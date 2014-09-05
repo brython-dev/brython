@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta charset="iso-8859-1">
+<script src="../../src/brython.js"></script>
+
+</head>
+<body onLoad="brython(1)">
+
+<script type="text/python">
+import sys
+import datetime
+import string
+
+from browser import document as doc
+from browser.html import P
+import sidebar
+
+menu_items = [('The Brython site','http://www.brython.info'),
+    ('Development site','https://bitbucket.org/olemis/brython/src'),
+    ('Group (en)','https://groups.google.com/forum/?fromgroups=#!forum/brython')]
+doc <= sidebar.menu('Brython',menu_items)
+doc <= P('yes')+'no'
+doc <= P()+str(datetime.date.today())
+doc <= P()+string.ascii_letters
+doc <= P('sys.path : '+str(sys.path))
+
+doc <= P("imported by 'from html import A' : %s" %str(sidebar.A)[1:-1])
+doc <= P("imported by 'from os import *' : %s" %str(sidebar.urandom)[1:-1])
+</script>
+</body>
+</html>

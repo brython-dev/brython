@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="iso-8859-1">
+<link rel="stylesheet" href="../doc/doc_brython.css">
+
+<link rel="stylesheet" href="console.css">
+
+<script type="text/javascript" src="../../src/brython.js"></script>
+<script type="text/javascript" src="../../src/py_VFS.js"></script>
+
+<script type="text/python3">
+from browser import document as doc
+from browser import alert
+
+def myevent(ev):
+    alert('bind works!')
+
+def add_onClick(event):
+    doc['myblock'].bind('click', myevent)
+    doc['mymessage'].text='event bound to block'
+
+def remove_onClick(event):
+    doc['myblock'].unbind('click', myevent)
+    doc['mymessage'].text='event unbound from block'
+
+doc['Add'].bind('click', add_onClick)
+doc['Remove'].bind('click', remove_onClick)
+
+</script>
+
+</head>
+<body onload="brython({debug:10, cache:'none'})">
+
+<div id="myblock" style="width:100px; height:100px; background:red"></div>
+<span id="mymessage">waiting to do something</span>
+<div id="container">
+<div id="right-div">
+<div style="padding: 3px 3px 3px 3px;">
+    <button id="Add">Add onClick</button>
+    <button id="Remove">Remove onClick</button>
+</div>
+
+</div>
+</div>
+
+</body>
+</html>

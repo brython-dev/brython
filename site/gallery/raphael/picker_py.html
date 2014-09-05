@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Color Picker — Raphaël - Brython version</title>
+        <link rel="stylesheet" href="picker.css">
+
+        <script src="raphael-min.js"></script>
+        <script src="colorpicker.js"></script>
+        <script src="colorwheel.js"></script>
+        
+        <script type="text/javascript" src="/src/brython.js"></script>
+
+        <script type="text/python3" src="picker.py"></script>
+
+    </head>
+    <body onload="brython(1)">
+        <div id="content">
+            <h1 id="h1">Color Picker</h1>
+            <table id="values">
+                <tr>
+                    <th>R</th>
+                    <td id="vr"></td>
+                    <th>H</th>
+                    <td id="vh"></td>
+                    <th>H</th>
+                    <td id="vh2"></td>
+                </tr>
+                <tr>
+                    <th>G</th>
+                    <td id="vg"></td>
+                    <th>S</th>
+                    <td id="vs"></td>
+                    <th>S</th>
+                    <td id="vs2"></td>
+                </tr>
+                <tr>
+                    <th>B</th>
+                    <td id="vb"></td>
+                    <th>B</th>
+                    <td id="vv"></td>
+                    <th>L</th>
+                    <td id="vl"></td>
+                </tr>
+            </table>
+            <input type="text" id="output" value="#eeeeee">
+            <p id="copy">
+                Powered by <a href="http://raphaeljs.com/">Raphaël</a>
+                <br>Copied from the <a href="http://raphaeljs.com/picker.html">Raphael demo</a>
+            </p>
+        </div>
+        <div id="picker2"></div>
+    </body>
+</html>

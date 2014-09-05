@@ -1,0 +1,224 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="iso-8859-1">
+<link rel="stylesheet" href="../doc/doc_brython.css">
+
+<link rel="stylesheet" href="../tests/console.css">
+
+<script src="http://d1n0x3qji82z53.cloudfront.net/src-min-noconflict/ace.js" type="text/javascript">
+</script>
+
+<script type="text/javascript" src="blanket.min.js" 
+        data-cover-adapter="usage-blanket.js"
+        data-cover-flags="branchTracking,debug"></script>
+
+
+<script type="text/javascript" src="../../src/brython_builtins.js" data-cover></script>
+<script type="text/javascript" src="../../src/version_info.js" data-cover></script>
+<script type="text/javascript" src="../../src/identifiers_re.js" data-cover></script>
+<script type="text/javascript" src="../../src/py2js.js" data-cover></script>
+<script type="text/javascript" src="../../src/py_object.js" data-cover></script>
+<script type="text/javascript" src="../../src/py_type.js" data-cover></script>
+<script type="text/javascript" src="../../src/py_utils.js" data-cover></script>
+<script type="text/javascript" src="../../src/py_generator.js" data-cover></script>
+<script type="text/javascript" src="../../src/py_builtin_functions.js" data-cover></script>
+<script type="text/javascript" src="../../src/py_set.js" data-cover></script>
+<script type="text/javascript" src="../../src/js_objects.js" data-cover></script>
+<script type="text/javascript" src="../../src/stdlib_paths.js" data-cover></script>
+<script type="text/javascript" src="../../src/py_import.js" data-cover></script>
+
+<script type="text/javascript" src="../../src/py_bytes.js" data-cover></script>
+<script type="text/javascript" src="../../src/py_string.js" data-cover></script>
+<script type="text/javascript" src="../../src/py_int.js" data-cover></script>
+<script type="text/javascript" src="../../src/py_float.js" data-cover></script>
+<script type="text/javascript" src="../../src/py_complex.js" data-cover></script>
+<script type="text/javascript" src="../../src/py_dict.js" data-cover></script>
+<script type="text/javascript" src="../../src/py_list.js" data-cover></script>
+<script type="text/javascript" src="../../src/py_dom.js" data-cover></script>
+
+<script>
+  blanket.beforeStartTestRunner({
+     callback: function() {
+         brython({debug:1, cache:'none', static_stdlib_import:true});
+     }
+  });
+</script>
+
+<script type="text/python" src="../tests/editor.py"></script>
+
+<script type="text/python3">
+from browser import document as doc
+from browser import timer
+from javascript import console
+import time
+
+script_num = -1
+failed = []
+t_start = None
+
+def test_next():
+    global script_num,failed
+    script_num += 1
+    options = doc['files'].options
+    if script_num < len(options):
+        option = doc['files'].options[script_num]
+        src = open(option.value).read()
+        doc['files'].selectedIndex = script_num
+        editor.setValue(src)
+        state = run()
+        if state == 0:
+            failed.append(option.text)
+        timer.set_timeout(test_next,500)
+    else:
+        doc['console'].value = ''
+        print('completed all tests in %.2f ms' %(time.time()-t_start))
+        print('failed : %s' %failed)
+    
+def test_all(ev):
+    global script_num,failed,t_start
+    script_num = -1
+    t_start = time.time()
+    failed = []
+    test_next()
+
+def set_debug(ev):
+    if ev.target.checked:
+        __BRYTHON__.debug = 1
+    else:
+        __BRYTHON__.debug = 0
+
+# bindings
+doc['test_all'].bind('click',test_all)
+doc['set_debug'].bind('change',set_debug)
+
+# next functions are defined in editor.py
+doc['show_js'].bind('click',show_js)
+doc['run'].bind('click',run)
+doc['clear_text'].bind('click',clear_text)
+doc['show_console'].bind('click',show_console)
+doc['files'].bind('change',load)
+</script>
+
+</head>
+<body>
+
+<table id="banner" cellpadding=0 cellspacing=0>
+<tr id="banner_row">
+</tr>
+</table>
+
+<div style="text-align:center">
+<br>Brython version: <span id="version"></span>
+</div>
+</center>
+
+
+<div id="container">
+<div id="left-div">
+<div style="padding: 3px 3px 3px 3px;">
+Theme:
+ <select id="ace_theme" onChange="change_theme(event)">
+<optgroup label="Bright">
+<option value="ace/theme/chrome">Chrome</option>
+<option value="ace/theme/clouds">Clouds</option>
+<option value="ace/theme/crimson_editor">Crimson Editor</option>
+<option value="ace/theme/dawn">Dawn</option>
+<option value="ace/theme/dreamweaver">Dreamweaver</option>
+<option value="ace/theme/eclipse">Eclipse</option>
+<option value="ace/theme/github">GitHub</option>
+<option value="ace/theme/solarized_light">Solarized Light</option>
+<option value="ace/theme/textmate">TextMate</option>
+<option value="ace/theme/tomorrow">Tomorrow</option>
+<option value="ace/theme/xcode">XCode</option>
+</optgroup>
+<optgroup label="Dark">
+<option value="ace/theme/ambiance">Ambiance</option>
+<option value="ace/theme/chaos">Chaos</option>
+<option value="ace/theme/clouds_midnight">Clouds Midnight</option>
+<option value="ace/theme/cobalt">Cobalt</option>
+<option value="ace/theme/idle_fingers">idleFingers</option>
+<option value="ace/theme/kr_theme">krTheme</option>
+<option value="ace/theme/merbivore">Merbivore</option>
+<option value="ace/theme/merbivore_soft">Merbivore Soft</option>
+<option value="ace/theme/mono_industrial">Mono Industrial</option>
+<option value="ace/theme/monokai">Monokai</option>
+<option value="ace/theme/pastel_on_dark">Pastel on dark</option>
+<option value="ace/theme/solarized_dark">Solarized Dark</option>
+<option value="ace/theme/twilight">Twilight</option>
+<option value="ace/theme/tomorrow_night">Tomorrow Night</option>
+<option value="ace/theme/tomorrow_night_blue">Tomorrow Night Blue</option>
+<option value="ace/theme/tomorrow_night_bright">Tomorrow Night Bright</option>
+<option value="ace/theme/tomorrow_night_eighties">Tomorrow Night 80s</option>
+<option value="ace/theme/vibrant_ink">Vibrant Ink</option>
+</optgroup>
+</select>
+
+Test suite:
+<select name="filename" id="files">
+  <optgroup label="Core language features">
+    <option value="../tests/test_suite.py">basic test suite</option>
+    <option value="../tests/classes_tests.py">built-in classes</option>
+    <option value="../tests/test_rmethods.py">reflected methods</option>
+    <option value="../tests/test_bytes.py">bytes</option>
+    <option value="../tests/test_classes.py">classes</option>
+    <option value="../tests/test_decimals.py">decimals</option>
+    <option value="../tests/test_decorators.py">decorators</option>
+    <option value="../tests/test_descriptors.py">descriptors</option>
+    <option value="../tests/test_dict.py">dicts</option>
+    <option value="../tests/test_import.py">imports</option>
+    <option value="../tests/test_iterators.py">iterators</option>
+    <option value="../tests/test_generators.py">generators</option>
+    <option value="../tests/test_list_methods.py">lists</option>
+    <option value="../tests/test_numbers.py">numbers</option>
+    <option value="../tests/test_print.py">print</option>
+    <option value="../tests/test_set.py">sets</option>
+    <option value="../tests/test_strings.py">strings</option>
+    <option value="../tests/test_string_format.py">string format</option>
+    <option value="../tests/test_string_methods.py">string methods</option>
+  </optgroup>
+  <optgroup label="Issues">
+    <option value="../tests/issues_gc.py">issues (GC)</option>
+    <option value="../tests/issues.py">issues</option>
+  </optgroup>
+  <optgroup label="Modules">
+    <option value="../tests/test_re.py">re</option>
+    <option value="../tests/test_unittest.py">unittest</option>
+    <option value="../tests/test_bisect.py">bisect</option>
+    <option value="../tests/test_collections.py">collections</option>
+    <option value="../tests/test_datetime.py">datetime</option>
+    <option value="../tests/test_hashlib.py">hashlib</option>
+    <option value="../tests/test_indexedDB.py">indexedDB</option>
+    <option value="../tests/test_itertools.py">itertools</option>
+    <option value="../tests/test_json.py">JSON</option>
+    <option value="../tests/test_math.py">math</option>
+  </optgroup>
+</select>
+<br><button id="test_all">Run all tests</button>
+
+</div>
+  <div id="editor"></div>
+</div>
+
+<div id="right-div">
+<div style="padding: 3px 3px 3px 3px;">
+  <div style="float:left">
+    <button id="run">run</button>
+    <button id="clear_text">clear</button>
+    debug<input type="checkbox" id="set_debug" checked>
+  </div>
+  <div style="float:right">
+    <button id="show_console">Console</button>
+    <button id="show_js">Javascript</button>
+  </div>
+</div>
+
+<div style="width:100%;height:100%;">
+<textarea id="console"></textarea>
+</div>
+
+</div>
+</div>
+
+</body>
+</html>

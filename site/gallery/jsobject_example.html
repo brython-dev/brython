@@ -1,0 +1,35 @@
+<html>
+<head>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js">
+</script>
+<script src="../../src/brython.js"></script>
+</head>
+
+<script type="text/python">
+    from browser import document as doc
+    from javascript import JSObject
+    
+    def change_color(ev):
+      _divs=doc.get(selector='div')
+      for _div in _divs:
+          if _div.style.color != "blue":
+             _div.style.color = "blue"
+          else:
+             _div.style.color = "red"
+    
+    # creating an alias for "$" in jQuery would cause a SyntaxError in Python
+    # so we assign jQuery to a variable named jq
+
+    jq = jQuery.noConflict(true)
+    _jQuery=JSObject(jq("body"))
+    _jQuery.click(change_color)    
+</script>
+
+<body onload="brython()">
+
+  <div>Click here</div>
+  <div>to iterate through</div>
+  <div>these divs.</div>
+ 
+</body>
+</html>

@@ -1,0 +1,86 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<script src="../../src/brython.js"></script>
+</head>
+<body onload="brython(1)">
+<center><h1>Workable WebDatabase</h1></center>
+<script type="text/python">
+from browser import document as doc
+import time
+
+def newTable():
+    t = TABLE(id='msgs', border='1')
+    th = THEAD()
+    tb = TBODY()
+    r = TR()
+    r <= TH('ID')
+    r <= TH('Msg')
+    r <= TH('Time')
+    th <= r
+    t <= th
+    t <= tb
+    tableContainer<=t
+    return tb
+
+try:
+    db=openDatabase("brython", "0.1", "A list of to do items.", 5*1024*1024)
+except:
+    doc <= "WebSQL doesn't seem to be supported by your browser"
+    db = None
+
+def execSql(sql):
+    def onError(tx,e):
+        print("Exec:'", sql, "'Error:",e.message)
+    def doExec(tx):
+        tx.executeSql(sql, [], None, onError)
+    transaction(doExec)
+
+def querySql(sql):
+    def onError(tx, e):
+        print("query:'", sql, "'Error:",e.message)
+    def printResult(tx, result):
+        del doc['msgs']
+        tb = newTable()
+        for idx in range(result.rows.length):
+            itm = result.rows.item(idx)
+            r = TR()
+            r<=TD(str(itm.id))
+            r<=TD(str(itm.msg))
+            r<=TD(str(itm.time))
+            tb<=r
+    def doQuery(tx):
+        tx.executeSql(sql, [], printResult, onError)
+    transaction(doQuery)
+
+def addMsg():
+    q = doc['q'].value
+    sql = 'INSERT INTO MSGS (msg,time) VALUES ("%s","%s")'%(q,time.strftime('%Y-%m-%d %H:%M:%S'))
+    execSql(sql)
+
+def showAll():
+    querySql("SELECT * from MSGS")
+
+log('testing db')
+if db:
+    log('ok')
+    transaction=getattr(db, 'transaction')
+    
+    execSql('CREATE TABLE IF NOT EXISTS MSGS (id INTEGER PRIMARY KEY ASC, msg, time)')
+    
+    c=CENTER()
+    c<=LABEL("Input Message Here:")
+    c<=BR()
+    c<=TEXTAREA(id='q', rows=10, cols=60)+BR()
+    c<=BUTTON('Save To WebSQL', id='add', onclick='addMsg()')
+    c<=BUTTON('Show Saved Message', id='Show', onclick='showAll()')
+    c<=BR()
+    c<=HR()
+    tableContainer=DIV(id='tableContainer')
+    tableContainer<=newTable()
+    c<=tableContainer
+    doc<=c
+
+</script>
+</body>
+</html>

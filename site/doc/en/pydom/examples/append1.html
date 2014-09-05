@@ -1,0 +1,24 @@
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>append demo</title>
+        <style>
+          p {background: yellow;}
+        </style>
+        <script src="/src/brython.js"></script>
+        <script type="text/python">
+          from browser.pydom import get
+
+          def execute(event):
+              get("p").append("<strong>Hello</strong>")
+
+          get('#doit').click(execute)
+        </script>
+      </head>
+      <body onload="brython()">
+        <p>I would like to say: </p>
+
+        <button id="doit">Execute</button>
+      </body>
+    </html>

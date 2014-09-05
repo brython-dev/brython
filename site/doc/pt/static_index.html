@@ -1,0 +1,126 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython - Documentação</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+import time
+from browser import doc, window, markdown
+import header
+header.show('../../')
+
+def load():
+    target = 'content'
+    url = doc.query.getfirst('page','intro')+'.md'
+    
+    # fake query string to bypass browser cache
+    qs = '?foo=%s' %time.time()
+    try:
+        src = open(url+qs).read()
+    except IOError:
+        doc[target].html = "Page %s not found" %url
+        return False
+    
+    mk,scripts = markdown.mark(src)
+    doc[target].html = mk
+    for script in scripts:
+        exec(script,globals())
+
+language = "fr"
+
+load()
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<table id="banner" cellpadding=0 cellspacing=0>
+<tr id="banner_row">
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="?page=intro">Introdução</a></h4>
+<h4><a class="navig" href="?page=faq">Perguntas Frequentes</a></h4>
+<h4><a class="navig" href="?page=syntax">Sintaxe, palavras-chave e funções integradas</a></h4>
+<h4><a class="navig" href="?page=import">Implementação de <tt>import</tt></a>
+
+<h4>Interface do navegador</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="?page=dom_api">Introdução - DOM API</a>
+<br><a class="navig" href="?page=create">Criando um documento</a>
+<br><a class="navig" href="?page=access">Acessando elementos</a>
+<br><a class="navig" href="?page=attributes">Atributos e métodos</a>
+<br>
+<br><a class="navig" href="?page=events">Eventos</a>
+<br><a class="navig" href="?page=mouse_events">Eventos do Mouse</a>
+<br><a class="navig" href="?page=keyboard_events">Eventos do Teclado</a>
+<br><a class="navig" href="?page=focus_events">Eventos de Foco</a>
+<br><a class="navig" href="?page=drag_events">Eventos de Arrasto</a>
+<br>
+<br><a class="navig" href="?page=query">Cadeia de consulta (query)</a>
+<br><a class="navig" href="?page=jsobjects">Usando objetos e bibliotecas Javascript</a>
+</div>
+
+<h4>Módulos integrados de Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="?page=browser">browser</a>
+<br><a class="navig" href="?page=ajax">browser.ajax</a>
+<br><a class="navig" href="?page=html">browser.html</a>
+<br><a class="navig" href="?page=local_storage">browser.local_storage</a>
+<br><a class="navig" href="?page=markdown">browser.markdown</a>
+<br><a class="navig" href="?page=svg">browser.svg</a>
+<br><a class="navig" href="?page=timer">browser.timer</a>
+<br><a class="navig" href="?page=websockets">browser.websocket</a>
+<br>
+<br><a class="navig" href="?page=javascript">javascript</a>
+</div>
+
+<h4>Trabalhando com Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="?page=options">Opções da função <code>brython()</code></a>
+<br><a class="navig" href="?page=dev_env">Instalando o ambiente de desenvolvimento</a>
+<br><a class="navig" href="?page=test">Teste e depuração</a>
+<br><a class="navig" href="?page=deploy">Implantando uma aplicação</a>
+</div>
+
+<h4>Brython para Firefox OS</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="?page=firefox_os_intro">Introdução</a>
+<br><a class="navig" href="?page=firefox_os_tuto1">WebApps : desenho</a>
+<br><a class="navig" href="?page=firefox_os_tuto2">WebApps : aplicação</a>
+</div>
+
+<h4>Livro de receitas</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="?page=cookbook%2Fhello_world">Olá mundo !</a>
+<br><a class="navig" href="?page=cookbook%2Fcontent_in_div">Inserir conteúdo em um elemento</a>
+<br><a class="navig" href="?page=cookbook%2Fbasic_markup">Marcações HTML (negrito, itálico...)</a>
+<br><a class="navig" href="?page=cookbook%2Ftable">Tabela HTML</a>
+<br><a class="navig" href="?page=cookbook%2Fvalidate_form">Validar um formulário</a>
+<br><a class="navig" href="?page=cookbook%2Fdrag_drop">Arrastar e soltar</a>
+<br><a class="navig" href="?page=cookbook%2Fget_content">Obter o conteúdo de um elemento</a>
+<br><a class="navig" href="?page=cookbook%2Fread_file">Ler o conteúdo de um arquivo</a>
+<br><a class="navig" href="?page=cookbook%2Flocal_storage">Armazenar objetos localmente</a>
+<br><a class="navig" href="?page=cookbook%2Fread_text_from_imagemap">Exemplo de onmouseover</a>
+</div>
+
+<h4>Notas de implementação</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="?page=modele">Compilando e executando</a>
+<br><a class="navig" href="?page=implem">Conversão de sintaxe Python &rarr; JS</a>
+</div>
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;
+</td>
+</tr>
+</table>
+</html>

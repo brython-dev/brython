@@ -1,0 +1,143 @@
+html {
+  background-color: #fcfcfc;
+  -webkit-text-size-adjust: none;
+}
+body {
+  font-family: "trebuchet MS", arial, sans-serif;
+  font-size: 14px;
+  margin: 0;
+  padding: 0;
+  line-height: 18px;
+  text-align: center;
+}
+#benjoffe {
+  width: 800px;
+  margin: 0 auto;
+  text-align: left;
+}
+@media all and (max-width:500px) {
+  #benjoffe {
+    width: auto;
+  }
+}
+img {
+  border: none;
+}
+a:hover {
+  color: #c00;
+}
+h1 {
+  padding: 18px 0 0 9px;
+  margin: 0;
+  height: 36px;
+  border-bottom: 1px solid #b8b8b8;
+  color: #666;
+  text-shadow: #fff 0 1px 1px;
+  font-size: 24px;
+}
+
+#content {
+  clear: left;
+  position: relative;
+  padding: 18px 10px 10px 10px;
+  min-height: 200px;
+}
+#foot {
+  clear: both;
+  border-top: 1px solid #999;
+  padding: 10px 0;
+  font-size: 0.9em;
+  text-align: right;
+  margin: 0 10px;
+  color: #666;
+}
+#foot a {
+  color: #666;
+}
+#foot a:hover {
+  color: #000;
+}
+#app {
+  margin-top: 15px;
+}
+#holder {
+  position: relative;
+  width: 400px;
+  height:300px;
+  left: 100px;
+  border: 2px solid #333;
+}
+#sky {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 150px;
+  width: 400px;
+  background-color: #CCD;
+  background-image: url(img/sky.jpg);
+
+}
+#floor {
+  position: absolute;
+  left: 0;
+  top: 150px;
+  height: 150px;
+  width: 400px;
+  background-color: #565;
+  background-image: url(img/floor.png);
+
+}
+#canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+#overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 400px;
+  height: 300px;
+  background-image: url(img/overlay.gif);
+}
+#map, #underMap {
+  position: absolute;
+}
+#code {
+  position: absolute;
+  top: 140px;
+}
+#suppl {
+  position: absolute;
+  top: 100px;
+  left: 530px;
+  width: 270px;
+}
+
+p {
+  margin: 18px 0;
+}
+ul {
+  list-style: square;
+  margin: 0 0 18px 0;
+  padding: 0 0 0 18px;
+}
+p + ul {
+  margin-top: -9px;
+}
+ol {
+  margin: 18px 0;
+  padding: 0 0 0 18px;
+}
+p:first-child,
+ul:first-child,
+h2:first-child
+ol:first-child {
+  margin-top: 0;
+}
+p:last-child,
+ul:last-child,
+ol:last-child,
+h2:last-child {
+  margin-bottom: 0;
+}

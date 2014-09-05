@@ -1,0 +1,131 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython documentation</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+from browser import document as doc
+from browser import window
+import header
+header.show('../../')
+
+from browser import markdown
+import time
+
+def load(url,target):
+    # fake query string to bypass browser cache
+    t0 = time.time()
+    qs = '?foo=%s' %time.time()
+    try:
+        mk,scripts = markdown.mark(open(url+qs).read())
+    except IOError:
+        doc[target].html = "Page %s not found" %url
+        return False
+    doc[target].html = mk
+    t1 = time.time()
+    for script in scripts:
+        exec(script,globals())
+    return False
+
+# put in global namespace, for inline callbacks
+window.load = load
+    
+language = "en"
+</script>
+
+</head>
+<body onLoad="brython(1);load('intro.md','content')">
+
+<table id="banner" cellpadding=0 cellspacing=0>
+<tr id="banner_row">
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="#" onClick="load('intro.md','content')">Introduction</a></h4>
+
+<h4><a class="navig" href="#" onClick="load('faq.md','content')">Frequently asked questions</a></h4>
+
+<h4><a class="navig" href="#" onClick="load('syntax.md','content')">Syntax, keywords and built-in functions</a></h4>
+
+<h4><a class="navig" href="#" onClick="load('import.md','content')"><tt>import</tt> implementation</a></h4>
+
+<h4>Browser interface</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="#" onClick="load('dom_api.md','content')">Introduction - DOM API</a>
+<br><a class="navig" href="#" onClick="load('create.md','content')">Creating a document</a>
+<br><a class="navig" href="#" onClick="load('access.md','content')">Accessing elements</a>
+<br><a class="navig" href="#" onClick="load('attributes.md','content')">Attributes and methods</a>
+<br>
+<br><a class="navig" href="#" onClick="load('events.md','content')">Events</a>
+<br><a class="navig" href="#" onClick="load('mouse_events.md','content')">Mouse events</a>
+<br><a class="navig" href="#" onClick="load('keyboard_events.md','content')">Keyboard events</a>
+<br><a class="navig" href="#" onClick="load('focus_events.md','content')">Focus events</a>
+<br><a class="navig" href="#" onClick="load('drag_events.md','content')">Drag events</a>
+<br>
+<br><a class="navig" href="#" onClick="load('query.md','content')">Query string</a>
+<br><a class="navig" href="#" onClick="load('jsobjects.md','content')">Using Javascript objects and libraries</a>
+</div>
+
+<h4>Brython-specific built-in modules</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="#" onClick="load('browser.md','content')">browser</a>
+<br><a class="navig" href="#" onClick="load('ajax.md','content')">browser.ajax</a>
+<br><a class="navig" href="#" onClick="load('html.md','content')">browser.html</a>
+<br><a class="navig" href="#" onClick="load('local_storage.md','content')">browser.local_storage</a>
+<br><a class="navig" href="#" onClick="load('markdown.md','content')">browser.markdown</a>
+<br><a class="navig" href="#" onClick="load('svg.md','content')">browser.svg</a>
+<br><a class="navig" href="#" onClick="load('timer.md','content')">browser.timer</a>
+<br><a class="navig" href="#" onClick="load('websockets.md','content')">browser.websocket</a>
+<br>
+<br><a class="navig" href="#" onClick="load('javascript.md','content')">javascript</a>
+</div>
+
+<h4>Working with Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="#" onClick="load('options.md','content')">Options of function <code>brython()</code></a>
+<br><a class="navig" href="#" onClick="load('dev_env.md','content')">Installing the development environment</a>
+<br><a class="navig" href="#" onClick="load('test.md','content')">Testing and debugging</a>
+<br><a class="navig" href="#" onClick="load('deploy.md','content')">Deploying an application</a>
+</div>
+
+<h4>Brython for Firefox OS</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="#" onClick="load('firefox_os_intro.md','content')">Introduction</a>
+<br><a class="navig" href="#" onClick="load('firefox_os_tuto1.md','content')">WebApps : design</a>
+<br><a class="navig" href="#" onClick="load('firefox_os_tuto2.md','content')">WebApps : application</a>
+</div>
+
+<h4>Cookbook</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="#" onClick="load('cookbook/hello_world.md','content')">Hello world !</a>
+<br><a class="navig" href="#" onClick="load('cookbook/content_in_div.md','content')">Insert content in an element</a>
+<br><a class="navig" href="#" onClick="load('cookbook/basic_markup.md','content')">HTML markup (bold,italic...)</a>
+<br><a class="navig" href="#" onClick="load('cookbook/table.md','content')">HTML table</a>
+<br><a class="navig" href="#" onClick="load('cookbook/validate_form.md','content')">Validate a form</a>
+<br><a class="navig" href="#" onClick="load('cookbook/select_checkbox.md','content')">Handle options in a SELECT</a><br><a class="navig" href="#" onClick="load('cookbook/drag_drop.md','content')">Drag and drop</a>
+<br><a class="navig" href="#" onClick="load('cookbook/get_content.md','content')">Get the content of an element</a>
+<br><a class="navig" href="#" onClick="load('cookbook/read_file.md','content')">Read the content of a file</a>
+<br><a class="navig" href="#" onClick="load('cookbook/local_storage.md','content')">Store objects locally</a>
+<br><a class="navig" href="#" onClick="load('cookbook/read_text_from_imagemap.md','content')">Example of onmouseover</a>
+</div>
+
+<h4>Implementation notes</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="#" onClick="load('modele.md','content')">Compiling and running</a>
+<br><a class="navig" href="#" onClick="load('implem.md','content')">Python &rarr; JS syntax conversion</a>
+</div>
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;
+</td>
+</tr>
+</table>
+</html>

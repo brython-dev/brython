@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<script type="text/javascript" src="../../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../../src/version_info.js"></script>
+<script type="text/javascript" src="../../src/identifiers_re.js"></script>
+<script type="text/javascript" src="../../src/py2js.js"></script>
+<script type="text/javascript" src="../../src/py_object.js"></script>
+<script type="text/javascript" src="../../src/py_type.js"></script>
+<script type="text/javascript" src="../../src/py_utils.js"></script>
+<script type="text/javascript" src="../../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../../src/py_set.js"></script>
+<script type="text/javascript" src="../../src/js_objects.js"></script>
+<script type="text/javascript" src="../../src/py_import.js"></script>
+
+<script type="text/javascript" src="../../src/py_int.js"></script>
+<script type="text/javascript" src="../../src/py_float.js"></script>
+<script type="text/javascript" src="../../src/py_dict.js"></script>
+<script type="text/javascript" src="../../src/py_list.js"></script>
+<script type="text/javascript" src="../../src/py_string.js"></script>
+<script type="text/javascript" src="../../src/py_dom.js"></script>
+
+</head>
+<body onload="brython(1)">
+<h1>Saisie de caractères cyrilliques sur clavier AZERTY</h1>
+
+<script type="text/python">
+from browser import document as doc
+from browser.html import *
+
+"""
+Phonetic ordering of cyrillic (фонетических упорядочение кириллицу)
+We are matching the latin alphabet, uppercase, then lowercase
+"""
+
+CYR =  'АБЦДЕФГЧИЙКЛМНОПЯРСТУВЖХЫЗШЩЭЮЁабцдефгчийклмнопярстувжхызшщэюёьъ '
+FR  =  'ABWDEFGQI8KLMNOP1RCTYVJXUZSH379abwdefgqi_klmnop&rctyvjxuzsh"-ç56 '
+
+trans = dict(zip(FR,CYR))
+
+kb = ['1234567890','AZERTYUIOP','QSDFGHJKLM','<WXCVBN?./!',' ']
+
+def keydown(ev):
+    if ev.which in [8,13]:
+        return
+    ev.preventDefault()
+    ev.stopPropagation()
+    if ev.ctrlKey:    
+        return
+    fr_letter = ev.char
+    print(fr_letter,'shift',ev.shiftKey)
+    ix = FR.find(fr_letter)
+    print(ix)
+    if ix>-1:
+        if ix < len(FR)/2 and not ev.shiftKey:
+            ix += int(len(FR)/2)
+        doc['zone'].value += CYR[ix]
+
+def keyup(e):
+    if e.which in [8,13]:
+        return
+    if e.ctrlKey:    
+        return    
+    e.preventDefault()
+    e.stopPropagation()
+
+def kbd_click(ev):
+    doc['zone'].value += ev.target.text[2].strip()
+    doc['zone'].focus()
+    
+# build keyboard
+for line in kb:
+    for car in line:
+        txt = PRE(car+' '+B(trans.get(car,' ')))
+        btn = BUTTON(txt)
+        btn.bind('click',kbd_click)
+        doc <= btn
+    doc <= BR()
+
+doc <= TEXTAREA(cols=70,rows=5,Id="zone")
+
+
+doc['zone'].bind('keydown',keyup)
+doc['zone'].bind('keyup',keydown)
+doc['zone'].focus()
+</script>
+<br />
+Cliquer sur les boutons ou saisir au clavier:
+<br />
+
+</body>
+</html>

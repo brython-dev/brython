@@ -1,0 +1,24 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Documentation Brython</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script type="text/javascript" src="/src/brython.js"></script>
+
+<script type="text/python">
+from browser import doc,html
+t = html.TABLE()
+t <= html.CAPTION('Received data')
+
+for key in doc.query:
+    t <= html.TR(html.TD(key)+html.TD(doc.query[key]))
+    
+doc <= t 
+</script>
+
+</head>
+<body onLoad="brython(1)">
+</body>
+</html>

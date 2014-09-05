@@ -1,0 +1,3 @@
+
+def getpwuid():
+    pass

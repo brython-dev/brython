@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta charset="iso-8859-1">
+<style>
+body,td,th{font-family:sans-serif}
+a.sort_link{margin-left:10px;text-decoration:none}
+</style>
+
+<script type="text/javascript" src="../../src/brython.js"></script>
+
+
+</head>
+<body onLoad="brython(1)">
+
+        <script type="text/python">
+        from browser import document as doc
+        from browser.html import *
+        items = ['unan','daou','tri','pevar','pemp']
+        
+        def swap(src,dest):
+            selected = src.selectedIndex
+            if selected == -1:
+                return
+            option = src.options[selected]
+            dest.options.append(option)
+            option.selected = False
+        
+        def up(ev):
+            if ev.target == up_left:
+                src = left
+            else:
+                src = right
+            selected = int(src.selectedIndex)
+            if selected == -1 or selected == 0:
+                return
+            option = src.options[selected]
+            src.options.insert(selected-1,option)
+        
+        def down(ev):
+            if ev.target == down_left:
+                src = left
+            else:
+                src = right
+            selected = int(src.selectedIndex)
+            if selected == -1 or selected == len(src.options)-1:
+                return
+            option = src.options[selected]
+            src.options.insert(selected+2,option)
+        
+        t = TABLE()
+        tb = TBODY()
+        
+        left = SELECT(size=10,style={'width':100})
+        right = SELECT(size=10,style={'width':100})
+
+        up_left = BUTTON('\u2191')
+        up_left.bind('click',up)
+        down_left = BUTTON('\u2193')
+        down_left.bind('click',down)
+        up_down_left = up_left+BR()+down_left
+        
+        
+        for i,_item in enumerate(items):
+            option = OPTION(_item,value=i,width=40,Id='opt%s' %i,selected=i==1)
+            left <= option
+        
+        button_lr = BUTTON('>')
+        button_lr.bind('click',lambda ev:swap(left,right))
+        button_rl = BUTTON('<')
+        button_rl.bind('click',lambda ev:swap(right,left))
+        buttons = button_lr+BR()+button_rl
+                
+        up_right = BUTTON('\u2191')
+        up_right.bind('click',up)
+        down_right = BUTTON('\u2193')
+        down_right.bind('click',down)
+        up_down_right = up_right+BR()+down_right
+        
+        tb <= TR(TD(up_down_left)+TD(left)+TD(buttons)+TD(right)+TD(up_down_right))
+        t <= tb
+        doc <= t
+        
+        </script>
+
+</body>
+</html>

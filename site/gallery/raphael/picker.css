@@ -1,0 +1,63 @@
+body {
+    background: #333;
+    color: #999;
+    font: 300 100.01%/1.2 "Segoe UI", "Helvetica Neue", Helvetica, "Arial Unicode", Arial, sans-serif;
+    margin: 0 30px;
+}
+#content {
+    width: 640px;
+    height: 480px;
+    position: relative;
+}
+h1 {
+    font-weight: 300;
+    font-size: 3em;
+    position: absolute;
+    right: 10px;
+    bottom: 50px;
+}
+p {
+    font-size: 2em;
+}
+#benefits {
+    margin-top: 350px;
+}
+#copy a {
+    color: #666;
+    text-decoration: none;
+}
+#picker2 {
+    width: 300px;
+    position: absolute;
+    top: 250px;
+    left: 50%;
+    margin-left: -150px;
+}
+#benefits {
+    margin-bottom: 0;
+}
+#output {
+    background: #eee;
+    position: absolute;
+    font-size: 30px;
+    bottom: 10px;
+    left: 20px;
+    font-family: monospace;
+    margin-top: -20px;
+}
+#copy {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    margin: 0;
+    font-size: .6em;
+    color: #666;
+}
+#values {
+    position: absolute;
+    left: 20px;
+    top: 363px;
+    font-size: .7em;
+}
+
+

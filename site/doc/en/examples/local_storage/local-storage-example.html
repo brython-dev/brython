@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>HTML5 (+ Brython): TO DO Application Using Local Storage</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet">
+    
+   <script type="text/python">  
+from browser.local_storage import storage
+from browser import document as doc
+from browser import window as win
+from browser import html
+import datetime
+import json
+
+try:
+    storage['tasklist']
+except:
+    storage['tasklist'] = json.dumps({})
+
+def get_date():
+    date = datetime.datetime.now()
+    return date.strftime('%Y/%m/%d-%H:%M:%S')
+
+def get_form_data():
+    task = doc["taskform"].value
+    relevance = doc["relevanceform"].value
+    return task, relevance
+                                         
+class ToDo:
+    def __init__(self):
+        self.tasks = json.loads(storage['tasklist'])
+        for key in self.tasks:
+            self.add_task_row(key)
+    
+    def add_task(self, ev):
+        key = get_date()
+        task, relevance = get_form_data()
+        self.tasks[key] = [task, relevance]
+        self._save()
+        self.add_task_row(key)
+
+    def _del_task(self,event):
+        # get row
+        elt = event.target
+        while elt.parent and elt.tagName != 'TR':
+            elt = elt.parent
+        key = elt.id
+        del self.tasks[key]
+        del doc[key]
+        self._save()
+        
+    def add_task_row(self, key):
+        if self.tasks[key][1] == "High":
+            color = "danger"
+        elif self.tasks[key][1] == "Medium":
+            color = "warning"
+        else:
+            color = "success"
+        row = html.TR(Class = color)
+        row.id = key
+        self._temp_key = key
+        link = html.A(html.IMG(src = "./done.png"))
+        link.href = "#"
+        link.bind('click', self._del_task)
+        row <= html.TD(self.tasks[key][0]) + \
+               html.TD(self.tasks[key][1]) + \
+               html.TD(key) + \
+               html.TD(link)
+        doc['tablebody'] <= row
+            
+    def clear(self, ev):
+        for key in self.tasks:
+            del doc[key]
+        self.tasks = {}
+        self._save()
+
+    def _save(self):
+        storage['tasklist'] = json.dumps(self.tasks)
+
+todo = ToDo()
+add_task = getattr(todo,'add_task')
+clear_all = getattr(todo,'clear')
+doc["button-add"].bind("click", add_task)
+doc["link-clear"].bind("click", clear_all)
+ 
+   </script>
+   
+  </head>
+
+  <body onload="brython()">
+
+    <div class="navbar navbar-inverse">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">To-Do-Brython</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="starter-template">
+        
+        <h1>HTML5 (+ Brython): TO DO App</h1>
+        
+        <p class="lead">This simple app only works in modern browsers.</p>
+        
+        <form class="form-horizontal" role="form">
+          <div class="form-group">
+            <label for="taskform" class="col-lg-2 control-label">Task</label>
+            <div class="col-lg-10">
+              <input id="taskform" type="text" class="form-control" placeholder="Text input">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="relevanceform" class="col-lg-2 control-label">Relevance</label>
+            <div class="col-lg-10">
+              <select id="relevanceform" class="form-control">
+                <option>High</option>
+                <option>Medium</option>
+                <option>Low</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="col-lg-offset-2 col-lg-10">
+              <button id="button-add" type="button" class="btn btn-default">Add</button>
+            </div>
+          </div>
+        </form>
+
+        <table id="mytable" class="table table-striped table-bordered table-hover table-responsive">
+          <thead class="header">
+            <tr>
+              <th class="text-center">Task</th>
+              <th class="text-center">Relevance</th>
+              <th class="text-center">Created</th>
+              <th class="text-center">Done</th>
+            </tr>
+          </thead>
+          <tbody id="tablebody">
+          </tbody>
+        </table>
+        
+        <div><a id="link-clear" href="#">Clear all!</a></div>
+        
+      </div><!-- /.starter-template -->
+
+    </div><!-- /.container -->
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+    <!-- Brython scripts
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/javascript" src="../../../../../../src/brython.js"></script>
+
+  </body>
+</html>

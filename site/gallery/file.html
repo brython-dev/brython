@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+<meta name="description" content="HTML5 Canvas based Switch demo written in Brython www.brython.info">
+<meta name="keywords" content="Python,Brython">
+<meta name="author" content="Tad Vi">
+<meta charset="iso-8859-1">
+<script src="../../src/py2js.js"></script>
+<script src="../../src/py_utils.js"></script>
+<script src="../../src/py_classes.js"></script>
+<script src="../../src/py_import.js"></script>
+<script src="../../src/py_list.js"></script>
+<script src="../../src/py_string.js"></script>
+<script src="../../src/py_dom.js"></script>
+</head>
+
+<body onLoad="brython(1)">
+
+<script type="text/python">
+from browser import document as doc
+
+reader = None
+
+def on_load(ev):
+    log('ready state %s '%reader.readyState)
+    log(reader.result)
+    
+def on_fileupload(ev):
+    global reader
+    print('works, got some files')
+    for file in ev.target.files:
+        reader = open(file,'rb')
+        reader.onload = on_load
+    
+filereader = doc['files']
+filereader.onchange = on_fileupload
+
+</script>
+
+<p>Example of simple file reader in Brython. Reads first selected file into browser.
+    Could be used for some in-browser processing of the file.
+</p>
+
+<input id="files" class="btn btn-primary" type="file" autofocus autocomplete="off">
+
+</body>
+</html>

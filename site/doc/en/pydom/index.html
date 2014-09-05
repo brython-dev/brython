@@ -1,0 +1,78 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>pydom documentation</title>
+<link rel="stylesheet" href="../../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+from browser import doc, window
+from .... import header
+header.show('../../')
+
+import browser.markdown as markdown
+import time
+
+def load(url,target):
+    # fake query string to bypass browser cache
+    qs = '?foo=%s' %time.time()
+    try:
+        mk,scripts = markdown.mark(open(url+qs).read())
+    except IOError:
+        doc[target].html = "Page %s not found" %url
+        return False
+    doc[target].html = mk
+    for script in scripts:
+        exec(script,globals())
+    return False
+
+# put in global namespace, for inline callbacks
+window.load = load
+    
+language = "en"
+</script>
+
+</head>
+<body onLoad="brython(1);load('intro.md','content')">
+
+<table id="banner" cellpadding=0 cellspacing=0>
+<tr id="banner_row">
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h3>pydom functions</h3>
+
+<a class="navig" href="#" onClick="load('intro.md','content')">Introduction</a>
+
+<p></p>
+<b>A</b>
+<div style="padding-left:10px;">
+<br><a class="navig" href="#" onClick="load('add.md','content')">add</a>
+<br>addBack
+<br><a class="navig" href="#" onClick="load('addClass.md','content')">addClass</a>
+<br><a class="navig" href="#" onClick="load('after.md','content')">after</a>
+<br><a class="navig" href="#" onClick="load('append.md','content')">append</a>
+<br>attr
+</div>
+
+<p></p>
+<b>B</b>
+<div style="padding-left:10px;">
+<br><a class="navig" href="#" onClick="load('before.md','content')">before</a>
+</div>
+
+<br>More to come soon
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;
+</td>
+</tr>
+</table>
+</html>

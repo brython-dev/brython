@@ -1,0 +1,167 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="iso-8859-1">
+
+<script type="text/javascript" src="../../../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../../../src/version_info.js"></script>
+<script type="text/javascript" src="../../../src/identifiers_re.js"></script>
+<script type="text/javascript" src="../../../src/py2js.js"></script>
+<script type="text/javascript" src="../../../src/py_object.js"></script>
+<script type="text/javascript" src="../../../src/py_type.js"></script>
+<script type="text/javascript" src="../../../src/py_utils.js"></script>
+<script type="text/javascript" src="../../../src/py_generator.js"></script>
+<script type="text/javascript" src="../../../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../../../src/py_set.js"></script>
+<script type="text/javascript" src="../../../src/js_objects.js"></script>
+<script type="text/javascript" src="../../../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../../../src/py_import.js"></script>
+
+<script type="text/javascript" src="../../../src/py_int.js"></script>
+<script type="text/javascript" src="../../../src/py_float.js"></script>
+<script type="text/javascript" src="../../../src/py_complex.js"></script>
+<script type="text/javascript" src="../../../src/py_dict.js"></script>
+<script type="text/javascript" src="../../../src/py_list.js"></script>
+<script type="text/javascript" src="../../../src/py_bytes.js"></script>
+<script type="text/javascript" src="../../../src/py_string.js"></script>
+<script type="text/javascript" src="../../../src/py_dom.js"></script>
+
+<!--
+<script type="text/javascript" src="../../../src/py_VFS.js"></script>
+-->
+<script type="text/javascript" src="../../../src/local_storage_fs.js"></script>
+
+<script type="text/python">
+from browser import document
+from browser import window
+import sys
+
+info = sys.implementation.version
+document['version'].text = '%s.%s.%s' % (info.major,info.minor,info.micro)
+
+_height=document.documentElement.clientHeight
+_top=document['container'].offsetTop
+document['container'].style.height='%dpx' % (_height-_top-10)
+</script>
+
+<script type="text/python">
+#sys.path.insert(0, 'unittests')
+sys.path.append("test")
+
+def errorwrite(data):
+    document["errorconsole"].text += '%s' % data
+
+sys.stderr.write=errorwrite
+
+_iframe= document.createElement('iframe')
+_iframe.style.width="100%"
+_iframe.style.height="90%"
+
+document["container"] <= _iframe
+
+sys.stdout=_iframe.contentDocument   #write standard out to iframe
+
+def flush(*args):
+    from javascript import console
+    console.log(args)
+
+# a submodule of unittest expects the output object to have a flush function
+sys.stdout.flush=flush
+
+#create pre tag to hold stderr info
+#_stderr=document.createElement('pre')
+#_stderr.id="errorconsole"
+#document["container"] <= _stderr
+
+def choose_test(event):
+    import time
+    _start=time.time()
+    document["errorconsole"].text=''
+    module=event.target.value
+
+    if module == '':
+       return
+
+    import unittest
+    import HTMLTestRunner
+    #mod=__import__(module)
+    exec("import %s as mod" % module)
+    _suite=unittest.TestLoader().loadTestsFromModule(mod)
+    #unittest.TextTestRunner(sys.stdout, verbosity=5).run(_suite)
+    HTMLTestRunner.HTMLTestRunner(sys.stdout, verbosity=2).run(_suite)
+
+    sys.stderr.write('completed in %s seconds' % (time.time() - _start))
+
+document["test"].bind('change', choose_test)
+</script>
+
+</head>
+
+<body onload="brython({debug:1, cache:'version', re:'pyre',
+                       static_stdlib_import: true,
+                       open: $local_storage_open})">
+
+<div style="width:100%">
+<div style="float:left">
+UnitTests:
+<select id="test">
+  <option value="">--choose test--</option>
+  <option value="buffer_tests">buffer_tests</option>
+  <option value="relimport">Relative Imports</option>
+  <option value="test_abc">test_abc</option>
+  <option value="test_base64">test_base64</option>
+  <option value="test_binop">test_binop</option>
+  <option value="test_collections">test_collections</option>
+  <option value="test_compare">test_compare</option>
+  <option value="test_contains">test_contains</option>
+  <option value="test_datetime">test_datetime</option>
+  <option value="test_decimal">test_decimal</option>
+  <option value="test_decorators">test_decorators</option>
+  <option value="test_defaultdict">test_defaultdict</option>
+  <option value="test_deque">test_deque</option>
+  <option value="test_dict">test_dict</option>
+  <option value="test_errno">test_errno</option>
+  <option value="test_exceptions">test_exceptions</option>
+  <option value="test_float">test_float</option>
+  <option value="test_format">test_format</option>
+  <option value="test_fractions">test_fractions</option>
+  <option value="test_funcattrs">test_funcattrs</option>
+  <option value="test_generators">test_generators</option>
+  <option value="test_genericpath">test_genericpath</option>
+  <option value="test_global">test_global</option>
+  <option value="test_grammar">test_grammar</option>
+  <option value="test_hash">test_hash</option>
+  <option value="test_hashlib">test_hashlib</option>
+  <option value="test_heapq">test_heapq</option>
+  <option value="test_html">test_html</option>
+  <option value="test_imp">test_imp</option>
+  <option value="test_import">test_import</option>
+  <option value="test_index">test_index</option>
+  <option value="test_int">test_int</option>
+  <option value="test_int_literal">test_int_literal</option>
+  <option value="test_isinstance">test_isinstance</option>
+  <option value="test_list">test_list</option>
+  <option value="test_math">test_math</option>
+  <option value="test_metaclass">test_metaclass</option>
+  <option value="test_module">test_module</option>
+  <option value="test_operator">test_operator</option>
+  <option value="test_os">test_os</option>
+  <option value="test_re">test_re</option>
+  <option value="test_set">test_set</option>
+  <option value="test_string">test_string</option>
+  <option value="test_with">test_with</option>
+</select>
+</div>
+
+<div style="float:right">
+Brython version: <span id="version"></span>
+</div>
+</div>
+
+<div id="container" style="clear:both; width:100%">
+
+</div>
+<pre id="errorconsole"></pre>
+
+</body>
+</html>

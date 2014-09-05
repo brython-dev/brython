@@ -1,0 +1,45 @@
+body {font-family:arial,verdana;
+font-size:14px;
+}
+ul
+{
+list-style-type:none;
+margin:0;
+padding:0;
+overflow:hidden;
+}
+li
+{
+float:left;
+}
+a.banner:link,a.banner:visited
+{
+    display:block;
+    font-size:14px;
+    font-weight:bold;
+    color:#FFFFFF;
+    line-height:35px; /*hauteur de l'image de fond*/
+    background:black url(doc/images/noir-1.png) repeat-x;
+    padding:8px;
+    text-align:center;
+    text-decoration:none;
+}
+a.banner:hover,a.banner:active
+{
+ background:black url(doc/images/noir-2.png) repeat-x;
+ color:white;
+}
+#banner{
+    width:85%;
+    padding-bottom:15px;
+}
+#console{
+    color:#FFF;
+    background-color:#000;
+    font-weight:bold;
+}
+a.glink{
+    text-decoration:underline;
+    background-color: #FFF;
+    color: #000;
+}

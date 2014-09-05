@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta charset="iso-8859-1">
+
+<script type="text/javascript" src="../../src/brython.js"></script>
+
+<script type="text/python">
+from browser import document as doc
+from brython import svg
+
+titre = svg.text('Titre',x=70,y=25,font_size=22,text_anchor="middle")
+cercle = svg.circle(cx="70",cy="120",r="40",stroke="black",stroke_width="2",fill="red")
+
+panel = doc['panel']
+panel <= titre
+panel <= cercle
+</script>
+
+</head>
+<body onLoad="brython(1)">
+<h1>SVG pie chart</h1>
+<p>
+
+<table>
+<tr>
+<td id="data"></td>
+<td>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+    width="400" height="300" style="border-style:solid;border-width:1;border-color:#000;">
+  <g id="panel">
+  </g>
+</svg>
+</td>
+</tr>
+</table>
+
+
+</body>
+</html>

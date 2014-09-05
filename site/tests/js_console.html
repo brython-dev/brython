@@ -1,0 +1,58 @@
+<html>
+<head>
+<meta charset="iso-8859-1">
+<link rel="stylesheet" href="../doc/doc_brython.css">
+
+<style>
+body{margin:100px;}
+
+</style>
+<script>
+function log(data){
+    document.getElementById('console_js').value += data+'\n'
+}
+
+function run_js(){
+    document.getElementById("console_js").value=''
+    var src_elt = document.getElementById("src_js")
+    var src = src_elt.value
+    t0 = new Date()
+    t0 = t0.getTime()
+    try{eval(src)}
+    catch(err){log(err.message)}
+    t1 = new Date()
+    t1 = t1.getTime()
+    log('<done in '+(t1-t0)+' ms>')
+}
+</script>
+</head>
+<body>
+
+<a href="../index.html">Home</a>
+
+<p>This page runs Javascript code and measures execution time. The scripts can use the function <code>log(<i>data</i>)</code> to print results in the textarea on the right
+
+<p>Its purpose is to compare the execution speed of native Javascript to the equivalent with Brython
+
+<center>
+
+<table width=80%>
+<tr><td style="text-align:center"><b>Javascript</b>
+</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td><textarea id="src_js" cols=60 rows=10>var N = 100000
+var a=0
+for(var i=0;i<N;i++){
+    a += 1
+}
+</textarea></td>
+<td><button onClick="run_js()">run</button>
+<td><textarea id="console_js" cols=70 rows=10></textarea></td>
+</tr>
+
+</table>
+</center>
+</body>
+</html>

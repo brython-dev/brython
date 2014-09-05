@@ -1,0 +1,110 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="iso-8859-1">
+<link rel="stylesheet" href="../doc/doc_brython.css">
+
+<link rel="stylesheet" href="console.css">
+
+<script type="text/javascript" src="../../src/py_loader.js"></script>
+
+<script type="text/python3">
+import sys
+from browser.html import *
+from browser import document as doc
+
+# detect language
+language = "en" # default
+has_req = False
+lang = doc.query().getfirst("lang")
+if lang and lang in ["en","fr","es"]:
+    has_req = True
+    language = lang
+else:
+    import locale
+    try:
+        lang,enc = locale.getdefaultlocale()
+        lang = lang[:2]
+        if lang in ["en","fr","es"]:
+            language = lang
+    except:
+        pass
+
+# upper menu
+
+trans_menu = {
+    'menu_console':{'en':'Console','es':'Consola','fr':'Console'},
+    'menu_gallery':{'en':'Gallery','es':'Galería','fr':'Galerie'},
+    'menu_doc':{'en':'Documentation','es':'Documentación','fr':'Documentation'},
+    'menu_download':{'en':'Download','es':'Descargas','fr':'Téléchargement'},
+    'menu_dev':{'en':'Development','es':'Desarrollo','fr':'Développement'},
+    'menu_groups':{'en':'Groups','es':'Grupos','fr':'Groupes'}
+}
+
+links = {'home':'../index.html',
+    'console':'../tests/console.html',
+    'gallery':'../gallery/gallery_%s.html',
+    'doc':'../doc/%s/index.html',
+    'download':'https://bitbucket.org/olemis/brython/downloads',
+    'dev':'https://bitbucket.org/olemis/brython/src',
+    'groups':'../groups.html'
+}
+
+banner = doc['banner_row']
+for item in ['home','console','gallery','doc','download','dev','groups']:
+    href = links[item]
+    if item in ['doc','gallery']:
+        href = href %language
+    if has_req and item not in ['download','dev']:
+        # add lang to href
+        href += '?lang=%s' %language
+    if item == 'home':
+        link = A(IMG(src="../brython_white.png",Class="logo"),href=href)
+        cell = TD(link,Class="logo")
+    else:
+        link = A(trans_menu['menu_%s'%item][language],href=href,Class="banner")
+        cell = TD(link)
+    if item in ['download','dev']:
+        link.target = "_blank"        
+    banner <= cell
+
+# other translations
+
+trans = {
+    'report_bugs':{'en':'Please report bugs in the ',
+                   'es':'Poner los bugs en el ',
+                   'fr':"Signalez les bugs dans l'"},
+    'test_page':{'en':'Tests page','es':'P&aacute;gina de pruebas','fr':'Page de tests'},
+    'run':{'en':'run','es':'ejecutar','fr':'exécuter'},
+    'clear':{'en':'clear','es':'borrar','fr':'effacer'}
+}
+
+for key in trans:
+    if key in doc:
+        doc[key].html = trans[key][language]
+
+
+doc['version'].text='.'.join(map(str,sys.version_info))
+
+doc['message'].text="If you see this message, py_loader loaded brython successfully"
+
+</script>
+
+</head>
+<body onload="brython({debug:1, cache:'none'})">
+
+<table id="banner" cellpadding=0 cellspacing=0>
+<tr id="banner_row">
+</tr>
+</table>
+
+<div style="text-align:center">
+<br>Brython version: <span id="version"></span>
+</div>
+
+<div style="text-align:center">
+<br><span id="message"></span>
+</div>
+
+</body>
+</html>
