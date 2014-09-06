@@ -1,0 +1,45 @@
+textarea {
+     -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+     -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+     box-sizing: border-box;         /* Opera/IE 8+ */
+}
+
+#container {
+width:90%;
+height: 66%;
+position:relative;
+margin: auto;
+}
+
+#left-div {
+width:50%;
+height:100%;
+#position:relative;
+margin: auto;
+float:left;
+}
+
+#right-div {
+width:48%;
+height:100%;
+position:relative;
+margin: auto;
+float:right;
+}
+
+#editor {
+float:none;
+width:50%;
+height:100%;
+}
+
+#controls {
+width:10%;
+float:none;
+}
+
+#console {
+width:100%;
+height:100%;
+float:none;
+}
