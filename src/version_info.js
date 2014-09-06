@@ -1,5 +1,5 @@
-__BRYTHON__.implementation = [2, 1, 4, 'final', 0]
-__BRYTHON__.__MAGIC__ = "2.1.4"
+__BRYTHON__.implementation = [2, 1, 5, 'final', 0]
+__BRYTHON__.__MAGIC__ = "2.1.5"
 __BRYTHON__.version_info = [3, 3, 0, 'alpha', 0]
 __BRYTHON__.builtin_module_names = ["posix","builtins",
     "hashlib",
