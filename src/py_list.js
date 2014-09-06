@@ -465,6 +465,7 @@ function list(){
 list.__class__ = $B.$factory
 list.$dict = $ListDict
 $ListDict.$factory = list
+list.$is_func = true
 
 list.__module__='builtins'
 list.__bases__=[]  //builtins.object()]
@@ -502,6 +503,8 @@ function tuple(){
 }
 tuple.__class__ = $B.$factory
 tuple.$dict = $TupleDict
+tuple.$is_func = true
+
 $TupleDict.$factory = tuple
 $TupleDict.__new__ = $B.$__new__(tuple)
 

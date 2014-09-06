@@ -58,6 +58,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     factory.__class__ = {
             __class__:$B.$type,
             $factory:metaclass,
+            $is_func:true,
             is_class:true,
             __code__: {'__class__': $B.CodeDict},
             __mro__:metaclass.$dict.__mro__

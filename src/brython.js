@@ -363,13 +363,16 @@ var right=this.tree[1]
 if(left.type=='attribute' ||left.type=='sub'){
 var node=$get_node(this)
 var res='',rvar=''
+console.log('right '+right)
 if(right.type=='expr' && right.tree[0]!==undefined &&
 right.tree[0].type=='call' &&
 ('eval'==right.tree[0].func.value ||
-'exec'==right.tree[0].func.value)){
-res +='$temp'+$loop_num+'='+right.to_js()+';\n'
+'exec'==right.tree[0].func.value)){res +='var $temp'+$loop_num+'='+right.to_js()+';\n'
 rvar='$temp'+$loop_num
 $loop_num++
+}else if(right.type=='expr' && right.tree[0]!==undefined &&
+right.tree[0].type=='sub'){res +='var $temp'+$loop_num+'='+right.to_js()+';\n'
+rvar='$temp'+$loop_num
 }else{rvar=right.to_js()
 }
 if(left.type==='attribute'){
@@ -384,19 +387,29 @@ if(Array.isArray){
 function is_simple(elt){return(elt.type=='expr' &&
 ['int','id'].indexOf(elt.tree[0].type)>-1)
 }
-var shortcut=true
-if(left.tree.length==1){var left_seq=left,args=[]
-while(left_seq.value.type=='sub' && left_seq.tree.length==1){if(!is_simple(left_seq.tree[0])){shortcut=false;break}
-args.push('['+left_seq.tree[0].to_js()+']')
+var exprs=[]
+if(left.tree.length==1){var left_seq=left,args=[],ix=0
+while(left_seq.value.type=='sub' && left_seq.tree.length==1){left_seq.value.marked=true
+if(is_simple(left_seq.tree[0])){args.push('['+left_seq.tree[0].to_js()+']')
+}else{exprs.push('var $temp_ix'+$loop_num+'_'+ix+'='+left_seq.tree[0].to_js())
+args.push('[$temp_ix'+$loop_num+'_'+ix+']')
+ix++
+}
 left_seq=left_seq.value
 }
-if(shortcut && is_simple(left_seq.tree[0])){args.unshift('['+left_seq.tree[0].to_js()+']')
+if(is_simple(left_seq.tree[0])){args.unshift('['+left_seq.tree[0].to_js()+']')
+}else{exprs.push('var $temp_ix'+$loop_num+'_'+ix+'='+left_seq.tree[0].to_js())
+args.unshift('[$temp_ix'+$loop_num+'_'+ix+']')
+ix++
+}
+left_seq.marked=true 
 var val=left_seq.value.to_js()
-var res='Array.isArray('+val+') && '
+res +=exprs.join(';\n')+';\n'
+res +='Array.isArray('+val+') && '
 res +=val+args.join('')+'!==undefined ? '
 res +=val+args.join('')+'='+rvar
 res +=' : '
-}}}
+}}
 left.func='setitem' 
 res +=left.to_js()
 res=res.substr(0,res.length-1)
@@ -2114,7 +2127,8 @@ C.tree.pop()
 C.tree.push(this)
 this.parent=C
 this.tree=[]
-this.to_js=function(){var val=this.value.to_js()
+this.to_js=function(){
+if(this.marked){var val=this.value.to_js()
 var res='getattr('+val+',"__'+this.func+'__")('
 if(this.tree.length===1)return res+this.tree[0].to_js()+')'
 res +='slice('
@@ -2122,7 +2136,26 @@ for(var i=0;i<this.tree.length;i++){if(this.tree[i].type==='abstract_expr'){res+
 else{res+=this.tree[i].to_js()}
 if(i<this.tree.length-1){res+=','}}
 return res+'))'
-}}
+}else{var res=''
+if(Array.isArray && this.tree.length==1 && !this.in_sub){var expr='',x=this
+while(x.value.type=='sub'){expr +='['+x.tree[0].to_js()+']'
+x.value.in_sub=true
+x=x.value
+}
+var subs=x.value.to_js()+'['+x.tree[0].to_js()+']'
+res +='Array.isArray('+x.value.to_js()+' && '
+res +=subs+'!==undefined) ?'
+res +=subs+expr+ ' : '
+}
+var val=this.value.to_js()
+res +='getattr('+val+',"__'+this.func+'__")('
+if(this.tree.length===1)return res+this.tree[0].to_js()+')'
+res +='slice('
+for(var i=0;i<this.tree.length;i++){if(this.tree[i].type==='abstract_expr'){res+='null'}
+else{res+=this.tree[i].to_js()}
+if(i<this.tree.length-1){res+=','}}
+return res+'))'
+}}}
 function $TargetCtx(C,name){
 this.toString=function(){return ' (target) '+this.name}
 this.parent=C
@@ -4263,7 +4296,7 @@ var factory=_b_.getattr(metaclass,'__new__').apply(null,[factory,class_name,base
 _b_.getattr(metaclass,'__init__').apply(null,[factory,class_name,bases,cl_dict])
 for(var member in metaclass.$dict){if(typeof metaclass.$dict[member]=='function' && member !='__new__'){metaclass.$dict[member].$type='classmethod'
 }}
-factory.__class__={__class__:$B.$type,$factory:metaclass,is_class:true,__code__:{'__class__': $B.CodeDict},__mro__:metaclass.$dict.__mro__
+factory.__class__={__class__:$B.$type,$factory:metaclass,$is_func:true,is_class:true,__code__:{'__class__': $B.CodeDict},__mro__:metaclass.$dict.__mro__
 }
 factory.$dict.__class__=metaclass.$dict
 return factory
@@ -5101,7 +5134,7 @@ for(var i=0;i<def_node.children.length;i++){func_root.addChild($B.make_node(func
 }
 var func_node=func_root.children[1].children[0]
 func_root.children[1].addChild(new $B.genNode('var err=StopIteration("");err.caught=true;throw err'))
-var obj={__class__ : $BRGeneratorDict,args:args,$class:$class,def_ctx:def_ctx,func:func,func_name:func_name,func_root:func_root,module:module,func_node:func_node,next_root:func_root,gi_running:false,iter_id:iter_id,num:0
+var obj={__class__ : $BRGeneratorDict,args:args,$class:$class,def_ctx:def_ctx,func:func,func_name:func_name,func_root:func_root,module:module,func_node:func_node,next_root:func_root,gi_running:false,iter_id:iter_id,num:0,gens:0
 }
 $B.modules[iter_id]=obj
 return obj
@@ -8286,6 +8319,7 @@ return res
 list.__class__=$B.$factory
 list.$dict=$ListDict
 $ListDict.$factory=list
+list.$is_func=true
 list.__module__='builtins'
 list.__bases__=[]
 function $tuple(arg){return arg}
@@ -8307,6 +8341,7 @@ return obj
 }
 tuple.__class__=$B.$factory
 tuple.$dict=$TupleDict
+tuple.$is_func=true
 $TupleDict.$factory=tuple
 $TupleDict.__new__=$B.$__new__(tuple)
 tuple.__module__='builtins'

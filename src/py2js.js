@@ -541,14 +541,18 @@ function $AssignCtx(context, check_unbound){
           var node = $get_node(this)
           
           var res='', rvar=''
+          console.log('right '+right)
           if(right.type=='expr' && right.tree[0]!==undefined &&
              right.tree[0].type=='call' &&
              ('eval' == right.tree[0].func.value ||
               'exec' == right.tree[0].func.value)) {
-             // ['eval','exec'].indexOf(right.tree[0].func.value)>-1){
-             res += '$temp'+$loop_num+'='+right.to_js()+';\n'
+             res += 'var $temp'+$loop_num+'='+right.to_js()+';\n'
              rvar = '$temp'+$loop_num
              $loop_num++
+          }else if(right.type=='expr' && right.tree[0]!==undefined &&
+              right.tree[0].type=='sub'){
+             res += 'var $temp'+$loop_num+'='+right.to_js()+';\n'
+             rvar = '$temp'+$loop_num
           }else{
              rvar = right.to_js()
           }
@@ -571,22 +575,35 @@ function $AssignCtx(context, check_unbound){
                       return (elt.type=='expr' &&
                           ['int','id'].indexOf(elt.tree[0].type)>-1)
                   }
-                  var shortcut = true
+                  var exprs = []
                   if(left.tree.length==1){
-                      var left_seq = left, args = []
+                      var left_seq = left, args = [], ix = 0
                       while(left_seq.value.type=='sub' && left_seq.tree.length==1){
-                          if(!is_simple(left_seq.tree[0])){shortcut=false;break}
-                          args.push('['+left_seq.tree[0].to_js()+']')
+                          left_seq.value.marked = true
+                          if(is_simple(left_seq.tree[0])){
+                              args.push('['+left_seq.tree[0].to_js()+']')
+                          }else{
+                              exprs.push('var $temp_ix'+$loop_num+'_'+ix+'='+left_seq.tree[0].to_js())
+                              args.push('[$temp_ix'+$loop_num+'_'+ix+']')
+                              ix++
+                          }
                           left_seq=left_seq.value
                       }
-                      if(shortcut && is_simple(left_seq.tree[0])){
+                      if(is_simple(left_seq.tree[0])){
                           args.unshift('['+left_seq.tree[0].to_js()+']')
-                          var val = left_seq.value.to_js()
-                          var res = 'Array.isArray('+val+') && '
-                          res += val+args.join('')+'!==undefined ? '
-                          res += val+args.join('')+'='+rvar
-                          res += ' : '
+                      }else{
+                          exprs.push('var $temp_ix'+$loop_num+'_'+ix+'='+left_seq.tree[0].to_js())
+                          args.unshift('[$temp_ix'+$loop_num+'_'+ix+']')
+                          ix++
                       }
+                      left_seq.marked = true // to avoid doing the test in to_js()
+                      var val = left_seq.value.to_js()
+                      res += exprs.join(';\n')+';\n'
+                      
+                      res += 'Array.isArray('+val+') && '
+                      res += val+args.join('')+'!==undefined ? '
+                      res += val+args.join('')+'='+rvar
+                      res += ' : '
                   }
               }
              left.func = 'setitem' // just for to_js()
@@ -3381,17 +3398,49 @@ function $SubCtx(context){ // subscription or slicing
     this.parent = context
     this.tree = []
     this.to_js = function(){
-        var val = this.value.to_js()
-        var res = 'getattr('+val+',"__'+this.func+'__")('
-        if(this.tree.length===1) return res+this.tree[0].to_js()+')'
-
-        res += 'slice('
-        for(var i=0;i<this.tree.length;i++){
-            if(this.tree[i].type==='abstract_expr'){res+='null'}
-            else{res+=this.tree[i].to_js()}
-            if(i<this.tree.length-1){res+=','}
+        // In assignment to subscriptions, eg a[x][y], a flag "marked" is set
+        // to use the shorcut a[x] instead of the complete code with getattr
+        if(this.marked){
+            var val = this.value.to_js()
+            var res = 'getattr('+val+',"__'+this.func+'__")('
+            if(this.tree.length===1) return res+this.tree[0].to_js()+')'
+    
+            res += 'slice('
+            for(var i=0;i<this.tree.length;i++){
+                if(this.tree[i].type==='abstract_expr'){res+='null'}
+                else{res+=this.tree[i].to_js()}
+                if(i<this.tree.length-1){res+=','}
+            }
+            return res+'))'
+        }else{
+            var res = ''
+            if(Array.isArray && this.tree.length==1 && !this.in_sub){
+                var expr = '', x = this
+                while(x.value.type=='sub'){
+                    expr += '['+x.tree[0].to_js()+']'
+                    x.value.in_sub = true
+                    x = x.value
+                }
+                var subs = x.value.to_js()+'['+x.tree[0].to_js()+']'
+                res += 'Array.isArray('+x.value.to_js()+' && '
+                res += subs+'!==undefined) ?'
+                res += subs+expr+ ' : '
+                //console.log(res)
+            }
+            var val = this.value.to_js()
+            //if(this.value.type=='id'){console.log(val+'['+this.tree[0].to_js()+']')}
+            //else if(this.value.type=='sub'){console.log(''+this.value.value.to_js()+this.value.tree[0].to_js()+this.tree[0].to_js())}
+            res += 'getattr('+val+',"__'+this.func+'__")('
+            if(this.tree.length===1) return res+this.tree[0].to_js()+')'
+    
+            res += 'slice('
+            for(var i=0;i<this.tree.length;i++){
+                if(this.tree[i].type==='abstract_expr'){res+='null'}
+                else{res+=this.tree[i].to_js()}
+                if(i<this.tree.length-1){res+=','}
+            }
+            return res+'))'
         }
-        return res+'))'
     }
 }
 
