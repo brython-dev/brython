@@ -335,7 +335,6 @@ $B.$type.__getattribute__=function(klass,attr){
                     __mro__:[$B.builtins.object.$dict]
                 }
                 method.__eq__ = function(other){
-                    console.log('method __equ__ '+__func__+'\n'+other.__func__)
                     return other.__func__ === __func__
                 }
                 method.__func__ = __func__

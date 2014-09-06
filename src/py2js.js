@@ -2582,8 +2582,8 @@ function $check_unbound(assigned,scope,varname){
                     if(pnode.children[rank]===ctx_node){break}
                 }
                 var new_node = new $Node()
-                console.log('unbound name: '+varname)
-                console.log('in node '+ctx+' module '+ctx_node.module)
+                //console.log('unbound name: '+varname)
+                //console.log('in node '+ctx+' module '+ctx_node.module)
                 var js = 'throw UnboundLocalError("local variable '+"'"
                 js += varname+"'"+' referenced before assignment")'
                 
@@ -3701,9 +3701,9 @@ function $YieldCtx(context){
 
         // form "yield from <expr>" : <expr> is this.tree[0]
 
-        console.log('yield from expression '+this)
+        //console.log('yield from expression '+this)
         var res = $to_js(this.tree)
-        console.log('code '+res)
+        //console.log('code '+res)
         return res
     }
 }

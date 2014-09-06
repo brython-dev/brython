@@ -1622,8 +1622,6 @@ var ctx_node=ctx.node
 var pnode=ctx_node.parent
 for(var rank=0;rank<pnode.children.length;rank++){if(pnode.children[rank]===ctx_node){break}}
 var new_node=new $Node()
-console.log('unbound name: '+varname)
-console.log('in node '+ctx+' module '+ctx_node.module)
 var js='throw UnboundLocalError("local variable '+"'"
 js +=varname+"'"+' referenced before assignment")'
 if(ctx.tree[0].type=='condition' && 
@@ -2327,9 +2325,7 @@ node.parent.insert(rank+1,new_node)
 this.to_js=function(){var scope=$get_scope(this)
 var res=''
 if(this.from===undefined)return $to_js(this.tree)||'None'
-console.log('yield from expression '+this)
 var res=$to_js(this.tree)
-console.log('code '+res)
 return res
 }}
 var $loop_num=0
@@ -4404,8 +4400,7 @@ return res.apply(null,local_args)
 }})(args)
 method.__class__={__class__:$B.$type,__name__:'method',__mro__:[$B.builtins.object.$dict]
 }
-method.__eq__=function(other){console.log('method __equ__ '+__func__+'\n'+other.__func__)
-return other.__func__===__func__
+method.__eq__=function(other){return other.__func__===__func__
 }
 method.__func__=__func__
 method.__repr__=__repr__
@@ -5059,8 +5054,6 @@ break
 for(var i=rank;i<pnode.parent.children.length;i++){fnode.addChild(pnode.parent.children[i].clone_tree())
 }
 pnode=pnode.parent
-}
-for(var i=1;i<self.func_root.children[1].children.length;i++){fnode.addChild(self.func_root.children[1].children[i].clone_tree())
 }
 var js='var err=StopIteration("inserted S.I. '+self.func_name+'");'
 js +='err.caught=true;throw err'

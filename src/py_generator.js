@@ -411,9 +411,13 @@ $BRGeneratorDict.__next__ = function(self){
         pnode = pnode.parent
     }
     
+    /*
+    console.log('add clone of '+self.func_root.children[1])
     for(var i=1;i<self.func_root.children[1].children.length;i++){
+        console.log('add clone of '+self.func_root.children[1].children[i])
         fnode.addChild(self.func_root.children[1].children[i].clone_tree())
     }
+    */
     
     var js = 'var err=StopIteration("inserted S.I. '+self.func_name+'");'
     js += 'err.caught=true;throw err'
@@ -428,6 +432,7 @@ $BRGeneratorDict.__next__ = function(self){
     
     self._next = eval(self.func_name)
     
+    //console.log('new _next\n'+self._next)
     //if(self.func_name=="$foo"){console.log('after yielding '+yielded_value+'\n'+self._next)}
         
     // Return the yielded value
