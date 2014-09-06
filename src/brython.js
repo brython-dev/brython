@@ -1,6 +1,6 @@
 // brython.js www.brython.info
 // version [3, 3, 0, 'alpha', 0]
-// implementation [2, 1, 5, 'final', 0]
+// implementation [2, 2, 0, 'rc', 0]
 // version compiled from commented, indented source files at https://bitbucket.org/olemis/brython/src
 var __BRYTHON__=__BRYTHON__ ||{}
 ;(function($B){if($B.isa_web_worker==true){
@@ -43,8 +43,8 @@ $B.has_json=typeof(JSON)!=="undefined"
 $B.has_websocket=(function(){try{var x=window.WebSocket;return x!==undefined}
 catch(err){return false}})
 })(__BRYTHON__)
-__BRYTHON__.implementation=[2,1,5,'final',0]
-__BRYTHON__.__MAGIC__="2.1.5"
+__BRYTHON__.implementation=[2,2,0,'rc',0]
+__BRYTHON__.__MAGIC__="2.2.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
 __BRYTHON__.builtin_module_names=["posix","builtins","hashlib","javascript","json","marshal","math","modulefinder","time","_ajax","_browser","_html","_io","_jsre","_multiprocessing","_os","_posixsubprocess","_svg","_sys","_timer","_websocket","__random","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
