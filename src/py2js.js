@@ -541,7 +541,6 @@ function $AssignCtx(context, check_unbound){
           var node = $get_node(this)
           
           var res='', rvar=''
-          console.log('right '+right)
           if(right.type=='expr' && right.tree[0]!==undefined &&
              right.tree[0].type=='call' &&
              ('eval' == right.tree[0].func.value ||
@@ -694,7 +693,7 @@ function $AugmentedAssignCtx(context, op){
         
         var right = right_is_int ? this.tree[1].tree[0].value : '$temp'
         
-        if(!left_is_id || !right_is_int){
+        if(!right_is_int){
         
             // Create temporary variable
             var new_node = new $Node()
@@ -717,6 +716,17 @@ function $AugmentedAssignCtx(context, op){
             parent.insert(rank+offset, new_node)
             offset++
         }
+        /*
+        if(this.tree[0].type=='expr' && this.tree[0].tree[0].type=="sub"){
+            console.log('augm assign to '+this.tree[0].tree[0])
+            var new_node = new $Node()
+            var js = 'var $left = '+this.tree[0].tree[0].value.to_js()
+            new $NodeJSCtx(new_node, js)
+            parent.insert(rank+offset, new_node)
+            this.tree[0].tree[0] = {type:'id',value:'$left',to_js:function(){return '$left'}}
+            offset++
+        }
+        */
 
         var prefix = ''
     
@@ -3413,17 +3423,18 @@ function $SubCtx(context){ // subscription or slicing
             }
             return res+'))'
         }else{
-            var res = ''
-            if(Array.isArray && this.tree.length==1 && !this.in_sub){
+            var res = '', shortcut = false
+            if(false && this.func!=='delitem' && Array.isArray && this.tree.length==1 && !this.in_sub){
                 var expr = '', x = this
+                shortcut = true
                 while(x.value.type=='sub'){
                     expr += '['+x.tree[0].to_js()+']'
                     x.value.in_sub = true
                     x = x.value
                 }
                 var subs = x.value.to_js()+'['+x.tree[0].to_js()+']'
-                res += 'Array.isArray('+x.value.to_js()+' && '
-                res += subs+'!==undefined) ?'
+                res += '(Array.isArray('+x.value.to_js()+') && '
+                res += subs+'!==undefined ?'
                 res += subs+expr+ ' : '
                 //console.log(res)
             }
@@ -3431,15 +3442,18 @@ function $SubCtx(context){ // subscription or slicing
             //if(this.value.type=='id'){console.log(val+'['+this.tree[0].to_js()+']')}
             //else if(this.value.type=='sub'){console.log(''+this.value.value.to_js()+this.value.tree[0].to_js()+this.tree[0].to_js())}
             res += 'getattr('+val+',"__'+this.func+'__")('
-            if(this.tree.length===1) return res+this.tree[0].to_js()+')'
-    
-            res += 'slice('
-            for(var i=0;i<this.tree.length;i++){
-                if(this.tree[i].type==='abstract_expr'){res+='null'}
-                else{res+=this.tree[i].to_js()}
-                if(i<this.tree.length-1){res+=','}
+            if(this.tree.length===1){
+                res += this.tree[0].to_js()+')'
+            }else{
+                res += 'slice('
+                for(var i=0;i<this.tree.length;i++){
+                    if(this.tree[i].type==='abstract_expr'){res+='null'}
+                    else{res+=this.tree[i].to_js()}
+                    if(i<this.tree.length-1){res+=','}
+                }
+                res += '))'
             }
-            return res+'))'
+            return shortcut ? res+')' : res
         }
     }
 }
