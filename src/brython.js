@@ -363,7 +363,6 @@ var right=this.tree[1]
 if(left.type=='attribute' ||left.type=='sub'){
 var node=$get_node(this)
 var res='',rvar=''
-console.log('right '+right)
 if(right.type=='expr' && right.tree[0]!==undefined &&
 right.tree[0].type=='call' &&
 ('eval'==right.tree[0].func.value ||
@@ -383,7 +382,7 @@ res=res.substr(0,res.length-1)
 return res + ','+rvar+');None;'
 }
 if(left.type==='sub'){
-if(Array.isArray){
+if(false){
 function is_simple(elt){return(elt.type=='expr' &&
 ['int','id'].indexOf(elt.tree[0].type)>-1)
 }
@@ -410,6 +409,20 @@ res +=val+args.join('')+'!==undefined ? '
 res +=val+args.join('')+'='+rvar
 res +=' : '
 }}
+if(left.tree.length==1){var js=''
+var left_seq=left,ixs=[]
+while(left_seq.type=='sub' && left_seq.tree.length==1){ixs.unshift(left_seq.tree[0].to_js())
+left_seq=left_seq.value
+}
+if(left_seq.type=='id'){var t=left_seq.to_js()
+var js='Array.isArray('+t+') && '
+js +=t+'['+ixs.join('][')+']!==undefined ? '
+js +=t+'['+ixs.join('][')+'] = '+rvar+' : '
+}
+js +='__BRYTHON__.$setitem('+left.value.to_js()
+js +=','+left.tree[0].to_js()+','+rvar+');None;'
+return res+js
+}
 left.func='setitem' 
 res +=left.to_js()
 res=res.substr(0,res.length-1)
@@ -459,7 +472,7 @@ parent.children.splice(rank,1)
 var left_is_id=this.tree[0].type=='expr' && this.tree[0].tree[0].type=='id'
 var right_is_int=this.tree[1].type=='expr' && this.tree[1].tree[0].type=='int'
 var right=right_is_int ? this.tree[1].tree[0].value : '$temp'
-if(!left_is_id ||!right_is_int){
+if(!right_is_int){
 var new_node=new $Node()
 new $NodeJSCtx(new_node,'var $temp,$left')
 parent.insert(rank,new_node)
@@ -513,6 +526,19 @@ js +='}'
 new $NodeJSCtx(new_node,js)
 parent.insert(rank+offset,new_node)
 offset++
+}
+var aaops={'+=':'add','-=':'sub','*=':'mul'}
+if(C.tree[0].type=='sub' && 
+['+=','-=','*='].indexOf(op)>-1 && 
+C.tree[0].tree.length==1){var js1='__BRYTHON__.augm_item_'+aaops[op]+'('
+js1 +=C.tree[0].value.to_js()
+js1 +=','+C.tree[0].tree[0].to_js()+','
+js1 +=right+');None;'
+var new_node=new $Node()
+new $NodeJSCtx(new_node,js1)
+parent.insert(rank+offset,new_node)
+offset++
+return
 }
 var new_node=new $Node()
 var js=''
@@ -2136,25 +2162,32 @@ for(var i=0;i<this.tree.length;i++){if(this.tree[i].type==='abstract_expr'){res+
 else{res+=this.tree[i].to_js()}
 if(i<this.tree.length-1){res+=','}}
 return res+'))'
-}else{var res=''
-if(Array.isArray && this.tree.length==1 && !this.in_sub){var expr='',x=this
+}else{var res='',shortcut=false
+if(this.func=='getitem' && this.tree.length==1){res +='__BRYTHON__.$getitem('+this.value.to_js()+','
+res +=this.tree[0].to_js()+')'
+return res
+}
+if(false && this.func!=='delitem' && Array.isArray && this.tree.length==1 && !this.in_sub){var expr='',x=this
+shortcut=true
 while(x.value.type=='sub'){expr +='['+x.tree[0].to_js()+']'
 x.value.in_sub=true
 x=x.value
 }
 var subs=x.value.to_js()+'['+x.tree[0].to_js()+']'
-res +='Array.isArray('+x.value.to_js()+' && '
-res +=subs+'!==undefined) ?'
+res +='(Array.isArray('+x.value.to_js()+') && '
+res +=subs+'!==undefined ?'
 res +=subs+expr+ ' : '
 }
 var val=this.value.to_js()
 res +='getattr('+val+',"__'+this.func+'__")('
-if(this.tree.length===1)return res+this.tree[0].to_js()+')'
-res +='slice('
+if(this.tree.length===1){res +=this.tree[0].to_js()+')'
+}else{res +='slice('
 for(var i=0;i<this.tree.length;i++){if(this.tree[i].type==='abstract_expr'){res+='null'}
 else{res+=this.tree[i].to_js()}
 if(i<this.tree.length-1){res+=','}}
-return res+'))'
+res +='))'
+}
+return shortcut ? res+')' : res
 }}}
 function $TargetCtx(C,name){
 this.toString=function(){return ' (target) '+this.name}
@@ -4706,6 +4739,34 @@ return res
 }}
 return $B.JSObject(src)
 }
+$B.$getitem=function(obj,item){if(Array.isArray(obj)&& typeof item=='number' && obj[item]!==undefined){return item >=0 ? obj[item]: obj[obj.length+item]
+}
+return _b_.getattr(obj,'__getitem__')(item)
+}
+$B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& typeof item=='number'){if(item>=0){obj[item]=value}
+else{obj[obj.length+item]=value}
+return
+}
+_b_.getattr(obj,'__setitem__')(item,value)
+}
+$B.augm_item_add=function(obj,item,incr){if(Array.isArray(obj)&& typeof item=="number" &&
+obj[item]!==undefined){obj[item]+=incr
+return
+}
+var ga=_b_.getattr
+try{var augm_func=ga(ga(obj,'__getitem__')(item),'__iadd__')
+console.log('has augmfunc')
+}catch(err){ga(obj,'__setitem__')(item,ga(ga(obj,'__getitem__')(item),'__add__')(incr))
+return
+}
+augm_func(value)
+}
+augm_item_src=''+$B.augm_item_add
+var augm_ops=[['-=','sub'],['*=','mul']]
+for(var i=0;i<augm_ops.length;i++){var augm_code=augm_item_src.replace(/add/g,augm_ops[i][1])
+augm_code=augm_code.replace(/\+=/g,augm_ops[i][0])
+eval('$B.augm_item_'+augm_ops[i][1]+'='+augm_code)
+}
 $B.$raise=function(){
 var es=$B.exception_stack
 if(es.length>0)throw es[es.length-1]
@@ -5134,7 +5195,7 @@ for(var i=0;i<def_node.children.length;i++){func_root.addChild($B.make_node(func
 }
 var func_node=func_root.children[1].children[0]
 func_root.children[1].addChild(new $B.genNode('var err=StopIteration("");err.caught=true;throw err'))
-var obj={__class__ : $BRGeneratorDict,args:args,$class:$class,def_ctx:def_ctx,func:func,func_name:func_name,func_root:func_root,module:module,func_node:func_node,next_root:func_root,gi_running:false,iter_id:iter_id,num:0,gens:0
+var obj={__class__ : $BRGeneratorDict,args:args,$class:$class,def_ctx:def_ctx,func:func,func_name:func_name,func_root:func_root,module:module,func_node:func_node,next_root:func_root,gi_running:false,iter_id:iter_id,num:0
 }
 $B.modules[iter_id]=obj
 return obj
@@ -5417,7 +5478,8 @@ format.__code__={}
 format.__code__.co_argcount=2
 format.__code__.co_consts=[]
 format.__code__.co_varnames=['f','iterable']
-function getattr(obj,attr,_default){var klass=$B.get_class(obj)
+function getattr(obj,attr,_default){
+var klass=$B.get_class(obj)
 if(klass===undefined){
 if(obj[attr]!==undefined)return obj[attr]
 if(_default!==undefined)return _default

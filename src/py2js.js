@@ -564,7 +564,7 @@ function $AssignCtx(context, check_unbound){
               return res + ','+rvar+');None;'
           }
           if(left.type==='sub'){ // assign to item
-              if(Array.isArray){
+              if(false){ // && Array.isArray){
                   // If browser supports Array.isArray, test if the subscripted
                   // object is an array, if all subscription are integers or 
                   // ids, and if the assigned item exists
@@ -604,12 +604,33 @@ function $AssignCtx(context, check_unbound){
                       res += val+args.join('')+'='+rvar
                       res += ' : '
                   }
-              }
-             left.func = 'setitem' // just for to_js()
-             res += left.to_js()
-             res = res.substr(0,res.length-1) // remove trailing )
-             left.func = 'getitem' // restore default function
-             return res + ','+rvar+');None;'
+            }
+            
+            if(left.tree.length==1){
+                var js = ''
+                var left_seq = left, ixs = []
+                // If assignment like a[x][0]=y, with only integers or ids as 
+                // indices, use a shortcut for better performance
+                while(left_seq.type=='sub' && left_seq.tree.length==1){
+                    ixs.unshift(left_seq.tree[0].to_js())
+                    left_seq = left_seq.value
+                }
+                if(left_seq.type=='id'){
+                    var t=left_seq.to_js()
+                    var js = 'Array.isArray('+t+') && '
+                    js += t+'['+ixs.join('][')+']!==undefined ? '
+                    js += t+'['+ixs.join('][')+'] = '+rvar+' : '
+                }
+                js += '__BRYTHON__.$setitem('+left.value.to_js()
+                js += ','+left.tree[0].to_js()+','+rvar+');None;'
+                return res+js
+            }
+            
+            left.func = 'setitem' // just for to_js()
+            res += left.to_js()
+            res = res.substr(0,res.length-1) // remove trailing )
+            left.func = 'getitem' // restore default function
+            return res + ','+rvar+');None;'
           }
         }
        
@@ -784,6 +805,21 @@ function $AugmentedAssignCtx(context, op){
             offset++
 
         }
+        var aaops = {'+=':'add','-=':'sub','*=':'mul'}
+        if(context.tree[0].type=='sub' && 
+            ['+=','-=','*='].indexOf(op)>-1 && 
+            context.tree[0].tree.length==1){
+            var js1 = '__BRYTHON__.augm_item_'+aaops[op]+'('
+            js1 += context.tree[0].value.to_js()
+            js1 += ','+context.tree[0].tree[0].to_js()+','
+            js1 += right+');None;'
+            var new_node = new $Node()
+            new $NodeJSCtx(new_node,js1)
+            parent.insert(rank+offset, new_node)
+            offset++
+            return
+        }
+        
         // insert node 'if(!hasattr(foo,"__iadd__"))
         var new_node = new $Node()
         var js = ''
@@ -3424,6 +3460,11 @@ function $SubCtx(context){ // subscription or slicing
             return res+'))'
         }else{
             var res = '', shortcut = false
+            if(this.func=='getitem' && this.tree.length==1){
+                res += '__BRYTHON__.$getitem('+this.value.to_js()+','
+                res += this.tree[0].to_js()+')'
+                return res
+            }
             if(false && this.func!=='delitem' && Array.isArray && this.tree.length==1 && !this.in_sub){
                 var expr = '', x = this
                 shortcut = true

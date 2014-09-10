@@ -332,6 +332,48 @@ $B.$JS2Py = function(src){
     return $B.JSObject(src)
 }
 
+
+// get item
+$B.$getitem = function(obj, item){
+    if(Array.isArray(obj) && typeof item=='number' && obj[item]!==undefined){
+        return item >=0 ? obj[item] : obj[obj.length+item]
+    }
+    return _b_.getattr(obj,'__getitem__')(item)
+}
+$B.$setitem = function(obj,item,value){
+    if(Array.isArray(obj) && typeof item=='number'){
+        if(item>=0){obj[item]=value}
+        else{obj[obj.length+item]=value}
+        return
+    }
+    _b_.getattr(obj,'__setitem__')(item,value)
+}
+// augmented item
+$B.augm_item_add = function(obj,item,incr){
+    if(Array.isArray(obj) && typeof item=="number" &&
+        obj[item]!==undefined){
+        obj[item]+=incr
+        return
+    }
+    var ga = _b_.getattr
+    try{
+        var augm_func = ga(ga(obj,'__getitem__')(item),'__iadd__')
+        console.log('has augmfunc')
+    }catch(err){
+        ga(obj,'__setitem__')(item,
+            ga(ga(obj,'__getitem__')(item),'__add__')(incr))
+        return
+    }
+    augm_func(value)
+}
+augm_item_src = ''+$B.augm_item_add
+var augm_ops = [['-=','sub'],['*=','mul']]
+for(var i=0;i<augm_ops.length;i++){
+    var augm_code = augm_item_src.replace(/add/g,augm_ops[i][1])
+    augm_code = augm_code.replace(/\+=/g,augm_ops[i][0])
+    eval('$B.augm_item_'+augm_ops[i][1]+'='+augm_code)
+}
+
 // exceptions
 $B.$raise= function(){
     // Used for "raise" without specifying an exception
