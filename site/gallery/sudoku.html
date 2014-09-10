@@ -163,7 +163,7 @@ def make_grid (grid):
     return t
 
 # example from http://magictour.free.fr/msk_009
-grids = [line.replace('.','0') for line in open('sudoku_grids.txt')]
+grids = [line.replace('.','0').strip() for line in open('sudoku_grids.txt')]
 
 puzzle = html.SPAN(style={"float":"left"})
 puzzle <= make_grid(choice(grids))
