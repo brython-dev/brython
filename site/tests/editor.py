@@ -30,6 +30,8 @@ if sys.has_local_storage:
 else:
     storage = False
 
+__BRYTHON__.debug = int(doc['set_debug'].checked)
+
 def reset_src():
     if storage and "py_src" in storage:
        editor.setValue(storage["py_src"])
@@ -65,13 +67,6 @@ output = ''
 def show_console(ev):
     doc["console"].value = output
     doc["console"].cols = 60
-
-def clear_text(ev):
-    editor.setValue('')
-    if sys.has_local_storage:
-        storage["py_src"]=''
-
-    doc["console"].value=''
 
 def run(*args):
     global output
