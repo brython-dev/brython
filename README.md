@@ -6,10 +6,13 @@ Brython (Browser Python) is an implementation of Python 3 running in the browser
 Here is a simple example of an HTML page running Python :
 
     <html>
+    
     <head>
     <script src="/brython.js"></script>
     </head>
+    
     <body onload="brython()">
+    
     <script type="text/python">
     from browser import document, alert
     
@@ -18,8 +21,11 @@ Here is a simple example of an HTML page running Python :
     
     document['mybutton'].bind('click',echo)
     </script>
+    
     <input id="zone"><button id="mybutton">click !</button>
+    
     </body>
+    
     </html>
 
 To use Brython, all there is to do is 
