@@ -30,7 +30,7 @@ To use Brython, all there is to do is
 
 Main features
 =============
-Brython supports most of the syntax of Python 3, including comprehensions, generators, metaclasses, etc. and many modules of the CPython distribution
+Brython supports most of the syntax of Python 3, including comprehensions, generators, metaclasses, imports, etc. and many modules of the CPython distribution
 
 It includes libraries to interact with DOM elements and events, and with existing Javascript libraries such as jQuery, 3D, Highcharts, Rapheal etc.
 
