@@ -58,12 +58,12 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     factory.__class__ = {
             __class__:$B.$type,
             $factory:metaclass,
-            $is_func:true,
             is_class:true,
             __code__: {'__class__': $B.CodeDict},
             __mro__:metaclass.$dict.__mro__
     }
     factory.$dict.__class__ = metaclass.$dict
+    factory.$is_func = true
     return factory
 }
 
@@ -157,6 +157,7 @@ _b_.type = function(name,bases,cl_dict){
         })(class_dict)
     factory.__class__ = $B.$factory
     factory.$dict = class_dict
+    factory.$is_func = true // to speed up calls
     
     // factory compares equal to class_dict
     // so that instance.__class__ compares equal to factory
@@ -361,13 +362,18 @@ function $instance_creator(klass){
     return function(){
         var new_func=null,init_func=null,obj
         // apply __new__ to initialize the instance
-        try{
-            new_func = _b_.getattr(klass,'__new__')
-        }catch(err){$B.$pop_exc()}
-        if(new_func!==null){
-            var args = [klass.$factory]
-            for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
-            obj = new_func.apply(null,args)
+        if(klass.__bases__.length==1 && klass.__new__==undefined){
+            obj = {__class__:klass}
+        }else{
+            
+            try{
+                new_func = _b_.getattr(klass,'__new__')
+            }catch(err){$B.$pop_exc()}
+            if(new_func!==null){
+                var args = [klass.$factory]
+                for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
+                obj = new_func.apply(null,args)
+            }
         }
         // __initialized__ is set in object.__new__ if klass has a method __init__
         if(!obj.__initialized__){

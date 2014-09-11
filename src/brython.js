@@ -4329,9 +4329,10 @@ var factory=_b_.getattr(metaclass,'__new__').apply(null,[factory,class_name,base
 _b_.getattr(metaclass,'__init__').apply(null,[factory,class_name,bases,cl_dict])
 for(var member in metaclass.$dict){if(typeof metaclass.$dict[member]=='function' && member !='__new__'){metaclass.$dict[member].$type='classmethod'
 }}
-factory.__class__={__class__:$B.$type,$factory:metaclass,$is_func:true,is_class:true,__code__:{'__class__': $B.CodeDict},__mro__:metaclass.$dict.__mro__
+factory.__class__={__class__:$B.$type,$factory:metaclass,is_class:true,__code__:{'__class__': $B.CodeDict},__mro__:metaclass.$dict.__mro__
 }
 factory.$dict.__class__=metaclass.$dict
+factory.$is_func=true
 return factory
 }
 _b_.type=function(name,bases,cl_dict){
@@ -4376,6 +4377,7 @@ var factory=(function(_class){return function(){return $instance_creator(_class)
 }})(class_dict)
 factory.__class__=$B.$factory
 factory.$dict=class_dict
+factory.$is_func=true 
 factory.__eq__=function(other){return other===factory.__class__}
 class_dict.$factory=factory
 return factory
@@ -4481,12 +4483,12 @@ return method
 }}
 function $instance_creator(klass){
 return function(){var new_func=null,init_func=null,obj
-try{new_func=_b_.getattr(klass,'__new__')
+if(klass.__bases__.length==1 && klass.__new__==undefined){obj={__class__:klass}}else{try{new_func=_b_.getattr(klass,'__new__')
 }catch(err){$B.$pop_exc()}
 if(new_func!==null){var args=[klass.$factory]
 for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
 obj=new_func.apply(null,args)
-}
+}}
 if(!obj.__initialized__){try{init_func=_b_.getattr(klass,'__init__')}
 catch(err){$B.$pop_exc()}
 if(init_func!==null){var args=[obj]
@@ -4506,15 +4508,7 @@ $B.$InstanceMethodDict={__class__:$B.$type,__name__:'instancemethod',__mro__:[_b
 }})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 $B.$MakeArgs=function($fname,$args,$required,$defaults,$other_args,$other_kw,$after_star){
-if($defaults.length==0 && $other_args===null && $other_kw===null && 
-$after_star.length==0){var $ns={},flag=true
-for(var i=0;i<$args.length;i++){var $arg=$args[i]
-if(typeof $arg=='number' ||typeof $arg=='string'){$ns[$required[i]]=$arg
-}else{flag=false
-break
-}}
-if(flag){return $ns}}
-var i=null,$set_vars=[],$ns={},$arg
+var $set_vars=[],$ns={},$arg
 if($other_args !=null){$ns[$other_args]=[]}
 if($other_kw !=null){var $dict_keys=[];var $dict_values=[]}
 var upargs=[]
@@ -4540,19 +4534,15 @@ for(var $i=0;$i<upargs.length;$i++){var $arg=upargs[$i]
 var $PyVar=$B.$JS2Py($arg)
 if($arg && $arg.$nat=='kw'){
 $PyVar=$arg.value
-if($set_vars.indexOf($arg.name)>-1){console.log($arg.name+' already set to '+$ns[$arg.name])
-throw _b_.TypeError($fname+"() got multiple values for argument '"+$arg.name+"'")
+if($ns[$arg.name]!==undefined){throw _b_.TypeError($fname+"() got multiple values for argument '"+$arg.name+"'")
 }else if($required.indexOf($arg.name)>-1){var ix=$required.indexOf($arg.name)
 eval('var '+$required[ix]+"=$PyVar")
 $ns[$required[ix]]=$PyVar
-$set_vars.push($required[ix])
 }else if($other_args!==null && $after_star!==undefined &&
 $after_star.indexOf($arg.name)>-1){var ix=$after_star.indexOf($arg.name)
 eval('var '+$after_star[ix]+"=$PyVar")
 $ns[$after_star[ix]]=$PyVar
-$set_vars.push($after_star[ix])
 }else if($defaults.indexOf($arg.name)>-1){$ns[$arg.name]=$PyVar
-$set_vars.push($arg.name)
 }else if($other_kw!=null){$dict_keys.push($arg.name)
 $dict_values.push($PyVar)
 }else{
@@ -4562,11 +4552,9 @@ var pos_def=$defaults.indexOf($arg.name)
 if(pos_def!=-1){$defaults.splice(pos_def,1)}}else{
 if($i<$required.length){eval('var '+$required[$i]+"=$PyVar")
 $ns[$required[$i]]=$PyVar
-$set_vars.push($required[$i])
 }else if($other_args!==null){eval('$ns["'+$other_args+'"].push($PyVar)')
 }else if($i<$required.length+$defaults.length){var $var_name=$defaults[$i-$required.length]
 $ns[$var_name]=$PyVar
-$set_vars.push($var_name)
 }else{
 console.log(''+$B.line_info)
 msg=$fname+"() takes "+$required.length+' positional argument'
@@ -4575,7 +4563,7 @@ msg +=' but more were given'
 throw _b_.TypeError(msg)
 }}}
 var missing=[]
-for(var i=0;i<$required.length;i++){if($set_vars.indexOf($required[i])==-1){missing.push($required[i])}}
+for(var i=0;i<$required.length;i++){if($ns[$required[i]]===undefined){missing.push($required[i])}}
 if(missing.length==1){throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")
 }else if(missing.length>1){var msg=$fname+" missing "+missing.length+" positional arguments: "
 for(var i=0;i<missing.length-1;i++){msg +="'"+missing[i]+"', "}
@@ -4802,15 +4790,6 @@ exc.info +=$B.$syntax_err_line(module,pos)
 throw exc
 }
 $B.$pop_exc=function(){$B.exception_stack.pop()}
-$B.$Kw=function(name,value){return{
-$nat:'kw',name:name,value:value
-}}
-$B.$ptuple=function(arg){return{
-$nat:'ptuple',arg:arg
-}}
-$B.$pdict=function(arg){return{
-$nat:'pdict',arg:arg
-}}
 $B.$test_item=function(expr){
 $B.$test_result=expr
 return _b_.bool(expr)

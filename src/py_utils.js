@@ -6,29 +6,12 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     // builds a namespace from the arguments provided in $args
     // in a function defined like foo(x,y,z=1,*args,u,v,**kw) the parameters are
     // $required : ['x','y']
-    // $defaults : {'z':int(1)}
+    // $defaults : {'z':1}
     // $other_args = 'args'
     // $other_kw = 'kw'
     // $after_star = ['u','v']
 
-    // simple case : only required arguments
-        
-    if($defaults.length==0 && $other_args===null && $other_kw===null && 
-        $after_star.length==0){
-        var $ns = {}, flag = true
-        for(var i=0;i<$args.length;i++){
-            var $arg = $args[i]
-            if(typeof $arg=='number' || typeof $arg=='string'){
-                $ns[$required[i]]=$arg
-            }else{
-                flag = false
-                break
-            }
-        }
-        if(flag){return $ns}
-    }
-
-    var i=null,$set_vars = [],$ns = {},$arg
+    var $set_vars = [],$ns = {},$arg
     if($other_args != null){$ns[$other_args]=[]}
     if($other_kw != null){var $dict_keys=[];var $dict_values=[]}
     // create new list of arguments in case some are packed
@@ -62,23 +45,22 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
         var $PyVar=$B.$JS2Py($arg)
         if($arg && $arg.$nat=='kw'){ // keyword argument
             $PyVar = $arg.value
-            if($set_vars.indexOf($arg.name)>-1){
-                console.log($arg.name+' already set to '+$ns[$arg.name])
+            if($ns[$arg.name]!==undefined){
                 throw _b_.TypeError($fname+"() got multiple values for argument '"+$arg.name+"'")
-            } else if($required.indexOf($arg.name)>-1){
+            }else if($required.indexOf($arg.name)>-1){
                 var ix = $required.indexOf($arg.name)
                 eval('var '+$required[ix]+"=$PyVar")
                 $ns[$required[ix]]=$PyVar
-                $set_vars.push($required[ix])
+                //$set_vars.push($required[ix])
             }else if($other_args!==null && $after_star!==undefined &&
                 $after_star.indexOf($arg.name)>-1){
                     var ix = $after_star.indexOf($arg.name)
                     eval('var '+$after_star[ix]+"=$PyVar")
                     $ns[$after_star[ix]]=$PyVar
-                    $set_vars.push($after_star[ix])
+                    //$set_vars.push($after_star[ix])
             } else if($defaults.indexOf($arg.name)>-1){
                 $ns[$arg.name]=$PyVar
-                $set_vars.push($arg.name)
+                //$set_vars.push($arg.name)
             } else if($other_kw!=null){
                 $dict_keys.push($arg.name)
                 $dict_values.push($PyVar)
@@ -91,13 +73,13 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
             if($i<$required.length){
                 eval('var '+$required[$i]+"=$PyVar")
                 $ns[$required[$i]]=$PyVar
-                $set_vars.push($required[$i])
+                //$set_vars.push($required[$i])
             } else if($other_args!==null){
                 eval('$ns["'+$other_args+'"].push($PyVar)')
             } else if($i<$required.length+$defaults.length) {
                 var $var_name = $defaults[$i-$required.length]
                 $ns[$var_name]=$PyVar
-                $set_vars.push($var_name)
+                //$set_vars.push($var_name)
             } else {
                 console.log(''+$B.line_info)
                 msg = $fname+"() takes "+$required.length+' positional argument'
@@ -110,7 +92,7 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     // throw error if not all required positional arguments have been set
     var missing = []
     for(var i=0;i<$required.length;i++){
-        if($set_vars.indexOf($required[i])==-1){missing.push($required[i])}
+        if($ns[$required[i]]===undefined){missing.push($required[i])}
     }
     if(missing.length==1){
         throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")
@@ -425,35 +407,6 @@ $B.$IndentationError = function(module,msg,pos) {
 
 // function to remove internal exceptions from stack exposed to programs
 $B.$pop_exc=function(){$B.exception_stack.pop()}
-
-// classes used for passing parameters to functions
-// keyword arguments : foo(x=1)
-
-$B.$Kw = function(name,value){
-    return {
-        $nat:'kw',
-        name:name,
-        value:value
-    }
-}
-
-// packed tuple : foo(*args)
-
-$B.$ptuple = function(arg){
-    return {
-        $nat:'ptuple',
-        arg:arg
-    }
-}
-
-// packed dict : foo(**kw)
-
-$B.$pdict = function(arg){
-    return {
-        $nat:'pdict',
-        arg:arg
-    }
-}
 
 $B.$test_item = function(expr){
     // used to evaluate expressions with "and" or "or"
