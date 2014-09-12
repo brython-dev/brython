@@ -280,6 +280,8 @@ for dirpath,dirnames,filenames in os.walk(pdir):
         dirnames.remove('dist')
     if '.hg' in dirnames:
         dirnames.remove('.hg')
+    if '.git' in dirnames:
+        dirnames.remove('.git')
     for dirname in dirnames:
         if dirname == 'dist':
             continue
