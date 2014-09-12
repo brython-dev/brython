@@ -244,7 +244,7 @@ $BRGeneratorDict.__next__ = function(self){
     }
     
     self.gi_running = true
-
+    
     // Call the function _next to yield a value
     try{
         var res = self._next.apply(null, self.args)
@@ -258,7 +258,6 @@ $BRGeneratorDict.__next__ = function(self){
     }finally{
         self.gi_running = false
     }
-        
 
     if(res[0].__class__==$GeneratorReturn){
         // The function may have ordinary "return" lines, in this case

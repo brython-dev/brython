@@ -564,7 +564,7 @@ function $AssignCtx(context, check_unbound){
               return res + ','+rvar+');None;'
           }
           if(left.type==='sub'){ // assign to item
-              if(false){ // && Array.isArray){
+              if(Array.isArray){
                   // If browser supports Array.isArray, test if the subscripted
                   // object is an array, if all subscription are integers or 
                   // ids, and if the assigned item exists
@@ -578,12 +578,17 @@ function $AssignCtx(context, check_unbound){
                   if(left.tree.length==1){
                       var left_seq = left, args = [], ix = 0
                       while(left_seq.value.type=='sub' && left_seq.tree.length==1){
-                          left_seq.value.marked = true
+                          //left_seq.value.marked = true
                           if(is_simple(left_seq.tree[0])){
                               args.push('['+left_seq.tree[0].to_js()+']')
                           }else{
                               exprs.push('var $temp_ix'+$loop_num+'_'+ix+'='+left_seq.tree[0].to_js())
                               args.push('[$temp_ix'+$loop_num+'_'+ix+']')
+                              left_seq.tree[0]={type:'id',
+                                  to_js:(function(rank){
+                                      return function(){return '$temp_ix'+$loop_num+'_'+rank}
+                                      })(ix)
+                              }
                               ix++
                           }
                           left_seq=left_seq.value
@@ -593,6 +598,11 @@ function $AssignCtx(context, check_unbound){
                       }else{
                           exprs.push('var $temp_ix'+$loop_num+'_'+ix+'='+left_seq.tree[0].to_js())
                           args.unshift('[$temp_ix'+$loop_num+'_'+ix+']')
+                          left_seq.tree[0]={type:'id',
+                              to_js:(function(rank){
+                                  return function(){return '$temp_ix'+$loop_num+'_'+rank}
+                                  })(ix)
+                          }
                           ix++
                       }
                       left_seq.marked = true // to avoid doing the test in to_js()
@@ -603,27 +613,11 @@ function $AssignCtx(context, check_unbound){
                       res += val+args.join('')+'!==undefined ? '
                       res += val+args.join('')+'='+rvar
                       res += ' : '
-                  }
-            }
-            
-            if(left.tree.length==1){
-                var js = ''
-                var left_seq = left, ixs = []
-                // If assignment like a[x][0]=y, with only integers or ids as 
-                // indices, use a shortcut for better performance
-                while(left_seq.type=='sub' && left_seq.tree.length==1){
-                    ixs.unshift(left_seq.tree[0].to_js())
-                    left_seq = left_seq.value
+
+                    res += '__BRYTHON__.$setitem('+left.value.to_js()
+                    res += ','+left.tree[0].to_js()+','+rvar+');None;'
+                    return res
                 }
-                if(left_seq.type=='id'){
-                    var t=left_seq.to_js()
-                    var js = 'Array.isArray('+t+') && '
-                    js += t+'['+ixs.join('][')+']!==undefined ? '
-                    js += t+'['+ixs.join('][')+'] = '+rvar+' : '
-                }
-                js += '__BRYTHON__.$setitem('+left.value.to_js()
-                js += ','+left.tree[0].to_js()+','+rvar+');None;'
-                return res+js
             }
             
             left.func = 'setitem' // just for to_js()
@@ -1189,7 +1183,7 @@ function $CallCtx(context){
 
             //console.log(this.func)
             //console.log(this.func.to_js())
-            if(this.tree.length>0){
+            if(this.tree.length>-1){
               if (__BRYTHON__.$blocking_function_names) {
                  var _func_name=this.func.to_js()
                  if (_func_name.indexOf(__BRYTHON__.$blocking_function_names) > -1) {
@@ -1744,54 +1738,64 @@ function $DefCtx(context){
             // are "simple", ie not a keyword argument (x=0) or a packed
             // tuple (*x) or a packed dictionary (**x)
             
-            var js = 'var $simple=true;for(var i=0;i<arguments.length;i++)'
-            js += '{if(arguments[i].$nat!=undefined){$simple=false;break}}'
-            var new_node = new $Node()
-            new $NodeJSCtx(new_node,js)
-            nodes.push(new_node)
-            
-            var new_node = new $Node()
-            new $NodeJSCtx(new_node,'if(!$simple)')
-            nodes.push(new_node)
-            
-            // If at least one argument is not "simple", fall back to 
-            // $MakeArgs()
-            new_node.add(make_args_nodes[0])
-            new_node.add(make_args_nodes[1])
-            
-            var else_node = new $Node()
-            new $NodeJSCtx(else_node,'else')
-            nodes.push(else_node)
-            
-            // If all arguments are "simple" all there is to check is that
-            // we got the right number of arguments
-            
-            if(required_list.length>0){
-                // Test if missing arguments
+            if(__BRYTHON__.debug>0 || required_list.length>0){
                 
-                js = 'if(arguments.length<'+required_list.length+')'
-                js += '{var $missing='+required_list.length+'-arguments.length;'
-                js += 'throw TypeError("'+this.name+'() missing "+$missing+'
-                js += '" positional argument"+($missing>1 ? "s" : "")+": "'
-                js += '+new Array('+required+').slice(arguments.length))}'
+                var js = 'var $simple=true;for(var i=0;i<arguments.length;i++)'
+                js += '{if(arguments[i].$nat!=undefined){$simple=false;break}}'
+                var new_node = new $Node()
+                new $NodeJSCtx(new_node,js)
+                nodes.push(new_node)
+                
+                var new_node = new $Node()
+                new $NodeJSCtx(new_node,'if(!$simple)')
+                nodes.push(new_node)
+                
+                // If at least one argument is not "simple", fall back to 
+                // $MakeArgs()
+                new_node.add(make_args_nodes[0])
+                new_node.add(make_args_nodes[1])
+            
+                var else_node = new $Node()
+                new $NodeJSCtx(else_node,'else')
+                nodes.push(else_node)
+            }
+            
+            if(__BRYTHON__.debug>0){
+                // If all arguments are "simple" all there is to check is that
+                // we got the right number of arguments
+
+                js = 'if(arguments.length!='+required_list.length+')'
+                var wrong_nb_node = new $Node()
+                new $NodeJSCtx(wrong_nb_node,js)
+                else_node.add(wrong_nb_node)
+                
+                if(required_list.length>0){
+                    // Test if missing arguments
+                    
+                    js = 'if(arguments.length<'+required_list.length+')'
+                    js += '{var $missing='+required_list.length+'-arguments.length;'
+                    js += 'throw TypeError("'+this.name+'() missing "+$missing+'
+                    js += '" positional argument"+($missing>1 ? "s" : "")+": "'
+                    js += '+new Array('+required+').slice(arguments.length))}'
+                    new_node = new $Node()
+                    new $NodeJSCtx(new_node,js)
+                    wrong_nb_node.add(new_node)
+                
+                    js = 'else if'
+                }else{
+                    js = 'if'
+                }
+    
+                // Test if too many arguments
+                js += '(arguments.length>'+required_list.length+')'
+                js += '{throw TypeError("'+this.name+'() takes '+required_list.length
+                js += ' positional argument'
+                js += (required_list.length>1 ? "s" : "")
+                js += ' but more were given")}'
                 new_node = new $Node()
                 new $NodeJSCtx(new_node,js)
-                else_node.add(new_node)
-            
-                js = 'else if'
-            }else{
-                js = 'if'
+                wrong_nb_node.add(new_node)
             }
-
-            // Test if too many arguments
-            js += '(arguments.length>'+required_list.length+')'
-            js += '{throw TypeError("'+this.name+'() takes '+required_list.length
-            js += ' positional argument'
-            js += (required_list.length>1 ? "s" : "")
-            js += ' but more were given")}'
-            new_node = new $Node()
-            new $NodeJSCtx(new_node,js)
-            else_node.add(new_node)
             
             for(var i=0;i<required_list.length;i++){
                 var arg = required_list[i]
@@ -1812,33 +1816,20 @@ function $DefCtx(context){
         var def_func_node = new $Node()
         new $NodeJSCtx(def_func_node,'return function()')
 
-        // Wrap function body in a try/catch
-        var try_node = new $Node()
-        new $NodeJSCtx(try_node,'try')
-
         for(var i=0;i<node.children.length;i++) def_func_node.add(node.children[i])
 
-        //def_func_node.add(try_node)
+        var last_instr = node.children[node.children.length-1].context.tree[0]
+        if(last_instr.type!=='return'){
+            new_node = new $Node()
+            if(this.type=='BRgenerator'){
+                new $NodeJSCtx(new_node,'return [__BRYTHON__.generator_return(None)];')
+            }else{
+                new $NodeJSCtx(new_node,'return None;')
+            }               
+            def_func_node.add(new_node)
+        }
 
-        var catch_node = new $Node()
-        var js = 'catch(err'+$loop_num+')'
-        js += '{var exc = __BRYTHON__.exception(err'+$loop_num+');'
-        
-        // If the function has been defined as a callback for a DOM event, the
-        // error message must be printed on the standard error stream
-        
-        // Define a reference to the function
-        var func_ref = this.name
-        if(this.type==='BRgenerator') func_ref='$'+func_ref
-        if(scope.ntype==="module" || scope.ntype!=='class'){}
-        else{func_ref = '$class.'+func_ref}
-        js += 'if('+func_ref+'.is_callback===true)'
-        js += '{getattr(__BRYTHON__.stderr,"write")(exc.message)};'
-
-        js += 'throw exc}'
-        new $NodeJSCtx(catch_node,js)
         node.children = []
-        //def_func_node.add(catch_node)
         
         node.add(def_func_node)
 
@@ -3139,6 +3130,46 @@ function $OpCtx(context,op){ // context is the left operand
     context.parent.tree.pop()
     context.parent.tree.push(this)
     this.to_js = function(){
+        var comps = {'==':'eq','!=':'ne','>=':'ge','<=':'le',
+            '<':'lt','>':'gt'}
+        if(comps[this.op]!==undefined){
+            var method=comps[this.op]
+            if(this.tree[0].type=='expr' && this.tree[1].type=='expr'){
+                var t0=this.tree[0].tree[0],t1=this.tree[1].tree[0]
+                if(t1.type=='int'){
+                    if(t0.type=='int'){return t0.to_js()+this.op+t1.to_js()}
+                    else if(t0.type=='str'){return 'false'}
+                    else if(t0.type=='id'){
+                        var res = 'typeof '+t0.to_js()+'=="number" ? '
+                        res += t0.to_js()+this.op+t1.to_js()+' : '
+                        res += 'getattr('+this.tree[0].to_js()
+                        res += ',"__'+method+'__")('+this.tree[1].to_js()+')'
+                        return res
+                    }
+                }
+                else if(t1.type=='str'){
+                    if(t0.type=='str'){return t0.to_js()+this.op+t1.to_js()}
+                    else if(t0.type=='int'){return 'false'}
+                    else if(t0.type=='id'){
+                        var res = 'typeof '+t0.to_js()+'=="string" ? '
+                        res += t0.to_js()+this.op+t1.to_js()+' : '
+                        res += 'getattr('+this.tree[0].to_js()
+                        res += ',"__'+method+'__")('+this.tree[1].to_js()+')'
+                        return res
+                    }
+                }else if(t1.type=='id'){
+                    if(t0.type=='str'||t0.type=='int'){return t0.to_js()+this.op+t1.to_js()}
+                    else if(t0.type=='id'){
+                        var res = 'typeof '+t0.to_js()+'!="object" && '
+                        res += 'typeof '+t0.to_js()+'==typeof '+t1.to_js()
+                        res += ' ? '+t0.to_js()+this.op+t1.to_js()+' : '
+                        res += 'getattr('+this.tree[0].to_js()
+                        res += ',"__'+method+'__")('+this.tree[1].to_js()+')'
+                        return res
+                    }
+                }
+            }
+        }
         switch(this.op) {
           case 'and':
             var res ='__BRYTHON__.$test_expr(__BRYTHON__.$test_item('+this.tree[0].to_js()+')&&'
@@ -3351,6 +3382,11 @@ function $ReturnCtx(context){ // subscription or slicing
     }
     
     this.to_js = function(){
+        if(this.tree.length==1 && this.tree[0].type=='abstract_expr'){
+            // "return" must be transformed into "return None"
+            this.tree.pop()
+            new $IdCtx(new $ExprCtx(this,'rvalue',false),'None')
+        }
         var scope = $get_scope(this)
         if(scope.ntype=='BRgenerator'){
             var res = 'return [__BRYTHON__.generator_return('
