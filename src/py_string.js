@@ -190,7 +190,7 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
                      return '-inf'
                 }
 
-                if (Number.isNaN(res)) {
+                if (isNaN(res)) {
                    if (this.flag === '+' || this.flag === '+#') return '+nan'
                    if (this.flag === ' ' || this.flag === ' #') return ' nan'
                    return 'nan'
@@ -255,7 +255,7 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
                      return '-inf'
                 }
 
-                if (Number.isNaN(res)) {
+                if (isNaN(res)) {
                    switch(this.flag) {
                      case ' ':
                      case ' #':
@@ -320,7 +320,7 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
                 var num = parseFloat(src)
                 if (num == Infinity){res='inf'}
                 else if (num == -Infinity){res='-inf'}
-                else if (Number.isNaN(num)){res='nan'}
+                else if (isNaN(num)){res='nan'}
                 else {res=num}
 
                 // set default precision of 6 if precision is not specified
@@ -684,7 +684,7 @@ var $FormattableString=function(format_string) {
           }
        } else {
          _name = _name_parts.shift()[1]
-         if (this._index !== undefined && !Number.isNaN(_name)) {
+         if (this._index !== undefined && !isNaN(_name)) {
             // manual specification
             if (this._index) {
                throw _b_.ValueError("cannot switch from automatic field " +

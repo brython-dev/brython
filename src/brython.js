@@ -7325,7 +7325,7 @@ return _b_.str.$dict.__mod__('%'+format_spec,self)
 $FloatDict.__hash__=function(self){var _v=self.value
 if(_v===Infinity)return 314159
 if(_v===-Infinity)return -271828
-if(Number.isNaN(_v))return 0
+if(isNaN(_v))return 0
 var r=_b_.$frexp(_v)
 r[0]*=Math.pow(2,31)
 var hipart=_b_.int(r[0])
@@ -8537,7 +8537,7 @@ return 'inf'
 case -Infinity:
 return '-inf'
 }
-if(Number.isNaN(res)){if(this.flag==='+' ||this.flag==='+#')return '+nan'
+if(isNaN(res)){if(this.flag==='+' ||this.flag==='+#')return '+nan'
 if(this.flag===' ' ||this.flag===' #')return ' nan'
 return 'nan'
 }
@@ -8584,7 +8584,7 @@ return 'inf'
 case -Infinity:
 return '-inf'
 }
-if(Number.isNaN(res)){switch(this.flag){case ' ':
+if(isNaN(res)){switch(this.flag){case ' ':
 case ' #':
 return ' nan'
 case '+':
@@ -8632,7 +8632,7 @@ this._number_check(src)
 var num=parseFloat(src)
 if(num==Infinity){res='inf'}
 else if(num==-Infinity){res='-inf'}
-else if(Number.isNaN(num)){res='nan'}
+else if(isNaN(num)){res='nan'}
 else{res=num}
 if(this.precision===undefined)this.precision=".6" 
 if(this.precision && typeof res==='number'){res=res.toFixed(parseInt(this.precision.substr(1)))
@@ -8856,7 +8856,7 @@ this._index+=1
 if(! _literal ){_name_parts.shift()
 }}else{
 _name=_name_parts.shift()[1]
-if(this._index !==undefined && !Number.isNaN(_name)){
+if(this._index !==undefined && !isNaN(_name)){
 if(this._index){throw _b_.ValueError("cannot switch from automatic field " +
 "numbering to manual field specification")
 this._index=undefined
