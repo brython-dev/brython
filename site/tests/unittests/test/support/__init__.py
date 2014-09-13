@@ -32,10 +32,15 @@ try:
 except ImportError:
     _thread = None
     threading = None
-try:
-    import multiprocessing.process
-except ImportError:
-    multiprocessing = None
+
+# BCE, brython fix me
+# something wrong with multiprocessing module, so lets just comment out
+# for now.
+#try:
+#    import multiprocessing.process
+#except ImportError:
+#    multiprocessing = None
+multiprocessing = None
 
 try:
     import zlib
