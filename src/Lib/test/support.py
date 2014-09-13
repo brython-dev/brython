@@ -32,10 +32,14 @@ try:
 except ImportError:
     _thread = None
     threading = None
-try:
-    import multiprocessing.process
-except ImportError:
-    multiprocessing = None
+
+# BCE fixme brython.
+# causes an undefined is not a function error.  Will track down later.
+#try:
+#    import multiprocessing.process
+#except ImportError:
+#    multiprocessing = None
+multiprocessing = None
 
 try:
     import zlib
