@@ -3,7 +3,7 @@ var _b_ = $B.builtins
 var $s=[]
 for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
 eval($s.join(';'))
-//for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
+
 var $ObjectDict = _b_.object.$dict
 
 var $LocationDict = {__class__:$B.$type,__name__:'Location'}
@@ -68,7 +68,33 @@ $JSConstructorDict.$factory = JSConstructor
 
 // JSObject : wrapper around a native Javascript object
 
-function pyobj2jsobj(pyobj){
+$B.jsobj2pyobj=jsobj2pyobj=function(jsobj) {
+    switch(jsobj) {
+      case true:
+      case false:
+        return jsobj
+      case null:
+        return _b_.None
+    }
+
+    if (typeof jsobj === 'object') {
+       if ('length' in jsobj) return _b_.list(jsobj)
+
+       var d=_b_.dict()
+       for (var $a in jsobj) _b_.dict.$dict.__setitem__(d,$a, jsobj[$a])
+       return d
+    }
+
+    if (typeof jsobj === 'number') {
+       if (jsobj.toString().indexOf('.') == -1) return _b_.int(jsobj)
+       // for now, lets assume a float
+       return _b_.float(jsobj)
+    }
+
+    return $B.JSObject(jsobj)
+}
+
+$B.pyobj2jsobj=pyobj2jsobj=function(pyobj){
     // conversion of a Python object into a Javascript object
     if(pyobj===true || pyobj===false) return pyobj
     if(pyobj===_b_.None) return null
