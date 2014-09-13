@@ -1,7 +1,7 @@
 Development environment
 -----------------------
 
-Developers should use the environment available for [download](https://bitbucket.org/olemis/brython/downloads) : choose the zip file starting with "Brython\_site\_mirror" and unzip it in a directory (we call it the Brython directory in the next paragraphs)
+Developers should use the environment available for [download](https://github.com/PierreQuentel/brython/releases) : choose the zip file starting with "Brython\_site\_mirror" and unzip it in a directory (we call it the Brython directory in the next paragraphs)
 
 A web server is necessary to test the scripts locally while developing. Any web server that can serve files with the Brython directory as document root is ok ; you can use the built-in web server provided in the distribution : open a console window, go to the directory, and run `python server.py`. This will start the server on port 8000 (edit _server.py_ to change the port number)
 

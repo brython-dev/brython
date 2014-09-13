@@ -1,7 +1,7 @@
 Environnement de développement
 ------------------------------
 
-Les développeurs peuvent utiliser l'environnement disponible en  [téléchargement](https://bitbucket.org/olemis/brython/downloads) : choisir le fichier zip qui commence par "Brython\_site\_mirror" et le décompacter dans un répertoire (appelé le répertoire Brython dans les paragraphes qui suivent)
+Les développeurs peuvent utiliser l'environnement disponible en  [téléchargement](https://github.com/PierreQuentel/brython/releases) : choisir le fichier zip qui commence par "Brython\_site\_mirror" et le décompacter dans un répertoire (appelé le répertoire Brython dans les paragraphes qui suivent)
 
 Il faut un serveur web pour tester les scripts localement dans la phase de développement. Tout serveur qui peut accéder aux fichiers avec le répertoire Brython comme racine convient ; vous pouvez utiliser le serveur web intégré à la distribution : ouvrez une fenêtre de console, allez dans le répertoire et exécutez `python server.py`. Ceci lancera le serveur sur le port 8000 (éditer _server.py_ pour changer le numéro de port)
 

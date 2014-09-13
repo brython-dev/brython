@@ -445,12 +445,7 @@ format.__code__.co_consts=[]
 format.__code__.co_varnames=['f', 'iterable']
 
 function getattr(obj,attr,_default){
-    /*
-    if(Array.isArray){
-        if(typeof obj !=="string" && !Array.isArray(obj) &&
-            obj[attr]!==undefined){return obj[attr]===null? _b_.None : obj[attr]}
-    }
-    */
+
     var klass = $B.get_class(obj)
 
     if(klass===undefined){

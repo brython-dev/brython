@@ -1,7 +1,7 @@
 // brython.js www.brython.info
 // version [3, 3, 0, 'alpha', 0]
 // implementation [2, 2, 0, 'rc', 0]
-// version compiled from commented, indented source files at https://bitbucket.org/olemis/brython/src
+// version compiled from commented, indented source files at https://github.com/PierreQuentel/brython
 var __BRYTHON__=__BRYTHON__ ||{}
 ;(function($B){if($B.isa_web_worker==true){
 window={}
@@ -5481,8 +5481,7 @@ format.__code__={}
 format.__code__.co_argcount=2
 format.__code__.co_consts=[]
 format.__code__.co_varnames=['f','iterable']
-function getattr(obj,attr,_default){
-var klass=$B.get_class(obj)
+function getattr(obj,attr,_default){var klass=$B.get_class(obj)
 if(klass===undefined){
 if(obj[attr]!==undefined)return obj[attr]
 if(_default!==undefined)return _default

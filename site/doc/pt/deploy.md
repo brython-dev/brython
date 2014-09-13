@@ -6,7 +6,7 @@ aplicação, você não precisa instalar todo o ambiente de
 desenvolvimento.
 
 Na
-[pagina de downloads](https://bitbucket.org/olemis/brython/downloads),
+[pagina de downloads](https://github.com/PierreQuentel/brython/releases),
 escolha um dos arquivos (zip, gz ou bz2) chamados
 _Brython-YYYMMDD-HHMMSS_. Descompacte seu conteúdo para o diretório
 onde você quer intalar sua aplicação Brython.
