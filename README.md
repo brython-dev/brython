@@ -61,4 +61,5 @@ Documentation is available on the [official site](http://www.brython.info). You 
 Questions, feedback, issues, new features,...
 =============================================
 There is a main [mail list in english](https://groups.google.com/forum/?fromgroups=#!forum/brython). Also, you can find [mail list in other languages](http://brython.info/groups.html) but the activity is very low and it is recommended to use the main one in English. 
+
 If you find a bug/issue or do you want to see a new feature in Brython, please, [open a new issue](https://github.com/PierreQuentel/brython/issues).
