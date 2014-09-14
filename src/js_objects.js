@@ -157,6 +157,11 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
                 for(var i=0;i<arguments.length;i++){
                     args.push(pyobj2jsobj(arguments[i]))
                 }
+                // IE workaround
+                if(attr === 'replace' && obj.js === location) {
+                    location.replace(args[0])
+                    return
+                }
                 var res = obj.js[attr].apply(obj.js,args)
                 if(typeof res == 'object') return JSObject(res)
                 if(res===undefined) return None
