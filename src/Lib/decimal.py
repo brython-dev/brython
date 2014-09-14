@@ -6068,11 +6068,11 @@ def _convert_for_comparison(self, other, equality_op=False):
 # Is mutable, so that new contexts can have different default values
 
 DefaultContext = Context(
-        prec=28, rounding=ROUND_HALF_EVEN,
+        prec=17, rounding=ROUND_HALF_EVEN,
         traps=[DivisionByZero, Overflow, InvalidOperation],
         flags=[],
-        Emax=999999,
-        Emin=-999999,
+        Emax=308,
+        Emin=-324,
         capitals=1,
         clamp=0
 )

@@ -332,7 +332,7 @@ var int = function(){
         // throw error (base must be 0, or 2-36)
     }
 
-    if(typeof value=="number") return Number(parseInt(value, base))
+    if(typeof value=="number") return parseInt(Number(value), base)
     if(isinstance(value, _b_.str)) value=value.valueOf()
 
     if(typeof value=="string") {

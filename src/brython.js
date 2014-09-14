@@ -7793,7 +7793,7 @@ if(!isinstance(base,_b_.int)){if(hasattr(base,'__int__')){base=Number(getattr(ba
 }else if(hasattr(base,'__index__')){base=Number(getattr(base,'__index__')())}}
 if(!(base >=2 && base <=36)){if(base !=0)throw _b_.ValueError("invalid base")
 }
-if(typeof value=="number")return Number(parseInt(value,base))
+if(typeof value=="number")return parseInt(Number(value),base)
 if(isinstance(value,_b_.str))value=value.valueOf()
 if(typeof value=="string"){value=value.trim()
 if(value.length==2 && base==0 &&(value=='0b' ||value=='0o' ||value=='0x')){throw _b_.ValueError('invalid value')
