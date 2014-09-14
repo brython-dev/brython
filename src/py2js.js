@@ -6293,7 +6293,7 @@ function brython(options){
                 }
             }else{
                 // Get source code inside the script element
-                var $src = ($elt.innerText || $elt.textContent)
+                var $src = ($elt.innerHTML || $elt.textContent)
                 $B.$py_module_path['__main__'] = $href
             }
 

@@ -4125,7 +4125,7 @@ var $src_path=$src_elts.join('/')
 if($B.path.indexOf($src_path)==-1){
 $B.path.splice(0,0,$src_path)
 }}else{
-var $src=($elt.innerText ||$elt.textContent)
+var $src=($elt.innerHTML ||$elt.textContent)
 $B.$py_module_path['__main__']=$href
 }
 try{
@@ -6890,7 +6890,23 @@ __class__:$JSConstructorDict,js:obj
 JSConstructor.__class__=$B.$factory
 JSConstructor.$dict=$JSConstructorDict
 $JSConstructorDict.$factory=JSConstructor
-function pyobj2jsobj(pyobj){
+$B.jsobj2pyobj=jsobj2pyobj=function(jsobj){switch(jsobj){case true:
+case false:
+return jsobj
+case null:
+return _b_.None
+}
+if(typeof jsobj==='object'){if('length' in jsobj)return _b_.list(jsobj)
+var d=_b_.dict()
+for(var $a in jsobj)_b_.dict.$dict.__setitem__(d,$a,jsobj[$a])
+return d
+}
+if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1)return _b_.int(jsobj)
+return _b_.float(jsobj)
+}
+return $B.JSObject(jsobj)
+}
+$B.pyobj2jsobj=pyobj2jsobj=function(pyobj){
 if(pyobj===true ||pyobj===false)return pyobj
 if(pyobj===_b_.None)return null
 var klass=$B.get_class(pyobj)
@@ -6923,6 +6939,9 @@ obj.js['addEventListener']!==undefined){attr='addEventListener'}
 if(obj.js[attr]!==undefined){if(typeof obj.js[attr]=='function'){
 var res=function(){var args=[],arg
 for(var i=0;i<arguments.length;i++){args.push(pyobj2jsobj(arguments[i]))
+}
+if(attr==='replace' && obj.js===location){location.replace(args[0])
+return
 }
 var res=obj.js[attr].apply(obj.js,args)
 if(typeof res=='object')return JSObject(res)

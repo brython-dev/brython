@@ -36,7 +36,7 @@ load()
 
 for lang in ['fr', 'en', 'es', 'pt']:
     dyn = open(os.path.join(folder,lang,'index.html')).read()
-    static = open(os.path.join(folder,lang,'static_index.html'),'w')
+    static = open(os.path.join(folder,lang,'static_index.html'),'wb')
     pattern = 'href="#" onClick="load\(\'(.+)\.md\',\'content\'\)">'
     res = re.sub(pattern, repl, dyn)
     

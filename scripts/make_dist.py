@@ -94,7 +94,7 @@ abs_path = lambda path:os.path.join(os.path.dirname(os.getcwd()),'src',path)
 now = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
 
 # update version number
-out = open(abs_path('version_info.js'),'w')
+out = open(abs_path('version_info.js'),'wb')
 #implementation[2] = now
 out.write('__BRYTHON__.implementation = %s\n' % implementation)
 out.write('__BRYTHON__.__MAGIC__ = "%s"\n' % '.'.join(['%s' % _i for _i in implementation[:3]]))
@@ -124,7 +124,7 @@ import make_static_doc
 # in the standard library
 
 libfolder = os.path.join(os.path.dirname(os.getcwd()),'src')
-out = open(os.path.join(libfolder,'stdlib_paths.js'),'w')
+out = open(os.path.join(libfolder,'stdlib_paths.js'),'wb')
 out.write(""";(function($B){\n
 $B.stdlib = {}
 """)
@@ -184,7 +184,7 @@ loader_src = open(abs_path('py_loader.js')).read()
 
 loader_src = re.sub('version_info = \[1,2,".*?"\,"alpha",0]',
     'version_info = %s' % version, loader_src)
-out = open(abs_path('py_loader.js'),'w')
+out = open(abs_path('py_loader.js'),'wb')
 out.write(loader_src)
 out.close()
 
@@ -204,7 +204,7 @@ for fname in sources:
 
 res = res.replace('context','C')
 
-out = open(abs_path('brython.js'),'w')
+out = open(abs_path('brython.js'),'wb')
 out.write(res)
 out.close()
 
@@ -226,7 +226,7 @@ except ImportError:
 make_VFS.process(os.path.join(pdir,'src','py_VFS.js'))
 
 # make distribution with core + libraries
-out = open(os.path.join(pdir,'src','brython_dist.js'),'w')
+out = open(os.path.join(pdir,'src','brython_dist.js'),'wb')
 out.write(open(os.path.join(pdir,'src','brython.js')).read())
 out.write(open(os.path.join(pdir,'src','py_VFS.js')).read())
 out.close()
@@ -331,7 +331,7 @@ for arc,wfunc in (dist1,dist1.add),(dist2,dist2.add),(dist3,dist3.write):
 # changelog file
 try:
     _in = open(os.path.join(pdir,'dist','changelog.txt')).read()
-    out = open(os.path.join(pdir,'dist','changelog_%s.txt' %now),'w')
+    out = open(os.path.join(pdir,'dist','changelog_%s.txt' %now),'wb')
     first = 'Changes in Brython version %s.%s.%s' %(implementation[0],implementation[1],implementation[2])
     out.write('%s\n' %first)
     out.write('%s\n\n' %('='*len(first)))
