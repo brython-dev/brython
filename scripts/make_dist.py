@@ -304,7 +304,6 @@ def is_valid(filename):
         return False
     return True
 
-
 for arc,wfunc in (dist1,dist1.add),(dist2,dist2.add),(dist3,dist3.write):
 
     for path in 'README.txt','LICENCE.txt':

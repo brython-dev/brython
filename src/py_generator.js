@@ -245,6 +245,8 @@ $BRGeneratorDict.__next__ = function(self){
     
     self.gi_running = true
     
+    //console.log('run _next of '+self.iter_id+'\n'+self._next)
+    
     // Call the function _next to yield a value
     try{
         var res = self._next.apply(null, self.args)
@@ -270,6 +272,8 @@ $BRGeneratorDict.__next__ = function(self){
     // yielded value and a reference to the node where the function exited
     
     var yielded_value=res[0], yield_rank=res[1]
+    
+    //console.log(' yield '+res)
     
     // If the generator exits at the same place as in the previous iteration,
     // we don't have to build a new function, so just return the yielded value
@@ -314,6 +318,7 @@ $BRGeneratorDict.__next__ = function(self){
 
     // Parent of exit node    
     var pnode = exit_node.parent
+    var exit_in_if = pnode.is_if || pnode.is_else
     
     // Rest of the block after exit_node
     var rest = []
@@ -368,7 +373,7 @@ $BRGeneratorDict.__next__ = function(self){
         fnode.addChild(new $B.genNode(catch_test))
     }
     
-    //console.log('after yielding '+yielded_value+' and adding rest\n'+fnode.src())
+    console.log('after adding rest\n'+fnode.src())
     
     // If 'rest' has a break, we must exit the innermost loop
     if(!no_break){
@@ -381,16 +386,30 @@ $BRGeneratorDict.__next__ = function(self){
 
     while(pnode!==func_node && in_loop(pnode)){
         var rank = pnode.rank
+
         // block must start by "try", not "except"
         while(pnode.parent.children[rank].is_except){rank--}
-        // block must start by "if", not "elif" or "else"
-        while(pnode.parent.children[rank].is_else){rank--}
+
+        if(pnode.is_if){
+            // If exit_node was in a "if", start after the last if/elif/else
+            rank++
+            exit_node.replaced = true
+            while(rank<pnode.parent.children.length 
+                && pnode.parent.children[rank].is_else){rank++}
+        }else if(pnode.is_else){
+            exit_node.replaced = true
+            // If exit_node was in a "if", start after the last if/elif/else
+            while(rank<pnode.parent.children.length 
+                && pnode.parent.children[rank].is_else){rank++}
+        }        
 
         for(var i=rank;i<pnode.parent.children.length;i++){
             var g = pnode.parent.children[i].clone_tree(exit_node,true)
             fnode.addChild(g)
         }
+        console.log('pnode '+pnode+' exit in if '+exit_in_if+' after add '+fnode.src())
         pnode = pnode.parent
+        
     }
     
     // if exit_node was in a loop, or if pnode is an "if" or "else", 
@@ -409,7 +428,7 @@ $BRGeneratorDict.__next__ = function(self){
         }
         pnode = pnode.parent
     }
-    
+
     var js = 'var err=StopIteration("inserted S.I. '+self.func_name+'");'
     js += 'err.caught=true;throw err'
     fnode.addChild(new $B.genNode(js))
@@ -517,7 +536,6 @@ $B.$BRgenerator = function(func, def_id, $class){
         }
         
         $B.modules[iter_id] = obj
-        
         return obj
     }
     res.__repr__ = function(){return "<function "+func.__name__+">"}

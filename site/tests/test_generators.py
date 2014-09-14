@@ -429,4 +429,24 @@ a = 0
 g = foo()
 assert list(g) == [2, 1]
 
+# issue 299 : nested generators
+
+def flatten_gen(kc, x):
+
+    #kc stands for "kill counter" and is supposed to decrement in each nesting
+    if kc == 0:
+        yield "killoff"
+        return
+
+    for y in x:
+        if not isinstance(y, list):
+            yield y
+        else:
+            for z in flatten_gen(kc-1, y):
+                yield z
+
+i = [3,[4,5],[[6,[7],8]]]
+o = list(flatten_gen(3, i))
+assert o == [3,4,5,6,"killoff",8], o
+
 print('passed all tests...')

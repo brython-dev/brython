@@ -1123,10 +1123,8 @@ var def_func_node=new $Node()
 new $NodeJSCtx(def_func_node,'return function()')
 for(var i=0;i<node.children.length;i++)def_func_node.add(node.children[i])
 var last_instr=node.children[node.children.length-1].C.tree[0]
-if(last_instr.type!=='return'){new_node=new $Node()
-if(this.type=='BRgenerator'){new $NodeJSCtx(new_node,'return [__BRYTHON__.generator_return(None)];')
-}else{new $NodeJSCtx(new_node,'return None;')
-}
+if(last_instr.type!=='return' && this.type!='BRgenerator'){new_node=new $Node()
+new $NodeJSCtx(new_node,'return None;')
 def_func_node.add(new_node)
 }
 node.children=[]
@@ -5099,6 +5097,7 @@ fnode.addChild(new $B.genNode(js))
 js='for(var $var in $locals){eval("var "+$var+"=$locals[$var]")}'
 fnode.addChild(new $B.genNode(js))
 var pnode=exit_node.parent
+var exit_in_if=pnode.is_if ||pnode.is_else
 var rest=[]
 var no_break=true
 for(var i=exit_node.rank+1;i<pnode.children.length;i++){var clone=pnode.children[i].clone_tree(null,true)
@@ -5132,14 +5131,22 @@ catch_test +='{if(err.__class__!==__BRYTHON__.GeneratorBreak)'
 catch_test +='{throw err}}'
 fnode.addChild(new $B.genNode(catch_test))
 }
+console.log('after adding rest\n'+fnode.src())
 if(!no_break){var loop=in_loop(pnode)
 if(loop){pnode=loop}}
 while(pnode!==func_node && in_loop(pnode)){var rank=pnode.rank
 while(pnode.parent.children[rank].is_except){rank--}
-while(pnode.parent.children[rank].is_else){rank--}
+if(pnode.is_if){
+rank++
+exit_node.replaced=true
+while(rank<pnode.parent.children.length 
+&& pnode.parent.children[rank].is_else){rank++}}else if(pnode.is_else){exit_node.replaced=true
+while(rank<pnode.parent.children.length 
+&& pnode.parent.children[rank].is_else){rank++}}
 for(var i=rank;i<pnode.parent.children.length;i++){var g=pnode.parent.children[i].clone_tree(exit_node,true)
 fnode.addChild(g)
 }
+console.log('pnode '+pnode+' exit in if '+exit_in_if+' after add '+fnode.src())
 pnode=pnode.parent
 }
 while(pnode!==func_node && 

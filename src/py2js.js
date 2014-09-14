@@ -1819,13 +1819,9 @@ function $DefCtx(context){
         for(var i=0;i<node.children.length;i++) def_func_node.add(node.children[i])
 
         var last_instr = node.children[node.children.length-1].context.tree[0]
-        if(last_instr.type!=='return'){
+        if(last_instr.type!=='return' && this.type!='BRgenerator'){
             new_node = new $Node()
-            if(this.type=='BRgenerator'){
-                new $NodeJSCtx(new_node,'return [__BRYTHON__.generator_return(None)];')
-            }else{
-                new $NodeJSCtx(new_node,'return None;')
-            }               
+            new $NodeJSCtx(new_node,'return None;')
             def_func_node.add(new_node)
         }
 
