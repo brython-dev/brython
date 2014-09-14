@@ -1,0 +1,80 @@
+<html>
+<head>
+  <script type="text/javascript" src="../../src/brython.js"></script>
+
+  <script type="text/python">
+     from javascript import console
+     from browser import html, doc, window
+     import traceback
+
+     import sys
+     sys.path.insert(0, "performance")
+     import testlist
+
+     _tbody=doc.get(selector='tbody')[0]
+
+     for _test in testlist.tests:
+         _tr=html.TR()
+
+         _td = html.TD()
+         _td <= html.INPUT(Id=_test['name'], type="checkbox")
+         _tr <= _td
+
+         _tr <= html.TD(_test['name'])
+         _tr <= html.TD(_test['descr'])
+         _tr <= html.TD(Id="%s_results" % _test['name'])
+
+         _tbody <= _tr
+
+     def lookup_num_runs(name):
+         for _test in testlist.tests:
+             if _test['name'] == name:
+                return _test['num_runs']
+
+         return 0 
+
+     def run_tests(e):
+         _tbody=doc.get(selector='tbody')[0]
+         _inputs=_tbody.get(selector='input[type]')
+
+         for _input in _inputs:
+             if _input.type=='checkbox' and _input.checked:
+                _module=_input.id
+                console.log("begin %s" % _module)
+                try:
+                  #doc['%s_results' % _module].text="Running"
+                  _num_runs=lookup_num_runs(_module)
+                  console.log(_num_runs)
+                  exec("import %s" % _module)
+                  console.log("execute")
+                  exec("import %s;doc['%s_results'].text=%s.run(num_runs=%s)" % (_module,_module,_module,_num_runs))
+                except Exception as exc:
+                  traceback.print_exc()
+                console.log("end %s" % _module)
+
+     def select_all_event(e):
+         _tbody=doc.get(selector='tbody')[0]
+         _inputs=_tbody.get(selector='input[type]')
+
+         for _input in _inputs:
+             if _input.type == 'checkbox':
+                _input.checked=e.target.checked
+
+     window.run_tests=run_tests
+     window.select_all_event=select_all_event
+  </script>
+</head>
+
+<body onload="brython({cache: 'browser'})">
+  <table id="testtable" style="border:1px">
+  <thead>
+  <tr><th><input id="select_all" type="checkbox" onclick="select_all_event(event)"></th>
+      <th>Test Name</th><th>Description</th><th>Test Result</th></tr>
+  </thead>
+  <tbody></tbody>
+  </table>
+  <button onclick="run_tests(event)">Run Tests</button>
+
+  <div id="messages"></div>
+</body>
+</html>
