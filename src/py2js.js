@@ -6098,7 +6098,7 @@ $B.py2js = function(src,module,parent){
     root.insert(2,name_node)
     // file
     var file_node = new $Node()
-    new $NodeJSCtx(file_node,'var __file__=$globals["__file__"]="'+__BRYTHON__.$py_module_path[module]+'"')
+    new $NodeJSCtx(file_node,'var __file__=$globals["__file__"]="'+__BRYTHON__.$py_module_path[module]+'";')
     root.insert(3,file_node)
         
     if($B.debug>0){$add_line_num(root,null,module)}

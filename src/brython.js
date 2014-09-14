@@ -4041,7 +4041,7 @@ if(module.substr(0,9)=='__main__,'){lib_module='__main__'}
 new $NodeJSCtx(name_node,'var __name__=$globals["__name__"]="'+lib_module+'"')
 root.insert(2,name_node)
 var file_node=new $Node()
-new $NodeJSCtx(file_node,'var __file__=$globals["__file__"]="'+__BRYTHON__.$py_module_path[module]+'"')
+new $NodeJSCtx(file_node,'var __file__=$globals["__file__"]="'+__BRYTHON__.$py_module_path[module]+'";')
 root.insert(3,file_node)
 if($B.debug>0){$add_line_num(root,null,module)}
 $B.modules[module]=root
