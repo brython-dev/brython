@@ -373,8 +373,6 @@ $BRGeneratorDict.__next__ = function(self){
         fnode.addChild(new $B.genNode(catch_test))
     }
     
-    console.log('after adding rest\n'+fnode.src())
-    
     // If 'rest' has a break, we must exit the innermost loop
     if(!no_break){
         var loop = in_loop(pnode)
@@ -407,7 +405,6 @@ $BRGeneratorDict.__next__ = function(self){
             var g = pnode.parent.children[i].clone_tree(exit_node,true)
             fnode.addChild(g)
         }
-        console.log('pnode '+pnode+' exit in if '+exit_in_if+' after add '+fnode.src())
         pnode = pnode.parent
         
     }

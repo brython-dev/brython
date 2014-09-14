@@ -5131,7 +5131,6 @@ catch_test +='{if(err.__class__!==__BRYTHON__.GeneratorBreak)'
 catch_test +='{throw err}}'
 fnode.addChild(new $B.genNode(catch_test))
 }
-console.log('after adding rest\n'+fnode.src())
 if(!no_break){var loop=in_loop(pnode)
 if(loop){pnode=loop}}
 while(pnode!==func_node && in_loop(pnode)){var rank=pnode.rank
@@ -5146,7 +5145,6 @@ while(rank<pnode.parent.children.length
 for(var i=rank;i<pnode.parent.children.length;i++){var g=pnode.parent.children[i].clone_tree(exit_node,true)
 fnode.addChild(g)
 }
-console.log('pnode '+pnode+' exit in if '+exit_in_if+' after add '+fnode.src())
 pnode=pnode.parent
 }
 while(pnode!==func_node && 
