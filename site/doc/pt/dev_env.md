@@ -2,7 +2,7 @@ Ambiente de desenvolvimento
 ---------------------------
 
 Desenvolvedores deveriam usar o ambeinte disponível para
-[download](https://github.com/PierreQuentel/brython/releases): escolha o
+[download](https://github.com/brython-dev/brython/releases): escolha o
 arquivo zip que começa com "Brython\_site\_mirror" e descompacte-o em
 uma pasta (chamaremos esta pasta de diretório Brython nos próximos
 parágrafos).
