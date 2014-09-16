@@ -61,6 +61,25 @@ if($B.has_local_storage){
         return res
    }
 }
+$B.has_session_storage = typeof(Storage)!=="undefined"
+if($B.has_session_storage){
+   $B.session_storage = function(){
+        // for some weird reason, typeof sessionStorage.getItem is 'object'
+        // in IE8, not 'function' as in other browsers. So we have to
+        // return a specific object...
+        if(typeof sessionStorage.getItem==='function'){
+            var res = $B.JSObject(sessionStorage)
+            res.__repr__=res.__str__=function(){return "<object Storage>"}
+            res.__item__ = function(rank){return sessionStorage.key(rank)}
+            return res
+        }
+        var res = new Object()
+        res.__getattr__ = function(attr){return this[attr]}
+        res.getItem = function(key){return sessionStorage.getItem(str(key))}
+        res.setItem = function(key,value){sessionStorage.setItem(str(key),str(value))}
+        return res
+   }
+}
 
 $B._indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB
 $B.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction
