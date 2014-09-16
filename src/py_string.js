@@ -297,6 +297,7 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
                 return res
               case 'i':
               case 'd':
+                console.log(this.flag, this.precision, this.min_width)
                 //}else if(this.type=="i" || this.type=="d"){
                 
                 var num = parseInt(src) //_b_.int(src)
@@ -305,11 +306,10 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
                 if(this.flag===' '){res = ' '+res}
                 else if(this.flag==='+' && num>=0){res = '+'+res}
 
-                if(this.precision){   //for integers, precision is actually the width
-                    var flag=this.precision[0]
+                if(this.min_width){
                     var pad = ' '
-                    if(flag==='0' || flag==='.'){pad="0"}
-                    var width=parseInt(this.precision.substr(1))
+                    if(this.flag==='0' || this.flag==='.'){pad="0"}
+                    var width=parseInt(this.min_width)
                     while(res.length<width){res=pad+res}
                 }
                 return res
