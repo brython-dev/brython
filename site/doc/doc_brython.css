@@ -1,8 +1,7 @@
 @charset "utf-8";
-@import url(//fonts.googleapis.com/css?family="Oxygen");
 
 body, td {
-  font-family:Oxygen;
+  font-family:arial,verdana;
   font-size:13px;
   margin:0
 }
@@ -94,7 +93,7 @@ pre.marked, code { color:#339 }
 
 em, strong {
   color:#339;
-  font-family:Oxygen, courier
+  font-family: courier
 }
 
 #content > table {
