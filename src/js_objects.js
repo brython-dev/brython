@@ -253,8 +253,8 @@ function JSObject(obj){
     // If obj is a function, calling it with JSObject implies that it is
     // a function defined in Javascript. It must be wrapped in a JSObject
     // so that when called, the arguments are transformed into JS values
+    if (obj === null) {return _b_.None}
     if(typeof obj=='function'){return {__class__:$JSObjectDict,js:obj}}
-    
     var klass = $B.get_class(obj)
     if(klass===_b_.list.$dict){
         // JS arrays not created by list() must be wrapped
