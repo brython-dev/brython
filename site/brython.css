@@ -1,45 +1,49 @@
-body {font-family:arial,verdana;
-font-size:14px;
+@charset "utf-8";
+
+body {
+  font-family:arial,verdana;
+  font-size:14px
 }
-ul
-{
-list-style-type:none;
-margin:0;
-padding:0;
-overflow:hidden;
+
+ul {
+  list-style-type:none;
+  margin:0;
+  overflow:hidden;
+  padding:0
 }
-li
-{
-float:left;
+
+li { float:left }
+
+a.banner:link, a.banner:visited {
+  background:#000 url(doc/images/noir-1.png) repeat-x;
+  color:#FFF;
+  display:block;
+  font-size:14px;
+  font-weight:700;
+  line-height:35px;
+  padding:8px;
+  text-align:center;
+  text-decoration:none
 }
-a.banner:link,a.banner:visited
-{
-    display:block;
-    font-size:14px;
-    font-weight:bold;
-    color:#FFFFFF;
-    line-height:35px; /*hauteur de l'image de fond*/
-    background:black url(doc/images/noir-1.png) repeat-x;
-    padding:8px;
-    text-align:center;
-    text-decoration:none;
+
+a.banner:hover, a.banner:active {
+  background:#000 url(doc/images/noir-2.png) repeat-x;
+  color:#FFF
 }
-a.banner:hover,a.banner:active
-{
- background:black url(doc/images/noir-2.png) repeat-x;
- color:white;
+
+#banner {
+  padding-bottom:15px;
+  width:85%
 }
-#banner{
-    width:85%;
-    padding-bottom:15px;
+
+#console {
+  background-color:#000;
+  color:#FFF;
+  font-weight:700
 }
-#console{
-    color:#FFF;
-    background-color:#000;
-    font-weight:bold;
-}
-a.glink{
-    text-decoration:underline;
-    background-color: #FFF;
-    color: #000;
+
+a.glink {
+  background-color:#FFF;
+  color:#000;
+  text-decoration:underline
 }

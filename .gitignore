@@ -1,2 +1,56 @@
-__pycache__/
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+.directory
+
+
+# Packages
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+
+
+# Compiled
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.swp
+
+
+# Python / Brython
 *.py[cod]
+__pycache__
+
+
+# Installer logs
+pip-log.txt
+
+
+# Developer
+.coverage
+.project
+.mr.developer.cfg
+.pydevproject
+
+
+# Misc
+*.swp
