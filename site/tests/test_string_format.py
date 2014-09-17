@@ -1,3 +1,7 @@
+#########################
+## NEW STYLE FORMAT    ##
+## ie, string.format() ##
+#########################
 #accessing arguments by position
 assert '{0}, {1}, {2}'.format('a', 'b', 'c') == 'a, b, c'
 assert '{}, {}, {}'.format('a', 'b', 'c')  == 'a, b, c'
@@ -59,3 +63,26 @@ assert "Tested on {0:%Y-%m-%d}".format(d) == "Tested on 2010-09-07"
 import datetime
 d = datetime.datetime(2010, 7, 4, 12, 15, 58)
 assert '{:%Y-%m-%d %H:%M:%S}'.format(d) == '2010-07-04 12:15:58'
+
+########################
+## OLD STYLE FORMAT   ##
+## ie, "%xxx" % value ##
+########################
+# Signed integer decimal, conversion types 'd' and 'i'
+assert "%5d" % 3 == '    3'
+assert "%5d" % 3.3 == '    3'
+assert "%5.2d" % 3 == '   03'
+assert "%+5d" % 3 == '   +3'
+assert "%-5d" % 3 == '3    '
+assert "%#5d" % 3 == '    3'
+assert "%05d" % 3 == '00003'
+assert "%+05d" % 3 == '+0003'
+
+assert "%5i" % 3 == '    3'
+assert "%5i" % 3.3 == '    3'
+assert "%5.2i" % 3 == '   03'
+assert "%+5i" % 3 == '   +3'
+assert "%-5i" % 3 == '3    '
+assert "%#5i" % 3 == '    3'
+assert "%05i" % 3 == '00003'
+assert "%+05i" % 3 == '+0003'
