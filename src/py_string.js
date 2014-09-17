@@ -296,22 +296,40 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
                 }
                 return res
               case 'i':
+              case 'u':
               case 'd':
-                console.log(this.flag, this.precision, this.min_width)
+                console.log(this)
                 //}else if(this.type=="i" || this.type=="d"){
-                
+                this._number_check(src)
                 var num = parseInt(src) //_b_.int(src)
                 num=num.toPrecision()
                 res = num+''
                 if(this.flag===' '){res = ' '+res}
                 else if(this.flag==='+' && num>=0){res = '+'+res}
-
-                if(this.min_width){
+                else if(this.flag==='+' && num<0){res = '-'+res}
+                
+                if(this.min_width && this.precision){
+					var prec = this.precision.substr(1)
+					if (this.min_width >= prec){
+						var width = this.min_width
+					}else{var width = prec}
                     var pad = ' '
-                    if(this.flag==='0' || this.flag==='.'){pad="0"}
-                    var width=parseInt(this.min_width)
+                    if(this.flag==='0'){pad="0"}
+                    width=parseInt(width)
                     while(res.length<width){res=pad+res}
-                }
+                }else if(this.min_width && !this.precision){
+					var width = this.min_width
+                    var pad = ' '
+                    if(this.flag==='0'){pad="0"}
+                    width=parseInt(width)
+                    while(res.length<width){res=pad+res}
+				}else if(!this.min_width && this.precision){
+					var width = this.precision.substr(1)
+                    var pad = ' '
+                    if(this.flag==='0'){pad="0"}
+                    width=parseInt(width)
+                    while(res.length<width){res=pad+res}
+				}
                 return res
               case 'f':
               case 'F':
