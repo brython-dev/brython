@@ -69,15 +69,20 @@ assert '{:%Y-%m-%d %H:%M:%S}'.format(d) == '2010-07-04 12:15:58'
 ## ie, "%xxx" % value ##
 ########################
 # Signed integer decimal, conversion types 'd', 'u' and 'i'
+# Signed integer decimal, conversion types 'd', 'u' and 'i'
 assert "%5d" % 3 == '    3'
 assert "%5d" % 3.3 == '    3'
-assert "%5.2d" % 3 == '   03' # this fails
+assert "%5.2d" % 3 == '   03'
 assert "%+5d" % 3 == '   +3'
-assert "%-5d" % 3 == '3    ' # this fails
+assert "%-5d" % 3 == '3    '
 assert "%#5d" % 3 == '    3'
 assert "%05d" % 3 == '00003'
-assert "%+05d" % 3 == '+0003' # this fails
-assert "%+05d" % -3 == '-0003' # this fails
+assert "%+05d" % 3 == '+0003'
+assert "%+05d" % -3 == '-0003'
+assert "% 03d" % 3 == " 03"
+assert "%0 3d" % 3 == " 03"
+assert "%+ 3d" % 3 == " +3"
+assert "%- 3d" % 3 == " 3 "
 try:
     "%5d" % '3'
     raise Exception('should have raised TypeError')
@@ -86,18 +91,18 @@ except TypeError:
 
 assert "%5i" % 3 == '    3'
 assert "%5i" % 3.3 == '    3'
-assert "%5.2i" % 3 == '   03' # this fails
+assert "%5.2i" % 3 == '   03'
 assert "%+5i" % 3 == '   +3'
-assert "%-5i" % 3 == '3    ' # this fails
+assert "%-5i" % 3 == '3    '
 assert "%#5i" % 3 == '    3'
 assert "%05i" % 3 == '00003'
-assert "%+05i" % 3 == '+0003' # this fails
+assert "%+05i" % 3 == '+0003'
 
 assert "%5u" % 3 == '    3'
 assert "%5u" % 3.3 == '    3'
-assert "%5.2u" % 3 == '   03' # this fails
+assert "%5.2u" % 3 == '   03'
 assert "%+5u" % 3 == '   +3'
-assert "%-5u" % 3 == '3    ' # this fails
+assert "%-5u" % 3 == '3    '
 assert "%#5u" % 3 == '    3'
 assert "%05u" % 3 == '00003'
-assert "%+05u" % 3 == '+0003' # this fails
+assert "%+05u" % 3 == '+0003'
