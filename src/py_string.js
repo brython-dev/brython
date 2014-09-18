@@ -355,33 +355,6 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
 						res=pad+'0'.repeat(width-len_num-1)+res
 					}
 				}
-				
-                //if(this.flag===' '){res = ' '+res}
-                //else if(this.flag==='+' && num>=0){res = '+'+res}
-                //else if(this.flag==='+' && num<0){res = '-'+res}
-                
-                //if(this.min_width && this.precision){
-					//var prec = this.precision.substr(1)
-					//if (this.min_width >= prec){
-						//var width = this.min_width
-					//}else{var width = prec}
-                    //var pad = ' '
-                    //if(this.flag==='0'){pad="0"}
-                    //width=parseInt(width)
-                    //while(res.length<width){res=pad+res}
-                //}else if(this.min_width && !this.precision){
-					//var width = this.min_width
-                    //var pad = ' '
-                    //if(this.flag==='0'){pad="0"}
-                    //width=parseInt(width)
-                    //while(res.length<width){res=pad+res}
-				//}else if(!this.min_width && this.precision){
-					//var width = this.precision.substr(1)
-                    //var pad = ' '
-                    //if(this.flag==='0'){pad="0"}
-                    //width=parseInt(width)
-                    //while(res.length<width){res=pad+res}
-				//}
                 return res
               case 'f':
               case 'F':
