@@ -605,8 +605,14 @@ function $AssignCtx(context, check_unbound){
                           }
                           ix++
                       }
-                      left_seq.marked = true // to avoid doing the test in to_js()
-                      var val = left_seq.value.to_js()
+                      
+                      //console.log('left seq '+left_seq+' value '+left_seq.value)
+                      if (left_seq.value.type!=='id'){
+                          var val = '$temp_ix'+$loop_num+'_'+ix
+                          exprs.push('var '+val+'='+left_seq.value.to_js())
+                      }else{
+                          var val = left_seq.value.to_js()
+                      }
                       res += exprs.join(';\n')+';\n'
                       
                       res += 'Array.isArray('+val+') && '

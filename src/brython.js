@@ -1,6 +1,6 @@
 // brython.js www.brython.info
 // version [3, 3, 0, 'alpha', 0]
-// implementation [2, 2, 0, 'rc', 0]
+// implementation [2, 2, 1, 'rc', 0]
 // version compiled from commented, indented source files at https://github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
 ;(function($B){if($B.isa_web_worker==true){
@@ -43,8 +43,8 @@ $B.has_json=typeof(JSON)!=="undefined"
 $B.has_websocket=(function(){try{var x=window.WebSocket;return x!==undefined}
 catch(err){return false}})
 })(__BRYTHON__)
-__BRYTHON__.implementation=[2,2,0,'rc',0]
-__BRYTHON__.__MAGIC__="2.2.0"
+__BRYTHON__.implementation=[2,2,1,'rc',0]
+__BRYTHON__.__MAGIC__="2.2.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
 __BRYTHON__.builtin_module_names=["posix","builtins","hashlib","javascript","json","marshal","math","modulefinder","time","_ajax","_browser","_html","_io","_jsre","_multiprocessing","_os","_posixsubprocess","_svg","_sys","_timer","_websocket","__random","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
@@ -405,8 +405,10 @@ left_seq.tree[0]={type:'id',to_js:(function(rank){return function(){return '$tem
 }
 ix++
 }
-left_seq.marked=true 
-var val=left_seq.value.to_js()
+if(left_seq.value.type!=='id'){var val='$temp_ix'+$loop_num+'_'+ix
+exprs.push('var '+val+'='+left_seq.value.to_js())
+}else{var val=left_seq.value.to_js()
+}
 res +=exprs.join(';\n')+';\n'
 res +='Array.isArray('+val+') && '
 res +=val+args.join('')+'!==undefined ? '
@@ -4600,7 +4602,7 @@ if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
 return $ns
 }
 $B.get_class=function(obj){
-if(obj==null){obj=_b_.None}
+if(obj===null){return $B.$NoneDict}
 var klass=obj.__class__
 if(klass===undefined){switch(typeof obj){case 'function':
 return $B.$FunctionDict
@@ -6996,6 +6998,7 @@ $JSObjectDict.__setattr__=function(self,attr,value){if(isinstance(value,JSObject
 $JSObjectDict.__setitem__=$JSObjectDict.__setattr__
 $JSObjectDict.__str__=$JSObjectDict.__repr__
 function JSObject(obj){
+if(obj===null){return _b_.None}
 if(typeof obj=='function'){return{__class__:$JSObjectDict,js:obj}}
 var klass=$B.get_class(obj)
 if(klass===_b_.list.$dict){
@@ -8558,6 +8561,11 @@ return res + ' precision '+this.precision
 this.format=function(src){if(this.mapping_key!==null){if(!isinstance(src,_b_.dict)){throw _b_.TypeError("format requires a mapping")}
 src=getattr(src,'__getitem__')(this.mapping_key)
 }
+if(this.flag.indexOf("#")> -1){var flag_hash=true}
+if(this.flag.indexOf("+")> -1){var flag_plus=true}
+if(this.flag.indexOf("-")> -1){var flag_minus=true}
+if(this.flag.indexOf("0")> -1){var flag_zero=true}
+if(this.flag.indexOf(" ")> -1){var flag_space=true}
 switch(this.type){case 's':
 var res=str(src)
 if(this.precision){return res.substr(0,parseInt(this.precision.substr(1)))}
@@ -8660,18 +8668,39 @@ if(this.flag==='#'){if(this.type==='x'){res='0x'+res}
 else{res='0X'+res}}
 return res
 case 'i':
+case 'u':
 case 'd':
+this._number_check(src)
 var num=parseInt(src)
 num=num.toPrecision()
 res=num+''
-if(this.flag===' '){res=' '+res}
-else if(this.flag==='+' && num>=0){res='+'+res}
-if(this.precision){
-var flag=this.precision[0]
-var pad=' '
-if(flag==='0' ||flag==='.'){pad="0"}
-var width=parseInt(this.precision.substr(1))
-while(res.length<width){res=pad+res}}
+var len_num=res.length
+if(this.precision){					var prec=parseInt(this.precision.substr(1))
+				}else{					var prec=0
+				}
+				if(this.min_width){					var min_width=parseInt(this.min_width)
+				}else{					var min_width=0
+				}
+				var width=Math.max(len_num,prec,min_width)
+				var pad=' '
+				if(len_num===width){					if(flag_plus && num>=0){res='+'+res}					
+				}else{					if(flag_minus){						if(!flag_plus && !flag_space){							res=res+pad.repeat(width-len_num)
+						}
+						if(flag_plus){							res='+'+res+pad.repeat(width-len_num-1)
+						}
+						if(!flag_plus && flag_space){							res=pad+res+pad.repeat(width-len_num-1)
+						}
+					}else if(flag_plus && !flag_zero){						res=pad.repeat(width-len_num-1)+'+'+res
+					}else if(flag_plus && flag_zero){						if(num.substr(0,1)==='-'){							res='-'+'0'.repeat(width-len_num)+res.substr(1)
+						}else{							res='+'+'0'.repeat(width-len_num-1)+res
+						}
+					}else if(!flag_plus && !flag_space && flag_zero){						res='0'.repeat(width-len_num)+res
+					}else if(!flag_plus && !flag_zero && !flag_space && !flag_minus){						if(prec>0 && prec > len_num){							res=pad.repeat(width-(prec-len_num)-1)+'0'.repeat(prec-len_num)+res
+						}else{							res=pad.repeat(width-len_num)+res
+						}
+					}else if(flag_space && flag_zero){						res=pad+'0'.repeat(width-len_num-1)+res
+					}
+				}
 return res
 case 'f':
 case 'F':
