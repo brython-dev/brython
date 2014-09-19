@@ -5605,7 +5605,7 @@ function $transition(context,token){
 
 $B.forbidden = ['alert','case','catch','constructor','Date','delete',
     'default','document','Error','history','function','location','Math',
-    'new','Number','RegExp','this','throw','var','super','window']
+    'new','null','Number','RegExp','this','throw','var','super','window']
 
 function $tokenize(src,module,parent){
     var delimiters = [["#","\n","comment"],['"""','"""',"triple_string"],
