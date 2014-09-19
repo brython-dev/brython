@@ -2094,6 +2094,7 @@ $B.exception = function(js_exc){
         if(js_exc.name=='ReferenceError'){
             exc.__name__='NameError'
             exc.__class__=_b_.NameError.$dict
+            js_exc.message = js_exc.message.replace('$$','')
             console.log('name error '+js_exc)
         }
         exc.message = js_exc.message || '<'+js_exc+'>'
