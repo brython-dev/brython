@@ -15,8 +15,8 @@ links = {'home':'index.html',
     'editor':'tests/editor.html',
     'gallery':'gallery/gallery_%s.html',
     'doc':'doc/%s/index.html',
-    'download':'https://github.com/PierreQuentel/brython/releases',
-    'dev':'https://github.com/PierreQuentel/brython',
+    'download':'https://github.com/brython-dev/brython/releases',
+    'dev':'https://github.com/brython-dev/brython',
     'groups':'groups.html'
 }
 
