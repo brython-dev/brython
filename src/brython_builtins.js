@@ -43,11 +43,10 @@ $B.date = function(){
         arguments[4],arguments[5],arguments[6]))
 }
 
-// Removed local_storage check because it appears to break IE 11
 // Do NOT DRY this up because it seems to break IE 11
-
-$B.has_local_storage = true
+$B.has_local_storage = typeof(localStorage)!=="undefined"
 $B.local_storage = function() {
+    // no longer doing storage check... All browsers should have this by now
     var res = new Object()
     res.__getattr__ = function(attr){return this[attr]}
     res.getItem = function(key){
@@ -70,9 +69,11 @@ $B.local_storage = function() {
     }
     return res
 }
+
 //Do NOT DRY this up because it seems to break IE 11
-$B.has_session_storage = true
+$B.has_session_storage = typeof(sessionStorage)!=="undefined"
 $B.session_storage = function() {
+    // no longer doing storage check... All browsers should have this by now
     var res = new Object()
     res.__getattr__ = function(attr){return this[attr]}
     res.getItem = function(key){
@@ -95,9 +96,6 @@ $B.session_storage = function() {
     }
     return res
 }
-
-
-
 
 $B._indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB
 $B.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction

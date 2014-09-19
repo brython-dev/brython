@@ -20,8 +20,9 @@ $B.date=function(){if(arguments.length===0)return $B.JSObject(new Date())
 if(arguments.length===1)return $B.JSObject(new Date(arguments[0]))
 if(arguments.length===7)return $B.JSObject(new Date(arguments[0],arguments[1]-1,arguments[2],arguments[3],arguments[4],arguments[5],arguments[6]))
 }
-$B.has_local_storage=true
-$B.local_storage=function(){var res=new Object()
+$B.has_local_storage=typeof(localStorage)!=="undefined"
+$B.local_storage=function(){
+var res=new Object()
 res.__getattr__=function(attr){return this[attr]}
 res.getItem=function(key){return localStorage.getItem(key)
 }
@@ -37,8 +38,9 @@ res.clear=function(){localStorage.clear()
 }
 return res
 }
-$B.has_session_storage=true
-$B.session_storage=function(){var res=new Object()
+$B.has_session_storage=typeof(sessionStorage)!=="undefined"
+$B.session_storage=function(){
+var res=new Object()
 res.__getattr__=function(attr){return this[attr]}
 res.getItem=function(key){return sessionStorage.getItem(key)
 }
