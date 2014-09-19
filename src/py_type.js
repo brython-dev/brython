@@ -90,7 +90,7 @@ _b_.type = function(name,bases,cl_dict){
         
     // class attributes
     class_dict.__class__ = $B.$type
-    class_dict.__name__ = name
+    class_dict.__name__ = name.replace('$$','')
     class_dict.__bases__ = bases
     class_dict.__dict__ = cl_dict
     
