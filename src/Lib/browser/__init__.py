@@ -1,6 +1,5 @@
 from _browser import *
 
-from .local_storage import storage as _storage_local
-local_storage = _storage_local
-from .session_storage import storage as _storage_session
-session_storage = _storage_session
+from .local_storage import Local_Storage
+from .session_storage import Session_Storage
+from .object_storage import Object_Storage

@@ -1,47 +1,60 @@
 # local storage in browser
 from javascript import JSObject
+#import pickle
 
-class UnProvided():
+class __UnProvided():
     pass
 
-class LocalStorage:
+class Local_Storage():
     storage_type = "local_storage"
 
     def __init__(self):
-        if not __BRYTHON__.has_local_storage:
-            raise NameError('local storage is not supported by the browser')
         self.store = __BRYTHON__.local_storage()
 
     def __delitem__(self, key):
+        if (not isinstance(key, str)):
+            raise TypeError("key must be string")
         if key not in self:
             raise KeyError(key)
         self.store.removeItem(key)
 
     def __getitem__(self, key):
-        res = self.store.getItem(key)
+        if (not isinstance(key, str)):
+            raise TypeError("key must be string")
+        res = JSObject(self.store.getItem(key))
         if res:
-            return JSObject(res)
+            return res
         raise KeyError(key)
 
     def __setitem__(self, key, value):
+        if (not isinstance(key, str)):
+            raise TypeError("key must be string")
+        if (not isinstance(value, str)):
+            raise TypeError("value must be string")
         self.store.setItem(key, value)
 
     # implement "in" functionality
     def __contains__(self, key):
-        res = self.store.getItem(key)
-        if res:
-            return True
-        return False
+        if (not isinstance(key, str)):
+            raise TypeError("key must be string")
+        res = JSObject(self.store.getItem(key))
+        if res is None:
+            return False
+        return True
 
     def __iter__(self):
         keys = self.keys()
         return keys.__iter__()
 
     def get(self, key, default=None):
+        if (not isinstance(key, str)):
+            raise TypeError("key must be string")
         return JSObject(self.store.getItem(key)) or default
 
-    def pop(self, key, default=UnProvided()):
-        if type(default) is UnProvided:
+    def pop(self, key, default=__UnProvided()):
+        if (not isinstance(key, str)):
+            raise TypeError("key must be string")
+        if type(default) is __UnProvided:
             ret = self.get(key)
             del self[key]  # will throw key error if doesn't exist
             return ret
@@ -56,7 +69,7 @@ class LocalStorage:
     # while a real dict provides a view, returning a generator would less helpful than simply returning a list
     # and creating a custom iterator is overkill and would likely result in slower performance
     def keys(self):
-        return [JSObject(self.store.key(i)) for i in range(self.store.length)]
+        return [JSObject(self.store.key(i)) for i in range(self.store.length())]
 
     def values(self):
         return [JSObject(self.__getitem__(k)) for k in self.keys()]
@@ -68,16 +81,6 @@ class LocalStorage:
         self.store.clear()
 
     def __len__(self):
-        return self.store.length
+        return self.store.length()
 
-#     @property
-#     def storage(self):
-#         '''
-#         Legacy support for browser.local_storage.storage
-#         '''
-#         import warnings
-#         print("browser.{0}.storage is deprecated. Just use browser.{0} instead".format(self.storage_type))
-#         warnings.warn("browser.{0}.storage is deprecated. Just use browser.{0} instead".format(self.storage_type), DeprecationWarning)
-#         return self
-
-storage = LocalStorage()
+storage = Local_Storage()

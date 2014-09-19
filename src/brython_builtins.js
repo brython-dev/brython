@@ -42,44 +42,59 @@ $B.date = function(){
         arguments[1]-1,arguments[2],arguments[3],
         arguments[4],arguments[5],arguments[6]))
 }
-$B.has_local_storage = typeof(Storage)!=="undefined"
-if($B.has_local_storage){
-   $B.local_storage = function(){
-        // for some weird reason, typeof localStorage.getItem is 'object'
-        // in IE8, not 'function' as in other browsers. So we have to
-        // return a specific object...
-        if(typeof localStorage.getItem==='function'){
-            var res = $B.JSObject(localStorage)
-            res.__repr__=res.__str__=function(){return "<object Storage>"}
-            res.__item__ = function(rank){return localStorage.key(rank)}
-            return res
-        }
-        var res = new Object()
-        res.__getattr__ = function(attr){return this[attr]}
-        res.getItem = function(key){return localStorage.getItem(str(key))}
-        res.setItem = function(key,value){localStorage.setItem(str(key),str(value))}
-        return res
-   }
+
+// Removed local_storage check because it appears to break IE 11
+// Do NOT DRY this up because it seems to break IE 11
+$B.local_storage = function() {
+    var res = new Object()
+    res.__getattr__ = function(attr){return this[attr]}
+    res.getItem = function(key){
+        return localStorage.getItem(key)
+    }
+    res.setItem = function(key,value){
+        localStorage.setItem(key, value)
+    }
+    res.removeItem = function(key) {
+        localStorage.removeItem(key)
+    }
+    res.length = function() {
+        return localStorage.length
+    }
+    res.key = function(item) {
+        return localStorage.key(item)
+    }
+    res.clear = function() {
+        localStorage.clear()
+    }
+    return res
 }
-$B.has_session_storage = typeof(Storage)!=="undefined"
-if($B.has_session_storage){
-   $B.session_storage = function(){
-        // for some weird reason, typeof sessionStorage.getItem is 'object'
-        // in IE8, not 'function' as in other browsers. So we have to
-        // return a specific object...
-        if(typeof sessionStorage.getItem==='function'){
-            var res = $B.JSObject(sessionStorage)
-            res.__repr__=res.__str__=function(){return "<object Storage>"}
-            res.__item__ = function(rank){return sessionStorage.key(rank)}
-            return res
-        }
-        var res = new Object()
-        res.__getattr__ = function(attr){return this[attr]}
-        res.getItem = function(key){return sessionStorage.getItem(str(key))}
-        res.setItem = function(key,value){sessionStorage.setItem(str(key),str(value))}
-        return res
-   }
+//Do NOT DRY this up because it seems to break IE 11
+$B.session_storage = function() {
+    var res = new Object()
+    res.__getattr__ = function(attr){return this[attr]}
+    res.getItem = function(key){
+        return sessionStorage.getItem(key)
+    }
+    res.setItem = function(key,value){
+        sessionStorage.setItem(key, value)
+    }
+    res.removeItem = function(key) {
+        sessionStorage.removeItem(key)
+    }
+    res.length = function() {
+        return sessionStorage.length
+    }
+    res.key = function(item) {
+        return sessionStorage.key(item)
+    }
+    res.clear = function() {
+        sessionStorage.clear()
+    }
+    return res
 }
+
+
+
 
 $B._indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB
 $B.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction
