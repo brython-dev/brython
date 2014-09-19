@@ -154,6 +154,12 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
                 if(!isinstance(src,_b_.dict)){throw _b_.TypeError("format requires a mapping")}
                 src=getattr(src,'__getitem__')(this.mapping_key)
             }
+            
+            if(this.flag.indexOf("#") > -1){var flag_hash = true}
+            if(this.flag.indexOf("+") > -1){var flag_plus = true}
+            if(this.flag.indexOf("-") > -1){var flag_minus = true}
+            if(this.flag.indexOf("0") > -1){var flag_zero = true}
+            if(this.flag.indexOf(" ") > -1){var flag_space = true}
           
             switch(this.type) {
               case 's':
@@ -296,22 +302,59 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
                 }
                 return res
               case 'i':
+              case 'u':
               case 'd':
                 //}else if(this.type=="i" || this.type=="d"){
-                
+                this._number_check(src)
                 var num = parseInt(src) //_b_.int(src)
                 num=num.toPrecision()
                 res = num+''
-                if(this.flag===' '){res = ' '+res}
-                else if(this.flag==='+' && num>=0){res = '+'+res}
-
-                if(this.precision){   //for integers, precision is actually the width
-                    var flag=this.precision[0]
-                    var pad = ' '
-                    if(flag==='0' || flag==='.'){pad="0"}
-                    var width=parseInt(this.precision.substr(1))
-                    while(res.length<width){res=pad+res}
-                }
+                var len_num = res.length
+                if(this.precision){
+					var prec = parseInt(this.precision.substr(1))
+				}else{
+					var prec = 0
+				}
+				if(this.min_width){
+					var min_width = parseInt(this.min_width)
+				}else{
+					var min_width = 0
+				}
+				var width = Math.max(len_num, prec, min_width)
+				var pad = ' '
+				if (len_num === width){
+					if(flag_plus && num>=0){res = '+'+res}					
+				}else{
+					if(flag_minus){
+						if(!flag_plus && !flag_space){
+							res=res+pad.repeat(width-len_num)
+						}
+						if(flag_plus){
+							res='+'+res+pad.repeat(width-len_num-1)
+						}
+						if(!flag_plus && flag_space){
+							res=pad+res+pad.repeat(width-len_num-1)
+						}
+					}else if(flag_plus && !flag_zero){
+						res=pad.repeat(width-len_num-1)+'+'+res
+					}else if(flag_plus && flag_zero){
+						if(num.substr(0,1) === '-'){
+							res='-'+'0'.repeat(width-len_num)+res.substr(1)
+						}else{
+							res='+'+'0'.repeat(width-len_num-1)+res
+						}
+					}else if(!flag_plus && !flag_space && flag_zero){
+						res='0'.repeat(width-len_num)+res
+					}else if(!flag_plus && !flag_zero && !flag_space && !flag_minus){
+						if(prec>0 && prec > len_num){
+							res=pad.repeat(width-(prec-len_num)-1)+'0'.repeat(prec-len_num)+res
+						}else{
+							res=pad.repeat(width-len_num)+res
+						}
+					}else if(flag_space && flag_zero){
+						res=pad+'0'.repeat(width-len_num-1)+res
+					}
+				}
                 return res
               case 'f':
               case 'F':

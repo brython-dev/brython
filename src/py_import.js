@@ -356,6 +356,13 @@ $B.$import = function(mod_name,origin){
     //
     // The function returns None
     
+    var parts = mod_name.split('.')
+    var norm_parts = []
+    for(i=0;i<parts.length;i++){
+        norm_parts.push(parts[i].substr(0,2)=='$$' ? parts[i].substr(2) : parts[i])
+    }
+    mod_name = norm_parts.join('.')
+    
     if($B.imported[origin]===undefined){var package = ''}
     else{var package = $B.imported[origin].__package__}
 
