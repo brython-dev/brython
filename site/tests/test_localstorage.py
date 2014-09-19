@@ -1,6 +1,5 @@
 from browser.local_storage import storage  # legacy import
 from browser.session_storage import storage as sess_storage  # legacy import
-#from browser import session_storage, local_storage
 from browser import Local_Storage, Session_Storage, Object_Storage
  
 assert(Local_Storage().storage_type == "local_storage")

@@ -45,6 +45,8 @@ $B.date = function(){
 
 // Removed local_storage check because it appears to break IE 11
 // Do NOT DRY this up because it seems to break IE 11
+
+$B.has_local_storage = true
 $B.local_storage = function() {
     var res = new Object()
     res.__getattr__ = function(attr){return this[attr]}
@@ -69,6 +71,7 @@ $B.local_storage = function() {
     return res
 }
 //Do NOT DRY this up because it seems to break IE 11
+$B.has_session_storage = true
 $B.session_storage = function() {
     var res = new Object()
     res.__getattr__ = function(attr){return this[attr]}

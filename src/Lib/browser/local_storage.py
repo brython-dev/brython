@@ -1,6 +1,4 @@
 # local storage in browser
-from javascript import JSObject
-#import pickle
 
 class __UnProvided():
     pass
@@ -21,7 +19,7 @@ class Local_Storage():
     def __getitem__(self, key):
         if (not isinstance(key, str)):
             raise TypeError("key must be string")
-        res = JSObject(self.store.getItem(key))
+        res = __BRYTHON__.JSObject(self.store.getItem(key))
         if res:
             return res
         raise KeyError(key)
@@ -37,7 +35,7 @@ class Local_Storage():
     def __contains__(self, key):
         if (not isinstance(key, str)):
             raise TypeError("key must be string")
-        res = JSObject(self.store.getItem(key))
+        res = __BRYTHON__.JSObject(self.store.getItem(key))
         if res is None:
             return False
         return True
@@ -49,7 +47,7 @@ class Local_Storage():
     def get(self, key, default=None):
         if (not isinstance(key, str)):
             raise TypeError("key must be string")
-        return JSObject(self.store.getItem(key)) or default
+        return __BRYTHON__.JSObject(self.store.getItem(key)) or default
 
     def pop(self, key, default=__UnProvided()):
         if (not isinstance(key, str)):
@@ -69,10 +67,10 @@ class Local_Storage():
     # while a real dict provides a view, returning a generator would less helpful than simply returning a list
     # and creating a custom iterator is overkill and would likely result in slower performance
     def keys(self):
-        return [JSObject(self.store.key(i)) for i in range(self.store.length())]
+        return [__BRYTHON__.JSObject(self.store.key(i)) for i in range(self.store.length())]
 
     def values(self):
-        return [JSObject(self.__getitem__(k)) for k in self.keys()]
+        return [__BRYTHON__.JSObject(self.__getitem__(k)) for k in self.keys()]
 
     def items(self):
         return list(zip(self.keys(), self.values()))
