@@ -7245,6 +7245,11 @@ if(py_mod!==null)return py_mod
 return null 
 }
 $B.$import=function(mod_name,origin){
+var parts=mod_name.split('.')
+var norm_parts=[]
+for(i=0;i<parts.length;i++){norm_parts.push(parts[i].substr(0,2)=='$$' ? parts[i].substr(2): parts[i])
+}
+mod_name=norm_parts.join('.')
 if($B.imported[origin]===undefined){var package=''}
 else{var package=$B.imported[origin].__package__}
 if($B.$options.debug==10){console.log('$import '+mod_name+' origin '+origin)
