@@ -259,7 +259,6 @@ compile.__code__.co_varnames=['source','filename','mode']
 
 // built-in variable __debug__
 var __debug__ = __BRYTHON__.debug>0
-console.log('debug '+__BRYTHON__.debug)
 
 function delattr(obj, attr) {
     // descriptor protocol : if obj has attribute attr and this attribute has 

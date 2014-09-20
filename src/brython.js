@@ -5391,7 +5391,6 @@ compile.__code__.co_argcount=3
 compile.__code__.co_consts=[]
 compile.__code__.co_varnames=['source','filename','mode']
 var __debug__=__BRYTHON__.debug>0
-console.log('debug '+__BRYTHON__.debug)
 function delattr(obj,attr){
 var klass=$B.get_class(obj)
 var res=obj[attr]
@@ -6572,6 +6571,7 @@ _b_['$$super']=$$super
 ;(function($B){var _b_=$B.builtins
 var $ObjectDict=_b_.object.$dict
 var isinstance=_b_.isinstance,getattr=_b_.getattr,None=_b_.None
+var from_unicode={},to_unicode={}
 var $BytearrayDict={__class__:$B.$type,__name__:'bytearray'}
 var mutable_methods=['__delitem__','clear','copy','count','index','pop','remove','reverse','sort']
 for(var i=0;i<mutable_methods.length;i++){var method=mutable_methods[i]
@@ -6759,6 +6759,18 @@ function $UnicodeDecodeError(encoding,position){throw _b_.UnicodeDecodeError("'"
 }
 function _hex(int){return int.toString(16)}
 function _int(hex){return parseInt(hex,16)}
+function load_decoder(enc){
+if(to_unicode[enc]===undefined){load_encoder(enc)
+to_unicode[enc]={}
+for(var attr in from_unicode[enc]){to_unicode[enc][from_unicode[enc][attr]]=attr
+}}}
+function load_encoder(enc){
+if(from_unicode[enc]===undefined){var url=$B.brython_path
+if(url.charAt(url.length-1)=='/'){url=url.substr(0,url.length-1)}
+url +='/encodings/'+enc+'.js'
+var f=_b_.$open(url)
+eval(f.$content)
+}}
 function decode(b,encoding,errors){var s=''
 switch(encoding.toLowerCase()){case 'utf-8':
 case 'utf8':
@@ -6794,6 +6806,13 @@ case 'latin-1':
 case 'iso-8859-1':
 case 'windows-1252':
 for(var i=0;i<b.length;i++)s +=String.fromCharCode(b[i])
+break
+case 'cp1250': 
+case 'windows-1250': 
+load_decoder('cp1250')
+for(var i=0;i<b.length;i++){var u=to_unicode['cp1250'][b[i]]
+if(u!==undefined){s+=String.fromCharCode(u)}
+else{s +=String.fromCharCode(b[i])}}
 break
 case 'ascii':
 for(var i=0;i<b.length;i++){var cp=b[i]
@@ -6840,6 +6859,16 @@ case 'windows-1252':
 for(var i=0;i<s.length;i++){var cp=s.charCodeAt(i)
 if(cp<=255){t.push(cp)}
 else{$UnicodeEncodeError(encoding,i)}}
+break
+case 'cp1250':
+case 'windows-1250':
+for(var i=0;i<s.length;i++){var cp=s.charCodeAt(i)
+if(cp<=255){t.push(cp)}
+else{
+load_encoder('cp1250')
+var res=from_unicode['cp1250'][cp]
+if(res!==undefined){t.push(res)}
+else{$UnicodeEncodeError(encoding,i)}}}
 break
 case 'ascii':
 for(var i=0;i<s.length;i++){var cp=s.charCodeAt(i)

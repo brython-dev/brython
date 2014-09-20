@@ -4,6 +4,8 @@ var _b_=$B.builtins
 var $ObjectDict = _b_.object.$dict
 var isinstance = _b_.isinstance, getattr=_b_.getattr, None=_b_.None
 
+var from_unicode={}, to_unicode={}
+
 //bytearray() (built in function)
 var $BytearrayDict = {__class__:$B.$type,__name__:'bytearray'}
 
@@ -317,6 +319,28 @@ function $UnicodeDecodeError(encoding, position){
 function _hex(int){return int.toString(16)}
 function _int(hex){return parseInt(hex,16)}
 
+function load_decoder(enc){
+    // load table from encodings/<enc>.js
+    if(to_unicode[enc]===undefined){
+        load_encoder(enc)
+        to_unicode[enc] = {}
+        for(var attr in from_unicode[enc]){
+            to_unicode[enc][from_unicode[enc][attr]]=attr
+        }
+    }
+}
+
+function load_encoder(enc){
+    // load table from encodings/<enc>.js
+    if(from_unicode[enc]===undefined){
+        var url = $B.brython_path
+        if(url.charAt(url.length-1)=='/'){url=url.substr(0,url.length-1)}
+        url += '/encodings/'+enc+'.js'
+        var f = _b_.$open(url)
+        eval(f.$content)
+    }
+}
+
 function decode(b,encoding,errors){
     var s=''
 
@@ -374,6 +398,15 @@ function decode(b,encoding,errors){
       case 'iso-8859-1':
       case 'windows-1252':
         for(var i=0;i<b.length;i++) s += String.fromCharCode(b[i])
+        break;
+      case 'cp1250': 
+      case 'windows-1250': 
+        load_decoder('cp1250')
+        for(var i=0;i<b.length;i++){
+            var u = to_unicode['cp1250'][b[i]]
+            if(u!==undefined){s+=String.fromCharCode(u)}
+            else{s += String.fromCharCode(b[i])}
+        }
         break;
       case 'ascii':
         for(var i=0;i<b.length;i++){
@@ -437,6 +470,20 @@ function encode(s,encoding){
             var cp = s.charCodeAt(i) // code point
             if(cp<=255){t.push(cp)}
             else{$UnicodeEncodeError(encoding,i)}
+        }
+        break;
+      case 'cp1250':
+      case 'windows-1250':
+        for(var i=0;i<s.length;i++){
+            var cp = s.charCodeAt(i) // code point
+            if(cp<=255){t.push(cp)}
+            else{
+                // load table to convert Unicode code point to cp1250 encoding
+                load_encoder('cp1250')
+                var res = from_unicode['cp1250'][cp]
+                if(res!==undefined){t.push(res)}
+                else{$UnicodeEncodeError(encoding,i)}
+            }
         }
         break;
       case 'ascii':
