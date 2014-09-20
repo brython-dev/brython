@@ -1015,7 +1015,13 @@ this.defs=defs
 if(required.length>0)required=required.substr(0,required.length-1)
 var nodes=[],js
 var mod_name=$get_module(this).module
-if(this.type=='def' && scope.ntype!='BRgenerator' && mod_name!=='__main__'){if(fglobs===undefined){js='for(var $attr in $globals){eval("var "+$attr+"=$globals[$attr]")}'
+if(this.type=='def' && scope.ntype!='BRgenerator' && mod_name!=='__main__'){if(mod_name!=='__main__'){
+var new_node=new $Node()
+var js='$globals = __BRYTHON__.vars["'+mod_name+'"];' 
+new $NodeJSCtx(new_node,js)
+nodes.push(new_node)
+}
+if(fglobs===undefined){js='for(var $attr in $globals){eval("var "+$attr+"=$globals[$attr]")}'
 }else{
 js='\n'+header+'var $fglobs = ['
 for(var i=0;i<fglobs.length;i++){js+='"'+fglobs[i]+'",'}
@@ -7065,6 +7071,10 @@ for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]
 ;(function($B){var _b_=$B.builtins
 $B.$ModuleDict={__class__ : $B.$type,__name__ : 'module',toString : function(){return '<class *module*>'}}
 $B.$ModuleDict.__repr__=function(self){return '<module '+self.__name__+'>'}
+$B.$ModuleDict.__setattr__=function(self,attr,value){console.log('set module attr '+attr+' '+value+' module name '+self.__name__)
+self[attr]=value
+$B.vars[self.__name__][attr]=value
+}
 $B.$ModuleDict.__str__=function(self){return '<module '+self.__name__+'>'}
 $B.$ModuleDict.__mro__=[$B.$ModuleDict,_b_.object.$dict]
 function module(){}

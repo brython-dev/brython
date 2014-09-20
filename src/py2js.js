@@ -1658,6 +1658,16 @@ function $DefCtx(context){
         // insert global variables
         var mod_name = $get_module(this).module
         if(this.type=='def' && scope.ntype!='BRgenerator' && mod_name!=='__main__'){
+            if(mod_name!=='__main__'){
+                // $globals must be reset at each function execution : if it
+                // is in an imported module A, the importing module might have
+                // changed attributes of A
+                var new_node = new $Node()
+                var js = '$globals = __BRYTHON__.vars["'+mod_name+'"];' 
+                new $NodeJSCtx(new_node,js)
+                nodes.push(new_node)
+            }
+            
             if(fglobs===undefined){
                 js = 'for(var $attr in $globals){eval("var "+$attr+"=$globals[$attr]")}'
             }else{
