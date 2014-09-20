@@ -4299,6 +4299,7 @@ $ObjectDict.__gt__=$ObjectNI('__gt__','>')
 $ObjectDict.__hash__=function(self){$B.$py_next_hash+=1;
 return $B.$py_next_hash
 }
+$ObjectDict.__init__=function(){}
 $ObjectDict.__le__=$ObjectNI('__le__','<=')
 $ObjectDict.__lt__=$ObjectNI('__lt__','<')
 $ObjectDict.__mro__=[$ObjectDict]
@@ -6198,6 +6199,7 @@ function $$super(_type1,_type2){return{__class__:$SuperDict,__thisclass__:_type1
 $$super.$dict=$SuperDict
 $$super.__class__=$B.$factory
 $SuperDict.$factory=$$super
+$$super.$is_func=true
 var $Reader={__class__:$B.$type,__name__:'reader'}
 $Reader.__enter__=function(self){return self}
 $Reader.__exit__=function(self){return false}
@@ -7063,8 +7065,7 @@ for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]
 ;(function($B){var _b_=$B.builtins
 $B.$ModuleDict={__class__ : $B.$type,__name__ : 'module',toString : function(){return '<class *module*>'}}
 $B.$ModuleDict.__repr__=function(self){return '<module '+self.__name__+'>'}
-$B.$ModuleDict.__setattr__=function(self,attr,value){console.log('set module attr '+attr+' '+value+' module name '+self.__name__)
-self[attr]=value
+$B.$ModuleDict.__setattr__=function(self,attr,value){self[attr]=value
 $B.vars[self.__name__][attr]=value
 }
 $B.$ModuleDict.__str__=function(self){return '<module '+self.__name__+'>'}

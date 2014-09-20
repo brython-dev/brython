@@ -1527,7 +1527,6 @@ var $SuperDict = {__class__:$B.$type,__name__:'super'}
 
 $SuperDict.__getattribute__ = function(self,attr){
     var mro = self.__thisclass__.$dict.__mro__,res
-    //console.log(''+$B.$type.__getattribute__(mro[1], attr))
     for(var i=1;i<mro.length;i++){ // start with 1 = ignores the class where super() is defined
         res = mro[i][attr]
         if(res!==undefined){
@@ -1574,6 +1573,7 @@ function $$super(_type1,_type2){
 $$super.$dict = $SuperDict
 $$super.__class__ = $B.$factory
 $SuperDict.$factory = $$super
+$$super.$is_func = true
 
 var $Reader = {__class__:$B.$type,__name__:'reader'}
 

@@ -11,7 +11,6 @@ $B.$ModuleDict = {
 }
 $B.$ModuleDict.__repr__ = function(self){return '<module '+self.__name__+'>'}
 $B.$ModuleDict.__setattr__ = function(self, attr, value){
-    console.log('set module attr '+attr+' '+value+' module name '+self.__name__)
     self[attr] = value
     $B.vars[self.__name__][attr]=value
 }

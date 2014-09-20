@@ -269,6 +269,8 @@ $ObjectDict.__hash__ = function (self) {
     return $B.$py_next_hash;
 }
 
+$ObjectDict.__init__ = function(){}
+
 $ObjectDict.__le__ = $ObjectNI('__le__','<=')
 
 $ObjectDict.__lt__ = $ObjectNI('__lt__','<')

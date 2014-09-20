@@ -238,7 +238,7 @@ $B.$type.__getattribute__=function(klass,attr){
     }//switch
 
     var res = klass[attr],is_class=true
-    //if(attr=='prop'){console.log(klass.__name__+' direct attr '+attr+' '+res)}
+    //if(attr=='__init__'){console.log(klass.__name__+' direct attr '+attr+' '+res)}
     if(res===undefined){
         // search in classes hierarchy, following method resolution order
         var mro = klass.__mro__
@@ -265,6 +265,7 @@ $B.$type.__getattribute__=function(klass,attr){
             }
         }
     }
+    //if(attr=='__init__'){console.log(klass.__name__+' attr '+attr+' step 2 '+res)}
     if(res!==undefined){
 
         // If the attribute is a property, return it
