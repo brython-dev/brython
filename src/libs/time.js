@@ -5,9 +5,47 @@ var $s=[]
 for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
 eval($s.join(';'))
 
-//for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
+var stnames = ['tm_year','tm_mon','tm_mday','tm_hour','tm_min','tm_sec',
+    'tm_wday','tm_yday','tm_isdst']
 
-return  {
+var StructTimeDict = {__name__:'struct_time',__class__:$B.$type}
+
+StructTimeDict.__mro__ = [StructTimeDict,_b_.object.$dict]
+
+StructTimeDict.__getattr__ = function(self,name){
+    var ix = stnames.indexOf(name)
+    if(ix==-1){throw AttributeError(
+        "'time.struct_time' object has no attribute '"+name+"'")}
+    return StructTimeDict.__getitem__(self,ix)
+}
+
+StructTimeDict.__getitem__ = function(self, rank){
+    if(!typeof rank=='number'){throw _b_.TypeError(
+        'list indices must be integers, not '+$B.get_class(rank).__name__)
+    }
+    var res = self.value[rank]
+    if(res===undefined){throw _b_.KeyError(rank)}
+    return res
+}
+
+StructTimeDict.__repr__ = StructTimeDict.__str__ = function(self){
+    var res = 'time.struct_time('
+    var elts = []
+    for(var i=0;i<stnames.length;i++){
+        elts.push(stnames[i]+'='+self.value[i])
+    }
+    res += elts.join(', ')
+    return res+')'
+}
+
+function StructTime(args){
+    return {__class__:StructTimeDict, value: args}
+}
+StructTime.$type = $B.factory
+StructTime.$dict = StructTimeDict
+StructTimeDict.$factory = StructTime
+
+var $mod = {
     __name__ : 'time',
     tzname: _b_.tuple(['', '']),
     daylight: 0,      //fix me.. returns Non zero if DST timezone is defined
@@ -106,4 +144,26 @@ return  {
     }
 }
 
+function to_struct_time(ptuple){
+    // Receives a packed tuple, pass its attribute "arg" to struct_time
+    var arg = ptuple.arg
+    // The tuple received from module _strptime has 7 elements, we must add
+    // the rank of day in the year in the range [1, 366]
+    var ml = [31,28,31,30,31,30,31,31,30,31,30,31]
+    if(arg[0]%4==0){ml[1]++}
+    console.log(ml)
+    var i=1, yday=0
+    while(i<arg[1]){yday+=ml[i-1];i++}
+    yday += arg[2]
+    arg.push(yday)
+    arg.push(-1)
+    return $mod.struct_time(arg)
+}
+
+$mod.strptime = function(string, format){
+    var _strptime = _b_.__import__('_strptime')
+    return StructTime(_strptime._strptime_datetime(to_struct_time, string, format))
+}
+
+return $mod
 })(__BRYTHON__)

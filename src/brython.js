@@ -4786,7 +4786,7 @@ return
 }
 augm_func(value)
 }
-augm_item_src=''+$B.augm_item_add
+var augm_item_src=''+$B.augm_item_add
 var augm_ops=[['-=','sub'],['*=','mul']]
 for(var i=0;i<augm_ops.length;i++){var augm_code=augm_item_src.replace(/add/g,augm_ops[i][1])
 augm_code=augm_code.replace(/\+=/g,augm_ops[i][0])
@@ -6206,7 +6206,7 @@ function $$super(_type1,_type2){return{__class__:$SuperDict,__thisclass__:_type1
 $$super.$dict=$SuperDict
 $$super.__class__=$B.$factory
 $SuperDict.$factory=$$super
-$Reader={__class__:$B.$type,__name__:'reader'}
+var $Reader={__class__:$B.$type,__name__:'reader'}
 $Reader.__enter__=function(self){return self}
 $Reader.__exit__=function(self){return false}
 $Reader.__iter__=function(self){return iter(self.$lines)}
@@ -6393,7 +6393,7 @@ $FunctionDict.__mro__=[$FunctionDict,$ObjectDict]
 var $Function=function(){}
 $FunctionDict.$factory=$Function
 $Function.$dict=$FunctionDict
-$BaseExceptionDict={__class__:$B.$type,__name__:'BaseException'}
+var $BaseExceptionDict={__class__:$B.$type,__name__:'BaseException'}
 $BaseExceptionDict.__init__=function(self){self.args=[arguments[1]]
 }
 $BaseExceptionDict.__repr__=function(self){if(self.message===None){return $B.get_class(self).__name__+'()'}
@@ -6519,7 +6519,7 @@ function $make_exc(names,parent){
 var _str=[]
 for(var i=0;i<names.length;i++){var name=names[i]
 var $exc=(BaseException+'').replace(/BaseException/g,name)
-_str.push('$'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}')
+_str.push('var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}')
 _str.push('$'+name+'Dict.__mro__=[$'+name+'Dict].concat(parent.$dict.__mro__)')
 _str.push('_b_.'+name+'='+$exc)
 _str.push('_b_.'+name+'.__repr__ = function(){return "<class '+"'"+name+"'"+'>"}')
@@ -6942,7 +6942,7 @@ __class__:$JSConstructorDict,js:obj
 JSConstructor.__class__=$B.$factory
 JSConstructor.$dict=$JSConstructorDict
 $JSConstructorDict.$factory=JSConstructor
-$B.jsobj2pyobj=jsobj2pyobj=function(jsobj){switch(jsobj){case true:
+var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj){switch(jsobj){case true:
 case false:
 return jsobj
 case null:
@@ -6958,7 +6958,7 @@ return _b_.float(jsobj)
 }
 return $B.JSObject(jsobj)
 }
-$B.pyobj2jsobj=pyobj2jsobj=function(pyobj){
+var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
 if(pyobj===true ||pyobj===false)return pyobj
 if(pyobj===_b_.None)return null
 var klass=$B.get_class(pyobj)
