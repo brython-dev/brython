@@ -273,4 +273,6 @@ $JSObjectDict.$factory = JSObject
 
 $B.JSObject = JSObject
 $B.JSConstructor = JSConstructor
+
+
 })(__BRYTHON__)
