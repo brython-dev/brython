@@ -4070,6 +4070,7 @@ $B.callbacks={}
 if(options===undefined)options={'debug':0}
 if(typeof options==='number')options={'debug':options}
 $B.debug=options.debug
+_b_.__debug__=$B.debug>0
 if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
 $B.static_stdlib_import=options.static_stdlib_import
 if(options.open !==undefined)_b_.$open=options.open
@@ -5389,6 +5390,8 @@ compile.__code__={}
 compile.__code__.co_argcount=3
 compile.__code__.co_consts=[]
 compile.__code__.co_varnames=['source','filename','mode']
+var __debug__=__BRYTHON__.debug>0
+console.log('debug '+__BRYTHON__.debug)
 function delattr(obj,attr){
 var klass=$B.get_class(obj)
 var res=obj[attr]

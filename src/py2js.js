@@ -6167,6 +6167,8 @@ function brython(options){
     // level
     if(typeof options==='number') options={'debug':options}
     $B.debug = options.debug
+    // set built-in variable __debug__
+    _b_.__debug__ = $B.debug>0
 
     // For imports, default mode is to search modules of the standard library
     // using a static mapping stored in stdlib_paths.js

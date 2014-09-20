@@ -257,6 +257,10 @@ compile.__code__.co_varnames=['source','filename','mode']
 
 //function complex is located in py_complex.js
 
+// built-in variable __debug__
+var __debug__ = __BRYTHON__.debug>0
+console.log('debug '+__BRYTHON__.debug)
+
 function delattr(obj, attr) {
     // descriptor protocol : if obj has attribute attr and this attribute has 
     // a method __delete__(), use it
