@@ -1546,6 +1546,12 @@ if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
 var qname=package+'.'+mod_name
 res +='__BRYTHON__.$import("'+qname+'","'+parent_module+'");'
 res +='var $mod=__BRYTHON__.imported["'+qname+'"];'
+if(this.names[0]=='*'){res +=head+'for(var $attr in $mod){\n'
+res +="if($attr.substr(0,1)!=='_')\n"+head+"{var $x = 'var '+$attr+'"
+if(scope.ntype==="module"){res +='=__BRYTHON__.vars["'+scope.module+'"]["'+"'+$attr+'"+'"]'
+}
+res +='=$mod["'+"'+$attr+'"+'"]'+"'"+'\n'+head+'eval($x)}}'
+}else{
 switch(scope.ntype){case 'def':
 for(var i=0;i<this.names.length;i++){var alias=this.aliases[this.names[i]]||this.names[i]
 res+='var ' + alias + '=$locals["'+alias+'"]'
@@ -1570,7 +1576,7 @@ default:
 for(var i=0;i<this.names.length;i++){var name=this.names[i]
 var alias=this.aliases[name]||name
 res +=alias + '=getattr($mod,"'+ names +'")\n'
-}}}}else{if(this.names[0]=='*'){res +='__BRYTHON__.$import("'+this.module+'","'+mod+'")\n'
+}}}}}else{if(this.names[0]=='*'){res +='__BRYTHON__.$import("'+this.module+'","'+mod+'")\n'
 res +=head+'var $mod=__BRYTHON__.imported["'+this.module+'"]\n'
 res +=head+'for(var $attr in $mod){\n'
 res +="if($attr.substr(0,1)!=='_')\n"+head+"{var $x = 'var '+$attr+'"
@@ -3710,7 +3716,7 @@ return new $AbstractExprCtx(C,true)
 return $transition(C.parent,token)
 }
 }
-$B.forbidden=['alert','case','catch','constructor','Date','delete','default','document','Error','history','function','location','Math','new','Number','RegExp','this','throw','var','super','window']
+$B.forbidden=['alert','case','catch','constructor','Date','delete','default','document','Error','history','function','location','Math','new','null','Number','RegExp','this','throw','var','super','window']
 function $tokenize(src,module,parent){var delimiters=[["#","\n","comment"],['"""','"""',"triple_string"],["'","'","string"],['"','"',"string"],["r'","'","raw_string"],['r"','"',"raw_string"]]
 var br_open={"(":0,"[":0,"{":0}
 var br_close={")":"(","]":"[","}":"{"}
@@ -4363,7 +4369,7 @@ _b_.type=function(name,bases,cl_dict){
 if(arguments.length==1){return $B.get_class(name).$factory}
 var class_dict=$B.class_dict=new Object()
 class_dict.__class__=$B.$type
-class_dict.__name__=name
+class_dict.__name__=name.replace('$$','')
 class_dict.__bases__=bases
 class_dict.__dict__=cl_dict
 for(var i=0;i<cl_dict.$keys.length;i++){var attr=cl_dict.$keys[i],val=cl_dict.$values[i]
@@ -6483,6 +6489,7 @@ exc.__name__=js_exc.__name__ ||js_exc.name
 exc.__class__=_b_.Exception.$dict
 if(js_exc.name=='ReferenceError'){exc.__name__='NameError'
 exc.__class__=_b_.NameError.$dict
+js_exc.message=js_exc.message.replace('$$','')
 console.log('name error '+js_exc)
 }
 exc.message=js_exc.message ||'<'+js_exc+'>'
@@ -7138,7 +7145,7 @@ console.log(js)
 }
 eval(js)
 }catch(err){console.log(err+' for module '+module.name)
-for(var attr in err){console.log(attr,err[attr])
+for(var attr in err){
 }
 console.log('message: '+err.message)
 console.log('filename: '+err.fileName)
@@ -7164,8 +7171,7 @@ for(var attr in err)console.log(attr+' '+err[attr])
 if($B.debug>0){console.log('line info '+__BRYTHON__.line_info)}
 throw err
 }}
-function import_from_VFS(mod_name){console.log('import from VFS '+mod_name)
-var stored=$B.VFS[mod_name]
+function import_from_VFS(mod_name){var stored=$B.VFS[mod_name]
 if(stored!==undefined){var ext=stored[0]
 var module_contents=stored[1]
 var is_package=stored[2]
@@ -7178,10 +7184,8 @@ var package=elts.join('.')
 }
 $B.modules[mod_name].$package=is_package
 $B.modules[mod_name].__package__=package
-console.log("imported ("+mod_name+") via VFS, ext "+ext+' package '+is_package)
 if(ext=='.js'){run_js(module,path,module_contents)}
 else{run_py(module,path,module_contents)}
-console.log('import ('+mod_name+') done, class '+$B.imported[mod_name].__class__)
 return true
 }
 return null
@@ -7256,7 +7260,6 @@ if($B.$options.debug==10){console.log('$import '+mod_name+' origin '+origin)
 console.log('use VFS ? '+$B.use_VFS)
 console.log('use static stdlib paths ? '+$B.static_stdlib_import)
 }
-if($B.$options.debug==10){show_ns()}
 if($B.imported[mod_name]!==undefined){return}
 var mod,funcs=[]
 if($B.use_VFS){funcs=[import_from_VFS]
@@ -7283,7 +7286,7 @@ $B.imported[elt_name]=undefined
 throw _b_.ImportError("cannot import "+elt_name)
 }}}
 $B.$import_from=function(mod_name,names,origin){
-if($B.$options.debug==10){console.log('import from '+mod_name);show_ns()
+if($B.$options.debug==10){
 }
 if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
 var mod=$B.imported[mod_name]

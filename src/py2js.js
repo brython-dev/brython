@@ -2469,37 +2469,48 @@ function $FromCtx(context){
     
                 res +='__BRYTHON__.$import("'+qname+'","'+parent_module+'");'
                 res += 'var $mod=__BRYTHON__.imported["'+qname+'"];'
+                
+                if(this.names[0]=='*'){
+                    res += head+'for(var $attr in $mod){\n'
+                 res +="if($attr.substr(0,1)!=='_')\n"+head+"{var $x = 'var '+$attr+'"
+                  if(scope.ntype==="module"){
+                      res += '=__BRYTHON__.vars["'+scope.module+'"]["'+"'+$attr+'"+'"]'
+                  }
+                 res += '=$mod["'+"'+$attr+'"+'"]'+"'"+'\n'+head+'eval($x)}}'
 
-                //this is longer, but should execute more efficiently
-                switch(scope.ntype) { 
-                  case 'def':
-                    for(var i=0; i<this.names.length; i++) {
-                       var alias = this.aliases[this.names[i]]||this.names[i]
-                       res+='var ' + alias + '=$locals["'+alias+'"]'
-                       res += '=getattr($mod,"'+this.names[i]+'")\n'
-                    }
-                    break
-                  case 'class':
-                    for(var i=0; i<this.names.length; i++) {
-                       var name=this.names[i]
-                       var alias = this.aliases[name]|| name
-                       res+='var ' + alias
-                       res += '=getattr($mod,"'+ name +'")\n'
-                    }
-                    break
-                  case 'module':
-                    for(var i=0; i<this.names.length; i++) {
-                       var name=this.names[i]
-                       var alias = this.aliases[name]|| name
-                       res+='var ' + alias + '=$globals["'+alias+'"]'
-                       res += '=getattr($mod,"'+ name +'")\n'
-                    }
-                    break
-                  default:
-                    for(var i=0; i<this.names.length; i++) {
-                       var name=this.names[i]
-                       var alias = this.aliases[name]|| name
-                       res += alias + '=getattr($mod,"'+ names +'")\n'
+                }else{
+    
+                    //this is longer, but should execute more efficiently
+                    switch(scope.ntype) { 
+                      case 'def':
+                        for(var i=0; i<this.names.length; i++) {
+                           var alias = this.aliases[this.names[i]]||this.names[i]
+                           res+='var ' + alias + '=$locals["'+alias+'"]'
+                           res += '=getattr($mod,"'+this.names[i]+'")\n'
+                        }
+                        break
+                      case 'class':
+                        for(var i=0; i<this.names.length; i++) {
+                           var name=this.names[i]
+                           var alias = this.aliases[name]|| name
+                           res+='var ' + alias
+                           res += '=getattr($mod,"'+ name +'")\n'
+                        }
+                        break
+                      case 'module':
+                        for(var i=0; i<this.names.length; i++) {
+                           var name=this.names[i]
+                           var alias = this.aliases[name]|| name
+                           res+='var ' + alias + '=$globals["'+alias+'"]'
+                           res += '=getattr($mod,"'+ name +'")\n'
+                        }
+                        break
+                      default:
+                        for(var i=0; i<this.names.length; i++) {
+                           var name=this.names[i]
+                           var alias = this.aliases[name]|| name
+                           res += alias + '=getattr($mod,"'+ names +'")\n'
+                        }
                     }
                 }
             }
