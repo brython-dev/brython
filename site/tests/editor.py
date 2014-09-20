@@ -30,7 +30,8 @@ if sys.has_local_storage:
 else:
     storage = False
 
-__BRYTHON__.debug = int(doc['set_debug'].checked)
+if 'set_debug' in doc:
+    __BRYTHON__.debug = int(doc['set_debug'].checked)
 
 def reset_src():
     if storage and "py_src" in storage:

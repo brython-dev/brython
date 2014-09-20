@@ -1,4 +1,4 @@
-import widget
+from . import widget
 from browser import html
 
 class ProgressBar(widget.Widget):

@@ -1,4 +1,4 @@
-import widget
+from . import widget
 from browser import doc,html
 
 class Slider(widget.Widget):
