@@ -1575,7 +1575,7 @@ $$super.$dict = $SuperDict
 $$super.__class__ = $B.$factory
 $SuperDict.$factory = $$super
 
-$Reader = {__class__:$B.$type,__name__:'reader'}
+var $Reader = {__class__:$B.$type,__name__:'reader'}
 
 $Reader.__enter__ = function(self){return self}
 
@@ -1920,7 +1920,7 @@ $Function.$dict = $FunctionDict
 
 // built-in exceptions
 
-$BaseExceptionDict = {__class__:$B.$type,__name__:'BaseException'}
+var $BaseExceptionDict = {__class__:$B.$type,__name__:'BaseException'}
 
 $BaseExceptionDict.__init__ = function(self){
     self.args = [arguments[1]]
@@ -2134,7 +2134,7 @@ function $make_exc(names,parent){
         var name = names[i]
         var $exc = (BaseException+'').replace(/BaseException/g,name)
         // class dictionary
-        _str.push('$'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}')
+        _str.push('var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}')
         _str.push('$'+name+'Dict.__mro__=[$'+name+'Dict].concat(parent.$dict.__mro__)')
         // class constructor
         _str.push('_b_.'+name+'='+$exc)

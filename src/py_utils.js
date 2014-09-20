@@ -348,7 +348,7 @@ $B.augm_item_add = function(obj,item,incr){
     }
     augm_func(value)
 }
-augm_item_src = ''+$B.augm_item_add
+var augm_item_src = ''+$B.augm_item_add
 var augm_ops = [['-=','sub'],['*=','mul']]
 for(var i=0;i<augm_ops.length;i++){
     var augm_code = augm_item_src.replace(/add/g,augm_ops[i][1])

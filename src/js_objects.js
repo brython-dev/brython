@@ -68,7 +68,7 @@ $JSConstructorDict.$factory = JSConstructor
 
 // JSObject : wrapper around a native Javascript object
 
-$B.jsobj2pyobj=jsobj2pyobj=function(jsobj) {
+var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj) {
     switch(jsobj) {
       case true:
       case false:
@@ -94,7 +94,7 @@ $B.jsobj2pyobj=jsobj2pyobj=function(jsobj) {
     return $B.JSObject(jsobj)
 }
 
-$B.pyobj2jsobj=pyobj2jsobj=function(pyobj){
+var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
     // conversion of a Python object into a Javascript object
     if(pyobj===true || pyobj===false) return pyobj
     if(pyobj===_b_.None) return null
