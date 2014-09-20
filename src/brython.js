@@ -7044,6 +7044,7 @@ if(klass===_b_.list.$dict){
 if(obj.__brython__)return obj
 return{__class__:$JSObjectDict,js:obj}}
 if(klass!==undefined)return obj
+if(klass==$JSObjectDict)return obj
 return{__class__:$JSObjectDict,js:obj}
 }
 JSObject.__class__=$B.$factory

@@ -263,6 +263,8 @@ function JSObject(obj){
     }
     // If obj is a Python object, return it unchanged
     if(klass!==undefined) return obj
+    // If obj is already a JSObject, return it unchanged
+    if(klass==$JSObjectDict) return obj
     return {__class__:$JSObjectDict,js:obj}  // wrap it
 }
 JSObject.__class__ = $B.$factory
