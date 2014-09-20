@@ -182,6 +182,7 @@ def sheet_names():
         if name.startswith(prefix)]
 
 def select_sheet(ev):
+    menu_file.close()
     names = sheet_names()
     names.sort()
     
@@ -260,8 +261,10 @@ def stop_menu(*args):
 document.bind('keydown', doc_keydown)
 document.bind('click', stop_menu)
 
+menu_file = None
+
 def load(sheet_name=None):
-    global current_cell_info
+    global current_cell_info,menu_file
     
     if sheet_name is None:
         sheet_name = 'New document'

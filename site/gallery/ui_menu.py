@@ -1,6 +1,6 @@
 # Menu classes
 
-from browser import html
+from browser import html, document
 
 class Menu(html.DIV):
 
@@ -19,8 +19,6 @@ class BarItem:
         self.children = []
 
     def open(self, ev):
-        global current_menu
-        stop_menu()
         self.menu = html.DIV(style=dict(position='absolute',
             left=self.item.left,
             top=self.item.top+self.item.height,
@@ -30,7 +28,6 @@ class BarItem:
             self.menu <= child
         self.item.style.borderColor = '#777'
         document <= self.menu
-        current_menu = self
         ev.stopPropagation()
 
     def close(self):
