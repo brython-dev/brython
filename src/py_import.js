@@ -193,7 +193,7 @@ function run_py(module,path,module_contents) {
     }catch(err){
         console.log(err+' for module '+module.name)
         for(var attr in err){
-            console.log(attr, err[attr])
+            //console.log(attr, err[attr])
         }
         console.log('message: '+err.message)
         console.log('filename: '+err.fileName)
@@ -201,7 +201,7 @@ function run_py(module,path,module_contents) {
         if($B.debug>0){console.log('line info '+ $B.line_info)}
         throw err
     }
-
+    
     try{
         // add names defined in the module as attributes of $module
         var mod = $B.imported[module.name]
@@ -229,7 +229,6 @@ function run_py(module,path,module_contents) {
 }
 
 function import_from_VFS(mod_name){
-    console.log('import from VFS '+mod_name)
     var stored = $B.VFS[mod_name]
     if(stored!==undefined){
         var ext = stored[0]
@@ -245,10 +244,8 @@ function import_from_VFS(mod_name){
         }
         $B.modules[mod_name].$package = is_package
         $B.modules[mod_name].__package__ = package
-        console.log("imported ("+mod_name+") via VFS, ext "+ext+' package '+is_package)
         if (ext == '.js') {run_js(module,path,module_contents)}
         else{run_py(module,path,module_contents)}
-        console.log('import ('+mod_name+') done, class '+$B.imported[mod_name].__class__)
         return true
     }
     return null
@@ -313,7 +310,7 @@ function import_from_site_packages(mod_name, origin, package){
 }
 
 function import_from_caller_folder(mod_name,origin,package){
-
+    
     var module = {name:mod_name}
     var origin_path = $B.$py_module_path[origin]
     var origin_dir_elts = origin_path.split('/')
@@ -371,8 +368,7 @@ $B.$import = function(mod_name,origin){
        console.log('use VFS ? '+$B.use_VFS)
        console.log('use static stdlib paths ? '+$B.static_stdlib_import)  
     }
-    //console.log('$import '+mod_name+' origin '+origin)
-    if ($B.$options.debug == 10) {show_ns()}
+    //if ($B.$options.debug == 10) {show_ns()}
     
     // If the module has already been imported, it is stored in $B.imported
 
@@ -461,7 +457,7 @@ $B.$import_from = function(mod_name,names,origin){
     // are searched in __init__.py, or as module names in the package
     
     if ($B.$options.debug == 10) {
-      console.log('import from '+mod_name);show_ns()
+      //console.log('import from '+mod_name);show_ns()
     }
     if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
     var mod = $B.imported[mod_name]
