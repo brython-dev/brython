@@ -4824,6 +4824,9 @@ function $transition(context,token){
 
             if(arguments[2]==='*' && context.expect==='id' 
               && context.names.length ===0){
+               if($get_scope(context).ntype!=='module'){
+                   $_SyntaxError(context,["import * only allowed at module level"])
+               }
                context.names.push('*')
                context.expect = 'eol'
                return context

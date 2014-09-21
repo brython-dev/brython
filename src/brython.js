@@ -3109,7 +3109,9 @@ return C
 }
 case 'op':
 if(arguments[2]==='*' && C.expect==='id' 
-&& C.names.length===0){C.names.push('*')
+&& C.names.length===0){if($get_scope(C).ntype!=='module'){$_SyntaxError(C,["import * only allowed at module level"])
+}
+C.names.push('*')
 C.expect='eol'
 return C
 }
