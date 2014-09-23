@@ -324,6 +324,7 @@ $B.$getitem = function(obj, item){
 }
 $B.$setitem = function(obj,item,value){
     if(Array.isArray(obj) && typeof item=='number'){
+        if (obj.length < item) throw _b_.IndexError('list assignment index out of range')
         if(item>=0){obj[item]=value}
         else{obj[obj.length+item]=value}
         return
