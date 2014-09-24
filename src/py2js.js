@@ -6149,7 +6149,7 @@ function brython(options){
     $B.$py_module_path = {}
     
     // path_hook used in py_import.js
-    $B.path_hooks = []
+    $B.meta_path = []
 
     // Maps a module name to matching module object
     // A module can be the body of a script, or the body of a block inside a

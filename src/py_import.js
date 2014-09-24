@@ -163,7 +163,7 @@ function import_py(module,path,package){
     return run_py(module,path,module_contents)
 }
 
-function run_py(module,path,module_contents) {
+$B.run_py=run_py=function(module,path,module_contents) {
     var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
     $B.$py_module_path[module.name]=path
 
@@ -409,6 +409,13 @@ $B.$import = function(mod_name,origin){
     }
     funcs = funcs.concat([import_from_site_packages, 
         import_from_caller_folder])
+
+    // custom functions to use to search/import modules 
+    // ie, think localStorage, or maybe google drive
+    // default is undefined
+    if ($B.$options['custom_import_funcs'] !== undefined) {
+       funcs = funcs.concat($B.$options['custom_import_funcs'])
+    }
 
     // If the module name is qualified (form "import X.Y") we must import
     // X, then import X.Y

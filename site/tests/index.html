@@ -32,6 +32,8 @@
 <script type="text/javascript" src="../../src/py_list.js"></script>
 <script type="text/javascript" src="../../src/py_dom.js"></script>
 
+<script type="text/javascript" src="../../src/py_import_hooks.js"></script>
+
 <script type="text/python" src="editor.py"></script>
 
 <script type="text/python3">
@@ -106,7 +108,8 @@ for key in trans:
 </script>
 
 </head>
-<body onload="brython({debug:1, cache:'none', static_stdlib_import:true})">
+<body onload="brython({debug:1, cache:'none', static_stdlib_import:true,
+                       custom_import_funcs: [import_hooks]})">
 
 <table id="banner" cellpadding=0 cellspacing=0>
 <tr id="banner_row">
