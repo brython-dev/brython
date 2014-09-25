@@ -15,23 +15,29 @@ return  {
        if (timestamp === undefined) {
           timestamp=int(new Date().getTime()/1000);
        }
-       var d=new Date(0);  
+       var d=new Date(0);
        d.setUTCSeconds(timestamp);
        return d.toUTCString();
     },
     gmtime: function(){
        var d=new Date();
-       return [d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate(), 
-               d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds(), 
+       return [d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate(),
+               d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds(),
                d.getUTCDay(), 0, 0]
     },
     perf_counter: function() {
         return float((new Date()).getTime()/1000.0);
     },
-    
-    localtime : function(secs){ 
+
+    localtime : function(secs){
        var d=new Date();
-       if (secs === undefined || secs === None) {return d.getTime()}
+       if (secs === undefined || secs === None){
+           return d.getTime()
+       } else {
+           d = new Date(secs * 1000)
+       }
+
+
 
        // calculate if we are in daylight savings time or not.
        // borrowed from http://stackoverflow.com/questions/11887934/check-if-daylight-saving-time-is-in-effect-and-if-it-is-for-how-many-hours
@@ -44,9 +50,9 @@ return  {
        //fixme  (second to last value is 0 which is the number of days in this year..)
     },
     time : function(){return float((new Date().getTime())/1000)},
-    
+
     sleep : function(secs){},
-    
+
     strftime : function(format,arg){
         function ns(arg,nb){
             // left padding with 0
@@ -80,7 +86,7 @@ return  {
         res = res.replace(/%B/,full_months[obj.getMonth()])
         return res
     },
-    
+
     struct_time : function(arg){
         if(!isinstance(arg,[tuple,list])){
             throw TypeError('constructor requires a sequence')
