@@ -478,8 +478,7 @@ function getattr(obj,attr,_default){
         var res = _b_.dict()
         for(var $attr in obj){
             if($attr.charAt(0)!='$'){
-                res.$keys.push($attr)
-                res.$values.push(obj[$attr])
+                res.$data[$attr] = obj[$attr]
             }
         }
         return res
@@ -610,7 +609,7 @@ function globals(module){
     // the translation engine adds the argument module
     var res = _b_.dict()
     var scope = $B.vars[module]
-    for(var name in scope){res.$keys.push(name);res.$values.push(scope[name])}
+    for(var name in scope){res.$data[name] = scope[name]}
     return res
 }
 

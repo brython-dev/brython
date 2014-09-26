@@ -1067,9 +1067,9 @@ function $CallCtx(context){
                 // if an argument namespace is passed, insert it
                 if(ns!=='' && ns!=='globals'){
                    _r += '\n    var $globals = {}\n'
-                   _r += '\n    for(var $i=0;$i<'+ns+'.$keys.length;$i++){\n'
-                   _r += '      eval("var "+'+ns+'.$keys[$i]+"='
-                   _r += '$globals['+ns+'.$keys[$i]]='+ns+'.$values[$i]")\n};\n'
+                   _r += '\n    for(k in '+ns+'.$data){\n'
+                   _r += '      eval("var "k"='
+                   _r += '$globals[k]='+ns+'.$data[k]")\n};\n'
                 }
 
                 // insert globals and locals in the function

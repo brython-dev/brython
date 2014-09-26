@@ -1262,11 +1262,8 @@ $StringDict.maketrans = function(from, to) {
 
    // create a data structure that string.translate understands
    var _d=$B.$dict()
-   var _kpush=_d.$keys.push
-   var _vpush=_d.$values.push
    for(var i=0; i < 256; i++) {
-      _kpush(i)
-      _vpush(_t[i])
+      _d[i] = _t[i]
    }
    return _d
 }

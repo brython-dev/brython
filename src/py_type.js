@@ -95,9 +95,8 @@ _b_.type = function(name,bases,cl_dict){
     class_dict.__dict__ = cl_dict
     
     // set class attributes for faster lookups
-    for(var i=0;i<cl_dict.$keys.length;i++){
-        var attr = cl_dict.$keys[i],val=cl_dict.$values[i]
-        class_dict[attr] = val
+    for(attr in cl_dict.$data) {
+        class_dict[attr] = cl_dict.$data[attr]
     }
 
     //class_dict.__setattr__ = function(attr,value){class_dict[attr]=value}

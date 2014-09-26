@@ -671,9 +671,9 @@ _name=ns
 $B.$py_module_path[_name]=$B.$py_module_path[module]
 var _r='(function(){try{'
 if(ns!=='' && ns!=='globals'){_r +='\n    var $globals = {}\n'
-_r +='\n    for(var $i=0;$i<'+ns+'.$keys.length;$i++){\n'
-_r +='      eval("var "+'+ns+'.$keys[$i]+"='
-_r +='$globals['+ns+'.$keys[$i]]='+ns+'.$values[$i]")\n};\n'
+_r +='\n    for(k in '+ns+'.$data){\n'
+_r +='      eval("var "k"='
+_r +='$globals[k]='+ns+'.$data[k]")\n};\n'
 }
 _r +='\n    for(var $attr in $globals){eval("var "+$attr+"=$globals[$attr]")};\n'
 _r +='\n    for(var $attr in $locals){eval("var "+$attr+"=$locals[$attr]")};\n'
@@ -4061,7 +4061,7 @@ return root
 function brython(options){var _b_=$B.builtins
 $B.$py_src={}
 $B.$py_module_path={}
-$B.path_hooks=[]
+$B.meta_path=[]
 $B.modules={}
 $B.imported={__main__:{__class__:$B.$ModuleDict,__name__:'__main__'}}
 $B.$options={}
@@ -4374,8 +4374,7 @@ class_dict.__class__=$B.$type
 class_dict.__name__=name.replace('$$','')
 class_dict.__bases__=bases
 class_dict.__dict__=cl_dict
-for(var i=0;i<cl_dict.$keys.length;i++){var attr=cl_dict.$keys[i],val=cl_dict.$values[i]
-class_dict[attr]=val
+for(attr in cl_dict.$data){class_dict[attr]=cl_dict.$data[attr]
 }
 var seqs=[]
 for(var i=0;i<bases.length;i++){
@@ -4542,7 +4541,7 @@ $B.$InstanceMethodDict={__class__:$B.$type,__name__:'instancemethod',__mro__:[_b
 $B.$MakeArgs=function($fname,$args,$required,$defaults,$other_args,$other_kw,$after_star){
 var $set_vars=[],$ns={},$arg
 if($other_args !=null){$ns[$other_args]=[]}
-if($other_kw !=null){var $dict_keys=[];var $dict_values=[]}
+if($other_kw !=null){var $dict=Object.create(null)}
 var upargs=[]
 for(var i=0;i<$args.length;i++){$arg=$args[i]
 if($arg===undefined){console.log('arg '+i+' undef in '+$fname)}
@@ -4554,7 +4553,7 @@ for(var j=0;j<_arg.length;j++)upargs.push(_arg[j])
 break
 case 'pdict':
 var _arg=$arg.arg
-for(var j=0;j<_arg.$keys.length;j++){upargs.push({$nat:"kw",name:_arg.$keys[j],value:_arg.$values[j]})
+for(k in _arg.$data){upargs.push({$nat:"kw",name:k,value:_arg.$data[k]})
 }
 break
 default:
@@ -4575,8 +4574,7 @@ $after_star.indexOf($arg.name)>-1){var ix=$after_star.indexOf($arg.name)
 eval('var '+$after_star[ix]+"=$PyVar")
 $ns[$after_star[ix]]=$PyVar
 }else if($defaults.indexOf($arg.name)>-1){$ns[$arg.name]=$PyVar
-}else if($other_kw!=null){$dict_keys.push($arg.name)
-$dict_values.push($PyVar)
+}else if($other_kw!=null){$dict[$arg.name]=$PyVar
 }else{
 throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+$arg.name+"'")
 }
@@ -4603,8 +4601,7 @@ msg +="and '"+missing.pop()+"'"
 throw _b_.TypeError(msg)
 }
 if($other_kw!=null){$ns[$other_kw]=_b_.dict()
-$ns[$other_kw].$keys=$dict_keys
-$ns[$other_kw].$values=$dict_values
+$ns[$other_kw].$data=$dict
 }
 if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
 return $ns
@@ -4763,7 +4760,8 @@ $B.$getitem=function(obj,item){if(Array.isArray(obj)&& typeof item=='number' && 
 }
 return _b_.getattr(obj,'__getitem__')(item)
 }
-$B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& typeof item=='number'){if(item>=0){obj[item]=value}
+$B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& typeof item=='number'){if(obj.length < item)throw _b_.IndexError('list assignment index out of range')
+if(item>=0){obj[item]=value}
 else{obj[obj.length+item]=value}
 return
 }
@@ -4862,7 +4860,7 @@ $B.stdout={__class__:$io,write: function(data){console.log(data)},flush:function
 $B.stdin={__class__:$io,
 read: function(size){return ''}}
 function pyobject2jsobject(obj){if(_b_.isinstance(obj,_b_.dict)){var temp={__class__ :'dict'}
-for(var i=0;i<obj.$keys.length;i++)temp[obj.$keys[i]]=obj.$values[i]
+for(k in obj.$data)temp[k]=obj.$data[k]
 return temp
 }
 return obj
@@ -4914,7 +4912,9 @@ var ropsigns=['+','-','*','/','//','%','**','<<','>>','&','^','|']
 $B.make_rmethods=function(klass){for(var j=0;j<ropnames.length;j++){if(klass['__'+ropnames[j]+'__']===undefined){
 klass['__'+ropnames[j]+'__']=(function(name,sign){return function(self,other){try{return _b_.getattr(other,'__r'+name+'__')(self)}
 catch(err){$err(sign,klass,other)}}})(ropnames[j],ropsigns[j])
-}}}})(__BRYTHON__)
+}}}
+$B.copy_dict=function(left,right){for(k in right.$data){left[k]=right[k]
+}}})(__BRYTHON__)
 if(!Array.indexOf){Array.prototype.indexOf=function(obj){for(var i=0;i<this.length;i++)if(this[i]==obj)return i
 return -1
 }}
@@ -5506,8 +5506,7 @@ throw _b_.AttributeError('object has no attribute '+attr)
 if(attr.__class__===$B.$AttrDict)attr=attr.name
 if(attr=='__class__')return klass.$factory
 if(attr==='__dict__'){var res=_b_.dict()
-for(var $attr in obj){if($attr.charAt(0)!='$'){res.$keys.push($attr)
-res.$values.push(obj[$attr])
+for(var $attr in obj){if($attr.charAt(0)!='$'){res.$data[$attr]=obj[$attr]
 }}
 return res
 }
@@ -5586,7 +5585,7 @@ getattr.__code__.co_varnames=['value']
 function globals(module){
 var res=_b_.dict()
 var scope=$B.vars[module]
-for(var name in scope){res.$keys.push(name);res.$values.push(scope[name])}
+for(var name in scope){res.$data[name]=scope[name]}
 return res
 }
 globals.__doc__="globals() -> dictionary\n\nReturn the dictionary containing the current scope's global variables."
@@ -6968,8 +6967,7 @@ for(var i=0;i<pyobj.length;i++){res.push(pyobj2jsobj(pyobj[i]))}
 return res
 }else if(klass===_b_.dict.$dict){
 var jsobj={}
-for(var j=0;j<pyobj.$keys.length;j++){jsobj[pyobj.$keys[j]]=pyobj2jsobj(pyobj.$values[j])
-}
+$B.copy_dict(jsobj,pyobj)
 return jsobj
 }else if(klass===$B.builtins.float.$dict){
 return pyobj.value
@@ -7162,7 +7160,7 @@ $B.imported[module.name].__package__=mod_elts.join('.')
 }
 return run_py(module,path,module_contents)
 }
-function run_py(module,path,module_contents){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
+$B.run_py=run_py=function(module,path,module_contents){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 $B.$py_module_path[module.name]=path
 var root=$B.py2js(module_contents,module.name)
 var body=root.children
@@ -7305,6 +7303,8 @@ if($B.use_VFS){funcs=[import_from_VFS]
 }else{funcs=[import_from_stdlib]
 }
 funcs=funcs.concat([import_from_site_packages,import_from_caller_folder])
+if($B.$options['custom_import_funcs']!==undefined){funcs=funcs.concat($B.$options['custom_import_funcs'])
+}
 var mod_elts=mod_name.split('.')
 for(var i=0;i<mod_elts.length;i++){
 var elt_name=mod_elts.slice(0,i+1).join('.')
@@ -7998,128 +7998,115 @@ var $ObjectDict=_b_.object.$dict
 function $DictClass($keys,$values){
 this.iter=null
 this.__class__=$DictDict
-this.$keys=$keys 
-this.$values=$values 
+this.$data=Object.create(null)
+for(i=0;i < keys.length;++i){this.$data[$keys[i]]=$values[i]
 }
+this.$keys=function(){return Object.keys(this.$data)
+}}
 var $DictDict={__class__:$B.$type,__name__ : 'dict',$native:true
 }
-$DictDict.__bool__=function(self){return self.$keys.length>0}
+$DictDict.__bool__=function(self){for(k in self.$data){return true
+}
+return false
+}
 $DictDict.__contains__=function(self,item){if(self.$jsobj)return self.$jsobj[item]!==undefined
-return _b_.list.$dict.__contains__(self.$keys,item)
+return self.$data[item]!==undefined
 }
 $DictDict.__delitem__=function(self,arg){
-for(var i=0;i<self.$keys.length;i++){if(getattr(arg,'__eq__')(self.$keys[i])){self.$keys.splice(i,1)
-self.$values.splice(i,1)
 if(self.$jsobj)delete self.$jsobj[arg]
-return
-}}
+delete self.$data[arg]
 throw KeyError(_b_.str(arg))
 }
 $DictDict.__eq__=function(self,other){if(other===undefined){
 return self===dict
 }
 if(!isinstance(other,dict))return False
-if(other.$keys.length!==self.$keys.length)return False
-for(var i=0;i<self.$keys.length;i++){var key=self.$keys[i]
-for(var j=0;j<other.$keys.length;j++){try{if(getattr(other.$keys[j],'__eq__')(key)){if(!getattr(other.$values[j],'__eq__')(self.$values[i])){return False
-}}}catch(err){$B.$pop_exc()}}}
+if(Object.keys(other.$data).length !=Object.keys(self.$data).length)return False
+for(k in my_keys){if(!getattr(other.$data[k],'__eq__')(self.$data[k])){return False
+}}
 return True
 }
-$DictDict.__getitem__=function(self,arg){
-for(var i=0;i<self.$keys.length;i++){if(getattr(arg,'__eq__')(self.$keys[i]))return self.$values[i]
-}
+$DictDict.__getitem__=function(self,arg){result=self.$data[arg]
+if(result !==undefined)return result
 throw KeyError(_b_.str(arg))
 }
 $DictDict.__hash__=function(self){throw _b_.TypeError("unhashable type: 'dict'");}
 $DictDict.__init__=function(self){var args=[]
 for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
-self.$keys=[]
-self.$values=[]
+self.$data=Object.create(null)
 if(args.length==0)return
 if(args.length===1){var obj=args[0]
-if(isinstance(obj,dict)){self.$keys=obj.$keys
-self.$values=obj.$values
+if(isinstance(obj,dict)){
+for(k in obj.$data){self.$data[k]=obj.$data[k]
+}
 return
 }
 if(obj.__class__===$B.JSObject.$dict){
-var res=new $DictClass([],[])
-for(var attr in obj.js){$DictDict.__setitem__(res,attr,obj.js[attr])
+for(var attr in obj.js){self.$data[attr]=obj.js[attr]
 }
-self.$keys=res.$keys
-self.$values=res.$values
-self.$jsobj=obj.js 
 return
 }}
 var $ns=$B.$MakeArgs('dict',args,[],[],'args','kw')
 var args=$ns['args']
 var kw=$ns['kw']
-if(args.length>0){if(isinstance(args[0],dict)){self.$keys=args[0].$keys
-self.$values=args[0].$values
+if(args.length>0){if(isinstance(args[0],dict)){for(k in args[0].$data){self.$data[k]=args[0].$data[k]
+}
 return
 }
 var iterable=iter(args[0])
 while(1){try{var elt=next(iterable)
-self.$keys.push(getattr(elt,'__getitem__')(0))
-self.$values.push(getattr(elt,'__getitem__')(1))
+key=getattr(elt,'__getitem__')(0)
+value=getattr(elt,'__getitem__')(1)
+self.$data[key]=value
 }catch(err){if(err.__name__==='StopIteration'){$B.$pop_exc();break}
 throw err
 }}
 return
 }
-if(kw.$keys.length>0){
-self.$keys=kw.$keys
-self.$values=kw.$values
-}}
+if(Object.keys(kw.$data).length>0){
+for(k in kw.$data){self.$data[k]=kw.$data[k]
+}}}
 var $dict_iterator=$B.$iterator_class('dict iterator')
-$DictDict.__iter__=function(self){return $B.$iterator(self.$keys,$dict_iterator)
+$DictDict.__iter__=function(self){return $B.$iterator(Object.keys(self.$data),$dict_iterator)
 }
-$DictDict.__len__=function(self){return self.$keys.length}
+$DictDict.__len__=function(self){return Object.keys(self.$data).length}
 $DictDict.__mro__=[$DictDict,$ObjectDict]
 $DictDict.__ne__=function(self,other){return !$DictDict.__eq__(self,other)}
 $DictDict.__next__=function(self){if(self.iter==null){self.iter==0}
-if(self.iter<self.$keys.length){self.iter++
-return self.$keys[self.iter-1]
+if(self.iter<Object.keys(self.$data).length){self.iter++
+return Object.keys(self.$data)[self.iter-1]
 }else{
 self.iter=null
 throw _b_.StopIteration()
 }}
 $DictDict.__repr__=function(self){if(self===undefined)return "<class 'dict'>"
 var res=[]
-for(var i=0;i<self.$keys.length;i++){res.push(repr(self.$keys[i])+':'+repr(self.$values[i]))
+for(k in self.$data){res.push(repr(k)+':'+repr(self.$data[k]))
 }
 return '{'+ res.join(',')+'}'
 }
-$DictDict.__setitem__=function(self,key,value){for(var i=0;i<self.$keys.length;i++){try{if(getattr(key,'__eq__')(self.$keys[i])){
-self.$values[i]=value
-return
-}}catch(err){
-$B.$pop_exc()
-}}
-self.$keys.push(key)
-self.$values.push(value)
-if(self.$jsobj)self.$jsobj[key]=value
+$DictDict.__setitem__=function(self,key,value){self.$data[key]=value
 }
 $DictDict.__str__=$DictDict.__repr__
 $B.make_rmethods($DictDict)
 $DictDict.clear=function(self){
-self.$keys=[]
-self.$values=[]
-if(self.$jsobj)self.$jsobj={}}
+self.$data=Object.create(null)
+}
 $DictDict.copy=function(self){
 var res=dict()
-for(var i=0;i<self.$keys.length;i++){res.$keys.push(self.$keys[i])
-res.$values.push(self.$values[i])
+for(k in self){ret[k]=self[k]
 }
 return res
 }
-$DictDict.get=function(self,key,_default){try{return $DictDict.__getitem__(self,key)}
-catch(err){$B.$pop_exc()
+$DictDict.get=function(self,key,_default){ret=self.$data[key]
+if(ret !==undefined){return ret
+}
 if(_default!==undefined)return _default
 return None
-}}
+}
 var $dict_itemsDict=$B.$iterator_class('dict_itemiterator')
 $DictDict.items=function(self){var items=[]
-for(var i=0;i<self.$keys.length;i++){items.push(_b_.tuple([self.$keys[i],self.$values[i]]))
+for(k in self.$data){items.push(_b_.tuple([k,self.$data[k]]))
 }
 return $B.$iterator(items,$dict_itemsDict)
 }
@@ -8135,7 +8122,7 @@ return res
 throw err
 }}}
 var $dict_keysDict=$B.$iterator_class('dict_keys')
-$DictDict.keys=function(self){return $B.$iterator(self.$keys,$dict_keysDict)
+$DictDict.keys=function(self){return $B.$iterator(Object.keys(self.$data),$dict_keysDict)
 }
 $DictDict.pop=function(self,key,_default){try{var res=$DictDict.__getitem__(self,key)
 $DictDict.__delitem__(self,key)
@@ -8146,8 +8133,9 @@ throw err
 }
 throw err
 }}
-$DictDict.popitem=function(self){if(self.$keys.length===0)throw KeyError("'popitem(): dictionary is empty'")
-return _b_.tuple([self.$keys.pop(),self.$values.pop()])
+$DictDict.popitem=function(self){for(k in $self.data){return _b_.tuple([k,self.pop(k)])
+}
+throw KeyError("'popitem(): dictionary is empty'")
 }
 $DictDict.setdefault=function(self,key,_default){try{return $DictDict.__getitem__(self,key)}
 catch(err){if(_default===undefined)_default=None
@@ -8159,11 +8147,10 @@ for(var i=1;i<arguments.length;i++){params.push(arguments[i])}
 var $ns=$B.$MakeArgs('$DictDict.update',params,[],[],'args','kw')
 var args=$ns['args']
 if(args.length>0 && isinstance(args[0],dict)){var other=args[0]
-for(var i=0;i<other.$keys.length;i++){$DictDict.__setitem__(self,other.$keys[i],other.$values[i])
+for(k in Object.keys(other.$data)){$DictDict.__setitem__(self,k,other.$data[k])
 }}
 var kw=$ns['kw']
-var keys=kw.$keys
-for(var i=0;i<keys.length;i++){$DictDict.__setitem__(self,keys[i],kw.$values(keys[i]))
+for(k in kw.$data){$DictDict.__setitem__(self,k,kw.$data[k])
 }}
 var $dict_valuesDict=$B.$iterator_class('dict_values')
 $DictDict.values=function(self){return $B.$iterator(self.$values,$dict_valuesDict)
@@ -8435,8 +8422,7 @@ if(!self.__brython__)return self
 }
 $ListDict.toString=function(){return '$ListDict'}
 $ListDict.__dict__=dict()
-for(var $attr in list){$ListDict.__dict__.$keys.push($attr)
-$ListDict.__dict__.$values.push(list[$attr])
+for(var $attr in list){$ListDict.__dict__[$attr]=list[$attr]
 }
 function list(){if(arguments.length===0)return[]
 if(arguments.length>1){throw _b_.TypeError("list() takes at most 1 argument ("+arguments.length+" given)")
@@ -9303,10 +9289,7 @@ for(var i=0;i < from.source.length;i++){var _ndx=from.source[i].charCodeAt(0)
 _t[_ndx]=to.source[i]
 }
 var _d=$B.$dict()
-var _kpush=_d.$keys.push
-var _vpush=_d.$values.push
-for(var i=0;i < 256;i++){_kpush(i)
-_vpush(_t[i])
+for(var i=0;i < 256;i++){_d[i]=_t[i]
 }
 return _d
 }
@@ -10075,15 +10058,9 @@ DOMNode.bind=function(self,event){
 var _id
 if(self.elt.nodeType===9){_id=0}
 else{_id=self.elt.$brython_id}
-var ix=$B.events.$keys.indexOf(_id)
-if(ix===-1){$B.events.$keys.push(_id)
-$B.events.$values.push(dict())
-ix=$B.events.$keys.length-1
+if($B.events.$data[_id]===undefined){$B.events.$data[_id]=dict()
 }
-var ix_event=$B.events.$values[ix].$keys.indexOf(event)
-if(ix_event==-1){$B.events.$values[ix].$keys.push(event)
-$B.events.$values[ix].$values.push([])
-ix_event=$B.events.$values[ix].$values.length-1
+if($B.events.$data[_id][event]===undefined){$B.events.$data[_id][event]=[]
 }
 for(var i=2;i<arguments.length;i++){var func=arguments[i]
 var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))
@@ -10093,7 +10070,7 @@ var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))
 if(window.addEventListener){self.elt.addEventListener(event,callback,false)
 }else if(window.attachEvent){self.elt.attachEvent("on"+event,callback)
 }
-$B.events.$values[ix].$values[ix_event].push([func,callback])
+$B.events[_id][event].push([func,callback])
 }}
 DOMNode.children=function(self){var res=[]
 for(var i=0;i<self.elt.childNodes.length;i++){res.push($DOMNode(self.elt.childNodes[i]))
@@ -10110,11 +10087,9 @@ return None
 }
 DOMNode.class_name=function(self){return DOMNode.Class(self)}
 DOMNode.clone=function(self){res=$DOMNode(self.elt.cloneNode(true))
-res.elt.$brython_id=Math.random().toString(36).substr(2,8)
-var ix_elt=$B.events.$keys.indexOf(self.elt.$brython_id)
-if(ix_elt!=-1){var events=$B.events.$values[ix_elt]
-for(var i=0;i<events.$keys.length;i++){var event=events.$keys[i]
-for(var j=0;j<events.$values[i].length;j++){DOMNode.bind(res,event,events.$values[i][j][0])
+brython_id=res.elt.$brython_id=Math.random().toString(36).substr(2,8)
+if($B.events.$data[brython_id]===undefined){events=$B.events.$data[brython_id]
+for(event in events){for(tmp in events[event]){DOMNode.bind(res,event,tmp[0])
 }}}
 return res
 }
@@ -10128,8 +10103,7 @@ var args=[]
 for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
 var $ns=$B.$MakeArgs('get',args,[],[],null,'kw')
 var $dict={}
-for(var i=0;i<$ns['kw'].$keys.length;i++){$dict[$ns['kw'].$keys[i]]=$ns['kw'].$values[i]
-}
+$B.copy_dict($dict,$ns['kw'])
 if($dict['name']!==undefined){if(obj.getElementsByName===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by name")
 }
 var res=[]
@@ -10228,7 +10202,7 @@ DOMNode.set_class_name=function(self,arg){self.elt.setAttribute('class',arg)
 DOMNode.set_html=function(self,value){self.elt.innerHTML=str(value)
 }
 DOMNode.set_style=function(self,style){
-for(var i=0;i<style.$keys.length;i++){var key=style.$keys[i],value=style.$values[i]
+for(key in style.$data){var value=style.$data[key]
 if(key.toLowerCase()==='float'){self.elt.style.cssFloat=value
 self.elt.style.styleFloat=value
 }else{switch(key){case 'top':
@@ -10258,16 +10232,15 @@ self.elt.dispatchEvent(evObj)
 DOMNode.unbind=function(self,event){
 var _id
 if(self.elt.nodeType==9){_id=0}else{_id=self.elt.$brython_id}
-var ix_elt=$B.events.$keys.indexOf(_id)
-if(ix_elt==-1)return
-var ix_event=$B.events.$values[ix_elt].$keys.indexOf(event)
-if(ix_event==-1)return
-var events=$B.events.$values[ix_elt].$values[ix_event]
+elt=$B.events.$data[_id]
+if(elt===undefined)return
+events=elt[event]
+if(events===undefined)return
 if(arguments.length===2){for(var i=0;i<events.length;i++){var callback=events[i][1]
 if(window.removeEventListener){self.elt.removeEventListener(event,callback,false)
 }else if(window.detachEvent){self.elt.detachEvent(event,callback,false)
 }}
-$B.events.$values[ix_elt][ix_event]=[]
+elt[event]=[]
 return
 }
 for(var i=2;i<arguments.length;i++){var func=arguments[i],flag=false
@@ -10276,7 +10249,7 @@ if(window.removeEventListener){self.elt.removeEventListener(event,callback,false
 }else if(window.detachEvent){self.elt.detachEvent(event,callback,false)
 }
 events.splice(j,1)
-$B.events.$values[ix_elt][ix_event]=events
+elt[events]=events
 flag=true
 break
 }}
