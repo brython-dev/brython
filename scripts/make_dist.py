@@ -178,7 +178,7 @@ sources = ['brython_builtins','version_info','identifiers_re',
     'py_utils','py_generator',
     'py_builtin_functions','py_bytes', 'js_objects','stdlib_paths','py_import',
     'py_float','py_int','py_complex','py_dict','py_list','py_string','py_set',
-    'py_dom']
+    'py_dom', 'py_import_hooks']
 
 loader_src = open(abs_path('py_loader.js')).read()
 

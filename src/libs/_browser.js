@@ -7,10 +7,12 @@ var $module=(function($B) {
     doc: $B.$DOMNode(document),   //want to use document instead of doc
     DOMEvent:$B.DOMEvent,
     DOMNode:$B.DOMNode,
+    exitFullScreen:$B.exitFullScreen,
     mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},
     prompt: function(message, default_value){
         return $B.JSObject(window.prompt(message, default_value||''))
     },
+    requestFullScreen:$B.requestFullScreen,
     win: $B.win,
     $$window: $B.win
   }
