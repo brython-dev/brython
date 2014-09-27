@@ -32,7 +32,7 @@
             return $B.run_py({name: mod_name}, _path[j], _module) 
         }//for
     } //for
-    return false
+    return null
   }
 window.import_hooks=import_hooks
 })(__BRYTHON__)
