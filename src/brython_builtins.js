@@ -32,17 +32,6 @@ $B.__setattr__ = function(attr,value){
 // cf http://stackoverflow.com/questions/1043339/javascript-for-detecting-browser-language-preference
 $B.language = window.navigator.userLanguage || window.navigator.language
 
-// figure out which FullScreen function is available
-$B.requestFullScreen = document.documentElement.requestFullScreen || 
-                       document.documentElement.msRequestFullScreen ||
-                       document.documentElement.mozRequestFullScreen ||
-                       document.documentElement.webkitRequestFullScreen
-
-$B.exitFullScreen = document.exitFullScreen || 
-                    document.msExitFullScreen ||
-                    document.mozExitFullScreen ||
-                    document.webkitExitFullScreen
-
 // document charset ; defaults to "utf-8"
 $B.charset = document.characterSet || document.inputEncoding || "utf-8"
 
