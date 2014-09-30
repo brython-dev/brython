@@ -96,33 +96,34 @@ function makeFactory(tagName){
     return factory
 }
 
-// HTML4 tags
-var $tags = ['A', 'ABBR', 'ACRONYM', 'ADDRESS', 'APPLET',
-            'B', 'BDO', 'BIG', 'BLOCKQUOTE', 'BUTTON',
-            'CAPTION', 'CENTER', 'CITE', 'CODE',
-            'DEL', 'DFN', 'DIR', 'DIV', 'DL',
-            'EM', 'FIELDSET', 'FONT', 'FORM', 'FRAMESET',
-            'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
-            'I', 'IFRAME', 'INS', 'KBD', 'LABEL', 'LEGEND',
-            'MAP', 'MENU', 'NOFRAMES', 'NOSCRIPT', 'OBJECT',
-            'OL', 'OPTGROUP', 'PRE', 'Q', 'S', 'SAMP',
-            'SCRIPT', 'SELECT', 'SMALL', 'SPAN', 'STRIKE',
-            'STRONG', 'STYLE', 'SUB', 'SUP', 'TABLE',
-            'TEXTAREA', 'TITLE', 'TT', 'U', 'UL',
-            'VAR', 'BODY', 'COLGROUP', 'DD', 'DT', 'HEAD',
-            'HTML', 'LI', 'P', 'TBODY','OPTION', 
-            'TD', 'TFOOT', 'TH', 'THEAD', 'TR',
-            'AREA', 'BASE', 'BASEFONT', 'BR', 'COL', 'FRAME',
-            'HR', 'IMG', 'INPUT', 'ISINDEX', 'LINK',
-            'META', 'PARAM']
+// All HTML 4, 5.x extracted from
+// https://w3c.github.io/elements-of-html/
+// HTML4.01 tags
+var $tags = ['A','ABBR','ACRONYM','ADDRESS','APPLET','AREA','B','BASE',
+            'BASEFONT','BDO','BIG','BLOCKQUOTE','BODY','BR','BUTTON',
+            'CAPTION','CENTER','CITE','CODE','COL','COLGROUP','DD',
+            'DEL','DFN','DIR','DIV','DL','DT','EM','FIELDSET','FONT',
+            'FORM','FRAME','FRAMESET','H1','H2','H3','H4','H5','H6',
+            'HEAD','HR','HTML','I','IFRAME','IMG','INPUT','INS',
+            'ISINDEX','KBD','LABEL','LEGEND','LI','LINK','MAP','MENU',
+            'META','NOFRAMES','NOSCRIPT','OBJECT','OL','OPTGROUP',
+            'OPTION','P','PARAM','PRE','Q','S','SAMP','SCRIPT','SELECT',
+            'SMALL','SPAN','STRIKE','STRONG','STYLE','SUB','SUP',
+            'TABLE','TBODY','TD','TEXTAREA','TFOOT','TH','THEAD',
+            'TITLE','TR','TT','U','UL','VAR']
 
 // HTML5 tags
-$tags = $tags.concat(['ARTICLE','ASIDE','AUDIO','BDI',
-    'CANVAS','COMMAND','DATALIST','DETAILS','DIALOG',
-    'EMBED','FIGCAPTION','FIGURE','FOOTER','HEADER',
-    'KEYGEN','MARK','METER','NAV','OUTPUT',
-    'PROGRESS','RP','RT','RUBY','SECTION','SOURCE',
-    'SUMMARY','TIME','TRACK','VIDEO','WBR'])
+$tags = $tags.concat(['ARTICLE','ASIDE','AUDIO','BDI','CANVAS',
+                      'COMMAND','DATA','DATALIST','EMBED','FIGCAPTION',
+                      'FIGURE','FOOTER','HEADER','KEYGEN','MAIN','MARK',
+                      'MATH','METER','NAV','OUTPUT','PROGRESS','RB',
+                      'RP','RT','RTC','RUBY','SECTION','SOURCE',
+                      'SUMMARY','TEMPLATE','TIME','TRACK','VIDEO',
+                      'WBR'])
+
+// HTML5.1 tags
+$tags = $tags.concat(['DETAILS','DIALOG','MENUITEM','PICTURE',
+                      'SUMMARY'])
 
 // create classes
 var obj = new Object()
