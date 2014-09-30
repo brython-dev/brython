@@ -110,20 +110,15 @@ var $tags = ['A','ABBR','ACRONYM','ADDRESS','APPLET','AREA','B','BASE',
             'OPTION','P','PARAM','PRE','Q','S','SAMP','SCRIPT','SELECT',
             'SMALL','SPAN','STRIKE','STRONG','STYLE','SUB','SUP',
             'TABLE','TBODY','TD','TEXTAREA','TFOOT','TH','THEAD',
-            'TITLE','TR','TT','U','UL','VAR']
-
-// HTML5 tags
-$tags = $tags.concat(['ARTICLE','ASIDE','AUDIO','BDI','CANVAS',
-                      'COMMAND','DATA','DATALIST','EMBED','FIGCAPTION',
-                      'FIGURE','FOOTER','HEADER','KEYGEN','MAIN','MARK',
-                      'MATH','METER','NAV','OUTPUT','PROGRESS','RB',
-                      'RP','RT','RTC','RUBY','SECTION','SOURCE',
-                      'SUMMARY','TEMPLATE','TIME','TRACK','VIDEO',
-                      'WBR'])
-
-// HTML5.1 tags
-$tags = $tags.concat(['DETAILS','DIALOG','MENUITEM','PICTURE',
-                      'SUMMARY'])
+            'TITLE','TR','TT','U','UL','VAR',
+            // HTML5 tags
+            'ARTICLE','ASIDE','AUDIO','BDI','CANVAS','COMMAND','DATA',
+            'DATALIST','EMBED','FIGCAPTION','FIGURE','FOOTER','HEADER',
+            'KEYGEN','MAIN','MARK','MATH','METER','NAV','OUTPUT',
+            'PROGRESS','RB','RP','RT','RTC','RUBY','SECTION','SOURCE',
+            'TEMPLATE','TIME','TRACK','VIDEO','WBR',
+             // HTML5.1 tags
+            'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY']
 
 // create classes
 var obj = new Object()
