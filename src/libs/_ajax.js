@@ -55,7 +55,7 @@ $AjaxDict.open = function(self,method,url,async){
 $AjaxDict.send = function(self,params){
     // params is a Python dictionary
     var res = ''
-    if(!params || params.$keys.length==0){self.$xmlhttp.send();return}
+    if(!params || params == '' || !params.$keys || params.$keys.length==0){self.$xmlhttp.send();return}
     else if(isinstance(params,str)){
         res = params
     }else if(isinstance(params,dict)){
