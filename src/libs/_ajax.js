@@ -53,11 +53,13 @@ $AjaxDict.open = function(self,method,url,async){
 }
 
 $AjaxDict.send = function(self,params){
-    // params is a Python dictionary
+    // params is a Python dictionary  (not always, could be a string..)
     var res = ''
-    if(!params || params == '' || !params.$keys || params.$keys.length==0){self.$xmlhttp.send();return}
-    else if(isinstance(params,str)){
+    if(isinstance(params,str)){
         res = params
+    } else if(!params || !params.$keys || params.$keys.length==0){
+        self.$xmlhttp.send();
+        return
     }else if(isinstance(params,dict)){
         for(i=0;i<params.$keys.length;i++){
             res +=encodeURIComponent(str(params.$keys[i]))+'='+encodeURIComponent(str(params.$values[i]))+'&'
