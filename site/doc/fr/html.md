@@ -5,16 +5,31 @@ Ce module définit des classes correspondant aux balises HTML, en majuscules.
 
 Les classes définies sont :
 
-- les balises HTML4 : `A, ABBR, ACRONYM, ADDRESS, APPLET, AREA, B, BASE, BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON, CAPTION, CENTER, CITE, CODE, COL, COLGROUP, DD, DEL, DFN, DIR, DIV, DL, DT, EM, FIELDSET, FONT, FORM, FRAME, FRAMESET, H1, H2, H3, H4, H5, H6, HEAD, HR, HTML, I, IFRAME, IMG, INPUT, INS, ISINDEX KBD, LABEL, LEGEND, LI, LINK, MAP, MENU, META, NOFRAMES, NOSCRIPT, OBJECT, OL, OPTGROUP, OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT, SELECT, SMALL, SPAN, STRIKE, STRONG, STYLE, SUB, SUP, TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD, TITLE, TR, TT, U, UL, VAR`
+- les balises HTML4 : `A, ABBR, ACRONYM, ADDRESS, APPLET, AREA, B, BASE, 
+            BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON, 
+            CAPTION, CENTER, CITE, CODE, COL, COLGROUP, DD, 
+            DEL, DFN, DIR, DIV, DL, DT, EM, FIELDSET, FONT, 
+            FORM, FRAME, FRAMESET, H1, H2, H3, H4, H5, H6, 
+            HEAD, HR, HTML, I, IFRAME, IMG, INPUT, INS, 
+            ISINDEX, KBD, LABEL, LEGEND, LI, LINK, MAP, MENU, 
+            META, NOFRAMES, NOSCRIPT, OBJECT, OL, OPTGROUP, 
+            OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT, SELECT, 
+            SMALL, SPAN, STRIKE, STRONG, STYLE, SUB, SUP, 
+            TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD, 
+            TITLE, TR, TT, U, UL, VAR`
 
-> En suivant [ce lien](http://www.w3.org/TR/html4/index/elements.html), vous
-> trouverez la liste des balises HTML4 ainsi que leur documentation. Certaines
-> balises listées ci-dessus sont devenues obsolètes en HTML4.01.
+- les balises HTML5 : `ARTICLE, ASIDE, AUDIO, BDI, CANVAS, 
+                      COMMAND, DATA, DATALIST, EMBED, FIGCAPTION, 
+                      FIGURE, FOOTER, HEADER, KEYGEN, MAIN, MARK, 
+                      MATH, METER, NAV, OUTPUT, PROGRESS, RB, 
+                      RP, RT, RTC, RUBY, SECTION, SOURCE, 
+                      SUMMARY, TEMPLATE, TIME, TRACK, VIDEO, 
+                      WBR`
+                      
+- les balises HTML5.1 : `DETAILS, DIALOG, MENUITEM, PICTURE, SUMMARY`
 
-- les balises HTML5 : `ARTICLE, ASIDE, AUDIO, BDI, CANVAS, COMMAND, DATALIST, DETAILS, DIALOG, EMBED, FIGCAPTION, FIGURE, FOOTER, HEADER, HGROUP, KEYGEN, MARK, METER, NAV, OUTPUT, PROGRESS, RP, RT, RUBY, SECTION, SOURCE, SUMMARY, TIME, TRACK, VIDEO, WBR`
-
-> En suivant [ce lien](http://www.w3.org/TR/html5-author/index.html#elements-1),
-> vous trouverez la liste des balises HTML5 ainsi que leur documentation. Cette
+> En suivant [ce lien](https://w3c.github.io/elements-of-html/),
+> vous trouverez la liste des balises HTML ainsi que leur documentation. Cette
 > spécification est encore provisoire.
 
 La syntaxe pour créer un objet (par exemple un lien hypertexte) est :
