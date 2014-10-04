@@ -76,7 +76,11 @@ var $mod = {
        var jan = new Date(d.getFullYear(), 0, 1);
        var jul = new Date(d.getFullYear(), 6, 1);
        var dst=int(d.getTimezoneOffset() < Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset()));
-
+       
+       //http://stackoverflow.com/questions/4631928/convert-utc-epoch-to-local-date-with-javascript  
+       var d= new Date(0);
+       d.setUTCSeconds(secs)
+       
        return [d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(),
                     d.getMinutes(), d.getSeconds(), d.getDay(), 0, dst]
        //fixme  (second to last value is 0 which is the number of days in this year..)
