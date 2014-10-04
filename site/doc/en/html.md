@@ -5,13 +5,30 @@ This module exposes the HTML tags. The tag name is in uppercase letters
 
 The classes defined are :
 
-- HTML4 tags : `A, ABBR, ACRONYM, ADDRESS, APPLET,AREA, B, BASE, BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON, CAPTION, CENTER, CITE, CODE, COL, COLGROUP, DD, DEL, DFN, DIR, DIV, DL, DT, EM, FIELDSET, FONT, FORM, FRAME, FRAMESET,H1, H2, H3, H4, H5, H6, HEAD, HR, HTML, I, IFRAME, IMG, INPUT, INS, ISINDEX, KBD, LABEL, LEGEND, LI, LINK, MAP, MENU, META, NOFRAMES, NOSCRIPT, OBJECT,OL, OPTGROUP, OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT, SELECT, SMALL, SPAN, STRIKE, STRONG, STYLE, SUB, SUP, TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD, TITLE, TR, TT, U, UL, VAR`
+- HTML4 tags : `A, ABBR, ACRONYM, ADDRESS, APPLET, AREA, B, BASE, 
+            BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON, 
+            CAPTION, CENTER, CITE, CODE, COL, COLGROUP, DD, 
+            DEL, DFN, DIR, DIV, DL, DT, EM, FIELDSET, FONT, 
+            FORM, FRAME, FRAMESET, H1, H2, H3, H4, H5, H6, 
+            HEAD, HR, HTML, I, IFRAME, IMG, INPUT, INS, 
+            ISINDEX, KBD, LABEL, LEGEND, LI, LINK, MAP, MENU, 
+            META, NOFRAMES, NOSCRIPT, OBJECT, OL, OPTGROUP, 
+            OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT, SELECT, 
+            SMALL, SPAN, STRIKE, STRONG, STYLE, SUB, SUP, 
+            TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD, 
+            TITLE, TR, TT, U, UL, VAR`
 
-> In the following [link](http://www.w3.org/TR/html4/index/elements.html) you can find the index of HTML4 tags with references. Some of the above tags are deprecated in HTML4.01.
+- HTML5 tags : `ARTICLE, ASIDE, AUDIO, BDI, CANVAS, 
+                      COMMAND, DATA, DATALIST, EMBED, FIGCAPTION, 
+                      FIGURE, FOOTER, HEADER, KEYGEN, MAIN, MARK, 
+                      MATH, METER, NAV, OUTPUT, PROGRESS, RB, 
+                      RP, RT, RTC, RUBY, SECTION, SOURCE, 
+                      SUMMARY, TEMPLATE, TIME, TRACK, VIDEO, 
+                      WBR`
 
-- HTML5 tags : `ARTICLE, ASIDE, AUDIO, BDI, CANVAS, COMMAND, DATALIST, DETAILS, DIALOG, EMBED, FIGCAPTION, FIGURE, FOOTER, HEADER, HGROUP, KEYGEN, MARK, METER, NAV, OUTPUT, PROGRESS, RP, RT, RUBY, SECTION, SOURCE, SUMMARY, TIME, TRACK, VIDEO, WBR`
+- HTML5.1 tags : `DETAILS, DIALOG, MENUITEM, PICTURE, SUMMARY`
 
-> In the following [link](http://www.w3.org/TR/html5-author/index.html#elements-1) you can find the index of HTML5 tags with references (DRAFT).
+> In the following [link](https://w3c.github.io/elements-of-html/) you can find the index of HTML tags with references (DRAFT).
 
 [Note: In the following examples we assume that the **browser.html** module has been imported as follows: `from brower import html`]
 
