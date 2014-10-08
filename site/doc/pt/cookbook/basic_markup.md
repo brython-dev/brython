@@ -19,10 +19,10 @@ Solução
     <body onload="brython()">
     
     <script type="text/python">
-    from browser import doc,html
-    doc['zone'] <= html.H1("Apresentando Brython")
-    doc['zone'] <= html.H4(html.I("Python no navegador"))
-    doc['zone'] <= html.B("Olá mundo !")
+    from browser import document, html
+    document['zone'] <= html.H1("Apresentando Brython")
+    document['zone'] <= html.H4(html.I("Python no navegador"))
+    document['zone'] <= html.B("Olá mundo !")
     </script>
     
     </body>
@@ -36,13 +36,14 @@ Solução
 </table>
 
 <script type="text/python3">
-def fill_zone(ev):
-    from browser import doc,html
-    doc['zone'] <= html.H1("Introducing Brython")
-    doc['zone'] <= html.H4(html.I("Python in the browser"))
-    doc['zone'] <= html.B("Hello world !")
+from browser import document ,html
 
-doc['fill_zone'].bind('click', fill_zone)
+def fill_zone(ev):
+    document['zone'] <= html.H1("Introducing Brython")
+    document['zone'] <= html.H4(html.I("Python in the browser"))
+    document['zone'] <= html.B("Hello world !")
+
+document['fill_zone'].bind('click', fill_zone)
 </script>
 
 `B` é a função definida no módulo `browser.html`, correspondendo à

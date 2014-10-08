@@ -5,30 +5,13 @@ Este módulo permite acceder a las etiquetas HTML. El nombre de la etiqueta se e
 
 Las etiquetas disponibles son :
 
-- Etiquetas HTML4 : `A, ABBR, ACRONYM, ADDRESS, APPLET, AREA, B, BASE, 
-            BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON, 
-            CAPTION, CENTER, CITE, CODE, COL, COLGROUP, DD, 
-            DEL, DFN, DIR, DIV, DL, DT, EM, FIELDSET, FONT, 
-            FORM, FRAME, FRAMESET, H1, H2, H3, H4, H5, H6, 
-            HEAD, HR, HTML, I, IFRAME, IMG, INPUT, INS, 
-            ISINDEX, KBD, LABEL, LEGEND, LI, LINK, MAP, MENU, 
-            META, NOFRAMES, NOSCRIPT, OBJECT, OL, OPTGROUP, 
-            OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT, SELECT, 
-            SMALL, SPAN, STRIKE, STRONG, STYLE, SUB, SUP, 
-            TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD, 
-            TITLE, TR, TT, U, UL, VAR`
+- Etiquetas HTML4 : `A, ABBR, ACRONYM, ADDRESS, APPLET,AREA, B, BASE, BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON, CAPTION, CENTER, CITE, CODE, COL, COLGROUP, DD, DEL, DFN, DIR, DIV, DL, DT, EM, FIELDSET, FONT, FORM, FRAME, FRAMESET,H1, H2, H3, H4, H5, H6, HEAD, HR, HTML, I, IFRAME, IMG, INPUT, INS, ISINDEX, KBD, LABEL, LEGEND, LI, LINK, MAP, MENU, META, NOFRAMES, NOSCRIPT, OBJECT,OL, OPTGROUP, OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT, SELECT, SMALL, SPAN, STRIKE, STRONG, STYLE, SUB, SUP, TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD, TITLE, TR, TT, U, UL, VAR`
 
-- Etiquetas HTML5 : `ARTICLE, ASIDE, AUDIO, BDI, CANVAS, 
-                      COMMAND, DATA, DATALIST, EMBED, FIGCAPTION, 
-                      FIGURE, FOOTER, HEADER, KEYGEN, MAIN, MARK, 
-                      MATH, METER, NAV, OUTPUT, PROGRESS, RB, 
-                      RP, RT, RTC, RUBY, SECTION, SOURCE, 
-                      SUMMARY, TEMPLATE, TIME, TRACK, VIDEO, 
-                      WBR`
-                      
-- Etiquetas HTML5.1 : `DETAILS, DIALOG, MENUITEM, PICTURE, SUMMARY`                      
+> En el siguiente [enlace](http://www.w3.org/TR/html4/index/elements.html) puedes ver un listado de las etiquetas HTML4 con sus referencias. Algunas de las etiquetas de arriba han sido abandonadas HTML4.01.
 
-> En el siguiente [enlace](https://w3c.github.io/elements-of-html/) puedes ver un listado de las etiquetas HTML con sus referencias (Borrador).
+- Etiquetas HTML5 : `ARTICLE, ASIDE, AUDIO, BDI, CANVAS, COMMAND, DATALIST, DETAILS, DIALOG, EMBED, FIGCAPTION, FIGURE, FOOTER, HEADER, HGROUP, KEYGEN, MARK, METER, NAV, OUTPUT, PROGRESS, RP, RT, RUBY, SECTION, SOURCE, SUMMARY, TIME, TRACK, VIDEO, WBR`
+
+> En el siguiente [enlace](http://www.w3.org/TR/html5-author/index.html#elements-1) puedes ver un listado de las etiquetas HTML5 con sus referencias (Borrador).
 
 [Nota: En los siguientes ejemplos a continuación se asume que el módulo **browser.html** ha sido importado de la siguiente forma: `from brower import html`]
 

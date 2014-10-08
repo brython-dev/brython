@@ -6,32 +6,28 @@ maiúsculas.
 
 As classes definidas neste módulo são:
 
-- etiquetas HTML4: `A, ABBR, ACRONYM, ADDRESS, APPLET, AREA, B, BASE, 
-            BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON, 
-            CAPTION, CENTER, CITE, CODE, COL, COLGROUP, DD, 
-            DEL, DFN, DIR, DIV, DL, DT, EM, FIELDSET, FONT, 
-            FORM, FRAME, FRAMESET, H1, H2, H3, H4, H5, H6, 
-            HEAD, HR, HTML, I, IFRAME, IMG, INPUT, INS, 
-            ISINDEX, KBD, LABEL, LEGEND, LI, LINK, MAP, MENU, 
-            META, NOFRAMES, NOSCRIPT, OBJECT, OL, OPTGROUP, 
-            OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT, SELECT, 
-            SMALL, SPAN, STRIKE, STRONG, STYLE, SUB, SUP, 
-            TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD, 
-            TITLE, TR, TT, U, UL, VAR`
+- etiquetas HTML4: <code>A, ABBR, ACRONYM, ADDRESS, APPLET,AREA, B,
+  BASE, BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON, CAPTION,
+  CENTER, CITE, CODE, COL, COLGROUP, DD, DEL, DFN, DIR, DIV, DL, DT,
+  EM, FIELDSET, FONT, FORM, FRAME, FRAMESET,H1, H2, H3, H4, H5, H6,
+  HEAD, HR, HTML, I, IFRAME, IMG, INPUT, INS, ISINDEX, KBD, LABEL,
+  LEGEND, LI, LINK, MAP, MENU, META, NOFRAMES, NOSCRIPT, OBJECT,OL,
+  OPTGROUP, OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT, SELECT, SMALL,
+  SPAN, STRIKE, STRONG, STYLE, SUB, SUP, TABLE, TBODY, TD, TEXTAREA,
+  TFOOT, TH, THEAD, TITLE, TR, TT, U, UL, VAR</code>
 
-- etiquetas HTML5: `ARTICLE, ASIDE, AUDIO, BDI, CANVAS, 
-                      COMMAND, DATA, DATALIST, EMBED, FIGCAPTION, 
-                      FIGURE, FOOTER, HEADER, KEYGEN, MAIN, MARK, 
-                      MATH, METER, NAV, OUTPUT, PROGRESS, RB, 
-                      RP, RT, RTC, RUBY, SECTION, SOURCE, 
-                      SUMMARY, TEMPLATE, TIME, TRACK, VIDEO, 
-                      WBR`
+> Neste [link](http://www.w3.org/TR/html4/index/elements.html) você
+> pode encontrar um índice de etiquetas (tags) HTML4 com
+> referências. Algumas das etiquetas acima são deprecadas em HTML4.01.
 
-- etiquetas HTML5.1 : `DETAILS, DIALOG, MENUITEM, PICTURE, SUMMARY`
+- etiquetas HTML5: <code>ARTICLE, ASIDE, AUDIO, BDI, CANVAS, COMMAND,
+  DATALIST, DETAILS, DIALOG, EMBED, FIGCAPTION, FIGURE, FOOTER,
+  HEADER, HGROUP, KEYGEN, MARK, METER, NAV, OUTPUT, PROGRESS, RP, RT,
+  RUBY, SECTION, SOURCE, SUMMARY, TIME, TRACK, VIDEO, WBR</code>
 
 > Neste
-> [link](https://w3c.github.io/elements-of-html/) você
-> pode encontrar o índice de etiquetas (tags) HTML com referências
+> [link](http://www.w3.org/TR/html5-author/index.html#elements-1) você
+> pode encontrar o índice de etiquetas (tags) HTML5 com referências
 > (rascunho de especificação).
 
 Nota: Nos exemplos seguintes assumimos que o módulo **browser.html**
