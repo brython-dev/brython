@@ -9,10 +9,10 @@
 <body onload="brython(1)">
 
 <script type="text/python3">
-from javascript import JSObject
+from browser import window
 
 # Creates canvas 320 × 200 at 10, 50
-bRaphael = JSObject(Raphael)
+bRaphael = window.Raphael
 
 paper = bRaphael(410, 50, 320, 200)
 

@@ -36,10 +36,10 @@
             }
         </style>
         <script type="text/python3">
-        from browser import document
+        from browser import document, window
         from javascript import JSObject
         
-        paper = JSObject(Raphael)("canvas", 640, 480)
+        paper = window.Raphael("canvas", 640, 480)
         btn = document["run"]
         cd = document["code"]
 

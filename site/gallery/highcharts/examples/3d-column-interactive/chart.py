@@ -1,7 +1,7 @@
-from browser import document
+from browser import document, window
 from javascript import JSConstructor
 
-b_highchart = JSConstructor(Highcharts.Chart)
+b_highchart = JSConstructor(window.Highcharts.Chart)
 
 chart = b_highchart({
     'chart': {
@@ -42,7 +42,7 @@ showValues()
 def change_alpha(ev):
     chart.options.chart.options3d.alpha = ev.target.value
     showValues()
-    chart.redraw(false)
+    chart.redraw(False)
 
 def change_beta(ev):
     chart.options.chart.options3d.beta = ev.target.value

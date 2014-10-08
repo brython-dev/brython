@@ -1,9 +1,9 @@
 import math
 
-from browser import document
+from browser import document, window
 from javascript import JSObject
 
-bRaphael = JSObject(Raphael)
+bRaphael = window.Raphael
 
 out = document["output"]
 vr = document["vr"]
