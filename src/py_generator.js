@@ -257,7 +257,7 @@ $BRGeneratorDict.__next__ = function(self){
     
     self.gi_running = true
     
-    if(self.num<6){console.log('run _next of '+self.iter_id+'\n'+self._next)}
+    //if(self.num<6){console.log('run _next of '+self.iter_id+'\n'+self._next)}
     
     // Call the function _next to yield a value
     try{

@@ -1816,7 +1816,7 @@ function $DefCtx(context){
         var txt = ')('
         if(this.type=='def'){
             txt+=enclosing.join(',')
-            if(enclosing.length>0){console.log(this.name+' has enclosing')}
+            //if(enclosing.length>0){console.log(this.name+' has enclosing')}
         }
         new $NodeJSCtx(ret_node,txt+')')
         node.parent.insert(rank+1,ret_node)
