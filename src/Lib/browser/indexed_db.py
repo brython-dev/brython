@@ -95,7 +95,7 @@ class ObjectStore:
           cursor=event.target.result
           if cursor is not None:
              self._data.append(cursor.value)
-             cursor.continue()
+             getattr(cursor,"continue")() # cursor.continue() is illegal
 
       self._objectStore.openCursor(args).onsuccess=onsuccess
 

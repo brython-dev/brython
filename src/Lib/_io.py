@@ -35,7 +35,7 @@ DEFAULT_BUFFER_SIZE = 8 * 1024  # bytes
 BlockingIOError = BlockingIOError
 
 
-def open(file, mode="r", buffering=-1, encoding=None, errors=None,
+def __open(file, mode="r", buffering=-1, encoding=None, errors=None,
          newline=None, closefd=True, opener=None):
 
     r"""Open file and return a stream.  Raise IOError upon failure.

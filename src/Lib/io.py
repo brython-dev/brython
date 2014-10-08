@@ -291,4 +291,4 @@ class RawIOBase:
 
 BufferedReader = RawIOBase
 
-from _io import *
+#from _io import *

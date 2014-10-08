@@ -727,14 +727,12 @@ def fix_flags(src, flags):
 
 def parse(str, flags=0, pattern=None):
     # parse 're' pattern into list of (opcode, argument) tuples
-
     source = Tokenizer(str)
 
     if pattern is None:
         pattern = Pattern()
     pattern.flags = flags
     pattern.str = str
-
     p = _parse_sub(source, pattern, 0)
     p.pattern.flags = fix_flags(str, p.pattern.flags)
 
@@ -860,3 +858,5 @@ def expand_template(template, match):
     except IndexError:
         raise error("invalid group reference")
     return sep.join(literals)
+
+
