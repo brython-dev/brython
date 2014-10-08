@@ -3,7 +3,7 @@ import time
 import traceback
 import dis
 
-from browser import document as doc
+from browser import document as doc, window
 from javascript import JSObject
 
 # set height of container to 66% of screen
@@ -13,7 +13,7 @@ _s.style.height = '%spx' % int(_height*0.66)
 
 has_ace = True
 try:
-    editor=JSObject(ace).edit("editor")
+    editor=JSObject(window.ace).edit("editor")
     editor.getSession().setMode("ace/mode/python")
 except:
     from browser import html
@@ -78,7 +78,7 @@ def run(*args):
 
     t0 = time.perf_counter()
     try:
-        exec(src,globals())
+        exec(src)
         state = 1
     except Exception as exc:
         traceback.print_exc()
@@ -89,7 +89,7 @@ def run(*args):
     return state
 
 # load a Python script
-def load(evt):
+def load_script(evt):
     _name=evt.target.value+'?foo=%s' %time.time()
     editor.setValue(open(_name).read())
 

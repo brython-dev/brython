@@ -32,8 +32,6 @@
 <script type="text/javascript" src="../../src/py_list.js"></script>
 <script type="text/javascript" src="../../src/py_dom.js"></script>
 
-<script type="text/javascript" src="../../src/py_import_hooks.js"></script>
-
 <script type="text/python" src="editor.py"></script>
 
 <script type="text/python3">
@@ -84,7 +82,7 @@ doc['set_debug'].bind('change',set_debug)
 doc['show_js'].bind('click',show_js)
 doc['run'].bind('click',run)
 doc['show_console'].bind('click',show_console)
-doc['files'].bind('change',load)
+doc['files'].bind('change',load_script)
 </script>
 <script type="text/python3">
 import header
@@ -108,8 +106,7 @@ for key in trans:
 </script>
 
 </head>
-<body onload="brython({debug:1, cache:'none', static_stdlib_import:true,
-                       custom_import_funcs: [import_hooks]})">
+<body onload="brython({debug:1, cache:'none', static_stdlib_import:true})">
 
 <table id="banner" cellpadding=0 cellspacing=0>
 <tr id="banner_row">
