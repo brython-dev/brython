@@ -1,7 +1,8 @@
-__BRYTHON__.implementation = [2, 2, 1, 'rc', 0]
-__BRYTHON__.__MAGIC__ = "2.2.1"
+__BRYTHON__.implementation = [3, 0, 0, 'rc', 0]
+__BRYTHON__.__MAGIC__ = "3.0.0"
 __BRYTHON__.version_info = [3, 3, 0, 'alpha', 0]
 __BRYTHON__.builtin_module_names = ["posix","builtins",
+    "dis",
     "hashlib",
     "javascript",
     "json",
@@ -25,6 +26,7 @@ __BRYTHON__.builtin_module_names = ["posix","builtins",
     "_codecs",
     "_collections",
     "_csv",
+    "_dis",
     "_dummy_thread",
     "_functools",
     "_imp",

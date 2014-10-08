@@ -15,6 +15,28 @@ if ($B.isa_web_worker==true) {
   window.clearTimeout=function(timer) {clearTimeout(timer)}
 }
 
+// Name bindings in scopes
+// Name "x" defined in a scope are keys of the dictionary
+// __BRYTHON__.bound[scope.id]
+// with value set to true
+$B.bound = {}
+
+// Maps a module name to matching module object
+// A module can be the body of a script, or the body of a block inside a
+// script, such as in exec() or in a comprehension
+$B.modules = {}
+    
+// Maps a Python block (module, function, class) name to a Javascript object
+// mapping the names defined in this block to their value
+$B.vars = {}
+
+// Maps block names to a dictionary indexed by names defined as global
+// inside the block
+$B.globals = {}
+
+// Stack of executing scripts
+$B.exec_stack = []
+
 // Python __builtins__
 $B.builtins = {
     __repr__:function(){return "<module 'builtins>'"},
