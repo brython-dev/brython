@@ -407,8 +407,6 @@ $B.$import = function(mod_name,origin){
     }else{
         funcs = [import_from_stdlib]
     }
-    funcs = funcs.concat([import_from_site_packages, 
-        import_from_caller_folder])
 
     // custom functions to use to search/import modules 
     // ie, think localStorage, or maybe google drive
@@ -416,6 +414,10 @@ $B.$import = function(mod_name,origin){
     if ($B.$options['custom_import_funcs'] !== undefined) {
        funcs = funcs.concat($B.$options['custom_import_funcs'])
     }
+
+    funcs = funcs.concat([import_from_site_packages, 
+                          import_from_caller_folder])
+
 
     // If the module name is qualified (form "import X.Y") we must import
     // X, then import X.Y
