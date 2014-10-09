@@ -247,18 +247,27 @@ $B.$dict_comp = function(module_name,parent_block_id){ // dictionary comprehensi
     return __BRYTHON__.vars[locals_id][$res]
 }
 
-$B.$lambda = function($mod,parent_block_id,$args,$body){
+$B.$lambda = function(locals,$mod,parent_block_id,$args,$body){
 
     var rand = Math.random().toString(36).substr(2,8)
-    var $res = 'lambda_'+rand
+    var $res = 'lambda_'+$B.lambda_magic+'_'+rand
     var local_id = 'lambda'+rand
     var $py = 'def '+$res+'('+$args+'):\n'
     $py += '    return '+$body
+    
+    $B.vars[local_id] = $B.vars[local_id] || {}
+    for(var $attr in locals){
+        $B.vars[local_id][$attr] = locals[$attr]
+    }
 
     var $js = $B.py2js($py,$mod,local_id,parent_block_id).to_js()
-
-    eval($js)
-
+    try{
+        eval($js)
+        console.log('lambda ok')
+    }catch(err){
+        console.log(err)
+        throw err
+    }
     var $res = __BRYTHON__.vars[local_id][$res]
     $res.__module__ = $mod
     $res.__name__ = '<lambda>'

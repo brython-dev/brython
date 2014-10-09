@@ -1594,6 +1594,14 @@ function $DefCtx(context){
         var header = $ws(indent)
         
         // List of enclosing functions
+        
+        // For lambdas, test if the parent block is a function
+        if(this.name.substr(0,15)=='lambda_'+$B.lambda_magic){
+            var pblock = $B.modules[scope.id].parent_block
+            if(pblock.context && pblock.context.tree[0].type=="def"){
+                this.enclosing.push(pblock)
+            }
+        }
         var pnode = this.parent.node
         while(pnode.parent && pnode.parent.is_def_func){
             this.enclosing.push(pnode.parent.parent)
@@ -3030,6 +3038,7 @@ function $LambdaCtx(context){
     this.args_start = $pos+6
     this.vars = []
     this.locals = []
+    
     this.to_js = function(){
         var module = $get_module(this).module
         var scope = $get_scope(this)
@@ -3039,7 +3048,7 @@ function $LambdaCtx(context){
         var args = src.substring(this.args_start,this.body_start).replace(qesc,'\\"')
         var body = src.substring(this.body_start+1,this.body_end).replace(qesc,'\\"')
         body = body.replace(/\n/g,' ')
-        var res = '__BRYTHON__.$lambda("'+scope.module+'","'
+        var res = '__BRYTHON__.$lambda($locals,"'+scope.module+'","'
         res += scope.id+'","'+args+'","'+body+'")'
         return res
     }
@@ -6247,6 +6256,9 @@ function brython(options){
     // Used to compute the hash value of some objects (see 
     // py_builtin_functions.js)
     $B.$py_next_hash = -Math.pow(2,53)
+    
+    // Magic name used in lambdas
+    $B.lambda_magic = Math.random().toString(36).substr(2,8)
 
     // Callback functions indexed by their name
     // Used to print a traceback if an exception is raised when the function

@@ -959,6 +959,9 @@ this.rank=rank
 var fglobs=this.parent.node.globals
 var indent=node.indent+16
 var header=$ws(indent)
+if(this.name.substr(0,15)=='lambda_'+$B.lambda_magic){var pblock=$B.modules[scope.id].parent_block
+if(pblock.C && pblock.C.tree[0].type=="def"){this.enclosing.push(pblock)
+}}
 var pnode=this.parent.node
 while(pnode.parent && pnode.parent.is_def_func){this.enclosing.push(pnode.parent.parent)
 pnode=pnode.parent.parent
@@ -1831,7 +1834,7 @@ var qesc=new RegExp('"',"g")
 var args=src.substring(this.args_start,this.body_start).replace(qesc,'\\"')
 var body=src.substring(this.body_start+1,this.body_end).replace(qesc,'\\"')
 body=body.replace(/\n/g,' ')
-var res='__BRYTHON__.$lambda("'+scope.module+'","'
+var res='__BRYTHON__.$lambda($locals,"'+scope.module+'","'
 res +=scope.id+'","'+args+'","'+body+'")'
 return res
 }}
@@ -4079,6 +4082,7 @@ $B.path_hooks=[]
 $B.imported={__main__:{__class__:$B.$ModuleDict,__name__:'__main__'}}
 $B.$options={}
 $B.$py_next_hash=-Math.pow(2,53)
+$B.lambda_magic=Math.random().toString(36).substr(2,8)
 $B.callbacks={}
 if(options===undefined)options={'debug':0}
 if(typeof options==='number')options={'debug':options}
@@ -4715,11 +4719,14 @@ var $js=$root.to_js()
 eval($js)
 return __BRYTHON__.vars[locals_id][$res]
 }
-$B.$lambda=function($mod,parent_block_id,$args,$body){var rand=Math.random().toString(36).substr(2,8)
-var $res='lambda_'+rand
+$B.$lambda=function(locals,$mod,parent_block_id,$args,$body){var rand=Math.random().toString(36).substr(2,8)
+var $res='lambda_'+$B.lambda_magic+'_'+rand
 var local_id='lambda'+rand
 var $py='def '+$res+'('+$args+'):\n'
 $py +='    return '+$body
+$B.vars[local_id]=$B.vars[local_id]||{}
+for(var $attr in locals){$B.vars[local_id][$attr]=locals[$attr]
+}
 var $js=$B.py2js($py,$mod,local_id,parent_block_id).to_js()
 eval($js)
 var $res=__BRYTHON__.vars[local_id][$res]
@@ -7343,6 +7350,8 @@ var mod,funcs=[]
 if($B.use_VFS){funcs=[import_from_VFS]
 }else if($B.static_stdlib_import){funcs=[import_from_stdlib_static]
 }else{funcs=[import_from_stdlib]
+}
+if($B.$options['custom_import_funcs']!==undefined){funcs=funcs.concat($B.$options['custom_import_funcs'])
 }
 funcs=funcs.concat([import_from_site_packages,import_from_caller_folder])
 var mod_elts=mod_name.split('.')
