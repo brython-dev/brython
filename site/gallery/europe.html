@@ -5,7 +5,28 @@
 <meta name="keywords" content="Python,Brython">
 <meta name="author" content="Pierre Quentel">
 <meta http-equiv="Content-type" content="text/html;charset=utf-8">
-<script src="../../src/brython.js"></script>
+<script type="text/javascript" src="../../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../../src/version_info.js"></script>
+<script type="text/javascript" src="../../src/identifiers_re.js"></script>
+<script type="text/javascript" src="../../src/py2js.js"></script>
+<script type="text/javascript" src="../../src/py_object.js"></script>
+<script type="text/javascript" src="../../src/py_type.js"></script>
+<script type="text/javascript" src="../../src/py_utils.js"></script>
+<script type="text/javascript" src="../../src/py_generator.js"></script>
+<script type="text/javascript" src="../../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../../src/py_bytes.js"></script>
+<script type="text/javascript" src="../../src/py_set.js"></script>
+<script type="text/javascript" src="../../src/js_objects.js"></script>
+<script type="text/javascript" src="../../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../../src/py_import.js"></script>
+
+<script type="text/javascript" src="../../src/py_string.js"></script>
+<script type="text/javascript" src="../../src/py_int.js"></script>
+<script type="text/javascript" src="../../src/py_float.js"></script>
+<script type="text/javascript" src="../../src/py_complex.js"></script>
+<script type="text/javascript" src="../../src/py_dict.js"></script>
+<script type="text/javascript" src="../../src/py_list.js"></script>
+<script type="text/javascript" src="../../src/py_dom.js"></script>
 <style>
 .rounded-corners {
      -moz-border-radius: 20px;
@@ -71,10 +92,11 @@ for i,area in enumerate(doc[AREA]):
     area.bind('dragover',drag_over)
     area.bind('drop',drop)
 step = 0
+_timer = None
 
 def go_back(elt,mouse):
     # smoothly move the DIV to its original place
-    global step
+    global step, _timer
     x0,y0 = mouse.x-elt.clientWidth/2,mouse.y-elt.clientHeight/2
     x1,y1 = elt.left,elt.top # return integers (elt.style.left returns a string like "110px")
     step = 0

@@ -8,7 +8,8 @@ $B.make_node = function(top_node, node){
     
     if(node.locals_def){
         // the node where local namespace is reset
-        ctx_js = 'var $locals = $B.vars["'+top_node.iter_id+'"]'
+        ctx_js = 'var $locals = $B.vars["'+top_node.iter_id+'"], '
+        ctx_js += '$locals_id = "'+top_node.iter_id+'";'
     }
     
     if(node.is_catch){is_except=true;is_cond=true}
@@ -121,7 +122,7 @@ $B.genNode = function(data, parent){
         }
 
         if(head && this.is_break){
-            res.data = '$no_break'+this.loop_num+'=false;'
+            res.data = '$locals["$no_break'+this.loop_num+'"]=false;'
             res.data += 'var err = new Error("break");'
             res.data += 'err.__class__=__BRYTHON__.GeneratorBreak;throw err;'
             res.is_break = true
@@ -218,21 +219,32 @@ $BRGeneratorDict.__next__ = function(self){
  
     // Inject global variables in local namespace
     for(var $attr in $B.vars[self.module]){
-        eval("var "+$attr+"=$B.vars[self.module][$attr]")
+        //console.log("var "+$attr+"=$B.vars[self.module][$attr]")
+        try{eval("var "+$attr+"=$B.vars[self.module][$attr]")}
+        catch(err){console.log('err for '+$attr)}
     }
-
     // If generator is a method, we need the $class object
     var $class = eval(self.$class)
 
-    if(self._next===undefined){
+    if(self.func_root.scope.context===undefined){
+        var $globals = __BRYTHON__.vars[self.func_root.scope.id]
+    }
+    
+    var scope_id = self.func_root.scope.id
+    
+    var first_iter = self._next===undefined
+    
+    if(first_iter){
 
         // First iteration : run generator function to initialise the iterator
-
+        
         var src = self.func_root.src()+'\n)()'
+
         try{eval(src)}
         catch(err){console.log("cant eval\n"+src+'\n'+err);throw err}
         
-        self._next = eval(self.func_name)
+        self._next = __BRYTHON__.$generators[self.iter_id]
+        
     }
 
     // Increment the iteration counter
@@ -245,11 +257,12 @@ $BRGeneratorDict.__next__ = function(self){
     
     self.gi_running = true
     
-    //console.log('run _next of '+self.iter_id+'\n'+self._next)
+    //if(self.num<6){console.log('run _next of '+self.iter_id+'\n'+self._next)}
     
     // Call the function _next to yield a value
     try{
         var res = self._next.apply(null, self.args)
+
     }catch(err){
         self._next = function(){
             var _err = StopIteration('after exception')
@@ -295,25 +308,18 @@ $BRGeneratorDict.__next__ = function(self){
     
     // Create root node of new function and add the initialisation 
     // instructions
-
-    var root = new $B.genNode(self.def_ctx.to_js())
+    
+    var root = new $B.genNode(self.def_ctx.to_js('__BRYTHON__.generators["'+self.iter_id+'"]'))
     root.addChild(self.func_root.children[0].clone())
     fnode = self.func_root.children[1].clone()
     root.addChild(fnode)
     func_node = self.func_root.children[1]
     
-    // Add code to restore global variables
-
-    var js = 'var $globals = __BRYTHON__.vars["'+self.module+'"]'
+    // restore $globals and $locals
+    var js = 'var $globals = __BRYTHON__.vars["'+self.func_root.module+'"]'
     fnode.addChild(new $B.genNode(js))
-    js = 'for(var $var in $globals){eval("var "+$var+"=$globals[$var]")}'
-    fnode.addChild(new $B.genNode(js))
-
-    // and code to restore local variables
 
     var js = 'var $locals = __BRYTHON__.vars["'+self.iter_id+'"]'
-    fnode.addChild(new $B.genNode(js))
-    js = 'for(var $var in $locals){eval("var "+$var+"=$locals[$var]")}'
     fnode.addChild(new $B.genNode(js))
 
     // Parent of exit node    
@@ -437,7 +443,8 @@ $BRGeneratorDict.__next__ = function(self){
     try{eval(next_src)}
     catch(err){console.log('error '+err+'\n'+next_src)}
     
-    self._next = eval(self.func_name)
+    //self._next = eval(self.func_name)
+    self._next = __BRYTHON__.generators[self.iter_id]    
     
     //console.log('new _next\n'+self._next)
     //if(self.func_name=="$foo"){console.log('after yielding '+yielded_value+'\n'+self._next)}
@@ -477,20 +484,16 @@ $BRGeneratorDict.$$throw = function(self, value){
     return $BRGeneratorDict.__next__(self)
 }
 
-$B.$BRgenerator = function(func, def_id, $class){
+$B.$BRgenerator = function(scope_id, func_name, def_id, $class){
 
-    var def_ctx = $B.modules[def_id]
+    var def_node = $B.modules[def_id]
+    var def_ctx = def_node.context.tree[0]
     var counter = 0 // used to identify the function run for each next()
-
-    var func_name = '$'+def_ctx.name // name of the function run for each next()
-    if($class!==undefined){func_name = '$class.'+func_name}
-
-    var def_node = def_ctx.parent.node
-    var module = def_node.module
     
-    // identify the node with "try"
+    var func = __BRYTHON__.vars[scope_id][func_name]
+    __BRYTHON__.generators = __BRYTHON__.generators || {}
 
-    var try_node = def_node.children[1].children[0]
+    var module = def_node.module
 
     var res = function(){
         var args = []
@@ -502,13 +505,21 @@ $B.$BRgenerator = function(func, def_id, $class){
         
         // initialise its namespace
         $B.vars[iter_id] = {}
+        
+        // Names bound in generator are also bound in iterator
+        $B.bound[iter_id] = {}
+        for(var attr in $B.bound[def_id]){$B.bound[iter_id][attr] = true}
 
         // Create a tree structure based on the generator tree
         // iter_id is used in the node where the iterator resets local
         // namespace
-        var func_root = new $B.genNode(def_node.context.to_js())
+        __BRYTHON__.$generators = __BRYTHON__.$generators || {}
+        var func_root = new $B.genNode(def_ctx.to_js('__BRYTHON__.$generators["'+iter_id+'"]'))
+        func_root.scope = __BRYTHON__.modules[scope_id]
+        func_root.module = module
         func_root.yields = []
         func_root.loop_ends = {}
+        func_root.def_id = def_id
         func_root.iter_id = iter_id
         for(var i=0;i<def_node.children.length;i++){
             func_root.addChild($B.make_node(func_root, def_node.children[i]))
@@ -520,7 +531,9 @@ $B.$BRgenerator = function(func, def_id, $class){
             __class__ : $BRGeneratorDict,
             args:args,
             $class:$class,
+            def_id:def_id,
             def_ctx:def_ctx,
+            def_node:def_node,
             func:func,
             func_name:func_name,
             func_root:func_root,
@@ -529,12 +542,15 @@ $B.$BRgenerator = function(func, def_id, $class){
             next_root:func_root,
             gi_running:false,
             iter_id:iter_id,
+            id:iter_id,
             num:0
         }
         
         $B.modules[iter_id] = obj
+        obj.parent_block = def_node.parent_block
         return obj
     }
+    res.__call__ = function(){console.log('call generator');return res.apply(null,arguments)}
     res.__repr__ = function(){return "<function "+func.__name__+">"}
     return res
 }

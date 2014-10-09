@@ -70,7 +70,7 @@ def set_debug(ev):
         __BRYTHON__.debug = 0
 
 # bindings
-doc['run_js'].bind('click',run_js)
+doc['run_js'].bind('click', window.run_js)
 doc['set_debug'].bind('change',set_debug)
 
 # next functions are defined in editor.py

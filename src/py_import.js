@@ -163,11 +163,12 @@ function import_py(module,path,package){
     return run_py(module,path,module_contents)
 }
 
-$B.run_py=run_py=function(module,path,module_contents) {
+function run_py(module,path,module_contents) {
     var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
     $B.$py_module_path[module.name]=path
 
-    var root = $B.py2js(module_contents,module.name)
+    var root = $B.py2js(module_contents,module.name,
+        module.name,'__builtins__')
     var body = root.children
     root.children = []
     // use the module pattern : module name returns the results of an anonymous function
@@ -188,7 +189,7 @@ $B.run_py=run_py=function(module,path,module_contents) {
     
     try{
         var js = root.to_js()
-        if ($B.$options.debug == 10) {
+        if ($B.$options.debug == 10 && module.name=='_thread') {
            console.log('code for module '+module.name)
            console.log(js)
         }

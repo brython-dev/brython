@@ -24,7 +24,8 @@ def Grab(evt):
         # turn off all pointer events to the dragged element, this does 2 things:
         #    1) allows us to drag text elements without selecting the text
         #    2) allows us to find out where the dragged element is dropped (see Drop)
-        DragTarget.setAttributeNS(null, 'pointer-events', 'none')
+        DragTarget.setAttributeNS(None, 'pointer-events', 'none')
+        print(DragTarget.id.split('_'))
         
         # we need to find the current position and translation of the grabbed element,
         #    so that we only apply the differential between the current location
@@ -238,7 +239,7 @@ filled[3][3] = None
 
 </script>
 </head>
-<body onload="brython(1)">
+<body onload="brython(2)">
 <svg width='100%' height='100%' xmlns='http://www.w3.org/2000/svg'
    id="svg_root">
 

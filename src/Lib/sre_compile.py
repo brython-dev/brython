@@ -501,7 +501,7 @@ def _code(p, flags):
 def compile(p, flags=0):
     # internal: convert pattern list to internal format
 
-    #print("sre_compile.py:compile:492:p", p)
+    #print("sre_compile.py:compile:504:p", p)
     if isstring(p):
         pattern = p
         p = sre_parse.parse(p, flags)

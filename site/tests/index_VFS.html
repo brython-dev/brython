@@ -37,7 +37,7 @@
 <script type="text/python" src="editor.py"></script>
 
 <script type="text/python3">
-from browser import doc,timer
+from browser import document, timer, window
 
 script_num = -1
 failed = []
@@ -45,18 +45,18 @@ failed = []
 def test_next():
     global script_num,failed
     script_num += 1
-    options = doc['files'].options
+    options = document['files'].options
     if script_num < len(options):
-        option = doc['files'].options[script_num]
+        option = document['files'].options[script_num]
         src = open(option.value).read()
-        doc['files'].selectedIndex = script_num
+        document['files'].selectedIndex = script_num
         editor.setValue(src)
         state = run()
         if state == 0:
             failed.append(option.text)
         timer.set_timeout(test_next,500)
     else:
-        doc['console'].value = ''
+        document['console'].value = ''
         print('completed all tests !')
         print('failed : %s' %failed)
     
@@ -67,14 +67,14 @@ def test_all(ev):
     test_next()
 
 # bindings
-doc['test_all'].bind('click',test_all)
+document['test_all'].bind('click',test_all)
 
 # next functions are defined in editor.py
-doc['show_js'].bind('click',show_js)
-doc['run'].bind('click',run)
-doc['clear_text'].bind('click',clear_text)
-doc['show_console'].bind('click',show_console)
-doc['files'].bind('change',load)
+document['show_js'].bind('click',show_js)
+document['run'].bind('click',run)
+document['clear_text'].bind('click',window.clear_text)
+document['show_console'].bind('click',show_console)
+document['files'].bind('change',load_script)
 </script>
 <script type="text/python3">
 import header

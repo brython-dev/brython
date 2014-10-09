@@ -306,6 +306,7 @@ function dict(){
     $DictDict.__init__.apply(null,args)
     return res
 }
+
 $B.$dict = dict // used for dict literals : "x={}" is translated to "x=__BRYTHON__.$dict()",
              // not to "x=dict()"
              // otherwise this would fail :

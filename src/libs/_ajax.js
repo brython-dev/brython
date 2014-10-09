@@ -6,6 +6,7 @@ var _b_ = $B.builtins
 var $s=[]
 for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
 eval($s.join(';'))
+//for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
 
 var $XMLHttpDict = {__class__:$B.$type,__name__:'XMLHttp'}
 
@@ -53,13 +54,11 @@ $AjaxDict.open = function(self,method,url,async){
 }
 
 $AjaxDict.send = function(self,params){
-    // params is a Python dictionary  (not always, could be a string..)
+    // params is a Python dictionary
     var res = ''
-    if(isinstance(params,str)){
+    if(!params || params.$keys.length==0){self.$xmlhttp.send();return}
+    else if(isinstance(params,str)){
         res = params
-    } else if(!params || !params.$keys || params.$keys.length==0){
-        self.$xmlhttp.send();
-        return
     }else if(isinstance(params,dict)){
         for(i=0;i<params.$keys.length;i++){
             res +=encodeURIComponent(str(params.$keys[i]))+'='+encodeURIComponent(str(params.$values[i]))+'&'

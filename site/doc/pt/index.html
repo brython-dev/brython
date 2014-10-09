@@ -32,10 +32,12 @@ def load(url,target):
     print('exec scripts in %s' %(time.time()-t1))
     return False
 
-# put in global namespace, for inline callbacks
-window.load = load
-
+load('intro.md', 'content')
 language = "pt"
+
+# put in Javascript namespace for inline callbacks
+window.load = load
+    
 </script>
 
 </head>

@@ -143,69 +143,64 @@ $B.$mkdict = function(glob,loc){
     return res
 }
 
-$B.$list_comp = function(){
-    var $env = arguments[0]
-    var _stmts=[]
-    for(var $arg in $env) _stmts.push("var "+$arg+'=$env["'+$arg+'"]')
-    eval(_stmts.join(';'))
-
+$B.$list_comp = function(module_name, parent_block_id){
     var $ix = Math.random().toString(36).substr(2,8)
     var $py = 'def func'+$ix+"():\n"
     $py += "    x"+$ix+"=[]\n"
     var indent=4
-    for(var $i=2;$i<arguments.length;$i++){
+    for(var $i=3;$i<arguments.length;$i++){
         $py += ' '.repeat(indent)
         //for(var $j=0;$j<indent;$j++) $py += ' '
         $py += arguments[$i]+':\n'
         indent += 4
     }
     $py += ' '.repeat(indent)
-    //for(var $j=0;$j<indent;$j++) $py += ' '
-    $py += 'x'+$ix+'.append('+arguments[1].join('\n')+')\n'
+    $py += 'x'+$ix+'.append('+arguments[2].join('\n')+')\n'
     $py += "    return x"+$ix+"\n"
     $py += "res"+$ix+"=func"+$ix+"()"
     var $mod_name = 'lc'+$ix
-    var $root = $B.py2js($py,$mod_name,$B.line_info)
+
+    var $root = $B.py2js($py,module_name,$mod_name,parent_block_id,
+        $B.line_info)
+    
     $root.caller = $B.line_info
+    //$root.module = $mod_name
+
     var $js = $root.to_js()
-    $B.vars[$mod_name] = $env
-    try{
-    eval($js)
-    }catch(err){throw $B.exception(err)}
-    return eval("res"+$ix)
+    //console.log('list comp\n'+$js)
+    
+    try{eval($js)}
+    catch(err){throw $B.exception(err)}
+
+    return __BRYTHON__.vars['lc'+$ix]['res'+$ix]
 }
 
 $B.$gen_expr = function(){ // generator expresssion
-    var $env = arguments[0]
-    for(var $arg in $env){
-        try{
-            if($arg.search(/\./)>-1){ // qualified name
-                eval($arg+'=$env["'+$arg+'"]')
-            }else{
-                eval("var "+$arg+'=$env["'+$arg+'"]')
-            }
-        }catch(err){
-            throw err
-        }
-    }
+    var module_name = arguments[0]
+    var parent_block_id = arguments[1]
     var $ix = Math.random().toString(36).substr(2,8)
     var $res = 'res'+$ix
     var $py = $res+"=[]\n"
     var indent=0
-    for(var $i=2;$i<arguments.length;$i++){
+    for(var $i=3;$i<arguments.length;$i++){
         for(var $j=0;$j<indent;$j++) $py += ' '
         $py += arguments[$i]+':\n'
         indent += 4
     }
     for(var $j=0;$j<indent;$j++) $py += ' '
-    $py += $res+'.append('+arguments[1].join('\n')+')'
+    $py += $res+'.append('+arguments[2].join('\n')+')'
+    
     var $mod_name = 'ge'+$ix
-    var $root = $B.py2js($py,$mod_name,$B.line_info)
-    $root.caller = $B.line_info
+    $B.vars[$mod_name] = {}
+
+    var $root = $B.py2js($py,module_name,$mod_name,parent_block_id,
+        $B.line_info)
     var $js = $root.to_js()
-    $B.vars[$mod_name] = $env
+  
     eval($js)
-    var $res1 = eval($res)
+    
+    var $res1 = __BRYTHON__.vars["ge"+$ix]["res"+$ix]
+
     var $GenExprDict = {
         __class__:$B.$type,
         __name__:'generator',
@@ -230,62 +225,52 @@ $B.$gen_expr = function(){ // generator expresssion
     return $res2
 }
 
-$B.$dict_comp = function(){ // dictionary comprehension
-    var $env = arguments[0]
-
-    var _stmts=[]
-    for(var $arg in $env) _stmts.push("var "+$arg+'=$env["'+$arg+'"]')
-    eval(_stmts.join(';'))
+$B.$dict_comp = function(module_name,parent_block_id){ // dictionary comprehension
 
     var $ix = Math.random().toString(36).substr(2,8)
     var $res = 'res'+$ix
     var $py = $res+"={}\n"
     var indent=0
-    for(var $i=2;$i<arguments.length;$i++){
+    for(var $i=3;$i<arguments.length;$i++){
         for(var $j=0;$j<indent;$j++) $py += ' '
         $py += arguments[$i]+':\n'
         indent += 4
     }
     for(var $j=0;$j<indent;$j++) $py += ' '
-    $py += $res+'.update({'+arguments[1].join('\n')+'})'
-    var $mod_name = 'dc'+$ix
-    var $root = $B.py2js($py,$mod_name,$B.line_info)
+    $py += $res+'.update({'+arguments[2].join('\n')+'})'
+    var locals_id = 'dc'+$ix
+    var $root = $B.py2js($py,module_name,locals_id,parent_block_id)
     $root.caller = $B.line_info
     var $js = $root.to_js()
-    $B.vars[$mod_name] = $env
+    //$B.vars[$mod_name] = $env
     eval($js)
-    return eval($res)
+    return __BRYTHON__.vars[locals_id][$res]
 }
 
-$B.$ternary = function(env,cond,expr1,expr2){
-    // env is the environment to run the ternary expression
-    // built-in names must be available to evaluate the expression
+$B.$lambda = function($mod,parent_block_id,$args,$body){
 
-    var $s=[]
-    for(var $py_builtin in _b_) $s.push("var "+$py_builtin+"=_b_['"+$py_builtin+"']")
-    eval($s.join(';'))
-
-    for(var attr in env) eval('var '+attr+'=env["'+attr+'"]')
-
-    var res = 'if (bool('+cond+')){\n'
-    res += '    var $res = '+unescape(expr1)+'\n}else{\n'
-    res += '    var $res = '+unescape(expr2)+'\n}'
-    eval(res)
-    return $res
-}
-
-$B.$lambda = function($mod,$globals,$locals,$args,$body){
-    for(var $attr in $globals) eval('var '+$attr+'=$globals["'+$attr+'"]')
-    for(var $attr in $locals) eval('var '+$attr+'=$locals["'+$attr+'"]')
-    var $res = 'lambda_'+Math.random().toString(36).substr(2,8)
+    var rand = Math.random().toString(36).substr(2,8)
+    var $res = 'lambda_'+rand
+    var local_id = 'lambda'+rand
     var $py = 'def '+$res+'('+$args+'):\n'
     $py += '    return '+$body
-    var $js = $B.py2js($py,'lambda').to_js()
+
+    var $js = $B.py2js($py,$mod,local_id,parent_block_id).to_js()
+
     eval($js)
-    var $res = eval($res)
+
+    var $res = __BRYTHON__.vars[local_id][$res]
     $res.__module__ = $mod
     $res.__name__ = '<lambda>'
     return $res
+}
+
+// Function used to resolve names not defined in Python source
+// but introduced by "from A import *" or by exec
+
+$B.$search = function(name, globals_id){
+    var res = $B.vars[globals_id][name]
+    return res !== undefined ? res : $B.$NameError(name)
 }
 
 // transform native JS types into Brython types
@@ -324,9 +309,9 @@ $B.$getitem = function(obj, item){
 }
 $B.$setitem = function(obj,item,value){
     if(Array.isArray(obj) && typeof item=='number'){
-        if (obj.length < item) throw _b_.IndexError('list assignment index out of range')
-        if(item>=0){obj[item]=value}
-        else{obj[obj.length+item]=value}
+        if(item<0){item+=obj.length}
+        if(obj[item]===undefined){throw _b_.IndexError("list assignment index out of range")}
+        obj[item]=value
         return
     }
     _b_.getattr(obj,'__setitem__')(item,value)
