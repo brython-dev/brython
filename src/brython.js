@@ -4728,7 +4728,11 @@ $B.vars[local_id]=$B.vars[local_id]||{}
 for(var $attr in locals){$B.vars[local_id][$attr]=locals[$attr]
 }
 var $js=$B.py2js($py,$mod,local_id,parent_block_id).to_js()
-eval($js)
+try{eval($js)
+console.log('lambda ok')
+}catch(err){console.log(err)
+throw err
+}
 var $res=__BRYTHON__.vars[local_id][$res]
 $res.__module__=$mod
 $res.__name__='<lambda>'
@@ -7031,21 +7035,24 @@ if(obj.js===null)return $ObjectDict.__getattribute__(None,attr)
 if(attr==='__class__')return $JSObjectDict
 if(attr=="bind" && obj.js[attr]===undefined &&
 obj.js['addEventListener']!==undefined){attr='addEventListener'}
-if(obj.js[attr]!==undefined){if(typeof obj.js[attr]=='function'){
+var js_attr=obj.js[attr]
+if(obj.js_func && obj.js_func[attr]!==undefined){js_attr=obj.js_func[attr]
+}
+if(js_attr !==undefined){if(typeof js_attr=='function'){
 var res=function(){var args=[],arg
 for(var i=0;i<arguments.length;i++){args.push(pyobj2jsobj(arguments[i]))
 }
 if(attr==='replace' && obj.js===location){location.replace(args[0])
 return
 }
-var res=obj.js[attr].apply(obj.js,args)
+var res=js_attr.apply(obj.js,args)
 if(typeof res=='object')return JSObject(res)
 if(res===undefined)return None
 return $B.$JS2Py(res)
 }
 res.__repr__=function(){return '<function '+attr+'>'}
 res.__str__=function(){return '<function '+attr+'>'}
-return{__class__:$JSObjectDict,js:res,js_func:obj.js[attr]}}else{return $B.$JS2Py(obj.js[attr])
+return{__class__:$JSObjectDict,js:res,js_func:js_attr}}else{return $B.$JS2Py(obj.js[attr])
 }}else if(obj.js===window && attr==='$$location'){
 return $Location()
 }
