@@ -261,13 +261,8 @@ $B.$lambda = function(locals,$mod,parent_block_id,$args,$body){
     }
 
     var $js = $B.py2js($py,$mod,local_id,parent_block_id).to_js()
-    try{
-        eval($js)
-        console.log('lambda ok')
-    }catch(err){
-        console.log(err)
-        throw err
-    }
+    eval($js)
+
     var $res = __BRYTHON__.vars[local_id][$res]
     $res.__module__ = $mod
     $res.__name__ = '<lambda>'

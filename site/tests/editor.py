@@ -13,8 +13,17 @@ _s.style.height = '%spx' % int(_height*0.66)
 
 has_ace = True
 try:
-    editor=JSObject(window.ace).edit("editor")
-    editor.getSession().setMode("ace/mode/python")
+    editor = window.ace.edit("editor")
+    session = editor.getSession()
+    session.setMode("ace/mode/python")
+
+    editor.setOptions({
+     'width': 190,
+     'enableLiveAutocompletion': True,
+     'enableSnippets': True,
+     'highlightActiveLine': False,
+     'highlightSelectedWord': True
+    })
 except:
     from browser import html
     editor = html.TEXTAREA(rows=20,cols=70)
@@ -97,22 +106,7 @@ def show_js(ev):
     src = editor.getValue()
     doc["console"].value = dis.dis(src)
 
-def change_theme(evt):
-    _theme=evt.target.value
-    editor.setTheme(_theme)
-
-    if storage is not None:
-       storage["ace_theme"]=_theme
-doc["ace_theme"].bind("change",change_theme)
-
-def reset_theme():
-    if storage is not None:
-       if "ace_theme" in storage:
-          editor.setTheme(storage["ace_theme"])
-          doc["ace_theme"].value=storage["ace_theme"]
-
 if has_ace:
     reset_src()
-    reset_theme()
 else:
     reset_src_area()
