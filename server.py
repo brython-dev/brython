@@ -2,8 +2,12 @@
 #
 
 
+"""Simple HTTP Server for Brython Development."""
+
+
 import sys
 import os
+from webbrowser import open_new_tab
 
 
 try:
@@ -20,5 +24,7 @@ else:
 
 server_address, handler = ('', 8000), CGIHTTPRequestHandler
 httpd = server.HTTPServer(server_address, handler)
+print(__doc__)
 print(("Server running on port http://localhost:{}.".format(server_address[1])))
+open_new_tab("http://localhost:{}/site/".format(server_address[1]))
 httpd.serve_forever()
