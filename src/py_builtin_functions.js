@@ -2170,6 +2170,8 @@ $B.is_exc=function(exc,exc_list){
 $B.builtins_block = {id:'__builtins__',module:'__builtins__'}
 $B.modules['__builtins__'] = $B.builtins_block
 $B.bound['__builtins__'] = {'__BRYTHON__':true, '$eval':true, '$open': true}
+$B.bound['__builtins__']['BaseException'] = true
+
 $B.vars['__builtins__'] = {}
 
 _b_.__BRYTHON__ = __BRYTHON__
