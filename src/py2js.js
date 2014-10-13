@@ -326,15 +326,13 @@ function $AssignCtx(context, check_unbound){
         $_SyntaxError(context,["can't assign to function call "])
     }
     
-    // An assignment in a function creates a local variable. If it was
-    // referenced before, replace the statement where it was defined by an
-    // UnboundLocalError
     if(context.type=='list_or_tuple' || 
         (context.type=='expr' && context.tree[0].type=='list_or_tuple')){
         if(context.type=='expr'){context = context.tree[0]}
         for(var i=0;i<context.tree.length;i++){
             var assigned = context.tree[i].tree[0]
             if(assigned.type=='id' && check_unbound){
+                $B.bound[scope.id][assigned.value] = true
                 var scope = $get_scope(this)
                 if(scope.ntype=='def' || scope.ntype=='generator'){
                     $check_unbound(assigned,scope,assigned.value)
@@ -344,24 +342,35 @@ function $AssignCtx(context, check_unbound){
             }
         }
     }else if(context.type=='assign'){
+        //console.log('assign to assign '+context+ 'currently bound '+$B.keys($B.bound[scope.id]))
         for(var i=0;i<context.tree.length;i++){
             var assigned = context.tree[i].tree[0]
             if(assigned.type=='id'){
                 if(scope.ntype=='def' || scope.ntype=='generator'){
                     $check_unbound(assigned,scope,assigned.value)
                 }
+                $B.bound[scope.id][assigned.value] = true
             }
         }
     }else{
         var assigned = context.tree[0]
         if(assigned && assigned.type=='id'){
-            if(assigned.value=='xw'){
-                console.log('assign '+assigned.value+' in scope id '+scope.id)
-                console.log('globals '+$B.keys($B.globals[scope.id]))
-            }
             if(!$B.globals[scope.id] || $B.globals[scope.id][assigned.value]===undefined){
+                // A value is going to be assigned to a name
+                // After assignment the name will be bound to the current 
+                // scope
+                // We must keep track of the list of bound names before
+                // this assignment, because in code like
+                //
+                //    range = range
+                //
+                // the right part of the assignement must be evaluated
+                // first, and it is the builtin "range"
+                var node = $get_node(this)
+                node.bound_before = $B.keys($B.bound[scope.id])
                 $B.bound[scope.id][assigned.value] = true
                 assigned.bound = true
+                if(assigned.value=='xw'){console.log(assigned+' bound '+context)}
             }
             if(scope.ntype=='def' || scope.ntype=='generator'){
                 $check_unbound(assigned,scope,assigned.value)
@@ -395,7 +404,7 @@ function $AssignCtx(context, check_unbound){
             } else if (left.tree[0].type==='list_or_tuple'||left.tree[0].type==='target_list'){
               left_items = left.tree[0].tree
             }else if(left.tree[0].type=='id'){
-                // simple assign : add name to dictionary "bound" of scope
+                // simple assign : set attribute "bound" for name resolution
                 var name = left.tree[0].value
                 // check if name in globals
                 if(__BRYTHON__.globals && __BRYTHON__.globals[scope.id]
@@ -403,15 +412,11 @@ function $AssignCtx(context, check_unbound){
                         void(0)
                 }else{
                     left.tree[0].bound = true
-                    __BRYTHON__.bound[scope.id][name]=true
                 }
             }
             break
           case 'target_list':           
           case 'list_or_tuple':
-            //}else if(left.type==='target_list'){
-            //left_items = left.tree
-            //}else if(left.type==='list_or_tuple'){
             left_items = left.tree
         }
         if(left_items===null) {return}    
@@ -683,12 +688,17 @@ function $AugmentedAssignCtx(context, op){
     this.op = op
     this.tree = [context]
     
-    this.module = $get_scope(this).module
+    var scope = $get_scope(this)
+
+    // Store the names already bound
+    $get_node(this).bound_before = $B.keys($B.bound[scope.id])
+    //console.log('bound before augm assign '+$B.keys($B.bound[scope.id]))
+    
+    this.module = scope.module
 
     this.toString = function(){return '(augm assign) '+this.tree}
 
     this.transform = function(node,rank){
-    
         var func = '__'+$operators[op]+'__'
 
         var offset=0, parent=node.parent
@@ -747,7 +757,7 @@ function $AugmentedAssignCtx(context, op){
                   break;
                 case 'class':
                   var new_node = new $Node()
-                  new $NodeJSCtx(new_node,'$left='+context.to_js())
+                  new $NodeJSCtx(new_node,'var $left='+context.to_js())
                   parent.insert(rank+offset, new_node)
                   in_class = true
                   offset++
@@ -1230,12 +1240,6 @@ function $ClassCtx(context){
 
         // class constructor
         var scope = $get_scope(this)
-        /*
-        js = 'var '+this.name
-        if(!(scope.ntype==="module"||scope.ntype!=='class')){
-            js += ' = $class.'+this.name
-        }
-        */ 
         js = '__BRYTHON__.vars["'+scope.id+'"]["'+this.name+'"]'
         js += '=__BRYTHON__.$class_constructor("'+this.name+'",$'+this.name+'_'+this.random
         if(this.args!==undefined){ // class def has arguments
@@ -1284,9 +1288,6 @@ function $ClassCtx(context){
         var end_node = new $Node()
         new $NodeJSCtx(end_node,'None;')
         node.parent.insert(rank+3,end_node)
-        
-        // add to names bound in current scope
-        $B.bound[scope.id][this.name] = true
 
         this.transformed = true
     }
@@ -1452,30 +1453,14 @@ function $DecoratorCtx(context){
         var callable = children[func_rank].context
         var res = obj.name+'=',tail=''
         var scope = $get_scope(this)
-        /*
-        if(scope !==null && scope.ntype==='class'){
-            res = '$class.'+obj.name+'='
-        }
-        */
         var ref = '$locals["'+obj.name+'"]'
         res = ref+'='
         var _blocking_flag=false;
         for(var i=0;i<decorators.length;i++){
-            //if (decorators[i][0].tree[0].value == 'blocking') {
-            //  _blocking_flag=true;
-            //} else {
-              var dec = this.dec_ids[i] //$to_js(decorators[i]);
-              res += dec+'('
-              /*
-              if (decorators[i][0].tree[0].value == 'classmethod') {
-                  res += '__BRYTHON__.vars["'+scope.id+'"],'
-                  //res+= '$class,'
-              }
-              */
-              tail +=')'
-            //}
+          var dec = this.dec_ids[i] //$to_js(decorators[i]);
+          res += dec+'('
+          tail +=')'
         }
-        //res += (scope.ntype ==='class' ? '$class.' : '')
         res += ref+tail
 
         if (_blocking_flag == true) {
@@ -1965,30 +1950,13 @@ function $DelCtx(context){
             var expr = this.tree[0].tree[0]
             var scope = $get_scope(this)
             
-            function del_name(scope,name){
-                var js = 'delete '+name+';'
-                /*
-                // remove name from dictionaries
-                if(scope.ntype==='module'){
-                    js+='delete $globals["'+name+'"]'
-                }else if(scope.is_function){
-                    if(scope.globals && scope.globals.indexOf(name)>-1){
-                        // global variable
-                        js+='delete $globals["'+name+'"]'
-                    }else{ // local variable
-                        js+='delete $locals["'+name+'"]'
-                    }
-                }
-                */
-                return js+';'
-            }
             switch(expr.type) {
               case 'id':
-                return del_name(scope,expr.to_js())
+                return 'delete '+expr.to_js()+';'
               case 'list_or_tuple':
                 var res = ''
                 for(var i=0;i<expr.tree.length;i++){
-                    res += del_name(expr.tree[i].to_js())
+                    res += 'delete '+expr.tree[i].to_js()+';'
                 }
                 return res
               case 'sub':
@@ -2170,11 +2138,28 @@ function $ForExpr(context){
                 new_nodes.push(new_node)
             }
             
+            var range_is_builtin = false
+            if(!scope.blurred){
+                var _scope = $get_scope(this), found=[]
+                while(true){
+                    if($B.bound[_scope.id]['range']){found.push(_scope.id)}
+                    if(_scope.parent_block){_scope=_scope.parent_block}
+                    else{break}
+                }
+                range_is_builtin = found.length==1 && found[0]=="__builtins__"
+                if(found==['__builtins__']){range_is_builtin = true}
+            }
+            
             // Line to test if the callable "range" is the built-in "range"
             var test_range_node = new $Node()
-            new $NodeJSCtx(test_range_node,'if('+call.func.to_js()+'===__BRYTHON__.builtins.range)')
+            if(range_is_builtin){
+                new $NodeJSCtx(test_range_node,'if(true)')
+            }else{
+                new $NodeJSCtx(test_range_node,'if('+call.func.to_js()+'===__BRYTHON__.builtins.range)')
+            }
             new_nodes.push(test_range_node)
             
+
             // build the block with the Javascript "for" loop
             var idt = target.to_js()
             if($range.tree.length==1){
@@ -2243,6 +2228,19 @@ function $ForExpr(context){
                 // If the loop is already inside a function, don't
                 // wrap it
                 test_range_node.add(for_node)
+            }
+            if(range_is_builtin){
+                node.parent.children.splice(rank,1)
+                var k = 0
+                if(this.has_break){
+                    node.parent.insert(rank, new_nodes[0])
+                    k++
+                }
+                for(var i=new_nodes[k].children.length-1;i>=0;i--){
+                    node.parent.insert(rank+k, new_nodes[k].children[i])
+                }
+                node.children = []
+                return 0
             }
 
             // Add code in case the callable "range" is *not* the
@@ -2321,7 +2319,8 @@ function $ForExpr(context){
         var catch_node = new $Node()
 
         var js = 'catch($err){if(__BRYTHON__.is_exc($err,[StopIteration]))'
-        js += '{__BRYTHON__.$pop_exc();break}'
+        js += '{__BRYTHON__.$pop_exc();'
+        js += 'delete $locals["$next'+num+'"];break}'
         js += 'else{throw($err)}}'        
 
         new $NodeJSCtx(catch_node,js)
@@ -2354,6 +2353,20 @@ function $FromCtx(context){
     this.aliases = {}
     context.tree.push(this)
     this.expect = 'module'
+
+    this.add_name = function(name){
+        this.names.push(name)
+        if(name=='*'){$get_scope(this).blurred = true}
+    }
+    
+    this.bind_names = function(){
+        // Called at the end of the 'from' statement
+        // Binds the names or aliases in current scope
+        var scope = $get_scope(this)
+        for(var name in this.aliases){
+            $B.bound[scope.id][name] = true
+        }
+    }
     this.toString = function(){
         var res = '(from) '+this.module+' (import) '+this.names 
         return res + '(as)' + this.aliases
@@ -2418,12 +2431,17 @@ function $FromCtx(context){
                 res += 'var $mod=__BRYTHON__.imported["'+qname+'"];'
                 
                 if(this.names[0]=='*'){
-                    res += head+'for(var $attr in $mod){\n'
+                 res += head+'for(var $attr in $mod){\n'
                  res +="if($attr.substr(0,1)!=='_')\n"+head+"{var $x = 'var '+$attr+'"
                   if(scope.ntype==="module"){
                       res += '=__BRYTHON__.vars["'+scope.module+'"]["'+"'+$attr+'"+'"]'
                   }
                  res += '=$mod["'+"'+$attr+'"+'"]'+"'"+'\n'+head+'eval($x)}}'
+                 
+                 // Set attribute to indicate that the scope has a 
+                 // 'from X import *' : this will make name resolution harder :-(
+                 console.log(scope.id+' blurred')
+                 scope.blurred = true
 
                 }else{
     
@@ -2433,35 +2451,31 @@ function $FromCtx(context){
                       case 'def':
                         for(var i=0; i<this.names.length; i++) {
                            var alias = this.aliases[this.names[i]]||this.names[i]
-                           res+='var ' + alias + '=$locals["'+alias+'"]'
+                           res+='$locals["'+alias+'"]'
                            res += '=getattr($mod,"'+this.names[i]+'")\n'
-                           $B.bound[scope.id][alias] = true
                         }
                         break
                       case 'class':
                         for(var i=0; i<this.names.length; i++) {
                            var name=this.names[i]
                            var alias = this.aliases[name]|| name
-                           res+='var ' + alias
+                           res+='$locals["' + alias+'"]'
                            res += '=getattr($mod,"'+ name +'")\n'
-                           $B.bound[scope.id][alias] = true
                         }
                         break
                       case 'module':
                         for(var i=0; i<this.names.length; i++) {
                            var name=this.names[i]
                            var alias = this.aliases[name]|| name
-                           res+='var ' + alias + '=$globals["'+alias+'"]'
+                           res+='$globals["'+alias+'"]'
                            res += '=getattr($mod,"'+ name +'")\n'
-                           $B.bound[scope.id][alias] = true
                         }
                         break
                       default:
                         for(var i=0; i<this.names.length; i++) {
                            var name=this.names[i]
                            var alias = this.aliases[name]|| name
-                           res += alias + '=getattr($mod,"'+ names +'")\n'
-                           $B.bound[scope.id][alias] = true
+                           res += '$locals["'+alias +'"]=getattr($mod,"'+ names +'")\n'
                         }
                     }
                 }
@@ -2474,6 +2488,12 @@ function $FromCtx(context){
              res +="if($attr.substr(0,1)!=='_'){\n"+head // "{var $x = 'var '+$attr+'"
              res += '__BRYTHON__.vars["'+scope.module+'"][$attr]'
              res += '=$mod[$attr]\n'+head+'}}'
+
+             // Set attribute to indicate that the scope has a 
+             // 'from X import *' : this will make name resolution harder :-(
+             scope.blurred = true
+             console.log(scope.id+' blurred')
+
            }else{
              res += '__BRYTHON__.$import_from("'+this.module+'",['
              //for(var i=0;i<this.names.length;i++){
@@ -2486,17 +2506,12 @@ function $FromCtx(context){
                 var name=this.names[i]
                 var alias = this.aliases[name]||name
 
-                res += head+'try{var '+ alias
-                //if(scope.ntype==="module"){
-                if(_is_module) res += '=$globals["' + alias + '"]'
-
+                res += head+'try{$locals["'+ alias+'"]'
                 res += '=getattr(__BRYTHON__.imported["'+this.module+'"],"'+name+'")}\n'
                 res += 'catch($err'+$loop_num+'){if($err'+$loop_num+'.__class__'
                 res += '===AttributeError.$dict){$err'+$loop_num+'.__class__'
                 res += '=ImportError.$dict};throw $err'+$loop_num+'};'
 
-                // alias in bound in scope namespace
-                $B.bound[scope.id][alias] = true
              }
            }
         }
@@ -2651,8 +2666,9 @@ function $IdCtx(context,value){
     if(context.parent.type==='call_arg') this.call_arg=true
     
     this.scope = $get_scope(this)
+    this.blurred_scope = this.scope.blurred
     // If name is already referenced in the block, set attribute bound
-    if($B.bound[this.scope.id][value]){this.bound=true}
+    //if($B.bound[this.scope.id][value]){this.bound=true}
 
     var ctx = context
     while(ctx.parent!==undefined){
@@ -2742,6 +2758,9 @@ function $IdCtx(context,value){
     }
     
     this.to_js = function(arg){
+        if(this.value=='xw'){
+            console.log('id '+this.value+' in '+$get_node(this).context)
+        }
         var val = this.value
         switch(val) {
           //case 'print':
@@ -2771,35 +2790,56 @@ function $IdCtx(context,value){
         var scope = innermost, found=[], module = scope.module
         while(true){
             if($B.bound[scope.id]===undefined){console.log('name '+val+' undef '+scope.id)}
-            //else if(val=='args'){console.log(val+' bound of '+scope.id+' '+$B.keys($B.bound[scope.id]))}
-            //if(val=='sys'){console.log('search '+val+' in '+scope.id)}
-            if($B.bound[scope.id][val]){found.push(scope)}
+            if(scope===innermost){
+                // Handle the case when the same name is used at both sides
+                // of an assignment and the right side is defined in an
+                // upper scope, eg "range = range"
+                var bound_before = $get_node(this).bound_before
+                if(bound_before && !this.bound){
+                    if(bound_before.indexOf(val)>-1){found.push(scope)}
+                }else{
+                    if($B.bound[scope.id][val]){found.push(scope)}
+                }
+            }else{
+                if($B.bound[scope.id][val]){found.push(scope)}
+            }
             if(scope.parent_block){scope=scope.parent_block}
             else{break}
         }
         if(found.length>0){
             if(found.length>1 && found[0].context){
+                //if(val=='xw'){console.log(val+' bound ? '+this.bound)}
                 if(found[0].context.tree[0].type=='class' && !this.bound){
-                    // If the id is referenced in a class body, and an id of
-                    // the same name is bound in an upper scope, we must check
-                    // if it has already been bound in the class, else we use
-                    // the upper scope
-                    // This happens in code like
-                    //
-                    //    x = 0
-                    //    class A:
-                    //        print(x)    # should print 0
-                    //        def x(self):
-                    //            pass
-                    //        print(x)    # should print '<function x>'
-                    //        
-                    var res = '__BRYTHON__.vars["'+found[0].id+'"]'
-                    res += '["'+val+'"]!==undefined ? '
-                    res += '__BRYTHON__.vars["'+found[0].id+'"]'
-                    res += '["'+val+'"] : '
-                    res += '__BRYTHON__.vars["'+found[1].id+'"]'
-                    res += '["'+val+'"]'
-                    return res
+                    var bound_before = $get_node(this).bound_before, res
+                    if(bound_before){
+                        if(bound_before.indexOf(val)>-1){
+                            res = '__BRYTHON__.vars["'+found[0].id+'"]'
+                        }else{
+                            res = '__BRYTHON__.vars["'+found[1].id+'"]'
+                        }
+                        return res+'["'+val+'"]'
+                    }else{
+                        // If the id is referenced in a class body, and an id of
+                        // the same name is bound in an upper scope, we must check
+                        // if it has already been bound in the class, else we use
+                        // the upper scope
+                        // This happens in code like
+                        //
+                        //    x = 0
+                        //    class A:
+                        //        print(x)    # should print 0
+                        //        def x(self):
+                        //            pass
+                        //        print(x)    # should print '<function x>'
+                        //        
+                        var res = '__BRYTHON__.vars["'+found[0].id+'"]'
+                        res += '["'+val+'"]!==undefined ? '
+                        res += '__BRYTHON__.vars["'+found[0].id+'"]'
+                        res += '["'+val+'"] : '
+                        res += '__BRYTHON__.vars["'+found[1].id+'"]'
+                        res += '["'+val+'"]'
+                        return res
+                    }
                 }
             }
             scope = found[0]
@@ -2897,13 +2937,17 @@ function $ImportCtx(context){
     context.tree.push(this)
     this.expect = 'id'
     
-    this.transform = function(node, rank){
+    this.bind_names = function(){
         // For "import X", set X in the list of names bound in current scope
         var scope = $get_scope(this)
         for(var i=0;i<this.tree.length;i++){
-            var name = this.tree[i].name
-            var parts = name.split('.')
-            if(parts.length==1){$B.bound[scope.id][name]=true}
+            if(this.tree[i].name==this.tree[i].alias){
+                var name = this.tree[i].name
+                var parts = name.split('.')
+                if(parts.length==1){$B.bound[scope.id][name]=true}
+            }else{
+                $B.bound[scope.id][this.tree[i].alias] = true
+            }
         }
     }
     
@@ -2937,12 +2981,10 @@ function $ImportCtx(context){
                         }
                     }
                     res += '=__BRYTHON__.vars["'+key+'"];'
-                    $B.bound[scope.id][alias]=true
                 }
             }else{
                 res += '$locals["'+this.tree[i].alias
                 res += '"]=__BRYTHON__.vars["'+this.tree[i].name+'"];'
-                $B.bound[scope.id][this.tree[i].alias] = true
             }
         }
         // add None for interactive console
@@ -3167,6 +3209,24 @@ function $NodeCtx(node){
     node.context = this
     this.tree = []
     this.type = 'node'
+
+    var scope = null
+    var tree_node = node
+    while(tree_node.parent && tree_node.parent.type!=='module'){
+        var ntype = tree_node.parent.context.tree[0].type
+        
+        if(['def', 'class', 'BRgenerator'].indexOf(ntype)>-1){
+            scope = tree_node.parent
+            break
+        }
+        tree_node = tree_node.parent
+    }
+    if(scope==null){
+        scope = tree_node.parent || tree_node // module
+    }
+    //console.log('node in scope '+scope.id+' bound '+))
+    //node.bound_before = $B.keys($B.bound[scope.id])
+            
     this.toString = function(){return 'node '+this.tree}
     this.to_js = function(){
         if(this.tree.length>1){
@@ -4873,7 +4933,7 @@ function $transition(context,token){
           case 'id':
             //if(token==='id' && context.expect==='id'){
             if(context.expect==='id'){
-              context.names.push(arguments[2])
+              context.add_name(arguments[2])
               context.expect = ','
               return context
             } 
@@ -4904,7 +4964,7 @@ function $transition(context,token){
                if($get_scope(context).ntype!=='module'){
                    $_SyntaxError(context,["import * only allowed at module level"])
                }
-               context.names.push('*')
+               context.add_name('*')
                context.expect = 'eol'
                return context
             }
@@ -4921,6 +4981,7 @@ function $transition(context,token){
               case ',':
               case 'eol':
                 //if (context.expect ===',' || context.expect==='eol'){
+                context.bind_names()
                 return $transition(context.parent,token)
             }
           case 'as':
@@ -5118,6 +5179,7 @@ function $transition(context,token){
           case 'eol':
             //}else if(token==='eol' && 
             if (context.expect===','){
+               context.bind_names()
                return $transition(context.parent,token)
             }
             break
@@ -6427,6 +6489,7 @@ function brython(options){
                 _mod.__name__ = '__main__'
                 _mod.__file__ = __BRYTHON__.$py_module_path['__main__']
                 $B.imported['__main__'] = _mod
+                
             }catch($err){
                 if($B.debug>1){
                     console.log('PY2JS '+$err)
