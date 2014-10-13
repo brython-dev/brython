@@ -42,7 +42,7 @@
 }
 </style>
 </head>
-<body onLoad="brython()">
+<body onLoad="brython(2)">
 <img src="../brython.png">
 <script type="text/python">
 from browser import document as doc
@@ -109,6 +109,7 @@ def go_back(elt,mouse):
         if step>100:
             timer.clear_interval(_timer)
     _timer = timer.set_interval(move,10)
+
 
 </script>
 
