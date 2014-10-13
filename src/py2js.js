@@ -2492,7 +2492,7 @@ function $FromCtx(context){
              // Set attribute to indicate that the scope has a 
              // 'from X import *' : this will make name resolution harder :-(
              scope.blurred = true
-             console.log(scope.id+' blurred')
+             //console.log(scope.id+' blurred')
 
            }else{
              res += '__BRYTHON__.$import_from("'+this.module+'",['
@@ -5465,7 +5465,8 @@ function $transition(context,token){
             $_SyntaxError(context,['context op undefined '+context])
         }
         if(context.op.substr(0,5)=='unary'){
-            if(context.parent.type=='assign'){
+            console.log('unary, parent '+context.parent)
+            if(context.parent.type=='assign' || context.parent.type=='return'){
                 // create and return a tuple whose first element is context
                 context.parent.tree.pop()
                 var t = new $ListOrTupleCtx(context.parent,'tuple')

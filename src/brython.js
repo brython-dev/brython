@@ -1538,7 +1538,6 @@ res +="if($attr.substr(0,1)!=='_'){\n"+head
 res +='__BRYTHON__.vars["'+scope.module+'"][$attr]'
 res +='=$mod[$attr]\n'+head+'}}'
 scope.blurred=true
-console.log(scope.id+' blurred')
 }else{res +='__BRYTHON__.$import_from("'+this.module+'",['
 res +='"' + this.names.join('","')+ '"'
 res +='],"'+mod+'");\n'
@@ -3543,7 +3542,8 @@ return $transition(C.parent,token)
 case 'op':
 if(C.op===undefined){$_SyntaxError(C,['C op undefined '+C])
 }
-if(C.op.substr(0,5)=='unary'){if(C.parent.type=='assign'){
+if(C.op.substr(0,5)=='unary'){console.log('unary, parent '+C.parent)
+if(C.parent.type=='assign' ||C.parent.type=='return'){
 C.parent.tree.pop()
 var t=new $ListOrTupleCtx(C.parent,'tuple')
 t.tree.push(C)
