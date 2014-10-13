@@ -208,6 +208,12 @@ $BRGeneratorDict.__iter__ = function(self){return self}
 $BRGeneratorDict.__enter__ = function(self){console.log("generator.__enter__ called")}
 $BRGeneratorDict.__exit__ = function(self){console.log("generator.__exit__ called")}
 
+function clear_ns(iter_id){
+    delete $B.vars[iter_id]
+    delete $B.modules[iter_id]
+    delete $B.bound[iter_id]
+}
+
 $BRGeneratorDict.__next__ = function(self){
 
     // builtins will be needed to eval() the function
@@ -219,7 +225,6 @@ $BRGeneratorDict.__next__ = function(self){
  
     // Inject global variables in local namespace
     for(var $attr in $B.vars[self.module]){
-        //console.log("var "+$attr+"=$B.vars[self.module][$attr]")
         try{eval("var "+$attr+"=$B.vars[self.module][$attr]")}
         catch(err){console.log('err for '+$attr)}
     }
@@ -241,7 +246,11 @@ $BRGeneratorDict.__next__ = function(self){
         var src = self.func_root.src()+'\n)()'
 
         try{eval(src)}
-        catch(err){console.log("cant eval\n"+src+'\n'+err);throw err}
+        catch(err){
+            console.log("cant eval\n"+src+'\n'+err)
+            clear_ns(self.iter_id)
+            throw err
+        }
         
         self._next = __BRYTHON__.$generators[self.iter_id]
         
@@ -269,6 +278,7 @@ $BRGeneratorDict.__next__ = function(self){
             _err.caught = true
             throw _err
         }
+        clear_ns(self.iter_id)
         throw err
     }finally{
         self.gi_running = false
@@ -278,6 +288,7 @@ $BRGeneratorDict.__next__ = function(self){
         // The function may have ordinary "return" lines, in this case
         // the iteration stops
         self._next = function(){throw StopIteration("after generator return")}
+        clear_ns(self.iter_id)
         throw StopIteration('')
     }
 
