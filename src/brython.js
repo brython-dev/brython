@@ -3083,11 +3083,13 @@ case '!=':
 case 'is':
 case '>=':
 case '>':
-repl.parent.tree.pop()
-var and_expr=new $OpCtx(repl,'and')
 var c2=repl.tree[1]
 var c2_clone=new Object()
 for(var attr in c2){c2_clone[attr]=c2[attr]}
+while(repl.parent && repl.parent.type=='op'){if($op_weight[repl.parent.op]<$op_weight[repl.op]){repl=repl.parent
+}else{break}}
+repl.parent.tree.pop()
+var and_expr=new $OpCtx(repl,'and')
 c2_clone.parent=and_expr
 and_expr.tree.push('xxx')
 var new_op=new $OpCtx(c2_clone,op)
@@ -3542,8 +3544,7 @@ return $transition(C.parent,token)
 case 'op':
 if(C.op===undefined){$_SyntaxError(C,['C op undefined '+C])
 }
-if(C.op.substr(0,5)=='unary'){console.log('unary, parent '+C.parent)
-if(C.parent.type=='assign' ||C.parent.type=='return'){
+if(C.op.substr(0,5)=='unary'){if(C.parent.type=='assign' ||C.parent.type=='return'){
 C.parent.tree.pop()
 var t=new $ListOrTupleCtx(C.parent,'tuple')
 t.tree.push(C)

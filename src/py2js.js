@@ -3286,6 +3286,7 @@ function $OpCtx(context,op){ // context is the left operand
     this.toString = function(){return '(op '+this.op+') ['+this.tree+']'}
     this.parent = context.parent
     this.tree = [context]
+    
     // operation replaces left operand
     context.parent.tree.pop()
     context.parent.tree.push(this)
@@ -4853,16 +4854,31 @@ function $transition(context,token){
                      case '>=':
                      case '>':
                        //&& ['<','<=','==','!=','is','>=','>'].indexOf(op)>-1){
-                       // chained comparisons such as 1 <= 3 < 5
-                       // replace by (c1 op1 c2) and (c2 op ...)
-                       repl.parent.tree.pop()
-                       var and_expr = new $OpCtx(repl,'and')
+                       // chained comparisons such as c1 <= c2 < c3
+                       // replace by (c1 op1 c2) and (c2 op c3)
+                       
+                       // save c2
                        var c2 = repl.tree[1] // right operand of op1
                        // clone c2
                        var c2_clone = new Object()
                        for(var attr in c2){c2_clone[attr]=c2[attr]}
+
+                       // If there are consecutive chained comparisons
+                       // we must go up to the uppermost 'and' operator
+                       while(repl.parent && repl.parent.type=='op'){
+                           if($op_weight[repl.parent.op]<$op_weight[repl.op]){
+                               repl = repl.parent
+                           }else{break}
+                       }
+                       repl.parent.tree.pop()
+                       
+                       // Create a new 'and' operator, with the left operand
+                       // equal to c1 <= c2
+                       var and_expr = new $OpCtx(repl,'and')
+                       
                        c2_clone.parent = and_expr
-                       // add fake element to and_expr : it will be removed
+                       // For compatibility with the interface of $OpCtx,
+                       // add a fake element to and_expr : it will be removed
                        // when new_op is created at the next line
                        and_expr.tree.push('xxx')
                        var new_op = new $OpCtx(c2_clone,op)
@@ -5465,7 +5481,6 @@ function $transition(context,token){
             $_SyntaxError(context,['context op undefined '+context])
         }
         if(context.op.substr(0,5)=='unary'){
-            console.log('unary, parent '+context.parent)
             if(context.parent.type=='assign' || context.parent.type=='return'){
                 // create and return a tuple whose first element is context
                 context.parent.tree.pop()
