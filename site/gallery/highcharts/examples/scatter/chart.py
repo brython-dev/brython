@@ -1,5 +1,7 @@
+from browser import window
 from javascript import JSConstructor
-b_highchart = JSConstructor(Highcharts.Chart)
+
+b_highchart = JSConstructor(window.Highcharts.Chart)
 
 b_highchart({
     'chart': {
@@ -51,7 +53,7 @@ b_highchart({
             'states': {
                 'hover': {
                     'marker': {
-                        'enabled': false
+                        'enabled': False
                     }
                 }
             },

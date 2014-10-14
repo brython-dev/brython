@@ -336,7 +336,7 @@ function load_encoder(enc){
         var url = $B.brython_path
         if(url.charAt(url.length-1)=='/'){url=url.substr(0,url.length-1)}
         url += '/encodings/'+enc+'.js'
-        var f = _b_.$open(url)
+        var f = _b_.open(url)
         eval(f.$content)
     }
 }

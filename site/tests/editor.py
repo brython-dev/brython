@@ -3,7 +3,7 @@ import time
 import traceback
 import dis
 
-from browser import document as doc
+from browser import document as doc, window
 from javascript import JSObject
 
 # set height of container to 66% of screen
@@ -13,8 +13,17 @@ _s.style.height = '%spx' % int(_height*0.66)
 
 has_ace = True
 try:
-    editor=JSObject(ace).edit("editor")
-    editor.getSession().setMode("ace/mode/python")
+    editor = window.ace.edit("editor")
+    session = editor.getSession()
+    session.setMode("ace/mode/python")
+
+    editor.setOptions({
+     'width': 190,
+     'enableLiveAutocompletion': True,
+     'enableSnippets': True,
+     'highlightActiveLine': False,
+     'highlightSelectedWord': True
+    })
 except:
     from browser import html
     editor = html.TEXTAREA(rows=20,cols=70)
@@ -78,7 +87,7 @@ def run(*args):
 
     t0 = time.perf_counter()
     try:
-        exec(src,globals())
+        exec(src)
         state = 1
     except Exception as exc:
         traceback.print_exc()
@@ -89,7 +98,7 @@ def run(*args):
     return state
 
 # load a Python script
-def load(evt):
+def load_script(evt):
     _name=evt.target.value+'?foo=%s' %time.time()
     editor.setValue(open(_name).read())
 
@@ -97,22 +106,7 @@ def show_js(ev):
     src = editor.getValue()
     doc["console"].value = dis.dis(src)
 
-def change_theme(evt):
-    _theme=evt.target.value
-    editor.setTheme(_theme)
-
-    if storage is not None:
-       storage["ace_theme"]=_theme
-doc["ace_theme"].bind("change",change_theme)
-
-def reset_theme():
-    if storage is not None:
-       if "ace_theme" in storage:
-          editor.setTheme(storage["ace_theme"])
-          doc["ace_theme"].value=storage["ace_theme"]
-
 if has_ace:
     reset_src()
-    reset_theme()
 else:
     reset_src_area()

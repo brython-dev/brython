@@ -214,8 +214,7 @@ chr.__code__.co_varnames=['i']
 //classmethod() (built in function)
 var $ClassmethodDict = {__class__:$B.$type,__name__:'classmethod'}
 $ClassmethodDict.__mro__=[$ClassmethodDict,$ObjectDict]
-function classmethod(klass,func) {
-    // the first argument klass is added by py2js in $CallCtx
+function classmethod(func) {
     func.$type = 'classmethod'
     return func
 }
@@ -312,7 +311,7 @@ function dir(obj){
         return res
     }
     if(isinstance(obj,$B.JSObject)) obj=obj.js
-
+    
     if($B.get_class(obj).is_class){obj=obj.$dict}
     else {
         // We first look if the object has the __dir__ method
@@ -394,11 +393,46 @@ enumerate.__code__.co_argcount=2
 enumerate.__code__.co_consts=[]
 enumerate.__code__.co_varnames=['iterable']
 
-
 //eval() (built in function)
+function $eval(src, _globals, locals){
+    //console.log('exec stack '+$B.exec_stack)
+    if($B.exec_stack.length==0){$B.exec_stack=['__main__']}
 
-//exec() (built in function)
+    if(_globals===undefined){
+        var mod_name=$B.exec_stack[$B.exec_stack.length-1]
+    }else{
+        var mod_name = 'exec-'+Math.random().toString(36).substr(2,8)
+        __BRYTHON__.$py_module_path[mod_name] = __BRYTHON__.$py_module_path['__main__']
+        __BRYTHON__.vars[mod_name] = {}
+        __BRYTHON__.bound[mod_name] = {}
+        for(var i=0;i<_globals.$keys.length;i++){
+            __BRYTHON__.vars[mod_name][_globals.$keys[i]] = _globals.$values[i]
+            __BRYTHON__.bound[mod_name][_globals.$keys[i]] = true
+        }
+    }
+    $B.exec_stack.push(mod_name)
+    try{
+        var js = $B.py2js(src,mod_name,mod_name,'__builtins__').to_js()
+        //console.log(js)
+        var res = eval(js)
+        if(_globals!==undefined){
+            for(var attr in $B.vars[mod_name]){
+                if(['__name__','__doc__','__file__'].indexOf(attr)>-1){continue}
+                _b_.dict.$dict.__setitem__(_globals, attr, $B.vars[mod_name][attr])
+            }
+        }
+        return res
+    }finally{
+        $B.exec_stack.pop()
+    }
+}
+$eval.$is_func = true
 
+function exec(src, globals, locals){
+    return $eval(src, globals, locals) || _b_.None
+}
+
+exec.$is_func = true
 
 var $FilterDict = {__class__:$B.$type,__name__:'filter'}
 $FilterDict.__iter__ = function(self){return self}
@@ -1357,6 +1391,7 @@ function setattr(obj,attr,value){
     if(!isinstance(attr,_b_.str)){
         throw _b_.TypeError("setattr(): attribute name must be string")
     }
+
     switch(attr) {
       case 'alert':
       case 'case':
@@ -1973,7 +2008,7 @@ var BaseException = function (msg,js_exc){
         for(var i=0;i<$B.call_stack.length;i++){
             var call_info = $B.call_stack[i]
             var lib_module = call_info[1]
-            var caller = $B.modules[lib_module].caller
+            var caller = $B.modules[lib_module].line_info
             if(caller!==undefined){
                 call_info = caller
                 lib_module = caller[1]
@@ -2001,7 +2036,7 @@ var BaseException = function (msg,js_exc){
             while(1){
                 var mod = $B.modules[err_info[1]]
                 if(mod===undefined) break
-                var caller = mod.caller
+                var caller = mod.line_info
                 if(caller===undefined) break
                 err_info = caller
             }
@@ -2068,9 +2103,11 @@ $B.exception = function(js_exc){
 
     if(!js_exc.py_error){
         if($B.debug>0 && js_exc.info===undefined){
+            console.log('erreur '+js_exc+' dans module '+$B.line_info)
             if($B.line_info!==undefined){
                 var mod_name = $B.line_info[1]
                 var module = $B.modules[mod_name]
+                console.log('module '+mod_name+' caller '+module.caller)
                 if(module){
                     if(module.caller!==undefined){
                         // for list comprehension and the likes, replace
@@ -2081,6 +2118,9 @@ $B.exception = function(js_exc){
                     var lib_module = mod_name
                     if(lib_module.substr(0,13)==='__main__,exec'){lib_module='__main__'}
                     var line_num = $B.line_info[0]
+                    if($B.$py_src[mod_name]===undefined){
+                        console.log('pas de py_src pour '+mod_name)
+                    }
                     var lines = $B.$py_src[mod_name].split('\n')
                     js_exc.message += "\n  module '"+lib_module+"' line "+line_num
                     js_exc.message += '\n'+lines[line_num-1]
@@ -2126,11 +2166,21 @@ $B.is_exc=function(exc,exc_list){
     return false
 }
 
+$B.builtins_block = {id:'__builtins__',module:'__builtins__'}
+$B.modules['__builtins__'] = $B.builtins_block
+$B.bound['__builtins__'] = {'__BRYTHON__':true, '$eval':true, '$open': true}
+$B.bound['__builtins__']['BaseException'] = true
+
+$B.vars['__builtins__'] = {}
+
+_b_.__BRYTHON__ = __BRYTHON__
+
 function $make_exc(names,parent){
     // create a class for exception called "name"
     var _str=[]
     for(var i=0;i<names.length;i++){
         var name = names[i]
+        $B.bound['__builtins__'][name] = true
         var $exc = (BaseException+'').replace(/BaseException/g,name)
         // class dictionary
         _str.push('var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}')
@@ -2173,24 +2223,37 @@ $make_exc(['DeprecationWarning','PendingDeprecationWarning','RuntimeWarning',
 
 $make_exc(['EnvironmentError','IOError','VMSError','WindowsError'],_b_.OSError)
 
+$B.$NameError = function(name){
+    // Used if a name is not found in the bound names
+    // It is converted into 
+    // $globals[name] !== undefined ? $globals[name] : __BRYTHON__.$NameError(name)
+    throw _b_.NameError(name)
+}
+
 var builtin_names=[ 'Ellipsis', 'False',  'None', 
 'True', '_', '__build_class__', '__debug__', '__doc__', '__import__', '__name__', 
 '__package__', 'abs', 'all', 'any', 'ascii', 'bin', 'bool', 'bytearray', 'bytes',
 'callable', 'chr', 'classmethod', 'compile', 'complex', 'copyright', 'credits',
 'delattr', 'dict', 'dir', 'divmod', 'enumerate', //'eval', 
 'exec', 'exit', 
-'filter', '_b_.float', 'format', 'frozenset', 'getattr', 'globals', 'hasattr', 'hash', 
-'help', 'hex', 'id', 'input', '_b_.int', 'isinstance', 'issubclass', 'iter', 'len', 
+'filter', 'float', 'format', 'frozenset', 'getattr', 'globals', 'hasattr', 'hash', 
+'help', 'hex', 'id', 'input', 'int', 'isinstance', 'issubclass', 'iter', 'len', 
 'license', 'list', 'locals', 'map', 'max', 'memoryview', 'min', 'next', 
 'NotImplemented', 'object', 
 'oct', 'open', 'ord', 'pow', 'print', 'property', 'quit', 'range', 'repr', 
 'reversed', 'round', 'set', 'setattr', 'slice', 'sorted', 'staticmethod', 'str', 
 'sum','super', 'tuple', 'type', 'vars', 'zip']
 
+
 for(var i=0;i<builtin_names.length;i++){
     var name = builtin_names[i]
+    var name1 = name
+    if(name=='open'){name1 = '$url_open'}
+    if(name=='super'){name = '$$super'}
+    $B.bound['__builtins__'][name] = true
     try{
-        eval('_b_.'+name+'='+name)
+        _b_[name] = eval(name1)
+        $B.vars['__builtins__'][name] = _b_[name]
         if(typeof _b_[name]=='function'){
             if(_b_[name].__repr__===undefined){
                 _b_[name].__repr__ = _b_[name].__str__ = (function(x){
@@ -2227,8 +2290,10 @@ for(var i=0;i<builtin_names.length;i++){
 }
 
 $B._alert = _alert
-_b_['$open']=$url_open
-_b_['$print']=$print
+_b_['$eval']=$eval
+
+_b_['open']=$url_open
+_b_['print']=$print
 _b_['$$super']=$$super
 
 })(__BRYTHON__)

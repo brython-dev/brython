@@ -40,7 +40,7 @@ colors = ["C8E0A2","A6BED1","E4CC85","D7D7D7","90AF97","698EA8",
 
 panel = doc["panel"]
 legend = None
-
+print(svg.text)
 title = svg.text('',x=150,y=25,
     font_size=22,text_anchor="middle",
     style={"stroke":"black"})
@@ -94,7 +94,7 @@ def pie_chart():
         color = colors[i % len(colors)]
         style["fill"]='#'+color
         path = svg.path(d=path,style=style)
-        path.bind('mouseover',lambda ev:show_legend(key))
+        path.bind('mouseover',lambda ev,key=key:show_legend(key))
         path.bind('mouseout',lambda ev:hide_legend)
         panel <= path
         paths[key]=path

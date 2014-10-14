@@ -40,7 +40,7 @@ def echo(ev):
     alert(document["zone"].value)
 
 # bind event 'onclick' on button to function echo
-doc['echo'].bind('click',echo)
+document['echo'].bind('click',echo)
 </script>
 
 <input id="zone"><button id="echo">clic !</button>

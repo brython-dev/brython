@@ -163,11 +163,12 @@ function import_py(module,path,package){
     return run_py(module,path,module_contents)
 }
 
-$B.run_py=run_py=function(module,path,module_contents) {
+function run_py(module,path,module_contents) {
     var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
     $B.$py_module_path[module.name]=path
 
-    var root = $B.py2js(module_contents,module.name)
+    var root = $B.py2js(module_contents,module.name,
+        module.name,'__builtins__')
     var body = root.children
     root.children = []
     // use the module pattern : module name returns the results of an anonymous function
@@ -188,7 +189,7 @@ $B.run_py=run_py=function(module,path,module_contents) {
     
     try{
         var js = root.to_js()
-        if ($B.$options.debug == 10) {
+        if ($B.$options.debug == 10 && module.name=='_thread') {
            console.log('code for module '+module.name)
            console.log(js)
         }
@@ -407,8 +408,6 @@ $B.$import = function(mod_name,origin){
     }else{
         funcs = [import_from_stdlib]
     }
-    funcs = funcs.concat([import_from_site_packages, 
-        import_from_caller_folder])
 
     // custom functions to use to search/import modules 
     // ie, think localStorage, or maybe google drive
@@ -416,6 +415,10 @@ $B.$import = function(mod_name,origin){
     if ($B.$options['custom_import_funcs'] !== undefined) {
        funcs = funcs.concat($B.$options['custom_import_funcs'])
     }
+
+    funcs = funcs.concat([import_from_site_packages, 
+                          import_from_caller_folder])
+
 
     // If the module name is qualified (form "import X.Y") we must import
     // X, then import X.Y

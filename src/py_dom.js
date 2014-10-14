@@ -1248,7 +1248,22 @@ DOMNode.prototype.removeClass = function(name){
    this.__setattr('class', _class_string)
 }
 
-var win =  JSObject(window)
+var $WinDict = {__class__:$B.$type,__name__:'window'}
+
+$WinDict.__getattribute__ = function(self,attr){
+    if(window[attr]!==undefined){return JSObject(window[attr])}
+    throw _b_.AttributeError("'window' object has no attribute '"+attr+"'")
+}
+
+$WinDict.__setattr__ = function(self, attr, value){
+    console.log('set attr '+attr+' of window ')
+    window[attr] = value
+    console.log(window[attr])
+}
+
+$WinDict.__mro__ = [$WinDict,$ObjectDict]
+
+var win =  JSObject(window) //{__class__:$WinDict}
 
 win.get_postMessage = function(msg,targetOrigin){
     if(isinstance(msg,dict)){

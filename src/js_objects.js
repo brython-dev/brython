@@ -48,7 +48,7 @@ $JSConstructorDict.__call__ = function(self){
     for(var i=1;i<arguments.length;i++){
         args.push(pyobj2jsobj(arguments[i]))
     }
-    var factory = self.js.bind.apply(self.js, args)
+    var factory = self.func.bind.apply(self.func, args)
     var res = new factory()
     // res is a Javascript object
     return $B.$JS2Py(res)
@@ -57,9 +57,10 @@ $JSConstructorDict.__call__ = function(self){
 $JSConstructorDict.__mro__ = [$JSConstructorDict,$ObjectDict]
 
 function JSConstructor(obj){
+    //if(obj.__class__===$JSObjectDict){obj = obj.js}
     return {
         __class__:$JSConstructorDict,
-        js:obj
+        func:obj.js_func
     }
 }
 JSConstructor.__class__ = $B.$factory
@@ -144,9 +145,12 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
     if(attr==='__class__') return $JSObjectDict
     if(attr=="bind" && obj.js[attr]===undefined &&
         obj.js['addEventListener']!==undefined){attr='addEventListener'}
-        
-    if(obj.js[attr] !== undefined){
-        if(typeof obj.js[attr]=='function'){
+    var js_attr = obj.js[attr]
+    if(obj.js_func && obj.js_func[attr]!==undefined){
+        js_attr = obj.js_func[attr]
+    }
+    if(js_attr !== undefined){
+        if(typeof js_attr=='function'){
             // If the attribute of a JSObject is a function F, it is converted to a function G
             // where the arguments passed to the Python function G are converted to Javascript
             // objects usable by the underlying function F
@@ -160,14 +164,14 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
                     location.replace(args[0])
                     return
                 }
-                var res = obj.js[attr].apply(obj.js,args)
+                var res = js_attr.apply(obj.js,args)
                 if(typeof res == 'object') return JSObject(res)
                 if(res===undefined) return None
                 return $B.$JS2Py(res)
             }
             res.__repr__ = function(){return '<function '+attr+'>'}
             res.__str__ = function(){return '<function '+attr+'>'}
-            return {__class__:$JSObjectDict,js:res}
+            return {__class__:$JSObjectDict,js:res,js_func:js_attr}
         }else{
             return $B.$JS2Py(obj.js[attr])
         }

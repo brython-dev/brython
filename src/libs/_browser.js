@@ -1,6 +1,5 @@
 var $module=(function($B) {
-  return {
-    $$alert:$B._alert,
+  var mod = {
     confirm: function(message){return $B.JSObject(window.confirm(message))},
     console:{log:function(data){window.console.log(data)}},
     $$document:$B.$DOMNode(document),
@@ -12,6 +11,8 @@ var $module=(function($B) {
         return $B.JSObject(window.prompt(message, default_value||''))
     },
     win: $B.win,
-    $$window: $B.win
   }
+  mod['alert'] = $B._alert
+  mod['window'] = $B.win
+  return mod
 })(__BRYTHON__)

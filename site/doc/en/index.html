@@ -10,6 +10,7 @@
 <script type="text/python3">
 from browser import document as doc
 from browser import window
+
 import header
 header.show('../../')
 
@@ -31,14 +32,15 @@ def load(url,target):
         exec(script,globals())
     return False
 
-# put in global namespace, for inline callbacks
-window.load = load
-    
+load('intro.md', 'content')
 language = "en"
+
+# put in Javascript namespace for inline callbacks
+window.load = load
 </script>
 
 </head>
-<body onLoad="brython(1);load('intro.md','content')">
+<body onLoad="brython(1)">
 
 <table id="banner" cellpadding=0 cellspacing=0>
 <tr id="banner_row">
@@ -70,6 +72,7 @@ language = "en"
 <br><a class="navig" href="#" onClick="load('drag_events.md','content')">Drag events</a>
 <br>
 <br><a class="navig" href="#" onClick="load('query.md','content')">Query string</a>
+<br>
 <br><a class="navig" href="#" onClick="load('jsobjects.md','content')">Using Javascript objects and libraries</a>
 </div>
 

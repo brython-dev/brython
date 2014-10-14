@@ -55,9 +55,7 @@ maxunicode=1114111
 
 path = __BRYTHON__.path
 
-#$B.meta_path does not get updated when we do sys.meta_path.append(blah)
-meta_path = list(JSObject(__BRYTHON__.meta_path))
-meta_path = __BRYTHON__.meta_path
+path_hooks = list(JSObject(__BRYTHON__.path_hooks))
 
 platform="brython"
 

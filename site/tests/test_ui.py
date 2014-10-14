@@ -1,5 +1,5 @@
 import ui
-import random
+import __random as random
 from browser import html
 
 # Global Constants/Variables for testing are prepared

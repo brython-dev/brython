@@ -314,7 +314,7 @@ $ObjectDict.__setattr__.__str__ = function(){return 'method object.setattr'}
 
 $ObjectDict.__str__ = $ObjectDict.__repr__
 
-$ObjectDict.toString = $ObjectDict.__repr__ //function(){return '$ObjectDict'}
+//$ObjectDict.toString = $ObjectDict.__repr__ //function(){return '$ObjectDict'}
 
 // constructor of the built-in class 'object'
 function object(){return {__class__:$ObjectDict}}

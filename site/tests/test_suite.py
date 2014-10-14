@@ -257,4 +257,31 @@ def g():
 
 assert f != g
 
+# use of "global" in functions
+a = 9
+
+def f():
+    global a
+    res = [x for x in range(a)]
+    a = 8
+    return res
+
+assert f()==[0,1,2,3,4,5,6,7,8]
+assert a==8
+
+# nested function scopes
+def f(method, arg):
+    def cb(ev):
+        return method(ev, arg)
+    return cb
+
+def g(*z):
+    return z
+    
+a = f(g,5)
+b = f(g,11)
+
+assert a(8) == (8, 5)
+assert b(13) == (13, 11)
+
 print('passed all tests...')
