@@ -368,6 +368,7 @@ function $AssignCtx(context, check_unbound){
                 // first, and it is the builtin "range"
                 var node = $get_node(this)
                 node.bound_before = $B.keys($B.bound[scope.id])
+                //console.log('assign '+assigned.value+' set bound before '+node.context.tree[0]+' '+node.bound_before)
                 $B.bound[scope.id][assigned.value] = true
                 assigned.bound = true
                 if(assigned.value=='xw'){console.log(assigned+' bound '+context)}
@@ -1558,6 +1559,21 @@ function $DefCtx(context){
         while(thisnode.parent_block){
             thisnode = thisnode.parent_block
         }
+        
+        // Names bound in scope when the function is defined
+        var pblock = parent_block, pblocks=[pblock.id]
+        while(true){
+            if(pblock.parent_block && pblock.parent_block.id!='__builtins__'){
+                pblocks.push(pblock.parent_block.id)
+                pblock = pblock.parent_block
+            }else{break}
+        }
+        var env = {}
+        for(var i=pblocks.length;i>=0;i--){
+            for(var attr in $B.bound[pblocks[i]]){env[attr]=pblocks[i]}
+        }
+        delete env[name]
+        this.env = env
     }
     
     this.toString = function(){return 'def '+this.name+'('+this.tree+')'}
@@ -1666,7 +1682,11 @@ function $DefCtx(context){
             var enclosing = []
             for(var i=this.enclosing.length-1;i>=0;i--){
                 var func = this.enclosing[i]
-                for(var attr in $B.bound[func.id]){if(attr!==this.name){enclosing.push('$locals["'+attr+'"]')}}            
+                for(var attr in $B.bound[func.id]){
+                    if(attr!==this.name){
+                        enclosing.push('$B.vars["'+func.id+'"]["'+attr+'"]')
+                    }
+                } 
                 // Bind names
                 for(var attr in __BRYTHON__.bound[func.id]){
                     if(attr!=this.name && ($B.globals[this.id]===undefined || 
@@ -1715,8 +1735,8 @@ function $DefCtx(context){
             
             if(__BRYTHON__.debug>0 || required_list.length>0){
                 
-                var js = 'var $simple=true;for(var i=0;i<arguments.length;i++)'
-                js += '{if(arguments[i].$nat!=undefined){$simple=false;break}}'
+                var js = 'var $simple=true;for(var $i=0;$i<arguments.length;$i++)'
+                js += '{if(arguments[$i].$nat!=undefined){$simple=false;break}}'
                 var new_node = new $Node()
                 new $NodeJSCtx(new_node,js)
                 nodes.push(new_node)
@@ -6322,11 +6342,6 @@ function brython(options){
     
     // path_hook used in py_import.js
     $B.path_hooks = []
-
-    // Maps the name of imported modules to the module object
-    $B.imported = {
-        __main__:{__class__:$B.$ModuleDict,__name__:'__main__'}
-    }
 
     // Options passed to brython(), with default values
     $B.$options= {}
