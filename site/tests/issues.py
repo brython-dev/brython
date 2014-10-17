@@ -24,5 +24,7 @@ class b(a):
         assert s.x==9
 z = b()
 
-print('passed all tests')
+# issue 32
+assert 5 < 10 < 5 * 10 < 100
 
+print('passed all tests')

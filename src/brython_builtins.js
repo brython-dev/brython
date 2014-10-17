@@ -25,7 +25,12 @@ $B.bound = {}
 // A module can be the body of a script, or the body of a block inside a
 // script, such as in exec() or in a comprehension
 $B.modules = {}
-    
+
+// Maps the name of imported modules to the module object
+$B.imported = {
+    __main__:{__class__:$B.$ModuleDict,__name__:'__main__'}
+}
+
 // Maps a Python block (module, function, class) name to a Javascript object
 // mapping the names defined in this block to their value
 $B.vars = {}

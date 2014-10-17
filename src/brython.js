@@ -11,6 +11,7 @@ window.navigator.userLanguage=window.navigator.language="fixme"
 window.clearTimeout=function(timer){clearTimeout(timer)}}
 $B.bound={}
 $B.modules={}
+$B.imported={__main__:{__class__:$B.$ModuleDict,__name__:'__main__'}}
 $B.vars={}
 $B.globals={}
 $B.exec_stack=[]
@@ -952,7 +953,16 @@ if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[
 }}
 var thisnode=this.parent.node
 while(thisnode.parent_block){thisnode=thisnode.parent_block
-}}
+}
+var pblock=parent_block,pblocks=[pblock.id]
+while(true){if(pblock.parent_block && pblock.parent_block.id!='__builtins__'){pblocks.push(pblock.parent_block.id)
+pblock=pblock.parent_block
+}else{break}}
+var env={}
+for(var i=pblocks.length;i>=0;i--){for(var attr in $B.bound[pblocks[i]]){env[attr]=pblocks[i]}}
+delete env[name]
+this.env=env
+}
 this.toString=function(){return 'def '+this.name+'('+this.tree+')'}
 this.transform=function(node,rank){
 if(this.transformed!==undefined)return
@@ -1016,7 +1026,8 @@ nodes.push(new_node)
 }
 if(this.type=='def'){var enclosing=[]
 for(var i=this.enclosing.length-1;i>=0;i--){var func=this.enclosing[i]
-for(var attr in $B.bound[func.id]){if(attr!==this.name){enclosing.push('$locals["'+attr+'"]')}}
+for(var attr in $B.bound[func.id]){if(attr!==this.name){enclosing.push('$B.vars["'+func.id+'"]["'+attr+'"]')
+}}
 for(var attr in __BRYTHON__.bound[func.id]){if(attr!=this.name &&($B.globals[this.id]===undefined ||
 $B.globals[this.id][attr]===undefined)){__BRYTHON__.bound[this.id][attr]=true
 }}}
@@ -1041,8 +1052,8 @@ var only_positional=false
 if(defaults.length==0 && other_args===null && other_kw===null &&
 after_star.length==0){
 only_positional=true
-if(__BRYTHON__.debug>0 ||required_list.length>0){var js='var $simple=true;for(var i=0;i<arguments.length;i++)'
-js +='{if(arguments[i].$nat!=undefined){$simple=false;break}}'
+if(__BRYTHON__.debug>0 ||required_list.length>0){var js='var $simple=true;for(var $i=0;$i<arguments.length;$i++)'
+js +='{if(arguments[$i].$nat!=undefined){$simple=false;break}}'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
@@ -3083,11 +3094,13 @@ case '!=':
 case 'is':
 case '>=':
 case '>':
-repl.parent.tree.pop()
-var and_expr=new $OpCtx(repl,'and')
 var c2=repl.tree[1]
 var c2_clone=new Object()
 for(var attr in c2){c2_clone[attr]=c2[attr]}
+while(repl.parent && repl.parent.type=='op'){if($op_weight[repl.parent.op]<$op_weight[repl.op]){repl=repl.parent
+}else{break}}
+repl.parent.tree.pop()
+var and_expr=new $OpCtx(repl,'and')
 c2_clone.parent=and_expr
 and_expr.tree.push('xxx')
 var new_op=new $OpCtx(c2_clone,op)
@@ -3542,8 +3555,7 @@ return $transition(C.parent,token)
 case 'op':
 if(C.op===undefined){$_SyntaxError(C,['C op undefined '+C])
 }
-if(C.op.substr(0,5)=='unary'){console.log('unary, parent '+C.parent)
-if(C.parent.type=='assign' ||C.parent.type=='return'){
+if(C.op.substr(0,5)=='unary'){if(C.parent.type=='assign' ||C.parent.type=='return'){
 C.parent.tree.pop()
 var t=new $ListOrTupleCtx(C.parent,'tuple')
 t.tree.push(C)
@@ -4124,7 +4136,6 @@ function brython(options){var _b_=$B.builtins
 $B.$py_src={}
 $B.$py_module_path={}
 $B.path_hooks=[]
-$B.imported={__main__:{__class__:$B.$ModuleDict,__name__:'__main__'}}
 $B.$options={}
 $B.$py_next_hash=-Math.pow(2,53)
 $B.lambda_magic=Math.random().toString(36).substr(2,8)
