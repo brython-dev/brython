@@ -254,8 +254,8 @@ $DictDict.__init__ = function(self){
 }
 
 var $dict_iterator = $B.$iterator_class('dict iterator')
-$DictDict.__iter__ = function(self){
-    return $B.$iterator_wrapper(self.keys(),$key_iterator)
+$DictDict.__iter__ = function(self) {
+    return $DictDict.keys(self)
 }
 
 $DictDict.__len__ = function(self) {return self.$used}
@@ -339,7 +339,7 @@ $DictDict.get = function(self,key,_default){
 var $dict_itemsDict = $B.$iterator_class('dict_itemiterator')
 
 $DictDict.items = function(self){
-    return $B.$iterator_wrapper(new $item_iterator(self),$dict_itemsDict)
+    return $B.$iterator_wrapper(new $item_iterator(self), $dict_itemsDict)
 }
 
 $DictDict.fromkeys = function(keys,value){
