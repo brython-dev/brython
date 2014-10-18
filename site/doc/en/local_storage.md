@@ -33,6 +33,7 @@ If you want to remove permanently a key-value pair you can use the following:
 >    print(storage['foo']) # raises KeyError
 
 LocalStorage, SessionStorage, and ObjectStorage all mimic the interface of a dict object, and support:
+
 - `get`
 - `pop`
 - `keys`
