@@ -4123,7 +4123,7 @@ new $NodeJSCtx(name_node,'$locals["__name__"]="'+locals_id+'"')
 root.insert(2,name_node)
 $B.bound[module]['__name__']=true
 var file_node=new $Node()
-new $NodeJSCtx(file_node,'$locals["__file__"]="'+__BRYTHON__.$py_module_path[module]+'";\n')
+new $NodeJSCtx(file_node,'$locals["__file__"]="'+__BRYTHON__.$py_module_path[module]+'";None;\n')
 root.insert(3,file_node)
 $B.bound[module]['__file__']=true
 if($B.debug>0){$add_line_num(root,null,module)}

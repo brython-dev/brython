@@ -6320,7 +6320,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     $B.bound[module]['__name__'] = true
     // file
     var file_node = new $Node()
-    new $NodeJSCtx(file_node,'$locals["__file__"]="'+__BRYTHON__.$py_module_path[module]+'";\n')
+    new $NodeJSCtx(file_node,'$locals["__file__"]="'+__BRYTHON__.$py_module_path[module]+'";None;\n')
     root.insert(3,file_node)
     $B.bound[module]['__file__'] = true
         
