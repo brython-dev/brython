@@ -517,7 +517,7 @@ function getattr(obj,attr,_default){
         var res = _b_.dict()
         for(var $attr in obj){
             if($attr.charAt(0)!='$'){
-                res.$data[$attr] = obj[$attr]
+                $B.$dict_set(res, $attr, obj[$attr])
             }
         }
         return res
