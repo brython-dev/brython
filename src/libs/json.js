@@ -48,8 +48,14 @@ function _js(obj){
     }
     if(isinstance(obj,dict)){
         var res = new Object()
-        for(var i=0;i<obj.$keys.length;i++){
-            res[_js(obj.$keys[i])]=_js(obj.$values[i])
+        try {
+            itr = _b_.$dict_iterator(obj)
+            while (true) {
+                itm = itr.next()  // k,v pair
+                res[_js(itm[0])]=_js(itm[1])
+            }
+        } catch (err) {
+            if (err.__name__ !== "StopIteration") { throw err }
         }
         return res
     }

@@ -5545,14 +5545,15 @@ __BRYTHON__.$py_module_path[mod_name]=__BRYTHON__.$py_module_path['__main__']
 __BRYTHON__.vars[mod_name]={}
 __BRYTHON__.bound[mod_name]={}
 try{
-while(itm=_globals.items()){__BRYTHON__.vars[mod_name][itm[0]]=itm[1]
+itr=_b_.$dict_iterator(_globals)
+while(itm=itr.next()){__BRYTHON__.vars[mod_name][itm[0]]=itm[1]
 __BRYTHON__.bound[mod_name][itm[0]]=true
 }}catch(err){if(err.__name__ !=="StopIteration"){throw err }}}
 $B.exec_stack.push(mod_name)
 try{var js=$B.py2js(src,mod_name,mod_name,'__builtins__').to_js()
 var res=eval(js)
 if(_globals!==undefined){for(var attr in $B.vars[mod_name]){if(['__name__','__doc__','__file__'].indexOf(attr)>-1){continue}
-$DictDict.__setitem__(_globals,attr,$B.vars[mod_name][attr])
+_b_.dict.$dict.__setitem__(_globals,attr,$B.vars[mod_name][attr])
 }}
 return res
 }finally{$B.exec_stack.pop()
@@ -8371,6 +8372,8 @@ dict.$dict=$DictDict
 $DictDict.$factory=dict
 $DictDict.__new__=$B.$__new__(dict)
 _b_.dict=dict
+_b_.$dict_iterator=function(d){return new $item_generator(d)}
+_b_.$dict_length=$DictDict.__len__
 })(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 var $s=[]

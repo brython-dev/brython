@@ -406,7 +406,8 @@ function $eval(src, _globals, locals){
         __BRYTHON__.vars[mod_name] = {}
         __BRYTHON__.bound[mod_name] = {}
         try {
-            while (itm = _globals.items()) {
+            itr = _b_.$dict_iterator(_globals)
+            while (itm = itr.next()) {
                 __BRYTHON__.vars[mod_name][itm[0]] = itm[1]
                 __BRYTHON__.bound[mod_name][itm[0]] = true
             }
@@ -422,10 +423,7 @@ function $eval(src, _globals, locals){
         if(_globals!==undefined){
             for(var attr in $B.vars[mod_name]){
                 if(['__name__','__doc__','__file__'].indexOf(attr)>-1){continue}
-                //console.log("here")
-                //asljfdsalfdk
-                $DictDict.__setitem__(_globals, attr, $B.vars[mod_name][attr])
-                //_b_.dict.$dict.__setitem__(_globals, attr, $B.vars[mod_name][attr])
+                _b_.dict.$dict.__setitem__(_globals, attr, $B.vars[mod_name][attr])
             }
         }
         return res

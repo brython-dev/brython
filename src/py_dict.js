@@ -438,4 +438,8 @@ $DictDict.$factory = dict
 $DictDict.__new__ = $B.$__new__(dict)
 
 _b_.dict = dict
+
+// following are set for faster access elsewhere
+_b_.$dict_iterator = function(d) { return new $item_generator(d) }
+_b_.$dict_length = $DictDict.__len__
 })(__BRYTHON__)

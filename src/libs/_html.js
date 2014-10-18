@@ -35,32 +35,37 @@ function makeTagDict(tagName){
         }
 
         // attributes
-        for(var i=0;i<$ns['kw'].$keys.length;i++){
-            // keyword arguments
-            var arg = $ns['kw'].$keys[i]
-            var value = $ns['kw'].$values[i]
-            if(arg.toLowerCase().substr(0,2)==="on"){ 
-                // Event binding passed as argument "onclick", "onfocus"...
-                // Better use method bind of DOMNode objects
-                var js = '$B.DOMNode.bind(self,"'
-                js += arg.toLowerCase().substr(2)
-                eval(js+'",function(){'+value+'})')
-            }else if(arg.toLowerCase()=="style"){
-                $B.DOMNode.set_style(self,value)
-            } else {
-                if(value!==false){
-                    // option.selected=false sets it to true :-)
-                    try{
-                        arg = arg.toLowerCase()
-                        self.elt.setAttribute(arg,value)
-                        if(arg=="class"){ // for IE
-                            self.elt.setAttribute("className",value)
+        try {
+            itr = _b_.$dict_iterator($ns['kw'])
+            while (true) {
+                itm = itr.next()
+                var arg = itm[0]
+                var value = itm[1]
+                if(arg.toLowerCase().substr(0,2)==="on"){ 
+                    // Event binding passed as argument "onclick", "onfocus"...
+                    // Better use method bind of DOMNode objects
+                    var js = '$B.DOMNode.bind(self,"'
+                    js += arg.toLowerCase().substr(2)
+                    eval(js+'",function(){'+value+'})')
+                }else if(arg.toLowerCase()=="style"){
+                    $B.DOMNode.set_style(self,value)
+                } else {
+                    if(value!==false){
+                        // option.selected=false sets it to true :-)
+                        try{
+                            arg = arg.toLowerCase()
+                            self.elt.setAttribute(arg,value)
+                            if(arg=="class"){ // for IE
+                                self.elt.setAttribute("className",value)
+                            }
+                        }catch(err){
+                            throw ValueError("can't set attribute "+arg)
                         }
-                    }catch(err){
-                        throw ValueError("can't set attribute "+arg)
                     }
                 }
             }
+        } catch (err) {
+            if (err.__name__ !== "StopIteration") { throw err }
         }
     }
 

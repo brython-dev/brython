@@ -56,12 +56,18 @@ $AjaxDict.open = function(self,method,url,async){
 $AjaxDict.send = function(self,params){
     // params is a Python dictionary
     var res = ''
-    if(!params || params.$keys.length==0){self.$xmlhttp.send();return}
+    if(!params || _b_.$dict_length(params)==0){self.$xmlhttp.send();return}
     else if(isinstance(params,str)){
         res = params
     }else if(isinstance(params,dict)){
-        for(i=0;i<params.$keys.length;i++){
-            res +=encodeURIComponent(str(params.$keys[i]))+'='+encodeURIComponent(str(params.$values[i]))+'&'
+        itr = _b_.$dict_iterator(params)
+        try {
+            while(true) {
+                itm = itr.next()
+                res += encodeURIComponent(str(itm[0]))+'='+encodeURIComponent(str(itm[1]))+'&'
+            }
+        } catch (err) {
+            if (err.__name__ !== "StopIteration") { throw err }
         }
         res = res.substr(0,res.length-1)
     }else{
