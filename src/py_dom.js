@@ -591,11 +591,15 @@ DOMNode.bind = function(self,event){
     var _id
     if(self.elt.nodeType===9){_id=0}
     else{_id = self.elt.$brython_id}
+    var id_dict
     if (!$B.$dict_contains($B.events, _id)) {
-        $B.$dict_set($B.events, _id, dict())
+        id_dict = _b_.dict()
+        $B.$dict_set($B.events, _id, id_dict)
+    } else {
+        id_dict = $B.$dict_getitem($B.events, _id)
     }
-    if (!$B.$dict_contains($B.$dict_getitem($B.events, _id), event)) {
-        $B.$dict_set($B.$dict_getitem($B.events, _id), event, [])
+    if (!$B.$dict_contains(id_dict, event)) {
+        $B.$dict_set(id_dict, event, [])
     }
     for(var i=2;i<arguments.length;i++){
         var func = arguments[i]
