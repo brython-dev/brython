@@ -1452,6 +1452,7 @@ setattr.__code__.co_varnames=['object','name','value']
 
 // slice
 var $SliceDict = {__class__:$B.$type, __name__:'slice'}
+
 $SliceDict.__mro__ = [$SliceDict,$ObjectDict]
 
 function slice(){
@@ -1459,10 +1460,12 @@ function slice(){
     var args = $ns['args']
     if(args.length>3){throw _b_.TypeError(
         "slice expected at most 3 arguments, got "+args.length)
+    }else if(args.length==0){
+        throw _b_.TypeError('slice expected at least 1 arguments, got 0')
     }
 
     var start=0, stop=0, step=1
-    if(args.length==1){stop = args[0]}
+    if(args.length==1){start=None;stop = args[0];step=None}
     else if(args.length>=2){
         start = args[0]
         stop = args[1]
@@ -1476,8 +1479,8 @@ function slice(){
         step:step
     }
     res.__repr__ = res.__str__ = function(){
-            return 'slice('+start+','+stop+(args.length>=3 ? ','+step : '')+')'
-        }
+        return 'slice('+start+','+stop+','+step+')'
+    }
     return res
 }
 slice.__class__ = $B.$factory

@@ -1013,6 +1013,7 @@ function $CallCtx(context){
         // class parameters
         context.args = this
     }
+    this.expect = 'id'
     this.tree = []
     this.start = $pos
 
@@ -4357,8 +4358,10 @@ function $transition(context,token){
         if(token==='eol') return $transition(context.parent,'eol')
         $_SyntaxError(context,token)
       case 'call':
+        //console.log('call '+context+' token '+token)
         switch(token) {
           case ',':
+            if(context.expect=='id'){$_SyntaxError(context, token)}
             return context
           case 'id':
           case 'imaginary':
@@ -4372,11 +4375,13 @@ function $transition(context,token){
           case 'not':
           case 'lambda':
             if(context.has_dstar) $_SyntaxError(context,token)
+            context.expect = ','
             return $transition(new $CallArgCtx(context),token,arguments[2])
           case ')':
             context.end=$pos
             return context.parent
           case 'op':
+            context.expect = ','
             switch(arguments[2]) {
               case '-':
               case '~':

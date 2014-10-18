@@ -657,6 +657,7 @@ C.tree.push(this)
 }else{
 C.args=this
 }
+this.expect='id'
 this.tree=[]
 this.start=$pos
 this.toString=function(){return '(call) '+this.func+'('+this.tree+')'}
@@ -2700,6 +2701,7 @@ if(token==='eol')return $transition(C.parent,'eol')
 $_SyntaxError(C,token)
 case 'call':
 switch(token){case ',':
+if(C.expect=='id'){$_SyntaxError(C,token)}
 return C
 case 'id':
 case 'imaginary':
@@ -2713,11 +2715,13 @@ case '{':
 case 'not':
 case 'lambda':
 if(C.has_dstar)$_SyntaxError(C,token)
+C.expect=','
 return $transition(new $CallArgCtx(C),token,arguments[2])
 case ')':
 C.end=$pos
 return C.parent
 case 'op':
+C.expect=','
 switch(arguments[2]){case '-':
 case '~':
 return new $UnaryCtx(new $ExprCtx(C,'unary',false),arguments[2])
@@ -6195,9 +6199,10 @@ function slice(){var $ns=$B.$MakeArgs('slice',arguments,[],[],'args',null)
 var args=$ns['args']
 if(args.length>3){throw _b_.TypeError(
 "slice expected at most 3 arguments, got "+args.length)
+}else if(args.length==0){throw _b_.TypeError('slice expected at least 1 arguments, got 0')
 }
 var start=0,stop=0,step=1
-if(args.length==1){stop=args[0]}
+if(args.length==1){start=None;stop=args[0];step=None}
 else if(args.length>=2){start=args[0]
 stop=args[1]
 }
@@ -6205,7 +6210,7 @@ if(args.length>=3)step=args[2]
 if(step==0)throw ValueError("slice step must not be zero")
 var res={__class__ : $SliceDict,start:start,stop:stop,step:step
 }
-res.__repr__=res.__str__=function(){return 'slice('+start+','+stop+(args.length>=3 ? ','+step : '')+')'
+res.__repr__=res.__str__=function(){return 'slice('+start+','+stop+','+step+')'
 }
 return res
 }
