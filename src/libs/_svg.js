@@ -37,7 +37,7 @@ function makeTagDict(tagName){
 
         // attributes
         try {
-            itr = _b_.$dict_iterator($ns['kw'])
+            itr = $B.$dict_iterator($ns['kw'])
             while (true) {
                 itm = itr.next()
                 var arg = itm[0]
@@ -68,7 +68,7 @@ function makeTagDict(tagName){
                 }
             }
         } catch (err) {
-            if (err.__name__ !== "StopIteration") { throw err }
+            if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
         }
     }
 

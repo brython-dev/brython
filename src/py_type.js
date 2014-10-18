@@ -95,8 +95,14 @@ _b_.type = function(name,bases,cl_dict){
     class_dict.__dict__ = cl_dict
     
     // set class attributes for faster lookups
-    for(attr in cl_dict.$data) {
-        class_dict[attr] = cl_dict.$data[attr]
+    try {
+        itr = $B.$dict_iterator(cl_dict)
+        while (true) {
+            itm = itr.next()
+            class_dict[itm[0]] = itm[1]
+        }
+    } catch (err) {
+        if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
     }
 
     //class_dict.__setattr__ = function(attr,value){class_dict[attr]=value}

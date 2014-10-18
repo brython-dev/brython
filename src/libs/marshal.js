@@ -49,13 +49,13 @@ function _js(obj){
     if(isinstance(obj,dict)){
         var res = new Object()
         try {
-            itr = _b_.$dict_iterator(obj)
+            itr = $B.$dict_iterator(obj)
             while (true) {
                 itm = itr.next()  // k,v pair
                 res[_js(itm[0])]=_js(itm[1])
             }
         } catch (err) {
-            if (err.__name__ !== "StopIteration") { throw err }
+            if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
         }
         return res
     }

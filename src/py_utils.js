@@ -13,7 +13,7 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
 
     var $set_vars = [],$ns = {},$arg
     if($other_args != null){$ns[$other_args]=[]}
-    if($other_kw != null){var $dict=Object.create(null)}
+    if($other_kw != null){var $dict=_b_.dict()}
     // create new list of arguments in case some are packed
     var upargs = []
     for(var i=0;i<$args.length;i++){
@@ -30,8 +30,14 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
              case 'pdict':
                //}else if($arg.__class__===$B.$pdictDict){
                var _arg=$arg.arg
-               for(k in _arg.$data){
-                  upargs.push({$nat:"kw",name:k,value:_arg.$data[k]})
+               try {
+                   itr = $B.$dict_iterator(_arg)
+                   while (true) {
+                       itm = itr.next()
+                       upargs.push({$nat:"kw", name: itm[0], value: itm[1]})
+                   }
+               } catch (err) {
+                   if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
                }
                break
              default:
@@ -62,7 +68,7 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
                 $ns[$arg.name]=$PyVar
                 //$set_vars.push($arg.name)
             } else if($other_kw!=null){
-                $dict[$arg.name] = $PyVar
+                $B.$dict_set($dict, $arg.name, $PyVar)
             } else {
                 throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+$arg.name+"'")
             }
@@ -102,8 +108,7 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
         throw _b_.TypeError(msg)
     }
     if($other_kw!=null){
-        $ns[$other_kw]=_b_.dict()
-        $ns[$other_kw].$data = $dict
+        $ns[$other_kw]=$B.$dict_get_copy($dict)
     }
     if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
     return $ns
@@ -486,6 +491,16 @@ function pyobject2jsobject(obj) {
     if(_b_.isinstance(obj,_b_.dict)){
         var temp = {__class__ :'dict'}
         for(k in obj.$data) temp[k]=obj.$data[k]
+        try {
+            itr = $B.$dict_iterator(obj)
+            while (true) {
+                itm = itr.next()  // k, v
+                temp[itm[0]] = itm[1]
+            }
+        } catch (err) {
+            if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
+        }
+        
         return temp
     }
 
@@ -592,12 +607,6 @@ $B.make_rmethods = function(klass){
                 }
             })(ropnames[j],ropsigns[j])
         }
-    }
-}
-
-$B.copy_dict = function(left, right) {
-    for (k in right.$data) {
-        left[k] = right[k]
     }
 }
 

@@ -38,7 +38,7 @@ var $grow_dict = function(self) {
             new_data[bucket] = itm
         }
     } catch (err) {
-        if (err.__name__ !== "StopIteration") { throw err }
+        if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
     }
     self.$data = new_data
     self.$fill = self.$used
@@ -119,7 +119,7 @@ $item_generator.prototype.as_list = function() {
             ret[j++] = this.next()
         }
     } catch (err) {
-        if (err.__name__ !== "StopIteration") { throw err }
+        if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
     }
     return ret
 }
@@ -140,7 +140,7 @@ var $copy_dict = function(left, right) {
             $DictDict.__setitem__(left, item[0], item[1])
         }
     } catch (err) {
-        if (err.__name__ !== "StopIteration") { throw err }
+        if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
     }
 }
 
@@ -276,7 +276,7 @@ $DictDict.__next__ = function(self){
     try {
         return self.$iter.next()
     } catch (err) {
-        if (err.__name__ !== "StopIteration") { throw err }
+        if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
     }
 }
 
@@ -326,10 +326,10 @@ $DictDict.copy = function(self){
     return res
 }
 
-$DictDict.get = function(self,key,_default){
-    ret = $DictDict.__getitem__(self, key)
-    if (ret !== undefined) {
-        return ret
+$DictDict.get = function(self, key, _default){
+    bucket = $lookup_key(self, key)
+    if (bucket !== undefined) {
+        return self.$data[bucket][0]
     }
     if(_default!==undefined) return _default
     return None
@@ -439,7 +439,14 @@ $DictDict.__new__ = $B.$__new__(dict)
 
 _b_.dict = dict
 
-// following are set for faster access elsewhere
-_b_.$dict_iterator = function(d) { return new $item_generator(d) }
-_b_.$dict_length = $DictDict.__len__
+// following are used for faster access elsewhere
+$B.$dict_iterator = function(d) { return new $item_generator(d) }
+$B.$dict_length = $DictDict.__len__
+$B.$dict_getitem = $DictDict.__getitem__
+$B.$dict_get = $DictDict.get
+$B.$dict_set = $DictDict.__setitem__
+$B.$dict_contains = $DictDict.__contains__
+$B.$dict_items = function(d) { return new $item_generator(d).as_list() }
+$B.$copy_dict = $copy_dict  // copy from right to left
+$B.$dict_get_copy = $DictDict.copy  // return a shallow copy
 })(__BRYTHON__)

@@ -406,13 +406,13 @@ function $eval(src, _globals, locals){
         __BRYTHON__.vars[mod_name] = {}
         __BRYTHON__.bound[mod_name] = {}
         try {
-            itr = _b_.$dict_iterator(_globals)
+            itr = $B.$dict_iterator(_globals)
             while (itm = itr.next()) {
                 __BRYTHON__.vars[mod_name][itm[0]] = itm[1]
                 __BRYTHON__.bound[mod_name][itm[0]] = true
             }
         } catch (err) {
-            if (err.__name__ !== "StopIteration") { throw err }
+            if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
         }
     }
     $B.exec_stack.push(mod_name)
