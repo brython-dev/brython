@@ -24,6 +24,28 @@ class b(a):
         assert s.x==9
 z = b()
 
+# issue 12
+x = {'a':1}
+assert 'a' in x
+
+class ToDir:
+    def init(self):
+        pass
+
+instanceToDir = ToDir()
+
+dictToDir=({k: getattr(instanceToDir,k) 
+    for k in dir(instanceToDir) if '__' not in k})
+
+castdictToDir={str(k): getattr(instanceToDir,k) 
+    for k in dir(instanceToDir) if '__' not in k}
+
+
+assert 'init' in castdictToDir, 'init not in castdictToDir: %s' % list(dictToDir.keys())
+assert castdictToDir["init"]==instanceToDir.init , 'init not init method: %s' % castdictToDir["init"]
+assert 'init' in dictToDir, 'init not in dictToDir: %s' % list(dictToDir.keys())
+assert dictToDir["init"]==instanceToDir.init , 'init not init method: %s' % dictToDir["init"]
+
 # issue 32
 assert 5 < 10 < 5 * 10 < 100
 

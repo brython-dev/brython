@@ -285,14 +285,6 @@ delattr.__code__.co_varnames=['object','name']
 
 
 function dir(obj){
-
-    // dir() does not return a list of attributes as strings, because Python 
-    // attributes such as "delete" have been replaced by "$$delete" to avoid 
-    // conflicts with Javascript names
-
-    // Instead, it returns a list of instances of class __BRYTHON__.$AttrDict
-    // defined in py_string.js. Each instance has an attribute "name"
-    // set to the internal attributes (including leading "$$" if any)
     
     if(obj===null){
         // if dir is called without arguments, the parser transforms dir() into
@@ -305,7 +297,7 @@ function dir(obj){
                 // exclude internal attributes set by Brython
                 continue
             }
-            res.push({__class__:$B.$AttrDict,name:attr})
+            res.push(attr)
         }
         _b_.list.$dict.sort(res)
         return res
@@ -492,16 +484,6 @@ function getattr(obj,attr,_default){
         throw _b_.AttributeError('object has no attribute '+attr)
     }
     
-    // The attribute can be the result of a call to dir()
-    
-    // In this case it is an instance of class __BRYTHON__.$AttrDict and the
-    // real attribute (including potential leading $$) is the attribute
-    // "name" of the instance
-    
-    // $AttrDict is defined in py_string.js
-    
-    if(attr.__class__===$B.$AttrDict) attr = attr.name
-
     // attribute __class__ is set for all Python objects
     // return the factory function
     if(attr=='__class__') return klass.$factory

@@ -1599,39 +1599,4 @@ $B.$StringSubclassFactory = {
 
 _b_.str = str
 
-$B.$AttrDict = {__class__:$B.$type, __name__:'attribute'}
-
-$B.$AttrDict.__getitem__ = function(self, arg){
-    var _name=self.name
-    if(_name.substr(0,2)=='$$') _name=_name.substr(2)
-
-    return _b_.getattr(_name, '__getitem__')(arg)
-}
-
-
-$B.$AttrDict.__mro__ = [$B.$AttrDict, $ObjectDict]
-
-$B.$AttrDict.__repr__ = function(self){
-    if(self.name.substr(0,2)=='$$') return _b_.repr(self.name.substr(2))
-    return _b_.repr(self.name)
-}
-
-$B.$AttrDict.__str__ = function(self){
-    if(self.name.substr(0,2)=='$$') return _b_.str(self.name.substr(2))
-    return _b_.str(self.name)
-}
-
-for(var method in $StringDict){
-    if($B.$AttrDict[method]!==undefined){continue}
-    $B.$AttrDict[method] = (function(m){
-        return function(){
-            var args = []
-            for(var i=0;i<arguments.length;i++){
-                args.push(str(arguments[i]))
-            }
-            return $StringDict[m].apply(null, args)
-        }
-    })(method)
-}
-
 })(__BRYTHON__)

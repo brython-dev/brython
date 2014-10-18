@@ -4272,7 +4272,7 @@ for(var i=0;i<objects.length;i++){for(var attr in objects[i]){
 if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
 continue
 }
-res.push({__class__:$B.$AttrDict,name:attr})
+res.push(attr)
 }}
 res=_b_.list(_b_.set(res))
 _b_.list.$dict.sort(res)
@@ -4339,7 +4339,7 @@ if(x===undefined)return _b_.None
 return x
 }})(args)
 method.__class__=$B.$InstanceMethodDict
-method.__eq__=function(other){return other.__func__===__func__
+method.__eq__=function(other){return other.$res===res
 }
 method.__func__=__func__
 method.__repr__=__repr__
@@ -4348,6 +4348,7 @@ method.__str__=__str__
 method.__code__={'__class__' : $B.CodeDict}
 method.__doc__=res.__doc__ ||''
 method.$type='instancemethod'
+method.$res=res
 return method
 }else{
 return res1
@@ -5480,15 +5481,14 @@ delattr.__code__={}
 delattr.__code__.co_argcount=2
 delattr.__code__.co_consts=[]
 delattr.__code__.co_varnames=['object','name']
-function dir(obj){
-if(obj===null){
+function dir(obj){if(obj===null){
 var mod_name=arguments[1]
 var res=[],$globals=$B.vars[mod_name]
 for(var attr in $globals){
 if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
 continue
 }
-res.push({__class__:$B.$AttrDict,name:attr})
+res.push(attr)
 }
 _b_.list.$dict.sort(res)
 return res
@@ -5599,7 +5599,6 @@ if(obj[attr]!==undefined)return obj[attr]
 if(_default!==undefined)return _default
 throw _b_.AttributeError('object has no attribute '+attr)
 }
-if(attr.__class__===$B.$AttrDict)attr=attr.name
 if(attr=='__class__')return klass.$factory
 if(attr==='__dict__'){var res=_b_.dict()
 for(var $attr in obj){if($attr.charAt(0)!='$'){res.$keys.push($attr)
@@ -9624,25 +9623,7 @@ $StringSubclassDict.__mro__=[$StringSubclassDict,$ObjectDict]
 $B.$StringSubclassFactory={__class__:$B.$factory,$dict:$StringSubclassDict
 }
 _b_.str=str
-$B.$AttrDict={__class__:$B.$type,__name__:'attribute'}
-$B.$AttrDict.__getitem__=function(self,arg){var _name=self.name
-if(_name.substr(0,2)=='$$')_name=_name.substr(2)
-return _b_.getattr(_name,'__getitem__')(arg)
-}
-$B.$AttrDict.__mro__=[$B.$AttrDict,$ObjectDict]
-$B.$AttrDict.__repr__=function(self){if(self.name.substr(0,2)=='$$')return _b_.repr(self.name.substr(2))
-return _b_.repr(self.name)
-}
-$B.$AttrDict.__str__=function(self){if(self.name.substr(0,2)=='$$')return _b_.str(self.name.substr(2))
-return _b_.str(self.name)
-}
-for(var method in $StringDict){if($B.$AttrDict[method]!==undefined){continue}
-$B.$AttrDict[method]=(function(m){return function(){var args=[]
-for(var i=0;i<arguments.length;i++){args.push(str(arguments[i]))
-}
-return $StringDict[m].apply(null,args)
-}})(method)
-}})(__BRYTHON__)
+})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 var $s=[]
 for(var $b in _b_)$s.push('var ' + $b +'=_b_["'+$b+'"]')

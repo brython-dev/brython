@@ -65,7 +65,7 @@ $ObjectDict.__dir__ = function(self) {
                 // exclude internal attributes set by Brython
                 continue
             }
-            res.push({__class__:$B.$AttrDict,name:attr})
+            res.push(attr)
         }
     }
     res = _b_.list(_b_.set(res))
@@ -204,7 +204,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                     }})(args)
                 method.__class__ = $B.$InstanceMethodDict
                 method.__eq__ = function(other){
-                    return other.__func__ === __func__
+                    return other.$res === res
                 }
                 method.__func__ = __func__
                 method.__repr__ = __repr__
@@ -213,6 +213,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                 method.__code__ = {'__class__' : $B.CodeDict}
                 method.__doc__ = res.__doc__ || ''
                 method.$type = 'instancemethod'
+                method.$res = res
                 return method
             }else{
                 // result of __get__ is not a function
