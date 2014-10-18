@@ -1888,7 +1888,7 @@ function $DefCtx(context){
         offset++
         
         // if doc string, add it as attribute __doc__
-        js = prefix+'.__doc__='+(this.doc_string || 'None')+';'
+        js = prefix+'.__doc__='+(this.doc_string || 'None')+';None;'
         new_node = new $Node()
         new $NodeJSCtx(new_node,js)
         node.parent.insert(rank+offset,new_node)
@@ -1907,6 +1907,7 @@ function $DefCtx(context){
         js = prefix+'.__code__={__class__:__BRYTHON__.$CodeDict};None;'
         new_node = new $Node()
         new $NodeJSCtx(new_node,js)
+        node.insert(rank+offset, new_node)
 
         // define default values
         var default_node = new $Node()

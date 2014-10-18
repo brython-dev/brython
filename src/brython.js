@@ -1154,7 +1154,7 @@ new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank+offset,new_node)
 offset++
-js=prefix+'.__doc__='+(this.doc_string ||'None')+';'
+js=prefix+'.__doc__='+(this.doc_string ||'None')+';None;'
 new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank+offset,new_node)
@@ -1168,6 +1168,7 @@ offset++
 js=prefix+'.__code__={__class__:__BRYTHON__.$CodeDict};None;'
 new_node=new $Node()
 new $NodeJSCtx(new_node,js)
+node.insert(rank+offset,new_node)
 var default_node=new $Node()
 var js='None'
 if(defs1.length>0){js='var $defaults = {'+defs1.join(',')+'}'}
