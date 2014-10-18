@@ -490,7 +490,6 @@ $B.stdin = {
 function pyobject2jsobject(obj) {
     if(_b_.isinstance(obj,_b_.dict)){
         var temp = {__class__ :'dict'}
-        for(k in obj.$data) temp[k]=obj.$data[k]
         try {
             itr = $B.$dict_iterator(obj)
             while (true) {
