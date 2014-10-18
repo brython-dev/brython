@@ -1013,6 +1013,7 @@ function $CallCtx(context){
         // class parameters
         context.args = this
     }
+    this.expect = 'id'
     this.tree = []
     this.start = $pos
 
@@ -1888,7 +1889,7 @@ function $DefCtx(context){
         offset++
         
         // if doc string, add it as attribute __doc__
-        js = prefix+'.__doc__='+(this.doc_string || 'None')+';'
+        js = prefix+'.__doc__='+(this.doc_string || 'None')+';None;'
         new_node = new $Node()
         new $NodeJSCtx(new_node,js)
         node.parent.insert(rank+offset,new_node)
@@ -1907,6 +1908,7 @@ function $DefCtx(context){
         js = prefix+'.__code__={__class__:__BRYTHON__.$CodeDict};None;'
         new_node = new $Node()
         new $NodeJSCtx(new_node,js)
+        node.insert(rank+offset, new_node)
 
         // define default values
         var default_node = new $Node()
@@ -4356,8 +4358,10 @@ function $transition(context,token){
         if(token==='eol') return $transition(context.parent,'eol')
         $_SyntaxError(context,token)
       case 'call':
+        //console.log('call '+context+' token '+token)
         switch(token) {
           case ',':
+            if(context.expect=='id'){$_SyntaxError(context, token)}
             return context
           case 'id':
           case 'imaginary':
@@ -4371,11 +4375,13 @@ function $transition(context,token){
           case 'not':
           case 'lambda':
             if(context.has_dstar) $_SyntaxError(context,token)
+            context.expect = ','
             return $transition(new $CallArgCtx(context),token,arguments[2])
           case ')':
             context.end=$pos
             return context.parent
           case 'op':
+            context.expect = ','
             switch(arguments[2]) {
               case '-':
               case '~':
@@ -6320,7 +6326,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     $B.bound[module]['__name__'] = true
     // file
     var file_node = new $Node()
-    new $NodeJSCtx(file_node,'$locals["__file__"]="'+__BRYTHON__.$py_module_path[module]+'";\n')
+    new $NodeJSCtx(file_node,'$locals["__file__"]="'+__BRYTHON__.$py_module_path[module]+'";None;\n')
     root.insert(3,file_node)
     $B.bound[module]['__file__'] = true
         
