@@ -648,7 +648,9 @@ function globals(module){
     // the translation engine adds the argument module
     var res = _b_.dict()
     var scope = $B.vars[module]
-    for(var name in scope){res.$data[name] = scope[name]}
+    for(var name in scope){
+        $B.$dict_set(res, name, scope[name])
+    }
     return res
 }
 
@@ -896,7 +898,7 @@ function locals(obj_id,module){
     var res = _b_.dict()
     var scope = $B.vars[obj_id]
     for(var name in scope){
-       _b_.dict.$dict.__setitem__(res,name,scope[name])
+       $B.$dict_set(res,name,scope[name])
     }
     return res
 }
