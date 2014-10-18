@@ -1265,11 +1265,10 @@ $WinDict.__mro__ = [$WinDict,$ObjectDict]
 
 var win =  JSObject(window) //{__class__:$WinDict}
 
+// TODO: is this used anywhere?
 win.get_postMessage = function(msg,targetOrigin){
     if(isinstance(msg,dict)){
-        var temp = {__class__:'dict'}
-        for(var i=0;i<msg.__len__();i++) temp[msg.$keys[i]]=msg.$values[i]
-        msg = temp
+        msg = msg.$dict.copy()
     }
     return window.postMessage(msg,targetOrigin)
 }

@@ -38,11 +38,7 @@ var $grow_dict = function(self) {
             new_data[bucket] = itm
         }
     } catch (err) {
-        if (err.__name__ == "StopIteration") {
-            ;
-        } else {
-            throw err
-        }
+        if (err.__name__ !== "StopIteration") { throw err }
     }
     self.$data = new_data
     self.$fill = self.$used
@@ -94,73 +90,82 @@ var $DictDict = {__class__:$B.$type,
 var $key_iterator = function(d) {
     this.d = d
     this.current = 0
-    this.length = function() { return this.d.$used }
     this.iter = new $item_generator(d)
-    this.next = function() {
-        return this.iter.next()[0]
-    }
 }
+$key_iterator.prototype.length = function() { return this.d.$used }
+$key_iterator.prototype.next = function() { return this.iter.next()[0] }
 
 var $item_generator = function(d) {
     this.i = -1
-    this.d = d
-    this.next = function() {
-        i = this.i
-        if (i >= this.d.$size) {
-            throw _b_.StopIteration("StopIteration")
-        }
-        ++i
-        while ((d.$data[i] === undefined || d.$data[i] === dummy) && i < this.d.$size) {
-            ++i
-        }
-        this.i = i
-        if (i < this.d.$size) {
-            return this.d.$data[i]
-        }
-        throw _b_.StopIteration("StopIteration")
+    this.data = d.$data
+    this.size = d.$size
+    this.used = d.$used
+}
+$item_generator.prototype.next = function() {
+    do {
+        val = this.data[++this.i]
+    } while ((val === undefined || val === dummy) && this.i < this.size)
+    if (this.i < this.size) {
+        return val
     }
-    this.as_list = function() {
-        ret = []
-        j = 0
-        try {
-            while(true) {
-                itm = this.next()
-                ret[j] = itm
-                ++j
-            }
-        } catch (err) {
-            if (err.__name__ == "StopIteration") {
-                ;
-            } else {
-                throw err
-            }
+    this.i--
+    throw _b_.StopIteration("StopIteration")
+}
+$item_generator.prototype.as_list = function() {
+    ret = []
+    j = 0
+    try {
+        while(true) {
+            ret[j++] = this.next()
         }
-        return ret
+    } catch (err) {
+        if (err.__name__ !== "StopIteration") { throw err }
     }
+    return ret
 }
 
 var $item_iterator = function(d) {
     this.d = d
     this.current = 0
-    this.length = function() { return this.d.$used }
     this.iter = new $item_generator(d)
-    this.next = function() {
-        return _b_.tuple(this.iter.next())
+}
+$item_iterator.prototype.length = function() { return this.d.$used }
+$item_iterator.prototype.next = function() { return _b_.tuple(this.iter.next()) }
+
+var $copy_dict = function(left, right) {
+    gen = new $item_generator(right)
+    try {
+        while(true) {
+            item = gen.next()
+            $DictDict.__setitem__(left, item[0], item[1])
+        }
+    } catch (err) {
+        if (err.__name__ !== "StopIteration") { throw err }
     }
 }
 
-var $copy_dict = function(left, right) {
-    items = new $item_generator(right).as_list()
-    for (idx in items) {
-        item = items[idx]
-        $DictDict.__setitem__(left, item[0], item[1])
+$iterator_wrapper = function(items,klass){
+    var res = {
+        __class__:klass,
+        __iter__:function(){return res},
+        __len__:function(){return items.length()},
+        __next__:function(){
+            if (items.length() !== items.iter.used) {
+                throw _b_.RuntimeError("dictionary changed size during iteration")
+            }
+            return items.next()
+        },
+        __repr__:function(){return "<"+klass.__name__+" object>"},
+        counter:-1
     }
+    res.__str__ = res.toString = res.__repr__
+    return res
 }
 
 var $dict_keysDict = $B.$iterator_class('dict_keys')
 
 $DictDict.keys = function(self){
-    return $B.$iterator_wrapper(new $key_iterator(self),$dict_keysDict)
+    return $iterator_wrapper(new $key_iterator(self),$dict_keysDict)
 }
 
 $DictDict.__bool__ = function (self) {
@@ -266,18 +271,12 @@ $DictDict.__ne__ = function(self,other){return !$DictDict.__eq__(self,other)}
 
 $DictDict.__next__ = function(self){
     if(self.$iter==null){
-        self.$iter==0
-        self.$iter_size = self.$used
+        self.$iter = new $item_generator(self.$data)
     }
-    ++self.$iter
-    while ((self.$data[self.iter] === undefined || self.$data[self.iter] === dummy) && self.$iter < self.$size) {
-        ++self.$iter
-    }
-    if(self.$iter < self.$size){
-        return self.$data[self.$iter][0] // returning key in [key, value]
-    } else {
-        self.iter = null
-        throw _b_.StopIteration()
+    try {
+        return self.$iter.next()
+    } catch (err) {
+        if (err.__name__ !== "StopIteration") { throw err }
     }
 }
 
@@ -339,7 +338,7 @@ $DictDict.get = function(self,key,_default){
 var $dict_itemsDict = $B.$iterator_class('dict_itemiterator')
 
 $DictDict.items = function(self){
-    return $B.$iterator_wrapper(new $item_iterator(self), $dict_itemsDict)
+    return $iterator_wrapper(new $item_iterator(self), $dict_itemsDict)
 }
 
 $DictDict.fromkeys = function(keys,value){

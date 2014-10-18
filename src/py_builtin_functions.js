@@ -405,9 +405,13 @@ function $eval(src, _globals, locals){
         __BRYTHON__.$py_module_path[mod_name] = __BRYTHON__.$py_module_path['__main__']
         __BRYTHON__.vars[mod_name] = {}
         __BRYTHON__.bound[mod_name] = {}
-        for(var i=0;i<_globals.$keys.length;i++){
-            __BRYTHON__.vars[mod_name][_globals.$keys[i]] = _globals.$values[i]
-            __BRYTHON__.bound[mod_name][_globals.$keys[i]] = true
+        try {
+            while (itm = _globals.items()) {
+                __BRYTHON__.vars[mod_name][itm[0]] = itm[1]
+                __BRYTHON__.bound[mod_name][itm[0]] = true
+            }
+        } catch (err) {
+            if (err.__name__ !== "StopIteration") { throw err }
         }
     }
     $B.exec_stack.push(mod_name)
@@ -418,7 +422,10 @@ function $eval(src, _globals, locals){
         if(_globals!==undefined){
             for(var attr in $B.vars[mod_name]){
                 if(['__name__','__doc__','__file__'].indexOf(attr)>-1){continue}
-                _b_.dict.$dict.__setitem__(_globals, attr, $B.vars[mod_name][attr])
+                //console.log("here")
+                //asljfdsalfdk
+                $DictDict.__setitem__(_globals, attr, $B.vars[mod_name][attr])
+                //_b_.dict.$dict.__setitem__(_globals, attr, $B.vars[mod_name][attr])
             }
         }
         return res
