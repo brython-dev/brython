@@ -83,7 +83,7 @@ doc['set_debug'].bind('change',set_debug)
 
 # next functions are defined in editor.py
 doc['show_js'].bind('click',show_js)
-doc['run'].bind('click',run)
+doc['run'].bind('click',lambda ev:run(False))
 doc['show_console'].bind('click',show_console)
 doc['files'].bind('change',load_script)
 </script>
