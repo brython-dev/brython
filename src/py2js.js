@@ -57,6 +57,11 @@ var keys = $B.keys = function(obj){
     res.sort()
     return res
 }
+function clone(obj){
+    var res = new Object()
+    for(var attr in obj){res[attr]=obj[attr]}
+    return res
+}
 
 function $_SyntaxError(context,msg,indent){
     console.log('-- syntax error '+context+' '+msg)
@@ -2689,8 +2694,7 @@ function $IdCtx(context,value){
     
     this.scope = $get_scope(this)
     this.blurred_scope = this.scope.blurred
-    // If name is already referenced in the block, set attribute bound
-    //if($B.bound[this.scope.id][value]){this.bound=true}
+    this.env = clone($B.bound[this.scope.id])
 
     var ctx = context
     while(ctx.parent!==undefined){
@@ -2716,6 +2720,7 @@ function $IdCtx(context,value){
     if(context.type=='target_list'){
         // An id defined as a target in a "for" loop is bound
         $B.bound[scope.id][value]=true
+        this.bound = true
     }
 
     if(scope.ntype=='def' || scope.ntype=='generator'){
@@ -2780,9 +2785,6 @@ function $IdCtx(context,value){
     }
     
     this.to_js = function(arg){
-        if(this.value=='xw'){
-            console.log('id '+this.value+' in '+$get_node(this).context)
-        }
         var val = this.value
         switch(val) {
           //case 'print':
@@ -2867,9 +2869,15 @@ function $IdCtx(context,value){
             scope = found[0]
             var val_init = val
             if(scope.context===undefined){
-                //console.log('scope is module '+(scope.id===scope.module))
                 if(scope.id=='__builtins__'){val = '__BRYTHON__.builtins["'+val+'"]'}
-                else if(scope.id==scope.module){val = '$globals["'+val+'"]'}
+                else if(scope.id==scope.module){
+                    // In global namespace, if the 
+                    if(!this.bound && scope===innermost && this.env[val]===undefined){
+                        //console.log('nom '+val+' inconnu dans '+scope.module+' bound '+this.bound)
+                        return '__BRYTHON__.$NameError("'+val+'")'
+                    }
+                    val = '$globals["'+val+'"]'
+                }
                 else if(scope===innermost){val = '$locals["'+val+'"]'}
                 else{val = '__BRYTHON__.vars["'+scope.id+'"]["'+val+'"]'}
             }else if(scope===innermost){
@@ -5854,9 +5862,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     root.parent_block = $B.modules[parent_block_id]
     root.line_info = line_info
     root.indent = -1
-    // names bound at module level
-    $B.bound[module] = __BRYTHON__.bound[module] || {}
-    $B.bound[locals_id] = {}
+    if(locals_id!==module){$B.bound[locals_id] = {}}
     var new_node = new $Node()
     var current = root
     var name = ""
@@ -6293,7 +6299,12 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     $B.vars[module]=$B.vars[module] || {}
     $B.bound[module] = $B.bound[module] || {}
     $B.vars[locals_id] = $B.vars[locals_id] || {}
-    //$B.bound[locals_id] = {}
+
+    // Internal variables must be defined before tokenising, otherwise
+    // references to these names would generate a NameError
+    $B.bound[module]['__doc__'] = true
+    $B.bound[module]['__name__'] = true
+    $B.bound[module]['__file__'] = true
 
     $B.$py_src[locals_id]=src
     var root = $tokenize(src,module,locals_id,parent_block_id,line_info)
@@ -6316,19 +6327,16 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     var ds_node = new $Node()
     new $NodeJSCtx(ds_node,'$locals["__doc__"]='+root.doc_string)
     root.insert(1,ds_node)
-    $B.bound[module]['__doc__'] = true
     // name
     var name_node = new $Node()
     var lib_module = module
     if(module.substr(0,9)=='__main__,'){lib_module='__main__'}
     new $NodeJSCtx(name_node,'$locals["__name__"]="'+locals_id+'"')
     root.insert(2,name_node)
-    $B.bound[module]['__name__'] = true
     // file
     var file_node = new $Node()
     new $NodeJSCtx(file_node,'$locals["__file__"]="'+__BRYTHON__.$py_module_path[module]+'";None;\n')
     root.insert(3,file_node)
-    $B.bound[module]['__file__'] = true
         
     if($B.debug>0){$add_line_num(root,null,module)}
     

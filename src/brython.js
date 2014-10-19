@@ -69,6 +69,10 @@ for(var attr in obj){res.push(attr)}
 res.sort()
 return res
 }
+function clone(obj){var res=new Object()
+for(var attr in obj){res[attr]=obj[attr]}
+return res
+}
 function $_SyntaxError(C,msg,indent){console.log('-- syntax error '+C+' '+msg)
 var ctx_node=C
 while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
@@ -1655,6 +1659,7 @@ C.tree.push(this)
 if(C.parent.type==='call_arg')this.call_arg=true
 this.scope=$get_scope(this)
 this.blurred_scope=this.scope.blurred
+this.env=clone($B.bound[this.scope.id])
 var ctx=C
 while(ctx.parent!==undefined){switch(ctx.type){case 'list_or_tuple':
 case 'dict_or_set':
@@ -1670,6 +1675,7 @@ ctx=ctx.parent
 var scope=$get_scope(this)
 if(C.type=='target_list'){
 $B.bound[scope.id][value]=true
+this.bound=true
 }
 if(scope.ntype=='def' ||scope.ntype=='generator'){
 var _ctx=this.parent
@@ -1701,9 +1707,7 @@ scope.var2node[value]=[this]
 }else if(scope.var2node[value]===undefined){scope.var2node[value]=[this]
 }else{scope.var2node[value].push(this)
 }}}
-this.to_js=function(arg){if(this.value=='xw'){console.log('id '+this.value+' in '+$get_node(this).C)
-}
-var val=this.value
+this.to_js=function(arg){var val=this.value
 switch(val){
 case 'eval':
 val='$'+val
@@ -1745,9 +1749,13 @@ return res
 }}}
 scope=found[0]
 var val_init=val
-if(scope.C===undefined){
-if(scope.id=='__builtins__'){val='__BRYTHON__.builtins["'+val+'"]'}
-else if(scope.id==scope.module){val='$globals["'+val+'"]'}
+if(scope.C===undefined){if(scope.id=='__builtins__'){val='__BRYTHON__.builtins["'+val+'"]'}
+else if(scope.id==scope.module){
+if(!this.bound && scope===innermost && this.env[val]===undefined){
+return '__BRYTHON__.$NameError("'+val+'")'
+}
+val='$globals["'+val+'"]'
+}
 else if(scope===innermost){val='$locals["'+val+'"]'}
 else{val='__BRYTHON__.vars["'+scope.id+'"]["'+val+'"]'}}else if(scope===innermost){if($B.globals[scope.id]&& $B.globals[scope.id][val]){val='$globals["'+val+'"]'}
 else{val='$locals["'+val+'"]'}}else{val='__BRYTHON__.vars["'+scope.id+'"]["'+val+'"]'
@@ -3812,8 +3820,7 @@ $B.modules[root.id]=root
 root.parent_block=$B.modules[parent_block_id]
 root.line_info=line_info
 root.indent=-1
-$B.bound[module]=__BRYTHON__.bound[module]||{}
-$B.bound[locals_id]={}
+if(locals_id!==module){$B.bound[locals_id]={}}
 var new_node=new $Node()
 var current=root
 var name=""
@@ -4103,6 +4110,9 @@ if(locals_id===undefined){locals_id=module}
 $B.vars[module]=$B.vars[module]||{}
 $B.bound[module]=$B.bound[module]||{}
 $B.vars[locals_id]=$B.vars[locals_id]||{}
+$B.bound[module]['__doc__']=true
+$B.bound[module]['__name__']=true
+$B.bound[module]['__file__']=true
 $B.$py_src[locals_id]=src
 var root=$tokenize(src,module,locals_id,parent_block_id,line_info)
 root.transform()
@@ -4120,17 +4130,14 @@ root.insert(0,new_node)
 var ds_node=new $Node()
 new $NodeJSCtx(ds_node,'$locals["__doc__"]='+root.doc_string)
 root.insert(1,ds_node)
-$B.bound[module]['__doc__']=true
 var name_node=new $Node()
 var lib_module=module
 if(module.substr(0,9)=='__main__,'){lib_module='__main__'}
 new $NodeJSCtx(name_node,'$locals["__name__"]="'+locals_id+'"')
 root.insert(2,name_node)
-$B.bound[module]['__name__']=true
 var file_node=new $Node()
 new $NodeJSCtx(file_node,'$locals["__file__"]="'+__BRYTHON__.$py_module_path[module]+'";None;\n')
 root.insert(3,file_node)
-$B.bound[module]['__file__']=true
 if($B.debug>0){$add_line_num(root,null,module)}
 if($B.debug>=2){var t1=new Date().getTime()
 console.log('module '+module+' translated in '+(t1 - t0)+' ms')
