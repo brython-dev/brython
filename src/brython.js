@@ -1384,7 +1384,7 @@ new $NodeJSCtx(new_node,'return $no_break'+num)
 func_node.add(new_node)
 }
 var end_func_node=new $Node()
-new $NodeJSCtx(end_func_node,'var $res'+num+'=$f'+num+'($globals)')
+new $NodeJSCtx(end_func_node,'var $res'+num+'=$f'+num+'($globals);')
 test_range_node.add(end_func_node)
 if(this.has_break){var no_break=new $Node()
 new $NodeJSCtx(no_break,'$no_break'+num+'=$res'+num)

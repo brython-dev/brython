@@ -2241,7 +2241,7 @@ function $ForExpr(context){
                 // Line to call the function        
                 var end_func_node = new $Node()
                 new $NodeJSCtx(end_func_node,
-                    'var $res'+num+'=$f'+num+'($globals)')
+                    'var $res'+num+'=$f'+num+'($globals);')
                 test_range_node.add(end_func_node)
 
                 if(this.has_break){
