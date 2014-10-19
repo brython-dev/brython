@@ -33,7 +33,8 @@ Performs the following:
      - Removes docstrings.
      - Removes comments.
      - Minimizes code indentation.
-     - Joins multiline pairs of parentheses, braces, and brackets (and removes extraneous whitespace within).
+     - Joins multiline pairs of parentheses, braces, and brackets
+           (and removes extraneous whitespace within).
      - Preserves shebangs and encoding info (e.g. "# -- coding: utf-8 --").
 
 Various examples and edge cases are sprinkled throughout the pyminifier code so
@@ -51,8 +52,13 @@ If you get an error executing minified_pyminifier.py or
 something is broken.
 """
 
-import sys, re, cStringIO, tokenize
+
+import sys
+import re
+import cStringIO
+import tokenize
 from optparse import OptionParser
+
 
 # Compile our regular expressions for speed
 multiline_quoted_string = re.compile(r'(\'\'\'|\"\"\")')
@@ -62,12 +68,12 @@ shebang = re.compile('^#\!.*$')
 encoding = re.compile(".*coding[:=]\s*([-\w.]+)")
 multiline_indicator = re.compile('\\\\(\s*#.*)?\n')
 # The above also removes trailing comments: "test = 'blah \ # comment here"
-
 # These aren't used but they're a pretty good reference:
 double_quoted_string = re.compile(r'((?<!\\)".*?(?<!\\)")')
 single_quoted_string = re.compile(r"((?<!\\)'.*?(?<!\\)')")
 single_line_single_quoted_string = re.compile(r"((?<!\\)'''.*?(?<!\\)''')")
 single_line_double_quoted_string = re.compile(r"((?<!\\)'''.*?(?<!\\)''')")
+
 
 def remove_comments_and_docstrings(source):
     """
@@ -102,7 +108,7 @@ def remove_comments_and_docstrings(source):
         token_string = tok[1]
         start_line, start_col = tok[2]
         end_line, end_col = tok[3]
-        ltext = tok[4]
+        ltext = tok[4]  # lint:ok
         # The following two conditionals preserve indentation.
         # This is necessary because we're not using tokenize.untokenize()
         # (because it spits out code with copious amounts of oddly-placed
@@ -146,7 +152,7 @@ def remove_comments_and_docstrings(source):
                 #     """this function only has a docstring"""
                 #
                 # removing the docstring would result in an indentation error
-                
+
                 out += '""'
         else:
             out += token_string
@@ -154,6 +160,7 @@ def remove_comments_and_docstrings(source):
         last_col = end_col
         last_lineno = end_line
     return out
+
 
 def reduce_operators(source):
     """
@@ -178,7 +185,7 @@ def reduce_operators(source):
     out = ""
     out_line = ""
     prev_toktype = tokenize.INDENT
-    prev_tok = None
+    prev_tok = None  # lint:ok
     last_lineno = -1
     last_col = 0
     lshift = 1
@@ -187,7 +194,7 @@ def reduce_operators(source):
         token_string = tok[1]
         start_line, start_col = tok[2]
         end_line, end_col = tok[3]
-        ltext = tok[4]
+        ltext = tok[4]  # lint:ok
         if start_line > last_lineno:
             last_col = 0
         if start_col > last_col:
@@ -195,12 +202,12 @@ def reduce_operators(source):
         if token_type == tokenize.OP:
             # Operators that begin a line such as @ or open parens should be
             # left alone
-            start_of_line_types = [ # These indicate we're starting a new line
+            start_of_line_types = [  # These indicate we're starting a new line
                 tokenize.NEWLINE, tokenize.DEDENT, tokenize.INDENT]
             if prev_toktype not in start_of_line_types:
                 # This is just a regular operator; remove spaces
-                remove_columns.append(start_col) # Before OP
-                remove_columns.append(end_col+1) # After OP
+                remove_columns.append(start_col)  # Before OP
+                remove_columns.append(end_col+1)  # After OP
         if token_string.endswith('\n'):
             out_line += token_string
             if remove_columns:
@@ -210,10 +217,11 @@ def reduce_operators(source):
             # This was really handy for debugging (looks nice, worth saving):
                         #print out_line + (" " * col) + "^"
                         # The above points to the character we're looking at
-                        if out_line[col] == " ": # Only if it is a space
+                        if out_line[col] == " ":  # Only if it is a space
                             out_line = out_line[:col] + out_line[col+1:]
-                            lshift += 1 # To re-align future changes on this line
-                    except IndexError: # Reached and end of line, no biggie
+                            # To re-align future changes on this line
+                            lshift += 1
+                    except IndexError:  # Reached and end of line, no biggie
                         pass
             out += out_line
             remove_columns = []
@@ -222,13 +230,14 @@ def reduce_operators(source):
         else:
             out_line += token_string
         prev_toktype = token_type
-        prev_token = tok
+        prev_token = tok  # lint:ok
         last_col = end_col
         last_lineno = end_line
     # This makes sure to capture the last line if it doesn't end in a newline:
     out += out_line
     # The tokenize module doesn't recognize @ sign before a decorator
     return out
+
 
 # NOTE: This isn't used anymore...  Just here for reference in case someone
 # searches the internet looking for a way to remove similarly-styled end-of-line
@@ -251,14 +260,15 @@ def remove_comment(single_line):
         if section.startswith("'") or section.startswith('"'):
             # This is a quoted string; leave it alone
             out_line += section
-        elif '#' in section: # A '#' not in quotes?  There's a comment here!
+        elif '#' in section:  # A '#' not in quotes?  There's a comment here!
             # Get rid of everything after the # including the # itself:
             out_line += section.split('#')[0]
-            break # No reason to bother the rest--it's all comments
+            break  # No reason to bother the rest--it's all comments
         else:
             # This isn't a quoted string OR a comment; leave it as-is
             out_line += section
-    return out_line.rstrip() # Strip trailing whitespace before returning
+    return out_line.rstrip()  # Strip trailing whitespace before returning
+
 
 def join_multiline_pairs(text, pair="()"):
     """
@@ -268,7 +278,7 @@ def join_multiline_pairs(text, pair="()"):
     By default it joins parens () but it will join any two characters given via
     the 'pair' variable.
 
-    **Note:** Doesn't remove extraneous whitespace that ends up between the pair.
+    **Note:** Doesnt remove extraneous whitespace that ends up between the pair.
     Use reduce_operators() for that.
 
     Example:
@@ -283,7 +293,7 @@ def join_multiline_pairs(text, pair="()"):
 
     .. code-block:: python
 
-        test = (            "This is inside a multi-line pair of parentheses"        )
+        test = (         "This is inside a multi-line pair of parentheses"     )
     """
     # Readability variables
     opener = pair[0]
@@ -297,7 +307,7 @@ def join_multiline_pairs(text, pair="()"):
     quoted_string = False
     openers = 0
     closers = 0
-    linecount = 0
+    linecount = 0  # lint:ok
 
     # Regular expressions
     opener_regex = re.compile('\%s' % opener)
@@ -324,7 +334,8 @@ def join_multiline_pairs(text, pair="()"):
             quoted_string = False
         # Now let's focus on the lines containing our opener and/or closer:
         elif not quoted_string:
-            if opener_regex.search(line) or closer_regex.search(line) or inside_pair:
+            if opener_regex.search(line) \
+               or closer_regex.search(line) or inside_pair:
                 for character in line:
                     if character == opener:
                         if not escaped and not inside_quotes:
@@ -389,7 +400,7 @@ def join_multiline_pairs(text, pair="()"):
                         if escaped:
                             escaped = False
                         output += character
-                if inside_pair == False:
+                if inside_pair is False:
                     output += '\n'
             else:
                 output += line + '\n'
@@ -400,6 +411,7 @@ def join_multiline_pairs(text, pair="()"):
     output = trailing_newlines.sub('\n', output)
 
     return output
+
 
 def dedent(source):
     """
@@ -426,7 +438,7 @@ def dedent(source):
     prev_start_line = 0
     indentation = ""
     indentation_level = 0
-    for i,tok in enumerate(tokenize.generate_tokens(io_obj.readline)):
+    for i, tok in enumerate(tokenize.generate_tokens(io_obj.readline)):
         token_type = tok[0]
         token_string = tok[1]
         start_line, start_col = tok[2]
@@ -450,6 +462,7 @@ def dedent(source):
         last_col = end_col
         last_lineno = end_line
     return out
+
 
 def fix_empty_methods(source):
     """
@@ -477,8 +490,8 @@ def fix_empty_methods(source):
     previous_line = None
     method = re.compile(r'^\s*def\s*.*\(.*\):.*$')
     for line in source.split('\n'):
-        if len(line.strip()) > 0: # Don't look at blank lines
-            if just_matched == True:
+        if len(line.strip()) > 0:  # Don't look at blank lines
+            if just_matched is True:
                 this_indentation_level = len(line.rstrip()) - len(line.strip())
                 if def_indentation_level == this_indentation_level:
                     # This method is empty, insert a 'pass' statement
@@ -487,14 +500,16 @@ def fix_empty_methods(source):
                     output += "%s\n%s\n" % (previous_line, line)
                 just_matched = False
             elif method.match(line):
-                def_indentation_level = len(line) - len(line.strip()) # A commment
+                # A commment
+                def_indentation_level = len(line) - len(line.strip())
                 just_matched = True
                 previous_line = line
             else:
-                output += "%s\n" % line # Another self-test
+                output += "%s\n" % line  # Another self-test
         else:
             output += "\n"
     return output
+
 
 def remove_blank_lines(source):
     """
@@ -519,6 +534,7 @@ def remove_blank_lines(source):
     source = [a for a in io_obj.readlines() if a.strip()]
     return "".join(source)
 
+
 def minify(source):
     """
     Remove all docstrings, comments, blank lines, and minimize code
@@ -531,7 +547,7 @@ def minify(source):
     for line in source.split('\n')[0:2]:
         # Save the first comment line if it starts with a shebang
         # (e.g. '#!/usr/bin/env python') <--also a self test!
-        if shebang.match(line): # Must be first line
+        if shebang.match(line):  # Must be first line
             preserved_shebang = line
             continue
         # Save the encoding string (must be first or second line in file)
@@ -565,13 +581,15 @@ def minify(source):
         source = preserved_shebang + "\n" + source
 
     # Remove blank lines
-    source = remove_blank_lines(source).rstrip('\n') # Stubborn last newline
+    source = remove_blank_lines(source).rstrip('\n')  # Stubborn last newline
 
     return source
 
+
 def bz2_pack(source):
     "Returns 'source' as a bzip2-compressed, self-extracting python script."
-    import bz2, base64
+    import bz2
+    import base64
     out = ""
     compressed_source = bz2.compress(source)
     out += 'import bz2, base64\n'
@@ -580,9 +598,11 @@ def bz2_pack(source):
     out += "'))\n"
     return out
 
+
 def gz_pack(source):
     "Returns 'source' as a gzip-compressed, self-extracting python script."
-    import zlib, base64
+    import zlib
+    import base64
     out = ""
     compressed_source = zlib.compress(source)
     out += 'import zlib, base64\n'
@@ -591,21 +611,26 @@ def gz_pack(source):
     out += "'))\n"
     return out
 
+
 # The test.+() functions below are for testing pyminifer...
 def test_decorator(f):
     """Decorator that does nothing"""
     return f
 
+
 def test_reduce_operators():
     """Test the case where an operator such as an open paren starts a line"""
-    (a, b) = 1, 2 # The indentation level should be preserved
+    # The indentation level should be preserved
+    (a, b) = 1, 2  # lint:ok
     pass
+
 
 def test_empty_functions():
     """
     This is a test method.
     This should be replaced with 'def empty_method: pass'
     """
+
 
 class test_class(object):
     "Testing indented decorators"
@@ -614,32 +639,35 @@ class test_class(object):
     def foo(self):
         pass
 
+
 def test_function():
     """
     This function encapsulates the edge cases to prevent them from invading the
     global namespace.
     """
-    foo = ("The # character in this string should " # This comment
-           "not result in a syntax error") # ...and this one should go away
-    test_multi_line_list = [
+    foo = (  # lint:ok
+        "The # character in this string should "  # This comment
+        "not result in a syntax error")  # ...and this one should go away
+    test_multi_line_list = [  # lint:ok
         'item1',
         'item2',
         'item3'
     ]
-    test_multi_line_dict = {
+    test_multi_line_dict = {  # lint:ok
         'item1': 1,
         'item2': 2,
         'item3': 3
     }
     # It may seem strange but the code below tests our docstring removal code.
-    test_string_inside_operators = imaginary_function(
+    test_string_inside_operators = imaginary_function(  # lint:ok
         "This string was indented but the tokenizer won't see it that way."
-    ) # To understand how this could mess up docstring removal code see the
+    )  # To understand how this could mess up docstring removal code see the
       # remove_comments_and_docstrings() function starting at this line:
       #     "elif token_type == tokenize.STRING:"
     # This tests remove_extraneous_spaces():
     this_line_has_leading_indentation    = '''<--That extraneous space should be
-                                              removed''' # But not these spaces
+                                              removed'''  # But not these spaces
+
 
 def main():
     usage = '%prog [options] "<input file>"'
@@ -669,8 +697,8 @@ def main():
     options, args = parser.parse_args()
     try:
         source = open(args[0]).read()
-    except Exception, e:
-        print e
+    except Exception as error:
+        print(error)
         parser.print_help()
         sys.exit(2)
     # Minify our input script
@@ -686,7 +714,8 @@ def main():
         f.write(result)
         f.close()
     else:
-        print result
+        print(result)
+
 
 if __name__ == "__main__":
     main()
