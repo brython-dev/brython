@@ -55,7 +55,7 @@ def test_next():
         src = open(option.value).read()
         doc['files'].selectedIndex = script_num
         editor.setValue(src)
-        state = run()
+        state = run(in_globals=True)
         if state == 0:
             failed.append(option.text)
         timer.set_timeout(test_next,500)
