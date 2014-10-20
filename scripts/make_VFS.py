@@ -17,7 +17,7 @@ def process(filename):
     import slimit
     js_minify=slimit.minify
   except ImportError:
-    js_minify=None  
+    js_minify=None
 
   print("generating %s" % filename)
   _main_root=os.path.dirname(filename)
@@ -26,19 +26,19 @@ def process(filename):
 
   for _mydir in ("libs", "Lib"):
     for _root, _dir, _files in os.walk(os.path.join(_main_root, _mydir)):
-        if _root.endswith('lib_migration'): continue  #skip these modules 
+        if _root.endswith('lib_migration'): continue  #skip these modules
         if '__pycache__' in _root: continue
         for _file in _files:
             _ext=os.path.splitext(_file)[1]
             if _ext not in ('.js', '.py'): continue
- 
+
             _fp=open(os.path.join(_root, _file), "r")
             _data=_fp.read()
             _fp.close()
 
             if _ext in ('.js'):
                if js_minify is not None:
-                  try: 
+                  try:
                     _data=js_minify(_data)
                   except:
                     pass
@@ -66,7 +66,7 @@ def process(filename):
             else:
                 _VFS[mod_name]=[ext,_data]
             print("adding %s %s" %(mod_name,_vfs_filename))
-                
+
   _vfs=open(filename, "w")
   _vfs.write('__BRYTHON__.use_VFS = true;\n')
   _vfs.write('__BRYTHON__.VFS=%s;\n\n' % json.dumps(_VFS))
