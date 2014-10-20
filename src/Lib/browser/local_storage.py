@@ -5,7 +5,7 @@ from javascript import JSObject
 class __UnProvided():
     pass
 
-class Local_Storage():
+class LocalStorage():
     storage_type = "local_storage"
 
     def __init__(self):
@@ -83,4 +83,4 @@ class Local_Storage():
     def __len__(self):
         return self.store.length
 
-storage = Local_Storage()
+storage = LocalStorage()
