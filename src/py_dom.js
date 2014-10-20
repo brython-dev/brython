@@ -591,17 +591,15 @@ DOMNode.bind = function(self,event){
     var _id
     if(self.elt.nodeType===9){_id=0}
     else{_id = self.elt.$brython_id}
-    var ix = $B.events.$keys.indexOf(_id)
-    if(ix===-1){
-        $B.events.$keys.push(_id)
-        $B.events.$values.push(dict())
-        ix = $B.events.$keys.length-1
+    var id_dict
+    if (!$B.$dict_contains($B.events, _id)) {
+        id_dict = _b_.dict()
+        $B.$dict_set($B.events, _id, id_dict)
+    } else {
+        id_dict = $B.$dict_getitem($B.events, _id)
     }
-    var ix_event = $B.events.$values[ix].$keys.indexOf(event)
-    if(ix_event==-1){
-        $B.events.$values[ix].$keys.push(event)
-        $B.events.$values[ix].$values.push([])
-        ix_event = $B.events.$values[ix].$values.length-1
+    if (!$B.$dict_contains(id_dict, event)) {
+        $B.$dict_set(id_dict, event, [])
     }
     for(var i=2;i<arguments.length;i++){
         var func = arguments[i]
@@ -619,8 +617,7 @@ DOMNode.bind = function(self,event){
         }else if(window.attachEvent){
             self.elt.attachEvent("on"+event,callback)
         }
-        
-        $B.events.$values[ix].$values[ix_event].push([func,callback])
+        $B.$dict_getitem($B.$dict_getitem($B.events, _id), event).push([func,callback])
     }
 }
 
@@ -650,16 +647,15 @@ DOMNode.class_name = function(self){return DOMNode.Class(self)}
 
 DOMNode.clone = function(self){
     res = $DOMNode(self.elt.cloneNode(true))
-    res.elt.$brython_id=Math.random().toString(36).substr(2, 8)
+    brython_id = res.elt.$brython_id=Math.random().toString(36).substr(2, 8)
 
     // bind events on clone to the same callbacks as self
-    var ix_elt = $B.events.$keys.indexOf(self.elt.$brython_id)
-    if(ix_elt!=-1){
-        var events = $B.events.$values[ix_elt]
-        for(var i=0;i<events.$keys.length;i++){
-            var event = events.$keys[i]
-            for(var j=0;j<events.$values[i].length;j++){
-                DOMNode.bind(res,event,events.$values[i][j][0])
+    if (!$B.$dict_contains($B.events, brython_id)) {
+        events = $B.$dict_getitem($B.events, brython_id)
+        for (itms in $B.$dict_items(events)) {
+            event = itms[0]
+            for (tmp in itms[1]) {
+                DOMNode.bind(res, event, tmp[0])
             }
         }
     }
@@ -684,9 +680,7 @@ DOMNode.get = function(self){
     for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
     var $ns=$B.$MakeArgs('get',args,[],[],null,'kw')
     var $dict = {}
-    for(var i=0;i<$ns['kw'].$keys.length;i++){
-        $dict[$ns['kw'].$keys[i]]=$ns['kw'].$values[i]
-    }
+    $B.$copy_dict($dict, $ns['kw'])
     if($dict['name']!==undefined){
         if(obj.getElementsByName===undefined){
             throw _b_.TypeError("DOMNode object doesn't support selection by name")
@@ -844,8 +838,9 @@ DOMNode.set_html = function(self,value){
 }
 
 DOMNode.set_style = function(self,style){ // style is a dict
-    for(var i=0;i<style.$keys.length;i++){
-        var key = style.$keys[i],value=style.$values[i]
+    for(itm in $B.$dict_items(style)){
+        key = itm[0]
+        value = itm[1]
         if(key.toLowerCase()==='float'){
             self.elt.style.cssFloat = value
             self.elt.style.styleFloat = value
@@ -898,13 +893,12 @@ DOMNode.unbind = function(self,event){
     // if no function is specified, remove all callback functions
     var _id
     if(self.elt.nodeType==9){_id=0}else{_id=self.elt.$brython_id}
-    var ix_elt = $B.events.$keys.indexOf(_id)
-    if(ix_elt==-1) return
+    elt = $B.$dict_get($B.events, _id)
+    if (elt == None) return
 
-    var ix_event = $B.events.$values[ix_elt].$keys.indexOf(event)
-    if(ix_event==-1) return
+    events = $B.$dict_get(elt, event)
+    if(events == None) return
 
-    var events = $B.events.$values[ix_elt].$values[ix_event]
     if(arguments.length===2){
         for(var i=0;i<events.length;i++){
             var callback = events[i][1]
@@ -914,7 +908,7 @@ DOMNode.unbind = function(self,event){
                 self.elt.detachEvent(event,callback,false)
             }
         }
-        $B.events.$values[ix_elt][ix_event] = []
+        $B.$dict_set(elt, event, [])
         return
     }
     for(var i=2;i<arguments.length;i++){
@@ -929,7 +923,7 @@ DOMNode.unbind = function(self,event){
                 }
                 events.splice(j,1)
                 // Changes were made to listeners so the tracking array is updated
-                $B.events.$values[ix_elt][ix_event] = events
+                $B.$dict_set(elt, event, events)
                 flag = true
                 break
             }
@@ -1277,11 +1271,10 @@ $WinDict.__mro__ = [$WinDict,$ObjectDict]
 
 var win =  JSObject(window) //{__class__:$WinDict}
 
+// TODO: is this used anywhere?
 win.get_postMessage = function(msg,targetOrigin){
     if(isinstance(msg,dict)){
-        var temp = {__class__:'dict'}
-        for(var i=0;i<msg.__len__();i++) temp[msg.$keys[i]]=msg.$values[i]
-        msg = temp
+        msg = $B.$dict_get_copy(msg)
     }
     return window.postMessage(msg,targetOrigin)
 }

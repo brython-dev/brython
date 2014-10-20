@@ -433,10 +433,9 @@ $ListDict.sort = function(self){
 $ListDict.toString = function(){return '$ListDict'}
 
 // attribute __dict__
-$ListDict.__dict__ = dict()
+$ListDict.__dict__ = _b_.dict()
 for(var $attr in list){
-    $ListDict.__dict__.$keys.push($attr)
-    $ListDict.__dict__.$values.push(list[$attr])
+    $B.$dict_set($ListDict.__dict__, $attr, list[$attr])
 }
 
 // constructor for built-in type 'list'

@@ -397,9 +397,14 @@ function $eval(src, _globals, locals){
         __BRYTHON__.$py_module_path[mod_name] = __BRYTHON__.$py_module_path['__main__']
         __BRYTHON__.vars[mod_name] = {}
         __BRYTHON__.bound[mod_name] = {}
-        for(var i=0;i<_globals.$keys.length;i++){
-            __BRYTHON__.vars[mod_name][_globals.$keys[i]] = _globals.$values[i]
-            __BRYTHON__.bound[mod_name][_globals.$keys[i]] = true
+        try {
+            itr = $B.$dict_iterator(_globals)
+            while (itm = itr.next()) {
+                __BRYTHON__.vars[mod_name][itm[0]] = itm[1]
+                __BRYTHON__.bound[mod_name][itm[0]] = true
+            }
+        } catch (err) {
+            if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
         }
     }
     $B.exec_stack.push(mod_name)
@@ -494,8 +499,7 @@ function getattr(obj,attr,_default){
         var res = _b_.dict()
         for(var $attr in obj){
             if($attr.charAt(0)!='$'){
-                res.$keys.push($attr)
-                res.$values.push(obj[$attr])
+                $B.$dict_set(res, $attr, obj[$attr])
             }
         }
         return res
@@ -626,7 +630,9 @@ function globals(module){
     // the translation engine adds the argument module
     var res = _b_.dict()
     var scope = $B.vars[module]
-    for(var name in scope){res.$keys.push(name);res.$values.push(scope[name])}
+    for(var name in scope){
+        $B.$dict_set(res, name, scope[name])
+    }
     return res
 }
 
@@ -874,7 +880,7 @@ function locals(obj_id,module){
     var res = _b_.dict()
     var scope = $B.vars[obj_id]
     for(var name in scope){
-       _b_.dict.$dict.__setitem__(res,name,scope[name])
+       $B.$dict_set(res,name,scope[name])
     }
     return res
 }
