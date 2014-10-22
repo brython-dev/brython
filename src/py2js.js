@@ -1685,11 +1685,15 @@ function $DefCtx(context){
         }
 
         if(this.type=='def'){
-            var enclosing = []
+            var enclosing = [], passed = []
             for(var i=this.enclosing.length-1;i>=0;i--){
                 var func = this.enclosing[i]
                 for(var attr in $B.bound[func.id]){
                     if(attr!==this.name){
+                        if(func===scope && $B.bound[func.id][attr]!='arg'){
+                            continue
+                        }
+                        passed.push(attr)
                         enclosing.push('$B.vars["'+func.id+'"]["'+attr+'"]')
                     }
                 } 
@@ -1697,6 +1701,9 @@ function $DefCtx(context){
                 for(var attr in __BRYTHON__.bound[func.id]){
                     if(attr!=this.name && ($B.globals[this.id]===undefined || 
                         $B.globals[this.id][attr]===undefined)){
+                        if(func===scope && $B.bound[func.id][attr]!='arg'){
+                            continue
+                        }
                         __BRYTHON__.bound[this.id][attr] = true
                     }
                 }
@@ -1707,6 +1714,9 @@ function $DefCtx(context){
                 for(var attr in $B.bound[func.id]){
                     if(attr!==this.name && ($B.globals[this.id]===undefined ||
                         $B.globals[this.id][attr]===undefined)){
+                        if(func===scope && $B.bound[func.id][attr]!='arg'){
+                            continue
+                        }
                         new_node = new $Node()
                         new $NodeJSCtx(new_node,'if('+attr+'!==undefined){$locals["'+attr+'"] = '+attr+'};')
                         nodes.push(new_node)
@@ -1929,20 +1939,24 @@ function $DefCtx(context){
         if(func_name!==undefined){
             return func_name+'=(function()'
         }else{
+            var scope = $get_scope(this)
             var res = this.tree[0].to_js()+'=(function('
             if(this.type=='def'){
                 var args = []
                 for(var i=this.enclosing.length-1;i>=0;i--){
                     var func = this.enclosing[i]
                     for(var attr in $B.bound[func.id]){
-                        if(attr!==this.name){args.push(attr)}
+                        if(attr!==this.name){
+                            if($B.bound[func.id]===scope &&
+                                $B.bound[func.id][attr]!='arg'){continue}
+                            args.push(attr)
+                        }
                     }
                 }
                 res += args.join(',')
             }
             res += ')'
             return res
-            var scope = $get_scope(this)
             var name = this.name
             var res = '__BRYTHON__.vars["'+scope.id+'"]'
             if(scope.context===undefined){res = '$globals'}
@@ -2572,7 +2586,7 @@ function $FuncArgIdCtx(context,name){
     if($B.bound[node.id][name]){
         $_SyntaxError(context,["duplicate argument '"+name+"' in function definition"])
     }
-    $B.bound[node.id][name] = true
+    $B.bound[node.id][name] = 'arg'
 
     this.tree = []
     context.tree.push(this)
@@ -2607,7 +2621,7 @@ function $FuncStarArgCtx(context,op){
         if($B.bound[this.node.id][name]){
             $_SyntaxError(context,["duplicate argument '"+name+"' in function definition"])
         }
-        $B.bound[this.node.id][name] = true
+        $B.bound[this.node.id][name] = 'arg'
 
         // add to locals of function
         var ctx = context

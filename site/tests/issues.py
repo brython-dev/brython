@@ -49,4 +49,15 @@ assert dictToDir["init"]==instanceToDir.init , 'init not init method: %s' % dict
 # issue 32
 assert 5 < 10 < 5 * 10 < 100
 
+# issue 16 : isolate Python Namespacing
+i = 5
+def foo():
+    def bar():
+        return i
+    res = []
+    for i in range(5):
+        res.append(bar())
+    return res
+assert foo() == [0, 1, 2, 3, 4]
+
 print('passed all tests')
