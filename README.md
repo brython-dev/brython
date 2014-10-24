@@ -72,6 +72,28 @@ with the HTML example above.
 Point the browser to [http://localhost:8000/app](http://localhost:8000/app) to see the result.
 
 
+Imports:
+--------
+
+Put ALL of them at the top of the file **Sorted and Grouped** together by the type of import:
+
+- Future, if any, eg:  `from __future__ import braces`
+- Python Standard Library, eg: `import os`
+- Third Party, if any, eg: `from twisted import log`
+- Current Python Project, if any, eg:  `from clients import Client` 
+- Explicitly Local, if any, eg: `from . import blah`
+- Custom, if any, eg: imports inside `try: ... except:...` blocks
+
+**Do I have to do it Manually?, one by one?. No... Please use:**
+
+```bash
+pip install isort
+isort file.py
+```
+
+- By having the imports Alphabetically Sorted and Grouped allows better code, less error prone, eg. Unused imports, duplicated imports, etc.
+
+
 Test Brython online
 ===================
 If you want to test Brython online you can visit the following:
