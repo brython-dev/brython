@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+
+
 """This scripts builds the Javascript file identifiers_re.js in folder "src"
 
 This scripts holds the regular expressions used to detect Unicode variable
@@ -11,8 +13,8 @@ Unicode points that are accepted. Brython implements this PEP partially :
 accepted code point (by default u06FF)."""
 
 
-import re
 import os
+import re
 
 
 last_code_point = '06FF'
@@ -53,7 +55,8 @@ for line in src:
                 else:
                     print((state, line))
                 elts[state].append(_range)
-                out.write('-'.join([r'\u%s' % item for item in points]))
+                out.write('-'.join(
+                          [r'\u%s' % item for item in points]))  # lint:ok
 
 
 out.write(']/\n')

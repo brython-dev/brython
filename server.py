@@ -5,10 +5,9 @@
 """Simple HTTP Server for Brython Development."""
 
 
-import sys
 import os
+import sys
 from webbrowser import open_new_tab
-
 
 try:
     os.nice(19)

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+
+
 """Generates a skeleton for non-pure Python modules of the CPython distribution
 The resulting script has the same names as the original module, with same values
 if they are a built-in type (integer, string etc) and a value of the same type
@@ -6,8 +8,8 @@ if they are a built-in type (integer, string etc) and a value of the same type
 value."""
 
 
-import types
 import inspect
+import types
 
 
 stdlib_name = '_csv'
