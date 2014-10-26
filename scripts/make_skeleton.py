@@ -15,7 +15,6 @@ import types
 stdlib_name = '_csv'
 ns = {}
 exec('import %s;print(dir(%s))' % (stdlib_name, stdlib_name), ns)
-out = open('%s_skeleton.py' % stdlib_name, 'w')
 infos = ns[stdlib_name]
 
 
@@ -62,5 +61,5 @@ def skeleton(infos):
     return res
 
 
-out.write(skeleton(infos))
-out.close()
+with open('%s_skeleton.py' % stdlib_name, 'w') as new_skeleton_file_output:
+    new_skeleton_file_output.write(skeleton(infos))

@@ -43,16 +43,16 @@ def repl(mo):
 
 
 for lang in ['fr', 'en', 'es', 'pt']:
-    dyn = open(os.path.join(folder, lang, 'index.html')).read()
-    static = open(os.path.join(folder, lang, 'static_index.html'), 'wb')
-    pattern = 'href="#" onClick="load\(\'(.+)\.md\',\'content\'\)">'
-    res = re.sub(pattern, repl, dyn)
-    script_pattern = '<script type="text/python3?">.*?</script>'
-    res = re.sub(script_pattern,
-                 '<script type="text/python3">%s</script>' % loader, res,
-                 flags=re.S)
-    res = res.replace(
-        '<body onLoad="brython(1);load(\'intro.md\',\'content\')">',
-        '<body onLoad="brython(1)">')
-    static.write(res)
-    static.close()
+    with open(os.path.join(folder, lang, 'index.html')) as index_html_file:
+        dyn = index_html_file.read()
+    with open(os.path.join(folder, lang, 'static_index.html'), 'wb') as static:
+        pattern = 'href="#" onClick="load\(\'(.+)\.md\',\'content\'\)">'
+        res = re.sub(pattern, repl, dyn)
+        script_pattern = '<script type="text/python3?">.*?</script>'
+        res = re.sub(script_pattern,
+                     '<script type="text/python3">%s</script>' % loader, res,
+                     flags=re.S)
+        res = res.replace(
+            '<body onLoad="brython(1);load(\'intro.md\',\'content\')">',
+            '<body onLoad="brython(1)">')
+        static.write(res)
