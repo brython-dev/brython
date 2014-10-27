@@ -314,7 +314,7 @@ def is_valid(filename):
 
 
 for arc, wfunc in (dist1, dist1.add), (dist2, dist2.add), (dist3, dist3.write):
-    for path in 'README.txt', 'LICENCE.txt':
+    for path in 'README.md', 'LICENCE.txt':
         wfunc(os.path.join(pdir, path), arcname=os.path.join(name, path))
 
     wfunc(os.path.join(pdir, 'src', 'brython.js'),
