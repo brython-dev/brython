@@ -1,7 +1,7 @@
-// brython.js www.brython.info
+// brython.js brython.info
 // version [3, 3, 0, 'alpha', 0]
 // implementation [3, 0, 0, 'rc', 0]
-// version compiled from commented, indented source files at https://github.com/brython-dev/brython
+// version compiled from commented, indented source files at github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
 ;(function($B){if($B.isa_web_worker==true){
 window={}
