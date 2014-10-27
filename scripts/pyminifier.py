@@ -716,9 +716,8 @@ def main():
         result = gz_pack(result)
     # Either save the result to the output file or print it to stdout
     if options.outfile:
-        f = open(options.outfile, 'w')
-        f.write(result)
-        f.close()
+        with open(options.outfile, 'w') as new_minified_python_file:
+            new_minified_python_file.write(result)
     else:
         print(result)
 
