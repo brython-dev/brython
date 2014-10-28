@@ -11,7 +11,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     }
     // check if parents are defined
     if(parents!==undefined){
-        for(var i=0;i<parents.length;i++){
+        for(var i=0, len = parents.length; i < len;i++){
             if(parents[i]===undefined){
                 // restore the line of class definition
                 $B.line_info = class_obj.$def_line
@@ -25,13 +25,13 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     }
     // see if there is 'metaclass' in kwargs
     var metaclass = _b_.type
-    for(var i=0;i<kwargs.length;i++){
+    for(var i=0, len = kwargs.length; i < len;i++){
         var key=kwargs[i][0],val=kwargs[i][1]
         if(key=='metaclass'){metaclass=val}
     }
     if(metaclass===_b_.type){
         // see if one of the subclasses uses a metaclass
-        for(var i=0;i<parents.length;i++){
+        for(var i=0, len = parents.length; i < len;i++){
             if(parents[i].$dict.__class__!==$B.$type){
                 metaclass = parents[i].__class__.$factory
                 break
@@ -95,7 +95,7 @@ _b_.type = function(name,bases,cl_dict){
     class_dict.__dict__ = cl_dict
     
     // set class attributes for faster lookups
-    for(var i=0;i<cl_dict.$keys.length;i++){
+    for(var i=0, len = cl_dict.$keys.length; i < len;i++){
         var attr = cl_dict.$keys[i],val=cl_dict.$values[i]
         class_dict[attr] = val
     }
@@ -106,30 +106,30 @@ _b_.type = function(name,bases,cl_dict){
     // copied from http://code.activestate.com/recipes/577748-calculate-the-mro-of-a-class/
     // by Steve d'Aprano
     var seqs = []
-    for(var i=0;i<bases.length;i++){
+    for(var i=0, len = bases.length; i < len;i++){
         // we can't simply push bases[i].__mro__ 
         // because it would be modified in the algorithm
         if(bases[i]===_b_.str) bases[i] = $B.$StringSubclassFactory
         var bmro = []
         var _tmp=bases[i].$dict.__mro__
-        for(var k=0;k<_tmp.length;k++){
+        for(var k=0, len = _tmp.length; k < len;k++){
             bmro.push(_tmp[k])
         }
         seqs.push(bmro)
     }
 
-    for(var i=0;i<bases.length;i++) seqs.push(bases[i].$dict)
+    for(var i=0, len = bases.length; i < len;i++) seqs.push(bases[i].$dict)
 
     var mro = []
     while(1){
         var non_empty = []
-        for(var i=0;i<seqs.length;i++){
+        for(var i=0, len = seqs.length; i < len;i++){
             if(seqs[i].length>0) non_empty.push(seqs[i])
         }
         if (non_empty.length==0) break
-        for(var i=0;i<non_empty.length;i++){
+        for(var i=0, len = non_empty.length; i < len;i++){
             var seq = non_empty[i],candidate = seq[0],not_head = []
-            for(var j=0;j<non_empty.length;j++){
+            for(var j=0, len = non_empty.length; j < len;j++){
                 var s = non_empty[j]
                 if(s.slice(1).indexOf(candidate)>-1){not_head.push(s)}
             }
@@ -140,7 +140,7 @@ _b_.type = function(name,bases,cl_dict){
             throw _b_.TypeError("inconsistent hierarchy, no C3 MRO is possible")
         }
         mro.push(candidate)
-        for(var i=0;i<seqs.length;i++){
+        for(var i=0, len = seqs.length; i < len;i++){
             var seq = seqs[i]
             if(seq[0]===candidate){ // remove candidate
                 seqs[i].shift()
@@ -244,7 +244,7 @@ $B.$type.__getattribute__=function(klass,attr){
         var mro = klass.__mro__
         if(mro===undefined){console.log('mro undefined for class '+klass+' name '+klass.__name__)}
         //if(attr=='register'){console.log('mro '+mro+' is class '+klass.is_class)}
-        for(var i=0;i<mro.length;i++){
+        for(var i=0, len = mro.length; i < len;i++){
             var v=mro[i][attr]
             if(v!==undefined){
                 res = v
@@ -255,7 +255,7 @@ $B.$type.__getattribute__=function(klass,attr){
             // try in klass class
             var cl_mro = klass.__class__.__mro__
             if(cl_mro!==undefined){
-                for(var i=0;i<cl_mro.length;i++){
+                for(var i=0, len = cl_mro.length; i < len;i++){
                     var v=cl_mro[i][attr]
                     if(v!==undefined){
                         res = v
@@ -327,7 +327,7 @@ $B.$type.__getattribute__=function(klass,attr){
                         // make a local copy of initial args
                         //console.log('function '+attr+' of '+klass.__name__+' '+res)
                         var local_args = initial_args.slice()
-                        for(var i=0;i < arguments.length;i++){
+                        for(var i=0, len = arguments.length; i < len;i++){
                             local_args.push(arguments[i])
                         }
                         return res.apply(null,local_args)
@@ -372,7 +372,7 @@ function $instance_creator(klass){
             }catch(err){$B.$pop_exc()}
             if(new_func!==null){
                 var args = [klass.$factory]
-                for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
+                for(var i=0, len = arguments.length; i < len;i++){args.push(arguments[i])}
                 obj = new_func.apply(null,args)
             }
         }
@@ -382,7 +382,7 @@ function $instance_creator(klass){
             catch(err){$B.$pop_exc()}
             if(init_func!==null){
                 var args = [obj]
-                for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
+                for(var i=0, len = arguments.length; i < len;i++){args.push(arguments[i])}
                 init_func.apply(null,args)
             }
         }
