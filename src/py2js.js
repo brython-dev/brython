@@ -36,9 +36,9 @@ var $op_order = [['or'],['and'],
 
 var $op_weight={}
 var $weight=1
-for (var $i=0, len = $op_order.length; $i < len;$i++){
+for (var $i=0, _len_$i = $op_order.length; $i < _len_$i;$i++){
     var _tmp=$op_order[$i]
-    for(var $j=0, len = _tmp.length; $j < len;$j++){
+    for(var $j=0, _len_$j = _tmp.length; $j < _len_$j;$j++){
         $op_weight[_tmp[$j]]=$weight
     }
     $weight++
@@ -110,7 +110,7 @@ function $Node(type){
     this.show = function(indent){
         var res = ''
         if(this.type==='module'){
-            for(var i=0, len = this.children.length; i < len;i++){
+            for(var i=0, _len_i = this.children.length; i < _len_i;i++){
                 res += this.children[i].show(indent)
             }
             return res
@@ -122,7 +122,7 @@ function $Node(type){
         res += this.context
         if(this.children.length>0) res += '{'
         res +='\n'
-        for(var i=0, len = this.children.length; i < len;i++){
+        for(var i=0, _len_i = this.children.length; i < _len_i;i++){
            res += '['+i+'] '+this.children[i].show(indent+4)
         }
         if(this.children.length>0){
@@ -145,7 +145,7 @@ function $Node(type){
         this.res = []
         this.unbound = []
         if(this.type==='module'){
-          for(var i=0, len = this.children.length; i < len;i++){
+          for(var i=0, _len_i = this.children.length; i < _len_i;i++){
              this.res.push(this.children[i].to_js())
              this.children[i].js_index = this.res.length+0
           }
@@ -160,7 +160,7 @@ function $Node(type){
           this.js_index = this.res.length+0
           if(this.children.length>0) this.res.push('{')
           this.res.push('\n')
-          for(var i=0, len = this.children.length; i < len;i++){
+          for(var i=0, _len_i = this.children.length; i < _len_i;i++){
              this.res.push(this.children[i].to_js(indent+4))
              this.children[i].js_index = this.res.length+0
           }
@@ -188,7 +188,7 @@ function $Node(type){
             // remove original line
           this.parent.children.splice(rank,1)
           var offset = 0
-          for(var i=0, len = this.yield_atoms.length; i < len;i++){
+          for(var i=0, _len_i = this.yield_atoms.length; i < _len_i;i++){
 
                 // create a line to store the yield expression in a
                 // temporary variable
@@ -334,7 +334,7 @@ function $AssignCtx(context, check_unbound){
     if(context.type=='list_or_tuple' || 
         (context.type=='expr' && context.tree[0].type=='list_or_tuple')){
         if(context.type=='expr'){context = context.tree[0]}
-        for(var i=0, len = context.tree.length; i < len;i++){
+        for(var i=0, _len_i = context.tree.length; i < _len_i;i++){
             var assigned = context.tree[i].tree[0]
             if(assigned.type=='id' && check_unbound){
                 $B.bound[scope.id][assigned.value] = true
@@ -348,7 +348,7 @@ function $AssignCtx(context, check_unbound){
         }
     }else if(context.type=='assign'){
         //console.log('assign to assign '+context+ 'currently bound '+$B.keys($B.bound[scope.id]))
-        for(var i=0, len = context.tree.length; i < len;i++){
+        for(var i=0, _len_i = context.tree.length; i < _len_i;i++){
             var assigned = context.tree[i].tree[0]
             if(assigned.type=='id'){
                 if(scope.ntype=='def' || scope.ntype=='generator'){
@@ -450,13 +450,13 @@ function $AssignCtx(context, check_unbound){
             new $NodeJSCtx(new_node,'var $temp'+$loop_num+'=[]')
             new_nodes.push(new_node)
 
-            for(var i=0, len = right_items.length; i < len;i++){
+            for(var i=0, _len_i = right_items.length; i < _len_i;i++){
                 var js = '$temp'+$loop_num+'.push('+right_items[i].to_js()+')'
                 var new_node = new $Node()
                 new $NodeJSCtx(new_node,js)
                 new_nodes.push(new_node)
             }
-            for(var i=0, len = left_items.length; i < len;i++){
+            for(var i=0, _len_i = left_items.length; i < _len_i;i++){
                 var new_node = new $Node()
                 new_node.id = $get_node(this).module
                 var context = new $NodeCtx(new_node) // create ordinary node
@@ -495,7 +495,7 @@ function $AssignCtx(context, check_unbound){
             // If there is a packed tuple in the list of left items, store
             // its rank in the liste
             var packed = null
-            for(var i=0, len = left_items.length; i < len;i++){
+            for(var i=0, _len_i = left_items.length; i < _len_i;i++){
                 var expr = left_items[i]
                 if(expr.type=='expr' && expr.tree[0].type=='packed'){
                     packed = i
@@ -526,7 +526,7 @@ function $AssignCtx(context, check_unbound){
             }
 
             var j=0
-            for(var i=0, len = left_items.length; i < len;i++){
+            for(var i=0, _len_i = left_items.length; i < _len_i;i++){
 
                 var new_node = new $Node()
                 new_node.id = scope.id
@@ -836,7 +836,7 @@ function $AugmentedAssignCtx(context, op){
         var ctx1 = new $NodeCtx(aa1)
         var expr1 = new $ExprCtx(ctx1,'clone',false)
         expr1.tree = context.tree
-        for(var i=0, len = expr1.tree.length; i < len;i++){
+        for(var i=0, _len_i = expr1.tree.length; i < _len_i;i++){
             expr1.tree[i].parent = expr1
         }
         var assign1 = new $AssignCtx(expr1)
@@ -923,7 +923,7 @@ function $BlockingCtx(context) {
           node=node.parent
         }
 
-        for(var i=0, len = node.children.length; i < len;i++) def_func_node.add(node.children[i])
+        for(var i=0, _len_i = node.children.length; i < _len_i;i++) def_func_node.add(node.children[i])
 
         setTimeout_node.add(def_func_node)
 
@@ -1118,7 +1118,7 @@ function $CallCtx(context){
               }
               if(this.func.type=='id'){
                   var $simple = true
-                  for(var i=0, len = this.tree.length; i < len;i++){
+                  for(var i=0, _len_i = this.tree.length; i < _len_i;i++){
                       if(this.tree[i].type=='id'){continue}
                       if(this.tree[i].tree[0].type!='expr'){$simple=false;break}
                   }
@@ -1252,7 +1252,7 @@ function $ClassCtx(context){
         if(this.args!==undefined){ // class def has arguments
             var arg_tree = this.args.tree,args=[],kw=[]
 
-                for(var i=0, len = arg_tree.length; i < len;i++){
+                for(var i=0, _len_i = arg_tree.length; i < _len_i;i++){
                     var _tmp=arg_tree[i]
                     if(_tmp.tree[0].type=='kwarg'){kw.push(_tmp.tree[0])}
                     else{args.push(_tmp.to_js())}
@@ -1260,14 +1260,14 @@ function $ClassCtx(context){
                 js += ',tuple(['+args.join(',')+']),['
                 // add the names - needed to raise exception if a value is undefined
                 var _re=new RegExp('"','g')
-                for(var i=0, len = args.length; i < len;i++){
+                for(var i=0, _len_i = args.length; i < _len_i;i++){
                     js += '"'+args[i].replace(_re,'\\"')+'"'
                     if(i<args.length-1){js += ','}
                 }
                 js += ']'
 
                 js+=',['
-                for(var i=0, len = kw.length; i < len;i++){
+                for(var i=0, _len_i = kw.length; i < _len_i;i++){
                     var _tmp=kw[i]
                     js+='["'+_tmp.tree[0].value+'",'+_tmp.tree[1].to_js()+']'
                     if(i<kw.length-1){js+=','}
@@ -1319,7 +1319,7 @@ function $ComprehensionCtx(context){
     this.toString = function(){return '(comprehension) '+this.tree}
     this.to_js = function(){
         var _i = []  //intervals
-        for(var j=0, len = this.tree.length; j < len;j++) _i.push(this.tree[j].start)
+        for(var j=0, _len_j = this.tree.length; j < _len_j;j++) _i.push(this.tree[j].start)
         return _i
     }
 }
@@ -1452,7 +1452,7 @@ function $DecoratorCtx(context){
         //      x = $h3upb5s8(x)
         //
         this.dec_ids = []
-        for(var i=0, len = decorators.length; i < len;i++){
+        for(var i=0, _len_i = decorators.length; i < _len_i;i++){
             this.dec_ids.push('$'+Math.random().toString(36).substr(2,8))
         }
         var obj = children[func_rank].context.tree[0]
@@ -1463,7 +1463,7 @@ function $DecoratorCtx(context){
         var ref = '$locals["'+obj.name+'"]'
         res = ref+'='
         var _blocking_flag=false;
-        for(var i=0, len = decorators.length; i < len;i++){
+        for(var i=0, _len_i = decorators.length; i < _len_i;i++){
           var dec = this.dec_ids[i] //$to_js(decorators[i]);
           res += dec+'('
           tail +=')'
@@ -1491,7 +1491,7 @@ function $DecoratorCtx(context){
     }
     this.to_js = function(){
         var res = ''
-        for(var i=0, len = this.decorators.length; i < len;i++){
+        for(var i=0, _len_i = this.decorators.length; i < _len_i;i++){
             res += 'var '+this.dec_ids[i]+'='+$to_js(this.decorators[i])+';'
         }
         return res
@@ -1621,7 +1621,7 @@ function $DefCtx(context){
         var other_kw = null
         this.args = []
         var func_args = this.tree[1].tree
-        for(var i=0, len = func_args.length; i < len;i++){
+        for(var i=0, _len_i = func_args.length; i < _len_i;i++){
             var arg = func_args[i]
             if(arg.type==='func_arg_id'){
                 if(arg.tree.length===0){
@@ -1808,7 +1808,7 @@ function $DefCtx(context){
                 wrong_nb_node.add(new_node)
             }
             
-            for(var i=0, len = required_list.length; i < len;i++){
+            for(var i=0, _len_i = required_list.length; i < _len_i;i++){
                 var arg = required_list[i]
                 var new_node = new $Node()
                 var js = '$locals["'+arg+'"]=__BRYTHON__.$JS2Py(arguments['+i+'])'
@@ -1828,7 +1828,7 @@ function $DefCtx(context){
         new $NodeJSCtx(def_func_node,'return function()')
         def_func_node.is_def_func = true
 
-        for(var i=0, len = node.children.length; i < len;i++) def_func_node.add(node.children[i])
+        for(var i=0, _len_i = node.children.length; i < _len_i;i++) def_func_node.add(node.children[i])
 
         var last_instr = node.children[node.children.length-1].context.tree[0]
         if(last_instr.type!=='return' && this.type!='BRgenerator'){
@@ -1979,7 +1979,7 @@ function $DelCtx(context){
     this.to_js = function(){
         if(this.tree[0].type=='list_or_tuple'){
             var res = ''
-            for(var i=0, len = this.tree[0].tree.length; i < len;i++){
+            for(var i=0, _len_i = this.tree[0].tree.length; i < _len_i;i++){
                 var subdel = new $DelCtx(context) // this adds an element to context.tree
                 subdel.tree = [this.tree[0].tree[i]]
                 res += subdel.to_js()+';'
@@ -1996,7 +1996,7 @@ function $DelCtx(context){
                 return 'delete '+expr.to_js()+';'
               case 'list_or_tuple':
                 var res = ''
-                for(var i=0, len = expr.tree.length; i < len;i++){
+                for(var i=0, _len_i = expr.tree.length; i < _len_i;i++){
                     res += 'delete '+expr.tree[i].to_js()+';'
                 }
                 return res
@@ -2042,7 +2042,7 @@ function $DictOrSetCtx(context){
         switch(this.real) {
           case 'dict':
             var res = '__BRYTHON__.$dict(['
-            for(var i=0, len = this.items.length; i < len;i+=2){
+            for(var i=0, _len_i = this.items.length; i < _len_i;i+=2){
                 res+='['+this.items[i].to_js()+','+this.items[i+1].to_js()+']'
                 if(i<this.items.length-2){res+=','}
             }
@@ -2085,7 +2085,7 @@ function $ExceptCtx(context){
         if(this.tree.length===1 && this.tree[0].name==='Exception') return 'else if(1)'
         
         var res ='else if(__BRYTHON__.is_exc('+this.error_name+',['
-        for(var i=0, len = this.tree.length; i < len;i++){
+        for(var i=0, _len_i = this.tree.length; i < _len_i;i++){
             res+=this.tree[i].to_js()
             if(i<this.tree.length-1) res+=','
         }
@@ -2214,7 +2214,7 @@ function $ForExpr(context){
             new $NodeJSCtx(for_node,js)
 
             // Add the loop body            
-            for(var i=0, len = children.length; i < len;i++){
+            for(var i=0, _len_i = children.length; i < _len_i;i++){
                 for_node.add(children[i].clone())
             }
 
@@ -2368,7 +2368,7 @@ function $ForExpr(context){
         while_node.add(catch_node)
         
         // set new loop children
-        for(var i=0, len = children.length; i < len;i++){
+        for(var i=0, _len_i = children.length; i < _len_i;i++){
             while_node.add(children[i].clone())
         }
                     
@@ -2444,7 +2444,7 @@ function $FromCtx(context){
                 
             if(nbdots==this.module.length){
                 // form 'from . import X' : search module package.X
-                for(var i=0, len = this.names.length; i < len;i++){
+                for(var i=0, _len_i = this.names.length; i < _len_i;i++){
                     var mod_name = this.names[i]
                     if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
                     var qname = package+'.'+mod_name
@@ -2490,14 +2490,14 @@ function $FromCtx(context){
 
                     switch(scope.ntype) { 
                       case 'def':
-                        for(var i=0, len = this.names.length; i < len; i++) {
+                        for(var i=0, _len_i = this.names.length; i < _len_i; i++) {
                            var alias = this.aliases[this.names[i]]||this.names[i]
                            res+='$locals["'+alias+'"]'
                            res += '=getattr($mod,"'+this.names[i]+'")\n'
                         }
                         break
                       case 'class':
-                        for(var i=0, len = this.names.length; i < len; i++) {
+                        for(var i=0, _len_i = this.names.length; i < _len_i; i++) {
                            var name=this.names[i]
                            var alias = this.aliases[name]|| name
                            res+='$locals["' + alias+'"]'
@@ -2505,7 +2505,7 @@ function $FromCtx(context){
                         }
                         break
                       case 'module':
-                        for(var i=0, len = this.names.length; i < len; i++) {
+                        for(var i=0, _len_i = this.names.length; i < _len_i; i++) {
                            var name=this.names[i]
                            var alias = this.aliases[name]|| name
                            res+='$globals["'+alias+'"]'
@@ -2513,7 +2513,7 @@ function $FromCtx(context){
                         }
                         break
                       default:
-                        for(var i=0, len = this.names.length; i < len; i++) {
+                        for(var i=0, _len_i = this.names.length; i < _len_i; i++) {
                            var name=this.names[i]
                            var alias = this.aliases[name]|| name
                            res += '$locals["'+alias +'"]=getattr($mod,"'+ names +'")\n'
@@ -2543,7 +2543,7 @@ function $FromCtx(context){
              res += '"' + this.names.join('","') + '"'
              res += '],"'+mod+'");\n'
              var _is_module=scope.ntype === 'module'
-             for(var i=0, len = this.names.length; i < len;i++){
+             for(var i=0, _len_i = this.names.length; i < _len_i;i++){
                 var name=this.names[i]
                 var alias = this.aliases[name]||name
 
@@ -2662,7 +2662,7 @@ function $check_unbound(assigned,scope,varname){
     if(scope.var2node && scope.var2node[varname]){
         if(scope.context.tree[0].locals.indexOf(varname)>-1) return
 
-        for(var i=0, len = scope.var2node[varname].length; i < len;i++){
+        for(var i=0, _len_i = scope.var2node[varname].length; i < _len_i;i++){
             var ctx = scope.var2node[varname][i]
             if(ctx==assigned){
                 delete scope.var2node[varname]
@@ -2671,7 +2671,7 @@ function $check_unbound(assigned,scope,varname){
                 while(ctx.parent){ctx=ctx.parent}
                 var ctx_node = ctx.node
                 var pnode = ctx_node.parent
-                for(var rank=0, len = pnode.children.length; rank < len;rank++){
+                for(var rank=0, _len_rank = pnode.children.length; rank < _len_rank;rank++){
                     if(pnode.children[rank]===ctx_node){break}
                 }
                 var new_node = new $Node()
@@ -2761,7 +2761,7 @@ function $IdCtx(context,value){
                 }
                 var remove = []
                 if(scope.var2node && scope.var2node[value]){
-                    for(var i=0, len = scope.var2node[value].length; i < len;i++){
+                    for(var i=0, _len_i = scope.var2node[value].length; i < _len_i;i++){
                         var ctx = scope.var2node[value][i]
                         while(ctx.parent){
                             if(ctx===comprehension.parent){
@@ -2815,7 +2815,7 @@ function $IdCtx(context,value){
                 else{
                     var locals = scope.context.tree[0].locals
                     var res = '{'
-                    for(var i=0, len = locals.length; i < len;i++){
+                    for(var i=0, _len_i = locals.length; i < _len_i;i++){
                         res+="'"+locals[i]+"':"+locals[i]
                         if(i<locals.length-1) res+=','
                     }
@@ -2984,7 +2984,7 @@ function $ImportCtx(context){
     this.bind_names = function(){
         // For "import X", set X in the list of names bound in current scope
         var scope = $get_scope(this)
-        for(var i=0, len = this.tree.length; i < len;i++){
+        for(var i=0, _len_i = this.tree.length; i < _len_i;i++){
             if(this.tree[i].name==this.tree[i].alias){
                 var name = this.tree[i].name
                 var parts = name.split('.')
@@ -3004,14 +3004,14 @@ function $ImportCtx(context){
         elts.pop()
         path =elts.join('/')
         var res = ''
-        for(var i=0, len = ; i < len;i++){
+        for(var i=0, _len_i = ; i < _len_i;i++){
             res += '__BRYTHON__.$import('+this.tree[i].to_js()+',"'+mod+'");'
             if(this.tree[i].name == this.tree[i].alias){
                 var parts = this.tree[i].name.split('.')
                 // $import returns an object
                 // for "import a.b.c" this object has attributes
                 // "a", "a.b" and "a.b.c", values are the matching modules
-                for(var j=0, len = parts.length; j < len;j++){
+                for(var j=0, _len_j = parts.length; j < _len_j;j++){
                     var key = parts.slice(0,j+1).join('.')
                     var alias = key
                     if(j==parts.length-1){alias = this.tree[i].alias || alias}
@@ -3096,7 +3096,7 @@ function $KwArgCtx(context){
         //ui slider caused an issue in which scope.var2node[varname] is undefined
         // so lets check for that.
         if (scope.var2node[varname] !== undefined) {
-           for(var i=0, len = scope.var2node[varname].length; i < len;i++){
+           for(var i=0, _len_i = scope.var2node[varname].length; i < _len_i;i++){
              if(scope.var2node[varname][i]==context.tree[0]){
                 ix = i
                 break
@@ -3199,11 +3199,11 @@ function $ListOrTupleCtx(context,real){
             var res2 = ''
 
             var qesc = new RegExp('"',"g") // to escape double quotes in arguments
-            for(var i=1, len = this.intervals.length; i < len;i++){
+            for(var i=1, _len_i = this.intervals.length; i < _len_i;i++){
                 var txt = src.substring(this.intervals[i-1],this.intervals[i])
                 var lines = txt.split('\n')
                 res2 += '['
-                for(var j=0, len = lines.length; j < len;j++){
+                for(var j=0, _len_j = lines.length; j < _len_j;j++){
                     var txt = lines[j]
                     // ignore empty lines
                     if(txt.replace(/ /g,'').length==0){continue}
@@ -3433,7 +3433,7 @@ function $OpCtx(context,op){ // context is the left operand
                     if(vars.indexOf(_var)==-1){vars.push(_var)}
                     return true
                 }else if(elt.type=='op' && ['*','+','-'].indexOf(elt.op)>-1){
-                    for(var i=0, len = elt.tree.length; i < len;i++){
+                    for(var i=0, _len_i = elt.tree.length; i < _len_i;i++){
                         if(!is_simple(elt.tree[i])){return false}
                     }
                     return true
@@ -3455,14 +3455,14 @@ function $OpCtx(context,op){ // context is the left operand
                     // at least one variable
                     // Test if all variables are numbers
                     var tests = []
-                    for(var i=0, len = vars.length; i < len;i++){
+                    for(var i=0, _len_i = vars.length; i < _len_i;i++){
                         tests.push('typeof '+vars[i]+'.valueOf() == "number"')
                     }
                     var res = tests.join(' && ')+' ? '
 
                     // Test if all variables are integers
                     var tests = []
-                    for(var i=0, len = vars.length; i < len;i++){
+                    for(var i=0, _len_i = vars.length; i < _len_i;i++){
                         tests.push('typeof '+vars[i]+' == "number"')
                     }
                     res += '('+tests.join(' && ')+' ? '
@@ -3512,7 +3512,7 @@ function $PackedCtx(context){
     //     a, *b, c = [1, 2, 3, 4}
     this.type = 'packed'
     if(context.parent.type=='list_or_tuple'){
-        for(var i=0, len = context.parent.tree.length; i < len;i++){
+        for(var i=0, _len_i = context.parent.tree.length; i < _len_i;i++){
             var child = context.parent.tree[i]
             if(child.type=='expr' && child.tree.length>0 
               && child.tree[0].type=='packed'){
@@ -3614,7 +3614,7 @@ function $SingleKwCtx(context,token){ // used for finally,else
     if(token=="else"){
         var node = context.node
         var pnode = node.parent
-        for(var rank=0, len = pnode.children.length; rank < len;rank++){
+        for(var rank=0, _len_rank = pnode.children.length; rank < _len_rank;rank++){
             if(pnode.children[rank]===node) break
         }
         var pctx = pnode.children[rank-1].context
@@ -3661,7 +3661,7 @@ function $StringCtx(context,value){
     context.tree.push(this)
     this.to_js = function(){
         var res = ''
-        for(var i=0, len = this.tree.length; i < len;i++){
+        for(var i=0, _len_i = this.tree.length; i < _len_i;i++){
             var value=this.tree[i]
             if(value.charAt(0)!='b'){
                 res += value.replace(/\n/g,'\\n\\\n')
@@ -3694,7 +3694,7 @@ function $SubCtx(context){ // subscription or slicing
             if(this.tree.length===1) return res+this.tree[0].to_js()+')'
     
             res += 'slice('
-            for(var i=0, len = this.tree.length; i < len;i++){
+            for(var i=0, _len_i = this.tree.length; i < _len_i;i++){
                 if(this.tree[i].type==='abstract_expr'){res+='null'}
                 else{res+=this.tree[i].to_js()}
                 if(i<this.tree.length-1){res+=','}
@@ -3729,7 +3729,7 @@ function $SubCtx(context){ // subscription or slicing
                 res += this.tree[0].to_js()+')'
             }else{
                 res += 'slice('
-                for(var i=0, len = this.tree.length; i < len;i++){
+                for(var i=0, _len_i = this.tree.length; i < _len_i;i++){
                     if(this.tree[i].type==='abstract_expr'){res+='null'}
                     else{res+=this.tree[i].to_js()}
                     if(i<this.tree.length-1){res+=','}
@@ -3868,7 +3868,7 @@ function $TryCtx(context){
         if(has_else){
             var else_node = new $Node()
             new $NodeJSCtx(else_node,'if(!__BRYTHON__.$failed'+$loop_num+')')
-            for(var i=0, len = else_body.children.length; i < len;i++){
+            for(var i=0, _len_i = else_body.children.length; i < _len_i;i++){
                 else_node.add(else_body.children[i])
             }
             node.parent.insert(pos,else_node)
@@ -4107,7 +4107,7 @@ function $clear_ns(ctx){
         if(scope.var2node){
             for(var name in scope.var2node){
                 var remove = []
-                for(var j=0, len = scope.var2node[name].length; j < len;j++){
+                for(var j=0, _len_j = scope.var2node[name].length; j < _len_j;j++){
                     var elt = scope.var2node[name][j].parent
                     while(elt.parent){
                         if(elt===ctx){remove.push(j);break}
@@ -4198,20 +4198,20 @@ function $get_ids(ctx){
       case 'attribute':
       case 'sub':
         var res1 = $get_ids(ctx.value)
-        for(var i=0, len = res1.length; i < len;i++){
+        for(var i=0, _len_i = res1.length; i < _len_i;i++){
             if(res.indexOf(res1[i])===-1){res.push(res1[i])}
         }
         break
       case 'call':
         var res1 = $get_ids(ctx.func)
-        for(var i=0, len = res1.length; i < len;i++){
+        for(var i=0, _len_i = res1.length; i < _len_i;i++){
             if(res.indexOf(res1[i])===-1){res.push(res1[i])}
         }
     }
     if(ctx.tree!==undefined){
-        for(var i=0, len = ctx.tree.length; i < len;i++){
+        for(var i=0, _len_i = ctx.tree.length; i < _len_i;i++){
             var res1 = $get_ids(ctx.tree[i])
-            for(var j=0, len = res1.length; j < len;j++){
+            for(var j=0, _len_j = res1.length; j < _len_j;j++){
                 if(res.indexOf(res1[j])===-1) res.push(res1[j])
             }
         }
@@ -6012,7 +6012,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                         // Escape quotes inside string, except if they are already escaped
                         // In raw mode, always escape
                         var $string = zone.substr(1),string=''
-                        for(var i=0, len = $string.length; i < len;i++){
+                        for(var i=0, _len_i = $string.length; i < _len_i;i++){
                             var $car = $string.charAt(i)
                             if($car==car &&
                                 (raw || (i==0 || $string.charAt(i-1)!=='\\'))){
@@ -6422,7 +6422,7 @@ function brython(options){
     // https://github.com/kikocorreoso/brythonmagic for more info.
     if(options.ipy_id!==undefined){
        var $elts = [];
-       for(var $i=0, len = options.ipy_id.length; $i < len;$i++){
+       for(var $i=0, _len_$i = options.ipy_id.length; $i < _len_$i;$i++){
           $elts.push(document.getElementById(options.ipy_id[$i]));
        }
      }else{
@@ -6463,10 +6463,10 @@ function brython(options){
     // - <brython_path>/Lib/site-packages is used for 3rd party modules
     //   or packages
 
-    for(var $i=0, len = $scripts.length; $i < len;$i++){
+    for(var $i=0, _len_$i = $scripts.length; $i < _len_$i;$i++){
         var $elt = $scripts[$i]
         var $br_scripts = ['brython.js','py2js.js','brython_dist.js']
-        for(var $j=0, len = $br_scripts.length; $j < len;$j++){
+        for(var $j=0, _len_$j = $br_scripts.length; $j < _len_$j;$j++){
             var $bs = $br_scripts[$j]
             if($elt.src && $elt.src.substr($elt.src.length-$bs.length)==$bs){
                 if($elt.src.length===$bs.length ||
@@ -6474,7 +6474,7 @@ function brython(options){
                         var $path = $elt.src.substr(0,$elt.src.length-$bs.length)
                         $B.brython_path = $path
                         var subpaths = ['Lib','Lib/site-packages']
-                        for(var j=0, len = subpaths.length; j < len;j++){
+                        for(var j=0, _len_j = subpaths.length; j < _len_j;j++){
                             var subpath = $path+subpaths[j]
                             if (!($B.path.indexOf(subpath)> -1)) {
                                $B.path.push(subpath)
@@ -6491,7 +6491,7 @@ function brython(options){
 
     // Get all scripts with type = text/python or text/python3 and run them
     
-    for(var $i=0, len = $elts.length; $i < len;$i++){
+    for(var $i=0, _len_$i = $elts.length; $i < _len_$i;$i++){
         var $elt = $elts[$i]
         if($elt.type=="text/python"||$elt.type==="text/python3"){
         
