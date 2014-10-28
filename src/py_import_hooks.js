@@ -10,9 +10,9 @@
     var sys=$globals['sys']
     var _meta_path=_b_.getattr(sys, 'meta_path')
     var _path=_b_.getattr(sys, 'path')
-    for (var i=0; i < _meta_path.length; i++) {
+    for (var i=0, len = _meta_path.length; i < len; i++) {
         var _mp=_meta_path[i]
-        for (var j=0; j < _path.length; j++) {
+        for (var j=0, len = _path.length; j < len; j++) {
             try {
               var _finder= _b_.getattr(_mp, '__call__')(mod_name, _path[j])
               var _loader=_b_.getattr(_b_.getattr(_finder, 'find_module'), '__call__')()
