@@ -82,9 +82,9 @@ self.addEventListener('message', function(e) {
       search.push(mod_path+'/__init__')
 
       var flag = false
-      for(var j=0, len = search.length; j < len; j++) {
+      for(var j=0, _len_j = search.length; j < _len_j; j++) {
         var modpath = search[j]
-        for(var i=0, len = path_list.length; i < len;i++){
+        for(var i=0, _len_i = path_list.length; i < _len_i;i++){
            var path = path_list[i]
            if(path.charAt(path.length-1)!='/'){path += "/"}
            path += modpath
@@ -122,7 +122,7 @@ self.addEventListener('message', function(e) {
       var mod_node = new $Node('expression')
       new $NodeJSCtx(mod_node,'var $module=(function()')
       root.insert(0,mod_node)
-      for(var i=0, len = body.length; i < len;i++){mod_node.add(body[i])}
+      for(var i=0, _len_i = body.length; i < _len_i;i++){mod_node.add(body[i])}
       
       // $globals will be returned when the anonymous function is run
       var ret_node = new $Node('expression')
@@ -147,7 +147,7 @@ self.addEventListener('message', function(e) {
     __import__=function(module, origin) {
       var import_funcs = [import_js, import_module_search_path]
       if(module.name.search(/\./)>-1){import_funcs = [import_module_search_path]}
-      for(var j=0, len = import_funcs.length; j < len;j++){
+      for(var j=0, _len_j = import_funcs.length; j < _len_j;j++){
         try{
             return import_funcs[j](module,origin)
         } catch(err){
