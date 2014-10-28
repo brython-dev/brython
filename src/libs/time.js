@@ -31,7 +31,7 @@ StructTimeDict.__getitem__ = function(self, rank){
 StructTimeDict.__repr__ = StructTimeDict.__str__ = function(self){
     var res = 'time.struct_time('
     var elts = []
-    for(var i=0, len=stnames.length;i<len;i++){
+    for(var i=0, _len_i = stnames.length; i < _len_i;i++){
         elts.push(stnames[i]+'='+self.value[i])
     }
     res += elts.join(', ')
