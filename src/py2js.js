@@ -3004,7 +3004,7 @@ function $ImportCtx(context){
         elts.pop()
         path =elts.join('/')
         var res = ''
-        for(var i=0, _len_i = ; i < _len_i;i++){
+        for(var i=0, _len_i = this.tree.length; i < _len_i;i++){
             res += '__BRYTHON__.$import('+this.tree[i].to_js()+',"'+mod+'");'
             if(this.tree[i].name == this.tree[i].alias){
                 var parts = this.tree[i].name.split('.')
