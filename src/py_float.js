@@ -104,7 +104,7 @@ $FloatDict.fromhex = function(arg){
    //if (_int === undefined) throw _b_.ValueError('invalid hexadecimal floating-point string')
    var _sum=_int
 
-   for (var i=1, len = _fraction.length; i < len; i++) _sum+=parseInt(_fraction.charAt(i),16)/Math.pow(16,i) 
+   for (var i=1, _len_i = _fraction.length; i < _len_i; i++) _sum+=parseInt(_fraction.charAt(i),16)/Math.pow(16,i) 
    return float(_sign * _sum * Math.pow(2, parseInt(_exponent.substring(1))))
 }
 
