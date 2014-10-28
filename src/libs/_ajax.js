@@ -60,7 +60,7 @@ $AjaxDict.send = function(self,params){
     else if(isinstance(params,str)){
         res = params
     }else if(isinstance(params,dict)){
-        for(var i=0,len=params.$keys.length;i<len;i++){
+        for(var i=0, _len_i = params.$keys.length; i < _len_i;i++){
             res +=encodeURIComponent(str(params.$keys[i]))+'='+encodeURIComponent(str(params.$values[i]))+'&'
         }
         res = res.substr(0,res.length-1)
