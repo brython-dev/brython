@@ -266,7 +266,7 @@ function delattr(obj, attr) {
     var res = obj[attr]
     if(res===undefined){
         var mro = klass.__mro__
-        for(var i=0, len=mro.length;i<len;i++){
+        for(var i=0, _len_i = mro.length; i < _len_i;i++){
             var res = mro[i][attr]
             if(res!==undefined){break}
         }
@@ -397,7 +397,7 @@ function $eval(src, _globals, locals){
         __BRYTHON__.$py_module_path[mod_name] = __BRYTHON__.$py_module_path['__main__']
         __BRYTHON__.vars[mod_name] = {}
         __BRYTHON__.bound[mod_name] = {}
-        for(var i=0, len=_globals.$keys.length;i<len;i++){
+        for(var i=0, _len_i = _globals.$keys.length; i < _len_i;i++){
             __BRYTHON__.vars[mod_name][_globals.$keys[i]] = _globals.$values[i]
             __BRYTHON__.bound[mod_name][_globals.$keys[i]] = true
         }
@@ -564,7 +564,7 @@ function getattr(obj,attr,_default){
             
             var method = function(){
                 var args = [obj]
-                for(var i=0, len=arguments.length;i<len;i++){args.push(arguments[i])}
+                for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
                 return klass[attr].apply(null,args)
             }
             method.__name__ = 'method '+attr+' of built-in '+klass.__name__
@@ -588,7 +588,7 @@ function getattr(obj,attr,_default){
             }
             console.log('obj class '+dir(klass)+' str '+klass)
         }
-        for(var i=0, len=mro.length;i<len;i++){
+        for(var i=0, _len_i = mro.length; i < _len_i;i++){
             attr_func = mro[i]['__getattribute__']
             if(attr_func!==undefined) break
         }
@@ -760,7 +760,7 @@ function isinstance(obj,arg){
     if(obj===null) return arg===None
     if(obj===undefined) return false
     if(arg.constructor===Array){
-        for(var i=0, len=arg.length;i<len;i++){
+        for(var i=0, _len_i = arg.length; i < _len_i;i++){
             if(isinstance(obj,arg[i])) return true
         }
         return false
@@ -788,7 +788,7 @@ function isinstance(obj,arg){
 
        if(arg.$dict===undefined){return false}
        var _name=arg.$dict.__name__
-       for(var i=0, len=klass.__mro__.length;i<len;i++){
+       for(var i=0, _len_i = klass.__mro__.length; i < _len_i;i++){
           //we need to find a better way of comparing __mro__'s and arg.$dict
           //for now, just assume that if the __name__'s match, we have a match
           if(klass.__mro__[i].__name__== _name) return true
@@ -814,7 +814,7 @@ function issubclass(klass,classinfo){
       throw _b_.TypeError("issubclass() arg 1 must be a class")
     }
     if(isinstance(classinfo,_b_.tuple)){
-      for(var i=0, len=classinfo.length;i<len;i++){
+      for(var i=0, _len_i = classinfo.length; i < _len_i;i++){
          if(issubclass(klass,classinfo[i])) return true
       }
       return false
@@ -893,10 +893,10 @@ $MapDict.__iter__ = function (self){return self}
 function map(){
     var func = getattr(arguments[0],'__call__')
     var iter_args = []
-    for(var i=1, len=arguments.length;i<len;i++){iter_args.push(iter(arguments[i]))}
+    for(var i=1, _len_i = arguments.length; i < _len_i;i++){iter_args.push(iter(arguments[i]))}
     var __next__ = function(){
         var args = []
-        for(var i=0, len=iter_args.length;i<len;i++){
+        for(var i=0, _len_i = iter_args.length; i < _len_i;i++){
             try{
                 var x = next(iter_args[i])
                 args.push(x)
@@ -997,7 +997,7 @@ function $extreme(args,op){ // used by min() and max()
 
 function max(){
     var args = []
-    for(var i=0, len=arguments.length;i<len;i++){args.push(arguments[i])}
+    for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
     return $extreme(args,'__gt__')
 }
 
@@ -1014,7 +1014,7 @@ function memoryview(obj) {
 
 function min(){
     var args = []
-    for(var i=0, len=arguments.length;i<len;i++){args.push(arguments[i])}
+    for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
     return $extreme(args,'__lt__')
 }
 
@@ -1403,7 +1403,7 @@ function setattr(obj,attr,value){
     var res = obj[attr]
     if(res===undefined){
         var mro = $B.get_class(obj).__mro__
-        for(var i=0, len=mro.length;i<len;i++){
+        for(var i=0, _len_i = mro.length; i < _len_i;i++){
             res = mro[i][attr]
             if(res!==undefined) break
         }
@@ -1547,7 +1547,7 @@ var $SuperDict = {__class__:$B.$type,__name__:'super'}
 
 $SuperDict.__getattribute__ = function(self,attr){
     var mro = self.__thisclass__.$dict.__mro__,res
-    for(var i=1, len=mro.length;i<len;i++){ // start with 1 = ignores the class where super() is defined
+    for(var i=1, _len_i = mro.length; i < _len_i;i++){ // start with 1 = ignores the class where super() is defined
         res = mro[i][attr]
         if(res!==undefined){
             // if super() is called with a second argument, the result is bound
@@ -1558,7 +1558,7 @@ $SuperDict.__getattribute__ = function(self,attr){
                     return function(){
                         // make a local copy of initial args
                         var local_args = initial_args.slice()
-                        for(var i=0, len=arguments.length;i<len;i++){
+                        for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                             local_args.push(arguments[i])
                         }
                         var x = res.apply(null,local_args)
@@ -1738,12 +1738,12 @@ function zip(){
     var $ns=$B.$MakeArgs('zip',arguments,[],[],'args','kw')
     var _args = $ns['args']
     var args = []
-    for(var i=0, len=_args.length;i<len;i++){args.push(iter(_args[i]))}
+    for(var i=0, _len_i = _args.length; i < _len_i;i++){args.push(iter(_args[i]))}
     var kw = $ns['kw']
     var rank=0,items=[]
     while(1){
         var line=[],flag=true
-        for(var i=0, len=args.length;i<len;i++){
+        for(var i=0, _len_i = args.length; i < _len_i;i++){
             try{
                 var x=next(args[i])
                 line.push(x)
@@ -1991,7 +1991,7 @@ var BaseException = function (msg,js_exc){
         }
         // call stack
         var last_info, tb=null
-        for(var i=0, len=$B.call_stack.length;i<len;i++){
+        for(var i=0, _len_i = $B.call_stack.length; i < _len_i;i++){
             var call_info = $B.call_stack[i]
             var lib_module = call_info[1]
             var caller = $B.modules[lib_module].line_info
@@ -2146,7 +2146,7 @@ $B.is_exc=function(exc,exc_list){
     if(exc.__class__===undefined) exc = $B.exception(exc)
     
     var exc_class = exc.__class__.$factory
-    for(var i=0, len=exc_list.length;i<len;i++){
+    for(var i=0, _len_i = exc_list.length; i < _len_i;i++){
         if(issubclass(exc_class,exc_list[i])) return true
     }
     return false
@@ -2164,7 +2164,7 @@ _b_.__BRYTHON__ = __BRYTHON__
 function $make_exc(names,parent){
     // create a class for exception called "name"
     var _str=[]
-    for(var i=0, len=names.length;i<len;i++){
+    for(var i=0, _len_i = names.length; i < _len_i;i++){
         var name = names[i]
         $B.bound['__builtins__'][name] = true
         var $exc = (BaseException+'').replace(/BaseException/g,name)
@@ -2231,7 +2231,7 @@ var builtin_names=[ 'Ellipsis', 'False',  'None',
 'sum','super', 'tuple', 'type', 'vars', 'zip']
 
 
-for(var i=0, len=builtin_names.length;i<len;i++){
+for(var i=0, _len_i = builtin_names.length; i < _len_i;i++){
     var name = builtin_names[i]
     var name1 = name
     if(name=='open'){name1 = '$url_open'}
