@@ -19,7 +19,7 @@ $SetDict.__add__ = function(self,other){
 
 $SetDict.__and__ = function(self,other){
     var res = set()
-    for(var i=0;i<self.$items.length;i++){
+    for(var i=0, len = self.$items.length; i < len;i++){
         if(getattr(other,'__contains__')(self.$items[i])){
             $SetDict.add(res,self.$items[i])
         }
@@ -30,7 +30,7 @@ $SetDict.__and__ = function(self,other){
 $SetDict.__contains__ = function(self,item){
     if(self.$num && (typeof item=='number')){return self.$items.indexOf(item)>-1}
     if(self.$str && (typeof item=='string')){return self.$items.indexOf(item)>-1}
-    for(var i=0;i<self.$items.length;i++){
+    for(var i=0, len = self.$items.length; i < len;i++){
         try{if(getattr(self.$items[i],'__eq__')(item)) return true
         }catch(err){void(0)}
     }
@@ -43,7 +43,7 @@ $SetDict.__eq__ = function(self,other){
     
     if(isinstance(other,set)){
       if(other.$items.length==self.$items.length){
-        for(var i=0;i<self.$items.length;i++){
+        for(var i=0, len = self.$items.length; i < len;i++){
            if($SetDict.__contains__(self,other.$items[i])===false) return false
         }
         return true
@@ -63,7 +63,7 @@ $SetDict.__hash__ = function(self) {throw _b_.TypeError("unhashable type: 'set'"
 
 $SetDict.__init__ = function(self){
     var args = []
-    for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
+    for(var i=1, len = arguments.length; i < len;i++){args.push(arguments[i])}
     self.$items = []
     if(args.length==0) return
     if(args.length==1){    // must be an iterable
@@ -100,7 +100,7 @@ $SetDict.__iter__ = function(self){
 
 $SetDict.__le__ = function(self,other){
     var cfunc = getattr(other,'__contains__')
-    for(var i=0;i<self.$items.length;i++){
+    for(var i=0, len = self.$items.length; i < len;i++){
         if(!cfunc(self.$items[i])) return false
     }
     return true
@@ -118,7 +118,7 @@ $SetDict.__ne__ = function(self,other){return !$SetDict.__eq__(self,other)}
 
 $SetDict.__or__ = function(self,other){
     var res = $SetDict.copy(self)
-    for(var i=0;i<other.$items.length;i++) $SetDict.add(res,other.$items[i])
+    for(var i=0, len = other.$items.length; i < len;i++) $SetDict.add(res,other.$items[i])
     return res
 }
 
@@ -138,7 +138,7 @@ $SetDict.__str__ = $SetDict.toString = $SetDict.__repr__ = function(self){
         tail = ')'
     }
     var res = "{"
-    for(var i=0;i<self.$items.length;i++){
+    for(var i=0, len = self.$items.length; i < len;i++){
         res += repr(self.$items[i])
         if(i<self.$items.length-1){res += ','}
     }
@@ -150,7 +150,7 @@ $SetDict.__sub__ = function(self,other){
     // Return a new set with elements in the set that are not in the others
     var res = set()
     var cfunc = getattr(other,'__contains__')
-    for(var i=0;i<self.$items.length;i++){
+    for(var i=0, len = self.$items.length; i < len;i++){
         if(!cfunc(self.$items[i])){
             res.$items.push(self.$items[i])
         }
@@ -162,12 +162,12 @@ $SetDict.__xor__ = function(self,other){
     // Return a new set with elements in either the set or other but not both
     var res = set()
     var cfunc = getattr(other,'__contains__')
-    for(var i=0;i<self.$items.length;i++){
+    for(var i=0, len = self.$items.length; i < len;i++){
         if(!cfunc(self.$items[i])){
             $SetDict.add(res,self.$items[i])
         }
     }
-    for(var i=0;i<other.$items.length;i++){
+    for(var i=0, len = other.$items.length; i < len;i++){
         if(!$SetDict.__contains__(self,other.$items[i])){
             $SetDict.add(res,other.$items[i])
         }
@@ -186,7 +186,7 @@ $SetDict.add = function(self,item){
         return
     }
     var cfunc = getattr(item,'__eq__')
-    for(var i=0;i<self.$items.length;i++){
+    for(var i=0, len = self.$items.length; i < len;i++){
         try{if(cfunc(self.$items[i])) return}
         catch(err){void(0)} // if equality test throws exception
     }
@@ -197,7 +197,7 @@ $SetDict.clear = function(self){self.$items = []}
 
 $SetDict.copy = function(self){
     var res = set() // copy returns an instance of set, even for subclasses
-    for(var i=0;i<self.$items.length;i++) res.$items[i]=self.$items[i]
+    for(var i=0, len = self.$items.length; i < len;i++) res.$items[i]=self.$items[i]
     return res
 }
 
@@ -207,7 +207,7 @@ $SetDict.discard = function(self,item){
 }
 
 $SetDict.isdisjoint = function(self,other){
-    for(var i=0;i<self.$items.length;i++){
+    for(var i=0, len = self.$items.length; i < len;i++){
         if(getattr(other,'__contains__')(self.$items[i])) return false
     }
     return true
@@ -219,7 +219,7 @@ $SetDict.pop = function(self){
 }
 
 $SetDict.remove = function(self,item){
-    for(var i=0;i<self.$items.length;i++){
+    for(var i=0, len = self.$items.length; i < len;i++){
         if(getattr(self.$items[i],'__eq__')(item)){
             self.$items.splice(i,1)
             return _b_.None
@@ -231,7 +231,7 @@ $SetDict.remove = function(self,item){
 $SetDict.update = function(self,other){
     if (other === undefined || other.$items === undefined) return
 
-    for(var i=0; i<other.$items.length; i++) {
+    for(var i=0, len = other.$items.length; i < len; i++) {
         $SetDict.add(self,other.$items[i])
     }
 }
@@ -251,7 +251,7 @@ function set(){
     var res = {__class__:$SetDict,$str:true,$num:true}
     // apply __init__ with arguments of set()
     var args = [res]
-    for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
+    for(var i=0, len = arguments.length; i < len;i++){args.push(arguments[i])}
     $SetDict.__init__.apply(null,args)
     return res
 }
@@ -268,7 +268,7 @@ $FrozensetDict.__str__=$FrozensetDict.toString=$FrozensetDict.__repr__ = functio
     if(self===undefined) return "<class 'frozenset'>"
     if(self.$items.length===0) return 'frozenset()'
     var res = "{"
-    for(var i=0;i<self.$items.length;i++){
+    for(var i=0, len = self.$items.length; i < len;i++){
         res += repr(self.$items[i])
         if(i<self.$items.length-1){res += ','}
     }
@@ -300,7 +300,7 @@ $FrozensetDict.__hash__ = function(self) {
    var _hash=1927868237
    _hash *=self.$items.length   
 
-   for (var i=0; i < self.$items.length; i++) {
+   for (var i=0, len = self.$items.length; i < len; i++) {
       var _h=hash(self.$items[i])
       _hash ^= ((_h ^ 89869747) ^ (_h << 16)) * 3644798167
    }
