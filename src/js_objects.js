@@ -45,7 +45,7 @@ $JSConstructorDict.__call__ = function(self){
     // It takes Javascript arguments so we must convert
     // those passed to the Python function
     var args = [null]
-    for(var i=1,len=arguments.length;i<len;i++){
+    for(var i=1, _len_i = arguments.length; i < _len_i;i++){
         args.push(pyobj2jsobj(arguments[i]))
     }
     var factory = self.func.bind.apply(self.func, args)
@@ -111,13 +111,13 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
     }else if([_b_.list.$dict,_b_.tuple.$dict].indexOf(klass)>-1){
         // Python list : transform its elements
         var res = []
-        for(var i=0,len=pyobj.length;i<len;i++){res.push(pyobj2jsobj(pyobj[i]))}
+        for(var i=0, _len_i = pyobj.length; i < _len_i;i++){res.push(pyobj2jsobj(pyobj[i]))}
         return res
     }else if(klass===_b_.dict.$dict){
         // Python dictionaries are transformed into a Javascript object
         // whose attributes are the dictionary keys
         var jsobj = {}
-        for(var j=0,len=pyobj.$keys.length;j<len;j++){
+        for(var j=0, _len_j = pyobj.$keys.length; j < _len_j;j++){
             jsobj[pyobj.$keys[j]] = pyobj2jsobj(pyobj.$values[j])
         }
         return jsobj
@@ -158,7 +158,7 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
             // objects usable by the underlying function F
             var res = function(){
                 var args = [],arg
-                for(var i=0,len=arguments.length;i<len;i++){
+                for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     args.push(pyobj2jsobj(arguments[i]))
                 }
                 // IE workaround
@@ -186,7 +186,7 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
     var res
     // search in classes hierarchy, following method resolution order
     var mro = [$JSObjectDict,$ObjectDict]
-    for(var i=0,len=mro.length;i<len;i++){
+    for(var i=0, _len_i = mro.length; i < _len_i;i++){
         var v=mro[i][attr]
         if(v!==undefined){
             res = v
@@ -199,7 +199,7 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
             // return a function that takes obj as first argument
             return function(){
                 var args = [obj],arg
-                for(var i=0,len=arguments.length;i<len;i++){
+                for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     arg = arguments[i]
                     if(arg && (arg.__class__===$JSObjectDict || arg.__class__===$JSConstructorDict)){
                         args.push(arg.js)
