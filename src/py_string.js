@@ -27,7 +27,7 @@ $StringDict.__contains__ = function(self,item){
     var nbcar = item.length
     if(nbcar==0) return true // a string contains the empty string
     if(self.length==0) return nbcar==0
-    for(var i=0;i<self.length;i++){
+    for(var i=0, len = self.length; i < len;i++){
         if(self.substr(i,nbcar)==item) return true
     }
     return false
@@ -48,7 +48,7 @@ $StringDict.__format__ = function(self,arg){
     var _fs = $FormattableString(self.valueOf())
     var args=[]
     // we don't need the first item (ie, self)
-    for (var i =1; i < arguments.length; i++) { args.push(arguments[i])}
+    for (var i = 1, len = arguments.length; i < len; i++) { args.push(arguments[i])}
     return _fs.strformat(arg)
 }
 
@@ -91,7 +91,7 @@ $StringDict.__hash__ = function(self) {
   // this implementation for strings maybe good enough for us..
 
   var hash=1;
-  for(var i=0; i < self.length; i++) {
+  for(var i=0, len = self.length; i < len; i++) {
       hash=(101*hash + self.charCodeAt(i)) & 0xFFFFFFFF
   }
 
@@ -463,7 +463,7 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
     if(!isinstance(args,_b_.tuple)){
         if(args.__class__==_b_.dict.$dict && is_mapping){
             // convert all formats with the dictionary
-            for(var i=1;i<elts.length;i+=2){
+            for(var i=1, len = elts.length; i < len;i+=2){
                 elts[i]=elts[i].format(args)
             }
         }
@@ -471,7 +471,7 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
         else{elts[1]=elts[1].format(args)}
     }else{
         if(nb_repl==args.length){
-            for(var i=0;i<args.length;i++){
+            for(var i=0, len = args.length; i < len;i++){
                 var fmt = elts[1+2*i]
                 elts[1+2*i]=fmt.format(args[i])
             }
@@ -480,7 +480,7 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
         }else{throw _b_.TypeError('not enough arguments for format string')}
     }
     var res = ''
-    for(var i=0;i<elts.length;i++){res+=elts[i]}
+    for(var i=0, len = elts.length; i < len;i++){res+=elts[i]}
     // finally, replace %% by %
     return res.replace(/%%/g,'%')
 }// $end $legacy_format
@@ -592,7 +592,7 @@ $StringDict.endswith = function(self){
     // With optional start, test beginning at that position. With optional 
     // end, stop comparing at that position.
     var args = []
-    for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
+    for(var i=1, len = arguments.length; i < len;i++){args.push(arguments[i])}
     var start=null,end=null
     var $ns=$B.$MakeArgs("$StringDict.endswith",args,['suffix'],
         ['start','end'],null,null)
@@ -601,7 +601,7 @@ $StringDict.endswith = function(self){
     start = $ns['start'] || start
     end = $ns['end'] || self.length-1
     var s = self.substr(start,end+1)
-    for(var i=0;i<suffixes.length;i++){
+    for(var i=0, len = suffixes.length; i < len;i++){
         suffix = suffixes[i]
         if(suffix.length<=s.length &&
             s.substr(s.length-suffix.length)==suffix) return true
@@ -633,7 +633,7 @@ $StringDict.find = function(self){
     var s = self.substring(start,end)
     //var escaped = ['[','.','*','+','?','|','(',')','$','^']
     var esc_sub = ''
-    for(var i=0;i<sub.length;i++){
+    for(var i=0, len = sub.length; i < len;i++){
         switch(sub.charAt(i)) {
           case '[':
           case '.':
@@ -743,7 +743,7 @@ var $FormattableString=function(format_string) {
 
        //console.log('name', _name)
        var _k
-       for (var i=0; i < _name_parts.length; i++) {
+       for (var i=0, len = _name_parts.length; i < len; i++) {
            _k = _name_parts[i][0]
            var _v = _name_parts[i][1]
            var _tail = _name_parts[i][2]
@@ -796,7 +796,7 @@ var $FormattableString=function(format_string) {
        var kwargs=$ns['kwargs']
        
        if (args.length>0) {
-          for (var i=0; i < args.length; i++) {
+          for (var i=0, len = args.length; i < len; i++) {
               //kwargs[str(i)]=args.$dict[i]
               getattr(kwargs, '__setitem__')(str(i), args[i])
           }
@@ -806,7 +806,7 @@ var $FormattableString=function(format_string) {
        var _want_bytes = isinstance(this._string, str)
        var _params=_b_.dict()
 
-       for (var i=0; i < this._kwords_array.length; i++) {
+       for (var i=0, len = this._kwords_array.length; i < len; i++) {
            var _name = this._kwords_array[i]
            var _items = this._kwords[_name]
            var _var = getattr(kwargs, '__getitem__')(_name)
@@ -818,7 +818,7 @@ var $FormattableString=function(format_string) {
              _value=_var
            }
 
-           for (var j=0; j < _items.length; j++) {
+           for (var j=0, len = _items.length; j < len; j++) {
                var _parts = _items[j][0]
                var _conv = _items[j][1]
                var _spec = _items[j][2]
@@ -831,7 +831,7 @@ var $FormattableString=function(format_string) {
            }
        }
 
-       for (var i=0; i < this._nested_array.length; i++) {
+       for (var i=0, len = this._nested_array.length; i < len; i++) {
            var _name = this._nested_array[i]
            var _items = this._nested[i]
 
@@ -843,7 +843,7 @@ var $FormattableString=function(format_string) {
              _value=_var
            }
 
-           for (var j=0; j < _items.length; j++) {
+           for (var j=0, len = _items.length; j < len; j++) {
                var _parts = _items[j][0]
                var _conv = _items[j][1]
                var _spec = _items[j][2]
@@ -864,7 +864,7 @@ var $FormattableString=function(format_string) {
 
        if (want_bytes === undefined) want_bytes = false
 
-       for (var i=0; i < parts.length; i++) {
+       for (var i=0, len = parts.length; i < len; i++) {
            var _k = parts[i][0]
            var _part = parts[i][1]
 
@@ -1128,7 +1128,7 @@ $StringDict.format = function(self) {
     var _fs = $FormattableString(self.valueOf())
     var args=[]
     // we don't need the first item (ie, self)
-    for (var i =1; i < arguments.length; i++) { args.push(arguments[i])}
+    for (var i = 1, len = arguments.length; i < len; i++) { args.push(arguments[i])}
     return _fs.format.apply(null, args)
 }
 
@@ -1257,7 +1257,7 @@ $StringDict.maketrans = function(from, to) {
    for(var i=0; i < 256; i++) _t[i]=String.fromCharCode(i)
 
    // make substitution in the translation table
-   for(var i=0; i < from.source.length; i++) {
+   for(var i=0, len = from.source.length; i < len; i++) {
       var _ndx=from.source[i].charCodeAt(0)     //retrieve ascii code of char
       _t[_ndx]=to.source[i]
    }
@@ -1286,7 +1286,7 @@ $StringDict.partition = function(self,sep) {
 function $re_escape(str)
 {
   var specials = "[.*+?|()$^"
-  for(var i=0;i<specials.length;i++){
+  for(var i=0, len = specials.length; i < len;i++){
       var re = new RegExp('\\'+specials.charAt(i),'g')
       str = str.replace(re, "\\"+specials.charAt(i))
   }
@@ -1371,7 +1371,7 @@ $StringDict.rpartition = function(self,sep) {
 
 $StringDict.rsplit = function(self) {
     var args = []
-    for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
+    for(var i=1, len = arguments.length; i < len;i++){args.push(arguments[i])}
     var $ns=$B.$MakeArgs("$StringDict.rsplit",args,[],[],'args','kw')
     var sep=None,maxsplit=-1
     if($ns['args'].length>=1){sep=$ns['args'][0]}
@@ -1383,7 +1383,7 @@ $StringDict.rsplit = function(self) {
     if (array.length <= maxsplit) return array
 
     var s=[], j=1
-    for (var i=0; i < maxsplit - array.length; i++) {
+    for (var i=0, len = maxsplit - array.length; i < len; i++) {
         if (i < maxsplit - array.length) {
            if (i > 0) { s[0]+=sep}
            s[0]+=array[i]
@@ -1404,7 +1404,7 @@ $StringDict.rstrip = function(self,x){
 
 $StringDict.split = function(self){
     var args = []
-    for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
+    for(var i=1, len = arguments.length; i < len;i++){args.push(arguments[i])}
     var $ns=$B.$MakeArgs("$StringDict.split",args,[],[],'args','kw')
     var sep=None,maxsplit=-1
     if($ns['args'].length>=1){sep=$ns['args'][0]}
@@ -1442,7 +1442,7 @@ $StringDict.split = function(self){
     }else{
         //var escaped = ['*','.','[',']','(',')','|','$','^']
         var esc_sep = ''
-        for(var i=0;i<sep.length;i++){
+        for(var i=0, len = sep.length; i < len;i++){
             switch(sep.charAt(i)) {
               case '*':
               case '.':
@@ -1491,7 +1491,7 @@ $StringDict.startswith = function(self){
     var end = $ns['end'] || self.length-1
     var s = self.substr(start,end+1)
 
-    for (var i=0; i < prefixes.length; i++) {
+    for (var i=0, len = prefixes.length; i < len; i++) {
         if (s.indexOf(prefixes[i]) == 0) return true
     }
     return false
@@ -1517,7 +1517,7 @@ $StringDict.title = function(self) {
 $StringDict.translate = function(self,table) {
     var res = ''
     if (isinstance(table, _b_.dict)) {
-       for (var i=0; i<self.length; i++) {
+       for (var i=0, len = self.length; i < len; i++) {
            var repl = _b_.dict.$dict.get(table,self.charCodeAt(i),-1)
            if(repl==-1){res += self.charAt(i)}
            else if(repl!==None){res += repl}
@@ -1580,7 +1580,7 @@ for(var $attr in $StringDict){
                 var args = []
                 if(arguments.length>0){
                     var args = [arguments[0].valueOf()]
-                    for(var i=1;i<arguments.length;i++){
+                    for(var i=1, len = arguments.length; i < len;i++){
                         args.push(arguments[i])
                     }
                 }
