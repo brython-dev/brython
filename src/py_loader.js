@@ -11,7 +11,7 @@ function script_loader(name, version) {
 
    if(!$src || $version !==version){ // local copy not valid
       var $scripts = document.getElementsByTagName('script')
-      for(var $i=0;$i<$scripts.length;$i++){
+      for(var $i=0, len = $scripts.length; $i < len;$i++){
         if($scripts[$i].src.substr($scripts[$i].src.length-13)==='/py_loader.js'){
            $brython_path = $scripts[$i].src.substr(0,$scripts[$i].src.length-13)
            break
