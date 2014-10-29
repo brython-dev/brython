@@ -52,10 +52,8 @@ self.addEventListener('message', function (e) {
         if (name.substr(0, 2) == '$$') {
             name = name.substr(2)
         }
-        var filepath = __BRYTHON__.brython_path + 'libs/' + name +
-            '.js'
-        return [filepath, __BRYTHON__.$download_module(module.name,
-            filepath)]
+        var filepath = __BRYTHON__.brython_path + 'libs/' + name + '.js'
+        return [filepath, __BRYTHON__.$download_module(module.name, filepath)]
     }
 
 
