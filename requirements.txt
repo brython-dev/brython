@@ -1,0 +1,13 @@
+# This are for Development only.
+
+
+# AutoFix Imports on Python files  https://github.com/timothycrosley/isort
+isort
+
+
+# PEP8 Style Guide Best Practice
+pep8
+
+
+# http://legacy.python.org/dev/peps/pep-0257 https://github.com/GreenSteam/pep257
+pep257

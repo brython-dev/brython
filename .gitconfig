@@ -1,0 +1,78 @@
+# Custom Useful Git configs
+# USER AUTH ###################################################################
+#[user]
+#    name = Your Real Name Here
+#    email = YourMailHere@gmail.com
+#[github]
+#    user = YourGitHubUser
+
+
+# Git Core ####################################################################
+#[core]
+#    safecrlf = warn
+#    autocrlf = input  # input on Linux, auto on Windows
+#    compression = 9
+#    loosecompression = 9
+#    askpass = ssh-askpass  # Use a GUI dialog to Ask Password on Linux
+#    whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol,tab-in-indent,tabwidth=4
+
+
+# Credential Helper, dont ask password every time #############################
+[credential]
+    helper = cache
+#   helper = osxkeychain  # for Mac OsX
+
+
+# Autocorrect for mistyped git commands #######################################
+[help]
+    autocorrect = 1
+
+
+# PRETTY COLORS ###############################################################
+[color]
+    ui = auto
+    diff = auto
+    grep = auto
+    interactive = auto
+    showbranch = auto
+    status = auto
+
+
+[color "branch"]
+    current = yellow bold
+    local = green bold
+    remote = cyan bold
+
+
+[color "diff"]
+    meta = yellow bold
+    frag = magenta bold
+    old = red blink
+    new = green bold
+    whitespace = red reverse
+
+
+[color "status"]
+    added = green bold
+    changed = yellow bold
+    untracked = red bold
+
+
+# Security Check of SSL for HTTPS #############################################
+[http]
+    sslVerify = true
+
+
+# alias to commands ###########################################################
+[alias]
+    assume = update-index --assume-unchanged
+    unassume = update-index --no-assume-unchanged
+    assumed = "!git ls-files -v | grep ^h | cut -c 3-"
+    unassumeall = !git assumed | xargs git update-index --no-assume-unchanged
+    assumeall = "!git st -s | awk {'print $2'} | xargs git assume"
+    #
+    ours = "!f() { git checkout --ours $@ && git add $@; }; f"
+    theirs = "!f() { git checkout --theirs $@ && git add $@; }; f"
+    #
+    whois = "!sh -c 'git log -i -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -"
+    whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
