@@ -96,36 +96,45 @@ $ListDict.__getitem__ = function(self,arg){
         
         throw _b_.IndexError('list index out of range')
     }
-    if(isinstance(arg,_b_.slice)) {
+    if (isinstance(arg,_b_.slice)) {
+        /* Find the real values for start, stop and step */
         var step = arg.step===None ? 1 : arg.step
-        if(step>0){
-            var start = arg.start===None ? 0 : arg.start
-            var stop = arg.stop===None ? self.length : arg.stop
-        }else{
-            var start = arg.start===None ? self.length-1 : arg.start
-            var stop = arg.stop===None ? 0 : arg.stop
+        if (step == 0) {
+            throw Error('ValueError : slice step cannot be zero');
         }
-        if(start<0) start=_b_.int(self.length+start)
-        if(stop<0) stop=self.length+stop
-        var res = [],i=null,items=self.valueOf()
-        if(step>0){
-            if(stop<=start) return res
-            
-            for(var i=start;i<stop;i+=step){
-               if(items[i]!==undefined){res.push(items[i])}
-               else {res.push(None)}
-            }
-            return res
+        var length = self.length;
+        var start, end;
+        if (arg.start === None) {
+            start = step<0 ? length-1 : 0;
         } else {
-            if(stop>start){return res}
-            else {
-                for(var i=start;i>=stop;i+=step){
-                    if(items[i]!==undefined){res.push(items[i])}
-                    else {res.push(None)}
-                }
-                return res
+            start = arg.start;
+            if (start < 0) start += length;
+            if (start < 0) start = step<0 ? -1 : 0;
+            if (start >= length) start = step<0 ? length-1 : length;
+        }
+        if (arg.stop === None) {
+            stop = step<0 ? -1 : length;
+        } else {
+            stop = arg.stop;
+            if (stop < 0) stop += length;
+            if (stop < 0) stop = step<0 ? -1 : 0;
+            if (stop >= length) stop = step<0 ? length-1 : length;
+        }
+        /* Return the sliced list  */
+        var res = [], i=null, items=self.valueOf()
+        if (step > 0) {
+            if (stop <= start) return res;
+            for(var i=start; i<stop; i+=step) {
+               res.push(items[i])
             }
-        } 
+            return res;
+        } else {
+            if (stop > start) return res;
+            for(var i=start; i>stop; i+=step) {
+                res.push(items[i])
+            }
+            return res;
+        }
     }
     if(isinstance(arg,_b_.bool)){
         return $ListDict.__getitem__(self,_b_.int(arg))
