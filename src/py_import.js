@@ -306,7 +306,9 @@ function import_from_site_packages(mod_name, origin, package){
         if(py_mod!==null){
             console.log(py_paths[i].substr(py_paths[i].length-12))
             if(py_paths[i].substr(py_paths[i].length-12)=='/__init__.py'){
-                py_mod.__package__ = mod_name
+                // Since "__init__.py" was imported, module is a package
+                $B.imported[mod_name].$package = true;
+                py_mod.__package__ = mod_name  // py_mod is bool!!
             }
             return py_mod
         }
