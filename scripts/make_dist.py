@@ -24,7 +24,7 @@ except ImportError:
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
-implementation = [3, 0, 0, 'rc', 1]
+implementation = [3, 0, 0, 'final', 0]
 
 def custom_minify(src):
     _res, pos = '', 0
