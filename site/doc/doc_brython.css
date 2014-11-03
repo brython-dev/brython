@@ -8,36 +8,11 @@
 
 
 html {
-  -webkit-background-blend-mode:screen;
-  background:
-  linear-gradient(lightgray,transparent), /* top */
-    linear-gradient(90deg,lightblue,transparent), /* bottom x 2 */
-    linear-gradient(-90deg,lightcyan,transparent) no-repeat center center fixed;
-  -webkit-background-size:cover;
-  -moz-background-size:cover;
-  -o-background-size:cover;
-  background-size:cover;
-  font-family:Oxygen;
-  height:100%
+
 }
 
 body {
   font-family:Oxygen,arial;
-  background-color: transparent;
-  background: /* dotted seamless pattern */
-    -webkit-radial-gradient(rgba(255,255,255,.3) 15%, transparent 20%) 0 1px;
-    -webkit-background-size: 9px 9px;
-  background:
-    -moz-radial-gradient(rgba(255,255,255,.3) 15%, transparent 20%) 0 1px;
-    -moz-background-size: 9px 9px;
-  background:
-    -o-radial-gradient(rgba(255,255,255,.3) 15%, transparent 20%) 0 1px;
-    -o-background-size: 9px 9px;
-  background:
-    -ms-radial-gradient(rgba(255,255,255,.3) 15%, transparent 20%) 0 1px;
-    -ms-background-size: 9px 9px;
-  background: radial-gradient(rgba(255,255,255,.3) 15%, transparent 20%) 0 1px;
-  background-size: 9px 9px;
 }
 
 a.navig:link,a.navig:visited {
