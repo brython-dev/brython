@@ -2887,7 +2887,6 @@ function $IdCtx(context,value){
                 else if(scope.id==scope.module){
                     // In global namespace, if the 
                     if(!this.bound && scope===innermost && this.env[val]===undefined){
-                        //console.log('nom '+val+' inconnu dans '+scope.module+' bound '+this.bound)
                         return '__BRYTHON__.$NameError("'+val+'")'
                     }
                     val = '$globals["'+val+'"]'
@@ -2913,8 +2912,14 @@ function $IdCtx(context,value){
             // augmented assignement operators in this case
             this.unknown_binding = true
             
-            var res = '__BRYTHON__.$search("'+val+'","'+module+'")'
-            return res
+            // get global scope
+            var gs = innermost
+            while(gs.parent_block && gs.parent_block.id!=='__builtins__'){
+                gs = gs.parent_block
+            }
+            
+            return '__BRYTHON__.$search("'+val+'","'+gs.id+'")'
+
         }
 
         if(scope.ntype=='class' && this.in_class){
