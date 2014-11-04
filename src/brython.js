@@ -1736,7 +1736,15 @@ new $StringCtx(this.parent,res+'}')
 if(val=='__BRYTHON__'){return val}
 var innermost=$get_scope(this)
 var scope=innermost,found=[],module=scope.module
+var gs=innermost
+while(gs.parent_block && gs.parent_block.id!=='__builtins__'){gs=gs.parent_block
+}
 while(true){if($B.bound[scope.id]===undefined){console.log('name '+val+' undef '+scope.id)}
+if($B.globals[scope.id]!==undefined &&
+$B.globals[scope.id][val]!==undefined){console.log(val+' dans globals de '+scope.id+' module '+gs)
+found=[gs]
+break
+}
 if(scope===innermost){
 var bound_before=$get_node(this).bound_before
 if(bound_before && !this.bound){if(bound_before.indexOf(val)>-1){found.push(scope)}}else{if($B.bound[scope.id][val]){found.push(scope)}}}else{if($B.bound[scope.id][val]){found.push(scope)}}
@@ -1773,9 +1781,6 @@ var res=val+$to_js(this.tree,'')
 return res
 }else{
 this.unknown_binding=true
-var gs=innermost
-while(gs.parent_block && gs.parent_block.id!=='__builtins__'){gs=gs.parent_block
-}
 return '__BRYTHON__.$search("'+val+'","'+gs.id+'")'
 }
 if(scope.ntype=='class' && this.in_class){
@@ -2020,8 +2025,16 @@ C.tree.push(this)
 this.expect='id'
 this.toString=function(){return 'global '+this.tree}
 this.scope=$get_scope(this)
-if(this.scope.globals===undefined){this.scope.globals=[]}
-this.add=function(name){if(this.scope.globals.indexOf(name)==-1){this.scope.globals.push(name)}}
+if(this.scope.C===undefined){$_SyntaxError(C,["nonlocal declaration not allowed at module level"])
+}
+console.log('nonlocal dans scope '+this.scope.C.tree[0])
+this.add=function(name){if($B.bound[this.scope.id][name]=='arg'){$_SyntaxError(C,["name '"+name+"' is parameter and nonlocal"])
+}
+var pscope=this.scope.parent_block
+if(pscope.C===undefined){$_SyntaxError(C,["no binding for nonlocal '"+name+"' found"])
+}else if($B.bound[pscope.id][name]===undefined){$_SyntaxError(C,["no binding for nonlocal '"+name+"' found"])
+}
+if(this.scope.globals.indexOf(name)==-1){this.scope.globals.push(name)}}
 this.to_js=function(){return ''}}
 function $NotCtx(C){this.type='not'
 this.parent=C

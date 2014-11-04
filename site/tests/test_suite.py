@@ -284,4 +284,22 @@ b = f(g,11)
 assert a(8) == (8, 5)
 assert b(13) == (13, 11)
 
+# nonlocal and global
+x = 0
+
+def f():
+    x = 1
+    res = []
+    def g():
+        global x
+        return x
+    res.append(g())
+    def h():
+        nonlocal x
+        return x
+    res.append(h())
+    return res
+
+assert f()==[0, 1]
+
 print('passed all tests...')

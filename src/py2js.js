@@ -2826,8 +2826,21 @@ function $IdCtx(context,value){
         if(val=='__BRYTHON__'){return val}
         var innermost = $get_scope(this)
         var scope = innermost, found=[], module = scope.module
+        
+        // get global scope
+        var gs = innermost
+        while(gs.parent_block && gs.parent_block.id!=='__builtins__'){
+            gs = gs.parent_block
+        }
+
         while(true){
             if($B.bound[scope.id]===undefined){console.log('name '+val+' undef '+scope.id)}
+            if($B.globals[scope.id]!==undefined &&
+                $B.globals[scope.id][val]!==undefined){
+                console.log(val+' dans globals de '+scope.id+' module '+gs)
+                found = [gs]
+                break
+            }
             if(scope===innermost){
                 // Handle the case when the same name is used at both sides
                 // of an assignment and the right side is defined in an
@@ -2911,13 +2924,7 @@ function $IdCtx(context,value){
             // First set attribute "unknown_binding", used to avoid using
             // augmented assignement operators in this case
             this.unknown_binding = true
-            
-            // get global scope
-            var gs = innermost
-            while(gs.parent_block && gs.parent_block.id!=='__builtins__'){
-                gs = gs.parent_block
-            }
-            
+                        
             return '__BRYTHON__.$search("'+val+'","'+gs.id+'")'
 
         }
@@ -3310,9 +3317,22 @@ function $NonlocalCtx(context){
     this.toString = function(){return 'global '+this.tree}
 
     this.scope = $get_scope(this)
-    if(this.scope.globals===undefined){this.scope.globals=[]}
+    if(this.scope.context===undefined){
+        $_SyntaxError(context,["nonlocal declaration not allowed at module level"])
+    }
+    console.log('nonlocal dans scope '+this.scope.context.tree[0])
+    //if(this.scope.globals===undefined){this.scope.globals=[]}
 
     this.add = function(name){
+        if($B.bound[this.scope.id][name]=='arg'){
+            $_SyntaxError(context,["name '"+name+"' is parameter and nonlocal"])
+        }
+        var pscope = this.scope.parent_block
+        if(pscope.context===undefined){
+            $_SyntaxError(context,["no binding for nonlocal '"+name+"' found"])
+        }else if($B.bound[pscope.id][name]===undefined){
+            $_SyntaxError(context,["no binding for nonlocal '"+name+"' found"])
+        }
         if(this.scope.globals.indexOf(name)==-1){this.scope.globals.push(name)}
     }
 

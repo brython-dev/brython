@@ -14,8 +14,8 @@ Brython follows the Python syntax:
 - generators (keyword `yield`), generator expressions : `foo(x for x in bar if x>5)`
 - ternary operator: `x = r1 if condition else r2`
 - functions can be defined with any combination of fixed arguments, default values, variable positional arguments 
- and variable keyword arguments : `def foo(x, y=0, \*args, \*\*kw):`
-- unpacking of argument lists or dictionaries in function calls: `x = foo(\*args, \*\*kw)`
+ and variable keyword arguments : `def foo(x, y=0, *args, **kw):`
+- unpacking of argument lists or dictionaries in function calls: `x = foo(*args, **kw)`
 - classes with multiple inheritance
 - decorators
 - imports :  
@@ -37,11 +37,11 @@ By default, `print()` will output to the web browser console and so are the erro
 
 `sys.stdin` is not implemented at this time, however there is an `input()` built-in function that will open a blocking input dialog (a prompt).
 
-To open a print dialog (to a printer), call `win.print` (`win` is defined in module **browser**)
+To open a print dialog (to a printer), call `window.print` (`window` is defined in module **browser**)
 
 The following are not implemented in the current version : 
 
 - keyword `nonlocal`
-- built-in functions `help(),  memoryview(), vars()`
+- built-in functions `memoryview(), vars()`
 
 

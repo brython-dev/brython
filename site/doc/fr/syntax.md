@@ -50,5 +50,5 @@ Quelques particularités liées au contexte d'exécution dans un navigateur :
 Ne sont pas pris en charge dans la version actuelle : 
 
 - le mot-clé `nonlocal`
-- les fonctions intégrées `help(),  memoryview(),  vars()`
+- les fonctions intégrées `memoryview(),  vars()`
 
