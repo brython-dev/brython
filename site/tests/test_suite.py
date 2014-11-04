@@ -302,4 +302,13 @@ def f():
 
 assert f()==[0, 1]
 
+# use imported names
+from a import *
+
+res = []
+for i in range(10):
+    res.append(i)
+
+assert res == ['a', 'b', 'c']
+
 print('passed all tests...')

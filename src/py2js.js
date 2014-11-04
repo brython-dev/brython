@@ -2394,10 +2394,11 @@ function $FromCtx(context){
     this.aliases = {}
     context.tree.push(this)
     this.expect = 'module'
+    this.scope = $get_scope(this)
 
     this.add_name = function(name){
         this.names.push(name)
-        if(name=='*'){$get_scope(this).blurred = true}
+        if(name=='*'){this.scope.blurred = true}
     }
     
     this.bind_names = function(){
@@ -2833,7 +2834,7 @@ function $IdCtx(context,value){
         while(gs.parent_block && gs.parent_block.id!=='__builtins__'){
             gs = gs.parent_block
         }
-
+        
         while(true){
             if($B.bound[scope.id]===undefined){console.log('name '+val+' undef '+scope.id)}
             if($B.globals[scope.id]!==undefined &&
@@ -2896,8 +2897,15 @@ function $IdCtx(context,value){
             scope = found[0]
             var val_init = val
             if(scope.context===undefined){
-                if(scope.id=='__builtins__'){val = '__BRYTHON__.builtins["'+val+'"]'}
-                else if(scope.id==scope.module){
+                if(scope.id=='__builtins__'){
+                    if(gs.blurred){
+                        var val1 = '(__BRYTHON__.vars["'+gs.id+'"]["'+val+'"]'
+                        val1 += '|| __BRYTHON__.builtins["'+val+'"])'
+                        val = val1
+                    }else{
+                        val = '__BRYTHON__.builtins["'+val+'"]'
+                    }
+                }else if(scope.id==scope.module){
                     // In global namespace, if the 
                     if(!this.bound && scope===innermost && this.env[val]===undefined){
                         return '__BRYTHON__.$NameError("'+val+'")'

@@ -1478,8 +1478,9 @@ this.names=[]
 this.aliases={}
 C.tree.push(this)
 this.expect='module'
+this.scope=$get_scope(this)
 this.add_name=function(name){this.names.push(name)
-if(name=='*'){$get_scope(this).blurred=true}}
+if(name=='*'){this.scope.blurred=true}}
 this.bind_names=function(){
 var scope=$get_scope(this)
 for(var i=0;i<this.names.length;i++){var name=this.aliases[i]||this.names[i]
@@ -1767,8 +1768,11 @@ return res
 }}}
 scope=found[0]
 var val_init=val
-if(scope.C===undefined){if(scope.id=='__builtins__'){val='__BRYTHON__.builtins["'+val+'"]'}
-else if(scope.id==scope.module){
+if(scope.C===undefined){if(scope.id=='__builtins__'){if(gs.blurred){var val1='(__BRYTHON__.vars["'+gs.id+'"]["'+val+'"]'
+val1 +='|| __BRYTHON__.builtins["'+val+'"])'
+val=val1
+}else{val='__BRYTHON__.builtins["'+val+'"]'
+}}else if(scope.id==scope.module){
 if(!this.bound && scope===innermost && this.env[val]===undefined){return '__BRYTHON__.$NameError("'+val+'")'
 }
 val='$globals["'+val+'"]'
