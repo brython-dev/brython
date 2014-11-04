@@ -2404,7 +2404,8 @@ function $FromCtx(context){
         // Called at the end of the 'from' statement
         // Binds the names or aliases in current scope
         var scope = $get_scope(this)
-        for(var name in this.aliases){
+        for(var i=0;i<this.names.length;i++){
+            var name = this.aliases[i] || this.names[i]
             $B.bound[scope.id][name] = true
         }
     }
@@ -2837,7 +2838,6 @@ function $IdCtx(context,value){
             if($B.bound[scope.id]===undefined){console.log('name '+val+' undef '+scope.id)}
             if($B.globals[scope.id]!==undefined &&
                 $B.globals[scope.id][val]!==undefined){
-                console.log(val+' dans globals de '+scope.id+' module '+gs)
                 found = [gs]
                 break
             }
@@ -3320,9 +3320,7 @@ function $NonlocalCtx(context){
     if(this.scope.context===undefined){
         $_SyntaxError(context,["nonlocal declaration not allowed at module level"])
     }
-    console.log('nonlocal dans scope '+this.scope.context.tree[0])
-    //if(this.scope.globals===undefined){this.scope.globals=[]}
-
+    
     this.add = function(name){
         if($B.bound[this.scope.id][name]=='arg'){
             $_SyntaxError(context,["name '"+name+"' is parameter and nonlocal"])

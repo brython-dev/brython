@@ -1482,7 +1482,8 @@ this.add_name=function(name){this.names.push(name)
 if(name=='*'){$get_scope(this).blurred=true}}
 this.bind_names=function(){
 var scope=$get_scope(this)
-for(var name in this.aliases){$B.bound[scope.id][name]=true
+for(var i=0;i<this.names.length;i++){var name=this.aliases[i]||this.names[i]
+$B.bound[scope.id][name]=true
 }}
 this.toString=function(){var res='(from) '+this.module+' (import) '+this.names 
 return res + '(as)' + this.aliases
@@ -1741,8 +1742,7 @@ while(gs.parent_block && gs.parent_block.id!=='__builtins__'){gs=gs.parent_block
 }
 while(true){if($B.bound[scope.id]===undefined){console.log('name '+val+' undef '+scope.id)}
 if($B.globals[scope.id]!==undefined &&
-$B.globals[scope.id][val]!==undefined){console.log(val+' dans globals de '+scope.id+' module '+gs)
-found=[gs]
+$B.globals[scope.id][val]!==undefined){found=[gs]
 break
 }
 if(scope===innermost){
@@ -2027,7 +2027,6 @@ this.toString=function(){return 'global '+this.tree}
 this.scope=$get_scope(this)
 if(this.scope.C===undefined){$_SyntaxError(C,["nonlocal declaration not allowed at module level"])
 }
-console.log('nonlocal dans scope '+this.scope.C.tree[0])
 this.add=function(name){if($B.bound[this.scope.id][name]=='arg'){$_SyntaxError(C,["name '"+name+"' is parameter and nonlocal"])
 }
 var pscope=this.scope.parent_block
