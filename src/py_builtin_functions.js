@@ -673,7 +673,7 @@ hash.__code__.co_varnames=['object']
 
 function help(obj){
     if (obj === undefined) obj='help'
-    if(typeof obj == 'function') obj=getattr(obj, '__name__')
+    //if(typeof obj == 'function') obj=getattr(obj, '__name__')
 
     // if obj is a builtin, lets take a shortcut, and output doc string
     if(typeof obj=='string' && _b_[obj] !== undefined) {

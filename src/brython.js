@@ -5746,7 +5746,6 @@ hash.__code__.co_argcount=1
 hash.__code__.co_consts=[]
 hash.__code__.co_varnames=['object']
 function help(obj){if(obj===undefined)obj='help'
-if(typeof obj=='function')obj=getattr(obj,'__name__')
 if(typeof obj=='string' && _b_[obj]!==undefined){var _doc=_b_[obj].__doc__
 if(_doc !==undefined && _doc !=''){getattr($print,'__call__')(_doc)
 return
