@@ -388,24 +388,43 @@ enumerate.__code__.co_varnames=['iterable']
 //eval() (built in function)
 function $eval(src, _globals, locals){
     //console.log('exec stack '+$B.exec_stack)
+    var is_exec = arguments[3]=='exec'
     if($B.exec_stack.length==0){$B.exec_stack=['__main__']}
+    var env = $B.exec_stack[$B.exec_stack.length-1]
 
-    if(_globals===undefined){
-        var mod_name=$B.exec_stack[$B.exec_stack.length-1]
+    if(is_exec && _globals===undefined){
+        var mod_name = env
     }else{
         var mod_name = 'exec-'+Math.random().toString(36).substr(2,8)
         __BRYTHON__.$py_module_path[mod_name] = __BRYTHON__.$py_module_path['__main__']
         __BRYTHON__.vars[mod_name] = {}
         __BRYTHON__.bound[mod_name] = {}
-        for(var i=0;i<_globals.$keys.length;i++){
-            __BRYTHON__.vars[mod_name][_globals.$keys[i]] = _globals.$values[i]
-            __BRYTHON__.bound[mod_name][_globals.$keys[i]] = true
+        if(_globals!==undefined){
+            for(var i=0;i<_globals.$keys.length;i++){
+                __BRYTHON__.vars[mod_name][_globals.$keys[i]] = _globals.$values[i]
+                __BRYTHON__.bound[mod_name][_globals.$keys[i]] = true
+            }
+        }else{
+            for(var attr in $B.vars[env]){
+                __BRYTHON__.vars[mod_name][attr] = $B.vars[env][attr]
+                __BRYTHON__.bound[mod_name][attr] = true
+            }
         }
     }
     $B.exec_stack.push(mod_name)
     try{
-        var js = $B.py2js(src,mod_name,mod_name,'__builtins__').to_js()
-        //console.log(js)
+        var root = $B.py2js(src,mod_name,mod_name,'__builtins__')
+        // If the Python function is eval(), not exec(), check that the source
+        // is an expression
+        if(!is_exec){
+            var instr = root.children[root.children.length-1]
+            var type = instr.context.tree[0].type
+            if(["expr","list_or_tuple"].indexOf(type)==-1){
+                $B.line_info=[1,mod_name]
+                throw SyntaxError("eval() argument must be an expression")
+            }
+        }
+        var js = root.to_js()
         var res = eval(js)
         if(_globals!==undefined){
             for(var attr in $B.vars[mod_name]){
@@ -421,7 +440,7 @@ function $eval(src, _globals, locals){
 $eval.$is_func = true
 
 function exec(src, globals, locals){
-    return $eval(src, globals, locals) || _b_.None
+    return $eval(src, globals, locals,'exec') || _b_.None
 }
 
 exec.$is_func = true
@@ -673,8 +692,7 @@ hash.__code__.co_varnames=['object']
 
 function help(obj){
     if (obj === undefined) obj='help'
-    //if(typeof obj == 'function') obj=getattr(obj, '__name__')
-
+    
     // if obj is a builtin, lets take a shortcut, and output doc string
     if(typeof obj=='string' && _b_[obj] !== undefined) {
       var _doc=_b_[obj].__doc__
@@ -2089,11 +2107,11 @@ $B.exception = function(js_exc){
 
     if(!js_exc.py_error){
         if($B.debug>0 && js_exc.info===undefined){
-            console.log('erreur '+js_exc+' dans module '+$B.line_info)
+            //console.log('erreur '+js_exc+' dans module '+$B.line_info)
             if($B.line_info!==undefined){
                 var mod_name = $B.line_info[1]
                 var module = $B.modules[mod_name]
-                console.log('module '+mod_name+' caller '+module.caller)
+                //console.log('module '+mod_name+' caller '+module.caller)
                 if(module){
                     if(module.caller!==undefined){
                         // for list comprehension and the likes, replace
