@@ -3,7 +3,7 @@ var $module=(function($B) {
     alert:function(message){window.alert($B.builtins.str(message))},
     confirm: function(message){return $B.JSObject(window.confirm(message))},
     console:{log:function(data){window.console.log(data)}},
-    $$document:$B.$DOMNode(document),
+    document:$B.$DOMNode(document),
     doc: $B.$DOMNode(document),   //want to use document instead of doc
     DOMEvent:$B.DOMEvent,
     DOMNode:$B.DOMNode,
