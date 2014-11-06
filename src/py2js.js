@@ -1684,6 +1684,8 @@ function $DefCtx(context){
             nodes.push(new_node)
         }
 
+        var passed_alias = {}, passed_ix = 0
+        
         if(this.type=='def'){
             var enclosing = [], passed = []
             for(var i=this.enclosing.length-1;i>=0;i--){
@@ -1693,7 +1695,9 @@ function $DefCtx(context){
                         if(func===scope && $B.bound[func.id][attr]!='arg'){
                             continue
                         }
-                        passed.push(attr)
+                        passed.push('$var'+passed_ix)
+                        passed_alias[attr] = '$var'+passed_ix
+                        passed_ix++
                         enclosing.push('$B.vars["'+func.id+'"]["'+attr+'"]')
                     }
                 } 
@@ -1718,12 +1722,17 @@ function $DefCtx(context){
                             continue
                         }
                         new_node = new $Node()
-                        new $NodeJSCtx(new_node,'if('+attr+'!==undefined){$locals["'+attr+'"] = '+attr+'};')
+                        var js = 'if('+passed_alias[attr]+'!==undefined)'
+                        js += '{$locals["'+attr+'"] = '+passed_alias[attr]+'};'
+                        new $NodeJSCtx(new_node,js)
                         nodes.push(new_node)
                     }
                 }
             }
         }
+        
+        this.passed_ix = passed_ix
+
         var make_args_nodes = []
         var js = 'var $ns=__BRYTHON__.$MakeArgs("'+this.name+'",arguments,new Array('+required+'),'
         js += 'new Array('+defaults.join(',')+'),'+other_args+','+other_kw+
@@ -1943,6 +1952,7 @@ function $DefCtx(context){
             var res = this.tree[0].to_js()+'=(function('
             if(this.type=='def'){
                 var args = []
+                /*
                 for(var i=this.enclosing.length-1;i>=0;i--){
                     var func = this.enclosing[i]
                     for(var attr in $B.bound[func.id]){
@@ -1953,6 +1963,8 @@ function $DefCtx(context){
                         }
                     }
                 }
+                */
+                for(var i=0;i<this.passed_ix;i++){args.push('$var'+i)}
                 res += args.join(',')
             }
             res += ')'
@@ -5863,9 +5875,10 @@ function $transition(context,token){
     } // switch(context.type)
 }
 
-$B.forbidden = ['case','catch','constructor','Date','delete',
-    'default','document','Error','history','function','location','Math',
-    'new','null','Number','RegExp','this','throw','var','super']
+$B.forbidden = ['super',
+    'case','catch','constructor','Date','delete',
+    'default','Error','history','function','location','Math',
+    'new','null','Number','RegExp','this','var']
 
 function $tokenize(src,module,locals_id,parent_block_id,line_info){
     var delimiters = [["#","\n","comment"],['"""','"""',"triple_string"],

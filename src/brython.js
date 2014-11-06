@@ -1029,11 +1029,14 @@ var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 }
+var passed_alias={},passed_ix=0
 if(this.type=='def'){var enclosing=[],passed=[]
 for(var i=this.enclosing.length-1;i>=0;i--){var func=this.enclosing[i]
 for(var attr in $B.bound[func.id]){if(attr!==this.name){if(func===scope && $B.bound[func.id][attr]!='arg'){continue
 }
-passed.push(attr)
+passed.push('$var'+passed_ix)
+passed_alias[attr]='$var'+passed_ix
+passed_ix++
 enclosing.push('$B.vars["'+func.id+'"]["'+attr+'"]')
 }}
 for(var attr in __BRYTHON__.bound[func.id]){if(attr!=this.name &&($B.globals[this.id]===undefined ||
@@ -1046,9 +1049,12 @@ for(var attr in $B.bound[func.id]){if(attr!==this.name &&($B.globals[this.id]===
 $B.globals[this.id][attr]===undefined)){if(func===scope && $B.bound[func.id][attr]!='arg'){continue
 }
 new_node=new $Node()
-new $NodeJSCtx(new_node,'if('+attr+'!==undefined){$locals["'+attr+'"] = '+attr+'};')
+var js='if('+passed_alias[attr]+'!==undefined)'
+js +='{$locals["'+attr+'"] = '+passed_alias[attr]+'};'
+new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 }}}}
+this.passed_ix=passed_ix
 var make_args_nodes=[]
 var js='var $ns=__BRYTHON__.$MakeArgs("'+this.name+'",arguments,new Array('+required+'),'
 js +='new Array('+defaults.join(',')+'),'+other_args+','+other_kw+
@@ -1192,11 +1198,7 @@ this.to_js=function(func_name){if(func_name!==undefined){return func_name+'=(fun
 }else{var scope=$get_scope(this)
 var res=this.tree[0].to_js()+'=(function('
 if(this.type=='def'){var args=[]
-for(var i=this.enclosing.length-1;i>=0;i--){var func=this.enclosing[i]
-for(var attr in $B.bound[func.id]){if(attr!==this.name){if($B.bound[func.id]===scope &&
-$B.bound[func.id][attr]!='arg'){continue}
-args.push(attr)
-}}}
+for(var i=0;i<this.passed_ix;i++){args.push('$var'+i)}
 res +=args.join(',')
 }
 res +=')'
@@ -3819,7 +3821,7 @@ return new $AbstractExprCtx(C,true)
 return $transition(C.parent,token)
 }
 }
-$B.forbidden=['case','catch','constructor','Date','delete','default','document','Error','history','function','location','Math','new','null','Number','RegExp','this','throw','var','super']
+$B.forbidden=['super','case','catch','constructor','Date','delete','default','Error','history','function','location','Math','new','null','Number','RegExp','this','var']
 function $tokenize(src,module,locals_id,parent_block_id,line_info){var delimiters=[["#","\n","comment"],['"""','"""',"triple_string"],["'","'","string"],['"','"',"string"],["r'","'","raw_string"],['r"','"',"raw_string"]]
 var br_open={"(":0,"[":0,"{":0}
 var br_close={")":"(","]":"[","}":"{"}
@@ -5291,7 +5293,7 @@ throw err
 $BRGeneratorDict.send=function(self,value){self.sent_value=value
 return $BRGeneratorDict.__next__(self)
 }
-$BRGeneratorDict.$$throw=function(self,value){if(_b_.isinstance(value,_b_.type))value=value()
+$BRGeneratorDict.throw=function(self,value){if(_b_.isinstance(value,_b_.type))value=value()
 self.sent_value={__class__:$B.$GeneratorSendError,err:value}
 return $BRGeneratorDict.__next__(self)
 }
@@ -5578,17 +5580,27 @@ enumerate.__code__.co_argcount=2
 enumerate.__code__.co_consts=[]
 enumerate.__code__.co_varnames=['iterable']
 function $eval(src,_globals,locals){
+var is_exec=arguments[3]=='exec'
 if($B.exec_stack.length==0){$B.exec_stack=['__main__']}
-if(_globals===undefined){var mod_name=$B.exec_stack[$B.exec_stack.length-1]
+var env=$B.exec_stack[$B.exec_stack.length-1]
+if(is_exec && _globals===undefined){var mod_name=env
 }else{var mod_name='exec-'+Math.random().toString(36).substr(2,8)
 __BRYTHON__.$py_module_path[mod_name]=__BRYTHON__.$py_module_path['__main__']
 __BRYTHON__.vars[mod_name]={}
 __BRYTHON__.bound[mod_name]={}
-for(var i=0;i<_globals.$keys.length;i++){__BRYTHON__.vars[mod_name][_globals.$keys[i]]=_globals.$values[i]
+if(_globals!==undefined){for(var i=0;i<_globals.$keys.length;i++){__BRYTHON__.vars[mod_name][_globals.$keys[i]]=_globals.$values[i]
 __BRYTHON__.bound[mod_name][_globals.$keys[i]]=true
-}}
+}}else{for(var attr in $B.vars[env]){__BRYTHON__.vars[mod_name][attr]=$B.vars[env][attr]
+__BRYTHON__.bound[mod_name][attr]=true
+}}}
 $B.exec_stack.push(mod_name)
-try{var js=$B.py2js(src,mod_name,mod_name,'__builtins__').to_js()
+try{var root=$B.py2js(src,mod_name,mod_name,'__builtins__')
+if(!is_exec){var instr=root.children[root.children.length-1]
+var type=instr.C.tree[0].type
+if(["expr","list_or_tuple"].indexOf(type)==-1){$B.line_info=[1,mod_name]
+throw SyntaxError("eval() argument must be an expression")
+}}
+var js=root.to_js()
 var res=eval(js)
 if(_globals!==undefined){for(var attr in $B.vars[mod_name]){if(['__name__','__doc__','__file__'].indexOf(attr)>-1){continue}
 _b_.dict.$dict.__setitem__(_globals,attr,$B.vars[mod_name][attr])
@@ -5597,7 +5609,7 @@ return res
 }finally{$B.exec_stack.pop()
 }}
 $eval.$is_func=true
-function exec(src,globals,locals){return $eval(src,globals,locals)||_b_.None
+function exec(src,globals,locals){return $eval(src,globals,locals,'exec')||_b_.None
 }
 exec.$is_func=true
 var $FilterDict={__class__:$B.$type,__name__:'filter'}
@@ -6602,10 +6614,9 @@ for(var attr in js_exc){console.log(attr,js_exc[attr])}
 console.log('line info '+ $B.line_info)
 console.log(js_exc.info)
 }
-if(!js_exc.py_error){if($B.debug>0 && js_exc.info===undefined){console.log('erreur '+js_exc+' dans module '+$B.line_info)
+if(!js_exc.py_error){if($B.debug>0 && js_exc.info===undefined){
 if($B.line_info!==undefined){var mod_name=$B.line_info[1]
 var module=$B.modules[mod_name]
-console.log('module '+mod_name+' caller '+module.caller)
 if(module){if(module.caller!==undefined){
 $B.line_info=module.caller
 var mod_name=$B.line_info[1]

@@ -489,7 +489,7 @@ $BRGeneratorDict.send = function(self, value){
     return $BRGeneratorDict.__next__(self)
 }
 
-$BRGeneratorDict.$$throw = function(self, value){
+$BRGeneratorDict.throw = function(self, value){
     if(_b_.isinstance(value,_b_.type)) value=value()
     self.sent_value = {__class__:$B.$GeneratorSendError,err:value}
     return $BRGeneratorDict.__next__(self)
