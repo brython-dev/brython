@@ -126,7 +126,6 @@ $B.genNode = function(data, parent){
             res.data += 'var err = new Error("break");'
             res.data += 'err.__class__=__BRYTHON__.GeneratorBreak;throw err;'
             res.is_break = true
-            //console.log('res '+res)
         }
         res.has_child = this.has_child
         res.is_cond = this.is_cond
@@ -216,13 +215,11 @@ function clear_ns(iter_id){
 
 $BRGeneratorDict.__next__ = function(self){
 
-    // builtins will be needed to eval() the function
     var _b_ = $B.builtins
-    //for(var $py_builtin in _b_) eval("var "+$py_builtin+"=_b_[$py_builtin]")
     var $s=[]
     for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
     eval($s.join(';'))
- 
+
     // Inject global variables in local namespace
     for(var $attr in $B.vars[self.module]){
         try{eval("var "+$attr+"=$B.vars[self.module][$attr]")}
@@ -297,15 +294,11 @@ $BRGeneratorDict.__next__ = function(self){
     
     var yielded_value=res[0], yield_rank=res[1]
     
-    //console.log(' yield '+res)
-    
     // If the generator exits at the same place as in the previous iteration,
     // we don't have to build a new function, so just return the yielded value
     if(yield_rank==self.yield_rank) return yielded_value
     
     self.yield_rank = yield_rank
-    
-    //console.log('--- yielded '+yielded_value)
     
     // Get node where yield was thrown
     var exit_node = self.func_root.yields[yield_rank]
@@ -455,10 +448,7 @@ $BRGeneratorDict.__next__ = function(self){
     catch(err){console.log('error '+err+'\n'+next_src)}
     
     //self._next = eval(self.func_name)
-    self._next = __BRYTHON__.generators[self.iter_id]    
-    
-    //console.log('new _next\n'+self._next)
-    //if(self.func_name=="$foo"){console.log('after yielding '+yielded_value+'\n'+self._next)}
+    self._next = __BRYTHON__.generators[self.iter_id]
         
     // Return the yielded value
     return yielded_value

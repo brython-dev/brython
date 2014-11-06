@@ -73,8 +73,7 @@ function clone(obj){var res=new Object()
 for(var attr in obj){res[attr]=obj[attr]}
 return res
 }
-function $_SyntaxError(C,msg,indent){console.log('-- syntax error '+C+' '+msg)
-var ctx_node=C
+function $_SyntaxError(C,msg,indent){var ctx_node=C
 while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node
 var module=tree_node.module
@@ -89,8 +88,7 @@ $B.$SyntaxError(module,'invalid syntax',$pos)
 var $first_op_letter=[],$obj={}
 for(var $op in $operators)$obj[$op.charAt(0)]=1
 for(var $attr in $obj)$first_op_letter.push($attr)
-function $Node(type){
-this.type=type
+function $Node(type){this.type=type
 this.children=[]
 this.yield_atoms=[]
 this.add=function(child){this.children.push(child)
@@ -245,8 +243,7 @@ if(assigned.type=='id' && check_unbound){$B.bound[scope.id][assigned.value]=true
 var scope=$get_scope(this)
 if(scope.ntype=='def' ||scope.ntype=='generator'){$check_unbound(assigned,scope,assigned.value)
 }}else if(assigned.type=='call'){$_SyntaxError(C,["can't assign to function call"])
-}}}else if(C.type=='assign'){
-for(var i=0;i<C.tree.length;i++){var assigned=C.tree[i].tree[0]
+}}}else if(C.type=='assign'){for(var i=0;i<C.tree.length;i++){var assigned=C.tree[i].tree[0]
 if(assigned.type=='id'){if(scope.ntype=='def' ||scope.ntype=='generator'){$check_unbound(assigned,scope,assigned.value)
 }
 $B.bound[scope.id][assigned.value]=true
@@ -409,8 +406,7 @@ function is_simple(elt){return(elt.type=='expr' &&
 }
 var exprs=[]
 if(left.tree.length==1){var left_seq=left,args=[],ix=0
-while(left_seq.value.type=='sub' && left_seq.tree.length==1){
-if(is_simple(left_seq.tree[0])){args.push('['+left_seq.tree[0].to_js()+']')
+while(left_seq.value.type=='sub' && left_seq.tree.length==1){if(is_simple(left_seq.tree[0])){args.push('['+left_seq.tree[0].to_js()+']')
 }else{exprs.push('var $temp_ix'+$loop_num+'_'+ix+'='+left_seq.tree[0].to_js())
 args.push('[$temp_ix'+$loop_num+'_'+ix+']')
 left_seq.tree[0]={type:'id',to_js:(function(rank){return function(){return '$temp_ix'+$loop_num+'_'+rank}})(ix)
@@ -1131,8 +1127,7 @@ node.children=[]
 node.add(def_func_node)
 var ret_node=new $Node()
 var txt=')('
-if(this.type=='def'){txt+=enclosing.join(',')
-}
+if(this.type=='def'){txt+=enclosing.join(',')}
 new $NodeJSCtx(ret_node,txt+')')
 node.parent.insert(rank+1,ret_node)
 var offset=2
@@ -1516,8 +1511,7 @@ if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
 var qname=package+'.'+mod_name
 res +='__BRYTHON__.$import("'+qname+'","'+parent_module+'");'
 var _sn=scope.ntype
-if('def'==_sn ||'class'==_sn ||'module'==_sn){
-res +='var '
+if('def'==_sn ||'class'==_sn ||'module'==_sn){res +='var '
 }
 var alias=this.aliases[this.names[i]]||this.names[i]
 res +=alias
@@ -1722,8 +1716,7 @@ scope.var2node[value]=[this]
 }else{scope.var2node[value].push(this)
 }}}
 this.to_js=function(arg){var val=this.value
-switch(val){
-case 'eval':
+switch(val){case 'eval':
 val='$'+val
 break
 case 'locals':
@@ -1753,8 +1746,7 @@ var bound_before=$get_node(this).bound_before
 if(bound_before && !this.bound){if(bound_before.indexOf(val)>-1){found.push(scope)}}else{if($B.bound[scope.id][val]){found.push(scope)}}}else{if($B.bound[scope.id][val]){found.push(scope)}}
 if(scope.parent_block){scope=scope.parent_block}
 else{break}}
-if(found.length>0){if(found.length>1 && found[0].C){
-if(found[0].C.tree[0].type=='class' && !this.bound){var bound_before=$get_node(this).bound_before,res
+if(found.length>0){if(found.length>1 && found[0].C){if(found[0].C.tree[0].type=='class' && !this.bound){var bound_before=$get_node(this).bound_before,res
 if(bound_before){if(bound_before.indexOf(val)>-1){res='__BRYTHON__.vars["'+found[0].id+'"]'
 }else{res='__BRYTHON__.vars["'+found[1].id+'"]'
 }
@@ -1788,22 +1780,7 @@ return res
 }else{
 this.unknown_binding=true
 return '__BRYTHON__.$search("'+val+'","'+gs.id+'")'
-}
-if(scope.ntype=='class' && this.in_class){
-return this.in_class
-}
-if(scope.ntype==='class' && !this.is_left){
-var parent=this.parent
-while(parent){parent=parent.parent}
-if(this.parent.type==='expr' && this.parent.parent.type=='call_arg'){
-if(this.parent.parent.tree[0].type=='kwarg'){return val+$to_js(this.tree,'')
-}}
-return '($class["'+val+'"] !==undefined ? $class["'+val+'"] : '+val+')'
-}
-if($B.bound[scope.id]&& $B.bound[scope.id][val]){val='__BRYTHON__.vars["__main__"]["'+val+'"]'}
-var res=val+$to_js(this.tree,'')
-return res
-}}
+}}}
 function $ImaginaryCtx(C,value){this.type='imaginary'
 this.value=value
 this.toString=function(){return 'imaginary '+this.value}
@@ -2915,8 +2892,7 @@ C.tree=[]
 C.closed=true
 return C
 case 'dict':
-if(C.tree.length%2===0){
-C.items=C.tree
+if(C.tree.length%2===0){C.items=C.tree
 C.tree=[]
 C.closed=true
 return C
@@ -3989,8 +3965,7 @@ C=$transition(C,'id',name)
 name=""
 continue
 }}
-if(car=="."){
-if(pos<src.length-1 && /^\d$/.test(src.charAt(pos+1))){
+if(car=="."){if(pos<src.length-1 && /^\d$/.test(src.charAt(pos+1))){
 var j=pos+1
 while(j<src.length && src.charAt(j).search(/\d/)>-1){j++}
 C=$transition(C,'float','0'+src.substr(pos,j-pos))
@@ -4128,8 +4103,7 @@ var src=src.replace(/\r\n/gm,'\n')
 var $n=0
 var _src=src.charAt(0)
 var _src_length=src.length
-while(_src_length>$n &&(_src=="\n" ||_src=="\r")){
-$n++
+while(_src_length>$n &&(_src=="\n" ||_src=="\r")){$n++
 _src=src.charAt($n)
 }
 src=src.substr($n)
@@ -5157,8 +5131,7 @@ function clear_ns(iter_id){delete $B.vars[iter_id]
 delete $B.modules[iter_id]
 delete $B.bound[iter_id]
 }
-$BRGeneratorDict.__next__=function(self){
-var _b_=$B.builtins
+$BRGeneratorDict.__next__=function(self){var _b_=$B.builtins
 var $s=[]
 for(var $b in _b_)$s.push('var ' + $b +'=_b_["'+$b+'"]')
 eval($s.join(';'))
