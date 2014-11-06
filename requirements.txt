@@ -11,3 +11,7 @@ pep8
 
 # http://legacy.python.org/dev/peps/pep-0257 https://github.com/GreenSteam/pep257
 pep257
+
+
+# MkDocs Markdown-to-HTML5 Documentation used for readthedocs.org mkdocs.org
+mkdocs
