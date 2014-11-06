@@ -46,4 +46,4 @@ _codes=[]
 for _num, _code in errorcode.items():
     _codes.append('%s=%s' % (_code, _num))
 
-eval(';'.join(_codes))
+exec(';'.join(_codes))
