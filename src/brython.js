@@ -4597,9 +4597,7 @@ method.__code__={'__class__': $B.CodeDict}
 method.__doc__=res.__doc__ ||''
 method.im_class=klass
 return method
-}
-}else{
-}}
+}}}
 function $instance_creator(klass){
 return function(){var new_func=null,init_func=null,obj
 if(klass.__bases__.length==1 && klass.__new__==undefined){obj={__class__:klass}}else{try{new_func=_b_.getattr(klass,'__new__')
@@ -4709,8 +4707,7 @@ case 'boolean':
 return $B.$BoolDict
 case 'object':
 if(obj.constructor===Array)return _b_.list.$dict
-}
-}
+}}
 return klass
 }
 $B.$mkdict=function(glob,loc){var res={}
@@ -5362,16 +5359,6 @@ ascii.__code__={}
 ascii.__code__.co_argcount=1
 ascii.__code__.co_consts=[]
 ascii.__code__.co_varnames=['obj']
-function assert_raises(){var $ns=$B.$MakeArgs('assert_raises',arguments,['exc','func'],[],'args','kw')
-var args=$ns['args']
-try{$ns['func'].apply(this,args)}
-catch(err){if(err.name!==$ns['exc']){throw AssertionError(
-"exception raised '"+err.name+"', expected '"+$ns['exc']+"'")
-}
-return
-}
-throw AssertionError("no exception raised, expected '"+$ns['exc']+"'")
-}
 function $builtin_base_convert_helper(obj,base){var value
 if(isinstance(obj,_b_.int)){value=obj
 }else if(obj.__index__ !==undefined){value=obj.__index__()
@@ -5493,8 +5480,7 @@ delattr.__code__.co_varnames=['object','name']
 function dir(obj){if(obj===null){
 var mod_name=arguments[1]
 var res=[],$globals=$B.vars[mod_name]
-for(var attr in $globals){
-if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
+for(var attr in $globals){if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
 continue
 }
 res.push(attr)
@@ -5552,8 +5538,7 @@ enumerate.__code__={}
 enumerate.__code__.co_argcount=2
 enumerate.__code__.co_consts=[]
 enumerate.__code__.co_varnames=['iterable']
-function $eval(src,_globals,locals){
-var is_exec=arguments[3]=='exec'
+function $eval(src,_globals,locals){var is_exec=arguments[3]=='exec'
 if($B.exec_stack.length==0){$B.exec_stack=['__main__']}
 var env=$B.exec_stack[$B.exec_stack.length-1]
 if(is_exec && _globals===undefined){var mod_name=env
@@ -6466,8 +6451,7 @@ return -other
 var $EllipsisDict={__class__:$B.$type,__name__:'Ellipsis',}
 $EllipsisDict.__mro__=[$ObjectDict]
 $EllipsisDict.$factory=$EllipsisDict
-var Ellipsis={__bool__ : function(){return False},__class__ : $EllipsisDict,
-__repr__ : function(){return 'Ellipsis'},__str__ : function(){return 'Ellipsis'},toString : function(){return 'Ellipsis'}}
+var Ellipsis={__bool__ : function(){return False},__class__ : $EllipsisDict,__repr__ : function(){return 'Ellipsis'},__str__ : function(){return 'Ellipsis'},toString : function(){return 'Ellipsis'}}
 for(var $key in $B.$comps){
 switch($B.$comps[$key]){case 'ge':
 case 'gt':
@@ -7396,7 +7380,9 @@ mod_path=mod_name.replace(/\./g,'/')
 var py_paths=[$B.brython_path+'Lib/site-packages/'+mod_path+'.py',$B.brython_path+'Lib/site-packages/'+mod_path+'/__init__.py']
 for(var i=0;i<py_paths.length;i++){var py_mod=import_py(module,py_paths[i],package)
 if(py_mod!==null){console.log(py_paths[i].substr(py_paths[i].length-12))
-if(py_paths[i].substr(py_paths[i].length-12)=='/__init__.py'){py_mod.__package__=mod_name
+if(py_paths[i].substr(py_paths[i].length-12)=='/__init__.py'){
+$B.imported[mod_name].$package=true
+py_mod.__package__=mod_name 
 }
 return py_mod
 }}
@@ -8375,26 +8361,37 @@ if(arg<0)pos=items.length+pos
 if(pos>=0 && pos<items.length)return items[pos]
 throw _b_.IndexError('list index out of range')
 }
-if(isinstance(arg,_b_.slice)){var step=arg.step===None ? 1 : arg.step
-if(step>0){var start=arg.start===None ? 0 : arg.start
-var stop=arg.stop===None ? self.length : arg.stop
-}else{var start=arg.start===None ? self.length-1 : arg.start
-var stop=arg.stop===None ? 0 : arg.stop
+if(isinstance(arg,_b_.slice)){
+var step=arg.step===None ? 1 : arg.step
+if(step==0){throw Error('ValueError : slice step cannot be zero')
 }
-if(start<0)start=_b_.int(self.length+start)
-if(stop<0)stop=self.length+stop
+var length=self.length
+var start,end
+if(arg.start===None){start=step<0 ? length-1 : 0
+}else{
+start=arg.start
+if(start < 0)start +=length
+if(start < 0)start=step<0 ? -1 : 0
+if(start >=length)start=step<0 ? length-1 : length
+}
+if(arg.stop===None){stop=step<0 ? -1 : length
+}else{
+stop=arg.stop
+if(stop < 0)stop +=length
+if(stop < 0)stop=step<0 ? -1 : 0
+if(stop >=length)stop=step<0 ? length-1 : length
+}
 var res=[],i=null,items=self.valueOf()
-if(step>0){if(stop<=start)return res
-for(var i=start;i<stop;i+=step){if(items[i]!==undefined){res.push(items[i])}
-else{res.push(None)}}
+if(step > 0){if(stop <=start)return res
+for(var i=start;i<stop;i+=step){res.push(items[i])
+}
 return res
 }else{
-if(stop>start){return res}
-else{
-for(var i=start;i>=stop;i+=step){if(items[i]!==undefined){res.push(items[i])}
-else{res.push(None)}}
+if(stop > start)return res
+for(var i=start;i>stop;i+=step){res.push(items[i])
+}
 return res
-}}}
+}}
 if(isinstance(arg,_b_.bool)){return $ListDict.__getitem__(self,_b_.int(arg))
 }
 throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
@@ -9454,19 +9451,24 @@ str=str.replace(re,"\\"+specials.charAt(i))
 }
 return str
 }
-$StringDict.replace=function(self,old,_new,count){if(count!==undefined){if(!isinstance(count,[_b_.int,_b_.float])){throw __b_.TypeError(
-"'"+str(count.__class__)+"' object cannot be interpreted as an integer")
-}
-var re=new RegExp($re_escape(old),'g')
+$StringDict.replace=function(self,old,_new,count){
+if(count===undefined){count=-1
+}else{
+if(!isinstance(count,[_b_.int,_b_.float])){throw _b_.TypeError("'" + str(count.__class__)+ "' object cannot be interpreted as an integer")
+}else if(isinstance(count,_b_.float)){throw _b_.TypeError("integer argument expected, got float")
+}}
 var res=self.valueOf()
-while(count>0){if(self.search(re)==-1){return res}
-res=res.replace(re,_new)
+var pos=-1
+if(count < 0)count=res.length
+while(count > 0){pos=res.indexOf(old,pos)
+if(pos < 0)
+break
+res=res.substr(0,pos)+ _new + res.substr(pos + old.length)
+pos=pos + _new.length
 count--
 }
 return res
-}else{var re=new RegExp($re_escape(old),"g")
-return self.replace(re,_new)
-}}
+}
 $StringDict.rfind=function(self){
 var start=0,end=self.length
 var $ns=$B.$MakeArgs("$StringDict.find",arguments,['self','sub'],['start','end'],null,null)
