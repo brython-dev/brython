@@ -109,4 +109,3 @@ def show(prefix=''):
             link.target = "_blank"
         _banner <= cell
     return qs_lang, language
-
