@@ -100,8 +100,6 @@ _b_.type = function(name,bases,cl_dict){
         class_dict[attr] = val
     }
 
-    //class_dict.__setattr__ = function(attr,value){class_dict[attr]=value}
-
     // method resolution order
     // copied from http://code.activestate.com/recipes/577748-calculate-the-mro-of-a-class/
     // by Steve d'Aprano
@@ -200,50 +198,38 @@ $B.$type.__getattribute__=function(klass,attr){
     // we call $type.__getattribute__(obj.$dict,attr)
     switch(attr) {
       case '__call__':
-        //if(attr==='__call__') 
         return $instance_creator(klass)
       case '__eq__':
-        //if(attr==='__eq__'){
         return function(other){return klass.$factory===other}
       case '__ne__':
-        //if(attr==='__ne__'){
         return function(other){return klass.$factory!==other}
       case '__repr__':
-        //if(attr==='__repr__'){
         return function(){return "<class '"+klass.__name__+"'>"}
       case '__str__':
-        //if(attr==='__str__'){
         return function(){return "<class '"+klass.__name__+"'>"}
       case '__class__':
-        //if(attr==='__class__')
         return klass.__class__.$factory
       case '__doc__':
-        //if(attr==='__doc__') 
         return klass.__doc__
       case '__setattr__':
-        //if(attr==='__setattr__'){
         if(klass['__setattr__']!==undefined) return klass['__setattr__']
         return function(key,value){
             if(typeof value=='function'){
                 klass[key]=value //function(){return value.apply(null,arguments)}
-                //klass[key].$type = 'instancemethod' // for attribute resolution
             }else{
                 klass[key]=value
             }
         }
       case '__delattr__':
-        //if(attr==='__delattr__'){
         if(klass['__delattr__']!==undefined) return klass['__delattr__']
         return function(key){delete klass[key]}
     }//switch
 
     var res = klass[attr],is_class=true
-    //if(attr=='__init__'){console.log(klass.__name__+' direct attr '+attr+' '+res)}
     if(res===undefined){
         // search in classes hierarchy, following method resolution order
         var mro = klass.__mro__
         if(mro===undefined){console.log('mro undefined for class '+klass+' name '+klass.__name__)}
-        //if(attr=='register'){console.log('mro '+mro+' is class '+klass.is_class)}
         for(var i=0;i<mro.length;i++){
             var v=mro[i][attr]
             if(v!==undefined){
@@ -265,7 +251,7 @@ $B.$type.__getattribute__=function(klass,attr){
             }
         }
     }
-    //if(attr=='__init__'){console.log(klass.__name__+' attr '+attr+' step 2 '+res)}
+
     if(res!==undefined){
 
         // If the attribute is a property, return it
@@ -278,8 +264,7 @@ $B.$type.__getattribute__=function(klass,attr){
 
         if(get_func === undefined) return res
         
-        //if(get_func!==undefined){ // descriptor
-            // __new__ is a static method
+        // __new__ is a static method
         if(attr=='__new__'){res.$type='staticmethod'}
         var res1 = get_func.apply(null,[res,$B.builtins.None,klass])
         var args
@@ -291,7 +276,6 @@ $B.$type.__getattribute__=function(klass,attr){
                 case undefined:
                 case 'function':
                 case 'instancemethod':
-                    //if(res.$type===undefined || res.$type==='function' || res.$type==='instancemethod'){
                     // function called from a class
                     args = []
                     __repr__ = __str__ = function(){
@@ -299,7 +283,6 @@ $B.$type.__getattribute__=function(klass,attr){
                     }
                     break;
                 case 'classmethod':
-                    //}else if(res.$type==='classmethod'){
                     // class method : called with the class as first argument
                     args = [klass.$factory]
                     __self__ = klass
@@ -310,7 +293,6 @@ $B.$type.__getattribute__=function(klass,attr){
                     }
                     break;
                 case 'staticmethod':
-                    //}else if(res.$type==='staticmethod'){
                     // static methods have no __self__ or __func__
                     args = []
                     __repr__ = __str__ = function(){
@@ -325,7 +307,6 @@ $B.$type.__getattribute__=function(klass,attr){
                     return function(){
                         // class method
                         // make a local copy of initial args
-                        //console.log('function '+attr+' of '+klass.__name__+' '+res)
                         var local_args = initial_args.slice()
                         for(var i=0;i < arguments.length;i++){
                             local_args.push(arguments[i])
@@ -349,12 +330,6 @@ $B.$type.__getattribute__=function(klass,attr){
                 method.im_class = klass
                 return method
         }
-        //}else{
-        //    return res
-        //}
-    }else{
-        // search __getattr__
-        //throw AttributeError("type object '"+klass.__name__+"' has no attribute '"+attr+"'")
     }
 }
 

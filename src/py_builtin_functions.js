@@ -89,23 +89,6 @@ ascii.__code__.co_argcount=1
 ascii.__code__.co_consts=[]
 ascii.__code__.co_varnames=['obj']
 
-
-// not in Python but used for tests until unittest works
-// "assert_raises(exception,function,*args)" becomes "if condition: pass else: raise AssertionError"
-function assert_raises(){
-    var $ns=$B.$MakeArgs('assert_raises',arguments,['exc','func'],[],'args','kw')
-    var args = $ns['args']
-    try{$ns['func'].apply(this,args)}
-    catch(err){
-        if(err.name!==$ns['exc']){
-            throw AssertionError(
-                "exception raised '"+err.name+"', expected '"+$ns['exc']+"'")
-        }
-        return
-    }
-    throw AssertionError("no exception raised, expected '"+$ns['exc']+"'")
-}
-
 // used by bin, hex and oct functions
 function $builtin_base_convert_helper(obj, base) {
   var value;
@@ -160,11 +143,9 @@ function bool(obj){ // return true or false
         return obj
       case 'number':
       case 'string':
-        //if(typeof obj==="number" || typeof obj==="string"){
         if(obj) return true
         return false
       default:
-        //}else{
         try{return getattr(obj,'__bool__')()}
         catch(err){
             $B.$pop_exc()
@@ -292,7 +273,6 @@ function dir(obj){
         var mod_name=arguments[1]
         var res = [],$globals = $B.vars[mod_name]
         for(var attr in $globals){
-            //if(attr.charAt(0)=='$' && attr.substr(0,2)!='$$'){
             if(attr.charAt(0)=='$' && attr.charAt(1) != '$') {
                 // exclude internal attributes set by Brython
                 continue
@@ -387,7 +367,6 @@ enumerate.__code__.co_varnames=['iterable']
 
 //eval() (built in function)
 function $eval(src, _globals, locals){
-    //console.log('exec stack '+$B.exec_stack)
     var is_exec = arguments[3]=='exec'
     if($B.exec_stack.length==0){$B.exec_stack=['__main__']}
     var env = $B.exec_stack[$B.exec_stack.length-1]
@@ -630,15 +609,11 @@ function getattr(obj,attr,_default){
     throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")
 }
 
-//isn't taken care of by the for loop at the bottom of this file?
-//getattr.__name__ = 'getattr'
-
 getattr.__doc__="getattr(object, name[, default]) -> value\n\nGet a named attribute from an object; getattr(x, 'y') is equivalent to x.y.\nWhen a default argument is given, it is returned when the attribute doesn't\nexist; without it, an exception is raised in that case."
 getattr.__code__={}
 getattr.__code__.co_argcount=1
 getattr.__code__.co_consts=[]
 getattr.__code__.co_varnames=['value']
-
 
 //globals() (built in function)
 function globals(module){
@@ -841,7 +816,6 @@ function issubclass(klass,classinfo){
       return klass.$dict.__mro__.indexOf(classinfo.$dict)>-1    
     }
 
-    //console.log('error in is_subclass '+klass.$dict.__name+' classinfo '+_b_.str(classinfo))
     throw _b_.TypeError("issubclass() arg 2 must be a class or tuple of classes")
 }
 
@@ -1870,20 +1844,17 @@ $EllipsisDict.$factory = $EllipsisDict
 var Ellipsis = {
     __bool__ : function(){return False},
     __class__ : $EllipsisDict,
-    //__hash__ : function(){return 0},
     __repr__ : function(){return 'Ellipsis'},
     __str__ : function(){return 'Ellipsis'},
     toString : function(){return 'Ellipsis'}
 }
 
-//var $comp_ops = ['ge','gt','le','lt']
 for(var $key in $B.$comps){ // Ellipsis is not orderable with any type
     switch($B.$comps[$key]) {
       case 'ge':
       case 'gt':
       case 'le':
       case 'lt':
-        //if($comp_ops.indexOf($B.$comps[$key])>-1){
         Ellipsis['__'+$B.$comps[$key]+'__']=(function(k){
             return function(other){
             throw _b_.TypeError("unorderable types: ellipsis() "+k+" "+
@@ -1913,14 +1884,12 @@ var None = {
     toString : function(){return 'None'}
 }
 
-//var $comp_ops = ['ge','gt','le','lt']
 for(var $key in $B.$comps){ // None is not orderable with any type
     switch($key) {
       case 'ge':
       case 'gt':
       case 'le':
       case 'lt':
-        //if($comp_ops.indexOf($B.$comps[$key])>-1){
         None['__'+$B.$comps[$key]+'__']=(function(k){
             return function(other){
             throw _b_.TypeError("unorderable types: NoneType() "+k+" "+
@@ -2111,7 +2080,6 @@ $B.exception = function(js_exc){
             if($B.line_info!==undefined){
                 var mod_name = $B.line_info[1]
                 var module = $B.modules[mod_name]
-                //console.log('module '+mod_name+' caller '+module.caller)
                 if(module){
                     if(module.caller!==undefined){
                         // for list comprehension and the likes, replace
