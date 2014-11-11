@@ -326,6 +326,11 @@ _b_.dict = dict
 $ObjDictDict = {__class__:$B.$type,__name__:'obj_dict'}
 $ObjDictDict.__mro__ = [$ObjDictDict, $DictDict, $ObjectDict]
 
+$ObjDictDict.__delitem__ = function(self, key){
+    $DictDict.__delitem__(self, key)
+    delete self.$obj[key]
+}
+
 $ObjDictDict.__setitem__ = function(self, key, value){
     $DictDict.__setitem__(self, key, value)
     self.$obj[key] = value
