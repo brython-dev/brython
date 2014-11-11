@@ -811,7 +811,6 @@ DOMNode.reset = function(self){ // for FORM
 DOMNode.style = function(self){
     // set attribute "float" for cross-browser compatibility
     self.elt.style.float = self.elt.style.cssFloat || self.style.styleFloat
-    console.log('get style')
     return $B.JSObject(self.elt.style)
 }
 
@@ -844,6 +843,9 @@ DOMNode.set_html = function(self,value){
 }
 
 DOMNode.set_style = function(self,style){ // style is a dict
+    if(!_b_.isinstance(style, _b_.dict)){
+        throw TypeError('style must be dict, not '+$B.get_class(style).__name__)
+    }
     for(var i=0;i<style.$keys.length;i++){
         var key = style.$keys[i],value=style.$values[i]
         if(key.toLowerCase()==='float'){

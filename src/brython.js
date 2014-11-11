@@ -10335,7 +10335,6 @@ DOMNode.reset=function(self){
 return function(){self.elt.reset()}}
 DOMNode.style=function(self){
 self.elt.style.float=self.elt.style.cssFloat ||self.style.styleFloat
-console.log('get style')
 return $B.JSObject(self.elt.style)
 }
 DOMNode.setSelectionRange=function(self){
@@ -10354,6 +10353,8 @@ DOMNode.set_class_name=function(self,arg){self.elt.setAttribute('class',arg)
 DOMNode.set_html=function(self,value){self.elt.innerHTML=str(value)
 }
 DOMNode.set_style=function(self,style){
+if(!_b_.isinstance(style,_b_.dict)){throw TypeError('style must be dict, not '+$B.get_class(style).__name__)
+}
 for(var i=0;i<style.$keys.length;i++){var key=style.$keys[i],value=style.$values[i]
 if(key.toLowerCase()==='float'){self.elt.style.cssFloat=value
 self.elt.style.styleFloat=value
