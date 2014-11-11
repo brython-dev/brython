@@ -706,8 +706,7 @@ return 'getattr('+$to_js(this.tree)+',"__invert__")()'
 if(this.tree.length>-1){if(__BRYTHON__.$blocking_function_names){var _func_name=this.func.to_js()
 if(_func_name.indexOf(__BRYTHON__.$blocking_function_names)> -1){console.log("candidate blocking function.. ",_func_name)
 }}
-if(this.func.type=='id'){if(this.func.value=='fxn'){console.log('to js '+this.func.to_js())}
-var res='('+this.func.to_js()+'.$is_func ? '
+if(this.func.type=='id'){var res='('+this.func.to_js()+'.$is_func ? '
 res +=this.func.to_js()+' : '
 res +='getattr('+this.func.to_js()+',"__call__"))('
 res +=(this.tree.length>0 ? $to_js(this.tree): '')
@@ -2398,7 +2397,7 @@ this.parent=C
 C.tree.push(this)
 this.tree=[]
 this.expect='as'
-this.toString=function(){return '(with) '}
+this.toString=function(){return '(with) '+this.tree}
 this.set_alias=function(arg){var scope=$get_scope(this)
 this.tree[this.tree.length-1].alias=arg
 if(scope.ntype !=='module'){
@@ -2406,6 +2405,19 @@ scope.C.tree[0].locals.push(arg)
 }}
 this.transform=function(node,rank){if(this.transformed)return 
 if(this.tree[0].alias===null){this.tree[0].alias='$temp'}
+if(this.tree[0].type=='expr' && 
+this.tree[0].tree[0].type=='list_or_tuple'){if(this.tree[1].type!='expr' ||
+this.tree[1].tree[0].type!='list_or_tuple'){$_SyntaxError(C)
+}
+if(this.tree[0].tree[0].tree.length!=this.tree[1].tree[0].tree.length){$_SyntaxError(C,['wrong number of alias'])
+}
+var ids=this.tree[0].tree[0].tree
+var alias=this.tree[1].tree[0].tree
+this.tree.shift()
+this.tree.shift()
+for(var i=ids.length-1;i>=0;i--){ids[i].alias=alias[i].value
+this.tree.splice(0,0,ids[i])
+}}
 var new_node=new $Node()
 new $NodeJSCtx(new_node,'catch($err'+$loop_num+')')
 var fbody=new $Node()
@@ -2422,6 +2434,15 @@ var fbody=new $Node()
 new $NodeJSCtx(fbody,'$ctx_manager_exit(None,None,None)')
 new_node.add(fbody)
 node.parent.insert(rank+2,new_node)
+if(this.tree.length>1){var nw=new $Node()
+var ctx=new $NodeCtx(nw)
+nw.parent=node
+var wc=new $WithCtx(ctx)
+wc.tree=this.tree.slice(1)
+for(var i=0;i<node.children.length;i++){nw.add(node.children[i])
+}
+node.children=[nw]
+}
 this.transformed=true
 }
 this.to_js=function(){var res='var $ctx_manager='+this.tree[0].to_js()
@@ -3741,9 +3762,8 @@ return C
 return $transition(C.parent,token,arguments[2])
 case 'with':
 switch(token){case 'id':
-if(C.expect==='id'){new $TargetCtx(C,arguments[2])
-C.expect='as'
-return C
+if(C.expect==='id'){C.expect='as'
+return $transition(new $AbstractExprCtx(C,false),token,arguments[2])
 }
 if(C.expect==='alias'){if(C.parenth!==undefined){C.expect=','}
 else{C.expect=':'}
@@ -3752,9 +3772,7 @@ return C
 }
 break
 case 'as':
-if(C.expect==='as'
-&& C.has_alias===undefined 
-&& C.tree.length===1){
+if(C.expect==='as'){
 C.expect='alias'
 C.has_alias=true
 return C
@@ -3770,6 +3788,8 @@ break
 case '(':
 if(C.expect==='id' && C.tree.length===0){C.parenth=true
 return C
+}else if(C.expect=='alias'){C.expect=':'
+return $transition(new $AbstractExprCtx(C,false),token)
 }
 break
 case ')':
@@ -3780,6 +3800,8 @@ break
 case ',':
 if(C.parenth!==undefined && C.has_alias===undefined &&
 (C.expect==',' ||C.expect=='as')){C.expect='id'
+return C
+}else if(C.expect==':'){C.expect='id'
 return C
 }
 break
@@ -7176,7 +7198,7 @@ $B.JSConstructor=JSConstructor
 ;(function($B){$B.stdlib={}
 var js=['builtins','dis','hashlib','javascript','json','marshal','math','modulefinder','time','_ajax','_browser','_html','_io','_jsre','_multiprocessing','_os','_posixsubprocess','_svg','_sys','_timer','_websocket','__random','aes','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','md5','pbkdf2','rabbit-legacy','rabbit','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pylist=['abc','antigravity','atexit','base64','binascii','bisect','calendar','codecs','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','imp','inspect','io','itertools','keyword','linecache','locale','markdown2','numbers','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pyre','queue','random','re','reprlib','select','shutil','signal','site','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','textwrap','this','threading','token','tokenize','traceback','types','VFS_import','warnings','weakref','webbrowser','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','collections.abc','encodings.aliases','encodings.utf_8','html.entities','html.parser','http.cookies','importlib.abc','importlib.machinery','importlib.util','importlib._bootstrap','logging.config','logging.handlers','multiprocessing.pool','multiprocessing.process','multiprocessing.util','multiprocessing.dummy.connection','pydoc_data.topics','site-packages.test_sp','test.pystone','test.regrtest','test.re_tests','test.support','test.test_int','test.test_re','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.util','unittest.__main__','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test._test_warnings','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','urllib.parse','urllib.request','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.NodeFilter','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.cElementTree','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.parsers.expat','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','xml.sax._exceptions']
+var pylist=['abc','antigravity','atexit','base64','binascii','bisect','calendar','codecs','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','imp','inspect','io','itertools','keyword','linecache','locale','markdown2','numbers','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pyre','queue','random','re','reprlib','select','shutil','signal','site','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','textwrap','this','threading','token','tokenize','traceback','types','VFS_import','warnings','weakref','webbrowser','zipfile','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','collections.abc','encodings.aliases','encodings.utf_8','html.entities','html.parser','http.cookies','importlib.abc','importlib.machinery','importlib.util','importlib._bootstrap','logging.config','logging.handlers','multiprocessing.pool','multiprocessing.process','multiprocessing.util','multiprocessing.dummy.connection','pydoc_data.topics','site-packages.test_sp','test.pystone','test.regrtest','test.re_tests','test.support','test.test_int','test.test_re','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.util','unittest.__main__','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test._test_warnings','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','urllib.parse','urllib.request','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.NodeFilter','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.cElementTree','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.parsers.expat','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','xml.sax._exceptions']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var pkglist=['browser','collections','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','test','ui','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]

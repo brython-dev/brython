@@ -1094,7 +1094,6 @@ function $CallCtx(context){
                  }
               }
               if(this.func.type=='id'){
-                  if(this.func.value=='fxn'){console.log('to js '+this.func.to_js())}
                   var res = '('+this.func.to_js()+'.$is_func ? '
                   res += this.func.to_js()+' : '
                   res += 'getattr('+this.func.to_js()+',"__call__"))('
@@ -3817,7 +3816,7 @@ function $WithCtx(context){
     context.tree.push(this)
     this.tree = []
     this.expect = 'as'
-    this.toString = function(){return '(with) '}
+    this.toString = function(){return '(with) '+this.tree}
     this.set_alias = function(arg){
         var scope = $get_scope(this)
         this.tree[this.tree.length-1].alias = arg
@@ -3827,8 +3826,32 @@ function $WithCtx(context){
         }
     }
     this.transform = function(node,rank){
+        
         if(this.transformed) return  // used if inside a for loop
         if(this.tree[0].alias===null){this.tree[0].alias = '$temp'}
+        
+        // Form "with (a,b,c) as (x,y,z)"
+        
+        if(this.tree[0].type=='expr' && 
+            this.tree[0].tree[0].type=='list_or_tuple'){
+            if(this.tree[1].type!='expr' ||
+                this.tree[1].tree[0].type!='list_or_tuple'){
+                    $_SyntaxError(context)
+            }
+            if(this.tree[0].tree[0].tree.length!=this.tree[1].tree[0].tree.length){
+                $_SyntaxError(context,['wrong number of alias'])
+            }
+            // this.tree[1] is a list of alias for items in this.tree[0]
+            var ids = this.tree[0].tree[0].tree
+            var alias = this.tree[1].tree[0].tree
+            this.tree.shift()
+            this.tree.shift()
+            for(var i=ids.length-1;i>=0;i--){
+                ids[i].alias = alias[i].value
+                this.tree.splice(0,0,ids[i])
+            }
+        }
+        
         var new_node = new $Node()
         new $NodeJSCtx(new_node,'catch($err'+$loop_num+')')
         var fbody = new $Node()
@@ -3845,6 +3868,28 @@ function $WithCtx(context){
         new $NodeJSCtx(fbody,'$ctx_manager_exit(None,None,None)')
         new_node.add(fbody)
         node.parent.insert(rank+2,new_node)
+        
+        // If there are other "with" clauses, create a new child
+        // For instance : 
+        //     with x as x1, y as y1:
+        //         ...
+        // becomes
+        //     with x as x1:
+        //         with y as y1:
+        //             ...
+        
+        if(this.tree.length>1){
+            var nw = new $Node()
+            var ctx = new $NodeCtx(nw)
+            nw.parent = node
+            var wc = new $WithCtx(ctx)
+            wc.tree = this.tree.slice(1)
+            for(var i=0;i<node.children.length;i++){
+                nw.add(node.children[i])
+            }
+            node.children = [nw]
+        }
+        
         this.transformed = true
     }
     this.to_js = function(){
@@ -5606,11 +5651,9 @@ function $transition(context,token){
       case 'with':
         switch(token) {
           case 'id':
-            //if(token==='id' && context.expect==='id'){
             if(context.expect==='id'){
-              new $TargetCtx(context,arguments[2])
-              context.expect='as'
-              return context
+              context.expect = 'as'
+              return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
             }
             if(context.expect==='alias'){
                if(context.parenth!==undefined){context.expect = ','}
@@ -5620,44 +5663,42 @@ function $transition(context,token){
             }
             break
           case 'as':
-            //}else if(token==='as' && context.expect==='as'
-            if(context.expect==='as'
-               && context.has_alias===undefined  // only one alias allowed
-               && context.tree.length===1){ // if aliased, must be the only exception
+            if(context.expect==='as'){ // if aliased, must be the only exception
                 context.expect = 'alias'
                 context.has_alias = true
                 return context
             }
             break
           case ':':
-            //}else if(token===':' && ['id','as',':'].indexOf(context.expect)>-1){
             switch(context.expect) {
               case 'id':
               case 'as':
               case ':':
-               //if (context.expect=='id' || context.expect=='as' || context.expect==':') {
                return $BodyCtx(context)
             }
             break
           case '(':
-            //}else if(token==='(' && context.expect==='id' && context.tree.length===0){
             if(context.expect==='id' && context.tree.length===0){
                context.parenth = true
                return context
+            }else if(context.expect=='alias'){
+               context.expect = ':'
+               return $transition(new $AbstractExprCtx(context,false),token)
             }
             break
           case ')':
-            //}else if(token===')' && [',','as'].indexOf(context.expect)>-1){
             if (context.expect == ',' || context.expect == 'as') {
                context.expect = ':'
                return context
             }
             break
           case ',':
-            //}else if(token===',' && context.parenth!==undefined &&
             if(context.parenth!==undefined && context.has_alias === undefined &&
               (context.expect == ',' || context.expect == 'as')) {
                 context.expect='id'
+                return context
+            }else if(context.expect==':'){
+                context.expect = 'id'
                 return context
             }
             break
