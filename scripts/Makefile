@@ -1,4 +1,4 @@
 NODEJS=nodejs
 
 compile:
-	$(NODEJS) node_bridge compile.py
+    $(NODEJS) node_bridge compile.py

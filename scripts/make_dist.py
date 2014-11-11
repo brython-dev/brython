@@ -17,7 +17,7 @@ try:
     import slimit
     minify = slimit.minify
 except ImportError:
-    minify = None
+    minify = slimit = None
 
 
 # path of parent directory
@@ -25,6 +25,7 @@ pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
 implementation = [3, 0, 0, 'final', 0]
+
 
 def custom_minify(src):
     _res, pos = '', 0
@@ -95,7 +96,7 @@ def custom_minify(src):
     return _res
 
 
-abs_path = lambda path: os.path.join(os.path.dirname(os.getcwd()), 'src', path)
+abs_path = lambda _pth: os.path.join(os.path.dirname(os.getcwd()), 'src', _pth)
 now = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
 
 
@@ -207,7 +208,8 @@ for fname in sources:
     src_size += len(src)
     try:
         res += minify(src)
-    except:
+    except Exception as error:
+        print(error)
         res += custom_minify(src)
 
 res = res.replace('context', 'C')
@@ -230,6 +232,7 @@ try:
     import make_VFS  # isort:skip
 except ImportError:
     print("Cannot find make_VFS, so we won't make py_VFS.js")
+    make_VFS = None
     sys.exit()
 
 make_VFS.process(os.path.join(pdir, 'src', 'py_VFS.js'))
@@ -248,11 +251,11 @@ name = 'Brython%s_site_mirror-%s' % (vname, now)
 dest_path = os.path.join(dest_dir, name)
 
 
-def is_valid(filename):
-    if filename.startswith('.'):
+def is_valid(filename_path):
+    if filename_path.startswith('.'):
         return False
-    for ext in ('bat', 'log', 'gz', 'pyc'):
-        if filename.lower().endswith('.%s' % ext):
+    for extension in ('bat', 'log', 'gz', 'pyc'):
+        if filename_path.lower().endswith('.%s' % extension):
             return False
     return True
 
@@ -304,10 +307,10 @@ dist3 = zipfile.ZipFile(dest_path + '.zip', mode='w',
                         compression=zipfile.ZIP_DEFLATED)
 
 
-def is_valid(filename):
-    if filename.startswith('.'):
+def is_valid(filename_path):
+    if filename_path.startswith('.'):
         return False
-    if not filename.lower().endswith('.js'):
+    if not filename_path.lower().endswith('.js'):
         return False
     return True
 
@@ -344,5 +347,6 @@ try:
         ou.write('%s\n' % first)
         ou.write('%s\n\n' % ('=' * len(first)))
         ou.write(input_changelog_data_string)
-except:
+except Exception as error:
+    print(error)
     print("Warning - no changelog file")

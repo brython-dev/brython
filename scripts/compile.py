@@ -10,7 +10,7 @@
 # which can be used with brython.
 
 
-#fixme  os.path.join doesn't work (ie, import posixpath as path, does not work)
+# fixme  os.path.join doesn't work (ie, import posixpath as path, does not work)
 def os_path_join(a, b):
     return "%s/%s" % (a, b)
 
@@ -31,18 +31,18 @@ class FileIO:
         pass
 
 
-def compile_file(root, _file):
-    print(("compiling %s" % os_path_join(root, _file)))
-    _fp = FileIO(os_path_join(root, _file), 'r')
+def compile_file(root, _filename):
+    print(("compiling %s" % os_path_join(root, _filename)))
+    _fp = FileIO(os_path_join(root, _filename), 'r')
     _src = _fp.read()
     _fp.close()
-    _js = __BRYTHON__.compile_python(_src, _file)  # lint:ok
+    _js = __BRYTHON__.compile_python(_src, _filename)  # lint:ok
     if _js is not None:
-        _fp1 = FileIO(os_path_join(root, _file.replace('.py', '.pyj')), 'w')
+        _fp1 = FileIO(os_path_join(root, _filename.replace('.py', '.pyj')), 'w')
         _fp1.write(_js)
         _fp1.close()
     else:
-        print(("error compiling %s" % os_path_join(root, _file)))
+        print(("error compiling %s" % os_path_join(root, _filename)))
 
 
 # fixme, todo: modify to os.walk once scope issue is fixed.
