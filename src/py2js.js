@@ -3274,7 +3274,7 @@ function $OpCtx(context,op){ // context is the left operand
                 var t0=this.tree[0].tree[0],t1=this.tree[1].tree[0]
                 if(t1.type=='int'){
                     if(t0.type=='int'){return t0.to_js()+this.op+t1.to_js()}
-                    else if(t0.type=='str'){return 'false'}
+                    else if(t0.type=='str'){return '__BRYTHON__.$TypeError("unorderable types: int() < str()")'}
                     else if(t0.type=='id'){
                         var res = 'typeof '+t0.to_js()+'=="number" ? '
                         res += t0.to_js()+this.op+t1.to_js()+' : '
@@ -3285,7 +3285,7 @@ function $OpCtx(context,op){ // context is the left operand
                 }
                 else if(t1.type=='str'){
                     if(t0.type=='str'){return t0.to_js()+this.op+t1.to_js()}
-                    else if(t0.type=='int'){return 'false'}
+                    else if(t0.type=='int'){return '__BRYTHON__.$TypeError("unorderable types: str() < int()")'}
                     else if(t0.type=='id'){
                         var res = 'typeof '+t0.to_js()+'=="string" ? '
                         res += t0.to_js()+this.op+t1.to_js()+' : '
@@ -3294,8 +3294,7 @@ function $OpCtx(context,op){ // context is the left operand
                         return res
                     }
                 }else if(t1.type=='id'){
-                    if(t0.type=='str'||t0.type=='int'){return t0.to_js()+this.op+t1.to_js()}
-                    else if(t0.type=='id'){
+                    if(t0.type=='id'){
                         var res = 'typeof '+t0.to_js()+'!="object" && '
                         res += 'typeof '+t0.to_js()+'==typeof '+t1.to_js()
                         res += ' ? '+t0.to_js()+this.op+t1.to_js()+' : '

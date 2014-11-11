@@ -2195,6 +2195,9 @@ $B.$NameError = function(name){
     // $globals[name] !== undefined ? $globals[name] : __BRYTHON__.$NameError(name)
     throw _b_.NameError(name)
 }
+$B.$TypeError = function(msg){
+    throw _b_.TypeError(msg)
+}
 
 var builtin_names=[ 'Ellipsis', 'False',  'None', 
 'True', '_', '__build_class__', '__debug__', '__doc__', '__import__', '__name__', 

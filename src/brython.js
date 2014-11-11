@@ -2035,7 +2035,7 @@ this.to_js=function(){var comps={'==':'eq','!=':'ne','>=':'ge','<=':'le','<':'lt
 if(comps[this.op]!==undefined){var method=comps[this.op]
 if(this.tree[0].type=='expr' && this.tree[1].type=='expr'){var t0=this.tree[0].tree[0],t1=this.tree[1].tree[0]
 if(t1.type=='int'){if(t0.type=='int'){return t0.to_js()+this.op+t1.to_js()}
-else if(t0.type=='str'){return 'false'}
+else if(t0.type=='str'){return '__BRYTHON__.$TypeError("unorderable types: int() < str()")'}
 else if(t0.type=='id'){var res='typeof '+t0.to_js()+'=="number" ? '
 res +=t0.to_js()+this.op+t1.to_js()+' : '
 res +='getattr('+this.tree[0].to_js()
@@ -2043,14 +2043,13 @@ res +=',"__'+method+'__")('+this.tree[1].to_js()+')'
 return res
 }}
 else if(t1.type=='str'){if(t0.type=='str'){return t0.to_js()+this.op+t1.to_js()}
-else if(t0.type=='int'){return 'false'}
+else if(t0.type=='int'){return '__BRYTHON__.$TypeError("unorderable types: str() < int()")'}
 else if(t0.type=='id'){var res='typeof '+t0.to_js()+'=="string" ? '
 res +=t0.to_js()+this.op+t1.to_js()+' : '
 res +='getattr('+this.tree[0].to_js()
 res +=',"__'+method+'__")('+this.tree[1].to_js()+')'
 return res
-}}else if(t1.type=='id'){if(t0.type=='str'||t0.type=='int'){return t0.to_js()+this.op+t1.to_js()}
-else if(t0.type=='id'){var res='typeof '+t0.to_js()+'!="object" && '
+}}else if(t1.type=='id'){if(t0.type=='id'){var res='typeof '+t0.to_js()+'!="object" && '
 res +='typeof '+t0.to_js()+'==typeof '+t1.to_js()
 res +=' ? '+t0.to_js()+this.op+t1.to_js()+' : '
 res +='getattr('+this.tree[0].to_js()
@@ -6670,6 +6669,8 @@ $make_exc(['EnvironmentError','IOError','VMSError','WindowsError'],_b_.OSError)
 $B.$NameError=function(name){
 throw _b_.NameError(name)
 }
+$B.$TypeError=function(msg){throw _b_.TypeError(msg)
+}
 var builtin_names=['Ellipsis','False','None','True','_','__build_class__','__debug__','__doc__','__import__','__name__','__package__','abs','all','any','ascii','bin','bool','bytearray','bytes','callable','chr','classmethod','compile','complex','copyright','credits','delattr','dict','dir','divmod','enumerate',
 'exec','exit','filter','float','format','frozenset','getattr','globals','hasattr','hash','help','hex','id','input','int','isinstance','issubclass','iter','len','license','list','locals','map','max','memoryview','min','next','NotImplemented','object','oct','open','ord','pow','print','property','quit','range','repr','reversed','round','set','setattr','slice','sorted','staticmethod','str','sum','super','tuple','type','vars','zip']
 for(var i=0;i<builtin_names.length;i++){var name=builtin_names[i]
@@ -7958,8 +7959,7 @@ if(isinstance(other,_b_.float))return self.valueOf()> other.value
 if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.$dict.__hash__(other)
 }
 throw _b_.TypeError(
-"unorderable types: "+self.__class__.__name__+'() > '+
-$B.get_class(other).__name__+"()")
+"unorderable types: int() > "+$B.get_class(other).__name__+"()")
 }
 $comp_func +='' 
 for(var $op in $B.$comps){eval("$IntDict.__"+$B.$comps[$op]+'__ = '+$comp_func.replace(/>/gm,$op))
