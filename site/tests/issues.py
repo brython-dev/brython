@@ -60,4 +60,11 @@ def foo():
     return res
 assert foo() == [0, 1, 2, 3, 4]
 
+# issues 62 and 63
+import test_sp
+print(test_sp.test)
+s = 'a = 3'
+exec(s, test_sp.__dict__)
+print(test_sp.a)
+
 print('passed all tests')

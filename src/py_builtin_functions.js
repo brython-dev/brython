@@ -406,9 +406,10 @@ function $eval(src, _globals, locals){
         var js = root.to_js()
         var res = eval(js)
         if(_globals!==undefined){
+            var set_func = getattr(_globals,'__setitem__')
             for(var attr in $B.vars[mod_name]){
                 if(['__name__','__doc__','__file__'].indexOf(attr)>-1){continue}
-                _b_.dict.$dict.__setitem__(_globals, attr, $B.vars[mod_name][attr])
+                set_func(attr, $B.vars[mod_name][attr])
             }
         }
         return res
@@ -486,17 +487,10 @@ function getattr(obj,attr,_default){
     // return the factory function
     if(attr=='__class__') return klass.$factory
     
-    // attribute __dict__ returns a dictionary of all attributes
-    // of the underlying Javascript object
+    // attribute __dict__ returns an instance of a subclass of dict
+    // defined in py_dict.js
     if(attr==='__dict__'){
-        var res = _b_.dict()
-        for(var $attr in obj){
-            if($attr.charAt(0)!='$'){
-                res.$keys.push($attr)
-                res.$values.push(obj[$attr])
-            }
-        }
-        return res
+        return $B.obj_dict(obj)
     }
     
     // __call__ on a function returns the function itself

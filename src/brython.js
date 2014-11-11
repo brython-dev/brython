@@ -5560,8 +5560,9 @@ throw SyntaxError("eval() argument must be an expression")
 }}
 var js=root.to_js()
 var res=eval(js)
-if(_globals!==undefined){for(var attr in $B.vars[mod_name]){if(['__name__','__doc__','__file__'].indexOf(attr)>-1){continue}
-_b_.dict.$dict.__setitem__(_globals,attr,$B.vars[mod_name][attr])
+if(_globals!==undefined){var set_func=getattr(_globals,'__setitem__')
+for(var attr in $B.vars[mod_name]){if(['__name__','__doc__','__file__'].indexOf(attr)>-1){continue}
+set_func(attr,$B.vars[mod_name][attr])
 }}
 return res
 }finally{$B.exec_stack.pop()
@@ -5604,11 +5605,7 @@ if(_default!==undefined)return _default
 throw _b_.AttributeError('object has no attribute '+attr)
 }
 if(attr=='__class__')return klass.$factory
-if(attr==='__dict__'){var res=_b_.dict()
-for(var $attr in obj){if($attr.charAt(0)!='$'){res.$keys.push($attr)
-res.$values.push(obj[$attr])
-}}
-return res
+if(attr==='__dict__'){return $B.obj_dict(obj)
 }
 if(attr==='__call__' &&(typeof obj=='function')){if(obj.$blocking){console.log('calling blocking function '+obj.__name__)
 }
@@ -7379,7 +7376,7 @@ function import_from_site_packages(mod_name,origin,package){var module={name:mod
 mod_path=mod_name.replace(/\./g,'/')
 var py_paths=[$B.brython_path+'Lib/site-packages/'+mod_path+'.py',$B.brython_path+'Lib/site-packages/'+mod_path+'/__init__.py']
 for(var i=0;i<py_paths.length;i++){var py_mod=import_py(module,py_paths[i],package)
-if(py_mod!==null){console.log(py_paths[i].substr(py_paths[i].length-12))
+if(py_mod!==null){
 if(py_paths[i].substr(py_paths[i].length-12)=='/__init__.py'){
 $B.imported[mod_name].$package=true
 py_mod.__package__=mod_name 
@@ -8305,6 +8302,21 @@ dict.$dict=$DictDict
 $DictDict.$factory=dict
 $DictDict.__new__=$B.$__new__(dict)
 _b_.dict=dict
+$ObjDictDict={__class__:$B.$type,__name__:'obj_dict'}
+$ObjDictDict.__mro__=[$ObjDictDict,$DictDict,$ObjectDict]
+$ObjDictDict.__setitem__=function(self,key,value){$DictDict.__setitem__(self,key,value)
+self.$obj[key]=value
+}
+function obj_dict(obj){var res={__class__:$ObjDictDict,$obj:obj,$keys:[],$values:[]}
+for(var attr in obj){if(attr.charAt(0)!='$'){res.$keys.push(attr)
+res.$values.push(obj[attr])
+}}
+return res
+}
+obj_dict.$dict=$ObjDictDict
+obj_dict.__class__=$B.$factory
+$ObjDictDict.$factory=obj_dict
+$B.obj_dict=obj_dict
 })(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 var $s=[]

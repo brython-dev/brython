@@ -320,4 +320,31 @@ $DictDict.$factory = dict
 $DictDict.__new__ = $B.$__new__(dict)
 
 _b_.dict = dict
+
+// Class used for attribute __dict__ of objects
+
+$ObjDictDict = {__class__:$B.$type,__name__:'obj_dict'}
+$ObjDictDict.__mro__ = [$ObjDictDict, $DictDict, $ObjectDict]
+
+$ObjDictDict.__setitem__ = function(self, key, value){
+    $DictDict.__setitem__(self, key, value)
+    self.$obj[key] = value
+}
+
+function obj_dict(obj){
+    var res = {__class__:$ObjDictDict,$obj:obj,$keys:[],$values:[]}
+    for(var attr in obj){
+        if(attr.charAt(0)!='$'){
+            res.$keys.push(attr)
+            res.$values.push(obj[attr])
+        }
+    }
+    return res
+}
+obj_dict.$dict = $ObjDictDict
+obj_dict.__class__ = $B.$factory
+$ObjDictDict.$factory = obj_dict
+
+$B.obj_dict = obj_dict
+
 })(__BRYTHON__)
