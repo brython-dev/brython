@@ -171,7 +171,7 @@ $B.$gen_expr = function(){ // generator expresssion
     var indent=0
     for(var $i=3;$i<arguments.length;$i++){
         for(var $j=0;$j<indent;$j++) $py += ' '
-        $py += arguments[$i]+':\n'
+        $py += arguments[$i].join(' ')+':\n'
         indent += 4
     }
     for(var $j=0;$j<indent;$j++) $py += ' '

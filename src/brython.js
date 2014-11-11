@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 3, 0, 'alpha', 0]
-// implementation [3, 0, 0, 'final', 0]
+// implementation [3, 0, 1, 'alpha', 0]
 // version compiled from commented, indented source files at github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
 ;(function($B){if($B.isa_web_worker==true){
@@ -41,8 +41,8 @@ $B.has_json=typeof(JSON)!=="undefined"
 $B.has_websocket=(function(){try{var x=window.WebSocket;return x!==undefined}
 catch(err){return false}})
 })(__BRYTHON__)
-__BRYTHON__.implementation=[3,0,0,'final',0]
-__BRYTHON__.__MAGIC__="3.0.0"
+__BRYTHON__.implementation=[3,0,1,'alpha',0]
+__BRYTHON__.__MAGIC__="3.0.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
 __BRYTHON__.builtin_module_names=["posix","builtins","dis","hashlib","javascript","json","marshal","math","modulefinder","time","_ajax","_browser","_html","_io","_jsre","_multiprocessing","_os","_posixsubprocess","_svg","_sys","_timer","_websocket","__random","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
@@ -706,22 +706,15 @@ return 'getattr('+$to_js(this.tree)+',"__invert__")()'
 if(this.tree.length>-1){if(__BRYTHON__.$blocking_function_names){var _func_name=this.func.to_js()
 if(_func_name.indexOf(__BRYTHON__.$blocking_function_names)> -1){console.log("candidate blocking function.. ",_func_name)
 }}
-if(this.func.type=='id'){var $simple=true
-for(var i=0;i<this.tree.length;i++){if(this.tree[i].type=='id'){continue}
-if(this.tree[i].tree[0].type!='expr'){$simple=false;break}}
-if($simple){var res='('+this.func.to_js()+'.$is_func ? '
+if(this.func.type=='id'){if(this.func.value=='fxn'){console.log('to js '+this.func.to_js())}
+var res='('+this.func.to_js()+'.$is_func ? '
 res +=this.func.to_js()+' : '
 res +='getattr('+this.func.to_js()+',"__call__"))('
 res +=(this.tree.length>0 ? $to_js(this.tree): '')
 res +=')'
-}else{var res='('+this.func.to_js()+'.$is_func ? '
-res +=this.func.to_js()+' : '
-res +='getattr('+this.func.to_js()+',"__call__"))('
+}else{var res='getattr('+this.func.to_js()+',"__call__")('
 res +=(this.tree.length>0 ? $to_js(this.tree): '')
 res +=')'
-}}else{var res='getattr('+this.func.to_js()+',"__call__")('
-res +=(this.tree.length>0 ? $to_js(this.tree): '')
-res +=')' 
 }
 return res
 }
@@ -1026,6 +1019,7 @@ new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 }
 var passed_alias={},passed_ix=0
+this.env=[]
 if(this.type=='def'){var enclosing=[],passed=[]
 for(var i=this.enclosing.length-1;i>=0;i--){var func=this.enclosing[i]
 for(var attr in $B.bound[func.id]){if(attr!==this.name){if(func===scope && $B.bound[func.id][attr]!='arg'){continue
@@ -1039,6 +1033,7 @@ for(var attr in __BRYTHON__.bound[func.id]){if(attr!=this.name &&($B.globals[thi
 $B.globals[this.id][attr]===undefined)){if(func===scope && $B.bound[func.id][attr]!='arg'){continue
 }
 __BRYTHON__.bound[this.id][attr]=true
+this.env.push(attr)
 }}}
 for(var i=this.enclosing.length-1;i>=0;i--){var func=this.enclosing[i]
 for(var attr in $B.bound[func.id]){if(attr!==this.name &&($B.globals[this.id]===undefined ||
@@ -1181,7 +1176,7 @@ offset++
 js=prefix+'.__code__={__class__:__BRYTHON__.$CodeDict};None;'
 new_node=new $Node()
 new $NodeJSCtx(new_node,js)
-node.insert(rank+offset,new_node)
+node.parent.insert(rank+offset,new_node)
 var default_node=new $Node()
 var js='None'
 if(defs1.length>0){js='var $defaults = {'+defs1.join(',')+'}'}
@@ -1332,6 +1327,7 @@ this.module=$get_scope(this).module
 $loop_num++
 this.toString=function(){return '(for) '+this.tree}
 this.transform=function(node,rank){var scope=$get_scope(this)
+var mod_name=scope.module
 var target=this.tree[0]
 var iterable=this.tree[1]
 var num=this.loop_num
@@ -1446,6 +1442,7 @@ var try_node=new $Node()
 new $NodeJSCtx(try_node,'try')
 while_node.add(try_node)
 var iter_node=new $Node()
+iter_node.parent=$get_node(this).parent
 iter_node.id=this.module
 var C=new $NodeCtx(iter_node)
 var target_expr=new $ExprCtx(C,'left',true)
@@ -1743,7 +1740,11 @@ break
 }
 if(scope===innermost){
 var bound_before=$get_node(this).bound_before
-if(bound_before && !this.bound){if(bound_before.indexOf(val)>-1){found.push(scope)}}else{if($B.bound[scope.id][val]){found.push(scope)}}}else{if($B.bound[scope.id][val]){found.push(scope)}}
+if(bound_before && !this.bound){if(bound_before.indexOf(val)>-1){found.push(scope)}
+else if(scope.C &&
+scope.C.tree[0].type=='def' &&
+scope.C.tree[0].env.indexOf(val)>-1){found.push(scope)
+}}else{if($B.bound[scope.id][val]){found.push(scope)}}}else{if($B.bound[scope.id][val]){found.push(scope)}}
 if(scope.parent_block){scope=scope.parent_block}
 else{break}}
 if(found.length>0){if(found.length>1 && found[0].C){if(found[0].C.tree[0].type=='class' && !this.bound){var bound_before=$get_node(this).bound_before,res
@@ -1766,8 +1767,7 @@ if(scope.C===undefined){if(scope.id=='__builtins__'){if(gs.blurred){var val1='(_
 val1 +='|| __BRYTHON__.builtins["'+val+'"])'
 val=val1
 }else{val='__BRYTHON__.builtins["'+val+'"]'
-}}else if(scope.id==scope.module){
-if(!this.bound && scope===innermost && this.env[val]===undefined){return '__BRYTHON__.$NameError("'+val+'")'
+}}else if(scope.id==scope.module){if(!this.bound && scope===innermost && this.env[val]===undefined){return '__BRYTHON__.$NameError("'+val+'")'
 }
 val='$globals["'+val+'"]'
 }
@@ -4743,7 +4743,7 @@ var $res='res'+$ix
 var $py=$res+"=[]\n"
 var indent=0
 for(var $i=3;$i<arguments.length;$i++){for(var $j=0;$j<indent;$j++)$py +=' '
-$py +=arguments[$i]+':\n'
+$py +=arguments[$i].join(' ')+':\n'
 indent +=4
 }
 for(var $j=0;$j<indent;$j++)$py +=' '
