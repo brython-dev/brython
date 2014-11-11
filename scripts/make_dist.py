@@ -24,7 +24,7 @@ except ImportError:
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
-implementation = [3, 0, 0, 'final', 0]
+implementation = [3, 0, 1, 'alpha', 0]
 
 
 def custom_minify(src):
@@ -41,7 +41,7 @@ def custom_minify(src):
                     raise SyntaxError('string not closed in %s line %s : %s' %
                                       (fname, line, src[pos:pos + 20]))
                 else:
-                    # coutn number of backslashes before the quote
+                    # count number of backslashes before the quote
                     nb = 0
                     while src[end-nb-1] == '\\':
                         nb += 1
@@ -99,7 +99,6 @@ def custom_minify(src):
 abs_path = lambda _pth: os.path.join(os.path.dirname(os.getcwd()), 'src', _pth)
 now = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
 
-
 # update version number
 with open(abs_path('version_info.js'), 'wb') as vinfo_file_out:
     # implementation[2] = now
@@ -126,7 +125,6 @@ with open(abs_path('version_info.js'), 'wb') as vinfo_file_out:
     vinfo_file_out.write(',\n    '+',\n    '.join(
                          ['"%s"' % f for f in brython_py_builtins]))
     vinfo_file_out.write(']\n')
-
 
 # Create file stdlib_paths.js : static mapping between module names and paths
 # in the standard library
@@ -196,20 +194,22 @@ loader_source_code = re.sub('version_info = \[1,2,".*?"\,"alpha",0]',
 with open(abs_path('py_loader.js'), 'wb') as the_new_py_loader_file:
     the_new_py_loader_file.write(loader_source_code)
 
-
 res = '// brython.js brython.info\n'
 res += '// version %s\n' % version
 res += '// implementation %s\n' % implementation
 res += '// version compiled from commented, indented source files '
 res += 'at github.com/brython-dev/brython\n'
 src_size = 0
+
 for fname in sources:
     src = open(abs_path(fname)+'.js').read() + '\n'
     src_size += len(src)
-    try:
-        res += minify(src)
-    except Exception as error:
-        print(error)
+    if minify is not None:
+        try:
+            res += minify(src)
+        except Exception as error:
+            print(error)
+    else:
         res += custom_minify(src)
 
 res = res.replace('context', 'C')
