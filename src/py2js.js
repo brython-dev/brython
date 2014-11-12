@@ -1012,6 +1012,7 @@ function $CallCtx(context){
                 this.tree.pop()
             }
         }
+        var func_js = this.func.to_js()
         if(this.func!==undefined) {
             switch(this.func.value) {
               case 'classmethod':
@@ -1071,7 +1072,7 @@ function $CallCtx(context){
 
             if(this.tree.length>-1){
               if (__BRYTHON__.$blocking_function_names) {
-                 var _func_name=this.func.to_js()
+                 var _func_name = func_js
                  if (_func_name.indexOf(__BRYTHON__.$blocking_function_names) > -1) {
                     console.log("candidate blocking function.. ", _func_name)
                     // since this is a candidate blocking function
@@ -1094,20 +1095,28 @@ function $CallCtx(context){
                  }
               }
               if(this.func.type=='id'){
-                  var res = '('+this.func.to_js()+'.$is_func ? '
-                  res += this.func.to_js()+' : '
-                  res += 'getattr('+this.func.to_js()+',"__call__"))('
+                  if(this.func.is_builtin){
+                      // simplify code for built-in functions
+                      if($B.builtin_funcs[this.func.value]!==undefined){
+                          var res = func_js + '('
+                          res += (this.tree.length>0 ? $to_js(this.tree) : '')
+                          return res + ')'
+                      }
+                  }
+                  var res = '('+func_js+'.$is_func ? '
+                  res += func_js+' : '
+                  res += 'getattr('+func_js+',"__call__"))('
                   res += (this.tree.length>0 ? $to_js(this.tree) : '')
                   res += ')'
               }else{
-                  var res = 'getattr('+this.func.to_js()+',"__call__")('
+                  var res = 'getattr('+func_js+',"__call__")('
                   res += (this.tree.length>0 ? $to_js(this.tree) : '')
                   res += ')'
               }
               return res
             }
 
-            return 'getattr('+this.func.to_js()+',"__call__")()'
+            return 'getattr('+func_js+',"__call__")()'
         }
     }
 }
@@ -2841,7 +2850,6 @@ function $IdCtx(context,value){
                 }
             }
             scope = found[0]
-            var val_init = val
             if(scope.context===undefined){
                 if(scope.id=='__builtins__'){
                     if(gs.blurred){
@@ -2850,6 +2858,7 @@ function $IdCtx(context,value){
                         val = val1
                     }else{
                         val = '__BRYTHON__.builtins["'+val+'"]'
+                        this.is_builtin = true
                     }
                 }else if(scope.id==scope.module){
                     if(!this.bound && scope===innermost && this.env[val]===undefined){

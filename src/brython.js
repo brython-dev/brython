@@ -16,6 +16,7 @@ $B.vars={}
 $B.globals={}
 $B.exec_stack=[]
 $B.builtins={__repr__:function(){return "<module 'builtins>'"},__str__:function(){return "<module 'builtins'>"},}
+$B.builtin_funcs={}
 $B.__getattr__=function(attr){return this[attr]}
 $B.__setattr__=function(attr,value){
 if(['debug'].indexOf(attr)>-1){$B[attr]=value}
@@ -664,6 +665,7 @@ this.toString=function(){return '(call) '+this.func+'('+this.tree+')'}
 this.to_js=function(){if(this.tree.length>0){if(this.tree[this.tree.length-1].tree.length==0){
 this.tree.pop()
 }}
+var func_js=this.func.to_js()
 if(this.func!==undefined){switch(this.func.value){case 'classmethod':
 return 'classmethod('+$to_js(this.tree)+')'
 case 'locals':
@@ -703,21 +705,26 @@ return 'getattr('+$to_js(this.tree)+',"__invert__")()'
 }
 }
 }
-if(this.tree.length>-1){if(__BRYTHON__.$blocking_function_names){var _func_name=this.func.to_js()
+if(this.tree.length>-1){if(__BRYTHON__.$blocking_function_names){var _func_name=func_js
 if(_func_name.indexOf(__BRYTHON__.$blocking_function_names)> -1){console.log("candidate blocking function.. ",_func_name)
 }}
-if(this.func.type=='id'){var res='('+this.func.to_js()+'.$is_func ? '
-res +=this.func.to_js()+' : '
-res +='getattr('+this.func.to_js()+',"__call__"))('
+if(this.func.type=='id'){if(this.func.is_builtin){
+if($B.builtin_funcs[this.func.value]!==undefined){var res=func_js + '('
+res +=(this.tree.length>0 ? $to_js(this.tree): '')
+return res + ')'
+}}
+var res='('+func_js+'.$is_func ? '
+res +=func_js+' : '
+res +='getattr('+func_js+',"__call__"))('
 res +=(this.tree.length>0 ? $to_js(this.tree): '')
 res +=')'
-}else{var res='getattr('+this.func.to_js()+',"__call__")('
+}else{var res='getattr('+func_js+',"__call__")('
 res +=(this.tree.length>0 ? $to_js(this.tree): '')
 res +=')'
 }
 return res
 }
-return 'getattr('+this.func.to_js()+',"__call__")()'
+return 'getattr('+func_js+',"__call__")()'
 }}}
 function $ClassCtx(C){this.type='class'
 this.parent=C
@@ -1761,11 +1768,11 @@ res +='["'+val+'"]'
 return res
 }}}
 scope=found[0]
-var val_init=val
 if(scope.C===undefined){if(scope.id=='__builtins__'){if(gs.blurred){var val1='(__BRYTHON__.vars["'+gs.id+'"]["'+val+'"]'
 val1 +='|| __BRYTHON__.builtins["'+val+'"])'
 val=val1
 }else{val='__BRYTHON__.builtins["'+val+'"]'
+this.is_builtin=true
 }}else if(scope.id==scope.module){if(!this.bound && scope===innermost && this.env[val]===undefined){return '__BRYTHON__.$NameError("'+val+'")'
 }
 val='$globals["'+val+'"]'
@@ -6671,8 +6678,11 @@ throw _b_.NameError(name)
 }
 $B.$TypeError=function(msg){throw _b_.TypeError(msg)
 }
-var builtin_names=['Ellipsis','False','None','True','_','__build_class__','__debug__','__doc__','__import__','__name__','__package__','abs','all','any','ascii','bin','bool','bytearray','bytes','callable','chr','classmethod','compile','complex','copyright','credits','delattr','dict','dir','divmod','enumerate',
-'exec','exit','filter','float','format','frozenset','getattr','globals','hasattr','hash','help','hex','id','input','int','isinstance','issubclass','iter','len','license','list','locals','map','max','memoryview','min','next','NotImplemented','object','oct','open','ord','pow','print','property','quit','range','repr','reversed','round','set','setattr','slice','sorted','staticmethod','str','sum','super','tuple','type','vars','zip']
+var builtin_funcs=['abs','all','any','ascii','bin','bool','bytearray','bytes','callable','chr','classmethod','compile','complex','delattr','dict','dir','divmod','enumerate','exec','exit','filter','float','format','frozenset','getattr','globals','hasattr','hash','help','hex','id','input','int','isinstance','issubclass','iter','len','list','locals','map','max','memoryview','min','next','object','oct','open','ord','pow','print','property','quit','range','repr','reversed','round','set','setattr','slice','sorted','staticmethod','str','sum','super','tuple','type','vars','zip']
+for(var i=0;i<builtin_funcs.length;i++){$B.builtin_funcs[builtin_funcs[i]]=true
+}
+var other_builtins=['Ellipsis','False','None','True','_','__build_class__','__debug__','__doc__','__import__','__name__','__package__','copyright','credits','license','NotImplemented']
+var builtin_names=builtin_funcs.concat(other_builtins)
 for(var i=0;i<builtin_names.length;i++){var name=builtin_names[i]
 var name1=name
 if(name=='open'){name1='$url_open'}
