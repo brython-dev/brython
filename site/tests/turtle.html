@@ -24,12 +24,25 @@
     <script type=text/javascript src="../../src/py_dom.js"></script>
 
 <script id="python_script" type="text/python">
-  from browser import document
-
+  from browser import document, console
   _code=document["div_html"].text
+
   exec(_code)
   document["processing"].style.display="none"
 </script>
+
+<style type="text/css">
+.blink {
+  animation: blink 1s steps(5, start) infinite;
+  -webkit-animation: blink 1s steps(5, start) infinite;
+}
+@keyframes blink {
+  to { visibility: hidden; }
+}
+@-webkit-keyframes blink {
+  to { visibility: hidden; }
+}
+</style>
 
 </head>
 
@@ -37,6 +50,7 @@
 <pre id="div_html" style="float:left">
 import turtle
 t=turtle.Turtle()
+
 t.penup()
 t.left(45)
 t.backward(125)
@@ -63,7 +77,8 @@ t.getscreen().end()
      style="float:left;border-style:solid;border-color:black;margin-left:50px"></div>
 </body>
 
-<div id="processing" 
-     style="position:absolute;z-index:100;width:250px;height:100px;top:50%;left:50%;margin 0 auto;">Processing... Please wait..</div>
+<div id="processing" class="blink" 
+     style="color:red;position:absolute;z-index:100;width:250px;height:100px;top:50%;left:50%;margin 0 auto;">Processing... Please wait..
+</div>
 
 </html>
