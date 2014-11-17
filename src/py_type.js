@@ -41,11 +41,17 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     if(metaclass===_b_.type) return _b_.type(class_name,bases,cl_dict)
     
     // create the factory function
+    /*
     var factory = (function(_class){
                 return function(){
                     return $instance_creator(_class).apply(null,arguments)
                 }
           })($B.class_dict)
+    */
+    var factory = function(){
+                    return $instance_creator($B.class_dict).apply(null,arguments)
+                }
+    
     var new_func = _b_.getattr(metaclass,'__new__')
     var factory = _b_.getattr(metaclass,'__new__').apply(null,[factory,class_name,bases,cl_dict])
     _b_.getattr(metaclass,'__init__').apply(null,[factory,class_name,bases,cl_dict])
