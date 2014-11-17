@@ -70,6 +70,64 @@ for _i in range(6):
   t1.forward(50)
   t1.left(60)
 
+
+t2=turtle.Turtle("turtle")
+t2.reset()
+#t2.tracer(True)
+t2.up()
+t2.backward(100)
+t2.down()
+# draw 3 squares; the last filled
+t2.width(3)
+for i in range(3):
+    if i == 2:
+       t2.begin_fill()
+       for _ in range(4):
+           t2.forward(20)
+           t2.left(90)
+    if i == 2:
+       t2.color("maroon")
+       t2.end_fill()
+    t2.up()
+    t2.forward(30)
+    t2.down()
+
+t2.width(1)
+t2.color("black")
+# move out of the way
+#t2.tracer(False)  #screen object
+t2.up()
+t2.right(90)
+t2.forward(100)
+t2.right(90)
+t2.forward(100)
+t2.right(180)
+t2.down()
+        
+# some text
+t2.write("startstart", 1)  #does not work
+t2.write("start", 1)       #does not work
+t2.color("red")
+# staircase
+for i in range(5):
+    t2.forward(20)
+    t2.left(90)
+    t2.forward(20)
+    t2.right(90)
+
+# filled staircase
+#t2.tracer(True)
+t2.begin_fill()
+for i in range(5):
+    t2.forward(20)
+    t2.left(90)
+    t2.forward(20)
+    t2.right(90)
+t2.end_fill()
+# more text
+
+
+
 t.getscreen().end()
 </pre>
 
