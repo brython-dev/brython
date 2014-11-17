@@ -1095,6 +1095,7 @@ function $CallCtx(context){
                  }
               }
               if(this.func.type=='id'){
+                  var scope = $get_scope(this)
                   if(this.func.is_builtin){
                       // simplify code for built-in functions
                       if($B.builtin_funcs[this.func.value]!==undefined){
@@ -1102,7 +1103,13 @@ function $CallCtx(context){
                           res += (this.tree.length>0 ? $to_js(this.tree) : '')
                           return res + ')'
                       }
+                  }else if($B.bound[scope.id][this.func.value]=='class'){
+                      // simplify code for functions and classes
+                      var res = func_js + '('
+                      res += (this.tree.length>0 ? $to_js(this.tree) : '')
+                      return res + ')'
                   }
+
                   var res = '('+func_js+'.$is_func ? '
                   res += func_js+' : '
                   res += 'getattr('+func_js+',"__call__"))('
@@ -1151,9 +1158,12 @@ function $ClassCtx(context){
         this.parent.node.parent_block = parent_block
         
         $B.vars[this.id] = {}
+        
+        // bind name
+        $B.bound[this.scope.id][name] = 'class'
+
         // if function is defined inside another function, add the name
         // to local names
-        $B.bound[this.scope.id][name]=true
         if(scope.is_function){
             if(scope.context.tree[0].locals.indexOf(name)==-1){
                 scope.context.tree[0].locals.push(name)
@@ -1440,6 +1450,10 @@ function $DecoratorCtx(context){
           tail +=')'
         }
         res += ref+tail
+        // If obj is a function or a class we must set $B.bound to 'true'
+        // instead of "def" or "class" because the result might have an
+        // attribute "__call__"
+        $B.bound[scope.id][obj.name] = true
 
         if (_blocking_flag == true) {
            $B.$blocking_function_names=$B.$blocking_function_names || []
@@ -1523,7 +1537,7 @@ function $DefCtx(context){
         $B.vars[this.id] = $B.vars[this.id] || {}
         // if function is defined inside another function, add the name
         // to local names
-        $B.bound[this.scope.id][name]=true
+        $B.bound[this.scope.id][name]='def'
         id_ctx.bound = true
         if(scope.is_function){
             if(scope.context.tree[0].locals.indexOf(name)==-1){
