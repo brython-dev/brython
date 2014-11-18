@@ -163,7 +163,8 @@ function import_py(module,path,package){
     return run_py(module,path,module_contents)
 }
 
-function run_py(module,path,module_contents) {
+//$B.run_py is needed for import hooks..
+$B.run_py=run_py=function(module,path,module_contents) {
     var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
     $B.$py_module_path[module.name]=path
 
