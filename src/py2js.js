@@ -6260,8 +6260,8 @@ function brython(options){
     // Mapping between a module name and its path (url)
     $B.$py_module_path = {}
     
-    // path_hook used in py_import.js
-    $B.path_hooks = []
+    // meta_path used in py_import.js
+    $B.meta_path = []
 
     // Options passed to brython(), with default values
     $B.$options= {}
