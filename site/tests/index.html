@@ -77,6 +77,7 @@ def set_debug(ev):
     else:
         __BRYTHON__.debug = 0
 
+__BRYTHON__.debug = int(doc['set_debug'].checked)
 # bindings
 doc['test_all'].bind('click',test_all)
 doc['set_debug'].bind('change',set_debug)
