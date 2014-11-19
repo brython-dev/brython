@@ -2114,11 +2114,13 @@ small dst() may get within its bounds; and it doesn't even matter if some
 perverse time zone returns a negative dst()).  So a breaking case must be
 pretty bizarre, and a tzinfo subclass can override fromutc() if it is.
 """
-try:
-    from _datetime import *
-except ImportError:
-    pass
-else:
+#brython does not have a _datetime, so lets comment this out for now.
+#try:
+#    from _datetime import *
+#except ImportError:
+#    pass
+#else:
+if 1:
     # Clean up unused names
     del (_DAYNAMES, _DAYS_BEFORE_MONTH, _DAYS_IN_MONTH,
          _DI100Y, _DI400Y, _DI4Y, _MAXORDINAL, _MONTHNAMES,
@@ -2132,4 +2134,4 @@ else:
     # docstring does not get overwritten. In the future, it may be
     # appropriate to maintain a single module level docstring and
     # remove the following line.
-    from _datetime import __doc__
+    #from _datetime import __doc__
