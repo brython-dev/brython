@@ -4184,7 +4184,7 @@ return root
 function brython(options){var _b_=$B.builtins
 $B.$py_src={}
 $B.$py_module_path={}
-$B.path_hooks=[]
+$B.meta_path=[]
 $B.$options={}
 $B.$py_next_hash=-Math.pow(2,53)
 $B.lambda_magic=Math.random().toString(36).substr(2,8)
@@ -7319,7 +7319,7 @@ $B.imported[module.name].__package__=mod_elts.join('.')
 }
 return run_py(module,path,module_contents)
 }
-function run_py(module,path,module_contents){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
+$B.run_py=run_py=function(module,path,module_contents){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 $B.$py_module_path[module.name]=path
 var root=$B.py2js(module_contents,module.name,module.name,'__builtins__')
 var body=root.children
