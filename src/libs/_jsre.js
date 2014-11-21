@@ -41,12 +41,12 @@ var $module=(function($B){
         // look for things javascript does not support
         // check for name capturing group
         var mylist=['?P=', '?P<', '(?#', '(?<=', '(?<!', '(?(']
-        for(var i=0; i < mylist.length; i++) {
+        for(var i=0, _len_i = mylist.length; i < _len_i; i++) {
            if (pattern.indexOf(mylist[i]) > -1) return false
         }
 
         var re_list=['\{,\d+\}']
-        for(var i=0; i < re_list.length; i++) {
+        for(var i=0, _len_i = re_list.length; i < _len_i; i++) {
            var _re=new RegExp(re_list[i])
            if (_re.test(pattern)) return false
         }
@@ -88,7 +88,7 @@ var $module=(function($B){
         // string that may have regular expression metacharacters in it.
         var res = ''
         var ok = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'
-        for(var i=0;i<string.length;i++){
+        for(var i=0, _len_i = string.length; i < _len_i;i++){
             if(ok.search(string.charAt(i))>-1){res += string.charAt(i)}
         }
         return res
@@ -121,12 +121,12 @@ var $module=(function($B){
         if(jsmatch===null){return []}
         
         var _list=[]
-        for (var j=0; j < jsmatch.length; j++) {
+        for (var j=0, _len_j = jsmatch.length; j < _len_j; j++) {
             var mo = {}
             mo._match=jsmatch[j]
             mo.group = function(){
                var res = []
-               for(var i=0;i<arguments.length;i++){
+               for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                    if(jsmatch[arguments[i]]===undefined){res.push(None)}
                    else{res.push(jsmatch[arguments[i]])}
                }
@@ -136,7 +136,7 @@ var $module=(function($B){
             mo.groups = function(_default){
                if(_default===undefined){_default=None}
                var res = []
-               for(var i=1;i<jsmatch.length;i++){
+               for(var i=1, _len_i = jsmatch.length; i < _len_i;i++){
                   if(jsmatch[i]===undefined){res.push(_default)}
                   else{res.push(jsmatch[i])}
                }
@@ -161,7 +161,7 @@ var $module=(function($B){
         var mo = new Object()
         mo.group = function(){
             var res = []
-            for(var i=0;i<arguments.length;i++){
+            for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                 if(jsmatch[arguments[i]]===undefined){res.push(None)}
                 else{res.push(jsmatch[arguments[i]])}
             }
@@ -171,7 +171,7 @@ var $module=(function($B){
         mo.groups = function(_default){
             if(_default===undefined){_default=None}
             var res = []
-            for(var i=1;i<jsmatch.length;i++){
+            for(var i=1, _len_i = jsmatch.length; i < _len_i;i++){
                 if(jsmatch[i]===undefined){res.push(_default)}
                 else{res.push(jsmatch[i])}
             }
@@ -209,11 +209,11 @@ var $module=(function($B){
                 mo.start = function(){return start}
                 mo.end = function(){return end}
                 groups = []
-                for(var i=1;i<arguments.length-2;i++){groups.push(arguments[i])}
+                for(var i=1, _len_i = arguments.length-2; i < _len_i;i++){groups.push(arguments[i])}
                 mo.groups = function(_default){
                     if(_default===undefined){_default=None}
                     var res = []
-                    for(var i=0;i<groups.length;i++){
+                    for(var i=0, _len_i = groups.length; i < _len_i;i++){
                         if(groups[i]===undefined){res.push(_default)}
                         else{res.push(groups[i])}
                     }
@@ -233,7 +233,7 @@ var $module=(function($B){
             var pattern = arguments[0]
             if(pattern.charAt(0)!=='^'){pattern = '^'+pattern}
             var args = [pattern]
-            for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
+            for(var i=1, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
             return search_func.apply(null,args)
         }
     })(obj.search)

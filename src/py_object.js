@@ -11,7 +11,7 @@ __BRYTHON__.$__new__ = function(factory){
         catch(err){__BRYTHON__.$pop_exc()}
         if(init_func!==null){
             var args = []
-            for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
+            for(var i=1, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
             init_func.apply(null,args)
             res.__initialized__ = true
         }
@@ -55,10 +55,10 @@ $ObjectDict.__dir__ = function(self) {
 
     var objects = [self]
     var mro = self.__class__.__mro__
-    for (var i=0; i<mro.length; i++) {
+    for (var i=0, _len_i = mro.length; i < _len_i; i++) {
         objects.push(mro[i])
     }
-    for (var i=0; i<objects.length; i++) {
+    for (var i=0, _len_i = objects.length; i < _len_i; i++) {
         for(var attr in objects[i]){
             //if(attr.charAt(0)=='$' && attr.substr(0,2)!=='$$'){
             if(attr.charAt(0)=='$' && attr.charAt(1) != '$') {
@@ -91,7 +91,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         // search in classes hierarchy, following method resolution order
         //if(attr=='show'){console.log('object getattr '+attr+' of obj '+obj)}
         var mro = klass.__mro__
-        for(var i=0;i<mro.length;i++){
+        for(var i=0, _len_i = mro.length; i < _len_i;i++){
             var v=mro[i][attr]
             if(v!==undefined){
                 res = v
@@ -195,7 +195,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                     return function(){
                         // make a local copy of initial args
                         var local_args = initial_args.slice()
-                        for(var i=0;i<arguments.length;i++){
+                        for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                             local_args.push(arguments[i])
                         }
                         var x = res.apply(obj,local_args)
@@ -228,7 +228,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         if(_ga===undefined){
             var mro = klass.__mro__
             if(mro===undefined){console.log('in getattr mro undefined for '+obj)}
-            for(var i=0;i<mro.length;i++){
+            for(var i=0, _len_i = mro.length; i < _len_i;i++){
                 var v=mro[i]['__getattr__']
                 if(v!==undefined){
                     _ga = v

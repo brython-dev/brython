@@ -16,7 +16,7 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     if($other_kw != null){var $dict_keys=[];var $dict_values=[]}
     // create new list of arguments in case some are packed
     var upargs = []
-    for(var i=0;i<$args.length;i++){
+    for(var i=0, _len_i = $args.length; i < _len_i;i++){
         $arg = $args[i]
         if($arg===undefined){console.log('arg '+i+' undef in '+$fname)}
         else if($arg===null){upargs.push(null)}
@@ -24,11 +24,11 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
            switch($arg.$nat) {
              case 'ptuple':
                var _arg=$arg.arg
-               for(var j=0;j<_arg.length;j++) upargs.push(_arg[j])
+               for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs.push(_arg[j])
                break
              case 'pdict':
                var _arg=$arg.arg
-               for(var j=0;j<_arg.$keys.length;j++){
+               for(var j=0, _len_j = _arg.$keys.length; j < _len_j;j++){
                   upargs.push({$nat:"kw",name:_arg.$keys[j],value:_arg.$values[j]})
                }
                break
@@ -37,7 +37,7 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
            }//switch
         }//else
     }
-    for(var $i=0;$i<upargs.length;$i++){
+    for(var $i=0, _len_$i = upargs.length; $i < _len_$i;$i++){
         var $arg=upargs[$i]
         var $PyVar=$B.$JS2Py($arg)
         if($arg && $arg.$nat=='kw'){ // keyword argument
@@ -83,14 +83,14 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     }
     // throw error if not all required positional arguments have been set
     var missing = []
-    for(var i=0;i<$required.length;i++){
+    for(var i=0, _len_i = $required.length; i < _len_i;i++){
         if($ns[$required[i]]===undefined){missing.push($required[i])}
     }
     if(missing.length==1){
         throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")
     }else if(missing.length>1){
         var msg = $fname+" missing "+missing.length+" positional arguments: "
-        for(var i=0;i<missing.length-1;i++){msg += "'"+missing[i]+"', "}
+        for(var i=0, _len_i = missing.length-1; i < _len_i;i++){msg += "'"+missing[i]+"', "}
         msg += "and '"+missing.pop()+"'"
         throw _b_.TypeError(msg)
     }
@@ -138,7 +138,7 @@ $B.$list_comp = function(module_name, parent_block_id){
     var $py = 'def func'+$ix+"():\n"
     $py += "    x"+$ix+"=[]\n"
     var indent=4
-    for(var $i=3;$i<arguments.length;$i++){
+    for(var $i=3, _len_$i = arguments.length; $i < _len_$i;$i++){
         $py += ' '.repeat(indent)
         $py += arguments[$i]+':\n'
         indent += 4
@@ -169,7 +169,7 @@ $B.$gen_expr = function(){ // generator expresssion
     var $res = 'res'+$ix
     var $py = $res+"=[]\n"
     var indent=0
-    for(var $i=3;$i<arguments.length;$i++){
+    for(var $i=3, _len_$i = arguments.length; $i < _len_$i;$i++){
         for(var $j=0;$j<indent;$j++) $py += ' '
         $py += arguments[$i].join(' ')+':\n'
         indent += 4
@@ -218,7 +218,7 @@ $B.$dict_comp = function(module_name,parent_block_id){ // dictionary comprehensi
     var $res = 'res'+$ix
     var $py = $res+"={}\n"
     var indent=0
-    for(var $i=3;$i<arguments.length;$i++){
+    for(var $i=3, _len_$i = arguments.length; $i < _len_$i;$i++){
         for(var $j=0;$j<indent;$j++) $py += ' '
         $py += arguments[$i]+':\n'
         indent += 4
@@ -273,7 +273,7 @@ $B.$JS2Py = function(src){
     var klass = $B.get_class(src)
     if(klass!==undefined){
         if(klass===_b_.list.$dict){
-            for(var i=0;i<src.length;i++) src[i] = $B.$JS2Py(src[i])
+            for(var i=0, _len_i = src.length; i< _len_i;i++) src[i] = $B.$JS2Py(src[i])
         }
         return src
     }
@@ -282,7 +282,7 @@ $B.$JS2Py = function(src){
         if($B.$isEvent(src)) return $B.DOMEvent(src)
         if(src.constructor===Array||$B.$isNodeList(src)){
             var res = []
-            for(var i=0;i<src.length;i++) res.push($B.$JS2Py(src[i]))
+            for(var i=0, _len_i = src.length; i < _len_i;i++) res.push($B.$JS2Py(src[i]))
             return res
         }
     }
@@ -326,7 +326,7 @@ $B.augm_item_add = function(obj,item,incr){
 }
 var augm_item_src = ''+$B.augm_item_add
 var augm_ops = [['-=','sub'],['*=','mul']]
-for(var i=0;i<augm_ops.length;i++){
+for(var i=0, _len_i = augm_ops.length; i < _len_i;i++){
     var augm_code = augm_item_src.replace(/add/g,augm_ops[i][1])
     augm_code = augm_code.replace(/\+=/g,augm_ops[i][0])
     eval('$B.augm_item_'+augm_ops[i][1]+'='+augm_code)
@@ -347,7 +347,7 @@ $B.$syntax_err_line = function(module,pos) {
     var lnum=1
     var src = $B.$py_src[module]
     var line_pos = {1:0}
-    for(var i=0;i<src.length;i++){
+    for(var i=0, _len_i = src.length; i < _len_i;i++){
         pos2line[i]=lnum
         if(src.charAt(i)=='\n'){lnum+=1;line_pos[lnum]=i}
     }
@@ -473,7 +473,7 @@ $B.stdin = {
 function pyobject2jsobject(obj) {
     if(_b_.isinstance(obj,_b_.dict)){
         var temp = {__class__ :'dict'}
-        for(var i=0;i<obj.$keys.length;i++) temp[obj.$keys[i]]=obj.$values[i]
+        for(var i=0, _len_i = obj.$keys.length; i < _len_i;i++) temp[obj.$keys[i]]=obj.$values[i]
         return temp
     }
 
@@ -570,7 +570,7 @@ var ropnames = ['add','sub','mul','truediv','floordiv','mod','pow',
 var ropsigns = ['+','-','*','/','//','%','**','<<','>>','&','^', '|']
 
 $B.make_rmethods = function(klass){
-    for(var j=0;j<ropnames.length;j++){
+    for(var j=0, _len_j = ropnames.length; j < _len_j;j++){
         if(klass['__'+ropnames[j]+'__']===undefined){
             //console.log('set '+ropnames[j]+' of '+klass.__name__)
             klass['__'+ropnames[j]+'__']=(function(name,sign){
@@ -588,7 +588,7 @@ $B.make_rmethods = function(klass){
 // IE doesn't implement indexOf on Arrays
 if(!Array.indexOf){  
   Array.prototype.indexOf = function(obj){  
-    for(var i=0;i<this.length;i++) if(this[i]==obj) return i
+    for(var i=0, _len_i = this.length; i < _len_i;i++) if(this[i]==obj) return i
     return -1
   }
 }

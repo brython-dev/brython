@@ -37,9 +37,9 @@ function $import_single(module) {
   var ext=['.js', '.py'];
   var mods=[module, module+'/__init__'];
 
-  for(var i=0; i<search_path.length; i++) {
-     for (var j=0; j<ext.length; j++) {
-         for (var k=0; k<mods.length; k++) {
+  for(var i=0, _len_i = search_path.length; i < _len_i; i++) {
+     for (var j=0, _len_j = ext.length; j < _len_j; j++) {
+         for (var k=0, _len_k = mods.length; k < _len_k; k++) {
              var path=search_path[i]+'/'+mods[k]+ext[j]
 
              //console.log("searching for " + path);
@@ -77,7 +77,7 @@ $compile_python=function(module_contents,module) {
     mod_node.children = body
     // search for module-level names : functions, classes and variables
     var mod_names = []
-    for(var i=0;i<mod_node.children.length;i++){
+    for(var i=0, _len_i = mod_node.children.length; i < _len_i;i++){
         var node = mod_node.children[i]
         // use function get_ctx() 
         // because attribute 'context' is renamed by make_dist...
@@ -85,7 +85,7 @@ $compile_python=function(module_contents,module) {
         if(ctx.type==='def'||ctx.type==='class'){
             if(mod_names.indexOf(ctx.name)===-1){mod_names.push(ctx.name)}
         } else if(ctx.type==='from') {
-            for (var j=0; j< ctx.names.length; j++) {
+            for (var j=0, _len_j = ctx.names.length; j < _len_j; j++) {
                 var name=ctx.names[j];
                 if (name === '*') {
                    // just pass, we don't want to include '*'
@@ -109,7 +109,7 @@ $compile_python=function(module_contents,module) {
     }
     // create the object that will be returned when the anonymous function is run
     var ret_code = 'return {'
-    for(var i=0;i<mod_names.length;i++){
+    for(var i=0, _len_i = mod_names.length; i < _len_i;i++){
         ret_code += mod_names[i]+':'+mod_names[i]+','
     }
     ret_code += '__getattr__:function(attr){return this[attr]},'

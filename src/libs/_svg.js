@@ -26,7 +26,7 @@ function makeTagDict(tagName){
             if(isinstance(first,[str,int,float])){
                 self.elt.appendChild(document.createTextNode(str(first)))
             } else if(first.__class__===$TagSumDict){
-                for(var i=0;i<first.children.length;i++){
+                for(var i=0, _len_i = first.children.length; i < _len_i;i++){
                     self.elt.appendChild(first.children[i].elt)
                 }
             } else { // argument is another DOMNode instance
@@ -36,7 +36,7 @@ function makeTagDict(tagName){
         }
 
         // attributes
-        for(var i=0;i<$ns['kw'].$keys.length;i++){
+        for(var i=0, _len_i = $ns['kw'].$keys.length; i < _len_i;i++){
             // keyword arguments
             var arg = $ns['kw'].$keys[i]
             var value = $ns['kw'].$values[i]
@@ -88,7 +88,7 @@ function makeFactory(tagName){
         res.__class__ = dicts[tagName]
         // apply __init__
         var args = [res]
-        for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
+        for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
         dicts[tagName].__init__.apply(null,args)
         return res
     }
@@ -138,7 +138,7 @@ var $svg_tags = ['a',
 // create classes
 var obj = new Object()
 var dicts = {}
-for(var i=0;i<$svg_tags.length;i++){
+for(var i=0, _len_i = $svg_tags.length; i < _len_i;i++){
     var tag = $svg_tags[i]
     dicts[tag]=makeTagDict(tag)
     obj[tag] = makeFactory(tag)

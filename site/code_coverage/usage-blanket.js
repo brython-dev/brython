@@ -58,11 +58,11 @@
 
         var total =0, totalCovered=0;
 
-        for(var i=0;i<keys.length;i++){
+        for(var i=0, _len_i = keys.length; i < _len_i;i++){
             //loop through files
             var file = data[keys[i]];
             var lineKeys = Object.keys(file);
-            for(var j=0;j<lineKeys.length;j++){
+            for(var j=0, _len_j = lineKeys.length; j < _len_j;j++){
                 //loop through lines
                 if (typeof file[lineKeys[j]] === "number"){
                     if (file[lineKeys[j]] > 0){
@@ -97,7 +97,7 @@
         var newObj = {};
 
         var keys = Object.keys(obj);
-        for (var i=0;i<keys.length;i++){
+        for (var i=0, _len_i = keys.length; i < _len_i;i++){
             newObj[keys[i]]=obj[keys[i]].slice(0);
         }
         return newObj;
