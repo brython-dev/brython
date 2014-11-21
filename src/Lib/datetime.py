@@ -2120,7 +2120,6 @@ pretty bizarre, and a tzinfo subclass can override fromutc() if it is.
 #except ImportError:
 #    pass
 #else:
-<<<<<<< HEAD
 #    # Clean up unused names
 #    del (_DAYNAMES, _DAYS_BEFORE_MONTH, _DAYS_IN_MONTH,
 #         _DI100Y, _DI400Y, _DI4Y, _MAXORDINAL, _MONTHNAMES,
