@@ -2,15 +2,15 @@
 <html>
 <head>
     <title>Brython</title>
-    <meta charset=UTF-8>
-    <meta name=robots content="index, follow">
-    <meta name=description content=Brython >
-    <meta name=author content="Pierre Quentel">
-    <meta name=keywords content="Python, Brython">
-    <meta name=viewport content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="shortcut icon" href=brython.png type=image/x-icon >
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow">
+    <meta name="description" content="Brython">
+    <meta name="author" content="Pierre Quentel">
+    <meta name="keywords" content="Python, Brython">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="shortcut icon" href="brython.png" type="image/x-icon">
     <noscript>Please enable Javascript to view this page correctly.</noscript>
-    <link rel=stylesheet href="../doc/doc_brython.css">
+    <link rel="stylesheet" href="../doc/doc_brython.css">
     <style>
     .layered-paper {
         position:relative;
@@ -51,7 +51,7 @@
         transform:skew(8deg) rotate(3deg)
     }
     </style>
-    <script src="../../src/brython.js" async onload=brython(1) ></script>
+    <script src="../../src/brython.js"></script>
     <script type="text/python3">
     import header
     header.show('../')
@@ -59,10 +59,10 @@
 </head>
 
 
-<body>
+<body onload="brython(1)">
 
-    <table id=banner cellpadding=0 cellspacing=0>
-        <tr id=banner_row >
+    <table id="banner" cellpadding="0" cellspacing="0">
+        <tr id="banner_row">
     </table>
 
     <div style="text-align:center">
@@ -88,7 +88,6 @@
 <br><a target="_blank" href="battery.html" title="por Nicolas Pinault">carga de batería</a>
 <br><a target="_blank" href="barcode.html" title="por Carl Smith">código de barras</a>
 <br><a target="_blank" href="http://brython.info/cours_python/cours_python.html">presentación del tutorial Python (en francés)</a>
-<br><a target="_blank" href="turtle.html">Turtle Graphics</a>
 </td>
 
         <td valign="top">
