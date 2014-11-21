@@ -29,9 +29,9 @@ Contrairement à Python 2, `print` est une fonction et pas un mot-clé, les pare
 Mots clés et fonctions intégrées
 --------------------------------
 
-Brython supporte l'essentiel des mots-clés et des fonctions de Python 3 :
+Brython supporte tous les mots-clés et la plupart des fonctions de Python 3 :
 
-- mots clés : `as, assert, break, class, continue, def, del, elif, else, except, False, finally, for, from, global, if, import, is, lambda, None, pass, return, True, try, while, with, yield`
+- mots clés : `as, assert, break, class, continue, def, del, elif, else, except, False, finally, for, from, global, if, import, is, lambda, None, nonlocal, pass, return, True, try, while, with, yield`
 - fonctions intégrées : `abs(), all(), any(), ascii(), bin(), bool(), bytes(), callable(), chr(), classmethod(), delattr(), dict(), dir(), divmod(), enumerate(), eval(), exec(), filter(), float(), frozenset(), getattr(), globals(), hasattr(), hash(), hex(), id(), input(), int(), isinstance(), iter(), len(), list(), locals(), map(), max(), min(), next(), object(), open(), ord(), pow(), print(), property(), range(), repr(), reversed(), round(), set(), setattr(), slice(), sorted(), str(), sum(), super(), tuple(), type(), zip(), __import__`
 
 Quelques particularités liées au contexte d'exécution dans un navigateur :
@@ -47,8 +47,5 @@ Quelques particularités liées au contexte d'exécution dans un navigateur :
 >>    from browser import window
 >>    window.print(text)
 
-Ne sont pas pris en charge dans la version actuelle : 
-
-- le mot-clé `nonlocal`
-- les fonctions intégrées `help(),  memoryview(),  vars()`
+Ne sont pas pris en charge dans la version actuelle les fonctions intégrées `memoryview(),  vars()`
 

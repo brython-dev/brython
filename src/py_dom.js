@@ -64,7 +64,7 @@ var $DOMNodeAttrs = ['nodeName','nodeValue','nodeType','parentNode',
     'attributes','ownerDocument']
 
 $B.$isNode = function(obj){
-    for(var i=0, _len_i = $DOMNodeAttrs.length; i < _len_i;i++){
+    for(var i=0;i<$DOMNodeAttrs.length;i++){
         if(obj[$DOMNodeAttrs[i]]===undefined) return false
     }
     return true
@@ -100,11 +100,11 @@ var $DOMEventAttrs_IE = ['altKey','altLeft','button','cancelBubble',
 
 $B.$isEvent = function(obj){
     flag = true
-    for(var i=0, _len_i = $DOMEventAttrs_W3C.length; i < _len_i;i++){
+    for(var i=0;i<$DOMEventAttrs_W3C.length;i++){
         if(obj[$DOMEventAttrs_W3C[i]]===undefined){flag=false;break}
     }
     if(flag) return true
-    for(var i=0, _len_i = $DOMEventAttrs_IE.length; i < _len_i;i++){
+    for(var i=0;i<$DOMEventAttrs_IE.length;i++){
         if(obj[$DOMEventAttrs_IE[i]]===undefined) return false
     }
     return true
@@ -187,7 +187,7 @@ function $EventsList(elt,evt,arg){
     else{this.callbacks = [arg]}
     this.remove = function(callback){
         var found = false
-        for(var i=0, _len_i = this.callbacks.length; i < _len_i;i++){
+        for(var i=0;i<this.callbacks.length;i++){
             if(this.callbacks[i]===callback){
                 found = true
                 this.callback.splice(i,1)
@@ -355,7 +355,7 @@ DOMNode.__add__ = function(self,other){
     var res = $TagSum()
     res.children = [self]
     if(isinstance(other,$TagSum)){
-        for(var $i=0, _len_$i = other.children.length; $i < _len_$i;$i++){res.children.push(other.children[$i])}
+        for(var $i=0;$i<other.children.length;$i++){res.children.push(other.children[$i])}
     } else if(isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.list,
                                 _b_.dict,_b_.set,_b_.tuple])){
         res.children.push($DOMNode(document.createTextNode(_b_.str(other))))
@@ -426,7 +426,7 @@ DOMNode.__getattribute__ = function(self,attr){
           var headers = req.getAllResponseHeaders();
           headers = headers.split('\r\n')
           var res = _b_.dict()
-          for(var i=0, _len_i = headers.length; i < _len_i;i++){
+          for(var i=0;i<headers.length;i++){
               var header = headers[i]
               if(header.strip().length==0){continue}
               var pos = header.search(':')
@@ -456,7 +456,7 @@ DOMNode.__getattribute__ = function(self,attr){
             var func = (function(f,elt){
                 return function(){
                     var args = []
-                    for(var i=0, _len_i = arguments.length; i < _len_i;i++){
+                    for(var i=0;i<arguments.length;i++){
                         var arg=arguments[i]
                         if(isinstance(arg,JSObject)){
                             args.push(arg.js)
@@ -491,7 +491,7 @@ DOMNode.__getitem__ = function(self,key){
         }else{
             try{
                 var elts=self.elt.getElementsByTagName(key.$dict.__name__),res=[]
-                for(var $i=0, _len_$i = elts.length; $i < _len_$i;$i++) res.push($DOMNode(elts[$i]))
+                for(var $i=0;$i<elts.length;$i++) res.push($DOMNode(elts[$i]))
                 return res
             }catch(err){
                 throw KeyError(str(key))
@@ -513,7 +513,7 @@ DOMNode.__le__ = function(self,other){
     if(self.elt.nodeType===9){elt = self.elt.body} 
     if(isinstance(other,$TagSum)){
         var $i=0
-        for($i=0, _len_$i = other.children.length; $i < _len_$i;$i++){
+        for($i=0;$i<other.children.length;$i++){
             elt.appendChild(other.children[$i].elt)
         }
     }else if(typeof other==="string" || typeof other==="number"){
@@ -603,7 +603,7 @@ DOMNode.bind = function(self,event){
         $B.events.$values[ix].$values.push([])
         ix_event = $B.events.$values[ix].$values.length-1
     }
-    for(var i=2, _len_i = arguments.length; i < _len_i;i++){
+    for(var i=2;i<arguments.length;i++){
         var func = arguments[i]
         var callback = (function(f){
             return function(ev){
@@ -626,7 +626,7 @@ DOMNode.bind = function(self,event){
 
 DOMNode.children = function(self){
     var res = []
-    for(var i=0, _len_i = self.elt.childNodes.length; i < _len_i;i++){
+    for(var i=0;i<self.elt.childNodes.length;i++){
         res.push($DOMNode(self.elt.childNodes[i]))
     }
     return res
@@ -656,9 +656,9 @@ DOMNode.clone = function(self){
     var ix_elt = $B.events.$keys.indexOf(self.elt.$brython_id)
     if(ix_elt!=-1){
         var events = $B.events.$values[ix_elt]
-        for(var i=0, _len_i = events.$keys.length; i < _len_i;i++){
+        for(var i=0;i<events.$keys.length;i++){
             var event = events.$keys[i]
-            for(var j=0, _len_j = events.$values[i].length; j < _len_j;j++){
+            for(var j=0;j<events.$values[i].length;j++){
                 DOMNode.bind(res,event,events.$values[i][j][0])
             }
         }
@@ -681,10 +681,10 @@ DOMNode.get = function(self){
     // key can be 'id','name' or 'selector'
     var obj = self.elt
     var args = []
-    for(var i=1, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+    for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
     var $ns=$B.$MakeArgs('get',args,[],[],null,'kw')
     var $dict = {}
-    for(var i=0, _len_i = $ns['kw'].$keys.length; i < _len_i;i++){
+    for(var i=0;i<$ns['kw'].$keys.length;i++){
         $dict[$ns['kw'].$keys[i]]=$ns['kw'].$values[i]
     }
     if($dict['name']!==undefined){
@@ -694,7 +694,7 @@ DOMNode.get = function(self){
         var res = []
         var node_list = document.getElementsByName($dict['name'])
         if(node_list.length===0) return []
-        for(var i=0, _len_i = node_list.length; i < _len_i;i++) res.push($DOMNode(node_list[i]))
+        for(var i=0;i<node_list.length;i++) res.push($DOMNode(node_list[i]))
     }
     if($dict['tag']!==undefined){
         if(obj.getElementsByTagName===undefined){
@@ -703,7 +703,7 @@ DOMNode.get = function(self){
         var res = []
         var node_list = document.getElementsByTagName($dict['tag'])
         if(node_list.length===0) return []
-        for(var i=0, _len_i = node_list.length; i < _len_i;i++) res.push($DOMNode(node_list[i]))
+        for(var i=0;i<node_list.length;i++) res.push($DOMNode(node_list[i]))
     }
     if($dict['classname']!==undefined){
         if(obj.getElementsByClassName===undefined){
@@ -712,7 +712,7 @@ DOMNode.get = function(self){
         var res = []
         var node_list = document.getElementsByClassName($dict['classname'])
         if(node_list.length===0) return []
-        for(var i=0, _len_i = node_list.length; i < _len_i;i++) res.push($DOMNode(node_list[i]))
+        for(var i=0;i<node_list.length;i++) res.push($DOMNode(node_list[i]))
     }
     if($dict['id']!==undefined){
         if(obj.getElementById===undefined){
@@ -729,14 +729,14 @@ DOMNode.get = function(self){
         var node_list = obj.querySelectorAll($dict['selector'])
         var sel_res = []
         if(node_list.length===0) return []
-        for(var i=0, _len_i = node_list.length; i < _len_i;i++) sel_res.push($DOMNode(node_list[i]))
+        for(var i=0;i<node_list.length;i++) sel_res.push($DOMNode(node_list[i]))
         
         if(res===undefined) return sel_res
         var to_delete = []
-        for(var i=0, _len_i = res.length; i < _len_i;i++){
+        for(var i=0;i<res.length;i++){
             var elt = res[i] // keep it only if it is also inside sel_res
             flag = false
-            for(var j=0, _len_j = sel_res.length; j < _len_j;j++){
+            for(var j=0;j<sel_res.length;j++){
                 if(elt.__eq__(sel_res[j])){flag=true;break}
             }
             if(!flag){to_delete.push(i)}
@@ -811,7 +811,6 @@ DOMNode.reset = function(self){ // for FORM
 DOMNode.style = function(self){
     // set attribute "float" for cross-browser compatibility
     self.elt.style.float = self.elt.style.cssFloat || self.style.styleFloat
-    console.log('get style')
     return $B.JSObject(self.elt.style)
 }
 
@@ -844,7 +843,10 @@ DOMNode.set_html = function(self,value){
 }
 
 DOMNode.set_style = function(self,style){ // style is a dict
-    for(var i=0, _len_i = style.$keys.length; i < _len_i;i++){
+    if(!_b_.isinstance(style, _b_.dict)){
+        throw TypeError('style must be dict, not '+$B.get_class(style).__name__)
+    }
+    for(var i=0;i<style.$keys.length;i++){
         var key = style.$keys[i],value=style.$values[i]
         if(key.toLowerCase()==='float'){
             self.elt.style.cssFloat = value
@@ -906,7 +908,7 @@ DOMNode.unbind = function(self,event){
 
     var events = $B.events.$values[ix_elt].$values[ix_event]
     if(arguments.length===2){
-        for(var i=0, _len_i = events.length; i < _len_i;i++){
+        for(var i=0;i<events.length;i++){
             var callback = events[i][1]
             if(window.removeEventListener){
                 self.elt.removeEventListener(event,callback,false)
@@ -917,9 +919,9 @@ DOMNode.unbind = function(self,event){
         $B.events.$values[ix_elt][ix_event] = []
         return
     }
-    for(var i=2, _len_i = arguments.length; i < _len_i;i++){
+    for(var i=2;i<arguments.length;i++){
         var func = arguments[i], flag = false
-        for(var j=0, _len_j = events.length; j < _len_j;j++){
+        for(var j=0;j<events.length;j++){
             if(getattr(func,'__eq__')(events[j][0])){
                 var callback = events[j][1]
                 if(window.removeEventListener){
@@ -1005,7 +1007,7 @@ DOMNode.query = function(self){
         _values : {}
     }
     var qs = location.search.substr(1).split('&')
-    for(var i=0, _len_i = qs.length; i < _len_i;i++){
+    for(var i=0;i<qs.length;i++){
         var pos = qs[i].search('=')
         var elts = [qs[i].substr(0,pos),qs[i].substr(pos+1)]
         var key = decodeURIComponent(elts[0])
@@ -1047,7 +1049,7 @@ $TagSumDict.__radd__ = function(self,other){
 
 $TagSumDict.__repr__ = function(self){
     var res = '<object TagSum> '
-    for(var i=0, _len_i = self.children.length; i < _len_i;i++){
+    for(var i=0;i<self.children.length;i++){
         res+=self.children[i]
         if(self.children[i].toString()=='[object Text]'){res += ' ['+self.children[i].textContent+']\n'}
     }
@@ -1058,7 +1060,7 @@ $TagSumDict.__str__ = $TagSumDict.toString = $TagSumDict.__repr__
 
 $TagSumDict.clone = function(self){
     var res = $TagSum(), $i=0
-    for(var $i=0, _len_$i = self.children.length; $i < _len_$i;$i++){
+    for($i=0;$i<self.children.length;$i++){
         res.children.push(self.children[$i].cloneNode(true))
     }
     return res
@@ -1180,7 +1182,7 @@ DOMNode.before = function(self,content){
 DOMNode.prototype.closest = function(selector){
    var traverse=function(node, ancestors) {
        if (node === _doc) return None
-       for(var i=0, _len_i = ancestors.length; i < _len_i; i++) {
+       for(var i=0; i<ancestors.length; i++) {
           if (node === ancestors[i]) { 
              return ancestors[i];
           }
@@ -1215,7 +1217,7 @@ DOMNode.prototype.css = function(property,value){
 }
 
 DOMNode.prototype.empty = function(){
-   for (var i=0, _len_i = this.childNodes.length; i <= _len_i; i++) {
+   for (var i=0; i <= this.childNodes.length; i++) {
        this.removeChild(this.childNodes[i])
    }
 }

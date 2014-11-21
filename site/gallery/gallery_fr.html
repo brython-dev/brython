@@ -2,15 +2,15 @@
 <html>
 <head>
     <title>Brython</title>
-    <meta charset=UTF-8>
-    <meta name=robots content="index, follow">
-    <meta name=description content=Brython >
-    <meta name=author content="Pierre Quentel">
-    <meta name=keywords content="Python, Brython">
-    <meta name=viewport content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="shortcut icon" href=brython.png type=image/x-icon >
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow">
+    <meta name="description" content=Brython >
+    <meta name="author" content="Pierre Quentel">
+    <meta name="keywords" content="Python, Brython">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="shortcut icon" href="brython.png" type="image/x-icon">
     <noscript>Please enable Javascript to view this page correctly.</noscript>
-    <link rel=stylesheet href="../doc/doc_brython.css">
+    <link rel="stylesheet" href="../doc/doc_brython.css">
     <style>
     .layered-paper {
         position:relative;
@@ -24,7 +24,7 @@
         margin:26px auto 0;
         max-width:900px;
         min-height:400px;
-        padding:24px;
+        padding:0;
         position:relative;
         font-family:Oxygen,Helvetica;
         text-align:center
@@ -51,7 +51,7 @@
         transform:skew(8deg) rotate(3deg)
     }
     </style>
-    <script src="../../src/brython.js" async onload=brython(1) ></script>
+    <script src="../../src/brython.js"></script>
     <script type="text/python3">
     import header
     header.show('../')
@@ -59,10 +59,10 @@
 </head>
 
 
-<body>
+<body onload="brython(1)">
 
-    <table id=banner cellpadding=0 cellspacing=0>
-        <tr id=banner_row >
+    <table id="banner" cellpadding="0" cellspacing="0">
+        <tr id="banner_row">
     </table>
 
     <div style="text-align:center">
@@ -71,30 +71,30 @@
         <tr>
         <td valign="top">
         <h3>Brython</h3>
-<a class="glink" target="_blank" href="hello.html">Hello world !</a>
+<a target="_blank" href="hello.html">Hello world !</a>
 <br><a target="_blank" href="ajax.html">ajax</a>
 <br><a target="_blank" href="sort_table.html">tri de table</a>
 <br>
 <br><a target="_blank" href="svg_pie_chart.html">camembert SVG</a>
 <br><a target="_blank" href="solitaire.html">jeu de solitaire en SVG</a>
 <br><a target="_blank" href="sudoku.html">sudoku</a>
-<br><a target="_blank" href="compass.html">boussole SVG</a> par Nicolas Pinault<br>(fonctionne sur certains mobiles)
-<br><a target="_blank" href="geo.html">geolocalisation</a> par François Dion
-<br><a target="_blank" href="ruskey.html">clavier russe QWERTY</a> par François Dion
-<br><a target="_blank" href="kanban.html">simulateur Kanban</a> par Pedro Rodriguez
-<br><a target="_blank" href="ui/index.html">composants UI</a> par Billy Earney
+<br><a target="_blank" href="compass.html" title="par Nicolas Pinault">boussole SVG</a>
+<br><a target="_blank" href="geo.html" title="par François Dion">geolocalisation</a>
+<br><a target="_blank" href="ruskey.html" title="par François Dion">clavier russe QWERTY</a>
+<br><a target="_blank" href="kanban.html" title="par Pedro Rodriguez">simulateur Kanban</a>
+<br><a target="_blank" href="ui/index.html" title="par Billy Earney">composants UI</a>
 <br><a target="_blank" href="unbind.html">lier et annuler des liaisons aux événements</a>
-<br><a target="_blank" href="battery.html">charge de batterie</a> par Nicolas Pinault
-<br><a target="_blank" href="barcode.html">code barre</a> par Carl Smith
+<br><a target="_blank" href="battery.html" title="par Nicolas Pinault">charge de batterie</a>
+<br><a target="_blank" href="barcode.html" title="par Carl Smith">code barre</a>
 <br><a target="_blank" href="http://brython.info/cours_python/cours_python.html">tutoriel Python en diaporama</a>
 
 
-<p><i>les exemples suivants nécessitent HTML5</i>
+<p><i><small>les exemples suivants nécessitent HTML5</small></i>
 <br><a target="_blank" href="clock.html">horloge analogique</a>
 <br><a target="_blank" href="europe.html">glisser-déposer</a>
-<br><a target="_blank" href="drop_files.html">glisser-déposer de fichiers</a> par Glenn Linderman
+<br><a target="_blank" href="drop_files.html" title="par Glenn Linderman">glisser-déposer de fichiers</a>
 <br><a target="_blank" href="sheet.html">stockage local</a>
-<br><a target="_blank" href="canvas_plot.html">Python plot sur le web</a> par Kiko Correoso
+<br><a target="_blank" href="canvas_plot.html" title="par Kiko Correoso">Python plot sur le web</a>
 <br><a target="_blank" href="3Dwalker.html">animation 3D</a>
 
 </td>
@@ -102,7 +102,7 @@
 <td valign="top">
 <h3>Interaction avec des librairies Javascript</h3>
 
-<a target="_blank" href="three.html">animation 3D avec three.js</a> par Dirk Krause
+<a target="_blank" href="three.html" title="par Dirk Krause">animation 3D avec three.js</a>
 <br><a target="_blank" href="raphael">Raphael (graphiques vectoriel)</a>
 <br><a target="_blank" href="highcharts">Highcharts (courbes et graphes)</a>
 

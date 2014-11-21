@@ -48,6 +48,9 @@ $B.builtins = {
     __str__:function(){return "<module 'builtins'>"},    
 }
 
+// Builtin functions : used in py2js to simplify the code produced by a call
+$B.builtin_funcs = {}
+
 $B.__getattr__ = function(attr){return this[attr]}
 $B.__setattr__ = function(attr,value){
     // limited to some attributes

@@ -320,4 +320,61 @@ $DictDict.$factory = dict
 $DictDict.__new__ = $B.$__new__(dict)
 
 _b_.dict = dict
+
+// Class used for attribute __dict__ of objects
+
+$ObjDictDict = {__class__:$B.$type,__name__:'obj_dict'}
+$ObjDictDict.__mro__ = [$ObjDictDict, $DictDict, $ObjectDict]
+
+$ObjDictDict.__delitem__ = function(self, key){
+    $DictDict.__delitem__(self, key)
+    delete self.$obj[key]
+}
+
+$ObjDictDict.__setitem__ = function(self, key, value){
+    $DictDict.__setitem__(self, key, value)
+    self.$obj[key] = value
+}
+
+$ObjDictDict.clear = function(self){
+    $DictDict.clear(self)
+    for(var key in self.$obj){delete self.$obj[key]}
+}
+
+$ObjDictDict.pop = function(self, key, _default){
+    $DictDict.pop(self, key, _default)
+    delete self.$obj[key]
+    return key
+}
+
+$ObjDictDict.popitem = function(self){
+    var res = $DictDict.popitem(self) // tuple
+    var key = res[0]
+    delete self.$obj[key]
+    return res
+}
+
+$ObjDictDict.update = function(self, other){
+    $DictDict.update(self, other)
+    for(var i=0;i<other.$keys.length;i++){
+        self.$obj[other.$keys[i]]=other.$values[i]
+    }    
+}
+
+function obj_dict(obj){
+    var res = {__class__:$ObjDictDict,$obj:obj,$keys:[],$values:[]}
+    for(var attr in obj){
+        if(attr.charAt(0)!='$'){
+            res.$keys.push(attr)
+            res.$values.push(obj[attr])
+        }
+    }
+    return res
+}
+obj_dict.$dict = $ObjDictDict
+obj_dict.__class__ = $B.$factory
+$ObjDictDict.$factory = obj_dict
+
+$B.obj_dict = obj_dict
+
 })(__BRYTHON__)

@@ -593,7 +593,7 @@ def minify(source):
 
 
 def bz2_pack(source):
-    "Returns 'source' as a bzip2-compressed, self-extracting python script."
+    """Returns 'source' as a bzip2-compressed, self-extracting python script."""
     import bz2
     import base64
     out = ""
@@ -606,7 +606,7 @@ def bz2_pack(source):
 
 
 def gz_pack(source):
-    "Returns 'source' as a gzip-compressed, self-extracting python script."
+    """Returns 'source' as a gzip-compressed, self-extracting python script."""
     import zlib
     import base64
     out = ""
@@ -628,7 +628,7 @@ def test_reduce_operators():
     """Test the case where an operator such as an open paren starts a line"""
     # The indentation level should be preserved
     (a, b) = 1, 2  # lint:ok
-    pass
+    print(a, b)
 
 
 def test_empty_functions():
@@ -639,7 +639,7 @@ def test_empty_functions():
 
 
 class test_class(object):
-    "Testing indented decorators"
+    """Testing indented decorators."""
 
     @test_decorator
     def foo(self):
@@ -673,6 +673,8 @@ def test_function():
     # This tests remove_extraneous_spaces():
     this_line_has_leading_indentation    = '''<--That extraneous space should be
                                               removed'''  # But not these spaces
+    print((foo, test_multi_line_list, test_multi_line_dict,
+           test_string_inside_operators, this_line_has_leading_indentation))
 
 
 def main():

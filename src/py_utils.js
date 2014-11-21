@@ -23,19 +23,16 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
         else {
            switch($arg.$nat) {
              case 'ptuple':
-               //else if($arg.__class__===$B.$ptupleDict){
                var _arg=$arg.arg
                for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs.push(_arg[j])
                break
              case 'pdict':
-               //}else if($arg.__class__===$B.$pdictDict){
                var _arg=$arg.arg
                for(var j=0, _len_j = _arg.$keys.length; j < _len_j;j++){
                   upargs.push({$nat:"kw",name:_arg.$keys[j],value:_arg.$values[j]})
                }
                break
              default:
-               //}else{
                upargs.push($arg)
            }//switch
         }//else
@@ -51,16 +48,13 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
                 var ix = $required.indexOf($arg.name)
                 eval('var '+$required[ix]+"=$PyVar")
                 $ns[$required[ix]]=$PyVar
-                //$set_vars.push($required[ix])
             }else if($other_args!==null && $after_star!==undefined &&
                 $after_star.indexOf($arg.name)>-1){
                     var ix = $after_star.indexOf($arg.name)
                     eval('var '+$after_star[ix]+"=$PyVar")
                     $ns[$after_star[ix]]=$PyVar
-                    //$set_vars.push($after_star[ix])
             } else if($defaults.indexOf($arg.name)>-1){
                 $ns[$arg.name]=$PyVar
-                //$set_vars.push($arg.name)
             } else if($other_kw!=null){
                 $dict_keys.push($arg.name)
                 $dict_values.push($PyVar)
@@ -73,13 +67,11 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
             if($i<$required.length){
                 eval('var '+$required[$i]+"=$PyVar")
                 $ns[$required[$i]]=$PyVar
-                //$set_vars.push($required[$i])
             } else if($other_args!==null){
                 eval('$ns["'+$other_args+'"].push($PyVar)')
             } else if($i<$required.length+$defaults.length) {
                 var $var_name = $defaults[$i-$required.length]
                 $ns[$var_name]=$PyVar
-                //$set_vars.push($var_name)
             } else {
                 console.log(''+$B.line_info)
                 msg = $fname+"() takes "+$required.length+' positional argument'
@@ -130,8 +122,6 @@ $B.get_class = function(obj){
           case 'object':
             if(obj.constructor===Array) return _b_.list.$dict
         }
-        //if(obj===true||obj===false) return $B.$BoolDict
-        //if(typeof obj=='object' && obj.constructor===Array) return _b_.list.$dict
     }
     return klass
 }
@@ -150,7 +140,6 @@ $B.$list_comp = function(module_name, parent_block_id){
     var indent=4
     for(var $i=3, _len_$i = arguments.length; $i < _len_$i;$i++){
         $py += ' '.repeat(indent)
-        //for(var $j=0;$j<indent;$j++) $py += ' '
         $py += arguments[$i]+':\n'
         indent += 4
     }
@@ -164,10 +153,8 @@ $B.$list_comp = function(module_name, parent_block_id){
         $B.line_info)
     
     $root.caller = $B.line_info
-    //$root.module = $mod_name
 
     var $js = $root.to_js()
-    //console.log('list comp\n'+$js)
     
     try{eval($js)}
     catch(err){throw $B.exception(err)}
@@ -184,7 +171,7 @@ $B.$gen_expr = function(){ // generator expresssion
     var indent=0
     for(var $i=3, _len_$i = arguments.length; $i < _len_$i;$i++){
         for(var $j=0;$j<indent;$j++) $py += ' '
-        $py += arguments[$i]+':\n'
+        $py += arguments[$i].join(' ')+':\n'
         indent += 4
     }
     for(var $j=0;$j<indent;$j++) $py += ' '
@@ -242,7 +229,6 @@ $B.$dict_comp = function(module_name,parent_block_id){ // dictionary comprehensi
     var $root = $B.py2js($py,module_name,locals_id,parent_block_id)
     $root.caller = $B.line_info
     var $js = $root.to_js()
-    //$B.vars[$mod_name] = $env
     eval($js)
     return __BRYTHON__.vars[locals_id][$res]
 }
@@ -621,9 +607,3 @@ if (!String.prototype.repeat) {
     return result + pattern;
   };
 }
-
-// in case console is not defined
-//try{console}
-//catch(err){
-    //var console = {'log':function(data){void(0)}}
-//}

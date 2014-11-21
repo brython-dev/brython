@@ -60,4 +60,19 @@ def foo():
     return res
 assert foo() == [0, 1, 2, 3, 4]
 
+# issues 62, 63 and 64
+import test_sp
+
+s = 'a = 3'
+exec(s, test_sp.__dict__)
+assert test_sp.a == 3
+del test_sp.__dict__['a']
+try:
+    test_sp.a
+    raise ValueError('should have raised AttributeError')
+except AttributeError:
+    pass
+except:
+    raise ValueError('should have raised AttributeError')
+
 print('passed all tests')

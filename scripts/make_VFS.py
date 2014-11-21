@@ -17,7 +17,7 @@ try:
     js_minify = slimit.minify
 except ImportError as error:
     print(error)
-    js_minify = None
+    js_minify = slimit = None
 
 
 ###############################################################################
@@ -25,8 +25,10 @@ except ImportError as error:
 
 def process(filename):
   print(("generating %s" % filename))
+  nb = 0
+  nb_err = 0
   _main_root = os.path.dirname(filename)
-  _VFS={}
+  _VFS = {}
   for _mydir in ("libs", "Lib"):
     for _root, _dir, _files in os.walk(os.path.join(_main_root, _mydir)):
         if _root.endswith('lib_migration'):
@@ -37,22 +39,31 @@ def process(filename):
             _ext = os.path.splitext(_file)[1]
             if _ext not in ('.js', '.py'):
                 continue
+            nb += 1
 
             with open(os.path.join(_root, _file), "r") as file_with_data:
                 _data = file_with_data.read()
+            
+            if len(_data) == 0:
+                print('no data for %s' % _file)
+                _data = unicode('')
+                print(_data, type(_data))
+            else:
+                _data = _data.decode('utf-8')
 
-            if _ext in ('.js'):
+            if _ext in '.js':
                if js_minify is not None:
                   try:
                     _data = js_minify(_data)
-                  except:
-                    pass
-            elif _ext == '.py':
+                  except Exception as error:
+                    print(error)
+            elif _ext == '.py' and len(_data) > 0:
                try:
                  _data = pyminifier.remove_comments_and_docstrings(_data)
                  _data = pyminifier.dedent(_data)
-               except:
-                 pass
+               except Exception as error:
+                 print(error)
+                 nb_err += 1
 
             _vfs_filename = os.path.join(_root, _file).replace(_main_root, '')
             _vfs_filename = _vfs_filename.replace("\\", "/")
@@ -71,7 +82,7 @@ def process(filename):
             else:
                 _VFS[mod_name] = [ext, _data]
             print(("adding %s %s" % (mod_name, _vfs_filename)))
-
+  print('%s files, %s errors' % (nb, nb_err))
   with open(filename, "w") as file_to_write_VFS:
     file_to_write_VFS.write('__BRYTHON__.use_VFS = true;\n')
     file_to_write_VFS.write('__BRYTHON__.VFS=%s;\n\n' % json.dumps(_VFS))

@@ -283,8 +283,7 @@ var $comp_func = function(self,other){
       return self.valueOf() > _b_.bool.$dict.__hash__(other)
     }
     throw _b_.TypeError(
-        "unorderable types: "+self.__class__.__name__+'() > '+
-            $B.get_class(other).__name__+"()")
+        "unorderable types: int() > "+$B.get_class(other).__name__+"()")
 }
 $comp_func += '' // source codevar $comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
 for(var $op in $B.$comps){

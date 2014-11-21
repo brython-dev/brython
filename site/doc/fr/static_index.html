@@ -14,20 +14,20 @@ header.show('../../')
 
 def load():
     target = 'content'
-    url = doc.query.getfirst('page','intro')+'.md'
-    
+    url = doc.query.getfirst('page', 'intro') + '.md'
+
     # fake query string to bypass browser cache
-    qs = '?foo=%s' %time.time()
+    qs = '?foo=%s' % time.time()
     try:
-        src = open(url+qs).read()
+        src = open(url + qs).read()
     except IOError:
-        doc[target].html = "Page %s not found" %url
+        doc[target].html = "Page %s not found" % url
         return False
-    
-    mk,scripts = markdown.mark(src)
+
+    mk, scripts = markdown.mark(src)
     doc[target].html = mk
     for script in scripts:
-        exec(script,globals())
+        exec(script, globals())
 
 language = "fr"
 

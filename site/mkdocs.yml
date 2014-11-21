@@ -1,0 +1,30 @@
+site_name: Brython
+
+repo_url: https://github.com/brython-dev/brython
+
+site_description: Brython the Client-Side Python Documentation
+
+site_author: Pierre Quentel
+
+site_favicon: favicon.png
+
+theme: 'mkdocs'
+# theme: 'readthedocs'
+# theme: 'cerulean'
+# theme: 'slate'
+
+docs_dir: 'doc'
+
+site_dir: 'html'
+
+dev_addr: 0.0.0.0:8000
+
+# markdown_extensions: [smartypants]
+
+
+pages:
+    - ['index.md', 'Docs']
+    - ['en/intro.md', 'english', 'Docs Intro']
+    - ['es/intro.md', 'spanish', 'Docs Intro']
+    - ['fr/intro.md', 'french', 'Docs Intro']
+    - ['pt/intro.md', 'italian', 'Docs Intro']

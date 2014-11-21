@@ -89,23 +89,6 @@ ascii.__code__.co_argcount=1
 ascii.__code__.co_consts=[]
 ascii.__code__.co_varnames=['obj']
 
-
-// not in Python but used for tests until unittest works
-// "assert_raises(exception,function,*args)" becomes "if condition: pass else: raise AssertionError"
-function assert_raises(){
-    var $ns=$B.$MakeArgs('assert_raises',arguments,['exc','func'],[],'args','kw')
-    var args = $ns['args']
-    try{$ns['func'].apply(this,args)}
-    catch(err){
-        if(err.name!==$ns['exc']){
-            throw AssertionError(
-                "exception raised '"+err.name+"', expected '"+$ns['exc']+"'")
-        }
-        return
-    }
-    throw AssertionError("no exception raised, expected '"+$ns['exc']+"'")
-}
-
 // used by bin, hex and oct functions
 function $builtin_base_convert_helper(obj, base) {
   var value;
@@ -160,11 +143,9 @@ function bool(obj){ // return true or false
         return obj
       case 'number':
       case 'string':
-        //if(typeof obj==="number" || typeof obj==="string"){
         if(obj) return true
         return false
       default:
-        //}else{
         try{return getattr(obj,'__bool__')()}
         catch(err){
             $B.$pop_exc()
@@ -266,7 +247,7 @@ function delattr(obj, attr) {
     var res = obj[attr]
     if(res===undefined){
         var mro = klass.__mro__
-        for(var i=0, _len_i = mro.length; i < _len_i;i++){
+        for(var i=0;i<mro.length;i++){
             var res = mro[i][attr]
             if(res!==undefined){break}
         }
@@ -292,7 +273,6 @@ function dir(obj){
         var mod_name=arguments[1]
         var res = [],$globals = $B.vars[mod_name]
         for(var attr in $globals){
-            //if(attr.charAt(0)=='$' && attr.substr(0,2)!='$$'){
             if(attr.charAt(0)=='$' && attr.charAt(1) != '$') {
                 // exclude internal attributes set by Brython
                 continue
@@ -387,30 +367,49 @@ enumerate.__code__.co_varnames=['iterable']
 
 //eval() (built in function)
 function $eval(src, _globals, locals){
-    //console.log('exec stack '+$B.exec_stack)
+    var is_exec = arguments[3]=='exec'
     if($B.exec_stack.length==0){$B.exec_stack=['__main__']}
+    var env = $B.exec_stack[$B.exec_stack.length-1]
 
-    if(_globals===undefined){
-        var mod_name=$B.exec_stack[$B.exec_stack.length-1]
+    if(is_exec && _globals===undefined){
+        var mod_name = env
     }else{
         var mod_name = 'exec-'+Math.random().toString(36).substr(2,8)
         __BRYTHON__.$py_module_path[mod_name] = __BRYTHON__.$py_module_path['__main__']
         __BRYTHON__.vars[mod_name] = {}
         __BRYTHON__.bound[mod_name] = {}
-        for(var i=0, _len_i = _globals.$keys.length; i < _len_i;i++){
-            __BRYTHON__.vars[mod_name][_globals.$keys[i]] = _globals.$values[i]
-            __BRYTHON__.bound[mod_name][_globals.$keys[i]] = true
+        if(_globals!==undefined){
+            for(var i=0;i<_globals.$keys.length;i++){
+                __BRYTHON__.vars[mod_name][_globals.$keys[i]] = _globals.$values[i]
+                __BRYTHON__.bound[mod_name][_globals.$keys[i]] = true
+            }
+        }else{
+            for(var attr in $B.vars[env]){
+                __BRYTHON__.vars[mod_name][attr] = $B.vars[env][attr]
+                __BRYTHON__.bound[mod_name][attr] = true
+            }
         }
     }
     $B.exec_stack.push(mod_name)
     try{
-        var js = $B.py2js(src,mod_name,mod_name,'__builtins__').to_js()
-        //console.log(js)
+        var root = $B.py2js(src,mod_name,mod_name,'__builtins__')
+        // If the Python function is eval(), not exec(), check that the source
+        // is an expression
+        if(!is_exec){
+            var instr = root.children[root.children.length-1]
+            var type = instr.context.tree[0].type
+            if(["expr","list_or_tuple"].indexOf(type)==-1){
+                $B.line_info=[1,mod_name]
+                throw SyntaxError("eval() argument must be an expression")
+            }
+        }
+        var js = root.to_js()
         var res = eval(js)
         if(_globals!==undefined){
+            var set_func = getattr(_globals,'__setitem__')
             for(var attr in $B.vars[mod_name]){
                 if(['__name__','__doc__','__file__'].indexOf(attr)>-1){continue}
-                _b_.dict.$dict.__setitem__(_globals, attr, $B.vars[mod_name][attr])
+                set_func(attr, $B.vars[mod_name][attr])
             }
         }
         return res
@@ -421,7 +420,7 @@ function $eval(src, _globals, locals){
 $eval.$is_func = true
 
 function exec(src, globals, locals){
-    return $eval(src, globals, locals) || _b_.None
+    return $eval(src, globals, locals,'exec') || _b_.None
 }
 
 exec.$is_func = true
@@ -488,17 +487,10 @@ function getattr(obj,attr,_default){
     // return the factory function
     if(attr=='__class__') return klass.$factory
     
-    // attribute __dict__ returns a dictionary of all attributes
-    // of the underlying Javascript object
+    // attribute __dict__ returns an instance of a subclass of dict
+    // defined in py_dict.js
     if(attr==='__dict__'){
-        var res = _b_.dict()
-        for(var $attr in obj){
-            if($attr.charAt(0)!='$'){
-                res.$keys.push($attr)
-                res.$values.push(obj[$attr])
-            }
-        }
-        return res
+        return $B.obj_dict(obj)
     }
     
     // __call__ on a function returns the function itself
@@ -564,7 +556,7 @@ function getattr(obj,attr,_default){
             
             var method = function(){
                 var args = [obj]
-                for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+                for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
                 return klass[attr].apply(null,args)
             }
             method.__name__ = 'method '+attr+' of built-in '+klass.__name__
@@ -588,7 +580,7 @@ function getattr(obj,attr,_default){
             }
             console.log('obj class '+dir(klass)+' str '+klass)
         }
-        for(var i=0, _len_i = mro.length; i < _len_i;i++){
+        for(var i=0;i<mro.length;i++){
             attr_func = mro[i]['__getattribute__']
             if(attr_func!==undefined) break
         }
@@ -611,15 +603,11 @@ function getattr(obj,attr,_default){
     throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")
 }
 
-//isn't taken care of by the for loop at the bottom of this file?
-//getattr.__name__ = 'getattr'
-
 getattr.__doc__="getattr(object, name[, default]) -> value\n\nGet a named attribute from an object; getattr(x, 'y') is equivalent to x.y.\nWhen a default argument is given, it is returned when the attribute doesn't\nexist; without it, an exception is raised in that case."
 getattr.__code__={}
 getattr.__code__.co_argcount=1
 getattr.__code__.co_consts=[]
 getattr.__code__.co_varnames=['value']
-
 
 //globals() (built in function)
 function globals(module){
@@ -673,8 +661,7 @@ hash.__code__.co_varnames=['object']
 
 function help(obj){
     if (obj === undefined) obj='help'
-    if(typeof obj == 'function') obj=getattr(obj, '__name__')
-
+    
     // if obj is a builtin, lets take a shortcut, and output doc string
     if(typeof obj=='string' && _b_[obj] !== undefined) {
       var _doc=_b_[obj].__doc__
@@ -760,7 +747,7 @@ function isinstance(obj,arg){
     if(obj===null) return arg===None
     if(obj===undefined) return false
     if(arg.constructor===Array){
-        for(var i=0, _len_i = arg.length; i < _len_i;i++){
+        for(var i=0;i<arg.length;i++){
             if(isinstance(obj,arg[i])) return true
         }
         return false
@@ -788,7 +775,7 @@ function isinstance(obj,arg){
 
        if(arg.$dict===undefined){return false}
        var _name=arg.$dict.__name__
-       for(var i=0, _len_i = klass.__mro__.length; i < _len_i;i++){
+       for(var i=0;i<klass.__mro__.length;i++){
           //we need to find a better way of comparing __mro__'s and arg.$dict
           //for now, just assume that if the __name__'s match, we have a match
           if(klass.__mro__[i].__name__== _name) return true
@@ -814,7 +801,7 @@ function issubclass(klass,classinfo){
       throw _b_.TypeError("issubclass() arg 1 must be a class")
     }
     if(isinstance(classinfo,_b_.tuple)){
-      for(var i=0, _len_i = classinfo.length; i < _len_i;i++){
+      for(var i=0;i<classinfo.length;i++){
          if(issubclass(klass,classinfo[i])) return true
       }
       return false
@@ -823,7 +810,6 @@ function issubclass(klass,classinfo){
       return klass.$dict.__mro__.indexOf(classinfo.$dict)>-1    
     }
 
-    //console.log('error in is_subclass '+klass.$dict.__name+' classinfo '+_b_.str(classinfo))
     throw _b_.TypeError("issubclass() arg 2 must be a class or tuple of classes")
 }
 
@@ -893,10 +879,10 @@ $MapDict.__iter__ = function (self){return self}
 function map(){
     var func = getattr(arguments[0],'__call__')
     var iter_args = []
-    for(var i=1, _len_i = arguments.length; i < _len_i;i++){iter_args.push(iter(arguments[i]))}
+    for(var i=1;i<arguments.length;i++){iter_args.push(iter(arguments[i]))}
     var __next__ = function(){
         var args = []
-        for(var i=0, _len_i = iter_args.length; i < _len_i;i++){
+        for(var i=0;i<iter_args.length;i++){
             try{
                 var x = next(iter_args[i])
                 args.push(x)
@@ -997,7 +983,7 @@ function $extreme(args,op){ // used by min() and max()
 
 function max(){
     var args = []
-    for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+    for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
     return $extreme(args,'__gt__')
 }
 
@@ -1014,7 +1000,7 @@ function memoryview(obj) {
 
 function min(){
     var args = []
-    for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+    for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
     return $extreme(args,'__lt__')
 }
 
@@ -1403,7 +1389,7 @@ function setattr(obj,attr,value){
     var res = obj[attr]
     if(res===undefined){
         var mro = $B.get_class(obj).__mro__
-        for(var i=0, _len_i = mro.length; i < _len_i;i++){
+        for(var i=0;i<mro.length;i++){
             res = mro[i][attr]
             if(res!==undefined) break
         }
@@ -1547,7 +1533,7 @@ var $SuperDict = {__class__:$B.$type,__name__:'super'}
 
 $SuperDict.__getattribute__ = function(self,attr){
     var mro = self.__thisclass__.$dict.__mro__,res
-    for(var i=1, _len_i = mro.length; i < _len_i;i++){ // start with 1 = ignores the class where super() is defined
+    for(var i=1;i<mro.length;i++){ // start with 1 = ignores the class where super() is defined
         res = mro[i][attr]
         if(res!==undefined){
             // if super() is called with a second argument, the result is bound
@@ -1558,7 +1544,7 @@ $SuperDict.__getattribute__ = function(self,attr){
                     return function(){
                         // make a local copy of initial args
                         var local_args = initial_args.slice()
-                        for(var i=0, _len_i = arguments.length; i < _len_i;i++){
+                        for(var i=0;i<arguments.length;i++){
                             local_args.push(arguments[i])
                         }
                         var x = res.apply(null,local_args)
@@ -1738,12 +1724,12 @@ function zip(){
     var $ns=$B.$MakeArgs('zip',arguments,[],[],'args','kw')
     var _args = $ns['args']
     var args = []
-    for(var i=0, _len_i = _args.length; i < _len_i;i++){args.push(iter(_args[i]))}
+    for(var i=0;i<_args.length;i++){args.push(iter(_args[i]))}
     var kw = $ns['kw']
     var rank=0,items=[]
     while(1){
         var line=[],flag=true
-        for(var i=0, _len_i = args.length; i < _len_i;i++){
+        for(var i=0;i<args.length;i++){
             try{
                 var x=next(args[i])
                 line.push(x)
@@ -1852,20 +1838,17 @@ $EllipsisDict.$factory = $EllipsisDict
 var Ellipsis = {
     __bool__ : function(){return False},
     __class__ : $EllipsisDict,
-    //__hash__ : function(){return 0},
     __repr__ : function(){return 'Ellipsis'},
     __str__ : function(){return 'Ellipsis'},
     toString : function(){return 'Ellipsis'}
 }
 
-//var $comp_ops = ['ge','gt','le','lt']
 for(var $key in $B.$comps){ // Ellipsis is not orderable with any type
     switch($B.$comps[$key]) {
       case 'ge':
       case 'gt':
       case 'le':
       case 'lt':
-        //if($comp_ops.indexOf($B.$comps[$key])>-1){
         Ellipsis['__'+$B.$comps[$key]+'__']=(function(k){
             return function(other){
             throw _b_.TypeError("unorderable types: ellipsis() "+k+" "+
@@ -1895,14 +1878,12 @@ var None = {
     toString : function(){return 'None'}
 }
 
-//var $comp_ops = ['ge','gt','le','lt']
 for(var $key in $B.$comps){ // None is not orderable with any type
     switch($key) {
       case 'ge':
       case 'gt':
       case 'le':
       case 'lt':
-        //if($comp_ops.indexOf($B.$comps[$key])>-1){
         None['__'+$B.$comps[$key]+'__']=(function(k){
             return function(other){
             throw _b_.TypeError("unorderable types: NoneType() "+k+" "+
@@ -1991,7 +1972,7 @@ var BaseException = function (msg,js_exc){
         }
         // call stack
         var last_info, tb=null
-        for(var i=0, _len_i = $B.call_stack.length; i < _len_i;i++){
+        for(var i=0;i<$B.call_stack.length;i++){
             var call_info = $B.call_stack[i]
             var lib_module = call_info[1]
             var caller = $B.modules[lib_module].line_info
@@ -2089,11 +2070,10 @@ $B.exception = function(js_exc){
 
     if(!js_exc.py_error){
         if($B.debug>0 && js_exc.info===undefined){
-            console.log('erreur '+js_exc+' dans module '+$B.line_info)
+            //console.log('erreur '+js_exc+' dans module '+$B.line_info)
             if($B.line_info!==undefined){
                 var mod_name = $B.line_info[1]
                 var module = $B.modules[mod_name]
-                console.log('module '+mod_name+' caller '+module.caller)
                 if(module){
                     if(module.caller!==undefined){
                         // for list comprehension and the likes, replace
@@ -2146,7 +2126,7 @@ $B.is_exc=function(exc,exc_list){
     if(exc.__class__===undefined) exc = $B.exception(exc)
     
     var exc_class = exc.__class__.$factory
-    for(var i=0, _len_i = exc_list.length; i < _len_i;i++){
+    for(var i=0;i<exc_list.length;i++){
         if(issubclass(exc_class,exc_list[i])) return true
     }
     return false
@@ -2164,7 +2144,7 @@ _b_.__BRYTHON__ = __BRYTHON__
 function $make_exc(names,parent){
     // create a class for exception called "name"
     var _str=[]
-    for(var i=0, _len_i = names.length; i < _len_i;i++){
+    for(var i=0;i<names.length;i++){
         var name = names[i]
         $B.bound['__builtins__'][name] = true
         var $exc = (BaseException+'').replace(/BaseException/g,name)
@@ -2215,23 +2195,31 @@ $B.$NameError = function(name){
     // $globals[name] !== undefined ? $globals[name] : __BRYTHON__.$NameError(name)
     throw _b_.NameError(name)
 }
+$B.$TypeError = function(msg){
+    throw _b_.TypeError(msg)
+}
 
-var builtin_names=[ 'Ellipsis', 'False',  'None', 
-'True', '_', '__build_class__', '__debug__', '__doc__', '__import__', '__name__', 
-'__package__', 'abs', 'all', 'any', 'ascii', 'bin', 'bool', 'bytearray', 'bytes',
-'callable', 'chr', 'classmethod', 'compile', 'complex', 'copyright', 'credits',
-'delattr', 'dict', 'dir', 'divmod', 'enumerate', //'eval', 
-'exec', 'exit', 
+var builtin_funcs = ['abs', 'all', 'any', 'ascii', 'bin', 'bool', 'bytearray',
+'bytes', 'callable', 'chr', 'classmethod', 'compile', 'complex', 'delattr', 
+'dict', 'dir', 'divmod', 'enumerate', 'exec', 'exit', 
 'filter', 'float', 'format', 'frozenset', 'getattr', 'globals', 'hasattr', 'hash', 
 'help', 'hex', 'id', 'input', 'int', 'isinstance', 'issubclass', 'iter', 'len', 
-'license', 'list', 'locals', 'map', 'max', 'memoryview', 'min', 'next', 
-'NotImplemented', 'object', 
+'list', 'locals', 'map', 'max', 'memoryview', 'min', 'next', 'object', 
 'oct', 'open', 'ord', 'pow', 'print', 'property', 'quit', 'range', 'repr', 
 'reversed', 'round', 'set', 'setattr', 'slice', 'sorted', 'staticmethod', 'str', 
 'sum','super', 'tuple', 'type', 'vars', 'zip']
 
+for(var i=0;i<builtin_funcs.length;i++){
+    $B.builtin_funcs[builtin_funcs[i]]=true
+}
 
-for(var i=0, _len_i = builtin_names.length; i < _len_i;i++){
+var other_builtins = [ 'Ellipsis', 'False',  'None', 'True', '_', 
+'__build_class__', '__debug__', '__doc__', '__import__', '__name__', 
+'__package__', 'copyright', 'credits', 'license', 'NotImplemented']
+
+var builtin_names = builtin_funcs.concat(other_builtins)
+
+for(var i=0;i<builtin_names.length;i++){
     var name = builtin_names[i]
     var name1 = name
     if(name=='open'){name1 = '$url_open'}

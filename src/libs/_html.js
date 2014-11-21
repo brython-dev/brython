@@ -8,8 +8,6 @@ var $s=[]
 for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
 eval($s.join(';'))
 
-//for(var $py_builtin in _b_) eval("var "+$py_builtin+"=_b_[$py_builtin]")
-
 function makeTagDict(tagName){
     // return the dictionary for the class associated with tagName
     var dict = {__class__:$B.$type,

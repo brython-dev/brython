@@ -55,7 +55,8 @@ maxunicode=1114111
 
 path = __BRYTHON__.path
 
-path_hooks = list(JSObject(__BRYTHON__.path_hooks))
+#path_hooks = list(JSObject(__BRYTHON__.path_hooks))
+meta_path=__BRYTHON__.meta_path
 
 platform="brython"
 

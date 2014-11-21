@@ -11,7 +11,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     }
     // check if parents are defined
     if(parents!==undefined){
-        for(var i=0, _len_i = parents.length; i < _len_i;i++){
+        for(var i=0;i<parents.length;i++){
             if(parents[i]===undefined){
                 // restore the line of class definition
                 $B.line_info = class_obj.$def_line
@@ -25,13 +25,13 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     }
     // see if there is 'metaclass' in kwargs
     var metaclass = _b_.type
-    for(var i=0, _len_i = kwargs.length; i < _len_i;i++){
+    for(var i=0;i<kwargs.length;i++){
         var key=kwargs[i][0],val=kwargs[i][1]
         if(key=='metaclass'){metaclass=val}
     }
     if(metaclass===_b_.type){
         // see if one of the subclasses uses a metaclass
-        for(var i=0, _len_i = parents.length; i < _len_i;i++){
+        for(var i=0;i<parents.length;i++){
             if(parents[i].$dict.__class__!==$B.$type){
                 metaclass = parents[i].__class__.$factory
                 break
@@ -41,11 +41,17 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     if(metaclass===_b_.type) return _b_.type(class_name,bases,cl_dict)
     
     // create the factory function
+    /*
     var factory = (function(_class){
                 return function(){
                     return $instance_creator(_class).apply(null,arguments)
                 }
           })($B.class_dict)
+    */
+    var factory = function(){
+                    return $instance_creator($B.class_dict).apply(null,arguments)
+                }
+    
     var new_func = _b_.getattr(metaclass,'__new__')
     var factory = _b_.getattr(metaclass,'__new__').apply(null,[factory,class_name,bases,cl_dict])
     _b_.getattr(metaclass,'__init__').apply(null,[factory,class_name,bases,cl_dict])
@@ -95,41 +101,39 @@ _b_.type = function(name,bases,cl_dict){
     class_dict.__dict__ = cl_dict
     
     // set class attributes for faster lookups
-    for(var i=0, _len_i = cl_dict.$keys.length; i < _len_i;i++){
+    for(var i=0;i<cl_dict.$keys.length;i++){
         var attr = cl_dict.$keys[i],val=cl_dict.$values[i]
         class_dict[attr] = val
     }
-
-    //class_dict.__setattr__ = function(attr,value){class_dict[attr]=value}
 
     // method resolution order
     // copied from http://code.activestate.com/recipes/577748-calculate-the-mro-of-a-class/
     // by Steve d'Aprano
     var seqs = []
-    for(var i=0, _len_i = bases.length; i < _len_i;i++){
+    for(var i=0;i<bases.length;i++){
         // we can't simply push bases[i].__mro__ 
         // because it would be modified in the algorithm
         if(bases[i]===_b_.str) bases[i] = $B.$StringSubclassFactory
         var bmro = []
         var _tmp=bases[i].$dict.__mro__
-        for(var k=0, _len_k = _tmp.length; k < _len_k;k++){
+        for(var k=0;k<_tmp.length;k++){
             bmro.push(_tmp[k])
         }
         seqs.push(bmro)
     }
 
-    for(var i=0, _len_i = bases.length; i < _len_i;i++) seqs.push(bases[i].$dict)
+    for(var i=0;i<bases.length;i++) seqs.push(bases[i].$dict)
 
     var mro = []
     while(1){
         var non_empty = []
-        for(var i=0, _len_i = seqs.length; i < _len_i;i++){
+        for(var i=0;i<seqs.length;i++){
             if(seqs[i].length>0) non_empty.push(seqs[i])
         }
         if (non_empty.length==0) break
-        for(var i=0, _len_i = non_empty.length; i < _len_i;i++){
+        for(var i=0;i<non_empty.length;i++){
             var seq = non_empty[i],candidate = seq[0],not_head = []
-            for(var j=0, _len_j = non_empty.length; j < _len_j;j++){
+            for(var j=0;j<non_empty.length;j++){
                 var s = non_empty[j]
                 if(s.slice(1).indexOf(candidate)>-1){not_head.push(s)}
             }
@@ -140,7 +144,7 @@ _b_.type = function(name,bases,cl_dict){
             throw _b_.TypeError("inconsistent hierarchy, no C3 MRO is possible")
         }
         mro.push(candidate)
-        for(var i=0, _len_i = seqs.length; i < _len_i;i++){
+        for(var i=0;i<seqs.length;i++){
             var seq = seqs[i]
             if(seq[0]===candidate){ // remove candidate
                 seqs[i].shift()
@@ -200,51 +204,39 @@ $B.$type.__getattribute__=function(klass,attr){
     // we call $type.__getattribute__(obj.$dict,attr)
     switch(attr) {
       case '__call__':
-        //if(attr==='__call__') 
         return $instance_creator(klass)
       case '__eq__':
-        //if(attr==='__eq__'){
         return function(other){return klass.$factory===other}
       case '__ne__':
-        //if(attr==='__ne__'){
         return function(other){return klass.$factory!==other}
       case '__repr__':
-        //if(attr==='__repr__'){
         return function(){return "<class '"+klass.__name__+"'>"}
       case '__str__':
-        //if(attr==='__str__'){
         return function(){return "<class '"+klass.__name__+"'>"}
       case '__class__':
-        //if(attr==='__class__')
         return klass.__class__.$factory
       case '__doc__':
-        //if(attr==='__doc__') 
         return klass.__doc__
       case '__setattr__':
-        //if(attr==='__setattr__'){
         if(klass['__setattr__']!==undefined) return klass['__setattr__']
         return function(key,value){
             if(typeof value=='function'){
                 klass[key]=value //function(){return value.apply(null,arguments)}
-                //klass[key].$type = 'instancemethod' // for attribute resolution
             }else{
                 klass[key]=value
             }
         }
       case '__delattr__':
-        //if(attr==='__delattr__'){
         if(klass['__delattr__']!==undefined) return klass['__delattr__']
         return function(key){delete klass[key]}
     }//switch
 
     var res = klass[attr],is_class=true
-    //if(attr=='__init__'){console.log(klass.__name__+' direct attr '+attr+' '+res)}
     if(res===undefined){
         // search in classes hierarchy, following method resolution order
         var mro = klass.__mro__
         if(mro===undefined){console.log('mro undefined for class '+klass+' name '+klass.__name__)}
-        //if(attr=='register'){console.log('mro '+mro+' is class '+klass.is_class)}
-        for(var i=0, _len_i = mro.length; i < _len_i;i++){
+        for(var i=0;i<mro.length;i++){
             var v=mro[i][attr]
             if(v!==undefined){
                 res = v
@@ -255,7 +247,7 @@ $B.$type.__getattribute__=function(klass,attr){
             // try in klass class
             var cl_mro = klass.__class__.__mro__
             if(cl_mro!==undefined){
-                for(var i=0, _len_i = cl_mro.length; i < _len_i;i++){
+                for(var i=0;i<cl_mro.length;i++){
                     var v=cl_mro[i][attr]
                     if(v!==undefined){
                         res = v
@@ -265,7 +257,7 @@ $B.$type.__getattribute__=function(klass,attr){
             }
         }
     }
-    //if(attr=='__init__'){console.log(klass.__name__+' attr '+attr+' step 2 '+res)}
+
     if(res!==undefined){
 
         // If the attribute is a property, return it
@@ -278,8 +270,7 @@ $B.$type.__getattribute__=function(klass,attr){
 
         if(get_func === undefined) return res
         
-        //if(get_func!==undefined){ // descriptor
-            // __new__ is a static method
+        // __new__ is a static method
         if(attr=='__new__'){res.$type='staticmethod'}
         var res1 = get_func.apply(null,[res,$B.builtins.None,klass])
         var args
@@ -291,7 +282,6 @@ $B.$type.__getattribute__=function(klass,attr){
                 case undefined:
                 case 'function':
                 case 'instancemethod':
-                    //if(res.$type===undefined || res.$type==='function' || res.$type==='instancemethod'){
                     // function called from a class
                     args = []
                     __repr__ = __str__ = function(){
@@ -299,7 +289,6 @@ $B.$type.__getattribute__=function(klass,attr){
                     }
                     break;
                 case 'classmethod':
-                    //}else if(res.$type==='classmethod'){
                     // class method : called with the class as first argument
                     args = [klass.$factory]
                     __self__ = klass
@@ -310,7 +299,6 @@ $B.$type.__getattribute__=function(klass,attr){
                     }
                     break;
                 case 'staticmethod':
-                    //}else if(res.$type==='staticmethod'){
                     // static methods have no __self__ or __func__
                     args = []
                     __repr__ = __str__ = function(){
@@ -325,9 +313,8 @@ $B.$type.__getattribute__=function(klass,attr){
                     return function(){
                         // class method
                         // make a local copy of initial args
-                        //console.log('function '+attr+' of '+klass.__name__+' '+res)
                         var local_args = initial_args.slice()
-                        for(var i=0, _len_i = arguments.length; i < _len_i;i++){
+                        for(var i=0;i < arguments.length;i++){
                             local_args.push(arguments[i])
                         }
                         return res.apply(null,local_args)
@@ -349,12 +336,6 @@ $B.$type.__getattribute__=function(klass,attr){
                 method.im_class = klass
                 return method
         }
-        //}else{
-        //    return res
-        //}
-    }else{
-        // search __getattr__
-        //throw AttributeError("type object '"+klass.__name__+"' has no attribute '"+attr+"'")
     }
 }
 
@@ -372,7 +353,7 @@ function $instance_creator(klass){
             }catch(err){$B.$pop_exc()}
             if(new_func!==null){
                 var args = [klass.$factory]
-                for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+                for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
                 obj = new_func.apply(null,args)
             }
         }
@@ -382,7 +363,7 @@ function $instance_creator(klass){
             catch(err){$B.$pop_exc()}
             if(init_func!==null){
                 var args = [obj]
-                for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+                for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
                 init_func.apply(null,args)
             }
         }

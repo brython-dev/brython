@@ -1293,24 +1293,33 @@ function $re_escape(str)
   return str
 }
 
-$StringDict.replace = function(self,old,_new,count){
-    if(count!==undefined){
-        if(!isinstance(count,[_b_.int,_b_.float])){throw __b_.TypeError(
-            "'"+str(count.__class__)+"' object cannot be interpreted as an integer")
+$StringDict.replace = function(self, old, _new, count) {
+    // Replaces occurrences of 'old' by '_new'. Count references
+    // the number of times to replace. In CPython, negative or undefined 
+    // values of count means replace all.
+    if (count === undefined) {
+        count = -1;
+    } else {
+        // Validate instance type of 'count'
+        if (!isinstance(count,[_b_.int,_b_.float])) {
+            throw _b_.TypeError("'" + str(count.__class__) + "' object cannot be interpreted as an integer");
+        } else if (isinstance(count, _b_.float)) {
+            throw _b_.TypeError("integer argument expected, got float");
         }
-        var re = new RegExp($re_escape(old),'g')
-        
-        var res = self.valueOf()
-        while(count>0){
-            if(self.search(re)==-1){return res}
-            res = res.replace(re,_new)
-            count--
-        }
-        return res
-    }else{
-        var re = new RegExp($re_escape(old),"g")
-        return self.replace(re,_new)
     }
+
+    var res = self.valueOf();
+    var pos = -1;
+    if (count < 0) count = res.length;
+    while (count > 0) {
+        pos = res.indexOf(old, pos);
+        if (pos < 0)
+            break;
+        res = res.substr(0, pos) + _new + res.substr(pos + old.length);
+        pos = pos + _new.length;
+        count--;
+    }
+    return res;
 }
 
 $StringDict.rfind = function(self){

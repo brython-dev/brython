@@ -341,10 +341,11 @@ def _siftup_max(heap, pos):
     _siftdown_max(heap, startpos, pos)
 
 # If available, use C implementation
-try:
-    from _heapq import *
-except ImportError:
-    pass
+#_heapq does not exist in brython, so lets just comment it out.
+#try:
+#    from _heapq import *
+#except ImportError:
+#    pass
 
 def merge(*iterables):
     '''Merge multiple sorted inputs into a single sorted output.
