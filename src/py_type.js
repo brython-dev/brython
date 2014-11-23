@@ -41,13 +41,6 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     if(metaclass===_b_.type) return _b_.type(class_name,bases,cl_dict)
     
     // create the factory function
-    /*
-    var factory = (function(_class){
-                return function(){
-                    return $instance_creator(_class).apply(null,arguments)
-                }
-          })($B.class_dict)
-    */
     var factory = function(){
                     return $instance_creator($B.class_dict).apply(null,arguments)
                 }
@@ -154,11 +147,9 @@ _b_.type = function(name,bases,cl_dict){
     class_dict.__mro__ = [class_dict].concat(mro)
     
     // create the factory function
-    var factory = (function(_class){
-            return function(){
-                return $instance_creator(_class).apply(null,arguments)
-            }
-        })(class_dict)
+    var creator = $instance_creator(class_dict)
+    var factory = function(){return creator.apply(null,arguments)}
+
     factory.__class__ = $B.$factory
     factory.$dict = class_dict
     factory.$is_func = true // to speed up calls
@@ -341,35 +332,51 @@ $B.$type.__getattribute__=function(klass,attr){
 
 function $instance_creator(klass){
     // return the function to initalise a class instance
+    var new_func = null
+    try{new_func = _b_.getattr(klass,'__new__')}
+    catch(err){$B.$pop_exc()}
+    
+    var init_func = null
+    try{init_func = _b_.getattr(klass,'__init__')}
+    catch(err){$B.$pop_exc()}
+
+    if(klass.__bases__.length==1 && klass.__new__==undefined &&
+        init_func!==null){
+        // most usual case
+
+        return function(){
+            var obj = {__class__:klass}
+            var _args = Array.prototype.slice.call(arguments)
+            // __initialized__ is set in object.__new__ if klass has a method __init__
+            if(!obj.__initialized__){
+                init_func.apply(null,[obj].concat(_args))
+            }
+            return obj
+        }
+
+    }
+
     return function(){
-        var new_func=null,init_func=null,obj
+        var obj
+        var _args = Array.prototype.slice.call(arguments)
         // apply __new__ to initialize the instance
         if(klass.__bases__.length==1 && klass.__new__==undefined){
             obj = {__class__:klass}
         }else{
-            
-            try{
-                new_func = _b_.getattr(klass,'__new__')
-            }catch(err){$B.$pop_exc()}
             if(new_func!==null){
-                var args = [klass.$factory]
-                for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
-                obj = new_func.apply(null,args)
+                obj = new_func.apply(null,[klass.$factory].concat(_args))
             }
         }
         // __initialized__ is set in object.__new__ if klass has a method __init__
         if(!obj.__initialized__){
-            try{init_func = _b_.getattr(klass,'__init__')}
-            catch(err){$B.$pop_exc()}
             if(init_func!==null){
-                var args = [obj]
-                for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
-                init_func.apply(null,args)
+                init_func.apply(null,[obj].concat(_args))
             }
         }
         return obj
     }
 }
+
 
 // used as the factory for method objects
 function $MethodFactory(){}
