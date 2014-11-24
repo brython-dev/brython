@@ -1073,7 +1073,8 @@ var only_positional=false
 if(defaults.length==0 && other_args===null && other_kw===null &&
 after_star.length==0){
 only_positional=true
-if(__BRYTHON__.debug>0 ||required_list.length>0){var js='var $simple=true;for(var $i=0;$i<arguments.length;$i++)'
+if(__BRYTHON__.debug>0 ||required_list.length>0){var js='var $simple=true, $i=arguments.length;'
+js +='while($i-- > 0)'
 js +='{if(arguments[$i].$nat!=undefined){$simple=false;break}}'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
@@ -4640,10 +4641,9 @@ var init_func=null
 try{init_func=_b_.getattr(klass,'__init__')}
 catch(err){$B.$pop_exc()}
 if(klass.__bases__.length==1 && klass.__new__==undefined &&
-init_func!==null){return function(){var obj={__class__:klass}
-var _args=Array.prototype.slice.call(arguments)
-if(!obj.__initialized__){init_func.apply(null,[obj].concat(_args))
-}
+init_func!==null){
+return function(){var obj={__class__:klass}
+init_func.apply(null,[obj].concat(Array.prototype.slice.call(arguments)))
 return obj
 }}
 return function(){var obj
@@ -4666,6 +4666,8 @@ $B.$InstanceMethodDict={__class__:$B.$type,__name__:'instancemethod',__mro__:[_b
 ;(function($B){var _b_=$B.builtins
 $B.$MakeArgs=function($fname,$args,$required,$defaults,$other_args,$other_kw,$after_star){
 var $set_vars=[],$ns={},$arg
+var $robj={}
+for(var i=0;i<$required.length;i++){$robj[$required[i]]=null}
 if($other_args !=null){$ns[$other_args]=[]}
 if($other_kw !=null){var $dict_keys=[];var $dict_values=[]}
 var upargs=[]
@@ -4692,12 +4694,10 @@ var $PyVar=$B.$JS2Py($arg)
 if($arg && $arg.$nat=='kw'){
 $PyVar=$arg.value
 if($ns[$arg.name]!==undefined){throw _b_.TypeError($fname+"() got multiple values for argument '"+$arg.name+"'")
-}else if($required.indexOf($arg.name)>-1){var ix=$required.indexOf($arg.name)
-eval('var '+$required[ix]+"=$PyVar")
-$ns[$required[ix]]=$PyVar
+}else if($robj[$arg.name]===null){
+$ns[$arg.name]=$PyVar
 }else if($other_args!==null && $after_star!==undefined &&
 $after_star.indexOf($arg.name)>-1){var ix=$after_star.indexOf($arg.name)
-eval('var '+$after_star[ix]+"=$PyVar")
 $ns[$after_star[ix]]=$PyVar
 }else if($defaults.indexOf($arg.name)>-1){$ns[$arg.name]=$PyVar
 }else if($other_kw!=null){$dict_keys.push($arg.name)
@@ -4707,8 +4707,7 @@ throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+$arg.name+"
 }
 var pos_def=$defaults.indexOf($arg.name)
 if(pos_def!=-1){$defaults.splice(pos_def,1)}}else{
-if($i<$required.length){eval('var '+$required[$i]+"=$PyVar")
-$ns[$required[$i]]=$PyVar
+if($i<$required.length){$ns[$required[$i]]=$PyVar
 }else if($other_args!==null){eval('$ns["'+$other_args+'"].push($PyVar)')
 }else if($i<$required.length+$defaults.length){var $var_name=$defaults[$i-$required.length]
 $ns[$var_name]=$PyVar
@@ -4846,10 +4845,10 @@ return $res
 $B.$search=function(name,globals_id){var res=$B.vars[globals_id][name]
 return res !==undefined ? res : $B.$NameError(name)
 }
-$B.$JS2Py=function(src){if(src===null||src===undefined)return _b_.None
-if(typeof src==='number'){if(src%1===0)return src
+$B.$JS2Py=function(src){if(typeof src==='number'){if(src%1===0)return src
 return _b_.float(src)
 }
+if(src===null||src===undefined)return _b_.None
 var klass=$B.get_class(src)
 if(klass!==undefined){if(klass===_b_.list.$dict){for(var i=0,_len_i=src.length;i< _len_i;i++)src[i]=$B.$JS2Py(src[i])
 }

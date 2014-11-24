@@ -12,6 +12,8 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     // $after_star = ['u','v']
 
     var $set_vars = [],$ns = {},$arg
+    var $robj = {}
+    for(var i=0;i<$required.length;i++){$robj[$required[i]]=null}
     if($other_args != null){$ns[$other_args]=[]}
     if($other_kw != null){var $dict_keys=[];var $dict_values=[]}
     // create new list of arguments in case some are packed
@@ -44,14 +46,11 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
             $PyVar = $arg.value
             if($ns[$arg.name]!==undefined){
                 throw _b_.TypeError($fname+"() got multiple values for argument '"+$arg.name+"'")
-            }else if($required.indexOf($arg.name)>-1){
-                var ix = $required.indexOf($arg.name)
-                eval('var '+$required[ix]+"=$PyVar")
-                $ns[$required[ix]]=$PyVar
+            }else if($robj[$arg.name]===null){
+                $ns[$arg.name]=$PyVar
             }else if($other_args!==null && $after_star!==undefined &&
                 $after_star.indexOf($arg.name)>-1){
                     var ix = $after_star.indexOf($arg.name)
-                    eval('var '+$after_star[ix]+"=$PyVar")
                     $ns[$after_star[ix]]=$PyVar
             } else if($defaults.indexOf($arg.name)>-1){
                 $ns[$arg.name]=$PyVar
@@ -65,7 +64,6 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
             if(pos_def!=-1){$defaults.splice(pos_def,1)}
         }else{ // positional arguments
             if($i<$required.length){
-                eval('var '+$required[$i]+"=$PyVar")
                 $ns[$required[$i]]=$PyVar
             } else if($other_args!==null){
                 eval('$ns["'+$other_args+'"].push($PyVar)')
@@ -265,11 +263,11 @@ $B.$search = function(name, globals_id){
 
 // transform native JS types into Brython types
 $B.$JS2Py = function(src){
-    if(src===null||src===undefined) return _b_.None
     if(typeof src==='number'){
         if(src%1===0) return src
         return _b_.float(src)
     }
+    if(src===null||src===undefined) return _b_.None
     var klass = $B.get_class(src)
     if(klass!==undefined){
         if(klass===_b_.list.$dict){

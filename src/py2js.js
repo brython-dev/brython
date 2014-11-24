@@ -1745,7 +1745,8 @@ function $DefCtx(context){
             
             if(__BRYTHON__.debug>0 || required_list.length>0){
                 
-                var js = 'var $simple=true;for(var $i=0;$i<arguments.length;$i++)'
+                var js = 'var $simple=true, $i=arguments.length;'
+                js += 'while($i-- > 0)'
                 js += '{if(arguments[$i].$nat!=undefined){$simple=false;break}}'
                 var new_node = new $Node()
                 new $NodeJSCtx(new_node,js)

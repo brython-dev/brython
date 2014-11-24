@@ -346,11 +346,7 @@ function $instance_creator(klass){
 
         return function(){
             var obj = {__class__:klass}
-            var _args = Array.prototype.slice.call(arguments)
-            // __initialized__ is set in object.__new__ if klass has a method __init__
-            if(!obj.__initialized__){
-                init_func.apply(null,[obj].concat(_args))
-            }
+            init_func.apply(null,[obj].concat(Array.prototype.slice.call(arguments)))
             return obj
         }
 
