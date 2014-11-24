@@ -73,6 +73,8 @@ def set_debug(ev):
     else:
         __BRYTHON__.debug = 0
 
+__BRYTHON__.debug = int(doc['set_debug'].checked)
+
 # bindings
 doc['run_js'].bind('click', window.run_js)
 doc['set_debug'].bind('change',set_debug)
