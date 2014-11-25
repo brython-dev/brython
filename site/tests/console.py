@@ -196,9 +196,8 @@ doc['code'].bind('keypress', myKeyPress)
 doc['code'].bind('keydown', myKeyDown)
 doc['code'].bind('click', cursorToEnd)
 v = sys.implementation.version
-doc['code'].value = "Brython %s.%s.%s on %s %s\n>>> " % (
+doc['code'].value = "Brython %s.%s.%s on %s %s\n" % (
     v[0], v[1], v[2], win.navigator.appName, win.navigator.appVersion)
-#doc['code'].value += 'Type "copyright", "credits" or "license" for more information.'
+doc['code'].value += 'Type "copyright", "credits" or "license" for more information.\n>>> '
 doc['code'].focus()
 cursorToEnd()
-
