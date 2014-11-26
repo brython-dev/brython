@@ -286,6 +286,7 @@ except ImportError:
     sys.exit()
 
 make_VFS.process(os.path.join(pdir, 'src', 'py_VFS.js'))
+make_VFS.process_unittest(os.path.join(pdir, 'src', 'py_unittest.js'))
 
 # make distribution with core + libraries
 with open(os.path.join(pdir, 'src', 'brython_dist.js'), 'w') as distrib_file:
