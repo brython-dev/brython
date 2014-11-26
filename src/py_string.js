@@ -1385,23 +1385,20 @@ $StringDict.rsplit = function(self) {
     var sep=None,maxsplit=-1
     if($ns['args'].length>=1){sep=$ns['args'][0]}
     if($ns['args'].length==2){maxsplit=$ns['args'][1]}
-    maxsplit = $ns['kw'].get('maxsplit',maxsplit)
+    maxsplit = _b_.dict.$dict.get($ns['kw'],'maxsplit',maxsplit)
 
     var array=$StringDict.split(self) 
 
-    if (array.length <= maxsplit) return array
+    var array=$StringDict.split(self, sep) 
 
-    var s=[], j=1
-    for (var i=0, _len_i = maxsplit - array.length; i < _len_i; i++) {
-        if (i < maxsplit - array.length) {
-           if (i > 0) { s[0]+=sep}
-           s[0]+=array[i]
-        } else {
-           s[j]=array[i]
-           j+=1
-        }
-    }
-    return _b_.tuple(s)
+    if (array.length <= maxsplit || maxsplit == -1) return array
+
+    var s=[]
+    
+    s = array.splice(array.length - maxsplit, array.length)
+    s.splice(0, 0, array.join(sep))
+    
+    return s
 }
 
 $StringDict.rstrip = function(self,x){
@@ -1477,8 +1474,8 @@ $StringDict.split = function(self){
         // a maxsplit argument is supplied. (see javascript string split
         // function docs for details)
         var l=self.valueOf().split(re,-1)
-        var a=l.splice(0, maxsplit)
-        var b=l.splice(maxsplit-1, l.length)
+        var a=l.slice(0, maxsplit)
+        var b=l.slice(maxsplit-1, l.length)
         if (b.length > 0) a.push(b.join(sep))
 
         return a
