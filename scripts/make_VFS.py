@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
-"""Make VFS for Brython."""
-
-
 import json
 import os
-import sys
 
 import pyminifier
 
@@ -86,7 +82,7 @@ def process_unittest(filename):
         file_to_write_VFS.write("__BRYTHON__.=libs['unittest']=%s;\n\n" % json.dumps(_VFS))
 
         file_to_write_VFS.write("""
-__BRYTHON__.import_from_unittest function(mod_name){
+  __BRYTHON__.import_from_unittest function(mod_name){
   var stored = __BRYTHON__.libs['unittest'][mod_name]
   if(stored!==undefined){
     var module_contents = stored[0]
@@ -132,59 +128,53 @@ def process(filename, exclude_dirs=['unittest',]):
                continue  # skip these modules
             if '__pycache__' in _root:
                 continue
-            for _file in _files:
-                _ext = os.path.splitext(_file)[1]
-                if _ext not in ('.js', '.py'):
-                    continue
-                nb += 1
+            nb += 1
 
-                file_name = os.path.join(_root, _file)
-                try:  # python 3
-                    with open(file_name, encoding="utf-8") as file_with_data:
-                        _data = file_with_data.read()
-                except Exception as reason:  # python 2
-                     with open(file_name, "r") as file_with_data:
-                        _data = str(file_with_data.read()).decode("utf-8")
+            with open(os.path.join(_root, _file), "r") as file_with_data:
+                _data = file_with_data.read()
+            
+            if len(_data) == 0:
+                print('no data for %s' % _file)
+                _data = unicode('')
+                print(_data, type(_data))
+            else:
+                _data = _data.decode('utf-8')
 
-                if not len(_data):
-                    print("No data for {} ({}).".format(_file, type(_data)))
+            if _ext in '.js':
+               if js_minify is not None:
+                  try:
+                    _data = js_minify(_data)
+                  except Exception as error:
+                    print(error)
+            elif _ext == '.py' and len(_data) > 0:
+               try:
+                 _data = pyminifier.remove_comments_and_docstrings(_data)
+                 _data = pyminifier.dedent(_data)
+               except Exception as error:
+                 print(error)
+                 nb_err += 1
 
-                if _ext.lower() in '.js' and js_minify and _data:
-                    try:
-                        _data = js_minify(_data)
-                    except Exception as error:
-                        print(error)
-                elif _ext.lower() == '.py' and _data:
-                    try:
-                        _data = pyminifier.remove_comments_and_docstrings(
-                            _data)
-                        _data = pyminifier.dedent(_data)
-                    except Exception as error:
-                        print(error)
-                        nb_err += 1
+            _vfs_filename = os.path.join(_root, _file).replace(_main_root, '')
+            _vfs_filename = _vfs_filename.replace("\\", "/")
 
-                _vfs_filename = os.path.join(
-                    _root, _file).replace(_main_root, '')
-                _vfs_filename = _vfs_filename.replace("\\", "/")
+            if _vfs_filename.startswith('/libs/crypto_js/rollups/'):
+               if _file not in ('md5.js', 'sha1.js', 'sha3.js',
+                                'sha224.js', 'sha384.js', 'sha512.js'):
+                  continue
 
-                if _vfs_filename.startswith('/libs/crypto_js/rollups/'):
-                    if _file not in ('md5.js', 'sha1.js', 'sha3.js',
-                                     'sha224.js', 'sha384.js', 'sha512.js'):
-                        continue
-
-                mod_name = _vfs_filename[len(_mydir) + 2:].replace('/', '.')
-                mod_name, ext = os.path.splitext(mod_name)
-                is_package = mod_name.endswith('__init__')
-                if is_package:
-                    mod_name = mod_name[:-9]
-                    _VFS[mod_name] = [ext, _data, 1]
-                else:
-                    _VFS[mod_name] = [ext, _data]
-                print(("Adding %s %s" % (mod_name, _vfs_filename)))
-    print('%s files, %s errors' % (nb, nb_err))
-    with open(filename, "w") as file_to_write_VFS:
-        file_to_write_VFS.write('__BRYTHON__.use_VFS = true;\n')
-        file_to_write_VFS.write('__BRYTHON__.VFS=%s;\n\n' % json.dumps(_VFS))
+            mod_name = _vfs_filename[len(_mydir) + 2:].replace('/', '.')
+            mod_name, ext = os.path.splitext(mod_name)
+            is_package = mod_name.endswith('__init__')
+            if is_package:
+                mod_name = mod_name[:-9]
+                _VFS[mod_name] = [ext, _data, 1]
+            else:
+                _VFS[mod_name] = [ext, _data]
+            print(("adding %s %s" % (mod_name, _vfs_filename)))
+  print('%s files, %s errors' % (nb, nb_err))
+  with open(filename, "w") as file_to_write_VFS:
+    file_to_write_VFS.write('__BRYTHON__.use_VFS = true;\n')
+    file_to_write_VFS.write('__BRYTHON__.VFS=%s;\n\n' % json.dumps(_VFS))
 
 
 ###############################################################################

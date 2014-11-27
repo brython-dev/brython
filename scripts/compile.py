@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# execute this file via node.js
+## execute this file via node.js
 # $> nodejs node_bridge.js compile.py
 #
 # Author: Billy Earney
@@ -10,7 +10,7 @@
 # which can be used with brython.
 
 
-# fixme  os.path.join doesnt work (ie, import posixpath as path, does not work)
+# fixme  os.path.join doesn't work (ie, import posixpath as path, does not work)
 def os_path_join(a, b):
     return "%s/%s" % (a, b)
 

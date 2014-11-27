@@ -1609,3 +1609,4 @@ $B.$StringSubclassFactory = {
 _b_.str = str
 
 })(__BRYTHON__)
+

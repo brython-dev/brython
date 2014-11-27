@@ -4694,8 +4694,7 @@ var $PyVar=$B.$JS2Py($arg)
 if($arg && $arg.$nat=='kw'){
 $PyVar=$arg.value
 if($ns[$arg.name]!==undefined){throw _b_.TypeError($fname+"() got multiple values for argument '"+$arg.name+"'")
-}else if($robj[$arg.name]===null){
-$ns[$arg.name]=$PyVar
+}else if($robj[$arg.name]===null){$ns[$arg.name]=$PyVar
 }else if($other_args!==null && $after_star!==undefined &&
 $after_star.indexOf($arg.name)>-1){var ix=$after_star.indexOf($arg.name)
 $ns[$after_star[ix]]=$PyVar
