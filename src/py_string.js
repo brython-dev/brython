@@ -1416,7 +1416,7 @@ $StringDict.split = function(self){
     if($ns['args'].length>=1){sep=$ns['args'][0]}
     if($ns['args'].length==2){maxsplit=$ns['args'][1]}
     maxsplit = _b_.dict.$dict.get($ns['kw'],'maxsplit',maxsplit)
-    if(sep=='') throw _b_.ValueError('empty seperator')
+    if(sep=='') throw _b_.ValueError('empty separator')
     if(sep===None){
         var res = []
         var pos = 0
@@ -1475,7 +1475,7 @@ $StringDict.split = function(self){
         // function docs for details)
         var l=self.valueOf().split(re,-1)
         var a=l.slice(0, maxsplit)
-        var b=l.slice(maxsplit-1, l.length)
+        var b=l.slice(maxsplit, l.length)
         if (b.length > 0) a.push(b.join(sep))
 
         return a
