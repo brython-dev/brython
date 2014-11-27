@@ -108,26 +108,26 @@ with open(abs_path('version_info.js'), 'wb') as vinfo_file_out:
     vinfo_file_out.write('__BRYTHON__.version_info = %s\n' % str(version))
     # builtin module names = list of scripts in src/libs
     vinfo_file_out.write('__BRYTHON__.builtin_module_names = ["posix",')
-    vinfo_file_out.write(',\n    '.join(['"%s"' % fname.split('.')[0]
-                         for fname in os.listdir(abs_path('libs'))
-                         if fname.endswith('.js')]))
+    _modules=['"%s"' % fname.split('.')[0] 
+               for fname in os.listdir(abs_path('libs')) if fname.endswith('.js')]
+    _modules.sort()    #sort modules so that git diff's don't change between runs
+    vinfo_file_out.write(',\n    '.join(_modules))
     # add Python scripts in Lib that start with _ and arent found in CPython Lib
     # using sys.executable to find stdlib dir doesn't work under linux.
     stdlib_path = os.path.dirname(os.__file__)
     # stdlib_path = os.path.join(os.path.dirname(sys.executable),'Lib')
     stdlib_mods = [f for f in os.listdir(stdlib_path) if f.startswith('_')]
-<<<<<<< HEAD
     stdlib_mods.sort()
     brython_mods = [f for f in os.listdir(abs_path('Lib'))
                     if f.startswith('_') and f != '__pycache__']
     brython_py_builtins = [os.path.splitext(x)[0]
                            for x in brython_mods if x not in stdlib_mods]
     brython_py_builtins.sort()
-    file_content += (',\n    ' + ',\n    '.join(
+    vinfo_file_out.write(',\n    ' + ',\n    '.join(
                      ['"%s"' % f for f in brython_py_builtins]))
-    file_content += ']\n'
-    vinfo_file_out.write(file_content)
-    log.info("Finished Writing file: " + abs_path('version_info.js'))
+    vinfo_file_out.write(']\n')
+
+    #log.info("Finished Writing file: " + abs_path('version_info.js'))
 
 # Create file stdlib_paths.js : static mapping between module names and paths
 # in the standard library
@@ -147,6 +147,7 @@ with open(os.path.join(libfolder, 'stdlib_paths.js'), 'wb') as out:
             mod_name = os.path.splitext(filename)[0]
             jslist.append(mod_name)
 
+    jslist.sort()
     out.write("var js=['%s']\n" % "','".join(jslist))
     out.write("""for(var i=0;i<js.length;i++) $B.stdlib[js[i]]=['js']\n\n""")
 
@@ -169,6 +170,7 @@ with open(os.path.join(libfolder, 'stdlib_paths.js'), 'wb') as out:
                 pkglist.append(mod_name)
             else:
                 pylist.append(mod_name)
+    pylist.sort()
     out.write("var pylist=['%s']\n" % "','".join(pylist))
     out.write(
         "for(var i=0;i<pylist.length;i++) $B.stdlib[pylist[i]]=['py']\n\n")
