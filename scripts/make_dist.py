@@ -172,6 +172,7 @@ with open(os.path.join(libfolder, 'stdlib_paths.js'), 'wb') as out:
                 pylist.append(mod_name)
     pylist.sort()
     out.write("var pylist=['%s']\n" % "','".join(pylist))
+    pkglist.sort()
     out.write(
         "for(var i=0;i<pylist.length;i++) $B.stdlib[pylist[i]]=['py']\n\n")
     out.write("var pkglist=['%s']\n" % "','".join(pkglist))
