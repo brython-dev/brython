@@ -122,6 +122,10 @@ except ValueError:
 
 assert x.split('h') == ['aZj', 'k', 'Zyuy']
 assert x.split('h',1) == ['aZj', 'khZyuy']
+assert x.split('h', 2) == ['aZj', 'k', 'Zyuy']
+assert x.rsplit('h') == ['aZj', 'k', 'Zyuy']
+assert x.rsplit('h', 1) == ['aZjhk', 'Zyuy']
+assert x.rsplit('y', 2) == ['aZjhkhZ', 'u', '']
 assert x.startswith('aZ')
 assert x.strip('auy') == 'ZjhkhZ'
 assert x.upper() == 'AZJHKHZYUY'
