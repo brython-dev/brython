@@ -343,11 +343,19 @@ function $instance_creator(klass){
     if(klass.__bases__.length==1 && klass.__new__==undefined &&
         init_func!==null){
         // most usual case
-
-        return function(){
-            var obj = {__class__:klass}
-            init_func.apply(null,[obj].concat(Array.prototype.slice.call(arguments)))
-            return obj
+        
+        if(klass.__setattr__===undefined){
+            return function(){
+                var obj = {__class__:klass, $simple_setattr:true}
+                init_func.apply(null,[obj].concat(Array.prototype.slice.call(arguments)))
+                return obj
+            }
+        }else{
+            return function(){
+                var obj = {__class__:klass}
+                init_func.apply(null,[obj].concat(Array.prototype.slice.call(arguments)))
+                return obj
+            }
         }
 
     }

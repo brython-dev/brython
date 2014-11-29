@@ -309,7 +309,7 @@ $ObjectDict.__setattr__ = function(self,attr,val){
             throw _b_.AttributeError("'object' object attribute '"+attr+"' is read-only")
         }
     }
-    self[attr]=val
+    self[attr] = val
 }
 $ObjectDict.__setattr__.__str__ = function(){return 'method object.setattr'}
 
