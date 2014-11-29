@@ -16,13 +16,6 @@ except:
     import BaseHTTPServer as server
     from CGIHTTPServer import CGIHTTPRequestHandler
 
-
-try:
-    os.nice(19)
-except Exception as error:
-    print(error)
-
-
 server_address, handler = ('', 8000), CGIHTTPRequestHandler
 httpd = server.HTTPServer(server_address, handler)
 print(__doc__)
