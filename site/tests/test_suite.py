@@ -315,4 +315,17 @@ for i in range(10):
 
 assert res == ['a', 'b', 'c']
 
+# __setattr__ defined in a class
+
+class A:
+    def __init__(self, x):
+        self.x = x
+    
+    def __setattr__(self, k, v):
+        object.__setattr__(self, k, 2*v)
+
+a = A(4)
+assert a.x == 8
+
+
 print('passed all tests...')

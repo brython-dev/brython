@@ -111,6 +111,110 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     return $ns
 }
 
+$B.$MakeArgs1 = function($fname,$args,$robj,$required,$dobj,$defaults,
+    $other_args,$other_kw,$after_star){
+    // builds a namespace from the arguments provided in $args
+    // in a function defined like foo(x,y,z=1,*args,u,v,**kw) the parameters are
+    // $required : ['x','y']
+    // $defaults : {'z':1}
+    // $other_args = 'args'
+    // $other_kw = 'kw'
+    // $after_star = ['u','v']
+
+    var $ns = {},$arg
+
+    if($other_args != null){$ns[$other_args]=[]}
+    if($other_kw != null){var $dict_keys=[], $dict_values=[]}
+    // create new list of arguments in case some are packed
+    var upargs = []
+    for(var i=0, _len_i = $args.length; i < _len_i;i++){
+        $arg = $args[i]
+        if($arg===undefined){console.log('arg '+i+' undef in '+$fname)}
+        else if($arg===null){upargs.push(null)}
+        else {
+           switch($arg.$nat) {
+             case 'ptuple':
+               var _arg=$arg.arg
+               for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs.push(_arg[j])
+               break
+             case 'pdict':
+               var _arg=$arg.arg
+               for(var j=0, _len_j = _arg.$keys.length; j < _len_j;j++){
+                  upargs.push({$nat:"kw",name:_arg.$keys[j],value:_arg.$values[j]})
+               }
+               break
+             default:
+               upargs.push($arg)
+           }//switch
+        }//else
+    }
+    var nbreqset = 0 // number of required arguments set
+    for(var $i=0, _len_$i = upargs.length; $i < _len_$i;$i++){
+        var $arg=upargs[$i]
+        var $PyVar=$B.$JS2Py($arg)
+        if($arg && $arg.$nat=='kw'){ // keyword argument
+            $PyVar = $arg.value
+            if($ns[$arg.name]!==undefined){
+                throw _b_.TypeError($fname+"() got multiple values for argument '"+$arg.name+"'")
+            }else if($robj[$arg.name]===null){
+                $ns[$arg.name]=$PyVar
+                nbreqset++
+            }else if($other_args!==null && $after_star!==undefined &&
+                $after_star.indexOf($arg.name)>-1){
+                    var ix = $after_star.indexOf($arg.name)
+                    $ns[$after_star[ix]]=$PyVar
+            } else if($dobj[$arg.name]===null){
+                $ns[$arg.name]=$PyVar
+                var pos_def = $defaults.indexOf($arg.name)
+                $defaults.splice(pos_def,1)
+                delete $dobj[$arg.name]
+            } else if($other_kw!=null){
+                $dict_keys.push($arg.name)
+                $dict_values.push($PyVar)
+            } else {
+                throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+$arg.name+"'")
+            }
+        }else{ // positional argument
+            if($i<$required.length){
+                $ns[$required[$i]]=$PyVar
+                nbreqset++
+            } else if($other_args!==null){
+                $ns[$other_args].push($PyVar)
+            } else if($i<$required.length+$defaults.length) {
+                $ns[$defaults[$i-$required.length]]=$PyVar
+            } else {
+                console.log(''+$B.line_info)
+                msg = $fname+"() takes "+$required.length+' positional argument'
+                msg += $required.length == 1 ? '' : 's'
+                msg += ' but more were given'
+                throw _b_.TypeError(msg)
+            }
+        }
+    }
+    if(nbreqset!==$required.length){
+        // throw error if not all required positional arguments have been set
+        var missing = []
+        for(var i=0, _len_i = $required.length; i < _len_i;i++){
+            if($ns[$required[i]]===undefined){missing.push($required[i])}
+        }
+        if(missing.length==1){
+            throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")
+        }else if(missing.length>1){
+            var msg = $fname+" missing "+missing.length+" positional arguments: "
+            for(var i=0, _len_i = missing.length-1; i < _len_i;i++){msg += "'"+missing[i]+"', "}
+            msg += "and '"+missing.pop()+"'"
+            throw _b_.TypeError(msg)
+        }
+    }
+    if($other_kw!=null){
+        $ns[$other_kw]=_b_.dict()
+        $ns[$other_kw].$keys = $dict_keys
+        $ns[$other_kw].$values = $dict_values
+    }
+    if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
+    return $ns
+}
+
 
 $B.get_class = function(obj){
     // generally we get the attribute __class__ of an object by obj.__class__
