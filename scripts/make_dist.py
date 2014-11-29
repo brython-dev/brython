@@ -328,7 +328,6 @@ for arc, wfunc in (dist1, dist1.add), (dist2, dist2.add), (dist3, dist3.write):
             for path in filenames:
                 if os.path.splitext(path)[1] not in ('.js', '.py'):
                     continue
-                #abs_path = os.path.join(os.getcwd(),'src',folder,path)
                 print(('add', path, dirpath[len(base):]))
                 wfunc(os.path.join(dirpath, path),
                       arcname=os.path.join(name, dirpath[len(base) + 1:], path))
