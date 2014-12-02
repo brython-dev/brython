@@ -3188,18 +3188,18 @@ function $ListOrTupleCtx(context,real){
 
                 if(this.expression.length===1){
                     var res = '__BRYTHON__.$gen_expr("'+scope.module+'",'
-                    res += '"'+scope.id+'",'+res2+')'
+                    res += '$locals_id,'+res2+')'
                     return res
                 }
                 var res = '__BRYTHON__.$dict_comp("'+scope.module+'",'
-                res += '"'+scope.id+'",'+res2+')'
+                res += '$locals_id,'+res2+')'
                 return res
             }
 
             // Generator expression
             // Pass the module name and the id of current block
             var res = '__BRYTHON__.$gen_expr("'+scope.module+'",'
-            res += '"'+scope.id+'",'+res2+')'
+            res += '$locals_id,'+res2+')'
             return res
           case 'tuple':
             if(this.tree.length===1 && this.has_comma===undefined) return this.tree[0].to_js()

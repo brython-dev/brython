@@ -290,12 +290,16 @@ $B.$gen_expr = function(){ // generator expresssion
     for(var $j=0;$j<indent;$j++) $py += ' '
     $py += $res+'.append('+arguments[2].join('\n')+')'
     
+    console.log('ge\n'+$py)
+    
     var $mod_name = 'ge'+$ix
     $B.vars[$mod_name] = {}
 
     var $root = $B.py2js($py,module_name,$mod_name,parent_block_id,
         $B.line_info)
     var $js = $root.to_js()
+    
+    console.log('ge to js\n'+$js)
   
     eval($js)
     

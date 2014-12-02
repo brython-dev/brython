@@ -1977,15 +1977,15 @@ return res
 if(this.real==='dict_or_set_comp'){res1='"'+scope.id+'"'
 var res=res1+','+res2
 if(this.expression.length===1){var res='__BRYTHON__.$gen_expr("'+scope.module+'",'
-res +='"'+scope.id+'",'+res2+')'
+res +='$locals_id,'+res2+')'
 return res
 }
 var res='__BRYTHON__.$dict_comp("'+scope.module+'",'
-res +='"'+scope.id+'",'+res2+')'
+res +='$locals_id,'+res2+')'
 return res
 }
 var res='__BRYTHON__.$gen_expr("'+scope.module+'",'
-res +='"'+scope.id+'",'+res2+')'
+res +='$locals_id,'+res2+')'
 return res
 case 'tuple':
 if(this.tree.length===1 && this.has_comma===undefined)return this.tree[0].to_js()
@@ -4875,10 +4875,12 @@ indent +=4
 }
 for(var $j=0;$j<indent;$j++)$py +=' '
 $py +=$res+'.append('+arguments[2].join('\n')+')'
+console.log('ge\n'+$py)
 var $mod_name='ge'+$ix
 $B.vars[$mod_name]={}
 var $root=$B.py2js($py,module_name,$mod_name,parent_block_id,$B.line_info)
 var $js=$root.to_js()
+console.log('ge to js\n'+$js)
 eval($js)
 var $res1=__BRYTHON__.vars["ge"+$ix]["res"+$ix]
 var $GenExprDict={__class__:$B.$type,__name__:'generator',toString:function(){return '(generator)'}}
