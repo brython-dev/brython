@@ -3,12 +3,17 @@
 // implementation [3, 0, 1, 'alpha', 0]
 // version compiled from commented, indented source files at github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
-;(function($B){if($B.isa_web_worker==true){
-window={}
-window.XMLHttpRequest=XMLHttpRequest 
-window.navigator={}
-window.navigator.userLanguage=window.navigator.language="fixme"
-window.clearTimeout=function(timer){clearTimeout(timer)}}
+;(function($B){
+var scripts=document.getElementsByTagName('script')
+var this_url=scripts[scripts.length-1].src
+var elts=this_url.split('/')
+elts.pop()
+var $path=$B.brython_path=elts.join('/')+'/'
+$B.path=[]
+var subpaths=['Lib','Lib/site-packages']
+for(var j=0;j<subpaths.length;j++){var subpath=$path+subpaths[j]
+if(!($B.path.indexOf(subpath)> -1)){$B.path.push(subpath)
+}}
 $B.bound={}
 $B.modules={}
 $B.imported={__main__:{__class__:$B.$ModuleDict,__name__:'__main__'}}
@@ -4221,22 +4226,9 @@ var $href=$B.script_path=window.location.href
 var $href_elts=$href.split('/')
 $href_elts.pop()
 var $script_dir=$B.script_dir=$href_elts.join('/')
-$B.path=[]
 if(options.pythonpath!==undefined)$B.path=options.pythonpath
 if(options.re_module !==undefined){if(options.re_module=='pyre' ||options.re_module=='jsre'){$B.$options.re=options.re
 }}
-for(var $i=0;$i<$scripts.length;$i++){var $elt=$scripts[$i]
-var $br_scripts=['brython.js','py2js.js','brython_dist.js']
-for(var $j=0;$j<$br_scripts.length;$j++){var $bs=$br_scripts[$j]
-if($elt.src && $elt.src.substr($elt.src.length-$bs.length)==$bs){if($elt.src.length===$bs.length ||
-$elt.src.charAt($elt.src.length-$bs.length-1)=='/'){var $path=$elt.src.substr(0,$elt.src.length-$bs.length)
-$B.brython_path=$path
-var subpaths=['Lib','Lib/site-packages']
-for(var j=0;j<subpaths.length;j++){var subpath=$path+subpaths[j]
-if(!($B.path.indexOf(subpath)> -1)){$B.path.push(subpath)
-}}
-break
-}}}}
 if(!($B.path.indexOf($script_dir)> -1))$B.path.push($script_dir)
 for(var $i=0;$i<$elts.length;$i++){var $elt=$elts[$i]
 if($elt.type=="text/python"||$elt.type==="text/python3"){
@@ -4875,12 +4867,10 @@ indent +=4
 }
 for(var $j=0;$j<indent;$j++)$py +=' '
 $py +=$res+'.append('+arguments[2].join('\n')+')'
-console.log('ge\n'+$py)
 var $mod_name='ge'+$ix
 $B.vars[$mod_name]={}
 var $root=$B.py2js($py,module_name,$mod_name,parent_block_id,$B.line_info)
 var $js=$root.to_js()
-console.log('ge to js\n'+$js)
 eval($js)
 var $res1=__BRYTHON__.vars["ge"+$ix]["res"+$ix]
 var $GenExprDict={__class__:$B.$type,__name__:'generator',toString:function(){return '(generator)'}}

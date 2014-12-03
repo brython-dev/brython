@@ -43,7 +43,7 @@ for (var $i=0;$i<$op_order.length;$i++){
     }
     $weight++
 }
-
+ 
 var $augmented_assigns = {
     "//=":"ifloordiv",">>=":"irshift","<<=":"ilshift",
     "**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv",
@@ -6361,7 +6361,7 @@ function brython(options){
     var $script_dir = $B.script_dir = $href_elts.join('/')
 
     // List of URLs where imported modules should be searched
-    $B.path = []
+    // $B.path = []
     // A list can be provided as attribute of options
     if (options.pythonpath!==undefined) $B.path = options.pythonpath
 
@@ -6384,6 +6384,7 @@ function brython(options){
     // - <brython_path>/Lib/site-packages is used for 3rd party modules
     //   or packages
 
+    /*
     for(var $i=0;$i<$scripts.length;$i++){
         var $elt = $scripts[$i]
         var $br_scripts = ['brython.js','py2js.js','brython_dist.js']
@@ -6394,6 +6395,7 @@ function brython(options){
                     $elt.src.charAt($elt.src.length-$bs.length-1)=='/'){
                         var $path = $elt.src.substr(0,$elt.src.length-$bs.length)
                         $B.brython_path = $path
+                        console.log('brython path '+$path)
                         var subpaths = ['Lib','Lib/site-packages']
                         for(var j=0;j<subpaths.length;j++){
                             var subpath = $path+subpaths[j]
@@ -6406,6 +6408,7 @@ function brython(options){
             }
         }
     }
+    */
 
     // Current script directory inserted in path for imports
     if (!($B.path.indexOf($script_dir) > -1)) $B.path.push($script_dir)
