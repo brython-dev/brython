@@ -18,7 +18,7 @@ try:
     session.setMode("ace/mode/python")
 
     editor.setOptions({
-     'width': 190,
+     'width': '390px;',
      'enableLiveAutocompletion': True,
      'enableSnippets': True,
      'highlightActiveLine': False,
