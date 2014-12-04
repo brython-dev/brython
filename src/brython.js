@@ -424,8 +424,6 @@ left_seq=left_seq.value
 if(is_simple(left_seq.tree[0])){args.unshift('['+left_seq.tree[0].to_js()+']')
 }else{exprs.push('var $temp_ix'+$loop_num+'_'+ix+'='+left_seq.tree[0].to_js())
 args.unshift('[$temp_ix'+$loop_num+'_'+ix+']')
-left_seq.tree[0]={type:'id',to_js:(function(rank){return function(){return '$temp_ix'+$loop_num+'_'+rank}})(ix)
-}
 ix++
 }
 if(left_seq.value.type!=='id'){var val='$temp_ix'+$loop_num+'_'+ix
