@@ -3305,28 +3305,46 @@ function $OpCtx(context,op){ // context is the left operand
             var method=comps[this.op]
             if(this.tree[0].type=='expr' && this.tree[1].type=='expr'){
                 var t0=this.tree[0].tree[0],t1=this.tree[1].tree[0]
-                if(t1.type=='int'){
-                    if(t0.type=='int'){return t0.to_js()+this.op+t1.to_js()}
-                    else if(t0.type=='str'){return '$B.$TypeError("unorderable types: int() < str()")'}
-                    else if(t0.type=='id'){
+                switch(t1.type) {
+                  case 'int':
+                    //if(t1.type=='int'){
+                    switch (t0.type) {
+                      case 'int':
+                        //if(t0.type=='int'){
+                        return t0.to_js()+this.op+t1.to_js()
+                      case 'str':
+                        //else if(t0.type=='str'){
+                        return '$B.$TypeError("unorderable types: int() < str()")'
+                      case 'id':
+                        //else if(t0.type=='id'){
                         var res = 'typeof '+t0.to_js()+'=="number" ? '
                         res += t0.to_js()+this.op+t1.to_js()+' : '
                         res += 'getattr('+this.tree[0].to_js()
                         res += ',"__'+method+'__")('+this.tree[1].to_js()+')'
                         return res
                     }
-                }
-                else if(t1.type=='str'){
-                    if(t0.type=='str'){return t0.to_js()+this.op+t1.to_js()}
-                    else if(t0.type=='int'){return '$B.$TypeError("unorderable types: str() < int()")'}
-                    else if(t0.type=='id'){
+                
+                    break;
+                  case 'str':
+                    //else if(t1.type=='str'){
+                    switch(t0.type) {
+                      case 'str':
+                        //if(t0.type=='str'){
+                        return t0.to_js()+this.op+t1.to_js()
+                      case 'int':
+                        //else if(t0.type=='int'){
+                        return '$B.$TypeError("unorderable types: str() < int()")'
+                      case 'id':
+                        //else if(t0.type=='id'){
                         var res = 'typeof '+t0.to_js()+'=="string" ? '
                         res += t0.to_js()+this.op+t1.to_js()+' : '
                         res += 'getattr('+this.tree[0].to_js()
                         res += ',"__'+method+'__")('+this.tree[1].to_js()+')'
                         return res
                     }
-                }else if(t1.type=='id'){
+                    break;
+                  case 'id':
+                    //}else if(t1.type=='id'){
                     if(t0.type=='id'){
                         var res = 'typeof '+t0.to_js()+'!="object" && '
                         res += 'typeof '+t0.to_js()+'==typeof '+t1.to_js()
@@ -3335,7 +3353,8 @@ function $OpCtx(context,op){ // context is the left operand
                         res += ',"__'+method+'__")('+this.tree[1].to_js()+')'
                         return res
                     }
-                }
+                    break;
+                } //switch
             }
         }
         switch(this.op) {
