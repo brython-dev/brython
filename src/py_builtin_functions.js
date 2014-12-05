@@ -238,7 +238,7 @@ compile.__code__.co_varnames=['source','filename','mode']
 //function complex is located in py_complex.js
 
 // built-in variable __debug__
-var __debug__ = __BRYTHON__.debug>0
+var __debug__ = $B.debug>0
 
 function delattr(obj, attr) {
     // descriptor protocol : if obj has attribute attr and this attribute has 
@@ -375,18 +375,18 @@ function $eval(src, _globals, locals){
         var mod_name = env
     }else{
         var mod_name = 'exec-'+Math.random().toString(36).substr(2,8)
-        __BRYTHON__.$py_module_path[mod_name] = __BRYTHON__.$py_module_path['__main__']
-        __BRYTHON__.vars[mod_name] = {}
-        __BRYTHON__.bound[mod_name] = {}
+        $B.$py_module_path[mod_name] = $B.$py_module_path['__main__']
+        $B.vars[mod_name] = {}
+        $B.bound[mod_name] = {}
         if(_globals!==undefined){
             for(var i=0;i<_globals.$keys.length;i++){
-                __BRYTHON__.vars[mod_name][_globals.$keys[i]] = _globals.$values[i]
-                __BRYTHON__.bound[mod_name][_globals.$keys[i]] = true
+                $B.vars[mod_name][_globals.$keys[i]] = _globals.$values[i]
+                $B.bound[mod_name][_globals.$keys[i]] = true
             }
         }else{
             for(var attr in $B.vars[env]){
-                __BRYTHON__.vars[mod_name][attr] = $B.vars[env][attr]
-                __BRYTHON__.bound[mod_name][attr] = true
+                $B.vars[mod_name][attr] = $B.vars[env][attr]
+                $B.bound[mod_name][attr] = true
             }
         }
     }
@@ -398,7 +398,8 @@ function $eval(src, _globals, locals){
         if(!is_exec){
             var instr = root.children[root.children.length-1]
             var type = instr.context.tree[0].type
-            if(["expr","list_or_tuple"].indexOf(type)==-1){
+            if (!('expr' == type || 'list_or_tuple' == type)) {
+            //if(["expr","list_or_tuple"].indexOf(type)==-1){
                 $B.line_info=[1,mod_name]
                 throw SyntaxError("eval() argument must be an expression")
             }
@@ -408,8 +409,9 @@ function $eval(src, _globals, locals){
         if(_globals!==undefined){
             var set_func = getattr(_globals,'__setitem__')
             for(var attr in $B.vars[mod_name]){
-                if(['__name__','__doc__','__file__'].indexOf(attr)>-1){continue}
-                set_func(attr, $B.vars[mod_name][attr])
+               if (attr=='__name__'||attr=='__doc__'||attr == '__file__') continue
+                //if(['__name__','__doc__','__file__'].indexOf(attr)>-1){continue}
+               set_func(attr, $B.vars[mod_name][attr])
             }
         }
         return res
@@ -497,7 +499,6 @@ function getattr(obj,attr,_default){
     if(attr==='__call__' && (typeof obj=='function')){
         if(obj.$blocking){
             console.log('calling blocking function '+obj.__name__)
-            
         }
         if($B.debug>0){
             return function(){

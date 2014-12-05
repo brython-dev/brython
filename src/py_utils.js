@@ -120,16 +120,23 @@ $B.get_class = function(obj){
     var klass = obj.__class__
     if(klass===undefined){
         switch(typeof obj) {
-          case 'function':
-            return $B.$FunctionDict
           case 'number':
+            obj.__class__=_b_.int.$dict
             return _b_.int.$dict
           case 'string':
+            obj.__class__=_b_.str.$dict
             return _b_.str.$dict
           case 'boolean':
+            obj.__class__=$B.$BoolDict
             return $B.$BoolDict
+          case 'function':
+            obj.__class__=$B.$FunctionDict
+            return $B.$FunctionDict
           case 'object':
-            if(obj.constructor===Array) return _b_.list.$dict
+            if(obj.constructor===Array) {
+              obj.__class__=_b_.list.$dict
+              return _b_.list.$dict
+            }
         }
     }
     return klass
@@ -168,7 +175,7 @@ $B.$list_comp = function(module_name, parent_block_id){
     try{eval($js)}
     catch(err){throw $B.exception(err)}
 
-    return __BRYTHON__.vars['lc'+$ix]['res'+$ix]
+    return $B.vars['lc'+$ix]['res'+$ix]
 }
 
 $B.$gen_expr = function(){ // generator expresssion
@@ -195,7 +202,7 @@ $B.$gen_expr = function(){ // generator expresssion
   
     eval($js)
     
-    var $res1 = __BRYTHON__.vars["ge"+$ix]["res"+$ix]
+    var $res1 = $B.vars["ge"+$ix]["res"+$ix]
 
     var $GenExprDict = {
         __class__:$B.$type,
@@ -239,7 +246,7 @@ $B.$dict_comp = function(module_name,parent_block_id){ // dictionary comprehensi
     $root.caller = $B.line_info
     var $js = $root.to_js()
     eval($js)
-    return __BRYTHON__.vars[locals_id][$res]
+    return $B.vars[locals_id][$res]
 }
 
 $B.$lambda = function(locals,$mod,parent_block_id,$args,$body){
@@ -258,7 +265,7 @@ $B.$lambda = function(locals,$mod,parent_block_id,$args,$body){
     var $js = $B.py2js($py,$mod,local_id,parent_block_id).to_js()
     eval($js)
 
-    var $res = __BRYTHON__.vars[local_id][$res]
+    var $res = $B.vars[local_id][$res]
     $res.__module__ = $mod
     $res.__name__ = '<lambda>'
     return $res
