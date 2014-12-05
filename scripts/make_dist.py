@@ -26,7 +26,6 @@ pdir = os.path.dirname(os.getcwd())
 version = [3, 3, 0, "alpha", 0]
 implementation = [3, 0, 1, 'alpha', 0]
 
-
 def custom_minify(src):
     _res, pos = '', 0
     while pos < len(src):
@@ -192,14 +191,6 @@ sources = [
     'py_import_hooks'
 ]
 
-
-with open(abs_path('py_loader.js')) as the_old_py_loader_file:
-    loader_source_code = the_old_py_loader_file.read()
-loader_source_code = re.sub('version_info = \[1,2,".*?"\,"alpha",0]',
-                            'version_info = %s' % version, loader_source_code)
-with open(abs_path('py_loader.js'), 'wb') as the_new_py_loader_file:
-    the_new_py_loader_file.write(loader_source_code)
-
 res = '// brython.js brython.info\n'
 res += '// version %s\n' % version
 res += '// implementation %s\n' % implementation
@@ -336,7 +327,6 @@ for arc, wfunc in (dist1, dist1.add), (dist2, dist2.add), (dist3, dist3.write):
             for path in filenames:
                 if os.path.splitext(path)[1] not in ('.js', '.py'):
                     continue
-                #abs_path = os.path.join(os.getcwd(),'src',folder,path)
                 print(('add', path, dirpath[len(base):]))
                 wfunc(os.path.join(dirpath, path),
                       arcname=os.path.join(name, dirpath[len(base) + 1:], path))

@@ -1403,6 +1403,10 @@ function setattr(obj,attr,value){
         if(__set__ && (typeof __set__=='function')) {return __set__.apply(res,[obj,value])}
     }
     
+    // For instances of simple classes (no inheritance) there is no need to
+    // search __setattr__
+    if(obj.$simple_setattr){obj[attr]=value;return}
+    
     try{var f = getattr(obj,'__setattr__')}
     catch(err){
         $B.$pop_exc()

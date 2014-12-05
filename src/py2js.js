@@ -43,7 +43,7 @@ for (var $i=0;$i<$op_order.length;$i++){
     }
     $weight++
 }
-
+ 
 var $augmented_assigns = {
     "//=":"ifloordiv",">>=":"irshift","<<=":"ilshift",
     "**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv",
@@ -611,16 +611,12 @@ function $AssignCtx(context, check_unbound){
                           }
                           left_seq=left_seq.value
                       }
+                      
                       if(is_simple(left_seq.tree[0])){
                           args.unshift('['+left_seq.tree[0].to_js()+']')
                       }else{
                           exprs.push('var $temp_ix'+$loop_num+'_'+ix+'='+left_seq.tree[0].to_js())
                           args.unshift('[$temp_ix'+$loop_num+'_'+ix+']')
-                          left_seq.tree[0]={type:'id',
-                              to_js:(function(rank){
-                                  return function(){return '$temp_ix'+$loop_num+'_'+rank}
-                                  })(ix)
-                          }
                           ix++
                       }
                       
@@ -1598,7 +1594,7 @@ function $DefCtx(context){
             pnode = pnode.parent.parent
         }
         var required = '', required_list=[]
-        var defaults = [],defs=[],defs1=[]
+        var defaults = [],defs=[],def_list=[],defs1=[]
         var after_star = []
         var other_args = null
         var other_kw = null
@@ -1616,6 +1612,7 @@ function $DefCtx(context){
                     }
                 }else{
                     defaults.push('"'+arg.name+'"')
+                    def_list.push(arg.name)
                     defs.push(arg.name+' = '+$to_js(arg.tree))
                     defs1.push(arg.name+':'+$to_js(arg.tree))
                 }
@@ -1625,6 +1622,18 @@ function $DefCtx(context){
         }
         this.defs = defs
         if(required.length>0) required=required.substr(0,required.length-1)
+        
+        var robj = []
+        for(var i=0;i<required_list.length;i++){
+            robj.push(required_list[i]+':null')
+        }
+        robj = '{'+robj.join(',')+'}'
+
+        var dobj = []
+        for(var i=0;i<def_list.length;i++){
+            dobj.push(def_list[i]+':null')
+        }
+        dobj = '{'+dobj.join(',')+'}'
 
         var nodes=[], js
 
@@ -1719,9 +1728,11 @@ function $DefCtx(context){
         this.passed_ix = passed_ix
 
         var make_args_nodes = []
-        var js = 'var $ns=$B.$MakeArgs("'+this.name+'",arguments,new Array('+required+'),'
-        js += 'new Array('+defaults.join(',')+'),'+other_args+','+other_kw+
-            ',new Array('+after_star.join(',')+'))'
+        var js = 'var $ns=$B.$MakeArgs1("'+this.name+'",arguments,'
+        js += robj+',['+required+'],'+dobj+','
+        js += '['+defaults.join(',')+'],'+other_args+','+other_kw+
+            ',['+after_star.join(',')+'])'
+
         var new_node = new $Node()
         new $NodeJSCtx(new_node,js)
         make_args_nodes.push(new_node)
@@ -1736,7 +1747,7 @@ function $DefCtx(context){
             after_star.length==0){
             // If function only takes positional arguments, we can generate
             // a faster version of argument parsing than by calling function
-            // $MakeArgs
+            // $MakeArgs1
             only_positional = true
             
             // Loop to test if all the arguments passed to the function
@@ -1757,7 +1768,7 @@ function $DefCtx(context){
                 nodes.push(new_node)
                 
                 // If at least one argument is not "simple", fall back to 
-                // $MakeArgs()
+                // $MakeArgs1()
                 new_node.add(make_args_nodes[0])
                 new_node.add(make_args_nodes[1])
             
@@ -3173,20 +3184,18 @@ function $ListOrTupleCtx(context,real){
                 var res = res1+','+res2
 
                 if(this.expression.length===1){
-                    var res = '$B.$gen_expr("'+scope.module+'",'
-                    res += '"'+scope.id+'",'+res2+')'
-                    return res
+                  var res = '$B.$gen_expr("'+scope.module+'",'
+                  res += '$locals_id,'+res2+')'
+                  return res
                 }
                 var res = '$B.$dict_comp("'+scope.module+'",'
-                res += '"'+scope.id+'",'+res2+')'
+                res += '$locals_id,'+res2+')'
                 return res
             }
 
             // Generator expression
             // Pass the module name and the id of current block
-            var res = '$B.$gen_expr("'+scope.module+'",'
-            res += '"'+scope.id+'",'+res2+')'
-            return res
+            return '$B.$gen_expr("'+scope.module+'",'+'$locals_id,'+res2+')'
           case 'tuple':
             if(this.tree.length===1 && this.has_comma===undefined) return this.tree[0].to_js()
             return 'tuple(['+$to_js(this.tree)+'])'
@@ -6347,7 +6356,7 @@ function brython(options){
     var $script_dir = $B.script_dir = $href_elts.join('/')
 
     // List of URLs where imported modules should be searched
-    $B.path = []
+    // $B.path = []
     // A list can be provided as attribute of options
     if (options.pythonpath!==undefined) $B.path = options.pythonpath
 
@@ -6370,6 +6379,7 @@ function brython(options){
     // - <brython_path>/Lib/site-packages is used for 3rd party modules
     //   or packages
 
+    /*
     for(var $i=0;$i<$scripts.length;$i++){
         var $elt = $scripts[$i]
         var $br_scripts = ['brython.js','py2js.js','brython_dist.js']
@@ -6380,6 +6390,7 @@ function brython(options){
                     $elt.src.charAt($elt.src.length-$bs.length-1)=='/'){
                         var $path = $elt.src.substr(0,$elt.src.length-$bs.length)
                         $B.brython_path = $path
+                        console.log('brython path '+$path)
                         var subpaths = ['Lib','Lib/site-packages']
                         for(var j=0;j<subpaths.length;j++){
                             var subpath = $path+subpaths[j]
@@ -6392,6 +6403,7 @@ function brython(options){
             }
         }
     }
+    */
 
     // Current script directory inserted in path for imports
     if (!($B.path.indexOf($script_dir) > -1)) $B.path.push($script_dir)
