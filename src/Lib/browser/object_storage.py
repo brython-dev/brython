@@ -4,7 +4,7 @@ class __UnProvided():
     pass
 
 
-class Object_Storage():
+class ObjectStorage():
 
     def __init__(self, storage):
         self.storage = storage

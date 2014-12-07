@@ -1,6 +1,10 @@
 #!/usr/bin/python
-print('Content-type: text/plain\n\n')
+# -*- coding: utf-8 -*-
 
-import time
-time.sleep(10)
+
+from time import sleep
+
+
+print('Content-type: text/plain\n\n')
+sleep(10)
 print('script cgi with GET')

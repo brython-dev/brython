@@ -57,10 +57,13 @@ class Error(Exception):
     pass
 error = Error   # backward compatibility
 
-try:
-    from org.python.core import PyStringMap
-except ImportError:
-    PyStringMap = None
+# module org.python.core does not exist in Brython, so lets just ignore
+# this import request.
+#try:
+#    from org.python.core import PyStringMap
+#except ImportError:
+#    PyStringMap = None
+PyStringMap = None
 
 __all__ = ["Error", "copy", "deepcopy"]
 

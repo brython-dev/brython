@@ -1,0 +1,1 @@
+find . -iname '*.pyc' -delete

@@ -2,30 +2,40 @@ var __BRYTHON__=__BRYTHON__ || {}  // global object with brython built-ins
 
 ;(function($B) {
 
-if ($B.isa_web_worker==true) {
-  // we need to emulate a window and document variables/functions for
-  // web workers, since they don't exists. (this is much better than,
-  // having a bunch of tests throughout code, making the code more complex) 
+// Get url of current script
+var scripts = document.getElementsByTagName('script')
+var this_url = scripts[scripts.length-1].src
+var elts = this_url.split('/')
+elts.pop()
+// brython_path is the url of the directory holding brython core scripts
+// It is used to import modules of the standard library
+var $path = $B.brython_path = elts.join('/')+'/'
 
-  window = {}
-  window.XMLHttpRequest = XMLHttpRequest 
-  window.navigator={}
-  window.navigator.userLanguage=window.navigator.language="fixme"
-
-  window.clearTimeout=function(timer) {clearTimeout(timer)}
+// __BRYTHON__.path is the list of paths where Python modules are searched
+$B.path = []
+var subpaths = ['Lib','Lib/site-packages']
+for(var j=0;j<subpaths.length;j++){
+    var subpath = $path+subpaths[j]
+    if (!($B.path.indexOf(subpath)> -1)) {
+       $B.path.push(subpath)
+    }
 }
 
 // Name bindings in scopes
-// Name "x" defined in a scope are keys of the dictionary
+// Name "x" defined in a scope is a keys of the dictionary
 // __BRYTHON__.bound[scope.id]
-// with value set to true
 $B.bound = {}
 
-// Maps a module name to matching module object
+// Maps a module name to the matching module object
 // A module can be the body of a script, or the body of a block inside a
 // script, such as in exec() or in a comprehension
 $B.modules = {}
-    
+
+// Maps the name of imported modules to the module object
+$B.imported = {
+    __main__:{__class__:$B.$ModuleDict,__name__:'__main__'}
+}
+
 // Maps a Python block (module, function, class) name to a Javascript object
 // mapping the names defined in this block to their value
 $B.vars = {}
@@ -42,6 +52,9 @@ $B.builtins = {
     __repr__:function(){return "<module 'builtins>'"},
     __str__:function(){return "<module 'builtins'>"},    
 }
+
+// Builtin functions : used in py2js to simplify the code produced by a call
+$B.builtin_funcs = {}
 
 $B.__getattr__ = function(attr){return this[attr]}
 $B.__setattr__ = function(attr,value){

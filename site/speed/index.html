@@ -6,7 +6,10 @@
 
 <link rel="stylesheet" href="console.css">
 
-<script src="http://d1n0x3qji82z53.cloudfront.net/src-min-noconflict/ace.js" type="text/javascript">
+<script src="../tests/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="../tests/ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+<script src="../tests/ace/mode-python3.js" type="text/javascript" charset="utf-8"></script>
+<script src="../tests/ace/snippets/python.js" type="text/javascript" charset="utf-8"></script>
 </script>
 
 <script type="text/javascript" src="../../src/brython_builtins.js"></script>
@@ -32,7 +35,7 @@
 <script type="text/javascript" src="../../src/py_list.js"></script>
 <script type="text/javascript" src="../../src/py_dom.js"></script>
 
-<script type="text/python" src="editor.py"></script>
+<script type="text/python" src="../tests/editor.py"></script>
 
 <script type="text/python3">
 from browser import document as doc
@@ -81,9 +84,8 @@ doc['set_debug'].bind('change',set_debug)
 # next functions are defined in editor.py
 doc['show_js'].bind('click',show_js)
 doc['run'].bind('click',run)
-doc['clear_text'].bind('click',clear_text)
 doc['show_console'].bind('click',show_console)
-doc['files'].bind('change',load)
+doc['files'].bind('change',load_script)
 </script>
 <script type="text/python3">
 import header
@@ -168,7 +170,7 @@ Test suite:
 <br><button id="test_all">Run all tests</button>
 
 </div>
-  <div id="editor"></div>
+  <div id="editor" style="width:100%;"></div>
 </div>
 
 <div id="right-div">

@@ -8,8 +8,6 @@ var $s=[]
 for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
 eval($s.join(';'))
 
-//for(var $py_builtin in _b_) eval("var "+$py_builtin+"=_b_[$py_builtin]")
-
 function makeTagDict(tagName){
     // return the dictionary for the class associated with tagName
     var dict = {__class__:$B.$type,
@@ -25,7 +23,7 @@ function makeTagDict(tagName){
             if(isinstance(first,[str,int,float])){
                 self.elt.appendChild(document.createTextNode(str(first)))
             } else if(first.__class__===$TagSumDict){
-                for(var i=0;i<first.children.length;i++){
+                for(var i=0, _len_i = first.children.length; i < _len_i;i++){
                     self.elt.appendChild(first.children[i].elt)
                 }
             } else { // argument is another DOMNode instance
@@ -35,7 +33,7 @@ function makeTagDict(tagName){
         }
 
         // attributes
-        for(var i=0;i<$ns['kw'].$keys.length;i++){
+        for(var i=0, _len_i = $ns['kw'].$keys.length; i < _len_i;i++){
             // keyword arguments
             var arg = $ns['kw'].$keys[i]
             var value = $ns['kw'].$values[i]
@@ -87,7 +85,7 @@ function makeFactory(tagName){
         res.__class__ = dicts[tagName]
         // apply __init__
         var args = [res]
-        for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
+        for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
         dicts[tagName].__init__.apply(null,args)
         return res
     }
@@ -123,7 +121,7 @@ var $tags = ['A','ABBR','ACRONYM','ADDRESS','APPLET','AREA','B','BASE',
 // create classes
 var obj = new Object()
 var dicts = {}
-for(var i=0;i<$tags.length;i++){
+for(var i=0, _len_i = $tags.length; i < _len_i;i++){
     var tag = $tags[i]
     dicts[tag]=makeTagDict(tag)
     obj[tag] = makeFactory(tag)

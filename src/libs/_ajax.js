@@ -24,7 +24,7 @@ $XMLHttpDict.__repr__ = function(self){return '<object XMLHttp>'}
 $XMLHttpDict.__str__ = $XMLHttpDict.toString = $XMLHttpDict.__repr__
 
 $XMLHttpDict.text = function(self){return self.responseText}
-    
+
 $XMLHttpDict.xml = function(self){return $DomObject(self.responseXML)}
 
 $XMLHttpDict.headers = function(self){
@@ -54,18 +54,27 @@ $AjaxDict.open = function(self,method,url,async){
 }
 
 $AjaxDict.send = function(self,params){
-    // params is a Python dictionary
+    // params can be Python dictionary or string
     var res = ''
-    if(!params || params.$keys.length==0){self.$xmlhttp.send();return}
-    else if(isinstance(params,str)){
+    if(!params){
+        self.$xmlhttp.send();
+        return;
+    }else if(isinstance(params,str)){
         res = params
     }else if(isinstance(params,dict)){
-        for(i=0;i<params.$keys.length;i++){
-            res +=encodeURIComponent(str(params.$keys[i]))+'='+encodeURIComponent(str(params.$values[i]))+'&'
+        for(var i=0, _len_i = params.$keys.length; i < _len_i;i++){
+            var key = encodeURIComponent(str(params.$keys[i]));
+            if (isinstance(params.$values[i],list)) {
+                for (j = 0; j < params.$values[i].length; j++) {
+                    res += key +'=' + encodeURIComponent(str(params.$values[i][j])) + '&'
+                }
+            } else {
+                res += key + '=' + encodeURIComponent(str(params.$values[i])) + '&'
+            }
         }
         res = res.substr(0,res.length-1)
     }else{
-        throw _b_.TypeError("send() argument must be string or dictonary, not '"+str(params.__class__)+"'")
+        throw _b_.TypeError("send() argument must be string or dictionary, not '"+str(params.__class__)+"'")
     }
     self.$xmlhttp.send(res)
 }
@@ -76,8 +85,8 @@ $AjaxDict.set_header = function(self,key,value){
 
 $AjaxDict.set_timeout = function(self,seconds,func){
     self.$xmlhttp.$requestTimer = setTimeout(
-        function() {self.$xmlhttp.abort();func()}, 
-        seconds*1000); 
+        function() {self.$xmlhttp.abort();func()},
+        seconds*1000);
 }
 
 function ajax(){
@@ -93,7 +102,7 @@ function ajax(){
     }
     $xmlhttp.$requestTimer = null
     $xmlhttp.__class__ = $XMLHttpDict
-    
+
     $xmlhttp.onreadystatechange = function(){
         // here, "this" refers to $xmlhttp
         var state = this.readyState

@@ -449,4 +449,12 @@ i = [3,[4,5],[[6,[7],8]]]
 o = list(flatten_gen(3, i))
 assert o == [3,4,5,6,"killoff",8], o
 
+# generator expression inside a generator
+
+def permutations(pool):
+    yield tuple(pool[i] for i in pool)
+
+z = permutations(range(5))
+assert next(z) == (0, 1, 2, 3, 4)
+
 print('passed all tests...')

@@ -31,7 +31,7 @@ $DictDict.__contains__ = function(self,item){
 
 $DictDict.__delitem__ = function(self,arg){
     // search if arg is in the keys
-    for(var i=0;i<self.$keys.length;i++){
+    for(var i=0, _len_i = self.$keys.length; i < _len_i;i++){
         if(getattr(arg,'__eq__')(self.$keys[i])){
             self.$keys.splice(i,1)
             self.$values.splice(i,1)
@@ -48,9 +48,9 @@ $DictDict.__eq__ = function(self,other){
     }
     if(!isinstance(other,dict)) return False
     if(other.$keys.length!==self.$keys.length) return False
-    for(var i=0;i<self.$keys.length;i++){
+    for(var i=0, _len_i = self.$keys.length; i < _len_i;i++){
         var key = self.$keys[i]
-        for(var j=0;j<other.$keys.length;j++){
+        for(var j=0, _len_j = other.$keys.length; j < _len_j;j++){
             try{
                 if(getattr(other.$keys[j],'__eq__')(key)){
                     if(!getattr(other.$values[j],'__eq__')(self.$values[i])){
@@ -65,7 +65,7 @@ $DictDict.__eq__ = function(self,other){
 
 $DictDict.__getitem__ = function(self,arg){
     // search if arg is in the keys
-    for(var i=0;i<self.$keys.length;i++){
+    for(var i=0, _len_i = self.$keys.length; i < _len_i;i++){
         if(getattr(arg,'__eq__')(self.$keys[i])) return self.$values[i]
     }
     throw KeyError(_b_.str(arg))
@@ -75,7 +75,7 @@ $DictDict.__hash__ = function(self) {throw _b_.TypeError("unhashable type: 'dict
 
 $DictDict.__init__ = function(self){
     var args = []
-    for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
+    for(var i=1, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
     self.$keys = []
     self.$values = []
     if(args.length==0) return
@@ -155,14 +155,14 @@ $DictDict.__repr__ = function(self){
     if(self===undefined) return "<class 'dict'>"
 
     var res=[]
-    for(var i=0;i<self.$keys.length;i++){
+    for(var i=0, _len_i = self.$keys.length; i < _len_i;i++){
         res.push(repr(self.$keys[i])+':'+repr(self.$values[i]))
     }
     return '{'+ res.join(',') +'}'
 }
 
 $DictDict.__setitem__ = function(self,key,value){
-    for(var i=0;i<self.$keys.length;i++){
+    for(var i=0, _len_i = self.$keys.length; i < _len_i;i++){
         try{
             if(getattr(key,'__eq__')(self.$keys[i])){ // reset value
                 self.$values[i]=value
@@ -194,7 +194,7 @@ $DictDict.clear = function(self){
 $DictDict.copy = function(self){
     // Return a shallow copy of the dictionary
     var res = dict()
-    for(var i=0;i<self.$keys.length;i++){
+    for(var i=0, _len_i = self.$keys.length; i < _len_i;i++){
         res.$keys.push(self.$keys[i])
         res.$values.push(self.$values[i])
     }
@@ -214,7 +214,7 @@ var $dict_itemsDict = $B.$iterator_class('dict_itemiterator')
 
 $DictDict.items = function(self){
     var items = []
-    for(var i=0;i<self.$keys.length;i++){
+    for(var i=0, _len_i = self.$keys.length; i < _len_i;i++){
         items.push(_b_.tuple([self.$keys[i],self.$values[i]]))
     }
     return $B.$iterator(items,$dict_itemsDict)
@@ -276,18 +276,18 @@ $DictDict.setdefault = function(self,key,_default){
 
 $DictDict.update = function(self){
     var params = []
-    for(var i=1;i<arguments.length;i++){params.push(arguments[i])}
+    for(var i=1, _len_i = arguments.length; i < _len_i;i++){params.push(arguments[i])}
     var $ns=$B.$MakeArgs('$DictDict.update',params,[],[],'args','kw')
     var args = $ns['args']
     if(args.length>0 && isinstance(args[0],dict)){
         var other = args[0]
-        for(var i=0;i<other.$keys.length;i++){
+        for(var i=0, _len_i = other.$keys.length; i < _len_i;i++){
             $DictDict.__setitem__(self,other.$keys[i],other.$values[i])
         }
     }
     var kw = $ns['kw']
     var keys = kw.$keys
-    for(var i=0;i<keys.length;i++){
+    for(var i=0, _len_i = keys.length; i < _len_i;i++){
         $DictDict.__setitem__(self,keys[i],kw.$values(keys[i]))
     }
 }
@@ -302,7 +302,7 @@ function dict(){
     var res = {__class__:$DictDict}
     // apply __init__ with arguments of dict()
     var args = [res]
-    for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
+    for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
     $DictDict.__init__.apply(null,args)
     return res
 }
@@ -320,4 +320,61 @@ $DictDict.$factory = dict
 $DictDict.__new__ = $B.$__new__(dict)
 
 _b_.dict = dict
+
+// Class used for attribute __dict__ of objects
+
+$ObjDictDict = {__class__:$B.$type,__name__:'obj_dict'}
+$ObjDictDict.__mro__ = [$ObjDictDict, $DictDict, $ObjectDict]
+
+$ObjDictDict.__delitem__ = function(self, key){
+    $DictDict.__delitem__(self, key)
+    delete self.$obj[key]
+}
+
+$ObjDictDict.__setitem__ = function(self, key, value){
+    $DictDict.__setitem__(self, key, value)
+    self.$obj[key] = value
+}
+
+$ObjDictDict.clear = function(self){
+    $DictDict.clear(self)
+    for(var key in self.$obj){delete self.$obj[key]}
+}
+
+$ObjDictDict.pop = function(self, key, _default){
+    $DictDict.pop(self, key, _default)
+    delete self.$obj[key]
+    return key
+}
+
+$ObjDictDict.popitem = function(self){
+    var res = $DictDict.popitem(self) // tuple
+    var key = res[0]
+    delete self.$obj[key]
+    return res
+}
+
+$ObjDictDict.update = function(self, other){
+    $DictDict.update(self, other)
+    for(var i=0;i<other.$keys.length;i++){
+        self.$obj[other.$keys[i]]=other.$values[i]
+    }    
+}
+
+function obj_dict(obj){
+    var res = {__class__:$ObjDictDict,$obj:obj,$keys:[],$values:[]}
+    for(var attr in obj){
+        if(attr.charAt(0)!='$'){
+            res.$keys.push(attr)
+            res.$values.push(obj[attr])
+        }
+    }
+    return res
+}
+obj_dict.$dict = $ObjDictDict
+obj_dict.__class__ = $B.$factory
+$ObjDictDict.$factory = obj_dict
+
+$B.obj_dict = obj_dict
+
 })(__BRYTHON__)

@@ -3,7 +3,7 @@ import time
 import traceback
 import dis
 
-from browser import document as doc, window
+from browser import document as doc, window,alert
 from javascript import JSObject
 
 # set height of container to 66% of screen
@@ -18,7 +18,7 @@ try:
     session.setMode("ace/mode/python")
 
     editor.setOptions({
-     'width': 190,
+     'width': '390px;',
      'enableLiveAutocompletion': True,
      'enableSnippets': True,
      'highlightActiveLine': False,
@@ -78,7 +78,7 @@ def show_console(ev):
     doc["console"].value = output
     doc["console"].cols = 60
 
-def run(*args):
+def run(in_globals=False):
     global output
     doc["console"].value=''
     src = editor.getValue()
@@ -87,7 +87,11 @@ def run(*args):
 
     t0 = time.perf_counter()
     try:
-        exec(src)
+        if(in_globals):
+            exec(src)
+        else:
+            ns = {}
+            exec(src,ns)
         state = 1
     except Exception as exc:
         traceback.print_exc()
