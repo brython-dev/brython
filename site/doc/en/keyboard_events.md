@@ -150,14 +150,14 @@ with *keydown* <input id="keyCodeKeydown" value=""></input>
     from browser import document
     
     def keyCode(ev):
-        trace = doc["traceKeyCode"]
+        trace = document["traceKeyCode"]
         trace.text = 'event %s '%ev.type
         trace.text += ', keyCode : %s ' %ev.keyCode
         ev.stopPropagation()
     
-    doc['keyCodeKeydown'].bind('keydown', keyCode)
-    doc['keyCodeKeypress'].bind('keypress', keyCode)
-    doc['keyCodeKeyup'].bind('keyup', keyCode)
+    document['keyCodeKeydown'].bind('keydown', keyCode)
+    document['keyCodeKeypress'].bind('keypress', keyCode)
+    document['keyCodeKeyup'].bind('keyup', keyCode)
 </div>
 
 </td>
@@ -183,10 +183,10 @@ Enter text in the field below, with or without pressing the Shift key
 #### Code
 
 <div id="codeShiftKey">
-    from browser import document as doc
+    from browser import document
     
     def shiftKey(ev):
-        trace = doc["traceShiftKey"]
+        trace = document["traceShiftKey"]
         trace.text = 'shiftKey : %s ' %ev.shiftKey
 
     document['shiftKey'].bind('keypress', shiftKey)
@@ -223,6 +223,7 @@ with *keydown* <input id="whichKeydown"></input>
  </tr>
  <tr>
  <td colspan=2>
+ 
 #### Code
 
  <div id="codeWhich">
