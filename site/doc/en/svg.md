@@ -14,6 +14,7 @@ For instance, if the HTML document has an SVG graphics zone defined by
 >    </svg>
 
 you can insert forms and text by :
+
 <table>
 <tr>
 <td>
@@ -191,8 +192,6 @@ doc['run_svg3'].bind('click', run_svg3)
 
 </table>
 
-
-
 Here's an example of a polygon (a red star with a blue outline)
 
 <table>
@@ -239,7 +238,6 @@ doc['run_svg4'].bind('click', run_svg4)
 
 </table>
 
-
 Here's an example of animating a rectangle:
 
 <table>
@@ -283,8 +281,6 @@ doc['run_svg5'].bind('click', run_svg5)
 </tr>
 
 </table>
-
-
 
 For more detailed information about SVG shapes, their attributes, etc see the
 [SVG Shape Documentation](http://www.w3.org/TR/SVG/shapes.html)

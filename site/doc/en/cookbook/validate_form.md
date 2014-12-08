@@ -9,7 +9,7 @@ Solution
 
 In the form below we want to check that the user filled all the fields marked with a star, and that the date has the format MM/DD/YYYY
 
-For this, we use the function _validate()_ when clicking on "Send". If there is an error, the function reports it and we stay on the page ; otherwise the form is sent to a page that prints the data sent, using _doc.query_
+For this, we use the function _validate()_ when clicking on the "Send" button. If there is an error, the function reports it and we stay on the page ; otherwise the form is sent to a page that prints the data sent, using _doc.query_
 
 <table width="100%">
 <tr>
@@ -65,6 +65,7 @@ For this, we use the function _validate()_ when clicking on "Send". If there is 
             return False
 
     window.validate = validate
+    
 </td>
 </tr>
 </table>

@@ -56,13 +56,13 @@ En el ejemplo, cuando el objeto arrastrable ha sido soltado, ya no se puede volv
         # enteros, la distancia desde los bordes izquierdo y superior en el documento
         m0 = [ev.x-ev.target.left,ev.y-ev.target.top]
         # asociar datos al proceso de arrastrado
-        ev.data['text']=ev.target.id
+        ev.dataTransfer.setData('text',ev.target.id)
         # permitir al elemento arrastrable que sea movido
-        ev.data.effectAllowed = 'move'
+        ev.dataTransfer.effectAllowed = 'move'
     
     # función a llamar cuando el elemento arrastrable llega sobre la zona de destino
     def drag_over(ev):
-        ev.data.dropEffect = 'move'
+        ev.dataTransfer.dropEffect = 'move'
         # aquí hemos de prevenir el comportamiento por defecto para este tipo de evento
         ev.preventDefault()
     
@@ -71,7 +71,7 @@ En el ejemplo, cuando el objeto arrastrable ha sido soltado, ya no se puede volv
     # mientras el objeto se encuentra sobre la zona    
     def drop(ev):
         # obtiene los datos almacenados en drag_start (la id del elemento arrastrable)
-        src_id = ev.data['text']
+        src_id = ev.dataTransfer.getData('text')
         elt = doc[src_id]
         # establece las nuevas coordenadas del objeto arrastrado
         elt.style.left = "%spx" %(ev.x-m0[0])

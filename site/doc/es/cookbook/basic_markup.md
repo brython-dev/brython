@@ -52,5 +52,5 @@ document['fill_zone'].bind('click', fill_zone)
 
 Todas las etiquetas HTML tienen su propia función : `I, H1, H2,...`. Puedes anidar funciones, como se muestra en la segunda línea :
 
-    doc <= html.H4(html.I("Python en el navegador"))
+    document <= html.H4(html.I("Python en el navegador"))
 

@@ -39,4 +39,4 @@ By default, `print()` will output to the web browser console and so are the erro
 
 To open a print dialog (to a printer), call `window.print` (`window` is defined in module **browser**)
 
-The following built-in function `memoryview(), vars()` are not implemented in the current version
+The following built-in functions `memoryview(), vars()` are not implemented in the current version

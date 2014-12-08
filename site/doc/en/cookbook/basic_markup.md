@@ -53,5 +53,5 @@ document['fill_zone'].bind('click', fill_zone)
 
 All HTML tags have their own function : `I, H1, H2,...`. You can nest functions, as shown in the second line :
 
-    doc <= html.H4(html.I("Python in the browser"))
+    document <= html.H4(html.I("Python in the browser"))
 

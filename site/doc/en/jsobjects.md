@@ -13,7 +13,7 @@ By default, Brython only exposes two names in the global Javascript namespace:
 > `__BRYTHON__` : an object used internally by Brython to store the objects 
 > needed for scripts execution
 
-Consequently, by default, a Javascript program can not access Brython objects.
+Consequently, by default, a Javascript program cannot access Brython objects.
  For instance, for a function `echo()` defined in a Brython script 
 to react to an event on an element in the page, instead of using the regular 
 javascript syntax:
@@ -27,6 +27,7 @@ solution is to set an id to the element:
 
 and to define the link between this element and the event _click_ by :
 
+    from browser import document
     document['mybutton'].bind('click',echo)
 
 Another option is to force the introduction of the name _echo_ in the 
@@ -57,6 +58,7 @@ For instance :
 >    
 >    <script type="text/python">
 >    from browser import document, window
+>
 >    document['result'].value = window.circle.surface(10)
 >    </script>
 

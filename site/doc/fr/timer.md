@@ -21,17 +21,19 @@ Implémente des fonctions pour permettre l'exécution différée ou répétitive
     def press_button(ev):
         timer.set_timeout(change_color, 3000)
 
-    doc['st-button'].bind('click', press_button)
+    doc['first-button'].bind('click', press_button)
 </div>
 
 <script type="text/python">
-exec(doc["st-example"].text)
+from browser import document
+
+exec(document["st-example"].text)
 </script>
 
 <table cellpadding=10>
 <tr>
 <td style="width:100px;">
-<button id="st-button">Press</button>
+<button id="first-button">Press</button>
 </td>
 <td>
 <div id="st-text" style="background-color:black;color:#ffffff;padding:10px;font-family:courier;font-weight:bold;font-size:14px;">Cette couleur change au bout de 3s</div>
@@ -54,24 +56,26 @@ exec(doc["st-example"].text)
     
     idtimer = 1
     
-    def change_color():
-        doc['ct-text'].style.color = "blue"
+    def change_color_two():
+        doc['ct-text2'].style.color = "blue"
     
-    def press_button(ev):
+    def press_button_two(ev):
         global idtimer
-        idtimer = timer.set_timeout(change_color, 3000)
+        idtimer = timer.set_timeout(change_color_two, 3000)
         
     def stop_button(ev):
         global idtimer
         timer.clear_timeout(idtimer)
 
-    doc['ct-start'].bind('click', press_button)
+    doc['ct-start'].bind('click', press_button_two)
     doc['ct-stop'].bind('click', stop_button)
     
 </div>
 
 <script type="text/python">
-exec(doc["ct-example"].text)
+from browser import document
+
+exec(document["ct-example"].text)
 </script>
 
 <table cellpadding=10>
@@ -82,7 +86,7 @@ exec(doc["ct-example"].text)
 <button id="ct-stop">Arrêter</button>
 </td>
 <td>
-<div id="ct-text" style="background-color:black;color:#ffffff;padding:10px;font-family:courier;font-weight:bold;font-size:14px;">Cette couleur changera au bout de 3s</div>
+<div id="ct-text2" style="background-color:black;color:#ffffff;padding:10px;font-family:courier;font-weight:bold;font-size:14px;">Cette couleur changera au bout de 3s</div>
 </td>
 </tr>
 </table>
@@ -104,7 +108,7 @@ exec(doc["ct-example"].text)
 
 <div style="padding-left:50px;">
 <div id="py-source" style="background-color:#dddddd;">
-    import time
+    from time import time
     from browser import document as doc
     from browser import timer
     
@@ -112,17 +116,17 @@ exec(doc["ct-example"].text)
     counter = 0
     
     def show():
-        doc['_timer'].text = '%.2f' %(time.time()-counter)
+        doc['_timer'].text = '%.2f' %(time()-counter)
     
     def start_timer(ev):
         global _timer,counter
         if _timer is None:
-            counter = time.time()
+            counter = time()
             _timer = timer.set_interval(show,10)
             doc['start'].text = 'Pause'
         elif _timer == 'hold': # restart
             # restart timer
-            counter = time.time()-float(doc['_timer'].text)
+            counter = time()-float(doc['_timer'].text)
             _timer = timer.set_interval(show,10)
             doc['start'].text = 'Pause'
         else: # hold
@@ -143,7 +147,9 @@ exec(doc["ct-example"].text)
 </div>
 
 <script type='text/python'>
-exec(doc['py-source'].text)
+from browser import document
+
+exec(document['py-source'].text)
 </script>
 
 <table cellpadding=10>
@@ -206,23 +212,26 @@ exec(doc['py-source'].text)
         draw()
 
     def stop(i):
+        global id
         print(id)
         caf(id)
 
-    win.animate = animate
-    win.stop = stop
+    doc['btn-animate'].bind('click', animate)
+    doc['btn-stop'].bind('click', stop)
 </div>
 
 <script type='text/python'>
-exec(doc['raf-example'].text)
+from browser import document
+
+exec(document['raf-example'].text)
 </script>
 
 <table cellpadding=10>
 <tr>
 <td style="width:100px;">
-<button type="button" onclick="animate(0)">Animer</button>
+<button id="btn-animate" type="button">Animer</button>
 <br>
-<button type="button" onclick="stop(0)">Arrêter</button>
+<button id="btn-stop" type="button">Arrêter</button>
 </td>
 <td>
 <canvas id="raf-canvas" width=256 height=256></canvas>

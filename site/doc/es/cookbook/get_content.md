@@ -34,6 +34,8 @@ Solución
 </table>
 
 <script type="text/python3">
+from browser import document as doc
+
 def show_text(ev):
     src = doc.get(selector="pre.marked")[0].text
     exec(src)
@@ -55,4 +57,4 @@ Además, posee un atributo `html`, una cadena con el código HTML dentro del ele
 
 Los campos de entrada poseen un atributo `value`, una cadena con el valor actual del campo de entrada
 
-`alert()` es una función integrada de Brython que muestra su argumento en una ventana emergente (popup window)
+`alert()` es una función definida en el módulo **browser** que muestra su argumento en una ventana emergente (popup window)

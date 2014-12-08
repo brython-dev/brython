@@ -46,18 +46,18 @@ Ejemplos
 <td colspan=2>
 <blockquote>
 <div id="enter_leave">
-    from browser import document as doc
+    from browser import document
     
     def _mouseenter(ev):
-        doc["trace1"].text = 'entering %s' %ev.currentTarget.id
+        document["trace1"].text = 'entering %s' %ev.currentTarget.id
     
     def _mouseleave(ev):
-        doc["trace1"].text = 'leaving %s' %ev.currentTarget.id
+        document["trace1"].text = 'leaving %s' %ev.currentTarget.id
     
-    doc["yellow1"].bind('mouseenter',_mouseenter)
-    doc["yellow1"].bind('mouseleave',_mouseleave)
-    doc["blue1"].bind('mouseenter',_mouseenter)
-    doc["blue1"].bind('mouseleave',_mouseleave)
+    document["yellow1"].bind('mouseenter',_mouseenter)
+    document["yellow1"].bind('mouseleave',_mouseleave)
+    document["blue1"].bind('mouseenter',_mouseenter)
+    document["blue1"].bind('mouseleave',_mouseleave)
 </div>
 </blockquote>
 </td>
@@ -65,7 +65,9 @@ Ejemplos
 </table>
 
 <script type="text/python">
-exec(doc["enter_leave"].text)
+from browser import document
+
+exec(document["enter_leave"].text)
 </script>
 
 *mouseover* y *mouseout*
@@ -86,18 +88,18 @@ exec(doc["enter_leave"].text)
 <td colspan=2>
 <blockquote>
 <div id="over_out">
-    from browser import document as doc
+    from browser import document
     
     def _mouseover(ev):
-        doc["trace2"].text = 'entering %s' %ev.currentTarget.id
+        document["trace2"].text = 'entering %s' %ev.currentTarget.id
     
     def _mouseout(ev):
-        doc["trace2"].text = 'leaving %s' %ev.currentTarget.id
+        document["trace2"].text = 'leaving %s' %ev.currentTarget.id
     
-    doc["yellow2"].bind('mouseover',_mouseover)
-    doc["yellow2"].bind('mouseout',_mouseout)
-    doc["blue2"].bind('mouseover',_mouseover)
-    doc["blue2"].bind('mouseout',_mouseout)
+    document["yellow2"].bind('mouseover',_mouseover)
+    document["yellow2"].bind('mouseout',_mouseout)
+    document["blue2"].bind('mouseover',_mouseover)
+    document["blue2"].bind('mouseout',_mouseout)
 
 </div>
 </blockquote>
@@ -106,6 +108,8 @@ exec(doc["enter_leave"].text)
 </table>
 
 <script type="text/python">
+from browser import document
+
 exec(doc["over_out"].text)
 </script>
 
@@ -121,12 +125,12 @@ exec(doc["over_out"].text)
 <td colspan=2>
 <blockquote>
 <div id="move">
-    from browser import document as doc
+    from browser import document
     
     def _mousemove(ev):
-        doc["trace3"].text = 'coordinates : %s, %s' %(ev.x,ev.y)
+        document["trace3"].text = 'coordinates : %s, %s' %(ev.x,ev.y)
     
-    doc["green"].bind('mousemove',_mousemove)
+    document["green"].bind('mousemove',_mousemove)
 </div>
 </blockquote>
 </td>
@@ -134,13 +138,15 @@ exec(doc["over_out"].text)
 </table>
 
 <script type="text/python">
-exec(doc["move"].text)
+from browser import document
+
+exec(document["move"].text)
 </script>
 
 Atributos de la instancia `DOMEvent`
 ------------------------------------
 
-La instancia de `DOMEvent` posee los siguientes atributos
+Para eventos de ratón, la instancia de `DOMEvent` posee los siguientes atributos
 
 <table cellpadding=3 border=1>
 <tr><td>*button*</td><td>indica cual fue el botón pulsado que desencadenó el evento</td></tr>
