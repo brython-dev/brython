@@ -63,6 +63,9 @@ We can build a table from a list of lists :
 <tr>
 <td style="width:50%;">
 
+    from browser import document as doc
+    from browser.html import TABLE,TR,TH,TD
+    
     lines = [ ['Morrissey','vocals'],
         ['Johnny Marr','guitar'],
         ['Mike Joyce','the drums'],
