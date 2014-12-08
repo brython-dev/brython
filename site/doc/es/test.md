@@ -9,7 +9,7 @@ Ten en cuenta que el espacio de nombres no se 'refresca' cuando haces click en "
 
 Para las pruebas y la depuraci&oacute;n de Brython, se pueden encontrar una serie de scripts de prueba en la carpeta __tests__ ; puedes acceder a ellos pulsando el enlace "Test pages" en la consola y despu&eacute;s elegir los diferentes tests y ejecutarlos
 
-### Scripts de depuraci&oacute;n
+### Depurando scripts
 
 Cualquiera que sea el nivel de depuraci&oacute;n (debug mode), se informa en la consola del navegador de los errores sint&aacute;cticos (o en los lugares definidos mediante `sys.stderr`)
 
