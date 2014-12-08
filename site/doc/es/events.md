@@ -62,7 +62,9 @@ Cualquiera que sea el tipo de evento, las instancias de la clase `DOMEvent` pose
 <td>
 <button id="_bubbles">test</button>
 <script type="text/python">
-doc['_bubbles'].bind('click',lambda ev:alert('bubbles : %s ' %ev.bubbles))
+from browser import document
+
+document['_bubbles'].bind('click',lambda ev:alert('bubbles : %s ' %ev.bubbles))
 </script>
 </td>
 </tr>
@@ -75,7 +77,9 @@ doc['_bubbles'].bind('click',lambda ev:alert('bubbles : %s ' %ev.bubbles))
 <td>
 <button id="_cancelable">test</button>
 <script type="text/python">
-doc['_cancelable'].bind('click',lambda ev:alert('cancelable : %s ' %ev.cancelable))
+from browser import document
+
+document['_cancelable'].bind('click',lambda ev:alert('cancelable : %s ' %ev.cancelable))
 </script>
 </td>
 </tr>
@@ -88,7 +92,9 @@ doc['_cancelable'].bind('click',lambda ev:alert('cancelable : %s ' %ev.cancelabl
 <td>
 <button id="_currentTarget">test</button>
 <script type="text/python">
-doc['_currentTarget'].bind('click',lambda ev:alert('currentTarget : %s ' %ev.currentTarget))
+from browser import document
+
+document['_currentTarget'].bind('click',lambda ev:alert('currentTarget : %s ' %ev.currentTarget))
 </script>
 </td>
 </tr>
@@ -101,7 +107,9 @@ doc['_currentTarget'].bind('click',lambda ev:alert('currentTarget : %s ' %ev.cur
 <td>
 <button id="_defaultPrevented">test</button>
 <script type="text/python">
-doc['_defaultPrevented'].bind('click',lambda ev:alert('defaultPrevented : %s ' %ev.defaultPrevented))
+from browser import document
+
+document['_defaultPrevented'].bind('click',lambda ev:alert('defaultPrevented : %s ' %ev.defaultPrevented))
 </script>
 </td>
 </tr>
@@ -114,7 +122,9 @@ doc['_defaultPrevented'].bind('click',lambda ev:alert('defaultPrevented : %s ' %
 <td>
 <button id="_eventPhase">test</button>
 <script type="text/python">
-doc['_eventPhase'].bind('click',lambda ev:alert('eventPhase : %s ' %ev.eventPhase))
+from browser import document
+
+document['_eventPhase'].bind('click',lambda ev:alert('eventPhase : %s ' %ev.eventPhase))
 </script>
 </td>
 </tr>
@@ -127,7 +137,9 @@ doc['_eventPhase'].bind('click',lambda ev:alert('eventPhase : %s ' %ev.eventPhas
 <td>
 <button id="_target">test</button>
 <script type="text/python">
-doc['_target'].bind('click',lambda ev:alert('target : %s ' %ev.target))
+from browser import document
+
+document['_target'].bind('click',lambda ev:alert('target : %s ' %ev.target))
 </script>
 </td>
 </tr>
@@ -140,7 +152,9 @@ doc['_target'].bind('click',lambda ev:alert('target : %s ' %ev.target))
 <td>
 <button id="_timeStamp">test</button>
 <script type="text/python">
-doc['_timeStamp'].bind('click',lambda ev:alert('timeStamp : %s ' %ev.timeStamp))
+from browser import document
+
+document['_timeStamp'].bind('click',lambda ev:alert('timeStamp : %s ' %ev.timeStamp))
 </script>
 </td>
 </tr>
@@ -153,7 +167,9 @@ doc['_timeStamp'].bind('click',lambda ev:alert('timeStamp : %s ' %ev.timeStamp))
 <td>
 <button id="_type">test</button>
 <script type="text/python">
-doc['_type'].bind('click',lambda ev:alert('type : %s ' %ev.type))
+from browser import document
+
+document['_type'].bind('click',lambda ev:alert('type : %s ' %ev.type))
 </script>
 </td>
 </tr>
@@ -175,12 +191,12 @@ y los siguientes métodos
 
 <blockquote>
 <div id="disable_cbox">
-    from browser import document as doc
+    from browser import document
     
     def _cancel(ev):
         ev.preventDefault()
     
-    doc["disabled_cbox"].bind('click',_cancel)
+    document["disabled_cbox"].bind('click',_cancel)
 </div>
 </blockquote>
 
@@ -189,7 +205,7 @@ y los siguientes métodos
 >> checkbox deshabilitado <input type="checkbox" id="disabled_cbox">
 
 <script type="text/python">
-exec(doc["disable_cbox"].text)
+exec(document["disable_cbox"].text)
 </script>
 
 `stopPropagation()`
@@ -208,8 +224,7 @@ exec(doc["disable_cbox"].text)
 
 <blockquote>
 <div id="zzz_source">
-    from browser import document as doc
-    from browser import alert
+    from browser import document, alert
     
     def show(ev):
         alert('click on %s' %ev.currentTarget.id)
@@ -218,9 +233,9 @@ exec(doc["disable_cbox"].text)
         alert('clic on %s' %ev.currentTarget.id)
         ev.stopPropagation()
     
-    doc["yellow"].bind('click',show)
-    doc["blue"].bind('click',show)
-    doc["green"].bind('click',show_stop)
+    document["yellow"].bind('click',show)
+    document["blue"].bind('click',show)
+    document["green"].bind('click',show_stop)
 </div>
 </blockquote>
 
@@ -238,6 +253,6 @@ exec(doc["disable_cbox"].text)
 
 
 <script type="text/python">
-eval(doc["zzz_source"].text)
+eval(document["zzz_source"].text)
 </script>
 
