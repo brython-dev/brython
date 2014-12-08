@@ -35,7 +35,7 @@ exec(doc["st-example"].text)
 <button id="st-button">Press</button>
 </td>
 <td>
-<div id="st-text" style="background-color:black;color:#ffffff;padding:10px;font-family:courier;font-weight:bold;font-size:14px;">This color will change after 3s</div>
+<div id="st-text" style="background-color:black;color:#ffffff;padding:10px;font-family:courier;font-weight:bold;font-size:14px;">Este color cambiará después de 3s</div>
 </td>
 </tr>
 </table>
@@ -84,7 +84,7 @@ exec(doc["ct-example"].text)
 <button id="ct-stop">Stop</button>
 </td>
 <td>
-<div id="ct-text" style="background-color:black;color:#ffffff;padding:10px;font-family:courier;font-weight:bold;font-size:14px;">This color will change after 3s</div>
+<div id="ct-text" style="background-color:black;color:#ffffff;padding:10px;font-family:courier;font-weight:bold;font-size:14px;">Este color cambiará después de 3s</div>
 </td>
 </tr>
 </table>
