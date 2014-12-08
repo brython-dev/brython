@@ -38,7 +38,6 @@ Aquí podéis ver un ejemplo simple :
     
     # insert table in the element
     doc['zone'] <= table
-
 <button id="fill_zone">Test it</button>
 </td>
 <td id="zone" style="background-color:#FF7400;text-align:center;">Contenido inicial<p>
@@ -50,6 +49,7 @@ Aquí podéis ver un ejemplo simple :
 def fill_zone(ev):
     src = doc.get(selector="pre.marked")[0].text
     exec(src)
+
 doc['fill_zone'].bind('click', fill_zone)
 </script>
 
@@ -60,6 +60,7 @@ Podemos construir una tabla a partir de una lista de listas :
 <table width="100%">
 <tr>
 <td style="width:50%;">
+
     from browser import document as doc
     from browser.html import TABLE,TR,TH,TD
     
