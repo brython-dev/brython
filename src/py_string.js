@@ -916,8 +916,9 @@ var $FormattableString=function(format_string) {
        var _precision=_match[6]
        var _conversion=_match[7]
 
-       var _is_numeric = isinstance(value, _b_.float)
+       var _is_float = isinstance(value, _b_.float)
        var _is_integer = isinstance(value, _b_.int)
+       var _is_numeric = _is_float || _is_integer
 
        //console.log('match', _match)
 
@@ -984,7 +985,7 @@ var $FormattableString=function(format_string) {
        // Fastpath when alignment is not required
 
        if (_width <= _rv.length) {
-          if (! _is_numeric && (_align == '=' || (_zero && ! _align))) {
+          if (! _is_float && (_align == '=' || (_zero && ! _align))) {
              throw _b_.ValueError("'=' alignment not allowed in string format specifier")
           }
           return _rv
