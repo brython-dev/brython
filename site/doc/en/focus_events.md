@@ -43,6 +43,8 @@ Click in the entry field below to make it receive focus, then click somewhere ou
 </div>
 
 <script type="text/python">
+from browser import document
+
 exec(document["codeFocus"].text)
 </script>
 

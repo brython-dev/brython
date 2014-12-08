@@ -213,11 +213,12 @@ exec(doc['py-source'].text)
         draw()
 
     def stop(i):
+        global id
         print(id)
         caf(id)
 
-    win.animate = animate
-    win.stop = stop
+    doc['btn-animate'].bind('click', animate)
+    doc['btn-stop'].bind('click', stop)
 </div>
 
 <script type='text/python'>
@@ -227,9 +228,9 @@ exec(doc['raf-example'].text)
 <table cellpadding=10>
 <tr>
 <td style="width:100px;">
-<button type="button" onclick="animate(0)">Animate</button>
+<button id="btn-animate" type="button">Animate</button>
 <br>
-<button type="button" onclick="stop(0)">Stop</button>
+<button id="btn-stop" type="button">Stop</button>
 </td>
 <td>
 <canvas id="raf-canvas" width=256 height=256></canvas>

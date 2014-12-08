@@ -53,5 +53,7 @@ The function `show_selected()` shows how to get the list of selected elements ; 
 <div id="panel"></div>
 
 <script type="text/python3">
+from browser import document
+
 exec(doc['py_source'].text)
 </script>    

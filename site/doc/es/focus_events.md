@@ -43,5 +43,7 @@ Pulsa en el campo de entrada de abajo para hacer que reciba el foco, posteriorme
 </div>
 
 <script type="text/python">
+from browser import document
+
 exec(document["codeFocus"].text)
 </script>

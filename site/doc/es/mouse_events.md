@@ -65,7 +65,9 @@ Ejemplos
 </table>
 
 <script type="text/python">
-exec(doc["enter_leave"].text)
+from browser import document
+
+exec(document["enter_leave"].text)
 </script>
 
 *mouseover* y *mouseout*
@@ -106,6 +108,8 @@ exec(doc["enter_leave"].text)
 </table>
 
 <script type="text/python">
+from browser import document
+
 exec(doc["over_out"].text)
 </script>
 
@@ -134,6 +138,8 @@ exec(doc["over_out"].text)
 </table>
 
 <script type="text/python">
+from browser import document
+
 exec(document["move"].text)
 </script>
 

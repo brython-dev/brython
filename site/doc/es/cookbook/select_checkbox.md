@@ -46,3 +46,14 @@ La función `show_selected()` muestra como obtener la lista de los elementos sel
     
     b_show = html.BUTTON('show selected')
     b_show.bind('click', show_selected)
+    doc['panel'] <= b_show
+    
+</div>
+
+<div id="panel"></div>
+
+<script type="text/python3">
+from browser import document 
+
+exec(document['py_source'].text)
+</script>    

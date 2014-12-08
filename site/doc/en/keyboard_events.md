@@ -248,6 +248,8 @@ with *keydown* <input id="whichKeydown"></input>
 </table>
 
 <script type="text/python">
+from browser import document
+
 exec(document["codeAltKey"].text)
 exec(document["codeCharCode"].text)
 exec(document["codeCtrlKey"].text)

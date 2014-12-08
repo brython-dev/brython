@@ -9,7 +9,7 @@ from browser import alert
 Introducción
 ------------
 
-Supón que tenemos un eleemento del tipo botón en una página, como el siguiente : <button>un botón</button>
+Supón que tenemos un elemento del tipo botón en una página, como el siguiente : <button>un botón</button>
 
 Si pulsas sobre el mismo no sucederá nada, debido a que no eexiste ninguna instrucción sobre como reaccionar con un click (i.e., al pulsar el botón). Para ello, la acción para definir esto se realiza mediante la siguiente sintaxis :
 
@@ -62,7 +62,7 @@ Cualquiera que sea el tipo de evento, las instancias de la clase `DOMEvent` pose
 <td>
 <button id="_bubbles">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_bubbles'].bind('click',lambda ev:alert('bubbles : %s ' %ev.bubbles))
 </script>
@@ -77,7 +77,7 @@ document['_bubbles'].bind('click',lambda ev:alert('bubbles : %s ' %ev.bubbles))
 <td>
 <button id="_cancelable">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_cancelable'].bind('click',lambda ev:alert('cancelable : %s ' %ev.cancelable))
 </script>
@@ -92,7 +92,7 @@ document['_cancelable'].bind('click',lambda ev:alert('cancelable : %s ' %ev.canc
 <td>
 <button id="_currentTarget">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_currentTarget'].bind('click',lambda ev:alert('currentTarget : %s ' %ev.currentTarget))
 </script>
@@ -107,7 +107,7 @@ document['_currentTarget'].bind('click',lambda ev:alert('currentTarget : %s ' %e
 <td>
 <button id="_defaultPrevented">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_defaultPrevented'].bind('click',lambda ev:alert('defaultPrevented : %s ' %ev.defaultPrevented))
 </script>
@@ -122,7 +122,7 @@ document['_defaultPrevented'].bind('click',lambda ev:alert('defaultPrevented : %
 <td>
 <button id="_eventPhase">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_eventPhase'].bind('click',lambda ev:alert('eventPhase : %s ' %ev.eventPhase))
 </script>
@@ -137,7 +137,7 @@ document['_eventPhase'].bind('click',lambda ev:alert('eventPhase : %s ' %ev.even
 <td>
 <button id="_target">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_target'].bind('click',lambda ev:alert('target : %s ' %ev.target))
 </script>
@@ -152,7 +152,7 @@ document['_target'].bind('click',lambda ev:alert('target : %s ' %ev.target))
 <td>
 <button id="_timeStamp">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_timeStamp'].bind('click',lambda ev:alert('timeStamp : %s ' %ev.timeStamp))
 </script>
@@ -167,7 +167,7 @@ document['_timeStamp'].bind('click',lambda ev:alert('timeStamp : %s ' %ev.timeSt
 <td>
 <button id="_type">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_type'].bind('click',lambda ev:alert('type : %s ' %ev.type))
 </script>
@@ -187,7 +187,7 @@ y los siguientes métodos
 
 >> checkbox (comportamiento por defecto) <input type="checkbox">
 
-> Para reshabilitar este comportamiento en el checkbox : 
+> Para deshabilitar este comportamiento en el checkbox : 
 
 <blockquote>
 <div id="disable_cbox">
@@ -205,6 +205,7 @@ y los siguientes métodos
 >> checkbox deshabilitado <input type="checkbox" id="disabled_cbox">
 
 <script type="text/python">
+from browser import document
 exec(document["disable_cbox"].text)
 </script>
 
@@ -253,6 +254,8 @@ exec(document["disable_cbox"].text)
 
 
 <script type="text/python">
+from browser import document
+
 eval(document["zzz_source"].text)
 </script>
 
