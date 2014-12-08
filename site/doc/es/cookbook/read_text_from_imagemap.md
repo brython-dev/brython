@@ -12,6 +12,7 @@ Usaremos el atributo `onmouseover` de la etiqueta HTML `area` y le pasaremos una
 <table width="100%">
 <tr>
 <td style="width:40%;padding-right:10px;">
+
     from browser import document as doc
     
     def writetext(txt):
@@ -33,7 +34,7 @@ Usaremos el atributo `onmouseover` de la etiqueta HTML `area` y le pasaremos una
 
 <tr>
 <td></td>
-<td style="background-color:#ccccee;">
+<td style="background-color:#ccccee;text-align:center;">
 <div id="description"><blink><b>Mueve el ratón sobre los diferentes elementos de la imagen para ver una descripción.</b></blink></div>
 </td>
 </tr>
@@ -41,6 +42,7 @@ Usaremos el atributo `onmouseover` de la etiqueta HTML `area` y le pasaremos una
 
 <script type="text/python3">
 from browser import document as doc
+from browser import window
 def writetext(txt):
     doc["description"].text = ""
     doc["description"] <= txt
