@@ -116,6 +116,7 @@ $BytesDict.__add__ = function(self,other){
         throw _b_.TypeError("can't concat bytes to " + _b_.str(other))
     }
     self.source = self.source.concat(other.source)
+    return self
 }
 
 var $bytes_iterator = $B.$iterator_class('bytes_iterator')
@@ -224,7 +225,8 @@ $BytesDict.__repr__ = $BytesDict.__str__ = function(self){
 $BytesDict.__reduce_ex__ = function(self){return $BytesDict.__repr__(self)}
 
 $BytesDict.decode = function(self,encoding,errors){
-    if (errors === undefined) errors='strict'
+    if(encoding === undefined) encoding = 'utf-8'
+    if(errors === undefined) errors='strict'
 
     switch (errors) {
       case 'strict':
