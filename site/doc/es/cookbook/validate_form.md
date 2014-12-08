@@ -50,7 +50,7 @@ Para ello, usaremos la función _validate()_  que será invocada cuando pulsemos
     from browser import document as doc
     from browser import alert, window
     
-    def validate():
+    def validate(ev):
         if not doc['name'].value:
             alert('Por favor, introduce el nombre')
             doc['name'].focus()
