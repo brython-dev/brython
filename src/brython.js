@@ -50,7 +50,7 @@ catch(err){return false}})
 __BRYTHON__.implementation=[3,0,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.0.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.builtin_module_names=["posix","__random","_ajax","_browser","_html","_io","_jsre","_multiprocessing","_os","_posixsubprocess","_svg","_sys","_timer","_websocket","builtins","dis","hashlib","javascript","json","marshal","math","modulefinder","time","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.builtin_module_names=["posix","__random","_ajax","_browser","_html","_io","_jsre","_multiprocessing","_os","_posixsubprocess","_svg","_sys","_timer","_websocket","builtins","dis","hashlib","javascript","json","marshal","math","modulefinder","time","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
 
@@ -2059,28 +2059,43 @@ C.parent.tree.push(this)
 this.to_js=function(){var comps={'==':'eq','!=':'ne','>=':'ge','<=':'le','<':'lt','>':'gt'}
 if(comps[this.op]!==undefined){var method=comps[this.op]
 if(this.tree[0].type=='expr' && this.tree[1].type=='expr'){var t0=this.tree[0].tree[0],t1=this.tree[1].tree[0]
-if(t1.type=='int'){if(t0.type=='int'){return t0.to_js()+this.op+t1.to_js()}
-else if(t0.type=='str'){return '$B.$TypeError("unorderable types: int() < str()")'}
-else if(t0.type=='id'){var res='typeof '+t0.to_js()+'=="number" ? '
+switch(t1.type){case 'int':
+switch(t0.type){case 'int':
+return t0.to_js()+this.op+t1.to_js()
+case 'str':
+return '$B.$TypeError("unorderable types: int() < str()")'
+case 'id':
+var res='typeof '+t0.to_js()+'=="number" ? '
 res +=t0.to_js()+this.op+t1.to_js()+' : '
 res +='getattr('+this.tree[0].to_js()
 res +=',"__'+method+'__")('+this.tree[1].to_js()+')'
 return res
-}}
-else if(t1.type=='str'){if(t0.type=='str'){return t0.to_js()+this.op+t1.to_js()}
-else if(t0.type=='int'){return '$B.$TypeError("unorderable types: str() < int()")'}
-else if(t0.type=='id'){var res='typeof '+t0.to_js()+'=="string" ? '
+}
+break
+case 'str':
+switch(t0.type){case 'str':
+return t0.to_js()+this.op+t1.to_js()
+case 'int':
+return '$B.$TypeError("unorderable types: str() < int()")'
+case 'id':
+var res='typeof '+t0.to_js()+'=="string" ? '
 res +=t0.to_js()+this.op+t1.to_js()+' : '
 res +='getattr('+this.tree[0].to_js()
 res +=',"__'+method+'__")('+this.tree[1].to_js()+')'
 return res
-}}else if(t1.type=='id'){if(t0.type=='id'){var res='typeof '+t0.to_js()+'!="object" && '
+}
+break
+case 'id':
+if(t0.type=='id'){var res='typeof '+t0.to_js()+'!="object" && '
 res +='typeof '+t0.to_js()+'==typeof '+t1.to_js()
 res +=' ? '+t0.to_js()+this.op+t1.to_js()+' : '
 res +='getattr('+this.tree[0].to_js()
 res +=',"__'+method+'__")('+this.tree[1].to_js()+')'
 return res
-}}}}
+}
+break
+}
+}}
 switch(this.op){case 'and':
 var res='$B.$test_expr($B.$test_item('+this.tree[0].to_js()+')&&'
 return res + '$B.$test_item('+this.tree[1].to_js()+'))'
@@ -2260,14 +2275,17 @@ this.parent=C
 this.tree=[value]
 this.raw=false
 C.tree.push(this)
-this.to_js=function(){var res=''
+this.to_js=function(){var res='',type=null
 for(var i=0;i<this.tree.length;i++){var value=this.tree[i]
-if(value.charAt(0)!='b'){res +=value.replace(/\n/g,'\\n\\\n')
-}else{res +='bytes('
-res +=value.substr(1).replace(/\n/g,'\\n\\\n')
-res +=',$B.charset)'
+is_bytes=value.charAt(0)=='b'
+if(type==null){type=is_bytes
+if(is_bytes){res+='bytes('}}else if(type!=is_bytes){return '__BRYTHON__.$TypeError("can\'t concat bytes to str")'
+}
+if(!is_bytes){res +=value.replace(/\n/g,'\\n\\\n')
+}else{res +=value.substr(1).replace(/\n/g,'\\n\\\n')
 }
 if(i<this.tree.length-1){res+='+'}}
+if(is_bytes){res +=',$B.charset)'}
 return res
 }}
 function $SubCtx(C){
@@ -6881,6 +6899,7 @@ var $BytesDict={__class__ : $B.$type,__name__ : 'bytes'}
 $BytesDict.__add__=function(self,other){if(!isinstance(other,bytes)){throw _b_.TypeError("can't concat bytes to " + _b_.str(other))
 }
 self.source=self.source.concat(other.source)
+return self
 }
 var $bytes_iterator=$B.$iterator_class('bytes_iterator')
 $BytesDict.__iter__=function(self){return $B.$iterator(self.source,$bytes_iterator)
@@ -6945,7 +6964,8 @@ res +='\\x'+hx
 return res+"'"
 }
 $BytesDict.__reduce_ex__=function(self){return $BytesDict.__repr__(self)}
-$BytesDict.decode=function(self,encoding,errors){if(errors===undefined)errors='strict'
+$BytesDict.decode=function(self,encoding,errors){if(encoding===undefined)encoding='utf-8'
+if(errors===undefined)errors='strict'
 switch(errors){case 'strict':
 case 'ignore':
 case 'replace':
@@ -6965,7 +6985,8 @@ return bytes(_t)
 function _strip(self,cars,lr){if(cars===undefined){cars=[]
 var ws='\r\n \t'
 for(var i=0,_len_i=ws.length;i < _len_i;i++){cars.push(ws.charCodeAt(i))}}else if(isinstance(cars,bytes)){cars=cars.source
-}else{throw _b_.TypeError("Type str doesn't support the buffer API")
+}else{console.log($B.get_class(cars).__name__)
+throw _b_.TypeError("Type str doesn't support the buffer API")
 }
 if(lr=='l'){for(var i=0,_len_i=self.source.length;i < _len_i;i++){if(cars.indexOf(self.source[i])==-1)break
 }
@@ -7303,9 +7324,9 @@ $B.JSConstructor=JSConstructor
 ;(function($B){$B.stdlib={}
 var js=['__random','_ajax','_browser','_html','_io','_jsre','_multiprocessing','_os','_posixsubprocess','_svg','_sys','_timer','_websocket','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','marshal','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','time','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','pyre','queue','random','re','reprlib','select','shutil','signal','site','site-packages.pygame.Rect','site-packages.pygame.Surface','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.time','site-packages.test_sp','site-packages.turtle','site-packages.zipfile','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile']
+var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','pyre','queue','random','re','reprlib','select','shutil','signal','site','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
-var pkglist=['browser','collections','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.pygame','test','ui','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
+var pkglist=['browser','collections','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','test','ui','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]
 })(__BRYTHON__)
 
@@ -9369,8 +9390,9 @@ var _width=_match[4]
 var _comma=_match[5]
 var _precision=_match[6]
 var _conversion=_match[7]
-var _is_numeric=isinstance(value,_b_.float)
+var _is_float=isinstance(value,_b_.float)
 var _is_integer=isinstance(value,_b_.int)
+var _is_numeric=_is_float ||_is_integer
 if(_prefix !='' && ! _is_numeric){if(_is_numeric){throw _b_.ValueError('Alternate form (#) not allowed in float format specifier')
 }else{
 throw _b_.ValueError('Alternate form (#) not allowed in string format specification')
@@ -9406,7 +9428,7 @@ _width=parseInt(_width)
 }else{
 _width=0
 }
-if(_width <=_rv.length){if(! _is_numeric &&(_align=='=' ||(_zero && ! _align))){throw _b_.ValueError("'=' alignment not allowed in string format specifier")
+if(_width <=_rv.length){if(! _is_float &&(_align=='=' ||(_zero && ! _align))){throw _b_.ValueError("'=' alignment not allowed in string format specifier")
 }
 return _rv
 }
@@ -9803,7 +9825,8 @@ var $SetDict={__class__:$B.$type,__name__:'set',$native:true
 }
 $SetDict.__add__=function(self,other){return set(self.$items.concat(other.$items))
 }
-$SetDict.__and__=function(self,other){var res=set()
+$SetDict.__and__=function(self,other,accept_iter){$test(accept_iter,other)
+var res=set()
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(getattr(other,'__contains__')(self.$items[i])){$SetDict.add(res,self.$items[i])
 }}
 return res
@@ -9824,7 +9847,9 @@ return false
 }
 $SetDict.__ge__=function(self,other){return !$SetDict.__lt__(self,other)}
 $SetDict.__getitems__=function(self){return self.$items}
-$SetDict.__gt__=function(self,other){return !$SetDict.__le__(self,other)}
+$SetDict.__gt__=function(self,other,accept_iter){$test(accept_iter,other)
+return !$SetDict.__le__(self,other)
+}
 $SetDict.__hash__=function(self){throw _b_.TypeError("unhashable type: 'set'");}
 $SetDict.__init__=function(self){var args=[]
 for(var i=1,_len_i=arguments.length;i < _len_i;i++){args.push(arguments[i])}
@@ -9850,7 +9875,8 @@ throw _b_.TypeError("set expected at most 1 argument, got "+args.length)
 var $set_iterator=$B.$iterator_class('set iterator')
 $SetDict.__iter__=function(self){return $B.$iterator(self.$items,$set_iterator)
 }
-$SetDict.__le__=function(self,other){var cfunc=getattr(other,'__contains__')
+$SetDict.__le__=function(self,other){$test(accept_iter,other)
+var cfunc=getattr(other,'__contains__')
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(!cfunc(self.$items[i]))return false
 }
 return true
@@ -9860,8 +9886,13 @@ $SetDict.__lt__=function(self,other){return $SetDict.__le__(self,other)&&$SetDic
 }
 $SetDict.__mro__=[$SetDict,_b_.object.$dict]
 $SetDict.__ne__=function(self,other){return !$SetDict.__eq__(self,other)}
-$SetDict.__or__=function(self,other){var res=$SetDict.copy(self)
-for(var i=0,_len_i=other.$items.length;i < _len_i;i++)$SetDict.add(res,other.$items[i])
+$SetDict.__or__=function(self,other,accept_iter){$test(accept_iter,other)
+var res=$SetDict.copy(self)
+var func=getattr(iter(other),'__next__')
+while(true){try{$SetDict.add(res,func())}
+catch(err){if(isinstance(err,StopIteration)){$B.$pop_exc();break}
+throw err
+}}
 return res
 }
 $SetDict.__str__=$SetDict.toString=$SetDict.__repr__=function(self){if(self===undefined)return "<class 'set'>"
@@ -9882,14 +9913,16 @@ if(i<self.$items.length-1){res +=','}}
 res +='}'
 return head+res+tail
 }
-$SetDict.__sub__=function(self,other){
+$SetDict.__sub__=function(self,other,accept_iter){
+$test(accept_iter,other)
 var res=set()
 var cfunc=getattr(other,'__contains__')
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(!cfunc(self.$items[i])){res.$items.push(self.$items[i])
 }}
 return res
 }
-$SetDict.__xor__=function(self,other){
+$SetDict.__xor__=function(self,other,accept_iter){
+$test(accept_iter,other)
 var res=set()
 var cfunc=getattr(other,'__contains__')
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(!cfunc(self.$items[i])){$SetDict.add(res,self.$items[i])
@@ -9898,6 +9931,9 @@ for(var i=0,_len_i=other.$items.length;i < _len_i;i++){if(!$SetDict.__contains__
 }}
 return res
 }
+function $test(accept_iter,other){if(accept_iter===undefined && !isinstance(other,[set,frozenset])){throw TypeError("unsupported operand type(s) for |: 'set' and '"+
+$B.get_class(other).__name__+"'")
+}}
 $B.make_rmethods($SetDict)
 $SetDict.add=function(self,item){if(self.$str && !(typeof item=='string')){self.$str=false}
 if(self.$num && !(typeof item=='number')){self.$num=false}
@@ -9932,12 +9968,18 @@ throw _b_.KeyError(item)
 $SetDict.update=function(self,other){if(other===undefined ||other.$items===undefined)return
 for(var i=0,_len_i=other.$items.length;i < _len_i;i++){$SetDict.add(self,other.$items[i])
 }}
-$SetDict.symmetric_difference=$SetDict.__xor__
-$SetDict.difference=$SetDict.__sub__
-$SetDict.intersection=$SetDict.__and__
-$SetDict.issubset=$SetDict.__le__
-$SetDict.issuperset=$SetDict.__ge__
-$SetDict.union=$SetDict.__or__
+$SetDict.symmetric_difference=function(self,other){return $SetDict.__xor__(self,other,1)
+}
+$SetDict.difference=function(self,other){$SetDict.__sub__(self,other,1)
+}
+$SetDict.intersection=function(self,other){return $SetDict.__and__(self,other,1)
+}
+$SetDict.issubset=function(self,other){return $SetDict.__le__(self,other,1)
+}
+$SetDict.issuperset=function(self,other){return $SetDict.__ge__(self,other,1)
+}
+$SetDict.union=function(self,other){return $SetDict.__or__(self,other,1)
+}
 function set(){
 var res={__class__:$SetDict,$str:true,$num:true}
 var args=[res]
