@@ -34,9 +34,8 @@ Debido a que sus nombres pueden variar dependiendo del navegador, Brython define
 
 Para añadir un hijo a un elemento se usa el operador `<=` (piensa en ello como una flecha que indica asignación)
 
->    from browser import document as doc
->    from browser import html
->    doc['zone'] <= html.INPUT(Id="data")
+>    from browser import document, html
+>    document['zone'] <= html.INPUT(Id="data")
 
 La iteración sobre los hijos de un elemento se puede hacer usando la sintaxis Python habitual : 
 
@@ -45,7 +44,7 @@ La iteración sobre los hijos de un elemento se puede hacer usando la sintaxis P
 
 Para destruir un elemento se usa la palabra clave `del`
 
->    zone = doc['zone']
+>    zone = document['zone']
 >    del zone
 
 La colección `options` asociada con un objeto SELECT tiene una interfaz que funciona como una lista Python :
