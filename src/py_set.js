@@ -102,7 +102,7 @@ $SetDict.__iter__ = function(self){
     return $B.$iterator(self.$items,$set_iterator)
 }
 
-$SetDict.__le__ = function(self,other){
+$SetDict.__le__ = function(self,other,accept_iter){
     $test(accept_iter, other)
     var cfunc = getattr(other,'__contains__')
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){

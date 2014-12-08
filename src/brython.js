@@ -6985,8 +6985,7 @@ return bytes(_t)
 function _strip(self,cars,lr){if(cars===undefined){cars=[]
 var ws='\r\n \t'
 for(var i=0,_len_i=ws.length;i < _len_i;i++){cars.push(ws.charCodeAt(i))}}else if(isinstance(cars,bytes)){cars=cars.source
-}else{console.log($B.get_class(cars).__name__)
-throw _b_.TypeError("Type str doesn't support the buffer API")
+}else{throw _b_.TypeError("Type str doesn't support the buffer API")
 }
 if(lr=='l'){for(var i=0,_len_i=self.source.length;i < _len_i;i++){if(cars.indexOf(self.source[i])==-1)break
 }
@@ -9875,7 +9874,7 @@ throw _b_.TypeError("set expected at most 1 argument, got "+args.length)
 var $set_iterator=$B.$iterator_class('set iterator')
 $SetDict.__iter__=function(self){return $B.$iterator(self.$items,$set_iterator)
 }
-$SetDict.__le__=function(self,other){$test(accept_iter,other)
+$SetDict.__le__=function(self,other,accept_iter){$test(accept_iter,other)
 var cfunc=getattr(other,'__contains__')
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(!cfunc(self.$items[i]))return false
 }
