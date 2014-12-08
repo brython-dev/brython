@@ -56,9 +56,8 @@ Para añadir un nodo hermano se puede usar el operador `+`.
 
 Para añadir un nodo hijo se podría usar el operador `<=`, el cual fue elegido por las siguientes razones:
 
+- - tiene la forma de una flecha hacia la izquierda. Las anotaciones de función (function annotations) de Python usan un nuevo operador `->` que fue elegido por su forma de flecha.
 - parece una asignación aumentada debido al signo igual.
-- las anotaciones de función (function annotations) usan un nuevo operador `->` que fue elegido por su forma de flecha.
-- tiene la forma de una flecha hacia la izquierda.
 - no podría ser confundido con "menor o igual" debido a que una línea con `document <= elt` sería un 'no-op' si fuera "menor o igual", que se usa siempre en una condición.
 - estamos tan acostumbrados a interpretar los dos signos `<` y `=` como "menor o igual" que nos olvidamos que son una convención para los lenguajes de programación, para reemplazar el signo real `≤`.
 - en Python, `<=` se usa como un operador para conjuntos con un significado diferente a "menor o igual".
