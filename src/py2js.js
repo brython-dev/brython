@@ -3638,18 +3638,24 @@ function $StringCtx(context,value){
     this.raw = false
     context.tree.push(this)
     this.to_js = function(){
-        var res = ''
+        var res = '', type = null
         for(var i=0;i<this.tree.length;i++){
             var value=this.tree[i]
-            if(value.charAt(0)!='b'){
+            is_bytes = value.charAt(0)=='b'
+            if(type==null){
+                type=is_bytes
+                if(is_bytes){res+='bytes('}
+            }else if(type!=is_bytes){
+                return '__BRYTHON__.$TypeError("can\'t concat bytes to str")'
+            }
+            if(!is_bytes){
                 res += value.replace(/\n/g,'\\n\\\n')
             }else{
-                res += 'bytes('
                 res += value.substr(1).replace(/\n/g,'\\n\\\n')
-                res += ',$B.charset)'
             }
             if(i<this.tree.length-1){res+='+'}
         }
+        if(is_bytes){res += ',$B.charset)'}
         return res
     }
 }
