@@ -37,9 +37,9 @@ doc['get_file'].bind('click', get_file)
 </script>
 
 
-Fíjate en el valor aleatorio de la cadena de consulta (query) al final del nombre del fichero : Será necesario refrescar el resultado si el fichero fuente ha sido modificado entre dos llamdas diferentes
+Fíjate en el valor aleatorio de la cadena de consulta (query) al final del nombre del fichero : Será necesario refrescar el resultado si el fichero fuente ha sido modificado entre dos llamadas diferentes
 
-El siguiente ejemplo añade un timeout para mostrar un mensaje en caso de que el fichero no haya sido encontrado después de 4 segundos :
+El siguiente ejemplo añade un *timeout* para mostrar un mensaje en caso de que el fichero no haya sido encontrado después de 4 segundos :
 
     import time
     from browser import document as doc
