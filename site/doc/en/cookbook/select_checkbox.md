@@ -8,12 +8,13 @@ SELECT elements are composed of OPTION elements. An OPTION element has a boolean
 
 Checkbox elements (INPUT type="checkbox") have a boolean attribute _checked_ that can be used in the same way : to know if the box is checked, or to check/uncheck it.
 
-The example below selects or deselects options according to the state (checked/unchecked) or the checkbox elements ; conversely, a click in the SELECT element triggers checking/unckecking of the matching checkboxes.
+The example below selects or deselects options according to the state (checked/unchecked) of the checkbox elements ; conversely, a click in the SELECT element triggers checking/unckecking of the matching checkboxes.
 
 The function `show_selected()` shows how to get the list of selected elements ; `for option in sel` iterates on the option elements. For a SELECT element with a single choice (no attribute _multiple_) the rank of the selected option is also given by `sel.selectedIndex`
 
 <div id="py_source">
-    from browser import doc, html, alert
+    from browser import document as doc
+    from browser import html, alert
     
     def update_select(ev):
         # selects / deselects options in the SELECT box
