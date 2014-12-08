@@ -7,9 +7,10 @@ Almacenar objetos localmente usando 'local storage' disponible en HTML5
 Solución
 --------
 
-Brython proporciona un módulo llamado `browser.local_storage` que permite almacenar cadenas de valores a sociados a cadenas de claves
+Brython proporciona un módulo llamado `browser.local_storage` que permite almacenar cadenas de valores asociados a cadenas de claves
 
 
+    from browser import document as doc
     from browser.local_storage import storage
     storage['brython_test'] = doc['zone'].value
     
@@ -20,7 +21,6 @@ Brython proporciona un módulo llamado `browser.local_storage` que permite almac
     alert(storage['brython_test'])
 
 <button id="show_1">Mostrar valor almacenado</button>
-
 
 <script type="text/python3">
 def show_locstor(num):
