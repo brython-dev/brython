@@ -3307,16 +3307,12 @@ function $OpCtx(context,op){ // context is the left operand
                 var t0=this.tree[0].tree[0],t1=this.tree[1].tree[0]
                 switch(t1.type) {
                   case 'int':
-                    //if(t1.type=='int'){
                     switch (t0.type) {
                       case 'int':
-                        //if(t0.type=='int'){
                         return t0.to_js()+this.op+t1.to_js()
                       case 'str':
-                        //else if(t0.type=='str'){
                         return '$B.$TypeError("unorderable types: int() < str()")'
                       case 'id':
-                        //else if(t0.type=='id'){
                         var res = 'typeof '+t0.to_js()+'=="number" ? '
                         res += t0.to_js()+this.op+t1.to_js()+' : '
                         res += 'getattr('+this.tree[0].to_js()
@@ -3326,16 +3322,12 @@ function $OpCtx(context,op){ // context is the left operand
                 
                     break;
                   case 'str':
-                    //else if(t1.type=='str'){
                     switch(t0.type) {
                       case 'str':
-                        //if(t0.type=='str'){
                         return t0.to_js()+this.op+t1.to_js()
                       case 'int':
-                        //else if(t0.type=='int'){
                         return '$B.$TypeError("unorderable types: str() < int()")'
                       case 'id':
-                        //else if(t0.type=='id'){
                         var res = 'typeof '+t0.to_js()+'=="string" ? '
                         res += t0.to_js()+this.op+t1.to_js()+' : '
                         res += 'getattr('+this.tree[0].to_js()
@@ -3344,7 +3336,6 @@ function $OpCtx(context,op){ // context is the left operand
                     }
                     break;
                   case 'id':
-                    //}else if(t1.type=='id'){
                     if(t0.type=='id'){
                         var res = 'typeof '+t0.to_js()+'!="object" && '
                         res += 'typeof '+t0.to_js()+'==typeof '+t1.to_js()
@@ -4804,7 +4795,8 @@ function $transition(context,token){
             
             // conditional expressions have the lowest priority
             if(op_parent.type=='ternary' && op_parent.in_else){
-                var new_op = new $OpCtx(op_parent,op)
+                console.log('ternary '+op_parent+' in else '+op_parent.in_else)
+                var new_op = new $OpCtx(context,op)
                 return new $AbstractExprCtx(new_op,false)
             }
             

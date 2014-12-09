@@ -3136,7 +3136,8 @@ case '(':
 return new $CallCtx(C)
 case 'op':
 var op_parent=C.parent,op=arguments[2]
-if(op_parent.type=='ternary' && op_parent.in_else){var new_op=new $OpCtx(op_parent,op)
+if(op_parent.type=='ternary' && op_parent.in_else){console.log('ternary '+op_parent+' in else '+op_parent.in_else)
+var new_op=new $OpCtx(C,op)
 return new $AbstractExprCtx(new_op,false)
 }
 var op1=C.parent,repl=null
@@ -5316,7 +5317,7 @@ root.addChild(fnode)
 func_node=self.func_root.children[1]
 var js='var $globals = __BRYTHON__.vars["'+self.func_root.module+'"]'
 fnode.addChild(new $B.genNode(js))
-var js='var $locals = __BRYTHON__.vars["'+self.iter_id+'"]'
+var js='var $locals_id = "'+self.iter_id+'", $locals = __BRYTHON__.vars[$locals_id]'
 fnode.addChild(new $B.genNode(js))
 var pnode=exit_node.parent
 var exit_in_if=pnode.is_if ||pnode.is_else
