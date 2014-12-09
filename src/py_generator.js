@@ -323,7 +323,7 @@ $BRGeneratorDict.__next__ = function(self){
     var js = 'var $globals = __BRYTHON__.vars["'+self.func_root.module+'"]'
     fnode.addChild(new $B.genNode(js))
 
-    var js = 'var $locals = __BRYTHON__.vars["'+self.iter_id+'"]'
+    var js = 'var $locals_id = "'+self.iter_id+'", $locals = __BRYTHON__.vars[$locals_id]'
     fnode.addChild(new $B.genNode(js))
 
     // Parent of exit node    
