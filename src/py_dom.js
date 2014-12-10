@@ -23,8 +23,8 @@ function $getMouseOffset(target, ev){
 function $getPosition(e){
     var left = 0;
     var top  = 0;
-    var width = e.offsetWidth;
-    var height = e.offsetHeight;
+    var width = e.width || e.offsetWidth;
+    var height = e.height || e.offsetHeight;
 
     while (e.offsetParent){
         left += e.offsetLeft;

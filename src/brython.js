@@ -10042,8 +10042,8 @@ return{x:mousePos.x - docPos.x,y:mousePos.y - docPos.y}
 }
 function $getPosition(e){var left=0
 var top=0
-var width=e.offsetWidth
-var height=e.offsetHeight
+var width=e.width ||e.offsetWidth
+var height=e.height ||e.offsetHeight
 while(e.offsetParent){left +=e.offsetLeft
 top +=e.offsetTop
 e=e.offsetParent
