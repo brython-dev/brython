@@ -4,10 +4,6 @@ var $module = (function($B){
 var _b_ = $B.builtins
 var $TagSumDict = $B.$TagSum.$dict
 
-var $s=[]
-for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
-eval($s.join(';'))
-
 function makeTagDict(tagName){
     // return the dictionary for the class associated with tagName
     var dict = {__class__:$B.$type,
@@ -20,15 +16,15 @@ function makeTagDict(tagName){
         var args = $ns['args']
         if(args.length==1){
             var first=args[0]
-            if(isinstance(first,[str,int,float])){
-                self.elt.appendChild(document.createTextNode(str(first)))
+            if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
+                self.elt.appendChild(document.createTextNode(_b_.str(first)))
             } else if(first.__class__===$TagSumDict){
                 for(var i=0, _len_i = first.children.length; i < _len_i;i++){
                     self.elt.appendChild(first.children[i].elt)
                 }
             } else { // argument is another DOMNode instance
                 try{self.elt.appendChild(first.elt)}
-                catch(err){throw ValueError('wrong element '+first)}
+                catch(err){throw _b_.ValueError('wrong element '+first)}
             }
         }
 
@@ -55,7 +51,7 @@ function makeTagDict(tagName){
                             self.elt.setAttribute("className",value)
                         }
                     }catch(err){
-                        throw ValueError("can't set attribute "+arg)
+                        throw _b_.ValueError("can't set attribute "+arg)
                     }
                 }
             }
@@ -84,8 +80,7 @@ function makeFactory(tagName){
         var res = $B.$DOMNode(document.createElement(tagName))
         res.__class__ = dicts[tagName]
         // apply __init__
-        var args = [res]
-        for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+        var args = [res].concat(Array.prototype.slice.call(arguments))
         dicts[tagName].__init__.apply(null,args)
         return res
     }
@@ -123,9 +118,10 @@ var obj = new Object()
 var dicts = {}
 for(var i=0, _len_i = $tags.length; i < _len_i;i++){
     var tag = $tags[i]
-    dicts[tag]=makeTagDict(tag)
+    dicts[tag] = makeTagDict(tag)
     obj[tag] = makeFactory(tag)
     dicts[tag].$factory = obj[tag]
 }
+$B.tag_classes = dicts
 return obj
 })(__BRYTHON__)
