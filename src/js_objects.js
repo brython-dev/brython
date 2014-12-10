@@ -105,8 +105,9 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
         // instances of JSObject and JSConstructor are transformed into the
         // underlying Javascript object
         return pyobj.js
-    }else if(klass===$B.DOMNode){
-        // instances of DOMNode are transformed into the underlying DOM element
+    }else if(klass.__mro__.indexOf($B.DOMNode)>-1){
+        // instances of DOMNode or its subclasses are transformed into the 
+        // underlying DOM element
         return pyobj.elt
     }else if([_b_.list.$dict,_b_.tuple.$dict].indexOf(klass)>-1){
         // Python list : transform its elements
