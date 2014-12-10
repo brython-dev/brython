@@ -2,7 +2,7 @@ var __BRYTHON__=__BRYTHON__ || {}  // global object with brython built-ins
 
 ;(function($B) {
 
-// Get url of current script
+// Get url of this script brython_builtins.js
 var scripts = document.getElementsByTagName('script')
 var this_url = scripts[scripts.length-1].src
 var elts = this_url.split('/')
@@ -11,15 +11,14 @@ elts.pop()
 // It is used to import modules of the standard library
 var $path = $B.brython_path = elts.join('/')+'/'
 
+// Get the URL of the directory where the script stands
+var $href = $B.script_path = window.location.href
+var $href_elts = $href.split('/')
+$href_elts.pop()
+var $script_dir = $B.script_dir = $href_elts.join('/')
+
 // __BRYTHON__.path is the list of paths where Python modules are searched
-$B.path = []
-var subpaths = ['Lib','Lib/site-packages']
-for(var j=0;j<subpaths.length;j++){
-    var subpath = $path+subpaths[j]
-    if (!($B.path.indexOf(subpath)> -1)) {
-       $B.path.push(subpath)
-    }
-}
+$B.path = [$path+'Lib', $script_dir, $path+'Lib/site-packages']
 
 // Name bindings in scopes
 // Name "x" defined in a scope is a keys of the dictionary

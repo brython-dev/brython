@@ -4795,7 +4795,6 @@ function $transition(context,token){
             
             // conditional expressions have the lowest priority
             if(op_parent.type=='ternary' && op_parent.in_else){
-                console.log('ternary '+op_parent+' in else '+op_parent.in_else)
                 var new_op = new $OpCtx(context,op)
                 return new $AbstractExprCtx(new_op,false)
             }
@@ -6361,17 +6360,12 @@ function brython(options){
      }else{
         var $elts=document.getElementsByTagName('script')
     }
-    
-    var $scripts = document.getElementsByTagName('script')
-    
+
     // URL of the script where function brython() is called
     var $href = $B.script_path = window.location.href
     var $href_elts = $href.split('/')
     $href_elts.pop()
     
-    // URL of the directory where the script stands
-    var $script_dir = $B.script_dir = $href_elts.join('/')
-
     // List of URLs where imported modules should be searched
     // $B.path = []
     // A list can be provided as attribute of options
@@ -6387,43 +6381,6 @@ function brython(options){
           $B.$options.re=options.re
        }
     }
-
-    // Get path of brython.js or py2js.js or brython_dist.js to determine 
-    // brython_path, the url of the directory where this script stands
-    // It will be used for imports :
-    // - the subfolder <brython_path>/libs is used for Javascript modules
-    // - <brython_path>/Lib is used for Python modules in the standard library
-    // - <brython_path>/Lib/site-packages is used for 3rd party modules
-    //   or packages
-
-    /*
-    for(var $i=0;$i<$scripts.length;$i++){
-        var $elt = $scripts[$i]
-        var $br_scripts = ['brython.js','py2js.js','brython_dist.js']
-        for(var $j=0;$j<$br_scripts.length;$j++){
-            var $bs = $br_scripts[$j]
-            if($elt.src && $elt.src.substr($elt.src.length-$bs.length)==$bs){
-                if($elt.src.length===$bs.length ||
-                    $elt.src.charAt($elt.src.length-$bs.length-1)=='/'){
-                        var $path = $elt.src.substr(0,$elt.src.length-$bs.length)
-                        $B.brython_path = $path
-                        console.log('brython path '+$path)
-                        var subpaths = ['Lib','Lib/site-packages']
-                        for(var j=0;j<subpaths.length;j++){
-                            var subpath = $path+subpaths[j]
-                            if (!($B.path.indexOf(subpath)> -1)) {
-                               $B.path.push(subpath)
-                            }
-                        }
-                        break
-                }
-            }
-        }
-    }
-    */
-
-    // Current script directory inserted in path for imports
-    if (!($B.path.indexOf($script_dir) > -1)) $B.path.push($script_dir)
 
     // Get all scripts with type = text/python or text/python3 and run them
     
