@@ -5500,6 +5500,10 @@ function $transition(context,token){
                 //if('+-~'.search(arguments[2])>-1){
                 return new $UnaryCtx(context,arguments[2])
             }//switch
+          default:
+            if(context.tree[context.tree.length-1].type=='abstract_expr'){
+              $_SyntaxError(context,'token '+token+' after '+context)
+            }
         }// switch
         return $transition(context.parent,token)
       case 'packed':
