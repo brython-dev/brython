@@ -205,7 +205,7 @@ def mark(src):
                 if not line.strip():
                     line = '<p></p>'
                 if section.line:
-                    section.line += ' '
+                    section.line += '\n'
                 section.line += line
                     
             i += 1
