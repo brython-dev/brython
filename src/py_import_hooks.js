@@ -28,11 +28,11 @@
 
             if (_loader == _b_.None) continue   // finder cannot handle this
             // we have a hit.. lets see if the loader can retrieve the module
-            _module=_b_.getattr(_b_.getattr(_loader, 'load_module'), '__call__')(mod_name)
-            return $B.run_py({name: mod_name}, _path[j], _module) 
+            return _b_.getattr(_b_.getattr(_loader, 'load_module'), '__call__')(mod_name)
         }//for
     } //for
     return null
   }
+
 window.import_hooks=import_hooks
 })(__BRYTHON__)
