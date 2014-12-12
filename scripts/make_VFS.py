@@ -32,7 +32,9 @@ def process_unittest(filename):
     for _mydir in ("Lib",):
         for _root, _dir, _files in os.walk(os.path.join(_main_root, _mydir)):
             if 'unittest' not in _root:
-               continue
+               if 'test' not in _root:
+                  continue
+
             if '__pycache__' in _root:
                continue
 
@@ -109,7 +111,7 @@ def process_unittest(filename):
 """)
 
 
-def process(filename, exclude_dirs=['unittest',]):
+def process(filename, exclude_dirs=['unittest','test',]):
     """Process a VFS filename for Brython."""
     print("Generating {}".format(filename))
     nb = 0
