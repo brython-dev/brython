@@ -7,18 +7,11 @@ Make the browser display "Hello world !"
 Solution
 --------
 
-    <html>
-    <head>
-    <script src="brython.js"></script>
-    </head>
-    <body onload="brython()">
-    
-    <script type="text/python">
-    from browser import document as doc
-    doc <= "Hello world !"
-    </script>
-    
-    </body>
-    </html>
+```python
+from browser import document
+document <= "Hello world !"
+```
 
-`document` is a word defined in module **browser** that represents the document (the content of the web page). It supports the operation `<=` meaning "add content". Here the content is a simple Python string
+`document` is a word defined in module **browser** that represents the 
+document (the content of the web page). It supports the operation `<=` 
+meaning "add content". Here the content is a simple Python string.

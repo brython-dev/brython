@@ -89,6 +89,16 @@ select.language {
   padding:10px
 }
 
+.pycode{
+    background-color:#F0F0F0;
+    padding:3px 8px 8px 8px;
+    border-style:solid;
+    border-width:1px;
+    border-color:#888;
+    border-radius: 10px;
+    width:auto;
+}
+
 li {
   margin-bottom:3px
 }

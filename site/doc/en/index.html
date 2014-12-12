@@ -6,33 +6,11 @@
 <link rel="stylesheet" href="../doc_brython.css">
 
 <script src="/src/brython.js"></script>
+<script type="text/python" src="../docs.py"></script>
 
 <script type="text/python3">
-from browser import document as doc
-from browser import window
-
-import header
-header.show('../../')
-
-from browser import markdown
-import time
-
-def load(url,target):
-    # fake query string to bypass browser cache
-    t0 = time.time()
-    qs = '?foo=%s' %time.time()
-    try:
-        mk,scripts = markdown.mark(open(url+qs).read())
-    except IOError:
-        doc[target].html = "Page %s not found" %url
-        return False
-    doc[target].html = mk
-    t1 = time.time()
-    for script in scripts:
-        exec(script,globals())
-    return False
-
 load('intro.md', 'content')
+
 language = "en"
 
 # put in Javascript namespace for inline callbacks
