@@ -4,17 +4,36 @@
 <meta charset="utf-8">
 <title>Documentation Brython</title>
 <link rel="stylesheet" href="../doc_brython.css">
+<style>
+.pycode{
+    background-color:#F0F0F0;
+    padding:3px 8px 8px 8px;
+    border-style:solid;
+    border-width:1px;
+    border-color:#888;
+    border-radius: 10px;
+    width:auto;
+}
+</style>
 
 <script type="text/javascript" src="/src/brython.js"></script>
 <script type="text/python">
 from browser import document as doc
-from browser import window
+from browser import window, html, markdown
+
+import highlight
 
 import header
 header.show('../../')
 
-from browser import markdown
 import time
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text)
+    elt.focus()
 
 def load(url,target):
     # fake query string to bypass browser cache
@@ -27,6 +46,32 @@ def load(url,target):
     doc[target].html = mk
     for script in scripts:
         exec(script)
+    for elt in doc[target].get(selector='.exec'):
+        # Python code executed when user clicks on a button
+        elt.contentEditable = True
+        src = elt.text.strip()
+        h = highlight.highlight(src)
+        h.className = "pycode"
+        elt.clear()
+        elt <= h
+        elt.focus()
+        btn = html.IMG(src='../run.png', alt="run", style=dict(cursor="pointer"))
+        btn.bind('click', run)
+        elt.parent.insertBefore(btn, elt)
+    for elt in doc[target].get(selector='.exec_on_load'):
+        # Python code executed on page load
+        src = elt.text.strip()
+        h = highlight.highlight(src)
+        h.className = "pycode"
+        elt.clear()
+        elt <= h
+        exec(src)
+    for elt in doc[target].get(selector='.python'):
+        src = elt.text.strip()
+        h = highlight.highlight(src)
+        h.className = "pycode"
+        elt.clear()
+        elt <= h
     return False
 
 load('intro.md', 'content')
@@ -107,6 +152,8 @@ window.load = load
 <br><a class="navig" href="#" onClick="load('cookbook/read_file.md','content')">Lire le contenu d'un fichier</a>
 <br><a class="navig" href="#" onClick="load('cookbook/local_storage.md','content')">Stocker des objects localement</a>
 <br><a class="navig" href="#" onClick="load('cookbook/read_text_from_imagemap.md','content')">Exemple de onmouseover</a>
+<br><a class="navig" href="#" onClick="load('cookbook/draw_image.md','content')">Ajouter une image dans un canvas</a>
+
 </div>
 
 

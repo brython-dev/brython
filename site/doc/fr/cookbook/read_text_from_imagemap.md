@@ -7,43 +7,41 @@ Afficher une information au cours du déplacement de la souris sur une image
 Solution
 --------
 
-On utilise l'attribut `onmouseover` de la balise HTML `area` en lui affectant une fonction qui affiche une chaine de caractères dépendant de la position de la souris dans l'image
+On utilise l'attribut `onmouseover` de la balise HTML `area` en lui affectant 
+une fonction qui affiche une chaine de caractères dépendant de la position de 
+la souris dans l'image
 
-<table width="100%">
-<tr>
-<td style="width:40%;padding-right:10px;">
+```exec_on_load
+from browser import document, html
 
-    from browser import document as doc
-    def writetext(txt):
-        doc["description"].text = ""
-        doc["description"] <= txt
+def writetext(txt):
+    document["description"].text = txt
 
-</td>
-<td style="background-color:#FF7400;text-align:center;">
+coords = [(0,0,160,95),(180,0,400,165),(0,120,180,400),(175,235,270,400)]
+messages = ['Avion volant dans le ciel par une belle journée',
+    'Le soleil et les planètes gazeuses géantes comme Jupiter sont, de loin, \
+    les plus gros objets de notre système solaire.',
+    'C\'est toi ou c\'est moi.',
+    'Daniel la menace!!!!!!!!']
+prompt = 'Déplacer la souris sur les différents éléments pour voir une \
+    description.'
+
+writetext(prompt)
+
+for coord, msg in zip(coords, messages):
+    area = html.AREA(shape="rect", coords=coord)
+    area.bind('mouseover', lambda ev, msg=msg:writetext(msg))
+    area.bind('mouseout', lambda ev:writetext(prompt))
+    document["familymap"] <= area
+
+```
+
+<div id="description" style="background-color:#700;padding:10px;color:#FFF;"></div>
+
 <img src="../images/imagemap_example.png" width ="400" height ="400" alt="Happy Family" usemap="#familymap" />
 
-<map name="familymap">
-<area shape="rect" coords="0,0,160,95" onmouseover="writetext('Avion volant dans le ciel par une belle journée')" />
-<area shape="rect" coords="180,0,400,165" onmouseover="writetext('Le soleil et les planètes gazeuses géantes comme Jupiter sont, de loin, les plus gros objets de notre système solaire.')" />
-<area shape="rect" coords="0,120,180,400" onmouseover="writetext('C\'est toi ou c\'est moi.')" />
-<area shape="rect" coords="175,235,270,400" onmouseover="writetext('Daniel la menace!!!!!!!!')" />
+<map name="familymap" id="familymap">
 </map>
 
-</td>
-</tr>
 
-<tr>
-<td></td>
-<td style="background-color:#ccccee;">
-<div id="description"><blink><b>Déplacer la souris sur les différents éléments pour voir une description.</b></blink></div>
-</td>
-</tr>
-</table>
 
-<script type="text/python3">
-from browser import doc, window
-def writetext(txt):
-    doc["description"].text = ""
-    doc["description"] <= txt
-window.writetext = writetext
-</script>

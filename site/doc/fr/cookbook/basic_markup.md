@@ -12,40 +12,21 @@ Solution
 <tr>
 <td style="width:50%;">
 
-    <html>
-    <head>
-    <script src="brython.js"></script>
-    </head>
-    <body onload="brython()">
-    
-    <script type="text/python">
-    from browser import document, html
-    document['zone'] <= html.H1("Introduction à Brython")
-    document['zone'] <= html.H4(html.I("Python dans le navigateur"))
-    document['zone'] <= html.B("Salut !")
-    </script>
-    
-    </body>
-    </html>
+```exec
+from browser import document, html
 
-<button id="fill_zone">Essayez</button>
+document['zone'].clear()
+document['zone'] <= html.H1("Introduction à Brython")
+document['zone'] <= html.H4(html.I("Python dans le navigateur"))
+document['zone'] <= html.B("Salut !")
+```
+
 </td>
 <td id="zone" style="background-color:#FF7400;text-align:center;">Contenu initial<p>
 </td>
 </tr>
 </table>
 
-<script type="text/python3">
-from browser import document, html
-
-def fill_zone(ev):
-    document['zone'] <= html.H1("Introduction à Brython")
-    document['zone'] <= html.H4(html.I("Python dans le navigateur"))
-    document['zone'] <= html.B("Salut !")
-
-document['fill_zone'].bind('click', fill_zone)
-
-</script>
 
 `B` est une fonction définie dans le module `html`, correspondant à la balise HTML `<B>` (gras)
 
