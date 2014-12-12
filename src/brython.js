@@ -7447,8 +7447,6 @@ console.log(js)
 }
 eval(js)
 }catch(err){console.log(err+' for module '+module.name)
-for(var attr in err){
-}
 console.log('message: '+err.message)
 console.log('filename: '+err.fileName)
 console.log('linenum: '+err.lineNumber)
@@ -10804,8 +10802,7 @@ continue
 throw e
 }}
 if(_loader==_b_.None)continue 
-_module=_b_.getattr(_b_.getattr(_loader,'load_module'),'__call__')(mod_name)
-return $B.run_py({name: mod_name},_path[j],_module)
+return _b_.getattr(_b_.getattr(_loader,'load_module'),'__call__')(mod_name)
 }
 }
 return null
