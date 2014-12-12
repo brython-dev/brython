@@ -19,13 +19,18 @@ class URL:
 class CodeBlock:
     def __init__(self,line):
         self.lines = [line]
+        if line.startswith("```") and len(line)>3:
+            self.info = line[3:]
+        else:
+            self.info = None
     
     def to_html(self):
         if self.lines[0].startswith("`"):
             self.lines.pop(0)
         res = escape('\n'.join(self.lines))
         res = unmark(res)
-        res = '<pre class="marked">%s</pre>\n' %res
+        _class = self.info or "marked"
+        res = '<pre class="%s">%s</pre>\n' %(_class, res)
         return res,[]
 
 class HtmlBlock:
@@ -155,11 +160,25 @@ def mark(src):
             section = CodeBlock(line[4:])
             j = i+1
             while j<len(lines) and lines[j].startswith('    '):
-                    section.lines.append(lines[j][4:])
-                    j += 1
+                section.lines.append(lines[j][4:])
+                j += 1
             sections.append(section)
             section = Marked()
             i = j   
+            continue
+
+        elif line.strip() and line.startswith("```"):
+            # fenced code blocks à la Github Flavoured Markdown
+            if isinstance(section,Marked) and section.line:
+                sections.append(section)
+            section = CodeBlock(line)
+            j = i+1
+            while j<len(lines) and not lines[j].startswith("```"):
+                section.lines.append(lines[j])
+                j += 1
+            sections.append(section)
+            section = Marked()
+            i = j+1
             continue
 
         elif line.lower().startswith('<script'):
