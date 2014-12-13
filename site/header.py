@@ -69,7 +69,7 @@ def show(prefix=''):
     has_req = False
 
     qs_lang = doc.query.getfirst("lang")
-    if qs_lang and qs_lang in ["en", "fr", "es", "pt"]:
+    if qs_lang and qs_lang in ["en", "fr", "es"]:
         has_req = True
         language = qs_lang
     else:
@@ -77,7 +77,7 @@ def show(prefix=''):
         try:
             lang, enc = locale.getdefaultlocale()
             lang = lang[:2]
-            if lang in ("en", "fr", "es", "pt"):
+            if lang in ("en", "fr", "es"):
                 language = lang
         except:
             pass
