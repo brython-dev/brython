@@ -10,21 +10,28 @@ Solución
 <tr>
 <td style="width:50%;">
 
-    from browser import document as doc
-    from browser import alert
-    # doc['zone'] is the colored cell
-    alert(doc['zone'].text)
+### Mostrar texto
 
-<button id="show_text">Mostrar texto</button>
+```exec
+from browser import document
+from browser import alert
+# document['zone'] is the colored cell
+alert(document['zone'].text)
+```
 
-    alert(doc['zone'].html)
+### Mostrar código HTML
 
-<br><button id="show_html">Mostrar html</button>
+```exec
+alert(document['zone'].html)
+```
 
-    # doc['entry'] is the input field
-    alert(doc['entry'].value)
+### Mostrar texto introducido
 
-<br><button id="show_value">Mostrar texto introducido</button>
+```exec
+# document['entry'] es el campo de entrada
+alert(document['entry'].value)
+```
+
 </td>
 <td id="zone" style="background-color:#FF7400;text-align:center;">
 <B>Contenido de la celda</B><p>
@@ -32,24 +39,6 @@ Solución
 </td>
 </tr>
 </table>
-
-<script type="text/python3">
-from browser import document as doc
-
-def show_text(ev):
-    src = doc.get(selector="pre.marked")[0].text
-    exec(src)
-def show_html(ev):
-    src = doc.get(selector="pre.marked")[1].text
-    exec(src)
-def show_value(ev):
-    src = doc.get(selector="pre.marked")[2].text
-    exec(src)
-
-doc['show_text'].bind('click', show_text)
-doc['show_html'].bind('click', show_html)
-doc['show_value'].bind('click', show_value)
-</script>    
 
 Cada elemento en la página posee un atributo `text`, una cadena con el testo mostrado en el elemento
 

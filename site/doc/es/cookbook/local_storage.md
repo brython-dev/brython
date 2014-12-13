@@ -7,45 +7,44 @@ Almacenar objetos localmente usando 'local storage' disponible en HTML5
 Solución
 --------
 
-Brython proporciona un módulo llamado `browser.local_storage` que permite almacenar cadenas de valores asociados a cadenas de claves
+Brython proporciona un módulo llamado `browser.local_storage` que permite 
+almacenar cadenas de valores asociados a cadenas de claves
 
-
-    from browser import document as doc
-    from browser.local_storage import storage
-    storage['brython_test'] = doc['zone'].value
-    
 <input id="zone" value="Local Storage">
-<button id="show_0">Almacenar valor</button>
 
-    from browser import alert
-    alert(storage['brython_test'])
+### Almacenar valor
 
-<button id="show_1">Mostrar valor almacenado</button>
+```exec
+from browser import document
+from browser.local_storage import storage
+storage['brython_test'] = document['zone'].value
+```
 
-<script type="text/python3">
-def show_locstor(num):
-    src = doc.get(selector="pre.marked")[num].text
-    exec(src)
+### Mostrar valor almacenado
 
-doc['show_0'].bind('click', lambda ev:show_locstor(0))
-doc['show_1'].bind('click', lambda ev:show_locstor(1))
-doc['show_2'].bind('click', lambda ev:show_locstor(2))
-</script>
+```exec
+from browser import alert
+alert(storage['brython_test'])
+```
 
-Si un objeto Python puede ser serializado mediante el módulo `json`, podríamos almacenar la versión serializada para, más tarde, volver a obtener el objeto original :
+Si un objeto Python puede ser serializado mediante el módulo `json`, podríamos 
+almacenar la versión serializada para, más tarde, volver a obtener el objeto 
+original :
 
-    from browser import alert
-    from browser.local_storage import storage
-    import json
-    
-    a = {'foo':1,1515:'Marignan'}
-    
-    storage["brython_test"] = json.dumps(a)
-    
-    b = json.loads(storage['brython_test'])
-    alert(b['foo'])
-    alert(b['1515'])
+```exec
+from browser import alert
+from browser.local_storage import storage
+import json
 
-<button id="show_2">Pruébalo</button>
+a = {'foo':1,1515:'Marignan'}
 
-Ten cuidado ya que `json` convierte las claves del diccionario a una cadena. Debido a ello es por lo que hemos usado `b['1515']` en lugar de `b[1515]` en el ejemplo anterior
+storage["brython_test"] = json.dumps(a)
+
+b = json.loads(storage['brython_test'])
+alert(b['foo'])
+alert(b['1515'])
+```
+
+Ten cuidado ya que `json` convierte las claves del diccionario a una cadena. 
+Debido a ello es por lo que hemos usado `b['1515']` en lugar de `b[1515]` en 
+el ejemplo anterior
