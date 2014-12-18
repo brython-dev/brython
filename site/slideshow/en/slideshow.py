@@ -120,7 +120,6 @@ def show_page(slideshow, zone, page_num):
     for elt in zone.get(selector='.python'):
         src = elt.text.strip()
         width = max(len(line) for line in src.split('\n'))
-        h = highlight.highlight(src)
-        elt.clear()
-        elt <= h
+        # replace element content by highlighted code
+        elt.html = highlight.highlight(src).html
         elt.style.width = '%sem' %int(0.7*width)
