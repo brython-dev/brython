@@ -4,7 +4,8 @@
 brython
 =======
 
-Brython (Browser Python) is an implementation of Python 3 running in the browser.
+Brython (Browser Python) is an implementation of Python 3 running in the 
+browser, with an interface to the DOM elements and events.
 
 Here is a simple example of an HTML page running Python:
 
