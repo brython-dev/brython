@@ -6,13 +6,16 @@ var $module=(function($B){
              '__set__':0 // data descriptor, to force use of __get__
             },
         stderr : {
-            __set__:function(self, obj, value){$B.stderr = value},
-            write:function(data){$B.stderr.write(data)}
+            __get__:function(){return $B.stderr},
+            __set__:function(self, obj, value){console.log('set stderr');$B.stderr = value},
+            write:function(data){$B.builtins.getattr($B.stderr,"write")(data)}
             },
         stdout : {
-            __set__:function(self, obj, value){$B.stdout = value},
-            write:function(data){$B.stdout.write(data)}
+            __get__:function(){return $B.stdout},
+            __set__:function(self, obj, value){console.log('set stdout');$B.stdout = value},
+            write:function(data){$B.builtins.getattr($B.stdout,"write")(data)}
             },
         stdin : $B.stdin
     }
 })(__BRYTHON__)
+
