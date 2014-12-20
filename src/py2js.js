@@ -6246,7 +6246,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     if(module===undefined){module='__main__'}
     if(locals_id===undefined){locals_id=module}
 
-    $B.vars[module]=$B.vars[module] || {}
+    $B.vars[module]=$B.vars[module] || {__class__:$B.$ModuleDict}
     $B.bound[module] = $B.bound[module] || {}
     $B.vars[locals_id] = $B.vars[locals_id] || {}
 
@@ -6264,6 +6264,9 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     
     js += 'var __builtins__ = _b_ = $B.builtins\n'
     js += 'var $globals = $B.vars["'+module+'"];\n'
+    if(module=='__main__'){
+        js += '__BRYTHON__.imported["__main__"] = $globals\n'
+    }
     js += 'var $locals_id = "'+locals_id+'";\n'
     js += 'var $locals = $B.vars["'+locals_id+'"];\n'
     js += 'var $s=[];\n'
@@ -6444,7 +6447,6 @@ function brython(options){
                 _mod.__class__ = $B.$ModuleDict
                 _mod.__name__ = '__main__'
                 _mod.__file__ = $B.$py_module_path['__main__']
-                $B.imported['__main__'] = _mod
                 
             }catch($err){
                 if($B.debug>1){

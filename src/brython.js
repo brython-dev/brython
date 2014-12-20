@@ -4176,7 +4176,7 @@ src=src.substr($n)
 if(src.charAt(src.length-1)!="\n"){src+='\n'}
 if(module===undefined){module='__main__'}
 if(locals_id===undefined){locals_id=module}
-$B.vars[module]=$B.vars[module]||{}
+$B.vars[module]=$B.vars[module]||{__class__:$B.$ModuleDict}
 $B.bound[module]=$B.bound[module]||{}
 $B.vars[locals_id]=$B.vars[locals_id]||{}
 $B.bound[module]['__doc__']=true
@@ -4188,6 +4188,8 @@ root.transform()
 var js='var $B=__BRYTHON__\n'
 js +='var __builtins__ = _b_ = $B.builtins\n'
 js +='var $globals = $B.vars["'+module+'"];\n'
+if(module=='__main__'){js +='__BRYTHON__.imported["__main__"] = $globals\n'
+}
 js +='var $locals_id = "'+locals_id+'";\n'
 js +='var $locals = $B.vars["'+locals_id+'"];\n'
 js +='var $s=[];\n'
@@ -4281,7 +4283,6 @@ var _mod=$globals
 _mod.__class__=$B.$ModuleDict
 _mod.__name__='__main__'
 _mod.__file__=$B.$py_module_path['__main__']
-$B.imported['__main__']=_mod
 }catch($err){if($B.debug>1){console.log('PY2JS '+$err)
 for(var attr in $err){console.log(attr+' : '+$err[attr])
 }
