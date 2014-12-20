@@ -62,6 +62,9 @@ class cOutput:
     def write(self, data):
         doc["console"].value += str(data)
 
+    def flush(self):
+        pass
+
 sys.stdout = cOutput()
 sys.stderr = cOutput()
 
@@ -93,7 +96,7 @@ def run(in_globals=False):
             exec(src,ns)
         state = 1
     except Exception as exc:
-        traceback.print_exc()
+        traceback.print_exc(file=sys.stderr)
         state = 0
     output = doc["console"].value
 
