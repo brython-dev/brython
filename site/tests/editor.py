@@ -57,14 +57,13 @@ def reset_src_area():
     else:
        editor.value = 'for i in range(10):\n\tprint(i)'
 
-def write(data):
-    doc["console"].value += '%s' % data
+class cOutput:
+    
+    def write(self, data):
+        doc["console"].value += str(data)
 
-#sys.stdout = object()    #not needed when importing sys via src/Lib/sys.py
-sys.stdout.write = write
-
-#sys.stderr = object()    # ditto
-sys.stderr.write = write
+sys.stdout = cOutput()
+sys.stderr = cOutput()
 
 def to_str(xx):
     return str(xx)
