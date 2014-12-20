@@ -21,7 +21,7 @@ var $script_dir = $B.script_dir = $href_elts.join('/')
 $B.path = [$path+'Lib', $script_dir, $path+'Lib/site-packages']
 
 // Name bindings in scopes
-// Name "x" defined in a scope is a keys of the dictionary
+// Name "x" defined in a scope is a key of the dictionary
 // __BRYTHON__.bound[scope.id]
 $B.bound = {}
 
@@ -58,7 +58,7 @@ $B.builtin_funcs = {}
 $B.__getattr__ = function(attr){return this[attr]}
 $B.__setattr__ = function(attr,value){
     // limited to some attributes
-    if(['debug'].indexOf(attr)>-1){$B[attr]=value}
+    if(['debug', 'stdout', 'stderr'].indexOf(attr)>-1){$B[attr]=value}
     else{throw $B.builtins.AttributeError('__BRYTHON__ object has no attribute '+attr)}
 }
 
