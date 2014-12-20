@@ -35,7 +35,7 @@ def load(url,target):
         elt.clear()
         elt <= h
         elt.focus()
-        btn = html.IMG(src='../run.png', alt="run", style=dict(cursor="pointer"))
+        btn = html.BUTTON('▶')
         btn.bind('click', run)
         elt.parent.insertBefore(btn, elt)
     for elt in doc[target].get(selector='.exec_on_load'):
