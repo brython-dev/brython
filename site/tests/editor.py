@@ -57,14 +57,16 @@ def reset_src_area():
     else:
        editor.value = 'for i in range(10):\n\tprint(i)'
 
-def write(data):
-    doc["console"].value += '%s' % data
+class cOutput:
+    
+    def write(self, data):
+        doc["console"].value += str(data)
 
-#sys.stdout = object()    #not needed when importing sys via src/Lib/sys.py
-sys.stdout.write = write
+    def flush(self):
+        pass
 
-#sys.stderr = object()    # ditto
-sys.stderr.write = write
+sys.stdout = cOutput()
+sys.stderr = cOutput()
 
 def to_str(xx):
     return str(xx)
@@ -94,7 +96,7 @@ def run(in_globals=False):
             exec(src,ns)
         state = 1
     except Exception as exc:
-        traceback.print_exc()
+        traceback.print_exc(file=sys.stderr)
         state = 0
     output = doc["console"].value
 

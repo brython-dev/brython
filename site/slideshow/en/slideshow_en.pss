@@ -7,29 +7,10 @@ Brython (Python in the browser)
 <h3 style="padding-top:50px;padding-left:100px;">
 Pierre Quentel
 
-November 2014
+December 2014
 
 </h3>
 
-
-
-../..
-Why Brython ?
-=============
-
-**Brython (Browser Python) is designed to replace Javascript as the scripting 
-language for the Web**
-
-../..
-Why Brython ?
-==================
-
-**Brython (Browser Python) is designed to replace Javascript as the scripting 
-language for the Web**
-
-- Javascript is verbose and bizarre (this..)
- - hence the success of frameworks like jQuery, angular.js, prototype...
-
 ../..
 Why Brython ?
 =============
@@ -39,26 +20,15 @@ language for the Web**
 
 - Javascript is verbose and bizarre (this..)
  - hence the success of frameworks like jQuery, angular.js, prototype...
+
+@pause
 
 - the big crisis facing Python is the rise of Javascript
  
  - with HTML5, more and more webapps, more and more Javascript developers
  - JS is arriving on the server side (node.js)
 
-../..
-Why Brython ?
-=============
-
-**Brython (Browser Python) is designed to replace Javascript as the scripting 
-language for the Web**
-
-- Javascript is verbose and bizarre (this..)
- - hence the success of frameworks like jQuery, angular.js, prototype...
-
-- the big crisis facing Python is the rise of Javascript
- 
- - with HTML5, more and more webapps, more and more Javascript developers
- - JS is arriving on the server side (node.js)
+@pause
 
 - Javascript monopoly in the browser is not a fatality
 
@@ -82,219 +52,83 @@ Goals
 Make writing Python apps as staightforward as in Javascript : Python code
 inserted in the HTML page
 
-    <script type="text/python">
-    print("Python is better than Javascript")
-    </script>
+```html_src
+<script type="text/python">
+print("Python is better than Javascript")
+</script>
+```
 
-
-../..
-Goals
-=====
-
-Make writing Python apps as staightforward as in Javascript : Python code
-inserted in the HTML page
-
-    <script type="text/python">
-    print("Python is better than Javascript")
-    </script>
+@pause
 
 or inserting a script
 
-    <script type="text/python" src="script.py"></script>
+```html_src
+<script type="text/python" src="script.py"></script>
+```
 
-
-../..
-Goals
-=====
-
-Make writing Python apps as staightforward as in Javascript : Python code
-inserted in the HTML page
-
-    <script type="text/python">
-    print("Python is better than Javascript")
-    </script>
-
-or inserting a script
-
-    <script type="text/python" src="script.py"></script>
+@pause
 
 An interface compliant with the Document Object Model
 
-    element = document.getElementById("element_id")
+```python
+element = document.getElementById("element_id")
+```
 
-
-../..
-Goals
-=====
-
-Make writing Python apps as staightforward as in Javascript : Python code
-inserted in the HTML page
-
-    <script type="text/python">
-    print("Python is better than Javascript")
-    </script>
-
-or inserting a script
-
-    <script type="text/python" src="script.py"></script>
-
-An interface compliant with the Document Object Model
-
-    element = document.getElementById("element_id")
+@pause
 
 but with more Pythonic alternatives
 
-    element = document["element_id"]
-
-
-../..
-Using Python in an HTML page
-============================
-
-<table>
-<tr>
-<td>
-<pre style="background-color:#FFF;color:#66F;padding:10px;width:380px;font-size:17px;"><b>
-&lt;html&gt;
-
-&lt;head&gt;
-<br><span style="background-color:#FF0;"> &lt;script src="brython.js"&gt;&lt;/script&gt;
-</span>
-<br> &lt;/head&gt;
-
-&lt;body <span style="background-color:#FF0;">onload="brython()"</span>&gt;
-
-&lt;script <span style="background-color:#FF0;">type="text/python"</span>&gt;
-<br> from browser import alert
-<br> alert('hi there !')
-<br> &lt;/script&gt;
-
-&lt;/body&gt;
-
-&lt;/html&gt;
-</b></pre>
-</td>
-<td>
-<pre style="color:#FFF;padding:10px;width:330px;font-size:17px;"><b>
-&nbsp;
-
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-
-&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-
-</b></pre>
-</td>
-</tr>
-</table>
-../..
-Using Python in an HTML page
-============================
-
-<table>
-<tr>
-<td>
-<pre style="background-color:#FFF;color:#66F;padding:10px;width:380px;font-size:17px;"><b>
-&lt;html&gt;
-
-&lt;head&gt;
-<br><span style="background-color:#FF0;"> &lt;script src="brython.js"&gt;&lt;/script&gt;
-</span>
-<br> &lt;/head&gt;
-
-&lt;body <span style="background-color:#FF0;">onload="brython()"</span>&gt;
-
-&lt;script <span style="background-color:#FF0;">type="text/python"</span>&gt;
-<br> from browser import alert
-<br> alert('hi there !')
-<br> &lt;/script&gt;
-
-&lt;/body&gt;
-
-&lt;/html&gt;
-</b></pre>
-</td>
-<td>
-<pre style="color:#FFF;padding:10px;width:330px;font-size:17px;"><b>
-&nbsp;
-
-&nbsp;
-<br>loads Brython, puts the name **brython**
-&nbsp;
-<br>in the Javascript namespace
-
-&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-
-&nbsp;
-
-&nbsp;
-</b></pre>
-</td>
-</tr>
-</table>
+```python
+element = document["element_id"]
+```
 
 ../..
 Using Python in an HTML page
 ============================
 
-<table>
-<tr>
-<td>
-<pre style="background-color:#FFF;color:#66F;padding:10px;width:380px;font-size:17px;"><b>
+<div style="position:absolute;top:20%;left:5%;">
+<pre class="html_src" style="width:30em;"><b>
 &lt;html&gt;
+<br>&lt;head&gt;
+<span style="background-color:#FF0;">&lt;script src="brython.js"&gt;&lt;/script&gt;</span>
+&lt;/head&gt;
+<br>&lt;body <span style="background-color:#FF0;">onload="brython()"</span>&gt;
+<br>&lt;script <span style="background-color:#FF0;">type="text/python"</span>&gt;
+from browser import alert
+alert('hi there !')
+&lt;/script&gt;
+<br>&lt;/body&gt;
+<br>&lt;/html&gt;
+</pre>
+</div>
 
-&lt;head&gt;
-<br><span style="background-color:#FF0;"> &lt;script src="brython.js"&gt;&lt;/script&gt;
-</span>
-<br> &lt;/head&gt;
+@pause
 
-&lt;body <span style="background-color:#FF0;">onload="brython()"</span>&gt;
+<div style="position:absolute;top:20%;left:55%;">
+<pre style="color:#FFF;padding:0.5em;width:40%;">
 
-&lt;script <span style="background-color:#FF0;">type="text/python"</span>&gt;
-<br> from browser import alert
-<br> alert('hi there !')
-<br> &lt;/script&gt;
+loads Brython, puts the name **brython**
+&nbsp;in the Javascript namespace
 
-&lt;/body&gt;
+</pre>
+</div>
 
-&lt;/html&gt;
-</b></pre>
-</td>
-<td>
-<pre style="color:#FFF;padding:10px;width:330px;font-size:17px;"><b>
-&nbsp;
+@pause
 
-&nbsp;
-<br>loads Brython, puts the name **brython**
-&nbsp;
-<br>in the Javascript namespace
+<div style="position:absolute;top:20%;left:55%;">
+<pre style="color:#FFF;padding:0.5em;width:40%;">
 
-the function `brython()`
-<br>- searchs scripts with type
-<br> "text/python"
-<br>- translates Python source code
-<br> into Javascript code
-<br>- runs it by `eval()`
+loads Brython, puts the name **brython**
+&nbsp;in the Javascript namespace
 
-&nbsp;
+the function `brython()` :
+  - searches scripts with type "text/python"
+  - translates Python source code
+  - into Javascript code
+  - runs it by `eval()`
 
-&nbsp;
-</b></pre>
-</td>
-</tr>
-</table>
+</pre>
+</div>
 
 ../..
 Python syntax coverage
@@ -305,30 +139,12 @@ Python syntax coverage
 - no place for a new language somewhere between Python and Javascript
 - align on Python Language Reference (Python 3 syntax)
 
-../..
-Python syntax coverage
-======================
-
-**Brython aims at 100% compliance with Python**
-
-- no place for a new language somewhere between Python and Javascript
-- align on Python Language Reference (Python 3 syntax)
+@pause
 
 Support of all the keywords and most of built-in functions and types
 (except `memoryview` and `vars`)
 
-
-../..
-Python syntax coverage
-======================
-
-**Brython aims at 100% compliance with Python**
-
-- no place for a new language somewhere between Python and Javascript
-- align on Python Language Reference (Python 3 syntax)
-
-Support of all the keywords and most of built-in functions and types
-(except `memoryview` and `vars`)
+@pause
 
 Brython supports :
 
@@ -381,12 +197,16 @@ A few examples
 
 Access a DOM element
 
-    <input id="trace">
+```html_src
+<input id="trace">
+```
 
 Python code
 
-    from browser import document
-    elt = document["trace"]
+```python
+from browser import document
+elt = document["trace"]
+```
 
 ../..
 A few examples
@@ -394,17 +214,21 @@ A few examples
 
 Attach an event handler
 
-    <select id="country">
+```html_src
+<select id="country">
+```
 
 Python code
 
-    from browser import document, alert
+```python
+from browser import document, alert
     
-    def change_country(ev):
-        sel = ev.target
-        alert(sel.options[sel.selectedIndex].value)
-    
-    document["country"].bind('change', change_country)
+def change_country(ev):
+    sel = ev.target
+    alert(sel.options[sel.selectedIndex].value)
+
+document["country"].bind('change', change_country)
+```
 
 ../..
 Module `browser.html`
@@ -412,15 +236,17 @@ Module `browser.html`
 
 Build a selection box from a list
 
-    from browser import document, html
-        
-    countries = ['France', 'Italy', 'Russia']
+```python
+from browser import document, html
     
-    sel = html.SELECT()
-    for country in countries:
-        sel <= html.OPTION(country)
-    
-    document <= sel
+countries = ['France', 'Italy', 'Russia']
+
+sel = html.SELECT()
+for country in countries:
+    sel <= html.OPTION(country)
+
+document <= sel
+```
 
 `<=` is the same as `appendChild()` (left arrow, not "lesser or equal")
 
@@ -444,27 +270,22 @@ The interface uses the object `window` in module `browser`
 Access from Brython to Javascript libraries
 ===========================================
 
-<pre style="background-color:#FFF;color:#2A4480;padding:10px;font-size:16px;width:650px;">
+<pre class="html_src">
 &lt;html&gt;
 <br>&lt;head&gt;
 <br>&lt;meta charset="utf-8"&gt;
-<br><span style="background-color:yellow;">&lt;script src="raphael-min.js"&gt;&lt;/script&gt;</span>
-<br>&lt;script type="text/javascript" src="/src/brython.js"&gt;&lt;/script&gt;
-<br>&lt;/head&gt;
-
+<span style="background-color:yellow;">&lt;script src="raphael-min.js"&gt;&lt;/script&gt;</span>
+&lt;script type="text/javascript" src="/src/brython.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
 <br>&lt;body onload="brython()"&gt;
-
 <br>&lt;script type="text/python"&gt;
-<br><span style="background-color:yellow;">from browser import window
-<br>bRaphael = window.Raphael</span>
-<br>
+<span style="background-color:yellow;">from browser import window
+bRaphael = window.Raphael</span>
 <br>&#35; Creates canvas 320 × 200 at 10, 50
-<br>paper = bRaphael(410, 50, 320, 200)
-<br>
+paper = bRaphael(410, 50, 320, 200)
 <br>&#35; Creates circle at x = 50, y = 40, with radius 10
-<br>circle = paper.circle(50, 40, 10)
-<br>&lt;/script&gt;
-<br>
+circle = paper.circle(50, 40, 10)
+&lt;/script&gt;
 <br>&lt;/body&gt;
 <br>&lt;/html&gt;
 </pre>
@@ -474,17 +295,21 @@ Access from Javascript to Python objects
 
 Use a Python function as callback from a tag
 
-    <button onclick="info(this)">
+```html_src
+<button onclick="info(this)">
+```
 
 Function `info` is inserted in the Javascript namespace via the `window`
 object
 
-    from browser import window
-    
-    def info(elt):
-        alert("click on element %s" %elt)
-    
-    window.info = info
+```python
+from browser import window
+
+def info(elt):
+    alert("click on element %s" %elt)
+
+window.info = info
+```
 
 ../..
 Performance
@@ -493,20 +318,23 @@ On project launch, priority set to Python compliance over performance
 
 Since mid 2014, much work on optimisation (without any compromise on 
 compliance)
-
 <table>
 <tr>
 <td>Code</td>
 <td>
-    a = 0
-    for i in range(10000000):
-        a += 1
+```python
+a = 0
+for i in range(10000000):
+    a += 1
+```
 </td>
 
 <td>
-    a = [0]
-    for i in range(1000000):
-        a[0]= i
+```python
+a = [0]
+for i in range(1000000):
+    a[0]= i
+```
 </td>
 </tr>
 
@@ -518,7 +346,7 @@ compliance)
 
 </table>
 
-... but still much work ahead : 160 times less pystones than CPython
+... but still much work ahead : 80 times less pystones than CPython
 
 ../..
 Test Brython on line : editor

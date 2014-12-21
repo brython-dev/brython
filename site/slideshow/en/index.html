@@ -16,12 +16,12 @@
 from browser import document, window
 import slideshow
 
-document['cours'].style.height = window.innerHeight
+document['cours'].style.height = int(0.95*window.innerHeight)
 document['cours'].style.width = int(0.9*window.innerWidth)
 slideshow.show('slideshow_en.pss',document['cours'])
 
 </script>
-<div id="cours">
+<div id="cours"></div>
 </body>
 </html>
 

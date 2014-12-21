@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 3, 0, 'alpha', 0]
-// implementation [3, 0, 1, 'alpha', 0]
+// implementation [3, 0, 2, 'alpha', 0]
 // version compiled from commented, indented source files at github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
 ;(function($B){
@@ -24,7 +24,7 @@ $B.builtins={__repr__:function(){return "<module 'builtins>'"},__str__:function(
 $B.builtin_funcs={}
 $B.__getattr__=function(attr){return this[attr]}
 $B.__setattr__=function(attr,value){
-if(['debug'].indexOf(attr)>-1){$B[attr]=value}
+if(['debug','stdout','stderr'].indexOf(attr)>-1){$B[attr]=value}
 else{throw $B.builtins.AttributeError('__BRYTHON__ object has no attribute '+attr)}}
 $B.language=window.navigator.userLanguage ||window.navigator.language
 $B.charset=document.characterSet ||document.inputEncoding ||"utf-8"
@@ -47,8 +47,8 @@ $B.has_json=typeof(JSON)!=="undefined"
 $B.has_websocket=(function(){try{var x=window.WebSocket;return x!==undefined}
 catch(err){return false}})
 })(__BRYTHON__)
-__BRYTHON__.implementation=[3,0,1,'alpha',0]
-__BRYTHON__.__MAGIC__="3.0.1"
+__BRYTHON__.implementation=[3,0,2,'alpha',0]
+__BRYTHON__.__MAGIC__="3.0.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
 __BRYTHON__.builtin_module_names=["posix","__random","_ajax","_browser","_html","_io","_jsre","_multiprocessing","_os","_posixsubprocess","_svg","_sys","_timer","_websocket","builtins","dis","hashlib","javascript","json","marshal","math","modulefinder","time","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
@@ -4176,7 +4176,7 @@ src=src.substr($n)
 if(src.charAt(src.length-1)!="\n"){src+='\n'}
 if(module===undefined){module='__main__'}
 if(locals_id===undefined){locals_id=module}
-$B.vars[module]=$B.vars[module]||{}
+$B.vars[module]=$B.vars[module]||{__class__:$B.$ModuleDict}
 $B.bound[module]=$B.bound[module]||{}
 $B.vars[locals_id]=$B.vars[locals_id]||{}
 $B.bound[module]['__doc__']=true
@@ -4188,6 +4188,8 @@ root.transform()
 var js='var $B=__BRYTHON__\n'
 js +='var __builtins__ = _b_ = $B.builtins\n'
 js +='var $globals = $B.vars["'+module+'"];\n'
+if(module=='__main__'){js +='__BRYTHON__.imported["__main__"] = $globals\n'
+}
 js +='var $locals_id = "'+locals_id+'";\n'
 js +='var $locals = $B.vars["'+locals_id+'"];\n'
 js +='var $s=[];\n'
@@ -4281,7 +4283,6 @@ var _mod=$globals
 _mod.__class__=$B.$ModuleDict
 _mod.__name__='__main__'
 _mod.__file__=$B.$py_module_path['__main__']
-$B.imported['__main__']=_mod
 }catch($err){if($B.debug>1){console.log('PY2JS '+$err)
 for(var attr in $err){console.log(attr+' : '+$err[attr])
 }
@@ -7322,9 +7323,9 @@ $B.JSConstructor=JSConstructor
 ;(function($B){$B.stdlib={}
 var js=['__random','_ajax','_browser','_html','_io','_jsre','_multiprocessing','_os','_posixsubprocess','_svg','_sys','_timer','_websocket','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','marshal','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','time','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','pyre','queue','random','re','reprlib','select','shutil','signal','site','site-packages.highlight','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile']
+var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','pyre','queue','random','re','reprlib','select','shutil','signal','site','site-packages.highlight','site-packages.pygame.Rect','site-packages.pygame.Surface','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.time','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
-var pkglist=['browser','collections','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','test','ui','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
+var pkglist=['browser','collections','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.pygame','test','ui','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]
 })(__BRYTHON__)
 

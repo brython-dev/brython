@@ -21,7 +21,7 @@ doc["content"].html = doc["content_%s" %language].html
 
 if qs_lang:
     doc["c_%s" %qs_lang].href += "?lang=%s" %qs_lang
- 
+
 def ch_lang(ev):
     sel = ev.target
     new_lang = sel.options[sel.selectedIndex].value
