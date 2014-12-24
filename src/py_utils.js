@@ -253,6 +253,12 @@ $B.$mkdict = function(glob,loc){
     return res
 }
 
+function clear(ns){
+    // delete temporary structures
+    delete $B.vars[ns], $B.bound[ns], $B.modules[ns], $B.imported[ns]
+    
+}
+
 $B.$list_comp = function(module_name, parent_block_id){
     var $ix = Math.random().toString(36).substr(2,8)
     var $py = 'def func'+$ix+"():\n"
@@ -276,10 +282,14 @@ $B.$list_comp = function(module_name, parent_block_id){
 
     var $js = $root.to_js()
     
-    try{eval($js)}
+    try{
+        eval($js)
+        var res = $B.vars['lc'+$ix]['res'+$ix]
+    }
     catch(err){throw $B.exception(err)}
+    finally{clear($mod_name)}
 
-    return $B.vars['lc'+$ix]['res'+$ix]
+    return res
 }
 
 $B.$gen_expr = function(){ // generator expresssion
@@ -329,6 +339,7 @@ $B.$gen_expr = function(){ // generator expresssion
     $GenExprDict.$factory = $GenExprDict
     var $res2 = {value:$res1,__class__:$GenExprDict,$counter:-1}
     $res2.toString = function(){return 'ge object'}
+    clear($mod_name)
     return $res2
 }
 
@@ -350,7 +361,9 @@ $B.$dict_comp = function(module_name,parent_block_id){ // dictionary comprehensi
     $root.caller = $B.line_info
     var $js = $root.to_js()
     eval($js)
-    return $B.vars[locals_id][$res]
+    var res = $B.vars[locals_id][$res]
+    clear(locals_id)
+    return res
 }
 
 $B.$lambda = function(locals,$mod,parent_block_id,$args,$body){
