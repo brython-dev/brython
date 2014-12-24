@@ -1300,6 +1300,12 @@ this.tree=[]
 C.tree.push(this)
 this.toString=function(){return '**'+this.tree}
 this.to_js=function(){return '{$nat:"pdict",arg:'+$to_js(this.tree)+'}'}}
+function $EllipsisCtx(C){this.type='ellipsis'
+this.parent=C
+this.nbdots=1
+C.tree.push(this)
+this.toString=function(){return 'ellipsis'}
+this.to_js=function(){return '__BRYTHON__.builtins["Ellipsis"]'}}
 function $ExceptCtx(C){this.type='except'
 this.parent=C
 C.tree.push(this)
@@ -2683,6 +2689,7 @@ case 'bytes':
 case '[':
 case '(':
 case '{':
+case '.':
 case 'not':
 case 'lambda':
 case 'yield':
@@ -2708,6 +2715,8 @@ case '[':
 return new $ListOrTupleCtx(new $ExprCtx(C,'list',commas),'list')
 case '{':
 return new $DictOrSetCtx(new $ExprCtx(C,'dict_or_set',commas))
+case '.':
+return new $EllipsisCtx(new $ExprCtx(C,'ellipsis',commas))
 case 'not':
 if(C.type==='op'&&C.op==='is'){
 C.op='is_not'
@@ -2789,6 +2798,7 @@ case 'bytes':
 case '[':
 case '(':
 case '{':
+case '.':
 case 'not':
 case 'lambda':
 if(C.has_dstar)$_SyntaxError(C,token)
@@ -2824,6 +2834,7 @@ case 'bytes':
 case '[':
 case '(':
 case '{':
+case '.':
 case 'not':
 case 'lambda':
 if(C.expect==='id'){C.expect=','
@@ -3006,6 +3017,7 @@ case 'bytes':
 case '[':
 case '(':
 case '{':
+case '.':
 case 'not':
 case 'lambda':
 C.expect=','
@@ -3039,6 +3051,7 @@ case 'bytes':
 case '[':
 case '(':
 case '{':
+case '.':
 case 'not':
 case 'lambda':
 return $transition(new $AbstractExprCtx(C,false),token,arguments[2])
@@ -3050,6 +3063,11 @@ case ':':
 if(C.parent.parent.type==='lambda'){return $transition(C.parent.parent,token)
 }}
 $_SyntaxError(C,'token '+token+' after '+C)
+case 'ellipsis':
+if(token=='.'){C.nbdots++;return C}
+else{if(C.nbdots!=3){$pos--;$_SyntaxError(C,'token '+token+' after '+C)
+}else{return $transition(C.parent,token,arguments[2])
+}}
 case 'except':
 switch(token){case 'id':
 case 'imaginary':
@@ -3106,6 +3124,7 @@ case 'bytes':
 case '[':
 case '(':
 case '{':
+case '.':
 case 'not':
 case 'lamdba':
 if(C.expect==='expr'){C.expect=','
@@ -3542,6 +3561,7 @@ case '(':
 case '{':
 case 'not':
 case 'lamdba':
+case '.':
 var expr=new $AbstractExprCtx(C,true)
 return $transition(expr,token,arguments[2])
 case 'op':
@@ -3622,6 +3642,7 @@ case 'bytes':
 case '[':
 case '(':
 case '{':
+case '.':
 case 'not':
 case 'lamdba':
 var expr=new $AbstractExprCtx(C,false)
@@ -3652,6 +3673,7 @@ case 'bytes':
 case '[':
 case '(':
 case '{':
+case '.':
 case 'not':
 case 'lamdba':
 return $transition(new $AbstractExprCtx(C,false),token,arguments[2])
@@ -3736,6 +3758,7 @@ case 'bytes':
 case '[':
 case '(':
 case '{':
+case '.':
 case 'not':
 case 'lamdba':
 var expr=new $AbstractExprCtx(C,false)

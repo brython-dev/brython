@@ -2059,6 +2059,15 @@ function $DoubleStarArgCtx(context){
     this.to_js = function(){return '{$nat:"pdict",arg:'+$to_js(this.tree)+'}'}
 }
 
+function $EllipsisCtx(context){
+    this.type = 'ellipsis'
+    this.parent = context
+    this.nbdots = 1
+    context.tree.push(this)
+    this.toString = function(){return 'ellipsis'}
+    this.to_js = function(){return '__BRYTHON__.builtins["Ellipsis"]'}
+}
+
 function $ExceptCtx(context){
     this.type = 'except'
     this.parent = context
@@ -4264,6 +4273,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lambda':
           case 'yield':
@@ -4291,6 +4301,8 @@ function $transition(context,token){
             return new $ListOrTupleCtx(new $ExprCtx(context,'list',commas),'list')
           case '{':
             return new $DictOrSetCtx(new $ExprCtx(context,'dict_or_set',commas))
+          case '.':
+            return new $EllipsisCtx(new $ExprCtx(context,'ellipsis',commas))
           case 'not':
             if(context.type==='op'&&context.op==='is'){ // "is not"
                 context.op = 'is_not'
@@ -4383,6 +4395,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lambda':
             if(context.has_dstar) $_SyntaxError(context,token)
@@ -4421,6 +4434,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lambda':
             if(context.expect === 'id') { 
@@ -4637,6 +4651,7 @@ function $transition(context,token){
                   case '[':
                   case '(':
                   case '{':
+                  case '.':
                   case 'not':
                   case 'lambda':
                     context.expect = ','
@@ -4675,6 +4690,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lambda':
             return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
@@ -4688,6 +4704,17 @@ function $transition(context,token){
             }
         }
         $_SyntaxError(context,'token '+token+' after '+context)
+
+      case 'ellipsis':
+          if(token=='.'){context.nbdots++;return context}
+          else{
+              if(context.nbdots!=3){
+                  $pos--;$_SyntaxError(context,'token '+token+' after '+context)
+              }else{
+                  return $transition(context.parent, token, arguments[2])
+              }
+          }
+
       case 'except':
         switch(token) {
           case 'id':
@@ -4755,6 +4782,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lamdba':
             if(context.expect==='expr'){
@@ -5361,7 +5389,7 @@ function $transition(context,token){
           case '{':
           case 'not':
           case 'lamdba':
-            //if($expr_starters.indexOf(token)>-1){
+          case '.':
             var expr = new $AbstractExprCtx(context,true)
             return $transition(expr,token,arguments[2])
           case 'op':
@@ -5447,6 +5475,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lamdba':
             //if($expr_starters.indexOf(token)>-1){
@@ -5487,6 +5516,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lamdba':
             //if($expr_starters.indexOf(token)>-1){
@@ -5602,6 +5632,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lamdba':
             //if($expr_starters.indexOf(token)>-1){

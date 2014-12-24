@@ -75,6 +75,10 @@ except AttributeError:
 except:
     raise ValueError('should have raised AttributeError')
 
+# issue 82 : Ellipsis literal (...) missing
+def f():
+    ...
+
 #issue 83
 import sys
 assert sys.version_info > (3,0,0)
