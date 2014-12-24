@@ -7,12 +7,12 @@ var $module=(function($B){
             },
         stderr : {
             __get__:function(){return $B.stderr},
-            __set__:function(self, obj, value){console.log('set stderr');$B.stderr = value},
+            __set__:function(self, obj, value){$B.stderr = value},
             write:function(data){$B.builtins.getattr($B.stderr,"write")(data)}
             },
         stdout : {
             __get__:function(){return $B.stdout},
-            __set__:function(self, obj, value){console.log('set stdout');$B.stdout = value},
+            __set__:function(self, obj, value){$B.stdout = value},
             write:function(data){$B.builtins.getattr($B.stdout,"write")(data)}
             },
         stdin : $B.stdin
