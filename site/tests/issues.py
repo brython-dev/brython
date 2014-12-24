@@ -75,4 +75,15 @@ except AttributeError:
 except:
     raise ValueError('should have raised AttributeError')
 
+#issue 83
+import sys
+assert sys.version_info > (3,0,0)
+assert sys.version_info >= (3,0,0)
+
+assert not sys.version_info == (3,0,0)
+assert sys.version_info != (3,0,0)
+
+assert not sys.version_info < (3,0,0)
+assert not sys.version_info <= (3,0,0)
+
 print('passed all tests')

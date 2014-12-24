@@ -93,6 +93,43 @@ class __version_info(object):
                      self.releaselevel, self.serial)
         #return str(self.version_info)
 
+    def __eq__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) == other
+
+        raise Error("Error! I don't know how to compare!")
+
+    def __ge__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) >= other
+
+        raise Error("Error! I don't know how to compare!")
+
+    def __gt__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) > other
+
+        raise Error("Error! I don't know how to compare!")
+
+    def __le__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) <= other
+
+        raise Error("Error! I don't know how to compare!")
+
+    def __lt__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) < other
+
+        raise Error("Error! I don't know how to compare!")
+
+    def __ne__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) != other
+
+        raise Error("Error! I don't know how to compare!")
+
+
 #eventually this needs to be the real python version such as 3.0, 3.1, etc
 version_info=__version_info(__BRYTHON__.version_info)
 
