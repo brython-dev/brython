@@ -417,6 +417,8 @@ function $eval(src, _globals, locals){
         return res
     }finally{
         $B.exec_stack.pop()
+        delete $B.bound[mod_name], $B.modules[mod_name], $B.imported[mod_name]
+        if(_globals!==undefined){console.log('del '+mod_name);delete $B.vars[mod_name]}
     }
 }
 $eval.$is_func = true
@@ -1841,7 +1843,7 @@ $EllipsisDict.__mro__ = [$ObjectDict]
 $EllipsisDict.$factory = $EllipsisDict
 
 var Ellipsis = {
-    __bool__ : function(){return False},
+    __bool__ : function(){return True},
     __class__ : $EllipsisDict,
     __repr__ : function(){return 'Ellipsis'},
     __str__ : function(){return 'Ellipsis'},
