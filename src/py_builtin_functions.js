@@ -418,7 +418,7 @@ function $eval(src, _globals, locals){
     }finally{
         $B.exec_stack.pop()
         delete $B.bound[mod_name], $B.modules[mod_name], $B.imported[mod_name]
-        if(_globals!==undefined){console.log('del '+mod_name);delete $B.vars[mod_name]}
+        if(_globals!==undefined){delete $B.vars[mod_name]}
     }
 }
 $eval.$is_func = true
@@ -1765,6 +1765,16 @@ zip.__code__.co_varnames=['iter1']
 
 // built-in constants : True, False, None
 
+function no_set_attr(klass, attr){
+    if(klass[attr]!==undefined){
+        throw _b_.AttributeError("'"+klass.__name__+"' object attribute '"+
+            attr+"' is read-only")
+    }else{
+        throw _b_.AttributeError("'"+klass.__name__+
+            "' object has no attribute '"+attr+"'")
+    }
+}
+
 var $BoolDict = $B.$BoolDict = {__class__:$B.$type,
     __name__:'bool',
     __repr__ : function(){return "<class 'bool'>"},
@@ -1830,6 +1840,10 @@ $BoolDict.__repr__ = $BoolDict.__str__ = function(self){
     return "False"
 }
 
+$BoolDict.__setattr__ = function(self, attr){
+    return no_set_attr($BoolDict, attr)
+}
+
 $BoolDict.__sub__ = function(self,other){
     if(self.valueOf()) return 1-other;
     return -other;
@@ -1873,7 +1887,13 @@ for(var $func in Ellipsis){
 }
 
 var $NoneDict = {__class__:$B.$type,__name__:'NoneType',}
+
 $NoneDict.__mro__ = [$NoneDict,$ObjectDict]
+
+$NoneDict.__setattr__ = function(self, attr){
+    return no_set_attr($NoneDict, attr)
+}
+
 $NoneDict.$factory = $NoneDict
 
 var None = {
@@ -1885,17 +1905,18 @@ var None = {
     toString : function(){return 'None'}
 }
 
-for(var $key in $B.$comps){ // None is not orderable with any type
-    switch($key) {
+for(var $op in $B.$comps){ // None is not orderable with any type
+    var key = $B.$comps[$op]
+    switch(key){
       case 'ge':
       case 'gt':
       case 'le':
       case 'lt':
-        None['__'+$B.$comps[$key]+'__']=(function(k){
+        $NoneDict['__'+key+'__']=(function(op){
             return function(other){
-            throw _b_.TypeError("unorderable types: NoneType() "+k+" "+
-                $B.get_class(other).__name__)}
-        })($key)
+            throw _b_.TypeError("unorderable types: NoneType() "+op+" "+
+                $B.get_class(other).__name__+"()")}
+        })($op)
     }
 }
 for(var $func in None){

@@ -59,6 +59,9 @@ var $operators={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","
 }
 var $oplist=[]
 for(var attr in $operators){$oplist.push(attr)}
+var noassignlist=['True','False','None','__debug__']
+var noassign={}
+for(var i=0;i<noassignlist.length;i++){noassign[noassignlist[i]]=true}
 var $op_order=[['or'],['and'],['in','not_in'],['<','<=','>','>=','!=','==','is','is_not'],['|','^','&'],['>>','<<'],['+'],['-'],['*'],['/','//','%'],['unary_neg','unary_inv'],['**']
 ]
 var $op_weight={}
@@ -254,12 +257,14 @@ if(assigned.type=='id'){if(scope.ntype=='def' ||scope.ntype=='generator'){$check
 }
 $B.bound[scope.id][assigned.value]=true
 }}}else{var assigned=C.tree[0]
-if(assigned && assigned.type=='id'){if(!$B.globals[scope.id]||$B.globals[scope.id][assigned.value]===undefined){
+if(assigned && assigned.type=='id'){if(noassign[assigned.value]){$_SyntaxError(C,["can't assign to keyword"])
+}
+if(!$B.globals[scope.id]||$B.globals[scope.id][assigned.value]===undefined){
 var node=$get_node(this)
 node.bound_before=$B.keys($B.bound[scope.id])
 $B.bound[scope.id][assigned.value]=true
 assigned.bound=true
-if(assigned.value=='xw'){console.log(assigned+' bound '+C)}}
+}
 if(scope.ntype=='def' ||scope.ntype=='generator'){$check_unbound(assigned,scope,assigned.value)
 }}}
 this.toString=function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
@@ -463,6 +468,9 @@ C.parent.tree.pop()
 C.parent.tree.push(this)
 this.op=op
 this.tree=[C]
+if(C.type=='expr' && C.tree[0].type=='id' &&
+noassign[C.tree[0].value]){$_SyntaxError(C,["can't assign to keyword"])
+}
 var scope=$get_scope(this)
 $get_node(this).bound_before=$B.keys($B.bound[scope.id])
 this.module=scope.module
@@ -2772,6 +2780,7 @@ return $transition(C.parent,'eol')
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'attribute':
 if(token==='id'){var name=arguments[2]
+if(noassign[name]){$_SyntaxError(C,["cannot assign to "+name])}
 C.name=name
 return C.parent
 }
@@ -5738,7 +5747,7 @@ set_func(attr,$B.vars[mod_name][attr])
 return res
 }finally{$B.exec_stack.pop()
 delete $B.bound[mod_name],$B.modules[mod_name],$B.imported[mod_name]
-if(_globals!==undefined){console.log('del '+mod_name);delete $B.vars[mod_name]}}}
+if(_globals!==undefined){delete $B.vars[mod_name]}}}
 $eval.$is_func=true
 function exec(src,globals,locals){return $eval(src,globals,locals,'exec')||_b_.None
 }
@@ -6578,6 +6587,11 @@ zip.__code__={}
 zip.__code__.co_argcount=1
 zip.__code__.co_consts=[]
 zip.__code__.co_varnames=['iter1']
+function no_set_attr(klass,attr){if(klass[attr]!==undefined){throw _b_.AttributeError("'"+klass.__name__+"' object attribute '"+
+attr+"' is read-only")
+}else{throw _b_.AttributeError("'"+klass.__name__+
+"' object has no attribute '"+attr+"'")
+}}
 var $BoolDict=$B.$BoolDict={__class__:$B.$type,__name__:'bool',__repr__ : function(){return "<class 'bool'>"},__str__ : function(){return "<class 'bool'>"},toString : function(){return "<class 'bool'>"},$native:true
 }
 $BoolDict.__mro__=[$BoolDict,$ObjectDict]
@@ -6615,6 +6629,8 @@ return 0
 $BoolDict.__repr__=$BoolDict.__str__=function(self){if(self.valueOf())return "True"
 return "False"
 }
+$BoolDict.__setattr__=function(self,attr){return no_set_attr($BoolDict,attr)
+}
 $BoolDict.__sub__=function(self,other){if(self.valueOf())return 1-other
 return -other
 }
@@ -6634,15 +6650,18 @@ for(var $func in Ellipsis){if(typeof Ellipsis[$func]==='function'){Ellipsis[$fun
 }}
 var $NoneDict={__class__:$B.$type,__name__:'NoneType',}
 $NoneDict.__mro__=[$NoneDict,$ObjectDict]
+$NoneDict.__setattr__=function(self,attr){return no_set_attr($NoneDict,attr)
+}
 $NoneDict.$factory=$NoneDict
 var None={__bool__ : function(){return False},__class__ : $NoneDict,__hash__ : function(){return 0},__repr__ : function(){return 'None'},__str__ : function(){return 'None'},toString : function(){return 'None'}}
-for(var $key in $B.$comps){
-switch($key){case 'ge':
+for(var $op in $B.$comps){
+var key=$B.$comps[$op]
+switch(key){case 'ge':
 case 'gt':
 case 'le':
 case 'lt':
-None['__'+$B.$comps[$key]+'__']=(function(k){return function(other){throw _b_.TypeError("unorderable types: NoneType() "+k+" "+
-$B.get_class(other).__name__)}})($key)
+$NoneDict['__'+key+'__']=(function(op){return function(other){throw _b_.TypeError("unorderable types: NoneType() "+op+" "+
+$B.get_class(other).__name__+"()")}})($op)
 }}
 for(var $func in None){if(typeof None[$func]==='function'){None[$func].__str__=(function(f){return function(){return "<method-wrapper "+f+" of NoneType object>"}})($func)
 }}

@@ -20,6 +20,10 @@ var $operators = {
 var $oplist = []
 for(var attr in $operators){$oplist.push(attr)}
 
+var noassignlist = ['True','False','None','__debug__']
+var noassign = {}
+for(var i=0;i<noassignlist.length;i++){noassign[noassignlist[i]]=true}
+
 // operators weight for precedence
 var $op_order = [['or'],['and'],
     ['in','not_in'],
@@ -347,6 +351,9 @@ function $AssignCtx(context, check_unbound){
     }else{
         var assigned = context.tree[0]
         if(assigned && assigned.type=='id'){
+            if(noassign[assigned.value]){
+                $_SyntaxError(context,["can't assign to keyword"])
+            }
             if(!$B.globals[scope.id] || $B.globals[scope.id][assigned.value]===undefined){
                 // A value is going to be assigned to a name
                 // After assignment the name will be bound to the current 
@@ -362,7 +369,6 @@ function $AssignCtx(context, check_unbound){
                 node.bound_before = $B.keys($B.bound[scope.id])
                 $B.bound[scope.id][assigned.value] = true
                 assigned.bound = true
-                if(assigned.value=='xw'){console.log(assigned+' bound '+context)}
             }
             if(scope.ntype=='def' || scope.ntype=='generator'){
                 $check_unbound(assigned,scope,assigned.value)
@@ -672,6 +678,11 @@ function $AugmentedAssignCtx(context, op){
     context.parent.tree.push(this)
     this.op = op
     this.tree = [context]
+
+    if(context.type=='expr' && context.tree[0].type=='id' &&
+        noassign[context.tree[0].value]){
+                $_SyntaxError(context,["can't assign to keyword"])
+    }
     
     var scope = $get_scope(this)
 
@@ -4366,7 +4377,9 @@ function $transition(context,token){
       case 'attribute':
         if(token==='id'){
             var name = arguments[2]
-            context.name=name
+            if(noassign[name]){$_SyntaxError(context,
+                ["cannot assign to "+name])}
+    context.name=name
             return context.parent
         }
         $_SyntaxError(context,token)
