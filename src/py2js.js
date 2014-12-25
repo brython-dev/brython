@@ -351,7 +351,7 @@ function $AssignCtx(context, check_unbound){
     }else{
         var assigned = context.tree[0]
         if(assigned && assigned.type=='id'){
-            if(noassign[assigned.value]){
+            if(noassign[assigned.value]===true){
                 $_SyntaxError(context,["can't assign to keyword"])
             }
             if(!$B.globals[scope.id] || $B.globals[scope.id][assigned.value]===undefined){
@@ -680,7 +680,7 @@ function $AugmentedAssignCtx(context, op){
     this.tree = [context]
 
     if(context.type=='expr' && context.tree[0].type=='id' &&
-        noassign[context.tree[0].value]){
+        noassign[context.tree[0].value]===true){
                 $_SyntaxError(context,["can't assign to keyword"])
     }
     
@@ -4377,9 +4377,9 @@ function $transition(context,token){
       case 'attribute':
         if(token==='id'){
             var name = arguments[2]
-            if(noassign[name]){$_SyntaxError(context,
+            if(noassign[name]===true){$_SyntaxError(context,
                 ["cannot assign to "+name])}
-    context.name=name
+            context.name=name
             return context.parent
         }
         $_SyntaxError(context,token)

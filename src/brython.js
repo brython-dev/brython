@@ -257,7 +257,7 @@ if(assigned.type=='id'){if(scope.ntype=='def' ||scope.ntype=='generator'){$check
 }
 $B.bound[scope.id][assigned.value]=true
 }}}else{var assigned=C.tree[0]
-if(assigned && assigned.type=='id'){if(noassign[assigned.value]){$_SyntaxError(C,["can't assign to keyword"])
+if(assigned && assigned.type=='id'){if(noassign[assigned.value]===true){$_SyntaxError(C,["can't assign to keyword"])
 }
 if(!$B.globals[scope.id]||$B.globals[scope.id][assigned.value]===undefined){
 var node=$get_node(this)
@@ -469,7 +469,7 @@ C.parent.tree.push(this)
 this.op=op
 this.tree=[C]
 if(C.type=='expr' && C.tree[0].type=='id' &&
-noassign[C.tree[0].value]){$_SyntaxError(C,["can't assign to keyword"])
+noassign[C.tree[0].value]===true){$_SyntaxError(C,["can't assign to keyword"])
 }
 var scope=$get_scope(this)
 $get_node(this).bound_before=$B.keys($B.bound[scope.id])
@@ -2780,7 +2780,7 @@ return $transition(C.parent,'eol')
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'attribute':
 if(token==='id'){var name=arguments[2]
-if(noassign[name]){$_SyntaxError(C,["cannot assign to "+name])}
+if(noassign[name]===true){$_SyntaxError(C,["cannot assign to "+name])}
 C.name=name
 return C.parent
 }
