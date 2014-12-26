@@ -307,8 +307,10 @@ var $valid_digits=function(base) {
     return digits
 }
 
-//var int = function(value,base){
-var int = function(){
+var int = function(value, base){
+    // most usual case
+    if(typeof value=='number' && base===undefined){return Math.floor(value)}
+    
     var $ns=$B.$MakeArgs('int',arguments,[],[],'args','kw')
     //console.log($ns)
     var value = $ns['args'][0]
@@ -317,7 +319,20 @@ var int = function(){
     if (value === undefined) value = _b_.dict.$dict.get($ns['kw'],'x', 0)
     if (base === undefined) base = _b_.dict.$dict.get($ns['kw'],'base',10)
 
-    if (value ===0) return Number(0)
+    if (!(base >=2 && base <= 36)) {
+        // throw error (base must be 0, or 2-36)
+        if (base != 0) throw _b_.ValueError("invalid base")
+    }
+
+    if (typeof value == 'number'){
+        if(base==10){return Math.floor(value)}
+        else if(value.toString().search('e')>-1){
+            // can't convert to another base if value is too big
+            throw _b_.OverflowError("can't convert to base "+base)
+        }else{
+            return parseInt(value, base)
+        }
+    }
 
     if(value===true) return Number(1)
     if(value===false) return Number(0)
@@ -326,12 +341,7 @@ var int = function(){
       if (hasattr(base, '__int__')) {base = Number(getattr(base,'__int__')())
       }else if (hasattr(base, '__index__')) {base = Number(getattr(base,'__index__')())}
     }
-    if (!(base >=2 && base <= 36)) {
-        if (base != 0) throw _b_.ValueError("invalid base")
-        // throw error (base must be 0, or 2-36)
-    }
 
-    if(typeof value=="number") return parseInt(Number(value), base)
     if(isinstance(value, _b_.str)) value=value.valueOf()
 
     if(typeof value=="string") {

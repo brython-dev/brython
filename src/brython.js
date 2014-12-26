@@ -5668,7 +5668,7 @@ _b_.list.$dict.sort(res)
 return res
 }
 if(isinstance(obj,$B.JSObject))obj=obj.js
-if($B.get_class(obj).is_class){obj=obj.$dict}
+else if($B.get_class(obj).is_class){obj=obj.$dict}
 else{
 try{
 var res=getattr(obj,'__dir__')()
@@ -8148,19 +8148,25 @@ var digits='0123456789'
 for(var i=10;i < base;i++)digits+=String.fromCharCode(i+55)
 return digits
 }
-var int=function(){var $ns=$B.$MakeArgs('int',arguments,[],[],'args','kw')
+var int=function(value,base){
+if(typeof value=='number' && base===undefined){return Math.floor(value)}
+var $ns=$B.$MakeArgs('int',arguments,[],[],'args','kw')
 var value=$ns['args'][0]
 var base=$ns['args'][1]
 if(value===undefined)value=_b_.dict.$dict.get($ns['kw'],'x',0)
 if(base===undefined)base=_b_.dict.$dict.get($ns['kw'],'base',10)
-if(value===0)return Number(0)
+if(!(base >=2 && base <=36)){
+if(base !=0)throw _b_.ValueError("invalid base")
+}
+if(typeof value=='number'){if(base==10){return Math.floor(value)}
+else if(value.toString().search('e')>-1){
+throw _b_.OverflowError("can't convert to base "+base)
+}else{return parseInt(value,base)
+}}
 if(value===true)return Number(1)
 if(value===false)return Number(0)
 if(!isinstance(base,_b_.int)){if(hasattr(base,'__int__')){base=Number(getattr(base,'__int__')())
 }else if(hasattr(base,'__index__')){base=Number(getattr(base,'__index__')())}}
-if(!(base >=2 && base <=36)){if(base !=0)throw _b_.ValueError("invalid base")
-}
-if(typeof value=="number")return parseInt(Number(value),base)
 if(isinstance(value,_b_.str))value=value.valueOf()
 if(typeof value=="string"){value=value.trim()
 if(value.length==2 && base==0 &&(value=='0b' ||value=='0o' ||value=='0x')){throw _b_.ValueError('invalid value')
