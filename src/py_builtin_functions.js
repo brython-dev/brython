@@ -282,9 +282,9 @@ function dir(obj){
         _b_.list.$dict.sort(res)
         return res
     }
+
     if(isinstance(obj,$B.JSObject)) obj=obj.js
-    
-    if($B.get_class(obj).is_class){obj=obj.$dict}
+    else if($B.get_class(obj).is_class){obj=obj.$dict}
     else {
         // We first look if the object has the __dir__ method
         try {
