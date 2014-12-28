@@ -308,11 +308,24 @@ var $valid_digits=function(base) {
 }
 
 var int = function(value, base){
-    // most usual case
-    if(typeof value=='number' && base===undefined){return Math.floor(value)}
-    
+    // most simple case
+    if(typeof value=='number' && base===undefined){return value}
+
+    if(base!==undefined){
+        if(!isinstance(value,[_b_.str,_b_.bytes,_b_.bytearray])){
+            throw TypeError("int() can't convert non-string with explicit base")
+        }
+    }
+
+    if(isinstance(value,_b_.float)){
+        var v = value.value
+        return v >= 0 ? Math.floor(v) : Math.ceil(v)
+    }
+    if(isinstance(value,_b_.complex)){
+        throw TypeError("can't convert complex to int")
+    }
+
     var $ns=$B.$MakeArgs('int',arguments,[],[],'args','kw')
-    //console.log($ns)
     var value = $ns['args'][0]
     var base = $ns['args'][1]
 
@@ -325,7 +338,7 @@ var int = function(value, base){
     }
 
     if (typeof value == 'number'){
-        if(base==10){return Math.floor(value)}
+        if(base==10){return value}
         else if(value.toString().search('e')>-1){
             // can't convert to another base if value is too big
             throw _b_.OverflowError("can't convert to base "+base)
@@ -372,11 +385,9 @@ var int = function(value, base){
       } 
       return Number(parseInt(value, base))
     }
-    if(isinstance(value,_b_.float)) return Number(parseInt(value.value,base))
+
     
     if(isinstance(value,[_b_.bytes,_b_.bytearray])) return Number(parseInt(getattr(value,'decode')('latin-1'), base))
-
-    //if(isinstance(value, int)) return self
 
     if(hasattr(value, '__int__')) return Number(getattr(value,'__int__')())
     if(hasattr(value, '__trunc__')) return Number(getattr(value,'__trunc__')())
