@@ -113,7 +113,7 @@ def myKeyPress(event):
         current += 1
         if _status == "main" or _status == "3string":
             try:
-                _ = exec(currentLine, editor_ns)
+                _ = editor_ns['_'] = eval(currentLine, editor_ns)
                 if _ is not None:
                     print(repr(_))
                 doc['code'].value += '>>> '
