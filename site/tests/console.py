@@ -2,7 +2,7 @@ import sys
 import traceback
 
 from browser import document as doc
-from browser import window as win
+from browser import window, alert
 
 _credits = """    Thanks to CWI, CNRI, BeOpen.com, Zope Corporation and a cast of thousands
     for supporting Python development.  See www.python.org for more information."""
@@ -126,6 +126,13 @@ def myKeyPress(event):
                     str(msg).startswith('Unbalanced bracket'):
                     doc['code'].value += '... '
                     _status = "3string"
+                elif str(msg) == 'eval() argument must be an expression':
+                    try:
+                        exec(currentLine, editor_ns)
+                    except:
+                        traceback.print_exc()
+                    doc['code'].value += '>>> '
+                    _status = "main"
                 else:
                     traceback.print_exc()
                     doc['code'].value += '>>> '
@@ -197,7 +204,7 @@ doc['code'].bind('keydown', myKeyDown)
 doc['code'].bind('click', cursorToEnd)
 v = sys.implementation.version
 doc['code'].value = "Brython %s.%s.%s on %s %s\n>>> " % (
-    v[0], v[1], v[2], win.navigator.appName, win.navigator.appVersion)
+    v[0], v[1], v[2], window.navigator.appName, window.navigator.appVersion)
 #doc['code'].value += 'Type "copyright", "credits" or "license" for more information.'
 doc['code'].focus()
 cursorToEnd()
