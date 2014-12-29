@@ -12,6 +12,13 @@ var $module=(function($B) {
         return $B.JSObject(window.prompt(message, default_value||''))
     },
     win: $B.win,
-    window: $B.win
+    window: $B.win,
+    URLParameter:function(name) {
+       name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+       var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+           results = regex.exec(location.search);
+       results= results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+       return $B.builtins.str(results);
+    }
   }
 })(__BRYTHON__)
