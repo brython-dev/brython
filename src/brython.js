@@ -5734,12 +5734,10 @@ $B.exec_stack.push(mod_name)
 try{var root=$B.py2js(src,mod_name,mod_name,'__builtins__')
 if(!is_exec){var instr=root.children[root.children.length-1]
 var type=instr.C.tree[0].type
-if(!('expr'==type ||'list_or_tuple'==type)){
-$B.line_info=[1,mod_name]
-throw SyntaxError("eval() argument must be an expression")
+if(!('expr'==type ||'list_or_tuple'==type)){$B.line_info=[1,mod_name]
+throw _b_.SyntaxError("eval() argument must be an expression")
 }}
-var js=root.to_js()
-var res=eval(js)
+var res=eval(root.to_js())
 if(_globals!==undefined){var set_func=getattr(_globals,'__setitem__')
 for(var attr in $B.vars[mod_name]){if(attr=='__name__'||attr=='__doc__'||attr=='__file__')continue
 set_func(attr,$B.vars[mod_name][attr])
@@ -6845,7 +6843,7 @@ $B.$TypeError=function(msg){throw _b_.TypeError(msg)
 var builtin_funcs=['abs','all','any','ascii','bin','bool','bytearray','bytes','callable','chr','classmethod','compile','complex','delattr','dict','dir','divmod','enumerate','exec','exit','filter','float','format','frozenset','getattr','globals','hasattr','hash','help','hex','id','input','int','isinstance','issubclass','iter','len','list','locals','map','max','memoryview','min','next','object','oct','open','ord','pow','print','property','quit','range','repr','reversed','round','set','setattr','slice','sorted','staticmethod','str','sum','super','tuple','type','vars','zip']
 for(var i=0;i<builtin_funcs.length;i++){$B.builtin_funcs[builtin_funcs[i]]=true
 }
-var other_builtins=['Ellipsis','False','None','True','_','__build_class__','__debug__','__doc__','__import__','__name__','__package__','copyright','credits','license','NotImplemented']
+var other_builtins=['Ellipsis','False','None','True','__build_class__','__debug__','__doc__','__import__','__name__','__package__','copyright','credits','license','NotImplemented']
 var builtin_names=builtin_funcs.concat(other_builtins)
 for(var i=0;i<builtin_names.length;i++){var name=builtin_names[i]
 var name1=name
