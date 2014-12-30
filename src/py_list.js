@@ -146,7 +146,6 @@ $ListDict.__getitem__ = function(self,arg){
 $ListDict.__getitems__ = function(self){return self}
 
 $ListDict.__ge__ = function(self,other){
-    console.log('__ge__')
     if(!isinstance(other,[list, _b_.tuple])){
         throw _b_.TypeError("unorderable types: list() >= "+
             $B.get_class(other).__name__+'()')
