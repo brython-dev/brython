@@ -55,7 +55,7 @@ function makeTagDict(tagName){
                 if(value!==false){
                     // option.selected=false sets it to true :-)
                     try{
-                        arg = arg.toLowerCase()
+                        arg = arg.toLowerCase().replace('_','-')
                         self.elt.setAttributeNS(null,arg,value)
                         if(arg=="class"){ // for IE
                             self.elt.setAttribute("className",value)
