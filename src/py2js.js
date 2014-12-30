@@ -1577,7 +1577,7 @@ function $DefCtx(context){
         // already transformed ?defs
         if(this.transformed!==undefined) return
 
-        var scope = $get_scope(this)
+        var scope = this.scope
 
         // search doc string
         this.doc_string = $get_docstring(node)
@@ -1899,7 +1899,9 @@ function $DefCtx(context){
         prefix = this.tree[0].to_js()
         
         // add function name
-        js = prefix+'.__name__="'+this.name+'"'
+        js = prefix+'.__name__="'
+        if(this.scope.ntype=='class'){js+=this.scope.context.tree[0].name+'.'}
+        js += this.name+'"'
         var name_decl = new $Node()
         new $NodeJSCtx(name_decl,js)
         node.parent.insert(rank+offset,name_decl)
