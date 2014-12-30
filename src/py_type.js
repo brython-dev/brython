@@ -276,7 +276,7 @@ $B.$type.__getattribute__=function(klass,attr){
                     // function called from a class
                     args = []
                     __repr__ = __str__ = function(){
-                        return '<unbound method '+klass.__name__+'.'+attr+'>'
+                        return '<function '+klass.__name__+'.'+attr+'>'
                     }
                     break;
                 case 'classmethod':
