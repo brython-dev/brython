@@ -983,7 +983,7 @@ this.env=env
 this.toString=function(){return 'def '+this.name+'('+this.tree+')'}
 this.transform=function(node,rank){
 if(this.transformed!==undefined)return
-var scope=$get_scope(this)
+var scope=this.scope
 this.doc_string=$get_docstring(node)
 this.rank=rank 
 var fglobs=this.parent.node.globals
@@ -1185,7 +1185,9 @@ if(scope.C===undefined){prefix='$globals["'+this.name+'"]'}
 else if(scope.ntype=='def' ||scope.ntype=='BRgenerator'){prefix='$locals["'+this.name+'"]'
 }
 prefix=this.tree[0].to_js()
-js=prefix+'.__name__="'+this.name+'"'
+js=prefix+'.__name__="'
+if(this.scope.ntype=='class'){js+=this.scope.C.tree[0].name+'.'}
+js +=this.name+'"'
 var name_decl=new $Node()
 new $NodeJSCtx(name_decl,js)
 node.parent.insert(rank+offset,name_decl)
@@ -4645,7 +4647,7 @@ switch(res.$type){case undefined:
 case 'function':
 case 'instancemethod':
 args=[]
-__repr__=__str__=function(){return '<unbound method '+klass.__name__+'.'+attr+'>'
+__repr__=__str__=function(){return '<function '+klass.__name__+'.'+attr+'>'
 }
 break
 case 'classmethod':
@@ -5158,6 +5160,9 @@ var ropsigns=['+','-','*','/','//','%','**','<<','>>','&','^','|']
 $B.make_rmethods=function(klass){for(var j=0,_len_j=ropnames.length;j < _len_j;j++){if(klass['__'+ropnames[j]+'__']===undefined){
 klass['__'+ropnames[j]+'__']=(function(name,sign){return function(self,other){try{return _b_.getattr(other,'__r'+name+'__')(self)}
 catch(err){$err(sign,klass,other)}}})(ropnames[j],ropsigns[j])
+}}}
+$B.set_func_names=function(klass){var name=klass.__name__
+for(var attr in klass){if(typeof klass[attr]=='function'){klass[attr].__name__=name+'.'+attr
 }}}})(__BRYTHON__)
 if(!Array.indexOf){Array.prototype.indexOf=function(obj){for(var i=0,_len_i=this.length;i < _len_i;i++)if(this[i]==obj)return i
 return -1
@@ -7209,6 +7214,8 @@ bytes.__code__.co_consts=[]
 bytes.__code__.co_varnames=['i']
 for(var $attr in $BytesDict){if($BytearrayDict[$attr]===undefined){$BytearrayDict[$attr]=(function(attr){return function(){return $BytesDict[attr].apply(null,arguments)}})($attr)
 }}
+$B.set_func_names($BytesDict)
+$B.set_func_names($BytearrayDict)
 _b_.bytes=bytes
 _b_.bytearray=bytearray
 })(__BRYTHON__)
@@ -8318,6 +8325,7 @@ return res
 complex.$dict=$ComplexDict
 complex.__class__=$B.$factory
 $ComplexDict.$factory=complex
+$B.set_func_names($ComplexDict)
 _b_.complex=complex
 })(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
@@ -8509,8 +8517,9 @@ dict.__class__=$B.$factory
 dict.$dict=$DictDict
 $DictDict.$factory=dict
 $DictDict.__new__=$B.$__new__(dict)
+$B.set_func_names($DictDict)
 _b_.dict=dict
-$ObjDictDict={__class__:$B.$type,__name__:'obj_dict'}
+$ObjDictDict={__class__:$B.$type,__name__:'mappingproxy'}
 $ObjDictDict.__mro__=[$ObjDictDict,$DictDict,$ObjectDict]
 $ObjDictDict.__delitem__=function(self,key){$DictDict.__delitem__(self,key)
 delete self.$obj[key]
@@ -8533,6 +8542,7 @@ $ObjDictDict.update=function(self,other){$DictDict.update(self,other)
 for(var i=0;i<other.$keys.length;i++){self.$obj[other.$keys[i]]=other.$values[i]
 }}
 function obj_dict(obj){var res={__class__:$ObjDictDict,$obj:obj,$keys:[],$values:[]}
+if(obj.__class__===$B.$factory){obj=obj.$dict}
 for(var attr in obj){if(attr.charAt(0)!='$'){res.$keys.push(attr)
 res.$values.push(obj[attr])
 }}
@@ -8806,10 +8816,7 @@ if(reverse)$ListDict.reverse(self)
 if(!self.__brython__)return self
 }
 $ListDict.toString=function(){return '$ListDict'}
-$ListDict.__dict__=dict()
-for(var $attr in list){$ListDict.__dict__.$keys.push($attr)
-$ListDict.__dict__.$values.push(list[$attr])
-}
+$B.set_func_names($ListDict)
 function list(){if(arguments.length===0)return[]
 if(arguments.length>1){throw _b_.TypeError("list() takes at most 1 argument ("+arguments.length+" given)")
 }
@@ -8865,8 +8872,9 @@ case 'reverse':
 case 'sort':
 break
 default: 
-if($TupleDict[attr]===undefined)$TupleDict[attr]=$ListDict[attr]
-}
+if($TupleDict[attr]===undefined){if(typeof $ListDict[attr]=='function'){$TupleDict[attr]=(function(x){return function(){return $ListDict[x].apply(null,arguments)}})(attr)
+}else{$TupleDict[attr]=$ListDict[attr]
+}}}
 }
 $TupleDict.__delitem__=function(){throw _b_.TypeError("'tuple' object doesn't support item deletion")
 }
@@ -8878,6 +8886,7 @@ return $ListDict.__eq__(self,other)
 }
 $TupleDict.__mro__=[$TupleDict,$ObjectDict]
 $TupleDict.__name__='tuple'
+$B.set_func_names($TupleDict)
 _b_.list=list
 _b_.tuple=tuple
 })(__BRYTHON__)
@@ -10050,6 +10059,7 @@ set.__class__=$B.$factory
 set.$dict=$SetDict
 $SetDict.$factory=set
 $SetDict.__new__=$B.$__new__(set)
+$B.set_func_names($SetDict)
 var $FrozensetDict={__class__:$B.$type,__name__:'frozenset'}
 $FrozensetDict.__mro__=[$FrozensetDict,_.object.$dict]
 $FrozensetDict.__str__=$FrozensetDict.toString=$FrozensetDict.__repr__=function(self){if(self===undefined)return "<class 'frozenset'>"
@@ -10068,8 +10078,9 @@ case 'remove':
 case 'update':
 break
 default:
-if($FrozensetDict[attr]==undefined)$FrozensetDict[attr]=$SetDict[attr]
-}}
+if($FrozensetDict[attr]==undefined){if(typeof $SetDict[attr]=='function'){$FrozensetDict[attr]=(function(x){return function(){return $SetDict[x].apply(null,arguments)}})(attr)
+}else{$FrozensetDict[attr]=$SetDict[attr]
+}}}}
 $FrozensetDict.__hash__=function(self){
 if(self.__hashvalue__ !==undefined)return self.__hashvalue__
 var _hash=1927868237
@@ -10089,6 +10100,7 @@ frozenset.__class__=$B.$factory
 frozenset.$dict=$FrozensetDict
 $FrozensetDict.__new__=$B.$__new__(frozenset)
 $FrozensetDict.$factory=frozenset
+$B.set_func_names($FrozensetDict)
 _.set=set
 _.frozenset=frozenset
 })(__BRYTHON__)

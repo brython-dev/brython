@@ -440,12 +440,7 @@ $ListDict.sort = function(self){
 
 $ListDict.toString = function(){return '$ListDict'}
 
-// attribute __dict__
-$ListDict.__dict__ = dict()
-for(var $attr in list){
-    $ListDict.__dict__.$keys.push($attr)
-    $ListDict.__dict__.$values.push(list[$attr])
-}
+$B.set_func_names($ListDict)
 
 // constructor for built-in type 'list'
 function list(){
@@ -534,7 +529,15 @@ for(var attr in $ListDict){
         //'reverse','sort'].indexOf(attr)>-1){continue}
         break
       default:   
-        if($TupleDict[attr]===undefined) $TupleDict[attr] = $ListDict[attr]
+        if($TupleDict[attr]===undefined){
+            if(typeof $ListDict[attr]=='function'){
+                $TupleDict[attr] = (function(x){
+                    return function(){return $ListDict[x].apply(null, arguments)}
+                })(attr)
+            }else{
+                $TupleDict[attr] = $ListDict[attr]
+            }
+        }
     }//switch
 }
 
@@ -553,6 +556,9 @@ $TupleDict.__eq__ = function(self,other){
 
 $TupleDict.__mro__ = [$TupleDict,$ObjectDict]
 $TupleDict.__name__ = 'tuple'
+
+// set __repr__ and __str__
+$B.set_func_names($TupleDict)
 
 _b_.list = list
 _b_.tuple = tuple

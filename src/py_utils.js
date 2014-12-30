@@ -716,6 +716,16 @@ $B.make_rmethods = function(klass){
     }
 }
 
+// Set __name__ attribute of klass methods
+$B.set_func_names = function(klass){
+    var name = klass.__name__
+    for(var attr in klass){
+        if(typeof klass[attr] == 'function'){
+            klass[attr].__name__ = name+'.'+attr
+        }
+    }
+}
+
 })(__BRYTHON__)
 
 // IE doesn't implement indexOf on Arrays

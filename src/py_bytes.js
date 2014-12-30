@@ -529,6 +529,9 @@ for(var $attr in $BytesDict){
     }
 }
 
+$B.set_func_names($BytesDict)
+$B.set_func_names($BytearrayDict)
+
 _b_.bytes = bytes
 _b_.bytearray = bytearray
 

@@ -193,6 +193,8 @@ complex.$dict = $ComplexDict
 complex.__class__ = $B.$factory
 $ComplexDict.$factory = complex
 
+$B.set_func_names($ComplexDict)
+
 _b_.complex = complex
 
 })(__BRYTHON__)

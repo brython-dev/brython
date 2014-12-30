@@ -303,6 +303,8 @@ set.$dict = $SetDict
 $SetDict.$factory = set
 $SetDict.__new__ = $B.$__new__(set)
 
+$B.set_func_names($SetDict)
+
 var $FrozensetDict = {__class__:$B.$type,__name__:'frozenset'}
 
 $FrozensetDict.__mro__ = [$FrozensetDict,_.object.$dict]
@@ -329,7 +331,15 @@ for(var attr in $SetDict){
       case 'update':
         break
       default:
-        if($FrozensetDict[attr] ==undefined) $FrozensetDict[attr] = $SetDict[attr]
+        if($FrozensetDict[attr] ==undefined){
+            if(typeof $SetDict[attr]=='function'){
+                $FrozensetDict[attr] = (function(x){
+                    return function(){return $SetDict[x].apply(null, arguments)}
+                })(attr)
+            }else{
+                $FrozensetDict[attr] = $SetDict[attr]
+            }
+        }
     }
 }
 
@@ -363,6 +373,8 @@ frozenset.__class__ = $B.$factory
 frozenset.$dict = $FrozensetDict
 $FrozensetDict.__new__ = $B.$__new__(frozenset)
 $FrozensetDict.$factory = frozenset
+
+$B.set_func_names($FrozensetDict)
 
 _.set = set
 _.frozenset = frozenset

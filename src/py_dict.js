@@ -319,11 +319,13 @@ dict.$dict = $DictDict
 $DictDict.$factory = dict
 $DictDict.__new__ = $B.$__new__(dict)
 
+$B.set_func_names($DictDict)
+
 _b_.dict = dict
 
 // Class used for attribute __dict__ of objects
 
-$ObjDictDict = {__class__:$B.$type,__name__:'obj_dict'}
+$ObjDictDict = {__class__:$B.$type,__name__:'mappingproxy'}
 $ObjDictDict.__mro__ = [$ObjDictDict, $DictDict, $ObjectDict]
 
 $ObjDictDict.__delitem__ = function(self, key){
@@ -363,6 +365,7 @@ $ObjDictDict.update = function(self, other){
 
 function obj_dict(obj){
     var res = {__class__:$ObjDictDict,$obj:obj,$keys:[],$values:[]}
+    if(obj.__class__===$B.$factory){obj = obj.$dict}
     for(var attr in obj){
         if(attr.charAt(0)!='$'){
             res.$keys.push(attr)
