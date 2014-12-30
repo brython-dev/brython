@@ -5725,8 +5725,9 @@ if(is_exec && _globals===undefined){var mod_name=env
 $B.$py_module_path[mod_name]=$B.$py_module_path['__main__']
 $B.vars[mod_name]={}
 $B.bound[mod_name]={}
-if(_globals!==undefined){for(var i=0;i<_globals.$keys.length;i++){$B.vars[mod_name][_globals.$keys[i]]=_globals.$values[i]
-$B.bound[mod_name][_globals.$keys[i]]=true
+if(_globals!==undefined){var items=_b_.list(_b_.dict.$dict.items(_globals))
+for(var i=0;i<items.length;i++){$B.vars[mod_name][items[i][0]]=items[i][1]
+$B.bound[mod_name][items[i][0]]=true
 }}else{for(var attr in $B.vars[env]){$B.vars[mod_name][attr]=$B.vars[env][attr]
 $B.bound[mod_name][attr]=true
 }}}
@@ -5861,7 +5862,7 @@ getattr.__code__.co_varnames=['value']
 function globals(module){
 var res=_b_.dict()
 var scope=$B.vars[module]
-for(var name in scope){res.$keys.push(name);res.$values.push(scope[name])}
+for(var name in scope){_b_.dict.$dict.__setitem__(res,name,scope[name])}
 return res
 }
 globals.__doc__="globals() -> dictionary\n\nReturn the dictionary containing the current scope's global variables."
@@ -7280,7 +7281,8 @@ for(var i=0,_len_i=pyobj.length;i < _len_i;i++){res.push(pyobj2jsobj(pyobj[i]))}
 return res
 }else if(klass===_b_.dict.$dict){
 var jsobj={}
-for(var j=0,_len_j=pyobj.$keys.length;j < _len_j;j++){jsobj[pyobj.$keys[j]]=pyobj2jsobj(pyobj.$values[j])
+var items=_b_.list(_b_.dict.$dict.items(pyobj))
+for(var j=0,_len_j=items.length;j < _len_j;j++){jsobj[items[j][0]]=pyobj2jsobj(items[j][1])
 }
 return jsobj
 }else if(klass===$B.builtins.float.$dict){
@@ -8632,8 +8634,7 @@ if(isinstance(arg,_b_.bool)){return $ListDict.__getitem__(self,_b_.int(arg))
 throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
 }
 $ListDict.__getitems__=function(self){return self}
-$ListDict.__ge__=function(self,other){console.log('__ge__')
-if(!isinstance(other,[list,_b_.tuple])){throw _b_.TypeError("unorderable types: list() >= "+
+$ListDict.__ge__=function(self,other){if(!isinstance(other,[list,_b_.tuple])){throw _b_.TypeError("unorderable types: list() >= "+
 $B.get_class(other).__name__+'()')
 }
 var i=0
@@ -10441,16 +10442,12 @@ DOMNode.bind=function(self,event){
 var _id
 if(self.elt.nodeType===9){_id=0}
 else{_id=self.elt.$brython_id}
-var ix=$B.events.$keys.indexOf(_id)
-if(ix===-1){$B.events.$keys.push(_id)
-$B.events.$values.push(dict())
-ix=$B.events.$keys.length-1
+if(!_b_.dict.$dict.__contains__($B.events,_id)){_b_.dict.$dict.__setitem__($B.events,_id,dict())
 }
-var ix_event=$B.events.$values[ix].$keys.indexOf(event)
-if(ix_event==-1){$B.events.$values[ix].$keys.push(event)
-$B.events.$values[ix].$values.push([])
-ix_event=$B.events.$values[ix].$values.length-1
+var item=_b_.dict.$dict.__getitem__($B.events,_id)
+if(!_b_.dict.$dict.__contains__(item,event)){_b_.dict.$dict.__setitem__(item,event,[])
 }
+var evlist=_b_.dict.$dict.__getitem__(item,event)
 for(var i=2;i<arguments.length;i++){var func=arguments[i]
 var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))
 }catch(err){getattr(__BRYTHON__.stderr,"write")(err.__name__+': '+err.message+'\n'+err.info)
@@ -10459,7 +10456,7 @@ var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))
 if(window.addEventListener){self.elt.addEventListener(event,callback,false)
 }else if(window.attachEvent){self.elt.attachEvent("on"+event,callback)
 }
-$B.events.$values[ix].$values[ix_event].push([func,callback])
+evlist.push([func,callback])
 }}
 DOMNode.children=function(self){var res=[]
 for(var i=0;i<self.elt.childNodes.length;i++){res.push($DOMNode(self.elt.childNodes[i]))
@@ -10477,10 +10474,10 @@ return None
 DOMNode.class_name=function(self){return DOMNode.Class(self)}
 DOMNode.clone=function(self){res=$DOMNode(self.elt.cloneNode(true))
 res.elt.$brython_id=Math.random().toString(36).substr(2,8)
-var ix_elt=$B.events.$keys.indexOf(self.elt.$brython_id)
-if(ix_elt!=-1){var events=$B.events.$values[ix_elt]
-for(var i=0;i<events.$keys.length;i++){var event=events.$keys[i]
-for(var j=0;j<events.$values[i].length;j++){DOMNode.bind(res,event,events.$values[i][j][0])
+if(_b_.dict.$dict.__contains__($B.events,self.elt.$brython_id)){var events=_b_.dict.$dict.__getitem__($B.events,self.elt.$brython_id)
+var items=_b_.list(_b_.dict.$dict.items(events))
+for(var i=0;i<items.length;i++){var event=items[i][0]
+for(var j=0;j<items[i][1].length;j++){DOMNode.bind(res,event,items[i][1][j][0])
 }}}
 return res
 }
@@ -10494,7 +10491,8 @@ var args=[]
 for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
 var $ns=$B.$MakeArgs('get',args,[],[],null,'kw')
 var $dict={}
-for(var i=0;i<$ns['kw'].$keys.length;i++){$dict[$ns['kw'].$keys[i]]=$ns['kw'].$values[i]
+var items=_b_.list(_b_.dict.$dict.items($ns['kw']))
+for(var i=0;i<items.length;i++){$dict[items[i][0]]=items[i][1]
 }
 if($dict['name']!==undefined){if(obj.getElementsByName===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by name")
 }
@@ -10595,7 +10593,8 @@ DOMNode.set_html=function(self,value){self.elt.innerHTML=str(value)
 DOMNode.set_style=function(self,style){
 if(!_b_.isinstance(style,_b_.dict)){throw TypeError('style must be dict, not '+$B.get_class(style).__name__)
 }
-for(var i=0;i<style.$keys.length;i++){var key=style.$keys[i],value=style.$values[i]
+var items=_b_.list(_b_.dict.$dict.items(style))
+for(var i=0;i<items.length;i++){var key=items[i][0],value=items[i][1]
 if(key.toLowerCase()==='float'){self.elt.style.cssFloat=value
 self.elt.style.styleFloat=value
 }else{switch(key){case 'top':
@@ -10625,16 +10624,15 @@ self.elt.dispatchEvent(evObj)
 DOMNode.unbind=function(self,event){
 var _id
 if(self.elt.nodeType==9){_id=0}else{_id=self.elt.$brython_id}
-var ix_elt=$B.events.$keys.indexOf(_id)
-if(ix_elt==-1)return
-var ix_event=$B.events.$values[ix_elt].$keys.indexOf(event)
-if(ix_event==-1)return
-var events=$B.events.$values[ix_elt].$values[ix_event]
+if(!_b_.dict.$dict.__contains__($B.events,_id))return
+var item=_b_.dict.$dict.__getitem__($B.events,_id)
+if(!_b_.dict.$dict.__contains__(item,event))return
+var events=_b_.dict.$dict.__getitem__(item,event)
 if(arguments.length===2){for(var i=0;i<events.length;i++){var callback=events[i][1]
 if(window.removeEventListener){self.elt.removeEventListener(event,callback,false)
 }else if(window.detachEvent){self.elt.detachEvent(event,callback,false)
 }}
-$B.events.$values[ix_elt][ix_event]=[]
+events=[]
 return
 }
 for(var i=2;i<arguments.length;i++){var func=arguments[i],flag=false
@@ -10643,7 +10641,6 @@ if(window.removeEventListener){self.elt.removeEventListener(event,callback,false
 }else if(window.detachEvent){self.elt.detachEvent(event,callback,false)
 }
 events.splice(j,1)
-$B.events.$values[ix_elt][ix_event]=events
 flag=true
 break
 }}
@@ -10839,7 +10836,8 @@ console.log(window[attr])
 $WinDict.__mro__=[$WinDict,$ObjectDict]
 var win=JSObject(window)
 win.get_postMessage=function(msg,targetOrigin){if(isinstance(msg,dict)){var temp={__class__:'dict'}
-for(var i=0;i<msg.__len__();i++)temp[msg.$keys[i]]=msg.$values[i]
+var items=_b_.list(_b_.dict.$dict.items(msg))
+for(var i=0;i<items.length;i++)temp[items[i][0]]=items[i][1]
 msg=temp
 }
 return window.postMessage(msg,targetOrigin)

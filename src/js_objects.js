@@ -118,8 +118,9 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
         // Python dictionaries are transformed into a Javascript object
         // whose attributes are the dictionary keys
         var jsobj = {}
-        for(var j=0, _len_j = pyobj.$keys.length; j < _len_j;j++){
-            jsobj[pyobj.$keys[j]] = pyobj2jsobj(pyobj.$values[j])
+        var items = _b_.list(_b_.dict.$dict.items(pyobj))
+        for(var j=0, _len_j = items.length; j < _len_j;j++){
+            jsobj[items[j][0]] = pyobj2jsobj(items[j][1])
         }
         return jsobj
     }else if(klass===$B.builtins.float.$dict){
