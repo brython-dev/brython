@@ -319,8 +319,8 @@ def apply_markdown(src):
         
         i += 1
 
-    # before apply the markup with _ and *, isolate HTML tags because they can
-    # contain these characters
+    # before applying the markup with _ and *, isolate HTML tags because 
+    # they can contain these characters
 
     # We replace them temporarily by a random string
     rstr = ''.join(random.choice(letters) for i in range(16))
@@ -375,9 +375,9 @@ def apply_markdown(src):
     src = re.sub(code_pattern,s_escape,src)
 
     # replace escaped ` _ * by HTML characters
-    src = src.replace(r'\\\`','&#96;')
-    src = src.replace(r'\\_','&#95;')
-    src = src.replace(r'\\*','&#42;')
+    src = src.replace(r'\\`','&#96;')
+    src = src.replace(r'\_','&#95;')
+    src = src.replace(r'\*','&#42;')
 
     # emphasis
     strong_patterns = [('STRONG',r'\*\*(.*?)\*\*'),('B',r'__(.*?)__')]
