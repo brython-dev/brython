@@ -62,14 +62,15 @@ $AjaxDict.send = function(self,params){
     }else if(isinstance(params,str)){
         res = params
     }else if(isinstance(params,dict)){
-        for(var i=0, _len_i = params.$keys.length; i < _len_i;i++){
-            var key = encodeURIComponent(str(params.$keys[i]));
-            if (isinstance(params.$values[i],list)) {
-                for (j = 0; j < params.$values[i].length; j++) {
-                    res += key +'=' + encodeURIComponent(str(params.$values[i][j])) + '&'
+        var items = _b_.list(_b_.dict.$dict.items(params))
+        for(var i=0, _len_i = items.length; i < _len_i;i++){
+            var key = encodeURIComponent(str(items[i][0]));
+            if (isinstance(items[i][1],list)) {
+                for (j = 0; j < items[i][1].length; j++) {
+                    res += key +'=' + encodeURIComponent(str(items[i][1][j])) + '&'
                 }
             } else {
-                res += key + '=' + encodeURIComponent(str(params.$values[i])) + '&'
+                res += key + '=' + encodeURIComponent(str(items[i][1])) + '&'
             }
         }
         res = res.substr(0,res.length-1)

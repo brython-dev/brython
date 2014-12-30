@@ -34,9 +34,9 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
                for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs.push(_arg[j])
                break
              case 'pdict':
-               var _arg=$arg.arg
-               for(var j=0, _len_j = _arg.$keys.length; j < _len_j;j++){
-                  upargs.push({$nat:"kw",name:_arg.$keys[j],value:_arg.$values[j]})
+               var _arg=$arg.arg, items=_b_.list(_b_.dict.$dict.items(_arg))
+               for(var j=0, _len_j = items.length; j < _len_j;j++){
+                  upargs.push({$nat:"kw",name:items[j][0],value:items[j][1]})
                }
                break
              default:
@@ -104,8 +104,10 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     }
     if($other_kw!=null){
         $ns[$other_kw]=_b_.dict()
-        $ns[$other_kw].$keys = $dict_keys
-        $ns[$other_kw].$values = $dict_values
+        for(var i=0;i<$dict_keys.length;i++){
+            _b_.dict.$dict.__setitem__($ns[$other_kw], $dict_keys[i],
+                $dict_values[i])
+        }
     }
     if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
     return $ns
@@ -138,9 +140,9 @@ $B.$MakeArgs1 = function($fname,$args,$robj,$required,$dobj,$defaults,
                for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs.push(_arg[j])
                break
              case 'pdict':
-               var _arg=$arg.arg
-               for(var j=0, _len_j = _arg.$keys.length; j < _len_j;j++){
-                  upargs.push({$nat:"kw",name:_arg.$keys[j],value:_arg.$values[j]})
+               var _arg=$arg.arg, items=_b_.list(_b_.dict.$dict.items(_arg))
+               for(var j=0, _len_j = items.length; j < _len_j;j++){
+                  upargs.push({$nat:"kw",name:items[j][0],value:items[j][1]})
                }
                break
              default:
@@ -208,8 +210,10 @@ $B.$MakeArgs1 = function($fname,$args,$robj,$required,$dobj,$defaults,
     }
     if($other_kw!=null){
         $ns[$other_kw]=_b_.dict()
-        $ns[$other_kw].$keys = $dict_keys
-        $ns[$other_kw].$values = $dict_values
+        for(var i=0;i<$dict_keys.length;i++){
+            _b_.dict.$dict.__setitem__($ns[$other_kw], $dict_keys[i],
+                $dict_values[i])
+        }
     }
     if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
     return $ns
@@ -606,7 +610,10 @@ $B.stdin = {
 function pyobject2jsobject(obj) {
     if(_b_.isinstance(obj,_b_.dict)){
         var temp = {__class__ :'dict'}
-        for(var i=0, _len_i = obj.$keys.length; i < _len_i;i++) temp[obj.$keys[i]]=obj.$values[i]
+        var items = _b_.list(_b_.dict.$dict.items(obj))
+        for(var i=0, _len_i = items.length; i < _len_i;i++){
+            temp[items[i][0]]=items[i][1]
+        }
         return temp
     }
 

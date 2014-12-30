@@ -48,8 +48,9 @@ function _js(obj){
     }
     if(isinstance(obj,dict)){
         var res = new Object()
-        for(var i=0, _len_i = obj.$keys.length; i < _len_i;i++){
-            res[_js(obj.$keys[i])]=_js(obj.$values[i])
+        var items = _b_.list(_b_.dict.$dict.items(obj))
+        for(var i=0, _len_i = items.length; i < _len_i;i++){
+            res[_js(items[i][0])]=_js(items[i][1])
         }
         return res
     }

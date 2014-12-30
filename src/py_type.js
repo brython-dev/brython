@@ -94,9 +94,9 @@ _b_.type = function(name,bases,cl_dict){
     class_dict.__dict__ = cl_dict
     
     // set class attributes for faster lookups
-    for(var i=0;i<cl_dict.$keys.length;i++){
-        var attr = cl_dict.$keys[i],val=cl_dict.$values[i]
-        class_dict[attr] = val
+    var items = _b_.list(_b_.dict.$dict.items(cl_dict))
+    for(var i=0;i<items.length;i++){
+        class_dict[items[i][0]] = items[i][1]
     }
 
     // method resolution order

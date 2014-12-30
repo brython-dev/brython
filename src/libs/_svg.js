@@ -36,10 +36,11 @@ function makeTagDict(tagName){
         }
 
         // attributes
-        for(var i=0, _len_i = $ns['kw'].$keys.length; i < _len_i;i++){
+        var items = _b_.list(_b_.dict.$dict.items($ns['kw']))
+        for(var i=0, _len_i = items.length; i < _len_i;i++){
             // keyword arguments
-            var arg = $ns['kw'].$keys[i]
-            var value = $ns['kw'].$values[i]
+            var arg = items[i][0]
+            var value = items[i][1]
             if(arg.toLowerCase().substr(0,2)==="on"){ 
                 // Event binding passed as argument "onclick", "onfocus"...
                 // Better use method bind of DOMNode objects
