@@ -100,7 +100,7 @@ want to be up-to-date, please, use these versions.
 
 Questions, feedback, issues, new features...
 =============================================
-There is a main [mail list in english](https://groups.google.com/forum/?fromgroups=#!forum/brython "Brython Main Mailing List").
+There is a main [mail list in English](https://groups.google.com/forum/?fromgroups=#!forum/brython "Brython Main Mailing List").
 Also, you can find [mail list in other languages](http://brython.info/groups.html "Brython Mailing Lists")
 but the activity is very low and it is recommended to use the main one in English.
 
@@ -113,7 +113,7 @@ Theres a [Brython Community on Google Plus](https://plus.google.com/communities/
 Agile Development
 =================
 
-- [**Brython KanBan of Tickets**](https://waffle.io/brython-dev/brython "Agile Developent Kanban") *Whats Brython Team working on ?*
+- [**Brython KanBan of Tickets**](https://waffle.io/brython-dev/brython "Agile Development Kanban") *Whats Brython Team working on ?*
 
 - **Throughput Graph:** *Statistics about our work...*
 
