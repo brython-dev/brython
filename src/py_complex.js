@@ -3,7 +3,6 @@ var _b_ = $B.builtins
 var $s=[]
 for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
 eval($s.join(';'))
-//for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
 var $ObjectDict = _b_.object.$dict
 
 function $UnsupportedOpType(op,class1,class2){
@@ -39,7 +38,9 @@ $ComplexDict.__floordiv__ = function(self,other){
     $UnsupportedOpType("//","complex",$B.get_class(other))
 }
 
-$ComplexDict.__hash__ = function(self){return hash(self)}
+$ComplexDict.__hash__ = function(self){
+   return self.imag*1000003+self.real
+}
 
 $ComplexDict.__init__ = function(self,real,imag){
     self.toString = function(){return '('+real+'+'+imag+'j)'}
