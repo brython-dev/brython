@@ -379,9 +379,10 @@ function $eval(src, _globals, locals){
         $B.vars[mod_name] = {}
         $B.bound[mod_name] = {}
         if(_globals!==undefined){
-            for(var i=0;i<_globals.$keys.length;i++){
-                $B.vars[mod_name][_globals.$keys[i]] = _globals.$values[i]
-                $B.bound[mod_name][_globals.$keys[i]] = true
+            var items = _b_.list(_b_.dict.$dict.items(_globals))
+            for(var i=0;i<items.length;i++){
+                $B.vars[mod_name][items[i][0]] = items[i][1]
+                $B.bound[mod_name][items[i][0]] = true
             }
         }else{
             for(var attr in $B.vars[env]){
@@ -614,7 +615,7 @@ function globals(module){
     // the translation engine adds the argument module
     var res = _b_.dict()
     var scope = $B.vars[module]
-    for(var name in scope){res.$keys.push(name);res.$values.push(scope[name])}
+    for(var name in scope){_b_.dict.$dict.__setitem__(res, name, scope[name])}
     return res
 }
 
