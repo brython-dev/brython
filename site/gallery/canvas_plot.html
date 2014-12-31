@@ -11,7 +11,7 @@
 
 
 <script type="text/python">
-import __random as random
+import random
 from browser import document as doc
 from browser import timer
 
@@ -60,7 +60,6 @@ def graph():
         x2, y2 = change_ref_system(len(dataset), data)
         draw_line(x1, y1, x2, y2, linethick=3, color="blue")
     if len(dataset) >= 100:
-        print(len(dataset))
         timer.clear_interval(work)
 
 axis(color = "black", linethick = 5)
