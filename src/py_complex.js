@@ -39,7 +39,13 @@ $ComplexDict.__floordiv__ = function(self,other){
 }
 
 $ComplexDict.__hash__ = function(self){
-   return self.imag*1000003+self.real
+    // this is a quick fix for something like 'hash(complex)', where
+    // complex is not an instance but a type
+    if (self === undefined) {
+       return $ComplexDict.__hashvalue__ || $B.$py_next_hash--
+    }
+
+    return self.imag*1000003+self.real
 }
 
 $ComplexDict.__init__ = function(self,real,imag){

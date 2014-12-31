@@ -61,6 +61,9 @@ $SetDict.__gt__ = function(self, other, accept_iter){
 }
 
 $SetDict.__hash__ = function(self) {
+    if (self === undefined) {
+       return $SetDict.__hashvalue__ || $B.$py_next_hash--
+    }
     throw _.TypeError("unhashable type: 'set'");
 }
 
@@ -345,6 +348,10 @@ for(var attr in $SetDict){
 
 // hash is allowed on frozensets
 $FrozensetDict.__hash__ = function(self) {
+   if (self === undefined) {
+      return $FrozensetDict.__hashvalue__ || $B.$py_next_hash--  // for hash of string type (not instance of string)
+   }
+
    //taken from python repo /Objects/setobject.c
 
    if (self.__hashvalue__ !== undefined) return self.__hashvalue__

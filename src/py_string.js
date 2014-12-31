@@ -87,6 +87,10 @@ $StringDict.__getitem__ = function(self,arg){
 $StringDict.__getitems__ = function(self){return self.split('')}
 
 $StringDict.__hash__ = function(self) {
+  if (self === undefined) {
+     return $StringDict.__hashvalue__ || $B.$py_next_hash--  // for hash of string type (not instance of string)
+  }
+
   //http://stackoverflow.com/questions/2909106/python-whats-a-correct-and-good-way-to-implement-hash
   // this implementation for strings maybe good enough for us..
 

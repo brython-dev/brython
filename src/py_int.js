@@ -4,7 +4,6 @@ var _b_ = $B.builtins
 var $s=[]
 for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
 eval($s.join(';'))
-//for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
 var $ObjectDict = _b_.object.$dict
 
 function $err(op,other){
@@ -98,7 +97,13 @@ $IntDict.__getitem__ = function(){
     throw _b_.TypeError("'int' object is not subscriptable")
 }
 
-$IntDict.__hash__ = function(self){return self.valueOf()}
+$IntDict.__hash__ = function(self){
+   if (self === undefined) {
+      return $IntDict.__hashvalue__ || $B.$py_next_hash--  // for hash of int type (not instance of int)
+   }
+
+   return self.valueOf()
+}
 
 //$IntDict.__ior__ = function(self,other){return self | other} // bitwise OR
 

@@ -126,6 +126,10 @@ $FloatDict.__format__ = function(self, format_spec) {
 }
 
 $FloatDict.__hash__ = function(self) {
+    if (self === undefined) {
+       return $FloatDict.__hashvalue__ || $B.$py_next_hash--  // for hash of float type (not instance of int)
+    }
+
     var _v= self.value
     if (_v === Infinity) return 314159
     if (_v === -Infinity) return -271828

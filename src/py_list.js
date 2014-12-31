@@ -4,7 +4,6 @@ var _b_=$B.builtins
 var $s=[]
 for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
 eval($s.join(';'))
-//for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
 var $ObjectDict = _b_.object.$dict
 
 function $list(){
@@ -176,7 +175,13 @@ $ListDict.__gt__ = function(self,other){
     return false        
 }
 
-$ListDict.__hash__ = function(){throw _b_.TypeError("unhashable type: 'list'")}
+$ListDict.__hash__ = function(self){
+    if (self === undefined) {
+       return $ListDict.__hashvalue__ || $B.$py_next_hash--  // for hash of int type (not instance of int)
+    }
+
+    throw _b_.TypeError("unhashable type: 'list'")
+}
 
 $ListDict.__init__ = function(self,arg){
     var len_func = getattr(self,'__len__'),pop_func=getattr(self,'pop')
@@ -496,8 +501,8 @@ function tuple(){
     obj.__hash__ = function () {
       // http://nullege.com/codes/show/src%40p%40y%40pypy-HEAD%40pypy%40rlib%40test%40test_objectmodel.py/145/pypy.rlib.objectmodel._hash_float/python
       var x= 0x345678
-      for(var i=0, _len_i = args.length; i < _len_i; i++) {
-         var y=args[i].__hash__();
+      for(var i=0, _len_i = arguments.length; i < _len_i; i++) {
+         var y=arguments[i].__hash__();
          x=(1000003 * x) ^ y & 0xFFFFFFFF;
       }
       return x
