@@ -42,8 +42,8 @@ La syntaxe pour créer un objet (par exemple un lien hypertexte) est :
 
 > *attributes* est une suite de mots-clés correspondant aux
 > [attributs](http://www.w3.org/TR/html5-author/index.html#attributes-1) de la
-> balise HTML. Les traits d'union (-) doivent être remplacés par des soulignés
-> (_) : *http_equiv* et pas *http_equiv* (sinon le `-` serait interprété comme
+> balise HTML. Les traits d'union (`-`) doivent être remplacés par des soulignés
+> (`_`) : *http\_equiv* et pas *http-equiv* (sinon le `-` serait interprété comme
 > le signe moins).
 
 Pour l’attribut *style*, la valeur fournie doit être un dictionnaire :

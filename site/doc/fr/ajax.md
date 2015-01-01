@@ -78,26 +78,30 @@ readyState
 
 On suppose qu'il y a un DIV avec l'id "result" dans la page HTML
 
->    from browser import document, ajax
->
->    def on_complete(req):
->        if req.status==200:
->            document["result"].html = req.text
->        else:
->            document["result"].html = "error "+req.text
->
->    req = ajax.ajax()
->    req.bind('complete',on_complete)
->    # envoie une requête POST à l'url
->    req.open('POST',url,True)
->    req.set_header('content-type','application/x-www-form-urlencoded')
->    # envoie les données sous forme de dictionnaire
->    req.send({'x':0, 'y':1})
+```python
+from browser import document, ajax
+
+def on_complete(req):
+    if req.status==200:
+        document["result"].html = req.text
+    else:
+        document["result"].html = "error "+req.text
+
+req = ajax.ajax()
+req.bind('complete',on_complete)
+# envoie une requête POST à l'url
+req.open('POST',url,True)
+req.set_header('content-type','application/x-www-form-urlencoded')
+# envoie les données sous forme de dictionnaire
+req.send({'x':0, 'y':1})
+```
 
 Pour envoyer des données via la méthode GET il faut l'inclure dans la chaine
 de requête (query string)
 
->    qs = "x=0&y=1"
->    req.open('GET', url+'?'+qs, True)
->    req.set_header('content-type', 'application/x-www-form-urlencoded')
->    req.send()
+```python
+qs = "x=0&y=1"
+req.open('GET', url+'?'+qs, True)
+req.set_header('content-type', 'application/x-www-form-urlencoded')
+req.send()
+```
