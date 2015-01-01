@@ -26,13 +26,13 @@ on peut intégrer des tracés et des textes par :
 <tr>
 <td>
 ```exec
-from browser import document as doc
-from browser import svg
+from browser import document, svg
+
 titre = svg.text('Titre', x=70, y=25, font_size=22,
                  text_anchor="middle")
 cercle = svg.circle(cx=70, cy=120, r=40,
                     stroke="black",stroke_width="2",fill="red")
-panel = doc['panel']
+panel = document['panel']
 panel <= titre
 panel <= cercle
 ```
@@ -56,12 +56,12 @@ Ci-dessous nous créons un rectangle bleu, de hauteur et largeur égales à 40 p
 <tr>
 <td>
 ```exec
-from browser import document as doc
-from browser import svg
+from browser import document, svg
+
 rect = svg.rect(x="40",y="100", width="40", height="40",
     stroke_width="2",fill="blue")
 
-panel = doc['panel1']
+panel = document['panel1']
 panel <= rect
 ```
 </td>
@@ -157,7 +157,7 @@ panel <= star
 
 <td>
 
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="150" height="200" style="border-style:solid;border-width:1;border-color:#000;">
   <g id="panel4">
   </g>
 </svg>
