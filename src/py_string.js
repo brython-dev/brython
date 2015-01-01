@@ -1103,7 +1103,7 @@ var $FormattableString=function(format_string) {
       '(%)' +
       '|((?!{)(?:{{)+' +
       '|(?:}})+(?!})' +
-      '|{(?:[^{](?:[^{}]+|{[^{}]*})*)?})', 'g'
+      '|{(?:[^{}](?:[^{}]+|{[^{}]*})*)?})', 'g'
     )
 
     this.format_sub_re = new RegExp('({[^{}]*})')  // nested replacement field
