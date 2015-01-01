@@ -5,11 +5,11 @@ Pour créer des graphiques au format SVG, supporté par la plupart des
 navigateurs, on utilise le module intégré `svg`, qui contient les noms des
 éléments disponibles pour tracer des formes ou écrire du texte.
 
-Le module définit les noms suivants : `a, altGlyph, altGlyphDef, altGlyphItem,
+Le module définit les noms suivants : <code>a, altGlyph, altGlyphDef, altGlyphItem,
 animate, animateColor, animateMotion, animateTransform, circle, clipPath,
 color_profile, cursor, defs, desc, ellipse, feBlend, g, image, line,
 linearGradient, marker, mask, path, pattern, polygon, polyline, radialGradient,
-rect, stop, svg, text, tref, tspan, use`.
+rect, stop, svg, text, tref, tspan, use</code>.
 
 (Noter `color_profile` à la place de `color-profile`.)
 
@@ -45,6 +45,9 @@ panel <= cercle
 </tr>
 </table>
 
+Pour les attributs définis dans la norme SVG qui contiennent un tiret (-), il
+faut le remplacer par un souligné (_) dans les arguments : *text\_anchor* au 
+lieu de *text-anchor* qui provoquerait une erreur de syntaxe Python
 
 Dans l'exemple ci-dessous nous avons créé un élément texte et un élément cercle.
 Les mots-clés pour les couleurs sont accessibles sur [ce lien](http://www.w3.org/TR/SVG/types.html#ColorKeywords)

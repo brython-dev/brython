@@ -3,7 +3,7 @@ module **browser.svg**
 
 To create graphics in the SVG format, supported by most browsers, use the built-in module `svg`. It holds the name of the components available to draw forms or write text
 
-The module defines the following names : `a, altGlyph, altGlyphDef, altGlyphItem, animate, animateColor, animateMotion, animateTransform, circle, clipPath, color_profile,  cursor, defs, desc, ellipse, feBlend, g, image, line, linearGradient, marker, mask, path, pattern, polygon, polyline, radialGradient, rect, stop, svg, text, tref, tspan, use`
+The module defines the following names : <code>a, altGlyph, altGlyphDef, altGlyphItem, animate, animateColor, animateMotion, animateTransform, circle, clipPath, color_profile,  cursor, defs, desc, ellipse, feBlend, g, image, line, linearGradient, marker, mask, path, pattern, polygon, polyline, radialGradient, rect, stop, svg, text, tref, tspan, use</code>.
 
 For instance, if the HTML document has an SVG graphics zone defined by
 
@@ -41,6 +41,12 @@ panel <= cercle
 </tr>
 
 </table>
+
+For the attributes defined in the SVG norm that contain a hyphen (-), it must
+be replaced by an underscore (_) in the arguments : *text\_anchor* instead of
+*text-anchor* which would raise a Python syntax error.
+
+
 
 In the above example, we created a text element and a circle element.
 For a list of color keywords reference this [link](http://www.w3.org/TR/SVG/types.html#ColorKeywords)
