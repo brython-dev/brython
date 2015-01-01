@@ -93,7 +93,7 @@ var $key_iterator = function(d) {
     this.current = 0
     this.iter = new $item_generator(d)
 }
-$key_iterator.prototype.length = function() { return this.d.$used }
+$key_iterator.prototype.length = function() { return this.iter.length }
 $key_iterator.prototype.next = function() { return this.iter.next()[0] }
 
 var $value_iterator = function(d) {
@@ -101,34 +101,40 @@ var $value_iterator = function(d) {
     this.current = 0
     this.iter = new $item_generator(d)
 }
-$value_iterator.prototype.length = function() { return this.d.$used }
+$value_iterator.prototype.length = function() { return this.iter.length }
 $value_iterator.prototype.next = function() { return this.iter.next()[1] }
 
 var $item_generator = function(d) {
-    this.i = -1
+    this.i = 0
     this.data = d.$data
     this.size = d.$size
     this.used = d.$used
+    this.length=0
+
+    this.items=[]
+    for (var k in d.$numeric_dict) {
+       this.items.push([parseFloat(k), d.$numeric_dict[k]])
+    }
+
+    for (var k in d.$string_dict) {
+       this.items.push([k, d.$string_dict[k]])
+    }
+
+    for (var i=0; i < this.data.length; i++) {
+        var _v=this.data[i]
+        if (_v === undefined || _v === dummy) continue
+        this.items.push(_v)
+    }
+    this.length=this.items.length
 }
 $item_generator.prototype.next = function() {
-    do {
-        val = this.data[++this.i]
-    } while ((val === undefined || val === dummy) && this.i < this.size)
-    if (this.i < this.size) {
-        return val
+    if (this.i < this.items.length) {
+       return this.items[this.i++]
     }
-    this.i--
     throw _b_.StopIteration("StopIteration")
 }
 $item_generator.prototype.as_list = function() {
-    ret = []
-    j = 0
-    try {
-        while(1) ret[j++] = this.next()
-    } catch (err) {
-        if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
-    }
-    return ret
+    return this.items
 }
 
 var $item_iterator = function(d) {
@@ -136,7 +142,7 @@ var $item_iterator = function(d) {
     this.current = 0
     this.iter = new $item_generator(d)
 }
-$item_iterator.prototype.length = function() { return this.d.$used }
+$item_iterator.prototype.length = function() {return this.iter.items.length }
 $item_iterator.prototype.next = function() { return _b_.tuple(this.iter.next()) }
 
 var $copy_dict = function(left, right) {
@@ -157,9 +163,9 @@ $iterator_wrapper = function(items,klass){
         __iter__:function(){return res},
         __len__:function(){return items.length()},
         __next__:function(){
-            if (items.length() !== items.iter.used) {
-                throw _b_.RuntimeError("dictionary changed size during iteration")
-            }
+            //if (items.length() !== items.iter.used) {
+            //    throw _b_.RuntimeError("dictionary changed size during iteration")
+            //}
             return items.next()
         },
         __repr__:function(){return "<"+klass.__name__+" object>"},
@@ -181,16 +187,34 @@ $DictDict.values = function(self){
     return $iterator_wrapper(new $value_iterator(self), $dict_valuesDict)
 }
 
-$DictDict.__bool__ = function (self) {
-    return self.count > 0
-}
+$DictDict.__bool__ = function (self) {return $DictDict.__len__(self) > 0}
 
 $DictDict.__contains__ = function(self,item){
     if(self.$jsobj) return self.$jsobj[item]!==undefined
+    switch(typeof item) {
+      case 'number':
+        return self.$numeric_dict[item] !==undefined
+      case 'string':
+        return self.$string_dict[item] !==undefined
+    }
     return $lookup_key(self, item) !== undefined
 }
 
 $DictDict.__delitem__ = function(self,arg){
+    switch(typeof arg) {
+      case 'number':
+        if (self.$numeric_dict[arg] === undefined) throw KeyError(_b_.str(arg))
+        delete self.$numeric_dict[arg]
+        if (self.$jsobj) delete self.$jsobj[arg]
+        return
+      case 'string':
+        if (self.$string_dict[arg] === undefined) throw KeyError(_b_.str(arg))
+        delete self.$string_dict[arg]
+        if (self.$jsobj) delete self.$jsobj[arg]
+        return
+    }
+    // go with defaults
+
     var bucket = $lookup_key(self, arg)
     if (bucket === undefined) throw KeyError(_b_.str(arg))
     self.$data[bucket] = dummy
@@ -203,7 +227,7 @@ $DictDict.__eq__ = function(self,other){
     if(other===undefined){ // compare self to class "dict"
         return self===dict
     }
-    if(!isinstance(other,dict)) return False
+    if(!isinstance(other,dict)) return false
 
     if ($DictDict.__len__(self) != $DictDict.__len__(other)) return false
 
@@ -227,6 +251,17 @@ $DictDict.__eq__ = function(self,other){
 }
 
 $DictDict.__getitem__ = function(self,arg){
+    if(self.$jsobj && self.$jsobj[arg] !== undefined) return self.$jsobj[arg]
+
+    switch(typeof arg) {
+      case 'number':
+        if (self.$numeric_dict[arg] !== undefined) return self.$numeric_dict[arg]
+        break
+      case 'string':
+        if (self.$string_dict[arg] !== undefined) return self.$string_dict[arg]
+    }
+    // since the key is more complex use 'default' method of getting item
+
     var bucket = $lookup_key(self, arg)
     if (bucket !== undefined) return self.$data[bucket][1]
     throw KeyError(_b_.str(arg))
@@ -260,15 +295,7 @@ $DictDict.__init__ = function(self){
                 $DictDict.__setitem__(res,attr,obj.js[attr])
             }
 
-            self.$data = res.$data
-            self.$size = res.$size
-            self.$used = res.$used
-
             self.$jsobj = obj.js
-
-            //for(var attr in obj.js){
-            //    $DictDict.__setitem__(self, $B.JSObject(attr), $B.JSObject(obj.js[attr]))
-            //}
             return
         }
     } //switch
@@ -297,12 +324,8 @@ $DictDict.__init__ = function(self){
             }
         }
     }//if
-    if(kw.$used>0){ // format dict(k1=v1,k2=v2...)
-      for (var k in kw.$data) {
-          $DictDict.__setitem__(self, kw.$data[k][0], kw.$data[k][1])
-      }
-    }
-    return
+    //if(kw.$used>0){ // format dict(k1=v1,k2=v2...)
+    if($DictDict.__len__(kw) > 0) $copy_dict(self, kw)
 }
 
 var $dict_iterator = $B.$iterator_class('dict iterator')
@@ -310,7 +333,14 @@ $DictDict.__iter__ = function(self) {
     return $DictDict.keys(self)
 }
 
-$DictDict.__len__ = function(self) {return self.$used}
+$DictDict.__len__ = function(self) {
+   var _num_len=0, _str_len=0
+
+   for (var k in self.$numeric_dict) _num_len++
+   for (var k in self.$string_dict) _str_len++
+ 
+   return self.$used + _num_len + _str_len
+}
 
 $DictDict.__mro__ = [$DictDict,$ObjectDict]
 
@@ -318,7 +348,7 @@ $DictDict.__ne__ = function(self,other){return !$DictDict.__eq__(self,other)}
 
 $DictDict.__next__ = function(self){
     if(self.$iter==null){
-        self.$iter = new $item_generator(self.$data)
+        self.$iter = new $item_generator(self) //.$data)
     }
     try {
         return self.$iter.next()
@@ -339,7 +369,20 @@ $DictDict.__repr__ = function(self){
 }
 
 $DictDict.__setitem__ = function(self,key,value){
-     // if adding new item would invoke a grow...
+    switch(typeof key) {
+      case 'number':
+        self.$numeric_dict[key]=value
+        if(self.$jsobj) self.$jsobj[key]=value
+        return
+      case 'string':
+        self.$string_dict[key]=value
+        if(self.$jsobj) self.$jsobj[key]=value
+        return
+    }
+
+    // if we got here the key is more complex, use default method
+
+    // if adding new item would invoke a grow...
     if (self.$fill + 1 > self.$size * 3 / 4) {
         $grow_dict(self)
     }
@@ -352,7 +395,6 @@ $DictDict.__setitem__ = function(self,key,value){
     }
     self.$data[bucket] = [key, value]
 
-    // if dict wraps a JS Object, set its attribute (think sys.modules)
     if(self.$jsobj) self.$jsobj[key]=value
 }
 
@@ -368,6 +410,9 @@ $DictDict.clear = function(self){
     self.$fill = 0
     self.$used = 0
 
+    self.$numeric_dict={}
+    self.$string_dict={}
+
     if(self.$jsobj) self.$jsobj={}
 }
 
@@ -379,10 +424,16 @@ $DictDict.copy = function(self){
 }
 
 $DictDict.get = function(self, key, _default){
-    var bucket = $lookup_key(self, key)
-    if (bucket !== undefined) {
-        return self.$data[bucket][1]
+    if (_default === undefined) _default=None
+    switch(typeof key) {
+      case 'number':
+        return self.$numeric_dict[key] || _default
+      case 'string':
+        return self.$string_dict[key] || _default
     }
+
+    var bucket = $lookup_key(self, key)
+    if(bucket !== undefined) return self.$data[bucket][1]
     if(_default!==undefined) return _default
     return None
 }
@@ -395,7 +446,7 @@ $DictDict.items = function(self){
 
 $DictDict.fromkeys = function(keys,value){
     // class method
-    if(value===undefined) value=_b_.None
+    if(value===undefined) value=None
     var res = dict()
     var keys_iter = _b_.iter(keys)
     while(1){
