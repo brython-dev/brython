@@ -1,4 +1,4 @@
-import __random as random
+import random
 from browser import doc
 
 def getMousePosition(e):

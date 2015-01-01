@@ -3,7 +3,7 @@ import time
 import traceback
 import dis
 
-from browser import document as doc, window
+from browser import document as doc, window,alert
 from javascript import JSObject
 
 # set height of container to 66% of screen
@@ -18,7 +18,6 @@ try:
     session.setMode("ace/mode/python")
 
     editor.setOptions({
-     'width': 190,
      'enableLiveAutocompletion': True,
      'enableSnippets': True,
      'highlightActiveLine': False,
@@ -57,14 +56,16 @@ def reset_src_area():
     else:
        editor.value = 'for i in range(10):\n\tprint(i)'
 
-def write(data):
-    doc["console"].value += '%s' % data
+class cOutput:
+    
+    def write(self, data):
+        doc["console"].value += str(data)
 
-#sys.stdout = object()    #not needed when importing sys via src/Lib/sys.py
-sys.stdout.write = write
+    def flush(self):
+        pass
 
-#sys.stderr = object()    # ditto
-sys.stderr.write = write
+sys.stdout = cOutput()
+sys.stderr = cOutput()
 
 def to_str(xx):
     return str(xx)
@@ -78,7 +79,7 @@ def show_console(ev):
     doc["console"].value = output
     doc["console"].cols = 60
 
-def run(*args):
+def run(in_globals=False):
     global output
     doc["console"].value=''
     src = editor.getValue()
@@ -87,10 +88,14 @@ def run(*args):
 
     t0 = time.perf_counter()
     try:
-        exec(src)
+        if(in_globals):
+            exec(src)
+        else:
+            ns = {}
+            exec(src,ns)
         state = 1
     except Exception as exc:
-        traceback.print_exc()
+        traceback.print_exc(file=sys.stderr)
         state = 0
     output = doc["console"].value
 

@@ -19,10 +19,11 @@ Una página web está hecha de elementos (textos, imágenes, sonidos,...) que pu
 >    <html>
 >    <body>
 >    <script type="text/python">
->    from browser import document as doc
+>    from browser import document
 >    from browser.html import A,B
->    doc <= B("Brython")+"es una implementación de "
->    doc <= A("Python",href="http://www.python.org")+" para los navegadores"
+
+>    document <= B("Brython")+"es una implementación de "
+>    document <= A("Python",href="http://www.python.org")+" para los navegadores"
 >    </script>
 >    </body>
 >    </html>

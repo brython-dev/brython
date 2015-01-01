@@ -4,7 +4,6 @@ var _b_ = $B.builtins
 var $s=[]
 for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
 eval($s.join(';'))
-//for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
 var $ObjectDict = _b_.object.$dict
 
 function $err(op,other){
@@ -98,7 +97,13 @@ $IntDict.__getitem__ = function(){
     throw _b_.TypeError("'int' object is not subscriptable")
 }
 
-$IntDict.__hash__ = function(self){return self.valueOf()}
+$IntDict.__hash__ = function(self){
+   if (self === undefined) {
+      return $IntDict.__hashvalue__ || $B.$py_next_hash--  // for hash of int type (not instance of int)
+   }
+
+   return self.valueOf()
+}
 
 //$IntDict.__ior__ = function(self,other){return self | other} // bitwise OR
 
@@ -283,8 +288,7 @@ var $comp_func = function(self,other){
       return self.valueOf() > _b_.bool.$dict.__hash__(other)
     }
     throw _b_.TypeError(
-        "unorderable types: "+self.__class__.__name__+'() > '+
-            $B.get_class(other).__name__+"()")
+        "unorderable types: int() > "+$B.get_class(other).__name__+"()")
 }
 $comp_func += '' // source codevar $comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
 for(var $op in $B.$comps){
@@ -308,17 +312,45 @@ var $valid_digits=function(base) {
     return digits
 }
 
-//var int = function(value,base){
-var int = function(){
+var int = function(value, base){
+    // most simple case
+    if(typeof value=='number' && base===undefined){return value}
+
+    if(base!==undefined){
+        if(!isinstance(value,[_b_.str,_b_.bytes,_b_.bytearray])){
+            throw TypeError("int() can't convert non-string with explicit base")
+        }
+    }
+
+    if(isinstance(value,_b_.float)){
+        var v = value.value
+        return v >= 0 ? Math.floor(v) : Math.ceil(v)
+    }
+    if(isinstance(value,_b_.complex)){
+        throw TypeError("can't convert complex to int")
+    }
+
     var $ns=$B.$MakeArgs('int',arguments,[],[],'args','kw')
-    //console.log($ns)
     var value = $ns['args'][0]
     var base = $ns['args'][1]
 
     if (value === undefined) value = _b_.dict.$dict.get($ns['kw'],'x', 0)
     if (base === undefined) base = _b_.dict.$dict.get($ns['kw'],'base',10)
 
-    if (value ===0) return Number(0)
+    if (!(base >=2 && base <= 36)) {
+        // throw error (base must be 0, or 2-36)
+        if (base != 0) throw _b_.ValueError("invalid base")
+    }
+
+    if (typeof value == 'number'){
+        if(base==10){return value}
+        else if(value.toString().search('e')>-1){
+            // can't convert to another base if value is too big
+            throw _b_.OverflowError("can't convert to base "+base)
+        }else{
+            return parseInt(value, base)
+        }
+    }
 
     if(value===true) return Number(1)
     if(value===false) return Number(0)
@@ -327,12 +359,7 @@ var int = function(){
       if (hasattr(base, '__int__')) {base = Number(getattr(base,'__int__')())
       }else if (hasattr(base, '__index__')) {base = Number(getattr(base,'__index__')())}
     }
-    if (!(base >=2 && base <= 36)) {
-        if (base != 0) throw _b_.ValueError("invalid base")
-        // throw error (base must be 0, or 2-36)
-    }
 
-    if(typeof value=="number") return parseInt(Number(value), base)
     if(isinstance(value, _b_.str)) value=value.valueOf()
 
     if(typeof value=="string") {
@@ -363,11 +390,9 @@ var int = function(){
       } 
       return Number(parseInt(value, base))
     }
-    if(isinstance(value,_b_.float)) return Number(parseInt(value.value,base))
+
     
     if(isinstance(value,[_b_.bytes,_b_.bytearray])) return Number(parseInt(getattr(value,'decode')('latin-1'), base))
-
-    //if(isinstance(value, int)) return self
 
     if(hasattr(value, '__int__')) return Number(getattr(value,'__int__')())
     if(hasattr(value, '__trunc__')) return Number(getattr(value,'__trunc__')())

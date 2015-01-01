@@ -10,9 +10,9 @@
     var sys=$globals['sys']
     var _meta_path=_b_.getattr(sys, 'meta_path')
     var _path=_b_.getattr(sys, 'path')
-    for (var i=0; i < _meta_path.length; i++) {
+    for (var i=0, _len_i = _meta_path.length; i < _len_i; i++) {
         var _mp=_meta_path[i]
-        for (var j=0; j < _path.length; j++) {
+        for (var j=0, _len_j = _path.length; j < _len_j; j++) {
             try {
               var _finder= _b_.getattr(_mp, '__call__')(mod_name, _path[j])
               var _loader=_b_.getattr(_b_.getattr(_finder, 'find_module'), '__call__')()
@@ -28,11 +28,11 @@
 
             if (_loader == _b_.None) continue   // finder cannot handle this
             // we have a hit.. lets see if the loader can retrieve the module
-            _module=_b_.getattr(_b_.getattr(_loader, 'load_module'), '__call__')(mod_name)
-            return $B.run_py({name: mod_name}, _path[j], _module) 
+            return _b_.getattr(_b_.getattr(_loader, 'load_module'), '__call__')(mod_name)
         }//for
     } //for
     return null
   }
+
 window.import_hooks=import_hooks
 })(__BRYTHON__)

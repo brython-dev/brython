@@ -1,0 +1,11 @@
+<head>
+    <title>Brython</title>
+    <meta charset=UTF-8>
+    <meta name=robots content="index, follow">
+    <meta name=description content=Brython>
+    <meta name=author content="Pierre Quentel">
+    <meta name=keywords content="Python, Brython">
+    <meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1">
+    <link rel="shortcut icon" href=brython.png type=image/x-icon >
+    <noscript>Please enable Javascript to view this page correctly.</noscript>
+</head>

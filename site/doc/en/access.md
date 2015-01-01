@@ -14,8 +14,10 @@ we can get a reference to this field by
 
 We can also get all the elements of a given type, for instance all the hypertext links (HTML tag `A`), using the syntax
 
->    from browser import html
->    links = document[html.A]
+    from browser import document
+    from browser import html
+
+    links = document[html.A]
 
 Finally, all the elements in the page have a method `get()` that can be used to search elements :
 

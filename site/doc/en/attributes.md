@@ -41,6 +41,7 @@ To add a child to an element, use the operator `<=` (think of it as a left arrow
 >    document['zone'] <= html.INPUT(Id="data")
 
 Iterating on an element's children can be done using the usual Python syntax : 
+
 >    for child in element:
 >        (...)
 

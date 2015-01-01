@@ -10,6 +10,10 @@ Il définit deux classes :
 **javascript**.`JSObject`
 > Classe dont les instances «&nbsp;enveloppent&nbsp;» des objets Javascript.
 
+> _**Avertissement : **_ Cette classe n'est normalement pas utilisée 
+> directement. Un objet dont on obtient une référence par `window.js_object`
+> est une instance de `JSObject`
+
 > <code>JSObject(_jsobj_)</code> renvoie un objet *brobj* qui «&nbsp;»enveloppe&nbsp;»
 > l'objet Javascript *jsobj*. Les opérations réalisées sur l'instance de
 > `JSObject` sont répercutées sur l'objet Javascript en convertissant du mieux
@@ -47,20 +51,8 @@ Il définit deux classes :
 > constructeur *jsconstr* les arguments convertis comme indiqué dans le tableau
 > ci-dessus.
 
-Exemples
---------
-Utilisation de `JSObject` avec la bibliothèque Javascript jQuery.
-
->    from javascript import JSObject
->
->    def callback(*args):
->        ...
->
->    _jQuery=JSObject($("body"))
->    _jQuery.click(callback)
-
-> Voir [la démo jQuery](../../gallery/jsobject_example.html) pour une
-> démonstration grandeur nature.
+Exemple
+-------
 
 Utilisation de `JSConstructor` avec la bibliothèque Javascript three.js :
 

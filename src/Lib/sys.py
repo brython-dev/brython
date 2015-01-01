@@ -55,7 +55,8 @@ maxunicode=1114111
 
 path = __BRYTHON__.path
 
-path_hooks = list(JSObject(__BRYTHON__.path_hooks))
+#path_hooks = list(JSObject(__BRYTHON__.path_hooks))
+meta_path=__BRYTHON__.meta_path
 
 platform="brython"
 
@@ -91,6 +92,43 @@ class __version_info(object):
         return _s % (self.major, self.minor, self.micro, 
                      self.releaselevel, self.serial)
         #return str(self.version_info)
+
+    def __eq__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) == other
+
+        raise Error("Error! I don't know how to compare!")
+
+    def __ge__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) >= other
+
+        raise Error("Error! I don't know how to compare!")
+
+    def __gt__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) > other
+
+        raise Error("Error! I don't know how to compare!")
+
+    def __le__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) <= other
+
+        raise Error("Error! I don't know how to compare!")
+
+    def __lt__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) < other
+
+        raise Error("Error! I don't know how to compare!")
+
+    def __ne__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) != other
+
+        raise Error("Error! I don't know how to compare!")
+
 
 #eventually this needs to be the real python version such as 3.0, 3.1, etc
 version_info=__version_info(__BRYTHON__.version_info)

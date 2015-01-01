@@ -1,4 +1,6 @@
 #!c:/python33/python.exe
+# -*- coding: utf-8 -*-
+
 
 print('Content-type: text/plain\n')
 print()

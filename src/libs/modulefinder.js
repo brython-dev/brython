@@ -18,7 +18,7 @@ $ModuleFinderDict.run_script = function(self, pathname){
         if(ctx && ctx.type=='node'){ctx = ctx.tree[0]}
 
         if(ctx && ctx.type=="import"){
-            for(var i=0;i<ctx.tree.length;i++){
+            for(var i=0, _len_i = ctx.tree.length; i < _len_i;i++){
                 if(modules.indexOf(ctx.tree[i].name)==-1){
                     modules.push(ctx.tree[i].name)
                 }
@@ -29,9 +29,9 @@ $ModuleFinderDict.run_script = function(self, pathname){
             }
         }
         
-        for(var i=0;i<node.children.length;i++){
+        for(var i=0, _len_i = node.children.length; i < _len_i;i++){
             mods = walk(node.children[i])
-            for(var j=0;j<mods.length;j++){
+            for(var j=0, _len_j = mods.length; j < _len_j;j++){
                 if(modules.indexOf(mods[j])==-1){modules.push(mods[j])}
             }
         }

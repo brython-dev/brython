@@ -11,7 +11,7 @@ __BRYTHON__.$__new__ = function(factory){
         catch(err){__BRYTHON__.$pop_exc()}
         if(init_func!==null){
             var args = []
-            for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
+            for(var i=1, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
             init_func.apply(null,args)
             res.__initialized__ = true
         }
@@ -55,17 +55,17 @@ $ObjectDict.__dir__ = function(self) {
 
     var objects = [self]
     var mro = self.__class__.__mro__
-    for (var i=0; i<mro.length; i++) {
+    for (var i=0, _len_i = mro.length; i < _len_i; i++) {
         objects.push(mro[i])
     }
-    for (var i=0; i<objects.length; i++) {
+    for (var i=0, _len_i = objects.length; i < _len_i; i++) {
         for(var attr in objects[i]){
             //if(attr.charAt(0)=='$' && attr.substr(0,2)!=='$$'){
             if(attr.charAt(0)=='$' && attr.charAt(1) != '$') {
                 // exclude internal attributes set by Brython
                 continue
             }
-            res.push({__class__:$B.$AttrDict,name:attr})
+            res.push(attr)
         }
     }
     res = _b_.list(_b_.set(res))
@@ -91,7 +91,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         // search in classes hierarchy, following method resolution order
         //if(attr=='show'){console.log('object getattr '+attr+' of obj '+obj)}
         var mro = klass.__mro__
-        for(var i=0;i<mro.length;i++){
+        for(var i=0, _len_i = mro.length; i < _len_i;i++){
             var v=mro[i][attr]
             if(v!==undefined){
                 res = v
@@ -195,7 +195,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                     return function(){
                         // make a local copy of initial args
                         var local_args = initial_args.slice()
-                        for(var i=0;i<arguments.length;i++){
+                        for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                             local_args.push(arguments[i])
                         }
                         var x = res.apply(obj,local_args)
@@ -204,7 +204,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                     }})(args)
                 method.__class__ = $B.$InstanceMethodDict
                 method.__eq__ = function(other){
-                    return other.__func__ === __func__
+                    return other.$res === res
                 }
                 method.__func__ = __func__
                 method.__repr__ = __repr__
@@ -213,6 +213,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                 method.__code__ = {'__class__' : $B.CodeDict}
                 method.__doc__ = res.__doc__ || ''
                 method.$type = 'instancemethod'
+                method.$res = res
                 return method
             }else{
                 // result of __get__ is not a function
@@ -227,7 +228,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         if(_ga===undefined){
             var mro = klass.__mro__
             if(mro===undefined){console.log('in getattr mro undefined for '+obj)}
-            for(var i=0;i<mro.length;i++){
+            for(var i=0, _len_i = mro.length; i < _len_i;i++){
                 var v=mro[i]['__getattr__']
                 if(v!==undefined){
                     _ga = v
@@ -308,7 +309,7 @@ $ObjectDict.__setattr__ = function(self,attr,val){
             throw _b_.AttributeError("'object' object attribute '"+attr+"' is read-only")
         }
     }
-    self[attr]=val
+    self[attr] = val
 }
 $ObjectDict.__setattr__.__str__ = function(){return 'method object.setattr'}
 

@@ -22,78 +22,72 @@ In the example, when the draggable object has been dropped, it can't be dragged 
 <div id="source" style="position:absolute;width:80px;height:40px;background-color:red;">draggable object</div>
 </div>
 
-<div id="py_source">
-    from browser import document as doc
+```exec_on_load
+from browser import document as doc
 
-    panel = doc["panel"] # yellow zone
-    
-    source = doc["source"] # red zone
-    # place it at (10,10) from panel top left corner
-    source.style.top = "%spx" %(10+panel.top)
-    source.style.left = "%spx" %(10+panel.left)
-    # make red zone draggable
-    source.draggable = True
-    
-    dest = doc["dest"] # green zone
-    # place it at (10,150) from panel top left corner
-    dest.style.top = "%spx" %(10+panel.top)
-    dest.style.left = "%spx" %(150+panel.left)
-    
-    # when mouse is over the draggable element, change cursor
-    def mouse_over(ev):
-        print('mouse over ! ')
-        ev.target.style.cursor = "pointer"
-    
-    # offset of mouse relatively to dragged object when dragging starts
-    m0 = [None,None]
-    
-    # function called when the user starts dragging the object
-    def drag_start(ev):
-        global m0
-        # compute mouse offset
-        # ev.x and ev.y are the coordinates of the mouse when the event is fired
-        # ev.target is the dragged element. Its attributes "left" and "top" are
-        # integers, the distance from the left and top borders of the document
-        m0 = [ev.x-ev.target.left,ev.y-ev.target.top]
-        # associate data to the dragging process
-        ev.dataTransfer.setData('text',ev.target.id)
-        # allow dragged object to be moved
-        ev.dataTransfer.effectAllowed = 'move'
-    
-    # function called when the draggable object comes over the destination zone
-    def drag_over(ev):
-        ev.dataTransfer.dropEffect = 'move'
-        # here we must prevent the default behaviour for this kind of event
-        ev.preventDefault()
-    
-    # function attached to the destination zone
-    # describes what happens when the object is dropped, ie when the mouse is
-    # released while the object is over the zone    
-    def drop(ev):
-        # retrieve data stored in drag_start (the draggable element's id)
-        src_id = ev.dataTransfer.getData('text')
-        elt = doc[src_id]
-        # set the new coordinates of the dragged object
-        elt.style.left = "%spx" %(ev.x-m0[0])
-        elt.style.top = "%spx" %(ev.y-m0[1])
-        # don't drag the object any more
-        elt.draggable = False
-        # remove the callback function
-        elt.unbind('mouseover')
-        elt.style.cursor = "auto"
-        ev.preventDefault()
+panel = doc["panel"] # yellow zone
 
-    # bind events to the draggable objects    
-    source.bind('mouseover',mouse_over)
-    source.bind('dragstart',drag_start)
+source = doc["source"] # red zone
+# place it at (10,10) from panel top left corner
+source.style.top = "%spx" %(10+panel.top)
+source.style.left = "%spx" %(10+panel.left)
+# make red zone draggable
+source.draggable = True
 
-    # bind events to the destination zone    
-    dest.bind('dragover',drag_over)
-    dest.bind('drop',drop)
-    
-</div>
+dest = doc["dest"] # green zone
+# place it at (10,150) from panel top left corner
+dest.style.top = "%spx" %(10+panel.top)
+dest.style.left = "%spx" %(150+panel.left)
 
+# when mouse is over the draggable element, change cursor
+def mouse_over(ev):
+    print('mouse over ! ')
+    ev.target.style.cursor = "pointer"
 
-<script type="text/python3" id="py_source">
-exec(doc['py_source'].text)
-</script>    
+# offset of mouse relatively to dragged object when dragging starts
+m0 = [None,None]
+
+# function called when the user starts dragging the object
+def drag_start(ev):
+    global m0
+    # compute mouse offset
+    # ev.x and ev.y are the coordinates of the mouse when the event is fired
+    # ev.target is the dragged element. Its attributes "left" and "top" are
+    # integers, the distance from the left and top borders of the document
+    m0 = [ev.x-ev.target.left,ev.y-ev.target.top]
+    # associate data to the dragging process
+    ev.dataTransfer.setData('text',ev.target.id)
+    # allow dragged object to be moved
+    ev.dataTransfer.effectAllowed = 'move'
+
+# function called when the draggable object comes over the destination zone
+def drag_over(ev):
+    ev.dataTransfer.dropEffect = 'move'
+    # here we must prevent the default behaviour for this kind of event
+    ev.preventDefault()
+
+# function attached to the destination zone
+# describes what happens when the object is dropped, ie when the mouse is
+# released while the object is over the zone    
+def drop(ev):
+    # retrieve data stored in drag_start (the draggable element's id)
+    src_id = ev.dataTransfer.getData('text')
+    elt = doc[src_id]
+    # set the new coordinates of the dragged object
+    elt.style.left = "%spx" %(ev.x-m0[0])
+    elt.style.top = "%spx" %(ev.y-m0[1])
+    # don't drag the object any more
+    elt.draggable = False
+    # remove the callback function
+    elt.unbind('mouseover')
+    elt.style.cursor = "auto"
+    ev.preventDefault()
+
+# bind events to the draggable objects    
+source.bind('mouseover',mouse_over)
+source.bind('dragstart',drag_start)
+
+# bind events to the destination zone    
+dest.bind('dragover',drag_over)
+dest.bind('drop',drop)
+```

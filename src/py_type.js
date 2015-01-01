@@ -41,11 +41,10 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     if(metaclass===_b_.type) return _b_.type(class_name,bases,cl_dict)
     
     // create the factory function
-    var factory = (function(_class){
-                return function(){
-                    return $instance_creator(_class).apply(null,arguments)
+    var factory = function(){
+                    return $instance_creator($B.class_dict).apply(null,arguments)
                 }
-          })($B.class_dict)
+    
     var new_func = _b_.getattr(metaclass,'__new__')
     var factory = _b_.getattr(metaclass,'__new__').apply(null,[factory,class_name,bases,cl_dict])
     _b_.getattr(metaclass,'__init__').apply(null,[factory,class_name,bases,cl_dict])
@@ -95,12 +94,10 @@ _b_.type = function(name,bases,cl_dict){
     class_dict.__dict__ = cl_dict
     
     // set class attributes for faster lookups
-    for(var i=0;i<cl_dict.$keys.length;i++){
-        var attr = cl_dict.$keys[i],val=cl_dict.$values[i]
-        class_dict[attr] = val
+    var items = _b_.list(_b_.dict.$dict.items(cl_dict))
+    for(var i=0;i<items.length;i++){
+        class_dict[items[i][0]] = items[i][1]
     }
-
-    //class_dict.__setattr__ = function(attr,value){class_dict[attr]=value}
 
     // method resolution order
     // copied from http://code.activestate.com/recipes/577748-calculate-the-mro-of-a-class/
@@ -150,11 +147,9 @@ _b_.type = function(name,bases,cl_dict){
     class_dict.__mro__ = [class_dict].concat(mro)
     
     // create the factory function
-    var factory = (function(_class){
-            return function(){
-                return $instance_creator(_class).apply(null,arguments)
-            }
-        })(class_dict)
+    var creator = $instance_creator(class_dict)
+    var factory = function(){return creator.apply(null,arguments)}
+
     factory.__class__ = $B.$factory
     factory.$dict = class_dict
     factory.$is_func = true // to speed up calls
@@ -200,50 +195,38 @@ $B.$type.__getattribute__=function(klass,attr){
     // we call $type.__getattribute__(obj.$dict,attr)
     switch(attr) {
       case '__call__':
-        //if(attr==='__call__') 
         return $instance_creator(klass)
       case '__eq__':
-        //if(attr==='__eq__'){
         return function(other){return klass.$factory===other}
       case '__ne__':
-        //if(attr==='__ne__'){
         return function(other){return klass.$factory!==other}
       case '__repr__':
-        //if(attr==='__repr__'){
         return function(){return "<class '"+klass.__name__+"'>"}
       case '__str__':
-        //if(attr==='__str__'){
         return function(){return "<class '"+klass.__name__+"'>"}
       case '__class__':
-        //if(attr==='__class__')
         return klass.__class__.$factory
       case '__doc__':
-        //if(attr==='__doc__') 
         return klass.__doc__
       case '__setattr__':
-        //if(attr==='__setattr__'){
         if(klass['__setattr__']!==undefined) return klass['__setattr__']
         return function(key,value){
             if(typeof value=='function'){
                 klass[key]=value //function(){return value.apply(null,arguments)}
-                //klass[key].$type = 'instancemethod' // for attribute resolution
             }else{
                 klass[key]=value
             }
         }
       case '__delattr__':
-        //if(attr==='__delattr__'){
         if(klass['__delattr__']!==undefined) return klass['__delattr__']
         return function(key){delete klass[key]}
     }//switch
 
     var res = klass[attr],is_class=true
-    //if(attr=='__init__'){console.log(klass.__name__+' direct attr '+attr+' '+res)}
     if(res===undefined){
         // search in classes hierarchy, following method resolution order
         var mro = klass.__mro__
         if(mro===undefined){console.log('mro undefined for class '+klass+' name '+klass.__name__)}
-        //if(attr=='register'){console.log('mro '+mro+' is class '+klass.is_class)}
         for(var i=0;i<mro.length;i++){
             var v=mro[i][attr]
             if(v!==undefined){
@@ -265,7 +248,7 @@ $B.$type.__getattribute__=function(klass,attr){
             }
         }
     }
-    //if(attr=='__init__'){console.log(klass.__name__+' attr '+attr+' step 2 '+res)}
+
     if(res!==undefined){
 
         // If the attribute is a property, return it
@@ -278,8 +261,7 @@ $B.$type.__getattribute__=function(klass,attr){
 
         if(get_func === undefined) return res
         
-        //if(get_func!==undefined){ // descriptor
-            // __new__ is a static method
+        // __new__ is a static method
         if(attr=='__new__'){res.$type='staticmethod'}
         var res1 = get_func.apply(null,[res,$B.builtins.None,klass])
         var args
@@ -291,15 +273,13 @@ $B.$type.__getattribute__=function(klass,attr){
                 case undefined:
                 case 'function':
                 case 'instancemethod':
-                    //if(res.$type===undefined || res.$type==='function' || res.$type==='instancemethod'){
                     // function called from a class
                     args = []
                     __repr__ = __str__ = function(){
-                        return '<unbound method '+klass.__name__+'.'+attr+'>'
+                        return '<function '+klass.__name__+'.'+attr+'>'
                     }
                     break;
                 case 'classmethod':
-                    //}else if(res.$type==='classmethod'){
                     // class method : called with the class as first argument
                     args = [klass.$factory]
                     __self__ = klass
@@ -310,7 +290,6 @@ $B.$type.__getattribute__=function(klass,attr){
                     }
                     break;
                 case 'staticmethod':
-                    //}else if(res.$type==='staticmethod'){
                     // static methods have no __self__ or __func__
                     args = []
                     __repr__ = __str__ = function(){
@@ -325,7 +304,6 @@ $B.$type.__getattribute__=function(klass,attr){
                     return function(){
                         // class method
                         // make a local copy of initial args
-                        //console.log('function '+attr+' of '+klass.__name__+' '+res)
                         var local_args = initial_args.slice()
                         for(var i=0;i < arguments.length;i++){
                             local_args.push(arguments[i])
@@ -349,46 +327,60 @@ $B.$type.__getattribute__=function(klass,attr){
                 method.im_class = klass
                 return method
         }
-        //}else{
-        //    return res
-        //}
-    }else{
-        // search __getattr__
-        //throw AttributeError("type object '"+klass.__name__+"' has no attribute '"+attr+"'")
     }
 }
 
 function $instance_creator(klass){
     // return the function to initalise a class instance
+    var new_func = null
+    try{new_func = _b_.getattr(klass,'__new__')}
+    catch(err){$B.$pop_exc()}
+    
+    var init_func = null
+    try{init_func = _b_.getattr(klass,'__init__')}
+    catch(err){$B.$pop_exc()}
+
+    if(klass.__bases__.length==1 && klass.__new__==undefined &&
+        init_func!==null){
+        // most usual case
+        
+        if(klass.__setattr__===undefined){
+            return function(){
+                var obj = {__class__:klass, $simple_setattr:true}
+                init_func.apply(null,[obj].concat(Array.prototype.slice.call(arguments)))
+                return obj
+            }
+        }else{
+            return function(){
+                var obj = {__class__:klass}
+                init_func.apply(null,[obj].concat(Array.prototype.slice.call(arguments)))
+                return obj
+            }
+        }
+
+    }
+
     return function(){
-        var new_func=null,init_func=null,obj
+        var obj
+        var _args = Array.prototype.slice.call(arguments)
         // apply __new__ to initialize the instance
         if(klass.__bases__.length==1 && klass.__new__==undefined){
             obj = {__class__:klass}
         }else{
-            
-            try{
-                new_func = _b_.getattr(klass,'__new__')
-            }catch(err){$B.$pop_exc()}
             if(new_func!==null){
-                var args = [klass.$factory]
-                for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
-                obj = new_func.apply(null,args)
+                obj = new_func.apply(null,[klass.$factory].concat(_args))
             }
         }
         // __initialized__ is set in object.__new__ if klass has a method __init__
         if(!obj.__initialized__){
-            try{init_func = _b_.getattr(klass,'__init__')}
-            catch(err){$B.$pop_exc()}
             if(init_func!==null){
-                var args = [obj]
-                for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
-                init_func.apply(null,args)
+                init_func.apply(null,[obj].concat(_args))
             }
         }
         return obj
     }
 }
+
 
 // used as the factory for method objects
 function $MethodFactory(){}

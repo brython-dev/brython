@@ -2,7 +2,8 @@ Eventos de foco
 ===============
 
 <script type="text/python">
-from browser import doc, alert
+from browser import document as doc
+from browser import alert
 </script>
 
 Los eventos de foco son
@@ -29,18 +30,20 @@ Pulsa en el campo de entrada de abajo para hacer que reciba el foco, posteriorme
 #### Código
 
 <div id="codeFocus">
-    from browser import document as doc
+    from browser import document
     
     def getFocus(ev):
-        doc["traceFocus"].text = '%s recibe el foco' %ev.target.id
+        document["traceFocus"].text = '%s recibe el foco' %ev.target.id
         
     def loseFocus(ev):
-        doc["traceFocus"].text = '%s pierde el foco' %ev.target.id
+        document["traceFocus"].text = '%s pierde el foco' %ev.target.id
 
-    doc['entry'].bind('blur', loseFocus)
-    doc['entry'].bind('focus', getFocus)
+    document['entry'].bind('blur', loseFocus)
+    document['entry'].bind('focus', getFocus)
 </div>
 
 <script type="text/python">
-exec(doc["codeFocus"].text)
+from browser import document
+
+exec(document["codeFocus"].text)
 </script>

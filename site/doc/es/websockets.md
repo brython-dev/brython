@@ -75,7 +75,7 @@ Ejemplo :
     ws = None
     def _open(ev):
         if not __BRYTHON__.has_websocket:
-            alert("WebSocket is not supported by your browser")
+            alert("Tu navegador no soporta WebSocket")
             return
         global ws
         # open a web socket

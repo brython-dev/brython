@@ -2,7 +2,8 @@ Drag events
 ===========
 
 <script type="text/python">
-from browser import doc, alert
+from browser import document as doc
+from browser import alert
 </script>
 
 Drag events are

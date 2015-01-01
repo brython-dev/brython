@@ -4,7 +4,6 @@ var _b_=$B.builtins
 var $s=[]
 for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
 eval($s.join(';'))
-//for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
 var $ObjectDict = _b_.object.$dict
 
 function $list(){
@@ -12,7 +11,7 @@ function $list(){
     // different from list : $list(1) is valid (matches [1])
     // but list(1) is invalid (integer 1 is not iterable)
     var args = new Array()
-    for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
+    for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
     return new $ListDict(args)
 }
 
@@ -25,7 +24,7 @@ $ListDict.__add__ = function(self,other){
 }
 
 $ListDict.__contains__ = function(self,item){
-    for(var i=0;i<self.length;i++){
+    for(var i=0, _len_i = self.length; i < _len_i;i++){
         try{if(getattr(self[i],'__eq__')(item)){return true}
         }catch(err){$B.$pop_exc();void(0)}
     }
@@ -78,7 +77,7 @@ $ListDict.__eq__ = function(self,other){
 
     if($B.get_class(other)===$B.get_class(self)){
         if(other.length==self.length){
-            for(var i=0;i<self.length;i++){
+            for(var i=0, _len_i = self.length; i < _len_i;i++){
                 if(!getattr(self[i],'__eq__')(other[i])) return False
             }
             return True
@@ -96,36 +95,45 @@ $ListDict.__getitem__ = function(self,arg){
         
         throw _b_.IndexError('list index out of range')
     }
-    if(isinstance(arg,_b_.slice)) {
+    if (isinstance(arg,_b_.slice)) {
+        /* Find the real values for start, stop and step */
         var step = arg.step===None ? 1 : arg.step
-        if(step>0){
-            var start = arg.start===None ? 0 : arg.start
-            var stop = arg.stop===None ? self.length : arg.stop
-        }else{
-            var start = arg.start===None ? self.length-1 : arg.start
-            var stop = arg.stop===None ? 0 : arg.stop
+        if (step == 0) {
+            throw Error('ValueError : slice step cannot be zero');
         }
-        if(start<0) start=_b_.int(self.length+start)
-        if(stop<0) stop=self.length+stop
-        var res = [],i=null,items=self.valueOf()
-        if(step>0){
-            if(stop<=start) return res
-            
-            for(var i=start;i<stop;i+=step){
-               if(items[i]!==undefined){res.push(items[i])}
-               else {res.push(None)}
-            }
-            return res
+        var length = self.length;
+        var start, end;
+        if (arg.start === None) {
+            start = step<0 ? length-1 : 0;
         } else {
-            if(stop>start){return res}
-            else {
-                for(var i=start;i>=stop;i+=step){
-                    if(items[i]!==undefined){res.push(items[i])}
-                    else {res.push(None)}
-                }
-                return res
+            start = arg.start;
+            if (start < 0) start += length;
+            if (start < 0) start = step<0 ? -1 : 0;
+            if (start >= length) start = step<0 ? length-1 : length;
+        }
+        if (arg.stop === None) {
+            stop = step<0 ? -1 : length;
+        } else {
+            stop = arg.stop;
+            if (stop < 0) stop += length;
+            if (stop < 0) stop = step<0 ? -1 : 0;
+            if (stop >= length) stop = step<0 ? length-1 : length;
+        }
+        /* Return the sliced list  */
+        var res = [], i=null, items=self.valueOf()
+        if (step > 0) {
+            if (stop <= start) return res;
+            for(var i=start; i<stop; i+=step) {
+               res.push(items[i])
             }
-        } 
+            return res;
+        } else {
+            if (stop > start) return res;
+            for(var i=start; i>stop; i+=step) {
+                res.push(items[i])
+            }
+            return res;
+        }
     }
     if(isinstance(arg,_b_.bool)){
         return $ListDict.__getitem__(self,_b_.int(arg))
@@ -137,7 +145,6 @@ $ListDict.__getitem__ = function(self,arg){
 $ListDict.__getitems__ = function(self){return self}
 
 $ListDict.__ge__ = function(self,other){
-    console.log('__ge__')
     if(!isinstance(other,[list, _b_.tuple])){
         throw _b_.TypeError("unorderable types: list() >= "+
             $B.get_class(other).__name__+'()')
@@ -168,7 +175,13 @@ $ListDict.__gt__ = function(self,other){
     return false        
 }
 
-$ListDict.__hash__ = function(){throw _b_.TypeError("unhashable type: 'list'")}
+$ListDict.__hash__ = function(self){
+    if (self === undefined) {
+       return $ListDict.__hashvalue__ || $B.$py_next_hash--  // for hash of int type (not instance of int)
+    }
+
+    throw _b_.TypeError("unhashable type: 'list'")
+}
 
 $ListDict.__init__ = function(self,arg){
     var len_func = getattr(self,'__len__'),pop_func=getattr(self,'pop')
@@ -220,7 +233,7 @@ $ListDict.__repr__ = function(self){
     var items=self.valueOf()
     var res = '['
     if(self.__class__===$TupleDict){res='('}
-    for(var i=0;i<self.length;i++){
+    for(var i=0, _len_i = self.length; i < _len_i;i++){
         var x = self[i]
         try{res+=getattr(x,'__repr__')()}
         catch(err){console.log('no __repr__');res += x.toString()}
@@ -275,13 +288,13 @@ $ListDict.clear = function(self){ while(self.length) self.pop()}
 
 $ListDict.copy = function(self){
     var res = []
-    for(var i=0;i<self.length;i++) res.push(self[i])
+    for(var i=0, _len_i = self.length; i < _len_i;i++) res.push(self[i])
     return res
 }
 
 $ListDict.count = function(self,elt){
     var res = 0
-    for(var i=0;i<self.length;i++){
+    for(var i=0, _len_i = self.length; i < _len_i;i++){
         if(getattr(self[i],'__eq__')(elt)){res++}
     }
     return res
@@ -301,7 +314,7 @@ $ListDict.extend = function(self,other){
 }
 
 $ListDict.index = function(self,elt){
-    for(var i=0;i<self.length;i++){
+    for(var i=0, _len_i = self.length; i < _len_i;i++){
         if(getattr(self[i],'__eq__')(elt)) return i
     }
     throw _b_.ValueError(_b_.str(elt)+" is not in list")
@@ -310,7 +323,7 @@ $ListDict.index = function(self,elt){
 $ListDict.insert = function(self,i,item){self.splice(i,0,item)}
 
 $ListDict.remove = function(self,elt){
-    for(var i=0;i<self.length;i++){
+    for(var i=0, _len_i = self.length; i < _len_i;i++){
         if(getattr(self[i],'__eq__')(elt)){
             self.splice(i,1)
             return
@@ -337,7 +350,7 @@ $ListDict.pop = function(self,pos){
 }
 
 $ListDict.reverse = function(self){
-    for(var i=0;i<parseInt(self.length/2);i++){
+    for(var i=0, _len_i = parseInt(self.length/2); i < _len_i;i++){
         var buf = self[i]
         self[i] = self[self.length-i-1]
         self[self.length-i-1] = buf
@@ -402,7 +415,7 @@ function $elts_class(self){
     // If all elements are of the same class, return it
     if(self.length==0){return null}
     var cl = $B.get_class(self[0])
-    for(var i=1;i<self.length;i++){
+    for(var i=1, _len_i = self.length; i < _len_i;i++){
         if($B.get_class(self[i])!==cl){return false}
     }
     return cl
@@ -411,7 +424,7 @@ function $elts_class(self){
 $ListDict.sort = function(self){
     var func=null
     var reverse = false
-    for(var i=1;i<arguments.length;i++){
+    for(var i=1, _len_i = arguments.length; i < _len_i;i++){
         var arg = arguments[i]
         if(arg.$nat=='kw'){
             if(arg.name==='key'){func=getattr(arg.value,'__call__')}
@@ -432,12 +445,7 @@ $ListDict.sort = function(self){
 
 $ListDict.toString = function(){return '$ListDict'}
 
-// attribute __dict__
-$ListDict.__dict__ = dict()
-for(var $attr in list){
-    $ListDict.__dict__.$keys.push($attr)
-    $ListDict.__dict__.$values.push(list[$attr])
-}
+$B.set_func_names($ListDict)
 
 // constructor for built-in type 'list'
 function list(){
@@ -493,8 +501,8 @@ function tuple(){
     obj.__hash__ = function () {
       // http://nullege.com/codes/show/src%40p%40y%40pypy-HEAD%40pypy%40rlib%40test%40test_objectmodel.py/145/pypy.rlib.objectmodel._hash_float/python
       var x= 0x345678
-      for(var i=0; i < args.length; i++) {
-         var y=args[i].__hash__();
+      for(var i=0, _len_i = arguments.length; i < _len_i; i++) {
+         var y=arguments[i].__hash__();
          x=(1000003 * x) ^ y & 0xFFFFFFFF;
       }
       return x
@@ -526,7 +534,15 @@ for(var attr in $ListDict){
         //'reverse','sort'].indexOf(attr)>-1){continue}
         break
       default:   
-        if($TupleDict[attr]===undefined) $TupleDict[attr] = $ListDict[attr]
+        if($TupleDict[attr]===undefined){
+            if(typeof $ListDict[attr]=='function'){
+                $TupleDict[attr] = (function(x){
+                    return function(){return $ListDict[x].apply(null, arguments)}
+                })(attr)
+            }else{
+                $TupleDict[attr] = $ListDict[attr]
+            }
+        }
     }//switch
 }
 
@@ -545,6 +561,9 @@ $TupleDict.__eq__ = function(self,other){
 
 $TupleDict.__mro__ = [$TupleDict,$ObjectDict]
 $TupleDict.__name__ = 'tuple'
+
+// set __repr__ and __str__
+$B.set_func_names($TupleDict)
 
 _b_.list = list
 _b_.tuple = tuple

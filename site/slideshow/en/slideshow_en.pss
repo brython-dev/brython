@@ -1,0 +1,442 @@
+@title Brython - Python in the browser
+@pagenum True
+
+Brython (Python in the browser)
+===============================
+
+<h3 style="padding-top:50px;padding-left:100px;">
+Pierre Quentel
+
+December 2014
+
+</h3>
+
+../..
+Why Brython ?
+=============
+
+**Brython (Browser Python) is designed to replace Javascript as the scripting 
+language for the Web**
+
+- Javascript is verbose and bizarre (this..)
+ - hence the success of frameworks like jQuery, angular.js, prototype...
+
+@pause
+
+- the big crisis facing Python is the rise of Javascript
+ 
+ - with HTML5, more and more webapps, more and more Javascript developers
+ - JS is arriving on the server side (node.js)
+
+@pause
+
+- Javascript monopoly in the browser is not a fatality
+
+ - the DOM is explicitely language independant
+ 
+../..
+Before Brython
+===============
+
+When the project started (spring 2012) :
+
+- Skulpt : Python v2 console in the browser, but no interface (DOM API) to
+  write web client applications
+
+- PyJS (ex-Pyjamas) : GWT port, heavier development cycle
+
+../..
+Goals
+=====
+
+Make writing Python apps as staightforward as in Javascript : Python code
+inserted in the HTML page
+
+```html_src
+<script type="text/python">
+print("Python is better than Javascript")
+</script>
+```
+
+@pause
+
+or inserting a script
+
+```html_src
+<script type="text/python" src="script.py"></script>
+```
+
+@pause
+
+An interface compliant with the Document Object Model
+
+```python
+element = document.getElementById("element_id")
+```
+
+@pause
+
+but with more Pythonic alternatives
+
+```python
+element = document["element_id"]
+```
+
+../..
+Using Python in an HTML page
+============================
+
+<div style="position:absolute;top:20%;left:5%;">
+<pre class="html_src" style="width:30em;"><b>
+&lt;html&gt;
+<br>&lt;head&gt;
+<span style="background-color:#FF0;">&lt;script src="brython.js"&gt;&lt;/script&gt;</span>
+&lt;/head&gt;
+<br>&lt;body <span style="background-color:#FF0;">onload="brython()"</span>&gt;
+<br>&lt;script <span style="background-color:#FF0;">type="text/python"</span>&gt;
+from browser import alert
+alert('hi there !')
+&lt;/script&gt;
+<br>&lt;/body&gt;
+<br>&lt;/html&gt;
+</pre>
+</div>
+
+@pause
+
+<div style="position:absolute;top:20%;left:55%;">
+<pre style="color:#FFF;padding:0.5em;width:40%;">
+
+loads Brython, puts the name **brython**
+&nbsp;in the Javascript namespace
+
+</pre>
+</div>
+
+@pause
+
+<div style="position:absolute;top:20%;left:55%;">
+<pre style="color:#FFF;padding:0.5em;width:40%;">
+
+loads Brython, puts the name **brython**
+&nbsp;in the Javascript namespace
+
+the function `brython()` :
+  - searches scripts with type "text/python"
+  - translates Python source code
+  - into Javascript code
+  - runs it by `eval()`
+
+</pre>
+</div>
+
+../..
+Python syntax coverage
+======================
+
+**Brython aims at 100% compliance with Python**
+
+- no place for a new language somewhere between Python and Javascript
+- align on Python Language Reference (Python 3 syntax)
+
+@pause
+
+Support of all the keywords and most of built-in functions and types
+(except `memoryview` and `vars`)
+
+@pause
+
+Brython supports :
+
+- all the forms of `import` (including intra package)
+- multiple inheritance (C3 algorithm)
+- metaclasses
+- comprehensions
+- generators, including `yield from`
+
+
+../..
+
+Standard library coverage
+=========================
+
+Dozens of modules from the Python 3 standard distribution are used without any 
+modification : `datetime, configparser, csv, decimal`, the `unittest`
+package...
+
+Modules written in C in the standard distribution have been rewritten in 
+Python or in Javascript
+
+- those in Python are generally copied from PyPy
+
+../..
+Browser interface
+=================
+
+Specific modules to handle the interaction with DOM elements and event in the
+package `browser`
+
+Objects
+-------
+
+- `document` : access page elements
+- `window` : access the browser attributes (geolocalisation...) and global
+   Javascript namespace
+- `alert` : alert message
+
+Modules
+-------
+
+- `browser.html` : HTML tags
+- `browser.svg` : scalable vector graphics
+- local storage : `browser.local_storage`
+- `browser.ajax`
+../..
+A few examples
+==============
+
+Access a DOM element
+
+```html_src
+<input id="trace">
+```
+
+Python code
+
+```python
+from browser import document
+elt = document["trace"]
+```
+
+../..
+A few examples
+==============
+
+Attach an event handler
+
+```html_src
+<select id="country">
+```
+
+Python code
+
+```python
+from browser import document, alert
+    
+def change_country(ev):
+    sel = ev.target
+    alert(sel.options[sel.selectedIndex].value)
+
+document["country"].bind('change', change_country)
+```
+
+../..
+Module `browser.html`
+=====================
+
+Build a selection box from a list
+
+```python
+from browser import document, html
+    
+countries = ['France', 'Italy', 'Russia']
+
+sel = html.SELECT()
+for country in countries:
+    sel <= html.OPTION(country)
+
+document <= sel
+```
+
+`<=` is the same as `appendChild()` (left arrow, not "lesser or equal")
+
+../..
+Interface with Javascript
+=========================
+
+Brython has an interface to use Javascript libraries, for instance :
+
+- generalist : `jQuery`
+- UI : `jQueryUI`
+- 3D animation : `three.js`
+- code editor : `ace`
+- vector graphics : `Raphael`
+- graphs : `Highcharts`
+
+Javascript and Brython namespaces are strictly separate
+
+The interface uses the object `window` in module `browser`
+../..
+Access from Brython to Javascript libraries
+===========================================
+
+<pre class="html_src">
+&lt;html&gt;
+<br>&lt;head&gt;
+<br>&lt;meta charset="utf-8"&gt;
+<span style="background-color:yellow;">&lt;script src="raphael-min.js"&gt;&lt;/script&gt;</span>
+&lt;script type="text/javascript" src="/src/brython.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+<br>&lt;body onload="brython()"&gt;
+<br>&lt;script type="text/python"&gt;
+<span style="background-color:yellow;">from browser import window
+bRaphael = window.Raphael</span>
+<br>&#35; Creates canvas 320 × 200 at 10, 50
+paper = bRaphael(410, 50, 320, 200)
+<br>&#35; Creates circle at x = 50, y = 40, with radius 10
+circle = paper.circle(50, 40, 10)
+&lt;/script&gt;
+<br>&lt;/body&gt;
+<br>&lt;/html&gt;
+</pre>
+../..
+Access from Javascript to Python objects
+========================================
+
+Use a Python function as callback from a tag
+
+```html_src
+<button onclick="info(this)">
+```
+
+Function `info` is inserted in the Javascript namespace via the `window`
+object
+
+```python
+from browser import window
+
+def info(elt):
+    alert("click on element %s" %elt)
+
+window.info = info
+```
+
+../..
+Performance
+===========
+On project launch, priority set to Python compliance over performance
+
+Since mid 2014, much work on optimisation (without any compromise on 
+compliance)
+<table>
+<tr>
+<td>Code</td>
+<td>
+```python
+a = 0
+for i in range(10000000):
+    a += 1
+```
+</td>
+
+<td>
+```python
+a = [0]
+for i in range(1000000):
+    a[0]= i
+```
+</td>
+</tr>
+
+<tr>
+<td>Ratio / CPython 3.3</td>
+<td style="padding-left:30px;"><img src="bench1.png" width="350"></td>
+<td style="padding-left:30px;"><img src="bench2.png" width="350"></td>
+</tr>
+
+</table>
+
+... but still much work ahead : 80 times less pystones than CPython
+
+../..
+Test Brython on line : editor
+=============================
+
+<div style="text-align:center;">
+<img src="editor.png" width="85%">
+</div>
+../..
+Test Brython on line : console
+==============================
+
+<div style="text-align:center;">
+<img src="console.png" width="90%">
+</div>
+
+../..
+Test Brython on line : gallery
+==============================
+
+<div style="text-align:center;">
+<img src="gallery.png" width="90%">
+</div>
+../..
+Popularity
+==========
+
+<table>
+<tr>
+<td style="font-size:18px;">
+Members on 10/12/2014
+
+- Brython : 211
+- Skulpt : 171
+- PyJS-users : 199
+- PyJS-devel : 16
+- RapydScript : 47
+- PythonJS : 22
+</td>
+</tr>
+</table>
+../..
+Popularity
+==========
+
+<table>
+<tr>
+<td valign="top" style="font-size:18px;">
+Members on 10/12/2014
+
+- Brython : 211
+- Skulpt : 171
+- PyJS-users : 199
+- PyJS-devel : 16
+- RapydScript : 47
+- PythonJS : 22
+</td>
+
+<td style="padding-left:40px;">
+<img src="google_python_browser.png" width="630">
+</td>
+</tr>
+</table>
+../..
+How to contribute ?
+===================
+
+Development site : [https://github.com/brython-dev/brython]
+(https://github.com/brython-dev/brython)
+
+- report bugs
+- propose code
+- improve documentation
+
+Take part to discussions on the Google Group
+
+Develop web applications in Brython and advertise them
+
+- for instance improve this slideshow engine (search "Brython slideshow")
+../..
+pyschool.net
+============
+
+<img src="pyschool.png" width="70%">
+
+developed on Github : brython-in-the-classroom
+
+../..
+The final word...
+=================
+
+<center><img src="guido.png" style="margin-top:40px;"></center>
+

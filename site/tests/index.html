@@ -55,7 +55,7 @@ def test_next():
         src = open(option.value).read()
         doc['files'].selectedIndex = script_num
         editor.setValue(src)
-        state = run()
+        state = run(in_globals=True)
         if state == 0:
             failed.append(option.text)
         timer.set_timeout(test_next,500)
@@ -77,13 +77,14 @@ def set_debug(ev):
     else:
         __BRYTHON__.debug = 0
 
+__BRYTHON__.debug = int(doc['set_debug'].checked)
 # bindings
 doc['test_all'].bind('click',test_all)
 doc['set_debug'].bind('change',set_debug)
 
 # next functions are defined in editor.py
 doc['show_js'].bind('click',show_js)
-doc['run'].bind('click',run)
+doc['run'].bind('click',lambda ev:run(False))
 doc['show_console'].bind('click',show_console)
 doc['files'].bind('change',load_script)
 </script>

@@ -11,75 +11,73 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     // $other_kw = 'kw'
     // $after_star = ['u','v']
 
-    var $set_vars = [],$ns = {},$arg
+    var $ns = {},$arg
+
+    var $robj = {}
+    for(var i=0;i<$required.length;i++){$robj[$required[i]]=null}
+
+    var $dobj = {}
+    for(var i=0;i<$defaults.length;i++){$dobj[$defaults[i]]=null}
+
     if($other_args != null){$ns[$other_args]=[]}
-    if($other_kw != null){var $dict_keys=[];var $dict_values=[]}
+    if($other_kw != null){var $dict_keys=[], $dict_values=[]}
     // create new list of arguments in case some are packed
     var upargs = []
-    for(var i=0;i<$args.length;i++){
+    for(var i=0, _len_i = $args.length; i < _len_i;i++){
         $arg = $args[i]
         if($arg===undefined){console.log('arg '+i+' undef in '+$fname)}
         else if($arg===null){upargs.push(null)}
         else {
            switch($arg.$nat) {
              case 'ptuple':
-               //else if($arg.__class__===$B.$ptupleDict){
                var _arg=$arg.arg
-               for(var j=0;j<_arg.length;j++) upargs.push(_arg[j])
+               for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs.push(_arg[j])
                break
              case 'pdict':
-               //}else if($arg.__class__===$B.$pdictDict){
-               var _arg=$arg.arg
-               for(var j=0;j<_arg.$keys.length;j++){
-                  upargs.push({$nat:"kw",name:_arg.$keys[j],value:_arg.$values[j]})
+               var _arg=$arg.arg, items=_b_.list(_b_.dict.$dict.items(_arg))
+               for(var j=0, _len_j = items.length; j < _len_j;j++){
+                  upargs.push({$nat:"kw",name:items[j][0],value:items[j][1]})
                }
                break
              default:
-               //}else{
                upargs.push($arg)
            }//switch
         }//else
     }
-    for(var $i=0;$i<upargs.length;$i++){
+    var nbreqset = 0 // number of required arguments set
+    for(var $i=0, _len_$i = upargs.length; $i < _len_$i;$i++){
         var $arg=upargs[$i]
         var $PyVar=$B.$JS2Py($arg)
         if($arg && $arg.$nat=='kw'){ // keyword argument
             $PyVar = $arg.value
             if($ns[$arg.name]!==undefined){
                 throw _b_.TypeError($fname+"() got multiple values for argument '"+$arg.name+"'")
-            }else if($required.indexOf($arg.name)>-1){
-                var ix = $required.indexOf($arg.name)
-                eval('var '+$required[ix]+"=$PyVar")
-                $ns[$required[ix]]=$PyVar
-                //$set_vars.push($required[ix])
+            }else if($robj[$arg.name]===null){
+                $ns[$arg.name]=$PyVar
+                nbreqset++
             }else if($other_args!==null && $after_star!==undefined &&
                 $after_star.indexOf($arg.name)>-1){
                     var ix = $after_star.indexOf($arg.name)
-                    eval('var '+$after_star[ix]+"=$PyVar")
                     $ns[$after_star[ix]]=$PyVar
-                    //$set_vars.push($after_star[ix])
-            } else if($defaults.indexOf($arg.name)>-1){
+            } else if($dobj[$arg.name]===null){
                 $ns[$arg.name]=$PyVar
-                //$set_vars.push($arg.name)
+                var pos_def = $defaults.indexOf($arg.name)
+                $defaults.splice(pos_def,1)
+                delete $dobj[$arg.name]
             } else if($other_kw!=null){
                 $dict_keys.push($arg.name)
                 $dict_values.push($PyVar)
             } else {
                 throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+$arg.name+"'")
             }
-            var pos_def = $defaults.indexOf($arg.name)
-            if(pos_def!=-1){$defaults.splice(pos_def,1)}
-        }else{ // positional arguments
+        }else{ // positional argument
             if($i<$required.length){
-                eval('var '+$required[$i]+"=$PyVar")
                 $ns[$required[$i]]=$PyVar
-                //$set_vars.push($required[$i])
+                nbreqset++
             } else if($other_args!==null){
-                eval('$ns["'+$other_args+'"].push($PyVar)')
+                $ns[$other_args].push($PyVar)
             } else if($i<$required.length+$defaults.length) {
-                var $var_name = $defaults[$i-$required.length]
-                $ns[$var_name]=$PyVar
-                //$set_vars.push($var_name)
+                $ns[$defaults[$i-$required.length]]=$PyVar
             } else {
                 console.log(''+$B.line_info)
                 msg = $fname+"() takes "+$required.length+' positional argument'
@@ -89,27 +87,138 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
             }
         }
     }
-    // throw error if not all required positional arguments have been set
-    var missing = []
-    for(var i=0;i<$required.length;i++){
-        if($ns[$required[i]]===undefined){missing.push($required[i])}
-    }
-    if(missing.length==1){
-        throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")
-    }else if(missing.length>1){
-        var msg = $fname+" missing "+missing.length+" positional arguments: "
-        for(var i=0;i<missing.length-1;i++){msg += "'"+missing[i]+"', "}
-        msg += "and '"+missing.pop()+"'"
-        throw _b_.TypeError(msg)
+    if(nbreqset!==$required.length){
+        // throw error if not all required positional arguments have been set
+        var missing = []
+        for(var i=0, _len_i = $required.length; i < _len_i;i++){
+            if($ns[$required[i]]===undefined){missing.push($required[i])}
+        }
+        if(missing.length==1){
+            throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")
+        }else if(missing.length>1){
+            var msg = $fname+" missing "+missing.length+" positional arguments: "
+            for(var i=0, _len_i = missing.length-1; i < _len_i;i++){msg += "'"+missing[i]+"', "}
+            msg += "and '"+missing.pop()+"'"
+            throw _b_.TypeError(msg)
+        }
     }
     if($other_kw!=null){
         $ns[$other_kw]=_b_.dict()
-        $ns[$other_kw].$keys = $dict_keys
-        $ns[$other_kw].$values = $dict_values
+        for(var i=0;i<$dict_keys.length;i++){
+            _b_.dict.$dict.__setitem__($ns[$other_kw], $dict_keys[i],
+                $dict_values[i])
+        }
     }
     if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
     return $ns
 }
+
+$B.$MakeArgs1 = function($fname,$args,$robj,$required,$dobj,$defaults,
+    $other_args,$other_kw,$after_star){
+    // builds a namespace from the arguments provided in $args
+    // in a function defined like foo(x,y,z=1,*args,u,v,**kw) the parameters are
+    // $required : ['x','y']
+    // $defaults : {'z':1}
+    // $other_args = 'args'
+    // $other_kw = 'kw'
+    // $after_star = ['u','v']
+
+    var $ns = {},$arg
+
+    if($other_args != null){$ns[$other_args]=[]}
+    if($other_kw != null){var $dict_keys=[], $dict_values=[]}
+    // create new list of arguments in case some are packed
+    var upargs = []
+    for(var i=0, _len_i = $args.length; i < _len_i;i++){
+        $arg = $args[i]
+        if($arg===undefined){console.log('arg '+i+' undef in '+$fname)}
+        else if($arg===null){upargs.push(null)}
+        else {
+           switch($arg.$nat) {
+             case 'ptuple':
+               var _arg=$arg.arg
+               for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs.push(_arg[j])
+               break
+             case 'pdict':
+               var _arg=$arg.arg, items=_b_.list(_b_.dict.$dict.items(_arg))
+               for(var j=0, _len_j = items.length; j < _len_j;j++){
+                  upargs.push({$nat:"kw",name:items[j][0],value:items[j][1]})
+               }
+               break
+             default:
+               upargs.push($arg)
+           }//switch
+        }//else
+    }
+    var nbreqset = 0 // number of required arguments set
+    for(var $i=0, _len_$i = upargs.length; $i < _len_$i;$i++){
+        var $arg=upargs[$i]
+        var $PyVar=$B.$JS2Py($arg)
+        if($arg && $arg.$nat=='kw'){ // keyword argument
+            $PyVar = $arg.value
+            if($ns[$arg.name]!==undefined){
+                throw _b_.TypeError($fname+"() got multiple values for argument '"+$arg.name+"'")
+            }else if($robj[$arg.name]===null){
+                $ns[$arg.name]=$PyVar
+                nbreqset++
+            }else if($other_args!==null && $after_star!==undefined &&
+                $after_star.indexOf($arg.name)>-1){
+                    var ix = $after_star.indexOf($arg.name)
+                    $ns[$after_star[ix]]=$PyVar
+            } else if($dobj[$arg.name]===null){
+                $ns[$arg.name]=$PyVar
+                var pos_def = $defaults.indexOf($arg.name)
+                $defaults.splice(pos_def,1)
+                delete $dobj[$arg.name]
+            } else if($other_kw!=null){
+                $dict_keys.push($arg.name)
+                $dict_values.push($PyVar)
+            } else {
+                throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+$arg.name+"'")
+            }
+        }else{ // positional argument
+            if($i<$required.length){
+                $ns[$required[$i]]=$PyVar
+                nbreqset++
+            } else if($other_args!==null){
+                $ns[$other_args].push($PyVar)
+            } else if($i<$required.length+$defaults.length) {
+                $ns[$defaults[$i-$required.length]]=$PyVar
+            } else {
+                console.log(''+$B.line_info)
+                msg = $fname+"() takes "+$required.length+' positional argument'
+                msg += $required.length == 1 ? '' : 's'
+                msg += ' but more were given'
+                throw _b_.TypeError(msg)
+            }
+        }
+    }
+    if(nbreqset!==$required.length){
+        // throw error if not all required positional arguments have been set
+        var missing = []
+        for(var i=0, _len_i = $required.length; i < _len_i;i++){
+            if($ns[$required[i]]===undefined){missing.push($required[i])}
+        }
+        if(missing.length==1){
+            throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")
+        }else if(missing.length>1){
+            var msg = $fname+" missing "+missing.length+" positional arguments: "
+            for(var i=0, _len_i = missing.length-1; i < _len_i;i++){msg += "'"+missing[i]+"', "}
+            msg += "and '"+missing.pop()+"'"
+            throw _b_.TypeError(msg)
+        }
+    }
+    if($other_kw!=null){
+        $ns[$other_kw]=_b_.dict()
+        for(var i=0;i<$dict_keys.length;i++){
+            _b_.dict.$dict.__setitem__($ns[$other_kw], $dict_keys[i],
+                $dict_values[i])
+        }
+    }
+    if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
+    return $ns
+}
+
 
 $B.get_class = function(obj){
     // generally we get the attribute __class__ of an object by obj.__class__
@@ -119,19 +228,24 @@ $B.get_class = function(obj){
     var klass = obj.__class__
     if(klass===undefined){
         switch(typeof obj) {
-          case 'function':
-            return $B.$FunctionDict
           case 'number':
+            obj.__class__=_b_.int.$dict
             return _b_.int.$dict
           case 'string':
+            obj.__class__=_b_.str.$dict
             return _b_.str.$dict
           case 'boolean':
+            obj.__class__=$B.$BoolDict
             return $B.$BoolDict
+          case 'function':
+            obj.__class__=$B.$FunctionDict
+            return $B.$FunctionDict
           case 'object':
-            if(obj.constructor===Array) return _b_.list.$dict
+            if(obj.constructor===Array) {
+              obj.__class__=_b_.list.$dict
+              return _b_.list.$dict
+            }
         }
-        //if(obj===true||obj===false) return $B.$BoolDict
-        //if(typeof obj=='object' && obj.constructor===Array) return _b_.list.$dict
     }
     return klass
 }
@@ -143,14 +257,19 @@ $B.$mkdict = function(glob,loc){
     return res
 }
 
+function clear(ns){
+    // delete temporary structures
+    delete $B.vars[ns], $B.bound[ns], $B.modules[ns], $B.imported[ns]
+    
+}
+
 $B.$list_comp = function(module_name, parent_block_id){
     var $ix = Math.random().toString(36).substr(2,8)
     var $py = 'def func'+$ix+"():\n"
     $py += "    x"+$ix+"=[]\n"
     var indent=4
-    for(var $i=3;$i<arguments.length;$i++){
+    for(var $i=3, _len_$i = arguments.length; $i < _len_$i;$i++){
         $py += ' '.repeat(indent)
-        //for(var $j=0;$j<indent;$j++) $py += ' '
         $py += arguments[$i]+':\n'
         indent += 4
     }
@@ -164,15 +283,17 @@ $B.$list_comp = function(module_name, parent_block_id){
         $B.line_info)
     
     $root.caller = $B.line_info
-    //$root.module = $mod_name
 
     var $js = $root.to_js()
-    //console.log('list comp\n'+$js)
     
-    try{eval($js)}
+    try{
+        eval($js)
+        var res = $B.vars['lc'+$ix]['res'+$ix]
+    }
     catch(err){throw $B.exception(err)}
+    finally{clear($mod_name)}
 
-    return __BRYTHON__.vars['lc'+$ix]['res'+$ix]
+    return res
 }
 
 $B.$gen_expr = function(){ // generator expresssion
@@ -182,9 +303,9 @@ $B.$gen_expr = function(){ // generator expresssion
     var $res = 'res'+$ix
     var $py = $res+"=[]\n"
     var indent=0
-    for(var $i=3;$i<arguments.length;$i++){
+    for(var $i=3, _len_$i = arguments.length; $i < _len_$i;$i++){
         for(var $j=0;$j<indent;$j++) $py += ' '
-        $py += arguments[$i]+':\n'
+        $py += arguments[$i].join(' ')+':\n'
         indent += 4
     }
     for(var $j=0;$j<indent;$j++) $py += ' '
@@ -199,7 +320,7 @@ $B.$gen_expr = function(){ // generator expresssion
   
     eval($js)
     
-    var $res1 = __BRYTHON__.vars["ge"+$ix]["res"+$ix]
+    var $res1 = $B.vars["ge"+$ix]["res"+$ix]
 
     var $GenExprDict = {
         __class__:$B.$type,
@@ -222,6 +343,7 @@ $B.$gen_expr = function(){ // generator expresssion
     $GenExprDict.$factory = $GenExprDict
     var $res2 = {value:$res1,__class__:$GenExprDict,$counter:-1}
     $res2.toString = function(){return 'ge object'}
+    clear($mod_name)
     return $res2
 }
 
@@ -231,7 +353,7 @@ $B.$dict_comp = function(module_name,parent_block_id){ // dictionary comprehensi
     var $res = 'res'+$ix
     var $py = $res+"={}\n"
     var indent=0
-    for(var $i=3;$i<arguments.length;$i++){
+    for(var $i=3, _len_$i = arguments.length; $i < _len_$i;$i++){
         for(var $j=0;$j<indent;$j++) $py += ' '
         $py += arguments[$i]+':\n'
         indent += 4
@@ -242,9 +364,10 @@ $B.$dict_comp = function(module_name,parent_block_id){ // dictionary comprehensi
     var $root = $B.py2js($py,module_name,locals_id,parent_block_id)
     $root.caller = $B.line_info
     var $js = $root.to_js()
-    //$B.vars[$mod_name] = $env
     eval($js)
-    return __BRYTHON__.vars[locals_id][$res]
+    var res = $B.vars[locals_id][$res]
+    clear(locals_id)
+    return res
 }
 
 $B.$lambda = function(locals,$mod,parent_block_id,$args,$body){
@@ -263,7 +386,7 @@ $B.$lambda = function(locals,$mod,parent_block_id,$args,$body){
     var $js = $B.py2js($py,$mod,local_id,parent_block_id).to_js()
     eval($js)
 
-    var $res = __BRYTHON__.vars[local_id][$res]
+    var $res = $B.vars[local_id][$res]
     $res.__module__ = $mod
     $res.__name__ = '<lambda>'
     return $res
@@ -279,15 +402,15 @@ $B.$search = function(name, globals_id){
 
 // transform native JS types into Brython types
 $B.$JS2Py = function(src){
-    if(src===null||src===undefined) return _b_.None
     if(typeof src==='number'){
         if(src%1===0) return src
         return _b_.float(src)
     }
+    if(src===null||src===undefined) return _b_.None
     var klass = $B.get_class(src)
     if(klass!==undefined){
         if(klass===_b_.list.$dict){
-            for(var i=0;i<src.length;i++) src[i] = $B.$JS2Py(src[i])
+            for(var i=0, _len_i = src.length; i< _len_i;i++) src[i] = $B.$JS2Py(src[i])
         }
         return src
     }
@@ -296,7 +419,7 @@ $B.$JS2Py = function(src){
         if($B.$isEvent(src)) return $B.DOMEvent(src)
         if(src.constructor===Array||$B.$isNodeList(src)){
             var res = []
-            for(var i=0;i<src.length;i++) res.push($B.$JS2Py(src[i]))
+            for(var i=0, _len_i = src.length; i < _len_i;i++) res.push($B.$JS2Py(src[i]))
             return res
         }
     }
@@ -340,7 +463,7 @@ $B.augm_item_add = function(obj,item,incr){
 }
 var augm_item_src = ''+$B.augm_item_add
 var augm_ops = [['-=','sub'],['*=','mul']]
-for(var i=0;i<augm_ops.length;i++){
+for(var i=0, _len_i = augm_ops.length; i < _len_i;i++){
     var augm_code = augm_item_src.replace(/add/g,augm_ops[i][1])
     augm_code = augm_code.replace(/\+=/g,augm_ops[i][0])
     eval('$B.augm_item_'+augm_ops[i][1]+'='+augm_code)
@@ -361,7 +484,7 @@ $B.$syntax_err_line = function(module,pos) {
     var lnum=1
     var src = $B.$py_src[module]
     var line_pos = {1:0}
-    for(var i=0;i<src.length;i++){
+    for(var i=0, _len_i = src.length; i < _len_i;i++){
         pos2line[i]=lnum
         if(src.charAt(i)=='\n'){lnum+=1;line_pos[lnum]=i}
     }
@@ -487,7 +610,10 @@ $B.stdin = {
 function pyobject2jsobject(obj) {
     if(_b_.isinstance(obj,_b_.dict)){
         var temp = {__class__ :'dict'}
-        for(var i=0;i<obj.$keys.length;i++) temp[obj.$keys[i]]=obj.$values[i]
+        var items = _b_.list(_b_.dict.$dict.items(obj))
+        for(var i=0, _len_i = items.length; i < _len_i;i++){
+            temp[items[i][0]]=items[i][1]
+        }
         return temp
     }
 
@@ -584,7 +710,7 @@ var ropnames = ['add','sub','mul','truediv','floordiv','mod','pow',
 var ropsigns = ['+','-','*','/','//','%','**','<<','>>','&','^', '|']
 
 $B.make_rmethods = function(klass){
-    for(var j=0;j<ropnames.length;j++){
+    for(var j=0, _len_j = ropnames.length; j < _len_j;j++){
         if(klass['__'+ropnames[j]+'__']===undefined){
             //console.log('set '+ropnames[j]+' of '+klass.__name__)
             klass['__'+ropnames[j]+'__']=(function(name,sign){
@@ -597,12 +723,22 @@ $B.make_rmethods = function(klass){
     }
 }
 
+// Set __name__ attribute of klass methods
+$B.set_func_names = function(klass){
+    var name = klass.__name__
+    for(var attr in klass){
+        if(typeof klass[attr] == 'function'){
+            klass[attr].__name__ = name+'.'+attr
+        }
+    }
+}
+
 })(__BRYTHON__)
 
 // IE doesn't implement indexOf on Arrays
 if(!Array.indexOf){  
   Array.prototype.indexOf = function(obj){  
-    for(var i=0;i<this.length;i++) if(this[i]==obj) return i
+    for(var i=0, _len_i = this.length; i < _len_i;i++) if(this[i]==obj) return i
     return -1
   }
 }
@@ -621,9 +757,3 @@ if (!String.prototype.repeat) {
     return result + pattern;
   };
 }
-
-// in case console is not defined
-//try{console}
-//catch(err){
-    //var console = {'log':function(data){void(0)}}
-//}

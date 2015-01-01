@@ -67,14 +67,18 @@ _float_ es una función Javascript definida en __py\_builtin\_functions.js__</td
 <tr>
 <td>`x += y`</td>
 <td>
-    $temp=y
-    if(!hasattr(x,"__iadd__")){
-     x=getattr(x,"__add__")($temp)
-    }else{
-     x=getattr(x,"__iadd__")($temp)
+    var $temp=y;
+    if(typeof $temp=="number" && typeof x=="number"){
+        x+=$temp;$globals["x"]=x
+    }else if(!hasattr(x,"__iadd__")){
+        var x=$globals["x"]=getattr(x,"__add__")($temp);
+    }
+    else{
+        x=$globals["x"]=getattr(x,"__iadd__")($temp)
     }
 </td>
-<td>&nbsp;
+<td>La primera prueba permite una mejora de la eficiencia si ambas variables son enteros : en ese caso
+se podría usar el operador Javascript +=
 </td>
 </td>
 </tr>
@@ -93,15 +97,14 @@ _float_ es una función Javascript definida en __py\_builtin\_functions.js__</td
         (...)
 </td>
 <td>
-    var $iter48=iter(y)
-    var $no_break48=true
-    while(true){
+    var $next9=$locals["$next9"]=getattr(iter(iterable),"__next__")
+    var $no_break9=true;while(true){
         try{
-            x=$globals["x"]=getattr($iter48,"__next__")()
+            var obj=$globals["obj"]=$next9();None;
         }
         catch($err){
-            if($is_exc($err,[StopIteration])){
-                $pop_exc();break
+            if(__BRYTHON__.is_exc($err,[StopIteration])){
+                __BRYTHON__.$pop_exc();break
             }else{
                 throw($err)
             }
@@ -110,7 +113,7 @@ _float_ es una función Javascript definida en __py\_builtin\_functions.js__</td
     }
 
 </td>
-<td>_$no\_break1_ es un booleano usado en el caso de que el bucle `for` tenga un `else`
+<td>_$no\_break_ es un booleano usado en el caso de que el bucle `for` tenga un `else`
 
 _$pop\_exc()_ es una función interna que elimina la última excepción de la pila de excepciones
 
@@ -121,33 +124,19 @@ _$is\_exc(exc,classes)_ es una función interna que comprueba si la excepción _
 <tr>
 <td>`x,y = iterable`</td>
 <td>
-    $right=iter(iterable)
-    $counter=-1
-    try{
-        $counter++
-        x=next($right)
-        $counter++
-        y=next($right)
-    }catch($err49){
-        if($err49.__name__=="StopIteration"){
-            $pop_exc()
-            throw ValueError("need more than "+$counter+" value"+
-                ($counter>1 ? "s" : "")+" to unpack")
-        }
+    var $right9=getattr(iter(iterable),"__next__");
+    var $rlist9=[];while(true){
+        try{$rlist9.push($right9())}
+        catch(err){__BRYTHON__.$pop_exc();break}
     }
-    var $exhausted=true
-    try{
-        next($right)
-        $exhausted=false
-    }catch(err){
-        if(err.__name__=="StopIteration"){
-        $pop_exc()
-        }
+    if($rlist9.length<2){
+        throw ValueError("need more than "+$rlist9.length+
+            " values to unpack")
     }
-    if(!$exhausted){
-        throw ValueError("too many values to unpack (expected "+
-            ($counter+1)+")")
-    } 
+    if($rlist9.length>2){
+        throw ValueError("too many values to unpack (expected 2)")}
+    var x=$globals["x"]=$rlist9[0]
+    var y=$globals["y"]=$rlist9[1] 
 </td>
 <td>La traducción es bastante larga, pero el manejo de las excepciones se debe realizar en el tiempo de ejecución</td></tr>
 
@@ -158,29 +147,40 @@ _$is\_exc(exc,classes)_ es una función interna que comprueba si la excepción _
 </td>
 <td>
     var foo= (function (){
+        var $defaults = {}
         return function(){
             try{
-                var $ns=$MakeArgs("foo",arguments,[],{},null,null)
-                for($var in $ns){eval("var "+$var+"=$ns[$var]")}
-                var $locals = __BRYTHON__.scope["a54xmumg"].__dict__=$ns
-                var x=$locals["x"]=Number(3)
-            }catch(err51){
-                throw __BRYTHON__.exception(err51)
+                var $locals = __BRYTHON__.vars["__main__-foo-a8mk6bg2"]={}
+                for(var $var in $defaults){
+                    eval("var "+$var+"=$locals[$var]=$defaults[$var]")
+                }
+                var $ns=__BRYTHON__.$MakeArgs("foo",arguments,
+                    [],[],null,null,[])
+                for(var $var in $ns){
+                    eval("var "+$var+"=$ns[$var]")
+                    $locals[$var]=$ns[$var]
+                }
+                var x=$locals["x"]=3;None;
+            }
+            catch(err10){
+                throw __BRYTHON__.exception(err10)
             }
         }
-    })()
+    }
+    )()
     foo.__name__="foo"
-    window.foo=foo
+    $globals["foo"]=foo
     foo.$type='function'
+    foo.__module__ = "__main__"
+    foo.__doc__=""
+    foo.__code__= {__class__:__BRYTHON__.$CodeDict}
 </td>
 <td>
 _$ns_ es una variable interna, un objeto devuelto por la función _$MakeArgs_ que inspecciona los argumentos de la función y establece los valores
 
-Si _$MakeArgs_ no devuelve una excepción, se crearán los valores locales y se almacenarán en la variable interna _$locals_, y en el atributo _\_\_dict\_\__ del valor _\_\_BRYTHON\_\_.scope_ indexado mediante una cadena aleatoria (en este caso "a54xmumg") asociada con la función
+Si _$MakeArgs_ no devuelve una excepción, se crearán los valores locales y se almacenarán en la variable interna _$locals_, y un objeto interno _\_\_BRYTHON\_\_.vars[_function\_id_] donde _function\_id_ es un identificador de la función, hecho con el nombre del módulo, el nombre de la función y una cadena aleatoria (here "a8mk6bg2")
 
-Para ser consistente con la gestión del espacio de nombres de Python la variable local `x` se declare mediante el uso de la palabra clave `var` 
-
-La línea `window.foo = foo` añade el nombre de la función al espacio de nombres del navegador ; solo existirá si la función está al mismo nivel que el módulo y no dentro de otra función
+La línea `$globals["foo"]=foo` añade el nombre de la función en el espacio de nombres del módulo
 
 El atributo _$type_ de la función se usa internamente para ordenar funciones respecto de métodos de clases definidos al mismo nivel del módulo
 </td>
@@ -194,20 +194,30 @@ El atributo _$type_ de la función se usa internamente para ordenar funciones re
 </td>
 <td>
     var foo= (function (){
+        var $defaults = {}
         return function(){
             try{
-                var $ns=$MakeArgs("foo",arguments,[],{},null,null)
-                for($var in $ns){eval("var "+$var+"=$ns[$var]")}
-                var $locals = __BRYTHON__.scope["a54xmumg"].__dict__=$ns
-                x=$locals["x"]=Number(3)
-            }catch(err51){
-                throw __BRYTHON__.exception(err51)
+                var $locals = __BRYTHON__.vars["__main__-foo-o098yx0t"]={}
+                for(var $var in $defaults){
+                    eval("var "+$var+"=$locals[$var]=$defaults[$var]")
+                }
+                var $ns=__BRYTHON__.$MakeArgs("foo",arguments,
+                    [],[],null,null,[])
+                for(var $var in $ns){
+                    eval("var "+$var+"=$ns[$var]")
+                    $locals[$var]=$ns[$var]
+                }
+                x=$globals["x"]=3
             }
+            catch(err9){throw __BRYTHON__.exception(err9)}
         }
-    })()
+    }
+    )()
     foo.__name__="foo"
-    window.foo=foo
-    foo.$type='function'
+    $globals["foo"]=foo;foo.$type='function'
+    foo.__module__ = "__main__"
+    foo.__doc__=""
+    foo.__code__= {__class__:__BRYTHON__.$CodeDict}
 
 </td>
 <td>Para una variable global no se usará la palabra clave `var`</td>
@@ -220,22 +230,25 @@ El atributo _$type_ de la función se usa internamente para ordenar funciones re
 </td>
 <td>
     var foo= (function (){
+        var $defaults = {y:3}
         return function(){
             try{
-                var $ns=$MakeArgs("foo",arguments,["x"],
-                    {"y":Number(3)},"args","kw")
-                for($var in $ns){eval("var "+$var+"=$ns[$var]")}
-                var $locals = __BRYTHON__.scope["jez7jnqt"].__dict__=$ns
+                var $locals = __BRYTHON__.vars["__main__-foo-6f58vupa"]={}
+                for(var $var in $defaults){
+                    eval("var "+$var+"=$locals[$var]=$defaults[$var]")
+                }
+                var $ns=__BRYTHON__.$MakeArgs("foo",arguments,
+                    ["x"],["y"],"args","kw",[])
+                for(var $var in $ns){
+                    eval("var "+$var+"=$ns[$var]")
+                    $locals[$var]=$ns[$var]
+                }
                 (...)
-            }catch(err51){
-                throw __BRYTHON__.exception(err51)
             }
+            catch(err9){throw __BRYTHON__.exception(err9)}
         }
-    })()
-    foo.__name__="foo"
-    window.foo=foo
-    $globals["foo"]=foo
-    foo.$type='function'
+    }
+    )()
 </td>
 <td>la función _$MakeArgs_ creará un objeto Javascript con los nombres definidos en la definición de la función y con los valores correspondientes que se le pasan a la función. La siguiente línea crea el espacio de nombres de la función (variables locales)</td>
 </tr>
@@ -267,19 +280,18 @@ El atributo _$type_ de la función se usa internamente para ordenar funciones re
         print('another error')
 </td>
 <td>
-    x=$globals["x"]='brython'
-    $failed49=false
+    __BRYTHON__.$failed9=false
     try{
-        getattr(x,"__setitem__")(Number(2),'a')
+        getattr(x,"__setitem__")(2,'a')
     }
-    catch($err49){
-        var $failed49=true
+    catch($err9){
+        __BRYTHON__.$failed9=true
         if(false){void(0)}
-        else if($is_exc($err49,[TypeError])){
-            getattr($print,"__call__")('error')
+        else if(__BRYTHON__.is_exc($err9,[TypeError])){
+            getattr($print,"__call__")('erreur')
         }
         else{
-            getattr($print,"__call__")('another error')
+            getattr($print,"__call__")('autre erreur')
         }
     }
 
@@ -298,18 +310,19 @@ se añaden antes de cualquier `except`, traducidas en forma de un `else if` cuan
 </code></pre></td>
 <td>
     var $foo=(function(){
-        var $class = new Object()
+        var $class = {$def_line:__BRYTHON__.line_info}
         void(0)
         return $class
     }
     )()
-    var foo=$class_constructor("foo",$foo)
-    window.foo=foo
-    __BRYTHON__.scope["__main__"].__dict__["foo"]=foo
+    $foo.__doc__=""
+    $foo.__module__="__main__"
+    var foo=__BRYTHON__.$class_constructor("foo",$foo,tuple([]),[],[])
+    __BRYTHON__.vars["__main__"]["foo"]=foo
 </td>
 <td>La definición de una clase se ejecuta mediante una función prefijada con el signo $. Esta función devuelve un objeto `$class` que incorpora los atributos y los métodos de la clase
 
-La propia clase se crea mediante la función _$class\_constructor_ definida en __py\_utils.js__. Construirá dos objetos Javascript para la clase : Un "factory", usado para crear las instancias de la clase, y un objeto con los atributos y métodos de la clase
+La propia clase se crea mediante la función _$class\_constructor_ definida en __py\_types.js__. Construirá dos objetos Javascript para la clase : Un "factory", usado para crear las instancias de la clase, y un objeto con los atributos y métodos de la clase
 
 Los argumentos que se le pasan a _$class\_constructor_ son el nombre de la clase, la función que lleva el prefijo del signo $ y una tupla con las clases padre opcionales
 </tr>
@@ -322,27 +335,38 @@ Los argumentos que se le pasan a _$class\_constructor_ son el nombre de la clase
 </td>
 <td><code><pre>
     var $foo=(function(){
-        var $class = new Object()
+        var $class = {$def_line:__BRYTHON__.line_info}
         $class.__init__= (function (){
-        return function(){
-            try{
-                var $ns=$MakeArgs("__init__",arguments,
-                    ["self","x"],{},null,null)
-                for($var in $ns){eval("var "+$var+"=$ns[$var]")}
-                var $locals = __BRYTHON__.scope["dybwedwu"].__dict__=$ns
-                setattr(self,"x",x)
-            }catch(err52){
-                throw __BRYTHON__.exception(err52)
+            var $defaults = {}
+            return function(){
+                try{
+                    var $locals = __BRYTHON__.vars["__main__-__init__-kdc7mc5z"]={}
+                    for(var $var in $defaults){
+                        eval("var "+$var+"=$locals[$var]=$defaults[$var]")
+                    }
+                    var $ns=__BRYTHON__.$MakeArgs("__init__",arguments,
+                        ["self","x"],[],null,null,[])
+                    for(var $var in $ns){
+                        eval("var "+$var+"=$ns[$var]")
+                        $locals[$var]=$ns[$var]
+                    }
+                    setattr(self,"x",x)
+                }
+                catch(err10){throw __BRYTHON__.exception(err10)}
             }
         }
-        })()
+        )()
         $class.__init__.__name__="__init__"
+        $class.__init__.__module__ = "__main__"
+        $class.__init__.__doc__=""
+        $class.__init__.__code__= {__class__:__BRYTHON__.$CodeDict}
         return $class
-        }
+    }
     )()
-    var foo=$class_constructor("foo",$foo,A)
-    window.foo=foo
-    __BRYTHON__.scope["__main__"].__dict__["foo"]=foo
+    $foo.__doc__=""
+    $foo.__module__="__main__"
+    var foo=__BRYTHON__.$class_constructor("foo",$foo,tuple([A]),["A"],[])
+    __BRYTHON__.vars["__main__"]["foo"]=foo
 </pre></code>
 </td>
 <td>El código muestra que el objeto `$class` recibe el método `__init__()` como atributo

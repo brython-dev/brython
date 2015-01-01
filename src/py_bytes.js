@@ -12,12 +12,12 @@ var $BytearrayDict = {__class__:$B.$type,__name__:'bytearray'}
 var mutable_methods = ['__delitem__','clear','copy','count','index','pop',
     'remove','reverse','sort']
 
-for(var i=0;i<mutable_methods.length;i++){
+for(var i=0, _len_i = mutable_methods.length; i < _len_i;i++){
     var method = mutable_methods[i]
     $BytearrayDict[method] = (function(m){
         return function(self){
             var args = [self.source]
-            for(var i=1;i<arguments.length;i++) args.push(arguments[i])
+            for(var i=1, _len_i = arguments.length; i < _len_i;i++) args.push(arguments[i])
             return _b_.list.$dict[m].apply(null,args)
         }
     })(method)
@@ -116,6 +116,7 @@ $BytesDict.__add__ = function(self,other){
         throw _b_.TypeError("can't concat bytes to " + _b_.str(other))
     }
     self.source = self.source.concat(other.source)
+    return self
 }
 
 var $bytes_iterator = $B.$iterator_class('bytes_iterator')
@@ -208,7 +209,7 @@ $BytesDict.__ne__ = function(self,other){return !$BytesDict.__eq__(self,other)}
 
 $BytesDict.__repr__ = $BytesDict.__str__ = function(self){
     var res = "b'"
-    for(var i=0;i<self.source.length;i++){
+    for(var i=0, _len_i = self.source.length; i < _len_i;i++){
         var s=self.source[i]
         if(s<32 || s>=128){
             var hx = s.toString(16)
@@ -224,7 +225,8 @@ $BytesDict.__repr__ = $BytesDict.__str__ = function(self){
 $BytesDict.__reduce_ex__ = function(self){return $BytesDict.__repr__(self)}
 
 $BytesDict.decode = function(self,encoding,errors){
-    if (errors === undefined) errors='strict'
+    if(encoding === undefined) encoding = 'utf-8'
+    if(errors === undefined) errors='strict'
 
     switch (errors) {
       case 'strict':
@@ -245,7 +247,7 @@ $BytesDict.maketrans=function(from, to) {
     for(var i=0; i < 256; i++) _t[i]=i
 
     // make substitution in the translation table
-    for(var i=0; i < from.source.length; i++) {
+    for(var i=0, _len_i = from.source.length; i < _len_i; i++) {
        var _ndx=from.source[i]     //retrieve ascii code of char
        _t[_ndx]=to.source[i]
     }
@@ -258,14 +260,14 @@ function _strip(self,cars,lr){
     if(cars===undefined){
         cars = []
         var ws = '\r\n \t'
-        for(var i=0;i<ws.length;i++){cars.push(ws.charCodeAt(i))}
+        for(var i=0, _len_i = ws.length; i < _len_i; i++){cars.push(ws.charCodeAt(i))}
     }else if(isinstance(cars,bytes)){
         cars = cars.source
     }else{
         throw _b_.TypeError("Type str doesn't support the buffer API")
     }
     if(lr=='l'){
-        for(var i=0;i<self.source.length;i++){
+        for(var i=0, _len_i = self.source.length; i < _len_i;i++){
             if(cars.indexOf(self.source[i])==-1) break
         }
         return bytes(self.source.slice(i))
@@ -292,7 +294,7 @@ $BytesDict.translate = function(self,table,_delete) {
     }
     var res = []
     if (isinstance(table, bytes) && table.source.length==256) {
-       for (var i=0; i<self.source.length; i++) {
+       for (var i=0, _len_i = self.source.length; i < _len_i; i++) {
            if(_delete.indexOf(self.source[i])>-1) continue
            res.push(table.source[self.source[i]])
        }
@@ -302,7 +304,7 @@ $BytesDict.translate = function(self,table,_delete) {
 
 $BytesDict.upper = function(self) {
     var _res=[]
-    for(var i=0; i < self.source.length; i++) _res.push(self.source[i].toUpperCase())
+    for(var i=0, _len_i = self.source.length; i < _len_i; i++) _res.push(self.source[i].toUpperCase())
     return bytes(_res)
 }
 
@@ -397,19 +399,19 @@ function decode(b,encoding,errors){
       case 'latin-1':
       case 'iso-8859-1':
       case 'windows-1252':
-        for(var i=0;i<b.length;i++) s += String.fromCharCode(b[i])
+        for(var i=0, _len_i = b.length; i < _len_i;i++) s += String.fromCharCode(b[i])
         break;
       case 'cp1250': 
       case 'windows-1250': 
         load_decoder('cp1250')
-        for(var i=0;i<b.length;i++){
+        for(var i=0, _len_i = b.length; i < _len_i;i++){
             var u = to_unicode['cp1250'][b[i]]
             if(u!==undefined){s+=String.fromCharCode(u)}
             else{s += String.fromCharCode(b[i])}
         }
         break;
       case 'ascii':
-        for(var i=0;i<b.length;i++){
+        for(var i=0, _len_i = b.length; i < _len_i;i++){
             var cp = b[i]
             if(cp<=127){s += String.fromCharCode(cp)}
             else{
@@ -436,7 +438,7 @@ function encode(s,encoding){
         var _int_e0=_int('e0'), _int_e1=_int('e1'),_int_a0=_int('a0'), _int_80=_int('80')
         var _int_2000=_int('2000'), _int_D000=_int('D000')
  
-        for(var i=0;i<s.length;i++){
+        for(var i=0, _len_i = s.length; i < _len_i;i++){
             var cp = s.charCodeAt(i) // code point
             if(cp<=127){
                 t.push(cp)
@@ -466,7 +468,7 @@ function encode(s,encoding){
       case 'latin-1': 
       case 'iso-8859-1': 
       case 'windows-1252': 
-        for(var i=0;i<s.length;i++){
+        for(var i=0, _len_i = s.length; i < _len_i;i++){
             var cp = s.charCodeAt(i) // code point
             if(cp<=255){t.push(cp)}
             else{$UnicodeEncodeError(encoding,i)}
@@ -474,7 +476,7 @@ function encode(s,encoding){
         break;
       case 'cp1250':
       case 'windows-1250':
-        for(var i=0;i<s.length;i++){
+        for(var i=0, _len_i = s.length; i < _len_i;i++){
             var cp = s.charCodeAt(i) // code point
             if(cp<=255){t.push(cp)}
             else{
@@ -487,7 +489,7 @@ function encode(s,encoding){
         }
         break;
       case 'ascii':
-        for(var i=0;i<s.length;i++){
+        for(var i=0, _len_i = s.length; i < _len_i;i++){
             var cp = s.charCodeAt(i) // code point
             if(cp<=127){t.push(cp)}
             else{$UnicodeEncodeError(encoding,i)}
@@ -526,6 +528,9 @@ for(var $attr in $BytesDict){
         })($attr)
     }
 }
+
+$B.set_func_names($BytesDict)
+$B.set_func_names($BytearrayDict)
 
 _b_.bytes = bytes
 _b_.bytearray = bytearray

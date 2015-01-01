@@ -2114,22 +2114,23 @@ small dst() may get within its bounds; and it doesn't even matter if some
 perverse time zone returns a negative dst()).  So a breaking case must be
 pretty bizarre, and a tzinfo subclass can override fromutc() if it is.
 """
-try:
-    from _datetime import *
-except ImportError:
-    pass
-else:
-    # Clean up unused names
-    del (_DAYNAMES, _DAYS_BEFORE_MONTH, _DAYS_IN_MONTH,
-         _DI100Y, _DI400Y, _DI4Y, _MAXORDINAL, _MONTHNAMES,
-         _build_struct_time, _call_tzinfo_method, _check_date_fields,
-         _check_time_fields, _check_tzinfo_arg, _check_tzname,
-         _check_utc_offset, _cmp, _cmperror, _date_class, _days_before_month,
-         _days_before_year, _days_in_month, _format_time, _is_leap,
-         _isoweek1monday, _math, _ord2ymd, _time, _time_class, _tzinfo_class,
-         _wrap_strftime, _ymd2ord)
-    # XXX Since import * above excludes names that start with _,
-    # docstring does not get overwritten. In the future, it may be
-    # appropriate to maintain a single module level docstring and
-    # remove the following line.
-    from _datetime import __doc__
+#brython does not have a _datetime, so lets comment this out for now.
+#try:
+#    from _datetime import *
+#except ImportError:
+#    pass
+#else:
+#    # Clean up unused names
+#    del (_DAYNAMES, _DAYS_BEFORE_MONTH, _DAYS_IN_MONTH,
+#         _DI100Y, _DI400Y, _DI4Y, _MAXORDINAL, _MONTHNAMES,
+#         _build_struct_time, _call_tzinfo_method, _check_date_fields,
+#         _check_time_fields, _check_tzinfo_arg, _check_tzname,
+#         _check_utc_offset, _cmp, _cmperror, _date_class, _days_before_month,
+#         _days_before_year, _days_in_month, _format_time, _is_leap,
+#         _isoweek1monday, _math, _ord2ymd, _time, _time_class, _tzinfo_class,
+#         _wrap_strftime, _ymd2ord)
+#    # XXX Since import * above excludes names that start with _,
+#    # docstring does not get overwritten. In the future, it may be
+#    # appropriate to maintain a single module level docstring and
+#    # remove the following line.
+#    #from _datetime import __doc__

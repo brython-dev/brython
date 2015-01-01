@@ -14,8 +14,8 @@ Brython follows the Python syntax:
 - generators (keyword `yield`), generator expressions : `foo(x for x in bar if x>5)`
 - ternary operator: `x = r1 if condition else r2`
 - functions can be defined with any combination of fixed arguments, default values, variable positional arguments 
- and variable keyword arguments : `def foo(x, y=0, \*args, \*\*kw):`
-- unpacking of argument lists or dictionaries in function calls: `x = foo(\*args, \*\*kw)`
+ and variable keyword arguments : `def foo(x, y=0, *args, **kw):`
+- unpacking of argument lists or dictionaries in function calls: `x = foo(*args, **kw)`
 - classes with multiple inheritance
 - decorators
 - imports :  
@@ -28,20 +28,15 @@ Brython follows the Python syntax:
 Keywords and built-in functions
 -------------------------------
 
-Brython supports most keywords and functions of Python 3 :
+Brython supports all the keywords and most functions of Python 3 :
 
-- keywords : `as, assert, break, class, continue, def, del, elif, else, except, False, finally, for, from, global, if, import, is, lambda, None, pass, return, True, try, while, with, yield`
+- keywords : `as, assert, break, class, continue, def, del, elif, else, except, False, finally, for, from, global, if, import, is, lambda, None, nonlocal, pass, return, True, try, while, with, yield`
 - built-in functions : `abs(), all(), any(), ascii(), bin(), bool(), bytes(), callable(), chr(), classmethod(), delattr(), dict(), dir(), divmod(), enumerate(), eval(), exec(), filter(), float(), frozenset(), getattr(), globals(), hasattr(), hash(), hex(), id(), input(), int(), isinstance(), iter(), len(), list(), locals(), map(), max(), min(), next(), object(), open(), ord(), pow(), print(), property(), range(), repr(), reversed(), round(), set(), setattr(), slice(), sorted(), str(), sum(), super(), tuple(), type(), zip(), __import__()`
 
 By default, `print()` will output to the web browser console and so are the error messages. `sys.stderr` and `sys.stdout` can be assigned to an object with a `write()` method, and this allows for the redirection of output to go to a window or text area, for example
 
 `sys.stdin` is not implemented at this time, however there is an `input()` built-in function that will open a blocking input dialog (a prompt).
 
-To open a print dialog (to a printer), call `win.print` (`win` is defined in module **browser**)
+To open a print dialog (to a printer), call `window.print` (`window` is defined in module **browser**)
 
-The following are not implemented in the current version : 
-
-- keyword `nonlocal`
-- built-in functions `help(),  memoryview(), vars()`
-
-
+The following built-in functions `memoryview(), vars()` are not implemented in the current version

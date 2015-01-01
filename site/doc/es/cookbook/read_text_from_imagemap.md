@@ -9,40 +9,36 @@ Solución
 
 Usaremos el atributo `onmouseover` de la etiqueta HTML `area` y le pasaremos una función python que, en función de su posición, devolverá una cadena de texto.
 
-<table width="100%">
-<tr>
-<td style="width:40%;padding-right:10px;">
-    from browser import document as doc
-    
-    def writetext(txt):
-        doc["description"].text = ""
-        doc["description"] <= txt
 
-</td>
-<td style="background-color:#FF7400;text-align:center;">
+```exec_on_load
+from browser import document
+
+def writetext(txt):
+    document["description"].text = ""
+    document["description"] <= txt
+
+coords = [(0,0,160,95),(180,0,400,165),(0,120,180,400),(175,235,270,400)]
+messages = ['Avión volando a wonderland en un soleado día',
+    'El sol y los planetas gigantes gaseosos como Jupiter son, a distancia, \
+        los mayores objetos de nuestro sistema solar.',
+    'Este soy yo o eres tú.',
+    'Daniel el travieso!!!!!!!!']
+prompt = 'Mueve el ratón sobre los diferentes elementos de la imagen para ver \
+    una descripción.'
+
+writetext(prompt)
+
+for coord, msg in zip(coords, messages):
+    area = html.AREA(shape="rect", coords=coord)
+    area.bind('mouseover', lambda ev, msg=msg:writetext(msg))
+    area.bind('mouseout', lambda ev:writetext(prompt))
+    document["familymap"] <= area
+```
+
+<div id="description" style="background-color:#700;padding:10px;color:#FFF;"></div>
+
+
 <img src="../images/imagemap_example.png" width ="400" height ="400" alt="Happy Family" usemap="#familymap" />
 
-<map name="familymap">
-<area shape="rect" coords="0,0,160,95" onmouseover="writetext('Avión volando a wonderland en un soleado día')" />
-<area shape="rect" coords="180,0,400,165" onmouseover="writetext('El sol y los planetas gigantes gaseosos como Jupiter son, a distancia, los mayores objetos de nuestro sistema solar.')" />
-<area shape="rect" coords="0,120,180,400" onmouseover="writetext('Este soy yo o eres tú.')" />
-<area shape="rect" coords="175,235,270,400" onmouseover="writetext('Daniel el travieso!!!!!!!!')" />
+<map name="familymap" id="familymap">
 </map>
-</td>
-</tr>
-
-<tr>
-<td></td>
-<td style="background-color:#ccccee;">
-<div id="description"><blink><b>Mueve el ratón sobre los diferentes elementos de la imagen para ver una descripción.</b></blink></div>
-</td>
-</tr>
-</table>
-
-<script type="text/python3">
-from browser import document as doc
-def writetext(txt):
-    doc["description"].text = ""
-    doc["description"] <= txt
-window.writetext = writetext
-</script>

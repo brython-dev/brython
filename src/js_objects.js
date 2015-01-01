@@ -45,7 +45,7 @@ $JSConstructorDict.__call__ = function(self){
     // It takes Javascript arguments so we must convert
     // those passed to the Python function
     var args = [null]
-    for(var i=1;i<arguments.length;i++){
+    for(var i=1, _len_i = arguments.length; i < _len_i;i++){
         args.push(pyobj2jsobj(arguments[i]))
     }
     var factory = self.func.bind.apply(self.func, args)
@@ -105,20 +105,22 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
         // instances of JSObject and JSConstructor are transformed into the
         // underlying Javascript object
         return pyobj.js
-    }else if(klass===$B.DOMNode){
-        // instances of DOMNode are transformed into the underlying DOM element
+    }else if(klass.__mro__.indexOf($B.DOMNode)>-1){
+        // instances of DOMNode or its subclasses are transformed into the 
+        // underlying DOM element
         return pyobj.elt
     }else if([_b_.list.$dict,_b_.tuple.$dict].indexOf(klass)>-1){
         // Python list : transform its elements
         var res = []
-        for(var i=0;i<pyobj.length;i++){res.push(pyobj2jsobj(pyobj[i]))}
+        for(var i=0, _len_i = pyobj.length; i < _len_i;i++){res.push(pyobj2jsobj(pyobj[i]))}
         return res
     }else if(klass===_b_.dict.$dict){
         // Python dictionaries are transformed into a Javascript object
         // whose attributes are the dictionary keys
         var jsobj = {}
-        for(var j=0;j<pyobj.$keys.length;j++){
-            jsobj[pyobj.$keys[j]] = pyobj2jsobj(pyobj.$values[j])
+        var items = _b_.list(_b_.dict.$dict.items(pyobj))
+        for(var j=0, _len_j = items.length; j < _len_j;j++){
+            jsobj[items[j][0]] = pyobj2jsobj(items[j][1])
         }
         return jsobj
     }else if(klass===$B.builtins.float.$dict){
@@ -158,7 +160,7 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
             // objects usable by the underlying function F
             var res = function(){
                 var args = [],arg
-                for(var i=0;i<arguments.length;i++){
+                for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     args.push(pyobj2jsobj(arguments[i]))
                 }
                 // IE workaround
@@ -186,7 +188,7 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
     var res
     // search in classes hierarchy, following method resolution order
     var mro = [$JSObjectDict,$ObjectDict]
-    for(var i=0;i<mro.length;i++){
+    for(var i=0, _len_i = mro.length; i < _len_i;i++){
         var v=mro[i][attr]
         if(v!==undefined){
             res = v
@@ -199,7 +201,7 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
             // return a function that takes obj as first argument
             return function(){
                 var args = [obj],arg
-                for(var i=0;i<arguments.length;i++){
+                for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     arg = arguments[i]
                     if(arg && (arg.__class__===$JSObjectDict || arg.__class__===$JSConstructorDict)){
                         args.push(arg.js)

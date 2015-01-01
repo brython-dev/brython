@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="description" content="Hello world demo written in Brython www.brython.info">
+<meta name="keywords" content="Python,Brython">
+<meta name="author" content="Pierre Quentel">
+<meta charset="iso-8859-1">
+
+<link rel="stylesheet" href="slideshow.css">
+<script type="text/javascript" src="/src/brython.js"></script>
+
+</head>
+<body onLoad="brython(1)">
+
+<script type="text/python">
+from browser import document, window
+import slideshow
+
+document['cours'].style.height = int(0.95*window.innerHeight)
+document['cours'].style.width = int(0.9*window.innerWidth)
+slideshow.show('slideshow_en.pss',document['cours'])
+
+</script>
+<div id="cours"></div>
+</body>
+</html>
+

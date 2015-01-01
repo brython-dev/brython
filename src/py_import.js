@@ -136,7 +136,7 @@ function run_js(module,path,module_contents){
 
 function show_ns(){
     var kk = Object.keys(window)
-    for (var i=0; i < kk.length; i++){
+    for (var i=0, _len_i = kk.length; i < _len_i; i++){
         console.log(kk[i])
         if(kk[i].charAt(0)=='$'){console.log(eval(kk[i]))}
     }
@@ -163,7 +163,8 @@ function import_py(module,path,package){
     return run_py(module,path,module_contents)
 }
 
-function run_py(module,path,module_contents) {
+//$B.run_py is needed for import hooks..
+$B.run_py=run_py=function(module,path,module_contents) {
     var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
     $B.$py_module_path[module.name]=path
 
@@ -175,7 +176,7 @@ function run_py(module,path,module_contents) {
     var mod_node = new $Node('expression')
     new $NodeJSCtx(mod_node,'var $module=(function()')
     root.insert(0,mod_node)
-    for(var i=0;i<body.length;i++){mod_node.add(body[i])}
+    for(var i=0, _len_i = body.length; i < _len_i;i++){mod_node.add(body[i])}
 
     // $globals will be returned when the anonymous function is run
     var ret_node = new $Node('expression')
@@ -197,9 +198,9 @@ function run_py(module,path,module_contents) {
 
     }catch(err){
         console.log(err+' for module '+module.name)
-        for(var attr in err){
+        //for(var attr in err){
             //console.log(attr, err[attr])
-        }
+        //}
         console.log('message: '+err.message)
         console.log('filename: '+err.fileName)
         console.log('linenum: '+err.lineNumber)
@@ -289,7 +290,7 @@ function import_from_stdlib(mod_name, origin, package){
 
     var py_paths = [$B.brython_path+'Lib/'+mod_path+'.py',
         $B.brython_path+'Lib/'+mod_path+'/__init__.py']
-    for(var i=0;i<py_paths.length;i++){
+    for(var i=0, _len_i = py_paths.length; i < _len_i;i++){
         var py_mod = import_py(module, py_paths[i],package)
         if(py_mod!==null) return true
     }
@@ -301,12 +302,14 @@ function import_from_site_packages(mod_name, origin, package){
     mod_path = mod_name.replace(/\./g,'/')
     var py_paths = [$B.brython_path+'Lib/site-packages/'+mod_path+'.py',
         $B.brython_path+'Lib/site-packages/'+mod_path+'/__init__.py']
-    for(var i=0;i<py_paths.length;i++){
+    for(var i=0, _len_i = py_paths.length; i < _len_i;i++){
         var py_mod = import_py(module, py_paths[i], package)
         if(py_mod!==null){
-            console.log(py_paths[i].substr(py_paths[i].length-12))
+            //console.log(py_paths[i].substr(py_paths[i].length-12))
             if(py_paths[i].substr(py_paths[i].length-12)=='/__init__.py'){
-                py_mod.__package__ = mod_name
+                // Since "__init__.py" was imported, module is a package
+                $B.imported[mod_name].$package = true;
+                py_mod.__package__ = mod_name  // py_mod is bool!!
             }
             return py_mod
         }
@@ -332,14 +335,14 @@ function import_from_caller_folder(mod_name,origin,package){
     var py_paths = [origin_dir+'/'+mod_path+'.py',
         origin_dir+'/'+mod_path+'/__init__.py']
 
-    for (var i=0; i< $B.path.length; i++) {
+    for (var i=0, _len_i = $B.path.length; i < _len_i; i++) {
         if ($B.path[i].substring(0,4)=='http') continue
         var _path = origin_dir+'/'+ $B.path[i]+'/' 
         py_paths.push(_path+ mod_path + ".py")
         py_paths.push(_path+ mod_path + "/__init__.py")
     }
 
-    for(var i=0;i<py_paths.length;i++){
+    for(var i=0, _len_i = py_paths.length; i < _len_i;i++){
         //console.log(module, py_paths[i])
         var py_mod = import_py(module, py_paths[i],package)
         if(py_mod!==null) return py_mod
@@ -360,7 +363,7 @@ $B.$import = function(mod_name,origin){
     
     var parts = mod_name.split('.')
     var norm_parts = []
-    for(i=0;i<parts.length;i++){
+    for(var i = 0, _len_i = parts.length; i < _len_i;i++){
         norm_parts.push(parts[i].substr(0,2)=='$$' ? parts[i].substr(2) : parts[i])
     }
     mod_name = norm_parts.join('.')
@@ -424,7 +427,7 @@ $B.$import = function(mod_name,origin){
     // X, then import X.Y
     var mod_elts = mod_name.split('.')
     
-    for(var i=0;i<mod_elts.length;i++){
+    for(var i=0, _len_i = mod_elts.length; i < _len_i;i++){
     
         // Loop to import all the elements of the module name
     
@@ -439,7 +442,7 @@ $B.$import = function(mod_name,origin){
     
         // Try all the functions ; exit as soon as one of them returns a value
         var flag = false
-        for(j=0;j<funcs.length;j++){
+        for( var j = 0, _len_j = funcs.length; j < _len_j;j++){
             var res = funcs[j](elt_name,origin,package)
             if(res!==null){
                 flag = true
@@ -480,7 +483,7 @@ $B.$import_from = function(mod_name,names,origin){
         mod=$B.imported[mod_name]
     }
     
-    for(var i=0;i<names.length;i++){
+    for(var i=0, _len_i = names.length; i < _len_i;i++){
         if(mod[names[i]]===undefined){
             if(mod.$package){
                 var sub_mod = mod_name+'.'+names[i]

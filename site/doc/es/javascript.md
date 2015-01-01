@@ -8,6 +8,8 @@ Define dos clases :
 **javascript**.`JSObject`
 >  es una clase cuyas instancias envuelven a los objetos Javascript
 
+> _**Warning : **_ Normalmente, esta clase no se usa directamente. Cuando se obtiene una referencia a un objeto Javascript con `window.js_obj` devuelve una instancia de `JSObject`
+
 > <code>JSObject(_jsobj_)</code> devuelve un objeto *brobj* que envuelve al objeto Javascript *jsobj*. Las operaciones realizadas sobre la instancia `JSObject` impactan en el objeto Javascript convirtiendo de la forma más precisa los tipos Python en tipos Javascript
 
 > Si *jsobj* es una función, los argumentos que se pasen a *brobj* serán convertidos antes de ser pasados a *jsobj* de la siguiente forma
@@ -34,20 +36,8 @@ Define dos clases :
 
 > <code>JSConstructor(_jsconstr_)</code> devuelve un objeto Brython. Este objeto permite llamadas; devuelve una instancia de `JSObject` representando el Javascript obtenido al pasar los argumentos, convertidos como se detalla en la tabla anterior, al constructor *jsconstr* 
 
-Ejemplos
---------
-Usando `JSObject` la popular librería javascript jQuery
-
->    from javascript import JSObject
->
->    def callback(*args):
->        ...
->
->    _jQuery=JSObject($("body"))
->    _jQuery.click(callback)
-
-> Ver [jQuery](../../gallery/jsobject_example.html) para una demo en directo.
-
+Ejemplo
+-------
 
 Usando `JSConstructor` con la librería javascript three.js:
 

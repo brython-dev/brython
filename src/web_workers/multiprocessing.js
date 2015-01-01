@@ -1,17 +1,17 @@
-
-self.addEventListener('message', function(e) {
+self.addEventListener('message', function (e) {
 
     //we get an error when we put var before __BRYTHON__ below
-    __BRYTHON__={isa_web_worker:true}
+    __BRYTHON__ = { isa_web_worker: true }
 
     //importScripts('brython.js')
-    importScripts('/src/brython_builtins.js', '/src/version_info.js', 
-                  '/src/py2js.js',
-                '/src/py_object.js', '/src/py_type.js', '/src/py_utils.js',
-                '/src/py_builtin_functions.js', '/src/py_set.js', '/src/js_objects.js',
-                '/src/py_import.js', '/src/py_int.js', '/src/py_float.js', 
-                '/src/py_complex.js',
-                '/src/py_dict.js', '/src/py_list.js', '/src/py_string.js');
+    importScripts('/src/brython_builtins.js', '/src/version_info.js',
+        '/src/py2js.js',
+        '/src/py_object.js', '/src/py_type.js', '/src/py_utils.js',
+        '/src/py_builtin_functions.js', '/src/py_set.js',
+        '/src/js_objects.js',
+        '/src/py_import.js', '/src/py_int.js', '/src/py_float.js',
+        '/src/py_complex.js',
+        '/src/py_dict.js', '/src/py_list.js', '/src/py_string.js');
 
     __BRYTHON__.$py_src = {}
 
@@ -30,14 +30,14 @@ self.addEventListener('message', function(e) {
     __BRYTHON__.imported = {}
 
     // Options passed to brython(), with default values
-    __BRYTHON__.$options= {}
+    __BRYTHON__.$options = {}
 
     // Used to compute the hash value of some objects (see
     // py_builtin_functions.js)
-    __BRYTHON__.$py_next_hash = -Math.pow(2,53)
+    __BRYTHON__.$py_next_hash = -Math.pow(2, 53)
 
-    __BRYTHON__.$options={}
-    __BRYTHON__.debug=__BRYTHON__.$options.debug=0
+    __BRYTHON__.$options = {}
+    __BRYTHON__.debug = __BRYTHON__.$options.debug = 0
 
     // Stacks for exceptions and function calls, used for exception handling
     __BRYTHON__.exception_stack = []
@@ -49,23 +49,34 @@ self.addEventListener('message', function(e) {
 
     // capture all standard output
     var output = []
-    __BRYTHON__.stdout = {write:function(data){output.push(data)}}
-
-    // insert already defined builtins
-    for(var $py_builtin in __BRYTHON__.builtins){
-       eval("var "+$py_builtin+"=__BRYTHON__.builtins[$py_builtin]")
+    __BRYTHON__.stdout = {
+        write: function (data) {
+            output.push(data)
+        }
     }
 
-    var $defaults={}
-    eval('var _result=('+e.data.target+')('+e.data.args+')')
+    // insert already defined builtins
+    for (var $py_builtin in __BRYTHON__.builtins) {
+        eval("var " + $py_builtin + "=__BRYTHON__.builtins[$py_builtin]")
+    }
 
-    if (e.data.pos !== undefined) {  // allows parent to know where this individual
-                                     // result belongs in the result list
-      self.postMessage({stdout: output.join(''), 
-                        result:_result,
-                        pos: e.data.pos})
+    var $defaults = {}
+    eval('var _result=(' + e.data.target + ')(' + e.data.args + ')')
+
+
+    if (e.data.pos !== undefined) {
+        // allows parent to know where this individual result belongs in the
+        // result list
+        self.postMessage({
+            stdout: output.join(''),
+            result: _result,
+            pos: e.data.pos
+        })
     } else {
-      self.postMessage({stdout: output.join(''), result:_result.toString()})
+        self.postMessage({
+            stdout: output.join(''),
+            result: _result.toString()
+        })
     }
 
 }, false);

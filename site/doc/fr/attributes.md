@@ -25,7 +25,7 @@ Comme le nom des attributs peut être différent d'un navigateur à l'autre, Bry
 <td>*parent*</td><td>instance de `DOMNode`</td><td>l'élément parent de l'élément (`None` pour `document`)</td><td>L</td>
 </tr>
 <tr>
-<td>*class\_name*</td><td>chaine</td><td>le nom de la classe de l'élément (attribut *class* de la balise)<br></td><td>L/E</td>
+<td>*class_name*</td><td>chaine</td><td>le nom de la classe de l'élément (attribut *class* de la balise)<br></td><td>L/E</td>
 </tr>
 <tr>
 <td>*clear*</td><td>fonction</td><td><code>`elt.clear()</code>` supprime tous les descendants de l'élément</td><td>L</td>

@@ -23,8 +23,8 @@ function $getMouseOffset(target, ev){
 function $getPosition(e){
     var left = 0;
     var top  = 0;
-    var width = e.offsetWidth;
-    var height = e.offsetHeight;
+    var width = e.width || e.offsetWidth;
+    var height = e.height || e.offsetHeight;
 
     while (e.offsetParent){
         left += e.offsetLeft;
@@ -591,18 +591,16 @@ DOMNode.bind = function(self,event){
     var _id
     if(self.elt.nodeType===9){_id=0}
     else{_id = self.elt.$brython_id}
-    var ix = $B.events.$keys.indexOf(_id)
-    if(ix===-1){
-        $B.events.$keys.push(_id)
-        $B.events.$values.push(dict())
-        ix = $B.events.$keys.length-1
+    // if element id is not referenced in $B.events, create a new entry
+    if(!_b_.dict.$dict.__contains__($B.events, _id)){
+        _b_.dict.$dict.__setitem__($B.events, _id, dict())
     }
-    var ix_event = $B.events.$values[ix].$keys.indexOf(event)
-    if(ix_event==-1){
-        $B.events.$values[ix].$keys.push(event)
-        $B.events.$values[ix].$values.push([])
-        ix_event = $B.events.$values[ix].$values.length-1
+    var item = _b_.dict.$dict.__getitem__($B.events, _id)
+    // If event is not already registered for the element, create a new list
+    if(!_b_.dict.$dict.__contains__(item, event)){
+        _b_.dict.$dict.__setitem__(item, event, [])
     }
+    var evlist = _b_.dict.$dict.__getitem__(item, event)
     for(var i=2;i<arguments.length;i++){
         var func = arguments[i]
         var callback = (function(f){
@@ -619,8 +617,7 @@ DOMNode.bind = function(self,event){
         }else if(window.attachEvent){
             self.elt.attachEvent("on"+event,callback)
         }
-        
-        $B.events.$values[ix].$values[ix_event].push([func,callback])
+        evlist.push([func, callback])
     }
 }
 
@@ -653,13 +650,13 @@ DOMNode.clone = function(self){
     res.elt.$brython_id=Math.random().toString(36).substr(2, 8)
 
     // bind events on clone to the same callbacks as self
-    var ix_elt = $B.events.$keys.indexOf(self.elt.$brython_id)
-    if(ix_elt!=-1){
-        var events = $B.events.$values[ix_elt]
-        for(var i=0;i<events.$keys.length;i++){
-            var event = events.$keys[i]
-            for(var j=0;j<events.$values[i].length;j++){
-                DOMNode.bind(res,event,events.$values[i][j][0])
+    if(_b_.dict.$dict.__contains__($B.events, self.elt.$brython_id)){
+        var events = _b_.dict.$dict.__getitem__($B.events, self.elt.$brython_id)
+        var items = _b_.list(_b_.dict.$dict.items(events))
+        for(var i=0;i<items.length;i++){
+            var event = items[i][0]
+            for(var j=0;j<items[i][1].length;j++){
+                DOMNode.bind(res,event,items[i][1][j][0])
             }
         }
     }
@@ -684,8 +681,9 @@ DOMNode.get = function(self){
     for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
     var $ns=$B.$MakeArgs('get',args,[],[],null,'kw')
     var $dict = {}
-    for(var i=0;i<$ns['kw'].$keys.length;i++){
-        $dict[$ns['kw'].$keys[i]]=$ns['kw'].$values[i]
+    var items = _b_.list(_b_.dict.$dict.items($ns['kw']))
+    for(var i=0;i<items.length;i++){
+        $dict[items[i][0]]=items[i][1]
     }
     if($dict['name']!==undefined){
         if(obj.getElementsByName===undefined){
@@ -811,7 +809,6 @@ DOMNode.reset = function(self){ // for FORM
 DOMNode.style = function(self){
     // set attribute "float" for cross-browser compatibility
     self.elt.style.float = self.elt.style.cssFloat || self.style.styleFloat
-    console.log('get style')
     return $B.JSObject(self.elt.style)
 }
 
@@ -844,8 +841,12 @@ DOMNode.set_html = function(self,value){
 }
 
 DOMNode.set_style = function(self,style){ // style is a dict
-    for(var i=0;i<style.$keys.length;i++){
-        var key = style.$keys[i],value=style.$values[i]
+    if(!_b_.isinstance(style, _b_.dict)){
+        throw TypeError('style must be dict, not '+$B.get_class(style).__name__)
+    }
+    var items = _b_.list(_b_.dict.$dict.items(style))
+    for(var i=0;i<items.length;i++){
+        var key = items[i][0],value=items[i][1]
         if(key.toLowerCase()==='float'){
             self.elt.style.cssFloat = value
             self.elt.style.styleFloat = value
@@ -898,13 +899,11 @@ DOMNode.unbind = function(self,event){
     // if no function is specified, remove all callback functions
     var _id
     if(self.elt.nodeType==9){_id=0}else{_id=self.elt.$brython_id}
-    var ix_elt = $B.events.$keys.indexOf(_id)
-    if(ix_elt==-1) return
+    if(!_b_.dict.$dict.__contains__($B.events, _id)) return
+    var item = _b_.dict.$dict.__getitem__($B.events, _id)
+    if(!_b_.dict.$dict.__contains__(item, event)) return
 
-    var ix_event = $B.events.$values[ix_elt].$keys.indexOf(event)
-    if(ix_event==-1) return
-
-    var events = $B.events.$values[ix_elt].$values[ix_event]
+    var events = _b_.dict.$dict.__getitem__(item, event)
     if(arguments.length===2){
         for(var i=0;i<events.length;i++){
             var callback = events[i][1]
@@ -914,7 +913,7 @@ DOMNode.unbind = function(self,event){
                 self.elt.detachEvent(event,callback,false)
             }
         }
-        $B.events.$values[ix_elt][ix_event] = []
+        events = []
         return
     }
     for(var i=2;i<arguments.length;i++){
@@ -928,8 +927,6 @@ DOMNode.unbind = function(self,event){
                     self.elt.detachEvent(event,callback,false)
                 }
                 events.splice(j,1)
-                // Changes were made to listeners so the tracking array is updated
-                $B.events.$values[ix_elt][ix_event] = events
                 flag = true
                 break
             }
@@ -1280,7 +1277,8 @@ var win =  JSObject(window) //{__class__:$WinDict}
 win.get_postMessage = function(msg,targetOrigin){
     if(isinstance(msg,dict)){
         var temp = {__class__:'dict'}
-        for(var i=0;i<msg.__len__();i++) temp[msg.$keys[i]]=msg.$values[i]
+        var items = _b_.list(_b_.dict.$dict.items(msg))
+        for(var i=0;i<items.length;i++) temp[items[i][0]]=items[i][1]
         msg = temp
     }
     return window.postMessage(msg,targetOrigin)

@@ -11,14 +11,14 @@ function _py(obj){
     if(obj===null){return None}
     if(isinstance(obj,list)){
         var res = []
-        for(var i=0;i<obj.length;i++){
+        for(var i=0, _len_i = obj.length; i < _len_i;i++){
             res.push(_py(obj[i]))
         }
         return res
     }
     if(obj.__class__!==undefined){
         if(obj.__class__===list){
-            for(var i=0;i<obj.length;i++){
+            for(var i=0, _len_i = obj.length; i < _len_i;i++){
                 obj[i] = _py(obj[i])
             }
         }
@@ -43,13 +43,14 @@ function _js(obj){
     if(isinstance(obj,float)) return obj.value
     if(isinstance(obj,[list,tuple])){
         var res = []
-        for(var i=0;i<obj.length;i++){res.push(_js(obj[i]))}
+        for(var i=0, _len_i = obj.length; i < _len_i;i++){res.push(_js(obj[i]))}
         return res
     }
     if(isinstance(obj,dict)){
         var res = new Object()
-        for(var i=0;i<obj.$keys.length;i++){
-            res[_js(obj.$keys[i])]=_js(obj.$values[i])
+        var items = _b_.list(_b_.dict.$dict.items(obj))
+        for(var i=0, _len_i = items.length; i < _len_i;i++){
+            res[_js(items[i][0])]=_js(items[i][1])
         }
         return res
     }

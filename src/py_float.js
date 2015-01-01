@@ -104,7 +104,7 @@ $FloatDict.fromhex = function(arg){
    //if (_int === undefined) throw _b_.ValueError('invalid hexadecimal floating-point string')
    var _sum=_int
 
-   for (var i=1; i < _fraction.length; i++) _sum+=parseInt(_fraction.charAt(i),16)/Math.pow(16,i) 
+   for (var i=1, _len_i = _fraction.length; i < _len_i; i++) _sum+=parseInt(_fraction.charAt(i),16)/Math.pow(16,i) 
    return float(_sign * _sum * Math.pow(2, parseInt(_exponent.substring(1))))
 }
 
@@ -126,6 +126,10 @@ $FloatDict.__format__ = function(self, format_spec) {
 }
 
 $FloatDict.__hash__ = function(self) {
+    if (self === undefined) {
+       return $FloatDict.__hashvalue__ || $B.$py_next_hash--  // for hash of float type (not instance of int)
+    }
+
     var _v= self.value
     if (_v === Infinity) return 314159
     if (_v === -Infinity) return -271828

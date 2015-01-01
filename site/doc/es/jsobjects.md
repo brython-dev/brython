@@ -36,9 +36,9 @@ Otra opción sería forzar la instroducción de la función _echo_ en el espacio
 
 ### Objetos en programas Javascript
 
-Un documento HTML puede usar librerías o scripts Javascript, además de librerías y scripts Python. Brython no puede hacer uso de forma directa de los objetos Javascript : por ejemplo, la búsqueda de atributos usa el atributo  _\_\_class\_\__, que no existe para objetos Javascript
+Un documento HTML puede usar librerías o scripts Javascript, además de librerías y scripts Python. 
 
-Para poder ser usados en un script Python, deben ser transformados explícitamente por la función _JSObject()_ definida en el módulo **javascript**
+Los nombres añadidos al espacio global de nombres de javascript mediante scripts Javascript se encuentran disponibles para los scripts Brython como atributos del objeto `window` definido en el módulo **browser**
 
 Por ejemplo :
 
@@ -47,10 +47,34 @@ Por ejemplo :
     </script>
     
     <script type="text/python">
-    from browser import document as doc
-    from javascript import JSObject
-    doc['result'].value = JSObject(circle).surface(10)
+    from browser import document, window
+    
+    document['result'].value = window.circle.surface(10)
     </script>
+    
+Los objetos Javascript se convierten a su equivalente en Python mediante de la siguiente forma:
+
+<table border='1' cellpadding=3>
+
+<tr><th>Objeto Javascript (js\_obj)</th><th>Objeto Python (window.js\_obj)</th>
+</tr>
+<tr><td>Elemento DOM</td><td>instancia de `DOMNode`</td></tr>
+<tr><td>Evento DOM</td><td>instancia de `DOMEvent`</td></tr>
+<tr><td>Colección de elementos DOM</td><td>lista de instancias de `DOMNode`</td>
+</tr>
+<tr><td>`null, true, false`</td><td>`None, True, False`</td></tr>
+<tr><td>Integer</td><td>instancia de `int`</td></tr>
+<tr><td>Float</td><td>instancia de `float`</td></tr>
+<tr><td>String</td><td>instancia de `str`</td></tr>
+<tr><td>Array</td><td>instancia de `list`</td></tr>
+</table>
+
+Los otros objetos Javascript se convierten a una instancia de la clase
+`JSObject` definida en el módulo **javascript**. Se pueden convertir a un diccionario Python mediante:
+
+>    py_obj = dict(window.js_obj)
+
+Si el objeto Javascript es una función, los argumentos que se le pasan a la función Python se convierten a objetos Javascripts, usando la tabla anterior de forma opuesta
 
 ### Usando constructores Javascript
 
@@ -73,9 +97,10 @@ Por ejemplo :
     </script>
     
     <script type="text/python">
-    from browser import alert
+    from browser import alert, window
     from javascript import JSConstructor
-    rectangle = JSConstructor(Rectangle)
+    
+    rectangle = JSConstructor(window.Rectangle)
     alert(rectangle(10,10,30,30).surface())
     </script>
 
@@ -91,23 +116,22 @@ En la siguiente porción de código tenemos un ejemplo más completo de cómo po
     </head>
     
     <script type="text/python">
-        from browser import document as doc
-        from javascript import JSObject
+    from browser import document, window
         
-        def change_color(ev):
-          _divs=doc.get(selector='div')
-          for _div in _divs:
-              if _div.style.color != "blue":
-                 _div.style.color = "blue"
-              else:
-                 _div.style.color = "red"
+    def change_color(ev):
+        _divs=document.get(selector='div')
+        for _div in _divs:
+            if _div.style.color != "blue":
+                _div.style.color = "blue"
+            else:
+                _div.style.color = "red"
         
-        # creating an alias for "$" in jQuery would cause a SyntaxError in Python
-        # so we assign jQuery to a variable named jq
+    # creating an alias for "$" in jQuery would cause a SyntaxError in Python
+    # so we assign jQuery to a variable named jq
 
-        jq = jQuery.noConflict(true)
-        _jQuery=JSObject(jq("body"))
-        _jQuery.click(change_color)    
+    jq = window.jQuery.noConflict(True)
+    _jQuery = jq("body")
+    _jQuery.click(change_color)    
     </script>
     
     <body onload="brython()">
@@ -118,3 +142,7 @@ En la siguiente porción de código tenemos un ejemplo más completo de cómo po
      
     </body>
     </html>
+
+### Otros ejemplos
+
+Puedes encontrar otros ejemplos en la [galería](../../gallery/gallery_en.html) para ver como usar librerías Javascript (Three, Highcharts, Raphael) en scripts Brython.

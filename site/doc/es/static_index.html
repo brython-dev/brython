@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="../doc_brython.css">
 
 <script src="/src/brython.js"></script>
+<script type="text/python" src="../docs.py"></script>
 
 <script type="text/python3">
 import time
@@ -15,20 +16,20 @@ header.show('../../')
 
 def load():
     target = 'content'
-    url = doc.query.getfirst('page','intro')+'.md'
-    
+    url = doc.query.getfirst('page', 'intro') + '.md'
+
     # fake query string to bypass browser cache
-    qs = '?foo=%s' %time.time()
+    qs = '?foo=%s' % time.time()
     try:
-        src = open(url+qs).read()
+        src = open(url + qs).read()
     except IOError:
-        doc[target].html = "Page %s not found" %url
+        doc[target].html = "Page %s not found" % url
         return False
-    
-    mk,scripts = markdown.mark(src)
+
+    mk, scripts = markdown.mark(src)
     doc[target].html = mk
     for script in scripts:
-        exec(script,globals())
+        exec(script, globals())
 
 language = "fr"
 
@@ -105,7 +106,7 @@ load()
 <br><a class="navig" href="?page=cookbook%2Fcontent_in_div">Insertar contenido en un elemento</a>
 <br><a class="navig" href="?page=cookbook%2Fbasic_markup">Marcado HTML (bold,italic...)</a>
 <br><a class="navig" href="?page=cookbook%2Ftable">Tabla HTML</a>
-<br><a class="navig" href="?page=cookbook%2Fvalidate_form">Validar un formulario</a>
+<br><a class="navig" href="?page=cookbook%2Fselect_checkbox">Handle options in a SELECT</a>
 <br><a class="navig" href="?page=cookbook%2Fdrag_drop">Arrastrar y soltar</a>
 <br><a class="navig" href="?page=cookbook%2Fget_content">Obtener el contenido de un elemento</a>
 <br><a class="navig" href="?page=cookbook%2Fread_file">Leer el contenido de un fichero</a>
