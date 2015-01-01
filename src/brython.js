@@ -8396,47 +8396,48 @@ var $key_iterator=function(d){this.d=d
 this.current=0
 this.iter=new $item_generator(d)
 }
-$key_iterator.prototype.length=function(){return this.d.$used }
+$key_iterator.prototype.length=function(){return this.iter.length }
 $key_iterator.prototype.next=function(){return this.iter.next()[0]}
 var $value_iterator=function(d){this.d=d
 this.current=0
 this.iter=new $item_generator(d)
 }
-$value_iterator.prototype.length=function(){return this.d.$used }
+$value_iterator.prototype.length=function(){return this.iter.length }
 $value_iterator.prototype.next=function(){return this.iter.next()[1]}
-var $item_generator=function(d){this.i=-1
+var $item_generator=function(d){this.i=0
 this.data=d.$data
 this.size=d.$size
 this.used=d.$used
+this.length=0
+this.items=[]
+for(var k in d.$numeric_dict){this.items.push([parseFloat(k),d.$numeric_dict[k]])
 }
-$item_generator.prototype.next=function(){do{
-val=this.data[++this.i]
-}while((val===undefined ||val===dummy)&& this.i < this.size)
-if(this.i < this.size){return val
+for(var k in d.$string_dict){this.items.push([k,d.$string_dict[k]])
 }
-this.i--
+for(var i=0;i < this.data.length;i++){var _v=this.data[i]
+if(_v===undefined ||_v===dummy)continue
+this.items.push(_v)
+}
+this.length=this.items.length
+}
+$item_generator.prototype.next=function(){if(this.i < this.items.length){return this.items[this.i++]
+}
 throw _b_.StopIteration("StopIteration")
 }
-$item_generator.prototype.as_list=function(){ret=[]
-j=0
-try{
-while(1)ret[j++]=this.next()
-}catch(err){if(err.__name__ !=="StopIteration"){throw err }else{$B.$pop_exc()}}
-return ret
+$item_generator.prototype.as_list=function(){return this.items
 }
 var $item_iterator=function(d){this.d=d
 this.current=0
 this.iter=new $item_generator(d)
 }
-$item_iterator.prototype.length=function(){return this.d.$used }
+$item_iterator.prototype.length=function(){return this.iter.items.length }
 $item_iterator.prototype.next=function(){return _b_.tuple(this.iter.next())}
 var $copy_dict=function(left,right){var gen=new $item_generator(right)
 try{
 while(1){var item=gen.next()
 $DictDict.__setitem__(left,item[0],item[1])
 }}catch(err){if(err.__name__ !=="StopIteration"){throw err }else{$B.$pop_exc()}}}
-$iterator_wrapper=function(items,klass){var res={__class__:klass,__iter__:function(){return res},__len__:function(){return items.length()},__next__:function(){if(items.length()!==items.iter.used){throw _b_.RuntimeError("dictionary changed size during iteration")
-}
+$iterator_wrapper=function(items,klass){var res={__class__:klass,__iter__:function(){return res},__len__:function(){return items.length()},__next__:function(){
 return items.next()
 },__repr__:function(){return "<"+klass.__name__+" object>"},counter:-1
 }
@@ -8449,12 +8450,27 @@ $DictDict.keys=function(self){return $iterator_wrapper(new $key_iterator(self),$
 var $dict_valuesDict=$B.$iterator_class('dict_values')
 $DictDict.values=function(self){return $iterator_wrapper(new $value_iterator(self),$dict_valuesDict)
 }
-$DictDict.__bool__=function(self){return self.count > 0
-}
+$DictDict.__bool__=function(self){return $DictDict.__len__(self)> 0}
 $DictDict.__contains__=function(self,item){if(self.$jsobj)return self.$jsobj[item]!==undefined
+switch(typeof item){case 'number':
+return self.$numeric_dict[item]!==undefined
+case 'string':
+return self.$string_dict[item]!==undefined
+}
 return $lookup_key(self,item)!==undefined
 }
-$DictDict.__delitem__=function(self,arg){var bucket=$lookup_key(self,arg)
+$DictDict.__delitem__=function(self,arg){switch(typeof arg){case 'number':
+if(self.$numeric_dict[arg]===undefined)throw KeyError(_b_.str(arg))
+delete self.$numeric_dict[arg]
+if(self.$jsobj)delete self.$jsobj[arg]
+return
+case 'string':
+if(self.$string_dict[arg]===undefined)throw KeyError(_b_.str(arg))
+delete self.$string_dict[arg]
+if(self.$jsobj)delete self.$jsobj[arg]
+return
+}
+var bucket=$lookup_key(self,arg)
 if(bucket===undefined)throw KeyError(_b_.str(arg))
 self.$data[bucket]=dummy
 --self.$used
@@ -8463,7 +8479,7 @@ if(self.$jsobj)delete self.$jsobj[arg]
 $DictDict.__eq__=function(self,other){if(other===undefined){
 return self===dict
 }
-if(!isinstance(other,dict))return False
+if(!isinstance(other,dict))return false
 if($DictDict.__len__(self)!=$DictDict.__len__(other))return false
 var gen=new $item_generator(self)
 var keys1=[]
@@ -8478,7 +8494,14 @@ if(!getattr(v1,'__eq__')(v2))return false
 }
 return true
 }
-$DictDict.__getitem__=function(self,arg){var bucket=$lookup_key(self,arg)
+$DictDict.__getitem__=function(self,arg){if(self.$jsobj && self.$jsobj[arg]!==undefined)return self.$jsobj[arg]
+switch(typeof arg){case 'number':
+if(self.$numeric_dict[arg]!==undefined)return self.$numeric_dict[arg]
+break
+case 'string':
+if(self.$string_dict[arg]!==undefined)return self.$string_dict[arg]
+}
+var bucket=$lookup_key(self,arg)
 if(bucket !==undefined)return self.$data[bucket][1]
 throw KeyError(_b_.str(arg))
 }
@@ -8500,9 +8523,6 @@ if(obj.__class__===$B.JSObject.$dict){
 var res=new $DictClass([],[])
 for(var attr in obj.js){$DictDict.__setitem__(res,attr,obj.js[attr])
 }
-self.$data=res.$data
-self.$size=res.$size
-self.$used=res.$used
 self.$jsobj=obj.js
 return
 }}
@@ -8520,18 +8540,19 @@ $DictDict.__setitem__(self,key,value)
 }catch(err){if(err.__name__==='StopIteration'){$B.$pop_exc();break}
 throw err
 }}}
-if(kw.$used>0){
-for(var k in kw.$data){$DictDict.__setitem__(self,kw.$data[k][0],kw.$data[k][1])
-}}
-return
+if($DictDict.__len__(kw)> 0)$copy_dict(self,kw)
 }
 var $dict_iterator=$B.$iterator_class('dict iterator')
 $DictDict.__iter__=function(self){return $DictDict.keys(self)
 }
-$DictDict.__len__=function(self){return self.$used}
+$DictDict.__len__=function(self){var _num_len=0,_str_len=0
+for(var k in self.$numeric_dict)_num_len++
+for(var k in self.$string_dict)_str_len++
+return self.$used + _num_len + _str_len
+}
 $DictDict.__mro__=[$DictDict,$ObjectDict]
 $DictDict.__ne__=function(self,other){return !$DictDict.__eq__(self,other)}
-$DictDict.__next__=function(self){if(self.$iter==null){self.$iter=new $item_generator(self.$data)
+$DictDict.__next__=function(self){if(self.$iter==null){self.$iter=new $item_generator(self)
 }
 try{
 return self.$iter.next()
@@ -8544,7 +8565,15 @@ res.push(repr(itm[0])+':'+repr(itm[1]))
 }
 return '{'+ res.join(',')+'}'
 }
-$DictDict.__setitem__=function(self,key,value){
+$DictDict.__setitem__=function(self,key,value){switch(typeof key){case 'number':
+self.$numeric_dict[key]=value
+if(self.$jsobj)self.$jsobj[key]=value
+return
+case 'string':
+self.$string_dict[key]=value
+if(self.$jsobj)self.$jsobj[key]=value
+return
+}
 if(self.$fill + 1 > self.$size * 3 / 4){$grow_dict(self)
 }
 var bucket=$lookup_key(self,key)
@@ -8562,15 +8591,22 @@ self.$data=Array($DICT_MINSIZE)
 self.$size=$DICT_MINSIZE
 self.$fill=0
 self.$used=0
+self.$numeric_dict={}
+self.$string_dict={}
 if(self.$jsobj)self.$jsobj={}}
 $DictDict.copy=function(self){
 var res=_b_.dict()
 $copy_dict(res,self)
 return res
 }
-$DictDict.get=function(self,key,_default){var bucket=$lookup_key(self,key)
-if(bucket !==undefined){return self.$data[bucket][1]
+$DictDict.get=function(self,key,_default){if(_default===undefined)_default=None
+switch(typeof key){case 'number':
+return self.$numeric_dict[key]||_default
+case 'string':
+return self.$string_dict[key]||_default
 }
+var bucket=$lookup_key(self,key)
+if(bucket !==undefined)return self.$data[bucket][1]
 if(_default!==undefined)return _default
 return None
 }
@@ -8578,7 +8614,7 @@ var $dict_itemsDict=$B.$iterator_class('dict_itemiterator')
 $DictDict.items=function(self){return $iterator_wrapper(new $item_iterator(self),$dict_itemsDict)
 }
 $DictDict.fromkeys=function(keys,value){
-if(value===undefined)value=_b_.None
+if(value===undefined)value=None
 var res=dict()
 var keys_iter=_b_.iter(keys)
 while(1){try{var key=_b_.next(keys_iter)
@@ -9692,7 +9728,7 @@ this.format_str_re=new RegExp(
 '(%)' +
 '|((?!{)(?:{{)+' +
 '|(?:}})+(?!})' +
-'|{(?:[^{](?:[^{}]+|{[^{}]*})*)?})','g'
+'|{(?:[^{}](?:[^{}]+|{[^{}]*})*)?})','g'
 )
 this.format_sub_re=new RegExp('({[^{}]*})')
 this.format_spec_re=new RegExp(

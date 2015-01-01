@@ -174,14 +174,24 @@ Et un exemple d'animation sur un rectangle:
 <tr>
 <td>
 ```exec
-from browser import document, svg
+from browser import document, svg, timer
 
-rect = svg.rect(x=0, y=10, width=100, height=100)
-rect <= svg.animate(attributeName="x", From=-100, to=120,
-                    dur="10s", repeatCount="indefinite")
+rect = svg.rect(x=10, y=10, width=100, height=100)
+
+def move_rect():
+    # les attributs de l'élément SVG sont des chaines, il faut les convertir
+    # explicitement en entiers
+    rect.y = int(rect.y)+1
+    
+    # termine l'animation quand le rectangle arrive à la cible
+    if int(rect.y)>50:
+        timer.clear_interval(loop)
 
 panel = document['panel5']
 panel <= rect
+
+# initialise la boucle d'animation
+loop = timer.set_interval(move_rect, 30)
 ```
 </td>
 
