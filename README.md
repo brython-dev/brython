@@ -13,7 +13,7 @@ Here is a simple example of an HTML page running Python:
     <html>
 
         <head>
-            <script src="brython.js"></script>
+            <script src="brython_dist.js"></script>
         </head>
 
         <body onload="brython()">
@@ -36,7 +36,7 @@ Here is a simple example of an HTML page running Python:
 
 To use Brython, all there is to do is:
 
-1. Load the script [brython.js](http://brython.info/src/brython_dist.js "Brython from the site brython.info").
+1. Load the script [brython_dist.js](http://brython.info/src/brython_dist.js "Brython from the site brython.info").
 2. Run the function brython() on page load, like `<body onload=brython()>`.
 3. Write Python code inside tags `<script type="text/python">` or linking it.
 
@@ -54,12 +54,13 @@ It supports lastest specs of HTML5/CSS3, and can use CSS Frameworks like Bootstr
 
 Getting started
 ===============
-In the Releases section, load the latest version of the Brython site mirror,
-unzip it and start the built-in web server `server.py`. This will point your
-browser to [http://localhost:8000/site](http://localhost:8000/site):
-you access a clone of the [Brython site](http://brython.info "Brython Homepage")
-with an online editor, a console similar to the CPython interpreter,
-a gallery with many examples and a comprehensive documentation.
+In the Releases section of the Brython.info site, obtain the latest release from GitHub.
+Unzip or untar the release file, and start the built-in web server `server.py` (If you have multiple
+Python interpreters on your computer, remember to use the Python3 version). This will point your
+browser to [http://localhost:8000/site](http://localhost:8000/site) which is
+a clone of the [Brython site](http://brython.info "Brython Homepage")
+that contains an online editor, a console similar to the CPython interpreter,
+a gallery with many examples, and comprehensive documentation.
 
 ```bash
 git clone https://github.com/brython-dev/brython.git
@@ -67,7 +68,8 @@ cd brython
 python server.py
 ```
 
-Once you are familiar with the examples...,
+Once you are familiar with the examples...
+
 create a new folder "app" at the same level as "site" and create a file "index.html"
 with the HTML example above.
 Point the browser to [http://localhost:8000/app](http://localhost:8000/app) to see the result.
