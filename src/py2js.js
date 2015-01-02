@@ -1147,7 +1147,7 @@ function $ClassCtx(context){
     this.parent.node.bound = {} // will store the names bound in the function
 
     this.set_name = function(name){
-        this.random = Math.random().toString(36).substr(2,8)
+        this.random = $B.UUID()
         this.name = name
         this.id = context.node.module+'-'+name
         this.id += '-'+this.random
@@ -1441,7 +1441,7 @@ function $DecoratorCtx(context){
         //
         this.dec_ids = []
         for(var i=0;i<decorators.length;i++){
-            this.dec_ids.push('$'+Math.random().toString(36).substr(2,8))
+            this.dec_ids.push('$id'+ $B.UUID())
         }
         var obj = children[func_rank].context.tree[0]
         // add a line after decorated element
@@ -1532,7 +1532,7 @@ function $DefCtx(context){
         var id_ctx = new $IdCtx(this,name)
         this.name = name
         this.id = this.scope.id+'-'+name
-        this.id += '-'+Math.random().toString(36).substr(2,8)
+        this.id += '-'+ $B.UUID()
         this.parent.node.id = this.id
         
         // Add to modules dictionary - used in list comprehensions
@@ -6362,6 +6362,10 @@ function brython(options){
     // Used to compute the hash value of some objects (see 
     // py_builtin_functions.js)
     $B.$py_next_hash = -Math.pow(2,53)
+
+    // $py_UUID guarantees a unique id.  Do not use this variable 
+    // directly, use the $B.UUID function defined in py_utils.js
+    $B.$py_UUID=0
     
     // Magic name used in lambdas
     $B.lambda_magic = Math.random().toString(36).substr(2,8)

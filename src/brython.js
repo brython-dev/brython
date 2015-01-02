@@ -50,7 +50,7 @@ catch(err){return false}})
 __BRYTHON__.implementation=[3,0,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.0.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.builtin_module_names=["posix","__random","_ajax","_browser","_html","_io","_jsre","_multiprocessing","_os","_posixsubprocess","_svg","_sys","_timer","_websocket","builtins","dis","hashlib","javascript","json","math","modulefinder","time","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.builtin_module_names=["posix","__random","_ajax","_browser","_html","_io","_jsre","_multiprocessing","_os","_posixsubprocess","_svg","_sys","_timer","_websocket","builtins","dis","hashlib","javascript","json","math","modulefinder","time","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
 
@@ -751,7 +751,7 @@ this.toString=function(){return '(class) '+this.name+' '+this.tree+' args '+this
 var scope=this.scope=$get_scope(this)
 this.parent.node.parent_block=scope
 this.parent.node.bound={}
-this.set_name=function(name){this.random=Math.random().toString(36).substr(2,8)
+this.set_name=function(name){this.random=$B.UUID()
 this.name=name
 this.id=C.node.module+'-'+name
 this.id +='-'+this.random
@@ -910,7 +910,7 @@ else if(children[func_rank].C.tree[0].type==='decorator'){decorators.push(childr
 children.splice(func_rank,1)
 }else{break}}
 this.dec_ids=[]
-for(var i=0;i<decorators.length;i++){this.dec_ids.push('$'+Math.random().toString(36).substr(2,8))
+for(var i=0;i<decorators.length;i++){this.dec_ids.push('$id'+ $B.UUID())
 }
 var obj=children[func_rank].C.tree[0]
 var callable=children[func_rank].C
@@ -959,7 +959,7 @@ this.module=scope.module
 this.set_name=function(name){var id_ctx=new $IdCtx(this,name)
 this.name=name
 this.id=this.scope.id+'-'+name
-this.id +='-'+Math.random().toString(36).substr(2,8)
+this.id +='-'+ $B.UUID()
 this.parent.node.id=this.id
 $B.modules[this.id]=this.parent.node
 $B.bound[this.id]={}
@@ -4255,6 +4255,7 @@ $B.$py_module_path={}
 $B.meta_path=[]
 $B.$options={}
 $B.$py_next_hash=-Math.pow(2,53)
+$B.$py_UUID=0
 $B.lambda_magic=Math.random().toString(36).substr(2,8)
 $B.callbacks={}
 if(options===undefined)options={'debug':0}
@@ -4888,7 +4889,7 @@ return res
 function clear(ns){
 delete $B.vars[ns],$B.bound[ns],$B.modules[ns],$B.imported[ns]
 }
-$B.$list_comp=function(module_name,parent_block_id){var $ix=Math.random().toString(36).substr(2,8)
+$B.$list_comp=function(module_name,parent_block_id){var $ix=$B.UUID()
 var $py='def func'+$ix+"():\n"
 $py +="    x"+$ix+"=[]\n"
 var indent=4
@@ -4914,15 +4915,15 @@ return res
 $B.$gen_expr=function(){
 var module_name=arguments[0]
 var parent_block_id=arguments[1]
-var $ix=Math.random().toString(36).substr(2,8)
+var $ix=$B.UUID()
 var $res='res'+$ix
 var $py=$res+"=[]\n"
 var indent=0
-for(var $i=3,_len_$i=arguments.length;$i < _len_$i;$i++){for(var $j=0;$j<indent;$j++)$py +=' '
+for(var $i=3,_len_$i=arguments.length;$i < _len_$i;$i++){$py+=' '.repeat(indent)
 $py +=arguments[$i].join(' ')+':\n'
 indent +=4
 }
-for(var $j=0;$j<indent;$j++)$py +=' '
+$py+=' '.repeat(indent)
 $py +=$res+'.append('+arguments[2].join('\n')+')'
 var $mod_name='ge'+$ix
 $B.vars[$mod_name]={}
@@ -4948,15 +4949,15 @@ clear($mod_name)
 return $res2
 }
 $B.$dict_comp=function(module_name,parent_block_id){
-var $ix=Math.random().toString(36).substr(2,8)
+var $ix=$B.UUID()
 var $res='res'+$ix
 var $py=$res+"={}\n"
 var indent=0
-for(var $i=3,_len_$i=arguments.length;$i < _len_$i;$i++){for(var $j=0;$j<indent;$j++)$py +=' '
+for(var $i=3,_len_$i=arguments.length;$i < _len_$i;$i++){$py+=' '.repeat(indent)
 $py +=arguments[$i]+':\n'
 indent +=4
 }
-for(var $j=0;$j<indent;$j++)$py +=' '
+$py+=' '.repeat(indent)
 $py +=$res+'.update({'+arguments[2].join('\n')+'})'
 var locals_id='dc'+$ix
 var $root=$B.py2js($py,module_name,locals_id,parent_block_id)
@@ -4967,7 +4968,7 @@ var res=$B.vars[locals_id][$res]
 clear(locals_id)
 return res
 }
-$B.$lambda=function(locals,$mod,parent_block_id,$args,$body){var rand=Math.random().toString(36).substr(2,8)
+$B.$lambda=function(locals,$mod,parent_block_id,$args,$body){var rand=$B.UUID()
 var $res='lambda_'+$B.lambda_magic+'_'+rand
 var local_id='lambda'+rand
 var $py='def '+$res+'('+$args+'):\n'
@@ -5163,7 +5164,8 @@ catch(err){$err(sign,klass,other)}}})(ropnames[j],ropsigns[j])
 }}}
 $B.set_func_names=function(klass){var name=klass.__name__
 for(var attr in klass){if(typeof klass[attr]=='function'){klass[attr].__name__=name+'.'+attr
-}}}})(__BRYTHON__)
+}}}
+$B.UUID=function(){return $B.$py_UUID++}})(__BRYTHON__)
 if(!Array.indexOf){Array.prototype.indexOf=function(obj){for(var i=0,_len_i=this.length;i < _len_i;i++)if(this[i]==obj)return i
 return -1
 }}
@@ -5726,7 +5728,7 @@ function $eval(src,_globals,locals){var is_exec=arguments[3]=='exec'
 if($B.exec_stack.length==0){$B.exec_stack=['__main__']}
 var env=$B.exec_stack[$B.exec_stack.length-1]
 if(is_exec && _globals===undefined){var mod_name=env
-}else{var mod_name='exec-'+Math.random().toString(36).substr(2,8)
+}else{var mod_name='exec-'+ $B.UUID()
 $B.$py_module_path[mod_name]=$B.$py_module_path['__main__']
 $B.vars[mod_name]={}
 $B.bound[mod_name]={}
@@ -6545,7 +6547,7 @@ if(status===404){$res=_b_.IOError('File not found')
 }else if(status!==200){$res=_b_.IOError('Could not open file '+file+' : status '+status)
 }else{$res=req.responseText
 }}
-var fake_qs='?foo='+Math.random().toString(36).substr(2,8)
+var fake_qs='?foo='+$B.UUID()
 req.open('GET',file+fake_qs,false)
 var is_binary=mode.search('b')>-1
 if(is_binary){req.overrideMimeType('text/plain; charset=iso-8859-1')
@@ -7417,7 +7419,7 @@ case 'browser':
 fake_qs=''
 break
 default:
-fake_qs="?v="+Math.random().toString(36).substr(2,8)
+fake_qs="?v="+$B.UUID()
 }
 var timer=setTimeout(function(){$xmlhttp.abort()
 throw _b_.ImportError("No module named '"+module+"'")},5000)
@@ -10300,7 +10302,7 @@ posy=ev.pageY
 posy=ev.clientY + document.body.scrollTop
 + document.documentElement.scrollTop
 }
-var res=object()
+var res={}
 res.x=_b_.int(posx)
 res.y=_b_.int(posy)
 res.__getattr__=function(attr){return this[attr]}
@@ -10335,15 +10337,19 @@ var $NodeTypes={1:"ELEMENT",2:"ATTRIBUTE",3:"TEXT",4:"CDATA_SECTION",5:"ENTITY_R
 }
 var $DOMEventDict={__class__:$B.$type,__name__:'DOMEvent'}
 $DOMEventDict.__mro__=[$DOMEventDict,$ObjectDict]
-$DOMEventDict.__getattribute__=function(self,attr){if(attr=="x")return $mouseCoords(self).x
-if(attr=="y")return $mouseCoords(self).y
-if(attr=="data"){if(self.dataTransfer!==undefined)return $Clipboard(self.dataTransfer)
+$DOMEventDict.__getattribute__=function(self,attr){switch(attr){case 'x':
+return $mouseCoords(self).x
+case 'y':
+return $mouseCoords(self).y
+case 'data':
+if(self.dataTransfer!==undefined)return $Clipboard(self.dataTransfer)
 return self['data']
-}
-if(attr=="target"){if(self.target===undefined)return $DOMNode(self.srcElement)
+case 'target':
+if(self.target===undefined)return $DOMNode(self.srcElement)
 return $DOMNode(self.target)
+case 'char':
+return String.fromCharCode(self.which)
 }
-if(attr=="char")return String.fromCharCode(self.which)
 var res=self[attr]
 if(res!==undefined){if(typeof res=='function'){return function(){return res.apply(self,arguments)}}
 return $B.$JS2Py(res)
@@ -10458,7 +10464,7 @@ var res={}
 res.$dict={}
 res.elt=elt 
 if(elt['$brython_id']===undefined||elt.nodeType===9){
-elt.$brython_id=Math.random().toString(36).substr(2,8)
+elt.$brython_id='DOM-'+$B.UUID()
 res.__repr__=res.__str__=res.toString=function(){var res="<DOMNode object type '"
 return res+$NodeTypes[elt.nodeType]+"' name '"+elt.nodeName+"'>"
 }}
@@ -10616,15 +10622,16 @@ DOMNode.bind=function(self,event){
 var _id
 if(self.elt.nodeType===9){_id=0}
 else{_id=self.elt.$brython_id}
-if(!_b_.dict.$dict.__contains__($B.events,_id)){_b_.dict.$dict.__setitem__($B.events,_id,dict())
+var _d=_b_.dict.$dict
+if(!_d.__contains__($B.events,_id)){_d.__setitem__($B.events,_id,dict())
 }
-var item=_b_.dict.$dict.__getitem__($B.events,_id)
-if(!_b_.dict.$dict.__contains__(item,event)){_b_.dict.$dict.__setitem__(item,event,[])
+var item=_d.__getitem__($B.events,_id)
+if(!_d.__contains__(item,event)){_d.__setitem__(item,event,[])
 }
-var evlist=_b_.dict.$dict.__getitem__(item,event)
+var evlist=_d.__getitem__(item,event)
 for(var i=2;i<arguments.length;i++){var func=arguments[i]
 var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))
-}catch(err){getattr(__BRYTHON__.stderr,"write")(err.__name__+': '+err.message+'\n'+err.info)
+}catch(err){getattr($B.stderr,"write")(err.__name__+': '+err.message+'\n'+err.info)
 }}}
 )(func)
 if(window.addEventListener){self.elt.addEventListener(event,callback,false)
@@ -10647,9 +10654,10 @@ return None
 }
 DOMNode.class_name=function(self){return DOMNode.Class(self)}
 DOMNode.clone=function(self){res=$DOMNode(self.elt.cloneNode(true))
-res.elt.$brython_id=Math.random().toString(36).substr(2,8)
-if(_b_.dict.$dict.__contains__($B.events,self.elt.$brython_id)){var events=_b_.dict.$dict.__getitem__($B.events,self.elt.$brython_id)
-var items=_b_.list(_b_.dict.$dict.items(events))
+res.elt.$brython_id='DOM-' + $B.UUID()
+var _d=_b_.dict.$dict
+if(_d.__contains__($B.events,self.elt.$brython_id)){var events=_d.__getitem__($B.events,self.elt.$brython_id)
+var items=_b_.list(_d.items(events))
 for(var i=0;i<items.length;i++){var event=items[i][0]
 for(var j=0;j<items[i][1].length;j++){DOMNode.bind(res,event,items[i][1][j][0])
 }}}
@@ -11003,9 +11011,8 @@ var $WinDict={__class__:$B.$type,__name__:'window'}
 $WinDict.__getattribute__=function(self,attr){if(window[attr]!==undefined){return JSObject(window[attr])}
 throw _b_.AttributeError("'window' object has no attribute '"+attr+"'")
 }
-$WinDict.__setattr__=function(self,attr,value){console.log('set attr '+attr+' of window ')
+$WinDict.__setattr__=function(self,attr,value){
 window[attr]=value
-console.log(window[attr])
 }
 $WinDict.__mro__=[$WinDict,$ObjectDict]
 var win=JSObject(window)

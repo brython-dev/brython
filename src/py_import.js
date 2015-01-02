@@ -51,7 +51,7 @@ function $importer(){
             fake_qs=''
             break;
        default:
-            fake_qs="?v="+Math.random().toString(36).substr(2,8)
+            fake_qs="?v="+$B.UUID()
     }
 
     var timer = setTimeout( function() {

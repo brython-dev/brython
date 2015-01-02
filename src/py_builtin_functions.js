@@ -374,7 +374,7 @@ function $eval(src, _globals, locals){
     if(is_exec && _globals===undefined){
         var mod_name = env
     }else{
-        var mod_name = 'exec-'+Math.random().toString(36).substr(2,8)
+        var mod_name = 'exec-'+ $B.UUID()
         $B.$py_module_path[mod_name] = $B.$py_module_path['__main__']
         $B.vars[mod_name] = {}
         $B.bound[mod_name] = {}
@@ -1693,7 +1693,7 @@ function $url_open(){
             }
         }
         // add fake query string to avoid caching
-        var fake_qs = '?foo='+Math.random().toString(36).substr(2,8)
+        var fake_qs = '?foo='+$B.UUID()
         req.open('GET',file+fake_qs,false)
         var is_binary = mode.search('b')>-1
         if(is_binary){
