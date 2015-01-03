@@ -192,24 +192,24 @@ $DictDict.__bool__ = function (self) {return $DictDict.__len__(self) > 0}
 $DictDict.__contains__ = function(self,item){
     if(self.$jsobj) return self.$jsobj[item]!==undefined
     switch(typeof item) {
-      case 'number':
-        return self.$numeric_dict[item] !==undefined
       case 'string':
         return self.$string_dict[item] !==undefined
+      case 'number':
+        return self.$numeric_dict[item] !==undefined
     }
     return $lookup_key(self, item) !== undefined
 }
 
 $DictDict.__delitem__ = function(self,arg){
     switch(typeof arg) {
-      case 'number':
-        if (self.$numeric_dict[arg] === undefined) throw KeyError(_b_.str(arg))
-        delete self.$numeric_dict[arg]
-        if (self.$jsobj) delete self.$jsobj[arg]
-        return
       case 'string':
         if (self.$string_dict[arg] === undefined) throw KeyError(_b_.str(arg))
         delete self.$string_dict[arg]
+        if (self.$jsobj) delete self.$jsobj[arg]
+        return
+      case 'number':
+        if (self.$numeric_dict[arg] === undefined) throw KeyError(_b_.str(arg))
+        delete self.$numeric_dict[arg]
         if (self.$jsobj) delete self.$jsobj[arg]
         return
     }
@@ -254,11 +254,11 @@ $DictDict.__getitem__ = function(self,arg){
     if(self.$jsobj && self.$jsobj[arg] !== undefined) return self.$jsobj[arg]
 
     switch(typeof arg) {
-      case 'number':
-        if (self.$numeric_dict[arg] !== undefined) return self.$numeric_dict[arg]
-        break
       case 'string':
         if (self.$string_dict[arg] !== undefined) return self.$string_dict[arg]
+        break
+      case 'number':
+        if (self.$numeric_dict[arg] !== undefined) return self.$numeric_dict[arg]
     }
     // since the key is more complex use 'default' method of getting item
 
@@ -370,12 +370,12 @@ $DictDict.__repr__ = function(self){
 
 $DictDict.__setitem__ = function(self,key,value){
     switch(typeof key) {
-      case 'number':
-        self.$numeric_dict[key]=value
-        if(self.$jsobj) self.$jsobj[key]=value
-        return
       case 'string':
         self.$string_dict[key]=value
+        if(self.$jsobj) self.$jsobj[key]=value
+        return
+      case 'number':
+        self.$numeric_dict[key]=value
         if(self.$jsobj) self.$jsobj[key]=value
         return
     }
@@ -426,10 +426,10 @@ $DictDict.copy = function(self){
 $DictDict.get = function(self, key, _default){
     if (_default === undefined) _default=None
     switch(typeof key) {
-      case 'number':
-        return self.$numeric_dict[key] || _default
       case 'string':
         return self.$string_dict[key] || _default
+      case 'number':
+        return self.$numeric_dict[key] || _default
     }
 
     var bucket = $lookup_key(self, key)
