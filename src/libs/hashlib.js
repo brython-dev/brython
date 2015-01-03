@@ -5,7 +5,6 @@ var _b_ = $B.builtins
 var $s=[]
 for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
 eval($s.join(';'))
-//for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
 
 var $mod = {
 
@@ -56,32 +55,21 @@ function $get_CryptoJS_lib(alg) {
 }
 
 function $hashlib_new(alg) {
-    if (alg == 'md5') {
-       if ($B.Crypto === undefined || 
-           $B.CryptoJS.algo.MD5 === undefined) $get_CryptoJS_lib('md5')
-       this.hash = $B.CryptoJS.algo.MD5.create()
-    } else if (alg == 'sha1') {
-       if ($B.Crypto === undefined ||
-           $B.CryptoJS.algo.SHA1 === undefined) $get_CryptoJS_lib('sha1')
-       this.hash = $B.CryptoJS.algo.SHA1.create()
-    } else if (alg == 'sha224') {
-       if ($B.Crypto === undefined || 
-           $B.CryptoJS.algo.SHA224 === undefined) $get_CryptoJS_lib('sha224')
-       this.hash = $B.CryptoJS.algo.SHA224.create()
-    } else if (alg == 'sha256') {
-       if ($B.Crypto === undefined || 
-           $B.CryptoJS.algo.SHA256 === undefined) $get_CryptoJS_lib('sha256')
-       this.hash = $B.CryptoJS.algo.SHA256.create()
-    } else if (alg == 'sha384') {
-       if ($B.Crypto === undefined || 
-           $B.CryptoJS.algo.SHA384 === undefined) $get_CryptoJS_lib('sha384')
-       this.hash = $B.CryptoJS.algo.SHA384.create()
-    } else if (alg == 'sha512') {
-       if ($B.Crypto === undefined || 
-           $B.CryptoJS.algo.SHA512 === undefined) $get_CryptoJS_lib('sha512')
-       this.hash = $B.CryptoJS.algo.SHA512.create()
-    } else {
-       $raise('AttributeError', 'Invalid hash algorithm:' + alg)
+    switch(alg) {
+      case 'md5':
+      case 'sha1':
+      case 'sha224':
+      case 'sha256':
+      case 'sha384':
+      case 'sha512':
+        var ALG=alg.toUpperCase()
+        if ($B.Crypto === undefined || 
+            $B.CryptoJS.algo[ALG] === undefined) $get_CryptoJS_lib(alg)
+
+        this.hash = $B.CryptoJS.algo[ALG].create()
+        break
+      default:
+        $raise('AttributeError', 'Invalid hash algorithm:' + alg)
     }
  
     this.__class__ = $B.$type
@@ -91,12 +79,12 @@ function $hashlib_new(alg) {
     this.copy = function(){return this.hash.clone()}
 
     this.hexdigest = function() {
-        var temp=this.hash.clone();
-        temp=temp.finalize();
-        return temp.toString();
+        var temp=this.hash.clone()
+        temp=temp.finalize()
+        return temp.toString()
     }
 
-    return this;
+    return this
 }
 
 return $mod
