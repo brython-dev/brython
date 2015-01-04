@@ -45,7 +45,8 @@ document['container'].style.height='%dpx' % (_height-_top-10)
 </script>
 
 <script type="text/python">
-#sys.path.insert(0, 'unittests')
+from browser import timer
+
 sys.path.append("test")
 
 def errorwrite(data):
@@ -54,12 +55,16 @@ def errorwrite(data):
 sys.stderr.write=errorwrite
 
 _iframe= document.createElement('iframe')
-_iframe.style.width="100%"
+_iframe.style.width="99%"
 _iframe.style.height="90%"
 
 document["container"] <= _iframe
 
-sys.stdout=_iframe.contentDocument   #write standard out to iframe
+def write(data):
+     _iframe.contentDocument.write(data)
+     #document["container"].html += '%s' % data
+
+sys.stdout.write=write
 
 def flush(*args):
     from javascript import console
@@ -67,11 +72,6 @@ def flush(*args):
 
 # a submodule of unittest expects the output object to have a flush function
 sys.stdout.flush=flush
-
-#create pre tag to hold stderr info
-#_stderr=document.createElement('pre')
-#_stderr.id="errorconsole"
-#document["container"] <= _stderr
 
 def choose_test(event):
     import time
@@ -84,7 +84,7 @@ def choose_test(event):
 
     import unittest
     import HTMLTestRunner
-    #mod=__import__(module)
+
     exec("import %s as mod" % module)
     _suite=unittest.TestLoader().loadTestsFromModule(mod)
     #unittest.TextTestRunner(sys.stdout, verbosity=5).run(_suite)
@@ -97,7 +97,7 @@ document["test"].bind('change', choose_test)
 
 </head>
 
-<body onload="brython({debug:1, cache:'version', re:'pyre',
+<body onload="brython({debug:10, cache:'version', re:'pyre',
                        static_stdlib_import: true,
                        open: $local_storage_open})">
 
@@ -158,7 +158,7 @@ Brython version: <span id="version"></span>
 </div>
 </div>
 
-<div id="container" style="clear:both; width:100%">
+<div id="container" style="clear:both; width:100%;height:50%;overflow:auto">
 
 </div>
 <pre id="errorconsole"></pre>
