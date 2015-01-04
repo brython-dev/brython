@@ -220,6 +220,11 @@ $B.$type.__getattribute__=function(klass,attr){
       case '__delattr__':
         if(klass['__delattr__']!==undefined) return klass['__delattr__']
         return function(key){delete klass[key]}
+      case '__hash__':
+        return function() {
+           if (arguments.length == 0) return klass.__hashvalue__ || $B.$py_next_hash--
+
+        }
     }//switch
 
     var res = klass[attr],is_class=true
