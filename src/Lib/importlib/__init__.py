@@ -18,7 +18,7 @@ try:
     import _frozen_importlib as _bootstrap
 except ImportError:
     from . import _bootstrap
-    _bootstrap._setup(sys, _imp)
+    #_bootstrap._setup(sys, _imp)   #fix me brython
 else:
     # importlib._bootstrap is the built-in import, ensure we don't create
     # a second copy of the module.
