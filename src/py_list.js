@@ -263,8 +263,10 @@ $ListDict.__setitem__ = function(self,arg,value){
         self.splice(start,stop-start)
         // copy items in a temporary JS array
         // otherwise, a[:0]=a fails
-        if(hasattr(value,'__iter__')){
-            var $temp = list(value)
+        var $temp
+        if(Array.isArray(value)){$temp = Array.prototype.slice.call(value)}
+        else if(hasattr(value,'__iter__')){$temp = list(value)}
+        if($temp!==undefined){
             for(var i=$temp.length-1;i>=0;i--){
                 self.splice(start,0,$temp[i])
             }
@@ -452,6 +454,9 @@ function list(){
     if(arguments.length===0) return []
     if(arguments.length>1){
         throw _b_.TypeError("list() takes at most 1 argument ("+arguments.length+" given)")
+    }
+    if(Array.isArray(arguments[0])){ // most simple case
+        var res=arguments[0];res.__brython__=true;return res
     }
     var res = []
     var arg = iter(arguments[0])

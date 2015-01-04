@@ -72,7 +72,6 @@ $SetDict.__init__ = function(self){
     for(var i=1, _len_i = arguments.length; i < _len_i;i++){
         args.push(arguments[i])
     }
-    self.$items = []
     if(args.length==0) return
     if(args.length==1){    // must be an iterable
         var arg=args[0]
@@ -295,7 +294,7 @@ function set(){
     // $str is true if all the elements in the set are string, $num if
     // all the elements are integers
     // They are used to speed up operations on sets
-    var res = {__class__:$SetDict,$str:true,$num:true}
+    var res = {__class__:$SetDict,$str:true,$num:true,$items:[]}
     // apply __init__ with arguments of set()
     var args = [res].concat(Array.prototype.slice.call(arguments))
     $SetDict.__init__.apply(null,args)

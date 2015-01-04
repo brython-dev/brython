@@ -8876,8 +8876,10 @@ var step=arg.step===None ? 1 : arg.step
 if(start<0)start=self.length+start
 if(stop<0)stop=self.length+stop
 self.splice(start,stop-start)
-if(hasattr(value,'__iter__')){var $temp=list(value)
-for(var i=$temp.length-1;i>=0;i--){self.splice(start,0,$temp[i])
+var $temp
+if(Array.isArray(value)){$temp=Array.prototype.slice.call(value)}
+else if(hasattr(value,'__iter__')){$temp=list(value)}
+if($temp!==undefined){for(var i=$temp.length-1;i>=0;i--){self.splice(start,0,$temp[i])
 }
 return
 }
@@ -8981,6 +8983,9 @@ $ListDict.toString=function(){return '$ListDict'}
 $B.set_func_names($ListDict)
 function list(){if(arguments.length===0)return[]
 if(arguments.length>1){throw _b_.TypeError("list() takes at most 1 argument ("+arguments.length+" given)")
+}
+if(Array.isArray(arguments[0])){
+var res=arguments[0];res.__brython__=true;return res
 }
 var res=[]
 var arg=iter(arguments[0])
@@ -10084,7 +10089,6 @@ throw _.TypeError("unhashable type: 'set'")
 $SetDict.__init__=function(self){var args=[]
 for(var i=1,_len_i=arguments.length;i < _len_i;i++){args.push(arguments[i])
 }
-self.$items=[]
 if(args.length==0)return
 if(args.length==1){
 var arg=args[0]
@@ -10213,7 +10217,7 @@ $SetDict.issuperset=function(self,other){return $SetDict.__ge__(self,other,1)
 $SetDict.union=function(self,other){return $SetDict.__or__(self,other,1)
 }
 function set(){
-var res={__class__:$SetDict,$str:true,$num:true}
+var res={__class__:$SetDict,$str:true,$num:true,$items:[]}
 var args=[res].concat(Array.prototype.slice.call(arguments))
 $SetDict.__init__.apply(null,args)
 return res
