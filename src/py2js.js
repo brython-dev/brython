@@ -6316,9 +6316,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     }
     js += 'var $locals_id = "'+locals_id+'";\n'
     js += 'var $locals = $B.vars["'+locals_id+'"];\n'
-    js += 'var $s=[];\n'
-    js += 'for(var $b in _b_) $s.push(\'var \' + $b +\'=_b_["\'+$b+\'"]\');\n'
-    js += 'eval($s.join(";"))\n'
+    js += 'eval($B.InjectBuiltins())\n'
 
     var new_node = new $Node()
     new $NodeJSCtx(new_node,js)
