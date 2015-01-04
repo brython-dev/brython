@@ -62,3 +62,14 @@ To add a child, the operator `<=` was chosen for these reasons :
 - in Python, `<=` is used as an operator for sets with a different meaning than "lesser or equal"
 - the sign `<` is often used in computer science to mean something else than "lesser than" : in Python and many other languages, `<<` means left shift ; in HTML tags are enclosed with `<` and `>`
 - Python uses the same operator `%` for very different operations : modulo and string formatting
+
+__Q__ : What browsers are compatible with Brython?
+
+__A__ : Below is a list of browsers we support:
+
+// todo: get images from http://www.paulirish.com/2010/high-res-browser-icons/
+
+<table border="1">
+  <tr><td>Chrome</td><td>FireFox</td><td>IE</td><td>Opera</td><td>Safari</td><td>Android Browser</td><td>Chrome for Android</td><td>iOS Safari</td><td>Opera Mini</td></tr>
+  <tr><td>36+</td><td>31+</td><td>9+</td><td>26+</td><td>5.1+</td><td>4.1+</td><td>39+</td><td>7.1+</td><td>8+</td></tr>
+</table>
