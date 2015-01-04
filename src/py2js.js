@@ -5881,7 +5881,8 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                 else if(_s=="\t"){ 
                     // tab : fill until indent is multiple of 8
                     indent++;pos++
-                    while(indent%8>0){indent++}
+                    //while(indent%8>0){indent++}
+                    if(indent%8>0) indent+=8-indent%8
                 }else{break}
             }
             // ignore empty lines

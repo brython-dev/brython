@@ -1,13 +1,11 @@
 // built-in functions
 ;(function($B){
 
-var _b_=$B.builtins
+eval($B.InjectBuiltins())
+
 _b_.__debug__ = false
 
-// insert already defined builtins
-var $s=[]
-for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
-eval($s.join(';'))
+
 
 var $ObjectDict = _b_.object.$dict
 

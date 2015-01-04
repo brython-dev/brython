@@ -1,6 +1,7 @@
 ;(function($B){
-var _b_ = $B.builtins
-for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
+
+eval($B.InjectBuiltins())
+
 var $ObjectDict = _b_.object.$dict
 
 function $err(op,other){

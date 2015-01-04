@@ -737,6 +737,12 @@ $B.set_func_names = function(klass){
 // the variable $B.py_UUID is defined in py2js.js (in the brython function) 
 $B.UUID=function() {return $B.$py_UUID++}
 
+$B.InjectBuiltins=function() {
+   var _str=["var _b_=$B.builtins"]
+   for(var $b in $B.builtins) _str.push('var ' + $b +'=_b_["'+$b+'"]')
+   return _str.join(';')
+}
+
 })(__BRYTHON__)
 
 // IE doesn't implement indexOf on Arrays
