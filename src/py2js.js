@@ -5828,7 +5828,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     var br_open = {"(":0,"[":0,"{":0}
     var br_close = {")":"(","]":"[","}":"{"}
     var br_stack = ""
-    var br_pos = new Array()
+    var br_pos = []
     var kwdict = ["class","return","break",
         "for","lambda","try","finally","raise","def","from",
         "nonlocal","while","del","global","with",

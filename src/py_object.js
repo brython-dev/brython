@@ -280,7 +280,7 @@ $ObjectDict.__mro__ = [$ObjectDict]
 
 $ObjectDict.__new__ = function(cls){
     if(cls===undefined){throw _b_.TypeError('object.__new__(): not enough arguments')}
-    var obj = new Object()
+    var obj = {}
     obj.__class__ = cls.$dict
     return obj
 }

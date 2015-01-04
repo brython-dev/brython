@@ -8,7 +8,7 @@ function $list(){
     // used for list displays
     // different from list : $list(1) is valid (matches [1])
     // but list(1) is invalid (integer 1 is not iterable)
-    var args = new Array()
+    var args = []
     for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
     return new $ListDict(args)
 }
