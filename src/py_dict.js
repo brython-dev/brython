@@ -360,7 +360,7 @@ $DictDict.__repr__ = function(self){
     var items = new $item_generator(self).as_list()
     for(var idx in items) {
         var itm = items[idx]
-        res.push(repr(itm[0])+':'+repr(itm[1]))
+        res.push(repr(itm[0])+': '+repr(itm[1]))
     }
     return '{'+ res.join(',') +'}'
 }
@@ -441,7 +441,7 @@ $DictDict.items = function(self){
     return $iterator_wrapper(new $item_iterator(self), $dict_itemsDict)
 }
 
-$DictDict.fromkeys = function(keys,value){
+$DictDict.fromkeys = function(self, keys,value){
     // class method
     if(value===undefined) value=None
     var res = dict()
