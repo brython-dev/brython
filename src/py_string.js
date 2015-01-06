@@ -38,6 +38,9 @@ $StringDict.__eq__ = function(self,other){
     if(other===undefined){ // compare object "self" to class "str"
         return self===str
     }
+    if (_b_.isinstance(other, _b_.str)) {
+       return other.valueOf() == self.valueOf()
+    }
     return other===self.valueOf()
 }
 
