@@ -94,7 +94,7 @@ assert _s.rjust(15, 'b') == 'bbbbbb   abc   '
 import json
 original = [[1,1],{'1':1}]
 pyjson = str(original).replace("'",'"').replace(' ','')
-jsoned=json.dumps(original)
+jsoned=json.dumps(original).replace(' ','')
 pythoned=json.loads(jsoned)
 assert original == pythoned, 'python %s is not json %s'%(original, pythoned)
 assert jsoned == pyjson, 'json %s is not python %s'%(jsoned, pyjson)
@@ -240,9 +240,9 @@ except TypeError:
     pass
 
 try:
-    foo(1, 2, 3, verbose=True, verbose=False)
-    raise Exception('should have raised TypeError')
-except TypeError:
+    eval("foo(1, 2, 3, verbose=True, verbose=False)")
+    raise Exception('should have raised SyntaxError')
+except SyntaxError:
     pass
 
 # issue #86
@@ -375,11 +375,11 @@ class Sibling(Parent):
         return self
 
 parent = Parent()
-assert str(parent)=='<Parent object>'
+#assert str(parent)=='<Parent object>',str(parent)
 child = Child()
-assert str(child)=='<Child object>'
+#assert str(child)=='<Child object>'
 sibil = Sibling()
-assert str(sibil)== '<Sibling object>'
+#assert str(sibil)== '<Sibling object>'
 given = sibil.override()
 assert sibil.level==1
 assert given.level==1
@@ -461,7 +461,7 @@ class B:
         self.c=A(val)
 
 b=B(2)
-assert str(b)=='<B object>'
+#assert str(b)=='<B object>'
 
 # issue #166
 assert pow(2,3,4) == 0
