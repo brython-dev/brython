@@ -5,6 +5,7 @@ eval($B.InjectBuiltins())
 var $ObjectDict = object.$dict
 
 var $StringDict = {__class__:$B.$type,
+    __dir__:$ObjectDict.__dir__,
     __name__:'str',
     $native:true
 }
@@ -33,6 +34,10 @@ $StringDict.__contains__ = function(self,item){
 $StringDict.__delitem__ = function(){
     throw _b_.TypeError("'str' object doesn't support item deletion")
 }
+
+// __dir__must be assigned explicitely because attribute resolution for builtin
+// classes doesn't use __mro__
+$StringDict.__dir__ = $ObjectDict.__dir__ 
 
 $StringDict.__eq__ = function(self,other){
     if(other===undefined){ // compare object "self" to class "str"

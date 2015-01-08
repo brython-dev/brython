@@ -282,7 +282,7 @@ function dir(obj){
     }
 
     if(isinstance(obj,$B.JSObject)) obj=obj.js
-    else if($B.get_class(obj).is_class){obj=obj.$dict}
+    else if($B.get_class(obj).is_class){console.log('is class ');obj=obj.$dict}
     else {
         // We first look if the object has the __dir__ method
         try {
@@ -290,7 +290,7 @@ function dir(obj){
             res = _b_.list(res)
             res.sort()
             return res
-        } catch (err){$B.$pop_exc()}
+        } catch (err){console.log('no __dir__ '+err);$B.$pop_exc()}
     }
     var res = []
     for(var attr in obj){
@@ -490,9 +490,7 @@ function getattr(obj,attr,_default){
     
     // attribute __dict__ returns an instance of a subclass of dict
     // defined in py_dict.js
-    if(attr==='__dict__'){
-        return $B.obj_dict(obj)
-    }
+    if(attr==='__dict__'){return $B.obj_dict(obj)}
     
     // __call__ on a function returns the function itself
     if(attr==='__call__' && (typeof obj=='function')){
@@ -1162,7 +1160,11 @@ property.__code__.co_varnames=['fget','fset','fdel', 'doc']
 
 
 // range
-var $RangeDict = {__class__:$B.$type,__name__:'range',$native:true}
+var $RangeDict = {__class__:$B.$type,
+    __dir__:$ObjectDict.__dir__,
+    __name__:'range',
+    $native:true
+}
 
 $RangeDict.__contains__ = function(self,other){
     var x = iter(self)
@@ -1773,10 +1775,8 @@ function no_set_attr(klass, attr){
 }
 
 var $BoolDict = $B.$BoolDict = {__class__:$B.$type,
+    __dir__:$ObjectDict.__dir__,
     __name__:'bool',
-    __repr__ : function(){return "<class 'bool'>"},
-    __str__ : function(){return "<class 'bool'>"},
-    toString : function(){return "<class 'bool'>"},
     $native:true
 }
 $BoolDict.__mro__ = [$BoolDict,$ObjectDict]

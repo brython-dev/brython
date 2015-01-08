@@ -6,6 +6,7 @@ var _ = $B.builtins
 
 var $SetDict = {
     __class__:$B.$type,
+    __dir__:_.object.$dict.__dir__,
     __name__:'set',
     $native:true
 }

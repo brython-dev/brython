@@ -13,7 +13,10 @@ function $list(){
     return new $ListDict(args)
 }
 
-var $ListDict = {__class__:$B.$type,__name__:'list',$native:true}
+var $ListDict = {__class__:$B.$type,
+    __name__:'list',
+    $native:true,
+    __dir__:$ObjectDict.__dir__}
 
 $ListDict.__add__ = function(self,other){
     var res = self.valueOf().concat(other.valueOf())
@@ -452,8 +455,6 @@ $ListDict.sort = function(self){
     if(!self.__brython__) return self
 }
 
-$ListDict.toString = function(){return '$ListDict'}
-
 $B.set_func_names($ListDict)
 
 // constructor for built-in type 'list'
@@ -497,8 +498,6 @@ var $TupleDict = {__class__:$B.$type,__name__:'tuple',$native:true}
 $TupleDict.__iter__ = function(self){
     return $B.$iterator(self,$tuple_iterator)
 }
-
-$TupleDict.toString = function(){return '$TupleDict'}
 
 // other attributes are defined in py_list.js, once list is defined
 

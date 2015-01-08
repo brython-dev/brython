@@ -4406,11 +4406,14 @@ var opsigns=['+','-','*','/','//','%','**','<<','>>','&','^','|']
 $ObjectDict.__delattr__=function(self,attr){delete self[attr]}
 $ObjectDict.__dir__=function(self){var res=[]
 var objects=[self]
-var mro=self.__class__.__mro__
+var mro=$B.get_class(self).__mro__
 for(var i=0,_len_i=mro.length;i < _len_i;i++){objects.push(mro[i])
 }
 for(var i=0,_len_i=objects.length;i < _len_i;i++){for(var attr in objects[i]){
 if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
+continue
+}
+if(!isNaN(parseInt(attr.charAt(0)))){
 continue
 }
 res.push(attr)
@@ -5749,14 +5752,14 @@ _b_.list.$dict.sort(res)
 return res
 }
 if(isinstance(obj,$B.JSObject))obj=obj.js
-else if($B.get_class(obj).is_class){obj=obj.$dict}
+else if($B.get_class(obj).is_class){console.log('is class ');obj=obj.$dict}
 else{
 try{
 var res=getattr(obj,'__dir__')()
 res=_b_.list(res)
 res.sort()
 return res
-}catch(err){$B.$pop_exc()}}
+}catch(err){console.log('no __dir__ '+err);$B.$pop_exc()}}
 var res=[]
 for(var attr in obj){if(attr.charAt(0)!=='$' && attr!=='__class__'){res.push(attr)
 }}
@@ -5867,8 +5870,7 @@ if(_default!==undefined)return _default
 throw _b_.AttributeError('object has no attribute '+attr)
 }
 if(attr=='__class__')return klass.$factory
-if(attr==='__dict__'){return $B.obj_dict(obj)
-}
+if(attr==='__dict__'){return $B.obj_dict(obj)}
 if(attr==='__call__' &&(typeof obj=='function')){if(obj.$blocking){console.log('calling blocking function '+obj.__name__)
 }
 if($B.debug>0){return function(){$B.call_stack.push($B.line_info)
@@ -6290,7 +6292,8 @@ property.__code__={}
 property.__code__.co_argcount=4
 property.__code__.co_consts=[]
 property.__code__.co_varnames=['fget','fset','fdel','doc']
-var $RangeDict={__class__:$B.$type,__name__:'range',$native:true}
+var $RangeDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'range',$native:true
+}
 $RangeDict.__contains__=function(self,other){var x=iter(self)
 while(1){try{var y=$RangeDict.__next__(x)
 if(getattr(y,'__eq__')(other)){return true}}catch(err){return false}}
@@ -6673,7 +6676,7 @@ attr+"' is read-only")
 }else{throw _b_.AttributeError("'"+klass.__name__+
 "' object has no attribute '"+attr+"'")
 }}
-var $BoolDict=$B.$BoolDict={__class__:$B.$type,__name__:'bool',__repr__ : function(){return "<class 'bool'>"},__str__ : function(){return "<class 'bool'>"},toString : function(){return "<class 'bool'>"},$native:true
+var $BoolDict=$B.$BoolDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'bool',$native:true
 }
 $BoolDict.__mro__=[$BoolDict,$ObjectDict]
 bool.__class__=$B.$factory
@@ -7744,7 +7747,7 @@ function $err(op,other){var msg="unsupported operand type(s) for "+op
 msg +=": 'float' and '"+$.get_class(other).__name__+"'"
 throw _b_.TypeError(msg)
 }
-var $FloatDict={__class__:$B.$type,__name__:'float',$native:true}
+var $FloatDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'float',$native:true}
 $FloatDict.as_integer_ratio=function(self){if(Math.round(self.value)==self.value)return _b_.tuple([_b_.int(self.value),_b_.int(1)])
 var _temp=self.value
 var i=10
@@ -8292,7 +8295,7 @@ _b_.int=int
 var $ObjectDict=_b_.object.$dict
 function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError("unsupported operand type(s) for "+op+": '"+class1+"' and '"+class2+"'")
 }
-var $ComplexDict={__class__:$B.$type,__name__:'complex',toString:function(){return '$ComplexDict'},$native:true
+var $ComplexDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'complex',$native:true
 }
 $ComplexDict.__abs__=function(self,other){return complex(abs(self.real),abs(self.imag))}
 $ComplexDict.__bool__=function(self){return new Boolean(self.real ||self.imag)}
@@ -8454,7 +8457,7 @@ return bucket
 }
 var $next_probe=function(i,size){return((i * 5)+ 1)% size
 }
-var $DictDict={__class__:$B.$type,__name__ : 'dict',$native:true
+var $DictDict={__class__:$B.$type,__name__ : 'dict',$native:true,__dir__:$ObjectDict.__dir__
 }
 var $key_iterator=function(d){this.d=d
 this.current=0
@@ -8781,7 +8784,7 @@ var args=[]
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){args.push(arguments[i])}
 return new $ListDict(args)
 }
-var $ListDict={__class__:$B.$type,__name__:'list',$native:true}
+var $ListDict={__class__:$B.$type,__name__:'list',$native:true,__dir__:$ObjectDict.__dir__}
 $ListDict.__add__=function(self,other){var res=self.valueOf().concat(other.valueOf())
 if(isinstance(self,tuple))res=tuple(res)
 return res
@@ -9043,7 +9046,6 @@ else{$qsort(func,self,0,self.length)}
 if(reverse)$ListDict.reverse(self)
 if(!self.__brython__)return self
 }
-$ListDict.toString=function(){return '$ListDict'}
 $B.set_func_names($ListDict)
 function list(){if(arguments.length===0)return[]
 if(arguments.length>1){throw _b_.TypeError("list() takes at most 1 argument ("+arguments.length+" given)")
@@ -9073,7 +9075,6 @@ function $tuple(arg){return arg}
 var $TupleDict={__class__:$B.$type,__name__:'tuple',$native:true}
 $TupleDict.__iter__=function(self){return $B.$iterator(self,$tuple_iterator)
 }
-$TupleDict.toString=function(){return '$TupleDict'}
 var $tuple_iterator=$B.$iterator_class('tuple_iterator')
 function tuple(){var obj=list.apply(null,arguments)
 obj.__class__=$TupleDict
@@ -9123,7 +9124,7 @@ _b_.tuple=tuple
 })(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var $ObjectDict=object.$dict
-var $StringDict={__class__:$B.$type,__name__:'str',$native:true
+var $StringDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'str',$native:true
 }
 $StringDict.__add__=function(self,other){if(!(typeof other==="string")){try{return getattr(other,'__radd__')(self)}
 catch(err){throw _b_.TypeError(
@@ -9141,6 +9142,7 @@ return false
 }
 $StringDict.__delitem__=function(){throw _b_.TypeError("'str' object doesn't support item deletion")
 }
+$StringDict.__dir__=$ObjectDict.__dir__ 
 $StringDict.__eq__=function(self,other){if(other===undefined){
 return self===str
 }
@@ -10116,7 +10118,7 @@ $B.$StringSubclassFactory={__class__:$B.$factory,$dict:$StringSubclassDict
 _b_.str=str
 })(__BRYTHON__)
 ;(function($B){var _=$B.builtins
-var $SetDict={__class__:$B.$type,__name__:'set',$native:true
+var $SetDict={__class__:$B.$type,__dir__:_.object.$dict.__dir__,__name__:'set',$native:true
 }
 $SetDict.__add__=function(self,other){return set(self.$items.concat(other.$items))
 }

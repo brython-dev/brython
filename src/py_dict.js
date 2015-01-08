@@ -82,7 +82,8 @@ var $next_probe = function(i, size) {
 
 var $DictDict = {__class__:$B.$type,
     __name__ : 'dict',
-    $native:true
+    $native:true,
+    __dir__:$ObjectDict.__dir__
 }
 
 var $key_iterator = function(d) {
