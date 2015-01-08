@@ -5,11 +5,11 @@ Pour créer des graphiques au format SVG, supporté par la plupart des
 navigateurs, on utilise le module intégré `svg`, qui contient les noms des
 éléments disponibles pour tracer des formes ou écrire du texte.
 
-Le module définit les noms suivants : `a, altGlyph, altGlyphDef, altGlyphItem,
+Le module définit les noms suivants : <code>a, altGlyph, altGlyphDef, altGlyphItem,
 animate, animateColor, animateMotion, animateTransform, circle, clipPath,
 color_profile, cursor, defs, desc, ellipse, feBlend, g, image, line,
 linearGradient, marker, mask, path, pattern, polygon, polyline, radialGradient,
-rect, stop, svg, text, tref, tspan, use`.
+rect, stop, svg, text, tref, tspan, use</code>.
 
 (Noter `color_profile` à la place de `color-profile`.)
 
@@ -26,13 +26,13 @@ on peut intégrer des tracés et des textes par :
 <tr>
 <td>
 ```exec
-from browser import document as doc
-from browser import svg
+from browser import document, svg
+
 titre = svg.text('Titre', x=70, y=25, font_size=22,
                  text_anchor="middle")
 cercle = svg.circle(cx=70, cy=120, r=40,
                     stroke="black",stroke_width="2",fill="red")
-panel = doc['panel']
+panel = document['panel']
 panel <= titre
 panel <= cercle
 ```
@@ -45,6 +45,9 @@ panel <= cercle
 </tr>
 </table>
 
+Pour les attributs définis dans la norme SVG qui contiennent un tiret (-), il
+faut le remplacer par un souligné (_) dans les arguments : *text\_anchor* au 
+lieu de *text-anchor* qui provoquerait une erreur de syntaxe Python
 
 Dans l'exemple ci-dessous nous avons créé un élément texte et un élément cercle.
 Les mots-clés pour les couleurs sont accessibles sur [ce lien](http://www.w3.org/TR/SVG/types.html#ColorKeywords)
@@ -56,12 +59,12 @@ Ci-dessous nous créons un rectangle bleu, de hauteur et largeur égales à 40 p
 <tr>
 <td>
 ```exec
-from browser import document as doc
-from browser import svg
+from browser import document, svg
+
 rect = svg.rect(x="40",y="100", width="40", height="40",
     stroke_width="2",fill="blue")
 
-panel = doc['panel1']
+panel = document['panel1']
 panel <= rect
 ```
 </td>
@@ -157,7 +160,7 @@ panel <= star
 
 <td>
 
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="150" height="200" style="border-style:solid;border-width:1;border-color:#000;">
   <g id="panel4">
   </g>
 </svg>
@@ -174,14 +177,24 @@ Et un exemple d'animation sur un rectangle:
 <tr>
 <td>
 ```exec
-from browser import document, svg
+from browser import document, svg, timer
 
-rect = svg.rect(x=0, y=10, width=100, height=100)
-rect <= svg.animate(attributeName="x", From=-100, to=120,
-                    dur="10s", repeatCount="indefinite")
+rect = svg.rect(x=10, y=10, width=100, height=100)
+
+def move_rect():
+    # les attributs de l'élément SVG sont des chaines, il faut les convertir
+    # explicitement en entiers
+    rect.y = int(rect.y)+1
+    
+    # termine l'animation quand le rectangle arrive à la cible
+    if int(rect.y)>50:
+        timer.clear_interval(loop)
 
 panel = document['panel5']
 panel <= rect
+
+# initialise la boucle d'animation
+loop = timer.set_interval(move_rect, 30)
 ```
 </td>
 

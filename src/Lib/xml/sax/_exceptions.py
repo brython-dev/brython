@@ -1,8 +1,9 @@
 """Different kinds of SAX Exceptions"""
-import sys
-if sys.platform[:4] == "java":
-    from java.lang import Exception
-del sys
+#in brython the 4 lines below causes an $globals['Exception'] error
+#import sys
+#if sys.platform[:4] == "java":
+#    from java.lang import Exception
+#del sys
 
 # ===== SAXEXCEPTION =====
 

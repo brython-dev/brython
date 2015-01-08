@@ -17,6 +17,19 @@ function makeTagDict(tagName){
         __name__:tagName
         }
 
+    dict.__getattribute__ = function(self, attr){
+        if(self.elt.hasAttributeNS(null, attr)){
+            return self.elt.getAttributeNS(null,attr)
+        }
+        if(dict[attr]!==undefined){
+            return function(){
+                var args = [self].concat(Array.prototype.slice.call(arguments))
+                return dict[attr].apply(null, args)
+            }
+        }
+        return $B.DOMNode.__getattribute__(self, attr)        
+    }
+
     dict.__init__ = function(){
         var $ns=$B.$MakeArgs('pow',arguments,['self'],[],'args','kw')
         var self = $ns['self']
@@ -74,6 +87,14 @@ function makeTagDict(tagName){
         var res = $B.$DOMNode(document.createElementNS($svgNS,tagName))
         res.__class__ = cls.$dict
         return res
+    }
+    
+    dict.__setattr__ = function(self, key, value){
+        if(self.elt.hasAttributeNS(null, key)){
+            self.elt.setAttributeNS(null,key,value)
+        }else{
+            $B.DOMNode.__setattr__(self, key, value)
+        }
     }
 
     return dict

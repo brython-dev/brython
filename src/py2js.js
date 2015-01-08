@@ -1147,7 +1147,7 @@ function $ClassCtx(context){
     this.parent.node.bound = {} // will store the names bound in the function
 
     this.set_name = function(name){
-        this.random = Math.random().toString(36).substr(2,8)
+        this.random = $B.UUID()
         this.name = name
         this.id = context.node.module+'-'+name
         this.id += '-'+this.random
@@ -1441,7 +1441,7 @@ function $DecoratorCtx(context){
         //
         this.dec_ids = []
         for(var i=0;i<decorators.length;i++){
-            this.dec_ids.push('$'+Math.random().toString(36).substr(2,8))
+            this.dec_ids.push('$id'+ $B.UUID())
         }
         var obj = children[func_rank].context.tree[0]
         // add a line after decorated element
@@ -1532,7 +1532,7 @@ function $DefCtx(context){
         var id_ctx = new $IdCtx(this,name)
         this.name = name
         this.id = this.scope.id+'-'+name
-        this.id += '-'+Math.random().toString(36).substr(2,8)
+        this.id += '-'+ $B.UUID()
         this.parent.node.id = this.id
         
         // Add to modules dictionary - used in list comprehensions
@@ -5819,7 +5819,7 @@ function $transition(context,token){
 $B.forbidden = ['super',
     'case','catch','constructor','Date','delete',
     'default','Error','history','function','location','Math',
-    'new','null','Number','RegExp','this','var']
+    'new','null','Number','RegExp','this','throw','var']
 
 function $tokenize(src,module,locals_id,parent_block_id,line_info){
     var delimiters = [["#","\n","comment"],['"""','"""',"triple_string"],
@@ -5828,7 +5828,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     var br_open = {"(":0,"[":0,"{":0}
     var br_close = {")":"(","]":"[","}":"{"}
     var br_stack = ""
-    var br_pos = new Array()
+    var br_pos = []
     var kwdict = ["class","return","break",
         "for","lambda","try","finally","raise","def","from",
         "nonlocal","while","del","global","with",
@@ -5881,7 +5881,8 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                 else if(_s=="\t"){ 
                     // tab : fill until indent is multiple of 8
                     indent++;pos++
-                    while(indent%8>0){indent++}
+                    //while(indent%8>0){indent++}
+                    if(indent%8>0) indent+=8-indent%8
                 }else{break}
             }
             // ignore empty lines
@@ -6070,47 +6071,64 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                 continue
             }
         }
-        // point, ellipsis (...)
-        if(car=="."){
+
+        switch(car) {
+          case ' ':
+          case '\t':
+            pos++
+            break
+          case '.':
+            // point, ellipsis (...)
+            //if(car=="."){
             if(pos<src.length-1 && /^\d$/.test(src.charAt(pos+1))){
                 // number starting with . : add a 0 before the point
                 var j = pos+1
                 while(j<src.length && src.charAt(j).search(/\d/)>-1){j++}
                 context = $transition(context,'float','0'+src.substr(pos,j-pos))
                 pos = j
-                continue
-            } 
+                break
+            }
             $pos = pos
             context = $transition(context,'.')
-            pos++;continue
-        }
-        // octal, hexadecimal, binary
-        if(car==="0"){
+            pos++
+            break
+          case '0':
+            // octal, hexadecimal, binary
+            //if(car==="0"){
             var res = hex_pattern.exec(src.substr(pos))
             if(res){
                 context=$transition(context,'int',parseInt(res[1],16))
                 pos += res[0].length
-                continue
+                break
             }
             var res = octal_pattern.exec(src.substr(pos))
             if(res){
                 context=$transition(context,'int',parseInt(res[1],8))
                 pos += res[0].length
-                continue
+                break
             }
             var res = binary_pattern.exec(src.substr(pos))
             if(res){
                 context=$transition(context,'int',parseInt(res[1],2))
                 pos += res[0].length
-                continue
+                break
             }
             // literal like "077" is not valid in Python3
             if(src.charAt(pos+1).search(/\d/)>-1){
                 $_SyntaxError(context,('invalid literal starting with 0'))
             }
-        }
-        // number
-        if(car.search(/\d/)>-1){
+          case '0':
+          case '1':
+          case '2':
+          case '3':
+          case '4':
+          case '5':
+          case '6':
+          case '7':
+          case '8':
+          case '9':
+            // number
+            //if(car.search(/\d/)>-1){
             // digit
             var res = float_pattern1.exec(src.substr(pos))
             if(res){
@@ -6137,14 +6155,14 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                 }
             }
             pos += res[0].length
-            continue
-        }
-        // line end
-        if(car=="\n"){
+            break
+          case '\n':
+            // line end
+            //if(car=="\n"){
             lnum++
             if(br_stack.length>0){
                 // implicit line joining inside brackets
-                pos++;continue
+                pos++;//continue
             } else {
                 if(current.context.tree.length>0){
                     $pos = pos
@@ -6154,17 +6172,23 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                 }else{
                     new_node.line_num = lnum
                 }
-                pos++;continue
+                pos++
             }
-        }
-        if(car in br_open){
+            break
+          case '(':
+          case '[':
+          case '{':
+            //if(car in br_open){
             br_stack += car
             br_pos[br_stack.length-1] = [context,pos]
             $pos = pos
             context = $transition(context,car)
-            pos++;continue
-        }
-        if(car in br_close){
+            pos++
+            break
+          case ')':
+          case ']':
+          case '}':
+            //if(car in br_close){
             if(br_stack==""){
                 $_SyntaxError(context,"Unexpected closing bracket")
             } else if(br_close[car]!=br_stack.charAt(br_stack.length-1)){
@@ -6173,26 +6197,30 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                 br_stack = br_stack.substr(0,br_stack.length-1)
                 $pos = pos
                 context = $transition(context,car)
-                pos++;continue
+                pos++
             }
-        }
-        if(car=="="){
+            break
+          case '=':
+            //if(car=="="){
             if(src.charAt(pos+1)!="="){
                 $pos = pos
                 context = $transition(context,'=')
-                pos++;continue
+                pos++; //continue
             } else {
                 $pos = pos
                 context = $transition(context,'op','==')
-                pos+=2;continue
+                pos+=2
             }
-        }
-        if(car in punctuation){
+            break
+          case ',':
+          case ':': 
+            //if(car in punctuation){
             $pos = pos
             context = $transition(context,car)
-            pos++;continue
-        }
-        if(car===";"){ // next instruction
+            pos++
+            break
+          case ';':
+            //if(car===";"){ // next instruction
             $transition(context,'eol') // close previous instruction
             // create a new node, at the same level as current's parent
             if(current.context.tree.length===0){
@@ -6209,7 +6237,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                 }else if(_s==' '){pos1++}
                 else{break}
             }
-            if(ends_line){pos++;continue}
+            if(ends_line){pos++;break}
             new_node = new $Node()
             new_node.indent = current.indent
             new_node.line_num = lnum
@@ -6217,10 +6245,26 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
             current.parent.add(new_node)
             current = new_node
             context = new $NodeCtx(new_node)
-            pos++;continue
-        }
-        // operators
-        if($first_op_letter.indexOf(car)>-1){
+            pos++
+            break
+          case '/':
+          case '%':
+          case '&':
+          case '>':
+          case '<':
+          case '-':
+          case '+':
+          case '*':
+          case '/':
+          case '^':
+          case '=':
+          case '|':
+          case '~':
+          case '!':
+          case 'i':
+          case 'n':
+            // operators
+            //if($first_op_letter.indexOf(car)>-1){
             // find longest match
             var op_match = ""
             for(var op_sign in $operators){
@@ -6237,19 +6281,24 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                     context = $transition(context,'op',op_match)
                 }
                 pos += op_match.length
-                continue
             }
-        }
-        if(car=='\\' && src.charAt(pos+1)=='\n'){
-            lnum++;pos+=2;continue
-        }
-        if(car=='@'){
+            break
+          case '\\':
+            //if(car=='\\' && 
+            if (src.charAt(pos+1)=='\n'){
+              lnum++ 
+              pos+=2
+              break
+            }
+          case '@':
+            //if(car=='@'){
             $pos = pos
             context = $transition(context,car)
-            pos++;continue
-        }
-        if(car!=' '&&car!=='\t'){$pos=pos;$_SyntaxError(context,'unknown token ['+car+']')}
-        pos += 1
+            pos++
+            break
+          default:
+            $pos=pos;$_SyntaxError(context,'unknown token ['+car+']')
+        } //switch
     }
 
     if(br_stack.length!=0){
@@ -6315,9 +6364,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     }
     js += 'var $locals_id = "'+locals_id+'";\n'
     js += 'var $locals = $B.vars["'+locals_id+'"];\n'
-    js += 'var $s=[];\n'
-    js += 'for(var $b in _b_) $s.push(\'var \' + $b +\'=_b_["\'+$b+\'"]\');\n'
-    js += 'eval($s.join(";"))\n'
+    js += 'eval($B.InjectBuiltins())\n'
 
     var new_node = new $Node()
     new $NodeJSCtx(new_node,js)
@@ -6362,6 +6409,10 @@ function brython(options){
     // Used to compute the hash value of some objects (see 
     // py_builtin_functions.js)
     $B.$py_next_hash = -Math.pow(2,53)
+
+    // $py_UUID guarantees a unique id.  Do not use this variable 
+    // directly, use the $B.UUID function defined in py_utils.js
+    $B.$py_UUID=0
     
     // Magic name used in lambdas
     $B.lambda_magic = Math.random().toString(36).substr(2,8)

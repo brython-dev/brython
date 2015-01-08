@@ -1,8 +1,6 @@
 ;(function($B){
-var _b_ = $B.builtins
-var $s=[]
-for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
-eval($s.join(';'))
+
+eval($B.InjectBuiltins())
 
 var $ObjectDict = _b_.object.$dict
 

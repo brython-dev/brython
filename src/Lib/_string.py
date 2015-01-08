@@ -1,6 +1,6 @@
 """string helper module"""
 
-import pyre as re
+import re
 
 class __loader__(object):
     pass

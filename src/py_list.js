@@ -1,16 +1,14 @@
 ;(function($B){
 
-var _b_=$B.builtins
-var $s=[]
-for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
-eval($s.join(';'))
+eval($B.InjectBuiltins())
+
 var $ObjectDict = _b_.object.$dict
 
 function $list(){
     // used for list displays
     // different from list : $list(1) is valid (matches [1])
     // but list(1) is invalid (integer 1 is not iterable)
-    var args = new Array()
+    var args = []
     for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
     return new $ListDict(args)
 }
@@ -263,8 +261,10 @@ $ListDict.__setitem__ = function(self,arg,value){
         self.splice(start,stop-start)
         // copy items in a temporary JS array
         // otherwise, a[:0]=a fails
-        if(hasattr(value,'__iter__')){
-            var $temp = list(value)
+        var $temp
+        if(Array.isArray(value)){$temp = Array.prototype.slice.call(value)}
+        else if(hasattr(value,'__iter__')){$temp = list(value)}
+        if($temp!==undefined){
             for(var i=$temp.length-1;i>=0;i--){
                 self.splice(start,0,$temp[i])
             }
@@ -452,6 +452,9 @@ function list(){
     if(arguments.length===0) return []
     if(arguments.length>1){
         throw _b_.TypeError("list() takes at most 1 argument ("+arguments.length+" given)")
+    }
+    if(Array.isArray(arguments[0])){ // most simple case
+        var res=arguments[0];res.__brython__=true;return res
     }
     var res = []
     var arg = iter(arguments[0])

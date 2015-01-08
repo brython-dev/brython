@@ -264,7 +264,7 @@ function clear(ns){
 }
 
 $B.$list_comp = function(module_name, parent_block_id){
-    var $ix = Math.random().toString(36).substr(2,8)
+    var $ix = $B.UUID()
     var $py = 'def func'+$ix+"():\n"
     $py += "    x"+$ix+"=[]\n"
     var indent=4
@@ -299,16 +299,16 @@ $B.$list_comp = function(module_name, parent_block_id){
 $B.$gen_expr = function(){ // generator expresssion
     var module_name = arguments[0]
     var parent_block_id = arguments[1]
-    var $ix = Math.random().toString(36).substr(2,8)
+    var $ix = $B.UUID()
     var $res = 'res'+$ix
     var $py = $res+"=[]\n"
     var indent=0
     for(var $i=3, _len_$i = arguments.length; $i < _len_$i;$i++){
-        for(var $j=0;$j<indent;$j++) $py += ' '
+        $py+=' '.repeat(indent)
         $py += arguments[$i].join(' ')+':\n'
         indent += 4
     }
-    for(var $j=0;$j<indent;$j++) $py += ' '
+    $py+=' '.repeat(indent)
     $py += $res+'.append('+arguments[2].join('\n')+')'
     
     var $mod_name = 'ge'+$ix
@@ -349,16 +349,16 @@ $B.$gen_expr = function(){ // generator expresssion
 
 $B.$dict_comp = function(module_name,parent_block_id){ // dictionary comprehension
 
-    var $ix = Math.random().toString(36).substr(2,8)
+    var $ix = $B.UUID()
     var $res = 'res'+$ix
     var $py = $res+"={}\n"
     var indent=0
     for(var $i=3, _len_$i = arguments.length; $i < _len_$i;$i++){
-        for(var $j=0;$j<indent;$j++) $py += ' '
+        $py+=' '.repeat(indent)
         $py += arguments[$i]+':\n'
         indent += 4
     }
-    for(var $j=0;$j<indent;$j++) $py += ' '
+    $py+=' '.repeat(indent)
     $py += $res+'.update({'+arguments[2].join('\n')+'})'
     var locals_id = 'dc'+$ix
     var $root = $B.py2js($py,module_name,locals_id,parent_block_id)
@@ -372,7 +372,7 @@ $B.$dict_comp = function(module_name,parent_block_id){ // dictionary comprehensi
 
 $B.$lambda = function(locals,$mod,parent_block_id,$args,$body){
 
-    var rand = Math.random().toString(36).substr(2,8)
+    var rand = $B.UUID()
     var $res = 'lambda_'+$B.lambda_magic+'_'+rand
     var local_id = 'lambda'+rand
     var $py = 'def '+$res+'('+$args+'):\n'
@@ -731,6 +731,16 @@ $B.set_func_names = function(klass){
             klass[attr].__name__ = name+'.'+attr
         }
     }
+}
+
+// UUID is a function to produce a unique id.
+// the variable $B.py_UUID is defined in py2js.js (in the brython function) 
+$B.UUID=function() {return $B.$py_UUID++}
+
+$B.InjectBuiltins=function() {
+   var _str=["var _b_=$B.builtins"]
+   for(var $b in $B.builtins) _str.push('var ' + $b +'=_b_["'+$b+'"]')
+   return _str.join(';')
 }
 
 })(__BRYTHON__)

@@ -114,7 +114,7 @@ class SRE_Pattern:
             #import sre  #sre was renamed to re
             #fix me brython
             #print("possible issue at _sre.py line 116")
-            import pyre as sre
+            import re as sre
             filter = sre._subx(self, template)
         state = _State(string, 0, sys.maxsize, self.flags)
         sublist = []

@@ -16,15 +16,21 @@ $B.make_node = function(top_node, node){
     if(node.context.type=='node'){
         var ctx = node.context.tree[0]
         var ctype = ctx.type
-        
-        if((ctype=='condition' && ['if','elif'].indexOf(ctx.token)>-1) ||
-            ctype=='except' || ctype=='single_kw'){
-            is_cond = true
-        }
-        if(ctype=='condition' && ctx.token=='elif'){is_else=true}
-        if(ctype=='single_kw' && ctx.token=='else'){is_else=true}
-        if(ctype=='except'||
-            (ctype=='single_kw'&&ctx.token=="finally")){is_except=true}
+    
+        switch(ctx.type) {
+          case 'except':
+            is_except=true
+            is_cond=true
+            break
+          case 'single_kw':
+            is_cond=true
+            if (ctx.token == 'else') is_else=true
+            if (ctx.token == 'finally') is_except=true
+            break
+          case 'condition':
+            if (ctx.token == 'elif') {is_else=true; is_cond=true}
+            if (ctx.token == 'if') is_cond=true
+        }//switch
     }
     if(ctx_js){ // empty for "global x"
         var new_node = new $B.genNode(ctx_js)
@@ -153,9 +159,7 @@ $B.genNode = function(data, parent){
     }
     
     this.indent_src = function(indent){
-        var res = ''
-        for(var i=0;i<indent*_indent;i++) res+=' '
-        return res
+        return ' '.repeat(indent*indent)
     }
 
     this.src = function(indent){
@@ -479,7 +483,7 @@ $BRGeneratorDict.send = function(self, value){
     return $BRGeneratorDict.__next__(self)
 }
 
-$BRGeneratorDict.throw = function(self, value){
+$BRGeneratorDict.$$throw = function(self, value){
     if(_b_.isinstance(value,_b_.type)) value=value()
     self.sent_value = {__class__:$B.$GeneratorSendError,err:value}
     return $BRGeneratorDict.__next__(self)
