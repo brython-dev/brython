@@ -4112,7 +4112,7 @@ function $add_line_num(node,rank){
         else if(elt.type==='single_kw'){flag=false}
         if(flag){
             // add a trailing None for interactive mode
-            var js='$B.line_info=new Array('+node.line_num+',"'+mod_id+'");None;'
+            var js='$B.line_info=['+node.line_num+',"'+mod_id+'"];None;'
             if(node.module===undefined) console.log('tiens, module undef !')
 
             var new_node = new $Node()
