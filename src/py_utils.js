@@ -688,6 +688,40 @@ $B.$iterator_class = function(name){
     }
     res.__str__ = res.toString = res.__repr__
     res.__mro__ = [res,_b_.object.$dict]
+
+    function as_set(s) {
+       var _a=[]
+       while (1) {
+         try {
+              _a.push(_b_.next(s))
+         } catch (err) {
+              console.log(err)
+              if (err.__name__ == 'StopIteration') break
+         }
+       }
+          
+       return _b_.set(_a)
+    }
+
+    res.__sub__=function(self,other){
+       if (_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])) {
+          return _b_.getattr(as_set(self), '__sub__')(other)
+       }
+
+       if (_b_.hasattr(other, '__iter__')) {
+          return _b_.getattr(as_set(self), '__sub__')(as_set(other))
+       }
+       console.log("__sub__ not implemented yet for set and " + _b_.type(other))
+       _b_.NotImplementedError("__sub__ not implemented yet for set and " + _b_.type(other))
+    }
+
+    var _ops=['and', 'or', 'ge', 'le', 'xor'];
+    var _f = res.__sub__+''
+    for (var i=0; i < _ops.length; i++) {
+        var _op='__'+_ops[i]+'__'
+        eval('res.'+_op+'='+_f.replace('__sub__', _op))
+    }
+
     res.$factory = {__class__:$B.$factory,$dict:res}
     return res
 }
