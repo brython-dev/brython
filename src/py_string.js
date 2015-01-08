@@ -1,5 +1,4 @@
 ;(function($B){
-
 var _b_ = $B.builtins
 var $s=[]
 for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
@@ -27,7 +26,7 @@ $StringDict.__contains__ = function(self,item){
     var nbcar = item.length
     if(nbcar==0) return true // a string contains the empty string
     if(self.length==0) return nbcar==0
-    for(var i=0, _len_i = self.length; i < _len_i;i++){
+    for(var i=0;i<self.length;i++){
         if(self.substr(i,nbcar)==item) return true
     }
     return false
@@ -48,7 +47,7 @@ $StringDict.__format__ = function(self,arg){
     var _fs = $FormattableString(self.valueOf())
     var args=[]
     // we don't need the first item (ie, self)
-    for (var i = 1, _len_i = arguments.length; i < _len_i; i++) { args.push(arguments[i])}
+    for (var i =1; i < arguments.length; i++) { args.push(arguments[i])}
     return _fs.strformat(arg)
 }
 
@@ -87,15 +86,11 @@ $StringDict.__getitem__ = function(self,arg){
 $StringDict.__getitems__ = function(self){return self.split('')}
 
 $StringDict.__hash__ = function(self) {
-  if (self === undefined) {
-     return $StringDict.__hashvalue__ || $B.$py_next_hash--  // for hash of string type (not instance of string)
-  }
-
   //http://stackoverflow.com/questions/2909106/python-whats-a-correct-and-good-way-to-implement-hash
   // this implementation for strings maybe good enough for us..
 
   var hash=1;
-  for(var i=0, _len_i = self.length; i < _len_i; i++) {
+  for(var i=0; i < self.length; i++) {
       hash=(101*hash + self.charCodeAt(i)) & 0xFFFFFFFF
   }
 
@@ -115,16 +110,271 @@ $StringDict.__iter__ = function(self){
 
 $StringDict.__len__ = function(self){return self.length}
 
-var $legacy_format=$StringDict.__mod__ = function(self,args){
+var kwarg_key = new RegExp('([^\\)]*)\\)')
+
+
+var get_char_array = function(size, char) {
+    return new Array(size + 1).join(char)
+}
+
+var format_padding = function(s, flags) {
+    var padding = flags.padding
+    if (!padding) {  // undefined
+        return s
+    }
+    s = s.toString()
+    padding = parseInt(padding, 10)
+    var pad_char = flags.pad_char | " "
+    if (padding > 0) {
+        // left padding
+        return get_char_array(padding - s.length, pad_char) + s
+    } else {
+        // right padding
+        padding *= -1
+        return s + get_char_array(padding - s.length, pad_char)
+    }
+}
+
+var str_format = function(val, flags) {
+    // string format supports left and right padding
+    flags.pad_char = " "  // even if 0 padding is defined, don't use it
+    return format_padding(str(val), flags)
+}
+
+var num_format = function(val, flags) {
+    var ret = parseInt(val)
+    return format_padding(ret, flags)
+}
+
+var repr_format = function(val, flags) {
+    flags.pad_char = " "  // even if 0 padding is defined, don't use it
+    return format_padding(repr(val), flags)
+}
+
+var ascii_format = function(val, flags) {
+    flags.pad_char = " "  // even if 0 padding is defined, don't use it
+    return format_padding(ascii(val), flags)
+}
+
+var floating_point_format = function(val, upper, flags) {
+    // todo
+}
+
+var floating_point_decimal_format = function(val, flags) {
+    // todo
+}
+
+var floating_point_exponential_format = function(val, upper, flags) {
+    // todo
+}
+
+var signed_hex_format = function(val, upper, flags) {
+    // todo
+}
+
+var octal_format = function(val, flags) {
+    // todo
+}
+
+var single_char_format = function(val, flags) {
+    if(isinstance(val,str) && val.length==1) return val
+    try {
+        val = _b_.int(val)  // yes, floats are valid (they are cast to int)
+    } catch (err) {
+        throw _b_.TypeError('%c requires int or char')
+    }
+    return format_padding(chr(val), flags)
+}
+
+var num_flag = function(c, flags) {
+    if (c === '0' && !flags.padding) {
+        flags.pad_char = '0'
+        return
+    }
+    if (!flags.decimal_point) {
+        flags.padding = (flags.padding | "") + c
+    } else {
+        flags.precision = (flags.precision | "") + c
+    }
+}
+
+var decimal_point_flag = function(val, flags) {
+    if (flags.decimal_point) {
+        // can only have one decimal point
+        throw new UnsupportedChar()
+    }
+    flags.decimal_point = true
+}
+
+var neg_flag = function(val, flags) {
+    flags.pad_char = ' '  // overrides '0' flag
+}
+
+var space_flag = function(val, flags) {
+    flags.space = true
+}
+
+var sign_flag = function(val, flags) {
+    flags.space = false
+    flags.sign = true
+}
+
+var char_to_func_mapping = {
+    's': str_format,
+    'd': num_format,
+    'i': num_format,
+    'u': num_format,
+    'o': octal_format,
+    'r': repr_format,
+    'a': ascii_format,
+    'g': function(val, flags) {return floating_point_format(val, false, flags)},
+    'G': function(val, flags) {return floating_point_format(val, true, flags)},
+    'f': floating_point_decimal_format,
+    'F': floating_point_decimal_format,
+    'e': function(val, flags) {return floating_point_exponential_format(val, false, flags)},
+    'E': function(val, flags) {return floating_point_exponential_format(val, true, flags)},
+    'x': function(val, flags) {return signed_hex_format(val, false, flags)},
+    'X': function(val, flags) {return signed_hex_format(val, true, flags)},
+    'c': single_char_format,
+    '0': function(val, flags) {return num_flag('0', flags)},
+    '1': function(val, flags) {return num_flag('1', flags)},
+    '2': function(val, flags) {return num_flag('2', flags)},
+    '3': function(val, flags) {return num_flag('3', flags)},
+    '4': function(val, flags) {return num_flag('4', flags)},
+    '5': function(val, flags) {return num_flag('5', flags)},
+    '6': function(val, flags) {return num_flag('6', flags)},
+    '7': function(val, flags) {return num_flag('7', flags)},
+    '8': function(val, flags) {return num_flag('8', flags)},
+    '9': function(val, flags) {return num_flag('9', flags)},
+    '-': neg_flag,
+    ' ': space_flag,
+    '+': sign_flag,
+    '.': decimal_point_flag
+}
+
+var UnsupportedChar = function() {
+    this.name = "UnsupportedChar"
+}
+
+var $new_legacy_format = $StringDict.__mod__ = function(val, args) {
+    var length = val.length
+    var pos = 0 |0
+    var argpos = null
+    if (args && args.__class__ === _b_.tuple.$dict) {
+        argpos = 0 |0
+    }
+    var ret = ''
+    //start = performance.now()
+    var $get_kwarg_string = function(s) {
+        // returns [val, newpos]
+        ++pos
+        var rslt = kwarg_key.match(s.substring(newpos))
+        if (!rslt) {
+            throw _b_.ValueError("incomplete format key")
+        }
+        var key = rslt[1]
+        newpos += rslt[0].length
+        try {
+            var val = args.__class__.__getitem__(key)
+        } catch(err) {
+            if (err.name === "KeyError") {
+                throw err
+            }
+            throw _b_.TypeError("format requires a mapping")
+        }
+        return get_string_value(s, val)
+    }
+
+    var $get_arg_string = function(s) {
+        // returns [val, newpos]
+        var val
+        
+        // non-tuple args
+        if (argpos === null) {
+            // args is the value
+            val = args
+        } else {
+            try {
+                //val = args.__class__.__getitem__(argpos)
+                val = args[argpos++]
+            }
+            catch(err) {
+                if (err.name === "IndexError") {
+                    throw _b_.TypeError("not enough arguments for format string")
+                } else {
+                    throw err
+                }
+            }
+        }
+        return get_string_value(s, val)
+    }
+    var get_string_value = function(s, val) {
+        // todo: get flags, type
+        // todo: string value based on flags, type, value
+        var flags = {}
+        do {
+            func = char_to_func_mapping[s[newpos]]
+            try {
+                if (func === undefined) {
+                    throw new UnsupportedChar()
+                } else {
+                    var ret = func(val, flags)
+                    if (ret !== undefined) {
+                        return ret
+                    }
+                    ++newpos
+                }
+            } catch (err) {
+                if (err.name === "UnsupportedChar") {
+                    invalid_char = s[newpos]
+                    throw _b_.ValueError("unsupported format character '" + invalid_char + 
+                        "' (0x" + invalid_char.charCodeAt(0).toString(16) + ") at index " + newpos)
+                } else {
+                    throw err
+                }
+            }
+        } while (true)
+    }
+    do {
+        newpos = val.indexOf('%', pos)
+        if (newpos < 0) {
+            ret += val.substring(pos)
+            break
+        }
+        ret += val.substring(pos, newpos)
+        ++newpos
+        if (newpos < length) {
+            if (val[newpos] === '%') {
+                ret += '%'
+                ++newpos
+            } else {
+                var tmp
+                if (val[newpos] === '(') {
+                    ret += $get_kwarg_string(val)
+                } else {
+                    ret += $get_arg_string(val)
+                }
+            }
+        } else {
+            // % at end of string
+            throw _b_.ValueError("incomplete format")
+        }
+        pos = newpos + 1
+    } while (pos < length)
+    //end = performance.now()
+    //console.log(val)
+    //console.log(end - start)
+    return ret
+}
+
+var conv_flags = '([#\\+\\- 0]*)'
+var re = new RegExp('\\%(\\(.+?\\))*'+conv_flags+'(\\*|\\d*)(\\.\\*|\\.\\d*)*(h|l|L)*(.){1}')
+
+var $legacy_format= function(self,args){
     // string formatting (old style with %)
     var ph = [] // placeholders for replacements
 
     function format(s){
-        if (s === undefined) console.log('format:', s)
-        var conv_flags = '([#\\+\\- 0]*)'
-        //var conv_types = '[diouxXeEfFgGcrsa%]'
-        //var re = new RegExp('\\%(\\(.+?\\))*'+conv_flags+'(\\*|\\d*)(\\.\\*|\\.\\d*)*(h|l|L)*('+conv_types+'){1}')
-        var re = new RegExp('\\%(\\(.+?\\))*'+conv_flags+'(\\*|\\d*)(\\.\\*|\\.\\d*)*(h|l|L)*(.){1}')
         var res = re.exec(s)
         this.is_format = true
         if(!res){this.is_format = false;return}
@@ -315,50 +565,50 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
                 res = num+''
                 var len_num = res.length
                 if(this.precision){
-                    var prec = parseInt(this.precision.substr(1))
-                }else{
-                    var prec = 0
-                }
-                if(this.min_width){
-                    var min_width = parseInt(this.min_width)
-                }else{
-                    var min_width = 0
-                }
-                var width = Math.max(len_num, prec, min_width)
-                var pad = ' '
-                if (len_num === width){
-                    if(flag_plus && num>=0){res = '+'+res}                    
-                }else{
-                    if(flag_minus){
-                        if(!flag_plus && !flag_space){
-                            res=res+pad.repeat(width-len_num)
-                        }
-                        if(flag_plus){
-                            res='+'+res+pad.repeat(width-len_num-1)
-                        }
-                        if(!flag_plus && flag_space){
-                            res=pad+res+pad.repeat(width-len_num-1)
-                        }
-                    }else if(flag_plus && !flag_zero){
-                        res=pad.repeat(width-len_num-1)+'+'+res
-                    }else if(flag_plus && flag_zero){
-                        if(num.substr(0,1) === '-'){
-                            res='-'+'0'.repeat(width-len_num)+res.substr(1)
-                        }else{
-                            res='+'+'0'.repeat(width-len_num-1)+res
-                        }
-                    }else if(!flag_plus && !flag_space && flag_zero){
-                        res='0'.repeat(width-len_num)+res
-                    }else if(!flag_plus && !flag_zero && !flag_space && !flag_minus){
-                        if(prec>0 && prec > len_num){
-                            res=pad.repeat(width-(prec-len_num)-1)+'0'.repeat(prec-len_num)+res
-                        }else{
-                            res=pad.repeat(width-len_num)+res
-                        }
-                    }else if(flag_space && flag_zero){
-                        res=pad+'0'.repeat(width-len_num-1)+res
-                    }
-                }
+					var prec = parseInt(this.precision.substr(1))
+				}else{
+					var prec = 0
+				}
+				if(this.min_width){
+					var min_width = parseInt(this.min_width)
+				}else{
+					var min_width = 0
+				}
+				var width = Math.max(len_num, prec, min_width)
+				var pad = ' '
+				if (len_num === width){
+					if(flag_plus && num>=0){res = '+'+res}					
+				}else{
+					if(flag_minus){
+						if(!flag_plus && !flag_space){
+							res=res+pad.repeat(width-len_num)
+						}
+						if(flag_plus){
+							res='+'+res+pad.repeat(width-len_num-1)
+						}
+						if(!flag_plus && flag_space){
+							res=pad+res+pad.repeat(width-len_num-1)
+						}
+					}else if(flag_plus && !flag_zero){
+						res=pad.repeat(width-len_num-1)+'+'+res
+					}else if(flag_plus && flag_zero){
+						if(num.substr(0,1) === '-'){
+							res='-'+'0'.repeat(width-len_num)+res.substr(1)
+						}else{
+							res='+'+'0'.repeat(width-len_num-1)+res
+						}
+					}else if(!flag_plus && !flag_space && flag_zero){
+						res='0'.repeat(width-len_num)+res
+					}else if(!flag_plus && !flag_zero && !flag_space && !flag_minus){
+						if(prec>0 && prec > len_num){
+							res=pad.repeat(width-(prec-len_num)-1)+'0'.repeat(prec-len_num)+res
+						}else{
+							res=pad.repeat(width-len_num)+res
+						}
+					}else if(flag_space && flag_zero){
+						res=pad+'0'.repeat(width-len_num-1)+res
+					}
+				}
                 return res
               case 'f':
               case 'F':
@@ -406,6 +656,8 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
                 _b_.TypeError('%c requires _b_.int or char')
               case 'o':
                 //}else if(this.type=='o'){
+                  
+                  
                 var res = src.toString(8)
                 if(this.flag==='#') return '0o' + res
                 return res
@@ -467,7 +719,7 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
     if(!isinstance(args,_b_.tuple)){
         if(args.__class__==_b_.dict.$dict && is_mapping){
             // convert all formats with the dictionary
-            for(var i=1, _len_i = elts.length; i < _len_i;i+=2){
+            for(var i=1;i<elts.length;i+=2){
                 elts[i]=elts[i].format(args)
             }
         }
@@ -475,7 +727,7 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
         else{elts[1]=elts[1].format(args)}
     }else{
         if(nb_repl==args.length){
-            for(var i=0, _len_i = args.length; i < _len_i;i++){
+            for(var i=0;i<args.length;i++){
                 var fmt = elts[1+2*i]
                 elts[1+2*i]=fmt.format(args[i])
             }
@@ -484,7 +736,7 @@ var $legacy_format=$StringDict.__mod__ = function(self,args){
         }else{throw _b_.TypeError('not enough arguments for format string')}
     }
     var res = ''
-    for(var i=0, _len_i = elts.length; i < _len_i;i++){res+=elts[i]}
+    for(var i=0;i<elts.length;i++){res+=elts[i]}
     // finally, replace %% by %
     return res.replace(/%%/g,'%')
 }// $end $legacy_format
@@ -543,7 +795,6 @@ $B.make_rmethods($StringDict)
 var $notimplemented = function(self,other){
     throw NotImplementedError("OPERATOR not implemented for class str")
 }
-/*
 $notimplemented += '' // coerce to string
 for(var $op in $B.$operators){
     var $opfunc = '__'+$B.$operators[$op]+'__'
@@ -551,7 +802,6 @@ for(var $op in $B.$operators){
         //eval('$StringDict.'+$opfunc+"="+$notimplemented.replace(/OPERATOR/gm,$op))
     }
 }
-*/
 
 $StringDict.capitalize = function(self){
     if(self.length==0) return ''
@@ -596,7 +846,7 @@ $StringDict.endswith = function(self){
     // With optional start, test beginning at that position. With optional 
     // end, stop comparing at that position.
     var args = []
-    for(var i=1, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+    for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
     var start=null,end=null
     var $ns=$B.$MakeArgs("$StringDict.endswith",args,['suffix'],
         ['start','end'],null,null)
@@ -605,7 +855,7 @@ $StringDict.endswith = function(self){
     start = $ns['start'] || start
     end = $ns['end'] || self.length-1
     var s = self.substr(start,end+1)
-    for(var i=0, _len_i = suffixes.length; i < _len_i;i++){
+    for(var i=0;i<suffixes.length;i++){
         suffix = suffixes[i]
         if(suffix.length<=s.length &&
             s.substr(s.length-suffix.length)==suffix) return true
@@ -637,7 +887,7 @@ $StringDict.find = function(self){
     var s = self.substring(start,end)
     //var escaped = ['[','.','*','+','?','|','(',')','$','^']
     var esc_sub = ''
-    for(var i=0, _len_i = sub.length; i < _len_i;i++){
+    for(var i=0;i<sub.length;i++){
         switch(sub.charAt(i)) {
           case '[':
           case '.':
@@ -747,7 +997,7 @@ var $FormattableString=function(format_string) {
 
        //console.log('name', _name)
        var _k
-       for (var i=0, _len_i = _name_parts.length; i < _len_i; i++) {
+       for (var i=0; i < _name_parts.length; i++) {
            _k = _name_parts[i][0]
            var _v = _name_parts[i][1]
            var _tail = _name_parts[i][2]
@@ -800,7 +1050,7 @@ var $FormattableString=function(format_string) {
        var kwargs=$ns['kwargs']
        
        if (args.length>0) {
-          for (var i=0, _len_i = args.length; i < _len_i; i++) {
+          for (var i=0; i < args.length; i++) {
               //kwargs[str(i)]=args.$dict[i]
               getattr(kwargs, '__setitem__')(str(i), args[i])
           }
@@ -810,7 +1060,7 @@ var $FormattableString=function(format_string) {
        var _want_bytes = isinstance(this._string, str)
        var _params=_b_.dict()
 
-       for (var i=0, _len_i = this._kwords_array.length; i < _len_i; i++) {
+       for (var i=0; i < this._kwords_array.length; i++) {
            var _name = this._kwords_array[i]
            var _items = this._kwords[_name]
            var _var = getattr(kwargs, '__getitem__')(_name)
@@ -822,7 +1072,7 @@ var $FormattableString=function(format_string) {
              _value=_var
            }
 
-           for (var j=0, _len_j = _items.length; j < _len_j; j++) {
+           for (var j=0; j < _items.length; j++) {
                var _parts = _items[j][0]
                var _conv = _items[j][1]
                var _spec = _items[j][2]
@@ -835,7 +1085,7 @@ var $FormattableString=function(format_string) {
            }
        }
 
-       for (var i=0, _len_i = this._nested_array.length; i < _len_i; i++) {
+       for (var i=0; i < this._nested_array.length; i++) {
            var _name = this._nested_array[i]
            var _items = this._nested[i]
 
@@ -847,7 +1097,7 @@ var $FormattableString=function(format_string) {
              _value=_var
            }
 
-           for (var j=0, _len_j = _items.length; j < _len_j; j++) {
+           for (var j=0; j < _items.length; j++) {
                var _parts = _items[j][0]
                var _conv = _items[j][1]
                var _spec = _items[j][2]
@@ -868,7 +1118,7 @@ var $FormattableString=function(format_string) {
 
        if (want_bytes === undefined) want_bytes = false
 
-       for (var i=0, _len_i = parts.length; i < _len_i; i++) {
+       for (var i=0; i < parts.length; i++) {
            var _k = parts[i][0]
            var _part = parts[i][1]
 
@@ -920,9 +1170,8 @@ var $FormattableString=function(format_string) {
        var _precision=_match[6]
        var _conversion=_match[7]
 
-       var _is_float = isinstance(value, _b_.float)
+       var _is_numeric = isinstance(value, _b_.float)
        var _is_integer = isinstance(value, _b_.int)
-       var _is_numeric = _is_float || _is_integer
 
        //console.log('match', _match)
 
@@ -989,7 +1238,7 @@ var $FormattableString=function(format_string) {
        // Fastpath when alignment is not required
 
        if (_width <= _rv.length) {
-          if (! _is_float && (_align == '=' || (_zero && ! _align))) {
+          if (! _is_numeric && (_align == '=' || (_zero && ! _align))) {
              throw _b_.ValueError("'=' alignment not allowed in string format specifier")
           }
           return _rv
@@ -1103,7 +1352,7 @@ var $FormattableString=function(format_string) {
       '(%)' +
       '|((?!{)(?:{{)+' +
       '|(?:}})+(?!})' +
-      '|{(?:[^{](?:[^{}]+|{[^{}]*})*)?})', 'g'
+      '|{(?:[^{}](?:[^{}]+|{[^{}]*})*)?})', 'g'
     )
 
     this.format_sub_re = new RegExp('({[^{}]*})')  // nested replacement field
@@ -1133,7 +1382,7 @@ $StringDict.format = function(self) {
     var _fs = $FormattableString(self.valueOf())
     var args=[]
     // we don't need the first item (ie, self)
-    for (var i = 1, _len_i = arguments.length; i < _len_i; i++) { args.push(arguments[i])}
+    for (var i =1; i < arguments.length; i++) { args.push(arguments[i])}
     return _fs.format.apply(null, args)
 }
 
@@ -1262,15 +1511,18 @@ $StringDict.maketrans = function(from, to) {
    for(var i=0; i < 256; i++) _t[i]=String.fromCharCode(i)
 
    // make substitution in the translation table
-   for(var i=0, _len_i = from.source.length; i < _len_i; i++) {
+   for(var i=0; i < from.source.length; i++) {
       var _ndx=from.source[i].charCodeAt(0)     //retrieve ascii code of char
       _t[_ndx]=to.source[i]
    }
 
    // create a data structure that string.translate understands
    var _d=$B.$dict()
+   var _kpush=_d.$keys.push
+   var _vpush=_d.$values.push
    for(var i=0; i < 256; i++) {
-      _b_.dict.$dict.__setitem__(_d, i, _t[i])
+      _kpush(i)
+      _vpush(_t[i])
    }
    return _d
 }
@@ -1288,40 +1540,31 @@ $StringDict.partition = function(self,sep) {
 function $re_escape(str)
 {
   var specials = "[.*+?|()$^"
-  for(var i=0, _len_i = specials.length; i < _len_i;i++){
+  for(var i=0;i<specials.length;i++){
       var re = new RegExp('\\'+specials.charAt(i),'g')
       str = str.replace(re, "\\"+specials.charAt(i))
   }
   return str
 }
 
-$StringDict.replace = function(self, old, _new, count) {
-    // Replaces occurrences of 'old' by '_new'. Count references
-    // the number of times to replace. In CPython, negative or undefined 
-    // values of count means replace all.
-    if (count === undefined) {
-        count = -1;
-    } else {
-        // Validate instance type of 'count'
-        if (!isinstance(count,[_b_.int,_b_.float])) {
-            throw _b_.TypeError("'" + str(count.__class__) + "' object cannot be interpreted as an integer");
-        } else if (isinstance(count, _b_.float)) {
-            throw _b_.TypeError("integer argument expected, got float");
+$StringDict.replace = function(self,old,_new,count){
+    if(count!==undefined){
+        if(!isinstance(count,[_b_.int,_b_.float])){throw __b_.TypeError(
+            "'"+str(count.__class__)+"' object cannot be interpreted as an integer")
         }
+        var re = new RegExp($re_escape(old),'g')
+        
+        var res = self.valueOf()
+        while(count>0){
+            if(self.search(re)==-1){return res}
+            res = res.replace(re,_new)
+            count--
+        }
+        return res
+    }else{
+        var re = new RegExp($re_escape(old),"g")
+        return self.replace(re,_new)
     }
-
-    var res = self.valueOf();
-    var pos = -1;
-    if (count < 0) count = res.length;
-    while (count > 0) {
-        pos = res.indexOf(old, pos);
-        if (pos < 0)
-            break;
-        res = res.substr(0, pos) + _new + res.substr(pos + old.length);
-        pos = pos + _new.length;
-        count--;
-    }
-    return res;
 }
 
 $StringDict.rfind = function(self){
@@ -1382,25 +1625,28 @@ $StringDict.rpartition = function(self,sep) {
 
 $StringDict.rsplit = function(self) {
     var args = []
-    for(var i=1, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+    for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
     var $ns=$B.$MakeArgs("$StringDict.rsplit",args,[],[],'args','kw')
     var sep=None,maxsplit=-1
     if($ns['args'].length>=1){sep=$ns['args'][0]}
     if($ns['args'].length==2){maxsplit=$ns['args'][1]}
-    maxsplit = _b_.dict.$dict.get($ns['kw'],'maxsplit',maxsplit)
+    maxsplit = $ns['kw'].get('maxsplit',maxsplit)
 
     var array=$StringDict.split(self) 
 
-    var array=$StringDict.split(self, sep) 
+    if (array.length <= maxsplit) return array
 
-    if (array.length <= maxsplit || maxsplit == -1) return array
-
-    var s=[]
-    
-    s = array.splice(array.length - maxsplit, array.length)
-    s.splice(0, 0, array.join(sep))
-    
-    return s
+    var s=[], j=1
+    for (var i=0; i < maxsplit - array.length; i++) {
+        if (i < maxsplit - array.length) {
+           if (i > 0) { s[0]+=sep}
+           s[0]+=array[i]
+        } else {
+           s[j]=array[i]
+           j+=1
+        }
+    }
+    return _b_.tuple(s)
 }
 
 $StringDict.rstrip = function(self,x){
@@ -1412,13 +1658,13 @@ $StringDict.rstrip = function(self,x){
 
 $StringDict.split = function(self){
     var args = []
-    for(var i=1, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+    for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
     var $ns=$B.$MakeArgs("$StringDict.split",args,[],[],'args','kw')
     var sep=None,maxsplit=-1
     if($ns['args'].length>=1){sep=$ns['args'][0]}
     if($ns['args'].length==2){maxsplit=$ns['args'][1]}
     maxsplit = _b_.dict.$dict.get($ns['kw'],'maxsplit',maxsplit)
-    if(sep=='') throw _b_.ValueError('empty separator')
+    if(sep=='') throw _b_.ValueError('empty seperator')
     if(sep===None){
         var res = []
         var pos = 0
@@ -1450,7 +1696,7 @@ $StringDict.split = function(self){
     }else{
         //var escaped = ['*','.','[',']','(',')','|','$','^']
         var esc_sep = ''
-        for(var i=0, _len_i = sep.length; i < _len_i;i++){
+        for(var i=0;i<sep.length;i++){
             switch(sep.charAt(i)) {
               case '*':
               case '.':
@@ -1476,8 +1722,8 @@ $StringDict.split = function(self){
         // a maxsplit argument is supplied. (see javascript string split
         // function docs for details)
         var l=self.valueOf().split(re,-1)
-        var a=l.slice(0, maxsplit)
-        var b=l.slice(maxsplit, l.length)
+        var a=l.splice(0, maxsplit)
+        var b=l.splice(maxsplit-1, l.length)
         if (b.length > 0) a.push(b.join(sep))
 
         return a
@@ -1499,7 +1745,7 @@ $StringDict.startswith = function(self){
     var end = $ns['end'] || self.length-1
     var s = self.substr(start,end+1)
 
-    for (var i=0, _len_i = prefixes.length; i < _len_i; i++) {
+    for (var i=0; i < prefixes.length; i++) {
         if (s.indexOf(prefixes[i]) == 0) return true
     }
     return false
@@ -1525,7 +1771,7 @@ $StringDict.title = function(self) {
 $StringDict.translate = function(self,table) {
     var res = ''
     if (isinstance(table, _b_.dict)) {
-       for (var i=0, _len_i = self.length; i < _len_i; i++) {
+       for (var i=0; i<self.length; i++) {
            var repl = _b_.dict.$dict.get(table,self.charCodeAt(i),-1)
            if(repl==-1){res += self.charAt(i)}
            else if(repl!==None){res += repl}
@@ -1556,7 +1802,7 @@ function str(arg){
         $B.$pop_exc()
         try{ // try __repr__
              var f = getattr(arg,'__repr__')
-             return getattr(f,'__call__')()
+             return f()
         }catch(err){
              $B.$pop_exc()
              console.log(err+'\ndefault to toString '+arg);return arg.toString()
@@ -1573,8 +1819,6 @@ $StringDict.__new__ = function(cls){
     return {__class__:cls.$dict}
 }
 
-$B.set_func_names($StringDict)
-
 // dictionary and factory for subclasses of string
 var $StringSubclassDict = {
     __class__:$B.$type,
@@ -1590,7 +1834,7 @@ for(var $attr in $StringDict){
                 var args = []
                 if(arguments.length>0){
                     var args = [arguments[0].valueOf()]
-                    for(var i=1, _len_i = arguments.length; i < _len_i;i++){
+                    for(var i=1;i<arguments.length;i++){
                         args.push(arguments[i])
                     }
                 }
@@ -1608,5 +1852,40 @@ $B.$StringSubclassFactory = {
 }
 
 _b_.str = str
+
+$B.$AttrDict = {__class__:$B.$type, __name__:'attribute'}
+
+$B.$AttrDict.__getitem__ = function(self, arg){
+    var _name=self.name
+    if(_name.substr(0,2)=='$$') _name=_name.substr(2)
+
+    return _b_.getattr(_name, '__getitem__')(arg)
+}
+
+
+$B.$AttrDict.__mro__ = [$B.$AttrDict, $ObjectDict]
+
+$B.$AttrDict.__repr__ = function(self){
+    if(self.name.substr(0,2)=='$$') return _b_.repr(self.name.substr(2))
+    return _b_.repr(self.name)
+}
+
+$B.$AttrDict.__str__ = function(self){
+    if(self.name.substr(0,2)=='$$') return _b_.str(self.name.substr(2))
+    return _b_.str(self.name)
+}
+
+for(var method in $StringDict){
+    if($B.$AttrDict[method]!==undefined){continue}
+    $B.$AttrDict[method] = (function(m){
+        return function(){
+            var args = []
+            for(var i=0;i<arguments.length;i++){
+                args.push(str(arguments[i]))
+            }
+            return $StringDict[m].apply(null, args)
+        }
+    })(method)
+}
 
 })(__BRYTHON__)
