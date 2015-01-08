@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 3, 0, 'alpha', 0]
-// implementation [3, 0, 2, 'alpha', 0]
+// implementation [3, 0, 3, 'alpha', 0]
 // version compiled from commented, indented source files at github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
 ;(function($B){
@@ -47,8 +47,8 @@ $B.has_json=typeof(JSON)!=="undefined"
 $B.has_websocket=(function(){try{var x=window.WebSocket;return x!==undefined}
 catch(err){return false}})
 })(__BRYTHON__)
-__BRYTHON__.implementation=[3,0,2,'alpha',0]
-__BRYTHON__.__MAGIC__="3.0.2"
+__BRYTHON__.implementation=[3,0,3,'alpha',0]
+__BRYTHON__.__MAGIC__="3.0.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
 __BRYTHON__.builtin_module_names=["posix","__random","_ajax","_browser","_html","_io","_jsre","_multiprocessing","_os","_posixsubprocess","_svg","_sys","_timer","_websocket","builtins","dis","hashlib","javascript","json","math","modulefinder","time","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
@@ -2585,7 +2585,7 @@ if(elt.type==='condition' && elt.token==='elif'){flag=false}
 else if(elt.type==='except'){flag=false}
 else if(elt.type==='single_kw'){flag=false}
 if(flag){
-var js='$B.line_info=new Array('+node.line_num+',"'+mod_id+'");None;'
+var js='$B.line_info=['+node.line_num+',"'+mod_id+'"];None;'
 if(node.module===undefined)console.log('tiens, module undef !')
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
@@ -5195,6 +5195,26 @@ $B.$iterator_class=function(name){var res={__class__:$B.$type,__name__:name
 }
 res.__str__=res.toString=res.__repr__
 res.__mro__=[res,_b_.object.$dict]
+function as_set(s){var _a=[]
+while(1){try{
+_a.push(_b_.next(s))
+}catch(err){console.log(err)
+if(err.__name__=='StopIteration')break
+}}
+return _b_.set(_a)
+}
+res.__sub__=function(self,other){if(_b_.isinstance(other,[_b_.tuple,_b_.set,_b_.list])){return _b_.getattr(as_set(self),'__sub__')(other)
+}
+if(_b_.hasattr(other,'__iter__')){return _b_.getattr(as_set(self),'__sub__')(as_set(other))
+}
+console.log("__sub__ not implemented yet for set and " + _b_.type(other))
+_b_.NotImplementedError("__sub__ not implemented yet for set and " + _b_.type(other))
+}
+var _ops=['and','or','ge','le','xor']
+var _f=res.__sub__+''
+for(var i=0;i < _ops.length;i++){var _op='__'+_ops[i]+'__'
+eval('res.'+_op+'='+_f.replace('__sub__',_op))
+}
 res.$factory={__class__:$B.$factory,$dict:res}
 return res
 }
@@ -7354,8 +7374,7 @@ return pyobj
 var $JSObjectDict={__class__:$B.$type,__name__:'JSObject',toString:function(){return '(JSObject)'}}
 $JSObjectDict.__bool__=function(self){return(new Boolean(self.js)).valueOf()
 }
-$JSObjectDict.__getattribute__=function(obj,attr){if(attr=='dialog'){console.log("js obj attr "+attr)}
-if(attr.substr(0,2)=='$$')attr=attr.substr(2)
+$JSObjectDict.__getattribute__=function(obj,attr){if(attr.substr(0,2)=='$$')attr=attr.substr(2)
 if(obj.js===null)return $ObjectDict.__getattribute__(None,attr)
 if(attr==='__class__')return $JSObjectDict
 if(attr=="bind" && obj.js[attr]===undefined &&
@@ -7363,8 +7382,7 @@ obj.js['addEventListener']!==undefined){attr='addEventListener'}
 var js_attr=obj.js[attr]
 if(obj.js_func && obj.js_func[attr]!==undefined){js_attr=obj.js_func[attr]
 }
-if(js_attr !==undefined){if(attr=="dialog"){console.log('js_attr '+js_attr)}
-if(typeof js_attr=='function'){
+if(js_attr !==undefined){if(typeof js_attr=='function'){
 var res=function(){var args=[],arg
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){args.push(pyobj2jsobj(arguments[i]))
 }
@@ -8800,7 +8818,12 @@ if($B.get_class(other)===$B.get_class(self)){if(other.length==self.length){for(v
 }
 return True
 }}
-return False
+if(isinstance(other,[_b_.set,_b_.tuple,_b_.list])){if(self.length !=getattr(other,'__len__')())return false
+for(var i=0,_len_i=self.length;i < _len_i;i++){if(!getattr(other,'__contains__')(self[i]))return false
+}
+return true
+}
+return false
 }
 $ListDict.__getitem__=function(self,arg){if(isinstance(arg,_b_.int)){var items=self.valueOf()
 var pos=arg

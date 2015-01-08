@@ -3053,19 +3053,10 @@ function $KwArgCtx(context){
     // put id in list of kwargs
     // used to avoid passing the id as argument of a list comprehension
     var value = this.tree[0].value
-    var ctx = context
-    while(ctx.parent!==undefined){
-        switch(ctx.type) {
-          case 'list_or_tuple':
-          case 'dict_or_set':
-          case 'call_arg':
-          case 'def':
-          case 'lamdba':
-            if(ctx.kwargs===undefined){ctx.kwargs=[value]}
-            else if(ctx.kwargs.indexOf(value)===-1){ctx.kwargs.push(value)}
-        }
-        ctx = ctx.parent
-    }
+    var ctx = context.parent.parent // type 'call'
+    if(ctx.kwargs===undefined){ctx.kwargs=[value]}
+    else if(ctx.kwargs.indexOf(value)===-1){ctx.kwargs.push(value)}
+    else{$_SyntaxError(context,['keyword argument repeated'])}
 
     // If the keyword argument occurs inside a function, remove the occurence
     // from referenced variables in the function
