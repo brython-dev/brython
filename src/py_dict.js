@@ -362,7 +362,7 @@ $DictDict.__repr__ = function(self){
         var itm = items[idx]
         res.push(repr(itm[0])+': '+repr(itm[1]))
     }
-    return '{'+ res.join(',') +'}'
+    return '{'+ res.join(', ') +'}'
 }
 
 $DictDict.__setitem__ = function(self,key,value){
@@ -441,7 +441,7 @@ $DictDict.items = function(self){
     return $iterator_wrapper(new $item_iterator(self), $dict_itemsDict)
 }
 
-$DictDict.fromkeys = function(self, keys,value){
+$DictDict.fromkeys = function(keys, value){
     // class method
     if(value===undefined) value=None
     var res = dict()
