@@ -403,6 +403,7 @@ function $eval(src, _globals, locals){
             }
         }
         var res = eval(root.to_js())
+        if(res===undefined){res = _b_.None}
         if(_globals!==undefined){
             var set_func = getattr(_globals,'__setitem__')
             for(var attr in $B.vars[mod_name]){

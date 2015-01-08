@@ -1890,16 +1890,10 @@ this.tree=[C.tree[0]]
 C.parent.tree.pop()
 C.parent.tree.push(this)
 var value=this.tree[0].value
-var ctx=C
-while(ctx.parent!==undefined){switch(ctx.type){case 'list_or_tuple':
-case 'dict_or_set':
-case 'call_arg':
-case 'def':
-case 'lamdba':
+var ctx=C.parent.parent 
 if(ctx.kwargs===undefined){ctx.kwargs=[value]}
-else if(ctx.kwargs.indexOf(value)===-1){ctx.kwargs.push(value)}}
-ctx=ctx.parent
-}
+else if(ctx.kwargs.indexOf(value)===-1){ctx.kwargs.push(value)}
+else{$_SyntaxError(C,['keyword argument repeated'])}
 var scope=$get_scope(this)
 if(scope.ntype=='def' ||scope.ntype=='generator'){var ix=null,varname=C.tree[0].value
 if(scope.var2node[varname]!==undefined){for(var i=0;i<scope.var2node[varname].length;i++){if(scope.var2node[varname][i]==C.tree[0]){ix=i
@@ -5806,6 +5800,7 @@ if(!('expr'==type ||'list_or_tuple'==type)){$B.line_info=[1,mod_name]
 throw _b_.SyntaxError("eval() argument must be an expression")
 }}
 var res=eval(root.to_js())
+if(res===undefined){res=_b_.None}
 if(_globals!==undefined){var set_func=getattr(_globals,'__setitem__')
 for(var attr in $B.vars[mod_name]){if(attr=='__name__'||attr=='__doc__'||attr=='__file__')continue
 set_func(attr,$B.vars[mod_name][attr])
@@ -7359,7 +7354,8 @@ return pyobj
 var $JSObjectDict={__class__:$B.$type,__name__:'JSObject',toString:function(){return '(JSObject)'}}
 $JSObjectDict.__bool__=function(self){return(new Boolean(self.js)).valueOf()
 }
-$JSObjectDict.__getattribute__=function(obj,attr){if(attr.substr(0,2)=='$$')attr=attr.substr(2)
+$JSObjectDict.__getattribute__=function(obj,attr){if(attr=='dialog'){console.log("js obj attr "+attr)}
+if(attr.substr(0,2)=='$$')attr=attr.substr(2)
 if(obj.js===null)return $ObjectDict.__getattribute__(None,attr)
 if(attr==='__class__')return $JSObjectDict
 if(attr=="bind" && obj.js[attr]===undefined &&
@@ -7367,7 +7363,8 @@ obj.js['addEventListener']!==undefined){attr='addEventListener'}
 var js_attr=obj.js[attr]
 if(obj.js_func && obj.js_func[attr]!==undefined){js_attr=obj.js_func[attr]
 }
-if(js_attr !==undefined){if(typeof js_attr=='function'){
+if(js_attr !==undefined){if(attr=="dialog"){console.log('js_attr '+js_attr)}
+if(typeof js_attr=='function'){
 var res=function(){var args=[],arg
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){args.push(pyobj2jsobj(arguments[i]))
 }
@@ -8612,7 +8609,7 @@ var items=new $item_generator(self).as_list()
 for(var idx in items){var itm=items[idx]
 res.push(repr(itm[0])+': '+repr(itm[1]))
 }
-return '{'+ res.join(',')+'}'
+return '{'+ res.join(', ')+'}'
 }
 $DictDict.__setitem__=function(self,key,value){switch(typeof key){case 'string':
 self.$string_dict[key]=value
@@ -8662,7 +8659,7 @@ return None
 var $dict_itemsDict=$B.$iterator_class('dict_itemiterator')
 $DictDict.items=function(self){return $iterator_wrapper(new $item_iterator(self),$dict_itemsDict)
 }
-$DictDict.fromkeys=function(self,keys,value){
+$DictDict.fromkeys=function(keys,value){
 if(value===undefined)value=None
 var res=dict()
 var keys_iter=_b_.iter(keys)

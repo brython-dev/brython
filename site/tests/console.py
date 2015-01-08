@@ -2,7 +2,7 @@ import sys
 import traceback
 
 from browser import document as doc
-from browser import window, alert
+from browser import window, alert, console
 
 _credits = """    Thanks to CWI, CNRI, BeOpen.com, Zope Corporation and a cast of thousands
     for supporting Python development.  See www.python.org for more information."""
@@ -113,6 +113,7 @@ def myKeyPress(event):
         current += 1
         if _status == "main" or _status == "3string":
             try:
+                console.log('eval %s' %currentLine)
                 _ = editor_ns['_'] = eval(currentLine, editor_ns)
                 if _ is not None:
                     print(repr(_))
