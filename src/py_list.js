@@ -74,14 +74,23 @@ $ListDict.__eq__ = function(self,other){
     if(other===undefined) return self===list
 
     if($B.get_class(other)===$B.get_class(self)){
-        if(other.length==self.length){
+       if(other.length==self.length){
             for(var i=0, _len_i = self.length; i < _len_i;i++){
                 if(!getattr(self[i],'__eq__')(other[i])) return False
             }
             return True
-        }
+       }
     }
-    return False
+
+    if (isinstance(other, [_b_.set, _b_.tuple, _b_.list])) {
+       if (self.length != getattr(other, '__len__')()) return false
+
+       for(var i=0, _len_i = self.length; i < _len_i;i++){
+          if (!getattr(other, '__contains__')(self[i])) return false
+       }
+       return true
+    }
+    return false
 }
 
 $ListDict.__getitem__ = function(self,arg){
