@@ -1,4 +1,9 @@
 # numbers
+x = 1
+assert x.__class__ == int
+assert isinstance(x,int)
+assert str(x)=="1"
+
 assert 2+2==4
 assert (50-5*6)/4 == 5.0
 assert 8/5 == 1.6
@@ -14,6 +19,11 @@ assert z == 0
 
 assert 3 * 3.75 / 1.5 == 7.5
 assert 7.0 / 2 == 3.5
+
+y=3.14
+assert y.__class__ == float
+assert isinstance(3.14,float)
+assert str(y)=="3.14"
 
 # complex numbers
 x = 8j
