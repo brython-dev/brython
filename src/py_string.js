@@ -112,8 +112,19 @@ $StringDict.__len__ = function(self){return self.length}
 
 var kwarg_key = new RegExp('([^\\)]*)\\)')
 
+var NotANumber = function() {
+    this.name = 'NotANumber'
+}
+
+var _number_check=function(s) {
+    if(!isinstance(s,[_b_.int,_b_.float])){
+        throw new NotANumber()
+    }
+}
 
 var get_char_array = function(size, char) {
+    if (size <= 0)
+        return ''
     return new Array(size + 1).join(char)
 }
 
@@ -135,6 +146,32 @@ var format_padding = function(s, flags) {
     }
 }
 
+var format_precision = function(val, upper, flags) {
+    var precision = flags.precision
+    if (!precision) {
+        return val
+    }
+    precision = parseInt(precision, 10)
+    // val is a $FloatClass
+    val = parseFloat(val)
+    if (isFinite(val)) {
+        val = val.toFixed(precision)
+        return val
+    }
+    if (val === Infinity) {
+        val = 'inf'
+    } else if (val === -Infinity) {
+        val = '-inf'
+    } else {
+        val = 'nan'
+    }
+    if (upper) {
+        return val.toUpperCase()
+    }
+    return val
+    
+}
+
 var str_format = function(val, flags) {
     // string format supports left and right padding
     flags.pad_char = " "  // even if 0 padding is defined, don't use it
@@ -142,6 +179,7 @@ var str_format = function(val, flags) {
 }
 
 var num_format = function(val, flags) {
+    _number_check(val)
     var ret = parseInt(val)
     return format_padding(ret, flags)
 }
@@ -156,14 +194,23 @@ var ascii_format = function(val, flags) {
     return format_padding(ascii(val), flags)
 }
 
+// gG
 var floating_point_format = function(val, upper, flags) {
     // todo
+    _number_check(val)
 }
 
-var floating_point_decimal_format = function(val, flags) {
+// fG
+var floating_point_decimal_format = function(val, upper, flags) {
     // todo
+    _number_check(val)
+    if (!flags.precision) {
+        flags.precision = "6"
+    }
+    return format_padding(format_precision(val, upper, flags), flags)
 }
 
+// eE
 var floating_point_exponential_format = function(val, upper, flags) {
     // todo
 }
@@ -229,8 +276,8 @@ var char_to_func_mapping = {
     'a': ascii_format,
     'g': function(val, flags) {return floating_point_format(val, false, flags)},
     'G': function(val, flags) {return floating_point_format(val, true, flags)},
-    'f': floating_point_decimal_format,
-    'F': floating_point_decimal_format,
+    'f': function(val, flags) {return floating_point_decimal_format(val, false, flags)},
+    'F': function(val, flags) {return floating_point_decimal_format(val, true, flags)},
     'e': function(val, flags) {return floating_point_exponential_format(val, false, flags)},
     'E': function(val, flags) {return floating_point_exponential_format(val, true, flags)},
     'x': function(val, flags) {return signed_hex_format(val, false, flags)},
@@ -252,6 +299,7 @@ var char_to_func_mapping = {
     '.': decimal_point_flag
 }
 
+// exception thrown when an unsupported char is encountered in legacy format
 var UnsupportedChar = function() {
     this.name = "UnsupportedChar"
 }
@@ -329,6 +377,19 @@ var $new_legacy_format = $StringDict.__mod__ = function(val, args) {
                     invalid_char = s[newpos]
                     throw _b_.ValueError("unsupported format character '" + invalid_char + 
                         "' (0x" + invalid_char.charCodeAt(0).toString(16) + ") at index " + newpos)
+                } else if (err.name === "NotANumber") {
+                    var try_char = s[newpos]
+                    var cls = val.__class__
+                    if (!cls) {
+                        if (typeof(val) === 'string') {
+                            cls = 'str'
+                        } else {
+                            cls = typeof(val)
+                        }
+                    } else {
+                        cls = cls.__name__
+                    }
+                    throw _b_.TypeError("%" + try_char + " format: a number is required, not " + cls)
                 } else {
                     throw err
                 }
