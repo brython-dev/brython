@@ -166,7 +166,7 @@ $iterator_wrapper = function(items,klass){
             //}
             return items.next()
         },
-        __repr__:function(){return "<"+klass.__name__+" object>"},
+        //__repr__:function(){return "<"+klass.__name__+" object>"},
         counter:-1
     }
     res.__str__ = res.toString = res.__repr__
@@ -176,12 +176,22 @@ $iterator_wrapper = function(items,klass){
 var $dict_keysDict = $B.$iterator_class('dict_keys')
 
 $DictDict.keys = function(self){
+    if (arguments.length > 1) {
+       var _len=arguments.length - 1
+       var _msg="keys() takes no arguments ("+_len+" given)"
+       throw _b_.TypeError(_msg)
+    }
     return $iterator_wrapper(new $key_iterator(self),$dict_keysDict)
 }
 
 var $dict_valuesDict = $B.$iterator_class('dict_values')
 
 $DictDict.values = function(self){
+    if (arguments.length > 1) {
+       var _len=arguments.length - 1
+       var _msg="values() takes no arguments ("+_len+" given)"
+       throw _b_.TypeError(_msg)
+    }
     return $iterator_wrapper(new $value_iterator(self), $dict_valuesDict)
 }
 
@@ -262,6 +272,9 @@ $DictDict.__getitem__ = function(self,arg){
 
     var bucket = $lookup_key(self, arg)
     if (bucket !== undefined) return self.$data[bucket][1]
+
+    if(hasattr(self, '__missing__')) return getattr(self, '__missing__')(arg)
+
     throw KeyError(_b_.str(arg))
 }
 
@@ -436,13 +449,18 @@ $DictDict.get = function(self, key, _default){
     return None
 }
 
-var $dict_itemsDict = $B.$iterator_class('dict_itemiterator')
+var $dict_itemsDict = $B.$iterator_class('dict_items')
 
 $DictDict.items = function(self){
+    if (arguments.length > 1) {
+       var _len=arguments.length - 1
+       var _msg="items() takes no arguments ("+_len+" given)"
+       throw _b_.TypeError(_msg)
+    }
     return $iterator_wrapper(new $item_iterator(self), $dict_itemsDict)
 }
 
-$DictDict.fromkeys = function(keys, value){
+$DictDict.fromkeys = function(self){
     // class method
     if(value===undefined) value=None
     var res = dict()
