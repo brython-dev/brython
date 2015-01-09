@@ -135,14 +135,11 @@ var format_padding = function(s, flags) {
     }
     s = s.toString()
     padding = parseInt(padding, 10)
-    var pad_char = flags.pad_char | " "
-    if (padding > 0) {
-        // left padding
-        return get_char_array(padding - s.length, pad_char) + s
+    if (!flags.left) {
+        return get_char_array(padding - s.length, flags.pad_char) + s
     } else {
-        // right padding
-        padding *= -1
-        return s + get_char_array(padding - s.length, pad_char)
+        // left adjusted
+        return s + get_char_array(padding - s.length, flags.pad_char)
     }
 }
 
@@ -152,10 +149,12 @@ var format_precision = function(val, upper, flags) {
         return val
     }
     precision = parseInt(precision, 10)
-    // val is a $FloatClass
-    val = parseFloat(val)
+    // val is a float
     if (isFinite(val)) {
         val = val.toFixed(precision)
+        if (precision === 0 && flags.alternate) {
+            val += '.'
+        }
         return val
     }
     if (val === Infinity) {
@@ -170,6 +169,18 @@ var format_precision = function(val, upper, flags) {
     }
     return val
     
+}
+
+var format_sign = function(val, flags) {
+    if (flags.sign) {
+        if (val >= 0) {
+            return "+"
+        }
+        return ""  // negative number already has -
+    } else if (flags.space) {
+        return " "
+    }
+    return ""
 }
 
 var str_format = function(val, flags) {
@@ -200,14 +211,15 @@ var floating_point_format = function(val, upper, flags) {
     _number_check(val)
 }
 
-// fG
+// fF
 var floating_point_decimal_format = function(val, upper, flags) {
     // todo
     _number_check(val)
     if (!flags.precision) {
         flags.precision = "6"
     }
-    return format_padding(format_precision(val, upper, flags), flags)
+    val = parseFloat(val)
+    return format_padding(format_sign(val, flags) + format_precision(val, upper, flags), flags)
 }
 
 // eE
@@ -234,14 +246,14 @@ var single_char_format = function(val, flags) {
 }
 
 var num_flag = function(c, flags) {
-    if (c === '0' && !flags.padding) {
+    if (c === '0' && !flags.padding && !flags.decimal_point && !flags.left) {
         flags.pad_char = '0'
         return
     }
     if (!flags.decimal_point) {
-        flags.padding = (flags.padding | "") + c
+        flags.padding = (flags.padding || "") + c
     } else {
-        flags.precision = (flags.precision | "") + c
+        flags.precision = (flags.precision || "") + c
     }
 }
 
@@ -255,6 +267,7 @@ var decimal_point_flag = function(val, flags) {
 
 var neg_flag = function(val, flags) {
     flags.pad_char = ' '  // overrides '0' flag
+    flags.left = true
 }
 
 var space_flag = function(val, flags) {
@@ -262,8 +275,11 @@ var space_flag = function(val, flags) {
 }
 
 var sign_flag = function(val, flags) {
-    flags.space = false
     flags.sign = true
+}
+
+var alternate_flag = function(val, flags) {
+    flags.alternate = true
 }
 
 var char_to_func_mapping = {
@@ -296,7 +312,8 @@ var char_to_func_mapping = {
     '-': neg_flag,
     ' ': space_flag,
     '+': sign_flag,
-    '.': decimal_point_flag
+    '.': decimal_point_flag,
+    '#': alternate_flag
 }
 
 // exception thrown when an unsupported char is encountered in legacy format
@@ -359,7 +376,7 @@ var $new_legacy_format = $StringDict.__mod__ = function(val, args) {
     var get_string_value = function(s, val) {
         // todo: get flags, type
         // todo: string value based on flags, type, value
-        var flags = {}
+        var flags = {'pad_char': ' '}
         do {
             func = char_to_func_mapping[s[newpos]]
             try {
