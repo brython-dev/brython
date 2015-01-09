@@ -185,13 +185,7 @@ $ListDict.__gt__ = function(self,other){
     return false        
 }
 
-$ListDict.__hash__ = function(self){
-    if (self === undefined) {
-       return $ListDict.__hashvalue__ || $B.$py_next_hash--  // for hash of int type (not instance of int)
-    }
-
-    throw _b_.TypeError("unhashable type: 'list'")
-}
+$ListDict.__hash__ = None
 
 $ListDict.__init__ = function(self,arg){
     var len_func = getattr(self,'__len__'),pop_func=getattr(self,'pop')
@@ -509,15 +503,6 @@ function tuple(){
     var obj = list.apply(null,arguments)
     obj.__class__ = $TupleDict
 
-    obj.__hash__ = function () {
-      // http://nullege.com/codes/show/src%40p%40y%40pypy-HEAD%40pypy%40rlib%40test%40test_objectmodel.py/145/pypy.rlib.objectmodel._hash_float/python
-      var x= 0x345678
-      for(var i=0, _len_i = arguments.length; i < _len_i; i++) {
-         var y=arguments[i].__hash__();
-         x=(1000003 * x) ^ y & 0xFFFFFFFF;
-      }
-      return x
-    }
     return obj
 }
 tuple.__class__ = $B.$factory
@@ -568,6 +553,16 @@ $TupleDict.__eq__ = function(self,other){
     // compare object "self" to class "list"
     if(other===undefined) return self===tuple
     return $ListDict.__eq__(self,other)
+}
+
+$TupleDict.__hash__ = function (self) {
+  // http://nullege.com/codes/show/src%40p%40y%40pypy-HEAD%40pypy%40rlib%40test%40test_objectmodel.py/145/pypy.rlib.objectmodel._hash_float/python
+  var x= 0x345678
+  for(var i=0, _len_i = self.length; i < _len_i; i++) {
+     var y=_b_.hash(self[i]);
+     x=(1000003 * x) ^ y & 0xFFFFFFFF;
+  }
+  return x
 }
 
 $TupleDict.__mro__ = [$TupleDict,$ObjectDict]

@@ -5961,16 +5961,19 @@ hasattr.__code__={}
 hasattr.__code__.co_argcount=2
 hasattr.__code__.co_consts=[]
 hasattr.__code__.co_varnames=['object','name']
-function hash(obj){if(obj.__hashvalue__ !==undefined)return obj.__hashvalue__
+function hash(obj){if(arguments.length!=1){throw _b_.TypeError("hash() takes exactly one argument ("+
+arguments.length+" given)")
+}
+if(obj.__hashvalue__ !==undefined)return obj.__hashvalue__
 if(isinstance(obj,_b_.int))return obj.valueOf()
 if(isinstance(obj,bool))return _b_.int(obj)
 if(obj.__hash__ !==undefined){return obj.__hashvalue__=obj.__hash__()
 }
-if(hasattr(obj,'__hash__')){return obj.__hashvalue__=getattr(obj,'__hash__')()
-}
-throw _b_.AttributeError(
-"'"+_b_.str(obj.__class__)+"' object has no attribute '__hash__'")
-}
+var hashfunc=getattr(obj,'__hash__',_b_.None)
+if(hashfunc===_b_.None){throw _b_.TypeError("unhashable type: '"+
+$B.get_class(obj).__name__+"'")
+}else{return obj.__hashvalue__=hashfunc()
+}}
 hash.__doc__='hash(object) -> integer\n\nReturn a hash value for the object.  Two objects with the same value have\nthe same hash value.  The reverse is not necessarily true, but likely.'
 hash.__code__={}
 hash.__code__.co_argcount=1
@@ -8506,16 +8509,25 @@ $DictDict.__setitem__(left,item[0],item[1])
 }}catch(err){if(err.__name__ !=="StopIteration"){throw err }else{$B.$pop_exc()}}}
 $iterator_wrapper=function(items,klass){var res={__class__:klass,__iter__:function(){return res},__len__:function(){return items.length()},__next__:function(){
 return items.next()
-},__repr__:function(){return "<"+klass.__name__+" object>"},counter:-1
+},
+counter:-1
 }
 res.__str__=res.toString=res.__repr__
 return res
 }
 var $dict_keysDict=$B.$iterator_class('dict_keys')
-$DictDict.keys=function(self){return $iterator_wrapper(new $key_iterator(self),$dict_keysDict)
+$DictDict.keys=function(self){if(arguments.length > 1){var _len=arguments.length - 1
+var _msg="keys() takes no arguments ("+_len+" given)"
+throw _b_.TypeError(_msg)
+}
+return $iterator_wrapper(new $key_iterator(self),$dict_keysDict)
 }
 var $dict_valuesDict=$B.$iterator_class('dict_values')
-$DictDict.values=function(self){return $iterator_wrapper(new $value_iterator(self),$dict_valuesDict)
+$DictDict.values=function(self){if(arguments.length > 1){var _len=arguments.length - 1
+var _msg="values() takes no arguments ("+_len+" given)"
+throw _b_.TypeError(_msg)
+}
+return $iterator_wrapper(new $value_iterator(self),$dict_valuesDict)
 }
 $DictDict.__bool__=function(self){return $DictDict.__len__(self)> 0}
 $DictDict.__contains__=function(self,item){if(self.$jsobj)return self.$jsobj[item]!==undefined
@@ -8570,6 +8582,7 @@ if(self.$numeric_dict[arg]!==undefined)return self.$numeric_dict[arg]
 }
 var bucket=$lookup_key(self,arg)
 if(bucket !==undefined)return self.$data[bucket][1]
+if(hasattr(self,'__missing__'))return getattr(self,'__missing__')(arg)
 throw KeyError(_b_.str(arg))
 }
 $DictDict.__hash__=function(self){if(self===undefined){return $DictDict.__hashvalue__ ||$B.$py_next_hash-- 
@@ -8677,10 +8690,14 @@ if(bucket !==undefined)return self.$data[bucket][1]
 if(_default!==undefined)return _default
 return None
 }
-var $dict_itemsDict=$B.$iterator_class('dict_itemiterator')
-$DictDict.items=function(self){return $iterator_wrapper(new $item_iterator(self),$dict_itemsDict)
+var $dict_itemsDict=$B.$iterator_class('dict_items')
+$DictDict.items=function(self){if(arguments.length > 1){var _len=arguments.length - 1
+var _msg="items() takes no arguments ("+_len+" given)"
+throw _b_.TypeError(_msg)
 }
-$DictDict.fromkeys=function(keys,value){
+return $iterator_wrapper(new $item_iterator(self),$dict_itemsDict)
+}
+$DictDict.fromkeys=function(self){
 if(value===undefined)value=None
 var res=dict()
 var keys_iter=_b_.iter(keys)
@@ -8891,10 +8908,7 @@ else return(getattr(self[i],'__gt__')(other[i]))
 }
 return false 
 }
-$ListDict.__hash__=function(self){if(self===undefined){return $ListDict.__hashvalue__ ||$B.$py_next_hash-- 
-}
-throw _b_.TypeError("unhashable type: 'list'")
-}
+$ListDict.__hash__=None
 $ListDict.__init__=function(self,arg){var len_func=getattr(self,'__len__'),pop_func=getattr(self,'pop')
 while(len_func())pop_func()
 if(arg===undefined)return
@@ -9078,13 +9092,6 @@ $TupleDict.__iter__=function(self){return $B.$iterator(self,$tuple_iterator)
 var $tuple_iterator=$B.$iterator_class('tuple_iterator')
 function tuple(){var obj=list.apply(null,arguments)
 obj.__class__=$TupleDict
-obj.__hash__=function(){
-var x=0x345678
-for(var i=0,_len_i=arguments.length;i < _len_i;i++){var y=arguments[i].__hash__()
-x=(1000003 * x)^ y & 0xFFFFFFFF
-}
-return x
-}
 return obj
 }
 tuple.__class__=$B.$factory
@@ -9115,6 +9122,13 @@ $TupleDict.__setitem__=function(){throw _b_.TypeError("'tuple' object does not s
 $TupleDict.__eq__=function(self,other){
 if(other===undefined)return self===tuple
 return $ListDict.__eq__(self,other)
+}
+$TupleDict.__hash__=function(self){
+var x=0x345678
+for(var i=0,_len_i=self.length;i < _len_i;i++){var y=_b_.hash(self[i])
+x=(1000003 * x)^ y & 0xFFFFFFFF
+}
+return x
 }
 $TupleDict.__mro__=[$TupleDict,$ObjectDict]
 $TupleDict.__name__='tuple'

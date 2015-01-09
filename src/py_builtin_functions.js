@@ -636,18 +636,23 @@ hasattr.__code__.co_varnames=['object','name']
 
 
 function hash(obj){
+    if(arguments.length!=1){
+        throw _b_.TypeError("hash() takes exactly one argument ("+
+            arguments.length+" given)")
+    }
     if (obj.__hashvalue__ !== undefined) return obj.__hashvalue__
     if (isinstance(obj, _b_.int)) return obj.valueOf()
     if (isinstance(obj, bool)) return _b_.int(obj)
     if (obj.__hash__ !== undefined) {
        return obj.__hashvalue__=obj.__hash__()
     }
-    if (hasattr(obj, '__hash__')) {
-       return obj.__hashvalue__=getattr(obj, '__hash__')()
+    var hashfunc = getattr(obj, '__hash__', _b_.None)
+    if(hashfunc===_b_.None){
+        throw _b_.TypeError("unhashable type: '"+
+            $B.get_class(obj).__name__+"'")
+    }else{
+        return obj.__hashvalue__= hashfunc()
     }
-       
-    throw _b_.AttributeError(
-        "'"+_b_.str(obj.__class__)+"' object has no attribute '__hash__'")
 }
 
 hash.__doc__='hash(object) -> integer\n\nReturn a hash value for the object.  Two objects with the same value have\nthe same hash value.  The reverse is not necessarily true, but likely.'
