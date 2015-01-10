@@ -143,7 +143,20 @@ var format_padding = function(s, flags) {
     }
 }
 
-var format_precision = function(val, upper, flags) {
+var format_int_precision = function(val, flags) {
+    var precision = flags.precision
+    if (!precision) {
+        return val
+    }
+    precision = parseInt(precision, 10)
+    var s = val.toString()
+    if (s[0] === '-') {
+        return '-' + get_char_array(precision - s.length + 1, '0') + s.slice(1)
+    }
+    return get_char_array(precision - s.length, '0') + s
+}
+
+var format_float_precision = function(val, upper, flags) {
     var precision = flags.precision
     if (!precision) {
         return val
@@ -192,6 +205,7 @@ var str_format = function(val, flags) {
 var num_format = function(val, flags) {
     _number_check(val)
     var ret = parseInt(val)
+    ret = format_int_precision(ret, flags)
     return format_padding(ret, flags)
 }
 
@@ -213,13 +227,12 @@ var floating_point_format = function(val, upper, flags) {
 
 // fF
 var floating_point_decimal_format = function(val, upper, flags) {
-    // todo
     _number_check(val)
     if (!flags.precision) {
         flags.precision = "6"
     }
     val = parseFloat(val)
-    return format_padding(format_sign(val, flags) + format_precision(val, upper, flags), flags)
+    return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags), flags)
 }
 
 // eE
@@ -228,11 +241,43 @@ var floating_point_exponential_format = function(val, upper, flags) {
 }
 
 var signed_hex_format = function(val, upper, flags) {
-    // todo
+    _number_check(val)
+    var ret = parseInt(val)
+    ret = ret.toString(16)
+    ret = format_int_precision(ret, flags)
+    
+    if (flags.alternate) {
+        if (ret.charAt(0) === '-') {
+            if (upper) {
+                ret = "-0X" + ret.slice(1)
+            } else {
+                ret = "-0x" + ret.slice(1)
+            }
+        } else {
+            if (upper) {
+                ret = "0X" + ret
+            } else {
+                ret = "0x" + ret
+            }
+        }
+    }
+    return format_padding(ret, flags)
 }
 
 var octal_format = function(val, flags) {
-    // todo
+    _number_check(val)
+    var ret = parseInt(val)
+    ret = ret.toString(8)
+    ret = format_int_precision(ret, flags)
+    
+    if (flags.alternate) {
+        if (ret.charAt(0) === '-') {
+            ret = "-0o" + ret.slice(1)
+        } else {
+            ret = "0o" + ret
+        }
+    }
+    return format_padding(ret, flags)
 }
 
 var single_char_format = function(val, flags) {
