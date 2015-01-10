@@ -8697,7 +8697,7 @@ throw _b_.TypeError(_msg)
 }
 return $iterator_wrapper(new $item_iterator(self),$dict_itemsDict)
 }
-$DictDict.fromkeys=function(self){
+$DictDict.fromkeys=function(keys,value){
 if(value===undefined)value=None
 var res=dict()
 var keys_iter=_b_.iter(keys)

@@ -460,7 +460,7 @@ $DictDict.items = function(self){
     return $iterator_wrapper(new $item_iterator(self), $dict_itemsDict)
 }
 
-$DictDict.fromkeys = function(self){
+$DictDict.fromkeys = function(keys,value){
     // class method
     if(value===undefined) value=None
     var res = dict()
