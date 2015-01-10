@@ -79,6 +79,8 @@ editor_ns = {'credits':credits,
 def cursorToEnd(*args):
     pos = len(doc['code'].value)
     doc['code'].setSelectionRange(pos, pos)
+    doc['code'].scrollTop = doc['code'].scrollHeight
+        
 
 
 def get_col(area):
@@ -157,6 +159,7 @@ def myKeyPress(event):
             doc['code'].value += '>>> '
         else:
             doc['code'].value += '... '
+        
         cursorToEnd()
         event.preventDefault()
         #event.stopPropagation()
