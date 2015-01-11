@@ -370,11 +370,19 @@ $DictDict.__next__ = function(self){
 
 $DictDict.__repr__ = function(self){
     if(self===undefined) return "<class 'dict'>"
+    var _objs=[self]  // used to elimate recursion
     var res=[]
     var items = new $item_generator(self).as_list()
     for(var idx in items) {
         var itm = items[idx]
-        res.push(repr(itm[0])+': '+repr(itm[1]))
+        if (_objs.indexOf(itm[1]) > -1) {
+           var value='?'+_b_.type(itm[1])
+           if(isinstance(itm[1], dict)) value='{...}'
+           res.push(repr(itm[0])+': '+ value)
+        } else {
+           _objs.push(itm[1])
+           res.push(repr(itm[0])+': '+repr(itm[1]))
+        }
     }
     return '{'+ res.join(', ') +'}'
 }
