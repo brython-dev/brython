@@ -46,11 +46,14 @@ from types import MethodType as _MethodType, BuiltinMethodType as _BuiltinMethod
 from math import log as _log, exp as _exp, pi as _pi, e as _e, ceil as _ceil
 from math import sqrt as _sqrt, acos as _acos, cos as _cos, sin as _sin
 
+import __random
+import _random
+
 #from os import urandom as _urandom
 def _urandom(n):
     """urandom(n) -> str    
     Return n random bytes suitable for cryptographic use."""
-    import __random
+    #import __random
     randbytes= [__random.randint(0,255) for i in range(n)]
     return bytes(randbytes)
     
@@ -79,7 +82,7 @@ RECIP_BPF = 2**-BPF
 # Adrian Baddeley.  Adapted by Raymond Hettinger for use with
 # the Mersenne Twister  and os.urandom() core generators.
 
-import _random
+#import _random
 
 class Random(_random.Random):
     """Random number generator base class used by bound module functions.
@@ -232,10 +235,11 @@ class Random(_random.Random):
                    Method=_MethodType, BuiltinMethod=_BuiltinMethodType):
         "Return a random int in the range [0,n).  Raises ValueError if n==0."
 
+        random = self.random
         getrandbits = self.getrandbits
         # Only call self.getrandbits if the original random() builtin method
         # has not been overridden or if a new getrandbits() was supplied.
-        if type(self.random) is BuiltinMethod or type(getrandbits) is Method:
+        if type(random) is BuiltinMethod or type(getrandbits) is Method:
             k = n.bit_length()  # don't use (n-1) here because n can be 1
             r = getrandbits(k)          # 0 <= r < 2**k
             while r >= n:
@@ -243,7 +247,7 @@ class Random(_random.Random):
             return r
         # There's an overriden random() method but no new getrandbits() method,
         # so we can only use random() from here.
-        random = self.random
+        #random = self.random
         if n >= maxsize:
             _warn("Underlying random() generator does not supply \n"
                 "enough bits to choose from a population range this large.\n"
