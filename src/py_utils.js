@@ -684,10 +684,37 @@ $B.$iterator = function(items,klass){
 $B.$iterator_class = function(name){
     var res = {
         __class__:$B.$type,
-        __name__:name
+        __name__:name,
     }
+
+    res.__repr__=function(self){
+       var _a=[]
+       while (1) {
+         try {
+              _a.push(_b_.next(self))
+         } catch (err) {
+              if (err.__name__ == 'StopIteration') break
+         }
+       }
+          
+       return name+ _b_.repr(_b_.list(_a))
+    }
+
     res.__str__ = res.toString = res.__repr__
     res.__mro__ = [res,_b_.object.$dict]
+
+    function as_list(s) {
+       var _a=[]
+       while (1) {
+         try {
+              _a.push(_b_.next(s))
+         } catch (err) {
+              console.log(err)
+              if (err.__name__ == 'StopIteration') break
+         }
+       }
+       return _b_.list(_a)
+    }
 
     function as_set(s) {
        var _a=[]
@@ -699,28 +726,50 @@ $B.$iterator_class = function(name){
               if (err.__name__ == 'StopIteration') break
          }
        }
-          
        return _b_.set(_a)
     }
 
-    res.__sub__=function(self,other){
+
+    res.__ge__=function(self,other){
        if (_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])) {
-          return _b_.getattr(as_set(self), '__sub__')(other)
+          return _b_.getattr(as_list(self), '__ge__')(other)
        }
 
        if (_b_.hasattr(other, '__iter__')) {
-          return _b_.getattr(as_set(self), '__sub__')(as_set(other))
+          return _b_.getattr(as_list(self), '__ge__')(as_list(other))
        }
-       console.log("__sub__ not implemented yet for set and " + _b_.type(other))
-       _b_.NotImplementedError("__sub__ not implemented yet for set and " + _b_.type(other))
+
+       _b_.NotImplementedError("__ge__ not implemented yet for list and " + _b_.type(other))
     }
 
-    var _ops=['and', 'or', 'ge', 'le', 'xor'];
-    var _f = res.__sub__+''
+    var _ops=['ge', 'le', 'gt', 'lt', 'eq']
+    var _f = res.__ge__+''
+
     for (var i=0; i < _ops.length; i++) {
         var _op='__'+_ops[i]+'__'
-        eval('res.'+_op+'='+_f.replace('__sub__', _op))
+        eval('res.'+_op+'='+_f.replace(new RegExp('__ge__', 'g'), _op))
     }
+
+    res.__or__=function(self,other){
+       if (_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])) {
+          return _b_.getattr(as_set(self), '__or__')(other)
+       }
+
+       if (_b_.hasattr(other, '__iter__')) {
+          return _b_.getattr(as_set(self), '__or__')(as_set(other))
+       }
+
+       _b_.NotImplementedError("__or__ not implemented yet for set and " + _b_.type(other))
+    }
+
+    var _ops=['sub', 'and', 'xor']
+    var _f = res.__or__+''
+
+    for (var i=0; i < _ops.length; i++) {
+        var _op='__'+_ops[i]+'__'
+        eval('res.'+_op+'='+_f.replace(new RegExp('__or__', 'g'), _op))
+    }
+
 
     res.$factory = {__class__:$B.$factory,$dict:res}
     return res
