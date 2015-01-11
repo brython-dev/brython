@@ -105,6 +105,7 @@ with open(abs_path('version_info.js'), 'wb') as vinfo_file_out:
     vinfo_file_out.write('__BRYTHON__.__MAGIC__ = "%s"\n' %
                          '.'.join(['%s' % _i for _i in implementation[:3]]))
     vinfo_file_out.write('__BRYTHON__.version_info = %s\n' % str(version))
+    vinfo_file_out.write('__BRYTHON__.compiled_date = "%s"\n' % str(datetime.datetime.now()))
     # builtin module names = list of scripts in src/libs
     vinfo_file_out.write('__BRYTHON__.builtin_module_names = ["posix",')
     _modules=['"%s"' % fname.split('.')[0] 
