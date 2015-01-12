@@ -158,20 +158,22 @@ var $copy_dict = function(left, right) {
 $iterator_wrapper = function(items,klass){
     var res = {
         __class__:klass,
-        __iter__:function(){return res},
+        __iter__:function(){items.iter.i=0; return res},
         __len__:function(){return items.length()},
         __next__:function(){
             //if (items.length() !== items.iter.used) {
             //    throw _b_.RuntimeError("dictionary changed size during iteration")
             //}
             return items.next()
+            //return items[counter++]
         },
         //__repr__:function(){return "<"+klass.__name__+" object>"},
-        counter:-1
+        //counter:0
     }
     res.__str__ = res.toString = res.__repr__
     return res
 }
+
 
 var $dict_keysDict = $B.$iterator_class('dict_keys')
 
