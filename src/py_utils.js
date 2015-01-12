@@ -705,11 +705,11 @@ $B.$iterator_class = function(name){
 
     function as_list(s) {
        var _a=[]
+       var _it = _b_.iter(s)
        while (1) {
          try {
-              _a.push(_b_.next(s))
+              _a.push(_b_.next(_it))
          } catch (err) {
-              console.log(err)
               if (err.__name__ == 'StopIteration') break
          }
        }
@@ -718,17 +718,16 @@ $B.$iterator_class = function(name){
 
     function as_set(s) {
        var _a=[]
+       var _it = _b_.iter(s)
        while (1) {
          try {
-              _a.push(_b_.next(s))
+              _a.push(_b_.next(_it))
          } catch (err) {
-              console.log(err)
               if (err.__name__ == 'StopIteration') break
          }
        }
        return _b_.set(_a)
     }
-
 
     res.__ge__=function(self,other){
        if (_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])) {
@@ -769,7 +768,6 @@ $B.$iterator_class = function(name){
         var _op='__'+_ops[i]+'__'
         eval('res.'+_op+'='+_f.replace(new RegExp('__or__', 'g'), _op))
     }
-
 
     res.$factory = {__class__:$B.$factory,$dict:res}
     return res
