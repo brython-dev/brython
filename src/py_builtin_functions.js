@@ -282,7 +282,7 @@ function dir(obj){
     }
 
     if(isinstance(obj,$B.JSObject)) obj=obj.js
-    else if($B.get_class(obj).is_class){console.log('is class ');obj=obj.$dict}
+    else if($B.get_class(obj).is_class){obj=obj.$dict}
     else {
         // We first look if the object has the __dir__ method
         try {
@@ -2246,7 +2246,7 @@ var builtin_funcs = ['abs', 'all', 'any', 'ascii', 'bin', 'bool', 'bytearray',
 'list', 'locals', 'map', 'max', 'memoryview', 'min', 'next', 'object', 
 'oct', 'open', 'ord', 'pow', 'print', 'property', 'quit', 'range', 'repr', 
 'reversed', 'round', 'set', 'setattr', 'slice', 'sorted', 'staticmethod', 'str', 
-'sum','super', 'tuple', 'type', 'vars', 'zip']
+'sum','$$super', 'tuple', 'type', 'vars', 'zip']
 
 for(var i=0;i<builtin_funcs.length;i++){
     $B.builtin_funcs[builtin_funcs[i]]=true
