@@ -50,7 +50,7 @@ catch(err){return false}})
 __BRYTHON__.implementation=[3,0,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.0.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-01-13 16:07:29.919683"
+__BRYTHON__.compiled_date="2015-01-13 16:15:46.409402"
 __BRYTHON__.builtin_module_names=["posix","__random","_ajax","_browser","_html","_io","_jsre","_multiprocessing","_os","_posixsubprocess","_svg","_sys","_timer","_websocket","builtins","dis","hashlib","javascript","json","math","modulefinder","time","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -698,7 +698,8 @@ break
 case '$$super':
 if(this.tree.length==0){
 var scope=$get_scope(this)
-if(scope.ntype=='def' ||scope.ntype=='generator'){if(scope.parent && scope.parent.C.tree[0].type=='class'){new $IdCtx(this,scope.parent.C.tree[0].name)
+if(scope.ntype=='def' ||scope.ntype=='generator'){var def_scope=$get_scope(scope.C.tree[0])
+if(def_scope.ntype=='class'){new $IdCtx(this,def_scope.C.tree[0].name)
 }}}
 if(this.tree.length==1){
 var scope=$get_scope(this)
@@ -5777,7 +5778,7 @@ _b_.list.$dict.sort(res)
 return res
 }
 if(isinstance(obj,$B.JSObject))obj=obj.js
-else if($B.get_class(obj).is_class){console.log('is class ');obj=obj.$dict}
+else if($B.get_class(obj).is_class){obj=obj.$dict}
 else{
 try{
 var res=getattr(obj,'__dir__')()
@@ -5826,11 +5827,14 @@ enumerate.__code__={}
 enumerate.__code__.co_argcount=2
 enumerate.__code__.co_consts=[]
 enumerate.__code__.co_varnames=['iterable']
-function $eval(src,_globals,locals){var is_exec=arguments[3]=='exec'
+function $eval(src,_globals,locals){var is_exec=arguments[3]=='exec',mod_name
 if($B.exec_stack.length==0){$B.exec_stack=['__main__']}
 var env=$B.exec_stack[$B.exec_stack.length-1]
-if(is_exec && _globals===undefined){var mod_name=env
-}else{var mod_name='exec-'+ $B.UUID()
+if(is_exec && _globals===undefined){mod_name=env
+}else{if(_globals===undefined){mod_name="exec-"+$B.UUID()}
+else{if(_globals.id===undefined){_globals.id='exec-'+$B.UUID()}
+mod_name=_globals.id
+}
 $B.$py_module_path[mod_name]=$B.$py_module_path['__main__']
 $B.vars[mod_name]={}
 $B.bound[mod_name]={}
@@ -6960,7 +6964,7 @@ throw _b_.NameError(name)
 }
 $B.$TypeError=function(msg){throw _b_.TypeError(msg)
 }
-var builtin_funcs=['abs','all','any','ascii','bin','bool','bytearray','bytes','callable','chr','classmethod','compile','complex','delattr','dict','dir','divmod','enumerate','exec','exit','filter','float','format','frozenset','getattr','globals','hasattr','hash','help','hex','id','input','int','isinstance','issubclass','iter','len','list','locals','map','max','memoryview','min','next','object','oct','open','ord','pow','print','property','quit','range','repr','reversed','round','set','setattr','slice','sorted','staticmethod','str','sum','super','tuple','type','vars','zip']
+var builtin_funcs=['abs','all','any','ascii','bin','bool','bytearray','bytes','callable','chr','classmethod','compile','complex','delattr','dict','dir','divmod','enumerate','exec','exit','filter','float','format','frozenset','getattr','globals','hasattr','hash','help','hex','id','input','int','isinstance','issubclass','iter','len','list','locals','map','max','memoryview','min','next','object','oct','open','ord','pow','print','property','quit','range','repr','reversed','round','set','setattr','slice','sorted','staticmethod','str','sum','$$super','tuple','type','vars','zip']
 for(var i=0;i<builtin_funcs.length;i++){$B.builtin_funcs[builtin_funcs[i]]=true
 }
 var other_builtins=['Ellipsis','False','None','True','__build_class__','__debug__','__doc__','__import__','__name__','__package__','copyright','credits','license','NotImplemented']

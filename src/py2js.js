@@ -1047,8 +1047,9 @@ function $CallCtx(context){
                    // class parent as first argument
                    var scope = $get_scope(this)
                    if(scope.ntype=='def' || scope.ntype=='generator'){
-                      if(scope.parent && scope.parent.context.tree[0].type=='class'){
-                         new $IdCtx(this,scope.parent.context.tree[0].name)
+                      var def_scope = $get_scope(scope.context.tree[0])
+                      if(def_scope.ntype=='class'){
+                         new $IdCtx(this,def_scope.context.tree[0].name)
                       }
                    }
                 }

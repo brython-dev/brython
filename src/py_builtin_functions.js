@@ -282,7 +282,7 @@ function dir(obj){
     }
 
     if(isinstance(obj,$B.JSObject)) obj=obj.js
-    else if($B.get_class(obj).is_class){console.log('is class ');obj=obj.$dict}
+    else if($B.get_class(obj).is_class){obj=obj.$dict}
     else {
         // We first look if the object has the __dir__ method
         try {
@@ -365,14 +365,18 @@ enumerate.__code__.co_varnames=['iterable']
 
 //eval() (built in function)
 function $eval(src, _globals, locals){
-    var is_exec = arguments[3]=='exec'
+    var is_exec = arguments[3]=='exec', mod_name
     if($B.exec_stack.length==0){$B.exec_stack=['__main__']}
     var env = $B.exec_stack[$B.exec_stack.length-1]
 
     if(is_exec && _globals===undefined){
-        var mod_name = env
+        mod_name = env
     }else{
-        var mod_name = 'exec-'+ $B.UUID()
+        if(_globals===undefined){mod_name="exec-"+$B.UUID()}
+        else{
+            if(_globals.id === undefined){_globals.id = 'exec-'+$B.UUID()}
+            mod_name = _globals.id
+        }
         $B.$py_module_path[mod_name] = $B.$py_module_path['__main__']
         $B.vars[mod_name] = {}
         $B.bound[mod_name] = {}
@@ -2246,7 +2250,7 @@ var builtin_funcs = ['abs', 'all', 'any', 'ascii', 'bin', 'bool', 'bytearray',
 'list', 'locals', 'map', 'max', 'memoryview', 'min', 'next', 'object', 
 'oct', 'open', 'ord', 'pow', 'print', 'property', 'quit', 'range', 'repr', 
 'reversed', 'round', 'set', 'setattr', 'slice', 'sorted', 'staticmethod', 'str', 
-'sum','super', 'tuple', 'type', 'vars', 'zip']
+'sum','$$super', 'tuple', 'type', 'vars', 'zip']
 
 for(var i=0;i<builtin_funcs.length;i++){
     $B.builtin_funcs[builtin_funcs[i]]=true

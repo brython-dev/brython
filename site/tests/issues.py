@@ -90,4 +90,18 @@ assert sys.version_info != (3,0,0)
 assert not sys.version_info < (3,0,0)
 assert not sys.version_info <= (3,0,0)
 
+# issue #100
+class A:
+    if True:
+        def aaa(self, x):
+            return x
+
+class B(A):
+    if True:
+        def aaa(self, x):
+            return super().aaa(x)
+
+b = B()
+assert b.aaa(0)==0
+
 print('passed all tests')
