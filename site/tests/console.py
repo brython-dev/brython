@@ -80,8 +80,6 @@ def cursorToEnd(*args):
     pos = len(doc['code'].value)
     doc['code'].setSelectionRange(pos, pos)
     doc['code'].scrollTop = doc['code'].scrollHeight
-        
-
 
 def get_col(area):
     # returns the column num of cursor
@@ -115,7 +113,6 @@ def myKeyPress(event):
         current += 1
         if _status == "main" or _status == "3string":
             try:
-                console.log('eval %s' %currentLine)
                 _ = editor_ns['_'] = eval(currentLine, editor_ns)
                 if _ is not None:
                     print(repr(_))
@@ -162,8 +159,6 @@ def myKeyPress(event):
         
         cursorToEnd()
         event.preventDefault()
-        #event.stopPropagation()
-
 
 def myKeyDown(event):
     global _status, current
