@@ -128,13 +128,16 @@ var get_char_array = function(size, char) {
     return new Array(size + 1).join(char)
 }
 
-var format_padding = function(s, flags) {
+var format_padding = function(s, flags, minus_one) {
     var padding = flags.padding
     if (!padding) {  // undefined
         return s
     }
     s = s.toString()
     padding = parseInt(padding, 10)
+    if (minus_one) {  // numeric formatting where sign goes in front of padding
+        padding -= 1
+    }
     if (!flags.left) {
         return get_char_array(padding - s.length, flags.pad_char) + s
     } else {
@@ -146,10 +149,11 @@ var format_padding = function(s, flags) {
 var format_int_precision = function(val, flags) {
     var precision = flags.precision
     if (!precision) {
-        return val
+        return val.toString()
     }
     precision = parseInt(precision, 10)
     var s = val.toString()
+    var sign = s[0]
     if (s[0] === '-') {
         return '-' + get_char_array(precision - s.length + 1, '0') + s.slice(1)
     }
@@ -204,9 +208,20 @@ var str_format = function(val, flags) {
 
 var num_format = function(val, flags) {
     _number_check(val)
-    var ret = parseInt(val)
-    ret = format_int_precision(ret, flags)
-    return format_padding(ret, flags)
+    val = parseInt(val)
+    var s = format_int_precision(val, flags)
+    if (flags.pad_char === '0') {
+        if (val < 0) {
+            s = s.substring(1)
+            return '-' + format_padding(s, flags, true)
+        }
+        var sign = format_sign(val, flags)
+        if (sign !== '') {
+            return sign + format_padding(s, flags, true)
+        }
+    }
+    
+    return format_padding(format_sign(val, flags) + s, flags)
 }
 
 var repr_format = function(val, flags) {
@@ -223,7 +238,11 @@ var ascii_format = function(val, flags) {
 var _float_helper = function(val, flags) {
     _number_check(val)
     if (!flags.precision) {
-        flags.precision = "6"
+        if (!flags.decimal_point) {
+            flags.precision = "6"
+        } else {
+            flags.precision = "0"
+        }
     }
     return parseFloat(val)
 }
@@ -238,6 +257,10 @@ var floating_point_format = function(val, upper, flags) {
     }
     var diff = v.length - dot_idx
     if (diff > 4 || dot_idx > parseInt(flags.precision, 10)) {
+        // exponential
+        // note that "%.2g" % 100 == '1e+02' but "%.2e" % 100 == '1.00e+02'
+        
+        // todo: special case
         return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags, _floating_exp_helper), flags)
     }
     return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags, 
@@ -276,6 +299,19 @@ var signed_hex_format = function(val, upper, flags) {
     var ret = parseInt(val)
     ret = ret.toString(16)
     ret = format_int_precision(ret, flags)
+    if (upper) {
+        ret = ret.toUpperCase()
+    }
+    if (flags.pad_char === '0') {
+        if (val < 0) {
+            ret = ret.substring(1)
+            ret = '-' + format_padding(ret, flags, true)
+        }
+        var sign = format_sign(val, flags)
+        if (sign !== '') {
+            ret = sign + format_padding(ret, flags, true)
+        }
+    }
     
     if (flags.alternate) {
         if (ret.charAt(0) === '-') {
@@ -292,7 +328,7 @@ var signed_hex_format = function(val, upper, flags) {
             }
         }
     }
-    return format_padding(ret, flags)
+    return format_padding(format_sign(val, flags) + ret, flags)
 }
 
 var octal_format = function(val, flags) {
@@ -300,6 +336,17 @@ var octal_format = function(val, flags) {
     var ret = parseInt(val)
     ret = ret.toString(8)
     ret = format_int_precision(ret, flags)
+    
+    if (flags.pad_char === '0') {
+        if (val < 0) {
+            ret = ret.substring(1)
+            ret = '-' + format_padding(ret, flags, true)
+        }
+        var sign = format_sign(val, flags)
+        if (sign !== '') {
+            ret = sign + format_padding(ret, flags, true)
+        }
+    }
     
     if (flags.alternate) {
         if (ret.charAt(0) === '-') {
