@@ -741,7 +741,7 @@ $B.$iterator_class = function(name){
        _b_.NotImplementedError("__ge__ not implemented yet for list and " + _b_.type(other))
     }
 
-    var _ops=['ge', 'le', 'gt', 'lt', 'eq']
+    var _ops=['ge', 'le', 'gt', 'lt', 'eq', 'ne']
     var _f = res.__ge__+''
 
     for (var i=0; i < _ops.length; i++) {
