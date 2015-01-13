@@ -156,7 +156,7 @@ var format_int_precision = function(val, flags) {
     return get_char_array(precision - s.length, '0') + s
 }
 
-var format_float_precision = function(val, upper, flags) {
+var format_float_precision = function(val, upper, flags, modifier) {
     var precision = flags.precision
     if (!precision) {
         return val
@@ -164,7 +164,7 @@ var format_float_precision = function(val, upper, flags) {
     precision = parseInt(precision, 10)
     // val is a float
     if (isFinite(val)) {
-        val = val.toFixed(precision)
+        val = modifier(val, precision, upper)
         if (precision === 0 && flags.alternate) {
             val += '.'
         }
@@ -219,25 +219,56 @@ var ascii_format = function(val, flags) {
     return format_padding(ascii(val), flags)
 }
 
-// gG
-var floating_point_format = function(val, upper, flags) {
-    // todo
-    _number_check(val)
-}
-
-// fF
-var floating_point_decimal_format = function(val, upper, flags) {
+// converts to val to float and sets precision if missing
+var _float_helper = function(val, flags) {
     _number_check(val)
     if (!flags.precision) {
         flags.precision = "6"
     }
-    val = parseFloat(val)
-    return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags), flags)
+    return parseFloat(val)
+}
+
+// gG
+var floating_point_format = function(val, upper, flags) {
+    val = _float_helper(val, flags)
+    var v = val.toString()
+    var dot_idx = v.indexOf('.')
+    if (dot_idx < 0) {
+        dot_idx = v.length
+    }
+    var diff = v.length - dot_idx
+    if (diff > 4 || dot_idx > parseInt(flags.precision, 10)) {
+        return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags, _floating_exp_helper), flags)
+    }
+    return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags, 
+        function(val, precision) { return val.toFixed(precision) }), flags)
+}
+
+// fF
+var floating_point_decimal_format = function(val, upper, flags) {
+    val = _float_helper(val, flags)
+    return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags, 
+        function(val, precision) { return val.toFixed(precision) }), flags)
+}
+
+var _floating_exp_helper = function(val, precision, upper) {
+    val = val.toExponential(precision)
+    // pad exponent to two digits
+    var e_idx = val.lastIndexOf('e')
+    if (e_idx > val.length - 4) {
+        val = val.substring(0, e_idx + 2) + '0' + val.substring(e_idx + 2) 
+    }
+    if (upper) {
+        return val.toUpperCase()
+    }
+    return val
 }
 
 // eE
 var floating_point_exponential_format = function(val, upper, flags) {
-    // todo
+    val = _float_helper(val, flags)
+    
+    return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags, _floating_exp_helper), flags)
 }
 
 var signed_hex_format = function(val, upper, flags) {
@@ -437,6 +468,9 @@ var $new_legacy_format = $StringDict.__mod__ = function(val, args) {
             } catch (err) {
                 if (err.name === "UnsupportedChar") {
                     invalid_char = s[newpos]
+                    if (invalid_char === undefined) {
+                        throw _b_.ValueError("incomplete format")
+                    }
                     throw _b_.ValueError("unsupported format character '" + invalid_char + 
                         "' (0x" + invalid_char.charCodeAt(0).toString(16) + ") at index " + newpos)
                 } else if (err.name === "NotANumber") {
