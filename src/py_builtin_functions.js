@@ -484,21 +484,26 @@ function getattr(obj,attr,_default){
         throw _b_.AttributeError('object has no attribute '+attr)
     }
     
-    // attribute __class__ is set for all Python objects
-    // return the factory function
-    if(attr=='__class__') return klass.$factory
-    
-    // attribute __dict__ returns an instance of a subclass of dict
-    // defined in py_dict.js
-    if(attr==='__dict__'){return $B.obj_dict(obj)}
-    
-    // __call__ on a function returns the function itself
-    if(attr==='__call__' && (typeof obj=='function')){
-        if(obj.$blocking){
-            console.log('calling blocking function '+obj.__name__)
-        }
-        if($B.debug>0){
-            return function(){
+    switch(attr) {
+      case '__class__':
+        // attribute __class__ is set for all Python objects
+        // return the factory function
+        //if(attr=='__class__') 
+        return klass.$factory
+      case '__dict__':
+        // attribute __dict__ returns an instance of a subclass of dict
+        // defined in py_dict.js
+        //if(attr==='__dict__')
+        return $B.obj_dict(obj)
+      case '__call__':
+        // __call__ on a function returns the function itself
+        //if(attr==='__call__' && 
+        if (typeof obj=='function'){
+           if(obj.$blocking){
+             console.log('calling blocking function '+obj.__name__)
+           }
+           if($B.debug>0){
+              return function(){
                 $B.call_stack.push($B.line_info)
                 try{
                     var res = obj.apply(null,arguments)
@@ -506,35 +511,39 @@ function getattr(obj,attr,_default){
                     return res
                 }catch(err){throw err}
                 finally{$B.call_stack.pop()}
-            }
-        }
-        return function(){
-            var res = obj.apply(null,arguments)
-            if(res===undefined) return _b_.None
-            return res
-        }
-    }else if(attr=='__call__' && klass===$B.JSObject.$dict &&
-        typeof obj.js=='function'){
-        return function(){
+              }
+           }
+           return function(){
+             var res = obj.apply(null,arguments)
+             if(res===undefined) return _b_.None
+             return res
+           }
+        
+        //}else if(attr=='__call__' && 
+        } else if (klass===$B.JSObject.$dict && typeof obj.js=='function'){
+          return function(){
             var res = obj.js.apply(null,arguments)
             if(res===undefined) return _b_.None
             return $B.JSObject(res)
+          }
         }
-    }
+        break
+      case '__code__':
+        //if(attr=='__code__' && 
+        if (typeof obj=='function') {
+           var res = {__class__:$B.$CodeObjectDict,src:obj,
+                      name:obj.__name__ || '<module>'
+           }
+           if (obj.__code__ !== undefined) {
+              for (var attr in obj.__code__) res[attr]=obj.__code__[attr]
+           }
+           if($B.vars[obj.__module__]!==undefined){
+              res.filename=$B.vars[obj.__module__].__file__
+           }
+           return res
+        }//if
+    }//switch    
 
-    if(attr=='__code__' && (typeof obj=='function')){
-        var res = {__class__:$B.$CodeObjectDict,src:obj,
-                   name:obj.__name__ || '<module>'
-            }
-        if (obj.__code__ !== undefined) {
-           for (var attr in obj.__code__) res[attr]=obj.__code__[attr]
-        }
-        if($B.vars[obj.__module__]!==undefined){
-            res.filename=$B.vars[obj.__module__].__file__
-        }
-        return res
-    }
-    
     if(typeof obj == 'function') {
       if(attr !== undefined && obj[attr] !== undefined) {
         if (attr == '__module__') { // put other attrs here too..

@@ -375,8 +375,8 @@ $DictDict.__repr__ = function(self){
     var _objs=[self]  // used to elimate recursion
     var res=[]
     var items = new $item_generator(self).as_list()
-    for(var idx in items) {
-        var itm = items[idx]
+    for (var i=0; i < items.length; i++) {
+        var itm = items[i]
         if (_objs.indexOf(itm[1]) > -1) {
            var value='?'+_b_.type(itm[1])
            if(isinstance(itm[1], dict)) value='{...}'
@@ -618,7 +618,6 @@ function obj_dict(obj){
     $DictDict.clear(res)
     for(var attr in obj){
         if(attr.charAt(0)!='$'){
-           //this causes my browser to freeze..
            $DictDict.__setitem__(res, attr, obj[attr])
         }
     }
