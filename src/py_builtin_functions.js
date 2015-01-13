@@ -365,14 +365,18 @@ enumerate.__code__.co_varnames=['iterable']
 
 //eval() (built in function)
 function $eval(src, _globals, locals){
-    var is_exec = arguments[3]=='exec'
+    var is_exec = arguments[3]=='exec', mod_name
     if($B.exec_stack.length==0){$B.exec_stack=['__main__']}
     var env = $B.exec_stack[$B.exec_stack.length-1]
 
     if(is_exec && _globals===undefined){
-        var mod_name = env
+        mod_name = env
     }else{
-        var mod_name = 'exec-'+ $B.UUID()
+        if(_globals===undefined){mod_name="exec-"+$B.UUID()}
+        else{
+            if(_globals.id === undefined){_globals.id = 'exec-'+$B.UUID()}
+            mod_name = _globals.id
+        }
         $B.$py_module_path[mod_name] = $B.$py_module_path['__main__']
         $B.vars[mod_name] = {}
         $B.bound[mod_name] = {}
