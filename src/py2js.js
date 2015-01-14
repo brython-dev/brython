@@ -1047,8 +1047,9 @@ function $CallCtx(context){
                    // class parent as first argument
                    var scope = $get_scope(this)
                    if(scope.ntype=='def' || scope.ntype=='generator'){
-                      if(scope.parent && scope.parent.context.tree[0].type=='class'){
-                         new $IdCtx(this,scope.parent.context.tree[0].name)
+                      var def_scope = $get_scope(scope.context.tree[0])
+                      if(def_scope.ntype=='class'){
+                         new $IdCtx(this,def_scope.context.tree[0].name)
                       }
                    }
                 }
@@ -3053,19 +3054,10 @@ function $KwArgCtx(context){
     // put id in list of kwargs
     // used to avoid passing the id as argument of a list comprehension
     var value = this.tree[0].value
-    var ctx = context
-    while(ctx.parent!==undefined){
-        switch(ctx.type) {
-          case 'list_or_tuple':
-          case 'dict_or_set':
-          case 'call_arg':
-          case 'def':
-          case 'lamdba':
-            if(ctx.kwargs===undefined){ctx.kwargs=[value]}
-            else if(ctx.kwargs.indexOf(value)===-1){ctx.kwargs.push(value)}
-        }
-        ctx = ctx.parent
-    }
+    var ctx = context.parent.parent // type 'call'
+    if(ctx.kwargs===undefined){ctx.kwargs=[value]}
+    else if(ctx.kwargs.indexOf(value)===-1){ctx.kwargs.push(value)}
+    else{$_SyntaxError(context,['keyword argument repeated'])}
 
     // If the keyword argument occurs inside a function, remove the occurence
     // from referenced variables in the function
@@ -4112,7 +4104,7 @@ function $add_line_num(node,rank){
         else if(elt.type==='single_kw'){flag=false}
         if(flag){
             // add a trailing None for interactive mode
-            var js='$B.line_info=new Array('+node.line_num+',"'+mod_id+'");None;'
+            var js='$B.line_info=['+node.line_num+',"'+mod_id+'"];None;'
             if(node.module===undefined) console.log('tiens, module undef !')
 
             var new_node = new $Node()
@@ -5821,6 +5813,9 @@ $B.forbidden = ['super',
     'default','Error','history','function','location','Math',
     'new','null','Number','RegExp','this','throw','var']
 
+var s_escaped = 'abfnrtvx"'+"'"+'\\', is_escaped={}
+for(var i=0;i<s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
+
 function $tokenize(src,module,locals_id,parent_block_id,line_info){
     var delimiters = [["#","\n","comment"],['"""','"""',"triple_string"],
         ["'","'","string"],['"','"',"string"],
@@ -5982,7 +5977,11 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                             end += 2
                             lnum++
                         } else {
-                            zone+='\\' //src.charAt(end);
+                            if(end < src.length-1 &&
+                                is_escaped[src.charAt(end+1)]==undefined){
+                                    zone += '\\'
+                            }
+                            zone+='\\'
                             escaped=true;end+=1
                         }
                     }
