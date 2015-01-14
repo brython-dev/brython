@@ -38,7 +38,6 @@ class jq:
 
     @staticmethod
     def get(**selectors):
-        print(selectors)
         items = []
         for k,v in selectors.items():
             if k=='selector':
@@ -56,7 +55,7 @@ class jq:
     
     @staticmethod
     def __getitem__(element_id):
-        return jq('#'+element_id).items[0]
+        return jq.get(selector='#'+element_id)[0]
     
     def __iter__(self):
         return iter(self.items)

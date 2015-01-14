@@ -29,11 +29,13 @@
 <script type="text/javascript" src="/src/py_dom.js"></script>
 
 <style>
-#container {font-size:0.6em; width:40em;}
+#container {font-size:0.6em; width:40em; visibility: hidden;}
 </style>
 <script type="text/python">
+from browser import document
 from jqueryui import jq
 
+document['container'].style.visibility = 'visible'
 jq['accordion'].accordion()
 </script>
 
