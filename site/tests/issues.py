@@ -90,6 +90,15 @@ assert sys.version_info != (3,0,0)
 assert not sys.version_info < (3,0,0)
 assert not sys.version_info <= (3,0,0)
 
+#issue 98
+assert int.from_bytes(b'\xfc', 'big') == 252
+assert int.from_bytes(bytearray([252,0]), 'big') == 64512
+assert int.from_bytes(b'\x00\x10', byteorder='big') == 16
+assert int.from_bytes(b'\x00\x10', byteorder='little') == 4096
+assert int.from_bytes(b'\xfc\x00', byteorder='big', signed=True) == -1024
+assert int.from_bytes(b'\xfc\x00', byteorder='big', signed=False) == 64512
+assert int.from_bytes([255, 0, 0], byteorder='big') == 16711680
+
 # issue #100
 class A:
     if True:

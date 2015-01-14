@@ -17,18 +17,22 @@ var $IntDict = {__class__:$B.$type,
 }
 
 $IntDict.from_bytes = function() {
-  var $ns=$B.$MakeArgs("from_bytes", arguments, ['x'], [], 'args', 'kw')
+  var $ns=$B.$MakeArgs("from_bytes", arguments, ['x', 'byteorder'], 
+                       'signed', 'args', 'kw')
 
   var x = $ns['x']
-  var byteorder = _b_.dict.$dict.get($ns['kw'],'byteorder', $ns['args'][0])
+  var byteorder = $ns['byteorder']
+  var signed = $ns['signed'] || _b_.dict.$dict.get($ns['kw'],'signed', False)
 
   var _bytes, _len
   if (isinstance(x, [_b_.list, _b_.tuple])) {
      _bytes=x
      _len=len(x)
-  } else if (isinstance(x, _b_.bytes)) {
+  } else if (isinstance(x, [_b_.bytes, _b_.bytearray])) {
     _bytes=x.source
     _len=x.source.length
+  } else {
+    _b_.TypeError("Error! " + _b_.type(x) + " is not supported in int.from_bytes. fix me!")
   }
 
   switch(byteorder) {
@@ -39,7 +43,9 @@ $IntDict.from_bytes = function() {
           num = _mult * _bytes[i] +  num
           _mult*=256
       }
-      return num
+      if (!signed) return num
+      if (_bytes[0] < 128) return num
+      return num - _mult
     case 'little':
       var num = _bytes[0]
       if (num >= 128) num = num - 256
@@ -48,8 +54,9 @@ $IntDict.from_bytes = function() {
          num = _mult * _bytes[i] +  num
          _mult *= 256
       }
-      if (num < 0) return -num    // fixme.. alg above shouldn't return a negative
-      return num
+      if (!signed) return num
+      if (_bytes[_len - 1] < 128) return num
+      return num - _mult
   }
 
   throw _b_.ValueError("byteorder must be either 'little' or 'big'");
