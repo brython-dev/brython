@@ -523,7 +523,11 @@ var UnsupportedChar = function() {
     this.name = "UnsupportedChar"
 }
 
-var $new_legacy_format = $StringDict.__mod__ = function(val, args) {
+$StringDict.__mod__ = function(val, args) {
+    return $legacy_format(val, args, char_to_func_mapping)
+}
+
+var $legacy_format = function(val, args, char_mapping) {
     var length = val.length
     var pos = 0 |0
     var argpos = null
@@ -580,7 +584,7 @@ var $new_legacy_format = $StringDict.__mod__ = function(val, args) {
         // todo: string value based on flags, type, value
         var flags = {'pad_char': ' '}
         do {
-            func = char_to_func_mapping[s[newpos]]
+            func = char_mapping[s[newpos]]
             try {
                 if (func === undefined) {
                     throw new UnsupportedChar()
@@ -651,381 +655,30 @@ var $new_legacy_format = $StringDict.__mod__ = function(val, args) {
     return ret
 }
 
+var char_to_new_format_mapping = {
+    'b': function(val, flags) {
+        number_check(val)
+        val = val.toString(2)
+        if (flags.alternate) {
+            val = "0b" + val
+        }
+        return val
+    },
+    'n': function(val, flags) {return floating_point_format(val, false, flags)},
+    'N': function(val, flags) {return floating_point_format(val, true, flags)}
+}
+
+for (k in char_to_func_mapping) {
+    char_to_new_format_mapping[k] = char_to_func_mapping[k]
+}
+
+$format_to_legacy = function(val, args) {
+    return $legacy_format(val, args, char_to_new_format_mapping)
+}
+
 var conv_flags = '([#\\+\\- 0]*)'
 var re = new RegExp('\\%(\\(.+?\\))*'+conv_flags+'(\\*|\\d*)(\\.\\*|\\.\\d*)*(h|l|L)*(.){1}')
 
-var $legacy_format= function(self,args){
-    // string formatting (old style with %)
-    var ph = [] // placeholders for replacements
-
-    function format(s){
-        var res = re.exec(s)
-        this.is_format = true
-        if(!res){this.is_format = false;return}
-        this.src = res[0]
-        if(res[1]){this.mapping_key=str(res[1].substr(1,res[1].length-2))}
-        else{this.mapping_key=null}
-        this.flag = res[2]
-        this.min_width = res[3]
-        this.precision = res[4]
-        this.length_modifier = res[5]
-        this.type = res[6]
-        
-        this._number_check=function(s) {
-            if(!isinstance(s,[_b_.int,_b_.float])){
-              if (s.__class__ !== undefined) {
-                 throw _b_.TypeError("%"+this.type+" format: a number is required, not " + str(s.__class__))
-              } else if (typeof(s) === 'string') {
-                 throw _b_.TypeError("%"+this.type+" format: a number is required, not str")
-              } else {
-                 throw _b_.TypeError("%"+this.type+" format: a number is required, not 'unknown type'")
-              }
-            }
-        }
-    
-        this.toString = function(){
-            var res = 'type '+this.type+' key '+this.mapping_key+' min width '+this.min_width
-            return res + ' precision '+this.precision
-        }
-        this.format = function(src){
-            if(this.mapping_key!==null){
-                if(!isinstance(src,_b_.dict)){throw _b_.TypeError("format requires a mapping")}
-                src=getattr(src,'__getitem__')(this.mapping_key)
-            }
-            
-            if(this.flag.indexOf("#") > -1){var flag_hash = true}
-            if(this.flag.indexOf("+") > -1){var flag_plus = true}
-            if(this.flag.indexOf("-") > -1){var flag_minus = true}
-            if(this.flag.indexOf("0") > -1){var flag_zero = true}
-            if(this.flag.indexOf(" ") > -1){var flag_space = true}
-          
-            switch(this.type) {
-              case 's':
-                //if(this.type=="s"){
-                var res = str(src)
-                if(this.precision){return res.substr(0,parseInt(this.precision.substr(1)))}
-                return res
-              case 'r':
-                //}else if(this.type=="r"){
-                var res = repr(src)
-                if(this.precision){return res.substr(0,parseInt(this.precision.substr(1)))}
-                return res
-              case 'a':
-                //}else if(this.type=="a"){
-                var res = ascii(src)
-                if(this.precision){return res.substr(0,parseInt(this.precision.substr(1)))}
-                return res
-              case 'n':    //fix me  n is like g but uses current locale for separators
-              case 'g':
-              case 'G':
-                //}else if(this.type=="g" || this.type=="G"){
-                if(!isinstance(src,[_b_.int,_b_.float])){
-                   throw _b_.TypeError("a float is required")}
-                var prec = -4
-                if(this.precision){prec=parseInt(this.precision.substr(1))}
-                var res = parseFloat(src)
-
-                switch(res) {
-                   case Infinity:
-                     if (this.flag==='+' || this.flag === '+#') return '+inf'
-                     if (this.flag===' ' || this.flag === ' #') return ' inf'
-                     return 'inf'
-                   case -Infinity:
-                     return '-inf'
-                }
-
-                if (isNaN(res)) {
-                   if (this.flag === '+' || this.flag === '+#') return '+nan'
-                   if (this.flag === ' ' || this.flag === ' #') return ' nan'
-                   return 'nan'
-                }
-
-                res=res.toExponential()
-                var elts = res.split('e')
-                if((this.precision && eval(elts[1])>prec) ||
-                    (!this.precision && eval(elts[1])<-4)){
-                    this.type === 'g' ? this.type='e' : this.type='E'
-                    // The precision determines the number of significant digits 
-                    // before and after the decimal point and defaults to 6
-                    var prec = 6
-                    if(this.precision){prec=parseInt(this.precision.substr(1))-1}
-                    var res = parseFloat(src).toExponential(prec)
-                    var elts = res.split('e')
-                    var res = elts[0]+this.type+elts[1].charAt(0)
-                    if(elts[1].length===2){res += '0'}
-                    return res+elts[1].substr(1)
-                }else{
-                    var prec = 2
-                    if(this.flag=='#'){
-                      if (this.precision === undefined) {
-                         this.precision='.5'  // use a default of 6
-                      } else {
-                        prec=parseInt(this.precision.substr(1))-1
-                        var elts = str(src).split('.')
-                        this.precision = '.'+(prec-elts[0].length)
-                      }
-                    } else {
-                      //this.precision = this.precision || 0
-                    }
-
-                    this.type="f"
-                    var _v=this.format(src)
-                    //removing ending zeros
-
-                    if (this.flag === '#') return _v
-                    return _v.replace(new RegExp("[\.0]+$"), "");
-                }
-              case 'e':
-              case 'E':
-                //}else if(this.type=="e" || this.type=="E"){
-                this._number_check(src)
-                var prec = 6
-                if(this.precision){prec=parseInt(this.precision.substr(1))}
-                var res = parseFloat(src)
-
-                switch(res) {
-                   case Infinity:
-                     switch(this.flag) {
-                       case ' ':
-                       case ' #':
-                         return ' inf'
-                       case '+':
-                       case '+#':
-                         return '+inf'
-                       default:
-                         return 'inf'
-                     }
-                   case -Infinity:
-                     return '-inf'
-                }
-
-                if (isNaN(res)) {
-                   switch(this.flag) {
-                     case ' ':
-                     case ' #':
-                       return ' nan'
-                     case '+':
-                     case '+#':
-                       return '+nan'
-                     default:
-                       return 'nan'
-                   }
-                }
-
-                res=res.toExponential(prec)
-                var elts = res.split('e')
-                var res = elts[0]+this.type+elts[1].charAt(0)
-                if(elts[1].length===2){res += '0'}
-                return res+elts[1].substr(1)
-              case 'x':
-              case 'X':
-                //}else if(this.type=="x" || this.type=="X"){ // hex
-                this._number_check(src)
-                var num = src
-                res = src.toString(16)
-
-                var pad=' '
-                if(this.flag===' '){res = ' '+res}
-                else if(this.flag==='+' && num>=0){pad='+';res = '+'+res}
-
-                if(this.precision){
-                    var width=this.precision.substr(1)
-                    if(this.flag==='#'){pad="0"}
-                    while(res.length<width){res=pad+res}
-                }
-
-                if(this.flag ==='#'){
-                    if(this.type==='x'){res = '0x'+res}
-                    else{res = '0X'+res}
-                }
-                return res
-              case 'i':
-              case 'u':
-              case 'd':
-                //}else if(this.type=="i" || this.type=="d"){
-                this._number_check(src)
-                var num = parseInt(src) //_b_.int(src)
-                num=num.toPrecision()
-                res = num+''
-                var len_num = res.length
-                if(this.precision){
-					var prec = parseInt(this.precision.substr(1))
-				}else{
-					var prec = 0
-				}
-				if(this.min_width){
-					var min_width = parseInt(this.min_width)
-				}else{
-					var min_width = 0
-				}
-				var width = Math.max(len_num, prec, min_width)
-				var pad = ' '
-				if (len_num === width){
-					if(flag_plus && num>=0){res = '+'+res}					
-				}else{
-					if(flag_minus){
-						if(!flag_plus && !flag_space){
-							res=res+pad.repeat(width-len_num)
-						}
-						if(flag_plus){
-							res='+'+res+pad.repeat(width-len_num-1)
-						}
-						if(!flag_plus && flag_space){
-							res=pad+res+pad.repeat(width-len_num-1)
-						}
-					}else if(flag_plus && !flag_zero){
-						res=pad.repeat(width-len_num-1)+'+'+res
-					}else if(flag_plus && flag_zero){
-						if(num.substr(0,1) === '-'){
-							res='-'+'0'.repeat(width-len_num)+res.substr(1)
-						}else{
-							res='+'+'0'.repeat(width-len_num-1)+res
-						}
-					}else if(!flag_plus && !flag_space && flag_zero){
-						res='0'.repeat(width-len_num)+res
-					}else if(!flag_plus && !flag_zero && !flag_space && !flag_minus){
-						if(prec>0 && prec > len_num){
-							res=pad.repeat(width-(prec-len_num)-1)+'0'.repeat(prec-len_num)+res
-						}else{
-							res=pad.repeat(width-len_num)+res
-						}
-					}else if(flag_space && flag_zero){
-						res=pad+'0'.repeat(width-len_num-1)+res
-					}
-				}
-                return res
-              case 'f':
-              case 'F':
-                //}else if(this.type=="f" || this.type=="F"){
-                this._number_check(src)
-                var num = parseFloat(src)
-                if (num == Infinity){res='inf'}
-                else if (num == -Infinity){res='-inf'}
-                else if (isNaN(num)){res='nan'}
-                else {res=num}
-
-                // set default precision of 6 if precision is not specified
-                if(this.precision === undefined) this.precision=".6" 
-
-                if(this.precision && typeof res === 'number'){
-                   res = res.toFixed(parseInt(this.precision.substr(1)))
-                }
-
-                //res = num+''
-                switch(this.flag) {
-                  case ' ':
-                  case ' #':
-                    //if(this.flag===' ' && 
-                    if (num>=0 || res=='nan' || res == 'inf') res = ' '+res
-                    break
-                    //else if(this.flag===' #' && 
-                    //if (num>=0 || res=='nan' || res=='inf') res = ' '+res
-                  case '+':
-                  case '+#':
-                    //else if(this.flag==='+' && (num>=0 || res=='nan' || res=='inf')){res = '+'+res}
-                    //else if(this.flag==='+#' && 
-                    if (num>=0 || res=='nan' || res=='inf') res = '+'+res
-                    break
-                }
-                if(this.min_width){
-                    var pad = ' '
-                    if(this.flag==='0'){pad="0"}
-                    while(res.length<parseInt(this.min_width)){res=pad+res}
-                }
-                return res
-              case 'c':
-                //}else if(this.type=='c'){
-                if(isinstance(src,str) && str.length==1) return src
-                if(isinstance(src,_b_.int) && src>0 && src<256) return String.fromCharCode(src)
-                _b_.TypeError('%c requires _b_.int or char')
-              case 'o':
-                //}else if(this.type=='o'){
-                  
-                  
-                var res = src.toString(8)
-                if(this.flag==='#') return '0o' + res
-                return res
-              case 'b':
-                //}else if (this.type=='b') {
-                var res = src.toString(2)
-                if(this.flag==='#') return '0b' + res
-                return res
-              default:
-                //}else {
-                //if (hasattr(src, '__format__')) {
-                //   console.log(this.type)
-                //   //console.log(getattr(src, '__format__')(this.type))
-                //   return getattr(src, '__format__')(this.type)
-                //}
-                // consider this 'type' invalid
-                var _msg="unsupported format character '" + this.type
-                    _msg+= "' (0x" + this.type.charCodeAt(0).toString(16) + ") at index "
-                    _msg+= (self.valueOf().indexOf('%' + this.type)+1)
-                console.log(_msg)
-                throw _b_.ValueError(_msg) 
-            }//switch
-        }
-    }  // end format
-
-    
-    // elts is an Array ; items of odd rank are string format objects
-    var elts = []
-    var pos = 0, start = 0, nb_repl = 0, is_mapping = null
-    var val = self.valueOf()
-    while(pos<val.length){
-        if (val === undefined) console.log(val)
-        if(val.charAt(pos)=='%'){
-            var f = new format(val.substr(pos))
-            if(f.is_format){
-                if(f.type!=="%"){
-                    elts.push(val.substring(start,pos))
-                    elts.push(f)
-                    start = pos+f.src.length
-                    pos = start
-                    nb_repl++
-                    if(is_mapping===null){is_mapping=f.mapping_key!==null}
-                    else if(is_mapping!==(f.mapping_key!==null)){
-                        // can't mix mapping keys with non-mapping
-                        console.log(f+' not mapping')
-                        throw _b_.TypeError('format required a mapping')
-                    }
-                }else{ // form %%
-                    pos++;pos++
-                }
-            }else{pos++}
-        }else{pos++}
-    }
-    // check for invalid format string  "no format"
-    if(elts.length == 0) {
-        throw _b_.TypeError('not all arguments converted during string formatting')
-    }
-    elts.push(val.substr(start))
-    if(!isinstance(args,_b_.tuple)){
-        if(args.__class__==_b_.dict.$dict && is_mapping){
-            // convert all formats with the dictionary
-            for(var i=1;i<elts.length;i+=2){
-                elts[i]=elts[i].format(args)
-            }
-        }
-        else if(nb_repl>1){throw _b_.TypeError('not enough arguments for format string')}
-        else{elts[1]=elts[1].format(args)}
-    }else{
-        if(nb_repl==args.length){
-            for(var i=0;i<args.length;i++){
-                var fmt = elts[1+2*i]
-                elts[1+2*i]=fmt.format(args[i])
-            }
-        }else if(nb_repl<args.length){throw _b_.TypeError(
-            "not all arguments converted during string formatting")
-        }else{throw _b_.TypeError('not enough arguments for format string')}
-    }
-    var res = ''
-    for(var i=0;i<elts.length;i++){res+=elts[i]}
-    // finally, replace %% by %
-    return res.replace(/%%/g,'%')
-}// $end $legacy_format
-
-//_b_.$legacy_format=$legacy_format
 
 $StringDict.__mro__ = [$StringDict,$ObjectDict]
 
@@ -1361,9 +1014,6 @@ var $FormattableString=function(format_string) {
                var _conv = _items[j][1]
                var _spec = _items[j][2]
 
-               //console.log('legacy_format:', _spec, _params)
-               //_spec=$legacy_format(_spec, _params)
-
                var _f=this.format_field.apply(null, [_value, _parts,_conv,_spec,_want_bytes])
                getattr(_params,'__setitem__')(id(_items[j]).toString(), _f)
            }
@@ -1386,15 +1036,13 @@ var $FormattableString=function(format_string) {
                var _conv = _items[j][1]
                var _spec = _items[j][2]
 
-               //console.log('legacy_format:', _spec, _params)
-               _spec=$legacy_format(_spec, _params)
+               _spec=$format_to_legacy(_spec, _params)
 
                var _f=this.format_field.apply(null, [_value, _parts,_conv,_spec,_want_bytes])
                getattr(_params,'__setitem__')(id(_items[j]).toString(), _f)
            }
        }
-       //console.log('legacy_format:', this._string, _params)
-       return $legacy_format(this._string, _params)
+       return $format_to_legacy(this._string, _params)
     }  // this.format
 
     this.format_field=function(value,parts,conv,spec,want_bytes) {
@@ -1419,8 +1067,7 @@ var $FormattableString=function(format_string) {
 
        if (conv) {
           // fix me
-          //console.log('legacy_format:', conv, value)
-          value = $legacy_format((conv == 'r') && '%r' || '%s', value)
+          value = $format_to_legacy((conv == 'r') && '%r' || '%s', value)
        }
 
        value = this.strformat(value, spec)
@@ -1505,8 +1152,7 @@ var $FormattableString=function(format_string) {
        // fix me
        _rv='%' + _prefix + _precision + (_conversion || 's')
 
-       //console.log('legacy_format', _rv, value)
-       _rv = $legacy_format(_rv, value)
+       _rv = $format_to_legacy(_rv, value)
 
        if (_sign != '-' && value >= 0) _rv = _sign + _rv
 
