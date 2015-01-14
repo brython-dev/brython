@@ -5813,7 +5813,7 @@ $B.forbidden = ['super',
     'default','Error','history','function','location','Math',
     'new','null','Number','RegExp','this','throw','var']
 
-var s_escaped = 'abfnrtvx"'+"'"+'\\', is_escaped={}
+var s_escaped = 'abfnrtvxuU"'+"'"+'\\', is_escaped={}
 for(var i=0;i<s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
 
 function $tokenize(src,module,locals_id,parent_block_id,line_info){
