@@ -1292,8 +1292,27 @@ def _sys_version(sys_version=None):
     if result is not None:
         return result
 
+
     # Parse it
-    if 'IronPython' in sys_version:
+    if 'Brython' in sys_version:
+        # IronPython
+        name = 'Brython'
+        _parser=re.compile("^(\d+\.\d+\.\d+)[^[]+\[(.*)\]")
+
+        match=_parser.match(sys_version)
+
+        if match is None:
+            raise ValueError(
+                'failed to parse Brython sys.version: %s' %
+                repr(sys_version))
+
+        #version, alt_version, compiler = match.groups()
+        version, compiler = match.groups()
+        alt_version = ''
+        buildno = ''
+        builddate = ''
+
+    elif 'IronPython' in sys_version:
         # IronPython
         name = 'IronPython'
         if sys_version.startswith('IronPython'):

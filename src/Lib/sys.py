@@ -63,8 +63,7 @@ platform="brython"
 prefix = __BRYTHON__.brython_path
 
 version = '.'.join(str(x) for x in __BRYTHON__.version_info[:3])
-#todo, put in a 'real' date, etc
-version += " (default, Feb 29 2013, 00:00:00) \n[Javascript 1.5]"
+version += " (default, %s) \n[Javascript 1.5] on Brython" % __BRYTHON__.compiled_date
 hexversion = 0x03000000   # python 3.0
 
 class __version_info(object):
