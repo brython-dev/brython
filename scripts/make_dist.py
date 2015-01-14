@@ -24,7 +24,7 @@ except ImportError:
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
-implementation = [3, 0, 2, 'alpha', 0]
+implementation = [3, 0, 3, 'alpha', 0]
 
 def custom_minify(src):
     _res, pos = '', 0
@@ -105,6 +105,7 @@ with open(abs_path('version_info.js'), 'wb') as vinfo_file_out:
     vinfo_file_out.write('__BRYTHON__.__MAGIC__ = "%s"\n' %
                          '.'.join(['%s' % _i for _i in implementation[:3]]))
     vinfo_file_out.write('__BRYTHON__.version_info = %s\n' % str(version))
+    vinfo_file_out.write('__BRYTHON__.compiled_date = "%s"\n' % str(datetime.datetime.now()))
     # builtin module names = list of scripts in src/libs
     vinfo_file_out.write('__BRYTHON__.builtin_module_names = ["posix",')
     _modules=['"%s"' % fname.split('.')[0] 

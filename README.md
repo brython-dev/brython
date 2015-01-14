@@ -13,7 +13,7 @@ Here is a simple example of an HTML page running Python:
     <html>
 
         <head>
-            <script src="/src/brython.js"></script>
+            <script src="brython.js"></script>
         </head>
 
         <body onload="brython()">

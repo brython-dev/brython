@@ -54,7 +54,7 @@ $ObjectDict.__dir__ = function(self) {
     var res = []
 
     var objects = [self]
-    var mro = self.__class__.__mro__
+    var mro = $B.get_class(self).__mro__
     for (var i=0, _len_i = mro.length; i < _len_i; i++) {
         objects.push(mro[i])
     }
@@ -63,6 +63,11 @@ $ObjectDict.__dir__ = function(self) {
             //if(attr.charAt(0)=='$' && attr.substr(0,2)!=='$$'){
             if(attr.charAt(0)=='$' && attr.charAt(1) != '$') {
                 // exclude internal attributes set by Brython
+                continue
+            }
+            if(!isNaN(parseInt(attr.charAt(0)))){
+                // Exclude numerical attributes
+                // '0', '1' are in attributes of string 'ab'
                 continue
             }
             res.push(attr)

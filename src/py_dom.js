@@ -836,6 +836,11 @@ DOMNode.set_html = function(self,value){
     self.elt.innerHTML=str(value)
 }
 
+DOMNode.set_left = function(self, value){
+    console.log('set left')
+    self.elt.style.left = value
+}
+
 DOMNode.set_style = function(self,style){ // style is a dict
     if(!_b_.isinstance(style, _b_.dict)){
         throw TypeError('style must be dict, not '+$B.get_class(style).__name__)

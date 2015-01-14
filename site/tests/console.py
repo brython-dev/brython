@@ -2,7 +2,7 @@ import sys
 import traceback
 
 from browser import document as doc
-from browser import window, alert
+from browser import window, alert, console
 
 _credits = """    Thanks to CWI, CNRI, BeOpen.com, Zope Corporation and a cast of thousands
     for supporting Python development.  See www.python.org for more information."""
@@ -79,7 +79,7 @@ editor_ns = {'credits':credits,
 def cursorToEnd(*args):
     pos = len(doc['code'].value)
     doc['code'].setSelectionRange(pos, pos)
-
+    doc['code'].scrollTop = doc['code'].scrollHeight
 
 def get_col(area):
     # returns the column num of cursor
@@ -156,10 +156,9 @@ def myKeyPress(event):
             doc['code'].value += '>>> '
         else:
             doc['code'].value += '... '
+        
         cursorToEnd()
         event.preventDefault()
-        #event.stopPropagation()
-
 
 def myKeyDown(event):
     global _status, current

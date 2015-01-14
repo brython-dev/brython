@@ -1,3 +1,8 @@
+d = {1:'Z','y':88}
+assert d.__class__ == dict
+assert isinstance(d,dict)
+assert str(d)=="{1: 'Z', 'y': 88}"
+
 x = dict([['a',1],['r',2],['bg',3],['Z',4]])
 y = dict(zip(['a','r','Z','bg'],[1,2,4,3]))
 z = {'bg':3,'Z':4,'a':1,'r':2}
@@ -22,7 +27,7 @@ class foo(dict):
 
 x = foo({1:2})
 assert x.show() == 'show'
-assert str(x)=="{1:2}"
+assert str(x)=="{1: 2}"
 assert isinstance(x,dict)
 
 print("passed all tests..")
