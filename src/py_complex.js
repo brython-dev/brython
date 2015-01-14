@@ -9,8 +9,8 @@ function $UnsupportedOpType(op,class1,class2){
 }
 
 var $ComplexDict = {__class__:$B.$type,
-    __dir__:$ObjectDict.__dir__,
     __name__:'complex',
+    toString:function(){return '$ComplexDict'},
     $native:true
 }
 

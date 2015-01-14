@@ -6,7 +6,6 @@ var _ = $B.builtins
 
 var $SetDict = {
     __class__:$B.$type,
-    __dir__:_.object.$dict.__dir__,
     __name__:'set',
     $native:true
 }
@@ -40,44 +39,13 @@ $SetDict.__eq__ = function(self,other){
     // compare class set
     if(other===undefined) return self===set
     
-    if(_.isinstance(other,_.set)){
+    if(_.isinstance(other,set)){
       if(other.$items.length==self.$items.length){
         for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
            if($SetDict.__contains__(self,other.$items[i])===false) return false
         }
         return true
       }
-      return false
-    }
-
-    if(_.isinstance(other,[_.list])){
-      if(_.len(other)!=self.$items.length) return false
-
-      for(var i=0, _len_i = _.len(other); i < _len_i;i++){
-         var _value=getattr(other, '__getitem__')(i)
-         if($SetDict.__contains__(self, _value)===false) return false
-      }
-      return true
-    }
-
-    if(_.hasattr(other, '__iter__')) { // is an iterator
-      if(_.len(other)!=self.$items.length) return false
-      
-      var _it=_.iter(other)
-      
-      while(1) {
-         try {
-           var e=_.next(_it)
-           if(!$SetDict.__contains__(self, e)) return false
-         } catch(err) {
-           if(err.__name__=="StopIteration") {
-              break
-           }
-           console.log(err)
-           throw err
-         }
-      }
-      return true
     }
     return false
 }
@@ -158,10 +126,10 @@ $SetDict.__mro__ = [$SetDict,_.object.$dict]
 $SetDict.__ne__ = function(self,other){return !$SetDict.__eq__(self,other)}
 
 $SetDict.__or__ = function(self,other,accept_iter){
-    //$test(accept_iter, other)   <===  is this needed?  causes some dict unittests to fail
+    $test(accept_iter, other)
     var res = $SetDict.copy(self)
     var func = _.getattr(_.iter(other),'__next__')
-    while(1){
+    while(true){
         try{$SetDict.add(res, func())}
         catch(err){
             if(_.isinstance(err, _.StopIteration)){$B.$pop_exc();break}

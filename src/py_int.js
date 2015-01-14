@@ -15,48 +15,32 @@ var $IntDict = {__class__:$B.$type,
     toString:function(){return '$IntDict'},
     $native:true
 }
+// Pierre, this probably isn't correct, but may work for now.
+// do we need to create a $IntDict, like what we did for Float?
+$IntDict.from_bytes = function(x, byteorder) {
+  var len = x.source.length
 
-$IntDict.from_bytes = function() {
-  var $ns=$B.$MakeArgs("from_bytes", arguments, ['x', 'byteorder'], 
-                       'signed', 'args', 'kw')
+  if (byteorder == 'little') {
+     var num = x.source[len - 1];
 
-  var x = $ns['x']
-  var byteorder = $ns['byteorder']
-  var signed = $ns['signed'] || _b_.dict.$dict.get($ns['kw'],'signed', False)
+     if (num >= 128) num = num - 256;
 
-  var _bytes, _len
-  if (isinstance(x, [_b_.list, _b_.tuple])) {
-     _bytes=x
-     _len=len(x)
-  } else if (isinstance(x, [_b_.bytes, _b_.bytearray])) {
-    _bytes=x.source
-    _len=x.source.length
-  } else {
-    _b_.TypeError("Error! " + _b_.type(x) + " is not supported in int.from_bytes. fix me!")
+     for (var i = (len - 2); i >= 0; i--) {
+         num = 256 * num + x.source[i];
+     }
+     return num;
   }
 
-  switch(byteorder) {
-    case 'big':
-      var num = _bytes[_len - 1];
-      var _mult=256
-      for (var i = (_len - 2); i >= 0; i--) {
-          num = _mult * _bytes[i] +  num
-          _mult*=256
-      }
-      if (!signed) return num
-      if (_bytes[0] < 128) return num
-      return num - _mult
-    case 'little':
-      var num = _bytes[0]
-      if (num >= 128) num = num - 256
-      var _mult=256
-      for (var i = 1;  i < _len; i++) {
-         num = _mult * _bytes[i] +  num
-         _mult *= 256
-      }
-      if (!signed) return num
-      if (_bytes[_len - 1] < 128) return num
-      return num - _mult
+  if (byteorder === 'big') {
+     var num = x.source[0];
+
+     if (num >= 128) num = num - 256;
+
+     for (var i = 1;  i < len; i++) {
+         num = 256 * num + x.source[i];
+     }
+     if (num < 0) return -num    // fixme.. alg above shouldn't return a negative
+     return num;
   }
 
   throw _b_.ValueError("byteorder must be either 'little' or 'big'");

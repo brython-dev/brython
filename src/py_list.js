@@ -13,10 +13,7 @@ function $list(){
     return new $ListDict(args)
 }
 
-var $ListDict = {__class__:$B.$type,
-    __name__:'list',
-    $native:true,
-    __dir__:$ObjectDict.__dir__}
+var $ListDict = {__class__:$B.$type,__name__:'list',$native:true}
 
 $ListDict.__add__ = function(self,other){
     var res = self.valueOf().concat(other.valueOf())
@@ -77,23 +74,14 @@ $ListDict.__eq__ = function(self,other){
     if(other===undefined) return self===list
 
     if($B.get_class(other)===$B.get_class(self)){
-       if(other.length==self.length){
+        if(other.length==self.length){
             for(var i=0, _len_i = self.length; i < _len_i;i++){
                 if(!getattr(self[i],'__eq__')(other[i])) return False
             }
             return True
-       }
+        }
     }
-
-    if (isinstance(other, [_b_.set, _b_.tuple, _b_.list])) {
-       if (self.length != getattr(other, '__len__')()) return false
-
-       for(var i=0, _len_i = self.length; i < _len_i;i++){
-          if (!getattr(other, '__contains__')(self[i])) return false
-       }
-       return true
-    }
-    return false
+    return False
 }
 
 $ListDict.__getitem__ = function(self,arg){
@@ -185,7 +173,13 @@ $ListDict.__gt__ = function(self,other){
     return false        
 }
 
-$ListDict.__hash__ = None
+$ListDict.__hash__ = function(self){
+    if (self === undefined) {
+       return $ListDict.__hashvalue__ || $B.$py_next_hash--  // for hash of int type (not instance of int)
+    }
+
+    throw _b_.TypeError("unhashable type: 'list'")
+}
 
 $ListDict.__init__ = function(self,arg){
     var len_func = getattr(self,'__len__'),pop_func=getattr(self,'pop')
@@ -449,6 +443,8 @@ $ListDict.sort = function(self){
     if(!self.__brython__) return self
 }
 
+$ListDict.toString = function(){return '$ListDict'}
+
 $B.set_func_names($ListDict)
 
 // constructor for built-in type 'list'
@@ -493,6 +489,8 @@ $TupleDict.__iter__ = function(self){
     return $B.$iterator(self,$tuple_iterator)
 }
 
+$TupleDict.toString = function(){return '$TupleDict'}
+
 // other attributes are defined in py_list.js, once list is defined
 
 var $tuple_iterator = $B.$iterator_class('tuple_iterator')
@@ -503,6 +501,15 @@ function tuple(){
     var obj = list.apply(null,arguments)
     obj.__class__ = $TupleDict
 
+    obj.__hash__ = function () {
+      // http://nullege.com/codes/show/src%40p%40y%40pypy-HEAD%40pypy%40rlib%40test%40test_objectmodel.py/145/pypy.rlib.objectmodel._hash_float/python
+      var x= 0x345678
+      for(var i=0, _len_i = arguments.length; i < _len_i; i++) {
+         var y=arguments[i].__hash__();
+         x=(1000003 * x) ^ y & 0xFFFFFFFF;
+      }
+      return x
+    }
     return obj
 }
 tuple.__class__ = $B.$factory
@@ -553,16 +560,6 @@ $TupleDict.__eq__ = function(self,other){
     // compare object "self" to class "list"
     if(other===undefined) return self===tuple
     return $ListDict.__eq__(self,other)
-}
-
-$TupleDict.__hash__ = function (self) {
-  // http://nullege.com/codes/show/src%40p%40y%40pypy-HEAD%40pypy%40rlib%40test%40test_objectmodel.py/145/pypy.rlib.objectmodel._hash_float/python
-  var x= 0x345678
-  for(var i=0, _len_i = self.length; i < _len_i; i++) {
-     var y=_b_.hash(self[i]);
-     x=(1000003 * x) ^ y & 0xFFFFFFFF;
-  }
-  return x
 }
 
 $TupleDict.__mro__ = [$TupleDict,$ObjectDict]

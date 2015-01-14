@@ -13,30 +13,27 @@ class Slider(widget.Widget):
                           Href='#', style={'left': '0px'})
       self._value=0
       self._isMouseDown=False
-      self.m0 = [None, None]
 
-      def startSlide(ev):
+      def startSlide(e):
           self._isMouseDown=True
           self._upperBound = self._div_shell.offsetWidth - self._handle.offsetWidth
 
-          pos = widget.getMousePosition(ev)
+          pos = widget.getMousePosition(e)
           self._startMouseX=pos['x']
 
-          print('left', self._handle.style.left,'ev.x',ev.x)
-          self._lastElementLeft = int(self._handle.left)
-          print('left', self._lastElementLeft)
-          updatePosition(ev)
+          self._lastElementLeft = parseInt(self._handle.style.left)
+          updatePosition(e)
 
-      def updatePosition(ev):
-          #pos = widget.getMousePosition(ev)
+      def updatePosition(e):
+          pos = widget.getMousePosition(e)
           #print('mose pos',pos)
-          _newPos = self._lastElementLeft + ev.x - self._startMouseX
+          _newPos = self._lastElementLeft + pos['x'] - self._startMouseX
           
           _newPos = max(0, _newPos)
           _newPos = min(_newPos, self._upperBound)
 
-          self._handle.left = _newPos
-          print('new position',self._handle.style.left)
+          self._handle.style.left = '%spx' % _newPos
+          #print('new position',self._handle.style.left)
           self._lastElementLeft = _newPos
 
       def moving(e):

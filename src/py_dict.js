@@ -82,8 +82,7 @@ var $next_probe = function(i, size) {
 
 var $DictDict = {__class__:$B.$type,
     __name__ : 'dict',
-    $native:true,
-    __dir__:$ObjectDict.__dir__
+    $native:true
 }
 
 var $key_iterator = function(d) {
@@ -158,42 +157,30 @@ var $copy_dict = function(left, right) {
 $iterator_wrapper = function(items,klass){
     var res = {
         __class__:klass,
-        __iter__:function(){items.iter.i=0; return res},
+        __iter__:function(){return res},
         __len__:function(){return items.length()},
         __next__:function(){
             //if (items.length() !== items.iter.used) {
             //    throw _b_.RuntimeError("dictionary changed size during iteration")
             //}
             return items.next()
-            //return items[counter++]
         },
-        //__repr__:function(){return "<"+klass.__name__+" object>"},
-        //counter:0
+        __repr__:function(){return "<"+klass.__name__+" object>"},
+        counter:-1
     }
     res.__str__ = res.toString = res.__repr__
     return res
 }
 
-
 var $dict_keysDict = $B.$iterator_class('dict_keys')
 
 $DictDict.keys = function(self){
-    if (arguments.length > 1) {
-       var _len=arguments.length - 1
-       var _msg="keys() takes no arguments ("+_len+" given)"
-       throw _b_.TypeError(_msg)
-    }
     return $iterator_wrapper(new $key_iterator(self),$dict_keysDict)
 }
 
 var $dict_valuesDict = $B.$iterator_class('dict_values')
 
 $DictDict.values = function(self){
-    if (arguments.length > 1) {
-       var _len=arguments.length - 1
-       var _msg="values() takes no arguments ("+_len+" given)"
-       throw _b_.TypeError(_msg)
-    }
     return $iterator_wrapper(new $value_iterator(self), $dict_valuesDict)
 }
 
@@ -274,9 +261,6 @@ $DictDict.__getitem__ = function(self,arg){
 
     var bucket = $lookup_key(self, arg)
     if (bucket !== undefined) return self.$data[bucket][1]
-
-    if(hasattr(self, '__missing__')) return getattr(self, '__missing__')(arg)
-
     throw KeyError(_b_.str(arg))
 }
 
@@ -372,21 +356,13 @@ $DictDict.__next__ = function(self){
 
 $DictDict.__repr__ = function(self){
     if(self===undefined) return "<class 'dict'>"
-    var _objs=[self]  // used to elimate recursion
     var res=[]
     var items = new $item_generator(self).as_list()
-    for (var i=0; i < items.length; i++) {
-        var itm = items[i]
-        if (_objs.indexOf(itm[1]) > -1) {
-           var value='?'+_b_.type(itm[1])
-           if(isinstance(itm[1], dict)) value='{...}'
-           res.push(repr(itm[0])+': '+ value)
-        } else {
-           _objs.push(itm[1])
-           res.push(repr(itm[0])+': '+repr(itm[1]))
-        }
+    for(var idx in items) {
+        var itm = items[idx]
+        res.push(repr(itm[0])+':'+repr(itm[1]))
     }
-    return '{'+ res.join(', ') +'}'
+    return '{'+ res.join(',') +'}'
 }
 
 $DictDict.__setitem__ = function(self,key,value){
@@ -459,14 +435,9 @@ $DictDict.get = function(self, key, _default){
     return None
 }
 
-var $dict_itemsDict = $B.$iterator_class('dict_items')
+var $dict_itemsDict = $B.$iterator_class('dict_itemiterator')
 
 $DictDict.items = function(self){
-    if (arguments.length > 1) {
-       var _len=arguments.length - 1
-       var _msg="items() takes no arguments ("+_len+" given)"
-       throw _b_.TypeError(_msg)
-    }
     return $iterator_wrapper(new $item_iterator(self), $dict_itemsDict)
 }
 
@@ -618,6 +589,7 @@ function obj_dict(obj){
     $DictDict.clear(res)
     for(var attr in obj){
         if(attr.charAt(0)!='$'){
+           //this causes my browser to freeze..
            $DictDict.__setitem__(res, attr, obj[attr])
         }
     }

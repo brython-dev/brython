@@ -11,10 +11,7 @@ function $err(op,other){
 }
 
 // dictionary for built-in class 'float'
-var $FloatDict = {__class__:$B.$type,
-    __dir__:$ObjectDict.__dir__,
-    __name__:'float',
-    $native:true}
+var $FloatDict = {__class__:$B.$type,__name__:'float',$native:true}
 
 $FloatDict.as_integer_ratio=function(self) {
    if (Math.round(self.value) == self.value) return _b_.tuple([_b_.int(self.value), _b_.int(1)])

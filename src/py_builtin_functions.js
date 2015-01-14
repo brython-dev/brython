@@ -290,7 +290,7 @@ function dir(obj){
             res = _b_.list(res)
             res.sort()
             return res
-        } catch (err){console.log('no __dir__ '+err);$B.$pop_exc()}
+        } catch (err){$B.$pop_exc()}
     }
     var res = []
     for(var attr in obj){
@@ -365,18 +365,14 @@ enumerate.__code__.co_varnames=['iterable']
 
 //eval() (built in function)
 function $eval(src, _globals, locals){
-    var is_exec = arguments[3]=='exec', mod_name
+    var is_exec = arguments[3]=='exec'
     if($B.exec_stack.length==0){$B.exec_stack=['__main__']}
     var env = $B.exec_stack[$B.exec_stack.length-1]
 
     if(is_exec && _globals===undefined){
-        mod_name = env
+        var mod_name = env
     }else{
-        if(_globals===undefined){mod_name="exec-"+$B.UUID()}
-        else{
-            if(_globals.id === undefined){_globals.id = 'exec-'+$B.UUID()}
-            mod_name = _globals.id
-        }
+        var mod_name = 'exec-'+ $B.UUID()
         $B.$py_module_path[mod_name] = $B.$py_module_path['__main__']
         $B.vars[mod_name] = {}
         $B.bound[mod_name] = {}
@@ -407,7 +403,6 @@ function $eval(src, _globals, locals){
             }
         }
         var res = eval(root.to_js())
-        if(res===undefined){res = _b_.None}
         if(_globals!==undefined){
             var set_func = getattr(_globals,'__setitem__')
             for(var attr in $B.vars[mod_name]){
@@ -488,26 +483,23 @@ function getattr(obj,attr,_default){
         throw _b_.AttributeError('object has no attribute '+attr)
     }
     
-    switch(attr) {
-      case '__class__':
-        // attribute __class__ is set for all Python objects
-        // return the factory function
-        //if(attr=='__class__') 
-        return klass.$factory
-      case '__dict__':
-        // attribute __dict__ returns an instance of a subclass of dict
-        // defined in py_dict.js
-        //if(attr==='__dict__')
+    // attribute __class__ is set for all Python objects
+    // return the factory function
+    if(attr=='__class__') return klass.$factory
+    
+    // attribute __dict__ returns an instance of a subclass of dict
+    // defined in py_dict.js
+    if(attr==='__dict__'){
         return $B.obj_dict(obj)
-      case '__call__':
-        // __call__ on a function returns the function itself
-        //if(attr==='__call__' && 
-        if (typeof obj=='function'){
-           if(obj.$blocking){
-             console.log('calling blocking function '+obj.__name__)
-           }
-           if($B.debug>0){
-              return function(){
+    }
+    
+    // __call__ on a function returns the function itself
+    if(attr==='__call__' && (typeof obj=='function')){
+        if(obj.$blocking){
+            console.log('calling blocking function '+obj.__name__)
+        }
+        if($B.debug>0){
+            return function(){
                 $B.call_stack.push($B.line_info)
                 try{
                     var res = obj.apply(null,arguments)
@@ -515,39 +507,35 @@ function getattr(obj,attr,_default){
                     return res
                 }catch(err){throw err}
                 finally{$B.call_stack.pop()}
-              }
-           }
-           return function(){
-             var res = obj.apply(null,arguments)
-             if(res===undefined) return _b_.None
-             return res
-           }
-        
-        //}else if(attr=='__call__' && 
-        } else if (klass===$B.JSObject.$dict && typeof obj.js=='function'){
-          return function(){
+            }
+        }
+        return function(){
+            var res = obj.apply(null,arguments)
+            if(res===undefined) return _b_.None
+            return res
+        }
+    }else if(attr=='__call__' && klass===$B.JSObject.$dict &&
+        typeof obj.js=='function'){
+        return function(){
             var res = obj.js.apply(null,arguments)
             if(res===undefined) return _b_.None
             return $B.JSObject(res)
-          }
         }
-        break
-      case '__code__':
-        //if(attr=='__code__' && 
-        if (typeof obj=='function') {
-           var res = {__class__:$B.$CodeObjectDict,src:obj,
-                      name:obj.__name__ || '<module>'
-           }
-           if (obj.__code__ !== undefined) {
-              for (var attr in obj.__code__) res[attr]=obj.__code__[attr]
-           }
-           if($B.vars[obj.__module__]!==undefined){
-              res.filename=$B.vars[obj.__module__].__file__
-           }
-           return res
-        }//if
-    }//switch    
+    }
 
+    if(attr=='__code__' && (typeof obj=='function')){
+        var res = {__class__:$B.$CodeObjectDict,src:obj,
+                   name:obj.__name__ || '<module>'
+            }
+        if (obj.__code__ !== undefined) {
+           for (var attr in obj.__code__) res[attr]=obj.__code__[attr]
+        }
+        if($B.vars[obj.__module__]!==undefined){
+            res.filename=$B.vars[obj.__module__].__file__
+        }
+        return res
+    }
+    
     if(typeof obj == 'function') {
       if(attr !== undefined && obj[attr] !== undefined) {
         if (attr == '__module__') { // put other attrs here too..
@@ -649,23 +637,18 @@ hasattr.__code__.co_varnames=['object','name']
 
 
 function hash(obj){
-    if(arguments.length!=1){
-        throw _b_.TypeError("hash() takes exactly one argument ("+
-            arguments.length+" given)")
-    }
     if (obj.__hashvalue__ !== undefined) return obj.__hashvalue__
     if (isinstance(obj, _b_.int)) return obj.valueOf()
     if (isinstance(obj, bool)) return _b_.int(obj)
     if (obj.__hash__ !== undefined) {
        return obj.__hashvalue__=obj.__hash__()
     }
-    var hashfunc = getattr(obj, '__hash__', _b_.None)
-    if(hashfunc===_b_.None){
-        throw _b_.TypeError("unhashable type: '"+
-            $B.get_class(obj).__name__+"'")
-    }else{
-        return obj.__hashvalue__= hashfunc()
+    if (hasattr(obj, '__hash__')) {
+       return obj.__hashvalue__=getattr(obj, '__hash__')()
     }
+       
+    throw _b_.AttributeError(
+        "'"+_b_.str(obj.__class__)+"' object has no attribute '__hash__'")
 }
 
 hash.__doc__='hash(object) -> integer\n\nReturn a hash value for the object.  Two objects with the same value have\nthe same hash value.  The reverse is not necessarily true, but likely.'
@@ -1178,11 +1161,7 @@ property.__code__.co_varnames=['fget','fset','fdel', 'doc']
 
 
 // range
-var $RangeDict = {__class__:$B.$type,
-    __dir__:$ObjectDict.__dir__,
-    __name__:'range',
-    $native:true
-}
+var $RangeDict = {__class__:$B.$type,__name__:'range',$native:true}
 
 $RangeDict.__contains__ = function(self,other){
     var x = iter(self)
@@ -1793,8 +1772,10 @@ function no_set_attr(klass, attr){
 }
 
 var $BoolDict = $B.$BoolDict = {__class__:$B.$type,
-    __dir__:$ObjectDict.__dir__,
     __name__:'bool',
+    __repr__ : function(){return "<class 'bool'>"},
+    __str__ : function(){return "<class 'bool'>"},
+    toString : function(){return "<class 'bool'>"},
     $native:true
 }
 $BoolDict.__mro__ = [$BoolDict,$ObjectDict]
@@ -2250,7 +2231,7 @@ var builtin_funcs = ['abs', 'all', 'any', 'ascii', 'bin', 'bool', 'bytearray',
 'list', 'locals', 'map', 'max', 'memoryview', 'min', 'next', 'object', 
 'oct', 'open', 'ord', 'pow', 'print', 'property', 'quit', 'range', 'repr', 
 'reversed', 'round', 'set', 'setattr', 'slice', 'sorted', 'staticmethod', 'str', 
-'sum','$$super', 'tuple', 'type', 'vars', 'zip']
+'sum','super', 'tuple', 'type', 'vars', 'zip']
 
 for(var i=0;i<builtin_funcs.length;i++){
     $B.builtin_funcs[builtin_funcs[i]]=true

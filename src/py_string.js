@@ -1,11 +1,13 @@
 ;(function($B){
 
-eval($B.InjectBuiltins())
+var _b_ = $B.builtins
+var $s=[]
+for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
+eval($s.join(';'))
 
 var $ObjectDict = object.$dict
 
 var $StringDict = {__class__:$B.$type,
-    __dir__:$ObjectDict.__dir__,
     __name__:'str',
     $native:true
 }
@@ -35,16 +37,9 @@ $StringDict.__delitem__ = function(){
     throw _b_.TypeError("'str' object doesn't support item deletion")
 }
 
-// __dir__must be assigned explicitely because attribute resolution for builtin
-// classes doesn't use __mro__
-$StringDict.__dir__ = $ObjectDict.__dir__ 
-
 $StringDict.__eq__ = function(self,other){
     if(other===undefined){ // compare object "self" to class "str"
         return self===str
-    }
-    if (_b_.isinstance(other, _b_.str)) {
-       return other.valueOf() == self.valueOf()
     }
     return other===self.valueOf()
 }
@@ -1108,7 +1103,7 @@ var $FormattableString=function(format_string) {
       '(%)' +
       '|((?!{)(?:{{)+' +
       '|(?:}})+(?!})' +
-      '|{(?:[^{}](?:[^{}]+|{[^{}]*})*)?})', 'g'
+      '|{(?:[^{](?:[^{}]+|{[^{}]*})*)?})', 'g'
     )
 
     this.format_sub_re = new RegExp('({[^{}]*})')  // nested replacement field
