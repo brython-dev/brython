@@ -2,7 +2,9 @@ var $module=(function($B) {
   return {
     alert:function(message){window.alert($B.builtins.str(message))},
     confirm: function(message){return $B.JSObject(window.confirm(message))},
-    console:{log:function(data){window.console.log(data)}},
+    console:{log:function(data){window.console.log("DeprecationWarning: console.log() will be deprecated,\n"+
+		                                           "use print() instead.\n");
+		                        window.console.log(data)}},
     document:$B.$DOMNode(document),
     doc: $B.$DOMNode(document),   //want to use document instead of doc
     DOMEvent:$B.DOMEvent,
