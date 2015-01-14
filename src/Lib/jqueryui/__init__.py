@@ -36,15 +36,23 @@ class Element:
 
 class jq:
 
-    def __init__(self, *selectors):
+    @staticmethod
+    def get(**selectors):
+        print(selectors)
         items = []
-        for selector in selectors:
-            item = _jqui(selector)
-            if isinstance(item, list):
-                items += [Element(x) for x in item]
-            else:
-                items.append(Element(item))
-        self.items = items
+        for k,v in selectors.items():
+            if k=='selector':
+                if isinstance(v,[list, tuple]):
+                    values = v
+                else:
+                    values = [v]
+                for value in values:
+                    item = _jqui(value)
+                    if isinstance(item, list):
+                        items += [Element(x) for x in item]
+                    else:
+                        items.append(Element(item))
+        return items
     
     @staticmethod
     def __getitem__(element_id):
