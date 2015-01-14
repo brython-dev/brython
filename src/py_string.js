@@ -116,7 +116,7 @@ var NotANumber = function() {
     this.name = 'NotANumber'
 }
 
-var _number_check=function(s) {
+var number_check=function(s) {
     if(!isinstance(s,[_b_.int,_b_.float])){
         throw new NotANumber()
     }
@@ -162,16 +162,9 @@ var format_int_precision = function(val, flags) {
 
 var format_float_precision = function(val, upper, flags, modifier) {
     var precision = flags.precision
-    if (!precision) {
-        return val
-    }
-    precision = parseInt(precision, 10)
     // val is a float
     if (isFinite(val)) {
-        val = modifier(val, precision, upper)
-        if (precision === 0 && flags.alternate) {
-            val += '.'
-        }
+        val = modifier(val, precision, flags, upper)
         return val
     }
     if (val === Infinity) {
@@ -193,9 +186,10 @@ var format_sign = function(val, flags) {
         if (val >= 0) {
             return "+"
         }
-        return ""  // negative number already has -
     } else if (flags.space) {
-        return " "
+        if (val >= 0) {
+            return " "
+        }
     }
     return ""
 }
@@ -207,7 +201,7 @@ var str_format = function(val, flags) {
 }
 
 var num_format = function(val, flags) {
-    _number_check(val)
+    number_check(val)
     val = parseInt(val)
     var s = format_int_precision(val, flags)
     if (flags.pad_char === '0') {
@@ -236,45 +230,130 @@ var ascii_format = function(val, flags) {
 
 // converts to val to float and sets precision if missing
 var _float_helper = function(val, flags) {
-    _number_check(val)
+    number_check(val)
     if (!flags.precision) {
         if (!flags.decimal_point) {
-            flags.precision = "6"
+            flags.precision = 6
         } else {
-            flags.precision = "0"
+            flags.precision = 0
         }
+    } else {
+        flags.precision = parseInt(flags.precision, 10)
+        validate_precision(flags.precision)
     }
     return parseFloat(val)
+}
+
+// used to capture and remove trailing zeroes
+var trailing_zeros = /(.*?)(0+)([eE].*)/
+var leading_zeros = /\.(0*)/
+var trailing_dot = /\.$/
+
+var validate_precision = function(precision) {
+    // force precision to limits of javascript
+    if (precision > 20) {
+        throw _b_.ValueError("precision too big")
+    }
 }
 
 // gG
 var floating_point_format = function(val, upper, flags) {
     val = _float_helper(val, flags)
     var v = val.toString()
+    var v_len = v.length
     var dot_idx = v.indexOf('.')
     if (dot_idx < 0) {
-        dot_idx = v.length
+        dot_idx = v_len
     }
-    var diff = v.length - dot_idx
-    if (diff > 4 || dot_idx > parseInt(flags.precision, 10)) {
-        // exponential
-        // note that "%.2g" % 100 == '1e+02' but "%.2e" % 100 == '1.00e+02'
-        
-        // todo: special case
-        return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags, _floating_exp_helper), flags)
+    if (val < 1 && val > -1) {
+        var zeros = leading_zeros.exec(v)
+        var numzeros
+        if (zeros) {
+            numzeros = zeros[1].length
+        } else {
+            numzeros = 0
+        }
+        if (numzeros >= 4) {
+            val = format_sign(val, flags) + format_float_precision(val, upper, flags, _floating_g_exp_helper)
+            if (!flags.alternate) {
+                var trl = trailing_zeros.exec(val)
+                if (trl) {
+                    val = trl[1].replace(trailing_dot, '') + trl[3]  // remove trailing
+                }
+            } else {
+                if (flags.precision <= 1) {
+                    val = val[0] + '.' + val.substring(1)
+                }
+            }
+            return format_padding(val, flags)
+        }
+        flags.precision += numzeros
+        return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags, 
+            function(val, precision) {
+                val = val.toFixed(min(precision, v_len - dot_idx) + numzeros)
+            }), flags)
+    }
+    
+    if (dot_idx > flags.precision) {
+        val = format_sign(val, flags) + format_float_precision(val, upper, flags, _floating_g_exp_helper)
+        if (!flags.alternate) {
+            var trl = trailing_zeros.exec(val)
+            if (trl) {
+                val = trl[1].replace(trailing_dot, '') + trl[3]  // remove trailing
+            }
+        } else {
+            if (flags.precision <= 1) {
+                val = val[0] + '.' + val.substring(1)
+            }
+        }
+        return format_padding(val, flags)
     }
     return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags, 
-        function(val, precision) { return val.toFixed(precision) }), flags)
+        function(val, precision) {
+            if (!flags.decimal_point) {
+                precision = min(v_len - 1, 6)
+            } else if (precision > v_len) {
+                if (!flags.alternate) {
+                    precision = v_len
+                }
+            }
+            if (precision < dot_idx) {
+                precision = dot_idx
+            }
+            return val.toFixed(precision - dot_idx)
+        }), flags)
+}
+
+var _floating_g_exp_helper = function(val, precision, flags, upper) {
+    if (precision) {
+        --precision
+    }
+    val = val.toExponential(precision)
+    // pad exponent to two digits
+    var e_idx = val.lastIndexOf('e')
+    if (e_idx > val.length - 4) {
+        val = val.substring(0, e_idx + 2) + '0' + val.substring(e_idx + 2) 
+    }
+    if (upper) {
+        return val.toUpperCase()
+    }
+    return val
 }
 
 // fF
 var floating_point_decimal_format = function(val, upper, flags) {
     val = _float_helper(val, flags)
     return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags, 
-        function(val, precision) { return val.toFixed(precision) }), flags)
+        function(val, precision, flags) {
+            val = val.toFixed(precision)
+            if (precision === 0 && flags.alternate) {
+                val += '.'
+            }
+            return val
+        }), flags)
 }
 
-var _floating_exp_helper = function(val, precision, upper) {
+var _floating_exp_helper = function(val, precision, flags, upper) {
     val = val.toExponential(precision)
     // pad exponent to two digits
     var e_idx = val.lastIndexOf('e')
@@ -295,7 +374,7 @@ var floating_point_exponential_format = function(val, upper, flags) {
 }
 
 var signed_hex_format = function(val, upper, flags) {
-    _number_check(val)
+    number_check(val)
     var ret = parseInt(val)
     ret = ret.toString(16)
     ret = format_int_precision(ret, flags)
@@ -332,7 +411,7 @@ var signed_hex_format = function(val, upper, flags) {
 }
 
 var octal_format = function(val, flags) {
-    _number_check(val)
+    number_check(val)
     var ret = parseInt(val)
     ret = ret.toString(8)
     ret = format_int_precision(ret, flags)
@@ -456,14 +535,14 @@ var $new_legacy_format = $StringDict.__mod__ = function(val, args) {
     var $get_kwarg_string = function(s) {
         // returns [val, newpos]
         ++pos
-        var rslt = kwarg_key.match(s.substring(newpos))
+        var rslt = kwarg_key.exec(s.substring(newpos))
         if (!rslt) {
             throw _b_.ValueError("incomplete format key")
         }
         var key = rslt[1]
         newpos += rslt[0].length
         try {
-            var val = args.__class__.__getitem__(key)
+            var val = args.__class__.__getitem__(args, key)
         } catch(err) {
             if (err.name === "KeyError") {
                 throw err
@@ -554,6 +633,7 @@ var $new_legacy_format = $StringDict.__mod__ = function(val, args) {
             } else {
                 var tmp
                 if (val[newpos] === '(') {
+                    ++newpos
                     ret += $get_kwarg_string(val)
                 } else {
                     ret += $get_arg_string(val)
