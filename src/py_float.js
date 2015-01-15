@@ -427,6 +427,9 @@ var float = function (value){
     if(isinstance(value,_b_.bytes)) {
       return new $FloatClass(parseFloat(getattr(value,'decode')('latin-1')))
     }
+    if(hasattr(value, '__float__')) {
+      return new $FloatClass(getattr(value, '__float__')())
+    }
     if (typeof value == 'string') {
        value = value.trim()   // remove leading and trailing whitespace
        switch(value.toLowerCase()) {
