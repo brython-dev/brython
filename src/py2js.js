@@ -3660,7 +3660,7 @@ function $StringCtx(context,value){
             }
             if(i<this.tree.length-1){res+='+'}
         }
-        if(is_bytes){res += ',$B.charset)'}
+        if(is_bytes){res += ',"ISO-8859-1")'} //$B.charset)'}
         return res
     }
 }
