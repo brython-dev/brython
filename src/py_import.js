@@ -190,7 +190,7 @@ $B.run_py=run_py=function(module,path,module_contents) {
     
     try{
         var js = root.to_js()
-        if ($B.$options.debug == 10 && module.name=='_thread') {
+        if ($B.$options.debug == 10) {
            console.log('code for module '+module.name)
            console.log(js)
         }
