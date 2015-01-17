@@ -50,7 +50,7 @@ catch(err){return false}})
 __BRYTHON__.implementation=[3,0,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.0.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-01-17 12:13:24.319000"
+__BRYTHON__.compiled_date="2015-01-17 19:58:47.505000"
 __BRYTHON__.builtin_module_names=["posix","__random","_ajax","_browser","_html","_io","_jsre","_multiprocessing","_os","_posixsubprocess","_svg","_sys","_timer","builtins","dis","hashlib","javascript","json","math","modulefinder","time","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -264,6 +264,7 @@ if(!$B.globals[scope.id]||$B.globals[scope.id][assigned.value]===undefined){
 var node=$get_node(this)
 node.bound_before=$B.keys($B.bound[scope.id])
 $B.bound[scope.id][assigned.value]=true
+if(assigned.value=='xX'){console.log('assign xX in scope '+scope.id)}
 assigned.bound=true
 }
 if(scope.ntype=='def' ||scope.ntype=='generator'){$check_unbound(assigned,scope,assigned.value)
@@ -472,11 +473,12 @@ this.tree=[C]
 if(C.type=='expr' && C.tree[0].type=='id' &&
 noassign[C.tree[0].value]===true){$_SyntaxError(C,["can't assign to keyword"])
 }
-var scope=$get_scope(this)
-$get_node(this).bound_before=$B.keys($B.bound[scope.id])
+var scope=this.scope=$get_scope(this)
+this.scope.bound_before=$B.keys($B.bound[scope.id])
 this.module=scope.module
 this.toString=function(){return '(augm assign) '+this.tree}
 this.transform=function(node,rank){var func='__'+$operators[op]+'__'
+var mod_id=$get_module(this).id
 var offset=0,parent=node.parent
 parent.children.splice(rank,1)
 var left_is_id=this.tree[0].type=='expr' && this.tree[0].tree[0].type=='id'
@@ -488,7 +490,7 @@ new $NodeJSCtx(new_node,'var $temp,$left')
 parent.insert(rank,new_node)
 offset++
 var new_node=new $Node()
-new_node.id=this.module
+new_node.id=this.scope.id
 var new_ctx=new $NodeCtx(new_node)
 var new_expr=new $ExprCtx(new_ctx,'js',false)
 var _id=new $RawJSCtx(new_expr,'$temp')
@@ -498,12 +500,12 @@ _id.parent=assign
 parent.insert(rank+offset,new_node)
 offset++
 }
-var prefix='',in_class=false
+var prefix='',in_class=false,left=null
 switch(op){case '+=':
 case '-=':
 case '*=':
 case '/=':
-if(left_is_id){var scope=$get_scope(C)
+if(left_is_id){var scope=this.scope
 prefix='$locals'
 switch(scope.ntype){case 'module':
 prefix='$globals'
@@ -515,12 +517,14 @@ if(scope.globals && scope.globals.indexOf(C.tree[0].value)>-1){prefix='$globals'
 break
 case 'class':
 var new_node=new $Node()
-new $NodeJSCtx(new_node,'var $left='+C.to_js())
+var js=C.to_js(),left='$left',left_name=this.tree[0].tree[0].value
+console.log('set left to '+js+' C '+C)
+new $NodeJSCtx(new_node,'var $left='+js)
 parent.insert(rank+offset,new_node)
 in_class=true
 offset++
 }}}
-var left=C.tree[0].to_js()
+if(left===null){left=C.tree[0].to_js()}
 prefix=prefix && !C.tree[0].unknown_binding
 if(prefix){var left1=in_class ? '$left' : left
 var new_node=new $Node()
@@ -533,7 +537,7 @@ js +=' : (typeof '+left1+'=="number" ? '+left+op
 js +=right_is_int ? right : right+'.valueOf()'
 js +=' : '+left + '.value ' +op
 js +=right_is_int ? right : right+'.valueOf()'
-js +=');' 
+js +=');'
 js +='}'
 new $NodeJSCtx(new_node,js)
 parent.insert(rank+offset,new_node)
@@ -555,16 +559,17 @@ return
 var new_node=new $Node()
 var js=''
 if(prefix){js +='else '}
-js +='if(!hasattr('+C.to_js()+',"'+func+'"))'
+js +='if(!hasattr('+left+',"'+func+'"))'
 new $NodeJSCtx(new_node,js)
 parent.insert(rank+offset,new_node)
 offset ++
 var aa1=new $Node()
-aa1.id=this.module
+aa1.id=this.scope.id
 var ctx1=new $NodeCtx(aa1)
 var expr1=new $ExprCtx(ctx1,'clone',false)
-expr1.tree=C.tree
+if(left!='$left'){expr1.tree=C.tree
 for(var i=0;i<expr1.tree.length;i++){expr1.tree[i].parent=expr1
+}}else{new $RawJSCtx(expr1,'$left')
 }
 var assign1=new $AssignCtx(expr1)
 var new_op=new $OpCtx(expr1,op.substr(0,op.length-1))
@@ -578,13 +583,24 @@ var aa2=new $Node()
 new $NodeJSCtx(aa2,'else')
 parent.insert(rank+offset,aa2)
 var aa3=new $Node()
-var js3=C.to_js()
+var js3=left
 if(prefix){if(scope.ntype=='class'){js3='$left'}
-else{js3 +='='+prefix+'["'+C.tree[0].value+'"]'}}
-js3 +='=getattr('+C.to_js()
+}
+js3 +='=getattr('+left
 js3 +=',"'+func+'")('+right+')'
 new $NodeJSCtx(aa3,js3)
 aa2.add(aa3)
+if(left=='$left'){var aa4=new $Node(),js4
+if($B.bound[$get_module(this).id][left_name]===undefined){js4=C.to_js()+'=$left'
+}else{js4='if($locals["'+left_name+'"]!==undefined)'
+js4 +='{$locals["'+left_name+'"]=$left}'
+js4 +='else{$globals["'+left_name+'"]=$left}'
+console.log(js4)
+}
+new $NodeJSCtx(aa4,js4)
+offset++
+parent.insert(rank+offset,aa4)
+}
 return offset
 }
 this.to_js=function(){return ''
@@ -1811,8 +1827,10 @@ val1 +='|| $B.builtins["'+val+'"])'
 val=val1
 }else{val='$B.builtins["'+val+'"]'
 this.is_builtin=true
-}}else if(scope.id==scope.module){if(!this.bound && scope===innermost && this.env[val]===undefined){return '$B.$NameError("'+val+'")'
-}
+}}else if(scope.id==scope.module){if(!this.bound && scope===innermost && this.env[val]===undefined){if(found.length==1){return '$B.$NameError("'+val+'")'}
+else if(found[1].id=='__builtins__'){return '$B.builtins["'+val+'"]'
+}else{return '$B.vars["'+found[1].id+'"]["'+val+'"]'}}
+if(val=='int'){console.log('int found in globals '+scope.id)}
 val='$globals["'+val+'"]'
 }
 else if(scope===innermost){val='$locals["'+val+'"]'}
@@ -7495,7 +7513,7 @@ $B.JSConstructor=JSConstructor
 ;(function($B){$B.stdlib={}
 var js=['__random','_ajax','_browser','_html','_io','_jsre','_multiprocessing','_os','_posixsubprocess','_svg','_sys','_timer','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','time','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.highlight','site-packages.pygame.base','site-packages.pygame.color','site-packages.pygame.colordict','site-packages.pygame.compat','site-packages.pygame.constants','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.locals','site-packages.pygame.mixer','site-packages.pygame.mouse','site-packages.pygame.pkgdata','site-packages.pygame.rect','site-packages.pygame.sprite','site-packages.pygame.surface','site-packages.pygame.time','site-packages.pygame.transform','site-packages.pygame.version','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile']
+var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.highlight','site-packages.pygame.base','site-packages.pygame.color','site-packages.pygame.colordict','site-packages.pygame.compat','site-packages.pygame.constants','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.locals','site-packages.pygame.mixer','site-packages.pygame.mouse','site-packages.pygame.pkgdata','site-packages.pygame.rect','site-packages.pygame.sprite','site-packages.pygame.surface','site-packages.pygame.time','site-packages.pygame.transform','site-packages.pygame.version','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','uuid','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.pygame','test','ui','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]
@@ -8236,8 +8254,8 @@ s=getattr(s,'lstrip')('-0b')
 return s.length 
 }
 var $op_func=function(self,other){if(isinstance(other,int))return self-other
-if(isinstance(other,_b_.bool))return self-other
-if(hasattr(other,'__rsub__'))return getattr(other,'__rsub__')(self)
+else if(isinstance(other,_b_.bool))return self-(other ? 1 : 0)
+else if(hasattr(other,'__rsub__'))return getattr(other,'__rsub__')(self)
 $err("-",other)
 }
 $op_func +='' 

@@ -327,5 +327,13 @@ class A:
 a = A(4)
 assert a.x == 8
 
+# augmented assign in a method doesn't shadow names in global scope
+# or built-in names
+class f:
+
+    def __init__(self, int=None):
+        int += 1
+
+assert int(5.5)==5
 
 print('passed all tests...')
