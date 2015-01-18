@@ -688,22 +688,13 @@ $B.$iterator_class = function(name){
     }
 
     res.__repr__=function(self){
-       var _a=[]
-       while (1) {
-         try {
-              _a.push(_b_.next(self))
-         } catch (err) {
-              if (err.__name__ == 'StopIteration') break
-         }
-       }
-          
-       return name+ _b_.repr(_b_.list(_a))
+       return name + '('+ _b_.getattr(as_list(self), '__repr__')() + ')'
     }
 
     res.__str__ = res.toString = res.__repr__
     res.__mro__ = [res,_b_.object.$dict]
 
-    function as_list(s) {
+    function as_array(s) {
        var _a=[]
        var _it = _b_.iter(s)
        while (1) {
@@ -713,21 +704,11 @@ $B.$iterator_class = function(name){
               if (err.__name__ == 'StopIteration') break
          }
        }
-       return _b_.list(_a)
+       return _a
     }
 
-    function as_set(s) {
-       var _a=[]
-       var _it = _b_.iter(s)
-       while (1) {
-         try {
-              _a.push(_b_.next(_it))
-         } catch (err) {
-              if (err.__name__ == 'StopIteration') break
-         }
-       }
-       return _b_.set(_a)
-    }
+    function as_list(s) {return _b_.list(as_array(s))}
+    function as_set(s) {return _b_.set(as_array(s))}
 
     res.__ge__=function(self,other){
        if (_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])) {

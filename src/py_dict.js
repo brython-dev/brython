@@ -377,12 +377,12 @@ $DictDict.__repr__ = function(self){
     var items = new $item_generator(self).as_list()
     for (var i=0; i < items.length; i++) {
         var itm = items[i]
-        if (_objs.indexOf(itm[1]) > -1) {
+        if (_objs.indexOf(itm[1]) > -1 && _b_.isinstance(itm[1], [_b_.dict,_b_.list,_b_.set, _b_.tuple])) {
            var value='?'+_b_.type(itm[1])
            if(isinstance(itm[1], dict)) value='{...}'
            res.push(repr(itm[0])+': '+ value)
         } else {
-           _objs.push(itm[1])
+           if (_objs.indexOf(itm[1]) == -1) _objs.push(itm[1])
            res.push(repr(itm[0])+': '+repr(itm[1]))
         }
     }
