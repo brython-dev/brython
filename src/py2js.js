@@ -2462,7 +2462,7 @@ function $FromCtx(context){
                     res += '$B.$import("'+qname+'","'+parent_module+'");'
                     var _sn=scope.ntype
                     if('def' == _sn || 'class' == _sn || 'module' == _sn) {
-                        res += 'var '
+                        res += '\nvar '
                     }
                     var alias = this.aliases[this.names[i]]||this.names[i]
                     res += alias
@@ -6359,7 +6359,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     js += 'var __builtins__ = _b_ = $B.builtins\n'
     js += 'var $globals = $B.vars["'+module+'"];\n'
     if(module=='__main__'){
-        js += '__BRYTHON__.imported["__main__"] = $globals\n'
+        js += '$B.imported["__main__"] = $globals\n'
     }
     js += 'var $locals_id = "'+locals_id+'";\n'
     js += 'var $locals = $B.vars["'+locals_id+'"];\n'

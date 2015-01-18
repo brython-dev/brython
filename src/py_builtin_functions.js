@@ -179,7 +179,7 @@ callable.__code__.co_varnames=['obj']
 
 
 function chr(i) {
-  if (i < 0 || i > 1114111) Exception('ValueError', 'Outside valid range')
+  if (i < 0 || i > 1114111) _b_.ValueError('Outside valid range')
 
   return String.fromCharCode(i)
 }
