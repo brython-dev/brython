@@ -368,7 +368,6 @@ function $AssignCtx(context, check_unbound){
                 var node = $get_node(this)
                 node.bound_before = $B.keys($B.bound[scope.id])
                 $B.bound[scope.id][assigned.value] = true
-                if(assigned.value=='xX'){console.log('assign xX in scope '+scope.id)}
                 assigned.bound = true
             }
             if(scope.ntype=='def' || scope.ntype=='generator'){
@@ -685,10 +684,10 @@ function $AugmentedAssignCtx(context, op){
                 $_SyntaxError(context,["can't assign to keyword"])
     }
     
-    var scope = this.scope = $get_scope(this)
+    var scope = $get_scope(this)
 
     // Store the names already bound
-    this.scope.bound_before = $B.keys($B.bound[scope.id])
+    $get_node(this).bound_before = $B.keys($B.bound[scope.id])
     
     this.module = scope.module
 
@@ -696,7 +695,6 @@ function $AugmentedAssignCtx(context, op){
 
     this.transform = function(node,rank){
         var func = '__'+$operators[op]+'__'
-        var mod_id = $get_module(this).id
 
         var offset=0, parent=node.parent
         
@@ -719,7 +717,7 @@ function $AugmentedAssignCtx(context, op){
             // at the end of $aumented_assign, control will be
             // passed to the <placeholder> expression
             var new_node = new $Node()
-            new_node.id = this.scope.id
+            new_node.id = this.module
             var new_ctx = new $NodeCtx(new_node)
             var new_expr = new $ExprCtx(new_ctx,'js',false)
             // The id must be a "raw_js", otherwise if scope is a class, it would
@@ -732,7 +730,7 @@ function $AugmentedAssignCtx(context, op){
             offset++
         }
 
-        var prefix = '', in_class = false, left = null
+        var prefix = '', in_class = false
     
         switch(op) {
           case '+=':
@@ -740,7 +738,7 @@ function $AugmentedAssignCtx(context, op){
           case '*=':
           case '/=':
             if(left_is_id){
-              var scope = this.scope
+              var scope = $get_scope(context)
               prefix='$locals'
               switch(scope.ntype) {
                 case 'module':
@@ -754,10 +752,7 @@ function $AugmentedAssignCtx(context, op){
                   break;
                 case 'class':
                   var new_node = new $Node()
-                  var js = context.to_js(), left = '$left', 
-                      left_name = this.tree[0].tree[0].value
-                  console.log('set left to '+js+' context '+context)
-                  new $NodeJSCtx(new_node,'var $left='+js)
+                  new $NodeJSCtx(new_node,'var $left='+context.to_js())
                   parent.insert(rank+offset, new_node)
                   in_class = true
                   offset++
@@ -766,7 +761,7 @@ function $AugmentedAssignCtx(context, op){
         }
 
         // insert shortcut node if op is += and both args are numbers
-        if(left===null){left = context.tree[0].to_js()}
+        var left = context.tree[0].to_js()
         
         // We want to use Javascript += operator
         // If the left part is a name not defined in the souce code, which is
@@ -792,7 +787,7 @@ function $AugmentedAssignCtx(context, op){
             js += ' : '+left + '.value ' +op
             js += right_is_int ? right : right+'.valueOf()'
             
-            js += ');'
+            js += ');' //+prefix+'["'+left+'"]='+left
             js += '}'
             
             new $NodeJSCtx(new_node,js)
@@ -814,32 +809,26 @@ function $AugmentedAssignCtx(context, op){
             offset++
             return
         }
-
+        
         // insert node 'if(!hasattr(foo,"__iadd__"))
         var new_node = new $Node()
         var js = ''
         if(prefix){js += 'else '}
-        js += 'if(!hasattr('+left+',"'+func+'"))'
+        js += 'if(!hasattr('+context.to_js()+',"'+func+'"))'
         new $NodeJSCtx(new_node,js)
         parent.insert(rank+offset,new_node)
         offset ++
 
         // create node for "foo = foo + bar"
         var aa1 = new $Node()
-        aa1.id = this.scope.id
+        aa1.id = this.module
         var ctx1 = new $NodeCtx(aa1)
         var expr1 = new $ExprCtx(ctx1,'clone',false)
-        if(left!='$left'){
-            expr1.tree = context.tree
-            for(var i=0;i<expr1.tree.length;i++){
-                expr1.tree[i].parent = expr1
-            }
-        }else{
-            new $RawJSCtx(expr1,'$left')
+        expr1.tree = context.tree
+        for(var i=0;i<expr1.tree.length;i++){
+            expr1.tree[i].parent = expr1
         }
-        
         var assign1 = new $AssignCtx(expr1)
-        
         var new_op = new $OpCtx(expr1,op.substr(0,op.length-1))
         new_op.parent = assign1
         new $RawJSCtx(new_op,right)
@@ -853,33 +842,17 @@ function $AugmentedAssignCtx(context, op){
         new $NodeJSCtx(aa2,'else')
         parent.insert(rank+offset,aa2)
     
-        // create node for "foo.__iadd__(bar)"
+        // create node for "foo.__iadd__(bar)    
         var aa3 = new $Node()
-        var js3 = left
+        var js3 = context.to_js()
         if(prefix){
             if(scope.ntype=='class'){js3='$left'}
-            //else{js3 += '='+prefix+'["'+context.tree[0].value+'"]'}
+            else{js3 += '='+prefix+'["'+context.tree[0].value+'"]'}
         }
-        js3 += '=getattr('+left
+        js3 += '=getattr('+context.to_js()
         js3 += ',"'+func+'")('+right+')'
         new $NodeJSCtx(aa3,js3)
         aa2.add(aa3)
-        
-        // If we use temporary variable $left, reset the matching variable
-        if(left=='$left'){
-            var aa4 = new $Node(), js4
-            if($B.bound[$get_module(this).id][left_name]===undefined){
-                js4 = context.to_js()+'=$left'
-            }else{
-                js4 = 'if($locals["'+left_name+'"]!==undefined)'
-                js4 += '{$locals["'+left_name+'"]=$left}'
-                js4 += 'else{$globals["'+left_name+'"]=$left}'
-                console.log(js4)
-            }
-            new $NodeJSCtx(aa4, js4)
-            offset++
-            parent.insert(rank+offset, aa4)
-        }
         
         return offset
     }
@@ -2938,12 +2911,8 @@ function $IdCtx(context,value){
                     }
                 }else if(scope.id==scope.module){
                     if(!this.bound && scope===innermost && this.env[val]===undefined){
-                        if(found.length==1){return '$B.$NameError("'+val+'")'}
-                        else if(found[1].id=='__builtins__'){
-                            return '$B.builtins["'+val+'"]'
-                        }else{return '$B.vars["'+found[1].id+'"]["'+val+'"]'}
+                        return '$B.$NameError("'+val+'")'
                     }
-                    if(val=='int'){console.log('int found in globals '+scope.id)}
                     val = '$globals["'+val+'"]'
                 }
                 else if(scope===innermost){val = '$locals["'+val+'"]'}
@@ -4610,6 +4579,8 @@ function $transition(context,token){
                 return new $SubCtx(context.parent)
               case '(':
                 return new $CallArgCtx(new $CallCtx(context))
+              case 'op':
+                return new $AbstractExprCtx(new $OpCtx(context,arguments[2]),false)
             }
             return $transition(context.parent,token,arguments[2])
         }else{
