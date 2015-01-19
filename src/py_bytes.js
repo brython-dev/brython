@@ -56,8 +56,8 @@ $BytearrayDict.__setitem__ = function(self,arg,value){
 
         // copy items in a temporary JS array
         // otherwise, a[:0]=a fails
-        if(hasattr(value,'__iter__')){
-            var $temp = list(value)
+        if(_b_.hasattr(value,'__iter__')){
+            var $temp = _b_.list(value)
             for(var i=$temp.length-1;i>=0;i--){
                 if(!isinstance($temp[i], _b_.int)){
                     throw _b_.TypeError('an integer is required')
