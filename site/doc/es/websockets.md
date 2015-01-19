@@ -54,7 +54,7 @@ Ejemplo :
 <tr>
 <td id="py_source">
     from browser import document as doc
-    from browser import alert,websocket
+    from browser import alert,WebSocket
     
     def on_open(evt):
         doc['sendbtn'].disabled = False
@@ -79,7 +79,7 @@ Ejemplo :
             return
         global ws
         # open a web socket
-        ws = websocket.websocket("wss://echo.websocket.org")
+        ws = WebSocket("wss://echo.websocket.org")
         # bind functions to web socket events
         ws.bind('open',on_open)
         ws.bind('message',on_message)
