@@ -5,7 +5,7 @@ Web sockets, defined in HTML5, are a way to handle bi directional communication 
 
 The module defines one function :
 
-`websocket(`_host_`)`
+`WebSocket(`_host_`)`
 > _host_ is the location of a server that supports the WebSocket protocol. Returns a `WebSocket` object
 
 > If the browser doesn't support WebSocket, a `NotImplementedError` will be raised
@@ -51,7 +51,7 @@ Example :
 <tr>
 <td id="py_source">
     from browser import document as doc
-    from browser import alert,websocket
+    from browser import alert,WebSocket
     
     def on_open(evt):
         doc['sendbtn'].disabled = False
@@ -76,7 +76,7 @@ Example :
             return
         global ws
         # open a web socket
-        ws = websocket.websocket("wss://echo.websocket.org")
+        ws = WebSocket("wss://echo.websocket.org")
         # bind functions to web socket events
         ws.bind('open',on_open)
         ws.bind('message',on_message)
