@@ -531,9 +531,17 @@ $DictDict.update = function(self){
     for(var i=1;i<arguments.length;i++){params.push(arguments[i])}
     var $ns=$B.$MakeArgs('$DictDict.update',params,[],[],'args','kw')
     var args = $ns['args']
-    if(args.length>0 && isinstance(args[0],dict)){
-        var other = args[0]
-        $copy_dict(self, other)
+    if(args.length>0) {
+      var o=args[0]
+      if (isinstance(o,dict)){
+         $copy_dict(self, o)
+      } else if (hasattr(o, '__getitem__') && hasattr(o, 'keys')) {
+         var _keys=_b_.list(getattr(o, 'keys')())
+         for (var i=0; i < _keys.length; i++) {
+             var _value = getattr(o, '__getitem__')(_keys[i]) 
+             $DictDict.__setitem__(self, _keys[i], _value)
+         }
+      }
     }
     var kw = $ns['kw']
     $copy_dict(self, kw)
