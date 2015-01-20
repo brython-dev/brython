@@ -607,36 +607,6 @@ $B.stdin = {
     read: function(size){return ''}
 }
 
-/*
-function pyobject2jsobject(obj) {
-    if(_b_.isinstance(obj,_b_.dict)){
-        var temp = {__class__ :'dict'}
-        var items = _b_.list(_b_.dict.$dict.items(obj))
-        for(var i=0, _len_i = items.length; i < _len_i;i++){
-            temp[items[i][0]]=items[i][1]
-        }
-        return temp
-    }
-
-    // giving up, just return original object
-    return obj
-}
-
-function jsobject2pyobject(obj) {
-    if(obj === undefined) return _b_.None
-    if(obj.__class__ === 'dict'){
-       var d = _b_.dict()
-       for(var attr in obj){
-          if (attr !== '__class__') d.__setitem__(attr, obj[attr])
-       }
-       return d
-    }
-
-    // giving up, just return original object
-    return obj
-}
-*/
-
 $B.jsobject2pyobject=function(obj){
     switch(obj) {
       case null:
