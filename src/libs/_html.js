@@ -48,9 +48,6 @@ function makeTagDict(tagName){
                     try{
                         arg = arg.toLowerCase().replace('_','-')
                         self.elt.setAttribute(arg,value)
-                        if(arg=="class"){ // for IE
-                            self.elt.setAttribute("className",value)
-                        }
                     }catch(err){
                         throw _b_.ValueError("can't set attribute "+arg)
                     }
