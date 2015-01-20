@@ -2,6 +2,7 @@ var $module = (function($B){
 
 eval($B.InjectBuiltins())
 
+/*
 function _py(obj){
     switch(obj) {
       case null:
@@ -94,10 +95,10 @@ function _js(obj){
     }
     throw _b_.TypeError(str(obj)+' is not JSON serializable')
 }
-
+*/
 return  {
-    loads : function(json_obj){return _py(JSON.parse(json_obj))},
-    dumps : function(obj){return JSON.stringify(_js(obj))},
+    loads : function(json_obj){return $B.jsobject2pyobject(JSON.parse(json_obj))},
+    dumps : function(obj){return JSON.stringify($B.pyobject2jsobject(obj))},
 }
 
 })(__BRYTHON__)

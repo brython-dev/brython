@@ -607,6 +607,7 @@ $B.stdin = {
     read: function(size){return ''}
 }
 
+/*
 function pyobject2jsobject(obj) {
     if(_b_.isinstance(obj,_b_.dict)){
         var temp = {__class__ :'dict'}
@@ -634,6 +635,104 @@ function jsobject2pyobject(obj) {
     // giving up, just return original object
     return obj
 }
+*/
+
+$B.jsobject2pyobject=function(obj){
+    switch(obj) {
+      case null:
+        return _b_.None
+      case true:
+        return _b_.True
+      case false:
+        return _b_.False
+    }
+
+    if(_b_.isinstance(obj,_b_.list)){
+        var res = []
+        for(var i=0, _len_i = obj.length; i < _len_i;i++){
+            res.push($B.jsobject2pyobject(obj[i]))
+        }
+        return res
+    }
+
+    if(obj.__class__!==undefined){
+        if(obj.__class__===_b_.list){
+          for(var i=0, _len_i = obj.length; i < _len_i;i++){
+              obj[i] = $B.jsobject2pyobject(obj[i])
+          }
+          return obj
+        }
+        return obj
+    }
+
+    if(obj._type_ === 'iter') { // this is an iterator
+       return _b_.iter(obj.data)
+    }
+
+    if(typeof obj==='object' && obj.__class__===undefined){
+        // transform JS object into a Python dict
+        var res = _b_.dict()
+        for(var attr in obj){
+            _b_.getattr(res,'__setitem__')(attr,$B.jsobject2pyobject(obj[attr]))
+        }
+        return res
+    }
+
+    return $B.JSObject(obj)
+}
+
+$B.pyobject2jsobject=function (obj){
+    // obj is a Python object
+    switch(obj) {
+      case _b_.None:
+        return null
+      case _b_.True:
+        return true
+      case _b_.False:
+        return false
+    }
+
+    if(_b_.isinstance(obj,[_b_.int,_b_.str])) return obj
+    if(_b_.isinstance(obj,_b_.float)) return obj.value
+    if(_b_.isinstance(obj,[_b_.list,_b_.tuple])){
+        var res = []
+        for(var i=0, _len_i = obj.length; i < _len_i;i++){
+           res.push($B.pyobject2jsobject(obj[i]))
+        }
+        return res
+    }
+    if(_b_.isinstance(obj,_b_.dict)){
+        var res = {}
+        var items = _b_.list(_b_.dict.$dict.items(obj))
+        for(var i=0, _len_i = items.length; i < _len_i;i++){
+            res[$B.pyobject2jsobject(items[i][0])]=$B.pyobject2jsobject(items[i][1])
+        }
+        return res
+    }
+
+    if (hasattr(obj, '__iter__')) {
+       // this is an iterator..
+       var _a=[]
+       while(1) {
+          try {
+           _a.push($B.pyobject2jsobject(next(obj)))
+          } catch(err) {
+            if (err.__name__ !== "StopIteration") throw err
+            break
+          }
+       }
+       return {'_type_': 'iter', data: _a}
+    }
+
+    if (_b_.hasattr(obj, '__getstate__')) {
+       return _b_.getattr(obj, '__getstate__')()
+    }
+    if (_b_.hasattr(obj, '__dict__')) {
+       return $B.pyobject2jsobject(_b_.getattr(obj, '__dict__'))
+    }
+    throw _b_.TypeError(str(obj)+' is not JSON serializable')
+}
+
 
 // override IDBObjectStore's add, put, etc functions since we need
 // to convert python style objects to a js object type
@@ -641,20 +740,20 @@ function jsobject2pyobject(obj) {
 if (window.IDBObjectStore !== undefined) {
     window.IDBObjectStore.prototype._put=window.IDBObjectStore.prototype.put
     window.IDBObjectStore.prototype.put=function(obj, key) {
-       var myobj = pyobject2jsobject(obj)
+       var myobj = $B.pyobject2jsobject(obj)
        return window.IDBObjectStore.prototype._put.apply(this, [myobj, key]);
     }
     
     window.IDBObjectStore.prototype._add=window.IDBObjectStore.prototype.add
     window.IDBObjectStore.prototype.add=function(obj, key) {
-       var myobj= pyobject2jsobject(obj);
+       var myobj= $B.pyobject2jsobject(obj);
        return window.IDBObjectStore.prototype._add.apply(this, [myobj, key]);
     }
 }
 
 if (window.IDBRequest !== undefined) {
     window.IDBRequest.prototype.pyresult=function() {
-       return jsobject2pyobject(this.result);
+       return $B.jsobject2pyobject(this.result);
     }
 }
 
@@ -710,24 +809,24 @@ $B.$iterator_class = function(name){
     function as_list(s) {return _b_.list(as_array(s))}
     function as_set(s) {return _b_.set(as_array(s))}
 
-    res.__ge__=function(self,other){
+    res.__eq__=function(self,other){
        if (_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])) {
-          return _b_.getattr(as_list(self), '__ge__')(other)
+          return _b_.getattr(as_list(self), '__eq__')(other)
        }
 
        if (_b_.hasattr(other, '__iter__')) {
-          return _b_.getattr(as_list(self), '__ge__')(as_list(other))
+          return _b_.getattr(as_list(self), '__eq__')(as_list(other))
        }
 
-       _b_.NotImplementedError("__ge__ not implemented yet for list and " + _b_.type(other))
+       _b_.NotImplementedError("__eq__ not implemented yet for list and " + _b_.type(other))
     }
 
-    var _ops=['ge', 'le', 'gt', 'lt', 'eq', 'ne']
-    var _f = res.__ge__+''
+    var _ops=['eq', 'ne']
+    var _f = res.__eq__+''
 
     for (var i=0; i < _ops.length; i++) {
         var _op='__'+_ops[i]+'__'
-        eval('res.'+_op+'='+_f.replace(new RegExp('__ge__', 'g'), _op))
+        eval('res.'+_op+'='+_f.replace(new RegExp('__eq__', 'g'), _op))
     }
 
     res.__or__=function(self,other){
@@ -742,7 +841,7 @@ $B.$iterator_class = function(name){
        _b_.NotImplementedError("__or__ not implemented yet for set and " + _b_.type(other))
     }
 
-    var _ops=['sub', 'and', 'xor']
+    var _ops=['sub', 'and', 'xor', 'gt', 'ge', 'lt', 'le']
     var _f = res.__or__+''
 
     for (var i=0; i < _ops.length; i++) {
