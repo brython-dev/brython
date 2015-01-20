@@ -6,6 +6,9 @@ The package **browser** groups the built-in Brython-specific names and modules
 **browser**.`confirm(`_message_`)`
 > a function that print the _message_ in a window, and two buttons (ok/cancel). Returns `True` if ok, `False` if cancel
 
+**browser**.`console`
+> an object with methods to interact with the browser console. Its interface is browser-specific. It exposes at least the method `log(msg)`, which prints the message _msg_ in the console
+
 **browser**.`document`
 > an object that represents the HTML document currently displayed in the browser window. The interface of this object is described in section "Browser interface"
 

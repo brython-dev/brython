@@ -1,8 +1,8 @@
 var $module=(function($B) {
   return {
     alert:function(message){window.alert($B.builtins.str(message))},
-    confirm: function(message){return $B.JSObject(window.confirm(message))},
-    console:{log:function(data){window.console.log(data)}},
+    confirm: $B.JSObject(window.confirm),
+    console:$B.JSObject(window.console),
     document:$B.$DOMNode(document),
     doc: $B.$DOMNode(document),   //want to use document instead of doc
     DOMEvent:$B.DOMEvent,
