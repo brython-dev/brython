@@ -3,9 +3,7 @@
 <meta charset="iso-8859-1">
 
 <head>
-
-<title>jQuery UI Autocomplete - Default functionality</title>
-
+<link href="css" rel="stylesheet">
 <script type="text/javascript" src="/src/brython_builtins.js"></script>
 <script type="text/javascript" src="/src/version_info.js"></script>
 <script type="text/javascript" src="/src/identifiers_re.js"></script>
@@ -30,45 +28,16 @@
 <script type="text/javascript" src="/src/py_dom.js"></script>
 
 <style>
-body {
-    font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
-    font-size: 62.5%;
-}
-#container {font-size:1em; width:40em; visibility: hidden;}
+#container {font-size:0.6em; width:40em; visibility: hidden;}
 </style>
-
 <script type="text/python">
-from browser import document
+from browser import document, alert
 from jqueryui import jq
 
-document["container"].style.visibility = 'visible'
+document['container'].style.visibility = 'visible'
 
-availableTags = [
-    "ActionScript",
-    "AppleScript",
-    "Asp",
-    "BASIC",
-    "C",
-    "C++",
-    "Clojure",
-    "COBOL",
-    "ColdFusion",
-    "Erlang",
-    "Fortran",
-    "Groovy",
-    "Haskell",
-    "Java",
-    "JavaScript",
-    "Lisp",
-    "Perl",
-    "PHP",
-    "Python",
-    "Ruby",
-    "Scala",
-    "Scheme"
-]
+jq['drag0'].draggable()
 
-jq['tags'].autocomplete(source=availableTags)
 </script>
 
 </head>
@@ -77,10 +46,11 @@ jq['tags'].autocomplete(source=availableTags)
 
 <div id="container">
 
-<div class="ui-widget">
-<label for="tags">Tags: </label>
-<input id="tags">
-</div>
+    <h2>Draggable</h2>
+    
+    <div id="drag0" class="ui-widget-content" style="width: 10em; padding: 0.5em;">
+    <p>Drag me around</p>
+    </div>
 
 </div>
 

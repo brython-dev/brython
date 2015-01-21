@@ -7,7 +7,7 @@
 <script type="text/javascript" src="/src/brython.js"></script>
 
 <style>
-#container {font-size:0.6em; width:40em;}
+#container {font-size:0.6em; width:40em; visibility:hidden;}
 
 #resizable { width: 150px; height: 150px; padding: 0.5em; }
 #resizable h3 { text-align: center; margin: 0; }
@@ -15,7 +15,10 @@
 </style>
 
 <script type="text/python">
+from browser import document
 from jqueryui import jq
+
+document["container"].style.visibility = 'visible'
 
 jq['resizable'].resizable()
 </script>
