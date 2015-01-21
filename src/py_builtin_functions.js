@@ -1836,7 +1836,7 @@ $BoolDict.__gt__ = function(self,other){
     return _b_.int.$dict.__gt__($BoolDict.__hash__(self),other)
 }
 
-$BoolDict.__hash__ = function(self) {
+$BoolDict.__hash__ = $BoolDict.__index__= $BoolDict.__int__=function(self) {
    if(self.valueOf()) return 1
    return 0
 }
