@@ -409,6 +409,7 @@ var int = function(value, base){
     if(isinstance(value,[_b_.bytes,_b_.bytearray])) return Number(parseInt(getattr(value,'decode')('latin-1'), base))
 
     if(hasattr(value, '__int__')) return Number(getattr(value,'__int__')())
+    if(hasattr(value, '__index__')) return Number(getattr(value,'__index__')())
     if(hasattr(value, '__trunc__')) return Number(getattr(value,'__trunc__')())
 
     throw _b_.ValueError(
