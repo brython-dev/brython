@@ -159,7 +159,21 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
             var res = function(){
                 var args = [],arg
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
-                    args.push(pyobj2jsobj(arguments[i]))
+                    if(arguments[i].$nat=='ptuple'){
+                        // add all items produced by iteration on packed tuple
+                        var ptuple = _b_.iter(arguments[i].arg)
+                        while(true){
+                            try{
+                                var item = _b_.next(ptuple)
+                                args.push(pyobj2jsobj(item))
+                            }catch(err){    
+                                $B.$pop_exc()
+                                break
+                            }
+                        }
+                    }else{
+                        args.push(pyobj2jsobj(arguments[i]))
+                    }
                 }
                 // IE workaround
                 if(attr === 'replace' && obj.js === location) {
@@ -267,8 +281,6 @@ function JSObject(obj){
     }
     // If obj is a Python object, return it unchanged
     if(klass!==undefined) return obj
-    // If obj is already a JSObject, return it unchanged
-    if(klass==$JSObjectDict) return obj
     return {__class__:$JSObjectDict,js:obj}  // wrap it
 }
 JSObject.__class__ = $B.$factory
