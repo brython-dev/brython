@@ -1447,6 +1447,14 @@ var $SliceDict = {__class__:$B.$type, __name__:'slice'}
 
 $SliceDict.__mro__ = [$SliceDict,$ObjectDict]
 
+$SliceDict.indices = function (self, length) {
+  if (length < 0) _b_.ValueError('length should not be negative')
+  if (self.step > 0) {
+     return _b_.tuple(self.start, self.start + length, self.step)
+  }
+  _b_.NotImplementedError("Error! negative step indices not implemented yet")
+}
+
 function slice(){
     var $ns=$B.$MakeArgs('slice',arguments,[],[],'args',null)
     var args = $ns['args']
