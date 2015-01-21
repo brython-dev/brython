@@ -69,6 +69,10 @@ $ListDict.__delitem__ = function(self,arg){
         }
         return
     } 
+    if(hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
+        return $ListDict.__delitem__(self,_b_.int(arg))
+    }
+
     throw _b_.TypeError('list indices must be integer, not '+_b_.str(arg.__class__))
 }
 
@@ -145,7 +149,8 @@ $ListDict.__getitem__ = function(self,arg){
             return res;
         }
     }
-    if(isinstance(arg,_b_.bool)){
+    //allows objects that can be treated as integers
+    if(hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
         return $ListDict.__getitem__(self,_b_.int(arg))
     }
     throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
@@ -278,6 +283,9 @@ $ListDict.__setitem__ = function(self,arg,value){
         }
 
         throw _b_.TypeError("can only assign an iterable")
+    }
+    if(hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
+        return $ListDict.__setitem__(self,_b_.int(arg))
     }
 
     throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
