@@ -267,6 +267,22 @@ $JSObjectDict.__setitem__ = $JSObjectDict.__setattr__
 
 $JSObjectDict.__str__ = $JSObjectDict.__repr__
 
+var no_dict = {'string':true,'function':true,'number':true,'boolean':true}
+
+$JSObjectDict.to_dict = function(self){
+    // Returns a Python dictionary based on the underlying Javascript object
+    var res = _b_.dict()
+    for(var key in self.js){
+        var value = self.js[key]
+        if(typeof value=='object' && !Array.isArray(value)){
+            _b_.dict.$dict.__setitem__(res, key, $JSObjectDict.to_dict(JSObject(value)))
+        }else{
+            _b_.dict.$dict.__setitem__(res, key, value)
+        }
+    }
+    return res
+}
+
 function JSObject(obj){
     // If obj is a function, calling it with JSObject implies that it is
     // a function defined in Javascript. It must be wrapped in a JSObject
