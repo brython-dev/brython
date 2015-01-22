@@ -33,7 +33,7 @@ $ListDict.__contains__ = function(self,item){
 }
 
 $ListDict.__delitem__ = function(self,arg){
-    arg=$B.$GetInt(arg)
+    //arg=$B.$GetInt(arg)
     if(isinstance(arg,_b_.int)){
         var pos = arg
         if(arg<0) pos=self.length+pos
@@ -71,6 +71,11 @@ $ListDict.__delitem__ = function(self,arg){
         return
     } 
 
+    if (hasattr(arg, '__int__') || hasattr(arg, '__index__)) {
+       $ListDict.__delitem__(self, _b_.int(arg))
+       return
+    }
+
     throw _b_.TypeError('list indices must be integer, not '+_b_.str(arg.__class__))
 }
 
@@ -99,7 +104,7 @@ $ListDict.__eq__ = function(self,other){
 }
 
 $ListDict.__getitem__ = function(self,arg){
-    arg=$B.$GetInt(arg)
+    //arg=$B.$GetInt(arg)
     if(isinstance(arg,_b_.int)){
         var items=self.valueOf()
         var pos = arg
@@ -147,6 +152,10 @@ $ListDict.__getitem__ = function(self,arg){
             }
             return res;
         }
+    }
+
+    if (hasattr(arg, '__int__') || hasattr(arg, '__index__)) {
+       return $ListDict.__getitem__(self, _b_.int(arg))
     }
 
     throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
@@ -224,7 +233,7 @@ $ListDict.__lt__ = function(self,other){
 $ListDict.__mro__ = [$ListDict,$ObjectDict]
 
 $ListDict.__mul__ = function(self,other){
-    other=$B.$GetInt(other)
+    //other=$B.$GetInt(other)
     if(isinstance(other,_b_.int)) {  //this should be faster..
       var res=[]
       var $temp = self.slice(0,self.length)
@@ -232,6 +241,10 @@ $ListDict.__mul__ = function(self,other){
       return _b_.list(res)
     }
     
+    if (hasattr(other, '__int__') || hasattr(other, '__index__)) {
+       return $ListDict.__mul__(self, _b_.int(other))
+    }
+
     throw _b_.TypeError("can't multiply sequence by non-int of type '"+
             $B.get_class(other).__name__+"'")
 }
@@ -261,7 +274,7 @@ $ListDict.__repr__ = function(self){
 }
 
 $ListDict.__setitem__ = function(self,arg,value){
-    arg=$B.$GetInt(arg)
+    //arg=$B.$GetInt(arg)
     if(isinstance(arg,_b_.int)){
         var pos = arg
         if(arg<0) pos=self.length+pos
@@ -289,6 +302,11 @@ $ListDict.__setitem__ = function(self,arg,value){
         }
 
         throw _b_.TypeError("can only assign an iterable")
+    }
+
+    if (hasattr(arg, '__int__') || hasattr(arg, '__index__)) {
+       $ListDict.__setitem__(self, _b_.int(arg), value)
+       return
     }
 
     throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
