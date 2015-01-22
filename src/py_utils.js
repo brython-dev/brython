@@ -874,6 +874,15 @@ $B.InjectBuiltins=function() {
    return _str.join(';')
 }
 
+$B.$GetInt=function(value) {
+  // convert value to an integer,
+  if (_b_.isinstance(value, _b_.int)) return value
+  try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){}
+  try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){}
+
+  return value
+}
+
 })(__BRYTHON__)
 
 // IE doesn't implement indexOf on Arrays
