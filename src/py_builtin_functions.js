@@ -89,10 +89,8 @@ ascii.__code__.co_varnames=['obj']
 
 // used by bin, hex and oct functions
 function $builtin_base_convert_helper(obj, base) {
-  var value;
-  if (isinstance(obj, _b_.int)) {value=obj
-  } else if (obj.__index__ !== undefined) {value=obj.__index__()
-  }
+  var value=$B.$GetInt(obj)
+
   if (value === undefined) {
      // need to raise an error
      throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')
@@ -1448,9 +1446,16 @@ var $SliceDict = {__class__:$B.$type, __name__:'slice'}
 $SliceDict.__mro__ = [$SliceDict,$ObjectDict]
 
 $SliceDict.indices = function (self, length) {
-  if (length < 0) _b_.ValueError('length should not be negative')
+  var len=$B.$GetInt(length)
+  if (len < 0) _b_.ValueError('length should not be negative')
   if (self.step > 0) {
-     return _b_.tuple(self.start, self.start + length, self.step)
+     var _len = min(len, self.stop)
+     return _b_.tuple([self.start, _len, self.step])
+  } else if (self.step == _b_.None) {
+     var _len = min(len, self.stop)
+     var _start = self.start
+     if (_start == _b_.None) _start = 0
+     return _b_.tuple([_start, _len, 1])
   }
   _b_.NotImplementedError("Error! negative step indices not implemented yet")
 }
@@ -1465,12 +1470,25 @@ function slice(){
     }
 
     var start=0, stop=0, step=1
-    if(args.length==1){start=None;stop = args[0];step=None}
-    else if(args.length>=2){
-        start = args[0]
-        stop = args[1]
-    }
-    if(args.length>=3) step=args[2]
+    switch(args.length) {
+      case 1:
+        //if(args.length==1){
+        step=start=None
+        stop=$B.$GetInt(args[0])
+        break
+      case 2:
+        //else if(args.length>=2){
+        start = $B.$GetInt(args[0])
+        stop = $B.$GetInt(args[1])
+        break
+      case 3:
+        //}
+        //if(args.length>=3) 
+        start = $B.$GetInt(args[0])
+        stop = $B.$GetInt(args[1])
+        step= $B.$GetInt(args[2])
+    } //switch
+
     if(step==0) throw ValueError("slice step must not be zero")
     var res = {
         __class__ : $SliceDict,
