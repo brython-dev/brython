@@ -71,7 +71,7 @@ $ListDict.__delitem__ = function(self,arg){
         return
     } 
 
-    if (hasattr(arg, '__int__') || hasattr(arg, '__index__)) {
+    if (hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
        $ListDict.__delitem__(self, _b_.int(arg))
        return
     }
@@ -154,7 +154,7 @@ $ListDict.__getitem__ = function(self,arg){
         }
     }
 
-    if (hasattr(arg, '__int__') || hasattr(arg, '__index__)) {
+    if (hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
        return $ListDict.__getitem__(self, _b_.int(arg))
     }
 
@@ -241,7 +241,7 @@ $ListDict.__mul__ = function(self,other){
       return _b_.list(res)
     }
     
-    if (hasattr(other, '__int__') || hasattr(other, '__index__)) {
+    if (hasattr(other, '__int__') || hasattr(other, '__index__')) {
        return $ListDict.__mul__(self, _b_.int(other))
     }
 
@@ -304,7 +304,7 @@ $ListDict.__setitem__ = function(self,arg,value){
         throw _b_.TypeError("can only assign an iterable")
     }
 
-    if (hasattr(arg, '__int__') || hasattr(arg, '__index__)) {
+    if (hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
        $ListDict.__setitem__(self, _b_.int(arg), value)
        return
     }
