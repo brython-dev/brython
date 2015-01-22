@@ -33,6 +33,7 @@ $ListDict.__contains__ = function(self,item){
 }
 
 $ListDict.__delitem__ = function(self,arg){
+    arg=$B.$GetInt(arg)
     if(isinstance(arg,_b_.int)){
         var pos = arg
         if(arg<0) pos=self.length+pos
@@ -69,9 +70,6 @@ $ListDict.__delitem__ = function(self,arg){
         }
         return
     } 
-    if(hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
-        return $ListDict.__delitem__(self,_b_.int(arg))
-    }
 
     throw _b_.TypeError('list indices must be integer, not '+_b_.str(arg.__class__))
 }
@@ -101,6 +99,7 @@ $ListDict.__eq__ = function(self,other){
 }
 
 $ListDict.__getitem__ = function(self,arg){
+    arg=$B.$GetInt(arg)
     if(isinstance(arg,_b_.int)){
         var items=self.valueOf()
         var pos = arg
@@ -149,10 +148,7 @@ $ListDict.__getitem__ = function(self,arg){
             return res;
         }
     }
-    //allows objects that can be treated as integers
-    if(hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
-        return $ListDict.__getitem__(self,_b_.int(arg))
-    }
+
     throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
 }
 
@@ -170,9 +166,11 @@ $ListDict.__ge__ = function(self,other){
         if(getattr(self[i],'__eq__')(other[i])){i++} 
         else return(getattr(self[i],"__ge__")(other[i]))
     }
-    if(other.length==self.length) return true
+
+    //if(other.length==self.length) return true
     // other starts like self, but is longer
-    return false
+    //return false
+    return other.length == self.length
 }
 
 $ListDict.__gt__ = function(self,other){
@@ -187,7 +185,7 @@ $ListDict.__gt__ = function(self,other){
         else return(getattr(self[i],'__gt__')(other[i]))
     }
     // other starts like self, but is as long or longer
-    return false        
+    return false
 }
 
 $ListDict.__hash__ = None
@@ -226,11 +224,18 @@ $ListDict.__lt__ = function(self,other){
 $ListDict.__mro__ = [$ListDict,$ObjectDict]
 
 $ListDict.__mul__ = function(self,other){
-    if(isinstance(other,_b_.int)) return getattr(other,'__mul__')(self)
+    other=$B.$GetInt(other)
+    if(isinstance(other,_b_.int)) {  //this should be faster..
+      var res=[]
+      var $temp = self.slice(0,self.length)
+      for(var i=0;i<other;i++) res=res.concat($temp)
+      return _b_.list(res)
+    }
     
     throw _b_.TypeError("can't multiply sequence by non-int of type '"+
             $B.get_class(other).__name__+"'")
 }
+
 
 $ListDict.__ne__ = function(self,other){return !$ListDict.__eq__(self,other)}
 
@@ -256,6 +261,7 @@ $ListDict.__repr__ = function(self){
 }
 
 $ListDict.__setitem__ = function(self,arg,value){
+    arg=$B.$GetInt(arg)
     if(isinstance(arg,_b_.int)){
         var pos = arg
         if(arg<0) pos=self.length+pos
@@ -284,9 +290,6 @@ $ListDict.__setitem__ = function(self,arg,value){
 
         throw _b_.TypeError("can only assign an iterable")
     }
-    if(hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
-        return $ListDict.__setitem__(self,_b_.int(arg))
-    }
 
     throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
 }
@@ -301,9 +304,10 @@ $ListDict.append = function(self,other){self.push(other)}
 $ListDict.clear = function(self){ while(self.length) self.pop()}
 
 $ListDict.copy = function(self){
-    var res = []
-    for(var i=0, _len_i = self.length; i < _len_i;i++) res.push(self[i])
-    return res
+    return self.slice(0,self.length)
+    //var res = []
+    //for(var i=0, _len_i = self.length; i < _len_i;i++) res.push(self[i])
+    //return res
 }
 
 $ListDict.count = function(self,elt){
