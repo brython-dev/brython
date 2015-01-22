@@ -151,20 +151,27 @@ $IntDict.__mro__ = [$IntDict,$ObjectDict]
 
 $IntDict.__mul__ = function(self,other){
     var val = self.valueOf()
+
+    // this will be quick check, so lets do it early.
+    if(typeof other==="string") {
+        return other.repeat(val)
+        //var res = ''
+        //for(var i=0;i<val;i++) res+=other
+        //return res
+    }
+
+    other = $B.$GetInt(other)  // check for int, __int__, __index__
+
     if(isinstance(other,int)) return self*other
     if(isinstance(other,_b_.float)) return _b_.float(self*other.value)
     if(isinstance(other,_b_.bool)){
          var bool_value=0
-         if (other.valueOf()) bool_value=1
-         return self*bool_value
+         if (other.valueOf()) return self //bool_value=1
+         //return self*bool_value
+         return int(0)
     }
     if(isinstance(other,_b_.complex)){
         return _b_.complex(self.valueOf()*other.real, self.valueOf()*other.imag)
-    }
-    if(typeof other==="string") {
-        var res = ''
-        for(var i=0;i<val;i++) res+=other
-        return res
     }
     if(isinstance(other,[_b_.list,_b_.tuple])){
         var res = []
@@ -328,6 +335,7 @@ var $valid_digits=function(base) {
 
 var int = function(value, base){
     // most simple case
+    
     if(typeof value=='number' && base===undefined){return value}
 
     if(base!==undefined){
@@ -369,10 +377,11 @@ var int = function(value, base){
     if(value===true) return Number(1)
     if(value===false) return Number(0)
 
-    if(!isinstance(base, _b_.int)) {
-      if (hasattr(base, '__int__')) {base = Number(getattr(base,'__int__')())
-      }else if (hasattr(base, '__index__')) {base = Number(getattr(base,'__index__')())}
-    }
+    base=$B.$GetInt(base)
+    //if(!isinstance(base, _b_.int)) {
+    //  if (hasattr(base, '__int__')) {base = Number(getattr(base,'__int__')())
+    //  }else if (hasattr(base, '__index__')) {base = Number(getattr(base,'__index__')())}
+    //}
 
     if(isinstance(value, _b_.str)) value=value.valueOf()
 
