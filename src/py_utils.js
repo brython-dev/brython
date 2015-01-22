@@ -429,6 +429,7 @@ $B.$JS2Py = function(src){
 
 // get item
 $B.$getitem = function(obj, item){
+    item=$B.$GetInt(item)
     if(Array.isArray(obj) && typeof item=='number' && obj[item]!==undefined){
         return item >=0 ? obj[item] : obj[obj.length+item]
     }

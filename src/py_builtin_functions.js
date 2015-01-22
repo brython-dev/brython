@@ -1194,7 +1194,7 @@ $RangeDict.__contains__ = function(self,other){
 }
 
 $RangeDict.__getitem__ = function(self,rank){
-    var t0 = new Date().getTime()
+    rank=$B.$GetInt(rank)
     var res = self.start + rank*self.step
     if((self.step>0 && res >= self.stop) ||
         (self.step<0 && res < self.stop)){
