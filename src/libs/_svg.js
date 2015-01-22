@@ -70,9 +70,6 @@ function makeTagDict(tagName){
                     try{
                         arg = arg.toLowerCase().replace('_','-')
                         self.elt.setAttributeNS(null,arg,value)
-                        if(arg=="class"){ // for IE
-                            self.elt.setAttribute("className",value)
-                        }
                     }catch(err){
                         throw ValueError("can't set attribute "+arg)
                     }
