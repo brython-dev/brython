@@ -5,7 +5,7 @@ Este módulo permite acceder a las etiquetas HTML. El nombre de la etiqueta se e
 
 Las etiquetas disponibles son :
 
-- Etiquetas HTML4 : `A, ABBR, ACRONYM, ADDRESS, APPLET, AREA, B, BASE, 
+- Etiquetas HTML4 : <code>A, ABBR, ACRONYM, ADDRESS, APPLET, AREA, B, BASE, 
             BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON, 
             CAPTION, CENTER, CITE, CODE, COL, COLGROUP, DD, 
             DEL, DFN, DIR, DIV, DL, DT, EM, FIELDSET, FONT, 
@@ -16,17 +16,17 @@ Las etiquetas disponibles son :
             OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT, SELECT, 
             SMALL, SPAN, STRIKE, STRONG, STYLE, SUB, SUP, 
             TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD, 
-            TITLE, TR, TT, U, UL, VAR`
+            TITLE, TR, TT, U, UL, VAR</code>
 
-- Etiquetas HTML5 : `ARTICLE, ASIDE, AUDIO, BDI, CANVAS, 
+- Etiquetas HTML5 : <code>ARTICLE, ASIDE, AUDIO, BDI, CANVAS, 
                       COMMAND, DATA, DATALIST, EMBED, FIGCAPTION, 
                       FIGURE, FOOTER, HEADER, KEYGEN, MAIN, MARK, 
                       MATH, METER, NAV, OUTPUT, PROGRESS, RB, 
                       RP, RT, RTC, RUBY, SECTION, SOURCE, 
                       SUMMARY, TEMPLATE, TIME, TRACK, VIDEO, 
-                      WBR`
+                      WBR</code>
                       
-- Etiquetas HTML5.1 : `DETAILS, DIALOG, MENUITEM, PICTURE, SUMMARY`                      
+- Etiquetas HTML5.1 : <code>DETAILS, DIALOG, MENUITEM, PICTURE, SUMMARY</code>                      
 
 > En el siguiente [enlace](https://w3c.github.io/elements-of-html/) puedes ver un listado de las etiquetas HTML con sus referencias (Borrador).
 
