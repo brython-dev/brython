@@ -32,8 +32,7 @@ panel <= circulo
 </td>
 
 <td>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-  width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
   <g id="panel">
   </g>
 </svg>
@@ -67,8 +66,7 @@ panel <= rect
 ```
 </td>
 <td>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-  width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
   <g id="panel1">
   </g>
 </svg>
@@ -93,8 +91,7 @@ panel <= ellipse
 ```
 </td>
 <td>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-  width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
   <g id="panel2">
   </g>
 </svg>
@@ -121,8 +118,7 @@ panel <= line
 ```
 </td>
 <td>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-  width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
   <g id="panel3">
   </g>
 </svg>
@@ -150,8 +146,7 @@ panel <= star
 ```
 </td>
 <td>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-  width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
   <g id="panel4">
   </g>
 </svg>
@@ -188,10 +183,7 @@ loop = timer.set_interval(move_rect, 30)
 ```
 </td>
 <td>
-<svg id="panel5" xmlns="http://www.w3.org/2000/svg" 
-  viewPort="0 0 120 120"
-  width="120" height="200" 
-  style="border-style:solid;border-width:1;border-color:#000;">
+<svg id="panel5" xmlns="http://www.w3.org/2000/svg" viewPort="0 0 120 120" width="120" height="200" style="border-style:solid;border-width:1;border-color:#000;">
 </svg>
 </td>
 
