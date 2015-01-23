@@ -66,7 +66,7 @@ Para añadir un nodo hijo se podría usar el operador `<=`, el cual fue elegido 
 
 __P__ : ¿Qué navegadores son compatibles con Brython?
 
-__R__ : Below is a list of browsers we support:
+__R__ : Debajo se muestra una lista de los navegadores soportados:
 
 // todo: get images from http://www.paulirish.com/2010/high-res-browser-icons/
 
