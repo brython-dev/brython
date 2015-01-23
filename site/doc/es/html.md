@@ -30,7 +30,7 @@ Las etiquetas disponibles son :
 
 > En el siguiente [enlace](https://w3c.github.io/elements-of-html/) puedes ver un listado de las etiquetas HTML con sus referencias (Borrador).
 
-[Nota: En los siguientes ejemplos a continuación se asume que el módulo **browser.html** ha sido importado de la siguiente forma: `from brower import html`]
+[Nota: En los siguientes ejemplos a continuación se asume que el módulo **browser.html** ha sido importado de la siguiente forma: `from browser import html`]
 
 La sintaxis para crear un objeto (eg un hiperenlace) es :
 
