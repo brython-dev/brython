@@ -9,7 +9,7 @@ Este módulo usa el almacenamiento local definido en HTML5. La especificación s
 - Las claves y valores son cadenas por lo que si introduces, por ejemplo, una lista cuando intentes acceder a esos valores obtendrás una cadena en lugar de la lista original. ¡¡Recuerda esto!!
 - Las claves y valores se almacenan de forma persistente en un protocolo, dominio y puerto específicos. Las bases de datos `local_storage` trabajan en el ámbito de un origen HTML5, basicamente la tupla (esquema, host, puerto, i.e. `scheme://host:port`). Esto significa que la base de datos será compartida en todas las páginas alojadas en el mismo dominio, incluso de forma concurrente mediante múltiples pestañas del navegador. Sin embargo, una página que se conecte por `http://` no podrá ver una base de datos que fue creada mediante una sesión `https://`.
 
-En Brython, el **localStorage de HTML5** se encuentra implementado en el módulo **`browser.local_storage`**. El módulo define los siguientes objetos:
+En Brython, el **local storage de HTML5** se encuentra implementado en el paquete **`browser`** en los siguientes módulos:
 
 - **local\_storage**
 
@@ -19,10 +19,10 @@ En Brython, el **localStorage de HTML5** se encuentra implementado en el módulo
 >restringidos a cadenas.
 
 - **session\_storage**
-> Esta módulo también permite acceder al objeto `storage`, que permite acceder a
-> _session Storage_ que es similar al anterior. Usa **session\_storage** cuando no deseas que los datos se compartan entre diferentes sesiones del navegador o entre pestañas del mismo. Un caso de uso típico es un token para hacer log-in.
-- ObjectStorage
-  - Esta clase permite acceder tanto a `LocalStorage` como a `SessionStorage` con objetos en lugar de solo como cadenas. Esto se puede hacer amediante serialización de claves/valores. Se limita a la funcionalidad pickle de Brython Brython, la cual solo soporta objetos JSON serializables, como una `list` o un `dict`. Además, hay que tener en cuenta que los objetos se convierten en inmutables una vez han sido almacenados, por tanto  `ObjecStorage()['foo'].update({"bar": "zoo"})` en realidad no estaría haciendo nada.
+> Este módulo también permite acceder al objeto `storage`, que permite acceder a
+> _session storage_ que es similar al anterior. Usa **session\_storage** cuando 
+> no deseas que los datos se compartan entre diferentes sesiones del navegador 
+> o entre pestañas del mismo. Un caso de uso típico es un token para hacer log-in.
 
 Un ejemplo simple sería como sigue:
 
