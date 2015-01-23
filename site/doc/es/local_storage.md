@@ -12,11 +12,10 @@ Este módulo usa el almacenamiento local definido en HTML5. La especificación s
 En Brython, el **local storage de HTML5** se encuentra implementado en el paquete **`browser`** en los siguientes módulos:
 
 - **local\_storage**
-
 > Este módulo permite acceder a un único objeto `storage`, el cual da acceso a 
 > _local storage_. Se puede interactuar con el mismo como si fuera un diccionario 
 > Python, sin embargo, hay que tener en cuenta que las claves y los valores están 
->restringidos a cadenas.
+> restringidos a cadenas.
 
 - **session\_storage**
 > Este módulo también permite acceder al objeto `storage`, que permite acceder a
