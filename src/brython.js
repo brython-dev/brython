@@ -32,10 +32,19 @@ $B.date=function(){if(arguments.length===0)return $B.JSObject(new Date())
 if(arguments.length===1)return $B.JSObject(new Date(arguments[0]))
 if(arguments.length===7)return $B.JSObject(new Date(arguments[0],arguments[1]-1,arguments[2],arguments[3],arguments[4],arguments[5],arguments[6]))
 }
-$B.has_local_storage=typeof(Storage)!=="undefined"
-if($B.has_local_storage){
-$B.local_storage=localStorage
-$B.session_storage=sessionStorage
+var has_storage=typeof(Storage)!=="undefined"
+if(has_storage){$B.has_local_storage=false
+try{
+if(localStorage){$B.local_storage=localStorage
+$B.has_local_storage=true
+}}catch(err){}
+$B.has_session_storage=false
+try{
+if(sessionStorage){$B.session_storage=sessionStorage
+$B.has_session_storage=true
+}}catch(err){}}else{
+$B.has_local_storage=false
+$B.has_session_storage=false
 }
 $B._indexedDB=window.indexedDB ||window.webkitIndexedDB ||window.mozIndexedDB ||window.msIndexedDB
 $B.IDBTransaction=window.IDBTransaction ||window.webkitIDBTransaction
@@ -50,8 +59,8 @@ catch(err){return false}})
 __BRYTHON__.implementation=[3,0,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.0.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-01-21 22:12:45.132000"
-__BRYTHON__.builtin_module_names=["posix","__random","_ajax","_browser","_html","_io","_jsre","_long_int","_multiprocessing","_os","_posixsubprocess","_svg","_sys","_timer","builtins","dis","hashlib","javascript","json","math","modulefinder","time","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_patterns","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2015-01-24 11:02:05.658000"
+__BRYTHON__.builtin_module_names=["posix","__random","_ajax","_browser","_html","_io","_jsre","_multiprocessing","_os","_posixsubprocess","_svg","_sys","_timer","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","time","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_patterns","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
 
@@ -5060,7 +5069,8 @@ return res
 }}
 return $B.JSObject(src)
 }
-$B.$getitem=function(obj,item){if(Array.isArray(obj)&& typeof item=='number' && obj[item]!==undefined){return item >=0 ? obj[item]: obj[obj.length+item]
+$B.$getitem=function(obj,item){item=$B.$GetInt(item)
+if(Array.isArray(obj)&& typeof item=='number' && obj[item]!==undefined){return item >=0 ? obj[item]: obj[obj.length+item]
 }
 return _b_.getattr(obj,'__getitem__')(item)
 }
@@ -5307,6 +5317,12 @@ $B.UUID=function(){return $B.$py_UUID++}
 $B.InjectBuiltins=function(){var _str=["var _b_=$B.builtins"]
 for(var $b in $B.builtins)_str.push('var ' + $b +'=_b_["'+$b+'"]')
 return _str.join(';')
+}
+$B.$GetInt=function(value){
+if(_b_.isinstance(value,_b_.int))return value
+try{var v=_b_.getattr(value,'__int__')();return v}catch(e){}
+try{var v=_b_.getattr(value,'__index__')();return v}catch(e){}
+return value
 }})(__BRYTHON__)
 if(!Array.indexOf){Array.prototype.indexOf=function(obj){for(var i=0,_len_i=this.length;i < _len_i;i++)if(this[i]==obj)return i
 return -1
@@ -5689,10 +5705,7 @@ ascii.__code__={}
 ascii.__code__.co_argcount=1
 ascii.__code__.co_consts=[]
 ascii.__code__.co_varnames=['obj']
-function $builtin_base_convert_helper(obj,base){var value
-if(isinstance(obj,_b_.int)){value=obj
-}else if(obj.__index__ !==undefined){value=obj.__index__()
-}
+function $builtin_base_convert_helper(obj,base){var value=$B.$GetInt(obj)
 if(value===undefined){
 throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')
 return
@@ -6378,7 +6391,7 @@ while(1){try{var y=$RangeDict.__next__(x)
 if(getattr(y,'__eq__')(other)){return true}}catch(err){return false}}
 return false
 }
-$RangeDict.__getitem__=function(self,rank){var t0=new Date().getTime()
+$RangeDict.__getitem__=function(self,rank){rank=$B.$GetInt(rank)
 var res=self.start + rank*self.step
 if((self.step>0 && res >=self.stop)||
 (self.step<0 && res < self.stop)){throw _b_.IndexError('range object index out of range')
@@ -6539,8 +6552,14 @@ setattr.__code__.co_consts=[]
 setattr.__code__.co_varnames=['object','name','value']
 var $SliceDict={__class__:$B.$type,__name__:'slice'}
 $SliceDict.__mro__=[$SliceDict,$ObjectDict]
-$SliceDict.indices=function(self,length){if(length < 0)_b_.ValueError('length should not be negative')
-if(self.step > 0){return _b_.tuple(self.start,self.start + length,self.step)
+$SliceDict.indices=function(self,length){var len=$B.$GetInt(length)
+if(len < 0)_b_.ValueError('length should not be negative')
+if(self.step > 0){var _len=min(len,self.stop)
+return _b_.tuple([self.start,_len,self.step])
+}else if(self.step==_b_.None){var _len=min(len,self.stop)
+var _start=self.start
+if(_start==_b_.None)_start=0
+return _b_.tuple([_start,_len,1])
 }
 _b_.NotImplementedError("Error! negative step indices not implemented yet")
 }
@@ -6551,11 +6570,19 @@ if(args.length>3){throw _b_.TypeError(
 }else if(args.length==0){throw _b_.TypeError('slice expected at least 1 arguments, got 0')
 }
 var start=0,stop=0,step=1
-if(args.length==1){start=None;stop=args[0];step=None}
-else if(args.length>=2){start=args[0]
-stop=args[1]
+switch(args.length){case 1:
+step=start=None
+stop=$B.$GetInt(args[0])
+break
+case 2:
+start=$B.$GetInt(args[0])
+stop=$B.$GetInt(args[1])
+break
+case 3:
+start=$B.$GetInt(args[0])
+stop=$B.$GetInt(args[1])
+step=$B.$GetInt(args[2])
 }
-if(args.length>=3)step=args[2]
 if(step==0)throw ValueError("slice step must not be zero")
 var res={__class__ : $SliceDict,start:start,stop:stop,step:step
 }
@@ -7555,7 +7582,7 @@ $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor
 })(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var js=['__random','_ajax','_browser','_html','_io','_jsre','_long_int','_multiprocessing','_os','_posixsubprocess','_svg','_sys','_timer','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','time','tripledes']
+var js=['__random','_ajax','_browser','_html','_io','_jsre','_multiprocessing','_os','_posixsubprocess','_svg','_sys','_timer','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','time','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
 var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_patterns','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','build_patterns','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.highlight','site-packages.pygame.SDL','site-packages.pygame.base','site-packages.pygame.color','site-packages.pygame.colordict','site-packages.pygame.compat','site-packages.pygame.constants','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.locals','site-packages.pygame.mixer','site-packages.pygame.mouse','site-packages.pygame.pkgdata','site-packages.pygame.rect','site-packages.pygame.sprite','site-packages.pygame.surface','site-packages.pygame.time','site-packages.pygame.transform','site-packages.pygame.version','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','uuid','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
@@ -8238,17 +8265,16 @@ $err('%',other)
 }
 $IntDict.__mro__=[$IntDict,$ObjectDict]
 $IntDict.__mul__=function(self,other){var val=self.valueOf()
+if(typeof other==="string"){return other.repeat(val)
+}
+other=$B.$GetInt(other)
 if(isinstance(other,int))return self*other
 if(isinstance(other,_b_.float))return _b_.float(self*other.value)
 if(isinstance(other,_b_.bool)){var bool_value=0
-if(other.valueOf())bool_value=1
-return self*bool_value
+if(other.valueOf())return self 
+return int(0)
 }
 if(isinstance(other,_b_.complex)){return _b_.complex(self.valueOf()*other.real,self.valueOf()*other.imag)
-}
-if(typeof other==="string"){var res=''
-for(var i=0;i<val;i++)res+=other
-return res
 }
 if(isinstance(other,[_b_.list,_b_.tuple])){var res=[]
 var $temp=other.slice(0,other.length)
@@ -8375,8 +8401,7 @@ throw _b_.OverflowError("can't convert to base "+base)
 }}
 if(value===true)return Number(1)
 if(value===false)return Number(0)
-if(!isinstance(base,_b_.int)){if(hasattr(base,'__int__')){base=Number(getattr(base,'__int__')())
-}else if(hasattr(base,'__index__')){base=Number(getattr(base,'__index__')())}}
+base=$B.$GetInt(base)
 if(isinstance(value,_b_.str))value=value.valueOf()
 if(typeof value=="string"){value=value.trim()
 if(value.length==2 && base==0 &&(value=='0b' ||value=='0o' ||value=='0x')){throw _b_.ValueError('invalid value')
@@ -8931,7 +8956,8 @@ return res
 $ListDict.__contains__=function(self,item){for(var i=0,_len_i=self.length;i < _len_i;i++){try{if(getattr(self[i],'__eq__')(item)){return true}}catch(err){$B.$pop_exc();void(0)}}
 return false
 }
-$ListDict.__delitem__=function(self,arg){if(isinstance(arg,_b_.int)){var pos=arg
+$ListDict.__delitem__=function(self,arg){
+if(isinstance(arg,_b_.int)){var pos=arg
 if(arg<0)pos=self.length+pos
 if(pos>=0 && pos<self.length){self.splice(pos,1)
 return
@@ -8952,7 +8978,8 @@ for(var i=res.length-1;i>=0;i--){self.splice(res[i],1)
 }
 return
 }
-if(hasattr(arg,'__int__')||hasattr(arg,'__index__')){return $ListDict.__delitem__(self,_b_.int(arg))
+if(hasattr(arg,'__int__')||hasattr(arg,'__index__')){$ListDict.__delitem__(self,_b_.int(arg))
+return
 }
 throw _b_.TypeError('list indices must be integer, not '+_b_.str(arg.__class__))
 }
@@ -8969,7 +8996,8 @@ return true
 }
 return false
 }
-$ListDict.__getitem__=function(self,arg){if(isinstance(arg,_b_.int)){var items=self.valueOf()
+$ListDict.__getitem__=function(self,arg){
+if(isinstance(arg,_b_.int)){var items=self.valueOf()
 var pos=arg
 if(arg<0)pos=items.length+pos
 if(pos>=0 && pos<items.length)return items[pos]
@@ -9019,8 +9047,7 @@ while(i<self.length){if(i>=other.length)return true
 if(getattr(self[i],'__eq__')(other[i])){i++}
 else return(getattr(self[i],"__ge__")(other[i]))
 }
-if(other.length==self.length)return true
-return false
+return other.length==self.length
 }
 $ListDict.__gt__=function(self,other){if(!isinstance(other,[list,_b_.tuple])){throw _b_.TypeError("unorderable types: list() > "+
 $B.get_class(other).__name__+'()')
@@ -9030,7 +9057,7 @@ while(i<self.length){if(i>=other.length)return true
 if(getattr(self[i],'__eq__')(other[i])){i++}
 else return(getattr(self[i],'__gt__')(other[i]))
 }
-return false 
+return false
 }
 $ListDict.__hash__=None
 $ListDict.__init__=function(self,arg){var len_func=getattr(self,'__len__'),pop_func=getattr(self,'pop')
@@ -9050,7 +9077,15 @@ $ListDict.__len__=function(self){return self.length}
 $ListDict.__lt__=function(self,other){return !$ListDict.__ge__(self,other)
 }
 $ListDict.__mro__=[$ListDict,$ObjectDict]
-$ListDict.__mul__=function(self,other){if(isinstance(other,_b_.int))return getattr(other,'__mul__')(self)
+$ListDict.__mul__=function(self,other){
+if(isinstance(other,_b_.int)){
+var res=[]
+var $temp=self.slice(0,self.length)
+for(var i=0;i<other;i++)res=res.concat($temp)
+return _b_.list(res)
+}
+if(hasattr(other,'__int__')||hasattr(other,'__index__')){return $ListDict.__mul__(self,_b_.int(other))
+}
 throw _b_.TypeError("can't multiply sequence by non-int of type '"+
 $B.get_class(other).__name__+"'")
 }
@@ -9069,7 +9104,8 @@ return res+')'
 }
 return res+']'
 }
-$ListDict.__setitem__=function(self,arg,value){if(isinstance(arg,_b_.int)){var pos=arg
+$ListDict.__setitem__=function(self,arg,value){
+if(isinstance(arg,_b_.int)){var pos=arg
 if(arg<0)pos=self.length+pos
 if(pos>=0 && pos<self.length){self[pos]=value}
 else{throw _b_.IndexError('list index out of range')}
@@ -9090,7 +9126,8 @@ return
 }
 throw _b_.TypeError("can only assign an iterable")
 }
-if(hasattr(arg,'__int__')||hasattr(arg,'__index__')){return $ListDict.__setitem__(self,_b_.int(arg))
+if(hasattr(arg,'__int__')||hasattr(arg,'__index__')){$ListDict.__setitem__(self,_b_.int(arg),value)
+return
 }
 throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
 }
@@ -9098,9 +9135,7 @@ $ListDict.__str__=$ListDict.__repr__
 $B.make_rmethods($ListDict)
 $ListDict.append=function(self,other){self.push(other)}
 $ListDict.clear=function(self){while(self.length)self.pop()}
-$ListDict.copy=function(self){var res=[]
-for(var i=0,_len_i=self.length;i < _len_i;i++)res.push(self[i])
-return res
+$ListDict.copy=function(self){return self.slice(0,self.length)
 }
 $ListDict.count=function(self,elt){var res=0
 for(var i=0,_len_i=self.length;i < _len_i;i++){if(getattr(self[i],'__eq__')(elt)){res++}}
