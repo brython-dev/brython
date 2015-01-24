@@ -59,7 +59,7 @@ catch(err){return false}})
 __BRYTHON__.implementation=[3,0,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.0.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-01-24 11:02:05.658000"
+__BRYTHON__.compiled_date="2015-01-24 17:22:34.733000"
 __BRYTHON__.builtin_module_names=["posix","__random","_ajax","_browser","_html","_io","_jsre","_multiprocessing","_os","_posixsubprocess","_svg","_sys","_timer","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","time","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_patterns","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4642,7 +4642,8 @@ seqs[i].shift()
 }}}
 class_dict.__mro__=[class_dict].concat(mro)
 var creator=$instance_creator(class_dict)
-var factory=function(){return creator.apply(null,arguments)}
+var factory=function(){return creator.apply(null,arguments)
+}
 factory.__class__=$B.$factory
 factory.$dict=class_dict
 factory.$is_func=true 
@@ -4677,9 +4678,7 @@ case '__doc__':
 return klass.__doc__
 case '__setattr__':
 if(klass['__setattr__']!==undefined)return klass['__setattr__']
-return function(key,value){if(typeof value=='function'){klass[key]=value 
-}else{klass[key]=value
-}}
+return function(key,value){klass[key]=value}
 case '__delattr__':
 if(klass['__delattr__']!==undefined)return klass['__delattr__']
 return function(key){delete klass[key]}
@@ -4741,6 +4740,7 @@ method.__class__={__class__:$B.$type,__name__:'method',__mro__:[$B.builtins.obje
 }
 method.__eq__=function(other){return other.__func__===__func__
 }
+for(var attr in res){method[attr]=res[attr]}
 method.__func__=__func__
 method.__repr__=__repr__
 method.__self__=__self__
@@ -8926,10 +8926,16 @@ var key=res[0]
 delete self.$obj[key]
 return res
 }
-$ObjDictDict.update=function(self,other){$DictDict.update(self,other)
-for(var key in other)self.$obj[key]=other[key]
+$ObjDictDict.update=function(self){$DictDict.update.apply(null,arguments)
+var it=$DictDict.items(self)
+while(true){try{var item=next(it)
+self.$obj[item[0]]=item[1]
+}catch(err){if($B.is_exc(err,[_b_.StopIteration])){$B.$pop_exc();return
 }
+throw err
+}}}
 function obj_dict(obj){
+if(obj.__class__===$B.$factory){return obj.$dict.__dict__}
 var res={__class__:$ObjDictDict,$obj:obj}
 $DictDict.clear(res)
 for(var attr in obj){if(attr.charAt(0)!='$'){$DictDict.__setitem__(res,attr,obj[attr])
