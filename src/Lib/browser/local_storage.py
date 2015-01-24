@@ -1,5 +1,5 @@
 # local storage in browser
-
+import sys
 from javascript import JSObject
 
 class __UnProvided():
@@ -9,6 +9,8 @@ class LocalStorage():
     storage_type = "local_storage"
 
     def __init__(self):
+        if not sys.has_local_storage:
+            raise EnvironmentError("LocalStorage not available")
         self.store = JSObject(__BRYTHON__.local_storage)
 
     def __delitem__(self, key):
@@ -83,4 +85,5 @@ class LocalStorage():
     def __len__(self):
         return self.store.length
 
-storage = LocalStorage()
+if sys.has_local_storage:
+    storage = LocalStorage()
