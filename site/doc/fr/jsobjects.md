@@ -84,7 +84,7 @@ Les autres objets Javascript sont convertis en une instance de la classe
 `JSObject` définie dans le module **javascript**. On peut les convertir
 en dictionnaire Python par :
 
->    py_obj = dict(window.js_obj)
+>    py_obj = window.js_obj.to_dict()
 
 Si l'objet est une fonction, les arguments passés à la fonction Python sont 
 convertis dans l'appel de la fonction Javascript en utilisant le tableau 
