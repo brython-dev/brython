@@ -25,6 +25,15 @@ assert y.__class__ == float
 assert isinstance(3.14,float)
 assert str(y)=="3.14"
 
+x = -3
+assert x.__abs__() == 3
+assert -x.__abs__() == -3
+
+assert x.__ceil__() == x
+assert x.__ceil__() == -3
+
+assert x.__divmod__(2) == (-2, 1)
+
 # complex numbers
 x = 8j
 y = 8.3j
