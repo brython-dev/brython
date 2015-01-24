@@ -77,11 +77,26 @@ $B.date = function(){
         arguments[4],arguments[5],arguments[6]))
 }
 
-$B.has_local_storage = typeof(Storage)!=="undefined"
-if($B.has_local_storage){
+var has_storage = typeof(Storage)!=="undefined"
+if(has_storage){
+    $B.has_local_storage = false
     // add attributes local_storage and session_storage
-    $B.local_storage = localStorage
-    $B.session_storage = sessionStorage
+    try {
+        if (localStorage) {
+            $B.local_storage = localStorage
+            $B.has_local_storage = true
+        }
+    } catch (err) { }
+    $B.has_session_storage = false
+    try {
+        if (sessionStorage) {
+            $B.session_storage = sessionStorage
+            $B.has_session_storage = true
+        }
+    } catch (err) { }
+} else {
+    $B.has_local_storage = false
+    $B.has_session_storage = false
 }
 
 $B._indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB
