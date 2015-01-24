@@ -10,8 +10,10 @@ function $err(op,other){
     throw _b_.TypeError(msg)
 }
 
+// dictionary for built-in class 'int'
 var $IntDict = {__class__:$B.$type,
     __name__:'int',
+    __dir__:$ObjectDict.__dir__,
     toString:function(){return '$IntDict'},
     $native:true
 }
@@ -70,10 +72,16 @@ $IntDict.to_bytes = function(length, byteorder, star) {
 
 //$IntDict.__and__ = function(self,other){return self & other} // bitwise AND
 
+$IntDict.__abs__ = function(self){return abs(self)}
+
 $IntDict.__bool__ = function(self){return new Boolean(self.valueOf())}
+
+$IntDict.__ceil__ = function(self){return Math.ceil(self)}
 
 //is this a duplicate?
 $IntDict.__class__ = $B.$type
+
+$IntDict.__divmod__ = function(self, other){return divmod(self, other)}
 
 $IntDict.__eq__ = function(self,other){
     // compare object "self" to class "int"
@@ -91,6 +99,8 @@ $IntDict.__format__ = function(self,format_spec){
     if (format_spec == '') format_spec='d'
     return _b_.str.$dict.__mod__('%'+format_spec, self)
 }
+
+//$IntDict.__float__ = function(self){return float(self)}
 
 $IntDict.__floordiv__ = function(self,other){
     if(isinstance(other,int)){
