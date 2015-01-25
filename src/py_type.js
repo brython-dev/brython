@@ -42,8 +42,8 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     
     // create the factory function
     var factory = function(){
-                    return $instance_creator($B.class_dict).apply(null,arguments)
-                }
+        return $instance_creator($B.class_dict).apply(null,arguments)
+    }
     
     var new_func = _b_.getattr(metaclass,'__new__')
     var factory = _b_.getattr(metaclass,'__new__').apply(null,[factory,class_name,bases,cl_dict])
@@ -55,11 +55,11 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
        }
     }
     factory.__class__ = {
-            __class__:$B.$type,
-            $factory:metaclass,
-            is_class:true,
-            __code__: {'__class__': $B.CodeDict},
-            __mro__:metaclass.$dict.__mro__
+        __class__:$B.$type,
+        $factory:metaclass,
+        is_class:true,
+        __code__: {'__class__': $B.CodeDict},
+        __mro__:metaclass.$dict.__mro__
     }
     factory.$dict.__class__ = metaclass.$dict
     factory.$is_func = true
@@ -148,7 +148,9 @@ _b_.type = function(name,bases,cl_dict){
     
     // create the factory function
     var creator = $instance_creator(class_dict)
-    var factory = function(){return creator.apply(null,arguments)}
+    var factory = function(){
+        return creator.apply(null,arguments)
+    }
 
     factory.__class__ = $B.$factory
     factory.$dict = class_dict
@@ -193,6 +195,7 @@ _b_.object.__class__ = $B.$factory
 $B.$type.__getattribute__=function(klass,attr){
     // klass is a class dictionary : in getattr(obj,attr), if obj is a factory,
     // we call $type.__getattribute__(obj.$dict,attr)
+
     switch(attr) {
       case '__call__':
         return $instance_creator(klass)
@@ -210,13 +213,7 @@ $B.$type.__getattribute__=function(klass,attr){
         return klass.__doc__
       case '__setattr__':
         if(klass['__setattr__']!==undefined) return klass['__setattr__']
-        return function(key,value){
-            if(typeof value=='function'){
-                klass[key]=value //function(){return value.apply(null,arguments)}
-            }else{
-                klass[key]=value
-            }
-        }
+        return function(key,value){klass[key]=value}
       case '__delattr__':
         if(klass['__delattr__']!==undefined) return klass['__delattr__']
         return function(key){delete klass[key]}
@@ -228,6 +225,7 @@ $B.$type.__getattribute__=function(klass,attr){
     }//switch
 
     var res = klass[attr],is_class=true
+
     if(res===undefined){
         // search in classes hierarchy, following method resolution order
         var mro = klass.__mro__
@@ -258,7 +256,7 @@ $B.$type.__getattribute__=function(klass,attr){
 
         // If the attribute is a property, return it
         if(res.__class__===$B.$PropertyDict) return res
-
+        
         var get_func = res.__get__
         if(get_func===undefined && (typeof res=='function')){
             get_func = function(x){return x}
@@ -323,6 +321,7 @@ $B.$type.__getattribute__=function(klass,attr){
                 method.__eq__ = function(other){
                     return other.__func__ === __func__
                 }
+                for(var attr in res){method[attr]=res[attr]}
                 method.__func__ = __func__
                 method.__repr__ = __repr__
                 method.__self__ = __self__
@@ -334,6 +333,7 @@ $B.$type.__getattribute__=function(klass,attr){
         }
     }
 }
+
 
 function $instance_creator(klass){
     // return the function to initalise a class instance

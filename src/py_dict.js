@@ -583,7 +583,6 @@ $B.$dict_get_copy = $DictDict.copy  // return a shallow copy
 
 // Class used for attribute __dict__ of objects
 
-
 $ObjDictDict = {__class__:$B.$type,__name__:'obj_dict'}
 $ObjDictDict.__mro__ = [$ObjDictDict, $DictDict, $ObjectDict]
 
@@ -615,13 +614,26 @@ $ObjDictDict.popitem = function(self){
     return res
 }
 
-$ObjDictDict.update = function(self, other){
-    $DictDict.update(self, other)
-    for(var key in other) self.$obj[key]=other[key]
+$ObjDictDict.update = function(self){
+    $DictDict.update.apply(null, arguments)
+    // Update attributes of underlying object by iterating on self.items()
+    var it = $DictDict.items(self)
+    while(true){
+        try{
+            var item = next(it)
+            self.$obj[item[0]] = item[1]
+        }catch(err){
+            if($B.is_exc(err,[_b_.StopIteration])){
+                $B.$pop_exc();return
+            }
+            throw err
+        }
+    }
 }
 
 function obj_dict(obj){
-    // not sure what res should be?
+    // Function called to get attribute "__dict__" of an object
+    if(obj.__class__===$B.$factory){return obj.$dict.__dict__}
     var res = {__class__:$ObjDictDict,$obj:obj}
     $DictDict.clear(res)
     for(var attr in obj){

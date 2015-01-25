@@ -113,4 +113,21 @@ class B(A):
 b = B()
 assert b.aaa(0)==0
 
+# issue 108
+def funcattrs(**kwds):
+    def decorate(func):
+        func.__dict__.update(kwds)
+        return func
+    return decorate
+
+class C(object):
+       @funcattrs(abc=1, xyz="haha")
+       @funcattrs(booh=42)
+       def foo(self): return 42
+
+assert C().foo() == 42
+assert C.foo.abc == 1
+assert C.foo.xyz == "haha"
+assert C.foo.booh == 42
+
 print('passed all tests')

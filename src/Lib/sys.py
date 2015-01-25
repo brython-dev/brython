@@ -3,6 +3,7 @@ from _sys import *
 from javascript import JSObject
 
 has_local_storage=__BRYTHON__.has_local_storage
+has_session_storage = __BRYTHON__.has_session_storage
 has_json=__BRYTHON__.has_json
 
 argv = ['__main__']
