@@ -59,7 +59,7 @@ catch(err){return false}})
 __BRYTHON__.implementation=[3,0,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.0.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-01-24 17:40:40.882000"
+__BRYTHON__.compiled_date="2015-01-28 15:35:23.626000"
 __BRYTHON__.builtin_module_names=["posix","__random","_ajax","_browser","_html","_io","_jsre","_multiprocessing","_os","_posixsubprocess","_svg","_sys","_timer","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","time","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_patterns","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -3902,7 +3902,7 @@ return new $AbstractExprCtx(C,true)
 return $transition(C.parent,token)
 }
 }
-$B.forbidden=['super','case','catch','constructor','Date','delete','default','Error','history','function','location','Math','new','null','Number','RegExp','this','throw','var']
+$B.forbidden=['super','case','catch','constructor','Date','delete','default','Error','history','function','location','Math','new','null','Number','RegExp','this','throw','var','toString']
 var s_escaped='abfnrtvxuU"'+"'"+'\\',is_escaped={}
 for(var i=0;i<s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
 function $tokenize(src,module,locals_id,parent_block_id,line_info){var delimiters=[["#","\n","comment"],['"""','"""',"triple_string"],["'","'","string"],['"','"',"string"],["r'","'","raw_string"],['r"','"',"raw_string"]]
@@ -5223,10 +5223,10 @@ for(var i=0,_len_i=items.length;i < _len_i;i++){res[$B.pyobject2jsobject(items[i
 }
 return res
 }
-if(hasattr(obj,'__iter__')){
+if(_b_.hasattr(obj,'__iter__')){
 var _a=[]
 while(1){try{
-_a.push($B.pyobject2jsobject(next(obj)))
+_a.push($B.pyobject2jsobject(_b_.next(obj)))
 }catch(err){if(err.__name__ !=="StopIteration")throw err
 break
 }}
@@ -5723,7 +5723,10 @@ console.log('invalid base:' + base)
 if(value >=0)return prefix + value.toString(base)
 return '-' + prefix +(-value).toString(base)
 }
-function bin(obj){return $builtin_base_convert_helper(obj,2)}
+function bin(obj){if(isinstance(obj,_b_.int)){return $builtin_base_convert_helper(obj,2)
+}
+return getattr(obj,'__index__')()
+}
 bin.__doc__="bin(number) -> string\n\nReturn the binary representation of an integer.\n\n   >>> bin(2796202)\n   '0b1010101010101010101010'\n"
 bin.__code__={}
 bin.__code__.co_argcount=1
@@ -6093,6 +6096,7 @@ hex.__code__.co_consts=[]
 hex.__code__.co_varnames=['object']
 function id(obj){if(obj.__hashvalue__ !==undefined)return obj.__hashvalue__
 if(typeof obj=='string')return getattr(_b_.str(obj),'__hash__')()
+if(hasattr(obj,'__hash__'))return getattr(obj,'__hash__')()
 if(obj.__hash__===undefined ||isinstance(obj,[_b_.set,_b_.list,_b_.dict])){return obj.__hashvalue__=$B.$py_next_hash++
 }
 if(obj.__hash__ !==undefined)return obj.__hash__()
@@ -6828,6 +6832,8 @@ $BoolDict.__setattr__=function(self,attr){return no_set_attr($BoolDict,attr)
 }
 $BoolDict.__sub__=function(self,other){if(self.valueOf())return 1-other
 return -other
+}
+$BoolDict.__xor__=function(self,other){return self.valueOf()!=other.valueOf()
 }
 var $EllipsisDict={__class__:$B.$type,__name__:'Ellipsis',}
 $EllipsisDict.__mro__=[$ObjectDict]
@@ -7872,7 +7878,8 @@ function $err(op,other){var msg="unsupported operand type(s) for "+op
 msg +=": 'float' and '"+$.get_class(other).__name__+"'"
 throw _b_.TypeError(msg)
 }
-var $FloatDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'float',$native:true}
+var $FloatDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'float',$native:true
+}
 $FloatDict.as_integer_ratio=function(self){if(Math.round(self.value)==self.value)return _b_.tuple([_b_.int(self.value),_b_.int(1)])
 var _temp=self.value
 var i=10
@@ -8228,6 +8235,7 @@ if(isinstance(other,_b_.float))return self.valueOf()==other.value
 if(isinstance(other,_b_.complex)){if(other.imag !=0)return False
 return self.valueOf()==other.real
 }
+if(hasattr(other,'__eq__'))return getattr(other,'__eq__')(self)
 return self.valueOf()===other
 }
 $IntDict.__format__=function(self,format_spec){if(format_spec=='')format_spec='d'
@@ -8273,7 +8281,7 @@ if(typeof other==="string"){return other.repeat(val)
 other=$B.$GetInt(other)
 if(isinstance(other,int))return self*other
 if(isinstance(other,_b_.float))return _b_.float(self*other.value)
-if(isinstance(other,_b_.bool)){var bool_value=0
+if(isinstance(other,_b_.bool)){
 if(other.valueOf())return self 
 return int(0)
 }
@@ -10445,7 +10453,7 @@ for(var i=1,_len_i=arguments.length;i < _len_i;i++){args.push(arguments[i])
 if(args.length==0)return
 if(args.length==1){
 var arg=args[0]
-if(_.isinstance(arg,set)){self.$items=arg.$items
+if(_.isinstance(arg,[set,frozenset])){self.$items=arg.$items
 return
 }
 try{var iterable=_.iter(arg)
@@ -10496,10 +10504,10 @@ tail=')'
 head=self.__class__.__name__+'('
 tail=')'
 }
-var res="{"
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){res +=_.repr(self.$items[i])
-if(i<self.$items.length-1){res +=','}}
-res +='}'
+var res=[]
+for(var i=0,_len_i=self.$items.length;i < _len_i;i++){res.push(_.repr(self.$items[i]))
+}
+res='{' + res.join(', ')+'}'
 return head+res+tail
 }
 $SetDict.__sub__=function(self,other,accept_iter){
@@ -10540,8 +10548,28 @@ $SetDict.copy=function(self){var res=set()
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++)res.$items[i]=self.$items[i]
 return res
 }
+$SetDict.difference_update=function(self,s){if(_.isinstance(s,set)){for(var i=0;i < s.$items.length;i++){var _type=typeof s.$items[i]
+if(_type=='string' ||_type=="number"){var _index=self.$items.indexOf(s.$items[i])
+if(_index > -1){self.$items.splice(_index,1)
+break
+}}else{
+for(var j=0;j < self.$items.length;j++){if(getattr(self.$items[j],'__eq__')(s.$items[i])){self.$items.splice(j,1)
+break
+}}}}
+return
+}}
+$SetDict.intersection_update=function(self,s){if(_.isinstance(s,set)){var _res=[]
+for(var i=0;i < s.$items.length;i++){var _item=s.$items[i]
+var _type=typeof _item
+if(_type=='string' ||_type=="number"){if(self.$items.indexOf(_item)> -1)_res.push(_item)
+}else{
+for(var j=0;j < self.$items.length;j++){if(getattr(self.$items[j],'__eq__')(_item)){_res.push(_item)
+break
+}}}}
+self=set(_res)
+}}
 $SetDict.discard=function(self,item){try{$SetDict.remove(self,item)}
-catch(err){if(err.__name__!=='KeyError'){throw err}}}
+catch(err){if(err.__name__!=='LookupError'){throw err}}}
 $SetDict.isdisjoint=function(self,other){for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_.getattr(other,'__contains__')(self.$items[i]))return false
 }
 return true
@@ -10549,7 +10577,12 @@ return true
 $SetDict.pop=function(self){if(self.$items.length===0)throw _.KeyError('pop from an empty set')
 return self.$items.pop()
 }
-$SetDict.remove=function(self,item){for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_.getattr(self.$items[i],'__eq__')(item)){self.$items.splice(i,1)
+$SetDict.remove=function(self,item){if(typeof item=='string' ||typeof item=='number'){var _i=self.$items.indexOf(item)
+if(_i==-1)throw _.LookupError('missing item ' + _.repr(item))
+self.$items.splice(_i,1)
+return
+}
+for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_.getattr(self.$items[i],'__eq__')(item)){self.$items.splice(i,1)
 return _.None
 }}
 throw _.KeyError(item)
@@ -10584,11 +10617,10 @@ var $FrozensetDict={__class__:$B.$type,__name__:'frozenset'}
 $FrozensetDict.__mro__=[$FrozensetDict,_.object.$dict]
 $FrozensetDict.__str__=$FrozensetDict.toString=$FrozensetDict.__repr__=function(self){if(self===undefined)return "<class 'frozenset'>"
 if(self.$items.length===0)return 'frozenset()'
-var res="{"
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){res +=_.repr(self.$items[i])
-if(i<self.$items.length-1){res +=','}}
-res +='}'
-return 'frozenset('+res+')'
+var res=[]
+for(var i=0,_len_i=self.$items.length;i < _len_i;i++){res.push(_.repr(self.$items[i]))
+}
+return 'frozenset({'+res.join(', ')+'})'
 }
 for(var attr in $SetDict){switch(attr){case 'add':
 case 'clear':
@@ -10601,15 +10633,16 @@ default:
 if($FrozensetDict[attr]==undefined){if(typeof $SetDict[attr]=='function'){$FrozensetDict[attr]=(function(x){return function(){return $SetDict[x].apply(null,arguments)}})(attr)
 }else{$FrozensetDict[attr]=$SetDict[attr]
 }}}}
-$FrozensetDict.__hash__=function(self){if(self===undefined){return $FrozensetDict.__hashvalue__ ||$B.$py_next_hash-- 
+$FrozensetDict.__hash__=function(self){console.log('FrozensetDict.__hash__')
+if(self===undefined){return $FrozensetDict.__hashvalue__ ||$B.$py_next_hash-- 
 }
 if(self.__hashvalue__ !==undefined)return self.__hashvalue__
 var _hash=1927868237
 _hash *=self.$items.length 
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){var _h=hash(self.$items[i])
+for(var i=0,_len_i=self.$items.length;i < _len_i;i++){var _h=_.hash(self.$items[i])
 _hash ^=((_h ^ 89869747)^(_h << 16))* 3644798167
 }
-_hash *=69069 + 907133923
+_hash=_hash * 69069 + 907133923
 if(_hash==-1)_hash=590923713
 return self.__hashvalue__=_hash
 }

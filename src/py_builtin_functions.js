@@ -113,7 +113,12 @@ function $builtin_base_convert_helper(obj, base) {
 
 
 // bin() (built in function)
-function bin(obj) {return $builtin_base_convert_helper(obj, 2)}
+function bin(obj) {
+    if(isinstance(obj, _b_.int)){
+        return $builtin_base_convert_helper(obj, 2)
+    }
+    return getattr(obj, '__index__')()
+}
 
 bin.__doc__="bin(number) -> string\n\nReturn the binary representation of an integer.\n\n   >>> bin(2796202)\n   '0b1010101010101010101010'\n"
 bin.__code__={}

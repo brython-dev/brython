@@ -5811,7 +5811,8 @@ function $transition(context,token){
 $B.forbidden = ['super',
     'case','catch','constructor','Date','delete',
     'default','Error','history','function','location','Math',
-    'new','null','Number','RegExp','this','throw','var']
+    'new','null','Number','RegExp','this','throw','var',
+    'toString']
 
 var s_escaped = 'abfnrtvxuU"'+"'"+'\\', is_escaped={}
 for(var i=0;i<s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
