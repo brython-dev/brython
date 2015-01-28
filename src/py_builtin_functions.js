@@ -715,6 +715,8 @@ function id(obj) {
    // should be deterministic based on string contents
    if (typeof obj == 'string') return getattr(_b_.str(obj), '__hash__')() 
 
+   if (hasattr(obj, '__hash__')) return getattr(obj, '__hash__')()
+
    if (obj.__hash__ === undefined || isinstance(obj, [_b_.set,_b_.list,_b_.dict])) {
       return obj.__hashvalue__=$B.$py_next_hash++
    }
@@ -1890,6 +1892,9 @@ $BoolDict.__sub__ = function(self,other){
     return -other;
 }
 
+$BoolDict.__xor__ = function(self, other) {
+    return self.valueOf() != other.valueOf()
+}
 
 var $EllipsisDict = {__class__:$B.$type,
     __name__:'Ellipsis',

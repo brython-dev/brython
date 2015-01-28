@@ -107,7 +107,7 @@ $SetDict.__init__ = function(self){
     if(args.length==0) return
     if(args.length==1){    // must be an iterable
         var arg=args[0]
-        if(_.isinstance(arg,set)){
+        if(_.isinstance(arg,[set,frozenset])){
             self.$items = arg.$items
             return
         }
@@ -122,7 +122,6 @@ $SetDict.__init__ = function(self){
                 }
             }
             self.$items = obj.$items
-            //console.log('set init, str '+obj.$str+' num '+obj.$num)
         }catch(err){
             console.log(''+err)
             throw _.TypeError("'"+arg.__class__.__name__+"' object is not iterable")
@@ -186,12 +185,13 @@ $SetDict.__str__ = $SetDict.toString = $SetDict.__repr__ = function(self){
         head = self.__class__.__name__+'('
         tail = ')'
     }
-    var res = "{"
+    //var res = "{"
+    var res=[]
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
-        res += _.repr(self.$items[i])
-        if(i<self.$items.length-1){res += ','}
+        res.push(_.repr(self.$items[i]))
+        //if(i<self.$items.length-1){res += ', '}
     }
-    res += '}'
+    res = '{' + res.join(', ')+'}'
     return head+res+tail
 }
 
@@ -259,9 +259,55 @@ $SetDict.copy = function(self){
     return res
 }
 
+$SetDict.difference_update = function(self,s){
+    if (_.isinstance(s, set)) {
+       for (var i=0; i < s.$items.length; i++) {
+           var _type= typeof s.$items[i]
+
+           if(_type == 'string' || _type == "number") {
+              var _index=self.$items.indexOf(s.$items[i])
+              if (_index > -1) {
+                 self.$items.splice(_index, 1)
+                 break
+              } 
+           } else {
+              for (var j=0; j < self.$items.length; j++) {
+                if (getattr(self.$items[j], '__eq__')(s.$items[i])) {
+                  self.$items.splice(j,1)
+                  break
+                }
+              }
+           }
+       }
+       return
+    }
+}
+
+$SetDict.intersection_update = function(self,s){
+    if (_.isinstance(s, set)) {
+       var _res=[]
+       for (var i=0; i < s.$items.length; i++) {
+           var _item=s.$items[i]
+           var _type= typeof _item
+
+           if(_type == 'string' || _type == "number") {
+             if(self.$items.indexOf(_item) > -1) _res.push(_item)
+           } else {
+              for (var j=0; j < self.$items.length; j++) {
+                if (getattr(self.$items[j], '__eq__')(_item)) {
+                   _res.push(_item)
+                   break
+                }
+              }
+           }
+       }
+       self=set(_res)
+    }
+}
+
 $SetDict.discard = function(self,item){
     try{$SetDict.remove(self,item)}
-    catch(err){if(err.__name__!=='KeyError'){throw err}}
+    catch(err){if(err.__name__!=='LookupError'){throw err}}
 }
 
 $SetDict.isdisjoint = function(self,other){
@@ -277,6 +323,12 @@ $SetDict.pop = function(self){
 }
 
 $SetDict.remove = function(self,item){
+    if (typeof item == 'string' || typeof item == 'number') {
+       var _i=self.$items.indexOf(item) 
+       if (_i == -1) throw _.LookupError('missing item ' + _.repr(item)) 
+       self.$items.splice(_i,1)
+       return
+    }
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
         if(_.getattr(self.$items[i],'__eq__')(item)){
             self.$items.splice(i,1)
@@ -346,13 +398,12 @@ $FrozensetDict.__mro__ = [$FrozensetDict,_.object.$dict]
 $FrozensetDict.__str__=$FrozensetDict.toString=$FrozensetDict.__repr__ = function(self){
     if(self===undefined) return "<class 'frozenset'>"
     if(self.$items.length===0) return 'frozenset()'
-    var res = "{"
+
+    var res=[]
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
-        res += _.repr(self.$items[i])
-        if(i<self.$items.length-1){res += ','}
+        res.push(_.repr(self.$items[i]))
     }
-    res += '}'
-    return 'frozenset('+res+')'
+    return 'frozenset({'+res.join(', ')+'})'
 }
 
 for(var attr in $SetDict){
@@ -379,6 +430,7 @@ for(var attr in $SetDict){
 
 // hash is allowed on frozensets
 $FrozensetDict.__hash__ = function(self) {
+   console.log('FrozensetDict.__hash__')
    if (self === undefined) {
       return $FrozensetDict.__hashvalue__ || $B.$py_next_hash--  // for hash of string type (not instance of string)
    }
@@ -391,11 +443,11 @@ $FrozensetDict.__hash__ = function(self) {
    _hash *=self.$items.length   
 
    for (var i=0, _len_i = self.$items.length; i < _len_i; i++) {
-      var _h=hash(self.$items[i])
+      var _h=_.hash(self.$items[i])
       _hash ^= ((_h ^ 89869747) ^ (_h << 16)) * 3644798167
    }
 
-   _hash *= 69069 + 907133923
+   _hash = _hash * 69069 + 907133923
 
    if (_hash == -1) _hash = 590923713
 
