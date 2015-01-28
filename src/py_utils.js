@@ -681,12 +681,12 @@ $B.pyobject2jsobject=function (obj){
         return res
     }
 
-    if (hasattr(obj, '__iter__')) {
+    if (_b_.hasattr(obj, '__iter__')) {
        // this is an iterator..
        var _a=[]
        while(1) {
           try {
-           _a.push($B.pyobject2jsobject(next(obj)))
+           _a.push($B.pyobject2jsobject(_b_.next(obj)))
           } catch(err) {
             if (err.__name__ !== "StopIteration") throw err
             break

@@ -92,6 +92,9 @@ $IntDict.__eq__ = function(self,other){
       if (other.imag != 0) return False
       return self.valueOf() == other.real
     }
+
+    if (hasattr(other, '__eq__')) return getattr(other, '__eq__')(self)
+
     return self.valueOf()===other
 }
 
@@ -175,7 +178,7 @@ $IntDict.__mul__ = function(self,other){
     if(isinstance(other,int)) return self*other
     if(isinstance(other,_b_.float)) return _b_.float(self*other.value)
     if(isinstance(other,_b_.bool)){
-         var bool_value=0
+         //var bool_value=0
          if (other.valueOf()) return self //bool_value=1
          //return self*bool_value
          return int(0)
