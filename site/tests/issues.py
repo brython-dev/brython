@@ -130,4 +130,10 @@ assert C.foo.abc == 1
 assert C.foo.xyz == "haha"
 assert C.foo.booh == 42
 
+# issue 118
+class A:
+    def toString(self):
+        return "whatever"
+
+assert A().toString() == "whatever"
 print('passed all tests')
