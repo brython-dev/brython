@@ -430,7 +430,6 @@ for(var attr in $SetDict){
 
 // hash is allowed on frozensets
 $FrozensetDict.__hash__ = function(self) {
-   console.log('FrozensetDict.__hash__')
    if (self === undefined) {
       return $FrozensetDict.__hashvalue__ || $B.$py_next_hash--  // for hash of string type (not instance of string)
    }
