@@ -720,7 +720,9 @@ function id(obj) {
    // should be deterministic based on string contents
    if (typeof obj == 'string') return getattr(_b_.str(obj), '__hash__')() 
 
-   if (hasattr(obj, '__hash__')) return getattr(obj, '__hash__')()
+   try {
+     if (hasattr(obj, '__hash__')) return getattr(obj, '__hash__')()
+   } catch(e) {console.log(e)}  // sometimes __hash__ isn't a function
 
    if (obj.__hash__ === undefined || isinstance(obj, [_b_.set,_b_.list,_b_.dict])) {
       return obj.__hashvalue__=$B.$py_next_hash++
