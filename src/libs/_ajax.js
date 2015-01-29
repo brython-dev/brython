@@ -1,12 +1,7 @@
 // ajax
 var $module = (function($B){
 
-var _b_ = $B.builtins
-
-var $s=[]
-for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
-eval($s.join(';'))
-//for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
+eval($B.InjectBuiltins())
 
 var $XMLHttpDict = {__class__:$B.$type,__name__:'XMLHttp'}
 
