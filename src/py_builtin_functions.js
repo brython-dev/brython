@@ -724,9 +724,10 @@ function id(obj) {
    // should be deterministic based on string contents
    if (typeof obj == 'string') return getattr(_b_.str(obj), '__hash__')() 
 
-   try {
-     if (hasattr(obj, '__hash__')) return getattr(obj, '__hash__')()
-   } catch(e) {console.log(e)}  // sometimes __hash__ isn't a function
+   if (hasattr(obj, '__hash__')) {
+     var hash_func = getattr(obj, '__hash__')
+     if(callable(hash_func)){return hash_func()}
+   }
 
    if (obj.__hash__ === undefined || isinstance(obj, [_b_.set,_b_.list,_b_.dict])) {
       return obj.__hashvalue__=$B.$py_next_hash++
@@ -2040,6 +2041,15 @@ var $FrameDict = {__class__:$B.$type,
     __mro__:[$ObjectDict]
 }
 
+function frame(exc){
+    var mod_name = $B.line_info[1]
+    return {__class__:$FrameDict, exc:55}
+}
+
+frame.__class__ = $B.$factory
+frame.$dict = $FrameDict
+$FrameDict.$factory = frame
+
 var BaseException = function (msg,js_exc){
     var err = Error()
     err.info = 'Traceback (most recent call last):'
@@ -2075,7 +2085,7 @@ var BaseException = function (msg,js_exc){
             // create traceback object
             if(i==0){
                 tb = {__class__:$TracebackDict,
-                    tb_frame:{__class__:$FrameDict},
+                    tb_frame:frame(err),
                     tb_lineno:call_info[0],
                     tb_lasti:line,
                     tb_next: None // fix me
@@ -2107,7 +2117,7 @@ var BaseException = function (msg,js_exc){
             err.info += '\n    '+line
             // create traceback object
             tb = {__class__:$TracebackDict,
-                tb_frame:{__class__:$FrameDict},
+                tb_frame:frame(err),
                 tb_lineno:line_num,
                 tb_lasti:line,
                 tb_next: None   // fix me
@@ -2193,7 +2203,7 @@ $B.exception = function(js_exc){
         exc.message = js_exc.message || '<'+js_exc+'>'
         exc.info = ''
         exc.traceback = {__class__:$TracebackDict,
-            tb_frame:{__class__:$FrameDict},
+            tb_frame:frame(exc),
             tb_lineno:-1,
             tb_lasti:'',
             tb_next: None   // fix me
