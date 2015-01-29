@@ -568,10 +568,6 @@ function getattr(obj,attr,_default){
             // new is a static method
             if(attr=='__new__') return klass[attr].apply(null,arguments)
             
-            else if(klass.descriptors && klass.descriptors[attr]!==undefined){
-                return klass[attr].apply(null, [obj])
-            }
-            
             var method = function(){
                 var args = [obj]
                 for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
