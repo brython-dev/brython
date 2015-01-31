@@ -45,7 +45,7 @@ class BigInt:
       if self.value.isInt():
          return int(self.value.toNumber())
 
-      #raise Error?
+      raise TypeError("This is not an integer")
 
   def __le__(self, other):
       return bool(self.value.lte(_get_value(other)))
@@ -55,9 +55,8 @@ class BigInt:
 
   def __lshift__(self, shift):
       if isinstance(shift, int):
-         return LongInt(self.value.pow(2,shift))
-
-      #raise Error? 
+         _v=LongInt(2)**shift
+         return LongInt(self.value.times(_v.value))
 
   def __mod__(self, other):
       return LongInt(self.value.mod(_get_value(other)))
@@ -97,7 +96,7 @@ def get_precision(value):
     return len(str(value))
 
 class DecimalJS(BigInt):
-  def __init__(self, value, base=10):
+  def __init__(self, value=0, base=10):
       global _precision
       _prec=get_precision(value)
       if _prec > _precision:
@@ -107,11 +106,11 @@ class DecimalJS(BigInt):
       self.value=javascript.JSConstructor(window.Decimal)(value, base)
 
 class BigNumberJS(BigInt):
-  def __init__(self, value, base=10):
+  def __init__(self, value=0, base=10):
       self.value=javascript.JSConstructor(window.BigNumber)(value, base)
 
 class BigJS(BigInt):
-  def __init__(self, value, base=10):
+  def __init__(self, value=0, base=10):
       self.value=javascript.JSConstructor(window.Big)(value, base)
 
   def __floordiv__(self, other):
