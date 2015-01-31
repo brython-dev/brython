@@ -1679,7 +1679,13 @@ function $DefCtx(context){
         new_node.locals_def = true
         new $NodeJSCtx(new_node,js)
         nodes.push(new_node)
-           
+
+        // push id in frames stack
+        var new_node = new $Node()
+        var js = '__BRYTHON__.enter_frame(["'+this.id+'", "'+this.module+'"]);' 
+        new $NodeJSCtx(new_node,js)
+        nodes.push(new_node)
+                   
         // initialize default variables, if provided
         if(defs1.length>0){
             js = 'for(var $var in $defaults){$locals[$var]=$defaults[$var]}'
@@ -1851,7 +1857,7 @@ function $DefCtx(context){
         var last_instr = node.children[node.children.length-1].context.tree[0]
         if(last_instr.type!=='return' && this.type!='BRgenerator'){
             new_node = new $Node()
-            new $NodeJSCtx(new_node,'return None;')
+            new $NodeJSCtx(new_node,'__BRYTHON__.leave_frame("'+this.id+'");return None;')
             def_func_node.add(new_node)
         }
 
@@ -3581,7 +3587,7 @@ function $ReturnCtx(context){ // subscription or slicing
             var res = 'return [$B.generator_return('
             return res + $to_js(this.tree)+')]'
         }
-        return 'return '+$to_js(this.tree)
+        return '__BRYTHON__.leave_frame("'+scope.id+'");return '+$to_js(this.tree)
     }
 }
 
@@ -6364,6 +6370,8 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     }
     js += 'var $locals_id = "'+locals_id+'";\n'
     js += 'var $locals = $B.vars["'+locals_id+'"];\n'
+    
+    js += '__BRYTHON__.enter_frame(["'+module+'", "'+module+'"]);\n'
     js += 'eval($B.InjectBuiltins())\n'
 
     var new_node = new $Node()
@@ -6390,6 +6398,13 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
         var t1 = new Date().getTime()
         console.log('module '+module+' translated in '+(t1 - t0)+' ms')
     }
+    
+    // leave frame at the end of module
+    js = '__BRYTHON__.leave_frame("'+module+'");\n'
+    var new_node = new $Node()
+    new $NodeJSCtx(new_node,js)
+    root.add(new_node)
+    
     return root
 }
 

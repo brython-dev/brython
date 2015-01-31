@@ -884,6 +884,10 @@ $B.$GetInt=function(value) {
   return value
 }
 
+$B.enter_frame = function(frames){$B.frames_stack.push(frames)}
+
+$B.leave_frame = function(){$B.frames_stack.pop()}
+
 })(__BRYTHON__)
 
 // IE doesn't implement indexOf on Arrays

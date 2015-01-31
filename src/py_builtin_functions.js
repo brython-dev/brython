@@ -2043,9 +2043,39 @@ var $FrameDict = {__class__:$B.$type,
     __mro__:[$ObjectDict]
 }
 
-function frame(exc){
+function to_dict(obj){
+    var res = _b_.dict()
+    for(var attr in obj){
+        _b_.dict.$dict.__setitem__(res, attr, obj[attr])
+    }
+    return res
+}
+
+function frame(pos){
     var mod_name = $B.line_info[1]
-    return {__class__:$FrameDict, exc:55}
+    var fs = $B.frames_stack
+    var res = {__class__:$FrameDict,
+        f_builtins : to_dict($B.vars['__builtins__'])
+    }
+    if(pos===undefined){pos = fs.length-1}
+    if(fs.length){
+        var _frame = fs[pos]
+        res.f_locals = to_dict($B.vars[_frame[0]])
+        res.f_globals = to_dict($B.vars[_frame[1]])
+        if(__BRYTHON__.debug>0){
+            res.f_lineno = __BRYTHON__.line_info[0]
+        }else{
+            res.f_lineno = None
+        }
+        if(pos>0){res.f_back = frame(pos-1)}
+        else{res.f_back = None}
+        res.f_code = {__class__:$B.$CodeObjectDict,
+            co_code:None, // XXX fix me
+            co_name: _frame[0], // ditto
+            co_filename: $B.vars[_frame[1]].__name__
+        }
+    }
+    return res
 }
 
 frame.__class__ = $B.$factory
@@ -2087,7 +2117,7 @@ var BaseException = function (msg,js_exc){
             // create traceback object
             if(i==0){
                 tb = {__class__:$TracebackDict,
-                    tb_frame:frame(err),
+                    tb_frame:frame(),
                     tb_lineno:call_info[0],
                     tb_lasti:line,
                     tb_next: None // fix me
@@ -2119,7 +2149,7 @@ var BaseException = function (msg,js_exc){
             err.info += '\n    '+line
             // create traceback object
             tb = {__class__:$TracebackDict,
-                tb_frame:frame(err),
+                tb_frame:frame(),
                 tb_lineno:line_num,
                 tb_lasti:line,
                 tb_next: None   // fix me
@@ -2205,7 +2235,7 @@ $B.exception = function(js_exc){
         exc.message = js_exc.message || '<'+js_exc+'>'
         exc.info = ''
         exc.traceback = {__class__:$TracebackDict,
-            tb_frame:frame(exc),
+            tb_frame:frame(),
             tb_lineno:-1,
             tb_lasti:'',
             tb_next: None   // fix me

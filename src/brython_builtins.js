@@ -46,6 +46,9 @@ $B.globals = {}
 // Stack of executing scripts
 $B.exec_stack = []
 
+// Frames stack
+$B.frames_stack = []
+
 // Python __builtins__
 $B.builtins = {
     __repr__:function(){return "<module 'builtins>'"},
