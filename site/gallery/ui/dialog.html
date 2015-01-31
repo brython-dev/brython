@@ -7,17 +7,16 @@
 <script type="text/javascript" src="../../../src/brython.js"></script>
 
 <script type="text/python">
-from browser import document
-import jqui
+import ui
 
-_d = jqui.Dialog()
-
-document["container"] <= _d
+ui.add_stylesheet()
+_d=ui.Dialog()
+_d.attach("container")
 
 _d.set_title("My Title")
-_d.set_body("This is where I put stuff I want to say")
+#_d.set_body("This is where I put stuff I want to say")
 
-#_d.set_body('<img src="http://python.org/images/python-logo.gif">')
+_d.set_body('<img src="http://python.org/images/python-logo.gif">')
 </script>
 
 </head>
