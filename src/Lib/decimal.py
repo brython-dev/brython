@@ -630,7 +630,13 @@ class Decimal(object):
                self._exp = exp - len(fracpart)
                self._is_special = False
                return self
-            
+            else:
+               #is this a pure int?
+               self._int = value
+               self._exp = 0
+               self._is_special = False
+               return self
+      
             #print(value)
             #else:
                #fracpart=''
