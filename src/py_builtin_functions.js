@@ -402,9 +402,13 @@ function $eval(src, _globals, locals){
         // If the Python function is eval(), not exec(), check that the source
         // is an expression
         if(!is_exec){
+            // last instruction is 'leave frame' ; we must remove it, 
+            // otherwise eval() would return None
+            root.children.pop()
             var instr = root.children[root.children.length-1]
             var type = instr.context.tree[0].type
             if (!('expr' == type || 'list_or_tuple' == type)) {
+                console.log('not expression '+instr.context.tree[0])
                 $B.line_info=[1,mod_name]
                 throw _b_.SyntaxError("eval() argument must be an expression")
             }
@@ -421,6 +425,7 @@ function $eval(src, _globals, locals){
         return res
     }finally{
         $B.exec_stack.pop()
+        $B.leave_frame() // explicitely leave frame
         delete $B.bound[mod_name], $B.modules[mod_name], $B.imported[mod_name]
         if(_globals!==undefined){delete $B.vars[mod_name]}
     }
