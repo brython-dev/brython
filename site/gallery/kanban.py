@@ -126,7 +126,7 @@ class KanbanView:
         title = html.PRE(step.desc, Class="step_title")
         header <= title
 
-        count = html.PRE(0, id="% count" % step.id, Class="step_count")
+        count = html.PRE(0, id="%s count" % step.id, Class="step_count")
         count.text = len(step.task_ids)
         header <= count
 
