@@ -5,6 +5,11 @@ corresponding Unix manual entries for more information on calls."""
 
 import datetime
 
+from browser import window
+
+def _randint(a, b):
+    return int(window.Math.random()*(b-a+1)+a)
+    
 F_OK = 0
 
 O_APPEND = 8
@@ -538,8 +543,7 @@ def unlink(*args,**kw):
 def urandom(n):
     """urandom(n) -> str    
     Return n random bytes suitable for cryptographic use."""
-    import __random
-    randbytes= [__random.randint(0,255) for i in range(n)]
+    randbytes= [_randint(0,255) for i in range(n)]
     return bytes(randbytes)
 
 def utime(*args,**kw):
