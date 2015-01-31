@@ -2009,7 +2009,11 @@ $Function.$dict = $FunctionDict
 
 // built-in exceptions
 
-var $BaseExceptionDict = {__class__:$B.$type,__name__:'BaseException'}
+var $BaseExceptionDict = {__class__:$B.$type,
+    __bases__ : [_b_.object],
+    __module__:'builtins',
+    __name__:'BaseException'
+}
 
 $BaseExceptionDict.__init__ = function(self){
     self.args = [arguments[1]]
@@ -2277,6 +2281,8 @@ function $make_exc(names,parent){
         var $exc = (BaseException+'').replace(/BaseException/g,name)
         // class dictionary
         _str.push('var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}')
+        _str.push('$'+name+'Dict.__bases__ = [parent]')
+        _str.push('$'+name+'Dict.__module__ = "builtins"')
         _str.push('$'+name+'Dict.__mro__=[$'+name+'Dict].concat(parent.$dict.__mro__)')
         // class constructor
         _str.push('_b_.'+name+'='+$exc)

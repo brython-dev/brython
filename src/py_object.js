@@ -26,6 +26,7 @@ var _b_=$B.builtins
 // class object for the built-in class 'object'
 var $ObjectDict = {
     //__class__:$type, : not here, added in py_type.js after $type is defined
+    // __bases__ : set to an empty tuple in py_list.js after tuple is defined
     __name__:'object',
     $native:true
 }

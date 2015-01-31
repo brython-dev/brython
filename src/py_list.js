@@ -603,4 +603,8 @@ $B.set_func_names($TupleDict)
 
 _b_.list = list
 _b_.tuple = tuple
+
+// set object.__bases__ to an empty tuple
+_b_.object.$dict.__bases__ = tuple()
+
 })(__BRYTHON__)
