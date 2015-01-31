@@ -10,6 +10,8 @@ var $LongIntDict = {__class__:$B.$type,__name__:'LongInt'}
 
 function add_pos(v1, v2){
     // Add two positive numbers
+    // v1, v2 : strings
+    // Return an instance of LongInt
 
     var res = '', carry = 0, iself=v1.length, sv=0
     for(var i=v2.length-1;i>=0;i--){
@@ -38,6 +40,13 @@ function check_shift(shift){
     if(!shift.pos){throw ValueError("negative shift count")}
 }
 
+function clone(obj){
+    // Used for traces
+    var obj1 = {}
+    for(var attr in obj){obj1[attr]=obj[attr]}
+    return obj1
+}
+
 function comp_pos(v1, v2){
     // Compare two positive numbers
     if(v1.length>v2.length){return 1}
@@ -50,22 +59,37 @@ function comp_pos(v1, v2){
 }
 
 function divmod_pos(v1, v2){
+    // v1, v2 : strings, represent 2 positive integers A and B
+    // Return [a, b] where a and b are instances of LongInt
+    // a = A // B, b = A % B
     var v1_init = v1, quotient, mod
-    if(comp_pos(v2, v1)==1){
+    if(comp_pos(v1, v2)==-1){ // a < b
         quotient='0'
         mod = LongInt(v1)
-    }else if(v2==v1){
+    }else if(v2==v1){ // a = b
         quotient = '1';
         mod = LongInt('0')
     }else{
         var quotient = '', v1_init = v1
         // mv2 maps integers i from 2 to 9 to i*v2
         var mv2 = {}
+        // Javascript "safe integer" with the 15 first digits in v2,
+        // used in the algorithm to test candidate values
+        var jsv2 = parseInt(v2.substr(0,15))
+
+        // Division algorithm
         while(comp_pos(v1,v2)>-1){
+            // At each step in the division, v1 is split into substrings
+            // "left" is the left part, with the same length as v2
+            // "rest" is the rest of v1 after "left"
+            // The algorithm finds the one-digit integer "candidate" such
+            // that 0 <= left - candidate*v2 < v2
+            // It stops when left < v2
             var left = v1.substr(0, v2.length)
             if(left<v2){
                 if(left.length<v2.length){
                     if(quotient==''){quotient='0'}
+                    // v1 is lesser than v2 : division is finished
                     break
                 }
                 else{
@@ -73,23 +97,27 @@ function divmod_pos(v1, v2){
                 }
             }
             var rest = v1.substr(left.length)
-            // use JS int division to test an approximate result
+            // use JS division to test an approximate result
             jsleft = parseInt(left.substr(0,15))
-            jsv2 = parseInt(v2.substr(0,15))
             var candidate = Math.floor(jsleft/jsv2).toString()
             if(mv2[candidate]===undefined){
                 mv2[candidate] = mul_pos(v2, candidate).value
             }
             if(comp_pos(left, mv2[candidate])==-1){
+                // If left < candidate * v2, use candidate-1
                 candidate--
                 if(mv2[candidate]===undefined){
                     mv2[candidate] = mul_pos(v2, candidate).value
                 }
             }
+            // Add candidate to the quotient
             quotient += candidate
+            // New value for left : left - v2*candidate
             left = sub_pos(left, mv2[candidate]).value
+            // New value for v1
             v1 = left+rest
         }
+        // Modulo is A - (A//B)*B
         mod = sub_pos(v1_init, mul_pos(quotient, v2).value)
     }
     return [LongInt(quotient), mod]
@@ -101,6 +129,11 @@ function mul_pos(v1, v2){
     if(v1.length<v2.length){var a=v1; v1=v2 ; v2=a}
     if(v2=='0'){return LongInt('0')}
     var cols = {}, i=v2.length, j
+    
+    // Built the object "cols", indexed by integers from 1 to nb1+nb2-2
+    // where nb1 and nb2 are the number of digits in v1 and v2.
+    // cols[n] is the sum of v1[i]*v2[j] for i+j = n
+    
     while(i--){
         var car = v2.charAt(i)
         if(car=="0"){
@@ -124,17 +157,16 @@ function mul_pos(v1, v2){
             }
         }
     }
-    
-    function clone(obj){
-        var obj1 = {}
-        for(var attr in obj){obj1[attr]=obj[attr]}
-        return obj1
-    }
 
-    i = v1.length+v2.length-1    
+    // Transform cols so that cols[x] is a one-digit integers
+    i = v1.length+v2.length-1
     while(i--){
         var col = cols[i].toString()
         if(col.length>1){
+            // If the value in cols[i] has more than one digit, only keep the
+            // last one and report the others at the right index
+            // For instance if cols[i] = 123, keep 3 in cols[i], add 2 to
+            // cols[i-1] and 1 to cols[i-2]
             cols[i] = parseInt(col.charAt(col.length-1))
             j = col.length
             while(j-->1){
@@ -146,46 +178,67 @@ function mul_pos(v1, v2){
         }
     }
 
-    var imin, imax
+    // Find minimum index in cols
+    // The previous loop may have introduced negative indices
+    var imin
     for(var attr in cols){
         i = parseInt(attr)
         if(imin===undefined){imin=i}
         else if(i<imin){imin=i}
-        if(imax===undefined){imax=i}
-        else if(i>imax){imax=i}
     }
 
+    // Result is the concatenation of digits in cols
     var res = ''
-    for(var i=imin;i<=imax;i++){res+=cols[i].toString()}
+    for(var i=imin;i<=v1.length+v2.length-2;i++){res+=cols[i].toString()}
     return LongInt(res)
 }
 
 function sub_pos(v1, v2){
     // Substraction of positive numbers with v1>=v2
 
-    var res = '', carry = 0, iself=v1.length, sv=0
+    var res = '', carry = 0, i1=v1.length, sv=0
+    
+    // For all digits in v2, starting by the rightmost, substract it from
+    // the matching digit in v1
+    // This is the equivalent of the manual operation :
+    //    12345678
+    //   -   98765
+    //
+    // We begin by the rightmost operation : 8-5 (3, no carry),
+    // then 7-6 (1, no carry)
+    // then 6-7 (9, carry 1) and so on
     for(var i=v2.length-1;i>=0;i--){
-        iself--
-        sv=parseInt(v1.charAt(iself))
+        i1--
+        sv = parseInt(v1.charAt(i1))
         x = (sv-carry-parseInt(v2.charAt(i)))
         if(x<0){res=(10+x)+res;carry=1}
         else{res=x+res;carry=0}
     }
-    while(iself>0){
-        iself--
-        x = (parseInt(v1.charAt(iself))-carry)
+    
+    // If there are remaining digits in v1, substract the carry, if any
+    while(i1>0){
+        i1--
+        x = (parseInt(v1.charAt(i1))-carry)
         if(x<0){res=(10+x)+res;carry=1}
         else{res=x+res;carry=0}
     }
+
+    // Remove leading zeros and return the result
     while(res.charAt(0)=='0' && res.length>1){res=res.substr(1)}
     return {__class__:$LongIntDict, value:res, pos:true}
 }
+
+// Special methods to implement operations on instances of LongInt
 
 $LongIntDict.__abs__ = function(self){
     return {__class__:$LongIntDict, value: self.value, pos:true}
 }
 
 $LongIntDict.__add__ = function(self, other){
+    // Addition of "self" and "other"
+    // If both have the same sign (+ or -) we add their absolute values
+    // If they have different sign we use the substraction of their
+    // absolute values
     var res
     if(self.pos&&other.pos){  // self > 0, other > 0
         return add_pos(self.value, other.value)
@@ -225,17 +278,18 @@ $LongIntDict.__add__ = function(self, other){
 }
 
 $LongIntDict.__and__ = function(self, other){
+    // Bitwise "and" : build the binary representation of self and other
     var v1 = $LongIntDict.__index__(self)
     var v2 = $LongIntDict.__index__(other)
+    // apply "and" on zeros and ones
     if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
-    console.log(v1)
-    console.log(v2)
     var start = v1.length-v2.length
     var res = ''
     for(var i=0;i<v2.length;i++){
         if(v1.charAt(start+i)=='1' && v2.charAt(i)=='1'){res += '1'}
         else{res += '0'}
     }
+    // Return the LongInt instance represented by res in base 2
     return LongInt(res, 2)
 }
 
@@ -245,7 +299,7 @@ $LongIntDict.__divmod__ = function(self, other){
         if(dm[0].value!='0'){dm[0].pos = false}
         if(dm[1].value!='0'){
             // If self and other have different signs and self is not a multiple
-            // of other, round to previous integer
+            // of other, round to the previous integer
             dm[0] = $LongIntDict.__sub__(dm[0], LongInt('1'))
             dm[1] = $LongIntDict.__add__(dm[1], LongInt('1'))
         }
@@ -254,7 +308,7 @@ $LongIntDict.__divmod__ = function(self, other){
 }
 
 $LongIntDict.__eq__ = function(self, other){
-    return self.value==other.value
+    return self.value==other.value && self.pos==other.pos
 }
 
 $LongIntDict.__floordiv__ = function(self, other){
@@ -273,15 +327,18 @@ $LongIntDict.__gt__ = function(self, other){
 
 $LongIntDict.__index__ = function(self){
     // Used by bin()
+    // returns a string with the binary value of self
+    // The algorithm computes the result of the floor division of self by 2
+    
+    // XXX to do : negative integers
+    
     var res = '', pos=self.value.length,
         temp = self.value, d
-    var nb = 20
     while(true){
         d = divmod_pos(temp, '2')
         res = d[1].value + res
         temp = d[0].value
         if(temp=='0'){break}
-        if(!nb--){console.log('overflow');break}
     }
     return res
 }
@@ -335,10 +392,8 @@ $LongIntDict.__or__ = function(self, other){
     var v1 = $LongIntDict.__index__(self)
     var v2 = $LongIntDict.__index__(other)
     if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
-    console.log(v1)
-    console.log(v2)
     var start = v1.length-v2.length
-    var res = ''
+    var res = v1.substr(0, start)
     for(var i=0;i<v2.length;i++){
         if(v1.charAt(start+i)=='1' || v2.charAt(i)=='1'){res += '1'}
         else{res += '0'}
@@ -429,10 +484,8 @@ $LongIntDict.__xor__ = function(self, other){
     var v1 = $LongIntDict.__index__(self)
     var v2 = $LongIntDict.__index__(other)
     if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
-    console.log(v1)
-    console.log(v2)
     var start = v1.length-v2.length
-    var res = ''
+    var res = v1.substr(0, start)
     for(var i=0;i<v2.length;i++){
         if(v1.charAt(start+i)=='1' && v2.charAt(i)=='0'){res += '1'}
         else if(v1.charAt(start+i)=='0' && v2.charAt(i)=='1'){res += '1'}
@@ -467,7 +520,7 @@ function LongInt(value, base){
         throw _b_.TypeError("LongInt takes at most 2 arguments ("+
             arguments.length+" given)")
     }
-    // base defaults to 2
+    // base defaults to 10
     if(base===undefined){base = 10}
     else if(!isinstance(base, int)){
         throw TypeError("'"+$B.get_class(base).__name__+"' object cannot be interpreted as an integer")
@@ -475,61 +528,50 @@ function LongInt(value, base){
     if(base<0 || base==1 || base>36){
         throw ValueError("LongInt() base must be >= 2 and <= 36")
     }
-    if(typeof value=='string'){
-        var has_prefix = false, pos = true, start = 0
-        // Strip leading and trailing whitespaces
-        while(value.charAt(0)==' ' && value.length){value = value.substr(1)}
-        while(value.charAt(value.length-1)==' ' && value.length){
-            value = value.substr(0, value.length-1)
-        }
-        // Check if string starts with + or -
-        if(value.charAt(0)=='+'){has_prefix=true}
-        else if(value.charAt(0)=='-'){has_prefix=true;pos=false}
-        if(has_prefix){
-            // Remove prefix
-            if(value.length==1){
-                // "+" or "-" alone are not valid arguments
-                throw ValueError('LongInt argument is not a valid number')            
-            }else{value=value.substr(1)}
-        }
-        // Ignore leading "0"
-        while(start<value.length-1 && value.charAt(start)=='0'){start++}
-        value = value.substr(start)
-
-        // Check if all characters in value are valid in the base
-        var is_digits = digits(base)
-        for(var i=0;i<value.length;i++){
-            if(!is_digits[value.charAt(i)]){
-                throw ValueError('LongInt argument is not a valid number')
-            }
-        }
-        if(base!=10){
-            // Conversion to base 10
-            var coef = '1', v1 = LongInt('0'),
-                pos = value.length, digit_base10
-            while(pos--){
-                digit_base10 = parseInt(value.charAt(pos), base).toString()
-                try{
-                    digit_by_coef = mul_pos(coef, digit_base10).value
-                }catch(err){
-                    console.log('error digit by coef, for pos '+pos+' coef '+coef+' digit '+digit_base10)
-                    throw err
-                }
-                v1 = add_pos(v1.value, digit_by_coef)
-                try{
-                    coef = mul_pos(coef, base.toString()).value
-                }catch(err){
-                    console.log('error for coef '+pos)
-                    throw err
-                }
-            }
-            return v1
-        }
-        return {__class__:$LongIntDict, value:value, pos:pos}
-    }else{
+    if(!typeof value=='string'){
         throw ValueError("argument of long_int must be a string, not "+
             $B.get_class(value).__name__)
     }
+    var has_prefix = false, pos = true, start = 0
+    // Strip leading and trailing whitespaces
+    while(value.charAt(0)==' ' && value.length){value = value.substr(1)}
+    while(value.charAt(value.length-1)==' ' && value.length){
+        value = value.substr(0, value.length-1)
+    }
+    // Check if string starts with + or -
+    if(value.charAt(0)=='+'){has_prefix=true}
+    else if(value.charAt(0)=='-'){has_prefix=true;pos=false}
+    if(has_prefix){
+        // Remove prefix
+        if(value.length==1){
+            // "+" or "-" alone are not valid arguments
+            throw ValueError('LongInt argument is not a valid number')            
+        }else{value=value.substr(1)}
+    }
+    // Ignore leading zeros
+    while(start<value.length-1 && value.charAt(start)=='0'){start++}
+    value = value.substr(start)
+
+    // Check if all characters in value are valid in the base
+    var is_digits = digits(base)
+    for(var i=0;i<value.length;i++){
+        if(!is_digits[value.charAt(i)]){
+            throw ValueError('LongInt argument is not a valid number')
+        }
+    }
+    if(base!=10){
+        // Conversion to base 10
+        var coef = '1', v10 = LongInt('0'),
+            pos = value.length, digit_base10
+        while(pos--){
+            digit_base10 = parseInt(value.charAt(pos), base).toString()
+            digit_by_coef = mul_pos(coef, digit_base10).value
+            v10 = add_pos(v10.value, digit_by_coef)
+            coef = mul_pos(coef, base.toString()).value
+        }
+        return v10
+    }
+    return {__class__:$LongIntDict, value:value, pos:pos}
 }
 
 LongInt.__class__ = $B.$factory
