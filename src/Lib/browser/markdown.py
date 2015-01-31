@@ -1,6 +1,6 @@
 import browser.html
 import _jsre as re
-import __random as random
+import random
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 letters += letters.upper()+'0123456789'

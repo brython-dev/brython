@@ -46,12 +46,16 @@ from types import MethodType as _MethodType, BuiltinMethodType as _BuiltinMethod
 from math import log as _log, exp as _exp, pi as _pi, e as _e, ceil as _ceil
 from math import sqrt as _sqrt, acos as _acos, cos as _cos, sin as _sin
 
+from browser import window
+
+def _randint(a, b):
+    return int(window.Math.random()*(b-a+1)+a)
+    
 #from os import urandom as _urandom
 def _urandom(n):
     """urandom(n) -> str    
     Return n random bytes suitable for cryptographic use."""
-    import __random
-    randbytes= [__random.randint(0,255) for i in range(n)]
+    randbytes= [_randint(0,255) for i in range(n)]
     return bytes(randbytes)
     
 #from collections.abc import Set as _Set, Sequence as _Sequence
