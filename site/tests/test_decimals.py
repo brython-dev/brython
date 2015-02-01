@@ -19,3 +19,5 @@ assert a - c == decimal.Decimal('1.1')
 assert a * c == decimal.Decimal('20.4')
 
 assert a / c == decimal.Decimal('1.275')
+
+assert decimal.Decimal('3') + decimal.Decimal('4') == decimal.Decimal('7')
