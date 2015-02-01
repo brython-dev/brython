@@ -263,7 +263,7 @@ $ListDict.__repr__ = function(self){
     for(var i=0, _len_i = self.length; i < _len_i;i++){
         var x = self[i]
         try{res+=getattr(x,'__repr__')()}
-        catch(err){console.log('no __repr__');res += x.toString()}
+        catch(err){console.log('no __repr__ for item '+i+' toString ['+x.toString()+']');res += x.toString()}
         if(i<self.length-1){res += ', '}
     }
     if(self.__class__===$TupleDict){

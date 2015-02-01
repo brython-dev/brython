@@ -2055,6 +2055,7 @@ var $FrameDict = {__class__:$B.$type,
 function to_dict(obj){
     var res = _b_.dict()
     for(var attr in obj){
+        if(attr.charAt(0)=='$'){continue}
         _b_.dict.$dict.__setitem__(res, attr, obj[attr])
     }
     return res
