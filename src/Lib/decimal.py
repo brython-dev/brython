@@ -595,14 +595,15 @@ class Decimal(object):
         # From a string
         # REs insist on real strings, so we can too.
         if isinstance(value, str):
-            value=value.strip()
+            value=value.strip().lower()
 
             if value.startswith("-"):
                 self._sign = 1
+                value=value[1:]
             else:
                 self._sign = 0
 
-            if value in 'NaN':
+            if value in ('', 'nan'):
                self._is_special = True
                self._int = ''
                #if m.group('signal'):  #figure out what a signaling NaN is later
@@ -612,35 +613,44 @@ class Decimal(object):
                self._exp='n'
                return self
 
-            if value in ('Inf', '-Inf'):
+            if value in ('inf', '-inf', 'infinity', '-infinity'):
                self._int = '0'
                self._exp = 'F'
                self._is_special = True
                return self
 
+            import _jsre as re
+            _m=re.match("^\d*\.?\d*(e\+?\d*)?$", value)
+            if not _m:
+               self._is_special = True
+               self._int = ''
+               self._exp='n'
+               return self
+
             if '.' in value:
                intpart, fracpart=value.split('.')
-               if 'E' in fracpart:
-                  fracpart, exp=fracpart.split('E')
+               if 'e' in fracpart:
+                  fracpart, exp=fracpart.split('e')
                   exp=int(exp)
                else:
                   exp=0
 
-               self._int = str(int(intpart+fracpart))
+               #self._int = str(int(intpart+fracpart))
+               self._int = intpart+fracpart
                self._exp = exp - len(fracpart)
                self._is_special = False
                return self
             else:
                #is this a pure int?
-               self._int = value
-               self._exp = 0
                self._is_special = False
+               if 'e' in value:
+                  self._int, self._exp=value.split('e')
+                  #print(self._int, self._exp)
+               else:
+                  self._int = value
+                  self._exp = 0
                return self
       
-            #print(value)
-            #else:
-               #fracpart=''
-
             #m = _parser(value.strip())
             #if m is None:
             if context is None:
