@@ -321,12 +321,16 @@ var $comp_func = function(self,other){
     if(isinstance(other,_b_.bool)) {
       return self.valueOf() > _b_.bool.$dict.__hash__(other)
     }
+    if (hasattr(other, '__int__') || hasattr(other, '__index__')) {
+       return $IntDict.__gt__(self, $B.$GetInt(other))
+    }
     throw _b_.TypeError(
         "unorderable types: int() > "+$B.get_class(other).__name__+"()")
 }
 $comp_func += '' // source codevar $comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
 for(var $op in $B.$comps){
-    eval("$IntDict.__"+$B.$comps[$op]+'__ = '+$comp_func.replace(/>/gm,$op))
+    eval("$IntDict.__"+$B.$comps[$op]+'__ = '+
+          $comp_func.replace(/>/gm,$op).replace(/__gt__/gm,'__'+$B.$comps[$op]+'__'))
 }
 
 // add "reflected" methods
