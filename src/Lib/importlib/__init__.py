@@ -18,7 +18,7 @@ try:
     import _frozen_importlib as _bootstrap
 except ImportError:
     from . import _bootstrap
-    #_bootstrap._setup(sys, _imp)   #fix me brython
+    _bootstrap._setup(sys, _imp)
 else:
     # importlib._bootstrap is the built-in import, ensure we don't create
     # a second copy of the module.
@@ -90,3 +90,8 @@ def import_module(name, package=None):
                 break
             level += 1
     return _bootstrap._gcd_import(name[level:], package, level)
+
+
+#need at least one import hook for importlib stuff to work.
+import basehook
+sys.meta_path.append(basehook.BaseHook())

@@ -1473,8 +1473,10 @@ def _find_module(name, path):
     if not sys.meta_path:
         _warnings.warn('sys.meta_path is empty', ImportWarning)
     for finder in sys.meta_path:
-        with _ImportLockContext():
-            loader = finder.find_module(name, path)
+        #with _ImportLockContext():
+        #    loader = finder.find_module(name, path)
+        loader = finder.find_module(name, path)
+
         if loader is not None:
             # The parent import may have already imported this module.
             if name not in sys.modules:
