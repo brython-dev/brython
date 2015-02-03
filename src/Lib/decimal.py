@@ -613,7 +613,7 @@ class Decimal(object):
                self._exp='n'
                return self
 
-            if value in ('inf', '-inf', 'infinity', '-infinity'):
+            if value in ('inf', 'infinity'):
                self._int = '0'
                self._exp = 'F'
                self._is_special = True
