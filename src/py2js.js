@@ -3103,9 +3103,9 @@ function $LambdaCtx(context){
     this.locals = []
     
     this.to_js = function(){
-        var module = $get_module(this).module
+        var module = $get_module(this)
         var scope = $get_scope(this)
-        var src = $B.$py_src[module]
+        var src = $B.$py_src[module.id]
         var qesc = new RegExp('"',"g") // to escape double quotes in arguments
 
         var args = src.substring(this.args_start,this.body_start).replace(qesc,'\\"')
@@ -5859,6 +5859,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     root.module = module
     root.id = locals_id
     $B.modules[root.id] = root
+    $B.$py_src[locals_id] = src
     root.parent_block = $B.modules[parent_block_id]
     root.line_info = line_info
     root.indent = -1
