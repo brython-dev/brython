@@ -39,7 +39,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         }
     }
     if(metaclass===_b_.type) return _b_.type(class_name,bases,cl_dict)
-    
+        
     // create the factory function
     var factory = function(){
         return $instance_creator($B.class_dict).apply(null,arguments)
@@ -249,6 +249,17 @@ $B.$type.__getattribute__=function(klass,attr){
                     }
                 }
             }
+        }
+        if(res===undefined){
+            // search a method __getattr__
+            var getattr=null
+            for(var i=0;i<cl_mro.length;i++){
+                if(cl_mro[i].__getattr__!==undefined){
+                    getattr = cl_mro[i].__getattr__
+                    break
+                }
+            }
+            if(getattr!==null){return getattr(attr)}
         }
     }
 

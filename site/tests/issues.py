@@ -136,4 +136,19 @@ class A:
         return "whatever"
 
 assert A().toString() == "whatever"
+
+# issue 126
+class MyType(type):
+    def __getattr__(cls, attr):
+        return "whatever"
+
+class MyParent(metaclass=MyType):
+    pass
+
+class MyClass(MyParent):
+    pass
+
+assert MyClass.spam == "whatever"
+assert MyParent.spam == "whatever"
+
 print('passed all tests')
