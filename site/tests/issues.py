@@ -151,4 +151,7 @@ class MyClass(MyParent):
 assert MyClass.spam == "whatever"
 assert MyParent.spam == "whatever"
 
+#issue 127
+assert "aaa+AAA".split("+") == ['aaa', 'AAA']
+
 print('passed all tests')
