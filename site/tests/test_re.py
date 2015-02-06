@@ -38,5 +38,35 @@ m = re.match(r"(..)+", "a1b2c3")
 assert m.group(0) == 'a1b2c3'
 assert m.group(1) == 'c3'
 
-print('all tests ok..')
+_parser = re.compile(r"""        # A numeric string consists of:
+    \s*
+    (?P<sign>[-+])?              # an optional sign, followed by either...
+    (
+        (?=\d|\.\d)              # ...a number (with at least one digit)
+        (?P<int>\d*)             # having a (possibly empty) integer part
+        (\.(?P<frac>\d*))?       # followed by an optional fractional part
+        (E(?P<exp>[-+]?\d+))?    # followed by an optional exponent, or...
+    |
+        Inf(inity)?              # ...an infinity, or...
+    |
+        (?P<signal>s)?           # ...an (optionally signaling)
+        NaN                      # NaN
+        (?P<diag>\d*)            # with (possibly empty) diagnostic info.
+    )
+    \s*
+    \Z
+""", re.VERBOSE | re.IGNORECASE).match
 
+_m=_parser("3.0")
+assert _m.group('int') == '3'
+
+_m=_parser("NaN")
+assert _m.group('diag') is not None
+
+_m=_parser("Inf")
+assert _m.group('diag') is None and _m.group('sign') is None
+
+_m=_parser("-Inf")
+assert _m.group('diag') is None and _m.group('sign') == '-'
+
+print('all tests ok..')
