@@ -637,7 +637,8 @@ function globals(module){
     // the translation engine adds the argument module
     var res = _b_.dict()
     var scope = $B.vars[module]
-    for(var name in scope){_b_.dict.$dict.__setitem__(res, name, scope[name])}
+    var setitem=_b_.dict.$dict.__setitem__
+    for(var name in scope) setitem(res, name, scope[name])
     return res
 }
 
@@ -894,9 +895,8 @@ function locals(obj_id,module){
 
     var res = _b_.dict()
     var scope = $B.vars[obj_id]
-    for(var name in scope){
-       _b_.dict.$dict.__setitem__(res,name,scope[name])
-    }
+    var setitem=_b_.dict.$dict.__setitem__
+    for(var name in scope) setitem(res, name, scope[name])
     return res
 }
 
@@ -1215,7 +1215,9 @@ $RangeDict.__contains__ = function(self,other){
 }
 
 $RangeDict.__getitem__ = function(self,rank){
-    rank=$B.$GetInt(rank)
+    if(typeof rank != "number") {
+      rank=$B.$GetInt(rank)
+    }
     var res = self.start + rank*self.step
     if((self.step>0 && res >= self.stop) ||
         (self.step<0 && res < self.stop)){
@@ -1495,19 +1497,43 @@ function slice(){
       case 1:
         //if(args.length==1){
         step=start=None
-        stop=$B.$GetInt(args[0])
+        if(typeof args[0] == "number") {
+          stop= args[0]
+        } else {
+          stop=$B.$GetInt(args[0])
+        }
         break
       case 2:
         //else if(args.length>=2){
-        start = $B.$GetInt(args[0])
-        stop = $B.$GetInt(args[1])
+        if(typeof args[0] == "number") {
+          start= args[0]
+        } else {
+          start = $B.$GetInt(args[0])
+        }
+        if(typeof args[1] == "number") {
+          stop = args[1]
+        } else {
+          stop = $B.$GetInt(args[1])
+        }
         break
       case 3:
         //}
         //if(args.length>=3) 
-        start = $B.$GetInt(args[0])
-        stop = $B.$GetInt(args[1])
-        step= $B.$GetInt(args[2])
+        if(typeof args[0] == "number") {
+          start= args[0]
+        } else {
+          start = $B.$GetInt(args[0])
+        }
+        if(typeof args[1] == "number") {
+          stop = args[1]
+        } else {
+          stop = $B.$GetInt(args[1])
+        }
+        if(typeof args[2] == number) {
+          step = args[2]
+        } else {
+          step= $B.$GetInt(args[2])
+        }
     } //switch
 
     if(step==0) throw ValueError("slice step must not be zero")
@@ -2054,9 +2080,10 @@ var $FrameDict = {__class__:$B.$type,
 
 function to_dict(obj){
     var res = _b_.dict()
+    var setitem=_b_.dict.$dict.__setitem__
     for(var attr in obj){
         if(attr.charAt(0)=='$'){continue}
-        _b_.dict.$dict.__setitem__(res, attr, obj[attr])
+        setitem(res, attr, obj[attr])
     }
     return res
 }
@@ -2121,7 +2148,8 @@ var BaseException = function (msg,js_exc){
             var lines = $B.$py_src[call_info[1]].split('\n')
             err.info += '\n  module '+lib_module+' line '+call_info[0]
             var line = lines[call_info[0]-1]
-            while(line && line.charAt(0)==' '){line=line.substr(1)}
+            //while(line && line.charAt(0)==' '){line=line.substr(1)}
+            if(line) line=line.replace(/^[ ]+/g, '')
             err.info += '\n    '+line
             last_info = call_info
             // create traceback object
@@ -2202,7 +2230,9 @@ $B.exception = function(js_exc){
         console.log('$B.exception ', js_exc)
         for(var attr in js_exc){console.log(attr,js_exc[attr])}
         console.log('line info '+ $B.line_info)
-        console.log(js_exc.info)
+        //console.log(js_exc.info) //printed by for loop above
+        console.trace()
+        console.log('call stack', $B.call_stack)
     }
 
     if(!js_exc.py_error){
