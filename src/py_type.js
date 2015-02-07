@@ -6,8 +6,9 @@ var _b_=$B.builtins
 $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwargs){
     var cl_dict=_b_.dict(),bases=null
     // transform class object into a dictionary
+    var setitem=_b_.dict.$dict.__setitem__
     for(var attr in class_obj){
-        _b_.dict.$dict.__setitem__(cl_dict,attr,class_obj[attr])
+        setitem(cl_dict,attr,class_obj[attr])
     }
     // check if parents are defined
     if(parents!==undefined){
@@ -85,7 +86,7 @@ _b_.type = function(name,bases,cl_dict){
     // type() returns the factory function
     
     // Create the class dictionary    
-    var class_dict = $B.class_dict = new Object()
+    var class_dict = $B.class_dict = {}
         
     // class attributes
     class_dict.__class__ = $B.$type
