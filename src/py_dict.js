@@ -111,19 +111,18 @@ var $item_generator = function(d) {
     this.length=0
 
     this.items=[]
-    var push=this.items.push
     for (var k in d.$numeric_dict) {
-        push([parseFloat(k), d.$numeric_dict[k]])
+        this.items.push([parseFloat(k), d.$numeric_dict[k]])
     }
 
     for (var k in d.$string_dict) {
-        push([k, d.$string_dict[k]])
+        this.items.push([k, d.$string_dict[k]])
     }
 
     for (var i=0; i < this.data.length; i++) {
         var _v=this.data[i]
         if (_v === undefined || _v === dummy) continue
-        push(_v)
+        this.items.push(_v)
     }
     this.length=this.items.length
 }
