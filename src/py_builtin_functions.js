@@ -1494,45 +1494,28 @@ function slice(){
 
     var start=0, stop=0, step=1
     switch(args.length) {
-      case 1:
-        //if(args.length==1){
-        step=start=None
-        if(typeof args[0] == "number") {
-          stop= args[0]
-        } else {
-          stop=$B.$GetInt(args[0])
-        }
-        break
-      case 2:
-        //else if(args.length>=2){
-        if(typeof args[0] == "number") {
-          start= args[0]
-        } else {
-          start = $B.$GetInt(args[0])
-        }
-        if(typeof args[1] == "number") {
-          stop = args[1]
-        } else {
-          stop = $B.$GetInt(args[1])
-        }
-        break
       case 3:
         //}
         //if(args.length>=3) 
-        if(typeof args[0] == "number") {
-          start= args[0]
+        if(typeof args[2] == "number") {
+          step = args[2]
         } else {
-          start = $B.$GetInt(args[0])
+          step= $B.$GetInt(args[2])
         }
+      case 2:
+        //else if(args.length>=2){
         if(typeof args[1] == "number") {
           stop = args[1]
         } else {
           stop = $B.$GetInt(args[1])
         }
-        if(typeof args[2] == number) {
-          step = args[2]
+      case 1:
+        //if(args.length==1){
+        if (args.length == 1) step=start=None
+        if(typeof args[0] == "number") {
+          start= args[0]
         } else {
-          step= $B.$GetInt(args[2])
+          start=$B.$GetInt(args[0])
         }
     } //switch
 
