@@ -213,7 +213,12 @@ $IntDict.__new__ = function(cls){
 
 $IntDict.__pow__ = function(self,other){
     if(isinstance(other, int)) {
-      if (other.valueOf() >= 0) return int(Math.pow(self.valueOf(),other.valueOf()))
+      switch(other.valueOf()) {
+        case 0:
+          return int(1)
+        case 1:
+          return int(self.valueOf())
+      }
       return Math.pow(self.valueOf(),other.valueOf()) 
     }
     if(isinstance(other, _b_.float)) { 
