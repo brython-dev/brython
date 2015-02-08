@@ -17,6 +17,19 @@ function makeTagDict(tagName){
         __name__:tagName
         }
 
+    dict.__getattribute__ = function(self, attr){
+        if(self.elt.hasAttributeNS(null, attr)){
+            return self.elt.getAttributeNS(null,attr)
+        }
+        if(dict[attr]!==undefined){
+            return function(){
+                var args = [self].concat(Array.prototype.slice.call(arguments))
+                return dict[attr].apply(null, args)
+            }
+        }
+        return $B.DOMNode.__getattribute__(self, attr)        
+    }
+
     dict.__init__ = function(){
         var $ns=$B.$MakeArgs('pow',arguments,['self'],[],'args','kw')
         var self = $ns['self']
@@ -36,10 +49,11 @@ function makeTagDict(tagName){
         }
 
         // attributes
-        for(var i=0, _len_i = $ns['kw'].$keys.length; i < _len_i;i++){
+        var items = _b_.list(_b_.dict.$dict.items($ns['kw']))
+        for(var i=0, _len_i = items.length; i < _len_i;i++){
             // keyword arguments
-            var arg = $ns['kw'].$keys[i]
-            var value = $ns['kw'].$values[i]
+            var arg = items[i][0]
+            var value = items[i][1]
             if(arg.toLowerCase().substr(0,2)==="on"){ 
                 // Event binding passed as argument "onclick", "onfocus"...
                 // Better use method bind of DOMNode objects
@@ -54,11 +68,8 @@ function makeTagDict(tagName){
                 if(value!==false){
                     // option.selected=false sets it to true :-)
                     try{
-                        arg = arg.toLowerCase()
+                        arg = arg.toLowerCase().replace('_','-')
                         self.elt.setAttributeNS(null,arg,value)
-                        if(arg=="class"){ // for IE
-                            self.elt.setAttribute("className",value)
-                        }
                     }catch(err){
                         throw ValueError("can't set attribute "+arg)
                     }
@@ -73,6 +84,14 @@ function makeTagDict(tagName){
         var res = $B.$DOMNode(document.createElementNS($svgNS,tagName))
         res.__class__ = cls.$dict
         return res
+    }
+    
+    dict.__setattr__ = function(self, key, value){
+        if(self.elt.hasAttributeNS(null, key)){
+            self.elt.setAttributeNS(null,key,value)
+        }else{
+            $B.DOMNode.__setattr__(self, key, value)
+        }
     }
 
     return dict

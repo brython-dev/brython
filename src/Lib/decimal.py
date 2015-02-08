@@ -595,40 +595,97 @@ class Decimal(object):
         # From a string
         # REs insist on real strings, so we can too.
         if isinstance(value, str):
-            m = _parser(value.strip())
-            if m is None:
-                if context is None:
-                    context = getcontext()
-                return context._raise_error(ConversionSyntax,
-                                "Invalid literal for Decimal: %r" % value)
+            value=value.strip().lower()
 
-            if m.group('sign') == "-":
+            if value.startswith("-"):
                 self._sign = 1
+                value=value[1:]
             else:
                 self._sign = 0
-            intpart = m.group('int')
-            if intpart is not None:
-                # finite number
-                fracpart = m.group('frac') or ''
-                exp = int(m.group('exp') or '0')
-                self._int = str(int(intpart+fracpart))
-                self._exp = exp - len(fracpart)
-                self._is_special = False
+
+            if value in ('', 'nan'):
+               self._is_special = True
+               self._int = ''
+               #if m.group('signal'):  #figure out what a signaling NaN is later
+               #   self._exp = 'N'
+               #else:
+               #   self._exp = 'n'
+               self._exp='n'
+               return self
+
+            if value in ('inf', 'infinity'):
+               self._int = '0'
+               self._exp = 'F'
+               self._is_special = True
+               return self
+
+            import _jsre as re
+            _m=re.match("^\d*\.?\d*(e\+?\d*)?$", value)
+            if not _m:
+               self._is_special = True
+               self._int = ''
+               self._exp='n'
+               return self
+
+            if '.' in value:
+               intpart, fracpart=value.split('.')
+               if 'e' in fracpart:
+                  fracpart, exp=fracpart.split('e')
+                  exp=int(exp)
+               else:
+                  exp=0
+
+               #self._int = str(int(intpart+fracpart))
+               self._int = intpart+fracpart
+               self._exp = exp - len(fracpart)
+               self._is_special = False
+               return self
             else:
-                diag = m.group('diag')
-                if diag is not None:
-                    # NaN
-                    self._int = str(int(diag or '0')).lstrip('0')
-                    if m.group('signal'):
-                        self._exp = 'N'
-                    else:
-                        self._exp = 'n'
-                else:
-                    # infinity
-                    self._int = '0'
-                    self._exp = 'F'
-                self._is_special = True
-            return self
+               #is this a pure int?
+               self._is_special = False
+               if 'e' in value:
+                  self._int, _exp=value.split('e')
+                  self._exp=int(_exp)
+                  #print(self._int, self._exp)
+               else:
+                  self._int = value
+                  self._exp = 0
+               return self
+      
+            #m = _parser(value.strip())
+            #if m is None:
+            if context is None:
+               context = getcontext()
+            return context._raise_error(ConversionSyntax,
+                              "Invalid literal for Decimal: %r" % value)
+
+            #if m.group('sign') == "-":
+            #    self._sign = 1
+            #else:
+            #    self._sign = 0
+            #intpart = m.group('int')
+            #if intpart is not None:
+            #    # finite number
+            #    fracpart = m.group('frac') or ''
+            #    exp = int(m.group('exp') or '0')
+            #    self._int = str(int(intpart+fracpart))
+            #    self._exp = exp - len(fracpart)
+            #    self._is_special = False
+            #else:
+            #    diag = m.group('diag')
+            #    if diag is not None:
+            #        # NaN
+            #        self._int = str(int(diag or '0')).lstrip('0')
+            #        if m.group('signal'):
+            #            self._exp = 'N'
+            #        else:
+            #            self._exp = 'n'
+            #    else:
+            #        # infinity
+            #        self._int = '0'
+            #        self._exp = 'F'
+            #    self._is_special = True
+            #return self
 
         # From an integer
         if isinstance(value, int):
@@ -6109,26 +6166,28 @@ ExtendedContext = Context(
 # at least one decimal digit, possibly after the decimal point.  The
 # lookahead expression '(?=\d|\.\d)' checks this.
 
-import re
-_parser = re.compile(r"""        # A numeric string consists of:
-#    \s*
-    (?P<sign>[-+])?              # an optional sign, followed by either...
-    (
-        (?=\d|\.\d)              # ...a number (with at least one digit)
-        (?P<int>\d*)             # having a (possibly empty) integer part
-        (\.(?P<frac>\d*))?       # followed by an optional fractional part
-        (E(?P<exp>[-+]?\d+))?    # followed by an optional exponent, or...
-    |
-        Inf(inity)?              # ...an infinity, or...
-    |
-        (?P<signal>s)?           # ...an (optionally signaling)
-        NaN                      # NaN
-        (?P<diag>\d*)            # with (possibly empty) diagnostic info.
-    )
-#    \s*
-    \Z
-""", re.VERBOSE | re.IGNORECASE).match
+#import re
 
+#_parser = re.compile(r"""        # A numeric string consists of:
+#    \s*
+#    (?P<sign>[-+])?              # an optional sign, followed by either...
+#    (
+#        (?=\d|\.\d)              # ...a number (with at least one digit)
+#        (?P<int>\d*)             # having a (possibly empty) integer part
+#        (\.(?P<frac>\d*))?       # followed by an optional fractional part
+#        (E(?P<exp>[-+]?\d+))?    # followed by an optional exponent, or...
+#    |
+#        Inf(inity)?              # ...an infinity, or...
+#    |
+#        (?P<signal>s)?           # ...an (optionally signaling)
+#        NaN                      # NaN
+#        (?P<diag>\d*)            # with (possibly empty) diagnostic info.
+#    )
+#    \s*
+#    \Z
+#""", re.VERBOSE | re.IGNORECASE).match
+
+import _jsre as re
 _all_zeros = re.compile('0*$').match
 _exact_half = re.compile('50*$').match
 
@@ -6141,20 +6200,20 @@ _exact_half = re.compile('50*$').match
 #
 #   [[fill]align][sign][#][0][minimumwidth][,][.precision][type]
 
-_parse_format_specifier_regex = re.compile(r"""\A
-(?:
-   (?P<fill>.)?
-   (?P<align>[<>=^])
-)?
-(?P<sign>[-+ ])?
-(?P<alt>\#)?
-(?P<zeropad>0)?
-(?P<minimumwidth>(?!0)\d+)?
-(?P<thousands_sep>,)?
-(?:\.(?P<precision>0|(?!0)\d+))?
-(?P<type>[eEfFgGn%])?
-\Z
-""", re.VERBOSE|re.DOTALL)
+#_parse_format_specifier_regex = re.compile(r"""\A
+#(?:
+#   (?P<fill>.)?
+#   (?P<align>[<>=^])
+#)?
+#(?P<sign>[-+ ])?
+#(?P<alt>\#)?
+#(?P<zeropad>0)?
+#(?P<minimumwidth>(?!0)\d+)?
+#(?P<thousands_sep>,)?
+#(?:\.(?P<precision>0|(?!0)\d+))?
+#(?P<type>[eEfFgGn%])?
+#\Z
+#""", re.VERBOSE|re.DOTALL)
 
 del re
 

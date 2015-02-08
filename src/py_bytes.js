@@ -56,8 +56,8 @@ $BytearrayDict.__setitem__ = function(self,arg,value){
 
         // copy items in a temporary JS array
         // otherwise, a[:0]=a fails
-        if(hasattr(value,'__iter__')){
-            var $temp = list(value)
+        if(_b_.hasattr(value,'__iter__')){
+            var $temp = _b_.list(value)
             for(var i=$temp.length-1;i>=0;i--){
                 if(!isinstance($temp[i], _b_.int)){
                     throw _b_.TypeError('an integer is required')
@@ -116,6 +116,7 @@ $BytesDict.__add__ = function(self,other){
         throw _b_.TypeError("can't concat bytes to " + _b_.str(other))
     }
     self.source = self.source.concat(other.source)
+    return self
 }
 
 var $bytes_iterator = $B.$iterator_class('bytes_iterator')
@@ -224,7 +225,8 @@ $BytesDict.__repr__ = $BytesDict.__str__ = function(self){
 $BytesDict.__reduce_ex__ = function(self){return $BytesDict.__repr__(self)}
 
 $BytesDict.decode = function(self,encoding,errors){
-    if (errors === undefined) errors='strict'
+    if(encoding === undefined) encoding = 'utf-8'
+    if(errors === undefined) errors='strict'
 
     switch (errors) {
       case 'strict':
@@ -526,6 +528,9 @@ for(var $attr in $BytesDict){
         })($attr)
     }
 }
+
+$B.set_func_names($BytesDict)
+$B.set_func_names($BytearrayDict)
 
 _b_.bytes = bytes
 _b_.bytearray = bytearray

@@ -36,12 +36,32 @@ General notes on the underlying Mersenne Twister core generator:
 
 """
 
-from warnings import warn as _warn
+# Module adapted for Brython : remove expensive imports
+
+#from warnings import warn as _warn
+def _warn(msg):
+    print(msg)
+
 from types import MethodType as _MethodType, BuiltinMethodType as _BuiltinMethodType
 from math import log as _log, exp as _exp, pi as _pi, e as _e, ceil as _ceil
 from math import sqrt as _sqrt, acos as _acos, cos as _cos, sin as _sin
-from os import urandom as _urandom
-from collections.abc import Set as _Set, Sequence as _Sequence
+
+from browser import window
+
+def _randint(a, b):
+    return int(window.Math.random()*(b-a+1)+a)
+    
+#from os import urandom as _urandom
+def _urandom(n):
+    """urandom(n) -> str    
+    Return n random bytes suitable for cryptographic use."""
+    randbytes= [_randint(0,255) for i in range(n)]
+    return bytes(randbytes)
+    
+#from collections.abc import Set as _Set, Sequence as _Sequence
+_Set = set
+_Sequence = [str, list]
+
 from hashlib import sha512 as _sha512
 
 __all__ = ["Random","seed","random","uniform","randint","choice","sample",

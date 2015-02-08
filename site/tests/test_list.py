@@ -1,4 +1,10 @@
 # list examples
+
+z=[1,2,3]
+assert z.__class__ == list
+assert isinstance(z,list)
+assert str(z)=="[1, 2, 3]"
+
 a=['spam','eggs',100,1234]
 print(a[:2]+['bacon',2*2])
 print(3*a[:3]+['Boo!'])
@@ -19,3 +25,9 @@ a.extend('ab')
 print(a)
 a.extend([1,2,33])
 print(a)
+
+# tuple
+t = (1,8)
+assert t.__class__ == tuple
+assert isinstance(t,tuple)
+assert str(t)=='(1, 8)'

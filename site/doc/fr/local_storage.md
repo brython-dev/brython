@@ -1,5 +1,5 @@
-module **browser.local_storage**
---------------------------------
+modules **browser.local\_storage** and **browser.session\_storage**
+-------------------------------------------------------------------
 
 Ce module utilise le stockage local défini par HTML5
 ([voir la spécification](http://dev.w3.org/html5/webstorage/#the-localstorage-attribute)).
@@ -23,15 +23,32 @@ Qu’est-ce que le stockage local?
   `http://` ne peut pas voir une base de données créée lors d’une session
   `https://`.
 
-Le **stockage local HTML5** est implémenté par Brython avec le module
-`browser.local_storage`. Ce module définit un objet `storage` qui est utilisé
-comme un dictionnaire Python classique.
+HTML5 définit deux types de stockage, le _stockage local_ et le _stockage par_
+_session_ ; le premier est _persistant_, c'est-à-dire qu'il conserve les 
+données stockées quand l'utilisateur ferme la fenêtre du navigateur ; le
+second les perd quand la fenêtre du navigateur est fermée.
+
+Le **stockage local HTML5** est implémenté par Brython dans le paquetage 
+**browser** sous forme de deux modules :
+
+- **local_storage**
+> Ce module expose un objet unique, `storage`, qui donne accès au _stockage_
+> _local_. On peut interagir avec lui comme avec un dictionnaire, 
+> en se souvement que les clés et les valeurs sont limités à des chaines.
+- **session_storage**
+> Ce module expose aussi l'object `storage`, qui donne accès au _stockage de_
+> _session_. Son interface est la même que **local_storage**. Utilisez
+> **session_storage** quand vous ne voulez pas partager les données entre
+> sessions ou onglets. C'est typiquement le cas pour un jeton 
+> d'enregistrement.
 
 Voici un exemple simple:
 
->    from browser.local_storage import storage
->    storage['foo']='bar'
->    print(storage['foo'])
+```python
+from browser.local_storage import storage
+storage['foo']='bar'
+print(storage['foo'])
+```
 
 Maintenant, si vous fermez la page, le navigateur, ou même l’ordinateur, la
 valeur stockée sous la clef `'foo'` dans la base de donnée correspondant au
@@ -40,8 +57,25 @@ navigateur.
 
 Pour supprimer de façon permanente une paire clef-valeur:
 
->    del storage['foo']
->    print(storage['foo']) # raises KeyError
+```python
+del storage['foo']
+print(storage['foo']) # déclenche KeyError
+```
+
+L'objet `storage` copie l'interface d'un dictionnaire, et supporte:
+
+- `get`
+- `pop`
+- `keys`
+- `values`
+- `items`
+- `clear`
+- `__len__`
+- `__contains__`
+- `__iter__`
+
+Notez que `keys`, `values`, et `items` retournent une liste au lieu d'un 
+itérateur.
 
 Un exemple plus complet utilisant `local_storage`, une TO-DO list,est affichée
 dans l’iframe ci-dessous.

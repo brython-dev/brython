@@ -60,7 +60,7 @@ Whatever the event type, instances of class `DOMEvent` have the following attrib
 <td>
 <button id="_bubbles">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_bubbles'].bind('click',lambda ev:alert('bubbles : %s ' %ev.bubbles))
 </script>
@@ -75,7 +75,7 @@ document['_bubbles'].bind('click',lambda ev:alert('bubbles : %s ' %ev.bubbles))
 <td>
 <button id="_cancelable">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_cancelable'].bind('click',lambda ev:alert('cancelable : %s ' %ev.cancelable))
 </script>
@@ -90,7 +90,7 @@ document['_cancelable'].bind('click',lambda ev:alert('cancelable : %s ' %ev.canc
 <td>
 <button id="_currentTarget">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_currentTarget'].bind('click',lambda ev:alert('currentTarget : %s ' %ev.currentTarget))
 </script>
@@ -105,7 +105,7 @@ document['_currentTarget'].bind('click',lambda ev:alert('currentTarget : %s ' %e
 <td>
 <button id="_defaultPrevented">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_defaultPrevented'].bind('click',lambda ev:alert('defaultPrevented : %s ' %ev.defaultPrevented))
 </script>
@@ -120,7 +120,7 @@ document['_defaultPrevented'].bind('click',lambda ev:alert('defaultPrevented : %
 <td>
 <button id="_eventPhase">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_eventPhase'].bind('click',lambda ev:alert('eventPhase : %s ' %ev.eventPhase))
 </script>
@@ -135,7 +135,7 @@ document['_eventPhase'].bind('click',lambda ev:alert('eventPhase : %s ' %ev.even
 <td>
 <button id="_target">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_target'].bind('click',lambda ev:alert('target : %s ' %ev.target))
 </script>
@@ -148,7 +148,7 @@ document['_target'].bind('click',lambda ev:alert('target : %s ' %ev.target))
 <td>
 <button id="_timeStamp">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_timeStamp'].bind('click',lambda ev:alert('timeStamp : %s ' %ev.timeStamp))
 </script>
@@ -161,7 +161,7 @@ document['_timeStamp'].bind('click',lambda ev:alert('timeStamp : %s ' %ev.timeSt
 <td>
 <button id="_type">test</button>
 <script type="text/python">
-from browser import document
+from browser import document, alert
 
 document['_type'].bind('click',lambda ev:alert('type : %s ' %ev.type))
 </script>
@@ -199,6 +199,8 @@ and the following methods
 >> disabled checkbox <input type="checkbox" id="disabled_cbox">
 
 <script type="text/python">
+from browser import document
+
 exec(document["disable_cbox"].text)
 </script>
 
@@ -233,8 +235,6 @@ exec(document["disable_cbox"].text)
 </div>
 </blockquote>
 
-<div id="zzz"></div>
-
 > Clicking on the yellow zone triggers the call of function `show()`, which prints the message "click on yellow"
 
 > A click on the blue zone triggers the alert message "click on blue". Then the event propagates to the parent, the yellow frame. Since this frame also handles the event "click", the browser calls the associated action, the same function `show()`, and shows the message "click on yellow" (notice that the attribute `currentTarget` is updated when the event propagates)
@@ -247,6 +247,7 @@ exec(document["disable_cbox"].text)
 
 
 <script type="text/python">
+from browser import document
+
 eval(document["zzz_source"].text)
 </script>
-

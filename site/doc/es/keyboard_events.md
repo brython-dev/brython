@@ -53,7 +53,6 @@ Introduce texto en el campo de más abajo pulsando y sin pulsar la tecla Alt
     
     def altKey(ev):
         document["traceAltKey"].text = 'altKey : %s ' %ev.altKey
-        ev.preventDefault()
         
     # the entry field has the id "altKey"
     document['altKey'].bind('keypress', altKey)
@@ -187,7 +186,8 @@ Introduce texto en el campo de más abajo, pulsando y sin pulsar la tecla Shift
     from browser import document
     
     def shiftKey(ev):
-        document["traceShiftKey"].text = 'shiftKey : %s ' %ev.shiftKey
+        trace = document["traceShiftKey"]
+        trace.text = 'shiftKey : %s ' %ev.shiftKey
 
     document['shiftKey'].bind('keypress', shiftKey)
 </div>
@@ -228,7 +228,6 @@ con *keydown* <input id="whichKeydown"></input>
 
  <div id="codeWhich">
     from browser import document
-     
 
     def which(ev):
         trace = document["traceWhich"]
@@ -249,6 +248,8 @@ con *keydown* <input id="whichKeydown"></input>
 </table>
 
 <script type="text/python">
+from browser import document
+
 exec(document["codeAltKey"].text)
 exec(document["codeCharCode"].text)
 exec(document["codeCtrlKey"].text)

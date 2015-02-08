@@ -1,5 +1,14 @@
-import _os
-from os import urandom as _urandom
+from browser import window
+
+def _randint(a, b):
+    return int(window.Math.random()*(b-a+1)+a)
+    
+def _urandom(n):
+    """urandom(n) -> str    
+    Return n random bytes suitable for cryptographic use."""
+    randbytes= [_randint(0,255) for i in range(n)]
+    return bytes(randbytes)
+    
 class Random:
     """Random number generator base class used by bound module functions.
 
@@ -55,7 +64,7 @@ class Random:
 
     def random(self):
         """Get the next random number in the range [0.0, 1.0)."""
-        return _os.random()
+        return window.Math.random()
 
     def getrandbits(self, k):
         """getrandbits(k) -> x.  Generates a long int with k random bits."""

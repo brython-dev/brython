@@ -90,3 +90,8 @@ def import_module(name, package=None):
                 break
             level += 1
     return _bootstrap._gcd_import(name[level:], package, level)
+
+
+#need at least one import hook for importlib stuff to work.
+import basehook
+sys.meta_path.append(basehook.BaseHook())

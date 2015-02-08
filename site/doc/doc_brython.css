@@ -1,5 +1,4 @@
 @charset 'utf-8';
-@import url(http://fonts.googleapis.com/css?family=Oxygen:400,300,700);
 @-webkit-viewport{width:device-width}
 @-moz-viewport{width:device-width}
 @-ms-viewport{width:device-width}
@@ -12,8 +11,10 @@ html {
 }
 
 body {
-  font-family:Oxygen,arial;
-  font-size:14px;
+  font-family:Arial;
+  font-size:0.9em;
+  margin: 0px;
+  
 }
 
 a.navig:link,a:link,a:hover {
@@ -25,9 +26,9 @@ a.banner:link,a.banner:visited {
   background-color:#1767B7;
   color:#FFF;
   display:block;
-  font-size:16px;
+  font-size:1.2em;
   line-height:30px;
-  padding:10px;
+  padding:1.3em;
   text-align:center;
   text-decoration:none
 }
@@ -90,6 +91,16 @@ select.language {
   padding:10px
 }
 
+.pycode{
+    background-color:#F0F0F0;
+    padding:3px 8px 8px 8px;
+    border-style:solid;
+    border-width:1px;
+    border-color:#888;
+    border-radius: 10px;
+    width:auto;
+}
+
 li {
   margin-bottom:3px
 }
@@ -104,12 +115,12 @@ code {
 
 em {
   color:#339;
-  font-family:Oxygen,courier
+  font-family:courier
 }
 
 strong {
   color:#339;
-  font-family:Oxygen,courier
+  font-family:courier
 }
 
 #main {
@@ -121,76 +132,3 @@ strong {
   padding:5px
 }
 
-
-.github-fork-ribbon {
-    -webkit-box-shadow:0 2px 3px 0 rgba(0,0,0,.5);
-    -moz-box-shadow:0 2px 3px 0 rgba(0,0,0,.5);
-    -o-box-shadow:0 2px 3px 0 rgba(0,0,0,.5);
-    box-shadow:0 2px 3px 0 rgba(0,0,0,.5);
-    background-color:#1767B7;
-    background-image:linear-gradient(tobottom,rgba(0,0,0,0), rgba(0,0,0,0.2));
-    font:700 13px Oxygen;
-    padding:2px 0;
-    pointer-events:auto;
-    position:absolute;
-    z-index:9999
-}
-
-.github-fork-ribbon a,.github-fork-ribbon a:hover {
-    border-color:rgba(255,255,255,.7);
-    border-style:dotted;
-    border-width:1px 0;
-    color:#fff;
-    display:inline-block;
-    line-height:20px;
-    padding:2px 0;
-    text-align:center;
-    text-decoration:none;
-    text-shadow:0 -1px rgba(0,0,0,.5);
-    width:200px
-}
-
-.github-fork-ribbon-wrapper {
-    height:150px;
-    overflow:hidden;
-    pointer-events:none;
-    position:absolute;
-    top:0;
-    width:150px;
-    z-index:9999
-}
-
-.github-fork-ribbon-wrapper.fixed {
-    position:fixed
-}
-
-.github-fork-ribbon-wrapper.right {
-    right:0
-}
-
-.github-fork-ribbon-wrapper.right-bottom {
-    bottom:0;
-    position:fixed;
-    right:0;
-    top:inherit
-}
-
-.github-fork-ribbon-wrapper.right .github-fork-ribbon {
-    -moz-transform:rotate(45deg);
-    -ms-transform:rotate(45deg);
-    -o-transform:rotate(45deg);
-    -webkit-transform:rotate(45deg);
-    right:-43px;
-    top:42px;
-    transform:rotate(45deg)
-}
-
-.github-fork-ribbon-wrapper.right-bottom .github-fork-ribbon {
-    -moz-transform:rotate(-45deg);
-    -ms-transform:rotate(-45deg);
-    -o-transform:rotate(-45deg);
-    -webkit-transform:rotate(-45deg);
-    right:-43px;
-    top:80px;
-    transform:rotate(-45deg)
-}

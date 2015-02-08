@@ -26,6 +26,7 @@ var _b_=$B.builtins
 // class object for the built-in class 'object'
 var $ObjectDict = {
     //__class__:$type, : not here, added in py_type.js after $type is defined
+    // __bases__ : set to an empty tuple in py_list.js after tuple is defined
     __name__:'object',
     $native:true
 }
@@ -54,7 +55,7 @@ $ObjectDict.__dir__ = function(self) {
     var res = []
 
     var objects = [self]
-    var mro = self.__class__.__mro__
+    var mro = $B.get_class(self).__mro__
     for (var i=0, _len_i = mro.length; i < _len_i; i++) {
         objects.push(mro[i])
     }
@@ -63,6 +64,11 @@ $ObjectDict.__dir__ = function(self) {
             //if(attr.charAt(0)=='$' && attr.substr(0,2)!=='$$'){
             if(attr.charAt(0)=='$' && attr.charAt(1) != '$') {
                 // exclude internal attributes set by Brython
+                continue
+            }
+            if(!isNaN(parseInt(attr.charAt(0)))){
+                // Exclude numerical attributes
+                // '0', '1' are in attributes of string 'ab'
                 continue
             }
             res.push(attr)
@@ -75,6 +81,14 @@ $ObjectDict.__dir__ = function(self) {
 
 $ObjectDict.__eq__ = function(self,other){
     // equality test defaults to identity of objects
+    //test_issue_1393
+    var _class=$B.get_class(self)
+    if (_class.$native || _class.__name__ == 'function') {
+       var _class1=$B.get_class(other)
+       if (!_class1.$native && _class1.__name__ != 'function') {
+          return _b_.getattr(other, '__eq__')(self)
+       }
+    }
     return self===other
 }
 
@@ -280,7 +294,7 @@ $ObjectDict.__mro__ = [$ObjectDict]
 
 $ObjectDict.__new__ = function(cls){
     if(cls===undefined){throw _b_.TypeError('object.__new__(): not enough arguments')}
-    var obj = new Object()
+    var obj = {}
     obj.__class__ = cls.$dict
     return obj
 }

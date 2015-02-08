@@ -23,9 +23,7 @@ class Anything:
         return False
 
 class ComparisonTest(unittest.TestCase):
-    #brython fix me
-    #set1 = [2, 2.0, 2, 2+0j, Cmp(2.0)]
-    set1 = [2, 2.0, 2, 2+0, Cmp(2.0)]
+    set1 = [2, 2.0, 2, 2+0j, Cmp(2.0)]
     set2 = [[1], (3,), None, Empty()]
     candidates = set1 + set2
 

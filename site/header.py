@@ -4,15 +4,6 @@
 from browser import document as doc
 from browser.html import *
 
-
-# github.com/simonwhitaker/github-fork-ribbon-css
-GITHUB_FORKME_SNIPPET = """<a href="#top"></a>
-<div class="github-fork-ribbon-wrapper right-bottom">
-<div class="github-fork-ribbon">
-<a target=_blank href="//github.com/brython-dev/brython">Fork me on GitHub</a>
-</div></div>"""
-
-
 trans_menu = {
     'menu_console': {
         'en': 'Console',
@@ -69,7 +60,7 @@ def show(prefix=''):
     has_req = False
 
     qs_lang = doc.query.getfirst("lang")
-    if qs_lang and qs_lang in ["en", "fr", "es", "pt"]:
+    if qs_lang and qs_lang in ["en", "fr", "es"]:
         has_req = True
         language = qs_lang
     else:
@@ -77,13 +68,12 @@ def show(prefix=''):
         try:
             lang, enc = locale.getdefaultlocale()
             lang = lang[:2]
-            if lang in ("en", "fr", "es", "pt"):
+            if lang in ("en", "fr", "es"):
                 language = lang
         except:
             pass
 
     _banner = doc['banner_row']
-    _banner.html = GITHUB_FORKME_SNIPPET
 
     for key in['home', 'console', 'editor', 'gallery',
                'doc', 'download', 'dev', 'groups']:

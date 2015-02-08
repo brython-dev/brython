@@ -34,9 +34,9 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
                for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs.push(_arg[j])
                break
              case 'pdict':
-               var _arg=$arg.arg
-               for(var j=0, _len_j = _arg.$keys.length; j < _len_j;j++){
-                  upargs.push({$nat:"kw",name:_arg.$keys[j],value:_arg.$values[j]})
+               var _arg=$arg.arg, items=_b_.list(_b_.dict.$dict.items(_arg))
+               for(var j=0, _len_j = items.length; j < _len_j;j++){
+                  upargs.push({$nat:"kw",name:items[j][0],value:items[j][1]})
                }
                break
              default:
@@ -104,8 +104,10 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     }
     if($other_kw!=null){
         $ns[$other_kw]=_b_.dict()
-        $ns[$other_kw].$keys = $dict_keys
-        $ns[$other_kw].$values = $dict_values
+        for(var i=0;i<$dict_keys.length;i++){
+            _b_.dict.$dict.__setitem__($ns[$other_kw], $dict_keys[i],
+                $dict_values[i])
+        }
     }
     if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
     return $ns
@@ -138,9 +140,9 @@ $B.$MakeArgs1 = function($fname,$args,$robj,$required,$dobj,$defaults,
                for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs.push(_arg[j])
                break
              case 'pdict':
-               var _arg=$arg.arg
-               for(var j=0, _len_j = _arg.$keys.length; j < _len_j;j++){
-                  upargs.push({$nat:"kw",name:_arg.$keys[j],value:_arg.$values[j]})
+               var _arg=$arg.arg, items=_b_.list(_b_.dict.$dict.items(_arg))
+               for(var j=0, _len_j = items.length; j < _len_j;j++){
+                  upargs.push({$nat:"kw",name:items[j][0],value:items[j][1]})
                }
                break
              default:
@@ -208,8 +210,10 @@ $B.$MakeArgs1 = function($fname,$args,$robj,$required,$dobj,$defaults,
     }
     if($other_kw!=null){
         $ns[$other_kw]=_b_.dict()
-        $ns[$other_kw].$keys = $dict_keys
-        $ns[$other_kw].$values = $dict_values
+        for(var i=0;i<$dict_keys.length;i++){
+            _b_.dict.$dict.__setitem__($ns[$other_kw], $dict_keys[i],
+                $dict_values[i])
+        }
     }
     if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
     return $ns
@@ -253,8 +257,14 @@ $B.$mkdict = function(glob,loc){
     return res
 }
 
+function clear(ns){
+    // delete temporary structures
+    delete $B.vars[ns], $B.bound[ns], $B.modules[ns], $B.imported[ns]
+    
+}
+
 $B.$list_comp = function(module_name, parent_block_id){
-    var $ix = Math.random().toString(36).substr(2,8)
+    var $ix = $B.UUID()
     var $py = 'def func'+$ix+"():\n"
     $py += "    x"+$ix+"=[]\n"
     var indent=4
@@ -276,25 +286,29 @@ $B.$list_comp = function(module_name, parent_block_id){
 
     var $js = $root.to_js()
     
-    try{eval($js)}
+    try{
+        eval($js)
+        var res = $B.vars['lc'+$ix]['res'+$ix]
+    }
     catch(err){throw $B.exception(err)}
+    finally{clear($mod_name)}
 
-    return $B.vars['lc'+$ix]['res'+$ix]
+    return res
 }
 
 $B.$gen_expr = function(){ // generator expresssion
     var module_name = arguments[0]
     var parent_block_id = arguments[1]
-    var $ix = Math.random().toString(36).substr(2,8)
+    var $ix = $B.UUID()
     var $res = 'res'+$ix
     var $py = $res+"=[]\n"
     var indent=0
     for(var $i=3, _len_$i = arguments.length; $i < _len_$i;$i++){
-        for(var $j=0;$j<indent;$j++) $py += ' '
+        $py+=' '.repeat(indent)
         $py += arguments[$i].join(' ')+':\n'
         indent += 4
     }
-    for(var $j=0;$j<indent;$j++) $py += ' '
+    $py+=' '.repeat(indent)
     $py += $res+'.append('+arguments[2].join('\n')+')'
     
     var $mod_name = 'ge'+$ix
@@ -329,33 +343,36 @@ $B.$gen_expr = function(){ // generator expresssion
     $GenExprDict.$factory = $GenExprDict
     var $res2 = {value:$res1,__class__:$GenExprDict,$counter:-1}
     $res2.toString = function(){return 'ge object'}
+    clear($mod_name)
     return $res2
 }
 
 $B.$dict_comp = function(module_name,parent_block_id){ // dictionary comprehension
 
-    var $ix = Math.random().toString(36).substr(2,8)
+    var $ix = $B.UUID()
     var $res = 'res'+$ix
     var $py = $res+"={}\n"
     var indent=0
     for(var $i=3, _len_$i = arguments.length; $i < _len_$i;$i++){
-        for(var $j=0;$j<indent;$j++) $py += ' '
+        $py+=' '.repeat(indent)
         $py += arguments[$i]+':\n'
         indent += 4
     }
-    for(var $j=0;$j<indent;$j++) $py += ' '
+    $py+=' '.repeat(indent)
     $py += $res+'.update({'+arguments[2].join('\n')+'})'
     var locals_id = 'dc'+$ix
     var $root = $B.py2js($py,module_name,locals_id,parent_block_id)
     $root.caller = $B.line_info
     var $js = $root.to_js()
     eval($js)
-    return $B.vars[locals_id][$res]
+    var res = $B.vars[locals_id][$res]
+    clear(locals_id)
+    return res
 }
 
 $B.$lambda = function(locals,$mod,parent_block_id,$args,$body){
 
-    var rand = Math.random().toString(36).substr(2,8)
+    var rand = $B.UUID()
     var $res = 'lambda_'+$B.lambda_magic+'_'+rand
     var local_id = 'lambda'+rand
     var $py = 'def '+$res+'('+$args+'):\n'
@@ -412,6 +429,7 @@ $B.$JS2Py = function(src){
 
 // get item
 $B.$getitem = function(obj, item){
+    item=$B.$GetInt(item)
     if(Array.isArray(obj) && typeof item=='number' && obj[item]!==undefined){
         return item >=0 ? obj[item] : obj[obj.length+item]
     }
@@ -590,30 +608,102 @@ $B.stdin = {
     read: function(size){return ''}
 }
 
-function pyobject2jsobject(obj) {
+$B.jsobject2pyobject=function(obj){
+    switch(obj) {
+      case null:
+        return _b_.None
+      case true:
+        return _b_.True
+      case false:
+        return _b_.False
+    }
+
+    if(_b_.isinstance(obj,_b_.list)){
+        var res = []
+        for(var i=0, _len_i = obj.length; i < _len_i;i++){
+            res.push($B.jsobject2pyobject(obj[i]))
+        }
+        return res
+    }
+
+    if(obj.__class__!==undefined){
+        if(obj.__class__===_b_.list){
+          for(var i=0, _len_i = obj.length; i < _len_i;i++){
+              obj[i] = $B.jsobject2pyobject(obj[i])
+          }
+          return obj
+        }
+        return obj
+    }
+
+    if(obj._type_ === 'iter') { // this is an iterator
+       return _b_.iter(obj.data)
+    }
+
+    if(typeof obj==='object' && obj.__class__===undefined){
+        // transform JS object into a Python dict
+        var res = _b_.dict()
+        for(var attr in obj){
+            _b_.getattr(res,'__setitem__')(attr,$B.jsobject2pyobject(obj[attr]))
+        }
+        return res
+    }
+
+    return $B.JSObject(obj)
+}
+
+$B.pyobject2jsobject=function (obj){
+    // obj is a Python object
+    switch(obj) {
+      case _b_.None:
+        return null
+      case _b_.True:
+        return true
+      case _b_.False:
+        return false
+    }
+
+    if(_b_.isinstance(obj,[_b_.int,_b_.str])) return obj
+    if(_b_.isinstance(obj,_b_.float)) return obj.value
+    if(_b_.isinstance(obj,[_b_.list,_b_.tuple])){
+        var res = []
+        for(var i=0, _len_i = obj.length; i < _len_i;i++){
+           res.push($B.pyobject2jsobject(obj[i]))
+        }
+        return res
+    }
     if(_b_.isinstance(obj,_b_.dict)){
-        var temp = {__class__ :'dict'}
-        for(var i=0, _len_i = obj.$keys.length; i < _len_i;i++) temp[obj.$keys[i]]=obj.$values[i]
-        return temp
+        var res = {}
+        var items = _b_.list(_b_.dict.$dict.items(obj))
+        for(var i=0, _len_i = items.length; i < _len_i;i++){
+            res[$B.pyobject2jsobject(items[i][0])]=$B.pyobject2jsobject(items[i][1])
+        }
+        return res
     }
 
-    // giving up, just return original object
-    return obj
-}
-
-function jsobject2pyobject(obj) {
-    if(obj === undefined) return _b_.None
-    if(obj.__class__ === 'dict'){
-       var d = _b_.dict()
-       for(var attr in obj){
-          if (attr !== '__class__') d.__setitem__(attr, obj[attr])
+    if (_b_.hasattr(obj, '__iter__')) {
+       // this is an iterator..
+       var _a=[]
+       while(1) {
+          try {
+           _a.push($B.pyobject2jsobject(_b_.next(obj)))
+          } catch(err) {
+            if (err.__name__ !== "StopIteration") throw err
+            break
+          }
        }
-       return d
+       return {'_type_': 'iter', data: _a}
     }
 
-    // giving up, just return original object
-    return obj
+    if (_b_.hasattr(obj, '__getstate__')) {
+       return _b_.getattr(obj, '__getstate__')()
+    }
+    if (_b_.hasattr(obj, '__dict__')) {
+       return $B.pyobject2jsobject(_b_.getattr(obj, '__dict__'))
+    }
+    throw _b_.TypeError(str(obj)+' is not JSON serializable')
 }
+
 
 // override IDBObjectStore's add, put, etc functions since we need
 // to convert python style objects to a js object type
@@ -621,20 +711,20 @@ function jsobject2pyobject(obj) {
 if (window.IDBObjectStore !== undefined) {
     window.IDBObjectStore.prototype._put=window.IDBObjectStore.prototype.put
     window.IDBObjectStore.prototype.put=function(obj, key) {
-       var myobj = pyobject2jsobject(obj)
+       var myobj = $B.pyobject2jsobject(obj)
        return window.IDBObjectStore.prototype._put.apply(this, [myobj, key]);
     }
     
     window.IDBObjectStore.prototype._add=window.IDBObjectStore.prototype.add
     window.IDBObjectStore.prototype.add=function(obj, key) {
-       var myobj= pyobject2jsobject(obj);
+       var myobj= $B.pyobject2jsobject(obj);
        return window.IDBObjectStore.prototype._add.apply(this, [myobj, key]);
     }
 }
 
 if (window.IDBRequest !== undefined) {
     window.IDBRequest.prototype.pyresult=function() {
-       return jsobject2pyobject(this.result);
+       return $B.jsobject2pyobject(this.result);
     }
 }
 
@@ -664,10 +754,72 @@ $B.$iterator = function(items,klass){
 $B.$iterator_class = function(name){
     var res = {
         __class__:$B.$type,
-        __name__:name
+        __name__:name,
     }
+
+    res.__repr__=function(self){
+       return name + '('+ _b_.getattr(as_list(self), '__repr__')() + ')'
+    }
+
     res.__str__ = res.toString = res.__repr__
     res.__mro__ = [res,_b_.object.$dict]
+
+    function as_array(s) {
+       var _a=[]
+       var _it = _b_.iter(s)
+       while (1) {
+         try {
+              _a.push(_b_.next(_it))
+         } catch (err) {
+              if (err.__name__ == 'StopIteration') break
+         }
+       }
+       return _a
+    }
+
+    function as_list(s) {return _b_.list(as_array(s))}
+    function as_set(s) {return _b_.set(as_array(s))}
+
+    res.__eq__=function(self,other){
+       if (_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])) {
+          return _b_.getattr(as_list(self), '__eq__')(other)
+       }
+
+       if (_b_.hasattr(other, '__iter__')) {
+          return _b_.getattr(as_list(self), '__eq__')(as_list(other))
+       }
+
+       _b_.NotImplementedError("__eq__ not implemented yet for list and " + _b_.type(other))
+    }
+
+    var _ops=['eq', 'ne']
+    var _f = res.__eq__+''
+
+    for (var i=0; i < _ops.length; i++) {
+        var _op='__'+_ops[i]+'__'
+        eval('res.'+_op+'='+_f.replace(new RegExp('__eq__', 'g'), _op))
+    }
+
+    res.__or__=function(self,other){
+       if (_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])) {
+          return _b_.getattr(as_set(self), '__or__')(other)
+       }
+
+       if (_b_.hasattr(other, '__iter__')) {
+          return _b_.getattr(as_set(self), '__or__')(as_set(other))
+       }
+
+       _b_.NotImplementedError("__or__ not implemented yet for set and " + _b_.type(other))
+    }
+
+    var _ops=['sub', 'and', 'xor', 'gt', 'ge', 'lt', 'le']
+    var _f = res.__or__+''
+
+    for (var i=0; i < _ops.length; i++) {
+        var _op='__'+_ops[i]+'__'
+        eval('res.'+_op+'='+_f.replace(new RegExp('__or__', 'g'), _op))
+    }
+
     res.$factory = {__class__:$B.$factory,$dict:res}
     return res
 }
@@ -702,6 +854,39 @@ $B.make_rmethods = function(klass){
         }
     }
 }
+
+// Set __name__ attribute of klass methods
+$B.set_func_names = function(klass){
+    var name = klass.__name__
+    for(var attr in klass){
+        if(typeof klass[attr] == 'function'){
+            klass[attr].__name__ = name+'.'+attr
+        }
+    }
+}
+
+// UUID is a function to produce a unique id.
+// the variable $B.py_UUID is defined in py2js.js (in the brython function) 
+$B.UUID=function() {return $B.$py_UUID++}
+
+$B.InjectBuiltins=function() {
+   var _str=["var _b_=$B.builtins"]
+   for(var $b in $B.builtins) _str.push('var ' + $b +'=_b_["'+$b+'"]')
+   return _str.join(';')
+}
+
+$B.$GetInt=function(value) {
+  // convert value to an integer,
+  if (_b_.isinstance(value, _b_.int)) return value
+  try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){}
+  try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){}
+
+  return value
+}
+
+$B.enter_frame = function(frames){$B.frames_stack.push(frames)}
+
+$B.leave_frame = function(){$B.frames_stack.pop()}
 
 })(__BRYTHON__)
 

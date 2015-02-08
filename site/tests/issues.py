@@ -75,4 +75,83 @@ except AttributeError:
 except:
     raise ValueError('should have raised AttributeError')
 
+# issue 82 : Ellipsis literal (...) missing
+def f():
+    ...
+
+#issue 83
+import sys
+assert sys.version_info > (3,0,0)
+assert sys.version_info >= (3,0,0)
+
+assert not sys.version_info == (3,0,0)
+assert sys.version_info != (3,0,0)
+
+assert not sys.version_info < (3,0,0)
+assert not sys.version_info <= (3,0,0)
+
+#issue 98
+assert int.from_bytes(b'\xfc', 'big') == 252
+assert int.from_bytes(bytearray([252,0]), 'big') == 64512
+assert int.from_bytes(b'\x00\x10', byteorder='big') == 16
+assert int.from_bytes(b'\x00\x10', byteorder='little') == 4096
+assert int.from_bytes(b'\xfc\x00', byteorder='big', signed=True) == -1024
+assert int.from_bytes(b'\xfc\x00', byteorder='big', signed=False) == 64512
+assert int.from_bytes([255, 0, 0], byteorder='big') == 16711680
+
+# issue #100
+class A:
+    if True:
+        def aaa(self, x):
+            return x
+
+class B(A):
+    if True:
+        def aaa(self, x):
+            return super().aaa(x)
+
+b = B()
+assert b.aaa(0)==0
+
+# issue 108
+def funcattrs(**kwds):
+    def decorate(func):
+        func.__dict__.update(kwds)
+        return func
+    return decorate
+
+class C(object):
+       @funcattrs(abc=1, xyz="haha")
+       @funcattrs(booh=42)
+       def foo(self): return 42
+
+assert C().foo() == 42
+assert C.foo.abc == 1
+assert C.foo.xyz == "haha"
+assert C.foo.booh == 42
+
+# issue 118
+class A:
+    def toString(self):
+        return "whatever"
+
+assert A().toString() == "whatever"
+
+# issue 126
+class MyType(type):
+    def __getattr__(cls, attr):
+        return "whatever"
+
+class MyParent(metaclass=MyType):
+    pass
+
+class MyClass(MyParent):
+    pass
+
+assert MyClass.spam == "whatever"
+assert MyParent.spam == "whatever"
+
+#issue 127
+assert "aaa+AAA".split("+") == ['aaa', 'AAA']
+
 print('passed all tests')

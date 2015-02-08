@@ -20,6 +20,10 @@ var $operators = {
 var $oplist = []
 for(var attr in $operators){$oplist.push(attr)}
 
+var noassignlist = ['True','False','None','__debug__']
+var noassign = {}
+for(var i=0;i<noassignlist.length;i++){noassign[noassignlist[i]]=true}
+
 // operators weight for precedence
 var $op_order = [['or'],['and'],
     ['in','not_in'],
@@ -347,6 +351,9 @@ function $AssignCtx(context, check_unbound){
     }else{
         var assigned = context.tree[0]
         if(assigned && assigned.type=='id'){
+            if(noassign[assigned.value]===true){
+                $_SyntaxError(context,["can't assign to keyword"])
+            }
             if(!$B.globals[scope.id] || $B.globals[scope.id][assigned.value]===undefined){
                 // A value is going to be assigned to a name
                 // After assignment the name will be bound to the current 
@@ -362,7 +369,6 @@ function $AssignCtx(context, check_unbound){
                 node.bound_before = $B.keys($B.bound[scope.id])
                 $B.bound[scope.id][assigned.value] = true
                 assigned.bound = true
-                if(assigned.value=='xw'){console.log(assigned+' bound '+context)}
             }
             if(scope.ntype=='def' || scope.ntype=='generator'){
                 $check_unbound(assigned,scope,assigned.value)
@@ -672,6 +678,11 @@ function $AugmentedAssignCtx(context, op){
     context.parent.tree.push(this)
     this.op = op
     this.tree = [context]
+
+    if(context.type=='expr' && context.tree[0].type=='id' &&
+        noassign[context.tree[0].value]===true){
+                $_SyntaxError(context,["can't assign to keyword"])
+    }
     
     var scope = $get_scope(this)
 
@@ -1036,8 +1047,9 @@ function $CallCtx(context){
                    // class parent as first argument
                    var scope = $get_scope(this)
                    if(scope.ntype=='def' || scope.ntype=='generator'){
-                      if(scope.parent && scope.parent.context.tree[0].type=='class'){
-                         new $IdCtx(this,scope.parent.context.tree[0].name)
+                      var def_scope = $get_scope(scope.context.tree[0])
+                      if(def_scope.ntype=='class'){
+                         new $IdCtx(this,def_scope.context.tree[0].name)
                       }
                    }
                 }
@@ -1136,7 +1148,7 @@ function $ClassCtx(context){
     this.parent.node.bound = {} // will store the names bound in the function
 
     this.set_name = function(name){
-        this.random = Math.random().toString(36).substr(2,8)
+        this.random = $B.UUID()
         this.name = name
         this.id = context.node.module+'-'+name
         this.id += '-'+this.random
@@ -1430,7 +1442,7 @@ function $DecoratorCtx(context){
         //
         this.dec_ids = []
         for(var i=0;i<decorators.length;i++){
-            this.dec_ids.push('$'+Math.random().toString(36).substr(2,8))
+            this.dec_ids.push('$id'+ $B.UUID())
         }
         var obj = children[func_rank].context.tree[0]
         // add a line after decorated element
@@ -1521,7 +1533,7 @@ function $DefCtx(context){
         var id_ctx = new $IdCtx(this,name)
         this.name = name
         this.id = this.scope.id+'-'+name
-        this.id += '-'+Math.random().toString(36).substr(2,8)
+        this.id += '-'+ $B.UUID()
         this.parent.node.id = this.id
         
         // Add to modules dictionary - used in list comprehensions
@@ -1566,7 +1578,7 @@ function $DefCtx(context){
         // already transformed ?defs
         if(this.transformed!==undefined) return
 
-        var scope = $get_scope(this)
+        var scope = this.scope
 
         // search doc string
         this.doc_string = $get_docstring(node)
@@ -1667,7 +1679,13 @@ function $DefCtx(context){
         new_node.locals_def = true
         new $NodeJSCtx(new_node,js)
         nodes.push(new_node)
-           
+
+        // push id in frames stack
+        var new_node = new $Node()
+        var js = '__BRYTHON__.enter_frame(["'+this.id+'", "'+this.module+'"]);' 
+        new $NodeJSCtx(new_node,js)
+        nodes.push(new_node)
+                   
         // initialize default variables, if provided
         if(defs1.length>0){
             js = 'for(var $var in $defaults){$locals[$var]=$defaults[$var]}'
@@ -1839,7 +1857,7 @@ function $DefCtx(context){
         var last_instr = node.children[node.children.length-1].context.tree[0]
         if(last_instr.type!=='return' && this.type!='BRgenerator'){
             new_node = new $Node()
-            new $NodeJSCtx(new_node,'return None;')
+            new $NodeJSCtx(new_node,'__BRYTHON__.leave_frame("'+this.id+'");return None;')
             def_func_node.add(new_node)
         }
 
@@ -1888,7 +1906,9 @@ function $DefCtx(context){
         prefix = this.tree[0].to_js()
         
         // add function name
-        js = prefix+'.__name__="'+this.name+'"'
+        js = prefix+'.__name__="'
+        if(this.scope.ntype=='class'){js+=this.scope.context.tree[0].name+'.'}
+        js += this.name+'"'
         var name_decl = new $Node()
         new $NodeJSCtx(name_decl,js)
         node.parent.insert(rank+offset,name_decl)
@@ -2057,6 +2077,15 @@ function $DoubleStarArgCtx(context){
     context.tree.push(this)
     this.toString = function(){return '**'+this.tree}
     this.to_js = function(){return '{$nat:"pdict",arg:'+$to_js(this.tree)+'}'}
+}
+
+function $EllipsisCtx(context){
+    this.type = 'ellipsis'
+    this.parent = context
+    this.nbdots = 1
+    context.tree.push(this)
+    this.toString = function(){return 'ellipsis'}
+    this.to_js = function(){return '__BRYTHON__.builtins["Ellipsis"]'}
 }
 
 function $ExceptCtx(context){
@@ -2439,7 +2468,7 @@ function $FromCtx(context){
                     res += '$B.$import("'+qname+'","'+parent_module+'");'
                     var _sn=scope.ntype
                     if('def' == _sn || 'class' == _sn || 'module' == _sn) {
-                        res += 'var '
+                        res += '\nvar '
                     }
                     var alias = this.aliases[this.names[i]]||this.names[i]
                     res += alias
@@ -3031,19 +3060,10 @@ function $KwArgCtx(context){
     // put id in list of kwargs
     // used to avoid passing the id as argument of a list comprehension
     var value = this.tree[0].value
-    var ctx = context
-    while(ctx.parent!==undefined){
-        switch(ctx.type) {
-          case 'list_or_tuple':
-          case 'dict_or_set':
-          case 'call_arg':
-          case 'def':
-          case 'lamdba':
-            if(ctx.kwargs===undefined){ctx.kwargs=[value]}
-            else if(ctx.kwargs.indexOf(value)===-1){ctx.kwargs.push(value)}
-        }
-        ctx = ctx.parent
-    }
+    var ctx = context.parent.parent // type 'call'
+    if(ctx.kwargs===undefined){ctx.kwargs=[value]}
+    else if(ctx.kwargs.indexOf(value)===-1){ctx.kwargs.push(value)}
+    else{$_SyntaxError(context,['keyword argument repeated'])}
 
     // If the keyword argument occurs inside a function, remove the occurence
     // from referenced variables in the function
@@ -3083,9 +3103,9 @@ function $LambdaCtx(context){
     this.locals = []
     
     this.to_js = function(){
-        var module = $get_module(this).module
+        var module = $get_module(this)
         var scope = $get_scope(this)
-        var src = $B.$py_src[module]
+        var src = $B.$py_src[module.id]
         var qesc = new RegExp('"',"g") // to escape double quotes in arguments
 
         var args = src.substring(this.args_start,this.body_start).replace(qesc,'\\"')
@@ -3307,16 +3327,12 @@ function $OpCtx(context,op){ // context is the left operand
                 var t0=this.tree[0].tree[0],t1=this.tree[1].tree[0]
                 switch(t1.type) {
                   case 'int':
-                    //if(t1.type=='int'){
                     switch (t0.type) {
                       case 'int':
-                        //if(t0.type=='int'){
                         return t0.to_js()+this.op+t1.to_js()
                       case 'str':
-                        //else if(t0.type=='str'){
                         return '$B.$TypeError("unorderable types: int() < str()")'
                       case 'id':
-                        //else if(t0.type=='id'){
                         var res = 'typeof '+t0.to_js()+'=="number" ? '
                         res += t0.to_js()+this.op+t1.to_js()+' : '
                         res += 'getattr('+this.tree[0].to_js()
@@ -3326,16 +3342,12 @@ function $OpCtx(context,op){ // context is the left operand
                 
                     break;
                   case 'str':
-                    //else if(t1.type=='str'){
                     switch(t0.type) {
                       case 'str':
-                        //if(t0.type=='str'){
                         return t0.to_js()+this.op+t1.to_js()
                       case 'int':
-                        //else if(t0.type=='int'){
                         return '$B.$TypeError("unorderable types: str() < int()")'
                       case 'id':
-                        //else if(t0.type=='id'){
                         var res = 'typeof '+t0.to_js()+'=="string" ? '
                         res += t0.to_js()+this.op+t1.to_js()+' : '
                         res += 'getattr('+this.tree[0].to_js()
@@ -3344,7 +3356,6 @@ function $OpCtx(context,op){ // context is the left operand
                     }
                     break;
                   case 'id':
-                    //}else if(t1.type=='id'){
                     if(t0.type=='id'){
                         var res = 'typeof '+t0.to_js()+'!="object" && '
                         res += 'typeof '+t0.to_js()+'==typeof '+t1.to_js()
@@ -3576,7 +3587,7 @@ function $ReturnCtx(context){ // subscription or slicing
             var res = 'return [$B.generator_return('
             return res + $to_js(this.tree)+')]'
         }
-        return 'return '+$to_js(this.tree)
+        return '__BRYTHON__.leave_frame("'+scope.id+'");return '+$to_js(this.tree)
     }
 }
 
@@ -3638,18 +3649,24 @@ function $StringCtx(context,value){
     this.raw = false
     context.tree.push(this)
     this.to_js = function(){
-        var res = ''
+        var res = '', type = null
         for(var i=0;i<this.tree.length;i++){
             var value=this.tree[i]
-            if(value.charAt(0)!='b'){
+            is_bytes = value.charAt(0)=='b'
+            if(type==null){
+                type=is_bytes
+                if(is_bytes){res+='bytes('}
+            }else if(type!=is_bytes){
+                return '__BRYTHON__.$TypeError("can\'t concat bytes to str")'
+            }
+            if(!is_bytes){
                 res += value.replace(/\n/g,'\\n\\\n')
             }else{
-                res += 'bytes('
                 res += value.substr(1).replace(/\n/g,'\\n\\\n')
-                res += ',$B.charset)'
             }
             if(i<this.tree.length-1){res+='+'}
         }
+        if(is_bytes){res += ',"ISO-8859-1")'} //$B.charset)'}
         return res
     }
 }
@@ -4093,7 +4110,7 @@ function $add_line_num(node,rank){
         else if(elt.type==='single_kw'){flag=false}
         if(flag){
             // add a trailing None for interactive mode
-            var js='$B.line_info=new Array('+node.line_num+',"'+mod_id+'");None;'
+            var js='$B.line_info=['+node.line_num+',"'+mod_id+'"];None;'
             if(node.module===undefined) console.log('tiens, module undef !')
 
             var new_node = new $Node()
@@ -4267,6 +4284,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lambda':
           case 'yield':
@@ -4294,6 +4312,8 @@ function $transition(context,token){
             return new $ListOrTupleCtx(new $ExprCtx(context,'list',commas),'list')
           case '{':
             return new $DictOrSetCtx(new $ExprCtx(context,'dict_or_set',commas))
+          case '.':
+            return new $EllipsisCtx(new $ExprCtx(context,'ellipsis',commas))
           case 'not':
             if(context.type==='op'&&context.op==='is'){ // "is not"
                 context.op = 'is_not'
@@ -4357,6 +4377,8 @@ function $transition(context,token){
       case 'attribute':
         if(token==='id'){
             var name = arguments[2]
+            if(noassign[name]===true){$_SyntaxError(context,
+                ["cannot assign to "+name])}
             context.name=name
             return context.parent
         }
@@ -4386,6 +4408,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lambda':
             if(context.has_dstar) $_SyntaxError(context,token)
@@ -4424,6 +4447,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lambda':
             if(context.expect === 'id') { 
@@ -4640,6 +4664,7 @@ function $transition(context,token){
                   case '[':
                   case '(':
                   case '{':
+                  case '.':
                   case 'not':
                   case 'lambda':
                     context.expect = ','
@@ -4678,6 +4703,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lambda':
             return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
@@ -4691,6 +4717,17 @@ function $transition(context,token){
             }
         }
         $_SyntaxError(context,'token '+token+' after '+context)
+
+      case 'ellipsis':
+          if(token=='.'){context.nbdots++;return context}
+          else{
+              if(context.nbdots!=3){
+                  $pos--;$_SyntaxError(context,'token '+token+' after '+context)
+              }else{
+                  return $transition(context.parent, token, arguments[2])
+              }
+          }
+
       case 'except':
         switch(token) {
           case 'id':
@@ -4758,6 +4795,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lamdba':
             if(context.expect==='expr'){
@@ -4798,7 +4836,7 @@ function $transition(context,token){
             
             // conditional expressions have the lowest priority
             if(op_parent.type=='ternary' && op_parent.in_else){
-                var new_op = new $OpCtx(op_parent,op)
+                var new_op = new $OpCtx(context,op)
                 return new $AbstractExprCtx(new_op,false)
             }
             
@@ -5364,7 +5402,7 @@ function $transition(context,token){
           case '{':
           case 'not':
           case 'lamdba':
-            //if($expr_starters.indexOf(token)>-1){
+          case '.':
             var expr = new $AbstractExprCtx(context,true)
             return $transition(expr,token,arguments[2])
           case 'op':
@@ -5450,6 +5488,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lamdba':
             //if($expr_starters.indexOf(token)>-1){
@@ -5490,6 +5529,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lamdba':
             //if($expr_starters.indexOf(token)>-1){
@@ -5503,6 +5543,10 @@ function $transition(context,token){
                 //if('+-~'.search(arguments[2])>-1){
                 return new $UnaryCtx(context,arguments[2])
             }//switch
+          default:
+            if(context.tree[context.tree.length-1].type=='abstract_expr'){
+              $_SyntaxError(context,'token '+token+' after '+context)
+            }
         }// switch
         return $transition(context.parent,token)
       case 'packed':
@@ -5601,6 +5645,7 @@ function $transition(context,token){
           case '[':
           case '(':
           case '{':
+          case '.':
           case 'not':
           case 'lamdba':
             //if($expr_starters.indexOf(token)>-1){
@@ -5772,7 +5817,11 @@ function $transition(context,token){
 $B.forbidden = ['super',
     'case','catch','constructor','Date','delete',
     'default','Error','history','function','location','Math',
-    'new','null','Number','RegExp','this','var']
+    'new','null','Number','RegExp','this','throw','var',
+    'toString']
+
+var s_escaped = 'abfnrtvxuU"'+"'"+'\\', is_escaped={}
+for(var i=0;i<s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
 
 function $tokenize(src,module,locals_id,parent_block_id,line_info){
     var delimiters = [["#","\n","comment"],['"""','"""',"triple_string"],
@@ -5781,7 +5830,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     var br_open = {"(":0,"[":0,"{":0}
     var br_close = {")":"(","]":"[","}":"{"}
     var br_stack = ""
-    var br_pos = new Array()
+    var br_pos = []
     var kwdict = ["class","return","break",
         "for","lambda","try","finally","raise","def","from",
         "nonlocal","while","del","global","with",
@@ -5810,6 +5859,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     root.module = module
     root.id = locals_id
     $B.modules[root.id] = root
+    $B.$py_src[locals_id] = src
     root.parent_block = $B.modules[parent_block_id]
     root.line_info = line_info
     root.indent = -1
@@ -5834,7 +5884,8 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                 else if(_s=="\t"){ 
                     // tab : fill until indent is multiple of 8
                     indent++;pos++
-                    while(indent%8>0){indent++}
+                    //while(indent%8>0){indent++}
+                    if(indent%8>0) indent+=8-indent%8
                 }else{break}
             }
             // ignore empty lines
@@ -5934,7 +5985,11 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                             end += 2
                             lnum++
                         } else {
-                            zone+='\\' //src.charAt(end);
+                            if(end < src.length-1 &&
+                                is_escaped[src.charAt(end+1)]==undefined){
+                                    zone += '\\'
+                            }
+                            zone+='\\'
                             escaped=true;end+=1
                         }
                     }
@@ -6023,47 +6078,64 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                 continue
             }
         }
-        // point, ellipsis (...)
-        if(car=="."){
+
+        switch(car) {
+          case ' ':
+          case '\t':
+            pos++
+            break
+          case '.':
+            // point, ellipsis (...)
+            //if(car=="."){
             if(pos<src.length-1 && /^\d$/.test(src.charAt(pos+1))){
                 // number starting with . : add a 0 before the point
                 var j = pos+1
                 while(j<src.length && src.charAt(j).search(/\d/)>-1){j++}
                 context = $transition(context,'float','0'+src.substr(pos,j-pos))
                 pos = j
-                continue
-            } 
+                break
+            }
             $pos = pos
             context = $transition(context,'.')
-            pos++;continue
-        }
-        // octal, hexadecimal, binary
-        if(car==="0"){
+            pos++
+            break
+          case '0':
+            // octal, hexadecimal, binary
+            //if(car==="0"){
             var res = hex_pattern.exec(src.substr(pos))
             if(res){
                 context=$transition(context,'int',parseInt(res[1],16))
                 pos += res[0].length
-                continue
+                break
             }
             var res = octal_pattern.exec(src.substr(pos))
             if(res){
                 context=$transition(context,'int',parseInt(res[1],8))
                 pos += res[0].length
-                continue
+                break
             }
             var res = binary_pattern.exec(src.substr(pos))
             if(res){
                 context=$transition(context,'int',parseInt(res[1],2))
                 pos += res[0].length
-                continue
+                break
             }
             // literal like "077" is not valid in Python3
             if(src.charAt(pos+1).search(/\d/)>-1){
                 $_SyntaxError(context,('invalid literal starting with 0'))
             }
-        }
-        // number
-        if(car.search(/\d/)>-1){
+          case '0':
+          case '1':
+          case '2':
+          case '3':
+          case '4':
+          case '5':
+          case '6':
+          case '7':
+          case '8':
+          case '9':
+            // number
+            //if(car.search(/\d/)>-1){
             // digit
             var res = float_pattern1.exec(src.substr(pos))
             if(res){
@@ -6090,14 +6162,14 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                 }
             }
             pos += res[0].length
-            continue
-        }
-        // line end
-        if(car=="\n"){
+            break
+          case '\n':
+            // line end
+            //if(car=="\n"){
             lnum++
             if(br_stack.length>0){
                 // implicit line joining inside brackets
-                pos++;continue
+                pos++;//continue
             } else {
                 if(current.context.tree.length>0){
                     $pos = pos
@@ -6107,17 +6179,23 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                 }else{
                     new_node.line_num = lnum
                 }
-                pos++;continue
+                pos++
             }
-        }
-        if(car in br_open){
+            break
+          case '(':
+          case '[':
+          case '{':
+            //if(car in br_open){
             br_stack += car
             br_pos[br_stack.length-1] = [context,pos]
             $pos = pos
             context = $transition(context,car)
-            pos++;continue
-        }
-        if(car in br_close){
+            pos++
+            break
+          case ')':
+          case ']':
+          case '}':
+            //if(car in br_close){
             if(br_stack==""){
                 $_SyntaxError(context,"Unexpected closing bracket")
             } else if(br_close[car]!=br_stack.charAt(br_stack.length-1)){
@@ -6126,26 +6204,30 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                 br_stack = br_stack.substr(0,br_stack.length-1)
                 $pos = pos
                 context = $transition(context,car)
-                pos++;continue
+                pos++
             }
-        }
-        if(car=="="){
+            break
+          case '=':
+            //if(car=="="){
             if(src.charAt(pos+1)!="="){
                 $pos = pos
                 context = $transition(context,'=')
-                pos++;continue
+                pos++; //continue
             } else {
                 $pos = pos
                 context = $transition(context,'op','==')
-                pos+=2;continue
+                pos+=2
             }
-        }
-        if(car in punctuation){
+            break
+          case ',':
+          case ':': 
+            //if(car in punctuation){
             $pos = pos
             context = $transition(context,car)
-            pos++;continue
-        }
-        if(car===";"){ // next instruction
+            pos++
+            break
+          case ';':
+            //if(car===";"){ // next instruction
             $transition(context,'eol') // close previous instruction
             // create a new node, at the same level as current's parent
             if(current.context.tree.length===0){
@@ -6162,7 +6244,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                 }else if(_s==' '){pos1++}
                 else{break}
             }
-            if(ends_line){pos++;continue}
+            if(ends_line){pos++;break}
             new_node = new $Node()
             new_node.indent = current.indent
             new_node.line_num = lnum
@@ -6170,10 +6252,26 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
             current.parent.add(new_node)
             current = new_node
             context = new $NodeCtx(new_node)
-            pos++;continue
-        }
-        // operators
-        if($first_op_letter.indexOf(car)>-1){
+            pos++
+            break
+          case '/':
+          case '%':
+          case '&':
+          case '>':
+          case '<':
+          case '-':
+          case '+':
+          case '*':
+          case '/':
+          case '^':
+          case '=':
+          case '|':
+          case '~':
+          case '!':
+          case 'i':
+          case 'n':
+            // operators
+            //if($first_op_letter.indexOf(car)>-1){
             // find longest match
             var op_match = ""
             for(var op_sign in $operators){
@@ -6190,19 +6288,24 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                     context = $transition(context,'op',op_match)
                 }
                 pos += op_match.length
-                continue
             }
-        }
-        if(car=='\\' && src.charAt(pos+1)=='\n'){
-            lnum++;pos+=2;continue
-        }
-        if(car=='@'){
+            break
+          case '\\':
+            //if(car=='\\' && 
+            if (src.charAt(pos+1)=='\n'){
+              lnum++ 
+              pos+=2
+              break
+            }
+          case '@':
+            //if(car=='@'){
             $pos = pos
             context = $transition(context,car)
-            pos++;continue
-        }
-        if(car!=' '&&car!=='\t'){$pos=pos;$_SyntaxError(context,'unknown token ['+car+']')}
-        pos += 1
+            pos++
+            break
+          default:
+            $pos=pos;$_SyntaxError(context,'unknown token ['+car+']')
+        } //switch
     }
 
     if(br_stack.length!=0){
@@ -6245,7 +6348,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     if(module===undefined){module='__main__'}
     if(locals_id===undefined){locals_id=module}
 
-    $B.vars[module]=$B.vars[module] || {}
+    $B.vars[module]=$B.vars[module] || {__class__:$B.$ModuleDict}
     $B.bound[module] = $B.bound[module] || {}
     $B.vars[locals_id] = $B.vars[locals_id] || {}
 
@@ -6263,11 +6366,14 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     
     js += 'var __builtins__ = _b_ = $B.builtins\n'
     js += 'var $globals = $B.vars["'+module+'"];\n'
+    if(module=='__main__'){
+        js += '$B.imported["__main__"] = $globals\n'
+    }
     js += 'var $locals_id = "'+locals_id+'";\n'
     js += 'var $locals = $B.vars["'+locals_id+'"];\n'
-    js += 'var $s=[];\n'
-    js += 'for(var $b in _b_) $s.push(\'var \' + $b +\'=_b_["\'+$b+\'"]\');\n'
-    js += 'eval($s.join(";"))\n'
+    
+    js += '__BRYTHON__.enter_frame(["'+module+'", "'+module+'"]);\n'
+    js += 'eval($B.InjectBuiltins())\n'
 
     var new_node = new $Node()
     new $NodeJSCtx(new_node,js)
@@ -6293,6 +6399,13 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
         var t1 = new Date().getTime()
         console.log('module '+module+' translated in '+(t1 - t0)+' ms')
     }
+    
+    // leave frame at the end of module
+    js = '__BRYTHON__.leave_frame("'+module+'");\n'
+    var new_node = new $Node()
+    new $NodeJSCtx(new_node,js)
+    root.add(new_node)
+    
     return root
 }
 
@@ -6312,6 +6425,10 @@ function brython(options){
     // Used to compute the hash value of some objects (see 
     // py_builtin_functions.js)
     $B.$py_next_hash = -Math.pow(2,53)
+
+    // $py_UUID guarantees a unique id.  Do not use this variable 
+    // directly, use the $B.UUID function defined in py_utils.js
+    $B.$py_UUID=0
     
     // Magic name used in lambdas
     $B.lambda_magic = Math.random().toString(36).substr(2,8)
@@ -6363,17 +6480,12 @@ function brython(options){
      }else{
         var $elts=document.getElementsByTagName('script')
     }
-    
-    var $scripts = document.getElementsByTagName('script')
-    
+
     // URL of the script where function brython() is called
     var $href = $B.script_path = window.location.href
     var $href_elts = $href.split('/')
     $href_elts.pop()
     
-    // URL of the directory where the script stands
-    var $script_dir = $B.script_dir = $href_elts.join('/')
-
     // List of URLs where imported modules should be searched
     // $B.path = []
     // A list can be provided as attribute of options
@@ -6389,43 +6501,6 @@ function brython(options){
           $B.$options.re=options.re
        }
     }
-
-    // Get path of brython.js or py2js.js or brython_dist.js to determine 
-    // brython_path, the url of the directory where this script stands
-    // It will be used for imports :
-    // - the subfolder <brython_path>/libs is used for Javascript modules
-    // - <brython_path>/Lib is used for Python modules in the standard library
-    // - <brython_path>/Lib/site-packages is used for 3rd party modules
-    //   or packages
-
-    /*
-    for(var $i=0;$i<$scripts.length;$i++){
-        var $elt = $scripts[$i]
-        var $br_scripts = ['brython.js','py2js.js','brython_dist.js']
-        for(var $j=0;$j<$br_scripts.length;$j++){
-            var $bs = $br_scripts[$j]
-            if($elt.src && $elt.src.substr($elt.src.length-$bs.length)==$bs){
-                if($elt.src.length===$bs.length ||
-                    $elt.src.charAt($elt.src.length-$bs.length-1)=='/'){
-                        var $path = $elt.src.substr(0,$elt.src.length-$bs.length)
-                        $B.brython_path = $path
-                        console.log('brython path '+$path)
-                        var subpaths = ['Lib','Lib/site-packages']
-                        for(var j=0;j<subpaths.length;j++){
-                            var subpath = $path+subpaths[j]
-                            if (!($B.path.indexOf(subpath)> -1)) {
-                               $B.path.push(subpath)
-                            }
-                        }
-                        break
-                }
-            }
-        }
-    }
-    */
-
-    // Current script directory inserted in path for imports
-    if (!($B.path.indexOf($script_dir) > -1)) $B.path.push($script_dir)
 
     // Get all scripts with type = text/python or text/python3 and run them
     
@@ -6485,7 +6560,6 @@ function brython(options){
                 _mod.__class__ = $B.$ModuleDict
                 _mod.__name__ = '__main__'
                 _mod.__file__ = $B.$py_module_path['__main__']
-                $B.imported['__main__'] = _mod
                 
             }catch($err){
                 if($B.debug>1){

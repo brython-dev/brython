@@ -1,6 +1,6 @@
 import browser.html
 import _jsre as re
-import __random as random
+import random
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 letters += letters.upper()+'0123456789'
@@ -19,13 +19,18 @@ class URL:
 class CodeBlock:
     def __init__(self,line):
         self.lines = [line]
+        if line.startswith("```") and len(line)>3:
+            self.info = line[3:]
+        else:
+            self.info = None
     
     def to_html(self):
         if self.lines[0].startswith("`"):
             self.lines.pop(0)
         res = escape('\n'.join(self.lines))
         res = unmark(res)
-        res = '<pre class="marked">%s</pre>\n' %res
+        _class = self.info or "marked"
+        res = '<pre class="%s">%s</pre>\n' %(_class, res)
         return res,[]
 
 class HtmlBlock:
@@ -155,11 +160,25 @@ def mark(src):
             section = CodeBlock(line[4:])
             j = i+1
             while j<len(lines) and lines[j].startswith('    '):
-                    section.lines.append(lines[j][4:])
-                    j += 1
+                section.lines.append(lines[j][4:])
+                j += 1
             sections.append(section)
             section = Marked()
             i = j   
+            continue
+
+        elif line.strip() and line.startswith("```"):
+            # fenced code blocks à la Github Flavoured Markdown
+            if isinstance(section,Marked) and section.line:
+                sections.append(section)
+            section = CodeBlock(line)
+            j = i+1
+            while j<len(lines) and not lines[j].startswith("```"):
+                section.lines.append(lines[j])
+                j += 1
+            sections.append(section)
+            section = Marked()
+            i = j+1
             continue
 
         elif line.lower().startswith('<script'):
@@ -205,7 +224,7 @@ def mark(src):
                 if not line.strip():
                     line = '<p></p>'
                 if section.line:
-                    section.line += ' '
+                    section.line += '\n'
                 section.line += line
                     
             i += 1
@@ -300,8 +319,8 @@ def apply_markdown(src):
         
         i += 1
 
-    # before apply the markup with _ and *, isolate HTML tags because they can
-    # contain these characters
+    # before applying the markup with _ and *, isolate HTML tags because 
+    # they can contain these characters
 
     # We replace them temporarily by a random string
     rstr = ''.join(random.choice(letters) for i in range(16))
@@ -356,9 +375,9 @@ def apply_markdown(src):
     src = re.sub(code_pattern,s_escape,src)
 
     # replace escaped ` _ * by HTML characters
-    src = src.replace(r'\\\`','&#96;')
-    src = src.replace(r'\\_','&#95;')
-    src = src.replace(r'\\*','&#42;')
+    src = src.replace(r'\\`','&#96;')
+    src = src.replace(r'\_','&#95;')
+    src = src.replace(r'\*','&#42;')
 
     # emphasis
     strong_patterns = [('STRONG',r'\*\*(.*?)\*\*'),('B',r'__(.*?)__')]

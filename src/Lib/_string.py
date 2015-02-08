@@ -1,13 +1,23 @@
 """string helper module"""
 
-import pyre as re
+import re
 
 class __loader__(object):
     pass
 
-def formatter_field_name_split(*args,**kw):
+def formatter_field_name_split(fieldname):
     """split the argument as a field name"""
-    pass
+    _list=[]
+    for _name in fieldname:
+        _parts = _name.split('.')
+        for _item in _parts:
+            is_attr=False  #fix me
+            if re.match('\d+', _item):
+               _list.append((int(_item), is_attr))
+            else:
+               _list.append((_item, is_attr))
+
+    return _list[0][0], iter(_list[1:])
 
 def formatter_parser(*args,**kw):
     """parse the argument as a format string"""

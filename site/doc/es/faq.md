@@ -56,11 +56,21 @@ Para añadir un nodo hermano se puede usar el operador `+`.
 
 Para añadir un nodo hijo se podría usar el operador `<=`, el cual fue elegido por las siguientes razones:
 
+- - tiene la forma de una flecha hacia la izquierda. Las anotaciones de función (function annotations) de Python usan un nuevo operador `->` que fue elegido por su forma de flecha.
 - parece una asignación aumentada debido al signo igual.
-- las anotaciones de función (function annotations) usan un nuevo operador `->` que fue elegido por su forma de flecha.
-- tiene la forma de una flecha hacia la izquierda.
 - no podría ser confundido con "menor o igual" debido a que una línea con `document <= elt` sería un 'no-op' si fuera "menor o igual", que se usa siempre en una condición.
 - estamos tan acostumbrados a interpretar los dos signos `<` y `=` como "menor o igual" que nos olvidamos que son una convención para los lenguajes de programación, para reemplazar el signo real `≤`.
 - en Python, `<=` se usa como un operador para conjuntos con un significado diferente a "menor o igual".
 - el signo `<` se usa frecuentemente en ciencias de la computación para indicar algo diferente a "menor que": en Python y muchos otros lenguajes, `<<` significa desplazamiento hacia la izquierda; en HTML las etiquetas se encierran con `<` y `>`.
 - Python usa el operador `%` para operaciones muy diferentes: 'modulo' y formateo de cadenas.
+
+__P__ : ¿Qué navegadores son compatibles con Brython?
+
+__R__ : Debajo se muestra una lista de los navegadores soportados:
+
+// todo: get images from http://www.paulirish.com/2010/high-res-browser-icons/
+
+<table border="1">
+  <tr><td>Chrome</td><td>FireFox</td><td>IE</td><td>Opera</td><td>Safari</td><td>Android Browser</td><td>Chrome para Android</td><td>iOS Safari</td><td>Opera Mini</td></tr>
+  <tr><td>36+</td><td>31+</td><td>9+</td><td>26+</td><td>5.1+</td><td>4.1+</td><td>39+</td><td>7.1+</td><td>8+</td></tr>
+</table>

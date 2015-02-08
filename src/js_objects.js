@@ -1,8 +1,6 @@
 ;(function($B){
-var _b_ = $B.builtins
-var $s=[]
-for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
-eval($s.join(';'))
+
+eval($B.InjectBuiltins())
 
 var $ObjectDict = _b_.object.$dict
 
@@ -105,8 +103,9 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
         // instances of JSObject and JSConstructor are transformed into the
         // underlying Javascript object
         return pyobj.js
-    }else if(klass===$B.DOMNode){
-        // instances of DOMNode are transformed into the underlying DOM element
+    }else if(klass.__mro__.indexOf($B.DOMNode)>-1){
+        // instances of DOMNode or its subclasses are transformed into the 
+        // underlying DOM element
         return pyobj.elt
     }else if([_b_.list.$dict,_b_.tuple.$dict].indexOf(klass)>-1){
         // Python list : transform its elements
@@ -117,8 +116,9 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
         // Python dictionaries are transformed into a Javascript object
         // whose attributes are the dictionary keys
         var jsobj = {}
-        for(var j=0, _len_j = pyobj.$keys.length; j < _len_j;j++){
-            jsobj[pyobj.$keys[j]] = pyobj2jsobj(pyobj.$values[j])
+        var items = _b_.list(_b_.dict.$dict.items(pyobj))
+        for(var j=0, _len_j = items.length; j < _len_j;j++){
+            jsobj[items[j][0]] = pyobj2jsobj(items[j][1])
         }
         return jsobj
     }else if(klass===$B.builtins.float.$dict){
@@ -159,7 +159,21 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
             var res = function(){
                 var args = [],arg
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
-                    args.push(pyobj2jsobj(arguments[i]))
+                    if(arguments[i].$nat=='ptuple'){
+                        // add all items produced by iteration on packed tuple
+                        var ptuple = _b_.iter(arguments[i].arg)
+                        while(true){
+                            try{
+                                var item = _b_.next(ptuple)
+                                args.push(pyobj2jsobj(item))
+                            }catch(err){    
+                                $B.$pop_exc()
+                                break
+                            }
+                        }
+                    }else{
+                        args.push(pyobj2jsobj(arguments[i]))
+                    }
                 }
                 // IE workaround
                 if(attr === 'replace' && obj.js === location) {
@@ -253,6 +267,22 @@ $JSObjectDict.__setitem__ = $JSObjectDict.__setattr__
 
 $JSObjectDict.__str__ = $JSObjectDict.__repr__
 
+var no_dict = {'string':true,'function':true,'number':true,'boolean':true}
+
+$JSObjectDict.to_dict = function(self){
+    // Returns a Python dictionary based on the underlying Javascript object
+    var res = _b_.dict()
+    for(var key in self.js){
+        var value = self.js[key]
+        if(typeof value=='object' && !Array.isArray(value)){
+            _b_.dict.$dict.__setitem__(res, key, $JSObjectDict.to_dict(JSObject(value)))
+        }else{
+            _b_.dict.$dict.__setitem__(res, key, value)
+        }
+    }
+    return res
+}
+
 function JSObject(obj){
     // If obj is a function, calling it with JSObject implies that it is
     // a function defined in Javascript. It must be wrapped in a JSObject
@@ -267,8 +297,6 @@ function JSObject(obj){
     }
     // If obj is a Python object, return it unchanged
     if(klass!==undefined) return obj
-    // If obj is already a JSObject, return it unchanged
-    if(klass==$JSObjectDict) return obj
     return {__class__:$JSObjectDict,js:obj}  // wrap it
 }
 JSObject.__class__ = $B.$factory

@@ -1,12 +1,7 @@
 // ajax
 var $module = (function($B){
 
-var _b_ = $B.builtins
-
-var $s=[]
-for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
-eval($s.join(';'))
-//for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
+eval($B.InjectBuiltins())
 
 var $XMLHttpDict = {__class__:$B.$type,__name__:'XMLHttp'}
 
@@ -62,14 +57,15 @@ $AjaxDict.send = function(self,params){
     }else if(isinstance(params,str)){
         res = params
     }else if(isinstance(params,dict)){
-        for(var i=0, _len_i = params.$keys.length; i < _len_i;i++){
-            var key = encodeURIComponent(str(params.$keys[i]));
-            if (isinstance(params.$values[i],list)) {
-                for (j = 0; j < params.$values[i].length; j++) {
-                    res += key +'=' + encodeURIComponent(str(params.$values[i][j])) + '&'
+        var items = _b_.list(_b_.dict.$dict.items(params))
+        for(var i=0, _len_i = items.length; i < _len_i;i++){
+            var key = encodeURIComponent(str(items[i][0]));
+            if (isinstance(items[i][1],list)) {
+                for (j = 0; j < items[i][1].length; j++) {
+                    res += key +'=' + encodeURIComponent(str(items[i][1][j])) + '&'
                 }
             } else {
-                res += key + '=' + encodeURIComponent(str(params.$values[i])) + '&'
+                res += key + '=' + encodeURIComponent(str(items[i][1])) + '&'
             }
         }
         res = res.substr(0,res.length-1)

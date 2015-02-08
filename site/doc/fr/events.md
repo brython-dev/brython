@@ -8,32 +8,49 @@ from browser import doc, alert
 Introduction
 ------------
 
-Supposons que nous ayons dans la page un élément de type bouton, comme celui-ci : <button>un bouton</button>
+Supposons que nous ayons dans la page un élément de type bouton, comme 
+celui-ci : <button>un bouton</button>
 
-Si vous cliquez dessus, il ne se passera rien, parce que nous ne lui avons pas dit comment réagir à un clic. Pour cela, il faut définir une fonction qui sera appelée quand on clique, en utilisant la syntaxe :
+Si vous cliquez dessus, il ne se passera rien, parce que nous ne lui avons pas
+ dit comment réagir à un clic. Pour cela, il faut définir une fonction qui 
+ sera appelée quand on clique, en utilisant la syntaxe :
 
->    btn.bind('click', montre)
+```python
+btn.bind('click', montre)
+```
 
-Le premier argument de `bind` est le type d'événement auquel le bouton doit réagir ; le deuxième est une fonction qui prend un seul argument, une instance de la classe `DOMEvent`. Par exemple :
+Le premier argument de `bind` est le type d'événement auquel le bouton doit 
+réagir ; le deuxième est une fonction qui prend un seul argument, une instance 
+de la classe `DOMEvent`. Par exemple :
 
->    def montre(ev):
->        print('ouah !')
+```python
+def montre(ev):
+    print('ouah !')
+```
 
-(rappelez-vous que pour voir les résultats de `print` il faut ouvrir la console du navigateur)
+(rappelez-vous que pour voir les résultats de `print` il faut ouvrir la 
+console du navigateur)
 
-Les instances de `DOMEvent` possèdent un certain nombre d'attribut qui varient selon le type d'événement. Dans le cas d'un clic, et plus généralement des événements relatifs à la souris, les attributs sont notamment
+Les instances de `DOMEvent` possèdent un certain nombre d'attribut qui varient 
+selon le type d'événement. Dans le cas d'un clic, et plus généralement des 
+événements relatifs à la souris, les attributs sont notamment :
 
 - `target` : l'élément sur lequel l'événement s'est produit
-- `x, y` : position de la souris par rapport au bord supérieur gauche de la fenêtre
+- `x, y` : position de la souris par rapport au bord supérieur gauche de la 
+fenêtre
 
-Par exemple, si on veut afficher le texte affiché sur le bouton, et la position de la souris :
+Par exemple, si on veut afficher le texte affiché sur le bouton, et la 
+position de la souris :
 
->    def montre(ev):
->        print(ev.target.text, ev.x, ev.y)
+```python
+def montre(ev):
+    print(ev.target.text, ev.x, ev.y)
+```
 
 Interface
 ---------
-Pour la gestion des événements, les éléments d'une page possèdent les méthodes suivantes :
+Pour la gestion des événements, les éléments d'une page possèdent les 
+méthodes suivantes :
 
 <code>elt.bind(_nom\_evt, gest_)</code>
 
@@ -41,18 +58,21 @@ Pour la gestion des événements, les éléments d'une page possèdent les méth
 
 <code>elt.unbind(_nom\_evt[, gest_])</code>
 
-> défait l'association de la fonction _gest_ à l'événement de nom _nom\_evt_. Si _gest_ n'est pas fourni, défait toutes les associations de l'événement
+> défait l'association de la fonction _gest_ à l'événement de nom _nom\_evt_.
+ Si _gest_ n'est pas fourni, défait toutes les associations de l'événement.
 
 Objets `DOMEvent`
 -----------------
-Quel que soit le type d'événement géré, les instances de la classe `DOMEvent` possèdent les propriétés suivantes
+Quel que soit le type d'événement géré, les instances de la classe `DOMEvent` 
+possèdent les propriétés suivantes
 
 <table border=1 cellpadding=5>
 
 <tr>
 <td>
 `bubbles`
-> un booléen qui indique si l'élément se propage aux parents de l'élément sur lequel l'événement s'est produit
+> un booléen qui indique si l'élément se propage aux parents de l'élément sur 
+lequel l'événement s'est produit
 </td>
 <td>
 <button id="_bubbles">test</button>
@@ -164,23 +184,20 @@ et les méthodes suivantes
 
 > Pour désactiver ce comportement sur la case : 
 
->>    from browser import document
->>    
->>    def annule(ev):
->>        ev.preventDefault()
->>    
->>    document["disabled_cbox"].bind('click',annule)
+<blockquote><blockquote>
+```exec_on_load
+from browser import document
 
->> résultat :
-
->> case à cocher désactivée <input type="checkbox" id="disabled_cbox">
-
-<script type="text/python">
 def annule(ev):
     ev.preventDefault()
 
 document["disabled_cbox"].bind('click',annule)
-</script>
+```
+</blockquote></blockquote>
+>> résultat :
+
+>> case à cocher désactivée <input type="checkbox" id="disabled_cbox">
+
 
 `stopPropagation()`
 > arrête la propagation de la gestion de l'événement aux éléments parents de celui en cours de traitement
@@ -197,20 +214,20 @@ document["disabled_cbox"].bind('click',annule)
 > les 3 éléments (le cadre extérieur jaune et les cadres intérieurs bleu et vert) gèrent l'événement clic
 
 <blockquote>
-<div id="zzz_source">
-    from browser import document, alert
-    
-    def show(ev):
-        alert('clic sur %s' %ev.currentTarget.id)
-    
-    def show_stop(ev):
-        alert('clic sur %s' %ev.currentTarget.id)
-        ev.stopPropagation()
-    
-    document["jaune"].bind('click',show)
-    document["bleu"].bind('click',show)
-    document["vert"].bind('click',show_stop)
-</div>
+```exec_on_load
+from browser import document, alert
+
+def show(ev):
+    alert('clic sur %s' %ev.currentTarget.id)
+
+def show_stop(ev):
+    alert('clic sur %s' %ev.currentTarget.id)
+    ev.stopPropagation()
+
+document["jaune"].bind('click',show)
+document["bleu"].bind('click',show)
+document["vert"].bind('click',show_stop)
+```
 </blockquote>
 
 <div id="zzz"></div>
@@ -221,12 +238,14 @@ document["disabled_cbox"].bind('click',annule)
 
 > Quand on clique sur la zone verte, le message "clic sur vert" s'affiche. Cet événement est géré par la fonction `show_stop()`, qui se termine par
 
->>    ev.stopPropagation()
+<blockquote>
+```python
+ev.stopPropagation()
+```
+</blockquote>
 
 > L'événement ne se propage donc pas au niveau supérieur et le traitement s'arrête sans afficher "clic sur jaune"
 
 
-<script type="text/python">
-eval(document["zzz_source"].text)
-</script>
+
 

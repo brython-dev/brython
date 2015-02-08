@@ -233,6 +233,7 @@ function showClassDetail(cid, count) {
         tr = document.getElementById(tid);
         if (!tr) {
             tid = 'p' + tid0;
+            console.log(tid)
             tr = document.getElementById(tid);
         }
         id_list[i] = tid;
@@ -243,7 +244,9 @@ function showClassDetail(cid, count) {
     for (var i = 0; i < count; i++) {
         tid = id_list[i];
         if (toHide) {
-            document.getElementById('div_'+tid).style.display = 'none'
+            if (tid.substr(0,1) == 'f') {
+               document.getElementById('div_'+tid).style.display = 'none'
+            }
             document.getElementById(tid).className = 'hiddenRow';
         }
         else {
@@ -630,8 +633,8 @@ class HTMLTestRunner(Template_mixin):
         test(result)
         self.stopTime = datetime.datetime.now()
         self.generateReport(test, result)
-        print('\nTime Elapsed: %s' % (self.stopTime-self.startTime), file=sys.stderr)
-        return result
+        #print('\nTime Elapsed: %s' % (self.stopTime-self.startTime), file=sys.stderr)
+        #return result
 
 
     def sortResult(self, result_list):

@@ -3,13 +3,13 @@ import time
 import traceback
 import dis
 
-from browser import document as doc, window,alert
+from browser import document as doc, window, alert
 from javascript import JSObject
 
 # set height of container to 66% of screen
 _height = doc.documentElement.clientHeight
 _s = doc['container']
-_s.style.height = '%spx' % int(_height*0.66)
+_s.style.height = '%spx' % int(_height * 0.66)
 
 has_ace = True
 try:
@@ -18,7 +18,6 @@ try:
     session.setMode("ace/mode/python")
 
     editor.setOptions({
-     'width': '390px;',
      'enableLiveAutocompletion': True,
      'enableSnippets': True,
      'highlightActiveLine': False,
@@ -26,10 +25,10 @@ try:
     })
 except:
     from browser import html
-    editor = html.TEXTAREA(rows=20,cols=70)
+    editor = html.TEXTAREA(rows=20, cols=70)
     doc["editor"] <= editor
     def get_value(): return editor.value
-    def set_value(x):editor.value=x
+    def set_value(x):editor.value = x
     editor.getValue = get_value
     editor.setValue = set_value
     has_ace = False
@@ -44,33 +43,34 @@ if 'set_debug' in doc:
 
 def reset_src():
     if storage is not None and "py_src" in storage:
-       editor.setValue(storage["py_src"])
+        editor.setValue(storage["py_src"])
     else:
-       editor.setValue('for i in range(10):\n\tprint(i)')
-
+        editor.setValue('for i in range(10):\n\tprint(i)')
     editor.scrollToRow(0)
     editor.gotoLine(0)
 
 def reset_src_area():
     if storage and "py_src" in storage:
-       editor.value = storage["py_src"]
+        editor.value = storage["py_src"]
     else:
-       editor.value = 'for i in range(10):\n\tprint(i)'
+        editor.value = 'for i in range(10):\n\tprint(i)'
 
-def write(data):
-    doc["console"].value += '%s' % data
+class cOutput:
 
-#sys.stdout = object()    #not needed when importing sys via src/Lib/sys.py
-sys.stdout.write = write
+    def write(self, data):
+        doc["console"].value += str(data)
 
-#sys.stderr = object()    # ditto
-sys.stderr.write = write
+    def flush(self):
+        pass
+
+sys.stdout = cOutput()
+sys.stderr = cOutput()
 
 def to_str(xx):
     return str(xx)
 
 info = sys.implementation.version
-doc['version'].text = '%s.%s.%s' %(info.major,info.minor,info.micro)
+doc['version'].text = '%s.%s.%s' % (info.major, info.minor, info.micro)
 
 output = ''
 
@@ -80,10 +80,10 @@ def show_console(ev):
 
 def run(in_globals=False):
     global output
-    doc["console"].value=''
+    doc["console"].value = ''
     src = editor.getValue()
     if storage is not None:
-       storage["py_src"]=src
+       storage["py_src"] = src
 
     t0 = time.perf_counter()
     try:
@@ -91,19 +91,19 @@ def run(in_globals=False):
             exec(src)
         else:
             ns = {}
-            exec(src,ns)
+            exec(src, ns)
         state = 1
     except Exception as exc:
-        traceback.print_exc()
+        traceback.print_exc(file=sys.stderr)
         state = 0
     output = doc["console"].value
 
-    print('<completed in %6.2f ms>' % ((time.perf_counter()-t0)*1000.0))
+    print('<completed in %6.2f ms>' % ((time.perf_counter() - t0) * 1000.0))
     return state
 
 # load a Python script
 def load_script(evt):
-    _name=evt.target.value+'?foo=%s' %time.time()
+    _name = evt.target.value + '?foo=%s' % time.time()
     editor.setValue(open(_name).read())
 
 def show_js(ev):

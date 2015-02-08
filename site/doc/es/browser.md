@@ -6,6 +6,9 @@ El paquete **browser** agrupa los nombres y módulos que son específicos de Bry
 **browser**.`confirm(`_mensaje_`)`
 > una función que muestra el _message_ en una ventana mostrando, además, dos botones (ok/cancel). Devuelve `True` si se pulsa 'ok', `False` si se pulsa 'cancel'
 
+**broowser**.`console`
+> un objeto con métodos para interactuar con la consola del navegador. Su interfaz es específica de cada tipo de navegador. Permite acceder, al menos, al método `log(msg)`, el cual muestra el _msg_ en la consola. Otros métodos dependerán del navegador que se esté usando.
+
 **browser**.`document`
 > un objeto que representa el documento HTML  que se muestra en la ventana del navegador. La interfaz de este objeto se encuentra descrita en la sección "Browser interface"
 

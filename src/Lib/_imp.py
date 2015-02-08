@@ -11,7 +11,8 @@ def acquire_lock(*args,**kw):
     This lock should be used by import hooks to ensure thread-safety
     when importing modules.
     On platforms without threads, this function does nothing."""
-    raise NotImplementedError("%s:not implemented" % ('_imp.py:acquire_lock'))
+    pass   #assume we are a platform without threads
+    #raise NotImplementedError("%s:not implemented" % ('_imp.py:acquire_lock'))
 
 def extension_suffixes(*args,**kw):
     """extension_suffixes() -> list of strings    Returns the list of file suffixes used to identify extension modules."""
@@ -42,10 +43,12 @@ def lock_held(*args,**kw):
     """lock_held() -> boolean    Return True if the import lock is currently held, else False.
     On platforms without threads, return False."""
 
-    raise NotImplementedError("%s:not implemented" % ('_imp.py:lock_held'))
+    return False
+    #raise NotImplementedError("%s:not implemented" % ('_imp.py:lock_held'))
 
 def release_lock(*args,**kw):
     """release_lock() -> None    Release the interpreter's import lock.
     On platforms without threads, this function does nothing."""
 
-    raise NotImplementedError("%s:not implemented" % ('_imp.py:release_lock'))
+    pass  #assume no threads
+    #raise NotImplementedError("%s:not implemented" % ('_imp.py:release_lock'))

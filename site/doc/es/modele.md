@@ -13,9 +13,13 @@ Si el código es un fichero externo, se obtendrá mediante una llamada Ajax
 
 Esta función crea las siguientes variables de entorno :
 
-- `document.$py_src` : objeto indexado mediante los nombres de los módulos, el valor es el código fuente del módulo
-- `document.$debug` : nivel de depuración
-- `document.$exc_stack` : una lista de errores generados durante el 'parseo' o durante el tiempo de ejecución
+- `__BRYTHON__.$py_src` : objeto indexado mediante los nombres de los módulos, el valor es el código fuente del módulo
+- `__BRYTHON__.$debug` : nivel de depuración
+- `__BRYTHON__.exception_stack` : una lista de errores generados durante el 'parseo' o durante el tiempo de ejecución
+- `__BRYTHON__.imported` : Objeto Javascript, mapeado de los módulos importados al objeto módulo 
+- `__BRYTHON__.modules` : Objeto Javascript, mapeado de los nombres de los módulos a los objetos módulo
+- `__BRYTHON__.vars` : Objeto Javascript, mapeado de los nombres de los módulos al diccionario de las variables definidas en el módulo
+
     
 </td>
 
@@ -24,7 +28,7 @@ Esta función crea las siguientes variables de entorno :
 <tr>
     
 <td>Creación del árbol representando al código Python</td>
-<td>función <code>\_\_BRYTHON\_\_.$py2js(_source,module_)</code> in __py2js.js__
+<td>función <code>\_\_BRYTHON\_\_.py2js(_source,module_)</code> in __py2js.js__
 
 Esta función llama a :
 
@@ -35,14 +39,14 @@ Esta función llama a :
 - <code>transform(_root_)</code> : transforma el árbol para prepararlo para la conversión a Javascript (ver debajo)
 - `$add_line_num()` para añadir números de línea en el caso de que el 'debug mode' sea superior a 0
 
-La función `$py2js` devuelve la raíz del árbol.
+La función `py2js` devuelve la raíz del árbol.
 </td>
 </tr>
 
 <tr>
     
 <td>generando código Javascript</td>
-<td>método `to_js()` del árbol devuelto por `$py2js`
+<td>método `to_js()` del árbol devuelto por `py2js`
 
 Esta función llama de forma recursiva al método del mismo nombre y a todos los elementos sintácticos encontrados en el árbol. Devuelve la cadena que contiene el código Javascript resultante. Si el 'debug mode' es 2, esta cadena se mostrará en la consola del navegador.
 </td>
@@ -63,16 +67,15 @@ Esta función llama de forma recursiva al método del mismo nombre y a todos los
 El script __brython.js__ se genera mediante la compilación de varios scripts :
 
 - __brython\_builtins.js__ : define el objeto `__BRYTHON__` que actúa como pasarela entre objetos Javascript nativos (`Date, RegExp, Storage...`) y Brython
+- **version\_info.js** : creado por el script make_dist.py, añade información sobre la versión de Brython
 - __py2js.js__ : realiza la conversión de código Python a código Javascript
 - __py\_utils.js__ : funciones útiles (eg conversiones de tipos entre Javascript y Python)
-- __py\_object.js__ : implementa el clase `object` de Python
+- __py\_object.js__ : implementa la clase `object` de Python
+- __py\_type.js__ : implementa la clase `type` de Python
 - __py\_builtin\_functions.js__ : Python built-in functions
 - __js\_objects.js__ : interfaz a los objetos y constructores Javascript
 - __py\_import.js__ : implementación de _import_
-- __py\_dict.js__ : implementación de la clase `dict` Python
-- __py\_list.js__ : implementación de la clase Python `list`, basada en el tipo Javascript `Array`
-- __py\_string.js__ : implementación de la clase Python `str`, basada en el tipo Javascript `String`
-- __py\_set.js__ : implementación de la clase `set` Python
+- **py\_float.js**, **py\_int.js**, **py\_complex.js**, **py\_dict.js**, **py\_list.js**, **py\_string.js**, **py\_set.js** : implementación de las respectivas clases Python
 - __py\_dom.js__ : interacción con el documento HTML (DOM)
 
 ### Más sobre traducción y ejecución
@@ -104,6 +107,7 @@ Cada instrucción en el código fuente encuentra un nodo en el árbol (una insta
 Cada elemento sintáctico (identificador, llamada a función, expresión, operador,...) es manejado mediante una clase : ver en el código fuente de __py2js.js__ entre `function $AbstractExprCtx` y `function $UnaryCtx`
 
 En este paso, se puede informar de los errores : 
+
 - errores sintácticos
 - errores de indentación
 - cadenas literales inacabadas
@@ -129,7 +133,6 @@ En el momento de ejecución, el script generado puede hacer uso de :
 - funciones internas no accesibles desde Python (sus nombres siempre comienzan con $) ; la mayoría de ellas se definen en _$py\_utils.js_. Las más importantes son :
 
  - _$JS2Py_ : toma un solo argumento y devuelve :
-
   - el argumento sin cambiar si es un tipo soportado por Brython (i.e. si tiene un atributo clase ___class___)
   - una instancia de DOMObject (respectivamente DOMEvent) si el argumento es un objeto DOM (resp. evento)
   - una instancia de JSObject "envolviendo" al argumento en el resto de casos

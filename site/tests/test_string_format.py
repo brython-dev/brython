@@ -106,3 +106,66 @@ assert "%-5u" % 3 == '3    '
 assert "%#5u" % 3 == '    3'
 assert "%05u" % 3 == '00003'
 assert "%+05u" % 3 == '+0003'
+
+assert "%f" % 5 == "5.000000"
+assert "%5.f" % 50000 == "50000"
+assert "%f" % float('inf') == 'inf'
+assert "%F" % float('inf') == 'INF'
+assert "%f" % float('nan') == 'nan'
+assert "%10.5F" % float('nan') == '       NAN'
+assert "%#.0f" % 5 == '5.'
+assert "%.0f" % 5 == '5'
+assert "%+-015.5f" % -32.1 == "-32.10000      "
+assert "% f" % -5325.35 == '-5325.350000'
+
+assert "%o" % 10 == '12'
+assert "%#o" % -10 == '-0o12'
+assert "%# o" % -10 == '-0o12'
+assert "%05o" % -15 == '-0017'
+
+assert "%7.5x" % 7 == '  00007'
+assert "%x" % 11 == 'b'
+assert "% x" % 11 == ' b'
+assert "%+x" % 11 == '+b'
+assert "%X" % -11 == '-B'
+assert "%#5X" % -11 == ' -0XB'
+assert "%# X" % 8 == ' 0X8'
+assert "%05x" % -15 == '-000f'
+
+assert "%e" % 1 == '1.000000e+00'
+assert "%E" % -0.271 == '-2.710000E-01'
+assert "%15.4e" % 3.1415 == '     3.1415e+00'
+assert "%e" % 900000000000 == '9.000000e+11'
+
+assert "%g" % 5 == "5"
+assert "%g" % 100 == '100'
+assert "%.2g" % 100 == '1e+02'
+assert "%.2G" % 0.00005 == "5E-05"
+assert "%07.2g" % 100 == '001e+02'
+assert "%#.1g" % 100 == '1.e+02'
+assert "%#.g" % 100 == '1.e+02'
+assert "%.1g" % 100 == '1e+02'
+assert "%#.4g" % 100 == '100.0'
+assert "%g" % 55.5 == '55.5'
+assert "%.3g" % 14 == '14'
+
+assert "%c" % "h" == 'h'
+assert "%c" % 39 == "'"
+assert '%c' % 936 == 'Ψ'
+try:
+    "%c" % "hello"
+except TypeError as err:
+    assert str(err) == "%c requires int or char"
+else:
+    raise Exception("Did not raise error")
+
+assert '''%s %s %.2f %.3g %7.5E %1.1x %#o %s''' % ("hi", 5, 851.532, 14,
+          -3381, -851.532, 99, "to you") == 'hi 5 851.53 14 -3.38100E+03 -353 0o143 to you'
+assert ("%(hi)s" % {"hi": "bye"}) == "bye"
+
+try:
+    "%(boo" % {}
+except ValueError as err:
+    assert str(err) == "incomplete format key"
+else:
+    raise Exception("Did not raise error")

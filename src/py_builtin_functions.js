@@ -1,13 +1,11 @@
 // built-in functions
 ;(function($B){
 
-var _b_=$B.builtins
+eval($B.InjectBuiltins())
+
 _b_.__debug__ = false
 
-// insert already defined builtins
-var $s=[]
-for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
-eval($s.join(';'))
+
 
 var $ObjectDict = _b_.object.$dict
 
@@ -91,10 +89,8 @@ ascii.__code__.co_varnames=['obj']
 
 // used by bin, hex and oct functions
 function $builtin_base_convert_helper(obj, base) {
-  var value;
-  if (isinstance(obj, _b_.int)) {value=obj
-  } else if (obj.__index__ !== undefined) {value=obj.__index__()
-  }
+  var value=$B.$GetInt(obj)
+
   if (value === undefined) {
      // need to raise an error
      throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')
@@ -117,7 +113,12 @@ function $builtin_base_convert_helper(obj, base) {
 
 
 // bin() (built in function)
-function bin(obj) {return $builtin_base_convert_helper(obj, 2)}
+function bin(obj) {
+    if(isinstance(obj, _b_.int)){
+        return $builtin_base_convert_helper(obj, 2)
+    }
+    return getattr(obj, '__index__')()
+}
 
 bin.__doc__="bin(number) -> string\n\nReturn the binary representation of an integer.\n\n   >>> bin(2796202)\n   '0b1010101010101010101010'\n"
 bin.__code__={}
@@ -181,7 +182,7 @@ callable.__code__.co_varnames=['obj']
 
 
 function chr(i) {
-  if (i < 0 || i > 1114111) Exception('ValueError', 'Outside valid range')
+  if (i < 0 || i > 1114111) _b_.ValueError('Outside valid range')
 
   return String.fromCharCode(i)
 }
@@ -282,9 +283,9 @@ function dir(obj){
         _b_.list.$dict.sort(res)
         return res
     }
+
     if(isinstance(obj,$B.JSObject)) obj=obj.js
-    
-    if($B.get_class(obj).is_class){obj=obj.$dict}
+    else if($B.get_class(obj).is_class){obj=obj.$dict}
     else {
         // We first look if the object has the __dir__ method
         try {
@@ -292,7 +293,7 @@ function dir(obj){
             res = _b_.list(res)
             res.sort()
             return res
-        } catch (err){$B.$pop_exc()}
+        } catch (err){console.log('no __dir__ '+err);$B.$pop_exc()}
     }
     var res = []
     for(var attr in obj){
@@ -367,21 +368,26 @@ enumerate.__code__.co_varnames=['iterable']
 
 //eval() (built in function)
 function $eval(src, _globals, locals){
-    var is_exec = arguments[3]=='exec'
+    var is_exec = arguments[3]=='exec', mod_name
     if($B.exec_stack.length==0){$B.exec_stack=['__main__']}
     var env = $B.exec_stack[$B.exec_stack.length-1]
 
     if(is_exec && _globals===undefined){
-        var mod_name = env
+        mod_name = env
     }else{
-        var mod_name = 'exec-'+Math.random().toString(36).substr(2,8)
+        if(_globals===undefined){mod_name="exec-"+$B.UUID()}
+        else{
+            if(_globals.id === undefined){_globals.id = 'exec-'+$B.UUID()}
+            mod_name = _globals.id
+        }
         $B.$py_module_path[mod_name] = $B.$py_module_path['__main__']
         $B.vars[mod_name] = {}
         $B.bound[mod_name] = {}
         if(_globals!==undefined){
-            for(var i=0;i<_globals.$keys.length;i++){
-                $B.vars[mod_name][_globals.$keys[i]] = _globals.$values[i]
-                $B.bound[mod_name][_globals.$keys[i]] = true
+            var items = _b_.list(_b_.dict.$dict.items(_globals))
+            for(var i=0;i<items.length;i++){
+                $B.vars[mod_name][items[i][0]] = items[i][1]
+                $B.bound[mod_name][items[i][0]] = true
             }
         }else{
             for(var attr in $B.vars[env]){
@@ -396,27 +402,32 @@ function $eval(src, _globals, locals){
         // If the Python function is eval(), not exec(), check that the source
         // is an expression
         if(!is_exec){
+            // last instruction is 'leave frame' ; we must remove it, 
+            // otherwise eval() would return None
+            root.children.pop()
             var instr = root.children[root.children.length-1]
             var type = instr.context.tree[0].type
             if (!('expr' == type || 'list_or_tuple' == type)) {
-            //if(["expr","list_or_tuple"].indexOf(type)==-1){
+                console.log('not expression '+instr.context.tree[0])
                 $B.line_info=[1,mod_name]
-                throw SyntaxError("eval() argument must be an expression")
+                throw _b_.SyntaxError("eval() argument must be an expression")
             }
         }
-        var js = root.to_js()
-        var res = eval(js)
+        var res = eval(root.to_js())
+        if(res===undefined){res = _b_.None}
         if(_globals!==undefined){
             var set_func = getattr(_globals,'__setitem__')
             for(var attr in $B.vars[mod_name]){
                if (attr=='__name__'||attr=='__doc__'||attr == '__file__') continue
-                //if(['__name__','__doc__','__file__'].indexOf(attr)>-1){continue}
                set_func(attr, $B.vars[mod_name][attr])
             }
         }
         return res
     }finally{
         $B.exec_stack.pop()
+        $B.leave_frame() // explicitely leave frame
+        delete $B.bound[mod_name], $B.modules[mod_name], $B.imported[mod_name]
+        if(_globals!==undefined){delete $B.vars[mod_name]}
     }
 }
 $eval.$is_func = true
@@ -485,23 +496,26 @@ function getattr(obj,attr,_default){
         throw _b_.AttributeError('object has no attribute '+attr)
     }
     
-    // attribute __class__ is set for all Python objects
-    // return the factory function
-    if(attr=='__class__') return klass.$factory
-    
-    // attribute __dict__ returns an instance of a subclass of dict
-    // defined in py_dict.js
-    if(attr==='__dict__'){
+    switch(attr) {
+      case '__class__':
+        // attribute __class__ is set for all Python objects
+        // return the factory function
+        //if(attr=='__class__') 
+        return klass.$factory
+      case '__dict__':
+        // attribute __dict__ returns an instance of a subclass of dict
+        // defined in py_dict.js
+        //if(attr==='__dict__')
         return $B.obj_dict(obj)
-    }
-    
-    // __call__ on a function returns the function itself
-    if(attr==='__call__' && (typeof obj=='function')){
-        if(obj.$blocking){
-            console.log('calling blocking function '+obj.__name__)
-        }
-        if($B.debug>0){
-            return function(){
+      case '__call__':
+        // __call__ on a function returns the function itself
+        //if(attr==='__call__' && 
+        if (typeof obj=='function'){
+           if(obj.$blocking){
+             console.log('calling blocking function '+obj.__name__)
+           }
+           if($B.debug>0){
+              return function(){
                 $B.call_stack.push($B.line_info)
                 try{
                     var res = obj.apply(null,arguments)
@@ -509,35 +523,39 @@ function getattr(obj,attr,_default){
                     return res
                 }catch(err){throw err}
                 finally{$B.call_stack.pop()}
-            }
-        }
-        return function(){
-            var res = obj.apply(null,arguments)
-            if(res===undefined) return _b_.None
-            return res
-        }
-    }else if(attr=='__call__' && klass===$B.JSObject.$dict &&
-        typeof obj.js=='function'){
-        return function(){
+              }
+           }
+           return function(){
+             var res = obj.apply(null,arguments)
+             if(res===undefined) return _b_.None
+             return res
+           }
+        
+        //}else if(attr=='__call__' && 
+        } else if (klass===$B.JSObject.$dict && typeof obj.js=='function'){
+          return function(){
             var res = obj.js.apply(null,arguments)
             if(res===undefined) return _b_.None
             return $B.JSObject(res)
+          }
         }
-    }
+        break
+      case '__code__':
+        //if(attr=='__code__' && 
+        if (typeof obj=='function') {
+           var res = {__class__:$B.$CodeObjectDict,src:obj,
+                      name:obj.__name__ || '<module>'
+           }
+           if (obj.__code__ !== undefined) {
+              for (var attr in obj.__code__) res[attr]=obj.__code__[attr]
+           }
+           if($B.vars[obj.__module__]!==undefined){
+              res.filename=$B.vars[obj.__module__].__file__
+           }
+           return res
+        }//if
+    }//switch    
 
-    if(attr=='__code__' && (typeof obj=='function')){
-        var res = {__class__:$B.$CodeObjectDict,src:obj,
-                   name:obj.__name__ || '<module>'
-            }
-        if (obj.__code__ !== undefined) {
-           for (var attr in obj.__code__) res[attr]=obj.__code__[attr]
-        }
-        if($B.vars[obj.__module__]!==undefined){
-            res.filename=$B.vars[obj.__module__].__file__
-        }
-        return res
-    }
-    
     if(typeof obj == 'function') {
       if(attr !== undefined && obj[attr] !== undefined) {
         if (attr == '__module__') { // put other attrs here too..
@@ -554,6 +572,10 @@ function getattr(obj,attr,_default){
         if(typeof klass[attr]=='function'){
             // new is a static method
             if(attr=='__new__') return klass[attr].apply(null,arguments)
+            
+            if(klass.descriptors && klass.descriptors[attr]!==undefined){
+                return klass[attr].apply(null, [obj])
+            }
             
             var method = function(){
                 var args = [obj]
@@ -615,7 +637,8 @@ function globals(module){
     // the translation engine adds the argument module
     var res = _b_.dict()
     var scope = $B.vars[module]
-    for(var name in scope){res.$keys.push(name);res.$values.push(scope[name])}
+    var setitem=_b_.dict.$dict.__setitem__
+    for(var name in scope) setitem(res, name, scope[name])
     return res
 }
 
@@ -639,18 +662,23 @@ hasattr.__code__.co_varnames=['object','name']
 
 
 function hash(obj){
+    if(arguments.length!=1){
+        throw _b_.TypeError("hash() takes exactly one argument ("+
+            arguments.length+" given)")
+    }
     if (obj.__hashvalue__ !== undefined) return obj.__hashvalue__
     if (isinstance(obj, _b_.int)) return obj.valueOf()
     if (isinstance(obj, bool)) return _b_.int(obj)
     if (obj.__hash__ !== undefined) {
        return obj.__hashvalue__=obj.__hash__()
     }
-    if (hasattr(obj, '__hash__')) {
-       return obj.__hashvalue__=getattr(obj, '__hash__')()
+    var hashfunc = getattr(obj, '__hash__', _b_.None)
+    if(hashfunc===_b_.None){
+        throw _b_.TypeError("unhashable type: '"+
+            $B.get_class(obj).__name__+"'")
+    }else{
+        return obj.__hashvalue__= hashfunc()
     }
-       
-    throw _b_.AttributeError(
-        "'"+_b_.str(obj.__class__)+"' object has no attribute '__hash__'")
 }
 
 hash.__doc__='hash(object) -> integer\n\nReturn a hash value for the object.  Two objects with the same value have\nthe same hash value.  The reverse is not necessarily true, but likely.'
@@ -701,6 +729,13 @@ function id(obj) {
    // this calculates a hash from the string contents
    // should be deterministic based on string contents
    if (typeof obj == 'string') return getattr(_b_.str(obj), '__hash__')() 
+
+    /*
+   if (hasattr(obj, '__hash__')) {
+     var hash_func = getattr(obj, '__hash__')
+     if(callable(hash_func)){return hash_func()}
+   }
+   */
 
    if (obj.__hash__ === undefined || isinstance(obj, [_b_.set,_b_.list,_b_.dict])) {
       return obj.__hashvalue__=$B.$py_next_hash++
@@ -860,9 +895,8 @@ function locals(obj_id,module){
 
     var res = _b_.dict()
     var scope = $B.vars[obj_id]
-    for(var name in scope){
-       _b_.dict.$dict.__setitem__(res,name,scope[name])
-    }
+    var setitem=_b_.dict.$dict.__setitem__
+    for(var name in scope) setitem(res, name, scope[name])
     return res
 }
 
@@ -1163,7 +1197,11 @@ property.__code__.co_varnames=['fget','fset','fdel', 'doc']
 
 
 // range
-var $RangeDict = {__class__:$B.$type,__name__:'range',$native:true}
+var $RangeDict = {__class__:$B.$type,
+    __dir__:$ObjectDict.__dir__,
+    __name__:'range',
+    $native:true
+}
 
 $RangeDict.__contains__ = function(self,other){
     var x = iter(self)
@@ -1177,7 +1215,9 @@ $RangeDict.__contains__ = function(self,other){
 }
 
 $RangeDict.__getitem__ = function(self,rank){
-    var t0 = new Date().getTime()
+    if(typeof rank != "number") {
+      rank=$B.$GetInt(rank)
+    }
     var res = self.start + rank*self.step
     if((self.step>0 && res >= self.stop) ||
         (self.step<0 && res < self.stop)){
@@ -1428,6 +1468,21 @@ var $SliceDict = {__class__:$B.$type, __name__:'slice'}
 
 $SliceDict.__mro__ = [$SliceDict,$ObjectDict]
 
+$SliceDict.indices = function (self, length) {
+  var len=$B.$GetInt(length)
+  if (len < 0) _b_.ValueError('length should not be negative')
+  if (self.step > 0) {
+     var _len = min(len, self.stop)
+     return _b_.tuple([self.start, _len, self.step])
+  } else if (self.step == _b_.None) {
+     var _len = min(len, self.stop)
+     var _start = self.start
+     if (_start == _b_.None) _start = 0
+     return _b_.tuple([_start, _len, 1])
+  }
+  _b_.NotImplementedError("Error! negative step indices not implemented yet")
+}
+
 function slice(){
     var $ns=$B.$MakeArgs('slice',arguments,[],[],'args',null)
     var args = $ns['args']
@@ -1438,12 +1493,32 @@ function slice(){
     }
 
     var start=0, stop=0, step=1
-    if(args.length==1){start=None;stop = args[0];step=None}
-    else if(args.length>=2){
-        start = args[0]
-        stop = args[1]
-    }
-    if(args.length>=3) step=args[2]
+    switch(args.length) {
+      case 3:
+        //}
+        //if(args.length>=3) 
+        if(typeof args[2] == "number") {
+          step = args[2]
+        } else {
+          step= $B.$GetInt(args[2])
+        }
+      case 2:
+        //else if(args.length>=2){
+        if(typeof args[1] == "number") {
+          stop = args[1]
+        } else {
+          stop = $B.$GetInt(args[1])
+        }
+      case 1:
+        //if(args.length==1){
+        if (args.length == 1) step=start=None
+        if(typeof args[0] == "number") {
+          start= args[0]
+        } else {
+          start=$B.$GetInt(args[0])
+        }
+    } //switch
+
     if(step==0) throw ValueError("slice step must not be zero")
     var res = {
         __class__ : $SliceDict,
@@ -1693,7 +1768,7 @@ function $url_open(){
             }
         }
         // add fake query string to avoid caching
-        var fake_qs = '?foo='+Math.random().toString(36).substr(2,8)
+        var fake_qs = '?foo='+$B.UUID()
         req.open('GET',file+fake_qs,false)
         var is_binary = mode.search('b')>-1
         if(is_binary){
@@ -1763,11 +1838,19 @@ zip.__code__.co_varnames=['iter1']
 
 // built-in constants : True, False, None
 
+function no_set_attr(klass, attr){
+    if(klass[attr]!==undefined){
+        throw _b_.AttributeError("'"+klass.__name__+"' object attribute '"+
+            attr+"' is read-only")
+    }else{
+        throw _b_.AttributeError("'"+klass.__name__+
+            "' object has no attribute '"+attr+"'")
+    }
+}
+
 var $BoolDict = $B.$BoolDict = {__class__:$B.$type,
+    __dir__:$ObjectDict.__dir__,
     __name__:'bool',
-    __repr__ : function(){return "<class 'bool'>"},
-    __str__ : function(){return "<class 'bool'>"},
-    toString : function(){return "<class 'bool'>"},
     $native:true
 }
 $BoolDict.__mro__ = [$BoolDict,$ObjectDict]
@@ -1809,7 +1892,7 @@ $BoolDict.__gt__ = function(self,other){
     return _b_.int.$dict.__gt__($BoolDict.__hash__(self),other)
 }
 
-$BoolDict.__hash__ = function(self) {
+$BoolDict.__hash__ = $BoolDict.__index__= $BoolDict.__int__=function(self) {
    if(self.valueOf()) return 1
    return 0
 }
@@ -1828,11 +1911,18 @@ $BoolDict.__repr__ = $BoolDict.__str__ = function(self){
     return "False"
 }
 
+$BoolDict.__setattr__ = function(self, attr){
+    return no_set_attr($BoolDict, attr)
+}
+
 $BoolDict.__sub__ = function(self,other){
     if(self.valueOf()) return 1-other;
     return -other;
 }
 
+$BoolDict.__xor__ = function(self, other) {
+    return self.valueOf() != other.valueOf()
+}
 
 var $EllipsisDict = {__class__:$B.$type,
     __name__:'Ellipsis',
@@ -1841,7 +1931,7 @@ $EllipsisDict.__mro__ = [$ObjectDict]
 $EllipsisDict.$factory = $EllipsisDict
 
 var Ellipsis = {
-    __bool__ : function(){return False},
+    __bool__ : function(){return True},
     __class__ : $EllipsisDict,
     __repr__ : function(){return 'Ellipsis'},
     __str__ : function(){return 'Ellipsis'},
@@ -1871,7 +1961,13 @@ for(var $func in Ellipsis){
 }
 
 var $NoneDict = {__class__:$B.$type,__name__:'NoneType',}
+
 $NoneDict.__mro__ = [$NoneDict,$ObjectDict]
+
+$NoneDict.__setattr__ = function(self, attr){
+    return no_set_attr($NoneDict, attr)
+}
+
 $NoneDict.$factory = $NoneDict
 
 var None = {
@@ -1883,17 +1979,18 @@ var None = {
     toString : function(){return 'None'}
 }
 
-for(var $key in $B.$comps){ // None is not orderable with any type
-    switch($key) {
+for(var $op in $B.$comps){ // None is not orderable with any type
+    var key = $B.$comps[$op]
+    switch(key){
       case 'ge':
       case 'gt':
       case 'le':
       case 'lt':
-        None['__'+$B.$comps[$key]+'__']=(function(k){
+        $NoneDict['__'+key+'__']=(function(op){
             return function(other){
-            throw _b_.TypeError("unorderable types: NoneType() "+k+" "+
-                $B.get_class(other).__name__)}
-        })($key)
+            throw _b_.TypeError("unorderable types: NoneType() "+op+" "+
+                $B.get_class(other).__name__+"()")}
+        })($op)
     }
 }
 for(var $func in None){
@@ -1926,7 +2023,11 @@ $Function.$dict = $FunctionDict
 
 // built-in exceptions
 
-var $BaseExceptionDict = {__class__:$B.$type,__name__:'BaseException'}
+var $BaseExceptionDict = {__class__:$B.$type,
+    __bases__ : [_b_.object],
+    __module__:'builtins',
+    __name__:'BaseException'
+}
 
 $BaseExceptionDict.__init__ = function(self){
     self.args = [arguments[1]]
@@ -1960,6 +2061,47 @@ var $FrameDict = {__class__:$B.$type,
     __mro__:[$ObjectDict]
 }
 
+function to_dict(obj){
+    var res = _b_.dict()
+    var setitem=_b_.dict.$dict.__setitem__
+    for(var attr in obj){
+        if(attr.charAt(0)=='$'){continue}
+        setitem(res, attr, obj[attr])
+    }
+    return res
+}
+
+function frame(pos){
+    var mod_name = $B.line_info[1]
+    var fs = $B.frames_stack
+    var res = {__class__:$FrameDict,
+        f_builtins : to_dict($B.vars['__builtins__'])
+    }
+    if(pos===undefined){pos = fs.length-1}
+    if(fs.length){
+        var _frame = fs[pos]
+        res.f_locals = to_dict($B.vars[_frame[0]])
+        res.f_globals = to_dict($B.vars[_frame[1]])
+        if(__BRYTHON__.debug>0){
+            res.f_lineno = __BRYTHON__.line_info[0]
+        }else{
+            res.f_lineno = None
+        }
+        if(pos>0){res.f_back = frame(pos-1)}
+        else{res.f_back = None}
+        res.f_code = {__class__:$B.$CodeObjectDict,
+            co_code:None, // XXX fix me
+            co_name: _frame[0], // ditto
+            co_filename: $B.vars[_frame[1]].__name__
+        }
+    }
+    return res
+}
+
+frame.__class__ = $B.$factory
+frame.$dict = $FrameDict
+$FrameDict.$factory = frame
+
 var BaseException = function (msg,js_exc){
     var err = Error()
     err.info = 'Traceback (most recent call last):'
@@ -1989,13 +2131,14 @@ var BaseException = function (msg,js_exc){
             var lines = $B.$py_src[call_info[1]].split('\n')
             err.info += '\n  module '+lib_module+' line '+call_info[0]
             var line = lines[call_info[0]-1]
-            while(line && line.charAt(0)==' '){line=line.substr(1)}
+            //while(line && line.charAt(0)==' '){line=line.substr(1)}
+            if(line) line=line.replace(/^[ ]+/g, '')
             err.info += '\n    '+line
             last_info = call_info
             // create traceback object
             if(i==0){
                 tb = {__class__:$TracebackDict,
-                    tb_frame:{__class__:$FrameDict},
+                    tb_frame:frame(),
                     tb_lineno:call_info[0],
                     tb_lasti:line,
                     tb_next: None // fix me
@@ -2027,7 +2170,7 @@ var BaseException = function (msg,js_exc){
             err.info += '\n    '+line
             // create traceback object
             tb = {__class__:$TracebackDict,
-                tb_frame:{__class__:$FrameDict},
+                tb_frame:frame(),
                 tb_lineno:line_num,
                 tb_lasti:line,
                 tb_next: None   // fix me
@@ -2070,7 +2213,9 @@ $B.exception = function(js_exc){
         console.log('$B.exception ', js_exc)
         for(var attr in js_exc){console.log(attr,js_exc[attr])}
         console.log('line info '+ $B.line_info)
-        console.log(js_exc.info)
+        //console.log(js_exc.info) //printed by for loop above
+        console.trace()
+        console.log('call stack', $B.call_stack)
     }
 
     if(!js_exc.py_error){
@@ -2113,7 +2258,7 @@ $B.exception = function(js_exc){
         exc.message = js_exc.message || '<'+js_exc+'>'
         exc.info = ''
         exc.traceback = {__class__:$TracebackDict,
-            tb_frame:{__class__:$FrameDict},
+            tb_frame:frame(),
             tb_lineno:-1,
             tb_lasti:'',
             tb_next: None   // fix me
@@ -2155,6 +2300,8 @@ function $make_exc(names,parent){
         var $exc = (BaseException+'').replace(/BaseException/g,name)
         // class dictionary
         _str.push('var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}')
+        _str.push('$'+name+'Dict.__bases__ = [parent]')
+        _str.push('$'+name+'Dict.__module__ = "builtins"')
         _str.push('$'+name+'Dict.__mro__=[$'+name+'Dict].concat(parent.$dict.__mro__)')
         // class constructor
         _str.push('_b_.'+name+'='+$exc)
@@ -2212,13 +2359,13 @@ var builtin_funcs = ['abs', 'all', 'any', 'ascii', 'bin', 'bool', 'bytearray',
 'list', 'locals', 'map', 'max', 'memoryview', 'min', 'next', 'object', 
 'oct', 'open', 'ord', 'pow', 'print', 'property', 'quit', 'range', 'repr', 
 'reversed', 'round', 'set', 'setattr', 'slice', 'sorted', 'staticmethod', 'str', 
-'sum','super', 'tuple', 'type', 'vars', 'zip']
+'sum','$$super', 'tuple', 'type', 'vars', 'zip']
 
 for(var i=0;i<builtin_funcs.length;i++){
     $B.builtin_funcs[builtin_funcs[i]]=true
 }
 
-var other_builtins = [ 'Ellipsis', 'False',  'None', 'True', '_', 
+var other_builtins = [ 'Ellipsis', 'False',  'None', 'True', 
 '__build_class__', '__debug__', '__doc__', '__import__', '__name__', 
 '__package__', 'copyright', 'credits', 'license', 'NotImplemented']
 

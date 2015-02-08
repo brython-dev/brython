@@ -21,10 +21,14 @@ de la petición
 
 > La _función_ toma un único argumento: el objeto `ajax`.
 
-Es equivalente a: _req.on\_evt = func_
-
 `open(`_method, url, async_`)`
-> _method_ es el método HTTP usado para la petición (normalmente GET o POST), _url_ es la url a llamar, _async_ es el booleano que indica si la llamada es asíncrona o no
+> _method_ es el método HTTP usado para la petición (normalmente GET o POST), 
+
+> _url_ es la url a llamar, 
+
+> _async_ es el booleano que indica si la llamada es asíncrona (el
+> script que comenzó la petición se ejecuta sin esperar a la 
+> respuesta) o no (el script espera hasta que se recibe la respuesta).
 
 `readyState`
 > un entero que representa el estado de la petición (ver tabla más abajo)
@@ -50,8 +54,10 @@ estado de la petición
 `set_timeout(`_duration, function_`)`
 > si la petición no devuelve una respuesta durante la _duración_ en segundos, cancelará la petición y ejecutará la _función_. Esta función no puede tener argumentos
 
-`send()`
-> envía (inicia) la petición
+`send(`_[data]_`)`
+> envía (inicia) la petición. El argumento opcional _data_ será ignorado si el  
+> método no es POST ; debe ser un diccionario o una cadena representando la codificación url
+> de los pares clave-valor.
 
 `status`
 > es un entero que representa el estatus HTTP de la petición. Los valores más usuales son 200 (ok) y 404 (file not found)
@@ -66,17 +72,29 @@ estado de la petición
 
 Supondremos que existe un DIV con id _result_ en la página HTML
 
->    from browser import document as doc
->    from browser import ajax
->
->    def on_complete(req):
->        if req.status==200 or req.status==0:
->            doc["result"].html = req.text
->        else:
->            doc["result"].html = "error "+req.text
->    
->    req = ajax.ajax()
->    req.bind('complete',on_complete)
->    req.open('POST',url,True)
->    req.set_header('content-type','application/x-www-form-urlencoded')
->    req.send(data)
+```python
+from browser import document, ajax
+
+def on_complete(req):
+    if req.status==200 or req.status==0:
+        document["result"].html = req.text
+    else:
+        document["result"].html = "error "+req.text
+
+req = ajax.ajax()
+req.bind('complete',on_complete)
+# envía una petición POST a la url
+req.open('POST',url,True)
+req.set_header('content-type','application/x-www-form-urlencoded')
+# envía datos como un diccionario
+req.send({'x':0, 'y':1})
+```
+
+Para envíar datos via el método GET, se debe incluir en la cadena de la petición
+
+```python
+qs = "x=0&y=1"
+req.open('GET', url+'?'+qs, True)
+req.set_header('content-type', 'application/x-www-form-urlencoded')
+req.send()
+```

@@ -3,6 +3,7 @@ from _sys import *
 from javascript import JSObject
 
 has_local_storage=__BRYTHON__.has_local_storage
+has_session_storage = __BRYTHON__.has_session_storage
 has_json=__BRYTHON__.has_json
 
 argv = ['__main__']
@@ -63,8 +64,7 @@ platform="brython"
 prefix = __BRYTHON__.brython_path
 
 version = '.'.join(str(x) for x in __BRYTHON__.version_info[:3])
-#todo, put in a 'real' date, etc
-version += " (default, Feb 29 2013, 00:00:00) \n[Javascript 1.5]"
+version += " (default, %s) \n[Javascript 1.5] on Brython" % __BRYTHON__.compiled_date
 hexversion = 0x03000000   # python 3.0
 
 class __version_info(object):
@@ -92,6 +92,43 @@ class __version_info(object):
         return _s % (self.major, self.minor, self.micro, 
                      self.releaselevel, self.serial)
         #return str(self.version_info)
+
+    def __eq__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) == other
+
+        raise Error("Error! I don't know how to compare!")
+
+    def __ge__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) >= other
+
+        raise Error("Error! I don't know how to compare!")
+
+    def __gt__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) > other
+
+        raise Error("Error! I don't know how to compare!")
+
+    def __le__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) <= other
+
+        raise Error("Error! I don't know how to compare!")
+
+    def __lt__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) < other
+
+        raise Error("Error! I don't know how to compare!")
+
+    def __ne__(self,other):
+        if isinstance(other, tuple):
+           return (self.major, self.minor, self.micro) != other
+
+        raise Error("Error! I don't know how to compare!")
+
 
 #eventually this needs to be the real python version such as 3.0, 3.1, etc
 version_info=__version_info(__BRYTHON__.version_info)

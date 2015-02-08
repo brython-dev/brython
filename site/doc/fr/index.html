@@ -6,29 +6,9 @@
 <link rel="stylesheet" href="../doc_brython.css">
 
 <script type="text/javascript" src="/src/brython.js"></script>
+<script type="text/python" src="../docs.py"></script>
+
 <script type="text/python">
-from browser import document as doc
-from browser import window
-
-import header
-header.show('../../')
-
-from browser import markdown
-import time
-
-def load(url,target):
-    # fake query string to bypass browser cache
-    qs = '?foo=%s' %time.time()
-    try:
-        mk,scripts = markdown.mark(open(url+qs).read())
-    except IOError:
-        doc[target].html = "Page %s not found" %url
-        return False
-    doc[target].html = mk
-    for script in scripts:
-        exec(script)
-    return False
-
 load('intro.md', 'content')
 language = "fr"
 
@@ -80,6 +60,8 @@ window.load = load
 <br><a class="navig" href="#" onClick="load('html.md','content')">browser.html</a>
 <br><a class="navig" href="#" onClick="load('local_storage.md','content')">browser.local_storage</a>
 <br><a class="navig" href="#" onClick="load('markdown.md','content')">browser.markdown</a>
+<br><a class="navig" href="#" onClick="load('object_storage.md','content')">browser.object_storage</a>
+<br><a class="navig" href="#" onClick="load('local_storage.md','content')">browser.session_storage</a>
 <br><a class="navig" href="#" onClick="load('svg.md','content')">browser.svg</a>
 <br><a class="navig" href="#" onClick="load('timer.md','content')">browser.timer</a>
 <br><a class="navig" href="#" onClick="load('websockets.md','content')">browser.websocket</a>
@@ -100,13 +82,15 @@ window.load = load
 <br><a class="navig" href="#" onClick="load('cookbook/content_in_div.md','content')">Insérer du contenu dans un élément</a>
 <br><a class="navig" href="#" onClick="load('cookbook/basic_markup.md','content')">Mise en forme HTML (gras, italique...)</a>
 <br><a class="navig" href="#" onClick="load('cookbook/table.md','content')">Table HTML</a>
-<br><a class="navig" href="#" onClick="load('cookbook/validate_form.md','content')">Valider un formulaire</a>
+<br><a class="navig" href="#" onClick="load('cookbook/bind_unbind.md','content')">Attacher / détacher des événements</a>
 <br><a class="navig" href="#" onClick="load('cookbook/select_checkbox.md','content')">Gérer la sélection d'options dans un SELECT</a>
 <br><a class="navig" href="#" onClick="load('cookbook/drag_drop.md','content')">Glisser-déposer</a>
 <br><a class="navig" href="#" onClick="load('cookbook/get_content.md','content')">Obtenir le contenu d'un élément</a>
 <br><a class="navig" href="#" onClick="load('cookbook/read_file.md','content')">Lire le contenu d'un fichier</a>
 <br><a class="navig" href="#" onClick="load('cookbook/local_storage.md','content')">Stocker des objects localement</a>
 <br><a class="navig" href="#" onClick="load('cookbook/read_text_from_imagemap.md','content')">Exemple de onmouseover</a>
+<br><a class="navig" href="#" onClick="load('cookbook/draw_image.md','content')">Ajouter une image dans un canvas</a>
+
 </div>
 
 

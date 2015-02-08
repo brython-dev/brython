@@ -1,10 +1,7 @@
 ;(function($B){
-var _b_ = $B.builtins
 
-var $s=[]
-for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
-eval($s.join(';'))
-//for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
+eval($B.InjectBuiltins())
+
 var $ObjectDict = _b_.object.$dict
 
 function $err(op,other){
@@ -13,37 +10,55 @@ function $err(op,other){
     throw _b_.TypeError(msg)
 }
 
+// dictionary for built-in class 'int'
 var $IntDict = {__class__:$B.$type,
     __name__:'int',
+    __dir__:$ObjectDict.__dir__,
     toString:function(){return '$IntDict'},
     $native:true
 }
-// Pierre, this probably isn't correct, but may work for now.
-// do we need to create a $IntDict, like what we did for Float?
-$IntDict.from_bytes = function(x, byteorder) {
-  var len = x.source.length
 
-  if (byteorder == 'little') {
-     var num = x.source[len - 1];
+$IntDict.from_bytes = function() {
+  var $ns=$B.$MakeArgs("from_bytes", arguments, ['x', 'byteorder'], 
+                       'signed', 'args', 'kw')
 
-     if (num >= 128) num = num - 256;
+  var x = $ns['x']
+  var byteorder = $ns['byteorder']
+  var signed = $ns['signed'] || _b_.dict.$dict.get($ns['kw'],'signed', False)
 
-     for (var i = (len - 2); i >= 0; i--) {
-         num = 256 * num + x.source[i];
-     }
-     return num;
+  var _bytes, _len
+  if (isinstance(x, [_b_.list, _b_.tuple])) {
+     _bytes=x
+     _len=len(x)
+  } else if (isinstance(x, [_b_.bytes, _b_.bytearray])) {
+    _bytes=x.source
+    _len=x.source.length
+  } else {
+    _b_.TypeError("Error! " + _b_.type(x) + " is not supported in int.from_bytes. fix me!")
   }
 
-  if (byteorder === 'big') {
-     var num = x.source[0];
-
-     if (num >= 128) num = num - 256;
-
-     for (var i = 1;  i < len; i++) {
-         num = 256 * num + x.source[i];
-     }
-     if (num < 0) return -num    // fixme.. alg above shouldn't return a negative
-     return num;
+  switch(byteorder) {
+    case 'big':
+      var num = _bytes[_len - 1];
+      var _mult=256
+      for (var i = (_len - 2); i >= 0; i--) {
+          num = _mult * _bytes[i] +  num
+          _mult*=256
+      }
+      if (!signed) return num
+      if (_bytes[0] < 128) return num
+      return num - _mult
+    case 'little':
+      var num = _bytes[0]
+      if (num >= 128) num = num - 256
+      var _mult=256
+      for (var i = 1;  i < _len; i++) {
+         num = _mult * _bytes[i] +  num
+         _mult *= 256
+      }
+      if (!signed) return num
+      if (_bytes[_len - 1] < 128) return num
+      return num - _mult
   }
 
   throw _b_.ValueError("byteorder must be either 'little' or 'big'");
@@ -57,10 +72,16 @@ $IntDict.to_bytes = function(length, byteorder, star) {
 
 //$IntDict.__and__ = function(self,other){return self & other} // bitwise AND
 
+$IntDict.__abs__ = function(self){return abs(self)}
+
 $IntDict.__bool__ = function(self){return new Boolean(self.valueOf())}
+
+$IntDict.__ceil__ = function(self){return Math.ceil(self)}
 
 //is this a duplicate?
 $IntDict.__class__ = $B.$type
+
+$IntDict.__divmod__ = function(self, other){return divmod(self, other)}
 
 $IntDict.__eq__ = function(self,other){
     // compare object "self" to class "int"
@@ -71,6 +92,9 @@ $IntDict.__eq__ = function(self,other){
       if (other.imag != 0) return False
       return self.valueOf() == other.real
     }
+
+    if (hasattr(other, '__eq__')) return getattr(other, '__eq__')(self)
+
     return self.valueOf()===other
 }
 
@@ -78,6 +102,8 @@ $IntDict.__format__ = function(self,format_spec){
     if (format_spec == '') format_spec='d'
     return _b_.str.$dict.__mod__('%'+format_spec, self)
 }
+
+//$IntDict.__float__ = function(self){return float(self)}
 
 $IntDict.__floordiv__ = function(self,other){
     if(isinstance(other,int)){
@@ -98,7 +124,13 @@ $IntDict.__getitem__ = function(){
     throw _b_.TypeError("'int' object is not subscriptable")
 }
 
-$IntDict.__hash__ = function(self){return self.valueOf()}
+$IntDict.__hash__ = function(self){
+   if (self === undefined) {
+      return $IntDict.__hashvalue__ || $B.$py_next_hash--  // for hash of int type (not instance of int)
+   }
+
+   return self.valueOf()
+}
 
 //$IntDict.__ior__ = function(self,other){return self | other} // bitwise OR
 
@@ -132,20 +164,27 @@ $IntDict.__mro__ = [$IntDict,$ObjectDict]
 
 $IntDict.__mul__ = function(self,other){
     var val = self.valueOf()
+
+    // this will be quick check, so lets do it early.
+    if(typeof other==="string") {
+        return other.repeat(val)
+        //var res = ''
+        //for(var i=0;i<val;i++) res+=other
+        //return res
+    }
+
+    other = $B.$GetInt(other)  // check for int, __int__, __index__
+
     if(isinstance(other,int)) return self*other
     if(isinstance(other,_b_.float)) return _b_.float(self*other.value)
     if(isinstance(other,_b_.bool)){
-         var bool_value=0
-         if (other.valueOf()) bool_value=1
-         return self*bool_value
+         //var bool_value=0
+         if (other.valueOf()) return self //bool_value=1
+         //return self*bool_value
+         return int(0)
     }
     if(isinstance(other,_b_.complex)){
         return _b_.complex(self.valueOf()*other.real, self.valueOf()*other.imag)
-    }
-    if(typeof other==="string") {
-        var res = ''
-        for(var i=0;i<val;i++) res+=other
-        return res
     }
     if(isinstance(other,[_b_.list,_b_.tuple])){
         var res = []
@@ -174,7 +213,12 @@ $IntDict.__new__ = function(cls){
 
 $IntDict.__pow__ = function(self,other){
     if(isinstance(other, int)) {
-      if (other.valueOf() >= 0) return int(Math.pow(self.valueOf(),other.valueOf()))
+      switch(other.valueOf()) {
+        case 0:
+          return int(1)
+        case 1:
+          return int(self.valueOf())
+      }
       return Math.pow(self.valueOf(),other.valueOf()) 
     }
     if(isinstance(other, _b_.float)) { 
@@ -282,12 +326,16 @@ var $comp_func = function(self,other){
     if(isinstance(other,_b_.bool)) {
       return self.valueOf() > _b_.bool.$dict.__hash__(other)
     }
+    if (hasattr(other, '__int__') || hasattr(other, '__index__')) {
+       return $IntDict.__gt__(self, $B.$GetInt(other))
+    }
     throw _b_.TypeError(
         "unorderable types: int() > "+$B.get_class(other).__name__+"()")
 }
 $comp_func += '' // source codevar $comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
 for(var $op in $B.$comps){
-    eval("$IntDict.__"+$B.$comps[$op]+'__ = '+$comp_func.replace(/>/gm,$op))
+    eval("$IntDict.__"+$B.$comps[$op]+'__ = '+
+          $comp_func.replace(/>/gm,$op).replace(/__gt__/gm,'__'+$B.$comps[$op]+'__'))
 }
 
 // add "reflected" methods
@@ -307,31 +355,56 @@ var $valid_digits=function(base) {
     return digits
 }
 
-//var int = function(value,base){
-var int = function(){
+var int = function(value, base){
+    // most simple case
+    
+    if(typeof value=='number' && base===undefined){return value}
+
+    if(base!==undefined){
+        if(!isinstance(value,[_b_.str,_b_.bytes,_b_.bytearray])){
+            throw TypeError("int() can't convert non-string with explicit base")
+        }
+    }
+
+    if(isinstance(value,_b_.float)){
+        var v = value.value
+        return v >= 0 ? Math.floor(v) : Math.ceil(v)
+    }
+    if(isinstance(value,_b_.complex)){
+        throw TypeError("can't convert complex to int")
+    }
+
     var $ns=$B.$MakeArgs('int',arguments,[],[],'args','kw')
-    //console.log($ns)
     var value = $ns['args'][0]
     var base = $ns['args'][1]
 
     if (value === undefined) value = _b_.dict.$dict.get($ns['kw'],'x', 0)
     if (base === undefined) base = _b_.dict.$dict.get($ns['kw'],'base',10)
 
-    if (value ===0) return Number(0)
+    if (!(base >=2 && base <= 36)) {
+        // throw error (base must be 0, or 2-36)
+        if (base != 0) throw _b_.ValueError("invalid base")
+    }
+
+    if (typeof value == 'number'){
+        if(base==10){return value}
+        else if(value.toString().search('e')>-1){
+            // can't convert to another base if value is too big
+            throw _b_.OverflowError("can't convert to base "+base)
+        }else{
+            return parseInt(value, base)
+        }
+    }
 
     if(value===true) return Number(1)
     if(value===false) return Number(0)
 
-    if(!isinstance(base, _b_.int)) {
-      if (hasattr(base, '__int__')) {base = Number(getattr(base,'__int__')())
-      }else if (hasattr(base, '__index__')) {base = Number(getattr(base,'__index__')())}
-    }
-    if (!(base >=2 && base <= 36)) {
-        if (base != 0) throw _b_.ValueError("invalid base")
-        // throw error (base must be 0, or 2-36)
-    }
+    base=$B.$GetInt(base)
+    //if(!isinstance(base, _b_.int)) {
+    //  if (hasattr(base, '__int__')) {base = Number(getattr(base,'__int__')())
+    //  }else if (hasattr(base, '__index__')) {base = Number(getattr(base,'__index__')())}
+    //}
 
-    if(typeof value=="number") return parseInt(Number(value), base)
     if(isinstance(value, _b_.str)) value=value.valueOf()
 
     if(typeof value=="string") {
@@ -362,13 +435,12 @@ var int = function(){
       } 
       return Number(parseInt(value, base))
     }
-    if(isinstance(value,_b_.float)) return Number(parseInt(value.value,base))
+
     
     if(isinstance(value,[_b_.bytes,_b_.bytearray])) return Number(parseInt(getattr(value,'decode')('latin-1'), base))
 
-    //if(isinstance(value, int)) return self
-
     if(hasattr(value, '__int__')) return Number(getattr(value,'__int__')())
+    if(hasattr(value, '__index__')) return Number(getattr(value,'__index__')())
     if(hasattr(value, '__trunc__')) return Number(getattr(value,'__trunc__')())
 
     throw _b_.ValueError(

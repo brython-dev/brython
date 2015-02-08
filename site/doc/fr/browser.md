@@ -6,6 +6,9 @@ Le paquetage **browser** définit les noms et les modules intégrés spécifique
 **browser**.`confirm(`_message_`)`
 > une fonction qui affiche le _message_ dans une fenêtre et deux boutons de réponse (ok/annuler). Retourne `True` si ok, `False` sinon
 
+**browser**.`console`
+> un objet avec des méthods pour interagir avec la console du navigateur. Son interface est propre à chaque navigateur. Il expose au moins la méthode `log(msg)`, qui imprime le message _msg_ dans la console
+
 **browser**.`document`
 > un objet représentant le document HTML présenté dans le navigateur. L'interface de ce document est décrite dans la section "Interface avec le navigateur"
 
