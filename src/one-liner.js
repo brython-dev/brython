@@ -4,7 +4,7 @@
     // data-brython-options if it exists..
     var options = scripts[scripts.length-1].getAttribute("data-brython-options")
 
-    //figure out "root" path
+    //figure out "root" path so we know where brython source file are located
     var src = scripts[scripts.length-1].getAttribute("src")
     var _path =src.split('/')
     _path.pop()
@@ -18,7 +18,7 @@
        try {
          _obj=JSON.parse(options)
        } catch(e) {
-         alert(e)   // display an error to show that options cannot be parsed.
+         console.log(e)   // display an error to show that options cannot be parsed.
        }
     }
 
@@ -44,5 +44,5 @@
        }
 
        document.body.onload = function() { brython(_obj) };
-    }
+    } // end of if-else
 })();
