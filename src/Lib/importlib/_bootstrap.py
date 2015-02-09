@@ -1718,7 +1718,7 @@ def _setup(sys_module, _imp_module):
                 #    module.__loader__ = FrozenImporter
 
     self_module = sys.modules[__name__]
-    for builtin_name in ('_io', '_warnings', 'builtins', 'marshal'):
+    for builtin_name in ('_io', '_warnings', 'builtins'): #, 'marshal'):
         if builtin_name not in sys.modules:
             builtin_module = BuiltinImporter.load_module(builtin_name)
         else:
