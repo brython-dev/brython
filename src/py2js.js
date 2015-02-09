@@ -1716,24 +1716,6 @@ function $DefCtx(context){
         }
 
         this.env = []
-        
-        if(this.type=='def'){
-            for(var i=this.enclosing.length-1;i>=0;i--){
-                var func = this.enclosing[i]
-                for(var attr in $B.bound[func.id]){
-                    if(attr!=this.name && ($B.globals[this.id]===undefined || 
-                        $B.globals[this.id][attr]===undefined)){
-                        if(func===scope && $B.bound[func.id][attr]!='arg'){
-                            continue
-                        }
-                        this.env.push(attr)
-                    }
-                }
-            }
-        }
-
-        if(this.name=='newfunc'){console.log('env of '+name+' ['+this.env+']')}
-        this.env = []
 
         var make_args_nodes = []
         var js = 'var $ns=$B.$MakeArgs1("'+this.name+'",arguments,'
@@ -2837,10 +2819,6 @@ function $IdCtx(context,value){
                     else if(scope.context &&
                         scope.context.tree[0].type=='def' &&
                         scope.context.tree[0].env.indexOf(val)>-1){
-                         if(val=='keywords'){
-                             console.log('??? add in '+scope.id)
-                             console.log('env '+scope.context.tree[0].env)
-                         }
                          found.push(scope)
                     }
                 }else{
@@ -2851,12 +2829,6 @@ function $IdCtx(context,value){
             }
             if(scope.parent_block){scope=scope.parent_block}
             else{break}
-        }
-        if(val=='keywords'){
-            console.log(val+' found: ')
-            for(var i=0;i<found.length;i++){
-                console.log(found[i].id+' ['+$B.keys($B.bound[found[i].id])+']')
-            }
         }
         
         if(found.length>0){
