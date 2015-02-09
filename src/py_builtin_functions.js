@@ -2082,7 +2082,8 @@ function frame(pos){
         res.f_code = {__class__:$B.$CodeObjectDict,
             co_code:None, // XXX fix me
             co_name: _frame[0], // ditto
-            co_filename: $B.vars[_frame[1]].__name__
+            co_filename: ($B.vars[_frame[1]] === undefined ?
+                "<unknown>" : $B.vars[_frame[1]].__name__)
         }
     }
     return res
