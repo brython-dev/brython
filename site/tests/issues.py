@@ -151,6 +151,9 @@ class MyClass(MyParent):
 assert MyClass.spam == "whatever"
 assert MyParent.spam == "whatever"
 
+#issue 127
+assert "aaa+AAA".split("+") == ['aaa', 'AAA']
+
 # issue 121
 def recur(change_namespace=0):
     if change_namespace:
