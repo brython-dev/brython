@@ -151,4 +151,17 @@ class MyClass(MyParent):
 assert MyClass.spam == "whatever"
 assert MyParent.spam == "whatever"
 
+# issue 121
+def recur(change_namespace=0):
+    if change_namespace:
+        x = 2
+        return
+    else:
+        x = 1
+    def nested():
+        return x
+    recur(change_namespace=1)
+    return nested()
+
+assert recur() == 1
 print('passed all tests')
