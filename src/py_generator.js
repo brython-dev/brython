@@ -10,6 +10,7 @@ $B.make_node = function(top_node, node){
         // the node where local namespace is reset
         ctx_js = 'var $locals = $B.vars["'+top_node.iter_id+'"], '
         ctx_js += '$locals_id = "'+top_node.iter_id+'";'
+        ctx_js += 'var $block_id = $locals_id;'
     }
     
     if(node.is_catch){is_except=true;is_cond=true}
@@ -267,8 +268,6 @@ $BRGeneratorDict.__next__ = function(self){
     
     self.gi_running = true
     
-    //if(self.num<6){console.log('run _next of '+self.iter_id+'\n'+self._next)}
-    
     // Call the function _next to yield a value
     try{
         var res = self._next.apply(null, self.args)
@@ -330,7 +329,7 @@ $BRGeneratorDict.__next__ = function(self){
     var js = 'var $locals_id = "'+self.iter_id+'", $locals = __BRYTHON__.vars[$locals_id]'
     fnode.addChild(new $B.genNode(js))
 
-    // Parent of exit node    
+    // Parent of exit node
     var pnode = exit_node.parent
     var exit_in_if = pnode.is_if || pnode.is_else
     

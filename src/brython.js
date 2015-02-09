@@ -21,6 +21,7 @@ $B.vars={}
 $B.globals={}
 $B.exec_stack=[]
 $B.frames_stack=[]
+$B.rt_parents={}
 $B.builtins={__repr__:function(){return "<module 'builtins>'"},__str__:function(){return "<module 'builtins'>"},}
 $B.builtin_funcs={}
 $B.__getattr__=function(attr){return this[attr]}
@@ -60,7 +61,7 @@ catch(err){return false}})
 __BRYTHON__.implementation=[3,0,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.0.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-02-03 10:26:30.277000"
+__BRYTHON__.compiled_date="2015-02-09 21:18:57.423000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -692,7 +693,7 @@ if(this.func!==undefined){switch(this.func.value){case 'classmethod':
 return 'classmethod('+$to_js(this.tree)+')'
 case 'locals':
 var scope=$get_scope(this),mod=$get_module(this)
-if(scope !==null &&(scope.ntype==='def'||scope.ntype=='generator')){return 'locals("'+scope.C.tree[0].id+'","'+mod.module+'")'
+if(scope !==null &&(scope.ntype==='def'||scope.ntype=='generator')){return 'locals($locals_id,"'+mod.module+'")'
 }
 break
 case 'globals':
@@ -812,7 +813,7 @@ var mod_node=new $Node()
 new $NodeJSCtx(mod_node,js)
 node.parent.insert(rank+1,mod_node)
 var scope=$get_scope(this)
-js='$B.vars["'+scope.id+'"]["'+this.name+'"]'
+js='$B.vars[$locals_id]["'+this.name+'"]'
 js +='=$B.$class_constructor("'+this.name+'",$'+this.name+'_'+this.random
 if(this.args!==undefined){
 var arg_tree=this.args.tree,args=[],kw=[]
@@ -967,6 +968,12 @@ while(parent_block.C && parent_block.C.tree[0].type=='class'){parent_block=paren
 while(parent_block.C &&['def','BRgenerator'].indexOf(parent_block.C.tree[0].type)==-1){parent_block=parent_block.parent
 }
 this.parent.node.parent_block=parent_block
+var pb=parent_block
+while(pb && pb.C){if(pb.C.tree[0].type=='def'){this.inside_function=true
+break
+}
+pb=pb.parent_block
+}
 this.module=scope.module
 this.set_name=function(name){var id_ctx=new $IdCtx(this,name)
 this.name=name
@@ -979,23 +986,18 @@ $B.vars[this.id]=$B.vars[this.id]||{}
 $B.bound[this.scope.id][name]='def'
 id_ctx.bound=true
 if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)
-}}
-var thisnode=this.parent.node
-while(thisnode.parent_block){thisnode=thisnode.parent_block
-}
-var pblock=parent_block,pblocks=[pblock.id]
-while(true){if(pblock.parent_block && pblock.parent_block.id!='__builtins__'){pblocks.push(pblock.parent_block.id)
-pblock=pblock.parent_block
-}else{break}}
-var env={}
-for(var i=pblocks.length;i>=0;i--){for(var attr in $B.bound[pblocks[i]]){env[attr]=pblocks[i]}}
-delete env[name]
-this.env=env
-}
+}}}
 this.toString=function(){return 'def '+this.name+'('+this.tree+')'}
 this.transform=function(node,rank){
 if(this.transformed!==undefined)return
 var scope=this.scope
+var pb=this.parent.node
+var flag=this.name.substr(0,4)=='func'
+while(pb && pb.C){if(pb.C.tree[0].type=='def'){this.inside_function=true
+break
+}
+pb=pb.parent
+}
 this.doc_string=$get_docstring(node)
 this.rank=rank 
 var fglobs=this.parent.node.globals
@@ -1039,6 +1041,8 @@ for(var i=0;i<def_list.length;i++){dobj.push(def_list[i]+':null')
 dobj='{'+dobj.join(',')+'}'
 var nodes=[],js
 var global_scope=scope
+if(global_scope.parent_block===undefined){alert('undef '+global_scope.id)
+}
 while(global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.parent_block
 if(global_scope===undefined){console.log('global scope undef!!!'+this.name)}
 if(global_scope.parent_block===undefined){console.log('parent undef pour '+global_scope.id)}}
@@ -1047,10 +1051,12 @@ var new_node=new $Node()
 var js='var $globals = $B.vars["'+mod_name+'"];' 
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
-js='var $locals_id="'+this.id+'";'
 if(this.type=='def'){
+js='var $locals_id="'+this.id+'"+__BRYTHON__.UUID();'
+js +='var $block_id = "'+this.id+'";'
 js +='var $locals = $B.vars[$locals_id]=new Object();'
 }else{
+js='var $locals_id="'+this.id+'";'
 js +='var $locals = $B.vars[$locals_id];'
 }
 var new_node=new $Node()
@@ -1058,42 +1064,31 @@ new_node.locals_def=true
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 var new_node=new $Node()
-var js='__BRYTHON__.enter_frame(["'+this.id+'", "'+this.module+'"]);' 
+var js='$B.enter_frame(["'+this.id+'", "'+this.module+'"]);' 
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
+if(this.inside_function){var new_node=new $Node()
+var js='$B.rt_parents[$locals_id] = [$parent_id];' 
+js +='if($B.rt_parents[$parent_id]!==undefined)'
+js +='{$B.rt_parents[$locals_id] = '
+js +='[$parent_id].concat($B.rt_parents[$parent_id])};'
+new $NodeJSCtx(new_node,js)
+nodes.push(new_node)
+}
 if(defs1.length>0){js='for(var $var in $defaults){$locals[$var]=$defaults[$var]}'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 }
-var passed_alias={},passed_ix=0
 this.env=[]
-if(this.type=='def'){var enclosing=[],passed=[]
-for(var i=this.enclosing.length-1;i>=0;i--){var func=this.enclosing[i]
-for(var attr in $B.bound[func.id]){if(attr!==this.name){if(func===scope && $B.bound[func.id][attr]!='arg'){continue
-}
-passed.push('$var'+passed_ix)
-passed_alias[attr]='$var'+passed_ix
-passed_ix++
-enclosing.push('$B.vars["'+func.id+'"]["'+attr+'"]')
-}}
+if(this.type=='def'){for(var i=this.enclosing.length-1;i>=0;i--){var func=this.enclosing[i]
 for(var attr in $B.bound[func.id]){if(attr!=this.name &&($B.globals[this.id]===undefined ||
 $B.globals[this.id][attr]===undefined)){if(func===scope && $B.bound[func.id][attr]!='arg'){continue
 }
-$B.bound[this.id][attr]=true
 this.env.push(attr)
-}}}
-for(var i=this.enclosing.length-1;i>=0;i--){var func=this.enclosing[i]
-for(var attr in $B.bound[func.id]){if(attr!==this.name &&($B.globals[this.id]===undefined ||
-$B.globals[this.id][attr]===undefined)){if(func===scope && $B.bound[func.id][attr]!='arg'){continue
-}
-new_node=new $Node()
-var js='if('+passed_alias[attr]+'!==undefined)'
-js +='{$locals["'+attr+'"] = '+passed_alias[attr]+'};'
-new $NodeJSCtx(new_node,js)
-nodes.push(new_node)
 }}}}
-this.passed_ix=passed_ix
+if(this.name=='newfunc'){console.log('env of '+name+' ['+this.env+']')}
+this.env=[]
 var make_args_nodes=[]
 var js='var $ns=$B.$MakeArgs1("'+this.name+'",arguments,'
 js +=robj+',['+required+'],'+dobj+','
@@ -1171,9 +1166,9 @@ def_func_node.add(new_node)
 node.children=[]
 node.add(def_func_node)
 var ret_node=new $Node()
-var txt=')('
-if(this.type=='def'){txt+=enclosing.join(',')}
-new $NodeJSCtx(ret_node,txt+')')
+var js=')()'
+if(this.inside_function){js=')($locals_id)'}
+new $NodeJSCtx(ret_node,js)
 node.parent.insert(rank+1,ret_node)
 var offset=2
 if(this.type==='BRgenerator' && !this.declared){js='$B.$BRgenerator('
@@ -1236,24 +1231,13 @@ new $NodeJSCtx(default_node,js)
 node.insert(0,default_node)
 this.transformed=true
 }
-this.to_js=function(func_name){if(func_name!==undefined){return func_name+'=(function()'
-}else{var scope=$get_scope(this)
-var res=this.tree[0].to_js()+'=(function('
-if(this.type=='def'){var args=[]
-for(var i=0;i<this.passed_ix;i++){args.push('$var'+i)}
-res +=args.join(',')
-}
+this.to_js=function(func_name){if(func_name!==undefined){if(this.inside_function){return func_name+'=(function($parent_id)'
+}else{return func_name+'=(function()'
+}}else{var res=this.tree[0].to_js()+'=(function('
+if(this.inside_function){res +='$parent_id'}
 res +=')'
 return res
-var name=this.name
-var res='$B.vars["'+scope.id+'"]'
-if(scope.C===undefined){res='$globals'}
-else if(scope.ntype=='def'||scope.ntype=='BRgenerator'){res='$locals'
-}
-res +='["'+name+'"]'
-}
-return res+'=(function()'
-}}
+}}}
 function $DelCtx(C){this.type='del'
 this.parent=C
 C.tree.push(this)
@@ -1801,10 +1785,16 @@ var bound_before=$get_node(this).bound_before
 if(bound_before && !this.bound){if(bound_before.indexOf(val)>-1){found.push(scope)}
 else if(scope.C &&
 scope.C.tree[0].type=='def' &&
-scope.C.tree[0].env.indexOf(val)>-1){found.push(scope)
+scope.C.tree[0].env.indexOf(val)>-1){if(val=='keywords'){console.log('??? add in '+scope.id)
+console.log('env '+scope.C.tree[0].env)
+}
+found.push(scope)
 }}else{if($B.bound[scope.id][val]){found.push(scope)}}}else{if($B.bound[scope.id][val]){found.push(scope)}}
 if(scope.parent_block){scope=scope.parent_block}
 else{break}}
+if(val=='keywords'){console.log(val+' found: ')
+for(var i=0;i<found.length;i++){console.log(found[i].id+' ['+$B.keys($B.bound[found[i].id])+']')
+}}
 if(found.length>0){if(found.length>1 && found[0].C){if(found[0].C.tree[0].type=='class' && !this.bound){var bound_before=$get_node(this).bound_before,res
 if(bound_before){if(bound_before.indexOf(val)>-1){res='$B.vars["'+found[0].id+'"]'
 }else{res='$B.vars["'+found[1].id+'"]'
@@ -1831,7 +1821,11 @@ val='$globals["'+val+'"]'
 }
 else if(scope===innermost){val='$locals["'+val+'"]'}
 else{val='$B.vars["'+scope.id+'"]["'+val+'"]'}}else if(scope===innermost){if($B.globals[scope.id]&& $B.globals[scope.id][val]){val='$globals["'+val+'"]'}
-else{val='$locals["'+val+'"]'}}else{val='$B.vars["'+scope.id+'"]["'+val+'"]'
+else{val='$locals["'+val+'"]'}}else{
+var nb=0,sc=innermost.parent_block
+if(sc===undefined){console.log('innermost '+innermost.id+' no parent')}
+while(sc !=scope){nb++;sc=sc.parent_block}
+val='$B.vars[$B.rt_parents[$locals_id]['+nb+']]["'+val+'"]'
 }
 var res=val+$to_js(this.tree,'')
 return res
@@ -1938,7 +1932,7 @@ var qesc=new RegExp('"',"g")
 var args=src.substring(this.args_start,this.body_start).replace(qesc,'\\"')
 var body=src.substring(this.body_start+1,this.body_end).replace(qesc,'\\"')
 body=body.replace(/\n/g,' ')
-var res='$B.$lambda($locals,"'+scope.module+'","'
+var res='$B.$lambda($locals_id,"'+scope.module+'","'
 res +=scope.id+'","'+args+'","'+body+'")'
 return res
 }}
@@ -2000,20 +1994,20 @@ res2 +=']'
 if(i<this.intervals.length-1){res2+=','}}
 if(this.real==='list_comp'){res1='"'+scope.id+'"'
 var res='$B.$list_comp("'+scope.module+'",'
-res +='$locals_id,'+res2+')'
+res +='$block_id, $locals_id,'+res2+')'
 return res
 }
 if(this.real==='dict_or_set_comp'){res1='"'+scope.id+'"'
 var res=res1+','+res2
 if(this.expression.length===1){var res='$B.$gen_expr("'+scope.module+'",'
-res +='$locals_id,'+res2+')'
+res +='$block_id, $locals_id,'+res2+')'
 return res
 }
 var res='$B.$dict_comp("'+scope.module+'",'
-res +='$locals_id,'+res2+')'
+res +='$block_id, $locals_id, '+res2+')'
 return res
 }
-return '$B.$gen_expr("'+scope.module+'",'+'$locals_id,'+res2+')'
+return '$B.$gen_expr("'+scope.module+'",'+'$block_id, $locals_id,'+res2+')'
 case 'tuple':
 if(this.tree.length===1 && this.has_comma===undefined)return this.tree[0].to_js()
 return 'tuple(['+$to_js(this.tree)+'])'
@@ -4288,7 +4282,7 @@ js +='var __builtins__ = _b_ = $B.builtins\n'
 js +='var $globals = $B.vars["'+module+'"];\n'
 if(module=='__main__'){js +='$B.imported["__main__"] = $globals\n'
 }
-js +='var $locals_id = "'+locals_id+'";\n'
+js +='var $locals_id = "'+locals_id+'";var $block_id=$locals_id;\n'
 js +='var $locals = $B.vars["'+locals_id+'"];\n'
 js +='__BRYTHON__.enter_frame(["'+module+'", "'+module+'"]);\n'
 js +='eval($B.InjectBuiltins())\n'
@@ -4970,26 +4964,26 @@ for(var arg in loc)res[arg]=loc[arg]
 return res
 }
 function clear(ns){
-delete $B.vars[ns],$B.bound[ns],$B.modules[ns],$B.imported[ns]
+delete $B.vars[ns],$B.bound[ns],$B.modules[ns],$B.imported[ns],$B.rt_parents[ns]
 }
-$B.$list_comp=function(module_name,parent_block_id){var $ix=$B.UUID()
-var $py='def func'+$ix+"():\n"
-$py +="    x"+$ix+"=[]\n"
-var indent=4
-for(var $i=3,_len_$i=arguments.length;$i < _len_$i;$i++){$py +=' '.repeat(indent)
+$B.$list_comp=function(module_name,parent_block_id,parent_id){
+var $ix=$B.UUID()
+var $py="x"+$ix+"=[]\n",indent=0
+for(var $i=4,_len_$i=arguments.length;$i < _len_$i;$i++){$py +=' '.repeat(indent)
 $py +=arguments[$i]+':\n'
 indent +=4
 }
 $py +=' '.repeat(indent)
-$py +='x'+$ix+'.append('+arguments[2].join('\n')+')\n'
-$py +="    return x"+$ix+"\n"
-$py +="res"+$ix+"=func"+$ix+"()"
+$py +='x'+$ix+'.append('+arguments[3].join('\n')+')\n'
 var $mod_name='lc'+$ix
+$B.rt_parents[$mod_name]=[parent_id]
+if($B.rt_parents[parent_id]!==undefined){$B.rt_parents[$mod_name]=$B.rt_parents[$mod_name].concat($B.rt_parents[parent_id])
+}
 var $root=$B.py2js($py,module_name,$mod_name,parent_block_id,$B.line_info)
 $root.caller=$B.line_info
 var $js=$root.to_js()
 try{eval($js)
-var res=$B.vars['lc'+$ix]['res'+$ix]
+var res=$B.vars['lc'+$ix]['x'+$ix]
 }
 catch(err){throw $B.exception(err)}
 finally{clear($mod_name)}
@@ -4998,18 +4992,21 @@ return res
 $B.$gen_expr=function(){
 var module_name=arguments[0]
 var parent_block_id=arguments[1]
+var parent_id=arguments[2]
 var $ix=$B.UUID()
 var $res='res'+$ix
 var $py=$res+"=[]\n"
 var indent=0
-for(var $i=3,_len_$i=arguments.length;$i < _len_$i;$i++){$py+=' '.repeat(indent)
+for(var $i=4,_len_$i=arguments.length;$i < _len_$i;$i++){$py+=' '.repeat(indent)
 $py +=arguments[$i].join(' ')+':\n'
 indent +=4
 }
 $py+=' '.repeat(indent)
-$py +=$res+'.append('+arguments[2].join('\n')+')'
+$py +=$res+'.append('+arguments[3].join('\n')+')'
 var $mod_name='ge'+$ix
-$B.vars[$mod_name]={}
+$B.rt_parents[$mod_name]=[parent_id]
+if($B.rt_parents[parent_id]!==undefined){$B.rt_parents[$mod_name]=$B.rt_parents[$mod_name].concat($B.rt_parents[parent_id])
+}
 var $root=$B.py2js($py,module_name,$mod_name,parent_block_id,$B.line_info)
 var $js=$root.to_js()
 eval($js)
@@ -5031,33 +5028,39 @@ $res2.toString=function(){return 'ge object'}
 clear($mod_name)
 return $res2
 }
-$B.$dict_comp=function(module_name,parent_block_id){
+$B.$dict_comp=function(module_name,parent_block_id,parent_id){
 var $ix=$B.UUID()
 var $res='res'+$ix
 var $py=$res+"={}\n"
 var indent=0
-for(var $i=3,_len_$i=arguments.length;$i < _len_$i;$i++){$py+=' '.repeat(indent)
+for(var $i=4,_len_$i=arguments.length;$i < _len_$i;$i++){$py+=' '.repeat(indent)
 $py +=arguments[$i]+':\n'
 indent +=4
 }
 $py+=' '.repeat(indent)
-$py +=$res+'.update({'+arguments[2].join('\n')+'})'
-var locals_id='dc'+$ix
-var $root=$B.py2js($py,module_name,locals_id,parent_block_id)
+$py +=$res+'.update({'+arguments[3].join('\n')+'})'
+var $mod_name='dc'+$ix
+$B.rt_parents[$mod_name]=[parent_id]
+if($B.rt_parents[parent_id]!==undefined){$B.rt_parents[$mod_name]=$B.rt_parents[$mod_name].concat($B.rt_parents[parent_id])
+}
+var $root=$B.py2js($py,module_name,$mod_name,parent_block_id)
 $root.caller=$B.line_info
 var $js=$root.to_js()
 eval($js)
-var res=$B.vars[locals_id][$res]
-clear(locals_id)
+var res=$B.vars[$mod_name][$res]
+clear($mod_name)
 return res
 }
-$B.$lambda=function(locals,$mod,parent_block_id,$args,$body){var rand=$B.UUID()
+$B.$lambda=function(parent_id,$mod,parent_block_id,$args,$body){var rand=$B.UUID()
 var $res='lambda_'+$B.lambda_magic+'_'+rand
 var local_id='lambda'+rand
 var $py='def '+$res+'('+$args+'):\n'
 $py +='    return '+$body
 $B.vars[local_id]=$B.vars[local_id]||{}
-for(var $attr in locals){$B.vars[local_id][$attr]=locals[$attr]
+for(var $attr in $B.vars[parent_id]){$B.vars[local_id][$attr]=$B.vars[parent_id][$attr]
+}
+$B.rt_parents[local_id]=[parent_id]
+if($B.rt_parents[parent_id]!==undefined){$B.rt_parents[local_id]=$B.rt_parents[local_id].concat($B.rt_parents[parent_id])
 }
 var $js=$B.py2js($py,$mod,local_id,parent_block_id).to_js()
 eval($js)
@@ -5360,6 +5363,7 @@ var is_cond=false,is_except=false,is_else=false
 if(node.locals_def){
 ctx_js='var $locals = $B.vars["'+top_node.iter_id+'"], '
 ctx_js +='$locals_id = "'+top_node.iter_id+'";'
+ctx_js +='var $block_id = $locals_id;'
 }
 if(node.is_catch){is_except=true;is_cond=true}
 if(node.C.type=='node'){var ctx=node.C.tree[0]
@@ -6940,7 +6944,8 @@ if(pos>0){res.f_back=frame(pos-1)}
 else{res.f_back=None}
 res.f_code={__class__:$B.$CodeObjectDict,co_code:None,
 co_name: _frame[0],
-co_filename: $B.vars[_frame[1]].__name__
+co_filename:($B.vars[_frame[1]]===undefined ?
+"<unknown>" : $B.vars[_frame[1]].__name__)
 }}
 return res
 }
@@ -7645,7 +7650,7 @@ $B.JSConstructor=JSConstructor
 ;(function($B){$B.stdlib={}
 var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.basehook','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.highlight','site-packages.pygame.SDL','site-packages.pygame.base','site-packages.pygame.color','site-packages.pygame.colordict','site-packages.pygame.compat','site-packages.pygame.constants','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.locals','site-packages.pygame.mixer','site-packages.pygame.mouse','site-packages.pygame.pkgdata','site-packages.pygame.rect','site-packages.pygame.sprite','site-packages.pygame.surface','site-packages.pygame.time','site-packages.pygame.transform','site-packages.pygame.version','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','time','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile']
+var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.basehook','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','marshal','module1','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.highlight','site-packages.pygame.SDL','site-packages.pygame.base','site-packages.pygame.color','site-packages.pygame.colordict','site-packages.pygame.compat','site-packages.pygame.constants','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.locals','site-packages.pygame.mixer','site-packages.pygame.mouse','site-packages.pygame.pkgdata','site-packages.pygame.rect','site-packages.pygame.sprite','site-packages.pygame.surface','site-packages.pygame.time','site-packages.pygame.transform','site-packages.pygame.version','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','time','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','long_int1','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.pygame','test','ui','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]
@@ -8715,7 +8720,8 @@ var $copy_dict=function(left,right){var gen=new $item_generator(right)
 try{
 while(1){var item=gen.next()
 $DictDict.__setitem__(left,item[0],item[1])
-}}catch(err){if(err.__name__ !=="StopIteration"){throw err }else{$B.$pop_exc()}}}
+}}catch(err){if(err.__name__ !=="StopIteration"){throw err }
+else{$B.$pop_exc()}}}
 $iterator_wrapper=function(items,klass){var res={__class__:klass,__iter__:function(){items.iter.i=0;return res},__len__:function(){return items.length()},__next__:function(){
 return items.next()
 },
@@ -8827,8 +8833,8 @@ $DictDict.__setitem__(self,key,value)
 }catch(err){if(err.__name__==='StopIteration'){$B.$pop_exc();break}
 throw err
 }}}
-if($DictDict.__len__(kw)> 0)$copy_dict(self,kw)
-}
+if($DictDict.__len__(kw)> 0){$copy_dict(self,kw)
+}}
 var $dict_iterator=$B.$iterator_class('dict iterator')
 $DictDict.__iter__=function(self){return $DictDict.keys(self)
 }

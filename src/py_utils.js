@@ -259,25 +259,33 @@ $B.$mkdict = function(glob,loc){
 
 function clear(ns){
     // delete temporary structures
-    delete $B.vars[ns], $B.bound[ns], $B.modules[ns], $B.imported[ns]
+    delete $B.vars[ns], $B.bound[ns], $B.modules[ns], $B.imported[ns], $B.rt_parents[ns]
     
 }
 
-$B.$list_comp = function(module_name, parent_block_id){
+$B.$list_comp = function(module_name, parent_block_id, parent_id){
+    // Called for list comprehensions
+    // - module_name : name of the module where the list comprehension stands
+    // - parent_block_id : id of the block where the LC stands (determined by
+    //   code analysis)
+    // - parent_id : id of the locals dictionary ; if parent block is a 
+    //   function, a new parent_id is set for each call to the function
     var $ix = $B.UUID()
-    var $py = 'def func'+$ix+"():\n"
-    $py += "    x"+$ix+"=[]\n"
-    var indent=4
-    for(var $i=3, _len_$i = arguments.length; $i < _len_$i;$i++){
+    var $py = "x"+$ix+"=[]\n", indent = 0
+    for(var $i=4, _len_$i = arguments.length; $i < _len_$i;$i++){
         $py += ' '.repeat(indent)
         $py += arguments[$i]+':\n'
         indent += 4
     }
     $py += ' '.repeat(indent)
-    $py += 'x'+$ix+'.append('+arguments[2].join('\n')+')\n'
-    $py += "    return x"+$ix+"\n"
-    $py += "res"+$ix+"=func"+$ix+"()"
+    $py += 'x'+$ix+'.append('+arguments[3].join('\n')+')\n'
+
     var $mod_name = 'lc'+$ix
+
+    $B.rt_parents[$mod_name] = [parent_id]
+    if($B.rt_parents[parent_id]!==undefined){
+        $B.rt_parents[$mod_name] = $B.rt_parents[$mod_name].concat($B.rt_parents[parent_id])
+    }
 
     var $root = $B.py2js($py,module_name,$mod_name,parent_block_id,
         $B.line_info)
@@ -288,7 +296,7 @@ $B.$list_comp = function(module_name, parent_block_id){
     
     try{
         eval($js)
-        var res = $B.vars['lc'+$ix]['res'+$ix]
+        var res = $B.vars['lc'+$ix]['x'+$ix]
     }
     catch(err){throw $B.exception(err)}
     finally{clear($mod_name)}
@@ -299,20 +307,25 @@ $B.$list_comp = function(module_name, parent_block_id){
 $B.$gen_expr = function(){ // generator expresssion
     var module_name = arguments[0]
     var parent_block_id = arguments[1]
+    var parent_id = arguments[2]
     var $ix = $B.UUID()
     var $res = 'res'+$ix
     var $py = $res+"=[]\n"
     var indent=0
-    for(var $i=3, _len_$i = arguments.length; $i < _len_$i;$i++){
+    for(var $i=4, _len_$i = arguments.length; $i < _len_$i;$i++){
         $py+=' '.repeat(indent)
         $py += arguments[$i].join(' ')+':\n'
         indent += 4
     }
     $py+=' '.repeat(indent)
-    $py += $res+'.append('+arguments[2].join('\n')+')'
+    $py += $res+'.append('+arguments[3].join('\n')+')'
     
     var $mod_name = 'ge'+$ix
-    $B.vars[$mod_name] = {}
+
+    $B.rt_parents[$mod_name] = [parent_id]
+    if($B.rt_parents[parent_id]!==undefined){
+        $B.rt_parents[$mod_name] = $B.rt_parents[$mod_name].concat($B.rt_parents[parent_id])
+    }
 
     var $root = $B.py2js($py,module_name,$mod_name,parent_block_id,
         $B.line_info)
@@ -347,30 +360,36 @@ $B.$gen_expr = function(){ // generator expresssion
     return $res2
 }
 
-$B.$dict_comp = function(module_name,parent_block_id){ // dictionary comprehension
+$B.$dict_comp = function(module_name,parent_block_id, parent_id){ // dictionary comprehension
 
     var $ix = $B.UUID()
     var $res = 'res'+$ix
     var $py = $res+"={}\n"
     var indent=0
-    for(var $i=3, _len_$i = arguments.length; $i < _len_$i;$i++){
+    for(var $i=4, _len_$i = arguments.length; $i < _len_$i;$i++){
         $py+=' '.repeat(indent)
         $py += arguments[$i]+':\n'
         indent += 4
     }
     $py+=' '.repeat(indent)
-    $py += $res+'.update({'+arguments[2].join('\n')+'})'
-    var locals_id = 'dc'+$ix
-    var $root = $B.py2js($py,module_name,locals_id,parent_block_id)
+    $py += $res+'.update({'+arguments[3].join('\n')+'})'
+    var $mod_name = 'dc'+$ix
+
+    $B.rt_parents[$mod_name] = [parent_id]
+    if($B.rt_parents[parent_id]!==undefined){
+        $B.rt_parents[$mod_name] = $B.rt_parents[$mod_name].concat($B.rt_parents[parent_id])
+    }    
+    
+    var $root = $B.py2js($py,module_name,$mod_name,parent_block_id)
     $root.caller = $B.line_info
     var $js = $root.to_js()
     eval($js)
-    var res = $B.vars[locals_id][$res]
-    clear(locals_id)
+    var res = $B.vars[$mod_name][$res]
+    clear($mod_name)
     return res
 }
 
-$B.$lambda = function(locals,$mod,parent_block_id,$args,$body){
+$B.$lambda = function(parent_id,$mod,parent_block_id,$args,$body){
 
     var rand = $B.UUID()
     var $res = 'lambda_'+$B.lambda_magic+'_'+rand
@@ -379,8 +398,13 @@ $B.$lambda = function(locals,$mod,parent_block_id,$args,$body){
     $py += '    return '+$body
     
     $B.vars[local_id] = $B.vars[local_id] || {}
-    for(var $attr in locals){
-        $B.vars[local_id][$attr] = locals[$attr]
+    for(var $attr in $B.vars[parent_id]){
+        $B.vars[local_id][$attr] = $B.vars[parent_id][$attr]
+    }
+
+    $B.rt_parents[local_id] = [parent_id]
+    if($B.rt_parents[parent_id]!==undefined){
+        $B.rt_parents[local_id] = $B.rt_parents[local_id].concat($B.rt_parents[parent_id])
     }
 
     var $js = $B.py2js($py,$mod,local_id,parent_block_id).to_js()
