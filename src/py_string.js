@@ -1641,6 +1641,7 @@ $StringDict.split = function(self){
         for(var i=0, _len_i = sep.length; i < _len_i;i++){
             switch(sep.charAt(i)) {
               case '*':
+              case '+':
               case '.':
               case '[':
               case ']':

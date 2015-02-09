@@ -644,7 +644,8 @@ class Decimal(object):
                #is this a pure int?
                self._is_special = False
                if 'e' in value:
-                  self._int, self._exp=value.split('e')
+                  self._int, _exp=value.split('e')
+                  self._exp=int(_exp)
                   #print(self._int, self._exp)
                else:
                   self._int = value

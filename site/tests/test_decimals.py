@@ -30,6 +30,10 @@ assert str(Decimal('500000123')) == '500000123'
 assert str(Decimal('0')) == '0'
 assert str(Decimal(0)) == '0'
 
+assert str(Decimal('45')) == '45'
+assert str(Decimal('-45')) == '-45'
+assert str(Decimal(500000123)) == '500000123'
+
 for n in range(0, 32):
     for sign in (-1, 1):
         for x in range(-5, 5):
@@ -41,8 +45,7 @@ for n in range(0, 32):
 assert str(Decimal('')) == 'NaN'
 assert str(Decimal('45')) == '45'
 assert str(Decimal('45.34')), '45.34'
-#fix me
-#assert str(Decimal('45e2')) == '4.5E+3'
+assert str(Decimal('45e2')) == '4.5E+3'
 
 #just not a number
 assert str(Decimal('ugly')) == 'NaN'
@@ -57,4 +60,3 @@ assert str(Decimal("  3.45679  ")) ==  '3.45679'
 for lead in ["", ' ', '\u00a0', '\u205f']:
     for trail in ["", ' ', '\u00a0', '\u205f']:
         assert str(Decimal(lead + '9.311E+28' + trail)) == '9.311E+28'
-
