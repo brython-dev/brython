@@ -49,10 +49,10 @@ $B.exec_stack = []
 // Frames stack
 $B.frames_stack = []
 
-
 // At runtime, dictionary mapping a block id to the list 
 // of its parent block id
 $B.rt_parents = {}
+$B.ref_counter = {}
 
 // Python __builtins__
 $B.builtins = {

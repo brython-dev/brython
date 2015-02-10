@@ -2073,7 +2073,8 @@ function frame(pos){
     if(pos===undefined){pos = fs.length-1}
     if(fs.length){
         var _frame = fs[pos]
-        res.f_locals = to_dict($B.vars[_frame[0]])
+        var locals_id = _frame[0]
+        res.f_locals = to_dict($B.vars[locals_id])
         res.f_globals = to_dict($B.vars[_frame[1]])
         if(__BRYTHON__.debug>0){
             res.f_lineno = __BRYTHON__.line_info[0]
@@ -2084,7 +2085,7 @@ function frame(pos){
         else{res.f_back = None}
         res.f_code = {__class__:$B.$CodeObjectDict,
             co_code:None, // XXX fix me
-            co_name: _frame[0], // ditto
+            co_name: locals_id, // ditto
             co_filename: ($B.vars[_frame[1]] === undefined ?
                 "<unknown>" : $B.vars[_frame[1]].__name__)
         }

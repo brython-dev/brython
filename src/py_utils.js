@@ -406,6 +406,7 @@ $B.$lambda = function(parent_id,$mod,parent_block_id,$args,$body){
     if($B.rt_parents[parent_id]!==undefined){
         $B.rt_parents[local_id] = $B.rt_parents[local_id].concat($B.rt_parents[parent_id])
     }
+    $B.ref_counter[parent_id] = true
 
     var $js = $B.py2js($py,$mod,local_id,parent_block_id).to_js()
     eval($js)
@@ -910,7 +911,21 @@ $B.$GetInt=function(value) {
 
 $B.enter_frame = function(frames){$B.frames_stack.push(frames)}
 
-$B.leave_frame = function(){$B.frames_stack.pop()}
+function last(t){return t[t.length-1]}
+
+$B.leave_frame = function(){
+    var last_frame = last($B.frames_stack)
+    if(last_frame!==undefined){
+        if(last_frame[0][1]=='def'){
+            var locals_id = last_frame[0][0]
+            if($B.ref_counter[locals_id]===undefined){
+                delete $B.vars[locals_id], $B.modules[locals_id],
+                    $B.bound[locals_id], $B.rt_parents[locals_id]
+            }
+        }
+    }
+    $B.frames_stack.pop()
+}
 
 })(__BRYTHON__)
 

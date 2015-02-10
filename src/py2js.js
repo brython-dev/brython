@@ -61,7 +61,7 @@ var keys = $B.keys = function(obj){
     res.sort()
     return res
 }
-function clone(obj){
+var clone = $B.clone = function(obj){
     var res = new Object()
     for(var attr in obj){res[attr]=obj[attr]}
     return res
@@ -1691,7 +1691,7 @@ function $DefCtx(context){
 
         // push id in frames stack
         var new_node = new $Node()
-        var js = '$B.enter_frame(["'+this.id+'", "'+this.module+'"]);' 
+        var js = '$B.enter_frame([[$locals_id, "'+this.type+'"], "'+this.module+'"]);' 
         new $NodeJSCtx(new_node,js)
         nodes.push(new_node)
         
@@ -1901,6 +1901,15 @@ function $DefCtx(context){
         new $NodeJSCtx(new_node,js)
         node.parent.insert(rank+offset,new_node)
         offset++
+        
+        // if function inside function, add reference counter
+        if(this.inside_function){
+            js = '$B.ref_counter[$locals_id] = true;'
+            new_node = new $Node()
+            new $NodeJSCtx(new_node,js)
+            node.parent.insert(rank+offset,new_node)
+            offset++
+        }
         
         if(this.$blocking){
             console.log('blocking !!!')
@@ -3556,7 +3565,7 @@ function $ReturnCtx(context){ // subscription or slicing
             var res = 'return [$B.generator_return('
             return res + $to_js(this.tree)+')]'
         }
-        return '__BRYTHON__.leave_frame("'+scope.id+'");return '+$to_js(this.tree)
+        return 'var $res = '+$to_js(this.tree)+';__BRYTHON__.leave_frame("'+scope.id+'");return $res'
     }
 }
 
@@ -6341,7 +6350,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     js += 'var $locals_id = "'+locals_id+'";var $block_id=$locals_id;\n'
     js += 'var $locals = $B.vars["'+locals_id+'"];\n'
     
-    js += '__BRYTHON__.enter_frame(["'+module+'", "'+module+'"]);\n'
+    js += '__BRYTHON__.enter_frame([["'+module+'", "mod"], "'+module+'"]);\n'
     js += 'eval($B.InjectBuiltins())\n'
 
     var new_node = new $Node()

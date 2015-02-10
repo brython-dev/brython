@@ -22,6 +22,7 @@ $B.globals={}
 $B.exec_stack=[]
 $B.frames_stack=[]
 $B.rt_parents={}
+$B.ref_counter={}
 $B.builtins={__repr__:function(){return "<module 'builtins>'"},__str__:function(){return "<module 'builtins'>"},}
 $B.builtin_funcs={}
 $B.__getattr__=function(attr){return this[attr]}
@@ -61,7 +62,7 @@ catch(err){return false}})
 __BRYTHON__.implementation=[3,0,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.0.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-02-09 22:54:15.101000"
+__BRYTHON__.compiled_date="2015-02-10 17:55:23.882000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -90,7 +91,7 @@ for(var attr in obj){res.push(attr)}
 res.sort()
 return res
 }
-function clone(obj){var res=new Object()
+var clone=$B.clone=function(obj){var res=new Object()
 for(var attr in obj){res[attr]=obj[attr]}
 return res
 }
@@ -1064,7 +1065,7 @@ new_node.locals_def=true
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 var new_node=new $Node()
-var js='$B.enter_frame(["'+this.id+'", "'+this.module+'"]);' 
+var js='$B.enter_frame([[$locals_id, "'+this.type+'"], "'+this.module+'"]);' 
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 if(this.inside_function){var new_node=new $Node()
@@ -1206,6 +1207,12 @@ new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank+offset,new_node)
 offset++
+if(this.inside_function){js='$B.ref_counter[$locals_id] = true;'
+new_node=new $Node()
+new $NodeJSCtx(new_node,js)
+node.parent.insert(rank+offset,new_node)
+offset++
+}
 if(this.$blocking){console.log('blocking !!!')
 new_node=new $Node()
 new $NodeJSCtx(new_node,this.name+'.$blocking = true; // used in __call__')
@@ -2245,7 +2252,7 @@ var scope=$get_scope(this)
 if(scope.ntype=='BRgenerator'){var res='return [$B.generator_return('
 return res + $to_js(this.tree)+')]'
 }
-return '__BRYTHON__.leave_frame("'+scope.id+'");return '+$to_js(this.tree)
+return 'var $res = '+$to_js(this.tree)+';__BRYTHON__.leave_frame("'+scope.id+'");return $res'
 }}
 function $SingleKwCtx(C,token){
 this.type='single_kw'
@@ -4270,7 +4277,7 @@ if(module=='__main__'){js +='$B.imported["__main__"] = $globals\n'
 }
 js +='var $locals_id = "'+locals_id+'";var $block_id=$locals_id;\n'
 js +='var $locals = $B.vars["'+locals_id+'"];\n'
-js +='__BRYTHON__.enter_frame(["'+module+'", "'+module+'"]);\n'
+js +='__BRYTHON__.enter_frame([["'+module+'", "mod"], "'+module+'"]);\n'
 js +='eval($B.InjectBuiltins())\n'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
@@ -5049,6 +5056,7 @@ for(var $attr in $B.vars[parent_id]){$B.vars[local_id][$attr]=$B.vars[parent_id]
 $B.rt_parents[local_id]=[parent_id]
 if($B.rt_parents[parent_id]!==undefined){$B.rt_parents[local_id]=$B.rt_parents[local_id].concat($B.rt_parents[parent_id])
 }
+$B.ref_counter[parent_id]=true
 var $js=$B.py2js($py,$mod,local_id,parent_block_id).to_js()
 eval($js)
 var $res=$B.vars[local_id][$res]
@@ -5332,7 +5340,13 @@ try{var v=_b_.getattr(value,'__index__')();return v}catch(e){}
 return value
 }
 $B.enter_frame=function(frames){$B.frames_stack.push(frames)}
-$B.leave_frame=function(){$B.frames_stack.pop()}})(__BRYTHON__)
+function last(t){return t[t.length-1]}
+$B.leave_frame=function(){var last_frame=last($B.frames_stack)
+if(last_frame!==undefined){if(last_frame[0][1]=='def'){var locals_id=last_frame[0][0]
+if($B.ref_counter[locals_id]===undefined){delete $B.vars[locals_id],$B.modules[locals_id],$B.bound[locals_id],$B.rt_parents[locals_id]
+}}}
+$B.frames_stack.pop()
+}})(__BRYTHON__)
 if(!Array.indexOf){Array.prototype.indexOf=function(obj){for(var i=0,_len_i=this.length;i < _len_i;i++)if(this[i]==obj)return i
 return -1
 }}
@@ -6925,7 +6939,8 @@ var res={__class__:$FrameDict,f_builtins : to_dict($B.vars['__builtins__'])
 }
 if(pos===undefined){pos=fs.length-1}
 if(fs.length){var _frame=fs[pos]
-res.f_locals=to_dict($B.vars[_frame[0]])
+var locals_id=_frame[0]
+res.f_locals=to_dict($B.vars[locals_id])
 res.f_globals=to_dict($B.vars[_frame[1]])
 if(__BRYTHON__.debug>0){res.f_lineno=__BRYTHON__.line_info[0]
 }else{res.f_lineno=None
@@ -6933,7 +6948,7 @@ if(__BRYTHON__.debug>0){res.f_lineno=__BRYTHON__.line_info[0]
 if(pos>0){res.f_back=frame(pos-1)}
 else{res.f_back=None}
 res.f_code={__class__:$B.$CodeObjectDict,co_code:None,
-co_name: _frame[0],
+co_name: locals_id,
 co_filename:($B.vars[_frame[1]]===undefined ?
 "<unknown>" : $B.vars[_frame[1]].__name__)
 }}
