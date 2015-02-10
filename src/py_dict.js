@@ -339,7 +339,6 @@ $DictDict.__init__ = function(self){
             }
         }
     }//if
-    //if(kw.$used>0){ // format dict(k1=v1,k2=v2...)
     if($DictDict.__len__(kw) > 0) $copy_dict(self, kw)
 }
 

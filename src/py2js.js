@@ -652,7 +652,6 @@ function $AssignCtx(context, check_unbound){
             return res + ','+rvar+');None;'
           }
         }
-        
         return left.to_js()+'='+right.to_js()
     }
 }
@@ -1027,7 +1026,7 @@ function $CallCtx(context){
               case 'locals':
                 var scope = $get_scope(this),mod = $get_module(this)
                 if(scope !== null && (scope.ntype==='def'||scope.ntype=='generator')){
-                   return 'locals("'+scope.context.tree[0].id+'","'+mod.module+'")'
+                   return 'locals($locals_id,"'+mod.module+'")'
                 }
                 break
               case 'globals':
@@ -1238,7 +1237,7 @@ function $ClassCtx(context){
 
         // class constructor
         var scope = $get_scope(this)
-        js = '$B.vars["'+scope.id+'"]["'+this.name+'"]'
+        js = '$B.vars[$locals_id]["'+this.name+'"]'
         js += '=$B.$class_constructor("'+this.name+'",$'+this.name+'_'+this.random
         if(this.args!==undefined){ // class def has arguments
             var arg_tree = this.args.tree,args=[],kw=[]
@@ -1527,6 +1526,17 @@ function $DefCtx(context){
 
     this.parent.node.parent_block = parent_block
 
+    // this.inside_function : set if the function is defined inside another
+    // function
+    var pb = parent_block
+    while(pb && pb.context){
+        if(pb.context.tree[0].type=='def'){
+            this.inside_function = true
+            break
+        }
+        pb = pb.parent_block
+    }
+
     this.module = scope.module
 
     this.set_name = function(name){
@@ -1552,25 +1562,6 @@ function $DefCtx(context){
                 scope.context.tree[0].locals.push(name)
             }
         }
-        var thisnode = this.parent.node
-        while(thisnode.parent_block){
-            thisnode = thisnode.parent_block
-        }
-        
-        // Names bound in scope when the function is defined
-        var pblock = parent_block, pblocks=[pblock.id]
-        while(true){
-            if(pblock.parent_block && pblock.parent_block.id!='__builtins__'){
-                pblocks.push(pblock.parent_block.id)
-                pblock = pblock.parent_block
-            }else{break}
-        }
-        var env = {}
-        for(var i=pblocks.length;i>=0;i--){
-            for(var attr in $B.bound[pblocks[i]]){env[attr]=pblocks[i]}
-        }
-        delete env[name]
-        this.env = env
     }
     
     this.toString = function(){return 'def '+this.name+'('+this.tree+')'}
@@ -1579,6 +1570,19 @@ function $DefCtx(context){
         if(this.transformed!==undefined) return
 
         var scope = this.scope
+    
+        // this.inside_function : set if the function is defined inside another
+        // function
+        var pb = this.parent.node
+        var flag = this.name.substr(0,4)=='func'
+        
+        while(pb && pb.context){
+            if(pb.context.tree[0].type=='def'){
+                this.inside_function = true
+                break
+            }
+            pb = pb.parent
+        }
 
         // search doc string
         this.doc_string = $get_docstring(node)
@@ -1651,6 +1655,9 @@ function $DefCtx(context){
 
         // Get id of global scope
         var global_scope = scope
+        if(global_scope.parent_block===undefined){
+            alert('undef '+global_scope.id)
+        }
         while(global_scope.parent_block.id !== '__builtins__'){
             global_scope=global_scope.parent_block
             if(global_scope===undefined){console.log('global scope undef!!!'+this.name)}
@@ -1666,13 +1673,15 @@ function $DefCtx(context){
         nodes.push(new_node)
         
         // declare object holding local variables
-        js = 'var $locals_id="'+this.id+'";'
         if(this.type=='def'){
             // for functions, use the same namespace for all function calls
+            js = 'var $locals_id="'+this.id+'"+__BRYTHON__.UUID();'
+            js += 'var $block_id = "'+this.id+'";'
             js += 'var $locals = $B.vars[$locals_id]=new Object();'
         }else{
             // for generators, a specific namespace will be created for each
             // call, ie for each iterator
+            js = 'var $locals_id="'+this.id+'";'
             js += 'var $locals = $B.vars[$locals_id];'
         }
         var new_node = new $Node()
@@ -1682,10 +1691,22 @@ function $DefCtx(context){
 
         // push id in frames stack
         var new_node = new $Node()
-        var js = '__BRYTHON__.enter_frame(["'+this.id+'", "'+this.module+'"]);' 
+        var js = '$B.enter_frame(["'+this.id+'", "'+this.module+'"]);' 
         new $NodeJSCtx(new_node,js)
         nodes.push(new_node)
-                   
+        
+        // If function is inside another function, create the list of scope
+        // ids above current
+        if(this.inside_function){
+            var new_node = new $Node()
+            var js = '$B.rt_parents[$locals_id] = [$parent_id];' 
+            js += 'if($B.rt_parents[$parent_id]!==undefined)'
+            js += '{$B.rt_parents[$locals_id] = '
+            js += '[$parent_id].concat($B.rt_parents[$parent_id])};'
+            new $NodeJSCtx(new_node,js)
+            nodes.push(new_node)
+        }
+        
         // initialize default variables, if provided
         if(defs1.length>0){
             js = 'for(var $var in $defaults){$locals[$var]=$defaults[$var]}'
@@ -1694,56 +1715,7 @@ function $DefCtx(context){
             nodes.push(new_node)
         }
 
-        var passed_alias = {}, passed_ix = 0
         this.env = []
-        
-        if(this.type=='def'){
-            var enclosing = [], passed = []
-            for(var i=this.enclosing.length-1;i>=0;i--){
-                var func = this.enclosing[i]
-                for(var attr in $B.bound[func.id]){
-                    if(attr!==this.name){
-                        if(func===scope && $B.bound[func.id][attr]!='arg'){
-                            continue
-                        }
-                        passed.push('$var'+passed_ix)
-                        passed_alias[attr] = '$var'+passed_ix
-                        passed_ix++
-                        enclosing.push('$B.vars["'+func.id+'"]["'+attr+'"]')
-                    }
-                } 
-                // Bind names
-                for(var attr in $B.bound[func.id]){
-                    if(attr!=this.name && ($B.globals[this.id]===undefined || 
-                        $B.globals[this.id][attr]===undefined)){
-                        if(func===scope && $B.bound[func.id][attr]!='arg'){
-                            continue
-                        }
-                        $B.bound[this.id][attr] = true
-                        this.env.push(attr)
-                    }
-                }
-            }
-    
-            for(var i=this.enclosing.length-1;i>=0;i--){
-                var func = this.enclosing[i]
-                for(var attr in $B.bound[func.id]){
-                    if(attr!==this.name && ($B.globals[this.id]===undefined ||
-                        $B.globals[this.id][attr]===undefined)){
-                        if(func===scope && $B.bound[func.id][attr]!='arg'){
-                            continue
-                        }
-                        new_node = new $Node()
-                        var js = 'if('+passed_alias[attr]+'!==undefined)'
-                        js += '{$locals["'+attr+'"] = '+passed_alias[attr]+'};'
-                        new $NodeJSCtx(new_node,js)
-                        nodes.push(new_node)
-                    }
-                }
-            }
-        }
-        
-        this.passed_ix = passed_ix
 
         var make_args_nodes = []
         var js = 'var $ns=$B.$MakeArgs1("'+this.name+'",arguments,'
@@ -1866,9 +1838,9 @@ function $DefCtx(context){
         node.add(def_func_node)
 
         var ret_node = new $Node()
-        var txt = ')('
-        if(this.type=='def'){txt+=enclosing.join(',')}
-        new $NodeJSCtx(ret_node,txt+')')
+        var js = ')()'
+        if(this.inside_function){js = ')($locals_id)'}
+        new $NodeJSCtx(ret_node,js)
         node.parent.insert(rank+1,ret_node)
         
         var offset = 2
@@ -1958,27 +1930,17 @@ function $DefCtx(context){
 
     this.to_js = function(func_name){
         if(func_name!==undefined){
-            return func_name+'=(function()'
-        }else{
-            var scope = $get_scope(this)
-            var res = this.tree[0].to_js()+'=(function('
-            if(this.type=='def'){
-                var args = []
-                for(var i=0;i<this.passed_ix;i++){args.push('$var'+i)}
-                res += args.join(',')
+            if(this.inside_function){
+                return func_name+'=(function($parent_id)'
+            }else{
+                return func_name+'=(function()'
             }
+        }else{
+            var res = this.tree[0].to_js()+'=(function('
+            if(this.inside_function){res += '$parent_id'}
             res += ')'
             return res
-            var name = this.name
-            var res = '$B.vars["'+scope.id+'"]'
-            if(scope.context===undefined){res = '$globals'}
-            else if(scope.ntype=='def'||scope.ntype=='BRgenerator'){
-                res = '$locals'
-            }
-            res += '["'+name+'"]'
         }
-        return res+'=(function()'
-
     }
 }
 
@@ -2905,6 +2867,7 @@ function $IdCtx(context,value){
                 }
             }
             scope = found[0]
+            
             if(scope.context===undefined){
                 if(scope.id=='__builtins__'){
                     if(gs.blurred){
@@ -2927,7 +2890,13 @@ function $IdCtx(context,value){
                 if($B.globals[scope.id] && $B.globals[scope.id][val]){val = '$globals["'+val+'"]'}
                 else{val = '$locals["'+val+'"]'}
             }else{
-                val = '$B.vars["'+scope.id+'"]["'+val+'"]'
+                // name was found between innermost and the global of builtins
+                // namespace
+                // Count the number of levels above innermost
+                var nb = 0, sc = innermost.parent_block
+                if(sc===undefined){console.log('innermost '+innermost.id+' no parent')}
+                while(sc != scope){nb++;sc=sc.parent_block}
+                val = '$B.vars[$B.rt_parents[$locals_id]['+nb+']]["'+val+'"]'
             }
             var res = val+$to_js(this.tree,'')
             return res
@@ -3111,7 +3080,7 @@ function $LambdaCtx(context){
         var args = src.substring(this.args_start,this.body_start).replace(qesc,'\\"')
         var body = src.substring(this.body_start+1,this.body_end).replace(qesc,'\\"')
         body = body.replace(/\n/g,' ')
-        var res = '$B.$lambda($locals,"'+scope.module+'","'
+        var res = '$B.$lambda($locals_id,"'+scope.module+'","'
         res += scope.id+'","'+args+'","'+body+'")'
         return res
     }
@@ -3196,7 +3165,7 @@ function $ListOrTupleCtx(context,real){
             if(this.real==='list_comp'){
                 res1 = '"'+scope.id+'"'
                 var res = '$B.$list_comp("'+scope.module+'",'
-                res += '$locals_id,'+res2+')'
+                res += '$block_id, $locals_id,'+res2+')'
                 return res
             }
             if(this.real==='dict_or_set_comp'){
@@ -3205,17 +3174,17 @@ function $ListOrTupleCtx(context,real){
 
                 if(this.expression.length===1){
                   var res = '$B.$gen_expr("'+scope.module+'",'
-                  res += '$locals_id,'+res2+')'
+                  res += '$block_id, $locals_id,'+res2+')'
                   return res
                 }
                 var res = '$B.$dict_comp("'+scope.module+'",'
-                res += '$locals_id,'+res2+')'
+                res += '$block_id, $locals_id, '+res2+')'
                 return res
             }
 
             // Generator expression
             // Pass the module name and the id of current block
-            return '$B.$gen_expr("'+scope.module+'",'+'$locals_id,'+res2+')'
+            return '$B.$gen_expr("'+scope.module+'",'+'$block_id, $locals_id,'+res2+')'
           case 'tuple':
             if(this.tree.length===1 && this.has_comma===undefined) return this.tree[0].to_js()
             return 'tuple(['+$to_js(this.tree)+'])'
@@ -6369,7 +6338,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     if(module=='__main__'){
         js += '$B.imported["__main__"] = $globals\n'
     }
-    js += 'var $locals_id = "'+locals_id+'";\n'
+    js += 'var $locals_id = "'+locals_id+'";var $block_id=$locals_id;\n'
     js += 'var $locals = $B.vars["'+locals_id+'"];\n'
     
     js += '__BRYTHON__.enter_frame(["'+module+'", "'+module+'"]);\n'
@@ -6405,7 +6374,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     var new_node = new $Node()
     new $NodeJSCtx(new_node,js)
     root.add(new_node)
-    
+
     return root
 }
 

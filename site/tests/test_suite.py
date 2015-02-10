@@ -327,5 +327,17 @@ class A:
 a = A(4)
 assert a.x == 8
 
+# nested scopes
+def f():
+    x = 1
+    def g():
+        assert x == 1
+        def h():
+            assert x == 1
+            return x+1
+        return h()
+    return g()
+
+assert f()==2
 
 print('passed all tests...')
