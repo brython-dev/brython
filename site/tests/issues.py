@@ -179,6 +179,23 @@ target = time.struct_time([2001, 9, 9, 1, 46, 40, 6, 252, 0])
 assert time.gmtime(1000000000).args == target.args
 target = datetime.datetime(1970, 1, 1, 1, 0)
 assert datetime.datetime.fromtimestamp(0) == target
+try:
+    time.asctime(1)
+except TypeError:
+    pass
+except:
+    ValueError("Should have raised TypeError")
+try:
+    time.asctime((1,2,3,4))
+except TypeError:
+    pass
+except:
+    ValueError("Should have raised TypeError")
+assert time.asctime(time.gmtime(0)) == 'Thu Jan  1 00:00:00 1970'
+tup = tuple(time.gmtime(0).args)
+assert time.asctime(tup) == 'Thu Jan  1 00:00:00 1970'
+
+assert 
 
 
 print('passed all tests')
