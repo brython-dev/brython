@@ -1,0 +1,32 @@
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        <script src="/src/brython.js"></script>
+        <style type="text/css" src="/site/doc/doc_brython.css"></style>
+
+        <script type="text/python">
+        from browser import document, alert
+
+        def echo(event):
+            alert(document["zone"].value)
+
+        document['mybutton'].bind('click', echo)
+        </script>
+
+    </head>
+
+    <body onload="brython(1)">
+
+        <h1>Welcome to Brython</h1>
+
+        This page shows how to get a value inside an input field and show it
+        in a popup window
+        
+        <p>Edit it and start developing in Python in the browser !
+
+        <p><input id="zone"><button id="mybutton">click !</button>
+
+    </body>
+
+</html>
