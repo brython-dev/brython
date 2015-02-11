@@ -195,7 +195,5 @@ assert time.asctime(time.gmtime(0)) == 'Thu Jan  1 00:00:00 1970'
 tup = tuple(time.gmtime(0).args)
 assert time.asctime(tup) == 'Thu Jan  1 00:00:00 1970'
 
-assert 
-
 
 print('passed all tests')
