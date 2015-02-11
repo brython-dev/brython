@@ -52,7 +52,7 @@ def show(prefix=''):
             # add lang to href
             href += '?lang=%s' %language
         if key == 'home':
-            img = IMG(src=prefix+"brython_white.png",Class="logo")
+            img = IMG(src=prefix+"brython.svg",Class="logo")
             link = A(img,href=href)
             cell = TD(link,Class="logo")
         else:
