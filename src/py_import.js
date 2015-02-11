@@ -234,8 +234,11 @@ $B.run_py=run_py=function(module,path,module_contents) {
     }
 }
 
-function import_from_VFS(mod_name){
+function import_from_VFS(mod_name, origin, package){
     var stored = $B.VFS[mod_name]
+    if(stored===undefined && package){
+        stored = $B.VFS[package+'.'+mod_name]
+    }
     if(stored!==undefined){
         var ext = stored[0]
         var module_contents = stored[1]
