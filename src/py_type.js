@@ -260,7 +260,12 @@ $B.$type.__getattribute__=function(klass,attr){
                     break
                 }
             }
-            if(getattr!==null){return getattr(attr)}
+            if(getattr!==null){
+                if(getattr.$type=='classmethod'){
+                    return getattr(cl_mro[i].$factory, attr)
+                }
+                return getattr(attr)
+            }
         }
     }
 
