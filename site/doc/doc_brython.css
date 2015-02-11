@@ -132,3 +132,32 @@ strong {
   padding:5px
 }
 
+
+
+
+/* Breakpoint for all color devices of < 999px width */
+@media all and (color) and (max-width: 999px) {
+
+    #banner {
+    padding-bottom: 0
+    }
+
+    a.banner:link,a.banner:visited {
+        font-size: 2em;
+        line-height: 4em;
+        padding: 0
+    }
+
+    #console {
+    font-size: 10px
+    }
+
+    #content {
+    padding: 0
+    }
+
+    img.logo, td.logo {
+        display: none
+    }
+
+}
