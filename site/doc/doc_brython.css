@@ -139,7 +139,7 @@ strong {
 @media all and (color) and (max-width: 999px) {
 
     #banner {
-    padding-bottom: 0
+        padding-bottom: 0
     }
 
     a.banner:link,a.banner:visited {
@@ -149,11 +149,11 @@ strong {
     }
 
     #console {
-    font-size: 10px
+        font-size: 10px
     }
 
     #content {
-    padding: 0
+        padding: 0
     }
 
     img.logo, td.logo {
