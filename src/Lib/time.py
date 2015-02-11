@@ -8,6 +8,19 @@ tzname = tuple(['', ''])
 
 daylight = 0 # fix me.. returns Non zero if DST timezone is defined
 
+def _get_day_of_year(arg):
+    ml = [31,28,31,30,31,30,31,31,30,31,30,31]
+    if arg[0]%4==0:
+        ml[1] += 1
+    i=1
+    yday=0
+    while i<arg[1]:
+        yday += ml[i-1]
+        i += 1
+    yday += arg[2]
+    arg[7] = yday
+    return struct_time(arg)
+
 def ctime(timestamp=None):
     if timestamp is None:
         timestamp = int(date().getTime()/1000)
@@ -15,13 +28,16 @@ def ctime(timestamp=None):
     d.setUTCSeconds(timestamp)
     return d.toUTCString()
 
-def gmtime(secs):
+def gmtime(secs = None):
     d = date()
     if secs is not None:
        d = date(secs*1000)
-    return struct_time([d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate(),
-           d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds(),
-           d.getUTCDay(), 0, 0])
+    wday = d.getUTCDay() - 1 if d.getUTCDay() - 1 >= 0 else 6
+    tmp = struct_time([d.getUTCFullYear(), 
+        d.getUTCMonth()+1, d.getUTCDate(),
+        d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds(),
+        wday, 0, 0])
+    return _get_day_of_year(tmp.args)
 
 def perf_counter():
     return float(date().getTime()/1000.0)
