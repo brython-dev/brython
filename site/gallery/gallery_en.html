@@ -21,7 +21,7 @@
             linear-gradient(90deg, transparent 46%, gray 50%, lightgray 52%, transparent 55%),
             linear-gradient(lightgray .1em, transparent .1em);
         background-size: 100% 1.2em;
-        margin:26px auto 0;
+        margin:50px auto 0;
         max-width:900px;
         min-height:400px;
         padding:0;
@@ -60,9 +60,16 @@
 
 <body onload="brython(1)">
 
-    <table id="banner" cellpadding=0 cellspacing=0>
-        <tr id="banner_row">
-    </table>
+
+<div id="page">
+    <a href="#" class="open-panel" onclick="document.querySelector('html').classList.add('openNav')"><h1>☰</h1></a>
+<nav id="banner">
+    <ul class="menu" id="banner_row"></ul>
+</nav>
+
+
+<div id="content" onclick="document.querySelector('html').classList.remove('openNav')">
+
 
     <div style="text-align:center">
 
@@ -113,7 +120,7 @@
     </div>
     <br>
 
-
+</div></div>
 </body>
 
 </html>

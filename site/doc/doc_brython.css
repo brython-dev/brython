@@ -4,42 +4,20 @@
 @-ms-viewport{width:device-width}
 @-o-viewport{width:device-width}
 @viewport{width:device-width}
+@import url(https://fonts.googleapis.com/css?family=Oxygen);
 
 
-html {
-
+* {
+    font-family:Oxygen;
+    margin: 0
 }
 
-body {
-    font-family:Arial;
-    font-size:.9em;
-    margin: 0;
-}
-
-a.navig:link,a:link,a:hover {
-    color:#1767B7;
-    text-decoration:none
-}
-
-a.banner:link,a.banner:visited {
-    background-color:#1767B7;
-    color:#FFF;
-    display:block;
-    font-size:1.2em;
-    line-height:30px;
-    padding:1.3em;
-    text-align:center;
-    text-decoration:none
-}
-
-a.banner:hover,a.banner:active {
-    background-color:#2070C0;
-    color:#FFF
+a.banner:link, a.banner:visited {
+    font-size: 1.2em
 }
 
 #banner {
-    padding-bottom:15px;
-    width:100%
+    padding-bottom: 15px
 }
 
 #console {
@@ -47,11 +25,6 @@ a.banner:hover,a.banner:active {
     color:#FFF;
     font-size:12px;
     font-weight:700
-}
-
-#content {
-    padding-left:5%;
-    padding-right:5%
 }
 
 a.glink {
@@ -65,21 +38,6 @@ img.logo {
     height:28px;
     padding:0;
     width:auto
-}
-
-td.logo {
-    background-color:#1767B7;
-    padding-left:20px;
-    width:15%
-}
-
-td.top_menu {
-    width:10%
-}
-
-td.language {
-    background-color:#1767B7;
-    text-align:right
 }
 
 select.language {
@@ -129,30 +87,138 @@ strong {
     padding:5px
 }
 
+.logo {
+    height: 38px
+}
 
-/* Breakpoint for all color devices of < 999px width */
-@media all and (color) and (max-width: 999px) {
+#content {
+    clear: both
+}
 
-    #banner {
-        padding-bottom: 0
-    }
 
-    a.banner:link,a.banner:visited {
-        font-size: 2em;
-        line-height: 4em;
-        padding: 0
-    }
+/* Responsive off-Canvas Navigation Menu */
+ul.menu {
+    padding: 0;
+    border: 0;
+    margin: 0;
+    width: 100%
+}
 
-    #console {
-        font-size: 10px
-    }
+ul.menu li, a.open-panel, a.close-panel {
+    list-style-type: none;
+    display: block;
+    float: left;
+    margin: 0;
+    padding: .5em 0;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    min-width: 9em;
+    max-width: 50em;
+    text-align: center;
+    background-color: #1767b7
+}
+
+/* links on the responsive menu with glow */
+a.banner, a.banner:hover, a.banner:focus, a.open-panel, a.open-panel:hover, a.open-panel:focus {
+    text-decoration: none;
+    color: lightgray;
+    text-shadow: none;
+    -webkit-transition: 500ms linear 0s;
+    -moz-transition: 500ms linear 0s;
+    -o-transition: 500ms linear 0s;
+    transition: 500ms linear 0s;
+    outline: 0 none
+}
+
+a.banner:hover, a.banner:focus, a.open-panel:hover, a.open-panel:focus {
+    color: #fff;
+    text-shadow: -1px 1px 8px #ffc, 1px -1px 8px #fff
+}
+
+a.open-panel {
+    display: none;
+    border-radius: 0 0 9em 0
+}
+
+#close-panel {
+    display: none
+}
+
+#banner_row > li:nth-child(8) {
+    border-radius: 0 0 9em 0
+}
+
+
+/* Breakpoint: only color screens of < 999px, mobile */
+@media only screen and (color) and (max-width: 999px) {
 
     #content {
-        padding: 0
+        padding-top: 0
     }
 
-    img.logo, td.logo {
-        display: none
+    /* Move nav off screen, setup transitions */
+    nav {
+        width: 70%;
+        position: absolute;
+        left: -70%;
+        top: 0;
+        height: 100%;
+        background-color: #1767b7
+    }
+
+    /* Display nav items vertically */
+    ul.menu {
+        border-top: 1px solid gray
+    }
+
+    ul.menu li {
+        float: none;
+        width: 100%;
+        text-align: center;
+        padding: .5em 1em;
+        box-sizing: border-box;
+        border-bottom: 1px solid gray
+    }
+
+    /* Reveal open/close buttons */
+    a.open-panel, a.close-panel {
+        display: inline
+    }
+
+    #close-panel {
+        display: inherit
+    }
+
+    #banner_row > li:nth-child(8) {
+        border-radius: 0
+    }
+
+    .openNav #page {
+        left: 0;
+        -webkit-transform: translateX(70%);
+        -moz-transform: translateX(70%);
+        -ms-transform: translateX(70%);
+        -o-transform: translateX(70%);
+        transform: translateX(70%);
+        -webkit-transition: -webkit-transform 500ms ease;
+        -moz-transition: -moz-transform 500ms ease;
+        -o-transition: -o-transform 500ms ease;
+        transition: transform 500ms ease
+    }
+
+    /* When the panel is closed, transition the page back to the left */
+    #page {
+        left: 0;
+        -webkit-transform: translateX(0);
+        -moz-transform: translateX(0);
+        -ms-transform: translateX(0);
+        -o-transform: translateX(0);
+        transform: translateX(0);
+        -webkit-transition: -webkit-transform 500ms ease;
+        -moz-transition: -moz-transform 500ms ease;
+        -o-transition: -o-transform 500ms ease;
+        transition: transform 500ms ease
     }
 
 }
