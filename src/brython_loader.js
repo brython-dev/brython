@@ -1,19 +1,13 @@
 (function() {
-
-    
     function import_file(path, pos) {
      
        // we will "import" each script individually so things can
        // be debugged much easier by programmers/developers.
 
-       var _files=['brython_builtins', 'version_info', 'identifiers_re',
-                'py2js', 'py_object', 'py_type', 'py_utils',
-                'py_generator', 'py_builtin_functions',
-                'py_bytes', 'py_set', 'js_objects', 'stdlib_paths',
-                'py_import', 'py_string', 'py_int', 'py_float', 
-                'py_complex', 'py_dict', 'py_list', 'py_dom']
-
-       if (pos >= _files.length) return
+       if (pos >= _files.length) {
+          window.onload=function() {brython(_brython)}
+          return
+       }
       
        var _s = document.createElement('script')
        //_s.setAttribute('type', 'text/javascript')
@@ -51,7 +45,6 @@
     _path.pop()
     _path = _path.join('/') + '/'
 
-
     if (_loader.dist == true) {
        var _s = document.createElement('script');
        _s.src = _path + "brython_dist.js";
@@ -60,22 +53,31 @@
        return
     }
 
+    var _files=[]
     if (_loader.debug === undefined || _loader.debug==0) {  // just load brython.js
-       var _s = document.createElement('script');
-       _s.src = _path + "brython.js";
-       document.head.appendChild(_s);
+       _files.append("brython")
     } else {
-       import_file(_path, 0)
-    }
+      
+       //import_file(_path,0)
+        var py_files=['brython_builtins', 'version_info', 'identifiers_re',
+                'py2js', 'py_object', 'py_type', 'py_utils',
+                'py_generator', 'py_builtin_functions',
+                'py_bytes', 'py_set', 'js_objects', 'stdlib_paths',
+                'py_import', 'py_string', 'py_int', 'py_float', 
+                'py_complex', 'py_dict', 'py_list', 'py_dom']
+
+
+        for (var i=0; i < py_files.length; i++) {
+            _files.push(py_files[i])
+        }
+    }  
 
     // look at other loader options to see if we can/should do something else.
 
     if (_loader.VFS && _loader.VFS == true) {
-       var _s = document.createElement('script');
-       _s.src = _path + 'py_VFS.js'
-       document.head.appendChild(_s);
+       _files.push('py_VFS')
     }
 
-    window.onload= function() { brython(_brython)}
+    import_file(_path,0)
 
 })();
