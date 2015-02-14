@@ -6,6 +6,8 @@ date = javascript.JSConstructor(window.Date)
 
 #daylight = 0 # fix me.. returns Non zero if DST timezone is defined
 
+_STRUCT_TM_ITEMS = 11
+
 def _get_day_of_year(arg):
     ml = [31,28,31,30,31,30,31,31,30,31,30,31]
     if arg[0]%4==0:
@@ -34,10 +36,13 @@ daylight = _is_dst()
 timezone = date().getTimezoneOffset() * 60
 
 def _get_tzname():
-	d = date()
-	d = d.toTimeString()
-	d = d.split('(')[1].split(')')[0]
-	return (d, 'NotAvailable')
+    d = date()
+    d = d.toTimeString()
+    try:
+        d = d.split('(')[1].split(')')[0]
+        return (d, 'NotAvailable')
+    except:
+        return ('', '')
 
 tzname = _get_tzname()
 
@@ -68,8 +73,33 @@ def asctime(t = None):
                 4: "Fri", 5: "Sat", 6: "Sun"}
     months = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun',
         7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec'}
-    result = "%s %s %2d %02d:%02d:%02d %4d" % (
-        weekdays[t[6]], months[t[1]], t[2], t[3], t[4], t[5], t[0])
+    
+    mm = t[1]
+    if mm == 0: mm = 1
+    if -1 > mm > 13: raise ValueError("month out of range")
+    
+    dd = t[2]
+    if dd == 0: dd = 1
+    if -1 > dd > 32: raise ValueError("day of month out of range")
+    
+    hh = t[3]
+    if -1 > hh > 24: raise ValueError("hour out of range")
+    
+    minu = t[4]
+    if -1 > minu > 60: raise ValueError("minute out of range")
+    
+    ss = t[5]
+    if -1 > ss > 62: raise ValueError("seconds out of range")
+    
+    wd = t[6] % 7
+    if wd < -2: raise ValueError("day of week out of range")
+    
+    dy = t[7]
+    if dy == 0: dd = 1
+    if -1 > dd > 367: raise ValueError("day of year out of range")
+    
+    result = "%s %s %2d %02d:%02d:%02d %d" % (
+        weekdays[wd], months[mm], dd, hh, mm, ss, t[0])
     return result
 
 # All the clock_xx machinery shouldn't work in the browser so some
@@ -90,10 +120,23 @@ CLOCK_THREAD_CPUTIME_ID = _clock_msg % "https://docs.python.org/3/library/time.h
 
 def ctime(timestamp=None):
     if timestamp is None:
-        timestamp = int(date().getTime()/1000)
+        timestamp = date().getTime() / 1000.
     d = date(0)
     d.setUTCSeconds(timestamp)
-    return d.toUTCString()
+    jan = date(d.getFullYear(), 0, 1)
+    jul = date(d.getFullYear(), 6, 1)
+    dst = int(d.getTimezoneOffset() < max(jan.getTimezoneOffset(), jul.getTimezoneOffset()))
+    d = date(0)
+    d.setUTCSeconds(timestamp + (1 + dst) * 3600)
+    weekdays = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 
+                5: "Fri", 6: "Sat", 0: "Sun"}
+    months = {0:'Jan',1:'Feb',2:'Mar',3:'Apr',4:'May',5:'Jun',
+        6:'Jul',7:'Aug',8:'Sep',9:'Oct',10:'Nov',11:'Dec'}
+    result = "%s %s %2d %02d:%02d:%02d %d" % (weekdays[d.getUTCDay()],
+        months[d.getUTCMonth()], d.getUTCDate(),
+        d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds(), 
+        d.getUTCFullYear())
+    return result
 
 get_clock_info = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.get_clock_info")
 
@@ -111,7 +154,7 @@ def gmtime(secs = None):
 def localtime(secs = None):
    d = date()
    if secs is not None:
-       d = date(secs*1000)
+       d = date(secs * 1000)
    dst = _is_dst(secs)
    wday = d.getDay() - 1 if d.getDay() - 1 >= 0 else 6
    tmp = struct_time([d.getFullYear(), 
@@ -122,11 +165,19 @@ def localtime(secs = None):
    #return struct_time([d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(),
    #             d.getMinutes(), d.getSeconds(), d.getDay(), 0, dst])
 
-def mktime():
-	raise NotImplementedError('TODO')
+def mktime(t):
+    if isinstance(t, struct_time):
+        d1 = date(t.tm_year, t.tm_mon - 1, t.tm_mday, 
+                  t.tm_hour, t.tm_min, t.tm_sec, 0).getTime()
+    elif isinstance(t, tuple):
+        d1 = date(t[0], t[1] - 1, t[2], t[3], t[4], t[5], 0).getTime()
+    else:
+        raise ValueError("Tuple or struct_time argument required")
+    d2 = date(0).getTime()
+    return (d1 - d2) / 1000.
 
 def monotonic():
-	return javascript.JSObject(window.performance.now)()/1000.
+    return javascript.JSObject(window.performance.now)()/1000.
 
 def perf_counter():
     return float(date().getTime()/1000.0)
@@ -137,9 +188,9 @@ def time():
     return float(date().getTime()/1000)
 
 def sleep(secs):
-	raise NotImplementedError(
-    "Javascript is single-thread event-based model."
-    "Check browser.timer.set_timeout.")
+    start = date().getTime()
+    while date().getTime() - start < secs * 1000.:
+        pass
 
 def strftime(_format,arg=None):
     def ns(arg,nb):
@@ -259,4 +310,4 @@ def strptime(string, _format):
     return struct_time([_strptime._strptime_datetime(to_struct_time, string, _format)])
 
 def tzset():
-	raise NotImplementedError()
+    raise NotImplementedError()
