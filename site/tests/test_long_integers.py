@@ -7,50 +7,6 @@ else:
 a = LongInt('999')
 b = LongInt('15')
 
-assert a+b == LongInt('1014')
-assert a-b == LongInt('984')
-assert b-a == LongInt('-984')
-
-assert LongInt('-2')+LongInt('-55') == LongInt('-57')
-assert LongInt('-2')+LongInt('-55') == LongInt('-57')
-
-assert LongInt('2')+LongInt('55') == LongInt('57')
-assert LongInt('2')+LongInt('55') == LongInt('57')
-assert LongInt('1')+LongInt('-2') == LongInt('-1')
-assert LongInt('10')+LongInt('-2') == LongInt('8')
-assert LongInt('-1')+LongInt('3') == LongInt('2')
-assert LongInt('-10')+LongInt('3') == LongInt('-7')
-
-assert LongInt('10')-LongInt('2') == LongInt('8')
-assert LongInt('10')-LongInt('20') == LongInt('-10')
-assert LongInt('-10')-LongInt('2') == LongInt('-12')
-assert LongInt('10')-LongInt('2') == LongInt('8')
-
-assert LongInt('2')*LongInt('2') == LongInt('4')
-
-assert LongInt('45972127121')*\
-    LongInt('4798713213') == \
-    LongInt('220607053845258349773')
-
-assert LongInt('-45972027121')*\
-    LongInt('4798713013') == \
-    LongInt('-220606564779531625573')
-
-
-assert LongInt('1')//LongInt('2')==LongInt('0')
-assert LongInt('-1')//LongInt('2')==LongInt('-1')
-assert LongInt('1')//LongInt('-2')==LongInt('-1')
-assert LongInt('-1')//LongInt('-2')==LongInt('0')
-assert LongInt('-2')//LongInt('-2')==LongInt('1')
-import sys
-if sys.implementation.name == 'brython':
-    from long_int import LongInt
-else:
-    LongInt = int
-
-a = LongInt('999')
-b = LongInt('15')
-
 assert a+b==LongInt('1014')
 assert a-b == LongInt('984')
 assert b-a == LongInt('-984')
@@ -142,3 +98,10 @@ assert LongInt('3aokq94', 33) == LongInt('4294967296')
 assert LongInt('2qhxjli', 34) == LongInt('4294967296')
 assert LongInt('2br45qb', 35) == LongInt('4294967296')
 assert LongInt('1z141z4', 36) == LongInt('4294967296')
+
+assert LongInt('2') == 2
+
+for _i in range(20):
+    a=LongInt('2')
+    i=LongInt(str(_i))
+    assert a**i == LongInt(str(2**_i)), "%s != %s" % (a**i, 2**_i)

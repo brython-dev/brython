@@ -308,6 +308,7 @@ $LongIntDict.__divmod__ = function(self, other){
 }
 
 $LongIntDict.__eq__ = function(self, other){
+    if (typeof other == 'number') other=LongInt(_b_.str(other))
     return self.value==other.value && self.pos==other.pos
 }
 
