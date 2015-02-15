@@ -1,4 +1,18 @@
 (function() {
+    var scripts = document.getElementsByTagName("script")
+    //get last script that was executed (ie, this one!!!!!)
+    var script = scripts[scripts.length-1]
+
+    // read data-brython-options (or data-loader-options) if it exists..
+    var _loader=parse_options(script.getAttribute("data-loader-options"))
+    var _brython=parse_options(script.getAttribute("data-brython-options"))
+
+    //figure out "root" path so we know where brython source file(s) are located
+    var src = script.getAttribute("src")
+    var _path =src.split('/')
+    _path.pop()
+    _path = _path.join('/') + '/'
+
     function import_file(path, pos) {
      
        // we will "import" each script individually so things can
@@ -10,7 +24,7 @@
        }
       
        var _s = document.createElement('script')
-       //_s.setAttribute('type', 'text/javascript')
+       _s.setAttribute('type', 'text/javascript')
        _s.setAttribute('src', path + _files[pos] + '.js')
        _s.onload=function() {import_file(path, pos+1)}
 
@@ -31,23 +45,10 @@
        return {}
     }
 
-    var scripts = document.getElementsByTagName("script")
-    //get last script that was executed (ie, this one!!!!!)
-    var script = scripts[scripts.length-1]
-
-    // read data-brython-options (or data-loader-options) if it exists..
-    var _loader=parse_options(script.getAttribute("data-loader-options"))
-    var _brython=parse_options(script.getAttribute("data-brython-options"))
-
-    //figure out "root" path so we know where brython source file(s) are located
-    var src = scripts[scripts.length-1].getAttribute("src")
-    var _path =src.split('/')
-    _path.pop()
-    _path = _path.join('/') + '/'
-
     if (_loader.dist == true) {
        var _s = document.createElement('script');
        _s.src = _path + "brython_dist.js";
+       _s.setAttribute('type', 'text/javascript')
        _s.onload= function() { brython(_brython) };
        document.head.appendChild(_s);
        return
@@ -66,11 +67,8 @@
                 'py_import', 'py_string', 'py_int', 'py_float', 
                 'py_complex', 'py_dict', 'py_list', 'py_dom']
 
-
-        for (var i=0; i < py_files.length; i++) {
-            _files.push(py_files[i])
-        }
-    }  
+        _files.push.apply(_files, py_files)
+    }
 
     // look at other loader options to see if we can/should do something else.
 
