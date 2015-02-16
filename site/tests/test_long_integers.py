@@ -44,6 +44,14 @@ assert LongInt('-1')//LongInt('-2')==LongInt('0')
 assert LongInt('-2')//LongInt('-2')==LongInt('1')
 assert LongInt('-2')//LongInt('2')==LongInt('-1')
 
+#allow "other" operand to be an integer
+assert LongInt('1')//2==LongInt('0')
+assert LongInt('-1')//2==LongInt('-1')
+assert LongInt('1')//-2==LongInt('-1')
+assert LongInt('-1')//-2==LongInt('0')
+assert LongInt('-2')//-2==LongInt('1')
+assert LongInt('-2')//2==LongInt('-1')
+
 assert LongInt('54545400516506505640987')**LongInt('54')==\
 LongInt(
 '60945169934084919927170582065543862134179152042825505205801736307414791885193407'+
@@ -104,4 +112,5 @@ assert LongInt('2') == 2
 for _i in range(20):
     a=LongInt('2')
     i=LongInt(str(_i))
-    assert a**i == LongInt(str(2**_i)), "%s != %s" % (a**i, 2**_i)
+    assert a**i == 2**_i, "%s != %s" % (a**i, 2**_i)
+    assert a**_i == 2**_i, "%s != %s" % (a**_i, 2**_i)
