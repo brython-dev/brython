@@ -6,14 +6,10 @@ var _b_ = $B.builtins
 
 $B.$ModuleDict = {
     __class__ : $B.$type,
-    __name__ : 'module',
-    toString : function(){return '<class *module*>'}
+    __name__ : 'module'
 }
 $B.$ModuleDict.__repr__ = function(self){return '<module '+self.__name__+'>'}
-$B.$ModuleDict.__setattr__ = function(self, attr, value){
-    self[attr] = value
-    $B.vars[self.__name__][attr]=value
-}
+$B.$ModuleDict.__setattr__ = function(self, attr, value){self[attr] = value}
 $B.$ModuleDict.__str__ = function(self){return '<module '+self.__name__+'>'}
 $B.$ModuleDict.__mro__ = [$B.$ModuleDict,_b_.object.$dict]
 
@@ -118,7 +114,6 @@ function run_js(module,path,module_contents){
         throw _b_.ImportError("name '$module' is not defined in module")
     }
     // add class and __str__
-    $B.vars[module.name] = $module
     $module.__class__ = $B.$ModuleDict
     $module.__name__ = module.name
     $module.__repr__ = function(){return "<module '"+module.name+"' from "+path+" >"}
@@ -170,6 +165,7 @@ $B.run_py=run_py=function(module,path,module_contents) {
 
     var root = $B.py2js(module_contents,module.name,
         module.name,'__builtins__')
+
     var body = root.children
     root.children = []
     // use the module pattern : module name returns the results of an anonymous function
@@ -180,7 +176,7 @@ $B.run_py=run_py=function(module,path,module_contents) {
 
     // $globals will be returned when the anonymous function is run
     var ret_node = new $Node('expression')
-    new $NodeJSCtx(ret_node,'return $globals')
+    new $NodeJSCtx(ret_node,'return $locals_'+module.name.replace(/\./g,'_'))
     mod_node.add(ret_node)
     // add parenthesis for anonymous function execution
     
@@ -209,12 +205,9 @@ $B.run_py=run_py=function(module,path,module_contents) {
     }
     
     try{
-        // add names defined in the module as attributes of $module
-        var mod = $B.imported[module.name]
-        for(var attr in $B.vars[module.name]){
-            mod[attr] = $B.vars[module.name][attr]
-        }
-        // add class and __str__
+        // Create module object
+        var mod = eval('$module')
+        // add some attributes
         mod.__class__ = $B.$ModuleDict
         mod.__repr__ = function(){return "<module '"+module.name+"' from "+path+" >"}
         mod.__str__ = function(){return "<module '"+module.name+"' from "+path+" >"}
@@ -222,13 +215,12 @@ $B.run_py=run_py=function(module,path,module_contents) {
         mod.__file__ = path
         mod.__initializing__ = false
         mod.$package = module.is_package
-        $B.imported[module.name] = $B.modules[module.name] = $B.vars[module.name] = mod
+        $B.imported[module.name] = $B.modules[module.name] = mod
         return true
     }catch(err){
         console.log(''+err+' '+' for module '+module.name)
         for(var attr in err) console.log(attr+' '+err[attr])
 
-        //console.log('js code\n'+js)
         if($B.debug>0){console.log('line info '+__BRYTHON__.line_info)}
         throw err
     }

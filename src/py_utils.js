@@ -259,35 +259,36 @@ $B.$mkdict = function(glob,loc){
 
 function clear(ns){
     // delete temporary structures
-    delete $B.vars[ns], $B.bound[ns], $B.modules[ns], $B.imported[ns], $B.rt_parents[ns]
-    
+    delete $B.vars[ns], $B.bound[ns], $B.modules[ns], $B.imported[ns]
 }
 
-$B.$list_comp = function(module_name, parent_block_id, parent_id){
+$B.$list_comp = function(env){
     // Called for list comprehensions
-    // - module_name : name of the module where the list comprehension stands
-    // - parent_block_id : id of the block where the LC stands (determined by
-    //   code analysis)
-    // - parent_id : id of the locals dictionary ; if parent block is a 
-    //   function, a new parent_id is set for each call to the function
+    // "env" is a list of [local_name, local_ns] lists for all the enclosing
+    // namespaces
     var $ix = $B.UUID()
     var $py = "x"+$ix+"=[]\n", indent = 0
-    for(var $i=4, _len_$i = arguments.length; $i < _len_$i;$i++){
+    for(var $i=2, _len_$i = arguments.length; $i < _len_$i;$i++){
         $py += ' '.repeat(indent)
         $py += arguments[$i]+':\n'
         indent += 4
     }
     $py += ' '.repeat(indent)
-    $py += 'x'+$ix+'.append('+arguments[3].join('\n')+')\n'
-
-    var $mod_name = 'lc'+$ix
-
-    $B.rt_parents[$mod_name] = [parent_id]
-    if($B.rt_parents[parent_id]!==undefined){
-        $B.rt_parents[$mod_name] = $B.rt_parents[$mod_name].concat($B.rt_parents[parent_id])
+    $py += 'x'+$ix+'.append('+arguments[1].join('\n')+')\n'
+    
+    // Create the variables for enclosing namespaces, they may be referenced
+    // in the comprehension
+    for(var i=0;i<env.length;i++){
+        var sc_id = '$locals_'+env[i][0].replace(/\./,'_')
+        eval('var '+sc_id+'=env[i][1]')
     }
+    var local_name = env[0][0]
+    var module_env = env[env.length-1]
+    var module_name = module_env[0]
 
-    var $root = $B.py2js($py,module_name,$mod_name,parent_block_id,
+    var listcomp_name = 'lc'+$ix
+
+    var $root = $B.py2js($py,module_name,listcomp_name,local_name,
         $B.line_info)
     
     $root.caller = $B.line_info
@@ -296,44 +297,91 @@ $B.$list_comp = function(module_name, parent_block_id, parent_id){
     
     try{
         eval($js)
-        var res = $B.vars['lc'+$ix]['x'+$ix]
+        var res = eval('$locals_'+listcomp_name+'["x"+$ix]')
     }
-    catch(err){throw $B.exception(err)}
-    finally{clear($mod_name)}
+    catch(err){console.log('error list comp\n'+$js);throw $B.exception(err)}
+    finally{clear(listcomp_name)}
 
     return res
 }
 
-$B.$gen_expr = function(){ // generator expresssion
-    var module_name = arguments[0]
-    var parent_block_id = arguments[1]
-    var parent_id = arguments[2]
+$B.$dict_comp = function(env){
+    // Called for dict comprehensions
+    // "env" is a list of [local_name, local_ns] lists for all the enclosing
+    // namespaces
+
+    var $ix = $B.UUID()
+    var $res = 'res'+$ix
+    var $py = $res+"={}\n"
+    var indent=0
+    for(var $i=2, _len_$i = arguments.length; $i < _len_$i;$i++){
+        $py+=' '.repeat(indent)
+        $py += arguments[$i]+':\n'
+        indent += 4
+    }
+    $py+=' '.repeat(indent)
+    $py += $res+'.update({'+arguments[1].join('\n')+'})'
+
+    // Create the variables for enclosing namespaces, they may be referenced
+    // in the comprehension
+    for(var i=0;i<env.length;i++){
+        var sc_id = '$locals_'+env[i][0].replace(/\./,'_')
+        eval('var '+sc_id+'=env[i][1]')
+    }
+    var local_name = env[0][0]
+    var module_env = env[env.length-1]
+    var module_name = module_env[0]
+
+    var dictcomp_name = 'dc'+$ix
+    
+    var $root = $B.py2js($py,module_name,dictcomp_name,local_name,
+        $B.line_info)
+    $root.caller = $B.line_info
+
+    var $js = $root.to_js()
+    eval($js)
+
+    var res = eval('$locals_'+dictcomp_name+'["'+$res+'"]')
+
+    return res
+}
+
+$B.$gen_expr = function(env){
+    // Called for generator expressions
+    // "env" is a list of [local_name, local_ns] lists for all the enclosing
+    // namespaces
+
     var $ix = $B.UUID()
     var $res = 'res'+$ix
     var $py = $res+"=[]\n"
     var indent=0
-    for(var $i=4, _len_$i = arguments.length; $i < _len_$i;$i++){
+    for(var $i=2, _len_$i = arguments.length; $i < _len_$i;$i++){
         $py+=' '.repeat(indent)
         $py += arguments[$i].join(' ')+':\n'
         indent += 4
     }
     $py+=' '.repeat(indent)
-    $py += $res+'.append('+arguments[3].join('\n')+')'
+    $py += $res+'.append('+arguments[1].join('\n')+')'
     
-    var $mod_name = 'ge'+$ix
-
-    $B.rt_parents[$mod_name] = [parent_id]
-    if($B.rt_parents[parent_id]!==undefined){
-        $B.rt_parents[$mod_name] = $B.rt_parents[$mod_name].concat($B.rt_parents[parent_id])
+    // Create the variables for enclosing namespaces, they may be referenced
+    // in the expression
+    for(var i=0;i<env.length;i++){
+        var sc_id = '$locals_'+env[i][0].replace(/\./,'_')
+        eval('var '+sc_id+'=env[i][1]')
     }
+    var local_name = env[0][0]
+    var module_env = env[env.length-1]
+    var module_name = module_env[0]
 
-    var $root = $B.py2js($py,module_name,$mod_name,parent_block_id,
+    var genexpr_name = 'ge'+$ix
+
+    var $root = $B.py2js($py,module_name,genexpr_name,local_name,
         $B.line_info)
     var $js = $root.to_js()
   
-    eval($js)
+    try{eval($js)}catch(err){console.log('error '+err+' in gen expr\n'+$py+'\n'+$js);throw err}
     
-    var $res1 = $B.vars["ge"+$ix]["res"+$ix]
+    var $res1 = eval('$locals_ge'+$ix)["res"+$ix]
 
     var $GenExprDict = {
         __class__:$B.$type,
@@ -356,63 +404,39 @@ $B.$gen_expr = function(){ // generator expresssion
     $GenExprDict.$factory = $GenExprDict
     var $res2 = {value:$res1,__class__:$GenExprDict,$counter:-1}
     $res2.toString = function(){return 'ge object'}
-    clear($mod_name)
     return $res2
 }
 
-$B.$dict_comp = function(module_name,parent_block_id, parent_id){ // dictionary comprehension
-
-    var $ix = $B.UUID()
-    var $res = 'res'+$ix
-    var $py = $res+"={}\n"
-    var indent=0
-    for(var $i=4, _len_$i = arguments.length; $i < _len_$i;$i++){
-        $py+=' '.repeat(indent)
-        $py += arguments[$i]+':\n'
-        indent += 4
-    }
-    $py+=' '.repeat(indent)
-    $py += $res+'.update({'+arguments[3].join('\n')+'})'
-    var $mod_name = 'dc'+$ix
-
-    $B.rt_parents[$mod_name] = [parent_id]
-    if($B.rt_parents[parent_id]!==undefined){
-        $B.rt_parents[$mod_name] = $B.rt_parents[$mod_name].concat($B.rt_parents[parent_id])
-    }    
-    
-    var $root = $B.py2js($py,module_name,$mod_name,parent_block_id)
-    $root.caller = $B.line_info
-    var $js = $root.to_js()
-    eval($js)
-    var res = $B.vars[$mod_name][$res]
-    clear($mod_name)
-    return res
-}
-
-$B.$lambda = function(parent_id,$mod,parent_block_id,$args,$body){
+$B.$lambda = function(env,args,body){
+    // Called for anonymous functions (lambda)
+    // "env" is a list of [local_name, local_ns] lists for all the enclosing
+    // namespaces
+    // "args" are the arguments, "body" is the function body
 
     var rand = $B.UUID()
     var $res = 'lambda_'+$B.lambda_magic+'_'+rand
-    var local_id = 'lambda'+rand
-    var $py = 'def '+$res+'('+$args+'):\n'
-    $py += '    return '+$body
+    var $py = 'def '+$res+'('+args+'):\n'
+    $py += '    return '+body
     
-    $B.vars[local_id] = $B.vars[local_id] || {}
-    for(var $attr in $B.vars[parent_id]){
-        $B.vars[local_id][$attr] = $B.vars[parent_id][$attr]
+    // Create the variables for enclosing namespaces, they may be referenced
+    // in the function
+    for(var i=0;i<env.length;i++){
+        var sc_id = '$locals_'+env[i][0].replace(/\./,'_')
+        eval('var '+sc_id+'=env[i][1]')
     }
+    var local_name = env[0][0]
+    var module_env = env[env.length-1]
+    var module_name = module_env[0]
 
-    $B.rt_parents[local_id] = [parent_id]
-    if($B.rt_parents[parent_id]!==undefined){
-        $B.rt_parents[local_id] = $B.rt_parents[local_id].concat($B.rt_parents[parent_id])
-    }
-    $B.ref_counter[parent_id] = true
-
-    var $js = $B.py2js($py,$mod,local_id,parent_block_id).to_js()
+    var lambda_name = 'lambda'+rand
+    
+    var $js = $B.py2js($py,module_name,lambda_name,local_name).to_js()
+    
     eval($js)
+    
+    var $res = eval('$locals_'+lambda_name+'["'+$res+'"]')
 
-    var $res = $B.vars[local_id][$res]
-    $res.__module__ = $mod
+    $res.__module__ = module_name
     $res.__name__ = '<lambda>'
     return $res
 }
@@ -420,8 +444,9 @@ $B.$lambda = function(parent_id,$mod,parent_block_id,$args,$body){
 // Function used to resolve names not defined in Python source
 // but introduced by "from A import *" or by exec
 
-$B.$search = function(name, globals_id){
-    var res = $B.vars[globals_id][name]
+$B.$search = function(name, global_ns){
+    var res = global_ns[name]
+    //if(res===undefined){console.log('no '+name+' in global ns '+$B.keys(global_ns))}
     return res !== undefined ? res : $B.$NameError(name)
 }
 
@@ -909,22 +934,17 @@ $B.$GetInt=function(value) {
   return value
 }
 
-$B.enter_frame = function(frames){$B.frames_stack.push(frames)}
+$B.enter_frame = function(frame){
+    $B.frames_stack.push(frame)
+}
 
 function last(t){return t[t.length-1]}
 
 $B.leave_frame = function(){
-    var last_frame = last($B.frames_stack)
-    if(last_frame!==undefined){
-        if(last_frame[0][1]=='def'){
-            var locals_id = last_frame[0][0]
-            if($B.ref_counter[locals_id]===undefined){
-                delete $B.vars[locals_id], $B.modules[locals_id],
-                    $B.bound[locals_id], $B.rt_parents[locals_id]
-            }
-        }
+    // We must leave at least the frame for the main program
+    if($B.frames_stack.length>1){
+        var frame = $B.frames_stack.pop()
     }
-    $B.frames_stack.pop()
 }
 
 })(__BRYTHON__)
