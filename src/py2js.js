@@ -1336,7 +1336,7 @@ function $ConditionCtx(context,token){
     this.toString = function(){return this.token+' '+this.tree}
     
     this.transform = function(node,rank){
-        scope = $get_scope(this)
+        var scope = $get_scope(this)
         if(this.token=="while"){
             if(scope.ntype=='BRgenerator'){
                 this.parent.node.loop_start = this.loop_num
@@ -2837,7 +2837,7 @@ function $IdCtx(context,value){
                     }
                 }
             }
-            scope = found[0]
+            var scope = found[0]
             var scope_ns = '$locals_'+scope.id.replace(/\./g,'_')
             
             if(scope.context===undefined){
@@ -3600,8 +3600,7 @@ function $StringCtx(context,value){
     this.to_js = function(){
         var res = '', type = null
         for(var i=0;i<this.tree.length;i++){
-            var value=this.tree[i]
-            is_bytes = value.charAt(0)=='b'
+            var value=this.tree[i], is_bytes = value.charAt(0)=='b'
             if(type==null){
                 type=is_bytes
                 if(is_bytes){res+='bytes('}
@@ -4122,7 +4121,7 @@ function $get_scope(context){
           case 'class':
           case 'generator':
           case 'BRgenerator':
-            scope = tree_node.parent
+            var scope = tree_node.parent
             scope.ntype = ntype
             scope.elt = scope.context.tree[0]
             scope.is_function = ntype!='class'
@@ -4130,7 +4129,7 @@ function $get_scope(context){
         }
         tree_node = tree_node.parent
     }
-    scope = tree_node.parent || tree_node // module
+    var scope = tree_node.parent || tree_node // module
     scope.ntype = "module"
     scope.elt = scope.module
     return scope
@@ -4144,7 +4143,7 @@ function $get_module(context){
     while(tree_node.parent.type!=='module'){
         tree_node = tree_node.parent
     }
-    scope = tree_node.parent // module
+    var scope = tree_node.parent // module
     scope.ntype = "module"
     return scope
 }
@@ -6450,6 +6449,8 @@ function brython(options){
     }
 
     // Get all scripts with type = text/python or text/python3 and run them
+
+    kk = Object.keys(window)
     
     for(var $i=0;$i<$elts.length;$i++){
         var $elt = $elts[$i]
@@ -6526,8 +6527,19 @@ function brython(options){
                 // Throw the error to stop execution
                 throw $err
             }
+
         }
     }
+
+    /* Uncomment to check the names added in global Javascript namespace
+    kk1 = Object.keys(window)
+    for (var i=0; i < kk1.length; i++){
+        if(kk[i]===undefined){
+            console.log(kk1[i])
+        }
+    }
+    */           
+    
 }
 $B.$operators = $operators
 $B.$Node = $Node
