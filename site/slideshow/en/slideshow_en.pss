@@ -49,7 +49,7 @@ When the project started (spring 2012) :
 Goals
 =====
 
-Make writing Python apps as staightforward as in Javascript : Python code
+Make writing Python apps as straightforward as in Javascript : Python code
 inserted in the HTML page
 
 ```html_src
@@ -122,10 +122,10 @@ loads Brython, puts the name **brython**
 &nbsp;in the Javascript namespace
 
 the function `brython()` :
-  - searches scripts with type "text/python"
-  - translates Python source code
-  - into Javascript code
-  - runs it by `eval()`
+ - searches scripts with type "text/python"
+ - translates Python source code
+   into Javascript code
+ - runs it by `eval()`
 
 </pre>
 </div>
@@ -173,7 +173,7 @@ Python or in Javascript
 Browser interface
 =================
 
-Specific modules to handle the interaction with DOM elements and event in the
+Specific modules to handle the interaction with DOM elements and events in the
 package `browser`
 
 Objects
