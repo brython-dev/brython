@@ -78,6 +78,12 @@ def show_console(ev):
     doc["console"].value = output
     doc["console"].cols = 60
 
+# load a Python script
+def load_script(evt):
+    _name = evt.target.value + '?foo=%s' % time.time()
+    editor.setValue(open(_name).read())
+
+# run a script, in global namespace if in_globals is True
 def run(in_globals=False):
     global output
     doc["console"].value = ''
@@ -100,11 +106,6 @@ def run(in_globals=False):
 
     print('<completed in %6.2f ms>' % ((time.perf_counter() - t0) * 1000.0))
     return state
-
-# load a Python script
-def load_script(evt):
-    _name = evt.target.value + '?foo=%s' % time.time()
-    editor.setValue(open(_name).read())
 
 def show_js(ev):
     src = editor.getValue()

@@ -38,12 +38,11 @@
 
 </script>
 
-<script type="text/python3" src="editor.py"></script>
-
 <script type="text/python3">
-from browser import document as doc
+from browser import document as doc, window
 from browser import html
 import header
+import editor
 
 qs_lang,language = header.show('../')
 
@@ -80,9 +79,9 @@ doc['run_js'].bind('click', window.run_js)
 doc['set_debug'].bind('change',set_debug)
 
 # next functions are defined in editor.py
-doc['show_js'].bind('click',show_js)
-doc['run'].bind('click',run)
-doc['show_console'].bind('click',show_console)
+doc['show_js'].bind('click',editor.show_js)
+doc['run'].bind('click',editor.run)
+doc['show_console'].bind('click',editor.show_console)
 
 # erase "main" div
 def clear_main(ev):
@@ -160,7 +159,7 @@ function run_js(){
   </div>
 </div>
 <div style="width:100%;height:100%;">
-<textarea id="console"></textarea>
+<textarea id="console" autocomplete="off"></textarea>
 </div>
 </div>
 

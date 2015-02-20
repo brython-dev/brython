@@ -35,16 +35,49 @@
 <script type="text/javascript" src="../../src/py_list.js"></script>
 <script type="text/javascript" src="../../src/py_dom.js"></script>
 
-<script type="text/python" src="editor.py"></script>
+<script type="text/python">
+
+
+</script>
 
 <script type="text/python3">
-from browser import document as doc
-from browser import timer
 import time
+import sys
+import traceback
+import dis
+
+from browser import document as doc, window, alert
+from browser import timer
+from browser.local_storage import storage
+
+import editor
 
 script_num = -1
 failed = []
 t_start = None
+
+def run(in_globals=False):
+    global output
+    doc["console"].value = ''
+    src = editor.editor.getValue()
+    if storage is not None:
+       storage["py_src"] = src
+
+    t0 = time.perf_counter()
+    try:
+        if(in_globals):
+            exec(src)
+        else:
+            ns = {}
+            exec(src, ns)
+        state = 1
+    except Exception as exc:
+        traceback.print_exc(file=sys.stderr)
+        state = 0
+    output = doc["console"].value
+
+    print('<completed in %6.2f ms>' % ((time.perf_counter() - t0) * 1000.0))
+    return state
 
 def test_next():
     global script_num,failed
@@ -54,7 +87,7 @@ def test_next():
         option = doc['files'].options[script_num]
         src = open(option.value).read()
         doc['files'].selectedIndex = script_num
-        editor.setValue(src)
+        editor.editor.setValue(src)
         state = run(in_globals=True)
         if state == 0:
             failed.append(option.text)
@@ -78,20 +111,21 @@ def set_debug(ev):
         __BRYTHON__.debug = 0
 
 __BRYTHON__.debug = int(doc['set_debug'].checked)
+
 # bindings
 doc['test_all'].bind('click',test_all)
 doc['set_debug'].bind('change',set_debug)
 
-# next functions are defined in editor.py
-doc['show_js'].bind('click',show_js)
-doc['run'].bind('click',lambda ev:run(False))
-doc['show_console'].bind('click',show_console)
-doc['files'].bind('change',load_script)
+doc['show_js'].bind('click',editor.show_js)
+doc['run'].bind('click',lambda ev:run())
+doc['show_console'].bind('click',editor.show_console)
+doc['files'].bind('change',editor.load_script)
 </script>
+
 <script type="text/python3">
+from browser import document as doc
 import header
 qs_lang,language = header.show('../')
-
 # other translations
 
 trans = {
@@ -103,13 +137,14 @@ trans = {
     'clear':{'en':'clear','es':'borrar','fr':'effacer'}
 }
 
+
 for key in trans:
     if key in doc:
         doc[key].html = trans[key][language]
-
 </script>
 
 </head>
+
 <body onload="brython({debug:1, cache:'none', static_stdlib_import:true})">
 
 <table id="banner" cellpadding=0 cellspacing=0>
@@ -188,7 +223,7 @@ Test:
 </div>
 
 <div style="width:100%;height:100%;">
-<textarea id="console"></textarea>
+<textarea id="console" autocomplete="off"></textarea>
 </div>
 
 </div>
