@@ -56,7 +56,7 @@ catch(err){return false}})
 __BRYTHON__.implementation=[3,1,0,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-02-20 21:51:16.031000"
+__BRYTHON__.compiled_date="2015-02-20 22:34:50.202000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -891,8 +891,7 @@ return 2
 this.to_js=function(){var tok=this.token
 if(tok==='elif'){tok='else if'}
 var res=tok+'(bool('
-if(tok=='while'){
-res +='$locals["$no_break'+this.loop_num+'"] && '
+if(tok=='while'){res +='$locals["$no_break'+this.loop_num+'"] && '
 }
 if(this.tree.length==1){res +=$to_js(this.tree)+'))'
 }else{
@@ -925,8 +924,6 @@ var obj=children[func_rank].C.tree[0]
 var callable=children[func_rank].C
 var tail=''
 var scope=$get_scope(this)
-if(obj.name===undefined){console.log("bizarre pour "+obj+" rank "+rank+" func_rank "+func_rank+" line "+children[func_rank].C.type)
-}
 var ref='$locals["'+obj.name+'"]'
 var res=ref+'='
 var _blocking_flag=false
@@ -1532,8 +1529,7 @@ var _sn=scope.ntype
 if('def'==_sn ||'class'==_sn ||'module'==_sn){res +='\nvar '
 }
 var alias=this.aliases[this.names[i]]||this.names[i]
-res +=alias
-res +='=$locals["'+alias+'"]'
+res +=alias + '=$locals["'+alias+'"]'
 res +='=$B.imported["'+qname+'"];\n'
 }}else{var mod_name=this.module.substr(nbdots)
 if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
@@ -1998,8 +1994,7 @@ this.type='node_js'
 this.tree=[js]
 this.toString=function(){return 'js '+js}
 this.to_js=function(){return js}}
-function $NonlocalCtx(C){
-this.type='global'
+function $NonlocalCtx(C){this.type='global'
 this.parent=C
 this.tree=[]
 C.tree.push(this)
@@ -2346,9 +2341,6 @@ case 'finally':
 case 'single_kw':
 break
 default:
-console.log('next ctx '+next_ctx+' '+node.parent.children[rank+1].C)
-for(var i=0;i<node.parent.children.length;i++){console.log('child '+i+': '+node.parent.children[i].C)
-}
 $_SyntaxError(C,"missing clause after 'try' 2")
 }}
 var scope=$get_scope(this)
@@ -3532,8 +3524,7 @@ case '.':
 var expr=new $AbstractExprCtx(C,true)
 return $transition(expr,token,arguments[2])
 case 'op':
-switch(arguments[2]){
-case '*':
+switch(arguments[2]){case '*':
 case '+':
 case '-':
 case '~':
@@ -4296,7 +4287,7 @@ $href_elts.pop()
 if(options.pythonpath!==undefined)$B.path=options.pythonpath
 if(options.re_module !==undefined){if(options.re_module=='pyre' ||options.re_module=='jsre'){$B.$options.re=options.re
 }}
-kk=Object.keys(window)
+var kk=Object.keys(window)
 for(var $i=0;$i<$elts.length;$i++){var $elt=$elts[$i]
 if($elt.type=="text/python"||$elt.type==="text/python3"){var module_name='__main__'+$B.UUID()
 var $src=null

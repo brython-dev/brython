@@ -1358,7 +1358,6 @@ function $ConditionCtx(context,token){
         // so that an optional "else" clause will not be run.
         var res = tok+'(bool('
         if(tok=='while'){
-            //res += '$locals_'+this.scope.id.replace(/\./g,'_')
             res += '$locals["$no_break'+this.loop_num+'"] && '
         }
         if(this.tree.length==1){
@@ -1447,9 +1446,6 @@ function $DecoratorCtx(context){
         var callable = children[func_rank].context
         var tail=''
         var scope = $get_scope(this)
-        if(obj.name===undefined){
-            console.log("bizarre pour "+obj+" rank "+rank+" func_rank "+func_rank+" line "+children[func_rank].context.type)
-        }
         var ref = '$locals["'+obj.name+'"]'
         var res = ref+'='
         var _blocking_flag=false;
@@ -2419,12 +2415,7 @@ function $FromCtx(context){
                         res += '\nvar '
                     }
                     var alias = this.aliases[this.names[i]]||this.names[i]
-                    res += alias
-                    //if(scope.ntype == 'def'){
-                        res += '=$locals["'+alias+'"]'
-                    //}else if(scope.ntype=='module'){
-                    //    res += '=$locals_'+mod.id.replace(/\./g,'_')+'["'+alias+'"]'
-                    //}
+                    res += alias + '=$locals["'+alias+'"]'
                     res += '=$B.imported["'+qname+'"];\n'
                 }
             }else{
@@ -2617,7 +2608,7 @@ function $GlobalCtx(context){
 }
 
 function $check_unbound(assigned,scope,varname){
-    // check if the variable varname in context "assigned" was
+    // Check if the variable varname in context "assigned" was
     // referenced in the scope
     // If so, replace statement by UnboundLocalError
     if(scope.var2node && scope.var2node[varname]){
@@ -2939,10 +2930,7 @@ function $ImportCtx(context){
                     var imp_key = parts.slice(0,j+1).join('.')
                     var obj_attr = ''
                     for(var k=0;k<j+1;k++){obj_attr+='["'+parts[k]+'"]'}
-                    //if(j==parts.length-1){alias = this.tree[i].alias || alias}
                     res += '$locals'+obj_attr+'=$B.imported["'+imp_key+'"];'
-                    //res += 'console.log("keys in '+imp_key+': "+$B.keys($B.imported["'+imp_key+'"]));'
-                    //console.log(res)
                 }
             }else{
                 res += '$locals_'+scope.id+'["'+this.tree[i].alias
@@ -3214,7 +3202,6 @@ function $NodeJSCtx(node,js){ // used for raw JS code
 }
 
 function $NonlocalCtx(context){
-    // for the moment keep this as alias for global 
     this.type = 'global'
     this.parent = context
     this.tree = []
@@ -3732,10 +3719,6 @@ function $TryCtx(context){
               case 'single_kw':
                 break
               default:
-                console.log('next ctx '+next_ctx+' '+node.parent.children[rank+1].context)
-                for(var i=0;i<node.parent.children.length;i++){
-                    console.log('child '+i+': '+node.parent.children[i].context)
-                }
                 $_SyntaxError(context,"missing clause after 'try' 2")
             }
         }
@@ -4960,29 +4943,23 @@ function $transition(context,token){
               return context
             }
           case 'eol':
-            //if(token==='eol' && 
-            //(context.expect ===',' || context.expect==='eol')){
             switch(context.expect) {
               case ',':
               case 'eol':
-                //if (context.expect ===',' || context.expect==='eol'){
                 context.bind_names()
                 return $transition(context.parent,token)
             }
           case 'as':
-            //if (token==='as' && (context.expect ===',' || context.expect==='eol')){
             if (context.expect ===',' || context.expect==='eol'){
                context.expect='alias'
                return context
             }
           case '(':
-            //if (token==='(' && context.expect === 'id') {
             if (context.expect === 'id') {
                context.expect='id'
                return context
             }
           case ')':
-            //if (token===')' && context.expect === ',') {
             if (context.expect === ',') {
                context.expect='eol'
                return context
@@ -4992,7 +4969,6 @@ function $transition(context,token){
       case 'func_arg_id':
         switch(token) {
           case '=':
-          //if(token==='=' && 
             if (context.expect==='='){
                context.parent.has_default = true
                return new $AbstractExprCtx(context,false)
@@ -5000,7 +4976,6 @@ function $transition(context,token){
             break
           case ',':
           case ')':
-            //if(token===',' || token===')'){
             if(context.parent.has_default && context.tree.length==0){
                 $pos -= context.name.length
                 $_SyntaxError(context,['non-default argument follows default argument'])
@@ -5012,7 +4987,6 @@ function $transition(context,token){
       case 'func_args':
         switch (token) {
            case 'id':
-             //if(token==='id' && 
              if (context.expect==='id'){
                 context.expect = ','
                 if(context.names.indexOf(arguments[2])>-1){
@@ -5021,7 +4995,6 @@ function $transition(context,token){
              }
              return new $FuncArgIdCtx(context,arguments[2])
            case ',':
-             //if(token===','){
              if(context.has_kw_arg) $_SyntaxError(context,'duplicate kw arg')
              if(context.expect===','){
                 context.expect = 'id'
@@ -5029,10 +5002,8 @@ function $transition(context,token){
              }
              $_SyntaxError(context,'token '+token+' after '+context)
            case ')':
-             //if(token===')') 
              return context.parent
            case 'op':
-             //if(token==='op'){
              var op = arguments[2]
              context.expect = ','
              if(op=='*'){
@@ -5046,7 +5017,6 @@ function $transition(context,token){
       case 'func_star_arg':
         switch(token) {
           case 'id':
-            //if(token==='id' &&
             if (context.name===undefined){
                if(context.parent.names.indexOf(arguments[2])>-1){
                  $_SyntaxError(context,['duplicate argument '+arguments[2]+' in function definition'])
@@ -5056,7 +5026,6 @@ function $transition(context,token){
             context.parent.names.push(arguments[2])
             return context.parent
           case ',':
-            //if(token==',' && 
             if (context.name===undefined){
                // anonymous star arg - found in configparser
                context.set_name('$dummy')
@@ -5065,7 +5034,6 @@ function $transition(context,token){
             }
             break
           case ')':
-            //if(token==')'){
             // anonymous star arg - found in configparser
             context.set_name('$dummy')
             context.parent.names.push('$dummy')
@@ -5075,7 +5043,6 @@ function $transition(context,token){
       case 'global':
         switch(token) {
           case 'id':
-            //if(token==='id' && 
             if (context.expect==='id'){
                new $IdCtx(context,arguments[2])
                context.add(arguments[2])
@@ -5084,14 +5051,12 @@ function $transition(context,token){
             }
             break
           case ',': 
-            //if(token===',' && 
             if (context.expect===','){
                context.expect='id'
                return context
             }
             break
           case 'eol':
-            //if(token==='eol' && 
             if (context.expect===','){
                return $transition(context.parent,token)
             }
@@ -5121,7 +5086,6 @@ function $transition(context,token){
       case 'import':
         switch(token) {
           case 'id':
-            //if(token==='id' && 
             if (context.expect==='id'){
                new $ImportedModuleCtx(context,arguments[2])
                context.expect=','
@@ -5136,19 +5100,16 @@ function $transition(context,token){
             if (context.expect==='alias'){
                context.expect = ','
                context.tree[context.tree.length-1].alias = arguments[2]
-               //var mod_name=context.tree[context.tree.length-1].name;
                return context
             }
             break
           case '.':
-            //}else if(token==='.' && 
             if (context.expect===','){
                context.expect = 'qual'
                return context
             }
             break
           case ',':
-            //}else if(token===',' && 
             if (context.expect===','){
                context.expect = 'id'
                return context
@@ -5162,7 +5123,6 @@ function $transition(context,token){
             }
             break
           case 'eol':
-            //}else if(token==='eol' && 
             if (context.expect===','){
                context.bind_names()
                return $transition(context.parent,token)
@@ -5185,7 +5145,6 @@ function $transition(context,token){
           case '{':
           case 'not':
           case 'lamdba':
-            //if($expr_starters.indexOf(token)>-1){
             $_SyntaxError(context,'token '+token+' after '+context)
         }
         return $transition(context.parent,token,arguments[2])
@@ -5217,7 +5176,6 @@ function $transition(context,token){
                switch(context.real) {
                   case 'tuple':
                   case 'gen_expr':
-                    //if((context.real==='tuple'||context.real==='gen_expr')
                     if (token===')'){
                        context.closed = true
                        if(context.real==='gen_expr'){context.intervals.push($pos)}
@@ -5226,7 +5184,6 @@ function $transition(context,token){
                     break
                   case 'list':
                   case 'list_comp':
-                    //}else if((context.real==='list'||context.real==='list_comp')
                     if (token===']'){
                        context.closed = true
                        if(context.real==='list_comp'){context.intervals.push($pos)}
@@ -5234,7 +5191,6 @@ function $transition(context,token){
                     }
                     break
                   case 'dict_or_set_comp':
-                    //}else if(context.real==='dict_or_set_comp' && 
                     if (token==='}'){
                        context.intervals.push($pos)
                        return $transition(context.parent,token)
@@ -5244,12 +5200,10 @@ function $transition(context,token){
 
                switch(token) {
                  case ',':
-                   //}else if(token===','){
                    if(context.real==='tuple'){context.has_comma=true}
                    context.expect = 'id'
                    return context
                  case 'for':
-                   //}else if(token==='for'){
                    // comprehension
                    if(context.real==='list'){context.real = 'list_comp'}
                    else{context.real='gen_expr'}
@@ -5266,7 +5220,6 @@ function $transition(context,token){
             }else if(context.expect==='id'){
                switch(context.real) {
                  case 'tuple':
-                   //if(context.real==='tuple' && 
                    if (token===')'){
                       context.closed = true
                       return context.parent
@@ -5277,14 +5230,12 @@ function $transition(context,token){
                    }
                    break
                  case 'gen_expr':
-                   //}else if(context.real==='gen_expr' && 
                    if (token===')'){
                       context.closed = true
                       return $transition(context.parent,token)
                    }
                    break
                  case 'list':
-                   //}else if(context.real==='list'&& 
                    if (token===']'){
                       context.closed = true
                       return context
@@ -5294,7 +5245,6 @@ function $transition(context,token){
 
                switch(token) {
                  case '=':
-                   //if(token=='=' && 
                    if (context.real=='tuple' && context.implicit===true){
                       context.closed = true
                       context.parent.tree.pop()
@@ -5310,7 +5260,6 @@ function $transition(context,token){
                  case ',':
                    $_SyntaxError(context,'unexpected comma inside list')
                  default:
-                   //}else if(token !==')'&&token!==']'&&token!==','){
                    context.expect = ','
                    var expr = new $AbstractExprCtx(context,false)
                    return $transition(expr,token,arguments[2])
@@ -5321,13 +5270,10 @@ function $transition(context,token){
       case 'list_comp':
         switch(token) {
           case ']':
-            //if(token===']') 
             return context.parent
           case 'in':
-            //if(token==='in') 
             return new $ExprCtx(context,'iterable',true)
           case 'if':
-            //if(token==='if') 
             return new $ExprCtx(context,'condition',true)
         }
         $_SyntaxError(context,'token '+token+' after '+context)
@@ -5348,9 +5294,7 @@ function $transition(context,token){
             var expr = new $AbstractExprCtx(context,true)
             return $transition(expr,token,arguments[2])
           case 'op':
-            //if(token==="op" && arguments[2]=='*'){
             switch(arguments[2]) {
-              //if (arguments[2]=='*' || '+-~'.search(arguments[2])>-1) {
               case '*':
               case '+':
               case '-':
@@ -5498,7 +5442,6 @@ function $transition(context,token){
             }
             break
           case 'from':       
-            //if(token=='from' && 
             if (context.tree.length>0){
                return new $AbstractExprCtx(context,false)
             }
@@ -5538,16 +5481,12 @@ function $transition(context,token){
           case '{':
           case 'not':
           case 'lamdba':
-            //if($expr_starters.indexOf(token)>-1){
             return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
           case ',':
-            //if(token===',') 
             return $transition(context.parent,token)
           case ')':
-            //if(token===')') 
             return $transition(context.parent,token)
           case ':':
-            //if(token===':' && context.parent.parent.type==='lambda'){
             if(context.parent.parent.type==='lambda'){
               return $transition(context.parent.parent,token)
             }
@@ -5556,13 +5495,10 @@ function $transition(context,token){
       case 'str':
         switch(token) {
           case '[':
-            //if(token==='[') 
             return new $AbstractExprCtx(new $SubCtx(context.parent),false)
           case '(':
-            //if(token==='(') 
             return new $CallCtx(context)
           case 'str':
-            //if(token=='str'){
             context.tree.push(arguments[2])
             return context
         }//switch
@@ -5582,7 +5518,6 @@ function $transition(context,token){
           case '.':
           case 'not':
           case 'lamdba':
-            //if($expr_starters.indexOf(token)>-1){
             var expr = new $AbstractExprCtx(context,false)
             return $transition(expr,token,arguments[2])
           case ']':
@@ -5597,7 +5532,6 @@ function $transition(context,token){
       case 'target_list':
         switch(token) {
           case 'id':
-            //if(token==='id' && context.expect==='id'){
             if(context.expect==='id'){
               context.expect = ','
               new $IdCtx(context,arguments[2])
@@ -5605,17 +5539,14 @@ function $transition(context,token){
             }
           case '(':
           case '[':
-            //}else if((token==='('||token==='[')&&context.expect==='id'){
             if(context.expect==='id'){
               context.expect = ','
               return new $TargetListCtx(context)
             }
           case ')':
           case ']':
-            //}else if((token===')'||token===']')&&context.expect===','){
             if(context.expect===',') return context.parent
           case ',':
-            //}else if(token===',' && context.expect==','){
             if(context.expect==','){
               context.expect='id'
               return context
@@ -5638,7 +5569,6 @@ function $transition(context,token){
           case 'int':
           case 'float':
           case 'imaginary':
-            //if(['int','float','imaginary'].indexOf(token)>-1){
             // replace by real value of integer or float
             // parent of context is a $ExprCtx
             // grand-parent is a $AbstractExprCtx
@@ -5652,7 +5582,6 @@ function $transition(context,token){
             else if(context.op==='~'){value=~value}
             return $transition(context.parent.parent,token,value)
           case 'id':
-            //}else if(token==='id'){
             // replace by x.__neg__(), x.__invert__ or x
             context.parent.parent.tree.pop()
             var expr = new $ExprCtx(context.parent.parent,'call',false)
@@ -5669,8 +5598,6 @@ function $transition(context,token){
             }
             return context.parent
           case 'op':
-            //}else if(token==="op" && '+-'.search(arguments[2])>-1){
-            //if('+-'.search(arguments[2])>-1){
             if ('+' == arguments[2] || '-' == arguments[2]) {
                var op = arguments[2]
                if(context.op===op){context.op='+'}else{context.op='-'}
@@ -5822,7 +5749,6 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                 else if(_s=="\t"){ 
                     // tab : fill until indent is multiple of 8
                     indent++;pos++
-                    //while(indent%8>0){indent++}
                     if(indent%8>0) indent+=8-indent%8
                 }else{break}
             }
@@ -6024,7 +5950,6 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
             break
           case '.':
             // point, ellipsis (...)
-            //if(car=="."){
             if(pos<src.length-1 && /^\d$/.test(src.charAt(pos+1))){
                 // number starting with . : add a 0 before the point
                 var j = pos+1
@@ -6072,8 +5997,6 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
           case '7':
           case '8':
           case '9':
-            // number
-            //if(car.search(/\d/)>-1){
             // digit
             var res = float_pattern1.exec(src.substr(pos))
             if(res){
@@ -6103,7 +6026,6 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
             break
           case '\n':
             // line end
-            //if(car=="\n"){
             lnum++
             if(br_stack.length>0){
                 // implicit line joining inside brackets
@@ -6123,7 +6045,6 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
           case '(':
           case '[':
           case '{':
-            //if(car in br_open){
             br_stack += car
             br_pos[br_stack.length-1] = [context,pos]
             $pos = pos
@@ -6133,7 +6054,6 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
           case ')':
           case ']':
           case '}':
-            //if(car in br_close){
             if(br_stack==""){
                 $_SyntaxError(context,"Unexpected closing bracket")
             } else if(br_close[car]!=br_stack.charAt(br_stack.length-1)){
@@ -6146,7 +6066,6 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
             }
             break
           case '=':
-            //if(car=="="){
             if(src.charAt(pos+1)!="="){
                 $pos = pos
                 context = $transition(context,'=')
@@ -6159,13 +6078,11 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
             break
           case ',':
           case ':': 
-            //if(car in punctuation){
             $pos = pos
             context = $transition(context,car)
             pos++
             break
           case ';':
-            //if(car===";"){ // next instruction
             $transition(context,'eol') // close previous instruction
             // create a new node, at the same level as current's parent
             if(current.context.tree.length===0){
@@ -6209,7 +6126,6 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
           case 'i':
           case 'n':
             // operators
-            //if($first_op_letter.indexOf(car)>-1){
             // find longest match
             var op_match = ""
             for(var op_sign in $operators){
@@ -6229,14 +6145,12 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
             }
             break
           case '\\':
-            //if(car=='\\' && 
             if (src.charAt(pos+1)=='\n'){
               lnum++ 
               pos+=2
               break
             }
           case '@':
-            //if(car=='@'){
             $pos = pos
             context = $transition(context,car)
             pos++
@@ -6303,7 +6217,8 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     $B.$py_src[locals_id]=src
     var root = $tokenize(src,module,locals_id,parent_block_id,line_info)
     root.transform()
-    // add variable $globals
+
+    // Create internal variables
     var js = 'var $B = __BRYTHON__;\n'
     
     js += 'var __builtins__ = _b_ = $B.builtins;\n'
@@ -6433,7 +6348,6 @@ function brython(options){
     $href_elts.pop()
     
     // List of URLs where imported modules should be searched
-    // $B.path = []
     // A list can be provided as attribute of options
     if (options.pythonpath!==undefined) $B.path = options.pythonpath
 
@@ -6448,10 +6362,11 @@ function brython(options){
        }
     }
 
+    // Save initial Javascript namespace
+    var kk = Object.keys(window)
+    
     // Get all scripts with type = text/python or text/python3 and run them
 
-    kk = Object.keys(window)
-    
     for(var $i=0;$i<$elts.length;$i++){
         var $elt = $elts[$i]
         if($elt.type=="text/python"||$elt.type==="text/python3"){
@@ -6532,7 +6447,7 @@ function brython(options){
     }
 
     /* Uncomment to check the names added in global Javascript namespace
-    kk1 = Object.keys(window)
+    var kk1 = Object.keys(window)
     for (var i=0; i < kk1.length; i++){
         if(kk[i]===undefined){
             console.log(kk1[i])
