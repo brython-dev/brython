@@ -361,7 +361,7 @@ function $instance_creator(klass){
     var init_func = null
     try{init_func = _b_.getattr(klass,'__init__')}
     catch(err){$B.$pop_exc()}
-
+    
     if(klass.__bases__.length==1 && klass.__new__==undefined &&
         init_func!==null){
         // most usual case

@@ -5,8 +5,6 @@ eval($B.InjectBuiltins())
 
 _b_.__debug__ = false
 
-
-
 var $ObjectDict = _b_.object.$dict
 
 // maps comparison operator to method names
@@ -268,12 +266,12 @@ delattr.__code__.co_varnames=['object','name']
 
 function dir(obj){
     
-    if(obj===null){
-        // if dir is called without arguments, the parser transforms dir() into
-        // dir(null,module_name)
-        var mod_name=arguments[1]
-        var res = [],$globals = $B.vars[mod_name]
-        for(var attr in $globals){
+    if(obj===undefined){
+        // if dir is called without arguments, use globals
+        var frame = $B.last($B.frames_stack),
+            globals_obj = frame[1][1],
+            res = _b_.list()
+        for(var attr in globals_obj){
             if(attr.charAt(0)=='$' && attr.charAt(1) != '$') {
                 // exclude internal attributes set by Brython
                 continue
@@ -368,39 +366,48 @@ enumerate.__code__.co_varnames=['iterable']
 
 //eval() (built in function)
 function $eval(src, _globals, locals){
-    var is_exec = arguments[3]=='exec', mod_name
-    if($B.exec_stack.length==0){$B.exec_stack=['__main__']}
-    var env = $B.exec_stack[$B.exec_stack.length-1]
-
-    if(is_exec && _globals===undefined){
-        mod_name = env
+    var current_frame = $B.frames_stack[$B.frames_stack.length-1]
+    if(current_frame===undefined){alert('current frame undef pour '+src.substr(0,30))}
+    var current_locals_id = current_frame[0][0]
+    var current_locals_name = current_locals_id.replace(/\./,'_')
+    var current_globals_id = current_frame[1][0]
+    var current_globals_name = current_globals_id.replace(/\./,'_')
+    
+    var is_exec = arguments[3]=='exec', module_name
+    
+    if(_globals===undefined){
+        module_name = current_globals_name
+        eval('var $locals_'+module_name+'=current_frame[1][1]')
     }else{
-        if(_globals===undefined){mod_name="exec-"+$B.UUID()}
-        else{
-            if(_globals.id === undefined){_globals.id = 'exec-'+$B.UUID()}
-            mod_name = _globals.id
-        }
-        $B.$py_module_path[mod_name] = $B.$py_module_path['__main__']
-        $B.vars[mod_name] = {}
-        $B.bound[mod_name] = {}
-        if(_globals!==undefined){
-            var items = _b_.list(_b_.dict.$dict.items(_globals))
-            for(var i=0;i<items.length;i++){
-                $B.vars[mod_name][items[i][0]] = items[i][1]
-                $B.bound[mod_name][items[i][0]] = true
-            }
-        }else{
-            for(var attr in $B.vars[env]){
-                $B.vars[mod_name][attr] = $B.vars[env][attr]
-                $B.bound[mod_name][attr] = true
+        if(_globals.id === undefined){_globals.id = 'exec_'+$B.UUID()}
+        module_name = _globals.id
+        $B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id]
+
+        // Initialise locals object
+        eval('var $locals_'+module_name+'={}')
+
+        // Add names/values defined in _globals
+        var items = _b_.dict.$dict.items(_globals), item
+        while(true){
+            try{
+                item = next(items)
+                eval('$locals_'+module_name+'["'+item[0]+'"] = item[1]')
+            }catch(err){
+                break
             }
         }
     }
-    $B.exec_stack.push(mod_name)
+    if(locals===undefined){
+        local_name = module_name
+    }else{
+        if(locals.id === undefined){locals.id = 'exec_'+$B.UUID()}
+        local_name = locals.id
+    }
+
     try{
-        var root = $B.py2js(src,mod_name,mod_name,'__builtins__')
+        var root = $B.py2js(src,module_name,[module_name],local_name)
         // If the Python function is eval(), not exec(), check that the source
-        // is an expression
+        // is an expression_
         if(!is_exec){
             // last instruction is 'leave frame' ; we must remove it, 
             // otherwise eval() would return None
@@ -408,26 +415,39 @@ function $eval(src, _globals, locals){
             var instr = root.children[root.children.length-1]
             var type = instr.context.tree[0].type
             if (!('expr' == type || 'list_or_tuple' == type)) {
-                console.log('not expression '+instr.context.tree[0])
-                $B.line_info=[1,mod_name]
+                //console.log('not expression '+instr.context.tree[0])
+                $B.line_info=[1,module_name]
                 throw _b_.SyntaxError("eval() argument must be an expression")
             }
         }
-        var res = eval(root.to_js())
-        if(res===undefined){res = _b_.None}
-        if(_globals!==undefined){
-            var set_func = getattr(_globals,'__setitem__')
-            for(var attr in $B.vars[mod_name]){
-               if (attr=='__name__'||attr=='__doc__'||attr == '__file__') continue
-               set_func(attr, $B.vars[mod_name][attr])
+        var js = root.to_js()
+        
+        try{
+            var res = eval(js)
+            if(_globals!==undefined){
+                // Update _globals with the namespace after execution
+                var ns = eval('$locals_'+module_name)
+                var setitem = getattr(_globals,'__setitem__')
+                for(var attr in ns){
+                    setitem(attr, ns[attr])
+                }
             }
+        }catch(err){
+            console.log('error exec '+err)
+            console.log(js)
+            throw err
         }
+        
+        if(res===undefined){res = _b_.None}
         return res
     }finally{
-        $B.exec_stack.pop()
-        $B.leave_frame() // explicitely leave frame
-        delete $B.bound[mod_name], $B.modules[mod_name], $B.imported[mod_name]
-        if(_globals!==undefined){delete $B.vars[mod_name]}
+        /*
+        console.log($B.frames_stack)
+        for(var i=0;i<$B.frames_stack.length;i++){
+            var frame = $B.frames_stack[i]
+            console.log('frame '+i+': ['+frame[0][0]+', '+frame[1][0]+']')
+        }
+        */
     }
 }
 $eval.$is_func = true
@@ -500,16 +520,13 @@ function getattr(obj,attr,_default){
       case '__class__':
         // attribute __class__ is set for all Python objects
         // return the factory function
-        //if(attr=='__class__') 
         return klass.$factory
       case '__dict__':
         // attribute __dict__ returns an instance of a subclass of dict
         // defined in py_dict.js
-        //if(attr==='__dict__')
         return $B.obj_dict(obj)
       case '__call__':
         // __call__ on a function returns the function itself
-        //if(attr==='__call__' && 
         if (typeof obj=='function'){
            if(obj.$blocking){
              console.log('calling blocking function '+obj.__name__)
@@ -531,7 +548,6 @@ function getattr(obj,attr,_default){
              return res
            }
         
-        //}else if(attr=='__call__' && 
         } else if (klass===$B.JSObject.$dict && typeof obj.js=='function'){
           return function(){
             var res = obj.js.apply(null,arguments)
@@ -541,7 +557,6 @@ function getattr(obj,attr,_default){
         }
         break
       case '__code__':
-        //if(attr=='__code__' && 
         if (typeof obj=='function') {
            var res = {__class__:$B.$CodeObjectDict,src:obj,
                       name:obj.__name__ || '<module>'
@@ -549,9 +564,7 @@ function getattr(obj,attr,_default){
            if (obj.__code__ !== undefined) {
               for (var attr in obj.__code__) res[attr]=obj.__code__[attr]
            }
-           if($B.vars[obj.__module__]!==undefined){
-              res.filename=$B.vars[obj.__module__].__file__
-           }
+
            return res
         }//if
     }//switch    
@@ -633,13 +646,18 @@ getattr.__code__.co_consts=[]
 getattr.__code__.co_varnames=['value']
 
 //globals() (built in function)
-function globals(module){
-    // the translation engine adds the argument module
+function globals(){
+    // The last item in __BRYTHON__.frames_stack is
+    // [locals_name, locals_obj],[globals_name, globals_obj]
+    var globals_obj = $B.last($B.frames_stack)[1][1]
+
+    // Transform into a Python dictionary
     var res = _b_.dict()
-    var scope = $B.vars[module]
-    var setitem=_b_.dict.$dict.__setitem__
-    for(var name in scope) setitem(res, name, scope[name])
+    for(var name in globals_obj){
+        _b_.dict.$dict.__setitem__(res, name, globals_obj[name])
+    }
     return res
+
 }
 
 globals.__doc__="globals() -> dictionary\n\nReturn the dictionary containing the current scope's global variables."
@@ -701,7 +719,7 @@ function help(obj){
     }
     if(typeof obj=='string'){
       $B.$import("pydoc");
-      var pydoc=$B.vars["pydoc"]
+      var pydoc=$B.imported["pydoc"]
       getattr(getattr(pydoc,"help"),"__call__")(obj)
       return
     }
@@ -884,19 +902,16 @@ len.__code__.co_argcount=2
 len.__code__.co_consts=[]
 len.__code__.co_varnames=['module', 'object']
 
+function locals(){
+    // The last item in __BRYTHON__.frames_stack is
+    // [locals_name, locals_obj],[globals_name, globals_obj]
+    var locals_obj = $B.last($B.frames_stack)[0][1]
 
-// list built in function is defined in py_list
-
-function locals(obj_id,module){
-    // used for locals() ; the translation engine adds the argument obj,
-    // a dictionary mapping local variable names to their values, and the
-    // module name
-    if($B.vars[obj_id]===undefined) return globals(module)
-
+    // Transform into a Python dictionary
     var res = _b_.dict()
-    var scope = $B.vars[obj_id]
-    var setitem=_b_.dict.$dict.__setitem__
-    for(var name in scope) setitem(res, name, scope[name])
+    for(var name in locals_obj){
+        _b_.dict.$dict.__setitem__(res, name, locals_obj[name])
+    }
     return res
 }
 
@@ -2073,9 +2088,9 @@ function frame(pos){
     if(pos===undefined){pos = fs.length-1}
     if(fs.length){
         var _frame = fs[pos]
-        var locals_id = _frame[0]
-        res.f_locals = to_dict($B.vars[locals_id])
-        res.f_globals = to_dict($B.vars[_frame[1]])
+        var locals_id = _frame[0][0]
+        res.f_locals = to_dict(_frame[0][1])
+        res.f_globals = to_dict(_frame[1][1])
         if(__BRYTHON__.debug>0){
             res.f_lineno = __BRYTHON__.line_info[0]
         }else{
@@ -2085,9 +2100,8 @@ function frame(pos){
         else{res.f_back = None}
         res.f_code = {__class__:$B.$CodeObjectDict,
             co_code:None, // XXX fix me
-            co_name: locals_id, // ditto
-            co_filename: ($B.vars[_frame[1]] === undefined ?
-                "<unknown>" : $B.vars[_frame[1]].__name__)
+            co_name: locals_id, // idem
+            co_filename: "<unknown>" // idem
         }
     }
     return res
@@ -2282,8 +2296,6 @@ $B.modules['__builtins__'] = $B.builtins_block
 $B.bound['__builtins__'] = {'__BRYTHON__':true, '$eval':true, '$open': true}
 $B.bound['__builtins__']['BaseException'] = true
 
-$B.vars['__builtins__'] = {}
-
 _b_.__BRYTHON__ = __BRYTHON__
 
 function $make_exc(names,parent){
@@ -2374,7 +2386,7 @@ for(var i=0;i<builtin_names.length;i++){
     $B.bound['__builtins__'][name] = true
     try{
         _b_[name] = eval(name1)
-        $B.vars['__builtins__'][name] = _b_[name]
+        //$B.vars['__builtins__'][name] = _b_[name]
         if(typeof _b_[name]=='function'){
             if(_b_[name].__repr__===undefined){
                 _b_[name].__repr__ = _b_[name].__str__ = (function(x){

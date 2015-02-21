@@ -594,7 +594,7 @@ var $legacy_format = function(val, args, char_mapping) {
         // todo: string value based on flags, type, value
         var flags = {'pad_char': ' '}
         do {
-            func = char_mapping[s[newpos]]
+            var func = char_mapping[s[newpos]]
             try {
                 if (func === undefined) {
                     throw new UnsupportedChar()
@@ -633,7 +633,7 @@ var $legacy_format = function(val, args, char_mapping) {
         } while (true)
     }
     do {
-        newpos = val.indexOf('%', pos)
+        var newpos = val.indexOf('%', pos)
         if (newpos < 0) {
             ret += val.substring(pos)
             break

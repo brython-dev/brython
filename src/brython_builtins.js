@@ -17,6 +17,9 @@ var $href_elts = $href.split('/')
 $href_elts.pop()
 var $script_dir = $B.script_dir = $href_elts.join('/')
 
+// Mapping between a module name and its path (url)
+$B.$py_module_path = {}
+
 // __BRYTHON__.path is the list of paths where Python modules are searched
 $B.path = [$path+'Lib', $script_dir, $path+'Lib/site-packages']
 
@@ -35,24 +38,15 @@ $B.imported = {
     __main__:{__class__:$B.$ModuleDict,__name__:'__main__'}
 }
 
-// Maps a Python block (module, function, class) name to a Javascript object
-// mapping the names defined in this block to their value
+// Distionary used to save the loval variables of a generator
 $B.vars = {}
 
 // Maps block names to a dictionary indexed by names defined as global
 // inside the block
 $B.globals = {}
 
-// Stack of executing scripts
-$B.exec_stack = []
-
 // Frames stack
 $B.frames_stack = []
-
-// At runtime, dictionary mapping a block id to the list 
-// of its parent block id
-$B.rt_parents = {}
-$B.ref_counter = {}
 
 // Python __builtins__
 $B.builtins = {
@@ -76,14 +70,6 @@ $B.language = window.navigator.userLanguage || window.navigator.language
 
 // document charset ; defaults to "utf-8"
 $B.charset = document.characterSet || document.inputEncoding || "utf-8"
-
-$B.date = function(){
-    if(arguments.length===0) return $B.JSObject(new Date())
-    if(arguments.length===1) return $B.JSObject(new Date(arguments[0]))
-    if(arguments.length===7) return $B.JSObject(new Date(arguments[0],
-        arguments[1]-1,arguments[2],arguments[3],
-        arguments[4],arguments[5],arguments[6]))
-}
 
 var has_storage = typeof(Storage)!=="undefined"
 if(has_storage){
