@@ -6,7 +6,12 @@ date = javascript.JSConstructor(window.Date)
 
 #daylight = 0 # fix me.. returns Non zero if DST timezone is defined
 
-_STRUCT_TM_ITEMS = 11
+##############################################
+# Added to pass some tests
+# Are there timezone always in the browser?
+# I'm assuming we don't have always this info
+_STRUCT_TM_ITEMS = 9
+##############################################
 
 def _get_day_of_year(arg):
     ml = [31,28,31,30,31,30,31,31,30,31,30,31]
@@ -74,32 +79,10 @@ def asctime(t = None):
     months = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun',
         7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec'}
     
-    mm = t[1]
-    if mm == 0: mm = 1
-    if -1 > mm > 13: raise ValueError("month out of range")
-    
-    dd = t[2]
-    if dd == 0: dd = 1
-    if -1 > dd > 32: raise ValueError("day of month out of range")
-    
-    hh = t[3]
-    if -1 > hh > 24: raise ValueError("hour out of range")
-    
-    minu = t[4]
-    if -1 > minu > 60: raise ValueError("minute out of range")
-    
-    ss = t[5]
-    if -1 > ss > 62: raise ValueError("seconds out of range")
-    
-    wd = t[6] % 7
-    if wd < -2: raise ValueError("day of week out of range")
-    
-    dy = t[7]
-    if dy == 0: dd = 1
-    if -1 > dd > 367: raise ValueError("day of year out of range")
+    t = _check_struct_time(t)
     
     result = "%s %s %2d %02d:%02d:%02d %d" % (
-        weekdays[wd], months[mm], dd, hh, mm, ss, t[0])
+        weekdays[t[6]], months[t[1]], t[2], t[3], t[4], t[5], t[0])
     return result
 
 # All the clock_xx machinery shouldn't work in the browser so some
@@ -192,19 +175,44 @@ def sleep(secs):
     while date().getTime() - start < secs * 1000.:
         pass
 
-def strftime(_format,arg=None):
-    def ns(arg,nb):
+def strftime(_format,t = None):
+    
+    def ns(t,nb):
         # left padding with 0
-        res = str(arg)
+        res = str(t)
         while len(res)<nb:
             res = '0'+res
         return res
 
-    if arg is None:
-        obj = date()
+    if t and isinstance(t, struct_time) and len(t.args) == 9:
+        t = t.args
+    elif t and isinstance(t, tuple) and len(t) == 9:
+        t = t
+    elif t and isinstance(t, struct_time) and len(t.args) != 9:
+        raise TypeError("function takes exactly 9 arguments ({} given)".format(len(t.args)))
+    elif t and isinstance(t, tuple) and len(t) != 9:
+        raise TypeError("function takes exactly 9 arguments ({} given)".format(len(t.args)))
+    elif t and not isinstance(t, (tuple, struct_time)):
+        raise TypeError("Tuple or struct_time argument required")
     else:
-        obj = date(arg[0],arg[1]-1,arg[2],arg[3],arg[4],arg[5],arg[6])
-
+        t = localtime().args
+        
+    t = _check_struct_time(t)
+    
+    YY = ns(t[0],4)
+    yy = ns(t[0],4)[2:]
+    mm = ns(t[1],2)
+    dd = ns(t[2],2)
+    HH = t[3]
+    HH24 = ns(HH,2)
+    HH12 = ns(HH % 12,2)
+    if HH12 == 0:HH12 = 12
+    AMPM = 'AM' if 0 <= HH < 12 else 'PM'
+    MM = ns(t[4],2)
+    SS = ns(t[5],2)
+    DoY = ns(t[7],3)
+    w = t[6] + 1 if t[6] < 6 else 0
+    
     abb_weekdays = ['Su','Mo','Tu','We','Th','Fr','Sa']
     full_weekdays = ['Sunday','Monday','Tuesday','Wednesday',
         'Thursday','Friday','Saturday']
@@ -212,18 +220,25 @@ def strftime(_format,arg=None):
         'Jul','Aug','Sep','Oct','Nov','Dec']
     full_months = ['January','February','March','April','May','June',
         'July','August','September','October','November','December']
+
     res = _format
-    res = res.replace("%H",ns(obj.getHours(),2))
-    res = res.replace("%M",ns(obj.getMinutes(),2))
-    res = res.replace("%S",ns(obj.getSeconds(),2))
-    res = res.replace("%Y",ns(obj.getFullYear(),4))
-    res = res.replace("%y",ns(obj.getFullYear(),4)[2:])
-    res = res.replace("%m",ns(obj.getMonth()+1,2))
-    res = res.replace("%d",ns(obj.getDate(),2))
-    res = res.replace("%a",abb_weekdays[obj.getDay()])
-    res = res.replace("%A",full_weekdays[obj.getDay()])
-    res = res.replace("%b",abb_months[obj.getMonth()])
-    res = res.replace("%B",full_months[obj.getMonth()])
+    #print(HH24, HH12, AMPM, MM, SS, YY, yy, mm, dd)
+    res = res.replace("%H",HH24)
+    res = res.replace("%I",HH12)
+    res = res.replace("%p",AMPM)
+    res = res.replace("%M",MM)
+    res = res.replace("%S",SS)
+    res = res.replace("%Y",YY)
+    res = res.replace("%y",yy)
+    res = res.replace("%m",mm)
+    res = res.replace("%d",dd)
+    res = res.replace("%a",abb_weekdays[w])
+    res = res.replace("%A",full_weekdays[w])
+    res = res.replace("%b",abb_months[int(mm)-1])
+    res = res.replace("%B",full_months[int(mm)-1])
+    res = res.replace("%j", DoY)
+    res = res.replace("%w", w)
+    
     return res
    
 class struct_time:
@@ -284,6 +299,33 @@ class struct_time:
 
     def __str__(self):
         return self.__repr__()
+    
+def _check_struct_time(t):
+    mm = t[1]
+    if mm == 0: mm = 1
+    if -1 > mm > 13: raise ValueError("month out of range")
+    
+    dd = t[2]
+    if dd == 0: dd = 1
+    if -1 > dd > 32: raise ValueError("day of month out of range")
+    
+    hh = t[3]
+    if -1 > hh > 24: raise ValueError("hour out of range")
+    
+    minu = t[4]
+    if -1 > minu > 60: raise ValueError("minute out of range")
+    
+    ss = t[5]
+    if -1 > ss > 62: raise ValueError("seconds out of range")
+    
+    wd = t[6] % 7
+    if wd < -2: raise ValueError("day of week out of range")
+    
+    dy = t[7]
+    if dy == 0: dy = 1
+    if -1 > dy > 367: raise ValueError("day of year out of range")
+    
+    return t[0], mm, dd, hh, minu, ss, wd, dy, t[-1]
 
 
 def to_struct_time(ptuple):

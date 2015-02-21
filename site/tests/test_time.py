@@ -12,7 +12,10 @@ import unittest
 
 # Max year is only limited by the size of C int.
 #SIZEOF_INT = sysconfig.get_config_var('SIZEOF_INT') or 4
+#################################
+# This is used just for unittests
 SIZEOF_INT = 4
+#################################
 
 TIME_MAXYEAR = (1 << 8 * SIZEOF_INT - 1) - 1
 TIME_MINYEAR = -TIME_MAXYEAR - 1
@@ -20,6 +23,7 @@ _PyTime_ROUND_DOWN = 0
 _PyTime_ROUND_UP = 1
 
 
+# Tests that use clock related info have been commented
 class TimeTestCase(unittest.TestCase):
 
     def setUp(self):
