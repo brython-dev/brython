@@ -545,7 +545,6 @@ var $legacy_format = function(val, args, char_mapping) {
         argpos = 0 |0
     }
     var ret = ''
-    //start = performance.now()
     var $get_kwarg_string = function(s) {
         // returns [val, newpos]
         ++pos
@@ -576,7 +575,6 @@ var $legacy_format = function(val, args, char_mapping) {
             val = args
         } else {
             try {
-                //val = args.__class__.__getitem__(argpos)
                 val = args[argpos++]
             }
             catch(err) {
@@ -659,9 +657,6 @@ var $legacy_format = function(val, args, char_mapping) {
         }
         pos = newpos + 1
     } while (pos < length)
-    //end = performance.now()
-    //console.log(val)
-    //console.log(end - start)
     return ret
 }
 
@@ -704,7 +699,6 @@ $StringDict.__repr__ = function(self){
     var qesc = new RegExp("'","g") // to escape single quote
     var res = self.replace(/\n/g,'\\\\n')
     res = "'"+res.replace(qesc,"\\'")+"'"
-    //console.log(res)
     return res
 }
 
@@ -738,15 +732,6 @@ $B.make_rmethods($StringDict)
 var $notimplemented = function(self,other){
     throw NotImplementedError("OPERATOR not implemented for class str")
 }
-/*
-$notimplemented += '' // coerce to string
-for(var $op in $B.$operators){
-    var $opfunc = '__'+$B.$operators[$op]+'__'
-    if(!($opfunc in str)){
-        //eval('$StringDict.'+$opfunc+"="+$notimplemented.replace(/OPERATOR/gm,$op))
-    }
-}
-*/
 
 $StringDict.capitalize = function(self){
     if(self.length==0) return ''
@@ -830,7 +815,6 @@ $StringDict.find = function(self){
         throw _b_.TypeError(
         "slice indices must be integers or None or have an __index__ method")}
     var s = self.substring(start,end)
-    //var escaped = ['[','.','*','+','?','|','(',')','$','^']
     var esc_sub = ''
     for(var i=0, _len_i = sub.length; i < _len_i;i++){
         switch(sub.charAt(i)) {
@@ -844,7 +828,6 @@ $StringDict.find = function(self){
           case ')':
           case '$':
           case '^':
-          //if(escaped.indexOf(sub.charAt(i))>-1){
             esc_sub += '\\'
         }
         esc_sub += sub.charAt(i)
@@ -887,7 +870,6 @@ var $FormattableString=function(format_string) {
        var _out
        if (_i > -1) {
          _out = [p1.slice(0,_i), p1.slice(_i+1)]
-         //var _out = p1.split(':')   // only want to split on first ':'
        } else { _out=[p1]}
   
        var _field=_out[0] || ''
@@ -940,15 +922,12 @@ var $FormattableString=function(format_string) {
 
        var _empty_attribute=false
 
-       //console.log('name', _name)
        var _k
        for (var i=0, _len_i = _name_parts.length; i < _len_i; i++) {
            _k = _name_parts[i][0]
            var _v = _name_parts[i][1]
            var _tail = _name_parts[i][2]
-           //console.log('_v', _v)
            if (_v === '') {_empty_attribute = true}
-           //console.log(_tail)
            if (_tail !== '') {
               throw _b_.ValueError("Only '.' or '[' may follow ']' " +
                                "in format field specifier")
@@ -982,12 +961,10 @@ var $FormattableString=function(format_string) {
           this._kwords[_name].push(_rv)
        }
 
-       //console.log('_rv', _rv)
        return '%(' + id(_rv) + ')s'
     }  // this._prepare
 
     this.format=function() {
-       //console.log('format')
        // same as str.format() and unicode.format in Python 2.6+
 
        var $ns=$B.$MakeArgs('format',arguments,[],[],'args','kwargs')
@@ -1011,7 +988,6 @@ var $FormattableString=function(format_string) {
            var _var = getattr(kwargs, '__getitem__')(_name)
            var _value;
            if (hasattr(_var, 'value')) {
-              //_value = getattr(getattr(kwargs, '__getitem__')(_name), 'value')
               _value = getattr(_var, 'value')
            } else {
              _value=_var
@@ -1054,7 +1030,6 @@ var $FormattableString=function(format_string) {
     }  // this.format
 
     this.format_field=function(value,parts,conv,spec,want_bytes) {
-       //console.log('format_field')
 
        if (want_bytes === undefined) want_bytes = false
 
@@ -1079,20 +1054,14 @@ var $FormattableString=function(format_string) {
        }
 
        value = this.strformat(value, spec)
-       //value=this.strformat.apply(null, [value, spec])
 
-       if (want_bytes) { // && isinstance(value, unicode)) {
-          return value.toString()
-       }
+       if (want_bytes) { return value.toString()}
 
        return value
     }
 
     this.strformat=function(value, format_spec) {
-       //console.log('strformat')
        if (format_spec === undefined) format_spec = ''
-       //console.log(value)
-       //console.log(format_spec)
        if (!isinstance(value,[str,_b_.int]) && hasattr(value, '__format__')) {
           return getattr(value, '__format__')(format_spec)
        }
@@ -1112,8 +1081,6 @@ var $FormattableString=function(format_string) {
        var _is_float = isinstance(value, _b_.float)
        var _is_integer = isinstance(value, _b_.int)
        var _is_numeric = _is_float || _is_integer
-
-       //console.log('match', _match)
 
        if (_prefix != '' && ! _is_numeric) {
           if (_is_numeric) {
@@ -1167,7 +1134,6 @@ var $FormattableString=function(format_string) {
 
        var _zero = false
        if (_width) {
-          //_zero = _width.substring(0,1) == '0'
           _zero = _width.charAt(0) == '0'
           _width = parseInt(_width)
        } else {
@@ -1211,7 +1177,6 @@ var $FormattableString=function(format_string) {
     }
 
     this.field_part=function(literal) {
-       //console.log('field_part')
        if (literal.length == 0) return [['','','']]
 
        var _matches=[]
@@ -1225,7 +1190,6 @@ var $FormattableString=function(format_string) {
        var _lit=literal.charAt(_pos)
        while (_pos < literal.length &&
               _lit !== '[' && _lit !== '.') {
-              //console.log(literal.charAt(_pos))
               arg_name += _lit
               _pos++
               _lit=literal.charAt(_pos)
@@ -1243,7 +1207,6 @@ var $FormattableString=function(format_string) {
        //look for attribute_name and element_index
        while (_pos < literal.length) {
           var car = literal.charAt(_pos)
-          //console.log(_pos, car)
 
           if (car == '[') { // element_index
              _start=_middle=_end=''
@@ -1254,7 +1217,6 @@ var $FormattableString=function(format_string) {
                 _middle += car
                 _pos++
                 car = literal.charAt(_pos)
-                //console.log(car)
              }
 
              _pos++
@@ -1283,7 +1245,6 @@ var $FormattableString=function(format_string) {
                   _matches.push(['.', _middle, ''])
           }
        }
-       //console.log(_matches)
        return _matches
     }
 
@@ -1348,10 +1309,6 @@ $StringDict.isdecimal = function(self) {
 $StringDict.isdigit = function(self) { return /^[0-9]+$/.test(self)}
 
 $StringDict.isidentifier = function(self) {
-  //var keywords=['False', 'None', 'True', 'and', 'as', 'assert', 'break',
-  //   'class', 'continue', 'def', 'del', 'elif', 'else', 'except', 'finally',
-  //   'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda', 'nonlocal',
-  //   'not', 'or', 'pass', 'raise', 'return', 'try', 'while', 'with', 'yield'];
 
   switch(self) {
     case 'False':
@@ -1636,7 +1593,6 @@ $StringDict.split = function(self){
         }
         return res
     }else{
-        //var escaped = ['*','.','[',']','(',')','|','$','^']
         var esc_sep = ''
         for(var i=0, _len_i = sep.length; i < _len_i;i++){
             switch(sep.charAt(i)) {
@@ -1650,7 +1606,6 @@ $StringDict.split = function(self){
               case '|':
               case '$':
               case '^':
-                //if(escaped.indexOf(sep.charAt(i))>-1){esc_sep += '\\'}
                 esc_sep += '\\'
             }
             esc_sep += sep.charAt(i)
