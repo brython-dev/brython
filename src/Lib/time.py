@@ -8,6 +8,40 @@ tzname = tuple(['', ''])
 
 daylight = 0 # fix me.. returns Non zero if DST timezone is defined
 
+def _get_day_of_year(arg):
+    ml = [31,28,31,30,31,30,31,31,30,31,30,31]
+    if arg[0]%4==0:
+        ml[1] += 1
+    i=1
+    yday=0
+    while i<arg[1]:
+        yday += ml[i-1]
+        i += 1
+    yday += arg[2]
+    arg[7] = yday
+    return struct_time(arg)
+
+def asctime(t = None):
+    if t and isinstance(t, struct_time) and len(t.args) == 9:
+        t = t.args
+    elif t and isinstance(t, tuple) and len(t) == 9:
+        t = t
+    elif t and isinstance(t, struct_time) and len(t.args) != 9:
+        raise TypeError("function takes exactly 9 arguments ({} given)".format(len(t.args)))
+    elif t and isinstance(t, tuple) and len(t) != 9:
+        raise TypeError("function takes exactly 9 arguments ({} given)".format(len(t.args)))
+    elif t and not isinstance(t, (tuple, struct_time)):
+        raise TypeError("Tuple or struct_time argument required")
+    else:
+        t = localtime()
+    weekdays = {0: "Mon", 1: "Tue", 2: "Wed", 3: "Thu", 
+                4: "Fri", 5: "Sat", 6: "Sun"}
+    months = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun',
+        7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec'}
+    result = "%s %s %2d %02d:%02d:%02d %4d" % (
+        weekdays[t[6]], months[t[1]], t[2], t[3], t[4], t[5], t[0])
+    return result
+
 def ctime(timestamp=None):
     if timestamp is None:
         timestamp = int(date().getTime()/1000)
@@ -15,13 +49,16 @@ def ctime(timestamp=None):
     d.setUTCSeconds(timestamp)
     return d.toUTCString()
 
-def gmtime(secs):
+def gmtime(secs = None):
     d = date()
     if secs is not None:
        d = date(secs*1000)
-    return struct_time([d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate(),
-           d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds(),
-           d.getUTCDay(), 0, 0])
+    wday = d.getUTCDay() - 1 if d.getUTCDay() - 1 >= 0 else 6
+    tmp = struct_time([d.getUTCFullYear(), 
+        d.getUTCMonth()+1, d.getUTCDate(),
+        d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds(),
+        wday, 0, 0])
+    return _get_day_of_year(tmp.args)
 
 def perf_counter():
     return float(date().getTime()/1000.0)
@@ -36,9 +73,14 @@ def localtime(secs=None):
    jan = date(d.getFullYear(), 0, 1)
    jul = date(d.getFullYear(), 6, 1)
    dst = int(d.getTimezoneOffset() < max(jan.getTimezoneOffset(), jul.getTimezoneOffset()))
-
-   return struct_time([d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(),
-                d.getMinutes(), d.getSeconds(), d.getDay(), 0, dst])
+   wday = d.getDay() - 1 if d.getDay() - 1 >= 0 else 6
+   tmp = struct_time([d.getFullYear(), 
+       d.getMonth()+1, d.getDate(),
+       d.getHours(), d.getMinutes(), d.getSeconds(),
+       wday, 0, dst])
+   return _get_day_of_year(tmp.args)
+   #return struct_time([d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(),
+   #             d.getMinutes(), d.getSeconds(), d.getDay(), 0, dst])
 
 def time():
     return float(date().getTime()/1000)
