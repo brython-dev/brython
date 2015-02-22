@@ -18,7 +18,7 @@ function abs(obj){
     throw _b_.TypeError("Bad operand type for abs(): '"+$B.get_class(obj)+"'")
 }
 
-abs.__doc__='abs(number) -> number\n\nReturn the absolute value of the argument.'
+
 abs.__code__={}
 abs.__code__.co_argcount=1
 abs.__code__.co_consts=[]
@@ -36,7 +36,6 @@ function all(obj){
     }
 }
 
-all.__doc__='all(iterable) -> bool\n\nReturn True if bool(x) is True for all values x in the iterable.\nIf the iterable is empty, return True.'
 all.__code__={}
 all.__code__.co_argcount=1
 all.__code__.co_consts=[]
@@ -53,7 +52,6 @@ function any(obj){
     }
 }
 
-any.__doc__='any(iterable) -> bool\n\nReturn True if bool(x) is True for any x in the iterable.\nIf the iterable is empty, return False.'
 any.__code__={}
 any.__code__.co_argcount=1
 any.__code__.co_consts=[]
@@ -79,7 +77,6 @@ function ascii(obj) {
          .join("");
 }
 
-ascii.__doc__='ascii(object) -> string\n\nAs repr(), return a string containing a printable representation of an\nobject, but escape the non-ASCII characters in the string returned by\nrepr() using \\x, \\u or \\U escapes.  This generates a string similar\nto that returned by repr() in Python 2.'
 ascii.__code__={}
 ascii.__code__.co_argcount=1
 ascii.__code__.co_consts=[]
@@ -118,7 +115,6 @@ function bin(obj) {
     return getattr(obj, '__index__')()
 }
 
-bin.__doc__="bin(number) -> string\n\nReturn the binary representation of an integer.\n\n   >>> bin(2796202)\n   '0b1010101010101010101010'\n"
 bin.__code__={}
 bin.__code__.co_argcount=1
 bin.__code__.co_consts=[]
@@ -164,7 +160,6 @@ bool.__hash__ = function() {
     return 0
 }
 
-bool.__doc__='bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.'
 bool.__code__={}
 bool.__code__.co_argcount=1
 bool.__code__.co_consts=[]
@@ -172,7 +167,6 @@ bool.__code__.co_varnames=['x']
 
 function callable(obj) {return hasattr(obj,'__call__')}
 
-callable.__doc__='callable(object) -> bool\n\nReturn whether the object is callable (i.e., some kind of function).\nNote that classes are callable, as are instances of classes with a\n__call__() method.'
 callable.__code__={}
 callable.__code__.co_argcount=1
 callable.__code__.co_consts=[]
@@ -185,7 +179,6 @@ function chr(i) {
   return String.fromCharCode(i)
 }
 
-chr.__doc__='chr(i) -> Unicode character\n\nReturn a Unicode string of one character with ordinal i; 0 <= i <= 0x10ffff.'
 chr.__code__={}
 chr.__code__.co_argcount=1
 chr.__code__.co_consts=[]
@@ -227,12 +220,10 @@ compile.__class__ = $B.factory
 $B.$CodeObjectDict.$factory = compile
 compile.$dict = $B.$CodeObjectDict
 
-compile.__doc__="compile(source, filename, mode[, flags[, dont_inherit]]) -> code object\n\nCompile the source (a Python module, statement or expression)\ninto a code object that can be executed by exec() or eval().\nThe filename will be used for run-time error messages.\nThe mode must be 'exec' to compile a module, 'single' to compile a\nsingle (interactive) statement, or 'eval' to compile an expression.\nThe flags argument, if present, controls which future statements influence\nthe compilation of the code.\nThe dont_inherit argument, if non-zero, stops the compilation inheriting\nthe effects of any future statements in effect in the code calling\ncompile; if absent or zero these statements do influence the compilation,\nin addition to any features explicitly specified."
 compile.__code__={}
 compile.__code__.co_argcount=3
 compile.__code__.co_consts=[]
 compile.__code__.co_varnames=['source','filename','mode']
-
 
 //function complex is located in py_complex.js
 
@@ -257,7 +248,6 @@ function delattr(obj, attr) {
     getattr(obj,'__delattr__')(attr)
 }
 
-delattr.__doc__="delattr(object, name)\n\nDelete a named attribute on an object; delattr(x, 'y') is equivalent to\n``del x.y''."
 delattr.__code__={}
 delattr.__code__.co_argcount=2
 delattr.__code__.co_consts=[]
@@ -303,7 +293,6 @@ function dir(obj){
     return res
 }
 
-dir.__doc__="dir([object]) -> list of strings\n\nIf called without an argument, return the names in the current scope.\nElse, return an alphabetized list of names comprising (some of) the attributes\nof the given object, and of attributes reachable from it.\nIf the object supplies a method named __dir__, it will be used; otherwise\nthe default dir() logic is used and returns:\n  for a module object: the module's attributes.\n  for a class object:  its attributes, and recursively the attributes\n    of its bases.\n  for any other object: its attributes, its class's attributes, and\n    recursively the attributes of its class's base classes."
 dir.__code__={}
 dir.__code__.co_argcount=1
 dir.__code__.co_consts=[]
@@ -316,7 +305,6 @@ function divmod(x,y) {
    return [klass.__floordiv__(x,y), klass.__mod__(x,y)]
 }
 
-divmod.__doc__='divmod(x, y) -> (div, mod)\n\nReturn the tuple ((x-x%y)/y, x%y).  Invariant: div*y + mod == x.'
 divmod.__code__={}
 divmod.__code__.co_argcount=2
 divmod.__code__.co_consts=[]
@@ -358,7 +346,6 @@ enumerate.__class__ = $B.$factory
 enumerate.$dict = $EnumerateDict
 $EnumerateDict.$factory = enumerate
 
-enumerate.__doc__='enumerate(iterable[, start]) -> iterator for index, value of iterable\n\nReturn an enumerate object.  iterable must be another object that supports\niteration.  The enumerate object yields pairs containing a count (from\nstart, which defaults to zero) and a value yielded by the iterable argument.\nenumerate is useful for obtaining an indexed list:\n    (0, seq[0]), (1, seq[1]), (2, seq[2]), ...'
 enumerate.__code__={}
 enumerate.__code__.co_argcount=2
 enumerate.__code__.co_consts=[]
@@ -434,23 +421,28 @@ function $eval(src, _globals, locals){
             }
         }catch(err){
             console.log('error exec '+err)
-            console.log(js)
-            throw err
+            throw $B.exception(err)
         }
         
         if(res===undefined){res = _b_.None}
         return res
     }finally{
-        /*
-        console.log($B.frames_stack)
-        for(var i=0;i<$B.frames_stack.length;i++){
-            var frame = $B.frames_stack[i]
-            console.log('frame '+i+': ['+frame[0][0]+', '+frame[1][0]+']')
-        }
-        */
+        // console.log(show_frames())
     }
 }
 $eval.$is_func = true
+
+function show_frames(){
+    //console.log($B.frames_stack)
+    var ch = ''
+    for(var i=0;i<$B.frames_stack.length;i++){
+        var frame = $B.frames_stack[i]
+        ch += '['+frame[0][0]
+        if($B.debug>0){ch += ' line '+frame[0][2]}
+        ch += ', '+frame[1][0]+'] '
+    }
+    return ch
+}
 
 function exec(src, globals, locals){
     return $eval(src, globals, locals,'exec') || _b_.None
@@ -486,7 +478,6 @@ function filter(){
     }
 }
 
-filter.__doc__='filter(function or None, iterable) --> filter object\n\nReturn an iterator yielding those items of iterable for which function(item)\nis true. If function is None, return the items that are true.'
 filter.__code__={}
 filter.__code__.co_argcount=2
 filter.__code__.co_consts=[]
@@ -499,7 +490,6 @@ function format(value, format_spec) {
   throw _b_.NotImplementedError("__format__ is not implemented for object '" + _b_.str(value) + "'")
 }
 
-format.__doc__='format(value[, format_spec]) -> string\n\nReturns value.__format__(format_spec)\nformat_spec defaults to ""'
 format.__code__={}
 format.__code__.co_argcount=2
 format.__code__.co_consts=[]
@@ -517,14 +507,6 @@ function getattr(obj,attr,_default){
     }
     
     switch(attr) {
-      case '__class__':
-        // attribute __class__ is set for all Python objects
-        // return the factory function
-        return klass.$factory
-      case '__dict__':
-        // attribute __dict__ returns an instance of a subclass of dict
-        // defined in py_dict.js
-        return $B.obj_dict(obj)
       case '__call__':
         // __call__ on a function returns the function itself
         if (typeof obj=='function'){
@@ -556,6 +538,10 @@ function getattr(obj,attr,_default){
           }
         }
         break
+      case '__class__':
+        // attribute __class__ is set for all Python objects
+        // return the factory function
+        return klass.$factory
       case '__code__':
         if (typeof obj=='function') {
            var res = {__class__:$B.$CodeObjectDict,src:obj,
@@ -567,6 +553,19 @@ function getattr(obj,attr,_default){
 
            return res
         }//if
+      case '__dict__':
+        // attribute __dict__ returns an instance of a subclass of dict
+        // defined in py_dict.js
+        return $B.obj_dict(obj)
+      case '__doc__':
+        // for builtins objects, use $B.builtins_doc
+        for(var i=0;i<builtin_names.length;i++){
+            if(obj===_b_[builtin_names[i]]){
+                  _get_builtins_doc()
+                return $B.builtins_doc[builtin_names[i]]
+            }
+        }
+        break
     }//switch    
 
     if(typeof obj == 'function') {
@@ -639,7 +638,6 @@ function getattr(obj,attr,_default){
     throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")
 }
 
-getattr.__doc__="getattr(object, name[, default]) -> value\n\nGet a named attribute from an object; getattr(x, 'y') is equivalent to x.y.\nWhen a default argument is given, it is returned when the attribute doesn't\nexist; without it, an exception is raised in that case."
 getattr.__code__={}
 getattr.__code__.co_argcount=1
 getattr.__code__.co_consts=[]
@@ -660,7 +658,6 @@ function globals(){
 
 }
 
-globals.__doc__="globals() -> dictionary\n\nReturn the dictionary containing the current scope's global variables."
 globals.__code__={}
 globals.__code__.co_argcount=0
 globals.__code__.co_consts=[]
@@ -672,7 +669,6 @@ function hasattr(obj,attr){
     catch(err){$B.$pop_exc();return false}
 }
 
-hasattr.__doc__='hasattr(object, name) -> bool\n\nReturn whether the object has an attribute with the given name.\n(This is done by calling getattr(object, name) and catching AttributeError.)'
 hasattr.__code__={}
 hasattr.__code__.co_argcount=2
 hasattr.__code__.co_consts=[]
@@ -699,35 +695,52 @@ function hash(obj){
     }
 }
 
-hash.__doc__='hash(object) -> integer\n\nReturn a hash value for the object.  Two objects with the same value have\nthe same hash value.  The reverse is not necessarily true, but likely.'
 hash.__code__={}
 hash.__code__.co_argcount=1
 hash.__code__.co_consts=[]
 hash.__code__.co_varnames=['object']
 
+function _get_builtins_doc(){
+    if($B.builtins_doc===undefined){
+        // Load builtins docstrings from file builtins_doctring.js
+        var url = $B.brython_path
+        if(url.charAt(url.length-1)=='/'){url=url.substr(0,url.length-1)}
+        url += '/builtins_docstrings.js'
+        var f = _b_.open(url)
+        eval(f.$content)          
+        $B.builtins_doc = docs
+    }
+}
 
 function help(obj){
     if (obj === undefined) obj='help'
     
     // if obj is a builtin, lets take a shortcut, and output doc string
     if(typeof obj=='string' && _b_[obj] !== undefined) {
-      var _doc=_b_[obj].__doc__
-      if (_doc !== undefined && _doc != '') {
-         getattr($print,'__call__')(_doc)
-         return
-      }
+        _get_builtins_doc()
+        var _doc=$B.builtins_doc[obj]
+        if (_doc !== undefined && _doc != '') {
+             _b_.print(_doc)
+             return
+        }
+    }
+    // If obj is a built-in object, also use builtins_doc
+    for(var i=0;i<builtin_names.length;i++){
+        if(obj===_b_[builtin_names[i]]){
+              _get_builtins_doc()
+            _b_.print(_doc = $B.builtins_doc[builtin_names[i]])
+        }
     }
     if(typeof obj=='string'){
-      $B.$import("pydoc");
-      var pydoc=$B.imported["pydoc"]
-      getattr(getattr(pydoc,"help"),"__call__")(obj)
-      return
+        $B.$import("pydoc");
+        var pydoc=$B.imported["pydoc"]
+        getattr(getattr(pydoc,"help"),"__call__")(obj)
+        return
     }
     try{return getattr(obj,'__doc__')}
     catch(err){console.log('help err '+err);return ''}
 }
 
-help.__doc__="Define the builtin 'help'.\n    This is a wrapper around pydoc.help (with a twist).\n\n    "
 help.__code__={}
 help.__code__.co_argcount=1
 help.__code__.co_consts=[]
@@ -735,7 +748,6 @@ help.__code__.co_varnames=['object']
 
 function hex(x) { return $builtin_base_convert_helper(x, 16)}
 
-hex.__doc__="hex(number) -> string\n\nReturn the hexadecimal representation of an integer.\n\n   >>> hex(3735928559)\n   '0xdeadbeef'\n"
 hex.__code__={}
 hex.__code__.co_argcount=1
 hex.__code__.co_consts=[]
@@ -748,13 +760,6 @@ function id(obj) {
    // should be deterministic based on string contents
    if (typeof obj == 'string') return getattr(_b_.str(obj), '__hash__')() 
 
-    /*
-   if (hasattr(obj, '__hash__')) {
-     var hash_func = getattr(obj, '__hash__')
-     if(callable(hash_func)){return hash_func()}
-   }
-   */
-
    if (obj.__hash__ === undefined || isinstance(obj, [_b_.set,_b_.list,_b_.dict])) {
       return obj.__hashvalue__=$B.$py_next_hash++
    }
@@ -764,7 +769,6 @@ function id(obj) {
    return null
 }
 
-id.__doc__="id(object) -> integer\n\nReturn the identity of an object.  This is guaranteed to be unique among\nsimultaneously existing objects.  (Hint: it's the object's memory address.)"
 id.__code__={}
 id.__code__.co_argcount=1
 id.__code__.co_consts=[]
@@ -780,7 +784,6 @@ function __import__(mod_name){
    return $B.imported[mod_name]
 }
 
-__import__.__doc__="__import__(name, globals=None, locals=None, fromlist=(), level=0) -> module\n\nImport a module. Because this function is meant for use by the Python\ninterpreter and not for general use it is better to use\nimportlib.import_module() to programmatically import a module.\n\nThe globals argument is only used to determine the context;\nthey are not modified.  The locals argument is unused.  The fromlist\nshould be a list of names to emulate ``from name import ...'', or an\nempty list to emulate ``import name''.\nWhen importing a module from a package, note that __import__('A.B', ...)\nreturns package A when fromlist is empty, but its submodule B when\nfromlist is not empty.  Level is used to determine whether to perform \nabsolute or relative imports. 0 is absolute while a positive number\nis the number of parent directories to search relative to the current module."
 __import__.__code__={}
 __import__.__code__.co_argcount=5
 __import__.__code__.co_consts=[]
@@ -789,7 +792,6 @@ __import__.__code__.co_varnames=['name','globals','locals','fromlist','level']
 //not a direct alias of prompt: input has no default value
 function input(src) {return prompt(src)}
 
-input.__doc__='input([prompt]) -> string\n\nRead a string from standard input.  The trailing newline is stripped.\nIf the user hits EOF (Unix: Ctl-D, Windows: Ctl-Z+Return), raise EOFError.\nOn Unix, GNU readline is used if enabled.  The prompt string, if given,\nis printed without a trailing newline before reading.'
 input.__code__={}
 input.__code__.co_argcount=1
 input.__code__.co_consts=[]
@@ -840,7 +842,6 @@ function isinstance(obj,arg){
     return obj.constructor===arg
 }
 
-isinstance.__doc__="isinstance(object, class-or-type-or-tuple) -> bool\n\nReturn whether an object is an instance of a class or of a subclass thereof.\nWith a type as second argument, return whether that is the object's type.\nThe form using a tuple, isinstance(x, (A, B, ...)), is a shortcut for\nisinstance(x, A) or isinstance(x, B) or ... (etc.)."
 isinstance.__code__={}
 isinstance.__code__.co_argcount=2
 isinstance.__code__.co_consts=[]
@@ -867,7 +868,6 @@ function issubclass(klass,classinfo){
     throw _b_.TypeError("issubclass() arg 2 must be a class or tuple of classes")
 }
 
-issubclass.__doc__='issubclass(C, B) -> bool\n\nReturn whether class C is a subclass (i.e., a derived class) of class B.\nWhen using a tuple as the second argument issubclass(X, (A, B, ...)),\nis a shortcut for issubclass(X, A) or issubclass(X, B) or ... (etc.).'
 issubclass.__code__={}
 issubclass.__code__.co_argcount=2
 issubclass.__code__.co_consts=[]
@@ -882,7 +882,6 @@ function iter(obj){
     }
 }
 
-iter.__doc__='iter(iterable) -> iterator\niter(callable, sentinel) -> iterator\n\nGet an iterator from an object.  In the first form, the argument must\nsupply its own iterator, or be a sequence.\nIn the second form, the callable is called until it returns the sentinel.'
 iter.__code__={}
 iter.__code__.co_argcount=1
 iter.__code__.co_consts=[]
@@ -896,7 +895,6 @@ function len(obj){
     }
 }
 
-len.__doc__='len(module, object)\n\nReturn the number of items of a sequence or mapping.'
 len.__code__={}
 len.__code__.co_argcount=2
 len.__code__.co_consts=[]
@@ -915,7 +913,6 @@ function locals(){
     return res
 }
 
-locals.__doc__="locals() -> dictionary\n\nUpdate and return a dictionary containing the current scope's local variables."
 locals.__code__={}
 locals.__code__.co_argcount=0
 locals.__code__.co_consts=[]
@@ -953,7 +950,6 @@ function map(){
     return obj
 }
 
-map.__doc__='map(func, *iterables) --> map object\n\nMake an iterator that computes the function using arguments from\neach of the iterables.  Stops when the shortest iterable is exhausted.'
 map.__code__={}
 map.__code__.co_argcount=1
 map.__code__.co_consts=[]
@@ -1037,7 +1033,6 @@ function max(){
     return $extreme(args,'__gt__')
 }
 
-max.__doc__='max(iterable[, key=func]) -> value\nmax(a, b, c, ...[, key=func]) -> value\n\nWith a single iterable argument, return its largest item.\nWith two or more arguments, return the largest argument.'
 max.__code__={}
 max.__code__.co_argcount=1
 max.__code__.co_consts=[]
@@ -1054,7 +1049,6 @@ function min(){
     return $extreme(args,'__lt__')
 }
 
-min.__doc__='min(iterable[, key=func]) -> value\nmin(a, b, c, ...[, key=func]) -> value\n\nWith a single iterable argument, return its smallest item.\nWith two or more arguments, return the smallest argument.'
 min.__code__={}
 min.__code__.co_argcount=1
 min.__code__.co_consts=[]
@@ -1067,7 +1061,6 @@ function next(obj){
     throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not an iterator")
 }
 
-next.__doc__='next(iterator[, default])\n\nReturn the next item from the iterator. If default is given and the iterator\nis exhausted, it is returned instead of raising StopIteration.'
 next.__code__={}
 next.__code__.co_argcount=1
 next.__code__.co_consts=[]
@@ -1084,7 +1077,6 @@ function $not(obj){return !bool(obj)}
 
 function oct(x) {return $builtin_base_convert_helper(x, 8)}
 
-oct.__doc__="oct(number) -> string\n\nReturn the octal representation of an integer.\n\n   >>> oct(342391)\n   '0o1234567'\n"
 oct.__code__={}
 oct.__code__.co_argcount=1
 oct.__code__.co_consts=[]
@@ -1097,7 +1089,6 @@ function ord(c) {
     return c.charCodeAt(0)     // <= strobj.charCodeAt(index)
 }
 
-ord.__doc__='ord(c) -> integer\n\nReturn the integer ordinal of a one-character string.'
 ord.__code__={}
 ord.__code__.co_argcount=1
 ord.__code__.co_consts=[]
@@ -1143,7 +1134,6 @@ function pow() {
     }
 }
 
-pow.__doc__='pow(x, y[, z]) -> number\n\nWith two arguments, equivalent to x**y.  With three arguments,\nequivalent to (x**y) % z, but may be more efficient (e.g. for ints).'
 pow.__code__={}
 pow.__code__.co_argcount=2
 pow.__code__.co_consts=[]
@@ -1204,7 +1194,6 @@ function property(fget, fset, fdel, doc) {
 property.__class__ = $B.$factory
 property.$dict = $PropertyDict
 
-property.__doc__='property(fget=None, fset=None, fdel=None, doc=None) -> property attribute\n\nfget is a function to be used for getting an attribute value, and likewise\nfset is a function for setting, and fdel a function for del\'ing, an\nattribute.  Typical use is to define a managed attribute x:\n\nclass C(object):\n    def getx(self): return self._x\n    def setx(self, value): self._x = value\n    def delx(self): del self._x\n    x = property(getx, setx, delx, "I\'m the \'x\' property.")\n\nDecorators make defining new properties or modifying existing ones easy:\n\nclass C(object):\n    @property\n    def x(self):\n        "I am the \'x\' property."\n        return self._x\n    @x.setter\n    def x(self, value):\n        self._x = value\n    @x.deleter\n    def x(self):\n        del self._x\n'
 property.__code__={}
 property.__code__.co_argcount=4
 property.__code__.co_consts=[]
@@ -1325,7 +1314,6 @@ range.__class__ = $B.$factory
 range.$dict = $RangeDict
 $RangeDict.$factory = range
 
-range.__doc__='range(stop) -> range object\nrange(start, stop[, step]) -> range object\n\nReturn a virtual sequence of numbers from start to stop by step.'
 range.__code__={}
 range.__code__.co_argcount=1
 range.__code__.co_consts=[]
@@ -1338,7 +1326,6 @@ function repr(obj){
     throw _b_.AttributeError("object has no attribute __repr__")
 }
 
-repr.__doc__='repr(object) -> string\n\nReturn the canonical string representation of the object.\nFor most object types, eval(repr(object)) == object.'
 repr.__code__={}
 repr.__code__.co_argcount=1
 repr.__code__.co_consts=[]
@@ -1381,7 +1368,6 @@ reversed.__class__=$B.$factory
 reversed.$dict = $ReversedDict
 $ReversedDict.$factory = reversed
 
-reversed.__doc__='reversed(sequence) -> reverse iterator over values of the sequence\n\nReturn a reverse iterator'
 reversed.__code__={}
 reversed.__code__.co_argcount=1
 reversed.__code__.co_consts=[]
@@ -1405,7 +1391,6 @@ function round(arg,n){
     return _b_.int.$dict.__truediv__(Number(Math.round(arg.valueOf()*mult)),mult)
 }
 
-round.__doc__='round(number[, ndigits]) -> number\n\nRound a number to a given precision in decimal digits (default 0 digits).\nThis returns an int when called with one argument, otherwise the\nsame type as the number. ndigits may be negative.'
 round.__code__={}
 round.__code__.co_argcount=1
 round.__code__.co_consts=[]
@@ -1471,7 +1456,6 @@ function setattr(obj,attr,value){
     f(attr,value)
 }
 
-setattr.__doc__="setattr(object, name, value)\n\nSet a named attribute on an object; setattr(x, 'y', v) is equivalent to\n``x.y = v''."
 setattr.__code__={}
 setattr.__code__.co_argcount=3
 setattr.__code__.co_consts=[]
@@ -1543,7 +1527,6 @@ slice.__class__ = $B.$factory
 slice.$dict = $SliceDict
 $SliceDict.$factory = slice
 
-slice.__doc__='slice(stop)\nslice(start, stop[, step])\n\nCreate a slice object.  This is used for extended slicing (e.g. a[0:10:2]).'
 slice.__code__={}
 slice.__code__.co_argcount=3
 slice.__code__.co_consts=[]
@@ -1565,7 +1548,6 @@ function sorted () {
     return obj
 }
 
-sorted.__doc__='sorted(iterable, key=None, reverse=False) --> new sorted list'
 sorted.__code__={}
 sorted.__code__.co_argcount=3
 sorted.__code__.co_consts=[]
@@ -1584,7 +1566,6 @@ staticmethod.__class__=$B.$factory
 staticmethod.$dict = $StaticmethodDict
 $StaticmethodDict.$factory = staticmethod
 
-staticmethod.__doc__='staticmethod(function) -> method\n\nConvert a function to be a static method.\n\nA static method does not receive an implicit first argument.\nTo declare a static method, use this idiom:\n\n     class C:\n     def f(arg1, arg2, ...): ...\n     f = staticmethod(f)\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()).  The instance is ignored except for its class.\n\nStatic methods in Python are similar to those found in Java or C++.\nFor a more advanced concept, see the classmethod builtin.'
 staticmethod.__code__={}
 staticmethod.__code__.co_argcount=1
 staticmethod.__code__.co_consts=[]
@@ -1609,7 +1590,6 @@ function sum(iterable,start){
     return res
 }
 
-sum.__doc__="sum(iterable[, start]) -> value\n\nReturn the sum of an iterable of numbers (NOT strings) plus the value\nof parameter 'start' (which defaults to 0).  When the iterable is\nempty, return start."
 sum.__code__={}
 sum.__code__.co_argcount=2
 sum.__code__.co_consts=[]
@@ -1837,7 +1817,6 @@ zip.__class__=$B.$factory
 zip.$dict = $ZipDict
 $ZipDict.$factory = zip
 
-zip.__doc__='zip(iter1 [,iter2 [...]]) --> zip object\n\nReturn a zip object whose .__next__() method returns a tuple where\nthe i-th element comes from the i-th iterable argument.  The .__next__()\nmethod continues until the shortest iterable in the argument sequence\nis exhausted and then it raises StopIteration.'
 zip.__code__={}
 zip.__code__.co_argcount=1
 zip.__code__.co_consts=[]

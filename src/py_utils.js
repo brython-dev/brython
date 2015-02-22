@@ -299,7 +299,7 @@ $B.$list_comp = function(env){
         eval($js)
         var res = eval('$locals_'+listcomp_name+'["x"+$ix]')
     }
-    catch(err){console.log('error list comp\n'+$js);throw $B.exception(err)}
+    catch(err){throw $B.exception(err)}
     finally{clear(listcomp_name)}
 
     return res
@@ -379,7 +379,7 @@ $B.$gen_expr = function(env){
         $B.line_info)
     var $js = $root.to_js()
   
-    try{eval($js)}catch(err){console.log('error '+err+' in gen expr\n'+$py+'\n'+$js);throw err}
+    eval($js)
     
     var $res1 = eval('$locals_ge'+$ix)["res"+$ix]
 

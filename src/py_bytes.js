@@ -102,7 +102,6 @@ bytearray.__class__=$B.$factory
 bytearray.$dict = $BytearrayDict
 $BytearrayDict.$factory = bytearray
 
-bytearray.__doc__='bytearray(iterable_of_ints) -> bytearray\nbytearray(string, encoding[, errors]) -> bytearray\nbytearray(bytes_or_buffer) -> mutable copy of bytes_or_buffer\nbytearray(int) -> bytes array of size given by the parameter initialized with null bytes\nbytearray() -> empty bytes array\n\nConstruct an mutable bytearray object from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - a bytes or a buffer object\n  - any object implementing the buffer API.\n  - an integer'
 bytearray.__code__={}
 bytearray.__code__.co_argcount=1
 bytearray.__code__.co_consts=[]
@@ -514,7 +513,6 @@ bytes.__class__ = $B.$factory
 bytes.$dict = $BytesDict
 $BytesDict.$factory = bytes
 
-bytes.__doc__='bytes(iterable_of_ints) -> bytes\nbytes(string, encoding[, errors]) -> bytes\nbytes(bytes_or_buffer) -> immutable copy of bytes_or_buffer\nbytes(int) -> bytes object of size given by the parameter initialized with null bytes\nbytes() -> empty bytes object\n\nConstruct an immutable array of bytes from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - any object implementing the buffer API.\n  - an integer'
 bytes.__code__={}
 bytes.__code__.co_argcount=1
 bytes.__code__.co_consts=[]
