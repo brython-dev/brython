@@ -13,7 +13,21 @@ date = javascript.JSConstructor(window.Date)
 _STRUCT_TM_ITEMS = 9
 ##############################################
 
+
+##############################################
+## Helper functions
 def _get_day_of_year(arg):
+    """
+    Get the day position in the year starting from 1
+    
+    Parameters
+    ----------
+    arg : tuple
+    
+    Returns
+    -------
+    int with the correct day of the year starting from 1
+    """
     ml = [31,28,31,30,31,30,31,31,30,31,30,31]
     if arg[0]%4==0:
         ml[1] += 1
@@ -23,10 +37,65 @@ def _get_day_of_year(arg):
         yday += ml[i-1]
         i += 1
     yday += arg[2]
-    arg[7] = yday
-    return struct_time(arg)
+    return yday
+
+def _get_week_of_year(arg):
+    """
+    Get the week position in the year starting from 0. All days in a new 
+    year preceding the first Monday are considered to be in week 0.
+        
+    Parameters
+    ----------
+    arg : tuple
     
+    Returns
+    -------
+    int with the correct iso week (weeks starting on Monday) of the year.
+    """
+    d1 = date(arg[0], arg[1]-1, arg[2])
+    d0 = date(arg[0], 0, 1)
+    firstday = d0.getDay()
+    if firstday == 0 : firstday = 7
+    firstweek = 8 - firstday
+    doy = arg[7]
+    if firstday != 1:
+        doy = doy - firstweek
+    if doy % 7 == 0:
+        week_number = doy // 7
+    else:
+        week_number = doy // 7 + 1
+    return week_number
+    
+def _check_struct_time(t):
+    mm = t[1]
+    if mm == 0: mm = 1
+    if -1 > mm > 13: raise ValueError("month out of range")
+    
+    dd = t[2]
+    if dd == 0: dd = 1
+    if -1 > dd > 32: raise ValueError("day of month out of range")
+    
+    hh = t[3]
+    if -1 > hh > 24: raise ValueError("hour out of range")
+    
+    minu = t[4]
+    if -1 > minu > 60: raise ValueError("minute out of range")
+    
+    ss = t[5]
+    if -1 > ss > 62: raise ValueError("seconds out of range")
+    
+    wd = t[6] % 7
+    if wd < -2: raise ValueError("day of week out of range")
+    
+    dy = t[7]
+    if dy == 0: dy = 1
+    if -1 > dy > 367: raise ValueError("day of year out of range")
+    
+    return t[0], mm, dd, hh, minu, ss, wd, dy, t[-1]
+    
+        
 def _is_dst(secs = None):
+    "Check if data has daylight saving time"
     d = date()
     if secs is not None:
         d = date(secs*1000)
@@ -37,10 +106,8 @@ def _is_dst(secs = None):
     dst = int(d.getTimezoneOffset() < max(abs(jan.getTimezoneOffset()), abs(jul.getTimezoneOffset())))
     return dst
     
-daylight = _is_dst()
-timezone = date().getTimezoneOffset() * 60
-
 def _get_tzname():
+    "check if timezone is available, if not return a tuple of empty str"
     d = date()
     d = d.toTimeString()
     try:
@@ -48,9 +115,7 @@ def _get_tzname():
         return (d, 'NotAvailable')
     except:
         return ('', '')
-
-tzname = _get_tzname()
-
+        
 def _set_altzone():
     d = date()
     jan = date(d.getFullYear(), 0, 1)
@@ -58,10 +123,7 @@ def _set_altzone():
     result = timezone - (jan.getTimezoneOffset() - jul.getTimezoneOffset()) * 60
     return result
     
-altzone = _set_altzone() if daylight else timezone
-
-
-def asctime(t = None):
+def _check_input(t):
     if t and isinstance(t, struct_time) and len(t.args) == 9:
         t = t.args
     elif t and isinstance(t, tuple) and len(t) == 9:
@@ -73,33 +135,31 @@ def asctime(t = None):
     elif t and not isinstance(t, (tuple, struct_time)):
         raise TypeError("Tuple or struct_time argument required")
     else:
-        t = localtime()
+        t = localtime().args
+    return t
+## end of helper functions
+##############################################
+
+##############################################
+## Values depending the timezone of the browser.
+daylight = _is_dst()
+timezone = date().getTimezoneOffset() * 60
+tzname = _get_tzname()
+altzone = _set_altzone() if daylight else timezone
+##############################################
+
+def asctime(t = None):
     weekdays = {0: "Mon", 1: "Tue", 2: "Wed", 3: "Thu", 
                 4: "Fri", 5: "Sat", 6: "Sun"}
     months = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun',
         7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec'}
     
+    t = _check_input(t)
     t = _check_struct_time(t)
     
     result = "%s %s %2d %02d:%02d:%02d %d" % (
         weekdays[t[6]], months[t[1]], t[2], t[3], t[4], t[5], t[0])
     return result
-
-# All the clock_xx machinery shouldn't work in the browser so some
-# NotImplementedErrors or messages are shown
-_clock_msg = """Browser cannot access CPU. See '%s'"""
-def _clock_xx(url):
-    raise NotImplementedError(_clock_msg % url)
-clock = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.clock")
-clock_getres = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.clock_getres")
-clock_gettime = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.clock_gettime")
-clock_settime = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.clock_settime")
-CLOCK_HIGHRES = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_HIGHRES"
-CLOCK_MONOTONIC = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_MONOTONIC"
-CLOCK_MONOTONIC_RAW = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_MONOTONIC_RAW"
-CLOCK_PROCESS_CPUTIME_ID = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_PROCESS_CPUTIME_ID"
-CLOCK_REALTIME = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_REALTIME"
-CLOCK_THREAD_CPUTIME_ID = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_THREAD_CPUTIME_ID"
 
 def ctime(timestamp=None):
     if timestamp is None:
@@ -121,8 +181,6 @@ def ctime(timestamp=None):
         d.getUTCFullYear())
     return result
 
-get_clock_info = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.get_clock_info")
-
 def gmtime(secs = None):
     d = date()
     if secs is not None:
@@ -132,7 +190,8 @@ def gmtime(secs = None):
         d.getUTCMonth()+1, d.getUTCDate(),
         d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds(),
         wday, 0, 0])
-    return _get_day_of_year(tmp.args)
+    tmp.args[7] = _get_day_of_year(tmp.args)
+    return tmp
 
 def localtime(secs = None):
    d = date()
@@ -144,9 +203,8 @@ def localtime(secs = None):
        d.getMonth()+1, d.getDate(),
        d.getHours(), d.getMinutes(), d.getSeconds(),
        wday, 0, dst])
-   return _get_day_of_year(tmp.args)
-   #return struct_time([d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(),
-   #             d.getMinutes(), d.getSeconds(), d.getDay(), 0, dst])
+   tmp.args[7] = _get_day_of_year(tmp.args)
+   return tmp
 
 def mktime(t):
     if isinstance(t, struct_time):
@@ -165,8 +223,6 @@ def monotonic():
 def perf_counter():
     return float(date().getTime()/1000.0)
 
-process_time = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.process_time")
-
 def time():
     return float(date().getTime()/1000)
 
@@ -184,19 +240,7 @@ def strftime(_format,t = None):
             res = '0'+res
         return res
 
-    if t and isinstance(t, struct_time) and len(t.args) == 9:
-        t = t.args
-    elif t and isinstance(t, tuple) and len(t) == 9:
-        t = t
-    elif t and isinstance(t, struct_time) and len(t.args) != 9:
-        raise TypeError("function takes exactly 9 arguments ({} given)".format(len(t.args)))
-    elif t and isinstance(t, tuple) and len(t) != 9:
-        raise TypeError("function takes exactly 9 arguments ({} given)".format(len(t.args)))
-    elif t and not isinstance(t, (tuple, struct_time)):
-        raise TypeError("Tuple or struct_time argument required")
-    else:
-        t = localtime().args
-        
+    t = _check_input(t)   
     t = _check_struct_time(t)
     
     YY = ns(t[0],4)
@@ -212,8 +256,9 @@ def strftime(_format,t = None):
     SS = ns(t[5],2)
     DoY = ns(t[7],3)
     w = t[6] + 1 if t[6] < 6 else 0
+    W = ns(_get_week_of_year(t),2)
     
-    abb_weekdays = ['Su','Mo','Tu','We','Th','Fr','Sa']
+    abb_weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
     full_weekdays = ['Sunday','Monday','Tuesday','Wednesday',
         'Thursday','Friday','Saturday']
     abb_months = ['Jan','Feb','Mar','Apr','May','Jun',
@@ -222,7 +267,6 @@ def strftime(_format,t = None):
         'July','August','September','October','November','December']
 
     res = _format
-    #print(HH24, HH12, AMPM, MM, SS, YY, yy, mm, dd)
     res = res.replace("%H",HH24)
     res = res.replace("%I",HH12)
     res = res.replace("%p",AMPM)
@@ -238,6 +282,12 @@ def strftime(_format,t = None):
     res = res.replace("%B",full_months[int(mm)-1])
     res = res.replace("%j", DoY)
     res = res.replace("%w", w)
+    res = res.replace("%W", W)
+    res = res.replace("%x", mm+'/'+dd+'/'+yy)
+    res = res.replace("%X", HH24+':'+MM+':'+SS)
+    res = res.replace("%c", abb_weekdays[w]+' '+abb_months[int(mm)-1]+
+        ' '+dd+' '+HH24+':'+MM+':'+SS+' '+YY)
+    res = res.replace("%%", '%')
     
     return res
    
@@ -299,34 +349,6 @@ class struct_time:
 
     def __str__(self):
         return self.__repr__()
-    
-def _check_struct_time(t):
-    mm = t[1]
-    if mm == 0: mm = 1
-    if -1 > mm > 13: raise ValueError("month out of range")
-    
-    dd = t[2]
-    if dd == 0: dd = 1
-    if -1 > dd > 32: raise ValueError("day of month out of range")
-    
-    hh = t[3]
-    if -1 > hh > 24: raise ValueError("hour out of range")
-    
-    minu = t[4]
-    if -1 > minu > 60: raise ValueError("minute out of range")
-    
-    ss = t[5]
-    if -1 > ss > 62: raise ValueError("seconds out of range")
-    
-    wd = t[6] % 7
-    if wd < -2: raise ValueError("day of week out of range")
-    
-    dy = t[7]
-    if dy == 0: dy = 1
-    if -1 > dy > 367: raise ValueError("day of year out of range")
-    
-    return t[0], mm, dd, hh, minu, ss, wd, dy, t[-1]
-
 
 def to_struct_time(ptuple):
     # Receives a packed tuple, pass its attribute "arg" to struct_time
@@ -350,6 +372,24 @@ def to_struct_time(ptuple):
 def strptime(string, _format):
     import _strptime
     return struct_time([_strptime._strptime_datetime(to_struct_time, string, _format)])
+
+# All the clock_xx machinery shouldn't work in the browser so some
+# NotImplementedErrors or messages are shown
+_clock_msg = """Browser cannot access CPU. See '%s'"""
+def _clock_xx(url):
+    raise NotImplementedError(_clock_msg % url)
+clock = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.clock")
+clock_getres = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.clock_getres")
+clock_gettime = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.clock_gettime")
+clock_settime = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.clock_settime")
+CLOCK_HIGHRES = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_HIGHRES"
+CLOCK_MONOTONIC = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_MONOTONIC"
+CLOCK_MONOTONIC_RAW = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_MONOTONIC_RAW"
+CLOCK_PROCESS_CPUTIME_ID = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_PROCESS_CPUTIME_ID"
+CLOCK_REALTIME = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_REALTIME"
+CLOCK_THREAD_CPUTIME_ID = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_THREAD_CPUTIME_ID"
+get_clock_info = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.get_clock_info")
+process_time = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.process_time")
 
 def tzset():
     raise NotImplementedError()
