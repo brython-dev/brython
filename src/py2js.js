@@ -4120,7 +4120,7 @@ function $add_line_num(node,rank){
         else if(elt.type==='single_kw'){flag=false}
         if(flag){
             // add a trailing None for interactive mode
-            var js='$B.line_info=['+node.line_num+',"'+mod_id+'"];None;'
+            var js='$B.line_info=['+node.line_num+',"'+mod_id+'"];'
             if(node.module===undefined) console.log('tiens, module undef !')
 
             var new_node = new $Node()
@@ -6014,7 +6014,11 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                     }else{
                         context = $transition(context,name)
                     }
-                } else if($operators[name]!==undefined) { // and, or
+                } else if($operators[name]!==undefined 
+                    && $B.forbidden.indexOf(name)==-1) { 
+                    // Names "and", "or"
+                    // The additional test is to exclude the name 
+                    // "constructor"
                     $pos = pos-name.length
                     context = $transition(context,'op',name)
                 } else {
