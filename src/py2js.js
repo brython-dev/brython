@@ -1187,13 +1187,12 @@ function $CallCtx(context){
                           res += (this.tree.length>0 ? $to_js(this.tree) : '')
                           return res + ')'
                       }
-                  }else if($B.bound[scope.id][this.func.value]=='class'){
-                      // simplify code for functions and classes
-                      var res = func_js + '('
+                  }else if($B.bound[scope.id][this.func.value]=='class' ||
+                    $B.bound[scope.id][this.func.value]=='def'){
+                      var res = func_js+'('
                       res += (this.tree.length>0 ? $to_js(this.tree) : '')
                       return res + ')'
                   }
-
                   var res = '('+func_js+'.$is_func ? '
                   res += func_js+' : '
                   res += 'getattr('+func_js+',"__call__"))('
