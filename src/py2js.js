@@ -4,6 +4,44 @@
 
 var js,$pos,res,$op
 
+
+/* 
+Utility functions
+=================
+*/
+
+// Keys of an object
+var keys = $B.keys = function(obj){
+    var res = []
+    for(var attr in obj){res.push(attr)}
+    res.sort()
+    return res
+}
+
+// Return a clone of an object
+var clone = $B.clone = function(obj){
+    var res = new Object()
+    for(var attr in obj){res[attr]=obj[attr]}
+    return res
+}
+
+// Last element in a list
+$B.last = function(table){return table[table.length-1]}
+
+// Convert a list to an object indexed with list values
+$B.list2obj = function(list, value){
+    var res = {}, i = list.length
+    if(value===undefined){value=true}
+    while(i-->0){res[list[i]]=value}
+    return res
+}
+
+/*
+Internal variables
+==================
+*/
+
+// Mapping between operators and special Python method names
 var $operators = {
     "//=":"ifloordiv",">>=":"irshift","<<=":"ilshift",
     "**=":"ipow","**":"pow","//":"floordiv","<<":"lshift",">>":"rshift",
@@ -17,14 +55,18 @@ var $operators = {
     "is":"is","not_in":"not_in","is_not":"is_not" // fake
 }
 
-var $oplist = []
-for(var attr in $operators){$oplist.push(attr)}
+// Mapping between augmented assignment operators and method names 
+var $augmented_assigns = {
+    "//=":"ifloordiv",">>=":"irshift","<<=":"ilshift",
+    "**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv",
+    "%=":"imod",
+    "&=":"iand","|=":"ior","^=":"ixor"
+}
 
-var noassignlist = ['True','False','None','__debug__']
-var noassign = {}
-for(var i=0;i<noassignlist.length;i++){noassign[noassignlist[i]]=true}
+// Names that can't be assigned to
+var noassign = $B.list2obj(['True','False','None','__debug__'])
 
-// operators weight for precedence
+// Operators weight for precedence
 var $op_order = [['or'],['and'],
     ['in','not_in'],
     ['<','<=','>','>=','!=','==','is','is_not'],
@@ -47,27 +89,12 @@ for (var $i=0;$i<$op_order.length;$i++){
     }
     $weight++
 }
- 
-var $augmented_assigns = {
-    "//=":"ifloordiv",">>=":"irshift","<<=":"ilshift",
-    "**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv",
-    "%=":"imod",
-    "&=":"iand","|=":"ior","^=":"ixor"
-}
 
-var keys = $B.keys = function(obj){
-    var res = []
-    for(var attr in obj){res.push(attr)}
-    res.sort()
-    return res
-}
-var clone = $B.clone = function(obj){
-    var res = new Object()
-    for(var attr in obj){res[attr]=obj[attr]}
-    return res
-}
 
-$B.last = function(table){return table[table.length-1]}
+/*
+Function called in case of SyntaxError
+======================================
+*/
 
 function $_SyntaxError(context,msg,indent){
     //console.log('syntax error, context '+context+' msg '+msg)
@@ -78,7 +105,7 @@ function $_SyntaxError(context,msg,indent){
     var line_num = tree_node.line_num
     $B.line_info = [line_num,module]
     if(indent===undefined){
-        if(msg.constructor===Array){$B.$SyntaxError(module,msg[0],$pos)}
+        if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],$pos)}
         if(msg==="Triple string end not found"){
             // add an extra argument : used in interactive mode to
             // prompt for the rest of the triple-quoted string
@@ -88,26 +115,40 @@ function $_SyntaxError(context,msg,indent){
     }else{throw $B.$IndentationError(module,msg,$pos)}
 }
 
-var $first_op_letter = [], $obj={}
-for(var $op in $operators) $obj[$op.charAt(0)]=1
-for(var $attr in $obj) $first_op_letter.push($attr)
+/* 
+Class for Python abstract syntax tree
+=====================================
+
+An instance is created for the whole Python program as the root of the tree
+
+For each instruction in the Python source code, an instance is created
+as a child of the block where it stands : the root for instructions at
+module level, or a function definition, a loop, a condition, etc.
+*/
 
 function $Node(type){
     this.type = type
     this.children=[]
     this.yield_atoms = []
+
     this.add = function(child){
+        // Insert as the last child
         this.children.push(child)
         child.parent = this
         child.module = this.module
     }
+
     this.insert = function(pos,child){
+        // Insert child at position pos
         this.children.splice(pos,0,child)
         child.parent = this
         child.module = this.module
     }
+
     this.toString = function(){return "<object 'Node'>"} 
+
     this.show = function(indent){
+        // For debugging purposes
         var res = ''
         if(this.type==='module'){
             for(var i=0;i<this.children.length;i++){
@@ -130,11 +171,10 @@ function $Node(type){
         }
         return res
     }
-    this.indent_str = function(indent){
-        return ' '.repeat(indent)
-    }
 
     this.to_js = function(indent){
+        // Convert the node into a string with the translation in Javascript
+
         if(this.js!==undefined) return this.js
 
         this.res = []
@@ -150,7 +190,7 @@ function $Node(type){
         indent = indent || 0
         var ctx_js = this.context.to_js()
         if(ctx_js){ // empty for "global x"
-          this.res.push(this.indent_str(indent))
+          this.res.push(' '.repeat(indent))
           this.res.push(ctx_js)
           this.js_index = this.res.length+0
           if(this.children.length>0) this.res.push('{')
@@ -160,7 +200,7 @@ function $Node(type){
              this.children[i].js_index = this.res.length+0
           }
           if(this.children.length>0){
-             this.res.push(this.indent_str(indent))
+             this.res.push(' '.repeat(indent))
              this.res.push('}\n')
           }
         }
@@ -168,22 +208,26 @@ function $Node(type){
         this.js = this.res.join('')
         return this.js
     }
+    
     this.transform = function(rank){
         // Apply transformations to each node recursively
+        // Returns an offset : in case children were inserted by transform(),
+        // we must jump to the next original node, skipping those that have
+        // just been inserted
         
         if(this.yield_atoms.length>0){
             // If the node contains 'yield' atoms, we must split the node into
             // several nodes
-            // The line 'a = yield X' is transformed into 3 lines :
+            // The line 'a = yield X' is transformed into 4 lines :
             //     $yield_value0 = X
             //     yield $yield_value0
             //     $yield_value0 = <value sent to generator > or None
             //     a = $yield_value
 
             // remove original line
-          this.parent.children.splice(rank,1)
-          var offset = 0
-          for(var i=0;i<this.yield_atoms.length;i++){
+            this.parent.children.splice(rank,1)
+            var offset = 0
+            for(var i=0;i<this.yield_atoms.length;i++){
 
                 // create a line to store the yield expression in a
                 // temporary variable
@@ -250,15 +294,43 @@ function $Node(type){
           return ctx_offset
         }
     }
-    this.get_ctx = function(){return this.context}
+
     this.clone = function(){
         var res = new $Node(this.type)
         for(var attr in this){res[attr] = this[attr]}
         return res
     }
+
 }
 
-var $loop_id=0
+/*
+Context classes
+===============
+
+In the parser, for each token found in the source code, a
+new context is created by a call like :
+
+    new_context = $transition(current_context, token_type, token_value)
+
+For each new instruction, an instance of $Node is created ; it receives an
+attribute "context" which is an initial, empty context.
+
+For instance, if the first token is the keyword "assert", the new_context 
+is an instance of class $AssertCtx, in a state where it expects an 
+expression.
+
+Most contexts have an attribute "tree", a list of the elements associated
+with the keyword or the syntax element (eg the arguments in a function 
+definition).
+
+For context that need transforming the Python instruction into several
+Javascript instructions, a method transform(node, rank) is defined. It is
+called by the method transform() on the root node (the top level instance of
+$Node).
+
+Most contexts have a method to_js() that return the Javascript code for
+this context. It is called by the method to_js() of the root node.
+*/
 
 function $AbstractExprCtx(context,with_commas){
     this.type = 'abstract_expr'
@@ -275,6 +347,7 @@ function $AbstractExprCtx(context,with_commas){
 }
 
 function $AssertCtx(context){
+    // Context for keyword "assert"
     this.type = 'assert'
     this.toString = function(){return '(assert) '+this.tree}
     this.parent = context
@@ -305,16 +378,19 @@ function $AssertCtx(context){
 }
 
 function $AssignCtx(context, check_unbound){
-    // context is the left operand of assignment
-    // check_unbound is used to check unbound local variables
-    // This check is done when the AssignCtx object is created, but must be
-    // disabled if a new AssignCtx object is created afterwards by method
-    // transform()
+    /*
+    Context for the assignment operator "="
+    context is the left operand of assignment
+    check_unbound is used to check unbound local variables
+    This check is done when the AssignCtx object is created, but must be
+    disabled if a new AssignCtx object is created afterwards by method
+    transform()
+    */
     
     check_unbound = check_unbound === undefined
     
     this.type = 'assign'
-    // replace parent by this in parent tree
+    // replace parent by "this" in parent tree
     context.parent.tree.pop()
     context.parent.tree.push(this)
     this.parent = context.parent
@@ -357,7 +433,8 @@ function $AssignCtx(context, check_unbound){
             if(noassign[assigned.value]===true){
                 $_SyntaxError(context,["can't assign to keyword"])
             }
-            if(!$B.globals[scope.id] || $B.globals[scope.id][assigned.value]===undefined){
+            if(!$B.globals[scope.id] || 
+                $B.globals[scope.id][assigned.value]===undefined){
                 // A value is going to be assigned to a name
                 // After assignment the name will be bound to the current 
                 // scope
@@ -380,6 +457,7 @@ function $AssignCtx(context, check_unbound){
     }
     
     this.toString = function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
+    
     this.transform = function(node,rank){
         // rank is the rank of this line in node
         var scope =$get_scope(this)
@@ -660,6 +738,7 @@ function $AssignCtx(context, check_unbound){
 }
 
 function $AttrCtx(context){
+    // Class for object attributes (eg "x" in obj.x)
     this.type = 'attribute'
     this.value = context.tree[0]
     this.parent = context
@@ -674,6 +753,7 @@ function $AttrCtx(context){
 }
 
 function $AugmentedAssignCtx(context, op){
+    // Class for augmented assignments such as "+="
     this.type = 'augm_assign'
     this.parent = context.parent
     context.parent.tree.pop()
@@ -703,8 +783,10 @@ function $AugmentedAssignCtx(context, op){
         // remove current node
         parent.children.splice(rank,1)
         
-        var left_is_id = this.tree[0].type=='expr' && this.tree[0].tree[0].type=='id'
-        var right_is_int = this.tree[1].type=='expr' && this.tree[1].tree[0].type=='int'
+        var left_is_id = (this.tree[0].type=='expr' && 
+            this.tree[0].tree[0].type=='id')
+        var right_is_int = (this.tree[1].type=='expr' && 
+            this.tree[1].tree[0].type=='int')
         
         var right = right_is_int ? this.tree[1].tree[0].value : '$temp'
 
@@ -1154,7 +1236,8 @@ function $ClassCtx(context){
         while(parent_block.context && parent_block.context.tree[0].type=='class'){
             parent_block = parent_block.parent
         }
-        while(parent_block.context && ['def','BRgenerator'].indexOf(parent_block.context.tree[0].type)==-1){
+        while(parent_block.context && 
+            ['def','generator'].indexOf(parent_block.context.tree[0].type)==-1){
             parent_block = parent_block.parent
         }
         this.parent.node.parent_block = parent_block
@@ -1338,7 +1421,7 @@ function $ConditionCtx(context,token){
     this.transform = function(node,rank){
         var scope = $get_scope(this)
         if(this.token=="while"){
-            if(scope.ntype=='BRgenerator'){
+            if(scope.ntype=='generator'){
                 this.parent.node.loop_start = this.loop_num
             }
             var new_node = new $Node()
@@ -1519,7 +1602,8 @@ function $DefCtx(context){
     while(parent_block.context && parent_block.context.tree[0].type=='class'){
         parent_block = parent_block.parent
     }
-    while(parent_block.context && ['def','BRgenerator'].indexOf(parent_block.context.tree[0].type)==-1){
+    while(parent_block.context && 
+        ['def','generator'].indexOf(parent_block.context.tree[0].type)==-1){
         parent_block = parent_block.parent
     }
 
@@ -1804,7 +1888,7 @@ function $DefCtx(context){
         for(var i=0;i<node.children.length;i++) def_func_node.add(node.children[i])
 
         var last_instr = node.children[node.children.length-1].context.tree[0]
-        if(last_instr.type!=='return' && this.type!='BRgenerator'){
+        if(last_instr.type!=='return' && this.type!='generator'){
             new_node = new $Node()
             new $NodeJSCtx(new_node,'__BRYTHON__.leave_frame("'+this.id+'");return None;')
             def_func_node.add(new_node)
@@ -1822,7 +1906,7 @@ function $DefCtx(context){
         
         // If function is a generator, add a line to build the generator
         // function, based on the original function
-        if(this.type==='BRgenerator' && !this.declared){
+        if(this.type==='generator' && !this.declared){
 
             var sc = scope
             var env = []
@@ -2130,7 +2214,7 @@ function $ForExpr(context){
 
         var offset = 1
         
-        if($range && scope.ntype!='BRgenerator'){
+        if($range && scope.ntype!='generator'){
             if(this.has_break){
                 // If there is a "break" in the loop, add a boolean
                 // used if there is an "else" clause and in generators
@@ -2285,7 +2369,7 @@ function $ForExpr(context){
         else{js='while(true)'}
         new $NodeJSCtx(while_node,js)
         while_node.context.loop_num = num // used for "else" clauses
-        if(scope.ntype=='BRgenerator'){
+        if(scope.ntype=='generator'){
             // used in generators to signal a loop start
             while_node.loop_start = num
         }
@@ -2933,7 +3017,8 @@ function $ImportCtx(context){
                     res += '$locals'+obj_attr+'=$B.imported["'+imp_key+'"];'
                 }
             }else{
-                res += '$locals_'+scope.id+'["'+this.tree[i].alias
+                res += '$locals_'+scope.id.replace(/\./g,'_')
+                res += '["'+this.tree[i].alias
                 res += '"]=$B.imported["'+this.tree[i].name+'"];'
             }
         }
@@ -3167,7 +3252,7 @@ function $NodeCtx(node){
     while(tree_node.parent && tree_node.parent.type!=='module'){
         var ntype = tree_node.parent.context.tree[0].type
         
-        if(['def', 'class', 'BRgenerator'].indexOf(ntype)>-1){
+        if(['def', 'class', 'generator'].indexOf(ntype)>-1){
             scope = tree_node.parent
             break
         }
@@ -3515,7 +3600,7 @@ function $ReturnCtx(context){ // subscription or slicing
             new $IdCtx(new $ExprCtx(this,'rvalue',false),'None')
         }
         var scope = $get_scope(this)
-        if(scope.ntype=='BRgenerator'){
+        if(scope.ntype=='generator'){
             var res = 'return [$B.generator_return('
             return res + $to_js(this.tree)+')]'
         }
@@ -3939,9 +4024,9 @@ function $YieldCtx(context){
         $_SyntaxError(context,["'return' with argument inside generator"])
     }
     
-    // change type of function to BRgenerator
+    // change type of function to generator
     var def = scope.context.tree[0]
-    def.type = 'BRgenerator'
+    def.type = 'generator'
 
     // add to list of "yields" in function
     def.yields.push(this)
@@ -4103,7 +4188,6 @@ function $get_scope(context){
           case 'def':
           case 'class':
           case 'generator':
-          case 'BRgenerator':
             var scope = tree_node.parent
             scope.ntype = ntype
             scope.elt = scope.context.tree[0]
@@ -5456,7 +5540,7 @@ function $transition(context,token){
         // if 'return' has an agument inside a generator, raise a SyntaxError
         if(!no_args){
             var scope = $get_scope(context)
-            if(scope.ntype=='BRgenerator'){
+            if(scope.ntype=='generator'){
                 $_SyntaxError(context,["'return' with argument inside generator"])
             }
             // If the function is a generator but no 'yield' has been handled
@@ -5930,7 +6014,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                     }else{
                         context = $transition(context,name)
                     }
-                } else if($oplist.indexOf(name)>-1) { // and, or
+                } else if($operators[name]!==undefined) { // and, or
                     $pos = pos-name.length
                     context = $transition(context,'op',name)
                 } else {

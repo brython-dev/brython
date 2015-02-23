@@ -56,30 +56,12 @@ catch(err){return false}})
 __BRYTHON__.implementation=[3,1,0,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-02-22 10:56:20.444000"
+__BRYTHON__.compiled_date="2015-02-23 15:14:06.336000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
 
 ;(function($B){var js,$pos,res,$op
-var $operators={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","**":"pow","//":"floordiv","<<":"lshift",">>":"rshift","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor","+":"add","-":"sub","*":"mul","/":"truediv","%":"mod","&":"and","|":"or","~":"invert","^":"xor","<":"lt",">":"gt","<=":"le",">=":"ge","==":"eq","!=":"ne","or":"or","and":"and","in":"in","is":"is","not_in":"not_in","is_not":"is_not" 
-}
-var $oplist=[]
-for(var attr in $operators){$oplist.push(attr)}
-var noassignlist=['True','False','None','__debug__']
-var noassign={}
-for(var i=0;i<noassignlist.length;i++){noassign[noassignlist[i]]=true}
-var $op_order=[['or'],['and'],['in','not_in'],['<','<=','>','>=','!=','==','is','is_not'],['|','^','&'],['>>','<<'],['+'],['-'],['*'],['/','//','%'],['unary_neg','unary_inv'],['**']
-]
-var $op_weight={}
-var $weight=1
-for(var $i=0;$i<$op_order.length;$i++){var _tmp=$op_order[$i]
-for(var $j=0;$j<_tmp.length;$j++){$op_weight[_tmp[$j]]=$weight
-}
-$weight++
-}
-var $augmented_assigns={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor"
-}
 var keys=$B.keys=function(obj){var res=[]
 for(var attr in obj){res.push(attr)}
 res.sort()
@@ -90,6 +72,25 @@ for(var attr in obj){res[attr]=obj[attr]}
 return res
 }
 $B.last=function(table){return table[table.length-1]}
+$B.list2obj=function(list,value){var res={},i=list.length
+if(value===undefined){value=true}
+while(i-->0){res[list[i]]=value}
+return res
+}
+var $operators={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","**":"pow","//":"floordiv","<<":"lshift",">>":"rshift","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor","+":"add","-":"sub","*":"mul","/":"truediv","%":"mod","&":"and","|":"or","~":"invert","^":"xor","<":"lt",">":"gt","<=":"le",">=":"ge","==":"eq","!=":"ne","or":"or","and":"and","in":"in","is":"is","not_in":"not_in","is_not":"is_not" 
+}
+var $augmented_assigns={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor"
+}
+var noassign=$B.list2obj(['True','False','None','__debug__'])
+var $op_order=[['or'],['and'],['in','not_in'],['<','<=','>','>=','!=','==','is','is_not'],['|','^','&'],['>>','<<'],['+'],['-'],['*'],['/','//','%'],['unary_neg','unary_inv'],['**']
+]
+var $op_weight={}
+var $weight=1
+for(var $i=0;$i<$op_order.length;$i++){var _tmp=$op_order[$i]
+for(var $j=0;$j<_tmp.length;$j++){$op_weight[_tmp[$j]]=$weight
+}
+$weight++
+}
 function $_SyntaxError(C,msg,indent){
 var ctx_node=C
 while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
@@ -97,28 +98,28 @@ var tree_node=ctx_node.node
 var module=tree_node.module
 var line_num=tree_node.line_num
 $B.line_info=[line_num,module]
-if(indent===undefined){if(msg.constructor===Array){$B.$SyntaxError(module,msg[0],$pos)}
+if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],$pos)}
 if(msg==="Triple string end not found"){
 $B.$SyntaxError(module,'invalid syntax : triple string end not found',$pos)
 }
 $B.$SyntaxError(module,'invalid syntax',$pos)
 }else{throw $B.$IndentationError(module,msg,$pos)}}
-var $first_op_letter=[],$obj={}
-for(var $op in $operators)$obj[$op.charAt(0)]=1
-for(var $attr in $obj)$first_op_letter.push($attr)
 function $Node(type){this.type=type
 this.children=[]
 this.yield_atoms=[]
-this.add=function(child){this.children.push(child)
+this.add=function(child){
+this.children.push(child)
 child.parent=this
 child.module=this.module
 }
-this.insert=function(pos,child){this.children.splice(pos,0,child)
+this.insert=function(pos,child){
+this.children.splice(pos,0,child)
 child.parent=this
 child.module=this.module
 }
 this.toString=function(){return "<object 'Node'>"}
-this.show=function(indent){var res=''
+this.show=function(indent){
+var res=''
 if(this.type==='module'){for(var i=0;i<this.children.length;i++){res +=this.children[i].show(indent)
 }
 return res
@@ -135,9 +136,8 @@ res+='}\n'
 }
 return res
 }
-this.indent_str=function(indent){return ' '.repeat(indent)
-}
-this.to_js=function(indent){if(this.js!==undefined)return this.js
+this.to_js=function(indent){
+if(this.js!==undefined)return this.js
 this.res=[]
 this.unbound=[]
 if(this.type==='module'){for(var i=0;i<this.children.length;i++){this.res.push(this.children[i].to_js())
@@ -149,7 +149,7 @@ return this.js
 indent=indent ||0
 var ctx_js=this.C.to_js()
 if(ctx_js){
-this.res.push(this.indent_str(indent))
+this.res.push(' '.repeat(indent))
 this.res.push(ctx_js)
 this.js_index=this.res.length+0
 if(this.children.length>0)this.res.push('{')
@@ -157,7 +157,7 @@ this.res.push('\n')
 for(var i=0;i<this.children.length;i++){this.res.push(this.children[i].to_js(indent+4))
 this.children[i].js_index=this.res.length+0
 }
-if(this.children.length>0){this.res.push(this.indent_str(indent))
+if(this.children.length>0){this.res.push(' '.repeat(indent))
 this.res.push('}\n')
 }}
 this.js=this.res.join('')
@@ -207,12 +207,10 @@ i +=offset
 if(ctx_offset===undefined){ctx_offset=1}
 return ctx_offset
 }}
-this.get_ctx=function(){return this.C}
 this.clone=function(){var res=new $Node(this.type)
 for(var attr in this){res[attr]=this[attr]}
 return res
 }}
-var $loop_id=0
 function $AbstractExprCtx(C,with_commas){this.type='abstract_expr'
 this.with_commas=with_commas
 this.parent=C
@@ -222,7 +220,8 @@ this.toString=function(){return '(abstract_expr '+with_commas+') '+this.tree}
 this.to_js=function(){if(this.type==='list')return '['+$to_js(this.tree)+']'
 return $to_js(this.tree)
 }}
-function $AssertCtx(C){this.type='assert'
+function $AssertCtx(C){
+this.type='assert'
 this.toString=function(){return '(assert) '+this.tree}
 this.parent=C
 this.tree=[]
@@ -268,7 +267,8 @@ $B.bound[scope.id][assigned.value]=true
 }}}else{var assigned=C.tree[0]
 if(assigned && assigned.type=='id'){if(noassign[assigned.value]===true){$_SyntaxError(C,["can't assign to keyword"])
 }
-if(!$B.globals[scope.id]||$B.globals[scope.id][assigned.value]===undefined){
+if(!$B.globals[scope.id]||
+$B.globals[scope.id][assigned.value]===undefined){
 var node=$get_node(this)
 node.bound_before=$B.keys($B.bound[scope.id])
 $B.bound[scope.id][assigned.value]=true
@@ -461,7 +461,8 @@ return res + ','+rvar+');None;'
 }}
 return left.to_js()+'='+right.to_js()
 }}
-function $AttrCtx(C){this.type='attribute'
+function $AttrCtx(C){
+this.type='attribute'
 this.value=C.tree[0]
 this.parent=C
 C.tree.pop()
@@ -471,7 +472,8 @@ this.func='getattr'
 this.toString=function(){return '(attr) '+this.value+'.'+this.name}
 this.to_js=function(){return this.func+'('+this.value.to_js()+',"'+this.name+'")'
 }}
-function $AugmentedAssignCtx(C,op){this.type='augm_assign'
+function $AugmentedAssignCtx(C,op){
+this.type='augm_assign'
 this.parent=C.parent
 C.parent.tree.pop()
 C.parent.tree.push(this)
@@ -487,8 +489,10 @@ this.toString=function(){return '(augm assign) '+this.tree}
 this.transform=function(node,rank){var func='__'+$operators[op]+'__'
 var offset=0,parent=node.parent
 parent.children.splice(rank,1)
-var left_is_id=this.tree[0].type=='expr' && this.tree[0].tree[0].type=='id'
-var right_is_int=this.tree[1].type=='expr' && this.tree[1].tree[0].type=='int'
+var left_is_id=(this.tree[0].type=='expr' && 
+this.tree[0].tree[0].type=='id')
+var right_is_int=(this.tree[1].type=='expr' && 
+this.tree[1].tree[0].type=='int')
 var right=right_is_int ? this.tree[1].tree[0].value : '$temp'
 if(!right_is_int){
 var new_node=new $Node()
@@ -764,7 +768,8 @@ this.parent.node.id=this.id
 var parent_block=scope
 while(parent_block.C && parent_block.C.tree[0].type=='class'){parent_block=parent_block.parent
 }
-while(parent_block.C &&['def','BRgenerator'].indexOf(parent_block.C.tree[0].type)==-1){parent_block=parent_block.parent
+while(parent_block.C && 
+['def','generator'].indexOf(parent_block.C.tree[0].type)==-1){parent_block=parent_block.parent
 }
 this.parent.node.parent_block=parent_block
 $B.bound[this.scope.id][name]='class'
@@ -879,7 +884,7 @@ if(token==='while'){this.loop_num=$loop_num;$loop_num++}
 C.tree.push(this)
 this.toString=function(){return this.token+' '+this.tree}
 this.transform=function(node,rank){var scope=$get_scope(this)
-if(this.token=="while"){if(scope.ntype=='BRgenerator'){this.parent.node.loop_start=this.loop_num
+if(this.token=="while"){if(scope.ntype=='generator'){this.parent.node.loop_start=this.loop_num
 }
 var new_node=new $Node()
 var js='$locals["$no_break'
@@ -960,7 +965,8 @@ var scope=this.scope=$get_scope(this)
 var parent_block=scope
 while(parent_block.C && parent_block.C.tree[0].type=='class'){parent_block=parent_block.parent
 }
-while(parent_block.C &&['def','BRgenerator'].indexOf(parent_block.C.tree[0].type)==-1){parent_block=parent_block.parent
+while(parent_block.C && 
+['def','generator'].indexOf(parent_block.C.tree[0].type)==-1){parent_block=parent_block.parent
 }
 this.parent.node.parent_block=parent_block
 var pb=parent_block
@@ -1132,7 +1138,7 @@ def_func_node.is_def_func=true
 def_func_node.module=this.module
 for(var i=0;i<node.children.length;i++)def_func_node.add(node.children[i])
 var last_instr=node.children[node.children.length-1].C.tree[0]
-if(last_instr.type!=='return' && this.type!='BRgenerator'){new_node=new $Node()
+if(last_instr.type!=='return' && this.type!='generator'){new_node=new $Node()
 new $NodeJSCtx(new_node,'__BRYTHON__.leave_frame("'+this.id+'");return None;')
 def_func_node.add(new_node)
 }
@@ -1142,7 +1148,7 @@ var ret_node=new $Node()
 new $NodeJSCtx(ret_node,')()')
 node.parent.insert(rank+1,ret_node)
 var offset=2
-if(this.type==='BRgenerator' && !this.declared){var sc=scope
+if(this.type==='generator' && !this.declared){var sc=scope
 var env=[]
 while(sc && sc.id!=='__builtins__'){if(sc===scope){env.push('["'+sc.id+'",$locals]'
 )
@@ -1358,7 +1364,7 @@ if(func_name=='range' && call.tree.length<3){$range=call
 var new_nodes=[]
 var children=node.children
 var offset=1
-if($range && scope.ntype!='BRgenerator'){if(this.has_break){
+if($range && scope.ntype!='generator'){if(this.has_break){
 new_node=new $Node()
 var js=local_ns+'["$no_break'+num+'"]=true'
 new $NodeJSCtx(new_node,js)
@@ -1445,7 +1451,7 @@ if(this.has_break){js='while('+local_ns+'["$no_break'+num+'"])'}
 else{js='while(true)'}
 new $NodeJSCtx(while_node,js)
 while_node.C.loop_num=num 
-if(scope.ntype=='BRgenerator'){
+if(scope.ntype=='generator'){
 while_node.loop_start=num
 }
 new_nodes.push(while_node)
@@ -1816,7 +1822,8 @@ for(var j=0;j<parts.length;j++){var imp_key=parts.slice(0,j+1).join('.')
 var obj_attr=''
 for(var k=0;k<j+1;k++){obj_attr+='["'+parts[k]+'"]'}
 res +='$locals'+obj_attr+'=$B.imported["'+imp_key+'"];'
-}}else{res +='$locals_'+scope.id+'["'+this.tree[i].alias
+}}else{res +='$locals_'+scope.id.replace(/\./g,'_')
+res +='["'+this.tree[i].alias
 res +='"]=$B.imported["'+this.tree[i].name+'"];'
 }}
 return res + 'None;'
@@ -1969,7 +1976,7 @@ this.type='node'
 var scope=null
 var tree_node=node
 while(tree_node.parent && tree_node.parent.type!=='module'){var ntype=tree_node.parent.C.tree[0].type
-if(['def','class','BRgenerator'].indexOf(ntype)>-1){scope=tree_node.parent
+if(['def','class','generator'].indexOf(ntype)>-1){scope=tree_node.parent
 break
 }
 tree_node=tree_node.parent
@@ -2205,7 +2212,7 @@ this.tree.pop()
 new $IdCtx(new $ExprCtx(this,'rvalue',false),'None')
 }
 var scope=$get_scope(this)
-if(scope.ntype=='BRgenerator'){var res='return [$B.generator_return('
+if(scope.ntype=='generator'){var res='return [$B.generator_return('
 return res + $to_js(this.tree)+')]'
 }
 return 'var $res = '+$to_js(this.tree)+';__BRYTHON__.leave_frame("'+scope.id+'");return $res'
@@ -2486,7 +2493,7 @@ if(!scope.is_function){$_SyntaxError(C,["'yield' outside function"])
 }else if(scope.has_return_with_arguments){$_SyntaxError(C,["'return' with argument inside generator"])
 }
 var def=scope.C.tree[0]
-def.type='BRgenerator'
+def.type='generator'
 def.yields.push(this)
 this.toString=function(){return '(yield) '+(this.from ? '(from) ' : '')+this.tree}
 this.transform=function(node,rank){if(this.from===true){
@@ -2576,7 +2583,6 @@ while(tree_node.parent && tree_node.parent.type!=='module'){var ntype=tree_node.
 switch(ntype){case 'def':
 case 'class':
 case 'generator':
-case 'BRgenerator':
 var scope=tree_node.parent
 scope.ntype=ntype
 scope.elt=scope.C.tree[0]
@@ -3666,7 +3672,7 @@ $_SyntaxError(C,'token '+token+' after '+C)
 case 'return':
 var no_args=C.tree[0].type=='abstract_expr'
 if(!no_args){var scope=$get_scope(C)
-if(scope.ntype=='BRgenerator'){$_SyntaxError(C,["'return' with argument inside generator"])
+if(scope.ntype=='generator'){$_SyntaxError(C,["'return' with argument inside generator"])
 }
 scope.has_return_with_arguments=true
 }
@@ -4009,7 +4015,7 @@ if(res!==null){pos +=res[0].length
 C=$transition(C,'op','not_in')
 }else{C=$transition(C,name)
 }}else{C=$transition(C,name)
-}}else if($oplist.indexOf(name)>-1){
+}}else if($operators[name]!==undefined){
 $pos=pos-name.length
 C=$transition(C,'op',name)
 }else{
@@ -7585,7 +7591,7 @@ $B.JSConstructor=JSConstructor
 ;(function($B){$B.stdlib={}
 var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.basehook','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.highlight','site-packages.pygame.SDL','site-packages.pygame.base','site-packages.pygame.color','site-packages.pygame.colordict','site-packages.pygame.compat','site-packages.pygame.constants','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.locals','site-packages.pygame.mixer','site-packages.pygame.mouse','site-packages.pygame.pkgdata','site-packages.pygame.rect','site-packages.pygame.sprite','site-packages.pygame.surface','site-packages.pygame.time','site-packages.pygame.transform','site-packages.pygame.version','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','time','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile']
+var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.basehook','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.pygame.SDL','site-packages.pygame.base','site-packages.pygame.color','site-packages.pygame.colordict','site-packages.pygame.compat','site-packages.pygame.constants','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.locals','site-packages.pygame.mixer','site-packages.pygame.mouse','site-packages.pygame.pkgdata','site-packages.pygame.rect','site-packages.pygame.sprite','site-packages.pygame.surface','site-packages.pygame.time','site-packages.pygame.transform','site-packages.pygame.version','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','time','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','long_int1','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.pygame','test','ui','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]
