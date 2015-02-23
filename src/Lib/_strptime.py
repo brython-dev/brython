@@ -163,10 +163,10 @@ class LocaleTime(object):
         # Set self.timezone by using time.tzname.
         # Do not worry about possibility of time.tzname[0] == timetzname[1]
         # and time.daylight; handle that in strptime .
-        try:
-            time.tzset()
-        except AttributeError:
-            pass
+        #try:
+            #time.tzset()
+        #except AttributeError:
+            #pass
         no_saving = frozenset(["utc", "gmt", time.tzname[0].lower()])
         if time.daylight:
             has_saving = frozenset([time.tzname[1].lower()])
