@@ -340,4 +340,6 @@ def f():
 
 assert f()==2
 
+# check that name "constructor" is valid
+constructor = 0
 print('passed all tests...')
