@@ -6,14 +6,20 @@
 <link rel="stylesheet" href="../doc_brython.css">
 
 <script type="text/javascript" src="/src/brython.js"></script>
-<script type="text/python" src="../docs.py"></script>
 
 <script type="text/python">
-load('intro.md', 'content')
+from browser import window
+
+import docs
+import header
+
+header.show('../../')
+
+docs.load('intro.md', 'content')
 language = "fr"
 
 # put in Javascript namespace for inline callbacks
-window.load = load
+window.load = docs.load
 </script>
 
 </head>
