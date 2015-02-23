@@ -88,14 +88,18 @@ def show(prefix=''):
             href += '?lang=%s' % language
         if key == 'home':
             img = IMG(src=prefix + "brython.svg", Class="logo",
-                      alt="Brython Logo", title="Brython")
+                      alt="Brython Logo", title="Brython", width=99, height=25)
             link = A(img, href=href)
-            cell = TD(link, Class="logo")
+            cell = LI(link, Class="logo")
         else:
             link = A(trans_menu['menu_%s' % key][language],
                      href=href, Class="banner")
-            cell = TD(link)
+            cell = LI(link)
         if key in ('download', 'dev'):
             link.target = "_blank"
         _banner <= cell
+
+    _banner <= LI(A("< < <", href="#", Class="banner",
+                    onclick="document.querySelector('html').classList.remove('openNav')"), id="close-panel")
+
     return qs_lang, language

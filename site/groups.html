@@ -20,7 +20,7 @@
                 linear-gradient(#eee .1em, transparent .1em);
             background-size: 100% 1.2em;
             box-shadow:0 0 10px rgba(0,0,0,.3);
-            margin:26px auto 0;
+            margin:50px auto 0;
             max-width:666px;
             min-height:100px;
             padding:24px;
@@ -66,9 +66,16 @@
 
 <body onload="brython(1)">
 
-    <table id=banner cellpadding=0 cellspacing=0>
-        <tr id=banner_row >
-    </table>
+
+<div id="page">
+    <a href="#" class="open-panel" onclick="document.querySelector('html').classList.add('openNav')"><h1>☰</h1></a>
+<nav id="banner">
+    <ul class="menu" id="banner_row"></ul>
+</nav>
+
+
+<div id="content" onclick="document.querySelector('html').classList.remove('openNav')">
+
 
     <div class="letter">
         <h1 id="groups">Groups</h1>
@@ -82,6 +89,7 @@
         </ul>
     </div>
 
+    </div></div>
 </body>
 
 </html>

@@ -60,7 +60,7 @@ def show(prefix=''):
     has_req = False
 
     qs_lang = doc.query.getfirst("lang")
-    if qs_lang and qs_lang in ["en", "fr", "es", "pt"]:
+    if qs_lang and qs_lang in ["en", "fr", "es"]:
         has_req = True
         language = qs_lang
     else:
@@ -68,7 +68,7 @@ def show(prefix=''):
         try:
             lang, enc = locale.getdefaultlocale()
             lang = lang[:2]
-            if lang in ("en", "fr", "es", "pt"):
+            if lang in ("en", "fr", "es"):
                 language = lang
         except:
             pass
@@ -87,15 +87,19 @@ def show(prefix=''):
             # add lang to href
             href += '?lang=%s' % language
         if key == 'home':
-            img = IMG(src=prefix + "brython_white.png", Class="logo",
-                      alt="Brython Logo", title="Brython")
+            img = IMG(src=prefix + "brython.svg", Class="logo",
+                      alt="Brython Logo", title="Brython", width=99, height=25)
             link = A(img, href=href)
-            cell = TD(link, Class="logo")
+            cell = LI(link, Class="logo")
         else:
             link = A(trans_menu['menu_%s' % key][language],
                      href=href, Class="banner")
-            cell = TD(link)
+            cell = LI(link)
         if key in ('download', 'dev'):
             link.target = "_blank"
         _banner <= cell
+
+    _banner <= LI(A("< < <", href="#", Class="banner",
+                    onclick="document.querySelector('html').classList.remove('openNav')"), id="close-panel")
+
     return qs_lang, language

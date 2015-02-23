@@ -74,3 +74,4 @@ nosetests.xml
 .project
 .pydevproject
 *.nja
+.idea

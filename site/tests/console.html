@@ -37,39 +37,48 @@
     qs_lang, language = header.show('../')
     </script>
     <style>
-    .codearea {
+    #code {
         background-color:#000;
         color:#fff;
         font-family:'Oxygen Mono', Consolas, 'Liberation Mono', 'DejaVu Sans Mono', monospace;
         font-size:14px;
         overflow:auto
     }
-    div, textarea {
+    #content, #code {
         height:100%;
         width:98%
+    }
+    #embe {
+        width: 40em
     }
     </style>
 </head>
 
 
 <body onload=brython(1) ><!-- remove the 1 to leave debug mode -->
-    <table id=banner cellpadding=0 cellspacing=0>
-        <tr id=banner_row >
-    </table>
 
-    <textarea id=code class=codearea rows=20></textarea>
+    <div id="page">
+        <a href="#" class="open-panel" onclick="document.querySelector('html').classList.add('openNav')"><h1>☰</h1></a>
+    <nav id="banner">
+        <ul class="menu" id="banner_row"></ul>
+    </nav>
 
-    <div id=content></div>
+
+    <div id="content" onclick="document.querySelector('html').classList.remove('openNav')">
 
 
-    <script type="text/python3" src="console.py"></script>
-    <details>
-        <summary>Embed:</summary>
-        <blockquote title="The Console can be embedded in a web page by adding this line">
-            <pre>&lt;iframe src=http://brython.info/console.html width=800 height=400&gt;&lt;/iframe&gt;</pre>
-        </blockquote>
-    </details>
+        <textarea id=code class=codearea rows=20></textarea>
 
+        <div id=content></div>
+
+
+        <script type="text/python3" src="console.py"></script>
+        <details>
+            <summary>Embed:</summary><br>
+                <input type=text id=embe onclick="this.select()" title="The Console can be embedded in a web page by adding this line" value="&lt;iframe src=http://brython.info/console.html width=800 height=400&gt;&lt;/iframe&gt;" readonly >
+        </details>
+
+    </div></div>
 </body>
 
 </html>
