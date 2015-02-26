@@ -105,9 +105,7 @@ if ($B.has_indexedDB) {
 $B.re = function(pattern,flags){return $B.JSObject(new RegExp(pattern,flags))}
 $B.has_json = typeof(JSON)!=="undefined"
 
-$B.has_websocket = (function(){
-    try{var x=window.WebSocket;return x!==undefined}
-    catch(err){return false}
-})
+$B.has_websocket = window.WebSocket!==undefined
+
 
 })(__BRYTHON__)

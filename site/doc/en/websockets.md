@@ -51,8 +51,8 @@ Example :
 <tr>
 <td>
 ```exec_on_load
-from browser import document as doc
-from browser import alert,WebSocket
+from browser import alert, document as doc
+from browser import websocket
 
 def on_open(evt):
     doc['sendbtn'].disabled = False
@@ -77,7 +77,7 @@ def _open(ev):
         return
     global ws
     # open a web socket
-    ws = WebSocket("wss://echo.websocket.org")
+    ws = websocket.WebSocket("wss://echo.websocket.org")
     # bind functions to web socket events
     ws.bind('open',on_open)
     ws.bind('message',on_message)
