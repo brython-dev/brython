@@ -153,7 +153,7 @@ star = svg.polygon(fill="red", stroke="blue", stroke_width="10",
                              111,150 75,125  38,150 51,107
                               15,80  60,80""")
 
-panel = doc['panel4']
+panel = document['panel4']
 panel <= star
 ```
 </td>

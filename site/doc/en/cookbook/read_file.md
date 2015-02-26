@@ -18,7 +18,7 @@ import time
 from browser import document
 
 fake_qs = '?foo=%s' %time.time()
-document['zone'].value = open('cookbook/file.txt'+fake_qs).read()
+document['zone'].value = open('file.txt'+fake_qs).read()
 ```
 
 </td>
@@ -56,5 +56,5 @@ def go(url):
     req.open('GET',url,True)
     req.send()
 
-go('cookbook/file.txt?foo=%s' %time.time())
+go('file.txt?foo=%s' %time.time())
 ```

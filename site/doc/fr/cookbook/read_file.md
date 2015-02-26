@@ -17,7 +17,7 @@ On utilise la fonction intégrée `open()` pour récupérer le contenu du fichie
 from browser import document
 import time
 fake_qs = '?foo=%s' %time.time()
-document['zone'].value = open('cookbook/file.txt'+fake_qs).read()
+document['zone'].value = open('file.txt'+fake_qs).read()
 ```
 
 </td>
@@ -53,7 +53,7 @@ def go(url):
     req.open('GET',url,True)
     req.send()
 
-go('cookbook/file.txt?foo=%s' %time.time())
+go('file.txt?foo=%s' %time.time())
 ```
 
 

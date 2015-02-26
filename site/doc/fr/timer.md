@@ -109,34 +109,34 @@ _timer = None
 counter = 0
 
 def show():
-    doc['_timer'].text = '%.2f' %(time.time()-counter)
+    document['_timer'].text = '%.2f' %(time.time()-counter)
 
 def start_timer(ev):
     global _timer,counter
     if _timer is None:
         counter = time.time()
         _timer = timer.set_interval(show,10)
-        doc['start'].text = 'Pause'
+        document['start'].text = 'Pause'
     elif _timer == 'hold': # restart
         # restart timer
-        counter = time.time()-float(doc['_timer'].text)
+        counter = time.time()-float(document['_timer'].text)
         _timer = timer.set_interval(show,10)
-        doc['start'].text = 'Pause'
+        document['start'].text = 'Pause'
     else: # hold
         timer.clear_interval(_timer)
         _timer = 'hold'
-        doc['start'].text = 'Redémarrer'
+        document['start'].text = 'Redémarrer'
 
 def stop_timer(ev):
     global _timer
     timer.clear_interval(_timer)
     _timer = None
     t = 0
-    doc['_timer'].text = '%.2f' %0
-    doc['start'].text = 'Démarrer'
+    document['_timer'].text = '%.2f' %0
+    document['start'].text = 'Démarrer'
 
-doc['start'].bind('click', start_timer)
-doc['stop'].bind('click', stop_timer)
+document['start'].bind('click', start_timer)
+document['stop'].bind('click', stop_timer)
 ```
 
 <table cellpadding=10>
@@ -207,8 +207,8 @@ def stop(i):
     global id
     caf(id)
 
-doc['btn-animate'].bind('click', animate)
-doc['btn-stop'].bind('click', stop)
+document['btn-animate'].bind('click', animate)
+document['btn-stop'].bind('click', stop)
 ```
 
 <table cellpadding=10>
