@@ -189,7 +189,7 @@ sources = [
     'py_type', 'py_utils', 'py_generator', 'py_builtin_functions', 'py_bytes',
     'js_objects', 'stdlib_paths', 'py_import', 'py_float', 'py_int',
     'py_complex', 'py_dict', 'py_list', 'py_string', 'py_set', 'py_dom',
-    'py_import_hooks'
+    'py_import_hooks', 'builtin_modules'
 ]
 
 res = '// brython.js brython.info\n'
