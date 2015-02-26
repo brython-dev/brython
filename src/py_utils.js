@@ -478,13 +478,29 @@ $B.$JS2Py = function(src){
 
 
 // get item
+function index_error(obj){
+    var type = typeof obj=='string' ? 'string' : 'list'
+    throw _b_.IndexError(type+" index out of range")
+}
+
 $B.$getitem = function(obj, item){
+    if(typeof item=='number'){
+        if(Array.isArray(obj) || typeof obj=='string'){
+            item = item >=0 ? item : obj.length+item
+            if(obj[item]!==undefined){return obj[item]}
+            else{index_error(obj)}
+        }
+    }
     item=$B.$GetInt(item)
-    if(Array.isArray(obj) && typeof item=='number' && obj[item]!==undefined){
-        return item >=0 ? obj[item] : obj[obj.length+item]
+    if((Array.isArray(obj) || typeof obj=='string')
+        && typeof item=='number'){
+        item = item >=0 ? item : obj.length+item
+        if(obj[item]!==undefined){return obj[item]}
+        else{index_error(obj)}
     }
     return _b_.getattr(obj,'__getitem__')(item)
 }
+
 $B.$setitem = function(obj,item,value){
     if(Array.isArray(obj) && typeof item=='number'){
         if(item<0){item+=obj.length}
@@ -927,6 +943,7 @@ $B.InjectBuiltins=function() {
 
 $B.$GetInt=function(value) {
   // convert value to an integer,
+  if(typeof value=="number"){return value}
   if (_b_.isinstance(value, _b_.int)) return value
   try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){}
   try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){}

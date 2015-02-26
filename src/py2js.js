@@ -1106,6 +1106,7 @@ function $CallCtx(context){
     this.toString = function(){return '(call) '+this.func+'('+this.tree+')'}
 
     this.to_js = function(){
+        
         if(this.tree.length>0){
             if(this.tree[this.tree.length-1].tree.length==0){
                 // from "foo(x,)"
@@ -1113,6 +1114,38 @@ function $CallCtx(context){
             }
         }
         var func_js = this.func.to_js()
+        // After to_js() is called, if the block where the function is defined
+        // is identified, this.func.found is $B.bound[block_id][func_name]
+        // If the name matches a function or a class defined in the script,
+        // this.func.found is the instance of $DefCtx or $ClassCtx
+        // We can use it to compare the function signature and the arguments
+        // passed in the call
+        var ctx = this.func.found
+        if(ctx && ctx.type=='def'){
+            var flag = (ctx.default_list.length==0 && !ctx.other_args &&
+                !ctx.other_kw && ctx.after_star.length==0)
+            if(flag){
+                var args = []
+                if(this.tree.length==ctx.positional_list.length){
+                    for(var i=0;i<this.tree.length;i++){
+                        if(this.tree[i].type!='call_arg' ||
+                            this.tree[i].tree[0].type !=='expr'){
+                            flag=false
+                            break
+                        }else{
+                            args.push(ctx.positional_list[i]+':'+
+                                this.tree[i].to_js())
+                        }
+                    }
+                }
+                if(flag){
+                    args = '{$nat:"args"},{'+args.join(',')+'}'
+                }
+            }
+        }
+
+        // We use it to see if the object referenced by this name is a class
+        // or a function
         if(this.func!==undefined) {
             switch(this.func.value) {
               case 'classmethod':
@@ -1187,11 +1220,14 @@ function $CallCtx(context){
                           res += (this.tree.length>0 ? $to_js(this.tree) : '')
                           return res + ')'
                       }
-                  }else if($B.bound[scope.id][this.func.value]=='class' ||
-                    $B.bound[scope.id][this.func.value]=='def'){
-                      var res = func_js+'('
-                      res += (this.tree.length>0 ? $to_js(this.tree) : '')
-                      return res + ')'
+                  }else{
+                      var bound_obj = this.func.found
+                      if(bound_obj && (bound_obj.type=='class' ||
+                        bound_obj.type=='def')){
+                          var res = func_js+'('
+                          res += (this.tree.length>0 ? $to_js(this.tree) : '')
+                          return res + ')'
+                      }
                   }
                   var res = '('+func_js+'.$is_func ? '
                   res += func_js+' : '
@@ -1242,7 +1278,7 @@ function $ClassCtx(context){
         this.parent.node.parent_block = parent_block
         
         // bind name
-        $B.bound[this.scope.id][name] = 'class'
+        $B.bound[this.scope.id][name] = this
 
         // if function is defined inside another function, add the name
         // to local names
@@ -1620,6 +1656,13 @@ function $DefCtx(context){
     }
 
     this.module = scope.module
+    
+    // Arrays for arguments
+    this.positional_list = []
+    this.default_list = []
+    this.other_args = null
+    this.other_kw = null
+    this.after_star = []
 
     this.set_name = function(name){
         var id_ctx = new $IdCtx(this,name)
@@ -1636,7 +1679,7 @@ function $DefCtx(context){
         
         // If function is defined inside another function, add the name
         // to local names
-        $B.bound[this.scope.id][name]='def'
+        $B.bound[this.scope.id][name]=this
         id_ctx.bound = true
         if(scope.is_function){
             if(scope.context.tree[0].locals.indexOf(name)==-1){
@@ -1650,7 +1693,12 @@ function $DefCtx(context){
     this.transform = function(node,rank){
         // already transformed ?
         if(this.transformed!==undefined) return
-
+        
+        /*
+        console.log('on enter, positional '+this.positional_list+
+            ' default: '+this.default_list+' other_args: '+this.other_args+
+            ' other_kw: '+this.other_kw+' after_star:' +this.after_star)
+        */
         var scope = this.scope
     
         // this.inside_function : set if the function is defined inside another
@@ -1691,48 +1739,39 @@ function $DefCtx(context){
             this.enclosing.push(pnode.parent.parent)
             pnode = pnode.parent.parent
         }
-        var required = '', required_list=[]
+        
         var defaults = [],defs=[],def_list=[],defs1=[]
-        var after_star = []
-        var other_args = null
-        var other_kw = null
         this.args = []
         var func_args = this.tree[1].tree
         for(var i=0;i<func_args.length;i++){
             var arg = func_args[i]
+            this.args.push(arg.name)
             if(arg.type==='func_arg_id'){
-                if(arg.tree.length===0){
-                    if(other_args==null){
-                        required+='"'+arg.name+'",'
-                        required_list.push(arg.name)
-                    }else{
-                        after_star.push('"'+arg.name+'"')
-                    }
-                }else{
+                if(arg.tree.length>0){
                     defaults.push('"'+arg.name+'"')
-                    def_list.push(arg.name)
                     defs.push(arg.name+' = '+$to_js(arg.tree))
                     defs1.push(arg.name+':'+$to_js(arg.tree))
                 }
-            }else if(arg.type==='func_star_arg'&&arg.op==='*'){other_args='"'+arg.name+'"'}
-            else if(arg.type==='func_star_arg'&&arg.op==='**'){other_kw='"'+arg.name+'"'}
-            this.args.push(arg.name)
+            }
         }
         this.defs = defs
-        if(required.length>0) required=required.substr(0,required.length-1)
         
-        var robj = []
-        for(var i=0;i<required_list.length;i++){
-            robj.push(required_list[i]+':null')
+        // string to pass positional arguments
+        var positional_str=[], positional_obj=[]
+        for(var i=0, _len=this.positional_list.length;i<_len;i++){
+            positional_str.push('"'+this.positional_list[i]+'"')
+            positional_obj.push(this.positional_list[i]+':null')
         }
-        robj = '{'+robj.join(',')+'}'
+        positional_str = positional_str.join(',')
+        positional_obj = '{'+positional_obj.join(',')+'}'
 
+        // string to pass arguments with default values
         var dobj = []
-        for(var i=0;i<def_list.length;i++){
-            dobj.push(def_list[i]+':null')
+        for(var i=0;i<this.default_list.length;i++){
+            dobj.push(this.default_list[i]+':null')
         }
         dobj = '{'+dobj.join(',')+'}'
-
+        
         var nodes=[], js
 
         // Get id of global scope
@@ -1775,12 +1814,30 @@ function $DefCtx(context){
         }
 
         this.env = []
+        
+        // If the function is called from a script that knows its signature
+        // (this is usually the case when function definition and function
+        // call are in the same script) then the function receives 2 
+        // arguments : the object {$nat:"args"} and an object initialised
+        // with function arguments
+        
+        js = 'if(arguments.length==2 && arguments[0].$nat=="args")'
+        js += '{$locals = arguments[1]}'
+        var fast_node = new $Node()
+        new $NodeJSCtx(fast_node, js)
+        nodes.push(fast_node)
+
+        var slow_node = new $Node()
+        new $NodeJSCtx(slow_node, 'else')
+        nodes.push(slow_node)
+
+        // Code in the worst case, uses MakeArgs1 in py_utils.js
 
         var make_args_nodes = []
         var js = 'var $ns=$B.$MakeArgs1("'+this.name+'",arguments,'
-        js += robj+',['+required+'],'+dobj+','
-        js += '['+defaults.join(',')+'],'+other_args+','+other_kw+
-            ',['+after_star.join(',')+'])'
+        js += positional_obj+',['+positional_str+'],'+dobj+','
+        js += '['+defaults.join(',')+'],'+this.other_args+','+this.other_kw+
+            ',['+this.after_star.join(',')+'])'
 
         var new_node = new $Node()
         new $NodeJSCtx(new_node,js)
@@ -1792,29 +1849,30 @@ function $DefCtx(context){
         make_args_nodes.push(new_node)
         
         var only_positional = false
-        if(defaults.length==0 && other_args===null && other_kw===null &&
-            after_star.length==0){
+        if(defaults.length==0 && this.other_args===null && this.other_kw===null &&
+            this.after_star.length==0){
             // If function only takes positional arguments, we can generate
             // a faster version of argument parsing than by calling function
             // $MakeArgs1
             only_positional = true
+            var pos_nodes = []
             
             // Loop to test if all the arguments passed to the function
             // are "simple", ie not a keyword argument (x=0) or a packed
             // tuple (*x) or a packed dictionary (**x)
             
-            if($B.debug>0 || required_list.length>0){
+            if($B.debug>0 || this.positional_list.length>0){
                 
                 var js = 'var $simple=true, $i=arguments.length;'
                 js += 'while($i-- > 0)'
                 js += '{if(arguments[$i].$nat!=undefined){$simple=false;break}}'
                 var new_node = new $Node()
                 new $NodeJSCtx(new_node,js)
-                nodes.push(new_node)
+                pos_nodes.push(new_node)
                 
                 var new_node = new $Node()
                 new $NodeJSCtx(new_node,'if(!$simple)')
-                nodes.push(new_node)
+                pos_nodes.push(new_node)
                 
                 // If at least one argument is not "simple", fall back to 
                 // $MakeArgs1()
@@ -1823,26 +1881,27 @@ function $DefCtx(context){
             
                 var else_node = new $Node()
                 new $NodeJSCtx(else_node,'else')
-                nodes.push(else_node)
+                pos_nodes.push(else_node)
             }
             
             if($B.debug>0){
                 // If all arguments are "simple" all there is to check is that
                 // we got the right number of arguments
+                var pos_len = this.positional_list.length
 
-                js = 'if(arguments.length!='+required_list.length+')'
+                js = 'if(arguments.length!='+pos_len+')'
                 var wrong_nb_node = new $Node()
                 new $NodeJSCtx(wrong_nb_node,js)
                 else_node.add(wrong_nb_node)
                 
-                if(required_list.length>0){
+                if(pos_len>0){
                     // Test if missing arguments
                     
-                    js = 'if(arguments.length<'+required_list.length+')'
-                    js += '{var $missing='+required_list.length+'-arguments.length;'
+                    js = 'if(arguments.length<'+pos_len+')'
+                    js += '{var $missing='+pos_len+'-arguments.length;'
                     js += 'throw TypeError("'+this.name+'() missing "+$missing+'
                     js += '" positional argument"+($missing>1 ? "s" : "")+": "'
-                    js += '+new Array('+required+').slice(arguments.length))}'
+                    js += '+new Array('+positional_str+').slice(arguments.length))}'
                     new_node = new $Node()
                     new $NodeJSCtx(new_node,js)
                     wrong_nb_node.add(new_node)
@@ -1853,31 +1912,39 @@ function $DefCtx(context){
                 }
     
                 // Test if too many arguments
-                js += '(arguments.length>'+required_list.length+')'
-                js += '{throw TypeError("'+this.name+'() takes '+required_list.length
+                js += '(arguments.length>'+pos_len+')'
+                js += '{throw TypeError("'+this.name+'() takes '+pos_len
                 js += ' positional argument'
-                js += (required_list.length>1 ? "s" : "")
+                js += (pos_len>1 ? "s" : "")
                 js += ' but more were given")}'
                 new_node = new $Node()
                 new $NodeJSCtx(new_node,js)
                 wrong_nb_node.add(new_node)
             }
             
-            for(var i=0;i<required_list.length;i++){
-                var arg = required_list[i]
+            for(var i=0;i<this.positional_list.length;i++){
+                var arg = this.positional_list[i]
                 var new_node = new $Node()
                 var js = '$locals["'+arg+'"]=$B.$JS2Py(arguments['+i+'])'
                 new $NodeJSCtx(new_node,js)
                 else_node.add(new_node)
             }
 
+            for(var i=pos_nodes.length-1;i>=0;i--){
+                slow_node.children.splice(0,0,pos_nodes[i])
+            }
+
         }else{
 
-            nodes = nodes.concat(make_args_nodes)
+            slow_node.add(make_args_nodes[0])
+            slow_node.add(make_args_nodes[1])
 
         }
 
-        for(var i=nodes.length-1;i>=0;i--) node.children.splice(0,0,nodes[i])
+        for(var i=nodes.length-1;i>=0;i--){
+            //console.log('add node '+nodes[i].context)
+            node.children.splice(0,0,nodes[i])
+        }
 
         var def_func_node = new $Node()
         new $NodeJSCtx(def_func_node,'return function()')
@@ -1900,7 +1967,7 @@ function $DefCtx(context){
         var ret_node = new $Node()
         new $NodeJSCtx(ret_node,')()')
         node.parent.insert(rank+1,ret_node)
-        
+
         var offset = 2
         
         // If function is a generator, add a line to build the generator
@@ -1988,12 +2055,13 @@ function $DefCtx(context){
         if(defs1.length>0){js = 'var $defaults = {'+defs1.join(',')+'}'}
         new $NodeJSCtx(default_node,js)
         node.insert(0,default_node)
- 
+
         this.transformed = true
          
     }
 
     this.to_js = function(func_name){
+        
         if(func_name!==undefined){
             return func_name+'=(function()'
         }else{
@@ -2616,6 +2684,11 @@ function $FuncArgIdCtx(context,name){
     this.name = name
     this.parent = context
     
+    if(context.has_star_arg){
+        context.parent.after_star.push('"'+name+'"')
+    }else{
+        context.parent.positional_list.push(name)
+    }
     // bind name to function scope
     var node = $get_node(this)
     if($B.bound[node.id][name]){
@@ -2666,7 +2739,9 @@ function $FuncStarArgCtx(context,op){
                 break
             }
             ctx = ctx.parent
-        }    
+        }
+        if(op=='*'){ctx.other_args = '"'+name+'"'}
+        else{ctx.other_kw = '"'+name+'"'}
         
     }
     this.toString = function(){return '(func star arg '+this.op+') '+this.name}
@@ -2876,6 +2951,7 @@ function $IdCtx(context,value){
             if(scope.parent_block){scope=scope.parent_block}
             else{break}
         }
+        this.found = found
 
         if(found.length>0){
             if(found.length>1 && found[0].context){
@@ -2885,8 +2961,10 @@ function $IdCtx(context,value){
                        ns1='$locals_'+found[1].id.replace(/\./g,'_')
                     if(bound_before){
                         if(bound_before.indexOf(val)>-1){
+                            this.found = $B.bound[found[0].id][val]
                             res = ns0
                         }else{
+                            this.found = $B.bound[found[1].id][val]
                             res = ns1
                         }
                         return res+'["'+val+'"]'
@@ -2904,6 +2982,7 @@ function $IdCtx(context,value){
                         //            pass
                         //        print(x)    # should print '<function x>'
                         //
+                        this.found = false
                         var res = ns0 + '["'+val+'"]!==undefined ? '
                         res += ns0 + '["'+val+'"] : '
                         res += ns1 + '["'+val+'"]'
@@ -2912,6 +2991,7 @@ function $IdCtx(context,value){
                 }
             }
             var scope = found[0]
+            this.found = $B.bound[scope.id][val]
             var scope_ns = '$locals_'+scope.id.replace(/\./g,'_')
             
             if(scope.context===undefined){
@@ -3483,8 +3563,18 @@ function $OpCtx(context,op){ // context is the left operand
                     res += ')'
 
                     // If at least one variable is not a number
+                    
+                    // For addition, test if both arguments are strings
+                    if(this.op=='+'){
+                        res += ' : (typeof '+this.tree[0].to_js()+'=="string"'
+                        res += ' && typeof '+this.tree[1].to_js()
+                        res += '=="string") ? '+this.tree[0].to_js()
+                        res += '+'+this.tree[1].to_js()
+                    }
                     res += ': getattr('+this.tree[0].to_js()+',"__'
                     res += $operators[this.op]+'__")'+'('+this.tree[1].to_js()+')'
+                    //if(this.op=='+'){console.log(res)}
+                    res = '('+res+')'
                     
                 }
             }else{
@@ -3721,7 +3811,8 @@ function $SubCtx(context){ // subscription or slicing
                 res += this.tree[0].to_js()+')'
                 return res
             }
-            if(false && this.func!=='delitem' && Array.isArray && this.tree.length==1 && !this.in_sub){
+            if(this.func!=='delitem' && Array.isArray && 
+                this.tree.length==1 && !this.in_sub){
                 var expr = '', x = this
                 shortcut = true
                 while(x.value.type=='sub'){
@@ -3730,8 +3821,9 @@ function $SubCtx(context){ // subscription or slicing
                     x = x.value
                 }
                 var subs = x.value.to_js()+'['+x.tree[0].to_js()+']'
-                res += '(Array.isArray('+x.value.to_js()+') && '
-                res += subs+'!==undefined ?'
+                res += '((Array.isArray('+x.value.to_js()+') || '
+                res += 'typeof '+x.value.to_js()+'=="string")'
+                res += ' && '+subs+'!==undefined ?'
                 res += subs+expr+ ' : '
             }
             var val = this.value.to_js()
@@ -4110,7 +4202,7 @@ function $add_line_num(node,rank){
                 nd = nd.parent
             }
             if(node.module===undefined){
-                console.log('module undef, node '+node.context);flag=false
+                //console.log('module undef, node '+node.context);flag=false
             }
         }
         // don't add line num before try,finally,else,elif
@@ -5054,6 +5146,12 @@ function $transition(context,token){
           case '=':
             if (context.expect==='='){
                context.parent.has_default = true
+               var def_ctx = context.parent.parent
+               if(context.parent.has_star_arg){
+                   def_ctx.default_list.push(def_ctx.after_star.pop())
+               }else{
+                   def_ctx.default_list.push(def_ctx.positional_list.pop())
+               }
                return new $AbstractExprCtx(context,false)
             }
             break
