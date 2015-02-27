@@ -1,15 +1,15 @@
 from browser.local_storage import storage  # legacy import
 from browser.session_storage import storage as sess_storage  # legacy import
-from browser import LocalStorage, SessionStorage, ObjectStorage
- 
-assert(LocalStorage().storage_type == "local_storage")
-assert(SessionStorage().storage_type == "session_storage")
+from browser.object_storage import ObjectStorage
+
+assert(storage.storage_type == "local_storage")
+assert(sess_storage.storage_type == "session_storage")
 
 storage.clear()
 sess_storage.clear()
 
-session_storage = SessionStorage()
-local_storage = LocalStorage()
+session_storage = sess_storage
+local_storage = storage
 
 session_storage['hi'] = "blah"
 assert(session_storage.get("hi") == "blah")
@@ -31,7 +31,7 @@ for key in local_storage:
     assert(local_storage[key] == '5')
 assert(local_storage.items() == [('hi', '5')])
    
-object_storage = ObjectStorage(LocalStorage())
+object_storage = ObjectStorage(local_storage)
 object_storage.clear()
 object_storage['mah'] = {"hi": 5}
 assert(object_storage['mah'] == {'hi': 5})
