@@ -29,10 +29,10 @@ for lang in ['fr', 'en', 'es']:
         if not os.path.exists(path):
             os.mkdir(path)
 
+    print('static doc %s' %lang)
     for i, (src_path, dest_path) in enumerate(zip([os.path.join(md_doc_path, lang),
         os.path.join(md_doc_path,lang,'cookbook')], dest_paths)):
         for filename in os.listdir(src_path):
-            print(lang, filename)
             ext = os.path.splitext(filename)[1]
             if ext=='.md':
                 src = open(os.path.join(src_path, filename)).read()
