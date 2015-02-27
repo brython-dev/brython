@@ -1745,7 +1745,7 @@ function $DefCtx(context){
             pnode = pnode.parent.parent
         }
         
-        var defaults = [],defs=[],def_list=[],defs1=[]
+        var defaults = [],defs1=[]
         this.args = []
         var func_args = this.tree[1].tree
         for(var i=0;i<func_args.length;i++){
@@ -1754,12 +1754,12 @@ function $DefCtx(context){
             if(arg.type==='func_arg_id'){
                 if(arg.tree.length>0){
                     defaults.push('"'+arg.name+'"')
-                    defs.push(arg.name+' = '+$to_js(arg.tree))
+                    //defs.push(arg.name+' = '+$to_js(arg.tree))
                     defs1.push(arg.name+':'+$to_js(arg.tree))
                 }
             }
         }
-        this.defs = defs
+        //this.defs = defs
         
         // String to pass positional arguments
         var positional_str=[], positional_obj=[]
