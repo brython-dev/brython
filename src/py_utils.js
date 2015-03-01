@@ -507,6 +507,9 @@ $B.$setitem = function(obj,item,value){
         if(obj[item]===undefined){throw _b_.IndexError("list assignment index out of range")}
         obj[item]=value
         return
+    }else if(obj.__class__===_b_.dict.$dict){
+        obj.__class__.__setitem__(obj, item, value)
+        return
     }
     _b_.getattr(obj,'__setitem__')(item,value)
 }

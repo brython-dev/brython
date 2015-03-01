@@ -298,7 +298,12 @@ $DictDict.__init__ = function(self){
         return
       case 1:
         var obj = args[0]
-        if(isinstance(obj,dict)){
+        if(Array.isArray(obj)){
+            var src = args[0]
+            var i = src.length
+            while(i--){$DictDict.__setitem__(self, src[i][0], src[i][1])}
+            return
+        }else if(isinstance(obj,dict)){
             $copy_dict(self, obj)
             return
         }
@@ -326,16 +331,23 @@ $DictDict.__init__ = function(self){
         }
 
         // format dict([(k1,v1),(k2,v2)...])
-        var iterable = iter(args[0])
-        while(1){
-            try{
-               var elt = next(iterable)
-               var key = getattr(elt,'__getitem__')(0)
-               var value = getattr(elt,'__getitem__')(1)
-               $DictDict.__setitem__(self, key, value)
-            }catch(err){
-               if(err.__name__==='StopIteration'){$B.$pop_exc();break}
-               throw err
+        
+        if(Array.isArray(args[0])){
+            var src = args[0]
+            var i = src.length
+            while(i--){$DictDict.__setitem__(self, src[i][0], src[i][1])}
+        }else{
+            var iterable = iter(args[0])
+            while(1){
+                try{
+                   var elt = next(iterable)
+                   var key = getattr(elt,'__getitem__')(0)
+                   var value = getattr(elt,'__getitem__')(1)
+                   $DictDict.__setitem__(self, key, value)
+                }catch(err){
+                   if(err.__name__==='StopIteration'){$B.$pop_exc();break}
+                   throw err
+                }
             }
         }
     }//if
@@ -548,8 +560,22 @@ $DictDict.update = function(self){
     $copy_dict(self, kw)
 }
 
-function dict(){
+function dict(_args,second){
     var res = {__class__:$DictDict}
+
+    if(second===undefined && Array.isArray(_args)){
+        // Form "dict([[key1, value1], [key2,value2], ...])"
+        $DictDict.clear(res)
+        var i = _args.length
+        while(i--){
+            var key = _args[i][0]
+            if(typeof key=='string'){res.$string_dict[key] = _args[i][1]}
+            else if(typeof key=='number'){res.$numeric_dict[key] = _args[i][1]}
+            else{$DictDict.__setitem__(res, key, _args[i][1])}
+        }
+        return res
+    }
+
     // apply __init__ with arguments of dict()
     var args = [res]
     for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
