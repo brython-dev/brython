@@ -1,7 +1,7 @@
 <!DOCTYPE html> 
 <html>
 <head>
-<meta charset="iso-8859-1">
+<meta charset="utf-8">
 <link rel="stylesheet" href="../doc/doc_brython.css">
 
 <link rel="stylesheet" href="console.css">
@@ -100,7 +100,7 @@ trans = {
                    'es':'Poner los bugs en el ',
                    'fr':"Signalez les bugs dans l'"},
     'test_page':{'en':'Tests page','es':'Página de pruebas','fr':'Page de tests'},
-    'run':{'en':'run','es':'ejecutar','fr':'ex�cuter'},
+    'run':{'en':'run','es':'ejecutar','fr':'exécuter'},
     'clear':{'en':'clear','es':'borrar','fr':'effacer'}
 }
 
@@ -113,8 +113,9 @@ for key in trans:
 </head>
 <body onload="brython({debug:1, cache:'none', static_stdlib_import:true})">
 
-<table id="banner" cellpadding=0 cellspacing=0>
-<tr id="banner_row">
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../index.html"><img src="../brython.svg" class="logo"></a></td>
 </tr>
 </table>
 
@@ -130,6 +131,12 @@ for key in trans:
 
 Test suite:
 <select name="filename" id="files">
+    <option value="assignment.py">simple assignment</option>
+    <option value="augm_assign.py">augmented assignment</option>
+    <option value="build_dict.py">build dictionary</option>
+    <option value="set_dict_item.py">set dictionary item</option>
+    <option value="build_list.py">build list</option>
+    <option value="set_list_item.py">set list item</option>
     <option value="pystone.py">pystone</option>
     <option value="bm_ai.py">bm_ai (n-queens)</option>
 </select>
@@ -160,3 +167,4 @@ Test suite:
 </div>
 </body>
 </html>
+
