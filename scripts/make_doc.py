@@ -3,13 +3,14 @@ import shutil
 import sys
 
 # hack sys.path to be able to import markdown
-sys.path.append(os.path.join(os.getcwd(),'../src/Lib/browser'))
+sys.path.append(os.path.join(os.path.dirname(os.getcwd()),
+    'www','src','Lib','browser'))
 import markdown
 
 # path of markdown files
-md_doc_path = os.path.join(os.path.dirname(os.getcwd()),'site','doc')
+md_doc_path = os.path.join(os.path.dirname(os.getcwd()),'www','doc')
 
-static_doc_path = os.path.join(os.path.dirname(os.getcwd()),'site','static_doc')
+static_doc_path = os.path.join(os.path.dirname(os.getcwd()),'www','static_doc')
 src_paths = [static_doc_path, os.path.join(static_doc_path,'cookbook')]
 
 for path in src_paths:
