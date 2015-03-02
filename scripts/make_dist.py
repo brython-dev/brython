@@ -11,7 +11,7 @@ import sys
 import tarfile
 import zipfile
 
-#import make_doc  # lint:ok
+import make_doc  # lint:ok
 
 try:
     import slimit
