@@ -259,7 +259,7 @@ function dir(obj){
     if(obj===undefined){
         // if dir is called without arguments, use globals
         var frame = $B.last($B.frames_stack),
-            globals_obj = frame[3],
+            globals_obj = frame[1][1],
             res = _b_.list()
         for(var attr in globals_obj){
             if(attr.charAt(0)=='$' && attr.charAt(1) != '$') {
@@ -353,18 +353,18 @@ enumerate.__code__.co_varnames=['iterable']
 
 //eval() (built in function)
 function $eval(src, _globals, locals){
-    var current_frame = $B.last($B.frames_stack)
+    var current_frame = $B.frames_stack[$B.frames_stack.length-1]
     if(current_frame===undefined){alert('current frame undef pour '+src.substr(0,30))}
-    var current_locals_id = current_frame[0]
+    var current_locals_id = current_frame[0][0]
     var current_locals_name = current_locals_id.replace(/\./,'_')
-    var current_globals_id = current_frame[2]
+    var current_globals_id = current_frame[1][0]
     var current_globals_name = current_globals_id.replace(/\./,'_')
     
     var is_exec = arguments[3]=='exec', module_name
     
     if(_globals===undefined){
         module_name = current_globals_name
-        eval('var $locals_'+module_name+'=current_frame[3]')
+        eval('var $locals_'+module_name+'=current_frame[1][1]')
     }else{
         if(_globals.id === undefined){_globals.id = 'exec_'+$B.UUID()}
         module_name = _globals.id
@@ -647,7 +647,7 @@ getattr.__code__.co_varnames=['value']
 function globals(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj],[globals_name, globals_obj]
-    var globals_obj = $B.last($B.frames_stack)[3]
+    var globals_obj = $B.last($B.frames_stack)[1][1]
 
     // Transform into a Python dictionary
     var res = _b_.dict()

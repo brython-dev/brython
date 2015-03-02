@@ -954,8 +954,8 @@ $B.$GetInt=function(value) {
   return value
 }
 
-$B.enter_frame = function(){
-    $B.frames_stack.push(Array.prototype.slice.call(arguments))
+$B.enter_frame = function(frame){
+    $B.frames_stack.push(frame)
 }
 
 function last(t){return t[t.length-1]}

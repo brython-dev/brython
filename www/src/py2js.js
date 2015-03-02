@@ -1800,8 +1800,8 @@ function $DefCtx(context){
 
         // Push id in frames stack
         var new_node = new $Node()
-        var js = '$B.enter_frame($local_name, $locals,'
-        js += '"'+global_scope.id+'", '+global_ns+');' 
+        var js = '$B.enter_frame([[$local_name, $locals],'
+        js += '["'+global_scope.id+'", '+global_ns+']]);' 
         new_node.enter_frame = true
         new $NodeJSCtx(new_node,js)
         nodes.push(new_node)
@@ -1961,7 +1961,7 @@ function $DefCtx(context){
         if(last_instr.type!=='return' && this.type!='generator'){
             new_node = new $Node()
             new $NodeJSCtx(new_node,
-                '__BRYTHON__.leave_frame();return None;')
+                '__BRYTHON__.leave_frame("'+this.id+'");return None;')
             def_func_node.add(new_node)
         }
 
@@ -3331,7 +3331,7 @@ function $ListOrTupleCtx(context,real){
         
         switch(this.real) {
           case 'list':
-            return '['+$to_js(this.tree)+']'
+            return 'list(['+$to_js(this.tree)+'])'
           case 'list_comp':
           case 'gen_expr':
           case 'dict_or_set_comp':
@@ -3773,7 +3773,7 @@ function $ReturnCtx(context){
             var res = 'return [$B.generator_return('
             return res + $to_js(this.tree)+')]'
         }
-        return 'var $res = '+$to_js(this.tree)+';__BRYTHON__.leave_frame();return $res'
+        return 'var $res = '+$to_js(this.tree)+';__BRYTHON__.leave_frame("'+scope.id+'");return $res'
     }
 }
 
@@ -6485,8 +6485,8 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     }
     js += 'var $locals = '+local_ns+';\n'
     
-    js += '__BRYTHON__.enter_frame("'+locals_id+'", '+local_ns+','
-    js += '"'+module+'", '+global_ns+');\n'
+    js += '__BRYTHON__.enter_frame([["'+locals_id+'", '+local_ns+'],'
+    js += '["'+module+'", '+global_ns+']]);\n'
     js += 'eval($B.InjectBuiltins())\n'
 
     var new_node = new $Node()
@@ -6520,7 +6520,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     }
     
     // leave frame at the end of module
-    js = '__BRYTHON__.leave_frame();\n'
+    js = '__BRYTHON__.leave_frame("'+module+'");\n'
     var new_node = new $Node()
     new $NodeJSCtx(new_node,js)
     root.add(new_node)
