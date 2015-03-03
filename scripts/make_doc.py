@@ -24,7 +24,8 @@ for lang in ['fr', 'en', 'es']:
     dest_path = os.path.join(static_doc_path, lang)
     dest_paths = [dest_path, os.path.join(dest_path,'cookbook')]
         
-    index = open(os.path.join(md_doc_path,lang,'index_static.html')).read()
+    index = open(os.path.join(md_doc_path,lang,'index_static.html'), 'rb').read()
+    index = index.decode('utf-8')
 
     for path in dest_paths:
         if not os.path.exists(path):
@@ -36,9 +37,10 @@ for lang in ['fr', 'en', 'es']:
         for filename in os.listdir(src_path):
             ext = os.path.splitext(filename)[1]
             if ext=='.md':
-                src = open(os.path.join(src_path, filename)).read()
+                src = open(os.path.join(src_path, filename), 'rb').read()
+                src = src.decode('utf-8')
                 html, scripts = markdown.mark(src)
-                out = open(os.path.join(dest_path,filename[:-3]+'.html'), 'w')
+                out = open(os.path.join(dest_path,filename[:-3]+'.html'), 'wb')
                 html = index.replace('<content>',html)
                 html = html.replace('<prefix>','/'.join(['..']*(i+1)))
                 if i==1:
@@ -47,7 +49,7 @@ for lang in ['fr', 'en', 'es']:
                 if scripts:
                     html = html.replace('<scripts>',
                         '<script type="text/python">%s\n</script>' %'\n'.join(scripts))
-                out.write(html)
+                out.write(html.encode('utf-8'))
                 out.close()
             elif ext=='.txt':
                 shutil.copy(os.path.join(src_path, filename),
