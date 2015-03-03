@@ -15,7 +15,8 @@ from webbrowser import open_new_tab
 if not os.path.exists(os.path.join(os.getcwd(),'www','static_doc')):
     save_dir = os.getcwd()
     os.chdir(os.path.join(os.getcwd(),'scripts'))
-    make_doc = open('make_doc.py').read()
+    make_doc = open('make_doc.py', "rb").read()
+    make_doc = make_doc.decode("utf-8")
     exec(make_doc)
     os.chdir(save_dir)
 
