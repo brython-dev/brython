@@ -2067,8 +2067,17 @@ function $DefCtx(context){
         new_node = new $Node()
         new $NodeJSCtx(new_node,js)
         node.parent.insert(rank+offset, new_node)
+        
+        /*
+        offset++
+        node.parent.insert(rank+offset, clone(node))
+        offset++
+        node.parent.insert(rank+offset, clone(ret_node))
+        */
 
         this.transformed = true
+        
+        return offset
          
     }
 
@@ -2175,7 +2184,7 @@ function $DictOrSetCtx(context){
           case 'dict_comp':
             var key_items = this.items[0].expression[0].to_js()
             var value_items = this.items[0].expression[1].to_js()
-            return '$B.$dict('+$to_js(this.items)+')'+$to_js(this.tree)
+            return 'dict('+$to_js(this.items)+')'+$to_js(this.tree)
         }
         return 'set(['+$to_js(this.items)+'])'+$to_js(this.tree)
     }

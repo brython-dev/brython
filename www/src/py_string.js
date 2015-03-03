@@ -1413,7 +1413,7 @@ $StringDict.maketrans = function(from, to) {
    }
 
    // create a data structure that string.translate understands
-   var _d=$B.$dict()
+   var _d=dict()
    for(var i=0; i < 256; i++) {
       _b_.dict.$dict.__setitem__(_d, i, _t[i])
    }
