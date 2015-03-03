@@ -2164,7 +2164,7 @@ function $DictOrSetCtx(context){
     this.to_js = function(){
         switch(this.real) {
           case 'dict':
-            var res = '$B.$dict(['
+            var res = 'dict(['
             for(var i=0;i<this.items.length;i+=2){
                 res+='['+this.items[i].to_js()+','+this.items[i+1].to_js()+']'
                 if(i<this.items.length-2){res+=','}

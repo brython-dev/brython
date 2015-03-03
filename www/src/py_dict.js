@@ -583,13 +583,6 @@ function dict(_args,second){
     return res
 }
 
-$B.$dict = dict // used for dict literals : "x={}" is translated to "x=__BRYTHON__.$dict()",
-             // not to "x=dict()"
-             // otherwise this would fail :
-             // def foo(dict=None):
-             //     x = {}
-             // because inside the function, 'dict' has beeen set to the 
-             // value of argument 'dict'
 dict.__class__ = $B.$factory
 dict.$dict = $DictDict
 $DictDict.$factory = dict
