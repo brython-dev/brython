@@ -185,7 +185,6 @@ $B.$MakeArgs1 = function($fname,$args,$robj,$required,$dobj,$defaults,
             } else if($i<$required.length+$defaults.length) {
                 $ns[$defaults[$i-$required.length]]=$PyVar
             } else {
-                console.log(''+$B.line_info)
                 msg = $fname+"() takes "+$required.length+' positional argument'
                 msg += $required.length == 1 ? '' : 's'
                 msg += ' but more were given'
@@ -372,13 +371,13 @@ $B.$gen_expr = function(env){
     var local_name = env[0][0]
     var module_env = env[env.length-1]
     var module_name = module_env[0]
-
+    
     var genexpr_name = 'ge'+$ix
 
     var $root = $B.py2js($py,module_name,genexpr_name,local_name,
         $B.line_info)
     var $js = $root.to_js()
-  
+    
     eval($js)
     
     var $res1 = eval('$locals_ge'+$ix)["res"+$ix]

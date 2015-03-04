@@ -1800,8 +1800,8 @@ function $DefCtx(context){
 
         // Push id in frames stack
         var new_node = new $Node()
-        var js = '$B.enter_frame([[$local_name, $locals],'
-        js += '["'+global_scope.id+'", '+global_ns+']]);' 
+        var js = '$B.enter_frame([$local_name, $locals,'
+        js += '"'+global_scope.id+'", '+global_ns+']);' 
         new_node.enter_frame = true
         new $NodeJSCtx(new_node,js)
         nodes.push(new_node)
@@ -4299,19 +4299,6 @@ function $add_line_num(node,rank){
         var mod_id = pnode.id
         // ignore lines added in transform()
         if(node.line_num===undefined){flag=false}
-        if(node.module===undefined){
-            var nd = node.parent
-            while(nd){
-                if(nd.module!==undefined){
-                    node.module = nd.module
-                    break
-                }
-                nd = nd.parent
-            }
-            if(node.module===undefined){
-                //console.log('module undef, node '+node.context);flag=false
-            }
-        }
         // Don't add line num before try,finally,else,elif
         // because it would throw a syntax error in Javascript
         if(elt.type==='condition' && elt.token==='elif'){flag=false}
@@ -6494,8 +6481,8 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     }
     js += 'var $locals = '+local_ns+';\n'
     
-    js += '__BRYTHON__.enter_frame([["'+locals_id+'", '+local_ns+'],'
-    js += '["'+module+'", '+global_ns+']]);\n'
+    js += '__BRYTHON__.enter_frame(["'+locals_id+'", '+local_ns+','
+    js += '"'+module+'", '+global_ns+']);\n'
     js += 'eval($B.InjectBuiltins())\n'
 
     var new_node = new $Node()

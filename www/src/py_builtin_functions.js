@@ -355,16 +355,16 @@ enumerate.__code__.co_varnames=['iterable']
 function $eval(src, _globals, locals){
     var current_frame = $B.frames_stack[$B.frames_stack.length-1]
     if(current_frame===undefined){alert('current frame undef pour '+src.substr(0,30))}
-    var current_locals_id = current_frame[0][0]
+    var current_locals_id = current_frame[0]
     var current_locals_name = current_locals_id.replace(/\./,'_')
-    var current_globals_id = current_frame[1][0]
+    var current_globals_id = current_frame[2]
     var current_globals_name = current_globals_id.replace(/\./,'_')
     
     var is_exec = arguments[3]=='exec', module_name
     
     if(_globals===undefined){
         module_name = current_globals_name
-        eval('var $locals_'+module_name+'=current_frame[1][1]')
+        eval('var $locals_'+module_name+'=current_frame[3]')
     }else{
         if(_globals.id === undefined){_globals.id = 'exec_'+$B.UUID()}
         module_name = _globals.id
@@ -516,6 +516,10 @@ function getattr(obj,attr,_default){
            if($B.debug>0){
               return function(){
                 $B.call_stack.push($B.line_info)
+                if($B.line_info[1] != $B.last($B.frames_stack)[2]){
+                    var frame = $B.last($B.frames_stack)
+                    console.log($B.line_info[1]+' != '+frame+' length '+frame.length)
+                }
                 try{
                     var res = obj.apply(null,arguments)
                     if(res===undefined) return _b_.None
@@ -647,7 +651,7 @@ getattr.__code__.co_varnames=['value']
 function globals(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj],[globals_name, globals_obj]
-    var globals_obj = $B.last($B.frames_stack)[1][1]
+    var globals_obj = $B.last($B.frames_stack)[3]
 
     // Transform into a Python dictionary
     var res = _b_.dict()
@@ -903,7 +907,7 @@ len.__code__.co_varnames=['module', 'object']
 function locals(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj],[globals_name, globals_obj]
-    var locals_obj = $B.last($B.frames_stack)[0][1]
+    var locals_obj = $B.last($B.frames_stack)[1]
 
     // Transform into a Python dictionary
     var res = _b_.dict()
