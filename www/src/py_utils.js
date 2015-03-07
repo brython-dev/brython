@@ -797,7 +797,7 @@ if (window.IDBRequest !== undefined) {
 }
 
 $B.set_line = function(line_num,module_name){
-    $B.line_info = [line_num, module_name]
+    $B.line_info = line_num+','+module_name
     return _b_.None
 }
 
@@ -957,12 +957,11 @@ $B.enter_frame = function(frame){
     $B.frames_stack.push(frame)
 }
 
-function last(t){return t[t.length-1]}
-
 $B.leave_frame = function(){
     // We must leave at least the frame for the main program
     if($B.frames_stack.length>1){
         var frame = $B.frames_stack.pop()
+        //delete $B.modules[frame[0]],$B.$py_src[frame[0]]
     }
 }
 

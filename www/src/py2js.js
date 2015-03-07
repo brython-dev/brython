@@ -108,7 +108,7 @@ function $_SyntaxError(context,msg,indent){
     var tree_node = ctx_node.node
     var module = tree_node.module
     var line_num = tree_node.line_num
-    $B.line_info = [line_num,module]
+    $B.line_info = line_num+','+module
     if(indent===undefined){
         if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],$pos)}
         if(msg==="Triple string end not found"){
@@ -4306,7 +4306,8 @@ function $add_line_num(node,rank){
         else if(elt.type==='single_kw'){flag=false}
         if(flag){
             // add a trailing None for interactive mode
-            var js='$B.line_info=['+node.line_num+',"'+mod_id+'"];'
+            //var js='$B.line_info=['+node.line_num+',"'+mod_id+'"];'
+            var js='$B.line_info="'+node.line_num+','+mod_id+'";'
             if(node.module===undefined) console.log('tiens, module undef !')
 
             var new_node = new $Node()

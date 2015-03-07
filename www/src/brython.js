@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,0,'final',0]
 __BRYTHON__.__MAGIC__="3.1.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-03-06 11:29:19.837000"
+__BRYTHON__.compiled_date="2015-03-07 09:25:30.745000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -98,7 +98,7 @@ while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node
 var module=tree_node.module
 var line_num=tree_node.line_num
-$B.line_info=[line_num,module]
+$B.line_info=line_num+','+module
 if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],$pos)}
 if(msg==="Triple string end not found"){
 $B.$SyntaxError(module,'invalid syntax : triple string end not found',$pos)
@@ -2596,7 +2596,7 @@ if(elt.type==='condition' && elt.token==='elif'){flag=false}
 else if(elt.type==='except'){flag=false}
 else if(elt.type==='single_kw'){flag=false}
 if(flag){
-var js='$B.line_info=['+node.line_num+',"'+mod_id+'"];'
+var js='$B.line_info="'+node.line_num+','+mod_id+'";'
 if(node.module===undefined)console.log('tiens, module undef !')
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
@@ -5270,7 +5270,7 @@ return window.IDBObjectStore.prototype._add.apply(this,[myobj,key])
 }}
 if(window.IDBRequest !==undefined){window.IDBRequest.prototype.pyresult=function(){return $B.jsobject2pyobject(this.result)
 }}
-$B.set_line=function(line_num,module_name){$B.line_info=[line_num,module_name]
+$B.set_line=function(line_num,module_name){$B.line_info=line_num+','+module_name
 return _b_.None
 }
 $B.$iterator=function(items,klass){var res={__class__:klass,__iter__:function(){return res},__len__:function(){return items.length},__next__:function(){res.counter++
@@ -5350,7 +5350,6 @@ return value
 }
 $B.enter_frame=function(frame){$B.frames_stack.push(frame)
 }
-function last(t){return t[t.length-1]}
 $B.leave_frame=function(){
 if($B.frames_stack.length>1){var frame=$B.frames_stack.pop()
 }}})(__BRYTHON__)
@@ -5927,7 +5926,7 @@ root.children.pop()
 var instr=root.children[root.children.length-1]
 var type=instr.C.tree[0].type
 if(!('expr'==type ||'list_or_tuple'==type)){
-$B.line_info=[1,module_name]
+$B.line_info="1,"+module_name
 throw _b_.SyntaxError("eval() argument must be an expression")
 }}
 var js=root.to_js()
@@ -5991,9 +5990,6 @@ switch(attr){case '__call__':
 if(typeof obj=='function'){if(obj.$blocking){console.log('calling blocking function '+obj.__name__)
 }
 if($B.debug>0){return function(){$B.call_stack.push($B.line_info)
-if($B.line_info[1]!=$B.last($B.frames_stack)[2]){var frame=$B.last($B.frames_stack)
-console.log($B.line_info[1]+' != '+frame+' length '+frame.length)
-}
 try{var res=obj.apply(null,arguments)
 if(res===undefined)return _b_.None
 return res
@@ -6921,16 +6917,16 @@ setitem(res,attr,obj[attr])
 }
 return res
 }
-function frame(pos){var mod_name=$B.line_info[1]
+function frame(pos){var mod_name=$B.frames_stack[2]
 var fs=$B.frames_stack
 var res={__class__:$FrameDict,f_builtins : to_dict($B.vars['__builtins__'])
 }
 if(pos===undefined){pos=fs.length-1}
 if(fs.length){var _frame=fs[pos]
-var locals_id=_frame[0][0]
-res.f_locals=to_dict(_frame[0][1])
-res.f_globals=to_dict(_frame[1][1])
-if(__BRYTHON__.debug>0){res.f_lineno=__BRYTHON__.line_info[0]
+var locals_id=_frame[0]
+res.f_locals=to_dict(_frame[1])
+res.f_globals=to_dict(_frame[3])
+if(__BRYTHON__.debug>0){res.f_lineno=$B.line_info.split(',')[0]
 }else{res.f_lineno=None
 }
 if(pos>0){res.f_back=frame(pos-1)}
@@ -6954,10 +6950,10 @@ catch(_err){void(0)}}
 err.info+='\n' 
 }
 var last_info,tb=null
-for(var i=0;i<$B.call_stack.length;i++){var call_info=$B.call_stack[i]
+for(var i=0;i<$B.call_stack.length;i++){var call_info=$B.call_stack[i].split(',')
 var lib_module=call_info[1]
 var caller=$B.modules[lib_module].line_info
-if(caller!==undefined){call_info=caller
+if(caller!==undefined){call_info=caller.split(',')
 lib_module=caller[1]
 }
 if(lib_module.substr(0,13)==='__main__,exec'){lib_module='__main__'}
@@ -6969,13 +6965,7 @@ err.info +='\n    '+line
 last_info=call_info
 if(i==0){tb={__class__:$TracebackDict,tb_frame:frame(),tb_lineno:call_info[0],tb_lasti:line,tb_next: None 
 }}}
-var err_info=$B.line_info
-if(err_info!==undefined){while(1){var mod=$B.modules[err_info[1]]
-if(mod===undefined)break
-var caller=mod.line_info
-if(caller===undefined)break
-err_info=caller
-}}
+err_info=$B.line_info.split(',')
 if(err_info!==undefined && err_info!==last_info){var module=err_info[1]
 var line_num=err_info[0]
 try{var lines=$B.$py_src[module].split('\n')
@@ -7013,15 +7003,16 @@ console.trace()
 console.log('call stack',$B.call_stack)
 }
 if(!js_exc.py_error){if($B.debug>0 && js_exc.info===undefined){
-if($B.line_info!==undefined){var mod_name=$B.line_info[1]
+if($B.line_info!==undefined){var line_info=$B.line_info.split(',')
+var mod_name=line_info[1]
 var module=$B.modules[mod_name]
 if(module){if(module.caller!==undefined){
 $B.line_info=module.caller
-var mod_name=$B.line_info[1]
+var mod_name=line_info[1]
 }
 var lib_module=mod_name
 if(lib_module.substr(0,13)==='__main__,exec'){lib_module='__main__'}
-var line_num=$B.line_info[0]
+var line_num=line_info[0]
 if($B.$py_src[mod_name]===undefined){console.log('pas de py_src pour '+mod_name)
 }
 var lines=$B.$py_src[mod_name].split('\n')

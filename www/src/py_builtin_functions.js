@@ -403,7 +403,7 @@ function $eval(src, _globals, locals){
             var type = instr.context.tree[0].type
             if (!('expr' == type || 'list_or_tuple' == type)) {
                 //console.log('not expression '+instr.context.tree[0])
-                $B.line_info=[1,module_name]
+                $B.line_info="1,"+module_name
                 throw _b_.SyntaxError("eval() argument must be an expression")
             }
         }
@@ -516,10 +516,12 @@ function getattr(obj,attr,_default){
            if($B.debug>0){
               return function(){
                 $B.call_stack.push($B.line_info)
+                /*
                 if($B.line_info[1] != $B.last($B.frames_stack)[2]){
                     var frame = $B.last($B.frames_stack)
                     console.log($B.line_info[1]+' != '+frame+' length '+frame.length)
                 }
+                */
                 try{
                     var res = obj.apply(null,arguments)
                     if(res===undefined) return _b_.None
@@ -2063,7 +2065,7 @@ function to_dict(obj){
 }
 
 function frame(pos){
-    var mod_name = $B.line_info[1]
+    var mod_name = $B.frames_stack[2]
     var fs = $B.frames_stack
     var res = {__class__:$FrameDict,
         f_builtins : to_dict($B.vars['__builtins__'])
@@ -2071,11 +2073,11 @@ function frame(pos){
     if(pos===undefined){pos = fs.length-1}
     if(fs.length){
         var _frame = fs[pos]
-        var locals_id = _frame[0][0]
-        res.f_locals = to_dict(_frame[0][1])
-        res.f_globals = to_dict(_frame[1][1])
+        var locals_id = _frame[0]
+        res.f_locals = to_dict(_frame[1])
+        res.f_globals = to_dict(_frame[3])
         if(__BRYTHON__.debug>0){
-            res.f_lineno = __BRYTHON__.line_info[0]
+            res.f_lineno = $B.line_info.split(',')[0]
         }else{
             res.f_lineno = None
         }
@@ -2112,11 +2114,11 @@ var BaseException = function (msg,js_exc){
         // call stack
         var last_info, tb=null
         for(var i=0;i<$B.call_stack.length;i++){
-            var call_info = $B.call_stack[i]
+            var call_info = $B.call_stack[i].split(',')
             var lib_module = call_info[1]
             var caller = $B.modules[lib_module].line_info
             if(caller!==undefined){
-                call_info = caller
+                call_info = caller.split(',')
                 lib_module = caller[1]
             }
             if(lib_module.substr(0,13)==='__main__,exec'){lib_module='__main__'}
@@ -2138,6 +2140,7 @@ var BaseException = function (msg,js_exc){
             }
         }
         // error line
+        /*
         var err_info = $B.line_info
         if(err_info!==undefined){
             while(1){
@@ -2148,6 +2151,8 @@ var BaseException = function (msg,js_exc){
                 err_info = caller
             }
         }
+        */
+        err_info = $B.line_info.split(',')
         if(err_info!==undefined && err_info!==last_info){
             var module = err_info[1]
             var line_num = err_info[0]
@@ -2205,7 +2210,6 @@ $B.exception = function(js_exc){
         console.log('$B.exception ', js_exc)
         for(var attr in js_exc){console.log(attr,js_exc[attr])}
         console.log('line info '+ $B.line_info)
-        //console.log(js_exc.info) //printed by for loop above
         console.trace()
         console.log('call stack', $B.call_stack)
     }
@@ -2214,18 +2218,19 @@ $B.exception = function(js_exc){
         if($B.debug>0 && js_exc.info===undefined){
             //console.log('erreur '+js_exc+' dans module '+$B.line_info)
             if($B.line_info!==undefined){
-                var mod_name = $B.line_info[1]
+                var line_info = $B.line_info.split(',')
+                var mod_name = line_info[1]
                 var module = $B.modules[mod_name]
                 if(module){
                     if(module.caller!==undefined){
                         // for list comprehension and the likes, replace
                         // by the line in the enclosing module
                         $B.line_info = module.caller
-                        var mod_name = $B.line_info[1]
+                        var mod_name = line_info[1]
                     }
                     var lib_module = mod_name
                     if(lib_module.substr(0,13)==='__main__,exec'){lib_module='__main__'}
-                    var line_num = $B.line_info[0]
+                    var line_num = line_info[0]
                     if($B.$py_src[mod_name]===undefined){
                         console.log('pas de py_src pour '+mod_name)
                     }
