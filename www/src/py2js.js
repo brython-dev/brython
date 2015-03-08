@@ -2237,7 +2237,6 @@ function $ExceptCtx(context){
         var new_node = new $Node()
         new $NodeJSCtx(new_node,'$B.$pop_exc()')
         node.insert(0, new_node)
-        return 2
     }
     
     this.to_js = function(){
