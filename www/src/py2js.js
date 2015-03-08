@@ -1195,6 +1195,14 @@ function $CallCtx(context){
                 }//if
             }//switch
 
+            if($B.debug>0){
+                // On debug mode, use getattr(func,"__call__") to manage
+                // the call stack and get correct error messages
+                var res = 'getattr('+func_js+',"__call__")('
+                res += (this.tree.length>0 ? $to_js(this.tree) : '')
+                return res+')'
+            }
+
             if(this.tree.length>-1){
               if ($B.$blocking_function_names) {
                  var _func_name = func_js
@@ -1225,7 +1233,7 @@ function $CallCtx(context){
                       if($B.builtin_funcs[this.func.value]!==undefined){
                           var res = func_js + '('
                           res += (this.tree.length>0 ? $to_js(this.tree) : '')
-                          return res + ')'
+                          return res+')'
                       }
                   }else{
                       var bound_obj = this.func.found
@@ -1233,7 +1241,7 @@ function $CallCtx(context){
                         bound_obj.type=='def')){
                           var res = func_js+'('
                           res += (this.tree.length>0 ? $to_js(this.tree) : '')
-                          return res + ')'
+                          return res+')'
                       }
                   }
                   var res = '('+func_js+'.$is_func ? '
@@ -2225,6 +2233,13 @@ function $ExceptCtx(context){
         $B.bound[$get_scope(this).id][alias] = true
     }
 
+    this.transform = function(node, rank){
+        var new_node = new $Node()
+        new $NodeJSCtx(new_node,'$B.$pop_exc()')
+        node.insert(0, new_node)
+        return 2
+    }
+    
     this.to_js = function(){
         // in method "transform" of $TryCtx instances, related
         // $ExceptCtx instances receive an attribute __name__
@@ -4306,9 +4321,8 @@ function $add_line_num(node,rank){
         else if(elt.type==='single_kw'){flag=false}
         if(flag){
             // add a trailing None for interactive mode
-            //var js='$B.line_info=['+node.line_num+',"'+mod_id+'"];'
             var js='$B.line_info="'+node.line_num+','+mod_id+'";'
-            if(node.module===undefined) console.log('tiens, module undef !')
+            //if(node.module===undefined) console.log('tiens, module undef !')
 
             var new_node = new $Node()
             new $NodeJSCtx(new_node,js)

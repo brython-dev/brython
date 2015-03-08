@@ -71,7 +71,7 @@ $SetDict.__eq__ = function(self,other){
            if(!$SetDict.__contains__(self, e)) return false
          } catch(err) {
            if(err.__name__=="StopIteration") {
-              break
+              $B.$pop_exc();break
            }
            console.log(err)
            throw err

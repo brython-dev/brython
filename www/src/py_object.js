@@ -267,7 +267,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                         return _b_.getattr(arguments[0],rop)(obj)
                     }catch(err){
                         var msg = "unsupported operand types for "+opsigns[rank]+": '"
-                        msg += klass.__name__+"' and '"+arguments[0].__class__.__name__+"'"
+                        msg += klass.__name__+"' and '" //+arguments[0].__class__.__name__+"'"
                         throw _b_.TypeError(msg)
                     }
                 }

@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,0,'final',0]
 __BRYTHON__.__MAGIC__="3.1.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-03-07 09:25:30.745000"
+__BRYTHON__.compiled_date="2015-03-08 20:50:40.053000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -733,18 +733,23 @@ return 'getattr('+$to_js(this.tree)+',"__invert__")()'
 }
 }
 }
+if($B.debug>0){
+var res='getattr('+func_js+',"__call__")('
+res +=(this.tree.length>0 ? $to_js(this.tree): '')
+return res+')'
+}
 if(this.tree.length>-1){if($B.$blocking_function_names){var _func_name=func_js
 if(_func_name.indexOf($B.$blocking_function_names)> -1){console.log("candidate blocking function.. ",_func_name)
 }}
 if(this.func.type=='id'){if(this.func.is_builtin){
 if($B.builtin_funcs[this.func.value]!==undefined){var res=func_js + '('
 res +=(this.tree.length>0 ? $to_js(this.tree): '')
-return res + ')'
+return res+')'
 }}else{var bound_obj=this.func.found
 if(bound_obj &&(bound_obj.type=='class' ||
 bound_obj.type=='def')){var res=func_js+'('
 res +=(this.tree.length>0 ? $to_js(this.tree): '')
-return res + ')'
+return res+')'
 }}
 var res='('+func_js+'.$is_func ? '
 res +=func_js+' : '
@@ -1332,6 +1337,11 @@ this.expect='id'
 this.toString=function(){return '(except) '}
 this.set_alias=function(alias){this.tree[0].alias=alias
 $B.bound[$get_scope(this).id][alias]=true
+}
+this.transform=function(node,rank){var new_node=new $Node()
+new $NodeJSCtx(new_node,'$B.$pop_exc()')
+node.insert(0,new_node)
+return 2
 }
 this.to_js=function(){
 if(this.tree.length===0)return 'else'
@@ -2597,7 +2607,6 @@ else if(elt.type==='except'){flag=false}
 else if(elt.type==='single_kw'){flag=false}
 if(flag){
 var js='$B.line_info="'+node.line_num+','+mod_id+'";'
-if(node.module===undefined)console.log('tiens, module undef !')
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank,new_node)
@@ -4520,7 +4529,7 @@ return function(){try{
 if($B.$get_class(arguments[0])===klass){throw Error('')}
 return _b_.getattr(arguments[0],rop)(obj)
 }catch(err){var msg="unsupported operand types for "+opsigns[rank]+": '"
-msg +=klass.__name__+"' and '"+arguments[0].__class__.__name__+"'"
+msg +=klass.__name__+"' and '" 
 throw _b_.TypeError(msg)
 }}}}
 }}
@@ -4973,11 +4982,14 @@ var listcomp_name='lc'+$ix
 var $root=$B.py2js($py,module_name,listcomp_name,local_name,$B.line_info)
 $root.caller=$B.line_info
 var $js=$root.to_js()
+$B.call_stack.push($B.line_info)
 try{eval($js)
 var res=eval('$locals_'+listcomp_name+'["x"+$ix]')
 }
 catch(err){throw $B.exception(err)}
-finally{clear(listcomp_name)}
+finally{clear(listcomp_name)
+$B.call_stack.pop()
+}
 return res
 }
 $B.$dict_comp=function(env){
@@ -5251,7 +5263,7 @@ var _a=[]
 while(1){try{
 _a.push($B.pyobject2jsobject(_b_.next(obj)))
 }catch(err){if(err.__name__ !=="StopIteration")throw err
-break
+$B.$pop_exc();break
 }}
 return{'_type_': 'iter',data: _a}}
 if(_b_.hasattr(obj,'__getstate__')){return _b_.getattr(obj,'__getstate__')()
@@ -5290,8 +5302,7 @@ function as_array(s){var _a=[]
 var _it=_b_.iter(s)
 while(1){try{
 _a.push(_b_.next(_it))
-}catch(err){if(err.__name__=='StopIteration')break
-}}
+}catch(err){if(err.__name__=='StopIteration'){$B.$pop_exc();break}}}
 return _a
 }
 function as_list(s){return _b_.list(as_array(s))}
@@ -5344,8 +5355,8 @@ return _str.join(';')
 $B.$GetInt=function(value){
 if(typeof value=="number"){return value}
 if(_b_.isinstance(value,_b_.int))return value
-try{var v=_b_.getattr(value,'__int__')();return v}catch(e){}
-try{var v=_b_.getattr(value,'__index__')();return v}catch(e){}
+try{var v=_b_.getattr(value,'__int__')();return v}catch(e){$B.$pop_exc()}
+try{var v=_b_.getattr(value,'__index__')();return v}catch(e){$B.$pop_exc()}
 return value
 }
 $B.enter_frame=function(frame){$B.frames_stack.push(frame)
@@ -5635,7 +5646,8 @@ $BRGeneratorDict.__repr__=$BRGeneratorDict.__str__=function(self){return '<gener
 $BRGeneratorDict.close=function(self,value){self.sent_value=_b_.GeneratorExit()
 try{var res=$BRGeneratorDict.__next__(self)
 if(res!==_b_.None){throw _b_.RuntimeError("closed generator returned a value")
-}}catch(err){if($B.is_exc(err,[_b_.StopIteration,_b_.GeneratorExit]))return _b_.None
+}}catch(err){if($B.is_exc(err,[_b_.StopIteration,_b_.GeneratorExit])){$B.$pop_exc();return _b_.None
+}
 throw err
 }}
 $BRGeneratorDict.send=function(self,value){self.sent_value=value
@@ -5905,7 +5917,9 @@ var current_locals_name=current_locals_id.replace(/\./,'_')
 var current_globals_id=current_frame[2]
 var current_globals_name=current_globals_id.replace(/\./,'_')
 var is_exec=arguments[3]=='exec',module_name
-if(_globals===undefined){module_name=current_globals_name
+if(_globals===undefined){
+module_name='exec_'+$B.UUID()
+$B.$py_module_path[module_name]=$B.$py_module_path[current_globals_id]
 eval('var $locals_'+module_name+'=current_frame[3]')
 }else{if(_globals.id===undefined){_globals.id='exec_'+$B.UUID()}
 module_name=_globals.id
@@ -5930,14 +5944,12 @@ $B.line_info="1,"+module_name
 throw _b_.SyntaxError("eval() argument must be an expression")
 }}
 var js=root.to_js()
-try{var res=eval(js)
+var res=eval(js)
 if(_globals!==undefined){
 var ns=eval('$locals_'+module_name)
 var setitem=getattr(_globals,'__setitem__')
 for(var attr in ns){setitem(attr,ns[attr])
-}}}catch(err){console.log('error exec '+err)
-throw $B.exception(err)
-}
+}}
 if(res===undefined){res=_b_.None}
 return res
 }finally{
@@ -6293,7 +6305,7 @@ if(arg.length < 1 && !has_default){throw _b_.ValueError($op_name+"() arg is an e
 var $iter=iter(arg)
 var res=null
 while(true){try{var x=next($iter)
-if(res===null ||bool(getattr(func(x),op)(func(res)))){res=x}}catch(err){if(err.__name__=="StopIteration"){return res}
+if(res===null ||bool(getattr(func(x),op)(func(res)))){res=x}}catch(err){if(err.__name__=="StopIteration"){$B.$pop_exc();return res}
 throw err
 }}}else if((has_key && has_default && args.length>3)||
 (!has_key && has_default && args.length>2)){throw _b_.TypeError("Cannot specify a default for "+$op_name+"() with multiple positional arguments")
@@ -6964,20 +6976,7 @@ if(line)line=line.replace(/^[]+/g,'')
 err.info +='\n    '+line
 last_info=call_info
 if(i==0){tb={__class__:$TracebackDict,tb_frame:frame(),tb_lineno:call_info[0],tb_lasti:line,tb_next: None 
-}}}
-err_info=$B.line_info.split(',')
-if(err_info!==undefined && err_info!==last_info){var module=err_info[1]
-var line_num=err_info[0]
-try{var lines=$B.$py_src[module].split('\n')
-}catch(err){console.log('--module '+module);throw err}
-var lib_module=module
-if(lib_module.substr(0,13)==='__main__,exec'){lib_module='__main__'}
-err.info +="\n  module "+lib_module+" line "+line_num
-var line=lines[line_num-1]
-while(line && line.charAt(0)==' '){line=line.substr(1)}
-err.info +='\n    '+line
-tb={__class__:$TracebackDict,tb_frame:frame(),tb_lineno:line_num,tb_lasti:line,tb_next: None 
-}}}else{
+}}}}else{
 tb={__class__:$TracebackDict,tb_frame:{__class__:$FrameDict},tb_lineno:-1,tb_lasti:'',tb_next: None 
 }}
 err.message=msg
@@ -6996,12 +6995,6 @@ BaseException.__class__=$B.$factory
 BaseException.$dict=$BaseExceptionDict
 _b_.BaseException=BaseException
 $B.exception=function(js_exc){
-if($B.debug>0 && js_exc.caught===undefined){console.log('$B.exception ',js_exc)
-for(var attr in js_exc){console.log(attr,js_exc[attr])}
-console.log('line info '+ $B.line_info)
-console.trace()
-console.log('call stack',$B.call_stack)
-}
 if(!js_exc.py_error){if($B.debug>0 && js_exc.info===undefined){
 if($B.line_info!==undefined){var line_info=$B.line_info.split(',')
 var mod_name=line_info[1]
@@ -7034,7 +7027,6 @@ exc.info=''
 exc.traceback={__class__:$TracebackDict,tb_frame:frame(),tb_lineno:-1,tb_lasti:'',tb_next: None 
 }}else{var exc=js_exc
 }
-$B.exception_stack.push(exc)
 return exc
 }
 $B.is_exc=function(exc,exc_list){
@@ -7693,7 +7685,7 @@ return res
 }
 $B.$download_module=$download_module
 function import_js(module,path){try{var module_contents=$download_module(module.name,path)}
-catch(err){return null}
+catch(err){$B.$pop_exc();return null}
 run_js(module,path,module_contents)
 return true
 }
@@ -7721,7 +7713,8 @@ console.log('---')
 }
 function import_py(module,path,package){
 try{var module_contents=$download_module(module.name,path)
-}catch(err){return null
+}catch(err){$B.$pop_exc()
+return null
 }
 $B.imported[module.name].$package=module.is_package
 if(path.substr(path.length-12)=='/__init__.py'){$B.imported[module.name].__package__=module.name
@@ -9308,7 +9301,7 @@ var arg=iter(arguments[0])
 var next_func=getattr(arg,'__next__')
 while(1){try{res.push(next_func())}
 catch(err){if(err.__name__=='StopIteration'){$B.$pop_exc()
-}else{throw err 
+}else{throw err
 }
 break
 }}
@@ -10479,7 +10472,7 @@ var _it=_.iter(other)
 while(1){try{
 var e=_.next(_it)
 if(!$SetDict.__contains__(self,e))return false
-}catch(err){if(err.__name__=="StopIteration"){break
+}catch(err){if(err.__name__=="StopIteration"){$B.$pop_exc();break
 }
 console.log(err)
 throw err

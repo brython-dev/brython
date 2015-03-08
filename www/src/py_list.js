@@ -499,7 +499,7 @@ function list(){
             if(err.__name__=='StopIteration'){
                 $B.$pop_exc()
             }else{
-                throw err //console.log('err in next func '+err+'\n'+dir(arguments[0]))
+                throw err
             }
             break
         }

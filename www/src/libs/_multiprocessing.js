@@ -132,7 +132,7 @@ $PoolDict.map = function(self){
           arg=getattr(fargs, '__next__')()
        } catch(err) {
           if (err.__name__ == 'StopIteration') {
-             __BRYTHON__.$pop_exc()
+             $B.$pop_exc()
           } else {
              throw err
           }
@@ -154,6 +154,7 @@ $PoolDict.map = function(self){
                _pos++
            } catch(err) {
                if (err.__name__ != 'StopIteration') throw err
+               $B.$pop_exc()
                this.finished=true
            }
        }, false);
@@ -210,6 +211,7 @@ $PoolDict.apply_async = function(self){
                _pos++
            } catch(err) {
                if (err.__name__ != 'StopIteration') throw err
+               $B.$pop_exc()
                this.finished=true
            }
        }, false);
