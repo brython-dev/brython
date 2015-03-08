@@ -129,7 +129,8 @@ class BigJS(BigInt):
       return LongInt(self.value.pow(_value))
 
 
-_path = __file__[:__file__.rfind('/')]+'/'
+#_path = __file__[:__file__.rfind('/')]+'/'
+_path = __BRYTHON__.brython_path + 'Lib/long_int1/'
 
 #to use decimal.js library uncomment these 2 lines
 #javascript.load(_path+'decimal.min.js', ['Decimal'])
