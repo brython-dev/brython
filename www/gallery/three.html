@@ -1,0 +1,60 @@
+<html>
+<head>
+    <title>Getting Started with Three.js - Brython version</title>
+    <meta charset="iso-8859-1">
+    <script src="three.min.js"></script>
+<script type="text/javascript" src="../src/brython.js"></script>
+
+    <script type="text/python">
+        print('start ...')
+        from browser import document as doc
+        from browser import window
+        from javascript import JSObject,JSConstructor
+        
+        THREE = window.THREE
+        print(THREE)
+
+        cameraC = JSConstructor( THREE.PerspectiveCamera )
+        camera = cameraC( 75, 1, 1, 10000 )
+        camera.position.z = 1000;
+        print('ok')
+
+        sceneC = JSConstructor( THREE.Scene );
+        scene = sceneC();
+
+        geometryC = JSConstructor(THREE.CubeGeometry)
+        geometry = geometryC(200, 200, 200)
+        materialC = JSConstructor( THREE.MeshBasicMaterial )
+
+        material = materialC( { "color": "#ff0000", "wireframe": True } )
+
+        meshC = JSConstructor(THREE.Mesh)
+        mesh = meshC( geometry, material )
+        scene.add( mesh );
+
+        rendererC = JSConstructor(THREE.CanvasRenderer)
+        renderer = rendererC()
+        renderer.setSize( 444,444);
+
+
+        doc <= renderer.domElement
+        renderer.render( scene, camera )
+
+        def animate(i):
+            # note: three.js includes requestAnimationFrame shim
+            window.requestAnimationFrame( animate );
+
+            mesh.rotation.x += 0.01;
+            mesh.rotation.y += 0.02;
+
+            renderer.render( scene, camera );   
+
+        animate(0)
+
+    </script>
+
+</head>
+<body onload="brython(2)">
+    <div id="test"></div>
+</body>
+</html>

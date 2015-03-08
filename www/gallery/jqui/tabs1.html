@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<meta charset="iso-8859-1">
+
+<head>
+<link href="css" rel="stylesheet">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>jQuery UI Tabs - Simple manipulation</title>
+
+<script type="text/javascript" src="../../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../../src/version_info.js"></script>
+<script type="text/javascript" src="../../src/identifiers_re.js"></script>
+<script type="text/javascript" src="../../src/py2js.js"></script>
+<script type="text/javascript" src="../../src/py_object.js"></script>
+<script type="text/javascript" src="../../src/py_type.js"></script>
+<script type="text/javascript" src="../../src/py_utils.js"></script>
+<script type="text/javascript" src="../../src/py_generator.js"></script>
+<script type="text/javascript" src="../../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../../src/py_bytes.js"></script>
+<script type="text/javascript" src="../../src/py_set.js"></script>
+<script type="text/javascript" src="../../src/js_objects.js"></script>
+<script type="text/javascript" src="../../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../../src/py_import.js"></script>
+
+<script type="text/javascript" src="../../src/py_string.js"></script>
+<script type="text/javascript" src="../../src/py_int.js"></script>
+<script type="text/javascript" src="../../src/py_float.js"></script>
+<script type="text/javascript" src="../../src/py_complex.js"></script>
+<script type="text/javascript" src="../../src/py_dict.js"></script>
+<script type="text/javascript" src="../../src/py_list.js"></script>
+<script type="text/javascript" src="../../src/py_dom.js"></script>
+
+<style>
+body {
+    font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+    font-size: 62.5%;
+}
+#container {font-size:1em; width:40em; visibility: hidden;}
+.ui-menu { width: 150px; }
+
+#dialog label, #dialog input { display:block; }
+#dialog label { margin-top: 0.5em; }
+#dialog input, #dialog textarea { width: 95%; }
+#tabs { margin-top: 1em; }
+#tabs li .ui-icon-close { float: left; margin: 0.4em 0.2em 0 0; cursor: pointer; }
+#add_tab { cursor: pointer; }
+</style>
+
+<script type="text/python">
+from browser import document, alert
+from jqueryui import jq, Element
+
+document['container'].style.visibility = 'visible'
+
+tabTitle = jq["tab_title"]
+tabContent = jq["tab_content"]
+tabTemplate = "<li><a href='#{href}'>{label}</a> <span class='ui-icon ui-icon-close' role='presentation'>Remove Tab</span></li>"
+tabCounter = 2
+
+tabs = jq["tabs"].tabs()
+
+def addTabAndClose(ev):
+    addTab()
+    dialog.dialog("close")
+
+def closeDialog(ev):
+    dialog.dialog("close")
+
+def closeForm(ev):
+    print('closeform')
+    form[0].reset()
+
+# modal dialog init: custom buttons and a "close" callback resetting the form inside
+dialog = jq["dialog"].dialog(autoOpen=False,
+    modal=True,
+    buttons={"Add": addTabAndClose,
+        "Cancel": closeDialog}
+    )
+
+# addTab form: calls addTab function on submit and closes the dialog
+def form_submit(ev):
+    addTab()
+    dialog.dialog("close")
+    ev.preventDefault()
+
+form = dialog.find("form").submit(form_submit)
+
+# actual addTab function: adds new tab using the input from the form above
+def addTab():
+    global tabCounter
+    label = document["tab_title"].value or "Tab %s" %tabCounter
+    _id = "tabs-%s" %tabCounter
+    li = tabTemplate.format(href=_id, label=label)
+    tabContentHtml = document["tab_content"].value or "Tab %s content" %tabCounter
+    tabs.find( ".ui-tabs-nav" ).append( li )
+    tabs.append( "<div id='" + _id + "'><p>" + tabContentHtml + "</p></div>" )
+    tabs.tabs( "refresh" )
+    tabCounter+=1
+
+# addTab button: just opens the dialog
+def click_add_tab(ev):
+    dialog.dialog("open")
+
+jq["add_tab"].button().click(click_add_tab)
+
+# close icon: removing the tab on click
+def remove_tab(ev):
+    ev.target.id = 'azerty'
+    panelId = jq['azerty'].closest("li")
+    panelId = panelId.remove()
+    panelId = panelId.attr("aria-controls")
+    jq[panelId].remove()
+    tabs.tabs( "refresh" )
+
+tabs.delegate("span.ui-icon-close", "click", remove_tab)
+
+def keyup_on_tabs(ev):
+    if ev.altKey and ev.keyCode == jq.ui.keyCode.BACKSPACE:
+        panelId = tabs.find( ".ui-tabs-active" ).remove().attr( "aria-controls" )
+        jq[panelId].remove()
+        tabs.tabs( "refresh" )
+
+tabs.bind( "keyup", keyup_on_tabs)
+
+</script>
+
+</head>
+
+<body onLoad="brython(1)">
+
+<div id="container">
+
+    <div id="dialog" title="Tab data">
+    <form>
+    <fieldset class="ui-helper-reset">
+    <label for="tab_title">Title</label>
+    <input type="text" name="tab_title" id="tab_title" value="Tab Title" class="ui-widget-content ui-corner-all">
+    <label for="tab_content">Content</label>
+    <textarea name="tab_content" id="tab_content" class="ui-widget-content ui-corner-all">Tab content</textarea>
+    </fieldset>
+    </form>
+    </div>
+    <button id="add_tab">Add Tab</button>
+    <div id="tabs">
+    <ul>
+    <li><a href="#tabs-1">Nunc tincidunt</a> <span class="ui-icon ui-icon-close" role="presentation">Remove Tab</span></li>
+    </ul>
+    <div id="tabs-1">
+    <p>Proin elit arcu, rutrum commodo, vehicula tempus, commodo a, risus. Curabitur nec arcu. Donec sollicitudin mi sit amet mauris. Nam elementum quam ullamcorper ante. Etiam aliquet massa et lorem. Mauris dapibus lacus auctor risus. Aenean tempor ullamcorper leo. Vivamus sed magna quis ligula eleifend adipiscing. Duis orci. Aliquam sodales tortor vitae ipsum. Aliquam nulla. Duis aliquam molestie erat. Ut et mauris vel pede varius sollicitudin. Sed ut dolor nec orci tincidunt interdum. Phasellus ipsum. Nunc tristique tempus lectus.</p>
+    </div>
+    </div>
+
+</div>
+
+</body>
+</html>

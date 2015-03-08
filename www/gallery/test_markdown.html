@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<meta charset="iso-8859-1">
+<head>
+<style>
+body,td,th{font-family:"times"}
+a.sort_link{margin-left:10px;text-decoration:none}
+</style>
+
+<script type="text/javascript" src="../../src/brython.js"></script>
+
+</head>
+<body onLoad="brython(2)">
+<script id="ascript" type="text/python">
+from browser import document, markdown, alert
+
+def convert(ev):
+    src = document["src"].value
+    html, scripts = markdown.mark(src)
+    
+    document["zone"].html = html
+    document["raw"].value = html
+
+document["convert"].bind('click', convert)
+</script>
+<textarea id="src" cols=80 rows=10></textarea>
+<button id="convert">convert</button>
+<p><textarea id="raw" cols=80 rows=10></textarea>
+<p><div id="zone" style="background-color:#D0D0D0"></div>
+</body>
+</html>

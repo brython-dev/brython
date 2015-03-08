@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+    <title>Brython interactive mode</title>
+    <meta charset="UTF-8">
+    <meta name=robots content="index, follow">
+    <meta name=description content=Brython >
+    <meta name=author content="Pierre Quentel">
+    <meta name=keywords content="Python, Brython">
+    <meta name=viewport content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="shortcut icon" href=brython.png type=image/x-icon >
+    <noscript>Please enable Javascript to view this page correctly.</noscript>
+
+    <link rel=stylesheet href="doc/doc_brython.css">
+
+    <script src="src/brython.js"></script>
+
+    <style>
+    .codearea {
+        background-color:#000;
+        color:#fff;
+        font-family:'Oxygen Mono', Consolas, 'Liberation Mono', 'DejaVu Sans Mono', monospace;
+        font-size:14px;
+        overflow:auto
+    }
+    div, textarea {
+        height:100%;
+        width:98%
+    }
+    </style>
+</head>
+
+
+<body onload="brython(1)">
+    <table id=banner cellpadding=0 cellspacing=0>
+        <tr id=banner_row >
+    </table>
+
+    <textarea id=code class=codearea rows=20></textarea>
+
+    <div id=content></div>
+
+    <script type="text/python3" src="tests/console.py"></script>
+
+    <details>
+        <summary>Embed:</summary>
+            The console can be embedded in a web page by adding
+        <blockquote>
+            <pre>
+                &lt;iframe src=http://brython.info/console.html width=800 height=400&gt;&lt;/iframe&gt;
+            </pre>
+        </blockquote>
+    </details>
+
+</body>
+
+</html>

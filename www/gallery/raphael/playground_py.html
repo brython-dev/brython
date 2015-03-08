@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Raphaël · Playground</title>
+        <link rel="stylesheet" href="demo.css" type="text/css" media="screen">
+        <link rel="stylesheet" href="demo-print.css" type="text/css" media="print">
+        <script src="raphael-min.js"></script>
+        <script src="../../src/brython.js"></script>
+        <style media="screen">
+            body {
+                margin: 0;
+                padding: 0;
+                text-align: center;
+            }
+            h1 {
+                font-weight: 400;
+                height: 5%;
+            }
+            #canvas {
+                height: 480px;
+                margin: 0 auto;
+                text-align: left;
+                width: 640px;
+            }
+            #code {
+                font-family: Consolas, Monaco, "Lucida Console", monospace;
+                height: 4em;
+                margin: 10px;
+                padding: 0;
+                width: 90%;
+            }
+            #run {
+                font-size: 2em;
+            }
+        </style>
+        <script type="text/python3">
+        from browser import document, window
+        from javascript import JSObject
+        
+        paper = window.Raphael("canvas", 640, 480)
+        btn = document["run"]
+        cd = document["code"]
+
+        def callback(ev):
+            paper.clear()
+            r = paper.rect(0, 0, 640, 480, 10)
+            r.attr({'fill': "#fff", 'stroke':"none"})
+            
+            exec(cd.value)
+
+        btn.bind('click', callback)
+        callback(None)
+        </script>
+    </head>
+    <body onload="brython(1)">
+        <h1>Raphaël Playground</h1>
+        <div id="canvas"></div>
+        <div><textarea id="code">paper.circle(320, 240, 60).animate({"fill": "#223fa3", "stroke": "#0f0", "stroke-width": 80, "stroke-opacity": 0.5}, 2000);</textarea></div>
+        <div><button id="run" type="button">Run</button></div>
+        <p id="copy">Demo of <a href="http://raphaeljs.com/">Raphaël</a>—JavaScript Vector Library
+        <br>adapted to <a href="http://brython.info">Brython</a></p>
+         
+    </body>
+</html>

@@ -11,7 +11,7 @@ import sys
 import tarfile
 import zipfile
 
-import make_static_doc  # lint:ok
+import make_doc  # lint:ok
 
 try:
     import slimit
@@ -24,7 +24,7 @@ except ImportError:
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
-implementation = [3, 1, 0, 'alpha', 0]
+implementation = [3, 1, 0, 'final', 0]
 
 def custom_minify(src):
     _res, pos = '', 0
@@ -95,7 +95,7 @@ def custom_minify(src):
     return _res
 
 
-abs_path = lambda _pth: os.path.join(os.path.dirname(os.getcwd()), 'src', _pth)
+abs_path = lambda _pth: os.path.join(os.path.dirname(os.getcwd()), 'www', 'src', _pth)
 now = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
 
 # update version number
@@ -131,7 +131,7 @@ with open(abs_path('version_info.js'), 'wb') as vinfo_file_out:
 
 # Create file stdlib_paths.js : static mapping between module names and paths
 # in the standard library
-libfolder = os.path.join(os.path.dirname(os.getcwd()), 'src')
+libfolder = os.path.join(os.path.dirname(os.getcwd()), 'www', 'src')
 simple_javascript_template_string = """;(function($B){\n
 $B.stdlib = {}
 """
@@ -189,7 +189,7 @@ sources = [
     'py_type', 'py_utils', 'py_generator', 'py_builtin_functions', 'py_bytes',
     'js_objects', 'stdlib_paths', 'py_import', 'py_float', 'py_int',
     'py_complex', 'py_dict', 'py_list', 'py_string', 'py_set', 'py_dom',
-    'py_import_hooks'
+    'py_import_hooks', 'builtin_modules'
 ]
 
 res = '// brython.js brython.info\n'
@@ -233,14 +233,13 @@ except ImportError:
     make_VFS = None
     sys.exit()
 
-make_VFS.process(os.path.join(pdir, 'src', 'py_VFS.js'))
-make_VFS.process_unittest(os.path.join(pdir, 'src', 'py_unittest.js'))
+make_VFS.process(os.path.join(pdir, 'www', 'src', 'py_VFS.js'))
+make_VFS.process_unittest(os.path.join(pdir, 'www', 'src', 'py_unittest.js'))
 
 # make distribution with core + libraries
-with open(os.path.join(pdir, 'src', 'brython_dist.js'), 'wb') as distrib_file:
-    distrib_file.write(open(os.path.join(pdir, 'src', 'brython.js')).read())
-    distrib_file.write(open(os.path.join(pdir, 'src', 'py_VFS.js')).read())
-
+with open(os.path.join(pdir, 'www', 'src', 'brython_dist.js'), 'wb') as distrib_file:
+    distrib_file.write(open(os.path.join(pdir, 'www', 'src', 'brython.js')).read())
+    distrib_file.write(open(os.path.join(pdir, 'www', 'src', 'py_VFS.js')).read())
 
 # zip files
 dest_dir = os.path.join(pdir, 'dist')
@@ -318,10 +317,10 @@ for arc, wfunc in (dist1, dist1.add), (dist2, dist2.add), (dist3, dist3.write):
     for path in 'README.md', 'LICENCE.txt':
         wfunc(os.path.join(pdir, path), arcname=os.path.join(name, path))
 
-    wfunc(os.path.join(pdir, 'src', 'brython.js'),
+    wfunc(os.path.join(pdir, 'www', 'src', 'brython.js'),
           arcname=os.path.join(name, 'brython.js'))
 
-    base = os.path.join(pdir, 'src')
+    base = os.path.join(pdir, 'www', 'src')
     folders = ('libs', 'Lib')
     for folder in folders:
         for dirpath, dirnames, filenames in os.walk(os.path.join(base, folder)):

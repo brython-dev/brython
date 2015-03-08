@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<meta charset="iso-8859-1">
+<head>
+<title>Brython spreadsheet</title>
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+td {
+    border-style:solid;
+    border-width: 0px 0px 1px 0px;
+    border-color: #000;
+    padding:3px;
+}
+
+th {
+    border-style:solid;
+    border-width: 1px;
+    border-color: #000;
+    background-color: #61D7A4;
+    padding: 4px;
+}
+
+span{font-size:15px;
+    margin-left:10px;}
+a.sort_link{
+    margin-left:10px;
+    font-size: 15px;
+    text-decoration:none;
+}
+
+</style>
+
+<script type="text/javascript" src="../src/brython.js"></script>
+
+
+<style>
+table { border-collapse: collapse; font-family: Calibri, sans-serif; }
+colgroup, tbody { border: solid medium; }
+td { border: solid thin; height: 1.8em; min-width: 100px; text-align: left; padding: 0; }
+</style>
+</head>
+<body onLoad="brython(1)">
+<script type="text/python" src="sheet.py">
+</script>
+
+<h1>Brython Spreadsheet</h1>
+
+<div id="panel"></div>
+
+</body>
+</html>

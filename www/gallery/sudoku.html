@@ -1,0 +1,200 @@
+<!doctype html>
+<html>
+<meta charset="iso-8859-1">
+<head>
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+td {
+    border-style:solid;
+    border-width: 0px 0px 1px 0px;
+    border-color: #000;
+    padding:3px;
+}
+
+th {
+    border-style:solid;
+    border-width: 1px;
+    border-color: #000;
+    background-color: #61D7A4;
+    padding: 4px;
+}
+
+span{font-size:15px;
+    margin-left:10px;}
+a.sort_link{
+    margin-left:10px;
+    font-size: 15px;
+    text-decoration:none;
+}
+
+</style>
+
+<script type="text/javascript" src="../src/brython.js"></script>
+
+<style>
+table { border-collapse: collapse; font-family: Calibri, sans-serif; }
+colgroup, tbody { border: solid medium; }
+td { border: solid thin; height: 1.8em; width: 1.8em; text-align: center; padding: 0; }
+</style>
+</head>
+<body onLoad="brython()">
+<script type="text/python">
+from browser import document, html, alert
+from random import choice
+
+import sudoku
+
+current_cell = None
+
+def solve(ev):
+    line = ''.join(cell.text or ' ' for cell in puzzle.get(selector='TD'))
+    line = line.replace(' ','0')
+    try:
+        solution = sudoku.sudoku99(line)
+        result.clear()
+        result <= make_grid(solution)
+    except:
+        result.clear()
+        result <= "No solution !"
+
+def clear_grid(ev):
+    result.clear()
+    cells = puzzle.get(selector='TD')
+    for cell in cells:
+        cell.text = ' '
+    alert('Enter digits in the puzzle. Use TAB key to navigate')
+    make_input(cells[0])
+
+def change_grid(ev):
+    puzzle.clear()
+    puzzle <= make_grid(choice(grids))
+
+def entry_keydown(ev):
+    target = ev.target
+    is_tab = ev.keyCode==9
+    is_digit = ev.keyCode>=97 and ev.keyCode<=106
+    if is_tab or is_digit:
+        if is_digit:
+            value = 1+ev.keyCode-97
+        else:
+            value = ev.target.value
+        cell = ev.target.parent
+        cell.clear()
+        cell.text = value
+
+        # jump to next cell
+        cell_rank = int(cell.id[1:])
+        if is_digit or not ev.shiftKey:
+            if cell_rank<80:
+                next_cell = puzzle.get(selector='TD')[cell_rank+1]
+                make_input(next_cell)
+        else: # shift tab
+            if cell_rank>0:
+                next_cell = puzzle.get(selector='TD')[cell_rank-1]
+                make_input(next_cell)
+
+    ev.preventDefault()
+    ev.stopPropagation()
+        
+def end_entry(ev):
+    global current_cell
+    if current_cell is not None:
+        inputs = current_cell.get(selector='INPUT')
+        if inputs:
+            value = inputs[0].value
+            current_cell.clear()
+            current_cell.text = value
+    
+def entry(ev):
+    end_entry(ev)
+    make_input(ev.target)
+
+def entry_blur(ev):
+    end_entry(ev)
+
+def make_input(cell):
+    global current_cell
+    value = cell.text.strip()
+    cell.clear()
+    input = html.INPUT(value=value,
+        style={'width':'1.3em','padding':'0px'})
+    cell <= input
+    input.bind('keydown', entry_keydown)
+    input.bind('blur', entry_blur)
+    input.focus()
+    input.select()
+    current_cell = cell
+    
+def make_grid (grid):
+    # returns an HTML table with 9 rows and 9 columns
+    global current_cell
+    
+    t = html.TABLE()
+    for i in range(3):
+        cg = html.COLGROUP()
+        for j in range(3):
+            cg <= html.COL()
+        t <= cg
+    srow = -1
+    for i,val in enumerate(grid):
+        row, column = divmod(i, 9)
+        if row>srow:
+            if row%3==0:
+                tb = html.TBODY()
+                t <= tb
+            line = html.TR()
+            tb <= line
+            srow = row
+        if val == '0':
+            val = ' '
+        cell = html.TD(val,id='i%s' %i)
+        cell.bind('click', entry)
+        cell.style.contentEditable = True
+        if column%3==0:
+            cell.style.borderLeftWidth = '1px'
+        if column==8:
+            cell.style.borderRightWidth = '1px'
+        line <= cell
+
+    current_cell = None
+    return t
+
+# example from http://magictour.free.fr/msk_009
+grids = [line.replace('.','0').strip() for line in open('sudoku_grids.txt')]
+
+puzzle = html.SPAN(style={"float":"left"})
+puzzle <= make_grid(choice(grids))
+document <= puzzle
+
+buttons = html.SPAN(style={"float":"left"})
+
+b_solve = html.BUTTON('Solve')
+b_solve.bind('click', solve)
+buttons <= html.DIV(b_solve)
+buttons <= html.P()
+
+b_change = html.BUTTON('Load random grid')
+b_change.bind('click', change_grid)
+buttons <= html.DIV(b_change)
+
+b_clear = html.BUTTON('Enter new grid')
+b_clear.bind('click', clear_grid)
+buttons <= html.DIV(b_clear)
+
+document <= buttons
+
+result = html.SPAN(style={"float":"left"})
+document <= result
+
+</script>
+
+<h1>Sudoku solver</h1>
+<a href="https://github.com/attractivechaos/plb/blob/master/sudoku/incoming/sudoku-bb.py">Sudoku algorithm</a> by Boris Borcic,
+sample grids from <a href="http://magictour.free.fr/msk_009">http://magictour.free.fr/msk_009</a>, 
+
+<p>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Brython test</title>
+        <meta charset="iso-8859-1">
+        <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1,maximum-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <script src="../src/brython.js"></script>
+        <script type="text/python" src="navi.py"></script>
+        <link rel="stylesheet" type="text/css" href="navi.css" />
+        <link rel="apple-touch-icon" href="icon.png"/>
+        <link rel="apple-touch-startup-image" href="splash.png">
+    </head>
+    <body onLoad="brython(1)">
+        <div id="header">
+            <H1>Your position</H1>
+            <div id="switch">
+                  <span class="thumb"></span>
+                    <input id="refr" type="checkbox" />
+                </div>
+            </div>
+        </div>
+        <div id="navarea"></div>
+        <div id="maparea"></div>
+    </body>
+</html>

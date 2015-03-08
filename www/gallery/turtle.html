@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+
+    <script type=text/javascript src="../src/brython.js"></script>
+
+<script id="python_script" type="text/python">
+  from browser import document, console
+  _code=document["div_html"].text
+
+  exec(_code)
+  document["processing"].style.display="none"
+</script>
+
+<style type="text/css">
+.blink {
+  animation: blink 1s steps(5, start) infinite;
+  -webkit-animation: blink 1s steps(5, start) infinite;
+}
+@keyframes blink {
+  to { visibility: hidden; }
+}
+@-webkit-keyframes blink {
+  to { visibility: hidden; }
+}
+</style>
+
+</head>
+
+<body onload="brython(1)">
+<pre id="div_html" style="float:left">
+import turtle
+t=turtle.Turtle()
+
+t.penup()
+t.left(45)
+t.backward(125)
+t.right(45)
+t.pendown()
+
+for c in ['red', 'green', 'yellow', 'blue']:
+    t.color(c)
+    t.forward(75)
+    t.left(90)
+
+t1=turtle.Turtle("turtle")
+t1.penup()
+
+t1.pendown()
+t1.width(3)
+for c in ['red', 'blue', 'yellow', 'green', 'purple', 'brown']:
+    t1.color(c)
+    t1.forward(50)
+    t1.left(60)
+
+t1.penup()
+t1.left(60)
+t1.backward(120)
+
+t1.pendown()
+t1.color('red')
+t1.write("I love Brython!!")
+
+turtle._Screen().end()
+</pre>
+
+<div id="container" 
+     style="float:left;border-style:solid;border-color:black;margin-left:50px"></div>
+</body>
+
+<div id="processing" class="blink" 
+     style="color:red;position:absolute;z-index:100;width:250px;height:100px;top:50%;left:50%;margin 0 auto;">Processing... Please wait..
+</div>
+
+</html>

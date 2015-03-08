@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+    <head>
+        <title>python plot on the web</title>
+        <meta charset="iso-8859-1">
+        <script src="../src/brython.js"></script>
+        <script src="../src/py_VFS.js"></script>
+    </head>
+
+    <body onLoad="brython(1)">
+
+
+<script type="text/python">
+import random
+from browser import document as doc
+from browser import timer
+
+canvas = doc["plotarea"]
+ctx = canvas.getContext("2d")
+
+## After doing this I saw that this could be achieved using
+## translate(0,canvas.height); scale(1,-1); 
+## https://developer.mozilla.org/en-US/docs/HTML/Canvas/Tutorial/Transformations
+def change_ref_system(x, y):
+    return (20 + x * 8, 420 - y * 20)
+
+def draw_line(x1, y1, x2, y2, linethick = 3, color = "black"):
+    ctx.beginPath()
+    ctx.lineWidth = linethick
+    ctx.moveTo(x1, y1)
+    ctx.lineTo(x2, y2)
+    ctx.strokeStyle = color
+    ctx.stroke()
+
+def axis(color = "black", linethick = 3):
+    #Draw of x axis
+    draw_line(20, 420, 820, 420, linethick = linethick, color = color)
+    #Draw of y axis
+    draw_line(20, 20, 20, 420, linethick = linethick, color = color)
+
+def axis_color():
+    axis(color = doc["axis_color"].value)
+
+def figure_title():
+    ctx.clearRect(410, 0, 400, 30)
+    ctx.fillStyle = "gray"
+    ctx.font = "bold 16px Arial"
+    ctx.fillText(doc["titletext"].value, 410, 20)
+    
+dataset = []
+def graph():
+    data = random.random() * 20
+    doc["console"] <= '%s, ' % str(data)[0:5]
+    dataset.append(data)
+    if len(dataset) == 1:
+        x, y = change_ref_system(len(dataset), data)
+        draw_line(x, y, x, y, linethick=3, color="blue")
+    else:
+        x1, y1 = change_ref_system(len(dataset)-1, dataset[-2])
+        x2, y2 = change_ref_system(len(dataset), data)
+        draw_line(x1, y1, x2, y2, linethick=3, color="blue")
+    if len(dataset) >= 100:
+        timer.clear_interval(work)
+
+axis(color = "black", linethick = 5)
+figure_title()
+work = timer.set_interval(graph, 100)
+
+# Some "adds" :-P
+#dicc = {'Pybonacci (on wordpress)':'http://pybonacci.wordpress.com',
+#        'Pybonacci (on Twitter)':'https://twitter.com/Pybonacci'
+#       }
+#for clave in dicc.keys():
+#    doc <= P()
+#    doc <= 'Pulsa en: ' + A(clave, href=dicc[clave])
+
+        </script>
+
+
+<table>
+    <tr>
+        <td rowspan="3"><textarea id="console" cols=30 rows=30></textarea></td>
+        <td><input id="axis_color" value="black"><button onclick="axis_color()">Change axis color</button></td>
+    </tr>
+    <tr>
+        <td><input id="titletext" value="This is the title"><button onclick="figure_title()">Change title</button></td>
+    </tr>
+    <tr>
+        <td><canvas id="plotarea" width="840" height="440"></canvas></td>
+    </tr>
+</table>
+
+    </body>
+</html>

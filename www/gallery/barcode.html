@@ -1,0 +1,108 @@
+<html>
+
+<head>
+
+<script src="../src/brython.js"></script>
+
+<style>
+    
+    body { background: indianred }
+
+    input, div, h1 { width: 700px; margin: 25px; color: brown }
+
+    input {
+        font-size: 20px;
+        color: #FFF;
+        background: #A52A2A;
+        padding: 8px;
+        border: 1px solid #8B0000;
+        font-family: monospace;
+        border-radius: 5px;
+        outline: none;
+        }
+
+</style>
+
+</head>
+
+<body onload=brython(1)>
+
+<center>
+<h1>Interleaved 2 of 5 Barcode Generator</h1>
+<div id=user_in>
+<input type="text" placeholder="enter an even number of decimal digits...">
+</div>
+<div id=barcode></div>
+</center>
+
+<script type=text/python>
+
+from browser import document as doc
+
+def render(event):
+
+    '''This function converts its input, a string of decimal digits, into a
+    barcode, using the interleaved 2 of 5 format. The input string must not
+    contain an odd number of digits. The output is an SVG string.
+
+    Wikipedia [ITF Format]: http://en.wikipedia.org/wiki/Interleaved_2_of_5
+    '''
+    
+    digits = event.target.value
+    
+    if len(digits) % 2 != 0: return
+    if [ digit for digit in digits if digit not in '0123456789' ]: return
+
+    top = '<svg height="58" width="{0}" style="background:white">'
+    bar = '<rect x="{0}" y="4" width="{1}" height="50" style="fill:black"/>'
+    barcode = [top.format(len(digits) * 14 + 24)]
+
+    byte_map = {
+        '0': (2, 2, 4, 4, 2), '1': (4, 2, 2, 2, 4),
+        '2': (2, 4, 2, 2, 4), '3': (4, 4, 2, 2, 2),
+        '4': (2, 2, 4, 2, 4), '5': (4, 2, 4, 2, 2),
+        '6': (2, 4, 4, 2, 2), '7': (2, 2, 2, 4, 4),
+        '8': (4, 2, 2, 4, 2), '9': (2, 4, 2, 4, 2)
+        }
+
+    byte = lambda i: byte_map[digits[i]]
+
+    def encode(bits, i=0):
+
+        '''Encodes a string of decimal digits. The output's a binary string,
+        but as a list of ints, all 2s and 4s, rather than zeros and ones, as
+        the bars in the SVG barcode are rendered 2px wide for zeros, 4px for
+        ones.'''
+
+        if i == len(digits): return bits
+ 
+        for odd, even in zip(byte(i), byte(i+1)): bits.extend([odd, even])
+
+        return encode(bits, i+2)
+
+    def svg(bits, i=0, x=4):
+
+        '''Converts the list of ints returned by `encode` to a list of SVG
+        elements that can be joined to form an SVG string.'''
+
+        if i == len(bits): return barcode + ['</svg>']
+
+        odd, even = bits[i:i+2]
+        barcode.append(bar.format(x, odd))
+
+        return svg(bits, i+2, x+odd+even)
+
+    # The call to `encode` passes in the itf start code, and the itf end
+    # code's added to the list that `encode` returns. The complete list
+    # is passed to `svg`, which returns a list of SVG element strings
+    # that're joined with newlines to create the actual SVG output.
+
+    doc['barcode'].html = '\n'.join(svg(encode([2, 2, 2, 2]) + [4, 2, 2, 0]))
+
+doc['user_in'].bind('keyup', render)
+
+</script>
+
+</body>
+
+</html>

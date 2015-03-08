@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<meta charset="iso-8859-1">
+
+<head>
+<link href="css" rel="stylesheet">
+<script type="text/javascript" src="../../src/brython.js"></script>
+
+<style>
+#container {font-size:0.6em; width:40em; visibility: hidden;}
+</style>
+<script type="text/python">
+from browser import document, alert
+from jqueryui import jq
+
+document['container'].style.visibility = 'visible'
+
+def update_value(ev, ui):
+    document["test"].value = ui.value
+
+jq['slider'].slider(change=update_value)
+</script>
+
+</head>
+
+<body onLoad="brython(1)">
+
+<div id="container">
+
+    <h2>Slider</h2>
+    <div id="slider"></div>
+    <input id="test" value="0" autocomplete="off"></input>
+
+</div>
+
+</body>
+</html>

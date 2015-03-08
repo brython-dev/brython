@@ -1,0 +1,175 @@
+<!doctype html>
+<html>
+<meta charset="iso-8859-1">
+<head>
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+td {
+    border-style:solid;
+    border-width: 0px 0px 1px 0px;
+    border-color: #000;
+    padding:3px;
+}
+
+th {
+    border-style:solid;
+    border-width: 1px;
+    border-color: #000;
+    background-color: #61D7A4;
+    padding: 4px;
+}
+
+span{font-size:15px;
+    margin-left:10px;}
+a.sort_link{
+    margin-left:10px;
+    font-size: 15px;
+    text-decoration:none;
+}
+
+</style>
+
+<script type="text/javascript" src="/src/brython_builtins.js"></script>
+<script type="text/javascript" src="/src/version_info.js"></script>
+<script type="text/javascript" src="/src/identifiers_re.js"></script>
+<script type="text/javascript" src="/src/py2js.js"></script>
+<script type="text/javascript" src="/src/py_object.js"></script>
+<script type="text/javascript" src="/src/py_type.js"></script>
+<script type="text/javascript" src="/src/py_utils.js"></script>
+<script type="text/javascript" src="/src/py_generator.js"></script>
+<script type="text/javascript" src="/src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="/src/py_bytes.js"></script>
+<script type="text/javascript" src="/src/py_set.js"></script>
+<script type="text/javascript" src="/src/js_objects.js"></script>
+<script type="text/javascript" src="/src/stdlib_paths.js"></script>
+<script type="text/javascript" src="/src/py_import.js"></script>
+
+<script type="text/javascript" src="/src/py_string.js"></script>
+<script type="text/javascript" src="/src/py_int.js"></script>
+<script type="text/javascript" src="/src/py_float.js"></script>
+<script type="text/javascript" src="/src/py_complex.js"></script>
+<script type="text/javascript" src="/src/py_dict.js"></script>
+<script type="text/javascript" src="/src/py_list.js"></script>
+<script type="text/javascript" src="/src/py_dom.js"></script>
+
+<script type="text/javascript" src="/src/builtin_modules.js"></script>
+
+</head>
+<body onLoad="brython(1)">
+<script id="ascript" type="text/python">
+from browser import document as doc
+from browser import window, html
+import time
+
+t0 = time.time()
+
+orders = {}
+
+def sort_by_col(evt,numeric=False):
+    cell = evt.target
+    th_elt = cell.parent # TH cell
+    for i,th in enumerate(title.children):
+        if th==th_elt:
+            col_num = i
+            break
+    if col_num not in orders:
+        if numeric:
+            orders[col_num]='down'
+        else:
+            orders[col_num]='up'
+    elif orders[col_num]=='up':
+        orders[col_num]='down'
+    else:
+        orders[col_num]='up'
+    ascending = orders[col_num]
+
+    def k_str(_item):
+        return _item.children[col_num].text
+    def k_int(_item):
+        return float(_item.children[col_num].text)
+
+    if not numeric:
+        func = k_str
+    else:
+        func = k_int
+
+    rows.sort(key=func)
+
+    if ascending == 'down':
+        rows.reverse()
+
+    for i in range(len(rows)):
+        t <= rows[i]
+
+lines = ['Allemagne','Berlin',357026,81.8,
+'Autriche','Vienne',83871,8.40,
+'Belgique','Bruxelles',30518,10.91,
+'Bulgarie','Sofia',110944,7.50,
+'Chypre','Nicosie',9251,0.80,
+'Danemark','Copenhague',43098,5.56,
+'Espagne','Madrid',505997,46.15,
+'Estonie','Tallinn',43698,1.34,
+'Finlande','Helsinki',338144,5.37,
+'France','Paris',544000,65.07,
+'Grèce','Athènes',131625,11.32,
+'Hongrie','Budapest',93029,9.98,
+'Irlande','Dublin',69797,4.48,
+'Italie','Rome',301336,60.62,
+'Lettonie','Riga',64589,2.22,
+'Lituanie','Vilnius',62678,3.24,
+'Luxembourg','Luxembourg',2586,0.51,
+'Malte','La Valette',315,0.41,
+'Pays-Bas','Amsterdam',41528,16.65,
+'Pologne','Varsovie',312685,38.20,
+'Portugal','Lisbonne',91946,10.63,
+'République tchèque','Prague',78867,10.53,
+'Roumanie','Bucarest',238391,21.41,
+'Royaume-Uni','Londres',243820,62.43,
+'Slovaquie','Bratislava',49034,5.43,
+'Slovénie','Ljubljana',20273,2.05,
+'Suède','Stockholm',441369,9.41]
+
+doc <= html.H2("Pays d'Europe")
+
+table = html.TABLE(cellspacing=0)
+t = html.TBODY()
+title = html.TR()
+link = html.A('\u2191\u2193', href="#", Class="sort_link")
+link.bind('click',sort_by_col)
+
+link_num = html.A('\u2191\u2193', href="#", Class="sort_link")
+link_num.bind('click',lambda ev:sort_by_col(ev,True))
+link1 = link.clone()
+title <= html.TH('Pays'+link)
+title <= html.TH('Capitale'+link.clone())
+title <= html.TH('Superficie'+link_num)
+title <= html.TH('Population'+link_num.clone())
+t <= title
+
+rows = []
+for i in range(len(lines)/4):
+    row = html.TR()
+    for j in range(2):
+        row <= html.TD(lines[4*i+j])
+    for j in range(2,4):
+        row <= html.TD(lines[4*i+j],align="right")
+    rows.append(row)
+
+for row in rows:
+    t <= row
+
+table <= t
+doc <= table
+
+x = html.P()+html.A('r')
+
+foot = html.P()+html.I('Ecrit en '+html.A('Brython',href="http://www.brython.info"))
+
+doc <= foot
+
+</script>
+</body>
+</html>

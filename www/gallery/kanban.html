@@ -1,0 +1,211 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Pseudo Kanban for Brython</title>
+
+        <meta name="description" content="Pseudo Kanban simulation for Brython"/>
+        <meta name="keywords" content="Python,Brython,Kanban"/>
+        <meta name="author" content="Pedro Rodriguez"/>
+        <meta charset="utf-8"/>
+
+        <script type="text/javascript" src="../src/brython.js"></script>
+
+        <script type="text/javascript">
+            function popup_dump(s) {
+                var w = window.open("", "", "");
+                w.document.open("text/plain");
+                w.document.write(s);
+                w.document.close();
+                w.document.title = "DB DUMP";
+            }
+
+            function disclaimer() {
+                var copyright =
+                        'Copyright (c) 2013-2014, Pedro Rodriguez pedro.rodriguez.web@gmail.com\n' +
+                        'All rights reserved.\n' +
+                        '\n' +
+                        'Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n' +
+                        '\n' +
+                        'Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. \n' +
+                        'Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution. \n' +
+                        'Neither the name of the <ORGANIZATION> nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission. \n' +
+                        '\n' +
+                        'THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n';
+
+                ret = confirm( "Click OK to accept condition of use\n\n" + copyright );
+                if( ! ret ) {
+                    document.open("about:blank")
+                }
+            }
+
+        </script>
+
+        <style text="text/css">
+
+            .listing {
+                font-family : monospace;
+                }
+
+            .board {
+                float : left;
+                width : 100%;
+                display : table;
+                }
+
+            .step {
+                display : table-cell;
+                padding-bottom : 5em;
+                height : 100%;
+                }
+
+            .step_header {
+                padding : 0.2em;
+                border-radius : 5px;
+                border : 2px solid black;
+                background-color : rgba(255, 255, 255, 0.4);
+                margin : 5px;
+                outline : 0px none;
+                vertical-align : baseline;
+                font-weight : bold;
+                }
+
+            .step_title {
+                display : table-cell;
+                cursor : cell;
+                width : 100%;
+                text-align : center;
+                }
+
+            .step_count {
+                display : table-cell;
+                padding-left : 1em;
+                padding-right : 1em;
+                text-align : center;
+                }
+
+            .task {
+                cursor : pointer;
+                padding : 0.2em;
+                min-height : 3em;
+                border-radius : 5px;
+                border : 1px solid black;
+                margin : 5px;
+                padding-bottom : 2em;
+                outline : 0px none;
+                vertical-align : baseline;
+                }
+
+            .task_command {
+                height : 1.2em;
+                width : 100%;
+                }
+
+            .task_command_delete {
+                height : 1.2em;
+                border : 1px solid black;
+                text-align : center;
+                padding-left : 2px;
+                padding-right : 2px;
+                vertical-align : middle;
+                }
+
+            .task_progress {
+                position : relative;
+                width : 100%;
+                height : 1.2em;
+                border : 1px solid black;
+                background-color : rgba(255, 255, 255, 0.5)
+                }
+
+            .task_progress_bar {
+                height : inherit;
+                position : absolute;
+                background-color : rgba(0, 0, 0, .3)
+                }
+
+            .task_progress_text {
+                height : inherit;
+                position : absolute;
+                width : 100%;
+                text-align : center;
+                margin : 0px;
+                /* font-weight : bold; */
+                vertical-align : middle;
+                }
+
+            .task_desc {
+                margin : 1px;
+                }
+
+        </style>
+    </head>
+
+    <body onLoad="disclaimer(); brython(2)">
+
+        <script type="text/python" src='kanban.py'></script>
+
+        <div id="board" class="board"></div>
+        <button id="dump">Dump</button>
+        <button id="save_kanban">Save</button>
+        <button id="load_kanban">Load</button>
+        <p><b>Mini help for a pseudo Kanban simulator</b></p>
+        <table>
+            <tr>
+                <td style="vertical-align : top">
+                    <dl>
+                        <dt><b><i>Process</i></b></dt>
+                            <dd>- A flow of tasks running through different steps</dd>
+                    </dl>
+                </td>
+                <td style="vertical-align : top">
+                    <dl>
+                        <dt><b><i>Actions on a process</i></b></dt>
+                            <dd>- Drag task to free space of step to signal process evolution</dd>
+                            <dd>- Click on save to save to browser local storage (if browser allows)</dd>
+                            <dd>- Click on load to restore from browser local storage (if browser allows)</dd>
+                    </dl>
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align : top">
+                    <dl>
+                        <dt><b><i>Step</i></b></dt>
+                            <dd>- Represented by a column</dd>
+                            <dd>- Contains a number of tasks</dd>
+                            <dd>- Name of the step is shown on top of the column</dd>
+                            <dd>- Number ot top level tasks is show on top right</dd>
+                    </dl>
+                </td>
+                <td style="vertical-align : top">
+                    <dl>
+                        <dt><b><i>Action on a step</i></b></dt>
+                            <dd>- Click on step's name to create a new task</dd>
+                    </dl>
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align : top">
+                    <dl>
+                        <dt><b><i>Task</i></b></dt>
+                            <dd>- Represented by a colored box</dd>
+                            <dd>- Can be nested (sub-task)</dd>
+                            <dd>- Progress of the task is shown in bar on top of the box</dd>
+                            <dd>- Textual description of the task is below the progress bar</dd>
+                    </dl>
+                </td>
+                <td style="vertical-align : top">
+                    <dl>
+                        <dt><b><i>Actions on a task</i></b></dt>
+                            <dd>- Click on <b>X</b> box to delete task (with contained sub-tasks)</dd>
+                            <dd>- Click on bar to change progress level</dd>
+                            <dd>- Click on description to edit it (html tags accepted)</dd>
+                            <dd>- Click on free space of the box to change color</dd>
+                            <dd>- Drag to part below description to nest task</dd>
+                    </dl>
+                </td>
+            </tr>
+        </table>
+
+    </body>
+</html>
+

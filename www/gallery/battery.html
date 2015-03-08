@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<meta charset="iso-8859-1">
+<head>
+<style>
+body,td,th{font-family:sans-serif}
+a.sort_link{margin-left:10px;text-decoration:none}
+</style>
+
+<script type="text/javascript" src="../src/brython.js"></script>
+
+</head>
+<body onLoad="brython(2)">
+<script id="ascript" type="text/python">
+from browser import document as doc
+from browser import html, window
+
+try :
+    batt = window.navigator.battery
+
+    doc <= html.TABLE(html.TR(html.TD("Battery level : ") + 
+                    html.TD("?", Id='batt_level') +
+                    html.TD(" ") +
+                    html.TD("(") +
+                    html.TD("?", Id='batt_status') +
+                    html.TD("") +
+                    html.TD("?", Id='batt_time') +
+                    html.TD(")")))
+    
+    def batt_charging_change(event=None) :
+        if batt.charging :
+            doc["batt_status"].html = "charging"
+        else :
+            doc["batt_status"].html = "discharging"
+    
+    def batt_level_change(event=None) :
+        doc["batt_level"].html = "%d%%" %(batt.level*100)
+    
+    def batt_time_change(event=None) :
+        if batt.charging :
+            t = batt.chargingTime
+        else :
+            t = batt.dischargingTime
+        if t==0 :
+            doc["batt_time"].html = "done"
+        elif t == float('inf') :
+            doc["batt_time"].html = ""
+        else :
+            m, s = divmod(t, 60)
+            h, m = divmod(m, 60)
+            if h :
+                doc["batt_time"].html = " %dh%2.2dmn remaining" %(h,m)
+            elif m :
+                doc["batt_time"].html = " %2.2dmn remaining" %m
+            else :
+                doc["batt_time"].html = " %2.2ds remaining" %s
+     
+    batt_charging_change()
+    batt_level_change()
+    batt_time_change()
+     
+    #batt.bind('chargingchange', batt_charging_change)
+    batt.onchargingchange = batt_charging_change
+    batt.onchargingtimechange = batt_time_change
+    batt.ondischargingtimechange = batt_time_change
+    batt.levelchange = batt_level_change
+    
+    doc <= html.BR()
+    doc <= html.BR()
+    doc <= "The above information is automaticaly updated when battery status changes."
+    
+except :
+    doc <= "Battery information not available"
+
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<html>
+<head>
+<meta charset="utf-8">
+<script src="raphael-min.js"></script>
+
+<script type="text/javascript" src="../../src/brython.js"></script>
+
+</head>
+<body onload="brython(1)">
+
+<script type="text/python3">
+from browser import window
+
+# Creates canvas 320 × 200 at 10, 50
+bRaphael = window.Raphael
+
+paper = bRaphael(410, 50, 320, 200)
+
+# Creates circle at x = 50, y = 40, with radius 10
+circle = paper.circle(50, 40, 10)
+
+# Sets the fill attribute of the circle to red (#f00)
+circle.attr("fill", "#0f0")
+
+# Sets the stroke attribute of the circle to white
+circle.attr("stroke", "#fff")
+
+</script>
+
+</body>
+</head>

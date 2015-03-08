@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<meta charset="iso-8859-1">
+
+<head>
+<link href="css" rel="stylesheet">
+<script type="text/javascript" src="../../src/brython.js"></script>
+
+<style>
+#container {font-size:0.6em; width:40em; visibility: hidden;}
+</style>
+<script type="text/python">
+from browser import document, alert
+from jqueryui import jq
+
+document['container'].style.visibility = 'visible'
+
+def drop1(ev, ui):
+    elt = ev.target
+    elt.classList.add("ui-state-highlight")
+    elt.html = "Dropped !"
+
+jq['drag1'].draggable()
+jq['drop1'].droppable(drop=drop1)
+
+</script>
+
+</head>
+
+<body onLoad="brython(1)">
+
+<div id="container">
+
+<h2>Droppable</h2>
+
+<div id="drag1" class="ui-widget-content" 
+    style="width: 100px; height: 100px; padding: 0.5em; float: left; margin: 10px 10px 10px 0;">
+<p>Drag me to my target</p>
+</div>
+<div id="drop1" class="ui-widget-header"
+    style="width: 150px; height: 150px; padding: 0.5em; float: left; margin: 10px;">
+<p>Drop here</p>
+</div>
+
+</div>
+
+</body>
+</html>

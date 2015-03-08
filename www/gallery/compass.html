@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+<meta charset="iso-8859-1">
+<head>
+<style>
+body,td,th{font-family:sans-serif}
+a.sort_link{margin-left:10px;text-decoration:none}
+</style>
+
+<script type="text/javascript" src="../src/brython.js"></script>
+
+</head>
+<body onLoad="brython(1)">
+<script id="ascript" type="text/python">
+from browser import doc, html, window
+
+from browser import ajax
+import time
+
+class AjaxRequest():
+    def __init__(self, url):
+        self.url=url
+        self.ajax_timeout = 4
+        self.ajax_answer = None
+    
+    def _on_complete(self, req):
+        if req.status==200 or req.status==0:
+            self.ajax_answer = req.text
+        else:
+            self.ajax_answer = "error "+req.text
+    
+    def _err_msg(self):
+        self.ajax_answer = "server didn't reply after %s seconds" % ajax_timeout
+
+    def get(self):
+        self.ajax_answer = None
+        req = ajax.ajax()
+        req.bind('complete', self._on_complete)
+        req.set_timeout(self.ajax_timeout, self._err_msg)
+        req.open('GET', self.url, False)
+        req.send()
+        return self.ajax_answer
+
+w_width = window.innerWidth
+w_height = window.innerHeight
+
+d = html.DIV()
+d.innerHTML = AjaxRequest("compass.svg").get()
+doc <= d
+
+# Scale compass
+compass = doc["compass"]
+c_width = float(compass.getAttribute("width"))
+c_height = float(compass.getAttribute("height"))
+w_scale = w_width/c_width
+h_scale = w_height/c_height
+scale = min(h_scale, w_scale)
+compass.setAttribute('transform', 'scale(%f)' % scale);
+compass.setAttribute("width", c_width*scale)
+compass.setAttribute("height", c_height*scale)
+
+# Center div
+c_width = float(compass.getAttribute("width"))
+c_height = float(compass.getAttribute("height"))
+right = int((w_width-c_width)/2)
+top = int((w_height-c_height)/2)
+d.setAttribute("style", "position:absolute; top:%dpx; left:%dpx;" % (top, right))
+
+needle = doc["needle"]
+
+def onOrientationEvent(obj=None) :
+    #doc["alpha"].html = "%f" % obj.alpha
+    #doc["beta"].html = "%f" % obj.beta
+    #doc["gamma"].html = "%f" % obj.gamma
+    #doc["absolute"].html = "%d" % obj.absolute
+    needle.setAttribute('transform', 'rotate(%f 152 350)' % obj.alpha)
+
+try :
+    # Might raise an exception if deviceorientation information not supported.
+    window.navigator.ondeviceorientation = onOrientationEvent
+    # Previous statement does not work so use addEventListener()
+    window.addEventListener("deviceorientation", onOrientationEvent, True)
+except :
+    doc <= "Compass information not available"
+
+</script>
+
+</body>
+</html>

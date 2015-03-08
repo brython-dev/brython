@@ -1,0 +1,137 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta name="description" content="Drag and drop demo written in Brython www.brython.info">
+<meta name="keywords" content="Python,Brython">
+<meta name="author" content="Pierre Quentel">
+<meta http-equiv="Content-type" content="text/html;charset=utf-8">
+
+<script type="text/javascript" src="../src/brython.js"></script>
+
+<style>
+.rounded-corners {
+     -moz-border-radius: 20px;
+    -webkit-border-radius: 20px;
+    -khtml-border-radius: 20px;
+    border-radius: 20px;
+    text-align:center;
+    background-color:#440;
+    color:#FFF;
+    font-family:arial;
+    font-weight:bold;
+    font-size:12px;
+}
+</style>
+</head>
+<body onLoad="brython(2)">
+<img src="../brython.png">
+<script type="text/python">
+from browser import document as doc
+from browser import timer
+from browser.html import AREA,DIV
+
+countries = [area.id for area in doc[AREA]]
+
+
+def mouse_over(ev):
+    ev.target.style.cursor = "pointer"
+    
+def drag_start(ev):
+    ev.data['text']=ev.target.id
+    ev.data.effectAllowed = 'move'
+    
+def drag_over(ev):
+    ev.data.dropEffect = 'move'
+    ev.preventDefault()
+    
+def drop(ev):
+    ev.preventDefault()
+    src_id = ev.data['text']
+    elt = doc[src_id]
+    if ev.target.id==countries[int(src_id)]:
+        # dropped on the right country
+        elt.style.left = ev.x-elt.clientWidth/2
+        elt.style.top = ev.y-elt.clientHeight/2
+        elt.draggable = False # don't drag any more
+        elt.style.cursor = "auto"
+    else:
+        # back where we started
+        go_back(elt,ev)
+
+
+for i,area in enumerate(doc[AREA]):
+    # create a DIV for each AREA (ie each country)
+    ctag = DIV(area.id,draggable=True,id=i,Class="rounded-corners")
+    left = 10+110*(i//15)
+    _top = 100+30*(i-15*(i//15))
+    ctag.style= {'position':'absolute','left':left,'top':_top,
+        'width':80,'height':16}
+    ctag.bind('dragstart',drag_start)
+    ctag.bind('mouseover',mouse_over)
+    doc <= ctag
+    # drag and drop event handlers
+    area.bind('dragover',drag_over)
+    area.bind('drop',drop)
+step = 0
+_timer = None
+
+def go_back(elt,mouse):
+    # smoothly move the DIV to its original place
+    global step, _timer
+    x0,y0 = mouse.x-elt.clientWidth/2,mouse.y-elt.clientHeight/2
+    x1,y1 = elt.left,elt.top # return integers (elt.style.left returns a string like "110px")
+    step = 0
+    dx,dy = (x1-x0)/100,(y1-y0)/100
+    def move():
+        global step
+        elt.style.left = x0+step*dx
+        elt.style.top = y0+step*dy
+        step += 1
+        if step>100:
+            timer.clear_interval(_timer)
+    _timer = timer.set_interval(move,10)
+
+
+</script>
+
+<div align="center"><img src="img/europa.gif" border="0" usemap="#europa"> 
+<map name="europa">
+<area shape="rect" coords="260,493,283,509" id="Malte">
+<area shape="poly" coords="41,357,84,355,165,416,174,445,86,470,34,461,71,382,40,372" id="Espagne">
+<area shape="poly" coords="176,282,145,292,100,295,117,374,133,390,153,391,151,401,155,401,165,397,208,394,201,358,195,349,213,334,219,322,183,298,175,285" id="France">
+<area shape="poly" coords="213,398,202,405,205,416,217,413,213,399" id="Corse">
+<area shape="rect" coords="143,392,152,399" id="Andorre">
+<area shape="poly" coords="216,337,200,350,200,353,218,356,231,352,229,344,217,338" id="Suisse">
+<area shape="poly" coords="316,15,375,18,364,37,348,32,340,41,321,37,264,128,267,157,255,192,219,197,224,122,317,16" id="Norvège">
+<area shape="rect" coords="77,9,145,70" id="Islande">
+<area shape="poly" coords="275,361,294,354,297,360,280,376,273,376" id="Slovénie">
+<area shape="poly" coords="301,338,295,352,306,364,343,360,353,332,347,329,316,340,299,340" id="Hongrie">
+<area shape="poly" coords="301,329,304,338,317,338,344,329,345,323,335,315,315,320,300,330" id="Slovaquie">
+<area shape="poly" coords="262,308,274,325,299,327,313,319,304,304,282,296,260,307" id="Rép.Tchèque">
+<area shape="poly" coords="234,343,234,348,276,355,293,354,300,335,300,328,273,327,258,343,233,343" id="Autriche">
+<area shape="poly" coords="231,245,281,249,282,292,257,307,272,327,255,340,230,342,218,334,224,320,214,313,211,293,225,257,232,244" id="Allemagne">
+<area shape="poly" coords="178,283,189,279,205,294,205,299,195,306" id="Belgique">
+<area shape="poly" coords="119,174,188,140,172,281,101,284,126,236,124,226,109,221,117,204,119,175" id="Royaume-Uni">
+<area shape="poly" coords="200,257,223,257,212,280,208,292,189,276,199,258" id="Pays-Bas">
+<area shape="poly" coords="200,305,209,296,212,314,199,305" id="Luxembourg">
+<area shape="poly" coords="399,420,397,421,361,424,322,450,354,490,378,511,403,511,424,490,401,466,394,431,397,419" id="Grèce">
+<area shape="poly" coords="465,488,497,475,504,492,470,507,466,489" id="Chypre">
+<area shape="poly" coords="39,374,67,385,38,448,14,436" href="portugal_carte.htm" id="Portugal">
+<area shape="poly" coords="307,244,352,252,355,280,362,295,348,321,337,312,315,317,309,302,286,295,282,258,309,244" id="Pologne">
+<area shape="poly" coords="328,220,353,220,370,235,366,252,349,253,347,243,322,233" id="Lituanie">
+<area shape="poly" coords="348,198,376,202,379,223,368,232,353,218,329,218,347,198" id="Lettonie">
+<area shape="poly" coords="88,213,115,203,107,222,118,228,109,250,79,252,79,236,87,213" id="Irlande">
+<area shape="poly" coords="339,182,356,174,372,178,374,199,347,194,331,196,339,183" id="Estonie">
+<area shape="poly" coords="322,45,326,41,344,53,350,34,360,40,392,125,372,163,341,174,327,161,326,135,347,100,342,94,340,59,322,46" id="Finlande">
+<area shape="poly" coords="234,205,253,200,258,226,268,231,270,243,231,242,234,206" id="Danemark">
+<area shape="poly" coords="318,49,338,62,340,95,305,144,317,210,273,237,260,188,273,154,270,127,318,50" id="Suède">
+<area shape="poly" coords="356,333,346,362,331,365,357,386,375,393,402,383,415,391,426,361,404,362,390,325" id="Roumanie">
+<area shape="poly" coords="355,386,371,395,404,386,414,394,414,412,373,419,356,422" id="Bulgarie">
+<area shape="poly" coords="209,357,234,357,239,352,271,357,267,372,257,384,315,442,294,476,287,464,234,424,211,386" id="Italie">
+<area shape="poly" coords="200,419,215,418,218,438,201,438" id="Sardaigne">
+<area shape="poly" coords="250,465,284,468,284,488,267,489,247,474" id="Sicile">
+</map>
+</div>
+<div>Carte trouvée sur <a target="_blank" href="http://www.lexilogos.com/europe_carte.htm">Lexilogos</a></div>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+<meta charset="iso-8859-1">
+<head>
+<style>
+body,td,th{font-family:sans-serif}
+a.sort_link{margin-left:10px;text-decoration:none}
+</style>
+
+<script type="text/javascript" src="../../src/brython.js"></script>
+
+</head>
+<body onLoad="brython(2)">
+<script id="ascript" type="text/python">
+from browser import document as doc
+from browser import window, html
+
+try :
+    # Vibration API is currently defined here : http://dev.w3.org/2009/dap/vibration/
+    vibrate = window.navigator.vibrate
+
+    def onclick_single(event):
+        print('single')
+        vibrate(100)    # Vibration length = 100ms
+        
+    def onclick_double(event):
+        print('double')
+        vibrate([100, 200, 100,])   # Vibration length, pause length, vibration length...
+    
+    def onclick_start(event):
+        print('long')
+        vibrate(10000)    # Vibration length = 10s
+    
+    def onclick_stop(event):
+        print('stop')
+        vibrate(0)    # 0 = stop vibrate
+    
+    button_single = html.BUTTON("Single vibration")
+    button_double = html.BUTTON("Double vibration")
+    button_start = html.BUTTON("Start vibration")
+    button_stop  = html.BUTTON("Stop vibration")
+    
+    button_single.bind('click', onclick_single)
+    button_double.bind('click', onclick_double)
+    button_start.bind('click', onclick_start)
+    button_stop.bind('click', onclick_stop)
+    
+    doc <= html.TABLE(html.TR(html.TD(button_single) +
+                              html.TD() +
+                              html.TD(button_double)) +
+                      html.TR(html.TD(button_start) +
+                              html.TD() +
+                              html.TD(button_stop)))
+except :
+    doc <= "Can't generate vibrations."
+
+</script>
+</body>
+</html>

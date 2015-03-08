@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+<head>
+    <title>Brython</title>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow">
+    <meta name="description" content=Brython >
+    <meta name="author" content="Pierre Quentel">
+    <meta name="keywords" content="Python, Brython">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="shortcut icon" href="brython.png" type="image/x-icon">
+    <noscript>Please enable Javascript to view this page correctly.</noscript>
+    <link rel="stylesheet" href="../doc/doc_brython.css">
+    <style>
+    .layered-paper {
+        position:relative;
+        background: #eee;
+        width:99%;
+        box-shadow: 0 1px 1px rgba(0,0,0,.2), 0 10px 0 -5px #eee, 0 10px 1px -4px rgba(0,0,0,.2), 0 20px 0 -10px #eee, 0 20px 1px -9px rgba(0,0,0,.2);
+        background-image:
+            linear-gradient(90deg, transparent 46%, gray 50%, lightgray 52%, transparent 55%),
+            linear-gradient(lightgray .1em, transparent .1em);
+        background-size: 100% 1.2em;
+        margin:26px auto 0;
+        max-width:900px;
+        min-height:400px;
+        padding:0;
+        position:relative;
+        font-family:Oxygen,Helvetica;
+        text-align:center
+    }
+    .layered-paper:before, .layered-paper:after {
+        content:"";
+        position:absolute;
+        z-index:-1;
+        -webkit-box-shadow:0 0 20px rgba(0,0,0,.9);
+        -moz-box-shadow:0 0 20px rgba(0,0,0,.9);
+        box-shadow:0 0 20px rgba(0,0,0,.9);
+        top:9px;
+        bottom:9px;
+        left:0;
+        right:0;
+        -moz-border-radius:99px / 9px;
+        border-radius:99px / 9px
+    }
+    .layered-paper:after {
+        right:9px;
+        left:auto;
+        -webkit-transform:skew(8deg) rotate(3deg);
+        -moz-transform:skew(8deg) rotate(3deg);
+        transform:skew(8deg) rotate(3deg)
+    }
+    </style>
+    <script src="../src/brython.js"></script>
+    <script type="text/python3">
+    import header
+    header.show('../')
+    </script>
+</head>
+
+
+<body onload="brython(1)">
+
+    <table id=banner cellpadding=0 cellspacing=0>
+    <tr id=banner_row >
+    <td class="logo"><a href="../index.html"><img src="../brython.svg" class="logo"></a></td>
+    </tr>
+    </table>
+
+    <div style="text-align:center">
+
+        <table class="layered-paper">
+        <tr>
+        <td valign="top">
+        <h3>Brython</h3>
+<a target="_blank" href="hello.html">Hello world !</a>
+<br><a target="_blank" href="ajax.html">ajax</a>
+<br><a target="_blank" href="sort_table.html">tri de table</a>
+<br>
+<br><a target="_blank" href="svg_pie_chart.html">camembert SVG</a>
+<br><a target="_blank" href="solitaire.html">jeu de solitaire en SVG</a>
+<br><a target="_blank" href="sudoku.html">sudoku</a>
+<br><a target="_blank" href="compass.html" title="par Nicolas Pinault">boussole SVG</a>
+<br><a target="_blank" href="geo.html" title="par François Dion">geolocalisation</a>
+<br><a target="_blank" href="ruskey.html" title="par François Dion">clavier russe QWERTY</a>
+<br><a target="_blank" href="kanban.html" title="par Pedro Rodriguez">simulateur Kanban</a>
+<br><a target="_blank" href="ui/index.html" title="par Billy Earney">composants UI</a>
+<br><a target="_blank" href="battery.html" title="par Nicolas Pinault">charge de batterie</a>
+<br><a target="_blank" href="barcode.html" title="par Carl Smith">code barre</a>
+<br><a target="_blank" href="http://brython.info/cours_python/cours_python.html">tutoriel Python en diaporama</a>
+<br><a target="_blank" href="turtle.html">Turtle Graphics</a>
+
+<p><i><small>les exemples suivants nécessitent HTML5</small></i>
+<br><a target="_blank" href="clock.html">horloge analogique</a>
+<br><a target="_blank" href="europe.html">glisser-déposer</a>
+<br><a target="_blank" href="drop_files.html" title="par Glenn Linderman">glisser-déposer de fichiers</a>
+<br><a target="_blank" href="sheet.html">stockage local</a>
+<br><a target="_blank" href="canvas_plot.html" title="par Kiko Correoso">Python plot sur le web</a>
+<br><a target="_blank" href="3Dwalker.html">animation 3D</a>
+
+</td>
+
+    <td valign="top">
+        <h3>Interaction avec des librairies Javascript</h3>
+        
+        <a target="_blank" href="jqui">jQuery UI</a>
+        <p><a target="_blank" href="three.html" title="par Dirk Krause">animation 3D avec three.js</a>
+        <p><a target="_blank" href="raphael">Raphael (graphiques vectoriel)</a>
+        <p><a target="_blank" href="highcharts">Highcharts (courbes et graphes)</a>
+
+        </td>
+        </tr>
+        </table>
+    </div>
+    <br>
+
+
+</body>
+
+</html>
+

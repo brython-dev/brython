@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<script src="../src/brython.js"></script>
+
+</head>
+<body onload="brython(1)">
+<h1>Phonetic cyrillic on QWERTY keyboard</h1>
+Here is a little test, mapping latin characters on a keyboard to their phonetically equivalent characters in a cyrillic script, as used in Russian.
+<p>
+This demoes UTF-8 unicode, handling of keyboard events, and adding, modifying and deleting elements from the tree.
+<script type="text/python">
+from browser import document as doc
+from browser import window as win
+from browser.html import *
+
+"""
+Phonetic ordering of cyrillic (фонетических упорядочение кириллицу)
+We are matching the latin alphabet, uppercase, then lowercase
+"""
+
+CYR =  'АБЦДЕФГЧИЙКЛМНОПЯРСТУВЖХЫЗШЩЭЮЁЬЪабцдефгчийклмнопярстувжхызшщэюёьъ'
+position = 0
+
+
+def printkey_button(ev):
+    letter = ev.target.text
+    printkey(letter)
+
+def printkey(letter):
+    global position
+    try:
+        span = doc['x%s' %position]
+        span.value = letter
+    except KeyError:
+        doc <= SPAN(letter, id = 'x%s' %position)
+    position += 1
+
+def deletekey():
+    global position
+    position -= 1
+    if position < 0:
+        position = 0
+    else:
+        del doc['x%s' %position]
+
+
+def keydown(e):
+    if not e:
+        e = win.event
+    key = e.keyCode
+    offset = 65 if e.shiftKey else 32
+    e.preventDefault()
+    e.stopPropagation()
+    if key == 8: 
+        deletekey()
+    elif key == 32:
+        printkey(' ')
+    elif key in range(48, 58):
+        printkey(str(key - 48))
+    elif key >= offset:
+        printkey(CYR[key - offset])
+
+
+def keyup(e):
+    if not e:
+        e = win.event
+    e.preventDefault()
+    e.stopPropagation()
+
+def drawkeyboard():
+    table = TABLE()
+    tbody = TBODY()
+    row = TR()
+    for letter in CYR:
+        b = BUTTON(letter)
+        b.bind('click',printkey_button)
+        row <= TD(b)
+        if letter in ('Я','Ъ','я'):
+            tbody <= row
+            row=TR()
+    tbody <= row
+    table <= tbody
+    doc <= table
+
+# Draw keyboard and set key events
+
+drawkeyboard()
+doc.bind('keydown',keydown)
+doc.bind('keyup',keyup)
+
+</script>
+<br />
+Click buttons or type on keyboard:
+<br />
+</body>
+</html>

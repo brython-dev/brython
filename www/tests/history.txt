@@ -1,0 +1,8 @@
+C:\brython\20150228\site\gallery\hello.html
+C:\brython\20150228\site\console.html
+C:\brython\20150228\site\tests\console.html
+C:\brython\20150228\site\gallery\sort_table.html
+C:/brython/20150228/site/gallery/sort_table1.html
+C:\Python34\Lib\http\server.py
+C:\brython\20150228\server.py
+C:\brython\20150228\site\gallery\ajax.html
