@@ -293,13 +293,16 @@ $B.$list_comp = function(env){
     $root.caller = $B.line_info
 
     var $js = $root.to_js()
-    
+    $B.call_stack.push($B.line_info)
     try{
         eval($js)
         var res = eval('$locals_'+listcomp_name+'["x"+$ix]')
     }
     catch(err){throw $B.exception(err)}
-    finally{clear(listcomp_name)}
+    finally{
+        clear(listcomp_name)
+        $B.call_stack.pop()
+    }
 
     return res
 }
@@ -377,7 +380,7 @@ $B.$gen_expr = function(env){
     var $root = $B.py2js($py,module_name,genexpr_name,local_name,
         $B.line_info)
     var $js = $root.to_js()
-    
+
     eval($js)
     
     var $res1 = eval('$locals_ge'+$ix)["res"+$ix]
@@ -474,7 +477,6 @@ $B.$JS2Py = function(src){
     }
     return $B.JSObject(src)
 }
-
 
 // get item
 function index_error(obj){
@@ -757,7 +759,7 @@ $B.pyobject2jsobject=function (obj){
            _a.push($B.pyobject2jsobject(_b_.next(obj)))
           } catch(err) {
             if (err.__name__ !== "StopIteration") throw err
-            break
+            $B.$pop_exc();break
           }
        }
        return {'_type_': 'iter', data: _a}
@@ -839,7 +841,7 @@ $B.$iterator_class = function(name){
          try {
               _a.push(_b_.next(_it))
          } catch (err) {
-              if (err.__name__ == 'StopIteration') break
+              if (err.__name__ == 'StopIteration'){$B.$pop_exc();break}
          }
        }
        return _a
@@ -947,8 +949,8 @@ $B.$GetInt=function(value) {
   // convert value to an integer,
   if(typeof value=="number"){return value}
   if (_b_.isinstance(value, _b_.int)) return value
-  try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){}
-  try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){}
+  try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){$B.$pop_exc()}
+  try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){$B.$pop_exc()}
 
   return value
 }

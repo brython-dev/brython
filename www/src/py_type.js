@@ -47,7 +47,8 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     }
     
     var new_func = _b_.getattr(metaclass,'__new__')
-    var factory = _b_.getattr(metaclass,'__new__').apply(null,[factory,class_name,bases,cl_dict])
+    var factory = _b_.getattr(metaclass,'__new__').apply(null,
+        [factory,class_name,bases,cl_dict])
     _b_.getattr(metaclass,'__init__').apply(null,[factory,class_name,bases,cl_dict])
     // set functions defined in metaclass dictionary as class methods, except __new__
     for(var member in metaclass.$dict){

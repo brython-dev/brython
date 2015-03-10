@@ -363,8 +363,13 @@ function $eval(src, _globals, locals){
     var is_exec = arguments[3]=='exec', module_name
     
     if(_globals===undefined){
+        /*
         module_name = current_globals_name
         eval('var $locals_'+module_name+'=current_frame[3]')
+        */
+        module_name = 'exec_'+$B.UUID()
+        $B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id]
+        eval('var $locals_'+module_name+'=current_frame[3]')        
     }else{
         if(_globals.id === undefined){_globals.id = 'exec_'+$B.UUID()}
         module_name = _globals.id
@@ -407,27 +412,23 @@ function $eval(src, _globals, locals){
                 throw _b_.SyntaxError("eval() argument must be an expression")
             }
         }
+
         var js = root.to_js()
         
-        try{
-            var res = eval(js)
-            if(_globals!==undefined){
-                // Update _globals with the namespace after execution
-                var ns = eval('$locals_'+module_name)
-                var setitem = getattr(_globals,'__setitem__')
-                for(var attr in ns){
-                    setitem(attr, ns[attr])
-                }
+        var res = eval(js)
+        if(_globals!==undefined){
+            // Update _globals with the namespace after execution
+            var ns = eval('$locals_'+module_name)
+            var setitem = getattr(_globals,'__setitem__')
+            for(var attr in ns){
+                setitem(attr, ns[attr])
             }
-        }catch(err){
-            console.log('error exec '+err)
-            throw $B.exception(err)
         }
-        
+
         if(res===undefined){res = _b_.None}
         return res
     }finally{
-        // console.log(show_frames())
+        //$B.call_stack.pop()
     }
 }
 $eval.$is_func = true
@@ -516,12 +517,6 @@ function getattr(obj,attr,_default){
            if($B.debug>0){
               return function(){
                 $B.call_stack.push($B.line_info)
-                /*
-                if($B.line_info[1] != $B.last($B.frames_stack)[2]){
-                    var frame = $B.last($B.frames_stack)
-                    console.log($B.line_info[1]+' != '+frame+' length '+frame.length)
-                }
-                */
                 try{
                     var res = obj.apply(null,arguments)
                     if(res===undefined) return _b_.None
@@ -609,6 +604,10 @@ function getattr(obj,attr,_default){
     var is_class = klass.is_class, mro, attr_func
 
     if(is_class){
+        if(attr=='A__str__'){
+            console.log('attr '+attr+' of '+obj+' is class '+is_class)
+            console.log(klass.__class__[attr]+'')
+        }
         attr_func=$B.$type.__getattribute__
         if(obj.$dict===undefined){console.log('obj '+obj+' $dict undefined')}
         obj=obj.$dict
@@ -1015,7 +1014,7 @@ function $extreme(args,op){ // used by min() and max()
                 var x = next($iter)
                 if(res===null || bool(getattr(func(x),op)(func(res)))){res = x}
             }catch(err){
-                if(err.__name__=="StopIteration"){return res}
+                if(err.__name__=="StopIteration"){$B.$pop_exc();return res}
                 throw err
             }
         }
@@ -2125,54 +2124,21 @@ var BaseException = function (msg,js_exc){
             var lines = $B.$py_src[call_info[1]].split('\n')
             err.info += '\n  module '+lib_module+' line '+call_info[0]
             var line = lines[call_info[0]-1]
-            //while(line && line.charAt(0)==' '){line=line.substr(1)}
             if(line) line=line.replace(/^[ ]+/g, '')
             err.info += '\n    '+line
             last_info = call_info
-            // create traceback object
-            if(i==0){
-                tb = {__class__:$TracebackDict,
-                    tb_frame:frame(),
-                    tb_lineno:call_info[0],
-                    tb_lasti:line,
-                    tb_next: None // fix me
-                    }
-            }
         }
-        // error line
-        /*
-        var err_info = $B.line_info
-        if(err_info!==undefined){
-            while(1){
-                var mod = $B.modules[err_info[1]]
-                if(mod===undefined) break
-                var caller = mod.line_info
-                if(caller===undefined) break
-                err_info = caller
+        last_info = $B.line_info.split(',')
+        var line = $B.$py_src[last_info[1]].split('\n')[parseInt(last_info[0])-1]
+        err.info += '\n  module '+last_info[1]+' line '+last_info[0]
+        err.info += '\n    '+line
+        // create traceback object
+        tb = {__class__:$TracebackDict,
+            tb_frame:frame(),
+            tb_lineno:last_info[0],
+            tb_lasti:line,
+            tb_next: None // fix me
             }
-        }
-        */
-        err_info = $B.line_info.split(',')
-        if(err_info!==undefined && err_info!==last_info){
-            var module = err_info[1]
-            var line_num = err_info[0]
-            try{
-            var lines = $B.$py_src[module].split('\n')
-            }catch(err){console.log('--module '+module);throw err}
-            var lib_module = module
-            if(lib_module.substr(0,13)==='__main__,exec'){lib_module='__main__'}
-            err.info += "\n  module "+lib_module+" line "+line_num
-            var line = lines[line_num-1]
-            while(line && line.charAt(0)==' '){line = line.substr(1)}
-            err.info += '\n    '+line
-            // create traceback object
-            tb = {__class__:$TracebackDict,
-                tb_frame:frame(),
-                tb_lineno:line_num,
-                tb_lasti:line,
-                tb_next: None   // fix me
-            }
-        }
     }else{
         // minimal traceback object if debug mode is not set
         tb = {__class__:$TracebackDict,
@@ -2191,6 +2157,15 @@ var BaseException = function (msg,js_exc){
     err.value = msg
     err.traceback = tb
     $B.exception_stack.push(err)
+    /*
+    console.log($B.exception_stack.length+' in exc stack ')
+    var len=$B.exception_stack.length, ch=''
+    for(var i=0;i<10 && i<len;i++){
+        var exc = $B.exception_stack[len-i-1]
+        ch += exc.value+': '+exc.msg+'\n'
+    }
+    console.log(ch)
+    */
     return err
 }
 
@@ -2203,16 +2178,8 @@ _b_.BaseException = BaseException
 $B.exception = function(js_exc){
     // thrown by eval(), exec() or by a function
     // js_exc is the Javascript exception, which can be raised by the
-    // code generated by Python - in this case it has attribute py_error set 
+    // code generated by Python - in this case it has attribute py_error set -
     // or by the Javascript interpreter (ReferenceError for instance)
-
-    if($B.debug>0 && js_exc.caught===undefined){
-        console.log('$B.exception ', js_exc)
-        for(var attr in js_exc){console.log(attr,js_exc[attr])}
-        console.log('line info '+ $B.line_info)
-        console.trace()
-        console.log('call stack', $B.call_stack)
-    }
 
     if(!js_exc.py_error){
         if($B.debug>0 && js_exc.info===undefined){
@@ -2263,7 +2230,6 @@ $B.exception = function(js_exc){
     }else{
         var exc = js_exc
     }
-    $B.exception_stack.push(exc)
     return exc
 }
 

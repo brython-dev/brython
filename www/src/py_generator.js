@@ -467,7 +467,9 @@ $BRGeneratorDict.close = function(self, value){
             throw _b_.RuntimeError("closed generator returned a value")
         }
     }catch(err){
-        if($B.is_exc(err,[_b_.StopIteration,_b_.GeneratorExit])) return _b_.None
+        if($B.is_exc(err,[_b_.StopIteration,_b_.GeneratorExit])){
+            $B.$pop_exc();return _b_.None
+        }
         throw err
     }
 }
