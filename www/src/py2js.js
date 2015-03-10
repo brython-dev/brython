@@ -2232,12 +2232,6 @@ function $ExceptCtx(context){
         this.tree[0].alias = alias
         $B.bound[$get_scope(this).id][alias] = true
     }
-
-    this._transform = function(node, rank){
-        var new_node = new $Node()
-        new $NodeJSCtx(new_node,'$B.$pop_exc()')
-        node.insert(0, new_node)
-    }
     
     this.to_js = function(){
         // in method "transform" of $TryCtx instances, related

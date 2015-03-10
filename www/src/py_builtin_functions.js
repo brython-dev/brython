@@ -397,7 +397,6 @@ function $eval(src, _globals, locals){
     }
 
     try{
-        $B.call_stack.push('1,'+module_name)
         var root = $B.py2js(src,module_name,[module_name],local_name)
         // If the Python function is eval(), not exec(), check that the source
         // is an expression_
@@ -429,7 +428,7 @@ function $eval(src, _globals, locals){
         if(res===undefined){res = _b_.None}
         return res
     }finally{
-        $B.call_stack.pop()
+        //$B.call_stack.pop()
     }
 }
 $eval.$is_func = true
@@ -605,7 +604,7 @@ function getattr(obj,attr,_default){
     var is_class = klass.is_class, mro, attr_func
 
     if(is_class){
-        if(attr=='__str__'){
+        if(attr=='A__str__'){
             console.log('attr '+attr+' of '+obj+' is class '+is_class)
             console.log(klass.__class__[attr]+'')
         }
@@ -2128,16 +2127,18 @@ var BaseException = function (msg,js_exc){
             if(line) line=line.replace(/^[ ]+/g, '')
             err.info += '\n    '+line
             last_info = call_info
-            // create traceback object
-            if(i==0){
-                tb = {__class__:$TracebackDict,
-                    tb_frame:frame(),
-                    tb_lineno:call_info[0],
-                    tb_lasti:line,
-                    tb_next: None // fix me
-                    }
-            }
         }
+        last_info = $B.line_info.split(',')
+        var line = $B.$py_src[last_info[1]].split('\n')[parseInt(last_info[0])-1]
+        err.info += '\n  module '+last_info[1]+' line '+last_info[0]
+        err.info += '\n    '+line
+        // create traceback object
+        tb = {__class__:$TracebackDict,
+            tb_frame:frame(),
+            tb_lineno:last_info[0],
+            tb_lasti:line,
+            tb_next: None // fix me
+            }
     }else{
         // minimal traceback object if debug mode is not set
         tb = {__class__:$TracebackDict,
