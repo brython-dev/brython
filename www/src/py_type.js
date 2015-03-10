@@ -40,11 +40,8 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         }
     }
     if(metaclass===_b_.type) return _b_.type(class_name,bases,cl_dict)
-        
-    // create the factory function
-    var factory = function(){
-        return $instance_creator($B.class_dict).apply(null,arguments)
-    }
+    
+    console.log('metaclass is not type')
     
     var new_func = _b_.getattr(metaclass,'__new__')
     var factory = _b_.getattr(metaclass,'__new__').apply(null,[factory,class_name,bases,cl_dict])
@@ -196,6 +193,8 @@ _b_.object.__class__ = $B.$factory
 $B.$type.__getattribute__=function(klass,attr){
     // klass is a class dictionary : in getattr(obj,attr), if obj is a factory,
     // we call $type.__getattribute__(obj.$dict,attr)
+    
+    if(attr=='__str__'){console.log('attr '+attr+' klass '+klass.__name__)}
 
     switch(attr) {
       case '__call__':
@@ -206,7 +205,7 @@ $B.$type.__getattribute__=function(klass,attr){
         return function(other){return klass.$factory!==other}
       case '__repr__':
         return function(){return "<class '"+klass.__name__+"'>"}
-      case '__str__':
+      case 'A__str__':
         return function(){return "<class '"+klass.__name__+"'>"}
       case '__class__':
         return klass.__class__.$factory
@@ -232,6 +231,7 @@ $B.$type.__getattribute__=function(klass,attr){
         var mro = klass.__mro__
         if(mro===undefined){console.log('mro undefined for class '+klass+' name '+klass.__name__)}
         for(var i=0;i<mro.length;i++){
+            if(attr=='__str__'){console.log('search in '+mro[i].__name__)}
             var v=mro[i][attr]
             if(v!==undefined){
                 res = v

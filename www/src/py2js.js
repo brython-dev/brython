@@ -2233,7 +2233,7 @@ function $ExceptCtx(context){
         $B.bound[$get_scope(this).id][alias] = true
     }
 
-    this.transform = function(node, rank){
+    this._transform = function(node, rank){
         var new_node = new $Node()
         new $NodeJSCtx(new_node,'$B.$pop_exc()')
         node.insert(0, new_node)
