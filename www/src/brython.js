@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-03-08 21:16:25.280000"
+__BRYTHON__.compiled_date="2015-03-11 16:18:35.480000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1337,10 +1337,6 @@ this.expect='id'
 this.toString=function(){return '(except) '}
 this.set_alias=function(alias){this.tree[0].alias=alias
 $B.bound[$get_scope(this).id][alias]=true
-}
-this.transform=function(node,rank){var new_node=new $Node()
-new $NodeJSCtx(new_node,'$B.$pop_exc()')
-node.insert(0,new_node)
 }
 this.to_js=function(){
 if(this.tree.length===0)return 'else'
@@ -5136,7 +5132,7 @@ eval('$B.augm_item_'+augm_ops[i][1]+'='+augm_code)
 $B.$raise=function(){
 var es=$B.exception_stack
 if(es.length>0)throw es[es.length-1]
-throw Error('Exception')
+throw RuntimeError('No active exception to reraise')
 }
 $B.$syntax_err_line=function(module,pos){
 var pos2line={}
@@ -6051,7 +6047,10 @@ return method
 return klass[attr]
 }
 var is_class=klass.is_class,mro,attr_func
-if(is_class){attr_func=$B.$type.__getattribute__
+if(is_class){if(attr=='A__str__'){console.log('attr '+attr+' of '+obj+' is class '+is_class)
+console.log(klass.__class__[attr]+'')
+}
+attr_func=$B.$type.__getattribute__
 if(obj.$dict===undefined){console.log('obj '+obj+' $dict undefined')}
 obj=obj.$dict
 }else{var mro=klass.__mro__
@@ -6974,8 +6973,13 @@ var line=lines[call_info[0]-1]
 if(line)line=line.replace(/^[]+/g,'')
 err.info +='\n    '+line
 last_info=call_info
-if(i==0){tb={__class__:$TracebackDict,tb_frame:frame(),tb_lineno:call_info[0],tb_lasti:line,tb_next: None 
-}}}}else{
+}
+last_info=$B.line_info.split(',')
+var line=$B.$py_src[last_info[1]].split('\n')[parseInt(last_info[0])-1]
+err.info +='\n  module '+last_info[1]+' line '+last_info[0]
+err.info +='\n    '+line
+tb={__class__:$TracebackDict,tb_frame:frame(),tb_lineno:last_info[0],tb_lasti:line,tb_next: None 
+}}else{
 tb={__class__:$TracebackDict,tb_frame:{__class__:$FrameDict},tb_lineno:-1,tb_lasti:'',tb_next: None 
 }}
 err.message=msg
@@ -6994,8 +6998,9 @@ BaseException.__class__=$B.$factory
 BaseException.$dict=$BaseExceptionDict
 _b_.BaseException=BaseException
 $B.exception=function(js_exc){
-if(!js_exc.py_error){if($B.debug>0 && js_exc.info===undefined){
-if($B.line_info!==undefined){var line_info=$B.line_info.split(',')
+if(!js_exc.py_error){
+console.log(js_exc)
+if($B.debug>0 && js_exc.info===undefined){if($B.line_info!==undefined){var line_info=$B.line_info.split(',')
 var mod_name=line_info[1]
 var module=$B.modules[mod_name]
 if(module){if(module.caller!==undefined){
@@ -7004,7 +7009,7 @@ var mod_name=line_info[1]
 }
 var lib_module=mod_name
 if(lib_module.substr(0,13)==='__main__,exec'){lib_module='__main__'}
-var line_num=line_info[0]
+var line_num=parseInt(line_info[0])
 if($B.$py_src[mod_name]===undefined){console.log('pas de py_src pour '+mod_name)
 }
 var lines=$B.$py_src[mod_name].split('\n')
@@ -7014,18 +7019,19 @@ js_exc.info_in_msg=true
 }}else{console.log('error '+js_exc)
 }}
 var exc=Error()
-exc.__name__=js_exc.__name__ ||js_exc.name
+exc.__name__='Internal Javascript error: '+(js_exc.__name__ ||js_exc.name)
 exc.__class__=_b_.Exception.$dict
 if(js_exc.name=='ReferenceError'){exc.__name__='NameError'
 exc.__class__=_b_.NameError.$dict
 js_exc.message=js_exc.message.replace('$$','')
-console.log('name error '+js_exc)
 }
 exc.message=js_exc.message ||'<'+js_exc+'>'
 exc.info=''
+exc.py_error=true
 exc.traceback={__class__:$TracebackDict,tb_frame:frame(),tb_lineno:-1,tb_lasti:'',tb_next: None 
 }}else{var exc=js_exc
 }
+$B.exception_stack.push(exc)
 return exc
 }
 $B.is_exc=function(exc,exc_list){

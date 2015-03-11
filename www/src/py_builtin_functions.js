@@ -2182,8 +2182,9 @@ $B.exception = function(js_exc){
     // or by the Javascript interpreter (ReferenceError for instance)
 
     if(!js_exc.py_error){
+        // Print complete Javascript traceback in console
+        console.log(js_exc)
         if($B.debug>0 && js_exc.info===undefined){
-            //console.log('erreur '+js_exc+' dans module '+$B.line_info)
             if($B.line_info!==undefined){
                 var line_info = $B.line_info.split(',')
                 var mod_name = line_info[1]
@@ -2197,7 +2198,7 @@ $B.exception = function(js_exc){
                     }
                     var lib_module = mod_name
                     if(lib_module.substr(0,13)==='__main__,exec'){lib_module='__main__'}
-                    var line_num = line_info[0]
+                    var line_num = parseInt(line_info[0])
                     if($B.$py_src[mod_name]===undefined){
                         console.log('pas de py_src pour '+mod_name)
                     }
@@ -2211,16 +2212,16 @@ $B.exception = function(js_exc){
             }
         }
         var exc = Error()
-        exc.__name__ = js_exc.__name__ || js_exc.name
+        exc.__name__ = 'Internal Javascript error: '+(js_exc.__name__ || js_exc.name)
         exc.__class__ = _b_.Exception.$dict
         if(js_exc.name=='ReferenceError'){
             exc.__name__='NameError'
             exc.__class__=_b_.NameError.$dict
             js_exc.message = js_exc.message.replace('$$','')
-            console.log('name error '+js_exc)
         }
         exc.message = js_exc.message || '<'+js_exc+'>'
         exc.info = ''
+        exc.py_error = true
         exc.traceback = {__class__:$TracebackDict,
             tb_frame:frame(),
             tb_lineno:-1,
@@ -2230,6 +2231,7 @@ $B.exception = function(js_exc){
     }else{
         var exc = js_exc
     }
+    $B.exception_stack.push(exc)
     return exc
 }
 
