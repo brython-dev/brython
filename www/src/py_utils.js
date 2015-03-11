@@ -546,7 +546,8 @@ $B.$raise= function(){
     // If there is an exception in the stack, use it, else throw a simple Exception
     var es = $B.exception_stack
     if(es.length>0) throw es[es.length-1]
-    throw Error('Exception')
+    throw RuntimeError('No active exception to reraise')
+    //Error('Exception')
 }
 
 $B.$syntax_err_line = function(module,pos) {
