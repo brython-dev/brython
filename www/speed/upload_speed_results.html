@@ -67,8 +67,6 @@ def test_next():
         src = open(filename).read()
         _bk.set_performance_test(filename)
         state=_bk.run_performance_test(src)
-        #editor.editor.setValue(src)
-        #state = editor.run()
         if state == 0:
             failed.append(option.text)
         timer.set_timeout(test_next,500)

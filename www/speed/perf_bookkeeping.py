@@ -16,16 +16,12 @@ class bookkeeping:
       #execute code
       t0 = time.perf_counter()
       try:
-        #if(in_globals):
         exec(src)
-        #else:
-        #    ns = {}
-        #    exec(src, ns)
         state = 1
       except Exception as exc:
         traceback.print_exc(file=sys.stderr)
 
-      self.add_brython_result((time.perf_counter() - t0) * 1000.0)
+      self.add_brython_result(int((time.perf_counter() - t0) * 1000.0))
 
       def err_msg(*args):
           from javascript import console
@@ -133,6 +129,7 @@ class bookkeeping:
       req = ajax.ajax()
       req.bind('complete', on_complete)
       req.set_timeout(4, on_error)
-      req.open('POST','/cgi-bin/upload_results.py',True)
+      #req.open('POST','/cgi-bin/upload_results.py',True)
+      req.open('POST','//coherent-coder-88201.appspot.com/ReportData',True)
       req.set_header('content-type','application/x-www-form-urlencoded')
       req.send({'data': json.dumps(_data)})
