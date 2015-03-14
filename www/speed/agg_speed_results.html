@@ -156,8 +156,8 @@ def on_error(*args):
 req = ajax.ajax()
 req.bind('complete', on_complete)
 req.set_timeout(4, on_error)
-#req.open('GET', '//coherent-coder-88201.appspot.com/RequestData',True)
-req.open('GET', '//localhost:8080/RequestData',True)
+req.open('GET', '//coherent-coder-88201.appspot.com/RequestData',True)
+#req.open('GET', '//localhost:8080/RequestData',True)
 req.set_header('content-type','application/x-www-form-urlencoded')
 req.send()
 
