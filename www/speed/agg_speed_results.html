@@ -50,19 +50,31 @@ from javascript import JSConstructor
 def on_complete(*args):
     _json=json.loads(args[0].text)
 
-    _browsers=list(_json.keys())
-    #_browsers.sort()          #sort does not work
+    _browsers=[_b for _b in _json.keys() if _b is not None]
+    _browsers.sort()          #sort does not work
 
     _series={}
     for _browser in _browsers:
-        doc['container'] <= html.PRE(_browser)
         _tests=list(_json[_browser].keys())
-        #_tests.sort()
+        _tests.sort()
         for _test in _tests:
             if _test not in _series:
                _series[_test]=[]
             _series[_test].append(_json[_browser][_test]['avg'])
 
+    #add number of submittals to end of browser name label
+    _mycount={}
+    for _browser in _browsers:
+        _num=0
+        for _test in _json[_browser].keys():
+            if _json[_browser][_test]['count'] > _num:
+               _num=_json[_browser][_test]['count']
+
+        _mycount[_browser]=_num
+
+    _browser_count=['%s (%s)' % (_k, _v) for _k,_v in _mycount.items()]
+    _browser_count.sort()
+    
 
     _highchart = JSConstructor(window.Highcharts.Chart)
     _settings={
@@ -107,21 +119,20 @@ def on_complete(*args):
     }
     
     _settings['xAxis']= {
-            'categories': _browsers,
+            'categories': _browser_count,
             'title': {'text': None}
     }
 
     
     _series1=[]
     _keys=list(_series.keys())
-    #_keys.sort()
+    _keys.sort()
     for _key in _keys:
         _series1.append({'name': _key, 'data': _series[_key]})
 
     _settings['series']= _series1
     
     _highchart(_settings)
-
 
 def on_error(*args):
     doc['container'] <= html.PRE(args)
@@ -130,7 +141,7 @@ def on_error(*args):
 req = ajax.ajax()
 req.bind('complete', on_complete)
 req.set_timeout(4, on_error)
-req.open('GET','//localhost:8080/RequestData',True)
+req.open('GET', '//coherent-coder-88201.appspot.com/RequestData',True)
 req.set_header('content-type','application/x-www-form-urlencoded')
 req.send()
 
@@ -177,7 +188,6 @@ for key in trans:
 
 <div id="chart" style="width:800px;height:400px; margin:0 auto">
 </div>
-
 
 </div>
 </div>
