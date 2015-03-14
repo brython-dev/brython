@@ -122,14 +122,12 @@ class bookkeeping:
 
           doc['container'] <= html.PRE("results uploaded...")
 
-      #on_complete()
-      #return
 
       # upload results
       req = ajax.ajax()
       req.bind('complete', on_complete)
       req.set_timeout(4, on_error)
-      #req.open('POST','/cgi-bin/upload_results.py',True)
       req.open('POST','//coherent-coder-88201.appspot.com/ReportData',True)
+      #req.open('POST','//localhost:8080/ReportData',True)
       req.set_header('content-type','application/x-www-form-urlencoded')
       req.send({'data': json.dumps(_data)})
