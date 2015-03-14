@@ -47,39 +47,42 @@ from browser import window, ajax, html, document as doc
 from javascript import JSConstructor
 #from javascript import console
 
-def on_complete(*args):
-    _json=json.loads(args[0].text)
+def make_chart(data, brython_version):
+    _div=html.DIV(id="chart_%s" % brython_version, style={'width': '800px', 'height': '400px'})
+    doc['content'] <= _div
 
-    _browsers=[_b for _b in _json.keys() if _b is not None]
+    _browsers=[_b for _b in data.keys() if _b is not None]
     _browsers.sort()          #sort does not work
 
     _series={}
     for _browser in _browsers:
-        _tests=list(_json[_browser].keys())
+        _tests=list(data[_browser].keys())
         _tests.sort()
         for _test in _tests:
             if _test not in _series:
                _series[_test]=[]
-            _series[_test].append(_json[_browser][_test]['avg'])
+            _series[_test].append(data[_browser][_test]['avg'])
 
     #add number of submittals to end of browser name label
     _mycount={}
     for _browser in _browsers:
         _num=0
-        for _test in _json[_browser].keys():
-            if _json[_browser][_test]['count'] > _num:
-               _num=_json[_browser][_test]['count']
+        for _test in data[_browser].keys():
+            if data[_browser][_test]['count'] > _num:
+               _num=data[_browser][_test]['count']
 
         _mycount[_browser]=_num
 
     _browser_count=['%s (%s)' % (_k, _v) for _k,_v in _mycount.items()]
     _browser_count.sort()
     
-
     _highchart = JSConstructor(window.Highcharts.Chart)
     _settings={
-        'chart': {'renderTo': 'chart', 'type':'bar'},
-        'title': {'text': 'Brython vs CPython execution speed'},
+        'chart': {'renderTo': 'chart_%s' % brython_version, 'type':'bar'
+        },
+        'title': {'text': 'Brython vs CPython execution speed' % brython_version
+        },
+        'subtitle': {'text': 'Brython version %s' % brython_version},
         'yAxis': {
             'min': 0,
             'title': {
@@ -134,6 +137,18 @@ def on_complete(*args):
     
     _highchart(_settings)
 
+
+def on_complete(*args):
+    _json=json.loads(args[0].text)
+
+    #lets make a chart for each brython version
+    _brython_versions=list(_json.keys())
+    _brython_versions.sort()
+    _brython_versions.reverse()
+
+    for _brython_version in _brython_versions:
+        make_chart(_json[_brython_version], _brython_version)
+
 def on_error(*args):
     doc['container'] <= html.PRE(args)
 
@@ -141,7 +156,8 @@ def on_error(*args):
 req = ajax.ajax()
 req.bind('complete', on_complete)
 req.set_timeout(4, on_error)
-req.open('GET', '//coherent-coder-88201.appspot.com/RequestData',True)
+#req.open('GET', '//coherent-coder-88201.appspot.com/RequestData',True)
+req.open('GET', '//localhost:8080/RequestData',True)
 req.set_header('content-type','application/x-www-form-urlencoded')
 req.send()
 
@@ -182,11 +198,7 @@ for key in trans:
 </center>
 
 
-<div id="container" style="width:100%;height:100%">
-</div>
-
-
-<div id="chart" style="width:800px;height:400px; margin:0 auto">
+<div id="content" style="width:1000px;height:100%">
 </div>
 
 </div>
