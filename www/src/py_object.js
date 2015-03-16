@@ -1,9 +1,11 @@
 // A function that builds the __new__ method for the factory function
 __BRYTHON__.$__new__ = function(factory){
     return function(cls){
+        /*
         if(cls===undefined){
             throw __BRYTHON__.builtins.TypeError(factory.$dict.__name__+'.__new__(): not enough arguments')
         }
+        */
         var res = factory.apply(null,[])
         res.__class__ = cls.$dict
         var init_func = null
@@ -294,9 +296,7 @@ $ObjectDict.__mro__ = [$ObjectDict]
 
 $ObjectDict.__new__ = function(cls){
     if(cls===undefined){throw _b_.TypeError('object.__new__(): not enough arguments')}
-    var obj = {}
-    obj.__class__ = cls.$dict
-    return obj
+    return {__class__ : cls.$dict}
 }
 
 $ObjectDict.__ne__ = function(self,other){return self!==other}
@@ -307,8 +307,8 @@ $ObjectDict.__or__ = function(self,other){
 }
 
 $ObjectDict.__repr__ = function(self){
-    if(self===object || self === undefined) return "<class 'object'>"
-    if(self.__class__===$B.$type) return "<class '"+self.__class__.__name__+"'>"
+    if(self===object) return "<class 'object'>"
+    if(self.__class__===$B.$factory) return "<class '"+self.$dict.__name__+"'>"
     return "<"+self.__class__.__name__+" object>"
 }
 
