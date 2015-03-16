@@ -1692,11 +1692,23 @@ function str(arg){
     if(arg===undefined) return ''
     
     try{ // try __str__
+        if(arg.__class__===$B.$factory){
+            // arg is a class (the factory function)
+            // In this case, repr() doesn't use the attribute __str__ of the
+            // class or its subclasses, but the attribute __str__ of the
+            // class metaclass (usually "type") or its subclasses (usually
+            // "object")
+            // The metaclass is the attribute __class__ of the class dictionary
+            var func = $B.$type.__getattribute__(arg.$dict.__class__,'__str__')
+            return func()
+        }
+
         var f = getattr(arg,'__str__')
         // XXX fix : if not better than object.__str__, try __repr__
         return f()
     }
     catch(err){
+        console.log('err '+err)
         $B.$pop_exc()
         try{ // try __repr__
              var f = getattr(arg,'__repr__')
