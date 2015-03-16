@@ -390,6 +390,7 @@ $DictDict.__repr__ = function(self){
     var items = new $item_generator(self).as_list()
     for (var i=0; i < items.length; i++) {
         var itm = items[i]
+        console.log('item '+i+': '+itm[0])
         if (_objs.indexOf(itm[1]) > -1 && _b_.isinstance(itm[1], [_b_.dict,_b_.list,_b_.set, _b_.tuple])) {
            var value='?'+_b_.type(itm[1])
            if(isinstance(itm[1], dict)) value='{...}'
@@ -603,7 +604,7 @@ $B.$dict_get_copy = $DictDict.copy  // return a shallow copy
 
 // Class used for attribute __dict__ of objects
 
-$ObjDictDict = {__class__:$B.$type,__name__:'obj_dict'}
+$ObjDictDict = {__class__:$B.$type,__name__:'mapping_proxy'}
 $ObjDictDict.__mro__ = [$ObjDictDict, $DictDict, $ObjectDict]
 
 $ObjDictDict.__delitem__ = function(self, key){
@@ -653,7 +654,10 @@ $ObjDictDict.update = function(self){
 
 function obj_dict(obj){
     // Function called to get attribute "__dict__" of an object
-    if(obj.__class__===$B.$factory){return obj.$dict.__dict__}
+    if(obj.__class__===$B.$factory){
+        // For classes, use the class dictionary
+        obj = obj.$dict
+    }
     var res = {__class__:$ObjDictDict,$obj:obj}
     $DictDict.clear(res)
     for(var attr in obj){
