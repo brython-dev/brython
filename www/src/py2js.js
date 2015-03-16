@@ -2004,11 +2004,12 @@ function $DefCtx(context){
             var sc = scope
             var env = []
             while(sc && sc.id!=='__builtins__'){
+                var sc_id = sc.id.replace(/\./g,'_')
                 if(sc===scope){
-                    env.push('["'+sc.id+'",$locals]'
+                    env.push('["'+sc_id+'",$locals]'
                     )
                 }else{
-                    env.push('["'+sc.id+'",$locals_'+sc.id.replace(/\./g,'_')+']')
+                    env.push('["'+sc_id+'",$locals_'+sc_id+']')
                 }
                 sc = sc.parent_block
             }
