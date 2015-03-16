@@ -195,4 +195,14 @@ assert time.asctime(time.gmtime(0)) == 'Thu Jan  1 00:00:00 1970'
 tup = tuple(time.gmtime(0).args)
 assert time.asctime(tup) == 'Thu Jan  1 00:00:00 1970'
 
+# issue 154
+class MyMetaClass(type):
+    def __str__(cls):
+        return "Hello"
+
+class MyClass(metaclass=MyMetaClass):
+    pass
+
+assert str(MyClass) == "Hello"
+
 print('passed all tests')
