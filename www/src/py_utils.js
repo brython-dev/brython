@@ -399,11 +399,7 @@ $B.$gen_expr = function(env){
         }
         return self.value[self.$counter]
     }
-    $GenExprDict.__str__ = function(self){
-        if(self===undefined) return "<class 'generator'>"
-        return '<generator object <genexpr>>'
-    }
-    $GenExprDict.$factory = $GenExprDict
+    $GenExprDict.$factory = {__class__:$B.$factory,$dict:$GenExprDict}
     var $res2 = {value:$res1,__class__:$GenExprDict,$counter:-1}
     $res2.toString = function(){return 'ge object'}
     return $res2
@@ -828,11 +824,6 @@ $B.$iterator_class = function(name){
         __name__:name,
     }
 
-    res.__repr__=function(self){
-       return name + '('+ _b_.getattr(as_list(self), '__repr__')() + ')'
-    }
-
-    res.__str__ = res.toString = res.__repr__
     res.__mro__ = [res,_b_.object.$dict]
 
     function as_array(s) {
