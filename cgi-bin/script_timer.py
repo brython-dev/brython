@@ -15,4 +15,4 @@ filename = fs['filename'].value
 t0 = time.perf_counter()
 exec(src)
 t1 = time.perf_counter()
-print(json.dumps({'filename': filename, 'timing': (t1-t0) * 1000.0}))
+print(json.dumps({'filename': filename, 'timing': int((t1-t0) * 1000.0)}))
