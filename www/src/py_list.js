@@ -262,7 +262,7 @@ $ListDict.__repr__ = function(self){
     if(self.__class__===$TupleDict){res='('}
     for(var i=0, _len_i = self.length; i < _len_i;i++){
         var x = self[i]
-        try{res+=getattr(x,'__repr__')()}
+        try{res+=_b_.repr(x)}
         catch(err){console.log('no __repr__ for item '+i+' toString ['+x.toString()+']');res += x.toString()}
         if(i<self.length-1){res += ', '}
     }
@@ -370,9 +370,7 @@ $ListDict.remove = function(self,elt){
 
 $ListDict.pop = function(self,pos){
     if(pos===undefined){ // can't use self.pop() : too much recursion !
-        var res = self[self.length-1]
-        self.splice(self.length-1,1)
-        return res
+        return self.splice(self.length-1,1)[0]
     }
     if(arguments.length==2){
         if(isinstance(pos,_b_.int)){
@@ -513,8 +511,48 @@ $ListDict.$factory = list
 list.$is_func = true
 
 list.__module__='builtins'
-list.__bases__=[]  //builtins.object()]
+list.__bases__=[]
 
+
+// dictionary and factory for subclasses of list
+var $ListSubclassDict = {
+    __class__:$B.$type,
+    __name__:'list'
+}
+
+// the methods in subclass apply the methods in $ListDict to the
+// result of instance.valueOf(), which is a Javascript list
+for(var $attr in $ListDict){
+    if(typeof $ListDict[$attr]=='function'){
+        $ListSubclassDict[$attr]=(function(attr){
+            return function(){
+                var args = []
+                if(arguments.length>0){
+                    var args = [arguments[0].valueOf()]
+                    for(var i=1, _len_i = arguments.length; i < _len_i;i++){
+                        args.push(arguments[i])
+                    }
+                }
+                return $ListDict[attr].apply(null,args)
+            }
+        })($attr)
+    }
+}
+$ListSubclassDict.__init__ = function(self){
+    var res = [], args=[res]
+    for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
+    $ListDict.__init__.apply(null, args)
+    self.valueOf = function(){return res}
+}
+$ListSubclassDict.__mro__ = [$ListSubclassDict,$ObjectDict]
+
+// factory for list subclasses
+$B.$ListSubclassFactory = {
+    __class__:$B.$factory,
+    $dict:$ListSubclassDict
+}
+
+// Tuples
 function $tuple(arg){return arg} // used for parenthesed expressions
 
 var $TupleDict = {__class__:$B.$type,__name__:'tuple',$native:true}
