@@ -205,4 +205,16 @@ class MyClass(metaclass=MyMetaClass):
 
 assert str(MyClass) == "Hello"
 
+# issue 155
+class MyMetaClass(type):
+    pass
+
+class MyClass(metaclass=MyMetaClass):
+    pass
+
+MyOtherClass = MyMetaClass("DirectlyCreatedClass", (), {})
+
+assert isinstance(MyClass, MyMetaClass), type(MyClass)
+assert isinstance(MyOtherClass, MyMetaClass), type(MyOtherClass)
+
 print('passed all tests')

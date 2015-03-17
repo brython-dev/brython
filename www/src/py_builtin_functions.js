@@ -346,10 +346,7 @@ enumerate.__class__ = $B.$factory
 enumerate.$dict = $EnumerateDict
 $EnumerateDict.$factory = enumerate
 
-enumerate.__code__={}
-enumerate.__code__.co_argcount=2
-enumerate.__code__.co_consts=[]
-enumerate.__code__.co_varnames=['iterable']
+enumerate.__code__={co_argcount:2, co_consts:[], co_varnames:['iterable']}
 
 //eval() (built in function)
 function $eval(src, _globals, locals){
@@ -482,11 +479,7 @@ function filter(){
     }
 }
 
-filter.__code__={}
-filter.__code__.co_argcount=2
-filter.__code__.co_consts=[]
-filter.__code__.co_varnames=['f', 'iterable']
-
+filter.__code__={co_argcount:2, co_consts:[], co_varnames:['f', 'iterable']}
 
 function format(value, format_spec) {
   if(hasattr(value, '__format__')) return getattr(value,'__format__')(format_spec)
@@ -494,10 +487,7 @@ function format(value, format_spec) {
   throw _b_.NotImplementedError("__format__ is not implemented for object '" + _b_.str(value) + "'")
 }
 
-format.__code__={}
-format.__code__.co_argcount=2
-format.__code__.co_consts=[]
-format.__code__.co_varnames=['f', 'iterable']
+format.__code__={co_argcount:2, co_consts:[], co_varnames:['f', 'iterable']}
 
 function getattr(obj,attr,_default){
 
@@ -620,8 +610,6 @@ function getattr(obj,attr,_default){
 
     var is_class = klass.is_class, mro, attr_func
     
-    //if(attr=='__repr__'){console.log('attr '+attr+' of '+obj+' factory ? '+(obj.__class__===$B.$factory)+' is class '+klass.is_class)}
-    
     if(is_class){
         attr_func=$B.$type.__getattribute__
         if(obj.$dict===undefined){console.log('obj '+obj+' $dict undefined')}
@@ -659,10 +647,7 @@ function getattr(obj,attr,_default){
     throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")
 }
 
-getattr.__code__={}
-getattr.__code__.co_argcount=1
-getattr.__code__.co_consts=[]
-getattr.__code__.co_varnames=['value']
+getattr.__code__={co_argcount:1, co_consts:[], co_varnames:['value']}
 
 //globals() (built in function)
 function globals(){
@@ -842,32 +827,34 @@ function isinstance(obj,arg){
            return (typeof obj=="string"||klass===_b_.str.$dict)
          case _b_.list:
            return (obj.constructor===Array)
+         default:
+           return false
        }
     }
 
-    if(klass!==undefined){
-       // arg is the class constructor ; the attribute __class__ is the 
-       // class dictionary, ie arg.$dict
-       if(klass.__mro__===undefined){console.log('mro undef for '+klass+' '+klass.__name___+' '+dir(klass)+'\n arg '+arg)}
+   // arg is the class constructor ; the attribute __class__ is the 
+   // class dictionary, ie arg.$dict
 
-       if(arg.$dict===undefined){return false}
-       var _name=arg.$dict.__name__
-       for(var i=0;i<klass.__mro__.length;i++){
-          //we need to find a better way of comparing __mro__'s and arg.$dict
-          //for now, just assume that if the __name__'s match, we have a match
-          if(klass.__mro__[i].__name__== _name) return true
-       }
+   if(arg.$dict===undefined){return false}
 
-       return false
-    }
-    return obj.constructor===arg
+   if(klass==$B.$factory){klass = obj.$dict.__class__}
+
+   // Return true if one of the parents of obj class is arg
+   // If one of the parents is the class used to inherit from str, obj is an
+   // instance of str ; same for list
+   for(var i=0;i<klass.__mro__.length;i++){
+      if(klass.__mro__[i] === arg.$dict){return true}
+      else if(arg===_b_.str && 
+          klass.__mro__[i]===$B.$StringSubclassFactory.$dict){return true}
+      else if(arg===_b_.list && 
+          klass.__mro__[i]===$B.$ListSubclassFactory.$dict){return true}
+   }
+
+   return false
 }
 
-isinstance.__code__={}
-isinstance.__code__.co_argcount=2
-isinstance.__code__.co_consts=[]
-isinstance.__code__.co_varnames=['object', 'type']
-
+isinstance.__code__={co_argcount:2, co_consts:[], 
+    co_varnames:['object', 'type']}
 
 function issubclass(klass,classinfo){
     if(arguments.length!==2){
@@ -889,10 +876,7 @@ function issubclass(klass,classinfo){
     throw _b_.TypeError("issubclass() arg 2 must be a class or tuple of classes")
 }
 
-issubclass.__code__={}
-issubclass.__code__.co_argcount=2
-issubclass.__code__.co_consts=[]
-issubclass.__code__.co_varnames=['C','D']
+issubclass.__code__={co_argcount:2, co_consts:[], co_varnames:['C','D']}
 
 
 function iter(obj){
@@ -903,11 +887,7 @@ function iter(obj){
     }
 }
 
-iter.__code__={}
-iter.__code__.co_argcount=1
-iter.__code__.co_consts=[]
-iter.__code__.co_varnames=['i']
-
+iter.__code__={co_argcount:1, co_consts:[], co_varnames:['i']}
 
 function len(obj){
     try{return getattr(obj,'__len__')()}
@@ -916,10 +896,7 @@ function len(obj){
     }
 }
 
-len.__code__={}
-len.__code__.co_argcount=2
-len.__code__.co_consts=[]
-len.__code__.co_varnames=['module', 'object']
+len.__code__={co_argcount:2, co_consts:[], co_varnames:['module', 'object']}
 
 function locals(){
     // The last item in __BRYTHON__.frames_stack is
@@ -934,10 +911,7 @@ function locals(){
     return res
 }
 
-locals.__code__={}
-locals.__code__.co_argcount=0
-locals.__code__.co_consts=[]
-locals.__code__.co_varnames=[]
+locals.__code__={co_argcount:0, co_consts:[], co_varnames:[]}
 
 
 var $MapDict = {__class__:$B.$type,__name__:'map'}
@@ -971,10 +945,7 @@ function map(){
     return obj
 }
 
-map.__code__={}
-map.__code__.co_argcount=1
-map.__code__.co_consts=[]
-map.__code__.co_varnames=['func']
+map.__code__={co_argcount:1, co_consts:[], co_varnames:['func']}
 
 
 function $extreme(args,op){ // used by min() and max()
@@ -1054,10 +1025,7 @@ function max(){
     return $extreme(args,'__gt__')
 }
 
-max.__code__={}
-max.__code__.co_argcount=1
-max.__code__.co_consts=[]
-max.__code__.co_varnames=['iterable']
+max.__code__={co_argcount:1, co_consts:[], co_varnames:['iterable']}
 
 
 function memoryview(obj) {

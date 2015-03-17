@@ -1694,12 +1694,13 @@ function str(arg){
     try{ // try __str__
         if(arg.__class__===$B.$factory){
             // arg is a class (the factory function)
-            // In this case, repr() doesn't use the attribute __str__ of the
+            // In this case, str() doesn't use the attribute __str__ of the
             // class or its subclasses, but the attribute __str__ of the
             // class metaclass (usually "type") or its subclasses (usually
             // "object")
             // The metaclass is the attribute __class__ of the class dictionary
             var func = $B.$type.__getattribute__(arg.$dict.__class__,'__str__')
+            if(func.__func__===_b_.object.$dict.__str__){return func(arg)}
             return func()
         }
 
