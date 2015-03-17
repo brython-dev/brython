@@ -246,6 +246,7 @@ $B.get_class = function(obj){
             }
         }
     }
+    //if(klass===undefined){console.log('klass undef for '+obj+' '+$B.keys(obj))}
     return klass
 }
 

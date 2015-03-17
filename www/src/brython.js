@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-03-16 22:19:17.392000"
+__BRYTHON__.compiled_date="2015-03-17 09:59:49.935000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4588,7 +4588,7 @@ var meta_new=$B.$type.__getattribute__(metaclass.$dict,'__new__')
 if(meta_new.__func__===$B.$type.__new__){var factory=_b_.type.$dict.__new__(_b_.type,class_name,bases,cl_dict)
 }else{var factory=meta_new(metaclass,class_name,bases,cl_dict)
 }
-if(metaclass===_b_.type)return factory 
+if(metaclass===_b_.type)return factory
 for(var attr in class_dict){factory.$dict[attr]=class_dict[attr]}
 factory.$dict.$factory=factory
 for(var member in metaclass.$dict){if(typeof metaclass.$dict[member]=='function' && member !='__new__'){metaclass.$dict[member].$type='classmethod'
@@ -5901,10 +5901,7 @@ return res
 enumerate.__class__=$B.$factory
 enumerate.$dict=$EnumerateDict
 $EnumerateDict.$factory=enumerate
-enumerate.__code__={}
-enumerate.__code__.co_argcount=2
-enumerate.__code__.co_consts=[]
-enumerate.__code__.co_varnames=['iterable']
+enumerate.__code__={co_argcount:2,co_consts:[],co_varnames:['iterable']}
 function $eval(src,_globals,locals){var current_frame=$B.frames_stack[$B.frames_stack.length-1]
 if(current_frame===undefined){alert('current frame undef pour '+src.substr(0,30))}
 var current_locals_id=current_frame[0]
@@ -5978,17 +5975,11 @@ else{throw err}}}}
 return{
 __class__: $FilterDict,__next__: __next__
 }}
-filter.__code__={}
-filter.__code__.co_argcount=2
-filter.__code__.co_consts=[]
-filter.__code__.co_varnames=['f','iterable']
+filter.__code__={co_argcount:2,co_consts:[],co_varnames:['f','iterable']}
 function format(value,format_spec){if(hasattr(value,'__format__'))return getattr(value,'__format__')(format_spec)
 throw _b_.NotImplementedError("__format__ is not implemented for object '" + _b_.str(value)+ "'")
 }
-format.__code__={}
-format.__code__.co_argcount=2
-format.__code__.co_consts=[]
-format.__code__.co_varnames=['f','iterable']
+format.__code__={co_argcount:2,co_consts:[],co_varnames:['f','iterable']}
 function getattr(obj,attr,_default){var klass=$B.get_class(obj)
 if(klass===undefined){
 if(obj[attr]!==undefined)return obj[attr]
@@ -6081,10 +6072,7 @@ var cname=klass.__name__
 if(is_class)cname=obj.__name__
 throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")
 }
-getattr.__code__={}
-getattr.__code__.co_argcount=1
-getattr.__code__.co_consts=[]
-getattr.__code__.co_varnames=['value']
+getattr.__code__={co_argcount:1,co_consts:[],co_varnames:['value']}
 function globals(){
 var globals_obj=$B.last($B.frames_stack)[3]
 var res=_b_.dict()
@@ -6193,22 +6181,19 @@ case _b_.str:
 return(typeof obj=="string"||klass===_b_.str.$dict)
 case _b_.list:
 return(obj.constructor===Array)
+default:
+return false
 }}
-if(klass!==undefined){
-if(klass.__mro__===undefined){console.log('mro undef for '+klass+' '+klass.__name___+' '+dir(klass)+'\n arg '+arg)}
 if(arg.$dict===undefined){return false}
-var _name=arg.$dict.__name__
-for(var i=0;i<klass.__mro__.length;i++){
-if(klass.__mro__[i].__name__==_name)return true
-}
+if(klass==$B.$factory){klass=obj.$dict.__class__}
+for(var i=0;i<klass.__mro__.length;i++){if(klass.__mro__[i]===arg.$dict){return true}
+else if(arg===_b_.str && 
+klass.__mro__[i]===$B.$StringSubclassFactory.$dict){return true}
+else if(arg===_b_.list && 
+klass.__mro__[i]===$B.$ListSubclassFactory.$dict){return true}}
 return false
 }
-return obj.constructor===arg
-}
-isinstance.__code__={}
-isinstance.__code__.co_argcount=2
-isinstance.__code__.co_consts=[]
-isinstance.__code__.co_varnames=['object','type']
+isinstance.__code__={co_argcount:2,co_consts:[],co_varnames:['object','type']}
 function issubclass(klass,classinfo){if(arguments.length!==2){throw _b_.TypeError("issubclass expected 2 arguments, got "+arguments.length)
 }
 if(!klass.__class__ ||!klass.__class__.is_class){throw _b_.TypeError("issubclass() arg 1 must be a class")
@@ -6221,25 +6206,16 @@ if(classinfo.__class__.is_class){return klass.$dict.__mro__.indexOf(classinfo.$d
 }
 throw _b_.TypeError("issubclass() arg 2 must be a class or tuple of classes")
 }
-issubclass.__code__={}
-issubclass.__code__.co_argcount=2
-issubclass.__code__.co_consts=[]
-issubclass.__code__.co_varnames=['C','D']
+issubclass.__code__={co_argcount:2,co_consts:[],co_varnames:['C','D']}
 function iter(obj){try{return getattr(obj,'__iter__')()}
 catch(err){$B.$pop_exc()
 throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not iterable")
 }}
-iter.__code__={}
-iter.__code__.co_argcount=1
-iter.__code__.co_consts=[]
-iter.__code__.co_varnames=['i']
+iter.__code__={co_argcount:1,co_consts:[],co_varnames:['i']}
 function len(obj){try{return getattr(obj,'__len__')()}
 catch(err){throw _b_.TypeError("object of type '"+$B.get_class(obj).__name__+"' has no len()")
 }}
-len.__code__={}
-len.__code__.co_argcount=2
-len.__code__.co_consts=[]
-len.__code__.co_varnames=['module','object']
+len.__code__={co_argcount:2,co_consts:[],co_varnames:['module','object']}
 function locals(){
 var locals_obj=$B.last($B.frames_stack)[1]
 var res=_b_.dict()
@@ -6247,10 +6223,7 @@ for(var name in locals_obj){_b_.dict.$dict.__setitem__(res,name,locals_obj[name]
 }
 return res
 }
-locals.__code__={}
-locals.__code__.co_argcount=0
-locals.__code__.co_consts=[]
-locals.__code__.co_varnames=[]
+locals.__code__={co_argcount:0,co_consts:[],co_varnames:[]}
 var $MapDict={__class__:$B.$type,__name__:'map'}
 $MapDict.__mro__=[$MapDict,$ObjectDict]
 $MapDict.__iter__=function(self){return self}
@@ -6268,10 +6241,7 @@ var obj={__class__:$MapDict,__repr__:function(){return "<map object>"},__str__:f
 }
 return obj
 }
-map.__code__={}
-map.__code__.co_argcount=1
-map.__code__.co_consts=[]
-map.__code__.co_varnames=['func']
+map.__code__={co_argcount:1,co_consts:[],co_varnames:['func']}
 function $extreme(args,op){
 var $op_name='min'
 if(op==='__gt__')$op_name="max"
@@ -6324,10 +6294,7 @@ function max(){var args=[]
 for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
 return $extreme(args,'__gt__')
 }
-max.__code__={}
-max.__code__.co_argcount=1
-max.__code__.co_consts=[]
-max.__code__.co_varnames=['iterable']
+max.__code__={co_argcount:1,co_consts:[],co_varnames:['iterable']}
 function memoryview(obj){throw NotImplementedError('memoryview is not implemented')
 }
 function min(){var args=[]
@@ -8850,7 +8817,6 @@ var _objs=[self]
 var res=[]
 var items=new $item_generator(self).as_list()
 for(var i=0;i < items.length;i++){var itm=items[i]
-console.log('item '+i+': '+itm[0])
 if(_objs.indexOf(itm[1])> -1 && _b_.isinstance(itm[1],[_b_.dict,_b_.list,_b_.set,_b_.tuple])){var value='?'+_b_.type(itm[1])
 if(isinstance(itm[1],dict))value='{...}'
 res.push(repr(itm[0])+': '+ value)
@@ -10438,6 +10404,7 @@ function str(arg){if(arg===undefined)return ''
 try{
 if(arg.__class__===$B.$factory){
 var func=$B.$type.__getattribute__(arg.$dict.__class__,'__str__')
+if(func.__func__===_b_.object.$dict.__str__){return func(arg)}
 return func()
 }
 var f=getattr(arg,'__str__')

@@ -66,12 +66,10 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     }else{
         var factory = meta_new(metaclass, class_name, bases, cl_dict)
     }
+
+    if(metaclass===_b_.type) return factory
     
-    if(metaclass===_b_.type) return factory //_b_.type.$dict.__new__(_b_.type,class_name,bases,cl_dict)
-    
-    //factory.__class__ = $B.$factory
     for(var attr in class_dict){factory.$dict[attr] = class_dict[attr]}
-    //factory.$dict = class_dict
 
     factory.$dict.$factory = factory
 
@@ -82,11 +80,6 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
        }
     }
     
-    //var new_func = _b_.getattr(metaclass,'__new__')
-    //var factory = new_func.apply(null, [factory,class_name,bases,cl_dict])
-    //_b_.getattr(metaclass,'__init__').apply(null,[factory,class_name,bases,cl_dict])
-    //factory.__class__ = $B.$factory
-
     factory.$is_func = true
     return factory
 }

@@ -390,7 +390,6 @@ $DictDict.__repr__ = function(self){
     var items = new $item_generator(self).as_list()
     for (var i=0; i < items.length; i++) {
         var itm = items[i]
-        console.log('item '+i+': '+itm[0])
         if (_objs.indexOf(itm[1]) > -1 && _b_.isinstance(itm[1], [_b_.dict,_b_.list,_b_.set, _b_.tuple])) {
            var value='?'+_b_.type(itm[1])
            if(isinstance(itm[1], dict)) value='{...}'
