@@ -195,6 +195,14 @@ assert time.asctime(time.gmtime(0)) == 'Thu Jan  1 00:00:00 1970'
 tup = tuple(time.gmtime(0).args)
 assert time.asctime(tup) == 'Thu Jan  1 00:00:00 1970'
 
+# issue 137
+codeobj = compile("3 + 4", "<example>", "eval")
+assert eval(codeobj) == 7
+
+x = 7
+codeobj = compile("x + 4", "<example>", "eval")
+assert eval(codeobj) == 11
+
 # issue 154
 class MyMetaClass(type):
     def __str__(cls):

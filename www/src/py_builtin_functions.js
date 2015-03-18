@@ -212,18 +212,32 @@ $B.$CodeObjectDict.__mro__ = [$B.$CodeObjectDict,$ObjectDict]
 
 function compile(source, filename, mode) {
     //for now ignore mode variable, and flags, etc
-    var $ns=$B.$MakeArgs('compile',arguments,['source','filename','mode'],[],'args','kw')
-    return {__class__:$B.$CodeObjectDict,src:$B.py2js(source).to_js(),
-        name:source.__name__ || '<module>',filename:filename}
+    var current_frame = $B.frames_stack[$B.frames_stack.length-1]
+    if(current_frame===undefined){alert('current frame undef pour '+src.substr(0,30))}
+    var current_locals_id = current_frame[0]
+    var current_locals_name = current_locals_id.replace(/\./,'_')
+    var current_globals_id = current_frame[2]
+    var current_globals_name = current_globals_id.replace(/\./,'_')
+
+    var module_name = current_globals_name
+    var local_name = current_locals_name
+    
+    var root = $B.py2js(source,module_name,[module_name],local_name)
+    root.children.pop() // remove trailing "leave_frame()"
+    var js = root.to_js()
+    
+    return {__class__:$B.$CodeObjectDict,src:js,
+        name:source.__name__ || '<module>',
+        filename:filename, 
+        mode:mode}
 }
+
 compile.__class__ = $B.factory
 $B.$CodeObjectDict.$factory = compile
 compile.$dict = $B.$CodeObjectDict
 
-compile.__code__={}
-compile.__code__.co_argcount=3
-compile.__code__.co_consts=[]
-compile.__code__.co_varnames=['source','filename','mode']
+compile.__code__={co_argcount:3, co_consts:[], 
+    co_varnames:['source','filename','mode']}
 
 //function complex is located in py_complex.js
 
@@ -350,14 +364,22 @@ enumerate.__code__={co_argcount:2, co_consts:[], co_varnames:['iterable']}
 
 //eval() (built in function)
 function $eval(src, _globals, locals){
+
     var current_frame = $B.frames_stack[$B.frames_stack.length-1]
     if(current_frame===undefined){alert('current frame undef pour '+src.substr(0,30))}
     var current_locals_id = current_frame[0]
     var current_locals_name = current_locals_id.replace(/\./,'_')
     var current_globals_id = current_frame[2]
     var current_globals_name = current_globals_id.replace(/\./,'_')
+
+    if(src.__class__===$B.$CodeObjectDict){
+        module_name = current_globals_name
+        console.log('var $locals_'+module_name+'=current_frame[3]')
+        eval('var $locals_'+module_name+'=current_frame[3]')
+        return eval(src.src)
+    }
     
-    var is_exec = arguments[3]=='exec', module_name
+    var is_exec = arguments[3]=='exec', module_name, leave = false
     
     if(_globals===undefined){
         /*
@@ -401,6 +423,7 @@ function $eval(src, _globals, locals){
             // last instruction is 'leave frame' ; we must remove it, 
             // otherwise eval() would return None
             root.children.pop()
+            leave = true
             var instr = root.children[root.children.length-1]
             var type = instr.context.tree[0].type
             if (!('expr' == type || 'list_or_tuple' == type)) {
@@ -428,7 +451,7 @@ function $eval(src, _globals, locals){
         if(err.py_error===undefined){throw $B.exception(err)}
         throw err
     }finally{
-        //$B.call_stack.pop()
+        if(leave){$B.leave_frame()}
     }
 }
 $eval.$is_func = true
@@ -843,6 +866,7 @@ function isinstance(obj,arg){
    // If one of the parents is the class used to inherit from str, obj is an
    // instance of str ; same for list
    for(var i=0;i<klass.__mro__.length;i++){
+      //console.log('compare '+klass.__mro__[i].__name__+' to '+arg.$dict.__name__)
       if(klass.__mro__[i] === arg.$dict){return true}
       else if(arg===_b_.str && 
           klass.__mro__[i]===$B.$StringSubclassFactory.$dict){return true}

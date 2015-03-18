@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-03-17 09:59:49.935000"
+__BRYTHON__.compiled_date="2015-03-18 15:46:56.931000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -2241,16 +2241,17 @@ this.parent=C
 this.tree=[]
 C.tree.push(this)
 this.toString=function(){return ' (raise) '+this.tree}
-this.to_js=function(){if(this.tree.length===0)return '$B.$raise()'
+this.to_js=function(){var res='$B.leave_frame();'
+if(this.tree.length===0)return res+'$B.$raise()'
 var exc=this.tree[0]
 if(exc.type==='id' ||
 (exc.type==='expr' && exc.tree[0].type==='id')){var value=exc.value
 if(exc.type=='expr'){value=exc.tree[0].value}
-var res='if(isinstance('+exc.to_js()+',type)){throw '+exc.to_js()+'()}'
+res +='if(isinstance('+exc.to_js()+',type)){throw '+exc.to_js()+'()}'
 return res + 'else{throw '+exc.to_js()+'}'
 }
 while(this.tree.length>1)this.tree.pop()
-return 'throw '+$to_js(this.tree)
+return res+'throw '+$to_js(this.tree)
 }}
 function $RawJSCtx(C,js){this.type="raw_js"
 C.tree.push(this)
@@ -2414,7 +2415,10 @@ default:
 $_SyntaxError(C,"missing clause after 'try' 2")
 }}
 var scope=$get_scope(this)
-new $NodeJSCtx(node,'$B.$failed'+$loop_num+'=false;try')
+var js='$B.$failed'+$loop_num+'=false;'
+js +='$locals["$frame'+$loop_num+'"]=$B.frames_stack.slice();'
+js +='try'
+new $NodeJSCtx(node,js)
 node.is_try=true 
 var catch_node=new $Node()
 new $NodeJSCtx(catch_node,'catch($err'+$loop_num+')')
@@ -2462,7 +2466,13 @@ new $NodeJSCtx(else_node,'if(!$B.$failed'+$loop_num+')')
 for(var i=0;i<else_body.children.length;i++){else_node.add(else_body.children[i])
 }
 node.parent.insert(pos,else_node)
+pos++
 }
+var frame_node=new $Node()
+var js='$B.frames_stack = $locals["$frame'+$loop_num+'"];'
+js +='delete $locals["$frame'+$loop_num+'"];'
+new $NodeJSCtx(frame_node,js)
+node.parent.insert(pos,frame_node)
 $loop_num++
 }
 this.to_js=function(){return 'try'}}
@@ -5824,15 +5834,22 @@ $B.$CodeObjectDict={__class__:$B.$type,__name__:'code',__repr__:function(self){r
 $B.$CodeObjectDict.__str__=$B.$CodeObjectDict.__repr__
 $B.$CodeObjectDict.__mro__=[$B.$CodeObjectDict,$ObjectDict]
 function compile(source,filename,mode){
-var $ns=$B.$MakeArgs('compile',arguments,['source','filename','mode'],[],'args','kw')
-return{__class__:$B.$CodeObjectDict,src:$B.py2js(source).to_js(),name:source.__name__ ||'<module>',filename:filename}}
+var current_frame=$B.frames_stack[$B.frames_stack.length-1]
+if(current_frame===undefined){alert('current frame undef pour '+src.substr(0,30))}
+var current_locals_id=current_frame[0]
+var current_locals_name=current_locals_id.replace(/\./,'_')
+var current_globals_id=current_frame[2]
+var current_globals_name=current_globals_id.replace(/\./,'_')
+var module_name=current_globals_name
+var local_name=current_locals_name
+var root=$B.py2js(source,module_name,[module_name],local_name)
+root.children.pop()
+var js=root.to_js()
+return{__class__:$B.$CodeObjectDict,src:js,name:source.__name__ ||'<module>',filename:filename,mode:mode}}
 compile.__class__=$B.factory
 $B.$CodeObjectDict.$factory=compile
 compile.$dict=$B.$CodeObjectDict
-compile.__code__={}
-compile.__code__.co_argcount=3
-compile.__code__.co_consts=[]
-compile.__code__.co_varnames=['source','filename','mode']
+compile.__code__={co_argcount:3,co_consts:[],co_varnames:['source','filename','mode']}
 var __debug__=$B.debug>0
 function delattr(obj,attr){
 var klass=$B.get_class(obj)
@@ -5908,7 +5925,12 @@ var current_locals_id=current_frame[0]
 var current_locals_name=current_locals_id.replace(/\./,'_')
 var current_globals_id=current_frame[2]
 var current_globals_name=current_globals_id.replace(/\./,'_')
-var is_exec=arguments[3]=='exec',module_name
+if(src.__class__===$B.$CodeObjectDict){module_name=current_globals_name
+console.log('var $locals_'+module_name+'=current_frame[3]')
+eval('var $locals_'+module_name+'=current_frame[3]')
+return eval(src.src)
+}
+var is_exec=arguments[3]=='exec',module_name,leave=false
 if(_globals===undefined){
 module_name='exec_'+$B.UUID()
 $B.$py_module_path[module_name]=$B.$py_module_path[current_globals_id]
@@ -5929,6 +5951,7 @@ local_name=locals.id
 try{var root=$B.py2js(src,module_name,[module_name],local_name)
 if(!is_exec){
 root.children.pop()
+leave=true
 var instr=root.children[root.children.length-1]
 var type=instr.C.tree[0].type
 if(!('expr'==type ||'list_or_tuple'==type)){
@@ -5946,8 +5969,7 @@ if(res===undefined){res=_b_.None}
 return res
 }catch(err){if(err.py_error===undefined){throw $B.exception(err)}
 throw err
-}finally{
-}}
+}finally{if(leave){$B.leave_frame()}}}
 $eval.$is_func=true
 function show_frames(){
 var ch=''
@@ -6186,7 +6208,8 @@ return false
 }}
 if(arg.$dict===undefined){return false}
 if(klass==$B.$factory){klass=obj.$dict.__class__}
-for(var i=0;i<klass.__mro__.length;i++){if(klass.__mro__[i]===arg.$dict){return true}
+for(var i=0;i<klass.__mro__.length;i++){
+if(klass.__mro__[i]===arg.$dict){return true}
 else if(arg===_b_.str && 
 klass.__mro__[i]===$B.$StringSubclassFactory.$dict){return true}
 else if(arg===_b_.list && 

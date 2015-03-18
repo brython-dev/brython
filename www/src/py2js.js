@@ -3736,18 +3736,19 @@ function $RaiseCtx(context){
     this.toString = function(){return ' (raise) '+this.tree}
 
     this.to_js = function(){
-        if(this.tree.length===0) return '$B.$raise()'
+        var res = '$B.leave_frame();'
+        if(this.tree.length===0) return res+'$B.$raise()'
         var exc = this.tree[0]
         if(exc.type==='id' ||
             (exc.type==='expr' && exc.tree[0].type==='id')){
             var value = exc.value
             if(exc.type=='expr'){value = exc.tree[0].value}
-            var res = 'if(isinstance('+exc.to_js()+',type)){throw '+exc.to_js()+'()}'
+            res += 'if(isinstance('+exc.to_js()+',type)){throw '+exc.to_js()+'()}'
             return res + 'else{throw '+exc.to_js()+'}'
         }
         // if raise had a 'from' clause, ignore it
         while(this.tree.length>1) this.tree.pop()
-        return 'throw '+$to_js(this.tree)
+        return res+'throw '+$to_js(this.tree)
     }
 }
 
@@ -4012,7 +4013,10 @@ function $TryCtx(context){
         // Transform node into Javascript 'try' (necessary if
         // "try" inside a "for" loop)
         // add a boolean $failed, used to run the 'else' clause
-        new $NodeJSCtx(node,'$B.$failed'+$loop_num+'=false;try')
+        var js = '$B.$failed'+$loop_num+'=false;'
+        js += '$locals["$frame'+$loop_num+'"]=$B.frames_stack.slice();'
+        js += 'try'
+        new $NodeJSCtx(node, js)
         node.is_try = true // used in generators
         
         // Insert new 'catch' clause
@@ -4078,7 +4082,14 @@ function $TryCtx(context){
                 else_node.add(else_body.children[i])
             }
             node.parent.insert(pos,else_node)
+            pos++
         }
+        // restore frames stack as before the try clause
+        var frame_node = new $Node()
+        var js = '$B.frames_stack = $locals["$frame'+$loop_num+'"];'
+        js += 'delete $locals["$frame'+$loop_num+'"];'
+        new $NodeJSCtx(frame_node, js)
+        node.parent.insert(pos, frame_node)
         $loop_num++
     }
 
