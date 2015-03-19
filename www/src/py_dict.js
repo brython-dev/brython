@@ -27,13 +27,17 @@ var $grow_dict = function(self) {
     while (new_size < target_size) {
         new_size <<= 1
     }
-    var new_data = []
-    var _l = new $item_generator(self).as_list()
-    for (var i=0; i < _l.length; i++) {
-        var bucket = $find_empty(_l[i][0], new_size, new_data)
-        new_data[bucket] = _l
+    var new_data = Array($DICT_MINSIZE)
+    try {
+        var ig = new $item_generator(self)
+        while(1) {
+            var itm = ig.next()
+            var bucket = $find_empty(itm[0], new_size, new_data)
+            new_data[bucket] = itm
+        }
+    } catch (err) {
+        if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
     }
-
     self.$data = new_data
     self.$fill = self.$used
     self.$size = new_size
@@ -142,9 +146,15 @@ $item_iterator.prototype.length = function() {return this.iter.items.length }
 $item_iterator.prototype.next = function() { return _b_.tuple(this.iter.next()) }
 
 var $copy_dict = function(left, right) {
-    var _l = new $item_generator(right).as_list()
-    var si=$DictDict.__setitem__
-    for (var i=0; i < _l.length; i++) si(left, _l[i][0], _l[i][1])
+    var gen = new $item_generator(right)
+    try {
+        while(1) {
+            var item = gen.next()
+            $DictDict.__setitem__(left, item[0], item[1])
+        }
+    } catch (err) {
+        if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
+    }
 }
 
 $iterator_wrapper = function(items,klass){
@@ -233,13 +243,18 @@ $DictDict.__eq__ = function(self,other){
 
     if ($DictDict.__len__(self) != $DictDict.__len__(other)) return false
 
-    var _l = new $item_generator(self).as_list()
-    
-    for (var i=0; i < _l.length; i++) {
-        var key=_l[i][0]
+    var gen = new $item_generator(self)
+    var keys1=[]
+    try {
+        while(1) keys1.push(gen.next()[0])
+    } catch (err) {
+
+    }
+
+    for (var i=0; i < keys1.length; i++) {
+        var key=keys1[i]
         if (!$DictDict.__contains__(other, key)) return false
-        var v1=_l[i][1]
-        //var v1=$DictDict.__getitem__(self, key)
+        var v1=$DictDict.__getitem__(self, key)
         var v2=$DictDict.__getitem__(other, key)
         if (!getattr(v1, '__eq__')(v2)) return false
     }
@@ -284,9 +299,9 @@ $DictDict.__init__ = function(self){
       case 1:
         var obj = args[0]
         if(Array.isArray(obj)){
-            var i = obj.length
-            var si=$DictDict.__setitem__
-            while(i--) si(self, obj[i][0], obj[i][1])
+            var src = args[0]
+            var i = src.length
+            while(i--){$DictDict.__setitem__(self, src[i][0], src[i][1])}
             return
         }else if(isinstance(obj,dict)){
             $copy_dict(self, obj)
@@ -295,9 +310,9 @@ $DictDict.__init__ = function(self){
 
         if(obj.__class__===$B.JSObject.$dict){
             // convert a JSObject into a Python dictionary
-            var si=$DictDict.__setitem__
-            for(var attr in obj.js) si(self,attr,obj.js[attr])
-
+            for(var attr in obj.js){
+                $DictDict.__setitem__(self,attr,obj.js[attr])
+            }
             // Attribute $jsobj is used to update the original JS object
             // when the dictionary is modified
             self.$jsobj = obj.js
@@ -320,8 +335,7 @@ $DictDict.__init__ = function(self){
         if(Array.isArray(args[0])){
             var src = args[0]
             var i = src.length
-            var si=$DictDict.__setitem__
-            while(i--) si(self, src[i][0], src[i][1])
+            while(i--){$DictDict.__setitem__(self, src[i][0], src[i][1])}
         }else{
             var iterable = iter(args[0])
             while(1){
@@ -425,7 +439,7 @@ $B.make_rmethods($DictDict)
 
 $DictDict.clear = function(self){
     // Remove all items from the dictionary.
-    self.$data = [] //Array($DICT_MINSIZE)
+    self.$data = Array($DICT_MINSIZE)
     self.$size = $DICT_MINSIZE
     self.$fill = 0
     self.$used = 0
@@ -553,8 +567,12 @@ function dict(_args,second){
         // Form "dict([[key1, value1], [key2,value2], ...])"
         $DictDict.clear(res)
         var i = _args.length
-        var si=$DictDict.__setitem__
-        while(i--) si(res, _args[i][0], _args[i][1])
+        while(i--){
+            var key = _args[i][0]
+            if(typeof key=='string'){res.$string_dict[key] = _args[i][1]}
+            else if(typeof key=='number'){res.$numeric_dict[key] = _args[i][1]}
+            else{$DictDict.__setitem__(res, key, _args[i][1])}
+        }
         return res
     }
 
