@@ -2055,7 +2055,7 @@ $BaseExceptionDict.__init__ = function(self){
 
 $BaseExceptionDict.__repr__ = function(self){
     if(self.message===None){return $B.get_class(self).__name__+'()'}
-    return $B.get_class(self).__name__+"('"+self.message+"',)"
+    return self.message
 }
 
 $BaseExceptionDict.__str__ = $BaseExceptionDict.__repr__

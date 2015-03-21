@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-03-18 15:46:56.931000"
+__BRYTHON__.compiled_date="2015-03-21 09:40:46.218000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -5919,7 +5919,7 @@ enumerate.__class__=$B.$factory
 enumerate.$dict=$EnumerateDict
 $EnumerateDict.$factory=enumerate
 enumerate.__code__={co_argcount:2,co_consts:[],co_varnames:['iterable']}
-function $eval(src,_globals,locals){var current_frame=$B.frames_stack[$B.frames_stack.length-1]
+function $eval(src,_globals,_locals){var current_frame=$B.frames_stack[$B.frames_stack.length-1]
 if(current_frame===undefined){alert('current frame undef pour '+src.substr(0,30))}
 var current_locals_id=current_frame[0]
 var current_locals_name=current_locals_id.replace(/\./,'_')
@@ -5940,13 +5940,13 @@ module_name=_globals.id
 $B.$py_module_path[module_name]=$B.$py_module_path[current_globals_id]
 eval('var $locals_'+module_name+'={}')
 var items=_b_.dict.$dict.items(_globals),item
-while(true){try{item=next(items)
+while(1){try{item=next(items)
 eval('$locals_'+module_name+'["'+item[0]+'"] = item[1]')
 }catch(err){break
 }}}
-if(locals===undefined){local_name=module_name
-}else{if(locals.id===undefined){locals.id='exec_'+$B.UUID()}
-local_name=locals.id
+if(_locals===undefined){local_name=module_name
+}else{if(_locals.id===undefined){_locals.id='exec_'+$B.UUID()}
+local_name=_locals.id
 }
 try{var root=$B.py2js(src,module_name,[module_name],local_name)
 if(!is_exec){
@@ -5965,7 +5965,12 @@ var ns=eval('$locals_'+module_name)
 var setitem=getattr(_globals,'__setitem__')
 for(var attr in ns){setitem(attr,ns[attr])
 }}
-if(res===undefined){res=_b_.None}
+if(_locals!==undefined){
+var ns=eval('$locals_'+module_name)
+var setitem=getattr(_locals,'__setitem__')
+for(var attr in ns){setitem(attr,ns[attr])
+}}
+if(res===undefined)return _b_.None
 return res
 }catch(err){if(err.py_error===undefined){throw $B.exception(err)}
 throw err
@@ -6929,7 +6934,7 @@ return res
 }
 function frame(pos){var mod_name=$B.frames_stack[2]
 var fs=$B.frames_stack
-var res={__class__:$FrameDict,f_builtins : to_dict($B.vars['__builtins__'])
+var res={__class__:$FrameDict,f_builtins :{}
 }
 if(pos===undefined){pos=fs.length-1}
 if(fs.length){var _frame=fs[pos]
@@ -8696,11 +8701,10 @@ this.iter=new $item_generator(d)
 }
 $item_iterator.prototype.length=function(){return this.iter.items.length }
 $item_iterator.prototype.next=function(){return _b_.tuple(this.iter.next())}
-var $copy_dict=function(left,right){var gen=new $item_generator(right)
-try{
-while(1){var item=gen.next()
-$DictDict.__setitem__(left,item[0],item[1])
-}}catch(err){if(err.__name__ !=="StopIteration"){throw err }else{$B.$pop_exc()}}}
+var $copy_dict=function(left,right){var _l=new $item_generator(right).as_list()
+var si=$DictDict.__setitem__
+for(var i=0;i < _l.length;i++)si(left,_l[i][0],_l[i][1])
+}
 $iterator_wrapper=function(items,klass){var res={__class__:klass,__iter__:function(){items.iter.i=0;return res},__len__:function(){return items.length()},__next__:function(){
 return items.next()
 },
@@ -8753,14 +8757,10 @@ return self===dict
 }
 if(!isinstance(other,dict))return false
 if($DictDict.__len__(self)!=$DictDict.__len__(other))return false
-var gen=new $item_generator(self)
-var keys1=[]
-try{
-while(1)keys1.push(gen.next()[0])
-}catch(err){}
-for(var i=0;i < keys1.length;i++){var key=keys1[i]
+var d1=new $item_generator(self).as_list()
+for(var i=0;i < d1.length;i++){var key=d1[i][0]
 if(!$DictDict.__contains__(other,key))return false
-var v1=$DictDict.__getitem__(self,key)
+var v1=d1[i][1]
 var v2=$DictDict.__getitem__(other,key)
 if(!getattr(v1,'__eq__')(v2))return false
 }
@@ -8789,16 +8789,16 @@ switch(args.length){case 0:
 return
 case 1:
 var obj=args[0]
-if(Array.isArray(obj)){var src=args[0]
-var i=src.length
-while(i--){$DictDict.__setitem__(self,src[i][0],src[i][1])}
+if(Array.isArray(obj)){var i=obj.length
+var si=$DictDict.__setitem__
+while(i--)si(self,obj[i][0],obj[i][1])
 return
 }else if(isinstance(obj,dict)){$copy_dict(self,obj)
 return
 }
 if(obj.__class__===$B.JSObject.$dict){
-for(var attr in obj.js){$DictDict.__setitem__(self,attr,obj.js[attr])
-}
+var si=$DictDict.__setitem__
+for(var attr in obj.js)si(self,attr,obj.js[attr])
 self.$jsobj=obj.js
 return
 }}
@@ -8810,7 +8810,9 @@ return
 }
 if(Array.isArray(args[0])){var src=args[0]
 var i=src.length
-while(i--){$DictDict.__setitem__(self,src[i][0],src[i][1])}}else{var iterable=iter(args[0])
+var si=$DictDict.__setitem__
+while(i--)si(self,src[i][0],src[i][1])
+}else{var iterable=iter(args[0])
 while(1){try{var elt=next(iterable)
 var key=getattr(elt,'__getitem__')(0)
 var value=getattr(elt,'__getitem__')(1)
@@ -8823,10 +8825,10 @@ if($DictDict.__len__(kw)> 0)$copy_dict(self,kw)
 var $dict_iterator=$B.$iterator_class('dict iterator')
 $DictDict.__iter__=function(self){return $DictDict.keys(self)
 }
-$DictDict.__len__=function(self){var _num_len=0,_str_len=0
-for(var k in self.$numeric_dict)_num_len++
-for(var k in self.$string_dict)_str_len++
-return self.$used + _num_len + _str_len
+$DictDict.__len__=function(self){var _count=0
+for(var k in self.$numeric_dict)_count++
+for(var k in self.$string_dict)_count++
+return self.$used + _count
 }
 $DictDict.__mro__=[$DictDict,$ObjectDict]
 $DictDict.__ne__=function(self,other){return !$DictDict.__eq__(self,other)}
@@ -8949,10 +8951,8 @@ function dict(_args,second){var res={__class__:$DictDict}
 if(second===undefined && Array.isArray(_args)){
 $DictDict.clear(res)
 var i=_args.length
-while(i--){var key=_args[i][0]
-if(typeof key=='string'){res.$string_dict[key]=_args[i][1]}
-else if(typeof key=='number'){res.$numeric_dict[key]=_args[i][1]}
-else{$DictDict.__setitem__(res,key,_args[i][1])}}
+var si=$DictDict.__setitem__
+while(i--)si(res,_args[i][0],_args[i][1])
 return res
 }
 var args=[res]
