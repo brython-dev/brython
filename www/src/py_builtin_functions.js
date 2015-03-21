@@ -2045,7 +2045,7 @@ $BaseExceptionDict.__init__ = function(self){
 
 $BaseExceptionDict.__repr__ = function(self){
     if(self.message===None){return $B.get_class(self).__name__+'()'}
-    return self.message
+    return $B.get_class(self).__name__+"('"+self.message+"',)"
 }
 
 $BaseExceptionDict.__str__ = $BaseExceptionDict.__repr__
@@ -2085,7 +2085,7 @@ function frame(pos){
     var mod_name = $B.frames_stack[2]
     var fs = $B.frames_stack
     var res = {__class__:$FrameDict,
-        f_builtins : to_dict($B.vars['__builtins__'])
+        f_builtins : {} // XXX fix me
     }
     if(pos===undefined){pos = fs.length-1}
     if(fs.length){
