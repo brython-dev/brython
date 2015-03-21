@@ -6704,10 +6704,11 @@ function brython(options){
                                 
                 // If the error was not caught by the Python runtime, build an
                 // instance of a Python exception
-                if($err.py_error===undefined) $err=_b_.RuntimeError($err+'')
+                if($err.$py_error===undefined) $err=_b_.RuntimeError($err+'')
 
                 // Print the error traceback on the standard error stream
-                var $trace = $err.__name__+': '+$err.message+'\n'+$err.info
+                console.log('error')
+                var $trace = $err.__name__+': '+err.args+'\n'+_b_.getattr($err,'info')
                 _b_.getattr($B.stderr,'write')($trace)
                 
                 // Throw the error to stop execution

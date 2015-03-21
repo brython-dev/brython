@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-03-21 09:40:46.218000"
+__BRYTHON__.compiled_date="2015-03-21 14:26:39.984000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4383,8 +4383,9 @@ for(var attr in $err){console.log(attr+' : '+$err[attr])
 }
 console.log('line info '+$B.line_info)
 }
-if($err.py_error===undefined)$err=_b_.RuntimeError($err+'')
-var $trace=$err.__name__+': '+$err.message+'\n'+$err.info
+if($err.$py_error===undefined)$err=_b_.RuntimeError($err+'')
+console.log('error')
+var $trace=$err.__name__+': '+err.args+'\n'+_b_.getattr($err,'info')
 _b_.getattr($B.stderr,'write')($trace)
 throw $err
 }}}
@@ -5147,7 +5148,7 @@ var es=$B.exception_stack
 if(es.length>0)throw es[es.length-1]
 throw RuntimeError('No active exception to reraise')
 }
-$B.$syntax_err_line=function(module,pos){
+$B.$syntax_err_line=function(exc,module,pos){
 var pos2line={}
 var lnum=1
 var src=$B.$py_src[module]
@@ -5155,25 +5156,22 @@ var line_pos={1:0}
 for(var i=0,_len_i=src.length;i < _len_i;i++){pos2line[i]=lnum
 if(src.charAt(i)=='\n'){lnum+=1;line_pos[lnum]=i}}
 var line_num=pos2line[pos]
+exc.$line_info=line_num+','+module
 var lines=src.split('\n')
-var lib_module=module
-if(lib_module.substr(0,13)==='__main__,exec')lib_module='__main__'
 var line=lines[line_num-1]
 var lpos=pos-line_pos[line_num]
 while(line && line.charAt(0)==' '){line=line.substr(1)
 lpos--
 }
-info='\n    ' 
-for(var i=0;i<lpos;i++)info+=' '
-info +='^'
-return info
+exc.args=_b_.tuple([$B.$getitem(exc.args,0),_b_.tuple([module,line_num,lpos,line])])
 }
 $B.$SyntaxError=function(module,msg,pos){var exc=_b_.SyntaxError(msg)
-exc.info +=$B.$syntax_err_line(module,pos)
+$B.$syntax_err_line(exc,module,pos)
+console.log(_b_.str(exc.args))
 throw exc
 }
 $B.$IndentationError=function(module,msg,pos){var exc=_b_.IndentationError(msg)
-exc.info +=$B.$syntax_err_line(module,pos)
+$B.$syntax_err_line(exc,module,pos)
 throw exc
 }
 $B.$pop_exc=function(){$B.exception_stack.pop()}
@@ -5926,13 +5924,11 @@ var current_locals_name=current_locals_id.replace(/\./,'_')
 var current_globals_id=current_frame[2]
 var current_globals_name=current_globals_id.replace(/\./,'_')
 if(src.__class__===$B.$CodeObjectDict){module_name=current_globals_name
-console.log('var $locals_'+module_name+'=current_frame[3]')
 eval('var $locals_'+module_name+'=current_frame[3]')
 return eval(src.src)
 }
 var is_exec=arguments[3]=='exec',module_name,leave=false
-if(_globals===undefined){
-module_name='exec_'+$B.UUID()
+if(_globals===undefined){module_name='exec_'+$B.UUID()
 $B.$py_module_path[module_name]=$B.$py_module_path[current_globals_id]
 eval('var $locals_'+module_name+'=current_frame[3]')
 }else{if(_globals.id===undefined){_globals.id='exec_'+$B.UUID()}
@@ -5972,7 +5968,7 @@ for(var attr in ns){setitem(attr,ns[attr])
 }}
 if(res===undefined)return _b_.None
 return res
-}catch(err){if(err.py_error===undefined){throw $B.exception(err)}
+}catch(err){if(err.$py_error===undefined){throw $B.exception(err)}
 throw err
 }finally{if(leave){$B.leave_frame()}}}
 $eval.$is_func=true
@@ -6909,10 +6905,10 @@ $FunctionDict.$factory=$Function
 $Function.$dict=$FunctionDict
 var $BaseExceptionDict={__class__:$B.$type,__bases__ :[_b_.object],__module__:'builtins',__name__:'BaseException'
 }
-$BaseExceptionDict.__init__=function(self){self.args=[arguments[1]]
+$BaseExceptionDict.__init__=function(self){self.args=_b_.tuple([arguments[1]])
 }
-$BaseExceptionDict.__repr__=function(self){if(self.message===None){return $B.get_class(self).__name__+'()'}
-return self.message
+$BaseExceptionDict.__repr__=function(self){if(self.$message===None){return $B.get_class(self).__name__+'()'}
+return self.$message
 }
 $BaseExceptionDict.__str__=$BaseExceptionDict.__repr__
 $BaseExceptionDict.__mro__=[$BaseExceptionDict,$ObjectDict]
@@ -6921,6 +6917,41 @@ err.__name__=cls.$dict.__name__
 err.__class__=cls.$dict
 return err
 }
+$BaseExceptionDict.__getattr__=function(self,attr){if(attr=='info'){var info='Traceback (most recent call last):'
+if(self.$js_exc!==undefined){for(var attr in self.$js_exc){if(attr==='message')continue
+try{info +='\n    '+attr+' : '+self.$js_exc[attr]}
+catch(_err){}}
+info+='\n' 
+}
+var last_info,tb=null
+for(var i=0;i<self.$call_stack.length;i++){var call_info=self.$call_stack[i].split(',')
+var lib_module=call_info[1]
+var caller=$B.modules[lib_module].line_info
+if(caller!==undefined){call_info=caller.split(',')
+lib_module=caller[1]
+}
+var lines=$B.$py_src[call_info[1]].split('\n')
+info +='\n  module '+lib_module+' line '+call_info[0]
+var line=lines[call_info[0]-1]
+if(line)line=line.replace(/^[]+/g,'')
+info +='\n    '+line
+last_info=call_info
+}
+last_info=self.$line_info.split(',')
+var line=$B.$py_src[last_info[1]].split('\n')[parseInt(last_info[0])-1]
+if(line)line=line.replace(/^[]+/g,'')
+self.$last_info=last_info
+self.$line=line
+info +='\n  module '+last_info[1]+' line '+last_info[0]
+info +='\n    '+line
+return info
+}else if(attr=='traceback'){
+$BaseExceptionDict.__getattr__(self,'info')
+return{__class__:$TracebackDict,tb_frame:frame(self.$frames_stack),tb_lineno:self.$last_info[0],tb_lasti:self.$line,tb_next: None 
+}}else{console.log('attr error '+self.__class__.__name__)
+throw AttributeError(self.__class__.__name__+
+"has no attribute '"+attr+"'")
+}}
 var $TracebackDict={__class__:$B.$type,__name__:'traceback',__mro__:[$ObjectDict]
 }
 var $FrameDict={__class__:$B.$type,__name__:'frame',__mro__:[$ObjectDict]
@@ -6932,8 +6963,8 @@ setitem(res,attr,obj[attr])
 }
 return res
 }
-function frame(pos){var mod_name=$B.frames_stack[2]
-var fs=$B.frames_stack
+function frame(stack,pos){var mod_name=stack[2]
+var fs=stack
 var res={__class__:$FrameDict,f_builtins :{}
 }
 if(pos===undefined){pos=fs.length-1}
@@ -6944,7 +6975,7 @@ res.f_globals=to_dict(_frame[3])
 if(__BRYTHON__.debug>0){res.f_lineno=$B.line_info.split(',')[0]
 }else{res.f_lineno=None
 }
-if(pos>0){res.f_back=frame(pos-1)}
+if(pos>0){res.f_back=frame(stack,pos-1)}
 else{res.f_back=None}
 res.f_code={__class__:$B.$CodeObjectDict,co_code:None,
 co_name: locals_id,
@@ -6956,45 +6987,16 @@ frame.__class__=$B.$factory
 frame.$dict=$FrameDict
 $FrameDict.$factory=frame
 var BaseException=function(msg,js_exc){var err=Error()
-err.info='Traceback (most recent call last):'
+err.$line_info=$B.line_info
+err.$call_stack=$B.call_stack.slice()
+err.$frames_stack=$B.frames_stack.slice()
+err.$js_exc=js_exc
 if(msg===undefined)msg='BaseException'
-var tb=null
-if($B.debug && !msg.info){if(js_exc!==undefined){for(var attr in js_exc){if(attr==='message')continue
-try{err.info +='\n    '+attr+' : '+js_exc[attr]}
-catch(_err){void(0)}}
-err.info+='\n' 
-}
-var last_info,tb=null
-for(var i=0;i<$B.call_stack.length;i++){var call_info=$B.call_stack[i].split(',')
-var lib_module=call_info[1]
-var caller=$B.modules[lib_module].line_info
-if(caller!==undefined){call_info=caller.split(',')
-lib_module=caller[1]
-}
-if(lib_module.substr(0,13)==='__main__,exec'){lib_module='__main__'}
-var lines=$B.$py_src[call_info[1]].split('\n')
-err.info +='\n  module '+lib_module+' line '+call_info[0]
-var line=lines[call_info[0]-1]
-if(line)line=line.replace(/^[]+/g,'')
-err.info +='\n    '+line
-last_info=call_info
-}
-last_info=$B.line_info.split(',')
-var line=$B.$py_src[last_info[1]].split('\n')[parseInt(last_info[0])-1]
-err.info +='\n  module '+last_info[1]+' line '+last_info[0]
-err.info +='\n    '+line
-tb={__class__:$TracebackDict,tb_frame:frame(),tb_lineno:last_info[0],tb_lasti:line,tb_next: None 
-}}else{
-tb={__class__:$TracebackDict,tb_frame:{__class__:$FrameDict},tb_lineno:-1,tb_lasti:'',tb_next: None 
-}}
-err.message=msg
-err.args=msg
+err.args=_b_.tuple([msg])
+err.$message=msg
 err.__name__='BaseException'
 err.__class__=$BaseExceptionDict
-err.py_error=true
-err.type='BaseException'
-err.value=msg
-err.traceback=tb
+err.$py_error=true
 $B.exception_stack.push(err)
 return err
 }
@@ -7003,7 +7005,7 @@ BaseException.__class__=$B.$factory
 BaseException.$dict=$BaseExceptionDict
 _b_.BaseException=BaseException
 $B.exception=function(js_exc){
-if(!js_exc.py_error){
+if(!js_exc.$py_error){
 console.log(js_exc)
 if($B.debug>0 && js_exc.info===undefined){if($B.line_info!==undefined){var line_info=$B.line_info.split(',')
 var mod_name=line_info[1]
@@ -7030,10 +7032,10 @@ if(js_exc.name=='ReferenceError'){exc.__name__='NameError'
 exc.__class__=_b_.NameError.$dict
 js_exc.message=js_exc.message.replace('$$','')
 }
-exc.message=js_exc.message ||'<'+js_exc+'>'
+exc.$message=js_exc.message ||'<'+js_exc+'>'
 exc.info=''
-exc.py_error=true
-exc.traceback={__class__:$TracebackDict,tb_frame:frame(),tb_lineno:-1,tb_lasti:'',tb_next: None 
+exc.$py_error=true
+exc.traceback={__class__:$TracebackDict,tb_frame:frame($B.exception_stack),tb_lineno:-1,tb_lasti:'',tb_next: None 
 }}else{var exc=js_exc
 }
 $B.exception_stack.push(exc)
@@ -7756,7 +7758,7 @@ console.log(js)
 }
 eval(js)
 }catch(err){console.log(err+' for module '+module.name)
-console.log('message: '+err.message)
+console.log('message: '+err.$message)
 console.log('filename: '+err.fileName)
 console.log('linenum: '+err.lineNumber)
 if($B.debug>0){console.log('line info '+ $B.line_info)}
@@ -11087,7 +11089,8 @@ if(!_d.__contains__(item,event)){_d.__setitem__(item,event,[])
 var evlist=_d.__getitem__(item,event)
 for(var i=2;i<arguments.length;i++){var func=arguments[i]
 var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))
-}catch(err){getattr($B.stderr,"write")(err.__name__+': '+err.message+'\n'+err.info)
+}catch(err){getattr($B.stderr,"write")(err.__name__+': '+
+err.$message+'\n'+_b_.getattr(err,"info"))
 }}}
 )(func)
 if(window.addEventListener){self.elt.addEventListener(event,callback,false)

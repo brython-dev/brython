@@ -603,7 +603,8 @@ DOMNode.bind = function(self,event){
                 try{
                     return f($DOMEvent(ev))
                 }catch(err){
-                    getattr($B.stderr,"write")(err.__name__+': '+err.message+'\n'+err.info)
+                    getattr($B.stderr,"write")(err.__name__+': '+
+                        err.$message+'\n'+_b_.getattr(err,"info"))
                 }
             }}
         )(func)

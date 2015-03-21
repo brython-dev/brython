@@ -547,7 +547,7 @@ $B.$raise= function(){
     //Error('Exception')
 }
 
-$B.$syntax_err_line = function(module,pos) {
+$B.$syntax_err_line = function(exc,module,pos) {
     // map position to line number
     var pos2line = {}
     var lnum=1
@@ -558,32 +558,28 @@ $B.$syntax_err_line = function(module,pos) {
         if(src.charAt(i)=='\n'){lnum+=1;line_pos[lnum]=i}
     }
     var line_num = pos2line[pos]
+    exc.$line_info = line_num+','+module
+
     var lines = src.split('\n')
-
-    var lib_module = module
-    if(lib_module.substr(0,13)==='__main__,exec') lib_module='__main__'
-
     var line = lines[line_num-1]
     var lpos = pos-line_pos[line_num]
     while(line && line.charAt(0)==' '){
       line=line.substr(1)
       lpos--
     }
-    info = '\n    ' //+line+'\n    '
-    for(var i=0;i<lpos;i++) info+=' '
-    info += '^'
-    return info
+    exc.args = _b_.tuple([$B.$getitem(exc.args,0),_b_.tuple([module, line_num, lpos, line])])
 }
 
 $B.$SyntaxError = function(module,msg,pos) {
     var exc = _b_.SyntaxError(msg)
-    exc.info += $B.$syntax_err_line(module,pos)
+    $B.$syntax_err_line(exc,module,pos)
+    console.log(_b_.str(exc.args))
     throw exc
 }
 
 $B.$IndentationError = function(module,msg,pos) {
     var exc = _b_.IndentationError(msg)
-    exc.info += $B.$syntax_err_line(module,pos)
+    $B.$syntax_err_line(exc,module,pos)
     throw exc
 }
 

@@ -342,4 +342,11 @@ assert f()==2
 
 # check that name "constructor" is valid
 constructor = 0
+
+# exception attributes
+try:
+    'a'+2
+except TypeError as exc:
+    assert exc.args[0] == "Can't convert int to str implicitely"
+
 print('passed all tests...')

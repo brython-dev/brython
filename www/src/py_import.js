@@ -198,7 +198,7 @@ $B.run_py=run_py=function(module,path,module_contents) {
         //for(var attr in err){
             //console.log(attr, err[attr])
         //}
-        console.log('message: '+err.message)
+        console.log('message: '+err.$message)
         console.log('filename: '+err.fileName)
         console.log('linenum: '+err.lineNumber)
         if($B.debug>0){console.log('line info '+ $B.line_info)}
