@@ -2174,7 +2174,7 @@ $FrameDict.$factory = frame
 
 var BaseException = function (msg,js_exc){
     var err = Error()
-    //err.info = 'Traceback (most recent call last):'
+    err.__name__ = 'BaseException'
     err.$line_info = $B.line_info
     err.$call_stack = $B.call_stack.slice()
     err.$frames_stack = $B.frames_stack.slice()
@@ -2184,11 +2184,8 @@ var BaseException = function (msg,js_exc){
    
     err.args = _b_.tuple([msg])
     err.$message = msg
-    err.__name__ = 'BaseException'
     err.__class__ = $BaseExceptionDict
     err.$py_error = true
-    //err.type = 'BaseException'
-    //err.value = msg
     $B.exception_stack.push(err)
     return err
 }

@@ -6541,6 +6541,9 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     new $NodeJSCtx(new_node,js)
     root.add(new_node)
 
+    // Reset exception stack - may have been populated during parsing
+    $B.exception_stack = []
+
     return root
 }
 
@@ -6707,7 +6710,6 @@ function brython(options){
                 if($err.$py_error===undefined) $err=_b_.RuntimeError($err+'')
 
                 // Print the error traceback on the standard error stream
-                console.log('error')
                 var $trace = $err.__name__+': '+err.args+'\n'+_b_.getattr($err,'info')
                 _b_.getattr($B.stderr,'write')($trace)
                 

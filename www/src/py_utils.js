@@ -542,9 +542,10 @@ $B.$raise= function(){
     // Used for "raise" without specifying an exception
     // If there is an exception in the stack, use it, else throw a simple Exception
     var es = $B.exception_stack
-    if(es.length>0) throw es[es.length-1]
-    throw RuntimeError('No active exception to reraise')
-    //Error('Exception')
+    if(es.length>0){
+        throw es[es.length-1]
+    }
+    throw _b_.RuntimeError('No active exception to reraise')
 }
 
 $B.$syntax_err_line = function(exc,module,pos) {
@@ -573,7 +574,6 @@ $B.$syntax_err_line = function(exc,module,pos) {
 $B.$SyntaxError = function(module,msg,pos) {
     var exc = _b_.SyntaxError(msg)
     $B.$syntax_err_line(exc,module,pos)
-    console.log(_b_.str(exc.args))
     throw exc
 }
 

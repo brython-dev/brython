@@ -254,7 +254,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         }
         if(_ga!==undefined){
             try{return _ga(obj,attr)}
-            catch(err){void(0)}
+            catch(err){$B.$pop_exc()}
         }
         // for special methods such as __mul__, look for __rmul__ on operand
         if(attr.substr(0,2)=='__' && attr.substr(attr.length-2)=='__'){
