@@ -64,7 +64,7 @@ def test_next():
     script_num += 1
     if script_num < len(tests):
         filename = tests[script_num]
-        src = open(filename).read()
+        src = open('benchmarks/%s' % filename).read()
         _bk.set_performance_test(filename)
         state=_bk.run_performance_test(src)
         if state == 0:
@@ -79,7 +79,7 @@ def test_next():
 tests=["assignment.py", "augm_assign.py", "assignment_float.py",
        "build_dict.py", "set_dict_item.py", "build_list.py",
        "set_list_item.py", "add_integers.py", "add_strings.py",
-       "function_call.py"]
+       "function_call.py", "add_dict.py"] 
 
 script_num = -1
 failed = []

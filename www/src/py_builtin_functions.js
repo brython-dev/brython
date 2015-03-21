@@ -363,7 +363,7 @@ $EnumerateDict.$factory = enumerate
 enumerate.__code__={co_argcount:2, co_consts:[], co_varnames:['iterable']}
 
 //eval() (built in function)
-function $eval(src, _globals, locals){
+function $eval(src, _globals, _locals){
 
     var current_frame = $B.frames_stack[$B.frames_stack.length-1]
     if(current_frame===undefined){alert('current frame undef pour '+src.substr(0,30))}
@@ -399,7 +399,7 @@ function $eval(src, _globals, locals){
 
         // Add names/values defined in _globals
         var items = _b_.dict.$dict.items(_globals), item
-        while(true){
+        while(1){
             try{
                 item = next(items)
                 eval('$locals_'+module_name+'["'+item[0]+'"] = item[1]')
@@ -408,11 +408,11 @@ function $eval(src, _globals, locals){
             }
         }
     }
-    if(locals===undefined){
+    if(_locals===undefined){
         local_name = module_name
     }else{
-        if(locals.id === undefined){locals.id = 'exec_'+$B.UUID()}
-        local_name = locals.id
+        if(_locals.id === undefined){_locals.id = 'exec_'+$B.UUID()}
+        local_name = _locals.id
     }
 
     try{
@@ -445,7 +445,17 @@ function $eval(src, _globals, locals){
             }
         }
 
-        if(res===undefined){res = _b_.None}
+        // fixme: some extra variables are bleeding into locals...
+        if(_locals!==undefined){
+            // Update _globals with the namespace after execution
+            var ns = eval('$locals_'+module_name)
+            var setitem = getattr(_locals,'__setitem__')
+            for(var attr in ns){
+                setitem(attr, ns[attr])
+            }
+        }
+
+        if(res===undefined) return _b_.None
         return res
     }catch(err){
         if(err.py_error===undefined){throw $B.exception(err)}
