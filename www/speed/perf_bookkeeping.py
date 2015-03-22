@@ -1,8 +1,9 @@
 import sys
 import json
-from browser import window, ajax, html, document as doc
+from browser import window, ajax, html, alert, document as doc
 import time
 import traceback
+import highlight
 
 class bookkeeping:
   def __init__(self):
@@ -22,6 +23,9 @@ class bookkeeping:
         traceback.print_exc(file=sys.stderr)
 
       self.add_brython_result(int((time.perf_counter() - t0) * 1000.0))
+      src = src.replace('\r\n','\n')
+      
+      self._timings[self._filename]['code'] = src
 
       def err_msg(*args):
           from javascript import console
@@ -32,7 +36,7 @@ class bookkeeping:
       req = ajax.ajax()
       req.bind('complete',self.on_cpython_complete)
       req.set_timeout(4,err_msg)
-      req.open('POST','/cgi-bin/script_timer.py',True)
+      req.open('POST','/cgi-bin/script_timer.py',False)
       req.set_header('content-type','application/x-www-form-urlencoded')
       req.send({'src':src, 'filename': self._filename})
 
@@ -42,6 +46,7 @@ class bookkeeping:
       _dict=json.loads(e.text)
       filename=_dict['filename']
       self._timings[filename]['cpython']=_dict['timing']
+      self.cpython_version = _dict['version']
 
   def add_brython_result(self, timing):
       if self._filename not in self._timings:
@@ -131,3 +136,53 @@ class bookkeeping:
       #req.open('POST','//localhost:8080/ReportData',True)
       req.set_header('content-type','application/x-www-form-urlencoded')
       req.send({'data': json.dumps(_data)})
+
+  def show_results(self):
+      """ show table of results"""
+
+      doc['container'].clear()
+      doc['container'] <= html.H1("Speed comparison between Brython and CPython")
+
+      doc['container'] <= html.DIV('Browser Version: %s' % window.navigator.userAgent)
+      _v=sys.implementation.version
+      doc['container'] <= html.DIV('Brython Version: %s.%s.%s' % (_v.major, _v.minor, _v.micro))
+      doc['container'] <= html.DIV('Brython debug mode: %s' % sys.brython_debug_mode)
+      doc['container'] <= html.DIV('CPython Version: %s' % self.cpython_version)
+
+      doc['container'] <= html.P(html.I('Results are in milliseconds (ms)'))
+
+      _table=html.TABLE()
+      _tr=html.TR()
+      _tr <= html.TH('Benchmark')
+      _tr <= html.TH('Code')
+      _tr <= html.TH('Brython')
+      _tr <= html.TH('CPython')
+      _tr <= html.TH('Difference')
+      _tr <= html.TH('X Faster')
+      _table <= _tr
+      for _filename in self._timings.keys():
+          _tr=html.TR()
+          _tr <= html.TD(_filename)
+          _tr <= html.TD(highlight.highlight(self._timings[_filename]['code']))
+          for _platform in ('brython', 'cpython'):
+              _tr <= html.TD('%5.0f' % self._timings[_filename][_platform],
+                             style={'text-align':'right'})
+
+          _diff=self._timings[_filename]['cpython'] - self._timings[_filename]['brython']
+          _x=self._timings[_filename]['cpython']/self._timings[_filename]['brython']
+
+          if _x > 1:
+             _color="green"
+          elif _x < 0.5:
+             _color="red"
+          else:
+             _color="black"
+          _tr <= html.TD('%5.0f' % _diff,
+                         style={'text-align':'right'})
+          _tr <= html.TD('%4.2f' % _x, 
+                         style={'color': _color, 
+                                'text-align':'right'})
+          _table <= _tr
+
+      doc['container'] <= _table
+
