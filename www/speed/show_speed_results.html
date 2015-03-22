@@ -59,8 +59,6 @@ sys.stderr = cOutput()
 
 _bk=perf_bookkeeping.bookkeeping()
 
-script_num = -1
-failed = []
 t_start = None
 
 def test(filename):
@@ -79,19 +77,29 @@ tests=["assignment.py", "augm_assign.py", "assignment_float.py",
        "str_of_int.py",
        "create_function.py", "function_call.py"]
 
-script_num = -1
-failed = []
-for filename in tests:
-    test(filename)
+def run_tests(ev):
+    failed = []
+    for filename in tests:
+        test(filename)
+    
+    _bk.show_results()
 
-_bk.show_results()
-
+doc['run_tests'].bind('click', run_tests)
 </script>
 
 </head>
 <body onload="brython({debug:0, cache:'none', static_stdlib_import:true})">
 
+<h1>Speed comparison between Brython and CPython</h1>
+
 <div id="container" style="left-padding:20px;">
+This script will compare the time taken by the execution of the same scripts
+by Brython and by the CPython interpreter. The script code is sent to the
+cgi script <code>script_timer.py</code> in folder <code>cgi-bin</code>. Make
+sure that in the first line of this script, the path is that of the CPython
+interpreter in your file system.
+
+<p><button id="run_tests">Run tests</button>
 </div>
 
 </div>

@@ -141,7 +141,6 @@ class bookkeeping:
       """ show table of results"""
 
       doc['container'].clear()
-      doc['container'] <= html.H1("Speed comparison between Brython and CPython")
 
       doc['container'] <= html.DIV('Browser Version: %s' % window.navigator.userAgent)
       _v=sys.implementation.version
