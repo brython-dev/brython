@@ -1690,8 +1690,10 @@ $StringDict.zfill = function(self, width) {
 
 function str(arg){
     if(arg===undefined) return ''
+    else if(typeof arg=='number'){return arg.toString()}
+    else if(typeof arg=='string'){return arg}
     
-    try{ // try __str__
+    try{
         if(arg.__class__===$B.$factory){
             // arg is a class (the factory function)
             // In this case, str() doesn't use the attribute __str__ of the
@@ -1709,7 +1711,7 @@ function str(arg){
         return f()
     }
     catch(err){
-        console.log('err '+err)
+        //console.log('err '+err)
         $B.$pop_exc()
         try{ // try __repr__
              var f = getattr(arg,'__repr__')
