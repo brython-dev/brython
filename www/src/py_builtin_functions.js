@@ -441,6 +441,7 @@ function $eval(src, _globals, _locals){
         }
 
         // fixme: some extra variables are bleeding into locals...
+        /*  This also causes issues for unittests
         if(_locals!==undefined){
             // Update _globals with the namespace after execution
             var ns = eval('$locals_'+module_name)
@@ -449,7 +450,7 @@ function $eval(src, _globals, _locals){
                 setitem(attr, ns[attr])
             }
         }
-
+        */
         if(res===undefined) return _b_.None
         return res
     }catch(err){
