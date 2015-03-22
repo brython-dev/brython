@@ -6698,7 +6698,7 @@ function brython(options){
                 
             }catch($err){
                 if($B.debug>1){
-                    console.log('PY2JS '+$err)
+                    console.log($err)
                     for(var attr in $err){
                         console.log(attr+' : '+$err[attr])
                     }
@@ -6710,9 +6710,12 @@ function brython(options){
                 if($err.$py_error===undefined) $err=_b_.RuntimeError($err+'')
 
                 // Print the error traceback on the standard error stream
-                var $trace = $err.__name__+': '+err.args+'\n'+_b_.getattr($err,'info')
-                _b_.getattr($B.stderr,'write')($trace)
-                
+                var $trace = $err.__name__+': ' +$err.args +'\n'+_b_.getattr($err,'info')
+                try{
+                    _b_.getattr($B.stderr,'write')($trace)
+                }catch(print_exc_err){
+                    console.log($trace)
+                }
                 // Throw the error to stop execution
                 throw $err
             }
