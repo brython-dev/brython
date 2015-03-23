@@ -1690,8 +1690,10 @@ $StringDict.zfill = function(self, width) {
 
 function str(arg){
     if(arg===undefined) return ''
-    else if(typeof arg=='number'){return arg.toString()}
-    else if(typeof arg=='string'){return arg}
+    switch(typeof arg) {
+      case 'string': return arg
+      case 'number': return arg.toString()
+    }
     
     try{
         if(arg.__class__===$B.$factory){
