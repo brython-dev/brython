@@ -25,8 +25,10 @@ $ListDict.__add__ = function(self,other){
 }
 
 $ListDict.__contains__ = function(self,item){
+    var _eq = getattr(item, '__eq__')
     for(var i=0, _len_i = self.length; i < _len_i;i++){
-        try{if(getattr(self[i],'__eq__')(item)){return true}
+        try{if(_eq(self[i])) return true
+        //try{if(getattr(self[i],'__eq__')(item)){return true}
         }catch(err){$B.$pop_exc();void(0)}
     }
     return false
@@ -317,21 +319,17 @@ $ListDict.__str__ = $ListDict.__repr__
 // add "reflected" methods
 $B.make_rmethods($ListDict)
 
-$ListDict.append = function(self,other){self.push(other)}
+$ListDict.append = function(self,other){self[self.length]=other}
 
 $ListDict.clear = function(self){ while(self.length) self.pop()}
 
-$ListDict.copy = function(self){
-    return self.slice(0,self.length)
-    //var res = []
-    //for(var i=0, _len_i = self.length; i < _len_i;i++) res.push(self[i])
-    //return res
-}
+$ListDict.copy = function(self){return self.slice(0,self.length)}
 
 $ListDict.count = function(self,elt){
     var res = 0
+    _eq=getattr(elt, '__eq__')
     for(var i=0, _len_i = self.length; i < _len_i;i++){
-        if(getattr(self[i],'__eq__')(elt)){res++}
+        if (_eq(self[i])) res++
     }
     return res
 }
@@ -341,7 +339,7 @@ $ListDict.extend = function(self,other){
         "extend() takes exactly one argument ("+arguments.length+" given)")}
     other = iter(other)
     while(1){
-        try{self.push(next(other))}
+        try{self[self.length]=next(other)}
         catch(err){
             if(err.__name__=='StopIteration'){$B.$pop_exc();break}
             else{throw err}
@@ -350,8 +348,10 @@ $ListDict.extend = function(self,other){
 }
 
 $ListDict.index = function(self,elt){
+    var _eq = getattr(elt, '__eq__')
     for(var i=0, _len_i = self.length; i < _len_i;i++){
-        if(getattr(self[i],'__eq__')(elt)) return i
+        if(_eq(self[i])) return i
+        //if(getattr(self[i],'__eq__')(elt)) return i
     }
     throw _b_.ValueError(_b_.str(elt)+" is not in list")
 }
@@ -359,8 +359,10 @@ $ListDict.index = function(self,elt){
 $ListDict.insert = function(self,i,item){self.splice(i,0,item)}
 
 $ListDict.remove = function(self,elt){
+    var _eq = getattr(elt, '__eq__')
     for(var i=0, _len_i = self.length; i < _len_i;i++){
-        if(getattr(self[i],'__eq__')(elt)){
+        //if(getattr(self[i],'__eq__')(elt)){
+        if(_eq(self[i])){
             self.splice(i,1)
             return
         }
@@ -492,7 +494,7 @@ function list(){
     var arg = iter(arguments[0])
     var next_func = getattr(arg,'__next__')
     while(1){
-        try{res.push(next_func())}
+        try{res[res.length]=next_func()}
         catch(err){
             if(err.__name__=='StopIteration'){
                 $B.$pop_exc()
@@ -594,8 +596,6 @@ for(var attr in $ListDict){
       case 'pop':
       case 'reverse':
       case 'sort':
-        //if(['__delitem__','__setitem__','append','extend','insert','remove','pop',
-        //'reverse','sort'].indexOf(attr)>-1){continue}
         break
       default:   
         if($TupleDict[attr]===undefined){

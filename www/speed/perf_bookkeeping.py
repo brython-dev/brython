@@ -38,7 +38,7 @@ class bookkeeping:
       req.set_timeout(4,err_msg)
       req.open('POST','/cgi-bin/script_timer.py',False)
       req.set_header('content-type','application/x-www-form-urlencoded')
-      req.send({'src':src, 'filename': self._filename})
+      req.send({'filename': self._filename})
 
       return state
 
