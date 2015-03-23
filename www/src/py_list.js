@@ -321,17 +321,13 @@ $ListDict.append = function(self,other){self.push(other)}
 
 $ListDict.clear = function(self){ while(self.length) self.pop()}
 
-$ListDict.copy = function(self){
-    return self.slice(0,self.length)
-    //var res = []
-    //for(var i=0, _len_i = self.length; i < _len_i;i++) res.push(self[i])
-    //return res
-}
+$ListDict.copy = function(self){return self.slice(0,self.length)}
 
 $ListDict.count = function(self,elt){
     var res = 0
+    _eq=getattr(elt, '__eq__')
     for(var i=0, _len_i = self.length; i < _len_i;i++){
-        if(getattr(self[i],'__eq__')(elt)){res++}
+        if (_eq(self[i]) res++
     }
     return res
 }
