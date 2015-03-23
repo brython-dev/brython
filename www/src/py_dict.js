@@ -41,19 +41,13 @@ $value_iterator.prototype.next = function() { return this.iter.next()[1] }
 var $item_generator = function(d) {
     this.i = 0
 
-    this.items=[]
-    for (var k in d.$numeric_dict) {
-        this.items.push([parseFloat(k), d.$numeric_dict[k]])
-    }
+    // add numeric, string and object contents to items list
+    _i=[]
+    for (var k in d.$numeric_dict) _i[_i.length]=[parseFloat(k), d.$numeric_dict[k]]
+    for (var k in d.$string_dict) _i[_i.length]=[k, d.$string_dict[k]]
+    for (var k in d.$object_dict) _i[_i.length]=[d.$object_dict[k]]
 
-    for (var k in d.$string_dict) {
-        this.items.push([k, d.$string_dict[k]])
-    }
-
-    for (var k in d.$object_dict) {
-        this.items.push(d.$object_dict[k])
-    }
-
+    this.items=_i
     this.length=this.items.length
 }
 
