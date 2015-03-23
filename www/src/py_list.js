@@ -317,7 +317,7 @@ $ListDict.__str__ = $ListDict.__repr__
 // add "reflected" methods
 $B.make_rmethods($ListDict)
 
-$ListDict.append = function(self,other){self.push(other)}
+$ListDict.append = function(self,other){self[self.length]=other}
 
 $ListDict.clear = function(self){ while(self.length) self.pop()}
 
@@ -327,7 +327,7 @@ $ListDict.count = function(self,elt){
     var res = 0
     _eq=getattr(elt, '__eq__')
     for(var i=0, _len_i = self.length; i < _len_i;i++){
-        if (_eq(self[i]) res++
+        if (_eq(self[i])) res++
     }
     return res
 }
