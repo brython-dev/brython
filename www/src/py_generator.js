@@ -1,6 +1,7 @@
 ;(function($B){
 
 var _b_=$B.builtins
+eval($B.InjectBuiltins())
 
 $B.make_node = function(top_node, node){
     var ctx_js = node.context.to_js()
@@ -222,13 +223,6 @@ function clear_ns(iter_id){
 
 $BRGeneratorDict.__next__ = function(self){
 
-    var _b_ = $B.builtins
-    var $s=[]
-    for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
-    eval($s.join(';'))
-
-    // If generator is a method, we need the $class object
-    var $class = eval(self.$class)
     
     var scope_id = self.func_root.scope.id
     
@@ -298,7 +292,7 @@ $BRGeneratorDict.__next__ = function(self){
     
     // If the generator exits at the same place as in the previous iteration,
     // we don't have to build a new function, so just return the yielded value
-    if(yield_rank==self.yield_rank) return yielded_value
+    if(yield_rank==self.yield_rank){return yielded_value}
     
     self.yield_rank = yield_rank
     
