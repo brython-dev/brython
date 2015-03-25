@@ -21,11 +21,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         }
     }
     bases = parents
-    /*
-    if(bases.indexOf(_b_.object)==-1){
-        bases=bases.concat(_b_.tuple([_b_.object]))
-    }
-    */
+
     // see if there is 'metaclass' in kwargs
     var metaclass = _b_.type
     for(var i=0;i<kwargs.length;i++){
@@ -272,13 +268,6 @@ $B.$type.__getattribute__=function(klass,attr){
             }
         }
         var cl_mro = klass.__class__.__mro__
-        /*
-        if(cl_mro!==undefined){
-            for(var i=0;i<cl_mro.length;i++){
-                console.log('cl_mro['+i+']: '+cl_mro[i].__name__)
-            }
-        }
-        */
         if(res===undefined){
             // try in klass class
             var cl_mro = klass.__class__.__mro__
@@ -286,7 +275,6 @@ $B.$type.__getattribute__=function(klass,attr){
                 for(var i=0;i<cl_mro.length;i++){
                     var v=cl_mro[i][attr]
                     if(v!==undefined){
-                        //console.log('attr '+attr+' de '+klass.__name__+' trouvé dans '+cl_mro[i].__name__)
                         res = v
                         break
                     }
