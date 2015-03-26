@@ -98,6 +98,10 @@ function make_mro(bases, cl_dict){
         seqs.push(bmro)
     }
 
+    if(bases.indexOf(_b_.object)==-1){
+        bases=bases.concat(_b_.tuple([_b_.object]))
+    }
+
     for(var i=0;i<bases.length;i++) seqs.push(bases[i].$dict)
 
     var mro = []
@@ -393,9 +397,23 @@ function $instance_creator(klass){
     var init_func = null
     try{init_func = _b_.getattr(klass,'__init__')}
     catch(err){$B.$pop_exc()}
+    
+    // Variable "simple" is set if class only has one parent and this
+    // parent is "object" or "type"
+    var simple=false
+    if(klass.__bases__.length==1){
+        switch(klass.__bases__[0]){
+            case _b_.object:
+            case _b_.type:
+                simple=true
+                break
+            default:
+                simple=false
+                break
+        }
+    }
         
-    if(klass.__bases__.length==1 && klass.__new__==undefined &&
-        init_func!==null){
+    if(simple && klass.__new__==undefined && init_func!==null){
         // most usual case
         
         if(klass.__setattr__===undefined){
@@ -418,7 +436,7 @@ function $instance_creator(klass){
         var _args = Array.prototype.slice.call(arguments)
         
         // apply __new__ to initialize the instance
-        if(klass.__bases__.length==1 && klass.__new__==undefined){
+        if(simple && klass.__new__==undefined){
             obj = {__class__:klass}
         }else{
             if(new_func!==null){
