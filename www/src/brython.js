@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-03-25 10:32:56.439000"
+__BRYTHON__.compiled_date="2015-03-26 10:14:39.524000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4620,6 +4620,8 @@ for(var k=0;k<_tmp.length;k++){bmro.push(_tmp[k])
 }
 seqs.push(bmro)
 }
+if(bases.indexOf(_b_.object)==-1){bases=bases.concat(_b_.tuple([_b_.object]))
+}
 for(var i=0;i<bases.length;i++)seqs.push(bases[i].$dict)
 var mro=[]
 while(1){var non_empty=[]
@@ -4779,8 +4781,16 @@ catch(err){$B.$pop_exc()}
 var init_func=null
 try{init_func=_b_.getattr(klass,'__init__')}
 catch(err){$B.$pop_exc()}
-if(klass.__bases__.length==1 && klass.__new__==undefined &&
-init_func!==null){
+var simple=false
+if(klass.__bases__.length==1){switch(klass.__bases__[0]){case _b_.object:
+case _b_.type:
+simple=true
+break
+default:
+simple=false
+break
+}}
+if(simple && klass.__new__==undefined && init_func!==null){
 if(klass.__setattr__===undefined){return function(){var obj={__class__:klass,$simple_setattr:true}
 init_func.apply(null,[obj].concat(Array.prototype.slice.call(arguments)))
 return obj
@@ -4790,7 +4800,7 @@ return obj
 }}}
 return function(){var obj
 var _args=Array.prototype.slice.call(arguments)
-if(klass.__bases__.length==1 && klass.__new__==undefined){obj={__class__:klass}}else{if(new_func!==null){obj=new_func.apply(null,[klass.$factory].concat(_args))
+if(simple && klass.__new__==undefined){obj={__class__:klass}}else{if(new_func!==null){obj=new_func.apply(null,[klass.$factory].concat(_args))
 }}
 if(!obj.__initialized__){if(init_func!==null){init_func.apply(null,[obj].concat(_args))
 }}
@@ -5688,15 +5698,12 @@ throw _b_.AttributeError('object has no attribute '+attr)
 switch(attr){case '__call__':
 if(typeof obj=='function'){if(obj.$blocking){console.log('calling blocking function '+obj.__name__)
 }
-if($B.debug>0){return function(){$B.call_stack.push($B.line_info)
-try{var res=obj.apply(null,arguments)
-if(res===undefined)return _b_.None
+if($B.debug>0){
+return function(){$B.call_stack.push($B.line_info)
+var res=obj.apply(null,arguments)
+$B.call_stack.pop()
 return res
-}catch(err){throw err}
-finally{$B.call_stack.pop()}}}
-return function(){var res=obj.apply(null,arguments)
-if(res===undefined)return _b_.None
-return res
+}}else{return obj
 }}else if(klass===$B.JSObject.$dict && typeof obj.js=='function'){return function(){var res=obj.js.apply(null,arguments)
 if(res===undefined)return _b_.None
 return $B.JSObject(res)
@@ -5711,6 +5718,7 @@ if(obj.__code__ !==undefined){for(var attr in obj.__code__)res[attr]=obj.__code_
 }
 return res
 }
+break
 case '__dict__':
 return $B.obj_dict(obj)
 case '__doc__':
@@ -8850,7 +8858,6 @@ throw _b_.TypeError("can't multiply sequence by non-int of type '"+
 $B.get_class(other).__name__+"'")
 }
 $ListDict.__ne__=function(self,other){return !$ListDict.__eq__(self,other)}
-$ListDict.__new__=$B.$__new__(list)
 $ListDict.__repr__=function(self){if(self===undefined)return "<class 'list'>"
 var items=self.valueOf()
 var res='['
