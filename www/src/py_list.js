@@ -254,8 +254,6 @@ $ListDict.__mul__ = function(self,other){
 
 $ListDict.__ne__ = function(self,other){return !$ListDict.__eq__(self,other)}
 
-$ListDict.__new__ = $B.$__new__(list)
-
 $ListDict.__repr__ = function(self){
     if(self===undefined) return "<class 'list'>"
 
