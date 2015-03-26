@@ -533,26 +533,21 @@ function getattr(obj,attr,_default){
     
     switch(attr) {
       case '__call__':
-        // __call__ on a function returns the function itself
         if (typeof obj=='function'){
            if(obj.$blocking){
              console.log('calling blocking function '+obj.__name__)
            }
            if($B.debug>0){
+              // On debug mode, wrap the function to keep a track of call 
+              // stack, for traceback
               return function(){
                 $B.call_stack.push($B.line_info)
-                try{
-                    var res = obj.apply(null,arguments)
-                    if(res===undefined) return _b_.None
-                    return res
-                }catch(err){throw err}
-                finally{$B.call_stack.pop()}
+                var res = obj.apply(null,arguments)
+                $B.call_stack.pop()
+                return res
               }
-           }
-           return function(){
-             var res = obj.apply(null,arguments)
-             if(res===undefined) return _b_.None
-             return res
+           }else{
+               return obj
            }
         
         } else if (klass===$B.JSObject.$dict && typeof obj.js=='function'){
@@ -577,7 +572,8 @@ function getattr(obj,attr,_default){
            }
 
            return res
-        }//if
+        }
+        break
       case '__dict__':
         // attribute __dict__ returns an instance of a subclass of dict
         // defined in py_dict.js
