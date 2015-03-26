@@ -2101,6 +2101,15 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
         return info
     }else if(attr=='traceback'){
         // Get attribute 'info' to initialise attributes last_info and line
+        if($B.debug==0){
+            // Minimal traceback to avoid attribute error
+            return {__class__:$TracebackDict,
+                tb_frame:frame(self.$frames_stack),
+                tb_lineno:0,
+                tb_lasti:-1,
+                tb_next: None // fix me
+            }
+        }
         $BaseExceptionDict.__getattr__(self,'info')
         // Return traceback object
         return {__class__:$TracebackDict,
