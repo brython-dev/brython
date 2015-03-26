@@ -3738,13 +3738,12 @@ function $RaiseCtx(context){
     this.to_js = function(){
         var res = '$B.leave_frame();'
         if(this.tree.length===0) return res+'$B.$raise()'
-        var exc = this.tree[0]
+        var exc = this.tree[0], exc_js = exc.to_js()
+        
         if(exc.type==='id' ||
             (exc.type==='expr' && exc.tree[0].type==='id')){
-            var value = exc.value
-            if(exc.type=='expr'){value = exc.tree[0].value}
-            res += 'if(isinstance('+exc.to_js()+',type)){throw '+exc.to_js()+'()}'
-            return res + 'else{throw '+exc.to_js()+'}'
+            res += 'if(isinstance('+exc_js+',type)){throw '+exc_js+'()}'
+            return res + 'else{throw '+exc_js+'}'
         }
         // if raise had a 'from' clause, ignore it
         while(this.tree.length>1) this.tree.pop()
