@@ -408,15 +408,12 @@ function $FloatClass(value){
 // constructor for built-in class 'float'
 var float = function (value){
     switch(value) {
-       //if(value===undefined) 
       case undefined:
         return new $FloatClass(0.0)
       case Number.MAX_VALUE:
         //take care of 'inf not identifcal to 1.797...e+308' error 
-        //if(value === Number.MAX_VALUE) 
         return new $FloatClass(Infinity)
       case -Number.MAX_VALUE:
-        //if(value === -Number.MAX_VALUE)
         return new $FloatClass(-Infinity)
     }//switch
 
