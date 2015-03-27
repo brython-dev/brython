@@ -1,4 +1,4 @@
-#!c:/python34/python.exe
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os
