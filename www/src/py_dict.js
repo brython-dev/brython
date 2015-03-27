@@ -560,26 +560,34 @@ $DictDict.update = function(self){
     $copy_dict(self, kw)
 }
 
-function dict(_args,second){
-    var res = {__class__:$DictDict}
+function dict(args, second){
 
-    if(second===undefined && Array.isArray(_args)){
+    if(second===undefined && Array.isArray(args)){
         // Form "dict([[key1, value1], [key2,value2], ...])"
-        $DictDict.clear(res)
-        var i = _args.length
+        var res = {__class__:$DictDict,
+            $data : Array($DICT_MINSIZE),
+            $size : $DICT_MINSIZE,
+            $fill : 0,
+            $used : 0,
+            $numeric_dict : {},
+            $string_dict : {}
+        }
+        var i = args.length
         while(i--){
-            var key = _args[i][0]
-            if(typeof key=='string'){res.$string_dict[key] = _args[i][1]}
-            else if(typeof key=='number'){res.$numeric_dict[key] = _args[i][1]}
-            else{$DictDict.__setitem__(res, key, _args[i][1])}
+            var key = args[i][0]
+            if(typeof key=='string'){res.$string_dict[key] = args[i][1]}
+            else if(typeof key=='number'){res.$numeric_dict[key] = args[i][1]}
+            else{$DictDict.__setitem__(res, key, args[i][1])}
         }
         return res
     }
 
     // apply __init__ with arguments of dict()
-    var args = [res]
-    for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
-    $DictDict.__init__.apply(null,args)
+    var res = {__class__:$DictDict}
+    $DictDict.clear(res)
+    var _args = [res]
+    for(var i=0, _len_i = arguments.length; i < _len_i;i++){_args.push(arguments[i])}
+    $DictDict.__init__.apply(null,_args)
     return res
 }
 
