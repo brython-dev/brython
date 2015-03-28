@@ -4,81 +4,15 @@ eval($B.InjectBuiltins())
 
 var $ObjectDict = _b_.object.$dict
 
-var $DICT_MINSIZE = 8
-
 // dictionary
 function $DictClass($keys,$values){
     this.iter = null
     this.__class__ = $DictDict
     $DictDict.clear(this)
 
-    var setitem=$DictDict.__setitem__    
-    for (var i = 0; i < $keys.length; ++i) {
-        setitem($keys[i], $values[i])
-    }
-}
-
-dummy = {}
-
-// can either grow or shrink depending on actual used items
-var $grow_dict = function(self) {
-    var new_size = $DICT_MINSIZE
-    var target_size = (self.$used < 50000? 2 : 4) * self.$used
-    while (new_size < target_size) {
-        new_size <<= 1
-    }
-    var new_data = Array($DICT_MINSIZE)
-    try {
-        var ig = new $item_generator(self)
-        while(1) {
-            var itm = ig.next()
-            var bucket = $find_empty(itm[0], new_size, new_data)
-            new_data[bucket] = itm
-        }
-    } catch (err) {
-        if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
-    }
-    self.$data = new_data
-    self.$fill = self.$used
-    self.$size = new_size
-}
-
-var $lookup_key = function(self, key) {
-    eq = _b_.getattr(key, "__eq__")
-    size = self.$size
-    data = self.$data
-    bucket = Math.abs(_b_.hash(key) % size)
-    val = data[bucket]
-    while (val !== undefined) {
-        if (val === dummy) {
-            bucket = $next_probe(bucket, size)
-        } else {
-            k_val = val[0]  // [key, value]
-            if (eq(k_val)) {
-                return bucket
-            } else {
-                bucket = $next_probe(bucket, size)
-            }
-        }
-        val = data[bucket]
-    }
-    self.$empty_bucket = bucket
-
-    return undefined
-}
-
-var $find_empty = function(key, size, data) {
-    bucket = Math.abs(hash(key) % size)
-    val = data[bucket]
-    while (val !== undefined) {
-        bucket = $next_probe(bucket, size)
-        val = data[bucket]
-    }
-    return bucket
-}
-
-var $next_probe = function(i, size) {
-    return ((i * 5) + 1) % size
+    var setitem=$DictDict.__setitem__
+    var i=$keys.length
+    while(i--) setitem($keys[i], $values[i])
 }
 
 var $DictDict = {__class__:$B.$type,
@@ -105,23 +39,20 @@ $value_iterator.prototype.next = function() { return this.iter.next()[1] }
 
 var $item_generator = function(d) {
     this.i = 0
-    this.data = d.$data
-    this.size = d.$size
-    this.used = d.$used
 
     var items=[]
+    var pos=0
     for (var k in d.$numeric_dict) {
-        items[items.length]=[parseFloat(k), d.$numeric_dict[k]]
+        items[pos++]=[parseFloat(k), d.$numeric_dict[k]]
     }
 
     for (var k in d.$string_dict) {
-        items[items.length]=[k, d.$string_dict[k]]
+        items[pos++]=[k, d.$string_dict[k]]
     }
 
-    for (var i=0; i < this.data.length; i++) {
-        var _v=this.data[i]
-        if (_v === undefined || _v === dummy) continue
-        items[items.length]=_v
+    for (var k in d.$object_dict) {
+        var i=d.$object_dict[k].length
+        while(i--) items[pos++]=d.$object_dict[k][i]
     }
 
     this.items=items
@@ -149,7 +80,8 @@ $item_iterator.prototype.next = function() { return _b_.tuple(this.iter.next()) 
 var $copy_dict = function(left, right) {
     var _l=new $item_generator(right).as_list()
     var si=$DictDict.__setitem__
-    for (var i=0; i < _l.length; i++) si(left, _l[i][0], _l[i][1])
+    var i=_l.length
+    while(i--) si(left, _l[i][0], _l[i][1])
 }
 
 $iterator_wrapper = function(items,klass){
@@ -204,7 +136,16 @@ $DictDict.__contains__ = function(self,item){
       case 'number':
         return self.$numeric_dict[item] !==undefined
     }
-    return $lookup_key(self, item) !== undefined
+
+    var _key=hash(item)
+    if (self.$object_dict[_key] !== undefined) {
+       var _eq = getattr(item, '__eq__')
+       var i=self.$object_dict[_key].length
+       while(i--) {
+           if (_eq(self.$object_dict[_key][i][0])) return true
+       }
+    }
+    return false
 }
 
 $DictDict.__delitem__ = function(self,arg){
@@ -222,10 +163,17 @@ $DictDict.__delitem__ = function(self,arg){
     }
     // go with defaults
 
-    var bucket = $lookup_key(self, arg)
-    if (bucket === undefined) throw KeyError(_b_.str(arg))
-    self.$data[bucket] = dummy
-    --self.$used
+    var _key=hash(arg)
+    if (self.$object_dict[_key] !== undefined) {
+       var _eq=getattr(arg, '__eq__')
+       var i=self.$object_dict[_key].length
+       while(i--) {
+           if (_eq(self.$object_dict[_key][i][0])) {
+              delete self.$object_dict[_key][i];
+              break;
+           }
+       }
+    }
 
     if(self.$jsobj) delete self.$jsobj[arg]
 }
@@ -239,7 +187,8 @@ $DictDict.__eq__ = function(self,other){
     if ($DictDict.__len__(self) != $DictDict.__len__(other)) return false
 
     var _l = new $item_generator(self).as_list()
-    for (var i=0; i < _l.length; i++) {
+    var i=_l.length
+    while(i--) {
         var key=_l[i][0]
         if (!$DictDict.__contains__(other, key)) return false
         var v1=_l[i][1]
@@ -262,8 +211,16 @@ $DictDict.__getitem__ = function(self,arg){
     }
     // since the key is more complex use 'default' method of getting item
 
-    var bucket = $lookup_key(self, arg)
-    if (bucket !== undefined) return self.$data[bucket][1]
+    var _key=hash(arg)
+    if (self.$object_dict[_key] !== undefined) {
+       var _eq=getattr(arg, '__eq__')
+       var i=self.$object_dict[_key].length
+       while(i--) {
+           if (_eq(self.$object_dict[_key][i][0])) {
+              return self.$object_dict[_key][i][1]
+           }
+       }
+    }
 
     if(hasattr(self, '__missing__')) return getattr(self, '__missing__')(arg)
 
@@ -349,12 +306,13 @@ $DictDict.__iter__ = function(self) {
 }
 
 $DictDict.__len__ = function(self) {
-   var _count=0
+    var _count=0
 
-   for (var k in self.$numeric_dict) _count++
-   for (var k in self.$string_dict) _count++
+    for (var k in self.$numeric_dict) _count++
+    for (var k in self.$string_dict) _count++
+    for (var k in self.$object_dict) _count+= self.$object_dict[k].length
  
-   return self.$used + _count
+    return _count
 }
 
 $DictDict.__mro__ = [$DictDict,$ObjectDict]
@@ -405,18 +363,22 @@ $DictDict.__setitem__ = function(self,key,value){
 
     // if we got here the key is more complex, use default method
 
-    // if adding new item would invoke a grow...
-    if (self.$fill + 1 > self.$size * 3 / 4) {
-        $grow_dict(self)
+    var _key=hash(key)
+    if (self.$object_dict[_key] != undefined) {
+       var _eq=getattr(key, '__eq__')
+       var i=self.$object_dict[_key].length
+       while(i--) {
+           if (_eq(self.$object_dict[_key][i][0])) {
+              self.$object_dict[_key][i]=[key, value]
+              if(self.$jsobj) self.$jsobj[key]=value
+              return
+           }
+       }
+       // if we got here this key is not in the object
+       self.$object_dict[_key].push([key, value])
+    } else {
+       self.$object_dict[_key]=[[key, value]]
     }
-
-    var bucket = $lookup_key(self, key)
-    if (bucket === undefined) {
-        bucket = self.$empty_bucket
-        ++self.$fill
-        ++self.$used
-    }
-    self.$data[bucket] = [key, value]
 
     if(self.$jsobj) self.$jsobj[key]=value
 }
@@ -428,13 +390,10 @@ $B.make_rmethods($DictDict)
 
 $DictDict.clear = function(self){
     // Remove all items from the dictionary.
-    self.$data = Array($DICT_MINSIZE)
-    self.$size = $DICT_MINSIZE
-    self.$fill = 0
-    self.$used = 0
 
     self.$numeric_dict={}
     self.$string_dict={}
+    self.$object_dict={}
 
     if(self.$jsobj) self.$jsobj={}
 }
@@ -455,8 +414,16 @@ $DictDict.get = function(self, key, _default){
         return self.$numeric_dict[key] || _default
     }
 
-    var bucket = $lookup_key(self, key)
-    if(bucket !== undefined) return self.$data[bucket][1]
+    var _key=hash(key)
+    if (self.$object_dict[_key] != undefined) {
+       var _eq=getattr(key, '__eq__')
+       var i=self.$object_dict[_key].length
+       while(i--) {
+           if (_eq(self.$object_dict[_key][i][0])) 
+              return self.$object_dict[_key][i][1] 
+       }
+    }
+
     if(_default!==undefined) return _default
     return None
 }
@@ -554,12 +521,10 @@ function dict(args, second){
     if(second===undefined && Array.isArray(args)){
         // Form "dict([[key1, value1], [key2,value2], ...])"
         var res = {__class__:$DictDict,
-            $data : Array($DICT_MINSIZE),
-            $size : $DICT_MINSIZE,
-            $fill : 0,
-            $used : 0,
             $numeric_dict : {},
-            $string_dict : {}
+            $object_dict : {},
+            $string_dict : {},
+            length: 0
         }
         var i = args.length
         var si = $DictDict.__setitem__
