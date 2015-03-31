@@ -6699,8 +6699,9 @@ function brython(options){
                 if($B.debug>1){
                     console.log($err)
                     for(var attr in $err){
-                        console.log(attr+' : '+$err[attr])
+                       console.log(attr+' : ', $err[attr])
                     }
+
                     console.log('line info '+$B.line_info)
                 }
                                 
