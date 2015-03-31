@@ -682,11 +682,11 @@ function globals(){
 
     // Transform into a Python dictionary
     var res = _b_.dict()
+    var si=_b_.dict.$dict.__setitem__
     for(var name in globals_obj){
-        _b_.dict.$dict.__setitem__(res, name, globals_obj[name])
+       si(res, name, globals_obj[name])
     }
     return res
-
 }
 
 globals.__code__={}
@@ -931,8 +931,9 @@ function locals(){
 
     // Transform into a Python dictionary
     var res = _b_.dict()
+    var si=_b_.dict.$dict.__setitem__
     for(var name in locals_obj){
-        _b_.dict.$dict.__setitem__(res, name, locals_obj[name])
+       si(res, name, locals_obj[name])
     }
     return res
 }
@@ -1699,7 +1700,7 @@ $Reader.read = function(self,nb){
 $Reader.readable = function(self){return true}
 
 $Reader.readline = function(self,limit){
-    if(res.closed===true) throw _b_.ValueError('I/O operation on closed file')
+    if(self.closed===true) throw _b_.ValueError('I/O operation on closed file')
 
     var line = ''
     if(limit===undefined||limit===-1) limit=null
@@ -1714,6 +1715,7 @@ $Reader.readline = function(self,limit){
         if(limit!==null && line.length>=limit) return line
         self.$counter++
     }
+    return '0'   // return empty string when EOF has been reached.
 }
 
 $Reader.readlines = function(self,hint){
@@ -2103,21 +2105,21 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
         // Get attribute 'info' to initialise attributes last_info and line
         if($B.debug==0){
             // Minimal traceback to avoid attribute error
-            return {__class__:$TracebackDict,
+            return traceback({__class__:$TracebackDict,
                 tb_frame:frame(self.$frames_stack),
                 tb_lineno:0,
                 tb_lasti:-1,
                 tb_next: None // fix me
-            }
+            })
         }
         $BaseExceptionDict.__getattr__(self,'info')
         // Return traceback object
-        return {__class__:$TracebackDict,
+        return traceback({__class__:$TracebackDict,
             tb_frame:frame(self.$frames_stack),
             tb_lineno:self.$last_info[0],
             tb_lasti:self.$line,
             tb_next: None // fix me
-        }
+        })
     }else{
         console.log('attr error '+self.__class__.__name__)
         throw AttributeError(self.__class__.__name__+
@@ -2129,6 +2131,18 @@ var $TracebackDict = {__class__:$B.$type,
     __name__:'traceback',
     __mro__:[$ObjectDict]
 }
+
+function traceback(tb) {
+   return {__class__:$TracebackDict,
+           tb_frame: tb.tb_frame,
+           tb_lineno: tb.tb_lineno,
+           tb_lasti: tb.tb_lasti,
+           tb_next: tb.tb_next}
+}
+
+traceback.__class__ = $B.$factory
+traceback.$dict = $TracebackDict
+$TracebackDict.$factory = traceback
 
 // class of frame objects
 var $FrameDict = {__class__:$B.$type,
@@ -2150,7 +2164,8 @@ function frame(stack, pos){
     var mod_name = stack[2]
     var fs = stack
     var res = {__class__:$FrameDict,
-        f_builtins : {} // XXX fix me
+        f_builtins : {}, // XXX fix me
+        f_lineno: None
     }
     if(pos===undefined){pos = fs.length-1}
     if(fs.length){
@@ -2158,7 +2173,7 @@ function frame(stack, pos){
         var locals_id = _frame[0]
         res.f_locals = to_dict(_frame[1])
         res.f_globals = to_dict(_frame[3])
-        if(__BRYTHON__.debug>0){
+        if($B.debug>0){
             res.f_lineno = $B.line_info.split(',')[0]
         }else{
             res.f_lineno = None
@@ -2250,12 +2265,12 @@ $B.exception = function(js_exc){
         exc.$message = js_exc.message || '<'+js_exc+'>'
         exc.info = ''
         exc.$py_error = true
-        exc.traceback = {__class__:$TracebackDict,
+        exc.traceback = traceback({__class__:$TracebackDict,
             tb_frame:frame($B.exception_stack),
             tb_lineno:-1,
             tb_lasti:'',
             tb_next: None   // fix me
-        }
+        })
     }else{
         var exc = js_exc
     }
@@ -2285,22 +2300,23 @@ _b_.__BRYTHON__ = __BRYTHON__
 function $make_exc(names,parent){
     // create a class for exception called "name"
     var _str=[]
+    var pos=0
     for(var i=0;i<names.length;i++){
         var name = names[i]
         $B.bound['__builtins__'][name] = true
         var $exc = (BaseException+'').replace(/BaseException/g,name)
         // class dictionary
-        _str.push('var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}')
-        _str.push('$'+name+'Dict.__bases__ = [parent]')
-        _str.push('$'+name+'Dict.__module__ = "builtins"')
-        _str.push('$'+name+'Dict.__mro__=[$'+name+'Dict].concat(parent.$dict.__mro__)')
+        _str[pos++]='var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}'
+        _str[pos++]='$'+name+'Dict.__bases__ = [parent]'
+        _str[pos++]='$'+name+'Dict.__module__ = "builtins"'
+        _str[pos++]='$'+name+'Dict.__mro__=[$'+name+'Dict].concat(parent.$dict.__mro__)'
         // class constructor
-        _str.push('_b_.'+name+'='+$exc)
-        _str.push('_b_.'+name+'.__repr__ = function(){return "<class '+"'"+name+"'"+'>"}')
-        _str.push('_b_.'+name+'.__str__ = function(){return "<class '+"'"+name+"'"+'>"}')
-        _str.push('_b_.'+name+'.__class__=$B.$factory')
-        _str.push('$'+name+'Dict.$factory=_b_.'+name)
-        _str.push('_b_.'+name+'.$dict=$'+name+'Dict')
+        _str[pos++]='_b_.'+name+'='+$exc
+        _str[pos++]='_b_.'+name+'.__repr__ = function(){return "<class '+"'"+name+"'"+'>"}'
+        _str[pos++]='_b_.'+name+'.__str__ = function(){return "<class '+"'"+name+"'"+'>"}'
+        _str[pos++]='_b_.'+name+'.__class__=$B.$factory'
+        _str[pos++]='$'+name+'Dict.$factory=_b_.'+name
+        _str[pos++]='_b_.'+name+'.$dict=$'+name+'Dict'
     }
     eval(_str.join(';'))
 }
