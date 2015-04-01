@@ -193,6 +193,12 @@ def _getframe(num=0):
    
     return frame(a[0], a[1], a[2], a[3])
 
+
+## __stdxxx__ contains the original values of sys.stdxxx
+__stdout__ = __BRYTHON__.stdout
+__stderr__ = __BRYTHON__.stderr
+__stdin__ = __BRYTHON__.stdin
+
 #delete objects not in python sys module namespace
 del JSObject
 del _implementation
