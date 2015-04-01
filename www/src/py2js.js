@@ -6482,7 +6482,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     
     var global_ns = '$locals_'+module.replace(/\./g,'_')
 
-    $B.bound[module] = $B.bound[module] || {}
+    $B.bound[module] = {}
 
     // Internal variables must be defined before tokenising, otherwise
     // references to these names would generate a NameError
@@ -6651,7 +6651,8 @@ function brython(options){
         var $elt = $elts[$i]
         if($elt.type=="text/python"||$elt.type==="text/python3"){
 
-            if(first_script){module_name='__main__'; first_script=false}
+            if($elt.id){module_name=$elt.id}
+            else if(first_script){module_name='__main__'; first_script=false}
             else{module_name = '__main__'+$B.UUID()}
         
             // Get Python source code
