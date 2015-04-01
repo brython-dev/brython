@@ -783,10 +783,10 @@ function $AugmentedAssignCtx(context, op){
     this.transform = function(node,rank){
         var func = '__'+$operators[op]+'__'
 
-        var offset=0, parent=node.parent
+        var offset=1, parent=node.parent
         
-        // remove current node
-        parent.children.splice(rank,1)
+        // remove code from current node
+        new $NodeJSCtx(node,'')
         
         var left_is_id = (this.tree[0].type=='expr' && 
             this.tree[0].tree[0].type=='id')
@@ -799,7 +799,7 @@ function $AugmentedAssignCtx(context, op){
             // Create temporary variable
             var new_node = new $Node()
             new $NodeJSCtx(new_node,'var $temp,$left')
-            parent.insert(rank,new_node)
+            parent.insert(rank+offset,new_node)
             offset++
         
             // replace current node by "$temp = <placeholder>"
@@ -4326,7 +4326,6 @@ function $add_line_num(node,rank){
         if(flag){
             // add a trailing None for interactive mode
             var js='$B.line_info="'+node.line_num+','+mod_id+'";'
-            //if(node.module===undefined) console.log('tiens, module undef !')
 
             var new_node = new $Node()
             new $NodeJSCtx(new_node,js)
