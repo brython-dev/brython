@@ -6646,11 +6646,13 @@ function brython(options){
     
     // Get all scripts with type = text/python or text/python3 and run them
 
+    var first_script = true, module_name
     for(var $i=0;$i<$elts.length;$i++){
         var $elt = $elts[$i]
         if($elt.type=="text/python"||$elt.type==="text/python3"){
 
-            var module_name = '__main__'+$B.UUID()
+            if(first_script){module_name='__main__'; first_script=false}
+            else{module_name = '__main__'+$B.UUID()}
         
             // Get Python source code
             var $src = null
