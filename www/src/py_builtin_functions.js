@@ -2106,40 +2106,33 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
         // Get attribute 'info' to initialise attributes last_info and line
         if($B.debug==0){
             // Minimal traceback to avoid attribute error
-            return traceback({__class__:$TracebackDict,
+            return {__class__:$TracebackDict,
                 tb_frame:frame(self.$frames_stack),
                 tb_lineno:0,
                 tb_lasti:-1,
                 tb_next: None // fix me
-            })
+            }
         }
         $BaseExceptionDict.__getattr__(self,'info')
         // Return traceback object
-        return traceback({__class__:$TracebackDict,
+        return {__class__:$TracebackDict,
             tb_frame:frame(self.$frames_stack),
             tb_lineno:self.$last_info[0],
             tb_lasti:self.$line,
             tb_next: None // fix me
-        })
+        }
     }else{
-        console.log('attr error '+self.__class__.__name__)
         throw AttributeError(self.__class__.__name__+
             "has no attribute '"+attr+"'")
     }
 }
 // class of traceback objects
 var $TracebackDict = {__class__:$B.$type,
-    __name__:'traceback',
-    __mro__:[$ObjectDict]
+    __name__:'traceback'
 }
+$TracebackDict.__mro__ = [$TracebackDict, $ObjectDict]
 
-function traceback(tb) {
-   return {__class__:$TracebackDict,
-           tb_frame: tb.tb_frame,
-           tb_lineno: tb.tb_lineno,
-           tb_lasti: tb.tb_lasti,
-           tb_next: tb.tb_next}
-}
+function traceback(tb) {}
 
 traceback.__class__ = $B.$factory
 traceback.$dict = $TracebackDict
