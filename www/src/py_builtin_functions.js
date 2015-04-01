@@ -543,7 +543,7 @@ function getattr(obj,attr,_default){
               return function(){
                 $B.call_stack.push($B.line_info)
                 var res = obj.apply(null,arguments)
-                $B.call_stack.pop()
+                $B.line_info = $B.call_stack.pop()
                 return res
               }
            }else{
@@ -2090,14 +2090,15 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
             info += '\n    '+line
             last_info = call_info
         }
-        last_info = self.$line_info.split(',')
-        var line = $B.$py_src[last_info[1]].split('\n')[parseInt(last_info[0])-1]
-        if(line) line=line.replace(/^[ ]+/g, '')
-        self.$last_info = last_info
-        self.$line = line
-        info += '\n  module '+last_info[1]+' line '+last_info[0]
-        info += '\n    '+line
-        
+        if(self.$line_info!=last_info){
+            var err_info = self.$line_info.split(',')
+            var line = $B.$py_src[err_info[1]].split('\n')[parseInt(err_info[0])-1]
+            if(line) line=line.replace(/^[ ]+/g, '')
+            self.$last_info = err_info
+            self.$line = line
+            info += '\n  module '+err_info[1]+' line '+err_info[0]
+            info += '\n    '+line
+        }        
         return info
     }else if(attr=='traceback'){
         // Get attribute 'info' to initialise attributes last_info and line
@@ -2193,6 +2194,7 @@ var BaseException = function (msg,js_exc){
     err.__class__ = $BaseExceptionDict
     err.$py_error = true
     $B.exception_stack.push(err)
+    //console.log('exception '+err.__name__+' line info '+err.$line_info)
     return err
 }
 
@@ -2248,6 +2250,7 @@ $B.exception = function(js_exc){
             js_exc.message = js_exc.message.replace('$$','')
         }
         exc.$message = js_exc.message || '<'+js_exc+'>'
+        exc.args = _b_.tuple([exc.$message])
         exc.info = ''
         exc.$py_error = true
         exc.traceback = {__class__:$TracebackDict,
