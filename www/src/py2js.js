@@ -783,10 +783,10 @@ function $AugmentedAssignCtx(context, op){
     this.transform = function(node,rank){
         var func = '__'+$operators[op]+'__'
 
-        var offset=1, parent=node.parent
+        var offset=0, parent=node.parent
         
-        // remove code from current node
-        new $NodeJSCtx(node,'')
+        // remove current node
+        parent.children.splice(rank,1)
         
         var left_is_id = (this.tree[0].type=='expr' && 
             this.tree[0].tree[0].type=='id')
@@ -799,7 +799,7 @@ function $AugmentedAssignCtx(context, op){
             // Create temporary variable
             var new_node = new $Node()
             new $NodeJSCtx(new_node,'var $temp,$left')
-            parent.insert(rank+offset,new_node)
+            parent.insert(rank,new_node)
             offset++
         
             // replace current node by "$temp = <placeholder>"
