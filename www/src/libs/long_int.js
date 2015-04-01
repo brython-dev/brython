@@ -350,6 +350,15 @@ $LongIntDict.__index__ = function(self){
     return res
 }
 
+$LongIntDict.__invert__ = function(self){
+    var bin = $LongIntDict.__index__(self)
+    var res = ''
+    for(var i=0;i<bin.length;i++){
+        res += bin.charAt(i)=='0' ? '1' : '0'
+    }
+    return LongInt(res, 2)
+}
+
 $LongIntDict.__le__ = function(self, other){
     if (typeof other == 'number') other=LongInt(_b_.str(other))
     if(self.value.length>other.value.length){return false}
@@ -541,7 +550,7 @@ function LongInt(value, base){
     if(base<0 || base==1 || base>36){
         throw ValueError("LongInt() base must be >= 2 and <= 36")
     }
-    if(!typeof value=='string'){
+    if(typeof value!='string'){
         throw ValueError("argument of long_int must be a string, not "+
             $B.get_class(value).__name__)
     }
@@ -558,7 +567,7 @@ function LongInt(value, base){
         // Remove prefix
         if(value.length==1){
             // "+" or "-" alone are not valid arguments
-            throw ValueError('LongInt argument is not a valid number')            
+            throw ValueError('LongInt argument is not a valid number: "'+value+'"')
         }else{value=value.substr(1)}
     }
     // Ignore leading zeros
@@ -566,11 +575,20 @@ function LongInt(value, base){
     value = value.substr(start)
 
     // Check if all characters in value are valid in the base
-    var is_digits = digits(base)
+    var is_digits = digits(base), point = -1, exp = null, pos_exp
     for(var i=0;i<value.length;i++){
-        if(!is_digits[value.charAt(i)]){
-            throw ValueError('LongInt argument is not a valid number')
+        if(value.charAt(i)=='.' && point==-1){point=i}
+        else if(value.charAt(i)=='e' || value.charAt(i)=='E'){
+            exp = LongInt(value.substr(i+1))
+            break
         }
+        else if(!is_digits[value.charAt(i)]){
+            throw ValueError('LongInt argument is not a valid number: "'+value+'"')
+        }
+    }
+    if(point!=-1){value=value.substr(0,point)}
+    if(exp!==null){
+        value = value.substr(0,i)+'0'.repeat(parseInt(exp.value))
     }
     if(base!=10){
         // Conversion to base 10
