@@ -172,6 +172,33 @@ warnoptions=[]
 def getfilesystemencoding():
     return 'utf-8'
 
+
+def _getframe(num=0):
+    """ tb_frame        frame object at this level
+        tb_lasti        index of last attempted instruction in bytecode
+        tb_lineno       current line number in Python source code
+        tb_next         next inner traceback object (called by this level)
+    """
+
+    #TODO: I doubt this is good enough..  will research later when
+    #I learn more.
+    class frame:
+      def __init__(self, tb_frame, tb_lasti, tb_lineno, tb_text):
+          self.tb_frame=tb_frame
+          self.tb_lasti=tb_lasti
+          self.tb_lineno=tb_lineno
+          self.tb_text=tb_text
+
+    a=__BRYTHON__.frames_stack[num]
+   
+    return frame(a[0], a[1], a[2], a[3])
+
+
+## __stdxxx__ contains the original values of sys.stdxxx
+__stdout__ = __BRYTHON__.stdout
+__stderr__ = __BRYTHON__.stderr
+__stdin__ = __BRYTHON__.stdin
+
 #delete objects not in python sys module namespace
 del JSObject
 del _implementation
