@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-03-27 08:38:42.106000"
+__BRYTHON__.compiled_date="2015-04-01 11:54:39.383000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -488,8 +488,8 @@ $get_node(this).bound_before=$B.keys($B.bound[scope.id])
 this.module=scope.module
 this.toString=function(){return '(augm assign) '+this.tree}
 this.transform=function(node,rank){var func='__'+$operators[op]+'__'
-var offset=0,parent=node.parent
-parent.children.splice(rank,1)
+var offset=1,parent=node.parent
+new $NodeJSCtx(node,'')
 var left_is_id=(this.tree[0].type=='expr' && 
 this.tree[0].tree[0].type=='id')
 var right_is_int=(this.tree[1].type=='expr' && 
@@ -498,7 +498,7 @@ var right=right_is_int ? this.tree[1].tree[0].value : '$temp'
 if(!right_is_int){
 var new_node=new $Node()
 new $NodeJSCtx(new_node,'var $temp,$left')
-parent.insert(rank,new_node)
+parent.insert(rank+offset,new_node)
 offset++
 var new_node=new $Node()
 new_node.id=this.module
@@ -4378,7 +4378,7 @@ var $js=$root.to_js()
 if($B.debug>1)console.log($js)
 eval($js)
 }catch($err){if($B.debug>1){console.log($err)
-for(var attr in $err){console.log(attr+' : '+$err[attr])
+for(var attr in $err){console.log(attr+' : ',$err[attr])
 }
 console.log('line info '+$B.line_info)
 }
@@ -5699,7 +5699,7 @@ if(typeof obj=='function'){if(obj.$blocking){console.log('calling blocking funct
 if($B.debug>0){
 return function(){$B.call_stack.push($B.line_info)
 var res=obj.apply(null,arguments)
-$B.call_stack.pop()
+$B.line_info=$B.call_stack.pop()
 return res
 }}else{return obj
 }}else if(klass===$B.JSObject.$dict && typeof obj.js=='function'){return function(){var res=obj.js.apply(null,arguments)
@@ -5781,7 +5781,8 @@ getattr.__code__={co_argcount:1,co_consts:[],co_varnames:['value']}
 function globals(){
 var globals_obj=$B.last($B.frames_stack)[3]
 var res=_b_.dict()
-for(var name in globals_obj){_b_.dict.$dict.__setitem__(res,name,globals_obj[name])
+var si=_b_.dict.$dict.__setitem__
+for(var name in globals_obj){si(res,name,globals_obj[name])
 }
 return res
 }
@@ -5925,7 +5926,8 @@ len.__code__={co_argcount:2,co_consts:[],co_varnames:['module','object']}
 function locals(){
 var locals_obj=$B.last($B.frames_stack)[1]
 var res=_b_.dict()
-for(var name in locals_obj){_b_.dict.$dict.__setitem__(res,name,locals_obj[name])
+var si=_b_.dict.$dict.__setitem__
+for(var name in locals_obj){si(res,name,locals_obj[name])
 }
 return res
 }
@@ -6401,7 +6403,7 @@ self.$counter+=nb
 return self.$content.substr(self.$counter-nb,nb)
 }
 $Reader.readable=function(self){return true}
-$Reader.readline=function(self,limit){if(res.closed===true)throw _b_.ValueError('I/O operation on closed file')
+$Reader.readline=function(self,limit){if(self.closed===true)throw _b_.ValueError('I/O operation on closed file')
 var line=''
 if(limit===undefined||limit===-1)limit=null
 while(1){if(self.$counter>=self.$content.length-1)break
@@ -6410,7 +6412,9 @@ if(car=='\n'){self.$counter++;return line}
 line +=car
 if(limit!==null && line.length>=limit)return line
 self.$counter++
-}}
+}
+return '0' 
+}
 $Reader.readlines=function(self,hint){if(self.closed===true)throw _b_.ValueError('I/O operation on closed file')
 var x=self.$content.substr(self.$counter).split('\n')
 if(hint && hint!==-1){var y=[],size=0
@@ -6619,26 +6623,33 @@ if(line)line=line.replace(/^[]+/g,'')
 info +='\n    '+line
 last_info=call_info
 }
-last_info=self.$line_info.split(',')
-var line=$B.$py_src[last_info[1]].split('\n')[parseInt(last_info[0])-1]
+if(self.$line_info!=last_info){var err_info=self.$line_info.split(',')
+var line=$B.$py_src[err_info[1]].split('\n')[parseInt(err_info[0])-1]
 if(line)line=line.replace(/^[]+/g,'')
-self.$last_info=last_info
+self.$last_info=err_info
 self.$line=line
-info +='\n  module '+last_info[1]+' line '+last_info[0]
+info +='\n  module '+err_info[1]+' line '+err_info[0]
 info +='\n    '+line
+}
 return info
 }else if(attr=='traceback'){
 if($B.debug==0){
-return{__class__:$TracebackDict,tb_frame:frame(self.$frames_stack),tb_lineno:0,tb_lasti:-1,tb_next: None 
-}}
+return traceback({__class__:$TracebackDict,tb_frame:frame(self.$frames_stack),tb_lineno:0,tb_lasti:-1,tb_next: None 
+})
+}
 $BaseExceptionDict.__getattr__(self,'info')
-return{__class__:$TracebackDict,tb_frame:frame(self.$frames_stack),tb_lineno:self.$last_info[0],tb_lasti:self.$line,tb_next: None 
-}}else{console.log('attr error '+self.__class__.__name__)
+return traceback({__class__:$TracebackDict,tb_frame:frame(self.$frames_stack),tb_lineno:self.$last_info[0],tb_lasti:self.$line,tb_next: None 
+})
+}else{console.log('attr error '+self.__class__.__name__)
 throw AttributeError(self.__class__.__name__+
 "has no attribute '"+attr+"'")
 }}
 var $TracebackDict={__class__:$B.$type,__name__:'traceback',__mro__:[$ObjectDict]
 }
+function traceback(tb){return{__class__:$TracebackDict,tb_frame: tb.tb_frame,tb_lineno: tb.tb_lineno,tb_lasti: tb.tb_lasti,tb_next: tb.tb_next}}
+traceback.__class__=$B.$factory
+traceback.$dict=$TracebackDict
+$TracebackDict.$factory=traceback
 var $FrameDict={__class__:$B.$type,__name__:'frame',__mro__:[$ObjectDict]
 }
 function to_dict(obj){var res=_b_.dict()
@@ -6650,14 +6661,15 @@ return res
 }
 function frame(stack,pos){var mod_name=stack[2]
 var fs=stack
-var res={__class__:$FrameDict,f_builtins :{}
+var res={__class__:$FrameDict,f_builtins :{},
+f_lineno: None
 }
 if(pos===undefined){pos=fs.length-1}
 if(fs.length){var _frame=fs[pos]
 var locals_id=_frame[0]
 res.f_locals=to_dict(_frame[1])
 res.f_globals=to_dict(_frame[3])
-if(__BRYTHON__.debug>0){res.f_lineno=$B.line_info.split(',')[0]
+if($B.debug>0){res.f_lineno=$B.line_info.split(',')[0]
 }else{res.f_lineno=None
 }
 if(pos>0){res.f_back=frame(stack,pos-1)}
@@ -6718,10 +6730,12 @@ exc.__class__=_b_.NameError.$dict
 js_exc.message=js_exc.message.replace('$$','')
 }
 exc.$message=js_exc.message ||'<'+js_exc+'>'
+exc.args=_b_.tuple([exc.$message])
 exc.info=''
 exc.$py_error=true
-exc.traceback={__class__:$TracebackDict,tb_frame:frame($B.exception_stack),tb_lineno:-1,tb_lasti:'',tb_next: None 
-}}else{var exc=js_exc
+exc.traceback=traceback({__class__:$TracebackDict,tb_frame:frame($B.exception_stack),tb_lineno:-1,tb_lasti:'',tb_next: None 
+})
+}else{var exc=js_exc
 }
 $B.exception_stack.push(exc)
 return exc
@@ -6740,19 +6754,20 @@ $B.bound['__builtins__']['BaseException']=true
 _b_.__BRYTHON__=__BRYTHON__
 function $make_exc(names,parent){
 var _str=[]
+var pos=0
 for(var i=0;i<names.length;i++){var name=names[i]
 $B.bound['__builtins__'][name]=true
 var $exc=(BaseException+'').replace(/BaseException/g,name)
-_str.push('var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}')
-_str.push('$'+name+'Dict.__bases__ = [parent]')
-_str.push('$'+name+'Dict.__module__ = "builtins"')
-_str.push('$'+name+'Dict.__mro__=[$'+name+'Dict].concat(parent.$dict.__mro__)')
-_str.push('_b_.'+name+'='+$exc)
-_str.push('_b_.'+name+'.__repr__ = function(){return "<class '+"'"+name+"'"+'>"}')
-_str.push('_b_.'+name+'.__str__ = function(){return "<class '+"'"+name+"'"+'>"}')
-_str.push('_b_.'+name+'.__class__=$B.$factory')
-_str.push('$'+name+'Dict.$factory=_b_.'+name)
-_str.push('_b_.'+name+'.$dict=$'+name+'Dict')
+_str[pos++]='var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}'
+_str[pos++]='$'+name+'Dict.__bases__ = [parent]'
+_str[pos++]='$'+name+'Dict.__module__ = "builtins"'
+_str[pos++]='$'+name+'Dict.__mro__=[$'+name+'Dict].concat(parent.$dict.__mro__)'
+_str[pos++]='_b_.'+name+'='+$exc
+_str[pos++]='_b_.'+name+'.__repr__ = function(){return "<class '+"'"+name+"'"+'>"}'
+_str[pos++]='_b_.'+name+'.__str__ = function(){return "<class '+"'"+name+"'"+'>"}'
+_str[pos++]='_b_.'+name+'.__class__=$B.$factory'
+_str[pos++]='$'+name+'Dict.$factory=_b_.'+name
+_str[pos++]='_b_.'+name+'.$dict=$'+name+'Dict'
 }
 eval(_str.join(';'))
 }
@@ -7249,6 +7264,7 @@ if(typeof res=='object')return JSObject(res)
 if(res===undefined)return None
 return $B.$JS2Py(res)
 }
+res.__func__=js_attr
 res.__repr__=function(){return '<function '+attr+'>'}
 res.__str__=function(){return '<function '+attr+'>'}
 return{__class__:$JSObjectDict,js:res,js_func:js_attr}}else{return $B.$JS2Py(obj.js[attr])
@@ -7319,7 +7335,7 @@ $B.JSConstructor=JSConstructor
 ;(function($B){$B.stdlib={}
 var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.basehook','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.pygame.SDL','site-packages.pygame.base','site-packages.pygame.color','site-packages.pygame.colordict','site-packages.pygame.compat','site-packages.pygame.constants','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.locals','site-packages.pygame.mixer','site-packages.pygame.mouse','site-packages.pygame.pkgdata','site-packages.pygame.rect','site-packages.pygame.sprite','site-packages.pygame.surface','site-packages.pygame.time','site-packages.pygame.transform','site-packages.pygame.version','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','time','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile']
+var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.basehook','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.pygame.SDL','site-packages.pygame.base','site-packages.pygame.color','site-packages.pygame.colordict','site-packages.pygame.compat','site-packages.pygame.constants','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.locals','site-packages.pygame.mixer','site-packages.pygame.mouse','site-packages.pygame.pkgdata','site-packages.pygame.rect','site-packages.pygame.sprite','site-packages.pygame.surface','site-packages.pygame.time','site-packages.pygame.transform','site-packages.pygame.version','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','time','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','uuid','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','long_int1','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.pygame','test','ui','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]
@@ -7861,8 +7877,7 @@ function $FloatClass(value){this.value=value
 this.__class__=$FloatDict
 this.toString=function(){return this.value}
 this.valueOf=function(){return this.value}}
-var float=function(value){switch(value){
-case undefined:
+var float=function(value){switch(value){case undefined:
 return new $FloatClass(0.0)
 case Number.MAX_VALUE:
 return new $FloatClass(Infinity)
@@ -8297,54 +8312,12 @@ _b_.complex=complex
 })(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var $ObjectDict=_b_.object.$dict
-var $DICT_MINSIZE=8
 function $DictClass($keys,$values){this.iter=null
 this.__class__=$DictDict
 $DictDict.clear(this)
-var setitem=$DictDict.__setitem__ 
-for(var i=0;i < $keys.length;++i){setitem($keys[i],$values[i])
-}}
-dummy={}
-var $grow_dict=function(self){var new_size=$DICT_MINSIZE
-var target_size=(self.$used < 50000? 2 : 4)* self.$used
-while(new_size < target_size){new_size <<=1
-}
-var new_data=Array($DICT_MINSIZE)
-try{
-var ig=new $item_generator(self)
-while(1){var itm=ig.next()
-var bucket=$find_empty(itm[0],new_size,new_data)
-new_data[bucket]=itm
-}}catch(err){if(err.__name__ !=="StopIteration"){throw err }else{$B.$pop_exc()}}
-self.$data=new_data
-self.$fill=self.$used
-self.$size=new_size
-}
-var $lookup_key=function(self,key){eq=_b_.getattr(key,"__eq__")
-size=self.$size
-data=self.$data
-bucket=Math.abs(_b_.hash(key)% size)
-val=data[bucket]
-while(val !==undefined){if(val===dummy){bucket=$next_probe(bucket,size)
-}else{
-k_val=val[0]
-if(eq(k_val)){return bucket
-}else{
-bucket=$next_probe(bucket,size)
-}}
-val=data[bucket]
-}
-self.$empty_bucket=bucket
-return undefined
-}
-var $find_empty=function(key,size,data){bucket=Math.abs(hash(key)% size)
-val=data[bucket]
-while(val !==undefined){bucket=$next_probe(bucket,size)
-val=data[bucket]
-}
-return bucket
-}
-var $next_probe=function(i,size){return((i * 5)+ 1)% size
+var setitem=$DictDict.__setitem__
+var i=$keys.length
+while(i--)setitem($keys[i],$values[i])
 }
 var $DictDict={__class__:$B.$type,__name__ : 'dict',$native:true,__dir__:$ObjectDict.__dir__
 }
@@ -8361,20 +8334,17 @@ this.iter=new $item_generator(d)
 $value_iterator.prototype.length=function(){return this.iter.length }
 $value_iterator.prototype.next=function(){return this.iter.next()[1]}
 var $item_generator=function(d){this.i=0
-this.data=d.$data
-this.size=d.$size
-this.used=d.$used
-this.length=0
-this.items=[]
-for(var k in d.$numeric_dict){this.items.push([parseFloat(k),d.$numeric_dict[k]])
+var items=[]
+var pos=0
+for(var k in d.$numeric_dict){items[pos++]=[parseFloat(k),d.$numeric_dict[k]]
 }
-for(var k in d.$string_dict){this.items.push([k,d.$string_dict[k]])
+for(var k in d.$string_dict){items[pos++]=[k,d.$string_dict[k]]
 }
-for(var i=0;i < this.data.length;i++){var _v=this.data[i]
-if(_v===undefined ||_v===dummy)continue
-this.items.push(_v)
+for(var k in d.$object_dict){var i=d.$object_dict[k].length
+while(i--)items[pos++]=d.$object_dict[k][i]
 }
-this.length=this.items.length
+this.items=items
+this.length=items.length
 }
 $item_generator.prototype.next=function(){if(this.i < this.items.length){return this.items[this.i++]
 }
@@ -8388,11 +8358,11 @@ this.iter=new $item_generator(d)
 }
 $item_iterator.prototype.length=function(){return this.iter.items.length }
 $item_iterator.prototype.next=function(){return _b_.tuple(this.iter.next())}
-var $copy_dict=function(left,right){var gen=new $item_generator(right)
-try{
-while(1){var item=gen.next()
-$DictDict.__setitem__(left,item[0],item[1])
-}}catch(err){if(err.__name__ !=="StopIteration"){throw err }else{$B.$pop_exc()}}}
+var $copy_dict=function(left,right){var _l=new $item_generator(right).as_list()
+var si=$DictDict.__setitem__
+var i=_l.length
+while(i--)si(left,_l[i][0],_l[i][1])
+}
 $iterator_wrapper=function(items,klass){var res={__class__:klass,__iter__:function(){items.iter.i=0;return res},__len__:function(){return items.length()},__next__:function(){
 return items.next()
 },
@@ -8421,7 +8391,12 @@ return self.$string_dict[item]!==undefined
 case 'number':
 return self.$numeric_dict[item]!==undefined
 }
-return $lookup_key(self,item)!==undefined
+var _key=hash(item)
+if(self.$object_dict[_key]!==undefined){var _eq=getattr(item,'__eq__')
+var i=self.$object_dict[_key].length
+while(i--){if(_eq(self.$object_dict[_key][i][0]))return true
+}}
+return false
 }
 $DictDict.__delitem__=function(self,arg){switch(typeof arg){case 'string':
 if(self.$string_dict[arg]===undefined)throw KeyError(_b_.str(arg))
@@ -8434,10 +8409,12 @@ delete self.$numeric_dict[arg]
 if(self.$jsobj)delete self.$jsobj[arg]
 return
 }
-var bucket=$lookup_key(self,arg)
-if(bucket===undefined)throw KeyError(_b_.str(arg))
-self.$data[bucket]=dummy
---self.$used
+var _key=hash(arg)
+if(self.$object_dict[_key]!==undefined){var _eq=getattr(arg,'__eq__')
+var i=self.$object_dict[_key].length
+while(i--){if(_eq(self.$object_dict[_key][i][0])){delete self.$object_dict[_key][i]
+break
+}}}
 if(self.$jsobj)delete self.$jsobj[arg]
 }
 $DictDict.__eq__=function(self,other){if(other===undefined){
@@ -8445,14 +8422,11 @@ return self===dict
 }
 if(!isinstance(other,dict))return false
 if($DictDict.__len__(self)!=$DictDict.__len__(other))return false
-var gen=new $item_generator(self)
-var keys1=[]
-try{
-while(1)keys1.push(gen.next()[0])
-}catch(err){}
-for(var i=0;i < keys1.length;i++){var key=keys1[i]
+var _l=new $item_generator(self).as_list()
+var i=_l.length
+while(i--){var key=_l[i][0]
 if(!$DictDict.__contains__(other,key))return false
-var v1=$DictDict.__getitem__(self,key)
+var v1=_l[i][1]
 var v2=$DictDict.__getitem__(other,key)
 if(!getattr(v1,'__eq__')(v2))return false
 }
@@ -8465,8 +8439,11 @@ break
 case 'number':
 if(self.$numeric_dict[arg]!==undefined)return self.$numeric_dict[arg]
 }
-var bucket=$lookup_key(self,arg)
-if(bucket !==undefined)return self.$data[bucket][1]
+var _key=hash(arg)
+if(self.$object_dict[_key]!==undefined){var _eq=getattr(arg,'__eq__')
+var i=self.$object_dict[_key].length
+while(i--){if(_eq(self.$object_dict[_key][i][0])){return self.$object_dict[_key][i][1]
+}}}
 if(hasattr(self,'__missing__'))return getattr(self,'__missing__')(arg)
 throw KeyError(_b_.str(arg))
 }
@@ -8481,16 +8458,16 @@ switch(args.length){case 0:
 return
 case 1:
 var obj=args[0]
-if(Array.isArray(obj)){var src=args[0]
-var i=src.length
-while(i--){$DictDict.__setitem__(self,src[i][0],src[i][1])}
+if(Array.isArray(obj)){var i=obj.length
+var si=$DictDict.__setitem__
+while(i--)si(self,obj[i][0],obj[i][1])
 return
 }else if(isinstance(obj,dict)){$copy_dict(self,obj)
 return
 }
 if(obj.__class__===$B.JSObject.$dict){
-for(var attr in obj.js){$DictDict.__setitem__(self,attr,obj.js[attr])
-}
+var si=$DictDict.__setitem__
+for(var attr in obj.js)si(self,attr,obj.js[attr])
 self.$jsobj=obj.js
 return
 }}
@@ -8502,7 +8479,9 @@ return
 }
 if(Array.isArray(args[0])){var src=args[0]
 var i=src.length
-while(i--){$DictDict.__setitem__(self,src[i][0],src[i][1])}}else{var iterable=iter(args[0])
+var si=$DictDict.__setitem__
+while(i--)si(self,src[i][0],src[i][1])
+}else{var iterable=iter(args[0])
 while(1){try{var elt=next(iterable)
 var key=getattr(elt,'__getitem__')(0)
 var value=getattr(elt,'__getitem__')(1)
@@ -8515,10 +8494,11 @@ if($DictDict.__len__(kw)> 0)$copy_dict(self,kw)
 var $dict_iterator=$B.$iterator_class('dict iterator')
 $DictDict.__iter__=function(self){return $DictDict.keys(self)
 }
-$DictDict.__len__=function(self){var _num_len=0,_str_len=0
-for(var k in self.$numeric_dict)_num_len++
-for(var k in self.$string_dict)_str_len++
-return self.$used + _num_len + _str_len
+$DictDict.__len__=function(self){var _count=0
+for(var k in self.$numeric_dict)_count++
+for(var k in self.$string_dict)_count++
+for(var k in self.$object_dict)_count+=self.$object_dict[k].length
+return _count
 }
 $DictDict.__mro__=[$DictDict,$ObjectDict]
 $DictDict.__ne__=function(self,other){return !$DictDict.__eq__(self,other)}
@@ -8550,25 +8530,25 @@ self.$numeric_dict[key]=value
 if(self.$jsobj)self.$jsobj[key]=value
 return
 }
-if(self.$fill + 1 > self.$size * 3 / 4){$grow_dict(self)
+var _key=hash(key)
+if(self.$object_dict[_key]!=undefined){var _eq=getattr(key,'__eq__')
+var i=self.$object_dict[_key].length
+while(i--){if(_eq(self.$object_dict[_key][i][0])){self.$object_dict[_key][i]=[key,value]
+if(self.$jsobj)self.$jsobj[key]=value
+return
+}}
+self.$object_dict[_key].push([key,value])
+}else{
+self.$object_dict[_key]=[[key,value]]
 }
-var bucket=$lookup_key(self,key)
-if(bucket===undefined){bucket=self.$empty_bucket
-++self.$fill
-++self.$used
-}
-self.$data[bucket]=[key,value]
 if(self.$jsobj)self.$jsobj[key]=value
 }
 $DictDict.__str__=$DictDict.__repr__
 $B.make_rmethods($DictDict)
 $DictDict.clear=function(self){
-self.$data=Array($DICT_MINSIZE)
-self.$size=$DICT_MINSIZE
-self.$fill=0
-self.$used=0
 self.$numeric_dict={}
 self.$string_dict={}
+self.$object_dict={}
 if(self.$jsobj)self.$jsobj={}}
 $DictDict.copy=function(self){
 var res=_b_.dict()
@@ -8581,8 +8561,12 @@ return self.$string_dict[key]||_default
 case 'number':
 return self.$numeric_dict[key]||_default
 }
-var bucket=$lookup_key(self,key)
-if(bucket !==undefined)return self.$data[bucket][1]
+var _key=hash(key)
+if(self.$object_dict[_key]!=undefined){var _eq=getattr(key,'__eq__')
+var i=self.$object_dict[_key].length
+while(i--){if(_eq(self.$object_dict[_key][i][0]))
+return self.$object_dict[_key][i][1]
+}}
 if(_default!==undefined)return _default
 return None
 }
@@ -8638,12 +8622,20 @@ var kw=$ns['kw']
 $copy_dict(self,kw)
 }
 function dict(args,second){if(second===undefined && Array.isArray(args)){
-var res={__class__:$DictDict,$data : Array($DICT_MINSIZE),$size : $DICT_MINSIZE,$fill : 0,$used : 0,$numeric_dict :{},$string_dict :{}}
+var res={__class__:$DictDict,$numeric_dict :{},$object_dict :{},$string_dict :{},length: 0
+}
 var i=args.length
-while(i--){var key=args[i][0]
-if(typeof key=='string'){res.$string_dict[key]=args[i][1]}
-else if(typeof key=='number'){res.$numeric_dict[key]=args[i][1]}
-else{$DictDict.__setitem__(res,key,args[i][1])}}
+var si=$DictDict.__setitem__
+while(i--){var item=args[i]
+switch(typeof item[0]){case 'string':
+res.$string_dict[item[0]]=item[1]
+break
+case 'number':
+res.$numeric_dict[item[0]]=item[1]
+break
+default:
+si(res,item[0],item[1])
+}}
 return res
 }
 var res={__class__:$DictDict}
