@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-04-01 12:14:19.201000"
+__BRYTHON__.compiled_date="2015-04-01 13:58:42.051000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -489,6 +489,7 @@ this.module=scope.module
 this.toString=function(){return '(augm assign) '+this.tree}
 this.transform=function(node,rank){var func='__'+$operators[op]+'__'
 var offset=0,parent=node.parent
+var line_num=node.line_num,lnum_set=false
 parent.children.splice(rank,1)
 var left_is_id=(this.tree[0].type=='expr' && 
 this.tree[0].tree[0].type=='id')
@@ -497,6 +498,8 @@ this.tree[1].tree[0].type=='int')
 var right=right_is_int ? this.tree[1].tree[0].value : '$temp'
 if(!right_is_int){
 var new_node=new $Node()
+new_node.line_num=line_num
+lnum_set=true
 new $NodeJSCtx(new_node,'var $temp,$left')
 parent.insert(rank,new_node)
 offset++
@@ -527,6 +530,7 @@ if(scope.globals && scope.globals.indexOf(C.tree[0].value)>-1){prefix=global_ns
 break
 case 'class':
 var new_node=new $Node()
+if(!lnum_set){new_node.line_num=line_num;lnum_set=true}
 new $NodeJSCtx(new_node,'var $left='+C.to_js())
 parent.insert(rank+offset,new_node)
 in_class=true
@@ -536,6 +540,7 @@ var left=C.tree[0].to_js()
 prefix=prefix && !C.tree[0].unknown_binding
 if(prefix){var left1=in_class ? '$left' : left
 var new_node=new $Node()
+if(!lnum_set){new_node.line_num=line_num;lnum_set=true}
 js=right_is_int ? 'if(' : 'if(typeof $temp.valueOf()=="number" && '
 js +='typeof '+left1+'.valueOf()=="number"){'
 js +=right_is_int ? '(' : '(typeof $temp=="number" && '
@@ -559,12 +564,14 @@ js1 +=C.tree[0].value.to_js()
 js1 +=','+C.tree[0].tree[0].to_js()+','
 js1 +=right+');None;'
 var new_node=new $Node()
+if(!lnum_set){new_node.line_num=line_num;lnum_set=true}
 new $NodeJSCtx(new_node,js1)
 parent.insert(rank+offset,new_node)
 offset++
 return
 }
 var new_node=new $Node()
+if(!lnum_set){new_node.line_num=line_num;lnum_set=true}
 var js=''
 if(prefix){js +='else '}
 js +='if(!hasattr('+C.to_js()+',"'+func+'"))'

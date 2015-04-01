@@ -786,6 +786,7 @@ function $AugmentedAssignCtx(context, op){
         var offset=0, parent=node.parent
         
         // remove current node
+        var line_num = node.line_num, lnum_set = false
         parent.children.splice(rank,1)
         
         var left_is_id = (this.tree[0].type=='expr' && 
@@ -798,6 +799,8 @@ function $AugmentedAssignCtx(context, op){
         if(!right_is_int){
             // Create temporary variable
             var new_node = new $Node()
+            new_node.line_num = line_num
+            lnum_set = true
             new $NodeJSCtx(new_node,'var $temp,$left')
             parent.insert(rank,new_node)
             offset++
@@ -843,6 +846,7 @@ function $AugmentedAssignCtx(context, op){
                   break;
                 case 'class':
                   var new_node = new $Node()
+                  if(!lnum_set){new_node.line_num=line_num;lnum_set=true}
                   new $NodeJSCtx(new_node,'var $left='+context.to_js())
                   parent.insert(rank+offset, new_node)
                   in_class = true
@@ -865,6 +869,7 @@ function $AugmentedAssignCtx(context, op){
         if(prefix){
             var left1 = in_class ? '$left' : left
             var new_node = new $Node()
+            if(!lnum_set){new_node.line_num=line_num;lnum_set=true}
             js = right_is_int ? 'if(' : 'if(typeof $temp.valueOf()=="number" && '
             js += 'typeof '+left1+'.valueOf()=="number"){'
             
@@ -895,6 +900,7 @@ function $AugmentedAssignCtx(context, op){
             js1 += ','+context.tree[0].tree[0].to_js()+','
             js1 += right+');None;'
             var new_node = new $Node()
+            if(!lnum_set){new_node.line_num=line_num;lnum_set=true}
             new $NodeJSCtx(new_node,js1)
             parent.insert(rank+offset, new_node)
             offset++
@@ -903,6 +909,7 @@ function $AugmentedAssignCtx(context, op){
         
         // insert node 'if(!hasattr(foo,"__iadd__"))
         var new_node = new $Node()
+        if(!lnum_set){new_node.line_num=line_num;lnum_set=true}
         var js = ''
         if(prefix){js += 'else '}
         js += 'if(!hasattr('+context.to_js()+',"'+func+'"))'
