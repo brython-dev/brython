@@ -228,4 +228,14 @@ MyOtherClass = MyMetaClass("DirectlyCreatedClass", (), {})
 assert isinstance(MyClass, MyMetaClass), type(MyClass)
 assert isinstance(MyOtherClass, MyMetaClass), type(MyOtherClass)
 
+# traceback objects
+import sys
+import types
+
+try:
+    raise ValueError
+except ValueError:
+    tb = sys.exc_info()[2]
+    assert isinstance(tb, types.TracebackType)
+
 print('passed all tests')
