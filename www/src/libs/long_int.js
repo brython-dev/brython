@@ -575,21 +575,14 @@ function LongInt(value, base){
     value = value.substr(start)
 
     // Check if all characters in value are valid in the base
-    var is_digits = digits(base), point = -1, exp = null, pos_exp
+    var is_digits = digits(base), point = -1
     for(var i=0;i<value.length;i++){
         if(value.charAt(i)=='.' && point==-1){point=i}
-        else if(value.charAt(i)=='e' || value.charAt(i)=='E'){
-            exp = LongInt(value.substr(i+1))
-            break
-        }
         else if(!is_digits[value.charAt(i)]){
             throw ValueError('LongInt argument is not a valid number: "'+value+'"')
         }
     }
     if(point!=-1){value=value.substr(0,point)}
-    if(exp!==null){
-        value = value.substr(0,i)+'0'.repeat(parseInt(exp.value))
-    }
     if(base!=10){
         // Conversion to base 10
         var coef = '1', v10 = LongInt('0'),
