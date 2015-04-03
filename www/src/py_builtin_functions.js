@@ -868,13 +868,20 @@ function isinstance(obj,arg){
    // If one of the parents is the class used to inherit from str, obj is an
    // instance of str ; same for list
    for(var i=0;i<klass.__mro__.length;i++){
-      //console.log('compare '+klass.__mro__[i].__name__+' to '+arg.$dict.__name__)
-      if(klass.__mro__[i] === arg.$dict){return true}
+      var kl = klass.__mro__[i]
+      if(kl === arg.$dict){return true}
       else if(arg===_b_.str && 
-          klass.__mro__[i]===$B.$StringSubclassFactory.$dict){return true}
+          kl===$B.$StringSubclassFactory.$dict){return true}
       else if(arg===_b_.list && 
-          klass.__mro__[i]===$B.$ListSubclassFactory.$dict){return true}
+          kl===$B.$ListSubclassFactory.$dict){return true}
    }
+
+    // Search __instancecheck__ on arg
+    var hook = getattr(arg,'__instancecheck__',null)
+    if(hook!==null){
+        // FIX ME
+        console.log(hook(obj))
+    }
 
    return false
 }
