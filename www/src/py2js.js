@@ -2023,9 +2023,7 @@ function $DefCtx(context){
             var env_string = '['+env.join(', ')+']'
 
           js = '$B.$BRgenerator('+env_string
-          js += ',"'+this.name+'","'+this.id+'"'
-          if(scope.ntype=='class') js += ',$locals'
-          js += ')'
+          js += ',"'+this.name+'","'+this.id+'")'
           var gen_node = new $Node()
           gen_node.id = this.module
           var ctx = new $NodeCtx(gen_node)
@@ -4137,6 +4135,7 @@ function $WithCtx(context){
     this.transform = function(node,rank){
         
         if(this.transformed) return  // used if inside a for loop
+        node.is_try = true // for generators that use a context manager
         if(this.tree[0].alias===null){this.tree[0].alias = '$temp'}
         
         // Form "with (a,b,c) as (x,y,z)"
@@ -4161,22 +4160,27 @@ function $WithCtx(context){
             }
         }
         
-        var new_node = new $Node()
-        new $NodeJSCtx(new_node,'catch($err'+$loop_num+')')
+        var catch_node = new $Node()
+        catch_node.is_catch = true // for generators
+        new $NodeJSCtx(catch_node,'catch($err'+$loop_num+')')
+        
         var fbody = new $Node()
         var js = 'if(!$ctx_manager_exit($err'+$loop_num+'.type,'
         js += '$err'+$loop_num+'.value,$err'+$loop_num+'.traceback))'
         js += '{throw $err'+$loop_num+'}'
         new $NodeJSCtx(fbody,js)
-        new_node.add(fbody)
-        node.parent.insert(rank+1,new_node)
+        catch_node.add(fbody)
+        node.parent.insert(rank+1,catch_node)
         $loop_num++
-        var new_node = new $Node()
-        new $NodeJSCtx(new_node,'finally')
+
+        var finally_node = new $Node()
+        new $NodeJSCtx(finally_node,'finally')
+        finally_node.context.type = 'single_kw'
+        finally_node.context.token = 'finally'
         var fbody = new $Node()
         new $NodeJSCtx(fbody,'$ctx_manager_exit(None,None,None)')
-        new_node.add(fbody)
-        node.parent.insert(rank+2,new_node)
+        finally_node.add(fbody)
+        node.parent.insert(rank+2,finally_node)
         
         // If there are other "with" clauses, create a new child
         // For instance : 

@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-04-01 17:26:33.642000"
+__BRYTHON__.compiled_date="2015-04-03 07:52:46.742000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1199,9 +1199,7 @@ sc=sc.parent_block
 }
 var env_string='['+env.join(', ')+']'
 js='$B.$BRgenerator('+env_string
-js +=',"'+this.name+'","'+this.id+'"'
-if(scope.ntype=='class')js +=',$locals'
-js +=')'
+js +=',"'+this.name+'","'+this.id+'")'
 var gen_node=new $Node()
 gen_node.id=this.module
 var ctx=new $NodeCtx(gen_node)
@@ -2501,6 +2499,7 @@ if(scope.ntype !=='module'){
 scope.C.tree[0].locals.push(arg)
 }}
 this.transform=function(node,rank){if(this.transformed)return 
+node.is_try=true 
 if(this.tree[0].alias===null){this.tree[0].alias='$temp'}
 if(this.tree[0].type=='expr' && 
 this.tree[0].tree[0].type=='list_or_tuple'){if(this.tree[1].type!='expr' ||
@@ -2515,22 +2514,25 @@ this.tree.shift()
 for(var i=ids.length-1;i>=0;i--){ids[i].alias=alias[i].value
 this.tree.splice(0,0,ids[i])
 }}
-var new_node=new $Node()
-new $NodeJSCtx(new_node,'catch($err'+$loop_num+')')
+var catch_node=new $Node()
+catch_node.is_catch=true 
+new $NodeJSCtx(catch_node,'catch($err'+$loop_num+')')
 var fbody=new $Node()
 var js='if(!$ctx_manager_exit($err'+$loop_num+'.type,'
 js +='$err'+$loop_num+'.value,$err'+$loop_num+'.traceback))'
 js +='{throw $err'+$loop_num+'}'
 new $NodeJSCtx(fbody,js)
-new_node.add(fbody)
-node.parent.insert(rank+1,new_node)
+catch_node.add(fbody)
+node.parent.insert(rank+1,catch_node)
 $loop_num++
-var new_node=new $Node()
-new $NodeJSCtx(new_node,'finally')
+var finally_node=new $Node()
+new $NodeJSCtx(finally_node,'finally')
+finally_node.C.type='single_kw'
+finally_node.C.token='finally'
 var fbody=new $Node()
 new $NodeJSCtx(fbody,'$ctx_manager_exit(None,None,None)')
-new_node.add(fbody)
-node.parent.insert(rank+2,new_node)
+finally_node.add(fbody)
+node.parent.insert(rank+2,finally_node)
 if(this.tree.length>1){var nw=new $Node()
 var ctx=new $NodeCtx(nw)
 nw.parent=node
@@ -5902,12 +5904,16 @@ return false
 }}
 if(arg.$dict===undefined){return false}
 if(klass==$B.$factory){klass=obj.$dict.__class__}
-for(var i=0;i<klass.__mro__.length;i++){
-if(klass.__mro__[i]===arg.$dict){return true}
+for(var i=0;i<klass.__mro__.length;i++){var kl=klass.__mro__[i]
+if(kl===arg.$dict){return true}
 else if(arg===_b_.str && 
-klass.__mro__[i]===$B.$StringSubclassFactory.$dict){return true}
+kl===$B.$StringSubclassFactory.$dict){return true}
 else if(arg===_b_.list && 
-klass.__mro__[i]===$B.$ListSubclassFactory.$dict){return true}}
+kl===$B.$ListSubclassFactory.$dict){return true}}
+var hook=getattr(arg,'__instancecheck__',null)
+if(hook!==null){console.log(arg.$dict.__name__+' has subclasshook')
+console.log(hook(obj))
+}
 return false
 }
 isinstance.__code__={co_argcount:2,co_consts:[],co_varnames:['object','type']}
@@ -7342,7 +7348,7 @@ $B.JSConstructor=JSConstructor
 ;(function($B){$B.stdlib={}
 var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.basehook','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.pygame.SDL','site-packages.pygame.base','site-packages.pygame.color','site-packages.pygame.colordict','site-packages.pygame.compat','site-packages.pygame.constants','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.locals','site-packages.pygame.mixer','site-packages.pygame.mouse','site-packages.pygame.pkgdata','site-packages.pygame.rect','site-packages.pygame.sprite','site-packages.pygame.surface','site-packages.pygame.time','site-packages.pygame.transform','site-packages.pygame.version','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','time','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','uuid','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile']
+var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','calendar','codecs','collections.abc','collections.module2','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.basehook','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.pygame.SDL','site-packages.pygame.base','site-packages.pygame.color','site-packages.pygame.colordict','site-packages.pygame.compat','site-packages.pygame.constants','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.locals','site-packages.pygame.mixer','site-packages.pygame.mouse','site-packages.pygame.pkgdata','site-packages.pygame.rect','site-packages.pygame.sprite','site-packages.pygame.surface','site-packages.pygame.time','site-packages.pygame.transform','site-packages.pygame.version','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','time','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','uuid','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','long_int1','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.pygame','test','ui','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]
@@ -11359,6 +11365,7 @@ throw err
 }finally{self.gi_running=false
 $B.leave_frame()
 }
+if(res===undefined){throw StopIteration("")}
 if(res[0].__class__==$GeneratorReturn){
 self._next=function(){throw StopIteration("after generator return")}
 clear_ns(self.iter_id)
@@ -11378,6 +11385,7 @@ var js='var $locals = $B.vars["'+self.iter_id+'"];'
 fnode.addChild(new $B.genNode(js))
 var pnode=exit_node.parent
 var exit_in_if=pnode.is_if ||pnode.is_else
+var exit_in_loop=in_loop(exit_node)
 var rest=[]
 var no_break=true
 for(var i=exit_node.rank+1,_len_i=pnode.children.length;i < _len_i;i++){var clone=pnode.children[i].clone_tree(null,true)
@@ -11393,8 +11401,10 @@ for(var i=rank,_len_i=catch_node.parent.children.length;i < _len_i;i++){rest.pus
 }
 prest=catch_node
 }
-else if(prest.is_try){var rest2=prest.clone()
-for(var i=0,_len_i=rest.length;i < _len_i;i++){rest2.addChild(rest[i])}
+else if(prest.is_try){if(self.func_name=='fooX'){alert('pygen 352\n'+'\npnode in loop ?\n'+in_loop(pnode))}
+var rest2=prest.clone()
+for(var i=0,_len_i=rest.length;i < _len_i;i++){rest2.addChild(rest[i])
+}
 rest=[rest2]
 for(var i=prest.rank+1,_len_i=prest.parent.children.length;i < _len_i;i++){rest.push(prest.parent.children[i].clone_tree(null,true))
 }
@@ -11402,7 +11412,11 @@ pnode=pnode.parent
 }
 prest=prest.parent
 }
-if(no_break){for(var i=0,_len_i=rest.length;i < _len_i;i++){fnode.addChild(rest[i])}}else{
+if(self.func_name=='fooX'){alert('pygen 364\n'+root.src()+'\npnode\n'+pnode+' is try ? '+pnode.is_try)}
+if(no_break){if(self.func_name=='fooX'){alert('exit_in_loop '+exit_in_loop)}
+for(var i=0,_len_i=rest.length;i < _len_i;i++){
+fnode.addChild(rest[i])
+if(self.func_name=='fooX'){alert('add '+rest[i]+' is_try '+rest[i].is_try+' is except '+rest[i].is_except)}}}else{
 var rest_try=new $B.genNode('try')
 for(var i=0,_len_i=rest.length;i < _len_i;i++){rest_try.addChild(rest[i])}
 fnode.addChild(rest_try)
@@ -11411,6 +11425,7 @@ catch_test +='{if(err.__class__!==__BRYTHON__.GeneratorBreak)'
 catch_test +='{throw err}}'
 fnode.addChild(new $B.genNode(catch_test))
 }
+if(self.func_name=='fooX'){alert('pygen 380\n'+root.src()+'\npnode\n'+pnode+' is try ? '+pnode.is_try)}
 if(!no_break){var loop=in_loop(pnode)
 if(loop){pnode=loop}}
 while(pnode!==func_node && in_loop(pnode)){var rank=pnode.rank
@@ -11427,23 +11442,25 @@ fnode.addChild(g)
 }
 pnode=pnode.parent
 }
+if(self.func_name=='fooX'){alert('pygen 416\n'+root.src()+'\npnode\n'+pnode+' is try ? '+pnode.is_try)}
 while(pnode!==func_node && 
 (in_loop(exit_node)||pnode.is_if ||pnode.is_else)){var rank=pnode.rank+1
 while(rank < pnode.parent.children.length){var next_node=pnode.parent.children[rank]
-if(next_node.is_else){rank++}
+if(next_node.is_else||next_node.is_except){rank++}
 break
 }
 for(var i=rank,_len_i=pnode.parent.children.length;i < _len_i;i++){fnode.addChild(pnode.parent.children[i].clone_tree())
 }
 pnode=pnode.parent
 }
+if(self.func_name=='fooX'){alert('pygen 436\n'+root.src())}
 var js='var err=StopIteration("inserted S.I. in function '+self.func_name+'");'
 js +='err.caught=true;throw err'
 fnode.addChild(new $B.genNode(js))
 self.next_root=root
 var next_src=root.src()+'\n)()'
 try{eval(next_src)}
-catch(err){console.log('error '+err+'\n'+next_src)}
+catch(err){console.log('error '+err+'\n'+next_src);throw err}
 self._next=__BRYTHON__.generators[self.iter_id]
 return yielded_value
 }
@@ -11464,7 +11481,7 @@ $BRGeneratorDict.$$throw=function(self,value){if(_b_.isinstance(value,_b_.type))
 self.sent_value={__class__:$B.$GeneratorSendError,err:value}
 return $BRGeneratorDict.__next__(self)
 }
-$B.$BRgenerator=function(env,func_name,def_id,$class){var def_node=$B.modules[def_id]
+$B.$BRgenerator=function(env,func_name,def_id){var def_node=$B.modules[def_id]
 var def_ctx=def_node.C.tree[0]
 var counter=0 
 var func=env[0][1][func_name]
@@ -11487,8 +11504,8 @@ func_root.iter_id=iter_id
 for(var i=0,_len_i=def_node.children.length;i < _len_i;i++){func_root.addChild($B.make_node(func_root,def_node.children[i]))
 }
 var func_node=func_root.children[1].children[0]
-func_root.children[1].addChild(new $B.genNode('var err=StopIteration("");err.caught=true;throw err'))
-var obj={__class__ : $BRGeneratorDict,args:args,$class:$class,def_id:def_id,def_ctx:def_ctx,def_node:def_node,env:env,func:func,func_name:func_name,func_root:func_root,module:module,func_node:func_node,next_root:func_root,gi_running:false,iter_id:iter_id,id:iter_id,num:0
+var throw_node=new $B.genNode('var err=StopIteration("");err.caught=true;throw err')
+var obj={__class__ : $BRGeneratorDict,args:args,def_id:def_id,def_ctx:def_ctx,def_node:def_node,env:env,func:func,func_name:func_name,func_root:func_root,module:module,func_node:func_node,next_root:func_root,gi_running:false,iter_id:iter_id,id:iter_id,num:0
 }
 $B.modules[iter_id]=obj
 obj.parent_block=def_node.parent_block

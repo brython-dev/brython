@@ -276,6 +276,8 @@ $BRGeneratorDict.__next__ = function(self){
         // generators, so we must call it here to pop from frames stack
         $B.leave_frame()
     }
+    
+    if(res===undefined){throw StopIteration("")}
 
     if(res[0].__class__==$GeneratorReturn){
         // The function may have ordinary "return" lines, in this case
@@ -289,7 +291,7 @@ $BRGeneratorDict.__next__ = function(self){
     // yielded value and a reference to the node where the function exited
     
     var yielded_value=res[0], yield_rank=res[1]
-    
+
     // If the generator exits at the same place as in the previous iteration,
     // we don't have to build a new function, so just return the yielded value
     if(yield_rank==self.yield_rank){return yielded_value}
@@ -322,6 +324,8 @@ $BRGeneratorDict.__next__ = function(self){
     // Parent of exit node
     var pnode = exit_node.parent
     var exit_in_if = pnode.is_if || pnode.is_else
+
+    var exit_in_loop = in_loop(exit_node)
     
     // Rest of the block after exit_node
     var rest = []
@@ -335,6 +339,7 @@ $BRGeneratorDict.__next__ = function(self){
     // If exit_node was in an arborescence of "try" clauses, the "rest" must
     // run in the same arborescence
     var prest = exit_node.parent
+
     while(prest!==func_node){
         if(prest.is_except){
             var catch_node = prest
@@ -348,8 +353,11 @@ $BRGeneratorDict.__next__ = function(self){
             prest = catch_node
         }
         else if(prest.is_try){
+            if(self.func_name=='fooX'){alert('pygen 352\n'+'\npnode in loop ?\n'+in_loop(pnode))}
             var rest2 = prest.clone()
-            for(var i=0, _len_i = rest.length; i < _len_i;i++){rest2.addChild(rest[i])}
+            for(var i=0, _len_i = rest.length; i < _len_i;i++){
+                rest2.addChild(rest[i])
+            }
             rest = [rest2]
             for(var i=prest.rank+1, _len_i = prest.parent.children.length; i < _len_i;i++){
                 rest.push(prest.parent.children[i].clone_tree(null,true))
@@ -360,10 +368,16 @@ $BRGeneratorDict.__next__ = function(self){
         }
         prest = prest.parent
     }
-    
+    if(self.func_name=='fooX'){alert('pygen 364\n'+root.src()+'\npnode\n'+pnode+' is try ? '+pnode.is_try)}
+
     // add rest of block to new function
     if(no_break){
-        for(var i=0, _len_i = rest.length; i < _len_i;i++){fnode.addChild(rest[i])}
+        if(self.func_name=='fooX'){alert('exit_in_loop '+exit_in_loop)}
+        for(var i=0, _len_i = rest.length; i < _len_i;i++){
+            //if(exit_in_loop && rest[i].is_try!==true && rest[i].is_except!==true){break}
+            fnode.addChild(rest[i])
+            if(self.func_name=='fooX'){alert('add '+rest[i]+' is_try '+rest[i].is_try+' is except '+rest[i].is_except)}
+        }
     }else{
         // If the rest had a "break", this "break" is converted into raising
         // an exception with __class__ set to GeneratorBreak
@@ -375,6 +389,7 @@ $BRGeneratorDict.__next__ = function(self){
         catch_test += '{throw err}}'
         fnode.addChild(new $B.genNode(catch_test))
     }
+    if(self.func_name=='fooX'){alert('pygen 380\n'+root.src()+'\npnode\n'+pnode+' is try ? '+pnode.is_try)}
     
     // If 'rest' has a break, we must exit the innermost loop
     if(!no_break){
@@ -386,6 +401,7 @@ $BRGeneratorDict.__next__ = function(self){
     // part that starts at exit node
 
     while(pnode!==func_node && in_loop(pnode)){
+
         var rank = pnode.rank
 
         // block must start by "try", not "except"
@@ -411,23 +427,25 @@ $BRGeneratorDict.__next__ = function(self){
         pnode = pnode.parent
         
     }
-    
+    if(self.func_name=='fooX'){alert('pygen 416\n'+root.src()+'\npnode\n'+pnode+' is try ? '+pnode.is_try)}
     // if exit_node was in a loop, or if pnode is an "if" or "else", 
     // add the rest of the block after pnode
     while(pnode!==func_node && 
         (in_loop(exit_node) || pnode.is_if || pnode.is_else)){
+
         var rank = pnode.rank+1
         while(rank < pnode.parent.children.length){
             var next_node = pnode.parent.children[rank]
-            if(next_node.is_else){rank++}
+            if(next_node.is_else||next_node.is_except){rank++}
             break
         }
-    
+
         for(var i=rank, _len_i = pnode.parent.children.length; i < _len_i;i++){
             fnode.addChild(pnode.parent.children[i].clone_tree())
         }
         pnode = pnode.parent
     }
+    if(self.func_name=='fooX'){alert('pygen 436\n'+root.src())}
 
     var js = 'var err=StopIteration("inserted S.I. in function '+self.func_name+'");'
     js += 'err.caught=true;throw err'
@@ -438,10 +456,10 @@ $BRGeneratorDict.__next__ = function(self){
     self.next_root = root
     var next_src = root.src()+'\n)()'
     try{eval(next_src)}
-    catch(err){console.log('error '+err+'\n'+next_src)}
+    catch(err){console.log('error '+err+'\n'+next_src);throw err}
     
     self._next = __BRYTHON__.generators[self.iter_id]
-    
+
     // Return the yielded value
     return yielded_value
 
@@ -479,7 +497,7 @@ $BRGeneratorDict.$$throw = function(self, value){
     return $BRGeneratorDict.__next__(self)
 }
 
-$B.$BRgenerator = function(env, func_name, def_id, $class){
+$B.$BRgenerator = function(env, func_name, def_id){
 
     var def_node = $B.modules[def_id]
     var def_ctx = def_node.context.tree[0]
@@ -517,12 +535,12 @@ $B.$BRgenerator = function(env, func_name, def_id, $class){
             func_root.addChild($B.make_node(func_root, def_node.children[i]))
         }
         var func_node = func_root.children[1].children[0]
-        func_root.children[1].addChild(new $B.genNode('var err=StopIteration("");err.caught=true;throw err'))
+        var throw_node = new $B.genNode('var err=StopIteration("");err.caught=true;throw err')
+        //func_root.children[1].addChild(throw_node)
         
         var obj = {
             __class__ : $BRGeneratorDict,
             args:args,
-            $class:$class,
             def_id:def_id,
             def_ctx:def_ctx,
             def_node:def_node,
