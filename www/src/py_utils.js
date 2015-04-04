@@ -886,6 +886,8 @@ $B.$iterator_class = function(name){
 // class dict of functions attribute __code__
 $B.$CodeDict = {__class__:$B.$type,__name__:'code'}
 $B.$CodeDict.__mro__ = [$B.$CodeDict,_b_.object.$dict]
+$B.$CodeDict.$factory={__class__:$B.$factory, $dict:$B.$CodeDict}
+
 
 function $err(op,klass,other){
     var msg = "unsupported operand type(s) for "+op
