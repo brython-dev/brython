@@ -19,10 +19,7 @@ function abs(obj){
 }
 
 
-abs.__code__={}
-abs.__code__.co_argcount=1
-abs.__code__.co_consts=[]
-abs.__code__.co_varnames=['number']
+abs.__code__={co_argcount:1, co_consts:[], co_varnames:['number']}
 
 function _alert(src){alert(_b_.str(src))}
 
@@ -36,11 +33,7 @@ function all(obj){
     }
 }
 
-all.__code__={}
-all.__code__.co_argcount=1
-all.__code__.co_consts=[]
-all.__code__.co_varnames=['obj']
-
+all.__code__={co_argcount:1, co_consts:[], co_varnames:['obj']}
 
 function any(obj){
     var iterable = iter(obj)
@@ -52,11 +45,7 @@ function any(obj){
     }
 }
 
-any.__code__={}
-any.__code__.co_argcount=1
-any.__code__.co_consts=[]
-any.__code__.co_varnames=['obj']
-
+any.__code__={co_argcount:1, co_consts:[], co_varnames:['obj']}
 
 function ascii(obj) {
    // adapted from 
@@ -77,10 +66,7 @@ function ascii(obj) {
          .join("");
 }
 
-ascii.__code__={}
-ascii.__code__.co_argcount=1
-ascii.__code__.co_consts=[]
-ascii.__code__.co_varnames=['obj']
+ascii.__code__={co_argcount:1, co_consts:[], co_varnames:['obj']}
 
 // used by bin, hex and oct functions
 function $builtin_base_convert_helper(obj, base) {
@@ -115,11 +101,7 @@ function bin(obj) {
     return getattr(obj, '__index__')()
 }
 
-bin.__code__={}
-bin.__code__.co_argcount=1
-bin.__code__.co_consts=[]
-bin.__code__.co_varnames=['obj']
-
+bin.__code__={co_argcount:1, co_consts:[], co_varnames:['obj']}
 
 // blocking decorator
 var blocking = _b_.blocking = function(func) {
@@ -160,18 +142,11 @@ bool.__hash__ = function() {
     return 0
 }
 
-bool.__code__={}
-bool.__code__.co_argcount=1
-bool.__code__.co_consts=[]
-bool.__code__.co_varnames=['x']
+bool.__code__={co_argcount:1, co_consts:[], co_varnames:['x']}
 
 function callable(obj) {return hasattr(obj,'__call__')}
 
-callable.__code__={}
-callable.__code__.co_argcount=1
-callable.__code__.co_consts=[]
-callable.__code__.co_varnames=['obj']
-
+callable.__code__={co_argcount:1, co_consts:[], co_varnames:['obj']}
 
 function chr(i) {
   if (i < 0 || i > 1114111) _b_.ValueError('Outside valid range')
@@ -179,10 +154,7 @@ function chr(i) {
   return String.fromCharCode(i)
 }
 
-chr.__code__={}
-chr.__code__.co_argcount=1
-chr.__code__.co_consts=[]
-chr.__code__.co_varnames=['i']
+chr.__code__={co_argcount:1, co_consts:[], co_varnames:['i']}
 
 //classmethod() (built in function)
 var $ClassmethodDict = {__class__:$B.$type,__name__:'classmethod'}
@@ -262,11 +234,7 @@ function delattr(obj, attr) {
     getattr(obj,'__delattr__')(attr)
 }
 
-delattr.__code__={}
-delattr.__code__.co_argcount=2
-delattr.__code__.co_consts=[]
-delattr.__code__.co_varnames=['object','name']
-
+delattr.__code__={co_argcount:2, co_consts:[], co_varnames:['object','name']}
 
 function dir(obj){
     
@@ -307,10 +275,7 @@ function dir(obj){
     return res
 }
 
-dir.__code__={}
-dir.__code__.co_argcount=1
-dir.__code__.co_consts=[]
-dir.__code__.co_varnames=['obj']
+dir.__code__={co_argcount:1, co_consts:[], co_varnames:['obj']}
 
 
 //divmod() (built in function)
@@ -323,7 +288,6 @@ divmod.__code__={}
 divmod.__code__.co_argcount=2
 divmod.__code__.co_consts=[]
 divmod.__code__.co_varnames=['x','y']
-
 
 var $EnumerateDict = {__class__:$B.$type,__name__:'enumerate'}
 $EnumerateDict.__mro__ = [$EnumerateDict,$ObjectDict]
@@ -2147,9 +2111,9 @@ $TracebackDict.$factory = traceback
 
 // class of frame objects
 var $FrameDict = {__class__:$B.$type,
-    __name__:'frame',
-    __mro__:[$ObjectDict]
+    __name__:'frame'
 }
+$FrameDict.__mro__ = [$FrameDict, $ObjectDict]
 
 function to_dict(obj){
     var res = _b_.dict()

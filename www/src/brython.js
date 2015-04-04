@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-04-03 07:52:46.742000"
+__BRYTHON__.compiled_date="2015-04-04 07:51:52.782000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -5409,27 +5409,18 @@ if(isinstance(obj,_b_.float))return _b_.float(Math.abs(obj.value))
 if(hasattr(obj,'__abs__'))return getattr(obj,'__abs__')()
 throw _b_.TypeError("Bad operand type for abs(): '"+$B.get_class(obj)+"'")
 }
-abs.__code__={}
-abs.__code__.co_argcount=1
-abs.__code__.co_consts=[]
-abs.__code__.co_varnames=['number']
+abs.__code__={co_argcount:1,co_consts:[],co_varnames:['number']}
 function _alert(src){alert(_b_.str(src))}
 function all(obj){var iterable=iter(obj)
 while(1){try{var elt=next(iterable)
 if(!bool(elt))return false
 }catch(err){return true}}}
-all.__code__={}
-all.__code__.co_argcount=1
-all.__code__.co_consts=[]
-all.__code__.co_varnames=['obj']
+all.__code__={co_argcount:1,co_consts:[],co_varnames:['obj']}
 function any(obj){var iterable=iter(obj)
 while(1){try{var elt=next(iterable)
 if(bool(elt))return true
 }catch(err){return false}}}
-any.__code__={}
-any.__code__.co_argcount=1
-any.__code__.co_consts=[]
-any.__code__.co_varnames=['obj']
+any.__code__={co_argcount:1,co_consts:[],co_varnames:['obj']}
 function ascii(obj){
 function padWithLeadingZeros(string,pad){return new Array(pad+1-string.length).join("0")+ string
 }
@@ -5441,10 +5432,7 @@ return charCode > 127 ? charEscape(charCode): char
 })
 .join("")
 }
-ascii.__code__={}
-ascii.__code__.co_argcount=1
-ascii.__code__.co_consts=[]
-ascii.__code__.co_varnames=['obj']
+ascii.__code__={co_argcount:1,co_consts:[],co_varnames:['obj']}
 function $builtin_base_convert_helper(obj,base){var value=$B.$GetInt(obj)
 if(value===undefined){
 throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')
@@ -5467,10 +5455,7 @@ function bin(obj){if(isinstance(obj,_b_.int)){return $builtin_base_convert_helpe
 }
 return getattr(obj,'__index__')()
 }
-bin.__code__={}
-bin.__code__.co_argcount=1
-bin.__code__.co_consts=[]
-bin.__code__.co_varnames=['obj']
+bin.__code__={co_argcount:1,co_consts:[],co_varnames:['obj']}
 var blocking=_b_.blocking=function(func){
 $B.$blocking_functions=$B.$blocking_functions ||[]
 $B.$blocking_functions.push(_b_.id(func))
@@ -5500,22 +5485,13 @@ bool.toString=bool.__str__
 bool.__hash__=function(){if(this.valueOf())return 1
 return 0
 }
-bool.__code__={}
-bool.__code__.co_argcount=1
-bool.__code__.co_consts=[]
-bool.__code__.co_varnames=['x']
+bool.__code__={co_argcount:1,co_consts:[],co_varnames:['x']}
 function callable(obj){return hasattr(obj,'__call__')}
-callable.__code__={}
-callable.__code__.co_argcount=1
-callable.__code__.co_consts=[]
-callable.__code__.co_varnames=['obj']
+callable.__code__={co_argcount:1,co_consts:[],co_varnames:['obj']}
 function chr(i){if(i < 0 ||i > 1114111)_b_.ValueError('Outside valid range')
 return String.fromCharCode(i)
 }
-chr.__code__={}
-chr.__code__.co_argcount=1
-chr.__code__.co_consts=[]
-chr.__code__.co_varnames=['i']
+chr.__code__={co_argcount:1,co_consts:[],co_varnames:['i']}
 var $ClassmethodDict={__class__:$B.$type,__name__:'classmethod'}
 $ClassmethodDict.__mro__=[$ClassmethodDict,$ObjectDict]
 function classmethod(func){func.$type='classmethod'
@@ -5560,10 +5536,7 @@ if(res!==undefined && res.__delete__!==undefined){return res.__delete__(res,obj,
 }
 getattr(obj,'__delattr__')(attr)
 }
-delattr.__code__={}
-delattr.__code__.co_argcount=2
-delattr.__code__.co_consts=[]
-delattr.__code__.co_varnames=['object','name']
+delattr.__code__={co_argcount:2,co_consts:[],co_varnames:['object','name']}
 function dir(obj){if(obj===undefined){
 var frame=$B.last($B.frames_stack),globals_obj=frame[1][1],res=_b_.list()
 for(var attr in globals_obj){if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
@@ -5589,10 +5562,7 @@ for(var attr in obj){if(attr.charAt(0)!=='$' && attr!=='__class__'){res.push(att
 res.sort()
 return res
 }
-dir.__code__={}
-dir.__code__.co_argcount=1
-dir.__code__.co_consts=[]
-dir.__code__.co_varnames=['obj']
+dir.__code__={co_argcount:1,co_consts:[],co_varnames:['obj']}
 function divmod(x,y){var klass=$B.get_class(x)
 return[klass.__floordiv__(x,y),klass.__mod__(x,y)]
 }
@@ -5911,7 +5881,7 @@ kl===$B.$StringSubclassFactory.$dict){return true}
 else if(arg===_b_.list && 
 kl===$B.$ListSubclassFactory.$dict){return true}}
 var hook=getattr(arg,'__instancecheck__',null)
-if(hook!==null){console.log(arg.$dict.__name__+' has subclasshook')
+if(hook!==null){
 console.log(hook(obj))
 }
 return false
@@ -6664,8 +6634,9 @@ function traceback(tb){}
 traceback.__class__=$B.$factory
 traceback.$dict=$TracebackDict
 $TracebackDict.$factory=traceback
-var $FrameDict={__class__:$B.$type,__name__:'frame',__mro__:[$ObjectDict]
+var $FrameDict={__class__:$B.$type,__name__:'frame'
 }
+$FrameDict.__mro__=[$FrameDict,$ObjectDict]
 function to_dict(obj){var res=_b_.dict()
 var setitem=_b_.dict.$dict.__setitem__
 for(var attr in obj){if(attr.charAt(0)=='$'){continue}
