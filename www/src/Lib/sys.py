@@ -173,7 +173,7 @@ def getfilesystemencoding():
     return 'utf-8'
 
 def _getframe(num=0):
-    return __BRYTHON__.frame(__BRYTHON__.frames_stack, num)
+    return __BRYTHON__._frame(__BRYTHON__.frames_stack, num)
 
 ## __stdxxx__ contains the original values of sys.stdxxx
 __stdout__ = __BRYTHON__.stdout

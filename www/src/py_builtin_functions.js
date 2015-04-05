@@ -713,7 +713,6 @@ function __import__(mod_name){
 function input(src) {return prompt(src)}
 
 function isinstance(obj,arg){
-
     if(obj===null) return arg===None
     if(obj===undefined) return false
     if(arg.constructor===Array){
@@ -1796,8 +1795,11 @@ for(var $func in None){
 // add attributes to native Function
 var $FunctionCodeDict = {__class__:$B.$type,__name__:'function code'}
 $FunctionCodeDict.__mro__ = [$FunctionCodeDict,$ObjectDict]
+$FunctionCodeDict.$factory = {__class__:$B.$factory, $dict:$FunctionCodeDict}
+
 var $FunctionGlobalsDict = {__class:$B.$type,__name__:'function globals'}
 $FunctionGlobalsDict.__mro__ = [$FunctionGlobalsDict,$ObjectDict]
+$FunctionGlobalsDict.$factory = {__class__:$B.$factory, $dict:$FunctionGlobalsDict}
 
 var $FunctionDict = $B.$FunctionDict = {
     __class__:$B.$type,
@@ -1896,7 +1898,7 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
         // Return traceback object
         return traceback({
             tb_frame:frame(self.$frames_stack),
-            tb_lineno:self.$last_info[0],
+            tb_lineno:parseInt(self.$last_info[0]),
             tb_lasti:self.$line,
             tb_next: None // fix me
         })
@@ -1949,9 +1951,9 @@ function frame(stack, pos){
         res.f_locals = to_dict(_frame[1])
         res.f_globals = to_dict(_frame[3])
         if($B.debug>0){
-            res.f_lineno = $B.line_info.split(',')[0]
+            res.f_lineno = parseInt($B.line_info.split(',')[0])
         }else{
-            res.f_lineno = None
+            res.f_lineno = -1
         }
         if(pos>0){res.f_back = frame(stack, pos-1)}
         else{res.f_back = None}
@@ -1967,8 +1969,7 @@ function frame(stack, pos){
 frame.__class__ = $B.$factory
 frame.$dict = $FrameDict
 $FrameDict.$factory = frame
-
-$B.frame=frame
+$B._frame=frame
 
 var BaseException = function (msg,js_exc){
     var err = Error()

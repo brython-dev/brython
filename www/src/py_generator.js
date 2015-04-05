@@ -241,7 +241,7 @@ $BRGeneratorDict.__next__ = function(self){
             throw err
         }
         
-        self._next = __BRYTHON__.$generators[self.iter_id]
+        self._next = $B.$generators[self.iter_id]
     }
 
     // Increment the iteration counter
@@ -458,14 +458,14 @@ $BRGeneratorDict.__next__ = function(self){
     try{eval(next_src)}
     catch(err){console.log('error '+err+'\n'+next_src);throw err}
     
-    self._next = __BRYTHON__.generators[self.iter_id]
+    self._next = $B.generators[self.iter_id]
 
     // Return the yielded value
     return yielded_value
-
 }
 
 $BRGeneratorDict.__mro__ = [$BRGeneratorDict,_b_.object.$dict]
+$BRGeneratorDict.$factory = {__class__:$B.$factory, $dict: $BRGeneratorDict}
 
 $BRGeneratorDict.__repr__ = $BRGeneratorDict.__str__ = function(self){
     return '<generator '+self.func_name+' '+self.iter_id+'>'
@@ -504,7 +504,7 @@ $B.$BRgenerator = function(env, func_name, def_id){
     var counter = 0 // used to identify the function run for each next()
     
     var func = env[0][1][func_name]
-    __BRYTHON__.generators = __BRYTHON__.generators || {}
+    $B.generators = $B.generators || {}
 
     var module = def_node.module
 
@@ -523,7 +523,7 @@ $B.$BRgenerator = function(env, func_name, def_id){
         // Create a tree structure based on the generator tree
         // iter_id is used in the node where the iterator resets local
         // namespace
-        __BRYTHON__.$generators = __BRYTHON__.$generators || {}
+        $B.$generators = $B.$generators || {}
         var func_root = new $B.genNode(def_ctx.to_js('__BRYTHON__.$generators["'+iter_id+'"]'))
         func_root.scope = env[0][1]
         func_root.module = module
@@ -565,8 +565,8 @@ $B.$BRgenerator = function(env, func_name, def_id){
     res.__repr__ = function(){return "<function "+func.__name__+">"}
     return res
 }
-$B.$BRgenerator.__repr__ = function(){return "<class 'generator'>"}
-$B.$BRgenerator.__str__ = function(){return "<class 'generator'>"}
+$B.$BRgenerator.__repr__ = function(){return "<class 'generator'>"} 
+$B.$BRgenerator.__str__ = function(){return "<class 'generator'>"} 
 $B.$BRgenerator.__class__ = $B.$type
 
 })(__BRYTHON__)
