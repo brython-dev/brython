@@ -147,17 +147,14 @@ _b_.type = function(obj, bases, cl_dict){
             return obj.$dict.__class__.$factory
         }
         return $B.get_class(obj).$factory
-    }else{
-        return $B.$type.__new__(_b_.type, obj, bases, cl_dict)
     }
+        
+    return $B.$type.__new__(_b_.type, obj, bases, cl_dict)
 }
 
 _b_.type.__class__ = $B.$factory
 
-$B.$type = {
-    $factory: _b_.type,
-    __name__:'type',
-}
+$B.$type = {$factory: _b_.type, __name__:'type'}
 $B.$type.__class__ = $B.$type
 $B.$type.__mro__ = [$B.$type,_b_.object.$dict]
 _b_.type.$dict = $B.$type
@@ -462,9 +459,9 @@ $MethodFactory.__repr__ = $MethodFactory.__str__ = function(){return 'method'}
 
 $B.$MethodDict = {__class__:$B.$type,
     __name__:'method',
-    __mro__:[_b_.object.$dict],
     $factory:$MethodFactory
 }
+$B.$MethodDict.__mro__=[$B.$MethodDict, _b_.object.$dict]
 $MethodFactory.$dict = $B.$MethodDict
 
 $B.$InstanceMethodDict = {__class__:$B.$type,
