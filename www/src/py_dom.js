@@ -492,7 +492,7 @@ DOMNode.__getitem__ = function(self,key){
             }
         }
     }else{
-        return $DOMNode(self.elt.childNodes[key])
+        throw _b_.TypeError('DOMNode object is not subscriptable')
     }
 }
 
