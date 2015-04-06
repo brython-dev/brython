@@ -18,9 +18,6 @@ function abs(obj){
     throw _b_.TypeError("Bad operand type for abs(): '"+$B.get_class(obj)+"'")
 }
 
-
-abs.__code__={co_argcount:1, co_consts:[], co_varnames:['number']}
-
 function _alert(src){alert(_b_.str(src))}
 
 function all(obj){
@@ -33,8 +30,6 @@ function all(obj){
     }
 }
 
-all.__code__={co_argcount:1, co_consts:[], co_varnames:['obj']}
-
 function any(obj){
     var iterable = iter(obj)
     while(1){
@@ -44,8 +39,6 @@ function any(obj){
         }catch(err){return false}
     }
 }
-
-any.__code__={co_argcount:1, co_consts:[], co_varnames:['obj']}
 
 function ascii(obj) {
    // adapted from 
@@ -65,8 +58,6 @@ function ascii(obj) {
          })
          .join("");
 }
-
-ascii.__code__={co_argcount:1, co_consts:[], co_varnames:['obj']}
 
 // used by bin, hex and oct functions
 function $builtin_base_convert_helper(obj, base) {
@@ -100,8 +91,6 @@ function bin(obj) {
     }
     return getattr(obj, '__index__')()
 }
-
-bin.__code__={co_argcount:1, co_consts:[], co_varnames:['obj']}
 
 // blocking decorator
 var blocking = _b_.blocking = function(func) {
@@ -142,19 +131,13 @@ bool.__hash__ = function() {
     return 0
 }
 
-bool.__code__={co_argcount:1, co_consts:[], co_varnames:['x']}
-
 function callable(obj) {return hasattr(obj,'__call__')}
-
-callable.__code__={co_argcount:1, co_consts:[], co_varnames:['obj']}
 
 function chr(i) {
   if (i < 0 || i > 1114111) _b_.ValueError('Outside valid range')
 
   return String.fromCharCode(i)
 }
-
-chr.__code__={co_argcount:1, co_consts:[], co_varnames:['i']}
 
 //classmethod() (built in function)
 var $ClassmethodDict = {__class__:$B.$type,__name__:'classmethod'}
@@ -208,9 +191,6 @@ compile.__class__ = $B.factory
 $B.$CodeObjectDict.$factory = compile
 compile.$dict = $B.$CodeObjectDict
 
-compile.__code__={co_argcount:3, co_consts:[], 
-    co_varnames:['source','filename','mode']}
-
 //function complex is located in py_complex.js
 
 // built-in variable __debug__
@@ -233,8 +213,6 @@ function delattr(obj, attr) {
     }
     getattr(obj,'__delattr__')(attr)
 }
-
-delattr.__code__={co_argcount:2, co_consts:[], co_varnames:['object','name']}
 
 function dir(obj){
     
@@ -275,19 +253,11 @@ function dir(obj){
     return res
 }
 
-dir.__code__={co_argcount:1, co_consts:[], co_varnames:['obj']}
-
-
 //divmod() (built in function)
 function divmod(x,y) {
    var klass = $B.get_class(x)
    return [klass.__floordiv__(x,y), klass.__mod__(x,y)]
 }
-
-divmod.__code__={}
-divmod.__code__.co_argcount=2
-divmod.__code__.co_consts=[]
-divmod.__code__.co_varnames=['x','y']
 
 var $EnumerateDict = {__class__:$B.$type,__name__:'enumerate'}
 $EnumerateDict.__mro__ = [$EnumerateDict,$ObjectDict]
@@ -323,8 +293,6 @@ function enumerate(){
 enumerate.__class__ = $B.$factory
 enumerate.$dict = $EnumerateDict
 $EnumerateDict.$factory = enumerate
-
-enumerate.__code__={co_argcount:2, co_consts:[], co_varnames:['iterable']}
 
 //eval() (built in function)
 function $eval(src, _globals, _locals){
@@ -472,15 +440,12 @@ function filter(){
     }
 }
 
-filter.__code__={co_argcount:2, co_consts:[], co_varnames:['f', 'iterable']}
-
 function format(value, format_spec) {
   if(hasattr(value, '__format__')) return getattr(value,'__format__')(format_spec)
   
   throw _b_.NotImplementedError("__format__ is not implemented for object '" + _b_.str(value) + "'")
 }
 
-format.__code__={co_argcount:2, co_consts:[], co_varnames:['f', 'iterable']}
 
 function getattr(obj,attr,_default){
 
@@ -636,8 +601,6 @@ function getattr(obj,attr,_default){
     throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")
 }
 
-getattr.__code__={co_argcount:1, co_consts:[], co_varnames:['value']}
-
 //globals() (built in function)
 function globals(){
     // The last item in __BRYTHON__.frames_stack is
@@ -653,22 +616,10 @@ function globals(){
     return res
 }
 
-globals.__code__={}
-globals.__code__.co_argcount=0
-globals.__code__.co_consts=[]
-globals.__code__.co_varnames=[]
-
-
 function hasattr(obj,attr){
     try{getattr(obj,attr);return true}
     catch(err){$B.$pop_exc();return false}
 }
-
-hasattr.__code__={}
-hasattr.__code__.co_argcount=2
-hasattr.__code__.co_consts=[]
-hasattr.__code__.co_varnames=['object','name']
-
 
 function hash(obj){
     if(arguments.length!=1){
@@ -689,11 +640,6 @@ function hash(obj){
         return obj.__hashvalue__= hashfunc()
     }
 }
-
-hash.__code__={}
-hash.__code__.co_argcount=1
-hash.__code__.co_consts=[]
-hash.__code__.co_varnames=['object']
 
 function _get_builtins_doc(){
     if($B.builtins_doc===undefined){
@@ -736,17 +682,7 @@ function help(obj){
     catch(err){console.log('help err '+err);return ''}
 }
 
-help.__code__={}
-help.__code__.co_argcount=1
-help.__code__.co_consts=[]
-help.__code__.co_varnames=['object']
-
 function hex(x) { return $builtin_base_convert_helper(x, 16)}
-
-hex.__code__={}
-hex.__code__.co_argcount=1
-hex.__code__.co_consts=[]
-hex.__code__.co_varnames=['object']
 
 function id(obj) {
    if (obj.__hashvalue__ !== undefined) return obj.__hashvalue__
@@ -764,12 +700,6 @@ function id(obj) {
    return null
 }
 
-id.__code__={}
-id.__code__.co_argcount=1
-id.__code__.co_consts=[]
-id.__code__.co_varnames=['object']
-
-
 function __import__(mod_name){
    try {$B.$import(mod_name)}
    catch(err) {$B.imported[mod_name]=undefined}
@@ -779,22 +709,10 @@ function __import__(mod_name){
    return $B.imported[mod_name]
 }
 
-__import__.__code__={}
-__import__.__code__.co_argcount=5
-__import__.__code__.co_consts=[]
-__import__.__code__.co_varnames=['name','globals','locals','fromlist','level']
-
 //not a direct alias of prompt: input has no default value
 function input(src) {return prompt(src)}
 
-input.__code__={}
-input.__code__.co_argcount=1
-input.__code__.co_consts=[]
-input.__code__.co_varnames=['prompt']
-
-
 function isinstance(obj,arg){
-
     if(obj===null) return arg===None
     if(obj===undefined) return false
     if(arg.constructor===Array){
@@ -850,9 +768,6 @@ function isinstance(obj,arg){
    return false
 }
 
-isinstance.__code__={co_argcount:2, co_consts:[], 
-    co_varnames:['object', 'type']}
-
 function issubclass(klass,classinfo){
     if(arguments.length!==2){
       throw _b_.TypeError("issubclass expected 2 arguments, got "+arguments.length)
@@ -873,9 +788,6 @@ function issubclass(klass,classinfo){
     throw _b_.TypeError("issubclass() arg 2 must be a class or tuple of classes")
 }
 
-issubclass.__code__={co_argcount:2, co_consts:[], co_varnames:['C','D']}
-
-
 function iter(obj){
     try{return getattr(obj,'__iter__')()}
     catch(err){
@@ -884,7 +796,6 @@ function iter(obj){
     }
 }
 
-iter.__code__={co_argcount:1, co_consts:[], co_varnames:['i']}
 
 function len(obj){
     try{return getattr(obj,'__len__')()}
@@ -893,7 +804,6 @@ function len(obj){
     }
 }
 
-len.__code__={co_argcount:2, co_consts:[], co_varnames:['module', 'object']}
 
 function locals(){
     // The last item in __BRYTHON__.frames_stack is
@@ -908,8 +818,6 @@ function locals(){
     }
     return res
 }
-
-locals.__code__={co_argcount:0, co_consts:[], co_varnames:[]}
 
 
 var $MapDict = {__class__:$B.$type,__name__:'map'}
@@ -942,8 +850,6 @@ function map(){
     }
     return obj
 }
-
-map.__code__={co_argcount:1, co_consts:[], co_varnames:['func']}
 
 
 function $extreme(args,op){ // used by min() and max()
@@ -1023,8 +929,6 @@ function max(){
     return $extreme(args,'__gt__')
 }
 
-max.__code__={co_argcount:1, co_consts:[], co_varnames:['iterable']}
-
 
 function memoryview(obj) {
   throw NotImplementedError('memoryview is not implemented')
@@ -1036,23 +940,11 @@ function min(){
     return $extreme(args,'__lt__')
 }
 
-min.__code__={}
-min.__code__.co_argcount=1
-min.__code__.co_consts=[]
-min.__code__.co_varnames=['iterable']
-
-
 function next(obj){
     var ga = getattr(obj,'__next__')
     if(ga!==undefined) return ga()
     throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not an iterator")
 }
-
-next.__code__={}
-next.__code__.co_argcount=1
-next.__code__.co_consts=[]
-next.__code__.co_varnames=['iterable']
-
 
 var $NotImplementedDict = {__class__:$B.$type,__name__:'NotImplementedType'}
 $NotImplementedDict.__mro__ = [$NotImplementedDict,$ObjectDict]
@@ -1064,22 +956,11 @@ function $not(obj){return !bool(obj)}
 
 function oct(x) {return $builtin_base_convert_helper(x, 8)}
 
-oct.__code__={}
-oct.__code__.co_argcount=1
-oct.__code__.co_consts=[]
-oct.__code__.co_varnames=['number']
-
-
 function ord(c) {
     //return String.charCodeAt(c)  <= this returns an undefined function error
     // see http://msdn.microsoft.com/en-us/library/ie/hza4d04f(v=vs.94).aspx
     return c.charCodeAt(0)     // <= strobj.charCodeAt(index)
 }
-
-ord.__code__={}
-ord.__code__.co_argcount=1
-ord.__code__.co_consts=[]
-ord.__code__.co_varnames=['number']
 
 function pow() {
     var $ns=$B.$MakeArgs('pow',arguments,[],[],'args','kw')
@@ -1120,12 +1001,6 @@ function pow() {
         return Math.pow(x,y)%z
     }
 }
-
-pow.__code__={}
-pow.__code__.co_argcount=2
-pow.__code__.co_consts=[]
-pow.__code__.co_varnames=['x','y']
-
 
 function $print(){
     var end='\n',sep=' ',file=$B.stdout
@@ -1180,12 +1055,6 @@ function property(fget, fset, fdel, doc) {
 
 property.__class__ = $B.$factory
 property.$dict = $PropertyDict
-
-property.__code__={}
-property.__code__.co_argcount=4
-property.__code__.co_consts=[]
-property.__code__.co_varnames=['fget','fset','fdel', 'doc']
-
 
 // range
 var $RangeDict = {__class__:$B.$type,
@@ -1301,12 +1170,6 @@ range.__class__ = $B.$factory
 range.$dict = $RangeDict
 $RangeDict.$factory = range
 
-range.__code__={}
-range.__code__.co_argcount=1
-range.__code__.co_consts=[]
-range.__code__.co_varnames=['stop']
-
-
 function repr(obj){
     if(obj.__class__===$B.$factory){
         // obj is a class (the factory function)
@@ -1322,12 +1185,6 @@ function repr(obj){
     if(func!==undefined) return func()
     throw _b_.AttributeError("object has no attribute __repr__")
 }
-
-repr.__code__={}
-repr.__code__.co_argcount=1
-repr.__code__.co_consts=[]
-repr.__code__.co_varnames=['object']
-
 
 var $ReversedDict = {__class__:$B.$type,__name__:'reversed'}
 $ReversedDict.__mro__ = [$ReversedDict,$ObjectDict]
@@ -1365,12 +1222,6 @@ reversed.__class__=$B.$factory
 reversed.$dict = $ReversedDict
 $ReversedDict.$factory = reversed
 
-reversed.__code__={}
-reversed.__code__.co_argcount=1
-reversed.__code__.co_consts=[]
-reversed.__code__.co_varnames=['sequence']
-
-
 function round(arg,n){
     if(!isinstance(arg,[_b_.int,_b_.float])){
         throw _b_.TypeError("type "+arg.__class__+" doesn't define __round__ method")
@@ -1387,12 +1238,6 @@ function round(arg,n){
     var mult = Math.pow(10,n)
     return _b_.int.$dict.__truediv__(Number(Math.round(arg.valueOf()*mult)),mult)
 }
-
-round.__code__={}
-round.__code__.co_argcount=1
-round.__code__.co_consts=[]
-round.__code__.co_varnames=['number']
-
 
 function setattr(obj,attr,value){
     if(!isinstance(attr,_b_.str)){
@@ -1452,12 +1297,6 @@ function setattr(obj,attr,value){
     }
     f(attr,value)
 }
-
-setattr.__code__={}
-setattr.__code__.co_argcount=3
-setattr.__code__.co_consts=[]
-setattr.__code__.co_varnames=['object','name','value']
-
 
 // slice
 var $SliceDict = {__class__:$B.$type, __name__:'slice'}
@@ -1524,11 +1363,6 @@ slice.__class__ = $B.$factory
 slice.$dict = $SliceDict
 $SliceDict.$factory = slice
 
-slice.__code__={}
-slice.__code__.co_argcount=3
-slice.__code__.co_consts=[]
-slice.__code__.co_varnames=['start','stop','step']
-
 function sorted () {
     var $ns=$B.$MakeArgs('sorted',arguments,['iterable'],[],null,'kw')
     if($ns['iterable']===undefined) throw _b_.TypeError("sorted expected 1 positional argument, got 0")
@@ -1545,12 +1379,6 @@ function sorted () {
     return obj
 }
 
-sorted.__code__={}
-sorted.__code__.co_argcount=3
-sorted.__code__.co_consts=[]
-sorted.__code__.co_varnames=['iterable', 'key', 'reverse']
-
-
 // staticmethod() built in function
 var $StaticmethodDict = {__class__:$B.$type,__name__:'staticmethod'}
 $StaticmethodDict.__mro__ = [$StaticmethodDict,$ObjectDict]
@@ -1562,12 +1390,6 @@ function staticmethod(func) {
 staticmethod.__class__=$B.$factory
 staticmethod.$dict = $StaticmethodDict
 $StaticmethodDict.$factory = staticmethod
-
-staticmethod.__code__={}
-staticmethod.__code__.co_argcount=1
-staticmethod.__code__.co_consts=[]
-staticmethod.__code__.co_varnames=['function']
-
 
 // str() defined in py_string.js
 
@@ -1586,12 +1408,6 @@ function sum(iterable,start){
     }
     return res
 }
-
-sum.__code__={}
-sum.__code__.co_argcount=2
-sum.__code__.co_consts=[]
-sum.__code__.co_varnames=['iterable', 'start']
-
 
 // super() built in function
 var $SuperDict = {__class__:$B.$type,__name__:'super'}
@@ -1815,12 +1631,6 @@ zip.__class__=$B.$factory
 zip.$dict = $ZipDict
 $ZipDict.$factory = zip
 
-zip.__code__={}
-zip.__code__.co_argcount=1
-zip.__code__.co_consts=[]
-zip.__code__.co_varnames=['iter1']
-
-
 // built-in constants : True, False, None
 
 function no_set_attr(klass, attr){
@@ -1844,10 +1654,6 @@ bool.$dict = $BoolDict
 $BoolDict.$factory = bool
 
 bool.__doc__='bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.'
-bool.__code__={}
-bool.__code__.co_argcount=1
-bool.__code__.co_consts=[]
-bool.__code__.co_varnames=['x']
 
 $BoolDict.__add__ = function(self,other){
     if(self.valueOf()) return other + 1;
@@ -1989,8 +1795,11 @@ for(var $func in None){
 // add attributes to native Function
 var $FunctionCodeDict = {__class__:$B.$type,__name__:'function code'}
 $FunctionCodeDict.__mro__ = [$FunctionCodeDict,$ObjectDict]
+$FunctionCodeDict.$factory = {__class__:$B.$factory, $dict:$FunctionCodeDict}
+
 var $FunctionGlobalsDict = {__class:$B.$type,__name__:'function globals'}
 $FunctionGlobalsDict.__mro__ = [$FunctionGlobalsDict,$ObjectDict]
+$FunctionGlobalsDict.$factory = {__class__:$B.$factory, $dict:$FunctionGlobalsDict}
 
 var $FunctionDict = $B.$FunctionDict = {
     __class__:$B.$type,
@@ -2075,23 +1884,24 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
         return info
     }else if(attr=='traceback'){
         // Get attribute 'info' to initialise attributes last_info and line
+
         if($B.debug==0){
             // Minimal traceback to avoid attribute error
-            return {__class__:$TracebackDict,
+            return traceback({
                 tb_frame:frame(self.$frames_stack),
                 tb_lineno:0,
                 tb_lasti:-1,
                 tb_next: None // fix me
-            }
+            })
         }
         $BaseExceptionDict.__getattr__(self,'info')
         // Return traceback object
-        return {__class__:$TracebackDict,
+        return traceback({
             tb_frame:frame(self.$frames_stack),
-            tb_lineno:self.$last_info[0],
+            tb_lineno:parseInt(self.$last_info[0]),
             tb_lasti:self.$line,
             tb_next: None // fix me
-        }
+        })
     }else{
         throw AttributeError(self.__class__.__name__+
             "has no attribute '"+attr+"'")
@@ -2103,7 +1913,10 @@ var $TracebackDict = {__class__:$B.$type,
 }
 $TracebackDict.__mro__ = [$TracebackDict, $ObjectDict]
 
-function traceback(tb) {}
+function traceback(tb) {
+  tb.__class__ = $TracebackDict
+  return tb
+}
 
 traceback.__class__ = $B.$factory
 traceback.$dict = $TracebackDict
@@ -2129,8 +1942,7 @@ function frame(stack, pos){
     var mod_name = stack[2]
     var fs = stack
     var res = {__class__:$FrameDict,
-        f_builtins : {}, // XXX fix me
-        f_lineno: None
+        f_builtins : {} // XXX fix me
     }
     if(pos===undefined){pos = fs.length-1}
     if(fs.length){
@@ -2139,9 +1951,9 @@ function frame(stack, pos){
         res.f_locals = to_dict(_frame[1])
         res.f_globals = to_dict(_frame[3])
         if($B.debug>0){
-            res.f_lineno = $B.line_info.split(',')[0]
+            res.f_lineno = parseInt($B.line_info.split(',')[0])
         }else{
-            res.f_lineno = None
+            res.f_lineno = -1
         }
         if(pos>0){res.f_back = frame(stack, pos-1)}
         else{res.f_back = None}
@@ -2157,6 +1969,7 @@ function frame(stack, pos){
 frame.__class__ = $B.$factory
 frame.$dict = $FrameDict
 $FrameDict.$factory = frame
+$B._frame=frame
 
 var BaseException = function (msg,js_exc){
     var err = Error()
@@ -2232,7 +2045,7 @@ $B.exception = function(js_exc){
         exc.args = _b_.tuple([exc.$message])
         exc.info = ''
         exc.$py_error = true
-        exc.traceback = traceback({__class__:$TracebackDict,
+        exc.traceback = traceback({
             tb_frame:frame($B.exception_stack),
             tb_lineno:-1,
             tb_lasti:'',
@@ -2364,6 +2177,7 @@ for(var i=0;i<builtin_names.length;i++){
             _b_[name].__module__ = 'builtins'
             _b_[name].__name__ = name
 
+/*
             //define some default values for __code__
             var _c=_b_[name].__code__
 
@@ -2379,6 +2193,7 @@ for(var i=0;i<builtin_names.length;i++){
             _c.co_kwonlyargcount=_c.co_kwonlyargcount || 0
 
             _b_[name].__code__=_c
+*/
             _b_[name].__defaults__= _b_[name].__defaults__ || []
             _b_[name].__kwdefaults__= _b_[name].__kwdefaults__ || {}
             _b_[name].__annotations__= _b_[name].__annotations__ || {}

@@ -56,7 +56,7 @@
 
     var _files=[]
     if (_loader.debug === undefined || _loader.debug==0) {  // just load brython.js
-       _files.append("brython")
+       _files.push("brython")
     } else {
       
        //import_file(_path,0)
