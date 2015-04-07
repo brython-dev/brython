@@ -251,3 +251,12 @@ from browser import document
 
 eval(document["zzz_source"].text)
 </script>
+
+Creating and firing an event
+----------------------------
+
+`DOMEvent(`_evt\_name_`)` 
+> Creates an event of type _evt\_name_ such as _keydown, mousemove_, etc.
+
+`element.dispatchEvent(`event`)`
+> Fires the event on the specified `element`

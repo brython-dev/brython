@@ -149,7 +149,9 @@ $DOMEventDict.__getattribute__ = function(self,attr){
     throw _b_.AttributeError("object DOMEvent has no attribute '"+attr+"'")
 }
 
-var $DOMEvent = $B.DOMEvent = function(ev){
+
+// Function to transform a DOM event into an instance of DOMEvent
+function $DOMEvent(ev){
     ev.__class__ = $DOMEventDict
     if(ev.preventDefault===undefined){ev.preventDefault = function(){ev.returnValue=false}}
     if(ev.stopPropagation===undefined){ev.stopPropagation = function(){ev.cancelBubble=true}}
@@ -158,9 +160,15 @@ var $DOMEvent = $B.DOMEvent = function(ev){
     ev.toString = ev.__str__
     return ev
 }
-$DOMEvent.__class__ = $B.$factory
-$DOMEvent.$dict = $DOMEventDict
-$DOMEventDict.$factory = $DOMEvent
+
+$B.DOMEvent = function(evt_name){
+    // Factory to create instances of DOMEvent, based on an event name
+    return $DOMEvent(new Event(evt_name))
+}
+
+$B.DOMEvent.__class__ = $B.$factory
+$B.DOMEvent.$dict = $DOMEventDict
+$DOMEventDict.$factory = $B.DOMEvent
 
 var $ClipboardDict = {__class__:$B.$type,__name__:'Clipboard'}
 

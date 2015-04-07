@@ -21,7 +21,7 @@ btn.bind('click', montre)
 
 Le premier argument de `bind` est le type d'événement auquel le bouton doit 
 réagir ; le deuxième est une fonction qui prend un seul argument, une instance 
-de la classe `DOMEvent`. Par exemple :
+de la classe `DOMEvent` (définie dans le module **browser**). Par exemple :
 
 ```python
 def montre(ev):
@@ -246,6 +246,13 @@ ev.stopPropagation()
 
 > L'événement ne se propage donc pas au niveau supérieur et le traitement s'arrête sans afficher "clic sur jaune"
 
+Créer et déclencher un événement
+--------------------------------
+
+`DOMEvent(`_nom\_evt_`)` 
+> Crée un événement de type _nom\_evt_ comme _keydown, mousemove_, etc.
 
 
+`element.dispatchEvent(`_event_`)`
+> Déclenche l'événement _event_ sur l'élément spécifié
 
