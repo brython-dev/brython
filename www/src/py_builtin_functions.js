@@ -701,7 +701,10 @@ function id(obj) {
 }
 
 function __import__(mod_name){
-   try {$B.$import(mod_name)}
+   // for issue # 161
+   var mod = "__main__"    // fix me ..  how to get name of module this was called in?
+
+   try {$B.$import(mod_name, mod)}
    catch(err) {$B.imported[mod_name]=undefined}
 
    if ($B.imported[mod_name]===undefined) throw _b_.ImportError(mod_name) 
@@ -1957,7 +1960,8 @@ function frame(stack, pos){
         }
         if(pos>0){res.f_back = frame(stack, pos-1)}
         else{res.f_back = None}
-        res.f_code = {__class__:$B.$CodeObjectDict,
+        //res.f_code = {__class__:$B.$CodeObjectDict,
+        res.f_code = {__class__:$B.$CodeDict,
             co_code:None, // XXX fix me
             co_name: locals_id, // idem
             co_filename: "<unknown>" // idem
