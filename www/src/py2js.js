@@ -1625,13 +1625,16 @@ function $DecoratorCtx(context){
         // if a delay is supplied (on brython_block only), use that value 
         // as the delay value in the execution_object's setTimeout.
 
+        // fix me...
         if (_block_async_flag) {
            var parent_block = this.parent
            while(parent_block.context) {
               parent_block = parent_block.parent
            }
-
-           console.log(parent_block.to_js())
+           
+           // fix me...
+           var js=parent_block.to_js()
+           $B.execution_object.$append(js, 10)
         }
     }
 
