@@ -1,7 +1,7 @@
 ;(function($B) {
 _b_=$B.builtins
 
-$B.execution_object = $B.execution_object || {}
+$B.execution_object = {}
 
 $B.execution_object.queue=[]
 $B.execution_object.done=true
@@ -27,9 +27,9 @@ $B.execution_object.$append=function(code, delay) {
    if ($B.execution_object.done) $B.execution_object.$execute_next_segment()
 }
 
-$B.execution_object.$append("console.log('test');$B.execution_object.$execute_next_segment();", 10)
-$B.execution_object.$append("console.log('test2');$B.execution_object.$execute_next_segment();", 500)
-$B.execution_object.$append("console.log('test3');$B.execution_object.$execute_next_segment();", 500)
+//$B.execution_object.$append("console.log('test');$B.execution_object.$execute_next_segment();", 10)
+//$B.execution_object.$append("console.log('test2');$B.execution_object.$execute_next_segment();", 500)
+//$B.execution_object.$append("console.log('test3');$B.execution_object.$execute_next_segment();", 500)
 
 //$B.execution_object.$execute_next_segment()
 
