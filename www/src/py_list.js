@@ -26,16 +26,16 @@ $ListDict.__add__ = function(self,other){
 
 $ListDict.__contains__ = function(self,item){
     var _eq = getattr(item, '__eq__')
-    for(var i=0, _len_i = self.length; i < _len_i;i++){
+    var i=self.length
+    while(i--) {
         try{if(_eq(self[i])) return true
-        //try{if(getattr(self[i],'__eq__')(item)){return true}
         }catch(err){$B.$pop_exc();void(0)}
     }
     return false
 }
 
 $ListDict.__delitem__ = function(self,arg){
-    //arg=$B.$GetInt(arg)
+
     if(isinstance(arg,_b_.int)){
         var pos = arg
         if(arg<0) pos=self.length+pos
@@ -87,17 +87,19 @@ $ListDict.__eq__ = function(self,other){
 
     if($B.get_class(other)===$B.get_class(self)){
        if(other.length==self.length){
-            for(var i=0, _len_i = self.length; i < _len_i;i++){
-                if(!getattr(self[i],'__eq__')(other[i])) return False
+            var i=self.length
+            while(i--) {
+               if(!getattr(self[i],'__eq__')(other[i])) return false
             }
-            return True
+            return true
        }
     }
 
     if (isinstance(other, [_b_.set, _b_.tuple, _b_.list])) {
        if (self.length != getattr(other, '__len__')()) return false
 
-       for(var i=0, _len_i = self.length; i < _len_i;i++){
+       var i=self.length
+       while(i--) {
           if (!getattr(other, '__contains__')(self[i])) return false
        }
        return true
@@ -106,7 +108,7 @@ $ListDict.__eq__ = function(self,other){
 }
 
 $ListDict.__getitem__ = function(self,arg){
-    //arg=$B.$GetInt(arg)
+
     if(isinstance(arg,_b_.int)){
         var items=self.valueOf()
         var pos = arg
@@ -140,17 +142,17 @@ $ListDict.__getitem__ = function(self,arg){
             if (stop >= length) stop = step<0 ? length-1 : length;
         }
         /* Return the sliced list  */
-        var res = [], i=null, items=self.valueOf()
+        var res = [], i=null, items=self.valueOf(), pos=0
         if (step > 0) {
             if (stop <= start) return res;
             for(var i=start; i<stop; i+=step) {
-               res.push(items[i])
+               res[pos++]=items[i]
             }
             return res;
         } else {
             if (stop > start) return res;
             for(var i=start; i>stop; i+=step) {
-                res.push(items[i])
+               res[pos++]=items[i]
             }
             return res;
         }
@@ -235,12 +237,11 @@ $ListDict.__lt__ = function(self,other){
 $ListDict.__mro__ = [$ListDict,$ObjectDict]
 
 $ListDict.__mul__ = function(self,other){
-    //other=$B.$GetInt(other)
     if(isinstance(other,_b_.int)) {  //this should be faster..
-      var res=[]
-      var $temp = self.slice(0,self.length)
-      for(var i=0;i<other;i++) res=res.concat($temp)
-      return _b_.list(res)
+       var res=[]
+       var $temp = self.slice(0,self.length)
+       for(var i=0;i<other;i++) res=res.concat($temp)
+       return _b_.list(res)
     }
     
     if (hasattr(other, '__int__') || hasattr(other, '__index__')) {
@@ -257,24 +258,13 @@ $ListDict.__ne__ = function(self,other){return !$ListDict.__eq__(self,other)}
 $ListDict.__repr__ = function(self){
     if(self===undefined) return "<class 'list'>"
 
-    var items=self.valueOf()
-    var res = '['
-    if(self.__class__===$TupleDict){res='('}
-    for(var i=0, _len_i = self.length; i < _len_i;i++){
-        var x = self[i]
-        try{res+=_b_.repr(x)}
-        catch(err){console.log('no __repr__ for item '+i+' toString ['+x.toString()+']');res += x.toString()}
-        if(i<self.length-1){res += ', '}
-    }
-    if(self.__class__===$TupleDict){
-        if(self.length==1){res+=','}
-        return res+')'
-    }
-    return res+']'
+    var _r=self.map(_b_.repr)
+
+    if (self.__class__===$TupleDict) return '(' + _r.join(', ') + ')'
+    return '[' + _r.join(', ') + ']'
 }
 
 $ListDict.__setitem__ = function(self,arg,value){
-    //arg=$B.$GetInt(arg)
     if(isinstance(arg,_b_.int)){
         var pos = arg
         if(arg<0) pos=self.length+pos
@@ -326,9 +316,8 @@ $ListDict.copy = function(self){return self.slice(0,self.length)}
 $ListDict.count = function(self,elt){
     var res = 0
     _eq=getattr(elt, '__eq__')
-    for(var i=0, _len_i = self.length; i < _len_i;i++){
-        if (_eq(self[i])) res++
-    }
+    var i=self.length
+    while (i--) if (_eq(self[i])) res++
     return res
 }
 
@@ -336,8 +325,9 @@ $ListDict.extend = function(self,other){
     if(arguments.length!=2){throw _b_.TypeError(
         "extend() takes exactly one argument ("+arguments.length+" given)")}
     other = iter(other)
+    var pos=self.length
     while(1){
-        try{self[self.length]=next(other)}
+        try{self[pos++]=next(other)}
         catch(err){
             if(err.__name__=='StopIteration'){$B.$pop_exc();break}
             else{throw err}
@@ -349,7 +339,6 @@ $ListDict.index = function(self,elt){
     var _eq = getattr(elt, '__eq__')
     for(var i=0, _len_i = self.length; i < _len_i;i++){
         if(_eq(self[i])) return i
-        //if(getattr(self[i],'__eq__')(elt)) return i
     }
     throw _b_.ValueError(_b_.str(elt)+" is not in list")
 }
@@ -359,7 +348,6 @@ $ListDict.insert = function(self,i,item){self.splice(i,0,item)}
 $ListDict.remove = function(self,elt){
     var _eq = getattr(elt, '__eq__')
     for(var i=0, _len_i = self.length; i < _len_i;i++){
-        //if(getattr(self[i],'__eq__')(elt)){
         if(_eq(self[i])){
             self.splice(i,1)
             return
@@ -384,10 +372,12 @@ $ListDict.pop = function(self,pos){
 }
 
 $ListDict.reverse = function(self){
-    for(var i=0, _len_i = parseInt(self.length/2); i < _len_i;i++){
+    var _len=self.length-1
+    var i=parseInt(self.length/2)
+    while (i--) {
         var buf = self[i]
-        self[i] = self[self.length-i-1]
-        self[self.length-i-1] = buf
+        self[i] = self[_len-i]
+        self[_len-i] = buf
     }
 }
     
@@ -448,9 +438,11 @@ function $qsort(arg,array, begin, end)
 function $elts_class(self){
     // If all elements are of the same class, return it
     if(self.length==0){return null}
-    var cl = $B.get_class(self[0])
-    for(var i=1, _len_i = self.length; i < _len_i;i++){
-        if($B.get_class(self[i])!==cl){return false}
+    var cl = $B.get_class(self[0]), i=self.length
+
+    while (i--) {
+    //for(var i=1, _len_i = self.length; i < _len_i;i++){
+        if($B.get_class(self[i])!==cl) return false
     }
     return cl
 }
