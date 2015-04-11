@@ -65,7 +65,7 @@
                 'py_generator', 'py_builtin_functions',
                 'py_bytes', 'py_set', 'js_objects', 'stdlib_paths',
                 'py_import', 'py_string', 'py_int', 'py_float', 
-                'py_complex', 'py_dict', 'py_list', 'py_dom']
+                'py_complex', 'py_dict', 'py_list', 'py_dom', 'async']
 
         _files.push.apply(_files, py_files)
     }

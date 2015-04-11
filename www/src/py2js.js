@@ -1578,9 +1578,20 @@ function $DecoratorCtx(context){
         //      x = $h3upb5s8(x)
         //
         this.dec_ids = []
+        var pos=0
         for(var i=0;i<decorators.length;i++){
-            this.dec_ids.push('$id'+ $B.UUID())
+            this.dec_ids[pos++]='$id'+ $B.UUID()
         }
+
+        var _block_async_flag=false;
+        for(var i=0;i<decorators.length;i++){
+           try {
+             // decorator name
+             var name=decorators[i][0].tree[0].value
+             if (name == "brython_block" || name == "brython_async") _block_async_flag=true
+           } catch (err) {console.log(i); console.log(decorators[i][0])}
+        }
+
         var obj = children[func_rank].context.tree[0]
 
         // add a line after decorated element
@@ -1589,10 +1600,10 @@ function $DecoratorCtx(context){
         var scope = $get_scope(this)
         var ref = '$locals["'+obj.name+'"]'
         var res = ref+'='
-        var _blocking_flag=false;
+
         for(var i=0;i<decorators.length;i++){
-          var dec = this.dec_ids[i]
-          res += dec+'('
+          //var dec = this.dec_ids[i]
+          res += this.dec_ids[i]+'('
           tail +=')'
         }
         res += ref+tail
@@ -1602,31 +1613,37 @@ function $DecoratorCtx(context){
         // attribute "__call__"
         $B.bound[scope.id][obj.name] = true
 
-        if (_blocking_flag == true) {
-           $B.$blocking_function_names=$B.$blocking_function_names || []
-           $B.$blocking_function_names.push(obj.name)
-           console.log('blocking...', obj.name)
-           // the statement below doesn't work..  can I get some help?
-           // the code below is a 99% guess (just looking at other functions,
-           // and trying to figure out what needs to happen here...
-           //console.log('node.parent', node.parent)
-           //node.parent.insert(0, new $BlockingCtx(node));
-           //void(0);
-           obj.$blocking = true
-        }
-
         var decor_node = new $Node()
         new $NodeJSCtx(decor_node,res)
         node.parent.insert(func_rank+1,decor_node)
         this.decorators = decorators
+
+        // Pierre, I probably need some help here...
+        // we can use brython_block and brython_async as decorators so we know 
+        // that we need to generate javascript up to this point in python code
+        // and $append that javascript code to $B.execution_object.
+        // if a delay is supplied (on brython_block only), use that value 
+        // as the delay value in the execution_object's setTimeout.
+
+        // fix me...
+        if (_block_async_flag) {
+           var parent_block = this.parent
+           while(parent_block.context) {
+              parent_block = parent_block.parent
+           }
+           
+           // fix me...
+           var js=parent_block.to_js()
+           $B.execution_object.$append(js, 10)
+        }
     }
 
     this.to_js = function(){
-        var res = ''
+        var res = [], pos=0
         for(var i=0;i<this.decorators.length;i++){
-            res += 'var '+this.dec_ids[i]+'='+$to_js(this.decorators[i])+';'
+            res[pos++]='var '+this.dec_ids[i]+'='+$to_js(this.decorators[i])+';'
         }
-        return res
+        return res.join('')
     }
 }
 
@@ -1710,7 +1727,6 @@ function $DefCtx(context){
                 scope.context.tree[0].locals.push(name)
             }
         }
-
     }
     
     this.toString = function(){return 'def '+this.name+'('+this.tree+')'}
@@ -2065,14 +2081,6 @@ function $DefCtx(context){
         node.parent.insert(rank+offset,new_node)
         offset++
         
-        if(this.$blocking){
-            console.log('blocking !!!')
-            new_node = new $Node()
-            new $NodeJSCtx(new_node,this.name+'.$blocking = true; // used in __call__')
-            node.parent.insert(rank+offset,new_node)
-            offset++
-        }
-
         // Add attribute __code__
         // End with None for interactive interpreter
         js = prefix+'.__code__={__class__:$B.$CodeDict, '
@@ -2092,7 +2100,6 @@ function $DefCtx(context){
         this.transformed = true
         
         return offset
-         
     }
 
     this.to_js = function(func_name){
@@ -6510,7 +6517,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     }
     js += 'var $locals = '+local_ns+';\n'
     
-    js += '__BRYTHON__.enter_frame(["'+locals_id+'", '+local_ns+','
+    js += '$B.enter_frame(["'+locals_id+'", '+local_ns+','
     js += '"'+module+'", '+global_ns+']);\n'
     js += 'eval($B.InjectBuiltins())\n'
 
@@ -6545,7 +6552,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     }
     
     // leave frame at the end of module
-    js = '__BRYTHON__.leave_frame("'+module+'");\n'
+    js = '$B.leave_frame("'+module+'");\n'
     var new_node = new $Node()
     new $NodeJSCtx(new_node,js)
     root.add(new_node)
@@ -6706,7 +6713,8 @@ function brython(options){
                 if($B.debug>1) console.log($js)
 
                 // Run resulting Javascript
-                eval($js)
+                //eval($js)
+                $B.execution_object.$append($js +'\n$B.execution_object.$execute_next_segment()', 10);
                 
             }catch($err){
                 if($B.debug>1){

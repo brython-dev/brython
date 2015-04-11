@@ -92,16 +92,6 @@ function bin(obj) {
     return getattr(obj, '__index__')()
 }
 
-// blocking decorator
-var blocking = _b_.blocking = function(func) {
-   // func.$type='blocking'  <=  is this needed?
-   $B.$blocking_functions=$B.$blocking_functions || [];
-   $B.$blocking_functions.push(_b_.id(func))
-   console.log('blocking funcs '+$B.$blocking_functions)
-   func.$blocking = true
-   return func
-}
-
 function bool(obj){ // return true or false
     if(obj===null || obj === undefined ) return false
     switch(typeof obj) {
@@ -220,13 +210,13 @@ function dir(obj){
         // if dir is called without arguments, use globals
         var frame = $B.last($B.frames_stack),
             globals_obj = frame[1][1],
-            res = _b_.list()
+            res = _b_.list(), pos=0
         for(var attr in globals_obj){
             if(attr.charAt(0)=='$' && attr.charAt(1) != '$') {
                 // exclude internal attributes set by Brython
                 continue
             }
-            res.push(attr)
+            res[pos++]=attr
         }
         _b_.list.$dict.sort(res)
         return res
@@ -243,10 +233,10 @@ function dir(obj){
             return res
         } catch (err){console.log('no __dir__ '+err);$B.$pop_exc()}
     }
-    var res = []
+    var res = [], pos=0
     for(var attr in obj){
         if(attr.charAt(0)!=='$' && attr!=='__class__'){
-            res.push(attr)
+            res[pos++]=attr
         }
     }
     res.sort()
@@ -478,7 +468,6 @@ function getattr(obj,attr,_default){
            }else{
                return obj
            }
-        
         } else if (klass===$B.JSObject.$dict && typeof obj.js=='function'){
           return function(){
             var res = obj.js.apply(null,arguments)
@@ -521,9 +510,9 @@ function getattr(obj,attr,_default){
             // The attribute __mro__ of classes is a list of class
             // dictionaries ; it must be returned as a list of class
             // factory functions
-            var res = []
+            var res = [], pos=0
             for(var i=0;i<obj.$dict.__mro__.length;i++){
-                res.push(obj.$dict.__mro__[i].$factory)
+                res[pos++]=obj.$dict.__mro__[i].$factory
             }
             return res
         }
@@ -701,7 +690,10 @@ function id(obj) {
 }
 
 function __import__(mod_name){
-   try {$B.$import(mod_name)}
+   // for issue # 161
+   var mod = "__main__"    // fix me ..  how to get name of module this was called in?
+
+   try {$B.$import(mod_name, mod)}
    catch(err) {$B.imported[mod_name]=undefined}
 
    if ($B.imported[mod_name]===undefined) throw _b_.ImportError(mod_name) 
@@ -829,11 +821,10 @@ function map(){
     var iter_args = []
     for(var i=1;i<arguments.length;i++){iter_args.push(iter(arguments[i]))}
     var __next__ = function(){
-        var args = []
+        var args = [], pos=0
         for(var i=0;i<iter_args.length;i++){
             try{
-                var x = next(iter_args[i])
-                args.push(x)
+                args[pos++]=next(iter_args[i])
             }catch(err){
                 if(err.__name__==='StopIteration'){
                     $B.$pop_exc();throw _b_.StopIteration('')
@@ -1088,15 +1079,14 @@ $RangeDict.__getitem__ = function(self,rank){
 
 // special method to speed up "for" loops
 $RangeDict.__getitems__ = function(self){
-    var t=[],rank=0
+    var t=[], rank=0
     while(1){
         var res = self.start + rank*self.step
         if((self.step>0 && res >= self.stop) ||
             (self.step<0 && res < self.stop)){
                 break
         }
-        t.push(res)
-        rank++
+        t[rank++]=res
     }
     return t
 }
@@ -1509,14 +1499,15 @@ $Reader.readlines = function(self,hint){
     if(self.closed===true) throw _b_.ValueError('I/O operation on closed file')
     var x = self.$content.substr(self.$counter).split('\n')
     if(hint && hint!==-1){
-        var y=[],size=0
+        var y=[],size=0, pos=0
         while(1){
             var z = x.shift()
-            y.push(z)
             size += z.length
+            y[pos++]=z
             if(size>hint || x.length==0) return y
         }
-    }else{return x}
+    }
+    return x
 }
 
 $Reader.seek = function(self,offset,whence){
@@ -1610,19 +1601,17 @@ function zip(){
     var kw = $ns['kw']
     var rank=0,items=[]
     while(1){
-        var line=[],flag=true
+        var line=[],flag=true, pos=0
         for(var i=0;i<args.length;i++){
             try{
-                var x=next(args[i])
-                line.push(x)
+                line[pos++]=next(args[i])
             }catch(err){
                 if(err.__name__==='StopIteration'){$B.$pop_exc();flag=false;break}
                 else{throw err}
             }
         }
         if(!flag) break
-        items.push(_b_.tuple(line))
-        rank++
+        items[rank++]=_b_.tuple(line)
     }
     res.items = items
     return res
@@ -1957,7 +1946,8 @@ function frame(stack, pos){
         }
         if(pos>0){res.f_back = frame(stack, pos-1)}
         else{res.f_back = None}
-        res.f_code = {__class__:$B.$CodeObjectDict,
+        //res.f_code = {__class__:$B.$CodeObjectDict,
+        res.f_code = {__class__:$B.$CodeDict,
             co_code:None, // XXX fix me
             co_name: locals_id, // idem
             co_filename: "<unknown>" // idem
