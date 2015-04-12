@@ -207,6 +207,16 @@ function in_loop(node){
     return false
 }
 
+function in_try(node){
+    // Return the list of "try" clauses above the node
+    var tries = [], pnode=node.parent
+    while(pnode){
+        if(pnode.is_try){tries.push(pnode)}
+        pnode = pnode.parent
+    }
+    return tries
+}
+
 var $BRGeneratorDict = {__class__:$B.$type,__name__:'generator'}
 
 $BRGeneratorDict.__iter__ = function(self){return self}
@@ -233,7 +243,7 @@ $BRGeneratorDict.__next__ = function(self){
         // First iteration : run generator function to initialise the iterator
         
         var src = self.func_root.src()+'\n)()'
-        
+
         try{eval(src)}
         catch(err){
             console.log("cant eval\n"+src+'\n'+err)
@@ -258,7 +268,7 @@ $BRGeneratorDict.__next__ = function(self){
     for(var i=0;i<self.env.length;i++){
         eval('var $locals_'+self.env[i][0]+'=self.env[i][1]')
     }
-    
+
     // Call the function _next to yield a value
     try{
         var res = self._next.apply(null, self.args)
@@ -276,7 +286,7 @@ $BRGeneratorDict.__next__ = function(self){
         // generators, so we must call it here to pop from frames stack
         $B.leave_frame()
     }
-    
+
     if(res===undefined){throw StopIteration("")}
 
     if(res[0].__class__==$GeneratorReturn){
@@ -291,7 +301,7 @@ $BRGeneratorDict.__next__ = function(self){
     // yielded value and a reference to the node where the function exited
     
     var yielded_value=res[0], yield_rank=res[1]
-
+    
     // If the generator exits at the same place as in the previous iteration,
     // we don't have to build a new function, so just return the yielded value
     if(yield_rank==self.yield_rank){return yielded_value}
@@ -322,135 +332,79 @@ $BRGeneratorDict.__next__ = function(self){
     fnode.addChild(new $B.genNode(js))
 
     // Parent of exit node
-    var pnode = exit_node.parent
-    var exit_in_if = pnode.is_if || pnode.is_else
-
-    var exit_in_loop = in_loop(exit_node)
-    
-    // Rest of the block after exit_node
-    var rest = []
-    var no_break = true
-    for(var i=exit_node.rank+1, _len_i = pnode.children.length; i < _len_i;i++){
-        var clone = pnode.children[i].clone_tree(null,true)
-        rest.push(clone)
-        if(clone.has_break()){no_break=false}
-    }
-    
-    // If exit_node was in an arborescence of "try" clauses, the "rest" must
-    // run in the same arborescence
-    var prest = exit_node.parent
-
-    while(prest!==func_node){
-        if(prest.is_except){
-            var catch_node = prest
-            if(prest.parent.is_except){catch_node=prest.parent}
-            var rank = catch_node.rank
-            while(rank<catch_node.parent.children.length && 
-                catch_node.parent.children[rank].is_except){rank++}
-            for(var i=rank, _len_i = catch_node.parent.children.length; i < _len_i;i++){
-                rest.push(catch_node.parent.children[i].clone_tree(null,true))
-            }
-            prest = catch_node
+    while(true){
+        // Compute the rest of the block to run after exit_node
+        var exit_parent = exit_node.parent
+        var rest = []
+        var has_break = false
+        var start = exit_node.rank+1
+        if(exit_node.loop_start){start = exit_node.rank}
+        else if(exit_node.is_cond){
+            while(start<exit_parent.children.length &&
+                (exit_parent.children[start].is_except || exit_parent.children[start].is_else)){start++}
+        }else if(exit_node.is_try || exit_node.is_except){
+            while(start<exit_parent.children.length &&
+                (exit_parent.children[start].is_except || exit_parent.children[start].is_else)){start++}
         }
-        else if(prest.is_try){
-            if(self.func_name=='fooX'){alert('pygen 352\n'+'\npnode in loop ?\n'+in_loop(pnode))}
-            var rest2 = prest.clone()
-            for(var i=0, _len_i = rest.length; i < _len_i;i++){
-                rest2.addChild(rest[i])
-            }
-            rest = [rest2]
-            for(var i=prest.rank+1, _len_i = prest.parent.children.length; i < _len_i;i++){
-                rest.push(prest.parent.children[i].clone_tree(null,true))
-            }
-            // We are adding the content of pnode. To avoid adding it a second time
-            // if we are in a loop, pnode goes up one level
-            pnode = pnode.parent
+        for(var i=start, _len_i = exit_parent.children.length; i < _len_i;i++){
+            var clone = exit_parent.children[i].clone_tree(null,true)
+            rest.push(clone)
+            if(clone.has_break()){has_break=true}
         }
-        prest = prest.parent
-    }
-    if(self.func_name=='fooX'){alert('pygen 364\n'+root.src()+'\npnode\n'+pnode+' is try ? '+pnode.is_try)}
 
-    // add rest of block to new function
-    if(no_break){
-        if(self.func_name=='fooX'){alert('exit_in_loop '+exit_in_loop)}
-        for(var i=0, _len_i = rest.length; i < _len_i;i++){
-            //if(exit_in_loop && rest[i].is_try!==true && rest[i].is_except!==true){break}
-            fnode.addChild(rest[i])
-            if(self.func_name=='fooX'){alert('add '+rest[i]+' is_try '+rest[i].is_try+' is except '+rest[i].is_except)}
+        // add rest of block to new function
+        if(has_break){
+            // If the rest had a "break", this "break" is converted into raising
+            // an exception with __class__ set to GeneratorBreak
+            var rest_try = new $B.genNode('try')
+            for(var i=0, _len_i = rest.length; i < _len_i;i++){rest_try.addChild(rest[i])}
+            var catch_test = 'catch(err)'
+            catch_test += '{if(err.__class__!==__BRYTHON__.GeneratorBreak)'
+            catch_test += '{throw err}}'
+            catch_test = new $B.genNode(catch_test)
+            rest = [rest_try, catch_test]
         }
-    }else{
-        // If the rest had a "break", this "break" is converted into raising
-        // an exception with __class__ set to GeneratorBreak
-        var rest_try = new $B.genNode('try')
-        for(var i=0, _len_i = rest.length; i < _len_i;i++){rest_try.addChild(rest[i])}
-        fnode.addChild(rest_try)
-        var catch_test = 'catch(err)'
-        catch_test += '{if(err.__class__!==__BRYTHON__.GeneratorBreak)'
-        catch_test += '{throw err}}'
-        fnode.addChild(new $B.genNode(catch_test))
-    }
-    if(self.func_name=='fooX'){alert('pygen 380\n'+root.src()+'\npnode\n'+pnode+' is try ? '+pnode.is_try)}
-    
-    // If 'rest' has a break, we must exit the innermost loop
-    if(!no_break){
-        var loop = in_loop(pnode)
-        if(loop){pnode=loop}
-    }
-    
-    // While the parent of exit_node is in a loop, add it, only keeping the
-    // part that starts at exit node
-
-    while(pnode!==func_node && in_loop(pnode)){
-
-        var rank = pnode.rank
-
-        // block must start by "try", not "except"
-        while(pnode.parent.children[rank].is_except){rank--}
-
-        if(pnode.is_if){
-            // If exit_node was in a "if", start after the last if/elif/else
-            rank++
-            exit_node.replaced = true
-            while(rank<pnode.parent.children.length 
-                && pnode.parent.children[rank].is_else){rank++}
-        }else if(pnode.is_else){
-            exit_node.replaced = true
-            // If exit_node was in a "if", start after the last if/elif/else
-            while(rank<pnode.parent.children.length 
-                && pnode.parent.children[rank].is_else){rank++}
-        }        
-
-        for(var i=rank, _len_i = pnode.parent.children.length; i < _len_i;i++){
-            var g = pnode.parent.children[i].clone_tree(exit_node,true)
-            fnode.addChild(g)
-        }
-        pnode = pnode.parent
         
-    }
-    if(self.func_name=='fooX'){alert('pygen 416\n'+root.src()+'\npnode\n'+pnode+' is try ? '+pnode.is_try)}
-    // if exit_node was in a loop, or if pnode is an "if" or "else", 
-    // add the rest of the block after pnode
-    while(pnode!==func_node && 
-        (in_loop(exit_node) || pnode.is_if || pnode.is_else)){
+        
+        // Get list of "try" nodes above exit node
+        var tries = in_try(exit_node)
+        
+        if(tries.length==0){
+            // Not in a "try" clause : run rest at function level
+            for(var i=0;i<rest.length;i++){fnode.addChild(rest[i])}
+        }else{
+            // Attach "rest" to deepest "try" found, or to function body
+            var tree = []
+            for(var i=0;i<tries.length;i++){
+                var try_node = tries[i], try_clone = try_node.clone()
+                if(i==0){
+                    for(var j=0;j<rest.length;j++){try_clone.addChild(rest[j])}
+                }
+                var children = [try_clone]
 
-        var rank = pnode.rank+1
-        while(rank < pnode.parent.children.length){
-            var next_node = pnode.parent.children[rank]
-            if(next_node.is_else||next_node.is_except){rank++}
-            break
+                for(var j=try_node.rank+1;j<try_node.parent.children.length;j++){
+                    if(try_node.parent.children[j].is_except){
+                        children.push(try_node.parent.children[j].clone_tree(null,true))
+                    }else{
+                        break
+                    }
+                }
+                tree.push(children)
+            }
+            var parent = fnode
+            while(tree.length){
+                children = tree.pop()
+                for(var i=0;i<children.length;i++){parent.addChild(children[i])}
+                parent = children[0]
+            }
         }
 
-        for(var i=rank, _len_i = pnode.parent.children.length; i < _len_i;i++){
-            fnode.addChild(pnode.parent.children[i].clone_tree())
-        }
-        pnode = pnode.parent
+        // Up one block
+        exit_node = exit_parent
+        if(exit_node===self.func_root){break}
+
     }
-    if(self.func_name=='fooX'){alert('pygen 436\n'+root.src())}
-
-    var js = 'var err=StopIteration("inserted S.I. in function '+self.func_name+'");'
-    js += 'err.caught=true;throw err'
-    fnode.addChild(new $B.genNode(js))
-
+     
     // Set self._next to the code of the function for next iteration
 
     self.next_root = root
