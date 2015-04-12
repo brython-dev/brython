@@ -12,8 +12,8 @@ __BRYTHON__.$__new__ = function(factory){
         try{init_func = __BRYTHON__.builtins.getattr(res,'__init__')}
         catch(err){__BRYTHON__.$pop_exc()}
         if(init_func!==null){
-            var args = []
-            for(var i=1, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+            var args = [], pos=0
+            for(var i=1, _len_i = arguments.length; i < _len_i;i++){args[pos++]=arguments[i]}
             init_func.apply(null,args)
             res.__initialized__ = true
         }
@@ -54,13 +54,13 @@ var opsigns = ['+','-','*','/','//','%','**','<<','>>','&','^', '|']
 $ObjectDict.__delattr__ = function(self,attr){delete self[attr]}
 
 $ObjectDict.__dir__ = function(self) {
-    var res = []
-
-    var objects = [self]
+    var objects = [self], pos=1
     var mro = $B.get_class(self).__mro__
     for (var i=0, _len_i = mro.length; i < _len_i; i++) {
-        objects.push(mro[i])
+        objects[pos++]=mro[i]
     }
+
+    var res = [], pos=0
     for (var i=0, _len_i = objects.length; i < _len_i; i++) {
         for(var attr in objects[i]){
             //if(attr.charAt(0)=='$' && attr.substr(0,2)!=='$$'){
@@ -73,7 +73,7 @@ $ObjectDict.__dir__ = function(self) {
                 // '0', '1' are in attributes of string 'ab'
                 continue
             }
-            res.push(attr)
+            res[pos++]=attr
         }
     }
     res = _b_.list(_b_.set(res))
@@ -211,8 +211,9 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                     return function(){
                         // make a local copy of initial args
                         var local_args = initial_args.slice()
+                        var pos=local_args.length
                         for(var i=0, _len_i = arguments.length; i < _len_i;i++){
-                            local_args.push(arguments[i])
+                            local_args[pos++]=arguments[i]
                         }
                         var x = res.apply(obj,local_args)
                         if(x===undefined) return _b_.None

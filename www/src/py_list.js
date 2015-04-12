@@ -8,8 +8,8 @@ function $list(){
     // used for list displays
     // different from list : $list(1) is valid (matches [1])
     // but list(1) is invalid (integer 1 is not iterable)
-    var args = []
-    for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+    var args = [], pos=0
+    for(var i=0, _len_i = arguments.length; i < _len_i;i++){args[pos++]=arguments[i]}
     return new $ListDict(args)
 }
 
@@ -51,24 +51,26 @@ $ListDict.__delitem__ = function(self,arg){
         var step = arg.step || 1
         if(start<0) start=self.length+start
         if(stop<0) stop=self.length+stop
-        var res = [],i=null
+        var res = [],i=null, pos=0
         if(step>0){
             if(stop>start){
                 for(var i=start;i<stop;i+=step){
-                    if(self[i]!==undefined){res.push(i)}
+                    if(self[i]!==undefined){res[pos++]=i}
                 }
             }
         } else {
             if(stop<start){
                 for(var i=start;i>stop;i+=step.value){
-                    if(self[i]!==undefined){res.push(i)}
+                    if(self[i]!==undefined){res[pos++]=i}
                 }
                 res.reverse() // must be in ascending order
             }
         }
         // delete items from left to right
-        for(var i=res.length-1;i>=0;i--){
-            self.splice(res[i],1)
+        var i=res.length
+        while(i--) {
+           //for(var i=res.length-1;i>=0;i--){
+           self.splice(res[i],1)
         }
         return
     } 
@@ -130,15 +132,15 @@ $ListDict.__getitem__ = function(self,arg){
         } else {
             start = arg.start;
             if (start < 0) start += length;
-            if (start < 0) start = step<0 ? -1 : 0;
+            if (start < 0) start = step<0 ? -1 : 0
             if (start >= length) start = step<0 ? length-1 : length;
         }
         if (arg.stop === None) {
             stop = step<0 ? -1 : length;
         } else {
             stop = arg.stop;
-            if (stop < 0) stop += length;
-            if (stop < 0) stop = step<0 ? -1 : 0;
+            if (stop < 0) stop += length
+            if (stop < 0) stop = step<0 ? -1 : 0
             if (stop >= length) stop = step<0 ? length-1 : length;
         }
         /* Return the sliced list  */
@@ -210,8 +212,9 @@ $ListDict.__init__ = function(self,arg){
     if(arg===undefined) return
     var arg = iter(arg)
     var next_func = getattr(arg,'__next__')
+    var pos=self.length
     while(1){
-        try{self.push(next_func())}
+        try{self[pos++]=next_func()}
         catch(err){
             if(err.__name__=='StopIteration'){$B.$pop_exc();break}
             else{throw err}
@@ -260,8 +263,8 @@ $ListDict.__repr__ = function(self){
 
     var _r=self.map(_b_.repr)
 
-    if (self.__class__===$TupleDict) return '(' + _r.join(', ') + ')'
-    return '[' + _r.join(', ') + ']'
+    if (self.__class__===$TupleDict) return '('+_r.join(', ')+')'
+    return '['+_r.join(', ')+']'
 }
 
 $ListDict.__setitem__ = function(self,arg,value){
@@ -480,11 +483,11 @@ function list(){
     if(Array.isArray(arguments[0])){ // most simple case
         var res=arguments[0];res.__brython__=true;return res
     }
-    var res = []
+    var res = [], pos=0
     var arg = iter(arguments[0])
     var next_func = getattr(arg,'__next__')
     while(1){
-        try{res[res.length]=next_func()}
+        try{res[pos++]=next_func()}
         catch(err){
             if(err.__name__=='StopIteration'){
                 $B.$pop_exc()
@@ -521,8 +524,9 @@ for(var $attr in $ListDict){
                 var args = []
                 if(arguments.length>0){
                     var args = [arguments[0].valueOf()]
+                    var pos=1
                     for(var i=1, _len_i = arguments.length; i < _len_i;i++){
-                        args.push(arguments[i])
+                        args[pos++]=arguments[i]
                     }
                 }
                 return $ListDict[attr].apply(null,args)

@@ -16,8 +16,8 @@ for(var i=0, _len_i = mutable_methods.length; i < _len_i;i++){
     var method = mutable_methods[i]
     $BytearrayDict[method] = (function(m){
         return function(self){
-            var args = [self.source]
-            for(var i=1, _len_i = arguments.length; i < _len_i;i++) args.push(arguments[i])
+            var args = [self.source], pos=1
+            for(var i=1, _len_i = arguments.length; i < _len_i;i++) args[pos++]=arguments[i]
             return _b_.list.$dict[m].apply(null,args)
         }
     })(method)
@@ -80,7 +80,7 @@ $BytearrayDict.append = function(self,b){
     }
     if(!isinstance(b, _b_.int)) throw _b_.TypeError("an integer is required")
     if(b>255) throw ValueError("byte must be in range(0, 256)")
-    self.source.push(b)
+    self.source[self.source.length]=b
 }
 
 $BytearrayDict.insert = function(self,pos,b){
@@ -152,13 +152,13 @@ $BytesDict.__getitem__ = function(self,arg){
         }
         if(start<0) start=self.source.length+start
         if(stop<0) stop=self.source.length+stop
-        var res = [],i=null
+        var res = [],i=null, pos=0
         if(step>0){
           if(stop<=start) return ''
-          for(i=start;i<stop;i+=step) res.push(self.source[i])
+          for(i=start;i<stop;i+=step) res[pos++]=self.source[i]
         } else {
             if(stop>=start) return ''
-            for(i=start;i>=stop;i+=step) res.push(self.source[i])
+            for(i=start;i>=stop;i+=step) res[pos++]=self.source[i]
         }
         return bytes(res)
     } else if(isinstance(arg,bool)){
@@ -172,11 +172,13 @@ $BytesDict.__gt__ = function(self,other){
 }
 
 $BytesDict.__init__ = function(self,source,encoding,errors){
-    var int_list = []
+    var int_list = [], pos=0
     if(source===undefined){
         // empty list
     }else if(isinstance(source,_b_.int)){
-        for(var i=0;i<source;i++) int_list.push(0)
+        var i=source
+        //for(var i=0;i<source;i++) 
+        while(i--) int_list[pos++]=0
     }else{
         if(isinstance(source,_b_.str)){
             if(encoding===undefined)
@@ -257,9 +259,9 @@ $BytesDict.maketrans=function(from, to) {
 
 function _strip(self,cars,lr){
     if(cars===undefined){
-        cars = []
+        cars = [], pos=0
         var ws = '\r\n \t'
-        for(var i=0, _len_i = ws.length; i < _len_i; i++){cars.push(ws.charCodeAt(i))}
+        for(var i=0, _len_i = ws.length; i < _len_i; i++) cars[pos++]=ws.charCodeAt(i)
     }else if(isinstance(cars,bytes)){
         cars = cars.source
     }else{
@@ -291,19 +293,19 @@ $BytesDict.translate = function(self,table,_delete) {
     else{
         throw _b_.TypeError("Type "+$B.get_class(_delete).__name+" doesn't support the buffer API")    
     }
-    var res = []
+    var res = [], pos=0
     if (isinstance(table, bytes) && table.source.length==256) {
        for (var i=0, _len_i = self.source.length; i < _len_i; i++) {
            if(_delete.indexOf(self.source[i])>-1) continue
-           res.push(table.source[self.source[i]])
+           res[pos++]=table.source[self.source[i]]
        }
     }
     return bytes(res)
 }
 
 $BytesDict.upper = function(self) {
-    var _res=[]
-    for(var i=0, _len_i = self.source.length; i < _len_i; i++) _res.push(self.source[i].toUpperCase())
+    var _res=[], pos=0
+    for(var i=0, _len_i = self.source.length; i < _len_i; i++) _res[pos++]=self.source[i].toUpperCase()
     return bytes(_res)
 }
 
@@ -427,7 +429,7 @@ function decode(b,encoding,errors){
 }
 
 function encode(s,encoding){
-    var t=[]
+    var t=[], pos=0
 
     switch(encoding.toLowerCase()) {
       case 'utf-8':
@@ -440,27 +442,27 @@ function encode(s,encoding){
         for(var i=0, _len_i = s.length; i < _len_i;i++){
             var cp = s.charCodeAt(i) // code point
             if(cp<=127){
-                t.push(cp)
+                t[pos++]=cp
             }else if(cp<_int_800){
                 var zone = Math.floor((cp-128)/64)
-                t.push(_int_c2+zone)
-                t.push(cp -64*zone)
+                t[pos++]=_int_c2+zone
+                t[pos++]=cp -64*zone
             }else if(cp<_int_1000){
                 var zone = Math.floor((cp-_int_800)/64)
-                t.push(_int_e0)
-                t.push(_int_a0+zone)
-                t.push(_int_80 + cp - _int_800 - 64 * zone)
+                t[pos++]=_int_e0
+                t[pos++]=_int_a0+zone
+                t[pos++]=_int_80 + cp - _int_800 - 64 * zone
             }else if(cp<_int_2000){
                 var zone = Math.floor((cp-_int_1000)/64)
-                t.push(_int_e1+Math.floor((cp-_int_1000)/_int_1000))
-                t.push(_int_80+zone)
-                t.push(_int_80 + cp - _int_1000 -64*zone)
+                t[pos++]=_int_e1+Math.floor((cp-_int_1000)/_int_1000)
+                t[pos++]=_int_80+zone
+                t[pos++]=_int_80 + cp - _int_1000 -64*zone
             }else if(cp<_int_D000){
                 var zone = Math.floor((cp-_int_2000)/64)
                 var zone1 = Math.floor((cp-_int_2000)/_int_1000)
-                t.push(_int_e1+Math.floor((cp-_int_1000)/_int_1000))
-                t.push(_int_80+zone-zone1*64)
-                t.push(_int_80 + cp - _int_2000 - 64 * zone)
+                t[pos++]=_int_e1+Math.floor((cp-_int_1000)/_int_1000)
+                t[pos++]=_int_80+zone-zone1*64
+                t[pos++]=_int_80 + cp - _int_2000 - 64 * zone
             }
         }
         break;
@@ -469,7 +471,7 @@ function encode(s,encoding){
       case 'windows-1252': 
         for(var i=0, _len_i = s.length; i < _len_i;i++){
             var cp = s.charCodeAt(i) // code point
-            if(cp<=255){t.push(cp)}
+            if(cp<=255){t[pos++]=cp}
             else{$UnicodeEncodeError(encoding,i)}
         }
         break;
@@ -477,12 +479,12 @@ function encode(s,encoding){
       case 'windows-1250':
         for(var i=0, _len_i = s.length; i < _len_i;i++){
             var cp = s.charCodeAt(i) // code point
-            if(cp<=255){t.push(cp)}
+            if(cp<=255){t[pos++]=cp}
             else{
                 // load table to convert Unicode code point to cp1250 encoding
                 load_encoder('cp1250')
                 var res = from_unicode['cp1250'][cp]
-                if(res!==undefined){t.push(res)}
+                if(res!==undefined){t[pos++]=res}
                 else{$UnicodeEncodeError(encoding,i)}
             }
         }
@@ -490,7 +492,7 @@ function encode(s,encoding){
       case 'ascii':
         for(var i=0, _len_i = s.length; i < _len_i;i++){
             var cp = s.charCodeAt(i) // code point
-            if(cp<=127){t.push(cp)}
+            if(cp<=127){t[pos++]=cp}
             else{$UnicodeEncodeError(encoding,i)}
         }
         break;

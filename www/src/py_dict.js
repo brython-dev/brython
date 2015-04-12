@@ -235,8 +235,8 @@ $DictDict.__hash__ = function(self) {
 }
 
 $DictDict.__init__ = function(self){
-    var args = []
-    for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
+    var args = [], pos=0
+    for(var i=1;i<arguments.length;i++){args[pos++]=arguments[i]}
     $DictDict.clear(self)
     switch(args.length) {
       case 0:
@@ -333,17 +333,17 @@ $DictDict.__next__ = function(self){
 $DictDict.__repr__ = function(self){
     if(self===undefined) return "<class 'dict'>"
     var _objs=[self]  // used to elimate recursion
-    var res=[]
+    var res=[], pos=0
     var items = new $item_generator(self).as_list()
     for (var i=0; i < items.length; i++) {
         var itm = items[i]
         if (_objs.indexOf(itm[1]) > -1 && _b_.isinstance(itm[1], [_b_.dict,_b_.list,_b_.set, _b_.tuple])) {
            var value='?'+_b_.type(itm[1])
            if(isinstance(itm[1], dict)) value='{...}'
-           res.push(repr(itm[0])+': '+ value)
+           res[pos++]=repr(itm[0])+': '+ value
         } else {
            if (_objs.indexOf(itm[1]) == -1) _objs.push(itm[1])
-           res.push(repr(itm[0])+': '+repr(itm[1]))
+           res[pos++]=repr(itm[0])+': '+repr(itm[1])
         }
     }
     return '{'+ res.join(', ') +'}'
@@ -496,8 +496,8 @@ $DictDict.setdefault = function(self,key,_default){
 }
 
 $DictDict.update = function(self){
-    var params = []
-    for(var i=1;i<arguments.length;i++){params.push(arguments[i])}
+    var params = [], pos=0
+    for(var i=1;i<arguments.length;i++){params[pos++]=arguments[i]}
     var $ns=$B.$MakeArgs('$DictDict.update',params,[],[],'args','kw')
     var args = $ns['args']
     if(args.length>0) {
@@ -506,9 +506,12 @@ $DictDict.update = function(self){
          $copy_dict(self, o)
       } else if (hasattr(o, '__getitem__') && hasattr(o, 'keys')) {
          var _keys=_b_.list(getattr(o, 'keys')())
-         for (var i=0; i < _keys.length; i++) {
-             var _value = getattr(o, '__getitem__')(_keys[i]) 
-             $DictDict.__setitem__(self, _keys[i], _value)
+         var si=$DictDict.__setitem__
+         var i=_keys.length
+         while(i--) {
+             //for (var i=0; i < _keys.length; i++) {
+             var _value = getattr(o, '__getitem__')(_keys[i])
+             si(self, _keys[i], _value)
          }
       }
     }
@@ -547,8 +550,8 @@ function dict(args, second){
     // apply __init__ with arguments of dict()
     var res = {__class__:$DictDict}
     $DictDict.clear(res)
-    var _args = [res]
-    for(var i=0, _len_i = arguments.length; i < _len_i;i++){_args.push(arguments[i])}
+    var _args = [res], pos=1
+    for(var i=0, _len_i = arguments.length; i < _len_i;i++){_args[pos++]=arguments[i]}
     $DictDict.__init__.apply(null,_args)
     return res
 }
@@ -629,10 +632,9 @@ function obj_dict(obj){
     }
     var res = {__class__:$ObjDictDict,$obj:obj}
     $DictDict.clear(res)
+    var si=$DictDict.__setitem__
     for(var attr in obj){
-        if(attr.charAt(0)!='$'){
-           $DictDict.__setitem__(res, attr, obj[attr])
-        }
+        if(attr.charAt(0)!='$') si(res, attr, obj[attr])
     }
     return res
 }

@@ -460,7 +460,7 @@ function getattr(obj,attr,_default){
               // On debug mode, wrap the function to keep a track of call 
               // stack, for traceback
               return function(){
-                $B.call_stack.push($B.line_info)
+                $B.call_stack[$B.call_stack.length]=$B.line_info
                 var res = obj.apply(null,arguments)
                 $B.line_info = $B.call_stack.pop()
                 return res

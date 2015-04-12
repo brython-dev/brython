@@ -89,9 +89,9 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     }
     if(nbreqset!==$required.length){
         // throw error if not all required positional arguments have been set
-        var missing = []
+        var missing = [], pos=0
         for(var i=0, _len_i = $required.length; i < _len_i;i++){
-            if($ns[$required[i]]===undefined){missing.push($required[i])}
+            if($ns[$required[i]]===undefined) missing[pos++]=$required[i]
         }
         if(missing.length==1){
             throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")
@@ -104,9 +104,11 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     }
     if($other_kw!=null){
         $ns[$other_kw]=_b_.dict()
-        for(var i=0;i<$dict_keys.length;i++){
-            _b_.dict.$dict.__setitem__($ns[$other_kw], $dict_keys[i],
-                $dict_values[i])
+        var si=_b_.dict.$dict.__setitem__
+        var i=$dict_keys.length
+        while(i--) {
+        //for(var i=0;i<$dict_keys.length;i++){
+           si($ns[$other_kw], $dict_keys[i],$dict_values[i])
         }
     }
     if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
@@ -128,25 +130,25 @@ $B.$MakeArgs1 = function($fname,$args,$robj,$required,$dobj,$defaults,
     if($other_args != null){$ns[$other_args]=[]}
     if($other_kw != null){var $dict_keys=[], $dict_values=[]}
     // create new list of arguments in case some are packed
-    var upargs = []
+    var upargs = [], pos=0
     for(var i=0, _len_i = $args.length; i < _len_i;i++){
         $arg = $args[i]
         if($arg===undefined){console.log('arg '+i+' undef in '+$fname)}
-        else if($arg===null){upargs.push(null)}
+        else if($arg===null){upargs[pos++]=null}
         else {
            switch($arg.$nat) {
              case 'ptuple':
                var _arg=$arg.arg
-               for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs.push(_arg[j])
+               for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs[pos++]=_arg[j]
                break
              case 'pdict':
                var _arg=$arg.arg, items=_b_.list(_b_.dict.$dict.items(_arg))
                for(var j=0, _len_j = items.length; j < _len_j;j++){
-                  upargs.push({$nat:"kw",name:items[j][0],value:items[j][1]})
+                  upargs[pos++]={$nat:"kw",name:items[j][0],value:items[j][1]}
                }
                break
              default:
-               upargs.push($arg)
+               upargs[pos++]=$arg
            }//switch
         }//else
     }
@@ -194,9 +196,9 @@ $B.$MakeArgs1 = function($fname,$args,$robj,$required,$dobj,$defaults,
     }
     if(nbreqset!==$required.length){
         // throw error if not all required positional arguments have been set
-        var missing = []
+        var missing = [], pos=0
         for(var i=0, _len_i = $required.length; i < _len_i;i++){
-            if($ns[$required[i]]===undefined){missing.push($required[i])}
+            if($ns[$required[i]]===undefined){missing[pos++]=$required[i]}
         }
         if(missing.length==1){
             throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")
@@ -209,9 +211,11 @@ $B.$MakeArgs1 = function($fname,$args,$robj,$required,$dobj,$defaults,
     }
     if($other_kw!=null){
         $ns[$other_kw]=_b_.dict()
-        for(var i=0;i<$dict_keys.length;i++){
-            _b_.dict.$dict.__setitem__($ns[$other_kw], $dict_keys[i],
-                $dict_values[i])
+        var si=_b_.dict.$dict.__setitem__
+        var i=$dict_keys.length
+        while(i--) {
+           // for(var i=0;i<$dict_keys.length;i++){
+            si($ns[$other_kw], $dict_keys[i],$dict_values[i])
         }
     }
     if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
@@ -246,7 +250,6 @@ $B.get_class = function(obj){
             }
         }
     }
-    //if(klass===undefined){console.log('klass undef for '+obj+' '+$B.keys(obj))}
     return klass
 }
 
@@ -294,7 +297,7 @@ $B.$list_comp = function(env){
     $root.caller = $B.line_info
 
     var $js = $root.to_js()
-    $B.call_stack.push($B.line_info)
+    $B.call_stack[$B.call_stack.length]=$B.line_info
     try{
         eval($js)
         var res = eval('$locals_'+listcomp_name+'["x"+$ix]')
@@ -556,7 +559,7 @@ $B.$syntax_err_line = function(exc,module,pos) {
     var line_pos = {1:0}
     for(var i=0, _len_i = src.length; i < _len_i;i++){
         pos2line[i]=lnum
-        if(src.charAt(i)=='\n'){lnum+=1;line_pos[lnum]=i}
+        if(src.charAt(i)=='\n'){line_pos[++lnum]=i}
     }
     var line_num = pos2line[pos]
     exc.$line_info = line_num+','+module
@@ -564,10 +567,13 @@ $B.$syntax_err_line = function(exc,module,pos) {
     var lines = src.split('\n')
     var line = lines[line_num-1]
     var lpos = pos-line_pos[line_num]
-    while(line && line.charAt(0)==' '){
-      line=line.substr(1)
-      lpos--
-    }
+    var len=line.length
+    line=line.replace(/^\s*/,'')
+    lpos-=len-line.length
+    //while(line && line.charAt(0)==' '){
+    //  line=line.substr(1)
+    //  lpos--
+    //}
     exc.args = _b_.tuple([$B.$getitem(exc.args,0),_b_.tuple([module, line_num, lpos, line])])
 }
 
@@ -683,9 +689,9 @@ $B.jsobject2pyobject=function(obj){
     }
 
     if(_b_.isinstance(obj,_b_.list)){
-        var res = []
+        var res = [], pos=0
         for(var i=0, _len_i = obj.length; i < _len_i;i++){
-            res.push($B.jsobject2pyobject(obj[i]))
+            res[pos++]=$B.jsobject2pyobject(obj[i])
         }
         return res
     }
@@ -707,8 +713,9 @@ $B.jsobject2pyobject=function(obj){
     if(typeof obj==='object' && obj.__class__===undefined){
         // transform JS object into a Python dict
         var res = _b_.dict()
+        var si=_b_.dict.$dict.__setitem__
         for(var attr in obj){
-            _b_.getattr(res,'__setitem__')(attr,$B.jsobject2pyobject(obj[attr]))
+           si(res, attr,$B.jsobject2pyobject(obj[attr]))
         }
         return res
     }
@@ -730,9 +737,9 @@ $B.pyobject2jsobject=function (obj){
     if(_b_.isinstance(obj,[_b_.int,_b_.str])) return obj
     if(_b_.isinstance(obj,_b_.float)) return obj.value
     if(_b_.isinstance(obj,[_b_.list,_b_.tuple])){
-        var res = []
+        var res = [], pos=0
         for(var i=0, _len_i = obj.length; i < _len_i;i++){
-           res.push($B.pyobject2jsobject(obj[i]))
+           res[pos++]=$B.pyobject2jsobject(obj[i])
         }
         return res
     }
@@ -747,10 +754,10 @@ $B.pyobject2jsobject=function (obj){
 
     if (_b_.hasattr(obj, '__iter__')) {
        // this is an iterator..
-       var _a=[]
+       var _a=[], pos=0
        while(1) {
           try {
-           _a.push($B.pyobject2jsobject(_b_.next(obj)))
+           _a[pos++]=$B.pyobject2jsobject(_b_.next(obj))
           } catch(err) {
             if (err.__name__ !== "StopIteration") throw err
             $B.$pop_exc();break
@@ -824,11 +831,11 @@ $B.$iterator_class = function(name){
     res.__mro__ = [res,_b_.object.$dict]
 
     function as_array(s) {
-       var _a=[]
+       var _a=[], pos=0
        var _it = _b_.iter(s)
        while (1) {
          try {
-              _a.push(_b_.next(_it))
+              _a[pos++]=_b_.next(_it)
          } catch (err) {
               if (err.__name__ == 'StopIteration'){$B.$pop_exc();break}
          }
@@ -931,8 +938,8 @@ $B.set_func_names = function(klass){
 $B.UUID=function() {return $B.$py_UUID++}
 
 $B.InjectBuiltins=function() {
-   var _str=["var _b_=$B.builtins"]
-   for(var $b in $B.builtins) _str.push('var ' + $b +'=_b_["'+$b+'"]')
+   var _str=["var _b_=$B.builtins"], pos=1
+   for(var $b in $B.builtins) _str[pos++]='var ' + $b +'=_b_["'+$b+'"]'
    return _str.join(';')
 }
 
@@ -947,7 +954,7 @@ $B.$GetInt=function(value) {
 }
 
 $B.enter_frame = function(frame){
-    $B.frames_stack.push(frame)
+    $B.frames_stack[$B.frames_stack.length]=frame
 }
 
 $B.leave_frame = function(){
@@ -974,11 +981,11 @@ if(!Array.indexOf){
 if (!String.prototype.repeat) {
   String.prototype.repeat = function(count) {
     if (count < 1) return '';
-    var result = '', pattern = this.valueOf();
+    var result = '', pattern = this.valueOf()
     while (count > 1) {
-        if (count & 1) result += pattern;
-        count >>= 1, pattern += pattern;
+        if (count & 1) result += pattern
+        count >>= 1, pattern += pattern
     }
     return result + pattern;
-  };
+  }
 }
