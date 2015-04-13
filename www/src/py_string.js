@@ -1483,12 +1483,15 @@ $StringDict.rfind = function(self){
         "slice indices must be integers or None or have an __index__ method")}
 
     var s = self.substring(start,end)
-    var reversed = '',rsub=''
-    for(var i=s.length-1;i>=0;i--){reversed += s.charAt(i)}
-    for(var i=sub.length-1;i>=0;i--){rsub += sub.charAt(i)}
-    var res = reversed.search($re_escape(rsub))
-    if(res==-1) return -1
-    return start+s.length-1-res-sub.length+1
+    //var reversed = '',rsub=''
+    //for(var i=s.length-1;i>=0;i--){reversed += s.charAt(i)}
+    //for(var i=sub.length-1;i>=0;i--){rsub += sub.charAt(i)}
+    //var res = reversed.search($re_escape(rsub))
+    //if(res==-1) return -1
+    //return start+s.length-1-res-sub.length+1
+
+    // why not use lastIndexOf, which passes all brython tests..?
+    return self.lastIndexOf(sub)
 }
 
 $StringDict.rindex = function(){
@@ -1534,7 +1537,7 @@ $StringDict.rsplit = function(self) {
     if($ns['args'].length==2){maxsplit=$ns['args'][1]}
     maxsplit = _b_.dict.$dict.get($ns['kw'],'maxsplit',maxsplit)
 
-    var array=$StringDict.split(self) 
+    //var array=$StringDict.split(self) 
 
     var array=$StringDict.split(self, sep) 
 
@@ -1667,15 +1670,15 @@ $StringDict.title = function(self) {
 }
 
 $StringDict.translate = function(self,table) {
-    var res = ''
+    var res = [], pos=0
     if (isinstance(table, _b_.dict)) {
        for (var i=0, _len_i = self.length; i < _len_i; i++) {
            var repl = _b_.dict.$dict.get(table,self.charCodeAt(i),-1)
-           if(repl==-1){res += self.charAt(i)}
-           else if(repl!==None){res += repl}
+           if(repl==-1){res[pos++]=self.charAt(i)}
+           else if(repl!==None){res[pos++]=repl}
        }
     }
-    return res
+    return res.join('')
 }
 
 $StringDict.upper = function(self){return self.toUpperCase()}
@@ -1748,11 +1751,11 @@ for(var $attr in $StringDict){
     if(typeof $StringDict[$attr]=='function'){
         $StringSubclassDict[$attr]=(function(attr){
             return function(){
-                var args = []
+                var args = [], pos=0
                 if(arguments.length>0){
-                    var args = [arguments[0].valueOf()]
+                    var args = [arguments[0].valueOf()], pos=1
                     for(var i=1, _len_i = arguments.length; i < _len_i;i++){
-                        args.push(arguments[i])
+                        args[pos++]=arguments[i]
                     }
                 }
                 return $StringDict[attr].apply(null,args)

@@ -22,25 +22,25 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     if($other_args != null){$ns[$other_args]=[]}
     if($other_kw != null){var $dict_keys=[], $dict_values=[]}
     // create new list of arguments in case some are packed
-    var upargs = []
+    var upargs = [], pos=0
     for(var i=0, _len_i = $args.length; i < _len_i;i++){
         $arg = $args[i]
         if($arg===undefined){console.log('arg '+i+' undef in '+$fname)}
-        else if($arg===null){upargs.push(null)}
+        else if($arg===null){upargs[pos++]=null}
         else {
            switch($arg.$nat) {
              case 'ptuple':
                var _arg=$arg.arg
-               for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs.push(_arg[j])
+               for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs[pos++]=_arg[j]
                break
              case 'pdict':
                var _arg=$arg.arg, items=_b_.list(_b_.dict.$dict.items(_arg))
                for(var j=0, _len_j = items.length; j < _len_j;j++){
-                  upargs.push({$nat:"kw",name:items[j][0],value:items[j][1]})
+                  upargs[pos++]={$nat:"kw",name:items[j][0],value:items[j][1]}
                }
                break
              default:
-               upargs.push($arg)
+               upargs[pos++]=$arg
            }//switch
         }//else
     }

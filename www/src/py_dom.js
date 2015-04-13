@@ -156,8 +156,7 @@ function $DOMEvent(ev){
     if(ev.preventDefault===undefined){ev.preventDefault = function(){ev.returnValue=false}}
     if(ev.stopPropagation===undefined){ev.stopPropagation = function(){ev.cancelBubble=true}}
     ev.__repr__ = function(){return '<DOMEvent object>'}
-    ev.__str__ = function(){return '<DOMEvent object>'}
-    ev.toString = ev.__str__
+    ev.toString = ev.__str__ = ev.__repr__
     return ev
 }
 
@@ -360,13 +359,13 @@ function $DOMNode(elt){
 DOMNode.__add__ = function(self,other){
     // adding another element to self returns an instance of $TagSum
     var res = $TagSum()
-    res.children = [self]
+    res.children = [self], pos=1
     if(isinstance(other,$TagSum)){
-        for(var $i=0;$i<other.children.length;$i++){res.children.push(other.children[$i])}
+        for(var $i=0;$i<other.children.length;$i++){res.children[pos++]=other.children[$i]}
     } else if(isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.list,
                                 _b_.dict,_b_.set,_b_.tuple])){
-        res.children.push($DOMNode(document.createTextNode(_b_.str(other))))
-    }else{res.children.push(other)}
+        res.children[pos++]=$DOMNode(document.createTextNode(_b_.str(other)))
+    }else{res.children[pos++]=other}
     return res
 }
 
@@ -457,17 +456,17 @@ DOMNode.__getattribute__ = function(self,attr){
         if(typeof res==="function"){
             var func = (function(f,elt){
                 return function(){
-                    var args = []
+                    var args = [], pos=0
                     for(var i=0;i<arguments.length;i++){
                         var arg=arguments[i]
                         if(isinstance(arg,JSObject)){
-                            args.push(arg.js)
+                            args[pos++]=arg.js
                         }else if(isinstance(arg,DOMNode)){
-                            args.push(arg.elt)
+                            args[pos++]=arg.elt
                         }else if(arg===_b_.None){
-                            args.push(null)
+                            args[pos++]=null
                         }else{
-                            args.push(arg)
+                            args[pos++]=arg
                         }
                     }
                     var result = f.apply(elt,args)
@@ -492,8 +491,8 @@ DOMNode.__getitem__ = function(self,key){
             throw KeyError(key)
         }else{
             try{
-                var elts=self.elt.getElementsByTagName(key.$dict.__name__),res=[]
-                for(var $i=0;$i<elts.length;$i++) res.push($DOMNode(elts[$i]))
+                var elts=self.elt.getElementsByTagName(key.$dict.__name__),res=[],pos=0
+                for(var $i=0;$i<elts.length;$i++) res[pos++]=$DOMNode(elts[$i])
                 return res
             }catch(err){
                 throw KeyError(str(key))
@@ -531,9 +530,9 @@ DOMNode.__len__ = function(self){return self.elt.childNodes.length}
 DOMNode.__mul__ = function(self,other){
     if(isinstance(other,_b_.int) && other.valueOf()>0){
         var res = $TagSum()
+        var pos=res.children.length
         for(var i=0;i<other.valueOf();i++){
-            var clone = DOMNode.clone(self)()
-            res.children.push(clone)
+            res.children[pos++]= DOMNode.clone(self)()
         }
         return res
     }
@@ -604,6 +603,7 @@ DOMNode.bind = function(self,event){
         _d.__setitem__(item, event, [])
     }
     var evlist = _d.__getitem__(item, event)
+    var pos=evlist.length
     for(var i=2;i<arguments.length;i++){
         var func = arguments[i]
         var callback = (function(f){
@@ -621,14 +621,14 @@ DOMNode.bind = function(self,event){
         }else if(window.attachEvent){
             self.elt.attachEvent("on"+event,callback)
         }
-        evlist.push([func, callback])
+        evlist[pos++]=[func, callback]
     }
 }
 
 DOMNode.children = function(self){
-    var res = []
+    var res = [], pos=0
     for(var i=0;i<self.elt.childNodes.length;i++){
-        res.push($DOMNode(self.elt.childNodes[i]))
+        res[pos++]=$DOMNode(self.elt.childNodes[i])
     }
     return res
 }
@@ -682,8 +682,8 @@ DOMNode.get = function(self){
     // with specified keys/values
     // key can be 'id','name' or 'selector'
     var obj = self.elt
-    var args = []
-    for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
+    var args = [], pos=0
+    for(var i=1;i<arguments.length;i++){args[pos++]=arguments[i]}
     var $ns=$B.$MakeArgs('get',args,[],[],null,'kw')
     var $dict = {}
     var items = _b_.list(_b_.dict.$dict.items($ns['kw']))
@@ -694,28 +694,28 @@ DOMNode.get = function(self){
         if(obj.getElementsByName===undefined){
             throw _b_.TypeError("DOMNode object doesn't support selection by name")
         }
-        var res = []
+        var res = [], pos=0
         var node_list = document.getElementsByName($dict['name'])
         if(node_list.length===0) return []
-        for(var i=0;i<node_list.length;i++) res.push($DOMNode(node_list[i]))
+        for(var i=0;i<node_list.length;i++) res[pos++]=$DOMNode(node_list[i])
     }
     if($dict['tag']!==undefined){
         if(obj.getElementsByTagName===undefined){
             throw _b_.TypeError("DOMNode object doesn't support selection by tag name")
         }
-        var res = []
+        var res = [], pos=0
         var node_list = document.getElementsByTagName($dict['tag'])
         if(node_list.length===0) return []
-        for(var i=0;i<node_list.length;i++) res.push($DOMNode(node_list[i]))
+        for(var i=0;i<node_list.length;i++) res[pos++]=$DOMNode(node_list[i])
     }
     if($dict['classname']!==undefined){
         if(obj.getElementsByClassName===undefined){
             throw _b_.TypeError("DOMNode object doesn't support selection by class name")
         }
-        var res = []
+        var res = [], pos=0
         var node_list = document.getElementsByClassName($dict['classname'])
         if(node_list.length===0) return []
-        for(var i=0;i<node_list.length;i++) res.push($DOMNode(node_list[i]))
+        for(var i=0;i<node_list.length;i++) res[pos++]=$DOMNode(node_list[i])
     }
     if($dict['id']!==undefined){
         if(obj.getElementById===undefined){
@@ -730,19 +730,19 @@ DOMNode.get = function(self){
             throw _b_.TypeError("DOMNode object doesn't support selection by selector")
         }
         var node_list = obj.querySelectorAll($dict['selector'])
-        var sel_res = []
+        var sel_res = [], pos=0
         if(node_list.length===0) return []
-        for(var i=0;i<node_list.length;i++) sel_res.push($DOMNode(node_list[i]))
+        for(var i=0;i<node_list.length;i++) sel_res[pos++]=$DOMNode(node_list[i])
         
         if(res===undefined) return sel_res
-        var to_delete = []
+        var to_delete = [], pos=0
         for(var i=0;i<res.length;i++){
             var elt = res[i] // keep it only if it is also inside sel_res
             flag = false
             for(var j=0;j<sel_res.length;j++){
                 if(elt.__eq__(sel_res[j])){flag=true;break}
             }
-            if(!flag){to_delete.push(i)}
+            if(!flag){to_delete[pos++]=i}
         }
         for(var i=to_delete.length-1;i>=0;i--) res.splice(to_delete[i],1)
     }

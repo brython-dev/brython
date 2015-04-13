@@ -84,38 +84,38 @@ function make_mro(bases, cl_dict){
     // method resolution order
     // copied from http://code.activestate.com/recipes/577748-calculate-the-mro-of-a-class/
     // by Steve d'Aprano
-    var seqs = []
+    var seqs = [], pos1=0
     for(var i=0;i<bases.length;i++){
         // we can't simply push bases[i].__mro__ 
         // because it would be modified in the algorithm
         if(bases[i]===_b_.str) bases[i] = $B.$StringSubclassFactory
         else if(bases[i]===_b_.list) bases[i] = $B.$ListSubclassFactory
-        var bmro = []
+        var bmro = [], pos=0
         var _tmp=bases[i].$dict.__mro__
         for(var k=0;k<_tmp.length;k++){
-            bmro.push(_tmp[k])
+            bmro[pos++]=_tmp[k]
         }
-        seqs.push(bmro)
+        seqs[pos1++]=bmro
     }
 
     if(bases.indexOf(_b_.object)==-1){
         bases=bases.concat(_b_.tuple([_b_.object]))
     }
 
-    for(var i=0;i<bases.length;i++) seqs.push(bases[i].$dict)
+    for(var i=0;i<bases.length;i++) seqs[pos1++]=bases[i].$dict
 
-    var mro = []
+    var mro = [], mpos=0
     while(1){
-        var non_empty = []
+        var non_empty = [], pos=0
         for(var i=0;i<seqs.length;i++){
-            if(seqs[i].length>0) non_empty.push(seqs[i])
+            if(seqs[i].length>0) non_empty[pos++]=seqs[i]
         }
         if (non_empty.length==0) break
         for(var i=0;i<non_empty.length;i++){
-            var seq = non_empty[i],candidate = seq[0],not_head = []
+            var seq = non_empty[i],candidate = seq[0],not_head = [],pos=0
             for(var j=0;j<non_empty.length;j++){
                 var s = non_empty[j]
-                if(s.slice(1).indexOf(candidate)>-1){not_head.push(s)}
+                if(s.slice(1).indexOf(candidate)>-1){not_head[pos++]=s}
             }
             if(not_head.length>0){candidate=null}
             else{break}
@@ -123,7 +123,7 @@ function make_mro(bases, cl_dict){
         if(candidate===null){
             throw _b_.TypeError("inconsistent hierarchy, no C3 MRO is possible")
         }
-        mro.push(candidate)
+        mro[mpos++]=candidate
         for(var i=0;i<seqs.length;i++){
             var seq = seqs[i]
             if(seq[0]===candidate){ // remove candidate
@@ -132,7 +132,7 @@ function make_mro(bases, cl_dict){
         }
     }
     if(mro[mro.length-1]!==_b_.object.$dict){
-        mro.push(_b_.object.$dict)
+        mro[mpos++]=_b_.object.$dict
     }
 
     return mro
@@ -250,7 +250,6 @@ $B.$type.__getattribute__=function(klass,attr){
       case '__hash__':
         return function() {
            if (arguments.length == 0) return klass.__hashvalue__ || $B.$py_next_hash--
-
         }
     }//switch
 
@@ -358,8 +357,9 @@ $B.$type.__getattribute__=function(klass,attr){
                         // class method
                         // make a local copy of initial args
                         var local_args = initial_args.slice()
+                        var pos=local_args.length
                         for(var i=0;i < arguments.length;i++){
-                            local_args.push(arguments[i])
+                            local_args[pos++]=arguments[i]
                         }
                         return res.apply(null,local_args)
                     }})(args)
