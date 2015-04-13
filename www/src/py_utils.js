@@ -20,7 +20,7 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     for(var i=0;i<$defaults.length;i++){$dobj[$defaults[i]]=null}
 
     if($other_args != null){$ns[$other_args]=[]}
-    if($other_kw != null){var $dict_keys=[], $dict_values=[]}
+    if($other_kw != null){var $dict_keys=[], key_pos=0, $dict_values=[], value_pos=0}
     // create new list of arguments in case some are packed
     var upargs = [], pos=0
     for(var i=0, _len_i = $args.length; i < _len_i;i++){
@@ -65,8 +65,8 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
                 $defaults.splice(pos_def,1)
                 delete $dobj[$arg.name]
             } else if($other_kw!=null){
-                $dict_keys.push($arg.name)
-                $dict_values.push($PyVar)
+                $dict_keys[key_pos++]=$arg.name
+                $dict_values[value_pos++]=$PyVar
             } else {
                 throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+$arg.name+"'")
             }
@@ -470,8 +470,8 @@ $B.$JS2Py = function(src){
         if($B.$isNode(src)) return $B.$DOMNode(src)
         if($B.$isEvent(src)) return $B.DOMEvent(src)
         if(src.constructor===Array||$B.$isNodeList(src)){
-            var res = []
-            for(var i=0, _len_i = src.length; i < _len_i;i++) res.push($B.$JS2Py(src[i]))
+            var res = [], pos=0
+            for(var i=0,_len_i=src.length;i<_len_i;i++) res[pos++]=$B.$JS2Py(src[i])
             return res
         }
     }

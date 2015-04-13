@@ -535,8 +535,8 @@ for(var $attr in $ListDict){
     }
 }
 $ListSubclassDict.__init__ = function(self){
-    var res = [], args=[res]
-    for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
+    var res = [], args=[res], pos=1
+    for(var i=1;i<arguments.length;i++){args[pos++]=arguments[i]}
     $ListDict.__init__.apply(null, args)
     self.valueOf = function(){return res}
 }

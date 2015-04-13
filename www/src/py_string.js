@@ -51,9 +51,9 @@ $StringDict.__eq__ = function(self,other){
 
 $StringDict.__format__ = function(self,arg){
     var _fs = $FormattableString(self.valueOf())
-    var args=[]
+    var args=[], pos=0
     // we don't need the first item (ie, self)
-    for (var i = 1, _len_i = arguments.length; i < _len_i; i++) { args.push(arguments[i])}
+    for (var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
     return _fs.strformat(arg)
 }
 
@@ -775,8 +775,8 @@ $StringDict.endswith = function(self){
     // return False. suffix can also be a tuple of suffixes to look for. 
     // With optional start, test beginning at that position. With optional 
     // end, stop comparing at that position.
-    var args = []
-    for(var i=1, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+    var args = [], pos=0
+    for(var i=1, _len_i=arguments.length; i<_len_i;i++){args[pos++]=arguments[i]}
     var start=null,end=null
     var $ns=$B.$MakeArgs("$StringDict.endswith",args,['suffix'],
         ['start','end'],null,null)
@@ -1280,9 +1280,9 @@ var $FormattableString=function(format_string) {
 $StringDict.format = function(self) {
 
     var _fs = $FormattableString(self.valueOf())
-    var args=[]
+    var args=[], pos=0
     // we don't need the first item (ie, self)
-    for (var i = 1, _len_i = arguments.length; i < _len_i; i++) { args.push(arguments[i])}
+    for (var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
     return _fs.format.apply(null, args)
 }
 
@@ -1529,8 +1529,8 @@ $StringDict.rpartition = function(self,sep) {
 }
 
 $StringDict.rsplit = function(self) {
-    var args = []
-    for(var i=1, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+    var args = [], pos=0
+    for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
     var $ns=$B.$MakeArgs("$StringDict.rsplit",args,[],[],'args','kw')
     var sep=None,maxsplit=-1
     if($ns['args'].length>=1){sep=$ns['args'][0]}
@@ -1559,8 +1559,8 @@ $StringDict.rstrip = function(self,x){
 }
 
 $StringDict.split = function(self){
-    var args = []
-    for(var i=1, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+    var args = [], pos=0
+    for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
     var $ns=$B.$MakeArgs("$StringDict.split",args,[],[],'args','kw')
     var sep=None,maxsplit=-1
     if($ns['args'].length>=1){sep=$ns['args'][0]}
