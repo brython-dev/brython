@@ -517,6 +517,16 @@ function getattr(obj,attr,_default){
             return res
         }
         break
+      case '__subclasses__':
+          if(klass===$B.$factory){
+              //console.log('subclasses '+obj.$dict.$subclasses)
+              var subclasses = obj.$dict.$subclasses || []
+              for(var i=0;i<subclasses.length;i++){
+                  console.log(subclasses[i].$dict.__name__)
+              }
+              return function(){return subclasses}
+          }
+        break
     }//switch
 
     if(typeof obj == 'function') {
@@ -752,10 +762,7 @@ function isinstance(obj,arg){
 
     // Search __instancecheck__ on arg
     var hook = getattr(arg,'__instancecheck__',null)
-    if(hook!==null){
-        // FIX ME
-        console.log(hook(obj))
-    }
+    if(hook!==null){return hook(obj)}
 
    return false
 }
@@ -774,10 +781,17 @@ function issubclass(klass,classinfo){
       return false
     }
     if(classinfo.__class__.is_class){
-      return klass.$dict.__mro__.indexOf(classinfo.$dict)>-1    
+      if(klass.$dict.__mro__.indexOf(classinfo.$dict)>-1){return true}
     }
+    
+    // Search __subclasscheck__ on classinfo
+    var hook = getattr(classinfo,'__subclasscheck__',null)
+    //console.log('subclasscheck of '+classinfo+': '+hook)
+    if(hook!==null){return hook(klass)}
+    
+    return false
 
-    throw _b_.TypeError("issubclass() arg 2 must be a class or tuple of classes")
+    //throw _b_.TypeError("issubclass() arg 2 must be a class or tuple of classes")
 }
 
 function iter(obj){

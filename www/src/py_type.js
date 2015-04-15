@@ -52,7 +52,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         }
     }
     class_dict.__class__ = metaclass.$dict
-
+    
     // Get method __new__ of metaclass
     var meta_new = $B.$type.__getattribute__(metaclass.$dict,'__new__')
     
@@ -61,6 +61,12 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         var factory = _b_.type.$dict.__new__(_b_.type,class_name,bases,cl_dict)
     }else{
         var factory = meta_new(metaclass, class_name, bases, cl_dict)
+    }
+        
+    // Set new class as subclass of its parents
+    for(var i=0;i<parents.length;i++){
+        parents[i].$dict.$subclasses  = parents[i].$dict.$subclasses || []
+        parents[i].$dict.$subclasses.push(factory)
     }
 
     if(metaclass===_b_.type) return factory
