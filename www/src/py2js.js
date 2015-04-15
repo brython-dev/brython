@@ -347,6 +347,7 @@ function $AbstractExprCtx(context,with_commas){
     context.tree[context.tree.length]=this
     this.toString = function(){return '(abstract_expr '+with_commas+') '+this.tree}
     this.to_js = function(){
+        this.js_processed=true
         if(this.type==='list') return '['+$to_js(this.tree)+']'
         return $to_js(this.tree)
     }
@@ -407,10 +408,8 @@ function $AssignCtx(context, check_unbound){
     var scope = $get_scope(this)
     
     if(context.type=='expr' && context.tree[0].type=='call'){
-        $_SyntaxError(context,["can't assign to function call "])
-    }
-    
-    if(context.type=='list_or_tuple' || 
+          $_SyntaxError(context,["can't assign to function call "])
+    }else if(context.type=='list_or_tuple' || 
         (context.type=='expr' && context.tree[0].type=='list_or_tuple')){
         if(context.type=='expr'){context = context.tree[0]}
         for(var i=0;i<context.tree.length;i++){
@@ -462,7 +461,7 @@ function $AssignCtx(context, check_unbound){
                 $check_unbound(assigned,scope,assigned.value)
             }
         }
-    }
+    }//if
     
     this.toString = function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
     
@@ -528,11 +527,11 @@ function $AssignCtx(context, check_unbound){
             
             var $var='$temp'+$loop_num
             var new_node = new $Node()
-            new $NodeJSCtx(new_node,'var '+$var+'=[]')
+            new $NodeJSCtx(new_node,'var '+$var+'=[], $pos=0')
             new_nodes[pos++]=new_node
 
             for(var i=0;i<right_items.length;i++){
-                var js = $var+'['+$var+'.length]='+right_items[i].to_js()
+                var js = $var+'[$pos++]='+right_items[i].to_js()
                 var new_node = new $Node()
                 new $NodeJSCtx(new_node,js)
                 new_nodes[pos++]=new_node
@@ -569,8 +568,8 @@ function $AssignCtx(context, check_unbound){
             
             var rlist_node = new $Node()
             var $var='$rlist'+$loop_num
-            js = 'var '+$var+'=[];'
-            js += 'while(1){try{'+$var+'['+$var+'.length]=$right'
+            js = 'var '+$var+'=[], $pos=0;'
+            js += 'while(1){try{'+$var+'[$pos++]=$right'
             js += $loop_num+'()}catch(err){$B.$pop_exc();break}};'
             new $NodeJSCtx(rlist_node, js)
             new_nodes[pos++]=rlist_node
@@ -637,6 +636,7 @@ function $AssignCtx(context, check_unbound){
         }
     }
     this.to_js = function(){
+        this.js_processed=true
         if(this.parent.type==='call'){// like in foo(x=0)
             return '{$nat:"kw",name:'+this.tree[0].to_js()+',value:'+this.tree[1].to_js()+'}'
         }
@@ -760,6 +760,7 @@ function $AttrCtx(context){
     this.func = 'getattr' // becomes setattr for an assignment 
     this.toString = function(){return '(attr) '+this.value+'.'+this.name}
     this.to_js = function(){
+        this.js_processed=true
         return this.func+'('+this.value.to_js()+',"'+this.name+'")'
     }
 }
@@ -1022,6 +1023,7 @@ function $BreakCtx(context){
     }//while
 
     this.to_js = function(){
+        this.js_processed=true
         var scope = $get_scope(this)
         var res = '$locals_'+scope.id.replace(/\./g,'_')
         res += '["$no_break'+this.loop_ctx.loop_num+'"]=false;break'
@@ -1038,7 +1040,10 @@ function $CallArgCtx(context){
     this.tree = []
     context.tree[context.tree.length]=this
     this.expect='id'
-    this.to_js = function(){return $to_js(this.tree)}
+    this.to_js = function(){ 
+        this.js_processed=true
+        return $to_js(this.tree)
+    }
 }
 
 function $CallCtx(context){
@@ -1064,6 +1069,7 @@ function $CallCtx(context){
     this.toString = function(){return '(call) '+this.func+'('+this.tree+')'}
 
     this.to_js = function(){
+        this.js_processed=true
         
         if(this.tree.length>0){
             if(this.tree[this.tree.length-1].tree.length==0){
@@ -1334,7 +1340,10 @@ function $ClassCtx(context){
 
         this.transformed = true
     }
-    this.to_js = function(){return 'var $'+this.name+'_'+this.random+'=(function()'}
+    this.to_js = function(){
+        this.js_processed=true
+        return 'var $'+this.name+'_'+this.random+'=(function()'
+    }
 }
 
 function $CompIfCtx(context){
@@ -1345,7 +1354,10 @@ function $CompIfCtx(context){
     this.tree = []
     context.tree[context.tree.length]=this
     this.toString = function(){return '(comp if) '+this.tree}
-    this.to_js = function(){return $to_js(this.tree)}
+    this.to_js = function(){
+        this.js_processed=true
+        return $to_js(this.tree)
+    }
 }
 
 function $ComprehensionCtx(context){
@@ -1356,8 +1368,9 @@ function $ComprehensionCtx(context){
     context.tree[context.tree.length]=this
     this.toString = function(){return '(comprehension) '+this.tree}
     this.to_js = function(){
-        var _i = []  //intervals
-        for(var j=0;j<this.tree.length;j++) _i.push(this.tree[j].start)
+        this.js_processed=true
+        var _i = [], pos=0  //intervals
+        for(var j=0;j<this.tree.length;j++) _i[pos++]=this.tree[j].start
         return _i
     }
 }
@@ -1371,7 +1384,10 @@ function $CompForCtx(context){
     this.expect = 'in'
     context.tree[context.tree.length]=this
     this.toString = function(){return '(comp for) '+this.tree}
-    this.to_js = function(){return $to_js(this.tree)}
+    this.to_js = function(){
+        this.js_processed=true
+        return $to_js(this.tree)
+    }
 }
 
 function $CompIterableCtx(context){
@@ -1381,7 +1397,10 @@ function $CompIterableCtx(context){
     this.tree = []
     context.tree[context.tree.length]=this
     this.toString = function(){return '(comp iter) '+this.tree}
-    this.to_js = function(){return $to_js(this.tree)}
+    this.to_js = function(){
+        this.js_processed=true
+        return $to_js(this.tree)
+    }
 }
 
 function $ConditionCtx(context,token){
@@ -1409,6 +1428,7 @@ function $ConditionCtx(context,token){
         }
     }
     this.to_js = function(){
+        this.js_processed=true
         var tok = this.token
         if(tok==='elif'){tok='else if'}
         // In a "while" loop, the flag "$no_break" is initially set to false.
@@ -1438,7 +1458,9 @@ function $ContinueCtx(context){
 
     this.toString = function(){return '(continue)'}
     
-    this.to_js = function(){return 'continue'}
+    this.to_js = function(){
+        this.js_processed=true
+        return 'continue'}
 }
 
 function $DecoratorCtx(context){
@@ -1549,18 +1571,26 @@ function $DecoratorCtx(context){
 
         // fix me...
         if (_block_async_flag) {
-           var parent_block = this.parent
-           while(parent_block.context) {
+           var parent_block = this.parent, child=this.parent
+           while(parent_block && 
+                 parent_block.js_processed === undefined
+           ) {
+              console.log(parent_block)
+              console.log(parent_block.to_js())
+              child=parent_block
               parent_block = parent_block.parent
            }
            
            // fix me...
-           var js=parent_block.to_js()
-           $B.execution_object.$append(js, 10)
+           var js=child.to_js()
+           js+=";$B.execution_object.$execute_next_segment()";
+           console.log(js)
+           $B.execution_object.$append(js, 1000)
         }
     }
 
     this.to_js = function(){
+        this.js_processed=true
         var res = [], pos=0
         for(var i=0;i<this.decorators.length;i++){
             res[pos++]='var '+this.dec_ids[i]+'='+$to_js(this.decorators[i])+';'
@@ -1914,7 +1944,7 @@ function $DefCtx(context){
         if(last_instr.type!=='return' && this.type!='generator'){
             new_node = new $Node()
             new $NodeJSCtx(new_node,
-                '__BRYTHON__.leave_frame("'+this.id+'");return None;')
+                '$B.leave_frame("'+this.id+'");return None;')
             def_func_node.add(new_node)
         }
 
@@ -1947,14 +1977,13 @@ function $DefCtx(context){
         if(this.type==='generator' && !this.declared){
 
             var sc = scope
-            var env = []
+            var env = [], pos=0
             while(sc && sc.id!=='__builtins__'){
                 var sc_id = sc.id.replace(/\./g,'_')
                 if(sc===scope){
-                    env.push('["'+sc_id+'",$locals]'
-                    )
+                    env[pos++]='["'+sc_id+'",$locals]'
                 }else{
-                    env.push('["'+sc_id+'",$locals_'+sc_id+']')
+                    env[pos++]='["'+sc_id+'",$locals_'+sc_id+']'
                 }
                 sc = sc.parent_block
             }
@@ -2025,6 +2054,7 @@ function $DefCtx(context){
     }
 
     this.to_js = function(func_name){
+        this.js_processed=true
         
         if(func_name!==undefined){
             return func_name+'=(function()'
@@ -2044,6 +2074,8 @@ function $DelCtx(context){
     this.toString = function(){return 'del '+this.tree}
 
     this.to_js = function(){
+        this.js_processed=true
+
         if(this.tree[0].type=='list_or_tuple'){
             // Syntax "del a, b, c"
             var res = [], pos=0
@@ -2112,6 +2144,8 @@ function $DictOrSetCtx(context){
     }
 
     this.to_js = function(){
+        this.js_processed=true
+
         switch(this.real) {
           case 'dict':
             var res = [], pos=0
@@ -2135,7 +2169,10 @@ function $DoubleStarArgCtx(context){
     this.tree = []
     context.tree[context.tree.length]=this
     this.toString = function(){return '**'+this.tree}
-    this.to_js = function(){return '{$nat:"pdict",arg:'+$to_js(this.tree)+'}'}
+    this.to_js = function(){
+        this.js_processed=true
+        return '{$nat:"pdict",arg:'+$to_js(this.tree)+'}'
+    }
 }
 
 function $EllipsisCtx(context){
@@ -2145,7 +2182,10 @@ function $EllipsisCtx(context){
     this.nbdots = 1
     context.tree[context.tree.length]=this
     this.toString = function(){return 'ellipsis'}
-    this.to_js = function(){return '$B.builtins["Ellipsis"]'}
+    this.to_js = function(){
+        this.js_processed=true
+        return '$B.builtins["Ellipsis"]'
+    }
 }
 
 function $ExceptCtx(context){
@@ -2166,6 +2206,8 @@ function $ExceptCtx(context){
     this.to_js = function(){
         // in method "transform" of $TryCtx instances, related
         // $ExceptCtx instances receive an attribute __name__
+
+        this.js_processed=true
 
         switch(this.tree.length) {
            case 0:
@@ -2196,6 +2238,7 @@ function $ExprCtx(context,name,with_commas){
     this.toString = function(){return '(expr '+with_commas+') '+this.tree}
 
     this.to_js = function(arg){
+        this.js_processed=true
         if(this.type==='list') return '['+$to_js(this.tree)+']'
         if(this.tree.length===1) return this.tree[0].to_js(arg)
         return 'tuple('+$to_js(this.tree)+')'
@@ -2222,7 +2265,10 @@ function $FloatCtx(context,value){
     this.parent = context
     this.tree = []
     context.tree[context.tree.length]=this
-    this.to_js = function(){return 'float('+this.value+')'}
+    this.to_js = function(){
+        this.js_processed=true
+        return 'float('+this.value+')'
+    }
 }
 
 function $ForExpr(context){
@@ -2479,6 +2525,7 @@ function $ForExpr(context){
     }
 
     this.to_js = function(){
+        this.js_processed=true
         var iterable = this.tree.pop()
         return 'for '+$to_js(this.tree)+' in '+iterable.to_js()
     }
@@ -2516,6 +2563,7 @@ function $FromCtx(context){
     }
     
     this.to_js = function(){
+        this.js_processed=true
         var scope = $get_scope(this)
         var mod = $get_module(this).module
         if(mod.substr(0,13)==='__main__,exec'){mod='__main__'}
@@ -2658,7 +2706,10 @@ function $FuncArgs(context){
     this.has_default = false
     this.has_star_arg = false
     this.has_kw_arg = false
-    this.to_js = function(){return $to_js(this.tree)}
+    this.to_js = function(){
+        this.js_processed=true
+        return $to_js(this.tree)
+    }
 }
 
 function $FuncArgIdCtx(context,name){
@@ -2696,7 +2747,10 @@ function $FuncArgIdCtx(context,name){
 
     this.toString = function(){return 'func arg id '+this.name +'='+this.tree}
 
-    this.to_js = function(){return this.name+$to_js(this.tree)}
+    this.to_js = function(){
+        this.js_processed=true
+        return this.name+$to_js(this.tree)
+    }
 }
 
 function $FuncStarArgCtx(context,op){
@@ -2753,7 +2807,10 @@ function $GlobalCtx(context){
         $B.globals[this.scope.id][name] = true
     }
 
-    this.to_js = function(){return ''}
+    this.to_js = function(){
+        this.js_processed=true
+        return ''
+    }
 }
 
 function $check_unbound(assigned,scope,varname){
@@ -2898,6 +2955,7 @@ function $IdCtx(context,value){
     }
     
     this.to_js = function(arg){
+        this.js_processed=true
         var val = this.value
 
         // Special cases        
@@ -3047,7 +3105,10 @@ function $ImaginaryCtx(context,value){
     this.parent = context
     this.tree = []
     context.tree[context.tree.length]=this
-    this.to_js = function(){return 'complex(0,'+this.value+')'}
+    this.to_js = function(){
+        this.js_processed=true
+        return 'complex(0,'+this.value+')'
+    }
 }
 
 function $ImportCtx(context){
@@ -3076,6 +3137,7 @@ function $ImportCtx(context){
     }
     
     this.to_js = function(){
+        this.js_processed=true
         var scope = $get_scope(this)
         var mod = scope.module
 
@@ -3111,7 +3173,10 @@ function $ImportedModuleCtx(context,name){
     this.name = name
     this.alias = name
     context.tree[context.tree.length]=this
-    this.to_js = function(){return '"'+this.name+'"'}
+    this.to_js = function(){
+        this.js_processed=true
+        return '"'+this.name+'"'
+    }
 }
 
 function $IntCtx(context,value){
@@ -3124,13 +3189,19 @@ function $IntCtx(context,value){
 
     this.toString = function(){return 'int '+this.value}
 
-    this.to_js = function(){return this.value}
+    this.to_js = function(){
+        this.js_processed=true
+        return this.value
+    }
 }
 
 function $JSCode(js){
     this.js = js
     this.toString = function(){return this.js}
-    this.to_js = function(){return this.js}
+    this.to_js = function(){
+        this.js_processed=true
+        return this.js
+    }
 }
 
 function $KwArgCtx(context){
@@ -3175,6 +3246,7 @@ function $KwArgCtx(context){
     this.toString = function(){return 'kwarg '+this.tree[0]+'='+this.tree[1]}
 
     this.to_js = function(){
+        this.js_processed=true
         var key = this.tree[0].value
         if(key.substr(0,2)=='$$'){key=key.substr(2)}
         var res = '{$nat:"kw",name:"'+key+'",'
@@ -3195,6 +3267,7 @@ function $LambdaCtx(context){
     this.toString = function(){return '(lambda) '+this.args_start+' '+this.body_start}
     
     this.to_js = function(){
+        this.js_processed=true
         var module = $get_module(this)
 
         var src = $B.$py_src[module.id]
@@ -3266,6 +3339,7 @@ function $ListOrTupleCtx(context,real){
     }
 
     this.to_js = function(){
+        this.js_processed=true
         var scope = $get_scope(this)
         var sc = scope
         var env = [], pos=0
@@ -3360,6 +3434,7 @@ function $NodeCtx(node){
     this.toString = function(){return 'node '+this.tree}
 
     this.to_js = function(){
+        this.js_processed=true
         if(this.tree.length>1){
             var new_node = new $Node()
             var ctx = new $NodeCtx(new_node)
@@ -3380,7 +3455,10 @@ function $NodeJSCtx(node,js){
     this.type = 'node_js'
     this.tree = [js]
     this.toString = function(){return 'js '+js}
-    this.to_js = function(){return js}
+    this.to_js = function(){
+        this.js_processed=true
+        return js
+    }
 }
 
 function $NonlocalCtx(context){
@@ -3411,7 +3489,10 @@ function $NonlocalCtx(context){
         if(this.scope.globals.indexOf(name)==-1){this.scope.globals.push(name)}
     }
 
-    this.to_js = function(){return ''}
+    this.to_js = function(){
+        this.js_processed=true
+        return ''
+    }
 }
 
 
@@ -3422,7 +3503,10 @@ function $NotCtx(context){
     this.tree = []
     context.tree[context.tree.length]=this
     this.toString = function(){return 'not ('+this.tree+')'}
-    this.to_js = function(){return '!bool('+$to_js(this.tree)+')'}
+    this.to_js = function(){
+        this.js_processed=true
+        return '!bool('+$to_js(this.tree)+')'
+    }
 }
 
 function $OpCtx(context,op){ 
@@ -3440,6 +3524,7 @@ function $OpCtx(context,op){
 
 
     this.to_js = function(){
+        this.js_processed=true
         var comps = {'==':'eq','!=':'ne','>=':'ge','<=':'le',
             '<':'lt','>':'gt'}
         if(comps[this.op]!==undefined){
@@ -3642,7 +3727,10 @@ function $PackedCtx(context){
 
     this.toString = function(){return '(packed) '+this.tree}
 
-    this.to_js = function(){return $to_js(this.tree)}
+    this.to_js = function(){
+        this.js_processed=true
+        return $to_js(this.tree)
+    }
 }
 
 
@@ -3655,7 +3743,10 @@ function $PassCtx(context){
 
     this.toString = function(){return '(pass)'}
 
-    this.to_js = function(){return 'void(0)'}
+    this.to_js = function(){
+        this.js_processed=true
+        return 'void(0)'
+    }
 }
 
 function $RaiseCtx(context){
@@ -3668,6 +3759,7 @@ function $RaiseCtx(context){
     this.toString = function(){return ' (raise) '+this.tree}
 
     this.to_js = function(){
+        this.js_processed=true
         var res = '$B.leave_frame();'
         if(this.tree.length===0) return res+'$B.$raise()'
         var exc = this.tree[0], exc_js = exc.to_js()
@@ -3688,7 +3780,10 @@ function $RawJSCtx(context,js){
     context.tree[context.tree.length]=this
     this.parent = context
     this.toString = function(){return '(js) '+js}
-    this.to_js = function(){return js}
+    this.to_js = function(){
+        this.js_processed=true
+        return js
+    }
 }
 
 function $ReturnCtx(context){ 
@@ -3713,6 +3808,7 @@ function $ReturnCtx(context){
     this.toString = function(){return 'return '+this.tree}
 
     this.to_js = function(){
+        this.js_processed=true
         if(this.tree.length==1 && this.tree[0].type=='abstract_expr'){
             // "return" must be transformed into "return None"
             this.tree.pop()
@@ -3756,6 +3852,7 @@ function $SingleKwCtx(context,token){
     this.toString = function(){return this.token}
     
     this.to_js = function(){
+        this.js_processed=true
         if(this.token=='finally') return this.token
 
         // For "else" we must check if the previous block was a loop
@@ -3778,6 +3875,7 @@ function $StarArgCtx(context){
     context.tree[context.tree.length]=this
     this.toString = function(){return '(star arg) '+this.tree}
     this.to_js = function(){
+        this.js_processed=true
         return '{$nat:"ptuple",arg:'+$to_js(this.tree)+'}'
     }
 }
@@ -3793,6 +3891,7 @@ function $StringCtx(context,value){
     this.toString = function(){return 'string '+(this.tree||'')}
 
     this.to_js = function(){
+        this.js_processed=true
         var res = '', type = null
         for(var i=0;i<this.tree.length;i++){
             var value=this.tree[i], is_bytes = value.charAt(0)=='b'
@@ -3829,6 +3928,7 @@ function $SubCtx(context){
     }
 
     this.to_js = function(){
+        this.js_processed=true
         // In assignment to subscriptions, eg a[x][y], a flag "marked" is set
         // to use the shortcut a[x] instead of the complete code with getattr
         if(this.marked){
@@ -3894,7 +3994,10 @@ function $TargetListCtx(context){
 
     this.toString = function(){return '(target list) '+this.tree}
 
-    this.to_js = function(){return $to_js(this.tree)}
+    this.to_js = function(){
+        this.js_processed=true
+        return $to_js(this.tree)
+    }
 }
 
 function $TernaryCtx(context){
@@ -3909,6 +4012,7 @@ function $TernaryCtx(context){
     this.toString = function(){return '(ternary) '+this.tree}
 
     this.to_js = function(){
+        this.js_processed=true
         var res = 'bool('+this.tree[1].to_js()+') ? ' // condition
         res += this.tree[0].to_js()+' : '    // result if true
         return res + this.tree[2].to_js()          // result if false
@@ -4024,7 +4128,10 @@ function $TryCtx(context){
         $loop_num++
     }
 
-    this.to_js = function(){return 'try'}
+    this.to_js = function(){
+        this.js_processed=true
+        return 'try'
+    }
 
 }
 
@@ -4037,7 +4144,10 @@ function $UnaryCtx(context,op){
 
     this.toString = function(){return '(unary) '+this.op}
 
-    this.to_js = function(){return this.op}
+    this.to_js = function(){
+        this.js_processed=true
+        return this.op
+    }
 }
 
 function $WithCtx(context){
@@ -4134,6 +4244,7 @@ function $WithCtx(context){
     }
 
     this.to_js = function(){
+        this.js_processed=true
         var res = 'var $ctx_manager='+this.tree[0].to_js()
         var scope = $get_scope(this)
         res += '\nvar $ctx_manager_exit = getattr($ctx_manager,"__exit__")\n'
@@ -4231,6 +4342,7 @@ function $YieldCtx(context){
     }
 
     this.to_js = function(){
+        this.js_processed=true
         //var scope = $get_scope(this)
         //var res = ''
         if(this.from===undefined) return $to_js(this.tree) || 'None'
