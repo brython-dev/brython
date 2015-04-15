@@ -4063,7 +4063,7 @@ function $TryCtx(context){
         // Fake line to start the 'else if' clauses
         var new_node = new $Node()
         // Set the boolean $failed to true
-        new $NodeJSCtx(new_node,$var+'=true;if(false){void(0)}')
+        new $NodeJSCtx(new_node,$var+'=true;if(0){}')
         catch_node.insert(0,new_node)
         
         var pos = rank+2
@@ -4122,7 +4122,7 @@ function $TryCtx(context){
         // restore frames stack as before the try clause
         var frame_node = new $Node()
         var js = '$B.frames_stack = $locals["$frame'+$loop_num+'"];'
-        js += 'delete $locals["'+$var+'"];'
+        js += 'delete $locals["$frame'+$loop_num+'"];'
         new $NodeJSCtx(frame_node, js)
         node.parent.insert(pos, frame_node)
         $loop_num++
