@@ -12,15 +12,15 @@ Utility functions
 
 // Keys of an object
 var keys = $B.keys = function(obj){
-    var res = []
-    for(var attr in obj){res.push(attr)}
+    var res = [], pos=0
+    for(var attr in obj){res[pos++]=attr}
     res.sort()
     return res
 }
 
 // Return a clone of an object
 var clone = $B.clone = function(obj){
-    var res = new Object()
+    var res = {}
     for(var attr in obj){res[attr]=obj[attr]}
     return res
 }
@@ -138,7 +138,7 @@ function $Node(type){
 
     this.add = function(child){
         // Insert as the last child
-        this.children.push(child)
+        this.children[this.children.length]=child
         child.parent = this
         child.module = this.module
     }
@@ -183,11 +183,12 @@ function $Node(type){
         if(this.js!==undefined) return this.js
 
         this.res = []
+        var pos=0
         this.unbound = []
         if(this.type==='module'){
           for(var i=0;i<this.children.length;i++){
-             this.res.push(this.children[i].to_js())
-             this.children[i].js_index = this.res.length+0
+             this.res[pos++]=this.children[i].to_js()
+             this.children[i].js_index = pos //this.res.length+0
           }
           this.js = this.res.join('')
           return this.js
@@ -195,18 +196,18 @@ function $Node(type){
         indent = indent || 0
         var ctx_js = this.context.to_js()
         if(ctx_js){ // empty for "global x"
-          this.res.push(' '.repeat(indent))
-          this.res.push(ctx_js)
-          this.js_index = this.res.length+0
-          if(this.children.length>0) this.res.push('{')
-          this.res.push('\n')
+          this.res[pos++]=' '.repeat(indent)
+          this.res[pos++]=ctx_js
+          this.js_index = pos //this.res.length+0
+          if(this.children.length>0) this.res[pos++]='{'
+          this.res[pos++]='\n'
           for(var i=0;i<this.children.length;i++){
-             this.res.push(this.children[i].to_js(indent+4))
-             this.children[i].js_index = this.res.length+0
+             this.res[pos++]=this.children[i].to_js(indent+4)
+             this.children[i].js_index = pos //this.res.length+0
           }
           if(this.children.length>0){
-             this.res.push(' '.repeat(indent))
-             this.res.push('}\n')
+             this.res[pos++]=' '.repeat(indent)
+             this.res[pos++]='}\n'
           }
         }
 
@@ -343,9 +344,10 @@ function $AbstractExprCtx(context,with_commas){
     this.with_commas = with_commas
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.toString = function(){return '(abstract_expr '+with_commas+') '+this.tree}
     this.to_js = function(){
+        this.js_processed=true
         if(this.type==='list') return '['+$to_js(this.tree)+']'
         return $to_js(this.tree)
     }
@@ -357,7 +359,7 @@ function $AssertCtx(context){
     this.toString = function(){return '(assert) '+this.tree}
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.transform = function(node,rank){
         if(this.tree[0].type==='list_or_tuple'){
             // form "assert condition,message"
@@ -397,17 +399,17 @@ function $AssignCtx(context, check_unbound){
     this.type = 'assign'
     // replace parent by "this" in parent tree
     context.parent.tree.pop()
-    context.parent.tree.push(this)
+    //context.parent.tree.push(this)
+    context.parent.tree[context.parent.tree.length]=this
+
     this.parent = context.parent
     this.tree = [context]
 
     var scope = $get_scope(this)
     
     if(context.type=='expr' && context.tree[0].type=='call'){
-        $_SyntaxError(context,["can't assign to function call "])
-    }
-    
-    if(context.type=='list_or_tuple' || 
+          $_SyntaxError(context,["can't assign to function call "])
+    }else if(context.type=='list_or_tuple' || 
         (context.type=='expr' && context.tree[0].type=='list_or_tuple')){
         if(context.type=='expr'){context = context.tree[0]}
         for(var i=0;i<context.tree.length;i++){
@@ -459,7 +461,7 @@ function $AssignCtx(context, check_unbound){
                 $check_unbound(assigned,scope,assigned.value)
             }
         }
-    }
+    }//if
     
     this.toString = function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
     
@@ -516,22 +518,23 @@ function $AssignCtx(context, check_unbound){
             }else if(right_items.length<left_items.length){
                 throw Error('ValueError : need more than '+right_items.length+' to unpack')
             }
-            var new_nodes = []
+            var new_nodes = [], pos=0
             // replace original line by dummy line : the next one might also
             // be a multiple assignment
             var new_node = new $Node()
             new $NodeJSCtx(new_node,'void(0)')
-            new_nodes.push(new_node)
+            new_nodes[pos++]=new_node
             
+            var $var='$temp'+$loop_num
             var new_node = new $Node()
-            new $NodeJSCtx(new_node,'var $temp'+$loop_num+'=[]')
-            new_nodes.push(new_node)
+            new $NodeJSCtx(new_node,'var '+$var+'=[], $pos=0')
+            new_nodes[pos++]=new_node
 
             for(var i=0;i<right_items.length;i++){
-                var js = '$temp'+$loop_num+'.push('+right_items[i].to_js()+')'
+                var js = $var+'[$pos++]='+right_items[i].to_js()
                 var new_node = new $Node()
                 new $NodeJSCtx(new_node,js)
-                new_nodes.push(new_node)
+                new_nodes[pos++]=new_node
             }
             for(var i=0;i<left_items.length;i++){
                 var new_node = new $Node()
@@ -541,8 +544,8 @@ function $AssignCtx(context, check_unbound){
                 // assignment to left operand
                 // set "check_unbound" to false
                 var assign = new $AssignCtx(left_items[i], false) 
-                assign.tree[1] = new $JSCode('$temp'+$loop_num+'['+i+']')
-                new_nodes.push(new_node)
+                assign.tree[1] = new $JSCode($var+'['+i+']')
+                new_nodes[pos++]=new_node
             }
             node.parent.children.splice(rank,1) // remove original line
             for(var i=new_nodes.length-1;i>=0;i--){
@@ -560,14 +563,16 @@ function $AssignCtx(context, check_unbound){
             var js = 'var $right'+$loop_num+'=getattr'
             js += '(iter('+right.to_js()+'),"__next__");'
             new $NodeJSCtx(new_node,js)
-            var new_nodes = [new_node]
+
+            var new_nodes = [new_node], pos=1
             
             var rlist_node = new $Node()
-            js = 'var $rlist'+$loop_num+'=[];'
-            js += 'while(1){try{$rlist'+$loop_num+'.push($right'
-            js += $loop_num+'())}catch(err){$B.$pop_exc();break}};'
+            var $var='$rlist'+$loop_num
+            js = 'var '+$var+'=[], $pos=0;'
+            js += 'while(1){try{'+$var+'[$pos++]=$right'
+            js += $loop_num+'()}catch(err){$B.$pop_exc();break}};'
             new $NodeJSCtx(rlist_node, js)
-            new_nodes.push(rlist_node)
+            new_nodes[pos++]=rlist_node
             
             // If there is a packed tuple in the list of left items, store
             // its rank in the liste
@@ -589,7 +594,7 @@ function $AssignCtx(context, check_unbound){
             js += '.length+" value" + ($rlist'+$loop_num+'.length>1 ?'
             js += ' "s" : "")+" to unpack")}'
             new $NodeJSCtx(check_node,js)
-            new_nodes.push(check_node)
+            new_nodes[pos++]=check_node
 
             // Test if there were enough variables in the left part
             if(packed==null){
@@ -599,7 +604,7 @@ function $AssignCtx(context, check_unbound){
                 js += '{throw ValueError("too many values to unpack '
                 js += '(expected '+left_items.length+')")}'
                 new $NodeJSCtx(check_node,js)
-                new_nodes.push(check_node)
+                new_nodes[pos++]=check_node
             }
 
             var j=0
@@ -620,7 +625,7 @@ function $AssignCtx(context, check_unbound){
                     js += '[$rlist'+$loop_num+'.length-'+(left_items.length-i)+']'
                 }
                 assign.tree[1] = new $JSCode(js) // right part of the assignment
-                new_nodes.push(new_node)
+                new_nodes[pos++]=new_node
             }
             
             node.parent.children.splice(rank,1) // remove original line
@@ -631,6 +636,7 @@ function $AssignCtx(context, check_unbound){
         }
     }
     this.to_js = function(){
+        this.js_processed=true
         if(this.parent.type==='call'){// like in foo(x=0)
             return '{$nat:"kw",name:'+this.tree[0].to_js()+',value:'+this.tree[1].to_js()+'}'
         }
@@ -651,18 +657,18 @@ function $AssignCtx(context, check_unbound){
           
           var node = $get_node(this)
           
-          var res='', rvar=''
+          var res='', rvar='', $var='$temp'+$loop_num
           if(right.type=='expr' && right.tree[0]!==undefined &&
              right.tree[0].type=='call' &&
              ('eval' == right.tree[0].func.value ||
               'exec' == right.tree[0].func.value)) {
-             res += 'var $temp'+$loop_num+'='+right.to_js()+';\n'
-             rvar = '$temp'+$loop_num
+             res += 'var '+$var+'='+right.to_js()+';\n'
+             rvar = $var
              $loop_num++
           }else if(right.type=='expr' && right.tree[0]!==undefined &&
               right.tree[0].type=='sub'){
-             res += 'var $temp'+$loop_num+'='+right.to_js()+';\n'
-             rvar = '$temp'+$loop_num
+             res += 'var '+$var+'='+right.to_js()+';\n'
+             rvar = $var
           }else{
              rvar = right.to_js()
           }
@@ -687,16 +693,17 @@ function $AssignCtx(context, check_unbound){
                   }
                   var exprs = []
                   if(left.tree.length==1){
-                      var left_seq = left, args = [], ix = 0
+                      var left_seq = left, args = [], pos=0, ix = 0
                       while(left_seq.value.type=='sub' && left_seq.tree.length==1){
                           if(is_simple(left_seq.tree[0])){
-                              args.push('['+left_seq.tree[0].to_js()+']')
+                              args[pos++]='['+left_seq.tree[0].to_js()+']'
                           }else{
-                              exprs.push('var $temp_ix'+$loop_num+'_'+ix+'='+left_seq.tree[0].to_js())
-                              args.push('[$temp_ix'+$loop_num+'_'+ix+']')
+                              var $var='$temp_ix'+$loop_num
+                              exprs.push('var '+$var+'_'+ix+'='+left_seq.tree[0].to_js())
+                              args[pos++]='['+$var+'_'+ix+']'
                               left_seq.tree[0]={type:'id',
                                   to_js:(function(rank){
-                                      return function(){return '$temp_ix'+$loop_num+'_'+rank}
+                                      return function(){return $var+'_'+rank}
                                       })(ix)
                               }
                               ix++
@@ -748,11 +755,12 @@ function $AttrCtx(context){
     this.value = context.tree[0]
     this.parent = context
     context.tree.pop()
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.tree = []
     this.func = 'getattr' // becomes setattr for an assignment 
     this.toString = function(){return '(attr) '+this.value+'.'+this.name}
     this.to_js = function(){
+        this.js_processed=true
         return this.func+'('+this.value.to_js()+',"'+this.name+'")'
     }
 }
@@ -762,7 +770,8 @@ function $AugmentedAssignCtx(context, op){
     this.type = 'augm_assign'
     this.parent = context.parent
     context.parent.tree.pop()
-    context.parent.tree.push(this)
+    //context.parent.tree.push(this)
+    context.parent.tree[context.parent.tree.length]=this
     this.op = op
     this.tree = [context]
 
@@ -965,69 +974,6 @@ function $AugmentedAssignCtx(context, op){
     }
 }
 
-function $BlockingCtx(context) {
-    /*
-    Used for cases when we should do things sync or 
-    when we need to block (time.sleep) for instance
-    NOTE:  this.tree needs to contain the rest of the Abstract Sytnax Tree
-    for the whole program.  This will emulate blocking by putting all generated
-    javascript code inside a setTimeout anonymous function
-    
-    We can do this by creating a function that contains all the 
-    rest of the js compiled code.  At run time, if the blocking function
-    matches the hash, we know to block, else execute the function
-    with block time = 0;
-    */
-
-    console.log('blockingCtx', context)
-    this.type = 'block'
-    this.parent = context
-    this.tree = []
-    this.delay = 1000   // 1 second for now, will need to set this to some value
-
-    var scope = $get_scope(this)
-    // probably want to check for classes too?
-    if(!scope.is_function){
-      $_SyntaxError(context,["'blocking' non function"])
-    }
-
-    // change type of function to blocking_function
-    var def = scope.context.tree[0]
-    def.type = 'blocking_function'
-
-    this.transform = function(node, rank) {
-        console.log('blockingctx.transform')
-        var setTimeout_node = new $Node()
-        new $NodeJSCtx(setTimeout_node,'window.setTimeout(')
-
-        var def_func_node = new $Node()
-        new $NodeJSCtx(def_func_node,'function()')
-
-        // actually we want the whole AST from this point in the application
-        // to the end of the program
-        // this block could occur somewhere buried deep in the program, so
-        // we'll need to figure out how to do that.
-        while (node.parent !== undefined) {
-          node=node.parent
-        }
-
-        for(var i=0;i<node.children.length;i++) def_func_node.add(node.children[i])
-
-        setTimeout_node.add(def_func_node)
-
-        var setTimeout_node_end = new $Node()
-        new $NodeJSCtx(setTimeout_node_end,')')
-
-        node.add(setTimeout_node)
-        node.add(setTimeout_node_end)
-
-        this.transformed=true
-    }
-    this.to_js = function(){
-       return 'window.setTimeout(function(){'+$to_js(this.tree)+'},'+this.delay+');'
-    }
-}
-
 function $BodyCtx(context){
     // inline body for def, class, if, elif, else, try...
     // creates a new node, child of context node
@@ -1048,7 +994,7 @@ function $BreakCtx(context){
     this.type = 'break'
     this.toString = function(){return 'break '}
     this.parent = context
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     // get loop context
     var ctx_node = context
@@ -1077,6 +1023,7 @@ function $BreakCtx(context){
     }//while
 
     this.to_js = function(){
+        this.js_processed=true
         var scope = $get_scope(this)
         var res = '$locals_'+scope.id.replace(/\./g,'_')
         res += '["$no_break'+this.loop_ctx.loop_num+'"]=false;break'
@@ -1091,9 +1038,12 @@ function $CallArgCtx(context){
     this.parent = context
     this.start = $pos
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.expect='id'
-    this.to_js = function(){return $to_js(this.tree)}
+    this.to_js = function(){ 
+        this.js_processed=true
+        return $to_js(this.tree)
+    }
 }
 
 function $CallCtx(context){
@@ -1107,7 +1057,7 @@ function $CallCtx(context){
     this.parent = context
     if(context.type!='class'){
         context.tree.pop()
-        context.tree.push(this)
+        context.tree[context.tree.length]=this
     }else{
         // class parameters
         context.args = this
@@ -1119,6 +1069,7 @@ function $CallCtx(context){
     this.toString = function(){return '(call) '+this.func+'('+this.tree+')'}
 
     this.to_js = function(){
+        this.js_processed=true
         
         if(this.tree.length>0){
             if(this.tree[this.tree.length-1].tree.length==0){
@@ -1211,29 +1162,6 @@ function $CallCtx(context){
             }
 
             if(this.tree.length>-1){
-              if ($B.$blocking_function_names) {
-                 var _func_name = func_js
-                 if (_func_name.indexOf($B.$blocking_function_names) > -1) {
-                    console.log("candidate blocking function.. ", _func_name)
-                    // since this is a candidate blocking function
-                    // we need to take the rest of the program and put
-                    // it inside the body of a function. We will then
-                    // replace the rest of the program with something like
-                    // var _hash=$B.builtins.id(func)
-                    // var _blocktime=0
-                    // if (_hash.indexOf($B.$blocking_functions) > -1) {
-                    //   // we have a match!  this is a blocking function.
-                    //   _blocktime=5000   // 5 seconds..
-                    // }
-                    // window.setTimeout(myblockingfunction, block_time)
-
-                    // at run time we check to see if the function in the
-                    // program matches the hash of the blocking function
-                    // we block, else, we execute the call back function
-                    // immediately. 
-
-                 }
-              }
               if(this.func.type=='id'){
                   if(this.func.is_builtin){
                       // simplify code for built-in functions
@@ -1274,7 +1202,7 @@ function $ClassCtx(context){
     this.type = 'class'
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.expect = 'id'
     this.toString = function(){return '(class) '+this.name+' '+this.tree+' args '+this.args}
     var scope = this.scope = $get_scope(this)
@@ -1412,7 +1340,10 @@ function $ClassCtx(context){
 
         this.transformed = true
     }
-    this.to_js = function(){return 'var $'+this.name+'_'+this.random+'=(function()'}
+    this.to_js = function(){
+        this.js_processed=true
+        return 'var $'+this.name+'_'+this.random+'=(function()'
+    }
 }
 
 function $CompIfCtx(context){
@@ -1421,9 +1352,12 @@ function $CompIfCtx(context){
     context.parent.intervals.push($pos)
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.toString = function(){return '(comp if) '+this.tree}
-    this.to_js = function(){return $to_js(this.tree)}
+    this.to_js = function(){
+        this.js_processed=true
+        return $to_js(this.tree)
+    }
 }
 
 function $ComprehensionCtx(context){
@@ -1431,11 +1365,12 @@ function $ComprehensionCtx(context){
     this.type = 'comprehension'
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.toString = function(){return '(comprehension) '+this.tree}
     this.to_js = function(){
-        var _i = []  //intervals
-        for(var j=0;j<this.tree.length;j++) _i.push(this.tree[j].start)
+        this.js_processed=true
+        var _i = [], pos=0  //intervals
+        for(var j=0;j<this.tree.length;j++) _i[pos++]=this.tree[j].start
         return _i
     }
 }
@@ -1447,9 +1382,12 @@ function $CompForCtx(context){
     this.parent = context
     this.tree = []
     this.expect = 'in'
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.toString = function(){return '(comp for) '+this.tree}
-    this.to_js = function(){return $to_js(this.tree)}
+    this.to_js = function(){
+        this.js_processed=true
+        return $to_js(this.tree)
+    }
 }
 
 function $CompIterableCtx(context){
@@ -1457,9 +1395,12 @@ function $CompIterableCtx(context){
     this.type = 'comp_iterable'
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.toString = function(){return '(comp iter) '+this.tree}
-    this.to_js = function(){return $to_js(this.tree)}
+    this.to_js = function(){
+        this.js_processed=true
+        return $to_js(this.tree)
+    }
 }
 
 function $ConditionCtx(context,token){
@@ -1468,8 +1409,8 @@ function $ConditionCtx(context,token){
     this.token = token
     this.parent = context
     this.tree = []
-    if(token==='while'){this.loop_num=$loop_num;$loop_num++}
-    context.tree.push(this)
+    if(token==='while'){this.loop_num=$loop_num++}
+    context.tree[context.tree.length]=this
     this.toString = function(){return this.token+' '+this.tree}
     
     this.transform = function(node,rank){
@@ -1487,6 +1428,7 @@ function $ConditionCtx(context,token){
         }
     }
     this.to_js = function(){
+        this.js_processed=true
         var tok = this.token
         if(tok==='elif'){tok='else if'}
         // In a "while" loop, the flag "$no_break" is initially set to false.
@@ -1512,18 +1454,20 @@ function $ContinueCtx(context){
     // Class for keyword "continue"
     this.type = 'continue'
     this.parent = context
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     this.toString = function(){return '(continue)'}
     
-    this.to_js = function(){return 'continue'}
+    this.to_js = function(){
+        this.js_processed=true
+        return 'continue'}
 }
 
 function $DecoratorCtx(context){
     // Class for decorators
     this.type = 'decorator'
     this.parent = context
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.tree = []
 
     this.toString = function(){return '(decorator) '+this.tree}
@@ -1627,18 +1571,26 @@ function $DecoratorCtx(context){
 
         // fix me...
         if (_block_async_flag) {
-           var parent_block = this.parent
-           while(parent_block.context) {
+           var parent_block = this.parent, child=this.parent
+           while(parent_block && 
+                 parent_block.js_processed === undefined
+           ) {
+              console.log(parent_block)
+              console.log(parent_block.to_js())
+              child=parent_block
               parent_block = parent_block.parent
            }
            
            // fix me...
-           var js=parent_block.to_js()
-           $B.execution_object.$append(js, 10)
+           var js=child.to_js()
+           js+=";$B.execution_object.$execute_next_segment()";
+           console.log(js)
+           $B.execution_object.$append(js, 1000)
         }
     }
 
     this.to_js = function(){
+        this.js_processed=true
         var res = [], pos=0
         for(var i=0;i<this.decorators.length;i++){
             res[pos++]='var '+this.dec_ids[i]+'='+$to_js(this.decorators[i])+';'
@@ -1655,7 +1607,7 @@ function $DefCtx(context){
 
     this.locals = []
     this.yields = [] // list of nodes with "yield"
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     // store id of enclosing functions
     this.enclosing = []
@@ -1793,18 +1745,18 @@ function $DefCtx(context){
         //this.defs = defs
         
         // String to pass positional arguments
-        var positional_str=[], positional_obj=[]
+        var positional_str=[], positional_obj=[], pos=0
         for(var i=0, _len=this.positional_list.length;i<_len;i++){
-            positional_str.push('"'+this.positional_list[i]+'"')
-            positional_obj.push(this.positional_list[i]+':null')
+            positional_str[pos]='"'+this.positional_list[i]+'"'
+            positional_obj[pos++]=this.positional_list[i]+':null'
         }
         positional_str = positional_str.join(',')
         positional_obj = '{'+positional_obj.join(',')+'}'
 
         // String to pass arguments with default values
-        var dobj = []
+        var dobj = [], pos=0
         for(var i=0;i<this.default_list.length;i++){
-            dobj.push(this.default_list[i]+':null')
+            dobj[pos++]=this.default_list[i]+':null'
         }
         dobj = '{'+dobj.join(',')+'}'
         
@@ -1992,7 +1944,7 @@ function $DefCtx(context){
         if(last_instr.type!=='return' && this.type!='generator'){
             new_node = new $Node()
             new $NodeJSCtx(new_node,
-                '__BRYTHON__.leave_frame("'+this.id+'");return None;')
+                '$B.leave_frame("'+this.id+'");return None;')
             def_func_node.add(new_node)
         }
 
@@ -2025,14 +1977,13 @@ function $DefCtx(context){
         if(this.type==='generator' && !this.declared){
 
             var sc = scope
-            var env = []
+            var env = [], pos=0
             while(sc && sc.id!=='__builtins__'){
                 var sc_id = sc.id.replace(/\./g,'_')
                 if(sc===scope){
-                    env.push('["'+sc_id+'",$locals]'
-                    )
+                    env[pos++]='["'+sc_id+'",$locals]'
                 }else{
-                    env.push('["'+sc_id+'",$locals_'+sc_id+']')
+                    env[pos++]='["'+sc_id+'",$locals_'+sc_id+']'
                 }
                 sc = sc.parent_block
             }
@@ -2103,13 +2054,12 @@ function $DefCtx(context){
     }
 
     this.to_js = function(func_name){
+        this.js_processed=true
         
         if(func_name!==undefined){
             return func_name+'=(function()'
         }else{
-            var res = this.tree[0].to_js()+'=(function('
-            res += ')'
-            return res
+            return this.tree[0].to_js()+'=(function()'
         }
     }
 }
@@ -2118,23 +2068,25 @@ function $DelCtx(context){
     // Class for keyword "del"
     this.type = 'del'
     this.parent = context
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.tree = []
 
     this.toString = function(){return 'del '+this.tree}
 
     this.to_js = function(){
+        this.js_processed=true
+
         if(this.tree[0].type=='list_or_tuple'){
             // Syntax "del a, b, c"
-            var res = ''
+            var res = [], pos=0
             for(var i=0;i<this.tree[0].tree.length;i++){
                 var subdel = new $DelCtx(context) // this adds an element to context.tree
                 subdel.tree = [this.tree[0].tree[i]]
-                res += subdel.to_js()+';'
+                res[pos++]=subdel.to_js()
                 context.tree.pop() // remove the element from context.tree
             }
             this.tree = []
-            return res
+            return res.join(';')
         }else{
             var expr = this.tree[0].tree[0]
             var scope = $get_scope(this)
@@ -2143,11 +2095,11 @@ function $DelCtx(context){
                 case 'id':
                     return 'delete '+expr.to_js()+';'
                 case 'list_or_tuple':
-                    var res = ''
+                    var res = [], pos=0
                     for(var i=0;i<expr.tree.length;i++){
-                      res += 'delete '+expr.tree[i].to_js()+';'
+                      res[pos++]='delete '+expr.tree[i].to_js()
                     }
-                    return res
+                    return res.join(';')
                 case 'sub':
                     // Delete an item in a list : "del a[x]"
                     expr.func = 'delitem'
@@ -2179,7 +2131,7 @@ function $DictOrSetCtx(context){
 
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     this.toString = function(){
         switch(this.real) {
@@ -2192,19 +2144,18 @@ function $DictOrSetCtx(context){
     }
 
     this.to_js = function(){
+        this.js_processed=true
+
         switch(this.real) {
           case 'dict':
-            var res = 'dict(['
+            var res = [], pos=0
             for(var i=0;i<this.items.length;i+=2){
-                res+='['+this.items[i].to_js()+','+this.items[i+1].to_js()+']'
-                if(i<this.items.length-2){res+=','}
+                res[pos++]='['+this.items[i].to_js()+','+this.items[i+1].to_js()+']'
             }
-            return res+'])'+$to_js(this.tree)
+            return 'dict(['+res.join(',')+'])'+$to_js(this.tree)
           case 'set_comp':
             return 'set('+$to_js(this.items)+')'+$to_js(this.tree)
           case 'dict_comp':
-            var key_items = this.items[0].expression[0].to_js()
-            var value_items = this.items[0].expression[1].to_js()
             return 'dict('+$to_js(this.items)+')'+$to_js(this.tree)
         }
         return 'set(['+$to_js(this.items)+'])'+$to_js(this.tree)
@@ -2216,9 +2167,12 @@ function $DoubleStarArgCtx(context){
     this.type = 'double_star_arg'
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.toString = function(){return '**'+this.tree}
-    this.to_js = function(){return '{$nat:"pdict",arg:'+$to_js(this.tree)+'}'}
+    this.to_js = function(){
+        this.js_processed=true
+        return '{$nat:"pdict",arg:'+$to_js(this.tree)+'}'
+    }
 }
 
 function $EllipsisCtx(context){
@@ -2226,16 +2180,19 @@ function $EllipsisCtx(context){
     this.type = 'ellipsis'
     this.parent = context
     this.nbdots = 1
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.toString = function(){return 'ellipsis'}
-    this.to_js = function(){return '__BRYTHON__.builtins["Ellipsis"]'}
+    this.to_js = function(){
+        this.js_processed=true
+        return '$B.builtins["Ellipsis"]'
+    }
 }
 
 function $ExceptCtx(context){
     // Class for keyword "except"
     this.type = 'except'
     this.parent = context
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.tree = []
     this.expect = 'id'
 
@@ -2249,17 +2206,21 @@ function $ExceptCtx(context){
     this.to_js = function(){
         // in method "transform" of $TryCtx instances, related
         // $ExceptCtx instances receive an attribute __name__
-        if(this.tree.length===0) return 'else'
-        if(this.tree.length===1 && this.tree[0].name==='Exception'){
-            return 'else if(1)'
+
+        this.js_processed=true
+
+        switch(this.tree.length) {
+           case 0:
+             return 'else'
+           case 1:
+             if(this.tree[0].name==='Exception') return 'else if(1)'
         }
         
-        var res ='else if($B.is_exc('+this.error_name+',['
+        var res=[], pos=0
         for(var i=0;i<this.tree.length;i++){
-            res+=this.tree[i].to_js()
-            if(i<this.tree.length-1) res+=','
+            res[pos++]=this.tree[i].to_js()
         }
-        return res + ']))'
+        return 'else if($B.is_exc('+this.error_name+',['+res.join(',')+']))'
     }
 }
 
@@ -2272,11 +2233,12 @@ function $ExprCtx(context,name,with_commas){
     this.expect = ',' // can be 'expr' or ','
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     this.toString = function(){return '(expr '+with_commas+') '+this.tree}
 
     this.to_js = function(arg){
+        this.js_processed=true
         if(this.type==='list') return '['+$to_js(this.tree)+']'
         if(this.tree.length===1) return this.tree[0].to_js(arg)
         return 'tuple('+$to_js(this.tree)+')'
@@ -2289,7 +2251,7 @@ function $ExprNot(context){
     this.type = 'expr_not'
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     this.toString = function(){return '(expr_not)'}
 
@@ -2302,8 +2264,11 @@ function $FloatCtx(context,value){
     this.toString = function(){return 'float '+this.value}
     this.parent = context
     this.tree = []
-    context.tree.push(this)
-    this.to_js = function(){return 'float('+this.value+')'}
+    context.tree[context.tree.length]=this
+    this.to_js = function(){
+        this.js_processed=true
+        return 'float('+this.value+')'
+    }
 }
 
 function $ForExpr(context){
@@ -2311,7 +2276,7 @@ function $ForExpr(context){
     this.type = 'for'
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.loop_num = $loop_num
     this.module = $get_scope(this).module
     $loop_num++
@@ -2345,7 +2310,7 @@ function $ForExpr(context){
         }
         
         // nodes that will be inserted at the position of the original "for" loop
-        var new_nodes = []
+        var new_nodes = [], pos=0
         
         // save original children (loop body)
         var children = node.children
@@ -2359,14 +2324,14 @@ function $ForExpr(context){
                 new_node = new $Node()
                 var js = local_ns+'["$no_break'+num+'"]=true'
                 new $NodeJSCtx(new_node,js)
-                new_nodes.push(new_node)
+                new_nodes[pos++]=new_node
             }
             
             var range_is_builtin = false
             if(!scope.blurred){
-                var _scope = $get_scope(this), found=[]
-                while(true){
-                    if($B.bound[_scope.id]['range']){found.push(_scope.id)}
+                var _scope = $get_scope(this), found=[], fpos=0
+                while(1){
+                    if($B.bound[_scope.id]['range']){found[fpos++]=_scope.id}
                     if(_scope.parent_block){_scope=_scope.parent_block}
                     else{break}
                 }
@@ -2377,12 +2342,12 @@ function $ForExpr(context){
             // Line to test if the callable "range" is the built-in "range"
             var test_range_node = new $Node()
             if(range_is_builtin){
-                new $NodeJSCtx(test_range_node,'if(true)')
+                new $NodeJSCtx(test_range_node,'if(1)')
             }else{
                 new $NodeJSCtx(test_range_node,
                     'if('+call.func.to_js()+'===$B.builtins.range)')
             }
-            new_nodes.push(test_range_node)
+            new_nodes[pos++]=test_range_node
             
 
             // Build the block with the Javascript "for" loop
@@ -2471,7 +2436,7 @@ function $ForExpr(context){
             // built-in function
             var else_node = new $Node()
             new $NodeJSCtx(else_node,'else')
-            new_nodes.push(else_node)
+            new_nodes[pos++]=else_node
             
 
             // Add lines at module level, after the original "for" loop                    
@@ -2480,8 +2445,7 @@ function $ForExpr(context){
             }
             
             this.test_range = true
-            new_nodes = []
-
+            new_nodes = [], pos=0
         }
 
         // Line to declare the function that produces the next item from
@@ -2491,7 +2455,7 @@ function $ForExpr(context){
         js += '=getattr(iter('+iterable.to_js()+'),"__next__");\n'
         
         new $NodeJSCtx(new_node,js)
-        new_nodes.push(new_node)
+        new_nodes[pos++]=new_node
 
         if(this.has_break){
             // If there is a "break" in the loop, add a boolean
@@ -2499,12 +2463,12 @@ function $ForExpr(context){
             new_node = new $Node()
             var js = local_ns+'["$no_break'+num+'"]=true'
             new $NodeJSCtx(new_node,js)
-            new_nodes.push(new_node)
+            new_nodes[pos++]=new_node
         }
 
         var while_node = new $Node()
         if(this.has_break){js = 'while('+local_ns+'["$no_break'+num+'"])'}
-        else{js='while(true)'}
+        else{js='while(1)'}
         new $NodeJSCtx(while_node,js)
         while_node.context.loop_num = num // used for "else" clauses
         if(scope.ntype=='generator'){
@@ -2512,7 +2476,7 @@ function $ForExpr(context){
             while_node.loop_start = num
         }
         
-        new_nodes.push(while_node)
+        new_nodes[pos++]=while_node
         
         node.parent.children.splice(rank,1)
         if(this.test_range){
@@ -2561,6 +2525,7 @@ function $ForExpr(context){
     }
 
     this.to_js = function(){
+        this.js_processed=true
         var iterable = this.tree.pop()
         return 'for '+$to_js(this.tree)+' in '+iterable.to_js()
     }
@@ -2573,12 +2538,12 @@ function $FromCtx(context){
     this.module = ''
     this.names = []
     this.aliases = {}
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.expect = 'module'
     this.scope = $get_scope(this)
 
     this.add_name = function(name){
-        this.names.push(name)
+        this.names[this.names.length]=name
         if(name=='*'){this.scope.blurred = true}
     }
     
@@ -2598,6 +2563,7 @@ function $FromCtx(context){
     }
     
     this.to_js = function(){
+        this.js_processed=true
         var scope = $get_scope(this)
         var mod = $get_module(this).module
         if(mod.substr(0,13)==='__main__,exec'){mod='__main__'}
@@ -2734,13 +2700,16 @@ function $FuncArgs(context){
     this.parent = context
     this.tree = []
     this.names = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.toString = function(){return 'func args '+this.tree}
     this.expect = 'id'
     this.has_default = false
     this.has_star_arg = false
     this.has_kw_arg = false
-    this.to_js = function(){return $to_js(this.tree)}
+    this.to_js = function(){
+        this.js_processed=true
+        return $to_js(this.tree)
+    }
 }
 
 function $FuncArgIdCtx(context,name){
@@ -2763,7 +2732,7 @@ function $FuncArgIdCtx(context,name){
     $B.bound[node.id][name] = 'arg'
 
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     // add to locals of function
     var ctx = context
     while(ctx.parent!==undefined){
@@ -2778,7 +2747,10 @@ function $FuncArgIdCtx(context,name){
 
     this.toString = function(){return 'func arg id '+this.name +'='+this.tree}
 
-    this.to_js = function(){return this.name+$to_js(this.tree)}
+    this.to_js = function(){
+        this.js_processed=true
+        return this.name+$to_js(this.tree)
+    }
 }
 
 function $FuncStarArgCtx(context,op){
@@ -2790,7 +2762,7 @@ function $FuncStarArgCtx(context,op){
 
     if(op=='*'){context.has_star_arg=true}
     else if(op=='**'){context.has_kw_arg=true}
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     this.toString = function(){return '(func star arg '+this.op+') '+this.name}
 
@@ -2824,7 +2796,7 @@ function $GlobalCtx(context){
     this.type = 'global'
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.expect = 'id'
     this.toString = function(){return 'global '+this.tree}
     this.scope = $get_scope(this)
@@ -2835,7 +2807,10 @@ function $GlobalCtx(context){
         $B.globals[this.scope.id][name] = true
     }
 
-    this.to_js = function(){return ''}
+    this.to_js = function(){
+        this.js_processed=true
+        return ''
+    }
 }
 
 function $check_unbound(assigned,scope,varname){
@@ -2884,7 +2859,7 @@ function $IdCtx(context,value){
     this.value = value
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     if(context.parent.type==='call_arg') this.call_arg=true
     
     this.scope = $get_scope(this)
@@ -2939,20 +2914,21 @@ function $IdCtx(context,value){
                     // for the form "func(x for x in iterable)"
                     comprehension = comprehension.parent
                 }
-                var remove = []
+                var remove = [], pos=0
                 if(scope.var2node && scope.var2node[value]){
                     for(var i=0;i<scope.var2node[value].length;i++){
                         var ctx = scope.var2node[value][i]
                         while(ctx.parent){
                             if(ctx===comprehension.parent){
-                                remove.push(i)
+                                remove[pos++]=i
                                 break
                             }
                             ctx = ctx.parent
                         }
                     }
                 }
-                for(var i=remove.length-1;i>=0;i--){
+                while(i-->0) {
+                    //for(var i=remove.length-1;i>=0;i--){
                     scope.var2node[value].splice(i,1)
                 }
             }
@@ -2979,6 +2955,7 @@ function $IdCtx(context,value){
     }
     
     this.to_js = function(arg){
+        this.js_processed=true
         var val = this.value
 
         // Special cases        
@@ -2996,7 +2973,7 @@ function $IdCtx(context,value){
         var global_ns = '$locals_'+gs.id.replace(/\./g,'_')
         
         // Build the list of scopes where the variable name is bound
-        while(true){
+        while(1){
             if($B.bound[scope.id]===undefined){console.log('name '+val+' undef '+scope.id)}
             if($B.globals[scope.id]!==undefined &&
                 $B.globals[scope.id][val]!==undefined){
@@ -3100,8 +3077,7 @@ function $IdCtx(context,value){
                 // namespace
                 val = scope_ns+'["'+val+'"]'
             }
-            var res = val+$to_js(this.tree,'')
-            return res
+            return val+$to_js(this.tree,'')
         }else{
             // Name was not found in bound names
             // It may have been introduced in the globals namespace by an exec,
@@ -3128,8 +3104,11 @@ function $ImaginaryCtx(context,value){
     this.toString = function(){return 'imaginary '+this.value}
     this.parent = context
     this.tree = []
-    context.tree.push(this)
-    this.to_js = function(){return 'complex(0,'+this.value+')'}
+    context.tree[context.tree.length]=this
+    this.to_js = function(){
+        this.js_processed=true
+        return 'complex(0,'+this.value+')'
+    }
 }
 
 function $ImportCtx(context){
@@ -3137,7 +3116,7 @@ function $ImportCtx(context){
     this.type = 'import'
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.expect = 'id'
 
     this.toString = function(){return 'import '+this.tree}
@@ -3158,12 +3137,13 @@ function $ImportCtx(context){
     }
     
     this.to_js = function(){
+        this.js_processed=true
         var scope = $get_scope(this)
         var mod = scope.module
 
-        var res = ''
+        var res = [], pos=0
         for(var i=0;i<this.tree.length;i++){
-            res += '$B.$import('+this.tree[i].to_js()+',"'+mod+'");'
+            res[pos++]='$B.$import('+this.tree[i].to_js()+',"'+mod+'");'
             if(this.tree[i].name == this.tree[i].alias){
                 var parts = this.tree[i].name.split('.')
                 // $import returns an object
@@ -3173,16 +3153,16 @@ function $ImportCtx(context){
                     var imp_key = parts.slice(0,j+1).join('.')
                     var obj_attr = ''
                     for(var k=0;k<j+1;k++){obj_attr+='["'+parts[k]+'"]'}
-                    res += '$locals'+obj_attr+'=$B.imported["'+imp_key+'"];'
+                    res[pos++]='$locals'+obj_attr+'=$B.imported["'+imp_key+'"];'
                 }
             }else{
-                res += '$locals_'+scope.id.replace(/\./g,'_')
-                res += '["'+this.tree[i].alias
-                res += '"]=$B.imported["'+this.tree[i].name+'"];'
+                res[pos++]='$locals_'+scope.id.replace(/\./g,'_')
+                res[pos++]='["'+this.tree[i].alias
+                res[pos++]='"]=$B.imported["'+this.tree[i].name+'"];'
             }
         }
         // add None for interactive console
-        return res + 'None;'
+        return res.join('') + 'None;'
     }
 }
 
@@ -3192,8 +3172,11 @@ function $ImportedModuleCtx(context,name){
     this.parent = context
     this.name = name
     this.alias = name
-    context.tree.push(this)
-    this.to_js = function(){return '"'+this.name+'"'}
+    context.tree[context.tree.length]=this
+    this.to_js = function(){
+        this.js_processed=true
+        return '"'+this.name+'"'
+    }
 }
 
 function $IntCtx(context,value){
@@ -3202,17 +3185,23 @@ function $IntCtx(context,value){
     this.value = value
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     this.toString = function(){return 'int '+this.value}
 
-    this.to_js = function(){return this.value}
+    this.to_js = function(){
+        this.js_processed=true
+        return this.value
+    }
 }
 
 function $JSCode(js){
     this.js = js
     this.toString = function(){return this.js}
-    this.to_js = function(){return this.js}
+    this.to_js = function(){
+        this.js_processed=true
+        return this.js
+    }
 }
 
 function $KwArgCtx(context){
@@ -3235,7 +3224,11 @@ function $KwArgCtx(context){
     // If the keyword argument occurs inside a function, remove the occurence
     // from referenced variables in the function
     var scope = $get_scope(this)
-    if(scope.ntype=='def' || scope.ntype=='generator'){
+
+    switch(scope.ntype) {
+      case 'def':
+      case 'generator':
+        //if(scope.ntype=='def' || scope.ntype=='generator'){
         var ix = null,varname=context.tree[0].value
         //ui slider caused an issue in which scope.var2node[varname] is undefined
         // so lets check for that.
@@ -3253,11 +3246,11 @@ function $KwArgCtx(context){
     this.toString = function(){return 'kwarg '+this.tree[0]+'='+this.tree[1]}
 
     this.to_js = function(){
+        this.js_processed=true
         var key = this.tree[0].value
         if(key.substr(0,2)=='$$'){key=key.substr(2)}
         var res = '{$nat:"kw",name:"'+key+'",'
-        res += 'value:'+$to_js(this.tree.slice(1,this.tree.length))+'}'
-        return res
+        return res + 'value:'+$to_js(this.tree.slice(1,this.tree.length))+'}'
     }
 }
 
@@ -3265,7 +3258,7 @@ function $LambdaCtx(context){
     // Class for keyword "lambda"
     this.type = 'lambda'
     this.parent = context
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.tree = []
     this.args_start = $pos+6
     this.vars = []
@@ -3274,6 +3267,7 @@ function $LambdaCtx(context){
     this.toString = function(){return '(lambda) '+this.args_start+' '+this.body_start}
     
     this.to_js = function(){
+        this.js_processed=true
         var module = $get_module(this)
 
         var src = $B.$py_src[module.id]
@@ -3285,9 +3279,9 @@ function $LambdaCtx(context){
 
         var scope = $get_scope(this)
         var sc = scope
-        var env = []
+        var env = [], pos=0
         while(sc && sc.id!=='__builtins__'){
-            env.push('["'+sc.id+'",$locals_'+sc.id.replace(/\./g,'_')+']')
+            env[pos++]='["'+sc.id+'",$locals_'+sc.id.replace(/\./g,'_')+']'
             sc = sc.parent_block
         }
         var env_string = '['+env.join(', ')+']'
@@ -3307,7 +3301,7 @@ function $ListOrTupleCtx(context,real){
     this.closed = false
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     this.toString = function(){
         switch(this.real) {
@@ -3345,15 +3339,15 @@ function $ListOrTupleCtx(context,real){
     }
 
     this.to_js = function(){
+        this.js_processed=true
         var scope = $get_scope(this)
         var sc = scope
-        var env = []
+        var env = [], pos=0
         while(sc && sc.id!=='__builtins__'){
             if(sc===scope){
-                env.push('["'+sc.id+'",$locals]'
-                )
+                env[pos++]='["'+sc.id+'",$locals]'
             }else{
-                env.push('["'+sc.id+'",$locals_'+sc.id.replace(/\./g,'_')+']')
+                env[pos++]='["'+sc.id+'",$locals_'+sc.id.replace(/\./g,'_')+']'
             }
             sc = sc.parent_block
         }
@@ -3366,13 +3360,14 @@ function $ListOrTupleCtx(context,real){
           case 'gen_expr':
           case 'dict_or_set_comp':
             var src = this.get_src()
-            var res2 = ''
+            var res1 = []
 
             var qesc = new RegExp('"',"g") // to escape double quotes in arguments
             for(var i=1;i<this.intervals.length;i++){
                 var txt = src.substring(this.intervals[i-1],this.intervals[i])
                 var lines = txt.split('\n')
-                res2 += '['
+                var res2=[], pos=0
+
                 for(var j=0;j<lines.length;j++){
                     var txt = lines[j]
                     // ignore empty lines
@@ -3380,28 +3375,24 @@ function $ListOrTupleCtx(context,real){
                     txt = txt.replace(/\n/g,' ')
                     txt = txt.replace(/\\/g,'\\\\')
                     txt = txt.replace(qesc,'\\"')
-                    res2 += '"'+txt+'",'
+                    res2[pos++]='"'+txt+'"'
                 }
-                res2 += ']'
-                if(i<this.intervals.length-1){res2+=','}
+                res1.push('['+res2.join(',')+']')
             }
 
-            if(this.real==='list_comp'){
-                var res = '$B.$list_comp('+env_string+','+res2+')'
-                return res
-            }
-            if(this.real==='dict_or_set_comp'){
-            
+            switch(this.real) {
+              case 'list_comp':
+                return '$B.$list_comp('+env_string+','+res1+')'
+              case 'dict_or_set_comp':
                 if(this.expression.length===1){
-                  var res = '$B.$gen_expr('+env_string+','+res2+')'
-                  return res
+                  return '$B.$gen_expr('+env_string+','+res1+')'
                 }
-                return '$B.$dict_comp('+env_string+','+res2+')'
+                return '$B.$dict_comp('+env_string+','+res1+')'
             }
 
             // Generator expression
             // Pass the module name and the id of current block
-            return '$B.$gen_expr('+env_string+','+res2+')'
+            return '$B.$gen_expr('+env_string+','+res1+')'
           case 'tuple':
             if(this.tree.length===1 && this.has_comma===undefined){
                 return this.tree[0].to_js()
@@ -3423,10 +3414,17 @@ function $NodeCtx(node){
     while(tree_node.parent && tree_node.parent.type!=='module'){
         var ntype = tree_node.parent.context.tree[0].type
         
-        if(['def', 'class', 'generator'].indexOf(ntype)>-1){
+        var _break_flag=false
+        switch(ntype) {
+          case 'def':
+          case 'class':
+          case 'generator':
+            //if(['def', 'class', 'generator'].indexOf(ntype)>-1){
             scope = tree_node.parent
-            break
+            _break_flag=true
         }
+        if (_break_flag) break
+
         tree_node = tree_node.parent
     }
     if(scope==null){
@@ -3436,6 +3434,7 @@ function $NodeCtx(node){
     this.toString = function(){return 'node '+this.tree}
 
     this.to_js = function(){
+        this.js_processed=true
         if(this.tree.length>1){
             var new_node = new $Node()
             var ctx = new $NodeCtx(new_node)
@@ -3456,7 +3455,10 @@ function $NodeJSCtx(node,js){
     this.type = 'node_js'
     this.tree = [js]
     this.toString = function(){return 'js '+js}
-    this.to_js = function(){return js}
+    this.to_js = function(){
+        this.js_processed=true
+        return js
+    }
 }
 
 function $NonlocalCtx(context){
@@ -3464,7 +3466,7 @@ function $NonlocalCtx(context){
     this.type = 'global'
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.expect = 'id'
 
     this.scope = $get_scope(this)
@@ -3487,7 +3489,10 @@ function $NonlocalCtx(context){
         if(this.scope.globals.indexOf(name)==-1){this.scope.globals.push(name)}
     }
 
-    this.to_js = function(){return ''}
+    this.to_js = function(){
+        this.js_processed=true
+        return ''
+    }
 }
 
 
@@ -3496,9 +3501,12 @@ function $NotCtx(context){
     this.type = 'not'
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.toString = function(){return 'not ('+this.tree+')'}
-    this.to_js = function(){return '!bool('+$to_js(this.tree)+')'}
+    this.to_js = function(){
+        this.js_processed=true
+        return '!bool('+$to_js(this.tree)+')'
+    }
 }
 
 function $OpCtx(context,op){ 
@@ -3514,7 +3522,9 @@ function $OpCtx(context,op){
 
     this.toString = function(){return '(op '+this.op+') ['+this.tree+']'}
 
+
     this.to_js = function(){
+        this.js_processed=true
         var comps = {'==':'eq','!=':'ne','>=':'ge','<=':'le',
             '<':'lt','>':'gt'}
         if(comps[this.op]!==undefined){
@@ -3535,7 +3545,7 @@ function $OpCtx(context,op){
                         res += ',"__'+method+'__")('+this.tree[1].to_js()+')'
                         return res
                     }
-                
+
                     break;
                   case 'str':
                     switch(t0.type) {
@@ -3609,9 +3619,9 @@ function $OpCtx(context,op){
                 else if(elt.type=='expr' && elt.tree[0].type=='float'){
                     has_float_lit = true
                     return true
-                }else if(elt.type=='expr' && elt.tree[0].type=='list_or_tuple' 
+                }else if(elt.type=='expr' && elt.tree[0].type=='list_or_tuple'
                     && elt.tree[0].real=='tuple'
-                    && elt.tree[0].tree.length==1 
+                    && elt.tree[0].tree.length==1
                     && elt.tree[0].tree[0].type=='expr'){
                     return is_simple(elt.tree[0].tree[0].tree[0])
                 }else if (elt.type=='expr' && elt.tree[0].type=='id'){
@@ -3626,7 +3636,6 @@ function $OpCtx(context,op){
                 }
                 return false
             }
-
             var e0=this.tree[0],e1=this.tree[1]
             if(is_simple(this)){
                 var v0 = this.tree[0].tree[0]
@@ -3639,54 +3648,50 @@ function $OpCtx(context,op){
                     return 'new $B.$FloatClass('+this.simple_js()+')'
                 }else{
                     // at least one variable
-                    // Test if all variables are numbers
-                    var tests = []
+                    var tests = [], tests1=[], pos=0
                     for(var i=0;i<vars.length;i++){
-                        tests.push('typeof '+vars[i]+'.valueOf() == "number"')
+                        // Test if all variables are numbers
+                        tests[pos]='typeof '+vars[i]+'.valueOf() == "number"'
+                        // Test if all variables are integers
+                        tests1[pos++]='typeof '+vars[i]+' == "number"'
                     }
-                    var res = tests.join(' && ')+' ? '
+                    var res = [tests.join(' && ')+' ? '], pos=1
 
-                    // Test if all variables are integers
-                    var tests = []
-                    for(var i=0;i<vars.length;i++){
-                        tests.push('typeof '+vars[i]+' == "number"')
-                    }
-                    res += '('+tests.join(' && ')+' ? '
-                    
+                    res[pos++]='('+tests.join(' && ')+' ? '
+
                     // If true, use basic formula
-                    res += this.simple_js()
-                    
-                    // Else wrap simple formula in a float
-                    res += ' : new $B.$FloatClass('+this.simple_js()+')'
-                    
-                    // Close integers test
-                    res += ')'
+                    res[pos++]=this.simple_js()
 
-                    // If at least one variable is not a number
-                    
+                    // Else wrap simple formula in a float
+                    res[pos++]=' : new $B.$FloatClass('+this.simple_js()+')'
+
+                    // Close integers test
+                    res[pos++]=')'
+                   // If at least one variable is not a number
+
                     // For addition, test if both arguments are strings
                     if(this.op=='+'){
-                        res += ' : (typeof '+this.tree[0].to_js()+'=="string"'
-                        res += ' && typeof '+this.tree[1].to_js()
-                        res += '=="string") ? '+this.tree[0].to_js()
-                        res += '+'+this.tree[1].to_js()
+                        res[pos++]=' : (typeof '+this.tree[0].to_js()+'=="string"'
+                        res[pos++]=' && typeof '+this.tree[1].to_js()
+                        res[pos++]='=="string") ? '+this.tree[0].to_js()
+                        res[pos++]='+'+this.tree[1].to_js()
                     }
-                    res += ': getattr('+this.tree[0].to_js()+',"__'
-                    res += $operators[this.op]+'__")'+'('+this.tree[1].to_js()+')'
+                    res[pos++]= ': getattr('+this.tree[0].to_js()+',"__'
+                    res[pos++]= $operators[this.op]+'__")'+'('+this.tree[1].to_js()+')'
                     //if(this.op=='+'){console.log(res)}
-                    res = '('+res+')'
-                    
+                    res = '('+res.join('')+')'
                 }
             }else{
                 var res = 'getattr('+e0.to_js()+',"__'
                 res += $operators[this.op]+'__")'+'('+e1.to_js()+')'
-            } 
+            }
             return res
           default:
             var res = 'getattr('+this.tree[0].to_js()+',"__'
             return res + $operators[this.op]+'__")'+'('+this.tree[1].to_js()+')'
         }
     }
+
     
     this.simple_js = function(){
 
@@ -3718,11 +3723,14 @@ function $PackedCtx(context){
     }
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     this.toString = function(){return '(packed) '+this.tree}
 
-    this.to_js = function(){return $to_js(this.tree)}
+    this.to_js = function(){
+        this.js_processed=true
+        return $to_js(this.tree)
+    }
 }
 
 
@@ -3731,11 +3739,14 @@ function $PassCtx(context){
     this.type = 'pass'
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     this.toString = function(){return '(pass)'}
 
-    this.to_js = function(){return 'void(0)'}
+    this.to_js = function(){
+        this.js_processed=true
+        return 'void(0)'
+    }
 }
 
 function $RaiseCtx(context){
@@ -3743,11 +3754,12 @@ function $RaiseCtx(context){
     this.type = 'raise'
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     this.toString = function(){return ' (raise) '+this.tree}
 
     this.to_js = function(){
+        this.js_processed=true
         var res = '$B.leave_frame();'
         if(this.tree.length===0) return res+'$B.$raise()'
         var exc = this.tree[0], exc_js = exc.to_js()
@@ -3765,10 +3777,13 @@ function $RaiseCtx(context){
 
 function $RawJSCtx(context,js){
     this.type = "raw_js"
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.parent = context
     this.toString = function(){return '(js) '+js}
-    this.to_js = function(){return js}
+    this.to_js = function(){
+        this.js_processed=true
+        return js
+    }
 }
 
 function $ReturnCtx(context){ 
@@ -3776,7 +3791,7 @@ function $ReturnCtx(context){
     this.type = 'return'
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     // Check if return is inside a "for" loop
     // In this case, the loop will not be included inside a function
@@ -3793,6 +3808,7 @@ function $ReturnCtx(context){
     this.toString = function(){return 'return '+this.tree}
 
     this.to_js = function(){
+        this.js_processed=true
         if(this.tree.length==1 && this.tree[0].type=='abstract_expr'){
             // "return" must be transformed into "return None"
             this.tree.pop()
@@ -3800,10 +3816,9 @@ function $ReturnCtx(context){
         }
         var scope = $get_scope(this)
         if(scope.ntype=='generator'){
-            var res = 'return [$B.generator_return('
-            return res + $to_js(this.tree)+')]'
+            return 'return [$B.generator_return(' + $to_js(this.tree)+')]'
         }
-        return 'var $res = '+$to_js(this.tree)+';__BRYTHON__.leave_frame("'+scope.id+'");return $res'
+        return 'var $res = '+$to_js(this.tree)+';$B.leave_frame("'+scope.id+'");return $res'
     }
 }
 
@@ -3813,7 +3828,7 @@ function $SingleKwCtx(context,token){
     this.token = token
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     // If token is "else" inside a "for" loop, set the flag "has_break"
     // on the loop, to force the creation of a boolean "$no_break"
@@ -3837,6 +3852,7 @@ function $SingleKwCtx(context,token){
     this.toString = function(){return this.token}
     
     this.to_js = function(){
+        this.js_processed=true
         if(this.token=='finally') return this.token
 
         // For "else" we must check if the previous block was a loop
@@ -3856,9 +3872,10 @@ function $StarArgCtx(context){
     this.type = 'star_arg'
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.toString = function(){return '(star arg) '+this.tree}
     this.to_js = function(){
+        this.js_processed=true
         return '{$nat:"ptuple",arg:'+$to_js(this.tree)+'}'
     }
 }
@@ -3869,11 +3886,12 @@ function $StringCtx(context,value){
     this.parent = context
     this.tree = [value] // may be extended if consecutive strings eg 'a' 'b'
     this.raw = false
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     this.toString = function(){return 'string '+(this.tree||'')}
 
     this.to_js = function(){
+        this.js_processed=true
         var res = '', type = null
         for(var i=0;i<this.tree.length;i++){
             var value=this.tree[i], is_bytes = value.charAt(0)=='b'
@@ -3881,7 +3899,7 @@ function $StringCtx(context,value){
                 type=is_bytes
                 if(is_bytes){res+='bytes('}
             }else if(type!=is_bytes){
-                return '__BRYTHON__.$TypeError("can\'t concat bytes to str")'
+                return '$B.$TypeError("can\'t concat bytes to str")'
             }
             if(!is_bytes){
                 res += value.replace(/\n/g,'\\n\\\n')
@@ -3901,7 +3919,7 @@ function $SubCtx(context){
     this.func = 'getitem' // set to 'setitem' if assignment
     this.value = context.tree[0]
     context.tree.pop()
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.parent = context
     this.tree = []
 
@@ -3910,6 +3928,7 @@ function $SubCtx(context){
     }
 
     this.to_js = function(){
+        this.js_processed=true
         // In assignment to subscriptions, eg a[x][y], a flag "marked" is set
         // to use the shortcut a[x] instead of the complete code with getattr
         if(this.marked){
@@ -3917,20 +3936,19 @@ function $SubCtx(context){
             var res = 'getattr('+val+',"__'+this.func+'__")('
             if(this.tree.length===1) return res+this.tree[0].to_js()+')'
     
-            res += 'slice('
+            //res += 'slice('
+            var res1=[], pos=0
             for(var i=0;i<this.tree.length;i++){
-                if(this.tree[i].type==='abstract_expr'){res+='null'}
-                else{res+=this.tree[i].to_js()}
-                if(i<this.tree.length-1){res+=','}
+                if(this.tree[i].type==='abstract_expr'){res1[pos++]='null'}
+                else{res1[pos++]=this.tree[i].to_js()}
+                //if(i<this.tree.length-1){res+=','}
             }
-            return res+'))'
+            return res+'slice(' + res1.join(',') + '))'
         }else{
-            var res = '', shortcut = false
             if(this.func=='getitem' && this.tree.length==1){
-                res += '$B.$getitem('+this.value.to_js()+','
-                res += this.tree[0].to_js()+')'
-                return res
+                return '$B.$getitem('+this.value.to_js()+',' + this.tree[0].to_js()+')'
             }
+            var res='', shortcut = false
             if(this.func!=='delitem' && Array.isArray && 
                 this.tree.length==1 && !this.in_sub){
                 var expr = '', x = this
@@ -3951,13 +3969,14 @@ function $SubCtx(context){
             if(this.tree.length===1){
                 res += this.tree[0].to_js()+')'
             }else{
-                res += 'slice('
+                //res += 'slice('
+                var res1=[], pos=0
                 for(var i=0;i<this.tree.length;i++){
-                    if(this.tree[i].type==='abstract_expr'){res+='null'}
-                    else{res+=this.tree[i].to_js()}
-                    if(i<this.tree.length-1){res+=','}
+                    if(this.tree[i].type==='abstract_expr'){res1[pos++]='null'}
+                    else{res1[pos++]=this.tree[i].to_js()}
+                    //if(i<this.tree.length-1){res+=','}
                 }
-                res += '))'
+                res += 'slice(' + res1.join(',') + '))'
             }
             return shortcut ? res+')' : res
         }
@@ -3971,11 +3990,14 @@ function $TargetListCtx(context){
     this.parent = context
     this.tree = []
     this.expect = 'id'
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     this.toString = function(){return '(target list) '+this.tree}
 
-    this.to_js = function(){return $to_js(this.tree)}
+    this.to_js = function(){
+        this.js_processed=true
+        return $to_js(this.tree)
+    }
 }
 
 function $TernaryCtx(context){
@@ -3990,10 +4012,10 @@ function $TernaryCtx(context){
     this.toString = function(){return '(ternary) '+this.tree}
 
     this.to_js = function(){
+        this.js_processed=true
         var res = 'bool('+this.tree[1].to_js()+') ? ' // condition
         res += this.tree[0].to_js()+' : '    // result if true
-        res += this.tree[2].to_js()          // result if false
-        return res
+        return res + this.tree[2].to_js()          // result if false
     }
 }
 
@@ -4001,7 +4023,7 @@ function $TryCtx(context){
     // Class for the keyword "try"
     this.type = 'try'
     this.parent = context
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     this.toString = function(){return '(try) '}
 
@@ -4021,10 +4043,12 @@ function $TryCtx(context){
         }
         var scope = $get_scope(this)
         
+        var $var='$B.$failed'+$loop_num
+
         // Transform node into Javascript 'try' (necessary if
         // "try" inside a "for" loop)
         // add a boolean $failed, used to run the 'else' clause
-        var js = '$B.$failed'+$loop_num+'=false;'
+        var js = $var+'=false;'
         js += '$locals["$frame'+$loop_num+'"]=$B.frames_stack.slice();'
         js += 'try'
         new $NodeJSCtx(node, js)
@@ -4039,7 +4063,7 @@ function $TryCtx(context){
         // Fake line to start the 'else if' clauses
         var new_node = new $Node()
         // Set the boolean $failed to true
-        new $NodeJSCtx(new_node,'$B.$failed'+$loop_num+'=true;if(false){void(0)}')
+        new $NodeJSCtx(new_node,$var+'=true;if(false){void(0)}')
         catch_node.insert(0,new_node)
         
         var pos = rank+2
@@ -4098,13 +4122,16 @@ function $TryCtx(context){
         // restore frames stack as before the try clause
         var frame_node = new $Node()
         var js = '$B.frames_stack = $locals["$frame'+$loop_num+'"];'
-        js += 'delete $locals["$frame'+$loop_num+'"];'
+        js += 'delete $locals["'+$var+'"];'
         new $NodeJSCtx(frame_node, js)
         node.parent.insert(pos, frame_node)
         $loop_num++
     }
 
-    this.to_js = function(){return 'try'}
+    this.to_js = function(){
+        this.js_processed=true
+        return 'try'
+    }
 
 }
 
@@ -4113,18 +4140,21 @@ function $UnaryCtx(context,op){
     this.type = 'unary'
     this.op = op
     this.parent = context
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     this.toString = function(){return '(unary) '+this.op}
 
-    this.to_js = function(){return this.op}
+    this.to_js = function(){
+        this.js_processed=true
+        return this.op
+    }
 }
 
 function $WithCtx(context){
     // Class for keyword "with"
     this.type = 'with'
     this.parent = context
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
     this.tree = []
     this.expect = 'as'
 
@@ -4214,6 +4244,7 @@ function $WithCtx(context){
     }
 
     this.to_js = function(){
+        this.js_processed=true
         var res = 'var $ctx_manager='+this.tree[0].to_js()
         var scope = $get_scope(this)
         res += '\nvar $ctx_manager_exit = getattr($ctx_manager,"__exit__")\n'
@@ -4232,7 +4263,7 @@ function $YieldCtx(context){
     this.toString = function(){return '(yield) '+this.tree}
     this.parent = context
     this.tree = []
-    context.tree.push(this)
+    context.tree[context.tree.length]=this
 
     // Syntax control : 'yield' can start a 'yield expression'
     switch(context.type) {
@@ -4311,14 +4342,14 @@ function $YieldCtx(context){
     }
 
     this.to_js = function(){
-        var scope = $get_scope(this)
-        var res = ''
+        this.js_processed=true
+        //var scope = $get_scope(this)
+        //var res = ''
         if(this.from===undefined) return $to_js(this.tree) || 'None'
 
         // form "yield from <expr>" : <expr> is this.tree[0]
 
-        var res = $to_js(this.tree)
-        return res
+        return $to_js(this.tree)
     }
 }
 
@@ -4365,11 +4396,11 @@ function $clear_ns(ctx){
     if(scope.is_function){
         if(scope.var2node){
             for(var name in scope.var2node){
-                var remove = []
+                var remove = [],pos=0
                 for(var j=0;j<scope.var2node[name].length;j++){
                     var elt = scope.var2node[name][j].parent
                     while(elt.parent){
-                        if(elt===ctx){remove.push(j);break}
+                        if(elt===ctx){remove[pos++]=j;break}
                         elt=elt.parent
                     }
                 }
@@ -4448,14 +4479,14 @@ function $ws(n){
 }
 
 function $to_js_map(tree_element) {
-   if (tree_element.to_js !== undefined) return tree_element.to_js()
-   throw Error('no to_js() for '+tree_element)
+    if (tree_element.to_js !== undefined) return tree_element.to_js()
+    throw Error('no to_js() for '+tree_element)
 }
 
 function $to_js(tree,sep){
-   if(sep===undefined){sep=','}
+    if(sep===undefined){sep=','}
 
-   return tree.map($to_js_map).join(sep)
+    return tree.map($to_js_map).join(sep)
 }
 
 // expression starters 

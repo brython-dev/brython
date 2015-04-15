@@ -49,12 +49,12 @@ $B.make_node = function(top_node, node){
             top_node.yields.push(new_node)
         
         }else if(node.is_set_yield_value){
-            var js = '$sent'+ctx_js+'=__BRYTHON__.modules["'
+            var js = '$sent'+ctx_js+'=$B.modules["'
             js += top_node.iter_id+'"].sent_value || None;'
-            js += 'if($sent'+ctx_js+'.__class__===__BRYTHON__.$GeneratorSendError)'
+            js += 'if($sent'+ctx_js+'.__class__===$B.$GeneratorSendError)'
             js += '{throw $sent'+ctx_js+'.err};'
             js += '$yield_value'+ctx_js+'=$sent'+ctx_js+';'
-            js += '__BRYTHON__.modules["'+top_node.iter_id+'"].sent_value=None'
+            js += '$B.modules["'+top_node.iter_id+'"].sent_value=None'
             new_node.data = js
         }else if(ctype=='break'){
             new_node.is_break = true
@@ -90,7 +90,7 @@ $B.genNode = function(data, parent){
 
     this.addChild = function(child){
         if(child===undefined){console.log('child of '+this+' undefined')}
-        this.children.push(child)
+        this.children[this.children.length]=child
         this.has_child = true
         child.parent = this
         child.rank = this.children.length-1
@@ -134,7 +134,7 @@ $B.genNode = function(data, parent){
         if(head && this.is_break){
             res.data = '$locals["$no_break'+this.loop_num+'"]=false;'
             res.data += 'var err = new Error("break");'
-            res.data += 'err.__class__=__BRYTHON__.GeneratorBreak;throw err;'
+            res.data += 'err.__class__=$B.GeneratorBreak;throw err;'
             res.is_break = true
         }
         res.has_child = this.has_child
@@ -171,14 +171,14 @@ $B.genNode = function(data, parent){
         // Returns the indented Javascript source code starting at "this"
 
         indent = indent || 0
-        res = this.indent_src(indent)+this.data
-        if(this.has_child) res += '{'
-        res += '\n'
+        var res = [this.indent_src(indent)+this.data], pos=1
+        if(this.has_child) res[pos++]='{'
+        res[pos++]='\n'
         for(var i=0, _len_i = this.children.length; i < _len_i;i++){
-            res += this.children[i].src(indent+1)
+            res[pos++]=this.children[i].src(indent+1)
         }
-        if(this.has_child) res+='\n'+this.indent_src(indent)+'}\n'
-        return res
+        if(this.has_child) res[pos++]='\n'+this.indent_src(indent)+'}\n'
+        return res.join('')
     }
     
     this.toString = function(){return '<Node '+this.data+'>'}
@@ -209,9 +209,9 @@ function in_loop(node){
 
 function in_try(node){
     // Return the list of "try" clauses above the node
-    var tries = [], pnode=node.parent
+    var tries = [], pnode=node.parent, pos=0
     while(pnode){
-        if(pnode.is_try){tries.push(pnode)}
+        if(pnode.is_try){tries[pos++]=pnode}
         pnode = pnode.parent
     }
     return tries
@@ -232,10 +232,7 @@ function clear_ns(iter_id){
 }
 
 $BRGeneratorDict.__next__ = function(self){
-
-    
     var scope_id = self.func_root.scope.id
-    
     var first_iter = self._next===undefined
 
     if(first_iter){
@@ -332,10 +329,10 @@ $BRGeneratorDict.__next__ = function(self){
     fnode.addChild(new $B.genNode(js))
 
     // Parent of exit node
-    while(true){
+    while(1){
         // Compute the rest of the block to run after exit_node
         var exit_parent = exit_node.parent
-        var rest = []
+        var rest = [], pos=0
         var has_break = false
         var start = exit_node.rank+1
         if(exit_node.loop_start){start = exit_node.rank}
@@ -348,7 +345,7 @@ $BRGeneratorDict.__next__ = function(self){
         }
         for(var i=start, _len_i = exit_parent.children.length; i < _len_i;i++){
             var clone = exit_parent.children[i].clone_tree(null,true)
-            rest.push(clone)
+            rest[pos++]=clone
             if(clone.has_break()){has_break=true}
         }
 
@@ -359,7 +356,7 @@ $BRGeneratorDict.__next__ = function(self){
             var rest_try = new $B.genNode('try')
             for(var i=0, _len_i = rest.length; i < _len_i;i++){rest_try.addChild(rest[i])}
             var catch_test = 'catch(err)'
-            catch_test += '{if(err.__class__!==__BRYTHON__.GeneratorBreak)'
+            catch_test += '{if(err.__class__!==$B.GeneratorBreak)'
             catch_test += '{throw err}}'
             catch_test = new $B.genNode(catch_test)
             rest = [rest_try, catch_test]
@@ -374,22 +371,22 @@ $BRGeneratorDict.__next__ = function(self){
             for(var i=0;i<rest.length;i++){fnode.addChild(rest[i])}
         }else{
             // Attach "rest" to deepest "try" found, or to function body
-            var tree = []
+            var tree = [], pos=0
             for(var i=0;i<tries.length;i++){
                 var try_node = tries[i], try_clone = try_node.clone()
                 if(i==0){
                     for(var j=0;j<rest.length;j++){try_clone.addChild(rest[j])}
                 }
-                var children = [try_clone]
+                var children = [try_clone], cpos=1
 
                 for(var j=try_node.rank+1;j<try_node.parent.children.length;j++){
                     if(try_node.parent.children[j].is_except){
-                        children.push(try_node.parent.children[j].clone_tree(null,true))
+                        children[cpos++]=try_node.parent.children[j].clone_tree(null,true)
                     }else{
                         break
                     }
                 }
-                tree.push(children)
+                tree[pos++]=children
             }
             var parent = fnode
             while(tree.length){
@@ -402,7 +399,6 @@ $BRGeneratorDict.__next__ = function(self){
         // Up one block
         exit_node = exit_parent
         if(exit_node===self.func_root){break}
-
     }
      
     // Set self._next to the code of the function for next iteration
@@ -463,12 +459,11 @@ $B.$BRgenerator = function(env, func_name, def_id){
     var module = def_node.module
 
     var res = function(){
-        var args = []
-        for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+        var args = [], pos=0
+        for(var i=0,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
 
         // create an id for the iterator
-        var iter_id = def_id+'_'+counter
-        counter++
+        var iter_id = def_id+'_'+counter++
         
         // Names bound in generator are also bound in iterator
         $B.bound[iter_id] = {}
@@ -478,7 +473,7 @@ $B.$BRgenerator = function(env, func_name, def_id){
         // iter_id is used in the node where the iterator resets local
         // namespace
         $B.$generators = $B.$generators || {}
-        var func_root = new $B.genNode(def_ctx.to_js('__BRYTHON__.$generators["'+iter_id+'"]'))
+        var func_root = new $B.genNode(def_ctx.to_js('$B.$generators["'+iter_id+'"]'))
         func_root.scope = env[0][1]
         func_root.module = module
         func_root.yields = []

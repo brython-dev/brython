@@ -238,4 +238,9 @@ except ValueError:
     tb = sys.exc_info()[2]
     assert isinstance(tb, types.TracebackType)
 
+# issue 156
+from collections import abc
+assert isinstance(dict(one=1), abc.Mapping)
+assert issubclass(dict, abc.Mapping)
+
 print('passed all tests')

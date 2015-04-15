@@ -4,27 +4,31 @@ _b_=$B.builtins
 $B.execution_object = {}
 
 $B.execution_object.queue=[]
-$B.execution_object.done=true
+$B.execution_object.start_flag=true
 
 $B.execution_object.$execute_next_segment=function() {
    if ($B.execution_object.queue.length == 0) {
-      $B.execution_object.done=true
       return
    }
 
-   $B.execution_object.done=false
+   $B.execution_object.start_flag=false
 
    var element = $B.execution_object.queue.shift()
    var code=element[0]
    var delay=10
    if (element.length == 2) delay=element[1]
 
-   setTimeout(function() {eval(code)}, delay);
+   setTimeout(function() {
+        eval(code)
+        // if queue length is 0, set start_flag = true so that
+        // next push to queue will start execution again..
+        $B.execution_object.start_flag = $B.execution_object.queue.length == 0
+   }, delay);
 }
 
 $B.execution_object.$append=function(code, delay) {
    $B.execution_object.queue.push([code, delay]);
-   if ($B.execution_object.done) $B.execution_object.$execute_next_segment()
+   if ($B.execution_object.start_flag) $B.execution_object.$execute_next_segment()
 }
 
 //$B.execution_object.$append("console.log('test');$B.execution_object.$execute_next_segment();", 10)

@@ -51,9 +51,9 @@ $StringDict.__eq__ = function(self,other){
 
 $StringDict.__format__ = function(self,arg){
     var _fs = $FormattableString(self.valueOf())
-    var args=[]
+    var args=[], pos=0
     // we don't need the first item (ie, self)
-    for (var i = 1, _len_i = arguments.length; i < _len_i; i++) { args.push(arguments[i])}
+    for (var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
     return _fs.strformat(arg)
 }
 
@@ -775,8 +775,8 @@ $StringDict.endswith = function(self){
     // return False. suffix can also be a tuple of suffixes to look for. 
     // With optional start, test beginning at that position. With optional 
     // end, stop comparing at that position.
-    var args = []
-    for(var i=1, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+    var args = [], pos=0
+    for(var i=1, _len_i=arguments.length; i<_len_i;i++){args[pos++]=arguments[i]}
     var start=null,end=null
     var $ns=$B.$MakeArgs("$StringDict.endswith",args,['suffix'],
         ['start','end'],null,null)
@@ -1280,9 +1280,9 @@ var $FormattableString=function(format_string) {
 $StringDict.format = function(self) {
 
     var _fs = $FormattableString(self.valueOf())
-    var args=[]
+    var args=[], pos=0
     // we don't need the first item (ie, self)
-    for (var i = 1, _len_i = arguments.length; i < _len_i; i++) { args.push(arguments[i])}
+    for (var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
     return _fs.format.apply(null, args)
 }
 
@@ -1483,12 +1483,15 @@ $StringDict.rfind = function(self){
         "slice indices must be integers or None or have an __index__ method")}
 
     var s = self.substring(start,end)
-    var reversed = '',rsub=''
-    for(var i=s.length-1;i>=0;i--){reversed += s.charAt(i)}
-    for(var i=sub.length-1;i>=0;i--){rsub += sub.charAt(i)}
-    var res = reversed.search($re_escape(rsub))
-    if(res==-1) return -1
-    return start+s.length-1-res-sub.length+1
+    //var reversed = '',rsub=''
+    //for(var i=s.length-1;i>=0;i--){reversed += s.charAt(i)}
+    //for(var i=sub.length-1;i>=0;i--){rsub += sub.charAt(i)}
+    //var res = reversed.search($re_escape(rsub))
+    //if(res==-1) return -1
+    //return start+s.length-1-res-sub.length+1
+
+    // why not use lastIndexOf, which passes all brython tests..?
+    return self.lastIndexOf(sub)
 }
 
 $StringDict.rindex = function(){
@@ -1526,15 +1529,15 @@ $StringDict.rpartition = function(self,sep) {
 }
 
 $StringDict.rsplit = function(self) {
-    var args = []
-    for(var i=1, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+    var args = [], pos=0
+    for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
     var $ns=$B.$MakeArgs("$StringDict.rsplit",args,[],[],'args','kw')
     var sep=None,maxsplit=-1
     if($ns['args'].length>=1){sep=$ns['args'][0]}
     if($ns['args'].length==2){maxsplit=$ns['args'][1]}
     maxsplit = _b_.dict.$dict.get($ns['kw'],'maxsplit',maxsplit)
 
-    var array=$StringDict.split(self) 
+    //var array=$StringDict.split(self) 
 
     var array=$StringDict.split(self, sep) 
 
@@ -1556,8 +1559,8 @@ $StringDict.rstrip = function(self,x){
 }
 
 $StringDict.split = function(self){
-    var args = []
-    for(var i=1, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
+    var args = [], pos=0
+    for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
     var $ns=$B.$MakeArgs("$StringDict.split",args,[],[],'args','kw')
     var sep=None,maxsplit=-1
     if($ns['args'].length>=1){sep=$ns['args'][0]}
@@ -1667,15 +1670,15 @@ $StringDict.title = function(self) {
 }
 
 $StringDict.translate = function(self,table) {
-    var res = ''
+    var res = [], pos=0
     if (isinstance(table, _b_.dict)) {
        for (var i=0, _len_i = self.length; i < _len_i; i++) {
            var repl = _b_.dict.$dict.get(table,self.charCodeAt(i),-1)
-           if(repl==-1){res += self.charAt(i)}
-           else if(repl!==None){res += repl}
+           if(repl==-1){res[pos++]=self.charAt(i)}
+           else if(repl!==None){res[pos++]=repl}
        }
     }
-    return res
+    return res.join('')
 }
 
 $StringDict.upper = function(self){return self.toUpperCase()}
@@ -1748,11 +1751,11 @@ for(var $attr in $StringDict){
     if(typeof $StringDict[$attr]=='function'){
         $StringSubclassDict[$attr]=(function(attr){
             return function(){
-                var args = []
+                var args = [], pos=0
                 if(arguments.length>0){
-                    var args = [arguments[0].valueOf()]
+                    var args = [arguments[0].valueOf()], pos=1
                     for(var i=1, _len_i = arguments.length; i < _len_i;i++){
-                        args.push(arguments[i])
+                        args[pos++]=arguments[i]
                     }
                 }
                 return $StringDict[attr].apply(null,args)

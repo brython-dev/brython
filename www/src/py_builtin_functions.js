@@ -460,7 +460,7 @@ function getattr(obj,attr,_default){
               // On debug mode, wrap the function to keep a track of call 
               // stack, for traceback
               return function(){
-                $B.call_stack.push($B.line_info)
+                $B.call_stack[$B.call_stack.length]=$B.line_info
                 var res = obj.apply(null,arguments)
                 $B.line_info = $B.call_stack.pop()
                 return res
@@ -551,8 +551,8 @@ function getattr(obj,attr,_default){
             }
             
             var method = function(){
-                var args = [obj]
-                for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
+                var args = [obj], pos=1
+                for(var i=0;i<arguments.length;i++){args[pos++]=arguments[i]}
                 return klass[attr].apply(null,args)
             }
             method.__name__ = 'method '+attr+' of built-in '+klass.__name__
@@ -832,8 +832,8 @@ $MapDict.__iter__ = function (self){return self}
 
 function map(){
     var func = getattr(arguments[0],'__call__')
-    var iter_args = []
-    for(var i=1;i<arguments.length;i++){iter_args.push(iter(arguments[i]))}
+    var iter_args = [], pos=0
+    for(var i=1;i<arguments.length;i++){iter_args[pos++]=iter(arguments[i])}
     var __next__ = function(){
         var args = [], pos=0
         for(var i=0;i<iter_args.length;i++){
@@ -929,8 +929,8 @@ function $extreme(args,op){ // used by min() and max()
 }
 
 function max(){
-    var args = []
-    for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
+    var args = [], pos=0
+    for(var i=0;i<arguments.length;i++){args[pos++]=arguments[i]}
     return $extreme(args,'__gt__')
 }
 
@@ -940,8 +940,8 @@ function memoryview(obj) {
 }
 
 function min(){
-    var args = []
-    for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
+    var args = [], pos=0
+    for(var i=0;i<arguments.length;i++){args[pos++]=arguments[i]}
     return $extreme(args,'__lt__')
 }
 
@@ -1376,9 +1376,9 @@ function sorted () {
 
     var obj = _b_.list(iterable)
     // pass arguments to list.sort()
-    var args = [obj]
-    if (key !== None) args.push({$nat:'kw',name:'key',value:key})
-    if(reverse) args.push({$nat:'kw',name:'reverse',value:true})
+    var args = [obj], pos=1
+    if (key !== None) args[pos++]={$nat:'kw',name:'key',value:key}
+    if(reverse) args[pos++]={$nat:'kw',name:'reverse',value:true}
     _b_.list.$dict.sort.apply(null,args)
     return obj
 }
@@ -1429,8 +1429,9 @@ $SuperDict.__getattribute__ = function(self,attr){
                     return function(){
                         // make a local copy of initial args
                         var local_args = initial_args.slice()
+                        var pos=initial_args.length
                         for(var i=0;i<arguments.length;i++){
-                            local_args.push(arguments[i])
+                            local_args[pos++]=arguments[i]
                         }
                         var x = res.apply(null,local_args)
                         if(x===undefined) return None
@@ -1610,8 +1611,8 @@ function zip(){
     if(arguments.length==0) return res
     var $ns=$B.$MakeArgs('zip',arguments,[],[],'args','kw')
     var _args = $ns['args']
-    var args = []
-    for(var i=0;i<_args.length;i++){args.push(iter(_args[i]))}
+    var args = [], pos=0
+    for(var i=0;i<_args.length;i++){args[pos++]=iter(_args[i])}
     var kw = $ns['kw']
     var rank=0,items=[]
     while(1){
@@ -1989,7 +1990,7 @@ var BaseException = function (msg,js_exc){
     err.$message = msg
     err.__class__ = $BaseExceptionDict
     err.$py_error = true
-    $B.exception_stack.push(err)
+    $B.exception_stack[$B.exception_stack.length]=err
     //console.log('exception '+err.__name__+' line info '+err.$line_info)
     return err
 }
@@ -2058,7 +2059,7 @@ $B.exception = function(js_exc){
     }else{
         var exc = js_exc
     }
-    $B.exception_stack.push(exc)
+    $B.exception_stack[$B.exception_stack.length]=exc
     return exc
 }
 
@@ -2083,8 +2084,7 @@ _b_.__BRYTHON__ = __BRYTHON__
 
 function $make_exc(names,parent){
     // create a class for exception called "name"
-    var _str=[]
-    var pos=0
+    var _str=[], pos=0
     for(var i=0;i<names.length;i++){
         var name = names[i]
         $B.bound['__builtins__'][name] = true
