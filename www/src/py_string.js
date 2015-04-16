@@ -555,7 +555,7 @@ var $legacy_format = function(val, args, char_mapping) {
         var key = rslt[1]
         newpos += rslt[0].length
         try {
-            var val = args.__class__.__getitem__(args, key)
+            var val = _b_.getattr(args.__class__,'__getitem__')(args, key)
         } catch(err) {
             if (err.name === "KeyError") {
                 throw err
