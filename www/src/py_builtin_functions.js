@@ -603,16 +603,9 @@ function getattr(obj,attr,_default){
 //globals() (built in function)
 function globals(){
     // The last item in __BRYTHON__.frames_stack is
-    // [locals_name, locals_obj],[globals_name, globals_obj]
+    // [locals_name, locals_obj, globals_name, globals_obj]
     var globals_obj = $B.last($B.frames_stack)[3]
-
-    // Transform into a Python dictionary
-    var res = _b_.dict()
-    var si=_b_.dict.$dict.__setitem__
-    for(var name in globals_obj){
-       si(res, name, globals_obj[name])
-    }
-    return res
+    return $B.obj_dict(globals_obj)
 }
 
 function hasattr(obj,attr){
@@ -815,14 +808,7 @@ function locals(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj],[globals_name, globals_obj]
     var locals_obj = $B.last($B.frames_stack)[1]
-
-    // Transform into a Python dictionary
-    var res = _b_.dict()
-    var si=_b_.dict.$dict.__setitem__
-    for(var name in locals_obj){
-       si(res, name, locals_obj[name])
-    }
-    return res
+    return $B.obj_dict(locals_obj)
 }
 
 
