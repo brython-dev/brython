@@ -5,7 +5,7 @@ Le module **javascript** permet d'interagir avec les objets définis dans les
 bibliothèques et programmes Javascript présents dans la même page que le
 programme Brython.
 
-Il définit deux classes :
+Il définit deux classes et une fonction :
 
 **javascript**.`JSObject`
 > Classe dont les instances «&nbsp;enveloppent&nbsp;» des objets Javascript.
@@ -14,10 +14,10 @@ Il définit deux classes :
 > directement. Un objet dont on obtient une référence par `window.js_object`
 > est une instance de `JSObject`
 
-> <code>JSObject(_jsobj_)</code> renvoie un objet *brobj* qui «&nbsp;»enveloppe&nbsp;»
-> l'objet Javascript *jsobj*. Les opérations réalisées sur l'instance de
-> `JSObject` sont répercutées sur l'objet Javascript en convertissant du mieux
-> possible les types Python en types Javascript.
+> <code>JSObject(_jsobj_)</code> renvoie un objet *brobj* qui 
+> «&nbsp;enveloppe&nbsp;» l'objet Javascript *jsobj*. Les opérations réalisées 
+> sur l'instance de `JSObject` sont répercutées sur l'objet Javascript en 
+> convertissant du mieux possible les types Python en types Javascript.
 
 > Si *jsobj* est une fonction, les arguments passés à *brobj* sont convertis
 > avant d'être passés à *jsobj* de la façon suivante&nbsp;:
@@ -50,6 +50,20 @@ Il définit deux classes :
 > instance de `JSObject` représentant l'objet Javascript obtenu en passant au
 > constructeur *jsconstr* les arguments convertis comme indiqué dans le tableau
 > ci-dessus.
+
+**javascript**.`load(`_script\_url[,noms]_`)`
+> Fonction pour charger le script Javascript à l'adresse _script\_url_ et 
+> insérer la liste de _noms_ dans l'espace de noms du programme.
+
+> Cette fonction utilise un appel Ajax bloquant. Il faut l'utiliser quand on
+> ne peut pas insérer la librairie Javascript dans la page html par
+> `<script src="prog.js"></script>`. 
+
+> Par exemple, le module **jqueryui** de la bibliothèque standard Brython
+> fournit une interface avec la librairie Javascript jQueryUI. Si on écrit un
+> script Brython qui utilise ce module, on fait simplement `import jqueryui`
+> sans insérer les librairies Javascript dans la page. C'est le module 
+> **jqueryui** qui les charge, en utilisant cette fonction `load()`
 
 Exemple
 -------

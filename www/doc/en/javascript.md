@@ -3,7 +3,7 @@ module **javascript**
 
 The module **javascript** allows interaction with the objects defined in Javascript programs and libraries present in the same page as the Brython program
 
-It defines two classes :
+It defines two classes and a function :
 
 **javascript**.`JSObject`
 >  is a class whose instances wrap Javascript objects
@@ -35,6 +35,21 @@ It defines two classes :
 > is a class whose instances represent Javascript constructors, (ie functions used with the Javascript keyword `new`)
 
 > <code>JSConstructor(_jsconstr_)</code> returns a Brython object. This object is callable ; it returns an instance of `JSObject` representing the Javascript obtained by passing to the constructor *jsconstr* the arguments converted as indicated in the table above
+
+
+**javascript**.`load(`_script\_url[,names]_`)`
+> Load the Javascript script at address _script\_url_ and loads the list of
+> _names_ in the program namespace.
+
+> This function uses a blocking Ajax call. It must be used when one can't
+> load the Javascript library in the html page by 
+> `<script src="prog.js"></script>`. 
+
+> For instance, the module **jqueryui** in Brython standard library
+> provides an interface with the Javascript librairy jQueryUI. To use it in a 
+> Brython script, you simply write `import jqueryui` without inserting the
+> Javascript librairies in the page. It's the module **jqueryui** that
+> loads them, using this function `load()`
 
 Example
 -------
