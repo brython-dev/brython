@@ -755,7 +755,7 @@ function isinstance(obj,arg){
 
     // Search __instancecheck__ on arg
     var hook = getattr(arg,'__instancecheck__',null)
-    if(hook!==null){return hook(obj)}
+    if(hook!==null){console.log('instancecheck');return hook(obj)}
 
    return false
 }
@@ -806,7 +806,7 @@ function len(obj){
 
 function locals(){
     // The last item in __BRYTHON__.frames_stack is
-    // [locals_name, locals_obj],[globals_name, globals_obj]
+    // [locals_name, locals_obj, globals_name, globals_obj]
     var locals_obj = $B.last($B.frames_stack)[1]
     return $B.obj_dict(locals_obj)
 }
@@ -1938,8 +1938,8 @@ function frame(stack, pos){
     if(fs.length){
         var _frame = fs[pos]
         var locals_id = _frame[0]
-        res.f_locals = to_dict(_frame[1])
-        res.f_globals = to_dict(_frame[3])
+        res.f_locals = $B.obj_dict(_frame[1])
+        res.f_globals = $B.obj_dict(_frame[3])
         if($B.debug>0){
             res.f_lineno = parseInt($B.line_info.split(',')[0])
         }else{
@@ -1976,8 +1976,7 @@ var BaseException = function (msg,js_exc){
     err.$message = msg
     err.__class__ = $BaseExceptionDict
     err.$py_error = true
-    $B.exception_stack[$B.exception_stack.length]=err
-    //console.log('exception '+err.__name__+' line info '+err.$line_info)
+    $B.exception_stack[$B.exception_stack.length] = err
     return err
 }
 
