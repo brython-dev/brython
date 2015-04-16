@@ -11,7 +11,7 @@ import sys
 import tarfile
 import zipfile
 
-#import make_doc  # lint:ok
+import make_doc  # lint:ok
 
 try:
     import slimit
@@ -24,7 +24,7 @@ except ImportError:
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
-implementation = [3, 1, 1, 'alpha', 0]
+implementation = [3, 1, 2, 'alpha', 0]
 
 def custom_minify(src):
     _res, pos = '', 0
