@@ -1223,7 +1223,8 @@ function $ClassCtx(context){
             parent_block = parent_block.parent
         }
         while(parent_block.context && 
-            ['def','generator'].indexOf(parent_block.context.tree[0].type)==-1){
+             'def' !=parent_block.context.tree[0].type &&
+             'generator' != parent_block.context.tree[0].type){
             parent_block = parent_block.parent
         }
         this.parent.node.parent_block = parent_block
@@ -1631,7 +1632,8 @@ function $DefCtx(context){
         parent_block = parent_block.parent
     }
     while(parent_block.context && 
-        ['def','generator'].indexOf(parent_block.context.tree[0].type)==-1){
+          'def' !=parent_block.context.tree[0].type &&
+          'generator' != parent_block.context.tree[0].type){
         parent_block = parent_block.parent
     }
 
@@ -3657,7 +3659,7 @@ function $OpCtx(context,op){
                     }
                     var res = [tests.join(' && ')+' ? '], pos=1
 
-                    res[pos++]='('+tests.join(' && ')+' ? '
+                    res[pos++]='('+tests1.join(' && ')+' ? '
 
                     // If true, use basic formula
                     res[pos++]=this.simple_js()
@@ -3679,13 +3681,11 @@ function $OpCtx(context,op){
                     res[pos++]= ': getattr('+this.tree[0].to_js()+',"__'
                     res[pos++]= $operators[this.op]+'__")'+'('+this.tree[1].to_js()+')'
                     //if(this.op=='+'){console.log(res)}
-                    res = '('+res.join('')+')'
+                    return '('+res.join('')+')'
                 }
-            }else{
-                var res = 'getattr('+e0.to_js()+',"__'
-                res += $operators[this.op]+'__")'+'('+e1.to_js()+')'
             }
-            return res
+            var res = 'getattr('+e0.to_js()+',"__'
+            return res + $operators[this.op]+'__")'+'('+e1.to_js()+')'
           default:
             var res = 'getattr('+this.tree[0].to_js()+',"__'
             return res + $operators[this.op]+'__")'+'('+this.tree[1].to_js()+')'
@@ -4063,7 +4063,7 @@ function $TryCtx(context){
         // Fake line to start the 'else if' clauses
         var new_node = new $Node()
         // Set the boolean $failed to true
-        new $NodeJSCtx(new_node,$var+'=true;if(false){void(0)}')
+        new $NodeJSCtx(new_node,$var+'=true;if(0){}')
         catch_node.insert(0,new_node)
         
         var pos = rank+2
@@ -4122,7 +4122,7 @@ function $TryCtx(context){
         // restore frames stack as before the try clause
         var frame_node = new $Node()
         var js = '$B.frames_stack = $locals["$frame'+$loop_num+'"];'
-        js += 'delete $locals["'+$var+'"];'
+        js += 'delete $locals["$frame'+$loop_num+'"];'
         new $NodeJSCtx(frame_node, js)
         node.parent.insert(pos, frame_node)
         $loop_num++
