@@ -1,12 +1,22 @@
-from browser import window
+from browser import window, alert
 
 def _randint(a, b):
     return int(window.Math.random()*(b-a+1)+a)
     
-def _urandom(n):
+def _rand_with_seed(x, rand_obj):
+    x = window.Math.sin(rand_obj._state) * 10000
+    rand_obj._state += 1
+    return x - window.Math.floor(x)
+
+def _urandom(n, rand_obj):
     """urandom(n) -> str    
     Return n random bytes suitable for cryptographic use."""
-    randbytes= [_randint(0,255) for i in range(n)]
+    if rand_obj._state is None:
+        randbytes= [_randint(0,255) for i in range(n)]
+    else:
+        randbytes= []
+        for i in range(n):
+            randbytes.append(int(256*_rand_with_seed(i, rand_obj)))
     return bytes(randbytes)
     
 class Random:
@@ -73,5 +83,6 @@ class Random:
         if k != int(k):
             raise TypeError('number of bits should be an integer')
         numbytes = (k + 7) // 8                       # bits / 8 and rounded up
-        x = int.from_bytes(_urandom(numbytes), 'big')
+        x = int.from_bytes(_urandom(numbytes, self), 'big')
+            
         return x >> (numbytes * 8 - k)                # trim excess bits

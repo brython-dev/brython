@@ -254,4 +254,14 @@ assert globy == 88
 globals()['globx'] = 99
 assert globx == 99
 
+# issue 169
+from random import seed, shuffle
+first = list(range(20))
+seed(31416)
+shuffle(first)
+second = list(range(20))
+seed(31416)
+shuffle(second)
+assert first == second, "Same seed does not produce same random results"
+
 print('passed all tests')
