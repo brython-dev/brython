@@ -270,14 +270,14 @@ $B.$list_comp = function(env){
     // "env" is a list of [local_name, local_ns] lists for all the enclosing
     // namespaces
     var $ix = $B.UUID()
-    var $py = "x"+$ix+"=[]\n", indent = 0
+    var $py = ["x"+$ix+"=[]\n"], indent = 0, pos=1
     for(var $i=2, _len_$i = arguments.length; $i < _len_$i;$i++){
-        $py += ' '.repeat(indent)
-        $py += arguments[$i]+':\n'
+        $py[pos++]=' '.repeat(indent)
+        $py[pos++]=arguments[$i]+':\n'
         indent += 4
     }
-    $py += ' '.repeat(indent)
-    $py += 'x'+$ix+'.append('+arguments[1].join('\n')+')\n'
+    $py[pos++]=' '.repeat(indent)
+    $py[pos++]='x'+$ix+'.append('+arguments[1].join('\n')+')\n'
     
     // Create the variables for enclosing namespaces, they may be referenced
     // in the comprehension
@@ -291,7 +291,7 @@ $B.$list_comp = function(env){
 
     var listcomp_name = 'lc'+$ix
 
-    var $root = $B.py2js($py,module_name,listcomp_name,local_name,
+    var $root = $B.py2js($py.join(''),module_name,listcomp_name,local_name,
         $B.line_info)
     
     $root.caller = $B.line_info
@@ -318,15 +318,15 @@ $B.$dict_comp = function(env){
 
     var $ix = $B.UUID()
     var $res = 'res'+$ix
-    var $py = $res+"={}\n"
+    var $py = [$res+"={}\n"], pos=1
     var indent=0
     for(var $i=2, _len_$i = arguments.length; $i < _len_$i;$i++){
-        $py+=' '.repeat(indent)
-        $py += arguments[$i]+':\n'
+        $py[pos++]=' '.repeat(indent)
+        $py[pos++]=arguments[$i]+':\n'
         indent += 4
     }
-    $py+=' '.repeat(indent)
-    $py += $res+'.update({'+arguments[1].join('\n')+'})'
+    $py[pos++]=' '.repeat(indent)
+    $py[pos++]= $res+'.update({'+arguments[1].join('\n')+'})'
 
     // Create the variables for enclosing namespaces, they may be referenced
     // in the comprehension
@@ -340,7 +340,7 @@ $B.$dict_comp = function(env){
 
     var dictcomp_name = 'dc'+$ix
     
-    var $root = $B.py2js($py,module_name,dictcomp_name,local_name,
+    var $root = $B.py2js($py.join(''),module_name,dictcomp_name,local_name,
         $B.line_info)
     $root.caller = $B.line_info
 
@@ -359,15 +359,15 @@ $B.$gen_expr = function(env){
 
     var $ix = $B.UUID()
     var $res = 'res'+$ix
-    var $py = $res+"=[]\n"
+    var $py = [$res+"=[]\n"], pos=1
     var indent=0
     for(var $i=2, _len_$i = arguments.length; $i < _len_$i;$i++){
-        $py+=' '.repeat(indent)
-        $py += arguments[$i].join(' ')+':\n'
+        $py[pos++]=' '.repeat(indent)
+        $py[pos++]= arguments[$i].join(' ')+':\n'
         indent += 4
     }
-    $py+=' '.repeat(indent)
-    $py += $res+'.append('+arguments[1].join('\n')+')'
+    $py[pos++]=' '.repeat(indent)
+    $py[pos++]= $res+'.append('+arguments[1].join('\n')+')'
     
     // Create the variables for enclosing namespaces, they may be referenced
     // in the expression
@@ -381,7 +381,7 @@ $B.$gen_expr = function(env){
     
     var genexpr_name = 'ge'+$ix
 
-    var $root = $B.py2js($py,module_name,genexpr_name,local_name,
+    var $root = $B.py2js($py.join(''),module_name,genexpr_name,local_name,
         $B.line_info)
     var $js = $root.to_js()
 
@@ -418,7 +418,7 @@ $B.$lambda = function(env,args,body){
     var rand = $B.UUID()
     var $res = 'lambda_'+$B.lambda_magic+'_'+rand
     var $py = 'def '+$res+'('+args+'):\n'
-    $py += '    return '+body
+    $py+= '    return '+body
     
     // Create the variables for enclosing namespaces, they may be referenced
     // in the function
