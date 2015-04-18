@@ -1086,7 +1086,6 @@ function $CallCtx(context){
 
     this.to_js = function(){
         this.js_processed=true
-        
         if(this.tree.length>0){
             if(this.tree[this.tree.length-1].tree.length==0){
                 // from "foo(x,)"
@@ -1206,6 +1205,13 @@ function $CallCtx(context){
                   res += ')'
               }
               return res
+            }
+
+            if ($B.async_enabled) {
+               console.log(this.func)
+               if ($B.block[scope.id][this.func.value]) {
+                  console.log('block!')
+               }
             }
 
             return 'getattr('+func_js+',"__call__")()'
@@ -1606,7 +1612,7 @@ for _i in range(11,20):
            */
 
            //$B.block[scope.id][obj.name] = true
-           console.log(obj)
+           //console.log(obj)
 
            var parent_block = $get_scope(this)
            var child
@@ -1621,10 +1627,10 @@ for _i in range(11,20):
            }
            
            // fix me...
-           this.processing=true
-           var js=child.to_js()
-           console.log(js)
-           this.processing=undefined
+           //this.processing=true
+           //var js=child.to_js()
+           //console.log(js)
+           //this.processing=undefined
            //js+=";$B.execution_object.$execute_next_segment()";
            //console.log(js)
            //$B.execution_object.$append(js, 1000)
