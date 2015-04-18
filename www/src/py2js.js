@@ -1230,6 +1230,7 @@ function $ClassCtx(context){
         this.name = name
         this.id = context.node.module+'_'+name+'_'+this.random
         $B.bound[this.id] = {}
+        if ($B.async_enabled) $B.block[this.id] = {}
         $B.modules[this.id] = this.parent.node
         this.parent.node.id = this.id
 
@@ -1540,13 +1541,15 @@ function $DecoratorCtx(context){
             this.dec_ids[pos++]='$id'+ $B.UUID()
         }
 
-        var _block_async_flag=false;
-        for(var i=0;i<decorators.length;i++){
+        if ($B.async_enabled) {
+          var _block_async_flag=false;
+          for(var i=0;i<decorators.length;i++){
            try {
              // decorator name
              var name=decorators[i][0].tree[0].value
              if (name == "brython_block" || name == "brython_async") _block_async_flag=true
            } catch (err) {console.log(i); console.log(decorators[i][0])}
+          }
         }
 
         var obj = children[func_rank].context.tree[0]
@@ -1582,27 +1585,56 @@ function $DecoratorCtx(context){
         // if a delay is supplied (on brython_block only), use that value 
         // as the delay value in the execution_object's setTimeout.
 
+
+
         // fix me...
-        if (_block_async_flag) {
-           var parent_block = this.parent, child=this.parent
+        if ($B.async_enabled && _block_async_flag) {
+           /*
+// this would be a good test to see if async (and blocking) works
+
+@brython_block
+def mytest():
+    print("10")
+
+for _i in range(10):
+    print(_i)
+    
+mytest()
+
+for _i in range(11,20):
+    print(_i)
+           */
+
+           //$B.block[scope.id][obj.name] = true
+           console.log(obj)
+
+           var parent_block = $get_scope(this)
+           var child
+
            while(parent_block && 
                  parent_block.js_processed === undefined
            ) {
-              console.log(parent_block)
-              console.log(parent_block.to_js())
+              //console.log(parent_block)
+              //console.log(parent_block.to_js())
               child=parent_block
               parent_block = parent_block.parent
            }
            
            // fix me...
+           this.processing=true
            var js=child.to_js()
-           js+=";$B.execution_object.$execute_next_segment()";
            console.log(js)
-           $B.execution_object.$append(js, 1000)
+           this.processing=undefined
+           //js+=";$B.execution_object.$execute_next_segment()";
+           //console.log(js)
+           //$B.execution_object.$append(js, 1000)
         }
     }
 
     this.to_js = function(){
+        if ($B.async_enabled) {
+           if (this.processing !== undefined) return ""
+        }
         this.js_processed=true
         var res = [], pos=0
         for(var i=0;i<this.decorators.length;i++){
@@ -2956,9 +2988,17 @@ function $IdCtx(context,value){
         this.js_processed=true
         var val = this.value
 
-        // Special cases        
-        if(val=='eval') val = '$eval'
-        else if(val=='__BRYTHON__' || val == '$B'){return val}
+        // Special cases
+        switch(val) {
+          case '$B':
+          case '__BRYTHON__':
+            return val
+          case 'eval':
+            val='$eval'
+            break
+        }
+        //if(val=='eval') val = '$eval'
+        //else if(val=='__BRYTHON__' || val == '$B'){return val}
 
         var innermost = $get_scope(this)
         var scope = innermost, found=[], module = scope.module
@@ -3035,8 +3075,7 @@ function $IdCtx(context,value){
                         this.found = false
                         var res = ns0 + '["'+val+'"]!==undefined ? '
                         res += ns0 + '["'+val+'"] : '
-                        res += ns1 + '["'+val+'"]'
-                        return res
+                        return res + ns1 + '["'+val+'"]'
                     }
                 }
             }
@@ -6485,7 +6524,6 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     }
     
     return root
-
 }
 
 $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
@@ -6533,23 +6571,23 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     root.transform()
 
     // Create internal variables
-    var js = 'var $B = __BRYTHON__;\n'
+    var js = ['var $B = __BRYTHON__;\n'], pos=0
     
-    js += 'var __builtins__ = _b_ = $B.builtins;\n'
+    js[pos++]= 'var __builtins__ = _b_ = $B.builtins;\n'
     
     if(locals_is_module){
-        js += 'var '+local_ns+' = $locals_'+module+';'
+        js[pos++]= 'var '+local_ns+' = $locals_'+module+';'
     }else{
-        js += 'var '+local_ns+' = {};'
+        js[pos++]='var '+local_ns+' = {};'
     }
-    js += 'var $locals = '+local_ns+';\n'
+    js[pos++]='var $locals = '+local_ns+';\n'
     
-    js += '$B.enter_frame(["'+locals_id+'", '+local_ns+','
-    js += '"'+module+'", '+global_ns+']);\n'
-    js += 'eval($B.InjectBuiltins())\n'
+    js[pos++]='$B.enter_frame(["'+locals_id+'", '+local_ns+','
+    js[pos++]='"'+module+'", '+global_ns+']);\n'
+    js[pos++]='eval($B.InjectBuiltins())\n'
 
     var new_node = new $Node()
-    new $NodeJSCtx(new_node,js)
+    new $NodeJSCtx(new_node,js.join(''))
     root.insert(0,new_node)
     // module doc string
     var ds_node = new $Node()
@@ -6579,9 +6617,8 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     }
     
     // leave frame at the end of module
-    js = '$B.leave_frame("'+module+'");\n'
     var new_node = new $Node()
-    new $NodeJSCtx(new_node,js)
+    new $NodeJSCtx(new_node,'$B.leave_frame("'+module+'");\n')
     root.add(new_node)
 
     // Reset exception stack - may have been populated during parsing
@@ -6739,9 +6776,12 @@ function brython(options){
                 var $js = $root.to_js()
                 if($B.debug>1) console.log($js)
 
-                // Run resulting Javascript
-                //eval($js)
-                $B.execution_object.$append($js +'\n$B.execution_object.$execute_next_segment()', 10);
+                if ($B.async_enabled) {
+                   $B.execution_object.$append($js +'\n$B.execution_object.$execute_next_segment()', 10);
+                } else {
+                  // Run resulting Javascript
+                  eval($js)
+                }
                 
             }catch($err){
                 if($B.debug>1){
