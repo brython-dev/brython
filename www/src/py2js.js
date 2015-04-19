@@ -1086,6 +1086,7 @@ function $CallCtx(context){
 
     this.to_js = function(){
         this.js_processed=true
+
         if(this.tree.length>0){
             if(this.tree[this.tree.length-1].tree.length==0){
                 // from "foo(x,)"
@@ -1205,13 +1206,6 @@ function $CallCtx(context){
                   res += ')'
               }
               return res
-            }
-
-            if ($B.async_enabled) {
-               console.log(this.func)
-               if ($B.block[scope.id][this.func.value]) {
-                  console.log('block!')
-               }
             }
 
             return 'getattr('+func_js+',"__call__")()'
@@ -2995,16 +2989,8 @@ function $IdCtx(context,value){
         var val = this.value
 
         // Special cases
-        switch(val) {
-          case '$B':
-          case '__BRYTHON__':
-            return val
-          case 'eval':
-            val='$eval'
-            break
-        }
-        //if(val=='eval') val = '$eval'
-        //else if(val=='__BRYTHON__' || val == '$B'){return val}
+        if(val=='eval') val = '$eval'
+        else if(val=='__BRYTHON__' || val == '$B'){return val}
 
         var innermost = $get_scope(this)
         var scope = innermost, found=[], module = scope.module
