@@ -1169,10 +1169,27 @@ function $CallCtx(context){
                 }//if
             }//switch
 
+            var _block=false
+            if ($B.async_enabled) {
+               var scope = $get_scope(this.func)
+               if ($B.block[scope.id] === undefined) {
+                  //console.log('block for ' + scope.id + ' is undefined')
+               } 
+               else if ($B.block[scope.id][this.func.value]) _block=true
+            }
             if($B.debug>0){
                 // On debug mode, use getattr(func,"__call__") to manage
                 // the call stack and get correct error messages
+
+                // somehow we need to loop up through the context parents
+                // until we reach the root, or until we reach a node
+                // that has not been processed yet (js_processed=false)
+                // we then do a to_js (setting each js_processed to true)
+                // from this node until we reach the current node being processed. 
+                // Take output from to_js and append to execution_object.
+                
                 var res = 'getattr('+func_js+',"__call__")('
+                if (_block) res = '\n//------block----\n' + res
                 res += (this.tree.length>0 ? $to_js(this.tree) : '')
                 return res+')'
             }
@@ -1590,6 +1607,7 @@ function $DecoratorCtx(context){
         // fix me...
         if ($B.async_enabled && _block_async_flag) {
            /*
+
 // this would be a good test to see if async (and blocking) works
 
 @brython_block
@@ -1605,7 +1623,8 @@ for _i in range(11,20):
     print(_i)
            */
 
-           //$B.block[scope.id][obj.name] = true
+           if ($B.block[scope.id] === undefined) $B.block[scope.id]={}
+           $B.block[scope.id][obj.name] = true
            //console.log(obj)
 
            var parent_block = $get_scope(this)
