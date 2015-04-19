@@ -87,7 +87,8 @@ def choose_test(event):
     import unittest
     import HTMLTestRunner
 
-    exec("import %s as mod" % module)
+    #exec("import %s as mod" % module)
+    mod = __import__(module)
     _suite=unittest.TestLoader().loadTestsFromModule(mod)
     #unittest.TextTestRunner(sys.stdout, verbosity=5).run(_suite)
     HTMLTestRunner.HTMLTestRunner(sys.stdout, verbosity=2).run(_suite)
