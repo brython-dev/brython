@@ -35,7 +35,13 @@ def encode(*args,**kw):
     a ValueError. Other possible values are 'ignore', 'replace' and
     'xmlcharrefreplace' as well as any other name registered with
     codecs.register_error that can handle ValueErrors."""
-    pass
+    obj = args[0]
+    if len(args)==2:
+        encoding = args[1]
+    else:
+        encoding = 'utf-8'
+    if isinstance(obj, str):
+        return obj.encode(encoding)
 
 def escape_decode(*args,**kw):
     pass
