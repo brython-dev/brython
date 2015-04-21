@@ -519,11 +519,7 @@ function getattr(obj,attr,_default){
         break
       case '__subclasses__':
           if(klass===$B.$factory){
-              //console.log('subclasses '+obj.$dict.$subclasses)
               var subclasses = obj.$dict.$subclasses || []
-              for(var i=0;i<subclasses.length;i++){
-                  console.log(subclasses[i].$dict.__name__)
-              }
               return function(){return subclasses}
           }
         break
@@ -755,7 +751,7 @@ function isinstance(obj,arg){
 
     // Search __instancecheck__ on arg
     var hook = getattr(arg,'__instancecheck__',null)
-    if(hook!==null){console.log('instancecheck');return hook(obj)}
+    if(hook!==null){return hook(obj)}
 
    return false
 }
@@ -779,7 +775,6 @@ function issubclass(klass,classinfo){
     
     // Search __subclasscheck__ on classinfo
     var hook = getattr(classinfo,'__subclasscheck__',null)
-    //console.log('subclasscheck of '+classinfo+': '+hook)
     if(hook!==null){return hook(klass)}
     
     return false
@@ -1937,8 +1932,14 @@ function frame(stack, pos){
     if(pos===undefined){pos = fs.length-1}
     if(fs.length){
         var _frame = fs[pos]
+        if(_frame[1]===undefined){alert('frame undef '+stack+' '+Array.isArray(stack)+' is frames stack '+(stack===$B.frames_stack))}
         var locals_id = _frame[0]
-        res.f_locals = $B.obj_dict(_frame[1])
+        try{
+            res.f_locals = $B.obj_dict(_frame[1])
+        }catch(err){
+            console.log('err '+err)
+            throw err
+        }
         res.f_globals = $B.obj_dict(_frame[3])
         if($B.debug>0){
             res.f_lineno = parseInt($B.line_info.split(',')[0])
@@ -2036,7 +2037,7 @@ $B.exception = function(js_exc){
         exc.info = ''
         exc.$py_error = true
         exc.traceback = traceback({
-            tb_frame:frame($B.exception_stack),
+            tb_frame:frame($B.frames_stack),
             tb_lineno:-1,
             tb_lasti:'',
             tb_next: None   // fix me
