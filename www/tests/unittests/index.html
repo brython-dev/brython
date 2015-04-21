@@ -46,6 +46,8 @@ document['container'].style.height='%dpx' % (_height-_top-10)
 
 <script type="text/python">
 from browser import timer
+from browser import document
+import sys
 
 sys.path.append("test")
 
@@ -85,7 +87,8 @@ def choose_test(event):
     import unittest
     import HTMLTestRunner
 
-    exec("import %s as mod" % module)
+    #exec("import %s as mod" % module)
+    mod = __import__(module)
     _suite=unittest.TestLoader().loadTestsFromModule(mod)
     #unittest.TextTestRunner(sys.stdout, verbosity=5).run(_suite)
     HTMLTestRunner.HTMLTestRunner(sys.stdout, verbosity=2).run(_suite)

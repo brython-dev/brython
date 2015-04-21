@@ -28,6 +28,11 @@ $B.path = [$path+'Lib', $script_dir, $path+'Lib/site-packages']
 // __BRYTHON__.bound[scope.id]
 $B.bound = {}
 
+// for the time being, a flag will be used to know if we should 
+// enable async functionality.
+$B.async_enabled=false
+if ($B.async_enabled) $B.block = {}
+
 // Maps a module name to the matching module object
 // A module can be the body of a script, or the body of a block inside a
 // script, such as in exec() or in a comprehension
