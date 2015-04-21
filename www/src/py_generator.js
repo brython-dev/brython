@@ -462,6 +462,7 @@ $B.$BRgenerator = function(env, func_name, def_id){
     // Original function
     var func = env[0][1][func_name]
     $B.generators = $B.generators || {}
+    $B.$generators = $B.$generators || {}
 
     var module = def_node.module // module name
 
