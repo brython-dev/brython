@@ -70,6 +70,7 @@ $B.make_node = function(top_node, node){
         new_node.loop_start = node.loop_start
         new_node.is_set_yield_value = node.is_set_yield_value
 
+        // Recursion
         for(var i=0, _len_i = node.children.length; i < _len_i;i++){
             new_node.addChild($B.make_node(top_node, node.children[i]))
         }
@@ -449,14 +450,20 @@ $BRGeneratorDict.$$throw = function(self, value){
 
 $B.$BRgenerator = function(env, func_name, def_id){
 
+    // Creates a function that will return an iterator
+    // env : list of namespaces where the generator function stands
+    // func_name : function name
+    // def_id : generator function identifier
+
     var def_node = $B.modules[def_id]
     var def_ctx = def_node.context.tree[0]
     var counter = 0 // used to identify the function run for each next()
     
+    // Original function
     var func = env[0][1][func_name]
     $B.generators = $B.generators || {}
 
-    var module = def_node.module
+    var module = def_node.module // module name
 
     var res = function(){
         var args = [], pos=0
@@ -472,7 +479,6 @@ $B.$BRgenerator = function(env, func_name, def_id){
         // Create a tree structure based on the generator tree
         // iter_id is used in the node where the iterator resets local
         // namespace
-        $B.$generators = $B.$generators || {}
         var func_root = new $B.genNode(def_ctx.to_js('$B.$generators["'+iter_id+'"]'))
         func_root.scope = env[0][1]
         func_root.module = module
@@ -484,8 +490,6 @@ $B.$BRgenerator = function(env, func_name, def_id){
             func_root.addChild($B.make_node(func_root, def_node.children[i]))
         }
         var func_node = func_root.children[1].children[0]
-        var throw_node = new $B.genNode('var err=StopIteration("");err.caught=true;throw err')
-        //func_root.children[1].addChild(throw_node)
         
         var obj = {
             __class__ : $BRGeneratorDict,
