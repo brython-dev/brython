@@ -712,6 +712,7 @@ function isinstance(obj,arg){
         }
         return false
     }
+    if(arg===_b_.int &&(obj===True || obj===False)){return True}
         
     var klass = $B.get_class(obj)
     if (klass === undefined) {

@@ -243,16 +243,6 @@ from collections import abc
 assert isinstance(dict(one=1), abc.Mapping)
 assert issubclass(dict, abc.Mapping)
 
-# use sys._getframe.f_globals to set names
-import sys
-sys._getframe().f_globals['globx'] = 77
-assert globx==77
-
-# use globals() to set names
-globals()['globy'] = 88
-assert globy == 88
-globals()['globx'] = 99
-assert globx == 99
 
 # issue 169
 from random import seed, shuffle
@@ -263,5 +253,9 @@ second = list(range(20))
 seed(31416)
 shuffle(second)
 assert first == second, "Same seed does not produce same random results"
+
+# True and False are instances of int
+assert isinstance(True, int)
+assert isinstance(False, int)
 
 print('passed all tests')
