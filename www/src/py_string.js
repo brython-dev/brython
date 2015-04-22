@@ -767,6 +767,19 @@ $StringDict.count = function(self,elt){
 
 $StringDict.encode = function(self, encoding) {
     if (encoding === undefined) encoding='utf-8'
+    if(encoding=='rot13' || encoding=='rot_13'){
+        // Special case : returns a string
+        var res = ''
+        for(var i=0, _len = self.length; i<_len ; i++){
+            var char = self.charAt(i)
+            if(('a'<=char && char<='m') || ('A'<=char && char<='M')){
+                res += String.fromCharCode(String.charCodeAt(char)+13)
+            }else if(('m'<char && char<='z') || ('M'<char && char<='Z')){
+                res += String.fromCharCode(String.charCodeAt(char)-13)
+            }else{res += char}
+        }
+        return res
+    }
     return bytes(self, encoding)
 }
 

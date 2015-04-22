@@ -258,7 +258,7 @@ $B.$type.__getattribute__=function(klass,attr){
            if (arguments.length == 0) return klass.__hashvalue__ || $B.$py_next_hash--
         }
     }//switch
-
+    //console.log('get attr '+attr+' of klass '+klass)
     var res = klass[attr],is_class=true
 
     if(res===undefined){
