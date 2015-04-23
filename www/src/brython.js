@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-04-22 10:55:42.690000"
+__BRYTHON__.compiled_date="2015-04-23 11:18:08.745000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -5460,7 +5460,8 @@ return _str.join(';')
 }
 $B.$GetInt=function(value){
 if(typeof value=="number"){return value}
-if(_b_.isinstance(value,_b_.int))return value
+else if(typeof value==="boolean"){return value ? 1 : 0}
+else if(_b_.isinstance(value,_b_.int)){return value}
 try{var v=_b_.getattr(value,'__int__')();return v}catch(e){$B.$pop_exc()}
 try{var v=_b_.getattr(value,'__index__')();return v}catch(e){$B.$pop_exc()}
 return value
@@ -11116,9 +11117,11 @@ $B.DOMNode=DOMNode
 $B.$DOMNode=$DOMNode
 $B.win=win
 })(__BRYTHON__)
-;(function($B){var _b_=$B.builtins
+;(function($B){
+var _b_=$B.builtins
 eval($B.InjectBuiltins())
-$B.make_node=function(top_node,node){var ctx_js=node.C.to_js()
+$B.make_node=function(top_node,node){
+var ctx_js=node.C.to_js()
 var is_cond=false,is_except=false,is_else=false
 if(node.locals_def){
 var iter_name=top_node.iter_id
@@ -11146,20 +11149,23 @@ if(ctx.token=='if')is_cond=true
 }
 if(ctx_js){
 var new_node=new $B.genNode(ctx_js)
-if(ctype=='yield'){var rank=top_node.yields.length
+if(ctype=='yield'){
+var yield_node_id=top_node.yields.length
 while(ctx_js.charAt(ctx_js.length-1)==';'){ctx_js=ctx_js.substr(0,ctx_js.length-1)
 }
-var res='return ['+ctx_js+', '+rank+']'
+var res='return ['+ctx_js+', '+yield_node_id+']'
 new_node.data=res
 top_node.yields.push(new_node)
-}else if(node.is_set_yield_value){var js='$sent'+ctx_js+'=$B.modules["'
+}else if(node.is_set_yield_value){
+var js='$sent'+ctx_js+'=$B.modules["'
 js +=top_node.iter_id+'"].sent_value || None;'
 js +='if($sent'+ctx_js+'.__class__===$B.$GeneratorSendError)'
 js +='{throw $sent'+ctx_js+'.err};'
 js +='$yield_value'+ctx_js+'=$sent'+ctx_js+';'
 js +='$B.modules["'+top_node.iter_id+'"].sent_value=None'
 new_node.data=js
-}else if(ctype=='break'){new_node.is_break=true
+}else if(ctype=='break'){
+new_node.is_break=true
 new_node.loop_num=node.C.tree[0].loop_ctx.loop_num
 }
 new_node.is_cond=is_cond
@@ -11268,10 +11274,12 @@ $BRGeneratorDict.__exit__=function(self){console.log("generator.__exit__ called"
 function clear_ns(iter_id){delete $B.vars[iter_id]
 delete $B.modules[iter_id]
 delete $B.bound[iter_id]
+delete $B.generators[iter_id]
+delete $B.$generators[iter_id]
 }
-$BRGeneratorDict.__next__=function(self){var scope_id=self.func_root.scope.id
-var first_iter=self._next===undefined
-if(first_iter){
+$BRGeneratorDict.__next__=function(self){
+var scope_id=self.func_root.scope.id
+if(self._next===undefined){
 var src=self.func_root.src()+'\n)()'
 try{eval(src)}
 catch(err){console.log("cant eval\n"+src+'\n'+err)
@@ -11280,7 +11288,6 @@ throw err
 }
 self._next=$B.$generators[self.iter_id]
 }
-self.num++
 if(self.gi_running){throw _b_.ValueError("ValueError: generator already executing")
 }
 self.gi_running=true
@@ -11302,14 +11309,14 @@ self._next=function(){throw StopIteration("after generator return")}
 clear_ns(self.iter_id)
 throw StopIteration('')
 }
-var yielded_value=res[0],yield_rank=res[1]
-if(yield_rank==self.yield_rank){return yielded_value}
-self.yield_rank=yield_rank
-var exit_node=self.func_root.yields[yield_rank]
+var yielded_value=res[0],yield_node_id=res[1]
+if(yield_node_id==self.yield_node_id){return yielded_value}
+self.yield_node_id=yield_node_id
+var exit_node=self.func_root.yields[yield_node_id]
 exit_node.replaced=false
 var root=new $B.genNode(self.def_ctx.to_js('__BRYTHON__.generators["'+self.iter_id+'"]'))
 root.addChild(self.func_root.children[0].clone())
-fnode=self.func_root.children[1].clone()
+var fnode=self.func_root.children[1].clone()
 root.addChild(fnode)
 func_node=self.func_root.children[1]
 var js='var $locals = $B.vars["'+self.iter_id+'"];'
@@ -11319,10 +11326,15 @@ var exit_parent=exit_node.parent
 var rest=[],pos=0
 var has_break=false
 var start=exit_node.rank+1
-if(exit_node.loop_start){start=exit_node.rank}
-else if(exit_node.is_cond){while(start<exit_parent.children.length &&
-(exit_parent.children[start].is_except ||exit_parent.children[start].is_else)){start++}}else if(exit_node.is_try ||exit_node.is_except){while(start<exit_parent.children.length &&
-(exit_parent.children[start].is_except ||exit_parent.children[start].is_else)){start++}}
+if(exit_node.loop_start){
+start=exit_node.rank
+}else if(exit_node.is_cond){
+while(start<exit_parent.children.length &&
+(exit_parent.children[start].is_except ||
+exit_parent.children[start].is_else)){start++}}else if(exit_node.is_try ||exit_node.is_except){
+while(start<exit_parent.children.length &&
+(exit_parent.children[start].is_except ||
+exit_parent.children[start].is_else)){start++}}
 for(var i=start,_len_i=exit_parent.children.length;i < _len_i;i++){var clone=exit_parent.children[i].clone_tree(null,true)
 rest[pos++]=clone
 if(clone.has_break()){has_break=true}}
