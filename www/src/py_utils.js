@@ -944,9 +944,10 @@ $B.InjectBuiltins=function() {
 }
 
 $B.$GetInt=function(value) {
-  // convert value to an integer,
+  // convert value to an integer
   if(typeof value=="number"){return value}
-  if (_b_.isinstance(value, _b_.int)) return value
+  else if(typeof value==="boolean"){return value ? 1 : 0}
+  else if (_b_.isinstance(value, _b_.int)) {return value}
   try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){$B.$pop_exc()}
   try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){$B.$pop_exc()}
 
