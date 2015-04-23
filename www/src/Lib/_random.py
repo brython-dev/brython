@@ -8,10 +8,10 @@ def _rand_with_seed(x, rand_obj):
     rand_obj._state += 1
     return x - window.Math.floor(x)
 
-def _urandom(n, rand_obj):
+def _urandom(n, rand_obj=None):
     """urandom(n) -> str    
     Return n random bytes suitable for cryptographic use."""
-    if rand_obj._state is None:
+    if rand_obj is None or rand_obj._state is None:
         randbytes= [_randint(0,255) for i in range(n)]
     else:
         randbytes= []

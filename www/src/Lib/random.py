@@ -51,13 +51,6 @@ from browser import window
 def _randint(a, b):
     return int(window.Math.random()*(b-a+1)+a)
     
-#from os import urandom as _urandom
-def _urandom(n):
-    """urandom(n) -> str    
-    Return n random bytes suitable for cryptographic use."""
-    randbytes= [_randint(0,255) for i in range(n)]
-    return bytes(randbytes)
-    
 #from collections.abc import Set as _Set, Sequence as _Sequence
 _Set = set
 _Sequence = [str, list]
@@ -84,6 +77,7 @@ RECIP_BPF = 2**-BPF
 # the Mersenne Twister  and os.urandom() core generators.
 
 import _random
+_urandom = _random._urandom
 
 class Random(_random.Random):
     """Random number generator base class used by bound module functions.
