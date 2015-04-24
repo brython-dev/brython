@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-04-24 18:03:24.146000"
+__BRYTHON__.compiled_date="2015-04-24 20:24:03.808000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -2109,6 +2109,7 @@ function $NonlocalCtx(C){
 this.type='global'
 this.parent=C
 this.tree=[]
+this.names={}
 C.tree[C.tree.length]=this
 this.expect='id'
 this.scope=$get_scope(this)
@@ -2117,11 +2118,13 @@ if(this.scope.C===undefined){$_SyntaxError(C,["nonlocal declaration not allowed 
 this.toString=function(){return 'global '+this.tree}
 this.add=function(name){if($B.bound[this.scope.id][name]=='arg'){$_SyntaxError(C,["name '"+name+"' is parameter and nonlocal"])
 }
-var pscope=this.scope.parent_block
-if(pscope.C===undefined){$_SyntaxError(C,["no binding for nonlocal '"+name+"' found"])
-}else if($B.bound[pscope.id][name]===undefined){$_SyntaxError(C,["no binding for nonlocal '"+name+"' found"])
+this.names[name]=true
 }
-if(this.scope.globals.indexOf(name)==-1){this.scope.globals.push(name)}}
+this.transform=function(node,rank){var pscope=this.scope.parent_block
+if(pscope.C===undefined){$_SyntaxError(C,["no binding for nonlocal '"+name+"' found"])
+}else{for(var name in this.names){if($B.bound[pscope.id][name]===undefined){$_SyntaxError(C,["no binding for nonlocal '"+name+"' found"])
+}}
+if(this.scope.globals.indexOf(name)==-1){this.scope.globals.push(name)}}}
 this.to_js=function(){this.js_processed=true
 return ''
 }}
@@ -6448,7 +6451,6 @@ $BoolDict.__mro__=[$BoolDict,$ObjectDict]
 bool.__class__=$B.$factory
 bool.$dict=$BoolDict
 $BoolDict.$factory=bool
-bool.__doc__='bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.'
 $BoolDict.__add__=function(self,other){if(self.valueOf())return other + 1
 return other
 }
@@ -6733,18 +6735,28 @@ throw _b_.NameError(name)
 }
 $B.$TypeError=function(msg){throw _b_.TypeError(msg)
 }
-var builtin_funcs=['abs','all','any','ascii','bin','bool','bytearray','bytes','callable','chr','classmethod','compile','complex','delattr','dict','dir','divmod','enumerate','exec','exit','filter','float','format','frozenset','getattr','globals','hasattr','hash','help','hex','id','input','int','isinstance','issubclass','iter','len','list','locals','map','max','memoryview','min','next','object','oct','open','ord','pow','print','property','quit','range','repr','reversed','round','set','setattr','slice','sorted','staticmethod','str','sum','$$super','tuple','vars','zip']
-for(var i=0;i<builtin_funcs.length;i++){$B.builtin_funcs[builtin_funcs[i]]=true
+var builtin_funcs=['abs','all','any','ascii','bin','bool','bytearray','bytes','callable','chr','classmethod','compile','complex','delattr','dict','dir','divmod','enumerate','eval','exec','exit','filter','float','format','frozenset','getattr','globals','hasattr','hash','help','hex','id','input','int','isinstance','issubclass','iter','len','list','locals','map','max','memoryview','min','next','object','oct','open','ord','pow','print','property','quit','range','repr','reversed','round','set','setattr','slice','sorted','staticmethod','str','sum','$$super','tuple','vars','zip']
+for(var i=0;i<builtin_funcs.length;i++){var name=builtin_funcs[i]
+if(name=='open'){name1='$url_open'}
+if(name=='super'){name='$$super'}
+if(name=='eval'){name='$eval'}
+$B.builtin_funcs[name]=true
 }
+$B.builtin_funcs['$eval']=true
 var other_builtins=['Ellipsis','False','None','True','__build_class__','__debug__','__doc__','__import__','__name__','__package__','copyright','credits','license','NotImplemented','type']
 var builtin_names=builtin_funcs.concat(other_builtins)
 for(var i=0;i<builtin_names.length;i++){var name=builtin_names[i]
+var orig_name=name
 var name1=name
 if(name=='open'){name1='$url_open'}
 if(name=='super'){name='$$super'}
+if(name=='eval'){name=name1='$eval'}
+if(name=='print'){name1='$print'}
 $B.bound['__builtins__'][name]=true
 try{_b_[name]=eval(name1)
-if($B.builtin_funcs[name]!==undefined){if(_b_[name].__repr__===undefined){_b_[name].__repr__=_b_[name].__str__=(function(x){return function(){return '<built-in function '+x+'>'}})(name)
+if($B.builtin_funcs[name]!==undefined){
+if(_b_[name].__repr__===undefined){
+_b_[name].__repr__=_b_[name].__str__=(function(x){return function(){return '<built-in function '+x+'>'}})(orig_name)
 }
 _b_[name].__module__='builtins'
 _b_[name].__name__=name

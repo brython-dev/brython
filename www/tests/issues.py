@@ -261,4 +261,14 @@ assert isinstance(False, int)
 # repr of type(None)
 assert repr(type(None)) == "<class 'NoneType'>"
 
+# nonlocal
+def f():
+    def g(): 
+        nonlocal t
+        return t
+    t = 1
+    return g
+
+assert f()()==1
+
 print('passed all tests')

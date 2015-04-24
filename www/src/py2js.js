@@ -3521,6 +3521,7 @@ function $NonlocalCtx(context){
     this.type = 'global'
     this.parent = context
     this.tree = []
+    this.names = {}
     context.tree[context.tree.length]=this
     this.expect = 'id'
 
@@ -3535,13 +3536,21 @@ function $NonlocalCtx(context){
         if($B.bound[this.scope.id][name]=='arg'){
             $_SyntaxError(context,["name '"+name+"' is parameter and nonlocal"])
         }
+        this.names[name] = true
+    }
+    
+    this.transform = function(node, rank){
         var pscope = this.scope.parent_block
         if(pscope.context===undefined){
             $_SyntaxError(context,["no binding for nonlocal '"+name+"' found"])
-        }else if($B.bound[pscope.id][name]===undefined){
-            $_SyntaxError(context,["no binding for nonlocal '"+name+"' found"])
+        }else{
+            for(var name in this.names){
+                if($B.bound[pscope.id][name]===undefined){
+                    $_SyntaxError(context,["no binding for nonlocal '"+name+"' found"])
+                }
+            }
+            if(this.scope.globals.indexOf(name)==-1){this.scope.globals.push(name)}
         }
-        if(this.scope.globals.indexOf(name)==-1){this.scope.globals.push(name)}
     }
 
     this.to_js = function(){
