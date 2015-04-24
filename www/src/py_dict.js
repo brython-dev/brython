@@ -360,6 +360,11 @@ $DictDict.__setitem__ = function(self,key,value){
         if(self.$jsobj) self.$jsobj[key]=value
         return
     }
+    
+    if(isinstance(key, float)){
+        self.$numeric_dict[key.value] = value
+        return
+    }
 
     // if we got here the key is more complex, use default method
 
@@ -529,9 +534,9 @@ function dict(args, second){
             $string_dict : {},
             length: 0
         }
-        var i = args.length
+        var i = -1, stop = args.length-1
         var si = $DictDict.__setitem__
-        while(i--){
+        while(i++<stop){
             var item=args[i]
             switch(typeof item[0]) {
               case 'string':
@@ -542,6 +547,7 @@ function dict(args, second){
                 break
               default:
                 si(res, item[0], item[1])
+                break
             }
         }
         return res
