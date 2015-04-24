@@ -19,10 +19,14 @@ $B.execution_object.$execute_next_segment=function() {
    if (element.length == 2) delay=element[1]
 
    setTimeout(function() {
-        eval(code)
+        //console.log('eval:' + $B.execution_object.queue.length)
+        console.log(code)
+        try {eval(code)}catch(e){console.log(e)}
         // if queue length is 0, set start_flag = true so that
         // next push to queue will start execution again..
-        $B.execution_object.start_flag = $B.execution_object.queue.length == 0
+        $B.execution_object.start_flag = $B.execution_object.queue.length == 0;
+        //console.log('flag:')// + $B.execution_object.start_flag.toString())
+        //console.log('eval:' + $B.execution_object.queue.length)
    }, delay);
 }
 
@@ -34,6 +38,19 @@ $B.execution_object.$append=function(code, delay) {
 //$B.execution_object.$append("console.log('test');$B.execution_object.$execute_next_segment();", 10)
 //$B.execution_object.$append("console.log('test2');$B.execution_object.$execute_next_segment();", 500)
 //$B.execution_object.$append("console.log('test3');$B.execution_object.$execute_next_segment();", 500)
+
+$B.execution_object.source_conversion=function(js) {
+     js=js.replace("\n", "", 'g')
+     js=js.replace("'", "\\'", 'g')
+     js=js.replace('"', '\\"', 'g')
+
+     js=js.replace("@@", "\'", 'g')
+
+     js+="';$B.execution_object.$append($jscode, 10); "
+     js+="$B.execution_object.$execute_next_segment(); "
+
+     return "var $jscode='" + js
+}
 
 //$B.execution_object.$execute_next_segment()
 

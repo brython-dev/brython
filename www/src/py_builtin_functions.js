@@ -351,7 +351,9 @@ function $eval(src, _globals, _locals){
         }
 
         var js = root.to_js()
-        
+        if ($B.async_enabled) js=$B.execution_object.source_conversion(js) 
+        //js=js.replace("@@", "\'", 'g')
+        console.log(js)
         var res = eval(js)
         if(_globals!==undefined){
             // Update _globals with the namespace after execution
