@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-04-24 16:58:02.219000"
+__BRYTHON__.compiled_date="2015-04-24 18:03:24.146000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -508,7 +508,7 @@ if(!right_is_int){
 var new_node=new $Node()
 new_node.line_num=line_num
 lnum_set=true
-new $NodeJSCtx(new_node,'var $temp,$left')
+new $NodeJSCtx(new_node,'var $temp,$left;')
 parent.insert(rank,new_node)
 offset++
 var new_node=new $Node()
@@ -661,8 +661,8 @@ if(break_flag)break
 }
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this)
-var res='$locals_'+scope.id.replace(/\./g,'_')
-return res + '["$no_break'+this.loop_ctx.loop_num+'"]=false;break'
+var res=';$locals_'+scope.id.replace(/\./g,'_')
+return res + '["$no_break'+this.loop_ctx.loop_num+'"]=false;break;'
 }}
 function $CallArgCtx(C){
 this.type='call_arg'
@@ -740,8 +740,13 @@ if($B.block[scope.id]===undefined){
 else if($B.block[scope.id][this.func.value])_block=true
 }
 if($B.debug>0){
-var res='getattr('+func_js+',"__call__")('
-if(_block)res='\n//------block----\n' + res
+var res=""
+if(_block){
+res="@@;$B.execution_object.$append($jscode, 10); "
+res+="$B.execution_object.$execute_next_segment(); "
+res+="$jscode=@@"
+}
+res +='getattr('+func_js+',"__call__")('
 res +=(this.tree.length>0 ? $to_js(this.tree): '')
 return res+')'
 }
@@ -800,7 +805,7 @@ this.transform=function(node,rank){
 this.doc_string=$get_docstring(node)
 var instance_decl=new $Node()
 var local_ns='$locals_'+this.id.replace(/\./g,'_')
-var js='var '+local_ns+'='
+var js=';var '+local_ns+'='
 if($B.debug>0){js +='{$def_line:$B.line_info}'}
 else{js +='{}'}
 js +=', $locals = '+local_ns+';'
@@ -810,10 +815,10 @@ var ret_obj=new $Node()
 new $NodeJSCtx(ret_obj,'return '+local_ns+';')
 node.insert(node.children.length,ret_obj)
 var run_func=new $Node()
-new $NodeJSCtx(run_func,')()')
+new $NodeJSCtx(run_func,')();')
 node.parent.insert(rank+1,run_func)
 var scope=$get_scope(this)
-var name_ref='$locals_'+scope.id.replace(/\./g,'_')
+var name_ref=';$locals_'+scope.id.replace(/\./g,'_')
 name_ref +='["'+this.name+'"]'
 var js=[name_ref +'=$B.$class_constructor("'+this.name],pos=1
 js[pos++]='",$'+this.name+'_'+this.random
@@ -843,7 +848,7 @@ rank++
 node.parent.insert(rank+1,cl_cons)
 rank++
 var ds_node=new $Node()
-new $NodeJSCtx(ds_node,name_ref+'.__doc__='+(this.doc_string ||'None'))
+new $NodeJSCtx(ds_node,name_ref+'.__doc__='+(this.doc_string ||'None')+';')
 node.parent.insert(rank+1,ds_node)
 rank++
 js=name_ref+'.__code__={__class__:$B.$CodeDict};None;'
@@ -977,7 +982,7 @@ for(var i=0;i<decorators.length;i++){
 res +=this.dec_ids[i]+'('
 tail +=')'
 }
-res +=ref+tail
+res +=ref+tail+';'
 $B.bound[scope.id][obj.name]=true
 var decor_node=new $Node()
 new $NodeJSCtx(decor_node,res)
@@ -986,14 +991,6 @@ this.decorators=decorators
 if($B.async_enabled && _block_async_flag){
 if($B.block[scope.id]===undefined)$B.block[scope.id]={}
 $B.block[scope.id][obj.name]=true
-var parent_block=$get_scope(this)
-var child
-while(parent_block && 
-parent_block.js_processed===undefined
-){
-child=parent_block
-parent_block=parent_block.parent
-}
 }}
 this.to_js=function(){if($B.async_enabled){if(this.processing !==undefined)return ""
 }
@@ -1093,18 +1090,18 @@ while(global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.
 }
 var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
 var local_ns='$locals_'+this.id
-js='var '+local_ns+' = {}, $local_name="'+this.id+'", $locals='+local_ns+';'
+js='var '+local_ns+'={}, $local_name="'+this.id+'",$locals='+local_ns+';'
 var new_node=new $Node()
 new_node.locals_def=true
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 var new_node=new $Node()
-var js='$B.enter_frame([$local_name, $locals,'
+var js=';$B.enter_frame([$local_name, $locals,'
 js +='"'+global_scope.id+'", '+global_ns+']);' 
 new_node.enter_frame=true
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
-if(defs1.length>0){js='for(var $var in $defaults){$locals[$var]=$defaults[$var]}'
+if(defs1.length>0){js='for(var $var in $defaults){$locals[$var]=$defaults[$var]};'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
@@ -1122,12 +1119,12 @@ var make_args_nodes=[]
 var js='var $ns=$B.$MakeArgs1("'+this.name+'",arguments,'
 js +=positional_obj+',['+positional_str+'],'+dobj+','
 js +='['+defaults.join(',')+'],'+this.other_args+','+this.other_kw+
-',['+this.after_star.join(',')+'])'
+',['+this.after_star.join(',')+']);'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 make_args_nodes.push(new_node)
 var new_node=new $Node()
-new $NodeJSCtx(new_node,'for(var $var in $ns){$locals[$var]=$ns[$var]}')
+new $NodeJSCtx(new_node,'for(var $var in $ns){$locals[$var]=$ns[$var]};')
 make_args_nodes.push(new_node)
 var only_positional=false
 if(defaults.length==0 && this.other_args===null && this.other_kw===null &&
@@ -1136,7 +1133,7 @@ only_positional=true
 var pos_nodes=[]
 if($B.debug>0 ||this.positional_list.length>0){var js='var $simple=true, $i=arguments.length;'
 js +='while($i-- > 0)'
-js +='{if(arguments[$i].$nat!=undefined){$simple=false;break}}'
+js +='{if(arguments[$i].$nat!=undefined){$simple=false;break}};'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 pos_nodes.push(new_node)
@@ -1178,7 +1175,7 @@ wrong_nb_node.add(new_node)
 }
 for(var i=0;i<this.positional_list.length;i++){var arg=this.positional_list[i]
 var new_node=new $Node()
-var js='$locals["'+arg+'"]=$B.$JS2Py(arguments['+i+'])'
+var js='$locals["'+arg+'"]=$B.$JS2Py(arguments['+i+']);'
 new $NodeJSCtx(new_node,js)
 else_node.add(new_node)
 }
@@ -1196,18 +1193,18 @@ for(var i=0;i<node.children.length;i++){def_func_node.add(node.children[i])
 }
 var last_instr=node.children[node.children.length-1].C.tree[0]
 if(last_instr.type!=='return' && this.type!='generator'){new_node=new $Node()
-new $NodeJSCtx(new_node,'$B.leave_frame("'+this.id+'");return None;')
+new $NodeJSCtx(new_node,';$B.leave_frame("'+this.id+'");return None;')
 def_func_node.add(new_node)
 }
 node.children=[]
 var default_node=new $Node()
-var js='None'
+var js=';None;'
 if(defs1.length>0){js='var $defaults = {'+defs1.join(',')+'}'}
 new $NodeJSCtx(default_node,js)
 node.insert(0,default_node)
 node.add(def_func_node)
 var ret_node=new $Node()
-new $NodeJSCtx(ret_node,')()')
+new $NodeJSCtx(ret_node,')();')
 node.parent.insert(rank+1,ret_node)
 var offset=2
 if(this.type==='generator' && !this.declared){var sc=scope
@@ -1236,7 +1233,7 @@ offset++
 var prefix=this.tree[0].to_js()
 js=prefix+'.__name__="'
 if(this.scope.ntype=='class'){js+=this.scope.C.tree[0].name+'.'}
-js +=this.name+'"'
+js +=this.name+'";'
 var name_decl=new $Node()
 new $NodeJSCtx(name_decl,js)
 node.parent.insert(rank+offset,name_decl)
@@ -1505,7 +1502,7 @@ new $NodeJSCtx(new_node,js)
 new_nodes[pos++]=new_node
 if(this.has_break){
 new_node=new $Node()
-new $NodeJSCtx(new_node,local_ns+'["$no_break'+num+'"]=true')
+new $NodeJSCtx(new_node,local_ns+'["$no_break'+num+'"]=true;')
 new_nodes[pos++]=new_node
 }
 var while_node=new $Node()
@@ -1537,7 +1534,7 @@ try_node.add(iter_node)
 var catch_node=new $Node()
 var js='catch($err){if($B.is_exc($err,[StopIteration]))'
 js +='{$B.$pop_exc();'
-js +='delete $locals["$next'+num+'"];break}'
+js +='delete $locals["$next'+num+'"];break;}'
 js +='else{throw($err)}}' 
 new $NodeJSCtx(catch_node,js)
 while_node.add(catch_node)
@@ -1610,7 +1607,7 @@ res +="if($attr.substr(0,1)!=='_')\n"+head+"{var $x = 'var '+$attr+'"
 if(scope.ntype==="module"){res +='=$locals_'+scope.module.replace(/\./g,"_")
 res +='["'+"'+$attr+'"+'"]'
 }
-res +='=$mod["'+"'+$attr+'"+'"]'+"'"+'\n'+head+'eval($x)}}'
+res +='=$mod["'+"'+$attr+'"+'"]'+"'"+'\n'+head+'eval($x)}};'
 scope.blurred=true
 }else{
 var ns='$locals_'+scope.id.replace(/\./g,'_')
@@ -2304,7 +2301,7 @@ this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return ' (raise) '+this.tree}
 this.to_js=function(){this.js_processed=true
-var res='$B.leave_frame();'
+var res=';$B.leave_frame();'
 if(this.tree.length===0)return res+'$B.$raise()'
 var exc=this.tree[0],exc_js=exc.to_js()
 if(exc.type==='id' ||
@@ -2537,7 +2534,7 @@ node.parent.insert(pos,else_node)
 pos++
 }
 var frame_node=new $Node()
-var js='$B.frames_stack = $locals["$frame'+$loop_num+'"];'
+var js=';$B.frames_stack = $locals["$frame'+$loop_num+'"];'
 js +='delete $locals["$frame'+$loop_num+'"];'
 new $NodeJSCtx(frame_node,js)
 node.parent.insert(pos,frame_node)
@@ -2618,7 +2615,7 @@ var res='var $ctx_manager='+this.tree[0].to_js()
 var scope=$get_scope(this)
 res +='\nvar $ctx_manager_exit = getattr($ctx_manager,"__exit__")\n'
 if(this.tree[0].alias){var alias=this.tree[0].alias
-res +='$locals_'+scope.id.replace(/\./g,'_')
+res +=';$locals_'+scope.id.replace(/\./g,'_')
 res +='["'+alias+'"]='
 }
 return res + 'getattr($ctx_manager,"__enter__")()\ntry'
@@ -2687,7 +2684,7 @@ if(elt.type==='condition' && elt.token==='elif'){flag=false}
 else if(elt.type==='except'){flag=false}
 else if(elt.type==='single_kw'){flag=false}
 if(flag){
-var js='$B.line_info="'+node.line_num+','+mod_id+'";'
+var js=';$B.line_info="'+node.line_num+','+mod_id+'";'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank,new_node)
@@ -4353,27 +4350,27 @@ $B.bound[module]['__file__']=true
 $B.$py_src[locals_id]=src
 var root=$tokenize(src,module,locals_id,parent_block_id,line_info)
 root.transform()
-var js=['var $B = __BRYTHON__;\n'],pos=0
-js[pos++]='var __builtins__ = _b_ = $B.builtins;\n'
-if(locals_is_module){js[pos++]='var '+local_ns+' = $locals_'+module+';'
-}else{js[pos++]='var '+local_ns+' = {};'
+var js=['var $B=__BRYTHON__;\n'],pos=1
+js[pos++]='var __builtins__=_b_=$B.builtins;\n'
+if(locals_is_module){js[pos++]='var '+local_ns+'=$locals_'+module+';'
+}else{js[pos++]='var '+local_ns+'={};'
 }
-js[pos++]='var $locals = '+local_ns+';\n'
+js[pos++]='var $locals='+local_ns+';\n'
 js[pos++]='$B.enter_frame(["'+locals_id+'", '+local_ns+','
 js[pos++]='"'+module+'", '+global_ns+']);\n'
-js[pos++]='eval($B.InjectBuiltins())\n'
+js[pos++]='eval($B.InjectBuiltins());\n'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js.join(''))
 root.insert(0,new_node)
 var ds_node=new $Node()
-new $NodeJSCtx(ds_node,local_ns+'["__doc__"]='+root.doc_string)
+new $NodeJSCtx(ds_node,local_ns+'["__doc__"]='+root.doc_string+';')
 root.insert(1,ds_node)
 var name_node=new $Node()
 var lib_module=module
-try{if(module.substr(0,9)=='__main__,'){lib_module='__main__'}}catch(err){alert(module)
+try{if(module.substr(0,9)=='__main__,'){lib_module='__main__;'}}catch(err){alert(module)
 throw err
 }
-new $NodeJSCtx(name_node,local_ns+'["__name__"]="'+locals_id+'"')
+new $NodeJSCtx(name_node,local_ns+'["__name__"]="'+locals_id+'";')
 root.insert(2,name_node)
 var file_node=new $Node()
 new $NodeJSCtx(file_node,local_ns+'["__file__"]="'+$B.$py_module_path[module]+'";None;\n')
@@ -4383,7 +4380,7 @@ if($B.debug>=2){var t1=new Date().getTime()
 console.log('module '+module+' translated in '+(t1 - t0)+' ms')
 }
 var new_node=new $Node()
-new $NodeJSCtx(new_node,'$B.leave_frame("'+module+'");\n')
+new $NodeJSCtx(new_node,';$B.leave_frame("'+module+'");\n')
 root.add(new_node)
 $B.exception_stack=[]
 return root
@@ -4455,7 +4452,8 @@ try{
 var $root=$B.py2js($src,module_name,module_name,'__builtins__')
 var $js=$root.to_js()
 if($B.debug>1)console.log($js)
-if($B.async_enabled){$B.execution_object.$append($js +'\n$B.execution_object.$execute_next_segment()',10)
+if($B.async_enabled){$js=$B.execution_object.source_conversion($js)
+eval($js)
 }else{
 eval($js)
 }}catch($err){if($B.debug>1){console.log($err)
@@ -5067,7 +5065,9 @@ return $B.$FunctionDict
 case 'object':
 if(obj.constructor===Array){obj.__class__=_b_.list.$dict
 return _b_.list.$dict
-}}}
+}
+break
+}}
 return klass
 }
 $B.$mkdict=function(glob,loc){var res={}
@@ -5687,6 +5687,7 @@ $B.line_info="1,"+module_name
 throw _b_.SyntaxError("eval() argument must be an expression")
 }}
 var js=root.to_js()
+if($B.async_enabled)js=$B.execution_object.source_conversion(js)
 var res=eval(js)
 if(_globals!==undefined){
 var ns=eval('$locals_'+module_name)
@@ -6495,12 +6496,12 @@ $B.get_class(other).__name__)}})($key)
 }}
 for(var $func in Ellipsis){if(typeof Ellipsis[$func]==='function'){Ellipsis[$func].__str__=(function(f){return function(){return "<method-wrapper "+f+" of Ellipsis object>"}})($func)
 }}
-var $NoneDict={__class__:$B.$type,__name__:'NoneType',}
+var $NoneDict={__class__:$B.$type,__name__:'NoneType'}
 $NoneDict.__mro__=[$NoneDict,$ObjectDict]
 $NoneDict.__setattr__=function(self,attr){return no_set_attr($NoneDict,attr)
 }
-$NoneDict.$factory=$NoneDict
 var None={__bool__ : function(){return False},__class__ : $NoneDict,__hash__ : function(){return 0},__repr__ : function(){return 'None'},__str__ : function(){return 'None'},toString : function(){return 'None'}}
+$NoneDict.$factory={__class__:$B.$factory,$dict:$NoneDict}
 for(var $op in $B.$comps){
 var key=$B.$comps[$op]
 switch(key){case 'ge':
@@ -7373,7 +7374,6 @@ return run_py(module,path,module_contents)
 $B.run_py=run_py=function(module,path,module_contents){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 $B.$py_module_path[module.name]=path
 var root=$B.py2js(module_contents,module.name,module.name,'__builtins__')
-if(module.name==='random'){console.log('run py '+module.name)}
 var body=root.children
 root.children=[]
 var mod_node=new $Node('expression')
@@ -7463,7 +7463,6 @@ return null
 }
 function import_from_site_packages(mod_name,origin,package){var module={name:mod_name}
 mod_path=mod_name.replace(/\./g,'/')
-console.log('from site_packages, mod_name '+mod_name+' mod_path '+mod_path)
 var py_paths=[$B.brython_path+'Lib/site-packages/'+mod_path+'.py',$B.brython_path+'Lib/site-packages/'+mod_path+'/__init__.py']
 for(var i=0,_len_i=py_paths.length;i < _len_i;i++){var py_mod=import_py(module,py_paths[i],package)
 if(py_mod!==null){
@@ -11554,12 +11553,22 @@ var element=$B.execution_object.queue.shift()
 var code=element[0]
 var delay=10
 if(element.length==2)delay=element[1]
-setTimeout(function(){eval(code)
+setTimeout(function(){
+console.log(code)
+try{eval(code)}catch(e){console.log(e)}
 $B.execution_object.start_flag=$B.execution_object.queue.length==0
 },delay)
 }
 $B.execution_object.$append=function(code,delay){$B.execution_object.queue.push([code,delay])
 if($B.execution_object.start_flag)$B.execution_object.$execute_next_segment()
+}
+$B.execution_object.source_conversion=function(js){js=js.replace("\n","",'g')
+js=js.replace("'","\\'",'g')
+js=js.replace('"','\\"','g')
+js=js.replace("@@","\'",'g')
+js+="';$B.execution_object.$append($jscode, 10); "
+js+="$B.execution_object.$execute_next_segment(); "
+return "var $jscode='" + js
 }
 _b_['brython_block']=function(f,sec){if(sec===undefined ||sec==_b_.None)sec=1
 return f

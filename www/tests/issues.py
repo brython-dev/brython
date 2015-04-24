@@ -258,4 +258,7 @@ assert first == second, "Same seed does not produce same random results"
 assert isinstance(True, int)
 assert isinstance(False, int)
 
+# repr of type(None)
+assert repr(type(None)) == "<class 'NoneType'>"
+
 print('passed all tests')

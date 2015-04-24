@@ -248,6 +248,7 @@ $B.get_class = function(obj){
               obj.__class__=_b_.list.$dict
               return _b_.list.$dict
             }
+            break
         }
     }
     return klass

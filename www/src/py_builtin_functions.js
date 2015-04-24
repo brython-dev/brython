@@ -353,7 +353,7 @@ function $eval(src, _globals, _locals){
         var js = root.to_js()
         if ($B.async_enabled) js=$B.execution_object.source_conversion(js) 
         //js=js.replace("@@", "\'", 'g')
-        console.log(js)
+        //console.log(js)
         var res = eval(js)
         if(_globals!==undefined){
             // Update _globals with the namespace after execution
@@ -443,7 +443,7 @@ function getattr(obj,attr,_default){
 
     var klass = $B.get_class(obj)
 
-    //if(attr=='dup'){console.log('attr '+attr+' of '+obj+' klass '+klass.__name__)}
+    //if(attr=='__str__'){console.log('attr '+attr+' of '+obj+' klass '+klass.__name__)}
 
     if(klass===undefined){
         // for native JS objects used in Python code
@@ -1739,15 +1739,13 @@ for(var $func in Ellipsis){
     }
 }
 
-var $NoneDict = {__class__:$B.$type,__name__:'NoneType',}
+var $NoneDict = {__class__:$B.$type,__name__:'NoneType'}
 
 $NoneDict.__mro__ = [$NoneDict,$ObjectDict]
 
 $NoneDict.__setattr__ = function(self, attr){
     return no_set_attr($NoneDict, attr)
 }
-
-$NoneDict.$factory = $NoneDict
 
 var None = {
     __bool__ : function(){return False},
@@ -1757,6 +1755,8 @@ var None = {
     __str__ : function(){return 'None'},
     toString : function(){return 'None'}
 }
+
+$NoneDict.$factory = {__class__:$B.$factory,$dict:$NoneDict}
 
 for(var $op in $B.$comps){ // None is not orderable with any type
     var key = $B.$comps[$op]
