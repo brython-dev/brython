@@ -443,8 +443,6 @@ function getattr(obj,attr,_default){
 
     var klass = $B.get_class(obj)
 
-    //if(attr=='__str__'){console.log('attr '+attr+' of '+obj+' klass '+klass.__name__)}
-
     if(klass===undefined){
         // for native JS objects used in Python code
         if(obj[attr]!==undefined) return obj[attr]
@@ -1641,8 +1639,6 @@ bool.__class__ = $B.$factory
 bool.$dict = $BoolDict
 $BoolDict.$factory = bool
 
-bool.__doc__='bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.'
-
 $BoolDict.__add__ = function(self,other){
     if(self.valueOf()) return other + 1;
     return other;
@@ -2133,7 +2129,7 @@ $B.$TypeError = function(msg){
 
 var builtin_funcs = ['abs', 'all', 'any', 'ascii', 'bin', 'bool', 'bytearray',
 'bytes', 'callable', 'chr', 'classmethod', 'compile', 'complex', 'delattr', 
-'dict', 'dir', 'divmod', 'enumerate', 'exec', 'exit', 
+'dict', 'dir', 'divmod', 'enumerate', 'eval', 'exec', 'exit', 
 'filter', 'float', 'format', 'frozenset', 'getattr', 'globals', 'hasattr', 'hash', 
 'help', 'hex', 'id', 'input', 'int', 'isinstance', 'issubclass', 'iter', 'len', 
 'list', 'locals', 'map', 'max', 'memoryview', 'min', 'next', 'object', 
@@ -2142,8 +2138,13 @@ var builtin_funcs = ['abs', 'all', 'any', 'ascii', 'bin', 'bool', 'bytearray',
 'sum','$$super', 'tuple', 'vars', 'zip']
 
 for(var i=0;i<builtin_funcs.length;i++){
-    $B.builtin_funcs[builtin_funcs[i]]=true
+    var name = builtin_funcs[i]
+    if(name=='open'){name1 = '$url_open'}
+    if(name=='super'){name = '$$super'}
+    if(name=='eval'){name = '$eval'}    
+    $B.builtin_funcs[name]=true
 }
+$B.builtin_funcs['$eval'] = true
 
 var other_builtins = [ 'Ellipsis', 'False',  'None', 'True', 
 '__build_class__', '__debug__', '__doc__', '__import__', '__name__', 
@@ -2153,18 +2154,22 @@ var builtin_names = builtin_funcs.concat(other_builtins)
 
 for(var i=0;i<builtin_names.length;i++){
     var name = builtin_names[i]
+    var orig_name = name
     var name1 = name
     if(name=='open'){name1 = '$url_open'}
     if(name=='super'){name = '$$super'}
+    if(name=='eval'){name = name1 = '$eval'}
+    if(name=='print'){name1 = '$print'}
     $B.bound['__builtins__'][name] = true
     try{
         _b_[name] = eval(name1)
-        //$B.vars['__builtins__'][name] = _b_[name]
         if($B.builtin_funcs[name]!==undefined){
+            //console.log(name+' is builtin func')
             if(_b_[name].__repr__===undefined){
+                //console.log('set repr for '+name)
                 _b_[name].__repr__ = _b_[name].__str__ = (function(x){
                     return function(){return '<built-in function '+x+'>'}
-                })(name)
+                })(orig_name)
             }
             // used by inspect module
             _b_[name].__module__ = 'builtins'
