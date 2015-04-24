@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-04-23 11:18:08.745000"
+__BRYTHON__.compiled_date="2015-04-24 16:58:02.219000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1578,6 +1578,8 @@ var head=' '.repeat(indent)
 if(this.module.charAt(0)=='.'){
 var parent_module=$get_module(this).module
 var package=$B.imported[parent_module].__package__
+if(package===undefined){return 'throw SystemError("Parent module \'\' not loaded, cannot perform relative import")'
+}
 var nbdots=1
 while(nbdots<this.module.length && 
 this.module.charAt(nbdots)=='.'){nbdots++}
@@ -7371,6 +7373,7 @@ return run_py(module,path,module_contents)
 $B.run_py=run_py=function(module,path,module_contents){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 $B.$py_module_path[module.name]=path
 var root=$B.py2js(module_contents,module.name,module.name,'__builtins__')
+if(module.name==='random'){console.log('run py '+module.name)}
 var body=root.children
 root.children=[]
 var mod_node=new $Node('expression')
@@ -7460,6 +7463,7 @@ return null
 }
 function import_from_site_packages(mod_name,origin,package){var module={name:mod_name}
 mod_path=mod_name.replace(/\./g,'/')
+console.log('from site_packages, mod_name '+mod_name+' mod_path '+mod_path)
 var py_paths=[$B.brython_path+'Lib/site-packages/'+mod_path+'.py',$B.brython_path+'Lib/site-packages/'+mod_path+'/__init__.py']
 for(var i=0,_len_i=py_paths.length;i < _len_i;i++){var py_mod=import_py(module,py_paths[i],package)
 if(py_mod!==null){
@@ -8460,6 +8464,9 @@ self.$numeric_dict[key]=value
 if(self.$jsobj)self.$jsobj[key]=value
 return
 }
+if(isinstance(key,float)){self.$numeric_dict[key.value]=value
+return
+}
 var _key=hash(key)
 if(self.$object_dict[_key]!=undefined){var _eq=getattr(key,'__eq__')
 var i=self.$object_dict[_key].length
@@ -8557,9 +8564,9 @@ $copy_dict(self,kw)
 function dict(args,second){if(second===undefined && Array.isArray(args)){
 var res={__class__:$DictDict,$numeric_dict :{},$object_dict :{},$string_dict :{},length: 0
 }
-var i=args.length
+var i=-1,stop=args.length-1
 var si=$DictDict.__setitem__
-while(i--){var item=args[i]
+while(i++<stop){var item=args[i]
 switch(typeof item[0]){case 'string':
 res.$string_dict[item[0]]=item[1]
 break
@@ -8568,6 +8575,7 @@ res.$numeric_dict[item[0]]=item[1]
 break
 default:
 si(res,item[0],item[1])
+break
 }}
 return res
 }

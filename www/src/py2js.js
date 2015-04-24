@@ -2623,7 +2623,9 @@ function $FromCtx(context){
             // get the name of current module
             var parent_module = $get_module(this).module
             var package = $B.imported[parent_module].__package__
-            
+            if(package===undefined){
+                return 'throw SystemError("Parent module \'\' not loaded, cannot perform relative import")'
+            }            
             var nbdots = 1
             while(nbdots<this.module.length && 
                 this.module.charAt(nbdots)=='.'){nbdots++}
