@@ -271,4 +271,14 @@ def f():
 
 assert f()()==1
 
+# setting __class__
+class A:pass
+class B:
+    x = 1
+
+a = A()
+assert not hasattr(a, 'x')
+a.__class__ = B
+assert a.x == 1
+
 print('passed all tests')

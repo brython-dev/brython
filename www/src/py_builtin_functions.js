@@ -1255,6 +1255,12 @@ function setattr(obj,attr,value){
         attr='$$'+attr
     }
     
+    if(attr=='__class__'){
+        // Setting the attribute __class__ : value is the factory function,
+        // we must set __class__ to the class dictionary
+        obj.__class__ = value.$dict;return
+    }
+    
     var res = obj[attr]
     if(res===undefined){
         var mro = $B.get_class(obj).__mro__
