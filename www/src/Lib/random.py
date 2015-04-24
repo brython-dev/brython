@@ -47,9 +47,6 @@ from math import log as _log, exp as _exp, pi as _pi, e as _e, ceil as _ceil
 from math import sqrt as _sqrt, acos as _acos, cos as _cos, sin as _sin
 
 from browser import window
-
-def _randint(a, b):
-    return int(window.Math.random()*(b-a+1)+a)
     
 #from collections.abc import Set as _Set, Sequence as _Sequence
 _Set = set
@@ -78,6 +75,7 @@ RECIP_BPF = 2**-BPF
 
 import _random
 _urandom = _random._urandom
+_randint = _random._randint
 
 class Random(_random.Random):
     """Random number generator base class used by bound module functions.
