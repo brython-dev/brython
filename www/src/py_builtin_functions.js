@@ -1758,7 +1758,9 @@ var None = {
     toString : function(){return 'None'}
 }
 
-$NoneDict.$factory = {__class__:$B.$factory,$dict:$NoneDict}
+$NoneDict.$factory = function(){return None}
+$NoneDict.$factory.__class__=$B.$factory
+$NoneDict.$factory.$dict=$NoneDict
 
 for(var $op in $B.$comps){ // None is not orderable with any type
     var key = $B.$comps[$op]
