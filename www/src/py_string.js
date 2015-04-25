@@ -541,7 +541,7 @@ var $legacy_format = function(val, args, char_mapping) {
     var length = val.length
     var pos = 0 |0
     var argpos = null
-    if (args && args.__class__ === _b_.tuple.$dict) {
+    if (args && _b_.isinstance(args, _b_.tuple)) {
         argpos = 0 |0
     }
     var ret = ''
@@ -641,7 +641,6 @@ var $legacy_format = function(val, args, char_mapping) {
         if (newpos < length) {
             if (val[newpos] === '%') {
                 ret += '%'
-                ++newpos
             } else {
                 var tmp
                 if (val[newpos] === '(') {
