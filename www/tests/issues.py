@@ -271,6 +271,17 @@ def f():
 
 assert f()()==1
 
+def f():
+    k = 1
+    def g():
+        def r():
+            nonlocal k
+            return k+1
+        return r()
+    return g()
+
+assert f()==2
+
 # setting __class__
 class A:pass
 class B:

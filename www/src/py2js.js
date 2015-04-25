@@ -3536,7 +3536,7 @@ function $NonlocalCtx(context){
         if($B.bound[this.scope.id][name]=='arg'){
             $_SyntaxError(context,["name '"+name+"' is parameter and nonlocal"])
         }
-        this.names[name] = true
+        this.names[name] = [false, $pos]
     }
     
     this.transform = function(node, rank){
@@ -3544,12 +3544,23 @@ function $NonlocalCtx(context){
         if(pscope.context===undefined){
             $_SyntaxError(context,["no binding for nonlocal '"+name+"' found"])
         }else{
+            while(pscope!==undefined && pscope.context!==undefined){
+                for(var name in this.names){
+                    if($B.bound[pscope.id][name]!==undefined){
+                        this.names[name] = [true]
+                    }
+                }
+                pscope = pscope.parent_block
+            }
             for(var name in this.names){
-                if($B.bound[pscope.id][name]===undefined){
+                if(!this.names[name][0]){
+                    console.log('nonlocal error, context '+context)
+                    // restore $pos to get the correct error line
+                    $pos = this.names[name][1]
                     $_SyntaxError(context,["no binding for nonlocal '"+name+"' found"])
                 }
             }
-            if(this.scope.globals.indexOf(name)==-1){this.scope.globals.push(name)}
+            //if(this.scope.globals.indexOf(name)==-1){this.scope.globals.push(name)}
         }
     }
 
