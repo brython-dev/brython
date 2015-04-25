@@ -119,6 +119,7 @@ function divmod_pos(v1, v2){
         }
         // Modulo is A - (A//B)*B
         mod = sub_pos(v1_init, mul_pos(quotient, v2).value)
+        console.log(v1_init, quotient, v2, mul_pos(quotient,v2),mod)
     }
     return [LongInt(quotient), mod]
 }
@@ -516,6 +517,20 @@ $LongIntDict.__xor__ = function(self, other){
     return LongInt(res, 2)
 }
 
+$LongIntDict.to_base = function(self, base){
+    // Returns the string representation of self in specified base
+    console.log(self.value+' to base '+base)
+    var res='', v=self.value
+    while(v>0){
+        var dm = divmod_pos(v, base.toString())
+        console.log(dm[0].value+','+dm[1].value)
+        res = parseInt(dm[1].value).toString(base)+res
+        v = dm[0].value
+        if(v==0){break}
+    }
+    return res
+}
+
 function digits(base){
     // Return an object where keys are all the digits valid in specified base
     // and value is "true"
@@ -537,6 +552,16 @@ function digits(base){
     return is_digits
 }
 
+var MAX_SAFE_INTEGER = Math.pow(2, 53)-1;
+var MIN_SAFE_INTEGER = -Number.MAX_SAFE_INTEGER;
+
+function isSafeInteger(n) {
+    return (typeof n === 'number' &&
+        Math.round(n) === n &&
+        Number.MIN_SAFE_INTEGER <= n &&
+        n <= Number.MAX_SAFE_INTEGER);
+}
+
 function LongInt(value, base){
     if(arguments.length>2){
         throw _b_.TypeError("LongInt takes at most 2 arguments ("+
@@ -550,7 +575,14 @@ function LongInt(value, base){
     if(base<0 || base==1 || base>36){
         throw ValueError("LongInt() base must be >= 2 and <= 36")
     }
-    if(typeof value!='string'){
+    if(isinstance(value, float)){
+        if(value>=0){value=Math.round(value.value)}
+        else{value=Math.ceil(value.value)}
+    }
+    if(typeof value=='number'){
+        if(isSafeInteger(value)){value = value.toString()}
+        else{throw ValueError("argument of long_int is not a safe integer")}
+    }else if(typeof value!='string'){
         throw ValueError("argument of long_int must be a string, not "+
             $B.get_class(value).__name__)
     }
@@ -585,7 +617,7 @@ function LongInt(value, base){
     if(point!=-1){value=value.substr(0,point)}
     if(base!=10){
         // Conversion to base 10
-        var coef = '1', v10 = LongInt('0'),
+        var coef = '1', v10 = LongInt(0),
             pos = value.length, digit_base10
         while(pos--){
             digit_base10 = parseInt(value.charAt(pos), base).toString()
