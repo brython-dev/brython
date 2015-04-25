@@ -29,3 +29,9 @@ for _i in range(10):
 
 assert _listdict['not called'] == []
 assert _listdict['mylist'] == [0,1,2,3,4,5,6,7,8,9]
+
+# namedtuple
+a = collections.namedtuple("foo", "bar bash bing")(1, 2, 3)
+assert a.bar == 1
+assert a.bash == 2
+assert repr(a) == 'foo(bar=1, bash=2, bing=3)'
