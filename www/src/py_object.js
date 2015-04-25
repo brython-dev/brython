@@ -112,6 +112,11 @@ $ObjectDict.__getattribute__ = function(obj,attr){
             if(v!==undefined){
                 res = v
                 break
+            }else if(attr=='__str__' && mro[i]['__repr__']!==undefined){
+                // If the class doesn't define __str__ but defines __repr__,
+                // use __repr__
+                res = mro[i]['repr']
+                break
             }
         }
     }else{
