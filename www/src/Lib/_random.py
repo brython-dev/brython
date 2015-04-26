@@ -5,8 +5,18 @@ def _randint(a, b):
     
 def _rand_with_seed(x, rand_obj):
     x = window.Math.sin(rand_obj._state) * 10000
-    # adding 1 is not reliable because of integer implementation
-    rand_obj._state *= 1.01 
+    # Adding 1 is not reliable because of current integer implementation
+    # If rand_obj._state is not a "safe integer" in the range [-2**53, 2**53]
+    # the increment between 2 different values is a power of 2
+    # It is stored in an attribute of rand_obj to avoid having to compute it
+    # for each iteration
+    if not hasattr(rand_obj, 'incr'):
+        rand_obj.incr = 1
+    n = rand_obj._state
+    while n+rand_obj.incr==n:
+        # increase the increment until the increment value is different
+        rand_obj.incr *= 2
+    rand_obj._state += rand_obj.incr
     return x - window.Math.floor(x)
 
 def _urandom(n, rand_obj=None):
