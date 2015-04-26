@@ -56,4 +56,6 @@ assert 1.0+a == 5+2j
 assert 2.0-a == -2-2j
 assert 3.0*a == 12+6j
 
+assert hash(1.0) == 1
+
 print('passed all tests...')
