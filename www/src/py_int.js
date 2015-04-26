@@ -271,6 +271,9 @@ $IntDict.bit_length = function(self){
     return s.length       // len('100101') --> 6
 }
 
+$IntDict.numerator = function(self){return self}
+$IntDict.denominator = function(self){return int(1)}
+
 // code for operands & | ^ << >>
 var $op_func = function(self,other){
     if(isinstance(other,int)) return self-other
