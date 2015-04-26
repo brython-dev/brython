@@ -3,6 +3,7 @@
 eval($B.InjectBuiltins())
 
 var $ObjectDict = _b_.object.$dict
+var str_hash = _b_.str.$dict.__hash__
 
 // dictionary
 function $DictClass($keys,$values){
@@ -138,6 +139,10 @@ $DictDict.__contains__ = function(self,item){
     }
 
     var _key=hash(item)
+    if (self.$str_hash[_key]!==undefined &&
+        _b_.getattr(item,'__eq__')(self.$str_hash[_key])){return true}
+    if (self.$numeric_dict[_key]!==undefined &&
+        _b_.getattr(item,'__eq__')(_key)){return true}
     if (self.$object_dict[_key] !== undefined) {
        var _eq = getattr(item, '__eq__')
        var i=self.$object_dict[_key].length
@@ -153,6 +158,7 @@ $DictDict.__delitem__ = function(self,arg){
       case 'string':
         if (self.$string_dict[arg] === undefined) throw KeyError(_b_.str(arg))
         delete self.$string_dict[arg]
+        delete self.$str_hash[str_hash(arg)]
         if (self.$jsobj) delete self.$jsobj[arg]
         return
       case 'number':
@@ -212,6 +218,14 @@ $DictDict.__getitem__ = function(self,arg){
     // since the key is more complex use 'default' method of getting item
 
     var _key=hash(arg)
+    var sk = self.$str_hash[_key]
+    if (sk!==undefined && _b_.getattr(arg,'__eq__')(sk)){
+        return self.$string_dict[sk]
+    }
+    if (self.$numeric_dict[_key]!==undefined &&
+        _b_.getattr(arg,'__eq__')(_key)){
+         return self.$numeric_dict[_key]   
+    }
     if (self.$object_dict[_key] !== undefined) {
        var _eq=getattr(arg, '__eq__')
        var i=self.$object_dict[_key].length
@@ -353,6 +367,7 @@ $DictDict.__setitem__ = function(self,key,value){
     switch(typeof key) {
       case 'string':
         self.$string_dict[key]=value
+        self.$str_hash[str_hash(key)]=key
         if(self.$jsobj) self.$jsobj[key]=value
         return
       case 'number':
@@ -361,16 +376,23 @@ $DictDict.__setitem__ = function(self,key,value){
         return
     }
     
-    if(isinstance(key, float)){
-        self.$numeric_dict[key.value] = value
-        return
-    }
-
     // if we got here the key is more complex, use default method
 
     var _key=hash(key)
+    var _eq=getattr(key, '__eq__')
+
+    if(self.$numeric_dict[_key]!==undefined && _eq(_key)){
+        self.$numeric_dict[_key] = value
+        return
+    }
+    var sk = self.$str_hash[_key]
+    if(sk!==undefined && _eq(sk)){
+        self.$string_dict[sk] = value
+        return
+    }
+
+    
     if (self.$object_dict[_key] != undefined) {
-       var _eq=getattr(key, '__eq__')
        var i=self.$object_dict[_key].length
        while(i--) {
            if (_eq(self.$object_dict[_key][i][0])) {
@@ -398,6 +420,7 @@ $DictDict.clear = function(self){
 
     self.$numeric_dict={}
     self.$string_dict={}
+    self.$str_hash={}
     self.$object_dict={}
 
     if(self.$jsobj) self.$jsobj={}
@@ -532,6 +555,7 @@ function dict(args, second){
             $numeric_dict : {},
             $object_dict : {},
             $string_dict : {},
+            $str_hash: {},
             length: 0
         }
         var i = -1, stop = args.length-1
@@ -541,6 +565,7 @@ function dict(args, second){
             switch(typeof item[0]) {
               case 'string':
                 res.$string_dict[item[0]]=item[1]
+                res.$str_hash[str_hash(item[0])]=item[0]
                 break;
               case 'number':
                 res.$numeric_dict[item[0]]=item[1]

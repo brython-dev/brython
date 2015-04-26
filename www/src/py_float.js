@@ -137,6 +137,8 @@ $FloatDict.__hash__ = function(self) {
     if (_v === Infinity) return 314159
     if (_v === -Infinity) return -271828
     if (isNaN(_v)) return 0
+    // for integers, return the value
+    if (_v==Math.round(_v)) return Math.round(_v)
 
     var r=_b_.$frexp(_v)
     r[0] *= Math.pow(2,31)

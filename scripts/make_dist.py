@@ -188,7 +188,7 @@ sources = [
     'brython_builtins', 'version_info', 'identifiers_re', 'py2js', 'py_object',
     'py_type', 'py_utils', 'py_builtin_functions', 'py_bytes',
     'js_objects', 'stdlib_paths', 'py_import', 'py_float', 'py_int',
-    'py_complex', 'py_dict', 'py_list', 'py_string', 'py_set', 'py_dom',
+    'py_complex', 'py_list', 'py_string', 'py_dict', 'py_set', 'py_dom',
     'py_generator', 'py_import_hooks', 'builtin_modules', 'async'
 ]
 

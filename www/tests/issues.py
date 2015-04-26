@@ -292,4 +292,38 @@ assert not hasattr(a, 'x')
 a.__class__ = B
 assert a.x == 1
 
+# hashable objects
+class X:
+    def __hash__(self): return hash(1.0)
+    def __eq__(self, other): return other == 1
+
+a = {1: 'a', X(): 'b'}
+assert a=={1:'b'}
+assert X() in a
+assert a[X()]=='b'
+
+class X:
+    def __hash__(self): return hash('u')
+
+a = {'u': 'a', X(): 'b'}
+assert set(a.values())=={'a', 'b'}
+assert not X() in a
+
+b = {'u':'a'}
+assert not X() in b
+
+class X:
+    def __hash__(self): return hash('u')
+    def __eq__(self, other): return other=='u'
+    pass
+
+a = {'u': 'a', X(): 'b'}
+assert a == {'u': 'b'}
+assert X() in a
+assert a[X()]=='b'
+
+# issue 176
+x = [1,2,3]
+assert sum(-y for y in x) == -6
+
 print('passed all tests')

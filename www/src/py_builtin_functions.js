@@ -621,9 +621,21 @@ function hash(obj){
        return obj.__hashvalue__=obj.__hash__()
     }
     var hashfunc = getattr(obj, '__hash__', _b_.None)
-    if(hashfunc===_b_.None){
-        throw _b_.TypeError("unhashable type: '"+
-            $B.get_class(obj).__name__+"'")
+    // If no specific __hash__ method is supplied for the instance but
+    // a __eq__ method is defined, the object is not hashable
+    //
+    // class A:
+    //     def __eq__(self, other):
+    //         return False
+    //
+    // d = {A():1}
+    //
+    // throws an exception : unhashable type: 'A'
+    
+    if(hashfunc.__func__===_b_.object.$dict.__hash__ &&
+        getattr(obj,'__eq__').__func__!==_b_.object.$dict.__eq__){
+            throw _b_.TypeError("unhashable type: '"+
+                $B.get_class(obj).__name__+"'")
     }else{
         return obj.__hashvalue__= hashfunc()
     }
