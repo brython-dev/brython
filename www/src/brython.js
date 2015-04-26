@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-04-25 18:28:11.152000"
+__BRYTHON__.compiled_date="2015-04-26 08:28:21.282000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -5850,7 +5850,8 @@ if(isinstance(obj,bool))return _b_.int(obj)
 if(obj.__hash__ !==undefined){return obj.__hashvalue__=obj.__hash__()
 }
 var hashfunc=getattr(obj,'__hash__',_b_.None)
-if(hashfunc===_b_.None){throw _b_.TypeError("unhashable type: '"+
+if(hashfunc.__func__===_b_.object.$dict.__hash__ &&
+getattr(obj,'__eq__').__func__!==_b_.object.$dict.__eq__){throw _b_.TypeError("unhashable type: '"+
 $B.get_class(obj).__name__+"'")
 }else{return obj.__hashvalue__=hashfunc()
 }}
@@ -7660,6 +7661,7 @@ var _v=self.value
 if(_v===Infinity)return 314159
 if(_v===-Infinity)return -271828
 if(isNaN(_v))return 0
+if(_v==Math.round(_v))return Math.round(_v)
 var r=_b_.$frexp(_v)
 r[0]*=Math.pow(2,31)
 var hipart=_b_.int(r[0])
@@ -8271,6 +8273,7 @@ _b_.complex=complex
 })(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var $ObjectDict=_b_.object.$dict
+var str_hash=_b_.str.$dict.__hash__
 function $DictClass($keys,$values){this.iter=null
 this.__class__=$DictDict
 $DictDict.clear(this)
@@ -8351,6 +8354,10 @@ case 'number':
 return self.$numeric_dict[item]!==undefined
 }
 var _key=hash(item)
+if(self.$str_hash[_key]!==undefined &&
+_b_.getattr(item,'__eq__')(self.$str_hash[_key])){return true}
+if(self.$numeric_dict[_key]!==undefined &&
+_b_.getattr(item,'__eq__')(_key)){return true}
 if(self.$object_dict[_key]!==undefined){var _eq=getattr(item,'__eq__')
 var i=self.$object_dict[_key].length
 while(i--){if(_eq(self.$object_dict[_key][i][0]))return true
@@ -8360,6 +8367,7 @@ return false
 $DictDict.__delitem__=function(self,arg){switch(typeof arg){case 'string':
 if(self.$string_dict[arg]===undefined)throw KeyError(_b_.str(arg))
 delete self.$string_dict[arg]
+delete self.$str_hash[str_hash(arg)]
 if(self.$jsobj)delete self.$jsobj[arg]
 return
 case 'number':
@@ -8399,6 +8407,12 @@ case 'number':
 if(self.$numeric_dict[arg]!==undefined)return self.$numeric_dict[arg]
 }
 var _key=hash(arg)
+var sk=self.$str_hash[_key]
+if(sk!==undefined && _b_.getattr(arg,'__eq__')(sk)){return self.$string_dict[sk]
+}
+if(self.$numeric_dict[_key]!==undefined &&
+_b_.getattr(arg,'__eq__')(_key)){return self.$numeric_dict[_key]
+}
 if(self.$object_dict[_key]!==undefined){var _eq=getattr(arg,'__eq__')
 var i=self.$object_dict[_key].length
 while(i--){if(_eq(self.$object_dict[_key][i][0])){return self.$object_dict[_key][i][1]
@@ -8482,6 +8496,7 @@ return '{'+ res.join(', ')+'}'
 }
 $DictDict.__setitem__=function(self,key,value){switch(typeof key){case 'string':
 self.$string_dict[key]=value
+self.$str_hash[str_hash(key)]=key
 if(self.$jsobj)self.$jsobj[key]=value
 return
 case 'number':
@@ -8489,12 +8504,16 @@ self.$numeric_dict[key]=value
 if(self.$jsobj)self.$jsobj[key]=value
 return
 }
-if(isinstance(key,float)){self.$numeric_dict[key.value]=value
+var _key=hash(key)
+var _eq=getattr(key,'__eq__')
+if(self.$numeric_dict[_key]!==undefined && _eq(_key)){self.$numeric_dict[_key]=value
 return
 }
-var _key=hash(key)
-if(self.$object_dict[_key]!=undefined){var _eq=getattr(key,'__eq__')
-var i=self.$object_dict[_key].length
+var sk=self.$str_hash[_key]
+if(sk!==undefined && _eq(sk)){self.$string_dict[sk]=value
+return
+}
+if(self.$object_dict[_key]!=undefined){var i=self.$object_dict[_key].length
 while(i--){if(_eq(self.$object_dict[_key][i][0])){self.$object_dict[_key][i]=[key,value]
 if(self.$jsobj)self.$jsobj[key]=value
 return
@@ -8510,6 +8529,7 @@ $B.make_rmethods($DictDict)
 $DictDict.clear=function(self){
 self.$numeric_dict={}
 self.$string_dict={}
+self.$str_hash={}
 self.$object_dict={}
 if(self.$jsobj)self.$jsobj={}}
 $DictDict.copy=function(self){
@@ -8587,13 +8607,14 @@ var kw=$ns['kw']
 $copy_dict(self,kw)
 }
 function dict(args,second){if(second===undefined && Array.isArray(args)){
-var res={__class__:$DictDict,$numeric_dict :{},$object_dict :{},$string_dict :{},length: 0
+var res={__class__:$DictDict,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{},length: 0
 }
 var i=-1,stop=args.length-1
 var si=$DictDict.__setitem__
 while(i++<stop){var item=args[i]
 switch(typeof item[0]){case 'string':
 res.$string_dict[item[0]]=item[1]
+res.$str_hash[str_hash(item[0])]=item[0]
 break
 case 'number':
 res.$numeric_dict[item[0]]=item[1]
