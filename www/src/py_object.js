@@ -97,6 +97,7 @@ $ObjectDict.__eq__ = function(self,other){
 $ObjectDict.__ge__ = $ObjectNI('__ge__','>=')
 
 $ObjectDict.__getattribute__ = function(obj,attr){
+    if (attr == '__doc__') return _b_.None
     var klass = $B.get_class(obj)
     if(attr==='__class__'){
         return klass.$factory

@@ -246,7 +246,7 @@ $B.$type.__getattribute__=function(klass,attr){
       case '__class__':
         return klass.__class__.$factory
       case '__doc__':
-        return klass.__doc__
+        return klass.__doc__ || _b_.None
       case '__setattr__':
         if(klass['__setattr__']!==undefined) return klass['__setattr__']
         return function(key,value){klass[key]=value}

@@ -110,4 +110,17 @@ try:
 except AttributeError:
     pass
 
+
+class myclass:
+  pass
+
+class myclass1(myclass):
+  pass
+
+a=myclass()
+assert a.__doc__ == None
+
+b=myclass1()
+assert b.__doc__ == None
+
 print('passed all tests..')
