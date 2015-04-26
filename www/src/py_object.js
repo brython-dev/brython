@@ -306,7 +306,7 @@ $ObjectDict.__new__ = function(cls){
     return {__class__ : cls.$dict}
 }
 
-$ObjectDict.__ne__ = function(self,other){return self!==other}
+$ObjectDict.__ne__ = function(self,other){return !$ObjectDict.__eq__(self,other)}
 
 $ObjectDict.__or__ = function(self,other){
     if(_b_.bool(self)) return self

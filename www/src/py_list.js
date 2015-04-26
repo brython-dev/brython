@@ -310,6 +310,18 @@ $ListDict.__str__ = $ListDict.__repr__
 // add "reflected" methods
 $B.make_rmethods($ListDict)
 
+var _ops=['add', 'sub']
+
+$ListDict.__imul__=function(self, value) {self=$ListDict.__mul__(self,value)}
+
+/*   -- invalid left hand assignment error ????
+for (var i=0; i < _ops.length; i++) {
+    var _fun=$ListDict.__imul__+''
+    var _op='__i'+_ops[i]+'__'
+    eval('$ListDict.'+_op+'='+_fun.replace('mul', _ops[i]))
+}
+*/
+
 $ListDict.append = function(self,other){self[self.length]=other}
 
 $ListDict.clear = function(self){ while(self.length) self.pop()}
