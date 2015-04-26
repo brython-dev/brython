@@ -322,4 +322,8 @@ assert a == {'u': 'b'}
 assert X() in a
 assert a[X()]=='b'
 
+# issue 176
+x = [1,2,3]
+assert sum(-y for y in x) == -6
+
 print('passed all tests')

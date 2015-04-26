@@ -102,7 +102,7 @@ Function called in case of SyntaxError
 */
 
 function $_SyntaxError(context,msg,indent){
-    //console.log('syntax error, context '+context+' msg '+msg)
+    console.log('syntax error, context '+context+' msg '+msg)
     var ctx_node = context
     while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
     var tree_node = ctx_node.node
@@ -4728,7 +4728,8 @@ function $transition(context,token){
             switch(arguments[2]) {
               case '-':
               case '~':
-                return new $UnaryCtx(new $ExprCtx(context,'unary',false),arguments[2])
+                context.expect = ','
+                return $transition(new $CallArgCtx(context),token,arguments[2])
               case '+':
                 return context
               case '*':
@@ -4812,6 +4813,7 @@ function $transition(context,token){
             if (context.expect===',') {
                return new $CallArgCtx(context.parent)
             }
+            console.log('context '+context+'token '+token+' expect '+context.expect)
         }// switch
         $_SyntaxError(context,'token '+token+' after '+context)
       case 'class':
