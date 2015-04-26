@@ -32,7 +32,6 @@ $FloatDict.__class__ = $B.$type
 $FloatDict.__eq__ = function(self,other){
     // compare object "self" to class "float"
     if(other===undefined) return self===float
-    
     if(isinstance(other,_b_.int)) return self.value==other
     if(isinstance(other,float)) {
       // have to compare to NaN constant
@@ -41,7 +40,7 @@ $FloatDict.__eq__ = function(self,other){
     }
     if(isinstance(other,_b_.complex)){
       if (other.imag != 0) return false
-      return self.value==other.value
+      return self.value==other.real
     }
     return self.value===other
 }
