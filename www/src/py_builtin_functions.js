@@ -632,6 +632,8 @@ function hash(obj){
     //
     // throws an exception : unhashable type: 'A'
     
+    if (hashfunc == _b_.None) return $B.$py_next_hash++
+
     if(hashfunc.__func__===_b_.object.$dict.__hash__ &&
         getattr(obj,'__eq__').__func__!==_b_.object.$dict.__eq__){
             throw _b_.TypeError("unhashable type: '"+
