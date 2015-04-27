@@ -116,11 +116,15 @@ function run_js(module,path,module_contents){
     // add class and __str__
     $module.__class__ = $B.$ModuleDict
     $module.__name__ = module.name
-    $module.__repr__ = function(){return "<module '"+module.name+"' from "+path+" >"}
-    $module.__str__ = function(){
-      if(module.name == 'builtins') return "<module '"+module.name+"' (built-in)>"
+    $module.__repr__=$module.__str__ = function(){
+      if ($B.builtin_module_names.indexOf(module.name) > -1) {
+         return "<module '"+module.name+"' (built-in)>"
+      }
+
+      //if(module.name == 'builtins') return "<module '"+module.name+"' (built-in)>"
       return "<module '"+module.name+"' from "+path+" >"
     }
+
     $module.toString = function(){return "<module '"+module.name+"' from "+path+" >"}
     if(module.name != 'builtins') { // builtins do not have a __file__ attribute
       $module.__file__ = path
@@ -210,8 +214,13 @@ $B.run_py=run_py=function(module,path,module_contents) {
         var mod = eval('$module')
         // add some attributes
         mod.__class__ = $B.$ModuleDict
-        mod.__repr__ = function(){return "<module '"+module.name+"' from "+path+" >"}
-        mod.__str__ = function(){return "<module '"+module.name+"' from "+path+" >"}
+        mod.__repr__=mod.__str__ = function(){
+          if ($B.builtin_module_names.indexOf(module.name) > -1) {
+             return "<module '"+module.name+"' (built-in)>"
+          }
+          return "<module '"+module.name+"' from "+path+" >"
+        }
+
         mod.toString = function(){return "module "+module.name}
         mod.__file__ = path
         mod.__initializing__ = false
