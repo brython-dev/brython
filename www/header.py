@@ -36,10 +36,10 @@ trans_menu = {
         'fr': 'Développement',
         'pt': 'Desenvolvimento'},
     'menu_groups': {
-        'en': 'Groups',
-        'es': 'Grupos',
-        'fr': 'Groupes',
-        'pt': 'Grupos'}
+        'en': 'Social',
+        'es': 'Social',
+        'fr': 'Social',
+        'pt': 'Social'}
 }
 
 
