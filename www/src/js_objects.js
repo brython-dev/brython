@@ -189,6 +189,7 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
             res.__str__ = function(){return '<function '+attr+'>'}
             return {__class__:$JSObjectDict,js:res,js_func:js_attr}
         }else{
+            if(Array.isArray(obj.js[attr])){return obj.js[attr]}
             return $B.$JS2Py(obj.js[attr])
         }
     }else if(obj.js===window && attr==='$$location'){
@@ -229,10 +230,10 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
         // XXX search __getattr__
         throw _b_.AttributeError("no attribute "+attr+' for '+this)
     }
-
 }
 
 $JSObjectDict.__getitem__ = function(self,rank){
+    console.log('get item '+rank+' of', self)
     try{return getattr(self.js,'__getitem__')(rank)}
     catch(err){
         if(self.js[rank]!==undefined) return JSObject(self.js[rank])
@@ -255,7 +256,7 @@ $JSObjectDict.__len__ = function(self){
 
 $JSObjectDict.__mro__ = [$JSObjectDict,$ObjectDict]
 
-$JSObjectDict.__repr__ = function(self){return "<JSObject wraps "+self.js.toString()+">"}
+$JSObjectDict.__repr__ = function(self){console.log('jsobject repr', self.js);return "<JSObject wraps "+self.js+">"}
 
 $JSObjectDict.__setattr__ = function(self,attr,value){
     if(isinstance(value,JSObject)){self.js[attr]=value.js

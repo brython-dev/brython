@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-04-26 20:16:45.148000"
+__BRYTHON__.compiled_date="2015-04-29 09:06:29.126000"
 __BRYTHON__.builtin_module_names=["posix","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -5226,7 +5226,7 @@ function index_error(obj){var type=typeof obj=='string' ? 'string' : 'list'
 throw _b_.IndexError(type+" index out of range")
 }
 $B.$getitem=function(obj,item){if(typeof item=='number'){if(Array.isArray(obj)||typeof obj=='string'){item=item >=0 ? item : obj.length+item
-if(obj[item]!==undefined){return obj[item]}
+if(obj[item]!==undefined){return $B.$JS2Py(obj[item])}
 else{index_error(obj)}}}
 item=$B.$GetInt(item)
 if((Array.isArray(obj)||typeof obj=='string')
@@ -7231,7 +7231,8 @@ return $B.$JS2Py(res)
 }
 res.__repr__=function(){return '<function '+attr+'>'}
 res.__str__=function(){return '<function '+attr+'>'}
-return{__class__:$JSObjectDict,js:res,js_func:js_attr}}else{return $B.$JS2Py(obj.js[attr])
+return{__class__:$JSObjectDict,js:res,js_func:js_attr}}else{if(Array.isArray(obj.js[attr])){return obj.js[attr]}
+return $B.$JS2Py(obj.js[attr])
 }}else if(obj.js===window && attr==='$$location'){
 return $Location()
 }
@@ -7253,7 +7254,8 @@ return $B.$JS2Py(res)
 }else{
 throw _b_.AttributeError("no attribute "+attr+' for '+this)
 }}
-$JSObjectDict.__getitem__=function(self,rank){try{return getattr(self.js,'__getitem__')(rank)}
+$JSObjectDict.__getitem__=function(self,rank){console.log('get item '+rank+' of',self)
+try{return getattr(self.js,'__getitem__')(rank)}
 catch(err){if(self.js[rank]!==undefined)return JSObject(self.js[rank])
 throw _b_.AttributeError(self+' has no attribute __getitem__')
 }}
@@ -7265,7 +7267,7 @@ catch(err){console.log('err in JSObject.__len__ : '+err)
 throw _b_.AttributeError(this+' has no attribute __len__')
 }}
 $JSObjectDict.__mro__=[$JSObjectDict,$ObjectDict]
-$JSObjectDict.__repr__=function(self){return "<JSObject wraps "+self.js.toString()+">"}
+$JSObjectDict.__repr__=function(self){console.log('jsobject repr',self.js);return "<JSObject wraps "+self.js+">"}
 $JSObjectDict.__setattr__=function(self,attr,value){if(isinstance(value,JSObject)){self.js[attr]=value.js
 }else{self.js[attr]=value
 }}
@@ -7394,7 +7396,9 @@ try{var module_contents=$download_module(module.name,path)
 return null
 }
 $B.imported[module.name].$package=module.is_package
-if(path.substr(path.length-12)=='/__init__.py'){$B.imported[module.name].__package__=module.name
+if(path.substr(path.length-12)=='/__init__.py'){console.log(module.name+' is package')
+module.is_package=true
+$B.imported[module.name].__package__=module.name
 }else if(package!==undefined){$B.imported[module.name].__package__=package
 }else{var mod_elts=module.name.split('.')
 mod_elts.pop()
@@ -7510,8 +7514,8 @@ var origin_path=$B.$py_module_path[origin]
 var origin_dir_elts=origin_path.split('/')
 origin_dir_elts.pop()
 origin_dir=origin_dir_elts.join('/')
-mod_elts=mod_name.split('.')
-origin_elts=origin.split('.')
+var mod_elts=mod_name.split('.')
+var origin_elts=origin.split('.')
 while(mod_elts[0]==origin_elts[0]){mod_elts.shift();origin_elts.shift()}
 mod_path=mod_elts.join('/')
 var py_paths=[origin_dir+'/'+mod_path+'.py',origin_dir+'/'+mod_path+'/__init__.py']
@@ -7526,7 +7530,23 @@ if(py_mod!==null)return py_mod
 }
 return null 
 }
+function import_from_package(mod_name,origin,package){var mod_elts=mod_name.split('.'),package_elts=package.split('.')
+for(var i=0;i<package_elts.length;i++){mod_elts.shift()}
+var package_path=$B.imported[package].__file__
+var py_path=package_path.split('/')
+py_path.pop()
+py_path=py_path.concat(mod_elts)
+py_path=py_path.join('/')
+py_paths=[py_path+'.py',py_path+'/__init__.py']
+for(var i=0;i<2;i++){var module={name:mod_name}
+var py_mod=import_py(module,py_paths[i],package)
+if(py_mod!==null)return py_mod
+}
+return null 
+}
 $B.$import=function(mod_name,origin){
+if(mod_name.charAt(0)=='.'){console.log('import '+mod_name)
+}
 var parts=mod_name.split('.')
 var norm_parts=[]
 for(var i=0,_len_i=parts.length;i < _len_i;i++){norm_parts.push(parts[i].substr(0,2)=='$$' ? parts[i].substr(2): parts[i])
@@ -7564,6 +7584,12 @@ if(!flag){
 $B.modules[elt_name]=undefined
 $B.imported[elt_name]=undefined
 throw _b_.ImportError("cannot import "+elt_name)
+}
+if(i<mod_elts.length-1){
+if($B.imported[elt_name].$package){package=elt_name
+package_path=$B.modules[elt_name].__file__
+funcs=[import_from_package ]
+}}else{
 }}}
 $B.$import_from=function(mod_name,names,origin){
 if($B.$options.debug==10){
