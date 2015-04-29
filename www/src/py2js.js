@@ -851,7 +851,7 @@ function $AugmentedAssignCtx(context, op){
                 case 'generator':
                   if(scope.globals && scope.globals.indexOf(context.tree[0].value)>-1){
                     prefix = global_ns
-                  }
+                  }else{prefix='$locals'}
                   break;
                 case 'class':
                   var new_node = new $Node()
