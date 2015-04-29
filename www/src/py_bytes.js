@@ -171,6 +171,23 @@ $BytesDict.__gt__ = function(self,other){
     return _b_.list.$dict.__gt__(self.source,other.source)
 }
 
+$BytesDict.__hash__ = function(self) {
+  if (self === undefined) {
+     return $BytesDict.__hashvalue__ || $B.$py_next_hash--  // for hash of str$
+  }
+
+  //http://stackoverflow.com/questions/2909106/python-whats-a-correct-and-good-$
+  // this implementation for strings maybe good enough for us..
+
+  var hash=1;
+  for(var i=0, _len_i = self.length; i < _len_i; i++) {
+      hash=(101*hash + self.source[i]) & 0xFFFFFFFF
+  }
+
+  return hash
+}
+
+
 $BytesDict.__init__ = function(self,source,encoding,errors){
     var int_list = [], pos=0
     if(source===undefined){

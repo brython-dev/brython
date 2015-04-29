@@ -107,7 +107,7 @@ with open(abs_path('version_info.js'), 'wb') as vinfo_file_out:
     vinfo_file_out.write('__BRYTHON__.version_info = %s\n' % str(version))
     vinfo_file_out.write('__BRYTHON__.compiled_date = "%s"\n' % str(datetime.datetime.now()))
     # builtin module names = list of scripts in src/libs
-    vinfo_file_out.write('__BRYTHON__.builtin_module_names = ["posix",')
+    vinfo_file_out.write('__BRYTHON__.builtin_module_names = ["posix","sys","errno", "time",')
     _modules=['"%s"' % fname.split('.')[0] 
                for fname in os.listdir(abs_path('libs')) if fname.endswith('.js')]
     _modules.sort()    #sort modules so that git diff's don't change between runs

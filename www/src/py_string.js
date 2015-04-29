@@ -779,7 +779,7 @@ $StringDict.encode = function(self, encoding) {
         }
         return res
     }
-    return bytes(self, encoding)
+    return _b_.bytes(self, encoding)
 }
 
 $StringDict.endswith = function(self){
