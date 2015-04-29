@@ -361,7 +361,7 @@ var $valid_digits=function(base) {
 var int = function(value, base){
     // most simple case
     
-    if(typeof value=='number' && base===undefined){return value}
+    if(typeof value=='number' && base===undefined){return parseInt(value)}
 
     if(base!==undefined){
         if(!isinstance(value,[_b_.str,_b_.bytes,_b_.bytearray])){
