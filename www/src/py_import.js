@@ -148,6 +148,8 @@ function import_py(module,path,package){
     }
     $B.imported[module.name].$package = module.is_package
     if(path.substr(path.length-12)=='/__init__.py'){
+        console.log(module.name+' is package')
+        module.is_package = true
         $B.imported[module.name].__package__ = module.name
     }else if(package!==undefined){
         $B.imported[module.name].__package__ = package
@@ -321,8 +323,8 @@ function import_from_caller_folder(mod_name,origin,package){
     origin_dir_elts.pop()
     origin_dir = origin_dir_elts.join('/')
     
-    mod_elts = mod_name.split('.')
-    origin_elts = origin.split('.')
+    var mod_elts = mod_name.split('.')
+    var origin_elts = origin.split('.')
     
     while(mod_elts[0]==origin_elts[0]){mod_elts.shift();origin_elts.shift()}
 
@@ -346,6 +348,24 @@ function import_from_caller_folder(mod_name,origin,package){
     return null    
 }
 
+function import_from_package(mod_name,origin,package){
+    var mod_elts = mod_name.split('.'),
+        package_elts = package.split('.')
+    for(var i=0;i<package_elts.length;i++){mod_elts.shift()}
+    var package_path = $B.imported[package].__file__
+    var py_path = package_path.split('/')
+    py_path.pop()
+    py_path = py_path.concat(mod_elts)
+    py_path = py_path.join('/')
+    py_paths = [py_path+'.py', py_path+'/__init__.py']
+    for(var i=0;i<2;i++){
+        var module = {name:mod_name}
+        var py_mod = import_py(module,py_paths[i],package)
+        if(py_mod!==null) return py_mod
+    }
+    return null    
+}
+
 $B.$import = function(mod_name,origin){
 
     // Import the module named "mod_name" from the module called "origin"
@@ -356,6 +376,10 @@ $B.$import = function(mod_name,origin){
     // found or loaded
     //
     // The function returns None
+
+    if(mod_name.charAt(0)=='.'){
+        console.log('import '+mod_name)
+    }
     
     var parts = mod_name.split('.')
     var norm_parts = []
@@ -424,7 +448,7 @@ $B.$import = function(mod_name,origin){
     var mod_elts = mod_name.split('.')
     
     for(var i=0, _len_i = mod_elts.length; i < _len_i;i++){
-    
+        
         // Loop to import all the elements of the module name
     
         var elt_name = mod_elts.slice(0,i+1).join('.')
@@ -456,6 +480,18 @@ $B.$import = function(mod_name,origin){
             $B.modules[elt_name]=undefined
             $B.imported[elt_name]=undefined
             throw _b_.ImportError("cannot import "+elt_name)
+        }
+        
+        if(i<mod_elts.length-1){
+            //console.log(elt_name+' is package ? '+$B.imported[elt_name].$package)
+            if($B.imported[elt_name].$package){
+                package = elt_name
+                package_path = $B.modules[elt_name].__file__
+                //console.log(elt_name+' is package '+package+' at '+package_path)
+                funcs = [ import_from_package ]
+            }
+        }else{
+            //console.log('last element '+elt_name)
         }
     }
 }
