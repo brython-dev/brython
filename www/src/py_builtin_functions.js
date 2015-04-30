@@ -703,10 +703,11 @@ function id(obj) {
 }
 
 function __import__(mod_name){
-   // for issue # 161
-   var mod = "__main__"    // fix me ..  how to get name of module this was called in?
+   // get name of module this was called in
+   var current_frame = $B.frames_stack[$B.frames_stack.length-1]
+   var origin = current_frame[3].__name__
 
-   try {$B.$import(mod_name, mod)}
+   try {$B.$import(mod_name, origin)}
    catch(err) {$B.imported[mod_name]=undefined}
 
    if ($B.imported[mod_name]===undefined) throw _b_.ImportError(mod_name) 

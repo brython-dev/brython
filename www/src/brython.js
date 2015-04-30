@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-04-30 14:56:04.900000"
+__BRYTHON__.compiled_date="2015-04-30 17:45:04.429000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4548,7 +4548,12 @@ if(attr==='__class__'){return klass.$factory
 var res=obj[attr],args=[]
 if(res===undefined){
 var mro=klass.__mro__
-for(var i=0,_len_i=mro.length;i < _len_i;i++){var v=mro[i][attr]
+for(var i=0,_len_i=mro.length;i < _len_i;i++){
+if(mro[i].$methods){var method=mro[i].$methods[attr]
+if(method!==undefined){
+return method(obj)
+}}
+var v=mro[i][attr]
 if(v!==undefined){res=v
 break
 }else if(attr=='__str__' && mro[i]['__repr__']!==undefined){
@@ -4568,53 +4573,6 @@ var res1=get_func.apply(null,[res,obj,klass])
 if(typeof res1=='function'){
 if(res1.__class__===$B.$factory)return res
 return $B.make_method(attr,klass,res,res1)(obj)
-var __self__,__func__=res,__repr__,__str__
-switch(res.$type){case undefined:
-case 'function':
-args=[obj]
-__self__=obj
-__func__=res1
-__repr__=__str__=function(){var x='<bound method '+attr
-x +=" of '"+klass.__name__+"' object>"
-return x
-}
-break
-case 'instancemethod':
-return res
-case 'classmethod':
-args=[klass]
-__self__=klass
-__func__=res1
-__repr__=__str__=function(){var x='<bound method type'+'.'+attr
-x +=' of '+klass.__name__+'>'
-return x
-}
-break
-case 'staticmethod':
-args=[]
-__repr__=__str__=function(){return '<function '+klass.__name__+'.'+attr+'>'
-}}
-var method=(function(initial_args){return function(){
-var local_args=initial_args.slice()
-var pos=local_args.length
-for(var i=0,_len_i=arguments.length;i < _len_i;i++){local_args[pos++]=arguments[i]
-}
-var x=res.apply(obj,local_args)
-if(x===undefined)return _b_.None
-return x
-}})(args)
-method.__class__=$B.$InstanceMethodDict
-method.__eq__=function(other){return other.$res===res
-}
-method.__func__=__func__
-method.__repr__=__repr__
-method.__self__=__self__
-method.__str__=__str__
-method.__code__={'__class__' : $B.CodeDict}
-method.__doc__=res.__doc__ ||''
-method.$type='instancemethod'
-method.$res=res
-return method
 }else{
 return res1
 }}
@@ -5947,8 +5905,9 @@ if(obj.__hash__ !==undefined)return obj.__hash__()
 return null
 }
 function __import__(mod_name){
-var mod="__main__" 
-try{$B.$import(mod_name,mod)}
+var current_frame=$B.frames_stack[$B.frames_stack.length-1]
+var origin=current_frame[3].__name__
+try{$B.$import(mod_name,origin)}
 catch(err){$B.imported[mod_name]=undefined}
 if($B.imported[mod_name]===undefined)throw _b_.ImportError(mod_name)
 return $B.imported[mod_name]
