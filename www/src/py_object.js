@@ -109,6 +109,14 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         //if(attr=='show'){console.log('object getattr '+attr+' of obj '+obj)}
         var mro = klass.__mro__
         for(var i=0, _len_i = mro.length; i < _len_i;i++){
+            //console.log('class '+mro[i].__name__+' $methods '+mro[i].$methods)
+            if(mro[i].$methods){
+                var method = mro[i].$methods[attr]
+                if(method!==undefined){
+                    //console.log('object method '+attr)
+                    return method(obj)
+                }
+            }
             var v=mro[i][attr]
             if(v!==undefined){
                 res = v
@@ -170,75 +178,6 @@ $ObjectDict.__getattribute__ = function(obj,attr){
 
                 // instance method object
                 return $B.make_method(attr, klass, res, res1)(obj)
-                var __self__,__func__=res,__repr__,__str__
-                switch(res.$type) {
-                  case undefined:
-                  case 'function':
-                    //if(res.$type===undefined || res.$type=='function'){
-                    // the attribute is a function : return an instance method,
-                    // called with the instance as first argument
-                    args = [obj]
-                    __self__ = obj
-                    __func__ = res1
-                    __repr__ = __str__ = function(){
-                        var x = '<bound method '+attr
-                        x += " of '"+klass.__name__+"' object>"
-                        return x
-                    }
-                    break
-                  case 'instancemethod':
-                    //}else if(res.$type==='instancemethod'){
-                    // The attribute is a method of an instance of another class
-                    // Return it unchanged
-                    return res
-                  case 'classmethod':
-                    //}else if(res.$type==='classmethod'){
-                    // class method : called with the class as first argument
-                    args = [klass]
-                    __self__ = klass
-                    __func__ = res1
-                    __repr__ = __str__ = function(){
-                        var x = '<bound method type'+'.'+attr
-                        x += ' of '+klass.__name__+'>'
-                        return x
-                    }
-                    break
-                  case 'staticmethod':
-                    //}else if(res.$type==='staticmethod'){
-                    // static methods have no __self__ or __func__
-                    args = []
-                    __repr__ = __str__ = function(){
-                        return '<function '+klass.__name__+'.'+attr+'>'
-                    }
-                }
-
-                // build the instance method, called with a list of arguments
-                // depending on the method type
-                var method = (function(initial_args){
-                    return function(){
-                        // make a local copy of initial args
-                        var local_args = initial_args.slice()
-                        var pos=local_args.length
-                        for(var i=0, _len_i = arguments.length; i < _len_i;i++){
-                            local_args[pos++]=arguments[i]
-                        }
-                        var x = res.apply(obj,local_args)
-                        if(x===undefined) return _b_.None
-                        return x
-                    }})(args)
-                method.__class__ = $B.$InstanceMethodDict
-                method.__eq__ = function(other){
-                    return other.$res === res
-                }
-                method.__func__ = __func__
-                method.__repr__ = __repr__
-                method.__self__ = __self__
-                method.__str__ = __str__
-                method.__code__ = {'__class__' : $B.CodeDict}
-                method.__doc__ = res.__doc__ || ''
-                method.$type = 'instancemethod'
-                method.$res = res
-                return method
             }else{
                 // result of __get__ is not a function
                 return res1
