@@ -86,6 +86,77 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     return factory
 }
 
+$B.make_method = function(attr, klass, func, func1){
+    // Return a method, based on a function defined in a class
+    return function(instance){
+        var __self__,__func__= func,__repr__,__str__
+        switch(func.$type) {
+          case undefined:
+          case 'function':
+            // the attribute is a function : return an instance method,
+            // called with the instance as first argument
+            args = [instance]
+            __self__ = instance
+            __func__ = func1
+            __repr__ = __str__ = function(){
+                var x = '<bound method '+attr
+                x += " of '"+klass.__name__+"' object>"
+                return x
+            }
+            break
+          case 'instancemethod':
+            // The attribute is a method of an instance of another class
+            // Return it unchanged
+            return func
+          case 'classmethod':
+            // class method : called with the class as first argument
+            args = [klass]
+            __self__ = klass
+            __func__ = func1
+            __repr__ = __str__ = function(){
+                var x = '<bound method type'+'.'+attr
+                x += ' of '+klass.__name__+'>'
+                return x
+            }
+            break
+          case 'staticmethod':
+            // static methods have no __self__ or __func__
+            args = []
+            __repr__ = __str__ = function(){
+                return '<function '+klass.__name__+'.'+attr+'>'
+            }
+        }
+    
+        // build the instance method, called with a list of arguments
+        // depending on the method type
+        var method = (function(initial_args){
+            return function(){
+                // make a local copy of initial args
+                var local_args = initial_args.slice()
+                var pos=local_args.length
+                for(var i=0, _len_i = arguments.length; i < _len_i;i++){
+                    local_args[pos++]=arguments[i]
+                }
+                var x = func.apply(instance,local_args)
+                if(x===undefined) return _b_.None
+                return x
+            }})(args)
+        method.__class__ = $B.$InstanceMethodDict
+        method.__eq__ = function(other){
+            return other.$res === func
+        }
+        method.__func__ = __func__
+        method.__repr__ = __repr__
+        method.__self__ = __self__
+        method.__str__ = __str__
+        method.__code__ = {'__class__' : $B.CodeDict}
+        method.__doc__ = func.__doc__ || ''
+        method.$type = 'instancemethod'
+        method.$res = func
+        return method
+    }
+}
+
 function make_mro(bases, cl_dict){
     // method resolution order
     // copied from http://code.activestate.com/recipes/577748-calculate-the-mro-of-a-class/

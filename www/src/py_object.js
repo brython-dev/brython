@@ -169,6 +169,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                 if(res1.__class__===$B.$factory) return res
 
                 // instance method object
+                return $B.make_method(attr, klass, res, res1)(obj)
                 var __self__,__func__=res,__repr__,__str__
                 switch(res.$type) {
                   case undefined:
