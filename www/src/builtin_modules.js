@@ -2,6 +2,8 @@
     var modules = {}
     modules['browser'] = {
         $package: true,
+        is_package: true,
+        __package__:'browser',
         __file__:$B.brython_path+'/Lib/browser/__init__.py',
         alert:function(message){window.alert($B.builtins.str(message))},
         confirm: $B.JSObject(window.confirm),
@@ -187,6 +189,7 @@
             return "<module '"+name+"' (built-in)>"
         }
         $B.imported[name] = $B.modules[name] = module_obj
+        console.log('load '+name+' package '+module_obj.__package__)
     }
 
     for(var attr in modules){load(attr, modules[attr])}

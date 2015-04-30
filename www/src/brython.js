@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-04-30 08:12:01.936000"
+__BRYTHON__.compiled_date="2015-04-30 14:56:04.900000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1584,18 +1584,22 @@ var p_elts=package.split('.')
 while(nbdots>1){p_elts.pop();nbdots--}
 package=p_elts.join('.')
 if(nbdots==this.module.length){
-for(var i=0;i<this.names.length;i++){var mod_name=this.names[i]
+var package_elts=parent_module.split('.')
+for(var i=1;i<nbdots;i++){package_elts.pop()}
+var package_obj=$B.imported[package]
+var defined=[]
+for(var i=0;i<this.names.length;i++){if(package_obj[this.names[i]]!==undefined){var alias=this.aliases[this.names[i]]||this.names[i]
+res +='$locals["'+alias+'"]'
+res +='=$B.imported["'+package+'"]["'+this.names[i]+'"];\n'
+defined.push(i)
+}}
+for(var i=0;i<this.names.length;i++){if(defined.indexOf(i)!=-1){continue}
+var mod_name=this.names[i]
 if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
 var qname=package+'.'+mod_name
 res +='$B.$import("'+qname+'","'+parent_module+'");'
-var _sn=scope.ntype
-switch(scope.ntype){case 'def':
-case 'class':
-case 'module':
-res +='\nvar '
-}
 var alias=this.aliases[this.names[i]]||this.names[i]
-res +=alias + '=$locals["'+alias+'"]'
+res +='$locals["'+alias+'"]'
 res +='=$B.imported["'+qname+'"];\n'
 }}else{var mod_name=this.module.substr(nbdots)
 if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
@@ -4563,6 +4567,7 @@ if(attr=='__new__'){res.$type='staticmethod'}
 var res1=get_func.apply(null,[res,obj,klass])
 if(typeof res1=='function'){
 if(res1.__class__===$B.$factory)return res
+return $B.make_method(attr,klass,res,res1)(obj)
 var __self__,__func__=res,__repr__,__str__
 switch(res.$type){case undefined:
 case 'function':
@@ -4707,6 +4712,55 @@ for(var member in metaclass.$dict){if(typeof metaclass.$dict[member]=='function'
 factory.$is_func=true
 return factory
 }
+$B.make_method=function(attr,klass,func,func1){
+return function(instance){var __self__,__func__=func,__repr__,__str__
+switch(func.$type){case undefined:
+case 'function':
+args=[instance]
+__self__=instance
+__func__=func1
+__repr__=__str__=function(){var x='<bound method '+attr
+x +=" of '"+klass.__name__+"' object>"
+return x
+}
+break
+case 'instancemethod':
+return func
+case 'classmethod':
+args=[klass]
+__self__=klass
+__func__=func1
+__repr__=__str__=function(){var x='<bound method type'+'.'+attr
+x +=' of '+klass.__name__+'>'
+return x
+}
+break
+case 'staticmethod':
+args=[]
+__repr__=__str__=function(){return '<function '+klass.__name__+'.'+attr+'>'
+}}
+var method=(function(initial_args){return function(){
+var local_args=initial_args.slice()
+var pos=local_args.length
+for(var i=0,_len_i=arguments.length;i < _len_i;i++){local_args[pos++]=arguments[i]
+}
+var x=func.apply(instance,local_args)
+if(x===undefined)return _b_.None
+return x
+}})(args)
+method.__class__=$B.$InstanceMethodDict
+method.__eq__=function(other){return other.$res===func
+}
+method.__func__=__func__
+method.__repr__=__repr__
+method.__self__=__self__
+method.__str__=__str__
+method.__code__={'__class__' : $B.CodeDict}
+method.__doc__=func.__doc__ ||''
+method.$type='instancemethod'
+method.$res=func
+return method
+}}
 function make_mro(bases,cl_dict){
 var seqs=[],pos1=0
 for(var i=0;i<bases.length;i++){
@@ -7403,15 +7457,15 @@ try{var module_contents=$download_module(module.name,path)
 }catch(err){$B.$pop_exc()
 return null
 }
-$B.imported[module.name].$package=module.is_package
-if(path.substr(path.length-12)=='/__init__.py'){console.log(module.name+' is package')
-module.is_package=true
+$B.imported[module.name].is_package=module.is_package
+if(path.substr(path.length-12)=='/__init__.py'){module.is_package=true
 $B.imported[module.name].__package__=module.name
 }else if(package!==undefined){$B.imported[module.name].__package__=package
 }else{var mod_elts=module.name.split('.')
 mod_elts.pop()
 $B.imported[module.name].__package__=mod_elts.join('.')
 }
+$B.imported[module.name].__file__=path
 return run_py(module,path,module_contents)
 }
 $B.run_py=run_py=function(module,path,module_contents){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
@@ -7449,9 +7503,8 @@ mod.__repr__=mod.__str__=function(){if($B.builtin_module_names.indexOf(module.na
 return "<module '"+module.name+"' from "+path+" >"
 }
 mod.toString=function(){return "module "+module.name}
-mod.__file__=path
 mod.__initializing__=false
-mod.$package=module.is_package
+mod.is_package=module.is_package
 $B.imported[module.name]=$B.modules[module.name]=mod
 return true
 }catch(err){console.log(''+err+' '+' for module '+module.name)
@@ -7472,7 +7525,7 @@ else{var elts=mod_name.split('.')
 elts.pop()
 var package=elts.join('.')
 }
-$B.modules[mod_name].$package=is_package
+$B.modules[mod_name].is_package=is_package
 $B.modules[mod_name].__package__=package
 if(ext=='.js'){run_js(module,path,module_contents)}
 else{run_py(module,path,module_contents)}
@@ -7512,7 +7565,7 @@ var py_paths=[$B.brython_path+'Lib/site-packages/'+mod_path+'.py',$B.brython_pat
 for(var i=0,_len_i=py_paths.length;i < _len_i;i++){var py_mod=import_py(module,py_paths[i],package)
 if(py_mod!==null){
 if(py_paths[i].substr(py_paths[i].length-12)=='/__init__.py'){
-$B.imported[mod_name].$package=true
+$B.imported[mod_name].is_package=true
 py_mod.__package__=mod_name 
 }
 return py_mod
@@ -7543,6 +7596,7 @@ return null
 function import_from_package(mod_name,origin,package){var mod_elts=mod_name.split('.'),package_elts=package.split('.')
 for(var i=0;i<package_elts.length;i++){mod_elts.shift()}
 var package_path=$B.imported[package].__file__
+if(package_path===undefined){console.log('__file__ indefini pour package '+package)}
 var py_path=package_path.split('/')
 py_path.pop()
 py_path=py_path.concat(mod_elts)
@@ -7578,9 +7632,19 @@ if($B.$options['custom_import_funcs']!==undefined){funcs=funcs.concat($B.$option
 }
 funcs=funcs.concat([import_from_site_packages,import_from_caller_folder])
 var mod_elts=mod_name.split('.')
+if(mod_elts[0]==package && mod_elts.length==2){
+var res=$B.imported[package][mod_elts[1]]
+if(res!==undefined){return res}}
 for(var i=0,_len_i=mod_elts.length;i < _len_i;i++){
 var elt_name=mod_elts.slice(0,i+1).join('.')
-if($B.modules[elt_name]!==undefined)continue 
+if($B.imported[elt_name]!==undefined){
+if($B.imported[elt_name].is_package){
+package=elt_name
+package_path=$B.imported[elt_name].__file__
+funcs=[import_from_package ]
+}
+continue 
+}
 $B.modules[elt_name]=$B.imported[elt_name]={__class__:$B.$ModuleDict,toString:function(){return '<module '+elt_name+'>'}}
 var flag=false
 for(var j=0,_len_j=funcs.length;j < _len_j;j++){var res=funcs[j](elt_name,origin,package)
@@ -7595,11 +7659,10 @@ $B.modules[elt_name]=undefined
 $B.imported[elt_name]=undefined
 throw _b_.ImportError("cannot import "+elt_name)
 }
-if(i<mod_elts.length-1){
-if($B.imported[elt_name].$package){package=elt_name
+if(i<mod_elts.length-1 && $B.imported[elt_name].is_package){
+package=elt_name
 package_path=$B.modules[elt_name].__file__
 funcs=[import_from_package ]
-}}else{
 }}}
 $B.$import_from=function(mod_name,names,origin){
 if($B.$options.debug==10){
@@ -7609,7 +7672,7 @@ var mod=$B.imported[mod_name]
 if(mod===undefined){$B.$import(mod_name,origin)
 mod=$B.imported[mod_name]
 }
-for(var i=0,_len_i=names.length;i < _len_i;i++){if(mod[names[i]]===undefined){if(mod.$package){var sub_mod=mod_name+'.'+names[i]
+for(var i=0,_len_i=names.length;i < _len_i;i++){if(mod[names[i]]===undefined){if(mod.is_package){var sub_mod=mod_name+'.'+names[i]
 $B.$import(sub_mod,origin)
 mod[names[i]]=$B.modules[sub_mod]
 }else{throw _b_.ImportError("cannot import name "+names[i])
@@ -11550,7 +11613,7 @@ return null
 window.import_hooks=import_hooks
 })(__BRYTHON__)
 ;(function($B){var modules={}
-modules['browser']={$package: true,__file__:$B.brython_path+'/Lib/browser/__init__.py',alert:function(message){window.alert($B.builtins.str(message))},confirm: $B.JSObject(window.confirm),console:$B.JSObject(window.console),document:$B.$DOMNode(document),doc: $B.$DOMNode(document),
+modules['browser']={$package: true,is_package: true,__package__:'browser',__file__:$B.brython_path+'/Lib/browser/__init__.py',alert:function(message){window.alert($B.builtins.str(message))},confirm: $B.JSObject(window.confirm),console:$B.JSObject(window.console),document:$B.$DOMNode(document),doc: $B.$DOMNode(document),
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},prompt: function(message,default_value){return $B.JSObject(window.prompt(message,default_value||''))
 },win: $B.win,window: $B.win,URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]")
 var regex=new RegExp("[\\?&]" + name + "=([^&#]*)"),results=regex.exec(location.search)
@@ -11630,6 +11693,7 @@ module_obj.__name__=name
 module_obj.__repr__=module_obj.__str__=function(){return "<module '"+name+"' (built-in)>"
 }
 $B.imported[name]=$B.modules[name]=module_obj
+console.log('load '+name+' package '+module_obj.__package__)
 }
 for(var attr in modules){load(attr,modules[attr])}})(__BRYTHON__)
 ;(function($B){_b_=$B.builtins

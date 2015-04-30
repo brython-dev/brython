@@ -150,9 +150,8 @@ function import_py(module,path,package){
         $B.$pop_exc()
         return null
     }
-    $B.imported[module.name].$package = module.is_package
+    $B.imported[module.name].is_package = module.is_package
     if(path.substr(path.length-12)=='/__init__.py'){
-        console.log(module.name+' is package')
         module.is_package = true
         $B.imported[module.name].__package__ = module.name
     }else if(package!==undefined){
@@ -162,6 +161,7 @@ function import_py(module,path,package){
         mod_elts.pop()
         $B.imported[module.name].__package__ = mod_elts.join('.')
     }
+    $B.imported[module.name].__file__ = path
     return run_py(module,path,module_contents)
 }
 
@@ -201,6 +201,7 @@ $B.run_py=run_py=function(module,path,module_contents) {
 
     }catch(err){
         console.log(err+' for module '+module.name)
+        //console.log(js)
         //for(var attr in err){
             //console.log(attr, err[attr])
         //}
@@ -224,9 +225,8 @@ $B.run_py=run_py=function(module,path,module_contents) {
         }
 
         mod.toString = function(){return "module "+module.name}
-        mod.__file__ = path
         mod.__initializing__ = false
-        mod.$package = module.is_package
+        mod.is_package = module.is_package
         $B.imported[module.name] = $B.modules[module.name] = mod
         return true
     }catch(err){
@@ -255,7 +255,7 @@ function import_from_VFS(mod_name, origin, package){
             elts.pop()
             var package = elts.join('.')
         }
-        $B.modules[mod_name].$package = is_package
+        $B.modules[mod_name].is_package = is_package
         $B.modules[mod_name].__package__ = package
         if (ext == '.js') {run_js(module,path,module_contents)}
         else{run_py(module,path,module_contents)}
@@ -315,7 +315,7 @@ function import_from_site_packages(mod_name, origin, package){
             //console.log(py_paths[i].substr(py_paths[i].length-12))
             if(py_paths[i].substr(py_paths[i].length-12)=='/__init__.py'){
                 // Since "__init__.py" was imported, module is a package
-                $B.imported[mod_name].$package = true;
+                $B.imported[mod_name].is_package = true;
                 py_mod.__package__ = mod_name  // py_mod is bool!!
             }
             return py_mod
@@ -362,6 +362,7 @@ function import_from_package(mod_name,origin,package){
         package_elts = package.split('.')
     for(var i=0;i<package_elts.length;i++){mod_elts.shift()}
     var package_path = $B.imported[package].__file__
+    if(package_path===undefined){console.log('__file__ indefini pour package '+package)}
     var py_path = package_path.split('/')
     py_path.pop()
     py_path = py_path.concat(mod_elts)
@@ -410,7 +411,7 @@ $B.$import = function(mod_name,origin){
     // If the module has already been imported, it is stored in $B.imported
 
     if($B.imported[mod_name]!==undefined){return}
-
+    
     var mod,funcs = []
     
     // "funcs" is a list of functions used to find the module
@@ -456,12 +457,28 @@ $B.$import = function(mod_name,origin){
     // X, then import X.Y
     var mod_elts = mod_name.split('.')
     
+    if(mod_elts[0]==package && mod_elts.length==2){
+        // For the form "from . import x", search name "x" in the package, ie
+        // in the names defined in __init__.py
+        var res = $B.imported[package][mod_elts[1]]
+        if(res!==undefined){return res}
+    }
+    
     for(var i=0, _len_i = mod_elts.length; i < _len_i;i++){
         
         // Loop to import all the elements of the module name
     
         var elt_name = mod_elts.slice(0,i+1).join('.')
-        if($B.modules[elt_name]!==undefined) continue // already imported
+        if($B.imported[elt_name]!==undefined){
+            // module is already imported
+            if($B.imported[elt_name].is_package){
+                // If it's a package, the search will be inside this package
+                package = elt_name
+                package_path = $B.imported[elt_name].__file__
+                funcs = [ import_from_package ]
+            }
+            continue // to next element
+        }
 
         // Initialise attributes "modules" and "imported" of __BRYTHON__
         $B.modules[elt_name]=$B.imported[elt_name]={
@@ -491,16 +508,12 @@ $B.$import = function(mod_name,origin){
             throw _b_.ImportError("cannot import "+elt_name)
         }
         
-        if(i<mod_elts.length-1){
-            //console.log(elt_name+' is package ? '+$B.imported[elt_name].$package)
-            if($B.imported[elt_name].$package){
-                package = elt_name
-                package_path = $B.modules[elt_name].__file__
-                //console.log(elt_name+' is package '+package+' at '+package_path)
-                funcs = [ import_from_package ]
-            }
-        }else{
-            //console.log('last element '+elt_name)
+        if(i<mod_elts.length-1 && $B.imported[elt_name].is_package){
+            // If the module found is a package, the search will go on inside
+            // this package
+            package = elt_name
+            package_path = $B.modules[elt_name].__file__
+            funcs = [ import_from_package ]
         }
     }
 }
@@ -526,7 +539,7 @@ $B.$import_from = function(mod_name,names,origin){
     
     for(var i=0, _len_i = names.length; i < _len_i;i++){
         if(mod[names[i]]===undefined){
-            if(mod.$package){
+            if(mod.is_package){
                 var sub_mod = mod_name+'.'+names[i]
                 $B.$import(sub_mod,origin)
                 mod[names[i]] = $B.modules[sub_mod]

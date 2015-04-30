@@ -2641,21 +2641,33 @@ function $FromCtx(context){
                 
             if(nbdots==this.module.length){
                 // form 'from . import X' : search module package.X
+                
+                // get referenced package
+                var package_elts = parent_module.split('.')
+                for(var i=1;i<nbdots;i++){package_elts.pop()}
+                var package_obj = $B.imported[package]
+                
+                // Some of the names may be defined in the package object,
+                // ie in its __init__.py script
+                var defined = []
                 for(var i=0;i<this.names.length;i++){
+                    if(package_obj[this.names[i]]!==undefined){
+                        var alias = this.aliases[this.names[i]]||this.names[i]
+                        res += '$locals["'+alias+'"]'
+                        res += '=$B.imported["'+package+'"]["'+this.names[i]+'"];\n'
+                        defined.push(i)
+                    }
+                }
+                    
+                for(var i=0;i<this.names.length;i++){
+                    if(defined.indexOf(i)!=-1){continue}
                     var mod_name = this.names[i]
                     if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
                     var qname = package+'.'+mod_name
                     res += '$B.$import("'+qname+'","'+parent_module+'");'
-                    var _sn=scope.ntype
-                    switch(scope.ntype) {
-                      case 'def':
-                      case 'class':
-                      case 'module':
-                        //if('def' == _sn || 'class' == _sn || 'module' == _sn) {
-                        res += '\nvar '
-                    }
+
                     var alias = this.aliases[this.names[i]]||this.names[i]
-                    res += alias + '=$locals["'+alias+'"]'
+                    res += '$locals["'+alias+'"]'
                     res += '=$B.imported["'+qname+'"];\n'
                 }
             }else{
