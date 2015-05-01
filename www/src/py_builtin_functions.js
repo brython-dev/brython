@@ -1276,6 +1276,12 @@ function setattr(obj,attr,value){
         obj.__class__ = value.$dict;return
     }
     
+    if(obj.__class__===$B.$factory && obj.$dict.$methods
+        && typeof value=='function'){
+            obj.$dict.$methods[attr] = $B.make_method(attr, obj.$dict, value, value)
+            return
+    }
+    
     var res = obj[attr]
     if(res===undefined){
         var mro = $B.get_class(obj).__mro__

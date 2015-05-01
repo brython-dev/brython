@@ -256,13 +256,18 @@ $B.$type.__new__ = function(cls, name, bases, cl_dict){
     var class_dict = {__class__ : $B.$type,
         __name__ : name.replace('$$',''),
         __bases__ : bases,
-        __dict__ : cl_dict
+        __dict__ : cl_dict,
+        $methods : {}
     }
  
     // set class attributes for faster lookups
     var items = _b_.list(_b_.dict.$dict.items(cl_dict))
     for(var i=0;i<items.length;i++){
-        class_dict[items[i][0]] = items[i][1]
+        var name=items[i][0], v=items[i][1]
+        class_dict[name] = v
+        if(typeof v=='function' && v.__class__!==$B.$factory){
+            class_dict.$methods[name] = $B.make_method(name, cl_dict, v, v)
+        }
     }
     
     class_dict.__mro__ = [class_dict].concat(make_mro(bases, cl_dict))
