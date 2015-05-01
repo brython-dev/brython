@@ -1721,6 +1721,7 @@ function $DefCtx(context){
         
         // Add to modules dictionary - used in list comprehensions
         $B.modules[this.id] = this.parent.node
+        
         $B.bound[this.id] = {}
         
         // If function is defined inside another function, add the name
@@ -1781,18 +1782,27 @@ function $DefCtx(context){
             pnode = pnode.parent.parent
         }
         
-        var defaults = [],dpos=0,defs1=[],dpos1=0
-        this.args = [], apos=0
+        var defaults = [], apos=0, dpos=0,defs1=[],dpos1=0
+        this.argcount = 0
+        this.varnames = {}
+        this.args = []
+        
         var func_args = this.tree[1].tree
         for(var i=0;i<func_args.length;i++){
             var arg = func_args[i]
             this.args[apos++]=arg.name
+            this.varnames[arg.name]=true
             if(arg.type==='func_arg_id'){
+                this.argcount++
                 if(arg.tree.length>0){
                     defaults[dpos++]='"'+arg.name+'"'
                     //defs.push(arg.name+' = '+$to_js(arg.tree))
                     defs1[dpos1++]=arg.name+':'+$to_js(arg.tree)
                 }
+            }else if(arg.type=='func_star_arg'){
+                if(arg.op == '*'){this.has_star_arg = true}
+                else if(arg.op=='**'){this.has_kw_arg = true}
+            }else{
             }
         }
         //this.defs = defs
@@ -2057,9 +2067,9 @@ function $DefCtx(context){
         var prefix = this.tree[0].to_js()
         
         // Add attribute __name__
-        js = prefix+'.__name__="'
+        js = prefix+'.$infos={__name__:"'
         if(this.scope.ntype=='class'){js+=this.scope.context.tree[0].name+'.'}
-        js += this.name+'";'
+        js += this.name+'",'
         var name_decl = new $Node()
         new $NodeJSCtx(name_decl,js)
         node.parent.insert(rank+offset,name_decl)
@@ -2069,26 +2079,38 @@ function $DefCtx(context){
         var module = $get_module(this)
         
         new_node = new $Node()
-        new $NodeJSCtx(new_node,prefix+'.__module__ = "'+module.module+'";')
+        new $NodeJSCtx(new_node,'    __module__ : "'+module.module+'",')
         node.parent.insert(rank+offset,new_node)
         offset++
         
         // Add attribute __doc__
-        js = prefix+'.__doc__='+(this.doc_string || 'None')+';None;'
+        js = '    __doc__:'+(this.doc_string || 'None')+','
         new_node = new $Node()
         new $NodeJSCtx(new_node,js)
         node.parent.insert(rank+offset,new_node)
         offset++
+
+        var flags = 67
+        if(this.has_star_arg){flags |= 4}
+        if(this.has_kw_arg){ flags |= 8}
+        if(this.type=='generator'){ flags |= 32}
+        
+        for(var attr in $B.bound[this.id]){this.varnames[attr]=true}
+        var co_varnames = []
+        for(var attr in this.varnames){co_varnames.push('"'+attr+'"')}
         
         // Add attribute __code__
         // End with None for interactive interpreter
-        js = prefix+'.__code__={__class__:$B.$CodeDict, '
+        js = '    __code__:{__class__:$B.$CodeDict, '
         js += 'co_filename:$locals_'+scope.module.replace(/\./g,'_')
-        js += '["__file__"]};None;'
+        js += '["__file__"]}, co_firstlineno:'+node.line_num
+        js += ', co_argcount:'+this.argcount
+        js += ', co_varnames: ['+co_varnames.join(', ')+']'
+        js += ', co_flags:'+flags+'};None;'
         new_node = new $Node()
         new $NodeJSCtx(new_node,js)
         node.parent.insert(rank+offset, new_node)
-
+        
         /*
         var _block=false
         if ($B.async_enabled) {
