@@ -2103,10 +2103,10 @@ function $DefCtx(context){
         // End with None for interactive interpreter
         js = '    __code__:{__class__:$B.$CodeDict, '
         js += 'co_filename:$locals_'+scope.module.replace(/\./g,'_')
-        js += '["__file__"]}, co_firstlineno:'+node.line_num
+        js += '["__file__"], co_firstlineno:'+node.line_num
         js += ', co_argcount:'+this.argcount
         js += ', co_varnames: ['+co_varnames.join(', ')+']'
-        js += ', co_flags:'+flags+'};None;'
+        js += ', co_flags:'+flags+'}};None;'
         new_node = new $Node()
         new $NodeJSCtx(new_node,js)
         node.parent.insert(rank+offset, new_node)

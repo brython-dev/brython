@@ -480,18 +480,13 @@ function getattr(obj,attr,_default){
         // attribute __class__ is set for all Python objects
         // return the factory function
         return klass.$factory
+      /*
       case '__code__':
         if (typeof obj=='function') {
-           var res = {__class__:$B.$CodeObjectDict,src:obj,
-                      name:obj.__name__ || '<module>'
-           }
-           if (obj.__code__ !== undefined) {
-              for (var attr in obj.__code__) res[attr]=obj.__code__[attr]
-           }
-
-           return res
+           return {__class__:$B.$CodeObjectDict, $infos:obj.$infos}
         }
         break
+      */
       case '__dict__':
         // attribute __dict__ returns an instance of a subclass of dict
         // defined in py_dict.js
@@ -1816,11 +1811,22 @@ $FunctionGlobalsDict.$factory = {__class__:$B.$factory, $dict:$FunctionGlobalsDi
 
 var $FunctionDict = $B.$FunctionDict = {
     __class__:$B.$type,
-    __code__:{__class__:$FunctionCodeDict,__name__:'function code'},
+    //__code__:{__class__:$FunctionCodeDict,__name__:'function code'},
     __globals__:{__class__:$FunctionGlobalsDict,__name__:'function globals'},
     __name__:'function'
 }
 
+$FunctionDict.__getattr__ = function(self, attr){
+    if(self.$infos && self.$infos[attr]){
+        if(attr=='__code__'){
+            var res = {__class__:$B.$CodeDict}
+            for(var attr in self.$infos.__code__){
+                res[attr]=self.$infos.__code__[attr]
+            }
+            return res
+        }else{return self.$infos[attr]}
+    }
+}
 $FunctionDict.__repr__=$FunctionDict.__str__ = function(self){return '<function '+self.__name__+'>'}
 
 $FunctionDict.__mro__ = [$FunctionDict,$ObjectDict]

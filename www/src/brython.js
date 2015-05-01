@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-01 08:31:47.878000"
+__BRYTHON__.compiled_date="2015-05-01 10:38:06.194000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1262,10 +1262,10 @@ var co_varnames=[]
 for(var attr in this.varnames){co_varnames.push('"'+attr+'"')}
 js='    __code__:{__class__:$B.$CodeDict, '
 js +='co_filename:$locals_'+scope.module.replace(/\./g,'_')
-js +='["__file__"]}, co_firstlineno:'+node.line_num
+js +='["__file__"], co_firstlineno:'+node.line_num
 js +=', co_argcount:'+this.argcount
 js +=', co_varnames: ['+co_varnames.join(', ')+']'
-js +=', co_flags:'+flags+'};None;'
+js +=', co_flags:'+flags+'}};None;'
 new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank+offset,new_node)
@@ -5795,14 +5795,6 @@ return $B.JSObject(res)
 break
 case '__class__':
 return klass.$factory
-case '__code__':
-if(typeof obj=='function'){var res={__class__:$B.$CodeObjectDict,src:obj,name:obj.__name__ ||'<module>'
-}
-if(obj.__code__ !==undefined){for(var attr in obj.__code__)res[attr]=obj.__code__[attr]
-}
-return res
-}
-break
 case '__dict__':
 return $B.obj_dict(obj)
 case '__doc__':
@@ -6574,8 +6566,14 @@ $FunctionCodeDict.$factory={__class__:$B.$factory,$dict:$FunctionCodeDict}
 var $FunctionGlobalsDict={__class:$B.$type,__name__:'function globals'}
 $FunctionGlobalsDict.__mro__=[$FunctionGlobalsDict,$ObjectDict]
 $FunctionGlobalsDict.$factory={__class__:$B.$factory,$dict:$FunctionGlobalsDict}
-var $FunctionDict=$B.$FunctionDict={__class__:$B.$type,__code__:{__class__:$FunctionCodeDict,__name__:'function code'},__globals__:{__class__:$FunctionGlobalsDict,__name__:'function globals'},__name__:'function'
+var $FunctionDict=$B.$FunctionDict={__class__:$B.$type,
+__globals__:{__class__:$FunctionGlobalsDict,__name__:'function globals'},__name__:'function'
 }
+$FunctionDict.__getattr__=function(self,attr){if(self.$infos && self.$infos[attr]){if(attr=='__code__'){var res={__class__:$B.$CodeDict}
+for(var attr in self.$infos.__code__){res[attr]=self.$infos.__code__[attr]
+}
+return res
+}else{return self.$infos[attr]}}}
 $FunctionDict.__repr__=$FunctionDict.__str__=function(self){return '<function '+self.__name__+'>'}
 $FunctionDict.__mro__=[$FunctionDict,$ObjectDict]
 var $Function=function(){}
