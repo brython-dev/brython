@@ -480,13 +480,6 @@ function getattr(obj,attr,_default){
         // attribute __class__ is set for all Python objects
         // return the factory function
         return klass.$factory
-      /*
-      case '__code__':
-        if (typeof obj=='function') {
-           return {__class__:$B.$CodeObjectDict, $infos:obj.$infos}
-        }
-        break
-      */
       case '__dict__':
         // attribute __dict__ returns an instance of a subclass of dict
         // defined in py_dict.js
@@ -1811,7 +1804,7 @@ $FunctionGlobalsDict.$factory = {__class__:$B.$factory, $dict:$FunctionGlobalsDi
 
 var $FunctionDict = $B.$FunctionDict = {
     __class__:$B.$type,
-    //__code__:{__class__:$FunctionCodeDict,__name__:'function code'},
+    __code__:{__class__:$FunctionCodeDict,__name__:'function code'},
     __globals__:{__class__:$FunctionGlobalsDict,__name__:'function globals'},
     __name__:'function'
 }
