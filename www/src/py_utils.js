@@ -593,6 +593,28 @@ $B.$IndentationError = function(module,msg,pos) {
 // function to remove internal exceptions from stack exposed to programs
 $B.$pop_exc=function(){$B.exception_stack.pop()}
 
+// function used if a function call has an argument **kw
+$B.extend = function(fname, arg, mapping){
+    var it = _b_.iter(mapping), getter = _b_.getattr(mapping,'__getitem__')
+    while (true){
+        try{
+            var key = _b_.next(it)
+            if(typeof key!=='string'){
+                throw _b_.TypeError(fname+"() keywords must be strings")
+            }
+            if(arg[key]!==undefined){
+                throw _b_.TypeError(
+                    fname+"() got multiple values for argument '"+key+"'")
+            }
+            arg[key] = getter(key)
+        }catch(err){
+            if(_b_.isinstance(err,[_b_.StopIteration])){$B.$pop_exc();break}
+            throw err
+        }
+    }
+    return arg
+}
+
 $B.$test_item = function(expr){
     // used to evaluate expressions with "and" or "or"
     // returns a Javascript boolean (true or false) and stores
@@ -894,8 +916,11 @@ $B.$iterator_class = function(name){
 // class dict of functions attribute __code__
 $B.$CodeDict = {__class__:$B.$type,__name__:'code'}
 $B.$CodeDict.__mro__ = [$B.$CodeDict,_b_.object.$dict]
-$B.$CodeDict.$factory={__class__:$B.$factory, $dict:$B.$CodeDict}
 
+function _code(){}
+_code.__class__ = $B.$factory
+_code.$dict = $B.$CodeDict
+$B.$CodeDict.$factory = _code
 
 function $err(op,klass,other){
     var msg = "unsupported operand type(s) for "+op

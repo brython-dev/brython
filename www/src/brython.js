@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-01 10:38:06.194000"
+__BRYTHON__.compiled_date="2015-05-02 11:43:44.660000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -739,6 +739,31 @@ if($B.block[scope.id]===undefined){
 }
 else if($B.block[scope.id][this.func.value])_block=true
 }
+var pos_args=[],kw_args=[],star_args=null,dstar_args=null
+for(var i=0;i<this.tree.length;i++){var arg=this.tree[i],type
+if(arg.tree[0]===undefined){type=arg.type}
+else{type=arg.tree[0].type}
+switch(type){case 'expr':
+pos_args.push(arg.to_js())
+break
+case 'kwarg':
+kw_args.push(arg.tree[0].tree[0].value+':'+arg.tree[0].tree[1].to_js())
+break
+case 'star_arg':
+star_args=arg.tree[0].tree[0].to_js()
+break
+case 'double_star_arg':
+dstar_args=arg.tree[0].tree[0].to_js()
+break
+}}
+var pos_args_str='['+pos_args.join(', ')+']'
+if(star_args){pos_args_str +='.concat(_b_.list('+star_args+'))'}
+kw_args_str='{'+kw_args.join(', ')+'}'
+if(dstar_args){kw_args_str='$B.extend("'+this.func.value+'",'+kw_args_str
+kw_args_str +=','+dstar_args+')'
+}
+if(this.func.value=='FF'){return func_js+'('+pos_args_str+', '+kw_args_str+')'
+}
 if($B.debug>0){
 var res=""
 if(_block){
@@ -1069,15 +1094,23 @@ var defaults=[],apos=0,dpos=0,defs1=[],dpos1=0
 this.argcount=0
 this.varnames={}
 this.args=[]
+this.__defaults__=[]
+this.slots=[]
 var func_args=this.tree[1].tree
 for(var i=0;i<func_args.length;i++){var arg=func_args[i]
 this.args[apos++]=arg.name
 this.varnames[arg.name]=true
 if(arg.type==='func_arg_id'){this.argcount++
+this.slots.push(arg.name+':null')
 if(arg.tree.length>0){defaults[dpos++]='"'+arg.name+'"'
 defs1[dpos1++]=arg.name+':'+$to_js(arg.tree)
-}}else if(arg.type=='func_star_arg'){if(arg.op=='*'){this.has_star_arg=true}
-else if(arg.op=='**'){this.has_kw_arg=true}}else{}}
+this.__defaults__.push($to_js(arg.tree))
+}}else if(arg.type=='func_star_arg'){if(arg.op=='*'){this.star_arg=arg.name}
+else if(arg.op=='**'){this.kw_arg=arg.name}}}
+var flags=67
+if(this.star_arg){flags |=4}
+if(this.kw_arg){flags |=8}
+if(this.type=='generator'){flags |=32}
 var positional_str=[],positional_obj=[],pos=0
 for(var i=0,_len=this.positional_list.length;i<_len;i++){positional_str[pos]='"'+this.positional_list[i]+'"'
 positional_obj[pos++]=this.positional_list[i]+':null'
@@ -1112,6 +1145,47 @@ new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 }
 this.env=[]
+if(this.name=='FF'){
+js='var pos_args=arguments[0], kw_args=arguments[1],'
+js +='varnames = '+this.tree[0].to_js()+'.$infos.__code__.co_varnames,'
+js +='slots = {'+this.slots.join(', ')+'};'
+if(this.star_arg){js +='$locals["'+this.star_arg+'"]=[];'}
+if(this.kw_arg){js +='$locals["'+this.kw_arg+'"]={};'}
+var names_node=new $Node()
+new $NodeJSCtx(names_node,js)
+nodes.push(names_node)
+js='for(var i=0,_len=Math.min(pos_args.length,'+this.argcount+');i<_len;i++)'
+js +='{slots[varnames[i]]=pos_args[i]};console.log(slots);'
+var names_node=new $Node()
+new $NodeJSCtx(names_node,js)
+nodes.push(names_node)
+js='if(pos_args.length>i){\n'
+if(this.star_arg){js +='$locals["'+this.star_arg+'"]=pos_args.slice(i);console.log("set '+this.star_arg+'");'
+}else{js +='throw Error("too many positional arguments");'
+}
+js +='\n}'
+var names_node=new $Node()
+new $NodeJSCtx(names_node,js)
+nodes.push(names_node)
+js='for(var attr in kw_args){\n'
+js +='if(slots[attr]===null){\n'
+js +='    slots[attr]=kw_args[attr]\n'
+js +='}else if(slots[attr]===undefined){\n'
+if(this.kw_arg){js +='    $locals["'+this.kw_arg+'"][attr]=kw_arg[attr];'
+}else{js +='throw Error("unexpected keyword argument")'
+}
+js +='}else{\n'
+js +='throw Error("duplicate keyword argument")'
+js +='\n}\n}'
+var names_node=new $Node()
+new $NodeJSCtx(names_node,js)
+nodes.push(names_node)
+js='for(var attr in slots)'
+js +='{$locals[attr]=slots[attr]};'
+var names_node=new $Node()
+new $NodeJSCtx(names_node,js)
+nodes.push(names_node)
+}else{
 js='if(arguments.length==2 && arguments[0].$nat=="args")'
 js +='{for($var in arguments[1]){$locals[$var]=arguments[1][$var]}}'
 var fast_node=new $Node()
@@ -1187,7 +1261,7 @@ else_node.add(new_node)
 for(var i=pos_nodes.length-1;i>=0;i--){slow_node.children.splice(0,0,pos_nodes[i])
 }}else{slow_node.add(make_args_nodes[0])
 slow_node.add(make_args_nodes[1])
-}
+}}
 for(var i=nodes.length-1;i>=0;i--){node.children.splice(0,0,nodes[i])
 }
 var def_func_node=new $Node()
@@ -1236,12 +1310,18 @@ this.declared=true
 offset++
 }
 var prefix=this.tree[0].to_js()
+var indent=node.indent
 js=prefix+'.$infos={__name__:"'
 if(this.scope.ntype=='class'){js+=this.scope.C.tree[0].name+'.'}
 js +=this.name+'",'
 var name_decl=new $Node()
 new $NodeJSCtx(name_decl,js)
 node.parent.insert(rank+offset,name_decl)
+offset++
+var module=$get_module(this)
+new_node=new $Node()
+new $NodeJSCtx(new_node,'    __defaults__ : ['+this.__defaults__.join(', ')+'],')
+node.parent.insert(rank+offset,new_node)
 offset++
 var module=$get_module(this)
 new_node=new $Node()
@@ -1253,19 +1333,20 @@ new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank+offset,new_node)
 offset++
-var flags=67
-if(this.has_star_arg){flags |=4}
-if(this.has_kw_arg){flags |=8}
-if(this.type=='generator'){flags |=32}
 for(var attr in $B.bound[this.id]){this.varnames[attr]=true}
 var co_varnames=[]
 for(var attr in this.varnames){co_varnames.push('"'+attr+'"')}
-js='    __code__:{__class__:$B.$CodeDict, '
-js +='co_filename:$locals_'+scope.module.replace(/\./g,'_')
-js +='["__file__"], co_firstlineno:'+node.line_num
-js +=', co_argcount:'+this.argcount
-js +=', co_varnames: ['+co_varnames.join(', ')+']'
-js +=', co_flags:'+flags+'}};None;'
+var h='\n'+' '.repeat(indent+8)
+js='    __code__:{'+h+'__class__:$B.$CodeDict'
+h=','+h
+js +=h+'co_filename:$locals_'+scope.module.replace(/\./g,'_')+'["__file__"]'
+js +=h+'co_firstlineno:'+node.line_num
+js +=h+'co_argcount:'+this.argcount
+js +=h+'co_name: "'+this.name+'"'
+js +=h+'co_varnames: ['+co_varnames.join(', ')+']'
+js +=h+'co_nlocals: '+co_varnames.length
+js +=h+'co_flags:'+flags+'\n'+' '.repeat(indent+4)+'}\n};'
+js +='None;'
 new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank+offset,new_node)
@@ -2983,6 +3064,10 @@ return new $DoubleStarArgCtx(C)
 }
 $_SyntaxError(C,'token '+token+' after '+C)
 case ')':
+if(C.parent.kwargs &&
+$B.last(C.parent.tree).tree[0]&& 
+['kwarg','double_star_arg'].indexOf($B.last(C.parent.tree).tree[0].type)==-1){$_SyntaxError(C,['non-keyword arg after keyword arg'])
+}
 if(C.tree.length>0){var son=C.tree[C.tree.length-1]
 if(son.type==='list_or_tuple'&&son.real==='gen_expr'){son.intervals.push($pos)
 }}
@@ -2992,7 +3077,10 @@ if(C.expect===',' && C.parent.parent.type==='lambda'){return $transition(C.paren
 }
 break
 case ',':
-if(C.expect===','){return new $CallArgCtx(C.parent)
+if(C.expect===','){if(C.parent.kwargs && 
+['kwarg','double_star_arg'].indexOf($B.last(C.parent.tree).tree[0].type)==-1){$_SyntaxError(C,['non-keyword arg after keyword arg'])
+}
+return new $CallArgCtx(C.parent)
 }
 console.log('C '+C+'token '+token+' expect '+C.expect)
 }
@@ -5322,6 +5410,19 @@ $B.$syntax_err_line(exc,module,pos)
 throw exc
 }
 $B.$pop_exc=function(){$B.exception_stack.pop()}
+$B.extend=function(fname,arg,mapping){var it=_b_.iter(mapping),getter=_b_.getattr(mapping,'__getitem__')
+while(true){try{var key=_b_.next(it)
+if(typeof key!=='string'){throw _b_.TypeError(fname+"() keywords must be strings")
+}
+if(arg[key]!==undefined){throw _b_.TypeError(
+fname+"() got multiple values for argument '"+key+"'")
+}
+arg[key]=getter(key)
+}catch(err){if(_b_.isinstance(err,[_b_.StopIteration])){$B.$pop_exc();break}
+throw err
+}}
+return arg
+}
 $B.$test_item=function(expr){
 $B.$test_result=expr
 return _b_.bool(expr)
@@ -5485,7 +5586,10 @@ return res
 }
 $B.$CodeDict={__class__:$B.$type,__name__:'code'}
 $B.$CodeDict.__mro__=[$B.$CodeDict,_b_.object.$dict]
-$B.$CodeDict.$factory={__class__:$B.$factory,$dict:$B.$CodeDict}
+function _code(){}
+_code.__class__=$B.$factory
+_code.$dict=$B.$CodeDict
+$B.$CodeDict.$factory=_code
 function $err(op,klass,other){var msg="unsupported operand type(s) for "+op
 msg +=": '"+klass.__name__+"' and '"+$B.get_class(other).__name__+"'"
 throw _b_.TypeError(msg)
@@ -6566,8 +6670,7 @@ $FunctionCodeDict.$factory={__class__:$B.$factory,$dict:$FunctionCodeDict}
 var $FunctionGlobalsDict={__class:$B.$type,__name__:'function globals'}
 $FunctionGlobalsDict.__mro__=[$FunctionGlobalsDict,$ObjectDict]
 $FunctionGlobalsDict.$factory={__class__:$B.$factory,$dict:$FunctionGlobalsDict}
-var $FunctionDict=$B.$FunctionDict={__class__:$B.$type,
-__globals__:{__class__:$FunctionGlobalsDict,__name__:'function globals'},__name__:'function'
+var $FunctionDict=$B.$FunctionDict={__class__:$B.$type,__code__:{__class__:$FunctionCodeDict,__name__:'function code'},__globals__:{__class__:$FunctionGlobalsDict,__name__:'function globals'},__name__:'function'
 }
 $FunctionDict.__getattr__=function(self,attr){if(self.$infos && self.$infos[attr]){if(attr=='__code__'){var res={__class__:$B.$CodeDict}
 for(var attr in self.$infos.__code__){res[attr]=self.$infos.__code__[attr]
@@ -11670,7 +11773,6 @@ module_obj.__name__=name
 module_obj.__repr__=module_obj.__str__=function(){return "<module '"+name+"' (built-in)>"
 }
 $B.imported[name]=$B.modules[name]=module_obj
-console.log('load '+name+' package '+module_obj.__package__)
 }
 for(var attr in modules){load(attr,modules[attr])}})(__BRYTHON__)
 ;(function($B){_b_=$B.builtins
