@@ -189,7 +189,6 @@
             return "<module '"+name+"' (built-in)>"
         }
         $B.imported[name] = $B.modules[name] = module_obj
-        console.log('load '+name+' package '+module_obj.__package__)
     }
 
     for(var attr in modules){load(attr, modules[attr])}
