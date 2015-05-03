@@ -326,4 +326,9 @@ assert a[X()]=='b'
 x = [1,2,3]
 assert sum(-y for y in x) == -6
 
+# issue 186
+source = [0, 1, 2, 3]
+total = sum(source.pop() for _ in range(len(source)))
+assert total == 6, "expected 6 but instead was %d" % total
+
 print('passed all tests')

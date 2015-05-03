@@ -1914,57 +1914,61 @@ function $DefCtx(context){
             // experimental version where 2 arguments are received :
             // a list of positional arguments and a Javascript Object for
             // the keyword arguments
-            js = 'var pos_args=arguments[0], kw_args=arguments[1],'
-            js += 'varnames = '+this.tree[0].to_js()+'.$infos.__code__.co_varnames,'
-            js += 'slots = {'+this.slots.join(', ')+'};'
-            if(this.star_arg){ js += '$locals["'+this.star_arg+'"]=[];'}
-            if(this.kw_arg){ js += '$locals["'+this.kw_arg+'"]={};'}
+            var h = ' '.repeat(node.indent+12), 
+                h8 = ' '.repeat(node.indent+8),
+                h16 = ' '.repeat(node.indent+16)
+            js = 'var pos_args=arguments[0], kw_args=arguments[1],\n'
+            js += h+'varnames = '+this.tree[0].to_js()+'.$infos.__code__.co_varnames,\n'
+            js += h+'slots = {'+this.slots.join(', ')+'};\n'
+            if(this.star_arg){ js += h+'$locals["'+this.star_arg+'"] = [];\n'}
+            if(this.kw_arg){ js += h+'$locals["'+this.kw_arg+'"] = {__class__:_b_.dict.$dict, $string_dict:{}};\n'}
             var names_node = new $Node()
             new $NodeJSCtx(names_node, js)
             nodes.push(names_node)
 
             // Fill slots with positional arguments
-            js = 'for(var i=0,_len=Math.min(pos_args.length,'+this.argcount+');i<_len;i++)'
-            js +='{slots[varnames[i]]=pos_args[i]};console.log(slots);'
+            js = 'for(var i=0,_len=Math.min(pos_args.length,'+this.argcount+');i<_len;i++){\n'
+            js += h+'slots[varnames[i]]=pos_args[i]\n'+h8+'};'
             var names_node = new $Node()
             new $NodeJSCtx(names_node, js)
             nodes.push(names_node)
             
-            js = 'if(pos_args.length>i){\n'
+            js = 'if(pos_args.length>i){'
             if(this.star_arg){
-                js += '$locals["'+this.star_arg+'"]=pos_args.slice(i);console.log("set '+this.star_arg+'");'
+                js += '$locals["'+this.star_arg+'"]=pos_args.slice(i)'
             }else{
-                js += 'throw Error("too many positional arguments");'
+                js += 'throw Error("too many positional arguments")'
             }
-            js += '\n}'
+            js += '};'
             var names_node = new $Node()
             new $NodeJSCtx(names_node, js)
             nodes.push(names_node)
             
             // Fill slots with keyword arguments
             js = 'for(var attr in kw_args){\n'
-            js += 'if(slots[attr]===null){\n'
-            js += '    slots[attr]=kw_args[attr]\n'
+            js += h+'if(slots[attr]===null){slots[attr] = kw_args[attr]}\n'
             // If an unexpected keyword argument is passed
-            js += '}else if(slots[attr]===undefined){\n'
+            js += h+'else if(slots[attr]===undefined)'
             if(this.kw_arg){
-                js += '    $locals["'+this.kw_arg+'"][attr]=kw_arg[attr];'
+                js += '{$locals["'+this.kw_arg+'"].$string_dict[attr] = kw_args[attr]}'
             }else{
-                js += 'throw Error("unexpected keyword argument")'
+                js += '{throw Error("unexpected keyword argument")}'
             }
-            js += '}else{\n'
-            js += 'throw Error("duplicate keyword argument")'
-            js += '\n}\n}'
+            js += '\n'+h+'else{throw Error("duplicate keyword argument")}'
+            js += '\n'+h8+'}'
             var names_node = new $Node()
             new $NodeJSCtx(names_node, js)
             nodes.push(names_node)
 
-            js = 'for(var attr in slots)'
-            js +='{$locals[attr]=slots[attr]};'
+            js = 'for(var attr in slots){\n'
+            js += h+'if(slots[attr]===null){\n'
+            js += h16+'if($defaults[attr]!==undefined){$locals[attr]=$defaults[attr]}\n'
+            js += h16+'else{throw Error("missing argument")}\n'
+            js += h+'}else{$locals[attr]=slots[attr]}\n'
+            js += h8+'};'
             var names_node = new $Node()
             new $NodeJSCtx(names_node, js)
             nodes.push(names_node)
-
 
         }else{ // old version
         
@@ -2548,7 +2552,10 @@ function $ForExpr(context){
             }else{
                 var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()
             }
-            var js = idt+'=('+start+')-1;while('+idt+'++ < ('+stop+')-1)'
+            //var js = idt+'=('+start+')-1;while('+idt+'++ < ('+stop+')-1)'
+            var js = idt+'=('+start+')-1, $stop_'+num
+            js += '='+stop+'-1;while('+idt+'++ < $stop_'+num+')'
+            
             var for_node = new $Node()
             new $NodeJSCtx(for_node,js)
 
