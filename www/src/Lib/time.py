@@ -350,9 +350,8 @@ class struct_time:
     def __str__(self):
         return self.__repr__()
 
-def to_struct_time(ptuple):
-    # Receives a packed tuple, pass its attribute "arg" to struct_time
-    arg = ptuple.arg
+def to_struct_time(*arg):
+    arg = list(arg)
     # The tuple received from module _strptime has 7 elements, we must add
     # the rank of day in the year in the range [1, 366]
     ml = [31,28,31,30,31,30,31,31,30,31,30,31]
@@ -367,11 +366,11 @@ def to_struct_time(ptuple):
     yday += arg[2]
     arg.append(yday)
     arg.append(-1)
-    return struct_time(arg)
+    return struct_time(tuple(arg))
 
 def strptime(string, _format):
     import _strptime
-    return struct_time([_strptime._strptime_datetime(to_struct_time, string, _format)])
+    return _strptime._strptime_datetime(to_struct_time, string, _format)
 
 # All the clock_xx machinery shouldn't work in the browser so some
 # NotImplementedErrors or messages are shown
