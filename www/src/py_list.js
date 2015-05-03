@@ -487,16 +487,22 @@ $ListDict.sort = function(self){
 $B.set_func_names($ListDict)
 
 // constructor for built-in type 'list'
-function list(){
+function list(obj){
     if(arguments.length===0) return []
     if(arguments.length>1){
         throw _b_.TypeError("list() takes at most 1 argument ("+arguments.length+" given)")
     }
-    if(Array.isArray(arguments[0])){ // most simple case
-        var res=arguments[0];res.__brython__=true;return res
+    if(Array.isArray(obj)){ // most simple case
+        obj.__brython__ = true;
+        if(obj.__class__==$TupleDict){
+            var res = obj.slice()
+            res.__class__ = $ListDict
+            return res
+        }
+        return obj
     }
     var res = [], pos=0
-    var arg = iter(arguments[0])
+    var arg = iter(obj)
     var next_func = getattr(arg,'__next__')
     while(1){
         try{res[pos++]=next_func()}
@@ -578,7 +584,6 @@ var $tuple_iterator = $B.$iterator_class('tuple_iterator')
 function tuple(){
     var obj = list.apply(null,arguments)
     obj.__class__ = $TupleDict
-
     return obj
 }
 tuple.__class__ = $B.$factory
