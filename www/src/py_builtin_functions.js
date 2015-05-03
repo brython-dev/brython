@@ -1809,7 +1809,9 @@ var $FunctionDict = $B.$FunctionDict = {
     __name__:'function'
 }
 
-$FunctionDict.__getattr__ = function(self, attr){
+$FunctionDict.__getattribute__ = function(self, attr){
+    // Internal attributes __name__, __mdouel__, __doc__ etc. 
+    // are stored in self.$infos
     if(self.$infos && self.$infos[attr]){
         if(attr=='__code__'){
             var res = {__class__:$B.$CodeDict}
@@ -1817,10 +1819,16 @@ $FunctionDict.__getattr__ = function(self, attr){
                 res[attr]=self.$infos.__code__[attr]
             }
             return res
-        }else{return self.$infos[attr]}
+        }else{
+            return self.$infos[attr]
+        }
+    }else{
+        return _b_.object.$dict.__getattribute__(self, attr)
     }
 }
-$FunctionDict.__repr__=$FunctionDict.__str__ = function(self){return '<function '+self.__name__+'>'}
+$FunctionDict.__repr__=$FunctionDict.__str__ = function(self){
+    return '<function '+self.$infos.__name__+'>'
+}
 
 $FunctionDict.__mro__ = [$FunctionDict,$ObjectDict]
 var $Function = function(){}
