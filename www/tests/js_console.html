@@ -19,7 +19,7 @@ function run_js(){
     t0 = new Date()
     t0 = t0.getTime()
     try{eval(src)}
-    catch(err){log(err.message)}
+    catch(err){log(err);console.log(err)}
     t1 = new Date()
     t1 = t1.getTime()
     log('<done in '+(t1-t0)+' ms>')
