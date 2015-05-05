@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-04 17:11:36.173000"
+__BRYTHON__.compiled_date="2015-05-05 11:49:14.457000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -741,7 +741,17 @@ else if($B.block[scope.id][this.func.value])_block=true
 }
 var pos_args=[],kw_args=[],star_args=null,dstar_args=null
 for(var i=0;i<this.tree.length;i++){var arg=this.tree[i],type
-if(arg.tree[0]===undefined){type=arg.type}
+switch(arg.type){case 'star_arg':
+star_args=arg.tree[0].tree[0].to_js()
+break
+case 'double_star_arg':
+dstar_args=arg.tree[0].tree[0].to_js()
+break
+case 'id':
+pos_args.push(arg.to_js())
+break
+default:
+if(arg.tree[0]===undefined){console.log('bizarre',arg)}
 else{type=arg.tree[0].type}
 switch(type){case 'expr':
 pos_args.push(arg.to_js())
@@ -749,31 +759,41 @@ break
 case 'kwarg':
 kw_args.push(arg.tree[0].tree[0].value+':'+arg.tree[0].tree[1].to_js())
 break
+case 'list_or_tuple':
+case 'op':
+pos_args.push(arg.to_js())
+break
 case 'star_arg':
 star_args=arg.tree[0].tree[0].to_js()
 break
 case 'double_star_arg':
 dstar_args=arg.tree[0].tree[0].to_js()
 break
-}}
-var pos_args_str=pos_args.join(', ')
-if(star_args){pos_args_str +='.concat(_b_.list('+star_args+'))'}
-kw_args_str='{$nat:"kw",kw:{'+kw_args.join(', ')+'}}'
-if(dstar_args){kw_args_str='$B.extend("'+this.func.value+'",'+kw_args_str
-kw_args_str +=','+dstar_args+')'
+default:
+console.log('bizarre type '+ type+' arg '+ arg+' arg.type '+arg.type)
+pos_args.push(arg.to_js())
+break
 }
-if(false){
-if($B.debug>0){var res=""
-if(_block){
-res="@@;$B.execution_object.$append($jscode, 10); "
-res+="$B.execution_object.$execute_next_segment(); "
-res+="$jscode=@@"
-}
-res +='getattr('+func_js+',"__call__")('
-res +=(this.tree.length>0 ? $to_js(this.tree): '')
-return res+')'
-}else{return func_js+'.apply(null,['+pos_args_str+', '+kw_args_str+'])'
+break
 }}
+var args_str=pos_args.join(', ')
+if(star_args){args_str='$B.extend_list('+args_str
+if(pos_args.length>0){args_str +=','}
+args_str +='_b_.list('+star_args+'))'
+}
+kw_args_str='{'+kw_args.join(', ')+'}'
+if(dstar_args){kw_args_str='{$nat:"kw",kw:$B.extend("'+this.func.value+'",'+kw_args_str
+kw_args_str +=','+dstar_args+')}'
+}else if(kw_args_str!=='{}'){kw_args_str='{$nat:"kw",kw:'+kw_args_str+'}'
+}else{kw_args_str=''
+}
+if(star_args && kw_args_str){args_str +='.concat(['+kw_args_str+'])' 
+}else{if(args_str && kw_args_str){args_str +=','+kw_args_str}
+else if(!args_str){args_str=kw_args_str}}
+if(star_args){
+args_str='.apply(null,'+args_str+')'
+}else{args_str='('+args_str+')'
+}
 if($B.debug>0){
 var res=""
 if(_block){
@@ -781,28 +801,19 @@ res="@@;$B.execution_object.$append($jscode, 10); "
 res+="$B.execution_object.$execute_next_segment(); "
 res+="$jscode=@@"
 }
-res +='getattr('+func_js+',"__call__")('
-res +=(this.tree.length>0 ? $to_js(this.tree): '')
-return res+')'
+res +='getattr('+func_js+',"__call__")'
+return res+args_str
 }
 if(this.tree.length>-1){if(this.func.type=='id'){if(this.func.is_builtin){
-if($B.builtin_funcs[this.func.value]!==undefined){var res=func_js + '('
-res +=(this.tree.length>0 ? $to_js(this.tree): '')
-return res+')'
+if($B.builtin_funcs[this.func.value]!==undefined){return func_js+args_str
 }}else{var bound_obj=this.func.found
 if(bound_obj &&(bound_obj.type=='class' ||
-bound_obj.type=='def')){var res=func_js+'('
-res +=(this.tree.length>0 ? $to_js(this.tree): '')
-return res+')'
+bound_obj.type=='def')){return func_js+args_str
 }}
 var res='('+func_js+'.$is_func ? '
 res +=func_js+' : '
-res +='getattr('+func_js+',"__call__"))('
-res +=(this.tree.length>0 ? $to_js(this.tree): '')
-res +=')'
-}else{var res='getattr('+func_js+',"__call__")('
-res +=(this.tree.length>0 ? $to_js(this.tree): '')
-res +=')'
+res +='getattr('+func_js+',"__call__"))'+args_str
+}else{var res='getattr('+func_js+',"__call__")'+args_str
 }
 return res
 }
@@ -4544,7 +4555,10 @@ for(var attr in $err){console.log(attr+' : ',$err[attr])
 }
 console.log('line info '+$B.line_info)
 }
-if($err.$py_error===undefined)$err=_b_.RuntimeError($err+'')
+if($err.$py_error===undefined){console.log('Javascript error',$err)
+console.log($js)
+$err=_b_.RuntimeError($err+'')
+}
 var $trace=$err.__name__+': ' +$err.args +'\n'+_b_.getattr($err,'info')
 try{_b_.getattr($B.stderr,'write')($trace)
 }catch(print_exc_err){console.log($trace)
@@ -4998,6 +5012,11 @@ $B.$InstanceMethodDict={__class__:$B.$type,__name__:'instancemethod',__mro__:[_b
 }})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 $B.$MakeArgs=function($fname,$args,$required,$defaults,$other_args,$other_kw,$after_star){
+var has_kw_args=false,nb_pos=$args.length
+if(nb_pos>0 && $args[nb_pos-1]&& $args[nb_pos-1].$nat=='kw'){has_kw_args=true
+nb_pos--
+var kw_args=$args[nb_pos].kw
+}
 var $ns={},$arg
 var $robj={}
 for(var i=0;i<$required.length;i++){$robj[$required[i]]=null}
@@ -5006,17 +5025,13 @@ for(var i=0;i<$defaults.length;i++){$dobj[$defaults[i]]=null}
 if($other_args !=null){$ns[$other_args]=[]}
 if($other_kw !=null){var $dict_keys=[],key_pos=0,$dict_values=[],value_pos=0}
 var upargs=[],pos=0
-for(var i=0,_len_i=$args.length;i < _len_i;i++){$arg=$args[i]
+for(var i=0,_len_i=nb_pos;i < _len_i;i++){$arg=$args[i]
 if($arg===undefined){console.log('arg '+i+' undef in '+$fname)}
 else if($arg===null){upargs[pos++]=null}
 else{
 switch($arg.$nat){case 'ptuple':
 var _arg=$arg.arg
 for(var j=0,_len_j=_arg.length;j < _len_j;j++)upargs[pos++]=_arg[j]
-break
-case 'pdict':
-var _arg=$arg.arg,items=_b_.list(_b_.dict.$dict.items(_arg))
-for(var j=0,_len_j=items.length;j < _len_j;j++){upargs[pos++]={$nat:"kw",name:items[j][0],value:items[j][1]}}
 break
 default:
 upargs[pos++]=$arg
@@ -5026,23 +5041,6 @@ upargs[pos++]=$arg
 var nbreqset=0 
 for(var $i=0,_len_$i=upargs.length;$i < _len_$i;$i++){var $arg=upargs[$i]
 var $PyVar=$B.$JS2Py($arg)
-if($arg && $arg.$nat=='kw'){
-$PyVar=$arg.value
-if($ns[$arg.name]!==undefined){throw _b_.TypeError($fname+"() got multiple values for argument '"+$arg.name+"'")
-}else if($robj[$arg.name]===null){$ns[$arg.name]=$PyVar
-nbreqset++
-}else if($other_args!==null && $after_star!==undefined &&
-$after_star.indexOf($arg.name)>-1){var ix=$after_star.indexOf($arg.name)
-$ns[$after_star[ix]]=$PyVar
-}else if($dobj[$arg.name]===null){$ns[$arg.name]=$PyVar
-var pos_def=$defaults.indexOf($arg.name)
-$defaults.splice(pos_def,1)
-delete $dobj[$arg.name]
-}else if($other_kw!=null){$dict_keys[key_pos++]=$arg.name
-$dict_values[value_pos++]=$PyVar
-}else{
-throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+$arg.name+"'")
-}}else{
 if($i<$required.length){$ns[$required[$i]]=$PyVar
 nbreqset++
 }else if($other_args!==null){$ns[$other_args].push($PyVar)
@@ -5053,6 +5051,23 @@ msg=$fname+"() takes "+$required.length+' positional argument'
 msg +=$required.length==1 ? '' : 's'
 msg +=' but more were given'
 throw _b_.TypeError(msg)
+}}
+if(has_kw_args){
+for(var key in kw_args){$PyVar=kw_args[key]
+if($ns[key]!==undefined){throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")
+}else if($robj[key]===null){$ns[key]=$PyVar
+nbreqset++
+}else if($other_args!==null && $after_star!==undefined &&
+$after_star.indexOf(key)>-1){var ix=$after_star.indexOf(key)
+$ns[$after_star[ix]]=$PyVar
+}else if($dobj[key]===null){$ns[key]=$PyVar
+var pos_def=$defaults.indexOf(key)
+$defaults.splice(pos_def,1)
+delete $dobj[key]
+}else if($other_kw!=null){$dict_keys.push(key)
+$dict_values.push($PyVar)
+}else{
+throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")
 }}}
 if(nbreqset!==$required.length){
 var missing=[],pos=0
@@ -5074,21 +5089,22 @@ if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
 return $ns
 }
 $B.$MakeArgs1=function($fname,$args,$robj,$required,$dobj,$defaults,$other_args,$other_kw,$after_star){
+var has_kw_args=false,nb_pos=$args.length
+if(nb_pos>0 && $args[nb_pos-1].$nat=='kw'){has_kw_args=true
+nb_pos--
+var kw_args=$args[nb_pos].kw
+}
 var $ns={},$arg
 if($other_args !=null){$ns[$other_args]=[]}
 if($other_kw !=null){var $dict_keys=[],$dict_values=[]}
 var upargs=[],pos=0
-for(var i=0,_len_i=$args.length;i < _len_i;i++){$arg=$args[i]
+for(var i=0,_len_i=nb_pos;i < _len_i;i++){$arg=$args[i]
 if($arg===undefined){console.log('arg '+i+' undef in '+$fname)}
 else if($arg===null){upargs[pos++]=null}
 else{
 switch($arg.$nat){case 'ptuple':
 var _arg=$arg.arg
 for(var j=0,_len_j=_arg.length;j < _len_j;j++)upargs[pos++]=_arg[j]
-break
-case 'pdict':
-var _arg=$arg.arg,items=_b_.list(_b_.dict.$dict.items(_arg))
-for(var j=0,_len_j=items.length;j < _len_j;j++){upargs[pos++]={$nat:"kw",name:items[j][0],value:items[j][1]}}
 break
 default:
 upargs[pos++]=$arg
@@ -5098,23 +5114,6 @@ upargs[pos++]=$arg
 var nbreqset=0 
 for(var $i=0,_len_$i=upargs.length;$i < _len_$i;$i++){var $arg=upargs[$i]
 var $PyVar=$B.$JS2Py($arg)
-if($arg && $arg.$nat=='kw'){
-$PyVar=$arg.value
-if($ns[$arg.name]!==undefined){throw _b_.TypeError($fname+"() got multiple values for argument '"+$arg.name+"'")
-}else if($robj[$arg.name]===null){$ns[$arg.name]=$PyVar
-nbreqset++
-}else if($other_args!==null && $after_star!==undefined &&
-$after_star.indexOf($arg.name)>-1){var ix=$after_star.indexOf($arg.name)
-$ns[$after_star[ix]]=$PyVar
-}else if($dobj[$arg.name]===null){$ns[$arg.name]=$PyVar
-var pos_def=$defaults.indexOf($arg.name)
-$defaults.splice(pos_def,1)
-delete $dobj[$arg.name]
-}else if($other_kw!=null){$dict_keys.push($arg.name)
-$dict_values.push($PyVar)
-}else{
-throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+$arg.name+"'")
-}}else{
 if($i<$required.length){$ns[$required[$i]]=$PyVar
 nbreqset++
 }else if($other_args!==null){$ns[$other_args].push($PyVar)
@@ -5124,6 +5123,23 @@ msg=$fname+"() takes "+$required.length+' positional argument'
 msg +=$required.length==1 ? '' : 's'
 msg +=' but more were given'
 throw _b_.TypeError(msg)
+}}
+if(has_kw_args){
+for(var key in kw_args){$PyVar=kw_args[key]
+if($ns[key]!==undefined){throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")
+}else if($robj[key]===null){$ns[key]=$PyVar
+nbreqset++
+}else if($other_args!==null && $after_star!==undefined &&
+$after_star.indexOf(key)>-1){var ix=$after_star.indexOf(key)
+$ns[$after_star[ix]]=$PyVar
+}else if($dobj[key]===null){$ns[key]=$PyVar
+var pos_def=$defaults.indexOf(key)
+$defaults.splice(pos_def,1)
+delete $dobj[key]
+}else if($other_kw!=null){$dict_keys.push(key)
+$dict_values.push($PyVar)
+}else{
+throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")
 }}}
 if(nbreqset!==$required.length){
 var missing=[],pos=0
@@ -5386,6 +5402,15 @@ arg[key]=getter(key)
 throw err
 }}
 return arg
+}
+$B.extend_list=function(){
+var res=Array.prototype.slice.call(arguments,0,arguments.length-1),last=$B.last(arguments)
+var it=_b_.iter(last)
+while(true){try{res.push(_b_.next(it))
+}catch(err){if(_b_.isinstance(err,[_b_.StopIteration])){$B.$pop_exc();break}
+throw err
+}}
+return res
 }
 $B.$test_item=function(expr){
 $B.$test_result=expr
@@ -6066,46 +6091,37 @@ var $op_name='min'
 if(op==='__gt__')$op_name="max"
 if(args.length==0){throw _b_.TypeError($op_name+" expected 1 arguments, got 0")}
 var last_arg=args[args.length-1]
-var second_to_last_arg=args[args.length-2]
-var last_i=args.length-1
-var has_key=false
+var nb_args=args.length
+var has_kw_args=false
 var has_default=false
 var func=false
-if(last_arg.$nat=='kw'){if(last_arg.name==='key'){var func=last_arg.value
+if(last_arg.$nat=='kw'){nb_args--
+last_arg=last_arg.kw
+for(var attr in last_arg){switch(attr){case 'key':
+var func=last_arg[attr]
 has_key=true
-last_i--
-}else if(last_arg.name==='default'){var default_value=last_arg.value
+break
+case '$$default': 
+var default_value=last_arg[attr]
 has_default=true
-last_i--
-}else{throw _b_.TypeError("'"+last_arg.name+"' is an invalid keyword argument for this function")}}else{var func=function(x){return x}}
-if(second_to_last_arg && second_to_last_arg.$nat=='kw'){if(second_to_last_arg.name==='key'){if(has_key){throw _b_.SyntaxError("Keyword argument repeated")}
-var func=second_to_last_arg.value
-has_key=true
-last_i--
-}else if(second_to_last_arg.name==='default'){if(has_default){throw _b_.SyntaxError("Keyword argument repeated")}
-var default_value=second_to_last_arg.value
-has_default=true
-last_i--
-}else{throw _b_.TypeError("'"+second_to_last_arg.name+"' is an invalid keyword argument for this function")}}else{if(!func){var func=function(x){return x}}}
-if((has_key && has_default && args.length==3)||
-(!has_key && has_default && args.length==2)||
-(has_key && !has_default && args.length==2)||
-(!has_key && !has_default && args.length==1)){var arg=args[0]
-if(arg.length < 1 && has_default){return default_value
-}
-if(arg.length < 1 && !has_default){throw _b_.ValueError($op_name+"() arg is an empty sequence")
-}
-var $iter=iter(arg)
-var res=null
+break
+default:
+throw _b_.TypeError("'"+attr+"' is an invalid keyword argument for this function")
+break
+}}}
+if(!func){func=function(x){return x}}
+if(nb_args==0){throw _b_.TypeError($op_name+" expected 1 arguments, got 0")
+}else if(nb_args==1){
+var $iter=iter(args[0]),res=null
 while(true){try{var x=next($iter)
-if(res===null ||bool(getattr(func(x),op)(func(res)))){res=x}}catch(err){if(err.__name__=="StopIteration"){$B.$pop_exc();return res}
+if(res===null ||bool(getattr(func(x),op)(func(res)))){res=x}}catch(err){if(err.__name__=="StopIteration"){$B.$pop_exc()
+if(res===null){if(has_default){return default_value}
+else{throw _b_.ValueError($op_name+"() arg is an empty sequence")}}else{return res}}
 throw err
-}}}else if((has_key && has_default && args.length>3)||
-(!has_key && has_default && args.length>2)){throw _b_.TypeError("Cannot specify a default for "+$op_name+"() with multiple positional arguments")
-}else{
-if(last_i < 1){throw _b_.TypeError($op_name+" expected 1 arguments, got 0")}
+}}}else{if(has_default){throw _b_.TypeError("Cannot specify a default for "+$op_name+"() with multiple positional arguments")
+}
 var res=null
-for(var i=0;i<=last_i;i++){var x=args[i]
+for(var i=0;i<nb_args;i++){var x=args[i]
 if(res===null ||bool(getattr(func(x),op)(func(res)))){res=x}}
 return res
 }}
@@ -6391,8 +6407,8 @@ var key=_b_.dict.$dict.get($ns['kw'],'key',None)
 var reverse=_b_.dict.$dict.get($ns['kw'],'reverse',false)
 var obj=_b_.list(iterable)
 var args=[obj],pos=1
-if(key !==None)args[pos++]={$nat:'kw',name:'key',value:key}
-if(reverse)args[pos++]={$nat:'kw',name:'reverse',value:true}
+if(key !==None)args[pos++]={$nat:'kw',kw:{key:key}}
+if(reverse)args[pos++]={$nat:'kw',kw:{reverse:true}}
 _b_.list.$dict.sort.apply(null,args)
 return obj
 }
@@ -8696,8 +8712,9 @@ return cl
 $ListDict.sort=function(self){var func=null
 var reverse=false
 for(var i=1,_len_i=arguments.length;i < _len_i;i++){var arg=arguments[i]
-if(arg.$nat=='kw'){if(arg.name==='key'){func=getattr(arg.value,'__call__')}
-else if(arg.name==='reverse'){reverse=arg.value}}}
+if(arg.$nat=='kw'){var kw_args=arg.kw
+for(var key in kw_args){if(key=='key'){func=getattr(kw_args[key],'__call__')}
+else if(key=='reverse'){reverse=kw_args[key]}}}}
 if(self.length==0)return
 self.$cl=$elts_class(self)
 if(func===null && self.$cl===_b_.str.$dict){self.sort()}

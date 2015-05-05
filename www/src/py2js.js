@@ -1182,52 +1182,77 @@ function $CallCtx(context){
             var pos_args = [], kw_args = [], star_args = null, dstar_args = null
             for(var i=0;i<this.tree.length;i++){
                 var arg = this.tree[i], type
-                if(arg.tree[0]===undefined){type=arg.type}
-                else{type=arg.tree[0].type} //console.log(this.func.value+' pas de tree pour arg '+arg)}
-                switch(type){
-                    case 'expr':
-                        pos_args.push(arg.to_js())
-                        break
-                    case 'kwarg':
-                        kw_args.push(arg.tree[0].tree[0].value+':'+arg.tree[0].tree[1].to_js())
-                        break
+                switch(arg.type){
                     case 'star_arg':
                         star_args = arg.tree[0].tree[0].to_js()
                         break
                     case 'double_star_arg':
                         dstar_args = arg.tree[0].tree[0].to_js()
                         break
+                    case 'id':
+                        pos_args.push(arg.to_js())
+                        break
+                    default:
+                        if(arg.tree[0]===undefined){console.log('bizarre', arg)}
+                        else{type=arg.tree[0].type} //console.log(this.func.value+' pas de tree pour arg '+arg)}
+                        switch(type){
+                            case 'expr':
+                                pos_args.push(arg.to_js())
+                                break
+                            case 'kwarg':
+                                kw_args.push(arg.tree[0].tree[0].value+':'+arg.tree[0].tree[1].to_js())
+                                break
+                            case 'list_or_tuple':
+                            case 'op':
+                                pos_args.push(arg.to_js())
+                                break
+                            case 'star_arg':
+                                star_args = arg.tree[0].tree[0].to_js()
+                                break
+                            case 'double_star_arg':
+                                dstar_args = arg.tree[0].tree[0].to_js()
+                                break
+                            default:
+                                console.log('bizarre type '+ type+' arg '+ arg+' arg.type '+arg.type)
+                                pos_args.push(arg.to_js())
+                                break
+                        }
+                        break
                 }
             }
             
-            var pos_args_str = pos_args.join(', ')
-            if(star_args){pos_args_str += '.concat(_b_.list('+star_args+'))'}
-            kw_args_str = '{$nat:"kw",kw:{'+kw_args.join(', ')+'}}'
+            var args_str = pos_args.join(', ')
+            if(star_args){
+                args_str = '$B.extend_list('+args_str
+                if(pos_args.length>0){args_str += ','}
+                args_str += '_b_.list('+star_args+'))'
+            }
+            kw_args_str = '{'+kw_args.join(', ')+'}'
             if(dstar_args){
-                kw_args_str = '$B.extend("'+this.func.value+'",'+kw_args_str
-                kw_args_str += ','+dstar_args+')'
+                kw_args_str = '{$nat:"kw",kw:$B.extend("'+this.func.value+'",'+kw_args_str
+                kw_args_str += ','+dstar_args+')}'
+            }else if(kw_args_str!=='{}'){
+                kw_args_str = '{$nat:"kw",kw:'+kw_args_str+'}'
+            }else{
+                kw_args_str = ''
+            }
+            if(star_args && kw_args_str){
+                args_str += '.concat(['+kw_args_str+'])'            
+            }else{
+                if(args_str && kw_args_str){args_str += ','+kw_args_str}
+                else if(!args_str){args_str=kw_args_str}
             }
             
-            if(false){ //this.func.value=='FF'){
-                if($B.debug>0){
-                    var res=""
-                    if (_block) {
-                       //earney
-                       res="@@;$B.execution_object.$append($jscode, 10); "
-                       res+="$B.execution_object.$execute_next_segment(); "
-                       res+="$jscode=@@"
-                    }
-                    
-    
-                    res += 'getattr('+func_js+',"__call__")('
-                    //if (_block) res = '\n//------block----\n' + res
-                    res += (this.tree.length>0 ? $to_js(this.tree) : '')
-                    return res+')'
-                }else{
-                    return func_js+'.apply(null,['+pos_args_str+', '+kw_args_str+'])'
-                }
-            }        
-
+            if(star_args){
+                    // If there are star args, we use an internal function
+                    // $B.extend_list to produce the list of positional
+                    // arguments. In this case the function must be called
+                    // with apply
+                    args_str = '.apply(null,'+args_str+')'
+            }else{
+                args_str = '('+args_str+')'
+            }
+            
             if($B.debug>0){
                 // On debug mode, always use getattr(func,"__call__") to manage
                 // the call stack and get correct error messages
@@ -1248,10 +1273,9 @@ function $CallCtx(context){
                 }
                 
 
-                res += 'getattr('+func_js+',"__call__")('
-                //if (_block) res = '\n//------block----\n' + res
-                res += (this.tree.length>0 ? $to_js(this.tree) : '')
-                return res+')'
+                res += 'getattr('+func_js+',"__call__")'
+                return res+args_str
+
             }
 
             if(this.tree.length>-1){
@@ -1259,28 +1283,20 @@ function $CallCtx(context){
                   if(this.func.is_builtin){
                       // simplify code for built-in functions
                       if($B.builtin_funcs[this.func.value]!==undefined){
-                          var res = func_js + '('
-                          res += (this.tree.length>0 ? $to_js(this.tree) : '')
-                          return res+')'
+                          return func_js+args_str
                       }
                   }else{
                       var bound_obj = this.func.found
                       if(bound_obj && (bound_obj.type=='class' ||
                         bound_obj.type=='def')){
-                          var res = func_js+'('
-                          res += (this.tree.length>0 ? $to_js(this.tree) : '')
-                          return res+')'
+                          return func_js+args_str
                       }
                   }
                   var res = '('+func_js+'.$is_func ? '
                   res += func_js+' : '
-                  res += 'getattr('+func_js+',"__call__"))('
-                  res += (this.tree.length>0 ? $to_js(this.tree) : '')
-                  res += ')'
+                  res += 'getattr('+func_js+',"__call__"))'+args_str
               }else{
-                  var res = 'getattr('+func_js+',"__call__")('
-                  res += (this.tree.length>0 ? $to_js(this.tree) : '')
-                  res += ')'
+                  var res = 'getattr('+func_js+',"__call__")'+args_str
               }
               return res
             }
@@ -6940,7 +6956,11 @@ function brython(options){
                                 
                 // If the error was not caught by the Python runtime, build an
                 // instance of a Python exception
-                if($err.$py_error===undefined) $err=_b_.RuntimeError($err+'')
+                if($err.$py_error===undefined){
+                    console.log('Javascript error', $err)
+                    console.log($js)
+                    $err=_b_.RuntimeError($err+'')
+                }
 
                 // Print the error traceback on the standard error stream
                 var $trace = $err.__name__+': ' +$err.args +'\n'+_b_.getattr($err,'info')

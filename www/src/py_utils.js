@@ -11,6 +11,13 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     // $other_kw = 'kw'
     // $after_star = ['u','v']
 
+    var has_kw_args = false, nb_pos = $args.length
+    if(nb_pos>0 && $args[nb_pos-1] && $args[nb_pos-1].$nat=='kw'){
+        has_kw_args=true
+        nb_pos--
+        var kw_args=$args[nb_pos].kw
+    }
+
     var $ns = {},$arg
 
     var $robj = {}
@@ -21,9 +28,10 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
 
     if($other_args != null){$ns[$other_args]=[]}
     if($other_kw != null){var $dict_keys=[], key_pos=0, $dict_values=[], value_pos=0}
+    
     // create new list of arguments in case some are packed
     var upargs = [], pos=0
-    for(var i=0, _len_i = $args.length; i < _len_i;i++){
+    for(var i=0, _len_i = nb_pos; i < _len_i;i++){
         $arg = $args[i]
         if($arg===undefined){console.log('arg '+i+' undef in '+$fname)}
         else if($arg===null){upargs[pos++]=null}
@@ -32,12 +40,6 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
              case 'ptuple':
                var _arg=$arg.arg
                for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs[pos++]=_arg[j]
-               break
-             case 'pdict':
-               var _arg=$arg.arg, items=_b_.list(_b_.dict.$dict.items(_arg))
-               for(var j=0, _len_j = items.length; j < _len_j;j++){
-                  upargs[pos++]={$nat:"kw",name:items[j][0],value:items[j][1]}
-               }
                break
              default:
                upargs[pos++]=$arg
@@ -48,45 +50,48 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     for(var $i=0, _len_$i = upargs.length; $i < _len_$i;$i++){
         var $arg=upargs[$i]
         var $PyVar=$B.$JS2Py($arg)
-        if($arg && $arg.$nat=='kw'){ // keyword argument
-            $PyVar = $arg.value
-            if($ns[$arg.name]!==undefined){
-                throw _b_.TypeError($fname+"() got multiple values for argument '"+$arg.name+"'")
-            }else if($robj[$arg.name]===null){
-                $ns[$arg.name]=$PyVar
+        if($i<$required.length){
+            $ns[$required[$i]]=$PyVar
+            nbreqset++
+        } else if($other_args!==null){
+            $ns[$other_args].push($PyVar)
+        } else if($i<$required.length+$defaults.length) {
+            $ns[$defaults[$i-$required.length]]=$PyVar
+        } else {
+            console.log(''+$B.line_info)
+            msg = $fname+"() takes "+$required.length+' positional argument'
+            msg += $required.length == 1 ? '' : 's'
+            msg += ' but more were given'
+            throw _b_.TypeError(msg)
+        }
+    }
+
+    if(has_kw_args){ // keyword argument
+        for(var key in kw_args){
+            $PyVar = kw_args[key]
+            if($ns[key]!==undefined){
+                throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")
+            }else if($robj[key]===null){
+                $ns[key]=$PyVar
                 nbreqset++
             }else if($other_args!==null && $after_star!==undefined &&
-                $after_star.indexOf($arg.name)>-1){
-                    var ix = $after_star.indexOf($arg.name)
+                $after_star.indexOf(key)>-1){
+                    var ix = $after_star.indexOf(key)
                     $ns[$after_star[ix]]=$PyVar
-            } else if($dobj[$arg.name]===null){
-                $ns[$arg.name]=$PyVar
-                var pos_def = $defaults.indexOf($arg.name)
+            } else if($dobj[key]===null){
+                $ns[key]=$PyVar
+                var pos_def = $defaults.indexOf(key)
                 $defaults.splice(pos_def,1)
-                delete $dobj[$arg.name]
+                delete $dobj[key]
             } else if($other_kw!=null){
-                $dict_keys[key_pos++]=$arg.name
-                $dict_values[value_pos++]=$PyVar
+                $dict_keys.push(key)
+                $dict_values.push($PyVar)
             } else {
-                throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+$arg.name+"'")
-            }
-        }else{ // positional argument
-            if($i<$required.length){
-                $ns[$required[$i]]=$PyVar
-                nbreqset++
-            } else if($other_args!==null){
-                $ns[$other_args].push($PyVar)
-            } else if($i<$required.length+$defaults.length) {
-                $ns[$defaults[$i-$required.length]]=$PyVar
-            } else {
-                console.log(''+$B.line_info)
-                msg = $fname+"() takes "+$required.length+' positional argument'
-                msg += $required.length == 1 ? '' : 's'
-                msg += ' but more were given'
-                throw _b_.TypeError(msg)
+                throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")
             }
         }
     }
+    
     if(nbreqset!==$required.length){
         // throw error if not all required positional arguments have been set
         var missing = [], pos=0
@@ -125,13 +130,20 @@ $B.$MakeArgs1 = function($fname,$args,$robj,$required,$dobj,$defaults,
     // $other_kw = 'kw'
     // $after_star = ['u','v']
 
+    var has_kw_args = false, nb_pos = $args.length
+    if(nb_pos>0 && $args[nb_pos-1].$nat=='kw'){
+        has_kw_args=true
+        nb_pos--
+        var kw_args=$args[nb_pos].kw
+    }
+    
     var $ns = {},$arg
 
     if($other_args != null){$ns[$other_args]=[]}
     if($other_kw != null){var $dict_keys=[], $dict_values=[]}
     // create new list of arguments in case some are packed
     var upargs = [], pos=0
-    for(var i=0, _len_i = $args.length; i < _len_i;i++){
+    for(var i=0, _len_i = nb_pos; i < _len_i;i++){
         $arg = $args[i]
         if($arg===undefined){console.log('arg '+i+' undef in '+$fname)}
         else if($arg===null){upargs[pos++]=null}
@@ -140,12 +152,6 @@ $B.$MakeArgs1 = function($fname,$args,$robj,$required,$dobj,$defaults,
              case 'ptuple':
                var _arg=$arg.arg
                for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs[pos++]=_arg[j]
-               break
-             case 'pdict':
-               var _arg=$arg.arg, items=_b_.list(_b_.dict.$dict.items(_arg))
-               for(var j=0, _len_j = items.length; j < _len_j;j++){
-                  upargs[pos++]={$nat:"kw",name:items[j][0],value:items[j][1]}
-               }
                break
              default:
                upargs[pos++]=$arg
@@ -156,29 +162,6 @@ $B.$MakeArgs1 = function($fname,$args,$robj,$required,$dobj,$defaults,
     for(var $i=0, _len_$i = upargs.length; $i < _len_$i;$i++){
         var $arg=upargs[$i]
         var $PyVar=$B.$JS2Py($arg)
-        if($arg && $arg.$nat=='kw'){ // keyword argument
-            $PyVar = $arg.value
-            if($ns[$arg.name]!==undefined){
-                throw _b_.TypeError($fname+"() got multiple values for argument '"+$arg.name+"'")
-            }else if($robj[$arg.name]===null){
-                $ns[$arg.name]=$PyVar
-                nbreqset++
-            }else if($other_args!==null && $after_star!==undefined &&
-                $after_star.indexOf($arg.name)>-1){
-                    var ix = $after_star.indexOf($arg.name)
-                    $ns[$after_star[ix]]=$PyVar
-            } else if($dobj[$arg.name]===null){
-                $ns[$arg.name]=$PyVar
-                var pos_def = $defaults.indexOf($arg.name)
-                $defaults.splice(pos_def,1)
-                delete $dobj[$arg.name]
-            } else if($other_kw!=null){
-                $dict_keys.push($arg.name)
-                $dict_values.push($PyVar)
-            } else {
-                throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+$arg.name+"'")
-            }
-        }else{ // positional argument
             if($i<$required.length){
                 $ns[$required[$i]]=$PyVar
                 nbreqset++
@@ -192,8 +175,34 @@ $B.$MakeArgs1 = function($fname,$args,$robj,$required,$dobj,$defaults,
                 msg += ' but more were given'
                 throw _b_.TypeError(msg)
             }
+    }
+
+    if(has_kw_args){ // keyword argument
+        for(var key in kw_args){
+            $PyVar = kw_args[key]
+            if($ns[key]!==undefined){
+                throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")
+            }else if($robj[key]===null){
+                $ns[key]=$PyVar
+                nbreqset++
+            }else if($other_args!==null && $after_star!==undefined &&
+                $after_star.indexOf(key)>-1){
+                    var ix = $after_star.indexOf(key)
+                    $ns[$after_star[ix]]=$PyVar
+            } else if($dobj[key]===null){
+                $ns[key]=$PyVar
+                var pos_def = $defaults.indexOf(key)
+                $defaults.splice(pos_def,1)
+                delete $dobj[key]
+            } else if($other_kw!=null){
+                $dict_keys.push(key)
+                $dict_values.push($PyVar)
+            } else {
+                throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")
+            }
         }
     }
+
     if(nbreqset!==$required.length){
         // throw error if not all required positional arguments have been set
         var missing = [], pos=0
@@ -613,6 +622,23 @@ $B.extend = function(fname, arg, mapping){
         }
     }
     return arg
+}
+
+// function used if a function call has an argument *args
+$B.extend_list = function(){
+    // The last argument is the iterable to unpack
+    var res = Array.prototype.slice.call(arguments,0,arguments.length-1),
+        last = $B.last(arguments)
+    var it = _b_.iter(last)
+    while (true){
+        try{
+            res.push(_b_.next(it))
+        }catch(err){
+            if(_b_.isinstance(err,[_b_.StopIteration])){$B.$pop_exc();break}
+            throw err
+        }
+    }
+    return res
 }
 
 $B.$test_item = function(expr){

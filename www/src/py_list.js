@@ -468,8 +468,11 @@ $ListDict.sort = function(self){
     for(var i=1, _len_i = arguments.length; i < _len_i;i++){
         var arg = arguments[i]
         if(arg.$nat=='kw'){
-            if(arg.name==='key'){func=getattr(arg.value,'__call__')}
-            else if(arg.name==='reverse'){reverse=arg.value}
+            var kw_args = arg.kw
+            for(var key in kw_args){
+                if(key=='key'){func=getattr(kw_args[key],'__call__')}
+                else if(key=='reverse'){reverse=kw_args[key]}
+            }
         }
     }
     if(self.length==0) return

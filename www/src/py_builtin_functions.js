@@ -848,64 +848,57 @@ function $extreme(args,op){ // used by min() and max()
 
     if(args.length==0){throw _b_.TypeError($op_name+" expected 1 arguments, got 0")}
     var last_arg = args[args.length-1]
-    var second_to_last_arg = args[args.length-2]
-    var last_i = args.length-1
-    var has_key = false
+    var nb_args = args.length
+    var has_kw_args = false
     var has_default = false
     var func = false
     if(last_arg.$nat=='kw'){
-        if(last_arg.name === 'key'){
-            var func = last_arg.value
-            has_key = true
-            last_i--
-        }else if (last_arg.name === 'default'){
-            var default_value = last_arg.value
-            has_default = true
-            last_i--
-        }else{throw _b_.TypeError("'"+last_arg.name+"' is an invalid keyword argument for this function")}
-    }else{var func = function(x){return x}}
-    if(second_to_last_arg && second_to_last_arg.$nat=='kw'){
-        if(second_to_last_arg.name === 'key'){
-            if (has_key){throw _b_.SyntaxError("Keyword argument repeated")}
-            var func = second_to_last_arg.value
-            has_key = true
-            last_i--
-        }else if (second_to_last_arg.name === 'default'){
-            if (has_default){throw _b_.SyntaxError("Keyword argument repeated")}
-            var default_value = second_to_last_arg.value
-            has_default = true
-            last_i--
-        }else{throw _b_.TypeError("'"+second_to_last_arg.name+"' is an invalid keyword argument for this function")}
-    }else{if(!func){var func = function(x){return x}}}
-    if((has_key && has_default && args.length==3) ||
-       (!has_key && has_default && args.length==2) ||
-       (has_key && !has_default && args.length==2) ||
-       (!has_key && !has_default && args.length==1)){
-        var arg = args[0]
-        if (arg.length < 1 && has_default){
-            return default_value
+        nb_args--
+        last_arg = last_arg.kw
+        for(var attr in last_arg){
+            switch(attr){
+                case 'key':
+                    var func = last_arg[attr]
+                    has_key = true
+                    break
+                case '$$default': // Brython changes "default" to "$$default"
+                    var default_value = last_arg[attr]
+                    has_default = true
+                    break
+                default:
+                    throw _b_.TypeError("'"+attr+"' is an invalid keyword argument for this function")
+                    break
+            }
         }
-        if (arg.length < 1 && !has_default){
-            throw _b_.ValueError($op_name+"() arg is an empty sequence")
-        }
-        var $iter = iter(arg)
-        var res = null
+    }
+    if(!func){func = function(x){return x}}
+    if(nb_args==0){
+        throw _b_.TypeError($op_name+" expected 1 arguments, got 0")
+    }else if(nb_args==1){
+        // Only one positional argument : it must be an iterable
+        var $iter = iter(args[0]),
+            res = null
         while(true){
             try{
                 var x = next($iter)
                 if(res===null || bool(getattr(func(x),op)(func(res)))){res = x}
             }catch(err){
-                if(err.__name__=="StopIteration"){$B.$pop_exc();return res}
+                if(err.__name__=="StopIteration"){
+                    $B.$pop_exc()
+                    if(res===null){
+                        if(has_default){return default_value}
+                        else{throw _b_.ValueError($op_name+"() arg is an empty sequence")}
+                    }else{return res}
+                }
                 throw err
             }
         }
-    } else if ((has_key && has_default && args.length>3) ||
-               (!has_key && has_default && args.length>2)){
+    }else{
+        if(has_default){
            throw _b_.TypeError("Cannot specify a default for "+$op_name+"() with multiple positional arguments")
-    } else {
-        if (last_i < 1){throw _b_.TypeError($op_name+" expected 1 arguments, got 0")}
+        }
         var res = null
-        for(var i=0;i<=last_i;i++){
+        for(var i=0;i<nb_args;i++){
             var x = args[i]
             if(res===null || bool(getattr(func(x),op)(func(res)))){res = x}
         }
@@ -1374,8 +1367,8 @@ function sorted () {
     var obj = _b_.list(iterable)
     // pass arguments to list.sort()
     var args = [obj], pos=1
-    if (key !== None) args[pos++]={$nat:'kw',name:'key',value:key}
-    if(reverse) args[pos++]={$nat:'kw',name:'reverse',value:true}
+    if (key !== None) args[pos++]={$nat:'kw',kw:{key:key}}
+    if(reverse) args[pos++]={$nat:'kw',kw:{reverse:true}}
     _b_.list.$dict.sort.apply(null,args)
     return obj
 }
