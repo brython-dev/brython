@@ -143,7 +143,11 @@ $DOMEventDict.__getattribute__ = function(self,attr){
 
     var res =  self[attr]
     if(res!==undefined){
-        if(typeof res=='function'){return function(){return res.apply(self,arguments)}}
+        if(typeof res=='function'){
+            var func = function(){return res.apply(self,arguments)}
+            func.$infos = {__name__:res.toString().substr(9, res.toString().search('{'))}
+            return func
+        }
         return $B.$JS2Py(res)
     }
     throw _b_.AttributeError("object DOMEvent has no attribute '"+attr+"'")
