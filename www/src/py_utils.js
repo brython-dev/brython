@@ -120,12 +120,14 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     return $ns
 }
 
-$B.$MakeArgs1 = function($fname,argcount,slots,$args,$dobj,
+$B.$MakeArgs1 = function($fname,argcount,slots,var_names,$args,$dobj,
     extra_pos_args,extra_kw_args){
     // builds a namespace from the arguments provided in $args
     // in a function defined like foo(x,y,z=1,*args,u,v,**kw) the parameters are
     // $fname = "f"
     // argcount = 3 (for x, y , z)
+    // slots = {x:null, y:null, z:null}
+    // var_names = ['x', 'y', 'z']
     // $dobj = {'z':1}
     // extra_pos_args = 'args'
     // extra_kw_args = 'kw'
@@ -165,10 +167,7 @@ $B.$MakeArgs1 = function($fname,argcount,slots,$args,$dobj,
     }
 
     // Fill slots with positional (non-extra) arguments
-    var var_names = Object.keys(slots)
-    for(var i=0;i<nb_pos;i++){
-        slots[var_names[i]]=$args[i]
-    }
+    for(var i=0;i<nb_pos;i++){slots[var_names[i]]=$args[i]}
 
     // Then fill slots with keyword arguments, if any
     if(has_kw_args){
@@ -193,8 +192,9 @@ $B.$MakeArgs1 = function($fname,argcount,slots,$args,$dobj,
     }
     
     // If there are unfilled slots, see if there are default values
-    var missing = []
-    for(var attr in slots){
+    var missing = [], attr
+    for(var i=nb_pos,_len=var_names.length;i<_len;i++){
+        attr = var_names[i]
         if(slots[attr]===null){
             if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}
             else{missing.push("'"+attr+"'")}
@@ -213,9 +213,7 @@ $B.$MakeArgs1 = function($fname,argcount,slots,$args,$dobj,
     
     }
     // extra positional arguments are a tuple
-    if(extra_pos_args){
-        slots[extra_pos_args].__class__ = _b_.tuple.$dict
-    }
+    if(extra_pos_args){slots[extra_pos_args].__class__ = _b_.tuple.$dict}
 
     return slots
     

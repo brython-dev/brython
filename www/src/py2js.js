@@ -1855,6 +1855,7 @@ function $DefCtx(context){
         this.args = []
         this.__defaults__ = []
         this.slots = []
+        var slot_list = []
         
         var func_args = this.tree[1].tree
         for(var i=0;i<func_args.length;i++){
@@ -1865,6 +1866,7 @@ function $DefCtx(context){
                 if(this.star_arg){this.kwonlyargcount++}
                 else{this.argcount++}
                 this.slots.push(arg.name+':null')
+                slot_list.push('"'+arg.name+'"')
                 if(arg.tree.length>0){
                     defaults[dpos++]='"'+arg.name+'"'
                     defs1[dpos1++]=arg.name+':'+$to_js(arg.tree)
@@ -1912,7 +1914,7 @@ function $DefCtx(context){
         
         // Declare object holding local variables
         var local_ns = '$locals_'+this.id
-        js = 'var '+local_ns+'={'+this.slots.join(', ')+'}, '
+        js = 'var '+local_ns+'={}, '
         js += '$local_name="'+this.id+'",$locals='+local_ns+';'
 
         var new_node = new $Node()
@@ -1934,12 +1936,13 @@ function $DefCtx(context){
 
         var make_args_nodes = []
         var func_ref = '$locals_'+scope.id.replace(/\./g,'_')+'["'+this.name+'"]'
-        var js = 'var $ns = $B.$MakeArgs1("'+this.name+'",'
-        js += this.argcount+', {'+this.slots.join(', ')+'},'
+        var js = 'var $ns = $B.$MakeArgs1("'+this.name+'", '
+        js += this.argcount+', {'+this.slots.join(', ')+'}, '
+        js += '['+slot_list.join(', ')+'], '
         js += 'arguments, '
-        if(defs1.length){js += '$defaults,'}
-        else{js += '{},'}
-        js += this.other_args+','+this.other_kw+');'
+        if(defs1.length){js += '$defaults, '}
+        else{js += '{}, '}
+        js += this.other_args+', '+this.other_kw+');'
 
         var new_node = new $Node()
         new $NodeJSCtx(new_node,js)
@@ -1958,21 +1961,16 @@ function $DefCtx(context){
             only_positional = true
             var pos_nodes = []
             
-            // Loop to test if all the arguments passed to the function
-            // are "simple", ie not a keyword argument (x=0) or a packed
-            // tuple (*x) or a packed dictionary (**x)
-            
             if($B.debug>0 || this.positional_list.length>0){
+
+                // Test if all the arguments passed to the function
+                // are positional, not keyword arguments
+                // In calls, keyword arguments are passed as the last
+                // argument, an object with attribute $nat set to "kw"
                 
-                var js = 'var $simple=arguments.length==0||arguments[arguments.length-1].$nat==undefined;'
-                //js += 'while($i-- > 0)'
-                //js += '{if(arguments[$i].$nat!=undefined){$simple=false;break}};'
                 var new_node = new $Node()
+                var js = 'if(arguments.length>0 && arguments[arguments.length-1].$nat)'
                 new $NodeJSCtx(new_node,js)
-                nodes.push(new_node)
-                
-                var new_node = new $Node()
-                new $NodeJSCtx(new_node,'if(!$simple)')
                 nodes.push(new_node)
                 
                 // If at least one argument is not "simple", fall back to 
@@ -2026,7 +2024,7 @@ function $DefCtx(context){
             for(var i=0;i<this.positional_list.length;i++){
                 var arg = this.positional_list[i]
                 var new_node = new $Node()
-                var js = '$locals["'+arg+'"]=arguments['+i+'];'
+                var js = '$locals["'+arg+'"]='+arg+';' //arguments['+i+'];'
                 new $NodeJSCtx(new_node,js)
                 else_node.add(new_node)
             }
@@ -2042,9 +2040,9 @@ function $DefCtx(context){
 
         // Node that replaces the original "def" line
         var def_func_node = new $Node()
-        if(this.name=='FF'){
+        if(only_positional){
             // experimental : pass formal parameters
-            var params = Object.keys(this.varnames).join(', ')
+            var params = Object.keys(this.varnames).concat(['$extra']).join(', ')
             new $NodeJSCtx(def_func_node,'return function('+params+')')
         }else{
             new $NodeJSCtx(def_func_node,'return function()')
@@ -4007,9 +4005,9 @@ function $ReturnCtx(context){
         if(scope.ntype=='generator'){
             return 'return [$B.generator_return(' + $to_js(this.tree)+')]'
         }
-        var js = 'var $res = '+$to_js(this.tree)
-        js += ';if($B.frames_stack.length>1){$B.frames_stack.pop()}'
-        return js +';return $res'
+        var js = '' //var $res = '+$to_js(this.tree)
+        js += 'if($B.frames_stack.length>1){$B.frames_stack.pop()}'
+        return js +';return '+$to_js(this.tree)
     }
 }
 

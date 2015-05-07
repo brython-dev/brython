@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-07 10:35:31.847000"
+__BRYTHON__.compiled_date="2015-05-07 22:37:58.903000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1118,6 +1118,7 @@ this.varnames={}
 this.args=[]
 this.__defaults__=[]
 this.slots=[]
+var slot_list=[]
 var func_args=this.tree[1].tree
 for(var i=0;i<func_args.length;i++){var arg=func_args[i]
 this.args[apos++]=arg.name
@@ -1125,6 +1126,7 @@ this.varnames[arg.name]=true
 if(arg.type==='func_arg_id'){if(this.star_arg){this.kwonlyargcount++}
 else{this.argcount++}
 this.slots.push(arg.name+':null')
+slot_list.push('"'+arg.name+'"')
 if(arg.tree.length>0){defaults[dpos++]='"'+arg.name+'"'
 defs1[dpos1++]=arg.name+':'+$to_js(arg.tree)
 this.__defaults__.push($to_js(arg.tree))
@@ -1151,7 +1153,7 @@ while(global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.
 }
 var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
 var local_ns='$locals_'+this.id
-js='var '+local_ns+'={'+this.slots.join(', ')+'}, '
+js='var '+local_ns+'={}, '
 js +='$local_name="'+this.id+'",$locals='+local_ns+';'
 var new_node=new $Node()
 new_node.locals_def=true
@@ -1166,12 +1168,13 @@ nodes.push(new_node)
 this.env=[]
 var make_args_nodes=[]
 var func_ref='$locals_'+scope.id.replace(/\./g,'_')+'["'+this.name+'"]'
-var js='var $ns = $B.$MakeArgs1("'+this.name+'",'
-js +=this.argcount+', {'+this.slots.join(', ')+'},'
+var js='var $ns = $B.$MakeArgs1("'+this.name+'", '
+js +=this.argcount+', {'+this.slots.join(', ')+'}, '
+js +='['+slot_list.join(', ')+'], '
 js +='arguments, '
-if(defs1.length){js +='$defaults,'}
-else{js +='{},'}
-js +=this.other_args+','+this.other_kw+');'
+if(defs1.length){js +='$defaults, '}
+else{js +='{}, '}
+js +=this.other_args+', '+this.other_kw+');'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 make_args_nodes.push(new_node)
@@ -1183,12 +1186,10 @@ if(defaults.length==0 && this.other_args===null && this.other_kw===null &&
 this.after_star.length==0){
 only_positional=true
 var pos_nodes=[]
-if($B.debug>0 ||this.positional_list.length>0){var js='var $simple=arguments.length==0||arguments[arguments.length-1].$nat==undefined;'
+if($B.debug>0 ||this.positional_list.length>0){
 var new_node=new $Node()
+var js='if(arguments.length>0 && arguments[arguments.length-1].$nat)'
 new $NodeJSCtx(new_node,js)
-nodes.push(new_node)
-var new_node=new $Node()
-new $NodeJSCtx(new_node,'if(!$simple)')
 nodes.push(new_node)
 new_node.add(make_args_nodes[0])
 new_node.add(make_args_nodes[1])
@@ -1225,7 +1226,7 @@ wrong_nb_node.add(new_node)
 }
 for(var i=0;i<this.positional_list.length;i++){var arg=this.positional_list[i]
 var new_node=new $Node()
-var js='$locals["'+arg+'"]=arguments['+i+'];'
+var js='$locals["'+arg+'"]='+arg+';' 
 new $NodeJSCtx(new_node,js)
 else_node.add(new_node)
 }}else{nodes.push(make_args_nodes[0])
@@ -1234,8 +1235,8 @@ nodes.push(make_args_nodes[1])
 for(var i=nodes.length-1;i>=0;i--){node.children.splice(0,0,nodes[i])
 }
 var def_func_node=new $Node()
-if(this.name=='FF'){
-var params=Object.keys(this.varnames).join(', ')
+if(only_positional){
+var params=Object.keys(this.varnames).concat(['$extra']).join(', ')
 new $NodeJSCtx(def_func_node,'return function('+params+')')
 }else{new $NodeJSCtx(def_func_node,'return function()')
 }
@@ -2428,9 +2429,9 @@ new $IdCtx(new $ExprCtx(this,'rvalue',false),'None')
 var scope=$get_scope(this)
 if(scope.ntype=='generator'){return 'return [$B.generator_return(' + $to_js(this.tree)+')]'
 }
-var js='var $res = '+$to_js(this.tree)
-js +=';if($B.frames_stack.length>1){$B.frames_stack.pop()}'
-return js +';return $res'
+var js='' 
+js +='if($B.frames_stack.length>1){$B.frames_stack.pop()}'
+return js +';return '+$to_js(this.tree)
 }}
 function $SingleKwCtx(C,token){
 this.type='single_kw'
@@ -5097,7 +5098,7 @@ si($ns[$other_kw],$dict_keys[i],$dict_values[i])
 if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
 return $ns
 }
-$B.$MakeArgs1=function($fname,argcount,slots,$args,$dobj,extra_pos_args,extra_kw_args){
+$B.$MakeArgs1=function($fname,argcount,slots,var_names,$args,$dobj,extra_pos_args,extra_kw_args){
 var has_kw_args=false,nb_pos=$args.length,$ns
 if(nb_pos>0 && $args[nb_pos-1].$nat=='kw'){has_kw_args=true
 nb_pos--
@@ -5115,9 +5116,7 @@ throw _b_.TypeError(msg)
 slots[extra_pos_args]=Array.prototype.slice.call($args,argcount,nb_pos)
 nb_pos=argcount
 }}
-var var_names=Object.keys(slots)
-for(var i=0;i<nb_pos;i++){slots[var_names[i]]=$args[i]
-}
+for(var i=0;i<nb_pos;i++){slots[var_names[i]]=$args[i]}
 if(has_kw_args){for(var key in kw_args){if(slots[key]===undefined){
 if(extra_kw_args){
 slots[extra_kw_args].$string_dict[key]=kw_args[key]
@@ -5127,16 +5126,16 @@ throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")
 }else{
 slots[key]=kw_args[key]
 }}}
-var missing=[]
-for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}
+var missing=[],attr
+for(var i=nb_pos,_len=var_names.length;i<_len;i++){attr=var_names[i]
+if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}
 else{missing.push("'"+attr+"'")}}}
 if(missing.length>0){var msg=$fname+" missing "+missing.length+" positional arguments: "
 msg +=missing.join(' and ')
 throw _b_.TypeError(msg)
 if(missing.length==1){throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")
 }else if(missing.length>1){}}
-if(extra_pos_args){slots[extra_pos_args].__class__=_b_.tuple.$dict
-}
+if(extra_pos_args){slots[extra_pos_args].__class__=_b_.tuple.$dict}
 return slots
 }
 $B.get_class=function(obj){
@@ -5739,7 +5738,7 @@ var res=getattr(obj,'__dir__')()
 res=_b_.list(res)
 res.sort()
 return res
-}catch(err){console.log('no __dir__ '+err);$B.$pop_exc()}}
+}catch(err){$B.$pop_exc()}}
 var res=[],pos=0
 for(var attr in obj){if(attr.charAt(0)!=='$' && attr!=='__class__'){res[pos++]=attr
 }}
@@ -6504,7 +6503,7 @@ var req=new XMLHttpRequest()
 var req=new ActiveXObject("Microsoft.XMLHTTP")
 }
 req.onreadystatechange=function(){var status=req.status
-if(status===404){$res=_b_.IOError('File not found')
+if(status===404){$res=_b_.IOError('File '+file+' not found')
 }else if(status!==200){$res=_b_.IOError('Could not open file '+file+' : status '+status)
 }else{$res=req.responseText
 }}
@@ -7682,7 +7681,7 @@ if(res!==undefined){return res}}
 for(var i=0,_len_i=mod_elts.length;i < _len_i;i++){
 var elt_name=mod_elts.slice(0,i+1).join('.')
 if($B.imported[elt_name]!==undefined){
-if($B.imported[elt_name].is_package){
+if(!$B.use_VFS && $B.imported[elt_name].is_package){
 package=elt_name
 package_path=$B.imported[elt_name].__file__
 funcs=[import_from_package ]
@@ -7703,7 +7702,7 @@ $B.modules[elt_name]=undefined
 $B.imported[elt_name]=undefined
 throw _b_.ImportError("cannot import "+elt_name)
 }
-if(i<mod_elts.length-1 && $B.imported[elt_name].is_package){
+if(!($B.use_VFS)&& i<mod_elts.length-1 && $B.imported[elt_name].is_package){
 package=elt_name
 package_path=$B.modules[elt_name].__file__
 funcs=[import_from_package ]

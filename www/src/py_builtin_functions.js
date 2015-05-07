@@ -231,7 +231,7 @@ function dir(obj){
             res = _b_.list(res)
             res.sort()
             return res
-        } catch (err){console.log('no __dir__ '+err);$B.$pop_exc()}
+        } catch (err){$B.$pop_exc()}
     }
     var res = [], pos=0
     for(var attr in obj){
@@ -1558,7 +1558,7 @@ function $url_open(){
         req.onreadystatechange = function(){
             var status = req.status
             if(status===404){
-                $res = _b_.IOError('File not found')
+                $res = _b_.IOError('File '+file+' not found')
             }else if(status!==200){
                 $res = _b_.IOError('Could not open file '+file+' : status '+status) 
             }else{
