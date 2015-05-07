@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-05 14:48:26.841000"
+__BRYTHON__.compiled_date="2015-05-07 10:35:31.847000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1113,6 +1113,7 @@ pnode=pnode.parent.parent
 }
 var defaults=[],apos=0,dpos=0,defs1=[],dpos1=0
 this.argcount=0
+this.kwonlyargcount=0 
 this.varnames={}
 this.args=[]
 this.__defaults__=[]
@@ -1121,7 +1122,8 @@ var func_args=this.tree[1].tree
 for(var i=0;i<func_args.length;i++){var arg=func_args[i]
 this.args[apos++]=arg.name
 this.varnames[arg.name]=true
-if(arg.type==='func_arg_id'){this.argcount++
+if(arg.type==='func_arg_id'){if(this.star_arg){this.kwonlyargcount++}
+else{this.argcount++}
 this.slots.push(arg.name+':null')
 if(arg.tree.length>0){defaults[dpos++]='"'+arg.name+'"'
 defs1[dpos1++]=arg.name+':'+$to_js(arg.tree)
@@ -1149,7 +1151,8 @@ while(global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.
 }
 var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
 var local_ns='$locals_'+this.id
-js='var '+local_ns+'={}, $local_name="'+this.id+'",$locals='+local_ns+';'
+js='var '+local_ns+'={'+this.slots.join(', ')+'}, '
+js +='$local_name="'+this.id+'",$locals='+local_ns+';'
 var new_node=new $Node()
 new_node.locals_def=true
 new $NodeJSCtx(new_node,js)
@@ -1160,17 +1163,15 @@ js +='"'+global_scope.id+'", '+global_ns+']);'
 new_node.enter_frame=true
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
-if(defs1.length>0){js='for(var $var in $defaults){$locals[$var]=$defaults[$var]};'
-var new_node=new $Node()
-new $NodeJSCtx(new_node,js)
-nodes.push(new_node)
-}
 this.env=[]
 var make_args_nodes=[]
-var js='var $ns=$B.$MakeArgs1("'+this.name+'",arguments,'
-js +=positional_obj+',['+positional_str+'],'+dobj+','
-js +='['+defaults.join(',')+'],'+this.other_args+','+this.other_kw+
-',['+this.after_star.join(',')+']);'
+var func_ref='$locals_'+scope.id.replace(/\./g,'_')+'["'+this.name+'"]'
+var js='var $ns = $B.$MakeArgs1("'+this.name+'",'
+js +=this.argcount+', {'+this.slots.join(', ')+'},'
+js +='arguments, '
+if(defs1.length){js +='$defaults,'}
+else{js +='{},'}
+js +=this.other_args+','+this.other_kw+');'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 make_args_nodes.push(new_node)
@@ -1182,9 +1183,7 @@ if(defaults.length==0 && this.other_args===null && this.other_kw===null &&
 this.after_star.length==0){
 only_positional=true
 var pos_nodes=[]
-if($B.debug>0 ||this.positional_list.length>0){var js='var $simple=true, $i=arguments.length;'
-js +='while($i-- > 0)'
-js +='{if(arguments[$i].$nat!=undefined){$simple=false;break}};'
+if($B.debug>0 ||this.positional_list.length>0){var js='var $simple=arguments.length==0||arguments[arguments.length-1].$nat==undefined;'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
@@ -1226,7 +1225,7 @@ wrong_nb_node.add(new_node)
 }
 for(var i=0;i<this.positional_list.length;i++){var arg=this.positional_list[i]
 var new_node=new $Node()
-var js='$locals["'+arg+'"]=$B.$JS2Py(arguments['+i+']);'
+var js='$locals["'+arg+'"]=arguments['+i+'];'
 new $NodeJSCtx(new_node,js)
 else_node.add(new_node)
 }}else{nodes.push(make_args_nodes[0])
@@ -1246,7 +1245,7 @@ for(var i=0;i<node.children.length;i++){def_func_node.add(node.children[i])
 }
 var last_instr=node.children[node.children.length-1].C.tree[0]
 if(last_instr.type!=='return' && this.type!='generator'){new_node=new $Node()
-new $NodeJSCtx(new_node,';$B.leave_frame("'+this.id+'");return None;')
+new $NodeJSCtx(new_node,';$B.leave_frame();return None;')
 def_func_node.add(new_node)
 }
 node.children=[]
@@ -1285,7 +1284,12 @@ offset++
 }
 var prefix=this.tree[0].to_js()
 var indent=node.indent
-js=prefix+'.$infos={__name__:"'
+js=prefix+'.$infos = {'
+var name_decl=new $Node()
+new $NodeJSCtx(name_decl,js)
+node.parent.insert(rank+offset,name_decl)
+offset++
+js='    __name__:"'
 if(this.scope.ntype=='class'){js+=this.scope.C.tree[0].name+'.'}
 js +=this.name+'",'
 var name_decl=new $Node()
@@ -1313,13 +1317,15 @@ for(var attr in this.varnames){co_varnames.push('"'+attr+'"')}
 var h='\n'+' '.repeat(indent+8)
 js='    __code__:{'+h+'__class__:$B.$CodeDict'
 h=','+h
+js +=h+'co_argcount:'+this.argcount
 js +=h+'co_filename:$locals_'+scope.module.replace(/\./g,'_')+'["__file__"]'
 js +=h+'co_firstlineno:'+node.line_num
-js +=h+'co_argcount:'+this.argcount
+js +=h+'co_flags:'+flags+'\n'+' '.repeat(indent+4)
+js +=h+'co_kwonlyargcount:'+this.kwonlyargcount
 js +=h+'co_name: "'+this.name+'"'
-js +=h+'co_varnames: ['+co_varnames.join(', ')+']'
 js +=h+'co_nlocals: '+co_varnames.length
-js +=h+'co_flags:'+flags+'\n'+' '.repeat(indent+4)+'}\n};'
+js +=h+'co_varnames: ['+co_varnames.join(', ')+']'
+js +='}\n};'
 js +='None;'
 new_node=new $Node()
 new $NodeJSCtx(new_node,js)
@@ -2422,7 +2428,9 @@ new $IdCtx(new $ExprCtx(this,'rvalue',false),'None')
 var scope=$get_scope(this)
 if(scope.ntype=='generator'){return 'return [$B.generator_return(' + $to_js(this.tree)+')]'
 }
-return 'var $res = '+$to_js(this.tree)+';$B.leave_frame("'+scope.id+'");return $res'
+var js='var $res = '+$to_js(this.tree)
+js +=';if($B.frames_stack.length>1){$B.frames_stack.pop()}'
+return js +';return $res'
 }}
 function $SingleKwCtx(C,token){
 this.type='single_kw'
@@ -3486,7 +3494,9 @@ return new $AbstractExprCtx(C,false)
 break
 case ',':
 case ')':
-if(C.parent.has_default && C.tree.length==0){$pos -=C.name.length
+if(C.parent.has_default && C.tree.length==0 &&
+C.parent.has_star_arg===undefined){console.log('parent '+C.parent,C.parent)
+$pos -=C.name.length
 $_SyntaxError(C,['non-default argument follows default argument'])
 }else{return $transition(C.parent,token)
 }}
@@ -4556,7 +4566,6 @@ for(var attr in $err){console.log(attr+' : ',$err[attr])
 console.log('line info '+$B.line_info)
 }
 if($err.$py_error===undefined){console.log('Javascript error',$err)
-console.log($js)
 $err=_b_.RuntimeError($err+'')
 }
 var $trace=$err.__name__+': ' +$err.args +'\n'+_b_.getattr($err,'info')
@@ -5088,76 +5097,47 @@ si($ns[$other_kw],$dict_keys[i],$dict_values[i])
 if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
 return $ns
 }
-$B.$MakeArgs1=function($fname,$args,$robj,$required,$dobj,$defaults,$other_args,$other_kw,$after_star){
-var has_kw_args=false,nb_pos=$args.length
+$B.$MakeArgs1=function($fname,argcount,slots,$args,$dobj,extra_pos_args,extra_kw_args){
+var has_kw_args=false,nb_pos=$args.length,$ns
 if(nb_pos>0 && $args[nb_pos-1].$nat=='kw'){has_kw_args=true
 nb_pos--
 var kw_args=$args[nb_pos].kw
 }
-var $ns={},$arg
-if($other_args !=null){$ns[$other_args]=[]}
-if($other_kw !=null){var $dict_keys=[],$dict_values=[]}
-var upargs=[],pos=0
-for(var i=0,_len_i=nb_pos;i < _len_i;i++){$arg=$args[i]
-if($arg===undefined){console.log('arg '+i+' undef in '+$fname)}
-else if($arg===null){upargs[pos++]=null}
-else{
-switch($arg.$nat){case 'ptuple':
-var _arg=$arg.arg
-for(var j=0,_len_j=_arg.length;j < _len_j;j++)upargs[pos++]=_arg[j]
-break
-default:
-upargs[pos++]=$arg
-}
-}
-}
-var nbreqset=0 
-for(var $i=0,_len_$i=upargs.length;$i < _len_$i;$i++){var $arg=upargs[$i]
-var $PyVar=$B.$JS2Py($arg)
-if($i<$required.length){$ns[$required[$i]]=$PyVar
-nbreqset++
-}else if($other_args!==null){$ns[$other_args].push($PyVar)
-}else if($i<$required.length+$defaults.length){$ns[$defaults[$i-$required.length]]=$PyVar
-}else{
-msg=$fname+"() takes "+$required.length+' positional argument'
-msg +=$required.length==1 ? '' : 's'
+if(extra_pos_args){slots[extra_pos_args]=[]}
+if(extra_kw_args){slots[extra_kw_args]=_b_.dict()}
+if(nb_pos>argcount){
+if(extra_pos_args===null){
+msg=$fname+"() takes "+argcount+' positional argument'
+msg +=argcount> 1 ? '' : 's'
 msg +=' but more were given'
 throw _b_.TypeError(msg)
-}}
-if(has_kw_args){
-for(var key in kw_args){$PyVar=kw_args[key]
-if($ns[key]!==undefined){throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")
-}else if($robj[key]===null){$ns[key]=$PyVar
-nbreqset++
-}else if($other_args!==null && $after_star!==undefined &&
-$after_star.indexOf(key)>-1){var ix=$after_star.indexOf(key)
-$ns[$after_star[ix]]=$PyVar
-}else if($dobj[key]===null){$ns[key]=$PyVar
-var pos_def=$defaults.indexOf(key)
-$defaults.splice(pos_def,1)
-delete $dobj[key]
-}else if($other_kw!=null){$dict_keys.push(key)
-$dict_values.push($PyVar)
 }else{
-throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")
+slots[extra_pos_args]=Array.prototype.slice.call($args,argcount,nb_pos)
+nb_pos=argcount
+}}
+var var_names=Object.keys(slots)
+for(var i=0;i<nb_pos;i++){slots[var_names[i]]=$args[i]
+}
+if(has_kw_args){for(var key in kw_args){if(slots[key]===undefined){
+if(extra_kw_args){
+slots[extra_kw_args].$string_dict[key]=kw_args[key]
+}else{throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")
+}}else if(slots[key]!==null){
+throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")
+}else{
+slots[key]=kw_args[key]
 }}}
-if(nbreqset!==$required.length){
-var missing=[],pos=0
-for(var i=0,_len_i=$required.length;i < _len_i;i++){if($ns[$required[i]]===undefined){missing[pos++]=$required[i]}}
-if(missing.length==1){throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")
-}else if(missing.length>1){var msg=$fname+" missing "+missing.length+" positional arguments: "
-for(var i=0,_len_i=missing.length-1;i < _len_i;i++){msg +="'"+missing[i]+"', "}
-msg +="and '"+missing.pop()+"'"
+var missing=[]
+for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}
+else{missing.push("'"+attr+"'")}}}
+if(missing.length>0){var msg=$fname+" missing "+missing.length+" positional arguments: "
+msg +=missing.join(' and ')
 throw _b_.TypeError(msg)
-}}
-if($other_kw!=null){$ns[$other_kw]=_b_.dict()
-var si=_b_.dict.$dict.__setitem__
-var i=$dict_keys.length
-while(i--){
-si($ns[$other_kw],$dict_keys[i],$dict_values[i])
-}}
-if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
-return $ns
+if(missing.length==1){throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")
+}else if(missing.length>1){}}
+if(extra_pos_args){slots[extra_pos_args].__class__=_b_.tuple.$dict
+}
+return slots
 }
 $B.get_class=function(obj){
 if(obj===null){return $B.$NoneDict}
@@ -5608,7 +5588,7 @@ return value
 $B.enter_frame=function(frame){$B.frames_stack[$B.frames_stack.length]=frame
 }
 $B.leave_frame=function(){
-if($B.frames_stack.length>1){var frame=$B.frames_stack.pop()
+if($B.frames_stack.length>1){$B.frames_stack.pop()
 }}})(__BRYTHON__)
 if(!Array.indexOf){Array.prototype.indexOf=function(obj){for(var i=0,_len_i=this.length;i < _len_i;i++)if(this[i]==obj)return i
 return -1

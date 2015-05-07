@@ -1684,19 +1684,19 @@ function $DecoratorCtx(context){
         if ($B.async_enabled && _block_async_flag) {
            /*
 
-// this would be a good test to see if async (and blocking) works
-
-@brython_block
-def mytest():
-    print("10")
-
-for _i in range(10):
-    print(_i)
-    
-mytest()
-
-for _i in range(11,20):
-    print(_i)
+        // this would be a good test to see if async (and blocking) works
+        
+        @brython_block
+        def mytest():
+            print("10")
+        
+        for _i in range(10):
+            print(_i)
+            
+        mytest()
+        
+        for _i in range(11,20):
+            print(_i)
            */
 
            if ($B.block[scope.id] === undefined) $B.block[scope.id]={}
@@ -1850,6 +1850,7 @@ function $DefCtx(context){
         
         var defaults = [], apos=0, dpos=0,defs1=[],dpos1=0
         this.argcount = 0
+        this.kwonlyargcount = 0 // number of args after a star arg
         this.varnames = {}
         this.args = []
         this.__defaults__ = []
@@ -1861,11 +1862,11 @@ function $DefCtx(context){
             this.args[apos++]=arg.name
             this.varnames[arg.name]=true
             if(arg.type==='func_arg_id'){
-                this.argcount++
+                if(this.star_arg){this.kwonlyargcount++}
+                else{this.argcount++}
                 this.slots.push(arg.name+':null')
                 if(arg.tree.length>0){
                     defaults[dpos++]='"'+arg.name+'"'
-                    //defs.push(arg.name+' = '+$to_js(arg.tree))
                     defs1[dpos1++]=arg.name+':'+$to_js(arg.tree)
                     this.__defaults__.push($to_js(arg.tree))
                 }
@@ -1911,7 +1912,8 @@ function $DefCtx(context){
         
         // Declare object holding local variables
         var local_ns = '$locals_'+this.id
-        js = 'var '+local_ns+'={}, $local_name="'+this.id+'",$locals='+local_ns+';'
+        js = 'var '+local_ns+'={'+this.slots.join(', ')+'}, '
+        js += '$local_name="'+this.id+'",$locals='+local_ns+';'
 
         var new_node = new $Node()
         new_node.locals_def = true
@@ -1926,23 +1928,18 @@ function $DefCtx(context){
         new $NodeJSCtx(new_node,js)
         nodes.push(new_node)
         
-        // Initialize default variables, if provided
-        if(defs1.length>0){
-            js = 'for(var $var in $defaults){$locals[$var]=$defaults[$var]};'
-            var new_node = new $Node()
-            new $NodeJSCtx(new_node,js)
-            nodes.push(new_node)
-        }
-
         this.env = []
     
         // Code in the worst case, uses MakeArgs1 in py_utils.js
 
         var make_args_nodes = []
-        var js = 'var $ns=$B.$MakeArgs1("'+this.name+'",arguments,'
-        js += positional_obj+',['+positional_str+'],'+dobj+','
-        js += '['+defaults.join(',')+'],'+this.other_args+','+this.other_kw+
-            ',['+this.after_star.join(',')+']);'
+        var func_ref = '$locals_'+scope.id.replace(/\./g,'_')+'["'+this.name+'"]'
+        var js = 'var $ns = $B.$MakeArgs1("'+this.name+'",'
+        js += this.argcount+', {'+this.slots.join(', ')+'},'
+        js += 'arguments, '
+        if(defs1.length){js += '$defaults,'}
+        else{js += '{},'}
+        js += this.other_args+','+this.other_kw+');'
 
         var new_node = new $Node()
         new $NodeJSCtx(new_node,js)
@@ -1967,9 +1964,9 @@ function $DefCtx(context){
             
             if($B.debug>0 || this.positional_list.length>0){
                 
-                var js = 'var $simple=true, $i=arguments.length;'
-                js += 'while($i-- > 0)'
-                js += '{if(arguments[$i].$nat!=undefined){$simple=false;break}};'
+                var js = 'var $simple=arguments.length==0||arguments[arguments.length-1].$nat==undefined;'
+                //js += 'while($i-- > 0)'
+                //js += '{if(arguments[$i].$nat!=undefined){$simple=false;break}};'
                 var new_node = new $Node()
                 new $NodeJSCtx(new_node,js)
                 nodes.push(new_node)
@@ -2029,7 +2026,7 @@ function $DefCtx(context){
             for(var i=0;i<this.positional_list.length;i++){
                 var arg = this.positional_list[i]
                 var new_node = new $Node()
-                var js = '$locals["'+arg+'"]=$B.$JS2Py(arguments['+i+']);'
+                var js = '$locals["'+arg+'"]=arguments['+i+'];'
                 new $NodeJSCtx(new_node,js)
                 else_node.add(new_node)
             }
@@ -2064,7 +2061,7 @@ function $DefCtx(context){
         if(last_instr.type!=='return' && this.type!='generator'){
             new_node = new $Node()
             new $NodeJSCtx(new_node,
-                ';$B.leave_frame("'+this.id+'");return None;')
+                ';$B.leave_frame();return None;')
             def_func_node.add(new_node)
         }
 
@@ -2127,9 +2124,18 @@ function $DefCtx(context){
         var prefix = this.tree[0].to_js()
         
         var indent = node.indent
+
+        // Create attribute $infos for the function
+        // Adding only one attribute is much faster than adding all the 
+        // keys/values in $infos
+        js = prefix+'.$infos = {'
+        var name_decl = new $Node()
+        new $NodeJSCtx(name_decl,js)
+        node.parent.insert(rank+offset,name_decl)
+        offset++
         
         // Add attribute __name__
-        js = prefix+'.$infos={__name__:"'
+        js = '    __name__:"'
         if(this.scope.ntype=='class'){js+=this.scope.context.tree[0].name+'.'}
         js += this.name+'",'
         var name_decl = new $Node()
@@ -2167,13 +2173,15 @@ function $DefCtx(context){
         var h = '\n'+' '.repeat(indent+8)
         js = '    __code__:{'+h+'__class__:$B.$CodeDict'
         h = ','+h
+        js += h+'co_argcount:'+this.argcount
         js += h+'co_filename:$locals_'+scope.module.replace(/\./g,'_')+'["__file__"]'
         js += h+'co_firstlineno:'+node.line_num
-        js += h+'co_argcount:'+this.argcount
+        js += h+'co_flags:'+flags+'\n'+' '.repeat(indent+4)
+        js += h+'co_kwonlyargcount:'+this.kwonlyargcount
         js += h+'co_name: "'+this.name+'"'
-        js += h+'co_varnames: ['+co_varnames.join(', ')+']'
         js += h+'co_nlocals: '+co_varnames.length
-        js += h+'co_flags:'+flags+'\n'+' '.repeat(indent+4)+'}\n};'
+        js += h+'co_varnames: ['+co_varnames.join(', ')+']'
+        js += '}\n};'
 
         // End with None for interactive interpreter        
         js += 'None;'
@@ -3999,7 +4007,9 @@ function $ReturnCtx(context){
         if(scope.ntype=='generator'){
             return 'return [$B.generator_return(' + $to_js(this.tree)+')]'
         }
-        return 'var $res = '+$to_js(this.tree)+';$B.leave_frame("'+scope.id+'");return $res'
+        var js = 'var $res = '+$to_js(this.tree)
+        js += ';if($B.frames_stack.length>1){$B.frames_stack.pop()}'
+        return js +';return $res'
     }
 }
 
@@ -5482,7 +5492,9 @@ function $transition(context,token){
             break
           case ',':
           case ')':
-            if(context.parent.has_default && context.tree.length==0){
+            if(context.parent.has_default && context.tree.length==0 &&
+                context.parent.has_star_arg===undefined){
+                console.log('parent '+context.parent, context.parent)
                 $pos -= context.name.length
                 $_SyntaxError(context,['non-default argument follows default argument'])
             }else{
@@ -6958,7 +6970,7 @@ function brython(options){
                 // instance of a Python exception
                 if($err.$py_error===undefined){
                     console.log('Javascript error', $err)
-                    console.log($js)
+                    //console.log($js)
                     $err=_b_.RuntimeError($err+'')
                 }
 

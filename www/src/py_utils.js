@@ -120,115 +120,105 @@ $B.$MakeArgs = function($fname,$args,$required,$defaults,$other_args,$other_kw,$
     return $ns
 }
 
-$B.$MakeArgs1 = function($fname,$args,$robj,$required,$dobj,$defaults,
-    $other_args,$other_kw,$after_star){
+$B.$MakeArgs1 = function($fname,argcount,slots,$args,$dobj,
+    extra_pos_args,extra_kw_args){
     // builds a namespace from the arguments provided in $args
     // in a function defined like foo(x,y,z=1,*args,u,v,**kw) the parameters are
-    // $required : ['x','y']
-    // $defaults : {'z':1}
-    // $other_args = 'args'
-    // $other_kw = 'kw'
-    // $after_star = ['u','v']
-
-    var has_kw_args = false, nb_pos = $args.length
+    // $fname = "f"
+    // argcount = 3 (for x, y , z)
+    // $dobj = {'z':1}
+    // extra_pos_args = 'args'
+    // extra_kw_args = 'kw'
+    
+    var has_kw_args = false, 
+        nb_pos = $args.length,
+        $ns
+    
+    // If the function call had keywords arguments, they are in the last
+    // element of $args
     if(nb_pos>0 && $args[nb_pos-1].$nat=='kw'){
         has_kw_args=true
         nb_pos--
         var kw_args=$args[nb_pos].kw
     }
-    
-    var $ns = {},$arg
 
-    if($other_args != null){$ns[$other_args]=[]}
-    if($other_kw != null){var $dict_keys=[], $dict_values=[]}
-    // create new list of arguments in case some are packed
-    var upargs = [], pos=0
-    for(var i=0, _len_i = nb_pos; i < _len_i;i++){
-        $arg = $args[i]
-        if($arg===undefined){console.log('arg '+i+' undef in '+$fname)}
-        else if($arg===null){upargs[pos++]=null}
-        else {
-           switch($arg.$nat) {
-             case 'ptuple':
-               var _arg=$arg.arg
-               for(var j=0, _len_j = _arg.length; j < _len_j;j++) upargs[pos++]=_arg[j]
-               break
-             default:
-               upargs[pos++]=$arg
-           }//switch
-        }//else
-    }
-    var nbreqset = 0 // number of required arguments set
-    for(var $i=0, _len_$i = upargs.length; $i < _len_$i;$i++){
-        var $arg=upargs[$i]
-        var $PyVar=$B.$JS2Py($arg)
-            if($i<$required.length){
-                $ns[$required[$i]]=$PyVar
-                nbreqset++
-            } else if($other_args!==null){
-                $ns[$other_args].push($PyVar)
-            } else if($i<$required.length+$defaults.length) {
-                $ns[$defaults[$i-$required.length]]=$PyVar
-            } else {
-                msg = $fname+"() takes "+$required.length+' positional argument'
-                msg += $required.length == 1 ? '' : 's'
-                msg += ' but more were given'
-                throw _b_.TypeError(msg)
-            }
+    if(extra_pos_args){slots[extra_pos_args]=[]}
+    if(extra_kw_args){slots[extra_kw_args]=_b_.dict()}
+
+    if(nb_pos>argcount){
+        // More positional arguments than formal parameters
+        if(extra_pos_args===null){
+            // No parameter to store extra positional arguments :
+            // thow an exception
+            msg = $fname+"() takes "+argcount+' positional argument'
+            msg += argcount> 1 ? '' : 's'
+            msg += ' but more were given'
+            throw _b_.TypeError(msg)
+        }else{
+            // Store extra positional arguments
+            slots[extra_pos_args] = Array.prototype.slice.call($args,
+                argcount,nb_pos)
+            // For the next step of the algorithm, only use the arguments
+            // before these extra arguments
+            nb_pos = argcount
+        }
     }
 
-    if(has_kw_args){ // keyword argument
+    // Fill slots with positional (non-extra) arguments
+    var var_names = Object.keys(slots)
+    for(var i=0;i<nb_pos;i++){
+        slots[var_names[i]]=$args[i]
+    }
+
+    // Then fill slots with keyword arguments, if any
+    if(has_kw_args){
         for(var key in kw_args){
-            $PyVar = kw_args[key]
-            if($ns[key]!==undefined){
-                throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")
-            }else if($robj[key]===null){
-                $ns[key]=$PyVar
-                nbreqset++
-            }else if($other_args!==null && $after_star!==undefined &&
-                $after_star.indexOf(key)>-1){
-                    var ix = $after_star.indexOf(key)
-                    $ns[$after_star[ix]]=$PyVar
-            } else if($dobj[key]===null){
-                $ns[key]=$PyVar
-                var pos_def = $defaults.indexOf(key)
-                $defaults.splice(pos_def,1)
-                delete $dobj[key]
-            } else if($other_kw!=null){
-                $dict_keys.push(key)
-                $dict_values.push($PyVar)
-            } else {
-                throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")
+            if(slots[key]===undefined){
+                // The name of the keyword argument doesn't match any of the
+                // formal parameters
+                if(extra_kw_args){
+                    // If there is a place to store extra keyword arguments
+                    slots[extra_kw_args].$string_dict[key]=kw_args[key]
+                }else{
+                    throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")
+                }
+            }else if(slots[key]!==null){
+                // The slot is already filled
+                throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")            
+            }else{    
+                // Fill the slot with the key/value pair
+                slots[key] = kw_args[key]
             }
         }
     }
-
-    if(nbreqset!==$required.length){
-        // throw error if not all required positional arguments have been set
-        var missing = [], pos=0
-        for(var i=0, _len_i = $required.length; i < _len_i;i++){
-            if($ns[$required[i]]===undefined){missing[pos++]=$required[i]}
+    
+    // If there are unfilled slots, see if there are default values
+    var missing = []
+    for(var attr in slots){
+        if(slots[attr]===null){
+            if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}
+            else{missing.push("'"+attr+"'")}
         }
+    }
+    
+    if(missing.length>0){
+        var msg = $fname+" missing "+missing.length+" positional arguments: "
+        msg += missing.join(' and ')
+        throw _b_.TypeError(msg)
+
         if(missing.length==1){
             throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")
         }else if(missing.length>1){
-            var msg = $fname+" missing "+missing.length+" positional arguments: "
-            for(var i=0, _len_i = missing.length-1; i < _len_i;i++){msg += "'"+missing[i]+"', "}
-            msg += "and '"+missing.pop()+"'"
-            throw _b_.TypeError(msg)
         }
+    
     }
-    if($other_kw!=null){
-        $ns[$other_kw]=_b_.dict()
-        var si=_b_.dict.$dict.__setitem__
-        var i=$dict_keys.length
-        while(i--) {
-           // for(var i=0;i<$dict_keys.length;i++){
-            si($ns[$other_kw], $dict_keys[i],$dict_values[i])
-        }
+    // extra positional arguments are a tuple
+    if(extra_pos_args){
+        slots[extra_pos_args].__class__ = _b_.tuple.$dict
     }
-    if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
-    return $ns
+
+    return slots
+    
 }
 
 
@@ -1013,7 +1003,7 @@ $B.enter_frame = function(frame){
 $B.leave_frame = function(){
     // We must leave at least the frame for the main program
     if($B.frames_stack.length>1){
-        var frame = $B.frames_stack.pop()
+        $B.frames_stack.pop()
         //delete $B.modules[frame[0]],$B.$py_src[frame[0]]
     }
 }
