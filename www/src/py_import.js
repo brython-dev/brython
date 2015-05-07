@@ -433,7 +433,7 @@ $B.$import = function(mod_name,origin){
     //   in the path of the standard distribution (/libs or /Lib), then in
     //   /Lib/site-packages (for 3rd party modules), then in the folder of
     //   the "calling" script, identified by "origin"
-    
+
     if($B.use_VFS){
         funcs = [import_from_VFS]
     }else if($B.static_stdlib_import){
@@ -471,7 +471,7 @@ $B.$import = function(mod_name,origin){
         var elt_name = mod_elts.slice(0,i+1).join('.')
         if($B.imported[elt_name]!==undefined){
             // module is already imported
-            if($B.imported[elt_name].is_package){
+            if(!$B.use_VFS && $B.imported[elt_name].is_package){
                 // If it's a package, the search will be inside this package
                 package = elt_name
                 package_path = $B.imported[elt_name].__file__
@@ -508,7 +508,7 @@ $B.$import = function(mod_name,origin){
             throw _b_.ImportError("cannot import "+elt_name)
         }
         
-        if(i<mod_elts.length-1 && $B.imported[elt_name].is_package){
+        if(!($B.use_VFS) && i<mod_elts.length-1 && $B.imported[elt_name].is_package){
             // If the module found is a package, the search will go on inside
             // this package
             package = elt_name
