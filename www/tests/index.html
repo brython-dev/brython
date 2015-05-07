@@ -87,14 +87,17 @@ def test_next():
     script_num += 1
     options = doc['files'].options
     if script_num < len(options):
-        option = doc['files'].options[script_num]
-        src = open(option.value).read()
-        doc['files'].selectedIndex = script_num
-        editor.editor.setValue(src)
-        state = run(in_globals=True)
-        if state == 0:
-            failed.append(option.text)
-        timer.set_timeout(test_next,500)
+        try:
+            option = doc['files'].options[script_num]
+            src = open(option.value).read()
+            doc['files'].selectedIndex = script_num
+            editor.editor.setValue(src)
+            state = run(in_globals=True)
+            if state == 0:
+                failed.append(option.text)
+            timer.set_timeout(test_next,500)
+        except Exception as exc:
+            traceback.print_exc(file=sys.stderr)
     else:
         doc['console'].value = ''
         print('completed all tests in %.2f s' %(time.time()-t_start))
