@@ -152,9 +152,10 @@ function import_py(module,path,package){
     }
     $B.imported[module.name].is_package = module.is_package
     if(path.substr(path.length-12)=='/__init__.py'){
-        module.is_package = true
+        //module.is_package = true
         $B.imported[module.name].__package__ = module.name
-    }else if(package!==undefined){
+        $B.imported[module.name].is_package = module.is_package = true
+    }else if(package){
         $B.imported[module.name].__package__ = package
     }else{
         var mod_elts = module.name.split('.')
@@ -201,7 +202,7 @@ $B.run_py=run_py=function(module,path,module_contents) {
 
     }catch(err){
         console.log(err+' for module '+module.name)
-        //console.log(js)
+        console.log(js)
         //for(var attr in err){
             //console.log(attr, err[attr])
         //}
@@ -352,7 +353,9 @@ function import_from_caller_folder(mod_name,origin,package){
     for(var i=0, _len_i = py_paths.length; i < _len_i;i++){
         //console.log(module, py_paths[i])
         var py_mod = import_py(module, py_paths[i],package)
-        if(py_mod!==null) return py_mod
+        if(py_mod!==null) {
+            return py_mod
+        }
     }
     return null    
 }
@@ -387,9 +390,6 @@ $B.$import = function(mod_name,origin){
     //
     // The function returns None
 
-    if(mod_name.charAt(0)=='.'){
-        console.log('import '+mod_name)
-    }
     
     var parts = mod_name.split('.')
     var norm_parts = []
@@ -435,7 +435,9 @@ $B.$import = function(mod_name,origin){
     //   the "calling" script, identified by "origin"
 
     if($B.use_VFS){
-        funcs = [import_from_VFS]
+        funcs = [import_from_VFS, 
+            import_from_stdlib_static] // some modules in std lib are not in 
+                                       // py_VFS, eg unittest
     }else if($B.static_stdlib_import){
         funcs = [import_from_stdlib_static]
     }else{
@@ -460,10 +462,13 @@ $B.$import = function(mod_name,origin){
     if(mod_elts[0]==package && mod_elts.length==2){
         // For the form "from . import x", search name "x" in the package, ie
         // in the names defined in __init__.py
+        if($B.imported[package]===undefined){
+            console.log('mod_elts ['+mod_elts+']','package',package,'undef')
+        }
         var res = $B.imported[package][mod_elts[1]]
         if(res!==undefined){return res}
     }
-    
+
     for(var i=0, _len_i = mod_elts.length; i < _len_i;i++){
         
         // Loop to import all the elements of the module name
@@ -508,7 +513,9 @@ $B.$import = function(mod_name,origin){
             throw _b_.ImportError("cannot import "+elt_name)
         }
         
-        if(!($B.use_VFS) && i<mod_elts.length-1 && $B.imported[elt_name].is_package){
+        if(!($B.use_VFS && j==0) // if VFS is used but module was not found in py_VFS
+            && i<mod_elts.length-1 
+            && $B.imported[elt_name].is_package){
             // If the module found is a package, the search will go on inside
             // this package
             package = elt_name
@@ -531,6 +538,7 @@ $B.$import_from = function(mod_name,names,origin){
       //console.log('import from '+mod_name);show_ns()
     }
     if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
+    mod_name = mod_name.replace(/\$/g,'')
     var mod = $B.imported[mod_name]
     if(mod===undefined){
         $B.$import(mod_name,origin)
@@ -540,7 +548,7 @@ $B.$import_from = function(mod_name,names,origin){
     for(var i=0, _len_i = names.length; i < _len_i;i++){
         if(mod[names[i]]===undefined){
             if(mod.is_package){
-                var sub_mod = mod_name+'.'+names[i]
+                var sub_mod = mod_name+'.'+names[i].replace(/\$/g,'')
                 $B.$import(sub_mod,origin)
                 mod[names[i]] = $B.modules[sub_mod]
             }else{

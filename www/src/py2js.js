@@ -2719,147 +2719,62 @@ function $FromCtx(context){
         this.js_processed=true
         var scope = $get_scope(this)
         var mod = $get_module(this).module
-        if(mod.substr(0,13)==='__main__,exec'){mod='__main__'}
 
         var res = ''
         var indent = $get_node(this).indent
         var head= ' '.repeat(indent)
-
-        if (this.module.charAt(0)=='.'){
-            // intra-package reference : "from . import x" or 'from .X import Y'
-            // get the name of current module
-            var parent_module = $get_module(this).module
-            var package = $B.imported[parent_module].__package__
-            if(package===undefined){
-                return 'throw SystemError("Parent module \'\' not loaded, cannot perform relative import")'
-            }            
-            var nbdots = 1
-            while(nbdots<this.module.length && 
-                this.module.charAt(nbdots)=='.'){nbdots++}
-
-            var p_elts = package.split('.')
-            while(nbdots>1){p_elts.pop();nbdots--}
-            package = p_elts.join('.')
-                
-            if(nbdots==this.module.length){
-                // form 'from . import X' : search module package.X
-                
-                // get referenced package
-                var package_elts = parent_module.split('.')
-                for(var i=1;i<nbdots;i++){package_elts.pop()}
-                var package_obj = $B.imported[package]
-                
-                // Some of the names may be defined in the package object,
-                // ie in its __init__.py script
-                var defined = []
-                for(var i=0;i<this.names.length;i++){
-                    if(package_obj[this.names[i]]!==undefined){
-                        var alias = this.aliases[this.names[i]]||this.names[i]
-                        res += '$locals["'+alias+'"]'
-                        res += '=$B.imported["'+package+'"]["'+this.names[i]+'"];\n'
-                        defined.push(i)
-                    }
-                }
-                    
-                for(var i=0;i<this.names.length;i++){
-                    if(defined.indexOf(i)!=-1){continue}
-                    var mod_name = this.names[i]
-                    if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
-                    var qname = package+'.'+mod_name
-                    res += '$B.$import("'+qname+'","'+parent_module+'");'
-
-                    var alias = this.aliases[this.names[i]]||this.names[i]
-                    res += '$locals["'+alias+'"]'
-                    res += '=$B.imported["'+qname+'"];\n'
-                }
-            }else{
-                var mod_name = this.module.substr(nbdots)
-                if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
-                var qname = package+'.'+mod_name
-    
-                res +='$B.$import("'+qname+'","'+parent_module+'");'
-                res += 'var $mod=$B.imported["'+qname+'"];'
-                
-                if(this.names[0]=='*'){
-                    res += head+'for(var $attr in $mod){\n'
-                    res +="if($attr.substr(0,1)!=='_')\n"+head+"{var $x = 'var '+$attr+'"
-                    if(scope.ntype==="module"){
-                      res += '=$locals_'+scope.module.replace(/\./g,"_")
-                      res += '["'+"'+$attr+'"+'"]'
-                    }
-                    res += '=$mod["'+"'+$attr+'"+'"]'+"'"+'\n'+head+'eval($x)}};'
-                    
-                    // Set attribute to indicate that the scope has a 
-                    // 'from X import *' : this will make name resolution harder :-(
-                    scope.blurred = true
-
+        
+        //console.log('from',this.module)
+        var _mod = this.module.replace(/\$/g,''), package, packages=[]
+        while(_mod.length>0){
+            if(_mod.charAt(0)=='.'){
+                if(package===undefined){
+                    package = $B.imported[mod].__package__
+                    if(package==''){console.log('package vide 1 pour $B.imported['+mod+']')}
                 }else{
-    
-                    // This is longer, but should execute more efficiently
-                    var ns = '$locals_'+scope.id.replace(/\./g,'_')
-                    switch(scope.ntype) { 
-                      case 'def':
-                        for(var i=0; i<this.names.length; i++) {
-                           var alias = this.aliases[this.names[i]]||this.names[i]
-                           res+= ns+'["'+alias+'"]'
-                           res += '=getattr($mod,"'+this.names[i]+'")\n'
-                        }
-                        break
-                      case 'class':
-                        for(var i=0; i<this.names.length; i++) {
-                           var name=this.names[i]
-                           var alias = this.aliases[name]|| name
-                           res += ns+'["' + alias+'"]'
-                           res += '=getattr($mod,"'+ name +'")\n'
-                        }
-                        break
-                      case 'module':
-                        for(var i=0; i<this.names.length; i++) {
-                           var name=this.names[i]
-                           var alias = this.aliases[name]|| name
-                           res += ns+'["'+alias+'"]'
-                           res += '=getattr($mod,"'+ name +'")\n'
-                        }
-                        break
-                      default:
-                        for(var i=0; i<this.names.length; i++) {
-                           var name=this.names[i]
-                           var alias = this.aliases[name]|| name
-                           res += ns+'["'+alias +'"]=getattr($mod,"'+ names +'")\n'
-                        }
-                    }
+                    package = $B.imported[package]
+                    if(package==''){console.log('package vide 3 pour $B.imported['+package+']')}
                 }
+                if(package===undefined){
+                    return 'throw SystemError("Parent module \'\' not loaded, cannot perform relative import")'
+                }else{
+                    packages.push(package)
+                }
+                _mod = _mod.substr(1)
+            }else{
+                break
             }
+        }
+        if(_mod){packages.push(_mod)}
+        this.module = packages.join('.')
+        
+        if(this.names[0]=='*'){
+            res += '$B.$import("'+this.module+'","'+mod+'")\n'
+            res += head+'var $mod=$B.imported["'+this.module+'"]\n'
+            res += head+'for(var $attr in $mod){\n'
+            res +="if($attr.substr(0,1)!=='_'){\n"+head
+            res += '$locals_'+scope.id.replace(/\./g,'_')+'[$attr]'
+            res += '=$mod[$attr]\n'+head+'}}'
+            
+            // Set attribute to indicate that the scope has a 
+            // 'from X import *' : this will make name resolution harder :-(
+            scope.blurred = true
+        
         }else{
-           if(this.names[0]=='*'){
-             res += '$B.$import("'+this.module+'","'+mod+'")\n'
-             res += head+'var $mod=$B.imported["'+this.module+'"]\n'
-             res += head+'for(var $attr in $mod){\n'
-             res +="if($attr.substr(0,1)!=='_'){\n"+head
-             res += '$locals_'+scope.id.replace(/\./g,'_')+'[$attr]'
-             res += '=$mod[$attr]\n'+head+'}}'
-
-             // Set attribute to indicate that the scope has a 
-             // 'from X import *' : this will make name resolution harder :-(
-             scope.blurred = true
-
-           }else{
-             res += '$B.$import_from("'+this.module+'",['
-             res += '"' + this.names.join('","') + '"'
-             res += '],"'+mod+'");\n'
-             var _is_module=scope.ntype === 'module'
-             for(var i=0;i<this.names.length;i++){
+            res += '$B.$import_from("'+this.module+'",['
+            res += '"' + this.names.join('","') + '"'
+            res += '],"'+mod+'");\n'
+            var _is_module=scope.ntype === 'module'
+            for(var i=0;i<this.names.length;i++){
                 var name=this.names[i]
                 var alias = this.aliases[name]||name
-
+                
                 res += head+'try{$locals_'+scope.id.replace(/\./g,'_')+'["'+ alias+'"]'
                 res += '=getattr($B.imported["'+this.module+'"],"'+name+'")}\n'
                 res += 'catch($err'+$loop_num+'){if($err'+$loop_num+'.__class__'
                 res += '===AttributeError.$dict){$err'+$loop_num+'.__class__'
-                res += '=ImportError.$dict};throw $err'+$loop_num+'};'
-
-             }
-           }
+                res += '=ImportError.$dict};throw $err'+$loop_num+'};'            
+            }
         }
         return res + '\n'+head+'None;'
     }

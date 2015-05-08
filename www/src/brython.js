@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-07 22:37:58.903000"
+__BRYTHON__.compiled_date="2015-05-08 14:36:50.867000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1646,78 +1646,22 @@ this.toString=function(){return '(from) '+this.module+' (import) '+this.names+'(
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this)
 var mod=$get_module(this).module
-if(mod.substr(0,13)==='__main__,exec'){mod='__main__'}
 var res=''
 var indent=$get_node(this).indent
 var head=' '.repeat(indent)
-if(this.module.charAt(0)=='.'){
-var parent_module=$get_module(this).module
-var package=$B.imported[parent_module].__package__
+var _mod=this.module.replace(/\$/g,''),package,packages=[]
+while(_mod.length>0){if(_mod.charAt(0)=='.'){if(package===undefined){package=$B.imported[mod].__package__
+if(package==''){console.log('package vide 1 pour $B.imported['+mod+']')}}else{package=$B.imported[package]
+if(package==''){console.log('package vide 3 pour $B.imported['+package+']')}}
 if(package===undefined){return 'throw SystemError("Parent module \'\' not loaded, cannot perform relative import")'
+}else{packages.push(package)
 }
-var nbdots=1
-while(nbdots<this.module.length && 
-this.module.charAt(nbdots)=='.'){nbdots++}
-var p_elts=package.split('.')
-while(nbdots>1){p_elts.pop();nbdots--}
-package=p_elts.join('.')
-if(nbdots==this.module.length){
-var package_elts=parent_module.split('.')
-for(var i=1;i<nbdots;i++){package_elts.pop()}
-var package_obj=$B.imported[package]
-var defined=[]
-for(var i=0;i<this.names.length;i++){if(package_obj[this.names[i]]!==undefined){var alias=this.aliases[this.names[i]]||this.names[i]
-res +='$locals["'+alias+'"]'
-res +='=$B.imported["'+package+'"]["'+this.names[i]+'"];\n'
-defined.push(i)
+_mod=_mod.substr(1)
+}else{break
 }}
-for(var i=0;i<this.names.length;i++){if(defined.indexOf(i)!=-1){continue}
-var mod_name=this.names[i]
-if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
-var qname=package+'.'+mod_name
-res +='$B.$import("'+qname+'","'+parent_module+'");'
-var alias=this.aliases[this.names[i]]||this.names[i]
-res +='$locals["'+alias+'"]'
-res +='=$B.imported["'+qname+'"];\n'
-}}else{var mod_name=this.module.substr(nbdots)
-if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
-var qname=package+'.'+mod_name
-res +='$B.$import("'+qname+'","'+parent_module+'");'
-res +='var $mod=$B.imported["'+qname+'"];'
-if(this.names[0]=='*'){res +=head+'for(var $attr in $mod){\n'
-res +="if($attr.substr(0,1)!=='_')\n"+head+"{var $x = 'var '+$attr+'"
-if(scope.ntype==="module"){res +='=$locals_'+scope.module.replace(/\./g,"_")
-res +='["'+"'+$attr+'"+'"]'
-}
-res +='=$mod["'+"'+$attr+'"+'"]'+"'"+'\n'+head+'eval($x)}};'
-scope.blurred=true
-}else{
-var ns='$locals_'+scope.id.replace(/\./g,'_')
-switch(scope.ntype){case 'def':
-for(var i=0;i<this.names.length;i++){var alias=this.aliases[this.names[i]]||this.names[i]
-res+=ns+'["'+alias+'"]'
-res +='=getattr($mod,"'+this.names[i]+'")\n'
-}
-break
-case 'class':
-for(var i=0;i<this.names.length;i++){var name=this.names[i]
-var alias=this.aliases[name]||name
-res +=ns+'["' + alias+'"]'
-res +='=getattr($mod,"'+ name +'")\n'
-}
-break
-case 'module':
-for(var i=0;i<this.names.length;i++){var name=this.names[i]
-var alias=this.aliases[name]||name
-res +=ns+'["'+alias+'"]'
-res +='=getattr($mod,"'+ name +'")\n'
-}
-break
-default:
-for(var i=0;i<this.names.length;i++){var name=this.names[i]
-var alias=this.aliases[name]||name
-res +=ns+'["'+alias +'"]=getattr($mod,"'+ names +'")\n'
-}}}}}else{if(this.names[0]=='*'){res +='$B.$import("'+this.module+'","'+mod+'")\n'
+if(_mod){packages.push(_mod)}
+this.module=packages.join('.')
+if(this.names[0]=='*'){res +='$B.$import("'+this.module+'","'+mod+'")\n'
 res +=head+'var $mod=$B.imported["'+this.module+'"]\n'
 res +=head+'for(var $attr in $mod){\n'
 res +="if($attr.substr(0,1)!=='_'){\n"+head
@@ -1734,8 +1678,8 @@ res +=head+'try{$locals_'+scope.id.replace(/\./g,'_')+'["'+ alias+'"]'
 res +='=getattr($B.imported["'+this.module+'"],"'+name+'")}\n'
 res +='catch($err'+$loop_num+'){if($err'+$loop_num+'.__class__'
 res +='===AttributeError.$dict){$err'+$loop_num+'.__class__'
-res +='=ImportError.$dict};throw $err'+$loop_num+'};'
-}}}
+res +='=ImportError.$dict};throw $err'+$loop_num+'};' 
+}}
 return res + '\n'+head+'None;'
 }}
 function $FuncArgs(C){
@@ -7501,9 +7445,10 @@ try{var module_contents=$download_module(module.name,path)
 return null
 }
 $B.imported[module.name].is_package=module.is_package
-if(path.substr(path.length-12)=='/__init__.py'){module.is_package=true
+if(path.substr(path.length-12)=='/__init__.py'){
 $B.imported[module.name].__package__=module.name
-}else if(package!==undefined){$B.imported[module.name].__package__=package
+$B.imported[module.name].is_package=module.is_package=true
+}else if(package){$B.imported[module.name].__package__=package
 }else{var mod_elts=module.name.split('.')
 mod_elts.pop()
 $B.imported[module.name].__package__=mod_elts.join('.')
@@ -7532,6 +7477,7 @@ console.log(js)
 }
 eval(js)
 }catch(err){console.log(err+' for module '+module.name)
+console.log(js)
 console.log('message: '+err.$message)
 console.log('filename: '+err.fileName)
 console.log('linenum: '+err.lineNumber)
@@ -7632,8 +7578,8 @@ py_paths.push(_path+ mod_path + "/__init__.py")
 }
 for(var i=0,_len_i=py_paths.length;i < _len_i;i++){
 var py_mod=import_py(module,py_paths[i],package)
-if(py_mod!==null)return py_mod
-}
+if(py_mod!==null){return py_mod
+}}
 return null 
 }
 function import_from_package(mod_name,origin,package){var mod_elts=mod_name.split('.'),package_elts=package.split('.')
@@ -7652,8 +7598,6 @@ if(py_mod!==null)return py_mod
 return null 
 }
 $B.$import=function(mod_name,origin){
-if(mod_name.charAt(0)=='.'){console.log('import '+mod_name)
-}
 var parts=mod_name.split('.')
 var norm_parts=[]
 for(var i=0,_len_i=parts.length;i < _len_i;i++){norm_parts.push(parts[i].substr(0,2)=='$$' ? parts[i].substr(2): parts[i])
@@ -7667,7 +7611,7 @@ console.log('use static stdlib paths ? '+$B.static_stdlib_import)
 }
 if($B.imported[mod_name]!==undefined){return}
 var mod,funcs=[]
-if($B.use_VFS){funcs=[import_from_VFS]
+if($B.use_VFS){funcs=[import_from_VFS,import_from_stdlib_static]
 }else if($B.static_stdlib_import){funcs=[import_from_stdlib_static]
 }else{funcs=[import_from_stdlib]
 }
@@ -7676,6 +7620,8 @@ if($B.$options['custom_import_funcs']!==undefined){funcs=funcs.concat($B.$option
 funcs=funcs.concat([import_from_site_packages,import_from_caller_folder])
 var mod_elts=mod_name.split('.')
 if(mod_elts[0]==package && mod_elts.length==2){
+if($B.imported[package]===undefined){console.log('mod_elts ['+mod_elts+']','package',package,'undef')
+}
 var res=$B.imported[package][mod_elts[1]]
 if(res!==undefined){return res}}
 for(var i=0,_len_i=mod_elts.length;i < _len_i;i++){
@@ -7702,7 +7648,9 @@ $B.modules[elt_name]=undefined
 $B.imported[elt_name]=undefined
 throw _b_.ImportError("cannot import "+elt_name)
 }
-if(!($B.use_VFS)&& i<mod_elts.length-1 && $B.imported[elt_name].is_package){
+if(!($B.use_VFS && j==0)
+&& i<mod_elts.length-1 
+&& $B.imported[elt_name].is_package){
 package=elt_name
 package_path=$B.modules[elt_name].__file__
 funcs=[import_from_package ]
@@ -7711,11 +7659,12 @@ $B.$import_from=function(mod_name,names,origin){
 if($B.$options.debug==10){
 }
 if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
+mod_name=mod_name.replace(/\$/g,'')
 var mod=$B.imported[mod_name]
 if(mod===undefined){$B.$import(mod_name,origin)
 mod=$B.imported[mod_name]
 }
-for(var i=0,_len_i=names.length;i < _len_i;i++){if(mod[names[i]]===undefined){if(mod.is_package){var sub_mod=mod_name+'.'+names[i]
+for(var i=0,_len_i=names.length;i < _len_i;i++){if(mod[names[i]]===undefined){if(mod.is_package){var sub_mod=mod_name+'.'+names[i].replace(/\$/g,'')
 $B.$import(sub_mod,origin)
 mod[names[i]]=$B.modules[sub_mod]
 }else{throw _b_.ImportError("cannot import name "+names[i])
