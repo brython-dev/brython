@@ -193,7 +193,6 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                 else if(res1.__class__===$B.$MethodDict) return res
 
                 // instance method object
-                if(attr=="method"){console.log('call make method, klass', klass)}
                 return $B.make_method(attr, klass, res, res1)(obj)
             }else{
                 // result of __get__ is not a function

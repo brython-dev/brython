@@ -1378,7 +1378,12 @@ function $ClassCtx(context){
         var scope = $get_scope(this)
         var name_ref = ';$locals_'+scope.id.replace(/\./g,'_')
         name_ref += '["'+this.name+'"]'
-        var js = [name_ref +'=$B.$class_constructor("'+this.name], pos=1
+        
+        if(this.name=="FF"){ // experimental
+            var js = [name_ref +'=$B.$class_constructor1("'+this.name], pos=1
+        }else{
+            var js = [name_ref +'=$B.$class_constructor("'+this.name], pos=1
+        }
         js[pos++]= '",$'+this.name+'_'+this.random
         if(this.args!==undefined){ // class def has arguments
             var arg_tree = this.args.tree,args=[],kw=[]
@@ -1921,7 +1926,7 @@ function $DefCtx(context){
         new_node.enter_frame = true
         new $NodeJSCtx(new_node,js)
         nodes.push(new_node)
-        
+
         this.env = []
     
         // Code in the worst case, uses MakeArgs1 in py_utils.js
@@ -2033,7 +2038,6 @@ function $DefCtx(context){
         // Node that replaces the original "def" line
         var def_func_node = new $Node()
         if(only_positional){
-            // experimental : pass formal parameters
             var params = Object.keys(this.varnames).concat(['$extra']).join(', ')
             new $NodeJSCtx(def_func_node,'return function('+params+')')
         }else{

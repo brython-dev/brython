@@ -86,6 +86,32 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     return factory
 }
 
+$B.$class_constructor1 = function(class_name,class_obj){
+    if(class_obj.__init__===undefined){
+        var creator = function(){
+            this.__class__ = class_obj
+        }
+    }else{
+        var creator = function(args){
+            this.__class__ = class_obj
+            class_obj.__init__.apply(null,[this].concat(Array.prototype.slice.call(args)))
+        }
+    }
+    var factory = function(){return new creator(arguments)}
+    factory.__class__ = $B.$factory
+    factory.__name__ = class_name
+    factory.$dict = class_obj
+    class_obj.__class__ = $B.$type
+    class_obj.__name__ = class_name
+    class_obj.__mro__ = [class_obj, _b_.object.$dict]
+    for(var attr in class_obj){
+        factory.prototype[attr] = class_obj[attr]
+    }
+    class_obj.$factory = factory
+    return factory
+}
+
+
 $B.make_method = function(attr, klass, func, func1){
     // Return a method, based on a function defined in a class
     var __self__,__func__= func,__repr__,__str__, method
@@ -487,7 +513,8 @@ function $instance_creator(klass){
     // Variable "simple" is set if class only has one parent and this
     // parent is "object" or "type"
     var simple=false
-    if(klass.__bases__.length==1){
+    if(klass.__bases__.length==0){simple=true}
+    else if(klass.__bases__.length==1){
         switch(klass.__bases__[0]){
             case _b_.object:
             case _b_.type:

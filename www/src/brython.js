@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-10 18:24:08.010000"
+__BRYTHON__.compiled_date="2015-05-10 22:40:45.547000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -866,7 +866,10 @@ node.parent.insert(rank+1,run_func)
 var scope=$get_scope(this)
 var name_ref=';$locals_'+scope.id.replace(/\./g,'_')
 name_ref +='["'+this.name+'"]'
-var js=[name_ref +'=$B.$class_constructor("'+this.name],pos=1
+if(this.name=="FF"){
+var js=[name_ref +'=$B.$class_constructor1("'+this.name],pos=1
+}else{var js=[name_ref +'=$B.$class_constructor("'+this.name],pos=1
+}
 js[pos++]='",$'+this.name+'_'+this.random
 if(this.args!==undefined){
 var arg_tree=this.args.tree,args=[],kw=[]
@@ -1230,8 +1233,7 @@ nodes.push(make_args_nodes[1])
 for(var i=nodes.length-1;i>=0;i--){node.children.splice(0,0,nodes[i])
 }
 var def_func_node=new $Node()
-if(only_positional){
-var params=Object.keys(this.varnames).concat(['$extra']).join(', ')
+if(only_positional){var params=Object.keys(this.varnames).concat(['$extra']).join(', ')
 new $NodeJSCtx(def_func_node,'return function('+params+')')
 }else{new $NodeJSCtx(def_func_node,'return function()')
 }
@@ -4601,7 +4603,6 @@ var res1=get_func.apply(null,[res,obj,klass])
 if(typeof res1=='function'){
 if(res1.__class__===$B.$factory)return res
 else if(res1.__class__===$B.$MethodDict)return res
-if(attr=="method"){console.log('call make method, klass',klass)}
 return $B.make_method(attr,klass,res,res1)(obj)
 }else{
 return res1
@@ -4698,6 +4699,22 @@ factory.$dict.$factory=factory
 for(var member in metaclass.$dict){if(typeof metaclass.$dict[member]=='function' && member !='__new__'){metaclass.$dict[member].$type='classmethod'
 }}
 factory.$is_func=true
+return factory
+}
+$B.$class_constructor1=function(class_name,class_obj){if(class_obj.__init__===undefined){var creator=function(){this.__class__=class_obj
+}}else{var creator=function(args){this.__class__=class_obj
+class_obj.__init__.apply(null,[this].concat(Array.prototype.slice.call(args)))
+}}
+var factory=function(){return new creator(arguments)}
+factory.__class__=$B.$factory
+factory.__name__=class_name
+factory.$dict=class_obj
+class_obj.__class__=$B.$type
+class_obj.__name__=class_name
+class_obj.__mro__=[class_obj,_b_.object.$dict]
+for(var attr in class_obj){factory.prototype[attr]=class_obj[attr]
+}
+class_obj.$factory=factory
 return factory
 }
 $B.make_method=function(attr,klass,func,func1){
@@ -4921,7 +4938,8 @@ var init_func=null
 try{init_func=_b_.getattr(klass,'__init__')}
 catch(err){$B.$pop_exc()}
 var simple=false
-if(klass.__bases__.length==1){switch(klass.__bases__[0]){case _b_.object:
+if(klass.__bases__.length==0){simple=true}
+else if(klass.__bases__.length==1){switch(klass.__bases__[0]){case _b_.object:
 case _b_.type:
 simple=true
 break
