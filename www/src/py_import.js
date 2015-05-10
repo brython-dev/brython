@@ -202,7 +202,6 @@ $B.run_py=run_py=function(module,path,module_contents) {
 
     }catch(err){
         console.log(err+' for module '+module.name)
-        console.log(js)
         //for(var attr in err){
             //console.log(attr, err[attr])
         //}
