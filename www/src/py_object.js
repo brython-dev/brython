@@ -109,11 +109,9 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         //if(attr=='show'){console.log('object getattr '+attr+' of obj '+obj)}
         var mro = klass.__mro__
         for(var i=0, _len_i = mro.length; i < _len_i;i++){
-            //console.log('class '+mro[i].__name__+' $methods '+mro[i].$methods)
             if(mro[i].$methods){
                 var method = mro[i].$methods[attr]
                 if(method!==undefined){
-                    //console.log('object method '+attr)
                     return method(obj)
                 }
             }
@@ -175,8 +173,27 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                 // self as first argument
     
                 if(res1.__class__===$B.$factory) return res
+                
+                // Same thing if the attribute is a method of an instance
+                // =================
+                // class myRepr:
+                //     def repr(self, a):
+                //         return a
+                //    
+                // class myclass:
+                //     _repr=myRepr()
+                //     repr= _repr.repr
+                //
+                //     def myfunc(self):
+                //         return self.repr('test')
+                // =================
+                // In function myfunc, self.repr is an instance of MyRepr,
+                // it must be used as is, not transformed into a method
+
+                else if(res1.__class__===$B.$MethodDict) return res
 
                 // instance method object
+                if(attr=="method"){console.log('call make method, klass', klass)}
                 return $B.make_method(attr, klass, res, res1)(obj)
             }else{
                 // result of __get__ is not a function

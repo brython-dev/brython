@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 3, 0, 'alpha', 0]
-// implementation [3, 1, 2, 'alpha', 0]
+// implementation [3, 1, 3, 'alpha', 0]
 // version compiled from commented, indented source files at github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
 ;(function($B){
@@ -54,10 +54,10 @@ $B.re=function(pattern,flags){return $B.JSObject(new RegExp(pattern,flags))}
 $B.has_json=typeof(JSON)!=="undefined"
 $B.has_websocket=window.WebSocket!==undefined
 })(__BRYTHON__)
-__BRYTHON__.implementation=[3,1,2,'alpha',0]
-__BRYTHON__.__MAGIC__="3.1.2"
+__BRYTHON__.implementation=[3,1,3,'alpha',0]
+__BRYTHON__.__MAGIC__="3.1.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-08 14:36:50.867000"
+__BRYTHON__.compiled_date="2015-05-10 17:23:27.206000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4583,10 +4583,8 @@ if(attr==='__class__'){return klass.$factory
 var res=obj[attr],args=[]
 if(res===undefined){
 var mro=klass.__mro__
-for(var i=0,_len_i=mro.length;i < _len_i;i++){
-if(mro[i].$methods){var method=mro[i].$methods[attr]
-if(method!==undefined){
-return method(obj)
+for(var i=0,_len_i=mro.length;i < _len_i;i++){if(mro[i].$methods){var method=mro[i].$methods[attr]
+if(method!==undefined){return method(obj)
 }}
 var v=mro[i][attr]
 if(v!==undefined){res=v
@@ -4607,6 +4605,8 @@ if(attr=='__new__'){res.$type='staticmethod'}
 var res1=get_func.apply(null,[res,obj,klass])
 if(typeof res1=='function'){
 if(res1.__class__===$B.$factory)return res
+else if(res1.__class__===$B.$MethodDict)return res
+if(attr=="method"){console.log('call make method, klass',klass)}
 return $B.make_method(attr,klass,res,res1)(obj)
 }else{
 return res1
@@ -4706,15 +4706,20 @@ factory.$is_func=true
 return factory
 }
 $B.make_method=function(attr,klass,func,func1){
-return function(instance){var __self__,__func__=func,__repr__,__str__
+var __self__,__func__=func,__repr__,__str__,method
 switch(func.$type){case undefined:
 case 'function':
-args=[instance]
-__self__=instance
-__func__=func1
-__repr__=__str__=function(){var x='<bound method '+attr
-x +=" of '"+klass.__name__+"' object>"
-return x
+method=function(instance){
+var instance_method=function(){var local_args=[instance]
+var pos=local_args.length
+for(var i=0,_len_i=arguments.length;i < _len_i;i++){local_args[pos++]=arguments[i]
+}
+return func.apply(null,local_args)
+}
+instance_method.__class__=$B.$MethodDict
+instance_method.$infos={__func__:func,__name__:klass.__name__+'.'+attr,__self__:instance
+}
+return instance_method
 }
 break
 case 'instancemethod':
@@ -4727,20 +4732,25 @@ __repr__=__str__=function(){var x='<bound method type'+'.'+attr
 x +=' of '+klass.__name__+'>'
 return x
 }
-break
-case 'staticmethod':
-args=[]
-__repr__=__str__=function(){return '<function '+klass.__name__+'.'+attr+'>'
-}}
-var method=(function(initial_args){return function(){
-var local_args=initial_args.slice()
+method=function(klass){
+var local_args=[klass]
 var pos=local_args.length
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){local_args[pos++]=arguments[i]
 }
 var x=func.apply(instance,local_args)
 if(x===undefined)return _b_.None
 return x
-}})(args)
+}
+break
+case 'staticmethod':
+method=function(){var static_method=function(){return func.apply(null,arguments)
+}
+static_method.$infos={__func__:func,__name__:klass.__name__+'.'+attr
+}
+return static_method
+}
+break
+}
 method.__class__=$B.$InstanceMethodDict
 method.__eq__=function(other){return other.$res===func
 }
@@ -4753,7 +4763,7 @@ method.__doc__=func.__doc__ ||''
 method.$type='instancemethod'
 method.$res=func
 return method
-}}
+}
 function make_mro(bases,cl_dict){
 var seqs=[],pos1=0
 for(var i=0;i<bases.length;i++){
@@ -4806,7 +4816,9 @@ var class_dict={__class__ : $B.$type,__name__ : name.replace('$$',''),__bases__ 
 var items=_b_.list(_b_.dict.$dict.items(cl_dict))
 for(var i=0;i<items.length;i++){var name=items[i][0],v=items[i][1]
 class_dict[name]=v
-if(typeof v=='function' && v.__class__!==$B.$factory){class_dict.$methods[name]=$B.make_method(name,cl_dict,v,v)
+if(typeof v=='function' 
+&& v.__class__!==$B.$factory
+&& v.__class__!==$B.$MethodDict){class_dict.$methods[name]=$B.make_method(name,class_dict,v,v)
 }}
 class_dict.__mro__=[class_dict].concat(make_mro(bases,cl_dict))
 class_dict.__class__=class_dict.__mro__[1].__class__
@@ -4884,8 +4896,8 @@ switch(res.$type){case undefined:
 case 'function':
 case 'instancemethod':
 args=[]
-__repr__=__str__=function(){return '<function '+klass.__name__+'.'+attr+'>'
-}
+__repr__=__str__=function(attr){return function(){return '<function '+klass.__name__+'.'+attr+'>' 
+}}(attr)
 break
 case 'classmethod':
 args=[klass.$factory]
@@ -4897,8 +4909,8 @@ return x
 break
 case 'staticmethod':
 args=[]
-__repr__=__str__=function(){return '<function '+klass.__name__+'.'+attr+'>'
-}
+__repr__=__str__=function(attr){return function(){return '<function '+klass.__name__+'.'+attr+'>'
+}}(attr)
 break
 }
 var method=(function(initial_args){return function(){
@@ -4908,8 +4920,7 @@ for(var i=0;i < arguments.length;i++){local_args[pos++]=arguments[i]
 }
 return res.apply(null,local_args)
 }})(args)
-method.__class__={__class__:$B.$type,__name__:'method',__mro__:[$B.builtins.object.$dict]
-}
+method.__class__=$B.$FunctionDict
 method.__eq__=function(other){return other.__func__===__func__
 }
 for(var attr in res){method[attr]=res[attr]}
@@ -4955,12 +4966,14 @@ if(!obj.__initialized__){if(init_func!==null){init_func.apply(null,[obj].concat(
 return obj
 }}
 function $MethodFactory(){}
-$MethodFactory.__name__='method'
 $MethodFactory.__class__=$B.$factory
-$MethodFactory.__repr__=$MethodFactory.__str__=function(){return 'method'}
 $B.$MethodDict={__class__:$B.$type,__name__:'method',$factory:$MethodFactory
 }
+$B.$MethodDict.__eq__=function(self,other){return self.__func__===other.__func__
+}
 $B.$MethodDict.__mro__=[$B.$MethodDict,_b_.object.$dict]
+$B.$MethodDict.__repr__=$B.$MethodDict.__str__=function(self){return '<bound method '+self.$infos.__name__+' of '+_b_.str(self.$infos.__self__)+'>'
+}
 $MethodFactory.$dict=$B.$MethodDict
 $B.$InstanceMethodDict={__class__:$B.$type,__name__:'instancemethod',__mro__:[_b_.object.$dict],$factory:$MethodFactory
 }})(__BRYTHON__)
@@ -6587,6 +6600,7 @@ $FunctionDict.__repr__=$FunctionDict.__str__=function(self){return '<function '+
 }
 $FunctionDict.__mro__=[$FunctionDict,$ObjectDict]
 var $Function=function(){}
+$Function.__class__=$B.$factory
 $FunctionDict.$factory=$Function
 $Function.$dict=$FunctionDict
 var $BaseExceptionDict={__class__:$B.$type,__bases__ :[_b_.object],__module__:'builtins',__name__:'BaseException'
@@ -6796,7 +6810,7 @@ throw _b_.NameError(name)
 }
 $B.$TypeError=function(msg){throw _b_.TypeError(msg)
 }
-var builtin_funcs=['abs','all','any','ascii','bin','bool','bytearray','bytes','callable','chr','classmethod','compile','complex','delattr','dict','dir','divmod','enumerate','eval','exec','exit','filter','float','format','frozenset','getattr','globals','hasattr','hash','help','hex','id','input','int','isinstance','issubclass','iter','len','list','locals','map','max','memoryview','min','next','object','oct','open','ord','pow','print','property','quit','range','repr','reversed','round','set','setattr','slice','sorted','staticmethod','str','sum','$$super','tuple','vars','zip']
+var builtin_funcs=['abs','all','any','ascii','bin','bool','bytearray','bytes','callable','chr','classmethod','compile','complex','delattr','dict','dir','divmod','enumerate','eval','exec','exit','filter','float','format','frozenset','getattr','globals','hasattr','hash','help','hex','id','input','int','isinstance','issubclass','iter','len','list','locals','map','max','memoryview','min','next','object','oct','open','ord','pow','print','property','quit','range','repr','reversed','round','set','setattr','slice','sorted','staticmethod','str','sum','$$super','tuple','type','vars','zip']
 for(var i=0;i<builtin_funcs.length;i++){var name=builtin_funcs[i]
 if(name=='open'){name1='$url_open'}
 if(name=='super'){name='$$super'}
@@ -7350,7 +7364,7 @@ $B.JSConstructor=JSConstructor
 ;(function($B){$B.stdlib={}
 var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.basehook','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.pygame.SDL','site-packages.pygame.base','site-packages.pygame.color','site-packages.pygame.colordict','site-packages.pygame.compat','site-packages.pygame.constants','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.locals','site-packages.pygame.mixer','site-packages.pygame.mouse','site-packages.pygame.pkgdata','site-packages.pygame.rect','site-packages.pygame.sprite','site-packages.pygame.surface','site-packages.pygame.time','site-packages.pygame.transform','site-packages.pygame.version','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile','zlib']
+var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.basehook','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.pygame.SDL','site-packages.pygame.base','site-packages.pygame.color','site-packages.pygame.colordict','site-packages.pygame.compat','site-packages.pygame.constants','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.locals','site-packages.pygame.mixer','site-packages.pygame.mouse','site-packages.pygame.pkgdata','site-packages.pygame.rect','site-packages.pygame.sprite','site-packages.pygame.surface','site-packages.pygame.time','site-packages.pygame.transform','site-packages.pygame.version','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','uuid','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','long_int1','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.pygame','test','ui','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]
@@ -7477,7 +7491,6 @@ console.log(js)
 }
 eval(js)
 }catch(err){console.log(err+' for module '+module.name)
-console.log(js)
 console.log('message: '+err.$message)
 console.log('filename: '+err.fileName)
 console.log('linenum: '+err.lineNumber)

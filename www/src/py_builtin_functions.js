@@ -1825,6 +1825,7 @@ $FunctionDict.__repr__=$FunctionDict.__str__ = function(self){
 
 $FunctionDict.__mro__ = [$FunctionDict,$ObjectDict]
 var $Function = function(){}
+$Function.__class__=$B.$factory
 $FunctionDict.$factory = $Function
 $Function.$dict = $FunctionDict
 
@@ -2164,7 +2165,7 @@ var builtin_funcs = ['abs', 'all', 'any', 'ascii', 'bin', 'bool', 'bytearray',
 'list', 'locals', 'map', 'max', 'memoryview', 'min', 'next', 'object', 
 'oct', 'open', 'ord', 'pow', 'print', 'property', 'quit', 'range', 'repr', 
 'reversed', 'round', 'set', 'setattr', 'slice', 'sorted', 'staticmethod', 'str', 
-'sum','$$super', 'tuple', 'vars', 'zip']
+'sum','$$super', 'tuple', 'type', 'vars', 'zip']
 
 for(var i=0;i<builtin_funcs.length;i++){
     var name = builtin_funcs[i]

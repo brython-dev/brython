@@ -88,73 +88,97 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
 
 $B.make_method = function(attr, klass, func, func1){
     // Return a method, based on a function defined in a class
-    return function(instance){
-        var __self__,__func__= func,__repr__,__str__
-        switch(func.$type) {
-          case undefined:
-          case 'function':
-            // the attribute is a function : return an instance method,
-            // called with the instance as first argument
-            args = [instance]
-            __self__ = instance
-            __func__ = func1
-            __repr__ = __str__ = function(){
-                var x = '<bound method '+attr
-                x += " of '"+klass.__name__+"' object>"
-                return x
-            }
-            break
-          case 'instancemethod':
-            // The attribute is a method of an instance of another class
-            // Return it unchanged
-            return func
-          case 'classmethod':
-            // class method : called with the class as first argument
-            args = [klass]
-            __self__ = klass
-            __func__ = func1
-            __repr__ = __str__ = function(){
-                var x = '<bound method type'+'.'+attr
-                x += ' of '+klass.__name__+'>'
-                return x
-            }
-            break
-          case 'staticmethod':
-            // static methods have no __self__ or __func__
-            args = []
-            __repr__ = __str__ = function(){
-                return '<function '+klass.__name__+'.'+attr+'>'
-            }
+    var __self__,__func__= func,__repr__,__str__, method
+    switch(func.$type) {
+      case undefined:
+      case 'function':
+        // the attribute is a function : return an instance method,
+        // called with the instance as first argument
+        /*
+        __self__ = instance
+        __func__ = func1
+        __repr__ = __str__ = function(){
+            var x = '<bound method '+attr
+            x += " of '"+klass.__name__+"' object>"
+            return x
         }
-    
-        // build the instance method, called with a list of arguments
-        // depending on the method type
-        var method = (function(initial_args){
-            return function(){
-                // make a local copy of initial args
-                var local_args = initial_args.slice()
+        */
+        method = function(instance){
+            // make a local copy of initial args
+            var instance_method = function(){
+                var local_args = [instance]
                 var pos=local_args.length
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     local_args[pos++]=arguments[i]
                 }
-                var x = func.apply(instance,local_args)
-                if(x===undefined) return _b_.None
-                return x
-            }})(args)
-        method.__class__ = $B.$InstanceMethodDict
-        method.__eq__ = function(other){
-            return other.$res === func
+                return func.apply(null,local_args)
+            }
+            instance_method.__class__ = $B.$MethodDict
+            instance_method.$infos = {
+                __func__:func,
+                __name__:klass.__name__+'.'+attr,
+                __self__:instance
+            }
+
+            return instance_method
         }
-        method.__func__ = __func__
-        method.__repr__ = __repr__
-        method.__self__ = __self__
-        method.__str__ = __str__
-        method.__code__ = {'__class__' : $B.CodeDict}
-        method.__doc__ = func.__doc__ || ''
-        method.$type = 'instancemethod'
-        method.$res = func
-        return method
+        break
+      case 'instancemethod':
+        // The attribute is a method of an instance of another class
+        // Return it unchanged
+        return func
+      case 'classmethod':
+        // class method : called with the class as first argument
+        args = [klass]
+        __self__ = klass
+        __func__ = func1
+        __repr__ = __str__ = function(){
+            var x = '<bound method type'+'.'+attr
+            x += ' of '+klass.__name__+'>'
+            return x
+        }
+        method = function(klass){
+            // make a local copy of initial args
+            var local_args = [klass]
+            var pos=local_args.length
+            for(var i=0, _len_i = arguments.length; i < _len_i;i++){
+                local_args[pos++]=arguments[i]
+            }
+            var x = func.apply(instance,local_args)
+            if(x===undefined) return _b_.None
+            return x
+        }
+        break
+      case 'staticmethod':
+        // static methods have no __self__ or __func__
+        method = function(){
+            var static_method = function(){
+                return func.apply(null, arguments)
+            }
+            static_method.$infos = {
+                __func__:func,
+                __name__:klass.__name__+'.'+attr
+            }
+            return static_method
+        }
+        break
     }
+
+    // build the instance method, called with a list of arguments
+    // depending on the method type
+    method.__class__ = $B.$InstanceMethodDict
+    method.__eq__ = function(other){
+        return other.$res === func
+    }
+    method.__func__ = __func__
+    method.__repr__ = __repr__
+    method.__self__ = __self__
+    method.__str__ = __str__
+    method.__code__ = {'__class__' : $B.CodeDict}
+    method.__doc__ = func.__doc__ || ''
+    method.$type = 'instancemethod'
+    method.$res = func
+    return method
 }
 
 function make_mro(bases, cl_dict){
@@ -265,8 +289,10 @@ $B.$type.__new__ = function(cls, name, bases, cl_dict){
     for(var i=0;i<items.length;i++){
         var name=items[i][0], v=items[i][1]
         class_dict[name] = v
-        if(typeof v=='function' && v.__class__!==$B.$factory){
-            class_dict.$methods[name] = $B.make_method(name, cl_dict, v, v)
+        if(typeof v=='function' 
+          && v.__class__!==$B.$factory
+          && v.__class__!==$B.$MethodDict){
+            class_dict.$methods[name] = $B.make_method(name, class_dict, v, v)
         }
     }
     
@@ -409,9 +435,11 @@ $B.$type.__getattribute__=function(klass,attr){
                 case 'instancemethod':
                     // function called from a class
                     args = []
-                    __repr__ = __str__ = function(){
-                        return '<function '+klass.__name__+'.'+attr+'>'
-                    }
+                    __repr__ = __str__ = function(attr){
+                        return function(){
+                            return '<function '+klass.__name__+'.'+attr+'>'            
+                        }
+                    }(attr)
                     break;
                 case 'classmethod':
                     // class method : called with the class as first argument
@@ -426,9 +454,11 @@ $B.$type.__getattribute__=function(klass,attr){
                 case 'staticmethod':
                     // static methods have no __self__ or __func__
                     args = []
-                    __repr__ = __str__ = function(){
-                        return '<function '+klass.__name__+'.'+attr+'>'
-                    }
+                    __repr__ = __str__ = function(attr){
+                        return function(){
+                            return '<function '+klass.__name__+'.'+attr+'>'
+                        }
+                    }(attr)
                     break;
             } // switch
 
@@ -445,11 +475,7 @@ $B.$type.__getattribute__=function(klass,attr){
                         }
                         return res.apply(null,local_args)
                     }})(args)
-                method.__class__ = {
-                    __class__:$B.$type,
-                    __name__:'method',
-                    __mro__:[$B.builtins.object.$dict]
-                }
+                method.__class__ = $B.$FunctionDict
                 method.__eq__ = function(other){
                     return other.__func__ === __func__
                 }
@@ -535,15 +561,19 @@ function $instance_creator(klass){
 
 // used as the factory for method objects
 function $MethodFactory(){}
-$MethodFactory.__name__ = 'method'
 $MethodFactory.__class__ = $B.$factory
-$MethodFactory.__repr__ = $MethodFactory.__str__ = function(){return 'method'}
 
 $B.$MethodDict = {__class__:$B.$type,
     __name__:'method',
     $factory:$MethodFactory
 }
+$B.$MethodDict.__eq__ = function(self, other){
+    return self.__func__===other.__func__
+}
 $B.$MethodDict.__mro__=[$B.$MethodDict, _b_.object.$dict]
+$B.$MethodDict.__repr__ = $B.$MethodDict.__str__ = function(self){
+    return '<bound method '+self.$infos.__name__+' of '+_b_.str(self.$infos.__self__)+'>'
+}
 $MethodFactory.$dict = $B.$MethodDict
 
 $B.$InstanceMethodDict = {__class__:$B.$type,
