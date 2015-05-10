@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-10 17:23:27.206000"
+__BRYTHON__.compiled_date="2015-05-10 18:11:47.136000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -894,15 +894,10 @@ rank++
 node.parent.insert(rank+1,cl_cons)
 rank++
 var ds_node=new $Node()
-new $NodeJSCtx(ds_node,name_ref+'.__doc__='+(this.doc_string ||'None')+';')
+new $NodeJSCtx(ds_node,name_ref+'.$dict.__doc__='+(this.doc_string ||'None')+';')
 node.parent.insert(rank+1,ds_node)
 rank++
-js=name_ref+'.__code__={__class__:$B.$CodeDict};None;'
-var ds_node=new $Node()
-new $NodeJSCtx(ds_node,js)
-node.parent.insert(rank+1,ds_node)
-rank++
-js=name_ref+'.__module__="'+$get_module(this).module+'"'
+js=name_ref+'.$dict.__module__="'+$get_module(this).module+'"'
 var mod_node=new $Node()
 new $NodeJSCtx(mod_node,js)
 node.parent.insert(rank+1,mod_node)
@@ -4649,7 +4644,7 @@ return other
 }
 $ObjectDict.__repr__=function(self){if(self===object)return "<class 'object'>"
 if(self.__class__===$B.$factory)return "<class '"+self.$dict.__name__+"'>"
-return "<"+self.__class__.__name__+" object>"
+return "<"+self.__class__.__module__+"."+self.__class__.__name__+" object>"
 }
 $ObjectDict.__setattr__=function(self,attr,val){if(val===undefined){
 throw _b_.TypeError("can't set attributes of built-in/extension type 'object'")
@@ -4717,7 +4712,7 @@ for(var i=0,_len_i=arguments.length;i < _len_i;i++){local_args[pos++]=arguments[
 return func.apply(null,local_args)
 }
 instance_method.__class__=$B.$MethodDict
-instance_method.$infos={__func__:func,__name__:klass.__name__+'.'+attr,__self__:instance
+instance_method.$infos={__class__:klass.$factory,__func__:func,__name__:attr,__self__:instance
 }
 return instance_method
 }
@@ -4971,8 +4966,18 @@ $B.$MethodDict={__class__:$B.$type,__name__:'method',$factory:$MethodFactory
 }
 $B.$MethodDict.__eq__=function(self,other){return self.__func__===other.__func__
 }
+$B.$MethodDict.__getattribute__=function(self,attr){
+if(self.$infos && self.$infos[attr]){if(attr=='__code__'){var res={__class__:$B.$CodeDict}
+for(var attr in self.$infos.__code__){res[attr]=self.$infos.__code__[attr]
+}
+return res
+}else{return self.$infos[attr]
+}}else{return _b_.object.$dict.__getattribute__(self,attr)
+}}
 $B.$MethodDict.__mro__=[$B.$MethodDict,_b_.object.$dict]
-$B.$MethodDict.__repr__=$B.$MethodDict.__str__=function(self){return '<bound method '+self.$infos.__name__+' of '+_b_.str(self.$infos.__self__)+'>'
+$B.$MethodDict.__repr__=$B.$MethodDict.__str__=function(self){var res='<bound method '+self.$infos.__class__.$dict.__name__+'.' 
+res +=self.$infos.__name__+' of '
+return res+_b_.str(self.$infos.__self__)+'>'
 }
 $MethodFactory.$dict=$B.$MethodDict
 $B.$InstanceMethodDict={__class__:$B.$type,__name__:'instancemethod',__mro__:[_b_.object.$dict],$factory:$MethodFactory

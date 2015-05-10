@@ -273,7 +273,7 @@ $ObjectDict.__or__ = function(self,other){
 $ObjectDict.__repr__ = function(self){
     if(self===object) return "<class 'object'>"
     if(self.__class__===$B.$factory) return "<class '"+self.$dict.__name__+"'>"
-    return "<"+self.__class__.__name__+" object>"
+    return "<"+self.__class__.__module__+"."+self.__class__.__name__+" object>"
 }
 
 $ObjectDict.__setattr__ = function(self,attr,val){

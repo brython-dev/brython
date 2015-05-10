@@ -94,15 +94,6 @@ $B.make_method = function(attr, klass, func, func1){
       case 'function':
         // the attribute is a function : return an instance method,
         // called with the instance as first argument
-        /*
-        __self__ = instance
-        __func__ = func1
-        __repr__ = __str__ = function(){
-            var x = '<bound method '+attr
-            x += " of '"+klass.__name__+"' object>"
-            return x
-        }
-        */
         method = function(instance){
             // make a local copy of initial args
             var instance_method = function(){
@@ -115,8 +106,9 @@ $B.make_method = function(attr, klass, func, func1){
             }
             instance_method.__class__ = $B.$MethodDict
             instance_method.$infos = {
+                __class__:klass.$factory,
                 __func__:func,
-                __name__:klass.__name__+'.'+attr,
+                __name__:attr,
                 __self__:instance
             }
 
@@ -570,9 +562,28 @@ $B.$MethodDict = {__class__:$B.$type,
 $B.$MethodDict.__eq__ = function(self, other){
     return self.__func__===other.__func__
 }
+$B.$MethodDict.__getattribute__ = function(self, attr){
+    // Internal attributes __name__, __module__, __doc__ etc. 
+    // are stored in self.$infos
+    if(self.$infos && self.$infos[attr]){
+        if(attr=='__code__'){
+            var res = {__class__:$B.$CodeDict}
+            for(var attr in self.$infos.__code__){
+                res[attr]=self.$infos.__code__[attr]
+            }
+            return res
+        }else{
+            return self.$infos[attr]
+        }
+    }else{
+        return _b_.object.$dict.__getattribute__(self, attr)
+    }
+}
 $B.$MethodDict.__mro__=[$B.$MethodDict, _b_.object.$dict]
 $B.$MethodDict.__repr__ = $B.$MethodDict.__str__ = function(self){
-    return '<bound method '+self.$infos.__name__+' of '+_b_.str(self.$infos.__self__)+'>'
+    var res = '<bound method '+self.$infos.__class__.$dict.__name__+'.' 
+    res += self.$infos.__name__+' of '
+    return res+_b_.str(self.$infos.__self__)+'>'
 }
 $MethodFactory.$dict = $B.$MethodDict
 

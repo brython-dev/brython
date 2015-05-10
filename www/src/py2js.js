@@ -1416,20 +1416,12 @@ function $ClassCtx(context){
         // add doc string
         rank++
         var ds_node = new $Node()
-        new $NodeJSCtx(ds_node,name_ref+'.__doc__='+(this.doc_string || 'None')+';')
-        node.parent.insert(rank+1,ds_node)       
-
-        // add __code__ 
-        rank++
-        // end with None for interactive interpreter
-        js = name_ref+'.__code__={__class__:$B.$CodeDict};None;'
-        var ds_node = new $Node()
-        new $NodeJSCtx(ds_node,js)
-        node.parent.insert(rank+1,ds_node)       
+        new $NodeJSCtx(ds_node,name_ref+'.$dict.__doc__='+(this.doc_string || 'None')+';')
+        node.parent.insert(rank+1,ds_node)      
 
         // add attribute __module__
         rank++
-        js = name_ref+'.__module__="'+$get_module(this).module+'"'
+        js = name_ref+'.$dict.__module__="'+$get_module(this).module+'"'
         var mod_node = new $Node()
         new $NodeJSCtx(mod_node,js)
         node.parent.insert(rank+1,mod_node)
