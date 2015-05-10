@@ -11,7 +11,11 @@ import sys
 import tarfile
 import zipfile
 
+if(sys.version_info[0]!=2):
+    raise ValueError("This script uses pyminifier, which only works with Python 2")
+
 import make_doc  # lint:ok
+
 
 try:
     import slimit
@@ -24,7 +28,7 @@ except ImportError:
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
-implementation = [3, 1, 2, 'alpha', 0]
+implementation = [3, 1, 3, 'alpha', 0]
 
 def custom_minify(src):
     _res, pos = '', 0
