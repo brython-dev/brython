@@ -121,24 +121,26 @@ $B.make_method = function(attr, klass, func, func1){
         return func
       case 'classmethod':
         // class method : called with the class as first argument
-        args = [klass]
-        __self__ = klass
-        __func__ = func1
-        __repr__ = __str__ = function(){
-            var x = '<bound method type'+'.'+attr
-            x += ' of '+klass.__name__+'>'
-            return x
-        }
-        method = function(klass){
+        // the attribute is a function : return an instance method,
+        // called with the instance as first argument
+        method = function(){
             // make a local copy of initial args
-            var local_args = [klass]
-            var pos=local_args.length
-            for(var i=0, _len_i = arguments.length; i < _len_i;i++){
-                local_args[pos++]=arguments[i]
+            var class_method = function(){
+                var local_args = [klass]
+                var pos=local_args.length
+                for(var i=0, _len_i = arguments.length; i < _len_i;i++){
+                    local_args[pos++]=arguments[i]
+                }
+                return func.apply(null,local_args)
             }
-            var x = func.apply(instance,local_args)
-            if(x===undefined) return _b_.None
-            return x
+            class_method.__class__ = $B.$MethodDict
+            class_method.$infos = {
+                __class__:klass.$factory,
+                __func__:func,
+                __name__:attr
+            }
+
+            return class_method
         }
         break
       case 'staticmethod':
@@ -156,21 +158,8 @@ $B.make_method = function(attr, klass, func, func1){
         break
     }
 
-    // build the instance method, called with a list of arguments
-    // depending on the method type
-    method.__class__ = $B.$InstanceMethodDict
-    method.__eq__ = function(other){
-        return other.$res === func
-    }
-    method.__func__ = __func__
-    method.__repr__ = __repr__
-    method.__self__ = __self__
-    method.__str__ = __str__
-    method.__code__ = {'__class__' : $B.CodeDict}
-    method.__doc__ = func.__doc__ || ''
-    method.$type = 'instancemethod'
-    method.$res = func
     return method
+
 }
 
 function make_mro(bases, cl_dict){
