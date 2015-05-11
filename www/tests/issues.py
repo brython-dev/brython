@@ -331,4 +331,12 @@ source = [0, 1, 2, 3]
 total = sum(source.pop() for _ in range(len(source)))
 assert total == 6, "expected 6 but instead was %d" % total
 
+# issue 177
+import sys
+ModuleType=type(sys)
+foo=ModuleType("foo", "foodoc")
+assert foo.__name__=="foo"
+assert foo.__doc__=="foodoc"
+#assert type(foo.__dict__) == dict
+
 print('passed all tests')

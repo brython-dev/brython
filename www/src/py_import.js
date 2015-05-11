@@ -8,12 +8,18 @@ $B.$ModuleDict = {
     __class__ : $B.$type,
     __name__ : 'module'
 }
-$B.$ModuleDict.__repr__ = function(self){return '<module '+self.__name__+'>'}
-$B.$ModuleDict.__setattr__ = function(self, attr, value){self[attr] = value}
-$B.$ModuleDict.__str__ = function(self){return '<module '+self.__name__+'>'}
+$B.$ModuleDict.__repr__ = $B.$ModuleDict.__str__ = function(self){
+    return '<module '+self.__name__+'>'
+}
 $B.$ModuleDict.__mro__ = [$B.$ModuleDict,_b_.object.$dict]
 
-function module(){}
+function module(name,doc,package){
+    return {__class__:$B.$ModuleDict,
+        __name__:name,
+        __doc__:doc||_b_.None,
+        __package__:package||_b_.None
+    }
+}
 
 module.__class__ = $B.$factory
 module.$dict = $B.$ModuleDict
@@ -217,7 +223,8 @@ $B.run_py=run_py=function(module,path,module_contents) {
         var mod = eval('$module')
         // add some attributes
         mod.__class__ = $B.$ModuleDict
-        mod.__repr__=mod.__str__ = function(){
+        mod.__name__ = module.name
+        mod.__repr__ = mod.__str__ = function(){
           if ($B.builtin_module_names.indexOf(module.name) > -1) {
              return "<module '"+module.name+"' (built-in)>"
           }
