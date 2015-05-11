@@ -97,7 +97,7 @@ $ObjectDict.__eq__ = function(self,other){
 $ObjectDict.__ge__ = $ObjectNI('__ge__','>=')
 
 $ObjectDict.__getattribute__ = function(obj,attr){
-    if (attr == '__doc__') return _b_.None
+    
     var klass = $B.get_class(obj)
     if(attr==='__class__'){
         return klass.$factory
@@ -272,7 +272,11 @@ $ObjectDict.__or__ = function(self,other){
 $ObjectDict.__repr__ = function(self){
     if(self===object) return "<class 'object'>"
     if(self.__class__===$B.$factory) return "<class '"+self.$dict.__name__+"'>"
-    return "<"+self.__class__.__module__+"."+self.__class__.__name__+" object>"
+    if(self.__class__.__module__!==undefined){
+        return "<"+self.__class__.__module__+"."+self.__class__.__name__+" object>"
+    }else{
+        return "<"+self.__class__.__name__+" object>"
+    }
 }
 
 $ObjectDict.__setattr__ = function(self,attr,val){
