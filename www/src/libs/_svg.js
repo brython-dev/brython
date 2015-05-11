@@ -81,7 +81,7 @@ function makeTagDict(tagName){
     dict.__mro__ = [dict,$B.DOMNode,$B.builtins.object.$dict]
 
     dict.__new__ = function(cls){
-        var res = $B.$DOMNode(document.createElementNS($svgNS,tagName))
+        var res = $B.DOMNode(document.createElementNS($svgNS,tagName))
         res.__class__ = cls.$dict
         return res
     }
@@ -103,7 +103,7 @@ function makeTagDict(tagName){
 
 function makeFactory(tagName){
     var factory = function(){
-        var res = $B.$DOMNode(document.createElementNS($svgNS,tagName))
+        var res = $B.DOMNode(document.createElementNS($svgNS,tagName))
         res.__class__ = dicts[tagName]
         // apply __init__
         var args = [res]

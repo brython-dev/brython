@@ -8,8 +8,8 @@
         alert:function(message){window.alert($B.builtins.str(message))},
         confirm: $B.JSObject(window.confirm),
         console:$B.JSObject(window.console),
-        document:$B.$DOMNode(document),
-        doc: $B.$DOMNode(document),   //want to use document instead of doc
+        document:$B.DOMNode(document),
+        doc: $B.DOMNode(document),   //want to use document instead of doc
         DOMEvent:$B.DOMEvent,
         DOMNode:$B.DOMNode,
         mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},
@@ -85,12 +85,12 @@
                 }
             }
         
-            dict.__mro__ = [dict,$B.DOMNode,$B.builtins.object.$dict]
+            dict.__mro__ = [dict,$B.DOMNodeDict,$B.builtins.object.$dict]
         
             dict.__new__ = function(cls){
                 // __new__ must be defined explicitely : it returns an instance of
                 // DOMNode for the specified tagName
-                var res = $B.$DOMNode(document.createElement(tagName))
+                var res = $B.DOMNode(document.createElement(tagName))
                 res.__class__ = cls.$dict
                 return res
             }
@@ -104,7 +104,7 @@
         
         function makeFactory(tagName){
             var factory = function(){
-                var res = $B.$DOMNode(document.createElement(tagName))
+                var res = $B.DOMNode(document.createElement(tagName))
                 res.__class__ = dicts[tagName]
                 // apply __init__
                 var args = [res].concat(Array.prototype.slice.call(arguments))

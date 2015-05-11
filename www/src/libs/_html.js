@@ -61,7 +61,7 @@ function makeTagDict(tagName){
     dict.__new__ = function(cls){
         // __new__ must be defined explicitely : it returns an instance of
         // DOMNode for the specified tagName
-        var res = $B.$DOMNode(document.createElement(tagName))
+        var res = $B.DOMNode(document.createElement(tagName))
         res.__class__ = cls.$dict
         return res
     }
@@ -75,7 +75,7 @@ function makeTagDict(tagName){
 
 function makeFactory(tagName){
     var factory = function(){
-        var res = $B.$DOMNode(document.createElement(tagName))
+        var res = $B.DOMNode(document.createElement(tagName))
         res.__class__ = dicts[tagName]
         // apply __init__
         var args = [res].concat(Array.prototype.slice.call(arguments))

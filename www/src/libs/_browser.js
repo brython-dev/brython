@@ -3,8 +3,8 @@ var $module=(function($B) {
     alert:function(message){window.alert($B.builtins.str(message))},
     confirm: $B.JSObject(window.confirm),
     console:$B.JSObject(window.console),
-    document:$B.$DOMNode(document),
-    doc: $B.$DOMNode(document),   //want to use document instead of doc
+    document:$B.DOMNode(document),
+    doc: $B.DOMNode(document),   //want to use document instead of doc
     DOMEvent:$B.DOMEvent,
     DOMNode:$B.DOMNode,
     mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},
