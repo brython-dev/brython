@@ -675,4 +675,31 @@ $ObjDictDict.$factory = obj_dict
 
 $B.obj_dict = obj_dict
 
+// Class for attribute __dict__ of classes
+var mappingproxyDict = {
+    __class__ : $B.$type,
+    __name__ : "mappingproxy"
+}
+mappingproxyDict.__mro__ = [mappingproxyDict, _b_.object.$dict]
+
+mappingproxyDict.__setitem__ = function(){
+    throw _b_.TypeError("'mappingproxy' object does not support item assignment")
+}
+
+for(var attr in $ObjDictDict){
+    if(mappingproxyDict[attr]===undefined){
+        mappingproxyDict[attr] = $ObjDictDict[attr]
+    }
+}
+    
+function mappingproxy(obj){
+    var res = obj_dict(obj)
+    res.__class__ = mappingproxyDict
+    return res
+}
+mappingproxy.__class__ = $B.$factory
+mappingproxy.$dict = mappingproxyDict
+mappingproxyDict.$factory = mappingproxy
+$B.mappingproxy = mappingproxy
+
 })(__BRYTHON__)
