@@ -1421,7 +1421,9 @@ function $ClassCtx(context){
         // add doc string
         rank++
         var ds_node = new $Node()
-        new $NodeJSCtx(ds_node,name_ref+'.$dict.__doc__='+(this.doc_string || 'None')+';')
+        js = name_ref+'.$dict.__doc__='
+        js += (this.doc_string || 'None')+';'
+        new $NodeJSCtx(ds_node,js)
         node.parent.insert(rank+1,ds_node)      
 
         // add attribute __module__
@@ -2152,7 +2154,7 @@ function $DefCtx(context){
         offset++
         
         // Add attribute __doc__
-        js = '    __doc__:'+(this.doc_string || 'None')+','
+        js = '    __doc__: '+(this.doc_string || 'None')+','
         new_node = new $Node()
         new $NodeJSCtx(new_node,js)
         node.parent.insert(rank+offset,new_node)
@@ -2170,7 +2172,7 @@ function $DefCtx(context){
         js += h+'co_argcount:'+this.argcount
         js += h+'co_filename:$locals_'+scope.module.replace(/\./g,'_')+'["__file__"]'
         js += h+'co_firstlineno:'+node.line_num
-        js += h+'co_flags:'+flags+'\n'+' '.repeat(indent+4)
+        js += h+'co_flags:'+flags
         js += h+'co_kwonlyargcount:'+this.kwonlyargcount
         js += h+'co_name: "'+this.name+'"'
         js += h+'co_nlocals: '+co_varnames.length
@@ -4513,7 +4515,7 @@ function $clear_ns(ctx){
 }
 
 function $get_docstring(node){
-    var doc_string='""'
+    var doc_string=''
     if(node.children.length>0){
         var firstchild = node.children[0]
         if(firstchild.context.tree && firstchild.context.tree[0].type=='expr'){
@@ -6669,7 +6671,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     root.insert(0,new_node)
     // module doc string
     var ds_node = new $Node()
-    new $NodeJSCtx(ds_node, local_ns+'["__doc__"]='+root.doc_string+';')
+    new $NodeJSCtx(ds_node, local_ns+'["__doc__"]='+(root.doc_string||'None')+';')
     root.insert(1,ds_node)
     // name
     var name_node = new $Node()
