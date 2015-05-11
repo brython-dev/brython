@@ -483,6 +483,7 @@ function getattr(obj,attr,_default){
       case '__dict__':
         // attribute __dict__ returns an instance of a subclass of dict
         // defined in py_dict.js
+        //if(klass===$B.$factory){return $B.mappingproxy(obj)}
         return $B.obj_dict(obj)
       case '__doc__':
         // for builtins objects, use $B.builtins_doc
@@ -1249,47 +1250,53 @@ function setattr(obj,attr,value){
       case 'super':
       case 'window':
         attr='$$'+attr
-    }
-    
-    if(attr=='__class__'){
+        break
+      case '__class__':
         // Setting the attribute __class__ : value is the factory function,
         // we must set __class__ to the class dictionary
         obj.__class__ = value.$dict;return
+        break
     }
     
-    if(obj.__class__===$B.$factory && obj.$dict.$methods
-        && typeof value=='function'){
+    if(obj.__class__===$B.$factory){ 
+        // Setting attribute of a class means updating the class
+        // dictionary, not the class factory function
+        if(obj.$dict.$methods && typeof value=='function'){
+            // update attribute $methods
             obj.$dict.$methods[attr] = $B.make_method(attr, obj.$dict, value, value)
             return
+        }else{obj.$dict[attr]=value;return}
     }
     
-    var res = obj[attr]
+    var res = obj[attr], klass=$B.get_class(obj)
     if(res===undefined){
-        var mro = $B.get_class(obj).__mro__
-        for(var i=0;i<mro.length;i++){
+        var mro = klass.__mro__, _len = mro.length
+        for(var i=0;i<_len;i++){
             res = mro[i][attr]
             if(res!==undefined) break
         }
     }
+
     if(res!==undefined){
         // descriptor protocol : if obj has attribute attr and this attribute 
         // has a method __set__(), use it
         if(res.__set__!==undefined) return res.__set__(res,obj,value)
         var __set__ = getattr(res,'__set__',null)
-        if(__set__ && (typeof __set__=='function')) {return __set__.apply(res,[obj,value])}
+        if(__set__ && (typeof __set__=='function')) {
+            return __set__.apply(res,[obj,value])
+        }
     }
     
-    // For instances of simple classes (no inheritance) there is no need to
-    // search __setattr__
-    if(obj.$simple_setattr){obj[attr]=value;return}
-    
-    try{var f = getattr(obj,'__setattr__')}
-    catch(err){
-        $B.$pop_exc()
-        obj[attr]=value
-        return
+    // Search the __setattr__ method
+    var setattr=false
+    if(klass!==undefined){
+        for(var i=0, _len=klass.__mro__.length;i<_len;i++){
+            setattr = klass.__mro__[i].__setattr__
+            if(setattr){break}
+        }
     }
-    f(attr,value)
+    if(!setattr){obj[attr]=value;return}
+    setattr(obj,attr,value)
 }
 
 // slice

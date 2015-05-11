@@ -529,19 +529,12 @@ function $instance_creator(klass){
     if(simple && klass.__new__==undefined && init_func!==null){
         // most usual case
         
-        if(klass.__setattr__===undefined){
-            return function(){
-                var obj = {__class__:klass, $simple_setattr:true}
-                init_func.apply(null,[obj].concat(Array.prototype.slice.call(arguments)))
-                return obj
-            }
-        }else{
-            return function(){
-                var obj = {__class__:klass}
-                init_func.apply(null,[obj].concat(Array.prototype.slice.call(arguments)))
-                return obj
-            }
+        return function(){
+            var obj = {__class__:klass}
+            init_func.apply(null,[obj].concat(Array.prototype.slice.call(arguments)))
+            return obj
         }
+
     }
 
     return function(){
@@ -580,16 +573,17 @@ $B.$MethodDict.__eq__ = function(self, other){
 }
 $B.$MethodDict.__getattribute__ = function(self, attr){
     // Internal attributes __name__, __module__, __doc__ etc. 
-    // are stored in self.$infos
-    if(self.$infos && self.$infos[attr]){
+    // are stored in self.$infos.__func__.$infos
+    var infos = self.$infos.__func__.$infos
+    if(infos && infos[attr]){
         if(attr=='__code__'){
             var res = {__class__:$B.$CodeDict}
-            for(var attr in self.$infos.__code__){
-                res[attr]=self.$infos.__code__[attr]
+            for(var attr in infos.__code__){
+                res[attr]=infos.__code__[attr]
             }
             return res
         }else{
-            return self.$infos[attr]
+            return infos[attr]
         }
     }else{
         return _b_.object.$dict.__getattribute__(self, attr)
