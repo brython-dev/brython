@@ -2,7 +2,7 @@
     var modules = {}
     modules['browser'] = {
         $package: true,
-        is_package: true,
+        $is_package: true,
         __package__:'browser',
         __file__:$B.brython_path+'/Lib/browser/__init__.py',
         alert:function(message){window.alert($B.builtins.str(message))},
