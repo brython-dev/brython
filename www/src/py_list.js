@@ -263,7 +263,10 @@ $ListDict.__repr__ = function(self){
 
     var _r=self.map(_b_.repr)
 
-    if (self.__class__===$TupleDict) return '('+_r.join(', ')+')'
+    if (self.__class__===$TupleDict){
+        if(self.length==1){return '('+_r[0]+',)'}
+        return '('+_r.join(', ')+')'
+    }
     return '['+_r.join(', ')+']'
 }
 
