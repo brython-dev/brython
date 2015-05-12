@@ -88,16 +88,16 @@ def process_unittest(filename):
   var stored = __BRYTHON__.libs['unittest'][mod_name]
   if(stored!==undefined){
     var module_contents = stored[0]
-    var is_package = stored[1]
+    var $is_package = stored[1]
     var path = 'py_unittest'
-    var module = {name:mod_name,__class__:$B.$ModuleDict,is_package:is_package}
-    if(is_package){var package=mod_name}
+    var module = {name:mod_name,__class__:$B.$ModuleDict,$is_package:$is_package}
+    if($is_package){var package=mod_name}
     else{
       var elts = mod_name.split('.')
       elts.pop()
       var package = elts.join('.')
     }
-    $B.modules[mod_name].$package = is_package
+    $B.modules[mod_name].$package = $is_package
     $B.modules[mod_name].__package__ = package
 
     run_py(module,path,module_contents)

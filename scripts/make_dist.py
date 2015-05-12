@@ -16,7 +16,6 @@ if(sys.version_info[0]!=2):
 
 import make_doc  # lint:ok
 
-
 try:
     import slimit
     minify = slimit.minify
