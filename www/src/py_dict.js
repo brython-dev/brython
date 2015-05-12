@@ -39,8 +39,16 @@ $value_iterator.prototype.length = function() { return this.iter.length }
 $value_iterator.prototype.next = function() { return this.iter.next()[1] }
 
 var $item_generator = function(d) {
+    
     this.i = 0
 
+    if(d.$jsobj){
+        this.items = []
+        for(var attr in d.$jsobj){this.items.push([attr,d.$jsobj[attr]])};
+        this.length=this.items.length;
+        return
+    }
+    
     var items=[]
     var pos=0
     for (var k in d.$numeric_dict) {
@@ -154,17 +162,20 @@ $DictDict.__contains__ = function(self,item){
 }
 
 $DictDict.__delitem__ = function(self,arg){
+    if(self.$jsobj){
+        if(self.$jsobj[arg]===undefined){throw KeyError(arg)}
+        delete self.$jsobj[arg]
+        return
+    }
     switch(typeof arg) {
       case 'string':
         if (self.$string_dict[arg] === undefined) throw KeyError(_b_.str(arg))
         delete self.$string_dict[arg]
         delete self.$str_hash[str_hash(arg)]
-        if (self.$jsobj) delete self.$jsobj[arg]
         return
       case 'number':
         if (self.$numeric_dict[arg] === undefined) throw KeyError(_b_.str(arg))
         delete self.$numeric_dict[arg]
-        if (self.$jsobj) delete self.$jsobj[arg]
         return
     }
     // go with defaults
@@ -190,23 +201,27 @@ $DictDict.__eq__ = function(self,other){
     }
     if(!isinstance(other,dict)) return false
 
-    if ($DictDict.__len__(self) != $DictDict.__len__(other)) return false
+    if ($DictDict.__len__(self) != $DictDict.__len__(other)){return false}
 
     var _l = new $item_generator(self).as_list()
     var i=_l.length
     while(i--) {
         var key=_l[i][0]
-        if (!$DictDict.__contains__(other, key)) return false
+        if (!$DictDict.__contains__(other, key)) {return false}
         var v1=_l[i][1]
         var v2=$DictDict.__getitem__(other, key)
-        if (!getattr(v1, '__eq__')(v2)) return false
+        if (!getattr(v1, '__eq__')(v2)) {return false}
     }
 
     return true
 }
 
 $DictDict.__getitem__ = function(self,arg){
-    if(self.$jsobj && self.$jsobj[arg] !== undefined) return self.$jsobj[arg]
+
+    if(self.$jsobj){
+        if(self.$jsobj[arg]===undefined){return None}
+        return self.$jsobj[arg]
+    }
 
     switch(typeof arg) {
       case 'string':
@@ -215,6 +230,7 @@ $DictDict.__getitem__ = function(self,arg){
       case 'number':
         if (self.$numeric_dict[arg] !== undefined) return self.$numeric_dict[arg]
     }
+
     // since the key is more complex use 'default' method of getting item
 
     var _key=hash(arg)
@@ -321,6 +337,11 @@ $DictDict.__iter__ = function(self) {
 
 $DictDict.__len__ = function(self) {
     var _count=0
+    
+    if(self.$jsobj){
+        for(var attr in self.$jsobj){_count++}
+        return _count
+    }
 
     for (var k in self.$numeric_dict) _count++
     for (var k in self.$string_dict) _count++
@@ -346,6 +367,14 @@ $DictDict.__next__ = function(self){
 
 $DictDict.__repr__ = function(self){
     if(self===undefined) return "<class 'dict'>"
+    if(self.$jsobj){ // wrapper around Javascript object
+        var res = []
+        for(var attr in self.$jsobj){
+            if(attr.charAt(0)=='$' || attr=='__class__'){continue}
+            else{res.push(attr+': '+_b_.repr(self.$jsobj[attr]))}
+        }
+        return '{'+res.join(', ')+'}'
+    }
     var _objs=[self]  // used to elimate recursion
     var res=[], pos=0
     var items = new $item_generator(self).as_list()
@@ -364,15 +393,16 @@ $DictDict.__repr__ = function(self){
 }
 
 $DictDict.__setitem__ = function(self,key,value){
+
+    if(self.$jsobj){self.$jsobj[key]=value;return}
+
     switch(typeof key) {
       case 'string':
         self.$string_dict[key]=value
         self.$str_hash[str_hash(key)]=key
-        if(self.$jsobj) self.$jsobj[key]=value
         return
       case 'number':
         self.$numeric_dict[key]=value
-        if(self.$jsobj) self.$jsobj[key]=value
         return
     }
     
@@ -397,7 +427,6 @@ $DictDict.__setitem__ = function(self,key,value){
        while(i--) {
            if (_eq(self.$object_dict[_key][i][0])) {
               self.$object_dict[_key][i]=[key, value]
-              if(self.$jsobj) self.$jsobj[key]=value
               return
            }
        }
@@ -407,7 +436,6 @@ $DictDict.__setitem__ = function(self,key,value){
        self.$object_dict[_key]=[[key, value]]
     }
 
-    if(self.$jsobj) self.$jsobj[key]=value
 }
 
 $DictDict.__str__ = $DictDict.__repr__
@@ -605,75 +633,6 @@ $B.$dict_items = function(d) { return new $item_generator(d).as_list() }
 $B.$copy_dict = $copy_dict  // copy from right to left
 $B.$dict_get_copy = $DictDict.copy  // return a shallow copy
 
-// Class used for attribute __dict__ of objects
-
-$ObjDictDict = {__class__:$B.$type,__name__:'mapping_proxy'}
-$ObjDictDict.__mro__ = [$ObjDictDict, $DictDict, $ObjectDict]
-
-$ObjDictDict.__delitem__ = function(self, key){
-    $DictDict.__delitem__(self, key)
-    delete self.$obj[key]
-}
-
-$ObjDictDict.__setitem__ = function(self, key, value){
-    $DictDict.__setitem__(self, key, value)
-    self.$obj[key] = value
-}
-
-$ObjDictDict.clear = function(self){
-    $DictDict.clear(self)
-    for(var key in self.$obj){delete self.$obj[key]}
-}
-
-$ObjDictDict.pop = function(self, key, _default){
-    $DictDict.pop(self, key, _default)
-    delete self.$obj[key]
-    return key
-}
-
-$ObjDictDict.popitem = function(self){
-    var res = $DictDict.popitem(self) // tuple
-    var key = res[0]
-    delete self.$obj[key]
-    return res
-}
-
-$ObjDictDict.update = function(self){
-    $DictDict.update.apply(null, arguments)
-    // Update attributes of underlying object by iterating on self.items()
-    var it = $DictDict.items(self)
-    while(true){
-        try{
-            var item = next(it)
-            self.$obj[item[0]] = item[1]
-        }catch(err){
-            if($B.is_exc(err,[_b_.StopIteration])){
-                $B.$pop_exc();return
-            }
-            throw err
-        }
-    }
-}
-
-function obj_dict(obj){
-    // Function called to get attribute "__dict__" of an object
-    if(obj.__class__===$B.$factory){
-        // For classes, use the class dictionary
-        obj = obj.$dict
-    }
-    var res = {__class__:$ObjDictDict,$obj:obj}
-    $DictDict.clear(res)
-    var si=$DictDict.__setitem__
-    for(var attr in obj){
-        if(attr.charAt(0)!='$') si(res, attr, obj[attr])
-    }
-    return res
-}
-obj_dict.$dict = $ObjDictDict
-obj_dict.__class__ = $B.$factory
-$ObjDictDict.$factory = obj_dict
-
-$B.obj_dict = obj_dict
 
 // Class for attribute __dict__ of classes
 var mappingproxyDict = {
@@ -686,12 +645,7 @@ mappingproxyDict.__setitem__ = function(){
     throw _b_.TypeError("'mappingproxy' object does not support item assignment")
 }
 
-for(var attr in $ObjDictDict){
-    if(mappingproxyDict[attr]===undefined){
-        mappingproxyDict[attr] = $ObjDictDict[attr]
-    }
-}
-    
+
 function mappingproxy(obj){
     var res = obj_dict(obj)
     res.__class__ = mappingproxyDict
@@ -701,5 +655,11 @@ mappingproxy.__class__ = $B.$factory
 mappingproxy.$dict = mappingproxyDict
 mappingproxyDict.$factory = mappingproxy
 $B.mappingproxy = mappingproxy
+
+$B.obj_dict = function(obj){
+    var res = dict()
+    res.$jsobj = obj
+    return res
+}
 
 })(__BRYTHON__)

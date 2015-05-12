@@ -481,10 +481,8 @@ function getattr(obj,attr,_default){
         // return the factory function
         return klass.$factory
       case '__dict__':
-        // attribute __dict__ returns an instance of a subclass of dict
-        // defined in py_dict.js
-        //if(klass===$B.$factory){return $B.mappingproxy(obj)}
-        return $B.obj_dict(obj)
+        // attribute __dict__ returns a dictionary wrapping obj
+        return $B.obj_dict(obj) // defined in py_dict.js
       case '__doc__':
         // for builtins objects, use $B.builtins_doc
         for(var i=0;i<builtin_names.length;i++){
