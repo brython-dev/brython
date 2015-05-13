@@ -1213,7 +1213,6 @@ function $CallCtx(context){
                                 dstar_args = arg.tree[0].tree[0].to_js()
                                 break
                             default:
-                                console.log('bizarre type '+ type+' arg '+ arg+' arg.type '+arg.type)
                                 pos_args.push(arg.to_js())
                                 break
                         }
