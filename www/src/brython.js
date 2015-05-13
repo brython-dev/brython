@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-13 08:48:05.571000"
+__BRYTHON__.compiled_date="2015-05-13 09:33:07.303000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -7255,7 +7255,7 @@ if(pyobj===_b_.None)return null
 var klass=$B.get_class(pyobj)
 if(klass===$JSObjectDict ||klass===$JSConstructorDict){
 return pyobj.js
-}else if(klass.__mro__.indexOf($B.DOMNode)>-1){
+}else if(klass.__mro__.indexOf($B.DOMNodeDict)>-1){
 return pyobj.elt
 }else if([_b_.list.$dict,_b_.tuple.$dict].indexOf(klass)>-1){
 var res=[]
@@ -10716,7 +10716,7 @@ res.$dict={}
 res.elt=elt 
 if(elt['$brython_id']===undefined||elt.nodeType===9){
 elt.$brython_id='DOM-'+$B.UUID()
-res.__repr__=res.__str__=res.toString=function(){var res="<DOMNodeDict object type '"
+res.__repr__=res.__str__=res.toString=function(){var res="<DOMNode object type '"
 return res+$NodeTypes[elt.nodeType]+"' name '"+elt.nodeName+"'>"
 }}
 res.__class__=DOMNodeDict
@@ -10820,7 +10820,7 @@ throw KeyError(key)
 for(var $i=0;$i<elts.length;$i++)res[pos++]=DOMNode(elts[$i])
 return res
 }catch(err){throw KeyError(str(key))
-}}}else{throw _b_.TypeError('DOMNodeDict object is not subscriptable')
+}}}else{throw _b_.TypeError('DOMNode object is not subscriptable')
 }}
 DOMNodeDict.__iter__=function(self){
 self.$counter=-1
@@ -10857,8 +10857,8 @@ var txt=DOMNode(document.createTextNode(other))
 res.children=[txt,self]
 return res
 }
-DOMNodeDict.__str__=DOMNodeDict.__repr__=function(self){if(self===undefined)return "<class 'DOMNodeDict'>"
-var res="<DOMNodeDict object type '"
+DOMNodeDict.__str__=DOMNodeDict.__repr__=function(self){if(self===undefined)return "<class 'DOMNode'>"
+var res="<DOMNode object type '"
 return res+$NodeTypes[self.elt.nodeType]+"' name '"+self.elt.nodeName+"'>"
 }
 DOMNodeDict.__setattr__=function(self,attr,value){if(attr.substr(0,2)=='on'){
@@ -10935,34 +10935,34 @@ var $dict={}
 var items=_b_.list(_b_.dict.$dict.items($ns['kw']))
 for(var i=0;i<items.length;i++){$dict[items[i][0]]=items[i][1]
 }
-if($dict['name']!==undefined){if(obj.getElementsByName===undefined){throw _b_.TypeError("DOMNodeDict object doesn't support selection by name")
+if($dict['name']!==undefined){if(obj.getElementsByName===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by name")
 }
 var res=[],pos=0
 var node_list=document.getElementsByName($dict['name'])
 if(node_list.length===0)return[]
 for(var i=0;i<node_list.length;i++)res[pos++]=DOMNode(node_list[i])
 }
-if($dict['tag']!==undefined){if(obj.getElementsByTagName===undefined){throw _b_.TypeError("DOMNodeDict object doesn't support selection by tag name")
+if($dict['tag']!==undefined){if(obj.getElementsByTagName===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by tag name")
 }
 var res=[],pos=0
 var node_list=document.getElementsByTagName($dict['tag'])
 if(node_list.length===0)return[]
 for(var i=0;i<node_list.length;i++)res[pos++]=DOMNode(node_list[i])
 }
-if($dict['classname']!==undefined){if(obj.getElementsByClassName===undefined){throw _b_.TypeError("DOMNodeDict object doesn't support selection by class name")
+if($dict['classname']!==undefined){if(obj.getElementsByClassName===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by class name")
 }
 var res=[],pos=0
 var node_list=document.getElementsByClassName($dict['classname'])
 if(node_list.length===0)return[]
 for(var i=0;i<node_list.length;i++)res[pos++]=DOMNode(node_list[i])
 }
-if($dict['id']!==undefined){if(obj.getElementById===undefined){throw _b_.TypeError("DOMNodeDict object doesn't support selection by id")
+if($dict['id']!==undefined){if(obj.getElementById===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by id")
 }
 var id_res=obj.getElementById($dict['id'])
 if(!id_res)return[]
 return[DOMNode(id_res)]
 }
-if($dict['selector']!==undefined){if(obj.querySelectorAll===undefined){throw _b_.TypeError("DOMNodeDict object doesn't support selection by selector")
+if($dict['selector']!==undefined){if(obj.querySelectorAll===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by selector")
 }
 var node_list=obj.querySelectorAll($dict['selector'])
 var sel_res=[],pos=0
@@ -11055,7 +11055,7 @@ DOMNodeDict.set_value=function(self,value){self.elt.value=str(value)}
 DOMNodeDict.submit=function(self){
 return function(){self.elt.submit()}}
 DOMNodeDict.text=function(self){return self.elt.innerText ||self.elt.textContent}
-DOMNodeDict.toString=function(self){if(self===undefined)return 'DOMNodeDict'
+DOMNodeDict.toString=function(self){if(self===undefined)return 'DOMNode'
 return self.elt.nodeName
 }
 DOMNodeDict.trigger=function(self,etype){
@@ -11544,10 +11544,10 @@ for(var i=0,_len_i=items.length;i < _len_i;i++){
 var arg=items[i][0]
 var value=items[i][1]
 if(arg.toLowerCase().substr(0,2)==="on"){
-var js='$B.DOMNode.bind(self,"'
+var js='$B.DOMNodeDict.bind(self,"'
 js +=arg.toLowerCase().substr(2)
 eval(js+'",function(){'+value+'})')
-}else if(arg.toLowerCase()=="style"){$B.DOMNode.set_style(self,value)
+}else if(arg.toLowerCase()=="style"){$B.DOMNodeDict.set_style(self,value)
 }else{
 if(value!==false){
 try{arg=arg.toLowerCase().replace('_','-')

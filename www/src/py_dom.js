@@ -346,7 +346,7 @@ var DOMNode = $B.DOMNode = function(elt){
         elt.$brython_id='DOM-'+$B.UUID()
         // add attributes of Node to element
         res.__repr__ = res.__str__ = res.toString = function(){
-            var res = "<DOMNodeDict object type '"
+            var res = "<DOMNode object type '"
             return res+$NodeTypes[elt.nodeType]+"' name '"+elt.nodeName+"'>"
         }
     }
@@ -451,7 +451,7 @@ DOMNodeDict.__getattribute__ = function(self,attr){
     }//switch
     if(self.elt.getAttribute!==undefined){
         res = self.elt.getAttribute(attr)
-        // IE returns the properties of a DOMNodeDict (eg parentElement)
+        // IE returns the properties of a DOMNode (eg parentElement)
         // as "attribute", so we must check that this[attr] is not
         // defined
         if(res!==undefined&&res!==null&&self.elt[attr]===undefined){
@@ -507,7 +507,7 @@ DOMNodeDict.__getitem__ = function(self,key){
             }
         }
     }else{
-        throw _b_.TypeError('DOMNodeDict object is not subscriptable')
+        throw _b_.TypeError('DOMNode object is not subscriptable')
     }
 }
 
@@ -528,7 +528,7 @@ DOMNodeDict.__le__ = function(self,other){
     }else if(typeof other==="string" || typeof other==="number"){
         var $txt = document.createTextNode(other.toString())
         elt.appendChild($txt)
-    }else{ // other is a DOMNodeDict instance
+    }else{ // other is a DOMNode instance
         elt.appendChild(other.elt)
     }
 }
@@ -565,9 +565,9 @@ DOMNodeDict.__radd__ = function(self,other){ // add to a string
 }
 
 DOMNodeDict.__str__ = DOMNodeDict.__repr__ = function(self){
-    if(self===undefined) return "<class 'DOMNodeDict'>"
+    if(self===undefined) return "<class 'DOMNode'>"
     
-    var res = "<DOMNodeDict object type '"
+    var res = "<DOMNode object type '"
     return res+$NodeTypes[self.elt.nodeType]+"' name '"+self.elt.nodeName+"'>"
 }
 
@@ -700,7 +700,7 @@ DOMNodeDict.get = function(self){
     }
     if($dict['name']!==undefined){
         if(obj.getElementsByName===undefined){
-            throw _b_.TypeError("DOMNodeDict object doesn't support selection by name")
+            throw _b_.TypeError("DOMNode object doesn't support selection by name")
         }
         var res = [], pos=0
         var node_list = document.getElementsByName($dict['name'])
@@ -709,7 +709,7 @@ DOMNodeDict.get = function(self){
     }
     if($dict['tag']!==undefined){
         if(obj.getElementsByTagName===undefined){
-            throw _b_.TypeError("DOMNodeDict object doesn't support selection by tag name")
+            throw _b_.TypeError("DOMNode object doesn't support selection by tag name")
         }
         var res = [], pos=0
         var node_list = document.getElementsByTagName($dict['tag'])
@@ -718,7 +718,7 @@ DOMNodeDict.get = function(self){
     }
     if($dict['classname']!==undefined){
         if(obj.getElementsByClassName===undefined){
-            throw _b_.TypeError("DOMNodeDict object doesn't support selection by class name")
+            throw _b_.TypeError("DOMNode object doesn't support selection by class name")
         }
         var res = [], pos=0
         var node_list = document.getElementsByClassName($dict['classname'])
@@ -727,7 +727,7 @@ DOMNodeDict.get = function(self){
     }
     if($dict['id']!==undefined){
         if(obj.getElementById===undefined){
-            throw _b_.TypeError("DOMNodeDict object doesn't support selection by id")
+            throw _b_.TypeError("DOMNode object doesn't support selection by id")
         }
         var id_res = obj.getElementById($dict['id'])
         if(!id_res) return []
@@ -735,7 +735,7 @@ DOMNodeDict.get = function(self){
     }
     if($dict['selector']!==undefined){
         if(obj.querySelectorAll===undefined){
-            throw _b_.TypeError("DOMNodeDict object doesn't support selection by selector")
+            throw _b_.TypeError("DOMNode object doesn't support selection by selector")
         }
         var node_list = obj.querySelectorAll($dict['selector'])
         var sel_res = [], pos=0
@@ -897,12 +897,12 @@ DOMNodeDict.submit = function(self){ // for FORM
 DOMNodeDict.text = function(self){return self.elt.innerText || self.elt.textContent}
     
 DOMNodeDict.toString = function(self){
-    if(self===undefined) return 'DOMNodeDict'
+    if(self===undefined) return 'DOMNode'
     return self.elt.nodeName
 }
 
 DOMNodeDict.trigger = function (self, etype){
-    // Artificially triggers the event type provided for this DOMNodeDict
+    // Artificially triggers the event type provided for this DOMNode
     if (self.elt.fireEvent) {
       self.elt.fireEvent('on' + etype);
     } else {

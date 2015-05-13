@@ -27,7 +27,7 @@ function makeTagDict(tagName){
                 return dict[attr].apply(null, args)
             }
         }
-        return $B.DOMNode.__getattribute__(self, attr)        
+        return $B.DOMNodeDict.__getattribute__(self, attr)        
     }
 
     dict.__init__ = function(){
@@ -57,11 +57,11 @@ function makeTagDict(tagName){
             if(arg.toLowerCase().substr(0,2)==="on"){ 
                 // Event binding passed as argument "onclick", "onfocus"...
                 // Better use method bind of DOMNode objects
-                var js = '$B.DOMNode.bind(self,"'
+                var js = '$B.DOMNodeDict.bind(self,"'
                 js += arg.toLowerCase().substr(2)
                 eval(js+'",function(){'+value+'})')
             }else if(arg.toLowerCase()=="style"){
-                $B.DOMNode.set_style(self,value)
+                $B.DOMNodeDict.set_style(self,value)
             }else if(arg.toLowerCase().indexOf("href") !== -1){ // xlink:href
                 self.elt.setAttributeNS( "http://www.w3.org/1999/xlink","href",value)
             } else {
@@ -78,7 +78,7 @@ function makeTagDict(tagName){
         }
     }
 
-    dict.__mro__ = [dict,$B.DOMNode,$B.builtins.object.$dict]
+    dict.__mro__ = [dict,$B.DOMNodeDict,$B.builtins.object.$dict]
 
     dict.__new__ = function(cls){
         var res = $B.DOMNode(document.createElementNS($svgNS,tagName))
@@ -90,7 +90,7 @@ function makeTagDict(tagName){
         if(self.elt.hasAttributeNS(null, key)){
             self.elt.setAttributeNS(null,key,value)
         }else{
-            $B.DOMNode.__setattr__(self, key, value)
+            $B.DOMNodeDict.__setattr__(self, key, value)
         }
     }
 
