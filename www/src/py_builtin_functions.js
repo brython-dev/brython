@@ -1808,9 +1808,9 @@ var $FunctionDict = $B.$FunctionDict = {
 }
 
 $FunctionDict.__getattribute__ = function(self, attr){
-    // Internal attributes __name__, __mdouel__, __doc__ etc. 
+    // Internal attributes __name__, __module__, __doc__ etc. 
     // are stored in self.$infos
-    if(self.$infos && self.$infos[attr]){
+    if(self.$infos && self.$infos[attr]!==undefined){
         if(attr=='__code__'){
             var res = {__class__:$B.$CodeDict}
             for(var attr in self.$infos.__code__){
