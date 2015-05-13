@@ -266,6 +266,7 @@ function import_from_VFS(mod_name, origin, package){
         $B.modules[mod_name].__package__ = package
         if (ext == '.js') {run_js(module,path,module_contents)}
         else{run_py(module,path,module_contents)}
+        console.log('import '+mod_name+' from VFS')
         return true
     }
     return null
