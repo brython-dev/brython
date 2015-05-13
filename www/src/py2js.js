@@ -3142,7 +3142,7 @@ function $IdCtx(context,value){
                     }
                 }else if(scope.id==scope.module){
                     if(!this.bound && scope===innermost && this.env[val]===undefined){
-                        return '$B.$NameError("'+val+'")'
+                        return '$B.$search("'+val+'", $locals_'+scope.id.replace(/\./g,'_')+')'
                     }
                     val = scope_ns+'["'+val+'"]'
                 }else{
