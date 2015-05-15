@@ -1918,11 +1918,12 @@ $BaseExceptionDict.__init__ = function(self){
 }
 
 $BaseExceptionDict.__repr__ = function(self){
-    if(self.$message===None){return $B.get_class(self).__name__+'()'}
-    return self.$message
+    return self.__class__.__name__+repr(self.args)
 }
 
-$BaseExceptionDict.__str__ = $BaseExceptionDict.__repr__
+$BaseExceptionDict.__str__ = function(self){
+    return self.args[0]
+}
 
 $BaseExceptionDict.__mro__ = [$BaseExceptionDict,$ObjectDict]
 
@@ -2117,8 +2118,6 @@ function $make_exc(names,parent){
         _str[pos++]='$'+name+'Dict.__mro__=[$'+name+'Dict].concat(parent.$dict.__mro__)'
         // class constructor
         _str[pos++]='_b_.'+name+'='+$exc
-        _str[pos++]='_b_.'+name+'.__repr__ = function(){return "<class '+"'"+name+"'"+'>"}'
-        _str[pos++]='_b_.'+name+'.__str__ = function(){return "<class '+"'"+name+"'"+'>"}'
         _str[pos++]='_b_.'+name+'.__class__=$B.$factory'
         _str[pos++]='$'+name+'Dict.$factory=_b_.'+name
         _str[pos++]='_b_.'+name+'.$dict=$'+name+'Dict'
