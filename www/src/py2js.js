@@ -4303,8 +4303,9 @@ function $WithCtx(context){
         new $NodeJSCtx(catch_node,'catch($err'+$loop_num+')')
         
         var fbody = new $Node()
-        var js = 'if(!$ctx_manager_exit($err'+$loop_num+'.type,'
-        js += '$err'+$loop_num+'.value,$err'+$loop_num+'.traceback))'
+        var js = 'if(!$ctx_manager_exit($err'+$loop_num+
+            '.__class__.$factory,'+'$err'+$loop_num+
+            ',getattr($err'+$loop_num+',"traceback")))'
         js += '{throw $err'+$loop_num+'}'
         new $NodeJSCtx(fbody,js)
         catch_node.add(fbody)
