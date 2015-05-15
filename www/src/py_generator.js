@@ -48,6 +48,7 @@ $B.make_node = function(top_node, node){
     // iteration
 
     if(node.is_catch){is_except=true;is_cond=true}
+    if(node.is_except){is_except=true}
     if(node.context.type=='node'){
         var ctx = node.context.tree[0]
         var ctype = ctx.type

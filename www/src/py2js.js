@@ -4258,22 +4258,81 @@ function $WithCtx(context){
     context.tree[context.tree.length]=this
     this.tree = []
     this.expect = 'as'
+    this.scope = $get_scope(this)
 
     this.toString = function(){return '(with) '+this.tree}
 
     this.set_alias = function(arg){
-        var scope = $get_scope(this)
         this.tree[this.tree.length-1].alias = arg
-        if(scope.ntype !== 'module'){
+        if(this.scope.ntype !== 'module'){
             // add to function local names
-            scope.context.tree[0].locals.push(arg)
+            this.scope.context.tree[0].locals.push(arg)
         }
     }
 
     this.transform = function(node,rank){
+
+        /* PEP 243 says that
+        
+        with EXPR as VAR:
+            BLOCK        
+        
+           is transformed into
+
+
+        mgr = (EXPR)
+        exit = type(mgr).__exit__  # Not calling it yet
+        value = type(mgr).__enter__(mgr)
+        exc = True
+        try:
+            try:
+                VAR = value  # Only if "as VAR" is present
+                BLOCK
+            except:
+                # The exceptional case is handled here
+                exc = False
+                if not exit(mgr, *sys.exc_info()):
+                    raise
+                # The exception is swallowed if exit() returns true
+        finally:
+            # The normal and non-local-goto cases are handled here
+            if exc:
+                exit(mgr, None, None, None)
+           
+        */
+
+        node.is_try = true // for generators that use a context manager
         
         if(this.transformed) return  // used if inside a for loop
-        node.is_try = true // for generators that use a context manager
+
+        // If there are several "with" clauses, create a new child
+        // For instance : 
+        //     with x as x1, y as y1:
+        //         ...
+        // becomes
+        //     with x as x1:
+        //         with y as y1:
+        //             ...
+        
+        if(this.tree.length>1){
+            var nw = new $Node()
+            var ctx = new $NodeCtx(nw)
+            nw.parent = node
+            nw.module = node.module
+            nw.indent = node.indent+4
+            var wc = new $WithCtx(ctx)
+            wc.tree = this.tree.slice(1)
+            for(var i=0;i<node.children.length;i++){
+                nw.add(node.children[i])
+            }
+            node.children = [nw]
+            this.transformed = true
+            
+            return
+        }
+
+        var num = this.num = $loop_num        
+
         if(this.tree[0].alias===null){this.tree[0].alias = '$temp'}
         
         // Form "with (a,b,c) as (x,y,z)"
@@ -4298,64 +4357,77 @@ function $WithCtx(context){
             }
         }
         
+        var block = node.children // the block of code to run
+        
+        node.children = []
+        
+        var try_node = new $Node()
+        try_node.is_try = true
+        new $NodeJSCtx(try_node, 'try')
+        node.add(try_node)
+        
+        // if there is an alias, insert the value
+        if(this.tree[0].alias){
+            var alias = this.tree[0].alias
+            var js = '$locals_'+this.scope.id.replace(/\./g,'_')+
+                '["'+alias+'"] = $value'+num
+            var value_node = new $Node()
+            new $NodeJSCtx(value_node, js)
+            try_node.add(value_node)
+        }        
+        
+        // place blcok inside a try clause
+        for(var i=0;i<block.length;i++){try_node.add(block[i])}
+        
         var catch_node = new $Node()
         catch_node.is_catch = true // for generators
         new $NodeJSCtx(catch_node,'catch($err'+$loop_num+')')
         
-        var fbody = new $Node()
-        var js = 'if(!$ctx_manager_exit($err'+$loop_num+
+        var fbody = new $Node(), indent=node.indent+4
+        var js = '$exc'+num+' = false\n'+' '.repeat(indent)+
+            'if(!$ctx_manager_exit'+num+'($err'+$loop_num+
             '.__class__.$factory,'+'$err'+$loop_num+
             ',getattr($err'+$loop_num+',"traceback")))'
         js += '{throw $err'+$loop_num+'}'
         new $NodeJSCtx(fbody,js)
         catch_node.add(fbody)
-        node.parent.insert(rank+1,catch_node)
-        $loop_num++
+        node.add(catch_node)
 
         var finally_node = new $Node()
         new $NodeJSCtx(finally_node,'finally')
         finally_node.context.type = 'single_kw'
         finally_node.context.token = 'finally'
+        finally_node.is_except = true
         var fbody = new $Node()
-        new $NodeJSCtx(fbody,'$ctx_manager_exit(None,None,None)')
+        new $NodeJSCtx(fbody,'$ctx_manager_exit'+num+'(None,None,None)')
         finally_node.add(fbody)
-        node.parent.insert(rank+2,finally_node)
-        
-        // If there are other "with" clauses, create a new child
-        // For instance : 
-        //     with x as x1, y as y1:
-        //         ...
-        // becomes
-        //     with x as x1:
-        //         with y as y1:
-        //             ...
-        
-        if(this.tree.length>1){
-            var nw = new $Node()
-            var ctx = new $NodeCtx(nw)
-            nw.parent = node
-            var wc = new $WithCtx(ctx)
-            wc.tree = this.tree.slice(1)
-            for(var i=0;i<node.children.length;i++){
-                nw.add(node.children[i])
-            }
-            node.children = [nw]
-        }
+        node.parent.insert(rank+1,finally_node)
+
+        $loop_num++
         
         this.transformed = true
     }
 
     this.to_js = function(){
         this.js_processed=true
-        var res = 'var $ctx_manager='+this.tree[0].to_js()
-        var scope = $get_scope(this)
-        res += '\nvar $ctx_manager_exit = getattr($ctx_manager,"__exit__")\n'
+        var indent = $get_node(this).indent, h=' '.repeat(indent),
+            num = this.num, 
+            scope = $get_scope(this)
+        var res = 'var $ctx_manager'+num+' = '+this.tree[0].to_js()+
+            '\n'+h+'var $ctx_manager_exit'+num+
+            '= getattr($ctx_manager'+num+',"__exit__")\n'+
+            h+'var $value'+num+' = getattr($ctx_manager'+num+
+            ',"__enter__")()\n'
+        /*            
         if(this.tree[0].alias){
             var alias = this.tree[0].alias
-            res += ';$locals_'+scope.id.replace(/\./g,'_')
-            res += '["'+alias+'"]='
+            res += h+'$locals_'+scope.id.replace(/\./g,'_')
+            res += '["'+alias+'"] = getattr($ctx_manager'+num+
+                ',"__enter__")()\n'
         }
-        return res + 'getattr($ctx_manager,"__enter__")()\ntry'
+        */
+        res += h+'var $exc'+num+' = true\n'
+        return res + h+'try'
     }
 }
 
