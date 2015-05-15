@@ -763,7 +763,7 @@ function issubclass(klass,classinfo){
     if(arguments.length!==2){
       throw _b_.TypeError("issubclass expected 2 arguments, got "+arguments.length)
     }
-    if(!klass.__class__ || !klass.__class__.is_class){
+    if(!klass.__class__ || klass.__class__!==$B.$factory){
       throw _b_.TypeError("issubclass() arg 1 must be a class")
     }
     if(isinstance(classinfo,_b_.tuple)){
@@ -1834,6 +1834,77 @@ $Function.__class__=$B.$factory
 $FunctionDict.$factory = $Function
 $Function.$dict = $FunctionDict
 
+// class of traceback objects
+var $TracebackDict = {__class__:$B.$type,
+    __name__:'traceback'
+}
+$TracebackDict.__mro__ = [$TracebackDict, $ObjectDict]
+
+function traceback(tb) {
+  tb.__class__ = $TracebackDict
+  return tb
+}
+
+traceback.__class__ = $B.$factory
+traceback.$dict = $TracebackDict
+$TracebackDict.$factory = traceback
+
+// class of frame objects
+var $FrameDict = {__class__:$B.$type,
+    __name__:'frame'
+}
+$FrameDict.__mro__ = [$FrameDict, $ObjectDict]
+
+function to_dict(obj){
+    var res = _b_.dict()
+    var setitem=_b_.dict.$dict.__setitem__
+    for(var attr in obj){
+        if(attr.charAt(0)=='$'){continue}
+        setitem(res, attr, obj[attr])
+    }
+    return res
+}
+
+function frame(stack, pos){
+    var mod_name = stack[2]
+    var fs = stack
+    var res = {__class__:$FrameDict,
+        f_builtins : {} // XXX fix me
+    }
+    if(pos===undefined){pos = fs.length-1}
+    if(fs.length){
+        var _frame = fs[pos]
+        if(_frame[1]===undefined){alert('frame undef '+stack+' '+Array.isArray(stack)+' is frames stack '+(stack===$B.frames_stack))}
+        var locals_id = _frame[0]
+        try{
+            res.f_locals = $B.obj_dict(_frame[1])
+        }catch(err){
+            console.log('err '+err)
+            throw err
+        }
+        res.f_globals = $B.obj_dict(_frame[3])
+        if($B.debug>0){
+            res.f_lineno = parseInt($B.line_info.split(',')[0])
+        }else{
+            res.f_lineno = -1
+        }
+        if(pos>0){res.f_back = frame(stack, pos-1)}
+        else{res.f_back = None}
+        //res.f_code = {__class__:$B.$CodeObjectDict,
+        res.f_code = {__class__:$B.$CodeDict,
+            co_code:None, // XXX fix me
+            co_name: locals_id, // idem
+            co_filename: "<unknown>" // idem
+        }
+    }
+    return res
+}
+
+frame.__class__ = $B.$factory
+frame.$dict = $FrameDict
+$FrameDict.$factory = frame
+$B._frame=frame
+
 // built-in exceptions
 
 var $BaseExceptionDict = {__class__:$B.$type,
@@ -1926,76 +1997,6 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
             "has no attribute '"+attr+"'")
     }
 }
-// class of traceback objects
-var $TracebackDict = {__class__:$B.$type,
-    __name__:'traceback'
-}
-$TracebackDict.__mro__ = [$TracebackDict, $ObjectDict]
-
-function traceback(tb) {
-  tb.__class__ = $TracebackDict
-  return tb
-}
-
-traceback.__class__ = $B.$factory
-traceback.$dict = $TracebackDict
-$TracebackDict.$factory = traceback
-
-// class of frame objects
-var $FrameDict = {__class__:$B.$type,
-    __name__:'frame'
-}
-$FrameDict.__mro__ = [$FrameDict, $ObjectDict]
-
-function to_dict(obj){
-    var res = _b_.dict()
-    var setitem=_b_.dict.$dict.__setitem__
-    for(var attr in obj){
-        if(attr.charAt(0)=='$'){continue}
-        setitem(res, attr, obj[attr])
-    }
-    return res
-}
-
-function frame(stack, pos){
-    var mod_name = stack[2]
-    var fs = stack
-    var res = {__class__:$FrameDict,
-        f_builtins : {} // XXX fix me
-    }
-    if(pos===undefined){pos = fs.length-1}
-    if(fs.length){
-        var _frame = fs[pos]
-        if(_frame[1]===undefined){alert('frame undef '+stack+' '+Array.isArray(stack)+' is frames stack '+(stack===$B.frames_stack))}
-        var locals_id = _frame[0]
-        try{
-            res.f_locals = $B.obj_dict(_frame[1])
-        }catch(err){
-            console.log('err '+err)
-            throw err
-        }
-        res.f_globals = $B.obj_dict(_frame[3])
-        if($B.debug>0){
-            res.f_lineno = parseInt($B.line_info.split(',')[0])
-        }else{
-            res.f_lineno = -1
-        }
-        if(pos>0){res.f_back = frame(stack, pos-1)}
-        else{res.f_back = None}
-        //res.f_code = {__class__:$B.$CodeObjectDict,
-        res.f_code = {__class__:$B.$CodeDict,
-            co_code:None, // XXX fix me
-            co_name: locals_id, // idem
-            co_filename: "<unknown>" // idem
-        }
-    }
-    return res
-}
-
-frame.__class__ = $B.$factory
-frame.$dict = $FrameDict
-$FrameDict.$factory = frame
-$B._frame=frame
 
 var BaseException = function (msg,js_exc){
     var err = Error()
@@ -2015,9 +2016,9 @@ var BaseException = function (msg,js_exc){
     return err
 }
 
-BaseException.__name__ = 'BaseException'
 BaseException.__class__ = $B.$factory
 BaseException.$dict = $BaseExceptionDict
+$BaseExceptionDict.$factory = BaseException
 
 _b_.BaseException = BaseException
 
