@@ -4231,7 +4231,7 @@ function $TryCtx(context){
 
     this.to_js = function(){
         this.js_processed=true
-        return 'try'
+        return '$B.exception_stack=[];try'
     }
 
 }
@@ -4399,7 +4399,8 @@ function $WithCtx(context){
         finally_node.context.token = 'finally'
         finally_node.is_except = true
         var fbody = new $Node()
-        new $NodeJSCtx(fbody,'if($exc'+num+'){$ctx_manager_exit'+num+'(None,None,None)}')
+        new $NodeJSCtx(fbody,'if($exc'+num+'){$ctx_manager_exit'+num+
+            '(None,None,None)}')
         finally_node.add(fbody)
         node.parent.insert(rank+1,finally_node)
 
