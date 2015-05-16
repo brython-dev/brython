@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,3,'final',0]
 __BRYTHON__.__MAGIC__="3.1.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-14 09:53:42.559000"
+__BRYTHON__.compiled_date="2015-05-16 10:01:40.059000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -2593,14 +2593,29 @@ this.parent=C
 C.tree[C.tree.length]=this
 this.tree=[]
 this.expect='as'
+this.scope=$get_scope(this)
 this.toString=function(){return '(with) '+this.tree}
-this.set_alias=function(arg){var scope=$get_scope(this)
-this.tree[this.tree.length-1].alias=arg
-if(scope.ntype !=='module'){
-scope.C.tree[0].locals.push(arg)
+this.set_alias=function(arg){this.tree[this.tree.length-1].alias=arg
+if(this.scope.ntype !=='module'){
+this.scope.C.tree[0].locals.push(arg)
 }}
-this.transform=function(node,rank){if(this.transformed)return 
+this.transform=function(node,rank){
 node.is_try=true 
+if(this.transformed)return 
+if(this.tree.length>1){var nw=new $Node()
+var ctx=new $NodeCtx(nw)
+nw.parent=node
+nw.module=node.module
+nw.indent=node.indent+4
+var wc=new $WithCtx(ctx)
+wc.tree=this.tree.slice(1)
+for(var i=0;i<node.children.length;i++){nw.add(node.children[i])
+}
+node.children=[nw]
+this.transformed=true
+return
+}
+var num=this.num=$loop_num 
 if(this.tree[0].alias===null){this.tree[0].alias='$temp'}
 if(this.tree[0].type=='expr' && 
 this.tree[0].tree[0].type=='list_or_tuple'){if(this.tree[1].type!='expr' ||
@@ -2615,45 +2630,53 @@ this.tree.shift()
 for(var i=ids.length-1;i>=0;i--){ids[i].alias=alias[i].value
 this.tree.splice(0,0,ids[i])
 }}
+var block=node.children 
+node.children=[]
+var try_node=new $Node()
+try_node.is_try=true
+new $NodeJSCtx(try_node,'try')
+node.add(try_node)
+if(this.tree[0].alias){var alias=this.tree[0].alias
+var js='$locals_'+this.scope.id.replace(/\./g,'_')+
+'["'+alias+'"] = $value'+num
+var value_node=new $Node()
+new $NodeJSCtx(value_node,js)
+try_node.add(value_node)
+}
+for(var i=0;i<block.length;i++){try_node.add(block[i])}
 var catch_node=new $Node()
 catch_node.is_catch=true 
 new $NodeJSCtx(catch_node,'catch($err'+$loop_num+')')
-var fbody=new $Node()
-var js='if(!$ctx_manager_exit($err'+$loop_num+'.type,'
-js +='$err'+$loop_num+'.value,$err'+$loop_num+'.traceback))'
+var fbody=new $Node(),indent=node.indent+4
+var js='$exc'+num+' = false\n'+' '.repeat(indent)+
+'if(!$ctx_manager_exit'+num+'($err'+$loop_num+
+'.__class__.$factory,'+'$err'+$loop_num+
+',getattr($err'+$loop_num+',"traceback")))'
 js +='{throw $err'+$loop_num+'}'
 new $NodeJSCtx(fbody,js)
 catch_node.add(fbody)
-node.parent.insert(rank+1,catch_node)
-$loop_num++
+node.add(catch_node)
 var finally_node=new $Node()
 new $NodeJSCtx(finally_node,'finally')
 finally_node.C.type='single_kw'
 finally_node.C.token='finally'
+finally_node.is_except=true
 var fbody=new $Node()
-new $NodeJSCtx(fbody,'$ctx_manager_exit(None,None,None)')
+new $NodeJSCtx(fbody,'if($exc'+num+'){$ctx_manager_exit'+num+'(None,None,None)}')
 finally_node.add(fbody)
-node.parent.insert(rank+2,finally_node)
-if(this.tree.length>1){var nw=new $Node()
-var ctx=new $NodeCtx(nw)
-nw.parent=node
-var wc=new $WithCtx(ctx)
-wc.tree=this.tree.slice(1)
-for(var i=0;i<node.children.length;i++){nw.add(node.children[i])
-}
-node.children=[nw]
-}
+node.parent.insert(rank+1,finally_node)
+$loop_num++
 this.transformed=true
 }
 this.to_js=function(){this.js_processed=true
-var res='var $ctx_manager='+this.tree[0].to_js()
-var scope=$get_scope(this)
-res +='\nvar $ctx_manager_exit = getattr($ctx_manager,"__exit__")\n'
-if(this.tree[0].alias){var alias=this.tree[0].alias
-res +=';$locals_'+scope.id.replace(/\./g,'_')
-res +='["'+alias+'"]='
-}
-return res + 'getattr($ctx_manager,"__enter__")()\ntry'
+var indent=$get_node(this).indent,h=' '.repeat(indent),num=this.num,scope=$get_scope(this)
+var res='var $ctx_manager'+num+' = '+this.tree[0].to_js()+
+'\n'+h+'var $ctx_manager_exit'+num+
+'= getattr($ctx_manager'+num+',"__exit__")\n'+
+h+'var $value'+num+' = getattr($ctx_manager'+num+
+',"__enter__")()\n'
+res +=h+'var $exc'+num+' = true\n'
+return res + h+'try'
 }}
 function $YieldCtx(C){
 this.type='yield'
@@ -5991,7 +6014,7 @@ return false
 }
 function issubclass(klass,classinfo){if(arguments.length!==2){throw _b_.TypeError("issubclass expected 2 arguments, got "+arguments.length)
 }
-if(!klass.__class__ ||!klass.__class__.is_class){throw _b_.TypeError("issubclass() arg 1 must be a class")
+if(!klass.__class__ ||klass.__class__!==$B.$factory){throw _b_.TypeError("issubclass() arg 1 must be a class")
 }
 if(isinstance(classinfo,_b_.tuple)){for(var i=0;i<classinfo.length;i++){if(issubclass(klass,classinfo[i]))return true
 }
@@ -6611,60 +6634,6 @@ var $Function=function(){}
 $Function.__class__=$B.$factory
 $FunctionDict.$factory=$Function
 $Function.$dict=$FunctionDict
-var $BaseExceptionDict={__class__:$B.$type,__bases__ :[_b_.object],__module__:'builtins',__name__:'BaseException'
-}
-$BaseExceptionDict.__init__=function(self){self.args=_b_.tuple([arguments[1]])
-}
-$BaseExceptionDict.__repr__=function(self){if(self.$message===None){return $B.get_class(self).__name__+'()'}
-return self.$message
-}
-$BaseExceptionDict.__str__=$BaseExceptionDict.__repr__
-$BaseExceptionDict.__mro__=[$BaseExceptionDict,$ObjectDict]
-$BaseExceptionDict.__new__=function(cls){var err=_b_.BaseException()
-err.__name__=cls.$dict.__name__
-err.__class__=cls.$dict
-return err
-}
-$BaseExceptionDict.__getattr__=function(self,attr){if(attr=='info'){var info='Traceback (most recent call last):'
-if(self.$js_exc!==undefined){for(var attr in self.$js_exc){if(attr==='message')continue
-try{info +='\n    '+attr+' : '+self.$js_exc[attr]}
-catch(_err){}}
-info+='\n' 
-}
-var last_info,tb=null
-for(var i=0;i<self.$call_stack.length;i++){var call_info=self.$call_stack[i].split(',')
-var lib_module=call_info[1]
-var caller=$B.modules[lib_module].line_info
-if(caller!==undefined){call_info=caller.split(',')
-lib_module=caller[1]
-}
-var lines=$B.$py_src[call_info[1]].split('\n')
-info +='\n  module '+lib_module+' line '+call_info[0]
-var line=lines[call_info[0]-1]
-if(line)line=line.replace(/^[]+/g,'')
-info +='\n    '+line
-last_info=call_info
-}
-if(self.$line_info!=last_info){var err_info=self.$line_info.split(',')
-var line=$B.$py_src[err_info[1]].split('\n')[parseInt(err_info[0])-1]
-if(line)line=line.replace(/^[]+/g,'')
-self.$last_info=err_info
-self.$line=line
-info +='\n  module '+err_info[1]+' line '+err_info[0]
-info +='\n    '+line
-}
-return info
-}else if(attr=='traceback'){
-if($B.debug==0){
-return traceback({tb_frame:frame(self.$frames_stack),tb_lineno:0,tb_lasti:-1,tb_next: None 
-})
-}
-$BaseExceptionDict.__getattr__(self,'info')
-return traceback({tb_frame:frame(self.$frames_stack),tb_lineno:parseInt(self.$last_info[0]),tb_lasti:self.$line,tb_next: None 
-})
-}else{throw AttributeError(self.__class__.__name__+
-"has no attribute '"+attr+"'")
-}}
 var $TracebackDict={__class__:$B.$type,__name__:'traceback'
 }
 $TracebackDict.__mro__=[$TracebackDict,$ObjectDict]
@@ -6712,6 +6681,60 @@ frame.__class__=$B.$factory
 frame.$dict=$FrameDict
 $FrameDict.$factory=frame
 $B._frame=frame
+var $BaseExceptionDict={__class__:$B.$type,__bases__ :[_b_.object],__module__:'builtins',__name__:'BaseException'
+}
+$BaseExceptionDict.__init__=function(self){self.args=_b_.tuple([arguments[1]])
+}
+$BaseExceptionDict.__repr__=function(self){return self.__class__.__name__+repr(self.args)
+}
+$BaseExceptionDict.__str__=function(self){return self.args[0]
+}
+$BaseExceptionDict.__mro__=[$BaseExceptionDict,$ObjectDict]
+$BaseExceptionDict.__new__=function(cls){var err=_b_.BaseException()
+err.__name__=cls.$dict.__name__
+err.__class__=cls.$dict
+return err
+}
+$BaseExceptionDict.__getattr__=function(self,attr){if(attr=='info'){var info='Traceback (most recent call last):'
+if(self.$js_exc!==undefined){for(var attr in self.$js_exc){if(attr==='message')continue
+try{info +='\n    '+attr+' : '+self.$js_exc[attr]}
+catch(_err){}}
+info+='\n' 
+}
+var last_info,tb=null
+for(var i=0;i<self.$call_stack.length;i++){var call_info=self.$call_stack[i].split(',')
+var lib_module=call_info[1]
+var caller=$B.modules[lib_module].line_info
+if(caller!==undefined){call_info=caller.split(',')
+lib_module=caller[1]
+}
+var lines=$B.$py_src[call_info[1]].split('\n')
+info +='\n  module '+lib_module+' line '+call_info[0]
+var line=lines[call_info[0]-1]
+if(line)line=line.replace(/^[]+/g,'')
+info +='\n    '+line
+last_info=call_info
+}
+if(self.$line_info!=last_info){var err_info=self.$line_info.split(',')
+var line=$B.$py_src[err_info[1]].split('\n')[parseInt(err_info[0])-1]
+if(line)line=line.replace(/^[]+/g,'')
+self.$last_info=err_info
+self.$line=line
+info +='\n  module '+err_info[1]+' line '+err_info[0]
+info +='\n    '+line
+}
+return info
+}else if(attr=='traceback'){
+if($B.debug==0){
+return traceback({tb_frame:frame(self.$frames_stack),tb_lineno:0,tb_lasti:-1,tb_next: None 
+})
+}
+$BaseExceptionDict.__getattr__(self,'info')
+return traceback({tb_frame:frame(self.$frames_stack),tb_lineno:parseInt(self.$last_info[0]),tb_lasti:self.$line,tb_next: None 
+})
+}else{throw AttributeError(self.__class__.__name__+
+"has no attribute '"+attr+"'")
+}}
 var BaseException=function(msg,js_exc){var err=Error()
 err.__name__='BaseException'
 err.$line_info=$B.line_info
@@ -6726,9 +6749,9 @@ err.$py_error=true
 $B.exception_stack[$B.exception_stack.length]=err
 return err
 }
-BaseException.__name__='BaseException'
 BaseException.__class__=$B.$factory
 BaseException.$dict=$BaseExceptionDict
+$BaseExceptionDict.$factory=BaseException
 _b_.BaseException=BaseException
 $B.exception=function(js_exc){
 if(!js_exc.$py_error){
@@ -6791,8 +6814,6 @@ _str[pos++]='$'+name+'Dict.__bases__ = [parent]'
 _str[pos++]='$'+name+'Dict.__module__ = "builtins"'
 _str[pos++]='$'+name+'Dict.__mro__=[$'+name+'Dict].concat(parent.$dict.__mro__)'
 _str[pos++]='_b_.'+name+'='+$exc
-_str[pos++]='_b_.'+name+'.__repr__ = function(){return "<class '+"'"+name+"'"+'>"}'
-_str[pos++]='_b_.'+name+'.__str__ = function(){return "<class '+"'"+name+"'"+'>"}'
 _str[pos++]='_b_.'+name+'.__class__=$B.$factory'
 _str[pos++]='$'+name+'Dict.$factory=_b_.'+name
 _str[pos++]='_b_.'+name+'.$dict=$'+name+'Dict'
@@ -11196,6 +11217,7 @@ ctx_js +='", $locals = $locals_'+iter_name+';'
 ctx_js +='$B.vars["'+iter_name+'"] = $locals;'
 }
 if(node.is_catch){is_except=true;is_cond=true}
+if(node.is_except){is_except=true}
 if(node.C.type=='node'){var ctx=node.C.tree[0]
 var ctype=ctx.type
 switch(ctx.type){case 'except':
