@@ -1987,16 +1987,22 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
         }
         $BaseExceptionDict.__getattr__(self,'info')
         // Return traceback object
-        return traceback({
+        var tb = traceback({
             tb_frame:frame(self.$frames_stack),
-            tb_lineno:parseInt(self.$last_info[0]),
+            tb_lineno:parseInt(self.$line_info.split(',')[0]),
             tb_lasti:self.$line,
             tb_next: None // fix me
         })
+        return tb
     }else{
         throw AttributeError(self.__class__.__name__+
             "has no attribute '"+attr+"'")
     }
+}
+
+$BaseExceptionDict.with_traceback = function(self, tb){
+    self.traceback = tb
+    return self
 }
 
 var BaseException = function (msg,js_exc){
