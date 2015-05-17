@@ -538,7 +538,16 @@ function getattr(obj,attr,_default){
                 for(var i=0;i<arguments.length;i++){args[pos++]=arguments[i]}
                 return klass[attr].apply(null,args)
             }
-            method.__name__ = 'method '+attr+' of built-in '+klass.__name__
+            method.__class__ = $B.$MethodDict
+            method.$infos = {
+                __class__: klass.$factory,
+                __func__ : klass[attr],
+                __name__ : attr,
+                __self__ : obj
+            }
+            method.__str__ = method.__repr__ = function(){
+                return '<built-in method '+attr+' of '+klass.__name__+' object>'
+            }
             return method
         }
         return klass[attr]
@@ -1825,6 +1834,7 @@ $FunctionDict.__getattribute__ = function(self, attr){
     }
 }
 $FunctionDict.__repr__=$FunctionDict.__str__ = function(self){
+    console.log('repr of', self)
     return '<function '+self.$infos.__name__+'>'
 }
 

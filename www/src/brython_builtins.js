@@ -39,9 +39,7 @@ if ($B.async_enabled) $B.block = {}
 $B.modules = {}
 
 // Maps the name of imported modules to the module object
-$B.imported = {
-    __main__:{__class__:$B.$ModuleDict,__name__:'__main__'}
-}
+$B.imported = {}
 
 // Distionary used to save the loval variables of a generator
 $B.vars = {}

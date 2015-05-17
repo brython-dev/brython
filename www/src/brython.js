@@ -19,7 +19,7 @@ $B.bound={}
 $B.async_enabled=false
 if($B.async_enabled)$B.block={}
 $B.modules={}
-$B.imported={__main__:{__class__:$B.$ModuleDict,__name__:'__main__'}}
+$B.imported={}
 $B.vars={}
 $B.globals={}
 $B.frames_stack=[]
@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,3,'final',0]
 __BRYTHON__.__MAGIC__="3.1.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-16 13:10:47.818000"
+__BRYTHON__.compiled_date="2015-05-17 13:53:37.596000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -2055,6 +2055,7 @@ while(sc && sc.id!=='__builtins__'){if(sc===scope){env[pos++]='["'+sc.id+'",$loc
 sc=sc.parent_block
 }
 var env_string='['+env.join(', ')+']'
+var module=$get_module(this),module_name=module.id.replace(/\./g,'_')
 switch(this.real){case 'list':
 return '['+$to_js(this.tree)+']'
 case 'list_comp':
@@ -2648,7 +2649,7 @@ var catch_node=new $Node()
 catch_node.is_catch=true 
 new $NodeJSCtx(catch_node,'catch($err'+$loop_num+')')
 var fbody=new $Node(),indent=node.indent+4
-var js='$B.$pop_exc();$exc'+num+' = false\n'+' '.repeat(indent)+
+var js='$exc'+num+' = false\n'+' '.repeat(indent)+
 'if(!$ctx_manager_exit'+num+'($err'+$loop_num+
 '.__class__.$factory,'+'$err'+$loop_num+
 ',getattr($err'+$loop_num+',"traceback")))'
@@ -5186,6 +5187,17 @@ $B.call_stack.pop()
 }
 return res
 }
+$B.$list_comp1=function(items){
+var $ix=$B.UUID()
+var $py="x"+$ix+"=[]\n",indent=0
+for(var $i=1,_len_$i=items.length;$i < _len_$i;$i++){$py +=' '.repeat(indent)
+$py +=eval(items[$i])[0]+':\n'
+indent +=4
+}
+$py +=' '.repeat(indent)
+$py +='x'+$ix+'.append('+eval(items[0])+')\n'
+return[$py,$ix]
+}
 $B.$dict_comp=function(env){
 var $ix=$B.UUID()
 var $res='res'+$ix
@@ -5889,7 +5901,11 @@ var method=function(){var args=[obj],pos=1
 for(var i=0;i<arguments.length;i++){args[pos++]=arguments[i]}
 return klass[attr].apply(null,args)
 }
-method.__name__='method '+attr+' of built-in '+klass.__name__
+method.__class__=$B.$MethodDict
+method.$infos={__class__: klass.$factory,__func__ : klass[attr],__name__ : attr,__self__ : obj
+}
+method.__str__=method.__repr__=function(){return '<built-in method '+attr+' of '+klass.__name__+' object>'
+}
 return method
 }
 return klass[attr]
@@ -6628,7 +6644,8 @@ return res
 }else{return self.$infos[attr]
 }}else{return _b_.object.$dict.__getattribute__(self,attr)
 }}
-$FunctionDict.__repr__=$FunctionDict.__str__=function(self){return '<function '+self.$infos.__name__+'>'
+$FunctionDict.__repr__=$FunctionDict.__str__=function(self){console.log('repr of',self)
+return '<function '+self.$infos.__name__+'>'
 }
 $FunctionDict.__mro__=[$FunctionDict,$ObjectDict]
 var $Function=function(){}
@@ -8243,19 +8260,17 @@ for(var i=10;i < base;i++)digits+=String.fromCharCode(i+55)
 return digits
 }
 var int=function(value,base){
-if(typeof value=='number' && base===undefined){return parseInt(value)}
+if(value===undefined){return 0}
+if(typeof value=='number' && 
+(base===undefined ||base==10)){return parseInt(value)}
 if(base!==undefined){if(!isinstance(value,[_b_.str,_b_.bytes,_b_.bytearray])){throw TypeError("int() can't convert non-string with explicit base")
 }}
-if(isinstance(value,_b_.float)){var v=value.value
-return v >=0 ? Math.floor(v): Math.ceil(v)
-}
 if(isinstance(value,_b_.complex)){throw TypeError("can't convert complex to int")
 }
-var $ns=$B.$MakeArgs('int',arguments,[],[],'args','kw')
-var value=$ns['args'][0]
-var base=$ns['args'][1]
-if(value===undefined)value=_b_.dict.$dict.get($ns['kw'],'x',0)
-if(base===undefined)base=_b_.dict.$dict.get($ns['kw'],'base',10)
+var $ns=$B.$MakeArgs1('int',2,{x:null,base:null},['x','base'],arguments,{'base':10},'null','null')
+var value=$ns['x']
+var base=$ns['base']
+if(value.__class__==_b_.float.$dict && base===10){return parseInt(value.value)}
 if(!(base >=2 && base <=36)){
 if(base !=0)throw _b_.ValueError("invalid base")
 }
@@ -10103,7 +10118,8 @@ $DictDict.__repr__=function(self){if(self===undefined)return "<class 'dict'>"
 if(self.$jsobj){
 var res=[]
 for(var attr in self.$jsobj){if(attr.charAt(0)=='$' ||attr=='__class__'){continue}
-else{res.push(attr+': '+_b_.repr(self.$jsobj[attr]))}}
+else{res.push(attr+': '+_b_.repr(self.$jsobj[attr]))
+}}
 return '{'+res.join(', ')+'}'
 }
 var _objs=[self]
