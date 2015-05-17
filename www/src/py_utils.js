@@ -309,6 +309,23 @@ $B.$list_comp = function(env){
     return res
 }
 
+$B.$list_comp1 = function(items){
+    // Called for list comprehensions
+    //console.log('items',items)
+    var $ix = $B.UUID()
+    var $py = "x"+$ix+"=[]\n", indent = 0
+    for(var $i=1, _len_$i = items.length; $i < _len_$i;$i++){
+        $py += ' '.repeat(indent)
+        $py += eval(items[$i])[0]+':\n'
+        indent += 4
+    }
+    $py += ' '.repeat(indent)
+    $py += 'x'+$ix+'.append('+eval(items[0])+')\n'
+        
+    return [$py,$ix]
+}
+
+
 $B.$dict_comp = function(env){
     // Called for dict comprehensions
     // "env" is a list of [local_name, local_ns] lists for all the enclosing

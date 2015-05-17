@@ -3433,6 +3433,8 @@ function $ListOrTupleCtx(context,real){
             sc = sc.parent_block
         }
         var env_string = '['+env.join(', ')+']'
+        var module = $get_module(this),
+            module_name = module.id.replace(/\./g,'_')
         
         switch(this.real) {
           case 'list':
@@ -3463,6 +3465,26 @@ function $ListOrTupleCtx(context,real){
 
             switch(this.real) {
               case 'list_comp':
+                /*
+                var lc = $B.$list_comp1(res1),
+                    $py = lc[0], ix=lc[1],
+                    listcomp_name = 'lc'+ix,
+                    local_name = scope.id.replace(/\./g,'_')
+                console.log('list comp','local',local_name,'module',module_name)
+                //var $py = $B.$list_comp1(res1)
+                var $root = $B.py2js($py,module_name,listcomp_name,local_name,
+                    $B.line_info)
+
+    
+                $root.caller = $B.line_info
+
+                var $js = $root.to_js()
+                $js += 'return $locals_lc'+ix+'["x'+ix+'"]'
+                $js = '(function(){'+$js+'})()'
+                //console.log($py,'\n',$js)
+                //return $js
+                */
+
                 return '$B.$list_comp('+env_string+','+res1+')'
               case 'dict_or_set_comp':
                 if(this.expression.length===1){
