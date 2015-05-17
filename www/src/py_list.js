@@ -409,7 +409,7 @@ function $partition(arg,array,begin,end,pivot)
         if(array.$cl!==false){
             // Optimisation : if all elements have the same time, the 
             // comparison function __le__ can be computed once
-            var le_func = array.$cl.__le__
+            var le_func = _b_.getattr(array.$cl, '__le__')
             for(var ix=begin;ix<end-1;++ix) {
                 if(le_func(array[ix],piv)) {
                     array = swap(array, store, ix);
