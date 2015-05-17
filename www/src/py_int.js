@@ -361,28 +361,29 @@ var $valid_digits=function(base) {
 var int = function(value, base){
     // most simple case
     
-    if(typeof value=='number' && base===undefined){return parseInt(value)}
-
+    // int() with no argument returns 0
+    if(value===undefined){return 0}
+    
+    // int() of an integer returns the integer if base is undefined
+    if(typeof value=='number' && 
+        (base===undefined || base==10)){return parseInt(value)}
+    
     if(base!==undefined){
         if(!isinstance(value,[_b_.str,_b_.bytes,_b_.bytearray])){
             throw TypeError("int() can't convert non-string with explicit base")
         }
     }
 
-    if(isinstance(value,_b_.float)){
-        var v = value.value
-        return v >= 0 ? Math.floor(v) : Math.ceil(v)
-    }
     if(isinstance(value,_b_.complex)){
         throw TypeError("can't convert complex to int")
     }
 
-    var $ns=$B.$MakeArgs('int',arguments,[],[],'args','kw')
-    var value = $ns['args'][0]
-    var base = $ns['args'][1]
-
-    if (value === undefined) value = _b_.dict.$dict.get($ns['kw'],'x', 0)
-    if (base === undefined) base = _b_.dict.$dict.get($ns['kw'],'base',10)
+    var $ns=$B.$MakeArgs1('int',2,{x:null,base:null},['x','base'],arguments,
+        {'base':10},'null','null')
+    var value = $ns['x']
+    var base = $ns['base']
+    
+    if(value.__class__==_b_.float.$dict && base===10){return parseInt(value.value)}
 
     if (!(base >=2 && base <= 36)) {
         // throw error (base must be 0, or 2-36)
