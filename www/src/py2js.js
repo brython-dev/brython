@@ -3443,7 +3443,7 @@ function $ListOrTupleCtx(context,real){
           case 'gen_expr':
           case 'dict_or_set_comp':
             var src = this.get_src()
-            var res1 = []
+            var res1 = [], items = []
 
             var qesc = new RegExp('"',"g") // to escape double quotes in arguments
             for(var i=1;i<this.intervals.length;i++){
@@ -3466,25 +3466,24 @@ function $ListOrTupleCtx(context,real){
             switch(this.real) {
               case 'list_comp':
                 /*
-                var lc = $B.$list_comp1(res1),
+                var local_name = scope.id.replace(/\./g,'_')
+                var lc = $B.$list_comp1(items),
                     $py = lc[0], ix=lc[1],
                     listcomp_name = 'lc'+ix,
                     local_name = scope.id.replace(/\./g,'_')
-                console.log('list comp','local',local_name,'module',module_name)
-                //var $py = $B.$list_comp1(res1)
+                console.log('list comp\n',$py)
+                var $save_pos = $pos
                 var $root = $B.py2js($py,module_name,listcomp_name,local_name,
                     $B.line_info)
-
-    
+                $pos = $save_pos
                 $root.caller = $B.line_info
 
                 var $js = $root.to_js()
                 $js += 'return $locals_lc'+ix+'["x'+ix+'"]'
                 $js = '(function(){'+$js+'})()'
-                //console.log($py,'\n',$js)
-                //return $js
+                return $js
                 */
-
+                
                 return '$B.$list_comp('+env_string+','+res1+')'
               case 'dict_or_set_comp':
                 if(this.expression.length===1){
@@ -4286,6 +4285,7 @@ function $WithCtx(context){
 
     this.set_alias = function(arg){
         this.tree[this.tree.length-1].alias = arg
+        $B.bound[this.scope.id][arg] = true
         if(this.scope.ntype !== 'module'){
             // add to function local names
             this.scope.context.tree[0].locals.push(arg)
@@ -6733,7 +6733,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     
     var global_ns = '$locals_'+module.replace(/\./g,'_')
 
-    $B.bound[module] = {}
+    $B.bound[module] = $B.bound[module] || {}
 
     // Internal variables must be defined before tokenising, otherwise
     // references to these names would generate a NameError
