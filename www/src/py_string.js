@@ -694,7 +694,11 @@ $StringDict.__mul__ = function(self,other){
 $StringDict.__ne__ = function(self,other){return other!==self.valueOf()}
 
 $StringDict.__repr__ = function(self){
-    if(self===undefined){return "<class 'str'>"}
+    if(self.search('"')==-1 && self.search("'")==-1){
+        return "'"+self+"'"
+    }else if(self.search('"')==-1){
+        return '"'+self+'"'
+    }
     var qesc = new RegExp("'","g") // to escape single quote
     var res = self.replace(/\n/g,'\\\\n')
     res = "'"+res.replace(qesc,"\\'")+"'"
