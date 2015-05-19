@@ -20,7 +20,7 @@ def run(ev):
     # run the code in the elt after the button
     ix = ev.target.parent.children.index(ev.target)
     elt = ev.target.parent.children[ix+1]
-    exec(elt.text)
+    exec(elt.text,{})
     elt.focus()
 
 target = 'content'
@@ -43,7 +43,7 @@ for elt in document[target].get(selector='.exec_on_load'):
     h.className = "pycode"
     elt.clear()
     elt <= h
-    exec(src)
+    exec(src,{})
 for elt in document[target].get(selector='.python'):
     src = elt.text.strip()
     h = highlight.highlight(src)
