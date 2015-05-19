@@ -44,7 +44,9 @@ var $item_generator = function(d) {
 
     if(d.$jsobj){
         this.items = []
-        for(var attr in d.$jsobj){this.items.push([attr,d.$jsobj[attr]])};
+        for(var attr in d.$jsobj){
+            if(attr.charAt(0)!='$'){this.items.push([attr,d.$jsobj[attr]])}
+        }
         this.length=this.items.length;
         return
     }
@@ -200,7 +202,7 @@ $DictDict.__eq__ = function(self,other){
         return self===dict
     }
     if(!isinstance(other,dict)) return false
-
+    
     if ($DictDict.__len__(self) != $DictDict.__len__(other)){return false}
 
     var _l = new $item_generator(self).as_list()
@@ -339,7 +341,7 @@ $DictDict.__len__ = function(self) {
     var _count=0
     
     if(self.$jsobj){
-        for(var attr in self.$jsobj){_count++}
+        for(var attr in self.$jsobj){if(attr.charAt(0)!='$'){_count++}}
         return _count
     }
 
@@ -371,7 +373,7 @@ $DictDict.__repr__ = function(self){
         var res = []
         for(var attr in self.$jsobj){
             if(attr.charAt(0)=='$' || attr=='__class__'){continue}
-            else{res.push(attr+': '+_b_.repr(self.$jsobj[attr]))}
+            else{res.push("'"+attr+"': "+_b_.repr(self.$jsobj[attr]))}
         }
         return '{'+res.join(', ')+'}'
     }
