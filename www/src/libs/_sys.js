@@ -8,7 +8,7 @@ var $module=(function($B){
         },
         modules :
             {'__get__':function(){return _b_.dict($B.JSObject($B.imported))},
-             '__set__':0 // data descriptor, to force use of __get__
+             '__set__':function(self, obj, value){ throw _b_.TypeError("Read only property 'sys.modules'") }
             },
         stderr : {
             __get__:function(){return $B.stderr},
