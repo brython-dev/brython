@@ -1907,7 +1907,7 @@ function frame(stack, pos){
         }
         res.f_globals = $B.obj_dict(_frame[3])
         if($B.debug>0){
-            if(_frame[1].$line_info === undefined){console.log('pas de $line_info pour', _frame[1]);return 1}
+            if(_frame[1].$line_info === undefined){return 1}
             res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])
         }else{
             res.f_lineno = -1

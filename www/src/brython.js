@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-19 08:48:28.789000"
+__BRYTHON__.compiled_date="2015-05-19 22:24:23.991000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -6686,7 +6686,7 @@ try{res.f_locals=$B.obj_dict(_frame[1])
 throw err
 }
 res.f_globals=$B.obj_dict(_frame[3])
-if($B.debug>0){if(_frame[1].$line_info===undefined){console.log('pas de $line_info pour',_frame[1]);return 1}
+if($B.debug>0){if(_frame[1].$line_info===undefined){return 1}
 res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])
 }else{res.f_lineno=-1
 }
@@ -7076,28 +7076,35 @@ $BytesDict.upper=function(self){var _res=[],pos=0
 for(var i=0,_len_i=self.source.length;i < _len_i;i++)_res[pos++]=self.source[i].toUpperCase()
 return bytes(_res)
 }
-function $UnicodeEncodeError(encoding,position){throw _b_.UnicodeEncodeError("'"+encoding+
-"' codec can't encode character in position "+position)
+function $UnicodeEncodeError(encoding,code_point,position){throw _b_.UnicodeEncodeError("'"+encoding+
+"' codec can't encode character "+_b_.hex(code_point)+
+" in position "+position)
 }
 function $UnicodeDecodeError(encoding,position){throw _b_.UnicodeDecodeError("'"+encoding+
 "' codec can't decode bytes in position "+position)
 }
 function _hex(int){return int.toString(16)}
 function _int(hex){return parseInt(hex,16)}
+function normalise(encoding){var enc=encoding.toLowerCase()
+if(enc.substr(0,7)=='windows'){enc='cp'+enc.substr(7)}
+enc=enc.replace('-','')
+enc=enc.replace('-','_')
+return enc
+}
 function load_decoder(enc){
+console.log('load decoder',enc)
 if(to_unicode[enc]===undefined){load_encoder(enc)
 to_unicode[enc]={}
 for(var attr in from_unicode[enc]){to_unicode[enc][from_unicode[enc][attr]]=attr
 }}}
 function load_encoder(enc){
-if(from_unicode[enc]===undefined){var url=$B.brython_path
-if(url.charAt(url.length-1)=='/'){url=url.substr(0,url.length-1)}
-url +='/encodings/'+enc+'.js'
-var f=_b_.open(url)
-eval(f.$content)
-}}
-function decode(b,encoding,errors){var s=''
-switch(encoding.toLowerCase()){case 'utf-8':
+console.log('load encoder',enc)
+if(from_unicode[enc]===undefined){var mod=_b_.__import__('encodings.'+enc),table=mod.decoding_table
+from_unicode[enc]={}
+for(var i=0;i<table.length;i++){from_unicode[enc][table.charCodeAt(i)]=i
+}}}
+function decode(b,encoding,errors){var s='',enc=normalise(encoding)
+switch(enc){case 'utf-8':
 case 'utf8':
 var i=0,cp
 var _int_800=_int('800'),_int_c2=_int('c2'),_int_1000=_int('1000')
@@ -7127,17 +7134,10 @@ i+=1
 $UnicodeDecodeError(encoding,i)
 }}}}
 break
-case 'latin-1':
-case 'iso-8859-1':
-case 'windows-1252':
+case 'latin1':
+case 'iso8859_1':
+case 'windows1252':
 for(var i=0,_len_i=b.length;i < _len_i;i++)s +=String.fromCharCode(b[i])
-break
-case 'cp1250': 
-case 'windows-1250': 
-load_decoder('cp1250')
-for(var i=0,_len_i=b.length;i < _len_i;i++){var u=to_unicode['cp1250'][b[i]]
-if(u!==undefined){s+=String.fromCharCode(u)}
-else{s +=String.fromCharCode(b[i])}}
 break
 case 'ascii':
 for(var i=0,_len_i=b.length;i < _len_i;i++){var cp=b[i]
@@ -7148,12 +7148,18 @@ throw _b_.UnicodeDecodeError(msg)
 }}
 break
 default:
+try{load_decoder(enc)}
+catch(err){throw _b_.LookupError("unknown encoding: "+ enc)}
+for(var i=0,_len_i=b.length;i < _len_i;i++){var u=to_unicode[enc][b[i]]
+if(u!==undefined){s+=String.fromCharCode(u)}
+else{s +=String.fromCharCode(b[i])}}
+break
 throw _b_.LookupError("unknown encoding: "+encoding)
 }
 return s
 }
-function encode(s,encoding){var t=[],pos=0
-switch(encoding.toLowerCase()){case 'utf-8':
+function encode(s,encoding){var t=[],pos=0,enc=normalise(encoding)
+switch(enc){case 'utf-8':
 case 'utf8':
 var _int_800=_int('800'),_int_c2=_int('c2'),_int_1000=_int('1000')
 var _int_e0=_int('e0'),_int_e1=_int('e1'),_int_a0=_int('a0'),_int_80=_int('80')
@@ -7178,22 +7184,12 @@ t[pos++]=_int_80+zone-zone1*64
 t[pos++]=_int_80 + cp - _int_2000 - 64 * zone
 }}
 break
-case 'latin-1': 
-case 'iso-8859-1': 
-case 'windows-1252': 
+case 'latin1': 
+case 'iso8859_1': 
+case 'windows1252': 
 for(var i=0,_len_i=s.length;i < _len_i;i++){var cp=s.charCodeAt(i)
 if(cp<=255){t[pos++]=cp}
 else{$UnicodeEncodeError(encoding,i)}}
-break
-case 'cp1250':
-case 'windows-1250':
-for(var i=0,_len_i=s.length;i < _len_i;i++){var cp=s.charCodeAt(i)
-if(cp<=255){t[pos++]=cp}
-else{
-load_encoder('cp1250')
-var res=from_unicode['cp1250'][cp]
-if(res!==undefined){t[pos++]=res}
-else{$UnicodeEncodeError(encoding,i)}}}
 break
 case 'ascii':
 for(var i=0,_len_i=s.length;i < _len_i;i++){var cp=s.charCodeAt(i)
@@ -7201,7 +7197,14 @@ if(cp<=127){t[pos++]=cp}
 else{$UnicodeEncodeError(encoding,i)}}
 break
 default:
-throw _b_.LookupError("unknown encoding: "+ encoding.toLowerCase())
+try{load_encoder(enc)}
+catch(err){throw _b_.LookupError("unknown encoding: "+ enc)}
+for(var i=0,_len_i=s.length;i < _len_i;i++){var cp=s.charCodeAt(i)
+if(from_unicode[enc][cp]===undefined){$UnicodeEncodeError(encoding,cp,i)
+}
+t[pos++]=from_unicode[enc][cp]
+}
+break
 }
 return t
 }
@@ -7400,9 +7403,9 @@ $B.JSConstructor=JSConstructor
 ;(function($B){$B.stdlib={}
 var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.aliases','encodings.utf_8','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.basehook','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','markdown2','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.pygame.SDL','site-packages.pygame.base','site-packages.pygame.color','site-packages.pygame.colordict','site-packages.pygame.compat','site-packages.pygame.constants','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.locals','site-packages.pygame.mixer','site-packages.pygame.mouse','site-packages.pygame.pkgdata','site-packages.pygame.rect','site-packages.pygame.sprite','site-packages.pygame.surface','site-packages.pygame.time','site-packages.pygame.transform','site-packages.pygame.version','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.pystone','test.re_tests','test.regrtest','test.support','test.test_int','test.test_re','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile','zlib']
+var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.cp037','encodings.cp1006','encodings.cp1026','encodings.cp1125','encodings.cp1140','encodings.cp1250','encodings.cp1251','encodings.cp1252','encodings.cp1253','encodings.cp1254','encodings.cp1255','encodings.cp1256','encodings.cp1257','encodings.cp1258','encodings.cp273','encodings.cp424','encodings.cp437','encodings.cp500','encodings.cp720','encodings.cp737','encodings.cp775','encodings.cp850','encodings.cp852','encodings.cp855','encodings.cp856','encodings.cp857','encodings.cp858','encodings.cp860','encodings.cp861','encodings.cp862','encodings.cp863','encodings.cp864','encodings.cp865','encodings.cp866','encodings.cp869','encodings.cp874','encodings.cp875','encodings.hp_roman8','encodings.iso8859_1','encodings.iso8859_10','encodings.iso8859_11','encodings.iso8859_13','encodings.iso8859_14','encodings.iso8859_15','encodings.iso8859_16','encodings.iso8859_2','encodings.iso8859_3','encodings.iso8859_4','encodings.iso8859_5','encodings.iso8859_6','encodings.iso8859_7','encodings.iso8859_8','encodings.iso8859_9','encodings.koi8_r','encodings.koi8_u','encodings.mac_arabic','encodings.mac_centeuro','encodings.mac_croatian','encodings.mac_cyrillic','encodings.mac_farsi','encodings.mac_greek','encodings.mac_iceland','encodings.mac_latin2','encodings.mac_roman','encodings.mac_romanian','encodings.mac_turkish','encodings.palmos','encodings.ptcp154','encodings.tis_620','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.basehook','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.pygame.SDL','site-packages.pygame.base','site-packages.pygame.color','site-packages.pygame.colordict','site-packages.pygame.compat','site-packages.pygame.constants','site-packages.pygame.display','site-packages.pygame.draw','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.image','site-packages.pygame.locals','site-packages.pygame.mixer','site-packages.pygame.mouse','site-packages.pygame.pkgdata','site-packages.pygame.rect','site-packages.pygame.sprite','site-packages.pygame.surface','site-packages.pygame.time','site-packages.pygame.transform','site-packages.pygame.version','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','ui.dialog','ui.progressbar','ui.slider','ui.widget','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
-var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','long_int1','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.pygame','test','ui','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
+var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','long_int1','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.pygame','ui','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]
 })(__BRYTHON__)
 
