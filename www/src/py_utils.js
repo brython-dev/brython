@@ -295,7 +295,6 @@ $B.$list_comp = function(env){
     $root.caller = $B.line_info
 
     var $js = $root.to_js()
-    $B.call_stack[$B.call_stack.length]=$B.line_info
     try{
         eval($js)
         var res = eval('$locals_'+listcomp_name+'["x"+$ix]')
@@ -303,7 +302,6 @@ $B.$list_comp = function(env){
     catch(err){throw $B.exception(err)}
     finally{
         clear(listcomp_name)
-        $B.call_stack.pop()
     }
 
     return res
@@ -316,11 +314,11 @@ $B.$list_comp1 = function(items){
     var $py = "x"+$ix+"=[]\n", indent = 0
     for(var $i=1, _len_$i = items.length; $i < _len_$i;$i++){
         $py += ' '.repeat(indent)
-        $py += eval(items[$i])[0]+':\n'
+        $py += items[$i]+':\n'
         indent += 4
     }
     $py += ' '.repeat(indent)
-    $py += 'x'+$ix+'.append('+eval(items[0])+')\n'
+    $py += 'x'+$ix+'.append('+items[0]+')\n'
         
     return [$py,$ix]
 }

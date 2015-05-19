@@ -108,7 +108,7 @@ function $_SyntaxError(context,msg,indent){
     var tree_node = ctx_node.node
     var module = tree_node.module
     var line_num = tree_node.line_num
-    $B.line_info = line_num+','+module
+    $B.frames_stack.push([module,{$line_info:line_num+','+module}])
     if(indent===undefined){
         if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],$pos)}
         if(msg==="Triple string end not found"){
@@ -1356,9 +1356,9 @@ function $ClassCtx(context){
 
         var instance_decl = new $Node()
         var local_ns = '$locals_'+this.id.replace(/\./g,'_')
-        var js = ';var '+local_ns+'='
-        if($B.debug>0){js += '{$def_line:$B.line_info}'}
-        else{js += '{}'}
+        var js = ';var '+local_ns+'={}'
+        //if($B.debug>0){js += '{$def_line:$B.line_info}'}
+        //else{js += '{}'}
         js += ', $locals = '+local_ns+';'
         new $NodeJSCtx(instance_decl,js)
         node.insert(0,instance_decl)
@@ -3476,8 +3476,7 @@ function $ListOrTupleCtx(context,real){
                 var $root = $B.py2js($py,module_name,listcomp_name,local_name,
                     $B.line_info)
                 $pos = $save_pos
-                $root.caller = $B.line_info
-
+                
                 var $js = $root.to_js()
                 $js += 'return $locals_lc'+ix+'["x'+ix+'"]'
                 $js = '(function(){'+$js+'})()'
@@ -4571,7 +4570,7 @@ function $add_line_num(node,rank){
         else if(elt.type==='single_kw'){flag=false}
         if(flag){
             // add a trailing None for interactive mode
-            var js=';$B.line_info="'+node.line_num+','+mod_id+'";'
+            var js=';$locals.$line_info="'+node.line_num+','+mod_id+'";'
 
             var new_node = new $Node()
             new $NodeJSCtx(new_node,js)
@@ -6293,7 +6292,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                 if(context!==null){
                     if($indented.indexOf(context.tree[0].type)==-1){
                         $pos = pos
-                        $_SyntaxError(context,'unexpected indent1',pos)
+                        $_SyntaxError(context,'unexpected indent',pos)
                     }
                 }
                 // add a child to current node
@@ -6308,7 +6307,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                     current = current.parent
                     if(current===undefined || indent>current.indent){
                         $pos = pos
-                        $_SyntaxError(context,'unexpected indent2',pos)
+                        $_SyntaxError(context,'unexpected indent',pos)
                     }
                 }
                 current.parent.add(new_node)
@@ -6856,7 +6855,6 @@ function brython(options){
 
     // Stacks for exceptions and function calls, used for exception handling
     $B.exception_stack = []
-    $B.call_stack = []
 
     // Option to run code on demand and not all the scripts defined in a page
     // The following lines are included to allow to run brython scripts in
@@ -6968,10 +6966,8 @@ function brython(options){
                     for(var attr in $err){
                        console.log(attr+' : ', $err[attr])
                     }
-
-                    console.log('line info '+$B.line_info)
                 }
-                                
+
                 // If the error was not caught by the Python runtime, build an
                 // instance of a Python exception
                 if($err.$py_error===undefined){
@@ -6981,7 +6977,8 @@ function brython(options){
                 }
 
                 // Print the error traceback on the standard error stream
-                var $trace = $err.__name__+': ' +$err.args +'\n'+_b_.getattr($err,'info')
+                var $trace = _b_.getattr($err,'info')+'\n'+$err.__name__+
+                    ': ' +$err.args
                 try{
                     _b_.getattr($B.stderr,'write')($trace)
                 }catch(print_exc_err){

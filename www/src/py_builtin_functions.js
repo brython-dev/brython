@@ -345,7 +345,7 @@ function $eval(src, _globals, _locals){
             var type = instr.context.tree[0].type
             if (!('expr' == type || 'list_or_tuple' == type)) {
                 //console.log('not expression '+instr.context.tree[0])
-                $B.line_info="1,"+module_name
+                //$B.line_info="1,"+module_name
                 throw _b_.SyntaxError("eval() argument must be an expression")
             }
         }
@@ -456,18 +456,7 @@ function getattr(obj,attr,_default){
            if(obj.$blocking){
              console.log('calling blocking function '+obj.__name__)
            }
-           if($B.debug>0){
-              // On debug mode, wrap the function to keep a track of call 
-              // stack, for traceback
-              return function(){
-                $B.call_stack[$B.call_stack.length]=$B.line_info
-                var res = obj.apply(null,arguments)
-                $B.line_info = $B.call_stack.pop()
-                return res
-              }
-           }else{
-               return obj
-           }
+           return obj
         } else if (klass===$B.JSObject.$dict && typeof obj.js=='function'){
           return function(){
             var res = obj.js.apply(null,arguments)
@@ -1834,7 +1823,6 @@ $FunctionDict.__getattribute__ = function(self, attr){
     }
 }
 $FunctionDict.__repr__=$FunctionDict.__str__ = function(self){
-    console.log('repr of', self)
     return '<function '+self.$infos.__name__+'>'
 }
 
@@ -1848,11 +1836,36 @@ $Function.$dict = $FunctionDict
 var $TracebackDict = {__class__:$B.$type,
     __name__:'traceback'
 }
+$TracebackDict.__getattribute__ = function(self, attr){
+
+    var last_frame = $B.last(self.stack),
+        line_info = last_frame.$line_info
+
+    switch(attr){
+        case 'tb_frame':
+            return frame(self.stack)
+        case 'tb_lineno':
+            if(line_info===undefined){return -1}
+            else{return parseInt(line_info.split(',')[0])}
+        case 'tb_lasti':
+            if(line_info===undefined){return '<unknown>'}
+            else{
+                var info = line_info.split(',')
+                var src = $B.$py_src[line_info[1]]
+                return src.split('\n')[parseInt(info[0]-1)]
+            }
+        case 'tb_next':
+            if(self.stack.length==1){return None}
+            else{return traceback(self.stack.slice(0, self.stack.length-1))}
+    }
+}
+
 $TracebackDict.__mro__ = [$TracebackDict, $ObjectDict]
 
-function traceback(tb) {
-  tb.__class__ = $TracebackDict
-  return tb
+function traceback(stack) {
+  return {__class__ : $TracebackDict,
+      stack : stack
+  }
 }
 
 traceback.__class__ = $B.$factory
@@ -1894,7 +1907,8 @@ function frame(stack, pos){
         }
         res.f_globals = $B.obj_dict(_frame[3])
         if($B.debug>0){
-            res.f_lineno = parseInt($B.line_info.split(',')[0])
+            if(_frame[1].$line_info === undefined){console.log('pas de $line_info pour', _frame[1]);return 1}
+            res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])
         }else{
             res.f_lineno = -1
         }
@@ -1954,56 +1968,34 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
                 try{info += '\n    '+attr+' : '+self.$js_exc[attr]}
                 catch(_err){}
             }
-            info+='\n'        
+            info+='\n'
         }
-        // call stack
-        var last_info, tb=null
-        for(var i=0;i<self.$call_stack.length;i++){
-            var call_info = self.$call_stack[i].split(',')
-            var lib_module = call_info[1]
-            var caller = $B.modules[lib_module].line_info
-            if(caller!==undefined){
-                call_info = caller.split(',')
-                lib_module = caller[1]
-            }
-            var lines = $B.$py_src[call_info[1]].split('\n')
-            info += '\n  module '+lib_module+' line '+call_info[0]
-            var line = lines[call_info[0]-1]
+        for(var i=0;i<self.$stack.length;i++){
+            var frame = self.$stack[i]
+            if(frame[1].$line_info===undefined){continue}
+            var line_info = frame[1].$line_info.split(',')
+            var lines = $B.$py_src[line_info[1]].split('\n')
+            info += '\n  module '+line_info[1]+' line '+line_info[0]
+            var line = lines[parseInt(line_info[0])-1]
             if(line) line=line.replace(/^[ ]+/g, '')
             info += '\n    '+line
-            last_info = call_info
         }
-        if(self.$line_info!=last_info){
-            var err_info = self.$line_info.split(',')
-            var line = $B.$py_src[err_info[1]].split('\n')[parseInt(err_info[0])-1]
-            if(line) line=line.replace(/^[ ]+/g, '')
-            self.$last_info = err_info
-            self.$line = line
-            info += '\n  module '+err_info[1]+' line '+err_info[0]
-            info += '\n    '+line
-        }        
         return info
+
     }else if(attr=='traceback'){
         // Get attribute 'info' to initialise attributes last_info and line
-
-        if($B.debug==0){
+        
+        if(false){ //$B.debug==0){
             // Minimal traceback to avoid attribute error
             return traceback({
-                tb_frame:frame(self.$frames_stack),
+                tb_frame:frame(self.$stack),
                 tb_lineno:0,
                 tb_lasti:-1,
                 tb_next: None // fix me
             })
         }
-        $BaseExceptionDict.__getattr__(self,'info')
         // Return traceback object
-        var tb = traceback({
-            tb_frame:frame(self.$frames_stack),
-            tb_lineno:parseInt(self.$line_info.split(',')[0]),
-            tb_lasti:self.$line,
-            tb_next: None // fix me
-        })
-        return tb
+        return traceback(self.$stack)
     }else{
         throw AttributeError(self.__class__.__name__+
             "has no attribute '"+attr+"'")
@@ -2018,8 +2010,6 @@ $BaseExceptionDict.with_traceback = function(self, tb){
 var BaseException = function (msg,js_exc){
     var err = Error()
     err.__name__ = 'BaseException'
-    err.$line_info = $B.line_info
-    err.$call_stack = $B.call_stack.slice()
     err.$frames_stack = $B.frames_stack.slice()
     err.$js_exc = js_exc
     
@@ -2029,7 +2019,8 @@ var BaseException = function (msg,js_exc){
     err.$message = msg
     err.__class__ = $BaseExceptionDict
     err.$py_error = true
-    $B.exception_stack[$B.exception_stack.length] = err
+    err.$stack = $B.frames_stack.slice()
+    $B.exception_stack = [err]
     return err
 }
 
@@ -2050,19 +2041,18 @@ $B.exception = function(js_exc){
         console.log(js_exc)
         
         if($B.debug>0 && js_exc.info===undefined){
-            if($B.line_info!==undefined){
-                var line_info = $B.line_info.split(',')
+            var _frame = $B.last($B.frames_stack)
+            if(_frame[1].$line_info!==undefined){
+                var line_info = _frame[1].$line_info.split(',')
                 var mod_name = line_info[1]
                 var module = $B.modules[mod_name]
                 if(module){
                     if(module.caller!==undefined){
                         // for list comprehension and the likes, replace
                         // by the line in the enclosing module
-                        $B.line_info = module.caller
                         var mod_name = line_info[1]
                     }
                     var lib_module = mod_name
-                    if(lib_module.substr(0,13)==='__main__,exec'){lib_module='__main__'}
                     var line_num = parseInt(line_info[0])
                     if($B.$py_src[mod_name]===undefined){
                         console.log('pas de py_src pour '+mod_name)
@@ -2097,7 +2087,8 @@ $B.exception = function(js_exc){
     }else{
         var exc = js_exc
     }
-    $B.exception_stack[$B.exception_stack.length]=exc
+    exc.$stack = $B.frames_stack.slice()
+    //$B.exception_stack[$B.exception_stack.length]=exc
     return exc
 }
 
