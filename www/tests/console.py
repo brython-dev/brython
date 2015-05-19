@@ -115,7 +115,7 @@ def myKeyPress(event):
             try:
                 _ = editor_ns['_'] = eval(currentLine, editor_ns)
                 if _ is not None:
-                    print(repr(_))
+                    write(repr(str(_))+'\n')
                 doc['code'].value += '>>> '
                 _status = "main"
             except IndentationError:
