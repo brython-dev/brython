@@ -359,7 +359,6 @@ var $valid_digits=function(base) {
 }
 
 var int = function(value, base){
-    // most simple case
     
     // int() with no argument returns 0
     if(value===undefined){return 0}
@@ -412,43 +411,52 @@ var int = function(value, base){
     if(isinstance(value, _b_.str)) value=value.valueOf()
 
     if(typeof value=="string") {
-      value=value.trim()    // remove leading/trailing whitespace
-      if (value.length == 2 && base==0 && (value=='0b' || value=='0o' || value=='0x')) {
+      var _value=value.trim()    // remove leading/trailing whitespace
+      if (_value.length == 2 && base==0 && (_value=='0b' || _value=='0o' || _value=='0x')) {
          throw _b_.ValueError('invalid value')
       }
-      if (value.length >2) {
-         var _pre=value.substr(0,2).toUpperCase()
+      if (_value.length >2) {
+         var _pre=_value.substr(0,2).toUpperCase()
          if (base == 0) {
             if (_pre == '0B') base=2
             if (_pre == '0O') base=8
             if (_pre == '0X') base=16
          }
          if (_pre=='0B' || _pre=='0O' || _pre=='0X') {
-            value=value.substr(2)
+            _value=_value.substr(2)
          }
       }
       var _digits=$valid_digits(base)
       var _re=new RegExp('^[+-]?['+_digits+']+$', 'i')
-      if(!_re.test(value)) {
+      if(!_re.test(_value)) {
          throw _b_.ValueError(
-             "Invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
+             "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
       }
       if(base <= 10 && !isFinite(value)) {
          throw _b_.ValueError(
-             "Invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
+             "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
       } 
-      return Number(parseInt(value, base))
+      return Number(parseInt(_value, base))
     }
 
     
-    if(isinstance(value,[_b_.bytes,_b_.bytearray])) return Number(parseInt(getattr(value,'decode')('latin-1'), base))
+    if(isinstance(value,[_b_.bytes,_b_.bytearray])){
+        var _digits = $valid_digits(base)
+        for(var i=0;i<value.source.length;i++){
+            if(_digits.indexOf(String.fromCharCode(value.source[i]))==-1){
+                throw _b_.ValueError("invalid literal for int() with base "+
+                    base +": "+_b_.repr(value))
+            }
+        }
+        return Number(parseInt(getattr(value,'decode')('latin-1'), base))
+    }
 
     if(hasattr(value, '__int__')) return Number(getattr(value,'__int__')())
     if(hasattr(value, '__index__')) return Number(getattr(value,'__index__')())
     if(hasattr(value, '__trunc__')) return Number(getattr(value,'__trunc__')())
 
     throw _b_.ValueError(
-        "Invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
+        "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
 }
 int.$dict = $IntDict
 int.__class__ = $B.$factory
