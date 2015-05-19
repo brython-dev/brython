@@ -10,6 +10,14 @@ var $module=(function($B){
             {'__get__':function(){return _b_.dict($B.JSObject($B.imported))},
              '__set__':function(self, obj, value){ throw _b_.TypeError("Read only property 'sys.modules'") }
             },
+        path: 
+            {'__get__':function(){return $B.path},
+             '__set__':function(self, obj, value){ $B.path = value }
+            },
+        meta_path: 
+            {'__get__':function(){return $B.meta_path},
+             '__set__':function(self, obj, value){ $B.meta_path = value }
+            },
         stderr : {
             __get__:function(){return $B.stderr},
             __set__:function(self, obj, value){$B.stderr = value},

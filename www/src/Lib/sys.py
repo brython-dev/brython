@@ -56,10 +56,10 @@ maxsize=2147483647
 
 maxunicode=1114111
 
-path = __BRYTHON__.path
-
-#path_hooks = list(JSObject(__BRYTHON__.path_hooks))
-meta_path=__BRYTHON__.meta_path
+# Imported from _sys
+# path = __BRYTHON__.path
+# #path_hooks = list(JSObject(__BRYTHON__.path_hooks))
+# meta_path=__BRYTHON__.meta_path
 
 platform="brython"
 
