@@ -1,6 +1,15 @@
 Brython implémente la version 3 de Python en se basant sur la 
 [Référence du Langage Python](https://docs.python.org/3/reference/index.html)
 
+L'implémentation tient compte des limites des navigateurs, notamment 
+l'impossibilité d'accéder au système de fichier. L'écriture est impossible, et
+la lecture est limitée aux répertoires accessibles depuis le serveur par une
+requête Ajax.
+
+A cause des spécifications de Javascript, Brython ne gère correctement les
+entiers que dans la plage [-2**53, 2**53]. Un module spécifique est fourni
+pour les programmes qui doivent manipuler des entiers de longueur arbitraire.
+
 Mots clés et fonctions intégrées
 --------------------------------
 
@@ -40,5 +49,6 @@ Quelques particularités liées au contexte d'exécution dans un navigateur :
 >>    from browser import window
 >>    window.print(text)
 
-Ne sont pas pris en charge dans la version actuelle les fonctions intégrées `memoryview(),  vars()`
+Ne sont pas pris en charge dans la version actuelle les fonctions intégrées 
+`memoryview(),  vars()`
 
