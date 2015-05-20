@@ -95,7 +95,7 @@ var $DOMEventAttrs_IE = ['altKey','altLeft','button','cancelBubble',
     'url','wheelDelta','x','y']
 
 $B.$isEvent = function(obj){
-    flag = true
+    var flag = true
     for(var i=0;i<$DOMEventAttrs_W3C.length;i++){
         if(obj[$DOMEventAttrs_W3C[i]]===undefined){flag=false;break}
     }
@@ -745,8 +745,8 @@ DOMNodeDict.get = function(self){
         if(res===undefined) return sel_res
         var to_delete = [], pos=0
         for(var i=0;i<res.length;i++){
-            var elt = res[i] // keep it only if it is also inside sel_res
-            flag = false
+            var elt = res[i], // keep it only if it is also inside sel_res
+                flag = false
             for(var j=0;j<sel_res.length;j++){
                 if(elt.__eq__(sel_res[j])){flag=true;break}
             }

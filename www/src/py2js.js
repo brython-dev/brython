@@ -1226,7 +1226,7 @@ function $CallCtx(context){
                 if(pos_args.length>0){args_str += ','}
                 args_str += '_b_.list('+star_args+'))'
             }
-            kw_args_str = '{'+kw_args.join(', ')+'}'
+            var kw_args_str = '{'+kw_args.join(', ')+'}'
             if(dstar_args){
                 kw_args_str = '{$nat:"kw",kw:$B.extend("'+this.func.value+'",'+kw_args_str
                 kw_args_str += ','+dstar_args+')}'

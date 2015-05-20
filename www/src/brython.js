@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-19 22:24:23.991000"
+__BRYTHON__.compiled_date="2015-05-20 08:29:28.843000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -780,7 +780,7 @@ if(star_args){args_str='$B.extend_list('+args_str
 if(pos_args.length>0){args_str +=','}
 args_str +='_b_.list('+star_args+'))'
 }
-kw_args_str='{'+kw_args.join(', ')+'}'
+var kw_args_str='{'+kw_args.join(', ')+'}'
 if(dstar_args){kw_args_str='{$nat:"kw",kw:$B.extend("'+this.func.value+'",'+kw_args_str
 kw_args_str +=','+dstar_args+')}'
 }else if(kw_args_str!=='{}'){kw_args_str='{$nat:"kw",kw:'+kw_args_str+'}'
@@ -7590,19 +7590,16 @@ if(ext=='py'){return import_py({name:mod_name,__class__:$B.$ModuleDict,$is_packa
 }}
 return null
 }
-function import_from_stdlib(mod_name,origin,package){var module={name:mod_name,__class__:$B.$ModuleDict}
-var js_path=$B.brython_path+'libs/'+mod_name+'.js'
-var js_mod=import_js(module,js_path)
+function import_from_stdlib(mod_name,origin,package){var module={name:mod_name,__class__:$B.$ModuleDict},js_path=$B.brython_path+'libs/'+mod_name+'.js',js_mod=import_js(module,js_path)
 if(js_mod!==null)return true
-mod_path=mod_name.replace(/\./g,'/')
+var mod_path=mod_name.replace(/\./g,'/')
 var py_paths=[$B.brython_path+'Lib/'+mod_path+'.py',$B.brython_path+'Lib/'+mod_path+'/__init__.py']
 for(var i=0,_len_i=py_paths.length;i < _len_i;i++){var py_mod=import_py(module,py_paths[i],package)
 if(py_mod!==null)return true
 }
 return null
 }
-function import_from_site_packages(mod_name,origin,package){var module={name:mod_name}
-mod_path=mod_name.replace(/\./g,'/')
+function import_from_site_packages(mod_name,origin,package){var module={name:mod_name},mod_path=mod_name.replace(/\./g,'/')
 var py_paths=[$B.brython_path+'Lib/site-packages/'+mod_path+'.py',$B.brython_path+'Lib/site-packages/'+mod_path+'/__init__.py']
 for(var i=0,_len_i=py_paths.length;i < _len_i;i++){var py_mod=import_py(module,py_paths[i],package)
 if(py_mod!==null){
@@ -7614,23 +7611,19 @@ return py_mod
 }}
 return null
 }
-function import_from_caller_folder(mod_name,origin,package){var module={name:mod_name}
-var origin_path=$B.$py_module_path[origin]
-var origin_dir_elts=origin_path.split('/')
+function import_from_caller_folder(mod_name,origin,package){var module={name:mod_name},origin_path=$B.$py_module_path[origin],origin_dir_elts=origin_path.split('/')
 origin_dir_elts.pop()
-origin_dir=origin_dir_elts.join('/')
+var origin_dir=origin_dir_elts.join('/')
 var mod_elts=mod_name.split('.')
 var origin_elts=origin.split('.')
 while(mod_elts[0]==origin_elts[0]){mod_elts.shift();origin_elts.shift()}
-mod_path=mod_elts.join('/')
-var py_paths=[origin_dir+'/'+mod_path+'.py',origin_dir+'/'+mod_path+'/__init__.py']
+var mod_path=mod_elts.join('/'),py_paths=[origin_dir+'/'+mod_path+'.py',origin_dir+'/'+mod_path+'/__init__.py']
 for(var i=0,_len_i=$B.path.length;i < _len_i;i++){if($B.path[i].substring(0,4)=='http')continue
 var _path=origin_dir+'/'+ $B.path[i]+'/' 
 py_paths.push(_path+ mod_path + ".py")
 py_paths.push(_path+ mod_path + "/__init__.py")
 }
-for(var i=0,_len_i=py_paths.length;i < _len_i;i++){
-var py_mod=import_py(module,py_paths[i],package)
+for(var i=0,_len_i=py_paths.length;i < _len_i;i++){var py_mod=import_py(module,py_paths[i],package)
 if(py_mod!==null){return py_mod
 }}
 return null 
@@ -7643,7 +7636,7 @@ var py_path=package_path.split('/')
 py_path.pop()
 py_path=py_path.concat(mod_elts)
 py_path=py_path.join('/')
-py_paths=[py_path+'.py',py_path+'/__init__.py']
+var py_paths=[py_path+'.py',py_path+'/__init__.py']
 for(var i=0;i<2;i++){var module={name:mod_name}
 var py_mod=import_py(module,py_paths[i],package)
 if(py_mod!==null)return py_mod
@@ -7651,8 +7644,7 @@ if(py_mod!==null)return py_mod
 return null 
 }
 $B.$import=function(mod_name,origin){
-var parts=mod_name.split('.')
-var norm_parts=[]
+var parts=mod_name.split('.'),norm_parts=[],package_path
 for(var i=0,_len_i=parts.length;i < _len_i;i++){norm_parts.push(parts[i].substr(0,2)=='$$' ? parts[i].substr(2): parts[i])
 }
 mod_name=norm_parts.join('.')
@@ -10614,7 +10606,7 @@ return(typeof nodes==='object'
 }}
 var $DOMEventAttrs_W3C=['NONE','CAPTURING_PHASE','AT_TARGET','BUBBLING_PHASE','type','target','currentTarget','eventPhase','bubbles','cancelable','timeStamp','stopPropagation','preventDefault','initEvent']
 var $DOMEventAttrs_IE=['altKey','altLeft','button','cancelBubble','clientX','clientY','contentOverflow','ctrlKey','ctrlLeft','data','dataFld','dataTransfer','fromElement','keyCode','nextPage','offsetX','offsetY','origin','propertyName','reason','recordset','repeat','screenX','screenY','shiftKey','shiftLeft','source','srcElement','srcFilter','srcUrn','toElement','type','url','wheelDelta','x','y']
-$B.$isEvent=function(obj){flag=true
+$B.$isEvent=function(obj){var flag=true
 for(var i=0;i<$DOMEventAttrs_W3C.length;i++){if(obj[$DOMEventAttrs_W3C[i]]===undefined){flag=false;break}}
 if(flag)return true
 for(var i=0;i<$DOMEventAttrs_IE.length;i++){if(obj[$DOMEventAttrs_IE[i]]===undefined)return false
@@ -11006,7 +10998,7 @@ if(node_list.length===0)return[]
 for(var i=0;i<node_list.length;i++)sel_res[pos++]=DOMNode(node_list[i])
 if(res===undefined)return sel_res
 var to_delete=[],pos=0
-for(var i=0;i<res.length;i++){var elt=res[i]
+for(var i=0;i<res.length;i++){var elt=res[i],
 flag=false
 for(var j=0;j<sel_res.length;j++){if(elt.__eq__(sel_res[j])){flag=true;break}}
 if(!flag){to_delete[pos++]=i}}

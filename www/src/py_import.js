@@ -296,12 +296,13 @@ function import_from_stdlib_static(mod_name,origin,package){
 }
 
 function import_from_stdlib(mod_name, origin, package){
-    var module = {name:mod_name,__class__:$B.$ModuleDict}
-    var js_path = $B.brython_path+'libs/'+mod_name+'.js'
-    var js_mod = import_js(module, js_path)
+    var module = {name:mod_name,__class__:$B.$ModuleDict},
+        js_path = $B.brython_path+'libs/'+mod_name+'.js',
+        js_mod = import_js(module, js_path)
+
     if(js_mod!==null) return true
     
-    mod_path = mod_name.replace(/\./g,'/')
+    var mod_path = mod_name.replace(/\./g,'/')
 
     var py_paths = [$B.brython_path+'Lib/'+mod_path+'.py',
         $B.brython_path+'Lib/'+mod_path+'/__init__.py']
@@ -313,8 +314,8 @@ function import_from_stdlib(mod_name, origin, package){
 }
 
 function import_from_site_packages(mod_name, origin, package){
-    var module = {name:mod_name}
-    mod_path = mod_name.replace(/\./g,'/')
+    var module = {name:mod_name},
+        mod_path = mod_name.replace(/\./g,'/')
     var py_paths = [$B.brython_path+'Lib/site-packages/'+mod_path+'.py',
         $B.brython_path+'Lib/site-packages/'+mod_path+'/__init__.py']
     for(var i=0, _len_i = py_paths.length; i < _len_i;i++){
@@ -334,20 +335,19 @@ function import_from_site_packages(mod_name, origin, package){
 
 function import_from_caller_folder(mod_name,origin,package){
     
-    var module = {name:mod_name}
-    var origin_path = $B.$py_module_path[origin]
-    var origin_dir_elts = origin_path.split('/')
+    var module = {name:mod_name},
+        origin_path = $B.$py_module_path[origin],
+        origin_dir_elts = origin_path.split('/')
     origin_dir_elts.pop()
-    origin_dir = origin_dir_elts.join('/')
+    var origin_dir = origin_dir_elts.join('/')
     
     var mod_elts = mod_name.split('.')
     var origin_elts = origin.split('.')
     
     while(mod_elts[0]==origin_elts[0]){mod_elts.shift();origin_elts.shift()}
 
-    mod_path = mod_elts.join('/')
-    //mod_path = mod_name.replace(/\./g,'/')
-    var py_paths = [origin_dir+'/'+mod_path+'.py',
+    var mod_path = mod_elts.join('/'),
+        py_paths = [origin_dir+'/'+mod_path+'.py',
         origin_dir+'/'+mod_path+'/__init__.py']
 
     for (var i=0, _len_i = $B.path.length; i < _len_i; i++) {
@@ -358,7 +358,6 @@ function import_from_caller_folder(mod_name,origin,package){
     }
 
     for(var i=0, _len_i = py_paths.length; i < _len_i;i++){
-        //console.log(module, py_paths[i])
         var py_mod = import_py(module, py_paths[i],package)
         if(py_mod!==null) {
             return py_mod
@@ -377,7 +376,7 @@ function import_from_package(mod_name,origin,package){
     py_path.pop()
     py_path = py_path.concat(mod_elts)
     py_path = py_path.join('/')
-    py_paths = [py_path+'.py', py_path+'/__init__.py']
+    var py_paths = [py_path+'.py', py_path+'/__init__.py']
     for(var i=0;i<2;i++){
         var module = {name:mod_name}
         var py_mod = import_py(module,py_paths[i],package)
@@ -398,8 +397,9 @@ $B.$import = function(mod_name,origin){
     // The function returns None
 
     
-    var parts = mod_name.split('.')
-    var norm_parts = []
+    var parts = mod_name.split('.'),
+        norm_parts = [],
+        package_path
     for(var i = 0, _len_i = parts.length; i < _len_i;i++){
         norm_parts.push(parts[i].substr(0,2)=='$$' ? parts[i].substr(2) : parts[i])
     }
