@@ -7,8 +7,8 @@ those related to the file system. Writing is impossible, and reading is
 limited to the folders accessible with an Ajax request.
 
 Because of Javascript constraints, Brython correctly supports integers only in
-the range [-2**53, 2**53]. A specific module is provided for programs that
-handle arbitrary length integers.
+the range [-2<sup>53</sup>, 2<sup>53</sup>]. A specific module is provided for 
+programs that work with arbitrary length integers.
 
 Keywords and built-in functions
 -------------------------------
