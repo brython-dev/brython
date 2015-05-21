@@ -159,18 +159,11 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
             var res = function(){
                 var args = [],arg
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
-                    if(arguments[i].$nat=='ptuple'){
-                        // add all items produced by iteration on packed tuple
-                        var ptuple = _b_.iter(arguments[i].arg)
-                        while(true){
-                            try{
-                                var item = _b_.next(ptuple)
-                                args.push(pyobj2jsobj(item))
-                            }catch(err){    
-                                $B.$pop_exc()
-                                break
-                            }
-                        }
+                    if(arguments[i].$nat!=undefined){
+                        // Passing keyword arguments to a Javascript function
+                        // Will add the values
+                        var kw = arguments[i].kw
+                        for(var key in kw){args.push(pyobj2jsobj(kw[key]))}
                     }else{
                         args.push(pyobj2jsobj(arguments[i]))
                     }
@@ -233,7 +226,6 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
 }
 
 $JSObjectDict.__getitem__ = function(self,rank){
-    console.log('get item '+rank+' of', self)
     try{return getattr(self.js,'__getitem__')(rank)}
     catch(err){
         if(self.js[rank]!==undefined) return JSObject(self.js[rank])
@@ -309,3 +301,4 @@ $B.JSConstructor = JSConstructor
 
 
 })(__BRYTHON__)
+
