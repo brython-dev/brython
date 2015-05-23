@@ -160,10 +160,15 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
                 var args = [],arg
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     if(arguments[i].$nat!=undefined){
+                        //
                         // Passing keyword arguments to a Javascript function
-                        // Will add the values
-                        var kw = arguments[i].kw
-                        for(var key in kw){args.push(pyobj2jsobj(kw[key]))}
+                        // raises a TypeError : since we don't know the 
+                        // signature of the function, the result of Brython 
+                        // code like foo(y=1, x=2) applied to a JS function 
+                        // defined by function foo(x, y) can't be determined.
+                        //
+                        throw TypeError("A Javascript function can't "+
+                            "take keyword arguments")
                     }else{
                         args.push(pyobj2jsobj(arguments[i]))
                     }
