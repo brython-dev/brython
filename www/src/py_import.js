@@ -385,6 +385,9 @@ function import_from_package(mod_name,origin,package){
     return null    
 }
 
+var stdlib_path = $B.brython_path+'Lib',
+    site_packages_path = stdlib_path+'/site-packages'
+
 $B.$import = function(mod_name,origin){
 
     // Import the module named "mod_name" from the module called "origin"
@@ -440,6 +443,16 @@ $B.$import = function(mod_name,origin){
     //   in the path of the standard distribution (/libs or /Lib), then in
     //   /Lib/site-packages (for 3rd party modules), then in the folder of
     //   the "calling" script, identified by "origin"
+
+    /*
+    var current_path = $B.last($B.frames_stack)[1].__file__
+
+    for(var i=0;i<$B.path.length;i++){
+        console.log(i,'path',$B.path[i],'stdlib ?', $B.path[i]==stdlib_path,
+            'site-pacakes ?',$B.path[i]==site_packages_path,
+            'current ?',$B.path[i]==current_path)
+    }
+    */
 
     if($B.use_VFS){
         funcs = [import_from_VFS, 
