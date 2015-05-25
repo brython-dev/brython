@@ -29,6 +29,11 @@ pdir = os.path.dirname(os.getcwd())
 version = [3, 3, 0, "alpha", 0]
 implementation = [3, 1, 4, 'alpha', 0]
 
+# version name
+vname = '.'.join(str(x) for x in implementation[:3])
+if implementation[3] == 'rc':
+    vname += 'rc%s' % implementation[4]
+
 def custom_minify(src):
     _res, pos = '', 0
     while pos < len(src):
@@ -222,10 +227,7 @@ with open(abs_path('brython.js'), 'wb') as the_brythonjs_file_output:
 print(('size : originals %s compact %s gain %.2f' %
       (src_size, len(res), 100 * (src_size - len(res)) / src_size)))
 
-# version name
-vname = '.'.join(str(x) for x in implementation[:3])
-if implementation[3] == 'rc':
-    vname += 'rc%s' % implementation[4]
+
 
 sys.path.append("scripts")
 
@@ -250,7 +252,6 @@ if not os.path.exists(dest_dir):
     os.mkdir(dest_dir)
 name = 'Brython%s_site_mirror-%s' % (vname, now)
 dest_path = os.path.join(dest_dir, name)
-
 
 def is_valid(filename_path):
     if filename_path.startswith('.'):
@@ -331,6 +332,9 @@ for arc, wfunc in (dist1, dist1.add), (dist2, dist2.add), (dist3, dist3.write):
                 if os.path.splitext(path)[1] not in ('.js', '.py'):
                     continue
                 print(('add', path, dirpath[len(base):]))
+                # leave folder site-packages empty
+                if 'site-packages' in dirpath:
+                    path = ''
                 wfunc(os.path.join(dirpath, path),
                       arcname=os.path.join(name, dirpath[len(base) + 1:], path))
 
