@@ -689,17 +689,10 @@ function id(obj) {
    return null
 }
 
-function __import__(mod_name){
-   // get name of module this was called in
-   var current_frame = $B.frames_stack[$B.frames_stack.length-1]
-   var origin = current_frame[3].__name__
-
-   try {$B.$import(mod_name, origin)}
-   catch(err) {$B.imported[mod_name]=undefined}
-
-   if ($B.imported[mod_name]===undefined) throw _b_.ImportError(mod_name) 
-
-   return $B.imported[mod_name]
+// The default __import__ function is a builtin
+__import__ = function (mod_name, globals, locals, fromlist, level) {
+    // TODO : Install $B.$__import__ in builtins module to avoid nested call
+    return $B.$__import__(mod_name, globals, locals, fromList, level);
 }
 
 //not a direct alias of prompt: input has no default value
