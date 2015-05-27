@@ -29,7 +29,7 @@ $ListDict.__contains__ = function(self,item){
     var i=self.length
     while(i--) {
         try{if(_eq(self[i])) return true
-        }catch(err){$B.$pop_exc();void(0)}
+        }catch(err){}
     }
     return false
 }
@@ -216,7 +216,7 @@ $ListDict.__init__ = function(self,arg){
     while(1){
         try{self[pos++]=next_func()}
         catch(err){
-            if(err.__name__=='StopIteration'){$B.$pop_exc();break}
+            if(err.__name__=='StopIteration'){break}
             else{throw err}
         }
     }
@@ -347,7 +347,7 @@ $ListDict.extend = function(self,other){
     while(1){
         try{self[pos++]=next(other)}
         catch(err){
-            if(err.__name__=='StopIteration'){$B.$pop_exc();break}
+            if(err.__name__=='StopIteration'){break}
             else{throw err}
         }
     }
@@ -513,11 +513,7 @@ function list(obj){
     while(1){
         try{res[pos++]=next_func()}
         catch(err){
-            if(err.__name__=='StopIteration'){
-                $B.$pop_exc()
-            }else{
-                throw err
-            }
+            if(err.__name__!='StopIteration'){throw err}
             break
         }
     }

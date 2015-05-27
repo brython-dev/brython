@@ -107,7 +107,7 @@ $B.$download_module=$download_module
 
 function import_js(module,path) {
     try{var module_contents=$download_module(module.name, path)}
-    catch(err){$B.$pop_exc();return null}
+    catch(err){return null}
     run_js(module,path,module_contents)
     return true
 }
@@ -153,7 +153,6 @@ function import_py(module,path,package){
     try{
         var module_contents=$download_module(module.name, path)
     }catch(err){
-        $B.$pop_exc()
         return null
     }
     $B.imported[module.name].$is_package = module.$is_package

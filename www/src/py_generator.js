@@ -519,7 +519,7 @@ $BRGeneratorDict.close = function(self, value){
         }
     }catch(err){
         if($B.is_exc(err,[_b_.StopIteration,_b_.GeneratorExit])){
-            $B.$pop_exc();return _b_.None
+            return _b_.None
         }
         throw err
     }

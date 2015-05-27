@@ -1392,7 +1392,7 @@ $StringDict.join = function(self,obj){
             res += obj2+self
             count++
         }catch(err){
-            if(err.__name__==='StopIteration'){$B.$pop_exc();break}
+            if(err.__name__==='StopIteration'){break}
             else{throw err}
         }
     }
@@ -1733,12 +1733,10 @@ function str(arg){
     }
     catch(err){
         //console.log('err '+err)
-        $B.$pop_exc()
         try{ // try __repr__
              var f = getattr(arg,'__repr__')
              return getattr(f,'__call__')()
         }catch(err){
-             $B.$pop_exc()
              console.log(err+'\ndefault to toString '+arg);return arg.toString()
         }
     }

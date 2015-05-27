@@ -19,7 +19,7 @@ builtin_module_names=__BRYTHON__.builtin_module_names
 byteorder='little'
 
 def exc_info():
-    exc = __BRYTHON__.exception_stack[-1]
+    exc = __BRYTHON__.current_exception
     return (exc.__class__,exc,exc.traceback)
     
 exec_prefix = __BRYTHON__.brython_path

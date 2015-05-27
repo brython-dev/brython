@@ -10,7 +10,7 @@ __BRYTHON__.$__new__ = function(factory){
         res.__class__ = cls.$dict
         var init_func = null
         try{init_func = __BRYTHON__.builtins.getattr(res,'__init__')}
-        catch(err){__BRYTHON__.$pop_exc()}
+        catch(err){}
         if(init_func!==null){
             var args = [], pos=0
             for(var i=1, _len_i = arguments.length; i < _len_i;i++){args[pos++]=arguments[i]}
@@ -217,7 +217,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         }
         if(_ga!==undefined){
             try{return _ga(obj,attr)}
-            catch(err){$B.$pop_exc()}
+            catch(err){}
         }
         // for special methods such as __mul__, look for __rmul__ on operand
         if(attr.substr(0,2)=='__' && attr.substr(attr.length-2)=='__'){

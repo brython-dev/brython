@@ -1005,7 +1005,6 @@ $QueryDict.getlist = function(self,key){
 $QueryDict.getvalue = function(self,key,_default){
     try{return self.__getitem__(key)}
     catch(err){
-        $B.$pop_exc()
         if(_default===undefined) return None
         return _default
     }

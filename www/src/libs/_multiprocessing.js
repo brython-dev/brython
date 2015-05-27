@@ -128,14 +128,9 @@ $PoolDict.map = function(self){
        _workers[i] = new Worker('/src/web_workers/multiprocessing.js')
        var arg
 
-       try{ 
-          arg=getattr(fargs, '__next__')()
-       } catch(err) {
-          if (err.__name__ == 'StopIteration') {
-             $B.$pop_exc()
-          } else {
-             throw err
-          }
+       try{arg=getattr(fargs, '__next__')()} 
+       catch(err) {
+          if (err.__name__ != 'StopIteration') throw err
        }
        console.log(arg)
        _workers[i].finished=false
@@ -154,7 +149,6 @@ $PoolDict.map = function(self){
                _pos++
            } catch(err) {
                if (err.__name__ != 'StopIteration') throw err
-               $B.$pop_exc()
                this.finished=true
            }
        }, false);
@@ -185,14 +179,9 @@ $PoolDict.apply_async = function(self){
        _workers[i] = new Worker('/src/web_workers/multiprocessing.js')
        var arg
 
-       try{ 
-          arg=getattr(fargs, '__next__')()
-       } catch(err) {
-          if (err.__name__ == 'StopIteration') {
-             $B.$pop_exc()
-          } else {
-             throw err
-          }
+       try{arg=getattr(fargs, '__next__')()} 
+       catch(err) {
+          if (err.__name__ != 'StopIteration') throw err
        }
        //console.log(arg)
        //_workers[i].finished=false
@@ -211,7 +200,6 @@ $PoolDict.apply_async = function(self){
                _pos++
            } catch(err) {
                if (err.__name__ != 'StopIteration') throw err
-               $B.$pop_exc()
                this.finished=true
            }
        }, false);

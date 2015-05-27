@@ -557,10 +557,8 @@ for(var i=0, _len_i = augm_ops.length; i < _len_i;i++){
 $B.$raise= function(){
     // Used for "raise" without specifying an exception
     // If there is an exception in the stack, use it, else throw a simple Exception
-    var es = $B.exception_stack
-    if(es.length>0){
-        throw es[es.length-1]
-    }
+    var es = $B.current_exception
+    if(es!==undefined) throw es
     throw _b_.RuntimeError('No active exception to reraise')
 }
 
@@ -602,9 +600,6 @@ $B.$IndentationError = function(module,msg,pos) {
     throw exc
 }
 
-// function to remove internal exceptions from stack exposed to programs
-$B.$pop_exc=function(){$B.exception_stack.pop()}
-
 // function used if a function call has an argument **kw
 $B.extend = function(fname, arg, mapping){
     var it = _b_.iter(mapping), getter = _b_.getattr(mapping,'__getitem__')
@@ -620,7 +615,7 @@ $B.extend = function(fname, arg, mapping){
             }
             arg[key] = getter(key)
         }catch(err){
-            if(_b_.isinstance(err,[_b_.StopIteration])){$B.$pop_exc();break}
+            if(_b_.isinstance(err,[_b_.StopIteration])){break}
             throw err
         }
     }
@@ -637,7 +632,7 @@ $B.extend_list = function(){
         try{
             res.push(_b_.next(it))
         }catch(err){
-            if(_b_.isinstance(err,[_b_.StopIteration])){$B.$pop_exc();break}
+            if(_b_.isinstance(err,[_b_.StopIteration])){break}
             throw err
         }
     }
@@ -663,23 +658,20 @@ $B.$is_member = function(item,_set){
 
     // use __contains__ if defined
     try{f = _b_.getattr(_set,"__contains__")}
-    catch(err){$B.$pop_exc()}
+    catch(err){}
 
     if(f) return f(item)
 
     // use __iter__ if defined
     try{_iter = _b_.iter(_set)}
-    catch(err){$B.$pop_exc()}
+    catch(err){}
     if(_iter){
         while(1){
             try{
                 var elt = _b_.next(_iter)
                 if(_b_.getattr(elt,"__eq__")(item)) return true
             }catch(err){
-                if(err.__name__=="StopIteration"){
-                    $B.$pop_exc()
-                    return false
-                }
+                if(err.__name__=="StopIteration") return false
                 throw err
             }
         }
@@ -688,7 +680,6 @@ $B.$is_member = function(item,_set){
     // use __getitem__ if defined
     try{f = _b_.getattr(_set,"__getitem__")}
     catch(err){
-        $B.$pop_exc()
         throw _b_.TypeError("'"+$B.get_class(_set).__name__+"' object is not iterable")
     }
     if(f){
@@ -812,7 +803,7 @@ $B.pyobject2jsobject=function (obj){
            _a[pos++]=$B.pyobject2jsobject(_b_.next(obj))
           } catch(err) {
             if (err.__name__ !== "StopIteration") throw err
-            $B.$pop_exc();break
+            break
           }
        }
        return {'_type_': 'iter', data: _a}
@@ -889,7 +880,7 @@ $B.$iterator_class = function(name){
          try {
               _a[pos++]=_b_.next(_it)
          } catch (err) {
-              if (err.__name__ == 'StopIteration'){$B.$pop_exc();break}
+              if (err.__name__ == 'StopIteration'){break}
          }
        }
        return _a
@@ -1003,8 +994,8 @@ $B.$GetInt=function(value) {
   if(typeof value=="number"){return value}
   else if(typeof value==="boolean"){return value ? 1 : 0}
   else if (_b_.isinstance(value, _b_.int)) {return value}
-  try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){$B.$pop_exc()}
-  try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){$B.$pop_exc()}
+  try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){}
+  try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){}
 
   return value
 }

@@ -323,7 +323,7 @@ $DictDict.__init__ = function(self){
                    var value = getattr(elt,'__getitem__')(1)
                    $DictDict.__setitem__(self, key, value)
                 }catch(err){
-                   if(err.__name__==='StopIteration'){$B.$pop_exc();break}
+                   if(err.__name__==='StopIteration'){break}
                    throw err
                 }
             }
@@ -363,7 +363,7 @@ $DictDict.__next__ = function(self){
     try {
         return self.$iter.next()
     } catch (err) {
-        if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
+        if (err.__name__ !== "StopIteration") { throw err }
     }
 }
 
@@ -508,7 +508,6 @@ $DictDict.fromkeys = function(keys,value){
             $DictDict.__setitem__(res,key,value)
         }catch(err){
             if($B.is_exc(err,[_b_.StopIteration])){
-                $B.$pop_exc()
                 return res
             }
             throw err
@@ -522,7 +521,6 @@ $DictDict.pop = function(self,key,_default){
         $DictDict.__delitem__(self,key)
         return res
     }catch(err){
-        $B.$pop_exc()
         if(err.__name__==='KeyError'){
             if(_default!==undefined) return _default
             throw err
@@ -538,7 +536,6 @@ $DictDict.popitem = function(self){
         return _b_.tuple(itm)
     }catch(err) {
         if (err.__name__ == "StopIteration") {
-            $B.$pop_exc()
             throw KeyError("'popitem(): dictionary is empty'")
         }
     }

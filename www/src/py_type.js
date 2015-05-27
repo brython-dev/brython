@@ -504,11 +504,11 @@ function $instance_creator(klass){
     // return the function to initalise a class instance
     var new_func = null
     try{new_func = _b_.getattr(klass,'__new__')}
-    catch(err){$B.$pop_exc()}
+    catch(err){}
     
     var init_func = null
     try{init_func = _b_.getattr(klass,'__init__')}
-    catch(err){$B.$pop_exc()}
+    catch(err){}
     
     // Variable "simple" is set if class only has one parent and this
     // parent is "object" or "type"

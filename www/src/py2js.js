@@ -102,7 +102,7 @@ Function called in case of SyntaxError
 */
 
 function $_SyntaxError(context,msg,indent){
-    //console.log('syntax error, context '+context+' msg '+msg)
+    console.log('syntax error, context '+context+' msg '+msg)
     var ctx_node = context
     while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
     var tree_node = ctx_node.node
@@ -570,7 +570,7 @@ function $AssignCtx(context, check_unbound){
             var $var='$rlist'+$loop_num
             js = 'var '+$var+'=[], $pos=0;'
             js += 'while(1){try{'+$var+'[$pos++]=$right'
-            js += $loop_num+'()}catch(err){$B.$pop_exc();break}};'
+            js += $loop_num+'()}catch(err){break}};'
             new $NodeJSCtx(rlist_node, js)
             new_nodes[pos++]=rlist_node
             
@@ -2659,8 +2659,7 @@ function $ForExpr(context){
         var catch_node = new $Node()
 
         var js = 'catch($err){if($B.is_exc($err,[StopIteration]))'
-        js += '{$B.$pop_exc();'
-        js += 'delete $locals["$next'+num+'"];break;}'
+        js += '{delete $locals["$next'+num+'"];break;}'
         js += 'else{throw($err)}}'        
 
         new $NodeJSCtx(catch_node,js)
@@ -4251,7 +4250,7 @@ function $TryCtx(context){
 
     this.to_js = function(){
         this.js_processed=true
-        return '$B.exception_stack=[];try'
+        return 'try'
     }
 
 }
@@ -6795,9 +6794,6 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     new $NodeJSCtx(new_node,';$B.leave_frame("'+module+'");\n')
     root.add(new_node)
 
-    // Reset exception stack - may have been populated during parsing
-    $B.exception_stack = []
-
     return root
 }
 
@@ -6852,9 +6848,6 @@ function brython(options){
     if (options.CORS !== undefined) $B.$CORS = options.CORS
 
     $B.$options=options
-
-    // Stacks for exceptions and function calls, used for exception handling
-    $B.exception_stack = []
 
     // Option to run code on demand and not all the scripts defined in a page
     // The following lines are included to allow to run brython scripts in
