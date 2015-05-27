@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-27 10:06:49.896000"
+__BRYTHON__.compiled_date="2015-05-27 10:26:22.654000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -5830,13 +5830,11 @@ function format(value,format_spec){if(hasattr(value,'__format__'))return getattr
 throw _b_.NotImplementedError("__format__ is not implemented for object '" + _b_.str(value)+ "'")
 }
 function getattr(obj,attr,_default){var klass=$B.get_class(obj)
-if(attr=='createObjectStore'||attr=="result"){console.log('get attr',attr,'obj',obj,'klass',klass)}
 if(klass===undefined){
 if(obj[attr]!==undefined)return $B.$JS2Py(obj[attr])
 if(_default!==undefined)return _default
 throw _b_.AttributeError('object has no attribute '+attr)
 }
-if(attr=='createObjectStore'){console.log('getattr',attr,454)}
 switch(attr){case '__call__':
 if(typeof obj=='function'){if(obj.$blocking){console.log('calling blocking function '+obj.__name__)
 }
@@ -5871,7 +5869,6 @@ break
 if(typeof obj=='function'){if(attr !==undefined && obj[attr]!==undefined){if(attr=='__module__'){
 return obj[attr]
 }}}
-if(attr=='createObjectStore'||attr=='result'){console.log('getattr',attr,1)}
 if(klass.$native){if(klass[attr]===undefined){if(_default===undefined)throw _b_.AttributeError(klass.__name__+" object has no attribute '"+attr+"'")
 return _default
 }
@@ -5893,7 +5890,6 @@ return method
 return klass[attr]
 }
 var is_class=klass.is_class,mro,attr_func
-if(attr=='createObjectStore'){console.log('getattr',attr,2)}
 if(is_class){attr_func=$B.$type.__getattribute__
 if(obj.$dict===undefined){console.log('obj '+obj+' $dict undefined')}
 obj=obj.$dict
@@ -5911,8 +5907,7 @@ try{var res=attr_func(obj,attr)}
 catch(err){if(_default!==undefined)return _default
 throw err
 }
-if(res!==undefined){if(attr=='result'){console.log('attr',attr,'res',res)}
-return res
+if(res!==undefined){return res
 }
 if(_default !==undefined)return _default
 var cname=klass.__name__
@@ -7294,8 +7289,7 @@ return pyobj
 var $JSObjectDict={__class__:$B.$type,__name__:'JSObject',toString:function(){return '(JSObject)'}}
 $JSObjectDict.__bool__=function(self){return(new Boolean(self.js)).valueOf()
 }
-$JSObjectDict.__getattribute__=function(obj,attr){if(attr=='transaction'){console.log('jsobj',attr)}
-if(attr.substr(0,2)=='$$')attr=attr.substr(2)
+$JSObjectDict.__getattribute__=function(obj,attr){if(attr.substr(0,2)=='$$')attr=attr.substr(2)
 if(obj.js===null)return $ObjectDict.__getattribute__(None,attr)
 if(attr==='__class__')return $JSObjectDict
 if(attr=="bind" && obj.js[attr]===undefined &&
@@ -7303,9 +7297,7 @@ obj.js['addEventListener']!==undefined){attr='addEventListener'}
 var js_attr=obj.js[attr]
 if(obj.js_func && obj.js_func[attr]!==undefined){js_attr=obj.js_func[attr]
 }
-if(attr=='createObjectStore'){console.log('function',js_attr)}
 if(js_attr !==undefined){if(typeof js_attr=='function'){
-if(attr=='createObjectStore'){console.log('function',js_attr)}
 var res=function(){var args=[],arg
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){if(arguments[i].$nat!=undefined){
 throw TypeError("A Javascript function can't "+
@@ -7358,8 +7350,7 @@ throw _b_.AttributeError(this+' has no attribute __len__')
 }}
 $JSObjectDict.__mro__=[$JSObjectDict,$ObjectDict]
 $JSObjectDict.__repr__=function(self){return "<JSObject wraps "+self.js+">"}
-$JSObjectDict.__setattr__=function(self,attr,value){console.log('set attr',attr,'of',self,'to',value)
-if(isinstance(value,JSObject)){self.js[attr]=value.js}
+$JSObjectDict.__setattr__=function(self,attr,value){if(isinstance(value,JSObject)){self.js[attr]=value.js}
 else{self.js[attr]=value}}
 $JSObjectDict.__setitem__=$JSObjectDict.__setattr__
 $JSObjectDict.__str__=$JSObjectDict.__repr__
