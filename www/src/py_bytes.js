@@ -350,7 +350,6 @@ function normalise(encoding){
 
 function load_decoder(enc){
     // load table from Lib/encodings/<enc>.py
-    console.log('load decoder', enc)
     if(to_unicode[enc]===undefined){
         load_encoder(enc)
         to_unicode[enc] = {}
@@ -362,7 +361,6 @@ function load_decoder(enc){
 
 function load_encoder(enc){
     // load table from encodings/<enc>.py
-    console.log('load encoder', enc)
     if(from_unicode[enc]===undefined){
         var mod = _b_.__import__('encodings.'+enc),
             table = mod.decoding_table

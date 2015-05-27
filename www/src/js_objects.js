@@ -151,6 +151,7 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
     if(obj.js_func && obj.js_func[attr]!==undefined){
         js_attr = obj.js_func[attr]
     }
+
     if(js_attr !== undefined){
         if(typeof js_attr=='function'){
             // If the attribute of a JSObject is a function F, it is converted to a function G
@@ -256,9 +257,8 @@ $JSObjectDict.__mro__ = [$JSObjectDict,$ObjectDict]
 $JSObjectDict.__repr__ = function(self){return "<JSObject wraps "+self.js+">"}
 
 $JSObjectDict.__setattr__ = function(self,attr,value){
-    if(isinstance(value,JSObject)){self.js[attr]=value.js
-    }else{self.js[attr]=value
-    }
+    if(isinstance(value,JSObject)){self.js[attr]=value.js}
+    else{self.js[attr]=value}
 }
 
 $JSObjectDict.__setitem__ = $JSObjectDict.__setattr__
@@ -303,7 +303,6 @@ $JSObjectDict.$factory = JSObject
 
 $B.JSObject = JSObject
 $B.JSConstructor = JSConstructor
-
 
 })(__BRYTHON__)
 
