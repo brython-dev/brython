@@ -104,9 +104,8 @@ function bool(obj){ // return true or false
       default:
         try{return getattr(obj,'__bool__')()}
         catch(err){
-            $B.$pop_exc()
             try{return getattr(obj,'__len__')()>0}
-            catch(err){$B.$pop_exc();return true}
+            catch(err){return true}
         }
     }// switch
 }
@@ -221,9 +220,11 @@ function dir(obj){
         _b_.list.$dict.sort(res)
         return res
     }
-
+    
+    var klass = $B.get_class(obj)
+    
     if(isinstance(obj,$B.JSObject)) obj=obj.js
-    else if($B.get_class(obj).is_class){obj=obj.$dict}
+    else if(klass && klass.is_class){obj=obj.$dict}
     else {
         // We first look if the object has the __dir__ method
         try {
@@ -231,7 +232,7 @@ function dir(obj){
             res = _b_.list(res)
             res.sort()
             return res
-        } catch (err){$B.$pop_exc()}
+        } catch (err){}
     }
     var res = [], pos=0
     for(var attr in obj){
@@ -417,13 +418,8 @@ function filter(){
 
     var __next__ = function() {
         while(true){
-            try {
-                var _item = next(iterable)
-                if (func(_item)){return _item}
-            }catch(err){
-                if(err.__name__==='StopIteration'){$B.$pop_exc();throw _b_.StopIteration('')}
-                else{throw err}
-            }
+            var _item = next(iterable)
+            if (func(_item)){return _item}
         }
     }
     return {
@@ -445,11 +441,11 @@ function getattr(obj,attr,_default){
 
     if(klass===undefined){
         // for native JS objects used in Python code
-        if(obj[attr]!==undefined) return obj[attr]
+        if(obj[attr]!==undefined) return $B.$JS2Py(obj[attr])
         if(_default!==undefined) return _default
         throw _b_.AttributeError('object has no attribute '+attr)
     }
-    
+
     switch(attr) {
       case '__call__':
         if (typeof obj=='function'){
@@ -508,7 +504,7 @@ function getattr(obj,attr,_default){
         } 
       }
     }
-    
+
     if(klass.$native){
         if(klass[attr]===undefined){
             if(_default===undefined) throw _b_.AttributeError(klass.__name__+" object has no attribute '"+attr+"'")
@@ -543,7 +539,7 @@ function getattr(obj,attr,_default){
     }
 
     var is_class = klass.is_class, mro, attr_func
-    
+
     if(is_class){
         attr_func=$B.$type.__getattribute__
         if(obj.$dict===undefined){console.log('obj '+obj+' $dict undefined')}
@@ -568,12 +564,13 @@ function getattr(obj,attr,_default){
 
     try{var res = attr_func(obj,attr)}
     catch(err){
-        $B.$pop_exc()
         if(_default!==undefined) return _default
         throw err
     }
     
-    if(res!==undefined) return res
+    if(res!==undefined) {
+        return res
+    }
     if(_default !==undefined) return _default
     
     var cname = klass.__name__
@@ -591,7 +588,7 @@ function globals(){
 
 function hasattr(obj,attr){
     try{getattr(obj,attr);return true}
-    catch(err){$B.$pop_exc();return false}
+    catch(err){return false}
 }
 
 function hash(obj){
@@ -786,7 +783,6 @@ function issubclass(klass,classinfo){
 function iter(obj){
     try{return getattr(obj,'__iter__')()}
     catch(err){
-      $B.$pop_exc()
       throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not iterable")
     }
 }
@@ -819,13 +815,7 @@ function map(){
     var __next__ = function(){
         var args = [], pos=0
         for(var i=0;i<iter_args.length;i++){
-            try{
-                args[pos++]=next(iter_args[i])
-            }catch(err){
-                if(err.__name__==='StopIteration'){
-                    $B.$pop_exc();throw _b_.StopIteration('')
-                }else{throw err}
-            }
+            args[pos++]=next(iter_args[i])
         }
         return func.apply(null,args)
     }
@@ -881,7 +871,6 @@ function $extreme(args,op){ // used by min() and max()
                 if(res===null || bool(getattr(func(x),op)(func(res)))){res = x}
             }catch(err){
                 if(err.__name__=="StopIteration"){
-                    $B.$pop_exc()
                     if(res===null){
                         if(has_default){return default_value}
                         else{throw _b_.ValueError($op_name+"() arg is an empty sequence")}
@@ -1182,8 +1171,7 @@ function reversed(seq){
 
     try{return getattr(seq,'__reversed__')()}
     catch(err){
-        if(err.__name__=='AttributeError'){$B.$pop_exc()}
-        else{throw err}
+        if(err.__name__!='AttributeError'){throw err}
     }
 
     try{
@@ -1399,7 +1387,7 @@ function sum(iterable,start){
             var _item = next(iterable)
             res = getattr(res,'__add__')(_item)
         }catch(err){
-           if(err.__name__==='StopIteration'){$B.$pop_exc();break}
+           if(err.__name__==='StopIteration'){break}
            else{throw err}
         }
     }
@@ -1614,7 +1602,7 @@ function zip(){
             try{
                 line[pos++]=next(args[i])
             }catch(err){
-                if(err.__name__==='StopIteration'){$B.$pop_exc();flag=false;break}
+                if(err.__name__==='StopIteration'){flag=false;break}
                 else{throw err}
             }
         }
@@ -2020,7 +2008,7 @@ var BaseException = function (msg,js_exc){
     err.__class__ = $BaseExceptionDict
     err.$py_error = true
     err.$stack = $B.frames_stack.slice()
-    $B.exception_stack = [err]
+    $B.current_exception = err
     return err
 }
 
@@ -2088,7 +2076,6 @@ $B.exception = function(js_exc){
         var exc = js_exc
     }
     exc.$stack = $B.frames_stack.slice()
-    //$B.exception_stack[$B.exception_stack.length]=exc
     return exc
 }
 
