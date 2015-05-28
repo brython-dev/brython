@@ -1112,6 +1112,12 @@ function range(){
     if(args.length>3){throw _b_.TypeError(
         "range expected at most 3 arguments, got "+args.length)
     }
+    for(var i=0;i<args.length;i++){
+        if(typeof args[i]!='number'&&!isinstance(args[i],[_b_.int])||
+            !hasattr(args[i],'__index__')){
+            throw _b_.TypeError("'"+args[i]+"' object cannot be interpreted as an integer")
+        }
+    }
     var start=0
     var stop=0
     var step=1
@@ -1309,27 +1315,28 @@ function slice(){
     if(args.length>3){throw _b_.TypeError(
         "slice expected at most 3 arguments, got "+args.length)
     }else if(args.length==0){
-        throw _b_.TypeError('slice expected at least 1 arguments, got 0')
+        throw _b_.TypeError('slice expected at least 1 argument, got 0')
     }
 
     var start=0, stop=0, step=1
+    // If some arguments can be interpreted as integers, do the conversion
+    for(var i=0;i<args.length;i++){
+        try{args[i]=$B.$GetInt(args[i])}
+        catch(err){}
+    }
     switch(args.length) {
       case 1:
-        //if(args.length==1){
-        step=start=None
-        stop=$B.$GetInt(args[0])
+        step = start = None
+        stop = args[0]
         break
       case 2:
-        //else if(args.length>=2){
-        start = $B.$GetInt(args[0])
-        stop = $B.$GetInt(args[1])
+        start = args[0]
+        stop = args[1]
         break
       case 3:
-        //}
-        //if(args.length>=3) 
-        start = $B.$GetInt(args[0])
-        stop = $B.$GetInt(args[1])
-        step= $B.$GetInt(args[2])
+        start = args[0]
+        stop = args[1]
+        step = args[2]
     } //switch
 
     if(step==0) throw ValueError("slice step must not be zero")

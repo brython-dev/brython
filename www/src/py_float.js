@@ -253,7 +253,9 @@ $FloatDict.hex = function(self) {
 
 $FloatDict.__init__ = function(self,value){self.value=value}
 
-$FloatDict.is_integer=function(self) {return _b_.int(self.value) == self.value}
+$FloatDict.__int__ = function(self){return parseInt(self.value)}
+
+$FloatDict.is_integer = function(self) {return _b_.int(self.value) == self.value}
 
 $FloatDict.__mod__ = function(self,other) {
     // can't use Javascript % because it works differently for negative numbers

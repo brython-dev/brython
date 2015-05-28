@@ -168,19 +168,14 @@ $IntDict.__mul__ = function(self,other){
     // this will be quick check, so lets do it early.
     if(typeof other==="string") {
         return other.repeat(val)
-        //var res = ''
-        //for(var i=0;i<val;i++) res+=other
-        //return res
     }
 
-    other = $B.$GetInt(other)  // check for int, __int__, __index__
-
     if(isinstance(other,int)) return self*other
-    if(isinstance(other,_b_.float)) return _b_.float(self*other.value)
+    if(isinstance(other,_b_.float)){
+        return _b_.float(self*other.value)
+    }
     if(isinstance(other,_b_.bool)){
-         //var bool_value=0
-         if (other.valueOf()) return self //bool_value=1
-         //return self*bool_value
+         if (other.valueOf()) return self
          return int(0)
     }
     if(isinstance(other,_b_.complex)){
@@ -463,5 +458,6 @@ int.__class__ = $B.$factory
 $IntDict.$factory = int
 
 _b_.int = int
+
 
 })(__BRYTHON__)

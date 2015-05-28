@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-27 10:26:22.654000"
+__BRYTHON__.compiled_date="2015-05-28 08:17:16.743000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1519,8 +1519,8 @@ var idt=target.to_js()
 if($range.tree.length==1){var start=0,stop=$range.tree[0].to_js()
 }else{var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()
 }
-var js=idt+'=('+start+')-1, $stop_'+num
-js +='='+stop+'-1;while('+idt+'++ < $stop_'+num+')'
+var js=idt+'=$B.$GetInt('+start+')-1, $stop_'+num
+js +='=$B.$GetInt('+stop+')-1;while('+idt+'++ < $stop_'+num+')'
 var for_node=new $Node()
 new $NodeJSCtx(for_node,js)
 for(var i=0;i<children.length;i++){for_node.add(children[i].clone())
@@ -1558,6 +1558,7 @@ k++
 }
 for(var i=new_nodes[k].children.length-1;i>=0;i--){node.parent.insert(rank+k,new_nodes[k].children[i])
 }
+node.parent.children[rank].line_num=node.line_num
 node.children=[]
 return 0
 }
@@ -5295,7 +5296,7 @@ throw _b_.IndexError(type+" index out of range")
 $B.$getitem=function(obj,item){if(typeof item=='number'){if(Array.isArray(obj)||typeof obj=='string'){item=item >=0 ? item : obj.length+item
 if(obj[item]!==undefined){return $B.$JS2Py(obj[item])}
 else{index_error(obj)}}}
-item=$B.$GetInt(item)
+try{item=$B.$GetInt(item)}catch(err){}
 if((Array.isArray(obj)||typeof obj=='string')
 && typeof item=='number'){item=item >=0 ? item : obj.length+item
 if(obj[item]!==undefined){return obj[item]}
@@ -5569,7 +5570,8 @@ else if(typeof value==="boolean"){return value ? 1 : 0}
 else if(_b_.isinstance(value,_b_.int)){return value}
 try{var v=_b_.getattr(value,'__int__')();return v}catch(e){}
 try{var v=_b_.getattr(value,'__index__')();return v}catch(e){}
-return value
+throw _b_.TypeError("'"+$B.get_class(value).__name__+
+"' object cannot be interpreted as an integer")
 }
 $B.enter_frame=function(frame){$B.frames_stack[$B.frames_stack.length]=frame
 }
@@ -6212,6 +6214,9 @@ var args=$ns['args']
 if(args.length>3){throw _b_.TypeError(
 "range expected at most 3 arguments, got "+args.length)
 }
+for(var i=0;i<args.length;i++){if(typeof args[i]!='number'&&!isinstance(args[i],[_b_.int])||
+!hasattr(args[i],'__index__')){throw _b_.TypeError("'"+args[i]+"' object cannot be interpreted as an integer")
+}}
 var start=0
 var stop=0
 var step=1
@@ -6333,21 +6338,23 @@ function slice(){var $ns=$B.$MakeArgs('slice',arguments,[],[],'args',null)
 var args=$ns['args']
 if(args.length>3){throw _b_.TypeError(
 "slice expected at most 3 arguments, got "+args.length)
-}else if(args.length==0){throw _b_.TypeError('slice expected at least 1 arguments, got 0')
+}else if(args.length==0){throw _b_.TypeError('slice expected at least 1 argument, got 0')
 }
 var start=0,stop=0,step=1
+for(var i=0;i<args.length;i++){try{args[i]=$B.$GetInt(args[i])}
+catch(err){}}
 switch(args.length){case 1:
 step=start=None
-stop=$B.$GetInt(args[0])
+stop=args[0]
 break
 case 2:
-start=$B.$GetInt(args[0])
-stop=$B.$GetInt(args[1])
+start=args[0]
+stop=args[1]
 break
 case 3:
-start=$B.$GetInt(args[0])
-stop=$B.$GetInt(args[1])
-step=$B.$GetInt(args[2])
+start=args[0]
+stop=args[1]
+step=args[2]
 }
 if(step==0)throw ValueError("slice step must not be zero")
 var res={__class__ : $SliceDict,start:start,stop:stop,step:step
@@ -7857,6 +7864,7 @@ if(self.value < 0)return "-0x" + _s + 'p' + _esign + _e
 return "0x" + _s + 'p' + _esign + _e
 }
 $FloatDict.__init__=function(self,value){self.value=value}
+$FloatDict.__int__=function(self){return parseInt(self.value)}
 $FloatDict.is_integer=function(self){return _b_.int(self.value)==self.value}
 $FloatDict.__mod__=function(self,other){
 if(isinstance(other,_b_.int))return float((self.value%other+other)%other)
@@ -8099,11 +8107,10 @@ $IntDict.__mro__=[$IntDict,$ObjectDict]
 $IntDict.__mul__=function(self,other){var val=self.valueOf()
 if(typeof other==="string"){return other.repeat(val)
 }
-other=$B.$GetInt(other)
 if(isinstance(other,int))return self*other
-if(isinstance(other,_b_.float))return _b_.float(self*other.value)
-if(isinstance(other,_b_.bool)){
-if(other.valueOf())return self 
+if(isinstance(other,_b_.float)){return _b_.float(self*other.value)
+}
+if(isinstance(other,_b_.bool)){if(other.valueOf())return self
 return int(0)
 }
 if(isinstance(other,_b_.complex)){return _b_.complex(self.valueOf()*other.real,self.valueOf()*other.imag)

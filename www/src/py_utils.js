@@ -505,7 +505,7 @@ $B.$getitem = function(obj, item){
             else{index_error(obj)}
         }
     }
-    item=$B.$GetInt(item)
+    try{item=$B.$GetInt(item)}catch(err){}
     if((Array.isArray(obj) || typeof obj=='string')
         && typeof item=='number'){
         item = item >=0 ? item : obj.length+item
@@ -996,8 +996,8 @@ $B.$GetInt=function(value) {
   else if (_b_.isinstance(value, _b_.int)) {return value}
   try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){}
   try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){}
-
-  return value
+  throw _b_.TypeError("'"+$B.get_class(value).__name__+
+      "' object cannot be interpreted as an integer")
 }
 
 $B.enter_frame = function(frame){
