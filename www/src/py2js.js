@@ -2435,7 +2435,7 @@ function $ForExpr(context){
     this.toString = function(){return '(for) '+this.tree}
     
     this.transform = function(node,rank){
-        
+    
         var scope = $get_scope(this)
         var mod_name = scope.module
         var target = this.tree[0]
@@ -2499,7 +2499,6 @@ function $ForExpr(context){
             }
             new_nodes[pos++]=test_range_node
             
-
             // Build the block with the Javascript "for" loop
             var idt = target.to_js()
             if($range.tree.length==1){
@@ -2507,9 +2506,8 @@ function $ForExpr(context){
             }else{
                 var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()
             }
-            //var js = idt+'=('+start+')-1;while('+idt+'++ < ('+stop+')-1)'
-            var js = idt+'=('+start+')-1, $stop_'+num
-            js += '='+stop+'-1;while('+idt+'++ < $stop_'+num+')'
+            var js = idt+'=$B.$GetInt('+start+')-1, $stop_'+num
+            js += '=$B.$GetInt('+stop+')-1;while('+idt+'++ < $stop_'+num+')'
             
             var for_node = new $Node()
             new $NodeJSCtx(for_node,js)
@@ -2580,6 +2578,7 @@ function $ForExpr(context){
                 for(var i=new_nodes[k].children.length-1;i>=0;i--){
                     node.parent.insert(rank+k, new_nodes[k].children[i])
                 }
+                node.parent.children[rank].line_num = node.line_num
                 node.children = []
                 return 0
             }
