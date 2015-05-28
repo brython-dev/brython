@@ -1587,7 +1587,7 @@ $StringDict.split = function(self){
         var res = []
         var pos = 0
         while(pos<self.length&&self.charAt(pos).search(/\s/)>-1){pos++}
-        if(pos===self.length-1){return []}
+        if(pos===self.length-1){return [self]}
         var name = ''
         while(1){
             if(self.charAt(pos).search(/\s/)===-1){

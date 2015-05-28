@@ -37,6 +37,7 @@ try:
     print(x.rindex('K'))
 except ValueError:
     pass
+assert x.split() == [x]
 assert x.split('h') == ['aZj', 'k', 'Zyuy']
 #print(x.split('h',1))
 assert x.startswith('aZ')
