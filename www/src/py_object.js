@@ -111,9 +111,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         for(var i=0, _len_i = mro.length; i < _len_i;i++){
             if(mro[i].$methods){
                 var method = mro[i].$methods[attr]
-                if(method!==undefined){
-                    return method(obj)
-                }
+                if(method!==undefined){return method(obj)}
             }
             var v=mro[i][attr]
             if(v!==undefined){
@@ -194,6 +192,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
 
                 // instance method object
                 return $B.make_method(attr, klass, res, res1)(obj)
+                
             }else{
                 // result of __get__ is not a function
                 return res1
