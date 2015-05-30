@@ -107,7 +107,8 @@ $iterator_wrapper = function(items,klass){
             return items.next()
             //return items[counter++]
         },
-        __repr__:function(){return "<"+klass.__name__+" object>"},
+        //__repr__:function(){return "<"+klass.__name__+" object>"},
+        __repr__:function(){return klass.__name__+'('+ new $item_generator(items).as_list().join(',') + ')'},
         //counter:0
     }
     res.__str__ = res.toString = res.__repr__
