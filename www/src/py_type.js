@@ -121,7 +121,6 @@ $B.make_method = function(attr, klass, func, func1){
         // the attribute is a function : return an instance method,
         // called with the instance as first argument
         method = function(instance){
-            // make a local copy of initial args
             var instance_method = function(){
                 var local_args = [instance]
                 var pos=local_args.length
@@ -147,10 +146,7 @@ $B.make_method = function(attr, klass, func, func1){
         return func
       case 'classmethod':
         // class method : called with the class as first argument
-        // the attribute is a function : return an instance method,
-        // called with the instance as first argument
         method = function(){
-            // make a local copy of initial args
             var class_method = function(){
                 var local_args = [klass]
                 var pos=local_args.length
@@ -171,16 +167,7 @@ $B.make_method = function(attr, klass, func, func1){
         break
       case 'staticmethod':
         // static methods have no __self__ or __func__
-        method = function(){
-            var static_method = function(){
-                return func.apply(null, arguments)
-            }
-            static_method.$infos = {
-                __func__:func,
-                __name__:klass.__name__+'.'+attr
-            }
-            return static_method
-        }
+        method = function(){return func}
         break
     }
 
