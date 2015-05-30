@@ -313,7 +313,7 @@ function $eval(src, _globals, _locals){
         $B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id]
 
         // Initialise locals object
-        eval('var $locals_'+module_name+'={}')
+        if (!$B.async_enabled) eval('var $locals_'+module_name+'={}')
 
         // Add names/values defined in _globals
         var items = _b_.dict.$dict.items(_globals), item
