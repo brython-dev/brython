@@ -71,35 +71,31 @@ function divmod_pos(v1, v2){
         mod = LongInt('0')
     }else{
         var quotient = '', v1_init = v1
-        // mv2 maps integers i from 2 to 9 to i*v2
+        var left = v1.substr(0, v2.length)
+        if(v1<v2){left = v1.substr(0, v2.length+1)}
+        var right = v1.substr(left.length)
+        // mv2 maps integers i from 2 to 9 to i*v2, used as a cache to avoid
+        // having to compute i*v2 each time
         var mv2 = {}
         // Javascript "safe integer" with the 15 first digits in v2,
         // used in the algorithm to test candidate values
         var jsv2 = parseInt(v2.substr(0,15))
 
         // Division algorithm
-        while(comp_pos(v1,v2)>-1){
-            // At each step in the division, v1 is split into substrings
-            // "left" is the left part, with the same length as v2
-            // "rest" is the rest of v1 after "left"
-            // The algorithm finds the one-digit integer "candidate" such
-            // that 0 <= left - candidate*v2 < v2
-            // It stops when left < v2
-            var left = v1.substr(0, v2.length)
-            if(left<v2){
-                if(left.length<v2.length){
-                    if(quotient==''){quotient='0'}
-                    // v1 is lesser than v2 : division is finished
-                    break
-                }
-                else{
-                    left+=v1.charAt(v2.length)
-                }
-            }
-            var rest = v1.substr(left.length)
-            // use JS division to test an approximate result
-            jsleft = parseInt(left.substr(0,15))
+        // At each step in the division, v1 is split into substrings
+        // "left" is the left part, with the same length as v2
+        // "rest" is the rest of v1 after "left"
+        // The algorithm finds the one-digit integer "candidate" such
+        // that 0 <= left - candidate*v2 < v2
+        // It stops when right is empty
+        while(true){
+            // Uses JS division to test an approximate result
+            var jsleft = parseInt(left.substr(0,15))
             var candidate = Math.floor(jsleft/jsv2).toString()
+
+            // Check that candidate is the correct result
+            // Start by computing candidate*v2 : for this, use the table
+            // mv2, which stores the multiples of v2 already calculated
             if(mv2[candidate]===undefined){
                 mv2[candidate] = mul_pos(v2, candidate).value
             }
@@ -110,16 +106,22 @@ function divmod_pos(v1, v2){
                     mv2[candidate] = mul_pos(v2, candidate).value
                 }
             }
+
             // Add candidate to the quotient
             quotient += candidate
+
             // New value for left : left - v2*candidate
             left = sub_pos(left, mv2[candidate]).value
-            // New value for v1
-            v1 = left+rest
+
+            // Stop if all digits in v1 have been used
+            if(right.length==0){break}
+
+            // Else, add next digit to left and remove it from right
+            left += right.charAt(0)
+            right = right.substr(1)
         }
         // Modulo is A - (A//B)*B
-        mod = sub_pos(v1_init, mul_pos(quotient, v2).value)
-        console.log(v1_init, quotient, v2, mul_pos(quotient,v2),mod)
+        mod = sub_pos(v1, mul_pos(quotient, v2).value)
     }
     return [LongInt(quotient), mod]
 }
@@ -519,11 +521,9 @@ $LongIntDict.__xor__ = function(self, other){
 
 $LongIntDict.to_base = function(self, base){
     // Returns the string representation of self in specified base
-    console.log(self.value+' to base '+base)
     var res='', v=self.value
     while(v>0){
         var dm = divmod_pos(v, base.toString())
-        console.log(dm[0].value+','+dm[1].value)
         res = parseInt(dm[1].value).toString(base)+res
         v = dm[0].value
         if(v==0){break}
