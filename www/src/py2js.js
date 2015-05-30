@@ -1271,10 +1271,8 @@ function $CallCtx(context){
                    res+="$jscode=@@"
                 }
                 
-
                 res += 'getattr('+func_js+',"__call__")'
                 return res+args_str
-
             }
 
             if(this.tree.length>-1){
@@ -2070,7 +2068,7 @@ function $DefCtx(context){
         // the same number of lines for subsequent transformations
         var default_node = new $Node()
         var js = ';None;'
-        if(defs1.length>0){js = 'var $defaults = {'+defs1.join(',')+'}'}
+        if(defs1.length>0){js = 'var $defaults = {'+defs1.join(',')+'};'}
         new $NodeJSCtx(default_node,js)
         node.insert(0,default_node)
 
