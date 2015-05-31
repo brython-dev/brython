@@ -117,34 +117,43 @@ $B.$download_module=$download_module
 function import_js(module,path) {
     try{var module_contents=$download_module(module.name, path)}
     catch(err){$B.$pop_exc();return null}
-    run_js(module,path,module_contents)
+    run_js(module_contents,path,module)
     return true
 }
 
-function run_js(module,path,module_contents){
-    eval(module_contents)
+function run_js(module_contents,path,module){
+    // FIXME : Enhanced module isolation e.g. run_js arg names , globals ...
+    eval(module_contents);
+
     // check that module name is in namespace
     try{$module}
     catch(err){
         throw _b_.ImportError("name '$module' is not defined in module")
     }
-    // add class and __str__
-    $module.__class__ = $B.$ModuleDict
-    $module.__name__ = module.name
-    $module.__repr__=$module.__str__ = function(){
-      if ($B.builtin_module_names.indexOf(module.name) > -1) {
-         return "<module '"+module.name+"' (built-in)>"
-      }
-
-      //if(module.name == 'builtins') return "<module '"+module.name+"' (built-in)>"
-      return "<module '"+module.name+"' from "+path+" >"
+    if (module !== undefined) {
+        // FIXME : This might not be efficient . Refactor js modules instead.
+        // Overwrite original module object . Needed e.g. for reload()
+        for (var attr in $module) { module[attr] = $module[attr]; }
+        $module = module;
     }
-
-    $module.toString = function(){return "<module '"+module.name+"' from "+path+" >"}
-    if(module.name != 'builtins') { // builtins do not have a __file__ attribute
-      $module.__file__ = path
+    else {
+        // add class and __str__
+        $module.__class__ = $B.$ModuleDict
+        $module.__name__ = module.name
+        $module.__repr__=$module.__str__ = function(){
+          if ($B.builtin_module_names.indexOf(module.name) > -1) {
+             return "<module '"+module.name+"' (built-in)>"
+          }
+    
+          //if(module.name == 'builtins') return "<module '"+module.name+"' (built-in)>"
+          return "<module '"+module.name+"' from "+path+" >"
+        }
+    
+        $module.toString = function(){return "<module '"+module.name+"' from "+path+" >"}
+        if(module.name != 'builtins') { // builtins do not have a __file__ attribute
+          $module.__file__ = path
+        }
     }
-    $B.imported[module.name] = $B.modules[module.name] = $module
     return true
 }
 
@@ -293,7 +302,7 @@ importer_VFS = {
         var ext = stored[0],
             module_contents = stored[1];
         module.$is_package = stored[2];
-        if (ext == '.js') {run_js(module, module.__path__, module_contents)}
+        if (ext == '.js') {run_js(module_contents, module.__path__, module)}
         else {run_py(module, module.__path__, module_contents)}
         console.log('import '+module.__name__+' from VFS')
     }
@@ -318,7 +327,7 @@ importer_VFS = {
 //        }
 //        $B.modules[mod_name].$is_package = $is_package
 //        $B.modules[mod_name].__package__ = package
-//        if (ext == '.js') {run_js(module,path,module_contents)}
+//        if (ext == '.js') {run_js(module_contents,path,module)}
 //        else{run_py(module,path,module_contents)}
 //        console.log('import '+mod_name+' from VFS')
 //        return true
