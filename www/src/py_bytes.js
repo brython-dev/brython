@@ -259,6 +259,27 @@ $BytesDict.decode = function(self,encoding,errors){
     }
 }
 
+$BytesDict.join = function(){
+    var $ns = $B.$MakeArgs1('join',2,{self:null,iterable:null},
+        ['self','iterable'], arguments, {}),
+        self = $ns['self'], iterable = $ns['iterable']
+    var next_func = _b_.getattr(_b_.iter(iterable), '__next__'),
+        res = bytes(),
+        empty = true
+    while(true){
+        try{
+            var item = next_func()
+            if(empty){empty=false}
+            else{res = $BytesDict.__add__(res, self)}
+            res = $BytesDict.__add__(res, item)
+        }catch(err){
+            if(isinstance(err, _b_.StopIteration)){break}
+            throw err
+        }
+    }
+    return res
+}
+
 $BytesDict.maketrans=function(from, to) {
     var _t=[]
     // make 'default' translate table

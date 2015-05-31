@@ -27,6 +27,7 @@ assert b == bytearray([0,2,5])
 b.insert(1,4)
 assert b == bytearray([0,4,2,5])
 
+assert b'-'.join([b'a', b'b']) == b'a-b'
 
 # encoding and decoding
 for word in ['donnée','ήλιος','машина','太陽']:
