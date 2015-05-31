@@ -339,4 +339,11 @@ assert foo.__name__=="foo"
 assert foo.__doc__=="foodoc"
 #assert type(foo.__dict__) == dict
 
+# issue 201
+import json
+d=json.loads("""{"a":1,"b":2.1}""")
+assert d == {'a': 1, 'b': 2.1}
+assert type(d['a']) == int
+assert type(d['b']) == float
+
 print('passed all tests')
