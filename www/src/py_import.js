@@ -262,6 +262,7 @@ function import_from_VFS(mod_name, origin, package){
             var package = elts.join('.')
         }
         $B.modules[mod_name].$is_package = $is_package
+        $B.modules[mod_name].__file__ = path
         $B.modules[mod_name].__package__ = package
         if (ext == '.js') {run_js(module,path,module_contents)}
         else{run_py(module,path,module_contents)}
@@ -398,7 +399,6 @@ $B.$import = function(mod_name,origin){
     //
     // The function returns None
 
-    
     var parts = mod_name.split('.'),
         norm_parts = [],
         package_path

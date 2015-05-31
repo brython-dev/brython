@@ -1,4 +1,4 @@
-from browser import indexed_db
+from browser import window
 
 _kids=['Marsha', 'Jan', 'Cindy']
 
@@ -40,21 +40,30 @@ def printerr(event):
     print("Error: %s" % (event.result))    
 
 def onsuccess(event):
-    _trans=_db.transaction(["BradyKids"], 'readwrite')
-    global _objectStore
-    _objectStore=_trans.objectStore("BradyKids")
-    _objectStore.clear(onsuccess=continue1, onerror=printerr)
+    global db
+    db = request.result
 
 def onupgradeneeded(e):
-   print("event: ", e)
-   print("event type: ",  e.type)
+    print("event: ", e, "target", e.target)
+    print("event type: ",  e.type)
    
-   print("e.oldVersion: ", e.oldVersion)
-   print("e.newVersion: ", e.newVersion)
+    print("e.oldVersion: ", e.oldVersion)
+    print("e.newVersion: ", e.newVersion)
    
-   # todo.. override createObjectStore to take options (ie, like OS.put)
-   e.target.result.createObjectStore("BradyKids")
-   
-_db=indexed_db.IndexedDB()
-_db.open("BradyKids", onsuccess, onupgradeneeded=onupgradeneeded, version=3)
+    # todo.. override createObjectStore to take options (ie, like OS.put)
+    #e.target.result.createObjectStore("BradyKids")
+    db = request.result
+
+    for _kid in _kids:
+        print(_kid, db)
+        _rec={'name': _kid}
+        req = db.put(_rec, _kid)
+        req.onsuccess=printmsg
+        req.onerror=printerr
+
+db = None
+request = window.indexedDB.open("BradyKids", 3)
+request.onsuccess = onsuccess
+request.onupgradeneeded=onupgradeneeded
+print(db)
 print("allowing async operations to complete")

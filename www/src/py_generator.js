@@ -391,6 +391,10 @@ $BRGeneratorDict.__next__ = function(self){
     // restore $locals, saved in $B.vars[self.iter_id] in previous iteration
     var js = 'var $locals = $B.vars["'+self.iter_id+'"];'
     fnode.addChild(new $B.genNode(js))
+    // add a node to enter the frame
+    var env = $B.last(self.env)
+    fnode.addChild(new $B.genNode('$B.enter_frame(["'+self.iter_id+
+        '",$locals,"'+env[0]+'",$locals_'+env[0]+']);'))
 
     // To build the new function, we must identify the rest of the function to
     // run after the exit node

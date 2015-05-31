@@ -102,7 +102,7 @@ Function called in case of SyntaxError
 */
 
 function $_SyntaxError(context,msg,indent){
-    console.log('syntax error, context '+context+' msg '+msg)
+    //console.log('syntax error, context '+context+' msg '+msg)
     var ctx_node = context
     while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
     var tree_node = ctx_node.node
@@ -3220,7 +3220,13 @@ function $ImportCtx(context){
 
         var res = [], pos=0
         for(var i=0;i<this.tree.length;i++){
-            res[pos++]='$B.$import('+this.tree[i].to_js()+',"'+mod+'");'
+            var to_import = this.tree[i].name
+            
+            // If the module to import is already imported, don't call
+            // the function $B.$import
+            if($B.imported[to_import]===undefined){
+                res[pos++]='$B.$import("'+to_import+'","'+mod+'");'
+            }
             if(this.tree[i].name == this.tree[i].alias){
                 var parts = this.tree[i].name.split('.')
                 // $import returns an object

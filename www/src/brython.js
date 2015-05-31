@@ -57,7 +57,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-05-30 16:11:15.455000"
+__BRYTHON__.compiled_date="2015-05-31 22:43:35.549000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -94,7 +94,7 @@ $weight++
 }
 var $loop_num=0
 $B.func_magic=Math.random().toString(36).substr(2,8)
-function $_SyntaxError(C,msg,indent){console.log('syntax error, C '+C+' msg '+msg)
+function $_SyntaxError(C,msg,indent){
 var ctx_node=C
 while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node
@@ -1248,7 +1248,7 @@ def_func_node.add(new_node)
 node.children=[]
 var default_node=new $Node()
 var js=';None;'
-if(defs1.length>0){js='var $defaults = {'+defs1.join(',')+'}'}
+if(defs1.length>0){js='var $defaults = {'+defs1.join(',')+'};'}
 new $NodeJSCtx(default_node,js)
 node.insert(0,default_node)
 node.add(def_func_node)
@@ -1921,7 +1921,9 @@ this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this)
 var mod=scope.module
 var res=[],pos=0
-for(var i=0;i<this.tree.length;i++){res[pos++]='$B.$import('+this.tree[i].to_js()+',"'+mod+'");'
+for(var i=0;i<this.tree.length;i++){var to_import=this.tree[i].name
+if($B.imported[to_import]===undefined){res[pos++]='$B.$import("'+to_import+'","'+mod+'");'
+}
 if(this.tree[i].name==this.tree[i].alias){var parts=this.tree[i].name.split('.')
 for(var j=0;j<parts.length;j++){var imp_key=parts.slice(0,j+1).join('.')
 var obj_attr=''
@@ -5118,8 +5120,12 @@ $B.get_class=function(obj){
 if(obj===null){return $B.$NoneDict}
 var klass=obj.__class__
 if(klass===undefined){switch(typeof obj){case 'number':
+if(obj % 1===0){
 obj.__class__=_b_.int.$dict
 return _b_.int.$dict
+}
+obj.__class__=_b_.float.$dict
+return _b_.float.$dict
 case 'string':
 obj.__class__=_b_.str.$dict
 return _b_.str.$dict
@@ -5763,7 +5769,7 @@ eval('var $locals_'+module_name+'=current_frame[3]')
 }else{if(_globals.id===undefined){_globals.id='exec_'+$B.UUID()}
 module_name=_globals.id
 $B.$py_module_path[module_name]=$B.$py_module_path[current_globals_id]
-eval('var $locals_'+module_name+'={}')
+if(!$B.async_enabled)eval('var $locals_'+module_name+'={}')
 var items=_b_.dict.$dict.items(_globals),item
 while(1){try{item=next(items)
 eval('$locals_'+module_name+'["'+item[0]+'"] = item[1]')
@@ -6121,7 +6127,7 @@ if(isinstance(y,_b_.float)){b=y.value
 }else{
 throw _b_.TypeError("unsupported operand type(s) for ** or pow()")
 }
-return Math.pow(a,b)
+var res=Math.pow(a,b)
 }
 if(args.length===3){var x=args[0]
 var y=args[1]
@@ -6130,8 +6136,10 @@ var _err="pow() 3rd argument not allowed unless all arguments are integers"
 if(!isinstance(x,_b_.int))throw _b_.TypeError(_err)
 if(!isinstance(y,_b_.int))throw _b_.TypeError(_err)
 if(!isinstance(z,_b_.int))throw _b_.TypeError(_err)
-return Math.pow(x,y)%z
-}}
+var res=Math.pow(x,y)%z
+}
+return $B.get_class(res).$factory(res)
+}
 function $print(){var end='\n',sep=' ',file=$B.stdout
 var $ns=$B.$MakeArgs('print',arguments,[],['end','sep','file'],'args',null)
 for(var attr in $ns){eval('var '+attr+'=$ns[attr]')}
@@ -6731,7 +6739,6 @@ return self
 }
 var BaseException=function(msg,js_exc){var err=Error()
 err.__name__='BaseException'
-err.$frames_stack=$B.frames_stack.slice()
 err.$js_exc=js_exc
 if(msg===undefined)msg='BaseException'
 err.args=_b_.tuple([msg])
@@ -7021,6 +7028,17 @@ case 'backslashreplace':
 return decode(self.source,encoding,errors)
 default:
 }}
+$BytesDict.join=function(){var $ns=$B.$MakeArgs1('join',2,{self:null,iterable:null},['self','iterable'],arguments,{}),self=$ns['self'],iterable=$ns['iterable']
+var next_func=_b_.getattr(_b_.iter(iterable),'__next__'),res=bytes(),empty=true
+while(true){try{var item=next_func()
+if(empty){empty=false}
+else{res=$BytesDict.__add__(res,self)}
+res=$BytesDict.__add__(res,item)
+}catch(err){if(isinstance(err,_b_.StopIteration)){break}
+throw err
+}}
+return res
+}
 $BytesDict.maketrans=function(from,to){var _t=[]
 for(var i=0;i < 256;i++)_t[i]=i
 for(var i=0,_len_i=from.source.length;i < _len_i;i++){var _ndx=from.source[i]
@@ -7369,6 +7387,7 @@ var klass=$B.get_class(obj)
 if(klass===_b_.list.$dict){
 if(obj.__brython__)return obj
 return{__class__:$JSObjectDict,js:obj}}
+if(klass===_b_.float.$dict)return _b_.float(obj)
 if(klass!==undefined)return obj
 return{__class__:$JSObjectDict,js:obj}
 }
@@ -7381,7 +7400,7 @@ $B.JSConstructor=JSConstructor
 ;(function($B){$B.stdlib={}
 var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.cp037','encodings.cp1006','encodings.cp1026','encodings.cp1125','encodings.cp1140','encodings.cp1250','encodings.cp1251','encodings.cp1252','encodings.cp1253','encodings.cp1254','encodings.cp1255','encodings.cp1256','encodings.cp1257','encodings.cp1258','encodings.cp273','encodings.cp424','encodings.cp437','encodings.cp500','encodings.cp720','encodings.cp737','encodings.cp775','encodings.cp850','encodings.cp852','encodings.cp855','encodings.cp856','encodings.cp857','encodings.cp858','encodings.cp860','encodings.cp861','encodings.cp862','encodings.cp863','encodings.cp864','encodings.cp865','encodings.cp866','encodings.cp869','encodings.cp874','encodings.cp875','encodings.hp_roman8','encodings.iso8859_1','encodings.iso8859_10','encodings.iso8859_11','encodings.iso8859_13','encodings.iso8859_14','encodings.iso8859_15','encodings.iso8859_16','encodings.iso8859_2','encodings.iso8859_3','encodings.iso8859_4','encodings.iso8859_5','encodings.iso8859_6','encodings.iso8859_7','encodings.iso8859_8','encodings.iso8859_9','encodings.koi8_r','encodings.koi8_u','encodings.mac_arabic','encodings.mac_centeuro','encodings.mac_croatian','encodings.mac_cyrillic','encodings.mac_farsi','encodings.mac_greek','encodings.mac_iceland','encodings.mac_latin2','encodings.mac_roman','encodings.mac_romanian','encodings.mac_turkish','encodings.palmos','encodings.ptcp154','encodings.tis_620','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.basehook','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','uuid','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile','zlib']
+var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.cp037','encodings.cp1006','encodings.cp1026','encodings.cp1125','encodings.cp1140','encodings.cp1250','encodings.cp1251','encodings.cp1252','encodings.cp1253','encodings.cp1254','encodings.cp1255','encodings.cp1256','encodings.cp1257','encodings.cp1258','encodings.cp273','encodings.cp424','encodings.cp437','encodings.cp500','encodings.cp720','encodings.cp737','encodings.cp775','encodings.cp850','encodings.cp852','encodings.cp855','encodings.cp856','encodings.cp857','encodings.cp858','encodings.cp860','encodings.cp861','encodings.cp862','encodings.cp863','encodings.cp864','encodings.cp865','encodings.cp866','encodings.cp869','encodings.cp874','encodings.cp875','encodings.hp_roman8','encodings.iso8859_1','encodings.iso8859_10','encodings.iso8859_11','encodings.iso8859_13','encodings.iso8859_14','encodings.iso8859_15','encodings.iso8859_16','encodings.iso8859_2','encodings.iso8859_3','encodings.iso8859_4','encodings.iso8859_5','encodings.iso8859_6','encodings.iso8859_7','encodings.iso8859_8','encodings.iso8859_9','encodings.koi8_r','encodings.koi8_u','encodings.mac_arabic','encodings.mac_centeuro','encodings.mac_croatian','encodings.mac_cyrillic','encodings.mac_farsi','encodings.mac_greek','encodings.mac_iceland','encodings.mac_latin2','encodings.mac_roman','encodings.mac_romanian','encodings.mac_turkish','encodings.palmos','encodings.ptcp154','encodings.tis_620','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.basehook','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','long_int1','multiprocessing','multiprocessing.dummy','pydoc_data','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]
@@ -7544,6 +7563,7 @@ elts.pop()
 var package=elts.join('.')
 }
 $B.modules[mod_name].$is_package=$is_package
+$B.modules[mod_name].__file__=path
 $B.modules[mod_name].__package__=package
 if(ext=='.js'){run_js(module,path,module_contents)}
 else{run_py(module,path,module_contents)}
@@ -9916,7 +9936,8 @@ while(i--)si(left,_l[i][0],_l[i][1])
 }
 $iterator_wrapper=function(items,klass){var res={__class__:klass,__iter__:function(){items.iter.i=0;return res},__len__:function(){return items.length()},__next__:function(){
 return items.next()
-},__repr__:function(){return "<"+klass.__name__+" object>"},
+},
+__repr__:function(){return klass.__name__+'('+ new $item_generator(items).as_list().join(',')+ ')'},
 }
 res.__str__=res.toString=res.__repr__
 return res
@@ -11383,6 +11404,9 @@ root.addChild(fnode)
 func_node=self.func_root.children[1]
 var js='var $locals = $B.vars["'+self.iter_id+'"];'
 fnode.addChild(new $B.genNode(js))
+var env=$B.last(self.env)
+fnode.addChild(new $B.genNode('$B.enter_frame(["'+self.iter_id+
+'",$locals,"'+env[0]+'",$locals_'+env[0]+']);'))
 while(1){
 var exit_parent=exit_node.parent
 var rest=[],pos=0
