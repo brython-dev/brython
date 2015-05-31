@@ -270,11 +270,12 @@ importer_VFS = {
         if (stored===undefined) {
             return _b_.None;
         }
-        var is_package = stored[2];
+        var is_package = stored[2],
+            is_builtin = $B.builtin_module_names.indexOf(fullname) > -1;
         return new_spec({name : fullname,
                          loader: self,
                          // FIXME : Better origin string.
-                         origin : 'py_VFS',
+                         origin : is_builtin? 'built-in' : 'py_VFS',
                          // FIXME: Namespace packages ?
                          submodule_search_locations: is_package? [] : _b_.None,
                          loader_state: {stored: stored},
