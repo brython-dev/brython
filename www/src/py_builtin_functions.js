@@ -332,7 +332,7 @@ function $eval(src, _globals, _locals){
         if(_locals.id === undefined){_locals.id = 'exec_'+$B.UUID()}
         local_name = _locals.id
     }
-
+ 
     try{
         var root = $B.py2js(src,module_name,[module_name],local_name)
         // If the Python function is eval(), not exec(), check that the source
@@ -354,8 +354,9 @@ function $eval(src, _globals, _locals){
         var js = root.to_js()
         if ($B.async_enabled) js=$B.execution_object.source_conversion(js) 
         //js=js.replace("@@", "\'", 'g')
-        //console.log('exec',js)
+ 
         var res = eval(js)
+
         if(_globals!==undefined){
             // Update _globals with the namespace after execution
             var ns = eval('$locals_'+module_name)
@@ -954,7 +955,7 @@ function pow() {
         } else {
           throw _b_.TypeError("unsupported operand type(s) for ** or pow()")
         }
-        return Math.pow(a,b)
+        var res = Math.pow(a,b)
     }
 
     if(args.length === 3){
@@ -967,8 +968,10 @@ function pow() {
         if (!isinstance(y, _b_.int)) throw _b_.TypeError(_err)
         if (!isinstance(z, _b_.int)) throw _b_.TypeError(_err)
 
-        return Math.pow(x,y)%z
+        var res = Math.pow(x,y)%z
     }
+    // return result with correct type, int or float
+    return $B.get_class(res).$factory(res)
 }
 
 function $print(){
@@ -2005,7 +2008,6 @@ $BaseExceptionDict.with_traceback = function(self, tb){
 var BaseException = function (msg,js_exc){
     var err = Error()
     err.__name__ = 'BaseException'
-    err.$frames_stack = $B.frames_stack.slice()
     err.$js_exc = js_exc
     
     if(msg===undefined) msg='BaseException'
