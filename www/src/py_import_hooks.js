@@ -50,13 +50,13 @@
             module = $B.$ModuleDict.$factory(mod_name);
             var mod_desc = _b_.getattr(spec, 'origin');
             if (_b_.getattr(spec, 'has_location')) {
-                mod_desc = " from '" + mod_desc + "'";
+                mod_desc = "from '" + mod_desc + "'";
             }
             else {
-                mod_desc = ' (' + mod_desc + ')';
+                mod_desc = '(' + mod_desc + ')';
             }
             module.toString = module.__repr__ = module.__str__ =
-                    function(){return '<module ' + mod_name + mod_desc + '>'}
+                    function(){return "<module '" + mod_name + "' " + mod_desc + ">"}
         }
     }
     module.__loader__ = _loader;
