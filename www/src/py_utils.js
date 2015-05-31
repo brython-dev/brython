@@ -229,8 +229,14 @@ $B.get_class = function(obj){
     if(klass===undefined){
         switch(typeof obj) {
           case 'number':
-            obj.__class__=_b_.int.$dict
-            return _b_.int.$dict
+            if (obj % 1 === 0) { // this is an int
+               obj.__class__=_b_.int.$dict
+               return _b_.int.$dict
+            }
+            // this is a float
+            //obj= _b_.float(obj)
+            obj.__class__=_b_.float.$dict
+            return _b_.float.$dict
           case 'string':
             obj.__class__=_b_.str.$dict
             return _b_.str.$dict
