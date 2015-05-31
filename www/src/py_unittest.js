@@ -18,7 +18,7 @@ __BRYTHON__.=libs['unittest']={"unittest.test.test_setups": ["import io\nimport 
     $B.modules[mod_name].$package = $is_package
     $B.modules[mod_name].__package__ = package
 
-    run_py(module,path,module_contents)
+    run_py(module_contents,path,module)
     return true
   }
   return null

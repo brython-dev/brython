@@ -188,11 +188,11 @@ function import_py(module,path,package){
         $B.imported[mod_name].__package__ = mod_elts.join('.')
     }
     $B.imported[mod_name].__file__ = path
-    return run_py(module,path,module_contents)
+    return run_py(module_contents,path,module)
 }
 
 //$B.run_py is needed for import hooks..
-$B.run_py=run_py=function(module,path,module_contents) {
+$B.run_py=run_py=function(module_contents,path,module) {
     var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
     $B.$py_module_path[module.name]=path
 
@@ -240,20 +240,11 @@ $B.run_py=run_py=function(module,path,module_contents) {
     try{
         // Create module object
         var mod = eval('$module')
-        // add some attributes
-        mod.__class__ = $B.$ModuleDict
-        mod.__name__ = module.name
-        mod.__repr__ = mod.__str__ = function(){
-          if ($B.builtin_module_names.indexOf(module.__name__) > -1) {
-             return "<module '"+module.__name__+"' (built-in)>"
-          }
-          return "<module '"+module.__name__+"' from "+path+" >"
+        // Apply side-effects upon input module object
+        for (var attr in mod) {
+            module[attr] = mod[attr];
         }
-
-        //mod.toString = function(){return "module "+module.__name__}
-        mod.__initializing__ = false
-        mod.$is_package = module.$is_package
-        $B.imported[module.__name__] = $B.modules[module.__name__] = mod
+        module.__initializing__ = false
         return true
     }catch(err){
         console.log(''+err+' '+' for module '+module.name)
@@ -303,7 +294,7 @@ importer_VFS = {
             module_contents = stored[1];
         module.$is_package = stored[2];
         if (ext == '.js') {run_js(module_contents, module.__path__, module)}
-        else {run_py(module, module.__path__, module_contents)}
+        else {run_py(module_contents, module.__path__, module)}
         console.log('import '+module.__name__+' from VFS')
     }
 }
@@ -328,7 +319,7 @@ importer_VFS = {
 //        $B.modules[mod_name].$is_package = $is_package
 //        $B.modules[mod_name].__package__ = package
 //        if (ext == '.js') {run_js(module_contents,path,module)}
-//        else{run_py(module,path,module_contents)}
+//        else{run_py(module_contents,path,module)}
 //        console.log('import '+mod_name+' from VFS')
 //        return true
 //    }
@@ -479,7 +470,7 @@ importer_path = {
         module.$is_package = _spec.loader_state.is_package;
         var code = _spec.loader_state.code;
         delete _spec.loader_state['code'];
-        run_py(module, _spec.origin, code);
+        run_py(code, _spec.origin, module);
     }
 }
 
