@@ -293,6 +293,9 @@ function JSObject(obj){
         if(obj.__brython__) return obj
         return {__class__:$JSObjectDict,js:obj}
     }
+    // we need to do this or nan is returned, when doing json.loads(...)
+    if (klass === _b_.float.$dict) return _b_.float(obj)
+
     // If obj is a Python object, return it unchanged
     if(klass!==undefined) return obj
     return {__class__:$JSObjectDict,js:obj}  // wrap it
