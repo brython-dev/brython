@@ -6652,8 +6652,8 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
           case '|':
           case '~':
           case '!':
-          case 'i':
-          case 'n':
+          //case 'i':
+          //case 'n':
             // operators
             // find longest match
             var op_match = ""
@@ -6663,6 +6663,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                     op_match=op_sign
                 }
             }
+            //if(car=='!'){alert('op_match '+op_match)}
             $pos = pos
             if(op_match.length>0){
                 if(op_match in $augmented_assigns){
@@ -6671,6 +6672,8 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                     context = $transition(context,'op',op_match)
                 }
                 pos += op_match.length
+            }else{
+                $_SyntaxError(context,'invalid character: '+car)
             }
             break
           case '\\':
