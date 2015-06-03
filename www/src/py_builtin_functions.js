@@ -1683,7 +1683,10 @@ $BoolDict.__hash__ = $BoolDict.__index__= $BoolDict.__int__=function(self) {
 
 $BoolDict.__le__ = function(self,other){return !$BoolDict.__gt__(self,other)}
 
+$BoolDict.__lshift__ = function(self,other){return self.valueOf() << other}
+
 $BoolDict.__lt__ = function(self,other){return !$BoolDict.__ge__(self,other)}
+
 
 $BoolDict.__mul__ = function(self,other){
     if(self.valueOf()) return other
