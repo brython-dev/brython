@@ -280,7 +280,7 @@ var _mod = {
     },
     floor:function(x){return Math.floor(float_check(x))},
     fmod:function(x,y){return float(float_check(x)%float_check(y))},
-    frexp: function(x){return _b_.tuple(_b_.$frexp(x))}, // located in py_float.js
+    frexp: function(x){var _l=_b_.$frexp(x);return _b_.tuple([float(_l[0]), _l[1]])}, // located in py_float.js
     //fsum:function(x){},
     gamma: function(x){
          //using code from http://stackoverflow.com/questions/3959211/fast-factorial-function-in-javascript
