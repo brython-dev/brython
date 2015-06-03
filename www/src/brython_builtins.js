@@ -74,6 +74,10 @@ $B.language = window.navigator.userLanguage || window.navigator.language
 // document charset ; defaults to "utf-8"
 $B.charset = document.characterSet || document.inputEncoding || "utf-8"
 
+// minimum and maximum safe integers
+$B.max_int = Math.pow(2,53)-1
+$B.min_int = -$B.max_int
+
 var has_storage = typeof(Storage)!=="undefined"
 if(has_storage){
     $B.has_local_storage = false

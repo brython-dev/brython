@@ -803,7 +803,7 @@ function $AugmentedAssignCtx(context, op){
         var right_is_int = (this.tree[1].type=='expr' && 
             this.tree[1].tree[0].type=='int')
         
-        var right = right_is_int ? this.tree[1].tree[0].value : '$temp'
+        var right = right_is_int ? this.tree[1].tree[0].to_js() : '$temp'
 
         if(!right_is_int){
             // Create temporary variable
@@ -875,12 +875,18 @@ function $AugmentedAssignCtx(context, op){
         // the shortcut will not be used in this case
         
         prefix = prefix && !context.tree[0].unknown_binding
+        var op1 = op.charAt(0)
         if(prefix){
             var left1 = in_class ? '$left' : left
             var new_node = new $Node()
             if(!lnum_set){new_node.line_num=line_num;lnum_set=true}
             js = right_is_int ? 'if(' : 'if(typeof $temp.valueOf()=="number" && '
-            js += 'typeof '+left1+'.valueOf()=="number"){'
+            js += 'typeof '+left1+'.valueOf()=="number"' 
+            
+            // If both arguments are integers, we must check that the result
+            // is a safe integer
+            js += '&& '+left+op1+right+'>$B.min_int && '+left+op1+right+
+                '< $B.max_int){'
             
             js += right_is_int ? '(' : '(typeof $temp=="number" && '
             js += 'typeof '+left1+'=="number") ? '
@@ -953,10 +959,12 @@ function $AugmentedAssignCtx(context, op){
         // create node for "foo.__iadd__(bar)"
         var aa3 = new $Node()
         var js3 = context.to_js()
+        /*
         if(prefix){
             if(scope.ntype=='class'){js3='$left'}
             else{js3 += '='+prefix+'["'+context.tree[0].value+'"]'}
         }
+        */
         js3 += '=getattr('+context.to_js()
         js3 += ',"'+func+'")('+right+')'
         new $NodeJSCtx(aa3,js3)
@@ -3264,6 +3272,8 @@ function $ImportedModuleCtx(context,name){
 
 function $IntCtx(context,value){
     // Class for literal integers
+    // value is a 2-elt tuple [base, value_as_string] where
+    // base is one of 16 (hex literal), 8 (octal), 2 (binary) or 10 (int)
     this.type = 'int'
     this.value = value
     this.parent = context
@@ -3274,7 +3284,9 @@ function $IntCtx(context,value){
 
     this.to_js = function(){
         this.js_processed=true
-        return this.value
+        var v = parseInt(value[1], value[0])
+        if(v>$B.min_int && v<$B.max_int){return v}
+        else{return '$B.LongInt("'+value[1]+'", '+value[0]+')'}
     }
 }
 
@@ -3718,7 +3730,7 @@ function $OpCtx(context,op){
                 var x = this.tree[1].tree[0]
                 switch(x.type) {
                   case 'int':
-                    return op+x.value
+                    return op+x.to_js()
                   case 'float':
                     return 'float('+op+x.value+')'
                   case 'imaginary':
@@ -3825,7 +3837,11 @@ function $OpCtx(context,op){
                 return '('+elt.tree[0].tree[0].tree[0].simple_js()+')'
             }else{return elt.tree[0].to_js()}
         }
-        return sjs(this.tree[0])+op+sjs(this.tree[1]) 
+        if(op=='+'){return '$B.add('+sjs(this.tree[0])+','+sjs(this.tree[1])+')'}
+        else if(op=='-'){return '$B.sub('+sjs(this.tree[0])+','+sjs(this.tree[1])+')'}
+        else if(op=='*'){return '$B.mul('+sjs(this.tree[0])+','+sjs(this.tree[1])+')'}
+        else if(op=='/'){return '$B.div('+sjs(this.tree[0])+','+sjs(this.tree[1])+')'}
+        else{return sjs(this.tree[0])+op+sjs(this.tree[1])}
     }
 }
 
@@ -4701,7 +4717,7 @@ function $arbo(ctx){
 function $transition(context,token){
 
     //console.log('context '+context+' token '+token)
-
+    
     switch(context.type) {
       case 'abstract_expr':
 
@@ -6100,6 +6116,7 @@ function $transition(context,token){
             // we remove the $ExprCtx and trigger a transition 
             // from the $AbstractExpCtx with an integer or float
             // of the correct value
+            console.log(token,arguments[2],'after',context)
             var expr = context.parent
             context.parent.parent.tree.pop()
             var value = arguments[2]
@@ -6496,19 +6513,19 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
             //if(car==="0"){
             var res = hex_pattern.exec(src.substr(pos))
             if(res){
-                context=$transition(context,'int',parseInt(res[1],16))
+                context=$transition(context,'int',[16,res[1]])
                 pos += res[0].length
                 break
             }
             var res = octal_pattern.exec(src.substr(pos))
             if(res){
-                context=$transition(context,'int',parseInt(res[1],8))
+                context=$transition(context,'int',[8,res[1]]) //parseInt(res[1],8))
                 pos += res[0].length
                 break
             }
             var res = binary_pattern.exec(src.substr(pos))
             if(res){
-                context=$transition(context,'int',parseInt(res[1],2))
+                context=$transition(context,'int',[2,res[1]]) //parseInt(res[1],2))
                 pos += res[0].length
                 break
             }
@@ -6548,7 +6565,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                     if(res[1]!==undefined){
                         context = $transition(context,'imaginary',
                             res[0].substr(0,res[0].length-1))
-                    }else{context = $transition(context,'int',res[0])}
+                    }else{context = $transition(context,'int',[10,res[0]])}
                 }
             }
             pos += res[0].length
@@ -6972,6 +6989,7 @@ function brython(options){
                 if($err.$py_error===undefined){
                     console.log('Javascript error', $err)
                     //console.log($js)
+                    //for(var attr in $err){console.log(attr+': '+$err[attr])}
                     $err=_b_.RuntimeError($err+'')
                 }
 

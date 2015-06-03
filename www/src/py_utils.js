@@ -1018,6 +1018,39 @@ $B.leave_frame = function(){
     }
 }
 
+var min_int=Math.pow(-2, 53), max_int=Math.pow(2,53)-1
+$B.add = function(x,y){
+    var z = x+y
+    if(x>min_int && x<max_int && y>min_int && y<max_int
+        && z>min_int && z<max_int){return z}
+    else if(typeof x=='number' && typeof y=='number'){
+        return $B.LongInt.$dict.__add__($B.LongInt(x), $B.LongInt(y))
+    }else{return z}
+}
+$B.div = function(x,y){
+    var z = x/y
+    if(x>min_int && x<max_int && y>min_int && y<max_int
+        && z>min_int && z<max_int){return z}
+    else{return z}
+}
+$B.mul = function(x,y){
+    var z = x*y
+    if(x>min_int && x<max_int && y>min_int && y<max_int
+        && z>min_int && z<max_int){return z}
+    else if(typeof x=='number' && typeof y=='number'){
+        return $B.LongInt.$dict.__mul__($B.LongInt(x), $B.LongInt(y))
+    }else{return z}
+}
+$B.sub = function(x,y){
+    var z = x-y
+    if(x>min_int && x<max_int && y>min_int && y<max_int
+        && z>min_int && z<max_int){return z}
+    else if(typeof x=='number' && typeof y=='number'){
+        return $B.LongInt.$dict.__sub__($B.LongInt(x), $B.LongInt(y))
+    }else{return z}
+}
+
+
 })(__BRYTHON__)
 
 // IE doesn't implement indexOf on Arrays

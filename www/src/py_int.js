@@ -146,6 +146,16 @@ $IntDict.__int__ = function(self){return self}
 
 $IntDict.__invert__ = function(self){return ~self}
 
+// bitwise left shift
+$IntDict.__lshift__ = function(self,other){
+    if(isinstance(other, int)){
+        return int($B.LongInt.$dict.__lshift__($B.LongInt(self), $B.LongInt(other)))
+    }
+    var rlshift = getattr(other, '__rlshift__', null)
+    if(rlshift!==null){return rlshift(self)}
+    $err('<<', other)
+}
+
 $IntDict.__mod__ = function(self,other) {
     // can't use Javascript % because it works differently for negative numbers
     if(isinstance(other,_b_.tuple) && other.length==1) other=other[0]
@@ -170,7 +180,12 @@ $IntDict.__mul__ = function(self,other){
         return other.repeat(val)
     }
 
-    if(isinstance(other,int)) return self*other
+    if(isinstance(other,int)){
+        var res = self*other
+        if(res>$B.min_int && res<$B.max_int){return res}
+        else{return int($B.LongInt.$dict.__mul__($B.LongInt(self),
+            $B.LongInt(other)))}
+    }
     if(isinstance(other,_b_.float)){
         return _b_.float(self*other.value)
     }
@@ -179,7 +194,8 @@ $IntDict.__mul__ = function(self,other){
          return int(0)
     }
     if(isinstance(other,_b_.complex)){
-        return _b_.complex(self.valueOf()*other.real, self.valueOf()*other.imag)
+        return _b_.complex($IntDict.__mul__(self, other.real), 
+            $IntDict.__mul__(self, other.imag))
     }
     if(isinstance(other,[_b_.list,_b_.tuple])){
         var res = []
@@ -214,7 +230,10 @@ $IntDict.__pow__ = function(self,other){
         case 1:
           return int(self.valueOf())
       }
-      return Math.pow(self.valueOf(),other.valueOf()) 
+      var res = Math.pow(self.valueOf(),other.valueOf()) 
+      if(res>$B.min_int && res<$B.max_int){return res}
+      else{return int($B.LongInt.$dict.__pow__($B.LongInt(self),
+         $B.LongInt(other)))}
     }
     if(isinstance(other, _b_.float)) { 
       return _b_.float(Math.pow(self.valueOf(), other.valueOf()))
@@ -228,7 +247,15 @@ $IntDict.__repr__ = function(self){
     return self.toString()
 }
 
-//$IntDict.__rshift__ = function(self,other){return self >> other} // bitwise right shift
+// bitwise right shift
+$IntDict.__rshift__ = function(self,other){
+    if(isinstance(other, int)){
+        return int($B.LongInt.$dict.__rshift__($B.LongInt(self), $B.LongInt(other)))
+    }
+    var rrshift = getattr(other, '__rrshift__', null)
+    if(rrshift!==null){return rrshift(self)}
+    $err('>>', other)
+}
 
 $IntDict.__setattr__ = function(self,attr,value){
     if(self.__class__===$IntDict){
@@ -269,7 +296,7 @@ $IntDict.bit_length = function(self){
 $IntDict.numerator = function(self){return self}
 $IntDict.denominator = function(self){return int(1)}
 
-// code for operands & | ^ << >>
+// code for operands & | ^
 var $op_func = function(self,other){
     if(isinstance(other,int)) return self-other
     if(isinstance(other,_b_.bool)) return self-other
@@ -278,7 +305,7 @@ var $op_func = function(self,other){
 }
 
 $op_func += '' // source code
-var $ops = {'&':'and','|':'or','<<':'lshift','>>':'rshift','^':'xor'}
+var $ops = {'&':'and','|':'or','^':'xor'}
 for(var $op in $ops){
     var opf = $op_func.replace(/-/gm,$op)
     opf = opf.replace(new RegExp('sub','gm'),$ops[$op])
@@ -396,12 +423,13 @@ var int = function(value, base){
 
     if(value===true) return Number(1)
     if(value===false) return Number(0)
+    if(value.__class__===$B.LongInt.$dict){
+        var z = parseInt(value.value)
+        if(z>$B.min_int && z<$B.max_int){return z}
+        else{return value}
+    }
 
     base=$B.$GetInt(base)
-    //if(!isinstance(base, _b_.int)) {
-    //  if (hasattr(base, '__int__')) {base = Number(getattr(base,'__int__')())
-    //  }else if (hasattr(base, '__index__')) {base = Number(getattr(base,'__index__')())}
-    //}
 
     if(isinstance(value, _b_.str)) value=value.valueOf()
 
