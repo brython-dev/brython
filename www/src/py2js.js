@@ -394,6 +394,13 @@ function $AssignCtx(context, check_unbound){
     transform()
     */
     
+    var ctx = context
+    while(ctx){
+        if(ctx.type=='assert'){$_SyntaxError(context,'invalid syntax')}
+        ctx = ctx.parent
+    }
+    
+    
     check_unbound = check_unbound === undefined
     
     this.type = 'assign'
