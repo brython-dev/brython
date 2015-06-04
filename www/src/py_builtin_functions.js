@@ -1389,7 +1389,18 @@ $StaticmethodDict.$factory = staticmethod
 // str() defined in py_string.js
 
 function sum(iterable,start){
-    if(start===undefined) start=0
+    if(start===undefined) {
+      start=0
+    } else {
+      if(typeof start === 'str') {
+        throw _b_.TypeError("TypeError: sum() can't sum strings [use ''.join(seq) instead]")
+      }
+      
+      if (_b_.isinstance(start, _b_.bytes)) {
+         throw _b_.TypeError("TypeError: sum() can't sum bytes [use b''.join(seq) instead]")
+      }
+    }
+
     var res = start
     var iterable = iter(iterable)
     while(1){
