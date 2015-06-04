@@ -42,23 +42,25 @@ $IntDict.from_bytes = function() {
       var num = _bytes[_len - 1];
       var _mult=256
       for (var i = (_len - 2); i >= 0; i--) {
-          num = _mult * _bytes[i] +  num
-          _mult*=256
+          // For operations, use the functions that can take or return
+          // big integers
+          num = $B.add($B.mul(_mult, _bytes[i]), num)
+          _mult = $B.mul(_mult,256)
       }
       if (!signed) return num
       if (_bytes[0] < 128) return num
-      return num - _mult
+      return $B.sub(num, _mult)
     case 'little':
       var num = _bytes[0]
       if (num >= 128) num = num - 256
       var _mult=256
       for (var i = 1;  i < _len; i++) {
-         num = _mult * _bytes[i] +  num
-         _mult *= 256
+          num = $B.add($B.mul(_mult, _bytes[i]), num)
+          _mult = $B.mul(_mult,256)
       }
       if (!signed) return num
       if (_bytes[_len - 1] < 128) return num
-      return num - _mult
+      return $B.sub(num, _mult)
   }
 
   throw _b_.ValueError("byteorder must be either 'little' or 'big'");
@@ -173,6 +175,7 @@ $IntDict.__mod__ = function(self,other) {
 $IntDict.__mro__ = [$IntDict,$ObjectDict]
 
 $IntDict.__mul__ = function(self,other){
+
     var val = self.valueOf()
 
     // this will be quick check, so lets do it early.
@@ -183,8 +186,15 @@ $IntDict.__mul__ = function(self,other){
     if(isinstance(other,int)){
         var res = self*other
         if(res>$B.min_int && res<$B.max_int){return res}
-        else{return int($B.LongInt.$dict.__mul__($B.LongInt(self),
-            $B.LongInt(other)))}
+        else{
+            console.log('res is big int',
+                $B.LongInt.$dict.__mul__($B.LongInt(self),
+                $B.LongInt(other)))
+            var res = int($B.LongInt.$dict.__mul__($B.LongInt(self),
+                $B.LongInt(other)))
+            console.log('res', res)
+            return res
+        }
     }
     if(isinstance(other,_b_.float)){
         return _b_.float(self*other.value)

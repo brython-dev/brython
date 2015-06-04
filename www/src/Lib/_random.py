@@ -4,7 +4,10 @@ def _randint(a, b):
     return int(window.Math.random()*(b-a+1)+a)
     
 def _rand_with_seed(x, rand_obj):
-    x = window.Math.sin(rand_obj._state) * 10000
+    # if rand_obj.state is not a safe integer, Math.sin will return the same
+    # result for consecutive values : use the rest of division by 360
+    degrees = rand_obj._state % 360
+    x = window.Math.sin(degrees/(2*window.Math.PI)) * 10000
     # Adding 1 is not reliable because of current integer implementation
     # If rand_obj._state is not a "safe integer" in the range [-2**53, 2**53]
     # the increment between 2 different values is a power of 2
@@ -12,10 +15,6 @@ def _rand_with_seed(x, rand_obj):
     # for each iteration
     if not hasattr(rand_obj, 'incr'):
         rand_obj.incr = 1
-    n = rand_obj._state
-    while n+rand_obj.incr==n:
-        # increase the increment until the increment value is different
-        rand_obj.incr *= 2
     rand_obj._state += rand_obj.incr
     return x - window.Math.floor(x)
 

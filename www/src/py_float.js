@@ -337,7 +337,11 @@ $FloatDict.__truediv__ = function(self,other){
 
 // operations
 var $op_func = function(self,other){
-    if(isinstance(other,_b_.int)) return float(self.value-other)
+    if(isinstance(other,_b_.int)){
+        if(other.__class__===$B.LongInt.$dict){
+            return float(self.value-parseInt(other.value))
+        }else{return float(self.value-other)}
+    }
     if(isinstance(other,float)) return float(self.value-other.value)
     if(isinstance(other,_b_.bool)){ 
       var bool_value=0; 
@@ -357,7 +361,6 @@ for(var $op in $ops){
     $opf = $opf.replace(/__rsub__/gm,'__r'+$ops[$op]+'__')
     eval('$FloatDict.__'+$ops[$op]+'__ = '+$opf)
 }
-
 
 // comparison methods
 var $comp_func = function(self,other){
@@ -452,7 +455,7 @@ var float = function (value){
            if (isFinite(value)) return new $FloatClass(eval(value))
        }
     }
-    
+    console.log('error', value)
     throw _b_.ValueError("Could not convert to float(): '"+_b_.str(value)+"'")
 }
 float.__class__ = $B.$factory

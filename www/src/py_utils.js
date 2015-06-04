@@ -1023,8 +1023,10 @@ $B.add = function(x,y){
     var z = x+y
     if(x>min_int && x<max_int && y>min_int && y<max_int
         && z>min_int && z<max_int){return z}
-    else if(typeof x=='number' && typeof y=='number'){
-        return $B.LongInt.$dict.__add__($B.LongInt(x), $B.LongInt(y))
+    else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
+        && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
+        var res = $B.LongInt.$dict.__add__($B.LongInt(x), $B.LongInt(y))
+        return res
     }else{return z}
 }
 $B.div = function(x,y){
@@ -1037,7 +1039,8 @@ $B.mul = function(x,y){
     var z = x*y
     if(x>min_int && x<max_int && y>min_int && y<max_int
         && z>min_int && z<max_int){return z}
-    else if(typeof x=='number' && typeof y=='number'){
+    else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
+        && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
         return $B.LongInt.$dict.__mul__($B.LongInt(x), $B.LongInt(y))
     }else{return z}
 }
@@ -1045,7 +1048,8 @@ $B.sub = function(x,y){
     var z = x-y
     if(x>min_int && x<max_int && y>min_int && y<max_int
         && z>min_int && z<max_int){return z}
-    else if(typeof x=='number' && typeof y=='number'){
+    else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
+        && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
         return $B.LongInt.$dict.__sub__($B.LongInt(x), $B.LongInt(y))
     }else{return z}
 }
