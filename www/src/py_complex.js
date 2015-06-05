@@ -149,7 +149,6 @@ $ComplexDict.__ior__=$ComplexDict.__or__
 
 // operations
 var $op_func = function(self,other){
-    console.log('complex -',self,other)
     if(isinstance(other,complex)) return complex(self.real-other.real,self.imag-other.imag)
     if (isinstance(other,_b_.int)) return complex($B.sub(self.real,other.valueOf()),self.imag)
     if(isinstance(other,_b_.float)) return complex(self.real - other.value, self.imag)
