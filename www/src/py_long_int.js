@@ -519,6 +519,16 @@ $LongIntDict.__sub__ = function(self, other){
     }
 }
 
+$LongIntDict.__truediv__ = function(self, other){
+    if(isinstance(other, LongInt)){
+        return _b_.float(parseInt(self.value)/parseInt(other.value))
+    }else if(isinstance(other,_b_.int)){
+        return _b_.float(parseInt(self.value)/other)
+    }else if(isinstance(other,_b_.float)){
+        return _b_.float(parseInt(self.value)/other.value)
+    }else{throw TypeError("unsupported operand type(s) for /: 'int' and '"+
+        $B.get_class(other).__name__+"'")}
+}
 $LongIntDict.__xor__ = function(self, other){
     var v1 = $LongIntDict.__index__(self)
     var v2 = $LongIntDict.__index__(other)
