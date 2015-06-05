@@ -339,6 +339,24 @@ assert foo.__name__=="foo"
 assert foo.__doc__=="foodoc"
 #assert type(foo.__dict__) == dict
 
+# issue 183
+x=4
+cd=dict(globals())
+cd.update(locals())
+exec("x=x+4",cd)
+
+assert x == 4
+assert cd['x'] == 8
+
+y=5
+yd=dict(globals())
+yd.update(locals())
+co=compile("y=y+4","","exec")
+exec(co,yd)
+
+assert yd['y'] == 9
+assert y == 5
+
 # issue 201
 import json
 d=json.loads("""{"a":1,"b":2.1}""")

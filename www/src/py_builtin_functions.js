@@ -162,10 +162,16 @@ function compile(source, filename, mode) {
     var current_locals_name = current_locals_id.replace(/\./,'_')
     var current_globals_id = current_frame[2]
     var current_globals_name = current_globals_id.replace(/\./,'_')
-
-    var module_name = current_globals_name
-    var local_name = current_locals_name
+  
+    //var module_name = current_globals_name
+    //var local_name = current_locals_name
     
+    var module_name = 'exec_' + $B.UUID()
+    var local_name = module_name; //'' + $B.UUID()
+
+    //eval('var $locals_' + local_name + '={}');
+    //eval('var exec_' + module_name + '={}');
+
     var root = $B.py2js(source,module_name,[module_name],local_name)
     root.children.pop() // remove trailing "leave_frame()"
     var js = root.to_js()
@@ -173,6 +179,7 @@ function compile(source, filename, mode) {
     return {__class__:$B.$CodeObjectDict,src:js,
         name:source.__name__ || '<module>',
         filename:filename, 
+        globals_name: module_name, locals_name:local_name,
         mode:mode}
 }
 
@@ -295,14 +302,70 @@ function $eval(src, _globals, _locals){
     var current_globals_id = current_frame[2]
     var current_globals_name = current_globals_id.replace(/\./,'_')
 
-    if(src.__class__===$B.$CodeObjectDict){
-        module_name = current_globals_name
-        eval('var $locals_'+module_name+'=current_frame[3]')
-        return eval(src.src)
-    }
-    
     var is_exec = arguments[3]=='exec', module_name, leave = false
-    
+
+    if(src.__class__===$B.$CodeObjectDict){
+        var $globals="$locals_" + src.globals_name
+        var $locals="$locals_" + src.locals_name
+
+        if (_globals===undefined){
+           module_name = 'exec_'+$B.UUID()
+           $B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id]
+           eval('var '+ $globals + '=current_frame[3]')        
+        }  else {
+           eval('var ' + $globals + '={}');
+           var items = _b_.dict.$dict.items(_globals), item
+           while(1){
+              try{
+                item = next(items)
+                eval($globals+'["'+item[0]+'"] = item[1]')
+              }catch(err){
+                break
+              }
+           }
+        }
+
+        if (_locals===undefined){
+           //module_name = 'exec_'+$B.UUID()
+           //$B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id]
+           //eval('var '+ $locals + '=current_frame[3]')
+        }  else {
+           eval('var ' + $locals + '={}');
+           var items = _b_.dict.$dict.items(_locals), item
+           while(1){
+              try{
+                item = next(items)
+                eval($locals+'["'+item[0]+'"] = item[1]')
+              }catch(err){
+                break
+              }
+           }
+        }
+
+        var res=eval(src.src)
+
+        if(_globals!==undefined){
+            // Update _globals with the namespace after execution
+            var ns = eval($globals)
+            var setitem = getattr(_globals,'__setitem__')
+            for(var attr in ns){
+                setitem(attr, ns[attr])
+            }
+        }
+
+        if(_locals!==undefined){
+            // Update _locals with the namespace after execution
+            var ns = eval($locals)
+            var setitem = getattr(_locals,'__setitem__')
+            for(var attr in ns){
+                setitem(attr, ns[attr])
+            }
+        }
+
+        return res
+    }
+
+
     if(_globals===undefined){
         module_name = 'exec_'+$B.UUID()
         $B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id]
@@ -319,7 +382,7 @@ function $eval(src, _globals, _locals){
         var items = _b_.dict.$dict.items(_globals), item
         while(1){
             try{
-                item = next(items)
+                var item = next(items)
                 eval('$locals_'+module_name+'["'+item[0]+'"] = item[1]')
             }catch(err){
                 break
@@ -333,6 +396,7 @@ function $eval(src, _globals, _locals){
         local_name = _locals.id
     }
  
+    
     try{
         var root = $B.py2js(src,module_name,[module_name],local_name)
         // If the Python function is eval(), not exec(), check that the source
@@ -367,16 +431,16 @@ function $eval(src, _globals, _locals){
         }
 
         // fixme: some extra variables are bleeding into locals...
-        /*  This also causes issues for unittests
+        /*  This also causes issues for unittests */
         if(_locals!==undefined){
             // Update _globals with the namespace after execution
-            var ns = eval('$locals_'+module_name)
+            var ns = eval('$locals_'+local_name)
             var setitem = getattr(_locals,'__setitem__')
             for(var attr in ns){
                 setitem(attr, ns[attr])
             }
         }
-        */
+        
         if(res===undefined) return _b_.None
         return res
     }catch(err){
