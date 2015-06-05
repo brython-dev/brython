@@ -350,7 +350,7 @@ assert type(d['b']) == float
 
 import math
 m, e = math.frexp(abs(123.456))
-assert m = 0.945
+assert m == 0.9645
 assert m * (1 << 24) == 16181624.832
 
 print('passed all tests')
