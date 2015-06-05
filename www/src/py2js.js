@@ -900,14 +900,15 @@ function $AugmentedAssignCtx(context, op){
 
             js += left+op+right
             
-            js += ' : (typeof '+left1+'=="number" ? '+left+op
+            js += ' : (typeof '+left1+'=="number" ? '
+            // result is a float
+            js += left+'=float('+left+op1
             js += right_is_int ? right : right+'.valueOf()'
-            js += ' : '+left + '.value ' +op
+            js += ') : '+left + '.value ' +op
             js += right_is_int ? right : right+'.valueOf()'
             
-            js += ');'
-            js += '}'
-            
+            js += ')}'
+                       
             new $NodeJSCtx(new_node,js)
             parent.insert(rank+offset,new_node)
             offset++
