@@ -306,6 +306,7 @@ function $eval(src, _globals, _locals){
 
     if(src.__class__===$B.$CodeObjectDict){
         var $globals="$locals_" + src.globals_name
+        var $locals="$locals_" + src.locals_name
 
         if (_globals===undefined){
            module_name = 'exec_'+$B.UUID()
@@ -324,12 +325,38 @@ function $eval(src, _globals, _locals){
            }
         }
 
+        if (_locals===undefined){
+           //module_name = 'exec_'+$B.UUID()
+           //$B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id]
+           //eval('var '+ $locals + '=current_frame[3]')
+        }  else {
+           eval('var ' + $locals + '={}');
+           var items = _b_.dict.$dict.items(_locals), item
+           while(1){
+              try{
+                item = next(items)
+                eval($locals+'["'+item[0]+'"] = item[1]')
+              }catch(err){
+                break
+              }
+           }
+        }
+
         var res=eval(src.src)
 
         if(_globals!==undefined){
             // Update _globals with the namespace after execution
             var ns = eval($globals)
             var setitem = getattr(_globals,'__setitem__')
+            for(var attr in ns){
+                setitem(attr, ns[attr])
+            }
+        }
+
+        if(_locals!==undefined){
+            // Update _locals with the namespace after execution
+            var ns = eval($locals)
+            var setitem = getattr(_locals,'__setitem__')
             for(var attr in ns){
                 setitem(attr, ns[attr])
             }
@@ -404,16 +431,16 @@ function $eval(src, _globals, _locals){
         }
 
         // fixme: some extra variables are bleeding into locals...
-        /*  This also causes issues for unittests
+        /*  This also causes issues for unittests */
         if(_locals!==undefined){
             // Update _globals with the namespace after execution
-            var ns = eval('$locals_'+module_name)
+            var ns = eval('$locals_'+local_name)
             var setitem = getattr(_locals,'__setitem__')
             for(var attr in ns){
                 setitem(attr, ns[attr])
             }
         }
-        */
+        
         if(res===undefined) return _b_.None
         return res
     }catch(err){
