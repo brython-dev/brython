@@ -356,6 +356,7 @@ for(var $op in $ops){
 
 // comparison methods
 var $comp_func = function(self,other){
+    if (other.__class__ === $B.LongInt.$dict) return $B.LongInt.$dict.__gt__($B.LongInt(self), other)
     if(isinstance(other,int)) return self.valueOf() > other.valueOf()
     if(isinstance(other,_b_.float)) return self.valueOf() > other.value
     if(isinstance(other,_b_.bool)) {
@@ -422,12 +423,17 @@ var int = function(value, base){
     }
 
     if (typeof value == 'number'){
-        if(base==10){return value}
-        else if(value.toString().search('e')>-1){
+
+        if(base==10){
+           if(value < $B.min_int || value > $B.max_int) return $B.LongInt(value)
+           return value
+        }else if(value.toString().search('e')>-1){
             // can't convert to another base if value is too big
             throw _b_.OverflowError("can't convert to base "+base)
         }else{
-            return parseInt(value, base)
+            var res=parseInt(value, base)
+            if(res < $B.min_int || res > $B.max_int) return $B.LongInt(value,base)
+            return res
         }
     }
 
@@ -442,7 +448,6 @@ var int = function(value, base){
     base=$B.$GetInt(base)
 
     if(isinstance(value, _b_.str)) value=value.valueOf()
-
     if(typeof value=="string") {
       var _value=value.trim()    // remove leading/trailing whitespace
       if (_value.length == 2 && base==0 && (_value=='0b' || _value=='0o' || _value=='0x')) {
@@ -469,7 +474,9 @@ var int = function(value, base){
          throw _b_.ValueError(
              "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
       } 
-      return Number(parseInt(_value, base))
+      var res=parseInt(_value, base)
+      if(res < $B.min_int || res > $B.max_int) return $B.LongInt(_value, base)
+      return res
     }
 
     
