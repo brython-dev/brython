@@ -2751,8 +2751,10 @@ function $FromCtx(context){
         res[pos++] = '$B.$import("';
         res[pos++] = mod_name+'","'+mod+'",["';
         res[pos++] = this.names.join('","')+'"], {';
+        var sep = '';
         for (var attr in this.aliases) {
-            res[pos++] = '"'+attr+'": "'+this.aliases[attr]+'"';
+            res[pos++] = sep + '"'+attr+'": "'+this.aliases[attr]+'"';
+            sep = ',';
         }
         res[pos++] = '}, '+localns+');';
                      
