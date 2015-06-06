@@ -59,6 +59,7 @@
                     function(){return "<module '" + mod_name + "' " + mod_desc + ">"}
         }
     }
+    module.__name__ = _spec_name;
     module.__loader__ = _loader;
     // FIXME : Fall back to None ?
     module.__package__ = _b_.getattr(spec, 'parent', _b_.None);
@@ -69,6 +70,7 @@
     module.__path__ = locs;
     if (_b_.getattr(spec, 'has_location')) {
         module.__file__ = _b_.getattr(spec, 'origin')
+        $B.$py_module_path[module.__name__] = module.__file__;
     }
     var cached = _b_.getattr(spec, 'cached');
     if (!is_none(cached)) {
