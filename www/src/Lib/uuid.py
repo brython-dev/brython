@@ -50,8 +50,7 @@ RESERVED_NCS, RFC_4122, RESERVED_MICROSOFT, RESERVED_FUTURE = [
     'reserved for NCS compatibility', 'specified in RFC 4122',
     'reserved for Microsoft compatibility', 'reserved for future definition']
 
-from long_int import LongInt as int_
-#int_ = int      # The built-in int type
+int_ = int      # The built-in int type
 bytes_ = bytes  # The built-in bytes type
 
 class UUID(object):
