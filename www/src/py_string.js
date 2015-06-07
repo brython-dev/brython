@@ -212,7 +212,12 @@ var str_format = function(val, flags) {
 
 var num_format = function(val, flags) {
     number_check(val)
-    val = parseInt(val)
+    if (val.__class__ === $B.LongInt.$dict) {
+      val = $B.LongInt.$dict.to_base(val, 10)
+    } else {
+      val = parseInt(val)
+    }
+
     var s = format_int_precision(val, flags)
     if (flags.pad_char === '0') {
         if (val < 0) {
@@ -384,9 +389,15 @@ var floating_point_exponential_format = function(val, upper, flags) {
 }
 
 var signed_hex_format = function(val, upper, flags) {
+    var ret
     number_check(val)
-    var ret = parseInt(val)
-    ret = ret.toString(16)
+
+    if (val.__class__ === $B.LongInt.$dict) {
+       ret=$B.LongInt.$dict.to_base(val, 16)
+    } else {
+       ret = parseInt(val)
+       ret = ret.toString(16)
+    }
     ret = format_int_precision(ret, flags)
     if (upper) {
         ret = ret.toUpperCase()
