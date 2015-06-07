@@ -370,4 +370,14 @@ m, e = math.frexp(abs(123.456))
 assert m == 0.9645
 assert m * (1 << 24) == 16181624.832
 
+# issue 207
+
+for x in range(0x7ffffff0, 0x8000000f):
+    assert x & x == x, "%s & %s == %s" % (hex(x), hex(x), hex(x & x))
+    assert x | x == x, "%s | %s == %s" % (hex(x), hex(x), hex(x | x))
+
+for x in range(0x17ffffff0, 0x17fffffff):
+    assert x & x == x, "%s & %s == %s" % (hex(x), hex(x), hex(x & x))
+    assert x | x == x, "%s | %s == %s" % (hex(x), hex(x), hex(x | x))
+
 print('passed all tests')

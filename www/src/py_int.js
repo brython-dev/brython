@@ -308,7 +308,12 @@ $IntDict.denominator = function(self){return int(1)}
 
 // code for operands & | ^
 var $op_func = function(self,other){
-    if(isinstance(other,int)) return self-other
+    if(isinstance(other,int)) {
+       if (self > (1 << 32) || self < 0 || other > (1<<32) || other < 0) {
+          return $B.LongInt.$dict.__sub__($B.LongInt(self), $B.LongInt(other))
+       }
+       return self-other
+    }
     if(isinstance(other,_b_.bool)) return self-other
     if(hasattr(other,'__rsub__')) return getattr(other,'__rsub__')(self)
     $err("-",other)
@@ -392,7 +397,6 @@ var $valid_digits=function(base) {
 }
 
 var int = function(value, base){
-    
     // int() with no argument returns 0
     if(value===undefined){return 0}
     
