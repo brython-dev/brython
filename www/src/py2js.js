@@ -4937,6 +4937,7 @@ function $transition(context,token){
                switch(op) {
                   case '+':
                   case '-':
+                  case '~':
                     return $transition(new $AbstractExprCtx(context,false),token,op)
                   case '*':
                     return new $StarArgCtx(context)

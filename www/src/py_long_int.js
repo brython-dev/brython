@@ -382,6 +382,7 @@ $LongIntDict.__lt__ = function(self, other){
 
 $LongIntDict.__lshift__ = function(self, shift){
     check_shift(shift)
+    if(shift.value=='0'){return self}
     var res = self.value
     while(true){
         var x, carry=0, res1=''
