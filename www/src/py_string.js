@@ -433,8 +433,15 @@ var signed_hex_format = function(val, upper, flags) {
 
 var octal_format = function(val, flags) {
     number_check(val)
-    var ret = parseInt(val)
-    ret = ret.toString(8)
+    var ret 
+
+    if (val.__class__ === $B.LongInt.$dict) {
+      ret = $B.LongInt.$dict.to_base(8)
+    } else {
+      ret = parseInt(val)
+      ret = ret.toString(8)
+    }
+
     ret = format_int_precision(ret, flags)
     
     if (flags.pad_char === '0') {
