@@ -655,7 +655,10 @@ function globals(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
     var globals_obj = $B.last($B.frames_stack)[3]
-    return $B.obj_dict(globals_obj)
+    //return $B.obj_dict(globals_obj)
+    var _a=[]
+    for (var key in globals_obj) _a.push([key, globals_obj[key]])
+    return _b_.dict(_a)
 }
 
 function hasattr(obj,attr){

@@ -380,4 +380,8 @@ for x in range(0x17ffffff0, 0x17fffffff):
     assert x & x == x, "%s & %s == %s" % (hex(x), hex(x), hex(x & x))
     assert x | x == x, "%s | %s == %s" % (hex(x), hex(x), hex(x | x))
 
+# issue 208
+a=5
+assert globals().get('a')  == 5
+
 print('passed all tests')
