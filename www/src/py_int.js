@@ -186,15 +186,8 @@ $IntDict.__mul__ = function(self,other){
     if(isinstance(other,int)){
         var res = self*other
         if(res>$B.min_int && res<$B.max_int){return res}
-        else{
-            console.log('res is big int',
-                $B.LongInt.$dict.__mul__($B.LongInt(self),
-                $B.LongInt(other)))
-            var res = int($B.LongInt.$dict.__mul__($B.LongInt(self),
-                $B.LongInt(other)))
-            console.log('res', res)
-            return res
-        }
+        else{return int($B.LongInt.$dict.__mul__($B.LongInt(self),
+                $B.LongInt(other)))}
     }
     if(isinstance(other,_b_.float)){
         return _b_.float(self*other.value)
