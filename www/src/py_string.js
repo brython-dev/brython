@@ -88,9 +88,6 @@ $StringDict.__getitem__ = function(self,arg){
     if(isinstance(arg,bool)) return self.__getitem__(_b_.int(arg))
 }
 
-// special method to speed up "for" loops
-$StringDict.__getitems__ = function(self){return self.split('')}
-
 $StringDict.__hash__ = function(self) {
   if (self === undefined) {
      return $StringDict.__hashvalue__ || $B.$py_next_hash--  // for hash of string type (not instance of string)

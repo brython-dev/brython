@@ -81,9 +81,6 @@ $SetDict.__eq__ = function(self,other){
 
 $SetDict.__ge__ = function(self,other){return !$SetDict.__lt__(self,other)}
 
-// special method to speed up "for" loops
-$SetDict.__getitems__ = function(self){return self.$items}
-
 $SetDict.__gt__ = function(self, other, accept_iter){
     $test(accept_iter, other)
     return !$SetDict.__le__(self, other)
