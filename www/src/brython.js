@@ -59,7 +59,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-06-08 08:46:08.317000"
+__BRYTHON__.compiled_date="2015-06-08 11:43:31.549000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1254,7 +1254,7 @@ def_func_node.add(new_node)
 }
 node.children=[]
 var default_node=new $Node()
-var js=';None;'
+var js=';_b_.None;'
 if(defs1.length>0){js='var $defaults = {'+defs1.join(',')+'};'}
 new $NodeJSCtx(default_node,js)
 node.insert(0,default_node)
@@ -5628,7 +5628,11 @@ else if((typeof x=='number' ||x.__class__===$B.LongInt.$dict)
 $B.ge=function(x,y){if(typeof x=='number' && typeof y=='number'){return x>=y}
 else if(typeof x=='number' && typeof y!='number'){return !y.pos}
 else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
-else{return $B.LongInt.$dict.__ge__(x,y)}}})(__BRYTHON__)
+else{return $B.LongInt.$dict.__ge__(x,y)}}
+$B.gt=function(x,y){if(typeof x=='number' && typeof y=='number'){return x>y}
+else if(typeof x=='number' && typeof y!='number'){return !y.pos}
+else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
+else{return $B.LongInt.$dict.__gt__(x,y)}}})(__BRYTHON__)
 if(!Array.indexOf){Array.prototype.indexOf=function(obj){for(var i=0,_len_i=this.length;i < _len_i;i++)if(this[i]==obj)return i
 return -1
 }}
@@ -5669,12 +5673,7 @@ return charCode > 127 ? charEscape(charCode): char
 })
 .join("")
 }
-function $builtin_base_convert_helper(obj,base){var value=$B.$GetInt(obj)
-if(value===undefined){
-throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')
-return
-}
-var prefix=""
+function $builtin_base_convert_helper(obj,base){var prefix=""
 switch(base){case 2:
 prefix='0b';break
 case 8:
@@ -5683,6 +5682,14 @@ case 16:
 prefix='0x';break
 default:
 console.log('invalid base:' + base)
+}
+if(obj.__class__===$B.LongInt.$dict){if(obj.pos)return prefix + $B.LongInt.$dict.to_base(obj,base)
+return '-' + prefix + $B.LongInt.$dict.to_base(-obj,base)
+}
+var value=$B.$GetInt(obj)
+if(value===undefined){
+throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')
+return
 }
 if(value >=0)return prefix + value.toString(base)
 return '-' + prefix +(-value).toString(base)
@@ -6003,7 +6010,9 @@ throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")
 }
 function globals(){
 var globals_obj=$B.last($B.frames_stack)[3]
-return $B.obj_dict(globals_obj)
+var _a=[]
+for(var key in globals_obj)_a.push([key,globals_obj[key]])
+return _b_.dict(_a)
 }
 function hasattr(obj,attr){try{getattr(obj,attr);return true}
 catch(err){return false}}
@@ -6268,29 +6277,23 @@ if((self.step>0 && res >=self.stop)||
 }
 return res 
 }
-$RangeDict.__getitems__=function(self){var t=[],rank=0
-while(1){var res=self.start + rank*self.step
-if((self.step>0 && res >=self.stop)||
-(self.step<0 && res < self.stop)){break
-}
-t[rank++]=res
-}
-return t
-}
 $RangeDict.__iter__=function(self){return{
 __class__ : $RangeDict,start:self.start,stop:self.stop,step:self.step,$counter:self.start-self.step
 }}
 $RangeDict.__len__=function(self){if(self.step>0)return 1+_b_.int((self.stop-1-self.start)/self.step)
 return 1+_b_.int((self.start-1-self.stop)/-self.step)
 }
-$RangeDict.__next__=function(self){self.$counter +=self.step
+$RangeDict.__next__=function(self){if(self.$safe){self.$counter +=self.step
 if((self.step>0 && self.$counter >=self.stop)
 ||(self.step<0 && self.$counter <=self.stop)){throw _b_.StopIteration('')
-}
+}}else{self.$counter=$B.add(self.$counter,self.step)
+if(($B.gt(self.step,0)&& $B.ge(self.$counter,self.stop))
+||($B.gt(0,self.step)&& $B.ge(self.stop,self.$counter))){throw _b_.StopIteration('')
+}}
 return self.$counter
 }
 $RangeDict.__mro__=[$RangeDict,$ObjectDict]
-$RangeDict.__reversed__=function(self){return range(self.stop-1,self.start-1,-self.step)
+$RangeDict.__reversed__=function(self){return range($B.sub(self.stop,1),$B.sub(self.start,1),$B.sub(0,self.step))
 }
 $RangeDict.__repr__=$RangeDict.__str__=function(self){var res='range('+self.start+', '+self.stop
 if(self.step!=1)res +=', '+self.step
@@ -6315,6 +6318,8 @@ if(args.length>=3)step=args[2]
 if(step==0){throw ValueError("range() arg 3 must not be zero")}
 var res={__class__ : $RangeDict,start:start,stop:stop,step:step,$is_range:true
 }
+res.$safe=(typeof start=='number' && typeof stop=='number' &&
+typeof step=='number')
 res.__repr__=res.__str__=function(){return 'range('+start+','+stop+(args.length>=3 ? ','+step : '')+')'
 }
 return res
@@ -8292,7 +8297,10 @@ return s.length
 }
 $IntDict.numerator=function(self){return self}
 $IntDict.denominator=function(self){return int(1)}
-var $op_func=function(self,other){if(isinstance(other,int))return self-other
+var $op_func=function(self,other){if(isinstance(other,int)){if(self >(1 << 32)||self < 0 ||other >(1<<32)||other < 0){return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))
+}
+return self-other
+}
 if(isinstance(other,_b_.bool))return self-other
 if(hasattr(other,'__rsub__'))return getattr(other,'__rsub__')(self)
 $err("-",other)
@@ -9026,7 +9034,6 @@ if(hasattr(arg,'__int__')||hasattr(arg,'__index__')){return $ListDict.__getitem_
 }
 throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
 }
-$ListDict.__getitems__=function(self){return self}
 $ListDict.__ge__=function(self,other){if(!isinstance(other,[list,_b_.tuple])){throw _b_.TypeError("unorderable types: list() >= "+
 $B.get_class(other).__name__+'()')
 }
@@ -9364,7 +9371,6 @@ return res
 }
 if(isinstance(arg,bool))return self.__getitem__(_b_.int(arg))
 }
-$StringDict.__getitems__=function(self){return self.split('')}
 $StringDict.__hash__=function(self){if(self===undefined){return $StringDict.__hashvalue__ ||$B.$py_next_hash-- 
 }
 var hash=1
@@ -9434,7 +9440,10 @@ flags.pad_char=" "
 return format_padding(str(val),flags)
 }
 var num_format=function(val,flags){number_check(val)
+if(val.__class__===$B.LongInt.$dict){val=$B.LongInt.$dict.to_base(val,10)
+}else{
 val=parseInt(val)
+}
 var s=format_int_precision(val,flags)
 if(flags.pad_char==='0'){if(val < 0){s=s.substring(1)
 return '-' + format_padding(s,flags,true)
@@ -9534,9 +9543,13 @@ return val
 var floating_point_exponential_format=function(val,upper,flags){val=_float_helper(val,flags)
 return format_padding(format_sign(val,flags)+ format_float_precision(val,upper,flags,_floating_exp_helper),flags)
 }
-var signed_hex_format=function(val,upper,flags){number_check(val)
-var ret=parseInt(val)
+var signed_hex_format=function(val,upper,flags){var ret
+number_check(val)
+if(val.__class__===$B.LongInt.$dict){ret=$B.LongInt.$dict.to_base(val,16)
+}else{
+ret=parseInt(val)
 ret=ret.toString(16)
+}
 ret=format_int_precision(ret,flags)
 if(upper){ret=ret.toUpperCase()
 }
@@ -9557,8 +9570,12 @@ ret="0x" + ret
 return format_padding(format_sign(val,flags)+ ret,flags)
 }
 var octal_format=function(val,flags){number_check(val)
-var ret=parseInt(val)
+var ret 
+if(val.__class__===$B.LongInt.$dict){ret=$B.LongInt.$dict.to_base(8)
+}else{
+ret=parseInt(val)
 ret=ret.toString(8)
+}
 ret=format_int_precision(ret,flags)
 if(flags.pad_char==='0'){if(val < 0){ret=ret.substring(1)
 ret='-' + format_padding(ret,flags,true)
@@ -10833,7 +10850,6 @@ return true
 return false
 }
 $SetDict.__ge__=function(self,other){return !$SetDict.__lt__(self,other)}
-$SetDict.__getitems__=function(self){return self.$items}
 $SetDict.__gt__=function(self,other,accept_iter){$test(accept_iter,other)
 return !$SetDict.__le__(self,other)
 }
