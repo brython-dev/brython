@@ -787,13 +787,13 @@ function $AugmentedAssignCtx(context, op){
                 $_SyntaxError(context,["can't assign to keyword"])
     }
     
-    var scope = $get_scope(this)
+    var scope = this.scope = $get_scope(this)
 
     // Store the names already bound
     $get_node(this).bound_before = $B.keys($B.bound[scope.id])
     
     this.module = scope.module
-
+    
     this.toString = function(){return '(augm assign) '+this.tree}
 
     this.transform = function(node,rank){
@@ -825,7 +825,7 @@ function $AugmentedAssignCtx(context, op){
             // at the end of $augmented_assign, control will be
             // passed to the <placeholder> expression
             var new_node = new $Node()
-            new_node.id = this.module
+            new_node.id = this.scope.id
             var new_ctx = new $NodeCtx(new_node)
             var new_expr = new $ExprCtx(new_ctx,'js',false)
             // The id must be a "raw_js", otherwise if scope is a class, 
@@ -846,7 +846,7 @@ function $AugmentedAssignCtx(context, op){
           case '*=':
           case '/=':
             if(left_is_id){
-              var scope = $get_scope(context),
+              var scope = this.scope,
                   local_ns = '$local_'+scope.id.replace(/\./g,'_'),
                   global_ns = '$local_'+scope.module.replace(/\./g,'_'),
                   prefix
@@ -908,7 +908,7 @@ function $AugmentedAssignCtx(context, op){
             js += right_is_int ? right : right+'.valueOf()'
             
             js += ')}'
-                       
+
             new $NodeJSCtx(new_node,js)
             parent.insert(rank+offset,new_node)
             offset++
@@ -943,7 +943,7 @@ function $AugmentedAssignCtx(context, op){
 
         // create node for "foo = foo + bar"
         var aa1 = new $Node()
-        aa1.id = this.module
+        aa1.id = this.scope.id
         var ctx1 = new $NodeCtx(aa1)
         var expr1 = new $ExprCtx(ctx1,'clone',false)
         expr1.tree = context.tree
@@ -3107,6 +3107,14 @@ function $IdCtx(context,value){
             else{break}
         }
         this.found = found
+        /*
+        if(val=='int'){
+            console.log(val,'bound in')
+            for(var i=0;i<found.length;i++){
+                console.log(i,found[i].id)
+            }
+        }
+        */
 
         if(found.length>0){
             if(found.length>1 && found[0].context){
