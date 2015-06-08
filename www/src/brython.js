@@ -59,7 +59,7 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-06-08 11:43:31.549000"
+__BRYTHON__.compiled_date="2015-06-08 21:33:01.367000"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -497,7 +497,7 @@ this.tree=[C]
 if(C.type=='expr' && C.tree[0].type=='id' &&
 noassign[C.tree[0].value]===true){$_SyntaxError(C,["can't assign to keyword"])
 }
-var scope=$get_scope(this)
+var scope=this.scope=$get_scope(this)
 $get_node(this).bound_before=$B.keys($B.bound[scope.id])
 this.module=scope.module
 this.toString=function(){return '(augm assign) '+this.tree}
@@ -518,7 +518,7 @@ new $NodeJSCtx(new_node,'var $temp,$left;')
 parent.insert(rank,new_node)
 offset++
 var new_node=new $Node()
-new_node.id=this.module
+new_node.id=this.scope.id
 var new_ctx=new $NodeCtx(new_node)
 var new_expr=new $ExprCtx(new_ctx,'js',false)
 var _id=new $RawJSCtx(new_expr,'$temp')
@@ -533,7 +533,7 @@ switch(op){case '+=':
 case '-=':
 case '*=':
 case '/=':
-if(left_is_id){var scope=$get_scope(C),local_ns='$local_'+scope.id.replace(/\./g,'_'),global_ns='$local_'+scope.module.replace(/\./g,'_'),prefix
+if(left_is_id){var scope=this.scope,local_ns='$local_'+scope.id.replace(/\./g,'_'),global_ns='$local_'+scope.module.replace(/\./g,'_'),prefix
 switch(scope.ntype){case 'module':
 prefix=global_ns
 break
@@ -596,7 +596,7 @@ new $NodeJSCtx(new_node,js)
 parent.insert(rank+offset,new_node)
 offset ++
 var aa1=new $Node()
-aa1.id=this.module
+aa1.id=this.scope.id
 var ctx1=new $NodeCtx(aa1)
 var expr1=new $ExprCtx(ctx1,'clone',false)
 expr1.tree=C.tree
@@ -8311,10 +8311,10 @@ for(var $op in $ops){var opf=$op_func.replace(/-/gm,$op)
 opf=opf.replace(new RegExp('sub','gm'),$ops[$op])
 eval('$IntDict.__'+$ops[$op]+'__ = '+opf)
 }
-var $op_func=function(self,other){if(isinstance(other,int)){var res=self.valueOf()-other.valueOf()
-if(isinstance(res,int))return res
-return _b_.float(res)
-}
+var $op_func=function(self,other){if(isinstance(other,int)){if(typeof other=='number'){var res=self.valueOf()-other.valueOf()
+if(res>=$B.min_int && res<=$B.max_int){return res}
+else{return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))}}else{return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))
+}}
 if(isinstance(other,_b_.float)){return _b_.float(self.valueOf()-other.value)
 }
 if(isinstance(other,_b_.complex)){return _b_.complex(self-other.real,-other.imag)
@@ -8369,7 +8369,9 @@ if(isinstance(value,_b_.complex)){throw TypeError("can't convert complex to int"
 var $ns=$B.$MakeArgs1('int',2,{x:null,base:null},['x','base'],arguments,{'base':10},'null','null')
 var value=$ns['x']
 var base=$ns['base']
-if(value.__class__==_b_.float.$dict && base===10){return parseInt(value.value)}
+if(value.__class__==_b_.float.$dict && base===10){var res=parseInt(value.value)
+if(res<$B.min_int ||res>$B.max_int){return $B.LongInt(res+'')}
+else{return res}}
 if(!(base >=2 && base <=36)){
 if(base !=0)throw _b_.ValueError("invalid base")
 }
@@ -8444,7 +8446,7 @@ else{res=x+res;carry=0}}
 if(carry){res=carry+res}
 return{__class__:$LongIntDict,value:res,pos:true}}
 function check_shift(shift){
-if(!isinstance(shift,LongInt)){throw TypeError("shift must be LongInt, not '"+
+if(!isinstance(shift,LongInt)){throw TypeError("shift must be int, not '"+
 $B.get_class(shift).__name__+"'")
 }
 if(!shift.pos){throw ValueError("negative shift count")}}
@@ -8627,7 +8629,7 @@ else if(self.value.length<other.value.length){return true}
 else{return self.value <=other.value}}
 $LongIntDict.__lt__=function(self,other){return !$LongIntDict.__ge__(self,other)
 }
-$LongIntDict.__lshift__=function(self,shift){check_shift(shift)
+$LongIntDict.__lshift__=function(self,shift){shift=LongInt(shift)
 if(shift.value=='0'){return self}
 var res=self.value
 while(true){var x,carry=0,res1=''
@@ -8652,7 +8654,8 @@ res.pos=false
 return intOrLong(res)
 }
 $LongIntDict.__neg__=function(obj){return{__class__:$LongIntDict,value:obj.value,pos:!obj.pos}}
-$LongIntDict.__or__=function(self,other){var v1=$LongIntDict.__index__(self)
+$LongIntDict.__or__=function(self,other){other=LongInt(other)
+var v1=$LongIntDict.__index__(self)
 var v2=$LongIntDict.__index__(other)
 if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
 var start=v1.length-v2.length
@@ -8677,7 +8680,7 @@ res=LongInt($LongIntDict.__mul__(res,self))
 }
 return intOrLong(res)
 }
-$LongIntDict.__rshift__=function(self,shift){check_shift(shift)
+$LongIntDict.__rshift__=function(self,shift){shift=LongInt(shift)
 if(shift.value=='0'){return self}
 var res=self.value
 while(true){res=divmod_pos(res,'2')[0].value
@@ -8728,7 +8731,8 @@ $LongIntDict.__truediv__=function(self,other){if(isinstance(other,LongInt)){retu
 }else if(isinstance(other,_b_.float)){return _b_.float(parseInt(self.value)/other.value)
 }else{throw TypeError("unsupported operand type(s) for /: 'int' and '"+
 $B.get_class(other).__name__+"'")}}
-$LongIntDict.__xor__=function(self,other){var v1=$LongIntDict.__index__(self)
+$LongIntDict.__xor__=function(self,other){other=LongInt(other)
+var v1=$LongIntDict.__index__(self)
 var v2=$LongIntDict.__index__(other)
 if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
 var start=v1.length-v2.length
@@ -8780,7 +8784,7 @@ if(base<0 ||base==1 ||base>36){throw ValueError("LongInt() base must be >= 2 and
 if(isinstance(value,_b_.float)){if(value>=0){value=Math.round(value.value)}
 else{value=Math.ceil(value.value)}}
 if(typeof value=='number'){if(isSafeInteger(value)){value=value.toString()}
-else{throw ValueError("argument of long_int is not a safe integer")}}else if(value.__class__===$LongIntDict){return value}
+else{console.log('wrong value',value);throw ValueError("argument of long_int is not a safe integer")}}else if(value.__class__===$LongIntDict){return value}
 else if(typeof value!='string'){throw ValueError("argument of long_int must be a string, not "+
 $B.get_class(value).__name__)
 }
