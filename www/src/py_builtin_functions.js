@@ -1122,20 +1122,6 @@ $RangeDict.__getitem__ = function(self,rank){
     return res   
 }
 
-// special method to speed up "for" loops
-$RangeDict.__getitems__ = function(self){
-    var t=[], rank=0
-    while(1){
-        var res = self.start + rank*self.step
-        if((self.step>0 && res >= self.stop) ||
-            (self.step<0 && res < self.stop)){
-                break
-        }
-        t[rank++]=res
-    }
-    return t
-}
-
 $RangeDict.__iter__ = function(self){
     return {
         __class__ : $RangeDict,
@@ -1153,10 +1139,18 @@ $RangeDict.__len__ = function(self){
 }
 
 $RangeDict.__next__ = function(self){
-    self.$counter += self.step
-    if((self.step>0 && self.$counter >= self.stop)
-        || (self.step<0 && self.$counter <= self.stop)){
-            throw _b_.StopIteration('')
+    if(self.$safe){
+        self.$counter += self.step
+        if((self.step>0 && self.$counter >= self.stop)
+            || (self.step<0 && self.$counter <= self.stop)){
+                throw _b_.StopIteration('')
+        }
+    }else{
+        self.$counter = $B.add(self.$counter, self.step)
+        if(($B.gt(self.step,0) && $B.ge(self.$counter, self.stop))
+            || ($B.gt(0, self.step) && $B.ge(self.stop, self.$counter))){
+                throw _b_.StopIteration('')
+        }
     }
     return self.$counter
 }
@@ -1164,7 +1158,8 @@ $RangeDict.__next__ = function(self){
 $RangeDict.__mro__ = [$RangeDict,$ObjectDict]
 
 $RangeDict.__reversed__ = function(self){
-    return range(self.stop-1,self.start-1,-self.step)
+    return range($B.sub(self.stop,1),$B.sub(self.start,1),
+        $B.sub(0,self.step))
 }
 
 $RangeDict.__repr__ = $RangeDict.__str__ = function(self){
@@ -1202,6 +1197,8 @@ function range(){
         step:step,
         $is_range:true
     }
+    res.$safe = (typeof start=='number' && typeof stop=='number' &&
+        typeof step=='number')
     res.__repr__ = res.__str__ = function(){
             return 'range('+start+','+stop+(args.length>=3 ? ','+step : '')+')'
         }
@@ -2163,6 +2160,7 @@ $B.exception = function(js_exc){
         var exc = js_exc
     }
     exc.$stack = $B.frames_stack.slice()
+    $B.current_exception = exc
     return exc
 }
 

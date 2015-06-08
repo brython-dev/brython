@@ -2520,17 +2520,27 @@ function $ForExpr(context){
             }else{
                 var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()
             }
-            var js = idt+'=$B.$GetInt('+start+')-1, $stop_'+num
-            js += '=$B.$GetInt('+stop+')-1;while('+idt+'++ < $stop_'+num+')'
+            var h = '\n'+' '.repeat(node.indent+4)
+            var js = idt+'='+start+';'+h+'var $stop_'+num +'='+stop+h+
+                'var $safe'+num+'= typeof '+idt+'=="number" && typeof '+
+                '$stop_'+num+'=="number";'+h+'while(true)'
             
-            var for_node = new $Node()
+            var for_node = new $Node()  
             new $NodeJSCtx(for_node,js)
-
+            
+            for_node.add($NodeJS('if($safe'+num+' && '+idt+'>= $stop_'+
+                num+'){break}'))
+            for_node.add($NodeJS('else if(!$safe'+num+
+                ' && $B.ge('+idt+', $stop_'+num+
+                ')){break}'))
+            
             // Add the loop body            
             for(var i=0;i<children.length;i++){
                 for_node.add(children[i].clone())
             }
-
+            for_node.add($NodeJS('if($safe'+num+'){'+idt+'++}'))
+            for_node.add($NodeJS('else{'+idt+'=$B.add('+idt+',1)}'))
+            
             // Check if current "for" loop is inside another "for" loop
             var in_loop=false
             if(scope.ntype=='module'){
@@ -3569,6 +3579,12 @@ function $NodeCtx(node){
         if(node.children.length==0){return $to_js(this.tree)+';'}
         return $to_js(this.tree)
     }
+}
+
+function $NodeJS(js){
+    var node = new $Node()
+    new $NodeJSCtx(node, js)
+    return node
 }
 
 function $NodeJSCtx(node,js){ 

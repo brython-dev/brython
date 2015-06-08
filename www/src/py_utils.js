@@ -1053,6 +1053,21 @@ $B.sub = function(x,y){
         return $B.LongInt.$dict.__sub__($B.LongInt(x), $B.LongInt(y))
     }else{return z}
 }
+// gretaer or equal
+$B.ge = function(x,y){
+    if(typeof x=='number' && typeof y== 'number'){return x>=y}
+    // a safe int is >= to a long int if the long int is negative
+    else if(typeof x=='number' && typeof y!= 'number'){return !y.pos}
+    else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
+    else{return $B.LongInt.$dict.__ge__(x, y)}
+}
+$B.gt = function(x,y){
+    if(typeof x=='number' && typeof y== 'number'){return x>y}
+    // a safe int is >= to a long int if the long int is negative
+    else if(typeof x=='number' && typeof y!= 'number'){return !y.pos}
+    else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
+    else{return $B.LongInt.$dict.__gt__(x, y)}
+}
 
 
 })(__BRYTHON__)
