@@ -322,10 +322,17 @@ for(var $op in $ops){
 
 // code for + and -
 var $op_func = function(self,other){
+
     if(isinstance(other,int)){
-        var res = self.valueOf()-other.valueOf()
-        if(isinstance(res,int)) return res
-        return _b_.float(res)
+        if(typeof other=='number'){
+            var res = self.valueOf()-other.valueOf()
+            if(res>=$B.min_int && res<=$B.max_int){return res}
+            else{return $B.LongInt.$dict.__sub__($B.LongInt(self), 
+                $B.LongInt(other))}
+        }else{
+            return $B.LongInt.$dict.__sub__($B.LongInt(self), 
+                $B.LongInt(other))        
+        }
     }
     if(isinstance(other,_b_.float)){
         return _b_.float(self.valueOf()-other.value)
@@ -412,7 +419,11 @@ var int = function(value, base){
     var value = $ns['x']
     var base = $ns['base']
     
-    if(value.__class__==_b_.float.$dict && base===10){return parseInt(value.value)}
+    if(value.__class__==_b_.float.$dict && base===10){
+        var res = parseInt(value.value)
+        if(res<$B.min_int || res>$B.max_int){return $B.LongInt(res+'')}
+        else{return res}
+    }
 
     if (!(base >=2 && base <= 36)) {
         // throw error (base must be 0, or 2-36)

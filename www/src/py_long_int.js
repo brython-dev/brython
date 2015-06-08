@@ -33,7 +33,7 @@ function add_pos(v1, v2){
 function check_shift(shift){
     // Check the argument of >> and <<
     if(!isinstance(shift, LongInt)){
-        throw TypeError("shift must be LongInt, not '"+
+        throw TypeError("shift must be int, not '"+
             $B.get_class(shift).__name__+"'")
     }
     if(!shift.pos){throw ValueError("negative shift count")}
@@ -381,7 +381,7 @@ $LongIntDict.__lt__ = function(self, other){
 }
 
 $LongIntDict.__lshift__ = function(self, shift){
-    check_shift(shift)
+    shift = LongInt(shift)
     if(shift.value=='0'){return self}
     var res = self.value
     while(true){
@@ -421,6 +421,7 @@ $LongIntDict.__neg__ = function(obj){
 }
 
 $LongIntDict.__or__ = function(self, other){
+    other = LongInt(other)
     var v1 = $LongIntDict.__index__(self)
     var v2 = $LongIntDict.__index__(other)
     if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
@@ -459,7 +460,7 @@ $LongIntDict.__pow__ = function(self, power){
 }
 
 $LongIntDict.__rshift__ = function(self, shift){
-    check_shift(shift)
+    shift = LongInt(shift)
     if(shift.value=='0'){return self}
     var res = self.value
     while(true){
@@ -531,6 +532,7 @@ $LongIntDict.__truediv__ = function(self, other){
         $B.get_class(other).__name__+"'")}
 }
 $LongIntDict.__xor__ = function(self, other){
+    other = LongInt(other)
     var v1 = $LongIntDict.__index__(self)
     var v2 = $LongIntDict.__index__(other)
     if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
@@ -614,7 +616,7 @@ function LongInt(value, base){
     }
     if(typeof value=='number'){
         if(isSafeInteger(value)){value = value.toString()}
-        else{throw ValueError("argument of long_int is not a safe integer")}
+        else{console.log('wrong value', value);throw ValueError("argument of long_int is not a safe integer")}
     }else if(value.__class__===$LongIntDict){return value}
     else if(typeof value!='string'){
         throw ValueError("argument of long_int must be a string, not "+
