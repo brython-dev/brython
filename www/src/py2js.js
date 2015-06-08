@@ -2083,7 +2083,7 @@ function $DefCtx(context){
         // If function has no default value, insert a no-op "None" to have
         // the same number of lines for subsequent transformations
         var default_node = new $Node()
-        var js = ';None;'
+        var js = ';_b_.None;'
         if(defs1.length>0){js = 'var $defaults = {'+defs1.join(',')+'};'}
         new $NodeJSCtx(default_node,js)
         node.insert(0,default_node)

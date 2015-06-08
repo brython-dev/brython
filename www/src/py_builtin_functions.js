@@ -61,13 +61,6 @@ function ascii(obj) {
 
 // used by bin, hex and oct functions
 function $builtin_base_convert_helper(obj, base) {
-  var value=$B.$GetInt(obj)
-
-  if (value === undefined) {
-     // need to raise an error
-     throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')
-     return
-  }
   var prefix = "";
   switch (base) {
      case 2:
@@ -79,6 +72,20 @@ function $builtin_base_convert_helper(obj, base) {
      default:
          console.log('invalid base:' + base)
   }
+
+  if (obj.__class__ === $B.LongInt.$dict) {
+     if (obj.pos) return prefix + $B.LongInt.$dict.to_base(obj, base)
+     return '-' + prefix + $B.LongInt.$dict.to_base(-obj, base)
+  }
+
+  var value=$B.$GetInt(obj)
+
+  if (value === undefined) {
+     // need to raise an error
+     throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')
+     return
+  }
+
   if (value >=0) return prefix + value.toString(base);
   return '-' + prefix + (-value).toString(base);
 }
@@ -648,7 +655,10 @@ function globals(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
     var globals_obj = $B.last($B.frames_stack)[3]
-    return $B.obj_dict(globals_obj)
+    //return $B.obj_dict(globals_obj)
+    var _a=[]
+    for (var key in globals_obj) _a.push([key, globals_obj[key]])
+    return _b_.dict(_a)
 }
 
 function hasattr(obj,attr){
