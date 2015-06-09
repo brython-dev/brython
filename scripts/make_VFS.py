@@ -5,6 +5,7 @@ import json
 import os
 
 import pyminifier
+import minifier
 
 try:
     import io as StringIO
@@ -141,12 +142,12 @@ def process(filename, exclude_dirs=['unittest','test',]):
                 with open(os.path.join(_root, _file), "r") as file_with_data:
                    _data = file_with_data.read()
             
-                if len(_data) == 0:
-                   print('no data for %s' % _file)
-                   _data = unicode('')
-                   print(_data, type(_data))
-                else:
-                   _data = _data.decode('utf-8')
+                #if len(_data) == 0:
+                #   print('no data for %s' % _file)
+                #   _data = unicode('')
+                #   print(_data, type(_data))
+                #else:
+                #   _data = _data.decode('utf-8')
 
                 if _ext in '.js':
                    if js_minify is not None:
@@ -156,8 +157,7 @@ def process(filename, exclude_dirs=['unittest','test',]):
                         print(error)
                 elif _ext == '.py' and len(_data) > 0:
                    try:
-                     _data = pyminifier.remove_comments_and_docstrings(_data)
-                     _data = pyminifier.dedent(_data)
+                     _data = minifier.minify(_data)
                    except Exception as error:
                      print(error)
                      nb_err += 1
@@ -189,5 +189,5 @@ def process(filename, exclude_dirs=['unittest','test',]):
 
 
 if __name__ == '__main__':
-    _main_root = os.path.join(os.getcwd(), '../src')
+    _main_root = os.path.join(os.path.dirname(os.getcwd()), 'www', 'src')
     process(os.path.join(_main_root, "py_VFS.js"))

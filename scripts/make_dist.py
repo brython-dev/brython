@@ -11,8 +11,8 @@ import sys
 import tarfile
 import zipfile
 
-if(sys.version_info[0]!=2):
-    raise ValueError("This script uses pyminifier, which only works with Python 2")
+if(sys.version_info[0]!=3):
+    raise ValueError("This script only works with Python 3")
 
 import make_doc  # lint:ok
 
@@ -107,7 +107,7 @@ abs_path = lambda _pth: os.path.join(os.path.dirname(os.getcwd()), 'www', 'src',
 now = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
 
 # update version number
-with open(abs_path('version_info.js'), 'wb') as vinfo_file_out:
+with open(abs_path('version_info.js'), 'w') as vinfo_file_out:
     # implementation[2] = now
     vinfo_file_out.write('__BRYTHON__.implementation = %s\n' % implementation)
     vinfo_file_out.write('__BRYTHON__.__MAGIC__ = "%s"\n' %
@@ -143,7 +143,7 @@ libfolder = os.path.join(os.path.dirname(os.getcwd()), 'www', 'src')
 simple_javascript_template_string = """;(function($B){\n
 $B.stdlib = {}
 """
-with open(os.path.join(libfolder, 'stdlib_paths.js'), 'wb') as out:
+with open(os.path.join(libfolder, 'stdlib_paths.js'), 'w') as out:
     out.write(simple_javascript_template_string)
 
     jspath = os.path.join(libfolder, 'libs')
@@ -220,7 +220,7 @@ for fname in sources:
 
 res = res.replace('context', 'C')
 
-with open(abs_path('brython.js'), 'wb') as the_brythonjs_file_output:
+with open(abs_path('brython.js'), 'w') as the_brythonjs_file_output:
     the_brythonjs_file_output.write(res)
 
 
@@ -242,7 +242,7 @@ make_VFS.process(os.path.join(pdir, 'www', 'src', 'py_VFS.js'))
 make_VFS.process_unittest(os.path.join(pdir, 'www', 'src', 'py_unittest.js'))
 
 # make distribution with core + libraries
-with open(os.path.join(pdir, 'www', 'src', 'brython_dist.js'), 'wb') as distrib_file:
+with open(os.path.join(pdir, 'www', 'src', 'brython_dist.js'), 'w') as distrib_file:
     distrib_file.write(open(os.path.join(pdir, 'www', 'src', 'brython.js')).read())
     distrib_file.write(open(os.path.join(pdir, 'www', 'src', 'py_VFS.js')).read())
 
