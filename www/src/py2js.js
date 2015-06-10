@@ -6304,12 +6304,13 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     root.line_info = line_info
     root.indent = -1
     if(locals_id!==module){$B.bound[locals_id] = {}}
-    var new_node = new $Node()
-    var current = root
-    var name = ""
-    var _type = null
-    var pos = 0
-    indent = null
+    var new_node = new $Node(),
+        current = root,
+        name = "",
+        _type = null,
+        pos = 0,
+        indent = null,
+        string_modifier = false
 
     var lnum = 1
     while(pos<src.length){
@@ -6379,24 +6380,24 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
             var raw = context.type == 'str' && context.raw,
                 bytes = false ,
                 end = null;
-            if(name.length>0){
-                switch(name.toLowerCase()) {
+            if(string_modifier){
+                switch(string_modifier) {
                   case 'r': // raw string
-                    raw = true;name=''
+                    raw = true
                     break
                   case 'u':
                     // in string literals, '\U' and '\u' escapes in raw strings 
                     // are not treated specially.
-                    name = ''
                     break
                   case 'b':
-                    bytes = true;name=''
+                    bytes = true
                     break
                   case 'rb':
                   case 'br':
-                    bytes=true;raw=true;name=''
+                    bytes=true;raw=true
                     break
                 }
+                string_modifier = false
             }
             if(src.substr(pos,3)==car+car+car){_type="triple_string";end=pos+3}
             else{_type="string";end=pos+1}
@@ -6480,13 +6481,11 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         if(name==""){
             if($B.re_XID_Start.exec(car)){
                 name=car // identifier start
-                pos++;continue
-            }
-        } else {
-            if($B.re_XID_Continue.exec(car)){
-                name+=car
-                pos++;continue
-            } else{
+                pos++
+                while(pos<src.length && $B.re_XID_Continue.exec(src.charAt(pos))){
+                    name+=src.charAt(pos)
+                    pos++
+                }
                 if(kwdict.indexOf(name)>-1){
                     $pos = pos-name.length
                     if(unsupported.indexOf(name)>-1){
@@ -6512,6 +6511,11 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                     // "constructor"
                     $pos = pos-name.length
                     context = $transition(context,'op',name)
+                } else if((src.charAt(pos)=='"'||src.charAt(pos)=="'")
+                    && ['r','b','u','rb','br'].indexOf(name.toLowerCase())!==-1){
+                    string_modifier = name.toLowerCase()
+                    name = ""
+                    continue
                 } else {
                     if($B.forbidden.indexOf(name)>-1){name='$$'+name}
                     $pos = pos-name.length
