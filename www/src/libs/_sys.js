@@ -18,6 +18,14 @@ var $module=(function($B){
             {'__get__':function(){return $B.meta_path},
              '__set__':function(self, obj, value){ $B.meta_path = value }
             },
+        path_hooks: 
+            {'__get__':function(){return $B.path_hooks},
+             '__set__':function(self, obj, value){ $B.path_hooks = value }
+            },
+        path_importer_cache: 
+            {'__get__':function(){return $B.path_importer_cache},
+             '__set__':function(self, obj, value){ $B.path_importer_cache = value }
+            },
         stderr : {
             __get__:function(){return $B.stderr},
             __set__:function(self, obj, value){$B.stderr = value},

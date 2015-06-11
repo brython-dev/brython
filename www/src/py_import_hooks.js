@@ -66,8 +66,9 @@
     module.__spec__ = spec;
     var locs = _b_.getattr(spec, 'submodule_search_locations');
     // Brython-specific var
-    module.$is_package = !is_none(locs);
-    module.__path__ = locs;
+    if (module.$is_package = !is_none(locs)) {
+        module.__path__ = locs;
+    }
     if (_b_.getattr(spec, 'has_location')) {
         module.__file__ = _b_.getattr(spec, 'origin')
         $B.$py_module_path[module.__name__] = module.__file__;

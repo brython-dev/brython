@@ -402,62 +402,41 @@ importer_stdlib_static = {
 /**
  * Search an import path for .js and .py modules
  */
-var hints = {};
-hints[$B.brython_path + 'Lib/'] = 'py';
-hints[$B.brython_path + 'libs/'] = 'js';
-
 importer_path = {
-    // Highlight what kind of files are expected at a given URL / folder
-    'import_hints' : hints,
     'find_spec' : function(self, fullname, path, prev_module) {
-        var loader_data = {};
-        for (var i = 0, l = $B.path.length; i<l; ++i) {
-            var path = $B.path[i];
-            if (path[path.length - 1] != '/') {
-                path += '/'
+        if (is_none(path)) {
+            // [Import spec] Top-level import , use sys.path
+            path = $B.path;
+        }
+        for (var i = 0, li = path.length; i<li; ++i) {
+            var path_entry = path[i];
+            if (path_entry[path_entry.length - 1] != '/') {
+                path_entry += '/'
             }
-            var hint = self.import_hints[path],
-                notfound = true,
-                base_path = path + fullname.replace(/\./g, '/'),
-                modpaths = [];
-            // FIXME : Priorities .py vs .js ?
-            if (hint != 'py') {
-                // either js or undefined , try js code
-                modpaths = [[base_path + '.js', 'js', false]];
-            }
-            if (hint != 'js') {
-                // either py or undefined , try py code
-                modpaths = modpaths.concat([[base_path + '.py', 'py', false],
-                                            [base_path + '/__init__.py',
-                                             'py', true]]);
-            }
-            for (var j =0; notfound && j < modpaths.length; ++j) {
-                try{
-                    var file_info = modpaths[j];
-                    loader_data.code=$download_module(fullname, file_info[0]);
-                    notfound = false;
-                    loader_data.type = file_info[1];
-                    loader_data.is_package = file_info[2];
-                    loader_data.path = file_info[0];
-                }catch(err){
-                    // FIXME: Remove this ?
-                    $B.$pop_exc()
+            // Try path hooks cache first
+            var finder = $B.path_importer_cache[path_entry];
+            if (finder === undefined) {
+                var finder_notfound = true;
+                for (var j = 0, lj = $B.path_hooks.length;
+                     j < lj && finder_notfound;
+                     ++j) {
+                    var hook = $B.path_hooks[j];
+                    try {
+                        finder = _b_.getattr(hook, '__call__')(path_entry)
+                        finder_notfound = false;
+                    }
+                    catch (e) {
+                        if (e.__class__ !== _b_.ImportError.$dict) { throw e; }
+                    }
+                }
+                if (finder_notfound) {
+                    $B.path_importer_cache[path_entry] = _b_.None;
                 }
             }
-            if (!notfound) {
-                return new_spec({
-                    name : fullname,
-                    loader: self,
-                    origin : loader_data.path,
-                    // FIXME: Namespace packages ?
-                    submodule_search_locations: loader_data.is_package? [base_path]:
-                                                                        _b_.None,
-                    loader_state: loader_data,
-                    // FIXME : Where exactly compiled module is stored ?
-                    cached: _b_.None,
-                    parent: loader_data.is_package? fullname :
-                                                    parent_package(fullname),
-                    has_location: _b_.True});
+            var spec = _b_.getattr(_b_.getattr(finder, 'find_spec'),
+                                   '__call__')(finder, fullname, prev_module);
+            if (!is_none(spec)) {
+                return spec;
             }
         }
         return _b_.None;
@@ -467,13 +446,94 @@ importer_path = {
         return _b_.None;
     },
     'exec_module' : function(self, module) {
-        var _spec = _b_.getattr(module, '__spec__');
-        module.$is_package = _spec.loader_state.is_package;
-        var code = _spec.loader_state.code;
+        var _spec = _b_.getattr(module, '__spec__'),
+            code = _spec.loader_state.code;
+        module.$is_package = _spec.loader_state.is_package,
         delete _spec.loader_state['code'];
-        run_py(code, _spec.origin, module);
+        if (_spec.loader_state.type == 'py') {
+            run_py(code, _spec.origin, module);
+        }
+        else if (_spec.loader_state.type == 'js') {
+            run_js(code, _spec.origin, module)
+        }
     }
 }
+
+// FIXME : Add this code elsewhere ?
+$B.path_hooks = [];
+$B.path_importer_cache = {};
+
+/**
+ * Find modules deployed in a hierarchy under a given base URL
+ *
+ * @param {string}      search path URL, used as a reference during ihe import
+ * @param {string}      one of 'js', 'py' or undefined (i.e. yet unknown)
+ */
+UrlPathFinder = function(path, hint) {
+    this.path = path;
+    this.hint = hint;
+}
+
+UrlPathFinder.prototype.find_spec = function(self, fullname, module) {
+    var loader_data = {},
+        notfound = true,
+        hint = self.hint,
+        path_entry = self.path,
+        base_path = path_entry + fullname.match(/[^.]+$/g)[0];
+    if (hint != 'py') {
+        // either js or undefined , try js code
+        modpaths = [[base_path + '.js', 'js', false]];
+    }
+    if (hint != 'js') {
+        // either py or undefined , try py code
+        modpaths = modpaths.concat([[base_path + '.py', 'py', false],
+                                    [base_path + '/__init__.py',
+                                     'py', true]]);
+    }
+    for (var j = 0; notfound && j < modpaths.length; ++j) {
+        try{
+            var file_info = modpaths[j];
+            loader_data.code=$download_module(fullname, file_info[0]);
+            notfound = false;
+            if (self.hint === undefined) {
+                self.hint = file_info[1]
+            }
+            loader_data.type = file_info[1];
+            loader_data.is_package = file_info[2];
+            if (loader_data.is_package) {
+                // Populate cache in advance to speed up submodule imports
+                $B.path_importer_cache.append(new UrlPathFinder(base_path,
+                                                                self.hint));
+            }
+            loader_data.path = file_info[0];
+        }catch(err){
+            // FIXME: Remove this ?
+            $B.$pop_exc()
+        }
+    }
+    if (!notfound) {
+        return new_spec({
+            name : fullname,
+            loader: importer_path,
+            origin : loader_data.path,
+            // FIXME: Namespace packages ?
+            submodule_search_locations: loader_data.is_package? [base_path]:
+                                                                _b_.None,
+            loader_state: loader_data,
+            // FIXME : Where exactly compiled module is stored ?
+            cached: _b_.None,
+            parent: loader_data.is_package? fullname :
+                                            parent_package(fullname),
+            has_location: _b_.True});
+    }
+    return _b_.None;
+}
+
+UrlPathFinder.prototype.invalidate_caches = function(self) {
+    // TODO: Implement
+}
+
+$B.path_hooks.push(function(path) { return new UrlPathFinder(path); });
 
 window.is_none = function (o) {
     return o === undefined || o == _b_.None;
