@@ -299,10 +299,13 @@ $IntDict.bit_length = function(self){
 $IntDict.numerator = function(self){return self}
 $IntDict.denominator = function(self){return int(1)}
 
+$B.max_int32= (1<<30) * 2 - 1
+$B.min_int32= - $B.max_int32
+
 // code for operands & | ^
 var $op_func = function(self,other){
     if(isinstance(other,int)) {
-       if (self > (1 << 32) || self < 0 || other > (1<<32) || other < 0) {
+       if (self > $B.max_int32 || self < $B.min_int32 || other > $B.max_int32 || other < $B.min_int32) {
           return $B.LongInt.$dict.__sub__($B.LongInt(self), $B.LongInt(other))
        }
        return self-other
