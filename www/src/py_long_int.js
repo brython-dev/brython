@@ -618,6 +618,7 @@ function LongInt(value, base){
         if(isSafeInteger(value)){value = value.toString()}
         else{console.log('wrong value', value);throw ValueError("argument of long_int is not a safe integer")}
     }else if(value.__class__===$LongIntDict){return value}
+    else if(isinstance(value,_b_.bool)){value=_b_.bool.$dict.__int__(value)+''}
     else if(typeof value!='string'){
         throw ValueError("argument of long_int must be a string, not "+
             $B.get_class(value).__name__)
