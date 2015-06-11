@@ -300,6 +300,9 @@ importer_VFS = {
     }
 }
 
+importer_VFS.__repr__ = importer_VFS.__str__ = importer_VFS.toString = 
+    function() { return '<object importer_VFS>' }
+
 //function import_from_VFS(mod_name, origin, package){
 //    var stored = $B.VFS[mod_name]
 //    if(stored===undefined && package){
@@ -375,6 +378,10 @@ importer_stdlib_static = {
         }
     }
 }
+
+importer_stdlib_static.__repr__ = importer_stdlib_static.__str__ =
+importer_stdlib_static.toString = 
+    function() { return '<object importer_stdlib_static>' }
 
 //function import_from_stdlib_static(mod_name,origin,package){
 //    var address = $B.stdlib[mod_name]
@@ -459,6 +466,9 @@ importer_path = {
     }
 }
 
+importer_path.__repr__ = importer_path.__str__ = importer_path.toString = 
+    function() { return '<object importer_path>' }
+
 // FIXME : Add this code elsewhere ?
 $B.path_hooks = [];
 $B.path_importer_cache = {};
@@ -533,7 +543,11 @@ UrlPathFinder.prototype.invalidate_caches = function(self) {
     // TODO: Implement
 }
 
-$B.path_hooks.push(function(path) { return new UrlPathFinder(path); });
+url_hook = function(path) { return new UrlPathFinder(path); };
+url_hook.__repr__ = url_hook.__str__ = url_hook.toString = function() {
+    return '<function path_hook_for_UrlPathFinder>';
+}
+$B.path_hooks.push(url_hook);
 
 window.is_none = function (o) {
     return o === undefined || o == _b_.None;
