@@ -6,11 +6,6 @@ l'impossibilité d'accéder au système de fichier. L'écriture est impossible, 
 la lecture est limitée aux répertoires accessibles depuis le serveur par une
 requête Ajax.
 
-A cause des spécifications de Javascript, Brython ne gère correctement les
-entiers que dans la plage [-2<sup>53</sup>, 2<sup>53</sup>]. Un module est 
-fourni pour les programmes qui doivent manipuler des entiers de longueur 
-arbitraire.
-
 Mots clés et fonctions intégrées
 --------------------------------
 

@@ -59,8 +59,8 @@ $B.has_websocket=window.WebSocket!==undefined
 __BRYTHON__.implementation=[3,1,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.1.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-06-05 13:46:52.361000"
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_codecs","_collections","_csv","_dummy_thread","_functools","_imp","_io","_markupbase","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2015-06-12 18:31:34.265831"
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
 
@@ -497,7 +497,7 @@ this.tree=[C]
 if(C.type=='expr' && C.tree[0].type=='id' &&
 noassign[C.tree[0].value]===true){$_SyntaxError(C,["can't assign to keyword"])
 }
-var scope=$get_scope(this)
+var scope=this.scope=$get_scope(this)
 $get_node(this).bound_before=$B.keys($B.bound[scope.id])
 this.module=scope.module
 this.toString=function(){return '(augm assign) '+this.tree}
@@ -518,7 +518,7 @@ new $NodeJSCtx(new_node,'var $temp,$left;')
 parent.insert(rank,new_node)
 offset++
 var new_node=new $Node()
-new_node.id=this.module
+new_node.id=this.scope.id
 var new_ctx=new $NodeCtx(new_node)
 var new_expr=new $ExprCtx(new_ctx,'js',false)
 var _id=new $RawJSCtx(new_expr,'$temp')
@@ -533,7 +533,7 @@ switch(op){case '+=':
 case '-=':
 case '*=':
 case '/=':
-if(left_is_id){var scope=$get_scope(C),local_ns='$local_'+scope.id.replace(/\./g,'_'),global_ns='$local_'+scope.module.replace(/\./g,'_'),prefix
+if(left_is_id){var scope=this.scope,local_ns='$local_'+scope.id.replace(/\./g,'_'),global_ns='$local_'+scope.module.replace(/\./g,'_'),prefix
 switch(scope.ntype){case 'module':
 prefix=global_ns
 break
@@ -596,7 +596,7 @@ new $NodeJSCtx(new_node,js)
 parent.insert(rank+offset,new_node)
 offset ++
 var aa1=new $Node()
-aa1.id=this.module
+aa1.id=this.scope.id
 var ctx1=new $NodeCtx(aa1)
 var expr1=new $ExprCtx(ctx1,'clone',false)
 expr1.tree=C.tree
@@ -1254,7 +1254,7 @@ def_func_node.add(new_node)
 }
 node.children=[]
 var default_node=new $Node()
-var js=';None;'
+var js=';_b_.None;'
 if(defs1.length>0){js='var $defaults = {'+defs1.join(',')+'};'}
 new $NodeJSCtx(default_node,js)
 node.insert(0,default_node)
@@ -1526,12 +1526,21 @@ var idt=target.to_js()
 if($range.tree.length==1){var start=0,stop=$range.tree[0].to_js()
 }else{var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()
 }
-var js=idt+'=$B.$GetInt('+start+')-1, $stop_'+num
-js +='=$B.$GetInt('+stop+')-1;while('+idt+'++ < $stop_'+num+')'
+var h='\n'+' '.repeat(node.indent+4)
+var js=idt+'='+start+';'+h+'var $stop_'+num +'='+stop+h+
+'var $safe'+num+'= typeof '+idt+'=="number" && typeof '+
+'$stop_'+num+'=="number";'+h+'while(true)'
 var for_node=new $Node()
 new $NodeJSCtx(for_node,js)
+for_node.add($NodeJS('if($safe'+num+' && '+idt+'>= $stop_'+
+num+'){break}'))
+for_node.add($NodeJS('else if(!$safe'+num+
+' && $B.ge('+idt+', $stop_'+num+
+')){break}'))
 for(var i=0;i<children.length;i++){for_node.add(children[i].clone())
 }
+for_node.add($NodeJS('if($safe'+num+'){'+idt+'++}'))
+for_node.add($NodeJS('else{'+idt+'=$B.add('+idt+',1)}'))
 var in_loop=false
 if(scope.ntype=='module'){var pnode=node.parent
 while(pnode){if(pnode.for_wrapper){in_loop=true;break}
@@ -2129,6 +2138,10 @@ node.add(new_node)
 if(node.children.length==0){return $to_js(this.tree)+';'}
 return $to_js(this.tree)
 }}
+function $NodeJS(js){var node=new $Node()
+new $NodeJSCtx(node,js)
+return node
+}
 function $NodeJSCtx(node,js){
 this.node=node
 node.C=this
@@ -3018,6 +3031,7 @@ if(C.expect==='id'){var op=arguments[2]
 C.expect=','
 switch(op){case '+':
 case '-':
+case '~':
 return $transition(new $AbstractExprCtx(C,false),token,op)
 case '*':
 return new $StarArgCtx(C)
@@ -4089,12 +4103,7 @@ if(locals_id==parent_block_id){root.parent_block=$B.modules[parent_block_id].par
 root.line_info=line_info
 root.indent=-1
 if(locals_id!==module){$B.bound[locals_id]={}}
-var new_node=new $Node()
-var current=root
-var name=""
-var _type=null
-var pos=0
-indent=null
+var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
 var lnum=1
 while(pos<src.length){var flag=false
 var car=src.charAt(pos)
@@ -4140,20 +4149,21 @@ if(end==-1){end=src.length-1}
 pos +=end+1;continue
 }
 if(car=='"' ||car=="'"){var raw=C.type=='str' && C.raw,bytes=false ,end=null
-if(name.length>0){switch(name.toLowerCase()){case 'r': 
-raw=true;name=''
+if(string_modifier){switch(string_modifier){case 'r': 
+raw=true
 break
 case 'u':
-name=''
 break
 case 'b':
-bytes=true;name=''
+bytes=true
 break
 case 'rb':
 case 'br':
-bytes=true;raw=true;name=''
+bytes=true;raw=true
 break
-}}
+}
+string_modifier=false
+}
 if(src.substr(pos,3)==car+car+car){_type="triple_string";end=pos+3}
 else{_type="string";end=pos+1}
 var escaped=false
@@ -4208,11 +4218,11 @@ if(!found){if(_type==="triple_string"){$_SyntaxError(C,"Triple string end not fo
 continue
 }
 if(name==""){if($B.re_XID_Start.exec(car)){name=car 
-pos++;continue
-}}else{
-if($B.re_XID_Continue.exec(car)){name+=car
-pos++;continue
-}else{if(kwdict.indexOf(name)>-1){$pos=pos-name.length
+pos++
+while(pos<src.length && $B.re_XID_Continue.exec(src.charAt(pos))){name+=src.charAt(pos)
+pos++
+}
+if(kwdict.indexOf(name)>-1){$pos=pos-name.length
 if(unsupported.indexOf(name)>-1){$_SyntaxError(C,"Unsupported Python keyword '"+name+"'")
 }
 if(name=='not'){var re=/^\s+in\s+/
@@ -4225,6 +4235,10 @@ C=$transition(C,'op','not_in')
 && $B.forbidden.indexOf(name)==-1){
 $pos=pos-name.length
 C=$transition(C,'op',name)
+}else if((src.charAt(pos)=='"'||src.charAt(pos)=="'")
+&&['r','b','u','rb','br'].indexOf(name.toLowerCase())!==-1){string_modifier=name.toLowerCase()
+name=""
+continue
 }else{
 if($B.forbidden.indexOf(name)>-1){name='$$'+name}
 $pos=pos-name.length
@@ -5610,7 +5624,15 @@ if(x>min_int && x<max_int && y>min_int && y<max_int
 && z>min_int && z<max_int){return z}
 else if((typeof x=='number' ||x.__class__===$B.LongInt.$dict)
 &&(typeof y=='number' ||y.__class__===$B.LongInt.$dict)){return $B.LongInt.$dict.__sub__($B.LongInt(x),$B.LongInt(y))
-}else{return z}}})(__BRYTHON__)
+}else{return z}}
+$B.ge=function(x,y){if(typeof x=='number' && typeof y=='number'){return x>=y}
+else if(typeof x=='number' && typeof y!='number'){return !y.pos}
+else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
+else{return $B.LongInt.$dict.__ge__(x,y)}}
+$B.gt=function(x,y){if(typeof x=='number' && typeof y=='number'){return x>y}
+else if(typeof x=='number' && typeof y!='number'){return !y.pos}
+else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
+else{return $B.LongInt.$dict.__gt__(x,y)}}})(__BRYTHON__)
 if(!Array.indexOf){Array.prototype.indexOf=function(obj){for(var i=0,_len_i=this.length;i < _len_i;i++)if(this[i]==obj)return i
 return -1
 }}
@@ -5651,12 +5673,7 @@ return charCode > 127 ? charEscape(charCode): char
 })
 .join("")
 }
-function $builtin_base_convert_helper(obj,base){var value=$B.$GetInt(obj)
-if(value===undefined){
-throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')
-return
-}
-var prefix=""
+function $builtin_base_convert_helper(obj,base){var prefix=""
 switch(base){case 2:
 prefix='0b';break
 case 8:
@@ -5665,6 +5682,14 @@ case 16:
 prefix='0x';break
 default:
 console.log('invalid base:' + base)
+}
+if(obj.__class__===$B.LongInt.$dict){if(obj.pos)return prefix + $B.LongInt.$dict.to_base(obj,base)
+return '-' + prefix + $B.LongInt.$dict.to_base(-obj,base)
+}
+var value=$B.$GetInt(obj)
+if(value===undefined){
+throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')
+return
 }
 if(value >=0)return prefix + value.toString(base)
 return '-' + prefix +(-value).toString(base)
@@ -5714,19 +5739,11 @@ this.__mro__=[this,$ObjectDict]
 $B.$CodeObjectDict={__class__:$B.$type,__name__:'code',__repr__:function(self){return '<code object '+self.name+', file '+self.filename+'>'},}
 $B.$CodeObjectDict.__str__=$B.$CodeObjectDict.__repr__
 $B.$CodeObjectDict.__mro__=[$B.$CodeObjectDict,$ObjectDict]
-function compile(source,filename,mode){
-var current_frame=$B.frames_stack[$B.frames_stack.length-1]
-if(current_frame===undefined){alert('current frame undef pour '+src.substr(0,30))}
-var current_locals_id=current_frame[0]
-var current_locals_name=current_locals_id.replace(/\./,'_')
-var current_globals_id=current_frame[2]
-var current_globals_name=current_globals_id.replace(/\./,'_')
-var module_name='exec_' + $B.UUID()
+function compile(source,filename,mode){var module_name='exec_' + $B.UUID()
 var local_name=module_name;
 var root=$B.py2js(source,module_name,[module_name],local_name)
-root.children.pop()
-var js=root.to_js()
-return{__class__:$B.$CodeObjectDict,src:js,name:source.__name__ ||'<module>',filename:filename,globals_name: module_name,locals_name:local_name,mode:mode}}
+return{__class__:$B.$CodeObjectDict,src:source,name:source.__name__ ||'<module>',filename:filename,mode:mode
+}}
 compile.__class__=$B.factory
 $B.$CodeObjectDict.$factory=compile
 compile.$dict=$B.$CodeObjectDict
@@ -5794,39 +5811,7 @@ var current_locals_name=current_locals_id.replace(/\./,'_')
 var current_globals_id=current_frame[2]
 var current_globals_name=current_globals_id.replace(/\./,'_')
 var is_exec=arguments[3]=='exec',module_name,leave=false
-if(src.__class__===$B.$CodeObjectDict){var $globals="$locals_" + src.globals_name
-var $locals="$locals_" + src.locals_name
-if(_globals===undefined){module_name='exec_'+$B.UUID()
-$B.$py_module_path[module_name]=$B.$py_module_path[current_globals_id]
-eval('var '+ $globals + '=current_frame[3]')
-}else{
-eval('var ' + $globals + '={}')
-var items=_b_.dict.$dict.items(_globals),item
-while(1){try{item=next(items)
-eval($globals+'["'+item[0]+'"] = item[1]')
-}catch(err){break
-}}}
-if(_locals===undefined){
-}else{
-eval('var ' + $locals + '={}')
-var items=_b_.dict.$dict.items(_locals),item
-while(1){try{item=next(items)
-eval($locals+'["'+item[0]+'"] = item[1]')
-}catch(err){break
-}}}
-var res=eval(src.src)
-if(_globals!==undefined){
-var ns=eval($globals)
-var setitem=getattr(_globals,'__setitem__')
-for(var attr in ns){setitem(attr,ns[attr])
-}}
-if(_locals!==undefined){
-var ns=eval($locals)
-var setitem=getattr(_locals,'__setitem__')
-for(var attr in ns){setitem(attr,ns[attr])
-}}
-return res
-}
+if(src.__class__===$B.$CodeObjectDict){src=src.src}
 if(_globals===undefined){module_name='exec_'+$B.UUID()
 $B.$py_module_path[module_name]=$B.$py_module_path[current_globals_id]
 eval('var $locals_'+module_name+'=current_frame[3]')
@@ -5985,7 +5970,9 @@ throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")
 }
 function globals(){
 var globals_obj=$B.last($B.frames_stack)[3]
-return $B.obj_dict(globals_obj)
+var _a=[]
+for(var key in globals_obj)_a.push([key,globals_obj[key]])
+return _b_.dict(_a)
 }
 function hasattr(obj,attr){try{getattr(obj,attr);return true}
 catch(err){return false}}
@@ -6250,29 +6237,23 @@ if((self.step>0 && res >=self.stop)||
 }
 return res 
 }
-$RangeDict.__getitems__=function(self){var t=[],rank=0
-while(1){var res=self.start + rank*self.step
-if((self.step>0 && res >=self.stop)||
-(self.step<0 && res < self.stop)){break
-}
-t[rank++]=res
-}
-return t
-}
 $RangeDict.__iter__=function(self){return{
 __class__ : $RangeDict,start:self.start,stop:self.stop,step:self.step,$counter:self.start-self.step
 }}
 $RangeDict.__len__=function(self){if(self.step>0)return 1+_b_.int((self.stop-1-self.start)/self.step)
 return 1+_b_.int((self.start-1-self.stop)/-self.step)
 }
-$RangeDict.__next__=function(self){self.$counter +=self.step
+$RangeDict.__next__=function(self){if(self.$safe){self.$counter +=self.step
 if((self.step>0 && self.$counter >=self.stop)
 ||(self.step<0 && self.$counter <=self.stop)){throw _b_.StopIteration('')
-}
+}}else{self.$counter=$B.add(self.$counter,self.step)
+if(($B.gt(self.step,0)&& $B.ge(self.$counter,self.stop))
+||($B.gt(0,self.step)&& $B.ge(self.stop,self.$counter))){throw _b_.StopIteration('')
+}}
 return self.$counter
 }
 $RangeDict.__mro__=[$RangeDict,$ObjectDict]
-$RangeDict.__reversed__=function(self){return range(self.stop-1,self.start-1,-self.step)
+$RangeDict.__reversed__=function(self){return range($B.sub(self.stop,1),$B.sub(self.start,1),$B.sub(0,self.step))
 }
 $RangeDict.__repr__=$RangeDict.__str__=function(self){var res='range('+self.start+', '+self.stop
 if(self.step!=1)res +=', '+self.step
@@ -6297,6 +6278,8 @@ if(args.length>=3)step=args[2]
 if(step==0){throw ValueError("range() arg 3 must not be zero")}
 var res={__class__ : $RangeDict,start:start,stop:stop,step:step,$is_range:true
 }
+res.$safe=(typeof start=='number' && typeof stop=='number' &&
+typeof step=='number')
 res.__repr__=res.__str__=function(){return 'range('+start+','+stop+(args.length>=3 ? ','+step : '')+')'
 }
 return res
@@ -6864,6 +6847,7 @@ exc.traceback=traceback({tb_frame:frame($B.frames_stack),tb_lineno:-1,tb_lasti:'
 }else{var exc=js_exc
 }
 exc.$stack=$B.frames_stack.slice()
+$B.current_exception=exc
 return exc
 }
 $B.is_exc=function(exc,exc_list){
@@ -8205,11 +8189,7 @@ if(typeof other==="string"){return other.repeat(val)
 }
 if(isinstance(other,int)){var res=self*other
 if(res>$B.min_int && res<$B.max_int){return res}
-else{console.log('res is big int',$B.LongInt.$dict.__mul__($B.LongInt(self),$B.LongInt(other)))
-var res=int($B.LongInt.$dict.__mul__($B.LongInt(self),$B.LongInt(other)))
-console.log('res',res)
-return res
-}}
+else{return int($B.LongInt.$dict.__mul__($B.LongInt(self),$B.LongInt(other)))}}
 if(isinstance(other,_b_.float)){return _b_.float(self*other.value)
 }
 if(isinstance(other,_b_.bool)){if(other.valueOf())return self
@@ -8277,7 +8257,12 @@ return s.length
 }
 $IntDict.numerator=function(self){return self}
 $IntDict.denominator=function(self){return int(1)}
-var $op_func=function(self,other){if(isinstance(other,int))return self-other
+$B.max_int32=(1<<30)* 2 - 1
+$B.min_int32=- $B.max_int32
+var $op_func=function(self,other){if(isinstance(other,int)){if(self > $B.max_int32 ||self < $B.min_int32 ||other > $B.max_int32 ||other < $B.min_int32){return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))
+}
+return self-other
+}
 if(isinstance(other,_b_.bool))return self-other
 if(hasattr(other,'__rsub__'))return getattr(other,'__rsub__')(self)
 $err("-",other)
@@ -8288,10 +8273,10 @@ for(var $op in $ops){var opf=$op_func.replace(/-/gm,$op)
 opf=opf.replace(new RegExp('sub','gm'),$ops[$op])
 eval('$IntDict.__'+$ops[$op]+'__ = '+opf)
 }
-var $op_func=function(self,other){if(isinstance(other,int)){var res=self.valueOf()-other.valueOf()
-if(isinstance(res,int))return res
-return _b_.float(res)
-}
+var $op_func=function(self,other){if(isinstance(other,int)){if(typeof other=='number'){var res=self.valueOf()-other.valueOf()
+if(res>=$B.min_int && res<=$B.max_int){return res}
+else{return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))}}else{return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))
+}}
 if(isinstance(other,_b_.float)){return _b_.float(self.valueOf()-other.value)
 }
 if(isinstance(other,_b_.complex)){return _b_.complex(self-other.real,-other.imag)
@@ -8311,7 +8296,8 @@ for(var $op in $ops){var opf=$op_func.replace(/-/gm,$op)
 opf=opf.replace(new RegExp('sub','gm'),$ops[$op])
 eval('$IntDict.__'+$ops[$op]+'__ = '+opf)
 }
-var $comp_func=function(self,other){if(isinstance(other,int))return self.valueOf()> other.valueOf()
+var $comp_func=function(self,other){if(other.__class__===$B.LongInt.$dict)return $B.LongInt.$dict.__gt__($B.LongInt(self),other)
+if(isinstance(other,int))return self.valueOf()> other.valueOf()
 if(isinstance(other,_b_.float))return self.valueOf()> other.value
 if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.$dict.__hash__(other)
 }
@@ -8345,14 +8331,19 @@ if(isinstance(value,_b_.complex)){throw TypeError("can't convert complex to int"
 var $ns=$B.$MakeArgs1('int',2,{x:null,base:null},['x','base'],arguments,{'base':10},'null','null')
 var value=$ns['x']
 var base=$ns['base']
-if(value.__class__==_b_.float.$dict && base===10){return parseInt(value.value)}
+if(value.__class__==_b_.float.$dict && base===10){var res=parseInt(value.value)
+if(res<$B.min_int ||res>$B.max_int){return $B.LongInt(res+'')}
+else{return res}}
 if(!(base >=2 && base <=36)){
 if(base !=0)throw _b_.ValueError("invalid base")
 }
-if(typeof value=='number'){if(base==10){return value}
-else if(value.toString().search('e')>-1){
+if(typeof value=='number'){if(base==10){if(value < $B.min_int ||value > $B.max_int)return $B.LongInt(value)
+return value
+}else if(value.toString().search('e')>-1){
 throw _b_.OverflowError("can't convert to base "+base)
-}else{return parseInt(value,base)
+}else{var res=parseInt(value,base)
+if(res < $B.min_int ||res > $B.max_int)return $B.LongInt(value,base)
+return res
 }}
 if(value===true)return Number(1)
 if(value===false)return Number(0)
@@ -8379,7 +8370,9 @@ if(!_re.test(_value)){throw _b_.ValueError(
 if(base <=10 && !isFinite(value)){throw _b_.ValueError(
 "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
 }
-return Number(parseInt(_value,base))
+var res=parseInt(_value,base)
+if(res < $B.min_int ||res > $B.max_int)return $B.LongInt(_value,base)
+return res
 }
 if(isinstance(value,[_b_.bytes,_b_.bytearray])){var _digits=$valid_digits(base)
 for(var i=0;i<value.source.length;i++){if(_digits.indexOf(String.fromCharCode(value.source[i]))==-1){throw _b_.ValueError("invalid literal for int() with base "+
@@ -8415,7 +8408,7 @@ else{res=x+res;carry=0}}
 if(carry){res=carry+res}
 return{__class__:$LongIntDict,value:res,pos:true}}
 function check_shift(shift){
-if(!isinstance(shift,LongInt)){throw TypeError("shift must be LongInt, not '"+
+if(!isinstance(shift,LongInt)){throw TypeError("shift must be int, not '"+
 $B.get_class(shift).__name__+"'")
 }
 if(!shift.pos){throw ValueError("negative shift count")}}
@@ -8586,11 +8579,7 @@ temp=d[0].value
 if(temp=='0'){break}}
 return intOrLong(res)
 }
-$LongIntDict.__invert__=function(self){var bin=$LongIntDict.__index__(self)
-var res=''
-for(var i=0;i<bin.length;i++){res +=bin.charAt(i)=='0' ? '1' : '0'
-}
-return intOrLong(LongInt(res,2))
+$LongIntDict.__invert__=function(self){return $LongIntDict.__sub__(LongInt('-1'),self)
 }
 $LongIntDict.__le__=function(self,other){if(typeof other=='number')other=LongInt(_b_.str(other))
 if(self.value.length>other.value.length){return false}
@@ -8598,7 +8587,8 @@ else if(self.value.length<other.value.length){return true}
 else{return self.value <=other.value}}
 $LongIntDict.__lt__=function(self,other){return !$LongIntDict.__ge__(self,other)
 }
-$LongIntDict.__lshift__=function(self,shift){check_shift(shift)
+$LongIntDict.__lshift__=function(self,shift){shift=LongInt(shift)
+if(shift.value=='0'){return self}
 var res=self.value
 while(true){var x,carry=0,res1=''
 for(var i=res.length-1;i>=0;i--){x=(carry+parseInt(res.charAt(i))*2).toString()
@@ -8622,7 +8612,8 @@ res.pos=false
 return intOrLong(res)
 }
 $LongIntDict.__neg__=function(obj){return{__class__:$LongIntDict,value:obj.value,pos:!obj.pos}}
-$LongIntDict.__or__=function(self,other){var v1=$LongIntDict.__index__(self)
+$LongIntDict.__or__=function(self,other){other=LongInt(other)
+var v1=$LongIntDict.__index__(self)
 var v2=$LongIntDict.__index__(other)
 if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
 var start=v1.length-v2.length
@@ -8647,7 +8638,7 @@ res=LongInt($LongIntDict.__mul__(res,self))
 }
 return intOrLong(res)
 }
-$LongIntDict.__rshift__=function(self,shift){check_shift(shift)
+$LongIntDict.__rshift__=function(self,shift){shift=LongInt(shift)
 if(shift.value=='0'){return self}
 var res=self.value
 while(true){res=divmod_pos(res,'2')[0].value
@@ -8693,7 +8684,13 @@ return intOrLong(res)
 res.pos=false
 return intOrLong(res)
 }}
-$LongIntDict.__xor__=function(self,other){var v1=$LongIntDict.__index__(self)
+$LongIntDict.__truediv__=function(self,other){if(isinstance(other,LongInt)){return _b_.float(parseInt(self.value)/parseInt(other.value))
+}else if(isinstance(other,_b_.int)){return _b_.float(parseInt(self.value)/other)
+}else if(isinstance(other,_b_.float)){return _b_.float(parseInt(self.value)/other.value)
+}else{throw TypeError("unsupported operand type(s) for /: 'int' and '"+
+$B.get_class(other).__name__+"'")}}
+$LongIntDict.__xor__=function(self,other){other=LongInt(other)
+var v1=$LongIntDict.__index__(self)
 var v2=$LongIntDict.__index__(other)
 if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
 var start=v1.length-v2.length
@@ -8743,9 +8740,12 @@ else if(!isinstance(base,int)){throw TypeError("'"+$B.get_class(base).__name__+"
 if(base<0 ||base==1 ||base>36){throw ValueError("LongInt() base must be >= 2 and <= 36")
 }
 if(isinstance(value,_b_.float)){if(value>=0){value=Math.round(value.value)}
-else{value=Math.ceil(value.value)}}
+else{value=Math.ceil(value.value)}}else if(isinstance(value,_b_.bool)){if(value.valueOf())return int(1)
+return int(0)
+}
 if(typeof value=='number'){if(isSafeInteger(value)){value=value.toString()}
-else{throw ValueError("argument of long_int is not a safe integer")}}else if(value.__class__===$LongIntDict){return value}
+else{console.log('wrong value',value);throw ValueError("argument of long_int is not a safe integer")}}else if(value.__class__===$LongIntDict){return value}
+else if(isinstance(value,_b_.bool)){value=_b_.bool.$dict.__int__(value)+''}
 else if(typeof value!='string'){throw ValueError("argument of long_int must be a string, not "+
 $B.get_class(value).__name__)
 }
@@ -8999,7 +8999,6 @@ if(hasattr(arg,'__int__')||hasattr(arg,'__index__')){return $ListDict.__getitem_
 }
 throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
 }
-$ListDict.__getitems__=function(self){return self}
 $ListDict.__ge__=function(self,other){if(!isinstance(other,[list,_b_.tuple])){throw _b_.TypeError("unorderable types: list() >= "+
 $B.get_class(other).__name__+'()')
 }
@@ -9337,7 +9336,6 @@ return res
 }
 if(isinstance(arg,bool))return self.__getitem__(_b_.int(arg))
 }
-$StringDict.__getitems__=function(self){return self.split('')}
 $StringDict.__hash__=function(self){if(self===undefined){return $StringDict.__hashvalue__ ||$B.$py_next_hash-- 
 }
 var hash=1
@@ -9407,7 +9405,10 @@ flags.pad_char=" "
 return format_padding(str(val),flags)
 }
 var num_format=function(val,flags){number_check(val)
+if(val.__class__===$B.LongInt.$dict){val=$B.LongInt.$dict.to_base(val,10)
+}else{
 val=parseInt(val)
+}
 var s=format_int_precision(val,flags)
 if(flags.pad_char==='0'){if(val < 0){s=s.substring(1)
 return '-' + format_padding(s,flags,true)
@@ -9507,9 +9508,13 @@ return val
 var floating_point_exponential_format=function(val,upper,flags){val=_float_helper(val,flags)
 return format_padding(format_sign(val,flags)+ format_float_precision(val,upper,flags,_floating_exp_helper),flags)
 }
-var signed_hex_format=function(val,upper,flags){number_check(val)
-var ret=parseInt(val)
+var signed_hex_format=function(val,upper,flags){var ret
+number_check(val)
+if(val.__class__===$B.LongInt.$dict){ret=$B.LongInt.$dict.to_base(val,16)
+}else{
+ret=parseInt(val)
 ret=ret.toString(16)
+}
 ret=format_int_precision(ret,flags)
 if(upper){ret=ret.toUpperCase()
 }
@@ -9530,8 +9535,12 @@ ret="0x" + ret
 return format_padding(format_sign(val,flags)+ ret,flags)
 }
 var octal_format=function(val,flags){number_check(val)
-var ret=parseInt(val)
+var ret 
+if(val.__class__===$B.LongInt.$dict){ret=$B.LongInt.$dict.to_base(8)
+}else{
+ret=parseInt(val)
 ret=ret.toString(8)
+}
 ret=format_int_precision(ret,flags)
 if(flags.pad_char==='0'){if(val < 0){ret=ret.substring(1)
 ret='-' + format_padding(ret,flags,true)
@@ -10806,7 +10815,6 @@ return true
 return false
 }
 $SetDict.__ge__=function(self,other){return !$SetDict.__lt__(self,other)}
-$SetDict.__getitems__=function(self){return self.$items}
 $SetDict.__gt__=function(self,other,accept_iter){$test(accept_iter,other)
 return !$SetDict.__le__(self,other)
 }

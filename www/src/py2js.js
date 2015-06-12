@@ -787,13 +787,13 @@ function $AugmentedAssignCtx(context, op){
                 $_SyntaxError(context,["can't assign to keyword"])
     }
     
-    var scope = $get_scope(this)
+    var scope = this.scope = $get_scope(this)
 
     // Store the names already bound
     $get_node(this).bound_before = $B.keys($B.bound[scope.id])
     
     this.module = scope.module
-
+    
     this.toString = function(){return '(augm assign) '+this.tree}
 
     this.transform = function(node,rank){
@@ -825,7 +825,7 @@ function $AugmentedAssignCtx(context, op){
             // at the end of $augmented_assign, control will be
             // passed to the <placeholder> expression
             var new_node = new $Node()
-            new_node.id = this.module
+            new_node.id = this.scope.id
             var new_ctx = new $NodeCtx(new_node)
             var new_expr = new $ExprCtx(new_ctx,'js',false)
             // The id must be a "raw_js", otherwise if scope is a class, 
@@ -846,7 +846,7 @@ function $AugmentedAssignCtx(context, op){
           case '*=':
           case '/=':
             if(left_is_id){
-              var scope = $get_scope(context),
+              var scope = this.scope,
                   local_ns = '$local_'+scope.id.replace(/\./g,'_'),
                   global_ns = '$local_'+scope.module.replace(/\./g,'_'),
                   prefix
@@ -908,7 +908,7 @@ function $AugmentedAssignCtx(context, op){
             js += right_is_int ? right : right+'.valueOf()'
             
             js += ')}'
-                       
+
             new $NodeJSCtx(new_node,js)
             parent.insert(rank+offset,new_node)
             offset++
@@ -943,7 +943,7 @@ function $AugmentedAssignCtx(context, op){
 
         // create node for "foo = foo + bar"
         var aa1 = new $Node()
-        aa1.id = this.module
+        aa1.id = this.scope.id
         var ctx1 = new $NodeCtx(aa1)
         var expr1 = new $ExprCtx(ctx1,'clone',false)
         expr1.tree = context.tree
@@ -2083,7 +2083,7 @@ function $DefCtx(context){
         // If function has no default value, insert a no-op "None" to have
         // the same number of lines for subsequent transformations
         var default_node = new $Node()
-        var js = ';None;'
+        var js = ';_b_.None;'
         if(defs1.length>0){js = 'var $defaults = {'+defs1.join(',')+'};'}
         new $NodeJSCtx(default_node,js)
         node.insert(0,default_node)
@@ -2520,17 +2520,27 @@ function $ForExpr(context){
             }else{
                 var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()
             }
-            var js = idt+'=$B.$GetInt('+start+')-1, $stop_'+num
-            js += '=$B.$GetInt('+stop+')-1;while('+idt+'++ < $stop_'+num+')'
+            var h = '\n'+' '.repeat(node.indent+4)
+            var js = idt+'='+start+';'+h+'var $stop_'+num +'='+stop+h+
+                'var $safe'+num+'= typeof '+idt+'=="number" && typeof '+
+                '$stop_'+num+'=="number";'+h+'while(true)'
             
-            var for_node = new $Node()
+            var for_node = new $Node()  
             new $NodeJSCtx(for_node,js)
-
+            
+            for_node.add($NodeJS('if($safe'+num+' && '+idt+'>= $stop_'+
+                num+'){break}'))
+            for_node.add($NodeJS('else if(!$safe'+num+
+                ' && $B.ge('+idt+', $stop_'+num+
+                ')){break}'))
+            
             // Add the loop body            
             for(var i=0;i<children.length;i++){
                 for_node.add(children[i].clone())
             }
-
+            for_node.add($NodeJS('if($safe'+num+'){'+idt+'++}'))
+            for_node.add($NodeJS('else{'+idt+'=$B.add('+idt+',1)}'))
+            
             // Check if current "for" loop is inside another "for" loop
             var in_loop=false
             if(scope.ntype=='module'){
@@ -3097,6 +3107,14 @@ function $IdCtx(context,value){
             else{break}
         }
         this.found = found
+        /*
+        if(val=='int'){
+            console.log(val,'bound in')
+            for(var i=0;i<found.length;i++){
+                console.log(i,found[i].id)
+            }
+        }
+        */
 
         if(found.length>0){
             if(found.length>1 && found[0].context){
@@ -3569,6 +3587,12 @@ function $NodeCtx(node){
         if(node.children.length==0){return $to_js(this.tree)+';'}
         return $to_js(this.tree)
     }
+}
+
+function $NodeJS(js){
+    var node = new $Node()
+    new $NodeJSCtx(node, js)
+    return node
 }
 
 function $NodeJSCtx(node,js){ 
@@ -4937,6 +4961,7 @@ function $transition(context,token){
                switch(op) {
                   case '+':
                   case '-':
+                  case '~':
                     return $transition(new $AbstractExprCtx(context,false),token,op)
                   case '*':
                     return new $StarArgCtx(context)
@@ -6279,12 +6304,13 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     root.line_info = line_info
     root.indent = -1
     if(locals_id!==module){$B.bound[locals_id] = {}}
-    var new_node = new $Node()
-    var current = root
-    var name = ""
-    var _type = null
-    var pos = 0
-    indent = null
+    var new_node = new $Node(),
+        current = root,
+        name = "",
+        _type = null,
+        pos = 0,
+        indent = null,
+        string_modifier = false
 
     var lnum = 1
     while(pos<src.length){
@@ -6354,24 +6380,24 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
             var raw = context.type == 'str' && context.raw,
                 bytes = false ,
                 end = null;
-            if(name.length>0){
-                switch(name.toLowerCase()) {
+            if(string_modifier){
+                switch(string_modifier) {
                   case 'r': // raw string
-                    raw = true;name=''
+                    raw = true
                     break
                   case 'u':
                     // in string literals, '\U' and '\u' escapes in raw strings 
                     // are not treated specially.
-                    name = ''
                     break
                   case 'b':
-                    bytes = true;name=''
+                    bytes = true
                     break
                   case 'rb':
                   case 'br':
-                    bytes=true;raw=true;name=''
+                    bytes=true;raw=true
                     break
                 }
+                string_modifier = false
             }
             if(src.substr(pos,3)==car+car+car){_type="triple_string";end=pos+3}
             else{_type="string";end=pos+1}
@@ -6455,13 +6481,11 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         if(name==""){
             if($B.re_XID_Start.exec(car)){
                 name=car // identifier start
-                pos++;continue
-            }
-        } else {
-            if($B.re_XID_Continue.exec(car)){
-                name+=car
-                pos++;continue
-            } else{
+                pos++
+                while(pos<src.length && $B.re_XID_Continue.exec(src.charAt(pos))){
+                    name+=src.charAt(pos)
+                    pos++
+                }
                 if(kwdict.indexOf(name)>-1){
                     $pos = pos-name.length
                     if(unsupported.indexOf(name)>-1){
@@ -6487,6 +6511,11 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                     // "constructor"
                     $pos = pos-name.length
                     context = $transition(context,'op',name)
+                } else if((src.charAt(pos)=='"'||src.charAt(pos)=="'")
+                    && ['r','b','u','rb','br'].indexOf(name.toLowerCase())!==-1){
+                    string_modifier = name.toLowerCase()
+                    name = ""
+                    continue
                 } else {
                     if($B.forbidden.indexOf(name)>-1){name='$$'+name}
                     $pos = pos-name.length

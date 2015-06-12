@@ -186,15 +186,8 @@ $IntDict.__mul__ = function(self,other){
     if(isinstance(other,int)){
         var res = self*other
         if(res>$B.min_int && res<$B.max_int){return res}
-        else{
-            console.log('res is big int',
-                $B.LongInt.$dict.__mul__($B.LongInt(self),
-                $B.LongInt(other)))
-            var res = int($B.LongInt.$dict.__mul__($B.LongInt(self),
-                $B.LongInt(other)))
-            console.log('res', res)
-            return res
-        }
+        else{return int($B.LongInt.$dict.__mul__($B.LongInt(self),
+                $B.LongInt(other)))}
     }
     if(isinstance(other,_b_.float)){
         return _b_.float(self*other.value)
@@ -306,9 +299,17 @@ $IntDict.bit_length = function(self){
 $IntDict.numerator = function(self){return self}
 $IntDict.denominator = function(self){return int(1)}
 
+$B.max_int32= (1<<30) * 2 - 1
+$B.min_int32= - $B.max_int32
+
 // code for operands & | ^
 var $op_func = function(self,other){
-    if(isinstance(other,int)) return self-other
+    if(isinstance(other,int)) {
+       if (self > $B.max_int32 || self < $B.min_int32 || other > $B.max_int32 || other < $B.min_int32) {
+          return $B.LongInt.$dict.__sub__($B.LongInt(self), $B.LongInt(other))
+       }
+       return self-other
+    }
     if(isinstance(other,_b_.bool)) return self-other
     if(hasattr(other,'__rsub__')) return getattr(other,'__rsub__')(self)
     $err("-",other)
@@ -324,10 +325,17 @@ for(var $op in $ops){
 
 // code for + and -
 var $op_func = function(self,other){
+
     if(isinstance(other,int)){
-        var res = self.valueOf()-other.valueOf()
-        if(isinstance(res,int)) return res
-        return _b_.float(res)
+        if(typeof other=='number'){
+            var res = self.valueOf()-other.valueOf()
+            if(res>=$B.min_int && res<=$B.max_int){return res}
+            else{return $B.LongInt.$dict.__sub__($B.LongInt(self), 
+                $B.LongInt(other))}
+        }else{
+            return $B.LongInt.$dict.__sub__($B.LongInt(self), 
+                $B.LongInt(other))        
+        }
     }
     if(isinstance(other,_b_.float)){
         return _b_.float(self.valueOf()-other.value)
@@ -356,6 +364,7 @@ for(var $op in $ops){
 
 // comparison methods
 var $comp_func = function(self,other){
+    if (other.__class__ === $B.LongInt.$dict) return $B.LongInt.$dict.__gt__($B.LongInt(self), other)
     if(isinstance(other,int)) return self.valueOf() > other.valueOf()
     if(isinstance(other,_b_.float)) return self.valueOf() > other.value
     if(isinstance(other,_b_.bool)) {
@@ -391,7 +400,6 @@ var $valid_digits=function(base) {
 }
 
 var int = function(value, base){
-    
     // int() with no argument returns 0
     if(value===undefined){return 0}
     
@@ -414,7 +422,11 @@ var int = function(value, base){
     var value = $ns['x']
     var base = $ns['base']
     
-    if(value.__class__==_b_.float.$dict && base===10){return parseInt(value.value)}
+    if(value.__class__==_b_.float.$dict && base===10){
+        var res = parseInt(value.value)
+        if(res<$B.min_int || res>$B.max_int){return $B.LongInt(res+'')}
+        else{return res}
+    }
 
     if (!(base >=2 && base <= 36)) {
         // throw error (base must be 0, or 2-36)
@@ -422,12 +434,17 @@ var int = function(value, base){
     }
 
     if (typeof value == 'number'){
-        if(base==10){return value}
-        else if(value.toString().search('e')>-1){
+
+        if(base==10){
+           if(value < $B.min_int || value > $B.max_int) return $B.LongInt(value)
+           return value
+        }else if(value.toString().search('e')>-1){
             // can't convert to another base if value is too big
             throw _b_.OverflowError("can't convert to base "+base)
         }else{
-            return parseInt(value, base)
+            var res=parseInt(value, base)
+            if(res < $B.min_int || res > $B.max_int) return $B.LongInt(value,base)
+            return res
         }
     }
 
@@ -442,7 +459,6 @@ var int = function(value, base){
     base=$B.$GetInt(base)
 
     if(isinstance(value, _b_.str)) value=value.valueOf()
-
     if(typeof value=="string") {
       var _value=value.trim()    // remove leading/trailing whitespace
       if (_value.length == 2 && base==0 && (_value=='0b' || _value=='0o' || _value=='0x')) {
@@ -469,7 +485,9 @@ var int = function(value, base){
          throw _b_.ValueError(
              "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
       } 
-      return Number(parseInt(_value, base))
+      var res=parseInt(_value, base)
+      if(res < $B.min_int || res > $B.max_int) return $B.LongInt(_value, base)
+      return res
     }
 
     

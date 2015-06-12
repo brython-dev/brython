@@ -61,13 +61,6 @@ function ascii(obj) {
 
 // used by bin, hex and oct functions
 function $builtin_base_convert_helper(obj, base) {
-  var value=$B.$GetInt(obj)
-
-  if (value === undefined) {
-     // need to raise an error
-     throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')
-     return
-  }
   var prefix = "";
   switch (base) {
      case 2:
@@ -79,6 +72,20 @@ function $builtin_base_convert_helper(obj, base) {
      default:
          console.log('invalid base:' + base)
   }
+
+  if (obj.__class__ === $B.LongInt.$dict) {
+     if (obj.pos) return prefix + $B.LongInt.$dict.to_base(obj, base)
+     return '-' + prefix + $B.LongInt.$dict.to_base(-obj, base)
+  }
+
+  var value=$B.$GetInt(obj)
+
+  if (value === undefined) {
+     // need to raise an error
+     throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')
+     return
+  }
+
   if (value >=0) return prefix + value.toString(base);
   return '-' + prefix + (-value).toString(base);
 }
@@ -155,32 +162,17 @@ $B.$CodeObjectDict.__str__ = $B.$CodeObjectDict.__repr__
 $B.$CodeObjectDict.__mro__ = [$B.$CodeObjectDict,$ObjectDict]
 
 function compile(source, filename, mode) {
-    //for now ignore mode variable, and flags, etc
-    var current_frame = $B.frames_stack[$B.frames_stack.length-1]
-    if(current_frame===undefined){alert('current frame undef pour '+src.substr(0,30))}
-    var current_locals_id = current_frame[0]
-    var current_locals_name = current_locals_id.replace(/\./,'_')
-    var current_globals_id = current_frame[2]
-    var current_globals_name = current_globals_id.replace(/\./,'_')
-  
-    //var module_name = current_globals_name
-    //var local_name = current_locals_name
     
     var module_name = 'exec_' + $B.UUID()
     var local_name = module_name; //'' + $B.UUID()
 
-    //eval('var $locals_' + local_name + '={}');
-    //eval('var exec_' + module_name + '={}');
-
     var root = $B.py2js(source,module_name,[module_name],local_name)
-    root.children.pop() // remove trailing "leave_frame()"
-    var js = root.to_js()
     
-    return {__class__:$B.$CodeObjectDict,src:js,
+    return {__class__:$B.$CodeObjectDict,src:source,
         name:source.__name__ || '<module>',
         filename:filename, 
-        globals_name: module_name, locals_name:local_name,
-        mode:mode}
+        mode:mode
+    }
 }
 
 compile.__class__ = $B.factory
@@ -304,67 +296,7 @@ function $eval(src, _globals, _locals){
 
     var is_exec = arguments[3]=='exec', module_name, leave = false
 
-    if(src.__class__===$B.$CodeObjectDict){
-        var $globals="$locals_" + src.globals_name
-        var $locals="$locals_" + src.locals_name
-
-        if (_globals===undefined){
-           module_name = 'exec_'+$B.UUID()
-           $B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id]
-           eval('var '+ $globals + '=current_frame[3]')        
-        }  else {
-           eval('var ' + $globals + '={}');
-           var items = _b_.dict.$dict.items(_globals), item
-           while(1){
-              try{
-                item = next(items)
-                eval($globals+'["'+item[0]+'"] = item[1]')
-              }catch(err){
-                break
-              }
-           }
-        }
-
-        if (_locals===undefined){
-           //module_name = 'exec_'+$B.UUID()
-           //$B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id]
-           //eval('var '+ $locals + '=current_frame[3]')
-        }  else {
-           eval('var ' + $locals + '={}');
-           var items = _b_.dict.$dict.items(_locals), item
-           while(1){
-              try{
-                item = next(items)
-                eval($locals+'["'+item[0]+'"] = item[1]')
-              }catch(err){
-                break
-              }
-           }
-        }
-
-        var res=eval(src.src)
-
-        if(_globals!==undefined){
-            // Update _globals with the namespace after execution
-            var ns = eval($globals)
-            var setitem = getattr(_globals,'__setitem__')
-            for(var attr in ns){
-                setitem(attr, ns[attr])
-            }
-        }
-
-        if(_locals!==undefined){
-            // Update _locals with the namespace after execution
-            var ns = eval($locals)
-            var setitem = getattr(_locals,'__setitem__')
-            for(var attr in ns){
-                setitem(attr, ns[attr])
-            }
-        }
-
-        return res
-    }
-
+    if(src.__class__===$B.$CodeObjectDict){src = src.src}
 
     if(_globals===undefined){
         module_name = 'exec_'+$B.UUID()
@@ -648,7 +580,10 @@ function globals(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
     var globals_obj = $B.last($B.frames_stack)[3]
-    return $B.obj_dict(globals_obj)
+    //return $B.obj_dict(globals_obj)
+    var _a=[]
+    for (var key in globals_obj) _a.push([key, globals_obj[key]])
+    return _b_.dict(_a)
 }
 
 function hasattr(obj,attr){
@@ -1122,20 +1057,6 @@ $RangeDict.__getitem__ = function(self,rank){
     return res   
 }
 
-// special method to speed up "for" loops
-$RangeDict.__getitems__ = function(self){
-    var t=[], rank=0
-    while(1){
-        var res = self.start + rank*self.step
-        if((self.step>0 && res >= self.stop) ||
-            (self.step<0 && res < self.stop)){
-                break
-        }
-        t[rank++]=res
-    }
-    return t
-}
-
 $RangeDict.__iter__ = function(self){
     return {
         __class__ : $RangeDict,
@@ -1153,10 +1074,18 @@ $RangeDict.__len__ = function(self){
 }
 
 $RangeDict.__next__ = function(self){
-    self.$counter += self.step
-    if((self.step>0 && self.$counter >= self.stop)
-        || (self.step<0 && self.$counter <= self.stop)){
-            throw _b_.StopIteration('')
+    if(self.$safe){
+        self.$counter += self.step
+        if((self.step>0 && self.$counter >= self.stop)
+            || (self.step<0 && self.$counter <= self.stop)){
+                throw _b_.StopIteration('')
+        }
+    }else{
+        self.$counter = $B.add(self.$counter, self.step)
+        if(($B.gt(self.step,0) && $B.ge(self.$counter, self.stop))
+            || ($B.gt(0, self.step) && $B.ge(self.stop, self.$counter))){
+                throw _b_.StopIteration('')
+        }
     }
     return self.$counter
 }
@@ -1164,7 +1093,8 @@ $RangeDict.__next__ = function(self){
 $RangeDict.__mro__ = [$RangeDict,$ObjectDict]
 
 $RangeDict.__reversed__ = function(self){
-    return range(self.stop-1,self.start-1,-self.step)
+    return range($B.sub(self.stop,1),$B.sub(self.start,1),
+        $B.sub(0,self.step))
 }
 
 $RangeDict.__repr__ = $RangeDict.__str__ = function(self){
@@ -1202,6 +1132,8 @@ function range(){
         step:step,
         $is_range:true
     }
+    res.$safe = (typeof start=='number' && typeof stop=='number' &&
+        typeof step=='number')
     res.__repr__ = res.__str__ = function(){
             return 'range('+start+','+stop+(args.length>=3 ? ','+step : '')+')'
         }
@@ -2163,6 +2095,7 @@ $B.exception = function(js_exc){
         var exc = js_exc
     }
     exc.$stack = $B.frames_stack.slice()
+    $B.current_exception = exc
     return exc
 }
 

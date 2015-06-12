@@ -1,10 +1,15 @@
-Citation du la [spécification du Document Object Model](http://www.w3.org/DOM/) du W3C :
+Citation de la [spécification du Document Object Model](http://www.w3.org/DOM/)
+du W3C :
 
 > _Qu'est-ce que le Document Object Model?_
 
-> _Le Document Object Model est une interface indépendante d'une plateforme __ou d'un langage__ qui permet aux programmes et aux scripts d'accéder dynamiquement au contenu, à la structure et au style des documents, et de les mettre à jour_
+> _Le Document Object Model est une interface indépendante d'une plateforme 
+> __ou d'un langage__ qui permet aux programmes et aux scripts d'accéder 
+> dynamiquement au contenu, à la structure et au style des documents, et de 
+> les mettre à jour_
 
-L'objectif de Brython est d'utiliser Python comme langage de script pour les navigateurs web, à la place de Javascript
+L'objectif de Brython est d'utiliser Python comme langage de script pour les 
+navigateurs web, à la place de Javascript
 
 Un exemple simple :
 <table>
@@ -77,11 +82,11 @@ Ajax : il doit donc se trouver dans le même domaine que la page HTML
 
 Quand on clique sur le bouton, la fonction `echo()` définie dans le script 
 Python est exécutée. Cette fonction récupère la valeur de l'élément INPUT 
-par son id _zone_, en utilisant la syntaxe `document["zone"]` : `document` est un attribut 
-du module intégré **browser**, il se comporte comme un dictionnaire indexé par les id des éléments 
-DOM. `document["zone"]` est un objet correspondant à l'élément INPUT ; on accède à la
- valeur par l'attribut _value_
+par son id _zone_, en utilisant la syntaxe `document["zone"]` : `document` 
+est un attribut du module intégré **browser**, il se comporte comme un 
+dictionnaire indexé par les id des éléments DOM. `document["zone"]` est un 
+objet correspondant à l'élément INPUT ; on accède à la  valeur par 
+l'attribut _value_
 
 L'affichage est réalisé par la fonction `alert()` définie dans le même module
 **browser**, qui affiche une fenêtre avec le texte passé en paramètre
-

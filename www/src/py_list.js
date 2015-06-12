@@ -167,9 +167,6 @@ $ListDict.__getitem__ = function(self,arg){
     throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
 }
 
-// special method to speed up "for" loops
-$ListDict.__getitems__ = function(self){return self}
-
 $ListDict.__ge__ = function(self,other){
     if(!isinstance(other,[list, _b_.tuple])){
         throw _b_.TypeError("unorderable types: list() >= "+
