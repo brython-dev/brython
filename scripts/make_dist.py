@@ -15,6 +15,7 @@ if(sys.version_info[0]!=3):
     raise ValueError("This script only works with Python 3")
 
 import make_doc  # lint:ok
+import make_stdlib_list
 
 try:
     import slimit
