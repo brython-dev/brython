@@ -1,7 +1,7 @@
 """Minifier for Python code
 
-The module exposes a single function : minify(file_obj), where file_obj is
-a file object open in read-binary mode
+The module exposes a single function : minify(src), where src is
+a string with the original Python code.
 
 The function returns a string with a minified version of the original :
 - indentation is reduced to the minimum (1 space for each level)
@@ -13,10 +13,11 @@ import os
 import token
 import tokenize
 import re
+import io
 
-def minify(file_obj):
+def minify(src):
     
-    token_generator = tokenize.tokenize(file_obj.readline)
+    token_generator = tokenize.tokenize(io.BytesIO(src.encode('utf-8')).readline)
     
     out = ''
     line = 0
