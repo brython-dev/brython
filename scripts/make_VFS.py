@@ -4,20 +4,13 @@
 import json
 import os
 
-import minifier
+import javascript_minifier
+import python_minifier
 
 try:
     import io as StringIO
 except ImportError:
     import cStringIO as StringIO  # lint:ok
-# Check to see if slimit or some other minification library is installed and
-# Set minify equal to slimit's minify function.
-try:
-    import slimit
-    js_minify = slimit.minify
-except ImportError as error:
-    print(error)
-    js_minify = slimit = None
 
 
 ###############################################################################
@@ -45,11 +38,11 @@ def process_unittest(filename):
                 nb += 1
 
                 file_name = os.path.join(_root, _file)
-                file_obj = open(file_name, 'rb')
+                src = open(file_name, encoding='utf-8').read()
 
                 if _ext.lower() == '.py':
                     try:
-                        _data = minifier.minify(file_obj)
+                        _data = python_minifier.minify(src)
                     except Exception as error:
                         print(error)
                         nb_err += 1
@@ -128,21 +121,10 @@ def process(filename, exclude_dirs=['unittest','test',]):
                 nb += 1
 
                 file_name = os.path.join(_root, _file)
+                _data = open(file_name, encoding='utf-8').read()
             
-                if _ext == '.js':
-                   _data = open(file_name).read()
-                   if js_minify is not None:
-                      try:
-                        _data = js_minify(_data)
-                      except Exception as error:
-                        print(error)
-                elif _ext == '.py':
-                   file_obj = open(file_name, "rb")
-                   try:
-                     _data = minifier.minify(file_obj)
-                   except Exception as error:
-                     print(error, file_name)
-                     nb_err += 1
+                if _ext == '.py':
+                   _data = python_minifier.minify(_data)
 
                 _vfs_filename = os.path.join(_root, _file).replace(_main_root, '')
                 _vfs_filename = _vfs_filename.replace("\\", "/")
