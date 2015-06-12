@@ -361,12 +361,7 @@ $LongIntDict.__index__ = function(self){
 }
 
 $LongIntDict.__invert__ = function(self){
-    var bin = $LongIntDict.__index__(self)
-    var res = ''
-    for(var i=0;i<bin.length;i++){
-        res += bin.charAt(i)=='0' ? '1' : '0'
-    }
-    return intOrLong(LongInt(res, 2))
+    return $LongIntDict.__sub__(LongInt('-1'), self)
 }
 
 $LongIntDict.__le__ = function(self, other){
@@ -613,6 +608,9 @@ function LongInt(value, base){
     if(isinstance(value, _b_.float)){
         if(value>=0){value=Math.round(value.value)}
         else{value=Math.ceil(value.value)}
+    } else if(isinstance(value, _b_.bool)){
+        if (value.valueOf()) return int(1)
+        return int(0)
     }
     if(typeof value=='number'){
         if(isSafeInteger(value)){value = value.toString()}
