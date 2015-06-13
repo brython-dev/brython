@@ -61,8 +61,7 @@
     }
     module.__name__ = _spec_name;
     module.__loader__ = _loader;
-    // FIXME : Fall back to None ?
-    module.__package__ = _b_.getattr(spec, 'parent', _b_.None);
+    module.__package__ = _b_.getattr(spec, 'parent', '');
     module.__spec__ = spec;
     var locs = _b_.getattr(spec, 'submodule_search_locations');
     // Brython-specific var
