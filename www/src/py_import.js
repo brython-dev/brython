@@ -646,28 +646,30 @@ $B.$import = function(mod_name,origin,fromlist, aliases, locals){
     var parts = mod_name.split('.')
     if (mod_name[0] == '.') {
         // Relative imports
-        norm_parts = origin.split('.')
+        norm_parts = _b_.getattr($B.imported[origin], '__package__', '');
+        // Add a dummy item at the end so that initial dot corresponds to current pkg
+        norm_parts = (norm_parts == '')? ['']: (norm_parts + '.').split('.');
     }
     else {
         var norm_parts = []
     }
     prefix = true;
     for(var i = 0, _len_i = parts.length; i < _len_i;i++){
-        if (prefix && !parts) {
+        var p = parts[i];
+        if (prefix && p == '') {
             // Move up in package hierarchy
             elt = norm_parts.pop();
             if (elt === undefined) {
                 throw _b_.ImportError("Parent module '' not loaded, cannot perform relative import");
             }
         }
-        else { prefix=false }
-        norm_parts.push(parts[i].substr(0,2)=='$$' ? parts[i].substr(2) : parts[i])
+        else {
+            prefix=false;
+            norm_parts.push(p.substr(0,2)=='$$' ? p.substr(2) : p)
+        }
     }
     var mod_name = norm_parts.join('.')
     
-//    if($B.imported[origin]===undefined){var package = ''}
-//    else{var package = $B.imported[origin].__package__}
-
     if ($B.$options.debug == 10) {
        console.log('$import '+mod_name+' origin '+origin)
        console.log('use VFS ? '+$B.use_VFS)
