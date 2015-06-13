@@ -581,7 +581,7 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
        // TODO: Async module download and request multiplexing
        for (var i = 0, modsep = '', _mod_name = '', l = parsed_name.length - 1,
                 __path__ = _b_.None; i <= l; ++i) {
-            _parent_name = _mod_name;
+            var _parent_name = _mod_name;
             _mod_name += modsep + parsed_name[i];
             modsep = '.';
             var modobj = $B.imported[_mod_name];
