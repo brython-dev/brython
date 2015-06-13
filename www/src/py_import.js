@@ -663,7 +663,7 @@ $B.$import = function(mod_name,origin,fromlist, aliases, locals){
         else { prefix=false }
         norm_parts.push(parts[i].substr(0,2)=='$$' ? parts[i].substr(2) : parts[i])
     }
-    mod_name = norm_parts.join('.')
+    var mod_name = norm_parts.join('.')
     
 //    if($B.imported[origin]===undefined){var package = ''}
 //    else{var package = $B.imported[origin].__package__}
@@ -700,10 +700,19 @@ $B.$import = function(mod_name,origin,fromlist, aliases, locals){
             // TODO: After binding 'a' should we also bind 'a.b' , 'a.b.c' , ... ? 
         }
     }
-    else if (fromlist[0] == '*') {
-        // from mod_name import *
-        __all__ = _b_.getattr(modobj, '__all__', _b_.None);
-        if (is_none(__all__)) {
+    else {
+        var __all__ = fromlist,
+            thunk = {};
+        if (fromlist && fromlist[0] == '*') {
+            __all__ = _b_.getattr(modobj, '__all__', thunk);
+            if (__all__ !== thunk) {
+                // from modname import * ... when __all__ is defined
+                // then fallback to importing __all__ names with no alias
+                aliases = {};
+            }
+        }
+        if (__all__ === thunk) {
+            // from mod_name import * ... when __all__ is not defined
             for (var attr in modobj) {
                 if (attr[0] !== '_') {
                     locals[attr] = modobj[attr];
@@ -711,43 +720,38 @@ $B.$import = function(mod_name,origin,fromlist, aliases, locals){
             }
         }
         else {
-            for (var i = 0, l = __all__.length; i<l; ++i) {
-                var attr = __all__[i];
-                locals[attr] = modobj[attr];
-            }
-        }
-    }
-    else {
-        // from mod_name import N1 [as V1], ... Nn [as Vn]
-        for (var i = 0, l = fromlist.length; i < l; ++i) {
-            var name = fromlist[i];
-            var alias = aliases[name] || name;
-            try {
-                // [Import spec] Check if module has an attribute by that name
-                locals[alias] = _b_.getattr(modobj, name);
-            }
-            catch ($err1) {
-                // [Import spec] attempt to import a submodule with that name ...
-                // FIXME : level = 0 ? level = 1 ?
+            // from mod_name import N1 [as V1], ... Nn [as Vn]
+            // from modname import * ... when __all__ is defined
+            for (var i = 0, l = __all__.length; i < l; ++i) {
+                var name = __all__[i];
+                var alias = aliases[name] || name;
                 try {
-                    _b_.getattr(__import__,
-                                '__call__')(mod_name + '.' + name,
-                                            globals, undefined, [], 0);
-                }
-                catch ($err2) {
-                    if ($err2.__class__ = _b_.ImportError.$dict) {
-                        throw _b_.ImportError("cannot import name '" + name + "'")
-                    }
-                    throw $err2;
-                }
-                try {
-                    // [Import spec] ... then check imported module again for name
+                    // [Import spec] Check if module has an attribute by that name
                     locals[alias] = _b_.getattr(modobj, name);
                 }
-                catch ($err3) {
-                    // [Import spec] On attribute not found , raise ImportError
-                    if ($err3.__class__ === _b_.AttributeError.$dict) {
-                        $err3.__class__ = _b_.ImportError.$dict;
+                catch ($err1) {
+                    // [Import spec] attempt to import a submodule with that name ...
+                    // FIXME : level = 0 ? level = 1 ?
+                    try {
+                        _b_.getattr(__import__,
+                                    '__call__')(mod_name + '.' + name,
+                                                globals, undefined, [], 0);
+                    }
+                    catch ($err2) {
+                        if ($err2.__class__ = _b_.ImportError.$dict) {
+                            throw _b_.ImportError("cannot import name '" + name + "'")
+                        }
+                        throw $err2;
+                    }
+                    try {
+                        // [Import spec] ... then check imported module again for name
+                        locals[alias] = _b_.getattr(modobj, name);
+                    }
+                    catch ($err3) {
+                        // [Import spec] On attribute not found , raise ImportError
+                        if ($err3.__class__ === _b_.AttributeError.$dict) {
+                            $err3.__class__ = _b_.ImportError.$dict;
+                        }
                     }
                 }
             }
