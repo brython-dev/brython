@@ -21,7 +21,7 @@ var $script_dir = $B.script_dir = $href_elts.join('/')
 $B.$py_module_path = {}
 
 // __BRYTHON__.path is the list of paths where Python modules are searched
-$B.path = [$path+'Lib', $script_dir, $path+'Lib/site-packages']
+$B.path = [$path+'Lib', $path+'libs', $script_dir, $path+'Lib/site-packages']
 
 // Name bindings in scopes
 // Name "x" defined in a scope is a key of the dictionary
