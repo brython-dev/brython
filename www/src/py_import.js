@@ -543,6 +543,11 @@ UrlPathFinder.prototype.invalidate_caches = function(self) {
     // TODO: Implement
 }
 
+UrlPathFinder.prototype.__repr__ = function() {
+    return "<UrlPathFinder for '" + this.path + "'" +
+           (this.hint !== undefined? " format '" + this.hint + "'": '') + '>';
+}
+
 url_hook = function(path) { return new UrlPathFinder(path); };
 url_hook.__repr__ = url_hook.__str__ = url_hook.toString = function() {
     return '<function path_hook_for_UrlPathFinder>';

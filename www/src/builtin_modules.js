@@ -209,8 +209,8 @@
              '__set__':function(self, obj, value){ $B.path_hooks = value }
             },
         path_importer_cache: 
-            {'__get__':function(){return $B.path_importer_cache},
-             '__set__':function(self, obj, value){ $B.path_importer_cache = value }
+            {'__get__':function(){return _b_.dict($B.JSObject($B.path_importer_cache))},
+             '__set__':function(self, obj, value){ throw _b_.TypeError("Read only property 'sys.path_importer_cache'") }
             },
         stderr : {
             __get__:function(){return $B.stderr},
