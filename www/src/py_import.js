@@ -489,7 +489,8 @@ UrlPathFinder.prototype.find_spec = function(self, fullname, module) {
         notfound = true,
         hint = self.hint,
         path_entry = self.path,
-        base_path = path_entry + fullname.match(/[^.]+$/g)[0];
+        base_path = path_entry + fullname.match(/[^.]+$/g)[0],
+        modpaths = [];
     if (hint != 'py') {
         // either js or undefined , try js code
         modpaths = [[base_path + '.js', 'js', false]];
@@ -506,7 +507,9 @@ UrlPathFinder.prototype.find_spec = function(self, fullname, module) {
             loader_data.code=$download_module(fullname, file_info[0]);
             notfound = false;
             if (self.hint === undefined) {
+                // First time path is considered for top-level import
                 self.hint = file_info[1]
+                $B.path_importer_cache[self.path] = self;
             }
             loader_data.type = file_info[1];
             loader_data.is_package = file_info[2];
