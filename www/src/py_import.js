@@ -515,8 +515,8 @@ UrlPathFinder.prototype.find_spec = function(self, fullname, module) {
             loader_data.is_package = file_info[2];
             if (loader_data.is_package) {
                 // Populate cache in advance to speed up submodule imports
-                $B.path_importer_cache.append(new UrlPathFinder(base_path,
-                                                                self.hint));
+                $B.path_importer_cache[base_path + '/'] =
+                        new UrlPathFinder(base_path + '/', self.hint);
             }
             loader_data.path = file_info[0];
         }catch(err){
@@ -651,7 +651,9 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
  * @return None
  */
 $B.$import = function(mod_name,origin,fromlist, aliases, locals){
-    var parts = mod_name.split('.')
+    var parts = mod_name.split('.');
+    // For . , .. and so on , remove one relative step
+    if (mod_name[mod_name.length - 1] == '.') { parts.pop() }
     if (mod_name[0] == '.') {
         // Relative imports
         norm_parts = _b_.getattr($B.imported[origin], '__package__', '');
