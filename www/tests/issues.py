@@ -384,4 +384,22 @@ for x in range(0x17ffffff0, 0x17fffffff):
 a=5
 assert globals().get('a')  == 5
 
+# not an official issue
+class Cmp:
+    def __init__(self,arg):
+        self.arg = arg
+
+    def __repr__(self):
+        return '<Cmp %s>' % self.arg
+
+    def __eq__(self, other):
+        return self.arg == other
+        
+a=Cmp(1)
+b=Cmp(1)
+
+assert a == b
+assert not (a != b)
+
+
 print('passed all tests')

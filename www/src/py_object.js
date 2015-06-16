@@ -261,7 +261,15 @@ $ObjectDict.__new__ = function(cls){
     return {__class__ : cls.$dict}
 }
 
-$ObjectDict.__ne__ = function(self,other){return !$ObjectDict.__eq__(self,other)}
+$ObjectDict.__ne__ = function(self,other){
+   // see if any parent classes contain a __ne__ function
+   var _f= $ObjectDict.__getattribute__(self, '__ne__')
+   if (_f.__class__ !== self.__class__) return _b_.getattr(_f,'__ne__')(self, other)
+
+   // check to see if any parent classes contain a __eq__ function
+   var _f= $ObjectDict.__getattribute__(self, '__eq__')
+   return _b_.bool(!_b_.getattr(_f,'__eq__')(self, other))
+}
 
 $ObjectDict.__or__ = function(self,other){
     if(_b_.bool(self)) return self
