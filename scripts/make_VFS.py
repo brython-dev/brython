@@ -38,7 +38,12 @@ def process_unittest(filename):
                 nb += 1
 
                 file_name = os.path.join(_root, _file)
-                src = open(file_name, encoding='utf-8').read()
+                encoding = "utf-8"
+                try:
+                    src = open(file_name, encoding=encoding).read()
+                except:
+                    encoding = "iso-8859-1"
+                    src = open(file_name, encoding=encoding).read()
 
                 if _ext.lower() == '.py':
                     try:

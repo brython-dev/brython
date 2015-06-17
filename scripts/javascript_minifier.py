@@ -1,4 +1,5 @@
 """Javascript minifier"""
+import re
 
 def minify(src):
     
@@ -65,6 +66,9 @@ def minify(src):
         else:
             _res += src[pos]
             pos += 1
-    while '\n\n' in _res:
-        _res = _res.replace('\n\n', '\n')
+    # replace consecutive newlines
+    _res = re.sub('\n+', '\n', _res)
+    # remove newline followed by }
+    _res = re.sub('\n}', '}', _res)
+    
     return _res

@@ -66,7 +66,6 @@ for lang in 'en','es','fr':
             python_path = os.path.join(python_stdlib_folder, path)
             
             if path.startswith('Lib\\test'):
-                print(path, dirnames)
                 continue
             
             if path:
@@ -114,6 +113,3 @@ for lang in 'en','es','fr':
     
         out.write(html)
     
-
-
-

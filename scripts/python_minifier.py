@@ -5,8 +5,14 @@ a string with the original Python code.
 
 The function returns a string with a minified version of the original :
 - indentation is reduced to the minimum (1 space for each level)
-- comments are removed
-- lines starting with a string are removed (considered as doc strings)
+- comments are removed, except on the first 2 lines
+- lines starting with a string are removed (considered as doc strings), except
+  if the next line doesn't start with the same indent, like in
+      # --------------------------------
+      def f():
+          'function with docstring only'      
+      print('ok')
+      # --------------------------------
 """
 
 import os
@@ -17,13 +23,21 @@ import io
 
 def minify(src):
     
-    token_generator = tokenize.tokenize(io.BytesIO(src.encode('utf-8')).readline)
+    # tokenize expects method readline of file in binary mode
+    file_obj = io.BytesIO(src.encode('utf-8'))
+    token_generator = tokenize.tokenize(file_obj.readline)
     
-    out = ''
+    out = '' # minified source
     line = 0
     last_type = None
-    indents = []  # stack for indentation
+    indent = 0 # current indentation level
     brackets = [] # stack for brackets
+
+    # first token is script encoding    
+    encoding = next(token_generator).string
+    
+    file_obj = io.BytesIO(src.encode(encoding))
+    token_generator = tokenize.tokenize(file_obj.readline)    
 
     for item in token_generator:
 
@@ -38,22 +52,26 @@ def minify(src):
         if sline == 0: # encoding
             continue
         if item.type==tokenize.INDENT:
-            indents.append(len(item.string))
+            indent += 1
         elif item.type==tokenize.DEDENT:
-            indents.pop()
+            indent -= 1
             continue
         if sline>line:
             if not brackets and item.type==tokenize.STRING:
                 if last_type in [tokenize.NEWLINE, tokenize.INDENT, None]:
-                    # ignore string starting a line
-                    out += ' '*len(indents)+"''"
+                    # Replace a string starting a line by the empty string
+                    # It will be removed if the next line has the same
+                    # indentation
+                    out += ' '*indent+"''"
                     continue
-            out += ' '*len(indents)
+            out += ' '*indent # start with current indentation
             if item.type not in [tokenize.INDENT, tokenize.COMMENT]:
                 out += item.string
             elif item.type==tokenize.COMMENT and \
                 line<=2 and item.line.startswith('#!'):
-                 out += item.string
+                # Ignore comments starting a line, except in one of the first
+                # 2 lines, for interpreter path and/or encoding declaration
+                out += item.string
         else:
             if item.type == tokenize.COMMENT:
                 continue
@@ -92,12 +110,3 @@ def minify(src):
     out = re.sub("\n( *)''\n( *)", repl, out)
     
     return out
-
-if __name__ == '__main__':
-    import sys
-    source_name = sys.argv[1]
-    dest_name = sys.argv[2]
-    mini = minify(open(source_name, 'rb'))
-    out = open(dest_name,'w')
-    out.write(mini)
-    out.close()
