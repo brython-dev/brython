@@ -346,18 +346,21 @@ function import_from_caller_folder(mod_name,origin,package){
     
     while(mod_elts[0]==origin_elts[0]){mod_elts.shift();origin_elts.shift()}
 
+    //console.log('origin_path', origin_path)
     var mod_path = mod_elts.join('/'),
         py_paths = [origin_dir+'/'+mod_path+'.py',
         origin_dir+'/'+mod_path+'/__init__.py']
 
     for (var i=0, _len_i = $B.path.length; i < _len_i; i++) {
         if ($B.path[i].substring(0,4)=='http') continue
-        var _path = origin_dir+'/'+ $B.path[i]+'/' 
+        var _path = $B.brython_path+'/'+ $B.path[i]+'/'
+        //console.log('mod_path', mod_path) 
         py_paths.push(_path+ mod_path + ".py")
         py_paths.push(_path+ mod_path + "/__init__.py")
     }
 
     for(var i=0, _len_i = py_paths.length; i < _len_i;i++){
+        //console.log('py_paths', py_paths[i])
         var py_mod = import_py(module, py_paths[i],package)
         if(py_mod!==null) {
             return py_mod
