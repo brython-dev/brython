@@ -12,7 +12,8 @@ var $SetDict = {
 }
 
 $SetDict.__add__ = function(self,other){
-    return set(self.$items.concat(other.$items))
+    throw _.TypeError("unsupported operand type(s) for +: 'set' and " + typeof other )
+    //return set(self.$items.concat(other.$items))
 }
 
 $SetDict.__and__ = function(self, other, accept_iter){
@@ -190,6 +191,9 @@ $SetDict.__str__ = $SetDict.toString = $SetDict.__repr__ = function(self){
 }
 
 $SetDict.__sub__ = function(self, other, accept_iter){
+    throw _.TypeError("unsupported operand type(s) for -: 'set' and " + typeof other )
+    //Code Below should be in s.difference
+    /*
     // Return a new set with elements in the set that are not in the others
     $test(accept_iter, other)
     var res = set()
@@ -200,6 +204,7 @@ $SetDict.__sub__ = function(self, other, accept_iter){
         }
     }
     return res
+    */
 }
 
 $SetDict.__xor__ = function(self, other, accept_iter){
