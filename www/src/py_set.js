@@ -12,9 +12,12 @@ var $SetDict = {
 }
 
 $SetDict.__add__ = function(self,other){
-    return set(self.$items.concat(other.$items))
+    throw _.TypeError("Unsupported operand type(s) for +: 'set' and " typeof other)
 }
 
+$SetDict.__iadd__=function(self,other){
+    throw _.TypeError("Unsupported operand type(s) for +=: 'set'")
+}
 $SetDict.__and__ = function(self, other, accept_iter){
     $test(accept_iter, other)
     var res = set()
