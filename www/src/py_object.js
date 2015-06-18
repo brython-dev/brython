@@ -264,11 +264,18 @@ $ObjectDict.__new__ = function(cls){
 $ObjectDict.__ne__ = function(self,other){
    // see if any parent classes contain a __ne__ function
    var _f= $ObjectDict.__getattribute__(self, '__ne__')
-   if (_f.__class__ !== self.__class__) return _b_.getattr(_f,'__ne__')(self, other)
+   if (_f.$infos.__func__ !== $ObjectDict.__ne__) return _b_.getattr(_f,'__ne__')(self, other)
 
    // check to see if any parent classes contain a __eq__ function
    var _f= $ObjectDict.__getattribute__(self, '__eq__')
-   return _b_.bool(!_b_.getattr(_f,'__eq__')(self, other))
+ 
+   if (_f.$infos.__func__ !== $B.$MethodDict.__eq__) {  
+      // this sometimes produces bad results..
+      // see class foo,  foo.method  example in 'basic test suite'
+      return _b_.bool(!_b_.getattr(_f,'__eq__')(self, other))
+   }
+
+   return _b_.bool(!$ObjectDict.__eq__(self, other))
 }
 
 $ObjectDict.__or__ = function(self,other){
