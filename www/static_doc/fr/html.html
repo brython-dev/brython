@@ -1,0 +1,327 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Documentation Brython</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script type="text/javascript" src="/src/brython.js"></script>
+
+<script type="text/python">
+import time
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'fr')
+
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introduction</a></h4>
+<h4><a class="navig" href="faq.html">Questions fréquemment posées</a></h4>
+<h4><a class="navig" href="syntax.html">Syntaxe, mots-clés et fonctions intégrées</a></h4>
+<h4><a class="navig" href="stdlib.html">Distribution</a></h4>
+<h4><a class="navig" href="import.html">Implémentation de <tt>import</tt></a></h4>
+
+<h4>Interface avec le navigateur</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introduction - API DOM</a>
+<br><a class="navig" href="create.html">Créer un document</a>
+<br><a class="navig" href="access.html">Accéder aux éléments</a>
+<br><a class="navig" href="attributes.html">Attributs et méthodes</a>
+<br>
+<br><a class="navig" href="events.html">Evénements</a>
+<br><a class="navig" href="mouse_events.html">Evénements souris</a>
+<br><a class="navig" href="keyboard_events.html">Evénements clavier</a>
+<br><a class="navig" href="focus_events.html">Evénements focus</a>
+<br><a class="navig" href="drag_events.html">Evénements pour glisser-déposer</a>
+<br>
+<br><a class="navig" href="query.html">Chaine de requête</a>
+<br>
+<br><a class="navig" href="jsobjects.html">Objets et librairies Javascript</a>
+</div>
+
+<h4>Modules intégrés propres à Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Travailler avec Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Options de la fonction <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Installer l'environnement de développement</a>
+<br><a class="navig" href="test.html">Test et débogage</a>
+<br><a class="navig" href="deploy.html">Deployer une application</a></div>
+
+<h4>Recettes</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Salut !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insérer du contenu dans un élément</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Mise en forme HTML (gras, italique...)</a>
+<br><a class="navig" href="cookbook/table.html">Table HTML</a>
+<br><a class="navig" href="cookbook/bind_unbind.html">Attacher / détacher des événements</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Gérer la sélection d'options dans un SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Glisser-déposer</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtenir le contenu d'un élément</a>
+<br><a class="navig" href="cookbook/read_file.html">Lire le contenu d'un fichier</a>
+<br><a class="navig" href="cookbook/local_storage.html">Stocker des objects localement</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Exemple de onmouseover</a>
+<br><a class="navig" href="cookbook/draw_image.html">Ajouter une image dans un canvas</a>
+
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>module <STRONG>browser.html</STRONG></H2>
+
+<p></p>
+Ce module définit des classes correspondant aux balises HTML, en majuscules.
+<p></p>
+Les classes définies sont :
+<p></p>
+<ul>
+<li> les balises HTML4 : <code>A, ABBR, ACRONYM, ADDRESS, APPLET, AREA, B, BASE, 
+BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON, 
+CAPTION, CENTER, CITE, CODE, COL, COLGROUP, DD, 
+DEL, DFN, DIR, DIV, DL, DT, EM, FIELDSET, FONT, 
+FORM, FRAME, FRAMESET, H1, H2, H3, H4, H5, H6, 
+HEAD, HR, HTML, I, IFRAME, IMG, INPUT, INS, 
+ISINDEX, KBD, LABEL, LEGEND, LI, LINK, MAP, MENU, 
+META, NOFRAMES, NOSCRIPT, OBJECT, OL, OPTGROUP, 
+OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT, SELECT, 
+SMALL, SPAN, STRIKE, STRONG, STYLE, SUB, SUP, 
+TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD, 
+TITLE, TR, TT, U, UL, VAR</code>
+<p></p>
+<li> les balises HTML5 : <code>ARTICLE, ASIDE, AUDIO, BDI, CANVAS, 
+COMMAND, DATA, DATALIST, EMBED, FIGCAPTION, 
+FIGURE, FOOTER, HEADER, KEYGEN, MAIN, MARK, 
+MATH, METER, NAV, OUTPUT, PROGRESS, RB, 
+RP, RT, RTC, RUBY, SECTION, SOURCE, 
+SUMMARY, TEMPLATE, TIME, TRACK, VIDEO, 
+WBR</code>
+<p></p>
+<li> les balises HTML5.1 : <code>DETAILS, DIALOG, MENUITEM, PICTURE, SUMMARY</code>
+</ul>
+<p></p>
+<blockquote>
+ En suivant <a href="https://w3c.github.io/elements-of-html/">ce lien</a>,
+ vous trouverez la liste des balises HTML ainsi que leur documentation. Cette
+ spécification est encore provisoire.
+</blockquote>
+<p></p>
+La syntaxe pour créer un objet (par exemple un lien hypertexte) est :
+<p></p>
+<code>A(</code><EM>[content,[attributes]]</EM><code>)</code>
+<p></p>
+<blockquote>
+ <EM>content</EM> est le noeud «fils» de l'objet ; il peut s'agir d'un objet Python
+ comme une chaîne de caractères, un nombre, une liste, etc., ou bien une
+ instance d'une autre classe du module <STRONG>html</STRONG>.
+</blockquote>
+<p></p>
+<blockquote>
+ <EM>attributes</EM> est une suite de mots-clés correspondant aux
+ <a href="http://www.w3.org/TR/html5-author/index.html#attributes-1">attributs</a> de la
+ balise HTML. Les traits d'union (<code>-</code>) doivent être remplacés par des soulignés
+ (<code>&#95;</code>) : <EM>http&#95;equiv</EM> et pas <EM>http-equiv</EM> (sinon le <code>-</code> serait interprété comme
+ le signe moins).
+</blockquote>
+<p></p>
+Pour l’attribut <EM>style</EM>, la valeur fournie doit être un dictionnaire :
+<p></p></p><pre class="python">d = html.DIV('Brython', style={'height':100, 'width':200})</pre>
+<p><p></p>
+ou
+<p></p></p><pre class="python">d = html.DIV('Brython', style=dict(height=100, width=200))</pre>
+<p><p></p>
+Les mots-clé de <EM>style</EM> doivent être écrits avec la syntaxe Javascript, pas
+CSS : <EM>backgroundColor</EM> et non <EM>background-color</EM>.
+<p></p>
+Pour éviter les conflits avec le mot-clé de Python, l'attribut
+<EM>class</EM> doit être écrit avec une majuscule :
+<p></p></p><pre class="python">d = html.DIV('Brython', Class="container")</pre>
+<p><p></p>
+On peut aussi créer un objet sans argument, puis le compléter :
+<p></p>
+<ul>
+<li> pour ajouter un noeud enfant, utiliser l'opérateur <STRONG>&lt;=</STRONG>
+<li> pour ajouter des attributs, utiliser la syntaxe Python classique :
+  <code>objet.attribut = valeur</code>
+</ul>
+<p></p>
+Exemple :
+<p></p></p><pre class="python">link = html.A()
+link &lt;= html.B('connexion')
+link.href = 'http://example.com'</pre>
+<p><p></p>
+On peut aussi créer plusieurs éléments de même niveau par addition (symbole
+<STRONG>+</STRONG>) :
+<p></p></p><pre class="python">row = html.TR(html.TH('Nom')+html.TH('Prénom'))</pre>
+<p><p></p>
+En combinant ces opérateurs et la syntaxe Python, voici comment créer une boîte
+de sélection à partir d'une liste :
+<p></p></p><pre class="python">items = ['un','deux','trois']
+sel = html.SELECT()
+for i, elt in enumerate(items):
+    sel &lt;= html.OPTION(elt, value=i)
+doc &lt;= sel</pre>
+<p><p></p>
+Noter que la création d'une instance d'une classe relative aux balises HTML
+entraîne la création d'un unique objet DOM. Si on affecte l'instance à une
+variable, on ne peut pas l'utiliser à plusieurs endroits. Par exemple :
+<p></p></p><pre class="python">link = html.A('Python',href='http://www.python.org')
+doc &lt;= 'Site officiel de Python : ' + link
+doc &lt;= html.BR() + 'Je répète : le site est ' + link</pre>
+<p><p></p>
+le lien ne sera montré que dans la deuxième ligne. Une solution est de cloner
+l'objet initial :
+<p></p></p><pre class="python">link = html.A('Python',href='http://www.python.org')
+doc &lt;= 'Site officiel de Python : '+link
+doc &lt;= html.BR() + 'Je répète : le site est ' + link.clone()</pre>
+<p><p></p>
+En général, les classes relatives au HTML ont des attributs portant le même nom
+que l’objet DOM correspondant. Par exemple, on a accès à l’option choisie par
+l’utilisateur au travers de l’attribut <code>selectedIndex</code> d’un objet <code>SELECT</code>.
+Brython permet une approche encore plus pythonique avec quelques ajouts.
+<p></p>
+Voyons un exemple plus complet. Le code ci-dessous a généré la structure dans
+la partie bleue (une <code>div</code> identifiée par <code>id=container</code>). Nous allons insérer
+une structure HTML fictive dans cette <code>div</code> : une <code>div</code>, un <code>table</code>, un <code>form</code>
+et un <code>canvas</code> HTML5 :
+<p></p>
+<div style="padding-left:50px;">
+<table cellpadding=10>
+<tr>
+<td style="width:100px;">
+<p></p></p><pre class="exec_on_load"># Tout d’abord, l’import de quelques bibliothèques.
+from browser import document as doc
+from browser import html
+
+# Nous allons ajouter les éléments à la div identifiée "container".
+container = doc['container']
+
+# Création d’une nouvelle div,
+newdiv = html.DIV(id = "new-div")
+# à laquelle on ajoute du style.
+newdiv.style = {"padding": "5px", 
+               "backgroundColor": "#ADD8E6"}
+
+# Créons un tableau à deux colonnes, une pour le numéro de ligne,
+# une pour les mots.
+text = "Brython is really cool"
+textlist = text.split()
+table = html.TABLE()
+for i, word in enumerate(textlist):
+    table &lt;= html.TR(html.TD(i + 1) + 
+                     html.TD(word))
+# Un peu de style pour ce tableau:
+table.style = {"padding": "5px", 
+               "backgroundColor": "#aaaaaa",
+               "width": "100%"}
+# Maintenant, on ajoute le tableau à la div précédemment créée
+newdiv &lt;= table + html.BR()
+
+# Un formulaire? Pourquoi pas!
+form = html.FORM()
+input1 = html.INPUT(type="text", name="firstname", value="Prénom")
+input2 = html.INPUT(type="text", name="lastname", value="Nom")
+input3 = html.BUTTON("Bouton inactif pour l’exemple!")
+form &lt;= input1 + html.BR() + input2 + html.BR() + input3
+
+newdiv &lt;= form + html.BR()
+
+# Finalement, quelque chose de plus orienté HTML5, un canvas avec un
+# gradient de couleurs.
+canvas = html.CANVAS(width = 300, height = 300)
+canvas.style = {"width": "100%"}
+ctx = canvas.getContext('2d')
+ctx.rect(0, 0, 300, 300)
+grd = ctx.createRadialGradient(150, 150, 10, 150, 150, 150)
+grd.addColorStop(0, '#8ED6FF')
+grd.addColorStop(1, '#004CB3')
+ctx.fillStyle = grd
+ctx.fill()
+
+newdiv &lt;= canvas
+
+# La div est finalement insérée dans le conteneur.
+container &lt;= newdiv</pre>
+<p><p></p>
+</td>
+<td>
+<div id="container"></div>
+</td>
+</tr>
+</table>
+</div>
+<p></p>
+<p></p>
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

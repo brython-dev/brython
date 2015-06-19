@@ -1,0 +1,450 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython documentation</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+from browser import window, document, html
+
+import highlight
+
+import header
+header.show('../../', 'en')
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<script type="text/python">from browser import document as doc
+from browser import alert
+from browser import document, alert
+
+document['_bubbles'].bind('click',lambda ev:alert('bubbles : %s ' %ev.bubbles))
+from browser import document, alert
+
+document['_cancelable'].bind('click',lambda ev:alert('cancelable : %s ' %ev.cancelable))
+from browser import document, alert
+
+document['_currentTarget'].bind('click',lambda ev:alert('currentTarget : %s ' %ev.currentTarget))
+from browser import document, alert
+
+document['_defaultPrevented'].bind('click',lambda ev:alert('defaultPrevented : %s ' %ev.defaultPrevented))
+from browser import document, alert
+
+document['_eventPhase'].bind('click',lambda ev:alert('eventPhase : %s ' %ev.eventPhase))
+from browser import document, alert
+
+document['_target'].bind('click',lambda ev:alert('target : %s ' %ev.target))
+from browser import document, alert
+
+document['_timeStamp'].bind('click',lambda ev:alert('timeStamp : %s ' %ev.timeStamp))
+from browser import document, alert
+
+document['_type'].bind('click',lambda ev:alert('type : %s ' %ev.type))
+from browser import document
+
+exec(document["disable_cbox"].text)
+from browser import document
+
+eval(document["zzz_source"].text)
+</script>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introduction</a></h4>
+<h4><a class="navig" href="faq.html">Frequently asked questions</a></h4>
+<h4><a class="navig" href="syntax.html">Syntax, keywords and built-in functions</a></h4>
+<h4><a class="navig" href="stdlib.html">Standard distribution</a></h4>
+<h4><a class="navig" href="import.html"><tt>import</tt> implementation</a></h4>
+
+<h4>Browser interface</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introduction - DOM API</a>
+<br><a class="navig" href="create.html">Creating a document</a>
+<br><a class="navig" href="access.html">Accessing elements</a>
+<br><a class="navig" href="attributes.html">Attributes and methods</a>
+<br>
+<br><a class="navig" href="events.html">Events</a>
+<br><a class="navig" href="mouse_events.html">Mouse events</a>
+<br><a class="navig" href="keyboard_events.html">Keyboard events</a>
+<br><a class="navig" href="focus_events.html">Focus events</a>
+<br><a class="navig" href="drag_events.html">Drag events</a>
+<br>
+<br><a class="navig" href="query.html">Query string</a>
+<br>
+<br><a class="navig" href="jsobjects.html">Using Javascript objects and libraries</a>
+</div>
+
+<h4>Brython-specific built-in modules</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Working with Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Options of function <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Installing the development environment</a>
+<br><a class="navig" href="test.html">Testing and debugging</a>
+<br><a class="navig" href="deploy.html">Deploying an application</a>
+</div>
+
+<h4>Brython for Firefox OS</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="firefox_os_intro.html">Introduction</a>
+<br><a class="navig" href="firefox_os_tuto1.html">WebApps : design</a>
+<br><a class="navig" href="firefox_os_tuto2.html">WebApps : application</a>
+</div>
+
+<h4>Cookbook</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Hello world !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insert content in an element</a>
+<br><a class="navig" href="cookbook/basic_markup.html">HTML markup (bold,italic...)</a>
+<br><a class="navig" href="cookbook/table.html">HTML table</a>
+<br><a class="navig" href="cookbook/bind_unbind.html">Bind and unbind events</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Handle options in a SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Drag and drop</a>
+<br><a class="navig" href="cookbook/get_content.html">Get the content of an element</a>
+<br><a class="navig" href="cookbook/read_file.html">Read the content of a file</a>
+<br><a class="navig" href="cookbook/local_storage.html">Store objects locally</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Example of onmouseover</a>
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H1>Events</H1>
+
+<p></p></p><p><p></p>
+<p></p>
+<p></p>
+<H2>Introduction</H2>
+
+<p></p>
+Suppose we have in a page a element of type button, like this one : <button>a button</button>
+<p></p>
+If you click on it, nothing will happen, because no instruction was given on how to react to a click. For that, the action to take is defined by this syntax :
+<p></p>
+<blockquote></p><pre class="marked">btn.bind('click', show)</pre>
+<p></blockquote>
+<p></p>
+The first argument of <code>bind</code> is the type of event the button must handle ; the second is a function that takes a single argument, an instance of the class <code>DOMEvent</code>. For instance :
+<p></p>
+<blockquote></p><pre class="marked">def show(ev):
+    print('ok !')</pre>
+<p></blockquote>
+<p></p>
+(remember that to see the results of <code>print</code> the browser console must be open)
+<p></p>
+Instances of <code>DOMEvent</code> have a number of attributes that depend on the event type. In the case of a click, and more generally for events related to the mouse, the attributes include
+<p></p>
+<ul>
+<li> <code>target</code> : the element the event was dispatched on
+<li> <code>x, y</code> : position of the mouse relatively to the upper left corner of the window
+</ul>
+<p></p>
+For instance, to print the button text and the mouse position :
+<p></p>
+<blockquote></p><pre class="marked">def show(ev):
+    print(ev.target.text, ev.x, ev.y)</pre>
+<p></blockquote>
+<p></p>
+<p></p>
+<H2>Interface</H2>
+
+For events management, the elements of a page have the following methods :
+<p></p>
+<code>elt.bind(<I>evt&#95;name, handler</I>)</code>
+<p></p>
+<blockquote>
+ associates function <I>handler</I> to the event named <I>evt&#95;name</I>
+</blockquote>
+<p></p>
+<code>elt.unbind(<I>evt&#95;name[, handler</I>])</code>
+<p></p>
+<blockquote>
+ removes the association of function <I>handler</I> to the event named <I>evt&#95;name</I>. If <I>handler</I> is omitted, removes all the associations for the event
+</blockquote>
+<p></p>
+<p></p>
+<H2><code>DOMEvent</code> objects</H2>
+
+(information by Mozilla Contributors, found at <a href="https://developer.mozilla.org/en-US/docs/Web/API/event">https://developer.mozilla.org/en-US/docs/Web/API/event</a>)
+<p></p>
+Whatever the event type, instances of class <code>DOMEvent</code> have the following attributes
+<p></p>
+<table border=1 cellpadding=5>
+<p></p>
+<tr>
+<td>
+<code>bubbles</code>
+<blockquote>
+ boolean, indicates whether the given event bubbles up through the DOM or not
+</blockquote>
+</td>
+<td>
+<button id="_bubbles">test</button></p><p><p></p>
+</td>
+</tr>
+<p></p>
+<tr>
+<td>
+<code>cancelable</code>
+<blockquote>
+ boolean, indicates whether the event is cancelable or not
+</blockquote>
+</td>
+<td>
+<button id="_cancelable">test</button></p><p><p></p>
+</td>
+</tr>
+<p></p>
+<tr>
+<td>
+<code>currentTarget</code>
+<blockquote>
+ instance of <code>DOMNode</code> ; identifies the current target for the event, as the event traverses the DOM. It always refers to the element the event handler has been attached to as opposed to event.target which identifies the element on which the event occurred.
+</blockquote>
+</td>
+<td>
+<button id="_currentTarget">test</button></p><p><p></p>
+</td>
+</tr>
+<p></p>
+<tr>
+<td>
+<code>defaultPrevented</code>
+<blockquote>
+ boolean indicating whether or not event.preventDefault() was called on the event
+</blockquote>
+</td>
+<td>
+<button id="_defaultPrevented">test</button></p><p><p></p>
+</td>
+</tr>
+<p></p>
+<tr>
+<td>
+<code>eventPhase</code>
+<blockquote>
+ integer, indicates which phase of the <a href="http://www.w3.org/TR/DOM-Level-3-Events/#event-flow">event flow</a> is currently being evaluated
+</blockquote>
+</td>
+<td>
+<button id="_eventPhase">test</button></p><p><p></p>
+</td>
+</tr>
+<p></p>
+<tr>
+<td>
+<code>target</code>
+<blockquote>
+ <code>DOMNode</code> instance ; the object the event was dispatched on. It is different than <code>event.currentTarget</code> when the event handler is called in bubbling or capturing phase of the event
+</blockquote>
+</td>
+<td>
+<button id="_target">test</button></p><p><p></p>
+</td>
+</tr>
+<p></p>
+<tr><td><code>timeStamp</code>
+<blockquote>
+ integer, the time (in milliseconds since Jan. 1st, 1970 at 0h) at which the event was created
+</blockquote>
+</td>
+<td>
+<button id="_timeStamp">test</button></p><p><p></p>
+</td>
+</tr>
+<p></p>
+<tr><td><code>type</code>
+<blockquote>
+ string, contains the event type
+</blockquote>
+</td>
+<td>
+<button id="_type">test</button></p><p><p></p>
+</td>
+</tr>
+<p></p>
+</table>
+<p></p>
+and the following methods
+<p></p>
+<code>preventDefault()</code>
+<blockquote>
+ prevents the execution of the action associated by default to the event
+</blockquote>
+<p></p>
+<blockquote>
+ <STRONG>Example</STRONG>
+</blockquote>
+<p></p>
+<blockquote>
+ When a checkbox is clicked on, the default action is to show or hide a tick inside the checkbox : 
+</blockquote>
+<p></p>
+<blockquote><blockquote>
+ checkbox (default behaviour) <input type="checkbox">
+</blockquote></blockquote>
+<p></p>
+<blockquote>
+ To disable this behaviour on the checkbox : 
+</blockquote>
+<p></p>
+<blockquote>
+<div id="disable_cbox"></p><pre class="marked">from browser import document</pre>
+<p><p></p></p><pre class="marked">def &#95;cancel(ev):
+    ev.preventDefault()
+
+document["disabled&#95;cbox"].bind('click',&#95;cancel)</pre>
+<p></div>
+</blockquote>
+<p></p>
+<blockquote><blockquote>
+ result :
+</blockquote></blockquote>
+<p></p>
+<blockquote><blockquote>
+ disabled checkbox <input type="checkbox" id="disabled_cbox">
+</blockquote></blockquote>
+<p></p></p><p><p></p>
+<p></p>
+<code>stopPropagation()</code>
+<blockquote>
+ prevents further propagation of the current event
+</blockquote>
+<p></p>
+<blockquote>
+ <STRONG>Example</STRONG>
+</blockquote>
+<p></p>
+<blockquote>
+ In the coloured zone below
+</blockquote>
+<p></p>
+<div id="yellow" style="background-color:yellow;width:200px;padding:20px;margin-left:100px;">outer<p>
+<div id="blue" style="background-color:blue;color:white;padding:20px;">inner, normal propagation</div>
+<div id="green" style="background-color:green;color:white;padding:20px;">inner, propagation stopped</div>
+</div>
+<p></p>
+<blockquote>
+ the 3 elements (the outer yellow frame and the inner blue and green frames) handle the click event
+</blockquote>
+<p></p>
+<blockquote>
+<div id="zzz_source"></p><pre class="marked">from browser import document, alert
+
+def show(ev):
+    alert('click on %s' %ev.currentTarget.id)
+
+def show&#95;stop(ev):
+    alert('clic on %s' %ev.currentTarget.id)
+    ev.stopPropagation()
+
+document["yellow"].bind('click',show)
+document["blue"].bind('click',show)
+document["green"].bind('click',show&#95;stop)</pre>
+<p></div>
+</blockquote>
+<p></p>
+<blockquote>
+ Clicking on the yellow zone triggers the call of function <code>show()</code>, which prints the message "click on yellow"
+</blockquote>
+<p></p>
+<blockquote>
+ A click on the blue zone triggers the alert message "click on blue". Then the event propagates to the parent, the yellow frame. Since this frame also handles the event "click", the browser calls the associated action, the same function <code>show()</code>, and shows the message "click on yellow" (notice that the attribute <code>currentTarget</code> is updated when the event propagates)
+</blockquote>
+<p></p>
+<blockquote>
+ Clicking on the green zone cause the message "click on green" to pop up. This event is handled by the function <code>show&#95;stop()</code>, which ends in
+</blockquote>
+<p></p>
+<blockquote><blockquote></p><pre class="marked">ev.stopPropagation()</pre>
+<p></blockquote></blockquote>
+<p></p>
+<blockquote>
+ So the event does not propagate to the upper level and the execution exits without an alert box "click on yellow"
+</blockquote>
+<p></p>
+<p></p></p><p><p></p>
+<p></p>
+<p></p>
+<H2>Creating and firing an event</H2>
+
+<p></p>
+<code>DOMEvent(</code><I>evt&#95;name</I><code>)</code> 
+<blockquote>
+ Creates an event of type <I>evt&#95;name</I> such as <I>keydown, mousemove</I>, etc.
+</blockquote>
+<p></p>
+<code>element.dispatchEvent(</code>event<code>)</code>
+<blockquote>
+ Fires the event on the specified <code>element</code>
+</blockquote>
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

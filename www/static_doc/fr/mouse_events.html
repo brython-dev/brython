@@ -1,0 +1,288 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Documentation Brython</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script type="text/javascript" src="/src/brython.js"></script>
+
+<script type="text/python">
+import time
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'fr')
+
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<script type="text/python">from browser import doc, alert
+exec(doc["enter_leave"].text)
+exec(document["over_out"].text)
+def _mousemove(ev):
+    document["trace3"].text = 'coordonnées : %s, %s' %(ev.x,ev.y)
+
+document["vert"].bind('mousemove',_mousemove)
+</script>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introduction</a></h4>
+<h4><a class="navig" href="faq.html">Questions fréquemment posées</a></h4>
+<h4><a class="navig" href="syntax.html">Syntaxe, mots-clés et fonctions intégrées</a></h4>
+<h4><a class="navig" href="stdlib.html">Distribution</a></h4>
+<h4><a class="navig" href="import.html">Implémentation de <tt>import</tt></a></h4>
+
+<h4>Interface avec le navigateur</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introduction - API DOM</a>
+<br><a class="navig" href="create.html">Créer un document</a>
+<br><a class="navig" href="access.html">Accéder aux éléments</a>
+<br><a class="navig" href="attributes.html">Attributs et méthodes</a>
+<br>
+<br><a class="navig" href="events.html">Evénements</a>
+<br><a class="navig" href="mouse_events.html">Evénements souris</a>
+<br><a class="navig" href="keyboard_events.html">Evénements clavier</a>
+<br><a class="navig" href="focus_events.html">Evénements focus</a>
+<br><a class="navig" href="drag_events.html">Evénements pour glisser-déposer</a>
+<br>
+<br><a class="navig" href="query.html">Chaine de requête</a>
+<br>
+<br><a class="navig" href="jsobjects.html">Objets et librairies Javascript</a>
+</div>
+
+<h4>Modules intégrés propres à Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Travailler avec Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Options de la fonction <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Installer l'environnement de développement</a>
+<br><a class="navig" href="test.html">Test et débogage</a>
+<br><a class="navig" href="deploy.html">Deployer une application</a></div>
+
+<h4>Recettes</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Salut !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insérer du contenu dans un élément</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Mise en forme HTML (gras, italique...)</a>
+<br><a class="navig" href="cookbook/table.html">Table HTML</a>
+<br><a class="navig" href="cookbook/bind_unbind.html">Attacher / détacher des événements</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Gérer la sélection d'options dans un SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Glisser-déposer</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtenir le contenu d'un élément</a>
+<br><a class="navig" href="cookbook/read_file.html">Lire le contenu d'un fichier</a>
+<br><a class="navig" href="cookbook/local_storage.html">Stocker des objects localement</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Exemple de onmouseover</a>
+<br><a class="navig" href="cookbook/draw_image.html">Ajouter une image dans un canvas</a>
+
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H1>Evénements souris</H1>
+
+<p></p></p><p><p></p>
+<p></p>
+Les événements relatifs à la souris (mouvement, appui sur un bouton) sont
+<p></p>
+<table cellpadding=3 border=1>
+<tr>
+<td><EM>mouseenter</EM></td>
+<td>la souris entre dans la zone couverte par l'élément, ou un de ses descendants</td>
+</tr>
+<tr><td><EM>mouseleave</EM></td><td>la souris sort de la zone couverte par l'élément et par ses descendants</td></tr>
+<p></p>
+<tr><td><EM>mouseover</EM></td><td>la souris entre dans la zone couverte par l'élément</td></tr>
+<tr><td><EM>mouseout</EM></td><td>la souris quitte la zone couverte par l'élément</td></tr>
+<p></p>
+<tr><td><EM>mousemove</EM></td><td>la souris se déplace sur l'élément</td></tr>
+<p></p>
+<tr><td><EM>mousedown</EM></td><td>appui sur le bouton gauche de la souris</td></tr>
+<tr><td><EM>mouseup</EM></td><td>relâchement du bouton gauche de la souris</td></tr>
+<p></p>
+<tr><td><EM>click</EM></td><td>clic : appui puis relâchement du bouton gauche de la souris</td></tr>
+<tr><td><EM>dblclick</EM></td><td>double clic</td></tr>
+<p></p>
+</table>
+<p></p>
+<p></p>
+<H2>Exemples</H2>
+
+<p></p>
+<EM>mouseenter</EM> et <EM>mouseleave</EM>
+<p></p>
+<blockquote>
+ ces événements sont déclenchés quand la souris entre ou sort d'un élément. Si un élément en englobe d'autres, l'événement est déclenché à chaque fois que la souris entre ou sort d'un élément fils
+</blockquote>
+<p></p>
+<table>
+<tr>
+<td>
+<div id="jaune1" style="background-color:yellow;width:200px;padding:20px;margin-left:100px;">extérieur<p>
+<div id="bleu1" style="background-color:blue;color:white;padding:20px;">intérieur</div>
+</td>
+<td><div id="trace1">&nbsp;</div></td>
+</tr>
+<tr>
+<td colspan=2>
+<blockquote>
+<div id="enter_leave"></p><pre class="marked">from browser import document
+
+def &#95;mouseenter(ev):
+    document["trace1"].text = 'entrée dans %s' %ev.currentTarget.id
+
+def &#95;mouseleave(ev):
+    document["trace1"].text = 'sortie de %s' %ev.currentTarget.id
+
+document["jaune1"].bind('mouseenter',&#95;mouseenter)
+document["jaune1"].bind('mouseleave',&#95;mouseleave)
+document["bleu1"].bind('mouseenter',&#95;mouseenter)
+document["bleu1"].bind('mouseleave',&#95;mouseleave)</pre>
+<p></div>
+</blockquote>
+</td>
+</tr>
+</table>
+<p></p></p><p><p></p>
+<p></p>
+<EM>mouseover</EM> et <EM>mouseout</EM>
+<p></p>
+<blockquote>
+ la différence avec <EM>mouseenter</EM> et <EM>mouseleave</EM> est qu'une fois que la souris est entrée dans un élément, l'événement n'est pas déclenché sur les éléments fils
+</blockquote>
+<p></p>
+<table>
+<tr>
+<td>
+<div id="jaune2" style="background-color:yellow;width:200px;padding:20px;margin-left:100px;">extérieur<p>
+<div id="bleu2" style="background-color:blue;color:white;padding:20px;">intérieur</div>
+</td>
+<td>
+<div id="trace2">&nbsp;</div>
+</td>
+</tr>
+<tr>
+<td colspan=2>
+<blockquote>
+<div id="over_out"></p><pre class="marked">from browser import document
+
+def &#95;mouseover(ev):
+    document["trace2"].text = 'entrée dans %s' %ev.currentTarget.id
+
+def &#95;mouseout(ev):
+    document["trace2"].text = 'sortie de %s' %ev.currentTarget.id
+
+document["jaune2"].bind('mouseover',&#95;mouseover)
+document["jaune2"].bind('mouseout',&#95;mouseout)
+document["bleu2"].bind('mouseover',&#95;mouseover)
+document["bleu2"].bind('mouseout',&#95;mouseout)</pre>
+<p></div>
+</blockquote>
+</td>
+</tr>
+</table>
+<p></p></p><p><p></p>
+<p></p>
+<EM>mousemove</EM>
+<p></p>
+<table>
+<tr><td>
+<div id="vert" style="padding:5px;background-color:#8F8;width:150px;">déplacer la souris</div>
+</td>
+<td><div id="trace3">&nbsp;</div></td>
+</tr>
+</table>
+<p></p></p><p><p></p>
+<p></p>
+<p></p>
+<H2>Attributs de l'objet <code>DOMEvent</code></H2>
+
+<p></p>
+Pour les événements souris, l'instance de <code>DOMEvent</code> possède les attributs suivants
+<p></p>
+<table cellpadding=3 border=1>
+<tr><td><EM>button</EM></td><td>le numéro du bouton sur lequel on a appuyé</td></tr>
+<tr><td><EM>buttons</EM></td><td>indique sur quels boutons de la souris on a appuyé pour déclencher l'événement.
+<p></p>
+Chaque bouton sur lequel on peut appuyer est représenté par un entier donné (1  : bouton gauche, 2  : bouton droit, 4  : roue). Si on appuie sur plus d'un bouton, la valeur de <code>buttons</code> est combinée pour produire un nouveau nombre. Par exemple, si on appuie sur le bouton droit (2) et sur la roue (4), la valeur est égale à 2|4, soit 6</td></tr>
+<p></p>
+<tr><td><EM>x</EM></td><td>la position de la souris par rapport au bord gauche de la fenêtre (en pixels)</td></tr>
+<tr><td><EM>y</EM></td><td>la position de la souris par rapport au bord haut de la fenêtre (en pixels)</td></tr>
+<p></p>
+<tr><td><EM>clientX</EM></td><td>la position de la souris par rapport au bord gauche de l'élément dans lequel la souris se trouve au moment du clic (en pixels)</td></tr>
+<tr><td><EM>clientY</EM></td><td>la position de la souris par rapport au bord haut de l'élément dans lequel la souris se trouve au moment du clic (en pixels)</td></tr>
+<p></p>
+<tr><td><EM>screenX</EM></td><td>comme <EM>x</EM></td></tr>
+<tr><td><EM>screenY</EM></td><td>comme <EM>y</EM></td></tr>
+<p></p>
+</table>
+<p></p>
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

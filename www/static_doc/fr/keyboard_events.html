@@ -1,0 +1,439 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Documentation Brython</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script type="text/javascript" src="/src/brython.js"></script>
+
+<script type="text/python">
+import time
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'fr')
+
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<script type="text/python">from browser import doc, alert
+from browser import document as doc
+for _id in ["AltKey", "CharCode", "CtrlKey", "KeyCode", "ShiftKey", "Which"]:
+    elt_id = "code%s" %_id
+    exec(doc[elt_id].text)
+</script>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introduction</a></h4>
+<h4><a class="navig" href="faq.html">Questions fréquemment posées</a></h4>
+<h4><a class="navig" href="syntax.html">Syntaxe, mots-clés et fonctions intégrées</a></h4>
+<h4><a class="navig" href="stdlib.html">Distribution</a></h4>
+<h4><a class="navig" href="import.html">Implémentation de <tt>import</tt></a></h4>
+
+<h4>Interface avec le navigateur</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introduction - API DOM</a>
+<br><a class="navig" href="create.html">Créer un document</a>
+<br><a class="navig" href="access.html">Accéder aux éléments</a>
+<br><a class="navig" href="attributes.html">Attributs et méthodes</a>
+<br>
+<br><a class="navig" href="events.html">Evénements</a>
+<br><a class="navig" href="mouse_events.html">Evénements souris</a>
+<br><a class="navig" href="keyboard_events.html">Evénements clavier</a>
+<br><a class="navig" href="focus_events.html">Evénements focus</a>
+<br><a class="navig" href="drag_events.html">Evénements pour glisser-déposer</a>
+<br>
+<br><a class="navig" href="query.html">Chaine de requête</a>
+<br>
+<br><a class="navig" href="jsobjects.html">Objets et librairies Javascript</a>
+</div>
+
+<h4>Modules intégrés propres à Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Travailler avec Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Options de la fonction <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Installer l'environnement de développement</a>
+<br><a class="navig" href="test.html">Test et débogage</a>
+<br><a class="navig" href="deploy.html">Deployer une application</a></div>
+
+<h4>Recettes</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Salut !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insérer du contenu dans un élément</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Mise en forme HTML (gras, italique...)</a>
+<br><a class="navig" href="cookbook/table.html">Table HTML</a>
+<br><a class="navig" href="cookbook/bind_unbind.html">Attacher / détacher des événements</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Gérer la sélection d'options dans un SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Glisser-déposer</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtenir le contenu d'un élément</a>
+<br><a class="navig" href="cookbook/read_file.html">Lire le contenu d'un fichier</a>
+<br><a class="navig" href="cookbook/local_storage.html">Stocker des objects localement</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Exemple de onmouseover</a>
+<br><a class="navig" href="cookbook/draw_image.html">Ajouter une image dans un canvas</a>
+
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H1>Evénements clavier</H1>
+
+<p></p></p><p><p></p>
+<p></p>
+Les événements relatifs au clavier sont
+<p></p>
+<table cellpadding=3 border=1>
+<tr>
+<td><EM>input</EM></td>
+<td>déclenché quand la valeur d'un élément &lt;input&gt; ou &lt;textarea&gt; est modifié, ou quand le contenu d'un élément <code>contenteditable</code> est modifié
+</td>
+</tr>
+<p></p>
+<tr>
+<td><EM>keydown</EM></td><td>appui sur une touche quelconque du clavier</td>
+</tr>
+<p></p>
+<tr><td><EM>keypress</EM></td><td>appui sur une touche du clavier qui produit un caractère. Par exemple, quand on entre Ctrl+C au clavier, l'événement <EM>keypress</EM> n'est déclenché qu'au moment où on appuie sur C, alors que <EM>keydown</EM> est déclenché dès l'appui sur Ctrl</td></tr>
+<p></p>
+<tr><td><EM>keyup</EM></td><td>relâchement d'une touche enfoncée</td></tr>
+<p></p>
+</table>
+<p></p>
+<p></p>
+<H2>Attributs de l'objet <code>DOMEvent</code></H2>
+
+<p></p>
+L'instance de <code>DOMEvent</code> possède les attributs suivants
+<p></p>
+<table border=1 cellpadding=5>
+<p></p>
+<tr>
+<td>
+<code>altKey</code>
+<blockquote>
+ booléen, indique si la touche Alt (ou Option sur Mac) était enfoncée quand l'événement clavier a été déclenché
+</blockquote>
+<p></p>
+<blockquote>
+ Cet attribut n'est pas disponible pour l'événement <EM>input</EM>
+</blockquote>
+<p></p>
+<blockquote>
+ Il est normalement utilisé avec <EM>keypress</EM>, pour pouvoir tester si on a entré Alt+&lt;key&gt; ou seulement &lt;key&gt;
+</blockquote>
+</td>
+<td>
+<H4>Exemple</H4>
+
+<p></p>
+Saisir du texte dans le champ ci-dessous, en appuyant ou pas sur la touche Alt
+<p></p>
+<p><input id="altKey"></input>&nbsp;<span id="traceAltKey">&nbsp;</span>
+<p></p>
+<H4>Code</H4>
+
+<p></p>
+<div id="codeAltKey"></p><pre class="marked">from browser import document as doc
+
+def altKey(ev):
+    doc["traceAltKey"].text = 'altKey : %s ' %ev.altKey
+    
+# le champ de saisie a comme id "altKey"
+doc['altKey'].bind('keypress', altKey)</pre>
+<p></div>
+</td>
+</tr>
+<p></p>
+<td>
+<code>charCode</code>
+<blockquote>
+ Le numéro de référence Unicode pour la touche
+</blockquote>
+<p></p>
+<blockquote>
+ Cet attribut n'est utilisable que pour l'événement <EM>keypress</EM>
+</blockquote>
+<p></p>
+</td>
+<td>
+<H4>Example</H4>
+
+<p></p>
+Enter text in the entry below. Note that the character can be read by <code>ch(ev.charCode)</code>
+<p></p>
+<input id="charCode"></input>
+&nbsp;<span id="traceCharCode">&nbsp;</span>
+<p></p>
+<H4>Code</H4>
+
+<p></p>
+<div id="codeCharCode"></p><pre class="marked">from browser import document as doc
+
+def charCode(ev):
+    trace = doc["traceCharCode"]
+    char = chr(ev.charCode)
+    trace.text = 'charCode : %s, ' %ev.charCode
+    trace.text += 'character : %s' %char
+
+doc['charCode'].bind('keypress', charCode)</pre>
+<p></div>
+</td>
+<p></p>
+<tr>
+<td>
+<code>ctrlKey</code>
+<blockquote>
+ booléen, indique si la touche Ctrl était enfoncée quand l'événement clavier a été déclenché
+</blockquote>
+<p></p>
+<blockquote>
+ Cet attribut n'est pas disponible pour l'événement <EM>input</EM>
+</blockquote>
+<p></p>
+<blockquote>
+ Il est normalement utilisé avec <EM>keypress</EM>, pour pouvoir tester si on a entré Ctrl+&lt;key&gt; ou seulement &lt;key&gt;
+</blockquote>
+</td>
+<td>
+<H4>Example</H4>
+
+<p></p>
+Saisir du texte dans le champ ci-dessous, en appuyant ou pas sur la touche Ctrl
+<p></p>
+<input id="ctrlKey"></input>
+&nbsp;<span id="traceCtrlKey">&nbsp;</span>
+<p></p>
+<H4>Code</H4>
+
+<p></p>
+<div id="codeCtrlKey"></p><pre class="marked">from browser import document as doc
+
+
+def ctrlKey(ev):
+    doc["traceCtrlKey"].text = 'ctrlKey : %s ' %ev.ctrlKey
+    ev.preventDefault()
+
+doc['ctrlKey'].bind('keypress', ctrlKey)</pre>
+<p></div>
+<p></p>
+Notez que <code>ev.preventDefault()</code> est appelé pour éviter le comportement par défaut associé à certains raccourcis clavier qui utilisent la touche Ctrl
+<p></p>
+</td>
+</tr>
+<p></p>
+<tr>
+<td>
+<code>keyCode</code>
+<blockquote>
+ un code numérique dépendant du système et de l'implémentation, caractérise la clé enfoncée
+</blockquote>
+<p></p>
+<blockquote>
+ cette valeur est la même que les touches Alt, Ctrl ou majuscules soient enfoncées ou non
+</blockquote>
+<p></p>
+<blockquote>
+ noter que le résultat n'est pas le même selon qu'on gère les événements <EM>keydown</EM>, <EM>keyup</EM> et <EM>keypress</EM>
+</blockquote>
+</td>
+<td>
+<p></p>
+<H4>Example</H4>
+
+<p></p>
+Saisissez du texte dans les champs de saisie ci-dessous. Notez que le caractère peut être lu par <code>ch(ev.charCode)</code> avec l'événement <EM>keypress</EM>
+<p></p>
+avec <EM>keydown</EM> <input id="keyCodeKeydown"></input>
+<p></p>
+<p>avec <EM>keypress</EM> <input id="keyCodeKeypress"></input>
+&nbsp<span id="traceKeyCode">&nbsp;</span>
+<p></p>
+<p>avec <EM>keyup</EM> <input id="keyCodeKeyup"></input>
+<p></p>
+<H4>Code</H4>
+
+<p></p>
+<div id="codeKeyCode"></p><pre class="marked">from browser import document as doc
+
+def keyCode(ev):
+    trace = doc["traceKeyCode"]
+    trace.text = 'event %s '%ev.type
+    trace.text += ', keyCode : %s ' %ev.keyCode
+    ev.stopPropagation()
+
+doc['keyCodeKeydown'].bind('keydown', keyCode)
+doc['keyCodeKeypress'].bind('keypress', keyCode)
+doc['keyCodeKeyup'].bind('keyup', keyCode)</pre>
+<p></div>
+<p></p>
+</td>
+</tr>
+<p></p>
+<tr>
+<td>
+<code>shiftKey</code>
+<blockquote>
+ booléen, indique si la touche Majuscule était enfoncée quand l'événement clavier a été déclenché
+</blockquote>
+<p></p>
+<blockquote>
+ Cet attribut n'est pas disponible pour l'événement <EM>input</EM>
+</blockquote>
+<p></p>
+<blockquote>
+ Il est normalement utilisé avec <EM>keypress</EM>, pour pouvoir tester si on a entré Shift+&lt;key&gt; ou seulement &lt;key&gt;
+</blockquote>
+</td>
+<td>
+<H4>Example</H4>
+
+<p></p>
+Saisir du texte dans le champ ci-dessous, en appuyant ou pas sur la touche Majuscule
+<p></p>
+<input id="shiftKey" value="saisie"></input>
+&nbsp;<span id="traceShiftKey">&nbsp;</span>
+<p></p>
+<H4>Code</H4>
+
+<p></p>
+<div id="codeShiftKey"></p><pre class="marked">from browser import document as doc
+
+def shiftKey(ev):
+    doc["traceShiftKey"].text = 'shiftKey : %s ' %ev.shiftKey</pre>
+<p><p></p></p><pre class="marked">doc['shiftKey'].bind('keypress', shiftKey)</pre>
+<p></div>
+<p></p>
+</td>
+</tr>
+<p></p>
+<tr>
+<td>
+<code>which</code>
+<blockquote>
+ un code numérique dépendant du système et de l'implémentation, caractérise la clé enfoncée
+</blockquote>
+<p></p>
+<blockquote>
+ noter que le résultat n'est pas le même selon qu'on gère les événements <EM>keydown</EM>, <EM>keyup</EM> et <EM>keypress</EM>
+</blockquote>
+</td>
+<td>
+<H4>Example</H4>
+
+<p></p>
+Saisir du texte dans les champs ci-dessous. Notez qu'on peut lire le caractère par <code>chr(ev.which)</code> avec l'événement <EM>keypress</EM>
+<p></p>
+<table>
+<tr>
+<td>
+<p></p>
+avec <EM>keydown</EM> <input id="whichKeydown"></input>
+<p></p>
+<p>avec <EM>keypress</EM> <input id="whichKeypress"></input>
+<p></p>
+<p>avec <EM>keyup</EM> <input id="whichKeyup"></input>
+<p></p>
+</td>
+<td>
+<div id="traceWhich">&nbsp;</div>
+</td>
+</tr>
+<tr>
+<td colspan=2>
+<p></p>
+<H4>Code</H4>
+
+<p></p>
+<div id="codeWhich"></p><pre class="marked">from browser import document as doc
+ 
+trace = doc["traceWhich"]</pre>
+<p><p></p></p><pre class="marked">def which(ev):
+    trace.html = 'event : %s&lt;br&gt;' %ev.type
+    trace.html += 'which : %s&lt;br&gt;' %ev.which
+    if ev.type == 'keypress':
+        trace.html += 'character : %s' %chr(ev.which)</pre>
+<p><p></p></p><pre class="marked">doc['whichKeydown'].bind('keydown', which)
+doc['whichKeypress'].bind('keypress', which)
+doc['whichKeyup'].bind('keyup', which)</pre>
+<p> </div>
+ </td>
+ </tr>
+ </table>
+<p></p>
+</td>
+</tr>
+<p></p>
+<p></p>
+</table>
+<p></p></p><p><p></p>
+<p></p>
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

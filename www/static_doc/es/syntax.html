@@ -1,0 +1,195 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython documentation</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'es')
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text)
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src)
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introducción</a></h4>
+
+<h4><a class="navig" href="faq.html">Preguntas frecuentes (faq)</a></h4>
+
+<h4><a class="navig" href="syntax.html">Sintaxis, palabras clave y funciones integradas</a></h4>
+
+<h4><a class="navig" href="import.html">Implementación del <tt>import</tt></a></h4>
+
+<h4>Interfaz del navegador</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introducción - DOM API</a>
+<br><a class="navig" href="create.html">Creando un documento</a>
+<br><a class="navig" href="access.html">Accediendo a los elementos</a>
+<br><a class="navig" href="attributes.html">Atributos y métodos</a>
+<br>
+<br><a class="navig" href="events.html">Eventos</a>
+<br><a class="navig" href="mouse_events.html">Eventos del ratón</a>
+<br><a class="navig" href="keyboard_events.html">Eventos del teclado</a>
+<br><a class="navig" href="focus_events.html">Eventos de foco</a>
+<br><a class="navig" href="drag_events.html">Eventos de arrastre</a>
+<br>
+<br><a class="navig" href="query.html">Query string</a>
+<br><a class="navig" href="jsobjects.html">Usando objetos y librerías Javascript</a>
+</div>
+
+<h4>Módulos específicos de Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">El módulo integrado `browser`</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Trabajando con Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Opciones de la función <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Instalando el entorno de desarrollo</a>
+<br><a class="navig" href="test.html">Testing y depuración</a>
+<br><a class="navig" href="deploy.html">Desplegando una aplicación</a></div>
+
+<h4>Brython para Firefox OS</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="firefox_os_intro.html">Introducción</a>
+<br><a class="navig" href="firefox_os_tuto1.html">WebApps : diseño</a>
+<br><a class="navig" href="firefox_os_tuto2.html">WebApps : aplicación</a>
+</div>
+
+<h4>Cookbook</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Hola Mundo !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insertar contenido en un elemento</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Marcado HTML (bold,italic...)</a>
+<br><a class="navig" href="cookbook/table.html">Tabla HTML</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Handle options in a SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Arrastrar y soltar</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtener el contenido de un elemento</a>
+<br><a class="navig" href="cookbook/read_file.html">Leer el contenido de un fichero</a>
+<br><a class="navig" href="cookbook/local_storage.html">Almnacenar objetos localmente</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Ejemplo de onmouseover</a>
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>Sintaxis</H2>
+
+<p></p>
+Brython usa la misma sintaxis que Python:
+<p></p>
+<ul>
+<li> Los espacios en blanco son significativos e importantes y definen bloques
+<li> Las listas se crean con <code>[]</code> o <code>list()</code>, Las tuplas se crean con <code>()</code> o <code>tuple()</code>, los diccionarios se crean con <code>{}</code> o <code>dict()</code> y los conjuntos (sets) se crean con  <code>set()</code>
+<li> listas, diccionarios y conjuntos por comprensión (comprehension):
+<li> 
+ -<code>[ expr for item in iterable if condition ]</code>
+ -<code> dict((i,2&#42;i) for i in range(5))</code>
+ -<code>set(x for x in 'abcdcga')</code>
+<p></p>
+<li> generadores (keyword <code>yield</code>), expresiones generadoras : <code>foo(x for x in bar if x&gt;5)</code>
+<li> operador ternario: <code>x = r1 if condition else r2</code>
+<li> Las funciones pueden ser definidas con cualquier combinaci&oacute;n de argumentos fijos, argumentos por defecto, argumentos posicionales variables y argumentos de palabras clave variables : <br><code>def foo(x, y=0, \&#42;args, \&#42;\&#42;kw):</code>
+<li> Desempaquetado de argumentos en listas o diccionarios en llamadas a funciones : <code>x = foo(\&#42;args, \&#42;\&#42;kw)</code>
+<li> clases con herencia múltiple
+<li> decoradores
+<li> imports : 
+<ul>
+<li> <code>import foo</code>
+<li> <code>from foo import X</code>
+<li> <code>import foo as bar</code>
+<li> <code>from foo import X as Y</code>
+<li> <code>from foo import &#42;</code>
+<p></p>
+</ul></ul>
+<p></p>
+<H2>Keywords y funciones integradas (built-in functions)</H2>
+
+<p></p>
+Brython soporta la mayor parte de keywords y funciones de Python 3 :
+<p></p>
+<ul>
+<li> keywords : <code>as, assert, break, class, continue, def, del, elif, else, except, False, finally, for, from, global, if, import, is, lambda, None, nonlocal, pass, return, True, try, while, with, yield</code>
+<li> built-in functions : <code>abs(), all(), any(), ascii(), bin(), bool(), bytes(), callable(), chr(), classmethod(), delattr(), dict(), dir(), divmod(), enumerate(), eval(), exec(), filter(), float(), frozenset(), getattr(), globals(), hasattr(), hash(), hex(), id(), input(), int(), isinstance(), iter(), len(), list(), locals(), map(), max(), min(), next(), object(), open(), ord(), pow(), print(), property(), range(), repr(), reversed(), round(), set(), setattr(), slice(), sorted(), str(), sum(), super(), tuple(), type(), zip(), &#95;&#95;import&#95;&#95;()</code>
+</ul>
+<p></p>
+Por defecto, <code>print()</code> mostrará la salida en la consola del navegador de la misma forma que sucede con los errores. <code>sys.stderr</code> y <code>sys.stdout</code> se pueden asignar a un objeto usando el método <code>write()</code> permitiendo la redirección del 'output' a una ventana o área texto. 
+<p></p>
+<code>sys.stdin</code>, de momento, no ha sido implementado, sin embargo, existe la función integrada (built-in function) <code>input()</code> que abre un di&aacute;logo bloqueante de entrada (un 'prompt').
+<p></p>
+Para abrir un diálogo de impresión (a una impresora), llama a <code>window.print</code> (<code>window</code> se encuentra definido en el módulo <STRONG>browser</STRONG>)
+<p></p>
+Lo siguiente no ha sido implementado en la versi&oacute;n actual : 
+<p></p>
+<ul>
+<li> built-in functions <code>help(),  memoryview(), vars()</code>
+<p></p>
+<p></p>
+</ul></p>
+</td>
+</tr>
+</table>
+</html>

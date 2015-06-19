@@ -1,0 +1,392 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Documentation Brython</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script type="text/javascript" src="/src/brython.js"></script>
+
+<script type="text/python">
+import time
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'fr')
+
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introduction</a></h4>
+<h4><a class="navig" href="faq.html">Questions fréquemment posées</a></h4>
+<h4><a class="navig" href="syntax.html">Syntaxe, mots-clés et fonctions intégrées</a></h4>
+<h4><a class="navig" href="stdlib.html">Distribution</a></h4>
+<h4><a class="navig" href="import.html">Implémentation de <tt>import</tt></a></h4>
+
+<h4>Interface avec le navigateur</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introduction - API DOM</a>
+<br><a class="navig" href="create.html">Créer un document</a>
+<br><a class="navig" href="access.html">Accéder aux éléments</a>
+<br><a class="navig" href="attributes.html">Attributs et méthodes</a>
+<br>
+<br><a class="navig" href="events.html">Evénements</a>
+<br><a class="navig" href="mouse_events.html">Evénements souris</a>
+<br><a class="navig" href="keyboard_events.html">Evénements clavier</a>
+<br><a class="navig" href="focus_events.html">Evénements focus</a>
+<br><a class="navig" href="drag_events.html">Evénements pour glisser-déposer</a>
+<br>
+<br><a class="navig" href="query.html">Chaine de requête</a>
+<br>
+<br><a class="navig" href="jsobjects.html">Objets et librairies Javascript</a>
+</div>
+
+<h4>Modules intégrés propres à Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Travailler avec Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Options de la fonction <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Installer l'environnement de développement</a>
+<br><a class="navig" href="test.html">Test et débogage</a>
+<br><a class="navig" href="deploy.html">Deployer une application</a></div>
+
+<h4>Recettes</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Salut !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insérer du contenu dans un élément</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Mise en forme HTML (gras, italique...)</a>
+<br><a class="navig" href="cookbook/table.html">Table HTML</a>
+<br><a class="navig" href="cookbook/bind_unbind.html">Attacher / détacher des événements</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Gérer la sélection d'options dans un SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Glisser-déposer</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtenir le contenu d'un élément</a>
+<br><a class="navig" href="cookbook/read_file.html">Lire le contenu d'un fichier</a>
+<br><a class="navig" href="cookbook/local_storage.html">Stocker des objects localement</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Exemple de onmouseover</a>
+<br><a class="navig" href="cookbook/draw_image.html">Ajouter une image dans un canvas</a>
+
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>module <STRONG>browser.timer</STRONG></H2>
+
+<p></p>
+Implémente des fonctions pour permettre l'exécution différée ou répétitive de 
+fonctions :
+<p></p>
+<code>set&#95;timeout(</code><I>fonction,ms</I><code>)</code>
+<blockquote>
+ exécute la <EM>fonction</EM> après <EM>ms</EM> millisecondes. <EM>fonction</EM> ne prend aucun 
+ argument. Renvoie un objet utilisable dans la fonction suivante
+</blockquote>
+<p></p>
+<blockquote>
+ Elle repose sur la fonction <code>setTimeout</code> en Javascript : voir la 
+ <a href="http://www.w3.org/TR/2011/WD-html5-20110525/timers.html#dom-windowtimers-settimeout">documentation officielle</a>.
+</blockquote>
+<p></p>
+<blockquote>
+ Sur cet exemple, la couleur du texte dans la boite noire change après 3 secondes.
+</blockquote>
+<p></p>
+<div style="padding-left:50px;"></p><pre class="exec_on_load">from browser import document, timer
+
+def change&#95;color():
+    document['st-text'].style.color = "blue"
+
+def press&#95;button(ev):
+    timer.set&#95;timeout(change&#95;color, 3000)
+
+document['first-button'].bind('click', press&#95;button)</pre>
+<p><p></p>
+<table cellpadding=10>
+<tr>
+<td style="width:100px;">
+<button id="first-button">Press</button>
+</td>
+<td>
+<div id="st-text" style="background-color:black;color:#ffffff;padding:10px;font-family:courier;font-weight:bold;font-size:14px;">Cette couleur change au bout de 3s</div>
+</td>
+</tr>
+</table>
+</div>
+<p></p>
+<code>clear&#95;timeout(</code><I>timer</I><code>)</code>
+<blockquote>
+ annule l'exécution définie par <code>set&#95;timeout()</code>. Reçoit un argument, la 
+ valeur de l'objet retournée par <code>set&#95;timeout()</code>. 
+</blockquote>
+<p></p>
+<blockquote>
+ Elle repose sur la fonction <code>cancelTimeout</code> en Javascript. Voir la 
+ <a href="http://www.w3.org/TR/2011/WD-html5-20110525/timers.html#dom-windowtimers-cleartimeout">documentation officielle</a>.
+</blockquote>
+<p></p>
+<blockquote>
+ Reprenons l'exemple précédent. Vous avez maintenant la possibilité 
+ d'interrompre l'exécution de l'action avant que les 3 secondes soient 
+ écoulées.
+</blockquote>
+<p></p>
+<div style="padding-left:50px;"></p><pre class="exec_on_load">from browser import document, timer
+
+idtimer = 1
+
+def change&#95;color&#95;two():
+    document['ct-text2'].style.color = "blue"
+
+def press&#95;button&#95;two(ev):
+    global idtimer
+    idtimer = timer.set&#95;timeout(change&#95;color&#95;two, 3000)
+    
+def stop&#95;button(ev):
+    timer.clear&#95;timeout(idtimer)
+
+document['ct-start'].bind('click', press&#95;button&#95;two)
+document['ct-stop'].bind('click', stop&#95;button)</pre>
+<p><table cellpadding=10>
+<tr>
+<td style="width:100px;">
+<button id="ct-start">Lancer</button>
+<br>
+<button id="ct-stop">Arrêter</button>
+</td>
+<td>
+<div id="ct-text2" style="background-color:black;color:#ffffff;padding:10px;font-family:courier;font-weight:bold;font-size:14px;">Cette couleur changera au bout de 3s</div>
+</td>
+</tr>
+</table>
+</div>
+<p></p>
+<code>set&#95;interval(</code><I>fonction,ms</I><code>)</code>
+<blockquote>
+ lance l'exécution répétée de la <EM>fonction</EM> toutes les <EM>ms</EM> millisecondes. 
+ Renvoie un objet utilisable dans la fonction suivante
+</blockquote>
+<p></p>
+<blockquote>
+ Elle repose sur la fonction <code>setInterval</code> de Javascript. Voir la 
+ <a href="http://www.w3.org/TR/2011/WD-html5-20110525/timers.html#dom-windowtimers-setinterval">documentation officielle</a>.
+</blockquote>
+<p></p>
+<blockquote>
+ Quand c'est possible il est préférable d'éviter de se servir de cette 
+ fonction et d'utiliser plutôt <code>request&#95;animation&#95;frame</code> (voir ci-dessous)
+</blockquote>
+<p></p>
+<code>clear&#95;interval(</code><I>timer</I><code>)</code>
+<blockquote>
+ termine l'exécution répétée définie par <code>set&#95;interval()</code>
+</blockquote>
+<p></p>
+<blockquote>
+ Elle repose sur la fonction <code>clearInterval</code> de Javascript. Voir la  
+ <a href="http://www.w3.org/TR/2011/WD-html5-20110525/timers.html#dom-windowtimers-clearinterval">documentation officielle</a>.
+</blockquote>
+<p></p>
+<blockquote>
+ Voici un exemple qui utilise <code>set&#95;interval</code> et <code>cancel&#95;interval</code>:
+</blockquote>
+<p></p>
+<div style="padding-left:50px;"></p><pre class="exec_on_load">import time
+from browser import document, timer
+
+&#95;timer = None
+counter = 0
+
+def show():
+    document['&#95;timer'].text = '%.2f' %(time.time()-counter)
+
+def start&#95;timer(ev):
+    global &#95;timer,counter
+    if &#95;timer is None:
+        counter = time.time()
+        &#95;timer = timer.set&#95;interval(show,10)
+        document['start'].text = 'Pause'
+    elif &#95;timer == 'hold': # restart
+        # restart timer
+        counter = time.time()-float(document['&#95;timer'].text)
+        &#95;timer = timer.set&#95;interval(show,10)
+        document['start'].text = 'Pause'
+    else: # hold
+        timer.clear&#95;interval(&#95;timer)
+        &#95;timer = 'hold'
+        document['start'].text = 'Redémarrer'
+
+def stop&#95;timer(ev):
+    global &#95;timer
+    timer.clear&#95;interval(&#95;timer)
+    &#95;timer = None
+    t = 0
+    document['&#95;timer'].text = '%.2f' %0
+    document['start'].text = 'Démarrer'
+
+document['start'].bind('click', start&#95;timer)
+document['stop'].bind('click', stop&#95;timer)</pre>
+<p><p></p>
+<table cellpadding=10>
+<tr>
+<td style="width:100px;">
+<button id="start">Démarrer</button>
+<br><button id="stop">Arrêter</button>
+</td>
+<td>
+<div id="_timer" style="background-color:black;color:#0F0;padding:15px;font-family:courier;font-weight:bold;font-size:23px;">0.00</div>
+</td>
+</tr>
+</table>
+</div>
+<p></p>
+<code>request&#95;animation&#95;frame(</code><I>function</I><code>)</code>
+<blockquote>
+ provoque l'exécution répétée de la <EM>fonction</EM> en laissant le navigateur 
+ gérer la mise à jour. <EM>fonction</EM> prend un argument non significatif
+</blockquote>
+<p></p>
+<blockquote>
+ Elle repose sur la fonction <code>requestAnimationFrame</code> de Javascript. Voir la
+ <a href="http://www.w3.org/TR/animation-timing/#dom-windowanimationtiming-requestanimationframe">documentation officielle</a>. 
+</blockquote>
+<p></p>
+<code>cancel&#95;animation&#95;frame(</code><I>id</I><code>)</code>
+<blockquote>
+ annule l'exécution répétée de la fonction définie par 
+ <EM>request<I>animation</I>frame()</EM> ; <EM>id</EM> est l'objet retourné par 
+ <EM>request<I>animation</I>frame()</EM>
+</blockquote>
+<p></p>
+<blockquote>
+ Elle repose sur la fonction <code>cancelAnimationFrame</code> de Javascript. Voir la
+ <a href="http://www.w3.org/TR/animation-timing/#dom-windowanimationtiming-cancelanimationframe">documentation officielle</a>.
+</blockquote>
+<p></p>
+<blockquote>
+ Voici un exemple dans lequel on utilise <code>request&#95;animation&#95;frame</code> et
+ <code>cancel&#95;animation&#95;frame</code> :
+</blockquote>
+<p></p>
+<div style="padding-left:50px;"></p><pre class="exec_on_load">from browser.timer import request&#95;animation&#95;frame as raf
+from browser.timer import cancel&#95;animation&#95;frame as caf
+from browser import document
+import time
+from browser.html import CANVAS, BUTTON
+import math
+
+ctx = document['raf-canvas'].getContext( '2d' ) 
+
+toggle = True
+
+def draw():
+    t = time.time() &#42; 3
+    x = math.sin(t) &#42; 96 + 128
+    y = math.cos(t &#42; 0.9) &#42; 96 + 128
+    global toggle
+    if toggle:
+        toggle = False
+    else:
+        toggle = True
+    ctx.fillStyle = 'rgb(200,200,20)' if toggle else 'rgb(20,20,200)'
+    ctx.beginPath()
+    ctx.arc( x, y, 6, 0, math.pi &#42; 2, True)
+    ctx.closePath()
+    ctx.fill()
+
+def animate(i):
+    global id
+    id = raf(animate)
+    draw()
+
+def stop(i):
+    global id
+    caf(id)
+
+document['btn-animate'].bind('click', animate)
+document['btn-stop'].bind('click', stop)</pre>
+<p><p></p>
+<table cellpadding=10>
+<tr>
+<td style="width:100px;">
+<button id="btn-animate" type="button">Animer</button>
+<br>
+<button id="btn-stop" type="button">Arrêter</button>
+</td>
+<td>
+<canvas id="raf-canvas" width=256 height=256></canvas>
+</td>
+</tr>
+</table>
+</div>
+<p></p>
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

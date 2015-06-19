@@ -1,0 +1,247 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Documentation Brython</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script type="text/javascript" src="/src/brython.js"></script>
+
+<script type="text/python">
+import time
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'fr')
+
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introduction</a></h4>
+<h4><a class="navig" href="faq.html">Questions fréquemment posées</a></h4>
+<h4><a class="navig" href="syntax.html">Syntaxe, mots-clés et fonctions intégrées</a></h4>
+<h4><a class="navig" href="stdlib.html">Distribution</a></h4>
+<h4><a class="navig" href="import.html">Implémentation de <tt>import</tt></a></h4>
+
+<h4>Interface avec le navigateur</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introduction - API DOM</a>
+<br><a class="navig" href="create.html">Créer un document</a>
+<br><a class="navig" href="access.html">Accéder aux éléments</a>
+<br><a class="navig" href="attributes.html">Attributs et méthodes</a>
+<br>
+<br><a class="navig" href="events.html">Evénements</a>
+<br><a class="navig" href="mouse_events.html">Evénements souris</a>
+<br><a class="navig" href="keyboard_events.html">Evénements clavier</a>
+<br><a class="navig" href="focus_events.html">Evénements focus</a>
+<br><a class="navig" href="drag_events.html">Evénements pour glisser-déposer</a>
+<br>
+<br><a class="navig" href="query.html">Chaine de requête</a>
+<br>
+<br><a class="navig" href="jsobjects.html">Objets et librairies Javascript</a>
+</div>
+
+<h4>Modules intégrés propres à Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Travailler avec Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Options de la fonction <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Installer l'environnement de développement</a>
+<br><a class="navig" href="test.html">Test et débogage</a>
+<br><a class="navig" href="deploy.html">Deployer une application</a></div>
+
+<h4>Recettes</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Salut !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insérer du contenu dans un élément</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Mise en forme HTML (gras, italique...)</a>
+<br><a class="navig" href="cookbook/table.html">Table HTML</a>
+<br><a class="navig" href="cookbook/bind_unbind.html">Attacher / détacher des événements</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Gérer la sélection d'options dans un SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Glisser-déposer</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtenir le contenu d'un élément</a>
+<br><a class="navig" href="cookbook/read_file.html">Lire le contenu d'un fichier</a>
+<br><a class="navig" href="cookbook/local_storage.html">Stocker des objects localement</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Exemple de onmouseover</a>
+<br><a class="navig" href="cookbook/draw_image.html">Ajouter une image dans un canvas</a>
+
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>module <STRONG>javascript</STRONG></H2>
+
+<p></p>
+Le module <STRONG>javascript</STRONG> permet d'interagir avec les objets définis dans les
+bibliothèques et programmes Javascript présents dans la même page que le
+programme Brython.
+<p></p>
+Il définit deux classes et une fonction :
+<p></p>
+<STRONG>javascript</STRONG>.<code>JSObject</code>
+<blockquote>
+ Classe dont les instances «&nbsp;enveloppent&nbsp;» des objets Javascript.
+</blockquote>
+<p></p>
+<blockquote>
+ <I><STRONG>Avertissement : </STRONG></I> Cette classe n'est normalement pas utilisée 
+ directement. Un objet dont on obtient une référence par <code>window.js&#95;object</code>
+ est une instance de <code>JSObject</code>
+</blockquote>
+<p></p>
+<blockquote>
+ <code>JSObject(<I>jsobj</I>)</code> renvoie un objet <EM>brobj</EM> qui 
+ «&nbsp;enveloppe&nbsp;» l'objet Javascript <EM>jsobj</EM>. Les opérations réalisées 
+ sur l'instance de <code>JSObject</code> sont répercutées sur l'objet Javascript en 
+ convertissant du mieux possible les types Python en types Javascript.
+</blockquote>
+<p></p>
+<blockquote>
+ Si <EM>jsobj</EM> est une fonction, les arguments passés à <EM>brobj</EM> sont convertis
+ avant d'être passés à <EM>jsobj</EM> de la façon suivante&nbsp;:
+</blockquote>
+<p></p>
+<blockquote>
+<table border='1' cellpadding=3>
+<p></p>
+<tr><th>Type d'argument dans l'appel de fonction Brython</th><th>Argument passé à la fonction Javascript</th></tr>
+<tr><td>instance de <code>DOMNode</code></td><td>Elément DOM</td></tr>
+<tr><td>instance de <code>DOMEvent</code></td><td>Evénement DOM</td></tr>
+<tr><td>liste d'instances de <code>DOMNode</code></td><td>Tableau (<code>array</code>) d’éléments DOM</td></tr>
+<tr><td><code>None, True, False</code></td><td><code>null, true, false</code></td></tr>
+<tr><td>instance de <code>int</code></td><td>entier</td></tr>
+<tr><td>instance de <code>float</code></td><td>réel</td></tr>
+<tr><td>instance de <code>str</code></td><td>chaîne</td></tr>
+<tr><td>instance de <code>list</code></td><td>tableau Javascript</td></tr>
+<tr><td>instance de <code>JSObject</code></td><td>objet Javascript correspondant</td></tr>
+</table>
+</blockquote>
+<p></p>
+<blockquote>
+ Le résultat est converti en effectuant les opérations inverses.
+</blockquote>
+<p></p>
+<p></p>
+<STRONG>javascript</STRONG>.<code>JSConstructor</code>
+<blockquote>
+ Classe dont les instances représentent des constructeurs Javascript,
+ c'est-à-dire des fonctions utilisées avec le mot-clé Javascript <code>new</code>.
+</blockquote>
+<p></p>
+<blockquote>
+ <code>JSConstructor(<I>jsconstr</I>)</code> renvoie l'objet Brython <EM>brconstr</EM>.
+ Cet objet est un <EM>callable</EM> («&nbsp;appelable&nbsp;»)&nbsp;; il renvoie une
+ instance de <code>JSObject</code> représentant l'objet Javascript obtenu en passant au
+ constructeur <EM>jsconstr</EM> les arguments convertis comme indiqué dans le tableau
+ ci-dessus.
+</blockquote>
+<p></p>
+<STRONG>javascript</STRONG>.<code>load(</code><I>script&#95;url[,noms]</I><code>)</code>
+<blockquote>
+ Fonction pour charger le script Javascript à l'adresse <I>script&#95;url</I> et 
+ insérer la liste de <I>noms</I> dans l'espace de noms du programme.
+</blockquote>
+<p></p>
+<blockquote>
+ Cette fonction utilise un appel Ajax bloquant. Il faut l'utiliser quand on
+ ne peut pas insérer la librairie Javascript dans la page html par
+ <code>&lt;script src="prog.js"&gt;&lt;/script&gt;</code>. 
+</blockquote>
+<p></p>
+<blockquote>
+ Par exemple, le module <STRONG>jqueryui</STRONG> de la bibliothèque standard Brython
+ fournit une interface avec la librairie Javascript jQueryUI. Si on écrit un
+ script Brython qui utilise ce module, on fait simplement <code>import jqueryui</code>
+ sans insérer les librairies Javascript dans la page. C'est le module 
+ <STRONG>jqueryui</STRONG> qui les charge, en utilisant cette fonction <code>load()</code>
+</blockquote>
+<p></p>
+<p></p>
+<H2>Exemple</H2>
+
+<p></p>
+Utilisation de <code>JSConstructor</code> avec la bibliothèque Javascript three.js :
+<p></p>
+<blockquote></p><pre class="marked">from javascript import JSConstructor
+
+cameraC = JSConstructor(THREE.PerspectiveCamera)
+camera = cameraC(75, 1, 1, 10000)</pre>
+<p></blockquote>
+<p></p>
+<blockquote>
+ Voir <a href="../../gallery/three.html">la démo three</a> pour une démonstration
+ grandeur nature.
+</blockquote>
+<p></p>
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

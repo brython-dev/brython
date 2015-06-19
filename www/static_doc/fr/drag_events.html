@@ -1,0 +1,288 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Documentation Brython</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script type="text/javascript" src="/src/brython.js"></script>
+
+<script type="text/python">
+import time
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'fr')
+
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<script type="text/python">from browser import document as doc
+from browser import alert
+</script>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introduction</a></h4>
+<h4><a class="navig" href="faq.html">Questions fréquemment posées</a></h4>
+<h4><a class="navig" href="syntax.html">Syntaxe, mots-clés et fonctions intégrées</a></h4>
+<h4><a class="navig" href="stdlib.html">Distribution</a></h4>
+<h4><a class="navig" href="import.html">Implémentation de <tt>import</tt></a></h4>
+
+<h4>Interface avec le navigateur</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introduction - API DOM</a>
+<br><a class="navig" href="create.html">Créer un document</a>
+<br><a class="navig" href="access.html">Accéder aux éléments</a>
+<br><a class="navig" href="attributes.html">Attributs et méthodes</a>
+<br>
+<br><a class="navig" href="events.html">Evénements</a>
+<br><a class="navig" href="mouse_events.html">Evénements souris</a>
+<br><a class="navig" href="keyboard_events.html">Evénements clavier</a>
+<br><a class="navig" href="focus_events.html">Evénements focus</a>
+<br><a class="navig" href="drag_events.html">Evénements pour glisser-déposer</a>
+<br>
+<br><a class="navig" href="query.html">Chaine de requête</a>
+<br>
+<br><a class="navig" href="jsobjects.html">Objets et librairies Javascript</a>
+</div>
+
+<h4>Modules intégrés propres à Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Travailler avec Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Options de la fonction <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Installer l'environnement de développement</a>
+<br><a class="navig" href="test.html">Test et débogage</a>
+<br><a class="navig" href="deploy.html">Deployer une application</a></div>
+
+<h4>Recettes</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Salut !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insérer du contenu dans un élément</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Mise en forme HTML (gras, italique...)</a>
+<br><a class="navig" href="cookbook/table.html">Table HTML</a>
+<br><a class="navig" href="cookbook/bind_unbind.html">Attacher / détacher des événements</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Gérer la sélection d'options dans un SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Glisser-déposer</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtenir le contenu d'un élément</a>
+<br><a class="navig" href="cookbook/read_file.html">Lire le contenu d'un fichier</a>
+<br><a class="navig" href="cookbook/local_storage.html">Stocker des objects localement</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Exemple de onmouseover</a>
+<br><a class="navig" href="cookbook/draw_image.html">Ajouter une image dans un canvas</a>
+
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H1>Evénements glisser-déposer</H1>
+
+<p></p></p><p><p></p>
+<p></p>
+Les événements associés aux opérations de glisser-déposer sont
+<p></p>
+<table cellpadding=3 border=1>
+<tr>
+<td><EM>drag</EM></td>
+<td>Cet évènement est déclenché à la source du glisser-déposer, l'élément sur lequel l'évènement <EM>dragstart</EM> a été déclenché
+</td>
+</tr>
+<p></p>
+<tr>
+<td><EM>dragend</EM></td><td>La source du glisser-déposer recevra un évènement de ce type lorsque l'opération de glisser-déposer est terminée, qu'elle se soit bien déroulée ou non</td>
+</tr>
+<p></p>
+<tr>
+<td><EM>dragenter</EM></td><td>Déclenché lorsque le pointeur de la souris est déplacée pour la première fois au dessus d'un élément pendant le glisser-déposer. Un écouteur d'évènement pourrait alors indiquer si le dépôt des données courantes est autorisée ou non sur cette zone. Si aucun écouteur n'a été défini, ou si ce dernier n'entraîne aucune action, alors, le dépôt n'est par défaut, pas autorisé. C'est également l'évènement à prendre en charge pour donner des retours à l'utilisateur quand à la possibilité qu'il a déposer le contenu du glisser-déposer en affichant une surbrillance ou un marqueur d'insertion</td>
+</tr>
+<p></p>
+<tr>
+<td><EM>dragleave</EM></td><td>Cet évènement est déclenché quand la souris quite un élément durant un glisser-déposer. Les écouteurs évènement devraient retirer toute surbrillance ou marqueur d'insertion de cette zone</td>
+</tr>
+<p></p>
+<tr>
+<td><EM>dragover</EM></td><td>Cet évènement est déclenché lorsque la souris est déplacée au dessus d'un élément durant un glisser-déposer. La plupart du temps, cet évènement est utilisé pour les mêmes buts que l'évènement dragenter</td>
+</tr>
+<p></p>
+<tr>
+<td><EM>dragstart</EM></td><td>Déclenché sur un élément lorsque qu'un glisser-déposer est entrepris. L'utilisateur requiert la possibilité de glisser-déposer l'élément sur lequel cet évènement est déclenché</td>
+</tr>
+<p></p>
+<tr>
+<td><EM>drop</EM></td><td>L'évènement <EM>drop</EM> est déclenché sur l'élément sur lequel le dépôt a été effectué à la fin de l'opération de glisser déposer. Un écouteur d'évènement devrait être responsable de la récupération des données sources du glisser-déposer et de leur insertion sur la zone de dépôt. Cet évènement ne sera déclenché que si le dépôt est désiré. Il ne sera pas déclenché si l'utilisateur annule ce dernier en pressant, par exemple, sur la touche "Echap" de son clavier ou si le bouton de la souris a été relâché alors que le curseur était au-dessus d'une zone pour laquelle le glisser-déposer n'était pas autorisé</td>
+</tr>
+<p></p>
+</table>
+<p></p>
+<p></p>
+<H2>Attributs de l'objet <code>DOMEvent</code></H2>
+
+<p></p>
+<code>dataTransfer</code>
+<blockquote>
+ un "magasin de données" utilisé pour transporter des informations pendant le processus de glisser-déposer 
+</blockquote>
+<p></p>
+<p></p>
+<H2>Attributs et méthodes du magasin de données</H2>
+
+<p></p>
+Les "magasins de données" possèdent les attributs et méthodes suivants :
+<p></p>
+<code>dropEffect</code>
+<p></p>
+<blockquote>
+ Une chaine qui représente l'effect qui sera utilisé, il doit toujours être une des valeurs possibles de  <code>effectAllowed</code>.
+</blockquote>
+<p></p>
+<blockquote>
+ Pour les événements <EM>dragenter</EM> et <EM>dragover</EM>, le <code>dropEffect</code> sera initialisé en fonction de l'action requise par l'utilisateur. La manière dont cela est déterminé dépend de la plateforme, mais typiquement l'utilisateur peut appuyer sur des touches de modification pour préciser l'action souhaitée. A l'intérieur d'un gestionnaire d'événement pour <EM>dragenter</EM> ou <EM>dragover</EM>, le <code>dropEffect</code> doit être modifié si l'action que l'utilisateur requiert n'est pas celle qui est souhaitée.
+</blockquote>
+<p></p>
+<blockquote>
+ Pour les événements <EM>dragstart</EM>, <EM>drag</EM> et <EM>dragleave</EM>, le <code>dropEffect</code> est initialisé à "none". On peut affecter une valeur à <code>dropEffect</code>, mais cette valeur ne sera pas utilisée.
+</blockquote>
+<p></p>
+<blockquote>
+ Pour les événements <EM>drop</EM> et <EM>dragend</EM>, la valeur de <code>dropEffect</code> sera l'action souhaitée, c'est-à-dire celle que <code>dropEffect</code> avait après le dernier événement <EM>dragenter</EM> ou <EM>dragover</EM>.
+</blockquote>
+<p></p>
+<blockquote>
+ Les valeurs possibles sont :
+</blockquote>
+<p></p>
+<blockquote>
+ -    "copy" : une copie de l'élément source est effectuée dans le nouvel emplacement.
+ -    "move" : un élément est déplacé dans le nouvel emplacement.
+ -    "link" : un lien vers l'élément source est établie dans le nouvel emplacement.
+ -    "none" : l'élément ne peut pas être déposé.
+</blockquote>
+<p></p>
+<blockquote>
+ Affecter une autre valeur n'a aucun effet et ne modifie pas la valeur courante.
+</blockquote>
+<p></p>
+<p></p>
+<code>effectAllowed</code>
+<p></p>
+<blockquote>
+ Une chaine qui spécifie les effets autorisés pour le déplacement. On peut le définir dans l'événement <EM>dragstart</EM> pour indiquer les effets souhaités pour la source, et dans les événements <EM>dragenter</EM> et <EM>dragover</EM> pour insiquer les effets souhiatés pour la cible. La valeur n'est pas utilisée pour les autres événements.
+</blockquote>
+<p></p>
+<blockquote>
+ Les valeurs possibles sont:
+</blockquote>
+<p></p>
+<blockquote>
+ - "copy" : une copie de la source peut être effectuée au nouvel emplacement.
+ - "move" : un élément peut être déplacé au nouvel emplacement.
+ - "link" : un lien peut être établi vers la source dans le nouvel emplacement.
+ - "copyLink" : une opération de copie ou de lien est autorisée.
+ - "copyMove" : une opération de copie ou de déplacement est autorisée.
+ - "linkMove" : une opération de lien ou de déplacement est autorisée.
+ - "all" : toutes les opérations sont autorisées.
+ - "none" : l'élement ne peut pas être déposé.
+ - "uninitialized" : la valeur par défaut quand l'effet n'a pas été défini, équivalent à "all".
+</blockquote>
+<p></p>
+<blockquote>
+ Affecter une autre valeur n'a aucun effet et ne modifie pas la valeur courante.
+</blockquote>
+<p></p>
+<code>files</code>
+<p></p>
+<blockquote>
+ La liste de tous les fichiers locaux disponibles pour le transfert de données. Si l'opération de déplacement n'implique pas de glisser-déposer de fichiers, cette propriété est une liste vide. Une tentative d'accès à un élément de cette liste avec un index non valide renvoie <code>None</code>.
+</blockquote>
+<p></p>
+<code>getData(<I>type</I>)</code>
+<p></p>
+<blockquote>
+ Récupère la donnée pour un type donné, ou une chaine vide si la donnée pour ce type n'existe pas ou que l'attribut <code>dataTransfer</code> ne contient aucune donnée
+</blockquote>
+<p></p>
+<code>setData(<I>type</I>, <I>valeur</I>)</code>
+<p></p>
+<blockquote>
+ Affecte une valeur à un type donné. S'il n'y a pas de données pour ce type, elle est ajoutée à la fin, de façon que le dernier élément de la liste des types sera le nouveau format. Si la donnée pour ce type existe déjà, la valeur courante est remplacée à la même position. Autrement dit, l'ordre de la liste des types n'est pas modifiée quand on change la valeur pour un type.
+</blockquote>
+<p></p>
+<code>types</code>
+<p></p>
+<blockquote>
+ La liste des types de formats des données stockées pour le premier élément, dans l'ordre où les données ont été ajoutées. Si aucune donnée n'a été ajoutée, cette propriété est une liste vide.
+</blockquote>
+<p></p>
+<p></p>
+<H4>Exemple</H4>
+
+<p></p>
+Voir la recette de glisser-déposer dans le menu Recettes
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

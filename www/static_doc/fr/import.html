@@ -1,0 +1,179 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Documentation Brython</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script type="text/javascript" src="/src/brython.js"></script>
+
+<script type="text/python">
+import time
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'fr')
+
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introduction</a></h4>
+<h4><a class="navig" href="faq.html">Questions fréquemment posées</a></h4>
+<h4><a class="navig" href="syntax.html">Syntaxe, mots-clés et fonctions intégrées</a></h4>
+<h4><a class="navig" href="stdlib.html">Distribution</a></h4>
+<h4><a class="navig" href="import.html">Implémentation de <tt>import</tt></a></h4>
+
+<h4>Interface avec le navigateur</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introduction - API DOM</a>
+<br><a class="navig" href="create.html">Créer un document</a>
+<br><a class="navig" href="access.html">Accéder aux éléments</a>
+<br><a class="navig" href="attributes.html">Attributs et méthodes</a>
+<br>
+<br><a class="navig" href="events.html">Evénements</a>
+<br><a class="navig" href="mouse_events.html">Evénements souris</a>
+<br><a class="navig" href="keyboard_events.html">Evénements clavier</a>
+<br><a class="navig" href="focus_events.html">Evénements focus</a>
+<br><a class="navig" href="drag_events.html">Evénements pour glisser-déposer</a>
+<br>
+<br><a class="navig" href="query.html">Chaine de requête</a>
+<br>
+<br><a class="navig" href="jsobjects.html">Objets et librairies Javascript</a>
+</div>
+
+<h4>Modules intégrés propres à Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Travailler avec Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Options de la fonction <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Installer l'environnement de développement</a>
+<br><a class="navig" href="test.html">Test et débogage</a>
+<br><a class="navig" href="deploy.html">Deployer une application</a></div>
+
+<h4>Recettes</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Salut !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insérer du contenu dans un élément</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Mise en forme HTML (gras, italique...)</a>
+<br><a class="navig" href="cookbook/table.html">Table HTML</a>
+<br><a class="navig" href="cookbook/bind_unbind.html">Attacher / détacher des événements</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Gérer la sélection d'options dans un SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Glisser-déposer</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtenir le contenu d'un élément</a>
+<br><a class="navig" href="cookbook/read_file.html">Lire le contenu d'un fichier</a>
+<br><a class="navig" href="cookbook/local_storage.html">Stocker des objects localement</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Exemple de onmouseover</a>
+<br><a class="navig" href="cookbook/draw_image.html">Ajouter une image dans un canvas</a>
+
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>Implémentation de <code>import</code></H2>
+
+<p></p>
+Pour importer des modules ou des paquetages, Brython utilise le même mécanisme que CPython : pour résoudre "import X", le programme recherche un fichier dans plusieurs emplacements, d'abord dans la bibliothèque standard (urls relatives à celle du script <B>brython.js</B>) :
+<p></p>
+<ul>
+<li> <B>libs/X.js</B> (des modules Javascript, pour les modules de la bibliothèque standard qui ne peuvent pas être codés en Python)
+<li> <B>Lib/X.py</B>
+<li> <B>Lib/X/&#95;&#95;init&#95;&#95;.py</B>
+<li> <B>Lib/site-packages/X.py</B>
+<li> <B>Lib/site-packages/X/&#95;&#95;init&#95;&#95;.py</B>
+</ul>
+<p></p>
+puis, si aucun de ces fichiers n'existe, les urls <B>X.py</B> et <B>X/&#95;&#95;init&#95;&#95;.py</B> dans le répertoire du script qui effectue l'import
+<p></p>
+Comme le navigateur n'a pas accès directement au système de fichiers, la recherche de l'existence d'un fichier doit être effectuée par un appel Ajax, qui renvoie une erreur s'il n'y a pas de fichier à l'url indiquée
+<p></p>
+Cette méthode est couteuse en temps pour les scripts qui doivent importer plusieurs modules (par exemple, pour "import random", il faut importer pas moins de 44 modules !). Pour gagner en performance, Brython propose plusieurs options :
+<p></p>
+<ol>
+<li> la bibliothèque standard peut être chargée dans la page HTML en utilisant le fichier <B>py&#95;VFS.js</B> :
+<p></p>
+   <code>&lt;script src="/src/py&#95;VFS.js"&gt;&lt;/script&gt;</code>
+<p></p>
+   Dans ce cas, la recherche dans la bibliothèque standard consistera à voir si le module est référencé dans ce script ; si oui, le code source est récupéré et exécuté, sans avoir à effectuer d'appel Ajax
+<p></p>
+   Cette méthode accélère l'import des modules de la bibliothèque standard ; son inconvénient est que le fichier <B>py&#95;VFS.js</B> est assez volumineux (de l'ordre de 2 MO), et que si l'utilisateur modifie lui-même le contenu de la bibliothèque standard, il doit regénérer une version de <B>py&#95;VFS.js</B> en utilisant le script Python <B>scripts/make&#95;VFS.py</B>
+<p></p>
+<li> si on n'utilise pas <B>py&#95;VFS.js</B>, la recherche dans la bibliothèque standard utilise une table de correspondance entre le nom des modules et une url relative au chemin vers le script <B>brython.js</B> : de cette façon, on n'a à essayer qu'une seule url (donc un seul appel Ajax) pour voir si le module existe dans la bibliothèque standard
+<p></p>
+   Le seul inconvénient de cette méthode est que si l'utilisateur modifie la bibliothèque standard, il doit regénérer la table de correspondance en utilisant le script <B>scripts/make&#95;dist.py</B>
+<p></p>
+   Pour désactiver cette option, il faut invoquer la fonction <B>brython()</B> avec l'option <code>static&#95;stdlib&#95;import</code> égale à <code>false</code>
+</ol>
+<p></p>
+Noter que les modules doivent être encodés en utf-8 ; la déclaration d'encodage en début de module n'est pas prise en compte
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

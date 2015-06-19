@@ -1,0 +1,322 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython documentation</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'es')
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text)
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src)
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introducción</a></h4>
+
+<h4><a class="navig" href="faq.html">Preguntas frecuentes (faq)</a></h4>
+
+<h4><a class="navig" href="syntax.html">Sintaxis, palabras clave y funciones integradas</a></h4>
+
+<h4><a class="navig" href="import.html">Implementación del <tt>import</tt></a></h4>
+
+<h4>Interfaz del navegador</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introducción - DOM API</a>
+<br><a class="navig" href="create.html">Creando un documento</a>
+<br><a class="navig" href="access.html">Accediendo a los elementos</a>
+<br><a class="navig" href="attributes.html">Atributos y métodos</a>
+<br>
+<br><a class="navig" href="events.html">Eventos</a>
+<br><a class="navig" href="mouse_events.html">Eventos del ratón</a>
+<br><a class="navig" href="keyboard_events.html">Eventos del teclado</a>
+<br><a class="navig" href="focus_events.html">Eventos de foco</a>
+<br><a class="navig" href="drag_events.html">Eventos de arrastre</a>
+<br>
+<br><a class="navig" href="query.html">Query string</a>
+<br><a class="navig" href="jsobjects.html">Usando objetos y librerías Javascript</a>
+</div>
+
+<h4>Módulos específicos de Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">El módulo integrado `browser`</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Trabajando con Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Opciones de la función <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Instalando el entorno de desarrollo</a>
+<br><a class="navig" href="test.html">Testing y depuración</a>
+<br><a class="navig" href="deploy.html">Desplegando una aplicación</a></div>
+
+<h4>Brython para Firefox OS</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="firefox_os_intro.html">Introducción</a>
+<br><a class="navig" href="firefox_os_tuto1.html">WebApps : diseño</a>
+<br><a class="navig" href="firefox_os_tuto2.html">WebApps : aplicación</a>
+</div>
+
+<h4>Cookbook</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Hola Mundo !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insertar contenido en un elemento</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Marcado HTML (bold,italic...)</a>
+<br><a class="navig" href="cookbook/table.html">Tabla HTML</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Handle options in a SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Arrastrar y soltar</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtener el contenido de un elemento</a>
+<br><a class="navig" href="cookbook/read_file.html">Leer el contenido de un fichero</a>
+<br><a class="navig" href="cookbook/local_storage.html">Almnacenar objetos localmente</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Ejemplo de onmouseover</a>
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>módulo <STRONG>browser.svg</STRONG></H2>
+
+<p></p>
+Para crear gráficos vectoriales (formato SVG), soportado por la mayoría de navegadores, puedes usar el módulo <code>browser.svg</code>. El nombre proviene de los componentes disponibles para dibujar formas y escribir texto
+<p></p>
+El módulo define los siguientes nombres : <code>a, altGlyph, altGlyphDef, altGlyphItem, animate, animateColor, animateMotion, animateTransform, circle, clipPath, color&#95;profile,  cursor, defs, desc, ellipse, feBlend, g, image, line, linearGradient, marker, mask, path, pattern, polygon, polyline, radialGradient, rect, stop, svg, text, tref, tspan, use</code>
+<p></p>
+Por ejemplo, si el documento HTML posee una zona de gráficos SVG definida por
+<p></p>
+<blockquote></p><pre class="marked">&lt;svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+    width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;"&gt;
+  &lt;g id="panel"&gt;
+  &lt;/g&gt;
+&lt;/svg&gt;</pre>
+<p></blockquote>
+<p></p>
+puedes insertar formas y texto :
+<p></p>
+<table>
+<tr>
+<td></p><pre class="exec">from browser import document, svg
+
+titulo = svg.text('Titulo', x=70, y=25, font&#95;size=22,
+                 text&#95;anchor="middle")
+circulo = svg.circle(cx=70, cy=120, r=40,
+                    stroke="black",stroke&#95;width="2",fill="red")
+panel = document['panel']
+panel &lt;= titulo
+panel &lt;= circulo</pre>
+<p></td>
+<p></p>
+<td>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
+  <g id="panel">
+  </g>
+</svg>
+</td>
+<p></p>
+</tr>
+<p></p>
+</table>
+<p></p>
+Para los atributos definidos en la norma SVG que contienen un guión (-), se deberá
+reemplazar con un guión bajo (_) en los argumentos: <EM>text&#95;anchor</EM> en lugar de
+<EM>text-anchor</EM> el cual mostraría un error de sintaxis Python.
+<p></p>
+En el ejemplo anterior hemos creado un elemento círculo y un elemento texto.
+Para una lista de los colores puedes ver <a href="http://www.w3.org/TR/SVG/types.html#ColorKeywords">esta referencia</a>
+<p>
+Abajo creamos un rectángulo azul con una anchura y una altura de 40 px.
+</p>
+<p></p>
+<table>
+<tr>
+<td></p><pre class="exec">from browser import document, svg
+
+rect = svg.rect(x="40",y="100", width="40", height="40",
+    stroke&#95;width="2",fill="blue")
+
+panel = document['panel1']
+panel &lt;= rect</pre>
+<p></td>
+<td>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
+  <g id="panel1">
+  </g>
+</svg>
+</td>
+<p></p>
+</tr>
+<p></p>
+</table>
+<p></p>
+Debajo puedes ver un ejemplo de una elipse verde:
+<p></p>
+<table>
+<tr>
+<td></p><pre class="exec">from browser import document, svg
+ellipse = svg.ellipse(cx="70",cy="100", rx="40", ry="80",
+    stroke="black",stroke&#95;width="2",fill="green")
+
+panel = document['panel2']
+panel &lt;= ellipse</pre>
+<p></td>
+<td>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
+  <g id="panel2">
+  </g>
+</svg>
+</td>
+<p></p>
+</tr>
+<p></p>
+</table>
+<p></p>
+<p></p>
+Aquí puedes ver un ejemplo  de una línea marrón de longitud 100 píxeles.
+<p></p>
+<table>
+<tr>
+<td></p><pre class="exec">from browser import document, svg
+
+line = svg.line(x1="40",y1="50", x2="40", y2="150",
+                stroke="brown",stroke&#95;width="2")
+
+panel = document['panel3']
+panel &lt;= line</pre>
+<p></td>
+<td>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
+  <g id="panel3">
+  </g>
+</svg>
+</td>
+<p></p>
+</tr>
+<p></p>
+</table>
+<p></p>
+Un ejemplo de un polígono (una estrella roja con el contorno azul)
+<p></p>
+<table>
+<tr>
+<td></p><pre class="exec">from browser import document, svg
+
+star = svg.polygon(fill="red", stroke="blue", stroke&#95;width="10",
+                   points=""" 75,38  90,80  135,80  98,107
+                             111,150 75,125  38,150 51,107
+                              15,80  60,80""")
+
+panel = document['panel4']
+panel &lt;= star</pre>
+<p></td>
+<td>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
+  <g id="panel4">
+  </g>
+</svg>
+</td>
+<p></p>
+</tr>
+<p></p>
+</table>
+<p></p>
+Ejemplo  de un rectángulo animado:
+<p></p>
+<table>
+<tr>
+<td></p><pre class="exec">from browser import document, svg, timer
+
+rect = svg.rect(x=10, y=10, width=100, height=100)
+
+def move&#95;rect():
+    # the attributes of the SVG element are strings, they must be explicitely
+    # converted into integers
+    rect.y = int(rect.y)+1
+    
+    # ends animation when the rectangle reaches its target
+    if int(rect.y)&gt;50:
+        timer.clear&#95;interval(loop)
+
+panel = document['panel5']
+panel &lt;= rect
+
+# initialise the animation loop
+loop = timer.set&#95;interval(move&#95;rect, 30)</pre>
+<p></td>
+<td>
+<svg id="panel5" xmlns="http://www.w3.org/2000/svg" viewPort="0 0 120 120" width="120" height="200" style="border-style:solid;border-width:1;border-color:#000;">
+</svg>
+</td>
+<p></p>
+</tr>
+<p></p>
+</table>
+<p></p>
+Para información más detallada de las formas SVG, sus atributos, etc, puedes ver la documentación
+<a href="http://www.w3.org/TR/SVG/shapes.html">SVG Shape</a>
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

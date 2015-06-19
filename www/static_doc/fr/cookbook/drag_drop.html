@@ -1,0 +1,235 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Documentation Brython</title>
+<link rel="stylesheet" href="../../doc_brython.css">
+
+<script type="text/javascript" src="/src/brython.js"></script>
+
+<script type="text/python">
+import time
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../../', 'fr')
+
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="../intro.html">Introduction</a></h4>
+<h4><a class="navig" href="../faq.html">Questions fréquemment posées</a></h4>
+<h4><a class="navig" href="../syntax.html">Syntaxe, mots-clés et fonctions intégrées</a></h4>
+<h4><a class="navig" href="../stdlib.html">Distribution</a></h4>
+<h4><a class="navig" href="../import.html">Implémentation de <tt>import</tt></a></h4>
+
+<h4>Interface avec le navigateur</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="../dom_api.html">Introduction - API DOM</a>
+<br><a class="navig" href="../create.html">Créer un document</a>
+<br><a class="navig" href="../access.html">Accéder aux éléments</a>
+<br><a class="navig" href="../attributes.html">Attributs et méthodes</a>
+<br>
+<br><a class="navig" href="../events.html">Evénements</a>
+<br><a class="navig" href="../mouse_events.html">Evénements souris</a>
+<br><a class="navig" href="../keyboard_events.html">Evénements clavier</a>
+<br><a class="navig" href="../focus_events.html">Evénements focus</a>
+<br><a class="navig" href="../drag_events.html">Evénements pour glisser-déposer</a>
+<br>
+<br><a class="navig" href="../query.html">Chaine de requête</a>
+<br>
+<br><a class="navig" href="../jsobjects.html">Objets et librairies Javascript</a>
+</div>
+
+<h4>Modules intégrés propres à Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="../browser.html">browser</a>
+<br><a class="navig" href="../ajax.html">browser.ajax</a>
+<br><a class="navig" href="../html.html">browser.html</a>
+<br><a class="navig" href="../local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="../markdown.html">browser.markdown</a>
+<br><a class="navig" href="../object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="../local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="../svg.html">browser.svg</a>
+<br><a class="navig" href="../timer.html">browser.timer</a>
+<br><a class="navig" href="../websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="../javascript.html">javascript</a>
+</div>
+
+<h4>Travailler avec Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="../options.html">Options de la fonction <code>brython()</code></a>
+<br><a class="navig" href="../dev_env.html">Installer l'environnement de développement</a>
+<br><a class="navig" href="../test.html">Test et débogage</a>
+<br><a class="navig" href="../deploy.html">Deployer une application</a></div>
+
+<h4>Recettes</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="../cookbook/hello_world.html">Salut !</a>
+<br><a class="navig" href="../cookbook/content_in_div.html">Insérer du contenu dans un élément</a>
+<br><a class="navig" href="../cookbook/basic_markup.html">Mise en forme HTML (gras, italique...)</a>
+<br><a class="navig" href="../cookbook/table.html">Table HTML</a>
+<br><a class="navig" href="../cookbook/bind_unbind.html">Attacher / détacher des événements</a>
+<br><a class="navig" href="../cookbook/select_checkbox.html">Gérer la sélection d'options dans un SELECT</a>
+<br><a class="navig" href="../cookbook/drag_drop.html">Glisser-déposer</a>
+<br><a class="navig" href="../cookbook/get_content.html">Obtenir le contenu d'un élément</a>
+<br><a class="navig" href="../cookbook/read_file.html">Lire le contenu d'un fichier</a>
+<br><a class="navig" href="../cookbook/local_storage.html">Stocker des objects localement</a>
+<br><a class="navig" href="../cookbook/read_text_from_imagemap.html">Exemple de onmouseover</a>
+<br><a class="navig" href="../cookbook/draw_image.html">Ajouter une image dans un canvas</a>
+
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>Problème</H2>
+
+Glisser et déposer un élément sur la page web
+<p></p>
+<p></p>
+<p></p>
+<H2>Solution</H2>
+
+<p></p>
+Brython implémente une API basée sur la spécification du HTML5 pour le glisser-déposer. Dans la forme basique présentée dans cet exemple, elle consiste à définir des fonctions de rappel pour 3 événements :
+- <I>dragstart</I> sur l'élément déplaçable (quand l'utilisateur commence à le faire glisser)
+- <I>dragover</I> sur la zone de destination (quand l'objet déplacé se positionne dessus)
+- <I>drop</I> sur la zone de destination (quand l'utilisateur relâche le bouton de la souris)
+<p></p>
+Pour attacher une fonction <I>rappel</I> à un <I>evenement</I> sur un <I>element</I>, on utiliser la méthode <I>element</I><code>.bind(<I>evenement,rappel</I>)</code>
+<p></p>
+Les fonctions de rappel prennent un seul argument, une instance de <code>DOMEvent</code>. Pour communiquer des informations pendant l'opération de glisser-déposer, cette instance possède un attribut <I>data</I> qui reçoit une valeur dans la fonction de rappel associée à <I>dragstart</I> ; cette valeur est exploitée par la fonction de rappel associée à <I>drop</I> pour identifier l'élement qui est en train d'être déposé
+<p></p>
+Dans l'exemple, quand l'objet déplaçable a été déposé, on ne peut plus le déplacer ; pour cela, nous supprimons les fonctions associées à un <I>evenement</I> sur cet objet par la méthode <I>element</I><code>.unbind(<I>evenement</I>)</code>
+<p></p>
+<div style="width:400px;height:150px;background-color:yellow" id="panel">
+<div id="dest" style="position:absolute;width:180px;height:80px;background-color:green;color:white;">zone de destination</div>
+<div id="source" style="position:absolute;width:80px;height:40px;background-color:red;">objet déplaçable</div>
+</div>
+<p></p></p><pre class="exec_on_load">from browser import document as doc
+
+panel = doc["panel"] # zone jaune
+
+source = doc["source"] # zone rouge
+# on la place à (10,10) du bord supérieur gauche du panel
+source.style.top = "%spx" %(10+panel.top)
+source.style.left = "%spx" %(10+panel.left)
+# rend la zone rouge déplaçable
+source.draggable = True
+
+dest = doc["dest"] # zone verte
+# on la place à (10,150) du bord supérieur gauche du panel
+dest.style.top = "%spx" %(10+panel.top)
+dest.style.left = "%spx" %(150+panel.left)
+
+# quand la souris passe sur l'objet déplaçable, changer le curseur
+def mouse&#95;over(ev):
+    print('voilà la souris !')
+    ev.target.style.cursor = "pointer"
+
+# coordonnées de la souris relativement au bord supérieur gauche de l'objet
+# déplacé quand le glissement commence
+m0 = [None,None]
+
+# fonction appelée quand l'utilisateur commence à déplacer l'objet
+def drag&#95;start(ev):
+    global m0
+    # calcul des coordonnées de la souris
+    # ev.x et ev.y sont les coordonnées de la souris quand l'événement est déclenché
+    # ev.target est l'objet déplacé. Ses attributs "left" et "top" sont des entiers,
+    # la distance par rapport aux bords gauche et supérieur du document
+    m0 = [ev.x-ev.target.left,ev.y-ev.target.top]
+    # associer une donnée au processus de glissement
+    ev.dataTransfer.setData('text',ev.target.id)
+    # permet à l'object d'être déplacé dans l'objet destination
+    ev.dataTransfer.effectAllowed = 'move'
+
+# fonction appelée quand l'objet déplaçable vient au-dessus de la zone de destination
+def drag&#95;over(ev):
+    ev.dataTransfer.dropEffect = 'move'
+    # il faut désactiver le comportement par défaut pour ce genre d'événement
+    ev.preventDefault()
+
+# fonction attachée à la zone de destination
+# Elle définit ce qui se passe quand l'objet est déposé, c'est-à-dire
+# quand l'utilisateur relâche la souris alors que l'objet est au-dessus de la zone
+def drop(ev):
+    # récupère les données stockées dans drag&#95;start (l'id de l'objet déplacé)
+    src&#95;id = ev.dataTransfer.getData('text')
+    elt = doc[src&#95;id]
+    # définit les nouvelles coordonnées de l'objet déplacé
+    elt.style.left = "%spx" %(ev.x-m0[0])
+    elt.style.top = "%spx" %(ev.y-m0[1])
+    # ne plus déplacer l'objet
+    elt.draggable = False
+    # enlever la fonction associée à mouseover
+    elt.unbind('mouseover')
+    elt.style.cursor = "auto"
+    ev.preventDefault()
+
+# attache des fonctions aux événements sur l'objet déplaçable
+source.bind('mouseover',mouse&#95;over)
+source.bind('dragstart',drag&#95;start)
+
+# attache des fonctions aux événement sur la zone de destination
+dest.bind('dragover',drag&#95;over)
+dest.bind('drop',drop)</pre>
+<p><p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

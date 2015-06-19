@@ -1,0 +1,320 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython documentation</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'es')
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text)
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src)
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introducción</a></h4>
+
+<h4><a class="navig" href="faq.html">Preguntas frecuentes (faq)</a></h4>
+
+<h4><a class="navig" href="syntax.html">Sintaxis, palabras clave y funciones integradas</a></h4>
+
+<h4><a class="navig" href="import.html">Implementación del <tt>import</tt></a></h4>
+
+<h4>Interfaz del navegador</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introducción - DOM API</a>
+<br><a class="navig" href="create.html">Creando un documento</a>
+<br><a class="navig" href="access.html">Accediendo a los elementos</a>
+<br><a class="navig" href="attributes.html">Atributos y métodos</a>
+<br>
+<br><a class="navig" href="events.html">Eventos</a>
+<br><a class="navig" href="mouse_events.html">Eventos del ratón</a>
+<br><a class="navig" href="keyboard_events.html">Eventos del teclado</a>
+<br><a class="navig" href="focus_events.html">Eventos de foco</a>
+<br><a class="navig" href="drag_events.html">Eventos de arrastre</a>
+<br>
+<br><a class="navig" href="query.html">Query string</a>
+<br><a class="navig" href="jsobjects.html">Usando objetos y librerías Javascript</a>
+</div>
+
+<h4>Módulos específicos de Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">El módulo integrado `browser`</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Trabajando con Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Opciones de la función <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Instalando el entorno de desarrollo</a>
+<br><a class="navig" href="test.html">Testing y depuración</a>
+<br><a class="navig" href="deploy.html">Desplegando una aplicación</a></div>
+
+<h4>Brython para Firefox OS</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="firefox_os_intro.html">Introducción</a>
+<br><a class="navig" href="firefox_os_tuto1.html">WebApps : diseño</a>
+<br><a class="navig" href="firefox_os_tuto2.html">WebApps : aplicación</a>
+</div>
+
+<h4>Cookbook</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Hola Mundo !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insertar contenido en un elemento</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Marcado HTML (bold,italic...)</a>
+<br><a class="navig" href="cookbook/table.html">Tabla HTML</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Handle options in a SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Arrastrar y soltar</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtener el contenido de un elemento</a>
+<br><a class="navig" href="cookbook/read_file.html">Leer el contenido de un fichero</a>
+<br><a class="navig" href="cookbook/local_storage.html">Almnacenar objetos localmente</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Ejemplo de onmouseover</a>
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>Usando objetos Javascript</H2>
+
+<p></p>
+Tenemos que manejar el periodo de transición en el que Brython va a coexistir 
+con Javascript ;-)
+<p></p>
+<H3>Accessing Brython objects from Javascript</H3>
+
+<p></p>
+Por defecto, Brython solo expone dos nombres en el espacio de nombres global 
+de Javascript :
+<p></p>
+<blockquote>
+ <code>brython()</code> : la función que se ejecuta al cargarse la página
+</blockquote>
+<p></p>
+<blockquote>
+ <code>&#95;&#95;BRYTHON&#95;&#95;</code> : un objeto usado internamente por Brython para almacenar los 
+ objetos necesarios para ejecutar los scripts
+</blockquote>
+<p></p>
+Por tanto, por defecto, un programa Javascript no podría acceder a los objetos 
+Brython.
+Por ejemplo, para que la función <code>echo()</code> definida en un script Brython
+reaccione a un evento en un elemento de la página, en lugar de usar la sintaxis 
+javascript:
+<p></p></p><pre class="marked">&lt;button onclick="echo()"&gt;</pre>
+<p><p></p>
+(debido a que la función <I>echo</I> no es accesible directamente desde 
+Javascript), la solución sería definir un atributo id al elemento:
+<p></p></p><pre class="marked">&lt;button id="mybutton"&gt;</pre>
+<p><p></p>
+y definir un enlace entre este elemento y el evento <I>click</I> mediante :
+<p></p></p><pre class="marked">from browser import document
+document['mybutton'].bind('click',echo)</pre>
+<p><p></p>
+Otra opción sería forzar la instroducción de la función <I>echo</I> en el espacio 
+de nombres de Javascript, definiéndola como un atributo del objeto <code>window</code> 
+presente en el módulo <STRONG>browser</STRONG> :
+<p></p></p><pre class="marked">from browser import window
+window.echo = echo</pre>
+<p><p></p>
+<strong>NOTA: No se recomienda usar este segundo método ya que introduce un 
+riesgo de conflicto con nombres ya definidos por otros programas o librerías 
+Javascript usadas en la página.
+</strong>
+<p></p>
+<H3>Objetos en programas Javascript</H3>
+
+<p></p>
+Un documento HTML puede usar librerías o scripts Javascript, además de 
+librerías y scripts Python. 
+<p></p>
+Los nombres añadidos al espacio global de nombres de javascript mediante 
+scripts Javascript se encuentran disponibles para los scripts Brython como 
+atributos del objeto <code>window</code> definido en el módulo <STRONG>browser</STRONG>
+<p></p>
+Por ejemplo :
+<p></p></p><pre class="marked">&lt;script type="text/javascript"&gt;
+circle = {surface:function(r){return 3.14&#42;r&#42;r}}
+&lt;/script&gt;
+
+&lt;script type="text/python"&gt;
+from browser import document, window
+
+document['result'].value = window.circle.surface(10)
+&lt;/script&gt;
+</pre>
+<p>Los objetos Javascript se convierten a su equivalente en Python mediante de la
+siguiente forma:
+<p></p>
+<table border='1' cellpadding=3>
+<p></p>
+<tr><th>Objeto Javascript (js&#95;obj)</th><th>Objeto Python (window.js&#95;obj)</th>
+</tr>
+<tr><td>Elemento DOM</td><td>instancia de <code>DOMNode</code></td></tr>
+<tr><td>Evento DOM</td><td>instancia de <code>DOMEvent</code></td></tr>
+<tr><td>Colección de elementos DOM</td><td>lista de instancias de <code>DOMNode</code></td>
+</tr>
+<tr><td><code>null, true, false</code></td><td><code>None, True, False</code></td></tr>
+<tr><td>Integer</td><td>instancia de <code>int</code></td></tr>
+<tr><td>Float</td><td>instancia de <code>float</code></td></tr>
+<tr><td>String</td><td>instancia de <code>str</code></td></tr>
+<tr><td>Array</td><td>instancia de <code>list</code></td></tr>
+</table>
+<p></p>
+Los otros objetos Javascript se convierten a una instancia de la clase
+<code>JSObject</code> definida en el módulo <STRONG>javascript</STRONG>. Se pueden convertir a un 
+diccionario Python mediante:
+<p></p>
+<blockquote></p><pre class="marked">py&#95;obj = window.js&#95;obj.to&#95;dict()</pre>
+<p></blockquote>
+<p></p>
+Si el objeto Javascript es una función, los argumentos que se le pasan a la 
+función Python se convierten a objetos Javascripts, usando la tabla anterior 
+de forma opuesta
+<p></p>
+<H3>Usando constructores Javascript</H3>
+
+<p></p>
+Si una función Javascript es un objecto constructor, puede ser llamado en 
+código Javascript mediante la palabra clave <code>new</code>, se podría usar en Brython 
+transformando esa palabra clave en la función integrada <code>JSConstructor()</code> 
+definida en el módulo <STRONG>javascript</STRONG>
+<p></p>
+<code>JSConstructor(<I>constr</I>)</code> 
+<p></p>
+<blockquote>
+devuelve una función que cuando se la invoca con argumentos devuelve un 
+objeto Python que corresponde al objeto Javascript creado mediante el 
+constructor <I>constr</I>
+</blockquote>
+<p></p>
+Por ejemplo :
+<p></p></p><pre class="marked">&lt;script type="text/javascript"&gt;
+function Rectangle(x0,y0,x1,y1){
+    this.x0 = x0
+    this.y0 = y0
+    this.x1 = x1
+    this.y1 = y1
+    this.surface = function(){return (x1-x0)&#42;(y1-y0)}
+}
+&lt;/script&gt;
+
+&lt;script type="text/python"&gt;
+from browser import alert, window
+from javascript import JSConstructor
+
+rectangle = JSConstructor(window.Rectangle)
+alert(rectangle(10,10,30,30).surface())
+&lt;/script&gt;</pre>
+<p><p></p>
+<H3>jQuery example</H3>
+
+<p></p>
+En la siguiente porción de código tenemos un ejemplo más completo de cómo 
+podrías usar la popular librería jQuery :
+<p></p></p><pre class="marked">&lt;html&gt;
+&lt;head&gt;
+&lt;script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"&gt;
+&lt;/script&gt;
+&lt;script src="../../src/brython.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;script type="text/python"&gt;
+from browser import document, window
+    
+def change&#95;color(ev):
+    &#95;divs=document.get(selector='div')
+    for &#95;div in &#95;divs:
+        if &#95;div.style.color != "blue":
+            &#95;div.style.color = "blue"
+        else:
+            &#95;div.style.color = "red"
+    
+# creating an alias for "$" in jQuery would cause a SyntaxError in Python
+# so we assign jQuery to a variable named jq</pre>
+<p><p></p></p><pre class="marked">jq = window.jQuery.noConflict(True)
+&#95;jQuery = jq("body")
+&#95;jQuery.click(change&#95;color)    
+&lt;/script&gt;
+
+&lt;body onload="brython()"&gt;</pre>
+<p><p></p></p><pre class="marked">  &lt;div&gt;Click here&lt;/div&gt;
+  &lt;div&gt;to iterate through&lt;/div&gt;
+  &lt;div&gt;these divs.&lt;/div&gt;
+ 
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+<p><p></p>
+<H3>Otros ejemplos</H3>
+
+<p></p>
+Puedes encontrar otros ejemplos en la <a href="../../gallery/gallery_en.html">galería</a> 
+para ver como usar librerías Javascript (Three, Highcharts, Raphael) en 
+scripts Brython.
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

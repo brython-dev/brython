@@ -1,0 +1,176 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython documentation</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'es')
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text)
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src)
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introducción</a></h4>
+
+<h4><a class="navig" href="faq.html">Preguntas frecuentes (faq)</a></h4>
+
+<h4><a class="navig" href="syntax.html">Sintaxis, palabras clave y funciones integradas</a></h4>
+
+<h4><a class="navig" href="import.html">Implementación del <tt>import</tt></a></h4>
+
+<h4>Interfaz del navegador</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introducción - DOM API</a>
+<br><a class="navig" href="create.html">Creando un documento</a>
+<br><a class="navig" href="access.html">Accediendo a los elementos</a>
+<br><a class="navig" href="attributes.html">Atributos y métodos</a>
+<br>
+<br><a class="navig" href="events.html">Eventos</a>
+<br><a class="navig" href="mouse_events.html">Eventos del ratón</a>
+<br><a class="navig" href="keyboard_events.html">Eventos del teclado</a>
+<br><a class="navig" href="focus_events.html">Eventos de foco</a>
+<br><a class="navig" href="drag_events.html">Eventos de arrastre</a>
+<br>
+<br><a class="navig" href="query.html">Query string</a>
+<br><a class="navig" href="jsobjects.html">Usando objetos y librerías Javascript</a>
+</div>
+
+<h4>Módulos específicos de Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">El módulo integrado `browser`</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Trabajando con Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Opciones de la función <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Instalando el entorno de desarrollo</a>
+<br><a class="navig" href="test.html">Testing y depuración</a>
+<br><a class="navig" href="deploy.html">Desplegando una aplicación</a></div>
+
+<h4>Brython para Firefox OS</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="firefox_os_intro.html">Introducción</a>
+<br><a class="navig" href="firefox_os_tuto1.html">WebApps : diseño</a>
+<br><a class="navig" href="firefox_os_tuto2.html">WebApps : aplicación</a>
+</div>
+
+<h4>Cookbook</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Hola Mundo !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insertar contenido en un elemento</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Marcado HTML (bold,italic...)</a>
+<br><a class="navig" href="cookbook/table.html">Tabla HTML</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Handle options in a SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Arrastrar y soltar</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtener el contenido de un elemento</a>
+<br><a class="navig" href="cookbook/read_file.html">Leer el contenido de un fichero</a>
+<br><a class="navig" href="cookbook/local_storage.html">Almnacenar objetos localmente</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Ejemplo de onmouseover</a>
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>Entorno de desarrollo</H2>
+
+<p></p>
+Los desarrolladores deberían usar el entorno de desarrollo disponible para descarga en <a href="https://github.com/brython-dev/brython/releases">downloads</a> : elige el fichero zip cuyo nombre comienza por "Brython&#95;site&#95;mirror" y descomprímelo en una carpeta (la llamaremos la carpeta Brython  en los siguientes párrafos).
+<p></p>
+Es necesario un servidor web para poder probar los scripts localmente mientras nos encontramos desarrollando. Cualquier servidor web que sea capaz de servir ficheros con la carpeta Brython como documento raíz es válido ; puedes usar el servidor incluido con la distribución : abre una consola, muévete hasta la carpeta donde se encuentra el fichero server.py y ejecuta <code>python server.py</code>. Esto arrancará un servidor en el puerto 8000 (edita <I>server.py</I> para cambiar el número del puerto).
+<p></p>
+Una vez que el servidor ha arrancado, apunta tu navegador a <I>http://localhost:8000/site</I> : deberías poder ver la misma página que en <a href="http://www.brython.info">la página de inicio oficial de Brython</a>
+<p></p>
+Crea una nueva carpeta (eg "test") en la carpeta Brython. Con un editor de texto crea un fichero llamado <B>index.html</B> con el contenido mostrado más abajo y guárdala en la carpeta <B>test</B>
+<p></p>
+<blockquote></p><pre class="marked">&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset="iso-8859-1"&gt;
+&lt;script src="../src/brython.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body onLoad="brython()"&gt;
+&lt;script type="text/python"&gt;
+from browser import document as doc
+from browser import alert</pre>
+<p><p></p></p><pre class="marked">def echo(ev):
+    alert("Hola %s !" %doc["zone"].value)</pre>
+<p><p></p></p><pre class="marked">doc["echo"].bind('click', echo)
+&lt;/script&gt;
+&lt;p&gt;Tu nombre es : &lt;input id="zone"&gt;&lt;button id="echo"&gt;click !&lt;/button&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+<p></blockquote>
+<p></p>
+Apunta el navegador hacia <I>http://localhost:8000/test/index.html</I> : bingo ! Acabas de escribir tu primera aplicación Brython.
+<p></p>
+Usa este entorno para pruebas y desarrollo. Solo debes acordarte de apuntar el script <I>brython.js</I> a la localización correcta en relación a la carpeta donde se encuentran las páginas HTML que lo usen.
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

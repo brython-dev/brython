@@ -19,10 +19,20 @@ var $ListDict = {__class__:$B.$type,
     __dir__:$ObjectDict.__dir__}
 
 $ListDict.__add__ = function(self,other){
+    console.log("add here")
     var res = self.valueOf().concat(other.valueOf())
     if(isinstance(self,tuple)) res = tuple(res)
     return res
 }
+
+$ListDict.__iadd__ = function(self, other) {
+    console.log("iadd here")
+    for (var i = 0; i < other.length; i++) {
+        self.push(other[i])
+    }
+    return self
+}
+
 
 $ListDict.__contains__ = function(self,item){
     var _eq = getattr(item, '__eq__')
@@ -73,7 +83,7 @@ $ListDict.__delitem__ = function(self,arg){
            self.splice(res[i],1)
         }
         return
-    } 
+    }
 
     if (hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
        $ListDict.__delitem__(self, _b_.int(arg))
@@ -116,7 +126,7 @@ $ListDict.__getitem__ = function(self,arg){
         var pos = arg
         if(arg<0) pos=items.length+pos
         if(pos>=0 && pos<items.length) return items[pos]
-        
+
         throw _b_.IndexError('list index out of range')
     }
     if (isinstance(arg,_b_.slice)) {
@@ -175,7 +185,7 @@ $ListDict.__ge__ = function(self,other){
     var i=0
     while(i<self.length){
         if(i>=other.length) return true
-        if(getattr(self[i],'__eq__')(other[i])){i++} 
+        if(getattr(self[i],'__eq__')(other[i])){i++}
         else return(getattr(self[i],"__ge__")(other[i]))
     }
 
@@ -243,7 +253,7 @@ $ListDict.__mul__ = function(self,other){
        for(var i=0;i<other;i++) res=res.concat($temp)
        return _b_.list(res)
     }
-    
+
     if (hasattr(other, '__int__') || hasattr(other, '__index__')) {
        return $ListDict.__mul__(self, _b_.int(other))
     }
@@ -273,7 +283,7 @@ $ListDict.__setitem__ = function(self,arg,value){
         if(arg<0) pos=self.length+pos
         if(pos>=0 && pos<self.length){self[pos]=value}
         else {throw _b_.IndexError('list index out of range')}
-        return 
+        return
     }
     if(isinstance(arg,slice)){
         var start = arg.start===None ? 0 : arg.start
@@ -382,7 +392,7 @@ $ListDict.pop = function(self,pos){
             return res
         }
         throw _b_.TypeError(pos.__class__+" object cannot be interpreted as an integer")
-    } 
+    }
     throw _b_.TypeError("pop() takes at most 1 argument ("+(arguments.length-1)+' given)')
 }
 
@@ -395,7 +405,7 @@ $ListDict.reverse = function(self){
         self[_len-i] = buf
     }
 }
-    
+
 // QuickSort implementation found at http://en.literateprograms.org/Quicksort_(JavaScript)
 function $partition(arg,array,begin,end,pivot)
 {
@@ -404,7 +414,7 @@ function $partition(arg,array,begin,end,pivot)
     var store=begin;
     if(arg===null){
         if(array.$cl!==false){
-            // Optimisation : if all elements have the same time, the 
+            // Optimisation : if all elements have the same time, the
             // comparison function __le__ can be computed once
             var le_func = _b_.getattr(array.$cl, '__le__')
             for(var ix=begin;ix<end-1;++ix) {
@@ -607,7 +617,7 @@ for(var attr in $ListDict){
       case 'reverse':
       case 'sort':
         break
-      default:   
+      default:
         if($TupleDict[attr]===undefined){
             if(typeof $ListDict[attr]=='function'){
                 $TupleDict[attr] = (function(x){

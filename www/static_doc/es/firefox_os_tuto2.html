@@ -1,0 +1,230 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython documentation</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'es')
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text)
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src)
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introducción</a></h4>
+
+<h4><a class="navig" href="faq.html">Preguntas frecuentes (faq)</a></h4>
+
+<h4><a class="navig" href="syntax.html">Sintaxis, palabras clave y funciones integradas</a></h4>
+
+<h4><a class="navig" href="import.html">Implementación del <tt>import</tt></a></h4>
+
+<h4>Interfaz del navegador</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introducción - DOM API</a>
+<br><a class="navig" href="create.html">Creando un documento</a>
+<br><a class="navig" href="access.html">Accediendo a los elementos</a>
+<br><a class="navig" href="attributes.html">Atributos y métodos</a>
+<br>
+<br><a class="navig" href="events.html">Eventos</a>
+<br><a class="navig" href="mouse_events.html">Eventos del ratón</a>
+<br><a class="navig" href="keyboard_events.html">Eventos del teclado</a>
+<br><a class="navig" href="focus_events.html">Eventos de foco</a>
+<br><a class="navig" href="drag_events.html">Eventos de arrastre</a>
+<br>
+<br><a class="navig" href="query.html">Query string</a>
+<br><a class="navig" href="jsobjects.html">Usando objetos y librerías Javascript</a>
+</div>
+
+<h4>Módulos específicos de Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">El módulo integrado `browser`</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Trabajando con Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Opciones de la función <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Instalando el entorno de desarrollo</a>
+<br><a class="navig" href="test.html">Testing y depuración</a>
+<br><a class="navig" href="deploy.html">Desplegando una aplicación</a></div>
+
+<h4>Brython para Firefox OS</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="firefox_os_intro.html">Introducción</a>
+<br><a class="navig" href="firefox_os_tuto1.html">WebApps : diseño</a>
+<br><a class="navig" href="firefox_os_tuto2.html">WebApps : aplicación</a>
+</div>
+
+<h4>Cookbook</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Hola Mundo !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insertar contenido en un elemento</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Marcado HTML (bold,italic...)</a>
+<br><a class="navig" href="cookbook/table.html">Tabla HTML</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Handle options in a SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Arrastrar y soltar</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtener el contenido de un elemento</a>
+<br><a class="navig" href="cookbook/read_file.html">Leer el contenido de un fichero</a>
+<br><a class="navig" href="cookbook/local_storage.html">Almnacenar objetos localmente</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Ejemplo de onmouseover</a>
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H1>Creando tu propia webapp : la lógica de la aplicación</H1>
+
+<p></p>
+Crea un script Python llamado <EM>calculator.py</EM>; en <EM>index.html</EM>, justo después de la etiqueta <code>body</code>, añade la siguiente línea:
+<p></p></p><pre class="marked">&lt;script src="calculator.py" type="text/python3"&gt;&lt;/script&gt;</pre>
+<p><p></p>
+Esto hará que Brython cargue y ejecute el script.
+<p></p>
+Las primeras líneas de <EM>calculator.py</EM> importarán los nombres que se usarán para interactuar con la aplicación:
+<p></p></p><pre class="marked">from browser import document</pre>
+<p><p></p>
+Todas las teclas del teclado se encuentran dentro de etiquetas <code>&lt;a href="#"&gt;...&lt;/a&gt;</code>. El objeto <code>document</code> puede encontrar todas esas etiquetas de la siguiente forma:
+<p></p></p><pre class="marked">anchors = document.get(selector='a')</pre>
+<p><p></p>
+Mientras depuras la aplicación, será útil controlar que realmente obtienes las etiquetas, puedes añadir la línea:
+<p></p></p><pre class="marked">print(anchors)</pre>
+<p><p></p>
+que mostrará la lista de elementos en la consola del navegador.
+<p></p>
+Perfecto, de esta forma <EM>calculator.py</EM> es:
+<p></p></p><pre class="marked">from browser import document
+
+anchors = document.get(selector="a")
+print(anchors)</pre>
+<p><p></p>
+Recarga la página en el navegador y abre la consola (Tools > Web developer > Web console). en la consola, deberías ver la lista de elementos:
+<p></p></p><pre class="marked">&lt;DOMNode object type 'ELEMENT' name 'A'&gt;</pre>
+<p><p></p>
+Cada uno de los objetos dispone de un atributo <I>text</I> ; puedes ver lo que contiene este atributo cambiando la última línea por:
+<p></p></p><pre class="marked">print(list(anchor.text for anchor in anchors))</pre>
+<p><p></p>
+Esto mostrará <code>['7', '8', '9', '÷', '4', '5', '6', '&#42;', '1', '2', '3', '-', '.', '0', '=', '+']</code> en la consola.
+<p></p>
+Para definir qué sucede cuando un usuario pulsa sobre una de las teclas  Brython usa la syntaxis:
+<p></p></p><pre class="marked">anchor.bind('click', callback)</pre>
+<p><p></p>
+donde <I>callback</I> es una función que toma la instancia <code>DOMEvent</code> como argumento. En esta aplicación, usaremos la misma función para todas las teclas:
+<p></p></p><pre class="marked">from browser import document
+
+anchors = document.get(selector="a")
+
+def callback(ev):
+    print(ev.target.text)
+
+for anchor in anchors:
+    anchor.bind('click', callback)</pre>
+<p><p></p>
+Con estas vinculaciones ('bindings'), cuando el usuario pulsa una tecla, el texto de la tecla se mostrará en la consola (el atributo <I>target</I> del objeto <code>DOMEvent</code> es el elemento 'Anchor' mismo).
+<p></p>
+Esto no es exactamente lo que queremos: el texto debería verse en el campo de entrada. Este campo de entrada tiene el id "entry" y Brython obtiene una referencia a este elemento mediante <code>document["entry"]</code>. La función de respuesta puede ser cambiada a lo siguiente:
+<p></p></p><pre class="marked">def callback(ev):
+    document["entry"].value += ev.target.text</pre>
+<p><p></p>
+Esto está bien para la mayoría de las teclas pero debemos gestionar aquellas que se supone que calculan un resultado. El código completo de <EM>calculator.py</EM> mostrado más abajo debería ser autoexplicativo:
+<p></p></p><pre class="marked">from browser import document
+import math
+
+anchors = document.get(selector="a")
+entry = document["entry"]
+
+def callback(ev):
+    txt = ev.target.text
+    if txt=='C':
+        entry.value = ''
+    elif txt=='&lt;' and entry.value:
+        entry.value = entry.value[:-1]
+    elif txt=='=':
+        try:
+            entry.value = eval(entry.value)
+        except:
+            entry.value = 'error'
+    elif txt=='√¯':
+        try:
+            entry.value = math.sqrt(float(entry.value))
+        except:
+            entry.value = 'error'
+    elif txt=="1/x":
+        try:
+            entry.value = 1/float(entry.value)
+        except:
+            entry.value = 'error'    
+    else:
+        entry.value += ev.target.text
+
+for anchor in anchors:
+    anchor.bind('click', callback)</pre>
+<p><p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>
