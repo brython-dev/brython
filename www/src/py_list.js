@@ -24,6 +24,14 @@ $ListDict.__add__ = function(self,other){
     return res
 }
 
+$ListDict.__iadd__ = function(self, other) {
+    console.log("iadd here")
+    for (var i = 0; i < other.length; i++) {
+        self.push(other[i])
+    }
+    return self
+}
+
 $ListDict.__contains__ = function(self,item){
     var _eq = getattr(item, '__eq__')
     var i=self.length

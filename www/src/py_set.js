@@ -12,7 +12,7 @@ var $SetDict = {
 }
 
 $SetDict.__add__ = function(self,other){
-    return set(self.$items.concat(other.$items))
+    throw _.TypeError("unsupported operand type(s) for +: 'set' and " + typeof other )
 }
 
 $SetDict.__and__ = function(self, other, accept_iter){
@@ -190,16 +190,7 @@ $SetDict.__str__ = $SetDict.toString = $SetDict.__repr__ = function(self){
 }
 
 $SetDict.__sub__ = function(self, other, accept_iter){
-    // Return a new set with elements in the set that are not in the others
-    $test(accept_iter, other)
-    var res = set()
-    var cfunc = _.getattr(other,'__contains__')
-    for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
-        if(!cfunc(self.$items[i])){
-            res.$items.push(self.$items[i])
-        }
-    }
-    return res
+   throw _.TypeError("unsupported operand type(s) for -: 'set' and " + typeof other )
 }
 
 $SetDict.__xor__ = function(self, other, accept_iter){
@@ -352,7 +343,17 @@ $SetDict.symmetric_difference = function(self, other){
     return $SetDict.__xor__(self, other, 1)
 }
 $SetDict.difference = function(self, other){
-    $SetDict.__sub__(self, other, 1)
+    //Return a new set with elements in the set that are not in the others
+    //accept_iter == 1
+    $test(1, other)
+    var res = set()
+    var cfunc = _.getattr(other,'__contains__')
+    for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
+        if(!cfunc(self.$items[i])){
+            res.$items.push(self.$items[i])
+        }
+    }
+    return res
 }
 $SetDict.intersection = function(self, other){
     return $SetDict.__and__(self, other, 1)
