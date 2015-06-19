@@ -1757,7 +1757,9 @@ function str(arg){
              var f = getattr(arg,'__repr__')
              return getattr(f,'__call__')()
         }catch(err){
-             console.log(err+'\ndefault to toString '+arg);return arg.toString()
+             console.log(err)
+             console.log('default to toString ', arg)
+             return arg.toString()
         }
     }
 }
