@@ -904,8 +904,9 @@ function $AugmentedAssignCtx(context, op){
             // result is a float
             js += left+'=float('+left+op1
             js += right_is_int ? right : right+'.valueOf()'
-            js += ') : '+left + '.value ' +op
-            js += right_is_int ? right : right+'.valueOf()'
+            js += ') : ' +  left + '=' + "new $B.$FloatClass($B.add(" + left + '.value' + "," 
+            js += right_is_int ? "float(" + right + ")))" : "float(" + right +'.valueOf()' + ")))"
+
             
             js += ')}'
 
