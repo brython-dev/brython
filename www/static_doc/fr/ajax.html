@@ -1,0 +1,273 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Documentation Brython</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script type="text/javascript" src="/src/brython.js"></script>
+
+<script type="text/python">
+import time
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'fr')
+
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introduction</a></h4>
+<h4><a class="navig" href="faq.html">Questions fréquemment posées</a></h4>
+<h4><a class="navig" href="syntax.html">Syntaxe, mots-clés et fonctions intégrées</a></h4>
+<h4><a class="navig" href="stdlib.html">Distribution</a></h4>
+<h4><a class="navig" href="import.html">Implémentation de <tt>import</tt></a></h4>
+
+<h4>Interface avec le navigateur</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introduction - API DOM</a>
+<br><a class="navig" href="create.html">Créer un document</a>
+<br><a class="navig" href="access.html">Accéder aux éléments</a>
+<br><a class="navig" href="attributes.html">Attributs et méthodes</a>
+<br>
+<br><a class="navig" href="events.html">Evénements</a>
+<br><a class="navig" href="mouse_events.html">Evénements souris</a>
+<br><a class="navig" href="keyboard_events.html">Evénements clavier</a>
+<br><a class="navig" href="focus_events.html">Evénements focus</a>
+<br><a class="navig" href="drag_events.html">Evénements pour glisser-déposer</a>
+<br>
+<br><a class="navig" href="query.html">Chaine de requête</a>
+<br>
+<br><a class="navig" href="jsobjects.html">Objets et librairies Javascript</a>
+</div>
+
+<h4>Modules intégrés propres à Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Travailler avec Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Options de la fonction <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Installer l'environnement de développement</a>
+<br><a class="navig" href="test.html">Test et débogage</a>
+<br><a class="navig" href="deploy.html">Deployer une application</a></div>
+
+<h4>Recettes</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Salut !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insérer du contenu dans un élément</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Mise en forme HTML (gras, italique...)</a>
+<br><a class="navig" href="cookbook/table.html">Table HTML</a>
+<br><a class="navig" href="cookbook/bind_unbind.html">Attacher / détacher des événements</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Gérer la sélection d'options dans un SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Glisser-déposer</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtenir le contenu d'un élément</a>
+<br><a class="navig" href="cookbook/read_file.html">Lire le contenu d'un fichier</a>
+<br><a class="navig" href="cookbook/local_storage.html">Stocker des objects localement</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Exemple de onmouseover</a>
+<br><a class="navig" href="cookbook/draw_image.html">Ajouter une image dans un canvas</a>
+
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>module <STRONG>browser.ajax</STRONG></H2>
+
+<p></p>
+Ce module permet d'exécuter des requêtes Ajax. Il définit une seule fonction :
+<p></p>
+<code>ajax()</code>
+<blockquote>
+ Renvoie un objet ajax
+</blockquote>
+<p></p>
+Cet objet possède les attributs et méthodes suivants :
+<p></p>
+<code>bind(</code><I>evt,fonction</I><code>)</code>
+<blockquote>
+ Attache la <I>fonction</I> à l'événement <I>evt</I>. <I>evt</I> est une chaine de 
+ caractères correspondent aux différents états de la requête :
+</blockquote>
+<p></p>
+<ul>
+<li> "uninitialized" : non initialisé
+<li> "loading" : connexion établie
+<li> "loaded" : requête reçue
+<li> "interactive" : réponse en cours
+<li> "complete" : terminé
+</ul>
+<p></p>
+<blockquote>
+ La <I>fonction</I> prend un seul argument, qui est l'objet <code>ajax</code>
+</blockquote>
+<p></p>
+<code>open(</code><I>methode,url,async</I><code>)</code>
+<blockquote>
+ <I>methode</I> est la méthode HTTP utilisée pour la requête (habituellement GET 
+ ou POST).
+</blockquote>
+<p></p>
+<blockquote>
+ <I>url</I> est l'url appelée.
+</blockquote>
+<p></p>
+<blockquote>
+ <I>async</I> est un booléen qui indique si l'appel est asynchrone (le script qui
+ a effectué la requête continue de s'exécuter sans attendre la réponse à 
+ cette requête) ou non (l'exécution du script s'arrête en attendant la 
+ réponse).
+</blockquote>
+<p></p>
+<code>readyState</code>
+<blockquote>
+ un entier représentant l'état d'avancement de la requête, selon le tableau 
+ ci-dessous :
+</blockquote>
+<p></p>
+<blockquote>
+<table cellspacing=0 cellpadding=4 border=1>
+<tr><th>
+readyState
+</th><th>
+événement
+</th></tr>
+<tr><td align="center">0</td><td>"uninitialized"</td></tr>
+<tr><td align="center">1</td><td>"loading"</td></tr>
+<tr><td align="center">2</td><td>"loaded"</td></tr>
+<tr><td align="center">3</td><td>"interactive"</td></tr>
+<tr><td align="center">4</td><td>"complete"</td></tr>
+</table>
+</blockquote>
+<p></p>
+<code>set&#95;header(</code><I>nom,valeur</I><code>)</code>
+<blockquote>
+ affecte la valeur <I>valeur</I> à l'entête <I>nom</I>.
+</blockquote>
+<p></p>
+<code>set&#95;timeout(</code><I>duree, fonction</I><code>)</code>
+<blockquote>
+ si la requête n'a pas renvoyé de réponse dans les <I>duree</I> secondes, annule 
+ la requête et exécute la <I>fonction</I>. Cette fonction ne prend pas d'argument.
+</blockquote>
+<p></p>
+<code>send(</code><I>[data]</I><code>)</code>
+<blockquote>
+ lance la requête. L'argument optionnel <I>data</I> n'est pris en charge que si la
+ méthode est POST ; il doit s'agir soit d'un dictionnaire, soit d'une chaine
+ de caractères.
+</blockquote>
+<p></p>
+<code>status</code>
+<blockquote>
+ un entier représentant le statut HTTP de la requête. Les valeurs les plus 
+ courantes sont 200 (ok) et 404 (fichier non trouvé).
+</blockquote>
+<p></p>
+<code>text</code>
+<blockquote>
+ la réponse du serveur sous forme de chaine de caractères.
+</blockquote>
+<p></p>
+<code>xml</code>
+<blockquote>
+ la réponse du serveur sous forme d'objet DOM.
+</blockquote>
+<p></p>
+<p></p>
+<p></p>
+<H3>Exemple</H3>
+
+<p></p>
+On suppose qu'il y a un DIV avec l'id "result" dans la page HTML
+<p></p></p><pre class="python">from browser import document, ajax
+
+def on&#95;complete(req):
+    if req.status==200:
+        document["result"].html = req.text
+    else:
+        document["result"].html = "error "+req.text
+
+req = ajax.ajax()
+req.bind('complete',on&#95;complete)
+# envoie une requête POST à l'url
+req.open('POST',url,True)
+req.set&#95;header('content-type','application/x-www-form-urlencoded')
+# envoie les données sous forme de dictionnaire
+req.send({'x':0, 'y':1})</pre>
+<p><p></p>
+Pour envoyer des données via la méthode GET il faut l'inclure dans la chaine
+de requête (query string)
+<p></p></p><pre class="python">qs = "x=0&amp;y=1"
+req.open('GET', url+'?'+qs, True)
+req.set&#95;header('content-type', 'application/x-www-form-urlencoded')
+req.send()</pre>
+<p><p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

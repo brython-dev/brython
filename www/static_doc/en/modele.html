@@ -1,0 +1,306 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython documentation</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+from browser import window, document, html
+
+import highlight
+
+import header
+header.show('../../', 'en')
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introduction</a></h4>
+<h4><a class="navig" href="faq.html">Frequently asked questions</a></h4>
+<h4><a class="navig" href="syntax.html">Syntax, keywords and built-in functions</a></h4>
+<h4><a class="navig" href="stdlib.html">Standard distribution</a></h4>
+<h4><a class="navig" href="import.html"><tt>import</tt> implementation</a></h4>
+
+<h4>Browser interface</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introduction - DOM API</a>
+<br><a class="navig" href="create.html">Creating a document</a>
+<br><a class="navig" href="access.html">Accessing elements</a>
+<br><a class="navig" href="attributes.html">Attributes and methods</a>
+<br>
+<br><a class="navig" href="events.html">Events</a>
+<br><a class="navig" href="mouse_events.html">Mouse events</a>
+<br><a class="navig" href="keyboard_events.html">Keyboard events</a>
+<br><a class="navig" href="focus_events.html">Focus events</a>
+<br><a class="navig" href="drag_events.html">Drag events</a>
+<br>
+<br><a class="navig" href="query.html">Query string</a>
+<br>
+<br><a class="navig" href="jsobjects.html">Using Javascript objects and libraries</a>
+</div>
+
+<h4>Brython-specific built-in modules</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Working with Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Options of function <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Installing the development environment</a>
+<br><a class="navig" href="test.html">Testing and debugging</a>
+<br><a class="navig" href="deploy.html">Deploying an application</a>
+</div>
+
+<h4>Brython for Firefox OS</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="firefox_os_intro.html">Introduction</a>
+<br><a class="navig" href="firefox_os_tuto1.html">WebApps : design</a>
+<br><a class="navig" href="firefox_os_tuto2.html">WebApps : application</a>
+</div>
+
+<h4>Cookbook</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Hello world !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insert content in an element</a>
+<br><a class="navig" href="cookbook/basic_markup.html">HTML markup (bold,italic...)</a>
+<br><a class="navig" href="cookbook/table.html">HTML table</a>
+<br><a class="navig" href="cookbook/bind_unbind.html">Bind and unbind events</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Handle options in a SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Drag and drop</a>
+<br><a class="navig" href="cookbook/get_content.html">Get the content of an element</a>
+<br><a class="navig" href="cookbook/read_file.html">Read the content of a file</a>
+<br><a class="navig" href="cookbook/local_storage.html">Store objects locally</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Example of onmouseover</a>
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>Compiling and running</H2>
+
+<p></p>
+<H3>Overview</H3>
+
+<p></p>
+<table border=1 cellpadding =5>
+<tr><td>Step </td><td>performed by</td></tr>
+<tr>
+ <td>Reading Python source</td>
+ <td>function <code>brython(<I>debug&#95;mode</I>)</code> in <B>py2js.js</B>
+<p></p>
+If the code is in an external file, it is retrieved by an Ajax call
+<p></p>
+This function creates environment variables, including :
+<p></p>
+<ul>
+<li> <code>&#95;&#95;BRYTHON&#95;&#95;.$py&#95;src</code> : object indexed by module names, value is the module source code
+<li> <code>&#95;&#95;BRYTHON&#95;&#95;.debug</code> : debug level
+<li> <code>&#95;&#95;BRYTHON&#95;&#95;.exception&#95;stack</code> : a list of errors generated during parsing or at runtime
+<li> <code>&#95;&#95;BRYTHON&#95;&#95;.imported</code> : a Javascript object, mapping imported module names to the matching module object
+<li> <code>&#95;&#95;BRYTHON&#95;&#95;.modules</code> : a Javascript object, mapping module names to module objects
+<li> <code>&#95;&#95;BRYTHON&#95;&#95;.vars</code> : a Javascript object, mapping module names to the dictionary of variables defined in the module
+</ul>
+<p></p>
+</td>
+</tr>
+<p></p>
+<tr>
+ <td>creation of the tree representing the Python code</td>
+ <td>function <code>&#95;&#95;BRYTHON&#95;&#95;.py2js(<I>source,module</I>)</code> in <B>py2js.js</B>
+<p></p>
+  This function calls :
+<p></p>
+<ul>
+<li> <code>$tokenize(&lt;i&gt;source&lt;/i&gt;)</code> : syntax analysis of the tokens in Python source code and tree building ; returns the tree root
+<li> <code>transform(&lt;i&gt;root&lt;/i&gt;)</code> : transforms the tree to prepare the conversion to Javascript (see below)
+<li> <code>$add&#95;line&#95;num()</code> to add line numbers if debug mode is greater than 0
+<p></p>
+  The function <code>py2js</code> returns the tree root
+</td>
+</tr>
+</ul>
+<p></p>
+<tr>
+ <td>generating Javascript code</td>
+ <td>method <code>to&#95;js()</code> of the tree returned by <code>py2js</code>
+<p></p>
+ This function recursively calls the method of the same name on all the syntax elements found in the tree. It returns the string holding the resulting Javascript code. If debug mode is 2, this string is printed in the browser console
+ </td>
+</tr>
+<p></p>
+<tr>
+ <td>running Javascript code</td>
+ <td>evaluation by the function <code>eval()</code></td>
+</tr>
+<p></p>
+</table>
+<p></p>
+<H3>Files used</H3>
+
+<p></p>
+The script <B>brython.js</B> is generated by compilation of several scripts :
+<p></p>
+<ul>
+<li> <STRONG>brython&#95;builtins.js</STRONG> : defines the object <code>&#95;&#95;BRYTHON&#95;&#95;</code> which acts as a gateway between Javascript native objects (<code>Date, RegExp, Storage...</code>) and Brython
+<li> <STRONG>version&#95;info.js</STRONG> : created by the make_dist.py script, it adds information about the brython version
+<li> <STRONG>py2js.js</STRONG> : performs the conversion from Python code to Javascript code
+<li> <STRONG>py&#95;utils.js</STRONG> : utility functions (eg type conversions between Javascript and Python)
+<li> <STRONG>py&#95;object.js</STRONG> : implements Python <code>object</code> class
+<li> <STRONG>py&#95;type.js</STRONG> : implements Python <code>type</code> class
+<li> <STRONG>py&#95;builtin&#95;functions.js</STRONG> : Python built-in functions
+<li> <STRONG>js&#95;objects.js</STRONG> : interface to Javascript objects and constructors
+<li> <STRONG>py&#95;import.js</STRONG> : implementation of <tt>import</tt>
+<li> <STRONG>py&#95;float.js</STRONG>, <STRONG>py&#95;int.js</STRONG>, <STRONG>py&#95;complex.js</STRONG>, <STRONG>py&#95;dict.js</STRONG>, <STRONG>py&#95;list.js</STRONG>, <STRONG>py&#95;string.js</STRONG>, <STRONG>py&#95;set.js</STRONG> : implements the matching Python classes
+<li> <STRONG>py&#95;dom.js</STRONG> : interaction with the HTML document (DOM)
+</ul>
+<p></p>
+<H3>More on translation and running</H3>
+
+<p></p>
+Translation and run of a Brython script by <STRONG>py2js.js</STRONG> goes through the following steps :
+<ol>
+<li>syntax analysis and tree building
+<p></p>
+  This step relies on an automat whose state evolves with the tokens found in the source code
+<p></p>
+  Python code is split into tokens that can have the following types : 
+<p></p>
+<ul>
+<li> keyword
+<li> identifier
+<li> literal (string, integer, float)
+<li> operator
+<li> period (.)
+<li> colon (:)
+<li> semi colon (;)
+<li> parenthesis / bracket / curly brace
+<li> assignment (equal sign =)
+<li> decorator (@)
+<li> end of line
+</ul>
+<p></p>
+For each token, a call to the function <I>$transition()</I> is performed, it returns a new state depending on the current state and the token
+<p></p>
+Each instruction in the source code matches a node in the tree (an instance of class <I>$Node</I>). If a line holds more than one instruction separated by  ":" (<code>def foo(x):return x</code>) or by ";" (<code>x=1;print(x)</code>), as many nodes are created for this line
+<p></p>
+Each syntax element (identifier, function call, expression, operator...) is handled by a class : see in the source code of  <STRONG>py2js.js</STRONG> between <code>function $AbstractExprCtx</code> and <code>function $UnaryCtx</code>
+<p></p>
+In this step, errors can be reported : 
+<p></p>
+<ul>
+<li> syntax errors
+<li> indentation errors
+<li> unterminated string literals
+<li> unbalanced parenthesis / brackets / curly braces
+<li> illegal character
+<li> Python keyword not handled by Brython
+</ul>
+<p></p>
+<li>Transforming the tree
+<p></p>
+For some elements of the Python syntax, the tree representing the source code has to be modified (add branches) before starting the translation into Javascript. This is done by recursive calls to the method <code>transform()</code> from the top of the tree
+<p></p>
+For instance, in the first step the Python code <code>assert &#95;condition&#95;</code> yields a single branch of the tree. The second step transforms it into a branch <code>if not &#95;condition&#95;</code> and adds a child branch with <code>raise AssertionError</code>
+<p></p>
+The elements that must be transformed this way are : <code>assert</code>, chained (<code>x=y=0</code>) and multiple (<code>x,y=1,2</code>) assignments, <code>class, def, except, for, try</code>
+<p></p>
+This step is also used to store the variables declared by <code>global</code>
+<p></p>
+<li>Running Javascript code
+<p></p>
+At runtime the generated script can use :
+<p></p>
+<ul>
+<li> the built-in classes defined in <I>py&#95;object.js, py&#95;dict.js, py&#95;string.js, py&#95;list.js, py&#95;set.js, py&#95;dom.js</I>
+<li> internal functions, not accessible from Python (their name always starts with $) ; most of them are defined in <I>$py&#95;utils.js</I>. The most important are :
+<li> 
+<ul>
+<li> <I>$JS2Py</I> : takes a single argument and returns :
+<ul>
+<li> the argument unchanged if it is a type handled by Brython (i.e. if it has an attribute <I>&#95;&#95;class&#95;&#95;</I>)
+<li> an instance of DOMObject (respectively DOMEvent) if the argument is a DOM object (resp. event)
+<li> an instance of JSObject "wrapping" the argument in the other cases
+<p></p>
+</ul>
+<li> <I>$MakeArgs</I> called at the beginning of each function if its signature has at least one argument. It builds a namespace based on the function arguments, calling the function <I>$JS2Py</I> on all arguments
+<li> <I>$class&#95;constructor</I> is called for class definition
+<li> <I>$list&#95;comp</I> is called for list comprehensions
+<li> <I>$lambda</I> is called for anonymous functions defined by <code>lambda</code>
+<li> <I>$test&#95;expr</I> and <I>$test&#95;item</I> are used in evaluation of conditions combined by <code>and</code> or <code>or</code>
+<p></p>
+</ul>
+<li> the functions defined in the script <I>py&#95;import.js</I> for management of imports
+</ul>
+<p></p>
+</ol>
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

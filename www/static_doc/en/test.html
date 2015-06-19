@@ -1,0 +1,193 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython documentation</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+from browser import window, document, html
+
+import highlight
+
+import header
+header.show('../../', 'en')
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introduction</a></h4>
+<h4><a class="navig" href="faq.html">Frequently asked questions</a></h4>
+<h4><a class="navig" href="syntax.html">Syntax, keywords and built-in functions</a></h4>
+<h4><a class="navig" href="stdlib.html">Standard distribution</a></h4>
+<h4><a class="navig" href="import.html"><tt>import</tt> implementation</a></h4>
+
+<h4>Browser interface</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introduction - DOM API</a>
+<br><a class="navig" href="create.html">Creating a document</a>
+<br><a class="navig" href="access.html">Accessing elements</a>
+<br><a class="navig" href="attributes.html">Attributes and methods</a>
+<br>
+<br><a class="navig" href="events.html">Events</a>
+<br><a class="navig" href="mouse_events.html">Mouse events</a>
+<br><a class="navig" href="keyboard_events.html">Keyboard events</a>
+<br><a class="navig" href="focus_events.html">Focus events</a>
+<br><a class="navig" href="drag_events.html">Drag events</a>
+<br>
+<br><a class="navig" href="query.html">Query string</a>
+<br>
+<br><a class="navig" href="jsobjects.html">Using Javascript objects and libraries</a>
+</div>
+
+<h4>Brython-specific built-in modules</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Working with Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Options of function <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Installing the development environment</a>
+<br><a class="navig" href="test.html">Testing and debugging</a>
+<br><a class="navig" href="deploy.html">Deploying an application</a>
+</div>
+
+<h4>Brython for Firefox OS</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="firefox_os_intro.html">Introduction</a>
+<br><a class="navig" href="firefox_os_tuto1.html">WebApps : design</a>
+<br><a class="navig" href="firefox_os_tuto2.html">WebApps : application</a>
+</div>
+
+<h4>Cookbook</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Hello world !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insert content in an element</a>
+<br><a class="navig" href="cookbook/basic_markup.html">HTML markup (bold,italic...)</a>
+<br><a class="navig" href="cookbook/table.html">HTML table</a>
+<br><a class="navig" href="cookbook/bind_unbind.html">Bind and unbind events</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Handle options in a SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Drag and drop</a>
+<br><a class="navig" href="cookbook/get_content.html">Get the content of an element</a>
+<br><a class="navig" href="cookbook/read_file.html">Read the content of a file</a>
+<br><a class="navig" href="cookbook/local_storage.html">Store objects locally</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Example of onmouseover</a>
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>Testing and debugging</H2>
+
+<p></p>
+<H3>Interactive test</H3>
+
+<p></p>
+The Brythons site, or its mirror available for download, include a console where you can test Python code
+<p></p>
+Please note that the namespace is not refreshed when you click on "run", you must reload the page for that
+<p></p>
+For debugging and testing Brython, a number of test scripts are grouped in the directory <code>tests</code> ; you can access them by clicking the link  "Test pages" in the console, then select the different tests and run them
+<p></p>
+<H3>Debugging scripts</H3>
+
+<p></p>
+Whatever the debugging level, syntax errors are reported in the browser console (or at the place defined by <code>sys.stderr</code>)
+<p></p>
+For instance, the code
+<p></p>
+<blockquote></p><pre class="marked">x = $a</pre>
+<p></blockquote>
+<p></p>
+generates the message
+<p></p>
+<blockquote></p><pre class="marked">SyntaxError: unknown token [$]
+module '&#95;&#95;main&#95;&#95;' line 1
+x = $a
+    ^</pre>
+<p></blockquote>
+<p></p>
+By setting the debugging level to 1 in the call to function <code>brython(<I>debug&#95;mode</I>)</code>, the exceptions raised at runtime and not caught by an <code>except</code> also produce an error message, as close as possible to the one generated by Python3
+<p></p>
+This code :
+<p></p>
+<blockquote></p><pre class="marked">x = [1,2]
+x[3]</pre>
+<p></blockquote>
+<p></p>
+generates :
+<p></p>
+<blockquote></p><pre class="marked">IndexError: list index out of range
+module '&#95;&#95;main&#95;&#95;' line 2
+x[3]</pre>
+<p></blockquote>
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

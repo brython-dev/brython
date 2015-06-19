@@ -1,0 +1,219 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Documentation Brython</title>
+<link rel="stylesheet" href="../../doc_brython.css">
+
+<script type="text/javascript" src="/src/brython.js"></script>
+
+<script type="text/python">
+import time
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../../', 'fr')
+
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<script type="text/python">src = doc['py_source'].text
+exec(src)
+</script>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="../intro.html">Introduction</a></h4>
+<h4><a class="navig" href="../faq.html">Questions fréquemment posées</a></h4>
+<h4><a class="navig" href="../syntax.html">Syntaxe, mots-clés et fonctions intégrées</a></h4>
+<h4><a class="navig" href="../stdlib.html">Distribution</a></h4>
+<h4><a class="navig" href="../import.html">Implémentation de <tt>import</tt></a></h4>
+
+<h4>Interface avec le navigateur</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="../dom_api.html">Introduction - API DOM</a>
+<br><a class="navig" href="../create.html">Créer un document</a>
+<br><a class="navig" href="../access.html">Accéder aux éléments</a>
+<br><a class="navig" href="../attributes.html">Attributs et méthodes</a>
+<br>
+<br><a class="navig" href="../events.html">Evénements</a>
+<br><a class="navig" href="../mouse_events.html">Evénements souris</a>
+<br><a class="navig" href="../keyboard_events.html">Evénements clavier</a>
+<br><a class="navig" href="../focus_events.html">Evénements focus</a>
+<br><a class="navig" href="../drag_events.html">Evénements pour glisser-déposer</a>
+<br>
+<br><a class="navig" href="../query.html">Chaine de requête</a>
+<br>
+<br><a class="navig" href="../jsobjects.html">Objets et librairies Javascript</a>
+</div>
+
+<h4>Modules intégrés propres à Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="../browser.html">browser</a>
+<br><a class="navig" href="../ajax.html">browser.ajax</a>
+<br><a class="navig" href="../html.html">browser.html</a>
+<br><a class="navig" href="../local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="../markdown.html">browser.markdown</a>
+<br><a class="navig" href="../object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="../local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="../svg.html">browser.svg</a>
+<br><a class="navig" href="../timer.html">browser.timer</a>
+<br><a class="navig" href="../websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="../javascript.html">javascript</a>
+</div>
+
+<h4>Travailler avec Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="../options.html">Options de la fonction <code>brython()</code></a>
+<br><a class="navig" href="../dev_env.html">Installer l'environnement de développement</a>
+<br><a class="navig" href="../test.html">Test et débogage</a>
+<br><a class="navig" href="../deploy.html">Deployer une application</a></div>
+
+<h4>Recettes</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="../cookbook/hello_world.html">Salut !</a>
+<br><a class="navig" href="../cookbook/content_in_div.html">Insérer du contenu dans un élément</a>
+<br><a class="navig" href="../cookbook/basic_markup.html">Mise en forme HTML (gras, italique...)</a>
+<br><a class="navig" href="../cookbook/table.html">Table HTML</a>
+<br><a class="navig" href="../cookbook/bind_unbind.html">Attacher / détacher des événements</a>
+<br><a class="navig" href="../cookbook/select_checkbox.html">Gérer la sélection d'options dans un SELECT</a>
+<br><a class="navig" href="../cookbook/drag_drop.html">Glisser-déposer</a>
+<br><a class="navig" href="../cookbook/get_content.html">Obtenir le contenu d'un élément</a>
+<br><a class="navig" href="../cookbook/read_file.html">Lire le contenu d'un fichier</a>
+<br><a class="navig" href="../cookbook/local_storage.html">Stocker des objects localement</a>
+<br><a class="navig" href="../cookbook/read_text_from_imagemap.html">Exemple de onmouseover</a>
+<br><a class="navig" href="../cookbook/draw_image.html">Ajouter une image dans un canvas</a>
+
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>Problème</H2>
+
+<p></p>
+Valider le contenu d'un formulaire de saisie avant envoi au serveur
+<p></p>
+<p></p>
+<p></p>
+<H2>Solution</H2>
+
+<p></p>
+<p></p>
+<p></p>
+Dans le formulaire ci-dessous on veut vérifier que l'utilisateur a complété tous les champs marqués d'une étoile et que la date est au format JJ/MM/AAAA
+<p></p>
+Pour cela, on exécute la fonction <I>validate()</I> au moment d'appuyer sur "Envoi". S'il y a une erreur, la fonction le signale et on reste sur la page ; sinon le contrôle passe à une page qui affiche les données entrées en utilisant <I>doc.query</I>
+<p></p>
+<table width="100%">
+<p></p>
+<tr>
+<td style="background-color:#FF7400;text-align:center;">
+<form action="cookbook/echo.html" id="myform">
+<p></p>
+<table cellpadding=5>
+<tr>
+<td align="right">Nom *</td>
+<td><INPUT id="name" name="name"></td>
+</tr>
+<tr>
+<td align="right">Prénom</td>
+<td><INPUT id="firstname" name="firstname"></td>
+</tr>
+<tr>
+<td>Date de naissance (JJ/MM/AAAA) * </td>
+<td><INPUT id="date" name="date"></td>
+</tr>
+<tr>
+<td>Adresse mail</td>
+<td><INPUT id="mail" name="mail"></td>
+</tr>
+<tr>
+<td colspan=2><INPUT type="submit" value="Envoi" onclick="return validate()"></td>
+</tr>
+</table>
+<p></p>
+</form>
+</td>
+</tr>
+<p></p>
+<tr>
+<td style="width:40%;padding-right:10px;" id="py_source">
+<p></p></p><pre class="marked">import re
+from browser import document as doc
+from browser import alert, window
+
+def validate():
+    if not doc['name'].value:
+        alert('Veuillez saisir le nom')
+        doc['name'].focus()
+        return False
+    if not doc['date'].value:
+        alert('Veuillez saisir la date')
+        doc['date'].focus()
+        return False
+    elif not re.match(r'\d{2}/\d{2}/\d{4}',doc['date'].value):
+        alert("La date n'est pas au bon format")
+        doc['date'].focus()
+        return False
+        
+window.validate = validate</pre>
+<p></td>
+<p></p>
+</tr>
+</table>
+<p></p></p><p><p></p>
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

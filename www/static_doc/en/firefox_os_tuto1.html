@@ -1,0 +1,235 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython documentation</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+from browser import window, document, html
+
+import highlight
+
+import header
+header.show('../../', 'en')
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introduction</a></h4>
+<h4><a class="navig" href="faq.html">Frequently asked questions</a></h4>
+<h4><a class="navig" href="syntax.html">Syntax, keywords and built-in functions</a></h4>
+<h4><a class="navig" href="stdlib.html">Standard distribution</a></h4>
+<h4><a class="navig" href="import.html"><tt>import</tt> implementation</a></h4>
+
+<h4>Browser interface</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introduction - DOM API</a>
+<br><a class="navig" href="create.html">Creating a document</a>
+<br><a class="navig" href="access.html">Accessing elements</a>
+<br><a class="navig" href="attributes.html">Attributes and methods</a>
+<br>
+<br><a class="navig" href="events.html">Events</a>
+<br><a class="navig" href="mouse_events.html">Mouse events</a>
+<br><a class="navig" href="keyboard_events.html">Keyboard events</a>
+<br><a class="navig" href="focus_events.html">Focus events</a>
+<br><a class="navig" href="drag_events.html">Drag events</a>
+<br>
+<br><a class="navig" href="query.html">Query string</a>
+<br>
+<br><a class="navig" href="jsobjects.html">Using Javascript objects and libraries</a>
+</div>
+
+<h4>Brython-specific built-in modules</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Working with Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Options of function <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Installing the development environment</a>
+<br><a class="navig" href="test.html">Testing and debugging</a>
+<br><a class="navig" href="deploy.html">Deploying an application</a>
+</div>
+
+<h4>Brython for Firefox OS</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="firefox_os_intro.html">Introduction</a>
+<br><a class="navig" href="firefox_os_tuto1.html">WebApps : design</a>
+<br><a class="navig" href="firefox_os_tuto2.html">WebApps : application</a>
+</div>
+
+<h4>Cookbook</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Hello world !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insert content in an element</a>
+<br><a class="navig" href="cookbook/basic_markup.html">HTML markup (bold,italic...)</a>
+<br><a class="navig" href="cookbook/table.html">HTML table</a>
+<br><a class="navig" href="cookbook/bind_unbind.html">Bind and unbind events</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Handle options in a SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Drag and drop</a>
+<br><a class="navig" href="cookbook/get_content.html">Get the content of an element</a>
+<br><a class="navig" href="cookbook/read_file.html">Read the content of a file</a>
+<br><a class="navig" href="cookbook/local_storage.html">Store objects locally</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Example of onmouseover</a>
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H1>Building your own webapp : design</H1>
+
+<p></p>
+To get started, the easiest is to copy the Memos application in another directory
+<p></p>
+We will take the example of a calculator, whose logic will be held in a Python script called <EM>calculator.py</EM>. The application screen will show a line for the entered value and the result, and buttons for digits and operators, something like
+<p></p></p><pre class="marked">---------------------
+|                   |
+---------------------
+| 7 | 8 | 9 | / | C |
+---------------------
+| 4 | 5 | 6 | x | &lt; |
+---------------------
+| 1 | 2 | 3 | - |√¯ |
+---------------------
+| . | 2 | = | + |1/x|
+---------------------
+</pre>
+<p>First thing is to start the built-in server and point the browser to <code>http://localhost:8003</code> : it shows you the Memos application
+<p></p>
+Edit <EM>manifest.webapp</EM> to change the application name and description. Create an icon for the application to replace the one provided for the Memos application (<EM>/icons/brython-memo.png</EM>), and put the path to this new icon in the section <I>icons</I> of <EM>manifest.webapp</EM>
+<p></p>
+Edit <EM>index.html</EM> to remove the line
+<p></p>
+<blockquote></p><pre class="marked">&lt;script type="text/python" src="memos.py"&gt;&lt;/script&gt;</pre>
+<p></blockquote>
+<p></p>
+To develop the application, you will need to get familiar with Firefox OS user interface. To get started, download the latest version of Firefox OS <a href="https://github.com/buildingfirefoxos/Building-Blocks">Building Blocks</a> and open the file <EM>app.html</EM> in your browser. This will show you the HTML code used to generate common elements of the user interface : header, lists, fields, toolbar, etc. The source code of <EM>app.html</EM> is very useful to understand the tags used to build a page and the attributes you must set for each tag
+<p></p>
+Among all the elements presented in <EM>app.html</EM>, the one that looks the most like our calculator is the "Filters" page. In the source code of <EM>app.html</EM>, copy the code in section for Filter, id the part included in
+<p></p></p><pre class="marked">&lt;section id="filters" data-position="right"&gt;</pre>
+<p><p></p>
+and paste it in the body of <EM>index.html</EM>. Pointing the browser to <code>localhost:8003</code> will now show you the same page as "Filters" in <EM>app.html</EM>
+<p></p>
+Edit the code in <EM>index.html</EM> to get the design of your calculator to get the lines with the numbers : you will have something like
+<p></p></p><pre class="marked">  &lt;section id="filters" data-position="right"&gt;
+     &lt;section role="region"&gt;
+
+        &lt;!-- keypad --&gt;
+        &lt;ul role="tablist" data-type="filter"&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;7&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;8&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;9&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;/&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;C&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;ul role="tablist" data-type="filter"&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;4&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;5&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;6&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;&#42;&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;&lt;&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;ul role="tablist" data-type="filter"&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;1&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;2&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;3&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;-&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;√¯&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;ul role="tablist" data-type="filter"&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;.&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;0&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;=&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;+&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="tab"&gt;&lt;a href="#"&gt;1/x&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/section&gt;
+  &lt;/section&gt;</pre>
+<p><p></p>
+For the zone at the top of the screen, the one where you see what you have typed and where the result of an operation will be displayed when you press "=", you need something more like in the section "Input areas" in <EM>app.html</EM>. Again, copy and paste the interesting part of the section "Input areas" in the source code of <EM>app.html</EM> and adapt it in <EM>index.html</EM>. You will now get the basic layout of your application :
+<p></p></p><pre class="marked">&lt;section id="filters" data-position="right"&gt;
+ &lt;section role="region"&gt;</pre>
+<p><p></p></p><pre class="marked">    &lt;!-- entry field for feedback and result --&gt;
+    &lt;form class="paddings"&gt;
+      &lt;p&gt;
+        &lt;input type="text" placeholder="" value="" id="entry" required &gt;
+        &lt;button type="reset"&gt;Clear&lt;/button&gt;
+      &lt;/p&gt;
+    &lt;/form&gt;</pre>
+<p><p></p></p><pre class="marked">    &lt;!-- keypad --&gt;
+    (... same as above ...)</pre>
+<p><p></p></p><pre class="marked"> &lt;/section&gt;
+&lt;/section&gt;</pre>
+<p><p></p>
+With this content in <EM>index.html</EM>, the application home page now looks like the calculator we had designed. But when you click on the buttons, nothing happens. For that, you must now write a program to handle the events on the page
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

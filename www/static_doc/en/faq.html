@@ -1,0 +1,199 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython documentation</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+from browser import window, document, html
+
+import highlight
+
+import header
+header.show('../../', 'en')
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introduction</a></h4>
+<h4><a class="navig" href="faq.html">Frequently asked questions</a></h4>
+<h4><a class="navig" href="syntax.html">Syntax, keywords and built-in functions</a></h4>
+<h4><a class="navig" href="stdlib.html">Standard distribution</a></h4>
+<h4><a class="navig" href="import.html"><tt>import</tt> implementation</a></h4>
+
+<h4>Browser interface</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introduction - DOM API</a>
+<br><a class="navig" href="create.html">Creating a document</a>
+<br><a class="navig" href="access.html">Accessing elements</a>
+<br><a class="navig" href="attributes.html">Attributes and methods</a>
+<br>
+<br><a class="navig" href="events.html">Events</a>
+<br><a class="navig" href="mouse_events.html">Mouse events</a>
+<br><a class="navig" href="keyboard_events.html">Keyboard events</a>
+<br><a class="navig" href="focus_events.html">Focus events</a>
+<br><a class="navig" href="drag_events.html">Drag events</a>
+<br>
+<br><a class="navig" href="query.html">Query string</a>
+<br>
+<br><a class="navig" href="jsobjects.html">Using Javascript objects and libraries</a>
+</div>
+
+<h4>Brython-specific built-in modules</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Working with Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Options of function <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Installing the development environment</a>
+<br><a class="navig" href="test.html">Testing and debugging</a>
+<br><a class="navig" href="deploy.html">Deploying an application</a>
+</div>
+
+<h4>Brython for Firefox OS</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="firefox_os_intro.html">Introduction</a>
+<br><a class="navig" href="firefox_os_tuto1.html">WebApps : design</a>
+<br><a class="navig" href="firefox_os_tuto2.html">WebApps : application</a>
+</div>
+
+<h4>Cookbook</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Hello world !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insert content in an element</a>
+<br><a class="navig" href="cookbook/basic_markup.html">HTML markup (bold,italic...)</a>
+<br><a class="navig" href="cookbook/table.html">HTML table</a>
+<br><a class="navig" href="cookbook/bind_unbind.html">Bind and unbind events</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Handle options in a SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Drag and drop</a>
+<br><a class="navig" href="cookbook/get_content.html">Get the content of an element</a>
+<br><a class="navig" href="cookbook/read_file.html">Read the content of a file</a>
+<br><a class="navig" href="cookbook/local_storage.html">Store objects locally</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Example of onmouseover</a>
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>Frequently asked questions</H2>
+
+<p></p>
+<B>Q</B> : <I>what is the performance of Brython compared to Javascript, or to other solutions that allow using Python in the browser ?</I>
+<p></p>
+<B>A</B> : compared to Javascript, the ratio is naturally very different from one program to another, but it is somewhere between 3 to 5 times slower. A Javascript console is provided in the distribution or on <a href="http://brython.info/tests/js_console.html">the Brython site</a>, it can be used to measure the execution time of a Javascript program compared to its equivalent in Python in the editor (unchecking the "debug" box)
+<p></p>
+The diffence is due to two factors :
+<p></p>
+<ul>
+<li> the time to translate Python into Javascript, on the fly in the browser. To give an idea, the module datetime (2130 lines of Python code) is parsed and converted to Javascript in 0,5 second on an ordinary PC
+<li> JavaScript code generated by Brython must be compliant with the specifications of Python, including the dynamic nature of the search attributes, which leads to unoptimized Javascript code
+<p></p>
+ some <a href="http://pyppet.blogspot.fr/2013/11/brython-vs-pythonjs.html">fanciful comparisons</a> mention a ratio of 1 to 7500 against Brython : no information is given, but it's obvious that they don't compare similar situations ; in the same conditions (running a script in a web browser) it's hard to imagine how to be faster than native Javascript...
+</ul>
+<p></p>
+Compared to other solutions that translate Python to Javascript, a benchmark is available on <a href="https://brythonista.wordpress.com/2015/03/28/comparing-the-speed-of-cpython-brython-skulpt-and-pypy-js/">Pierre Quentel's</a> blog (he is the creator and main developer of Brython). It compares Brython, <a href="http://skulpt.org">Skulpt</a> and <a href="http://pypyjs.org/demo/">pypy.js</a>. One must be careful with this kind of benchmark between implementation, but with the features tested, Brython is generally faster than pypy.js, itself faster than Skulpt. In some cases, Brython is faster than Python reference implementation, CPython.
+<p></p>
+<B>Q</B> : <I>I see a lot of 404 errors in the browser console when I run Brython scripts, why is that ?</I>
+<p></p>
+<B>A</B> : this is because of the way Brython implements the "import" mechanism. When a script has to import module X, Brython searches for a file or a package in different directories : the standard library (directory libs for Javascript modules, Lib for Python modules), the directory Lib/site-packages, the directory of current page. For that, Ajax calls are sent to the matching urls ; if the file is not found, the 404 error message is written in the browser console, but the error is caught by Brython which goes on searching until it finds the module, or raises <code>ImportError</code> if all paths have been tried with no result
+<p></p>
+<B>Q</B> : <I>why use the operator <code>&lt;=</code> to build the tree of DOM elements ? This is not pythonic !</I>
+<p></p>
+<B>A</B> : Python has no built-in structure to manipulate trees, ie to add "child" or "sibling" nodes to a tree node. For these operations, functions can be used ; the syntax proposed by Brython is to use operators : this is easier to type (no parenthesis) and more readable
+<p></p>
+To add a sibling node, the operator <code>+</code> is used
+<p></p>
+To add a child, the operator <code>&lt;=</code> was chosen for these reasons :
+<p></p>
+<ul>
+<li> it has the shape of a left arrow ; note that Python function annotations use a new operator <code>-&gt;</code> that was chosen for its arrow shape
+<li> it looks like an augmented assignment because of the equal sign
+<li> it can't be confused with "lesser or equal" because a line with <code>document &lt;= elt</code> would be a no-op if it was "lesser or equal", which is always used in a condition or as the return value of a function
+<li> we are so used to interpret the 2 signs <code>&lt;</code> and <code>=</code> as "lesser or equal" that we forget that they are a convention for programming languages, to replace the real sign <code>≤</code>
+<li> in Python, <code>&lt;=</code> is used as an operator for sets with a different meaning than "lesser or equal"
+<li> the sign <code>&lt;</code> is often used in computer science to mean something else than "lesser than" : in Python and many other languages, <code>&lt;&lt;</code> means left shift ; in HTML tags are enclosed with <code>&lt;</code> and <code>&gt;</code>
+<li> Python uses the same operator <code>%</code> for very different operations : modulo and string formatting
+</ul>
+<p></p>
+<B>Q</B> : What browsers are compatible with Brython?
+<p></p>
+<B>A</B> : Below is a list of browsers we support:
+<p></p>
+// todo: get images from http://www.paulirish.com/2010/high-res-browser-icons/
+<p></p>
+<table border="1">
+  <tr><td>Chrome</td><td>FireFox</td><td>IE</td><td>Opera</td><td>Safari</td><td>Android Browser</td><td>Chrome for Android</td><td>iOS Safari</td><td>Opera Mini</td></tr>
+  <tr><td>36+</td><td>31+</td><td>9+</td><td>26+</td><td>5.1+</td><td>4.1+</td><td>39+</td><td>7.1+</td><td>8+</td></tr>
+</table>
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Documentation Brython</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script type="text/javascript" src="/src/brython.js"></script>
+
+<script type="text/python">
+import time
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'fr')
+
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introduction</a></h4>
+<h4><a class="navig" href="faq.html">Questions fréquemment posées</a></h4>
+<h4><a class="navig" href="syntax.html">Syntaxe, mots-clés et fonctions intégrées</a></h4>
+<h4><a class="navig" href="stdlib.html">Distribution</a></h4>
+<h4><a class="navig" href="import.html">Implémentation de <tt>import</tt></a></h4>
+
+<h4>Interface avec le navigateur</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introduction - API DOM</a>
+<br><a class="navig" href="create.html">Créer un document</a>
+<br><a class="navig" href="access.html">Accéder aux éléments</a>
+<br><a class="navig" href="attributes.html">Attributs et méthodes</a>
+<br>
+<br><a class="navig" href="events.html">Evénements</a>
+<br><a class="navig" href="mouse_events.html">Evénements souris</a>
+<br><a class="navig" href="keyboard_events.html">Evénements clavier</a>
+<br><a class="navig" href="focus_events.html">Evénements focus</a>
+<br><a class="navig" href="drag_events.html">Evénements pour glisser-déposer</a>
+<br>
+<br><a class="navig" href="query.html">Chaine de requête</a>
+<br>
+<br><a class="navig" href="jsobjects.html">Objets et librairies Javascript</a>
+</div>
+
+<h4>Modules intégrés propres à Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Travailler avec Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Options de la fonction <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Installer l'environnement de développement</a>
+<br><a class="navig" href="test.html">Test et débogage</a>
+<br><a class="navig" href="deploy.html">Deployer une application</a></div>
+
+<h4>Recettes</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Salut !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insérer du contenu dans un élément</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Mise en forme HTML (gras, italique...)</a>
+<br><a class="navig" href="cookbook/table.html">Table HTML</a>
+<br><a class="navig" href="cookbook/bind_unbind.html">Attacher / détacher des événements</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Gérer la sélection d'options dans un SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Glisser-déposer</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtenir le contenu d'un élément</a>
+<br><a class="navig" href="cookbook/read_file.html">Lire le contenu d'un fichier</a>
+<br><a class="navig" href="cookbook/local_storage.html">Stocker des objects localement</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Exemple de onmouseover</a>
+<br><a class="navig" href="cookbook/draw_image.html">Ajouter une image dans un canvas</a>
+
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p>Brython implémente la version 3 de Python en se basant sur la 
+<a href="https://docs.python.org/3/reference/index.html">Référence du Langage Python</a>
+<p></p>
+L'implémentation tient compte des limites des navigateurs, notamment 
+l'impossibilité d'accéder au système de fichier. L'écriture est impossible, et
+la lecture est limitée aux répertoires accessibles depuis le serveur par une
+requête Ajax.
+<p></p>
+<p></p>
+<H2>Mots clés et fonctions intégrées</H2>
+
+<p></p>
+Brython supporte tous les mots-clés et la plupart des fonctions de Python 3 :
+<p></p>
+<ul>
+<li> mots clés : <code>as, assert, break, class, continue, def, del, elif, else, </code>
+  <code>except, False, finally, for, from, global, if, import, is, lambda, None, </code>
+  <code>nonlocal, pass, return, True, try, while, with, yield</code>
+<li> fonctions intégrées : <code>abs(), all(), any(), ascii(), bin(), bool(), bytes(),</code>
+  <code>callable(), chr(), classmethod(), delattr(), dict(), dir(), divmod(), </code>
+  <code>enumerate(), eval(), exec(), filter(), float(), frozenset(), getattr(), </code>
+  <code>globals(), hasattr(), hash(), hex(), id(), input(), int(), isinstance(), </code>
+  <code>iter(), len(), list(), locals(), map(), max(), min(), next(), object(), </code>
+  <code>open(), ord(), pow(), print(), property(), range(), repr(), reversed(), </code>
+  <code>round(), set(), setattr(), slice(), sorted(), str(), sum(), super(), </code>
+  <code>tuple(), type(), zip(), &#95;&#95;import&#95;&#95;</code>
+</ul>
+<p></p>
+Quelques particularités liées au contexte d'exécution dans un navigateur :
+<p></p>
+<ul>
+<li> la fonction <code>open()</code> prend comme argument l'url du fichier à ouvrir ; comme 
+  on utilise un appel Ajax, elle doit être dans le même domaine que le script. 
+  L'objet retourné par <code>open()</code> possède les méthodes de lecture et d'accès 
+  habituelles : <code>read, readlines, seek, tell, close</code>
+<p></p>
+<li> par défaut, <code>print()</code> affiche sur la console du navigateur, et les messages 
+  d'erreur sont également affichés sur cette console. <code>sys.stderr</code> et 
+  <code>sys.stdout</code> peuvent être affectés à un objet qui implémente une méthode 
+  <code>write()</code>, ce qui permet par exemple d'afficher les messages d'erreurs dans 
+  une fenêtre
+<p></p>
+<li> <code>sys.stdin</code> n'est pas implémenté, mais on peut utiliser la fonction intégrée 
+  <code>input()</code> qui ouvre une fenêtre d'invite
+<p></p>
+<li> pour lancer une impression sur imprimante, utiliser la méthode <code>print()</code> de 
+  l'objet <code>window</code> défini dans le module <STRONG>browser</STRONG> :
+</ul>
+<p></p>
+<blockquote><blockquote></p><pre class="marked">from browser import window
+window.print(text)</pre>
+<p></blockquote></blockquote>
+<p></p>
+Ne sont pas pris en charge dans la version actuelle les fonctions intégrées 
+<code>memoryview(),  vars()</code>
+<p></p>
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

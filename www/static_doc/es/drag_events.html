@@ -1,0 +1,290 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython documentation</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'es')
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text)
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src)
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<script type="text/python">from browser import document as doc
+from browser import alert
+</script>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introducción</a></h4>
+
+<h4><a class="navig" href="faq.html">Preguntas frecuentes (faq)</a></h4>
+
+<h4><a class="navig" href="syntax.html">Sintaxis, palabras clave y funciones integradas</a></h4>
+
+<h4><a class="navig" href="import.html">Implementación del <tt>import</tt></a></h4>
+
+<h4>Interfaz del navegador</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introducción - DOM API</a>
+<br><a class="navig" href="create.html">Creando un documento</a>
+<br><a class="navig" href="access.html">Accediendo a los elementos</a>
+<br><a class="navig" href="attributes.html">Atributos y métodos</a>
+<br>
+<br><a class="navig" href="events.html">Eventos</a>
+<br><a class="navig" href="mouse_events.html">Eventos del ratón</a>
+<br><a class="navig" href="keyboard_events.html">Eventos del teclado</a>
+<br><a class="navig" href="focus_events.html">Eventos de foco</a>
+<br><a class="navig" href="drag_events.html">Eventos de arrastre</a>
+<br>
+<br><a class="navig" href="query.html">Query string</a>
+<br><a class="navig" href="jsobjects.html">Usando objetos y librerías Javascript</a>
+</div>
+
+<h4>Módulos específicos de Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">El módulo integrado `browser`</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Trabajando con Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Opciones de la función <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Instalando el entorno de desarrollo</a>
+<br><a class="navig" href="test.html">Testing y depuración</a>
+<br><a class="navig" href="deploy.html">Desplegando una aplicación</a></div>
+
+<h4>Brython para Firefox OS</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="firefox_os_intro.html">Introducción</a>
+<br><a class="navig" href="firefox_os_tuto1.html">WebApps : diseño</a>
+<br><a class="navig" href="firefox_os_tuto2.html">WebApps : aplicación</a>
+</div>
+
+<h4>Cookbook</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Hola Mundo !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insertar contenido en un elemento</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Marcado HTML (bold,italic...)</a>
+<br><a class="navig" href="cookbook/table.html">Tabla HTML</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Handle options in a SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Arrastrar y soltar</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtener el contenido de un elemento</a>
+<br><a class="navig" href="cookbook/read_file.html">Leer el contenido de un fichero</a>
+<br><a class="navig" href="cookbook/local_storage.html">Almnacenar objetos localmente</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Ejemplo de onmouseover</a>
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H1>Eventos de arrastre (Drag)</H1>
+
+<p></p></p><p><p></p>
+<p></p>
+Los eventos de arrastre son
+<p></p>
+<table cellpadding=3 border=1>
+<tr>
+<td><EM>drag</EM></td>
+<td>un elemento o una selección de texto se está arrastrando
+</td>
+</tr>
+<p></p>
+<tr>
+<td><EM>dragend</EM></td><td>una operación de arrastre se termina (liberando el botón del ratón o pulsando la tecla de escape)</td>
+</tr>
+<p></p>
+<tr>
+<td><EM>dragenter</EM></td><td>un elemento arrastrado o una selección de texto entra dentro de un objetivo válido donde soltar (drop)</td>
+</tr>
+<p></p>
+<tr>
+<td><EM>dragleave</EM></td><td>un elemento o selección de texto arrastrado abandona un objetivo válido donde soltar (drop)</td>
+</tr>
+<p></p>
+<tr>
+<td><EM>dragover</EM></td><td>aun elemento o selección de texto está siendo arrastrado sobre un objetivo válido donde soltar (drop)</td>
+</tr>
+<p></p>
+<tr>
+<td><EM>dragstart</EM></td><td>el usuario inicia el arrastre de un elemento o una selección de texto</td>
+</tr>
+<p></p>
+<tr>
+<td><EM>drop</EM></td><td>un elemento se suelta en un un objetivo válido donde soltar (drop)</td>
+</tr>
+<p></p>
+</table>
+<p></p>
+<p></p>
+<H2>Atributo del objeto <code>DOMEvent</code></H2>
+
+<p></p>
+<code>dataTransfer</code>
+<blockquote>
+ un "data store" usado para almacenar infurmación durante el proceso de arrastrar y soltar (drag and drop)
+</blockquote>
+<p></p>
+<p></p>
+<H2>Atributos y métodos del data store</H2>
+
+<p></p>
+El "data store" posee los siguientes atributos y métodos :
+<p></p>
+<code>dropEffect</code>
+<p></p>
+<blockquote>
+ una cadena que representa el fecto que se usará, y deberá ser siempre uno de los valores posibles de <code>effectAllowed</code>.
+</blockquote>
+<p></p>
+<blockquote>
+ para los eventos <EM>dragenter</EM> y <EM>dragover</EM>, el <code>dropEffect</code> se inicializará basándose en la acción que esté solicitando el usuario. Como se determine esto depende de la plataforma, pero el usuario, normalmente, puede pulsar teclas de modificación que ajusten la acción que se desea. Dentro del manejador de un evento para los eventos <EM>dragenter</EM> y <EM>dragover</EM>, el <code>dropEffect</code> debería ser modificado si la acción solicitada por el usuario no es la deseada.
+</blockquote>
+<p></p>
+<blockquote>
+ Para los eventos <EM>dragstart</EM>, <EM>drag</EM>, y <EM>dragleave</EM>, el <code>dropEffect</code> se inicializa como "none". Cualquier valor asignado al <code>dropEffect</code> no será usado para nada.
+</blockquote>
+<p></p>
+<blockquote>
+ Para los eventos <EM>drop</EM> y <EM>dragend</EM>, el <code>dropEffect</code> será inicializado a la acción deseada, que será el valor que el <code>dropEffect</code> tendrá después del último evento <EM>dragenter</EM> o <EM>dragover</EM>.
+</blockquote>
+<p></p>
+<blockquote>
+ Valores posibles:
+</blockquote>
+<p></p>
+<blockquote>
+ -    "copy" : se hará una copia del item fuente en la nueva localización.
+ -    "move" : un item se moverá a la nueva localización.
+ -    "link" : se establece un enlace a la fuente en la nueva localización.
+ -    "none" : el item no podrá soltarse.
+</blockquote>
+<p></p>
+<blockquote>
+ Asignar cualquier otro valor no tendrá efecto y permanecerá el valor antiguo.
+</blockquote>
+<p></p>
+<p></p>
+<code>effectAllowed</code>
+<p></p>
+<blockquote>
+ Una cadena que especifica los efectos permitidos para este arrastre. Puedes establecer esto en el evento <EM>dragstart</EM> para seleccionar el efecto deseado para la fuente, y dentro de los eventos <EM>dragenter</EM> y <EM>dragover</EM> para seleccionar los efectos deseados para el objetivo. El valor no se usa para otros eventos.
+</blockquote>
+<p></p>
+<blockquote>
+ Valores posibles:
+</blockquote>
+<p></p>
+<blockquote>
+ - "copy" : se hará una copia del item fuente en la nueva localización.
+ - "move" : un item se moverá a la nueva localización.
+ - "link" : se establece un enlace a la fuente en la nueva localización.
+ - "copyLink" : se permite una operación de copia o enlace.
+ - "copyMove" : se permite una operación de copia o movimiento.
+ - "linkMove" : se permite una operación de movimiento o enlace.
+ - "all" : se permten todas las operaciones.
+ - "none" : el item no se podrá soltar.
+ - "uninitialized" : el valor defecto cuando no se ha establecido el efecto, equivalente a "all".
+</blockquote>
+<p></p>
+<blockquote>
+ Asignar cualquier otro valor no tendrá efecto y permanecerá el valor antiguo.
+</blockquote>
+<p></p>
+<code>ficheros</code>
+<p></p>
+<blockquote>
+ Contiene una lista de todos los ficheros locales disponibles en la transferencia de datos. Si la operación de arrastre no implica arrastrar ficheros, esta propiedad será una lista vacia. Un índice de acceso inválido a la lista de ficheros especificados por esta propiedad devolverá <code>None</code>.
+</blockquote>
+<p></p>
+<code>getData(<I>type</I>)</code>
+<p></p>
+<blockquote>
+ Recupera los datos para un tipo dado o una cadena vacia si los datos para ese tipo no existen o la tranferencia de datos no contiene información
+</blockquote>
+<p></p>
+<code>setData(<I>type</I>, <I>value</I>)</code>
+<p></p>
+<blockquote>
+ Establece los datos para un tipo dado. Si los datos para el tipo no existen se añadirán al final, de manera que el último item de la lista de tipos será del nuevo formato. Si los datos para el tipo ya existen serán reemplazados en la misma posición. Esto es, el orden de la lista de tipos no se cambia cuando se reemplazan datos del mismo tipo.
+</blockquote>
+<p></p>
+<p></p>
+<code>tipos</code>
+<p></p>
+<blockquote>
+ Almacena una lista de los tipos de formato de los datos que se encuentran almacenados para el primer item, en el miso orden en que los datos fueron añadidos. Si no se añadieron datos se obtendrá una lista vacía.
+</blockquote>
+<p></p>
+<p></p>
+<H4>Ejemplo</H4>
+
+<p></p>
+Ver la receta 'drag and drop' en el menú del recetario ('cookbook')
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>

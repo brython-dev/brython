@@ -1,0 +1,275 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython documentation</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+from browser import window, document, html
+
+import highlight
+
+import header
+header.show('../../', 'en')
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text,{})
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src,{})
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introduction</a></h4>
+<h4><a class="navig" href="faq.html">Frequently asked questions</a></h4>
+<h4><a class="navig" href="syntax.html">Syntax, keywords and built-in functions</a></h4>
+<h4><a class="navig" href="stdlib.html">Standard distribution</a></h4>
+<h4><a class="navig" href="import.html"><tt>import</tt> implementation</a></h4>
+
+<h4>Browser interface</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introduction - DOM API</a>
+<br><a class="navig" href="create.html">Creating a document</a>
+<br><a class="navig" href="access.html">Accessing elements</a>
+<br><a class="navig" href="attributes.html">Attributes and methods</a>
+<br>
+<br><a class="navig" href="events.html">Events</a>
+<br><a class="navig" href="mouse_events.html">Mouse events</a>
+<br><a class="navig" href="keyboard_events.html">Keyboard events</a>
+<br><a class="navig" href="focus_events.html">Focus events</a>
+<br><a class="navig" href="drag_events.html">Drag events</a>
+<br>
+<br><a class="navig" href="query.html">Query string</a>
+<br>
+<br><a class="navig" href="jsobjects.html">Using Javascript objects and libraries</a>
+</div>
+
+<h4>Brython-specific built-in modules</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Working with Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Options of function <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Installing the development environment</a>
+<br><a class="navig" href="test.html">Testing and debugging</a>
+<br><a class="navig" href="deploy.html">Deploying an application</a>
+</div>
+
+<h4>Brython for Firefox OS</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="firefox_os_intro.html">Introduction</a>
+<br><a class="navig" href="firefox_os_tuto1.html">WebApps : design</a>
+<br><a class="navig" href="firefox_os_tuto2.html">WebApps : application</a>
+</div>
+
+<h4>Cookbook</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Hello world !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insert content in an element</a>
+<br><a class="navig" href="cookbook/basic_markup.html">HTML markup (bold,italic...)</a>
+<br><a class="navig" href="cookbook/table.html">HTML table</a>
+<br><a class="navig" href="cookbook/bind_unbind.html">Bind and unbind events</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Handle options in a SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Drag and drop</a>
+<br><a class="navig" href="cookbook/get_content.html">Get the content of an element</a>
+<br><a class="navig" href="cookbook/read_file.html">Read the content of a file</a>
+<br><a class="navig" href="cookbook/local_storage.html">Store objects locally</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Example of onmouseover</a>
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>module <STRONG>browser.ajax</STRONG></H2>
+
+<p></p>
+This module allows running Ajax requests. It defines a single function :
+<p></p>
+<code>ajax()</code>
+<blockquote>
+ returns an <code>ajax</code> object
+</blockquote>
+<p></p>
+This object has the following attributes and methods :
+<p></p>
+<code>bind(</code><I>evt,function</I><code>)</code>
+<blockquote>
+ attaches the <I>function</I> to the event <I>evt</I>. <I>evt</I> is a string that matches 
+ the different request states :
+</blockquote>
+<p></p>
+<ul>
+<li> "uninitialized" : not initialized
+<li> "loading" : established connection
+<li> "loaded": received request
+<li> "interactive": response in progress
+<li> "complete" : finished
+</ul>
+<p></p>
+<blockquote>
+ The <I>function</I> takes a single argument, the <code>ajax</code> object.
+</blockquote>
+<p></p>
+<code>open(</code><I>method, url, async</I><code>)</code>
+<blockquote>
+ <I>method</I> is the HTTP method used for the request (usually GET or POST),
+</blockquote>
+<p></p>
+<blockquote>
+ <I>url</I> is the url to call,
+</blockquote>
+<p></p>
+<blockquote>
+ <I>async</I> is a boolean that indicates whether the call is asynchronous (the
+ script that started the request goes on running without waiting for the
+ response) or not (the script hangs until the response is received).
+</blockquote>
+<p></p>
+<p></p>
+<code>readyState</code>
+<blockquote>
+ an integer representing the request state (cf table below).
+</blockquote>
+<p></p>
+<blockquote>
+<table cellspacing=0 cellpadding=4 border=1>
+<tr><th>
+readyState
+</th><th>
+request state
+</th></tr>
+<tr><td align="center">0</td><td>"uninitialized"</td></tr>
+<tr><td align="center">1</td><td align="center">"loading"</td></tr>
+<tr><td align="center">2</td><td align="center">"loaded"</td></tr>
+<tr><td align="center">3</td><td align="center">"interactive"</td></tr>
+<tr><td align="center">4</td><td align="center">"complete"</td></tr>
+</table>
+</blockquote>
+<p></p>
+<code>set&#95;header(</code><I>name, value</I><code>)</code>
+<blockquote>
+ sets the <I>value</I> of the header <I>name</I>.
+</blockquote>
+<p></p>
+<code>set&#95;timeout(</code><I>duration, function</I><code>)</code>
+<blockquote>
+ if the query did not return response within <I>duration</I> in seconds, it will
+ cancel the query and execute the <I>function</I>. This function cannot have 
+ arguments.
+</blockquote>
+<p></p>
+<code>send(</code><I>[data]</I><code>)</code>
+<blockquote>
+ sends (starts) the request. The optional argument <I>data</I> is ignored if the 
+ method is not POST ; it must be a dictionary, or a string representing the url
+ encoding of key-value pairs.
+</blockquote>
+<p></p>
+<code>status</code>
+<blockquote>
+ an integer representing the HTTP status of the request. The most usual are 
+ 200 (ok) and 404 (file not found).
+</blockquote>
+<p></p>
+<code>text</code>
+<blockquote>
+ the server response as a string of characters.
+</blockquote>
+<p></p>
+<code>xml</code>
+<blockquote>
+ the server response as a DOM object.
+</blockquote>
+<p></p>
+<p></p>
+<p></p>
+<H3>Example</H3>
+
+<p></p>
+We suppose there is a DIV with id <I>result</I> in the HTML page
+<p></p></p><pre class="python">from browser import document, ajax
+
+def on&#95;complete(req):
+   if req.status==200 or req.status==0:
+       document["result"].html = req.text
+   else:
+       document["result"].html = "error "+req.text
+
+req = ajax.ajax()
+req.bind('complete',on&#95;complete)
+# send a POST request to the url
+req.open('POST',url,True)
+req.set&#95;header('content-type','application/x-www-form-urlencoded')
+# send data as a dictionary
+req.send({'x':0, 'y':1})</pre>
+<p>To send data via the GET method, it must be included in the query string
+<p></p></p><pre class="python">qs = "x=0&amp;y=1"
+req.open('GET', url+'?'+qs, True)
+req.set&#95;header('content-type', 'application/x-www-form-urlencoded')
+req.send()</pre>
+<p><p></p></p>
+</td>
+</tr>
+</table>
+</html>

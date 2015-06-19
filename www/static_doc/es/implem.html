@@ -1,0 +1,506 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython documentation</title>
+<link rel="stylesheet" href="../doc_brython.css">
+
+<script src="/src/brython.js"></script>
+
+<script type="text/python3">
+from browser import window, document, html
+import highlight
+
+import header
+header.show('../../', 'es')
+
+def run(ev):
+    # run the code in the elt after the button
+    ix = ev.target.parent.children.index(ev.target)
+    elt = ev.target.parent.children[ix+1]
+    exec(elt.text)
+    elt.focus()
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src)
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<scripts>
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../../index.html"><img src="/brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">Introducción</a></h4>
+
+<h4><a class="navig" href="faq.html">Preguntas frecuentes (faq)</a></h4>
+
+<h4><a class="navig" href="syntax.html">Sintaxis, palabras clave y funciones integradas</a></h4>
+
+<h4><a class="navig" href="import.html">Implementación del <tt>import</tt></a></h4>
+
+<h4>Interfaz del navegador</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">Introducción - DOM API</a>
+<br><a class="navig" href="create.html">Creando un documento</a>
+<br><a class="navig" href="access.html">Accediendo a los elementos</a>
+<br><a class="navig" href="attributes.html">Atributos y métodos</a>
+<br>
+<br><a class="navig" href="events.html">Eventos</a>
+<br><a class="navig" href="mouse_events.html">Eventos del ratón</a>
+<br><a class="navig" href="keyboard_events.html">Eventos del teclado</a>
+<br><a class="navig" href="focus_events.html">Eventos de foco</a>
+<br><a class="navig" href="drag_events.html">Eventos de arrastre</a>
+<br>
+<br><a class="navig" href="query.html">Query string</a>
+<br><a class="navig" href="jsobjects.html">Usando objetos y librerías Javascript</a>
+</div>
+
+<h4>Módulos específicos de Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">El módulo integrado `browser`</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>Trabajando con Brython</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html">Opciones de la función <code>brython()</code></a>
+<br><a class="navig" href="dev_env.html">Instalando el entorno de desarrollo</a>
+<br><a class="navig" href="test.html">Testing y depuración</a>
+<br><a class="navig" href="deploy.html">Desplegando una aplicación</a></div>
+
+<h4>Brython para Firefox OS</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="firefox_os_intro.html">Introducción</a>
+<br><a class="navig" href="firefox_os_tuto1.html">WebApps : diseño</a>
+<br><a class="navig" href="firefox_os_tuto2.html">WebApps : aplicación</a>
+</div>
+
+<h4>Cookbook</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="cookbook/hello_world.html">Hola Mundo !</a>
+<br><a class="navig" href="cookbook/content_in_div.html">Insertar contenido en un elemento</a>
+<br><a class="navig" href="cookbook/basic_markup.html">Marcado HTML (bold,italic...)</a>
+<br><a class="navig" href="cookbook/table.html">Tabla HTML</a>
+<br><a class="navig" href="cookbook/select_checkbox.html">Handle options in a SELECT</a>
+<br><a class="navig" href="cookbook/drag_drop.html">Arrastrar y soltar</a>
+<br><a class="navig" href="cookbook/get_content.html">Obtener el contenido de un elemento</a>
+<br><a class="navig" href="cookbook/read_file.html">Leer el contenido de un fichero</a>
+<br><a class="navig" href="cookbook/local_storage.html">Almnacenar objetos localmente</a>
+<br><a class="navig" href="cookbook/read_text_from_imagemap.html">Ejemplo de onmouseover</a>
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<p><p></p>
+<H2>Traducción de la sintaxis Python a código Javascript</H2>
+
+<p></p>
+<table border=1 cellpadding=3>
+<tr>
+<th>Python</th>
+<th>Javascript</th>
+<th>Comentarios</th>
+</tr>
+<p></p>
+<tr>
+<td>
+<code>x = 1</code>
+<p></p>
+<code>y = 3.14</code>
+<p></p>
+<code>z = "azerty"</code>
+</td>
+<td></p><pre class="marked">var $globals = &#95;&#95;BRYTHON&#95;&#95;.scope["&#95;&#95;main&#95;&#95;"].&#95;&#95;dict&#95;&#95;
+var $locals = $globals
+x=$globals["x"]=Number(1)
+y=$globals["y"]=float(3.14)
+z=$globals["z"]="azerty"</pre>
+<p></td>
+<td>Las primeras dos líneas están presentes en todos los scripts ; definen variables internas Brython que usan las funciones <code>globals()</code> y <code>locals()</code>. Tened en cuenta que en los siguientes ejemplos no se mostrarán esas dos líneas.
+<p></p>
+<I>float</I> es una función Javascript definida en <B>py&#95;builtin&#95;functions.js</B></td>
+</tr>
+<p></p>
+<tr>
+<td><code>x = foo.bar</code></td>
+<td><code>x=getattr(foo,"bar")</code>
+<td>&nbsp;</td>
+</td>
+</tr>
+<p></p>
+<tr>
+<td><code>foo.bar = x</code></td>
+<td><code>setattr(foo,"bar",x)</code>
+<td>&nbsp;</td>
+</td>
+</tr>
+<p></p>
+<tr>
+<td><code>x = foo[bar]</code></td>
+<td><code>x=getattr(foo,"&#95;&#95;getitem&#95;&#95;")(bar)</code>
+<td>&nbsp;</td>
+</td>
+</tr>
+<p></p>
+<tr>
+<td><code>foo[bar] = x</code></td>
+<td><code>getattr(foo,"&#95;&#95;setitem&#95;&#95;")(bar,x)</code>
+<td>&nbsp;</td>
+</td>
+</tr>
+<p></p>
+<tr>
+<td><code>x+y</code></td>
+<td><code>getattr(x,"&#95;&#95;add&#95;&#95;")(y)</code>
+<td>lo mismo para todos los operadores
+<br>necesario para implementar operaciones como 2 * "a"</td>
+</td>
+</tr>
+<p></p>
+<tr>
+<td><code>x += y</code></td>
+<td></p><pre class="marked">var $temp=y;
+if(typeof $temp=="number" &amp;&amp; typeof x=="number"){
+    x+=$temp;$globals["x"]=x
+}else if(!hasattr(x,"&#95;&#95;iadd&#95;&#95;")){
+    var x=$globals["x"]=getattr(x,"&#95;&#95;add&#95;&#95;")($temp);
+}
+else{
+    x=$globals["x"]=getattr(x,"&#95;&#95;iadd&#95;&#95;")($temp)
+}</pre>
+<p></td>
+<td>La primera prueba permite una mejora de la eficiencia si ambas variables son enteros : en ese caso
+se podría usar el operador Javascript +=
+</td>
+</td>
+</tr>
+<p></p>
+<tr>
+<td><code>a and b</code></td>
+<td><code>$test&#95;expr($test&#95;item(a)&amp;&amp;$test&#95;item(b))</code>
+<td>Se mantiene el operador && Javascript y de esta forma no se evalúa b si a es falso
+<br><I>$test&#95;item</I> devuelve un booleano Javascript (true o false) y almacena el valor resultante en una variable global ; <I>$test&#95;expr</I> devuelve esta variable global</td>
+</td>
+</tr>
+<p></p>
+<tr>
+<td></p><pre class="marked">for obj in iterable:
+    (...)</pre>
+<p></td>
+<td></p><pre class="marked">var $next9=$locals["$next9"]=getattr(iter(iterable),"&#95;&#95;next&#95;&#95;")
+var $no&#95;break9=true;while(true){
+    try{
+        var obj=$globals["obj"]=$next9();None;
+    }
+    catch($err){
+        if(&#95;&#95;BRYTHON&#95;&#95;.is&#95;exc($err,[StopIteration])){
+            &#95;&#95;BRYTHON&#95;&#95;.$pop&#95;exc();break
+        }else{
+            throw($err)
+        }
+    }
+    (...)
+}</pre>
+<p><p></p>
+</td>
+<td><I>$no&#95;break</I> es un booleano usado en el caso de que el bucle <code>for</code> tenga un <code>else</code>
+<p></p>
+<I>$pop&#95;exc()</I> es una función interna que elimina la última excepción de la pila de excepciones
+<p></p>
+<I>$is&#95;exc(exc,classes)</I> es una función interna que comprueba si la excepción <I>exc</I> es una instanncia de una de las <I>clases</I>
+<p></p>
+</td></tr>
+<p></p>
+<tr>
+<td><code>x,y = iterable</code></td>
+<td></p><pre class="marked">var $right9=getattr(iter(iterable),"&#95;&#95;next&#95;&#95;");
+var $rlist9=[];while(true){
+    try{$rlist9.push($right9())}
+    catch(err){&#95;&#95;BRYTHON&#95;&#95;.$pop&#95;exc();break}
+}
+if($rlist9.length&lt;2){
+    throw ValueError("need more than "+$rlist9.length+
+        " values to unpack")
+}
+if($rlist9.length&gt;2){
+    throw ValueError("too many values to unpack (expected 2)")}
+var x=$globals["x"]=$rlist9[0]
+var y=$globals["y"]=$rlist9[1] </pre>
+<p></td>
+<td>La traducción es bastante larga, pero el manejo de las excepciones se debe realizar en el tiempo de ejecución</td></tr>
+<p></p>
+<tr>
+<td></p><pre class="marked">def foo():
+   x=3</pre>
+<p></td>
+<td></p><pre class="marked">var foo= (function (){
+    var $defaults = {}
+    return function(){
+        try{
+            var $locals = &#95;&#95;BRYTHON&#95;&#95;.vars["&#95;&#95;main&#95;&#95;-foo-a8mk6bg2"]={}
+            for(var $var in $defaults){
+                eval("var "+$var+"=$locals[$var]=$defaults[$var]")
+            }
+            var $ns=&#95;&#95;BRYTHON&#95;&#95;.$MakeArgs("foo",arguments,
+                [],[],null,null,[])
+            for(var $var in $ns){
+                eval("var "+$var+"=$ns[$var]")
+                $locals[$var]=$ns[$var]
+            }
+            var x=$locals["x"]=3;None;
+        }
+        catch(err10){
+            throw &#95;&#95;BRYTHON&#95;&#95;.exception(err10)
+        }
+    }
+}
+)()
+foo.&#95;&#95;name&#95;&#95;="foo"
+$globals["foo"]=foo
+foo.$type='function'
+foo.&#95;&#95;module&#95;&#95; = "&#95;&#95;main&#95;&#95;"
+foo.&#95;&#95;doc&#95;&#95;=""
+foo.&#95;&#95;code&#95;&#95;= {&#95;&#95;class&#95;&#95;:&#95;&#95;BRYTHON&#95;&#95;.$CodeDict}</pre>
+<p></td>
+<td>
+<I>$ns</I> es una variable interna, un objeto devuelto por la función <I>$MakeArgs</I> que inspecciona los argumentos de la función y establece los valores
+<p></p>
+Si <I>$MakeArgs</I> no devuelve una excepción, se crearán los valores locales y se almacenarán en la variable interna <I>$locals</I>, y un objeto interno <I>&#95;&#95;BRYTHON&#95;&#95;.vars[</I>function&#95;id<I>] donde </I>function&#95;id_ es un identificador de la función, hecho con el nombre del módulo, el nombre de la función y una cadena aleatoria (here "a8mk6bg2")
+<p></p>
+La línea <code>$globals["foo"]=foo</code> añade el nombre de la función en el espacio de nombres del módulo
+<p></p>
+El atributo <I>$type</I> de la función se usa internamente para ordenar funciones respecto de métodos de clases definidos al mismo nivel del módulo
+</td>
+</tr>
+<p></p>
+<tr>
+<td></p><pre class="marked">def foo():
+   global x
+   x=3</pre>
+<p></td>
+<td></p><pre class="marked">var foo= (function (){
+    var $defaults = {}
+    return function(){
+        try{
+            var $locals = &#95;&#95;BRYTHON&#95;&#95;.vars["&#95;&#95;main&#95;&#95;-foo-o098yx0t"]={}
+            for(var $var in $defaults){
+                eval("var "+$var+"=$locals[$var]=$defaults[$var]")
+            }
+            var $ns=&#95;&#95;BRYTHON&#95;&#95;.$MakeArgs("foo",arguments,
+                [],[],null,null,[])
+            for(var $var in $ns){
+                eval("var "+$var+"=$ns[$var]")
+                $locals[$var]=$ns[$var]
+            }
+            x=$globals["x"]=3
+        }
+        catch(err9){throw &#95;&#95;BRYTHON&#95;&#95;.exception(err9)}
+    }
+}
+)()
+foo.&#95;&#95;name&#95;&#95;="foo"
+$globals["foo"]=foo;foo.$type='function'
+foo.&#95;&#95;module&#95;&#95; = "&#95;&#95;main&#95;&#95;"
+foo.&#95;&#95;doc&#95;&#95;=""
+foo.&#95;&#95;code&#95;&#95;= {&#95;&#95;class&#95;&#95;:&#95;&#95;BRYTHON&#95;&#95;.$CodeDict}</pre>
+<p><p></p>
+</td>
+<td>Para una variable global no se usará la palabra clave <code>var</code></td>
+</tr>
+<p></p>
+<tr>
+<td></p><pre class="marked">def foo(x,y=3,&#42;args,&#42;&#42;kw):
+   (...)</pre>
+<p></td>
+<td></p><pre class="marked">var foo= (function (){
+    var $defaults = {y:3}
+    return function(){
+        try{
+            var $locals = &#95;&#95;BRYTHON&#95;&#95;.vars["&#95;&#95;main&#95;&#95;-foo-6f58vupa"]={}
+            for(var $var in $defaults){
+                eval("var "+$var+"=$locals[$var]=$defaults[$var]")
+            }
+            var $ns=&#95;&#95;BRYTHON&#95;&#95;.$MakeArgs("foo",arguments,
+                ["x"],["y"],"args","kw",[])
+            for(var $var in $ns){
+                eval("var "+$var+"=$ns[$var]")
+                $locals[$var]=$ns[$var]
+            }
+            (...)
+        }
+        catch(err9){throw &#95;&#95;BRYTHON&#95;&#95;.exception(err9)}
+    }
+}
+)()</pre>
+<p></td>
+<td>la función <I>$MakeArgs</I> creará un objeto Javascript con los nombres definidos en la definición de la función y con los valores correspondientes que se le pasan a la función. La siguiente línea crea el espacio de nombres de la función (variables locales)</td>
+</tr>
+<p></p>
+<tr>
+<td><code>foo(x)</code>
+</td>
+<td><code>getattr(foo,"&#95;&#95;call&#95;&#95;")(x)</code>
+</td>
+<td>Las llamadas usan el método &#95;&#95;call&#95;&#95; del objeto
+</tr>
+<p></p>
+<tr>
+<td><code>foo(x,y=1)</code>
+</td>
+<td><code>getattr(foo,"&#95;&#95;call&#95;&#95;")(x,$Kw("y",Number(1)))</code>
+</td>
+<td>los argumentos pasados como palabras clave se convierten a objetos gracias a la función <I>$Kw</I>
+</tr>
+<p></p>
+<tr>
+<td></p><pre class="marked">x='brython'
+try:
+    x[2]='a'
+except TypeError:
+    print('error')
+except:
+    print('another error')</pre>
+<p></td>
+<td></p><pre class="marked">&#95;&#95;BRYTHON&#95;&#95;.$failed9=false
+try{
+    getattr(x,"&#95;&#95;setitem&#95;&#95;")(2,'a')
+}
+catch($err9){
+    &#95;&#95;BRYTHON&#95;&#95;.$failed9=true
+    if(false){void(0)}
+    else if(&#95;&#95;BRYTHON&#95;&#95;.is&#95;exc($err9,[TypeError])){
+        getattr($print,"&#95;&#95;call&#95;&#95;")('erreur')
+    }
+    else{
+        getattr($print,"&#95;&#95;call&#95;&#95;")('autre erreur')
+    }
+}</pre>
+<p><p></p>
+</td>
+<td>Las líneas</p><pre class="marked">catch($err51){
+    if(false){void(0)}
+    </pre>
+<p>se añaden antes de cualquier <code>except</code>, traducidas en forma de un <code>else if</code> cuando se especifica el nombre de una excepción o como un <code>else</code> cuando no se especifica nada
+<p></p>
+</tr>
+<p></p>
+<tr>
+<td><pre><code>class foo:
+   pass
+</code></pre></td>
+<td></p><pre class="marked">var $foo=(function(){
+    var $class = {$def&#95;line:&#95;&#95;BRYTHON&#95;&#95;.line&#95;info}
+    void(0)
+    return $class
+}
+)()
+$foo.&#95;&#95;doc&#95;&#95;=""
+$foo.&#95;&#95;module&#95;&#95;="&#95;&#95;main&#95;&#95;"
+var foo=&#95;&#95;BRYTHON&#95;&#95;.$class&#95;constructor("foo",$foo,tuple([]),[],[])
+&#95;&#95;BRYTHON&#95;&#95;.vars["&#95;&#95;main&#95;&#95;"]["foo"]=foo</pre>
+<p></td>
+<td>La definición de una clase se ejecuta mediante una función prefijada con el signo $. Esta función devuelve un objeto <code>$class</code> que incorpora los atributos y los métodos de la clase
+<p></p>
+La propia clase se crea mediante la función <I>$class&#95;constructor</I> definida en <B>py&#95;types.js</B>. Construirá dos objetos Javascript para la clase : Un "factory", usado para crear las instancias de la clase, y un objeto con los atributos y métodos de la clase
+<p></p>
+Los argumentos que se le pasan a <I>$class&#95;constructor</I> son el nombre de la clase, la función que lleva el prefijo del signo $ y una tupla con las clases padre opcionales
+</tr>
+<p></p>
+<tr>
+<td></p><pre class="marked">class foo(A):
+    def &#95;&#95;init&#95;&#95;(self,x):
+        self.x = x</pre>
+<p></td>
+<td><code><pre></p><pre class="marked">var $foo=(function(){
+    var $class = {$def&#95;line:&#95;&#95;BRYTHON&#95;&#95;.line&#95;info}
+    $class.&#95;&#95;init&#95;&#95;= (function (){
+        var $defaults = {}
+        return function(){
+            try{
+                var $locals = &#95;&#95;BRYTHON&#95;&#95;.vars["&#95;&#95;main&#95;&#95;-&#95;&#95;init&#95;&#95;-kdc7mc5z"]={}
+                for(var $var in $defaults){
+                    eval("var "+$var+"=$locals[$var]=$defaults[$var]")
+                }
+                var $ns=&#95;&#95;BRYTHON&#95;&#95;.$MakeArgs("&#95;&#95;init&#95;&#95;",arguments,
+                    ["self","x"],[],null,null,[])
+                for(var $var in $ns){
+                    eval("var "+$var+"=$ns[$var]")
+                    $locals[$var]=$ns[$var]
+                }
+                setattr(self,"x",x)
+            }
+            catch(err10){throw &#95;&#95;BRYTHON&#95;&#95;.exception(err10)}
+        }
+    }
+    )()
+    $class.&#95;&#95;init&#95;&#95;.&#95;&#95;name&#95;&#95;="&#95;&#95;init&#95;&#95;"
+    $class.&#95;&#95;init&#95;&#95;.&#95;&#95;module&#95;&#95; = "&#95;&#95;main&#95;&#95;"
+    $class.&#95;&#95;init&#95;&#95;.&#95;&#95;doc&#95;&#95;=""
+    $class.&#95;&#95;init&#95;&#95;.&#95;&#95;code&#95;&#95;= {&#95;&#95;class&#95;&#95;:&#95;&#95;BRYTHON&#95;&#95;.$CodeDict}
+    return $class
+}
+)()
+$foo.&#95;&#95;doc&#95;&#95;=""
+$foo.&#95;&#95;module&#95;&#95;="&#95;&#95;main&#95;&#95;"
+var foo=&#95;&#95;BRYTHON&#95;&#95;.$class&#95;constructor("foo",$foo,tuple([A]),["A"],[])
+&#95;&#95;BRYTHON&#95;&#95;.vars["&#95;&#95;main&#95;&#95;"]["foo"]=foo</pre>
+<p></pre></code>
+</td>
+<td>El código muestra que el objeto <code>$class</code> recibe el método <code>&#95;&#95;init&#95;&#95;()</code> como atributo
+<p></p>
+La clase hereda de la clase <code>A</code>, se puede ver en el tercer argumento de <code>$class&#95;constructor</code>
+</td>
+</tr>
+<p></p>
+<p></p>
+</table>
+<p></p>
+<p></p></p>
+</td>
+</tr>
+</table>
+</html>
