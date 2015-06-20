@@ -555,9 +555,18 @@ $B.$MethodDict = {__class__:$B.$type,
     __name__:'method',
     $factory:$MethodFactory
 }
+
 $B.$MethodDict.__eq__ = function(self, other){
-    return self.__func__===other.__func__
+    return self.$infos !== undefined &&
+           other.$infos !== undefined &&
+           self.$infos.__func__===other.$infos.__func__ && 
+           self.$infos.__self__===other.$infos.__self__
 }
+
+$B.$MethodDict.__ne__ = function(self, other){
+    return !$B.$MethodDict.__eq__(self,other)
+}
+
 $B.$MethodDict.__getattribute__ = function(self, attr){
     // Internal attributes __name__, __module__, __doc__ etc. 
     // are stored in self.$infos.__func__.$infos
