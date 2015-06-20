@@ -51,7 +51,8 @@ from browser import timer
 from browser import document
 import sys
 
-sys.path.append("test")
+sys.path.append("../../src/Lib/test/unittests")
+sys.path.append("../../src/Lib/unittest")
 
 def errorwrite(data):
     document["errorconsole"].text += '%s' % data

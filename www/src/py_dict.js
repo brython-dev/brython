@@ -271,6 +271,7 @@ $DictDict.__init__ = function(self){
     var args = [], pos=0
     for(var i=1;i<arguments.length;i++){args[pos++]=arguments[i]}
     $DictDict.clear(self)
+
     switch(args.length) {
       case 0:
         return
@@ -279,7 +280,7 @@ $DictDict.__init__ = function(self){
         if(Array.isArray(obj)){
             var i = obj.length
             var si = $DictDict.__setitem__
-            while(i--) si(self, obj[i][0], obj[i][1])
+            while(i-->0) si(self, obj[i-1][0], obj[i-1][1])
             return
         }else if(isinstance(obj,dict)){
             $copy_dict(self, obj)
@@ -312,9 +313,9 @@ $DictDict.__init__ = function(self){
         
         if(Array.isArray(args[0])){
             var src = args[0]
-            var i = src.length
+            var i = src.length -1
             var si=$DictDict.__setitem__
-            while(i--) si(self, src[i][0], src[i][1])
+            while(i-->0) si(self, src[i-1][0], src[i-1][1])
         }else{
             var iterable = iter(args[0])
             while(1){

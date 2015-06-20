@@ -596,6 +596,7 @@ function hash(obj){
         throw _b_.TypeError("hash() takes exactly one argument ("+
             arguments.length+" given)")
     }
+    if (obj === undefined) console.log('hash:obj is undefined', obj)
     if (obj.__hashvalue__ !== undefined) return obj.__hashvalue__
     if (isinstance(obj, _b_.int)) return obj.valueOf()
     if (isinstance(obj, bool)) return _b_.int(obj)
@@ -928,7 +929,13 @@ function oct(x) {return $builtin_base_convert_helper(x, 8)}
 function ord(c) {
     //return String.charCodeAt(c)  <= this returns an undefined function error
     // see http://msdn.microsoft.com/en-us/library/ie/hza4d04f(v=vs.94).aspx
-    return c.charCodeAt(0)     // <= strobj.charCodeAt(index)
+    switch(typeof c) {
+      case 'string':
+        if (c.length == 1) return c.charCodeAt(0)     // <= strobj.charCodeAt(index)
+        _b_.TypeError('ord() expected a character, but string of length ' + c.length + ' found') 
+      default:
+        _b_.TypeError('ord() expected a character, but ' + typeof(c) + ' was found') 
+    }
 }
 
 function pow() {

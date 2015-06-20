@@ -159,7 +159,12 @@ var format_int_precision = function(val, flags) {
         return val.toString()
     }
     precision = parseInt(precision, 10)
-    var s = val.toString()
+    var s
+    if (val.__class__ === $B.LongInt.$dict) {
+       s=$B.LongInt.$dict.to_base(val, 10)
+    } else {
+       s=val.toString()
+    }
     var sign = s[0]
     if (s[0] === '-') {
         return '-' + get_char_array(precision - s.length + 1, '0') + s.slice(1)
@@ -1752,7 +1757,9 @@ function str(arg){
              var f = getattr(arg,'__repr__')
              return getattr(f,'__call__')()
         }catch(err){
-             console.log(err+'\ndefault to toString '+arg);return arg.toString()
+             console.log(err)
+             console.log('default to toString ', arg)
+             return arg.toString()
         }
     }
 }

@@ -310,7 +310,7 @@ def mkdir(*args,**kw):
     The mode argument is ignored on Windows."""
     pass
 
-def open(*args,**kw):
+def open(path, flags, mode=0o777, *args, dir_fd=None):
     """open(path, flags, mode=0o777, *, dir_fd=None)    
     Open a file for low level IO.  Returns a file handle (integer).
     
@@ -318,7 +318,44 @@ def open(*args,**kw):
       and path should be relative; path will then be relative to that directory.
     dir_fd may not be implemented on your platform.
       If it is unavailable, using it will raise a NotImplementedError."""
-    pass
+    
+    ## lets assume this is reading/writing to a local storage in the browser
+    from browser.local_storage import storage
+    
+    class mystorage:
+      def __init__(self, path, flags):
+          self._path=path
+          self._pos=0
+          self._flags=flags
+
+          if self._flags & O_RDONLY == O_RDONLY:
+             self._data=storage.get(self._path, None)
+             if self._data is None:
+                raise FileNotFoundError("%s not found" % self._path)
+          elif self._flags & O_WRONLY == O_WRONLY:
+             storage[self._path]=''
+
+      def seek(self, pos):
+          self._pos=pos
+
+      def read(self, size=None):
+          if size is None:
+             _result=self._data[self._pos:]
+             self._pos=len(self._data)
+             return _result
+
+          assert size <= len(self._data) - self._pos
+          _result=self._data[self._pos: self._pos+size]
+          self._pos+=size
+          return _result
+
+      def write(self, data):
+          storage[self._path]+=str(data)
+
+      def close(self):
+          pass
+
+    return mystorage(path, flags)
 
 def pipe(*args,**kw):
     """pipe() -> (read_end, write_end)    
@@ -530,7 +567,7 @@ def umask(*args,**kw):
 class uname_result:
     pass
 
-def unlink(*args,**kw):
+def unlink(path, *args, dir_fd=None):
     """unlink(path, *, dir_fd=None)    
     Remove a file (same as remove()).
     

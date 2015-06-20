@@ -402,14 +402,14 @@ class defaultdict(dict):
         dict.__init__(self, args, kwds)
         self.default_factory = default_factory
         self.update(args, kwds)
-        #super(defaultdict, self).__init__(*args, **kwds)
+        super(defaultdict, self).__init__(*args, **kwds)
 
     #fixme..  had to add this function to get defaultdict working with brython correctly
-    def __getitem__(self, key):
-        if self.__contains__(key):  
-           return dict.__getitem__(self,key)
-    
-        return self.__missing__(key)
+    #def __getitem__(self, key):
+    #    if self.__contains__(key):  
+    #       return dict.__getitem__(self,key)
+    #
+    #    return self.__missing__(key)
 
     def __missing__(self, key):
         # from defaultdict docs
@@ -445,7 +445,7 @@ class defaultdict(dict):
 
         #   This API is used by pickle.py and copy.py.
         #
-        return (type(self), (self.default_factory,), None, None, self.iteritems())
+        return (type(self), (self.default_factory,), None, None, self.items())
 
 from operator import itemgetter as _itemgetter
 from keyword import iskeyword as _iskeyword

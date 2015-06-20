@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,0,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-06-20 17:38:29.918083"
+__BRYTHON__.compiled_date="2015-06-20 17:46:23.163151"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4988,6 +4988,7 @@ function hasattr(obj,attr){try{getattr(obj,attr);return true}
 catch(err){return false}}
 function hash(obj){if(arguments.length!=1){throw _b_.TypeError("hash() takes exactly one argument ("+
 arguments.length+" given)")}
+if(obj===undefined)console.log('hash:obj is undefined',obj)
 if(obj.__hashvalue__ !==undefined)return obj.__hashvalue__
 if(isinstance(obj,_b_.int))return obj.valueOf()
 if(isinstance(obj,bool))return _b_.int(obj)
@@ -5135,7 +5136,11 @@ var NotImplemented={__class__ : $NotImplementedDict,}
 function $not(obj){return !bool(obj)}
 function oct(x){return $builtin_base_convert_helper(x,8)}
 function ord(c){
-return c.charCodeAt(0)}
+switch(typeof c){case 'string':
+if(c.length==1)return c.charCodeAt(0)
+_b_.TypeError('ord() expected a character, but string of length ' + c.length + ' found')
+default:
+_b_.TypeError('ord() expected a character, but ' + typeof(c)+ ' was found')}}
 function pow(){var $ns=$B.$MakeArgs('pow',arguments,[],[],'args','kw')
 var args=$ns['args']
 if(args.length<2){throw _b_.TypeError(
@@ -6315,10 +6320,11 @@ var origin_elts=origin.split('.')
 while(mod_elts[0]==origin_elts[0]){mod_elts.shift();origin_elts.shift()}
 var mod_path=mod_elts.join('/'),py_paths=[origin_dir+'/'+mod_path+'.py',origin_dir+'/'+mod_path+'/__init__.py']
 for(var i=0,_len_i=$B.path.length;i < _len_i;i++){if($B.path[i].substring(0,4)=='http')continue
-var _path=origin_dir+'/'+ $B.path[i]+'/' 
+var _path=$B.brython_path+'/'+ $B.path[i]+'/'
 py_paths.push(_path+ mod_path + ".py")
 py_paths.push(_path+ mod_path + "/__init__.py")}
-for(var i=0,_len_i=py_paths.length;i < _len_i;i++){var py_mod=import_py(module,py_paths[i],package)
+for(var i=0,_len_i=py_paths.length;i < _len_i;i++){
+var py_mod=import_py(module,py_paths[i],package)
 if(py_mod!==null){return py_mod}}
 return null }
 function import_from_package(mod_name,origin,package){var mod_elts=mod_name.split('.'),package_elts=package.split('.')
@@ -6408,6 +6414,7 @@ if(isinstance(other,float)){
 return self.valueOf()==other.valueOf()}
 if(isinstance(other,_b_.complex)){if(other.imag !=0)return false
 return self==other.real}
+if(_b_.hasattr(other,'__eq__')){return _b_.getattr(other,'__eq__')(self.value)}
 return self.value===other}
 $FloatDict.__floordiv__=function(self,other){if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0)throw ZeroDivisionError('division by zero')
 return float(Math.floor(self/other))}
@@ -7634,7 +7641,9 @@ return s + get_char_array(padding - s.length,flags.pad_char)}}
 var format_int_precision=function(val,flags){var precision=flags.precision
 if(!precision){return val.toString()}
 precision=parseInt(precision,10)
-var s=val.toString()
+var s
+if(val.__class__===$B.LongInt.$dict){s=$B.LongInt.$dict.to_base(val,10)}else{
+s=val.toString()}
 var sign=s[0]
 if(s[0]==='-'){return '-' + get_char_array(precision - s.length + 1,'0')+ s.slice(1)}
 return get_char_array(precision - s.length,'0')+ s}
@@ -8351,7 +8360,9 @@ return f()}
 catch(err){
 try{
 var f=getattr(arg,'__repr__')
-return getattr(f,'__call__')()}catch(err){console.log(err+'\ndefault to toString '+arg);return arg.toString()}}}
+return getattr(f,'__call__')()}catch(err){console.log(err)
+console.log('default to toString ',arg)
+return arg.toString()}}}
 str.__class__=$B.$factory
 str.$dict=$StringDict
 $StringDict.$factory=str
@@ -8499,7 +8510,7 @@ case 1:
 var obj=args[0]
 if(Array.isArray(obj)){var i=obj.length
 var si=$DictDict.__setitem__
-while(i--)si(self,obj[i][0],obj[i][1])
+while(i-->0)si(self,obj[i-1][0],obj[i-1][1])
 return}else if(isinstance(obj,dict)){$copy_dict(self,obj)
 return}
 if(obj.__class__===$B.JSObject.$dict){
@@ -8513,9 +8524,9 @@ var kw=$ns['kw']
 if(args.length>0){if(isinstance(args[0],dict)){$B.$copy_dict(self,args[0])
 return}
 if(Array.isArray(args[0])){var src=args[0]
-var i=src.length
+var i=src.length -1
 var si=$DictDict.__setitem__
-while(i--)si(self,src[i][0],src[i][1])}else{var iterable=iter(args[0])
+while(i-->0)si(self,src[i-1][0],src[i-1][1])}else{var iterable=iter(args[0])
 while(1){try{var elt=next(iterable)
 var key=getattr(elt,'__getitem__')(0)
 var value=getattr(elt,'__getitem__')(1)
