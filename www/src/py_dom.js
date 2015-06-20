@@ -469,7 +469,7 @@ DOMNodeDict.__getattribute__ = function(self,attr){
                         var arg=arguments[i]
                         if(isinstance(arg,JSObject)){
                             args[pos++]=arg.js
-                        }else if(isinstance(arg,DOMNodeDict)){
+                        }else if(isinstance(arg,DOMNode)){
                             args[pos++]=arg.elt
                         }else if(arg===_b_.None){
                             args[pos++]=null
@@ -619,8 +619,7 @@ DOMNodeDict.bind = function(self,event){
                 try{
                     return f($DOMEvent(ev))
                 }catch(err){
-                    getattr($B.stderr,"write")(err.__name__+': '+
-                        err.$message+'\n'+_b_.getattr(err,"info"))
+                    getattr($B.stderr,"write")(err)
                 }
             }}
         )(func)
