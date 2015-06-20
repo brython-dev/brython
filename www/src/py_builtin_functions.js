@@ -12,7 +12,7 @@ $B.$comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
 
 function abs(obj){
     if(isinstance(obj,_b_.int)) return _b_.int(Math.abs(obj))
-    if(isinstance(obj,_b_.float)) return _b_.float(Math.abs(obj.value))
+    if(isinstance(obj,_b_.float)) return _b_.float(Math.abs(obj))
     if(hasattr(obj,'__abs__')) return getattr(obj,'__abs__')()
 
     throw _b_.TypeError("Bad operand type for abs(): '"+$B.get_class(obj)+"'")
@@ -1118,7 +1118,7 @@ function range(){
     var start=0
     var stop=0
     var step=1
-    if(args.length==1){stop = args[0]}
+    if(args.length==1){stop = $B.$GetInt(args[0])}
     else if(args.length>=2){
         start = args[0]
         stop = args[1]

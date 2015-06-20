@@ -123,7 +123,7 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
         return jsobj
     }else if(klass===$B.builtins.float.$dict){
         // Python floats are converted to the underlying value
-        return pyobj.value
+        return pyobj.valueOf()
     }else{
         // other types are left unchanged
         return pyobj

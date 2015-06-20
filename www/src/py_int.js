@@ -89,7 +89,7 @@ $IntDict.__eq__ = function(self,other){
     // compare object "self" to class "int"
     if(other===undefined) return self===int
     if(isinstance(other,int)) return self.valueOf()==other.valueOf()
-    if(isinstance(other,_b_.float)) return self.valueOf()==other.value
+    if(isinstance(other,_b_.float)) return self.valueOf()==other.valueOf()
     if(isinstance(other,_b_.complex)){
       if (other.imag != 0) return False
       return self.valueOf() == other.real
@@ -113,8 +113,8 @@ $IntDict.__floordiv__ = function(self,other){
         return Math.floor(self/other)
     }
     if(isinstance(other,_b_.float)){
-        if(!other.value) throw ZeroDivisionError('division by zero')
-        return _b_.float(Math.floor(self/other.value))
+        if(!other.valueOf()) throw ZeroDivisionError('division by zero')
+        return Math.floor(self/other)
     }
     if(hasattr(other,'__rfloordiv__')){
         return getattr(other,'__rfloordiv__')(self)
@@ -190,7 +190,7 @@ $IntDict.__mul__ = function(self,other){
                 $B.LongInt(other)))}
     }
     if(isinstance(other,_b_.float)){
-        return _b_.float(self*other.value)
+        return new Number(self*other)
     }
     if(isinstance(other,_b_.bool)){
          if (other.valueOf()) return self
@@ -239,7 +239,7 @@ $IntDict.__pow__ = function(self,other){
          $B.LongInt(other)))}
     }
     if(isinstance(other, _b_.float)) { 
-      return _b_.float(Math.pow(self.valueOf(), other.valueOf()))
+      return new Number(Math.pow(self.valueOf(), other.valueOf()))
     }
     if(hasattr(other,'__rpow__')) return getattr(other,'__rpow__')(self)
     $err("**",other)
@@ -273,11 +273,11 @@ $IntDict.__str__ = $IntDict.__repr__
 $IntDict.__truediv__ = function(self,other){
     if(isinstance(other,int)){
         if(other==0) throw ZeroDivisionError('division by zero')
-        return _b_.float(self/other)
+        return new Number(self/other)
     }
     if(isinstance(other,_b_.float)){
-        if(!other.value) throw ZeroDivisionError('division by zero')
-        return _b_.float(self/other.value)
+        if(!other.valueOf()) throw ZeroDivisionError('division by zero')
+        return new Number(self/other)
     }
     if(isinstance(other,_b_.complex)){
         var cmod = other.real*other.real+other.imag*other.imag
@@ -338,7 +338,7 @@ var $op_func = function(self,other){
         }
     }
     if(isinstance(other,_b_.float)){
-        return _b_.float(self.valueOf()-other.value)
+        return new Number(self-other)
     }
     if(isinstance(other,_b_.complex)){
         return _b_.complex(self-other.real,-other.imag)
@@ -346,7 +346,7 @@ var $op_func = function(self,other){
     if(isinstance(other,_b_.bool)){
          var bool_value=0;
          if(other.valueOf()) bool_value=1;
-         return self.valueOf()-bool_value
+         return self-bool_value
     }
     if(isinstance(other,_b_.complex)){
         return _b_.complex(self.valueOf() - other.real, other.imag)
@@ -366,7 +366,7 @@ for(var $op in $ops){
 var $comp_func = function(self,other){
     if (other.__class__ === $B.LongInt.$dict) return $B.LongInt.$dict.__gt__($B.LongInt(self), other)
     if(isinstance(other,int)) return self.valueOf() > other.valueOf()
-    if(isinstance(other,_b_.float)) return self.valueOf() > other.value
+    if(isinstance(other,_b_.float)) return self.valueOf() > other.valueOf()
     if(isinstance(other,_b_.bool)) {
       return self.valueOf() > _b_.bool.$dict.__hash__(other)
     }
@@ -422,8 +422,8 @@ var int = function(value, base){
     var value = $ns['x']
     var base = $ns['base']
     
-    if(value.__class__==_b_.float.$dict && base===10){
-        var res = parseInt(value.value)
+    if(isinstance(value, _b_.float) && base===10){
+        var res = parseInt(value)
         if(res<$B.min_int || res>$B.max_int){return $B.LongInt(res+'')}
         else{return res}
     }
@@ -489,7 +489,6 @@ var int = function(value, base){
       if(res < $B.min_int || res > $B.max_int) return $B.LongInt(_value, base)
       return res
     }
-
     
     if(isinstance(value,[_b_.bytes,_b_.bytearray])){
         var _digits = $valid_digits(base)

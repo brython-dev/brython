@@ -887,8 +887,8 @@ function $AugmentedAssignCtx(context, op){
             var left1 = in_class ? '$left' : left
             var new_node = new $Node()
             if(!lnum_set){new_node.line_num=line_num;lnum_set=true}
-            js = right_is_int ? 'if(' : 'if(typeof $temp.valueOf()=="number" && '
-            js += 'typeof '+left1+'.valueOf()=="number"' 
+            js = right_is_int ? 'if(' : 'if($temp.constructor===Number && '
+            js += left1+'.constructor===Number' 
             
             // If both arguments are integers, we must check that the result
             // is a safe integer
@@ -900,11 +900,11 @@ function $AugmentedAssignCtx(context, op){
 
             js += left+op+right
             
-            js += ' : (typeof '+left1+'=="number" ? '
+            js += ' : ('+left1+'.constructor===Number ? '
             // result is a float
             js += left+'=float('+left+op1
             js += right_is_int ? right : right+'.valueOf()'
-            js += ') : '+left + '.value ' +op
+            js += ') : '+left + op
             js += right_is_int ? right : right+'.valueOf()'
             
             js += ')}'
@@ -2036,7 +2036,9 @@ function $DefCtx(context){
             for(var i=0;i<this.positional_list.length;i++){
                 var arg = this.positional_list[i]
                 var new_node = new $Node()
-                var js = '$locals["'+arg+'"]='+arg+';' //arguments['+i+'];'
+                var js = '$locals["'+arg+'"]=('+arg+
+                    '.is_float ? _b_.float('+arg+'.value) : '+arg+')'
+                js = '$locals["'+arg+'"]='+arg
                 new $NodeJSCtx(new_node,js)
                 else_node.add(new_node)
             }
@@ -2521,13 +2523,16 @@ function $ForExpr(context){
                 var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()
             }
             var h = '\n'+' '.repeat(node.indent+4)
-            var js = idt+'='+start+';'+h+'var $stop_'+num +'='+stop+h+
+            var js = idt+'=$B.sub('+start+',1);'+h+'var $stop_'+num +'=$B.$GetInt('+
+                stop+')'+h+
                 'var $safe'+num+'= typeof '+idt+'=="number" && typeof '+
                 '$stop_'+num+'=="number";'+h+'while(true)'
             
             var for_node = new $Node()  
             new $NodeJSCtx(for_node,js)
             
+            for_node.add($NodeJS('if($safe'+num+'){'+idt+'++}'))
+            for_node.add($NodeJS('else{'+idt+'=$B.add('+idt+',1)}'))
             for_node.add($NodeJS('if($safe'+num+' && '+idt+'>= $stop_'+
                 num+'){break}'))
             for_node.add($NodeJS('else if(!$safe'+num+
@@ -2538,8 +2543,6 @@ function $ForExpr(context){
             for(var i=0;i<children.length;i++){
                 for_node.add(children[i].clone())
             }
-            for_node.add($NodeJS('if($safe'+num+'){'+idt+'++}'))
-            for_node.add($NodeJS('else{'+idt+'=$B.add('+idt+',1)}'))
             
             // Check if current "for" loop is inside another "for" loop
             var in_loop=false

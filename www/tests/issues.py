@@ -364,6 +364,15 @@ assert d == {'a': 1, 'b': 2.1}
 assert type(d['a']) == int
 assert type(d['b']) == float
 
+# issue 203
+def f(z):
+  z += 1
+  return z
+
+x = 1.0
+
+assert x != f(x)
+
 # issue 204
 import math
 m, e = math.frexp(abs(123.456))

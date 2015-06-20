@@ -251,6 +251,7 @@ $B.get_class = function(obj){
               obj.__class__=_b_.list.$dict
               return _b_.list.$dict
             }
+            else if(obj.constructor===Number) return _b_.float.$dict
             break
         }
     }
@@ -783,8 +784,7 @@ $B.pyobject2jsobject=function (obj){
         return false
     }
 
-    if(_b_.isinstance(obj,[_b_.int,_b_.str])) return obj
-    if(_b_.isinstance(obj,_b_.float)) return obj.value
+    if(_b_.isinstance(obj,[_b_.int,_b_.float, _b_.str])) return obj
     if(_b_.isinstance(obj,[_b_.list,_b_.tuple])){
         var res = [], pos=0
         for(var i=0, _len_i = obj.length; i < _len_i;i++){
@@ -999,7 +999,7 @@ $B.$GetInt=function(value) {
   // convert value to an integer
   if(typeof value=="number"){return value}
   else if(typeof value==="boolean"){return value ? 1 : 0}
-  else if (_b_.isinstance(value, _b_.int)) {return value}
+  else if (_b_.isinstance(value, [_b_.int, _b_.float])) {return value.valueOf()}
   try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){}
   try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){}
   throw _b_.TypeError("'"+$B.get_class(value).__name__+

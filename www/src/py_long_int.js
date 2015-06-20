@@ -325,7 +325,7 @@ $LongIntDict.__eq__ = function(self, other){
 
 $LongIntDict.__floordiv__ = function(self, other){
     if(isinstance(other, _b_.float)){
-        return _b_.float(parseInt(self.value)/other.value)
+        return _b_.float(parseInt(self.value)/other)
     }
     if (typeof other == 'number') other=LongInt(_b_.str(other))
     return intOrLong($LongIntDict.__divmod__(self, other)[0])
@@ -522,7 +522,7 @@ $LongIntDict.__truediv__ = function(self, other){
     }else if(isinstance(other,_b_.int)){
         return _b_.float(parseInt(self.value)/other)
     }else if(isinstance(other,_b_.float)){
-        return _b_.float(parseInt(self.value)/other.value)
+        return _b_.float(parseInt(self.value)/other)
     }else{throw TypeError("unsupported operand type(s) for /: 'int' and '"+
         $B.get_class(other).__name__+"'")}
 }
