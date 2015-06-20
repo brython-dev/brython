@@ -202,6 +202,13 @@ $ListDict.__gt__ = function(self,other){
 
 $ListDict.__hash__ = None
 
+$ListDict.__iadd__ = function(self, other) {
+    for (var i = 0; i < other.length; i++) {
+        self.push(other[i])
+    }
+    return self
+}
+
 $ListDict.__init__ = function(self,arg){
     var len_func = getattr(self,'__len__'),pop_func=getattr(self,'pop')
     while(len_func()) pop_func()
