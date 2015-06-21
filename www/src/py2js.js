@@ -887,7 +887,7 @@ function $AugmentedAssignCtx(context, op){
             var left1 = in_class ? '$left' : left
             var new_node = new $Node()
             if(!lnum_set){new_node.line_num=line_num;lnum_set=true}
-            js = right_is_int ? 'if(' : 'if($temp.constructor===Number && '
+            js = right_is_int ? 'if(' : 'if(typeof $temp.valueOf()=="number" && '
             js += left1+'.constructor===Number' 
             
             // If both arguments are integers, we must check that the result

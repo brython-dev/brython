@@ -410,5 +410,9 @@ b=Cmp(1)
 assert a == b
 assert not (a != b)
 
+# issue 218
+a = [1,2,3]
+a *= 2
+assert a == [1, 2, 3, 1, 2, 3]
 
 print('passed all tests')
