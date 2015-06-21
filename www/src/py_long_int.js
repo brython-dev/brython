@@ -580,8 +580,8 @@ var MIN_SAFE_INTEGER = -MAX_SAFE_INTEGER;
 function isSafeInteger(n) {
     return (typeof n === 'number' &&
         Math.round(n) === n &&
-        Number.MIN_SAFE_INTEGER <= n &&
-        n <= Number.MAX_SAFE_INTEGER);
+        MIN_SAFE_INTEGER <= n &&
+        n <= MAX_SAFE_INTEGER);
 }
 
 function intOrLong(long){
