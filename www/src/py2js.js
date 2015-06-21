@@ -966,15 +966,7 @@ function $AugmentedAssignCtx(context, op){
     
         // create node for "foo.__iadd__(bar)"
         var aa3 = new $Node()
-        var js3 = context.to_js()
-        /*
-        if(prefix){
-            if(scope.ntype=='class'){js3='$left'}
-            else{js3 += '='+prefix+'["'+context.tree[0].value+'"]'}
-        }
-        */
-        js3 += '=getattr('+context.to_js()
-        js3 += ',"'+func+'")('+right+')'
+        var js3 = 'getattr('+context.to_js()+',"'+func+'")('+right+')'
         new $NodeJSCtx(aa3,js3)
         aa2.add(aa3)
         
