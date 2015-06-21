@@ -16,8 +16,8 @@ import javascript_minifier
 if(sys.version_info[0]!=3):
     raise ValueError("This script only works with Python 3")
 
-#import make_doc  # lint:ok
-#import make_stdlib_list
+import make_doc  # lint:ok
+import make_stdlib_list
 
 # path of parent directory
 pdir = os.path.dirname(os.getcwd())
@@ -32,7 +32,7 @@ if implementation[3] == 'rc':
 
 abs_path = lambda _pth: os.path.join(os.path.dirname(os.getcwd()), 'www', 'src', _pth)
 now = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
-'''
+
 # update version number
 with open(abs_path('version_info.js'), 'w') as vinfo_file_out:
     # implementation[2] = now
@@ -260,7 +260,6 @@ for arc, wfunc in (dist1, dist1.add), (dist2, dist2.add), (dist3, dist3.write):
                       arcname=os.path.join(name, dirpath[len(base) + 1:], path))
 
     arc.close()
-'''
 
 # changelog file
 try:
