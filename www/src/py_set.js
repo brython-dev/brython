@@ -12,7 +12,8 @@ var $SetDict = {
 }
 
 $SetDict.__add__ = function(self,other){
-    return set(self.$items.concat(other.$items))
+    throw _.TypeError("unsupported operand type(s) for +: 'set' and " + 
+        typeof other )
 }
 
 $SetDict.__and__ = function(self, other, accept_iter){
@@ -70,10 +71,7 @@ $SetDict.__eq__ = function(self,other){
            var e=_.next(_it)
            if(!$SetDict.__contains__(self, e)) return false
          } catch(err) {
-           if(err.__name__=="StopIteration") {
-              $B.$pop_exc();break
-           }
-           console.log(err)
+           if(err.__name__=="StopIteration") {break}
            throw err
          }
       }
@@ -83,9 +81,6 @@ $SetDict.__eq__ = function(self,other){
 }
 
 $SetDict.__ge__ = function(self,other){return !$SetDict.__lt__(self,other)}
-
-// special method to speed up "for" loops
-$SetDict.__getitems__ = function(self){return self.$items}
 
 $SetDict.__gt__ = function(self, other, accept_iter){
     $test(accept_iter, other)
@@ -117,7 +112,7 @@ $SetDict.__init__ = function(self){
             while(1){
                 try{$SetDict.add(obj,_.next(iterable))}
                 catch(err){
-                    if(err.__name__=='StopIteration'){$B.$pop_exc();break}
+                    if(err.__name__=='StopIteration'){break}
                     throw err
                 }
             }
@@ -163,7 +158,7 @@ $SetDict.__or__ = function(self,other,accept_iter){
     while(1){
         try{$SetDict.add(res, func())}
         catch(err){
-            if(_.isinstance(err, _.StopIteration)){$B.$pop_exc();break}
+            if(_.isinstance(err, _.StopIteration)){break}
             throw err
         }
     }

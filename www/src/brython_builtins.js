@@ -39,9 +39,7 @@ if ($B.async_enabled) $B.block = {}
 $B.modules = {}
 
 // Maps the name of imported modules to the module object
-$B.imported = {
-    __main__:{__class__:$B.$ModuleDict,__name__:'__main__'}
-}
+$B.imported = {}
 
 // Distionary used to save the loval variables of a generator
 $B.vars = {}
@@ -76,6 +74,10 @@ $B.language = window.navigator.userLanguage || window.navigator.language
 // document charset ; defaults to "utf-8"
 $B.charset = document.characterSet || document.inputEncoding || "utf-8"
 
+// minimum and maximum safe integers
+$B.max_int = Math.pow(2,53)-1
+$B.min_int = -$B.max_int
+
 var has_storage = typeof(Storage)!=="undefined"
 if(has_storage){
     $B.has_local_storage = false
@@ -98,13 +100,13 @@ if(has_storage){
     $B.has_session_storage = false
 }
 
-$B._indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB
-$B.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction
-$B.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange
-
-$B.has_indexedDB = typeof($B._indexedDB) !== "undefined"
-if ($B.has_indexedDB) {
-   $B.indexedDB = function() {return $B.JSObject($B._indexedDB)}
+var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB
+$B.has_indexedDB = indexedDB !== undefined
+if($B.has_indexedDB){
+    $B.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction
+    $B.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange
+    
+    $B.indexedDB = function(){return $B.JSObject(indexedDB)}
 }
 
 $B.re = function(pattern,flags){return $B.JSObject(new RegExp(pattern,flags))}

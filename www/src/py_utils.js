@@ -229,8 +229,14 @@ $B.get_class = function(obj){
     if(klass===undefined){
         switch(typeof obj) {
           case 'number':
-            obj.__class__=_b_.int.$dict
-            return _b_.int.$dict
+            if (obj % 1 === 0) { // this is an int
+               obj.__class__=_b_.int.$dict
+               return _b_.int.$dict
+            }
+            // this is a float
+            //obj= _b_.float(obj)
+            obj.__class__=_b_.float.$dict
+            return _b_.float.$dict
           case 'string':
             obj.__class__=_b_.str.$dict
             return _b_.str.$dict
@@ -245,6 +251,7 @@ $B.get_class = function(obj){
               obj.__class__=_b_.list.$dict
               return _b_.list.$dict
             }
+            else if(obj.constructor===Number) return _b_.float.$dict
             break
         }
     }
@@ -295,7 +302,6 @@ $B.$list_comp = function(env){
     $root.caller = $B.line_info
 
     var $js = $root.to_js()
-    $B.call_stack[$B.call_stack.length]=$B.line_info
     try{
         eval($js)
         var res = eval('$locals_'+listcomp_name+'["x"+$ix]')
@@ -303,11 +309,27 @@ $B.$list_comp = function(env){
     catch(err){throw $B.exception(err)}
     finally{
         clear(listcomp_name)
-        $B.call_stack.pop()
     }
 
     return res
 }
+
+$B.$list_comp1 = function(items){
+    // Called for list comprehensions
+    //console.log('items',items)
+    var $ix = $B.UUID()
+    var $py = "x"+$ix+"=[]\n", indent = 0
+    for(var $i=1, _len_$i = items.length; $i < _len_$i;$i++){
+        $py += ' '.repeat(indent)
+        $py += items[$i]+':\n'
+        indent += 4
+    }
+    $py += ' '.repeat(indent)
+    $py += 'x'+$ix+'.append('+items[0]+')\n'
+        
+    return [$py,$ix]
+}
+
 
 $B.$dict_comp = function(env){
     // Called for dict comprehensions
@@ -421,7 +443,7 @@ $B.$lambda = function(env,args,body){
     // Create the variables for enclosing namespaces, they may be referenced
     // in the function
     for(var i=0;i<env.length;i++){
-        var sc_id = '$locals_'+env[i][0].replace(/\./,'_')
+        var sc_id = '$locals_'+env[i][0].replace(/\./g,'_')
         eval('var '+sc_id+'=env[i][1]')
     }
     var local_name = env[0][0]
@@ -490,7 +512,7 @@ $B.$getitem = function(obj, item){
             else{index_error(obj)}
         }
     }
-    item=$B.$GetInt(item)
+    try{item=$B.$GetInt(item)}catch(err){}
     if((Array.isArray(obj) || typeof obj=='string')
         && typeof item=='number'){
         item = item >=0 ? item : obj.length+item
@@ -542,10 +564,8 @@ for(var i=0, _len_i = augm_ops.length; i < _len_i;i++){
 $B.$raise= function(){
     // Used for "raise" without specifying an exception
     // If there is an exception in the stack, use it, else throw a simple Exception
-    var es = $B.exception_stack
-    if(es.length>0){
-        throw es[es.length-1]
-    }
+    var es = $B.current_exception
+    if(es!==undefined) throw es
     throw _b_.RuntimeError('No active exception to reraise')
 }
 
@@ -587,9 +607,6 @@ $B.$IndentationError = function(module,msg,pos) {
     throw exc
 }
 
-// function to remove internal exceptions from stack exposed to programs
-$B.$pop_exc=function(){$B.exception_stack.pop()}
-
 // function used if a function call has an argument **kw
 $B.extend = function(fname, arg, mapping){
     var it = _b_.iter(mapping), getter = _b_.getattr(mapping,'__getitem__')
@@ -605,7 +622,7 @@ $B.extend = function(fname, arg, mapping){
             }
             arg[key] = getter(key)
         }catch(err){
-            if(_b_.isinstance(err,[_b_.StopIteration])){$B.$pop_exc();break}
+            if(_b_.isinstance(err,[_b_.StopIteration])){break}
             throw err
         }
     }
@@ -622,7 +639,7 @@ $B.extend_list = function(){
         try{
             res.push(_b_.next(it))
         }catch(err){
-            if(_b_.isinstance(err,[_b_.StopIteration])){$B.$pop_exc();break}
+            if(_b_.isinstance(err,[_b_.StopIteration])){break}
             throw err
         }
     }
@@ -648,23 +665,20 @@ $B.$is_member = function(item,_set){
 
     // use __contains__ if defined
     try{f = _b_.getattr(_set,"__contains__")}
-    catch(err){$B.$pop_exc()}
+    catch(err){}
 
     if(f) return f(item)
 
     // use __iter__ if defined
     try{_iter = _b_.iter(_set)}
-    catch(err){$B.$pop_exc()}
+    catch(err){}
     if(_iter){
         while(1){
             try{
                 var elt = _b_.next(_iter)
                 if(_b_.getattr(elt,"__eq__")(item)) return true
             }catch(err){
-                if(err.__name__=="StopIteration"){
-                    $B.$pop_exc()
-                    return false
-                }
+                if(err.__name__=="StopIteration") return false
                 throw err
             }
         }
@@ -673,7 +687,6 @@ $B.$is_member = function(item,_set){
     // use __getitem__ if defined
     try{f = _b_.getattr(_set,"__getitem__")}
     catch(err){
-        $B.$pop_exc()
         throw _b_.TypeError("'"+$B.get_class(_set).__name__+"' object is not iterable")
     }
     if(f){
@@ -771,8 +784,7 @@ $B.pyobject2jsobject=function (obj){
         return false
     }
 
-    if(_b_.isinstance(obj,[_b_.int,_b_.str])) return obj
-    if(_b_.isinstance(obj,_b_.float)) return obj.value
+    if(_b_.isinstance(obj,[_b_.int,_b_.float, _b_.str])) return obj
     if(_b_.isinstance(obj,[_b_.list,_b_.tuple])){
         var res = [], pos=0
         for(var i=0, _len_i = obj.length; i < _len_i;i++){
@@ -797,7 +809,7 @@ $B.pyobject2jsobject=function (obj){
            _a[pos++]=$B.pyobject2jsobject(_b_.next(obj))
           } catch(err) {
             if (err.__name__ !== "StopIteration") throw err
-            $B.$pop_exc();break
+            break
           }
        }
        return {'_type_': 'iter', data: _a}
@@ -874,7 +886,7 @@ $B.$iterator_class = function(name){
          try {
               _a[pos++]=_b_.next(_it)
          } catch (err) {
-              if (err.__name__ == 'StopIteration'){$B.$pop_exc();break}
+              if (err.__name__ == 'StopIteration'){break}
          }
        }
        return _a
@@ -987,11 +999,11 @@ $B.$GetInt=function(value) {
   // convert value to an integer
   if(typeof value=="number"){return value}
   else if(typeof value==="boolean"){return value ? 1 : 0}
-  else if (_b_.isinstance(value, _b_.int)) {return value}
-  try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){$B.$pop_exc()}
-  try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){$B.$pop_exc()}
-
-  return value
+  else if (_b_.isinstance(value, [_b_.int, _b_.float])) {return value.valueOf()}
+  try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){}
+  try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){}
+  throw _b_.TypeError("'"+$B.get_class(value).__name__+
+      "' object cannot be interpreted as an integer")
 }
 
 $B.enter_frame = function(frame){
@@ -1005,6 +1017,58 @@ $B.leave_frame = function(){
         //delete $B.modules[frame[0]],$B.$py_src[frame[0]]
     }
 }
+
+var min_int=Math.pow(-2, 53), max_int=Math.pow(2,53)-1
+$B.add = function(x,y){
+    var z = x+y
+    if(x>min_int && x<max_int && y>min_int && y<max_int
+        && z>min_int && z<max_int){return z}
+    else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
+        && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
+        var res = $B.LongInt.$dict.__add__($B.LongInt(x), $B.LongInt(y))
+        return res
+    }else{return z}
+}
+$B.div = function(x,y){
+    var z = x/y
+    if(x>min_int && x<max_int && y>min_int && y<max_int
+        && z>min_int && z<max_int){return z}
+    else{return z}
+}
+$B.mul = function(x,y){
+    var z = x*y
+    if(x>min_int && x<max_int && y>min_int && y<max_int
+        && z>min_int && z<max_int){return z}
+    else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
+        && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
+        return $B.LongInt.$dict.__mul__($B.LongInt(x), $B.LongInt(y))
+    }else{return z}
+}
+$B.sub = function(x,y){
+    var z = x-y
+    if(x>min_int && x<max_int && y>min_int && y<max_int
+        && z>min_int && z<max_int){return z}
+    else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
+        && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
+        return $B.LongInt.$dict.__sub__($B.LongInt(x), $B.LongInt(y))
+    }else{return z}
+}
+// gretaer or equal
+$B.ge = function(x,y){
+    if(typeof x=='number' && typeof y== 'number'){return x>=y}
+    // a safe int is >= to a long int if the long int is negative
+    else if(typeof x=='number' && typeof y!= 'number'){return !y.pos}
+    else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
+    else{return $B.LongInt.$dict.__ge__(x, y)}
+}
+$B.gt = function(x,y){
+    if(typeof x=='number' && typeof y== 'number'){return x>y}
+    // a safe int is >= to a long int if the long int is negative
+    else if(typeof x=='number' && typeof y!= 'number'){return !y.pos}
+    else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
+    else{return $B.LongInt.$dict.__gt__(x, y)}
+}
+
 
     window.is_none = function (o) {
         return o === undefined || o == _b_.None;

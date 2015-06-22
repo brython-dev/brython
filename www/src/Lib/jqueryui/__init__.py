@@ -47,8 +47,8 @@ document <= html.LINK(rel="stylesheet",
 # fully loaded in the page, so "window.jQuery" raises an exception
 
 # Load jQuery and put name 'jQuery' in the global Javascript namespace
-javascript.load(_path+'jquery-1.11.2.js', ['jQuery'])
-javascript.load(_path+'jquery-ui.js')
+javascript.load(_path+'jquery-1.11.2.min.js', ['jQuery'])
+javascript.load(_path+'jquery-ui.min.js')
 
 _jqui = window.jQuery.noConflict(True)
 

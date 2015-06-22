@@ -44,7 +44,9 @@ var $item_generator = function(d) {
 
     if(d.$jsobj){
         this.items = []
-        for(var attr in d.$jsobj){this.items.push([attr,d.$jsobj[attr]])};
+        for(var attr in d.$jsobj){
+            if(attr.charAt(0)!='$'){this.items.push([attr,d.$jsobj[attr]])}
+        }
         this.length=this.items.length;
         return
     }
@@ -105,7 +107,8 @@ $iterator_wrapper = function(items,klass){
             return items.next()
             //return items[counter++]
         },
-        __repr__:function(){return "<"+klass.__name__+" object>"},
+        //__repr__:function(){return "<"+klass.__name__+" object>"},
+        __repr__:function(){return klass.__name__+'('+ new $item_generator(items).as_list().join(',') + ')'},
         //counter:0
     }
     res.__str__ = res.toString = res.__repr__
@@ -200,7 +203,7 @@ $DictDict.__eq__ = function(self,other){
         return self===dict
     }
     if(!isinstance(other,dict)) return false
-
+    
     if ($DictDict.__len__(self) != $DictDict.__len__(other)){return false}
 
     var _l = new $item_generator(self).as_list()
@@ -268,6 +271,7 @@ $DictDict.__init__ = function(self){
     var args = [], pos=0
     for(var i=1;i<arguments.length;i++){args[pos++]=arguments[i]}
     $DictDict.clear(self)
+
     switch(args.length) {
       case 0:
         return
@@ -276,7 +280,7 @@ $DictDict.__init__ = function(self){
         if(Array.isArray(obj)){
             var i = obj.length
             var si = $DictDict.__setitem__
-            while(i--) si(self, obj[i][0], obj[i][1])
+            while(i-->0) si(self, obj[i-1][0], obj[i-1][1])
             return
         }else if(isinstance(obj,dict)){
             $copy_dict(self, obj)
@@ -309,9 +313,9 @@ $DictDict.__init__ = function(self){
         
         if(Array.isArray(args[0])){
             var src = args[0]
-            var i = src.length
+            var i = src.length -1
             var si=$DictDict.__setitem__
-            while(i--) si(self, src[i][0], src[i][1])
+            while(i-->0) si(self, src[i-1][0], src[i-1][1])
         }else{
             var iterable = iter(args[0])
             while(1){
@@ -321,7 +325,7 @@ $DictDict.__init__ = function(self){
                    var value = getattr(elt,'__getitem__')(1)
                    $DictDict.__setitem__(self, key, value)
                 }catch(err){
-                   if(err.__name__==='StopIteration'){$B.$pop_exc();break}
+                   if(err.__name__==='StopIteration'){break}
                    throw err
                 }
             }
@@ -339,7 +343,7 @@ $DictDict.__len__ = function(self) {
     var _count=0
     
     if(self.$jsobj){
-        for(var attr in self.$jsobj){_count++}
+        for(var attr in self.$jsobj){if(attr.charAt(0)!='$'){_count++}}
         return _count
     }
 
@@ -361,7 +365,7 @@ $DictDict.__next__ = function(self){
     try {
         return self.$iter.next()
     } catch (err) {
-        if (err.__name__ !== "StopIteration") { throw err } else { $B.$pop_exc() }
+        if (err.__name__ !== "StopIteration") { throw err }
     }
 }
 
@@ -371,7 +375,7 @@ $DictDict.__repr__ = function(self){
         var res = []
         for(var attr in self.$jsobj){
             if(attr.charAt(0)=='$' || attr=='__class__'){continue}
-            else{res.push(attr+': '+_b_.repr(self.$jsobj[attr]))}
+            else{res.push("'"+attr+"': "+_b_.repr(self.$jsobj[attr]))}
         }
         return '{'+res.join(', ')+'}'
     }
@@ -506,7 +510,6 @@ $DictDict.fromkeys = function(keys,value){
             $DictDict.__setitem__(res,key,value)
         }catch(err){
             if($B.is_exc(err,[_b_.StopIteration])){
-                $B.$pop_exc()
                 return res
             }
             throw err
@@ -520,7 +523,6 @@ $DictDict.pop = function(self,key,_default){
         $DictDict.__delitem__(self,key)
         return res
     }catch(err){
-        $B.$pop_exc()
         if(err.__name__==='KeyError'){
             if(_default!==undefined) return _default
             throw err
@@ -536,7 +538,6 @@ $DictDict.popitem = function(self){
         return _b_.tuple(itm)
     }catch(err) {
         if (err.__name__ == "StopIteration") {
-            $B.$pop_exc()
             throw KeyError("'popitem(): dictionary is empty'")
         }
     }

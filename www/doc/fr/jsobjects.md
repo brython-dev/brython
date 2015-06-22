@@ -16,8 +16,8 @@ Javascript :
 
 Par défaut, un programme Javascript ne donc peut pas accéder aux objets 
 Brython. Par exemple, si on veut utiliser une fonction `echo()` définie dans 
-un script Brython pour réagir à un événement sur un élément de la page, au lieu
- de la syntaxe
+un script Brython pour réagir à un événement sur un élément de la page, au 
+lieu de la syntaxe
 
 >    <button onclick="echo()">
 
@@ -88,8 +88,20 @@ en dictionnaire Python par :
 
 Si l'objet est une fonction, les arguments passés à la fonction Python sont 
 convertis dans l'appel de la fonction Javascript en utilisant le tableau 
-inverse de celui ci-dessus
+inverse de celui ci-dessus.
 
+Attention, une fonction Javascript ne peut pas être appelée avec des
+arguments par mots-clés, cela déclenche une exception `TypeError` : si la 
+fonction est définie par
+
+>    function foo(x, y)
+
+et qu'on l'appelle depuis un script Brython par
+
+>    window.foo(y=0, x=1)
+
+la conversion des arguments dans le bon ordre n'est pas possible, parce que le
+script Brython ne connait pas la signature de la fonction Javascript.
 
 ### Utilisation de constructeurs Javascript dans un script Brython
 

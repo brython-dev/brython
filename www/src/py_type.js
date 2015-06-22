@@ -121,7 +121,6 @@ $B.make_method = function(attr, klass, func, func1){
         // the attribute is a function : return an instance method,
         // called with the instance as first argument
         method = function(instance){
-            // make a local copy of initial args
             var instance_method = function(){
                 var local_args = [instance]
                 var pos=local_args.length
@@ -147,10 +146,7 @@ $B.make_method = function(attr, klass, func, func1){
         return func
       case 'classmethod':
         // class method : called with the class as first argument
-        // the attribute is a function : return an instance method,
-        // called with the instance as first argument
         method = function(){
-            // make a local copy of initial args
             var class_method = function(){
                 var local_args = [klass]
                 var pos=local_args.length
@@ -171,16 +167,7 @@ $B.make_method = function(attr, klass, func, func1){
         break
       case 'staticmethod':
         // static methods have no __self__ or __func__
-        method = function(){
-            var static_method = function(){
-                return func.apply(null, arguments)
-            }
-            static_method.$infos = {
-                __func__:func,
-                __name__:klass.__name__+'.'+attr
-            }
-            return static_method
-        }
+        method = function(){return func}
         break
     }
 
@@ -504,11 +491,11 @@ function $instance_creator(klass){
     // return the function to initalise a class instance
     var new_func = null
     try{new_func = _b_.getattr(klass,'__new__')}
-    catch(err){$B.$pop_exc()}
+    catch(err){}
     
     var init_func = null
     try{init_func = _b_.getattr(klass,'__init__')}
-    catch(err){$B.$pop_exc()}
+    catch(err){}
     
     // Variable "simple" is set if class only has one parent and this
     // parent is "object" or "type"
@@ -568,9 +555,18 @@ $B.$MethodDict = {__class__:$B.$type,
     __name__:'method',
     $factory:$MethodFactory
 }
+
 $B.$MethodDict.__eq__ = function(self, other){
-    return self.__func__===other.__func__
+    return self.$infos !== undefined &&
+           other.$infos !== undefined &&
+           self.$infos.__func__===other.$infos.__func__ && 
+           self.$infos.__self__===other.$infos.__self__
 }
+
+$B.$MethodDict.__ne__ = function(self, other){
+    return !$B.$MethodDict.__eq__(self,other)
+}
+
 $B.$MethodDict.__getattribute__ = function(self, attr){
     // Internal attributes __name__, __module__, __doc__ etc. 
     // are stored in self.$infos.__func__.$infos

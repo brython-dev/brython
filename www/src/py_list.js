@@ -29,7 +29,7 @@ $ListDict.__contains__ = function(self,item){
     var i=self.length
     while(i--) {
         try{if(_eq(self[i])) return true
-        }catch(err){$B.$pop_exc();void(0)}
+        }catch(err){}
     }
     return false
 }
@@ -167,9 +167,6 @@ $ListDict.__getitem__ = function(self,arg){
     throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
 }
 
-// special method to speed up "for" loops
-$ListDict.__getitems__ = function(self){return self}
-
 $ListDict.__ge__ = function(self,other){
     if(!isinstance(other,[list, _b_.tuple])){
         throw _b_.TypeError("unorderable types: list() >= "+
@@ -205,6 +202,13 @@ $ListDict.__gt__ = function(self,other){
 
 $ListDict.__hash__ = None
 
+$ListDict.__iadd__ = function(self, other) {
+    for (var i = 0; i < other.length; i++) {
+        self.push(other[i])
+    }
+    return self
+}
+
 $ListDict.__init__ = function(self,arg){
     var len_func = getattr(self,'__len__'),pop_func=getattr(self,'pop')
     while(len_func()) pop_func()
@@ -216,7 +220,7 @@ $ListDict.__init__ = function(self,arg){
     while(1){
         try{self[pos++]=next_func()}
         catch(err){
-            if(err.__name__=='StopIteration'){$B.$pop_exc();break}
+            if(err.__name__=='StopIteration'){break}
             else{throw err}
         }
     }
@@ -315,16 +319,6 @@ $B.make_rmethods($ListDict)
 
 var _ops=['add', 'sub']
 
-$ListDict.__imul__=function(self, value) {self=$ListDict.__mul__(self,value)}
-
-/*   -- invalid left hand assignment error ????
-for (var i=0; i < _ops.length; i++) {
-    var _fun=$ListDict.__imul__+''
-    var _op='__i'+_ops[i]+'__'
-    eval('$ListDict.'+_op+'='+_fun.replace('mul', _ops[i]))
-}
-*/
-
 $ListDict.append = function(self,other){self[self.length]=other}
 
 $ListDict.clear = function(self){ while(self.length) self.pop()}
@@ -347,7 +341,7 @@ $ListDict.extend = function(self,other){
     while(1){
         try{self[pos++]=next(other)}
         catch(err){
-            if(err.__name__=='StopIteration'){$B.$pop_exc();break}
+            if(err.__name__=='StopIteration'){break}
             else{throw err}
         }
     }
@@ -409,7 +403,7 @@ function $partition(arg,array,begin,end,pivot)
         if(array.$cl!==false){
             // Optimisation : if all elements have the same time, the 
             // comparison function __le__ can be computed once
-            var le_func = array.$cl.__le__
+            var le_func = _b_.getattr(array.$cl, '__le__')
             for(var ix=begin;ix<end-1;++ix) {
                 if(le_func(array[ix],piv)) {
                     array = swap(array, store, ix);
@@ -513,11 +507,7 @@ function list(obj){
     while(1){
         try{res[pos++]=next_func()}
         catch(err){
-            if(err.__name__=='StopIteration'){
-                $B.$pop_exc()
-            }else{
-                throw err
-            }
+            if(err.__name__!='StopIteration'){throw err}
             break
         }
     }

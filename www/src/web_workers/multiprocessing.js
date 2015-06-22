@@ -40,7 +40,6 @@ self.addEventListener('message', function (e) {
     __BRYTHON__.debug = __BRYTHON__.$options.debug = 0
 
     // Stacks for exceptions and function calls, used for exception handling
-    __BRYTHON__.exception_stack = []
     __BRYTHON__.call_stack = []
 
     // Maps a Python block (module, function, class) to a Javascript object

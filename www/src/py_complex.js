@@ -150,7 +150,7 @@ $ComplexDict.__ior__=$ComplexDict.__or__
 // operations
 var $op_func = function(self,other){
     if(isinstance(other,complex)) return complex(self.real-other.real,self.imag-other.imag)
-    if (isinstance(other,_b_.int)) return complex(self.real-other.valueOf(),self.imag)
+    if (isinstance(other,_b_.int)) return complex($B.sub(self.real,other.valueOf()),self.imag)
     if(isinstance(other,_b_.float)) return complex(self.real - other.value, self.imag)
     if(isinstance(other,_b_.bool)){
          var bool_value=0;
@@ -160,12 +160,11 @@ var $op_func = function(self,other){
     throw _b_.TypeError("unsupported operand type(s) for -: "+self.__repr__()+
              " and '"+$B.get_class(other).__name__+"'")
 }
-$op_func += '' // source code
-var $ops = {'+':'add','-':'sub'}
-for(var $op in $ops){
-    eval('$ComplexDict.__'+$ops[$op]+'__ = '+$op_func.replace(/-/gm,$op))
-}
+$ComplexDict.__sub__ = $op_func
 
+$op_func += '' // source code
+$op_func = $op_func.replace(/-/gm, '+').replace(/sub/gm, 'add')
+eval('$ComplexDict.__add__ = '+$op_func)
 
 // comparison methods
 var $comp_func = function(self,other){

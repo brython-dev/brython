@@ -48,6 +48,7 @@ $B.make_node = function(top_node, node){
     // iteration
 
     if(node.is_catch){is_except=true;is_cond=true}
+    if(node.is_except){is_except=true}
     if(node.context.type=='node'){
         var ctx = node.context.tree[0]
         var ctype = ctx.type
@@ -390,6 +391,10 @@ $BRGeneratorDict.__next__ = function(self){
     // restore $locals, saved in $B.vars[self.iter_id] in previous iteration
     var js = 'var $locals = $B.vars["'+self.iter_id+'"];'
     fnode.addChild(new $B.genNode(js))
+    // add a node to enter the frame
+    var env = $B.last(self.env)
+    fnode.addChild(new $B.genNode('$B.enter_frame(["'+self.iter_id+
+        '",$locals,"'+env[0]+'",$locals_'+env[0]+']);'))
 
     // To build the new function, we must identify the rest of the function to
     // run after the exit node
@@ -518,7 +523,7 @@ $BRGeneratorDict.close = function(self, value){
         }
     }catch(err){
         if($B.is_exc(err,[_b_.StopIteration,_b_.GeneratorExit])){
-            $B.$pop_exc();return _b_.None
+            return _b_.None
         }
         throw err
     }

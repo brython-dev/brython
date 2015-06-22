@@ -339,4 +339,80 @@ assert foo.__name__=="foo"
 assert foo.__doc__=="foodoc"
 #assert type(foo.__dict__) == dict
 
+# issue 183
+x=4
+cd=dict(globals())
+cd.update(locals())
+exec("x=x+4",cd)
+
+assert x == 4
+assert cd['x'] == 8
+
+y=5
+yd=dict(globals())
+yd.update(locals())
+co=compile("y=y+4","","exec")
+exec(co,yd)
+
+assert yd['y'] == 9
+assert y == 5
+
+# issue 201
+import json
+d=json.loads("""{"a":1,"b":2.1}""")
+assert d == {'a': 1, 'b': 2.1}
+assert type(d['a']) == int
+assert type(d['b']) == float
+
+# issue 203
+def f(z):
+  z += 1
+  return z
+
+x = 1.0
+
+assert x != f(x)
+
+# issue 204
+import math
+m, e = math.frexp(abs(123.456))
+assert m == 0.9645
+assert m * (1 << 24) == 16181624.832
+
+# issue 207
+
+for x in range(0x7ffffff0, 0x8000000f):
+    assert x & x == x, "%s & %s == %s" % (hex(x), hex(x), hex(x & x))
+    assert x | x == x, "%s | %s == %s" % (hex(x), hex(x), hex(x | x))
+
+for x in range(0x17ffffff0, 0x17fffffff):
+    assert x & x == x, "%s & %s == %s" % (hex(x), hex(x), hex(x & x))
+    assert x | x == x, "%s | %s == %s" % (hex(x), hex(x), hex(x | x))
+
+# issue 208
+a=5
+assert globals().get('a')  == 5
+
+# not an official issue
+class Cmp:
+    def __init__(self,arg):
+        self.arg = arg
+
+    def __repr__(self):
+        return '<Cmp %s>' % self.arg
+
+    def __eq__(self, other):
+        return self.arg == other
+        
+a=Cmp(1)
+b=Cmp(1)
+
+assert a == b
+assert not (a != b)
+
+# issue 218
+a = [1,2,3]
+a *= 2
+assert a == [1, 2, 3, 1, 2, 3]
+
 print('passed all tests')

@@ -1,15 +1,19 @@
 Implementation of `import`
 --------------------------
 
-To import modules or packages, Brython uses the same mechanism as CPython : to resolve "import X", the program looks for a file in several places, first in the standard library (urls relative to that of the script __brython.js__) :
+To import modules or packages, Brython uses the same mechanism as CPython : to 
+resolve "import X", the program looks for a file in several places, first in 
+the standard library (urls relative to that of the script __brython.js__) :
 
-- __libs/X.js__ (Javascript modules, for the modules in the standard library that can't be written in Python)
+- __libs/X.js__ (Javascript modules, for the modules in the standard library 
+  that can't be written in Python)
 - __Lib/X.py__
 - __Lib/X/\_\_init\_\_.py__
+- __&lt;current\_dir&gt;/X.py__ (current\_dir is the directory of the script that
+  performs the import)
+- __&lt;current\_dir&gt;/X/\_\_init\_\_.py__
 - __Lib/site-packages/X.py__
 - __Lib/site-packages/X/\_\_init\_\_.py__
-
-then, if none of these files exists, the urls __X.py__ and __X/\_\_init\_\_.py__ in the directory of the script that performs the import
 
 Since the browser has no direct access to the file system, looking for a file must be done by an Ajax call, which returns an error message if there is no file at the specified url
 

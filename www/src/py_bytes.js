@@ -259,6 +259,27 @@ $BytesDict.decode = function(self,encoding,errors){
     }
 }
 
+$BytesDict.join = function(){
+    var $ns = $B.$MakeArgs1('join',2,{self:null,iterable:null},
+        ['self','iterable'], arguments, {}),
+        self = $ns['self'], iterable = $ns['iterable']
+    var next_func = _b_.getattr(_b_.iter(iterable), '__next__'),
+        res = bytes(),
+        empty = true
+    while(true){
+        try{
+            var item = next_func()
+            if(empty){empty=false}
+            else{res = $BytesDict.__add__(res, self)}
+            res = $BytesDict.__add__(res, item)
+        }catch(err){
+            if(isinstance(err, _b_.StopIteration)){break}
+            throw err
+        }
+    }
+    return res
+}
+
 $BytesDict.maketrans=function(from, to) {
     var _t=[]
     // make 'default' translate table
@@ -326,9 +347,10 @@ $BytesDict.upper = function(self) {
     return bytes(_res)
 }
 
-function $UnicodeEncodeError(encoding, position){
+function $UnicodeEncodeError(encoding, code_point, position){
     throw _b_.UnicodeEncodeError("'"+encoding+
-        "' codec can't encode character in position "+position)
+        "' codec can't encode character "+_b_.hex(code_point)+
+        " in position "+position)
 }
 
 function $UnicodeDecodeError(encoding, position){
@@ -339,8 +361,16 @@ function $UnicodeDecodeError(encoding, position){
 function _hex(int){return int.toString(16)}
 function _int(hex){return parseInt(hex,16)}
 
+function normalise(encoding){
+    var enc=encoding.toLowerCase()
+    if(enc.substr(0,7)=='windows'){enc='cp'+enc.substr(7)}
+    enc = enc.replace('-','') // first hyphen, like in cp-1250
+    enc = enc.replace('-','_') // second, like in iso-8859-1
+    return enc
+}
+
 function load_decoder(enc){
-    // load table from encodings/<enc>.js
+    // load table from Lib/encodings/<enc>.py
     if(to_unicode[enc]===undefined){
         load_encoder(enc)
         to_unicode[enc] = {}
@@ -351,20 +381,21 @@ function load_decoder(enc){
 }
 
 function load_encoder(enc){
-    // load table from encodings/<enc>.js
+    // load table from encodings/<enc>.py
     if(from_unicode[enc]===undefined){
-        var url = $B.brython_path
-        if(url.charAt(url.length-1)=='/'){url=url.substr(0,url.length-1)}
-        url += '/encodings/'+enc+'.js'
-        var f = _b_.open(url)
-        eval(f.$content)
+        var mod = _b_.__import__('encodings.'+enc),
+            table = mod.decoding_table
+        from_unicode[enc] = {}
+        for(var i=0;i<table.length;i++){
+            from_unicode[enc][table.charCodeAt(i)] = i
+        }
     }
 }
 
 function decode(b,encoding,errors){
-    var s=''
+    var s='', enc=normalise(encoding)
 
-    switch(encoding.toLowerCase()) {
+    switch(enc) {
       case 'utf-8':
       case 'utf8':
         var i=0,cp
@@ -414,19 +445,10 @@ function decode(b,encoding,errors){
             }
         }
         break;
-      case 'latin-1':
-      case 'iso-8859-1':
-      case 'windows-1252':
+      case 'latin1':
+      case 'iso8859_1':
+      case 'windows1252':
         for(var i=0, _len_i = b.length; i < _len_i;i++) s += String.fromCharCode(b[i])
-        break;
-      case 'cp1250': 
-      case 'windows-1250': 
-        load_decoder('cp1250')
-        for(var i=0, _len_i = b.length; i < _len_i;i++){
-            var u = to_unicode['cp1250'][b[i]]
-            if(u!==undefined){s+=String.fromCharCode(u)}
-            else{s += String.fromCharCode(b[i])}
-        }
         break;
       case 'ascii':
         for(var i=0, _len_i = b.length; i < _len_i;i++){
@@ -440,15 +462,23 @@ function decode(b,encoding,errors){
         }
         break;
       default:
+        try{load_decoder(enc)}
+        catch(err){throw _b_.LookupError("unknown encoding: "+ enc)}
+        for(var i=0, _len_i = b.length; i < _len_i;i++){
+            var u = to_unicode[enc][b[i]]
+            if(u!==undefined){s+=String.fromCharCode(u)}
+            else{s += String.fromCharCode(b[i])}
+        }
+        break;
         throw _b_.LookupError("unknown encoding: "+encoding)
     }
     return s
 }
 
 function encode(s,encoding){
-    var t=[], pos=0
+    var t=[], pos=0, enc=normalise(encoding)
 
-    switch(encoding.toLowerCase()) {
+    switch(enc) {
       case 'utf-8':
       case 'utf8':
         //optimize by creating constants..
@@ -483,27 +513,13 @@ function encode(s,encoding){
             }
         }
         break;
-      case 'latin-1': 
-      case 'iso-8859-1': 
-      case 'windows-1252': 
+      case 'latin1': 
+      case 'iso8859_1': 
+      case 'windows1252': 
         for(var i=0, _len_i = s.length; i < _len_i;i++){
             var cp = s.charCodeAt(i) // code point
             if(cp<=255){t[pos++]=cp}
             else{$UnicodeEncodeError(encoding,i)}
-        }
-        break;
-      case 'cp1250':
-      case 'windows-1250':
-        for(var i=0, _len_i = s.length; i < _len_i;i++){
-            var cp = s.charCodeAt(i) // code point
-            if(cp<=255){t[pos++]=cp}
-            else{
-                // load table to convert Unicode code point to cp1250 encoding
-                load_encoder('cp1250')
-                var res = from_unicode['cp1250'][cp]
-                if(res!==undefined){t[pos++]=res}
-                else{$UnicodeEncodeError(encoding,i)}
-            }
         }
         break;
       case 'ascii':
@@ -514,7 +530,17 @@ function encode(s,encoding){
         }
         break;
       default:
-        throw _b_.LookupError("unknown encoding: "+ encoding.toLowerCase())
+          try{load_encoder(enc)}
+          catch(err){throw _b_.LookupError("unknown encoding: "+ enc)}
+              
+          for(var i=0, _len_i = s.length; i < _len_i;i++){
+              var cp = s.charCodeAt(i) // code point
+              if(from_unicode[enc][cp]===undefined){
+                  $UnicodeEncodeError(encoding,cp,i)
+              }
+              t[pos++] = from_unicode[enc][cp]
+          }
+          break
     }
     return t
 }

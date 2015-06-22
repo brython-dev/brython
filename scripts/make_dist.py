@@ -11,98 +11,30 @@ import sys
 import tarfile
 import zipfile
 
-if(sys.version_info[0]!=2):
-    raise ValueError("This script uses pyminifier, which only works with Python 2")
+import javascript_minifier
+
+if(sys.version_info[0]!=3):
+    raise ValueError("This script only works with Python 3")
 
 import make_doc  # lint:ok
-
-try:
-    import slimit
-    minify = slimit.minify
-except ImportError:
-    minify = slimit = None
-
+import make_stdlib_list
 
 # path of parent directory
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
-implementation = [3, 1, 3, 'alpha', 0]
+implementation = [3, 2, 0, 'alpha', 0]
 
-def custom_minify(src):
-    _res, pos = '', 0
-    while pos < len(src):
-        if src[pos] in ('"', "'"):
-            # the end of the string is the next quote if it is not
-            # after an odd number of backslashes
-            start = pos
-            while True:
-                end = src.find(src[pos], start + 1)
-                if end == -1:
-                    line = src[:pos].count('\n')
-                    raise SyntaxError('string not closed in %s line %s : %s' %
-                                      (fname, line, src[pos:pos + 20]))
-                else:
-                    # count number of backslashes before the quote
-                    nb = 0
-                    while src[end-nb-1] == '\\':
-                        nb += 1
-                    if not nb % 2:
-                        break
-                    else:
-                        start = end+1
-            _res += src[pos:end+1]
-            pos = end+1
-        elif src[pos] == '\r':
-            pos += 1
-        elif src[pos] == ' ':
-            if _res and _res[-1] in '({=[)}];|\n':
-                pos += 1
-                continue
-            _res += ' '
-            while pos < len(src) and src[pos] == ' ':
-                pos += 1
-        elif src[pos:pos + 2] == '//':
-            end = src.find('\n', pos)
-            if end == -1:
-                break
-            pos = end
-        elif src[pos:pos + 2] == '/*':
-            end = src.find('*/', pos)
-            if end == -1:
-                break
-            pos = end+2
-        elif src[pos] in '={[(' and _res and _res[-1] == ' ':
-            _res = _res[:-1]+src[pos]
-            pos += 1
-        elif src[pos] == ';' and pos < len(src) - 1 and src[pos + 1] in '\r\n':
-            pos += 1
-        elif src[pos] in '{[,':
-            _res += src[pos]
-            while pos < len(src) - 1 and src[pos + 1] in ' \r\n':
-                pos += 1
-            pos += 1
-        elif src[pos] == '}':
-            _res += src[pos]
-            nxt = pos + 1
-            while nxt < len(src) and src[nxt] in ' \r\n':
-                nxt += 1
-            if nxt < len(src) and src[nxt] == '}':
-                pos = nxt - 1
-            pos += 1
-        else:
-            _res += src[pos]
-            pos += 1
-    while '\n\n' in _res:
-        _res = _res.replace('\n\n', '\n')
-    return _res
-
+# version name
+vname = '.'.join(str(x) for x in implementation[:3])
+if implementation[3] == 'rc':
+    vname += 'rc%s' % implementation[4]
 
 abs_path = lambda _pth: os.path.join(os.path.dirname(os.getcwd()), 'www', 'src', _pth)
 now = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
 
 # update version number
-with open(abs_path('version_info.js'), 'wb') as vinfo_file_out:
+with open(abs_path('version_info.js'), 'w') as vinfo_file_out:
     # implementation[2] = now
     vinfo_file_out.write('__BRYTHON__.implementation = %s\n' % implementation)
     vinfo_file_out.write('__BRYTHON__.__MAGIC__ = "%s"\n' %
@@ -138,7 +70,7 @@ libfolder = os.path.join(os.path.dirname(os.getcwd()), 'www', 'src')
 simple_javascript_template_string = """;(function($B){\n
 $B.stdlib = {}
 """
-with open(os.path.join(libfolder, 'stdlib_paths.js'), 'wb') as out:
+with open(os.path.join(libfolder, 'stdlib_paths.js'), 'w') as out:
     out.write(simple_javascript_template_string)
 
     jspath = os.path.join(libfolder, 'libs')
@@ -188,11 +120,11 @@ print('static stdlib mapping ok')
 
 # build brython.js from base Javascript files
 sources = [
-    'brython_builtins', 'version_info', 'identifiers_re', 'py2js', 'py_object',
-    'py_type', 'py_utils', 'py_builtin_functions', 'py_bytes',
+    'brython_builtins', 'version_info', 'identifiers_re', 'py2js', 
+    'py_object', 'py_type', 'py_utils', 'py_builtin_functions', 'py_bytes',
     'js_objects', 'stdlib_paths', 'py_import', 'py_float', 'py_int',
-    'py_complex', 'py_list', 'py_string', 'py_dict', 'py_set', 'py_dom',
-    'py_generator', 'py_import_hooks', 'builtin_modules', 'async'
+    'py_long_int', 'py_complex', 'py_list', 'py_string', 'py_dict', 'py_set', 
+    'py_dom', 'py_generator', 'py_import_hooks', 'builtin_modules', 'async'
 ]
 
 res = '// brython.js brython.info\n'
@@ -205,27 +137,18 @@ src_size = 0
 for fname in sources:
     src = open(abs_path(fname)+'.js').read() + '\n'
     src_size += len(src)
-    if minify is not None:
-        try:
-            res += minify(src)
-        except Exception as error:
-            print(error)
-    else:
-        res += custom_minify(src)
+    res += javascript_minifier.minify(src)
 
 res = res.replace('context', 'C')
 
-with open(abs_path('brython.js'), 'wb') as the_brythonjs_file_output:
+with open(abs_path('brython.js'), 'w') as the_brythonjs_file_output:
     the_brythonjs_file_output.write(res)
 
 
 print(('size : originals %s compact %s gain %.2f' %
       (src_size, len(res), 100 * (src_size - len(res)) / src_size)))
 
-# version name
-vname = '.'.join(str(x) for x in implementation[:3])
-if implementation[3] == 'rc':
-    vname += 'rc%s' % implementation[4]
+
 
 sys.path.append("scripts")
 
@@ -240,7 +163,7 @@ make_VFS.process(os.path.join(pdir, 'www', 'src', 'py_VFS.js'))
 make_VFS.process_unittest(os.path.join(pdir, 'www', 'src', 'py_unittest.js'))
 
 # make distribution with core + libraries
-with open(os.path.join(pdir, 'www', 'src', 'brython_dist.js'), 'wb') as distrib_file:
+with open(os.path.join(pdir, 'www', 'src', 'brython_dist.js'), 'w') as distrib_file:
     distrib_file.write(open(os.path.join(pdir, 'www', 'src', 'brython.js')).read())
     distrib_file.write(open(os.path.join(pdir, 'www', 'src', 'py_VFS.js')).read())
 
@@ -250,7 +173,6 @@ if not os.path.exists(dest_dir):
     os.mkdir(dest_dir)
 name = 'Brython%s_site_mirror-%s' % (vname, now)
 dest_path = os.path.join(dest_dir, name)
-
 
 def is_valid(filename_path):
     if filename_path.startswith('.'):
@@ -331,11 +253,13 @@ for arc, wfunc in (dist1, dist1.add), (dist2, dist2.add), (dist3, dist3.write):
                 if os.path.splitext(path)[1] not in ('.js', '.py'):
                     continue
                 print(('add', path, dirpath[len(base):]))
+                # leave folder site-packages empty
+                if 'site-packages' in dirpath:
+                    path = ''
                 wfunc(os.path.join(dirpath, path),
                       arcname=os.path.join(name, dirpath[len(base) + 1:], path))
 
     arc.close()
-
 
 # changelog file
 try:
@@ -343,7 +267,7 @@ try:
         implementation[0], implementation[1], implementation[2])
     with open(os.path.join(pdir, 'dist', 'changelog.txt')) as file_to_read:
         input_changelog_data_string = file_to_read.read()
-    with open(os.path.join(pdir, 'dist', 'changelog_%s.txt' % now), 'wb') as ou:
+    with open(os.path.join(pdir, 'dist', 'changelog_%s.txt' % now), 'w') as ou:
         ou.write('%s\n' % first)
         ou.write('%s\n\n' % ('=' * len(first)))
         ou.write(input_changelog_data_string)

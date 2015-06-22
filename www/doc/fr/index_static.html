@@ -20,7 +20,7 @@ def run(ev):
     # run the code in the elt after the button
     ix = ev.target.parent.children.index(ev.target)
     elt = ev.target.parent.children[ix+1]
-    exec(elt.text)
+    exec(elt.text,{})
     elt.focus()
 
 target = 'content'
@@ -43,7 +43,7 @@ for elt in document[target].get(selector='.exec_on_load'):
     h.className = "pycode"
     elt.clear()
     elt <= h
-    exec(src)
+    exec(src,{})
 for elt in document[target].get(selector='.python'):
     src = elt.text.strip()
     h = highlight.highlight(src)
@@ -68,11 +68,9 @@ for elt in document[target].get(selector='.python'):
 <tr>
 <td style="width:20%;vertical-align:top;">
 <h4><a class="navig" href="intro.html">Introduction</a></h4>
-
 <h4><a class="navig" href="faq.html">Questions fréquemment posées</a></h4>
-
 <h4><a class="navig" href="syntax.html">Syntaxe, mots-clés et fonctions intégrées</a></h4>
-
+<h4><a class="navig" href="stdlib.html">Distribution</a></h4>
 <h4><a class="navig" href="import.html">Implémentation de <tt>import</tt></a></h4>
 
 <h4>Interface avec le navigateur</h4>

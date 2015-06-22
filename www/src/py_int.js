@@ -42,23 +42,25 @@ $IntDict.from_bytes = function() {
       var num = _bytes[_len - 1];
       var _mult=256
       for (var i = (_len - 2); i >= 0; i--) {
-          num = _mult * _bytes[i] +  num
-          _mult*=256
+          // For operations, use the functions that can take or return
+          // big integers
+          num = $B.add($B.mul(_mult, _bytes[i]), num)
+          _mult = $B.mul(_mult,256)
       }
       if (!signed) return num
       if (_bytes[0] < 128) return num
-      return num - _mult
+      return $B.sub(num, _mult)
     case 'little':
       var num = _bytes[0]
       if (num >= 128) num = num - 256
       var _mult=256
       for (var i = 1;  i < _len; i++) {
-         num = _mult * _bytes[i] +  num
-         _mult *= 256
+          num = $B.add($B.mul(_mult, _bytes[i]), num)
+          _mult = $B.mul(_mult,256)
       }
       if (!signed) return num
       if (_bytes[_len - 1] < 128) return num
-      return num - _mult
+      return $B.sub(num, _mult)
   }
 
   throw _b_.ValueError("byteorder must be either 'little' or 'big'");
@@ -87,7 +89,7 @@ $IntDict.__eq__ = function(self,other){
     // compare object "self" to class "int"
     if(other===undefined) return self===int
     if(isinstance(other,int)) return self.valueOf()==other.valueOf()
-    if(isinstance(other,_b_.float)) return self.valueOf()==other.value
+    if(isinstance(other,_b_.float)) return self.valueOf()==other.valueOf()
     if(isinstance(other,_b_.complex)){
       if (other.imag != 0) return False
       return self.valueOf() == other.real
@@ -111,8 +113,8 @@ $IntDict.__floordiv__ = function(self,other){
         return Math.floor(self/other)
     }
     if(isinstance(other,_b_.float)){
-        if(!other.value) throw ZeroDivisionError('division by zero')
-        return _b_.float(Math.floor(self/other.value))
+        if(!other.valueOf()) throw ZeroDivisionError('division by zero')
+        return Math.floor(self/other)
     }
     if(hasattr(other,'__rfloordiv__')){
         return getattr(other,'__rfloordiv__')(self)
@@ -146,6 +148,16 @@ $IntDict.__int__ = function(self){return self}
 
 $IntDict.__invert__ = function(self){return ~self}
 
+// bitwise left shift
+$IntDict.__lshift__ = function(self,other){
+    if(isinstance(other, int)){
+        return int($B.LongInt.$dict.__lshift__($B.LongInt(self), $B.LongInt(other)))
+    }
+    var rlshift = getattr(other, '__rlshift__', null)
+    if(rlshift!==null){return rlshift(self)}
+    $err('<<', other)
+}
+
 $IntDict.__mod__ = function(self,other) {
     // can't use Javascript % because it works differently for negative numbers
     if(isinstance(other,_b_.tuple) && other.length==1) other=other[0]
@@ -163,28 +175,30 @@ $IntDict.__mod__ = function(self,other) {
 $IntDict.__mro__ = [$IntDict,$ObjectDict]
 
 $IntDict.__mul__ = function(self,other){
+
     var val = self.valueOf()
 
     // this will be quick check, so lets do it early.
     if(typeof other==="string") {
         return other.repeat(val)
-        //var res = ''
-        //for(var i=0;i<val;i++) res+=other
-        //return res
     }
 
-    other = $B.$GetInt(other)  // check for int, __int__, __index__
-
-    if(isinstance(other,int)) return self*other
-    if(isinstance(other,_b_.float)) return _b_.float(self*other.value)
+    if(isinstance(other,int)){
+        var res = self*other
+        if(res>$B.min_int && res<$B.max_int){return res}
+        else{return int($B.LongInt.$dict.__mul__($B.LongInt(self),
+                $B.LongInt(other)))}
+    }
+    if(isinstance(other,_b_.float)){
+        return new Number(self*other)
+    }
     if(isinstance(other,_b_.bool)){
-         //var bool_value=0
-         if (other.valueOf()) return self //bool_value=1
-         //return self*bool_value
+         if (other.valueOf()) return self
          return int(0)
     }
     if(isinstance(other,_b_.complex)){
-        return _b_.complex(self.valueOf()*other.real, self.valueOf()*other.imag)
+        return _b_.complex($IntDict.__mul__(self, other.real), 
+            $IntDict.__mul__(self, other.imag))
     }
     if(isinstance(other,[_b_.list,_b_.tuple])){
         var res = []
@@ -219,10 +233,13 @@ $IntDict.__pow__ = function(self,other){
         case 1:
           return int(self.valueOf())
       }
-      return Math.pow(self.valueOf(),other.valueOf()) 
+      var res = Math.pow(self.valueOf(),other.valueOf()) 
+      if(res>$B.min_int && res<$B.max_int){return res}
+      else{return int($B.LongInt.$dict.__pow__($B.LongInt(self),
+         $B.LongInt(other)))}
     }
     if(isinstance(other, _b_.float)) { 
-      return _b_.float(Math.pow(self.valueOf(), other.valueOf()))
+      return new Number(Math.pow(self.valueOf(), other.valueOf()))
     }
     if(hasattr(other,'__rpow__')) return getattr(other,'__rpow__')(self)
     $err("**",other)
@@ -233,7 +250,15 @@ $IntDict.__repr__ = function(self){
     return self.toString()
 }
 
-//$IntDict.__rshift__ = function(self,other){return self >> other} // bitwise right shift
+// bitwise right shift
+$IntDict.__rshift__ = function(self,other){
+    if(isinstance(other, int)){
+        return int($B.LongInt.$dict.__rshift__($B.LongInt(self), $B.LongInt(other)))
+    }
+    var rrshift = getattr(other, '__rrshift__', null)
+    if(rrshift!==null){return rrshift(self)}
+    $err('>>', other)
+}
 
 $IntDict.__setattr__ = function(self,attr,value){
     if(self.__class__===$IntDict){
@@ -248,11 +273,11 @@ $IntDict.__str__ = $IntDict.__repr__
 $IntDict.__truediv__ = function(self,other){
     if(isinstance(other,int)){
         if(other==0) throw ZeroDivisionError('division by zero')
-        return _b_.float(self/other)
+        return new Number(self/other)
     }
     if(isinstance(other,_b_.float)){
-        if(!other.value) throw ZeroDivisionError('division by zero')
-        return _b_.float(self/other.value)
+        if(!other.valueOf()) throw ZeroDivisionError('division by zero')
+        return new Number(self/other)
     }
     if(isinstance(other,_b_.complex)){
         var cmod = other.real*other.real+other.imag*other.imag
@@ -274,16 +299,24 @@ $IntDict.bit_length = function(self){
 $IntDict.numerator = function(self){return self}
 $IntDict.denominator = function(self){return int(1)}
 
-// code for operands & | ^ << >>
+$B.max_int32= (1<<30) * 2 - 1
+$B.min_int32= - $B.max_int32
+
+// code for operands & | ^
 var $op_func = function(self,other){
-    if(isinstance(other,int)) return self-other
+    if(isinstance(other,int)) {
+       if (self > $B.max_int32 || self < $B.min_int32 || other > $B.max_int32 || other < $B.min_int32) {
+          return $B.LongInt.$dict.__sub__($B.LongInt(self), $B.LongInt(other))
+       }
+       return self-other
+    }
     if(isinstance(other,_b_.bool)) return self-other
     if(hasattr(other,'__rsub__')) return getattr(other,'__rsub__')(self)
     $err("-",other)
 }
 
 $op_func += '' // source code
-var $ops = {'&':'and','|':'or','<<':'lshift','>>':'rshift','^':'xor'}
+var $ops = {'&':'and','|':'or','^':'xor'}
 for(var $op in $ops){
     var opf = $op_func.replace(/-/gm,$op)
     opf = opf.replace(new RegExp('sub','gm'),$ops[$op])
@@ -292,13 +325,20 @@ for(var $op in $ops){
 
 // code for + and -
 var $op_func = function(self,other){
+
     if(isinstance(other,int)){
-        var res = self.valueOf()-other.valueOf()
-        if(isinstance(res,int)) return res
-        return _b_.float(res)
+        if(typeof other=='number'){
+            var res = self.valueOf()-other.valueOf()
+            if(res>=$B.min_int && res<=$B.max_int){return res}
+            else{return $B.LongInt.$dict.__sub__($B.LongInt(self), 
+                $B.LongInt(other))}
+        }else{
+            return $B.LongInt.$dict.__sub__($B.LongInt(self), 
+                $B.LongInt(other))        
+        }
     }
     if(isinstance(other,_b_.float)){
-        return _b_.float(self.valueOf()-other.value)
+        return new Number(self-other)
     }
     if(isinstance(other,_b_.complex)){
         return _b_.complex(self-other.real,-other.imag)
@@ -306,7 +346,7 @@ var $op_func = function(self,other){
     if(isinstance(other,_b_.bool)){
          var bool_value=0;
          if(other.valueOf()) bool_value=1;
-         return self.valueOf()-bool_value
+         return self-bool_value
     }
     if(isinstance(other,_b_.complex)){
         return _b_.complex(self.valueOf() - other.real, other.imag)
@@ -324,8 +364,9 @@ for(var $op in $ops){
 
 // comparison methods
 var $comp_func = function(self,other){
+    if (other.__class__ === $B.LongInt.$dict) return $B.LongInt.$dict.__gt__($B.LongInt(self), other)
     if(isinstance(other,int)) return self.valueOf() > other.valueOf()
-    if(isinstance(other,_b_.float)) return self.valueOf() > other.value
+    if(isinstance(other,_b_.float)) return self.valueOf() > other.valueOf()
     if(isinstance(other,_b_.bool)) {
       return self.valueOf() > _b_.bool.$dict.__hash__(other)
     }
@@ -359,30 +400,33 @@ var $valid_digits=function(base) {
 }
 
 var int = function(value, base){
-    // most simple case
+    // int() with no argument returns 0
+    if(value===undefined){return 0}
     
-    if(typeof value=='number' && base===undefined){return parseInt(value)}
-
+    // int() of an integer returns the integer if base is undefined
+    if(typeof value=='number' && 
+        (base===undefined || base==10)){return parseInt(value)}
+    
     if(base!==undefined){
         if(!isinstance(value,[_b_.str,_b_.bytes,_b_.bytearray])){
             throw TypeError("int() can't convert non-string with explicit base")
         }
     }
 
-    if(isinstance(value,_b_.float)){
-        var v = value.value
-        return v >= 0 ? Math.floor(v) : Math.ceil(v)
-    }
     if(isinstance(value,_b_.complex)){
         throw TypeError("can't convert complex to int")
     }
 
-    var $ns=$B.$MakeArgs('int',arguments,[],[],'args','kw')
-    var value = $ns['args'][0]
-    var base = $ns['args'][1]
-
-    if (value === undefined) value = _b_.dict.$dict.get($ns['kw'],'x', 0)
-    if (base === undefined) base = _b_.dict.$dict.get($ns['kw'],'base',10)
+    var $ns=$B.$MakeArgs1('int',2,{x:null,base:null},['x','base'],arguments,
+        {'base':10},'null','null')
+    var value = $ns['x']
+    var base = $ns['base']
+    
+    if(isinstance(value, _b_.float) && base===10){
+        var res = parseInt(value)
+        if(res<$B.min_int || res>$B.max_int){return $B.LongInt(res+'')}
+        else{return res}
+    }
 
     if (!(base >=2 && base <= 36)) {
         // throw error (base must be 0, or 2-36)
@@ -390,69 +434,85 @@ var int = function(value, base){
     }
 
     if (typeof value == 'number'){
-        if(base==10){return value}
-        else if(value.toString().search('e')>-1){
+
+        if(base==10){
+           if(value < $B.min_int || value > $B.max_int) return $B.LongInt(value)
+           return value
+        }else if(value.toString().search('e')>-1){
             // can't convert to another base if value is too big
             throw _b_.OverflowError("can't convert to base "+base)
         }else{
-            return parseInt(value, base)
+            var res=parseInt(value, base)
+            if(res < $B.min_int || res > $B.max_int) return $B.LongInt(value,base)
+            return res
         }
     }
 
     if(value===true) return Number(1)
     if(value===false) return Number(0)
+    if(value.__class__===$B.LongInt.$dict){
+        var z = parseInt(value.value)
+        if(z>$B.min_int && z<$B.max_int){return z}
+        else{return value}
+    }
 
     base=$B.$GetInt(base)
-    //if(!isinstance(base, _b_.int)) {
-    //  if (hasattr(base, '__int__')) {base = Number(getattr(base,'__int__')())
-    //  }else if (hasattr(base, '__index__')) {base = Number(getattr(base,'__index__')())}
-    //}
 
     if(isinstance(value, _b_.str)) value=value.valueOf()
-
     if(typeof value=="string") {
-      value=value.trim()    // remove leading/trailing whitespace
-      if (value.length == 2 && base==0 && (value=='0b' || value=='0o' || value=='0x')) {
+      var _value=value.trim()    // remove leading/trailing whitespace
+      if (_value.length == 2 && base==0 && (_value=='0b' || _value=='0o' || _value=='0x')) {
          throw _b_.ValueError('invalid value')
       }
-      if (value.length >2) {
-         var _pre=value.substr(0,2).toUpperCase()
+      if (_value.length >2) {
+         var _pre=_value.substr(0,2).toUpperCase()
          if (base == 0) {
             if (_pre == '0B') base=2
             if (_pre == '0O') base=8
             if (_pre == '0X') base=16
          }
          if (_pre=='0B' || _pre=='0O' || _pre=='0X') {
-            value=value.substr(2)
+            _value=_value.substr(2)
          }
       }
       var _digits=$valid_digits(base)
       var _re=new RegExp('^[+-]?['+_digits+']+$', 'i')
-      if(!_re.test(value)) {
+      if(!_re.test(_value)) {
          throw _b_.ValueError(
-             "Invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
+             "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
       }
       if(base <= 10 && !isFinite(value)) {
          throw _b_.ValueError(
-             "Invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
+             "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
       } 
-      return Number(parseInt(value, base))
+      var res=parseInt(_value, base)
+      if(res < $B.min_int || res > $B.max_int) return $B.LongInt(_value, base)
+      return res
     }
-
     
-    if(isinstance(value,[_b_.bytes,_b_.bytearray])) return Number(parseInt(getattr(value,'decode')('latin-1'), base))
+    if(isinstance(value,[_b_.bytes,_b_.bytearray])){
+        var _digits = $valid_digits(base)
+        for(var i=0;i<value.source.length;i++){
+            if(_digits.indexOf(String.fromCharCode(value.source[i]))==-1){
+                throw _b_.ValueError("invalid literal for int() with base "+
+                    base +": "+_b_.repr(value))
+            }
+        }
+        return Number(parseInt(getattr(value,'decode')('latin-1'), base))
+    }
 
     if(hasattr(value, '__int__')) return Number(getattr(value,'__int__')())
     if(hasattr(value, '__index__')) return Number(getattr(value,'__index__')())
     if(hasattr(value, '__trunc__')) return Number(getattr(value,'__trunc__')())
 
     throw _b_.ValueError(
-        "Invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
+        "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
 }
 int.$dict = $IntDict
 int.__class__ = $B.$factory
 $IntDict.$factory = int
 
 _b_.int = int
+
 
 })(__BRYTHON__)

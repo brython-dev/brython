@@ -1,5 +1,13 @@
 import unittest
 
+## take from support/__init__.py, and modified.
+## eventually will need to take full functionality from support/__init__.py
+def run_with_locale(catstr, *locales):
+    pass
+
+def cpython_only(test):
+    return unittest.skip('')
+
 
 class TestEquality(object):
     """Used as a mixin for TestCase"""

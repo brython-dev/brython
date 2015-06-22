@@ -116,7 +116,7 @@ $B.$download_module=$download_module
 
 function import_js(module,path) {
     try{var module_contents=$download_module(module.name, path)}
-    catch(err){$B.$pop_exc();return null}
+    catch(err){return null}
     run_js(module_contents,path,module)
     return true
 }
@@ -172,7 +172,6 @@ function import_py(module,path,package){
     try{
         var module_contents=$download_module(mod_name, path)
     }catch(err){
-        $B.$pop_exc()
         return null
     }
     $B.imported[mod_name].$is_package = module.$is_package
@@ -356,6 +355,7 @@ importer_stdlib_static.__repr__ = importer_stdlib_static.__str__ =
 importer_stdlib_static.toString = 
     function() { return '<object importer_stdlib_static>' }
 
+
 /**
  * Search an import path for .js and .py modules
  */
@@ -470,8 +470,6 @@ UrlPathFinder.prototype.find_spec = function(self, fullname, module) {
             }
             loader_data.path = file_info[0];
         }catch(err){
-            // FIXME: Remove this ?
-            $B.$pop_exc()
         }
     }
     if (!notfound) {
@@ -499,6 +497,7 @@ UrlPathFinder.prototype.invalidate_caches = function(self) {
 UrlPathFinder.prototype.__repr__ = function() {
     return "<UrlPathFinder for '" + this.path + "'" +
            (this.hint !== undefined? " format '" + this.hint + "'": '') + '>';
+        //console.log('mod_path', mod_path) 
 }
 
 url_hook = function(path) { return new UrlPathFinder(path); };
@@ -644,6 +643,16 @@ $B.$import = function(mod_name,origin,fromlist, aliases, locals){
     if (__import__ === undefined) {
         // [Import spec] Fall back to
         __import__ = $B.$__import__;
+
+    /*
+    var current_path = $B.last($B.frames_stack)[1].__file__
+
+    for(var i=0;i<$B.path.length;i++){
+        console.log(i,'path',$B.path[i],'stdlib ?', $B.path[i]==stdlib_path,
+            'site-pacakes ?',$B.path[i]==site_packages_path,
+            'current ?',$B.path[i]==current_path)
+    }
+    */
     }
     // FIXME: Should we need locals dict supply it in, now it is useless
     var modobj = _b_.getattr(__import__,

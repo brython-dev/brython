@@ -10,7 +10,7 @@ __BRYTHON__.$__new__ = function(factory){
         res.__class__ = cls.$dict
         var init_func = null
         try{init_func = __BRYTHON__.builtins.getattr(res,'__init__')}
-        catch(err){__BRYTHON__.$pop_exc()}
+        catch(err){}
         if(init_func!==null){
             var args = [], pos=0
             for(var i=1, _len_i = arguments.length; i < _len_i;i++){args[pos++]=arguments[i]}
@@ -111,9 +111,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         for(var i=0, _len_i = mro.length; i < _len_i;i++){
             if(mro[i].$methods){
                 var method = mro[i].$methods[attr]
-                if(method!==undefined){
-                    return method(obj)
-                }
+                if(method!==undefined){return method(obj)}
             }
             var v=mro[i][attr]
             if(v!==undefined){
@@ -194,6 +192,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
 
                 // instance method object
                 return $B.make_method(attr, klass, res, res1)(obj)
+                
             }else{
                 // result of __get__ is not a function
                 return res1
@@ -217,7 +216,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         }
         if(_ga!==undefined){
             try{return _ga(obj,attr)}
-            catch(err){$B.$pop_exc()}
+            catch(err){}
         }
         // for special methods such as __mul__, look for __rmul__ on operand
         if(attr.substr(0,2)=='__' && attr.substr(attr.length-2)=='__'){
@@ -262,7 +261,9 @@ $ObjectDict.__new__ = function(cls){
     return {__class__ : cls.$dict}
 }
 
-$ObjectDict.__ne__ = function(self,other){return !$ObjectDict.__eq__(self,other)}
+$ObjectDict.__ne__ = function(self,other){
+    return !_b_.getattr(self, '__eq__')(other)
+}
 
 $ObjectDict.__or__ = function(self,other){
     if(_b_.bool(self)) return self

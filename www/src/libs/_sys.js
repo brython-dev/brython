@@ -7,7 +7,7 @@ var $module=(function($B){
             return $B._frame($B.frames_stack, depth)
         },
         modules :
-            {'__get__':function(){return _b_.dict($B.JSObject($B.imported))},
+            {'__get__':function(){return $B.obj_dict($B.imported)},
              '__set__':function(self, obj, value){ throw _b_.TypeError("Read only property 'sys.modules'") }
             },
         path: 

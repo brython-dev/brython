@@ -95,7 +95,7 @@ var $DOMEventAttrs_IE = ['altKey','altLeft','button','cancelBubble',
     'url','wheelDelta','x','y']
 
 $B.$isEvent = function(obj){
-    flag = true
+    var flag = true
     for(var i=0;i<$DOMEventAttrs_W3C.length;i++){
         if(obj[$DOMEventAttrs_W3C[i]]===undefined){flag=false;break}
     }
@@ -469,7 +469,7 @@ DOMNodeDict.__getattribute__ = function(self,attr){
                         var arg=arguments[i]
                         if(isinstance(arg,JSObject)){
                             args[pos++]=arg.js
-                        }else if(isinstance(arg,DOMNodeDict)){
+                        }else if(isinstance(arg,DOMNode)){
                             args[pos++]=arg.elt
                         }else if(arg===_b_.None){
                             args[pos++]=null
@@ -619,8 +619,7 @@ DOMNodeDict.bind = function(self,event){
                 try{
                     return f($DOMEvent(ev))
                 }catch(err){
-                    getattr($B.stderr,"write")(err.__name__+': '+
-                        err.$message+'\n'+_b_.getattr(err,"info"))
+                    getattr($B.stderr,"write")(err)
                 }
             }}
         )(func)
@@ -745,8 +744,8 @@ DOMNodeDict.get = function(self){
         if(res===undefined) return sel_res
         var to_delete = [], pos=0
         for(var i=0;i<res.length;i++){
-            var elt = res[i] // keep it only if it is also inside sel_res
-            flag = false
+            var elt = res[i], // keep it only if it is also inside sel_res
+                flag = false
             for(var j=0;j<sel_res.length;j++){
                 if(elt.__eq__(sel_res[j])){flag=true;break}
             }
@@ -1005,7 +1004,6 @@ $QueryDict.getlist = function(self,key){
 $QueryDict.getvalue = function(self,key,_default){
     try{return self.__getitem__(key)}
     catch(err){
-        $B.$pop_exc()
         if(_default===undefined) return None
         return _default
     }

@@ -63,7 +63,7 @@ def license():
 license.__repr__ = lambda:_license
 
 def write(data):
-    doc['code'].value += data
+    doc['code'].value += str(data)
 
 
 sys.stdout.write = sys.stderr.write = write
@@ -115,7 +115,7 @@ def myKeyPress(event):
             try:
                 _ = editor_ns['_'] = eval(currentLine, editor_ns)
                 if _ is not None:
-                    print(repr(_))
+                    write(repr(_)+'\n')
                 doc['code'].value += '>>> '
                 _status = "main"
             except IndentationError:

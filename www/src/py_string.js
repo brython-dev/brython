@@ -88,9 +88,6 @@ $StringDict.__getitem__ = function(self,arg){
     if(isinstance(arg,bool)) return self.__getitem__(_b_.int(arg))
 }
 
-// special method to speed up "for" loops
-$StringDict.__getitems__ = function(self){return self.split('')}
-
 $StringDict.__hash__ = function(self) {
   if (self === undefined) {
      return $StringDict.__hashvalue__ || $B.$py_next_hash--  // for hash of string type (not instance of string)
@@ -162,7 +159,12 @@ var format_int_precision = function(val, flags) {
         return val.toString()
     }
     precision = parseInt(precision, 10)
-    var s = val.toString()
+    var s
+    if (val.__class__ === $B.LongInt.$dict) {
+       s=$B.LongInt.$dict.to_base(val, 10)
+    } else {
+       s=val.toString()
+    }
     var sign = s[0]
     if (s[0] === '-') {
         return '-' + get_char_array(precision - s.length + 1, '0') + s.slice(1)
@@ -212,7 +214,12 @@ var str_format = function(val, flags) {
 
 var num_format = function(val, flags) {
     number_check(val)
-    val = parseInt(val)
+    if (val.__class__ === $B.LongInt.$dict) {
+      val = $B.LongInt.$dict.to_base(val, 10)
+    } else {
+      val = parseInt(val)
+    }
+
     var s = format_int_precision(val, flags)
     if (flags.pad_char === '0') {
         if (val < 0) {
@@ -384,9 +391,15 @@ var floating_point_exponential_format = function(val, upper, flags) {
 }
 
 var signed_hex_format = function(val, upper, flags) {
+    var ret
     number_check(val)
-    var ret = parseInt(val)
-    ret = ret.toString(16)
+
+    if (val.__class__ === $B.LongInt.$dict) {
+       ret=$B.LongInt.$dict.to_base(val, 16)
+    } else {
+       ret = parseInt(val)
+       ret = ret.toString(16)
+    }
     ret = format_int_precision(ret, flags)
     if (upper) {
         ret = ret.toUpperCase()
@@ -422,8 +435,15 @@ var signed_hex_format = function(val, upper, flags) {
 
 var octal_format = function(val, flags) {
     number_check(val)
-    var ret = parseInt(val)
-    ret = ret.toString(8)
+    var ret 
+
+    if (val.__class__ === $B.LongInt.$dict) {
+      ret = $B.LongInt.$dict.to_base(8)
+    } else {
+      ret = parseInt(val)
+      ret = ret.toString(8)
+    }
+
     ret = format_int_precision(ret, flags)
     
     if (flags.pad_char === '0') {
@@ -694,7 +714,11 @@ $StringDict.__mul__ = function(self,other){
 $StringDict.__ne__ = function(self,other){return other!==self.valueOf()}
 
 $StringDict.__repr__ = function(self){
-    if(self===undefined){return "<class 'str'>"}
+    if(self.search('"')==-1 && self.search("'")==-1){
+        return "'"+self+"'"
+    }else if(self.search('"')==-1){
+        return '"'+self+'"'
+    }
     var qesc = new RegExp("'","g") // to escape single quote
     var res = self.replace(/\n/g,'\\\\n')
     res = "'"+res.replace(qesc,"\\'")+"'"
@@ -1388,7 +1412,7 @@ $StringDict.join = function(self,obj){
             res += obj2+self
             count++
         }catch(err){
-            if(err.__name__==='StopIteration'){$B.$pop_exc();break}
+            if(err.__name__==='StopIteration'){break}
             else{throw err}
         }
     }
@@ -1583,7 +1607,7 @@ $StringDict.split = function(self){
         var res = []
         var pos = 0
         while(pos<self.length&&self.charAt(pos).search(/\s/)>-1){pos++}
-        if(pos===self.length-1){return []}
+        if(pos===self.length-1){return [self]}
         var name = ''
         while(1){
             if(self.charAt(pos).search(/\s/)===-1){
@@ -1729,13 +1753,13 @@ function str(arg){
     }
     catch(err){
         //console.log('err '+err)
-        $B.$pop_exc()
         try{ // try __repr__
              var f = getattr(arg,'__repr__')
              return getattr(f,'__call__')()
         }catch(err){
-             $B.$pop_exc()
-             console.log(err+'\ndefault to toString '+arg);return arg.toString()
+             console.log(err)
+             console.log('default to toString ', arg)
+             return arg.toString()
         }
     }
 }

@@ -99,6 +99,10 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
     if(pyobj===_b_.None) return null
 
     var klass = $B.get_class(pyobj)
+    if (klass === undefined) {
+        // not a Python object , consider arg as Javascript object instead
+        return pyobj;
+    }
     if(klass===$JSObjectDict || klass===$JSConstructorDict){
         // instances of JSObject and JSConstructor are transformed into the
         // underlying Javascript object
@@ -123,7 +127,7 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
         return jsobj
     }else if(klass===$B.builtins.float.$dict){
         // Python floats are converted to the underlying value
-        return pyobj.value
+        return pyobj.valueOf()
     }else{
         // other types are left unchanged
         return pyobj
@@ -151,6 +155,7 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
     if(obj.js_func && obj.js_func[attr]!==undefined){
         js_attr = obj.js_func[attr]
     }
+
     if(js_attr !== undefined){
         if(typeof js_attr=='function'){
             // If the attribute of a JSObject is a function F, it is converted to a function G
@@ -159,18 +164,16 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
             var res = function(){
                 var args = [],arg
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
-                    if(arguments[i].$nat=='ptuple'){
-                        // add all items produced by iteration on packed tuple
-                        var ptuple = _b_.iter(arguments[i].arg)
-                        while(true){
-                            try{
-                                var item = _b_.next(ptuple)
-                                args.push(pyobj2jsobj(item))
-                            }catch(err){    
-                                $B.$pop_exc()
-                                break
-                            }
-                        }
+                    if(arguments[i].$nat!=undefined){
+                        //
+                        // Passing keyword arguments to a Javascript function
+                        // raises a TypeError : since we don't know the 
+                        // signature of the function, the result of Brython 
+                        // code like foo(y=1, x=2) applied to a JS function 
+                        // defined by function foo(x, y) can't be determined.
+                        //
+                        throw TypeError("A Javascript function can't "+
+                            "take keyword arguments")
                     }else{
                         args.push(pyobj2jsobj(arguments[i]))
                     }
@@ -233,7 +236,6 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
 }
 
 $JSObjectDict.__getitem__ = function(self,rank){
-    console.log('get item '+rank+' of', self)
     try{return getattr(self.js,'__getitem__')(rank)}
     catch(err){
         if(self.js[rank]!==undefined) return JSObject(self.js[rank])
@@ -259,9 +261,8 @@ $JSObjectDict.__mro__ = [$JSObjectDict,$ObjectDict]
 $JSObjectDict.__repr__ = function(self){return "<JSObject wraps "+self.js+">"}
 
 $JSObjectDict.__setattr__ = function(self,attr,value){
-    if(isinstance(value,JSObject)){self.js[attr]=value.js
-    }else{self.js[attr]=value
-    }
+    if(isinstance(value,JSObject)){self.js[attr]=value.js}
+    else{self.js[attr]=value}
 }
 
 $JSObjectDict.__setitem__ = $JSObjectDict.__setattr__
@@ -296,6 +297,9 @@ function JSObject(obj){
         if(obj.__brython__) return obj
         return {__class__:$JSObjectDict,js:obj}
     }
+    // we need to do this or nan is returned, when doing json.loads(...)
+    if (klass === _b_.float.$dict) return _b_.float(obj)
+
     // If obj is a Python object, return it unchanged
     if(klass!==undefined) return obj
     return {__class__:$JSObjectDict,js:obj}  // wrap it
@@ -307,5 +311,5 @@ $JSObjectDict.$factory = JSObject
 $B.JSObject = JSObject
 $B.JSConstructor = JSConstructor
 
-
 })(__BRYTHON__)
+

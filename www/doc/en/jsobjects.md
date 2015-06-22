@@ -87,7 +87,20 @@ a Python dictionary by :
 
 If the Javascript object is a function, the arguments passed to the Python
 function are converted into Javascript objects, using the reverse of the
-above table
+above table.
+
+Take care, a Javascript function can't be called with keyword arguments, this
+raises a `TypeError` exception : if the function is defined by
+
+>    function foo(x, y)
+
+and if it is called from a Brython script by
+
+>    window.foo(y=0, x=1)
+
+passing the arguments in the excepted order is not possible, because the
+Brython script doesn't know the signature of the Javascript function.
+
 
 ### Using Javascript constructors
 
