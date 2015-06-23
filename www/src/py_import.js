@@ -191,33 +191,35 @@ function import_py(module,path,package){
 }
 
 //$B.run_py is needed for import hooks..
-$B.run_py=run_py=function(module_contents,path,module) {
-    var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
-    $B.$py_module_path[module.name]=path
-
-    var root = $B.py2js(module_contents,module.__name__,
-        module.__name__,'__builtins__')
-
-    var body = root.children
-    root.children = []
-    // use the module pattern : module name returns the results of an anonymous function
-    var mod_node = new $Node('expression')
-    new $NodeJSCtx(mod_node,'var $module=(function()')
-    root.insert(0,mod_node)
-    for(var i=0, _len_i = body.length; i < _len_i;i++){mod_node.add(body[i])}
-
-    // $globals will be returned when the anonymous function is run
-    var ret_node = new $Node('expression')
-    new $NodeJSCtx(ret_node,'return $locals_'+module.__name__.replace(/\./g,'_'))
-    mod_node.add(ret_node)
-    // add parenthesis for anonymous function execution
+$B.run_py=run_py=function(module_contents,path,module,compiled) {
+    if (!compiled) {
+        var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
+        $B.$py_module_path[module.name]=path
     
-    var ex_node = new $Node('expression')
-    new $NodeJSCtx(ex_node,')(__BRYTHON__)')
-    root.add(ex_node)
+        var root = $B.py2js(module_contents,module.__name__,
+            module.__name__,'__builtins__')
+    
+        var body = root.children
+        root.children = []
+        // use the module pattern : module name returns the results of an anonymous function
+        var mod_node = new $Node('expression')
+        new $NodeJSCtx(mod_node,'var $module=(function()')
+        root.insert(0,mod_node)
+        for(var i=0, _len_i = body.length; i < _len_i;i++){mod_node.add(body[i])}
+    
+        // $globals will be returned when the anonymous function is run
+        var ret_node = new $Node('expression')
+        new $NodeJSCtx(ret_node,'return $locals_'+module.__name__.replace(/\./g,'_'))
+        mod_node.add(ret_node)
+        // add parenthesis for anonymous function execution
+        
+        var ex_node = new $Node('expression')
+        new $NodeJSCtx(ex_node,')(__BRYTHON__)')
+        root.add(ex_node)
+    }
     
     try{
-        var js = root.to_js()
+        var js = (compiled)? module_contents : root.to_js()
         if ($B.$options.debug == 10) {
            console.log('code for module '+module.__name__)
            console.log(js)
@@ -407,10 +409,11 @@ importer_path = {
             code = _spec.loader_state.code;
         module.$is_package = _spec.loader_state.is_package,
         delete _spec.loader_state['code'];
-        if (_spec.loader_state.type == 'py') {
-            run_py(code, _spec.origin, module);
+        var src_type = _spec.loader_state.type;
+        if (src_type == 'py' || src_type == 'pyc') {
+            run_py(code, _spec.origin, module, src_type=='pyc');
         }
-        else if (_spec.loader_state.type == 'js') {
+        else if (src_type == 'js') {
             run_js(code, _spec.origin, module)
         }
     }
@@ -441,11 +444,18 @@ UrlPathFinder.prototype.find_spec = function(self, fullname, module) {
         path_entry = self.path,
         base_path = path_entry + fullname.match(/[^.]+$/g)[0],
         modpaths = [];
-    if (hint != 'py') {
+    var tryall = hint === undefined;
+    if (tryall || hint == 'js') {
         // either js or undefined , try js code
         modpaths = [[base_path + '.js', 'js', false]];
     }
-    if (hint != 'js') {
+    if (tryall || hint == 'pyc') {
+        // either pyc or undefined , try pre-compiled module code
+        modpaths = modpaths.concat([[base_path + '.pyc.js', 'pyc', false],
+                                    [base_path + '/__init__.pyc.js',
+                                     'pyc', true]]);
+    }
+    if (tryall || hint == 'py') {
         // either py or undefined , try py code
         modpaths = modpaths.concat([[base_path + '.py', 'py', false],
                                     [base_path + '/__init__.py',
