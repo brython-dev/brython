@@ -127,7 +127,8 @@ $B.make_method = function(attr, klass, func, func1){
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     local_args[pos++]=arguments[i]
                 }
-                return func.apply(null,local_args)
+                var f = _b_.getattr(func, '__get__', func)
+                return f.apply(null,local_args)
             }
             instance_method.__class__ = $B.$MethodDict
             instance_method.$infos = {
