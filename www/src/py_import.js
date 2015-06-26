@@ -221,6 +221,7 @@ $B.run_py=run_py=function(module,path,module_contents) {
         // Create module object
         var mod = eval('$module')
         // add some attributes
+        mod.__js__ = js
         mod.__class__ = $B.$ModuleDict
         mod.__name__ = module.name
         mod.__repr__ = mod.__str__ = function(){

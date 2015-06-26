@@ -133,7 +133,14 @@ $ObjectDict.__getattribute__ = function(obj,attr){
     }
 
     if(res!==undefined){
+
+        //if(res.__class__===_b_.property.$dict){console.log('getattr',attr,'res', res, res.__get__;return res.fget(obj)}
+
         var get_func = res.__get__
+
+        if(get_func!==undefined){
+            return get_func.apply(null,[res, obj, klass])
+        }
         
         if(get_func===undefined && (typeof res=='object')){
             var __get__ = _b_.getattr(res,'__get__',null);

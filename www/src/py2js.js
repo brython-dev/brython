@@ -1650,6 +1650,10 @@ function $DecoratorCtx(context){
         }
 
         var obj = children[func_rank].context.tree[0]
+        if(obj.type=='def'){
+            obj.decorated = true
+            obj.alias = '$dec'+$B.UUID()
+        }
 
         // add a line after decorated element
         var callable = children[func_rank].context
@@ -1663,7 +1667,7 @@ function $DecoratorCtx(context){
           res += this.dec_ids[i]+'('
           tail +=')'
         }
-        res += ref+tail+';'
+        res += (obj.decorated ? obj.alias : ref)+tail+';'
         
         // If obj is a function or a class we must set $B.bound to 'true'
         // instead of "def" or "class" because the result might have an
@@ -2125,6 +2129,7 @@ function $DefCtx(context){
         }
 
         var prefix = this.tree[0].to_js()
+        if(this.decorated){prefix=this.alias}
         
         var indent = node.indent
 
@@ -2219,6 +2224,7 @@ function $DefCtx(context){
         this.js_processed=true
 
         func_name = func_name || this.tree[0].to_js()
+        if(this.decorated){func_name=this.alias}
         return func_name+'=(function()'
     }
 }

@@ -435,7 +435,7 @@ function format(value, format_spec) {
 function getattr(obj,attr,_default){
 
     var klass = $B.get_class(obj)
-
+    
     if(klass===undefined){
         // for native JS objects used in Python code
         if(obj[attr]!==undefined) return $B.$JS2Py(obj[attr])
@@ -1033,6 +1033,7 @@ function property(fget, fset, fdel, doc) {
 
 property.__class__ = $B.$factory
 property.$dict = $PropertyDict
+$PropertyDict.$factory = property
 
 // range
 var $RangeDict = {__class__:$B.$type,
