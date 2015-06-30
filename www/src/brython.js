@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,0,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-06-26 22:36:26.443317"
+__BRYTHON__.compiled_date="2015-06-30 11:15:41.295765"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","__datetime","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -3936,19 +3936,18 @@ break}else if(attr=='__str__' && mro[i]['__repr__']!==undefined){
 res=mro[i]['repr']
 break}}}else{if(res.__set__===undefined){
 return res}}
-if(res!==undefined){
-var get_func=res.__get__
-if(attr=="clicked"){console.log('get_func',get_func)}
-if(get_func!==undefined){return get_func.apply(null,[res,obj,klass])}
-if(get_func===undefined &&(typeof res=='object')){var __get__=_b_.getattr(res,'__get__',null)
-if(__get__ &&(typeof __get__=='function')){get_func=function(x,y){return __get__.apply(x,[y,klass])}}}
-if(get_func===undefined &&(typeof res=='function')){get_func=function(x){return x}}
-if(get_func!==undefined){
+if(res!==undefined){if(res.__class__===_b_.property.$dict){return res.__get__(res,obj,klass)}
+var __get__=_b_.getattr(res,'__get__',null)
+if(__get__!==null){try{return __get__.apply(null,[obj,klass])}
+catch(err){console.log('error in get.apply',err)
+console.log(__get__+'')
+throw err}}
+if(typeof res=='object'){if(__get__ &&(typeof __get__=='function')){get_func=function(x,y){return __get__.apply(x,[y,klass])}}}
+if(__get__===null &&(typeof res=='function')){__get__=function(x){return x}}
+if(__get__!==null){
 res.__name__=attr
 if(attr=='__new__'){res.$type='staticmethod'}
-var res1=get_func.apply(null,[res,obj,klass])
-if(attr=="clicked"){console.log('res',res)
-console.log('res1',res1)}
+var res1=__get__.apply(null,[res,obj,klass])
 if(typeof res1=='function'){
 if(res1.__class__===$B.$factory)return res
 else if(res1.__class__===$B.$MethodDict)return res
@@ -4850,10 +4849,9 @@ function divmod(x,y){var klass=$B.get_class(x)
 return[klass.__floordiv__(x,y),klass.__mod__(x,y)]}
 var $EnumerateDict={__class__:$B.$type,__name__:'enumerate'}
 $EnumerateDict.__mro__=[$EnumerateDict,$ObjectDict]
-function enumerate(){var _start=0
-var $ns=$B.$MakeArgs("enumerate",arguments,["iterable"],["start"],null,null)
+function enumerate(){var $ns=$B.$MakeArgs1("enumerate",2,{iterable:null,start:null},['iterable','start'],arguments,{start:0},null,null)
 var _iter=iter($ns["iterable"])
-var _start=$ns["start"]||_start
+var _start=$ns["start"]
 var res={__class__:$EnumerateDict,__getattr__:function(attr){return res[attr]},__iter__:function(){return res},__name__:'enumerate iterator',__next__:function(){res.counter++
 return _b_.tuple([res.counter,next(_iter)])},__repr__:function(){return "<enumerate object>"},__str__:function(){return "<enumerate object>"},counter:_start-1}
 for(var attr in res){if(typeof res[attr]==='function' && attr!=="__class__"){res[attr].__str__=(function(x){return function(){return "<method wrapper '"+x+"' of enumerate object>"}})(attr)}}
@@ -5149,23 +5147,16 @@ if(c.length==1)return c.charCodeAt(0)
 _b_.TypeError('ord() expected a character, but string of length ' + c.length + ' found')
 default:
 _b_.TypeError('ord() expected a character, but ' + typeof(c)+ ' was found')}}
-function pow(){var $ns=$B.$MakeArgs('pow',arguments,[],[],'args','kw')
-var args=$ns['args']
-if(args.length<2){throw _b_.TypeError(
-"pow expected at least 2 arguments, got "+args.length)}
-if(args.length>3){throw _b_.TypeError(
-"pow expected at most 3 arguments, got "+args.length)}
-if(args.length===2){var x=args[0]
-var y=args[1]
-var a,b
-if(isinstance(x,_b_.float)){a=x.value}else if(isinstance(x,_b_.int)){a=x}else{throw _b_.TypeError("unsupported operand type(s) for ** or pow()")}
-if(isinstance(y,_b_.float)){b=y.value}else if(isinstance(y,_b_.int)){b=y}else{
-throw _b_.TypeError("unsupported operand type(s) for ** or pow()")}
-var res=Math.pow(a,b)}
-if(args.length===3){var x=args[0]
-var y=args[1]
-var z=args[2]
-var _err="pow() 3rd argument not allowed unless all arguments are integers"
+function pow(){var $ns=$B.$MakeArgs1('pow',3,{x:null,y:null,z:null},['x','y','z'],arguments,{z:null},null,null)
+var x=$ns['x'],y=$ns['y'],z=$ns['z']
+if(z===null){var a,b
+if(isinstance(x,_b_.float)){a=x.valueOf()}
+else if(isinstance(x,_b_.int)){a=x}
+else{throw _b_.TypeError("unsupported operand type(s) for ** or pow()")}
+if(isinstance(y,_b_.float)){b=y.valueOf()}
+else if(isinstance(y,_b_.int)){b=y}
+else{throw _b_.TypeError("unsupported operand type(s) for ** or pow()")}
+var res=Math.pow(a,b)}else{var _err="pow() 3rd argument not allowed unless all arguments are integers"
 if(!isinstance(x,_b_.int))throw _b_.TypeError(_err)
 if(!isinstance(y,_b_.int))throw _b_.TypeError(_err)
 if(!isinstance(z,_b_.int))throw _b_.TypeError(_err)
@@ -5376,10 +5367,13 @@ res=getattr(res,'__add__')(_item)}catch(err){if(err.__name__==='StopIteration'){
 else{throw err}}}
 return res}
 var $SuperDict={__class__:$B.$type,__name__:'super'}
-$SuperDict.__getattribute__=function(self,attr){var mro=self.__thisclass__.$dict.__mro__,res
+$SuperDict.__getattribute__=function(self,attr){if($SuperDict[attr]!==undefined){
+return function(){return $SuperDict[attr](self)}}
+var mro=self.__thisclass__.$dict.__mro__,res
 for(var i=1;i<mro.length;i++){
 res=mro[i][attr]
 if(res!==undefined){
+if(res.__class__===$PropertyDict){return res.__get__(res,self.__self_class__)}
 if(self.__self_class__!==None){var _args=[self.__self_class__]
 if(attr=='__new__'){_args=[]}
 var method=(function(initial_args){return function(){
@@ -5396,7 +5390,9 @@ return method}
 return res}}
 throw _b_.AttributeError("object 'super' has no attribute '"+attr+"'")}
 $SuperDict.__mro__=[$SuperDict,$ObjectDict]
-$SuperDict.__repr__=$SuperDict.__str__=function(self){return "<object 'super'>"}
+$SuperDict.__repr__=$SuperDict.__str__=function(self){var res="<super: <class '"+self.__thisclass__.$dict.__name__+"'"
+if(self.__self_class__!==undefined){res +=', <'+self.__self_class__.__class__.__name__+' object>'}
+return res+'>'}
 function $$super(_type1,_type2){return{__class__:$SuperDict,__thisclass__:_type1,__self_class__:(_type2 ||None)}}
 $$super.$dict=$SuperDict
 $$super.__class__=$B.$factory

@@ -1623,14 +1623,14 @@ function $DecoratorCtx(context){
         // The technique used here is to replace these lines by :
         //
         //      $vth93h6g = property # random variable name
-        //      def x(self):
+        //      def $dec001(self):   # another random name
         //          return self._x
-        //      x = $vth93h6g(x)
+        //      x = $vth93h6g($dec001)
         //    
         //      $h3upb5s8 = x.setter
-        //      def x(self, value):
+        //      def $dec002(self, value):
         //          self._x = value
-        //      x = $h3upb5s8(x)
+        //      x = $h3upb5s8($dec002)
         //
         this.dec_ids = []
         var pos=0

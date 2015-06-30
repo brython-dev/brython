@@ -131,7 +131,7 @@ $B.$MakeArgs1 = function($fname,argcount,slots,var_names,$args,$dobj,
     // $dobj = {'z':1}
     // extra_pos_args = 'args'
     // extra_kw_args = 'kw'
-    
+        
     var has_kw_args = false, 
         nb_pos = $args.length,
         $ns
