@@ -6957,7 +6957,6 @@ function brython(options){
 			var $elt = $elts[$i];
 			$src += ($elt.innerHTML || $elt.textContent);
 		}
-		console.log($src);
 		try{
 			// Conversion of Python source code to Javascript
 
