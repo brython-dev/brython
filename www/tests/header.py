@@ -36,10 +36,10 @@ trans_menu = {
         'fr': 'Développement',
         'pt': 'Desenvolvimento'},
     'menu_groups': {
-        'en': 'Groups',
-        'es': 'Grupos',
-        'fr': 'Groupes',
-        'pt': 'Grupos'}
+        'en': 'Social',
+        'es': 'Social',
+        'fr': 'Social',
+        'pt': 'Social'}
 }
 
 
@@ -60,7 +60,7 @@ def show(prefix=''):
     has_req = False
 
     qs_lang = doc.query.getfirst("lang")
-    if qs_lang and qs_lang in ["en", "fr", "es", "pt"]:
+    if qs_lang and qs_lang in ["en", "fr", "es"]:
         has_req = True
         language = qs_lang
     else:
@@ -68,7 +68,7 @@ def show(prefix=''):
         try:
             lang, enc = locale.getdefaultlocale()
             lang = lang[:2]
-            if lang in ("en", "fr", "es", "pt"):
+            if lang in ("en", "fr", "es"):
                 language = lang
         except:
             pass
@@ -87,7 +87,7 @@ def show(prefix=''):
             # add lang to href
             href += '?lang=%s' % language
         if key == 'home':
-            img = IMG(src=prefix + "brython_white.png", Class="logo",
+            img = IMG(src=prefix + "brython.svg", Class="logo",
                       alt="Brython Logo", title="Brython")
             link = A(img, href=href)
             cell = TD(link, Class="logo")

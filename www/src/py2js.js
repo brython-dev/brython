@@ -2737,66 +2737,86 @@ function $FromCtx(context){
     
     this.to_js = function(){
         this.js_processed=true
-        var scope = $get_scope(this)
-        var mod = $get_module(this).module
+        var scope = $get_scope(this),
+            mod = $get_module(this).module,
+            res = [],
+            pos = 0,
+            indent = $get_node(this).indent,
+            head= ' '.repeat(indent);
+        
+//        //console.log('from',this.module)
+//        var _mod = this.module.replace(/\$/g,''), package, packages=[]
+//        while(_mod.length>0){
+//            if(_mod.charAt(0)=='.'){
+//                if(package===undefined){
+//                    package = $B.imported[mod].__package__
+//                    if(package==''){console.log('package vide 1 pour $B.imported['+mod+']')}
+//                }else{
+//                    package = $B.imported[package]
+//                    if(package==''){console.log('package vide 3 pour $B.imported['+package+']')}
+//                }
+//                if(package===undefined){
+//                    return 'throw SystemError("Parent module \'\' not loaded, cannot perform relative import")'
+//                }else{
+//                    packages.push(package)
+//                }
+//                _mod = _mod.substr(1)
+//            }else{
+//                break
+//            }
+//        }
+//        if(_mod){packages.push(_mod)}
+//        this.module = packages.join('.')
 
-        var res = ''
-        var indent = $get_node(this).indent
-        var head= ' '.repeat(indent)
-        
-        //console.log('from',this.module)
-        var _mod = this.module.replace(/\$/g,''), package, packages=[]
-        while(_mod.length>0){
-            if(_mod.charAt(0)=='.'){
-                if(package===undefined){
-                    package = $B.imported[mod].__package__
-                    if(package==''){console.log('package vide 1 pour $B.imported['+mod+']')}
-                }else{
-                    package = $B.imported[package]
-                    if(package==''){console.log('package vide 3 pour $B.imported['+package+']')}
-                }
-                if(package===undefined){
-                    return 'throw SystemError("Parent module \'\' not loaded, cannot perform relative import")'
-                }else{
-                    packages.push(package)
-                }
-                _mod = _mod.substr(1)
-            }else{
-                break
-            }
+        // FIXME : Replacement still needed ?
+        var mod_name = this.module.replace(/\$/g,''),
+            localns = '$locals_'+scope.id.replace(/\./g,'_');
+        res[pos++] = '$B.$import("';
+        res[pos++] = mod_name+'","'+mod+'",["';
+        res[pos++] = this.names.join('","')+'"], {';
+        var sep = '';
+        for (var attr in this.aliases) {
+            res[pos++] = sep + '"'+attr+'": "'+this.aliases[attr]+'"';
+            sep = ',';
         }
-        if(_mod){packages.push(_mod)}
-        this.module = packages.join('.')
-        
+        res[pos++] = '}, '+localns+');';
+                     
         if(this.names[0]=='*'){
-            res += '$B.$import("'+this.module+'","'+mod+'")\n'
-            res += head+'var $mod=$B.imported["'+this.module+'"]\n'
-            res += head+'for(var $attr in $mod){\n'
-            res +="if($attr.substr(0,1)!=='_'){\n"+head
-            res += '$locals_'+scope.id.replace(/\./g,'_')+'[$attr]'
-            res += '=$mod[$attr]\n'+head+'}}'
-            
             // Set attribute to indicate that the scope has a 
             // 'from X import *' : this will make name resolution harder :-(
             scope.blurred = true
-        
-        }else{
-            res += '$B.$import_from("'+this.module+'",['
-            res += '"' + this.names.join('","') + '"'
-            res += '],"'+mod+'");\n'
-            var _is_module=scope.ntype === 'module'
-            for(var i=0;i<this.names.length;i++){
-                var name=this.names[i]
-                var alias = this.aliases[name]||name
-                
-                res += head+'try{$locals_'+scope.id.replace(/\./g,'_')+'["'+ alias+'"]'
-                res += '=getattr($B.imported["'+this.module+'"],"'+name+'")}\n'
-                res += 'catch($err'+$loop_num+'){if($err'+$loop_num+'.__class__'
-                res += '===AttributeError.$dict){$err'+$loop_num+'.__class__'
-                res += '=ImportError.$dict};throw $err'+$loop_num+'};'            
-            }
         }
-        return res + '\n'+head+'None;'
+
+//        if(this.names[0]=='*'){
+//            res += '$B.$import("'+this.module+'","'+mod+'")\n'
+//            res += head+'var $mod=$B.imported["'+this.module+'"]\n'
+//            res += head+'for(var $attr in $mod){\n'
+//            res +="if($attr.substr(0,1)!=='_'){\n"+head
+//            res += '$locals_'+scope.id.replace(/\./g,'_')+'[$attr]'
+//            res += '=$mod[$attr]\n'+head+'}}'
+//            
+//            // Set attribute to indicate that the scope has a 
+//            // 'from X import *' : this will make name resolution harder :-(
+//            scope.blurred = true
+//        
+//        }else{
+//            res += '$B.$import_from("'+this.module+'",['
+//            res += '"' + this.names.join('","') + '"'
+//            res += '],"'+mod+'");\n'
+//            var _is_module=scope.ntype === 'module'
+//            for(var i=0;i<this.names.length;i++){
+//                var name=this.names[i]
+//                var alias = this.aliases[name]||name
+//                
+//                res += head+'try{$locals_'+scope.id.replace(/\./g,'_')+'["'+ alias+'"]'
+//                res += '=getattr($B.imported["'+this.module+'"],"'+name+'")}\n'
+//                res += 'catch($err'+$loop_num+'){if($err'+$loop_num+'.__class__'
+//                res += '===AttributeError.$dict){$err'+$loop_num+'.__class__'
+//                res += '=ImportError.$dict};throw $err'+$loop_num+'};'            
+//            }
+//        }
+        res[pos++] = '\n'+head+'None;';
+        return res.join('');
     }
 }
 
@@ -3255,29 +3275,30 @@ function $ImportCtx(context){
 
         var res = [], pos=0
         for(var i=0;i<this.tree.length;i++){
-            var to_import = this.tree[i].name
-            
-            // If the module to import is already imported, don't call
-            // the function $B.$import
-            if($B.imported[to_import]===undefined){
-                res[pos++]='$B.$import("'+to_import+'","'+mod+'");'
-            }
-            if(this.tree[i].name == this.tree[i].alias){
-                var parts = this.tree[i].name.split('.')
-                // $import returns an object
-                // for "import a.b.c" this object has attributes
-                // "a", "a.b" and "a.b.c", values are the matching modules
-                for(var j=0;j<parts.length;j++){
-                    var imp_key = parts.slice(0,j+1).join('.')
-                    var obj_attr = ''
-                    for(var k=0;k<j+1;k++){obj_attr+='["'+parts[k]+'"]'}
-                    res[pos++]='$locals'+obj_attr+'=$B.imported["'+imp_key+'"];'
-                }
-            }else{
-                res[pos++]='$locals_'+scope.id.replace(/\./g,'_')
-                res[pos++]='["'+this.tree[i].alias
-                res[pos++]='"]=$B.imported["'+this.tree[i].name+'"];'
-            }
+            var mod_name = this.tree[i].name,
+                aliases = (this.tree[i].name == this.tree[i].alias)?
+                    '{}' : ('{"' + mod_name + '" : "' +
+                    this.tree[i].alias + '"}'),
+                localns = '$locals_'+scope.id.replace(/\./g,'_');
+            res[pos++]='$B.$import("'+mod_name+'","'+mod+'", [],'+aliases+',' +
+                                   localns + ');'
+
+//            if(this.tree[i].name == this.tree[i].alias){
+//                var parts = this.tree[i].name.split('.')
+//                // $import returns an object
+//                // for "import a.b.c" this object has attributes
+//                // "a", "a.b" and "a.b.c", values are the matching modules
+//                for(var j=0;j<parts.length;j++){
+//                    var imp_key = parts.slice(0,j+1).join('.')
+//                    var obj_attr = ''
+//                    for(var k=0;k<j+1;k++){obj_attr+='["'+parts[k]+'"]'}
+//                    res[pos++]='$locals'+obj_attr+'=$B.imported["'+imp_key+'"];'
+//                }
+//            }else{
+//                res[pos++]='$locals_'+scope.id.replace(/\./g,'_')
+//                res[pos++]='["'+this.tree[i].alias
+//                res[pos++]='"]=$B.imported["'+this.tree[i].name+'"];'
+//            }
         }
         // add None for interactive console
         return res.join('') + 'None;'
@@ -6863,7 +6884,9 @@ function brython(options){
     $B.$py_src = {}
     
     // meta_path used in py_import.js
-    $B.meta_path = []
+    if ($B.meta_path === undefined) {
+        $B.meta_path = []
+    }
 
     // Options passed to brython(), with default values
     $B.$options= {}
