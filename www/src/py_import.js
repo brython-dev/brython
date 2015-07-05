@@ -429,7 +429,11 @@ $B.path_importer_cache = {};
  * @param {string}      URL pointing at location of VFS js file
  */
 VfsPathFinder = function(path) {
-    if (path.substr(-7) != '.vfs.js') {
+    if (path.substr(-1) == '/') {
+        path = path.slice(0, -1);
+    }
+    var ext = path.substr(-7);
+    if (ext != '.vfs.js') {
         throw _b_.ImportError('VFS file URL must end with .vfs.js extension');
     }
     this.path = path;
@@ -437,7 +441,7 @@ VfsPathFinder = function(path) {
 }
 
 VfsPathFinder.prototype.load_vfs = function() {
-    try { var code = $download_module('<VFS>', path) }
+    try { var code = $download_module('<VFS>', this.path) }
     catch (e) {
         this.vfs = undefined;
         throw new _b_.ImportError(e.$message || e.message);
@@ -447,17 +451,18 @@ VfsPathFinder.prototype.load_vfs = function() {
         this.vfs = $vfs;
     }
     catch (e) { throw new _b_.ImportError('Expecting $vfs var in VFS file'); }
+    $B.path_importer_cache[this.path + '/'] = this;
 }
 
 VfsPathFinder.prototype.find_spec = function(self, fullname, module) {
-    if (this.vfs === undefined) {
-        try { this.load_vfs() }
+    if (self.vfs === undefined) {
+        try { self.load_vfs() }
         catch(e) {
             console.log("Could not load VFS while importing '" + fullname + "'");
             return _b_.None;
         }
     }
-    var stored = this.vfs[fullname];
+    var stored = self.vfs[fullname];
     if (stored === undefined) {
         return _b_.None;
     }
@@ -465,9 +470,9 @@ VfsPathFinder.prototype.find_spec = function(self, fullname, module) {
     return new_spec({name : fullname,
                      loader: importer_VFS,
                      // FIXME : Better origin string.
-                     origin : this.path + '#' + fullname,
+                     origin : self.path + '#' + fullname,
                      // FIXME: Namespace packages ?
-                     submodule_search_locations: is_package? [this.path] : _b_.None,
+                     submodule_search_locations: is_package? [self.path] : _b_.None,
                      loader_state: {stored: stored},
                      // FIXME : Where exactly compiled module is stored ?
                      cached: _b_.None,
@@ -476,14 +481,14 @@ VfsPathFinder.prototype.find_spec = function(self, fullname, module) {
 }
 
 VfsPathFinder.prototype.invalidate_caches = function(self) {
-    this.vfs = undefined;
+    self.vfs = undefined;
 }
 
 VfsPathFinder.prototype.__repr__ = function() {
     return "<VfsPathFinder for '" + this.path + "'>"
 }
 
-vfs_hook = function(path) { return new UrlPathFinder(path); }
+vfs_hook = function(path) { return new VfsPathFinder(path); }
 
 vfs_hook.__repr__ = vfs_hook.__str__ = vfs_hook.toString = function() {
     return '<function path_hook_for_VfsPathFinder>';
