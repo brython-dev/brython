@@ -99,6 +99,10 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
     if(pyobj===_b_.None) return null
 
     var klass = $B.get_class(pyobj)
+    if (klass === undefined) {
+        // not a Python object , consider arg as Javascript object instead
+        return pyobj;
+    }
     if(klass===$JSObjectDict || klass===$JSConstructorDict){
         // instances of JSObject and JSConstructor are transformed into the
         // underlying Javascript object

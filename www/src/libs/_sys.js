@@ -8,7 +8,23 @@ var $module=(function($B){
         },
         modules :
             {'__get__':function(){return $B.obj_dict($B.imported)},
-             '__set__':0 // data descriptor, to force use of __get__
+             '__set__':function(self, obj, value){ throw _b_.TypeError("Read only property 'sys.modules'") }
+            },
+        path: 
+            {'__get__':function(){return $B.path},
+             '__set__':function(self, obj, value){ $B.path = value }
+            },
+        meta_path: 
+            {'__get__':function(){return $B.meta_path},
+             '__set__':function(self, obj, value){ $B.meta_path = value }
+            },
+        path_hooks: 
+            {'__get__':function(){return $B.path_hooks},
+             '__set__':function(self, obj, value){ $B.path_hooks = value }
+            },
+        path_importer_cache: 
+            {'__get__':function(){return _b_.dict($B.JSObject($B.path_importer_cache))},
+             '__set__':function(self, obj, value){ throw _b_.TypeError("Read only property 'sys.path_importer_cache'") }
             },
         stderr : {
             __get__:function(){return $B.stderr},

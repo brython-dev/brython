@@ -1070,6 +1070,10 @@ $B.gt = function(x,y){
 }
 
 
+    window.is_none = function (o) {
+        return o === undefined || o == _b_.None;
+    }
+
 })(__BRYTHON__)
 
 // IE doesn't implement indexOf on Arrays

@@ -34,5 +34,18 @@ assert global_in_imported.X == 15
 from delegator import Delegator
 delegate = Delegator([])
 
+# test VFS path entry finder and from <module> import * 
+import sys
+vfs_path = __BRYTHON__.script_dir + '/test.vfs.js'
+sys.path.insert(0, vfs_path)
+
+from hello import *
+assert get_hello() == 'Hello'
+assert world.get_world() == 'world'
+
+import foo
+assert foo.get_foo() == 'foo'
+assert foo.get_bar() == 'bar'
+
 print('passed all tests')
 
