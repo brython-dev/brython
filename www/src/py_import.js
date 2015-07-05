@@ -424,6 +424,73 @@ $B.path_hooks = [];
 $B.path_importer_cache = {};
 
 /**
+ * Find modules packaged in a js script to be used as a virtual file system
+ *
+ * @param {string}      URL pointing at location of VFS js file
+ */
+VfsPathFinder = function(path) {
+    if (path.substr(-7) != '.vfs.js') {
+        throw _b_.ImportError('VFS file URL must end with .vfs.js extension');
+    }
+    this.path = path;
+    this.load_vfs();
+}
+
+VfsPathFinder.prototype.load_vfs = function() {
+    try { var code = $download_module('<VFS>', path) }
+    catch (e) {
+        this.vfs = undefined;
+        throw new _b_.ImportError(e.$message || e.message);
+    }
+    eval(code);
+    try {
+        this.vfs = $vfs;
+    }
+    catch (e) { throw new _b_.ImportError('Expecting $vfs var in VFS file'); }
+}
+
+VfsPathFinder.prototype.find_spec = function(self, fullname, module) {
+    if (this.vfs === undefined) {
+        try { this.load_vfs() }
+        catch(e) {
+            console.log("Could not load VFS while importing '" + fullname + "'");
+            return _b_.None;
+        }
+    }
+    var stored = this.vfs[fullname];
+    if (stored === undefined) {
+        return _b_.None;
+    }
+    var is_package = stored[2];
+    return new_spec({name : fullname,
+                     loader: importer_VFS,
+                     // FIXME : Better origin string.
+                     origin : this.path + '#' + fullname,
+                     // FIXME: Namespace packages ?
+                     submodule_search_locations: is_package? [this.path] : _b_.None,
+                     loader_state: {stored: stored},
+                     // FIXME : Where exactly compiled module is stored ?
+                     cached: _b_.None,
+                     parent: is_package? fullname : parent_package(fullname),
+                     has_location: _b_.True});
+}
+
+VfsPathFinder.prototype.invalidate_caches = function(self) {
+    this.vfs = undefined;
+}
+
+VfsPathFinder.prototype.__repr__ = function() {
+    return "<VfsPathFinder for '" + this.path + "'>"
+}
+
+vfs_hook = function(path) { return new UrlPathFinder(path); }
+
+vfs_hook.__repr__ = vfs_hook.__str__ = vfs_hook.toString = function() {
+    return '<function path_hook_for_VfsPathFinder>';
+}
+$B.path_hooks.push(vfs_hook);
+
+/**
  * Find modules deployed in a hierarchy under a given base URL
  *
  * @param {string}      search path URL, used as a reference during ihe import
