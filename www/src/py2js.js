@@ -1623,14 +1623,14 @@ function $DecoratorCtx(context){
         // The technique used here is to replace these lines by :
         //
         //      $vth93h6g = property # random variable name
-        //      def x(self):
+        //      def $dec001(self):   # another random name
         //          return self._x
-        //      x = $vth93h6g(x)
+        //      x = $vth93h6g($dec001)
         //    
         //      $h3upb5s8 = x.setter
-        //      def x(self, value):
+        //      def $dec002(self, value):
         //          self._x = value
-        //      x = $h3upb5s8(x)
+        //      x = $h3upb5s8($dec002)
         //
         this.dec_ids = []
         var pos=0
@@ -1650,6 +1650,10 @@ function $DecoratorCtx(context){
         }
 
         var obj = children[func_rank].context.tree[0]
+        if(obj.type=='def'){
+            obj.decorated = true
+            obj.alias = '$dec'+$B.UUID()
+        }
 
         // add a line after decorated element
         var callable = children[func_rank].context
@@ -1663,7 +1667,7 @@ function $DecoratorCtx(context){
           res += this.dec_ids[i]+'('
           tail +=')'
         }
-        res += ref+tail+';'
+        res += (obj.decorated ? obj.alias : ref)+tail+';'
         
         // If obj is a function or a class we must set $B.bound to 'true'
         // instead of "def" or "class" because the result might have an
@@ -2125,6 +2129,7 @@ function $DefCtx(context){
         }
 
         var prefix = this.tree[0].to_js()
+        if(this.decorated){prefix=this.alias}
         
         var indent = node.indent
 
@@ -2219,6 +2224,7 @@ function $DefCtx(context){
         this.js_processed=true
 
         func_name = func_name || this.tree[0].to_js()
+        if(this.decorated){func_name=this.alias}
         return func_name+'=(function()'
     }
 }
@@ -6965,103 +6971,159 @@ function brython(options){
     
     // Get all scripts with type = text/python or text/python3 and run them
 
-    var first_script = true, module_name
-    for(var $i=0;$i<$elts.length;$i++){
-        var $elt = $elts[$i]
-        if($elt.type=="text/python"||$elt.type==="text/python3"){
+    var first_script = true, module_name;
+    if(options.ipy_id!==undefined){
+		module_name='__main__';
+		var $src = "";
+		$B.$py_module_path[module_name] = $href;
+		for(var $i=0;$i<$elts.length;$i++){
+			var $elt = $elts[$i];
+			$src += ($elt.innerHTML || $elt.textContent);
+		}
+		try{
+			// Conversion of Python source code to Javascript
 
-            if($elt.id){module_name=$elt.id}
-            else if(first_script){module_name='__main__'; first_script=false}
-            else{module_name = '__main__'+$B.UUID()}
-        
-            // Get Python source code
-            var $src = null
-            if($elt.src){ 
-                // format <script type="text/python" src="python_script.py">
-                // get source code by an Ajax call
-                if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
-                    var $xmlhttp=new XMLHttpRequest();
-                }else{// code for IE6, IE5
-                    var $xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
-                }
-                $xmlhttp.onreadystatechange = function(){
-                    var state = this.readyState
-                    if(state===4){
-                        $src = $xmlhttp.responseText
-                    }
-                }
-                $xmlhttp.open('GET',$elt.src,false)
-                $xmlhttp.send()
-                if($xmlhttp.status != 200){
-                    var msg = "can't open file '"+$elt.src
-                    msg += "': No such file or directory"
-                    console.log(msg)
-                    return
-                }
-                $B.$py_module_path[module_name]=$elt.src
-                var $src_elts = $elt.src.split('/')
-                $src_elts.pop()
-                var $src_path = $src_elts.join('/')
-                if ($B.path.indexOf($src_path) == -1) {
-                    // insert in first position : folder /Lib with built-in modules
-                    // should be the last used when importing scripts
-                    $B.path.splice(0,0,$src_path)
-                }
-            }else{
-                // Get source code inside the script element
-                var $src = ($elt.innerHTML || $elt.textContent)
-                $B.$py_module_path[module_name] = $href
-            }
+			var $root = $B.py2js($src,module_name,module_name,'__builtins__')
+			//earney
+			var $js = $root.to_js()
+			if($B.debug>1) console.log($js)
 
-            try{
-                // Conversion of Python source code to Javascript
+			if ($B.async_enabled) {
+			   $js = $B.execution_object.source_conversion($js) 
+			   
+			   //console.log($js)
+			   eval($js)
+			} else {
+			   // Run resulting Javascript
+			   eval($js)
+			}
+			
+		}catch($err){
+			if($B.debug>1){
+				console.log($err)
+				for(var attr in $err){
+				   console.log(attr+' : ', $err[attr])
+				}
+			}
 
-                var $root = $B.py2js($src,module_name,module_name,'__builtins__')
-                //earney
-                var $js = $root.to_js()
-                if($B.debug>1) console.log($js)
+			// If the error was not caught by the Python runtime, build an
+			// instance of a Python exception
+			if($err.$py_error===undefined){
+				console.log('Javascript error', $err)
+				//console.log($js)
+				//for(var attr in $err){console.log(attr+': '+$err[attr])}
+				$err=_b_.RuntimeError($err+'')
+			}
 
-                if ($B.async_enabled) {
-                   $js = $B.execution_object.source_conversion($js) 
-                   
-                   //console.log($js)
-                   eval($js)
-                } else {
-                   // Run resulting Javascript
-                   eval($js)
-                }
-                
-            }catch($err){
-                if($B.debug>1){
-                    console.log($err)
-                    for(var attr in $err){
-                       console.log(attr+' : ', $err[attr])
-                    }
-                }
+			// Print the error traceback on the standard error stream
+			var $trace = _b_.getattr($err,'info')+'\n'+$err.__name__+
+				': ' +$err.args
+			try{
+				_b_.getattr($B.stderr,'write')($trace)
+			}catch(print_exc_err){
+				console.log($trace)
+			}
+			// Throw the error to stop execution
+			throw $err
+		}
+	}else{
+		for(var $i=0;$i<$elts.length;$i++){
+			var $elt = $elts[$i]
+			if($elt.type=="text/python"||$elt.type==="text/python3"){
 
-                // If the error was not caught by the Python runtime, build an
-                // instance of a Python exception
-                if($err.$py_error===undefined){
-                    console.log('Javascript error', $err)
-                    //console.log($js)
-                    //for(var attr in $err){console.log(attr+': '+$err[attr])}
-                    $err=_b_.RuntimeError($err+'')
-                }
+				if($elt.id){module_name=$elt.id}
+				else if(first_script){module_name='__main__'; first_script=false}
+				else{module_name = '__main__'+$B.UUID()}
+			
+				// Get Python source code
+				var $src = null
+				if($elt.src){ 
+					// format <script type="text/python" src="python_script.py">
+					// get source code by an Ajax call
+					if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
+						var $xmlhttp=new XMLHttpRequest();
+					}else{// code for IE6, IE5
+						var $xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+					}
+					$xmlhttp.onreadystatechange = function(){
+						var state = this.readyState
+						if(state===4){
+							$src = $xmlhttp.responseText
+						}
+					}
+					$xmlhttp.open('GET',$elt.src,false)
+					$xmlhttp.send()
+					if($xmlhttp.status != 200){
+						var msg = "can't open file '"+$elt.src
+						msg += "': No such file or directory"
+						console.log(msg)
+						return
+					}
+					$B.$py_module_path[module_name]=$elt.src
+					var $src_elts = $elt.src.split('/')
+					$src_elts.pop()
+					var $src_path = $src_elts.join('/')
+					if ($B.path.indexOf($src_path) == -1) {
+						// insert in first position : folder /Lib with built-in modules
+						// should be the last used when importing scripts
+						$B.path.splice(0,0,$src_path)
+					}
+				}else{
+					// Get source code inside the script element
+					var $src = ($elt.innerHTML || $elt.textContent)
+					$B.$py_module_path[module_name] = $href
+				}
 
-                // Print the error traceback on the standard error stream
-                var $trace = _b_.getattr($err,'info')+'\n'+$err.__name__+
-                    ': ' +$err.args
-                try{
-                    _b_.getattr($B.stderr,'write')($trace)
-                }catch(print_exc_err){
-                    console.log($trace)
-                }
-                // Throw the error to stop execution
-                throw $err
-            }
+				try{
+					// Conversion of Python source code to Javascript
 
-        }
-    }
+					var $root = $B.py2js($src,module_name,module_name,'__builtins__')
+					//earney
+					var $js = $root.to_js()
+					if($B.debug>1) console.log($js)
+
+					if ($B.async_enabled) {
+					   $js = $B.execution_object.source_conversion($js) 
+					   
+					   //console.log($js)
+					   eval($js)
+					} else {
+					   // Run resulting Javascript
+					   eval($js)
+					}
+					
+				}catch($err){
+					if($B.debug>1){
+						console.log($err)
+						for(var attr in $err){
+						   console.log(attr+' : ', $err[attr])
+						}
+					}
+
+					// If the error was not caught by the Python runtime, build an
+					// instance of a Python exception
+					if($err.$py_error===undefined){
+						console.log('Javascript error', $err)
+						//console.log($js)
+						//for(var attr in $err){console.log(attr+': '+$err[attr])}
+						$err=_b_.RuntimeError($err+'')
+					}
+
+					// Print the error traceback on the standard error stream
+					var $trace = _b_.getattr($err,'info')+'\n'+$err.__name__+
+						': ' +$err.args
+					try{
+						_b_.getattr($B.stderr,'write')($trace)
+					}catch(print_exc_err){
+						console.log($trace)
+					}
+					// Throw the error to stop execution
+					throw $err
+				}
+
+			}
+		}
+	}
 
     /* Uncomment to check the names added in global Javascript namespace
     var kk1 = Object.keys(window)

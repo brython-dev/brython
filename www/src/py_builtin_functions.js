@@ -253,11 +253,10 @@ var $EnumerateDict = {__class__:$B.$type,__name__:'enumerate'}
 $EnumerateDict.__mro__ = [$EnumerateDict,$ObjectDict]
 
 function enumerate(){
-    var _start = 0
-    var $ns = $B.$MakeArgs("enumerate",arguments,["iterable"],
-                ["start"], null, null)
+    var $ns = $B.$MakeArgs1("enumerate",2,{iterable:null,start:null},
+        ['iterable', 'start'],arguments,{start:0}, null, null)
     var _iter = iter($ns["iterable"])
-    var _start = $ns["start"] || _start
+    var _start = $ns["start"]
     var res = {
         __class__:$EnumerateDict,
         __getattr__:function(attr){return res[attr]},
@@ -435,7 +434,7 @@ function format(value, format_spec) {
 function getattr(obj,attr,_default){
 
     var klass = $B.get_class(obj)
-
+    
     if(klass===undefined){
         // for native JS objects used in Python code
         if(obj[attr]!==undefined) return $B.$JS2Py(obj[attr])
@@ -932,35 +931,20 @@ function ord(c) {
 }
 
 function pow() {
-    var $ns=$B.$MakeArgs('pow',arguments,[],[],'args','kw')
-    var args = $ns['args']
-    if(args.length<2){throw _b_.TypeError(
-        "pow expected at least 2 arguments, got "+args.length)
-    }
-    if(args.length>3){throw _b_.TypeError(
-        "pow expected at most 3 arguments, got "+args.length)
-    }
-    if(args.length === 2){
-        var x = args[0]
-        var y = args[1]
+    var $ns=$B.$MakeArgs1('pow',3,{x:null,y:null,z:null},['x','y','z'],
+        arguments,{z:null},null,null)
+    var x=$ns['x'],y=$ns['y'],z=$ns['z']
+    if(z === null){
         var a,b
-        if(isinstance(x, _b_.float)){a=x.value
-        } else if(isinstance(x, _b_.int)){a=x
-        } else {throw _b_.TypeError("unsupported operand type(s) for ** or pow()")
-        }
-
-        if (isinstance(y, _b_.float)){b=y.value
-        } else if (isinstance(y, _b_.int)){b=y
-        } else {
-          throw _b_.TypeError("unsupported operand type(s) for ** or pow()")
-        }
+        if(isinstance(x, _b_.float)){a=x.valueOf()}
+        else if(isinstance(x, _b_.int)){a=x}
+        else {throw _b_.TypeError("unsupported operand type(s) for ** or pow()")}
+        
+        if (isinstance(y, _b_.float)){b=y.valueOf()}
+        else if (isinstance(y, _b_.int)){b=y}
+        else {throw _b_.TypeError("unsupported operand type(s) for ** or pow()")}
         var res = Math.pow(a,b)
-    }
-
-    if(args.length === 3){
-        var x = args[0]
-        var y = args[1]
-        var z = args[2]
+    }else{
         var _err="pow() 3rd argument not allowed unless all arguments are integers"
 
         if (!isinstance(x, _b_.int)) throw _b_.TypeError(_err)
@@ -1026,6 +1010,7 @@ function property(fget, fset, fdel, doc) {
 
 property.__class__ = $B.$factory
 property.$dict = $PropertyDict
+$PropertyDict.$factory = property
 
 // range
 var $RangeDict = {__class__:$B.$type,
@@ -1415,11 +1400,17 @@ function sum(iterable,start){
 var $SuperDict = {__class__:$B.$type,__name__:'super'}
 
 $SuperDict.__getattribute__ = function(self,attr){
+    if($SuperDict[attr]!==undefined){ // for __repr__ and __str__
+        return function(){return $SuperDict[attr](self)}
+    }
     var mro = self.__thisclass__.$dict.__mro__,res
     for(var i=1;i<mro.length;i++){ // start with 1 = ignores the class where super() is defined
         res = mro[i][attr]
         if(res!==undefined){
             // if super() is called with a second argument, the result is bound
+            if(res.__class__===$PropertyDict){
+                return res.__get__(res, self.__self_class__)
+            }
             if(self.__self_class__!==None){
                 var _args = [self.__self_class__]
                 if(attr=='__new__'){_args=[]}
@@ -1452,7 +1443,13 @@ $SuperDict.__getattribute__ = function(self,attr){
 
 $SuperDict.__mro__ = [$SuperDict,$ObjectDict]
 
-$SuperDict.__repr__=$SuperDict.__str__=function(self){return "<object 'super'>"}
+$SuperDict.__repr__=$SuperDict.__str__=function(self){
+    var res = "<super: <class '"+self.__thisclass__.$dict.__name__+"'"
+    if(self.__self_class__!==undefined){
+        res += ', <'+self.__self_class__.__class__.__name__+' object>'
+    }
+    return res+'>'
+}
 
 function $$super(_type1,_type2){
     return {__class__:$SuperDict,

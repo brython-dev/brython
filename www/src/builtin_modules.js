@@ -1,6 +1,6 @@
 ;(function($B) {
     var modules = {}
-    modules['browser'] = {
+    modules['_browser'] = {
         $package: true,
         $is_package: true,
         __package__:'browser',

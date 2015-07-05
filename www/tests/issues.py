@@ -415,4 +415,19 @@ a = [1,2,3]
 a *= 2
 assert a == [1, 2, 3, 1, 2, 3]
 
+# bug with property setter
+class Test:
+
+    @property
+    def clicked(self):
+        return self.func
+
+    @clicked.setter
+    def clicked(self, callback):
+        self.func = callback
+
+t = Test()
+t.clicked = lambda x: x+7 #"clicked"
+assert t.clicked(7) == 14
+
 print('passed all tests')
