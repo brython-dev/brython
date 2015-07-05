@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 3, 0, 'alpha', 0]
-// implementation [3, 2, 0, 'alpha', 0]
+// implementation [3, 2, 1, 'alpha', 0]
 // version compiled from commented, indented source files at github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
 ;(function($B){
@@ -52,11 +52,11 @@ $B.indexedDB=function(){return $B.JSObject(indexedDB)}}
 $B.re=function(pattern,flags){return $B.JSObject(new RegExp(pattern,flags))}
 $B.has_json=typeof(JSON)!=="undefined"
 $B.has_websocket=window.WebSocket!==undefined})(__BRYTHON__)
-__BRYTHON__.implementation=[3,2,0,'alpha',0]
-__BRYTHON__.__MAGIC__="3.2.0"
+__BRYTHON__.implementation=[3,2,1,'alpha',0]
+__BRYTHON__.__MAGIC__="3.2.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-06-30 11:15:41.295765"
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","__datetime","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2015-07-05 11:56:36.777150"
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
 
@@ -2099,7 +2099,7 @@ if(this.marked){var val=this.value.to_js()
 var res='getattr('+val+',"__'+this.func+'__")('
 if(this.tree.length===1)return res+this.tree[0].to_js()+')'
 var res1=[],pos=0
-for(var i=0;i<this.tree.length;i++){if(this.tree[i].type==='abstract_expr'){res1[pos++]='null'}
+for(var i=0;i<this.tree.length;i++){if(this.tree[i].type==='abstract_expr'){res1[pos++]='None'}
 else{res1[pos++]=this.tree[i].to_js()}}
 return res+'slice(' + res1.join(',')+ '))'}else{if(this.func=='getitem' && this.tree.length==1){return '$B.$getitem('+this.value.to_js()+',' + this.tree[0].to_js()+')'}
 var res='',shortcut=false
@@ -2116,9 +2116,8 @@ res +=' && '+subs+'!==undefined ?'
 res +=subs+expr+ ' : '}
 var val=this.value.to_js()
 res +='getattr('+val+',"__'+this.func+'__")('
-if(this.tree.length===1){res +=this.tree[0].to_js()+')'}else{
-var res1=[],pos=0
-for(var i=0;i<this.tree.length;i++){if(this.tree[i].type==='abstract_expr'){res1[pos++]='null'}
+if(this.tree.length===1){res +=this.tree[0].to_js()+')'}else{var res1=[],pos=0
+for(var i=0;i<this.tree.length;i++){if(this.tree[i].type==='abstract_expr'){res1[pos++]='None'}
 else{res1[pos++]=this.tree[i].to_js()}}
 res +='slice(' + res1.join(',')+ '))'}
 return shortcut ? res+')' : res}}}
@@ -3840,7 +3839,25 @@ if(options.pythonpath!==undefined)$B.path=options.pythonpath
 if(options.re_module !==undefined){if(options.re_module=='pyre' ||options.re_module=='jsre'){$B.$options.re=options.re}}
 var kk=Object.keys(window)
 var first_script=true,module_name
+if(options.ipy_id!==undefined){module_name='__main__'
+var $src=""
+$B.$py_module_path[module_name]=$href
 for(var $i=0;$i<$elts.length;$i++){var $elt=$elts[$i]
+$src +=($elt.innerHTML ||$elt.textContent)}
+try{
+var $root=$B.py2js($src,module_name,module_name,'__builtins__')
+var $js=$root.to_js()
+if($B.debug>1)console.log($js)
+if($B.async_enabled){$js=$B.execution_object.source_conversion($js)
+eval($js)}else{
+eval($js)}}catch($err){if($B.debug>1){console.log($err)
+for(var attr in $err){console.log(attr+' : ',$err[attr])}}
+if($err.$py_error===undefined){console.log('Javascript error',$err)
+$err=_b_.RuntimeError($err+'')}
+var $trace=_b_.getattr($err,'info')+'\n'+$err.__name__+
+': ' +$err.args
+try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
+throw $err}}else{for(var $i=0;$i<$elts.length;$i++){var $elt=$elts[$i]
 if($elt.type=="text/python"||$elt.type==="text/python3"){if($elt.id){module_name=$elt.id}
 else if(first_script){module_name='__main__';first_script=false}
 else{module_name='__main__'+$B.UUID()}
@@ -3878,7 +3895,7 @@ $err=_b_.RuntimeError($err+'')}
 var $trace=_b_.getattr($err,'info')+'\n'+$err.__name__+
 ': ' +$err.args
 try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
-throw $err}}}}
+throw $err}}}}}
 $B.$operators=$operators
 $B.$Node=$Node
 $B.$NodeJSCtx=$NodeJSCtx
@@ -4249,64 +4266,6 @@ return res+_b_.str(self.$infos.__self__)+'>'}
 $MethodFactory.$dict=$B.$MethodDict
 $B.$InstanceMethodDict={__class__:$B.$type,__name__:'instancemethod',__mro__:[_b_.object.$dict],$factory:$MethodFactory}})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
-$B.$MakeArgs=function($fname,$args,$required,$defaults,$other_args,$other_kw,$after_star){
-var has_kw_args=false,nb_pos=$args.length
-if(nb_pos>0 && $args[nb_pos-1]&& $args[nb_pos-1].$nat=='kw'){has_kw_args=true
-nb_pos--
-var kw_args=$args[nb_pos].kw}
-var $ns={},$arg
-var $robj={}
-for(var i=0;i<$required.length;i++){$robj[$required[i]]=null}
-var $dobj={}
-for(var i=0;i<$defaults.length;i++){$dobj[$defaults[i]]=null}
-if($other_args !=null){$ns[$other_args]=[]}
-if($other_kw !=null){var $dict_keys=[],key_pos=0,$dict_values=[],value_pos=0}
-var upargs=[],pos=0
-for(var i=0,_len_i=nb_pos;i < _len_i;i++){$arg=$args[i]
-if($arg===undefined){console.log('arg '+i+' undef in '+$fname)}
-else if($arg===null){upargs[pos++]=null}
-else{
-switch($arg.$nat){case 'ptuple':
-var _arg=$arg.arg
-for(var j=0,_len_j=_arg.length;j < _len_j;j++)upargs[pos++]=_arg[j]
-break
-default:
-upargs[pos++]=$arg}}}
-var nbreqset=0 
-for(var $i=0,_len_$i=upargs.length;$i < _len_$i;$i++){var $arg=upargs[$i]
-var $PyVar=$B.$JS2Py($arg)
-if($i<$required.length){$ns[$required[$i]]=$PyVar
-nbreqset++}else if($other_args!==null){$ns[$other_args].push($PyVar)}else if($i<$required.length+$defaults.length){$ns[$defaults[$i-$required.length]]=$PyVar}else{
-console.log(''+$B.line_info)
-msg=$fname+"() takes "+$required.length+' positional argument'
-msg +=$required.length==1 ? '' : 's'
-msg +=' but more were given'
-throw _b_.TypeError(msg)}}
-if(has_kw_args){
-for(var key in kw_args){$PyVar=kw_args[key]
-if($ns[key]!==undefined){throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")}else if($robj[key]===null){$ns[key]=$PyVar
-nbreqset++}else if($other_args!==null && $after_star!==undefined &&
-$after_star.indexOf(key)>-1){var ix=$after_star.indexOf(key)
-$ns[$after_star[ix]]=$PyVar}else if($dobj[key]===null){$ns[key]=$PyVar
-var pos_def=$defaults.indexOf(key)
-$defaults.splice(pos_def,1)
-delete $dobj[key]}else if($other_kw!=null){$dict_keys.push(key)
-$dict_values.push($PyVar)}else{
-throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")}}}
-if(nbreqset!==$required.length){
-var missing=[],pos=0
-for(var i=0,_len_i=$required.length;i < _len_i;i++){if($ns[$required[i]]===undefined)missing[pos++]=$required[i]}
-if(missing.length==1){throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")}else if(missing.length>1){var msg=$fname+" missing "+missing.length+" positional arguments: "
-for(var i=0,_len_i=missing.length-1;i < _len_i;i++){msg +="'"+missing[i]+"', "}
-msg +="and '"+missing.pop()+"'"
-throw _b_.TypeError(msg)}}
-if($other_kw!=null){$ns[$other_kw]=_b_.dict()
-var si=_b_.dict.$dict.__setitem__
-var i=$dict_keys.length
-while(i--){
-si($ns[$other_kw],$dict_keys[i],$dict_values[i])}}
-if($other_args!=null){$ns[$other_args]=_b_.tuple($ns[$other_args])}
-return $ns}
 $B.$MakeArgs1=function($fname,argcount,slots,var_names,$args,$dobj,extra_pos_args,extra_kw_args){
 var has_kw_args=false,nb_pos=$args.length,$ns
 if(nb_pos>0 && $args[nb_pos-1].$nat=='kw'){has_kw_args=true
@@ -5162,11 +5121,12 @@ if(!isinstance(y,_b_.int))throw _b_.TypeError(_err)
 if(!isinstance(z,_b_.int))throw _b_.TypeError(_err)
 var res=Math.pow(x,y)%z}
 return $B.get_class(res).$factory(res)}
-function $print(){var end='\n',sep=' ',file=$B.stdout
-var $ns=$B.$MakeArgs('print',arguments,[],['end','sep','file'],'args',null)
-for(var attr in $ns){eval('var '+attr+'=$ns[attr]')}
+function $print(){var $ns=$B.$MakeArgs1('print',0,{},[],arguments,{},'args','kw')
+var ks=$ns['kw'].$string_dict
+var end=ks['end']===undefined ? '\n' : ks['end'],sep=ks['sep']===undefined ? ' ' : ks['sep'],file=ks['file']===undefined ? $B.stdout : ks['file'],args=$ns['args']
 getattr(file,'write')(args.map(_b_.str).join(sep)+end)}
 $print.__name__='print'
+$print.is_func=true
 function $prompt(text,fill){return prompt(text,fill ||'')}
 var $PropertyDict={__class__ : $B.$type,__name__ : 'property',__repr__ : function(){return "<property object>"},__str__ : function(){return "<property object>"},toString : function(){return "property"}}
 $PropertyDict.__mro__=[$PropertyDict,$ObjectDict]
@@ -5210,7 +5170,7 @@ $RangeDict.__reversed__=function(self){return range($B.sub(self.stop,1),$B.sub(s
 $RangeDict.__repr__=$RangeDict.__str__=function(self){var res='range('+self.start+', '+self.stop
 if(self.step!=1)res +=', '+self.step
 return res+')'}
-function range(){var $ns=$B.$MakeArgs('range',arguments,[],[],'args',null)
+function range(){var $ns=$B.$MakeArgs1('range',0,{},[],arguments,{},'args',null)
 var args=$ns['args']
 if(args.length>3){throw _b_.TypeError(
 "range expected at most 3 arguments, got "+args.length)}
@@ -5313,7 +5273,7 @@ var _start=self.start
 if(_start==_b_.None)_start=0
 return _b_.tuple([_start,_len,1])}
 _b_.NotImplementedError("Error! negative step indices not implemented yet")}
-function slice(){var $ns=$B.$MakeArgs('slice',arguments,[],[],'args',null)
+function slice(){var $ns=$B.$MakeArgs1('slice',0,{},[],arguments,{},'args',null)
 var args=$ns['args']
 if(args.length>3){throw _b_.TypeError(
 "slice expected at most 3 arguments, got "+args.length)}else if(args.length==0){throw _b_.TypeError('slice expected at least 1 argument, got 0')}
@@ -5339,7 +5299,7 @@ return res}
 slice.__class__=$B.$factory
 slice.$dict=$SliceDict
 $SliceDict.$factory=slice
-function sorted(){var $ns=$B.$MakeArgs('sorted',arguments,['iterable'],[],null,'kw')
+function sorted(){var $ns=$B.$MakeArgs1('sorted',1,{iterable:null},['iterable'],arguments,{},null,'kw')
 if($ns['iterable']===undefined)throw _b_.TypeError("sorted expected 1 positional argument, got 0")
 var iterable=$ns['iterable']
 var key=_b_.dict.$dict.get($ns['kw'],'key',None)
@@ -5441,8 +5401,7 @@ $BufferedReader.__mro__=[$BufferedReader,$Reader,$ObjectDict]
 var $TextIOWrapper={__class__:$B.$type,__name__:'_io.TextIOWrapper'}
 $TextIOWrapper.__mro__=[$TextIOWrapper,$Reader,$ObjectDict]
 function $url_open(){
-var mode='r',encoding='utf-8'
-var $ns=$B.$MakeArgs('open',arguments,['file'],['mode','encoding'],'args','kw')
+var $ns=$B.$MakeArgs1('open',3,{file:null,mode:null,encoding:null},['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},'args','kw')
 for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
 if(args.length>0)var mode=args[0]
 if(args.length>1)var encoding=args[1]
@@ -5469,7 +5428,7 @@ $ZipDict.__iter__=function(self){return $B.$iterator(self.items,$zip_iterator)}
 $ZipDict.__mro__=[$ZipDict,$ObjectDict]
 function zip(){var res={__class__:$ZipDict,items:[]}
 if(arguments.length==0)return res
-var $ns=$B.$MakeArgs('zip',arguments,[],[],'args','kw')
+var $ns=$B.$MakeArgs1('zip',0,{},[],arguments,{},'args','kw')
 var _args=$ns['args']
 var args=[],pos=0
 for(var i=0;i<_args.length;i++){args[pos++]=iter(_args[i])}
@@ -5630,7 +5589,7 @@ var line_info=frame[1].$line_info.split(',')
 var lines=$B.$py_src[line_info[1]].split('\n')
 info +='\n  module '+line_info[1]+' line '+line_info[0]
 var line=lines[parseInt(line_info[0])-1]
-if(line)line=line.replace(/^[]+/g,'')
+if(line)line=line.replace(/^[ ]+/g,'')
 info +='\n    '+line}
 return info}else if(attr=='traceback'){
 if(false){
@@ -6154,11 +6113,11 @@ $JSObjectDict.$factory=JSObject
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var js=['__datetime','_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
+var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','browser.ajax','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.timer','browser.websocket','calendar','codecs','collections.abc','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','encodings.cp037','encodings.cp1006','encodings.cp1026','encodings.cp1125','encodings.cp1140','encodings.cp1250','encodings.cp1251','encodings.cp1252','encodings.cp1253','encodings.cp1254','encodings.cp1255','encodings.cp1256','encodings.cp1257','encodings.cp1258','encodings.cp273','encodings.cp424','encodings.cp437','encodings.cp500','encodings.cp720','encodings.cp737','encodings.cp775','encodings.cp850','encodings.cp852','encodings.cp855','encodings.cp856','encodings.cp857','encodings.cp858','encodings.cp860','encodings.cp861','encodings.cp862','encodings.cp863','encodings.cp864','encodings.cp865','encodings.cp866','encodings.cp869','encodings.cp874','encodings.cp875','encodings.hp_roman8','encodings.iso8859_1','encodings.iso8859_10','encodings.iso8859_11','encodings.iso8859_13','encodings.iso8859_14','encodings.iso8859_15','encodings.iso8859_16','encodings.iso8859_2','encodings.iso8859_3','encodings.iso8859_4','encodings.iso8859_5','encodings.iso8859_6','encodings.iso8859_7','encodings.iso8859_8','encodings.iso8859_9','encodings.koi8_r','encodings.koi8_u','encodings.mac_arabic','encodings.mac_centeuro','encodings.mac_croatian','encodings.mac_cyrillic','encodings.mac_farsi','encodings.mac_greek','encodings.mac_iceland','encodings.mac_latin2','encodings.mac_roman','encodings.mac_romanian','encodings.mac_turkish','encodings.palmos','encodings.ptcp154','encodings.tis_620','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','html.entities','html.parser','http.cookies','imp','importlib._bootstrap','importlib.abc','importlib.basehook','importlib.machinery','importlib.util','inspect','io','itertools','keyword','linecache','locale','logging.config','logging.handlers','marshal','multiprocessing.dummy.connection','multiprocessing.pool','multiprocessing.process','multiprocessing.util','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','pydoc_data.topics','queue','random','re','reprlib','select','shutil','signal','site','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test.unittests.__main__','site-packages.test.unittests.audiotests','site-packages.test.unittests.autotest','site-packages.test.unittests.bad_coding','site-packages.test.unittests.bad_coding2','site-packages.test.unittests.badsyntax_3131','site-packages.test.unittests.badsyntax_future3','site-packages.test.unittests.badsyntax_future4','site-packages.test.unittests.badsyntax_future5','site-packages.test.unittests.badsyntax_future6','site-packages.test.unittests.badsyntax_future7','site-packages.test.unittests.badsyntax_future8','site-packages.test.unittests.badsyntax_future9','site-packages.test.unittests.badsyntax_pep3120','site-packages.test.unittests.buffer_tests','site-packages.test.unittests.crashers.bogus_code_obj','site-packages.test.unittests.crashers.gc_inspection','site-packages.test.unittests.crashers.infinite_loop_re','site-packages.test.unittests.crashers.mutation_inside_cyclegc','site-packages.test.unittests.crashers.recursive_call','site-packages.test.unittests.crashers.trace_at_recursion_limit','site-packages.test.unittests.crashers.underlying_dict','site-packages.test.unittests.curses_tests','site-packages.test.unittests.datetimetester','site-packages.test.unittests.dis_module','site-packages.test.unittests.doctest_aliases','site-packages.test.unittests.double_const','site-packages.test.unittests.encoded_modules.module_iso_8859_1','site-packages.test.unittests.encoded_modules.module_koi8_r','site-packages.test.unittests.fork_wait','site-packages.test.unittests.future_test1','site-packages.test.unittests.future_test2','site-packages.test.unittests.gdb_sample','site-packages.test.unittests.inspect_fodder','site-packages.test.unittests.inspect_fodder2','site-packages.test.unittests.leakers.test_ctypes','site-packages.test.unittests.leakers.test_gestalt','site-packages.test.unittests.leakers.test_selftype','site-packages.test.unittests.list_tests','site-packages.test.unittests.lock_tests','site-packages.test.unittests.make_ssl_certs','site-packages.test.unittests.memory_watchdog','site-packages.test.unittests.mock_socket','site-packages.test.unittests.mp_fork_bomb','site-packages.test.unittests.multibytecodec_support','site-packages.test.unittests.namespace_pkgs.both_portions.foo.one','site-packages.test.unittests.namespace_pkgs.both_portions.foo.two','site-packages.test.unittests.namespace_pkgs.module_and_namespace_package.a_test','site-packages.test.unittests.namespace_pkgs.not_a_namespace_pkg.foo.one','site-packages.test.unittests.namespace_pkgs.portion1.foo.one','site-packages.test.unittests.namespace_pkgs.portion2.foo.two','site-packages.test.unittests.namespace_pkgs.project1.parent.child.one','site-packages.test.unittests.namespace_pkgs.project2.parent.child.two','site-packages.test.unittests.namespace_pkgs.project3.parent.child.three','site-packages.test.unittests.outstanding_bugs','site-packages.test.unittests.pickletester','site-packages.test.unittests.profilee','site-packages.test.unittests.pyclbr_input','site-packages.test.unittests.pydoc_mod','site-packages.test.unittests.pydocfodder','site-packages.test.unittests.pystone','site-packages.test.unittests.re_tests','site-packages.test.unittests.regrtest','site-packages.test.unittests.relimport','site-packages.test.unittests.reperf','site-packages.test.unittests.sample_doctest','site-packages.test.unittests.sample_doctest_no_docstrings','site-packages.test.unittests.sample_doctest_no_doctests','site-packages.test.unittests.script_helper','site-packages.test.unittests.seq_tests','site-packages.test.unittests.sortperf','site-packages.test.unittests.ssl_servers','site-packages.test.unittests.string_tests','site-packages.test.unittests.subprocessdata.fd_status','site-packages.test.unittests.subprocessdata.input_reader','site-packages.test.unittests.subprocessdata.qcat','site-packages.test.unittests.subprocessdata.qgrep','site-packages.test.unittests.subprocessdata.sigchild_ignore','site-packages.test.unittests.test.mapping_tests','site-packages.test.unittests.test___all__','site-packages.test.unittests.test___future__','site-packages.test.unittests.test__locale','site-packages.test.unittests.test__osx_support','site-packages.test.unittests.test_abc','site-packages.test.unittests.test_abstract_numbers','site-packages.test.unittests.test_aifc','site-packages.test.unittests.test_argparse','site-packages.test.unittests.test_array','site-packages.test.unittests.test_ast','site-packages.test.unittests.test_asynchat','site-packages.test.unittests.test_asyncore','site-packages.test.unittests.test_atexit','site-packages.test.unittests.test_audioop','site-packages.test.unittests.test_augassign','site-packages.test.unittests.test_base64','site-packages.test.unittests.test_bigaddrspace','site-packages.test.unittests.test_bigmem','site-packages.test.unittests.test_binascii','site-packages.test.unittests.test_binhex','site-packages.test.unittests.test_binop','site-packages.test.unittests.test_bisect','site-packages.test.unittests.test_bool','site-packages.test.unittests.test_buffer','site-packages.test.unittests.test_bufio','site-packages.test.unittests.test_builtin','site-packages.test.unittests.test_bytes','site-packages.test.unittests.test_bz2','site-packages.test.unittests.test_calendar','site-packages.test.unittests.test_call','site-packages.test.unittests.test_capi','site-packages.test.unittests.test_cgi','site-packages.test.unittests.test_cgitb','site-packages.test.unittests.test_charmapcodec','site-packages.test.unittests.test_class','site-packages.test.unittests.test_cmath','site-packages.test.unittests.test_cmd','site-packages.test.unittests.test_cmd_line','site-packages.test.unittests.test_cmd_line_script','site-packages.test.unittests.test_code','site-packages.test.unittests.test_code_module','site-packages.test.unittests.test_codeccallbacks','site-packages.test.unittests.test_codecencodings_cn','site-packages.test.unittests.test_codecencodings_hk','site-packages.test.unittests.test_codecencodings_iso2022','site-packages.test.unittests.test_codecencodings_jp','site-packages.test.unittests.test_codecencodings_kr','site-packages.test.unittests.test_codecencodings_tw','site-packages.test.unittests.test_codecmaps_cn','site-packages.test.unittests.test_codecmaps_hk','site-packages.test.unittests.test_codecmaps_jp','site-packages.test.unittests.test_codecmaps_kr','site-packages.test.unittests.test_codecmaps_tw','site-packages.test.unittests.test_codecs','site-packages.test.unittests.test_codeop','site-packages.test.unittests.test_coding','site-packages.test.unittests.test_collections','site-packages.test.unittests.test_colorsys','site-packages.test.unittests.test_compare','site-packages.test.unittests.test_compile','site-packages.test.unittests.test_compileall','site-packages.test.unittests.test_complex','site-packages.test.unittests.test_concurrent_futures','site-packages.test.unittests.test_configparser','site-packages.test.unittests.test_contains','site-packages.test.unittests.test_Clib','site-packages.test.unittests.test_copy','site-packages.test.unittests.test_copyreg','site-packages.test.unittests.test_cprofile','site-packages.test.unittests.test_crashers','site-packages.test.unittests.test_crypt','site-packages.test.unittests.test_csv','site-packages.test.unittests.test_ctypes','site-packages.test.unittests.test_curses','site-packages.test.unittests.test_datetime','site-packages.test.unittests.test_dbm','site-packages.test.unittests.test_dbm_dumb','site-packages.test.unittests.test_dbm_gnu','site-packages.test.unittests.test_dbm_ndbm','site-packages.test.unittests.test_decimal','site-packages.test.unittests.test_decorators','site-packages.test.unittests.test_defaultdict','site-packages.test.unittests.test_deque','site-packages.test.unittests.test_descr','site-packages.test.unittests.test_descrtut','site-packages.test.unittests.test_devpoll','site-packages.test.unittests.test_dict','site-packages.test.unittests.test_dictcomps','site-packages.test.unittests.test_dictviews','site-packages.test.unittests.test_difflib','site-packages.test.unittests.test_dis','site-packages.test.unittests.test_distutils','site-packages.test.unittests.test_doctest','site-packages.test.unittests.test_doctest2','site-packages.test.unittests.test_docxmlrpc','site-packages.test.unittests.test_dummy_thread','site-packages.test.unittests.test_dummy_threading','site-packages.test.unittests.test_dynamic','site-packages.test.unittests.test_email.__main__','site-packages.test.unittests.test_email.test__encoded_words','site-packages.test.unittests.test_email.test__header_value_parser','site-packages.test.unittests.test_email.test_asian_codecs','site-packages.test.unittests.test_email.test_defect_handling','site-packages.test.unittests.test_email.test_email','site-packages.test.unittests.test_email.test_generator','site-packages.test.unittests.test_email.test_headerregistry','site-packages.test.unittests.test_email.test_inversion','site-packages.test.unittests.test_email.test_message','site-packages.test.unittests.test_email.test_parser','site-packages.test.unittests.test_email.test_pickleable','site-packages.test.unittests.test_email.test_policy','site-packages.test.unittests.test_email.test_utils','site-packages.test.unittests.test_email.torture_test','site-packages.test.unittests.test_enumerate','site-packages.test.unittests.test_eof','site-packages.test.unittests.test_epoll','site-packages.test.unittests.test_errno','site-packages.test.unittests.test_exception_variations','site-packages.test.unittests.test_exceptions','site-packages.test.unittests.test_extcall','site-packages.test.unittests.test_faulthandler','site-packages.test.unittests.test_fcntl','site-packages.test.unittests.test_file','site-packages.test.unittests.test_file_eintr','site-packages.test.unittests.test_filecmp','site-packages.test.unittests.test_fileinput','site-packages.test.unittests.test_fileio','site-packages.test.unittests.test_float','site-packages.test.unittests.test_flufl','site-packages.test.unittests.test_fnmatch','site-packages.test.unittests.test_fork1','site-packages.test.unittests.test_format','site-packages.test.unittests.test_fractions','site-packages.test.unittests.test_frozen','site-packages.test.unittests.test_ftplib','site-packages.test.unittests.test_funcattrs','site-packages.test.unittests.test_functools','site-packages.test.unittests.test_future','site-packages.test.unittests.test_future3','site-packages.test.unittests.test_future4','site-packages.test.unittests.test_future5','site-packages.test.unittests.test_gc','site-packages.test.unittests.test_gdb','site-packages.test.unittests.test_generators','site-packages.test.unittests.test_genericpath','site-packages.test.unittests.test_genexps','site-packages.test.unittests.test_getargs2','site-packages.test.unittests.test_getopt','site-packages.test.unittests.test_gettext','site-packages.test.unittests.test_glob','site-packages.test.unittests.test_global','site-packages.test.unittests.test_grammar','site-packages.test.unittests.test_grp','site-packages.test.unittests.test_gzip','site-packages.test.unittests.test_hash','site-packages.test.unittests.test_hashlib','site-packages.test.unittests.test_heapq','site-packages.test.unittests.test_hmac','site-packages.test.unittests.test_html','site-packages.test.unittests.test_htmlparser','site-packages.test.unittests.test_http_cookiejar','site-packages.test.unittests.test_http_cookies','site-packages.test.unittests.test_httplib','site-packages.test.unittests.test_httpservers','site-packages.test.unittests.test_idle','site-packages.test.unittests.test_imaplib','site-packages.test.unittests.test_imp','site-packages.test.unittests.test_import','site-packages.test.unittests.test_importhooks','site-packages.test.unittests.test_importlib.__main__','site-packages.test.unittests.test_importlib.abc','site-packages.test.unittests.test_importlib.builtin.test_finder','site-packages.test.unittests.test_importlib.builtin.test_loader','site-packages.test.unittests.test_importlib.builtin.util','site-packages.test.unittests.test_importlib.extension.test_case_sensitivity','site-packages.test.unittests.test_importlib.extension.test_finder','site-packages.test.unittests.test_importlib.extension.test_loader','site-packages.test.unittests.test_importlib.extension.test_path_hook','site-packages.test.unittests.test_importlib.extension.util','site-packages.test.unittests.test_importlib.frozen.test_finder','site-packages.test.unittests.test_importlib.frozen.test_loader','site-packages.test.unittests.test_importlib.import_.test___package__','site-packages.test.unittests.test_importlib.import_.test_api','site-packages.test.unittests.test_importlib.import_.test_caching','site-packages.test.unittests.test_importlib.import_.test_fromlist','site-packages.test.unittests.test_importlib.import_.test_meta_path','site-packages.test.unittests.test_importlib.import_.test_packages','site-packages.test.unittests.test_importlib.import_.test_path','site-packages.test.unittests.test_importlib.import_.test_relative_imports','site-packages.test.unittests.test_importlib.import_.util','site-packages.test.unittests.test_importlib.regrtest','site-packages.test.unittests.test_importlib.source.test_abc_loader','site-packages.test.unittests.test_importlib.source.test_case_sensitivity','site-packages.test.unittests.test_importlib.source.test_file_loader','site-packages.test.unittests.test_importlib.source.test_finder','site-packages.test.unittests.test_importlib.source.test_path_hook','site-packages.test.unittests.test_importlib.source.test_source_encoding','site-packages.test.unittests.test_importlib.source.util','site-packages.test.unittests.test_importlib.test_abc','site-packages.test.unittests.test_importlib.test_api','site-packages.test.unittests.test_importlib.test_locks','site-packages.test.unittests.test_importlib.test_util','site-packages.test.unittests.test_importlib.util','site-packages.test.unittests.test_index','site-packages.test.unittests.test_inspect','site-packages.test.unittests.test_int','site-packages.test.unittests.test_int_literal','site-packages.test.unittests.test_io','site-packages.test.unittests.test_ioctl','site-packages.test.unittests.test_ipaddress','site-packages.test.unittests.test_isinstance','site-packages.test.unittests.test_iter','site-packages.test.unittests.test_iterlen','site-packages.test.unittests.test_itertools','site-packages.test.unittests.test_json.__main__','site-packages.test.unittests.test_json.test_decode','site-packages.test.unittests.test_json.test_default','site-packages.test.unittests.test_json.test_dump','site-packages.test.unittests.test_json.test_encode_basestring_ascii','site-packages.test.unittests.test_json.test_fail','site-packages.test.unittests.test_json.test_float','site-packages.test.unittests.test_json.test_indent','site-packages.test.unittests.test_json.test_pass1','site-packages.test.unittests.test_json.test_pass2','site-packages.test.unittests.test_json.test_pass3','site-packages.test.unittests.test_json.test_recursion','site-packages.test.unittests.test_json.test_scanstring','site-packages.test.unittests.test_json.test_separators','site-packages.test.unittests.test_json.test_speedups','site-packages.test.unittests.test_json.test_tool','site-packages.test.unittests.test_json.test_unicode','site-packages.test.unittests.test_keywordonlyarg','site-packages.test.unittests.test_kqueue','site-packages.test.unittests.test_largefile','site-packages.test.unittests.test_lib2to3','site-packages.test.unittests.test_linecache','site-packages.test.unittests.test_list','site-packages.test.unittests.test_listcomps','site-packages.test.unittests.test_locale','site-packages.test.unittests.test_logging','site-packages.test.unittests.test_long','site-packages.test.unittests.test_longexp','site-packages.test.unittests.test_lzma','site-packages.test.unittests.test_macpath','site-packages.test.unittests.test_macurl2path','site-packages.test.unittests.test_mailbox','site-packages.test.unittests.test_mailcap','site-packages.test.unittests.test_marshal','site-packages.test.unittests.test_math','site-packages.test.unittests.test_memoryio','site-packages.test.unittests.test_memoryview','site-packages.test.unittests.test_metaclass','site-packages.test.unittests.test_mimetypes','site-packages.test.unittests.test_minidom','site-packages.test.unittests.test_mmap','site-packages.test.unittests.test_module','site-packages.test.unittests.test_modulefinder','site-packages.test.unittests.test_msilib','site-packages.test.unittests.test_multibytecodec','site-packages.test.unittests.test_multiprocessing','site-packages.test.unittests.test_namespace_pkgs','site-packages.test.unittests.test_netrc','site-packages.test.unittests.test_nis','site-packages.test.unittests.test_nntplib','site-packages.test.unittests.test_normalization','site-packages.test.unittests.test_ntpath','site-packages.test.unittests.test_numeric_tower','site-packages.test.unittests.test_opcodes','site-packages.test.unittests.test_openpty','site-packages.test.unittests.test_operator','site-packages.test.unittests.test_optparse','site-packages.test.unittests.test_os','site-packages.test.unittests.test_ossaudiodev','site-packages.test.unittests.test_osx_env','site-packages.test.unittests.test_parser','site-packages.test.unittests.test_pdb','site-packages.test.unittests.test_peepholer','site-packages.test.unittests.test_pep247','site-packages.test.unittests.test_pep263','site-packages.test.unittests.test_pep277','site-packages.test.unittests.test_pep292','site-packages.test.unittests.test_pep3120','site-packages.test.unittests.test_pep3131','site-packages.test.unittests.test_pep3151','site-packages.test.unittests.test_pep352','site-packages.test.unittests.test_pep380','site-packages.test.unittests.test_pickle','site-packages.test.unittests.test_pickletools','site-packages.test.unittests.test_pipes','site-packages.test.unittests.test_pkg','site-packages.test.unittests.test_pkgimport','site-packages.test.unittests.test_pkgutil','site-packages.test.unittests.test_platform','site-packages.test.unittests.test_plistlib','site-packages.test.unittests.test_poll','site-packages.test.unittests.test_popen','site-packages.test.unittests.test_poplib','site-packages.test.unittests.test_posix','site-packages.test.unittests.test_posixpath','site-packages.test.unittests.test_pow','site-packages.test.unittests.test_pprint','site-packages.test.unittests.test_print','site-packages.test.unittests.test_profile','site-packages.test.unittests.test_property','site-packages.test.unittests.test_pstats','site-packages.test.unittests.test_pty','site-packages.test.unittests.test_pulldom','site-packages.test.unittests.test_pwd','site-packages.test.unittests.test_py_compile','site-packages.test.unittests.test_pyclbr','site-packages.test.unittests.test_pydoc','site-packages.test.unittests.test_pyexpat','site-packages.test.unittests.test_queue','site-packages.test.unittests.test_quopri','site-packages.test.unittests.test_raise','site-packages.test.unittests.test_random','site-packages.test.unittests.test_range','site-packages.test.unittests.test_re','site-packages.test.unittests.test_readline','site-packages.test.unittests.test_reprlib','site-packages.test.unittests.test_resource','site-packages.test.unittests.test_richcmp','site-packages.test.unittests.test_rlcompleter','site-packages.test.unittests.test_robotparser','site-packages.test.unittests.test_runpy','site-packages.test.unittests.test_sax','site-packages.test.unittests.test_sched','site-packages.test.unittests.test_scope','site-packages.test.unittests.test_select','site-packages.test.unittests.test_set','site-packages.test.unittests.test_setcomps','site-packages.test.unittests.test_shelve','site-packages.test.unittests.test_shlex','site-packages.test.unittests.test_shutil','site-packages.test.unittests.test_signal','site-packages.test.unittests.test_site','site-packages.test.unittests.test_slice','site-packages.test.unittests.test_smtpd','site-packages.test.unittests.test_smtplib','site-packages.test.unittests.test_smtpnet','site-packages.test.unittests.test_sndhdr','site-packages.test.unittests.test_socket','site-packages.test.unittests.test_socketserver','site-packages.test.unittests.test_sort','site-packages.test.unittests.test_sqlite','site-packages.test.unittests.test_ssl','site-packages.test.unittests.test_startfile','site-packages.test.unittests.test_stat','site-packages.test.unittests.test_strftime','site-packages.test.unittests.test_string','site-packages.test.unittests.test_stringprep','site-packages.test.unittests.test_strlit','site-packages.test.unittests.test_strptime','site-packages.test.unittests.test_strtod','site-packages.test.unittests.test_struct','site-packages.test.unittests.test_structmembers','site-packages.test.unittests.test_structseq','site-packages.test.unittests.test_subprocess','site-packages.test.unittests.test_sunau','site-packages.test.unittests.test_sundry','site-packages.test.unittests.test_super','site-packages.test.unittests.test_support','site-packages.test.unittests.test_symtable','site-packages.test.unittests.test_syntax','site-packages.test.unittests.test_sys','site-packages.test.unittests.test_sys_setprofile','site-packages.test.unittests.test_sys_settrace','site-packages.test.unittests.test_sysconfig','site-packages.test.unittests.test_syslog','site-packages.test.unittests.test_tarfile','site-packages.test.unittests.test_tcl','site-packages.test.unittests.test_telnetlib','site-packages.test.unittests.test_tempfile','site-packages.test.unittests.test_textwrap','site-packages.test.unittests.test_thread','site-packages.test.unittests.test_threaded_import','site-packages.test.unittests.test_threadedtempfile','site-packages.test.unittests.test_threading','site-packages.test.unittests.test_threading_local','site-packages.test.unittests.test_threadsignals','site-packages.test.unittests.test_time','site-packages.test.unittests.test_timeit','site-packages.test.unittests.test_timeout','site-packages.test.unittests.test_tk','site-packages.test.unittests.test_tokenize','site-packages.test.unittests.test_tools','site-packages.test.unittests.test_trace','site-packages.test.unittests.test_traceback','site-packages.test.unittests.test_ttk_guionly','site-packages.test.unittests.test_ttk_textonly','site-packages.test.unittests.test_tuple','site-packages.test.unittests.test_typechecks','site-packages.test.unittests.test_types','site-packages.test.unittests.test_ucn','site-packages.test.unittests.test_unary','site-packages.test.unittests.test_unicode','site-packages.test.unittests.test_unicode_file','site-packages.test.unittests.test_unicodedata','site-packages.test.unittests.test_unittest','site-packages.test.unittests.test_univnewlines','site-packages.test.unittests.test_unpack','site-packages.test.unittests.test_unpack_ex','site-packages.test.unittests.test_urllib','site-packages.test.unittests.test_urllib2','site-packages.test.unittests.test_urllib2_localnet','site-packages.test.unittests.test_urllib2net','site-packages.test.unittests.test_urllib_response','site-packages.test.unittests.test_urllibnet','site-packages.test.unittests.test_urlparse','site-packages.test.unittests.test_userdict','site-packages.test.unittests.test_userlist','site-packages.test.unittests.test_userstring','site-packages.test.unittests.test_uu','site-packages.test.unittests.test_uuid','site-packages.test.unittests.test_venv','site-packages.test.unittests.test_wait3','site-packages.test.unittests.test_wait4','site-packages.test.unittests.test_warnings','site-packages.test.unittests.test_wave','site-packages.test.unittests.test_weakref','site-packages.test.unittests.test_weakset','site-packages.test.unittests.test_webbrowser','site-packages.test.unittests.test_winreg','site-packages.test.unittests.test_winsound','site-packages.test.unittests.test_with','site-packages.test.unittests.test_wsgiref','site-packages.test.unittests.test_xdrlib','site-packages.test.unittests.test_xml_dom_minicompat','site-packages.test.unittests.test_xml_etree','site-packages.test.unittests.test_xml_etree_c','site-packages.test.unittests.test_xmlrpc','site-packages.test.unittests.test_xmlrpc_net','site-packages.test.unittests.test_zipfile','site-packages.test.unittests.test_zipfile64','site-packages.test.unittests.test_zipimport','site-packages.test.unittests.test_zipimport_support','site-packages.test.unittests.test_zlib','site-packages.test.unittests.testcodec','site-packages.test.unittests.tf_inherit_check','site-packages.test.unittests.threaded_import_hangers','site-packages.test.unittests.time_hashlib','site-packages.test.unittests.tracedmodules.testmod','site-packages.test.unittests.warning_tests','site-packages.test.unittests.win_console_handler','site-packages.test.unittests.xmltests','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','unittest.__main__','unittest.case','unittest.loader','unittest.main','unittest.mock','unittest.result','unittest.runner','unittest.signals','unittest.suite','unittest.test._test_warnings','unittest.test.dummy','unittest.test.support','unittest.test.test_assertions','unittest.test.test_break','unittest.test.test_case','unittest.test.test_discovery','unittest.test.test_functiontestcase','unittest.test.test_loader','unittest.test.test_program','unittest.test.test_result','unittest.test.test_runner','unittest.test.test_setups','unittest.test.test_skipping','unittest.test.test_suite','unittest.test.testmock.support','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.testmock','unittest.test.testmock.testpatch','unittest.test.testmock.testsentinel','unittest.test.testmock.testwith','unittest.util','urllib.parse','urllib.request','uuid','warnings','weakref','webbrowser','xml.dom.NodeFilter','xml.dom.domreg','xml.dom.expatbuilder','xml.dom.minicompat','xml.dom.minidom','xml.dom.pulldom','xml.dom.xmlbuilder','xml.etree.ElementInclude','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.parsers.expat','xml.sax._exceptions','xml.sax.expatreader','xml.sax.handler','xml.sax.saxutils','xml.sax.xmlreader','zipfile','zlib']
+var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','calendar','codecs','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','queue','random','re','reprlib','select','shutil','signal','site','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.unittests.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
-var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','long_int1','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.test','site-packages.test.support','site-packages.test.unittests','site-packages.test.unittests.encoded_modules','site-packages.test.unittests.leakers','site-packages.test.unittests.namespace_pkgs.not_a_namespace_pkg.foo','site-packages.test.unittests.test_email','site-packages.test.unittests.test_importlib','site-packages.test.unittests.test_importlib.builtin','site-packages.test.unittests.test_importlib.extension','site-packages.test.unittests.test_importlib.frozen','site-packages.test.unittests.test_importlib.import_','site-packages.test.unittests.test_importlib.source','site-packages.test.unittests.test_json','site-packages.test.unittests.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
+var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','long_int1','multiprocessing','multiprocessing.dummy','pydoc_data','test.unittests','test.unittests.encoded_modules','test.unittests.leakers','test.unittests.namespace_pkgs.not_a_namespace_pkg.foo','test.unittests.test_email','test.unittests.test_importlib','test.unittests.test_importlib.builtin','test.unittests.test_importlib.extension','test.unittests.test_importlib.frozen','test.unittests.test_importlib.import_','test.unittests.test_importlib.source','test.unittests.test_json','test.unittests.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]})(__BRYTHON__)
 
 ;(function($B){var _b_=$B.builtins
@@ -6291,6 +6250,10 @@ console.log('import '+mod_name+' from VFS')
 return true}
 return null}
 function import_from_stdlib_static(mod_name,origin,package){var address=$B.stdlib[mod_name]
+if(address===undefined){var elts=mod_name.split('.')
+if(elts.length==1){return null}
+var mod=elts.pop(),pckg=elts.join('.'),pckg_address=$B.stdlib[pckg]
+if(pckg_address!==undefined && pckg_address[1]){address=['py']}else{return null}}
 if(address!==undefined){var ext=address[0]
 var $is_package=address[1]!==undefined
 var path=$B.brython_path
@@ -6393,7 +6356,6 @@ package_path=$B.modules[elt_name].__file__
 funcs=[import_from_package ]}}}
 $B.$import_from=function(mod_name,names,origin){
 if($B.$options.debug==10){}
-if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
 mod_name=mod_name.replace(/\$/g,'')
 var mod=$B.imported[mod_name]
 if(mod===undefined){$B.$import(mod_name,origin)
@@ -6649,7 +6611,7 @@ function $err(op,other){var msg="unsupported operand type(s) for "+op
 msg +=": 'int' and '"+$B.get_class(other).__name__+"'"
 throw _b_.TypeError(msg)}
 var $IntDict={__class__:$B.$type,__name__:'int',__dir__:$ObjectDict.__dir__,toString:function(){return '$IntDict'},$native:true}
-$IntDict.from_bytes=function(){var $ns=$B.$MakeArgs("from_bytes",arguments,['x','byteorder'],'signed','args','kw')
+$IntDict.from_bytes=function(){var $ns=$B.$MakeArgs1("from_bytes",3,{x:null,byteorder:null,signed:null},['x','byteorder','signed'],arguments,{signed:False},'args','kw')
 var x=$ns['x']
 var byteorder=$ns['byteorder']
 var signed=$ns['signed']||_b_.dict.$dict.get($ns['kw'],'signed',False)
@@ -6763,6 +6725,7 @@ $IntDict.__setattr__=function(self,attr,value){if(self.__class__===$IntDict){thr
 self[attr]=value}
 $IntDict.__str__=$IntDict.__repr__
 $IntDict.__truediv__=function(self,other){if(isinstance(other,int)){if(other==0)throw ZeroDivisionError('division by zero')
+if(other.__class__==$B.LongInt.$dict){return new Number(self/parseInt(other.value))}
 return new Number(self/other)}
 if(isinstance(other,_b_.float)){if(!other.valueOf())throw ZeroDivisionError('division by zero')
 return new Number(self/other)}
@@ -7891,14 +7854,10 @@ if(('a'<=char && char<='m')||('A'<=char && char<='M')){res +=String.fromCharCode
 return res}
 return _b_.bytes(self,encoding)}
 $StringDict.endswith=function(self){
-var args=[],pos=0
-for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-var start=null,end=null
-var $ns=$B.$MakeArgs("$StringDict.endswith",args,['suffix'],['start','end'],null,null)
+var $ns=$B.$MakeArgs1("$StringDict.endswith",4,{self:null,suffix:null,start:null,end:null},['self','suffix','start','end'],arguments,{start:0,end:self.length-1},null,null)
 var suffixes=$ns['suffix']
 if(!isinstance(suffixes,_b_.tuple)){suffixes=[suffixes]}
-start=$ns['start']||start
-end=$ns['end']||self.length-1
+var start=$ns['start'],end=$ns['end']
 var s=self.substr(start,end+1)
 for(var i=0,_len_i=suffixes.length;i < _len_i;i++){suffix=suffixes[i]
 if(suffix.length<=s.length &&
@@ -7910,7 +7869,7 @@ for(var i=0;i < tabsize;i++)_str+=' '
 return self.valueOf().replace(/\t/g,_str)}
 $StringDict.find=function(self){
 var start=0,end=self.length
-var $ns=$B.$MakeArgs("$StringDict.find",arguments,['self','sub'],['start','end'],null,null)
+var $ns=$B.$MakeArgs1("$StringDict.find",4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:self.length},null,null)
 for(var attr in $ns){eval('var '+attr+'=$ns[attr]')}
 if(!isinstance(sub,str)){throw _b_.TypeError(
 "Can't convert '"+sub.__class__.__name__+"' object to str implicitly")}
@@ -7993,7 +7952,7 @@ this._kwords_array.push(_name)}
 this._kwords[_name].push(_rv)}
 return '%(' + id(_rv)+ ')s'}
 this.format=function(){
-var $ns=$B.$MakeArgs('format',arguments,[],[],'args','kwargs')
+var $ns=$B.$MakeArgs1('format',0,{},[],arguments,{},'args','kwargs')
 var args=$ns['args']
 var kwargs=$ns['kwargs']
 if(args.length>0){for(var i=0,_len_i=args.length;i < _len_i;i++){
@@ -8247,8 +8206,7 @@ pos=pos + _new.length
 count--}
 return res}
 $StringDict.rfind=function(self){
-var start=0,end=self.length
-var $ns=$B.$MakeArgs("$StringDict.find",arguments,['self','sub'],['start','end'],null,null)
+var $ns=$B.$MakeArgs1("$StringDict.find",4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:self.length},null,null)
 for(var attr in $ns){eval('var '+attr+'=$ns[attr]')}
 if(!isinstance(sub,str)){throw _b_.TypeError(
 "Can't convert '"+sub.__class__.__name__+"' object to str implicitly")}
@@ -8260,8 +8218,7 @@ $StringDict.rindex=function(){
 var res=$StringDict.rfind.apply(this,arguments)
 if(res==-1){throw _b_.ValueError("substring not found")}
 return res}
-$StringDict.rjust=function(self){var fillchar=' '
-var $ns=$B.$MakeArgs("$StringDict.rjust",arguments,['self','width'],['fillchar'],null,null)
+$StringDict.rjust=function(self){var $ns=$B.$MakeArgs1("$StringDict.rjust",3,{self:null,width:null,fillchar:null},['self','width','fillchar'],arguments,{fillchar:' '},null,null)
 for(var attr in $ns){eval('var '+attr+'=$ns[attr]')}
 if(width <=self.length)return self
 return Array(width - self.length + 1).join(fillchar)+ self}
@@ -8272,7 +8229,7 @@ while(1){if(self.substr(pos,sep.length)==sep){return _b_.tuple([self.substr(0,po
 if(pos<0){return _b_.tuple(['','',self])}}}}
 $StringDict.rsplit=function(self){var args=[],pos=0
 for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-var $ns=$B.$MakeArgs("$StringDict.rsplit",args,[],[],'args','kw')
+var $ns=$B.$MakeArgs1("$StringDict.rsplit",0,{},[],args,{},'args','kw')
 var sep=None,maxsplit=-1
 if($ns['args'].length>=1){sep=$ns['args'][0]}
 if($ns['args'].length==2){maxsplit=$ns['args'][1]}
@@ -8289,7 +8246,7 @@ sp=new RegExp(pattern+'$')
 return str(self.replace(sp,""))}
 $StringDict.split=function(self){var args=[],pos=0
 for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-var $ns=$B.$MakeArgs("$StringDict.split",args,[],[],'args','kw')
+var $ns=$B.$MakeArgs1("$StringDict.split",0,{},[],args,{},'args','kw')
 var sep=None,maxsplit=-1
 if($ns['args'].length>=1){sep=$ns['args'][0]}
 if($ns['args'].length==2){maxsplit=$ns['args'][1]}
@@ -8332,11 +8289,11 @@ if(b.length > 0)a.push(b.join(sep))
 return a}}
 $StringDict.splitlines=function(self){return $StringDict.split(self,'\n')}
 $StringDict.startswith=function(self){
-var $ns=$B.$MakeArgs("$StringDict.startswith",arguments,['self','prefix'],['start','end'],null,null)
+var $ns=$B.$MakeArgs1("$StringDict.startswith",4,{self:null,prefix:null,start:null,end:null},['self','prefix','start','end'],arguments,{start:0,end:self.length-1},null,null)
 var prefixes=$ns['prefix']
 if(!isinstance(prefixes,_b_.tuple)){prefixes=[prefixes]}
-var start=$ns['start']||0
-var end=$ns['end']||self.length-1
+var start=$ns['start']
+var end=$ns['end']
 var s=self.substr(start,end+1)
 for(var i=0,_len_i=prefixes.length;i < _len_i;i++){if(s.indexOf(prefixes[i])==0)return true}
 return false}
@@ -8525,7 +8482,7 @@ var si=$DictDict.__setitem__
 for(var attr in obj.js)si(self,attr,obj.js[attr])
 self.$jsobj=obj.js
 return}}
-var $ns=$B.$MakeArgs('dict',args,[],[],'args','kw')
+var $ns=$B.$MakeArgs1('dict',0,{},[],args,{},'args','kw')
 var args=$ns['args']
 var kw=$ns['kw']
 if(args.length>0){if(isinstance(args[0],dict)){$B.$copy_dict(self,args[0])
@@ -8640,7 +8597,7 @@ $DictDict.__setitem__(self,key,_default)
 return _default}}
 $DictDict.update=function(self){var params=[],pos=0
 for(var i=1;i<arguments.length;i++){params[pos++]=arguments[i]}
-var $ns=$B.$MakeArgs('$DictDict.update',params,[],[],'args','kw')
+var $ns=$B.$MakeArgs1('$DictDict.update',0,{},[],params,{},'args','kw')
 var args=$ns['args']
 if(args.length>0){var o=args[0]
 if(isinstance(o,dict)){$copy_dict(self,o)}else if(hasattr(o,'__getitem__')&& hasattr(o,'keys')){var _keys=_b_.list(getattr(o,'keys')())
@@ -9203,7 +9160,7 @@ DOMNodeDict.get=function(self){
 var obj=self.elt
 var args=[],pos=0
 for(var i=1;i<arguments.length;i++){args[pos++]=arguments[i]}
-var $ns=$B.$MakeArgs('get',args,[],[],null,'kw')
+var $ns=$B.$MakeArgs1('get',0,{},[],args,{},null,'kw')
 var $dict={}
 var items=_b_.list(_b_.dict.$dict.items($ns['kw']))
 for(var i=0;i<items.length;i++){$dict[items[i][0]]=items[i][1]}
@@ -9668,7 +9625,8 @@ return _b_.getattr(_b_.getattr(_loader,'load_module'),'__call__')(mod_name)}}
 return null}
 window.import_hooks=import_hooks})(__BRYTHON__)
 ;(function($B){var modules={}
-modules['browser']={$package: true,$is_package: true,__package__:'browser',__file__:$B.brython_path+'/Lib/browser/__init__.py',alert:function(message){window.alert($B.builtins.str(message))},confirm: $B.JSObject(window.confirm),console:$B.JSObject(window.console),document:$B.DOMNode(document),doc: $B.DOMNode(document),
+modules['browser']={$package: true,$is_package: true,__package__:'browser',__file__:$B.brython_path.replace(/\/*$/g,'')+
+'/Lib/browser/__init__.py',alert:function(message){window.alert($B.builtins.str(message))},confirm: $B.JSObject(window.confirm),console:$B.JSObject(window.console),document:$B.DOMNode(document),doc: $B.DOMNode(document),
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},prompt: function(message,default_value){return $B.JSObject(window.prompt(message,default_value||''))},win: $B.win,window: $B.win,URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]")
 var regex=new RegExp("[\\?&]" + name + "=([^&#]*)"),results=regex.exec(location.search)
 results=results===null ? "" : decodeURIComponent(results[1].replace(/\+/g," "))
@@ -9677,7 +9635,7 @@ modules['browser.html']=(function($B){var _b_=$B.builtins
 var $TagSumDict=$B.$TagSum.$dict
 function makeTagDict(tagName){
 var dict={__class__:$B.$type,__name__:tagName}
-dict.__init__=function(){var $ns=$B.$MakeArgs('pow',arguments,['self'],[],'args','kw')
+dict.__init__=function(){var $ns=$B.$MakeArgs1('pow',1,{self:null},['self'],arguments,{},'args','kw')
 var self=$ns['self']
 var args=$ns['args']
 if(args.length==1){var first=args[0]
