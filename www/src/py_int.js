@@ -19,8 +19,9 @@ var $IntDict = {__class__:$B.$type,
 }
 
 $IntDict.from_bytes = function() {
-  var $ns=$B.$MakeArgs("from_bytes", arguments, ['x', 'byteorder'], 
-                       'signed', 'args', 'kw')
+  var $ns=$B.$MakeArgs1("from_bytes", 3, 
+      {x:null, byteorder:null, signed:null}, ['x', 'byteorder', 'signed'],
+      arguments, {signed:False}, 'args', 'kw')
 
   var x = $ns['x']
   var byteorder = $ns['byteorder']
@@ -273,6 +274,7 @@ $IntDict.__str__ = $IntDict.__repr__
 $IntDict.__truediv__ = function(self,other){
     if(isinstance(other,int)){
         if(other==0) throw ZeroDivisionError('division by zero')
+        if(other.__class__==$B.LongInt.$dict){return new Number(self/parseInt(other.value))}
         return new Number(self/other)
     }
     if(isinstance(other,_b_.float)){
