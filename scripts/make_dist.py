@@ -23,7 +23,7 @@ import make_stdlib_list
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
-implementation = [3, 2, 0, 'alpha', 0]
+implementation = [3, 2, 1, 'alpha', 0]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
@@ -90,6 +90,13 @@ with open(os.path.join(libfolder, 'stdlib_paths.js'), 'w') as out:
     pkglist = []
     pypath = os.path.join(libfolder, 'Lib')
     for dirpath, dirnames, filenames in os.walk(pypath):
+        if os.path.exists(os.path.join(dirpath,'__init__.py')):
+            # package
+            filenames = []
+            path = dirpath[len(pypath)+len(os.sep):].split(os.sep)
+            pkglist.append('.'.join(path))
+        elif not dirnames:
+            filenames = []
         for filename in filenames:
             mod_name, ext = os.path.splitext(filename)
             if ext != '.py':

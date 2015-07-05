@@ -275,6 +275,15 @@ function import_from_VFS(mod_name, origin, package){
 
 function import_from_stdlib_static(mod_name,origin,package){
     var address = $B.stdlib[mod_name]
+    if(address===undefined){
+        var elts = mod_name.split('.')
+        if(elts.length==1){return null}
+        var mod = elts.pop(), pckg = elts.join('.'),
+            pckg_address = $B.stdlib[pckg]
+        if(pckg_address!==undefined && pckg_address[1]){
+            address = ['py']
+        }else{return null}
+    }
     if(address!==undefined){
         var ext = address[0]
         var $is_package = address[1]!==undefined
@@ -402,7 +411,7 @@ $B.$import = function(mod_name,origin){
     // found or loaded
     //
     // The function returns None
-
+    
     var parts = mod_name.split('.'),
         norm_parts = [],
         package_path
@@ -447,15 +456,6 @@ $B.$import = function(mod_name,origin){
     //   /Lib/site-packages (for 3rd party modules), then in the folder of
     //   the "calling" script, identified by "origin"
 
-    /*
-    var current_path = $B.last($B.frames_stack)[1].__file__
-
-    for(var i=0;i<$B.path.length;i++){
-        console.log(i,'path',$B.path[i],'stdlib ?', $B.path[i]==stdlib_path,
-            'site-pacakes ?',$B.path[i]==site_packages_path,
-            'current ?',$B.path[i]==current_path)
-    }
-    */
 
     if($B.use_VFS){
         funcs = [import_from_VFS, 
@@ -560,7 +560,7 @@ $B.$import_from = function(mod_name,names,origin){
     if ($B.$options.debug == 10) {
       //console.log('import from '+mod_name);show_ns()
     }
-    if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
+    //if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
     mod_name = mod_name.replace(/\$/g,'')
     var mod = $B.imported[mod_name]
     if(mod===undefined){
