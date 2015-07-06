@@ -3257,11 +3257,7 @@ function $ImportCtx(context){
         for(var i=0;i<this.tree.length;i++){
             var to_import = this.tree[i].name
             
-            // If the module to import is already imported, don't call
-            // the function $B.$import
-            if($B.imported[to_import]===undefined){
-                res[pos++]='$B.$import("'+to_import+'","'+mod+'");'
-            }
+            res[pos++]='$B.$import("'+to_import+'","'+mod+'");'
             if(this.tree[i].name == this.tree[i].alias){
                 var parts = this.tree[i].name.split('.')
                 // $import returns an object
