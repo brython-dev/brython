@@ -190,7 +190,7 @@ var $module=(function($B){
     }
     obj.sub = function(pattern,repl,string){
         var $ns=$B.$MakeArgs1('re.search', 3,
-            {pattern:null, repl:null, string:null], 
+            {pattern:null, repl:null, string:null}, 
             ['pattern','repl','string'],
             arguments,{},'args','kw')
         for($var in $ns){eval("var "+$var+"=$ns[$var]")}
