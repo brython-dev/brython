@@ -1,0 +1,62 @@
+<html>
+
+<head>
+<meta charset="utf-8">
+<script type="text/javascript" src="../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../src/version_info.js"></script>
+<script type="text/javascript" src="../src/identifiers_re.js"></script>
+<script type="text/javascript" src="../src/py2js.js"></script>
+<script type="text/javascript" src="../src/py_object.js"></script>
+<script type="text/javascript" src="../src/py_type.js"></script>
+<script type="text/javascript" src="../src/py_utils.js"></script>
+<script type="text/javascript" src="../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../src/py_bytes.js"></script>
+<script type="text/javascript" src="../src/py_set.js"></script>
+<script type="text/javascript" src="../src/js_objects.js"></script>
+<script type="text/javascript" src="../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../src/py_import.js"></script>
+
+<script type="text/javascript" src="../src/py_string.js"></script>
+<script type="text/javascript" src="../src/py_int.js"></script>
+<script type="text/javascript" src="../src/py_long_int.js"></script>
+<script type="text/javascript" src="../src/py_float.js"></script>
+<script type="text/javascript" src="../src/py_complex.js"></script>
+<script type="text/javascript" src="../src/py_dict.js"></script>
+<script type="text/javascript" src="../src/py_list.js"></script>
+<script type="text/javascript" src="../src/py_generator.js"></script>
+<script type="text/javascript" src="../src/py_dom.js"></script>
+
+<script type="text/javascript" src="../src/builtin_modules.js"></script>
+<script type="text/javascript" src="../src/async.js"></script>
+</head>
+
+<body onload="brython()">
+
+<script type="text/python">
+import javascript
+from browser import ajax
+
+src = open("../src/Lib/datetime.py").read()
+
+import datetime
+
+js = javascript.py2js(src)
+mod = "var $module = (function($B){\n"
+
+mod += js+'\nreturn $locals\n})(__BRYTHON__)'
+
+
+def on_complete(req):
+    print('ok')
+
+req = ajax.ajax()
+req.bind('complete',on_complete)
+url = "/cgi-bin/precompiled.py"
+req.open('POST',url,False)
+req.set_header('content-type','application/x-www-form-urlencoded')
+req.send({'name':'datetime','js':mod})
+
+</script>
+</body>
+
+</html>

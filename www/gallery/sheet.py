@@ -1,9 +1,7 @@
 from browser import document, html, alert, local_storage
-import ui, ui.dialog
+import jqueryui
 import json
-from ui_menu import Menu, BarItem, MenuListItem
 
-ui.add_stylesheet()
 storage = local_storage.storage
 
 current_cell = None
