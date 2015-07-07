@@ -49,8 +49,6 @@ def minify(src):
         elif src[pos] in '={[(' and _res and _res[-1] == ' ':
             _res = _res[:-1]+src[pos]
             pos += 1
-        elif src[pos] == ';' and pos < len(src) - 1 and src[pos + 1] in '\r\n':
-            pos += 1
         elif src[pos] in '{[,':
             _res += src[pos]
             while pos < len(src) - 1 and src[pos + 1] in ' \r\n':
