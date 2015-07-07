@@ -56,3 +56,9 @@ for lang in ['fr', 'en', 'es']:
             elif ext=='.txt':
                 shutil.copy(os.path.join(src_path, filename),
                     os.path.join(dest_path, filename))
+            elif os.path.isdir(os.path.join(src_path,filename)) \
+                and filename!='cookbook':
+                dest_dir = os.path.join(dest_path, filename)
+                if os.path.exists(dest_dir):
+                    shutil.rmtree(dest_dir)
+                shutil.copytree(os.path.join(src_path, filename), dest_dir)
