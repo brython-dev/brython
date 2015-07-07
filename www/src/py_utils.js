@@ -951,6 +951,9 @@ $B.gt = function(x,y){
     else{return $B.LongInt.$dict.__gt__(x, y)}
 }
 
+window.is_none = function (o) {
+    return o === undefined || o == _b_.None;
+}
 
 })(__BRYTHON__)
 

@@ -42,5 +42,5 @@ class BaseHook:
       if name is None:
          name=self._fullname
       window.eval('__BRYTHON__.imported["%s"]={}' % name)
-      return JSObject(__BRYTHON__.run_py)(TempMod(name),
-                                          self._modpath, self._module)
+      return JSObject(__BRYTHON__.run_py)(self._module,
+                                          self._modpath, TempMod(name))
