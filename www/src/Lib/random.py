@@ -659,7 +659,6 @@ class SystemRandom(Random):
             raise TypeError('number of bits should be an integer')
         numbytes = (k + 7) // 8                       # bits / 8 and rounded up
         x = int.from_bytes(_urandom(numbytes), 'big')
-        print('random', 662, x, type(x))
         return x >> (numbytes * 8 - k)                # trim excess bits
 
     def seed(self, *args, **kwds):
