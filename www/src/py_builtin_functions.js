@@ -687,7 +687,12 @@ function id(obj) {
 // The default __import__ function is a builtin
 function __import__(mod_name, globals, locals, fromlist, level) {
     // TODO : Install $B.$__import__ in builtins module to avoid nested call
-    return $B.$__import__(mod_name, globals, locals, fromList, level);
+    var $ = $B.$MakeArgs1('__import__',5,
+        {name:null,globals:null,locals:null,fromlist:null,level:null},
+        ['name', 'globals', 'locals', 'fromlist', 'level'],
+        arguments, {globals:None, locals:None, fromlist:_b_.tuple(), level:0},
+        null, null)
+    return $B.$__import__($.name, $.globals, $.locals, $.fromlist, $.level);
 }
 
 //not a direct alias of prompt: input has no default value
