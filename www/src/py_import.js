@@ -123,8 +123,12 @@ function import_js(module,path) {
 
 function run_js(module_contents,path,module){
     // FIXME : Enhanced module isolation e.g. run_js arg names , globals ...
-    eval(module_contents);
-
+    try{
+        eval(module_contents);
+    }catch(err){
+        console.log(err)
+        throw err
+    }
     // check that module name is in namespace
     try{$module}
     catch(err){
