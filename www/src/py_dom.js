@@ -675,6 +675,21 @@ DOMNodeDict.clone = function(self){
     return res
 }
 
+DOMNodeDict.events = function(self, event){
+    var _id
+    if(self.elt.nodeType===9){_id=0}
+    else{_id = self.elt.$brython_id}
+    // if element id is not referenced in $B.events, create a new entry
+    var _d=_b_.dict.$dict
+    if(!_d.__contains__($B.events, _id)){return []}
+    var item = _d.__getitem__($B.events, _id)
+    // If event is not already registered for the element, create a new list
+    if(!_d.__contains__(item, event)){return []}
+    var evt_list = _d.__getitem__(item, event), callbacks = []
+    for(var i=0;i<evt_list.length;i++){callbacks.push(evt_list[i][1])}
+    return callbacks
+}
+
 DOMNodeDict.focus = function(self){
     return (function(obj){
         return function(){

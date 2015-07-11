@@ -3,11 +3,8 @@ Problème
 
 Activer / désactiver un événement sur un élément
 
-
 Solution
 --------
-
-
 
 <table>
 <tr>
@@ -19,20 +16,25 @@ from browser import alert
 
 def myevent(ev):
     alert('ça marche !')
-```
 
-### Active l'exécution d'une fonction quand on clique sur l'élément
+def compteur():
+    alert('%s événement(s) attaché(s) à "click"' 
+        %len(document['myblock'].events('click')))
 
-```exec
-document['myblock'].bind('click', myevent)
-document['mymessage'].text='événement attaché, cliquer pour voir...'
-```
+def attache(ev):
+    document['myblock'].bind('click', myevent)
+    compteur()
+    document['mymessage'].text='événement attaché, cliquer pour voir...'
 
-### Désactive
+def detache(ev):
+    if document['myblock'].events('click'):
+        document['myblock'].unbind('click', myevent)
+        compteur()
+        document['mymessage'].text='clic désactivé'
 
-```exec
-document['myblock'].unbind('click', myevent)
-document['mymessage'].text='clic désactivé'
+document['attache'].bind('click', attache)
+document['detache'].bind('click', detache)
+
 ```
 
 </td>
@@ -40,6 +42,8 @@ document['mymessage'].text='clic désactivé'
 <td style="padding-left:5em;">
 <div id="myblock" style="width:100px; height:100px; background:red"></div>
 <span id="mymessage">en attente d'activation</span>
+<div><button id="attache">Attache événement</button>
+<button id="detache">Détache</button>
 </td>
 
 </table>
