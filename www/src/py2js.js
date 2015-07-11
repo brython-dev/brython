@@ -6940,7 +6940,15 @@ function brython(options){
           $elts.push(document.getElementById(options.ipy_id[$i]));
        }
      }else{
-        var $elts=document.getElementsByTagName('script')
+        var scripts=document.getElementsByTagName('script'),$elts=[]
+        // Freeze the list of scripts here ; other scripts can be inserted on
+        // the fly by viruses
+        for(var i=0;i<scripts.length;i++){
+            var script = scripts[i]
+            if(script.type=="text/python" || script.type=="text/python3"){
+                $elts.push(script)
+            }
+        }
     }
 
     // URL of the script where function brython() is called
