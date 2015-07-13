@@ -270,6 +270,7 @@ function RandomStream(seed) {
   
   // Added for compatibility with Python
   random.getstate = function(){return [mt, mti]}
+  
   random.setstate = function(state){
     mt = state[0]
     mti = state[1]
@@ -284,28 +285,11 @@ var _random = RandomStream()
 
 _b_ = $B.builtins
 
-var $random_obj = {}
-
-function _rand_with_seed(){
-    /*
-    # if rand_obj.state is not a safe integer, Math.sin will return the same
-    # result for consecutive values : use the rest of division by 360
-    */
-    degrees = $random_obj._state % 360
-    x = Math.sin($random_obj._state) * 10000
-
-    $random_obj._state += 1
-    if($random_obj._state > $B.MAX_SAFE_INTEGER){$random_obj._state = 1}
-    return x - Math.floor(x)
-}
+var NV_MAGICCONST = 4 * Math.exp(-0.5)/Math.sqrt(2),
+    gauss_next = null
 
 function _randbelow(x){
     return Math.floor(x*_random())
-}
-
-function __random(){
-    if($random_obj._state!==undefined){return _rand_with_seed()}
-    else{return Math.random()}
 }
 
 function _urandom(n){
@@ -314,16 +298,8 @@ function _urandom(n){
     Return n random bytes suitable for cryptographic use.
     */
     
-    if($random_obj._state===undefined){
-        randbytes= []
-        for(i=0;i<n;i++){randbytes.push(randint(0,255))}
-    }else{
-        randbytes= []
-        for(i=0;i<n;i++){
-            var item = _rand_with_seed(i)
-            randbytes.push(parseInt(256*item))
-        }
-    }
+    randbytes= []
+    for(i=0;i<n;i++){randbytes.push(parseInt(_random()*256))}
     return _b_.bytes(randbytes)
 }
 
@@ -340,7 +316,153 @@ return {
         if(Array.isArray(seq)){return seq[rank]}
         else{return _b_.getattr(seq,'__getitem__')(rank)}
     },
+
+    expovariate: function(lambd){
+        /*
+        Exponential distribution.
+
+        lambd is 1.0 divided by the desired mean.  It should be
+        nonzero.  (The parameter would be called "lambda", but that is
+        a reserved word in Python.)  Returned values range from 0 to
+        positive infinity if lambd is positive, and from negative
+        infinity to 0 if lambd is negative.
+
+        */
+        // lambd: rate lambd = 1/mean
+        // ('lambda' is a Python reserved word)
+
+        // we use 1-random() instead of random() to preclude the
+        // possibility of taking the log of zero.
+        return -Math.log(1.0 - _random())/lambd
+    },
+
+    gammavariate: function(alpha, beta){
+        /* Gamma distribution.  Not the gamma function!
+
+        Conditions on the parameters are alpha > 0 and beta > 0.
+
+        The probability distribution function is:
+
+                    x ** (alpha - 1) * math.exp(-x / beta)
+          pdf(x) =  --------------------------------------
+                      math.gamma(alpha) * beta ** alpha
+
+        */
+
+        // alpha > 0, beta > 0, mean is alpha*beta, variance is alpha*beta**2
+
+        // Warning: a few older sources define the gamma distribution in terms
+        // of alpha > -1.0
+        
+        var $ = $B.$MakeArgs1('gammavariate', 2,
+                {alpha:null, beta:null}, ['alpha', 'beta'],
+                arguments, {}, null, null),
+            alpha = $.alpha,
+            beta = $.beta,
+            LOG4 = Math.log(4),
+            SG_MAGICCONST = 1.0 + Math.log(4.5)
+            
+        if(alpha <= 0.0 || beta <= 0.0){
+            throw _b_.ValueError('gammavariate: alpha and beta must be > 0.0')
+        }
+
+        if(alpha > 1.0){
+
+            // Uses R.C.H. Cheng, "The generation of Gamma
+            // variables with non-integral shape parameters",
+            // Applied Statistics, (1977), 26, No. 1, p71-74
+
+            ainv = Math.sqrt(2.0 * alpha - 1.0)
+            bbb = alpha - LOG4
+            ccc = alpha + ainv
+
+            while(true){
+                u1 = _random()
+                if(!((1e-7 < u1) && (u1 < .9999999))){
+                    continue
+                }
+                u2 = 1.0 - _random()
+                v = Math.log(u1/(1.0-u1))/ainv
+                x = alpha*Math.exp(v)
+                z = u1*u1*u2
+                r = bbb+ccc*v-x
+                if((r + SG_MAGICCONST - 4.5*z >= 0.0) || r >= Math.log(z)){
+                    return x * beta
+                }
+            }
+        }else if(alpha == 1.0){
+            // expovariate(1)
+            u = _random()
+            while(u <= 1e-7){u = _random()}
+            return -Math.log(u) * beta
+        }else{
+            // alpha is between 0 and 1 (exclusive)
+
+            // Uses ALGORITHM GS of Statistical Computing - Kennedy & Gentle
+
+            while(true){
+                u = _random()
+                b = (Math.E + alpha)/Math.E
+                p = b*u
+                if(p <= 1.0){x = Math.pow(p, (1.0/alpha))}
+                else{x = -Math.log((b-p)/alpha)}
+                u1 = _random()
+                if(p > 1.0){
+                    if(u1 <= Math.pow(x, alpha - 1.0)){
+                        break
+                    }
+                }else if(u1 <= Math.exp(-x)){
+                    break
+                }
+            }
+            return x * beta
+        }
+    },
     
+    gauss:function(){
+
+        /* Gaussian distribution.
+
+        mu is the mean, and sigma is the standard deviation.  This is
+        slightly faster than the normalvariate() function.
+
+        Not thread-safe without a lock around calls.
+
+        # When x and y are two variables from [0, 1), uniformly
+        # distributed, then
+        #
+        #    cos(2*pi*x)*sqrt(-2*log(1-y))
+        #    sin(2*pi*x)*sqrt(-2*log(1-y))
+        #
+        # are two *independent* variables with normal distribution
+        # (mu = 0, sigma = 1).
+        # (Lambert Meertens)
+        # (corrected version; bug discovered by Mike Miller, fixed by LM)
+
+        # Multithreading note: When two threads call this function
+        # simultaneously, it is possible that they will receive the
+        # same return value.  The window is very small though.  To
+        # avoid this, you have to use a lock around all calls.  (I
+        # didn't want to slow this down in the serial case by using a
+        # lock here.)
+        */
+
+        var $ = $B.$MakeArgs1('gauss', 2, {mu:null, sigma:null},
+                ['mu', 'sigma'], arguments, {}, null, null),
+            mu = $.mu,
+            sigma = $.sigma
+
+        z = gauss_next
+        gauss_next = null
+        if(z===null){
+            x2pi = _random() * Math.PI * 2
+            g2rad = Math.sqrt(-2.0 * Math.log(1.0 - _random()))
+            z = Math.cos(x2pi) * g2rad
+            gauss_next = Math.sin(x2pi) * g2rad
+        }
+        return mu + z*sigma
+    },
+         
     getrandbits: function(k){
         var $ = $B.$MakeArgs1('getrandbits', 1,
             {k:null},['k'],arguments, {}, null, null),
@@ -364,6 +486,48 @@ return {
         return _random.getstate()
     },
     
+    normalvariate: function(mu, sigma){
+        /*
+        Normal distribution.
+
+        mu is the mean, and sigma is the standard deviation.
+
+        */
+
+        // mu = mean, sigma = standard deviation
+
+        // Uses Kinderman and Monahan method. Reference: Kinderman,
+        // A.J. and Monahan, J.F., "Computer generation of random
+        // variables using the ratio of uniform deviates", ACM Trans
+        // Math Software, 3, (1977), pp257-260.
+        
+        var $=$B.$MakeArgs1('normalvariate', 2,
+            {mu:null, sigma:null}, ['mu', 'sigma'],
+            arguments, {}, null, null),
+            mu = $.mu,
+            sigma = $.sigma
+
+        while(true){
+            u1 = _random()
+            u2 = 1.0 - _random()
+            z = NV_MAGICCONST*(u1-0.5)/u2
+            zz = z*z/4.0
+            if(zz <= -Math.log(u2)){break}
+        }
+        return mu + z*sigma
+    },
+    
+    paretovariate: function(){
+        /* Pareto distribution.  alpha is the shape parameter.*/
+        // Jain, pg. 495
+        
+        var $ = $B.$MakeArgs1('paretovariate', 1, {alpha:null}, ['alpha'],
+                    arguments, {}, null, null)
+
+        u = 1 - _random()
+        return 1 / Math.pow(u,1/$.alpha)
+    },
+        
     randint: function(a, b){
         var $ = $B.$MakeArgs1('randint', 2,
             {a:null, b:null},
@@ -460,7 +624,7 @@ return {
         return result
     },
         
-    seed: function(a){
+    seed: function(){
         /*
         Initialize internal state from hashable object.
     
@@ -469,11 +633,39 @@ return {
     
         If *a* is an int, all bits are used.
         */
-        var $=$B.$MakeArgs1('seed',1,{a:null},['a'],arguments,{},null,null)
-    
-        $random_obj._state = $.a
-        $random_obj.gauss_next = _b_.None
-        _random.seed($.a)
+        var $=$B.$MakeArgs1('seed',2,{a:null, version:null},['a', 'version'],
+                arguments,{a:new Date(), version:2},null,null),
+            a = $.a,
+            version = $.version
+
+        if(version==1){a = _b_.hash(a)}
+        else if(version==2){
+            if(_b_.isinstance(a, _b_.str)){
+                a = _b_.int.$dict.from_bytes(_b_.bytes(a, 'utf-8'), 'big')
+            }else if(_b_.isinstance(a, [_b_.bytes, _b_.bytearray])){
+                a = _b_.int.$dict.from_bytes(a, 'big')
+            }else if(!_b_.isinstance(a, _b_.int)){
+                throw _b_.TypeError('wrong argument')
+            }
+            if(a.__class__===$B.LongInt.$dict){
+                // In this implementation, seed() only accepts safe integers
+                // Generate a random one from the underlying string value,
+                // using an arbitrary seed (99) to always return the same
+                // integer
+                var numbers = a.value, res = '', pos
+                _random.seed(99)
+                for(var i=0;i<17;i++){
+                    pos = parseInt(_random()*numbers.length)
+                    res += numbers.charAt(pos)
+                }
+                a = parseInt(res)
+            }
+        }else{
+            throw ValueError('version can only be 1 or 2')
+        }
+
+        _random.seed(a)
+        gauss_next = null
     },
     
     setstate: function(state){
@@ -519,7 +711,36 @@ return {
             }
         }
     },
-    
+
+    triangular: function(){
+        /*
+        Triangular distribution.
+
+        Continuous distribution bounded by given lower and upper limits,
+        and having a given mode value in-between.
+
+        http://en.wikipedia.org/wiki/Triangular_distribution
+        */
+        var $=$B.$MakeArgs1('triangular',3,
+            {low:null, high:null, mode:null},
+            ['low', 'high', 'mode'],
+            arguments,{low:0, high:1, mode:null}, null, null),
+            low = $.low,
+            high = $.high,
+            mode = $.mode
+            
+        var u = _random(),
+            c = mode===null ? 0.5 : (mode - low) / (high - low)
+        if(u > c){
+            u = 1 - u
+            c = 1 - c
+            var temp = low
+            low = high
+            high = temp
+        }
+        return low + (high - low) * Math.pow(u * c, 0.5)
+    },
+        
     uniform: function(){
         var $ = $B.$MakeArgs1('uniform',2,{a:null,b:null},['a','b'],
             arguments,{},null,null),
@@ -529,8 +750,110 @@ return {
         return a + (b-a)*_random()
     },
 
+    vonmisesvariate: function(mu, kappa){
+        /* Circular data distribution.
+
+        mu is the mean angle, expressed in radians between 0 and 2*pi, and
+        kappa is the concentration parameter, which must be greater than or
+        equal to zero.  If kappa is equal to zero, this distribution reduces
+        to a uniform random angle over the range 0 to 2*pi.
+
+        */
+        // mu:    mean angle (in radians between 0 and 2*pi)
+        // kappa: concentration parameter kappa (>= 0)
+        // if kappa = 0 generate uniform random angle
+
+        // Based upon an algorithm published in: Fisher, N.I.,
+        // "Statistical Analysis of Circular Data", Cambridge
+        // University Press, 1993.
+
+        // Thanks to Magnus Kessler for a correction to the
+        // implementation of step 4.
+        
+        var $=$B.$MakeArgs1('vonmisesvariate', 2,
+                {mu: null, kappa:null}, ['mu', 'kappa'],
+                arguments, {}, null, null),
+            mu = $.mu,
+            kappa = $.kappa,
+            TWOPI = 2*Math.PI
+
+        if(kappa <= 1e-6){return TWOPI * _random()}
+
+        s = 0.5 / kappa
+        r = s + Math.sqrt(1.0 + s * s)
+
+        while(true){
+            u1 = _random()
+            z = Math.cos(Math.PI * u1)
+
+            d = z / (r + z)
+            u2 = _random()
+            if((u2 < 1.0 - d * d) || 
+                (u2 <= (1.0 - d) * Math.exp(d))){
+                    break
+            }
+        }
+        q = 1.0 / r
+        f = (q + z) / (1.0 + q * z)
+        u3 = _random()
+        if(u3 > 0.5){theta = (mu + Math.acos(f)) % TWOPI}
+        else{theta = (mu - Math.acos(f)) % TWOPI}
+        return theta
+    },
+
+    weibullvariate: function(){
+        /*Weibull distribution.
+
+        alpha is the scale parameter and beta is the shape parameter.
+
+        */
+        // Jain, pg. 499; bug fix courtesy Bill Arms
+
+        var $ = $B.$MakeArgs1('weibullvariate', 2, {alpha:null, beta:null},
+                ['alpha', 'beta'], arguments, {}, null, null),
+            alpha = $.alpha,
+            beta = $.beta
+
+        u = 1 - _random()
+        return alpha * Math.pow(-Math.log(u), 1/beta)
+    },
+
     VERSION: 3
 }
 
 })(__BRYTHON__)
+
+$module.lognormvariate = function(){
+    /*
+    Log normal distribution.
+
+    If you take the natural logarithm of this distribution, you'll get a
+    normal distribution with mean mu and standard deviation sigma.
+    mu can have any value, and sigma must be greater than zero.
+
+    */
+
+    return Math.exp($module.normalvariate.apply(null, arguments))
+}
+
+$module.betavariate = function(){
+    /* Beta distribution.
+
+    Conditions on the parameters are alpha > 0 and beta > 0.
+    Returned values range between 0 and 1.
+
+
+    # This version due to Janne Sinkkonen, and matches all the std
+    # texts (e.g., Knuth Vol 2 Ed 3 pg 134 "the beta distribution").
+    */
+    
+    var $ = $B.$MakeArgs1('betavariate', 2, {alpha:null, beta:null},
+            ['alpha', 'beta'], arguments, {}, null, null),
+        alpha = $.alpha,
+        beta = $.beta
+
+    y = $module.gammavariate(alpha, 1)
+    if(y == 0){return _b_.float(0)}
+    else{return y / (y + $module.gammavariate(beta, 1))}
+}
 
