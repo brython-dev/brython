@@ -554,7 +554,7 @@ return {
         return start + Math.floor(_random()*nb)*step
     },
 
-    sample: function(population, k){
+    sample: function(){
         /*
         Chooses k unique random elements from a population sequence or set.
 
@@ -603,7 +603,9 @@ return {
         }
         if(n <= setsize){
             // An n-length list is smaller than a k-length set
-            pool = _b_.list(population)
+            if(Array.isArray(population)){
+                var pool = population.slice()
+            }else{var pool = _b_.list(population)}
             for(var i=0;i<k;i++){ //invariant:  non-selected at [0,n-i)
                 j = _randbelow(n-i)
                 result[i] = pool[j]
