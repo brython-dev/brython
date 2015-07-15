@@ -100,19 +100,29 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
 
     var klass = $B.get_class(pyobj)
     if(klass===$JSObjectDict || klass===$JSConstructorDict){
-        // instances of JSObject and JSConstructor are transformed into the
+        // Instances of JSObject and JSConstructor are transformed into the
         // underlying Javascript object
+        
+        // If the object is a function, the JSObject has a js_func attribute,
+        // which is the original Javascript function
+        if(pyobj.js_func!==undefined){return pyobj.js_func}
         return pyobj.js
+
     }else if(klass.__mro__.indexOf($B.DOMNodeDict)>-1){
+
         // instances of DOMNode or its subclasses are transformed into the 
         // underlying DOM element
         return pyobj.elt
+
     }else if([_b_.list.$dict,_b_.tuple.$dict].indexOf(klass)>-1){
+
         // Python list : transform its elements
         var res = []
         for(var i=0, _len_i = pyobj.length; i < _len_i;i++){res.push(pyobj2jsobj(pyobj[i]))}
         return res
+
     }else if(klass===_b_.dict.$dict){
+
         // Python dictionaries are transformed into a Javascript object
         // whose attributes are the dictionary keys
         var jsobj = {}
@@ -121,12 +131,17 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
             jsobj[items[j][0]] = pyobj2jsobj(items[j][1])
         }
         return jsobj
+
     }else if(klass===$B.builtins.float.$dict){
+
         // Python floats are converted to the underlying value
         return pyobj.valueOf()
+
     }else{
         // other types are left unchanged
+
         return pyobj
+
     }
 }
 
