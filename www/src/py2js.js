@@ -2627,6 +2627,7 @@ function $ForExpr(context){
         // Line to declare the function that produces the next item from
         // the iterable
         var new_node = new $Node()
+        new_node.line_num = $get_node(this).line_num
         var js = '$locals["$next'+num+'"]'
         js += '=getattr(iter('+iterable.to_js()+'),"__next__");\n'
         
