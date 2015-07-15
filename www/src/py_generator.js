@@ -419,7 +419,7 @@ $BRGeneratorDict.__next__ = function(self){
         // By default it is the node of rank exit_node.rank+1
         var start = exit_node.rank+1
 
-        if(exit_node.loop_start){
+        if(exit_node.loop_start!==undefined){
             // If exit_node is a loop, run it again
             start = exit_node.rank
         }else if(exit_node.is_cond){
