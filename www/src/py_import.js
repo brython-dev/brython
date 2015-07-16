@@ -243,11 +243,13 @@ $B.run_py=run_py=function(module_contents,path,module) {
     try{
         // Create module object
         var mod = eval('$module')
-        // Apply side-effects upon input module object
-        for (var attr in mod) {
-            module[attr] = mod[attr];
-        }
-        module.__initializing__ = false
+        // Set attributes of module to this object
+        for (var attr in module) {mod[attr] = module[attr]}
+        mod.__initializing__ = false
+        // $B.imported[mod.__name__] must be the module object, so that
+        // setting attributes in a program affects the module namespace
+        // See issue #7
+        $B.imported[mod.__name__] = mod
         return true
     }catch(err){
         console.log(''+err+' '+' for module '+module.name)
