@@ -1,6 +1,6 @@
 ;(function($B) {
     var modules = {}
-    modules['_browser'] = {
+    modules['browser'] = {
         $package: true,
         $is_package: true,
         __package__:'browser',
@@ -27,6 +27,7 @@
            return $B.builtins.str(results);
         }
     }
+    modules['browser'].__path__ = modules['browser'].__file__
 
     // creation of an HTML element
     modules['_browser.html'] = (function($B){
