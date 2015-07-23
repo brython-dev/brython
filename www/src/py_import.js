@@ -25,6 +25,15 @@ module.__class__ = $B.$factory
 module.$dict = $B.$ModuleDict
 $B.$ModuleDict.$factory = module
 
+var loader = function(){}
+var Loader = {__class__:$B.$type,
+    __name__ : 'Loader'
+}
+Loader.__mro__ = [Loader, _b_.object.$dict]
+Loader.$factory = loader
+loader.$dict = Loader
+loader.__class__ = $B.$factory
+
 /**
  * Module's parent package name
  */
@@ -230,6 +239,7 @@ $B.run_py=run_py=function(module_contents,path,module) {
 
     }catch(err){
         console.log(err+' for module '+module.__name__)
+        //console.log(module_contents)
         //for(var attr in err){
             //console.log(attr, err[attr])
         //}
@@ -267,8 +277,40 @@ function new_spec(fields) {
 }
 
 // Virtual File System optimized module import
-importer_VFS = {
-    'find_spec' : function(self, fullname, path, prev_module) {
+function finder_VFS(){
+    return {__class__:finder_VFS.$dict}
+}
+finder_VFS.__class__ = $B.$factory
+
+finder_VFS.$dict = {
+    $factory: finder_VFS,
+    __class__: $B.$type,
+    __name__: 'VFSFinder',
+    
+    create_module : function(cls, spec) {
+        // Fallback to default module creation
+        return _b_.None;
+    },
+    
+    exec_module : function(cls, module) {
+        var stored = module.__spec__.loader_state.stored;
+        delete module.__spec__['loader_state'];
+        var ext = stored[0],
+            module_contents = stored[1];
+        module.$is_package = stored[2];
+        if (ext == '.js') {run_js(module_contents, module.__path__, module)}
+        else {run_py(module_contents, module.__path__, module)}
+        if($B.debug>1){console.log('import '+module.__name__+' from VFS')}
+    },
+    
+    find_module: function(cls, name, path){
+        if (!$B.use_VFS) {
+            return _b_.None;
+        }
+        return $B.VFS[name]
+    },
+
+    find_spec : function(cls, fullname, path, prev_module) {
         if (!$B.use_VFS) {
             return _b_.None;
         }
@@ -279,7 +321,7 @@ importer_VFS = {
         var is_package = stored[2],
             is_builtin = $B.builtin_module_names.indexOf(fullname) > -1;
         return new_spec({name : fullname,
-                         loader: self,
+                         loader: cls,
                          // FIXME : Better origin string.
                          origin : is_builtin? 'built-in' : 'py_VFS',
                          // FIXME: Namespace packages ?
@@ -289,33 +331,65 @@ importer_VFS = {
                          cached: _b_.None,
                          parent: is_package? fullname : parent_package(fullname),
                          has_location: _b_.False});
-    },
-    'create_module' : function(self, spec) {
-        // Fallback to default module creation
-        return _b_.None;
-    },
-    'exec_module' : function(self, module) {
-        var stored = module.__spec__.loader_state.stored;
-        delete module.__spec__['loader_state'];
-        var ext = stored[0],
-            module_contents = stored[1];
-        module.$is_package = stored[2];
-        if (ext == '.js') {run_js(module_contents, module.__path__, module)}
-        else {run_py(module_contents, module.__path__, module)}
-        console.log('import '+module.__name__+' from VFS')
     }
 }
 
-importer_VFS.__repr__ = importer_VFS.__str__ = importer_VFS.toString = 
-    function() { return '<object importer_VFS>' }
+finder_VFS.$dict.__mro__ = [finder_VFS.$dict, _b_.object.$dict]
+finder_VFS.$dict.create_module.$type = 'classmethod'
+finder_VFS.$dict.exec_module.$type = 'classmethod'
+finder_VFS.$dict.find_module.$type = 'classmethod'
+finder_VFS.$dict.find_spec.$type = 'classmethod'
 
 /**
  * Module importer optimizing module lookups via stdlib_paths.js
  */
-importer_stdlib_static = {
-    'find_spec' : function(self, fullname, path, prev_module) {
+
+function finder_stdlib_static(){
+    return {__class__:finder_stdlib_static.$dict}
+}
+finder_stdlib_static.__class__ = $B.$factory
+
+finder_stdlib_static.$dict = {
+    $factory : finder_stdlib_static,
+    __class__ : $B.$type,
+    __name__ : 'StdlibStatic',
+    create_module : function(cls, spec) {
+        // Fallback to default module creation
+        return _b_.None;
+    },
+    exec_module : function(cls, module) {
+        var metadata = module.__spec__.loader_state;
+        delete module.__spec__['loader_state'];
+        module.$is_package = metadata.is_package; 
+        if (metadata.ext == 'py') {
+            import_py(module, metadata.path, module.__package__);
+        }
+        else {
+            import_js(module, metadata.path);
+        }
+    },
+    find_module: function(cls, name, path){
+        return {__class__:Loader,
+            load_module:function(name, path){
+                var spec = cls.$dict.find_spec(cls, name, path)
+                var mod = module(name)
+                $B.imported[name] = mod
+                mod.__spec__ = spec
+                cls.$dict.exec_module(cls, mod)
+            }
+        }
+    },
+    find_spec: function(cls, fullname, path, prev_module) {
         if ($B.stdlib) {
             var address = $B.stdlib[fullname];
+            if(address===undefined){
+                var elts = fullname.split('.')
+                if(elts.length>1){
+                    var mod_name = elts.pop()
+                    var package = $B.stdlib[elts.join('.')]
+                    if(package && package[1]){address = ['py']}
+                }
+            }
             if (address !== undefined) {
                 var ext = address[0],
                     is_pkg = address[1] !== undefined,
@@ -326,51 +400,71 @@ importer_stdlib_static = {
                                 path: path + (is_pkg? '/__init__.py' :
                                               ((ext == 'py')? '.py' : '.js')),
                                 address: address}
-                return new_spec({name : fullname,
-                                 loader: self,
-                                 // FIXME : Better origin string.
-                                 origin : metadata.path,
-                                 submodule_search_locations: is_pkg? [path] : _b_.None,
-                                 loader_state: metadata,
-                                 // FIXME : Where exactly compiled module is stored ?
-                                 cached: _b_.None,
-                                 parent: is_pkg? fullname :
-                                                     parent_package(fullname),
-                                 has_location: _b_.True});
+
+                var res = new_spec(
+                    {name : fullname,
+                     loader: cls,
+                     // FIXME : Better origin string.
+                     origin : metadata.path,
+                     submodule_search_locations: is_pkg? [path] : _b_.None,
+                     loader_state: metadata,
+                     // FIXME : Where exactly compiled module is stored ?
+                     cached: _b_.None,
+                     parent: is_pkg? fullname :
+                                         parent_package(fullname),
+                     has_location: _b_.True});
+                 return res
             }
         }
         return _b_.None;
-    },
-    'create_module' : function(self, spec) {
+    }
+}
+finder_stdlib_static.$dict.__mro__ = [finder_stdlib_static.$dict,
+    _b_.object.$dict]
+finder_stdlib_static.$dict.create_module.$type = 'classmethod'
+finder_stdlib_static.$dict.exec_module.$type = 'classmethod'
+finder_stdlib_static.$dict.find_module.$type = 'classmethod'
+finder_stdlib_static.$dict.find_spec.$type = 'classmethod'
+
+/**
+ * Search an import path for .py modules
+ */
+function finder_path(){
+    return {__class__:finder_path.$dict}
+}
+finder_path.__class__ = $B.$factory
+
+finder_path.$dict = {
+    $factory: finder_path,
+    __class__: $B.$type,
+    __name__: 'ImporterPath',
+
+    create_module : function(cls, spec) {
         // Fallback to default module creation
         return _b_.None;
     },
-    'exec_module' : function(self, module) {
-        var metadata = module.__spec__.loader_state;
-        delete module.__spec__['loader_state'];
-        module.$is_package = metadata.is_package; 
-        if (metadata.ext == 'py') {
-            import_py(module, metadata.path, module.__package__);
+
+    exec_module : function(cls, module) {
+        var _spec = _b_.getattr(module, '__spec__'),
+            code = _spec.loader_state.code;
+        module.$is_package = _spec.loader_state.is_package,
+        delete _spec.loader_state['code'];
+        if (_spec.loader_state.type == 'py') {
+            run_py(code, _spec.origin, module);
         }
-        else {
-            import_js(module, metadata.path);
+        else if (_spec.loader_state.type == 'js') {
+            run_js(code, _spec.origin, module)
         }
-    }
-}
+    },
 
-importer_stdlib_static.__repr__ = importer_stdlib_static.__str__ =
-importer_stdlib_static.toString = 
-    function() { return '<object importer_stdlib_static>' }
+    find_module: function(cls, name, path){
+        return finder_path.find_spec(cls, name, path)
+    },
 
-
-/**
- * Search an import path for .js and .py modules
- */
-importer_path = {
-    'find_spec' : function(self, fullname, path, prev_module) {
+    find_spec : function(cls, fullname, path, prev_module) {
         if (is_none(path)) {
             // [Import spec] Top-level import , use sys.path
-            path = $B.path;
+            path = $B.path
         }
         for (var i = 0, li = path.length; i<li; ++i) {
             var path_entry = path[i];
@@ -385,6 +479,7 @@ importer_path = {
                      j < lj && finder_notfound;
                      ++j) {
                     var hook = $B.path_hooks[j];
+                    if(!$B.use_VFS && hook===vfs_hook){continue}
                     try {
                         finder = _b_.getattr(hook, '__call__')(path_entry)
                         finder_notfound = false;
@@ -398,33 +493,22 @@ importer_path = {
                 }
             }
             var spec = _b_.getattr(_b_.getattr(finder, 'find_spec'),
-                                   '__call__')(finder, fullname, prev_module);
+                                   '__call__')(fullname, prev_module);
             if (!is_none(spec)) {
                 return spec;
             }
         }
         return _b_.None;
-    },
-    'create_module' : function(self, spec) {
-        // Fallback to default module creation
-        return _b_.None;
-    },
-    'exec_module' : function(self, module) {
-        var _spec = _b_.getattr(module, '__spec__'),
-            code = _spec.loader_state.code;
-        module.$is_package = _spec.loader_state.is_package,
-        delete _spec.loader_state['code'];
-        if (_spec.loader_state.type == 'py') {
-            run_py(code, _spec.origin, module);
-        }
-        else if (_spec.loader_state.type == 'js') {
-            run_js(code, _spec.origin, module)
-        }
     }
 }
 
-importer_path.__repr__ = importer_path.__str__ = importer_path.toString = 
-    function() { return '<object importer_path>' }
+finder_path.$dict.__mro__ = [finder_path.$dict,
+    _b_.object.$dict]
+finder_path.$dict.create_module.$type = 'classmethod'
+finder_path.$dict.exec_module.$type = 'classmethod'
+finder_path.$dict.find_module.$type = 'classmethod'
+finder_path.$dict.find_spec.$type = 'classmethod'
+
 
 // FIXME : Add this code elsewhere ?
 $B.path_hooks = [];
@@ -475,7 +559,7 @@ VfsPathFinder.prototype.find_spec = function(self, fullname, module) {
     }
     var is_package = stored[2];
     return new_spec({name : fullname,
-                     loader: importer_VFS,
+                     loader: finder_VFS,
                      // FIXME : Better origin string.
                      origin : self.path + '#' + fullname,
                      // FIXME: Namespace packages ?
@@ -500,7 +584,8 @@ vfs_hook = function(path) { return new VfsPathFinder(path); }
 vfs_hook.__repr__ = vfs_hook.__str__ = vfs_hook.toString = function() {
     return '<function path_hook_for_VfsPathFinder>';
 }
-$B.path_hooks.push(vfs_hook);
+
+$B.path_hooks.push(vfs_hook)
 
 /**
  * Find modules deployed in a hierarchy under a given base URL
@@ -508,81 +593,65 @@ $B.path_hooks.push(vfs_hook);
  * @param {string}      search path URL, used as a reference during ihe import
  * @param {string}      one of 'js', 'py' or undefined (i.e. yet unknown)
  */
-UrlPathFinder = function(path, hint) {
-    this.path = path;
-    this.hint = hint;
-}
 
-UrlPathFinder.prototype.find_spec = function(self, fullname, module) {
-    var loader_data = {},
-        notfound = true,
-        hint = self.hint,
-        path_entry = self.path,
-        base_path = path_entry + fullname.match(/[^.]+$/g)[0],
-        modpaths = [];
-    if (hint != 'py') {
-        // either js or undefined , try js code
-        modpaths = [[base_path + '.js', 'js', false]];
-    }
-    if (hint != 'js') {
-        // either py or undefined , try py code
-        modpaths = modpaths.concat([[base_path + '.py', 'py', false],
-                                    [base_path + '/__init__.py',
-                                     'py', true]]);
-    }
-    for (var j = 0; notfound && j < modpaths.length; ++j) {
-        try{
-            var file_info = modpaths[j];
-            loader_data.code=$download_module(fullname, file_info[0]);
-            notfound = false;
-            if (self.hint === undefined) {
-                // First time path is considered for top-level import
-                self.hint = file_info[1]
-                $B.path_importer_cache[self.path] = self;
+function url_hook(path_entry) { 
+    return {__class__: url_hook.$dict, path_entry:path_entry }
+}
+url_hook.__class__ = $B.$factory
+
+url_hook.$dict = {
+    $factory: url_hook,
+    __class__: $B.$type,
+    __name__ : 'UrlPathFinder',
+    
+    find_spec : function(self, fullname, module) {
+        var loader_data = {},
+            notfound = true,
+            base_path = self.path_entry + fullname.match(/[^.]+$/g)[0],
+            modpaths = [];
+            // either py or undefined , try py code
+            modpaths = [[base_path + '.py', 'py', false],
+                        [base_path + '/__init__.py', 'py', true]];
+        for (var j = 0; notfound && j < modpaths.length; ++j) {
+            try{
+                var file_info = modpaths[j];
+                loader_data.code=$download_module(fullname, file_info[0]);
+                notfound = false;
+                loader_data.type = file_info[1];
+                loader_data.is_package = file_info[2];
+                if (loader_data.is_package) {
+                    // Populate cache in advance to speed up submodule imports
+                    $B.path_importer_cache[base_path + '/'] =
+                            url_hook(base_path + '/', 'py');
+                }
+                loader_data.path = file_info[0];
+            }catch(err){
             }
-            loader_data.type = file_info[1];
-            loader_data.is_package = file_info[2];
-            if (loader_data.is_package) {
-                // Populate cache in advance to speed up submodule imports
-                $B.path_importer_cache[base_path + '/'] =
-                        new UrlPathFinder(base_path + '/', self.hint);
-            }
-            loader_data.path = file_info[0];
-        }catch(err){
         }
+        if (!notfound) {
+            return new_spec({
+                name : fullname,
+                loader: finder_path,
+                origin : loader_data.path,
+                // FIXME: Namespace packages ?
+                submodule_search_locations: loader_data.is_package? [base_path]:
+                                                                    _b_.None,
+                loader_state: loader_data,
+                // FIXME : Where exactly compiled module is stored ?
+                cached: _b_.None,
+                parent: loader_data.is_package? fullname :
+                                                parent_package(fullname),
+                has_location: _b_.True});
+        }
+        return _b_.None;
+    },
+
+    invalidate_caches : function(self) {
+        // TODO: Implement
     }
-    if (!notfound) {
-        return new_spec({
-            name : fullname,
-            loader: importer_path,
-            origin : loader_data.path,
-            // FIXME: Namespace packages ?
-            submodule_search_locations: loader_data.is_package? [base_path]:
-                                                                _b_.None,
-            loader_state: loader_data,
-            // FIXME : Where exactly compiled module is stored ?
-            cached: _b_.None,
-            parent: loader_data.is_package? fullname :
-                                            parent_package(fullname),
-            has_location: _b_.True});
-    }
-    return _b_.None;
 }
+url_hook.$dict.__mro__ = [url_hook.$dict, _b_.object.$dict]
 
-UrlPathFinder.prototype.invalidate_caches = function(self) {
-    // TODO: Implement
-}
-
-UrlPathFinder.prototype.__repr__ = function() {
-    return "<UrlPathFinder for '" + this.path + "'" +
-           (this.hint !== undefined? " format '" + this.hint + "'": '') + '>';
-        //console.log('mod_path', mod_path) 
-}
-
-url_hook = function(path) { return new UrlPathFinder(path); };
-url_hook.__repr__ = url_hook.__str__ = url_hook.toString = function() {
-    return '<function path_hook_for_UrlPathFinder>';
-}
 $B.path_hooks.push(url_hook);
 
 window.is_none = function (o) {
@@ -722,16 +791,6 @@ $B.$import = function(mod_name,origin,fromlist, aliases, locals){
     if (__import__ === undefined) {
         // [Import spec] Fall back to
         __import__ = $B.$__import__;
-
-    /*
-    var current_path = $B.last($B.frames_stack)[1].__file__
-
-    for(var i=0;i<$B.path.length;i++){
-        console.log(i,'path',$B.path[i],'stdlib ?', $B.path[i]==stdlib_path,
-            'site-pacakes ?',$B.path[i]==site_packages_path,
-            'current ?',$B.path[i]==current_path)
-    }
-    */
     }
     // FIXME: Should we need locals dict supply it in, now it is useless
     var modobj = _b_.getattr(__import__,
@@ -809,6 +868,6 @@ $B.$import = function(mod_name,origin,fromlist, aliases, locals){
     }
 }
 
-$B.meta_path = [importer_VFS, importer_stdlib_static, importer_path];
+$B.meta_path = [finder_VFS, finder_stdlib_static, finder_path];
 
 })(__BRYTHON__)
