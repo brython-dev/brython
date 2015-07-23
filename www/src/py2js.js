@@ -4009,9 +4009,9 @@ function $ReturnCtx(context){
         if(scope.ntype=='generator'){
             return 'return [$B.generator_return(' + $to_js(this.tree)+')]'
         }
-        var js = '' //var $res = '+$to_js(this.tree)
-        js += 'if($B.frames_stack.length>1){$B.frames_stack.pop()}'
-        return js +';return '+$to_js(this.tree)
+        return 'var $res = '+$to_js(this.tree)+';'+
+            'if($B.frames_stack.length>1){$B.frames_stack.pop()}'+
+            ';return $res'
     }
 }
 
@@ -6831,7 +6831,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     if(locals_is_module){
         js[pos++]= 'var '+local_ns+'=$locals_'+module+';'
     }else{
-        js[pos++]='var '+local_ns+'={};'
+        js[pos++]='var '+local_ns+'=$B.imported["'+locals_id+'"] || {};'
     }
     js[pos++]='var $locals='+local_ns+';\n'
     
@@ -6930,7 +6930,36 @@ function brython(options){
     if (options.CORS !== undefined) $B.$CORS = options.CORS
 
     $B.$options=options
+    
+    // Set $B.meta_path, the list of finders to use for imports
+    //
+    // The original list in $B.meta_path is made of 3 finders defined in
+    // py_import.js :
+    // - finder_VFS : in the Virtual File System : a Javascript object with
+    //   source of the standard distribution
+    // - finder_static_stlib : use the script stdlib_path.js to identify the
+    //   packages and modules in the standard distribution
+    // - finder_path : search module at different urls
+    
+    var meta_path = []
 
+    // $B.use_VFS is set to true if the script py_VFS.js or brython_dist.js
+    // has been loaded in the page. In this case we use the VFS
+    if($B.use_VFS){meta_path.push($B.meta_path[0])}
+    // Otherwise, remove the function using VFS in $B.path_hooks
+    else{$B.path_hooks.shift()}
+
+    if(options.static_stdlib_import!==false){
+        // Add finder using static paths
+        meta_path.push($B.meta_path[1])
+        // Remove /Lib in sys.path : if we use the static list and the module
+        // was not find in it, it's no use searching twice in the same place
+        $B.path.shift()
+    }
+    // Always use the defaut finder using sys.path
+    meta_path.push($B.meta_path[2])
+    $B.meta_path = meta_path   
+    
     // Option to run code on demand and not all the scripts defined in a page
     // The following lines are included to allow to run brython scripts in
     // the IPython notebook using a cell magic. Have a look at
