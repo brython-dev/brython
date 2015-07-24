@@ -245,10 +245,11 @@ $ListDict.__mro__ = [$ListDict,$ObjectDict]
 
 $ListDict.__mul__ = function(self,other){
     if(isinstance(other,_b_.int)) {  //this should be faster..
-       var res=[]
-       var $temp = self.slice(0,self.length)
-       for(var i=0;i<other;i++) res=res.concat($temp)
-       return _b_.list(res)
+       var res=[],
+           $temp = self.slice(0,self.length), 
+           len=$temp.length
+       for(var i=0;i<other;i++){for(var j=0;j<len;j++){res.push($temp[j])}}
+       return res
     }
     
     if (hasattr(other, '__int__') || hasattr(other, '__index__')) {
