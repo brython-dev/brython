@@ -215,8 +215,6 @@ $IntDict.__mul__ = function(self,other){
 
 $IntDict.__name__ = 'int'
 
-$IntDict.__ne__ = function(self,other){return !$IntDict.__eq__(self,other)}
-
 $IntDict.__neg__ = function(self){return -self}
 
 $IntDict.__new__ = function(cls){
@@ -503,9 +501,20 @@ var int = function(value, base){
         return Number(parseInt(getattr(value,'decode')('latin-1'), base))
     }
 
-    if(hasattr(value, '__int__')) return Number(getattr(value,'__int__')())
-    if(hasattr(value, '__index__')) return Number(getattr(value,'__index__')())
-    if(hasattr(value, '__trunc__')) return Number(getattr(value,'__trunc__')())
+    if(hasattr(value, '__int__')) return getattr(value,'__int__')()
+    if(hasattr(value, '__index__')) return getattr(value,'__index__')()
+    if(hasattr(value, '__trunc__')) {
+        var res = getattr(value,'__trunc__')(),
+            int_func = _b_.getattr(res, '__int__', null)
+        if(int_func===null){
+            throw TypeError('__trunc__ returned non-Integral (type '+
+                $B.get_class(res).__name__+')')
+        }
+        var res=int_func()
+        if(isinstance(res, int)){return res}
+        throw TypeError('__trunc__ returned non-Integral (type '+
+                $B.get_class(res).__name__+')')
+    }
 
     throw _b_.ValueError(
         "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
