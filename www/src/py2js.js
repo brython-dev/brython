@@ -3777,22 +3777,26 @@ function $OpCtx(context,op){
           case 'unary_neg':
           case 'unary_inv':
             // For unary operators, the left operand is the unary sign(s)
-            if(this.op=='unary_neg'){op='-'}else{op='~'}
+            var op, method
+            if(this.op=='unary_neg'){op='-';method='__neg__'}
+            else{op='~';method='__invert__'}
             // for integers or float, replace their value using
             // Javascript operators
             if(this.tree[1].type=="expr"){
                 var x = this.tree[1].tree[0]
                 switch(x.type) {
                   case 'int':
-                    return op+x.to_js()
+                    var v = parseInt(x.value[1], x.value[0])
+                    if(v>$B.min_int && v<$B.max_int){return op+v}
+                    // for long integers, use __neg__ or __invert__
+                    return 'getattr('+x.to_js()+', "'+method+'")()'
                   case 'float':
                     return 'float('+op+x.value+')'
                   case 'imaginary':
                     return 'complex(0,'+op+x.value+')'
                 }
             }
-            if(op=='-') return 'getattr('+this.tree[1].to_js()+',"__neg__")()'
-            return 'getattr('+this.tree[1].to_js()+',"__invert__")()'
+            return 'getattr('+this.tree[1].to_js()+',"'+method+'")()'
           case 'is':
             return this.tree[0].to_js() + '===' + this.tree[1].to_js()
           case 'is_not':
