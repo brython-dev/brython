@@ -503,8 +503,15 @@ function getattr(obj,attr,_default){
 
     if(klass.$native){
         if(klass[attr]===undefined){
-            if(_default===undefined) throw _b_.AttributeError(klass.__name__+" object has no attribute '"+attr+"'")
-            return _default
+            var object_attr = _b_.object.$dict[attr]
+            if(object_attr!==undefined){klass[attr]=object_attr}
+            else{
+                if(_default===undefined){
+                    throw _b_.AttributeError(klass.__name__+
+                        " object has no attribute '"+attr+"'")
+                }
+                return _default
+            }
         }
         if(typeof klass[attr]=='function'){
             // new is a static method
