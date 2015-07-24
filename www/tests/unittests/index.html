@@ -49,10 +49,13 @@ document['container'].style.height='%dpx' % (_height-_top-10)
 </script>
 
 <script type="text/python">
-from browser import timer
+from browser import timer, html
 from browser import document, alert
 import sys
 from test import support
+import unittest
+import HTMLTestRunner
+
 
 sys.path.append("../../src/Lib/test/unittests")
 sys.path.append("../../src/Lib/unittest")
@@ -62,15 +65,10 @@ def errorwrite(data):
 
 sys.stderr.write=errorwrite
 
-_iframe= document.createElement('iframe')
-_iframe.style.width="99%"
-_iframe.style.height="90%"
-
-document["container"] <= _iframe
+document["container"] <= html.DIV(style=dict(height="90%", width="99%"))
 
 def write(data):
-     _iframe.contentDocument.write(data)
-     #document["container"].html += '%s' % data
+     document["container"].html = '%s' % data
 
 sys.stdout.write=write
 
@@ -91,13 +89,10 @@ def choose_test(event):
     if module == '':
        return
 
-    import unittest
-    import HTMLTestRunner
-
     #exec("import %s as mod" % module)
     mod = __import__(module)
     _suite=unittest.TestLoader().loadTestsFromModule(mod)
-    #unittest.TextTestRunner(sys.stdout, verbosity=5).run(_suite)
+    #unittest.HTMLTestRunner(sys.stdout, verbosity=5).run(_suite)
     HTMLTestRunner.HTMLTestRunner(sys.stdout, verbosity=2).run(_suite)
 
     sys.stderr.write('completed in %s seconds' % (time.time() - _start))
