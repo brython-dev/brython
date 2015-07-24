@@ -304,10 +304,15 @@ finder_VFS.$dict = {
     },
     
     find_module: function(cls, name, path){
-        if (!$B.use_VFS) {
-            return _b_.None;
+        return {__class__:Loader,
+            load_module:function(name, path){
+                var spec = cls.$dict.find_spec(cls, name, path)
+                var mod = module(name)
+                $B.imported[name] = mod
+                mod.__spec__ = spec
+                cls.$dict.exec_module(cls, mod)
+            }
         }
-        return $B.VFS[name]
     },
 
     find_spec : function(cls, fullname, path, prev_module) {
