@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-07-23 11:41:37.862393"
+__BRYTHON__.compiled_date="2015-07-24 09:47:54.754010"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_random","_random1","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","random1","__random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -6239,8 +6239,11 @@ var ext=stored[0],module_contents=stored[1];
 module.$is_package=stored[2];
 if(ext=='.js'){run_js(module_contents,module.__path__,module)}
 else{run_py(module_contents,module.__path__,module)}
-if($B.debug>1){console.log('import '+module.__name__+' from VFS')}},find_module: function(cls,name,path){if(!$B.use_VFS){return _b_.None;}
-return $B.VFS[name]},find_spec : function(cls,fullname,path,prev_module){if(!$B.use_VFS){return _b_.None;}
+if($B.debug>1){console.log('import '+module.__name__+' from VFS')}},find_module: function(cls,name,path){return{__class__:Loader,load_module:function(name,path){var spec=cls.$dict.find_spec(cls,name,path)
+var mod=module(name)
+$B.imported[name]=mod
+mod.__spec__=spec
+cls.$dict.exec_module(cls,mod)}}},find_spec : function(cls,fullname,path,prev_module){if(!$B.use_VFS){return _b_.None;}
 var stored=$B.VFS[fullname];
 if(stored===undefined){return _b_.None;}
 var is_package=stored[2],is_builtin=$B.builtin_module_names.indexOf(fullname)> -1;
@@ -6270,7 +6273,6 @@ if(address===undefined){var elts=fullname.split('.')
 if(elts.length>1){var mod_name=elts.pop()
 var package=$B.stdlib[elts.join('.')]
 if(package && package[1]){address=['py']}}}
-if(fullname=='importlib.basehook'){console.log('address',address)}
 if(address !==undefined){var ext=address[0],is_pkg=address[1]!==undefined,path=$B.brython_path +((ext=='py')? 'Lib/' : 'libs/')+
 fullname.replace(/\./g,'/'),metadata={ext: ext,is_package: is_pkg,path: path +(is_pkg? '/__init__.py' :
 ((ext=='py')? '.py' : '.js')),address: address}
