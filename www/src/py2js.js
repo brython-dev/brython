@@ -4476,9 +4476,9 @@ function $WithCtx(context){
         
         var fbody = new $Node(), indent=node.indent+4
         var js = '$exc'+num+' = false\n'+' '.repeat(indent)+
-            'if(!$ctx_manager_exit'+num+'($err'+$loop_num+
+            'if(!bool($ctx_manager_exit'+num+'($err'+$loop_num+
             '.__class__.$factory,'+'$err'+$loop_num+
-            ',getattr($err'+$loop_num+',"traceback")))'
+            ',getattr($err'+$loop_num+',"traceback"))))'
         js += '{throw $err'+$loop_num+'}'
         new $NodeJSCtx(fbody,js)
         catch_node.add(fbody)
