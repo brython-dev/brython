@@ -49,7 +49,7 @@ document['container'].style.height='%dpx' % (_height-_top-10)
 </script>
 
 <script type="text/python">
-from browser import timer, html
+from browser import timer
 from browser import document, alert
 import sys
 from test import support
@@ -65,10 +65,16 @@ def errorwrite(data):
 
 sys.stderr.write=errorwrite
 
-document["container"] <= html.DIV(style=dict(height="90%", width="99%"))
+_iframe= document.createElement('iframe')
+_iframe.style.width="99%"
+_iframe.style.height="90%"
+
+document["container"] <= _iframe
 
 def write(data):
-     document["container"].html = '%s' % data
+     _iframe.contentDocument.write(data)
+     _iframe.contentDocument.close()
+     #document["container"].html += '%s' % data
 
 sys.stdout.write=write
 
