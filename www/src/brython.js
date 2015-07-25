@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-07-24 21:59:40.063647"
+__BRYTHON__.compiled_date="2015-07-25 23:18:49.060301"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_random","_random1","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","random1","__random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4267,11 +4267,10 @@ if(extra_pos_args){slots[extra_pos_args]=[]}
 if(extra_kw_args){slots[extra_kw_args]=_b_.dict()}
 if(nb_pos>argcount){
 if(extra_pos_args===null){
-msg=$fname+"() takes "+argcount+' positional argument'
-msg +=argcount> 1 ? '' : 's'
-msg +=' but more were given'
+msg=$fname+"() takes "+argcount+' positional argument'+
+(argcount> 1 ? '' : 's')+ ' but more were given'
 throw _b_.TypeError(msg)}else{
-slots[extra_pos_args]=Array.prototype.slice.call($args,argcount,nb_pos)
+slots[extra_pos_args]=_b_.tuple(Array.prototype.slice.call($args,argcount,nb_pos))
 nb_pos=argcount}}
 for(var i=0;i<nb_pos;i++){slots[var_names[i]]=$args[i]}
 if(has_kw_args){for(var key in kw_args){if(slots[key]===undefined){
@@ -4279,15 +4278,12 @@ if(extra_kw_args){
 slots[extra_kw_args].$string_dict[key]=kw_args[key]}else{throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")}}else if(slots[key]!==null){
 throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")}else{
 slots[key]=kw_args[key]}}}
-var missing=[],attr
-for(var i=nb_pos,_len=var_names.length;i<_len;i++){attr=var_names[i]
-if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}
+var missing=[]
+for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}
 else{missing.push("'"+attr+"'")}}}
-if(missing.length>0){var msg=$fname+" missing "+missing.length+" positional arguments: "
+if(missing.length>0){if(missing.length==1){throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")}else{var msg=$fname+" missing "+missing.length+" positional arguments: "
 msg +=missing.join(' and ')
-throw _b_.TypeError(msg)
-if(missing.length==1){throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")}else if(missing.length>1){}}
-if(extra_pos_args){slots[extra_pos_args].__class__=_b_.tuple.$dict}
+throw _b_.TypeError(msg)}}
 return slots}
 $B.get_class=function(obj){
 if(obj===null){return $B.$NoneDict}
@@ -7564,6 +7560,7 @@ $B.set_func_names($ListDict)
 function list(obj){if(arguments.length===0)return[]
 if(arguments.length>1){throw _b_.TypeError("list() takes at most 1 argument ("+arguments.length+" given)")}
 if(Array.isArray(obj)){
+obj=obj.slice()
 obj.__brython__=true;
 if(obj.__class__==$TupleDict){var res=obj.slice()
 res.__class__=$ListDict
