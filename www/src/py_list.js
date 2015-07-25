@@ -494,6 +494,7 @@ function list(obj){
         throw _b_.TypeError("list() takes at most 1 argument ("+arguments.length+" given)")
     }
     if(Array.isArray(obj)){ // most simple case
+        obj = obj.slice() // list(t) is not t
         obj.__brython__ = true;
         if(obj.__class__==$TupleDict){
             var res = obj.slice()
