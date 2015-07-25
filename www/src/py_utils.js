@@ -34,14 +34,13 @@ $B.$MakeArgs1 = function($fname,argcount,slots,var_names,$args,$dobj,
         if(extra_pos_args===null){
             // No parameter to store extra positional arguments :
             // thow an exception
-            msg = $fname+"() takes "+argcount+' positional argument'
-            msg += argcount> 1 ? '' : 's'
-            msg += ' but more were given'
+            msg = $fname+"() takes "+argcount+' positional argument'+
+                (argcount> 1 ? '' : 's') + ' but more were given'
             throw _b_.TypeError(msg)
         }else{
             // Store extra positional arguments
-            slots[extra_pos_args] = Array.prototype.slice.call($args,
-                argcount,nb_pos)
+            slots[extra_pos_args] = _b_.tuple(Array.prototype.slice.call($args,
+                argcount,nb_pos))
             // For the next step of the algorithm, only use the arguments
             // before these extra arguments
             nb_pos = argcount
@@ -74,9 +73,8 @@ $B.$MakeArgs1 = function($fname,argcount,slots,var_names,$args,$dobj,
     }
     
     // If there are unfilled slots, see if there are default values
-    var missing = [], attr
-    for(var i=nb_pos,_len=var_names.length;i<_len;i++){
-        attr = var_names[i]
+    var missing = []
+    for(var attr in slots){
         if(slots[attr]===null){
             if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}
             else{missing.push("'"+attr+"'")}
@@ -84,18 +82,16 @@ $B.$MakeArgs1 = function($fname,argcount,slots,var_names,$args,$dobj,
     }
     
     if(missing.length>0){
-        var msg = $fname+" missing "+missing.length+" positional arguments: "
-        msg += missing.join(' and ')
-        throw _b_.TypeError(msg)
 
         if(missing.length==1){
             throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")
-        }else if(missing.length>1){
+        }else{
+            var msg = $fname+" missing "+missing.length+" positional arguments: "
+            msg += missing.join(' and ')
+            throw _b_.TypeError(msg)
         }
     
     }
-    // extra positional arguments are a tuple
-    if(extra_pos_args){slots[extra_pos_args].__class__ = _b_.tuple.$dict}
 
     return slots
     
