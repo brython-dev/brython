@@ -384,7 +384,7 @@ function load_encoder(enc){
     // load table from encodings/<enc>.py
     if(from_unicode[enc]===undefined){
         var mod = _b_.__import__('encodings.'+enc),
-            table = mod.decoding_table
+            table = mod[enc].decoding_table
         from_unicode[enc] = {}
         for(var i=0;i<table.length;i++){
             from_unicode[enc][table.charCodeAt(i)] = i

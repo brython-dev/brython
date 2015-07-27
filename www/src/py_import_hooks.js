@@ -25,7 +25,7 @@
     for (var i=0, _len_i = _meta_path.length; i < _len_i && is_none(spec); i++) {
         var _finder=_meta_path[i];
         spec=_b_.getattr(_b_.getattr(_finder, 'find_spec'),
-                         '__call__')(_finder, mod_name, _path, undefined);
+                         '__call__')(mod_name, _path, undefined);
     } //for
 
     if (is_none(spec)) {
@@ -42,7 +42,7 @@
         if (!is_none(_loader)) {
             var create_module = _b_.getattr(_loader, 'create_module', _b_.None);
             if (!is_none(create_module)) {
-                module = _b_.getattr(create_module, '__call__')(_loader, spec);
+                module = _b_.getattr(create_module, '__call__')(spec);
             }
         }
         if (is_none(module)) {
@@ -63,6 +63,7 @@
     module.__loader__ = _loader;
     module.__package__ = _b_.getattr(spec, 'parent', '');
     module.__spec__ = spec;
+
     var locs = _b_.getattr(spec, 'submodule_search_locations');
     // Brython-specific var
     if (module.$is_package = !is_none(locs)) {
@@ -90,12 +91,13 @@
         if (is_none(exec_module)) {
             // FIXME : Remove !!! Backwards compat in CPython
             module = _b_.getattr(_b_.getattr(_loader, 'load_module'),
-                                 '__call__')(_loader, _spec_name);
+                                 '__call__')(_spec_name);
         }
         else {
             $B.modules[_spec_name] = _sys_modules[_spec_name] = module;
-            try { _b_.getattr(exec_module, '__call__')(_loader, module) }
+            try { _b_.getattr(exec_module, '__call__')(module) }
             catch (e) {
+                console.log('error', e)
                 delete $B.modules[_spec_name];
                 delete _sys_modules[_spec_name];
                 throw e;

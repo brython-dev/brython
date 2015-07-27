@@ -4,7 +4,8 @@
         $package: true,
         $is_package: true,
         __package__:'browser',
-        __file__:$B.brython_path+'/Lib/browser/__init__.py',
+        __file__:$B.brython_path.replace(/\/*$/g,'')+
+            '/Lib/browser/__init__.py',
         alert:function(message){window.alert($B.builtins.str(message))},
         confirm: $B.JSObject(window.confirm),
         console:$B.JSObject(window.console),
@@ -26,9 +27,10 @@
            return $B.builtins.str(results);
         }
     }
+    modules['browser'].__path__ = modules['browser'].__file__
 
     // creation of an HTML element
-    modules['browser.html'] = (function($B){
+    modules['_browser.html'] = (function($B){
     
         var _b_ = $B.builtins
         var $TagSumDict = $B.$TagSum.$dict
@@ -40,7 +42,8 @@
                 }
         
             dict.__init__ = function(){
-                var $ns=$B.$MakeArgs('pow',arguments,['self'],[],'args','kw')
+                var $ns=$B.$MakeArgs1('pow',1,{self:null},['self'],arguments,
+                    {},'args','kw')
                 var self = $ns['self']
                 var args = $ns['args']
                 if(args.length==1){
@@ -175,7 +178,10 @@
                 }
             }
         },
-        py2js: function(src){return $B.py2js(src).to_js()},
+        py2js: function(src){
+            var module_name = '__main__'+$B.UUID()
+            return $B.py2js(src,module_name,module_name,'__builtins__').to_js()
+        },
         pyobj2jsobj:function(obj){ return $B.pyobj2jsobj(obj)},
         jsobj2pyobj:function(obj){ return $B.jsobj2pyobj(obj)}
     }

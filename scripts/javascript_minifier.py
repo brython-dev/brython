@@ -5,7 +5,8 @@ def minify(src):
     
     _res, pos = '', 0
     while pos < len(src):
-        if src[pos] in ('"', "'"):
+        if src[pos] in ('"', "'") or \
+            (src[pos]=='/' and src[pos-1]=='('):
             # the end of the string is the next quote if it is not
             # after an odd number of backslashes
             start = pos
@@ -48,8 +49,6 @@ def minify(src):
         elif src[pos] in '={[(' and _res and _res[-1] == ' ':
             _res = _res[:-1]+src[pos]
             pos += 1
-        elif src[pos] == ';' and pos < len(src) - 1 and src[pos + 1] in '\r\n':
-            pos += 1
         elif src[pos] in '{[,':
             _res += src[pos]
             while pos < len(src) - 1 and src[pos + 1] in ' \r\n':
@@ -72,3 +71,7 @@ def minify(src):
     _res = re.sub('\n}', '}', _res)
     
     return _res
+
+if __name__=="__main__":
+    print(minify(open('test.js').read()))
+    

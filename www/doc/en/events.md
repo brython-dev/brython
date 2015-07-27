@@ -42,7 +42,13 @@ For events management, the elements of a page have the following methods :
 
 <code>elt.unbind(_evt\_name[, handler_])</code>
 
-> removes the association of function _handler_ to the event named _evt\_name_. If _handler_ is omitted, removes all the associations for the event
+> removes the association of function _handler_ to the event named 
+> _evt\_name_. If _handler_ is omitted, removes all the associations for the 
+> event
+
+<code>elt.events(_evt\_name_)</code>
+
+> returns the list of functions that handle the event named _evt\_name_
 
 `DOMEvent` objects
 ------------------

@@ -503,8 +503,15 @@ function getattr(obj,attr,_default){
 
     if(klass.$native){
         if(klass[attr]===undefined){
-            if(_default===undefined) throw _b_.AttributeError(klass.__name__+" object has no attribute '"+attr+"'")
-            return _default
+            var object_attr = _b_.object.$dict[attr]
+            if(object_attr!==undefined){klass[attr]=object_attr}
+            else{
+                if(_default===undefined){
+                    throw _b_.AttributeError(klass.__name__+
+                        " object has no attribute '"+attr+"'")
+                }
+                return _default
+            }
         }
         if(typeof klass[attr]=='function'){
             // new is a static method
@@ -685,9 +692,14 @@ function id(obj) {
 }
 
 // The default __import__ function is a builtin
-__import__ = function (mod_name, globals, locals, fromlist, level) {
+function __import__(mod_name, globals, locals, fromlist, level) {
     // TODO : Install $B.$__import__ in builtins module to avoid nested call
-    return $B.$__import__(mod_name, globals, locals, fromList, level);
+    var $ = $B.$MakeArgs1('__import__',5,
+        {name:null,globals:null,locals:null,fromlist:null,level:null},
+        ['name', 'globals', 'locals', 'fromlist', 'level'],
+        arguments, {globals:None, locals:None, fromlist:_b_.tuple(), level:0},
+        null, null)
+    return $B.$__import__($.name, $.globals, $.locals, $.fromlist, $.level);
 }
 
 //not a direct alias of prompt: input has no default value
@@ -958,13 +970,18 @@ function pow() {
 }
 
 function $print(){
-    var end='\n',sep=' ',file=$B.stdout
-    var $ns=$B.$MakeArgs('print',arguments,[],['end','sep','file'],'args', null)
-    for(var attr in $ns){eval('var '+attr+'=$ns[attr]')}
+    var $ns=$B.$MakeArgs1('print',0,{},[],arguments,
+        {},'args', 'kw')
+    var ks = $ns['kw'].$string_dict
+    var end = ks['end'] === undefined ? '\n' : ks['end'],
+        sep = ks['sep'] === undefined ? ' ' : ks['sep'],
+        file = ks['file'] === undefined ? $B.stdout : ks['file'],
+        args = $ns['args']
 
     getattr(file,'write')(args.map(_b_.str).join(sep)+end)
 }
 $print.__name__ = 'print'
+$print.is_func = true
 
 function $prompt(text,fill){return prompt(text,fill || '')}
 
@@ -1089,7 +1106,7 @@ $RangeDict.__repr__ = $RangeDict.__str__ = function(self){
 }
 
 function range(){
-    var $ns=$B.$MakeArgs('range',arguments,[],[],'args',null)
+    var $ns=$B.$MakeArgs1('range',0,{},[],arguments,{},'args',null)
     var args = $ns['args']
     if(args.length>3){throw _b_.TypeError(
         "range expected at most 3 arguments, got "+args.length)
@@ -1294,7 +1311,7 @@ $SliceDict.indices = function (self, length) {
 }
 
 function slice(){
-    var $ns=$B.$MakeArgs('slice',arguments,[],[],'args',null)
+    var $ns=$B.$MakeArgs1('slice',0,{},[],arguments,{},'args',null)
     var args = $ns['args']
     if(args.length>3){throw _b_.TypeError(
         "slice expected at most 3 arguments, got "+args.length)
@@ -1340,7 +1357,8 @@ slice.$dict = $SliceDict
 $SliceDict.$factory = slice
 
 function sorted () {
-    var $ns=$B.$MakeArgs('sorted',arguments,['iterable'],[],null,'kw')
+    var $ns=$B.$MakeArgs1('sorted',1,{iterable:null},['iterable'],
+        arguments,{},null,'kw')
     if($ns['iterable']===undefined) throw _b_.TypeError("sorted expected 1 positional argument, got 0")
     var iterable=$ns['iterable']
     var key = _b_.dict.$dict.get($ns['kw'],'key',None)
@@ -1547,8 +1565,10 @@ function $url_open(){
     // other arguments : 
     // - mode can be 'r' (text, default) or 'rb' (binary)
     // - encoding if mode is 'rb'
-    var mode = 'r',encoding='utf-8'
-    var $ns=$B.$MakeArgs('open',arguments,['file'],['mode','encoding'],'args','kw')
+    //var mode = 'r',encoding='utf-8'
+    var $ns=$B.$MakeArgs1('open',3,{file:null,mode:null,encoding:null},
+        ['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},
+        'args','kw')
     for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
     if(args.length>0) var mode=args[0]
     if(args.length>1) var encoding=args[1]
@@ -1604,7 +1624,7 @@ $ZipDict.__mro__ = [$ZipDict,$ObjectDict]
 function zip(){
     var res = {__class__:$ZipDict,items:[]}
     if(arguments.length==0) return res
-    var $ns=$B.$MakeArgs('zip',arguments,[],[],'args','kw')
+    var $ns=$B.$MakeArgs1('zip',0,{},[],arguments,{},'args','kw')
     var _args = $ns['args']
     var args = [], pos=0
     for(var i=0;i<_args.length;i++){args[pos++]=iter(_args[i])}

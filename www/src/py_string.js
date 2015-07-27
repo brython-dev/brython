@@ -811,15 +811,14 @@ $StringDict.endswith = function(self){
     // return False. suffix can also be a tuple of suffixes to look for. 
     // With optional start, test beginning at that position. With optional 
     // end, stop comparing at that position.
-    var args = [], pos=0
-    for(var i=1, _len_i=arguments.length; i<_len_i;i++){args[pos++]=arguments[i]}
-    var start=null,end=null
-    var $ns=$B.$MakeArgs("$StringDict.endswith",args,['suffix'],
-        ['start','end'],null,null)
+    var $ns=$B.$MakeArgs1("$StringDict.endswith",4,
+        {self:null, suffix:null, start:null, end:null}, 
+        ['self', 'suffix', 'start', 'end'],
+        arguments,{start:0, end:self.length-1},null,null)
     var suffixes = $ns['suffix']
     if(!isinstance(suffixes,_b_.tuple)){suffixes=[suffixes]}
-    start = $ns['start'] || start
-    end = $ns['end'] || self.length-1
+    var start = $ns['start'],
+        end = $ns['end']
     var s = self.substr(start,end+1)
     for(var i=0, _len_i = suffixes.length; i < _len_i;i++){
         suffix = suffixes[i]
@@ -842,8 +841,10 @@ $StringDict.find = function(self){
     // arguments start and end are interpreted as in slice notation. 
     // Return -1 if sub is not found.
     var start=0,end=self.length
-    var $ns=$B.$MakeArgs("$StringDict.find",arguments,['self','sub'],
-        ['start','end'],null,null)
+    var $ns=$B.$MakeArgs1("$StringDict.find",4,
+        {self:null, sub:null, start:null, end:null}, 
+        ['self', 'sub', 'start','end'],
+        arguments,{start:0, end:self.length},null,null)
     for(var attr in $ns){eval('var '+attr+'=$ns[attr]')}
     if(!isinstance(sub,str)){throw _b_.TypeError(
         "Can't convert '"+sub.__class__.__name__+"' object to str implicitly")}
@@ -1003,7 +1004,7 @@ var $FormattableString=function(format_string) {
     this.format=function() {
        // same as str.format() and unicode.format in Python 2.6+
 
-       var $ns=$B.$MakeArgs('format',arguments,[],[],'args','kwargs')
+       var $ns=$B.$MakeArgs1('format',0,{},[],arguments,{},'args','kwargs')
        var args=$ns['args']
        var kwargs=$ns['kwargs']
        
@@ -1509,9 +1510,10 @@ $StringDict.rfind = function(self){
     // Return the highest index in the string where substring sub is found, 
     // such that sub is contained within s[start:end]. Optional arguments 
     // start and end are interpreted as in slice notation. Return -1 on failure.
-    var start=0,end=self.length
-    var $ns=$B.$MakeArgs("$StringDict.find",arguments,['self','sub'],
-        ['start','end'],null,null)
+    var $ns=$B.$MakeArgs1("$StringDict.find",4,
+        {self:null, sub:null, start:null, end:null},
+        ['self', 'sub', 'start', 'end'],
+        arguments,{start:0, end:self.length},null,null)
     for(var attr in $ns){eval('var '+attr+'=$ns[attr]')}
     if(!isinstance(sub,str)){throw _b_.TypeError(
         "Can't convert '"+sub.__class__.__name__+"' object to str implicitly")}
@@ -1519,12 +1521,6 @@ $StringDict.rfind = function(self){
         "slice indices must be integers or None or have an __index__ method")}
 
     var s = self.substring(start,end)
-    //var reversed = '',rsub=''
-    //for(var i=s.length-1;i>=0;i--){reversed += s.charAt(i)}
-    //for(var i=sub.length-1;i>=0;i--){rsub += sub.charAt(i)}
-    //var res = reversed.search($re_escape(rsub))
-    //if(res==-1) return -1
-    //return start+s.length-1-res-sub.length+1
 
     // why not use lastIndexOf, which passes all brython tests..?
     return self.lastIndexOf(sub)
@@ -1538,9 +1534,10 @@ $StringDict.rindex = function(){
 }
 
 $StringDict.rjust = function(self) {
-    var fillchar = ' '
-    var $ns=$B.$MakeArgs("$StringDict.rjust",arguments,['self','width'],
-                      ['fillchar'],null,null)
+    var $ns=$B.$MakeArgs1("$StringDict.rjust",3,
+        {self:null, width:null, fillchar:null},
+        ['self', 'width', 'fillchar'],
+        arguments,{fillchar:' '},null,null)
     for(var attr in $ns){eval('var '+attr+'=$ns[attr]')}
 
     if (width <= self.length) return self
@@ -1567,7 +1564,7 @@ $StringDict.rpartition = function(self,sep) {
 $StringDict.rsplit = function(self) {
     var args = [], pos=0
     for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-    var $ns=$B.$MakeArgs("$StringDict.rsplit",args,[],[],'args','kw')
+    var $ns=$B.$MakeArgs1("$StringDict.rsplit",0,{},[],args,{},'args','kw')
     var sep=None,maxsplit=-1
     if($ns['args'].length>=1){sep=$ns['args'][0]}
     if($ns['args'].length==2){maxsplit=$ns['args'][1]}
@@ -1597,7 +1594,7 @@ $StringDict.rstrip = function(self,x){
 $StringDict.split = function(self){
     var args = [], pos=0
     for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-    var $ns=$B.$MakeArgs("$StringDict.split",args,[],[],'args','kw')
+    var $ns=$B.$MakeArgs1("$StringDict.split",0,{},[],args,{},'args','kw')
     var sep=None,maxsplit=-1
     if($ns['args'].length>=1){sep=$ns['args'][0]}
     if($ns['args'].length==2){maxsplit=$ns['args'][1]}
@@ -1674,12 +1671,14 @@ $StringDict.startswith = function(self){
     // prefix can also be a tuple of prefixes to look for. With optional 
     // start, test string beginning at that position. With optional end, 
     // stop comparing string at that position.
-    var $ns=$B.$MakeArgs("$StringDict.startswith",arguments,['self','prefix'],
-        ['start','end'],null,null)
+    var $ns=$B.$MakeArgs1("$StringDict.startswith",4,
+        {self:null, prefix:null, start:null, end:null}, 
+        ['self', 'prefix', 'start', 'end'],
+        arguments,{start:0, end:self.length-1},null,null)
     var prefixes = $ns['prefix']
     if(!isinstance(prefixes,_b_.tuple)){prefixes=[prefixes]}
-    var start = $ns['start'] || 0
-    var end = $ns['end'] || self.length-1
+    var start = $ns['start']
+    var end = $ns['end']
     var s = self.substr(start,end+1)
 
     for (var i=0, _len_i = prefixes.length; i < _len_i; i++) {
