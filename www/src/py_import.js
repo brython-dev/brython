@@ -256,6 +256,7 @@ $B.run_py=run_py=function(module_contents,path,module) {
         // Apply side-effects upon input module object
         for (var attr in mod) {
             module[attr] = mod[attr];
+        }
         module.__initializing__ = false
         // $B.imported[mod.__name__] must be the module object, so that
         // setting attributes in a program affects the module namespace
@@ -486,7 +487,6 @@ finder_path.$dict = {
                      j < lj && finder_notfound;
                      ++j) {
                     var hook = $B.path_hooks[j];
-                    if(!$B.use_VFS && hook===vfs_hook){continue}
                     try {
                         finder = _b_.getattr(hook, '__call__')(path_entry)
                         finder_notfound = false;
@@ -526,7 +526,8 @@ $B.path_importer_cache = {};
  *
  * @param {string}      URL pointing at location of VFS js file
  */
-VfsPathFinder = function(path) {
+
+function vfs_hook(path) {
     if (path.substr(-1) == '/') {
         path = path.slice(0, -1);
     }
@@ -534,63 +535,62 @@ VfsPathFinder = function(path) {
     if (ext != '.vfs.js') {
         throw _b_.ImportError('VFS file URL must end with .vfs.js extension');
     }
-    this.path = path;
-    this.load_vfs();
+    self = {__class__: vfs_hook.$dict, path: path};
+    vfs_hook.$dict.load_vfs(self);
+    return self;
 }
 
-VfsPathFinder.prototype.load_vfs = function() {
-    try { var code = $download_module('<VFS>', this.path) }
-    catch (e) {
-        this.vfs = undefined;
-        throw new _b_.ImportError(e.$message || e.message);
-    }
-    eval(code);
-    try {
-        this.vfs = $vfs;
-    }
-    catch (e) { throw new _b_.ImportError('Expecting $vfs var in VFS file'); }
-    $B.path_importer_cache[this.path + '/'] = this;
-}
+vfs_hook.__class__ = $B.$factory
 
-VfsPathFinder.prototype.find_spec = function(self, fullname, module) {
-    if (self.vfs === undefined) {
-        try { self.load_vfs() }
-        catch(e) {
-            console.log("Could not load VFS while importing '" + fullname + "'");
+vfs_hook.$dict = {
+    $factory: vfs_hook,
+    __class__: $B.$type,
+    __name__: 'VfsPathFinder',
+
+    load_vfs: function(self) {
+        try { var code = $download_module('<VFS>', self.path) }
+        catch (e) {
+            self.vfs = undefined;
+            throw new _b_.ImportError(e.$message || e.message);
+        }
+        eval(code);
+        try {
+            self.vfs = $vfs;
+        }
+        catch (e) { throw new _b_.ImportError('Expecting $vfs var in VFS file'); }
+        $B.path_importer_cache[self.path + '/'] = self;
+    },
+    find_spec: function(self, fullname, module) {
+        if (self.vfs === undefined) {
+            try { vfs_hook.$dict.load_vfs(self) }
+            catch(e) {
+                console.log("Could not load VFS while importing '" + fullname + "'");
+                return _b_.None;
+            }
+        }
+        var stored = self.vfs[fullname];
+        if (stored === undefined) {
             return _b_.None;
         }
+        var is_package = stored[2];
+        return new_spec({name : fullname,
+                         loader: finder_VFS,
+                         // FIXME : Better origin string.
+                         origin : self.path + '#' + fullname,
+                         // FIXME: Namespace packages ?
+                         submodule_search_locations: is_package? [self.path] :
+                                                                 _b_.None,
+                         loader_state: {stored: stored},
+                         // FIXME : Where exactly compiled module is stored ?
+                         cached: _b_.None,
+                         parent: is_package? fullname : parent_package(fullname),
+                         has_location: _b_.True});
+    },
+    invalidate_caches: function(self) {
+        self.vfs = undefined;
     }
-    var stored = self.vfs[fullname];
-    if (stored === undefined) {
-        return _b_.None;
-    }
-    var is_package = stored[2];
-    return new_spec({name : fullname,
-                     loader: finder_VFS,
-                     // FIXME : Better origin string.
-                     origin : self.path + '#' + fullname,
-                     // FIXME: Namespace packages ?
-                     submodule_search_locations: is_package? [self.path] : _b_.None,
-                     loader_state: {stored: stored},
-                     // FIXME : Where exactly compiled module is stored ?
-                     cached: _b_.None,
-                     parent: is_package? fullname : parent_package(fullname),
-                     has_location: _b_.True});
 }
-
-VfsPathFinder.prototype.invalidate_caches = function(self) {
-    self.vfs = undefined;
-}
-
-VfsPathFinder.prototype.__repr__ = function() {
-    return "<VfsPathFinder for '" + this.path + "'>"
-}
-
-vfs_hook = function(path) { return new VfsPathFinder(path); }
-
-vfs_hook.__repr__ = vfs_hook.__str__ = vfs_hook.toString = function() {
-    return '<function path_hook_for_VfsPathFinder>';
-}
+vfs_hook.$dict.__mro__ = [vfs_hook.$dict, _b_.object.$dict]
 
 $B.path_hooks.push(vfs_hook)
 
@@ -876,5 +876,22 @@ $B.$import = function(mod_name,origin,fromlist, aliases, locals){
 }
 
 $B.meta_path = [finder_VFS, finder_stdlib_static, finder_path];
+
+// Introspection for builtin importers
+
+_importlib_module = {
+    __class__ : $B.$ModuleDict,
+    __name__ : '_importlib',
+    Loader: Loader,
+    VFSFinder: finder_VFS,
+    StdlibStatic: finder_stdlib_static,
+    ImporterPath: finder_path,
+    VFSPathFinder : vfs_hook,
+    UrlPathFinder: url_hook
+}
+_importlib_module.__repr__ = _importlib_module.__str__ = function(){
+return "<module '_importlib' (built-in)>"
+}
+$B.imported['_importlib'] = $B.modules['_importlib'] = _importlib_module
 
 })(__BRYTHON__)
