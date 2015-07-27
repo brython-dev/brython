@@ -56,5 +56,11 @@ import foo
 assert foo.get_foo() == 'foo'
 assert foo.get_bar() == 'bar'
 
+# Assertions for issue #7
+import test_issue7 # brythontest2 in #7 => test_issue7
+test_issue7.xxx = 123
+assert test_issue7.xxx == 123
+assert test_issue7.yyy() == 246
+
 print('passed all tests')
 
