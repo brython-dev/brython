@@ -19,8 +19,9 @@ var $IntDict = {__class__:$B.$type,
 }
 
 $IntDict.from_bytes = function() {
-  var $ns=$B.$MakeArgs("from_bytes", arguments, ['x', 'byteorder'], 
-                       'signed', 'args', 'kw')
+  var $ns=$B.$MakeArgs1("from_bytes", 3, 
+      {x:null, byteorder:null, signed:null}, ['x', 'byteorder', 'signed'],
+      arguments, {signed:False}, 'args', 'kw')
 
   var x = $ns['x']
   var byteorder = $ns['byteorder']
@@ -214,8 +215,6 @@ $IntDict.__mul__ = function(self,other){
 
 $IntDict.__name__ = 'int'
 
-$IntDict.__ne__ = function(self,other){return !$IntDict.__eq__(self,other)}
-
 $IntDict.__neg__ = function(self){return -self}
 
 $IntDict.__new__ = function(cls){
@@ -273,6 +272,7 @@ $IntDict.__str__ = $IntDict.__repr__
 $IntDict.__truediv__ = function(self,other){
     if(isinstance(other,int)){
         if(other==0) throw ZeroDivisionError('division by zero')
+        if(other.__class__==$B.LongInt.$dict){return new Number(self/parseInt(other.value))}
         return new Number(self/other)
     }
     if(isinstance(other,_b_.float)){
@@ -501,9 +501,20 @@ var int = function(value, base){
         return Number(parseInt(getattr(value,'decode')('latin-1'), base))
     }
 
-    if(hasattr(value, '__int__')) return Number(getattr(value,'__int__')())
-    if(hasattr(value, '__index__')) return Number(getattr(value,'__index__')())
-    if(hasattr(value, '__trunc__')) return Number(getattr(value,'__trunc__')())
+    if(hasattr(value, '__int__')) return getattr(value,'__int__')()
+    if(hasattr(value, '__index__')) return getattr(value,'__index__')()
+    if(hasattr(value, '__trunc__')) {
+        var res = getattr(value,'__trunc__')(),
+            int_func = _b_.getattr(res, '__int__', null)
+        if(int_func===null){
+            throw TypeError('__trunc__ returned non-Integral (type '+
+                $B.get_class(res).__name__+')')
+        }
+        var res=int_func()
+        if(isinstance(res, int)){return res}
+        throw TypeError('__trunc__ returned non-Integral (type '+
+                $B.get_class(res).__name__+')')
+    }
 
     throw _b_.ValueError(
         "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")

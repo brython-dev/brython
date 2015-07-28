@@ -34,5 +34,33 @@ assert global_in_imported.X == 15
 from delegator import Delegator
 delegate = Delegator([])
 
+# test VFS path entry finder and from <module> import * 
+import sys
+# Ensure that VFS path finder is installed
+from _importlib import VFSPathFinder
+if VFSPathFinder not in sys.path_hooks:
+    sys.path_hooks.insert(0, VFSPathFinder)
+    print('WARNING: VFS path hook installed')
+else:
+    print('INFO: VFS path finder already installed')
+
+# Add VFS file URL at the beginning of import search path
+vfs_path = __BRYTHON__.script_dir + '/test.vfs.js'
+sys.path.insert(0, vfs_path)
+
+from hello import *
+assert get_hello() == 'Hello'
+assert world.get_world() == 'world'
+
+import foo
+assert foo.get_foo() == 'foo'
+assert foo.get_bar() == 'bar'
+
+# Assertions for issue #7
+import test_issue7 # brythontest2 in #7 => test_issue7
+test_issue7.xxx = 123
+assert test_issue7.xxx == 123
+assert test_issue7.yyy() == 246
+
 print('passed all tests')
 

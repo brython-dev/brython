@@ -3,35 +3,37 @@
 <head>
 <meta charset="iso-8859-1">
 
-<script type="text/javascript" src="../../../src/brython_builtins.js"></script>
-<script type="text/javascript" src="../../../src/version_info.js"></script>
-<script type="text/javascript" src="../../../src/identifiers_re.js"></script>
-<script type="text/javascript" src="../../../src/py2js.js"></script>
-<script type="text/javascript" src="../../../src/py_object.js"></script>
-<script type="text/javascript" src="../../../src/py_type.js"></script>
-<script type="text/javascript" src="../../../src/py_utils.js"></script>
-<script type="text/javascript" src="../../../src/py_builtin_functions.js"></script>
-<script type="text/javascript" src="../../../src/py_set.js"></script>
-<script type="text/javascript" src="../../../src/js_objects.js"></script>
-<script type="text/javascript" src="../../../src/stdlib_paths.js"></script>
-<script type="text/javascript" src="../../../src/py_import.js"></script>
+<script type="text/javascript" src="../../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../../src/version_info.js"></script>
+<script type="text/javascript" src="../../src/identifiers_re.js"></script>
+<script type="text/javascript" src="../../src/py2js.js"></script>
+<script type="text/javascript" src="../../src/py_object.js"></script>
+<script type="text/javascript" src="../../src/py_type.js"></script>
+<script type="text/javascript" src="../../src/py_utils.js"></script>
+<script type="text/javascript" src="../../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../../src/py_bytes.js"></script>
+<script type="text/javascript" src="../../src/py_set.js"></script>
+<script type="text/javascript" src="../../src/js_objects.js"></script>
+<script type="text/javascript" src="../../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../../src/py_import.js"></script>
 
-<script type="text/javascript" src="../../../src/py_int.js"></script>
-<script type="text/javascript" src="../../../src/py_long_int.js"></script>
-<script type="text/javascript" src="../../../src/py_float.js"></script>
-<script type="text/javascript" src="../../../src/py_complex.js"></script>
-<script type="text/javascript" src="../../../src/py_bytes.js"></script>
-<script type="text/javascript" src="../../../src/py_string.js"></script>
-<script type="text/javascript" src="../../../src/py_dict.js"></script>
-<script type="text/javascript" src="../../../src/py_list.js"></script>
-<script type="text/javascript" src="../../../src/py_generator.js"></script>
-<script type="text/javascript" src="../../../src/py_dom.js"></script>
-<script type="text/javascript" src="../../../src/async.js"></script>
+<script type="text/javascript" src="../../src/py_string.js"></script>
+<script type="text/javascript" src="../../src/py_int.js"></script>
+<script type="text/javascript" src="../../src/py_long_int.js"></script>
+<script type="text/javascript" src="../../src/py_float.js"></script>
+<script type="text/javascript" src="../../src/py_complex.js"></script>
+<script type="text/javascript" src="../../src/py_dict.js"></script>
+<script type="text/javascript" src="../../src/py_list.js"></script>
+<script type="text/javascript" src="../../src/py_generator.js"></script>
+<script type="text/javascript" src="../../src/py_dom.js"></script>
+
+<script type="text/javascript" src="../../src/builtin_modules.js"></script>
+<script type="text/javascript" src="../../src/py_import_hooks.js"></script>
+<script type="text/javascript" src="../../src/async.js"></script>
 
 <!--
 <script type="text/javascript" src="../../../src/py_VFS.js"></script>
 -->
-<script type="text/javascript" src="../../../src/local_storage_fs.js"></script>
 
 <script type="text/python">
 from browser import document
@@ -48,8 +50,12 @@ document['container'].style.height='%dpx' % (_height-_top-10)
 
 <script type="text/python">
 from browser import timer
-from browser import document
+from browser import document, alert
 import sys
+from test import support
+import unittest
+import HTMLTestRunner
+
 
 sys.path.append("../../src/Lib/test/unittests")
 sys.path.append("../../src/Lib/unittest")
@@ -67,6 +73,7 @@ document["container"] <= _iframe
 
 def write(data):
      _iframe.contentDocument.write(data)
+     _iframe.contentDocument.close()
      #document["container"].html += '%s' % data
 
 sys.stdout.write=write
@@ -82,30 +89,28 @@ def choose_test(event):
     import time
     _start=time.time()
     document["errorconsole"].text=''
-    module=event.target.value
+    sel = document['test']
+    module = sel.options[sel.selectedIndex].value
 
     if module == '':
        return
 
-    import unittest
-    import HTMLTestRunner
-
     #exec("import %s as mod" % module)
     mod = __import__(module)
     _suite=unittest.TestLoader().loadTestsFromModule(mod)
-    #unittest.TextTestRunner(sys.stdout, verbosity=5).run(_suite)
+    #unittest.HTMLTestRunner(sys.stdout, verbosity=5).run(_suite)
     HTMLTestRunner.HTMLTestRunner(sys.stdout, verbosity=2).run(_suite)
 
     sys.stderr.write('completed in %s seconds' % (time.time() - _start))
 
-document["test"].bind('change', choose_test)
+document["btn_test"].bind('click', choose_test)
 </script>
 
 </head>
 
-<body onload="brython({debug:0, cache:'version', re:'pyre',
-                       static_stdlib_import: true,
-                       open: $local_storage_open})">
+<body onload="brython({debug:1,
+                       static_stdlib_import: true
+                       })">
 
 <div style="width:100%">
 <div style="float:left">
@@ -157,6 +162,7 @@ UnitTests:
   <option value="test_string">test_string</option>
   <option value="test_with">test_with</option>
 </select>
+<button id="btn_test">Run test</button>
 </div>
 
 <div style="float:right">

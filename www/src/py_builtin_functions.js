@@ -253,11 +253,10 @@ var $EnumerateDict = {__class__:$B.$type,__name__:'enumerate'}
 $EnumerateDict.__mro__ = [$EnumerateDict,$ObjectDict]
 
 function enumerate(){
-    var _start = 0
-    var $ns = $B.$MakeArgs("enumerate",arguments,["iterable"],
-                ["start"], null, null)
+    var $ns = $B.$MakeArgs1("enumerate",2,{iterable:null,start:null},
+        ['iterable', 'start'],arguments,{start:0}, null, null)
     var _iter = iter($ns["iterable"])
-    var _start = $ns["start"] || _start
+    var _start = $ns["start"]
     var res = {
         __class__:$EnumerateDict,
         __getattr__:function(attr){return res[attr]},
@@ -435,7 +434,7 @@ function format(value, format_spec) {
 function getattr(obj,attr,_default){
 
     var klass = $B.get_class(obj)
-
+    
     if(klass===undefined){
         // for native JS objects used in Python code
         if(obj[attr]!==undefined) return $B.$JS2Py(obj[attr])
@@ -504,8 +503,15 @@ function getattr(obj,attr,_default){
 
     if(klass.$native){
         if(klass[attr]===undefined){
-            if(_default===undefined) throw _b_.AttributeError(klass.__name__+" object has no attribute '"+attr+"'")
-            return _default
+            var object_attr = _b_.object.$dict[attr]
+            if(object_attr!==undefined){klass[attr]=object_attr}
+            else{
+                if(_default===undefined){
+                    throw _b_.AttributeError(klass.__name__+
+                        " object has no attribute '"+attr+"'")
+                }
+                return _default
+            }
         }
         if(typeof klass[attr]=='function'){
             // new is a static method
@@ -686,9 +692,14 @@ function id(obj) {
 }
 
 // The default __import__ function is a builtin
-__import__ = function (mod_name, globals, locals, fromlist, level) {
+function __import__(mod_name, globals, locals, fromlist, level) {
     // TODO : Install $B.$__import__ in builtins module to avoid nested call
-    return $B.$__import__(mod_name, globals, locals, fromList, level);
+    var $ = $B.$MakeArgs1('__import__',5,
+        {name:null,globals:null,locals:null,fromlist:null,level:null},
+        ['name', 'globals', 'locals', 'fromlist', 'level'],
+        arguments, {globals:None, locals:None, fromlist:_b_.tuple(), level:0},
+        null, null)
+    return $B.$__import__($.name, $.globals, $.locals, $.fromlist, $.level);
 }
 
 //not a direct alias of prompt: input has no default value
@@ -932,35 +943,20 @@ function ord(c) {
 }
 
 function pow() {
-    var $ns=$B.$MakeArgs('pow',arguments,[],[],'args','kw')
-    var args = $ns['args']
-    if(args.length<2){throw _b_.TypeError(
-        "pow expected at least 2 arguments, got "+args.length)
-    }
-    if(args.length>3){throw _b_.TypeError(
-        "pow expected at most 3 arguments, got "+args.length)
-    }
-    if(args.length === 2){
-        var x = args[0]
-        var y = args[1]
+    var $ns=$B.$MakeArgs1('pow',3,{x:null,y:null,z:null},['x','y','z'],
+        arguments,{z:null},null,null)
+    var x=$ns['x'],y=$ns['y'],z=$ns['z']
+    if(z === null){
         var a,b
-        if(isinstance(x, _b_.float)){a=x.value
-        } else if(isinstance(x, _b_.int)){a=x
-        } else {throw _b_.TypeError("unsupported operand type(s) for ** or pow()")
-        }
-
-        if (isinstance(y, _b_.float)){b=y.value
-        } else if (isinstance(y, _b_.int)){b=y
-        } else {
-          throw _b_.TypeError("unsupported operand type(s) for ** or pow()")
-        }
+        if(isinstance(x, _b_.float)){a=x.valueOf()}
+        else if(isinstance(x, _b_.int)){a=x}
+        else {throw _b_.TypeError("unsupported operand type(s) for ** or pow()")}
+        
+        if (isinstance(y, _b_.float)){b=y.valueOf()}
+        else if (isinstance(y, _b_.int)){b=y}
+        else {throw _b_.TypeError("unsupported operand type(s) for ** or pow()")}
         var res = Math.pow(a,b)
-    }
-
-    if(args.length === 3){
-        var x = args[0]
-        var y = args[1]
-        var z = args[2]
+    }else{
         var _err="pow() 3rd argument not allowed unless all arguments are integers"
 
         if (!isinstance(x, _b_.int)) throw _b_.TypeError(_err)
@@ -974,13 +970,18 @@ function pow() {
 }
 
 function $print(){
-    var end='\n',sep=' ',file=$B.stdout
-    var $ns=$B.$MakeArgs('print',arguments,[],['end','sep','file'],'args', null)
-    for(var attr in $ns){eval('var '+attr+'=$ns[attr]')}
+    var $ns=$B.$MakeArgs1('print',0,{},[],arguments,
+        {},'args', 'kw')
+    var ks = $ns['kw'].$string_dict
+    var end = ks['end'] === undefined ? '\n' : ks['end'],
+        sep = ks['sep'] === undefined ? ' ' : ks['sep'],
+        file = ks['file'] === undefined ? $B.stdout : ks['file'],
+        args = $ns['args']
 
     getattr(file,'write')(args.map(_b_.str).join(sep)+end)
 }
 $print.__name__ = 'print'
+$print.is_func = true
 
 function $prompt(text,fill){return prompt(text,fill || '')}
 
@@ -1026,6 +1027,7 @@ function property(fget, fset, fdel, doc) {
 
 property.__class__ = $B.$factory
 property.$dict = $PropertyDict
+$PropertyDict.$factory = property
 
 // range
 var $RangeDict = {__class__:$B.$type,
@@ -1104,7 +1106,7 @@ $RangeDict.__repr__ = $RangeDict.__str__ = function(self){
 }
 
 function range(){
-    var $ns=$B.$MakeArgs('range',arguments,[],[],'args',null)
+    var $ns=$B.$MakeArgs1('range',0,{},[],arguments,{},'args',null)
     var args = $ns['args']
     if(args.length>3){throw _b_.TypeError(
         "range expected at most 3 arguments, got "+args.length)
@@ -1309,7 +1311,7 @@ $SliceDict.indices = function (self, length) {
 }
 
 function slice(){
-    var $ns=$B.$MakeArgs('slice',arguments,[],[],'args',null)
+    var $ns=$B.$MakeArgs1('slice',0,{},[],arguments,{},'args',null)
     var args = $ns['args']
     if(args.length>3){throw _b_.TypeError(
         "slice expected at most 3 arguments, got "+args.length)
@@ -1355,7 +1357,8 @@ slice.$dict = $SliceDict
 $SliceDict.$factory = slice
 
 function sorted () {
-    var $ns=$B.$MakeArgs('sorted',arguments,['iterable'],[],null,'kw')
+    var $ns=$B.$MakeArgs1('sorted',1,{iterable:null},['iterable'],
+        arguments,{},null,'kw')
     if($ns['iterable']===undefined) throw _b_.TypeError("sorted expected 1 positional argument, got 0")
     var iterable=$ns['iterable']
     var key = _b_.dict.$dict.get($ns['kw'],'key',None)
@@ -1415,11 +1418,17 @@ function sum(iterable,start){
 var $SuperDict = {__class__:$B.$type,__name__:'super'}
 
 $SuperDict.__getattribute__ = function(self,attr){
+    if($SuperDict[attr]!==undefined){ // for __repr__ and __str__
+        return function(){return $SuperDict[attr](self)}
+    }
     var mro = self.__thisclass__.$dict.__mro__,res
     for(var i=1;i<mro.length;i++){ // start with 1 = ignores the class where super() is defined
         res = mro[i][attr]
         if(res!==undefined){
             // if super() is called with a second argument, the result is bound
+            if(res.__class__===$PropertyDict){
+                return res.__get__(res, self.__self_class__)
+            }
             if(self.__self_class__!==None){
                 var _args = [self.__self_class__]
                 if(attr=='__new__'){_args=[]}
@@ -1452,7 +1461,13 @@ $SuperDict.__getattribute__ = function(self,attr){
 
 $SuperDict.__mro__ = [$SuperDict,$ObjectDict]
 
-$SuperDict.__repr__=$SuperDict.__str__=function(self){return "<object 'super'>"}
+$SuperDict.__repr__=$SuperDict.__str__=function(self){
+    var res = "<super: <class '"+self.__thisclass__.$dict.__name__+"'"
+    if(self.__self_class__!==undefined){
+        res += ', <'+self.__self_class__.__class__.__name__+' object>'
+    }
+    return res+'>'
+}
 
 function $$super(_type1,_type2){
     return {__class__:$SuperDict,
@@ -1550,8 +1565,10 @@ function $url_open(){
     // other arguments : 
     // - mode can be 'r' (text, default) or 'rb' (binary)
     // - encoding if mode is 'rb'
-    var mode = 'r',encoding='utf-8'
-    var $ns=$B.$MakeArgs('open',arguments,['file'],['mode','encoding'],'args','kw')
+    //var mode = 'r',encoding='utf-8'
+    var $ns=$B.$MakeArgs1('open',3,{file:null,mode:null,encoding:null},
+        ['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},
+        'args','kw')
     for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
     if(args.length>0) var mode=args[0]
     if(args.length>1) var encoding=args[1]
@@ -1607,7 +1624,7 @@ $ZipDict.__mro__ = [$ZipDict,$ObjectDict]
 function zip(){
     var res = {__class__:$ZipDict,items:[]}
     if(arguments.length==0) return res
-    var $ns=$B.$MakeArgs('zip',arguments,[],[],'args','kw')
+    var $ns=$B.$MakeArgs1('zip',0,{},[],arguments,{},'args','kw')
     var _args = $ns['args']
     var args = [], pos=0
     for(var i=0;i<_args.length;i++){args[pos++]=iter(_args[i])}

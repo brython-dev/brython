@@ -133,23 +133,37 @@ $ObjectDict.__getattribute__ = function(obj,attr){
     }
 
     if(res!==undefined){
-        var get_func = res.__get__
+
+        if(res.__class__===_b_.property.$dict){
+            return res.__get__(res, obj, klass)
+        }
+
+        var __get__ = _b_.getattr(res,'__get__',null)
+
+        // For descriptors, attribute resolution is done by applying __get__
+        if(__get__!==null){
+            try{return __get__.apply(null,[obj, klass])}
+            catch(err){
+                console.log('error in get.apply', err)
+                console.log(__get__+'')
+                throw err
+            }
+        }
         
-        if(get_func===undefined && (typeof res=='object')){
-            var __get__ = _b_.getattr(res,'__get__',null);
+        if(typeof res=='object'){
             if(__get__ && (typeof __get__=='function')){
                 get_func = function(x,y){return __get__.apply(x,[y,klass])}
             }
         }
         
-        if(get_func===undefined && (typeof res=='function')){
-            get_func = function(x){return x}
+        if(__get__===null && (typeof res=='function')){
+            __get__ = function(x){return x}
         }
-        if(get_func!==undefined){ // descriptor
+        if(__get__!==null){ // descriptor
             res.__name__ = attr
             // __new__ is a static method
             if(attr=='__new__'){res.$type='staticmethod'}
-            var res1 = get_func.apply(null,[res,obj,klass])
+            var res1 = __get__.apply(null,[res,obj,klass])
             if(typeof res1=='function'){
                 // If attribute is a class then return it unchanged
                 //
