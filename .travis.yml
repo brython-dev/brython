@@ -1,0 +1,6 @@
+language: javascript
+
+# TODO: install QUnit PhantomJS runner
+before_install: git clone https://github.com/jonkemp/qunit-phantomjs-runner.git
+script: phantomjs qunit-phantomjs-runner/runner.js www/tests/run_qunit.html
+
