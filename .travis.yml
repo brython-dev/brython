@@ -8,5 +8,5 @@ before_install:
   - git clone https://github.com/founddrama/phantomjs-cookbook
 script:
   - cd phantomjs-cookbook
-  - phantomjs phantomjs/examples/run-qunit.js chapter04/recipe09-runner.html
+  - phantomjs ../phantomjs/examples/run-qunit.js chapter04/recipe09-runner.html
 
