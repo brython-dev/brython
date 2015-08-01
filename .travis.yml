@@ -1,12 +1,10 @@
 language: javascript
 
 before_install:
-#  - mkdir qunit
-#  - wget -O qunit/qunit-1.18.0.css http://code.jquery.com/qunit/qunit-1.18.0.css
-#  - wget -O qunit/qunit-1.18.0.js  http://code.jquery.com/qunit/qunit-1.18.0.js
+  - mkdir qunit
+  - wget -O qunit/qunit-1.18.0.css http://code.jquery.com/qunit/qunit-1.18.0.css
+  - wget -O qunit/qunit-1.18.0.js  http://code.jquery.com/qunit/qunit-1.18.0.js
   - git clone http://github.com/ariya/phantomjs
-  - git clone https://github.com/founddrama/phantomjs-cookbook
 script:
-  - cd phantomjs-cookbook
-  - phantomjs ../phantomjs/examples/run-qunit.js chapter04/recipe09-runner.html
+  - phantomjs phantomjs/examples/run-qunit.js www/tests/run_qunit.html
 

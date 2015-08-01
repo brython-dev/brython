@@ -1,15 +1,22 @@
 <!doctype html>
 <html>
   <head>
+    <!-- Online install -->
     <link rel="stylesheet" type="text/css" href="//code.jquery.com/qunit/qunit-1.18.0.css" />
+    <!-- Local install for Travis-CI -->
+    <link rel="stylesheet" type="text/css" href="../../qunit/qunit-1.18.0.css" />
+  </head>
+  <body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <!-- Online install -->
     <script src="//code.jquery.com/qunit/qunit-1.18.0.js"></script>
+    <!-- Local install for Travis-CI -->
+    <script src="../../qunit/qunit-1.18.0.js"></script>
     <script languaje="javascript">
       test("Initial test - always fail", function( assert ) {
         assert.equal(1, 0);
       })
     </script>
-  </head>
-  <body>
-    <div id="qunit"></div>
   </body>
 </html>
