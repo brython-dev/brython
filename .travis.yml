@@ -1,6 +1,17 @@
 language: javascript
 
 # TODO: install QUnit PhantomJS runner
-before_install: git clone https://github.com/jonkemp/qunit-phantomjs-runner.git
-script: phantomjs qunit-phantomjs-runner/runner.js www/tests/run_qunit.html
+#before_install:
+#  - git clone https://github.com/jonkemp/qunit-phantomjs-runner.git
+#script: 
+#  - phantomjs qunit-phantomjs-runner/runner.js www/tests/run_qunit.html
+
+# Reproducing QUnit sample build found in PhantomJS Cookbook
+
+before:install
+  - git clone http://github.com/ariya/phantomjs
+  - git clone https://github.com/founddrama/phantomjs-cookbook
+script: 
+  - cd phantomjs-cookbook
+  - phantomjs phantomjs/examples/run-qunit.js chapter04/recipe09-runner.html
 
