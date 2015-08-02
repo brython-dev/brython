@@ -76,5 +76,7 @@ def run(src, in_globals=False):
     t1 = time.perf_counter()
     return state, t0, t1
 
-
+def run_test_module(filename, base_path='', in_globals=False):
+    src = open(base_path + filename).read()
+    return run(src, in_globals)
 

@@ -46,22 +46,34 @@
 
 <!-- Test cases -->
     <script type="text/javascript">
-      window.subtle_failure = function(assert) {
-        assert.equal(1, 0)
-      }
-      window.subtle_success = function(assert) {
-        assert.equal(1, 1)
+      window.test_proc = function(filenm, caption) {
+        return function(assert) {
+            exec_info = __BRYTHON__.builtins.$eval(
+                '__import__("brython_test_utils", {},{},[],0)' +
+                '.run_test_module("' + filenm + '")');
+            status = exec_info[0]; tstart = exec_info[1]; tend = exec_info[2];
+            if (status == 1) {
+                assert.ok(true, caption + " - ok");
+            }
+            else {
+                // TODO: Record and output generated traceback
+                assert.ok(false, caption + " - FAILED")
+            }
+        }
       }
     </script>
 
 <script type="text/python3">
 from javascript import JSObject
 from browser import alert, window
+import brython_test_utils as utils
 
 _QUnit = JSObject(window.QUnit)
 
-_QUnit.test("Initial test - always fail", window.subtle_failure )
-_QUnit.test("Initial test - ok",          window.subtle_success )
+for label, options in utils.discover_test_modules():
+    # TODO: Define module for option groups
+    for filenm, caption in options:
+        _QUnit.test(caption, window.test_proc(filenm, caption))
 </script>
 
   </body>
