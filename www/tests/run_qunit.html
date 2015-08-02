@@ -6,17 +6,66 @@
     <!-- Local install for Travis-CI -->
     <link rel="stylesheet" type="text/css" href="../../qunit/qunit-1.18.0.css" />
   </head>
-  <body>
+  <body onload="brython({debug:1, cache:'none', static_stdlib_import:true})">
+    <!-- QUnit init -->
     <div id="qunit"></div>
     <div id="qunit-fixture"></div>
     <!-- Online install -->
     <script src="//code.jquery.com/qunit/qunit-1.18.0.js"></script>
     <!-- Local install for Travis-CI -->
     <script src="../../qunit/qunit-1.18.0.js"></script>
-    <script languaje="javascript">
-      test("Initial test - always fail", function( assert ) {
-        assert.equal(1, 0);
-      })
+
+    <!-- Brython init -->
+    <script type="text/javascript" src="../src/brython_builtins.js"></script>
+    <script type="text/javascript" src="../src/version_info.js"></script>
+    <script type="text/javascript" src="../src/identifiers_re.js"></script>
+    <script type="text/javascript" src="../src/py2js.js"></script>
+    <script type="text/javascript" src="../src/py_object.js"></script>
+    <script type="text/javascript" src="../src/py_type.js"></script>
+    <script type="text/javascript" src="../src/py_utils.js"></script>
+    <script type="text/javascript" src="../src/py_builtin_functions.js"></script>
+    <script type="text/javascript" src="../src/py_bytes.js"></script>
+    <script type="text/javascript" src="../src/py_set.js"></script>
+    <script type="text/javascript" src="../src/js_objects.js"></script>
+    <script type="text/javascript" src="../src/stdlib_paths.js"></script>
+    <script type="text/javascript" src="../src/py_import.js"></script>
+
+    <script type="text/javascript" src="../src/py_string.js"></script>
+    <script type="text/javascript" src="../src/py_int.js"></script>
+    <script type="text/javascript" src="../src/py_long_int.js"></script>
+    <script type="text/javascript" src="../src/py_float.js"></script>
+    <script type="text/javascript" src="../src/py_complex.js"></script>
+    <script type="text/javascript" src="../src/py_dict.js"></script>
+    <script type="text/javascript" src="../src/py_list.js"></script>
+    <script type="text/javascript" src="../src/py_generator.js"></script>
+    <script type="text/javascript" src="../src/py_dom.js"></script>
+
+    <script type="text/javascript" src="../src/builtin_modules.js"></script>
+    <script type="text/javascript" src="../src/py_import_hooks.js"></script>
+    <script type="text/javascript" src="../src/async.js"></script>
+
+<!-- Test cases -->
+<script type="text/python3">
+from javascript import JSObject
+from browser import alert, window
+
+_QUnit = JSObject(window.QUnit)
+
+_QUnit.test("Initial test - always fail", window.subtle_failure )
+_QUnit.test("Initial test - ok",          window.subtle_success )
+</script>
+
+    <!-- Start Brython -->
+    <script type="text/javascript">
+      window.subtle_failure = function(assert) {
+        assert.equal(1, 0)
+      }
+      window.subtle_success = function(assert) {
+        assert.equal(1, 1)
+      }
+
+      brython()
     </script>
   </body>
 </html>
+

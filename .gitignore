@@ -74,3 +74,7 @@ nosetests.xml
 .project
 .pydevproject
 *.nja
+
+# Temporary QUnit folder
+qunit/
+
