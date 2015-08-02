@@ -45,6 +45,15 @@
     <script type="text/javascript" src="../src/async.js"></script>
 
 <!-- Test cases -->
+    <script type="text/javascript">
+      window.subtle_failure = function(assert) {
+        assert.equal(1, 0)
+      }
+      window.subtle_success = function(assert) {
+        assert.equal(1, 1)
+      }
+    </script>
+
 <script type="text/python3">
 from javascript import JSObject
 from browser import alert, window
@@ -55,15 +64,6 @@ _QUnit.test("Initial test - always fail", window.subtle_failure )
 _QUnit.test("Initial test - ok",          window.subtle_success )
 </script>
 
-    <!-- Start Brython -->
-    <script type="text/javascript">
-      window.subtle_failure = function(assert) {
-        assert.equal(1, 0)
-      }
-      window.subtle_success = function(assert) {
-        assert.equal(1, 1)
-      }
-    </script>
   </body>
 </html>
 
