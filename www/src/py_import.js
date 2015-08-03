@@ -459,8 +459,9 @@ finder_path.$dict = {
             code = _spec.loader_state.code;
         module.$is_package = _spec.loader_state.is_package,
         delete _spec.loader_state['code'];
-        if (_spec.loader_state.type == 'py') {
-            run_py(code, _spec.origin, module);
+        var src_type = _spec.loader_state.type
+        if (src_type == 'py' || src_type == 'pyc.js') {
+            run_py(code, _spec.origin, module, src_type=='pyc.js');
         }
         else if (_spec.loader_state.type == 'js') {
             run_js(code, _spec.origin, module)
@@ -629,11 +630,11 @@ url_hook.$dict = {
             // either js or undefined , try js code
             modpaths = [[base_path + '.js', 'js', false]];
         }
-        if (tryall || hint == 'pyc') {
+        if (tryall || hint == 'pyc.js') {
             // either pyc or undefined , try pre-compiled module code
-            modpaths = modpaths.concat([[base_path + '.pyc.js', 'pyc', false],
+            modpaths = modpaths.concat([[base_path + '.pyc.js', 'pyc.js', false],
                                         [base_path + '/__init__.pyc.js',
-                                         'pyc', true]]);
+                                         'pyc.js', true]]);
         }
         if (tryall || hint == 'py') {
             // either py or undefined , try py code
@@ -655,7 +656,7 @@ url_hook.$dict = {
                 if (loader_data.is_package) {
                     // Populate cache in advance to speed up submodule imports
                     $B.path_importer_cache[base_path + '/'] =
-                            url_hook(base_path + '/', 'py', self.hint);
+                            url_hook(base_path + '/', self.hint);
                 }
                 loader_data.path = file_info[0];
             }catch(err){
