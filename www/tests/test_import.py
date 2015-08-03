@@ -44,23 +44,48 @@ if VFSPathFinder not in sys.path_hooks:
 else:
     print('INFO: VFS path finder already installed')
 
+print('Testing VFS for .py files')
+
 # Add VFS file URL at the beginning of import search path
-vfs_path = __BRYTHON__.script_dir + '/test.vfs.js'
-sys.path.insert(0, vfs_path)
+vfs_url = __BRYTHON__.script_dir + '/test.vfs.js'
+sys.path.insert(0, vfs_url)
 
 from hello import *
-assert get_hello() == 'Hello'
-assert world.get_world() == 'world'
+
+assert get_hello() == 'Hello from py'
+assert world.get_world() == 'py world'
 
 import foo
-assert foo.get_foo() == 'foo'
-assert foo.get_bar() == 'bar'
+assert foo.get_foo() == 'foo from py'
+assert foo.get_bar() == 'bar from py'
 
 # Assertions for issue #7
 import test_issue7 # brythontest2 in #7 => test_issue7
 test_issue7.xxx = 123
 assert test_issue7.xxx == 123
 assert test_issue7.yyy() == 246
+
+# Repeat tests for .pyc VFS file
+print('Testing VFS for .pyc files')
+
+# Override VFS entry in sys.path
+vfs_pyc_url = __BRYTHON__.script_dir + '/test_pyc.vfs.js'
+sys.path[0] = vfs_pyc_url
+
+from hello_pyc import *
+
+assert get_hello() == 'Hello from pyc'
+assert world.get_world() == 'pyc world'
+
+import foo_pyc
+assert foo_pyc.get_foo() == 'foo from pyc'
+assert foo_pyc.get_bar() == 'bar from pyc'
+
+# Assertions for issue #7
+import test_issue7_pyc # brythontest2 in #7 => test_issue7_pyc
+test_issue7_pyc.xxx = 123
+assert test_issue7_pyc.xxx == 123
+assert test_issue7_pyc.yyy() == 369
 
 print('passed all tests')
 
