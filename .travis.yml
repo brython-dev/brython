@@ -1,0 +1,10 @@
+language: javascript
+
+before_install:
+  - mkdir qunit
+  - wget -O qunit/qunit-1.18.0.css http://code.jquery.com/qunit/qunit-1.18.0.css
+  - wget -O qunit/qunit-1.18.0.js  http://code.jquery.com/qunit/qunit-1.18.0.js
+  - git clone http://github.com/ariya/phantomjs
+script:
+  - phantomjs phantomjs/examples/run-qunit.js www/tests/run_qunit.html
+
