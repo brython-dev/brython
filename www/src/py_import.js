@@ -304,7 +304,7 @@ finder_VFS.$dict = {
             module_contents = stored[1];
         module.$is_package = stored[2];
         if (ext == '.js') {run_js(module_contents, module.__path__, module)}
-        else {run_py(module_contents, module.__path__, module)}
+        else {run_py(module_contents, module.__path__, module, ext=='.pyc.js')}
         if($B.debug>1){console.log('import '+module.__name__+' from VFS')}
     },
 
