@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- Online install -->
+    <link rel="stylesheet" type="text/css" href="//code.jquery.com/qunit/qunit-1.18.0.css" />
+    <!-- Local install for Travis-CI -->
+    <link rel="stylesheet" type="text/css" href="../../qunit/qunit-1.18.0.css" />
+  </head>
+  <body onload="brython({debug:1, cache:'none', static_stdlib_import:true})">
+    <!-- QUnit init -->
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <!-- Online install -->
+    <script src="//code.jquery.com/qunit/qunit-1.18.0.js"></script>
+    <!-- Local install for Travis-CI -->
+    <script src="../../qunit/qunit-1.18.0.js"></script>
+
+    <!-- Brython init -->
+    <script type="text/javascript" src="../src/brython_builtins.js"></script>
+    <script type="text/javascript" src="../src/version_info.js"></script>
+    <script type="text/javascript" src="../src/identifiers_re.js"></script>
+    <script type="text/javascript" src="../src/py2js.js"></script>
+    <script type="text/javascript" src="../src/py_object.js"></script>
+    <script type="text/javascript" src="../src/py_type.js"></script>
+    <script type="text/javascript" src="../src/py_utils.js"></script>
+    <script type="text/javascript" src="../src/py_builtin_functions.js"></script>
+    <script type="text/javascript" src="../src/py_bytes.js"></script>
+    <script type="text/javascript" src="../src/py_set.js"></script>
+    <script type="text/javascript" src="../src/js_objects.js"></script>
+    <script type="text/javascript" src="../src/stdlib_paths.js"></script>
+    <script type="text/javascript" src="../src/py_import.js"></script>
+
+    <script type="text/javascript" src="../src/py_string.js"></script>
+    <script type="text/javascript" src="../src/py_int.js"></script>
+    <script type="text/javascript" src="../src/py_long_int.js"></script>
+    <script type="text/javascript" src="../src/py_float.js"></script>
+    <script type="text/javascript" src="../src/py_complex.js"></script>
+    <script type="text/javascript" src="../src/py_dict.js"></script>
+    <script type="text/javascript" src="../src/py_list.js"></script>
+    <script type="text/javascript" src="../src/py_generator.js"></script>
+    <script type="text/javascript" src="../src/py_dom.js"></script>
+
+    <script type="text/javascript" src="../src/builtin_modules.js"></script>
+    <script type="text/javascript" src="../src/py_import_hooks.js"></script>
+    <script type="text/javascript" src="../src/async.js"></script>
+
+<!-- Test cases -->
+    <script type="text/javascript">
+      window.test_proc = function(filenm, caption) {
+        return function(assert) {
+            exec_info = __BRYTHON__.builtins.$eval(
+                '__import__("brython_test_utils", {},{},[],0)' +
+                '.run_test_module("' + filenm + '")');
+            status = exec_info[0]; tstart = exec_info[1]; tend = exec_info[2];
+            if (status == 1) {
+                assert.ok(true, caption + " - ok");
+            }
+            else {
+                // TODO: Record and output generated traceback
+                assert.ok(false, caption + " - FAILED")
+            }
+        }
+      }
+    </script>
+
+<script type="text/python3">
+from javascript import JSObject
+from browser import alert, window
+import brython_test_utils as utils
+
+_QUnit = JSObject(window.QUnit)
+
+for label, options in utils.discover_test_modules():
+    # TODO: Define module for option groups
+    for filenm, caption in options:
+        _QUnit.test(caption, window.test_proc(filenm, caption))
+</script>
+
+  </body>
+</html>
+

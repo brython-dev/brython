@@ -1157,7 +1157,7 @@ function repr(obj){
         return func(obj)
     }
     var func = getattr(obj,'__repr__')
-    if(func!==undefined) return func()
+    if(func!==undefined) return func.apply(obj)
     throw _b_.AttributeError("object has no attribute __repr__")
 }
 

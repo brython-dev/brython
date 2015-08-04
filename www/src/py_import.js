@@ -157,11 +157,11 @@ function run_js(module_contents,path,module){
           if ($B.builtin_module_names.indexOf(module.name) > -1) {
              return "<module '"+module.name+"' (built-in)>"
           }
-    
+
           //if(module.name == 'builtins') return "<module '"+module.name+"' (built-in)>"
           return "<module '"+module.name+"' from "+path+" >"
         }
-    
+
         $module.toString = function(){return "<module '"+module.name+"' from "+path+" >"}
         if(module.name != 'builtins') { // builtins do not have a __file__ attribute
           $module.__file__ = path
@@ -204,33 +204,35 @@ function import_py(module,path,package){
 }
 
 //$B.run_py is needed for import hooks..
-$B.run_py=run_py=function(module_contents,path,module) {
-    var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
-    $B.$py_module_path[module.name]=path
+$B.run_py=run_py=function(module_contents,path,module,compiled) {
+    if (!compiled) {
+        var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
+        $B.$py_module_path[module.name]=path
 
-    var root = $B.py2js(module_contents,module.__name__,
-        module.__name__,'__builtins__')
+        var root = $B.py2js(module_contents,module.__name__,
+            module.__name__,'__builtins__')
 
-    var body = root.children
-    root.children = []
-    // use the module pattern : module name returns the results of an anonymous function
-    var mod_node = new $Node('expression')
-    new $NodeJSCtx(mod_node,'var $module=(function()')
-    root.insert(0,mod_node)
-    for(var i=0, _len_i = body.length; i < _len_i;i++){mod_node.add(body[i])}
+        var body = root.children
+        root.children = []
+        // use the module pattern : module name returns the results of an anonymous function
+        var mod_node = new $Node('expression')
+        new $NodeJSCtx(mod_node,'var $module=(function()')
+        root.insert(0,mod_node)
+        for(var i=0, _len_i = body.length; i < _len_i;i++){mod_node.add(body[i])}
 
-    // $globals will be returned when the anonymous function is run
-    var ret_node = new $Node('expression')
-    new $NodeJSCtx(ret_node,'return $locals_'+module.__name__.replace(/\./g,'_'))
-    mod_node.add(ret_node)
-    // add parenthesis for anonymous function execution
-    
-    var ex_node = new $Node('expression')
-    new $NodeJSCtx(ex_node,')(__BRYTHON__)')
-    root.add(ex_node)
-    
+        // $globals will be returned when the anonymous function is run
+        var ret_node = new $Node('expression')
+        new $NodeJSCtx(ret_node,'return $locals_'+module.__name__.replace(/\./g,'_'))
+        mod_node.add(ret_node)
+        // add parenthesis for anonymous function execution
+
+        var ex_node = new $Node('expression')
+        new $NodeJSCtx(ex_node,')(__BRYTHON__)')
+        root.add(ex_node)
+    }
+
     try{
-        var js = root.to_js()
+        var js = (compiled)? module_contents : root.to_js()
         if ($B.$options.debug == 10) {
            console.log('code for module '+module.__name__)
            console.log(js)
@@ -249,17 +251,19 @@ $B.run_py=run_py=function(module_contents,path,module) {
         if($B.debug>0){console.log('line info '+ $B.line_info)}
         throw err
     }
-    
+
     try{
         // Create module object
         var mod = eval('$module')
-        // Set attributes of module to this object
-        for (var attr in module) {mod[attr] = module[attr]}
-        mod.__initializing__ = false
+        // Apply side-effects upon input module object
+        for (var attr in mod) {
+            module[attr] = mod[attr];
+        }
+        module.__initializing__ = false
         // $B.imported[mod.__name__] must be the module object, so that
         // setting attributes in a program affects the module namespace
         // See issue #7
-        $B.imported[mod.__name__] = mod
+        $B.imported[module.__name__] = module
         return true
     }catch(err){
         console.log(''+err+' '+' for module '+module.name)
@@ -271,6 +275,7 @@ $B.run_py=run_py=function(module_contents,path,module) {
 }
 
 function new_spec(fields) {
+    // TODO : Implement ModuleSpec class i.e. not a module object
     // add Python-related fields
     fields.__class__ = $B.$ModuleDict
     return fields;
@@ -286,12 +291,12 @@ finder_VFS.$dict = {
     $factory: finder_VFS,
     __class__: $B.$type,
     __name__: 'VFSFinder',
-    
+
     create_module : function(cls, spec) {
         // Fallback to default module creation
         return _b_.None;
     },
-    
+
     exec_module : function(cls, module) {
         var stored = module.__spec__.loader_state.stored;
         delete module.__spec__['loader_state'];
@@ -299,10 +304,10 @@ finder_VFS.$dict = {
             module_contents = stored[1];
         module.$is_package = stored[2];
         if (ext == '.js') {run_js(module_contents, module.__path__, module)}
-        else {run_py(module_contents, module.__path__, module)}
+        else {run_py(module_contents, module.__path__, module, ext=='.pyc.js')}
         if($B.debug>1){console.log('import '+module.__name__+' from VFS')}
     },
-    
+
     find_module: function(cls, name, path){
         return {__class__:Loader,
             load_module:function(name, path){
@@ -454,8 +459,9 @@ finder_path.$dict = {
             code = _spec.loader_state.code;
         module.$is_package = _spec.loader_state.is_package,
         delete _spec.loader_state['code'];
-        if (_spec.loader_state.type == 'py') {
-            run_py(code, _spec.origin, module);
+        var src_type = _spec.loader_state.type
+        if (src_type == 'py' || src_type == 'pyc.js') {
+            run_py(code, _spec.origin, module, src_type=='pyc.js');
         }
         else if (_spec.loader_state.type == 'js') {
             run_js(code, _spec.origin, module)
@@ -484,7 +490,6 @@ finder_path.$dict = {
                      j < lj && finder_notfound;
                      ++j) {
                     var hook = $B.path_hooks[j];
-                    if(!$B.use_VFS && hook===vfs_hook){continue}
                     try {
                         finder = _b_.getattr(hook, '__call__')(path_entry)
                         finder_notfound = false;
@@ -504,6 +509,7 @@ finder_path.$dict = {
             }
         }
         return _b_.None;
+            run_py(code, _spec.origin, module, src_type=='pyc');
     }
 }
 
@@ -524,7 +530,8 @@ $B.path_importer_cache = {};
  *
  * @param {string}      URL pointing at location of VFS js file
  */
-VfsPathFinder = function(path) {
+
+function vfs_hook(path) {
     if (path.substr(-1) == '/') {
         path = path.slice(0, -1);
     }
@@ -532,63 +539,62 @@ VfsPathFinder = function(path) {
     if (ext != '.vfs.js') {
         throw _b_.ImportError('VFS file URL must end with .vfs.js extension');
     }
-    this.path = path;
-    this.load_vfs();
+    self = {__class__: vfs_hook.$dict, path: path};
+    vfs_hook.$dict.load_vfs(self);
+    return self;
 }
 
-VfsPathFinder.prototype.load_vfs = function() {
-    try { var code = $download_module('<VFS>', this.path) }
-    catch (e) {
-        this.vfs = undefined;
-        throw new _b_.ImportError(e.$message || e.message);
-    }
-    eval(code);
-    try {
-        this.vfs = $vfs;
-    }
-    catch (e) { throw new _b_.ImportError('Expecting $vfs var in VFS file'); }
-    $B.path_importer_cache[this.path + '/'] = this;
-}
+vfs_hook.__class__ = $B.$factory
 
-VfsPathFinder.prototype.find_spec = function(self, fullname, module) {
-    if (self.vfs === undefined) {
-        try { self.load_vfs() }
-        catch(e) {
-            console.log("Could not load VFS while importing '" + fullname + "'");
+vfs_hook.$dict = {
+    $factory: vfs_hook,
+    __class__: $B.$type,
+    __name__: 'VfsPathFinder',
+
+    load_vfs: function(self) {
+        try { var code = $download_module('<VFS>', self.path) }
+        catch (e) {
+            self.vfs = undefined;
+            throw new _b_.ImportError(e.$message || e.message);
+        }
+        eval(code);
+        try {
+            self.vfs = $vfs;
+        }
+        catch (e) { throw new _b_.ImportError('Expecting $vfs var in VFS file'); }
+        $B.path_importer_cache[self.path + '/'] = self;
+    },
+    find_spec: function(self, fullname, module) {
+        if (self.vfs === undefined) {
+            try { vfs_hook.$dict.load_vfs(self) }
+            catch(e) {
+                console.log("Could not load VFS while importing '" + fullname + "'");
+                return _b_.None;
+            }
+        }
+        var stored = self.vfs[fullname];
+        if (stored === undefined) {
             return _b_.None;
         }
+        var is_package = stored[2];
+        return new_spec({name : fullname,
+                         loader: finder_VFS,
+                         // FIXME : Better origin string.
+                         origin : self.path + '#' + fullname,
+                         // FIXME: Namespace packages ?
+                         submodule_search_locations: is_package? [self.path] :
+                                                                 _b_.None,
+                         loader_state: {stored: stored},
+                         // FIXME : Where exactly compiled module is stored ?
+                         cached: _b_.None,
+                         parent: is_package? fullname : parent_package(fullname),
+                         has_location: _b_.True});
+    },
+    invalidate_caches: function(self) {
+        self.vfs = undefined;
     }
-    var stored = self.vfs[fullname];
-    if (stored === undefined) {
-        return _b_.None;
-    }
-    var is_package = stored[2];
-    return new_spec({name : fullname,
-                     loader: finder_VFS,
-                     // FIXME : Better origin string.
-                     origin : self.path + '#' + fullname,
-                     // FIXME: Namespace packages ?
-                     submodule_search_locations: is_package? [self.path] : _b_.None,
-                     loader_state: {stored: stored},
-                     // FIXME : Where exactly compiled module is stored ?
-                     cached: _b_.None,
-                     parent: is_package? fullname : parent_package(fullname),
-                     has_location: _b_.True});
 }
-
-VfsPathFinder.prototype.invalidate_caches = function(self) {
-    self.vfs = undefined;
-}
-
-VfsPathFinder.prototype.__repr__ = function() {
-    return "<VfsPathFinder for '" + this.path + "'>"
-}
-
-vfs_hook = function(path) { return new VfsPathFinder(path); }
-
-vfs_hook.__repr__ = vfs_hook.__str__ = vfs_hook.toString = function() {
-    return '<function path_hook_for_VfsPathFinder>';
-}
+vfs_hook.$dict.__mro__ = [vfs_hook.$dict, _b_.object.$dict]
 
 $B.path_hooks.push(vfs_hook)
 
@@ -599,8 +605,8 @@ $B.path_hooks.push(vfs_hook)
  * @param {string}      one of 'js', 'py' or undefined (i.e. yet unknown)
  */
 
-function url_hook(path_entry) { 
-    return {__class__: url_hook.$dict, path_entry:path_entry }
+function url_hook(path_entry, hint) { 
+    return {__class__: url_hook.$dict, path_entry:path_entry, hint:hint }
 }
 url_hook.__class__ = $B.$factory
 
@@ -608,15 +614,33 @@ url_hook.$dict = {
     $factory: url_hook,
     __class__: $B.$type,
     __name__ : 'UrlPathFinder',
-    
+    __repr__: function(self) {
+        return '<UrlPathFinder' + (self.hint? " for '" + self.hint + "'":
+                                   "(unbound)") + ' at ' + self.path_entry + '>'
+    },
+
     find_spec : function(self, fullname, module) {
         var loader_data = {},
             notfound = true,
+            hint = self.hint,
             base_path = self.path_entry + fullname.match(/[^.]+$/g)[0],
             modpaths = [];
+        var tryall = hint === undefined;
+        if (tryall || hint == 'js') {
+            // either js or undefined , try js code
+            modpaths = [[base_path + '.js', 'js', false]];
+        }
+        if (tryall || hint == 'pyc.js') {
+            // either pyc or undefined , try pre-compiled module code
+            modpaths = modpaths.concat([[base_path + '.pyc.js', 'pyc.js', false],
+                                        [base_path + '/__init__.pyc.js',
+                                         'pyc.js', true]]);
+        }
+        if (tryall || hint == 'py') {
             // either py or undefined , try py code
-            modpaths = [[base_path + '.py', 'py', false],
-                        [base_path + '/__init__.py', 'py', true]];
+            modpaths = modpaths.concat([[base_path + '.py', 'py', false],
+                                         [base_path + '/__init__.py', 'py', true]]);
+        }
         for (var j = 0; notfound && j < modpaths.length; ++j) {
             try{
                 var file_info = modpaths[j];
@@ -624,10 +648,15 @@ url_hook.$dict = {
                 notfound = false;
                 loader_data.type = file_info[1];
                 loader_data.is_package = file_info[2];
+                if (hint === undefined) {
+                    self.hint = file_info[1];
+                    // Top-level import
+                    $B.path_importer_cache[self.path_entry] = self;
+                }
                 if (loader_data.is_package) {
                     // Populate cache in advance to speed up submodule imports
                     $B.path_importer_cache[base_path + '/'] =
-                            url_hook(base_path + '/', 'py');
+                            url_hook(base_path + '/', self.hint);
                 }
                 loader_data.path = file_info[0];
             }catch(err){
@@ -704,7 +733,7 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
                 catch(err) {
                     delete $B.imported[_mod_name]
                 }
-        
+
                 if (is_none($B.imported[_mod_name])) {
                     throw _b_.ImportError(_mod_name) 
                 }
@@ -781,7 +810,7 @@ $B.$import = function(mod_name,origin,fromlist, aliases, locals){
         }
     }
     var mod_name = norm_parts.join('.')
-    
+
     if ($B.$options.debug == 10) {
        console.log('$import '+mod_name+' origin '+origin)
        console.log('use VFS ? '+$B.use_VFS)
@@ -874,5 +903,22 @@ $B.$import = function(mod_name,origin,fromlist, aliases, locals){
 }
 
 $B.meta_path = [finder_VFS, finder_stdlib_static, finder_path];
+
+// Introspection for builtin importers
+
+_importlib_module = {
+    __class__ : $B.$ModuleDict,
+    __name__ : '_importlib',
+    Loader: Loader,
+    VFSFinder: finder_VFS,
+    StdlibStatic: finder_stdlib_static,
+    ImporterPath: finder_path,
+    VFSPathFinder : vfs_hook,
+    UrlPathFinder: url_hook
+}
+_importlib_module.__repr__ = _importlib_module.__str__ = function(){
+return "<module '_importlib' (built-in)>"
+}
+$B.imported['_importlib'] = $B.modules['_importlib'] = _importlib_module
 
 })(__BRYTHON__)

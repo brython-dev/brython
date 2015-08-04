@@ -20,7 +20,7 @@
     }
 
     var _meta_path=_b_.getattr($sys, 'meta_path');
-    
+
     var spec = undefined;
     for (var i=0, _len_i = _meta_path.length; i < _len_i && is_none(spec); i++) {
         var _finder=_meta_path[i];
