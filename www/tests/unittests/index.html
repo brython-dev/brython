@@ -56,9 +56,8 @@ from test import support
 import unittest
 import HTMLTestRunner
 
-
-sys.path.append("../../src/Lib/test/unittests")
-sys.path.append("../../src/Lib/unittest")
+sys.path.append("../../src/Lib/test")
+#sys.path.append("../../src/Lib/unittest")
 
 def errorwrite(data):
     document["errorconsole"].text += '%s' % data
