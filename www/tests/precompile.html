@@ -33,6 +33,11 @@
 
 <body onload="brython(1)">
 
+<p> <input type="text" placeholder="Module name" id="txt_modnm"/> </p>
+<p> <textarea id="txt_py" placeholder="Enter Python code" cols="80" rows="20"></textarea> </p>
+<p> <button id="btn_py2js">Compile to js</button> </p>
+<p> <textarea id="txt_js" readonly="true"placeholder="Javascript code" cols="80" rows="20"></textarea> </p>
+
 <script type="text/python">
 import javascript
 from browser import ajax
@@ -46,18 +51,8 @@ mod = "var $module = (function($B){\n"
 
 mod += js+'\nreturn $locals\n})(__BRYTHON__)'
 
-
-def on_complete(req):
-    print('ok')
-
-req = ajax.ajax()
-req.bind('complete',on_complete)
-url = "/cgi-bin/precompiled.py"
-req.open('POST',url,False)
-req.set_header('content-type','application/x-www-form-urlencoded')
-req.send({'name':'datetime','js':mod})
-
 </script>
 </body>
 
 </html>
+
