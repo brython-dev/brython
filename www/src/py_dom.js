@@ -637,6 +637,7 @@ DOMNodeDict.bind = function(self,event){
         }
         evlist[pos++]=[func, callback]
     }
+    return self
 }
 
 DOMNodeDict.children = function(self){
