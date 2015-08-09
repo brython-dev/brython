@@ -619,7 +619,14 @@ DOMNodeDict.bind = function(self,event){
                 try{
                     return f($DOMEvent(ev))
                 }catch(err){
-                    getattr($B.stderr,"write")(err)
+                    if(err.__class__!==undefined){
+                        var msg = _b_.getattr(err, 'info')+
+                            '\n'+err.__class__.__name__
+                        if(err.args){msg += ': '+err.args[0]}
+                        getattr($B.stderr,"write")(msg)
+                    }else{
+                        getattr($B.stderr,"write")(err)
+                    }
                 }
             }}
         )(func)
