@@ -2,6 +2,7 @@
 
 <head>
 <meta charset="utf-8">
+<title>Brython - Translate Python code into Javascript</title>
 <script type="text/javascript" src="../src/brython_builtins.js"></script>
 <script type="text/javascript" src="../src/version_info.js"></script>
 <script type="text/javascript" src="../src/identifiers_re.js"></script>
@@ -32,31 +33,33 @@
 
 <body onload="brython()">
 
+<p> <input type="text" placeholder="Module name" id="txt_modnm" value="x.y.z"/> </p>
+<p> <textarea id="txt_py" placeholder="Enter Python code" cols="80" rows="20">x = 3</textarea> </p>
+<p> <button id="btn_py2js">Compile to js</button> </p>
+<p> <textarea id="txt_js" readonly="true" placeholder="Javascript code" cols="80" rows="20"></textarea> </p>
+
 <script type="text/python">
 import javascript
-from browser import ajax
+from browser import doc
 
-src = open("../src/Lib/datetime.py").read()
+def convert_py2js(ev):
+    mod_name = doc['txt_modnm'].value or ''
+    if not mod_name:
+        alert('Module name required')
+        return
+    local_id_suffix = '_' + mod_name.replace('.', '_')
+    src = doc['txt_py'].value
 
-import datetime
+    js = javascript.py2js(src, mod_name)
+    mod = "var $module = (function($B){\n"
 
-js = javascript.py2js(src)
-mod = "var $module = (function($B){\n"
+    mod += js+'\nreturn $locals' + local_id_suffix + '\n})(__BRYTHON__)'
+    doc['txt_js'].set_value(mod)
 
-mod += js+'\nreturn $locals\n})(__BRYTHON__)'
-
-
-def on_complete(req):
-    print('ok')
-
-req = ajax.ajax()
-req.bind('complete',on_complete)
-url = "/cgi-bin/precompiled.py"
-req.open('POST',url,False)
-req.set_header('content-type','application/x-www-form-urlencoded')
-req.send({'name':'datetime','js':mod})
+doc['btn_py2js'].bind('click', convert_py2js)
 
 </script>
 </body>
 
 </html>
+
