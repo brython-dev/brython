@@ -1,11 +1,11 @@
 ;(function($B){
 
 $B.stdlib = {}
-var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_random','_random1','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','random1','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
-for(var i=0;i<js.length;i++) $B.stdlib[js[i]]=['js']
-
 var pylist=['VFS_import','__random','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','calendar','codecs','colorsys','configparser','contextlib','copy','copyreg','csv','datetime','decimal','difflib','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','queue','random_kozh','re','reprlib','select','shutil','signal','site','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i<pylist.length;i++) $B.stdlib[pylist[i]]=['py']
+
+var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_random','_random1','_svg','_sys','aes','builtins','datetime','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','random1','rc4','ripemd160','saved','sha1','sha224','sha256','sha3','sha384','sha512','time','tripledes']
+for(var i=0;i<js.length;i++) $B.stdlib[js[i]]=['js']
 
 var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','long_int1','multiprocessing','multiprocessing.dummy','pydoc_data','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++) $B.stdlib[pkglist[i]]=['py',true]
