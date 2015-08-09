@@ -10,19 +10,6 @@ $B.stdlib = {}
 with open(os.path.join(libfolder, 'stdlib_paths.js'), 'w') as out:
     out.write(simple_javascript_template_string)
 
-    jspath = os.path.join(libfolder, 'libs')
-    jslist = []
-    for dirpath, dirnames, filenames in os.walk(jspath):
-        for filename in filenames:
-            if not filename.endswith('.js'):
-                continue
-            mod_name = os.path.splitext(filename)[0]
-            jslist.append(mod_name)
-
-    jslist.sort()
-    out.write("var js=['%s']\n" % "','".join(jslist))
-    out.write("""for(var i=0;i<js.length;i++) $B.stdlib[js[i]]=['js']\n\n""")
-
     pylist = []
     pkglist = []
     pypath = os.path.join(libfolder, 'Lib')
@@ -54,6 +41,21 @@ with open(os.path.join(libfolder, 'stdlib_paths.js'), 'w') as out:
     pkglist.sort()
     out.write(
         "for(var i=0;i<pylist.length;i++) $B.stdlib[pylist[i]]=['py']\n\n")
+
+    jspath = os.path.join(libfolder, 'libs')
+    jslist = []
+    for dirpath, dirnames, filenames in os.walk(jspath):
+        for filename in filenames:
+            if not filename.endswith('.js'):
+                continue
+            mod_name = os.path.splitext(filename)[0]
+            jslist.append(mod_name)
+
+    jslist.sort()
+    out.write("var js=['%s']\n" % "','".join(jslist))
+
+    out.write("""for(var i=0;i<js.length;i++) $B.stdlib[js[i]]=['js']\n\n""")
+
     out.write("var pkglist=['%s']\n" % "','".join(pkglist))
     out.write(
         "for(var i=0;i<pkglist.length;i++) $B.stdlib[pkglist[i]]=['py',true]\n")
