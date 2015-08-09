@@ -71,7 +71,7 @@ import brython_test_utils as utils
 _QUnit = JSObject(window.QUnit)
 
 for label, options in utils.discover_test_modules():
-    # TODO: Define module for option groups
+    _QUnit.module('Brython : ' + label)
     for filenm, caption in options:
         _QUnit.test(caption, window.test_proc(filenm, caption))
 </script>
