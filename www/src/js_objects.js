@@ -160,6 +160,10 @@ $JSObjectDict.__bool__ = function(self){
     return (new Boolean(self.js)).valueOf()
 }
 
+$JSObjectDict.__dir__ = function(self){
+    return Object.keys(self.js)
+}
+
 $JSObjectDict.__getattribute__ = function(obj,attr){
     if(attr.substr(0,2)=='$$') attr=attr.substr(2)
     if(obj.js===null) return $ObjectDict.__getattribute__(None,attr)
@@ -246,7 +250,7 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
         return $B.$JS2Py(res)
     }else{
         // XXX search __getattr__
-        throw _b_.AttributeError("no attribute "+attr+' for '+this)
+        throw _b_.AttributeError("no attribute "+attr+' for '+obj.js)
     }
 }
 
@@ -260,14 +264,19 @@ $JSObjectDict.__getitem__ = function(self,rank){
 
 var $JSObject_iterator = $B.$iterator_class('JS object iterator')
 $JSObjectDict.__iter__ = function(self){
+    if(window.Map && self.js instanceof Map){
+        // Special case for Javascript type "Map"
+        var items = []
+        for(item of self.js){items.push(item)}
+        return $B.$iterator(items, $JSObject_iterator)
+    }
     return $B.$iterator(self.js,$JSObject_iterator)
 }
 
 $JSObjectDict.__len__ = function(self){
     try{return getattr(self.js,'__len__')()}
     catch(err){
-        console.log('err in JSObject.__len__ : '+err)
-        throw _b_.AttributeError(this+' has no attribute __len__')
+        throw _b_.AttributeError(self.js+' has no attribute __len__')
     }
 }
 

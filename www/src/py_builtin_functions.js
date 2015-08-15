@@ -222,8 +222,7 @@ function dir(obj){
     
     var klass = $B.get_class(obj)
     
-    if(isinstance(obj,$B.JSObject)) obj=obj.js
-    else if(klass && klass.is_class){obj=obj.$dict}
+    if(klass && klass.is_class){obj=obj.$dict}
     else {
         // We first look if the object has the __dir__ method
         try {
