@@ -39,8 +39,8 @@ function makeTagDict(tagName){
                 // Event binding passed as argument "onclick", "onfocus"...
                 // Better use method bind of DOMNode objects
                 var js = '$B.DOMNodeDict.bind(self,"'
-                js += arg.toLowerCase().substr(2)
-                eval(js+'",function(){'+value+'})')
+                js += arg.toLowerCase().substr(2)+'",function(){eval("'+value+'")})'
+                eval(js)
             }else if(arg.toLowerCase()=="style"){
                 $B.DOMNodeDict.set_style(self,value)
             } else {
