@@ -30,14 +30,13 @@
 <script type="text/python">
 from browser import document as doc, alert
 import browser.html as html
-from javascript import JSObject
 
 def handleFileSelect(evt):
   evt.stopPropagation()
   evt.preventDefault()
 
-  files = JSObject(evt.dataTransfer.files) # FileList object.
-  #console.log(files)
+  files = evt.dataTransfer.files # FileList object.
+  print(files)
 
   # files is a FileList of File objects. List some properties.
   output = []
