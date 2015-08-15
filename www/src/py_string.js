@@ -939,7 +939,7 @@ var $FormattableString=function(format_string) {
              throw _b_.ValueError("cannot switch from manual field specification to automatic field numbering")
           }
 
-          _name = self._index.toString()
+          _name = this._index.toString()
           this._index+=1
 
           if (! _literal ) {
