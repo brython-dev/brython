@@ -46,7 +46,7 @@ import sys
 import traceback
 import dis
 
-from browser import document as doc, window, alert
+from browser import document as doc, window, alert, console
 from browser import timer
 from browser.local_storage import storage
 
@@ -69,6 +69,7 @@ def run(in_globals=False):
     output = doc["console"].value
 
     print('<completed in %6.2f ms>' % ((t1 - t0) * 1000.0))
+    return state
 
 def test_next():
     global script_num,failed
