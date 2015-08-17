@@ -222,7 +222,7 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
     
     var res
     // search in classes hierarchy, following method resolution order
-    var mro = [$JSObjectDict,$ObjectDict]
+    var mro = obj.__class__.__mro__
     for(var i=0, _len_i = mro.length; i < _len_i;i++){
         var v=mro[i][attr]
         if(v!==undefined){
@@ -257,19 +257,13 @@ $JSObjectDict.__getattribute__ = function(obj,attr){
 $JSObjectDict.__getitem__ = function(self,rank){
     try{return getattr(self.js,'__getitem__')(rank)}
     catch(err){
-        if(self.js[rank]!==undefined) return JSObject(self.js[rank])
-        throw _b_.AttributeError(self+' has no attribute __getitem__')
+        if(self.js[rank]!==undefined){return JSObject(self.js[rank])}
+        throw _b_.AttributeError(self.js+' has no attribute __getitem__')
     }
 }
 
 var $JSObject_iterator = $B.$iterator_class('JS object iterator')
 $JSObjectDict.__iter__ = function(self){
-    if(window.Map && self.js instanceof Map){
-        // Special case for Javascript type "Map"
-        var items = []
-        for(item of self.js){items.push(item)}
-        return $B.$iterator(items, $JSObject_iterator)
-    }
     return $B.$iterator(self.js,$JSObject_iterator)
 }
 
@@ -286,7 +280,19 @@ $JSObjectDict.__repr__ = function(self){return "<JSObject wraps "+self.js+">"}
 
 $JSObjectDict.__setattr__ = function(self,attr,value){
     if(isinstance(value,JSObject)){self.js[attr]=value.js}
-    else{self.js[attr]=value}
+    else{
+        self.js[attr]=value
+        if(typeof value=='function'){
+            self.js[attr] = function(){
+                try{return value.apply(null, arguments)}
+                catch(err){
+                    var info = _b_.getattr(err,'info')
+                    throw Error(info+'\n'+err.__class__.__name__+
+                        ': '+_b_.repr(err.args[0]))
+                }
+            }
+        }
+    }
 }
 
 $JSObjectDict.__setitem__ = $JSObjectDict.__setattr__
@@ -315,6 +321,7 @@ function JSObject(obj){
     // so that when called, the arguments are transformed into JS values
     if (obj === null) {return _b_.None}
     if(typeof obj=='function'){return {__class__:$JSObjectDict,js:obj}}
+    if(window.Map && obj instanceof Map){return $Map(obj)}
     var klass = $B.get_class(obj)
     if(klass===_b_.list.$dict){
         // JS arrays not created by list() must be wrapped
@@ -334,6 +341,44 @@ $JSObjectDict.$factory = JSObject
 
 $B.JSObject = JSObject
 $B.JSConstructor = JSConstructor
+
+// class for Map objects, implements a Pythonic interface
+
+function $Map(obj){return {js:obj, __class__:$Map.$dict}}
+
+$Map.__class__ = $B.$factory
+$Map.$dict = {
+    __class__: $B.$type,
+    __name__: 'Map',
+
+    __contains__: function(self, key){return self.js.has(key)},
+    
+    __delitem__: function(self, key){
+        var res = self.js.delete(pyobj2jsobj(key))
+        if(res){return _b_.None}
+        throw _b_.KeyError(key)
+    },
+    
+    __getitem__: function(self, key){
+        var res = self.js.get(pyobj2jsobj(key))
+        if(res!==undefined){return jsobj2pyobj(res)}
+        else{throw KeyError(key)}
+    },
+    
+    __iter__: function(self){
+        var res = []
+        for(var item of self.js){res.push(item)}
+        return $B.$iterator(res, $JSObject_iterator)
+    },
+    
+    __setitem__: function(self, key, value){
+        self.js.set(pyobj2jsobj(key), pyobj2jsobj(value))
+    },
+    
+    __str__: function(self){return '<Map '+self.js.toString()+'>'}
+}
+$Map.$dict.__mro__ = [$Map.$dict, $JSObjectDict, _b_.object.$dict]
+
 
 })(__BRYTHON__)
 
