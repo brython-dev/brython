@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-08-15 16:02:13.570047"
+__BRYTHON__.compiled_date="2015-08-17 11:33:38.913932"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_random","_random1","_svg","_sys","builtins","datetime","dis","hashlib","javascript","json","long_int","math","modulefinder","random","random1","saved","__random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -5558,7 +5558,8 @@ frame.$dict=$FrameDict
 $FrameDict.$factory=frame
 $B._frame=frame
 var $BaseExceptionDict={__class__:$B.$type,__bases__ :[_b_.object],__module__:'builtins',__name__:'BaseException'}
-$BaseExceptionDict.__init__=function(self){self.args=_b_.tuple([arguments[1]])}
+$BaseExceptionDict.__init__=function(self){self.args=_b_.tuple([arguments[1]])
+self.message=arguments[1]}
 $BaseExceptionDict.__repr__=function(self){return self.__class__.__name__+repr(self.args)}
 $BaseExceptionDict.__str__=function(self){return self.args[0]}
 $BaseExceptionDict.__mro__=[$BaseExceptionDict,$ObjectDict]
@@ -5591,7 +5592,7 @@ err.__name__='BaseException'
 err.$js_exc=js_exc
 if(msg===undefined)msg='BaseException'
 err.args=_b_.tuple([msg])
-err.$message=msg
+err.message=msg
 err.__class__=$BaseExceptionDict
 err.$py_error=true
 err.$stack=$B.frames_stack.slice()
@@ -6058,7 +6059,7 @@ return{__class__:$JSObjectDict,js:res,js_func:js_attr}}else{if(Array.isArray(obj
 return $B.$JS2Py(obj.js[attr])}}else if(obj.js===window && attr==='$$location'){
 return $Location()}
 var res
-var mro=[$JSObjectDict,$ObjectDict]
+var mro=obj.__class__.__mro__
 for(var i=0,_len_i=mro.length;i < _len_i;i++){var v=mro[i][attr]
 if(v!==undefined){res=v
 break}}
@@ -6070,20 +6071,20 @@ return res.apply(obj,args)}}
 return $B.$JS2Py(res)}else{
 throw _b_.AttributeError("no attribute "+attr+' for '+obj.js)}}
 $JSObjectDict.__getitem__=function(self,rank){try{return getattr(self.js,'__getitem__')(rank)}
-catch(err){if(self.js[rank]!==undefined)return JSObject(self.js[rank])
-throw _b_.AttributeError(self+' has no attribute __getitem__')}}
+catch(err){if(self.js[rank]!==undefined){return JSObject(self.js[rank])}
+throw _b_.AttributeError(self.js+' has no attribute __getitem__')}}
 var $JSObject_iterator=$B.$iterator_class('JS object iterator')
-$JSObjectDict.__iter__=function(self){if(window.Map && self.js instanceof Map){
-var items=[]
-for(item of self.js){items.push(item)}
-return $B.$iterator(items,$JSObject_iterator)}
-return $B.$iterator(self.js,$JSObject_iterator)}
+$JSObjectDict.__iter__=function(self){return $B.$iterator(self.js,$JSObject_iterator)}
 $JSObjectDict.__len__=function(self){try{return getattr(self.js,'__len__')()}
 catch(err){throw _b_.AttributeError(self.js+' has no attribute __len__')}}
 $JSObjectDict.__mro__=[$JSObjectDict,$ObjectDict]
 $JSObjectDict.__repr__=function(self){return "<JSObject wraps "+self.js+">"}
 $JSObjectDict.__setattr__=function(self,attr,value){if(isinstance(value,JSObject)){self.js[attr]=value.js}
-else{self.js[attr]=value}}
+else{self.js[attr]=value
+if(typeof value=='function'){self.js[attr]=function(){try{return value.apply(null,arguments)}
+catch(err){var info=_b_.getattr(err,'info')
+throw Error(info+'\n'+err.__class__.__name__+
+': '+_b_.repr(err.args[0]))}}}}}
 $JSObjectDict.__setitem__=$JSObjectDict.__setattr__
 $JSObjectDict.__str__=$JSObjectDict.__repr__
 var no_dict={'string':true,'function':true,'number':true,'boolean':true}
@@ -6095,6 +6096,7 @@ return res}
 function JSObject(obj){
 if(obj===null){return _b_.None}
 if(typeof obj=='function'){return{__class__:$JSObjectDict,js:obj}}
+if(window.Map && obj instanceof Map){return $Map(obj)}
 var klass=$B.get_class(obj)
 if(klass===_b_.list.$dict){
 if(obj.__brython__)return obj
@@ -6106,13 +6108,23 @@ JSObject.__class__=$B.$factory
 JSObject.$dict=$JSObjectDict
 $JSObjectDict.$factory=JSObject
 $B.JSObject=JSObject
-$B.JSConstructor=JSConstructor})(__BRYTHON__)
+$B.JSConstructor=JSConstructor
+function $Map(obj){return{js:obj,__class__:$Map.$dict}}
+$Map.__class__=$B.$factory
+$Map.$dict={__class__: $B.$type,__name__: 'Map',__contains__: function(self,key){return self.js.has(key)},__delitem__: function(self,key){var res=self.js.delete(pyobj2jsobj(key))
+if(res){return _b_.None}
+throw _b_.KeyError(key)},__getitem__: function(self,key){var res=self.js.get(pyobj2jsobj(key))
+if(res!==undefined){return jsobj2pyobj(res)}
+else{throw KeyError(key)}},__iter__: function(self){var res=[]
+for(var item of self.js){res.push(item)}
+return $B.$iterator(res,$JSObject_iterator)},__setitem__: function(self,key,value){self.js.set(pyobj2jsobj(key),pyobj2jsobj(value))},__str__: function(self){return '<Map '+self.js.toString()+'>'}}
+$Map.$dict.__mro__=[$Map.$dict,$JSObjectDict,_b_.object.$dict]})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__random','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','calendar','codecs','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','queue','random_kozh','re','reprlib','select','shutil','signal','site','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','__random','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','calendar','codecs','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','queue','random_kozh','re','reprlib','select','shutil','signal','site','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_random','_random1','_svg','_sys','aes','builtins','datetime','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','random1','rc4','ripemd160','saved','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','long_int1','multiprocessing','multiprocessing.dummy','pydoc_data','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
+var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','long_int1','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.requests','site-packages.requests.packages','site-packages.requests.packages.chardet','site-packages.requests.packages.urllib3','site-packages.requests.packages.urllib3.contrib','site-packages.requests.packages.urllib3.packages','site-packages.requests.packages.urllib3.packages.ssl_match_hostname','site-packages.requests.packages.urllib3.util','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]})(__BRYTHON__)
 
 ;(function($B){var _b_=$B.builtins
@@ -6359,12 +6371,8 @@ function url_hook(path_entry,hint){return{__class__: url_hook.$dict,path_entry:p
 url_hook.__class__=$B.$factory
 url_hook.$dict={$factory: url_hook,__class__: $B.$type,__name__ : 'UrlPathFinder',__repr__: function(self){return '<UrlPathFinder' +(self.hint? " for '" + self.hint + "'":
 "(unbound)")+ ' at ' + self.path_entry + '>'},find_spec : function(self,fullname,module){var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry + fullname.match(/[^.]+$/g)[0],modpaths=[];
-var tryall=hint===undefined;
-if(tryall ||hint=='js'){
-modpaths=[[base_path + '.js','js',false]];}
-if(tryall ||hint=='pyc.js'){
-modpaths=modpaths.concat([[base_path + '.pyc.js','pyc.js',false],[base_path + '/__init__.pyc.js','pyc.js',true]]);}
-if(tryall ||hint=='py'){
+if(self.path_entry==$B.brython_path+'libs/'){if(!$B.$options.static_stdlib_import){
+modpaths=[[base_path + '.js','js',false]];}}else{
 modpaths=modpaths.concat([[base_path + '.py','py',false],[base_path + '/__init__.py','py',true]]);}
 for(var j=0;notfound && j < modpaths.length;++j){try{var file_info=modpaths[j];
 loader_data.code=$download_module(fullname,file_info[0]);
@@ -9455,12 +9463,6 @@ function $TagSum(){return{__class__:$TagSumDict,children:[],toString:function(){
 $TagSum.__class__=$B.$factory
 $TagSum.$dict=$TagSumDict
 $B.$TagSum=$TagSum 
-var $WinDict={__class__:$B.$type,__name__:'window'}
-$WinDict.__getattribute__=function(self,attr){if(window[attr]!==undefined){return JSObject(window[attr])}
-throw _b_.AttributeError("'window' object has no attribute '"+attr+"'")}
-$WinDict.__setattr__=function(self,attr,value){
-window[attr]=value}
-$WinDict.__mro__=[$WinDict,$ObjectDict]
 var win=JSObject(window)
 win.get_postMessage=function(msg,targetOrigin){if(isinstance(msg,dict)){var temp={__class__:'dict'}
 var items=_b_.list(_b_.dict.$dict.items(msg))
@@ -9731,14 +9733,14 @@ $B.$BRgenerator.__repr__=function(){return "<class 'generator'>"}
 $B.$BRgenerator.__str__=function(){return "<class 'generator'>"}
 $B.$BRgenerator.__class__=$B.$type})(__BRYTHON__)
 ;(function($B){var modules={}
-modules['_browser']={$package: true,$is_package: true,__package__:'browser',__file__:$B.brython_path.replace(/\/*$/g,'')+
+modules['browser']={$package: true,$is_package: true,__package__:'browser',__file__:$B.brython_path.replace(/\/*$/g,'')+
 '/Lib/browser/__init__.py',alert:function(message){window.alert($B.builtins.str(message))},confirm: $B.JSObject(window.confirm),console:$B.JSObject(window.console),document:$B.DOMNode(document),doc: $B.DOMNode(document),
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},prompt: function(message,default_value){return $B.JSObject(window.prompt(message,default_value||''))},win: $B.win,window: $B.win,URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
 var regex=new RegExp("[\\?&]" + name + "=([^&#]*)"),results=regex.exec(location.search);
 results=results===null ? "" : decodeURIComponent(results[1].replace(/\+/g," "));
 return $B.builtins.str(results);}}
-modules['_browser'].__path__=modules['_browser'].__file__
-modules['_browser.html']=(function($B){var _b_=$B.builtins
+modules['browser'].__path__=modules['browser'].__file__
+modules['browser.html']=(function($B){var _b_=$B.builtins
 var $TagSumDict=$B.$TagSum.$dict
 function makeTagDict(tagName){
 var dict={__class__:$B.$type,__name__:tagName}
@@ -9807,7 +9809,8 @@ module_obj.__class__=$B.$ModuleDict
 module_obj.__name__=name
 module_obj.__repr__=module_obj.__str__=function(){return "<module '"+name+"' (built-in)>"}
 $B.imported[name]=$B.modules[name]=module_obj}
-for(var attr in modules){load(attr,modules[attr])}})(__BRYTHON__)
+for(var attr in modules){load(attr,modules[attr])}
+modules['browser'].html=modules['browser.html']})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,
 $sys=$B.imported['_sys'];
 function import_hooks(mod_name,origin,_path,module){
