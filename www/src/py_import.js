@@ -625,22 +625,20 @@ url_hook.$dict = {
             hint = self.hint,
             base_path = self.path_entry + fullname.match(/[^.]+$/g)[0],
             modpaths = [];
-        var tryall = hint === undefined;
-        if (tryall || hint == 'js') {
-            // either js or undefined , try js code
-            modpaths = [[base_path + '.js', 'js', false]];
-        }
-        if (tryall || hint == 'pyc.js') {
-            // either pyc or undefined , try pre-compiled module code
-            modpaths = modpaths.concat([[base_path + '.pyc.js', 'pyc.js', false],
-                                        [base_path + '/__init__.pyc.js',
-                                         'pyc.js', true]]);
-        }
-        if (tryall || hint == 'py') {
-            // either py or undefined , try py code
+
+        if (self.path_entry == $B.brython_path+'libs/'){
+            if(!$B.$options.static_stdlib_import) {
+                // Only search js modules inside src/libs, and if we don't
+                // use static stdlib import (handled by finder_stdlib_static)
+                modpaths = [[base_path + '.js', 'js', false]];
+            }
+        }else{
+            // In other locations than src/libs, only search Python modules
+            // or packages
             modpaths = modpaths.concat([[base_path + '.py', 'py', false],
                                          [base_path + '/__init__.py', 'py', true]]);
         }
+
         for (var j = 0; notfound && j < modpaths.length; ++j) {
             try{
                 var file_info = modpaths[j];
