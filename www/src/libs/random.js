@@ -824,7 +824,7 @@ function Random(){
         VERSION: 3
     }
 }
-console.log('return Random()')
+
 var $module = Random()
 
 $module.lognormvariate = function(){
