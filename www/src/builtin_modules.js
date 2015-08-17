@@ -1,6 +1,6 @@
 ;(function($B) {
     var modules = {}
-    modules['_browser'] = {
+    modules['browser'] = {
         $package: true,
         $is_package: true,
         __package__:'browser',
@@ -27,10 +27,10 @@
            return $B.builtins.str(results);
         }
     }
-    modules['_browser'].__path__ = modules['_browser'].__file__
+    modules['browser'].__path__ = modules['browser'].__file__
 
     // creation of an HTML element
-    modules['_browser.html'] = (function($B){
+    modules['browser.html'] = (function($B){
     
         var _b_ = $B.builtins
         var $TagSumDict = $B.$TagSum.$dict
@@ -245,6 +245,7 @@
     }
 
     for(var attr in modules){load(attr, modules[attr])}
+    modules['browser'].html = modules['browser.html']
           
 })(__BRYTHON__)
 
