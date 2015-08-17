@@ -87,6 +87,10 @@ test_issue7_pyc.xxx = 123
 assert test_issue7_pyc.xxx == 123
 assert test_issue7_pyc.yyy() == 369
 
+'''
+Temporarily skipped - testing .pyc.js files in all folders is
+too expensive
+
 # Repeat tests for .pyc.js files deployed at a given path
 print('Testing deployment of .pyc.js files')
 
@@ -108,6 +112,6 @@ import test_issue7_pyc2 # brythontest2 in #7 => test_issue7_pyc2
 test_issue7_pyc2.xxx = 123
 assert test_issue7_pyc2.xxx == 123
 assert test_issue7_pyc2.yyy() == 120
-
+'''
 print('passed all tests')
 
