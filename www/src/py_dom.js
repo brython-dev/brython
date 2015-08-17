@@ -1110,21 +1110,6 @@ $TagSum.__class__=$B.$factory
 $TagSum.$dict = $TagSumDict
 $B.$TagSum = $TagSum // used in _html.js and _svg.js
 
-var $WinDict = {__class__:$B.$type,__name__:'window'}
-
-$WinDict.__getattribute__ = function(self,attr){
-    if(window[attr]!==undefined){return JSObject(window[attr])}
-    throw _b_.AttributeError("'window' object has no attribute '"+attr+"'")
-}
-
-$WinDict.__setattr__ = function(self, attr, value){
-    //console.log('set attr '+attr+' of window ')
-    window[attr] = value
-    //console.log(window[attr])
-}
-
-$WinDict.__mro__ = [$WinDict,$ObjectDict]
-
 var win =  JSObject(window) //{__class__:$WinDict}
 
 win.get_postMessage = function(msg,targetOrigin){
