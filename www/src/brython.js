@@ -55,8 +55,8 @@ $B.has_websocket=window.WebSocket!==undefined})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-08-17 11:33:38.913932"
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_random","_random1","_svg","_sys","builtins","datetime","dis","hashlib","javascript","json","long_int","math","modulefinder","random","random1","saved","__random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2015-08-18 11:47:47.406638"
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
 
@@ -4815,10 +4815,9 @@ var current_globals_id=current_frame[2]
 var current_globals_name=current_globals_id.replace(/\./,'_')
 var is_exec=arguments[3]=='exec',module_name,leave=false
 if(src.__class__===$B.$CodeObjectDict){src=src.src}
-if(_globals===undefined){module_name='exec_'+$B.UUID()
+if(_globals===undefined){module_name=current_globals_name
 $B.$py_module_path[module_name]=$B.$py_module_path[current_globals_id]
-eval('var $locals_'+module_name+'=current_frame[3]')}else{if(_globals.id===undefined){_globals.id='exec_'+$B.UUID()}
-module_name=_globals.id
+eval('var $locals_'+module_name+'=current_frame[3]')}else{module_name=_b_.dict.$dict.get(_globals,'__name__','exec_'+$B.UUID())
 $B.$py_module_path[module_name]=$B.$py_module_path[current_globals_id]
 if(!$B.async_enabled)eval('var $locals_'+module_name+'={}')
 var items=_b_.dict.$dict.items(_globals),item
@@ -5558,8 +5557,7 @@ frame.$dict=$FrameDict
 $FrameDict.$factory=frame
 $B._frame=frame
 var $BaseExceptionDict={__class__:$B.$type,__bases__ :[_b_.object],__module__:'builtins',__name__:'BaseException'}
-$BaseExceptionDict.__init__=function(self){self.args=_b_.tuple([arguments[1]])
-self.message=arguments[1]}
+$BaseExceptionDict.__init__=function(self){self.args=_b_.tuple([arguments[1]])}
 $BaseExceptionDict.__repr__=function(self){return self.__class__.__name__+repr(self.args)}
 $BaseExceptionDict.__str__=function(self){return self.args[0]}
 $BaseExceptionDict.__mro__=[$BaseExceptionDict,$ObjectDict]
@@ -5592,7 +5590,7 @@ err.__name__='BaseException'
 err.$js_exc=js_exc
 if(msg===undefined)msg='BaseException'
 err.args=_b_.tuple([msg])
-err.message=msg
+err.$message=msg
 err.__class__=$BaseExceptionDict
 err.$py_error=true
 err.$stack=$B.frames_stack.slice()
@@ -6074,7 +6072,11 @@ $JSObjectDict.__getitem__=function(self,rank){try{return getattr(self.js,'__geti
 catch(err){if(self.js[rank]!==undefined){return JSObject(self.js[rank])}
 throw _b_.AttributeError(self.js+' has no attribute __getitem__')}}
 var $JSObject_iterator=$B.$iterator_class('JS object iterator')
-$JSObjectDict.__iter__=function(self){return $B.$iterator(self.js,$JSObject_iterator)}
+$JSObjectDict.__iter__=function(self){if(window.Symbol && self.js[Symbol.iterator]!==undefined){
+var items=[]
+for(var item of self.js){items.push(item)}
+return $B.$iterator(items,$JSObject_iterator)}
+return $B.$iterator(self.js,$JSObject_iterator)}
 $JSObjectDict.__len__=function(self){try{return getattr(self.js,'__len__')()}
 catch(err){throw _b_.AttributeError(self.js+' has no attribute __len__')}}
 $JSObjectDict.__mro__=[$JSObjectDict,$ObjectDict]
@@ -6096,7 +6098,6 @@ return res}
 function JSObject(obj){
 if(obj===null){return _b_.None}
 if(typeof obj=='function'){return{__class__:$JSObjectDict,js:obj}}
-if(window.Map && obj instanceof Map){return $Map(obj)}
 var klass=$B.get_class(obj)
 if(klass===_b_.list.$dict){
 if(obj.__brython__)return obj
@@ -6108,23 +6109,13 @@ JSObject.__class__=$B.$factory
 JSObject.$dict=$JSObjectDict
 $JSObjectDict.$factory=JSObject
 $B.JSObject=JSObject
-$B.JSConstructor=JSConstructor
-function $Map(obj){return{js:obj,__class__:$Map.$dict}}
-$Map.__class__=$B.$factory
-$Map.$dict={__class__: $B.$type,__name__: 'Map',__contains__: function(self,key){return self.js.has(key)},__delitem__: function(self,key){var res=self.js.delete(pyobj2jsobj(key))
-if(res){return _b_.None}
-throw _b_.KeyError(key)},__getitem__: function(self,key){var res=self.js.get(pyobj2jsobj(key))
-if(res!==undefined){return jsobj2pyobj(res)}
-else{throw KeyError(key)}},__iter__: function(self){var res=[]
-for(var item of self.js){res.push(item)}
-return $B.$iterator(res,$JSObject_iterator)},__setitem__: function(self,key,value){self.js.set(pyobj2jsobj(key),pyobj2jsobj(value))},__str__: function(self){return '<Map '+self.js.toString()+'>'}}
-$Map.$dict.__mro__=[$Map.$dict,$JSObjectDict,_b_.object.$dict]})(__BRYTHON__)
+$B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__random','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','calendar','codecs','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','queue','random_kozh','re','reprlib','select','shutil','signal','site','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','calendar','codecs','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
-var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_random','_random1','_svg','_sys','aes','builtins','datetime','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','random1','rc4','ripemd160','saved','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
+var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','long_int1','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.requests','site-packages.requests.packages','site-packages.requests.packages.chardet','site-packages.requests.packages.urllib3','site-packages.requests.packages.urllib3.contrib','site-packages.requests.packages.urllib3.packages','site-packages.requests.packages.urllib3.packages.ssl_match_hostname','site-packages.requests.packages.urllib3.util','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
+var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','long_int1','multiprocessing','multiprocessing.dummy','pydoc_data','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]})(__BRYTHON__)
 
 ;(function($B){var _b_=$B.builtins
@@ -6331,8 +6322,7 @@ catch(e){if(e.__class__ !==_b_.ImportError.$dict){throw e;}}}
 if(finder_notfound){$B.path_importer_cache[path_entry]=_b_.None;}}
 var spec=_b_.getattr(_b_.getattr(finder,'find_spec'),'__call__')(fullname,prev_module);
 if(!is_none(spec)){return spec;}}
-return _b_.None;
-run_py(code,_spec.origin,module,src_type=='pyc');}}
+return _b_.None;}}
 finder_path.$dict.__mro__=[finder_path.$dict,_b_.object.$dict]
 finder_path.$dict.create_module.$type='classmethod'
 finder_path.$dict.exec_module.$type='classmethod'

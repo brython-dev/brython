@@ -297,12 +297,12 @@ function $eval(src, _globals, _locals){
     if(src.__class__===$B.$CodeObjectDict){src = src.src}
 
     if(_globals===undefined){
-        module_name = 'exec_'+$B.UUID()
+        module_name = current_globals_name
         $B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id]
         eval('var $locals_'+module_name+'=current_frame[3]')        
     }else{
-        if(_globals.id === undefined){_globals.id = 'exec_'+$B.UUID()}
-        module_name = _globals.id
+        module_name = _b_.dict.$dict.get(_globals, '__name__', 
+            'exec_'+$B.UUID())
         $B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id]
 
         // Initialise locals object
