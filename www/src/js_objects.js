@@ -264,6 +264,12 @@ $JSObjectDict.__getitem__ = function(self,rank){
 
 var $JSObject_iterator = $B.$iterator_class('JS object iterator')
 $JSObjectDict.__iter__ = function(self){
+    if(window.Symbol && self.js[Symbol.iterator]!==undefined){
+        // Javascript objects that support the iterable protocol, such as Map
+        var items = []
+        for(var item of self.js){items.push(item)}
+        return $B.$iterator(items, $JSObject_iterator)
+    }
     return $B.$iterator(self.js,$JSObject_iterator)
 }
 
@@ -321,7 +327,6 @@ function JSObject(obj){
     // so that when called, the arguments are transformed into JS values
     if (obj === null) {return _b_.None}
     if(typeof obj=='function'){return {__class__:$JSObjectDict,js:obj}}
-    if(window.Map && obj instanceof Map){return $Map(obj)}
     var klass = $B.get_class(obj)
     if(klass===_b_.list.$dict){
         // JS arrays not created by list() must be wrapped
@@ -341,44 +346,6 @@ $JSObjectDict.$factory = JSObject
 
 $B.JSObject = JSObject
 $B.JSConstructor = JSConstructor
-
-// class for Map objects, implements a Pythonic interface
-
-function $Map(obj){return {js:obj, __class__:$Map.$dict}}
-
-$Map.__class__ = $B.$factory
-$Map.$dict = {
-    __class__: $B.$type,
-    __name__: 'Map',
-
-    __contains__: function(self, key){return self.js.has(key)},
-    
-    __delitem__: function(self, key){
-        var res = self.js.delete(pyobj2jsobj(key))
-        if(res){return _b_.None}
-        throw _b_.KeyError(key)
-    },
-    
-    __getitem__: function(self, key){
-        var res = self.js.get(pyobj2jsobj(key))
-        if(res!==undefined){return jsobj2pyobj(res)}
-        else{throw KeyError(key)}
-    },
-    
-    __iter__: function(self){
-        var res = []
-        for(var item of self.js){res.push(item)}
-        return $B.$iterator(res, $JSObject_iterator)
-    },
-    
-    __setitem__: function(self, key, value){
-        self.js.set(pyobj2jsobj(key), pyobj2jsobj(value))
-    },
-    
-    __str__: function(self){return '<Map '+self.js.toString()+'>'}
-}
-$Map.$dict.__mro__ = [$Map.$dict, $JSObjectDict, _b_.object.$dict]
-
 
 })(__BRYTHON__)
 
