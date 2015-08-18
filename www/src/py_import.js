@@ -509,7 +509,6 @@ finder_path.$dict = {
             }
         }
         return _b_.None;
-            run_py(code, _spec.origin, module, src_type=='pyc');
     }
 }
 
