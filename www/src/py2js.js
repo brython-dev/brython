@@ -448,8 +448,8 @@ function $AssignCtx(context, check_unbound){
             if(noassign[assigned.value]===true){
                 $_SyntaxError(context,["can't assign to keyword"])
             }
-            if(!$B.globals[scope.id] || 
-                $B.globals[scope.id][assigned.value]===undefined){
+            if(!$B._globals[scope.id] || 
+                $B._globals[scope.id][assigned.value]===undefined){
                 // A value is going to be assigned to a name
                 // After assignment the name will be bound to the current 
                 // scope
@@ -500,8 +500,8 @@ function $AssignCtx(context, check_unbound){
                 // simple assign : set attribute "bound" for name resolution
                 var name = left.tree[0].value
                 // check if name in globals
-                if($B.globals && $B.globals[scope.id]
-                    && $B.globals[scope.id][name]){
+                if($B._globals && $B._globals[scope.id]
+                    && $B._globals[scope.id][name]){
                         void(0)
                 }else{
                     left.tree[0].bound = true
@@ -2927,11 +2927,10 @@ function $GlobalCtx(context){
     this.expect = 'id'
     this.toString = function(){return 'global '+this.tree}
     this.scope = $get_scope(this)
-    $B.globals = $B.globals || {}
-    $B.globals[this.scope.id] = $B.globals[this.scope.id] || {}
+    $B._globals[this.scope.id] = $B._globals[this.scope.id] || {}
 
     this.add = function(name){
-        $B.globals[this.scope.id][name] = true
+        $B._globals[this.scope.id][name] = true
     }
 
     this.to_js = function(){
@@ -3102,8 +3101,8 @@ function $IdCtx(context,value){
         // Build the list of scopes where the variable name is bound
         while(1){
             if($B.bound[scope.id]===undefined){console.log('name '+val+' undef '+scope.id)}
-            if($B.globals[scope.id]!==undefined &&
-                $B.globals[scope.id][val]!==undefined){
+            if($B._globals[scope.id]!==undefined &&
+                $B._globals[scope.id][val]!==undefined){
                 found = [gs]
                 break
             }
@@ -3201,7 +3200,7 @@ function $IdCtx(context,value){
                     val = scope_ns+'["'+val+'"]'
                 }
             }else if(scope===innermost){
-                if($B.globals[scope.id] && $B.globals[scope.id][val]){
+                if($B._globals[scope.id] && $B._globals[scope.id][val]){
                     val = global_ns+'["'+val+'"]'
                 }else{
                     val = '$locals["'+val+'"]'
