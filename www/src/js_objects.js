@@ -72,17 +72,9 @@ var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj) {
       case true:
       case false:
         return jsobj
-      case null:
-        return _b_.None
     }
 
-    if (typeof jsobj === 'object') {
-       if ('length' in jsobj) return _b_.list(jsobj)
-
-       var d=_b_.dict()
-       for (var $a in jsobj) _b_.dict.$dict.__setitem__(d,$a, jsobj[$a])
-       return d
-    }
+    if (Array.isArray(jsobj)) return _b_.list(jsobj)
 
     if (typeof jsobj === 'number') {
        if (jsobj.toString().indexOf('.') == -1) return _b_.int(jsobj)
@@ -148,7 +140,6 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
 
     }
 }
-
 
 var $JSObjectDict = {
     __class__:$B.$type,
@@ -290,8 +281,13 @@ $JSObjectDict.__setattr__ = function(self,attr,value){
         self.js[attr]=value
         if(typeof value=='function'){
             self.js[attr] = function(){
-                try{return value.apply(null, arguments)}
+                var args = []
+                for(var i=0, len=arguments.length;i<len;i++){
+                    args.push(jsobj2pyobj(arguments[i]))
+                }
+                try{return value.apply(null, args)}
                 catch(err){
+                    err = $B.exception(err)
                     var info = _b_.getattr(err,'info')
                     throw Error(info+'\n'+err.__class__.__name__+
                         ': '+_b_.repr(err.args[0]))
@@ -322,10 +318,10 @@ $JSObjectDict.to_dict = function(self){
 }
 
 function JSObject(obj){
+    if (obj === null) {return _b_.None}
     // If obj is a function, calling it with JSObject implies that it is
     // a function defined in Javascript. It must be wrapped in a JSObject
     // so that when called, the arguments are transformed into JS values
-    if (obj === null) {return _b_.None}
     if(typeof obj=='function'){return {__class__:$JSObjectDict,js:obj}}
     var klass = $B.get_class(obj)
     if(klass===_b_.list.$dict){
