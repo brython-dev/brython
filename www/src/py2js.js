@@ -108,6 +108,7 @@ function $_SyntaxError(context,msg,indent){
     var tree_node = ctx_node.node
     var module = tree_node.module
     var line_num = tree_node.line_num
+    if(indent!==undefined){line_num++}
     $B.frames_stack.push([module,{$line_info:line_num+','+module}])
     if(indent===undefined){
         if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],$pos)}
