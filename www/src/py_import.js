@@ -207,7 +207,7 @@ function import_py(module,path,package){
 $B.run_py=run_py=function(module_contents,path,module,compiled) {
     if (!compiled) {
         var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
-        $B.$py_module_path[module.name]=path
+        $B.$py_module_path[module.__name__]=path
 
         var root = $B.py2js(module_contents,module.__name__,
             module.__name__,'__builtins__')
@@ -303,6 +303,9 @@ finder_VFS.$dict = {
         var ext = stored[0],
             module_contents = stored[1];
         module.$is_package = stored[2];
+        var path = $B.brython_path+'Lib/'+module.__name__
+        if(module.$is_package){path += '/__init__.py'}
+        module.__path__ = module.__file__ = path
         if (ext == '.js') {run_js(module_contents, module.__path__, module)}
         else {run_py(module_contents, module.__path__, module, ext=='.pyc.js')}
         if($B.debug>1){console.log('import '+module.__name__+' from VFS')}

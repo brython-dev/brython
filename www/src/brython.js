@@ -55,7 +55,7 @@ $B.has_websocket=window.WebSocket!==undefined})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-08-18 11:47:47.406638"
+__BRYTHON__.compiled_date="2015-08-19 10:28:33.115292"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -6001,13 +6001,8 @@ JSConstructor.$dict=$JSConstructorDict
 $JSConstructorDict.$factory=JSConstructor
 var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj){switch(jsobj){case true:
 case false:
-return jsobj
-case null:
-return _b_.None}
-if(typeof jsobj==='object'){if('length' in jsobj)return _b_.list(jsobj)
-var d=_b_.dict()
-for(var $a in jsobj)_b_.dict.$dict.__setitem__(d,$a,jsobj[$a])
-return d}
+return jsobj}
+if(Array.isArray(jsobj))return _b_.list(jsobj)
 if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1)return _b_.int(jsobj)
 return _b_.float(jsobj)}
 return $B.JSObject(jsobj)}
@@ -6083,8 +6078,11 @@ $JSObjectDict.__mro__=[$JSObjectDict,$ObjectDict]
 $JSObjectDict.__repr__=function(self){return "<JSObject wraps "+self.js+">"}
 $JSObjectDict.__setattr__=function(self,attr,value){if(isinstance(value,JSObject)){self.js[attr]=value.js}
 else{self.js[attr]=value
-if(typeof value=='function'){self.js[attr]=function(){try{return value.apply(null,arguments)}
-catch(err){var info=_b_.getattr(err,'info')
+if(typeof value=='function'){self.js[attr]=function(){var args=[]
+for(var i=0,len=arguments.length;i<len;i++){args.push(jsobj2pyobj(arguments[i]))}
+try{return value.apply(null,args)}
+catch(err){err=$B.exception(err)
+var info=_b_.getattr(err,'info')
 throw Error(info+'\n'+err.__class__.__name__+
 ': '+_b_.repr(err.args[0]))}}}}}
 $JSObjectDict.__setitem__=$JSObjectDict.__setattr__
@@ -6095,8 +6093,7 @@ var res=_b_.dict()
 for(var key in self.js){var value=self.js[key]
 if(typeof value=='object' && !Array.isArray(value)){_b_.dict.$dict.__setitem__(res,key,$JSObjectDict.to_dict(JSObject(value)))}else{_b_.dict.$dict.__setitem__(res,key,value)}}
 return res}
-function JSObject(obj){
-if(obj===null){return _b_.None}
+function JSObject(obj){if(obj===null){return _b_.None}
 if(typeof obj=='function'){return{__class__:$JSObjectDict,js:obj}}
 var klass=$B.get_class(obj)
 if(klass===_b_.list.$dict){
@@ -6206,7 +6203,7 @@ $B.imported[mod_name].__package__=mod_elts.join('.')}
 $B.imported[mod_name].__file__=path
 return run_py(module_contents,path,module)}
 $B.run_py=run_py=function(module_contents,path,module,compiled){if(!compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
-$B.$py_module_path[module.name]=path
+$B.$py_module_path[module.__name__]=path
 var root=$B.py2js(module_contents,module.__name__,module.__name__,'__builtins__')
 var body=root.children
 root.children=[]
@@ -6248,6 +6245,9 @@ return _b_.None;},exec_module : function(cls,module){var stored=module.__spec__.
 delete module.__spec__['loader_state'];
 var ext=stored[0],module_contents=stored[1];
 module.$is_package=stored[2];
+var path=$B.brython_path+'Lib/'+module.__name__
+if(module.$is_package){path +='/__init__.py'}
+module.__path__=module.__file__=path
 if(ext=='.js'){run_js(module_contents,module.__path__,module)}
 else{run_py(module_contents,module.__path__,module,ext=='.pyc.js')}
 if($B.debug>1){console.log('import '+module.__name__+' from VFS')}},find_module: function(cls,name,path){return{__class__:Loader,load_module:function(name,path){var spec=cls.$dict.find_spec(cls,name,path)
