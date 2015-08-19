@@ -16,9 +16,6 @@ import javascript_minifier
 if(sys.version_info[0]!=3):
     raise ValueError("This script only works with Python 3")
 
-import make_doc  # lint:ok
-import make_stdlib_list
-
 # path of parent directory
 pdir = os.path.dirname(os.getcwd())
 # version info
@@ -94,6 +91,12 @@ with open(abs_path('brython.js'), 'w') as the_brythonjs_file_output:
 print(('size : originals %s compact %s gain %.2f' %
       (src_size, len(res), 100 * (src_size - len(res)) / src_size)))
 
+# Generate page comparing Brython dist and CPython stdlib
+import make_stdlib_list
+
+# Generate static documentation pages
+import make_doc  # lint:ok
+
 sys.path.append("scripts")
 
 try:
@@ -109,7 +112,7 @@ with open(os.path.join(pdir, 'www', 'src', 'brython_dist.js'), 'w') as distrib_f
     distrib_file.write(open(os.path.join(pdir, 'www', 'src', 'brython.js')).read())
     distrib_file.write(open(os.path.join(pdir, 'www', 'src', 'py_VFS.js')).read())
 
-make_VFS.process_unittest(os.path.join(pdir, 'www', 'src', 'py_unittest.js'))
+#make_VFS.process_unittest(os.path.join(pdir, 'www', 'src', 'py_unittest.js'))
 
 # zip files
 dest_dir = os.path.join(pdir, 'dist')
