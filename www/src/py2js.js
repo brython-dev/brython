@@ -974,14 +974,7 @@ function $AugmentedAssignCtx(context, op){
         return offset
     }
 
-    this.to_js = function(){return ''
-        if(this.tree[0].type=='expr' && this.tree[0].length==1
-            && this.tree[0].tree[0].type=='id'){
-            return this.tree[0].to_js()+op+this.tree[1].to_js()+';'
-        }else{
-            return this.tree[0].to_js()+op+this.tree[1].to_js()+';'
-        }
-    }
+    this.to_js = function(){return ''}
 }
 
 function $BodyCtx(context){
@@ -5358,8 +5351,12 @@ function $transition(context,token){
             var op1 = context.parent,repl=null
             while(1){
                 if(op1.type==='expr'){op1=op1.parent}
-                else if(op1.type==='op'&&$op_weight[op1.op]>=$op_weight[op]){repl=op1;op1=op1.parent}
-                else{break}
+                else if(op1.type==='op'
+                    &&$op_weight[op1.op]>=$op_weight[op]
+                    && !(op1.op=='**' && op=='**') // cf. issue #250
+                    ){
+                        repl=op1;op1=op1.parent
+                }else{break}
             }
             if(repl===null){
                 if(op === 'and' || op === 'or'){
@@ -6027,7 +6024,7 @@ function $transition(context,token){
         }// switch
         return $transition(context.parent,token)
       case 'packed':
-        if(token==='id') new $IdCtx(context,arguments[2]);return context.parent
+        if(token==='id'){new $IdCtx(context,arguments[2]);return context.parent}
         $_SyntaxError(context,'token '+token+' after '+context)
       case 'pass':
         if(token==='eol') return context.parent

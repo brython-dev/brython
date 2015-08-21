@@ -431,4 +431,7 @@ t = Test()
 t.clicked = lambda x: x+7 #"clicked"
 assert t.clicked(7) == 14
 
+# issue 250
+assert 2**3**4 == 2417851639229258349412352
+
 print('passed all tests')
