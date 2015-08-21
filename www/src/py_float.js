@@ -332,6 +332,7 @@ $FloatDict.is_integer = function(self) {return _b_.int(self) == self}
 
 $FloatDict.__mod__ = function(self,other) {
     // can't use Javascript % because it works differently for negative numbers
+    if(other==0){throw ZeroDivisionError('float modulo')}
     if(isinstance(other,_b_.int)) return new Number((self%other+other)%other)
     
     if(isinstance(other,float)){

@@ -162,12 +162,11 @@ $IntDict.__lshift__ = function(self,other){
 $IntDict.__mod__ = function(self,other) {
     // can't use Javascript % because it works differently for negative numbers
     if(isinstance(other,_b_.tuple) && other.length==1) other=other[0]
-    if(isinstance(other,int)) return (self%other+other)%other
-    if(isinstance(other,_b_.float)) return ((self%other)+other)%other
-    if(isinstance(other,bool)){ 
-         var bool_value=0; 
-         if (other.valueOf()) bool_value=1;
-         return (self%bool_value+bool_value)%bool_value
+    if(isinstance(other,[int, _b_.float, bool])){
+        if(other===false){other=0}else if(other===true){other=1}
+        if(other==0){throw _b_.ZeroDivisionError(
+            "integer division or modulo by zero")}
+        return (self%other+other)%other
     }
     if(hasattr(other,'__rmod__')) return getattr(other,'__rmod__')(self)
     $err('%',other)
