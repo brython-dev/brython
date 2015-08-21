@@ -57,7 +57,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-08-19 17:17:26.584159"
+__BRYTHON__.compiled_date="2015-08-21 11:35:48.829136"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -529,9 +529,7 @@ var js3='getattr('+C.to_js()+',"'+func+'")('+right+')'
 new $NodeJSCtx(aa3,js3)
 aa2.add(aa3)
 return offset}
-this.to_js=function(){return ''
-if(this.tree[0].type=='expr' && this.tree[0].length==1
-&& this.tree[0].tree[0].type=='id'){return this.tree[0].to_js()+op+this.tree[1].to_js()+';'}else{return this.tree[0].to_js()+op+this.tree[1].to_js()+';'}}}
+this.to_js=function(){return ''}}
 function $BodyCtx(C){
 var ctx_node=C.parent
 while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
@@ -2838,8 +2836,10 @@ if(op_parent.type=='ternary' && op_parent.in_else){var new_op=new $OpCtx(C,op)
 return new $AbstractExprCtx(new_op,false)}
 var op1=C.parent,repl=null
 while(1){if(op1.type==='expr'){op1=op1.parent}
-else if(op1.type==='op'&&$op_weight[op1.op]>=$op_weight[op]){repl=op1;op1=op1.parent}
-else{break}}
+else if(op1.type==='op'
+&&$op_weight[op1.op]>=$op_weight[op]
+&& !(op1.op=='**' && op=='**')
+){repl=op1;op1=op1.parent}else{break}}
 if(repl===null){if(op==='and' ||op==='or'){while(C.parent.type==='not'||
 (C.parent.type==='expr'&&C.parent.parent.type==='not')){
 C=C.parent
@@ -3289,7 +3289,7 @@ default:
 if(C.tree[C.tree.length-1].type=='abstract_expr'){$_SyntaxError(C,'token '+token+' after '+C)}}
 return $transition(C.parent,token)
 case 'packed':
-if(token==='id')new $IdCtx(C,arguments[2]);return C.parent
+if(token==='id'){new $IdCtx(C,arguments[2]);return C.parent}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'pass':
 if(token==='eol')return C.parent
@@ -6525,10 +6525,42 @@ return new Number(_sign * _sum * Math.pow(2,parseInt(_exponent.substring(1))))}
 $FloatDict.__getformat__=function(arg){if(arg=='double' ||arg=='float')return 'IEEE, little-endian'
 throw _b_.ValueError("__getformat__() argument 1 must be 'double' or 'float'")}
 $FloatDict.__getitem__=function(){throw _b_.TypeError("'float' object is not subscriptable")}
-$FloatDict.__format__=function(self,format_spec){
-if(format_spec=='')format_spec='f'
-if(format_spec=='.4')format_spec='.4G'
-return _b_.str.$dict.__mod__('%'+format_spec,self)}
+function preformat(self,fmt){
+if(fmt.empty){return _b_.str(self)}
+if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type)==-1){throw _b_.ValueError("Unknown format code '"+fmt.type+
+"' for object of type 'float'")}
+if(isNaN(self)){if(fmt.type=='f'||fmt.type=='g'){return 'nan'}
+else{return 'NAN'}}
+if(self==Number.POSITIVE_INFINITY){if(fmt.type=='f'||fmt.type=='g'){return 'inf'}
+else{return 'INF'}}
+if(fmt.precision===undefined && fmt.type !==undefined){fmt.precision=6}
+if(fmt.type=='%'){self *=100}
+if(fmt.type=='e'){var res=self.toExponential(fmt.precision),exp=parseInt(res.substr(res.search('e')+1))
+if(Math.abs(exp)<10){res=res.substr(0,res.length-1)+'0'+
+res.charAt(res.length-1)}
+return res }
+if(fmt.precision!==undefined){
+var prec=fmt.precision
+if(prec && 'fF%'.indexOf(fmt.type)>-1){var pos_pt=Math.abs(self).toString().search(/\./)
+if(pos_pt>-1){prec+=pos_pt}}
+var res=self.toPrecision(prec),pt_pos=res.indexOf('.')
+if(fmt.type!==undefined && 
+(fmt.type=='%' ||fmt.type.toLowerCase()=='f')){if(pt_pos==-1){res +='.'+'0'.repeat(fmt.precision)}
+else{missing=fmt.precision-res.length+pt_pos+1
+if(missing>0)res +='0'.repeat(missing)}}else{var res1=self.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search('e')+1))
+if(exp<-4 ||exp>=fmt.precision-1){res=res1
+if(Math.abs(exp)<10){res=res.substr(0,res.length-1)+'0'+
+res.charAt(res.length-1)}}}}else{var res=_b_.str(self)}
+if(fmt.type===undefined||'gGn'.indexOf(fmt.type)!=-1){
+while(res.charAt(res.length-1)=='0'){res=res.substr(0,res.length-1)}
+if(res.charAt(res.length-1)=='.'){if(fmt.type===undefined){res +='0'}
+else{res=res.substr(0,res.length-1)}}}
+if(fmt.sign!==undefined){if((fmt.sign==' ' ||fmt.sign=='+')&& self>0){res=fmt.sign+res}}
+if(fmt.type=='%'){res+='%'}
+return res}
+$FloatDict.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec)
+fmt.align=fmt.align ||'>'
+return $B.format_width(preformat(self,fmt),fmt)}
 $FloatDict.__hash__=function(self){if(self===undefined){return $FloatDict.__hashvalue__ ||$B.$py_next_hash-- }
 var _v=self.valueOf()
 if(_v===Infinity)return 314159
@@ -6688,15 +6720,15 @@ switch(value.toLowerCase()){case '+inf':
 case 'inf':
 case '+infinity':
 case 'infinity':
-return $FloatClass(Infinity)
+return Number.POSITIVE_INFINITY
 case '-inf':
 case '-infinity':
-return $FloatClass(-Infinity)
+return Number.NEGATIVE_INFINTY
 case '+nan':
 case 'nan':
-return $FloatClass(Number.NaN)
+return Number.NaN
 case '-nan':
-return $FloatClass(-Number.NaN)
+return -Number.NaN
 case '':
 throw _b_.ValueError('count not convert string to float')
 default:
@@ -8449,7 +8481,44 @@ for(var i=1,_len_i=arguments.length;i < _len_i;i++){args[pos++]=arguments[i]}}
 return $StringDict[attr].apply(null,args)}})($attr)}}
 $StringSubclassDict.__mro__=[$StringSubclassDict,$ObjectDict]
 $B.$StringSubclassFactory={__class__:$B.$factory,$dict:$StringSubclassDict}
-_b_.str=str})(__BRYTHON__)
+_b_.str=str
+$B.parse_format_spec=function(spec){if(spec==''){this.empty=true;return}
+var pos=0,aligns='<>=^',digits='0123456789',types='bcdeEfFgGnosxX%'
+var align_pos=aligns.indexOf(spec.charAt(0))
+if(align_pos!=-1){this.align=aligns[align_pos];this.fill=' ';pos++}
+else{align_pos=aligns.indexOf(spec.charAt(1))
+if(spec.charAt(1)&& align_pos!=-1){this.align=aligns[align_pos]
+this.fill=spec.charAt(0)
+pos=2}}
+this.fill=this.fill ||' '
+var car=spec.charAt(pos)
+if(car=='+'||car=='-'||car==' '){this.sign=car;pos++;car=spec.charAt(pos)}
+if(car=='#'){this.alternate=true;pos++;car=spec.charAt(pos)}
+if(car=='0'){this.sign_aware=true;pos++;car=spec.charAt(pos)}
+while(car && digits.indexOf(car)>-1){if(this.width===undefined){this.width=car}
+else{this.width+=car}
+pos++;car=spec.charAt(pos)}
+if(this.width!==undefined){this.width=parseInt(this.width)}
+if(car==','){this.comma=true;pos++;car=spec.charAt(pos)}
+if(car=='.'){if(digits.indexOf(spec.charAt(pos+1))==-1){throw _b_.ValueError("Missing precision in format spec")}
+this.precision=spec.charAt(pos+1)
+pos+=2;car=spec.charAt(pos)
+while(car && digits.indexOf(car)>-1){this.precision+=car;pos++;car=spec.charAt(pos)}
+this.precision=parseInt(this.precision)}
+if(car && types.indexOf(car)>-1){this.type=car;pos++;car=spec.charAt(pos)}
+if(pos!==spec.length){
+throw _b_.ValueError("Invalid format specifier")}}
+$B.format_width=function(s,fmt){if(fmt.width && s.length<fmt.width){var fill=fmt.fill ||' ',align=fmt.align ||'<',missing=fmt.width-s.length
+switch(align){case '<':
+return s+fill.repeat(missing)
+case '>':
+return fill.repeat(missing)+s
+case '=':
+if('+-'.indexOf(s.charAt(0))==0){return s.charAt(0)+fill.repeat(missing-1)+s}else{return fill.repeat(missing)+s }
+case '^':
+left=parseInt(missing/2)
+return fill.repeat(left)+s+(missing-left).repeat(fill)}}
+return s}})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var $ObjectDict=_b_.object.$dict
 var str_hash=_b_.str.$dict.__hash__
