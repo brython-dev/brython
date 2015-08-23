@@ -46,7 +46,7 @@ import sys
 import traceback
 import dis
 
-from browser import document as doc, window, alert
+from browser import document as doc, window, alert, console
 from browser import timer
 from browser.local_storage import storage
 
@@ -58,17 +58,18 @@ script_num = -1
 failed = []
 t_start = None
 
-def run(in_globals=False):
+def run():
     global output
     doc["console"].value = ''
     src = editor.editor.getValue()
     if storage is not None:
        storage["py_src"] = src
 
-    state, t0, t1 = utils.run(src, in_globals)
+    state, t0, t1 = utils.run(src)
     output = doc["console"].value
 
     print('<completed in %6.2f ms>' % ((t1 - t0) * 1000.0))
+    return state
 
 def test_next():
     global script_num,failed
@@ -80,7 +81,7 @@ def test_next():
             src = open(option.value).read()
             doc['files'].selectedIndex = script_num
             editor.editor.setValue(src)
-            state = run(in_globals=True)
+            state = run()
             if state == 0:
                 failed.append(option.text)
             timer.set_timeout(test_next,500)

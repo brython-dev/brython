@@ -87,6 +87,7 @@ test_issue7_pyc.xxx = 123
 assert test_issue7_pyc.xxx == 123
 assert test_issue7_pyc.yyy() == 369
 
+
 # Repeat tests for .pyc.js files deployed at a given path
 print('Testing deployment of .pyc.js files')
 
@@ -94,20 +95,29 @@ print('Testing deployment of .pyc.js files')
 pyc_path = __BRYTHON__.script_dir + '/pycache'
 sys.path[0] = pyc_path
 
-from hello_pyc2 import *
+# Optimize module imports
+# i.e only send AJAX requests for .pyc.js files when processing this path
+from _importlib import optimize_import_for_path
+optimize_import_for_path(pyc_path, 'pyc.js')
 
-assert get_hello() == 'Hello from pyc2'
-assert world.get_world() == 'pyc2 world'
+try:
+    from hello_pyc2 import *
 
-import foo_pyc2
-assert foo_pyc2.get_foo() == 'foo from pyc2'
-assert foo_pyc2.get_bar() == 'bar from pyc2'
+    assert get_hello() == 'Hello from pyc2'
+    assert world.get_world() == 'pyc2 world'
 
-# Assertions for issue #7
-import test_issue7_pyc2 # brythontest2 in #7 => test_issue7_pyc2
-test_issue7_pyc2.xxx = 123
-assert test_issue7_pyc2.xxx == 123
-assert test_issue7_pyc2.yyy() == 120
+    import foo_pyc2
+    assert foo_pyc2.get_foo() == 'foo from pyc2'
+    assert foo_pyc2.get_bar() == 'bar from pyc2'
+
+    # Assertions for issue #7
+    import test_issue7_pyc2 # brythontest2 in #7 => test_issue7_pyc2
+    test_issue7_pyc2.xxx = 123
+    assert test_issue7_pyc2.xxx == 123
+    assert test_issue7_pyc2.yyy() == 120
+finally:
+    # Ensure that this path will not affect subsequent import
+    sys.path.remove(pyc_path);
 
 print('passed all tests')
 

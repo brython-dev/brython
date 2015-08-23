@@ -1,5 +1,4 @@
-[![Stories in Ready](https://badge.waffle.io/brython-dev/brython.svg?label=ready&title=Ready)](http://waffle.io/brython-dev/brython)    [![Join the chat at https://gitter.im/brython-dev/brython](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/brython-dev/brython?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge "Chat with Brython Users and Developers")
-
+[![Stories in Ready](https://badge.waffle.io/brython-dev/brython.svg?label=ready&title=Ready)](http://waffle.io/brython-dev/brython)
 
 brython
 =======

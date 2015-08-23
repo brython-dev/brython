@@ -619,7 +619,14 @@ DOMNodeDict.bind = function(self,event){
                 try{
                     return f($DOMEvent(ev))
                 }catch(err){
-                    getattr($B.stderr,"write")(err)
+                    if(err.__class__!==undefined){
+                        var msg = _b_.getattr(err, 'info')+
+                            '\n'+err.__class__.__name__
+                        if(err.args){msg += ': '+err.args[0]}
+                        getattr($B.stderr,"write")(msg)
+                    }else{
+                        getattr($B.stderr,"write")(err)
+                    }
                 }
             }}
         )(func)
@@ -630,6 +637,7 @@ DOMNodeDict.bind = function(self,event){
         }
         evlist[pos++]=[func, callback]
     }
+    return self
 }
 
 DOMNodeDict.children = function(self){
@@ -1101,21 +1109,6 @@ function $TagSum(){
 $TagSum.__class__=$B.$factory
 $TagSum.$dict = $TagSumDict
 $B.$TagSum = $TagSum // used in _html.js and _svg.js
-
-var $WinDict = {__class__:$B.$type,__name__:'window'}
-
-$WinDict.__getattribute__ = function(self,attr){
-    if(window[attr]!==undefined){return JSObject(window[attr])}
-    throw _b_.AttributeError("'window' object has no attribute '"+attr+"'")
-}
-
-$WinDict.__setattr__ = function(self, attr, value){
-    //console.log('set attr '+attr+' of window ')
-    window[attr] = value
-    //console.log(window[attr])
-}
-
-$WinDict.__mro__ = [$WinDict,$ObjectDict]
 
 var win =  JSObject(window) //{__class__:$WinDict}
 

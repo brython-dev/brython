@@ -108,6 +108,7 @@ function $_SyntaxError(context,msg,indent){
     var tree_node = ctx_node.node
     var module = tree_node.module
     var line_num = tree_node.line_num
+    if(indent!==undefined){line_num++}
     $B.frames_stack.push([module,{$line_info:line_num+','+module}])
     if(indent===undefined){
         if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],$pos)}
@@ -447,8 +448,8 @@ function $AssignCtx(context, check_unbound){
             if(noassign[assigned.value]===true){
                 $_SyntaxError(context,["can't assign to keyword"])
             }
-            if(!$B.globals[scope.id] || 
-                $B.globals[scope.id][assigned.value]===undefined){
+            if(!$B._globals[scope.id] || 
+                $B._globals[scope.id][assigned.value]===undefined){
                 // A value is going to be assigned to a name
                 // After assignment the name will be bound to the current 
                 // scope
@@ -499,8 +500,8 @@ function $AssignCtx(context, check_unbound){
                 // simple assign : set attribute "bound" for name resolution
                 var name = left.tree[0].value
                 // check if name in globals
-                if($B.globals && $B.globals[scope.id]
-                    && $B.globals[scope.id][name]){
+                if($B._globals && $B._globals[scope.id]
+                    && $B._globals[scope.id][name]){
                         void(0)
                 }else{
                     left.tree[0].bound = true
@@ -973,14 +974,7 @@ function $AugmentedAssignCtx(context, op){
         return offset
     }
 
-    this.to_js = function(){return ''
-        if(this.tree[0].type=='expr' && this.tree[0].length==1
-            && this.tree[0].tree[0].type=='id'){
-            return this.tree[0].to_js()+op+this.tree[1].to_js()+';'
-        }else{
-            return this.tree[0].to_js()+op+this.tree[1].to_js()+';'
-        }
-    }
+    this.to_js = function(){return ''}
 }
 
 function $BodyCtx(context){
@@ -2926,11 +2920,10 @@ function $GlobalCtx(context){
     this.expect = 'id'
     this.toString = function(){return 'global '+this.tree}
     this.scope = $get_scope(this)
-    $B.globals = $B.globals || {}
-    $B.globals[this.scope.id] = $B.globals[this.scope.id] || {}
+    $B._globals[this.scope.id] = $B._globals[this.scope.id] || {}
 
     this.add = function(name){
-        $B.globals[this.scope.id][name] = true
+        $B._globals[this.scope.id][name] = true
     }
 
     this.to_js = function(){
@@ -3101,8 +3094,8 @@ function $IdCtx(context,value){
         // Build the list of scopes where the variable name is bound
         while(1){
             if($B.bound[scope.id]===undefined){console.log('name '+val+' undef '+scope.id)}
-            if($B.globals[scope.id]!==undefined &&
-                $B.globals[scope.id][val]!==undefined){
+            if($B._globals[scope.id]!==undefined &&
+                $B._globals[scope.id][val]!==undefined){
                 found = [gs]
                 break
             }
@@ -3200,7 +3193,7 @@ function $IdCtx(context,value){
                     val = scope_ns+'["'+val+'"]'
                 }
             }else if(scope===innermost){
-                if($B.globals[scope.id] && $B.globals[scope.id][val]){
+                if($B._globals[scope.id] && $B._globals[scope.id][val]){
                     val = global_ns+'["'+val+'"]'
                 }else{
                     val = '$locals["'+val+'"]'
@@ -5358,8 +5351,12 @@ function $transition(context,token){
             var op1 = context.parent,repl=null
             while(1){
                 if(op1.type==='expr'){op1=op1.parent}
-                else if(op1.type==='op'&&$op_weight[op1.op]>=$op_weight[op]){repl=op1;op1=op1.parent}
-                else{break}
+                else if(op1.type==='op'
+                    &&$op_weight[op1.op]>=$op_weight[op]
+                    && !(op1.op=='**' && op=='**') // cf. issue #250
+                    ){
+                        repl=op1;op1=op1.parent
+                }else{break}
             }
             if(repl===null){
                 if(op === 'and' || op === 'or'){
@@ -6027,7 +6024,7 @@ function $transition(context,token){
         }// switch
         return $transition(context.parent,token)
       case 'packed':
-        if(token==='id') new $IdCtx(context,arguments[2]);return context.parent
+        if(token==='id'){new $IdCtx(context,arguments[2]);return context.parent}
         $_SyntaxError(context,'token '+token+' after '+context)
       case 'pass':
         if(token==='eol') return context.parent
@@ -6915,6 +6912,7 @@ function brython(options){
     // If the argument provided to brython() is a number, it is the debug 
     // level
     if(typeof options==='number') options={'debug':options}
+    if(options.debug === undefined) { options.debug = 0 }
     $B.debug = options.debug
     // set built-in variable __debug__
     _b_.__debug__ = $B.debug>0

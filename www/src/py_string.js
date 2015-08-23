@@ -939,7 +939,7 @@ var $FormattableString=function(format_string) {
              throw _b_.ValueError("cannot switch from manual field specification to automatic field numbering")
           }
 
-          _name = self._index.toString()
+          _name = this._index.toString()
           this._index+=1
 
           if (! _literal ) {
@@ -1756,8 +1756,8 @@ function str(arg){
              var f = getattr(arg,'__repr__')
              return getattr(f,'__call__')()
         }catch(err){
-             console.log(err)
-             console.log('default to toString ', arg)
+             if($B.debug>1){console.log(err)}
+             console.log('Warning - no method __str__ or __repr__, default to toString', arg)
              return arg.toString()
         }
     }
@@ -1807,5 +1807,75 @@ $B.$StringSubclassFactory = {
 }
 
 _b_.str = str
+
+// Function to parse the 2nd argument of format()
+$B.parse_format_spec = function(spec){
+    if(spec==''){this.empty=true;return}
+    var pos=0,
+        aligns = '<>=^',
+        digits = '0123456789',
+        types = 'bcdeEfFgGnosxX%'
+    var align_pos = aligns.indexOf(spec.charAt(0))
+    if(align_pos!=-1){this.align=aligns[align_pos];this.fill=' ';pos++}
+    else{
+        align_pos = aligns.indexOf(spec.charAt(1))
+        if(spec.charAt(1) && align_pos!=-1){
+            this.align=aligns[align_pos]
+            this.fill=spec.charAt(0)
+            pos = 2
+        }
+    }
+    this.fill = this.fill || ' '
+    var car = spec.charAt(pos)
+    if(car=='+'||car=='-'||car==' '){this.sign=car;pos++;car=spec.charAt(pos)}
+    if(car=='#'){this.alternate=true;pos++;car=spec.charAt(pos)}
+    if(car=='0'){this.sign_aware=true;pos++;car=spec.charAt(pos)}
+    while(car && digits.indexOf(car)>-1){
+        if(this.width===undefined){this.width=car}
+        else{this.width+=car}
+        pos++;car=spec.charAt(pos)
+    }
+    if(this.width!==undefined){this.width=parseInt(this.width)}
+    if(car==','){this.comma=true;pos++;car=spec.charAt(pos)}
+    if(car=='.'){
+        if(digits.indexOf(spec.charAt(pos+1))==-1){
+            throw _b_.ValueError("Missing precision in format spec")
+        }
+        this.precision = spec.charAt(pos+1)
+        pos+=2;car=spec.charAt(pos)
+        while(car && digits.indexOf(car)>-1){
+            this.precision+=car;pos++;car=spec.charAt(pos)
+        }
+        this.precision = parseInt(this.precision)
+    }
+    if(car && types.indexOf(car)>-1){this.type=car;pos++;car=spec.charAt(pos)}
+    if(pos!==spec.length){
+        //console.log('error', spec, this, pos, spec.charAt(pos))
+        throw _b_.ValueError("Invalid format specifier")
+    }
+}
+
+$B.format_width = function(s, fmt){
+    if(fmt.width && s.length<fmt.width){
+        var fill=fmt.fill || ' ', align = fmt.align || '<',
+            missing = fmt.width-s.length
+        switch(align){
+            case '<':
+                return s+fill.repeat(missing)
+            case '>':
+                return fill.repeat(missing)+s
+            case '=':
+                if('+-'.indexOf(s.charAt(0))==0){
+                    return s.charAt(0)+fill.repeat(missing-1)+s
+                }else{
+                    return fill.repeat(missing)+s            
+                }
+            case '^':
+                left = parseInt(missing/2)
+                return fill.repeat(left)+s+(missing-left).repeat(fill)
+        }
+    }
+    return s
+}
 
 })(__BRYTHON__)

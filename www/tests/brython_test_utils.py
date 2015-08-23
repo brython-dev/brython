@@ -1,5 +1,6 @@
-
-import time, traceback
+import sys
+import time
+import traceback
 
 def discover_test_modules():
     # TODO : Test discovery based on file system paths
@@ -61,14 +62,11 @@ def populate_testmod_input(elem, selected=None):
                 o = html.OPTION(caption, value=filenm)
             g <= o
 
-def run(src, in_globals=False):
+def run(src):
     t0 = time.perf_counter()
     try:
-        if(in_globals):
-            exec(src)
-        else:
-            ns = {}
-            exec(src, ns)
+        ns = {'__name__':'__main__'}
+        exec(src, ns)
         state = 1
     except Exception as exc:
         traceback.print_exc(file=sys.stderr)
@@ -76,7 +74,7 @@ def run(src, in_globals=False):
     t1 = time.perf_counter()
     return state, t0, t1
 
-def run_test_module(filename, base_path='', in_globals=False):
+def run_test_module(filename, base_path=''):
     src = open(base_path + filename).read()
-    return run(src, in_globals)
+    return run(src)
 

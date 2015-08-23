@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8"/>
+<script type="text/javascript" src="/src/brython.js"></script>
+
+</head>
+
+<body onload="brython(2)">
+<script type="text/python3">
+from browser import document, html
+
+document <= html.PRE(open(document.query['file']).read())
+
+</script>
+
+</body>
+</html>

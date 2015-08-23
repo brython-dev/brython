@@ -74,7 +74,8 @@ _status = "main"  # or "block" if typing inside a block
 # execution namespace
 editor_ns = {'credits':credits,
     'copyright':copyright,
-    'license':license}  
+    'license':license,
+    '__name__':'__main__'}  
 
 def cursorToEnd(*args):
     pos = len(doc['code'].value)

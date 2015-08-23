@@ -127,8 +127,7 @@ __or__ = or_
 def pos(a):
     "Same as +a."
     return +a    #brython does not like
-    if a >= 0: return a
-    return -a
+
 __pos__ = pos
 
 def pow(a, b):

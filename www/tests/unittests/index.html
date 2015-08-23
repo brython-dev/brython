@@ -50,7 +50,7 @@ document['container'].style.height='%dpx' % (_height-_top-10)
 
 <script type="text/python">
 from browser import timer
-from browser import document, alert
+from browser import document, alert, window
 import sys
 from test import support
 import unittest
@@ -102,7 +102,18 @@ def choose_test(event):
 
     sys.stderr.write('completed in %s seconds' % (time.time() - _start))
 
+def show_test(event):
+    sel = document['test']
+    module = sel.options[sel.selectedIndex].value
+
+    if module == '':
+       return
+
+    mod = __import__(module)
+    tab = window.open('show.html?file=%s' %mod.__file__)
+
 document["btn_test"].bind('click', choose_test)
+document["btn_show"].bind('click', show_test)
 </script>
 
 </head>
@@ -162,6 +173,7 @@ UnitTests:
   <option value="test_with">test_with</option>
 </select>
 <button id="btn_test">Run test</button>
+<button id="btn_show">Show test</button>
 </div>
 
 <div style="float:right">

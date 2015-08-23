@@ -16,9 +16,6 @@ import javascript_minifier
 if(sys.version_info[0]!=3):
     raise ValueError("This script only works with Python 3")
 
-import make_doc  # lint:ok
-import make_stdlib_list
-
 # path of parent directory
 pdir = os.path.dirname(os.getcwd())
 # version info
@@ -65,7 +62,6 @@ with open(abs_path('version_info.js'), 'w') as vinfo_file_out:
     #log.info("Finished Writing file: " + abs_path('version_info.js'))
 
 import make_stdlib_static
-
 # build brython.js from base Javascript files
 sources = [
     'brython_builtins', 'version_info', 'identifiers_re', 'py2js', 
@@ -92,11 +88,14 @@ res = res.replace('context', 'C')
 with open(abs_path('brython.js'), 'w') as the_brythonjs_file_output:
     the_brythonjs_file_output.write(res)
 
-
 print(('size : originals %s compact %s gain %.2f' %
       (src_size, len(res), 100 * (src_size - len(res)) / src_size)))
 
+# Generate page comparing Brython dist and CPython stdlib
+import make_stdlib_list
 
+# Generate static documentation pages
+import make_doc  # lint:ok
 
 sys.path.append("scripts")
 
@@ -108,17 +107,18 @@ except ImportError:
     sys.exit()
 
 make_VFS.process(os.path.join(pdir, 'www', 'src', 'py_VFS.js'))
-make_VFS.process_unittest(os.path.join(pdir, 'www', 'src', 'py_unittest.js'))
-
 # make distribution with core + libraries
 with open(os.path.join(pdir, 'www', 'src', 'brython_dist.js'), 'w') as distrib_file:
     distrib_file.write(open(os.path.join(pdir, 'www', 'src', 'brython.js')).read())
     distrib_file.write(open(os.path.join(pdir, 'www', 'src', 'py_VFS.js')).read())
 
+#make_VFS.process_unittest(os.path.join(pdir, 'www', 'src', 'py_unittest.js'))
+
 # zip files
 dest_dir = os.path.join(pdir, 'dist')
 if not os.path.exists(dest_dir):
     os.mkdir(dest_dir)
+
 name = 'Brython%s_site_mirror-%s' % (vname, now)
 dest_path = os.path.join(dest_dir, name)
 
@@ -147,7 +147,6 @@ dist_zip = zipfile.ZipFile(dest_path + '.zip', mode='w',
                            compression=zipfile.ZIP_DEFLATED)
 
 for dirpath, dirnames, filenames in os.walk(pdir):
-    print(dirpath)
     for path in filenames:
         if not is_valid(path):
             continue
@@ -185,7 +184,6 @@ def is_valid(filename_path):
         return False
     return True
 
-
 for arc, wfunc in (dist1, dist1.add), (dist2, dist2.add), (dist3, dist3.write):
     for path in 'README.md', 'LICENCE.txt':
         wfunc(os.path.join(pdir, path), arcname=os.path.join(name, path))
@@ -197,8 +195,10 @@ for arc, wfunc in (dist1, dist1.add), (dist2, dist2.add), (dist3, dist3.write):
     folders = ('libs', 'Lib')
     for folder in folders:
         for dirpath, dirnames, filenames in os.walk(os.path.join(base, folder)):
+            if 'test' in dirnames:
+                dirnames.remove('test')
             for path in filenames:
-                if os.path.splitext(path)[1] not in ('.js', '.py'):
+                if os.path.splitext(path)[1] not in ('.js', '.py', '.css'):
                     continue
                 print(('add', path, dirpath[len(base):]))
                 # leave folder site-packages empty
