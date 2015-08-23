@@ -305,7 +305,7 @@ finder_VFS.$dict = {
         module.$is_package = stored[2];
         var path = $B.brython_path+'Lib/'+module.__name__
         if(module.$is_package){path += '/__init__.py'}
-        module.__path__ = module.__file__ = path
+        module.__file__ = path
         if (ext == '.js') {run_js(module_contents, module.__path__, module)}
         else {run_py(module_contents, module.__path__, module, ext=='.pyc.js')}
         if($B.debug>1){console.log('import '+module.__name__+' from VFS')}
