@@ -523,10 +523,6 @@ finder_path.$dict.find_module.$type = 'classmethod'
 finder_path.$dict.find_spec.$type = 'classmethod'
 
 
-// FIXME : Add this code elsewhere ?
-$B.path_hooks = [];
-$B.path_importer_cache = {};
-
 /**
  * Find modules packaged in a js script to be used as a virtual file system
  *
@@ -597,8 +593,6 @@ vfs_hook.$dict = {
     }
 }
 vfs_hook.$dict.__mro__ = [vfs_hook.$dict, _b_.object.$dict]
-
-$B.path_hooks.push(vfs_hook)
 
 /**
  * Find modules deployed in a hierarchy under a given base URL
@@ -689,7 +683,24 @@ url_hook.$dict = {
 }
 url_hook.$dict.__mro__ = [url_hook.$dict, _b_.object.$dict]
 
-$B.path_hooks.push(url_hook);
+// FIXME : Add this code elsewhere ?
+$B.path_hooks = [vfs_hook, url_hook];
+$B.path_importer_cache = {};
+// see #247 - By adding these early some unnecesary AJAX requests are not sent
+var _sys_paths = [[$B.script_dir + '/', 'py'],
+                  [$B.brython_path + 'Lib/', 'py'],
+                  [$B.brython_path + 'Lib/site-packages/', 'py'],
+                  [$B.brython_path + 'libs/', 'js']];
+
+for (i = 0; i < _sys_paths.length; ++i) {
+    var _path = _sys_paths[i],
+        _type = _path[1];
+    _path = _path[0];
+    $B.path_importer_cache[_path] = url_hook(_path, _type);
+}
+delete _path;
+delete _type;
+delete _sys_paths;
 
 window.is_none = function (o) {
     return o === undefined || o == _b_.None;
