@@ -270,7 +270,7 @@ $B.$gen_expr = function(env){
     // Create the variables for enclosing namespaces, they may be referenced
     // in the expression
     for(var i=0;i<env.length;i++){
-        var sc_id = '$locals_'+env[i][0].replace(/\./,'_')
+        var sc_id = '$locals_'+env[i][0].replace(/\./g,'_')
         eval('var '+sc_id+'=env[i][1]')
     }
     var local_name = env[0][0]
