@@ -918,6 +918,12 @@ $B.$import = function(mod_name,origin,fromlist, aliases, locals){
 
 $B.meta_path = [finder_VFS, finder_stdlib_static, finder_path];
 
+function optimize_import_for_path(path, filetype) {
+    if (path.slice(-1) != '/') { path = path + '/' }
+    // Ensure sys is loaded
+    $B.path_importer_cache[path] = url_hook(path, filetype);
+}
+
 // Introspection for builtin importers
 
 _importlib_module = {
@@ -928,7 +934,8 @@ _importlib_module = {
     StdlibStatic: finder_stdlib_static,
     ImporterPath: finder_path,
     VFSPathFinder : vfs_hook,
-    UrlPathFinder: url_hook
+    UrlPathFinder: url_hook,
+    optimize_import_for_path : optimize_import_for_path
 }
 _importlib_module.__repr__ = _importlib_module.__str__ = function(){
 return "<module '_importlib' (built-in)>"
