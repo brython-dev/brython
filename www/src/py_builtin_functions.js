@@ -921,11 +921,20 @@ function next(obj){
     throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not an iterator")
 }
 
-var $NotImplementedDict = {__class__:$B.$type,__name__:'NotImplementedType'}
-$NotImplementedDict.__mro__ = [$NotImplementedDict,$ObjectDict]
-$NotImplementedDict.__repr__ = $NotImplementedDict.__str__ = function(){return 'NotImplemented'}
 
-var NotImplemented = {__class__ : $NotImplementedDict,}
+function _NotImplemented(){return {__class__:_NotImplemented.$dict}}
+_NotImplemented.__class__ = $B.$factory
+
+_NotImplemented.$dict = {
+    $factory: _NotImplemented,
+    __class__: $B.$type,
+    __name__: 'NotImplementedType'
+}
+_NotImplemented.$dict.__mro__ = [_NotImplemented.$dict, $ObjectDict]
+
+var NotImplemented = {__class__ : _NotImplemented.$dict, 
+    __str__: function(){return 'NotImplemented'}
+}
 
 function $not(obj){return !bool(obj)}
 
