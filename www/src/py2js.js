@@ -6954,8 +6954,10 @@ function brython(options){
     if(options.static_stdlib_import!==false){
         // Add finder using static paths
         meta_path.push($B.meta_path[1])
-        // Remove /Lib in sys.path : if we use the static list and the module
+        // Remove /Lib and /libs in sys.path :
+        // if we use the static list and the module
         // was not find in it, it's no use searching twice in the same place
+        $B.path.shift()
         $B.path.shift()
     }
     // Always use the defaut finder using sys.path
