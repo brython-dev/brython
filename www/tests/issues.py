@@ -441,4 +441,9 @@ assert x == ['foo', 'bar']
 # issue 250
 assert 2**3**4 == 2417851639229258349412352
 
+# issue 258
+a = [1, 2, 3]
+b, *c = a
+assert c == [2, 3]
+
 print('passed all tests')

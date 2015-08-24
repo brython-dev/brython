@@ -3005,8 +3005,9 @@ function $IdCtx(context,value){
 
     var scope = $get_scope(this)
     
-    if(context.type=='target_list'){
-        // An id defined as a target in a "for" loop is bound
+    if(context.type=='target_list' || context.type=='packed'){
+        // An id defined as a target in a "for" loop, or as "packed" 
+        // (eg "a, *b = [1, 2, 3]") is bound
         $B.bound[scope.id][value]=true
         this.bound = true
     }
