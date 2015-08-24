@@ -156,7 +156,7 @@ $B.$list_comp = function(env){
     var $py = "x"+$ix+"=[]\n", indent = 0
     for(var $i=2, _len_$i = arguments.length; $i < _len_$i;$i++){
         $py += ' '.repeat(indent)
-        $py += arguments[$i]+':\n'
+        $py += arguments[$i].join('')+':\n'
         indent += 4
     }
     $py += ' '.repeat(indent)
