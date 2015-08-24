@@ -46,34 +46,46 @@
 
 <!-- Test cases -->
     <script type="text/javascript">
-      window.test_proc = function(filenm, caption) {
+      window.qunit_unittest_wrapper = function(test, result) {
         return function(assert) {
-            exec_info = __BRYTHON__.builtins.$eval(
-                '__import__("brython_test_utils", {},{},[],0)' +
-                '.run_test_module("' + filenm + '")');
-            status = exec_info[0]; tstart = exec_info[1]; tend = exec_info[2];
-            if (status == 1) {
-                assert.ok(true, caption + " - ok");
+            test_call =  __BRYTHON__.builtins.getattr(test, '__call__')
+            test_call(result);
+            var msg = '';
+            if (result.details !== __BRYTHON__.builtins.None) {
+                msg = '[' + result.lastOutcome + '] - ' + result.details;
             }
-            else {
-                // TODO: Record and output generated traceback
-                assert.ok(false, caption + " - FAILED")
-            }
+            assert.ok(__BRYTHON__.builtins.getattr(result, 'wasSuccessful')(),
+                      msg)
         }
       }
     </script>
 
 <script type="text/python3">
 from javascript import JSObject
-from browser import alert, window
+from browser import window
 import brython_test_utils as utils
+from   brython_test_utils import unittest as test_utils
+import unittest
 
 _QUnit = JSObject(window.QUnit)
+# TODO: Arg values e.g. verbosity level ?
+result = test_utils.OneTimeTestResult()
 
-for label, options in utils.discover_test_modules():
-    # TODO: Define module for option groups
-    for filenm, caption in options:
-        _QUnit.test(caption, window.test_proc(filenm, caption))
+def qunit_add_tests(suite):
+    module_name = getattr(suite, 'caption', None) or 'All tests'
+    _QUnit.module(module_name)
+    pend = []
+    for test in suite:
+        if isinstance(test, unittest.BaseTestSuite):
+            pend.append(test)
+        else:
+            _QUnit.test(test.shortDescription(),
+                        window.qunit_unittest_wrapper(test, result))
+    for suite in pend:
+        qunit_add_tests(suite)
+
+
+qunit_add_tests(test_utils.load_brython_test_cases())
 </script>
 
   </body>

@@ -2,7 +2,7 @@ import sys
 import time
 import traceback
 
-def discover_test_modules():
+def discover_brython_test_modules():
     # TODO : Test discovery based on file system paths
     return [
         ("Core language features", [
@@ -51,7 +51,7 @@ def populate_testmod_input(elem, selected=None):
     """Build a multiple selection control including test modules
     """
     from browser import html
-    groups = discover_test_modules()
+    groups = discover_brython_test_modules()
     for label, options in groups:
         g = html.OPTGROUP(label=label)
         elem <= g

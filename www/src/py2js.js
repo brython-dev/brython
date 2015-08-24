@@ -6912,6 +6912,7 @@ function brython(options){
     // If the argument provided to brython() is a number, it is the debug 
     // level
     if(typeof options==='number') options={'debug':options}
+    if(options.debug === undefined) { options.debug = 0 }
     $B.debug = options.debug
     // set built-in variable __debug__
     _b_.__debug__ = $B.debug>0
