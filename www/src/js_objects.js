@@ -249,7 +249,7 @@ $JSObjectDict.__getitem__ = function(self,rank){
     try{return getattr(self.js,'__getitem__')(rank)}
     catch(err){
         if(self.js[rank]!==undefined){return JSObject(self.js[rank])}
-        throw _b_.AttributeError(self.js+' has no attribute __getitem__')
+        throw _b_.KeyError(rank)
     }
 }
 
