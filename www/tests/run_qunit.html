@@ -64,11 +64,12 @@
 from javascript import JSObject
 from browser import window
 import brython_test_utils as utils
+from   brython_test_utils import unittest as test_utils
 import unittest
 
 _QUnit = JSObject(window.QUnit)
 # TODO: Arg values e.g. verbosity level ?
-result = utils.OneTimeTestResult()
+result = test_utils.OneTimeTestResult()
 
 def qunit_add_tests(suite):
     module_name = getattr(suite, 'caption', None) or 'All tests'
@@ -84,7 +85,7 @@ def qunit_add_tests(suite):
         qunit_add_tests(suite)
 
 
-qunit_add_tests(utils.load_brython_test_cases())
+qunit_add_tests(test_utils.load_brython_test_cases())
 </script>
 
   </body>
