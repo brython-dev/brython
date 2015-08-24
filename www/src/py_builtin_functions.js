@@ -11,9 +11,8 @@ var $ObjectDict = _b_.object.$dict
 $B.$comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
 
 function abs(obj){
-    if(isinstance(obj,_b_.int)) return _b_.int(Math.abs(obj))
-    if(isinstance(obj,_b_.float)) return _b_.float(Math.abs(obj))
-    if(hasattr(obj,'__abs__')) return getattr(obj,'__abs__')()
+    if(isinstance(obj,[_b_.int, _b_.float])){return _b_.int(Math.abs(obj))};
+    if(hasattr(obj,'__abs__')){return getattr(obj,'__abs__')()};
 
     throw _b_.TypeError("Bad operand type for abs(): '"+$B.get_class(obj)+"'")
 }
