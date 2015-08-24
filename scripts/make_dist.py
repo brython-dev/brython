@@ -91,12 +91,6 @@ with open(abs_path('brython.js'), 'w') as the_brythonjs_file_output:
 print(('size : originals %s compact %s gain %.2f' %
       (src_size, len(res), 100 * (src_size - len(res)) / src_size)))
 
-# Generate page comparing Brython dist and CPython stdlib
-import make_stdlib_list
-
-# Generate static documentation pages
-import make_doc  # lint:ok
-
 sys.path.append("scripts")
 
 try:
@@ -113,6 +107,12 @@ with open(os.path.join(pdir, 'www', 'src', 'brython_dist.js'), 'w') as distrib_f
     distrib_file.write(open(os.path.join(pdir, 'www', 'src', 'py_VFS.js')).read())
 
 #make_VFS.process_unittest(os.path.join(pdir, 'www', 'src', 'py_unittest.js'))
+
+# Generate page comparing Brython dist and CPython stdlib
+import make_stdlib_list
+
+# Generate static documentation pages
+import make_doc  # lint:ok
 
 # zip files
 dest_dir = os.path.join(pdir, 'dist')
