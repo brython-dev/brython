@@ -984,6 +984,7 @@ function $BodyCtx(context){
     while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
     var tree_node = ctx_node.node
     var body_node = new $Node()
+    body_node.line_num = tree_node.line_num
     tree_node.insert(0,body_node)
     return new $NodeCtx(body_node)
 }
