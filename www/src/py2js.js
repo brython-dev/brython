@@ -808,6 +808,12 @@ function $AugmentedAssignCtx(context, op){
         
         var left_is_id = (this.tree[0].type=='expr' && 
             this.tree[0].tree[0].type=='id')
+
+        if(left_is_id){
+            var left_id = this.tree[0].tree[0].value,
+                was_bound = $B.bound[this.scope.id][left_id]!==undefined
+        }
+            
         var right_is_int = (this.tree[1].type=='expr' && 
             this.tree[1].tree[0].type=='int')
         
@@ -970,6 +976,12 @@ function $AugmentedAssignCtx(context, op){
         var js3 = 'getattr('+context.to_js()+',"'+func+'")('+right+')'
         new $NodeJSCtx(aa3,js3)
         aa2.add(aa3)
+
+        // Augmented assignment doesn't bind names ; if the variable name has
+        // been bound in the code above (by a call to $AssignCtx), remove it
+        if(left_is_id && !was_bound && !this.scope.blurred){
+            $B.bound[this.scope.id][left_id] = undefined
+        }
         
         return offset
     }
@@ -3651,7 +3663,8 @@ function $NonlocalCtx(context){
     this.transform = function(node, rank){
         var pscope = this.scope.parent_block
         if(pscope.context===undefined){
-            $_SyntaxError(context,["no binding for nonlocal '"+name+"' found"])
+            $_SyntaxError(context,["no binding for nonlocal '"+
+                $B.last(Object.keys(this.names))+"' found"])
         }else{
             while(pscope!==undefined && pscope.context!==undefined){
                 for(var name in this.names){

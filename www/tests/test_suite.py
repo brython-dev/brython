@@ -306,6 +306,15 @@ def f():
 
 assert f()==[0, 1]
 
+def P():
+    b=1
+    def Q():
+        nonlocal b
+        b+=1
+        return b
+    return Q()
+assert P()==2
+
 # use imported names
 from a import *
 
