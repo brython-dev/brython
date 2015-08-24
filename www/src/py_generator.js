@@ -504,7 +504,6 @@ $BRGeneratorDict.__next__ = function(self){
 
     self.next_root = root
     var next_src = root.src()+'\n)()'
-    console.log(next_src)
     try{eval(next_src)}
     catch(err){console.log('error '+err+'\n'+next_src);throw err}
 
