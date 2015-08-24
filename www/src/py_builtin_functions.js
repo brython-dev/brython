@@ -197,9 +197,11 @@ function delattr(obj, attr) {
         }
     }
     if(res!==undefined && res.__delete__!==undefined){
-        return res.__delete__(res,obj,attr)
+        res.__delete__(res,obj,attr)
+    }else{
+        getattr(obj,'__delattr__')(attr)
     }
-    getattr(obj,'__delattr__')(attr)
+    return None
 }
 
 function dir(obj){
@@ -978,6 +980,7 @@ function $print(){
         args = $ns['args']
 
     getattr(file,'write')(args.map(_b_.str).join(sep)+end)
+    return None
 }
 $print.__name__ = 'print'
 $print.is_func = true
@@ -1244,7 +1247,7 @@ function setattr(obj,attr,value){
       case '__class__':
         // Setting the attribute __class__ : value is the factory function,
         // we must set __class__ to the class dictionary
-        obj.__class__ = value.$dict;return
+        obj.__class__ = value.$dict;return None
         break
     }
     
@@ -1254,8 +1257,8 @@ function setattr(obj,attr,value){
         if(obj.$dict.$methods && typeof value=='function'){
             // update attribute $methods
             obj.$dict.$methods[attr] = $B.make_method(attr, obj.$dict, value, value)
-            return
-        }else{obj.$dict[attr]=value;return}
+            return None
+        }else{obj.$dict[attr]=value;return None}
     }
     
     var res = obj[attr], klass=$B.get_class(obj)
@@ -1270,10 +1273,10 @@ function setattr(obj,attr,value){
     if(res!==undefined){
         // descriptor protocol : if obj has attribute attr and this attribute 
         // has a method __set__(), use it
-        if(res.__set__!==undefined) return res.__set__(res,obj,value)
+        if(res.__set__!==undefined){res.__set__(res,obj,value); return None}
         var __set__ = getattr(res,'__set__',null)
         if(__set__ && (typeof __set__=='function')) {
-            return __set__.apply(res,[obj,value])
+            __set__.apply(res,[obj,value]);return None
         }
     }
     
@@ -1285,8 +1288,8 @@ function setattr(obj,attr,value){
             if(setattr){break}
         }
     }
-    if(!setattr){obj[attr]=value;return}
-    setattr(obj,attr,value)
+    if(!setattr){obj[attr]=value}else{setattr(obj,attr,value)}
+    return None
 }
 
 // slice

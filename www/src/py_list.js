@@ -2,7 +2,7 @@
 
 eval($B.InjectBuiltins())
 
-var $ObjectDict = _b_.object.$dict
+var $ObjectDict = _b_.object.$dict, $N = _b_.None
 
 function $list(){
     // used for list displays
@@ -41,7 +41,7 @@ $ListDict.__delitem__ = function(self,arg){
         if(arg<0) pos=self.length+pos
         if(pos>=0 && pos<self.length){
             self.splice(pos,1)
-            return
+            return $N
         }
         throw _b_.IndexError('list index out of range')
     }
@@ -72,12 +72,12 @@ $ListDict.__delitem__ = function(self,arg){
            //for(var i=res.length-1;i>=0;i--){
            self.splice(res[i],1)
         }
-        return
+        return $N
     } 
 
     if (hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
        $ListDict.__delitem__(self, _b_.int(arg))
-       return
+       return $N
     }
 
     throw _b_.TypeError('list indices must be integer, not '+_b_.str(arg.__class__))
@@ -213,7 +213,7 @@ $ListDict.__init__ = function(self,arg){
     var len_func = getattr(self,'__len__'),pop_func=getattr(self,'pop')
     while(len_func()) pop_func()
 
-    if(arg===undefined) return
+    if(arg===undefined) return $N
     var arg = iter(arg)
     var next_func = getattr(arg,'__next__')
     var pos=self.length
@@ -224,6 +224,7 @@ $ListDict.__init__ = function(self,arg){
             else{throw err}
         }
     }
+    return $N
 }
 
 var $list_iterator = $B.$iterator_class('list_iterator')
@@ -281,7 +282,7 @@ $ListDict.__setitem__ = function(self,arg,value){
         if(arg<0) pos=self.length+pos
         if(pos>=0 && pos<self.length){self[pos]=value}
         else {throw _b_.IndexError('list index out of range')}
-        return 
+        return $N
     }
     if(isinstance(arg,slice)){
         var start = arg.start===None ? 0 : arg.start
@@ -299,7 +300,7 @@ $ListDict.__setitem__ = function(self,arg,value){
             for(var i=$temp.length-1;i>=0;i--){
                 self.splice(start,0,$temp[i])
             }
-            return
+            return $N
         }
 
         throw _b_.TypeError("can only assign an iterable")
@@ -307,7 +308,7 @@ $ListDict.__setitem__ = function(self,arg,value){
 
     if (hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
        $ListDict.__setitem__(self, _b_.int(arg), value)
-       return
+       return $N
     }
 
     throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
@@ -320,9 +321,9 @@ $B.make_rmethods($ListDict)
 
 var _ops=['add', 'sub']
 
-$ListDict.append = function(self,other){self[self.length]=other}
+$ListDict.append = function(self,other){self[self.length]=other;return $N}
 
-$ListDict.clear = function(self){ while(self.length) self.pop()}
+$ListDict.clear = function(self){ while(self.length){self.pop()};return $N}
 
 $ListDict.copy = function(self){return self.slice(0,self.length)}
 
@@ -346,6 +347,7 @@ $ListDict.extend = function(self,other){
             else{throw err}
         }
     }
+    return $N
 }
 
 $ListDict.index = function(self,elt){
@@ -356,14 +358,14 @@ $ListDict.index = function(self,elt){
     throw _b_.ValueError(_b_.str(elt)+" is not in list")
 }
 
-$ListDict.insert = function(self,i,item){self.splice(i,0,item)}
+$ListDict.insert = function(self,i,item){self.splice(i,0,item);return $N}
 
 $ListDict.remove = function(self,elt){
     var _eq = getattr(elt, '__eq__')
     for(var i=0, _len_i = self.length; i < _len_i;i++){
         if(_eq(self[i])){
             self.splice(i,1)
-            return
+            return $N
         }
     }
     throw _b_.ValueError(_b_.str(elt)+" is not in list")
@@ -392,6 +394,7 @@ $ListDict.reverse = function(self){
         self[i] = self[_len-i]
         self[_len-i] = buf
     }
+    return $N
 }
     
 // QuickSort implementation found at http://en.literateprograms.org/Quicksort_(JavaScript)
@@ -482,7 +485,7 @@ $ListDict.sort = function(self){
     else{$qsort(func,self,0,self.length)}
     if(reverse) $ListDict.reverse(self)
     // Javascript libraries might use the return value
-    if(!self.__brython__) return self
+    return (self.__brython__ ? $N : self)
 }
 
 $B.set_func_names($ListDict)
@@ -555,6 +558,7 @@ $ListSubclassDict.__init__ = function(self){
     for(var i=1;i<arguments.length;i++){args[pos++]=arguments[i]}
     $ListDict.__init__.apply(null, args)
     self.valueOf = function(){return res}
+    return $N
 }
 $ListSubclassDict.__mro__ = [$ListSubclassDict,$ObjectDict]
 

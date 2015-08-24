@@ -2,7 +2,7 @@
 
 eval($B.InjectBuiltins())
 
-var $ObjectDict = _b_.object.$dict
+var $ObjectDict = _b_.object.$dict, $N = _b_.None
 
 function $err(op,other){
     var msg = "unsupported operand type(s) for "+op
@@ -143,6 +143,7 @@ $IntDict.__init__ = function(self,value){
     if(value===undefined){value=0}
     self.toString = function(){return value}
     //self.valueOf = function(){return value}
+    return $N
 }
 
 $IntDict.__int__ = function(self){return self}
@@ -264,6 +265,7 @@ $IntDict.__setattr__ = function(self,attr,value){
     }
     // subclasses of int can have attributes set
     self[attr] = value
+    return $N
 }
 
 $IntDict.__str__ = $IntDict.__repr__
