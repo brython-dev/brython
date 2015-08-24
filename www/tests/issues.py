@@ -431,7 +431,19 @@ t = Test()
 t.clicked = lambda x: x+7 #"clicked"
 assert t.clicked(7) == 14
 
+# issue 249
+x = [a.strip() for a in [
+  " foo ",
+  " bar ",
+]]
+assert x == ['foo', 'bar']
+
 # issue 250
 assert 2**3**4 == 2417851639229258349412352
+
+# issue 258
+a = [1, 2, 3]
+b, *c = a
+assert c == [2, 3]
 
 print('passed all tests')

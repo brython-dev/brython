@@ -2,8 +2,9 @@
 
 eval($B.InjectBuiltins())
 
-var $ObjectDict = _b_.object.$dict
-var str_hash = _b_.str.$dict.__hash__
+var $ObjectDict = _b_.object.$dict,
+    str_hash = _b_.str.$dict.__hash__,
+    $N = _b_.None
 
 // dictionary
 function $DictClass($keys,$values){
@@ -168,18 +169,18 @@ $DictDict.__delitem__ = function(self,arg){
     if(self.$jsobj){
         if(self.$jsobj[arg]===undefined){throw KeyError(arg)}
         delete self.$jsobj[arg]
-        return
+        return $N
     }
     switch(typeof arg) {
       case 'string':
         if (self.$string_dict[arg] === undefined) throw KeyError(_b_.str(arg))
         delete self.$string_dict[arg]
         delete self.$str_hash[str_hash(arg)]
-        return
+        return $N
       case 'number':
         if (self.$numeric_dict[arg] === undefined) throw KeyError(_b_.str(arg))
         delete self.$numeric_dict[arg]
-        return
+        return $N
     }
     // go with defaults
 
@@ -196,6 +197,7 @@ $DictDict.__delitem__ = function(self,arg){
     }
 
     if(self.$jsobj) delete self.$jsobj[arg]
+    return $N
 }
 
 $DictDict.__eq__ = function(self,other){
@@ -281,10 +283,10 @@ $DictDict.__init__ = function(self){
             var i = obj.length
             var si = $DictDict.__setitem__
             while(i-->0) si(self, obj[i-1][0], obj[i-1][1])
-            return
+            return $N
         }else if(isinstance(obj,dict)){
             $copy_dict(self, obj)
-            return
+            return $N
         }
 
         if(obj.__class__===$B.JSObject.$dict){
@@ -295,7 +297,7 @@ $DictDict.__init__ = function(self){
             // Attribute $jsobj is used to update the original JS object
             // when the dictionary is modified
             self.$jsobj = obj.js
-            return
+            return $N
         }
     } //switch
 
@@ -306,7 +308,7 @@ $DictDict.__init__ = function(self){
     if (args.length>0) {
         if(isinstance(args[0],dict)){
             $B.$copy_dict(self, args[0])
-            return
+            return $N
         }
 
         // format dict([(k1,v1),(k2,v2)...])
@@ -332,6 +334,7 @@ $DictDict.__init__ = function(self){
         }
     }//if
     if($DictDict.__len__(kw) > 0) $copy_dict(self, kw)
+    return $N
 }
 
 var $dict_iterator = $B.$iterator_class('dict iterator')
@@ -404,10 +407,10 @@ $DictDict.__setitem__ = function(self,key,value){
       case 'string':
         self.$string_dict[key]=value
         self.$str_hash[str_hash(key)]=key
-        return
+        return $N
       case 'number':
         self.$numeric_dict[key]=value
-        return
+        return $N
     }
     
     // if we got here the key is more complex, use default method
@@ -417,12 +420,12 @@ $DictDict.__setitem__ = function(self,key,value){
 
     if(self.$numeric_dict[_key]!==undefined && _eq(_key)){
         self.$numeric_dict[_key] = value
-        return
+        return $N
     }
     var sk = self.$str_hash[_key]
     if(sk!==undefined && _eq(sk)){
         self.$string_dict[sk] = value
-        return
+        return $N
     }
 
     
@@ -431,7 +434,7 @@ $DictDict.__setitem__ = function(self,key,value){
        while(i--) {
            if (_eq(self.$object_dict[_key][i][0])) {
               self.$object_dict[_key][i]=[key, value]
-              return
+              return $N
            }
        }
        // if we got here this key is not in the object
@@ -439,7 +442,7 @@ $DictDict.__setitem__ = function(self,key,value){
     } else {
        self.$object_dict[_key]=[[key, value]]
     }
-
+    return $N
 }
 
 $DictDict.__str__ = $DictDict.__repr__
@@ -456,6 +459,7 @@ $DictDict.clear = function(self){
     self.$object_dict={}
 
     if(self.$jsobj) self.$jsobj={}
+    return $N
 }
 
 $DictDict.copy = function(self){
@@ -574,6 +578,7 @@ $DictDict.update = function(self){
     }
     var kw = $ns['kw']
     $copy_dict(self, kw)
+    return $N
 }
 
 function dict(args, second){

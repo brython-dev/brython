@@ -984,6 +984,7 @@ function $BodyCtx(context){
     while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
     var tree_node = ctx_node.node
     var body_node = new $Node()
+    body_node.line_num = tree_node.line_num
     tree_node.insert(0,body_node)
     return new $NodeCtx(body_node)
 }
@@ -3005,8 +3006,9 @@ function $IdCtx(context,value){
 
     var scope = $get_scope(this)
     
-    if(context.type=='target_list'){
-        // An id defined as a target in a "for" loop is bound
+    if(context.type=='target_list' || context.type=='packed'){
+        // An id defined as a target in a "for" loop, or as "packed" 
+        // (eg "a, *b = [1, 2, 3]") is bound
         $B.bound[scope.id][value]=true
         this.bound = true
     }

@@ -1,6 +1,6 @@
 ;(function($B){
 
-var _ = $B.builtins
+var _ = $B.builtins, $N = _.None
 
 // set
 
@@ -99,12 +99,12 @@ $SetDict.__init__ = function(self){
     for(var i=1, _len_i = arguments.length; i < _len_i;i++){
         args.push(arguments[i])
     }
-    if(args.length==0) return
+    if(args.length==0) return $N
     if(args.length==1){    // must be an iterable
         var arg=args[0]
         if(_.isinstance(arg,[set,frozenset])){
             self.$items = arg.$items
-            return
+            return $N
         }
         try{
             var iterable = _.iter(arg)
@@ -124,6 +124,7 @@ $SetDict.__init__ = function(self){
     } else {
         throw _.TypeError("set expected at most 1 argument, got "+args.length)
     }
+    return $N
 }
 
 var $set_iterator = $B.$iterator_class('set iterator')
@@ -236,7 +237,7 @@ $SetDict.add = function(self,item){
     if(self.$num && !(typeof item=='number')){self.$num=false}
     if(self.$num||self.$str){
         if(self.$items.indexOf(item)==-1){self.$items.push(item)}
-        return
+        return $N
     }
     var cfunc = _.getattr(item,'__eq__')
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
@@ -244,9 +245,10 @@ $SetDict.add = function(self,item){
         catch(err){void(0)} // if equality test throws exception
     }
     self.$items.push(item)
+    return $N
 }
 
-$SetDict.clear = function(self){self.$items = []}
+$SetDict.clear = function(self){self.$items = []; return $N}
 
 $SetDict.copy = function(self){
     var res = set() // copy returns an instance of set, even for subclasses
@@ -274,7 +276,7 @@ $SetDict.difference_update = function(self,s){
               }
            }
        }
-       return
+       return $N
     }
 }
 
@@ -298,11 +300,13 @@ $SetDict.intersection_update = function(self,s){
        }
        self=set(_res)
     }
+    return $N
 }
 
 $SetDict.discard = function(self,item){
     try{$SetDict.remove(self,item)}
     catch(err){if(err.__name__!=='LookupError'){throw err}}
+    return $N
 }
 
 $SetDict.isdisjoint = function(self,other){
@@ -322,23 +326,24 @@ $SetDict.remove = function(self,item){
        var _i=self.$items.indexOf(item) 
        if (_i == -1) throw _.LookupError('missing item ' + _.repr(item)) 
        self.$items.splice(_i,1)
-       return
+       return $N
     }
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
         if(_.getattr(self.$items[i],'__eq__')(item)){
             self.$items.splice(i,1)
-            return _.None
+            return $N
         }
     }
     throw _.KeyError(item)
 }
 
 $SetDict.update = function(self,other){
-    if (other === undefined || other.$items === undefined) return
+    if (other === undefined || other.$items === undefined) return $N
 
     for(var i=0, _len_i = other.$items.length; i < _len_i; i++) {
         $SetDict.add(self,other.$items[i])
     }
+    return $N
 }
 
 /*
@@ -353,7 +358,7 @@ $SetDict.symmetric_difference = function(self, other){
     return $SetDict.__xor__(self, other, 1)
 }
 $SetDict.difference = function(self, other){
-    $SetDict.__sub__(self, other, 1)
+    return $SetDict.__sub__(self, other, 1)
 }
 $SetDict.intersection = function(self, other){
     return $SetDict.__and__(self, other, 1)

@@ -11,9 +11,8 @@ var $ObjectDict = _b_.object.$dict
 $B.$comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
 
 function abs(obj){
-    if(isinstance(obj,_b_.int)) return _b_.int(Math.abs(obj))
-    if(isinstance(obj,_b_.float)) return _b_.float(Math.abs(obj))
-    if(hasattr(obj,'__abs__')) return getattr(obj,'__abs__')()
+    if(isinstance(obj,[_b_.int, _b_.float])){return _b_.int(Math.abs(obj))};
+    if(hasattr(obj,'__abs__')){return getattr(obj,'__abs__')()};
 
     throw _b_.TypeError("Bad operand type for abs(): '"+$B.get_class(obj)+"'")
 }
@@ -197,9 +196,11 @@ function delattr(obj, attr) {
         }
     }
     if(res!==undefined && res.__delete__!==undefined){
-        return res.__delete__(res,obj,attr)
+        res.__delete__(res,obj,attr)
+    }else{
+        getattr(obj,'__delattr__')(attr)
     }
-    getattr(obj,'__delattr__')(attr)
+    return None
 }
 
 function dir(obj){
@@ -919,11 +920,20 @@ function next(obj){
     throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not an iterator")
 }
 
-var $NotImplementedDict = {__class__:$B.$type,__name__:'NotImplementedType'}
-$NotImplementedDict.__mro__ = [$NotImplementedDict,$ObjectDict]
-$NotImplementedDict.__repr__ = $NotImplementedDict.__str__ = function(){return 'NotImplemented'}
 
-var NotImplemented = {__class__ : $NotImplementedDict,}
+function _NotImplemented(){return {__class__:_NotImplemented.$dict}}
+_NotImplemented.__class__ = $B.$factory
+
+_NotImplemented.$dict = {
+    $factory: _NotImplemented,
+    __class__: $B.$type,
+    __name__: 'NotImplementedType'
+}
+_NotImplemented.$dict.__mro__ = [_NotImplemented.$dict, $ObjectDict]
+
+var NotImplemented = {__class__ : _NotImplemented.$dict, 
+    __str__: function(){return 'NotImplemented'}
+}
 
 function $not(obj){return !bool(obj)}
 
@@ -978,6 +988,7 @@ function $print(){
         args = $ns['args']
 
     getattr(file,'write')(args.map(_b_.str).join(sep)+end)
+    return None
 }
 $print.__name__ = 'print'
 $print.is_func = true
@@ -1244,7 +1255,7 @@ function setattr(obj,attr,value){
       case '__class__':
         // Setting the attribute __class__ : value is the factory function,
         // we must set __class__ to the class dictionary
-        obj.__class__ = value.$dict;return
+        obj.__class__ = value.$dict;return None
         break
     }
     
@@ -1254,8 +1265,8 @@ function setattr(obj,attr,value){
         if(obj.$dict.$methods && typeof value=='function'){
             // update attribute $methods
             obj.$dict.$methods[attr] = $B.make_method(attr, obj.$dict, value, value)
-            return
-        }else{obj.$dict[attr]=value;return}
+            return None
+        }else{obj.$dict[attr]=value;return None}
     }
     
     var res = obj[attr], klass=$B.get_class(obj)
@@ -1270,10 +1281,10 @@ function setattr(obj,attr,value){
     if(res!==undefined){
         // descriptor protocol : if obj has attribute attr and this attribute 
         // has a method __set__(), use it
-        if(res.__set__!==undefined) return res.__set__(res,obj,value)
+        if(res.__set__!==undefined){res.__set__(res,obj,value); return None}
         var __set__ = getattr(res,'__set__',null)
         if(__set__ && (typeof __set__=='function')) {
-            return __set__.apply(res,[obj,value])
+            __set__.apply(res,[obj,value]);return None
         }
     }
     
@@ -1285,8 +1296,8 @@ function setattr(obj,attr,value){
             if(setattr){break}
         }
     }
-    if(!setattr){obj[attr]=value;return}
-    setattr(obj,attr,value)
+    if(!setattr){obj[attr]=value}else{setattr(obj,attr,value)}
+    return None
 }
 
 // slice

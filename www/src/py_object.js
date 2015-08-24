@@ -51,7 +51,7 @@ var opnames = ['add','sub','mul','truediv','floordiv','mod','pow',
     'lshift','rshift','and','xor','or']
 var opsigns = ['+','-','*','/','//','%','**','<<','>>','&','^', '|']
 
-$ObjectDict.__delattr__ = function(self,attr){delete self[attr]}
+$ObjectDict.__delattr__ = function(self,attr){delete self[attr]; return _b_.None}
 
 $ObjectDict.__dir__ = function(self) {
     var objects = [self], pos=1
@@ -262,7 +262,7 @@ $ObjectDict.__hash__ = function (self) {
     return $B.$py_next_hash;
 }
 
-$ObjectDict.__init__ = function(){}
+$ObjectDict.__init__ = function(){return _b_.None}
 
 $ObjectDict.__le__ = $ObjectNI('__le__','<=')
 
@@ -306,6 +306,7 @@ $ObjectDict.__setattr__ = function(self,attr,val){
         }
     }
     self[attr] = val
+    return _b_.None
 }
 $ObjectDict.__setattr__.__str__ = function(){return 'method object.setattr'}
 

@@ -119,6 +119,7 @@ $B.make_node = function(top_node, node){
 
         }
 
+        new_node.is_yield = (ctype=='yield'||ctype=='return')
         new_node.is_cond = is_cond
         new_node.is_except = is_except
         new_node.is_if = ctype=='condition' && ctx.token=="if"
@@ -164,6 +165,7 @@ $B.genNode = function(data, parent){
         res.is_else = this.is_else
         res.loop_num = this.loop_num
         res.loop_start = this.loop_start
+        res.is_yield = this.is_yield
         return res
     }
 
@@ -203,6 +205,7 @@ $B.genNode = function(data, parent){
         res.loop_num = this.loop_num
         res.loop_start = this.loop_start
         res.no_break = true
+        res.is_yield = this.is_yield
         for(var i=0, _len_i = this.children.length; i < _len_i;i++){
             res.addChild(this.children[i].clone_tree(exit_node, head))
             if(this.children[i].is_break){res.no_break=false}
@@ -234,6 +237,10 @@ $B.genNode = function(data, parent){
         res[pos++]='\n'
         for(var i=0, _len_i = this.children.length; i < _len_i;i++){
             res[pos++]=this.children[i].src(indent+1)
+            // If child is a "yield" node, the Javascript code is a "return"
+            // so it's no use adding followin nodes (and it raises a
+            // SyntaxError on Firefox)
+            if(this.children[i].is_yield){break}
         }
         if(this.has_child) res[pos++]='\n'+this.indent_src(indent)+'}\n'
         return res.join('')
@@ -317,7 +324,7 @@ $BRGeneratorDict.__next__ = function(self){
         
         self._next = $B.$generators[self.iter_id]
     }
-
+    
     // Cannot resume a generator already running
     if(self.gi_running){
         throw _b_.ValueError("ValueError: generator already executing")
@@ -497,6 +504,7 @@ $BRGeneratorDict.__next__ = function(self){
 
     self.next_root = root
     var next_src = root.src()+'\n)()'
+    console.log(next_src)
     try{eval(next_src)}
     catch(err){console.log('error '+err+'\n'+next_src);throw err}
 

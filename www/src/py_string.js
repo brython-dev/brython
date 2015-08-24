@@ -107,6 +107,7 @@ $StringDict.__hash__ = function(self) {
 $StringDict.__init__ = function(self,arg){
     self.valueOf = function(){return arg}
     self.toString = function(){return arg}
+    return _b_.None
 }
 
 var $str_iterator = $B.$iterator_class('str_iterator')
@@ -725,7 +726,7 @@ $StringDict.__repr__ = function(self){
     return res
 }
 
-$StringDict.__setattr__ = function(self,attr,value){setattr(self,attr,value)}
+$StringDict.__setattr__ = function(self,attr,value){return setattr(self,attr,value)}
 
 $StringDict.__setitem__ = function(self,attr,value){
     throw _b_.TypeError("'str' object does not support item assignment")
