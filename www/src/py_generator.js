@@ -120,7 +120,6 @@ $B.make_node = function(top_node, node){
         }
 
         new_node.is_yield = (ctype=='yield'||ctype=='return')
-        if(new_node.is_yield){console.log('ctype', ctype)}
         new_node.is_cond = is_cond
         new_node.is_except = is_except
         new_node.is_if = ctype=='condition' && ctx.token=="if"
@@ -312,7 +311,6 @@ $BRGeneratorDict.__next__ = function(self){
         // First iteration : run generator function to initialise the iterator
         
         var src = self.func_root.src()+'\n)()'
-        console.log('func root', src)
 
         try{eval(src)}
         catch(err){
@@ -320,7 +318,6 @@ $BRGeneratorDict.__next__ = function(self){
             clear_ns(self.iter_id)
             throw err
         }
-        console.log('eval func root ok')
         
         // The evaluation of the function creates a function referenced in the
         // global object __BRTHON__.$generators
@@ -342,7 +339,6 @@ $BRGeneratorDict.__next__ = function(self){
 
     // Call the function _next to yield a value
     try{
-        console.log('run _next\n', self._next+'')
         var res = self._next.apply(null, self.args)
     }catch(err){
         self._next = function(){
@@ -366,7 +362,6 @@ $BRGeneratorDict.__next__ = function(self){
         // the iteration stops
         self._next = function(){throw StopIteration("after generator return")}
         clear_ns(self.iter_id)
-        console.log('generator return')
         throw StopIteration('')
     }
 
