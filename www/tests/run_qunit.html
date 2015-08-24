@@ -49,9 +49,7 @@
       window.qunit_unittest_wrapper = function(test, result) {
         return function(assert) {
             test_call =  __BRYTHON__.builtins.getattr(test, '__call__')
-            __BRYTHON__.builtins.print(test_call)
             test_call(result);
-            __BRYTHON__.builtins.print('Ok')
             var msg = '';
             if (result.details !== __BRYTHON__.builtins.None) {
                 msg = '[' + result.lastOutcome + '] - ' + result.details;

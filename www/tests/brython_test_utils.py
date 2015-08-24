@@ -51,13 +51,14 @@ def discover_brython_test_modules():
 # TODO: Not needed if test cases are written in unittest style
 class BrythonModuleTestCase(unittest.TestCase):
     def __init__(self, modname, caption):
+        unittest.TestCase.__init__(self)
         self.modname = modname
         self.caption = caption
 
     def shortDescription(self):
         return "Brython test module '%s'" % self.caption
 
-    def runTest():
+    def runTest(self):
         status, tstart, tend = run_test_module(self.modname)
         # TODO: Record and output generated traceback
         self.assertEquals(1, status,
