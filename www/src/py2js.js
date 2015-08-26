@@ -1581,6 +1581,20 @@ function $ContinueCtx(context){
     }
 }
 
+function $DebuggerCtx(context){
+    // Class for keyword "continue"
+    this.type = 'continue'
+    this.parent = context
+    context.tree[context.tree.length]=this
+
+    this.toString = function(){return '(debugger)'}
+    
+    this.to_js = function(){
+        this.js_processed=true
+        return 'debugger'
+    }
+}
+
 function $DecoratorCtx(context){
     // Class for decorators
     this.type = 'decorator'
@@ -5917,6 +5931,8 @@ function $transition(context,token){
             return new $ClassCtx(context)
           case 'continue':
             return new $ContinueCtx(context)
+          case '__debugger__':
+            return new $DebuggerCtx(context)
           case 'break':
             return new $BreakCtx(context)
           case 'def':
@@ -6307,7 +6323,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         "for","lambda","try","finally","raise","def","from",
         "nonlocal","while","del","global","with",
         "as","elif","else","if","yield","assert","import",
-        "except","raise","in","not","pass","with","continue"
+        "except","raise","in","not","pass","with","continue","__debugger__"
         //"False","None","True","continue",
         // "and',"or","is"
         ]
