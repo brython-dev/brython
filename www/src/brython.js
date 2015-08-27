@@ -57,7 +57,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-08-24 22:11:12.707892"
+__BRYTHON__.compiled_date="2015-08-27 15:34:09.566312"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -6545,8 +6545,7 @@ return new Number(_sign * _sum * Math.pow(2,parseInt(_exponent.substring(1))))}
 $FloatDict.__getformat__=function(arg){if(arg=='double' ||arg=='float')return 'IEEE, little-endian'
 throw _b_.ValueError("__getformat__() argument 1 must be 'double' or 'float'")}
 $FloatDict.__getitem__=function(){throw _b_.TypeError("'float' object is not subscriptable")}
-function preformat(self,fmt){
-if(fmt.empty){return _b_.str(self)}
+function preformat(self,fmt){if(fmt.empty){return _b_.str(self)}
 if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type)==-1){throw _b_.ValueError("Unknown format code '"+fmt.type+
 "' for object of type 'float'")}
 if(isNaN(self)){if(fmt.type=='f'||fmt.type=='g'){return 'nan'}
@@ -6811,8 +6810,33 @@ if(isinstance(other,_b_.complex)){if(other.imag !=0)return False
 return self.valueOf()==other.real}
 if(hasattr(other,'__eq__'))return getattr(other,'__eq__')(self)
 return self.valueOf()===other}
-$IntDict.__format__=function(self,format_spec){if(format_spec=='')format_spec='d'
-return _b_.str.$dict.__mod__('%'+format_spec,self)}
+function preformat(self,fmt){if(fmt.empty){return _b_.str(self)}
+if(fmt.type && 'bcdoxXn'.indexOf(fmt.type)==-1){throw _b_.ValueError("Unknown format code '"+fmt.type+
+"' for object of type 'int'")}
+switch(fmt.type){case undefined:
+case 'd':
+return self.toString()
+case 'b':
+return self.toString(2)
+case 'c':
+return _b_.chr(self)
+case 'o':
+return self.toString(8)
+case 'x':
+return self.toString(16)
+case 'X':
+return self.toString(16).toUpperCase()
+case 'n':
+return self }
+return res}
+$IntDict.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec)
+fmt.align=fmt.align ||'>'
+var res=preformat(self,fmt)
+if(fmt.comma){var len=res.length,nb=Math.ceil(res.length/3),chunks=[]
+for(var i=0;i<nb;i++){chunks.push(res.substring(len-3*i-3,len-3*i))}
+chunks.reverse()
+res=chunks.join(',')}
+return $B.format_width(res,fmt)}
 $IntDict.__floordiv__=function(self,other){if(isinstance(other,int)){if(other==0)throw ZeroDivisionError('division by zero')
 return Math.floor(self/other)}
 if(isinstance(other,_b_.float)){if(!other.valueOf())throw ZeroDivisionError('division by zero')
@@ -7729,10 +7753,13 @@ $StringDict.__eq__=function(self,other){if(other===undefined){
 return self===str}
 if(_b_.isinstance(other,_b_.str)){return other.valueOf()==self.valueOf()}
 return other===self.valueOf()}
-$StringDict.__format__=function(self,arg){var _fs=$FormattableString(self.valueOf())
-var args=[],pos=0
-for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-return _fs.strformat(arg)}
+function preformat(self,fmt){if(fmt.empty){return _b_.str(self)}
+if(fmt.type && fmt.type!='s'){throw _b_.ValueError("Unknown format code '"+fmt.type+
+"' for object of type 'str'")}
+return self}
+$StringDict.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec)
+fmt.align=fmt.align ||'<'
+return $B.format_width(preformat(self,fmt),fmt)}
 $StringDict.__getitem__=function(self,arg){if(isinstance(arg,_b_.int)){var pos=arg
 if(arg<0)pos+=self.length
 if(pos>=0 && pos<self.length)return self.charAt(pos)
@@ -7749,7 +7776,8 @@ for(var i=start;i<stop;i+=step)res +=self.charAt(i)}else{
 if(stop>=start)return ''
 for(var i=start;i>=stop;i+=step)res +=self.charAt(i)}
 return res}
-if(isinstance(arg,bool))return self.__getitem__(_b_.int(arg))}
+if(isinstance(arg,bool))return self.__getitem__(_b_.int(arg))
+throw _b_.TypeError('string indices must be integers')}
 $StringDict.__hash__=function(self){if(self===undefined){return $StringDict.__hashvalue__ ||$B.$py_next_hash-- }
 var hash=1;
 for(var i=0,_len_i=self.length;i < _len_i;i++){hash=(101*hash + self.charCodeAt(i))& 0xFFFFFFFF}
@@ -7907,10 +7935,9 @@ flags.left=true}
 var space_flag=function(val,flags){flags.space=true}
 var sign_flag=function(val,flags){flags.sign=true}
 var alternate_flag=function(val,flags){flags.alternate=true}
-var char_to_func_mapping={'s': str_format,'d': num_format,'i': num_format,'u': num_format,'o': octal_format,'r': repr_format,'a': ascii_format,'g': function(val,flags){return floating_point_format(val,false,flags)},'G': function(val,flags){return floating_point_format(val,true,flags)},'f': function(val,flags){return floating_point_decimal_format(val,false,flags)},'F': function(val,flags){return floating_point_decimal_format(val,true,flags)},'e': function(val,flags){return floating_point_exponential_format(val,false,flags)},'E': function(val,flags){return floating_point_exponential_format(val,true,flags)},'x': function(val,flags){return signed_hex_format(val,false,flags)},'X': function(val,flags){return signed_hex_format(val,true,flags)},'c': single_char_format,'0': function(val,flags){return num_flag('0',flags)},'1': function(val,flags){return num_flag('1',flags)},'2': function(val,flags){return num_flag('2',flags)},'3': function(val,flags){return num_flag('3',flags)},'4': function(val,flags){return num_flag('4',flags)},'5': function(val,flags){return num_flag('5',flags)},'6': function(val,flags){return num_flag('6',flags)},'7': function(val,flags){return num_flag('7',flags)},'8': function(val,flags){return num_flag('8',flags)},'9': function(val,flags){return num_flag('9',flags)},'-': neg_flag,' ': space_flag,'+': sign_flag,'.': decimal_point_flag,'#': alternate_flag}
+var char_mapping={'s': str_format,'d': num_format,'i': num_format,'u': num_format,'o': octal_format,'r': repr_format,'a': ascii_format,'g': function(val,flags){return floating_point_format(val,false,flags)},'G': function(val,flags){return floating_point_format(val,true,flags)},'f': function(val,flags){return floating_point_decimal_format(val,false,flags)},'F': function(val,flags){return floating_point_decimal_format(val,true,flags)},'e': function(val,flags){return floating_point_exponential_format(val,false,flags)},'E': function(val,flags){return floating_point_exponential_format(val,true,flags)},'x': function(val,flags){return signed_hex_format(val,false,flags)},'X': function(val,flags){return signed_hex_format(val,true,flags)},'c': single_char_format,'0': function(val,flags){return num_flag('0',flags)},'1': function(val,flags){return num_flag('1',flags)},'2': function(val,flags){return num_flag('2',flags)},'3': function(val,flags){return num_flag('3',flags)},'4': function(val,flags){return num_flag('4',flags)},'5': function(val,flags){return num_flag('5',flags)},'6': function(val,flags){return num_flag('6',flags)},'7': function(val,flags){return num_flag('7',flags)},'8': function(val,flags){return num_flag('8',flags)},'9': function(val,flags){return num_flag('9',flags)},'-': neg_flag,' ': space_flag,'+': sign_flag,'.': decimal_point_flag,'#': alternate_flag}
 var UnsupportedChar=function(){this.name="UnsupportedChar"}
-$StringDict.__mod__=function(val,args){return $legacy_format(val,args,char_to_func_mapping)}
-var $legacy_format=function(val,args,char_mapping){var length=val.length
+$StringDict.__mod__=function(self,args){var length=self.length
 var pos=0 |0
 var argpos=null
 if(args && _b_.isinstance(args,_b_.tuple)){argpos=0 |0}
@@ -7922,56 +7949,50 @@ if(!rslt){throw _b_.ValueError("incomplete format key")}
 var key=rslt[1]
 newpos +=rslt[0].length
 try{
-var val=_b_.getattr(args.__class__,'__getitem__')(args,key)}catch(err){if(err.name==="KeyError"){throw err}
+var self=_b_.getattr(args.__class__,'__getitem__')(args,key)}catch(err){if(err.name==="KeyError"){throw err}
 throw _b_.TypeError("format requires a mapping")}
-return get_string_value(s,val)}
+return get_string_value(s,self)}
 var $get_arg_string=function(s){
-var val
+var self
 if(argpos===null){
-val=args}else{
+self=args}else{
 try{
-val=args[argpos++]}
+self=args[argpos++]}
 catch(err){if(err.name==="IndexError"){throw _b_.TypeError("not enough arguments for format string")}else{
 throw err}}}
-return get_string_value(s,val)}
-var get_string_value=function(s,val){
+return get_string_value(s,self)}
+var get_string_value=function(s,self){
 var flags={'pad_char': ' '}
 do{
 var func=char_mapping[s[newpos]]
 try{
 if(func===undefined){throw new UnsupportedChar()}else{
-var ret=func(val,flags)
+var ret=func(self,flags)
 if(ret !==undefined){return ret}
 ++newpos}}catch(err){if(err.name==="UnsupportedChar"){invalid_char=s[newpos]
 if(invalid_char===undefined){throw _b_.ValueError("incomplete format")}
 throw _b_.ValueError("unsupported format character '" + invalid_char + 
 "' (0x" + invalid_char.charCodeAt(0).toString(16)+ ") at index " + newpos)}else if(err.name==="NotANumber"){var try_char=s[newpos]
-var cls=val.__class__
-if(!cls){if(typeof(val)==='string'){cls='str'}else{
-cls=typeof(val)}}else{
+var cls=self.__class__
+if(!cls){if(typeof(self)==='string'){cls='str'}else{
+cls=typeof(self)}}else{
 cls=cls.__name__}
 throw _b_.TypeError("%" + try_char + " format: a number is required, not " + cls)}else{
 throw err}}}while(true)}
 do{
-var newpos=val.indexOf('%',pos)
-if(newpos < 0){ret +=val.substring(pos)
+var newpos=self.indexOf('%',pos)
+if(newpos < 0){ret +=self.substring(pos)
 break}
-ret +=val.substring(pos,newpos)
+ret +=self.substring(pos,newpos)
 ++newpos
-if(newpos < length){if(val[newpos]==='%'){ret +='%'}else{
+if(newpos < length){if(self[newpos]==='%'){ret +='%'}else{
 var tmp
-if(val[newpos]==='('){++newpos
-ret +=$get_kwarg_string(val)}else{
-ret +=$get_arg_string(val)}}}else{
+if(self[newpos]==='('){++newpos
+ret +=$get_kwarg_string(self)}else{
+ret +=$get_arg_string(self)}}}else{
 throw _b_.ValueError("incomplete format")}
 pos=newpos + 1}while(pos < length)
 return ret}
-var char_to_new_format_mapping={'b': function(val,flags){number_check(val)
-val=val.toString(2)
-if(flags.alternate){val="0b" + val}
-return val},'n': function(val,flags){return floating_point_format(val,false,flags)},'N': function(val,flags){return floating_point_format(val,true,flags)}}
-for(k in char_to_func_mapping){char_to_new_format_mapping[k]=char_to_func_mapping[k]}
-$format_to_legacy=function(val,args){return $legacy_format(val,args,char_to_new_format_mapping)}
 $StringDict.__mro__=[$StringDict,$ObjectDict]
 $StringDict.__mul__=function(self,other){if(!isinstance(other,_b_.int)){throw _b_.TypeError(
 "Can't multiply sequence by non-int of type '"+
@@ -8060,219 +8081,66 @@ esc_sub +=sub.charAt(i)}
 var res=s.search(esc_sub)
 if(res==-1)return -1
 return start+res}
-var $FormattableString=function(format_string){
-this.format_string=format_string
-this._prepare=function(){
-var match=arguments[0]
-var p1='' + arguments[2]
-if(match=='%')return '%%'
-if(match.substring(0,1)==match.substring(match.length-1)){
-return match.substring(0,Math.floor(match.length/2))}
-if(p1.charAt(0)=='{' && p1.charAt(match.length-1)=='}'){p1=match.substring(1,p1.length-1)}
-var _repl
-if(match.length >=2){_repl=''}else{
-_repl=match.substring(1)}
-var _i=p1.indexOf(':')
-var _out
-if(_i > -1){_out=[p1.slice(0,_i),p1.slice(_i+1)]}else{_out=[p1]}
-var _field=_out[0]||''
-var _format_spec=_out[1]||''
-_out=_field.split('!')
-var _literal=_out[0]||''
-var _sep=_field.indexOf('!')> -1?'!': undefined 
-var _conv=_out[1]
-if(_sep && _conv===undefined){throw _b_.ValueError("end of format while looking for conversion specifier")}
-if(_conv !==undefined && _conv.length > 1){throw _b_.ValueError("expected ':' after format specifier")}
-if(_conv !==undefined && 'rsa'.indexOf(_conv)==-1){throw _b_.ValueError("Unknown conversion specifier " + _conv)}
-_name_parts=this.field_part.apply(null,[_literal])
-var _start=_literal.charAt(0)
-var _name=''
-if(_start=='' ||_start=='.' ||_start=='['){
-if(this._index===undefined){throw _b_.ValueError("cannot switch from manual field specification to automatic field numbering")}
-_name=this._index.toString()
-this._index+=1
-if(! _literal ){_name_parts.shift()}}else{
-_name=_name_parts.shift()[1]
-if(this._index !==undefined && !isNaN(_name)){
-if(this._index){throw _b_.ValueError("cannot switch from automatic field " +
-"numbering to manual field specification")
-this._index=undefined}}}
-var _empty_attribute=false
-var _k
-for(var i=0,_len_i=_name_parts.length;i < _len_i;i++){_k=_name_parts[i][0]
-var _v=_name_parts[i][1]
-var _tail=_name_parts[i][2]
-if(_v===''){_empty_attribute=true}
-if(_tail !==''){throw _b_.ValueError("Only '.' or '[' may follow ']' " +
-"in format field specifier")}}
-if(_name_parts && _k=='[' && ! 
-_literal.charAt(_literal.length)==']'){throw _b_.ValueError("Missing ']' in format string")}
-if(_empty_attribute){throw _b_.ValueError("Empty attribute in format string")}
-var _rv=''
-if(_format_spec.indexOf('{')!=-1){_format_spec=_format_spec.replace(this.format_sub_re,this._prepare)
-_rv=[_name_parts,_conv,_format_spec]
-if(this._nested[_name]===undefined){this._nested[_name]=[]
-this._nested_array.push(_name)}
-this._nested[_name].push(_rv)}else{
-_rv=[_name_parts,_conv,_format_spec]
-if(this._kwords[_name]===undefined){this._kwords[_name]=[]
-this._kwords_array.push(_name)}
-this._kwords[_name].push(_rv)}
-return '%(' + id(_rv)+ ')s'}
-this.format=function(){
-var $ns=$B.$MakeArgs1('format',0,{},[],arguments,{},'args','kwargs')
-var args=$ns['args']
-var kwargs=$ns['kwargs']
-if(args.length>0){for(var i=0,_len_i=args.length;i < _len_i;i++){
-getattr(kwargs,'__setitem__')(str(i),args[i])}}
-var _want_bytes=isinstance(this._string,str)
-var _params=_b_.dict()
-for(var i=0,_len_i=this._kwords_array.length;i < _len_i;i++){var _name=this._kwords_array[i]
-var _items=this._kwords[_name]
-var _var=getattr(kwargs,'__getitem__')(_name)
-var _value;
-if(hasattr(_var,'value')){_value=getattr(_var,'value')}else{
-_value=_var}
-for(var j=0,_len_j=_items.length;j < _len_j;j++){var _parts=_items[j][0]
-var _conv=_items[j][1]
-var _spec=_items[j][2]
-var _f=this.format_field.apply(null,[_value,_parts,_conv,_spec,_want_bytes])
-getattr(_params,'__setitem__')(id(_items[j]).toString(),_f)}}
-for(var i=0,_len_i=this._nested_array.length;i < _len_i;i++){var _name=this._nested_array[i]
-var _items=this._nested[i]
-var _var=getattr(kwargs,'__getitem__')(_name)
-var _value;
-if(hasattr(_var,'value')){_value=getattr(getattr(kwargs,'__getitem__')(_name),'value')}else{
-_value=_var}
-for(var j=0,_len_j=_items.length;j < _len_j;j++){var _parts=_items[j][0]
-var _conv=_items[j][1]
-var _spec=_items[j][2]
-_spec=$format_to_legacy(_spec,_params)
-var _f=this.format_field.apply(null,[_value,_parts,_conv,_spec,_want_bytes])
-getattr(_params,'__setitem__')(id(_items[j]).toString(),_f)}}
-return $format_to_legacy(this._string,_params)}
-this.format_field=function(value,parts,conv,spec,want_bytes){if(want_bytes===undefined)want_bytes=false
-for(var i=0,_len_i=parts.length;i < _len_i;i++){var _k=parts[i][0]
-var _part=parts[i][1]
-if(_k){if(!isNaN(_part)){value=value[parseInt(_part)]}else{
-value=getattr(value,_part)}}else{
-value=value[_part]}}
-if(conv){
-value=$format_to_legacy((conv=='r')&& '%r' ||'%s',value)}
-value=this.strformat(value,spec)
-if(want_bytes){return value.toString()}
-return value}
-this.strformat=function(value,format_spec){if(format_spec===undefined)format_spec=''
-if(!isinstance(value,[str,_b_.int])&& hasattr(value,'__format__')){return getattr(value,'__format__')(format_spec)}
-var _m=this.format_spec_re.test(format_spec)
-if(!_m)throw _b_.ValueError('Invalid conversion specification')
-var _match=this.format_spec_re.exec(format_spec)
-var _align=_match[1]
-var _sign=_match[2]
-var _prefix=_match[3]
-var _width=_match[4]
-var _comma=_match[5]
-var _precision=_match[6]
-var _conversion=_match[7]
-var _is_float=isinstance(value,_b_.float)
-var _is_integer=isinstance(value,_b_.int)
-var _is_numeric=_is_float ||_is_integer
-if(_prefix !='' && ! _is_numeric){if(_is_numeric){throw _b_.ValueError('Alternate form (#) not allowed in float format specifier')}else{
-throw _b_.ValueError('Alternate form (#) not allowed in string format specification')}}
-if(_is_numeric && _conversion=='n'){_conversion=_is_integer && 'd' ||'g'}else{
-if(_sign){if(! _is_numeric){throw _b_.ValueError('Sign not allowed in string format specification');}
-if(_conversion=='c'){throw("Sign not allowed with integer format specifier 'c'")}}}
-if(_comma !==''){value +=''
-var x=value.split('.')
-var x1=x[0];
-var x2=x.length > 1 ? '.' + x[1]: '';
-var rgx=/(\d+)(\d{3})/;
-while(rgx.test(x1)){x1=x1.replace(rgx,'$1' + ',' + '$2');}
-value=x1+x2 }
-var _rv
-if(_conversion !='' &&((_is_numeric && _conversion=='s')||
-(! _is_integer && 'coxX'.indexOf(_conversion)!=-1))){console.log(_conversion)
-throw _b_.ValueError('Fix me')}
-if(_conversion=='c')_conversion='s'
-_rv='%' + _prefix + _precision +(_conversion ||'s')
-_rv=$format_to_legacy(_rv,value)
-if(_sign !='-' && value >=0)_rv=_sign + _rv
-var _zero=false
-if(_width){_zero=_width.charAt(0)=='0'
-_width=parseInt(_width)}else{
-_width=0}
-if(_width <=_rv.length){if(! _is_float &&(_align=='=' ||(_zero && ! _align))){throw _b_.ValueError("'=' alignment not allowed in string format specifier")}
-return _rv}
-_fill=_align.substr(0,_align.length-1)
-_align=_align.substr(_align.length-1)
-if(! _fill){_fill=_zero && '0' ||' '}
-if(_align=='^'){_rv=getattr(_rv,'center')(_width,_fill)}else if(_align=='=' ||(_zero && ! _align)){if(! _is_numeric){throw _b_.ValueError("'=' alignment not allowed in string format specifier")}
-if(_value < 0 ||_sign !='-'){_rv=_rv.substring(0,1)+ getattr(_rv.substring(1),'rjust')(_width - 1,_fill)}else{
-_rv=getattr(_rv,'rjust')(_width,_fill)}}else if((_align=='>' ||_align=='=')||(_is_numeric && ! _aligned)){_rv=getattr(_rv,'rjust')(_width,_fill)}else if(_align=='<'){_rv=getattr(_rv,'ljust')(_width,_fill)}else{
-throw _b_.ValueError("'" + _align + "' alignment not valid")}
-return _rv}
-this.field_part=function(literal){if(literal.length==0)return[['','','']]
-var _matches=[]
-var _pos=0
-var _start='',_middle='',_end=''
-var arg_name=''
-if(literal===undefined)console.log(literal)
-var _lit=literal.charAt(_pos)
-while(_pos < literal.length &&
-_lit !=='[' && _lit !=='.'){arg_name +=_lit
-_pos++
-_lit=literal.charAt(_pos)}
-if(arg_name !='')_matches.push(['',arg_name,''])
-var attribute_name=''
-var element_index=''
-while(_pos < literal.length){var car=literal.charAt(_pos)
-if(car=='['){
-_start=_middle=_end=''
-_pos++
-car=literal.charAt(_pos)
-while(_pos < literal.length && car !==']'){_middle +=car
-_pos++
-car=literal.charAt(_pos)}
-_pos++
-if(car==']'){while(_pos < literal.length){_end+=literal.charAt(_pos)
-_pos++}}
-_matches.push([_start,_middle,_end])}else if(car=='.'){
-_middle=''
-_pos++
-car=literal.charAt(_pos)
-while(_pos < literal.length &&
-car !=='[' && 
-car !=='.'){
-_middle +=car
-_pos++
-car=literal.charAt(_pos)}
-_matches.push(['.',_middle,''])}}
-return _matches}
-this.format_str_re=new RegExp(
-'(%)' +
-'|((?!{)(?:{{)+' +
-'|(?:}})+(?!})' +
-'|{(?:[^{}](?:[^{}]+|{[^{}]*})*)?})','g'
-)
-this.format_sub_re=new RegExp('({[^{}]*})')
-this.format_spec_re=new RegExp(
-'((?:[^{}]?[<>=^])?)' + 
-'([\\-\\+ ]?)' + 
-'(#?)' + '(\\d*)' + '(,?)' + 
-'((?:\.\\d+)?)' + 
-'(.?)$' 
-)
-this._index=0
-this._kwords={}
-this._kwords_array=[]
-this._nested={}
-this._nested_array=[]
-this._string=format_string.replace(this.format_str_re,this._prepare)
-return this}
-$StringDict.format=function(self){var _fs=$FormattableString(self.valueOf())
-var args=[],pos=0
-for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-return _fs.format.apply(null,args)}
+function parse_format(fmt_string){
+var elts=fmt_string.split(':'),name,conv,spec,name_ext=[]
+if(elts.length==1){
+name=fmt_string}else{
+name=elts[0]
+spec=elts.splice(1).join(':')}
+var elts=name.split('!')
+if(elts.length>1){name=elts[0]
+conv=elts[1]
+if(conv.length!==1 ||'ras'.search(conv)==-1){throw _b_.ValueError('wrong conversion flag '+conv)}}
+if(name!==undefined){
+function name_repl(match){name_ext.push(match)
+return ''}
+var name_ext_re=/\.[_a-zA-Z][_a-zA-Z0-9]*|\[[_a-zA-Z][_a-zA-Z0-9]*\]|\[[0-9]+\]/g
+name=name.replace(name_ext_re,name_repl)}
+return{name: name,name_ext: name_ext,conv: conv,spec: spec||''}}
+$StringDict.format=function(self){var $=$B.$MakeArgs1('format',1,{self:null},['self'],arguments,{},'args','kw')
+var pos=0,_len=self.length,car,text='',parts=[],rank=0,defaults={}
+while(pos<_len){car=self.charAt(pos)
+if(car=='{' && self.charAt(pos+1)=='{'){
+text +='{'
+pos+=2}else if(car=='}' && self.charAt(pos+1)=='}'){
+text +='}'
+pos+=2}else if(car=='{'){
+parts.push(text)
+var end=pos+1,nb=1
+while(end<_len){if(self.charAt(end)=='{'){nb++;end++}
+else if(self.charAt(end)=='}'){nb--;end++
+if(nb==0){
+var fmt_string=self.substring(pos+1,end-1)
+var fmt_obj=parse_format(fmt_string)
+if(!fmt_obj.name){fmt_obj.name=rank+''
+rank++}
+if(fmt_obj.spec!==undefined){
+function replace_nested(name,key){return _b_.dict.$dict.__getitem__($.kw,key)}
+fmt_obj.spec=fmt_obj.spec.replace(/\{(.+?)\}/g,replace_nested)}
+parts.push(fmt_obj)
+text=''
+break}}else{end++}}
+if(nb>0){throw ValueError("wrong format "+self)}
+pos=end}else{text +=car;pos++}}
+if(text){parts.push(text)}
+var res='',fmt
+for(var i=0;i<parts.length;i++){
+if(typeof parts[i]=='string'){res +=parts[i];continue}
+fmt=parts[i]
+if(fmt.name.charAt(0).search(/\d/)>-1){
+var pos=parseInt(fmt.name),value=_b_.tuple.$dict.__getitem__($.args,pos)}else{
+var value=_b_.dict.$dict.__getitem__($.kw,fmt.name)}
+for(var j=0;j<fmt.name_ext.length;j++){var ext=fmt.name_ext[j]
+if(ext.charAt(0)=='.'){
+value=_b_.getattr(value,ext.substr(1))}else{
+var key=ext.substr(1,ext.length-2)
+if(key.charAt(0).search(/\d/)>-1){key=parseInt(key)}
+value=_b_.getattr(value,'__getitem__')(key)}}
+if(fmt.conv=='a'){value=_b_.ascii(value)}
+else if(fmt.conv=='r'){value=_b_.repr(value)}
+else if(fmt.conv=='s'){value=_b_.str(value)}
+res +=_b_.getattr(value,'__format__')(fmt.spec)}
+return res}
 $StringDict.format_map=function(self){throw NotImplementedError("function format_map not implemented yet");}
 $StringDict.index=function(self){
 var res=$StringDict.find.apply(self,arguments)
@@ -8509,17 +8377,20 @@ return $StringDict[attr].apply(null,args)}})($attr)}}
 $StringSubclassDict.__mro__=[$StringSubclassDict,$ObjectDict]
 $B.$StringSubclassFactory={__class__:$B.$factory,$dict:$StringSubclassDict}
 _b_.str=str
-$B.parse_format_spec=function(spec){if(spec==''){this.empty=true;return}
-var pos=0,aligns='<>=^',digits='0123456789',types='bcdeEfFgGnosxX%'
+$B.parse_format_spec=function(spec){if(spec==''){this.empty=true}
+else{var pos=0,aligns='<>=^',digits='0123456789',types='bcdeEfFgGnosxX%'
 var align_pos=aligns.indexOf(spec.charAt(0))
-if(align_pos!=-1){this.align=aligns[align_pos];this.fill=' ';pos++}
+if(align_pos!=-1){
+this.align=aligns[align_pos];this.fill=' ';pos++}
 else{align_pos=aligns.indexOf(spec.charAt(1))
-if(spec.charAt(1)&& align_pos!=-1){this.align=aligns[align_pos]
+if(spec.charAt(1)&& align_pos!=-1){
+this.align=aligns[align_pos]
 this.fill=spec.charAt(0)
 pos=2}}
-this.fill=this.fill ||' '
 var car=spec.charAt(pos)
-if(car=='+'||car=='-'||car==' '){this.sign=car;pos++;car=spec.charAt(pos)}
+if(car=='+'||car=='-'||car==' '){this.sign=car;
+pos++;
+car=spec.charAt(pos);}
 if(car=='#'){this.alternate=true;pos++;car=spec.charAt(pos)}
 if(car=='0'){this.sign_aware=true;pos++;car=spec.charAt(pos)}
 while(car && digits.indexOf(car)>-1){if(this.width===undefined){this.width=car}
@@ -8533,8 +8404,17 @@ pos+=2;car=spec.charAt(pos)
 while(car && digits.indexOf(car)>-1){this.precision+=car;pos++;car=spec.charAt(pos)}
 this.precision=parseInt(this.precision)}
 if(car && types.indexOf(car)>-1){this.type=car;pos++;car=spec.charAt(pos)}
-if(pos!==spec.length){
+if(pos!==spec.length){console.log('error',spec,this,pos,spec.charAt(pos))
 throw _b_.ValueError("Invalid format specifier")}}
+this.toString=function(){return(this.fill===undefined ? '' : _b_.str(this.fill))+
+(this.align||'')+
+(this.sign||'')+
+(this.alternate ? '#' : '')+
+(this.sign_aware ? '0' : '')+
+(this.width ||'')+
+(this.comma ? ',' : '')+
+(this.precision ? '.'+this.precision : '')+
+(this.type ||'')}}
 $B.format_width=function(s,fmt){if(fmt.width && s.length<fmt.width){var fill=fmt.fill ||' ',align=fmt.align ||'<',missing=fmt.width-s.length
 switch(align){case '<':
 return s+fill.repeat(missing)
@@ -8544,7 +8424,7 @@ case '=':
 if('+-'.indexOf(s.charAt(0))==0){return s.charAt(0)+fill.repeat(missing-1)+s}else{return fill.repeat(missing)+s }
 case '^':
 left=parseInt(missing/2)
-return fill.repeat(left)+s+(missing-left).repeat(fill)}}
+return fill.repeat(left)+s+fill.repeat(missing-left)}}
 return s}})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var $ObjectDict=_b_.object.$dict,str_hash=_b_.str.$dict.__hash__,$N=_b_.None
