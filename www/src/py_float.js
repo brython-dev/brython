@@ -123,7 +123,6 @@ $FloatDict.__getitem__ = function(){
 }
 
 function preformat(self, fmt){
-    // fix me..  this probably isn't correct..
     if(fmt.empty){return _b_.str(self)}
     if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type)==-1){
         throw _b_.ValueError("Unknown format code '"+fmt.type+
@@ -201,6 +200,7 @@ $FloatDict.__format__ = function(self, format_spec) {
     fmt.align = fmt.align || '>'
     return $B.format_width(preformat(self, fmt), fmt)
 }
+
 $FloatDict.__hash__ = function(self) {
     if (self === undefined) {
        return $FloatDict.__hashvalue__ || $B.$py_next_hash--  // for hash of float type (not instance of int)

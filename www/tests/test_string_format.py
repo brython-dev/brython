@@ -169,3 +169,6 @@ except ValueError as err:
     assert str(err) == "incomplete format key"
 else:
     raise Exception("Did not raise error")
+
+assert '{0:{fill}{align}16}'.format("hello", fill=0, align=">")=="00000000000hello"
+assert "I have {{}} bananas.".format() == "I have {} bananas."
