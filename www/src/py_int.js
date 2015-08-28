@@ -113,15 +113,15 @@ function preformat(self, fmt){
         case 'd':
             return self.toString()
         case 'b':
-            return self.toString(2)
+            return (fmt.alternate ? '0b' : '') + self.toString(2)
         case 'c':
             return _b_.chr(self)
         case 'o':
-            return self.toString(8)
+            return (fmt.alternate ? '0o' : '') + self.toString(8)
         case 'x':
-            return self.toString(16)
+            return (fmt.alternate ? '0x' : '') + self.toString(16)
         case 'X':
-            return self.toString(16).toUpperCase()
+            return (fmt.alternate ? '0X' : '') + self.toString(16).toUpperCase()
         case 'n':
             return self // fix me
     }

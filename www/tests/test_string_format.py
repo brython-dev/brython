@@ -193,3 +193,10 @@ assert "I have {:,} bananas.".format(42000) == "I have 42,000 bananas."
 assert "I have {:,} bananas.".format(42000.0) == "I have 42,000.0 bananas."
 assert "I have {:c} bananas.".format(42) == "I have * bananas."
 
+# other examples from Python docs
+assert "int: {0:d};  hex: {0:x};  oct: {0:o};  bin: {0:b}".format(42) == 'int: 42;  hex: 2a;  oct: 52;  bin: 101010'
+assert "int: {0:d};  hex: {0:#x};  oct: {0:#o};  bin: {0:#b}".format(42) == 'int: 42;  hex: 0x2a;  oct: 0o52;  bin: 0b101010'
+
+points = 19
+total = 22
+assert 'Correct answers: {:.2%}'.format(points/total) == 'Correct answers: 86.36%'
