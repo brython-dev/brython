@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython</title>
+<link rel="stylesheet" href="../doc/doc_brython.css">
+<link rel="stylesheet" href="console.css">
+
+<script type="text/javascript" src="../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../src/version_info.js"></script>
+<script type="text/javascript" src="../src/identifiers_re.js"></script>
+<script type="text/javascript" src="../src/py2js.js"></script>
+<script type="text/javascript" src="../src/py_object.js"></script>
+<script type="text/javascript" src="../src/py_type.js"></script>
+<script type="text/javascript" src="../src/py_utils.js"></script>
+<script type="text/javascript" src="../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../src/py_bytes.js"></script>
+<script type="text/javascript" src="../src/py_set.js"></script>
+<script type="text/javascript" src="../src/js_objects.js"></script>
+<script type="text/javascript" src="../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../src/py_import.js"></script>
+
+<script type="text/javascript" src="../src/py_string.js"></script>
+<script type="text/javascript" src="../src/py_int.js"></script>
+<script type="text/javascript" src="../src/py_long_int.js"></script>
+<script type="text/javascript" src="../src/py_float.js"></script>
+<script type="text/javascript" src="../src/py_complex.js"></script>
+<script type="text/javascript" src="../src/py_dict.js"></script>
+<script type="text/javascript" src="../src/py_list.js"></script>
+<script type="text/javascript" src="../src/py_generator.js"></script>
+<script type="text/javascript" src="../src/py_dom.js"></script>
+
+<script type="text/javascript" src="../src/builtin_modules.js"></script>
+<script type="text/javascript" src="../src/py_import_hooks.js"></script>
+<script type="text/javascript" src="../src/async.js"></script>
+
+<script type="text/javascript" src="../src/py_VFS.js"></script>
+
+<script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+<script src="ace/mode-python3.js" type="text/javascript" charset="utf-8"></script>
+<script src="ace/snippets/python.js" type="text/javascript" charset="utf-8"></script>
+
+<!-- <script src="debugger/acorn_interpreter.js" type="text/javascript" charset="utf-8"></script> -->
+<script src="debugger/acorn.js" type="text/javascript" charset="utf-8"></script>
+<script src="debugger/interpreter.js" type="text/javascript" charset="utf-8"></script>
+<script src="debugger/main.js" type="text/javascript" charset="utf-8"></script>
+
+</script>
+
+<script type="text/python3">
+from browser import document as doc, window
+from browser import html
+import header
+import debugger
+
+qs_lang,language = header.show('../')
+
+# other translations
+
+trans = {
+    'report_bugs':{'en':'Please report bugs in the ',
+                   'es':'Poner los bugs en el ',
+                   'fr':"Signalez les bugs dans l'"},
+    'test_page':{'en':'Tests page','es':'P&aacute;gina de pruebas','fr':'Page de tests'},
+    'run':{'en':'run','es':'ejecutar','fr':'ex?cuter'},
+    'clear':{'en':'clear','es':'borrar','fr':'effacer'}
+}
+
+for key in trans:
+    if key in doc:
+        doc[key].html = trans[key].get(language,trans[key]['en'])
+
+# link to test page
+tplink = doc['test_page']
+if qs_lang:
+    tplink.href += '?lang=%s' %qs_lang
+
+# bindings
+# next functions are defined in debugger.py
+doc['show_js'].bind('click',debugger.show_js)
+doc['run'].bind('click',debugger.run)
+doc['show_console'].bind('click',debugger.show_console)
+
+doc['debug'].bind('click',debugger.start_debugger)
+doc['step'].bind('click',debugger.step_debugger)
+doc['back'].bind('click',debugger.step_back_debugger)
+doc['stop'].bind('click',debugger.stop_debugger)
+
+# erase "main" div
+def clear_main(ev):
+    doc['main'].text = ''
+
+main_content = 'Zone with id="main" ; use it to test interaction with DOM elements'
+
+# add "main" div
+def add_main(ev):
+    global main_content
+    try:
+        # if "main" div already exists, save content and erase container
+        main_content = doc["main"].html
+        doc["main_container"].html = ""
+        doc["add_main"].text = 'Show "main" div'
+    except KeyError:
+        t = html.TABLE()
+        row = html.TR()
+        b = html.BUTTON('Clear')
+        b.bind('click', clear_main)
+        row <= html.TD(b)+html.TD(html.DIV(Id="main"))
+        t <= row
+        doc["main_container"] <= t
+        doc["main"].html = main_content
+        doc["add_main"].text = 'Hide "main" div'
+
+doc["add_main"].bind('click', add_main)
+
+</script>
+
+</head>
+<body onload="brython({debug:1, cache:'version'})">
+
+<table id=banner cellpadding=0 cellspacing=0>
+<tr id=banner_row >
+<td class="logo"><a href="../index.html"><img src="../brython.svg" class="logo"></a></td>
+</tr>
+</table>
+
+<div id="main_container"></div>
+
+<div style="text-align:center">Brython version: <span id="version"></span>
+</div>
+</center>
+
+<div id="container">
+<div id="left-div">
+<div style="padding: 3px 3px 3px 3px;">
+<button id="add_main">Add <b>&lt;div id=main&gt;</b></button>
+
+</div>
+  <div id="editor" style="width:100%;"></div>
+</div>
+
+<div id="right-div">
+<div style="padding: 3px 3px 3px 3px;">
+  <div style="float:left">
+    <button id="run"> ▶ Run</button>
+    <button id="debug"> ⏏ Start Debuger</button>
+    <button id="back" disabled> &#8676; Back</button>
+    <button id="step" disabled> &#8677; Step</button>
+    <button id="stop" disabled> ■ Stop</button>
+  </div>
+
+  <div style="float:right">
+    <button id="show_console">Python</button>
+    <button id="show_js">Javascript</button>
+  </div>
+</div>
+<div style="width:100%;height:100%;">
+<textarea id="console" autocomplete="off"></textarea>
+</div>
+</div>
+
+<div style="float:left;margin-top:50px">
+    <a href="//github.com/brython-dev/brython/issues" title="Please report Bugs on the GitHub Issue Tracker !">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="#000" width="16" height="16" viewBox="0 0 32 16"><path d="m31.9 10.5v-2.05l-6-.02c-.2-2.29-1-4.41-2.2-6.11h5.1l2.2-8.93-1.94-.5-1.83 7.39-5.44-.01c-.03-.02-.05-.04-.08-.06.2-.64.32-1.3.32-2 .01-3.37-2.66-6.11-5.95-6.12-3.32-.01-6 2.72-5.97 6.09-.01.7.11 1.36.31 1.98-.03.02-.05.04-.08.06h-5.51l-1.79-7.4-1.93.49 2.16 8.95h5.1c-1.24 1.7-2.06 3.8-2.25 6.12l-6-.02v2.05l6 .02c.11 1.46.48 2.83 1.04 4.08h-3.87l-2.2 8.93 1.94.5 1.83-7.39h3.51c1.83 2.48 4.59 4.09 7.68 4.06 3.1 0 5.86-1.57 7.7-4.06h3.51l1.79 7.39 1.93-.48-2.16-8.95h-3.87c.45-1.3.81-2.69.93-4.09l6 .02"/></svg>
+        Bugs?
+    </a><br>
+    <a href='index.html' id=test_page >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="#000"><path d="m7.75.5c-4.28 0-7.75 3.47-7.75 7.75 0 4.25 3.47 7.75 7.75 7.75 4.25 0 7.75-3.5 7.75-7.75 0-4.28-3.5-7.75-7.75-7.75m0 13.6c-3.21 0-5.81-2.6-5.81-5.81s2.6-5.81 5.81-5.81 5.81 2.6 5.81 5.81-2.6 5.81-5.81 5.81m-.97-9.72a.969 .969 0 0 0 1.94 0 .969 .969 0 1 0 -1.94 0m2.91.96a.969 .969 0 0 0 1.94 0 .969 .969 0 1 0 -1.94 0m-5.81 0a.969 .969 0 0 0 1.94 0 .969 .969 0 1 0 -1.94 0m2.91 5.81v.97h1.94v-.97l-.98-4.89z"/></svg>
+        Unittests?
+    </a>
+</div>
+
+</body>
+</html>
