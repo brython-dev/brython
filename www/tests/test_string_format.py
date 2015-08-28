@@ -170,5 +170,26 @@ except ValueError as err:
 else:
     raise Exception("Did not raise error")
 
+# issue 260
+c = 3-5j
+assert 'real part is {0.real}, imaginary part is {0.imag}.'.format(c) == "real part is 3.0, imaginary part is -5.0."
 assert '{0:{fill}{align}16}'.format("hello", fill=0, align=">")=="00000000000hello"
 assert "I have {{}} bananas.".format() == "I have {} bananas."
+assert "I have {{}} bananas.".format(2) == "I have {} bananas."
+assert "I have {{}} and {} bananas.".format(2) == "I have {} and 2 bananas."
+assert "I have {!r} bananas.".format("\\yellow") == r"I have '\\yellow' bananas."
+assert "I have {!a} bananas.".format("\\yellow") == r"I have '\\yellow' bananas."
+assert "I have {!a} bananas.".format("42₵") == r"I have '42\u20b5' bananas."
+assert "I have {:*<10} bananas.".format(42.5) == "I have 42.5****** bananas."
+assert "I have {:*<10} bananas.".format(42) == "I have 42******** bananas."
+assert "I have {:*^10} bananas.".format(42) == "I have ****42**** bananas."
+assert "I have {:*^10} bananas.".format(42.5) == "I have ***42.5*** bananas."
+assert "I have {:*=10} bananas.".format(-42) == "I have -*******42 bananas."
+assert "I have {:*=10} bananas.".format(-42.5) == "I have -*****42.5 bananas."
+assert "I have {:>10} bananas.".format(42) == "I have         42 bananas."
+assert "I have {:10} bananas.".format(42) == "I have         42 bananas."
+assert "I have {:10} bananas.".format(42.5) == "I have       42.5 bananas."
+assert "I have {:,} bananas.".format(42000) == "I have 42,000 bananas."
+assert "I have {:,} bananas.".format(42000.0) == "I have 42,000.0 bananas."
+assert "I have {:c} bananas.".format(42) == "I have * bananas."
+

@@ -179,7 +179,37 @@ for(var $op in $B.$comps){
 // add "reflected" methods
 $B.make_rmethods($ComplexDict)
 
+// Descriptors to return real and imag
+$ComplexDict.descriptors = {
+    'real': function(self){return new Number(self.real)},
+    'imag': function(self){return new Number(self.imag)}
+}
+
+var complex_re = /^(\d*\.?\d*)([\+\-]?)(\d*\.?\d*)(j?)$/
+
 var complex=function(real,imag){
+    if(typeof real=='string'){
+        if(imag!==undefined){
+            throw _b_.TypeError("complex() can't take second arg if first is a string")
+        }
+        var parts = complex_re.exec(real)
+        if(parts===null){
+            throw _b_.ValueError("complex() arg is a malformed string")
+        }else if(parts[1]=='.' || parts[3]=='.'){
+            throw _b_.ValueError("complex() arg is a malformed string")
+        }else if(parts[4]=='j'){
+            if(parts[2]==''){
+                real = 0; imag = parseFloat(parts[1])
+            }else{
+                real = parseFloat(parts[1])
+                imag = parts[3]=='' ? 1 : parseFloat(parts[3])
+                imag = parts[2]=='-' ? -imag : imag
+            }
+        }else{
+            real = parseFloat(parts[1])
+            imag = 0
+        }
+    }
     var res = {
         __class__:$ComplexDict,
         real:real || 0,

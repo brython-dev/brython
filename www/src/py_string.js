@@ -703,14 +703,16 @@ $StringDict.__mul__ = function(self,other){
 $StringDict.__ne__ = function(self,other){return other!==self.valueOf()}
 
 $StringDict.__repr__ = function(self){
-    if(self.search('"')==-1 && self.search("'")==-1){
-        return "'"+self+"'"
+    var res = self.replace(/\n/g,'\\\\n')
+    // escape the escape char
+    res = res.replace(/\\/g, '\\\\')
+    if(res.search('"')==-1 && res.search("'")==-1){
+        return "'"+res+"'"
     }else if(self.search('"')==-1){
-        return '"'+self+'"'
+        return '"'+res+'"'
     }
     var qesc = new RegExp("'","g") // to escape single quote
-    var res = self.replace(/\n/g,'\\\\n')
-    res = "'"+res.replace(qesc,"\\'")+"'"
+    res = "'"+res.replace(qesc,"\\'")+"'"    
     return res
 }
 
@@ -862,6 +864,8 @@ $StringDict.find = function(self){
     if(res==-1) return -1
     return start+res
 }
+
+// Next function used by method .format()
 
 function parse_format(fmt_string){
 
@@ -1589,8 +1593,8 @@ $B.format_width = function(s, fmt){
             case '>':
                 return fill.repeat(missing)+s
             case '=':
-                if('+-'.indexOf(s.charAt(0))==0){
-                    return s.charAt(0)+fill.repeat(missing-1)+s
+                if('+-'.indexOf(s.charAt(0))>-1){
+                    return s.charAt(0)+fill.repeat(missing)+s.substr(1)
                 }else{
                     return fill.repeat(missing)+s            
                 }

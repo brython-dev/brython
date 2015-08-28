@@ -57,7 +57,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-08-27 15:34:09.566312"
+__BRYTHON__.compiled_date="2015-08-28 08:44:21.125762"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4705,13 +4705,12 @@ if(!bool(elt))return false}catch(err){return true}}}
 function any(obj){var iterable=iter(obj)
 while(1){try{var elt=next(iterable)
 if(bool(elt))return true}catch(err){return false}}}
-function ascii(obj){
-function padWithLeadingZeros(string,pad){return new Array(pad+1-string.length).join("0")+ string;}
-function charEscape(charCode){if(charCode>255)return "\\u"+padWithLeadingZeros(charCode.toString(16),4)
-return "\\x" + padWithLeadingZeros(charCode.toString(16),2)}
-return obj.split("").map(function(char){var charCode=char.charCodeAt(0);
-return charCode > 127 ? charEscape(charCode): char;})
-.join("");}
+function ascii(obj){var res=repr(obj),res1='',cp
+for(var i=0;i<res.length;i++){cp=res.charCodeAt(i)
+if(cp<128){res1 +=res.charAt(i)}
+else if(cp<256){res1 +='\\x'+cp.toString(16)}
+else{res1 +='\\u'+cp.toString(16)}}
+return res1}
 function $builtin_base_convert_helper(obj,base){var prefix="";
 switch(base){case 2:
 prefix='0b';break;
@@ -4912,12 +4911,12 @@ if(typeof obj=='function'){if(attr !==undefined && obj[attr]!==undefined){if(att
 return obj[attr]}}}
 if(klass.$native){if(klass[attr]===undefined){var object_attr=_b_.object.$dict[attr]
 if(object_attr!==undefined){klass[attr]=object_attr}
+else if(klass.descriptors && klass.descriptors[attr]!==undefined){return klass.descriptors[attr](obj)}
 else{if(_default===undefined){throw _b_.AttributeError(klass.__name__+
 " object has no attribute '"+attr+"'")}
 return _default}}
 if(typeof klass[attr]=='function'){
 if(attr=='__new__')return klass[attr].apply(null,arguments)
-if(klass.descriptors && klass.descriptors[attr]!==undefined){return klass[attr].apply(null,[obj])}
 var method=function(){var args=[obj],pos=1
 for(var i=0;i<arguments.length;i++){args[pos++]=arguments[i]}
 return klass[attr].apply(null,args)}
@@ -5194,7 +5193,7 @@ function repr(obj){if(obj.__class__===$B.$factory){
 var func=$B.$type.__getattribute__(obj.$dict.__class__,'__repr__')
 return func(obj)}
 var func=getattr(obj,'__repr__')
-if(func!==undefined)return func.apply(obj)
+if(func!==undefined)return func(obj)
 throw _b_.AttributeError("object has no attribute __repr__")}
 var $ReversedDict={__class__:$B.$type,__name__:'reversed'}
 $ReversedDict.__mro__=[$ReversedDict,$ObjectDict]
@@ -6579,7 +6578,12 @@ if(fmt.type=='%'){res+='%'}
 return res}
 $FloatDict.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec)
 fmt.align=fmt.align ||'>'
-return $B.format_width(preformat(self,fmt),fmt)}
+var raw=preformat(self,fmt).split('.'),_int=raw[0]
+if(fmt.comma){var len=_int.length,nb=Math.ceil(_int.length/3),chunks=[]
+for(var i=0;i<nb;i++){chunks.push(_int.substring(len-3*i-3,len-3*i))}
+chunks.reverse()
+raw[0]=chunks.join(',')}
+return $B.format_width(raw.join('.'),fmt)}
 $FloatDict.__hash__=function(self){if(self===undefined){return $FloatDict.__hashvalue__ ||$B.$py_next_hash-- }
 var _v=self.valueOf()
 if(_v===Infinity)return 314159
@@ -7426,7 +7430,15 @@ $B.get_class(other).__name__ + "()")}
 $comp_func +='' 
 for(var $op in $B.$comps){eval("$ComplexDict.__"+$B.$comps[$op]+'__ = '+$comp_func.replace(/>/gm,$op))}
 $B.make_rmethods($ComplexDict)
-var complex=function(real,imag){var res={__class__:$ComplexDict,real:real ||0,imag:imag ||0}
+$ComplexDict.descriptors={'real': function(self){return new Number(self.real)},'imag': function(self){return new Number(self.imag)}}
+var complex_re=/^(\d*\.?\d*)([\+\-]?)(\d*\.?\d*)(j?)$/
+var complex=function(real,imag){if(typeof real=='string'){if(imag!==undefined){throw _b_.TypeError("complex() can't take second arg if first is a string")}
+var parts=complex_re.exec(real)
+if(parts===null){throw _b_.ValueError("complex() arg is a malformed string")}else if(parts[1]=='.' ||parts[3]=='.'){throw _b_.ValueError("complex() arg is a malformed string")}else if(parts[4]=='j'){if(parts[2]==''){real=0;imag=parseFloat(parts[1])}else{real=parseFloat(parts[1])
+imag=parts[3]=='' ? 1 : parseFloat(parts[3])
+imag=parts[2]=='-' ? -imag : imag}}else{real=parseFloat(parts[1])
+imag=0}}
+var res={__class__:$ComplexDict,real:real ||0,imag:imag ||0}
 res.__repr__=res.__str__=function(){if(real==0)return imag + 'j'
 return '('+real+'+'+imag+'j)'}
 return res}
@@ -8001,10 +8013,11 @@ $res=''
 for(var i=0;i<other;i++){$res+=self.valueOf()}
 return $res}
 $StringDict.__ne__=function(self,other){return other!==self.valueOf()}
-$StringDict.__repr__=function(self){if(self.search('"')==-1 && self.search("'")==-1){return "'"+self+"'"}else if(self.search('"')==-1){return '"'+self+'"'}
+$StringDict.__repr__=function(self){var res=self.replace(/\n/g,'\\\\n')
+res=res.replace(/\\/g,'\\\\')
+if(res.search('"')==-1 && res.search("'")==-1){return "'"+res+"'"}else if(self.search('"')==-1){return '"'+res+'"'}
 var qesc=new RegExp("'","g")
-var res=self.replace(/\n/g,'\\\\n')
-res="'"+res.replace(qesc,"\\'")+"'"
+res="'"+res.replace(qesc,"\\'")+"'" 
 return res}
 $StringDict.__setattr__=function(self,attr,value){return setattr(self,attr,value)}
 $StringDict.__setitem__=function(self,attr,value){throw _b_.TypeError("'str' object does not support item assignment")}
@@ -8421,7 +8434,7 @@ return s+fill.repeat(missing)
 case '>':
 return fill.repeat(missing)+s
 case '=':
-if('+-'.indexOf(s.charAt(0))==0){return s.charAt(0)+fill.repeat(missing-1)+s}else{return fill.repeat(missing)+s }
+if('+-'.indexOf(s.charAt(0))>-1){return s.charAt(0)+fill.repeat(missing)+s.substr(1)}else{return fill.repeat(missing)+s }
 case '^':
 left=parseInt(missing/2)
 return fill.repeat(left)+s+fill.repeat(missing-left)}}
