@@ -198,15 +198,15 @@
                         return !/^(__|_|\$)/.test(key);
                     });
 
-                    if (getLastRecordedFrame().type === 'endwhile' && getLastRecordedFrame().was_modified) {
-                        getLastRecordedFrame().next_line_no = obj.line_no;
-                    }
-                }
-                if (obj.type === 'endwhile') {
                     getLastRecordedFrame().next_line_no = obj.line_no;
+                    // if (getLastRecordedFrame().type === 'endwhile' && getLastRecordedFrame().was_modified) {
+                    //     getLastRecordedFrame().next_line_no = obj.line_no;
+                    // }
                 }
+                // if (obj.type === 'endwhile') {
+                // }
                 if (obj.type === 'afterwhile' || obj.type === 'eof') {
-                    getLastRecordedFrame().next_line_no = obj.line_no;
+                    // getLastRecordedFrame().next_line_no = obj.line_no;
                     getLastRecordedFrame().was_modified = true;
                     break;
                 }
