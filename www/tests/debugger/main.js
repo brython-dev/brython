@@ -178,7 +178,7 @@
     }
 
     /**
-     * Trace Function 
+     * Trace Function constructs a list of states of the program after each trace call
      * @param {[type]} obj [description]
      */
     function setTrace(obj) {
@@ -196,6 +196,9 @@
                     obj.var_names = Object.keys(obj.locals).filter(function (key) {
                         return !/^(__|_|\$)/.test(key);
                     });
+                }
+                if (obj.type==='endwhile') {
+                    getLastRecordedFrame().next_line_no = obj.line_no;
                 }
                 recordedFrames.push(obj);
                 break;
@@ -386,7 +389,8 @@
 
     /**
      * Inject Trace Function into Brython code
-     * The trace function is called every time a line, function call, return, output
+     * The trace function is called every time a line, output
+     * shoudl support function call, return later
      * @param  {String} code Brython Code to inject trace in
      * @return {String} trace injected code as string
      */
@@ -402,12 +406,12 @@
         do {
 
             newCode += code.substr(0, index);
-            newCode += traceWord + "({event:'line', frame:$B.last($B.frames_stack), line_no: " + line.line_no + "});\n";
+            newCode += traceWord + "({event:'line', frame:$B.last($B.frames_stack), line_no: " + line.line_no + ", next_line_no: " + (+line.line_no + 1) + "});\n";
             newCode += line.string;
             index += line.string.length;
             code = code.substr(index);
 
-            lastLineNo = line.line_no;
+            lastLineNo = +line.line_no;
             largestLine = largestLine>lastLineNo?largestLine:lastLineNo;
             line = getNextLine(code);
             if (line === null) {
@@ -466,7 +470,7 @@
             var re = new RegExp('^' + indent, 'm');
             var res = re.exec(code);
             newCode += code.substr(0, res.index);
-            newCode += traceWord + "({event:'line', frame:$B.last($B.frames_stack), line_no: " + lastLine + "});\n";
+            newCode += traceWord + "({event:'line', type:'endwhile', frame:$B.last($B.frames_stack), line_no: " + lastLine + ", next_line_no: " + (lastLine+1) + "});\n";
             newCode += indent;
             newCode += code.substr(res.index + indent.length);
             return newCode;

@@ -167,8 +167,8 @@ def debug_step(state):
 
     doc["console"].value = str(state.stdout)
 
-    editor.gotoLine(state.line_no)
-    session.addGutterDecoration(state.line_no, 'active')
+    editor.gotoLine(state.next_line_no)
+    session.addGutterDecoration(state.next_line_no, 'active')
 
     if (Debugger.is_last_step()):
         doc['step'].disabled = True
