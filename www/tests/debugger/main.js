@@ -55,6 +55,7 @@
     function setStepUpdateCallback(cb) {
         stepUpdate = cb;
     }
+
     function lastStepCallback(cb) {
         debugLastStep = cb;
     }
@@ -84,7 +85,7 @@
     }
 
     function getLastRecordedFrame() {
-        return recordedFrames[recordedFrames.length-1];
+        return recordedFrames[recordedFrames.length - 1];
     }
 
     function getCurrentFrame() {
@@ -119,7 +120,7 @@
      * @return {Boolean} [description]
      */
     function isLastStep() {
-        return currentStep === recordedFrames.length-1;
+        return currentStep === recordedFrames.length - 1;
     }
     /**
      * Is this first step
@@ -186,19 +187,28 @@
         // replace by event
         switch (obj.event) {
             case 'line':
-                if(!isRecorded) linePause = true;
-                obj.printerr =  obj.stderr =  obj.stdout = obj.printout = "";
-                if(getLastRecordedFrame()) {
+                if (!isRecorded) linePause = true;
+                obj.printerr = obj.stderr = obj.stdout = obj.printout = "";
+                if (getLastRecordedFrame()) {
                     obj.stdout = getLastRecordedFrame().stdout;
                     obj.stderr = getLastRecordedFrame().stderr;
                     obj.locals = obj.frame[1];
                     obj.globals = obj.frame[3];
-                    obj.var_names = Object.keys(obj.locals).filter(function (key) {
+                    obj.var_names = Object.keys(obj.locals).filter(function(key) {
                         return !/^(__|_|\$)/.test(key);
                     });
+
+                    if (getLastRecordedFrame().type === 'endwhile' && getLastRecordedFrame().was_modified) {
+                        getLastRecordedFrame().next_line_no = obj.line_no;
+                    }
                 }
-                if (obj.type==='endwhile') {
+                if (obj.type === 'endwhile') {
                     getLastRecordedFrame().next_line_no = obj.line_no;
+                }
+                if (obj.type === 'afterwhile' || obj.type === 'eof') {
+                    getLastRecordedFrame().next_line_no = obj.line_no;
+                    getLastRecordedFrame().was_modified = true;
+                    break;
                 }
                 recordedFrames.push(obj);
                 break;
@@ -217,7 +227,7 @@
         }
     }
 
-    function resetDebugger () {
+    function resetDebugger() {
         isRecorded = false;
         recordedFrames = [];
         recordedOut = [];
@@ -378,7 +388,8 @@
             //js=js.replace("@@", "\'", 'g')
         } catch (err) {
             errorrWhileDebugging(err);
-            $B.leave_frame();$B.leave_frame();
+            $B.leave_frame();
+            $B.leave_frame();
             if (err.$py_error === undefined) {
                 throw $B.exception(err);
             }
@@ -399,6 +410,9 @@
         var end = code.length;
         var newCode = "";
         var whileLine;
+        var codearr = code.split('\n');
+        codearr.splice(9, 0, traceWord + "({event:'line', type:'start', frame:$B.last($B.frames_stack), line_no: " + 0 + ", next_line_no: " + 1 + "});")
+        code = codearr.join('\n');
         var line = getNextLine(code);
         var lastLineNo = 1;
         var largestLine = 1;
@@ -406,13 +420,13 @@
         do {
 
             newCode += code.substr(0, index);
-            newCode += traceWord + "({event:'line', frame:$B.last($B.frames_stack), line_no: " + line.line_no + ", next_line_no: " + (+line.line_no + 1) + "});\n";
+            newCode += line.indentString + traceWord + "({event:'line', frame:$B.last($B.frames_stack), line_no: " + line.line_no + ", next_line_no: " + (+line.line_no + 1) + "});\n";
             newCode += line.string;
             index += line.string.length;
             code = code.substr(index);
 
             lastLineNo = +line.line_no;
-            largestLine = largestLine>lastLineNo?largestLine:lastLineNo;
+            largestLine = largestLine > lastLineNo ? largestLine : lastLineNo;
             line = getNextLine(code);
             if (line === null) {
                 break;
@@ -423,10 +437,10 @@
             }
             index = line.index;
         } while (~index);
-        codesplit = code.split(/^\;\$B\.leave_frame\(/m)
-        newCode+= codesplit[0] + traceWord + "({event:'line', type:'eof', frame:$B.last($B.frames_stack), line_no: " + (++largestLine) + ", next_line_no: " + (largestLine) + "});\n";
-        newCode += ';$B.leave_frame(' +codesplit[1];
-        
+        var codesplit = code.split(/^\;\$B\.leave_frame\(/m)
+        newCode += codesplit[0] + traceWord + "({event:'line', type:'eof', frame:$B.last($B.frames_stack), line_no: " + (++largestLine) + ", next_line_no: " + (largestLine) + "});\n";
+        newCode += ';$B.leave_frame(' + codesplit[1];
+
         console.log('debugger:\n\n' + newCode);
         return newCode;
 
@@ -435,6 +449,7 @@
             if (!match) return null;
             return {
                 indent: match[1].length,
+                indentString: match[1],
                 line_no: match[2],
                 string: match[0],
                 module: match[3],
@@ -470,8 +485,9 @@
             var re = new RegExp('^' + indent, 'm');
             var res = re.exec(code);
             newCode += code.substr(0, res.index);
-            newCode += traceWord + "({event:'line', type:'endwhile', frame:$B.last($B.frames_stack), line_no: " + lastLine + ", next_line_no: " + (lastLine+1) + "});\n";
+            newCode += whileLine.indentString + traceWord + "({event:'line', type:'endwhile', frame:$B.last($B.frames_stack), line_no: " + lastLine + ", next_line_no: " + (lastLine + 1) + "});\n";
             newCode += indent;
+            newCode += traceWord + "({event:'line', type:'afterwhile', frame:$B.last($B.frames_stack), line_no: " + (lastLine + 1) + ", next_line_no: " + (lastLine + 1) + "});\n";
             newCode += code.substr(res.index + indent.length);
             return newCode;
         }
@@ -496,7 +512,8 @@
             return res;
         } catch (err) {
             errorrWhileDebugging(err);
-            $B.leave_frame();$B.leave_frame();
+            $B.leave_frame();
+            $B.leave_frame();
             if (err.$py_error === undefined) {
                 throw $B.exception(err);
             }
@@ -582,7 +599,7 @@
                 };
             })();
             $locals["write"].$infos = {
-                __name__: cname+".write",
+                __name__: cname + ".write",
                 __defaults__: [],
                 __module__: "__main__",
                 __doc__: _b_.None,
@@ -620,9 +637,9 @@
     function setOutErr() {
         realStdOut = $B.stdout;
         realStdErr = $B.stderr;
-        var type = isRecorded?'record':'spy';
-        $B.stdout = outerr[type+'Out'];
-        $B.stderr = outerr[type+'Err'];
+        var type = isRecorded ? 'record' : 'spy';
+        $B.stdout = outerr[type + 'Out'];
+        $B.stderr = outerr[type + 'Err'];
     }
     /**
      * resetting back stdout to original stream before debugger ran

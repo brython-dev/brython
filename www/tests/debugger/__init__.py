@@ -159,6 +159,7 @@ def debug_stoped():
     doc['debug'].disabled = False
     doc['run'].disabled = False
     doc['step'].disabled = True
+    doc['back'].disabled = True
     doc['stop'].disabled = True
     editor.setHighlightActiveLine(False)
 
@@ -175,9 +176,9 @@ def debug_step(state):
     else:
         doc['step'].disabled = False
     if Debugger.is_first_step():
-        doc['back'].disabled = False
-    else:
         doc['back'].disabled = True
+    else:
+        doc['back'].disabled = False
 
 Debugger.on_debugging_started(debug_started)
 Debugger.on_debugging_end(debug_stoped)
