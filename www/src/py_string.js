@@ -964,12 +964,13 @@ $StringDict.format = function(self) {
                             rank++
                         }
 
-                        if(fmt_obj.spec!==undefined){    
+                        if(fmt_obj.spec!==undefined){
                             // "spec" may contain "nested replacement fields"
                             // In this case, evaluate them using the keyword
                             // arguments passed to format()
                             function replace_nested(name, key){
-                                return _b_.dict.$dict.__getitem__($.kw, key)
+                                var x = _b_.dict.$dict.__getitem__($.kw, key)
+                                return x
                             }
                             fmt_obj.spec = fmt_obj.spec.replace(/\{(.+?)\}/g, 
                                 replace_nested)
@@ -1523,13 +1524,22 @@ $B.parse_format_spec = function(spec){
         var pos=0,
             aligns = '<>=^',
             digits = '0123456789',
-            types = 'bcdeEfFgGnosxX%'
-        var align_pos = aligns.indexOf(spec.charAt(0))
+            types = 'bcdeEfFgGnosxX%',
+            align_pos = aligns.indexOf(spec.charAt(0))
         if(align_pos!=-1){
-            // The first character defines alignment : fill defaults to ' '
-            this.align=aligns[align_pos];this.fill=' ';pos++
-        }
-        else{
+            if(spec.charAt(1) && aligns.indexOf(spec.charAt(1))!=-1){
+                // If the second char is also an alignment specifier, the
+                // first char is the fill value
+                this.fill = spec.charAt(0)
+                this.align = spec.charAt(1)
+                pos = 2
+            }else{
+                // The first character defines alignment : fill defaults to ' '
+                this.align=aligns[align_pos];
+                this.fill=' ';
+                pos++
+            }
+        }else{
             align_pos = aligns.indexOf(spec.charAt(1))
             if(spec.charAt(1) && align_pos!=-1){
                 // The second character defines alignment : fill is the first one
@@ -1545,7 +1555,12 @@ $B.parse_format_spec = function(spec){
             car=spec.charAt(pos);
         }
         if(car=='#'){this.alternate=true;pos++;car=spec.charAt(pos)}
-        if(car=='0'){this.sign_aware=true;pos++;car=spec.charAt(pos)}
+        if(car=='0'){
+            // sign-aware : equivalent to fill=0 and align=='='
+            this.fill='0'
+            this.align = '='
+            pos++;car=spec.charAt(pos)
+        }
         while(car && digits.indexOf(car)>-1){
             if(this.width===undefined){this.width=car}
             else{this.width+=car}

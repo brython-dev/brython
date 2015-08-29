@@ -200,3 +200,31 @@ assert "int: {0:d};  hex: {0:#x};  oct: {0:#o};  bin: {0:#b}".format(42) == 'int
 points = 19
 total = 22
 assert 'Correct answers: {:.2%}'.format(points/total) == 'Correct answers: 86.36%'
+
+results = []
+for align, text in zip('<^>', ['left', 'center', 'right']):
+    results.append('{0:{fill}{align}16}'.format(text, fill=align, align=align))
+
+assert results == ['left<<<<<<<<<<<<',
+    '^^^^^center^^^^^',
+    '>>>>>>>>>>>right']
+
+octets = [192, 168, 0, 1]
+x = '{:02X}{:02X}{:02X}{:02X}'.format(*octets)
+assert x == 'C0A80001'
+assert int(x, 16) == 3232235521
+
+width = 5
+results = []
+for num in range(5,12): 
+    line = []
+    for base in 'dXob':
+        line.append('{0:{width}{base}}'.format(num, base=base, width=width))
+    results.append(' '.join(line))
+assert results ==  ['    5     5     5   101',
+'    6     6     6   110',
+'    7     7     7   111',
+'    8     8    10  1000',
+'    9     9    11  1001',
+'   10     A    12  1010',
+'   11     B    13  1011']
