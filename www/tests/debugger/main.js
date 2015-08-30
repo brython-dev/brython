@@ -8,6 +8,7 @@
         set_step: setStep,
         set_editor: setEditor,
         is_debugging: isDebugging,
+        is_recorded: wasRecorded,
         is_executing: isExecuting,
         is_last_step: isLastStep,
         is_first_step: isFirstStep,
@@ -28,6 +29,7 @@
     win[traceWord] = setTrace;
     var editor;
     var debugging = false; // flag indecting debugger was started
+    var stepLimit = 10000; // Solving the halting problem by limiting the number of steps to run
 
     var linePause = true; // used inorder to stop interpreter on line
     var myInterpreter = null;
@@ -43,6 +45,10 @@
     var debugStarted = noop;
     var debugEnded = noop;
     var debugLastStep = noop;
+
+    function wasRecorded () {
+        return isRecorded;
+    }
 
     function setDebugStartedCallback(cb) {
         debugStarted = cb;
@@ -90,6 +96,10 @@
 
     function getCurrentFrame() {
         return currentFrame;
+    }
+
+    function setStepLimit(n) {
+        stepLimit = n || 10000;
     }
 
     /**
@@ -199,15 +209,8 @@
                     });
 
                     getLastRecordedFrame().next_line_no = obj.line_no;
-                    // if (getLastRecordedFrame().type === 'endwhile' && getLastRecordedFrame().was_modified) {
-                    //     getLastRecordedFrame().next_line_no = obj.line_no;
-                    // }
                 }
-                // if (obj.type === 'endwhile') {
-                // }
-                if (obj.type === 'afterwhile' || obj.type === 'eof') {
-                    // getLastRecordedFrame().next_line_no = obj.line_no;
-                    getLastRecordedFrame().was_modified = true;
+                if (isDisposableState(obj)) {
                     break;
                 }
                 recordedFrames.push(obj);
@@ -220,11 +223,30 @@
                 break;
             case 'stderr':
                 console.error(obj.data);
+                stopDebugger();
                 recordedErr.push(obj);
+                if (!obj.frame) {
+                    break;
+                }
                 getLastRecordedFrame().printerr = obj.data;
                 getLastRecordedFrame().stderr += obj.data;
                 break;
         }
+
+        if (recordedFrames.length > stepLimit) {
+            throw new Error("You have exceeded the amount of steps allowed by this debugger, you probably have an infinit loop or you're running a long program");
+            // you can change the limit by using the setStepLimit method variable form the default
+            // The debugger is not meant to debug long pieces of code so that should be taken into consideration
+        }
+    }
+    /**
+     * these states are only there to update the previouse states of where they should point
+     * they are not recorded
+     * @param  {[type]}  obj [description]
+     * @return {Boolean}     [description]
+     */
+    function isDisposableState(obj) {
+        return obj.type === 'afterwhile' || obj.type === 'eof';
     }
 
     function resetDebugger() {
@@ -310,14 +332,14 @@
      * @param  {Boolean} whether to run recording then replay or step
      */
     function startDebugger(src, record) {
-        var code = src || getEditor().getValue();
+        var code = src || getEditor().getValue() || "";
         resetDebugger();
 
-        isRecorded = record;
+        isRecorded = record==undefined?true:record;
 
         var obj = parseCode(code);
 
-        setOutErr();
+        setOutErr(record);
 
         if (record) {
             recordedFrames = [];
@@ -414,6 +436,9 @@
         codearr.splice(9, 0, traceWord + "({event:'line', type:'start', frame:$B.last($B.frames_stack), line_no: " + 0 + ", next_line_no: " + 1 + "});")
         code = codearr.join('\n');
         var line = getNextLine(code);
+        if (line ===null) { // in case empty code
+            return code;
+        }
         var lastLineNo = 1;
         var largestLine = 1;
         var index = line.index;
@@ -436,12 +461,12 @@
                 code = injectWhileEndTrace(code, whileLine, lastLineNo); // add a trace at the end of the while block
             }
             index = line.index;
-        } while (~index);
+        } while (true);
         var codesplit = code.split(/^\;\$B\.leave_frame\(/m)
         newCode += codesplit[0] + traceWord + "({event:'line', type:'eof', frame:$B.last($B.frames_stack), line_no: " + (++largestLine) + ", next_line_no: " + (largestLine) + "});\n";
         newCode += ';$B.leave_frame(' + codesplit[1];
 
-        console.log('debugger:\n\n' + newCode);
+        //         console.log('debugger:\n\n' + newCode);
         return newCode;
 
         function getNextLine(code) {
@@ -495,8 +520,8 @@
 
     /**
      * Run traced code, used in record mode by hidding 
-     * @param  {[type]} obj object contianing code and module scope
-     * @return {[type]} result of running code as if evaluated
+     * @param  {Object} obj object contianing code and module scope
+     * @return {Object} result of running code as if evaluated
      */
     function $run(obj) {
         var leave = false;
@@ -541,9 +566,9 @@
      * @param  {Object} obj containing module scope
      * @return {[type]} Interpreter scope API function
      */
-    function initAPI(obj) {
+    function defineAPIScope(obj) {
 
-        return function(interpreter, scope) {
+        return function initAPI(interpreter, scope) {
             // variables
 
             interpreter.setProperty(scope, '__BRYTHON__', __BRYTHON__, true);
@@ -585,7 +610,9 @@
             var $locals = obj;
             $locals["write"] = (function() {
                 return function(data) {
-                    var frame = getLastRecordedFrame();
+                    var frame = getLastRecordedFrame() || {
+                        frame: undefined
+                    };
                     setTrace({
                         event: std,
                         data: data,
@@ -634,10 +661,10 @@
     /**
      * setStdout to debugger stdout capturing output stream
      */
-    function setOutErr() {
+    function setOutErr(record) {
         realStdOut = $B.stdout;
         realStdErr = $B.stderr;
-        var type = isRecorded ? 'record' : 'spy';
+        var type = record ? 'record' : 'spy';
         $B.stdout = outerr[type + 'Out'];
         $B.stderr = outerr[type + 'Err'];
     }

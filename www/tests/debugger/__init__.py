@@ -142,6 +142,7 @@ def step_debugger(ev):
     else:
         Debugger.step_debugger()
 
+
 def step_back_debugger(ev):
         Debugger.step_back_debugger()
 
@@ -152,7 +153,10 @@ def debug_started():
     doc['step'].disabled = False
     doc['stop'].disabled = False
     editor.setHighlightActiveLine(True)
-    editor.gotoLine(1)
+    if Debugger.is_recorded():
+        editor.gotoLine(Debugger.get_recorded_frames()[0].next_line_no)
+    else:
+        Debugger.step_debugger()
 
 
 def debug_stoped():
