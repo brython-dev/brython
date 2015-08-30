@@ -169,3 +169,62 @@ except ValueError as err:
     assert str(err) == "incomplete format key"
 else:
     raise Exception("Did not raise error")
+
+# issue 260
+c = 3-5j
+assert 'real part is {0.real}, imaginary part is {0.imag}.'.format(c) == "real part is 3.0, imaginary part is -5.0."
+assert '{0:{fill}{align}16}'.format("hello", fill=0, align=">")=="00000000000hello"
+assert "I have {{}} bananas.".format() == "I have {} bananas."
+assert "I have {{}} bananas.".format(2) == "I have {} bananas."
+assert "I have {{}} and {} bananas.".format(2) == "I have {} and 2 bananas."
+assert "I have {!r} bananas.".format("\\yellow") == r"I have '\\yellow' bananas."
+assert "I have {!a} bananas.".format("\\yellow") == r"I have '\\yellow' bananas."
+assert "I have {!a} bananas.".format("42₵") == r"I have '42\u20b5' bananas."
+assert "I have {:*<10} bananas.".format(42.5) == "I have 42.5****** bananas."
+assert "I have {:*<10} bananas.".format(42) == "I have 42******** bananas."
+assert "I have {:*^10} bananas.".format(42) == "I have ****42**** bananas."
+assert "I have {:*^10} bananas.".format(42.5) == "I have ***42.5*** bananas."
+assert "I have {:*=10} bananas.".format(-42) == "I have -*******42 bananas."
+assert "I have {:*=10} bananas.".format(-42.5) == "I have -*****42.5 bananas."
+assert "I have {:>10} bananas.".format(42) == "I have         42 bananas."
+assert "I have {:10} bananas.".format(42) == "I have         42 bananas."
+assert "I have {:10} bananas.".format(42.5) == "I have       42.5 bananas."
+assert "I have {:,} bananas.".format(42000) == "I have 42,000 bananas."
+assert "I have {:,} bananas.".format(42000.0) == "I have 42,000.0 bananas."
+assert "I have {:c} bananas.".format(42) == "I have * bananas."
+
+# other examples from Python docs
+assert "int: {0:d};  hex: {0:x};  oct: {0:o};  bin: {0:b}".format(42) == 'int: 42;  hex: 2a;  oct: 52;  bin: 101010'
+assert "int: {0:d};  hex: {0:#x};  oct: {0:#o};  bin: {0:#b}".format(42) == 'int: 42;  hex: 0x2a;  oct: 0o52;  bin: 0b101010'
+
+points = 19
+total = 22
+assert 'Correct answers: {:.2%}'.format(points/total) == 'Correct answers: 86.36%'
+
+results = []
+for align, text in zip('<^>', ['left', 'center', 'right']):
+    results.append('{0:{fill}{align}16}'.format(text, fill=align, align=align))
+
+assert results == ['left<<<<<<<<<<<<',
+    '^^^^^center^^^^^',
+    '>>>>>>>>>>>right']
+
+octets = [192, 168, 0, 1]
+x = '{:02X}{:02X}{:02X}{:02X}'.format(*octets)
+assert x == 'C0A80001'
+assert int(x, 16) == 3232235521
+
+width = 5
+results = []
+for num in range(5,12): 
+    line = []
+    for base in 'dXob':
+        line.append('{0:{width}{base}}'.format(num, base=base, width=width))
+    results.append(' '.join(line))
+assert results ==  ['    5     5     5   101',
+'    6     6     6   110',
+'    7     7     7   111',
+'    8     8    10  1000',
+'    9     9    11  1001',
+'   10     A    12  1010',
+'   11     B    13  1011']

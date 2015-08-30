@@ -101,9 +101,48 @@ $IntDict.__eq__ = function(self,other){
     return self.valueOf()===other
 }
 
+function preformat(self, fmt){
+    if(fmt.empty){return _b_.str(self)}
+    if(fmt.type && 'bcdoxXn'.indexOf(fmt.type)==-1){
+        throw _b_.ValueError("Unknown format code '"+fmt.type+
+            "' for object of type 'int'")
+    }
+    
+    switch(fmt.type){
+        case undefined:
+        case 'd':
+            return self.toString()
+        case 'b':
+            return (fmt.alternate ? '0b' : '') + self.toString(2)
+        case 'c':
+            return _b_.chr(self)
+        case 'o':
+            return (fmt.alternate ? '0o' : '') + self.toString(8)
+        case 'x':
+            return (fmt.alternate ? '0x' : '') + self.toString(16)
+        case 'X':
+            return (fmt.alternate ? '0X' : '') + self.toString(16).toUpperCase()
+        case 'n':
+            return self // fix me
+    }
+        
+    return res
+}
+
+
 $IntDict.__format__ = function(self,format_spec){
-    if (format_spec == '') format_spec='d'
-    return _b_.str.$dict.__mod__('%'+format_spec, self)
+    var fmt = new $B.parse_format_spec(format_spec)
+    fmt.align = fmt.align || '>'
+    var res = preformat(self, fmt)
+    if(fmt.comma){
+        var len = res.length, nb = Math.ceil(res.length/3), chunks = []
+        for(var i=0;i<nb;i++){
+            chunks.push(res.substring(len-3*i-3, len-3*i))
+        }
+        chunks.reverse()
+        res = chunks.join(',')
+    }
+    return $B.format_width(res, fmt)
 }
 
 //$IntDict.__float__ = function(self){return float(self)}

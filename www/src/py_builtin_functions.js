@@ -41,22 +41,14 @@ function any(obj){
 }
 
 function ascii(obj) {
-   // adapted from 
-   // http://stackoverflow.com/questions/7499473/need-to-ecape-non-ascii-characters-in-javascript
-    function padWithLeadingZeros(string,pad) {
-        return new Array(pad+1-string.length).join("0") + string;
+    var res = repr(obj), res1='', cp
+    for(var i=0;i<res.length;i++){
+        cp = res.charCodeAt(i)
+        if(cp<128){res1 += res.charAt(i)}
+        else if(cp<256){res1 += '\\x'+cp.toString(16)}
+        else{res1 += '\\u'+cp.toString(16)}
     }
-    
-    function charEscape(charCode) {
-      if(charCode>255) return "\\u"+padWithLeadingZeros(charCode.toString(16),4)
-      return "\\x" + padWithLeadingZeros(charCode.toString(16),2)
-    }
-    
-    return obj.split("").map(function (char) {
-             var charCode = char.charCodeAt(0);
-             return charCode > 127 ? charEscape(charCode) : char;
-         })
-         .join("");
+    return res1
 }
 
 // used by bin, hex and oct functions
@@ -501,11 +493,13 @@ function getattr(obj,attr,_default){
         } 
       }
     }
-
     if(klass.$native){
         if(klass[attr]===undefined){
             var object_attr = _b_.object.$dict[attr]
             if(object_attr!==undefined){klass[attr]=object_attr}
+            else if(klass.descriptors && klass.descriptors[attr]!==undefined){
+                return klass.descriptors[attr](obj)
+            }
             else{
                 if(_default===undefined){
                     throw _b_.AttributeError(klass.__name__+
@@ -514,13 +508,10 @@ function getattr(obj,attr,_default){
                 return _default
             }
         }
+        
         if(typeof klass[attr]=='function'){
             // new is a static method
             if(attr=='__new__') return klass[attr].apply(null,arguments)
-            
-            if(klass.descriptors && klass.descriptors[attr]!==undefined){
-                return klass[attr].apply(null, [obj])
-            }
             
             var method = function(){
                 var args = [obj], pos=1
@@ -1168,7 +1159,7 @@ function repr(obj){
         return func(obj)
     }
     var func = getattr(obj,'__repr__')
-    if(func!==undefined) return func.apply(obj)
+    if(func!==undefined){return func()}
     throw _b_.AttributeError("object has no attribute __repr__")
 }
 

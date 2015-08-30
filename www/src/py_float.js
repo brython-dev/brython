@@ -123,7 +123,6 @@ $FloatDict.__getitem__ = function(){
 }
 
 function preformat(self, fmt){
-    // fix me..  this probably isn't correct..
     if(fmt.empty){return _b_.str(self)}
     if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type)==-1){
         throw _b_.ValueError("Unknown format code '"+fmt.type+
@@ -199,8 +198,19 @@ function preformat(self, fmt){
 $FloatDict.__format__ = function(self, format_spec) {
     var fmt = new $B.parse_format_spec(format_spec)
     fmt.align = fmt.align || '>'
-    return $B.format_width(preformat(self, fmt), fmt)
+    var raw = preformat(self, fmt).split('.'),
+        _int = raw[0]
+    if(fmt.comma){
+        var len = _int.length, nb = Math.ceil(_int.length/3), chunks = []
+        for(var i=0;i<nb;i++){
+            chunks.push(_int.substring(len-3*i-3, len-3*i))
+        }
+        chunks.reverse()
+        raw[0] = chunks.join(',')
+    }
+    return $B.format_width(raw.join('.'), fmt)
 }
+
 $FloatDict.__hash__ = function(self) {
     if (self === undefined) {
        return $FloatDict.__hashvalue__ || $B.$py_next_hash--  // for hash of float type (not instance of int)
