@@ -44,7 +44,8 @@ def discover_brython_test_modules():
           ("test_math.py", "math"),
           ("test_storage.py", "storage"),
 #          ("test_time.py", "time"),
-          ("test_types.py", "types")
+          ("test_types.py", "types"),
+          ("test_struct.py", "struct")
         ])]
 
 def populate_testmod_input(elem, selected=None):
