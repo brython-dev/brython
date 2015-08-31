@@ -97,17 +97,18 @@ The most updated docs usually are the English and French versions so if you
 want to be up-to-date, please, use these versions.
 
 
-Questions, feedback, issues, new features...
-=============================================
-There is a main [mail list in English](https://groups.google.com/forum/?fromgroups=#!forum/brython "Brython Main Mailing List").
+Community (questions, feedback, issues, new features, ...)
+==========================================================
+There is a main [mailing list in English](https://groups.google.com/forum/?fromgroups=#!forum/brython "Brython Main Mailing List").
 Also, you can find [mail list in other languages](http://brython.info/groups.html "Brython Mailing Lists")
 but the activity is very low and it is recommended to use the main one in English.
 
 If you find a bug/issue or do you want to see a new feature in Brython, please,
 [open a new issue](https://github.com/brython-dev/brython/issues "Brython GitHub Issues").
 
-Theres a [Brython Community on Google Plus](https://plus.google.com/communities/114694456237115550531).
+There's a [Brython Community on Google Plus](https://plus.google.com/communities/114694456237115550531).
 
+IRC: #brython on [freenode](https://webchat.freenode.net/)
 
 Agile Development
 =================
