@@ -230,6 +230,15 @@ function sub_pos(v1, v2){
     return {__class__:$LongIntDict, value:res, pos:true}
 }
 
+// Utility method to build a long int from a big float
+$LongIntDict.$from_float = function(value){
+    var _s = value.toExponential().split('e'),
+        d = _s[0], e = parseInt(_s[1])
+    var res = d.replace(/\./,'')
+    res += '0'.repeat(e-res.length+1)
+    return {__class__: $B.LongInt.$dict, value: res, pos: value>=0}
+}
+
 // Special methods to implement operations on instances of LongInt
 
 $LongIntDict.__abs__ = function(self){
@@ -323,6 +332,10 @@ $LongIntDict.__eq__ = function(self, other){
     return self.value==other.value && self.pos==other.pos
 }
 
+$LongIntDict.__float__ = function(self){
+    return new Number(parseFloat(self.value))
+}
+
 $LongIntDict.__floordiv__ = function(self, other){
     if(isinstance(other, _b_.float)){
         return _b_.float(parseInt(self.value)/other)
@@ -376,8 +389,18 @@ $LongIntDict.__lt__ = function(self, other){
 }
 
 $LongIntDict.__lshift__ = function(self, shift){
-    shift = LongInt(shift)
-    if(shift.value=='0'){return self}
+    var is_long = shift.__class__==$LongIntDict
+    if(is_long){
+        var shift_value = parseInt(shift.value)
+        if(shift_value<0){throw _b_.ValueError('negative shift count')}
+        if(shift_value < $B.max_int){shift_safe=true;shift = shift_value}
+    }
+    if(shift_safe){
+        if(shift_value==0){return self}
+    }else{
+        shift = LongInt(shift)
+        if(shift.value=='0'){return self}
+    }
     var res = self.value
     while(true){
         var x, carry=0, res1=''
@@ -388,8 +411,13 @@ $LongIntDict.__lshift__ = function(self, shift){
         }
         if(carry){res1=carry+res1}
         res=res1
-        shift = sub_pos(shift.value, '1')
-        if(shift.value=='0'){break}
+        if(shift_safe){
+            shift--
+            if(shift==0){break}
+        }else{
+            shift = sub_pos(shift.value, '1')
+            if(shift.value=='0'){break}
+        }
     }
     return intOrLong({__class__:$LongIntDict, value:res, pos:self.pos})
 }
@@ -402,7 +430,7 @@ $LongIntDict.__mro__ = [$LongIntDict, _b_.int.$dict, _b_.object.$dict]
 
 $LongIntDict.__mul__ = function(self, other){
     if(isinstance(other, _b_.float)){
-        return _b_.float(parseInt(self.value)*other.value)
+        return _b_.float(parseInt(self.value)*other)
     }
     if (typeof other == 'number') other=LongInt(_b_.str(other))
     var res = mul_pos(self.value, other.value)
@@ -606,14 +634,16 @@ function LongInt(value, base){
         throw ValueError("LongInt() base must be >= 2 and <= 36")
     }
     if(isinstance(value, _b_.float)){
-        if(value>=0){value=Math.round(value.value)}
-        else{value=Math.ceil(value.value)}
+        console.log('arg is float', value)
+        if(value>=0){value=new Number(Math.round(value.value))}
+        else{value=new Number(Math.ceil(value.value))}
     } else if(isinstance(value, _b_.bool)){
         if (value.valueOf()) return int(1)
         return int(0)
     }
     if(typeof value=='number'){
         if(isSafeInteger(value)){value = value.toString()}
+        else if(value.constructor == Number){console.log('big number', value);value = value.toString()}
         else{console.log('wrong value', value);throw ValueError("argument of long_int is not a safe integer")}
     }else if(value.__class__===$LongIntDict){return value}
     else if(isinstance(value,_b_.bool)){value=_b_.bool.$dict.__int__(value)+''}

@@ -345,10 +345,14 @@ $B.min_int32= - $B.max_int32
 // code for operands & | ^
 var $op_func = function(self,other){
     if(isinstance(other,int)) {
-       if (self > $B.max_int32 || self < $B.min_int32 || other > $B.max_int32 || other < $B.min_int32) {
-          return $B.LongInt.$dict.__sub__($B.LongInt(self), $B.LongInt(other))
-       }
-       return self-other
+        if(other.__class__===$B.LongInt.$dict){
+            return $B.LongInt.$dict.__sub__($B.LongInt(self), $B.LongInt(other))
+        }
+        if (self > $B.max_int32 || self < $B.min_int32 || 
+            other > $B.max_int32 || other < $B.min_int32) {
+            return $B.LongInt.$dict.__sub__($B.LongInt(self), $B.LongInt(other))
+        }
+        return self-other
     }
     if(isinstance(other,_b_.bool)) return self-other
     if(hasattr(other,'__rsub__')) return getattr(other,'__rsub__')(self)
@@ -463,8 +467,9 @@ var int = function(value, base){
     var base = $ns['base']
     
     if(isinstance(value, _b_.float) && base===10){
-        var res = parseInt(value)
-        if(res<$B.min_int || res>$B.max_int){return $B.LongInt(res+'')}
+        if(value<$B.min_int || value>$B.max_int){
+            return $B.LongInt.$dict.$from_float(value)
+        }
         else{return res}
     }
 

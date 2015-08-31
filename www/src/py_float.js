@@ -360,7 +360,12 @@ $FloatDict.__mod__ = function(self,other) {
 $FloatDict.__mro__ = [$FloatDict,$ObjectDict]
 
 $FloatDict.__mul__ = function(self,other){
-    if(isinstance(other,_b_.int)) return new Number(self*other)
+    if(isinstance(other,_b_.int)){
+        if(other.__class__==$B.LongInt.$dict){
+            return new Number(self*parseFloat(other.value))
+        }
+        return new Number(self*other)
+    }
     if(isinstance(other,float)) return new Number(self*other)
     if(isinstance(other,_b_.bool)){ 
       var bool_value=0; 
@@ -444,7 +449,10 @@ for(var $op in $ops){
 
 // comparison methods
 var $comp_func = function(self,other){
-    if(isinstance(other,_b_.int)) return self > other.valueOf()
+    if(isinstance(other,_b_.int)){
+        if(other.__class__===$B.LongInt.$dict){return self > parseInt(other.value)}
+        return self > other.valueOf()
+    }
     if(isinstance(other,float)) return self > other
     throw _b_.TypeError(
         "unorderable types: "+self.__class__.__name__+'() > '+$B.get_class(other).__name__+"()")
