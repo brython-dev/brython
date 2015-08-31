@@ -281,7 +281,19 @@ var _mod = {
     floor:function(x){return Math.floor(float_check(x))},
     fmod:function(x,y){return float(float_check(x)%float_check(y))},
     frexp: function(x){var _l=_b_.$frexp(x);return _b_.tuple([float(_l[0]), _l[1]])}, // located in py_float.js
-    //fsum:function(x){},
+    fsum:function(x){
+        var res = new Number(), _it = _b_.iter(x)
+        while(true){
+            try{
+                var item = _b_.next(_it)
+                res += new Number(item)
+            }catch(err){
+                if(_b_.isinstance(err, _b_.StopIteration)){break}
+                throw err
+            }
+        }
+        return res
+    },
     gamma: function(x){
          //using code from http://stackoverflow.com/questions/3959211/fast-factorial-function-in-javascript
          // Lanczos Approximation of the Gamma Function
