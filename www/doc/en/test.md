@@ -40,17 +40,17 @@ generates :
 
 ### Debugging Javascript Generated Python Code
 
-TL;DR if you want to use the browser builtin debugger to step through your python js code write `__debugger__` in your code and open the developer tools.
+> TL;DR if you want to use the browser builtin debugger to step through your python js code write `__debugger__` in your code and open the developer tools.
 
-This is equivilant to the javascript `debugger` statemtent.
+This statement is equivalent to the javascript `debugger` statement.
 
-Modern browsers such as FireFox and Google Chrome have built in debuggers, these debuggers allow developers to step through the code steping into function calls and out (you know like debuggers in IDEs)
+Modern browsers such as FireFox and Google Chrome have built in debuggers, these debuggers allow developers to step through the code stepping into function calls and out (you know like debuggers in IDEs)
 
 It is possible to debug javascript code by placing breakpoints on the line numbers inside the script tab in the developer tools.
 
-However Brython generated javascript is generated dring runtime and thus does not aprear in a file, fortunatly, browsers have added a special keyword to the javascript language called `debugger` this statement manually inserts a breakpoint into the script so that in runtime if the developer tools are open it will halt execusion and start a debugging session there.
+However Brython generated javascript is generated during runtime and thus does not appear in a file, fortunately, browsers have added a special keyword to the javascript language called `debugger` this statement manually inserts a breakpoint into the script so that in runtime if the developer tools are open it will halt execution and start a debugging session there.
 
-We have addedd to the Brython interpreter the keyword `__debugger__` which will be translated by the tokenizer to `debugger` thus triggering the same process.
+We have added to the Brython interpreter the keyword `__debugger__` which will be translated by the tokenizer to `debugger` thus triggering the same process.
 
 To try it out now head over to the editor, type `__debugger__` in your code, open the developer tools (in chrome right-click inspect element), then click run.
 
@@ -59,75 +59,75 @@ to learn more about the chrome developer tools visit their documentation or this
 
 ### Debugging Python Code
 
-A simple time-travel step back and forth debugger is implimented [here]()
+A simple time-travel step back and forth debugger is implimented [here](../../tests/debugger.html)
 
 As of this writing it is not full featured and supports online line step
 You will find documentation on how each function in the debugger works (in case you want to build on it)
 
-The debugger does not yet support input statements (as it is not run live but records teh program states each line then replays it), a work around is soon planned tho.
+The debugger does not yet support input statements (as it is not run live but records the program states each line then replays it), a work around is soon planned tho.
 
-#####For Developers
+####Brython_Debugger For Developers
 
 The debugger provides 4 hooks (on_debugging_started, on_step_update, on_debugging_end, on_last_step) which take a callback that you can decide to do whatever you want with.
 
-This debugger is still under developemnt and changes will occure to the API
+This debugger is still under development and changes will occur to the API
 
 The debugger is available in the global scope from the window object under Brython_Debugger.
 
-For an example on how it works go to debugger.html
+For an example on how it works see [debugger](../../tests/debugger.html)
 
 The following is the debugger public API you can find more details description in the code at www/tests/debugger/main.js
 
 
-#####start_debugger()
-> start the debugging session, takes code to debug as parameter as well as an optional boolean flag for whther to live debug or recod
+**Brython_Debugger**.`start_debugger()`
+> start the debugging session, takes code to debug as parameter as well as an optional boolean flag for whether to live debug or record
 > Currently live debug is not supported and debugging by default starts in record mode
 > The on_debugging_started callback is called at the end of this step
 
-#####stop_debugger()
+**Brython_Debugger**.`stop_debugger()`
 > function to call when you want to stop the debugging session
 > on_debugging_end is called at this step
 
-#####step_debugger()
+**Brython_Debugger**.`step_debugger()`
 > This function when called steps forward one step in the recorded debugging session
 
-#####step_back_debugger()
+**Brython_Debugger**.`step_back_debugger()`
 > This function when called steps backward one step in the recorded debugging session
 
-#####set_step(n)
+**Brython_Debugger**.`set_step(n)`
 > seek to a specific step in the recorded debugging session take a number from 0 to the last step as parameter
 > if a number larger than the last step is entered nothing will happen
 
-#####can_step(n)
+**Brython_Debugger**.`can_step(n)`
 > check if you can step to the specified step
 
-#####is_debugging()
-> return whether a debuggin session is active
+**Brython_Debugger**.`is_debugging()`
+> return whether a debugging session is active
 
-#####is_recorded()
+**Brython_Debugger**.`is_recorded()`
 > returns whether this debugger is in recording mode
 
-#####is_last_step()
-> returns whether the currect step is the last step
+**Brython_Debugger**.`is_last_step()`
+> returns whether the current step is the last step
 
-#####is_first_step()
+**Brython_Debugger**.`is_first_step()`
 > returns whether the current step is the first step
 
-#####get_current_step()
+**Brython_Debugger**.`get_current_step()`
 > return a number indicating the current step
 
-#####get_current_frame()
+**Brython_Debugger**.`get_current_frame()`
 > returns the current frame/state (it should be state)
 
-#####get_recorded_frames()
+**Brython_Debugger**.`get_recorded_frames()`
 > returns all recorded states
 
 
-#####on_debugging_started(cb)
-> cb is called after debuggin session has stared
+**Brython_Debugger**.`on_debugging_started(cb)`
+> cb is called after debugging session has started
 
-#####on_debugging_end(cb)
-> cb is called after debuggin session has ended
+**Brython_Debugger**.`on_debugging_end(cb)`
+> cb is called after debugging session has ended
 
-#####on_step_update(cb)
+**Brython_Debugger**.`on_step_update(cb)`
 > cb is called whenever a state is changed using setState
