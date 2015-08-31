@@ -9,6 +9,7 @@ Please note that the namespace is not refreshed when you click on "run", you mus
 
 For debugging and testing Brython, a number of test scripts are grouped in the directory `tests` ; you can access them by clicking the link  "Test pages" in the console, then select the different tests and run them
 
+
 ### Debugging scripts
 
 Whatever the debugging level, syntax errors are reported in the browser console (or at the place defined by `sys.stderr`)
@@ -36,3 +37,97 @@ generates :
 >    IndexError: list index out of range
 >    module '__main__' line 2
 >    x[3]
+
+### Debugging Javascript Generated Python Code
+
+TL;DR if you want to use the browser builtin debugger to step through your python js code write `__debugger__` in your code and open the developer tools.
+
+This is equivilant to the javascript `debugger` statemtent.
+
+Modern browsers such as FireFox and Google Chrome have built in debuggers, these debuggers allow developers to step through the code steping into function calls and out (you know like debuggers in IDEs)
+
+It is possible to debug javascript code by placing breakpoints on the line numbers inside the script tab in the developer tools.
+
+However Brython generated javascript is generated dring runtime and thus does not aprear in a file, fortunatly, browsers have added a special keyword to the javascript language called `debugger` this statement manually inserts a breakpoint into the script so that in runtime if the developer tools are open it will halt execusion and start a debugging session there.
+
+We have addedd to the Brython interpreter the keyword `__debugger__` which will be translated by the tokenizer to `debugger` thus triggering the same process.
+
+To try it out now head over to the editor, type `__debugger__` in your code, open the developer tools (in chrome right-click inspect element), then click run.
+
+to learn more about the chrome developer tools visit their documentation or this short course by code school.
+
+
+### Debugging Python Code
+
+A simple time-travel step back and forth debugger is implimented [here]()
+
+As of this writing it is not full featured and supports online line step
+You will find documentation on how each function in the debugger works (in case you want to build on it)
+
+The debugger does not yet support input statements (as it is not run live but records teh program states each line then replays it), a work around is soon planned tho.
+
+#####For Developers
+
+The debugger provides 4 hooks (on_debugging_started, on_step_update, on_debugging_end, on_last_step) which take a callback that you can decide to do whatever you want with.
+
+This debugger is still under developemnt and changes will occure to the API
+
+The debugger is available in the global scope from the window object under Brython_Debugger.
+
+For an example on how it works go to debugger.html
+
+The following is the debugger public API you can find more details description in the code at www/tests/debugger/main.js
+
+
+#####start_debugger()
+> start the debugging session, takes code to debug as parameter as well as an optional boolean flag for whther to live debug or recod
+> Currently live debug is not supported and debugging by default starts in record mode
+> The on_debugging_started callback is called at the end of this step
+
+#####stop_debugger()
+> function to call when you want to stop the debugging session
+> on_debugging_end is called at this step
+
+#####step_debugger()
+> This function when called steps forward one step in the recorded debugging session
+
+#####step_back_debugger()
+> This function when called steps backward one step in the recorded debugging session
+
+#####set_step(n)
+> seek to a specific step in the recorded debugging session take a number from 0 to the last step as parameter
+> if a number larger than the last step is entered nothing will happen
+
+#####can_step(n)
+> check if you can step to the specified step
+
+#####is_debugging()
+> return whether a debuggin session is active
+
+#####is_recorded()
+> returns whether this debugger is in recording mode
+
+#####is_last_step()
+> returns whether the currect step is the last step
+
+#####is_first_step()
+> returns whether the current step is the first step
+
+#####get_current_step()
+> return a number indicating the current step
+
+#####get_current_frame()
+> returns the current frame/state (it should be state)
+
+#####get_recorded_frames()
+> returns all recorded states
+
+
+#####on_debugging_started(cb)
+> cb is called after debuggin session has stared
+
+#####on_debugging_end(cb)
+> cb is called after debuggin session has ended
+
+#####on_step_update(cb)
+> cb is called whenever a state is changed using setState
