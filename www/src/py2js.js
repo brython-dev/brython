@@ -6840,24 +6840,21 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     root.transform()
 
     // Create internal variables
-    var js = ['var $B=__BRYTHON__;\n'], pos=1
+    var js = ['var $B = __BRYTHON__;\n'], pos=1
     
-    js[pos++]= 'var __builtins__=_b_=$B.builtins;\n'
+    js[pos++]='eval(__BRYTHON__.InjectBuiltins());\n\n'
     
     if(locals_is_module){
-        js[pos++]= 'var '+local_ns+'=$locals_'+module+';'
+        js[pos]= 'var '+local_ns+'=$locals_'+module+', '
     }else{
-        js[pos++]='var '+local_ns+'=$B.imported["'+locals_id+'"] || {};'
+        js[pos]='var '+local_ns+'=$B.imported["'+locals_id+'"] || {}, '
     }
-    js[pos++]='var $locals='+local_ns+';\n'
+    js[pos++]+='$locals='+local_ns+';'
     
-    js[pos++]='$B.enter_frame(["'+locals_id+'", '+local_ns+','
-    js[pos++]='"'+module+'", '+global_ns+']);\n'
-    js[pos++]='eval($B.InjectBuiltins());\n'
-
     var new_node = new $Node()
     new $NodeJSCtx(new_node,js.join(''))
     root.insert(0,new_node)
+
     // module doc string
     var ds_node = new $Node()
     new $NodeJSCtx(ds_node, local_ns+'["__doc__"]='+(root.doc_string||'None')+';')
@@ -6877,6 +6874,9 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     var file_node = new $Node()
     new $NodeJSCtx(file_node,local_ns+'["__file__"]="'+$B.$py_module_path[module]+'";None;\n')
     root.insert(3,file_node)
+
+    root.insert(4, $NodeJS('$B.enter_frame(["'+locals_id+'", '+local_ns+','+
+        '"'+module+'", '+global_ns+']);\n'))
         
     if($B.debug>0){$add_line_num(root,null,module)}
     
@@ -6887,7 +6887,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     
     // leave frame at the end of module
     var new_node = new $Node()
-    new $NodeJSCtx(new_node,';$B.leave_frame("'+module+'");\n')
+    new $NodeJSCtx(new_node,'\n;$B.leave_frame("'+module+'");\n')
     root.add(new_node)
 
     return root
