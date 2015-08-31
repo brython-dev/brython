@@ -3,6 +3,8 @@
 
 var $module = (function($B){
 
+_b_ = $B.builtins
+
 // Code copied from https://github.com/ianb/whrandom/blob/master/mersenne.js
 // by Ian Bicking
 
@@ -246,7 +248,7 @@ function RandomStream(seed) {
   }
   /* These real versions are due to Isaku Wada, 2002/01/09 added */
 
-  var random = genrand_real2;
+  var random = genrand_res53;
 
   random.seed = function (seed) {
     if (! seed) {
@@ -281,7 +283,7 @@ function RandomStream(seed) {
 
 }
 
-function Random(){
+function _Random(){
     var _random = RandomStream()
     
     _b_ = $B.builtins
@@ -305,13 +307,19 @@ function Random(){
     }
     
     return {
+        // magic constants
+        NV_MAGICCONST: 1.71552776992141,
+        TWOPI: 6.28318530718,
+        LOG4: 1.38629436111989,
+        SG_MAGICCONST: 2.50407739677627,
+
         choice: function(seq){
             var $ = $B.$MakeArgs1('choice', 1,
                 {seq:null},['seq'],arguments, {}, null, null),
                 seq = $.seq
             var len, rank
             if(Array.isArray(seq)){len = seq.length}
-            else{len = _b_.getattr(seq,'__len__')}
+            else{len = _b_.getattr(seq,'__len__')()}
             if(len==0){throw _b_.IndexError("Cannot choose from an empty sequence")}
             rank = parseInt(_random()*len)
             if(Array.isArray(seq)){return seq[rank]}
@@ -551,8 +559,17 @@ function Random(){
                     step = $.step===null ? 1 : $.step
                 if(step==0){throw _b_.ValueError('step cannot be 0')}
             }
-            var nb = Math.floor((stop-start)/step)
-            return start + Math.floor(_random()*nb)*step
+            if(typeof start=='number' && typeof stop == 'number' &&
+                typeof step=='number'){
+                return start+Math.floor(_random()*Math.floor((stop-start)/step))
+            }else{
+                var d = _b_.getattr(stop,'__sub__')(start)
+                d = _b_.getattr(d, '__floordiv__')(step)
+                d = _b_.int(d)
+                d = _b_.getattr(d, '__mul__')(_random())
+                d = _b_.getattr(start, '__add__')(d)
+                return _b_.int(d)
+            }
         },
     
         sample: function(){
@@ -820,12 +837,27 @@ function Random(){
             u = 1 - _random()
             return alpha * Math.pow(-Math.log(u), 1/beta)
         },
-    
+        
         VERSION: 3
     }
 }
 
-var $module = Random()
+function Random(){
+    var obj = {__class__: Random.$dict}
+    Random.$dict.__init__(obj)
+    return obj
+}
+Random.__class__ = $B.$factory
+Random.$dict = {
+    __class__: $B.$type,
+    __name__: 'Random',
+    $factory: Random,
+    __init__: function(self){self.$r = _Random()},
+    __getattribute__: function(self, attr){return self.$r[attr]}
+}
+Random.$dict.__mro__ = [Random.$dict, $B.builtins.object.$dict]
+
+var $module = _Random()
 
 $module.lognormvariate = function(){
     /*
@@ -862,6 +894,24 @@ $module.betavariate = function(){
 }
 
 $module.Random = Random
+
+$module.SystemRandom = function(){
+    var f = function(){console.log('call f');return {__class__:f.$dict}}
+    f.__class__ = $B.$factory
+    f.$dict = {
+        __class__: $B.$type,
+        __name__: 'SystemRandom',
+        $factory: f,
+        __getattribute__: function(){
+            console.log('get attribute')
+            throw $B.builtins.NotImplementedError()
+        }
+    }
+    f.$dict.__mro__ = [f.$dict, $B.builtins.object.$dict]
+    console.log('SystemRandom', f)
+    return f()
+}
+
 return $module
 
 })(__BRYTHON__)
