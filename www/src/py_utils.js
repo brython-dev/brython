@@ -897,6 +897,15 @@ $B.leave_frame = function(){
 }
 
 var min_int=Math.pow(-2, 53), max_int=Math.pow(2,53)-1
+
+$B.is_safe_int = function(){
+    for(var i=0;i<arguments.length;i++){
+        var arg = arguments[i]
+        if(arg<min_int || arg>max_int){return false}
+    }
+    return true
+}
+
 $B.add = function(x,y){
     var z = x+y
     if(x>min_int && x<max_int && y>min_int && y<max_int
