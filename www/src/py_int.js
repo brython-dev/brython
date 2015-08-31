@@ -470,7 +470,7 @@ var int = function(value, base){
         if(value<$B.min_int || value>$B.max_int){
             return $B.LongInt.$dict.$from_float(value)
         }
-        else{return res}
+        else{return Math.floor(value)}
     }
 
     if (!(base >=2 && base <= 36)) {
