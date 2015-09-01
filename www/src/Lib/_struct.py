@@ -7,6 +7,7 @@
 
 # this module 'borrowed' from 
 # https://bitbucket.org/pypy/pypy/src/18626459a9b2/lib_pypy/_struct.py?at=py3k-listview_str
+# with many bug fixes
 
 """Functions to convert between Python values and C structs.
 Python strings are used to hold the data representing the C struct
@@ -109,18 +110,18 @@ def isnan(v):
 def pack_float(x, size, le):
     unsigned = float_pack(x, size)
     result = []
-    for i in range(8):
+    for i in range(size):
         result.append((unsigned >> (i * 8)) & 0xFF)
     if le == "big":
         result.reverse()
     return bytes(result)
 
 def unpack_float(data, index, size, le):
-    binary = [data[i] for i in range(index, index + 8)]
+    binary = [data[i] for i in range(index, index + size)]
     if le == "big":
         binary.reverse()
     unsigned = 0
-    for i in range(8):
+    for i in range(size):
         unsigned |= binary[i] << (i * 8)
     return float_unpack(unsigned, size, le)
 
@@ -268,11 +269,14 @@ formatmode={ '<' : (default, 'little'),
 def getmode(fmt):
     try:
         formatdef,endianness = formatmode[fmt[0]]
+        alignment = fmt[0] not in formatmode or fmt[0]=='@'
         index = 1
     except (IndexError, KeyError):
         formatdef,endianness = formatmode['@']
+        alignment = True
         index = 0
-    return formatdef,endianness,index
+    return formatdef,endianness,index,alignment
+
 def getNum(fmt,i):
     num=None
     cur = fmt[i]
@@ -290,7 +294,7 @@ def calcsize(fmt):
     Return size of C struct described by format string fmt.
     See struct.__doc__ for more on format strings."""
 
-    formatdef,endianness,i = getmode(fmt)
+    formatdef,endianness,i,alignment = getmode(fmt)
     num = 0
     result = 0
     while i<len(fmt):
@@ -303,6 +307,10 @@ def calcsize(fmt):
         if num != None :
             result += num*format['size']
         else:
+            # if formatdef is native, alignment is native, so we count a
+            # number of padding bytes until result is a multiple of size
+            if alignment:
+                result += format['size'] - result % format['size']
             result += format['size']
         num = 0
         i += 1
@@ -312,7 +320,7 @@ def pack(fmt,*args):
     """pack(fmt, v1, v2, ...) -> string
        Return string containing values v1, v2, ... packed according to fmt.
        See struct.__doc__ for more on format strings."""
-    formatdef,endianness,i = getmode(fmt)
+    formatdef,endianness,i,alignment = getmode(fmt)
     args = list(args)
     n_args = len(args)
     result = []
@@ -357,6 +365,10 @@ def pack(fmt,*args):
             if len(args) < num:
                 raise StructError("insufficient arguments to pack")
             for var in args[:num]:
+                # pad with 0 until position is a multiple of size
+                if len(result) and alignment:
+                    padding = format['size'] - len(result) % format['size']
+                    result += [bytes([0])]*padding
                 result += [format['pack'](var,format['size'],endianness)]
             args=args[num:]
         num = None
@@ -370,7 +382,7 @@ def unpack(fmt,data):
        Unpack the string, containing packed C structure data, according
        to fmt.  Requires len(string)==calcsize(fmt).
        See struct.__doc__ for more on format strings."""
-    formatdef,endianness,i = getmode(fmt)
+    formatdef,endianness,i,alignment = getmode(fmt)
     j = 0
     num = 0
     result = []
@@ -401,6 +413,10 @@ def unpack(fmt,data):
             result.append(data[j+1:j+n+1])
             j += num
         else:
+            # skip padding bytes until we get at a multiple of size
+            if j>0 and alignment:
+                padding = format['size'] - j % format['size']
+                j += padding
             for n in range(num):
                 result += [format['unpack'](data,j,format['size'],endianness)]
                 j += format['size']
@@ -409,11 +425,11 @@ def unpack(fmt,data):
 
 def pack_into(fmt, buf, offset, *args):
     data = pack(fmt, *args)
-    buffer(buf)[offset:offset+len(data)] = data
+    buf[offset:offset+len(data)] = data
 
 def unpack_from(fmt, buf, offset=0):
     size = calcsize(fmt)
-    data = buffer(buf)[offset:offset+size]
+    data = buf[offset:offset+size]
     if len(data) != size:
         raise error("unpack_from requires a buffer of at least %d bytes"
                     % (size,))
@@ -422,3 +438,11 @@ def unpack_from(fmt, buf, offset=0):
 def _clearcache():
     "Clear the internal cache."
     # No cache in this implementation
+
+if __name__=='__main__':
+    t = pack('Bf',1,2)
+    print(t, len(t))
+    print(unpack('Bf', t))
+    print(calcsize('Bf'))
+    
+    

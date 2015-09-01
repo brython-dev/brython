@@ -346,9 +346,10 @@ $LongIntDict.__floordiv__ = function(self, other){
 
 $LongIntDict.__ge__ = function(self, other){
     if (typeof other == 'number') other=LongInt(_b_.str(other))
-    if(self.value.length>other.value.length){return true}
-    else if(self.value.length<other.value.length){return false}
-    else{return self.value >= other.value}
+    if(self.pos != other.pos){return !other.pos}
+    if(self.value.length>other.value.length){return self.pos}
+    else if(self.value.length<other.value.length){return !self.pos}
+    else{return self.pos ? self.value >= other.value : self.value <= other.value}
 }
 
 $LongIntDict.__gt__ = function(self, other){
@@ -379,9 +380,10 @@ $LongIntDict.__invert__ = function(self){
 
 $LongIntDict.__le__ = function(self, other){
     if (typeof other == 'number') other=LongInt(_b_.str(other))
-    if(self.value.length>other.value.length){return false}
-    else if(self.value.length<other.value.length){return true}
-    else{return self.value <= other.value}
+    if(self.pos !== other.pos){return !self.pos}
+    if(self.value.length>other.value.length){return !self.pos}
+    else if(self.value.length<other.value.length){return self.pos}
+    else{return self.pos ? self.value <= other.value : self.value >= other.value}
 }
 
 $LongIntDict.__lt__ = function(self, other){
