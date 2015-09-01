@@ -154,7 +154,10 @@ def debug_started(Debugger):
     doc['stop'].disabled = False
     editor.setHighlightActiveLine(True)
     if Debugger.is_recorded():
-        editor.gotoLine(Debugger.get_recorded_states()[0].next_line_no)
+        if len(Debugger.get_recorded_states()) > 0:
+            editor.gotoLine(Debugger.get_recorded_states()[0].next_line_no)
+        else:
+            doc['step'].disabled = True
     else:
         Debugger.step_debugger()
 
@@ -184,6 +187,13 @@ def debug_step(state):
     else:
         doc['back'].disabled = False
 
+
+def debug_error(err, Debugger):
+    doc['console'].value = str(err.data)
+    if len(Debugger.get_recorded_states()) == 0:
+        Debugger.stop_debugger()
+
 Debugger.on_debugging_started(debug_started)
 Debugger.on_debugging_end(debug_stoped)
+Debugger.on_debugging_error(debug_error)
 Debugger.on_step_update(debug_step)

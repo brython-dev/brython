@@ -16,11 +16,12 @@
         get_current_step: getStep,
         get_current_state: getCurrentState,
         get_recorded_states: getRecordedStates,
-        on_debugging_started: setDebugStartedCallback,
-        on_debugging_end: setDebugEndedCallback,
-        on_step_update: setStepUpdateCallback
+        on_debugging_started: eventCallbackSetter('debugStarted'),
+        on_debugging_end: eventCallbackSetter('debugEnded'),
+        on_debugging_error: eventCallbackSetter('debugError'),
+        on_step_update: eventCallbackSetter('stepUpdate'),
     };
-    var LINE_RGX = /^([ ]*);\$locals\.\$line_info=\"(\d+),(.+)\";/m;
+    var LINE_RGX = /^( *);\$locals\.\$line_info=\"(\d+),(.+)\";/m;
     var WHILE_RGX = /^( *)while/m;
     var FUNC_RGX = /^( *)\$locals.*\[\"(.+)\"\]=\(function\(\){/m;
     var $B = win.__BRYTHON__;
@@ -34,15 +35,24 @@
     var myInterpreter = null;
 
     var isRecorded = false;
+    var stopDebugOnRuntimeError = false;
     var recordedFrames = [];
     var recordedOut = [];
     var recordedErr = [];
     var currentStep = 0;
     var noop = function() {};
 
-    var stepUpdate = noop;
-    var debugStarted = noop;
-    var debugEnded = noop;
+    var events = ['stepUpdate', 'debugStarted', 'debugError', 'debugEnded'];
+    var events_cb = {};
+    events.forEach(function(key) {
+        events_cb[key] = noop;
+    });
+
+    function eventCallbackSetter(key) {
+        return function(cb) {
+            events_cb[key] = cb;
+        };
+    }
 
     /**
      * Change the name of the traceCall Function that is injected in the brython generated javascript
@@ -58,20 +68,8 @@
      * is the debugger in record mode, exposed as is_recorded
      * @return {Boolean} whether the is recorded flag is on
      */
-    function wasRecorded () {
+    function wasRecorded() {
         return isRecorded;
-    }
-
-    function setDebugStartedCallback(cb) {
-        debugStarted = cb;
-    }
-
-    function setDebugEndedCallback(cb) {
-        debugEnded = cb;
-    }
-
-    function setStepUpdateCallback(cb) {
-        stepUpdate = cb;
     }
 
     function isDebugging() {
@@ -158,7 +156,7 @@
     function debuggingStarted() {
         debugging = true;
         linePause = false;
-        debugStarted(Debugger);
+        events_cb.debugStarted(Debugger);
     }
 
     /**
@@ -168,7 +166,7 @@
      */
     function updateStep() {
         currentState = recordedFrames[currentStep];
-        stepUpdate(currentState);
+        events_cb.stepUpdate(currentState);
     }
 
 
@@ -178,7 +176,29 @@
     function stopDebugger() {
         debugging = false;
         resetOutErr();
-        debugEnded(Debugger);
+        events_cb.debugEnded(Debugger);
+    }
+
+    /**
+     * Fire when an error occurrs while parsing or during runtime
+     */
+    function errorWhileDebugging(err) {
+        var trace = {
+            event: 'line',
+            type: 'runtime_error',
+            data: _b_.getattr(err, 'info') + '\n' + err.$message + '\n',
+            stack: err.$stack,
+            message: err.$message,
+            frame: $B.last(err.$stack),
+            err: err,
+            line_no: +($B.last(err.$stack)[1].$line_info.split(',')[0]),
+            next_line_no: +($B.last(err.$stack)[1].$line_info.split(',')[0]),
+            module_name: +($B.last(err.$stack)[1].$line_info.split(',')[1])
+        };
+        if (getRecordedStates().length > 0) {
+            setTrace(trace);
+        }
+        events_cb.debugError(trace, Debugger);
     }
 
     /**
@@ -206,6 +226,10 @@
                 if (isDisposableState(obj)) {
                     break;
                 }
+                if (obj.type === 'runtime_error') {
+                    recordedFrames.pop();
+                    obj.stdout += obj.data;
+                }
                 recordedFrames.push(obj);
                 break;
             case 'stdout':
@@ -216,7 +240,6 @@
                 break;
             case 'stderr':
                 console.error(obj.data);
-                stopDebugger();
                 recordedErr.push(obj);
                 if (!obj.frame) {
                     break;
@@ -284,16 +307,6 @@
         setStep(step - 1);
     }
 
-
-    /**
-     * In recorded debugging mode this will move one step forward from the current frame
-     * this triggers an debugger.update event for who ever is registered by calling setStep
-     * @return {[type]} [description]
-     */
-    function errorrWhileDebugging(err) {
-        resetOutErr();
-        resetDebugger();
-    }
     /**
      * step through the interpreter using JS-Interpreter with acorn until linePause is true
      * linePause is set to true when the interpreter runs the tracefunction and a line event is triggered
@@ -303,7 +316,7 @@
         try {
             ok = myInterpreter.step();
         } catch (e) {
-            errorrWhileDebugging(e);
+            errorWhileDebugging(e);
             console.error(e);
         } finally {
             if (!ok) {
@@ -331,18 +344,28 @@
         var code = src || getEditor().getValue() || "";
         resetDebugger();
 
-        isRecorded = record==undefined?true:record;
-
-        var obj = parseCode(code);
+        isRecorded = record === undefined ? true : record;
 
         setOutErr(record);
+        try {
+            var obj = parseCode(code);
 
-        if (record) {
-            recordedFrames = [];
-            var res = $run(obj);
+
+            if (record) {
+                recordedFrames = [];
+                var res = $run(obj);
+            } else {
+                myInterpreter = interpretCode(obj);
+            }
+        } catch (err) {
+            errorWhileDebugging(err);
+            $B.leave_frame();
+            $B.leave_frame();
+            if (stopDebugOnRuntimeError) {
+                throw err;
+            }
+        } finally {
             resetOutErr();
-        } else {
-            myInterpreter = interpretCode(obj);
         }
         debuggingStarted();
     }
@@ -371,15 +394,15 @@
         // Initialize global and local module scope
         var current_frame = $B.frames_stack[$B.frames_stack.length - 1];
         var module_name;
-        
+
         if (current_frame === undefined) {
-           module_name='__main__';
-           $B.$py_module_path[module_name] = window.location.href;
-           local_name = '__builtins__';
+            module_name = '__main__';
+            $B.$py_module_path[module_name] = window.location.href;
+            local_name = '__builtins__';
         } else {
             var current_locals_id = current_frame[0];
             var current_locals_name = current_locals_id.replace(/\./, '_');
-            var current_globals_id = current_frame[2];
+            var current_globals_id = current_frame[2] || current_locals_id;
             var current_globals_name = current_globals_id.replace(/\./, '_');
             var _globals = _b_.dict([]);
             module_name = _b_.dict.$dict.get(_globals, '__name__', 'exec_' + $B.UUID());
@@ -398,9 +421,6 @@
             if ($B.async_enabled) obj.code = $B.execution_object.source_conversion(obj.code);
             //js=js.replace("@@", "\'", 'g')
         } catch (err) {
-            errorrWhileDebugging(err);
-            $B.leave_frame();
-            $B.leave_frame();
             if (err.$py_error === undefined) {
                 throw $B.exception(err);
             }
@@ -425,7 +445,7 @@
         codearr.splice(9, 0, traceCall + "({event:'line', type:'start', frame:$B.last($B.frames_stack), line_no: " + 0 + ", next_line_no: " + 1 + "});")
         code = codearr.join('\n');
         var line = getNextLine(code);
-        if (line ===null) { // in case empty code
+        if (line === null) { // in case empty code
             return code;
         }
         var lastLineNo = 1;
@@ -455,7 +475,7 @@
         newCode += codesplit[0] + traceCall + "({event:'line', type:'eof', frame:$B.last($B.frames_stack), line_no: " + (++largestLine) + ", next_line_no: " + (largestLine) + "});\n";
         newCode += ';$B.leave_frame(' + codesplit[1];
 
-//         console.log('debugger:\n\n' + newCode);
+        //         console.log('debugger:\n\n' + newCode);
         return newCode;
 
         function getNextLine(code) {
@@ -513,7 +533,6 @@
      * @return {Object} result of running code as if evaluated
      */
     function $run(obj) {
-        var leave = false;
         var js = obj.code;
         // Initialise locals object
         try {
@@ -525,17 +544,10 @@
             if (res === undefined) return _b_.None;
             return res;
         } catch (err) {
-            errorrWhileDebugging(err);
-            $B.leave_frame();
-            $B.leave_frame();
             if (err.$py_error === undefined) {
                 throw $B.exception(err);
             }
             throw err;
-        } finally {
-            if (leave) {
-                $B.leave_frame();
-            }
         }
     }
 
@@ -594,49 +606,30 @@
     var realStdErr = $B.stderr;
 
     function createOut(cname, std, next) {
-        var cout = (function() {
-            var obj = {};
-            var $locals = obj;
-            $locals["write"] = (function() {
-                return function(data) {
-                    var frame = getLastRecordedFrame() || {
-                        frame: undefined
-                    };
-                    setTrace({
-                        event: std,
-                        data: data,
-                        frame: frame.frame,
-                        line_no: frame.line_no
-                    });
-                    if (next) {
-                        next.write(data);
-                    }
-                    return _b_.None;
+        var $io = {
+            __class__: $B.$type,
+            __name__: 'io'
+        };
+        $io.__mro__ = [$io, _b_.object.$dict];
+        return {
+            __class__: $io,
+            write: function(data) {
+                var frame = getLastRecordedFrame() || {
+                    frame: undefined
                 };
-            })();
-            $locals["write"].$infos = {
-                __name__: cname + ".write",
-                __defaults__: [],
-                __module__: "__main__",
-                __doc__: _b_.None,
-                __code__: {
-                    __class__: $B.$CodeDict,
-                    co_argcount: 2,
-                    co_filename: '',
-                    co_firstlineno: 5,
-                    co_flags: 67,
-                    co_kwonlyargcount: 0,
-                    co_name: "write",
-                    co_nlocals: 2,
-                    co_varnames: ["self", "data"]
+                setTrace({
+                    event: std,
+                    data: data,
+                    frame: frame.frame,
+                    line_no: frame.line_no
+                });
+                if (next) {
+                    next.write(data);
                 }
-            };
-            return obj;
-        })();
-        cout = $B.$class_constructor(cname, cout, _b_.tuple([]), [], []);
-        cout.$dict.__doc__ = _b_.None;
-        cout.$dict.__module__ = "__main__";
-        return cout;
+                return _b_.None;
+            },
+            flush: function() {}
+        };
     }
 
     var outerr = {
