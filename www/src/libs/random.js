@@ -561,12 +561,12 @@ function _Random(){
             }
             if(typeof start=='number' && typeof stop == 'number' &&
                 typeof step=='number'){
-                return start+Math.floor(_random()*Math.floor((stop-start)/step))
+                return start+step*Math.floor(_random()*Math.floor((stop-start)/step))
             }else{
                 var d = _b_.getattr(stop,'__sub__')(start)
                 d = _b_.getattr(d, '__floordiv__')(step)
-                d = _b_.int(d)
                 d = _b_.getattr(d, '__mul__')(_random())
+                d = _b_.getattr(step, '__mul__')(_b_.int(d))
                 d = _b_.getattr(start, '__add__')(d)
                 return _b_.int(d)
             }
