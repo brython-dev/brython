@@ -126,9 +126,6 @@
             // throw new Error("You stepped out of bounds")
             return;
         }
-        if (isLastStep()) {
-            fireLastStepEvent();
-        }
         currentStep = n;
         updateStep();
     }
@@ -373,33 +370,26 @@
         };
         // Initialize global and local module scope
         var current_frame = $B.frames_stack[$B.frames_stack.length - 1];
-        if (current_frame === undefined) {
-            alert('current frame undef pour ' + src.substr(0, 30));
-        }
-        var current_locals_id = current_frame[0];
-        var current_locals_name = current_locals_id.replace(/\./, '_');
-        var current_globals_id = current_frame[2];
-        var current_globals_name = current_globals_id.replace(/\./, '_');
         var module_name;
-        _globals = _b_.dict([]);
-        module_name = _b_.dict.$dict.get(_globals, '__name__', 'exec_' + $B.UUID());
-        $B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id];
-        local_name = module_name;
+        
+        if (current_frame === undefined) {
+           module_name='__main__';
+           $B.$py_module_path[module_name] = window.location.href;
+           local_name = '__builtins__';
+        } else {
+            var current_locals_id = current_frame[0];
+            var current_locals_name = current_locals_id.replace(/\./, '_');
+            var current_globals_id = current_frame[2];
+            var current_globals_name = current_globals_id.replace(/\./, '_');
+            var _globals = _b_.dict([]);
+            module_name = _b_.dict.$dict.get(_globals, '__name__', 'exec_' + $B.UUID());
+            $B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id];
+            local_name = module_name;
+        }
 
         obj.module_name = module_name;
         if (!$B.async_enabled) obj[module_name] = {};
 
-        // Add names/values defined in _globals
-        var items = _b_.dict.$dict.items(_globals);
-        var item;
-        while (1) {
-            try {
-                item = next(items);
-                obj[module_name][item[0]] = item[1];
-            } catch (err) {
-                break;
-            }
-        }
 
         // parse python into javascript
         try {
@@ -465,7 +455,7 @@
         newCode += codesplit[0] + traceCall + "({event:'line', type:'eof', frame:$B.last($B.frames_stack), line_no: " + (++largestLine) + ", next_line_no: " + (largestLine) + "});\n";
         newCode += ';$B.leave_frame(' + codesplit[1];
 
-        //         console.log('debugger:\n\n' + newCode);
+//         console.log('debugger:\n\n' + newCode);
         return newCode;
 
         function getNextLine(code) {
