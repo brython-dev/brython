@@ -1,3 +1,5 @@
+
+
 Testing and debugging
 ---------------------
 
@@ -64,11 +66,14 @@ A simple time-travel step back and forth debugger is implimented [here](../../te
 As of this writing it is not full featured and supports online line step
 You will find documentation on how each function in the debugger works (in case you want to build on it)
 
+Currently only python language specific programs are suported.
+
 The debugger does not yet support input statements (as it is not run live but records the program states each line then replays it), a work around is soon planned tho.
+
 
 ####Brython_Debugger For Developers
 
-The debugger provides 4 hooks (on_debugging_started, on_step_update, on_debugging_end, on_last_step) which take a callback that you can decide to do whatever you want with.
+The debugger provides 3 hooks (on_debugging_started, on_step_update, on_debugging_end) which take a callback that you can decide to do whatever you want with.
 
 This debugger is still under development and changes will occur to the API
 
@@ -76,17 +81,16 @@ The debugger is available in the global scope from the window object under Bryth
 
 For an example on how it works see [debugger](../../tests/debugger.html)
 
+If you want to add additional trace points call the setTrace function provided by the API inside your function
+
 The following is the debugger public API you can find more details description in the code at www/tests/debugger/main.js
 
 
 **Brython_Debugger**.`start_debugger()`
-> start the debugging session, takes code to debug as parameter as well as an optional boolean flag for whether to live debug or record
-> Currently live debug is not supported and debugging by default starts in record mode
-> The on_debugging_started callback is called at the end of this step
+> start the debugging session, takes code to debug as parameter as well as an optional boolean flag for whether to live debug or record. Currently live debug is not supported and debugging by default starts in record mode.  The on_debugging_started callback is called at the end of this step
 
 **Brython_Debugger**.`stop_debugger()`
-> function to call when you want to stop the debugging session
-> on_debugging_end is called at this step
+> function to call when you want to stop the debugging session on_debugging_end is called at this step
 
 **Brython_Debugger**.`step_debugger()`
 > This function when called steps forward one step in the recorded debugging session
@@ -95,8 +99,7 @@ The following is the debugger public API you can find more details description i
 > This function when called steps backward one step in the recorded debugging session
 
 **Brython_Debugger**.`set_step(n)`
-> seek to a specific step in the recorded debugging session take a number from 0 to the last step as parameter
-> if a number larger than the last step is entered nothing will happen
+> seek to a specific step in the recorded debugging session take a number from 0 to the last step as parameter. If a number larger than the last step is entered nothing will happen
 
 **Brython_Debugger**.`can_step(n)`
 > check if you can step to the specified step
@@ -122,6 +125,13 @@ The following is the debugger public API you can find more details description i
 **Brython_Debugger**.`get_recorded_frames()`
 > returns all recorded states
 
+**Brython_Debugger**.`set_trace(obj)`
+> object should contain the data you want paced later to the set_trace function
+ do not use event names already used by the debugger
+ add a trace call, (which will be called on step update)
+
+**Brython_Debugger**.`set_trace_call(string)`
+> Change the name of the traceCall Function that is injected in the brython generated javascript, used to record state, the default is Brython_Debugger.set_trace. To change it you would still need to call this function, so be careful and generally you don't need to.
 
 **Brython_Debugger**.`on_debugging_started(cb)`
 > cb is called after debugging session has started

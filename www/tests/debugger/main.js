@@ -6,27 +6,26 @@
         step_back_debugger: stepBackRecording,
         can_step: canStep,
         set_step: setStep,
-        set_editor: setEditor,
+        set_trace: setTrace,
+        set_trace_call: setTraceCall,
         is_debugging: isDebugging,
         is_recorded: wasRecorded,
         is_executing: isExecuting,
         is_last_step: isLastStep,
         is_first_step: isFirstStep,
         get_current_step: getStep,
-        get_current_frame: getCurrentFrame,
-        get_recorded_frames: getRecordedFrames,
+        get_current_state: getCurrentState,
+        get_recorded_states: getRecordedStates,
         on_debugging_started: setDebugStartedCallback,
         on_debugging_end: setDebugEndedCallback,
-        on_step_update: setStepUpdateCallback,
-        on_last_step: setStepUpdateCallback,
+        on_step_update: setStepUpdateCallback
     };
     var LINE_RGX = /^([ ]*);\$locals\.\$line_info=\"(\d+),(.+)\";/m;
     var WHILE_RGX = /^( *)while/m;
     var FUNC_RGX = /^( *)\$locals.*\[\"(.+)\"\]=\(function\(\){/m;
     var $B = win.__BRYTHON__;
     var _b_ = $B.builtins;
-    var traceWord = '__setTrace';
-    win[traceWord] = setTrace;
+    var traceCall = 'Brython_Debugger.set_trace';
     var editor;
     var debugging = false; // flag indecting debugger was started
     var stepLimit = 10000; // Solving the halting problem by limiting the number of steps to run
@@ -44,8 +43,21 @@
     var stepUpdate = noop;
     var debugStarted = noop;
     var debugEnded = noop;
-    var debugLastStep = noop;
 
+    /**
+     * Change the name of the traceCall Function that is injected in the brython generated javascript
+     * The default is Brython_Debugger.set_trace
+     * To change it you would still need to call this function
+     * So be careful and generally you don't need to
+     */
+    function setTraceCall(name) {
+        traceCall = name;
+    }
+
+    /**
+     * is the debugger in record mode, exposed as is_recorded
+     * @return {Boolean} whether the is recorded flag is on
+     */
     function wasRecorded () {
         return isRecorded;
     }
@@ -60,10 +72,6 @@
 
     function setStepUpdateCallback(cb) {
         stepUpdate = cb;
-    }
-
-    function lastStepCallback(cb) {
-        debugLastStep = cb;
     }
 
     function isDebugging() {
@@ -86,7 +94,7 @@
         return currentStep;
     }
 
-    function getRecordedFrames() {
+    function getRecordedStates() {
         return recordedFrames;
     }
 
@@ -94,8 +102,8 @@
         return recordedFrames[recordedFrames.length - 1];
     }
 
-    function getCurrentFrame() {
-        return currentFrame;
+    function getCurrentState() {
+        return currentState;
     }
 
     function setStepLimit(n) {
@@ -142,7 +150,6 @@
 
     /**
      * reset all the way back to first step in recordedFrames
-     * @return {[type]} [description]
      */
     function resetStep() {
         setStep(0);
@@ -150,42 +157,31 @@
 
     /**
      * Fire event after debugger has been intialized and bebug mode started
-     * @return {[type]} [description]
      */
     function debuggingStarted() {
         debugging = true;
         linePause = false;
-        debugStarted();
+        debugStarted(Debugger);
     }
 
     /**
      * Set currntFrame to the one corresponding to the current step
      * Fire event when currentStep changes
      * In live mode currentStep is useually the last
-     * @return {[type]} [description]
      */
     function updateStep() {
-        currentFrame = recordedFrames[currentStep];
-        stepUpdate(currentFrame);
+        currentState = recordedFrames[currentStep];
+        stepUpdate(currentState);
     }
 
 
     /**
      * Fire when exiting debug mode
-     * @return {[type]} [description]
      */
     function stopDebugger() {
         debugging = false;
         resetOutErr();
-        debugEnded();
-    }
-
-    /**
-     * Fire when exiting debug mode
-     * @return {[type]} [description]
-     */
-    function fireLastStepEvent() {
-        lastStepCallback();
+        debugEnded(Debugger);
     }
 
     /**
@@ -231,6 +227,9 @@
                 getLastRecordedFrame().printerr = obj.data;
                 getLastRecordedFrame().stderr += obj.data;
                 break;
+            default:
+                // custom step to be handled by user
+                recordedFrames.push(obj);
         }
 
         if (recordedFrames.length > stepLimit) {
@@ -319,7 +318,7 @@
         if (linePause) {
             // A block has been highlighted.  Pause execution here.
             linePause = false;
-            currentStep = getRecordedFrames().length - 1;
+            currentStep = getRecordedStates().length - 1;
         } else {
             // Keep executing until a highlight statement is reached.
             stepDebugger();
@@ -433,7 +432,7 @@
         var newCode = "";
         var whileLine;
         var codearr = code.split('\n');
-        codearr.splice(9, 0, traceWord + "({event:'line', type:'start', frame:$B.last($B.frames_stack), line_no: " + 0 + ", next_line_no: " + 1 + "});")
+        codearr.splice(9, 0, traceCall + "({event:'line', type:'start', frame:$B.last($B.frames_stack), line_no: " + 0 + ", next_line_no: " + 1 + "});")
         code = codearr.join('\n');
         var line = getNextLine(code);
         if (line ===null) { // in case empty code
@@ -445,7 +444,7 @@
         do {
 
             newCode += code.substr(0, index);
-            newCode += line.indentString + traceWord + "({event:'line', frame:$B.last($B.frames_stack), line_no: " + line.line_no + ", next_line_no: " + (+line.line_no + 1) + "});\n";
+            newCode += line.indentString + traceCall + "({event:'line', frame:$B.last($B.frames_stack), line_no: " + line.line_no + ", next_line_no: " + (+line.line_no + 1) + "});\n";
             newCode += line.string;
             index += line.string.length;
             code = code.substr(index);
@@ -463,7 +462,7 @@
             index = line.index;
         } while (true);
         var codesplit = code.split(/^\;\$B\.leave_frame\(/m)
-        newCode += codesplit[0] + traceWord + "({event:'line', type:'eof', frame:$B.last($B.frames_stack), line_no: " + (++largestLine) + ", next_line_no: " + (largestLine) + "});\n";
+        newCode += codesplit[0] + traceCall + "({event:'line', type:'eof', frame:$B.last($B.frames_stack), line_no: " + (++largestLine) + ", next_line_no: " + (largestLine) + "});\n";
         newCode += ';$B.leave_frame(' + codesplit[1];
 
         //         console.log('debugger:\n\n' + newCode);
@@ -510,9 +509,9 @@
             var re = new RegExp('^' + indent, 'm');
             var res = re.exec(code);
             newCode += code.substr(0, res.index);
-            newCode += whileLine.indentString + traceWord + "({event:'line', type:'endwhile', frame:$B.last($B.frames_stack), line_no: " + lastLine + ", next_line_no: " + (lastLine + 1) + "});\n";
+            newCode += whileLine.indentString + traceCall + "({event:'line', type:'endwhile', frame:$B.last($B.frames_stack), line_no: " + lastLine + ", next_line_no: " + (lastLine + 1) + "});\n";
             newCode += indent;
-            newCode += traceWord + "({event:'line', type:'afterwhile', frame:$B.last($B.frames_stack), line_no: " + (lastLine + 1) + ", next_line_no: " + (lastLine + 1) + "});\n";
+            newCode += traceCall + "({event:'line', type:'afterwhile', frame:$B.last($B.frames_stack), line_no: " + (lastLine + 1) + ", next_line_no: " + (lastLine + 1) + "});\n";
             newCode += code.substr(res.index + indent.length);
             return newCode;
         }
@@ -581,7 +580,7 @@
             wrapper = function(obj) {
                 return interpreter.createPrimitive(setTrace(obj));
             };
-            interpreter.setProperty(scope, traceWord,
+            interpreter.setProperty(scope, traceCall,
                 interpreter.createNativeFunction(wrapper));
 
             wrapper = function(text) {
