@@ -358,6 +358,9 @@
                 myInterpreter = interpretCode(obj);
             }
         } catch (err) {
+            if(!err.$py_error) {
+                throw err;
+            }
             errorWhileDebugging(err);
             $B.leave_frame();
             $B.leave_frame();
@@ -496,6 +499,7 @@
             var match = WHILE_RGX.exec(code);
             if (!match) return null;
             return {
+                indent: match[1].length,
                 indentString: match[1],
                 match: match,
                 index: match.index
@@ -516,7 +520,7 @@
         function injectWhileEndTrace(code, whileLine, lastLine) {
             var indent = whileLine.indentString + '}';
             var newCode = "";
-            var re = new RegExp('^' + indent, 'm');
+            var re = new RegExp('^ {'+Math.max(whileLine.indent-4, 0)+','+whileLine.indent+'}\}', 'm');
             var res = re.exec(code);
             newCode += code.substr(0, res.index);
             newCode += whileLine.indentString + traceCall + "({event:'line', type:'endwhile', frame:$B.last($B.frames_stack), line_no: " + lastLine + ", next_line_no: " + (lastLine + 1) + "});\n";

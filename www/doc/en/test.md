@@ -63,7 +63,7 @@ to learn more about the chrome developer tools visit their documentation or this
 
 A simple time-travel step back and forth debugger is implimented [here](../../tests/debugger.html)
 
-As of this writing it is not full featured and supports online line step
+As of this writing it is not full featured and supports only line step.
 You will find documentation on how each function in the debugger works (in case you want to build on it)
 
 Currently only python language specific programs are suported.
@@ -73,7 +73,7 @@ The debugger does not yet support input statements (as it is not run live but re
 
 ####Brython_Debugger For Developers
 
-The debugger provides 3 hooks (on_debugging_started, on_step_update, on_debugging_end) which take a callback that you can decide to do whatever you want with.
+The debugger provides 4 hooks (on_debugging_started, on_step_update, on_debugging_end, and on_debugging_error) which take a callback that you can decide to do whatever you want with.
 
 This debugger is still under development and changes will occur to the API
 
@@ -138,6 +138,9 @@ The following is the debugger public API you can find more details description i
 
 **Brython_Debugger**.`on_debugging_end(cb)`
 > cb is called after debugging session has ended
+
+**Brython_Debugger**.`on_debugging_error(cb)`
+> cb is called after either a syntax or runtime error occurs
 
 **Brython_Debugger**.`on_step_update(cb)`
 > cb is called whenever a state is changed using setState
