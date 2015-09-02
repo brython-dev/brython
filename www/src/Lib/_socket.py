@@ -260,60 +260,60 @@ def getaddrinfo(*args,**kw):
     """getaddrinfo(host, port [, family, socktype, proto, flags])        -> list of (family, socktype, proto, canonname, sockaddr)
     
     Resolve host and port into addrinfo struct."""
-    raise NotImplementedError()
+    pass
 
 def getdefaulttimeout(*args,**kw):
     """getdefaulttimeout() -> timeout    
     Returns the default timeout in seconds (float) for new socket objects.
     A value of None indicates that new socket objects have no timeout.
     When the socket module is first imported, the default is None."""
-    raise NotImplementedError()
+    pass
 
 def gethostbyaddr(*args,**kw):
     """gethostbyaddr(host) -> (name, aliaslist, addresslist)    
     Return the true host name, a list of aliases, and a list of IP addresses,
     for a host.  The host argument is a string giving a host name or IP number."""
-    raise NotImplementedError()
+    pass
 
 def gethostbyname(*args,**kw):
     """gethostbyname(host) -> address    
     Return the IP address (a string of the form '255.255.255.255') for a host."""
-    raise NotImplementedError()
+    pass
 
 def gethostbyname_ex(*args,**kw):
     """gethostbyname_ex(host) -> (name, aliaslist, addresslist)    
     Return the true host name, a list of aliases, and a list of IP addresses,
     for a host.  The host argument is a string giving a host name or IP number."""
-    raise NotImplementedError()
+    pass
 
 def gethostname(*args,**kw):
     """gethostname() -> string    
     Return the current host name."""
-    raise NotImplementedError()
+    pass
 
 def getnameinfo(*args,**kw):
     """getnameinfo(sockaddr, flags) --> (host, port)    
     Get host and port for a sockaddr."""
-    raise NotImplementedError()
+    pass
 
 def getprotobyname(*args,**kw):
     """getprotobyname(name) -> integer    
     Return the protocol number for the named protocol.  (Rarely used.)"""
-    raise NotImplementedError()
+    pass
 
 def getservbyname(*args,**kw):
     """getservbyname(servicename[, protocolname]) -> integer    
     Return a port number from a service name and protocol name.
     The optional protocol name, if given, should be 'tcp' or 'udp',
     otherwise any protocol will match."""
-    raise NotImplementedError()
+    pass
 
 def getservbyport(*args,**kw):
     """getservbyport(port[, protocolname]) -> string    
     Return the service name from a port number and protocol name.
     The optional protocol name, if given, should be 'tcp' or 'udp',
     otherwise any protocol will match."""
-    raise NotImplementedError()
+    pass
 
 has_ipv6 = True
 
@@ -323,48 +323,48 @@ class herror:
 def htonl(*args,**kw):
     """htonl(integer) -> integer    
     Convert a 32-bit integer from host to network byte order."""
-    raise NotImplementedError()
+    pass
 
 def htons(*args,**kw):
     """htons(integer) -> integer    
     Convert a 16-bit integer from host to network byte order."""
-    raise NotImplementedError()
+    pass
 
 def inet_aton(*args,**kw):
-    """inet_aton(string) -> bytes giving packed 32-bit IP representation
+    """inet_aton(string) -> bytes giving packed 32-bit IP representation    
     Convert an IP address in string format (123.45.67.89) to the 32-bit packed
     binary format used in low-level network functions."""
-    raise NotImplementedError()
+    pass
 
 def inet_ntoa(*args,**kw):
     """inet_ntoa(packed_ip) -> ip_address_string    
     Convert an IP address from 32-bit packed binary format to string format"""
-    raise NotImplementedError()
+    pass
 
 def ntohl(*args,**kw):
     """ntohl(integer) -> integer    
     Convert a 32-bit integer from network to host byte order."""
-    raise NotImplementedError()
+    pass
 
 def ntohs(*args,**kw):
     """ntohs(integer) -> integer    
     Convert a 16-bit integer from network to host byte order."""
-    raise NotImplementedError()
+    pass
 
 def setdefaulttimeout(*args,**kw):
     """setdefaulttimeout(timeout)    
     Set the default timeout in seconds (float) for new socket objects.
     A value of None indicates that new socket objects have no timeout.
     When the socket module is first imported, the default is None."""
-    raise NotImplementedError()
+    pass
 
 class socket:
     def __init__(self,*args,**kw):
         pass
     def bind(self,*args,**kw):
-        raise NotImplementedError()
+        pass
     def close(self):
-        raise NotImplementedError()
+        pass
 
 class timeout:
     pass
