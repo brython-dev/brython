@@ -57,7 +57,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,1,'final',0]
 __BRYTHON__.__MAGIC__="3.2.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-01 11:04:53.715333"
+__BRYTHON__.compiled_date="2015-09-02 13:37:29.815962"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4651,7 +4651,8 @@ return _str.join(';')}
 $B.$GetInt=function(value){
 if(typeof value=="number"){return value}
 else if(typeof value==="boolean"){return value ? 1 : 0}
-else if(_b_.isinstance(value,[_b_.int,_b_.float])){return value.valueOf()}
+else if(_b_.isinstance(value,_b_.int)){return value}
+else if(_b_.isinstance(value,_b_.float)){return value.valueOf()}
 try{var v=_b_.getattr(value,'__int__')();return v}catch(e){}
 try{var v=_b_.getattr(value,'__index__')();return v}catch(e){}
 throw _b_.TypeError("'"+$B.get_class(value).__name__+
@@ -5163,8 +5164,9 @@ var res=self.start + rank*self.step
 if((self.step>0 && res >=self.stop)||
 (self.step<0 && res < self.stop)){throw _b_.IndexError('range object index out of range')}
 return res }
-$RangeDict.__iter__=function(self){return{
-__class__ : $RangeDict,start:self.start,stop:self.stop,step:self.step,$counter:self.start-self.step}}
+$RangeDict.__iter__=function(self){var res={__class__ : $RangeDict,start:self.start,stop:self.stop,step:self.step}
+if(self.$safe){res.$counter=self.start-self.step}else{res.$counter=$B.sub(self.start,self.step)}
+return res}
 $RangeDict.__len__=function(self){if(self.step>0)return 1+_b_.int((self.stop-1-self.start)/self.step)
 return 1+_b_.int((self.start-1-self.stop)/-self.step)}
 $RangeDict.__next__=function(self){if(self.$safe){self.$counter +=self.step
@@ -5175,8 +5177,8 @@ if(($B.gt(self.step,0)&& $B.ge(self.$counter,self.stop))
 return self.$counter}
 $RangeDict.__mro__=[$RangeDict,$ObjectDict]
 $RangeDict.__reversed__=function(self){return range($B.sub(self.stop,1),$B.sub(self.start,1),$B.sub(0,self.step))}
-$RangeDict.__repr__=$RangeDict.__str__=function(self){var res='range('+self.start+', '+self.stop
-if(self.step!=1)res +=', '+self.step
+$RangeDict.__repr__=$RangeDict.__str__=function(self){var res='range('+_b_.str(self.start)+', '+_b_.str(self.stop)
+if(self.step!=1)res +=', '+_b_.str(self.step)
 return res+')'}
 function range(){var $ns=$B.$MakeArgs1('range',0,{},[],arguments,{},'args',null)
 var args=$ns['args']
@@ -5195,7 +5197,6 @@ if(step==0){throw ValueError("range() arg 3 must not be zero")}
 var res={__class__ : $RangeDict,start:start,stop:stop,step:step,$is_range:true}
 res.$safe=(typeof start=='number' && typeof stop=='number' &&
 typeof step=='number')
-res.__repr__=res.__str__=function(){return 'range('+start+','+stop+(args.length>=3 ? ','+step : '')+')'}
 return res}
 range.__class__=$B.$factory
 range.$dict=$RangeDict
@@ -7101,35 +7102,29 @@ left +=right.charAt(0)
 right=right.substr(1)}
 mod=sub_pos(v1,mul_pos(quotient,v2).value)}
 return[LongInt(quotient),mod]}
-function mul_pos(v1,v2){
-if(v1.length<v2.length){var a=v1;v1=v2 ;v2=a}
-if(v2=='0'){return LongInt('0')}
-var cols={},i=v2.length,j
-while(i--){var car=v2.charAt(i)
-if(car=="0"){j=v1.length
-while(j--){if(cols[i+j]===undefined){cols[i+j]=0}}}else if(car=="1"){j=v1.length
-while(j--){var z=parseInt(v1.charAt(j))
-if(cols[i+j]===undefined){cols[i+j]=z}
-else{cols[i+j]+=z}}}else{var x=parseInt(car),j=v1.length,y,z
-while(j--){y=x * parseInt(v1.charAt(j))
-if(cols[i+j]===undefined){cols[i+j]=y}
-else{cols[i+j]+=y}}}}
-i=v1.length+v2.length-1
-while(i--){var col=cols[i].toString()
-if(col.length>1){
-cols[i]=parseInt(col.charAt(col.length-1))
-j=col.length
-while(j-->1){var report=parseInt(col.charAt(j-1))
-var pos=i-col.length+j
-if(cols[pos]===undefined){cols[pos]=report}
-else{cols[pos]+=report}}}}
-var imin
-for(var attr in cols){i=parseInt(attr)
-if(imin===undefined){imin=i}
-else if(i<imin){imin=i}}
-var res=''
-for(var i=imin;i<=v1.length+v2.length-2;i++){res+=cols[i].toString()}
-return LongInt(res)}
+function split_chunks(s,size){var nb=Math.ceil(s.length/size),chunks=[],len=s.length
+for(var i=0;i<nb;i++){var pos=len-size*(i+1)
+if(pos<0){size +=pos;pos=0}
+chunks.push(parseInt(s.substr(pos,size)))}
+return chunks}
+function mul_pos(x,y){
+var chunk_size=6
+var cx=split_chunks(x,chunk_size),cy=split_chunks(y,chunk_size)
+var products={},len=cx.length+cy.length
+for(var i=0;i<len-1;i++){products[i]=0}
+for(var i=0;i<cx.length;i++){for(var j=0;j<cy.length;j++){products[i+j]+=cx[i]*cy[j]}}
+var nb=len-1
+for(var i=0;i<len-1;i++){var chunks=split_chunks(res[i].toString(),chunk_size)
+for(var j=1;j<chunks.length;j++){pos=i+j
+if(res[pos]===undefined){res[pos]=parseInt(chunks[j]);nb=pos}
+else{res[pos]+=parseInt(chunks[j])}}
+res[i]=chunks[0]}
+var result='',i=0,s
+while(res[i]!==undefined){s=res[i].toString()
+if(res[i+1]!==undefined){s='0'.repeat(chunk_size-s.length)+s}
+result=s+result;
+i++}
+return LongInt(result)}
 function sub_pos(v1,v2){
 var res='',carry=0,i1=v1.length,sv=0
 for(var i=v2.length-1;i>=0;i--){i1--
@@ -7143,10 +7138,6 @@ if(x<0){res=(10+x)+res;carry=1}
 else{res=x+res;carry=0}}
 while(res.charAt(0)=='0' && res.length>1){res=res.substr(1)}
 return{__class__:$LongIntDict,value:res,pos:true}}
-$LongIntDict.$from_float=function(value){var _s=value.toExponential().split('e'),d=_s[0],e=parseInt(_s[1])
-var res=d.replace(/\./,'')
-res +='0'.repeat(e-res.length+1)
-return{__class__: $B.LongInt.$dict,value: res,pos: value>=0}}
 $LongIntDict.__abs__=function(self){return{__class__:$LongIntDict,value: self.value,pos:true}}
 $LongIntDict.__add__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float(parseInt(self.value)+other.value)}
 if(typeof other=='number')other=LongInt(_b_.str(other))
