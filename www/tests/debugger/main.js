@@ -210,7 +210,12 @@
             module_name: +($B.last(err.$stack)[1].$line_info.split(',')[1])
         };
         if (getRecordedStates().length > 0) {
-            setTrace(trace);
+            if(getRecordedStates().length>=stepLimit) {
+                trace.type = 'infinit_loop';
+                recordedStates.push(trace)
+            } else {
+                setTrace(trace);   
+            }
         }
         events_cb.debugError(trace, Debugger);
     }
@@ -223,6 +228,13 @@
     function setTrace(state) {
         // console.log(state);
         // replace by event
+
+        if (recordedStates.length > stepLimit) {
+            throw $B.exception("You have exceeded the amount of steps allowed by this debugger, you probably have an infinit loop or you're running a long program");
+            // you can change the limit by using the setStepLimit method variable form the default
+            // The debugger is not meant to debug long pieces of code so that should be taken into consideration
+        }
+
         switch (state.event) {
             case 'line':
                 return setLineTrace(state);
@@ -236,12 +248,6 @@
             default:
                 // custom step to be handled by user
                 recordedStates.push(state);
-        }
-
-        if (recordedStates.length > stepLimit) {
-            throw new Error("You have exceeded the amount of steps allowed by this debugger, you probably have an infinit loop or you're running a long program");
-            // you can change the limit by using the setStepLimit method variable form the default
-            // The debugger is not meant to debug long pieces of code so that should be taken into consideration
         }
     }
 
@@ -271,10 +277,14 @@
             return;
         }
         if (state.type === 'runtime_error') {
-            recordedStates.pop();
-            state.stdout += state.data;
+           setErrorState(state);
         }
         recordedStates.push(state);
+    }
+
+    function setErrorState(state) {
+        recordedStates.pop();
+        state.stdout += state.data;
     }
 
     function setdStdOutTrace(state) {
