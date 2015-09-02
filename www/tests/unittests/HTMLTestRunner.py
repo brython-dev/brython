@@ -317,8 +317,8 @@ pre         { }
 
 /* -- heading ---------------------------------------------------------------------- */
 h1 {
-	font-size: 16pt;
-	color: gray;
+    font-size: 16pt;
+    color: gray;
 }
 .heading {
     margin-top: 0ex;
@@ -380,7 +380,7 @@ a.popup_link:hover {
 #total_row  { font-weight: bold; }
 .passClass  { background-color: #6c6; }
 .failClass  { background-color: #c60; }
-.errorClass { background-color: #c00; }
+.errorClass { background-color: #c00; color:#FFF}
 .passCase   { color: #6c6; }
 .failCase   { color: #c60; font-weight: bold; }
 .errorCase  { color: #c00; font-weight: bold; }
