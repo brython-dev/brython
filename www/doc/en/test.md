@@ -66,14 +66,33 @@ A simple time-travel step back and forth debugger is implimented [here](../../te
 As of this writing it is not full featured and supports only line step.
 You will find documentation on how each function in the debugger works (in case you want to build on it)
 
-Currently only python language specific programs are suported.
+Currently only python language specific programs are supported.
 
-The debugger does not yet support input statements (as it is not run live but records the program states each line then replays it), a work around is soon planned tho.
+The debugger does not fully support the input statements; only supporting input with a string literal for argument (more on this below).
 
 
 ####Brython_Debugger For Developers
 
 The debugger provides 4 hooks (on_debugging_started, on_step_update, on_debugging_end, and on_debugging_error) which take a callback that you can decide to do whatever you want with.
+
+The way the debugger works in record mode (default) when you run `start_debugger` is by parsing the python code into brython generated js and then injecting a trace function before each $line_info occurrence (which requires running brython in debug mode higher than 0).
+
+Additional trace calls; are injected at the start of the code before any line, for pointing at the first line; after while loops and at the end of the program, for pointing at the correct lines when debugging in an editor.
+
+Since the debugger is not run live but recorded the parser replaces each call to the brython input function with a trace of type input with the arguments that were meant to be passed to the input function (currently only support string literals).
+
+After injecting trace is complete the debugger runs the code which then fires the trace calls while running.
+
+Each line trace call gets a state object as parameter with the current top frame and line number and records it. Before doing so the previous state's next line number is updated with the current state's line number; as while stepping in the editor the next line not the current line is what gets highlighted.
+
+If the line trace is of type afterwhile or eof then it's state is not recorded.
+
+If an input trace is called then a line state trace of type input is added and the debugger halts code execution, starting the debugging session.
+
+When the line trace of type input is stepped on the user is prompted for input based on Brython's defined input function, the result is recorded and the program gets re-executed.
+
+If there was no input trace then the debugging session will start after the parsed code is executed normally.
+
 
 This debugger is still under development and changes will occur to the API
 
@@ -81,7 +100,7 @@ The debugger is available in the global scope from the window object under Bryth
 
 For an example on how it works see [debugger](../../tests/debugger.html)
 
-If you want to add additional trace points call the setTrace function provided by the API inside your function
+If you want to add additional trace points call the setTrace function provided by the API inside your own function (currently must be globally accessible)
 
 The following is the debugger public API you can find more details description in the code at www/tests/debugger/main.js
 
@@ -98,11 +117,11 @@ The following is the debugger public API you can find more details description i
 **Brython_Debugger**.`step_back_debugger()`
 > This function when called steps backward one step in the recorded debugging session
 
-**Brython_Debugger**.`set_step(n)`
-> seek to a specific step in the recorded debugging session take a number from 0 to the last step as parameter. If a number larger than the last step is entered nothing will happen
-
 **Brython_Debugger**.`can_step(n)`
 > check if you can step to the specified step
+
+**Brython_Debugger**.`set_step(n)`
+> seek to a specific step in the recorded debugging session take a number from 0 to the last step as parameter. If a number larger than the last step is entered nothing will happen
 
 **Brython_Debugger**.`is_debugging()`
 > return whether a debugging session is active
@@ -124,6 +143,9 @@ The following is the debugger public API you can find more details description i
 
 **Brython_Debugger**.`get_recorded_frames()`
 > returns all recorded states
+
+**Brython_Debugger**.`set_trace_limit(Number)`
+> The maximum number of steps executed before the debugger halts, defult 10000
 
 **Brython_Debugger**.`set_trace(obj)`
 > object should contain the data you want paced later to the set_trace function

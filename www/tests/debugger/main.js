@@ -8,6 +8,7 @@
         set_step: setStep,
         set_trace: setTrace,
         set_trace_call: setTraceCall,
+        set_step_limit: setStepLimit,
         is_debugging: isDebugging,
         is_recorded: wasRecorded,
         is_executing: isExecuting,
@@ -24,7 +25,6 @@
     var $B = win.__BRYTHON__;
     var _b_ = $B.builtins;
     var traceCall = 'Brython_Debugger.set_trace';
-    var editor;
     var debugging = false; // flag indecting debugger was started
     var stepLimit = 10000; // Solving the halting problem by limiting the number of steps to run
 
@@ -86,14 +86,6 @@
         return debugging && !linePause;
     }
 
-    function setEditor(ed) {
-        editor = ed;
-    }
-
-    function getEditor() {
-        return editor;
-    }
-
     function getStep() {
         return currentStep;
     }
@@ -110,8 +102,12 @@
         return currentState;
     }
 
+    /**
+     * Set the limit of the number of steps that can be executed before thrwing an error
+     * @param {Numebr} n limit default 100000
+     */
     function setStepLimit(n) {
-        stepLimit = n || 10000;
+        stepLimit = (n===undefined)?10000:n;
     }
 
     /**
@@ -166,13 +162,6 @@
      */
     function isFirstStep() {
         return currentStep === 0;
-    }
-
-    /**
-     * reset all the way back to first step in recordedStates
-     */
-    function resetStep() {
-        setStep(0);
     }
 
     /**
@@ -313,7 +302,7 @@
         state.event = 'line';
         state.type = 'input';
         state.id = state.id + recordedStates.length;
-        if (recordedInputs[state.id]) {
+        if (recordedInputs[state.id]!==undefined) {
             return recordedInputs[state.id];
         } else {
             state.line_no = getLastRecordedState().line_no;
