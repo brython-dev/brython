@@ -21,9 +21,6 @@
         on_debugging_error: eventCallbackSetter('debugError'),
         on_step_update: eventCallbackSetter('stepUpdate'),
     };
-    var LINE_RGX = /^( *);\$locals\.\$line_info=\"(\d+),(.+)\";/m;
-    var WHILE_RGX = /^( *)while/m;
-    var FUNC_RGX = /^( *)\$locals.*\[\"(.+)\"\]=\(function\(\){/m;
     var $B = win.__BRYTHON__;
     var _b_ = $B.builtins;
     var traceCall = 'Brython_Debugger.set_trace';
@@ -35,8 +32,10 @@
     var myInterpreter = null;
 
     var isRecorded = false;
-    var stopDebugOnRuntimeError = false;
-    var recordedFrames = [];
+    var weStopDebugOnRuntimeError = false;
+    var parserReturn = null; // object returned when done parsing
+    var recordedStates = [];
+    var recordedInputs = {};
     var recordedOut = [];
     var recordedErr = [];
     var currentStep = 0;
@@ -47,6 +46,13 @@
     events.forEach(function(key) {
         events_cb[key] = noop;
     });
+
+    // used in trace injection
+    var LINE_RGX = /^( *);\$locals\.\$line_info=\"(\d+),(.+)\";/m;
+    var WHILE_RGX = /^( *)while/m;
+    var FUNC_RGX = /^( *)\$locals.*\[\"(.+)\"\]=\(function\(\){/m;
+    var INPUT_RGX = /getattr\(\$B.builtins\[\"input\"\],\"__call__\"\)\(((?:\"(.)*\")|\d*)\)/g; // only works for string params
+    var HALT = "HALT";
 
     function eventCallbackSetter(key) {
         return function(cb) {
@@ -93,11 +99,11 @@
     }
 
     function getRecordedStates() {
-        return recordedFrames;
+        return recordedStates;
     }
 
-    function getLastRecordedFrame() {
-        return recordedFrames[recordedFrames.length - 1];
+    function getLastRecordedState() {
+        return recordedStates[recordedStates.length - 1];
     }
 
     function getCurrentState() {
@@ -113,19 +119,38 @@
      * @param {Number} n The place to seek
      */
     function canStep(n) {
-        return n < recordedFrames.length && n >= 0;
+        return n < recordedStates.length && n >= 0;
     }
     /**
-     * Move to step n in recordedFrames
+     * return state at position n
+     * @param {Number} n The place to seek
+     */
+    function getState(n) {
+        return canStep(n) ? getRecordedStates()[n] : null;
+    }
+    /**
+     * Move to step n in recordedStates
      * @param {Number} n The place to seek
      */
     function setStep(n) {
-        if (!canStep(n)) {
+        var state = getState(n);
+        if (!state) {
             // throw new Error("You stepped out of bounds")
             return;
         }
+        if (state.type === 'input') {
+            recordInput(state);
+            rerunCode();
+            n -= 1;
+        }
         currentStep = n;
         updateStep();
+    }
+
+    function recordInput(state) {
+        var inp = _b_.input(state.arg);
+        recordedInputs[state.id] = inp;
+        return recordedInputs[state.id];
     }
 
     /**
@@ -133,7 +158,7 @@
      * @return {Boolean} [description]
      */
     function isLastStep() {
-        return currentStep === recordedFrames.length - 1;
+        return currentStep === recordedStates.length - 1;
     }
     /**
      * Is this first step
@@ -144,7 +169,7 @@
     }
 
     /**
-     * reset all the way back to first step in recordedFrames
+     * reset all the way back to first step in recordedStates
      */
     function resetStep() {
         setStep(0);
@@ -165,7 +190,7 @@
      * In live mode currentStep is useually the last
      */
     function updateStep() {
-        currentState = recordedFrames[currentStep];
+        currentState = recordedStates[currentStep];
         events_cb.stepUpdate(currentState);
     }
 
@@ -203,77 +228,122 @@
 
     /**
      * Trace Function constructs a list of states of the program after each trace call
-     * @param {[type]} obj [description]
+     * @param {[type]} state trace object
+     * @return {String} Value of input when setTrace is used for input
      */
-    function setTrace(obj) {
-        // console.log(obj);
+    function setTrace(state) {
+        // console.log(state);
         // replace by event
-        switch (obj.event) {
+        switch (state.event) {
             case 'line':
-                if (!isRecorded) linePause = true;
-                obj.printerr = obj.stderr = obj.stdout = obj.printout = "";
-                if (getLastRecordedFrame()) {
-                    obj.stdout = getLastRecordedFrame().stdout;
-                    obj.stderr = getLastRecordedFrame().stderr;
-                    obj.locals = obj.frame[1];
-                    obj.globals = obj.frame[3];
-                    obj.var_names = Object.keys(obj.locals).filter(function(key) {
-                        return !/^(__|_|\$)/.test(key);
-                    });
-
-                    getLastRecordedFrame().next_line_no = obj.line_no;
-                }
-                if (isDisposableState(obj)) {
-                    break;
-                }
-                if (obj.type === 'runtime_error') {
-                    recordedFrames.pop();
-                    obj.stdout += obj.data;
-                }
-                recordedFrames.push(obj);
-                break;
+                return setLineTrace(state);
             case 'stdout':
-                // console.log(obj.data);
-                recordedOut.push(obj);
-                getLastRecordedFrame().printout = obj.data;
-                getLastRecordedFrame().stdout += obj.data;
-                break;
+                return setdStdOutTrace(state);
             case 'stderr':
-                console.error(obj.data);
-                recordedErr.push(obj);
-                if (!obj.frame) {
-                    break;
-                }
-                getLastRecordedFrame().printerr = obj.data;
-                getLastRecordedFrame().stderr += obj.data;
-                break;
+                return setdStdErrTrace(state);
+            case 'input':
+                // state = {event, arg, id}
+                return setInputTrace(state);
             default:
                 // custom step to be handled by user
-                recordedFrames.push(obj);
+                recordedStates.push(state);
         }
 
-        if (recordedFrames.length > stepLimit) {
+        if (recordedStates.length > stepLimit) {
             throw new Error("You have exceeded the amount of steps allowed by this debugger, you probably have an infinit loop or you're running a long program");
             // you can change the limit by using the setStepLimit method variable form the default
             // The debugger is not meant to debug long pieces of code so that should be taken into consideration
         }
     }
+
     /**
-     * these states are only there to update the previouse states of where they should point
-     * they are not recorded
-     * @param  {[type]}  obj [description]
-     * @return {Boolean}     [description]
+     * Inserts a line state trace in recorded states
+     * makes sure that trace builds on old trace stdout and stderr
+     * Update previous state next_line_no with the current state line_no for editor using debugger to highlight
+     * Some states are disposable and are only inserted to insure proper next_line_no update and are thuse disposed of later
      */
-    function isDisposableState(obj) {
-        return obj.type === 'afterwhile' || obj.type === 'eof';
+    function setLineTrace(state) {
+        if (!isRecorded) {
+            linePause = true;
+        }
+        state.printerr = state.stderr = state.stdout = state.printout = "";
+        if (getLastRecordedState()) {
+            state.stdout = getLastRecordedState().stdout;
+            state.stderr = getLastRecordedState().stderr;
+            state.locals = state.frame[1];
+            state.globals = state.frame[3];
+            state.var_names = Object.keys(state.locals).filter(function(key) {
+                return !/^(__|_|\$)/.test(key);
+            });
+
+            getLastRecordedState().next_line_no = state.line_no;
+        }
+        if (isDisposableState(state)) {
+            return;
+        }
+        if (state.type === 'runtime_error') {
+            recordedStates.pop();
+            state.stdout += state.data;
+        }
+        recordedStates.push(state);
     }
 
-    function resetDebugger() {
-        isRecorded = false;
-        recordedFrames = [];
+    function setdStdOutTrace(state) {
+        recordedOut.push(state);
+        getLastRecordedState().printout = state.data;
+        getLastRecordedState().stdout += state.data;
+    }
+
+    function setdStdErrTrace(state) {
+        console.error(state.data);
+        recordedErr.push(state);
+        if (!state.frame) {
+            return;
+        }
+        getLastRecordedState().printerr = state.data;
+        getLastRecordedState().stderr += state.data;
+    }
+
+    /**
+     * Inserts a line of type input into the recordedStates such that during setStep it would prompt user for input
+     * If an input trace of the same id was already set then return the value instead without inserting a line trace.
+     * @param {Object} state state to record excpected to contina {id: unique idetifier, arg: argument for prompt}
+     */
+    function setInputTrace(state) {
+        state.event = 'line';
+        state.type = 'input';
+        state.id = state.id + recordedStates.length;
+        if (recordedInputs[state.id]) {
+            return recordedInputs[state.id];
+        } else {
+            state.line_no = getLastRecordedState().line_no;
+            state.frame = getLastRecordedState().frame;
+
+            setTrace(state);
+            throw HALT;
+        }
+    }
+    /**
+     * These states are only there to update the previouse states of where they should point
+     * they are not recorded
+     * @param  {[type]}  state [description]
+     * @return {Boolean}     [description]
+     */
+    function isDisposableState(state) {
+        var disposable = ['afterwhile', 'eof'];
+        return disposable[state.type]!==undefined;
+    }
+
+    function resetDebugger(rerun) {
+        recordedStates = [];
         recordedOut = [];
         recordedErr = [];
-        currentStep = 0;
+        if (!rerun) {
+            isRecorded = false;
+            currentStep = 0;
+            recordedInputs = {};
+            parserReturn = null;
+        }
     }
 
     /**
@@ -336,6 +406,21 @@
     }
 
     /**
+     * Rerun already parsed brython js code
+     */
+    function rerunCode() {
+        resetDebugger(true);
+        try {
+            setOutErr(true);
+            runTrace(parserReturn);
+        } catch (err) {
+            handleDebugError(err);
+        } finally {
+            resetOutErr();
+        }
+    }
+
+    /**
      * Initialises the debugger, setup code for debugging, and either run interpreter or record run
      * @param  {String} src optional code to be passed, if not passed will be read from the set editor
      * @param  {Boolean} whether to run recording then replay or step
@@ -348,29 +433,37 @@
 
         setOutErr(record);
         try {
-            var obj = parseCode(code);
-
+            var obj = parserReturn = parseCode(code);
 
             if (record) {
-                recordedFrames = [];
-                var res = $run(obj);
+                runTrace(obj);
             } else {
                 myInterpreter = interpretCode(obj);
             }
         } catch (err) {
-            if(!err.$py_error) {
-                throw err;
-            }
-            errorWhileDebugging(err);
-            $B.leave_frame();
-            $B.leave_frame();
-            if (stopDebugOnRuntimeError) {
-                throw err;
-            }
+            handleDebugError(err);
         } finally {
             resetOutErr();
         }
         debuggingStarted();
+    }
+
+    function handleDebugError(err) {
+        if (!err.$py_error) {
+            throw err;
+        }
+        if (!wasHalted(err)) {
+            errorWhileDebugging(err);
+        }
+        $B.leave_frame();
+        $B.leave_frame();
+        if (!wasHalted(err) && weStopDebugOnRuntimeError) {
+            throw err;
+        }
+    }
+
+    function wasHalted(err) {
+        return err.$message === ('<' + HALT + '>');
     }
 
     /**
@@ -474,11 +567,25 @@
             }
             index = line.index;
         } while (true);
-        var codesplit = code.split(/^\;\$B\.leave_frame\(/m)
+        var codesplit = code.split(/^\;\$B\.leave_frame\(/m);
         newCode += codesplit[0] + traceCall + "({event:'line', type:'eof', frame:$B.last($B.frames_stack), line_no: " + (++largestLine) + ", next_line_no: " + (largestLine) + "});\n";
         newCode += ';$B.leave_frame(' + codesplit[1];
 
-        //         console.log('debugger:\n\n' + newCode);
+        //  inject input trace if applicable
+        var re = new RegExp(INPUT_RGX.source, 'g');
+        var inputLine = getNextInput(newCode, re);
+        while (inputLine !== null) {
+            code = newCode.substr(0, inputLine.index);
+            var inJect = traceCall + "({event:'input', arg:" + inputLine.param + ", id:'" + inputLine.index + "'})";
+            code += inJect;
+            index = inputLine.index + inputLine.string.length;
+            code += newCode.substr(index);
+            newCode = code;
+            inputLine = getNextInput(newCode, re);
+        }
+
+        // console.log('debugger:\n\n' + code);
+
         return newCode;
 
         function getNextLine(code) {
@@ -520,7 +627,7 @@
         function injectWhileEndTrace(code, whileLine, lastLine) {
             var indent = whileLine.indentString + '}';
             var newCode = "";
-            var re = new RegExp('^ {'+Math.max(whileLine.indent-4, 0)+','+whileLine.indent+'}\}', 'm');
+            var re = new RegExp('^ {' + Math.max(whileLine.indent - 4, 0) + ',' + whileLine.indent + '}\}', 'm');
             var res = re.exec(code);
             newCode += code.substr(0, res.index);
             newCode += whileLine.indentString + traceCall + "({event:'line', type:'endwhile', frame:$B.last($B.frames_stack), line_no: " + lastLine + ", next_line_no: " + (lastLine + 1) + "});\n";
@@ -529,6 +636,16 @@
             newCode += code.substr(res.index + indent.length);
             return newCode;
         }
+
+        function getNextInput(code, re) {
+            var match = re.exec(code);
+            if (!match) return null;
+            return {
+                param: match[1],
+                string: match[0],
+                index: match.index
+            };
+        }
     }
 
     /**
@@ -536,7 +653,7 @@
      * @param  {Object} obj object contianing code and module scope
      * @return {Object} result of running code as if evaluated
      */
-    function $run(obj) {
+    function runTrace(obj) {
         var js = obj.code;
         // Initialise locals object
         try {
@@ -618,7 +735,7 @@
         return {
             __class__: $io,
             write: function(data) {
-                var frame = getLastRecordedFrame() || {
+                var frame = getLastRecordedState() || {
                     frame: undefined
                 };
                 setTrace({
