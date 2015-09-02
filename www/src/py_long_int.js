@@ -125,74 +125,57 @@ function divmod_pos(v1, v2){
     return [LongInt(quotient), mod]
 }
 
-function mul_pos(v1, v2){
-    // Multiply positive numbers v1 by v2
-    // Make v2 smaller than v1
-    if(v1.length<v2.length){var a=v1; v1=v2 ; v2=a}
-    if(v2=='0'){return LongInt('0')}
-    var cols = {}, i=v2.length, j
+function split_chunks(s, size){
+    var nb = Math.ceil(s.length/size), chunks = [], len=s.length
+    for(var i=0;i<nb;i++){
+        var pos = len-size*(i+1)
+        if(pos<0){size += pos; pos=0}
+        chunks.push(parseInt(s.substr(pos, size)))
+    }
+    return chunks
+}
+
+function mul_pos(x, y){
+    // To multiply long integers in strings x and y, split the strings in
+    // chunks of chunk_size digits to get integers than can be safely
+    // multiplied by Javascript
+    var chunk_size = 6
+    var cx = split_chunks(x, chunk_size), cy = split_chunks(y, chunk_size)
     
-    // Built the object "cols", indexed by integers from 1 to nb1+nb2-2
-    // where nb1 and nb2 are the number of digits in v1 and v2.
-    // cols[n] is the sum of v1[i]*v2[j] for i+j = n
-    
-    while(i--){
-        var car = v2.charAt(i)
-        if(car=="0"){
-            j = v1.length
-            while(j--){
-                if(cols[i+j]===undefined){cols[i+j]=0}
-            }        
-        }else if(car=="1"){
-            j = v1.length
-            while(j--){
-                var z = parseInt(v1.charAt(j))
-                if(cols[i+j]===undefined){cols[i+j]=z}
-                else{cols[i+j] += z}
-            }
-        }else{
-            var x = parseInt(car), j = v1.length, y, z
-            while(j--){
-                y = x * parseInt(v1.charAt(j))
-                if(cols[i+j]===undefined){cols[i+j]=y}
-                else{cols[i+j] += y}
-            }
+    // Multiply chunk i of x by chunk j of y and store the result in an
+    // object "products" at index i+j
+    // The value of products[pos] is the sum of x[i]*y[j] for i+j = pos
+    var products = {}, len = cx.length+cy.length
+    for(var i=0;i<len-1;i++){products[i]=0}
+    for(var i=0;i<cx.length;i++){
+        for(var j=0;j<cy.length;j++){
+            products[i+j] += cx[i]*cy[j]
         }
     }
 
-    // Transform cols so that cols[x] is a one-digit integers
-    i = v1.length+v2.length-1
-    while(i--){
-        var col = cols[i].toString()
-        if(col.length>1){
-            // If the value in cols[i] has more than one digit, only keep the
-            // last one and report the others at the right index
-            // For instance if cols[i] = 123, keep 3 in cols[i], add 2 to
-            // cols[i-1] and 1 to cols[i-2]
-            cols[i] = parseInt(col.charAt(col.length-1))
-            j = col.length
-            while(j-->1){
-                var report = parseInt(col.charAt(j-1))
-                var pos = i-col.length+j
-                if(cols[pos]===undefined){cols[pos]=report}
-                else{cols[pos] += report}
-            }
+    // If products[pos] has more digits than chunk_size, report the carry
+    // at position pos+1
+    var nb = len-1
+    for(var i=0;i<len-1;i++){
+        var chunks = split_chunks(res[i].toString(), chunk_size)
+        for(var j=1;j<chunks.length;j++){
+            pos = i+j
+            if(res[pos]===undefined){res[pos]=parseInt(chunks[j]);nb=pos}
+            else{res[pos] += parseInt(chunks[j])}
         }
+        res[i] = chunks[0]
     }
 
-    // Find minimum index in cols
-    // The previous loop may have introduced negative indices
-    var imin
-    for(var attr in cols){
-        i = parseInt(attr)
-        if(imin===undefined){imin=i}
-        else if(i<imin){imin=i}
+    // Build the result as the concatenation of strings, padded with 0 if
+    // necessary
+    var result = '', i=0, s
+    while(res[i]!==undefined){
+        s = res[i].toString()
+        if(res[i+1]!==undefined){s='0'.repeat(chunk_size-s.length)+s}
+        result = s+result;
+        i++
     }
-
-    // Result is the concatenation of digits in cols
-    var res = ''
-    for(var i=imin;i<=v1.length+v2.length-2;i++){res+=cols[i].toString()}
-    return LongInt(res)
+    return LongInt(result)
 }
 
 function sub_pos(v1, v2){
@@ -228,15 +211,6 @@ function sub_pos(v1, v2){
     // Remove leading zeros and return the result
     while(res.charAt(0)=='0' && res.length>1){res=res.substr(1)}
     return {__class__:$LongIntDict, value:res, pos:true}
-}
-
-// Utility method to build a long int from a big float
-$LongIntDict.$from_float = function(value){
-    var _s = value.toExponential().split('e'),
-        d = _s[0], e = parseInt(_s[1])
-    var res = d.replace(/\./,'')
-    res += '0'.repeat(e-res.length+1)
-    return {__class__: $B.LongInt.$dict, value: res, pos: value>=0}
 }
 
 // Special methods to implement operations on instances of LongInt
