@@ -1062,13 +1062,18 @@ $RangeDict.__getitem__ = function(self,rank){
 }
 
 $RangeDict.__iter__ = function(self){
-    return {
+    var res = {
         __class__ : $RangeDict,
         start:self.start,
         stop:self.stop,
-        step:self.step,
-        $counter:self.start-self.step
+        step:self.step
     }
+    if(self.$safe){
+        res.$counter = self.start-self.step
+    }else{
+        res.$counter = $B.sub(self.start, self.step)
+    }
+    return res
 }
 
 $RangeDict.__len__ = function(self){
@@ -1102,8 +1107,8 @@ $RangeDict.__reversed__ = function(self){
 }
 
 $RangeDict.__repr__ = $RangeDict.__str__ = function(self){
-    var res = 'range('+self.start+', '+self.stop
-    if(self.step!=1) res += ', '+self.step
+    var res = 'range('+_b_.str(self.start)+', '+_b_.str(self.stop)
+    if(self.step!=1) res += ', '+_b_.str(self.step)
     return res+')'
 }
 
@@ -1138,9 +1143,6 @@ function range(){
     }
     res.$safe = (typeof start=='number' && typeof stop=='number' &&
         typeof step=='number')
-    res.__repr__ = res.__str__ = function(){
-            return 'range('+start+','+stop+(args.length>=3 ? ','+step : '')+')'
-        }
     return res
 }
 range.__class__ = $B.$factory

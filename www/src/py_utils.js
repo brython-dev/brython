@@ -877,7 +877,8 @@ $B.$GetInt=function(value) {
   // convert value to an integer
   if(typeof value=="number"){return value}
   else if(typeof value==="boolean"){return value ? 1 : 0}
-  else if (_b_.isinstance(value, [_b_.int, _b_.float])) {return value.valueOf()}
+  else if (_b_.isinstance(value, _b_.int)) {return value}
+  else if (_b_.isinstance(value, _b_.float)) {return value.valueOf()}
   try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){}
   try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){}
   throw _b_.TypeError("'"+$B.get_class(value).__name__+
