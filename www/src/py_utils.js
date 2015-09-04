@@ -53,12 +53,13 @@ $B.$MakeArgs1 = function($fname,argcount,slots,var_names,$args,$dobj,
     // Then fill slots with keyword arguments, if any
     if(has_kw_args){
         for(var key in kw_args){
+            var value=kw_args[key], key = key.replace(/\$/g,'')
             if(slots[key]===undefined){
                 // The name of the keyword argument doesn't match any of the
                 // formal parameters
                 if(extra_kw_args){
                     // If there is a place to store extra keyword arguments
-                    slots[extra_kw_args].$string_dict[key]=kw_args[key]
+                    slots[extra_kw_args].$string_dict[key]=value
                 }else{
                     throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")
                 }
@@ -67,7 +68,7 @@ $B.$MakeArgs1 = function($fname,argcount,slots,var_names,$args,$dobj,
                 throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")            
             }else{    
                 // Fill the slot with the key/value pair
-                slots[key] = kw_args[key]
+                slots[key] = value
             }
         }
     }
