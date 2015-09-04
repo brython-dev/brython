@@ -353,6 +353,7 @@ function $eval(src, _globals, _locals){
                 setitem(attr, ns[attr])
             }
         }
+        $B.imported[module_name] = ns
 
         // fixme: some extra variables are bleeding into locals...
         /*  This also causes issues for unittests */

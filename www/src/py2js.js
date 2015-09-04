@@ -7161,6 +7161,7 @@ function brython(options){
                        // Run resulting Javascript
                        eval($js)
                     }
+                    $B.imported[module_name] = $locals
                     
                 }catch($err){
                     if($B.debug>1){
