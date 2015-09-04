@@ -157,21 +157,21 @@ function mul_pos(x, y){
     // at position pos+1
     var nb = len-1
     for(var i=0;i<len-1;i++){
-        var chunks = split_chunks(res[i].toString(), chunk_size)
+        var chunks = split_chunks(products[i].toString(), chunk_size)
         for(var j=1;j<chunks.length;j++){
             pos = i+j
-            if(res[pos]===undefined){res[pos]=parseInt(chunks[j]);nb=pos}
-            else{res[pos] += parseInt(chunks[j])}
+            if(products[pos]===undefined){products[pos]=parseInt(chunks[j]);nb=pos}
+            else{products[pos] += parseInt(chunks[j])}
         }
-        res[i] = chunks[0]
+        products[i] = chunks[0]
     }
 
     // Build the result as the concatenation of strings, padded with 0 if
     // necessary
     var result = '', i=0, s
-    while(res[i]!==undefined){
-        s = res[i].toString()
-        if(res[i+1]!==undefined){s='0'.repeat(chunk_size-s.length)+s}
+    while(products[i]!==undefined){
+        s = products[i].toString()
+        if(products[i+1]!==undefined){s='0'.repeat(chunk_size-s.length)+s}
         result = s+result;
         i++
     }
