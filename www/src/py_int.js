@@ -132,6 +132,10 @@ function preformat(self, fmt){
 
 $IntDict.__format__ = function(self,format_spec){
     var fmt = new $B.parse_format_spec(format_spec)
+    if(fmt.type && 'eEfFgG%'.indexOf(fmt.type)!=-1){
+        // Call __format__ on float(self)
+        return _b_.float.$dict.__format__(self, format_spec)        
+    }
     fmt.align = fmt.align || '>'
     var res = preformat(self, fmt)
     if(fmt.comma){

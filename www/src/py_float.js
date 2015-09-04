@@ -153,11 +153,11 @@ function preformat(self, fmt){
         // Use Javascript toPrecision to get the correct result
         // The argument of toPrecision is the number of digits after .
         // For format type f, precision is the total number of digits, so we
-        // must add the number of digits before .
+        // must add the number of digits before "."
         var prec = fmt.precision
         if(prec && 'fF%'.indexOf(fmt.type)>-1){
             var pos_pt = Math.abs(self).toString().search(/\./)
-            if(pos_pt>-1){prec+=pos_pt}
+            if(pos_pt>-1){prec+=pos_pt}else{prec=Math.abs(self).toString().length}
         }
         var res = self.toPrecision(prec),
             pt_pos=res.indexOf('.')
