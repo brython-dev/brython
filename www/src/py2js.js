@@ -6823,15 +6823,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     var t0 = new Date().getTime()
   
     // Normalise line ends and script end
-    var src = src.replace(/\r\n/gm,'\n')
-    var $n=0
-    var _src=src.charAt(0)
-    var _src_length=src.length
-    while (_src_length>$n && (_src=="\n" || _src=="\r")){
-        $n++
-        _src=src.charAt($n)
-    }
-    src = src.substr($n)
+    src = src.replace(/\r\n/gm,'\n')
     if(src.charAt(src.length-1)!="\n"){src+='\n'}
 
     var locals_is_module = Array.isArray(locals_id)
