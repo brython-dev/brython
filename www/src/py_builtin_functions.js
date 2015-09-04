@@ -1062,6 +1062,21 @@ $RangeDict.__getitem__ = function(self,rank){
     return res   
 }
 
+$RangeIterator = function(obj){
+    return {__class__:$RangeIterator.$dict, obj: obj}
+}
+$RangeIterator.__class__ = $B.$factory
+$RangeIterator.$dict = {
+    __class__: $B.$type,
+    __name__: 'range_iterator',
+    $factory: $RangeIterator,
+    
+    __iter__: function(self){return self},
+    
+    __next__: function(self){return next(self.obj)}
+}
+$RangeIterator.$dict.__mro__ = [$RangeIterator.$dict, $ObjectDict]
+
 $RangeDict.__iter__ = function(self){
     var res = {
         __class__ : $RangeDict,
@@ -1074,7 +1089,7 @@ $RangeDict.__iter__ = function(self){
     }else{
         res.$counter = $B.sub(self.start, self.step)
     }
-    return res
+    return $RangeIterator(res)
 }
 
 $RangeDict.__len__ = function(self){
