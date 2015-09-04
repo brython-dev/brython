@@ -4322,9 +4322,10 @@ function $TryCtx(context){
         if(!has_default){
             // If no default except clause, add a line to throw the
             // exception if it was not caught
-            var new_node = new $Node()
-            new $NodeJSCtx(new_node,'else{throw $err'+$loop_num+'}')
+            var new_node = new $Node(), ctx = new $NodeCtx(new_node)
             catch_node.insert(catch_node.children.length,new_node)
+            new $SingleKwCtx(ctx, 'else')
+            new_node.add($NodeJS('throw $err'+$loop_num))
         }
         if(has_else){
             var else_node = new $Node()
@@ -4485,8 +4486,7 @@ function $WithCtx(context){
         // if there is an alias, insert the value
         if(this.tree[0].alias){
             var alias = this.tree[0].alias
-            var js = '$locals_'+this.scope.id.replace(/\./g,'_')+
-                '["'+alias+'"] = $value'+num
+            var js = '$locals'+'["'+alias+'"] = $value'+num
             var value_node = new $Node()
             new $NodeJSCtx(value_node, js)
             try_node.add(value_node)
@@ -4500,7 +4500,7 @@ function $WithCtx(context){
         new $NodeJSCtx(catch_node,'catch($err'+$loop_num+')')
         
         var fbody = new $Node(), indent=node.indent+4
-        var js = '$exc'+num+' = false\n'+' '.repeat(indent)+
+        var js = '$exc'+num+' = false;console.log($err'+$loop_num+')\n'+' '.repeat(indent)+
             'if(!bool($ctx_manager_exit'+num+'($err'+$loop_num+
             '.__class__.$factory,'+'$err'+$loop_num+
             ',getattr($err'+$loop_num+',"traceback"))))'
