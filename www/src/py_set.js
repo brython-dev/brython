@@ -163,6 +163,7 @@ $SetDict.__or__ = function(self,other,accept_iter){
             throw err
         }
     }
+    res.__class__ = self.__class__
     return res
 }
 
