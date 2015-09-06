@@ -116,6 +116,7 @@ $SetDict.__init__ = function(self){
             var iterable = _.iter(arg)
         }catch(err){
             console.log(err)
+            console.log('arg', arg)
             throw _.TypeError("'"+arg.__class__.__name__+"' object is not iterable")
         }
         var obj = {$items:[],$str:true,$num:true}
@@ -124,7 +125,6 @@ $SetDict.__init__ = function(self){
                 $SetDict.add(obj,item)
             }catch(err){
                 if(_b_.isinstance(err, _b_.StopIteration)){break}
-                console.log('arg', arg,'\niterable',iterable,'\nitem',item, '\nerr',err)
                 throw err
             }
         }
@@ -248,7 +248,11 @@ function $test(accept_iter, other, op){
 // add "reflected" methods
 $B.make_rmethods($SetDict)
 
-$SetDict.add = function(self,item){
+$SetDict.add = function(){
+    var $ = $B.$MakeArgs1('add', 2, {self:null,item:null},['self','item'],
+        arguments, {},null,null),
+        self=$.self,
+        item=$.item
     _b_.hash(item)
     if(self.$str && !(typeof item=='string')){self.$str=false}
     if(self.$num && !(typeof item=='number')){self.$num=false}
@@ -258,24 +262,34 @@ $SetDict.add = function(self,item){
     }
     var cfunc = _.getattr(item,'__eq__')
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
-        try{if(cfunc(self.$items[i])) return}
-        catch(err){void(0)} // if equality test throws exception
+        if(cfunc(self.$items[i])) return
     }
     self.$items.push(item)
     return $N
 }
 
-$SetDict.clear = function(self){self.$items = []; return $N}
+$SetDict.clear = function(){
+    var $ = $B.$MakeArgs1('clear', 1, {self:null},['self'],
+        arguments, {}, null, null)
+    $.self.$items = []; 
+    return $N
+}
 
-$SetDict.copy = function(self){
+$SetDict.copy = function(){
+    var $ = $B.$MakeArgs1('copy', 1, {self:null},['self'],
+        arguments, {}, null, null)
     var res = set() // copy returns an instance of set, even for subclasses
-    for(var i=0, _len_i = self.$items.length; i < _len_i;i++) res.$items[i]=self.$items[i]
+    for(var i=0, _len_i = $.self.$items.length; i < _len_i;i++){
+        res.$items[i]=$.self.$items[i]
+    }
     return res
 }
 
 $SetDict.difference_update = function(self){
-    for(var i=1;i<arguments.length;i++){
-        var s = set(arguments[i]),
+    var $ = $B.$MakeArgs1('difference_update', 1, {self:null},['self'],
+        arguments, {}, 'args', null)
+    for(var i=0;i<$.args.length;i++){
+        var s = set($.args[i]),
             _next = _b_.getattr(_b_.iter(s), '__next__'), item
         while (true){
             try{
@@ -303,16 +317,21 @@ $SetDict.difference_update = function(self){
     return $N
 }
 
-$SetDict.discard = function(self,item){
-    try{$SetDict.remove(self,item)}
+$SetDict.discard = function(){
+    var $ = $B.$MakeArgs1('discard', 2, {self:null,item:null},['self','item'],
+        arguments, {},null,null)
+    try{$SetDict.remove($.self, $.item)}
     catch(err){if(!_b_.isinstance(err, [_b_.KeyError, _b_.LookupError])){throw err}}
     return $N
 }
 
-$SetDict.intersection_update = function(self){
+$SetDict.intersection_update = function(){
     // Update the set, keeping only elements found in it and all others.
-    for(var i=1;i<arguments.length;i++){
-        var remove = [], s = set(arguments[i])
+    var $ = $B.$MakeArgs1('intersection_update',1,{self:null},['self'],
+        arguments,{},'args',null),
+        self = $.self
+    for(var i=0;i<$.args.length;i++){
+        var remove = [], s = set($.args[i])
         for(var j=0;j<self.$items.length;j++){
             var _item = self.$items[j], _type = typeof _item
             if(_type == 'string' || _type == "number") {
@@ -331,9 +350,12 @@ $SetDict.intersection_update = function(self){
     return $N
 }
 
-$SetDict.isdisjoint = function(self,other){
-    for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
-        if(_.getattr(other,'__contains__')(self.$items[i])) return false
+$SetDict.isdisjoint = function(){
+    var $ = $B.$MakeArgs1('is_disjoint', 2, 
+        {self:null,other:null},['self','other'],
+        arguments, {},null,null)
+    for(var i=0, _len_i = $.self.$items.length; i < _len_i;i++){
+        if(_.getattr($.other,'__contains__')($.self.$items[i])) return false
     }
     return true
 }
@@ -345,6 +367,8 @@ $SetDict.pop = function(self){
 
 $SetDict.remove = function(self,item){
     // If item is a set, search if a frozenset in self compares equal to item
+    var $ = $B.$MakeArgs1('remove', 2, {self:null,item:null},['self','item'],
+        arguments, {},null,null), self=$.self, item=$.item
     if(!_b_.isinstance(item, set)){_b_.hash(item)}
     if (typeof item == 'string' || typeof item == 'number') {
        var _i=self.$items.indexOf(item) 
@@ -363,6 +387,10 @@ $SetDict.remove = function(self,item){
 
 $SetDict.symmetric_difference_update = function(self, s){
     // Update the set, keeping only elements found in either set, but not in both.
+    var $ = $B.$MakeArgs1('symmetric_difference_update',2,
+        {self:null, s:null}, ['self', 's'], arguments,{},null,null),
+        self = $.self, s = $.s
+
     var _next = _b_.getattr(_b_.iter(s), '__next__'), item, remove=[], add=[]
     while (true){
         try{
@@ -397,8 +425,10 @@ $SetDict.symmetric_difference_update = function(self, s){
 
 $SetDict.update = function(self){
     // Update the set, adding elements from all others.
-    for(var i=1;i<arguments.length;i++){
-        var other = set(arguments[i])
+    var $ = $B.$MakeArgs1('update',1,{self:null},['self'],
+        arguments,{},'args',null)
+    for(var i=0;i<$.args.length;i++){
+        var other = set($.args[i])
         for(var j=0, _len = other.$items.length; j < _len; j++) {
             $SetDict.add(self,other.$items[j])
         }

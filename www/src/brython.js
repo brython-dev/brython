@@ -57,7 +57,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-06 21:04:54.015931"
+__BRYTHON__.compiled_date="2015-09-06 22:48:36.931861"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4794,7 +4794,7 @@ if(res!==undefined){break}}}
 if(res!==undefined && res.__delete__!==undefined){res.__delete__(res,obj,attr)}else{getattr(obj,'__delattr__')(attr)}
 return None}
 function dir(obj){if(obj===undefined){
-var frame=$B.last($B.frames_stack),globals_obj=frame[1][1],res=_b_.list(),pos=0
+var frame=$B.last($B.frames_stack),globals_obj=frame[3],res=_b_.list(),pos=0
 for(var attr in globals_obj){if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
 continue}
 res[pos++]=attr}
@@ -8831,11 +8831,11 @@ var arg=args[0]
 if(_.isinstance(arg,[set,frozenset])){self.$items=arg.$items
 return $N}
 try{var iterable=_.iter(arg)}catch(err){console.log(err)
+console.log('arg',arg)
 throw _.TypeError("'"+arg.__class__.__name__+"' object is not iterable")}
 var obj={$items:[],$str:true,$num:true}
 while(1){try{var item=_.next(iterable)
 $SetDict.add(obj,item)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
-console.log('arg',arg,'\niterable',iterable,'\nitem',item,'\nerr',err)
 throw err}}
 self.$items=obj.$items}else{
 throw _.TypeError("set expected at most 1 argument, got "+args.length)}
@@ -8887,21 +8887,25 @@ return res}
 function $test(accept_iter,other,op){if(accept_iter===undefined && !_.isinstance(other,[set,frozenset])){throw _b_.TypeError("unsupported operand type(s) for "+op+
 ": 'set' and '"+$B.get_class(other).__name__+"'")}}
 $B.make_rmethods($SetDict)
-$SetDict.add=function(self,item){_b_.hash(item)
+$SetDict.add=function(){var $=$B.$MakeArgs1('add',2,{self:null,item:null},['self','item'],arguments,{},null,null),self=$.self,item=$.item
+_b_.hash(item)
 if(self.$str && !(typeof item=='string')){self.$str=false}
 if(self.$num && !(typeof item=='number')){self.$num=false}
 if(self.$num||self.$str){if(self.$items.indexOf(item)==-1){self.$items.push(item)}
 return $N}
 var cfunc=_.getattr(item,'__eq__')
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){try{if(cfunc(self.$items[i]))return}
-catch(err){void(0)}}
+for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(cfunc(self.$items[i]))return}
 self.$items.push(item)
 return $N}
-$SetDict.clear=function(self){self.$items=[];return $N}
-$SetDict.copy=function(self){var res=set()
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++)res.$items[i]=self.$items[i]
+$SetDict.clear=function(){var $=$B.$MakeArgs1('clear',1,{self:null},['self'],arguments,{},null,null)
+$.self.$items=[];
+return $N}
+$SetDict.copy=function(){var $=$B.$MakeArgs1('copy',1,{self:null},['self'],arguments,{},null,null)
+var res=set()
+for(var i=0,_len_i=$.self.$items.length;i < _len_i;i++){res.$items[i]=$.self.$items[i]}
 return res}
-$SetDict.difference_update=function(self){for(var i=1;i<arguments.length;i++){var s=set(arguments[i]),_next=_b_.getattr(_b_.iter(s),'__next__'),item
+$SetDict.difference_update=function(self){var $=$B.$MakeArgs1('difference_update',1,{self:null},['self'],arguments,{},'args',null)
+for(var i=0;i<$.args.length;i++){var s=set($.args[i]),_next=_b_.getattr(_b_.iter(s),'__next__'),item
 while(true){try{item=_next()
 var _type=typeof item
 if(_type=='string' ||_type=="number"){var _index=self.$items.indexOf(item)
@@ -8909,11 +8913,13 @@ if(_index > -1){self.$items.splice(_index,1)}}else{
 for(var j=0;j < self.$items.length;j++){if(getattr(self.$items[j],'__eq__')(item)){self.$items.splice(j,1)}}}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}}
 return $N}
-$SetDict.discard=function(self,item){try{$SetDict.remove(self,item)}
+$SetDict.discard=function(){var $=$B.$MakeArgs1('discard',2,{self:null,item:null},['self','item'],arguments,{},null,null)
+try{$SetDict.remove($.self,$.item)}
 catch(err){if(!_b_.isinstance(err,[_b_.KeyError,_b_.LookupError])){throw err}}
 return $N}
-$SetDict.intersection_update=function(self){
-for(var i=1;i<arguments.length;i++){var remove=[],s=set(arguments[i])
+$SetDict.intersection_update=function(){
+var $=$B.$MakeArgs1('intersection_update',1,{self:null},['self'],arguments,{},'args',null),self=$.self
+for(var i=0;i<$.args.length;i++){var remove=[],s=set($.args[i])
 for(var j=0;j<self.$items.length;j++){var _item=self.$items[j],_type=typeof _item
 if(_type=='string' ||_type=="number"){if(s.$items.indexOf(_item)==-1){remove.push(j)}}else{var found=false
 for(var k=0;!found && k < s.$items.length;k++){if(_b_.getattr(s.$items[k],'__eq__')(_item)){found=true}}
@@ -8921,11 +8927,13 @@ if(!found){remove.push(j)}}}
 remove.sort().reverse()
 for(var j=0;j<remove.length;j++){self.$items.splice(remove[j],1)}}
 return $N}
-$SetDict.isdisjoint=function(self,other){for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_.getattr(other,'__contains__')(self.$items[i]))return false}
+$SetDict.isdisjoint=function(){var $=$B.$MakeArgs1('is_disjoint',2,{self:null,other:null},['self','other'],arguments,{},null,null)
+for(var i=0,_len_i=$.self.$items.length;i < _len_i;i++){if(_.getattr($.other,'__contains__')($.self.$items[i]))return false}
 return true}
 $SetDict.pop=function(self){if(self.$items.length===0)throw _.KeyError('pop from an empty set')
 return self.$items.pop()}
 $SetDict.remove=function(self,item){
+var $=$B.$MakeArgs1('remove',2,{self:null,item:null},['self','item'],arguments,{},null,null),self=$.self,item=$.item
 if(!_b_.isinstance(item,set)){_b_.hash(item)}
 if(typeof item=='string' ||typeof item=='number'){var _i=self.$items.indexOf(item)
 if(_i==-1)throw _.KeyError(item)
@@ -8935,6 +8943,7 @@ for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_.getattr(self.$items[i
 return $N}}
 throw _.KeyError(item)}
 $SetDict.symmetric_difference_update=function(self,s){
+var $=$B.$MakeArgs1('symmetric_difference_update',2,{self:null,s:null},['self','s'],arguments,{},null,null),self=$.self,s=$.s
 var _next=_b_.getattr(_b_.iter(s),'__next__'),item,remove=[],add=[]
 while(true){try{item=_next()
 var _type=typeof item
@@ -8950,7 +8959,8 @@ for(var i=0;i<remove.length;i++){if(remove[i]!=remove[i-1]){self.$items.splice(r
 for(var i=0;i<add.length;i++){$SetDict.add(self,add[i])}
 return $N}
 $SetDict.update=function(self){
-for(var i=1;i<arguments.length;i++){var other=set(arguments[i])
+var $=$B.$MakeArgs1('update',1,{self:null},['self'],arguments,{},'args',null)
+for(var i=0;i<$.args.length;i++){var other=set($.args[i])
 for(var j=0,_len=other.$items.length;j < _len;j++){$SetDict.add(self,other.$items[j])}}
 return $N}
 $SetDict.symmetric_difference=function(self,other){return $SetDict.__xor__(self,set(other))}
