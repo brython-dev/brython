@@ -83,7 +83,7 @@ def load_script(evt):
     editor.setValue(open(_name).read())
 
 # run a script, in global namespace if in_globals is True
-def run(in_globals=False):
+def run(*args):
     global output
     doc["console"].value = ''
     src = editor.getValue()
@@ -92,11 +92,8 @@ def run(in_globals=False):
 
     t0 = time.perf_counter()
     try:
-        if(in_globals):
-            exec(src)
-        else:
-            ns = {}
-            exec(src, ns)
+        ns = {'__name__':'__main__'}
+        exec(src, ns)
         state = 1
     except Exception as exc:
         traceback.print_exc(file=sys.stderr)
