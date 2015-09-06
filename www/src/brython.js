@@ -57,7 +57,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-05 16:39:00.564356"
+__BRYTHON__.compiled_date="2015-09-06 08:15:18.040315"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -2265,7 +2265,8 @@ var catch_node=new $Node()
 catch_node.is_catch=true 
 new $NodeJSCtx(catch_node,'catch($err'+$loop_num+')')
 var fbody=new $Node(),indent=node.indent+4
-var js='$exc'+num+' = false;console.log($err'+$loop_num+')\n'+' '.repeat(indent)+
+var js='$exc'+num+' = false;$err'+$loop_num+'=$B.exception($err'+
+$loop_num+')\n'+' '.repeat(indent)+
 'if(!bool($ctx_manager_exit'+num+'($err'+$loop_num+
 '.__class__.$factory,'+'$err'+$loop_num+
 ',getattr($err'+$loop_num+',"traceback"))))'
@@ -4968,9 +4969,9 @@ if(isinstance(obj,bool))return _b_.int(obj)
 if(obj.__hash__ !==undefined){return obj.__hashvalue__=obj.__hash__()}
 var hashfunc=getattr(obj,'__hash__',_b_.None)
 if(hashfunc==_b_.None)return $B.$py_next_hash++
-if(hashfunc.__func__===_b_.object.$dict.__hash__ &&
-getattr(obj,'__eq__').__func__!==_b_.object.$dict.__eq__){throw _b_.TypeError("unhashable type: '"+
-$B.get_class(obj).__name__+"'")}else{return obj.__hashvalue__=hashfunc()}}
+if(hashfunc.$infos===undefined){return obj.__hashvalue__=hashfunc()}
+if(hashfunc.$infos.__func__===_b_.object.$dict.__hash__){if(getattr(obj,'__eq__').$infos.__func__!==_b_.object.$dict.__eq__){throw _b_.TypeError("unhashable type: '"+
+$B.get_class(obj).__name__+"'")}else{return $B.$py_next_hash++}}else{return obj.__hashvalue__=hashfunc()}}
 function _get_builtins_doc(){if($B.builtins_doc===undefined){
 var url=$B.brython_path
 if(url.charAt(url.length-1)=='/'){url=url.substr(0,url.length-1)}
@@ -7557,7 +7558,6 @@ while(i<self.length){if(i>=other.length)return true
 if(getattr(self[i],'__eq__')(other[i])){i++}
 else return(getattr(self[i],'__gt__')(other[i]))}
 return false}
-$ListDict.__hash__=None
 $ListDict.__iadd__=function(self,other){for(var i=0;i < other.length;i++){self.push(other[i])}
 return self}
 $ListDict.__init__=function(self,arg){var len_func=getattr(self,'__len__'),pop_func=getattr(self,'pop')
@@ -8818,11 +8818,10 @@ if(!$SetDict.__contains__(self,e))return false}catch(err){if(err.__name__=="Stop
 throw err}}
 return true}
 return false}
+$SetDict.__format__=function(self,format_string){return $SetDict.__str__(self)}
 $SetDict.__ge__=function(self,other){return !$SetDict.__lt__(self,other)}
 $SetDict.__gt__=function(self,other,accept_iter){$test(accept_iter,other)
 return !$SetDict.__le__(self,other)}
-$SetDict.__hash__=function(self){if(self===undefined){return $SetDict.__hashvalue__ ||$B.$py_next_hash--}
-throw _.TypeError("unhashable type: 'set'");}
 $SetDict.__init__=function(self){var args=[]
 for(var i=1,_len_i=arguments.length;i < _len_i;i++){args.push(arguments[i])}
 if(args.length==0)return $N
@@ -8830,13 +8829,14 @@ if(args.length==1){
 var arg=args[0]
 if(_.isinstance(arg,[set,frozenset])){self.$items=arg.$items
 return $N}
-try{var iterable=_.iter(arg)
+try{var iterable=_.iter(arg)}catch(err){console.log(err)
+throw _.TypeError("'"+arg.__class__.__name__+"' object is not iterable")}
 var obj={$items:[],$str:true,$num:true}
-while(1){try{$SetDict.add(obj,_.next(iterable))}
-catch(err){if(err.__name__=='StopIteration'){break}
+while(1){try{var item=_.next(iterable)
+$SetDict.add(obj,item)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
+console.log(item,err)
 throw err}}
-self.$items=obj.$items}catch(err){console.log(''+err)
-throw _.TypeError("'"+arg.__class__.__name__+"' object is not iterable")}}else{
+self.$items=obj.$items}else{
 throw _.TypeError("set expected at most 1 argument, got "+args.length)}
 return $N}
 var $set_iterator=$B.$iterator_class('set iterator')
@@ -8884,10 +8884,11 @@ var cfunc=_.getattr(other,'__contains__')
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(!cfunc(self.$items[i])){$SetDict.add(res,self.$items[i])}}
 for(var i=0,_len_i=other.$items.length;i < _len_i;i++){if(!$SetDict.__contains__(self,other.$items[i])){$SetDict.add(res,other.$items[i])}}
 return res}
-function $test(accept_iter,other){if(accept_iter===undefined && !_.isinstance(other,[set,frozenset])){throw TypeError("unsupported operand type(s) for |: 'set' and '"+
+function $test(accept_iter,other){if(accept_iter===undefined && !_.isinstance(other,[set,frozenset])){throw _b_.TypeError("unsupported operand type(s) for |: 'set' and '"+
 $B.get_class(other).__name__+"'")}}
 $B.make_rmethods($SetDict)
-$SetDict.add=function(self,item){if(self.$str && !(typeof item=='string')){self.$str=false}
+$SetDict.add=function(self,item){_b_.hash(item)
+if(self.$str && !(typeof item=='string')){self.$str=false}
 if(self.$num && !(typeof item=='number')){self.$num=false}
 if(self.$num||self.$str){if(self.$items.indexOf(item)==-1){self.$items.push(item)}
 return $N}
@@ -8900,35 +8901,52 @@ $SetDict.clear=function(self){self.$items=[];return $N}
 $SetDict.copy=function(self){var res=set()
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++)res.$items[i]=self.$items[i]
 return res}
-$SetDict.difference_update=function(self,s){if(_.isinstance(s,set)){for(var i=0;i < s.$items.length;i++){var _type=typeof s.$items[i]
-if(_type=='string' ||_type=="number"){var _index=self.$items.indexOf(s.$items[i])
-if(_index > -1){self.$items.splice(_index,1)
-break}}else{
-for(var j=0;j < self.$items.length;j++){if(getattr(self.$items[j],'__eq__')(s.$items[i])){self.$items.splice(j,1)
-break}}}}
-return $N}}
-$SetDict.intersection_update=function(self,s){if(_.isinstance(s,set)){var _res=[]
-for(var i=0;i < s.$items.length;i++){var _item=s.$items[i]
-var _type=typeof _item
-if(_type=='string' ||_type=="number"){if(self.$items.indexOf(_item)> -1)_res.push(_item)}else{
-for(var j=0;j < self.$items.length;j++){if(getattr(self.$items[j],'__eq__')(_item)){_res.push(_item)
-break}}}}
-self=set(_res)}
+$SetDict.difference_update=function(self){for(var i=1;i<arguments.length;i++){var s=set(arguments[i]),_next=_b_.getattr(_b_.iter(s),'__next__'),item
+while(true){try{item=_next()
+var _type=typeof item
+if(_type=='string' ||_type=="number"){var _index=self.$items.indexOf(item)
+if(_index > -1){self.$items.splice(_index,1)}}else{
+for(var j=0;j < self.$items.length;j++){if(getattr(self.$items[j],'__eq__')(item)){self.$items.splice(j,1)}}}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
+throw err}}}
 return $N}
 $SetDict.discard=function(self,item){try{$SetDict.remove(self,item)}
-catch(err){if(err.__name__!=='LookupError'){throw err}}
+catch(err){if(!_b_.isinstance(err,[_b_.KeyError,_b_.LookupError])){throw err}}
+return $N}
+$SetDict.intersection_update=function(self){
+for(var i=1;i<arguments.length;i++){var remove=[],s=set(arguments[i])
+for(var j=0;j<self.$items.length;j++){var _item=self.$items[j],_type=typeof _item
+if(_type=='string' ||_type=="number"){if(s.$items.indexOf(_item)==-1){remove.push(j)}}else{var found=false
+for(var k=0;!found && k < s.$items.length;k++){if(_b_.getattr(s.$items[k],'__eq__')(_item)){found=true}}
+if(!found){remove.push(j)}}}
+remove.sort().reverse()
+for(var j=0;j<remove.length;j++){self.$items.splice(remove[j],1)}}
 return $N}
 $SetDict.isdisjoint=function(self,other){for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_.getattr(other,'__contains__')(self.$items[i]))return false}
 return true}
 $SetDict.pop=function(self){if(self.$items.length===0)throw _.KeyError('pop from an empty set')
 return self.$items.pop()}
-$SetDict.remove=function(self,item){if(typeof item=='string' ||typeof item=='number'){var _i=self.$items.indexOf(item)
-if(_i==-1)throw _.LookupError('missing item ' + _.repr(item))
+$SetDict.remove=function(self,item){
+if(!_b_.isinstance(item,set)){_b_.hash(item)}
+if(typeof item=='string' ||typeof item=='number'){var _i=self.$items.indexOf(item)
+if(_i==-1)throw _.KeyError('missing item ' + _.repr(item))
 self.$items.splice(_i,1)
 return $N}
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_.getattr(self.$items[i],'__eq__')(item)){self.$items.splice(i,1)
 return $N}}
 throw _.KeyError(item)}
+$SetDict.symmetric_difference_update=function(self,s){
+var _next=_b_.getattr(_b_.iter(s),'__next__'),item
+while(true){try{item=_next()
+var _type=typeof item
+if(_type=='string' ||_type=="number"){var _index=self.$items.indexOf(item)
+if(_index > -1){self.$items.splice(_index,1)}else{self.$items.push(item)}}else{
+var found=false
+for(var j=0;!found && j < self.$items.length;j++){if(_b_.getattr(self.$items[j],'__eq__')(item)){self.$items.splice(j,1)
+found=true}}
+if(!found){$SetDict.add(self,item)}}}catch(err){console.log(err)
+if(_b_.isinstance(err,_b_.StopIteration)){break}
+throw err}}
+return $N}
 $SetDict.update=function(self,other){if(other===undefined ||other.$items===undefined)return $N
 for(var i=0,_len_i=other.$items.length;i < _len_i;i++){$SetDict.add(self,other.$items[i])}
 return $N}

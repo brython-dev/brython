@@ -80,18 +80,15 @@ $SetDict.__eq__ = function(self,other){
     return false
 }
 
+$SetDict.__format__ = function(self, format_string){
+    return $SetDict.__str__(self)
+}
+
 $SetDict.__ge__ = function(self,other){return !$SetDict.__lt__(self,other)}
 
 $SetDict.__gt__ = function(self, other, accept_iter){
     $test(accept_iter, other)
     return !$SetDict.__le__(self, other)
-}
-
-$SetDict.__hash__ = function(self) {
-    if (self === undefined) {
-       return $SetDict.__hashvalue__ || $B.$py_next_hash--
-    }
-    throw _.TypeError("unhashable type: 'set'");
 }
 
 $SetDict.__init__ = function(self){
@@ -108,19 +105,21 @@ $SetDict.__init__ = function(self){
         }
         try{
             var iterable = _.iter(arg)
-            var obj = {$items:[],$str:true,$num:true}
-            while(1){
-                try{$SetDict.add(obj,_.next(iterable))}
-                catch(err){
-                    if(err.__name__=='StopIteration'){break}
-                    throw err
-                }
-            }
-            self.$items = obj.$items
         }catch(err){
-            console.log(''+err)
+            console.log(err)
             throw _.TypeError("'"+arg.__class__.__name__+"' object is not iterable")
         }
+        var obj = {$items:[],$str:true,$num:true}
+        while(1){
+            try{var item = _.next(iterable)
+                $SetDict.add(obj,item)
+            }catch(err){
+                if(_b_.isinstance(err, _b_.StopIteration)){break}
+                console.log(item, err)
+                throw err
+            }
+        }
+        self.$items = obj.$items
     } else {
         throw _.TypeError("set expected at most 1 argument, got "+args.length)
     }
@@ -225,7 +224,7 @@ $SetDict.__xor__ = function(self, other, accept_iter){
 
 function $test(accept_iter, other){
     if(accept_iter===undefined && !_.isinstance(other,[set, frozenset])){
-        throw TypeError("unsupported operand type(s) for |: 'set' and '"+
+        throw _b_.TypeError("unsupported operand type(s) for |: 'set' and '"+
             $B.get_class(other).__name__+"'")
     }
 }
@@ -234,6 +233,7 @@ function $test(accept_iter, other){
 $B.make_rmethods($SetDict)
 
 $SetDict.add = function(self,item){
+    _b_.hash(item)
     if(self.$str && !(typeof item=='string')){self.$str=false}
     if(self.$num && !(typeof item=='number')){self.$num=false}
     if(self.$num||self.$str){
@@ -257,56 +257,61 @@ $SetDict.copy = function(self){
     return res
 }
 
-$SetDict.difference_update = function(self,s){
-    if (_.isinstance(s, set)) {
-       for (var i=0; i < s.$items.length; i++) {
-           var _type= typeof s.$items[i]
-
-           if(_type == 'string' || _type == "number") {
-              var _index=self.$items.indexOf(s.$items[i])
-              if (_index > -1) {
-                 self.$items.splice(_index, 1)
-                 break
-              } 
-           } else {
-              for (var j=0; j < self.$items.length; j++) {
-                if (getattr(self.$items[j], '__eq__')(s.$items[i])) {
-                  self.$items.splice(j,1)
-                  break
-                }
-              }
+$SetDict.difference_update = function(self){
+    for(var i=1;i<arguments.length;i++){
+        var s = set(arguments[i]),
+            _next = _b_.getattr(_b_.iter(s), '__next__'), item
+        while (true){
+            try{
+               item = _next()
+               var _type= typeof item
+    
+               if(_type == 'string' || _type == "number") {
+                  var _index=self.$items.indexOf(item)
+                  if (_index > -1) {
+                     self.$items.splice(_index, 1)
+                  } 
+               } else {
+                  for (var j=0; j < self.$items.length; j++) {
+                    if (getattr(self.$items[j], '__eq__')(item)) {
+                      self.$items.splice(j,1)
+                    }
+                  }
+               }
+           }catch(err){
+               if(_b_.isinstance(err, _b_.StopIteration)){break}
+               throw err
            }
-       }
-       return $N
-    }
-}
-
-$SetDict.intersection_update = function(self,s){
-    if (_.isinstance(s, set)) {
-       var _res=[]
-       for (var i=0; i < s.$items.length; i++) {
-           var _item=s.$items[i]
-           var _type= typeof _item
-
-           if(_type == 'string' || _type == "number") {
-             if(self.$items.indexOf(_item) > -1) _res.push(_item)
-           } else {
-              for (var j=0; j < self.$items.length; j++) {
-                if (getattr(self.$items[j], '__eq__')(_item)) {
-                   _res.push(_item)
-                   break
-                }
-              }
-           }
-       }
-       self=set(_res)
+        }
     }
     return $N
 }
 
 $SetDict.discard = function(self,item){
     try{$SetDict.remove(self,item)}
-    catch(err){if(err.__name__!=='LookupError'){throw err}}
+    catch(err){if(!_b_.isinstance(err, [_b_.KeyError, _b_.LookupError])){throw err}}
+    return $N
+}
+
+$SetDict.intersection_update = function(self){
+    // Update the set, keeping only elements found in it and all others.
+    for(var i=1;i<arguments.length;i++){
+        var remove = [], s = set(arguments[i])
+        for(var j=0;j<self.$items.length;j++){
+            var _item = self.$items[j], _type = typeof _item
+            if(_type == 'string' || _type == "number") {
+                if(s.$items.indexOf(_item)==-1){remove.push(j)}
+            }else{
+              var found = false
+              for(var k=0;!found && k < s.$items.length;k++){
+                if(_b_.getattr(s.$items[k], '__eq__')(_item)){found=true}
+              }
+              if(!found){remove.push(j)}
+           }
+       }
+       remove.sort().reverse()
+       for(var j=0;j<remove.length;j++){self.$items.splice(remove[j],1)}
+    }
     return $N
 }
 
@@ -323,9 +328,11 @@ $SetDict.pop = function(self){
 }
 
 $SetDict.remove = function(self,item){
+    // If item is a set, search if a frozenset in self compares equal to item
+    if(!_b_.isinstance(item, set)){_b_.hash(item)}
     if (typeof item == 'string' || typeof item == 'number') {
        var _i=self.$items.indexOf(item) 
-       if (_i == -1) throw _.LookupError('missing item ' + _.repr(item)) 
+       if (_i == -1) throw _.KeyError('missing item ' + _.repr(item)) 
        self.$items.splice(_i,1)
        return $N
     }
@@ -336,6 +343,40 @@ $SetDict.remove = function(self,item){
         }
     }
     throw _.KeyError(item)
+}
+
+$SetDict.symmetric_difference_update = function(self, s){
+    // Update the set, keeping only elements found in either set, but not in both.
+    var _next = _b_.getattr(_b_.iter(s), '__next__'), item
+    while (true){
+        try{
+           item = _next()
+           var _type= typeof item
+
+           if(_type == 'string' || _type == "number") {
+              var _index=self.$items.indexOf(item)
+              if (_index > -1) {
+                 self.$items.splice(_index, 1)
+              }else{
+                  self.$items.push(item)
+              }
+           } else {
+              var found = false
+              for (var j=0; !found && j < self.$items.length; j++) {
+                if (_b_.getattr(self.$items[j], '__eq__')(item)) {
+                  self.$items.splice(j,1)
+                  found = true
+                }
+              }
+              if(!found){$SetDict.add(self, item)}
+           }
+       }catch(err){
+           console.log(err)
+           if(_b_.isinstance(err, _b_.StopIteration)){break}
+           throw err
+       }
+    }
+    return $N
 }
 
 $SetDict.update = function(self,other){
