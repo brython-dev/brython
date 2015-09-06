@@ -200,8 +200,6 @@ $ListDict.__gt__ = function(self,other){
     return false
 }
 
-$ListDict.__hash__ = None
-
 $ListDict.__iadd__ = function(self, other) {
     for (var i = 0; i < other.length; i++) {
         self.push(other[i])

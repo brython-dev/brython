@@ -603,6 +603,13 @@ function hash(obj){
        return obj.__hashvalue__=obj.__hash__()
     }
     var hashfunc = getattr(obj, '__hash__', _b_.None)
+
+    if (hashfunc == _b_.None) return $B.$py_next_hash++
+
+    if(hashfunc.$infos === undefined){
+        return obj.__hashvalue__ = hashfunc()
+    }
+
     // If no specific __hash__ method is supplied for the instance but
     // a __eq__ method is defined, the object is not hashable
     //
@@ -613,13 +620,14 @@ function hash(obj){
     // d = {A():1}
     //
     // throws an exception : unhashable type: 'A'
-    
-    if (hashfunc == _b_.None) return $B.$py_next_hash++
 
-    if(hashfunc.__func__===_b_.object.$dict.__hash__ &&
-        getattr(obj,'__eq__').__func__!==_b_.object.$dict.__eq__){
+    if(hashfunc.$infos.__func__===_b_.object.$dict.__hash__){
+        if(getattr(obj,'__eq__').$infos.__func__!==_b_.object.$dict.__eq__){
             throw _b_.TypeError("unhashable type: '"+
                 $B.get_class(obj).__name__+"'")
+        }else{
+            return $B.$py_next_hash++
+        }
     }else{
         return obj.__hashvalue__= hashfunc()
     }
