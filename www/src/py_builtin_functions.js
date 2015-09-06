@@ -201,7 +201,7 @@ function dir(obj){
     if(obj===undefined){
         // if dir is called without arguments, use globals
         var frame = $B.last($B.frames_stack),
-            globals_obj = frame[1][1],
+            globals_obj = frame[3],
             res = _b_.list(), pos=0
         for(var attr in globals_obj){
             if(attr.charAt(0)=='$' && attr.charAt(1) != '$') {
