@@ -28,6 +28,6 @@ def getweakrefs(obj):
     return obj
 
 
-def proxy(obj,callback):
+def proxy(obj,callback=None):
     return ProxyType(obj)
 
