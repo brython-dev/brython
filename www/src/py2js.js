@@ -4500,7 +4500,8 @@ function $WithCtx(context){
         new $NodeJSCtx(catch_node,'catch($err'+$loop_num+')')
         
         var fbody = new $Node(), indent=node.indent+4
-        var js = '$exc'+num+' = false;console.log($err'+$loop_num+')\n'+' '.repeat(indent)+
+        var js = '$exc'+num+' = false;$err'+$loop_num+'=$B.exception($err'+
+            $loop_num+')\n'+' '.repeat(indent)+
             'if(!bool($ctx_manager_exit'+num+'($err'+$loop_num+
             '.__class__.$factory,'+'$err'+$loop_num+
             ',getattr($err'+$loop_num+',"traceback"))))'
