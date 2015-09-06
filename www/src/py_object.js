@@ -33,11 +33,23 @@ var $ObjectDict = {
     $native:true
 }
 
-// function used to generate the methods that return 'unorderable types'
+// Function for comparison operators
+// In a<b, if b defines __gt__, use b.__gt__(a)
+var reverse_func = {'__lt__':'__gt__',
+    '__gt__':'__lt__',
+    '__le__': '__ge__',
+    '__ge__': '__le__'
+}
 var $ObjectNI = function(name,op){
-    return function(other){
-        throw _b_.TypeError('unorderable types: object() '+op+
-            ' '+ _b_.str($B.get_class(other).__name__)+'()')
+    return function(self, other){
+        var klass = $B.get_class(other), 
+            other_comp = _b_.getattr(klass, reverse_func[name])
+        if(other_comp.__func__===$ObjectDict[reverse_func[name]]){
+            throw _b_.TypeError('unorderable types: object() '+op+
+                ' '+ _b_.str($B.get_class(other).__name__)+'()')
+        }else{
+            return other_comp(other, self)
+        }
     }
 }
 
