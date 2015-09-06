@@ -57,7 +57,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-06 08:15:18.040315"
+__BRYTHON__.compiled_date="2015-09-06 21:04:54.015931"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -3920,8 +3920,10 @@ return res}}
 __BRYTHON__.builtins.object=(function($B){var _b_=$B.builtins
 var $ObjectDict={
 __name__:'object',$native:true}
-var $ObjectNI=function(name,op){return function(other){throw _b_.TypeError('unorderable types: object() '+op+
-' '+ _b_.str($B.get_class(other).__name__)+'()')}}
+var reverse_func={'__lt__':'__gt__','__gt__':'__lt__','__le__': '__ge__','__ge__': '__le__'}
+var $ObjectNI=function(name,op){return function(self,other){var klass=$B.get_class(other),other_comp=_b_.getattr(klass,reverse_func[name])
+if(other_comp.__func__===$ObjectDict[reverse_func[name]]){throw _b_.TypeError('unorderable types: object() '+op+
+' '+ _b_.str($B.get_class(other).__name__)+'()')}else{return other_comp(other,self)}}}
 var opnames=['add','sub','mul','truediv','floordiv','mod','pow','lshift','rshift','and','xor','or']
 var opsigns=['+','-','*','/','//','%','**','<<','>>','&','^','|']
 $ObjectDict.__delattr__=function(self,attr){delete self[attr];return _b_.None}
@@ -8819,9 +8821,8 @@ throw err}}
 return true}
 return false}
 $SetDict.__format__=function(self,format_string){return $SetDict.__str__(self)}
-$SetDict.__ge__=function(self,other){return !$SetDict.__lt__(self,other)}
-$SetDict.__gt__=function(self,other,accept_iter){$test(accept_iter,other)
-return !$SetDict.__le__(self,other)}
+$SetDict.__ge__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return !$SetDict.__lt__(self,other)}else{return _b_.object.$dict.__ge__(self,other)}}
+$SetDict.__gt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return !$SetDict.__le__(self,other)}else{return _b_.object.$dict.__gt__(self,other)}}
 $SetDict.__init__=function(self){var args=[]
 for(var i=1,_len_i=arguments.length;i < _len_i;i++){args.push(arguments[i])}
 if(args.length==0)return $N
@@ -8834,20 +8835,19 @@ throw _.TypeError("'"+arg.__class__.__name__+"' object is not iterable")}
 var obj={$items:[],$str:true,$num:true}
 while(1){try{var item=_.next(iterable)
 $SetDict.add(obj,item)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
-console.log(item,err)
+console.log('arg',arg,'\niterable',iterable,'\nitem',item,'\nerr',err)
 throw err}}
 self.$items=obj.$items}else{
 throw _.TypeError("set expected at most 1 argument, got "+args.length)}
 return $N}
 var $set_iterator=$B.$iterator_class('set iterator')
 $SetDict.__iter__=function(self){return $B.$iterator(self.$items,$set_iterator)}
-$SetDict.__le__=function(self,other,accept_iter){$test(accept_iter,other)
-var cfunc=_.getattr(other,'__contains__')
+$SetDict.__le__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){var cfunc=_.getattr(other,'__contains__')
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(!cfunc(self.$items[i]))return false}
-return true}
+return true}else{return _b_.object.$dict.__le__(self,other)}}
 $SetDict.__len__=function(self){return self.$items.length}
-$SetDict.__lt__=function(self,other){return($SetDict.__le__(self,other)&&
-$SetDict.__len__(self)<_.getattr(other,'__len__')())}
+$SetDict.__lt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return($SetDict.__le__(self,other)&&
+$SetDict.__len__(self)<_.getattr(other,'__len__')())}else{return _b_.object.$dict['__lt__'](self,other)}}
 $SetDict.__mro__=[$SetDict,_.object.$dict]
 $SetDict.__ne__=function(self,other){return !$SetDict.__eq__(self,other)}
 $SetDict.__or__=function(self,other,accept_iter){
@@ -8872,20 +8872,20 @@ for(var i=0,_len_i=self.$items.length;i < _len_i;i++){res.push(_.repr(self.$item
 res='{' + res.join(', ')+'}'
 return head+res+tail}
 $SetDict.__sub__=function(self,other,accept_iter){
-$test(accept_iter,other)
+$test(accept_iter,other,'-')
 var res=set()
 var cfunc=_.getattr(other,'__contains__')
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(!cfunc(self.$items[i])){res.$items.push(self.$items[i])}}
 return res}
 $SetDict.__xor__=function(self,other,accept_iter){
-$test(accept_iter,other)
+$test(accept_iter,other,'^')
 var res=set()
 var cfunc=_.getattr(other,'__contains__')
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(!cfunc(self.$items[i])){$SetDict.add(res,self.$items[i])}}
 for(var i=0,_len_i=other.$items.length;i < _len_i;i++){if(!$SetDict.__contains__(self,other.$items[i])){$SetDict.add(res,other.$items[i])}}
 return res}
-function $test(accept_iter,other){if(accept_iter===undefined && !_.isinstance(other,[set,frozenset])){throw _b_.TypeError("unsupported operand type(s) for |: 'set' and '"+
-$B.get_class(other).__name__+"'")}}
+function $test(accept_iter,other,op){if(accept_iter===undefined && !_.isinstance(other,[set,frozenset])){throw _b_.TypeError("unsupported operand type(s) for "+op+
+": 'set' and '"+$B.get_class(other).__name__+"'")}}
 $B.make_rmethods($SetDict)
 $SetDict.add=function(self,item){_b_.hash(item)
 if(self.$str && !(typeof item=='string')){self.$str=false}
@@ -8928,34 +8928,37 @@ return self.$items.pop()}
 $SetDict.remove=function(self,item){
 if(!_b_.isinstance(item,set)){_b_.hash(item)}
 if(typeof item=='string' ||typeof item=='number'){var _i=self.$items.indexOf(item)
-if(_i==-1)throw _.KeyError('missing item ' + _.repr(item))
+if(_i==-1)throw _.KeyError(item)
 self.$items.splice(_i,1)
 return $N}
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_.getattr(self.$items[i],'__eq__')(item)){self.$items.splice(i,1)
 return $N}}
 throw _.KeyError(item)}
 $SetDict.symmetric_difference_update=function(self,s){
-var _next=_b_.getattr(_b_.iter(s),'__next__'),item
+var _next=_b_.getattr(_b_.iter(s),'__next__'),item,remove=[],add=[]
 while(true){try{item=_next()
 var _type=typeof item
 if(_type=='string' ||_type=="number"){var _index=self.$items.indexOf(item)
-if(_index > -1){self.$items.splice(_index,1)}else{self.$items.push(item)}}else{
+if(_index > -1){remove.push(_index)}else{add.push(item)}}else{
 var found=false
-for(var j=0;!found && j < self.$items.length;j++){if(_b_.getattr(self.$items[j],'__eq__')(item)){self.$items.splice(j,1)
+for(var j=0;!found && j < self.$items.length;j++){if(_b_.getattr(self.$items[j],'__eq__')(item)){remove.push(j)
 found=true}}
-if(!found){$SetDict.add(self,item)}}}catch(err){console.log(err)
-if(_b_.isinstance(err,_b_.StopIteration)){break}
+if(!found){add.push(item)}}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
+remove.sort().reverse()
+for(var i=0;i<remove.length;i++){if(remove[i]!=remove[i-1]){self.$items.splice(remove[i],1)}}
+for(var i=0;i<add.length;i++){$SetDict.add(self,add[i])}
 return $N}
-$SetDict.update=function(self,other){if(other===undefined ||other.$items===undefined)return $N
-for(var i=0,_len_i=other.$items.length;i < _len_i;i++){$SetDict.add(self,other.$items[i])}
+$SetDict.update=function(self){
+for(var i=1;i<arguments.length;i++){var other=set(arguments[i])
+for(var j=0,_len=other.$items.length;j < _len;j++){$SetDict.add(self,other.$items[j])}}
 return $N}
-$SetDict.symmetric_difference=function(self,other){return $SetDict.__xor__(self,other,1)}
-$SetDict.difference=function(self,other){return $SetDict.__sub__(self,other,1)}
-$SetDict.intersection=function(self,other){return $SetDict.__and__(self,other,1)}
-$SetDict.issubset=function(self,other){return $SetDict.__le__(self,other,1)}
-$SetDict.issuperset=function(self,other){return $SetDict.__ge__(self,other,1)}
-$SetDict.union=function(self,other){return $SetDict.__or__(self,other,1)}
+$SetDict.symmetric_difference=function(self,other){return $SetDict.__xor__(self,set(other))}
+$SetDict.difference=function(self,other){return $SetDict.__sub__(self,set(other))}
+$SetDict.intersection=function(self,other){return $SetDict.__and__(self,set(other))}
+$SetDict.issubset=function(self,other){return $SetDict.__le__(self,set(other))}
+$SetDict.issuperset=function(self,other){return $SetDict.__ge__(self,set(other))}
+$SetDict.union=function(self,other){return $SetDict.__or__(self,set(other))}
 function set(){
 var res={__class__:$SetDict,$str:true,$num:true,$items:[]}
 var args=[res].concat(Array.prototype.slice.call(arguments))
