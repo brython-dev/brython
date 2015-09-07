@@ -1,5 +1,6 @@
 (function(win) {
     var Debugger = win.Brython_Debugger = {
+        run_no_debugger: runNoTrace,
         start_debugger: startDebugger,
         stop_debugger: stopDebugger,
         step_debugger: stepDebugger,
@@ -200,11 +201,13 @@
         var trace = {
             event: 'line',
             type: 'runtime_error',
-            data: _b_.getattr(err, 'info') + '\n' + err.$message + '\n',
+            data: _b_.getattr(err, 'info') + '\n' + _b_.getattr(err, '__name__') + ": " +err.$message + '\n', 
             stack: err.$stack,
             message: err.$message,
+            name: _b_.getattr(err, '__name__'),
             frame: $B.last(err.$stack),
             err: err,
+            step: getRecordedStates().length -1,
             line_no: +($B.last(err.$stack)[1].$line_info.split(',')[0]),
             next_line_no: +($B.last(err.$stack)[1].$line_info.split(',')[0]),
             module_name: +($B.last(err.$stack)[1].$line_info.split(',')[1])
@@ -212,17 +215,18 @@
         if (getRecordedStates().length > 0) {
             if(getRecordedStates().length>=stepLimit) {
                 trace.type = 'infinit_loop';
-                recordedStates.push(trace)
+                recordedStates.push(trace);
             } else {
                 setTrace(trace);   
             }
+        } else {
+            trace.type = 'syntax_error';
         }
         events_cb.debugError(trace, Debugger);
     }
 
     /**
      * Trace Function constructs a list of states of the program after each trace call
-     * @param {[type]} state trace object
      * @return {String} Value of input when setTrace is used for input
      */
     function setTrace(state) {
@@ -325,8 +329,8 @@
     /**
      * These states are only there to update the previouse states of where they should point
      * they are not recorded
-     * @param  {[type]}  state [description]
-     * @return {Boolean}     [description]
+     * @param { Object} state state object to
+     * @return {Boolean}     [The state is disposable]
      */
     function isDisposableState(state) {
         var disposable = ['afterwhile', 'eof'];
@@ -359,7 +363,6 @@
     /**
      * In recorded debugging mode this will move one step forward from the current frame
      * this triggers an debugger.update event for who ever is registered by calling setStep
-     * @return {[type]} [description]
      */
     function stepRecording() {
         var step = getStep();
@@ -369,7 +372,6 @@
     /**
      * In recorded debugging mode this will move one step backeards from the current frame
      * this triggers an debugger.update event for who ever is registered by calling setStep
-     * @return {[type]} [description]
      */
     function stepBackRecording() {
         var step = getStep();
@@ -467,8 +469,7 @@
 
     /**
      * Parsed python code converts it to brython then injects trac function calls inside to record debugging events
-     * @param  {[type]} src [description]
-     * @return {[type]}     [description]
+     * @param { String} src python source to parse
      */
     function parseCode(src) {
         // Generate JavaScript code and parse it.
@@ -479,8 +480,7 @@
 
     /**
      * Convert python code to Brython JS
-     * @param  {[type]} src [description]
-     * @return {[type]}     [description]
+     * @param { String} src python source to parse
      */
     function pythonToBrythonJS(src) {
         var obj = {
@@ -672,6 +672,46 @@
     }
 
     /**
+     * Run Code without trace
+     * @param  {[type]} code [description]
+     * @return {[type]}      [description]
+     */
+    function runNoTrace (code) {
+        var module_name = '__main__';
+        $B.$py_module_path[module_name] = window.location.href;
+        try {
+            var root = $B.py2js(code, module_name, module_name, '__builtins__');
+            
+            var js = root.to_js();
+            if ($B.debug > 1) {
+                console.log(js);
+            }
+
+            var None = _b_.None;
+            var getattr = _b_.getattr;
+            var setattr = _b_.setattr;
+
+            if ($B.async_enabled) {
+                js = $B.execution_object.source_conversion(js);
+
+                //console.log(js)
+                eval(js);
+            } else {
+                // Run resulting Javascript
+                eval(js);
+            }
+        } catch (exc) {
+            $B.leave_frame();
+            $B.leave_frame();
+            if (exc.$py_error) {
+                errorWhileDebugging(exc);
+            } else {
+                throw exc;
+            }
+        }
+    }
+
+    /**
      * Interpret initialize interpreter when running debugger in live mode (not recorded)
      * @param  {Object} obj object containing trace injected code and module scope
      * @return {Interpreter} instence of Interpreter
@@ -685,7 +725,6 @@
     /**
      * functions that returns the Interpreter scope function
      * @param  {Object} obj containing module scope
-     * @return {[type]} Interpreter scope API function
      */
     function defineAPIScope(obj) {
 
