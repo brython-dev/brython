@@ -111,7 +111,7 @@ def myKeyPress(event):
             return
         doc['code'].value += '\n'
         history.append(currentLine)
-        current += 1
+        current = len(history)
         if _status == "main" or _status == "3string":
             try:
                 _ = editor_ns['_'] = eval(currentLine, editor_ns)
