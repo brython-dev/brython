@@ -5,6 +5,9 @@ import dis
 
 from browser import document as doc, window, alert
 
+
+Debugger = window.Brython_Debugger
+
 # set height of container to 66% of screen
 _height = doc.documentElement.clientHeight
 _s = doc['container']
@@ -34,9 +37,6 @@ except:
     editor.setValue = set_value
     has_ace = False
 
-Debugger = window.Brython_Debugger
-if Debugger:
-    Debugger.set_editor(editor)
 
 if sys.has_local_storage:
     from browser.local_storage import storage
@@ -147,19 +147,22 @@ def step_back_debugger(ev):
         Debugger.step_back_debugger()
 
 
-def debug_started():
+def debug_started(Debugger):
     doc['run'].disabled = True
     doc['debug'].disabled = True
     doc['step'].disabled = False
     doc['stop'].disabled = False
     editor.setHighlightActiveLine(True)
     if Debugger.is_recorded():
-        editor.gotoLine(Debugger.get_recorded_frames()[0].next_line_no)
+        if len(Debugger.get_recorded_states()) > 0:
+            editor.gotoLine(Debugger.get_recorded_states()[0].next_line_no)
+        else:
+            doc['step'].disabled = True
     else:
         Debugger.step_debugger()
 
 
-def debug_stoped():
+def debug_stoped(Debugger):
     doc['debug'].disabled = False
     doc['run'].disabled = False
     doc['step'].disabled = True
@@ -184,6 +187,13 @@ def debug_step(state):
     else:
         doc['back'].disabled = False
 
+
+def debug_error(err, Debugger):
+    doc['console'].value = str(err.data)
+    if len(Debugger.get_recorded_states()) == 0:
+        Debugger.stop_debugger()
+
 Debugger.on_debugging_started(debug_started)
 Debugger.on_debugging_end(debug_stoped)
+Debugger.on_debugging_error(debug_error)
 Debugger.on_step_update(debug_step)
