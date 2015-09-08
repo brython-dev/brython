@@ -112,7 +112,10 @@ def myKeyPress(event):
         doc['code'].value += '\n'
         history.append(currentLine)
         current += 1
-        if _status == "main" or _status == "3string":
+        if _status =="main" and currentLine[0] == "@":
+            doc['code'].value += "... "
+            _status = "block"
+        elif _status == "main" or _status == "3string":
             try:
                 _ = editor_ns['_'] = eval(currentLine, editor_ns)
                 if _ is not None:
