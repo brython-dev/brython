@@ -5473,7 +5473,7 @@ function $transition(context,token){
             return new $AbstractExprCtx(new_op,false)
           case 'augm_assign':
             if(context.expect===','){
-               return new $AbstractExprCtx(new $AugmentedAssignCtx(context,arguments[2]))
+               return new $AbstractExprCtx(new $AugmentedAssignCtx(context,arguments[2]),true)
             }
             break
           case '=':
