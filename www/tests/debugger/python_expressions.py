@@ -79,8 +79,10 @@ for i in r:
 
 [x for x in l if x > 20]
 
+
 def baz():
     pass
+
 
 def bar(a):
     return a
@@ -97,6 +99,12 @@ def boo(a=3):
 def buk(a=3):
     global b
     b = 4
+
+
+def bla():
+    for i in range(10):
+        print(l[i])
+
 
 def foo(): print ("in foo")
 
