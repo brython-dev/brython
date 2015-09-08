@@ -225,13 +225,12 @@ def b2a_base64(s):
         snippet = table_b2a_base64[(a >> 2 ) & 0x3F] + \
                   table_b2a_base64[(a << 4 ) & 0x3F] + '=='
     else:
-        a = ord(final[0])
-        b = ord(final[1])
+        a = final[0]
+        b = final[1]
         snippet = table_b2a_base64[(a >> 2) & 0x3F] + \
                   table_b2a_base64[((a << 4) | (b >> 4) & 0xF) & 0x3F] + \
                   table_b2a_base64[(b << 2) & 0x3F] + '='
-
-    return bytes(''.join(result) + snippet + '\n',__BRYTHON__.charset)
+    return bytes(''.join(result) + snippet + '\n', __BRYTHON__.charset)
 
 def a2b_qp(s, header=False):
     inp = 0

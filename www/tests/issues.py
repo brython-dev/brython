@@ -467,6 +467,11 @@ b = bytearray(b'<Z\x00N')
 b64 = base64.b64encode( b )
 assert b64 == b'PFoATg=='
 
+import base64
+buf = bytearray(b'EZ\x86\xdd\xabN\x86\xdd\xabNE[\x86\xdd\xabN\x86\xdd\xabN')
+b64 = base64.b64encode( buf )
+assert b64 == b'RVqG3atOht2rTkVbht2rTobdq04='
+
 # issue 279
 x = 0
 if False: x+=2;x+=3
