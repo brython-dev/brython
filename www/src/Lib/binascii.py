@@ -221,7 +221,7 @@ def b2a_base64(s):
     if final_length == 0:
         snippet = ''
     elif final_length == 1:
-        a = ord(final[0])
+        a = final[0]
         snippet = table_b2a_base64[(a >> 2 ) & 0x3F] + \
                   table_b2a_base64[(a << 4 ) & 0x3F] + '=='
     else:

@@ -57,7 +57,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-08 08:25:57.128428"
+__BRYTHON__.compiled_date="2015-09-08 09:34:11.511336"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4033,7 +4033,7 @@ var metaclass=_b_.type
 for(var i=0;i<kwargs.length;i++){var key=kwargs[i][0],val=kwargs[i][1]
 if(key=='metaclass'){metaclass=val}}
 var class_dict={__name__ : class_name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict}
-var items=_b_.list(_b_.dict.$dict.items(cl_dict))
+var items=$B.$dict_items(cl_dict);
 for(var i=0;i<items.length;i++){class_dict[items[i][0]]=items[i][1]}
 class_dict.__mro__=[class_dict].concat(make_mro(bases,cl_dict))
 for(var i=1;i<class_dict.__mro__.length;i++){if(class_dict.__mro__[i].__class__ !==$B.$type){metaclass=class_dict.__mro__[i].__class__.$factory}}
@@ -4126,7 +4126,7 @@ $B.$type.__mro__=[$B.$type,_b_.object.$dict]
 _b_.type.$dict=$B.$type
 $B.$type.__new__=function(cls,name,bases,cl_dict){
 var class_dict={__class__ : $B.$type,__name__ : name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict,$methods :{}}
-var items=_b_.list(_b_.dict.$dict.items(cl_dict))
+var items=$B.$dict_items(cl_dict);
 for(var i=0;i<items.length;i++){var name=items[i][0],v=items[i][1]
 class_dict[name]=v
 if(typeof v=='function' 
@@ -5109,11 +5109,15 @@ var NotImplemented={__class__ : _NotImplemented.$dict,__str__: function(){return
 function $not(obj){return !bool(obj)}
 function oct(x){return $builtin_base_convert_helper(x,8)}
 function ord(c){
-switch(typeof c){case 'string':
+switch($B.get_class(c)){case _b_.str.$dict:
 if(c.length==1)return c.charCodeAt(0)
-_b_.TypeError('ord() expected a character, but string of length ' + c.length + ' found')
+throw _b_.TypeError('ord() expected a character, but string of length ' + c.length + ' found')
+case _b_.bytes.$dict:
+case _b_.bytearray.$dict:
+if(c.source.length==1)return c.source[0]
+throw _b_.TypeError('ord() expected a character, but string of length ' + c.source.length + ' found')
 default:
-_b_.TypeError('ord() expected a character, but ' + typeof(c)+ ' was found')}}
+throw _b_.TypeError('ord() expected a character, but ' + $B.get_class(c).__name__ + ' was found')}}
 function pow(){var $ns=$B.$MakeArgs1('pow',3,{x:null,y:null,z:null},['x','y','z'],arguments,{z:null},null,null)
 var x=$ns['x'],y=$ns['y'],z=$ns['z']
 if(z===null){var a,b

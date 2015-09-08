@@ -446,4 +446,10 @@ a = [1, 2, 3]
 b, *c = a
 assert c == [2, 3]
 
+# issue 274
+import base64
+b = bytearray(b'<Z\x00N')
+b64 = base64.b64encode( b )
+assert b64 == b'PFoATg=='
+
 print('passed all tests')
