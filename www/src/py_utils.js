@@ -602,9 +602,16 @@ $B.stdout = {
 }
 
 $B.stdin = {
-    __class__:$io,
-    //fix me
-    read: function(size){return ''}
+    __class__: $io,
+    __original__:true,
+    closed: false,
+    len:1, pos:0,
+    read: function () {
+        return '';
+    },
+    readline: function() {
+        return '';
+    }
 }
 
 $B.jsobject2pyobject=function(obj){
