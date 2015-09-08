@@ -2549,14 +2549,14 @@ function $ForExpr(context){
             var for_node = new $Node()  
             new $NodeJSCtx(for_node,js)
             
-            for_node.add($NodeJS('if($safe'+num+'){'+idt+'++}'))
-            for_node.add($NodeJS('else{'+idt+'=$B.add('+idt+',1)}'))
-            for_node.add($NodeJS('if($safe'+num+' && '+idt+'>= $stop_'+
+            for_node.add($NodeJS('if($safe'+num+'){var $next'+num+'='+idt+'+1'+'}'))
+            for_node.add($NodeJS('else{var $next'+num+'=$B.add('+idt+',1)}'))
+            for_node.add($NodeJS('if($safe'+num+' && $next'+num+'>= $stop_'+
                 num+'){break}'))
             for_node.add($NodeJS('else if(!$safe'+num+
-                ' && $B.ge('+idt+', $stop_'+num+
+                ' && $B.ge($next'+num+', $stop_'+num+
                 ')){break}'))
-            
+            for_node.add($NodeJS(idt+' = $next'+num))            
             // Add the loop body            
             for(var i=0;i<children.length;i++){
                 for_node.add(children[i].clone())
@@ -6730,16 +6730,17 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
             var ends_line = false
             while(pos1<src.length){
                 var _s=src.charAt(pos1)
-                if(_s=='\n' || _s=='#'){ends_line=true;break
-                }else if(_s==' '){pos1++}
+                if(_s=='\n' || _s=='#'){ends_line=true;break}
+                else if(_s==' '){pos1++}
                 else{break}
             }
             if(ends_line){pos++;break}
+            
             new_node = new $Node()
-            new_node.indent = current.indent
+            new_node.indent = $get_node(context).indent
             new_node.line_num = lnum
             new_node.module = module
-            current.parent.add(new_node)
+            $get_node(context).parent.add(new_node)
             current = new_node
             context = new $NodeCtx(new_node)
             pos++

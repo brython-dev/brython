@@ -467,4 +467,10 @@ b = bytearray(b'<Z\x00N')
 b64 = base64.b64encode( b )
 assert b64 == b'PFoATg=='
 
+# issue 279
+x = 0
+if False: x+=2;x+=3
+for n in range(2): x+=1;x+=1
+assert x==4
+
 print('passed all tests')
