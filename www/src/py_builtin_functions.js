@@ -943,12 +943,16 @@ function oct(x) {return $builtin_base_convert_helper(x, 8)}
 function ord(c) {
     //return String.charCodeAt(c)  <= this returns an undefined function error
     // see http://msdn.microsoft.com/en-us/library/ie/hza4d04f(v=vs.94).aspx
-    switch(typeof c) {
-      case 'string':
+    switch($B.get_class(c)) {
+      case _b_.str.$dict:
         if (c.length == 1) return c.charCodeAt(0)     // <= strobj.charCodeAt(index)
-        _b_.TypeError('ord() expected a character, but string of length ' + c.length + ' found') 
+        throw _b_.TypeError('ord() expected a character, but string of length ' + c.length + ' found') 
+      case _b_.bytes.$dict:
+      case _b_.bytearray.$dict:
+        if (c.source.length == 1) return c.source[0]     // <= strobj.charCodeAt(index)
+        throw _b_.TypeError('ord() expected a character, but string of length ' + c.source.length + ' found')       
       default:
-        _b_.TypeError('ord() expected a character, but ' + typeof(c) + ' was found') 
+        throw _b_.TypeError('ord() expected a character, but ' + $B.get_class(c).__name__ + ' was found') 
     }
 }
 
