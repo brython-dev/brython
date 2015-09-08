@@ -446,6 +446,21 @@ a = [1, 2, 3]
 b, *c = a
 assert c == [2, 3]
 
+# issue 261 (__slots__)
+class A:
+    __slots__ = 'x',
+
+A.x
+a = A()
+a.x = 9
+assert a.x == 9
+try:
+    a.y = 0
+except AttributeError:
+    pass
+except:
+    raise
+
 # issue 274
 import base64
 b = bytearray(b'<Z\x00N')

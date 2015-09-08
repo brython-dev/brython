@@ -57,7 +57,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-08 09:34:11.511336"
+__BRYTHON__.compiled_date="2015-09-08 11:11:09.149837"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4036,6 +4036,11 @@ var class_dict={__name__ : class_name.replace('$$',''),__bases__ : bases,__dict_
 var items=$B.$dict_items(cl_dict);
 for(var i=0;i<items.length;i++){class_dict[items[i][0]]=items[i][1]}
 class_dict.__mro__=[class_dict].concat(make_mro(bases,cl_dict))
+var slots=[]
+for(var i=0;i<class_dict.__mro__.length;i++){var _slots=class_dict.__mro__[i].__slots__
+if(_slots!==undefined){_slots=_b_.list(_slots)
+for(var j=0;j<_slots.length;j++){cl_dict.$slots=cl_dict.$slots ||{}
+cl_dict.$slots[_slots[j]]=class_dict.__mro__[i]}}}
 for(var i=1;i<class_dict.__mro__.length;i++){if(class_dict.__mro__[i].__class__ !==$B.$type){metaclass=class_dict.__mro__[i].__class__.$factory}}
 class_dict.__class__=metaclass.$dict
 var meta_new=$B.$type.__getattribute__(metaclass.$dict,'__new__')
@@ -4125,7 +4130,7 @@ $B.$type.__class__=$B.$type
 $B.$type.__mro__=[$B.$type,_b_.object.$dict]
 _b_.type.$dict=$B.$type
 $B.$type.__new__=function(cls,name,bases,cl_dict){
-var class_dict={__class__ : $B.$type,__name__ : name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict,$methods :{}}
+var class_dict={__class__ : $B.$type,__name__ : name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict,$methods :{},$slots: cl_dict.$slots}
 var items=$B.$dict_items(cl_dict);
 for(var i=0;i<items.length;i++){var name=items[i][0],v=items[i][1]
 class_dict[name]=v
@@ -4185,6 +4190,7 @@ for(var i=0;i<cl_mro.length;i++){if(cl_mro[i].__getattr__!==undefined){getattr=c
 break}}
 if(getattr!==null){if(getattr.$type=='classmethod'){return getattr(klass.$factory,attr)}
 return getattr(attr)}}}
+if(res===undefined && klass.$slots && klass.$slots[attr]!==undefined){return member_descriptor(klass.$slots[attr],attr)}
 if(res!==undefined){
 if(res.__class__===$B.$PropertyDict)return res
 var get_func=res.__get__
@@ -4253,6 +4259,11 @@ var _args=Array.prototype.slice.call(arguments)
 if(simple && klass.__new__==undefined){obj={__class__:klass}}else{if(new_func!==null){obj=new_func.apply(null,[klass.$factory].concat(_args))}}
 if(!obj.__initialized__){if(init_func!==null){init_func.apply(null,[obj].concat(_args))}}
 return obj}}
+function member_descriptor(klass,attr){return{__class__:member_descriptor.$dict,klass: klass,attr: attr}}
+member_descriptor.__class__=$B.$factory
+member_descriptor.$dict={__class__: $B.$type,__name__: 'member_descriptor',$factory: member_descriptor,__str__: function(self){return "<member '"+self.attr+"' of '"+self.klass.__name__+
+"' objects>"}}
+member_descriptor.$dict.__mro__=[member_descriptor.$dict ,_b_.object.$dict]
 function $MethodFactory(){}
 $MethodFactory.__class__=$B.$factory
 $B.$MethodDict={__class__:$B.$type,__name__:'method',$factory:$MethodFactory}
@@ -5275,6 +5286,8 @@ if(res!==undefined){
 if(res.__set__!==undefined){res.__set__(res,obj,value);return None}
 var __set__=getattr(res,'__set__',null)
 if(__set__ &&(typeof __set__=='function')){__set__.apply(res,[obj,value]);return None}}
+if(klass && klass.$slots && klass.$slots[attr]===undefined){throw _b_.AttributeError("'"+klass.__name__+"' object has no attribute'"+
+attr+"'")}
 var setattr=false
 if(klass!==undefined){for(var i=0,_len=klass.__mro__.length;i<_len;i++){setattr=klass.__mro__[i].__setattr__
 if(setattr){break}}}

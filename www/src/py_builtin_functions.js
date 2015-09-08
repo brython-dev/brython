@@ -1309,6 +1309,12 @@ function setattr(obj,attr,value){
             __set__.apply(res,[obj,value]);return None
         }
     }
+
+    // Use __slots__ if defined
+    if(klass && klass.$slots && klass.$slots[attr]===undefined){
+        throw _b_.AttributeError("'"+klass.__name__+"' object has no attribute'"+
+            attr+"'")
+    }
     
     // Search the __setattr__ method
     var setattr=false
@@ -1318,6 +1324,7 @@ function setattr(obj,attr,value){
             if(setattr){break}
         }
     }
+    
     if(!setattr){obj[attr]=value}else{setattr(obj,attr,value)}
     return None
 }
