@@ -35,9 +35,9 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         __bases__ : bases,
         __dict__ : cl_dict
     }
- 
+
     // set class attributes for faster lookups
-    var items = _b_.list(_b_.dict.$dict.items(cl_dict))
+    var items = $B.$dict_items(cl_dict);
     for(var i=0;i<items.length;i++){
         class_dict[items[i][0]] = items[i][1]
     }
@@ -278,9 +278,9 @@ $B.$type.__new__ = function(cls, name, bases, cl_dict){
         __dict__ : cl_dict,
         $methods : {}
     }
- 
+
     // set class attributes for faster lookups
-    var items = _b_.list(_b_.dict.$dict.items(cl_dict))
+    var items = $B.$dict_items(cl_dict);
     for(var i=0;i<items.length;i++){
         var name=items[i][0], v=items[i][1]
         class_dict[name] = v
