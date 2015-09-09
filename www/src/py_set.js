@@ -137,7 +137,16 @@ $SetDict.__init__ = function(self){
 
 var $set_iterator = $B.$iterator_class('set iterator')
 $SetDict.__iter__ = function(self){
-    return $B.$iterator(self.$items,$set_iterator)
+    var it = $B.$iterator(self.$items,$set_iterator), 
+        len = self.$items.length,
+        nxt = it.__next__
+    it.__next__ = function(){
+        if(it.__len__() != len){
+            throw _b_.RuntimeError("size changed during iteration")
+        }
+        return nxt()
+    }
+    return it
 }
 
 $SetDict.__le__ = function(self,other){
@@ -278,6 +287,7 @@ $SetDict.clear = function(){
 $SetDict.copy = function(){
     var $ = $B.$MakeArgs1('copy', 1, {self:null},['self'],
         arguments, {}, null, null)
+    if(_b_.isinstance($.self, frozenset)){return $.self}
     var res = set() // copy returns an instance of set, even for subclasses
     for(var i=0, _len_i = $.self.$items.length; i < _len_i;i++){
         res.$items[i]=$.self.$items[i]
