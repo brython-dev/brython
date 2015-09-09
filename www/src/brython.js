@@ -33,6 +33,10 @@ $B.language=window.navigator.userLanguage ||window.navigator.language
 $B.charset=document.characterSet ||document.inputEncoding ||"utf-8"
 $B.max_int=Math.pow(2,53)-1
 $B.min_int=-$B.max_int
+$B.$py_next_hash=-Math.pow(2,53)
+$B.$py_UUID=0
+$B.lambda_magic=Math.random().toString(36).substr(2,8)
+$B.callbacks={}
 var has_storage=typeof(Storage)!=="undefined"
 if(has_storage){$B.has_local_storage=false
 try{
@@ -57,7 +61,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-08 15:39:15.874813"
+__BRYTHON__.compiled_date="2015-09-09 11:13:06.134014"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1608,9 +1612,8 @@ var scope=found[0]
 this.found=$B.bound[scope.id][val]
 var scope_ns='$locals_'+scope.id.replace(/\./g,'_')
 if(scope.C===undefined){
-if(scope.id=='__builtins__'){if(gs.blurred){var val1='('+global_ns+'["'+val+'"]'
-val1 +='|| $B.builtins["'+val+'"])'
-val=val1}else{val='$B.builtins["'+val+'"]'
+if(scope.id=='__builtins__'){if(gs.blurred){
+val='('+global_ns+'["'+val+'"] || '+val+')'}else{
 this.is_builtin=true}}else if(scope.id==scope.module){if(!this.bound && scope===innermost && this.env[val]===undefined){return '$B.$search("'+val+'", $locals_'+scope.id.replace(/\./g,'_')+')'}
 val=scope_ns+'["'+val+'"]'}else{val=scope_ns+'["'+val+'"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns+'["'+val+'"]'}else{val='$locals["'+val+'"]'}}else{
 val=scope_ns+'["'+val+'"]'}
@@ -3809,10 +3812,6 @@ function brython(options){var _b_=$B.builtins
 $B.$py_src={}
 if($B.meta_path===undefined){$B.meta_path=[]}
 $B.$options={}
-$B.$py_next_hash=-Math.pow(2,53)
-$B.$py_UUID=0
-$B.lambda_magic=Math.random().toString(36).substr(2,8)
-$B.callbacks={}
 if(options===undefined)options={'debug':0}
 if(typeof options==='number')options={'debug':options}
 if(options.debug===undefined){options.debug=0 }
@@ -5008,11 +5007,9 @@ return}
 try{return getattr(obj,'__doc__')}
 catch(err){console.log('help err '+err);return ''}}
 function hex(x){return $builtin_base_convert_helper(x,16)}
-function id(obj){if(obj.__hashvalue__ !==undefined)return obj.__hashvalue__
-if(typeof obj=='string')return getattr(_b_.str(obj),'__hash__')()
-if(obj.__hash__===undefined ||isinstance(obj,[_b_.set,_b_.list,_b_.dict])){return obj.__hashvalue__=$B.$py_next_hash++}
-if(obj.__hash__ !==undefined)return obj.__hash__()
-return null}
+function id(obj){
+if(isinstance(obj,[_b_.str,_b_.int,_b_.float])){return getattr(_b_.str(obj),'__hash__')()}else if(obj.$id!==undefined){return obj.$id}
+else{return obj.$id=$B.UUID()}}
 function __import__(mod_name,globals,locals,fromlist,level){
 var $=$B.$MakeArgs1('__import__',5,{name:null,globals:null,locals:null,fromlist:null,level:null},['name','globals','locals','fromlist','level'],arguments,{globals:None,locals:None,fromlist:_b_.tuple(),level:0},null,null)
 return $B.$__import__($.name,$.globals,$.locals,$.fromlist,$.level);}
@@ -8860,7 +8857,10 @@ self.$items=obj.$items}else{
 throw _.TypeError("set expected at most 1 argument, got "+args.length)}
 return $N}
 var $set_iterator=$B.$iterator_class('set iterator')
-$SetDict.__iter__=function(self){return $B.$iterator(self.$items,$set_iterator)}
+$SetDict.__iter__=function(self){var it=$B.$iterator(self.$items,$set_iterator),len=self.$items.length,nxt=it.__next__
+it.__next__=function(){if(it.__len__()!=len){throw _b_.RuntimeError("size changed during iteration")}
+return nxt()}
+return it}
 $SetDict.__le__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){var cfunc=_.getattr(other,'__contains__')
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(!cfunc(self.$items[i]))return false}
 return true}else{return _b_.object.$dict.__le__(self,other)}}
@@ -8920,6 +8920,7 @@ $SetDict.clear=function(){var $=$B.$MakeArgs1('clear',1,{self:null},['self'],arg
 $.self.$items=[];
 return $N}
 $SetDict.copy=function(){var $=$B.$MakeArgs1('copy',1,{self:null},['self'],arguments,{},null,null)
+if(_b_.isinstance($.self,frozenset)){return $.self}
 var res=set()
 for(var i=0,_len_i=$.self.$items.length;i < _len_i;i++){res.$items[i]=$.self.$items[i]}
 return res}
