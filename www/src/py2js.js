@@ -3205,12 +3205,14 @@ function $IdCtx(context,value){
             if(scope.context===undefined){
                 // name found at module level
                 if(scope.id=='__builtins__'){
-                    if(gs.blurred){
-                        var val1 = '('+global_ns+'["'+val+'"]'
-                        val1 += '|| $B.builtins["'+val+'"])'
-                        val = val1
+                    if(gs.blurred){ 
+                        // If the program has "from <module> import *" we 
+                        // can't be sure by syntax analysis that the builtin
+                        // name is not overridden
+                        val = '('+global_ns+'["'+val+'"] || '+val+')'
                     }else{
-                        val = '$B.builtins["'+val+'"]'
+                        // Keep the name as is, it is introduced in the 
+                        // namespace at the beginning of the script
                         this.is_builtin = true
                     }
                 }else if(scope.id==scope.module){
