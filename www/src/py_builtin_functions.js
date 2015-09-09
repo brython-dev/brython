@@ -677,11 +677,15 @@ function help(obj){
 function hex(x) { return $builtin_base_convert_helper(x, 16)}
 
 function id(obj) {
-   if (obj.__hashvalue__ !== undefined) return obj.__hashvalue__
-
    // this calculates a hash from the string contents
    // should be deterministic based on string contents
-   if (typeof obj == 'string') return getattr(_b_.str(obj), '__hash__')() 
+   if (isinstance(obj, [_b_.str, _b_.int, _b_.float])){
+       return getattr(_b_.str(obj), '__hash__')()
+   }else if(obj.$id!==undefined){return obj.$id}
+   else{return obj.$id = $B.UUID()}
+
+   /*
+   if (obj.__hashvalue__ !== undefined) return obj.__hashvalue__
 
    if (obj.__hash__ === undefined || isinstance(obj, [_b_.set,_b_.list,_b_.dict])) {
       return obj.__hashvalue__=$B.$py_next_hash++
@@ -690,6 +694,7 @@ function id(obj) {
    if (obj.__hash__ !== undefined) return obj.__hash__()
 
    return null
+   */
 }
 
 // The default __import__ function is a builtin
