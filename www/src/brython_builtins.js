@@ -78,6 +78,22 @@ $B.charset = document.characterSet || document.inputEncoding || "utf-8"
 $B.max_int = Math.pow(2,53)-1
 $B.min_int = -$B.max_int
 
+// Used to compute the hash value of some objects (see 
+// py_builtin_functions.js)
+$B.$py_next_hash = -Math.pow(2,53)
+
+// $py_UUID guarantees a unique id.  Do not use this variable 
+// directly, use the $B.UUID function defined in py_utils.js
+$B.$py_UUID=0
+
+// Magic name used in lambdas
+$B.lambda_magic = Math.random().toString(36).substr(2,8)
+
+// Callback functions indexed by their name
+// Used to print a traceback if an exception is raised when the function
+// is triggered by a DOM event
+$B.callbacks = {}
+
 var has_storage = typeof(Storage)!=="undefined"
 if(has_storage){
     $B.has_local_storage = false
