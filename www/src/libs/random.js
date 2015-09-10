@@ -316,7 +316,7 @@ function _Random(){
         SG_MAGICCONST: 2.50407739677627,
 
         choice: function(seq){
-            var $ = $B.$MakeArgs1('choice', 1,
+            var $ = $B.args('choice', 1,
                 {seq:null},['seq'],arguments, {}, null, null),
                 seq = $.seq
             var len, rank
@@ -365,7 +365,7 @@ function _Random(){
             // Warning: a few older sources define the gamma distribution in terms
             // of alpha > -1.0
             
-            var $ = $B.$MakeArgs1('gammavariate', 2,
+            var $ = $B.args('gammavariate', 2,
                     {alpha:null, beta:null}, ['alpha', 'beta'],
                     arguments, {}, null, null),
                 alpha = $.alpha,
@@ -458,7 +458,7 @@ function _Random(){
             # lock here.)
             */
     
-            var $ = $B.$MakeArgs1('gauss', 2, {mu:null, sigma:null},
+            var $ = $B.args('gauss', 2, {mu:null, sigma:null},
                     ['mu', 'sigma'], arguments, {}, null, null),
                 mu = $.mu,
                 sigma = $.sigma
@@ -475,7 +475,7 @@ function _Random(){
         },
              
         getrandbits: function(k){
-            var $ = $B.$MakeArgs1('getrandbits', 1,
+            var $ = $B.args('getrandbits', 1,
                 {k:null},['k'],arguments, {}, null, null),
                 k = $B.$GetInt($.k)
             // getrandbits(k) -> x.  Generates a long int with k random bits.
@@ -493,7 +493,7 @@ function _Random(){
         
         getstate: function(){
             // Return internal state; can be passed to setstate() later.
-            var $ = $B.$MakeArgs1('getstate', 0, {}, [], arguments, {}, null, null)
+            var $ = $B.args('getstate', 0, {}, [], arguments, {}, null, null)
             return _random.getstate()
         },
         
@@ -512,7 +512,7 @@ function _Random(){
             // variables using the ratio of uniform deviates", ACM Trans
             // Math Software, 3, (1977), pp257-260.
             
-            var $=$B.$MakeArgs1('normalvariate', 2,
+            var $=$B.args('normalvariate', 2,
                 {mu:null, sigma:null}, ['mu', 'sigma'],
                 arguments, {}, null, null),
                 mu = $.mu,
@@ -532,7 +532,7 @@ function _Random(){
             /* Pareto distribution.  alpha is the shape parameter.*/
             // Jain, pg. 495
             
-            var $ = $B.$MakeArgs1('paretovariate', 1, {alpha:null}, ['alpha'],
+            var $ = $B.args('paretovariate', 1, {alpha:null}, ['alpha'],
                         arguments, {}, null, null)
     
             u = 1 - _random()
@@ -540,7 +540,7 @@ function _Random(){
         },
             
         randint: function(a, b){
-            var $ = $B.$MakeArgs1('randint', 2,
+            var $ = $B.args('randint', 2,
                 {a:null, b:null},
                 ['a', 'b'],
                 arguments, {}, null, null)
@@ -550,7 +550,7 @@ function _Random(){
         random: _random,
         
         randrange: function(){
-            var $ = $B.$MakeArgs1('randrange', 3,
+            var $ = $B.args('randrange', 3,
                 {x:null, stop:null, step:null},
                 ['x', 'stop', 'step'],
                 arguments, {stop:null, step:null}, null, null)
@@ -625,7 +625,7 @@ function _Random(){
             # set and it doesn't suffer from frequent reselections.'
             
             */
-            var $ = $B.$MakeArgs1('sample',2,{population:null,k:null},
+            var $ = $B.args('sample',2,{population:null,k:null},
                 ['population','k'], arguments,{},null,null),
                 population = $.population,
                 k = $.k
@@ -677,7 +677,7 @@ function _Random(){
         
             If *a* is an int, all bits are used.
             */
-            var $=$B.$MakeArgs1('seed',2,{a:null, version:null},['a', 'version'],
+            var $=$B.args('seed',2,{a:null, version:null},['a', 'version'],
                     arguments,{a:new Date(), version:2},null,null),
                 a = $.a,
                 version = $.version
@@ -714,7 +714,7 @@ function _Random(){
         
         setstate: function(state){
             // Restore internal state from object returned by getstate().
-            var $ = $B.$MakeArgs1('setstate', 1, {state:null}, ['state'], 
+            var $ = $B.args('setstate', 1, {state:null}, ['state'], 
                 arguments, {}, null, null)
             var state = _random.getstate()
             if(!Array.isArray($.state)){
@@ -752,7 +752,7 @@ function _Random(){
             float in [0.0, 1.0); by default, the standard random.random.
             */
     
-            var $ = $B.$MakeArgs1('shuffle',2,{x:null,random:null},
+            var $ = $B.args('shuffle',2,{x:null,random:null},
                 ['x','random'],
                 arguments,{random:null},null,null),
                 x = $.x,
@@ -790,7 +790,7 @@ function _Random(){
     
             http://en.wikipedia.org/wiki/Triangular_distribution
             */
-            var $=$B.$MakeArgs1('triangular',3,
+            var $=$B.args('triangular',3,
                 {low:null, high:null, mode:null},
                 ['low', 'high', 'mode'],
                 arguments,{low:0, high:1, mode:null}, null, null),
@@ -811,7 +811,7 @@ function _Random(){
         },
             
         uniform: function(){
-            var $ = $B.$MakeArgs1('uniform',2,{a:null,b:null},['a','b'],
+            var $ = $B.args('uniform',2,{a:null,b:null},['a','b'],
                 arguments,{},null,null),
                 a = $B.$GetInt($.a),
                 b = $B.$GetInt($.b)
@@ -839,7 +839,7 @@ function _Random(){
             // Thanks to Magnus Kessler for a correction to the
             // implementation of step 4.
             
-            var $=$B.$MakeArgs1('vonmisesvariate', 2,
+            var $=$B.args('vonmisesvariate', 2,
                     {mu: null, kappa:null}, ['mu', 'kappa'],
                     arguments, {}, null, null),
                 mu = $.mu,
@@ -878,7 +878,7 @@ function _Random(){
             */
             // Jain, pg. 499; bug fix courtesy Bill Arms
     
-            var $ = $B.$MakeArgs1('weibullvariate', 2, {alpha:null, beta:null},
+            var $ = $B.args('weibullvariate', 2, {alpha:null, beta:null},
                     ['alpha', 'beta'], arguments, {}, null, null),
                 alpha = $.alpha,
                 beta = $.beta
@@ -914,7 +914,7 @@ function _Random(){
         # texts (e.g., Knuth Vol 2 Ed 3 pg 134 "the beta distribution").
         */
         
-        var $ = $B.$MakeArgs1('betavariate', 2, {alpha:null, beta:null},
+        var $ = $B.args('betavariate', 2, {alpha:null, beta:null},
                 ['alpha', 'beta'], arguments, {}, null, null),
             alpha = $.alpha,
             beta = $.beta

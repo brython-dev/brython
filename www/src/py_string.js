@@ -802,7 +802,7 @@ $StringDict.endswith = function(self){
     // return False. suffix can also be a tuple of suffixes to look for. 
     // With optional start, test beginning at that position. With optional 
     // end, stop comparing at that position.
-    var $ns=$B.$MakeArgs1("$StringDict.endswith",4,
+    var $ns=$B.args("$StringDict.endswith",4,
         {self:null, suffix:null, start:null, end:null}, 
         ['self', 'suffix', 'start', 'end'],
         arguments,{start:0, end:self.length-1},null,null)
@@ -832,7 +832,7 @@ $StringDict.find = function(self){
     // arguments start and end are interpreted as in slice notation. 
     // Return -1 if sub is not found.
     var start=0,end=self.length
-    var $ns=$B.$MakeArgs1("$StringDict.find",4,
+    var $ns=$B.args("$StringDict.find",4,
         {self:null, sub:null, start:null, end:null}, 
         ['self', 'sub', 'start','end'],
         arguments,{start:0, end:self.length},null,null)
@@ -915,7 +915,7 @@ function parse_format(fmt_string){
 
 $StringDict.format = function(self) {
 
-    var $ = $B.$MakeArgs1('format', 1, {self:null}, ['self'],
+    var $ = $B.args('format', 1, {self:null}, ['self'],
         arguments, {}, 'args', 'kw')
 
     // Parse self to detect formatting instructions
@@ -1218,7 +1218,7 @@ $StringDict.rfind = function(self){
     // Return the highest index in the string where substring sub is found, 
     // such that sub is contained within s[start:end]. Optional arguments 
     // start and end are interpreted as in slice notation. Return -1 on failure.
-    var $ns=$B.$MakeArgs1("$StringDict.find",4,
+    var $ns=$B.args("$StringDict.find",4,
         {self:null, sub:null, start:null, end:null},
         ['self', 'sub', 'start', 'end'],
         arguments,{start:0, end:self.length},null,null)
@@ -1242,7 +1242,7 @@ $StringDict.rindex = function(){
 }
 
 $StringDict.rjust = function(self) {
-    var $ns=$B.$MakeArgs1("$StringDict.rjust",3,
+    var $ns=$B.args("$StringDict.rjust",3,
         {self:null, width:null, fillchar:null},
         ['self', 'width', 'fillchar'],
         arguments,{fillchar:' '},null,null)
@@ -1272,7 +1272,7 @@ $StringDict.rpartition = function(self,sep) {
 $StringDict.rsplit = function(self) {
     var args = [], pos=0
     for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-    var $ns=$B.$MakeArgs1("$StringDict.rsplit",0,{},[],args,{},'args','kw')
+    var $ns=$B.args("$StringDict.rsplit",0,{},[],args,{},'args','kw')
     var sep=None,maxsplit=-1
     if($ns['args'].length>=1){sep=$ns['args'][0]}
     if($ns['args'].length==2){maxsplit=$ns['args'][1]}
@@ -1302,7 +1302,7 @@ $StringDict.rstrip = function(self,x){
 $StringDict.split = function(self){
     var args = [], pos=0
     for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-    var $ns=$B.$MakeArgs1("$StringDict.split",0,{},[],args,{},'args','kw')
+    var $ns=$B.args("$StringDict.split",0,{},[],args,{},'args','kw')
     var sep=None,maxsplit=-1
     if($ns['args'].length>=1){sep=$ns['args'][0]}
     if($ns['args'].length==2){maxsplit=$ns['args'][1]}
@@ -1379,7 +1379,7 @@ $StringDict.startswith = function(self){
     // prefix can also be a tuple of prefixes to look for. With optional 
     // start, test string beginning at that position. With optional end, 
     // stop comparing string at that position.
-    var $ns=$B.$MakeArgs1("$StringDict.startswith",4,
+    var $ns=$B.args("$StringDict.startswith",4,
         {self:null, prefix:null, start:null, end:null}, 
         ['self', 'prefix', 'start', 'end'],
         arguments,{start:0, end:self.length-1},null,null)

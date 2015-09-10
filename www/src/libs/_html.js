@@ -11,7 +11,7 @@ function makeTagDict(tagName){
         }
 
     dict.__init__ = function(){
-        var $ns=$B.$MakeArgs1('pow',1,{self:null},['self'],
+        var $ns=$B.args('__init__',1,{self:null},['self'],
             arguments,{},'args','kw')
         var self = $ns['self']
         var args = $ns['args']

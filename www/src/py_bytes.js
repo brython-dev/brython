@@ -260,7 +260,7 @@ $BytesDict.decode = function(self,encoding,errors){
 }
 
 $BytesDict.join = function(){
-    var $ns = $B.$MakeArgs1('join',2,{self:null,iterable:null},
+    var $ns = $B.args('join',2,{self:null,iterable:null},
         ['self','iterable'], arguments, {}),
         self = $ns['self'], iterable = $ns['iterable']
     var next_func = _b_.getattr(_b_.iter(iterable), '__next__'),

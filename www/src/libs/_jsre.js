@@ -94,7 +94,7 @@ var $module=(function($B){
         return res
     }
     obj.findall = function(pattern,string,flags){
-        var $ns=$B.$MakeArgs1('re.findall',2,
+        var $ns=$B.args('re.findall',2,
             {pattern:null, string:null}, ['pattern', 'string'],
             arguments,{},'args','kw') ,
             args = $ns['args'] ,
@@ -110,7 +110,7 @@ var $module=(function($B){
         return jsmatch
     }
     obj.finditer = function(pattern,string,flags){
-        var $ns=$B.$MakeArgs1('re.finditer',2,
+        var $ns=$B.args('re.finditer',2,
             {pattern:null, sring:null}, ['pattern','string'],
             arguments,{},'args','kw'),
             args = $ns['args'],
@@ -154,7 +154,7 @@ var $module=(function($B){
         return _list
     }
     obj.search = function(pattern,string){
-        var $ns=$B.$MakeArgs1('re.search', 2,
+        var $ns=$B.args('re.search', 2,
             {pattern:null, string:null},['pattern','string'],
             arguments,{},'args','kw')
         var args = $ns['args']
@@ -189,7 +189,7 @@ var $module=(function($B){
         return JSObject(mo)
     }
     obj.sub = function(pattern,repl,string){
-        var $ns=$B.$MakeArgs1('re.search', 3,
+        var $ns=$B.args('re.search', 3,
             {pattern:null, repl:null, string:null}, 
             ['pattern','repl','string'],
             arguments,{},'args','kw')

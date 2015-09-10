@@ -246,7 +246,7 @@ var $EnumerateDict = {__class__:$B.$type,__name__:'enumerate'}
 $EnumerateDict.__mro__ = [$EnumerateDict,$ObjectDict]
 
 function enumerate(){
-    var $ns = $B.$MakeArgs1("enumerate",2,{iterable:null,start:null},
+    var $ns = $B.args("enumerate",2,{iterable:null,start:null},
         ['iterable', 'start'],arguments,{start:0}, null, null)
     var _iter = iter($ns["iterable"])
     var _start = $ns["start"]
@@ -677,30 +677,16 @@ function help(obj){
 function hex(x) { return $builtin_base_convert_helper(x, 16)}
 
 function id(obj) {
-   // this calculates a hash from the string contents
-   // should be deterministic based on string contents
    if (isinstance(obj, [_b_.str, _b_.int, _b_.float])){
        return getattr(_b_.str(obj), '__hash__')()
    }else if(obj.$id!==undefined){return obj.$id}
    else{return obj.$id = $B.UUID()}
-
-   /*
-   if (obj.__hashvalue__ !== undefined) return obj.__hashvalue__
-
-   if (obj.__hash__ === undefined || isinstance(obj, [_b_.set,_b_.list,_b_.dict])) {
-      return obj.__hashvalue__=$B.$py_next_hash++
-   }
-
-   if (obj.__hash__ !== undefined) return obj.__hash__()
-
-   return null
-   */
 }
 
 // The default __import__ function is a builtin
 function __import__(mod_name, globals, locals, fromlist, level) {
     // TODO : Install $B.$__import__ in builtins module to avoid nested call
-    var $ = $B.$MakeArgs1('__import__',5,
+    var $ = $B.args('__import__',5,
         {name:null,globals:null,locals:null,fromlist:null,level:null},
         ['name', 'globals', 'locals', 'fromlist', 'level'],
         arguments, {globals:None, locals:None, fromlist:_b_.tuple(), level:0},
@@ -962,7 +948,7 @@ function ord(c) {
 }
 
 function pow() {
-    var $ns=$B.$MakeArgs1('pow',3,{x:null,y:null,z:null},['x','y','z'],
+    var $ns=$B.args('pow',3,{x:null,y:null,z:null},['x','y','z'],
         arguments,{z:null},null,null)
     var x=$ns['x'],y=$ns['y'],z=$ns['z']
     if(z === null){
@@ -989,7 +975,7 @@ function pow() {
 }
 
 function $print(){
-    var $ns=$B.$MakeArgs1('print',0,{},[],arguments,
+    var $ns=$B.args('print',0,{},[],arguments,
         {},'args', 'kw')
     var ks = $ns['kw'].$string_dict
     var end = ks['end'] === undefined ? '\n' : ks['end'],
@@ -1146,7 +1132,7 @@ $RangeDict.__repr__ = $RangeDict.__str__ = function(self){
 }
 
 function range(){
-    var $ns=$B.$MakeArgs1('range',0,{},[],arguments,{},'args',null)
+    var $ns=$B.args('range',0,{},[],arguments,{},'args',null)
     var args = $ns['args']
     if(args.length>3){throw _b_.TypeError(
         "range expected at most 3 arguments, got "+args.length)
@@ -1355,7 +1341,7 @@ $SliceDict.indices = function (self, length) {
 }
 
 function slice(){
-    var $ns=$B.$MakeArgs1('slice',0,{},[],arguments,{},'args',null)
+    var $ns=$B.args('slice',0,{},[],arguments,{},'args',null)
     var args = $ns['args']
     if(args.length>3){throw _b_.TypeError(
         "slice expected at most 3 arguments, got "+args.length)
@@ -1401,7 +1387,7 @@ slice.$dict = $SliceDict
 $SliceDict.$factory = slice
 
 function sorted () {
-    var $ns=$B.$MakeArgs1('sorted',1,{iterable:null},['iterable'],
+    var $ns=$B.args('sorted',1,{iterable:null},['iterable'],
         arguments,{},null,'kw')
     if($ns['iterable']===undefined) throw _b_.TypeError("sorted expected 1 positional argument, got 0")
     var iterable=$ns['iterable']
@@ -1610,7 +1596,7 @@ function $url_open(){
     // - mode can be 'r' (text, default) or 'rb' (binary)
     // - encoding if mode is 'rb'
     //var mode = 'r',encoding='utf-8'
-    var $ns=$B.$MakeArgs1('open',3,{file:null,mode:null,encoding:null},
+    var $ns=$B.args('open',3,{file:null,mode:null,encoding:null},
         ['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},
         'args','kw')
     for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
@@ -1668,7 +1654,7 @@ $ZipDict.__mro__ = [$ZipDict,$ObjectDict]
 function zip(){
     var res = {__class__:$ZipDict,items:[]}
     if(arguments.length==0) return res
-    var $ns=$B.$MakeArgs1('zip',0,{},[],arguments,{},'args','kw')
+    var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
     var _args = $ns['args']
     var args = [], pos=0
     for(var i=0;i<_args.length;i++){args[pos++]=iter(_args[i])}

@@ -2,7 +2,7 @@
 
 var _b_=$B.builtins
 
-$B.$MakeArgs1 = function($fname,argcount,slots,var_names,$args,$dobj,
+$B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     extra_pos_args,extra_kw_args){
     // builds a namespace from the arguments provided in $args
     // in a function defined like foo(x,y,z=1,*args,u,v,**kw) the parameters are
@@ -97,7 +97,6 @@ $B.$MakeArgs1 = function($fname,argcount,slots,var_names,$args,$dobj,
     return slots
     
 }
-
 
 $B.get_class = function(obj){
     // generally we get the attribute __class__ of an object by obj.__class__

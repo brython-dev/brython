@@ -301,7 +301,7 @@ $DictDict.__init__ = function(self){
         }
     } //switch
 
-    var $ns=$B.$MakeArgs1('dict',0,{},[],args,{},'args','kw')
+    var $ns=$B.args('dict',0,{},[],args,{},'args','kw')
     var args = $ns['args']
     var kw = $ns['kw']
     
@@ -559,7 +559,7 @@ $DictDict.setdefault = function(self,key,_default){
 $DictDict.update = function(self){
     var params = [], pos=0
     for(var i=1;i<arguments.length;i++){params[pos++]=arguments[i]}
-    var $ns=$B.$MakeArgs1('$DictDict.update',0,{},[],params,{},'args','kw')
+    var $ns=$B.args('$DictDict.update',0,{},[],params,{},'args','kw')
     var args = $ns['args']
     if(args.length>0) {
       var o=args[0]

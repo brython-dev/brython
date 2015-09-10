@@ -42,7 +42,7 @@
                 }
         
             dict.__init__ = function(){
-                var $ns=$B.$MakeArgs1('pow',1,{self:null},['self'],arguments,
+                var $ns=$B.args('pow',1,{self:null},['self'],arguments,
                     {},'args','kw')
                 var self = $ns['self']
                 var args = $ns['args']

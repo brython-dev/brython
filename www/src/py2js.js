@@ -1966,7 +1966,7 @@ function $DefCtx(context){
 
         var make_args_nodes = []
         var func_ref = '$locals_'+scope.id.replace(/\./g,'_')+'["'+this.name+'"]'
-        var js = 'var $ns = $B.$MakeArgs1("'+this.name+'", '
+        var js = 'var $ns = $B.args("'+this.name+'", '
         js += this.argcount+', {'+this.slots.join(', ')+'}, '
         js += '['+slot_list.join(', ')+'], '
         js += 'arguments, '
@@ -1987,7 +1987,7 @@ function $DefCtx(context){
             this.after_star.length==0){
             // If function only takes positional arguments, we can generate
             // a faster version of argument parsing than by calling function
-            // $MakeArgs1
+            // $B.args
             only_positional = true
             var pos_nodes = []
             
@@ -2004,7 +2004,7 @@ function $DefCtx(context){
                 nodes.push(new_node)
                 
                 // If at least one argument is not "simple", fall back to 
-                // $MakeArgs1()
+                // $B.args()
                 new_node.add(make_args_nodes[0])
                 new_node.add(make_args_nodes[1])
             

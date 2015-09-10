@@ -74,7 +74,7 @@ $ProcessDict.terminate = function(self){
 function Process(){
     //arguments group=None, target=None, name=None, args=(), kwargs=()
 
-    var $ns=$B.$MakeArgs1('Process',0,{},[],arguments,{},null,'kw')
+    var $ns=$B.args('Process',0,{},[],arguments,{},null,'kw')
     var kw=$ns['kw']
 
     var target=_b_.dict.$dict.get($ns['kw'],'target',None)
@@ -111,7 +111,7 @@ $PoolDict.__str__ = $PoolDict.toString = $PoolDict.__repr__=function(self){
 
 $PoolDict.map = function(){
 
-   var $ns=$B.$MakeArgs1('Pool.map', 3,
+   var $ns=$B.args('Pool.map', 3,
        {self:null, func:null, fargs:null}, ['self', 'func', 'fargs'],
        arguments,{},'args','kw')
    var func=$ns['func']
@@ -212,7 +212,7 @@ $PoolDict.apply_async = function(){
 function Pool(){
     console.log("pool")
     console.log(arguments)
-    var $ns=$B.$MakeArgs1('Pool',1,
+    var $ns=$B.args('Pool',1,
         {processes:null},['processes'],arguments,{},'args','kw')
     //var kw=$ns['kw']
 

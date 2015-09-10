@@ -5,7 +5,7 @@ function $local_storage_open( ) {
     // other arguments : 
     // - mode can be 'r' (text, default) or 'rb' (binary)
     // - encoding if mode is 'rb'
-    var $ns=__BRYTHON__.$MakeArgs1('open',3,
+    var $ns=__BRYTHON__.args('open',3,
         {file:null, mode:null, encoding:null},['file','mode','encoding'],
         arguments,{mode:'r',encoding:'utf-8'},'args','kw')
     for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}

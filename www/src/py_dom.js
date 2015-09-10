@@ -714,7 +714,7 @@ DOMNodeDict.get = function(self){
     var obj = self.elt
     var args = [], pos=0
     for(var i=1;i<arguments.length;i++){args[pos++]=arguments[i]}
-    var $ns=$B.$MakeArgs1('get',0,{},[],args,{},null,'kw')
+    var $ns=$B.args('get',0,{},[],args,{},null,'kw')
     var $dict = {}
     var items = _b_.list(_b_.dict.$dict.items($ns['kw']))
     for(var i=0;i<items.length;i++){
