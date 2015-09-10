@@ -553,8 +553,24 @@ $FrozensetDict.__hash__ = function(self) {
    return self.__hashvalue__ = _hash
 }
 
+$FrozensetDict.__init__ = function(){
+    // doesn't do anything
+    var $=$B.$MakeArgs1('__init__', 1, {self:null}, ['self'], 
+        arguments, {}, 'args', 'kw')
+    return $N
+}
+
+// Singleton for empty frozensets
+$empty_frozenset = {__class__:$FrozensetDict, $items:[]}
+
 function frozenset(){
-    var res = set.apply(null,arguments)
+    var $ =  $B.$MakeArgs1('frozenset', 1, {iterable:null},['iterable'],
+        arguments,{iterable:null},null,null)
+    if($.iterable===null){return $empty_frozenset}
+    else if(_b_.isinstance($.iterable,frozenset)){return $.iterable}
+    
+    var res = set($.iterable)
+    if(res.$items.length==0){return $empty_frozenset}
     res.__class__ = $FrozensetDict
     return res
 }
