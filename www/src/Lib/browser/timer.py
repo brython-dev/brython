@@ -7,7 +7,9 @@ def wrap(func):
         try:
             return func(*args, **kw)
         except Exception as exc:
-            sys.stderr.write(exc)
+            msg = '{0.info}\n{0.__name__}: {0.args[0]}'.format(exc)
+            import sys
+            sys.stderr.write(msg)
     return f
 
 clear_interval = window.clearInterval

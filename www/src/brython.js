@@ -61,7 +61,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-10 09:15:39.003311"
+__BRYTHON__.compiled_date="2015-09-11 11:15:17.697803"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -3937,6 +3937,7 @@ if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
 continue}
 if(!isNaN(parseInt(attr.charAt(0)))){
 continue}
+if(attr=='__mro__'){continue}
 res[pos++]=attr}}
 res=_b_.list(_b_.set(res))
 _b_.list.$dict.sort(res)
@@ -4154,6 +4155,7 @@ _b_.type.__class__=$B.$factory
 _b_.object.$dict.__class__=$B.$type
 _b_.object.__class__=$B.$factory
 $B.$type.__getattribute__=function(klass,attr){
+if(attr==='__mro__'){console.log('get',attr,'of',klass)}
 switch(attr){case '__call__':
 return $instance_creator(klass)
 case '__eq__':
@@ -4654,7 +4656,7 @@ $B.make_rmethods=function(klass){for(var j=0,_len_j=ropnames.length;j < _len_j;j
 klass['__'+ropnames[j]+'__']=(function(name,sign){return function(self,other){try{return _b_.getattr(other,'__r'+name+'__')(self)}
 catch(err){$err(sign,klass,other)}}})(ropnames[j],ropsigns[j])}}}
 $B.set_func_names=function(klass){var name=klass.__name__
-for(var attr in klass){if(typeof klass[attr]=='function'){klass[attr].__name__=name+'.'+attr}}}
+for(var attr in klass){if(typeof klass[attr]=='function'){klass[attr].$infos={__name__ : name+'.'+attr}}}}
 $B.UUID=function(){return $B.$py_UUID++}
 $B.InjectBuiltins=function(){var _str=["var _b_=$B.builtins"],pos=1
 for(var $b in $B.builtins)_str[pos++]='var ' + $b +'=_b_["'+$b+'"]'
@@ -5549,7 +5551,7 @@ $Function.__class__=$B.$factory
 $FunctionDict.$factory=$Function
 $Function.$dict=$FunctionDict
 var $TracebackDict={__class__:$B.$type,__name__:'traceback'}
-$TracebackDict.__getattribute__=function(self,attr){var last_frame=$B.last(self.stack),line_info=last_frame.$line_info
+$TracebackDict.__getattribute__=function(self,attr){var last_frame=self.stack.tb_frame,line_info=last_frame.$line_info
 switch(attr){case 'tb_frame':
 return frame(self.stack)
 case 'tb_lineno':
@@ -5562,8 +5564,11 @@ var src=$B.$py_src[line_info[1]]
 return src.split('\n')[parseInt(info[0]-1)]}
 case 'tb_next':
 if(self.stack.length==1){return None}
-else{return traceback(self.stack.slice(0,self.stack.length-1))}}}
+else{return traceback(self.stack.slice(0,self.stack.length-1))}
+default:
+return $TracebackDict[attr]}}
 $TracebackDict.__mro__=[$TracebackDict,$ObjectDict]
+$TracebackDict.__str__=function(self){return '<traceback object>'}
 function traceback(stack){return{__class__ : $TracebackDict,stack : stack}}
 traceback.__class__=$B.$factory
 traceback.$dict=$TracebackDict
@@ -5620,12 +5625,11 @@ var line=lines[parseInt(line_info[0])-1]
 if(line)line=line.replace(/^[ ]+/g,'')
 info +='\n    '+line}
 return info}else if(attr=='traceback'){
-if(false){
-return traceback({tb_frame:frame(self.$stack),tb_lineno:0,tb_lasti:-1,tb_next: None })}
 return traceback(self.$stack)}else{throw AttributeError(self.__class__.__name__+
 "has no attribute '"+attr+"'")}}
 $BaseExceptionDict.with_traceback=function(self,tb){self.traceback=tb
 return self}
+$B.set_func_names($BaseExceptionDict)
 var BaseException=function(msg,js_exc){var err=Error()
 err.__name__='BaseException'
 err.$js_exc=js_exc
@@ -5635,6 +5639,7 @@ err.$message=msg
 err.__class__=$BaseExceptionDict
 err.$py_error=true
 err.$stack=$B.frames_stack.slice()
+err.traceback=traceback({tb_frame:frame($B.frames_stack),tb_lineno:-1,tb_lasti:'',tb_next: None })
 $B.current_exception=err
 return err}
 BaseException.__class__=$B.$factory
@@ -9025,11 +9030,12 @@ if(_hash==-1)_hash=590923713
 return self.__hashvalue__=_hash}
 $FrozensetDict.__init__=function(){
 var $=$B.args('__init__',1,{self:null},['self'],arguments,{},'args','kw')
+console.log('__init__',$.args)
 return $N}
 $empty_frozenset={__class__:$FrozensetDict,$items:[]}
 function frozenset(){var $=$B.args('frozenset',1,{iterable:null},['iterable'],arguments,{iterable:null},null,null)
 if($.iterable===null){return $empty_frozenset}
-else if(_b_.isinstance($.iterable,frozenset)){return $.iterable}
+else if($.iterable.__class__==$FrozensetDict){return $.iterable}
 var res=set($.iterable)
 if(res.$items.length==0){return $empty_frozenset}
 res.__class__=$FrozensetDict

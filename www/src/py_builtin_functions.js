@@ -1892,8 +1892,7 @@ var $TracebackDict = {__class__:$B.$type,
     __name__:'traceback'
 }
 $TracebackDict.__getattribute__ = function(self, attr){
-
-    var last_frame = $B.last(self.stack),
+    var last_frame = self.stack.tb_frame,
         line_info = last_frame.$line_info
 
     switch(attr){
@@ -1912,10 +1911,14 @@ $TracebackDict.__getattribute__ = function(self, attr){
         case 'tb_next':
             if(self.stack.length==1){return None}
             else{return traceback(self.stack.slice(0, self.stack.length-1))}
+        default:
+            return $TracebackDict[attr]
     }
 }
 
 $TracebackDict.__mro__ = [$TracebackDict, $ObjectDict]
+
+$TracebackDict.__str__ = function(self){return '<traceback object>'}
 
 function traceback(stack) {
   return {__class__ : $TracebackDict,
@@ -2038,17 +2041,6 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
         return info
 
     }else if(attr=='traceback'){
-        // Get attribute 'info' to initialise attributes last_info and line
-        
-        if(false){ //$B.debug==0){
-            // Minimal traceback to avoid attribute error
-            return traceback({
-                tb_frame:frame(self.$stack),
-                tb_lineno:0,
-                tb_lasti:-1,
-                tb_next: None // fix me
-            })
-        }
         // Return traceback object
         return traceback(self.$stack)
     }else{
@@ -2062,6 +2054,8 @@ $BaseExceptionDict.with_traceback = function(self, tb){
     return self
 }
 
+$B.set_func_names($BaseExceptionDict)
+
 var BaseException = function (msg,js_exc){
     var err = Error()
     err.__name__ = 'BaseException'
@@ -2074,6 +2068,12 @@ var BaseException = function (msg,js_exc){
     err.__class__ = $BaseExceptionDict
     err.$py_error = true
     err.$stack = $B.frames_stack.slice()
+    err.traceback = traceback({
+            tb_frame:frame($B.frames_stack),
+            tb_lineno:-1,
+            tb_lasti:'',
+            tb_next: None   // fix me
+        })
     $B.current_exception = err
     return err
 }
