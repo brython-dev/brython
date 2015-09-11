@@ -85,6 +85,7 @@ $ObjectDict.__dir__ = function(self) {
                 // '0', '1' are in attributes of string 'ab'
                 continue
             }
+            if(attr=='__mro__'){continue}
             res[pos++]=attr
         }
     }
