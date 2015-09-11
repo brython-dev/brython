@@ -2669,6 +2669,8 @@ function $ForExpr(context){
         else{js='while(1)'}
         new $NodeJSCtx(while_node,js)
         while_node.context.loop_num = num // used for "else" clauses
+        while_node.context.type = 'for' // used in $add_line_num
+        while_node.line_num = node.line_num
         if(scope.ntype=='generator'){
             // used in generators to signal a loop start
             while_node.loop_start = num
@@ -4679,6 +4681,14 @@ function $add_line_num(node,rank){
         }
         var i=0
         while(i<node.children.length) i+=$add_line_num(node.children[i],i)
+
+        // At the end of a "while" or "for" loop body, add a line to reset
+        // line number to that of the "while" or "for" loop (cf issue #281)
+        if((elt.type=='condition' && elt.token=="while")
+            || node.context.type=='for'){
+            node.add($NodeJS('$locals.$line_info="'+node.line_num+','+
+                mod_id+'";'))
+        }
 
         return offset
     }
