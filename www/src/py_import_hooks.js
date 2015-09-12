@@ -45,6 +45,7 @@
                 module = _b_.getattr(create_module, '__call__')(spec);
             }
         }
+        if(module===undefined){throw _b_.ImportError(mod_name)}
         if (is_none(module)) {
             // FIXME : Initialize __doc__ and __package__
             module = $B.$ModuleDict.$factory(mod_name);
@@ -97,7 +98,6 @@
             $B.modules[_spec_name] = _sys_modules[_spec_name] = module;
             try { _b_.getattr(exec_module, '__call__')(module) }
             catch (e) {
-                console.log('error', e)
                 delete $B.modules[_spec_name];
                 delete _sys_modules[_spec_name];
                 throw e;

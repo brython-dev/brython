@@ -104,7 +104,9 @@ function $download_module(module,url){
             if($xmlhttp.status==200 || $xmlhttp.status==0){res=$xmlhttp.responseText}
             else{
                 // don't throw an exception here, it will not be caught (issue #30)
-            console.log('Error '+$xmlhttp.status+' means that Python module '+module+' was not found at url '+url)
+                console.log('Error '+$xmlhttp.status+
+                    ' means that Python module '+module+
+                    ' was not found at url '+url)
                 res = _b_.FileNotFoundError("No module named '"+module+"'")
             }
         }
@@ -181,12 +183,8 @@ function show_ns(){
 
 function import_py(module,path,package){
     // import Python module at specified path
-    var mod_name = module.__name__;
-    try{
-        var module_contents=$download_module(mod_name, path)
-    }catch(err){
-        return null
-    }
+    var mod_name = module.__name__,
+        module_contents = $download_module(mod_name, path)
     $B.imported[mod_name].$is_package = module.$is_package
     if(path.substr(path.length-12)=='/__init__.py'){
         //module.is_package = true
@@ -905,6 +903,7 @@ $B.$import = function(mod_name,origin,fromlist, aliases, locals){
                         locals[alias] = _b_.getattr(modobj, name);
                     }
                     catch ($err3) {
+                        console.log('error', $err3)
                         // [Import spec] On attribute not found , raise ImportError
                         if ($err3.__class__ === _b_.AttributeError.$dict) {
                             $err3.__class__ = _b_.ImportError.$dict;
