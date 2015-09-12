@@ -98,7 +98,7 @@ def process_unittest(filename):
 """)
 
 
-def process(filename, exclude_dirs=['unittest','test',]):
+def process(filename, exclude_dirs=['unittest','test','site-packages']):
     """Process a VFS filename for Brython."""
     print("Generating {}".format(filename))
     nb = 0
