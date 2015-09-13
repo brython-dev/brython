@@ -13,7 +13,7 @@
    *                                    Value of parent package's __path__
    * @param module          {module}    [Optional] Existing module, for reload only
    */
-  function import_hooks(mod_name, origin, _path, module) {
+  function import_hooks(mod_name, _path, module) {
     // Default argument binding
     if (is_none(module)) {
         module = undefined;

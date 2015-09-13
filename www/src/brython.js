@@ -61,7 +61,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-12 15:32:48.178276"
+__BRYTHON__.compiled_date="2015-09-13 16:14:16.035452"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1444,9 +1444,17 @@ $B.bound[scope.id][name]=true}}
 this.toString=function(){return '(from) '+this.module+' (import) '+this.names+'(as)'+this.aliases}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),mod=$get_module(this).module,res=[],pos=0,indent=$get_node(this).indent,head=' '.repeat(indent);
+var _mod=this.module.replace(/\$/g,''),package,packages=[]
+while(_mod.length>0){if(_mod.charAt(0)=='.'){if(package===undefined){package=$B.imported[mod].__package__
+if(package==''){console.log('package vide 1 pour $B.imported['+mod+']')}}else{package=$B.imported[package]
+if(package==''){console.log('package vide 3 pour $B.imported['+package+']')}}
+if(package===undefined){return 'throw SystemError("Parent module \'\' not loaded, cannot perform relative import")'}else{packages.push(package)}
+_mod=_mod.substr(1)}else{break}}
+if(_mod){packages.push(_mod)}
+this.module=packages.join('.')
 var mod_name=this.module.replace(/\$/g,''),localns='$locals_'+scope.id.replace(/\./g,'_');
 res[pos++]='$B.$import("';
-res[pos++]=mod_name+'","'+mod+'",["';
+res[pos++]=mod_name+'",["';
 res[pos++]=this.names.join('","')+'"], {';
 var sep='';
 for(var attr in this.aliases){res[pos++]=sep + '"'+attr+'": "'+this.aliases[attr]+'"';
@@ -1651,7 +1659,7 @@ var res=[],pos=0
 for(var i=0;i<this.tree.length;i++){var mod_name=this.tree[i].name,aliases=(this.tree[i].name==this.tree[i].alias)?
 '{}' :('{"' + mod_name + '" : "' +
 this.tree[i].alias + '"}'),localns='$locals_'+scope.id.replace(/\./g,'_');
-res[pos++]='$B.$import("'+mod_name+'","'+mod+'", [],'+aliases+',' +
+res[pos++]='$B.$import("'+mod_name+'", [],'+aliases+',' +
 localns + ');'}
 return res.join('')+ 'None;'}}
 function $ImportedModuleCtx(C,name){this.type='imported module'
@@ -6025,14 +6033,14 @@ var $ObjectDict=_b_.object.$dict
 var $LocationDict={__class__:$B.$type,__name__:'Location'}
 $LocationDict.__mro__=[$LocationDict,$ObjectDict]
 function $Location(){
-var obj={}
-for(var x in window.location){if(typeof window.location[x]==='function'){obj[x]=(function(f){return function(){return f.apply(window.location,arguments)}})(window.location[x])}else{obj[x]=window.location[x]}}
-if(obj['replace']===undefined){
-obj['replace']=function(url){window.location=url}}
-obj.__class__=$LocationDict
-obj.toString=function(){return window.location.toString()}
-obj.__repr__=obj.__str__=obj.toString
-return obj}
+var self={}
+for(var x in window.location){if(typeof window.location[x]==='function'){self[x]=(function(f){return function(){return f.apply(window.location,arguments)}})(window.location[x])}else{self[x]=window.location[x]}}
+if(self['replace']===undefined){
+self['replace']=function(url){window.location=url}}
+self.__class__=$LocationDict
+self.toString=function(){return window.location.toString()}
+self.__repr__=self.__str__=self.toString
+return self}
 $LocationDict.$factory=$Location
 $Location.$dict=$LocationDict
 var $JSConstructorDict={__class__:$B.$type,__name__:'JSConstructor'}
@@ -6043,9 +6051,9 @@ var factory=self.func.bind.apply(self.func,args)
 var res=new factory()
 return $B.$JS2Py(res)}
 $JSConstructorDict.__mro__=[$JSConstructorDict,$ObjectDict]
-function JSConstructor(obj){
+function JSConstructor(self){
 return{
-__class__:$JSConstructorDict,func:obj.js_func}}
+__class__:$JSConstructorDict,func:self.js_func}}
 JSConstructor.__class__=$B.$factory
 JSConstructor.$dict=$JSConstructorDict
 $JSConstructorDict.$factory=JSConstructor
@@ -6078,41 +6086,42 @@ return pyobj}}
 var $JSObjectDict={__class__:$B.$type,__name__:'JSObject',toString:function(){return '(JSObject)'}}
 $JSObjectDict.__bool__=function(self){return(new Boolean(self.js)).valueOf()}
 $JSObjectDict.__dir__=function(self){return Object.keys(self.js)}
-$JSObjectDict.__getattribute__=function(obj,attr){if(attr.substr(0,2)=='$$')attr=attr.substr(2)
-if(obj.js===null)return $ObjectDict.__getattribute__(None,attr)
+$JSObjectDict.__getattribute__=function(self,attr){if(attr.substr(0,2)=='$$')attr=attr.substr(2)
+if(self.js===null)return $ObjectDict.__getattribute__(None,attr)
 if(attr==='__class__')return $JSObjectDict
-if(attr=="bind" && obj.js[attr]===undefined &&
-obj.js['addEventListener']!==undefined){attr='addEventListener'}
-var js_attr=obj.js[attr]
-if(obj.js_func && obj.js_func[attr]!==undefined){js_attr=obj.js_func[attr]}
+if(self.__class__===$JSObjectDict && attr=="$bind" && 
+self.js[attr]===undefined &&
+self.js['addEventListener']!==undefined){attr='addEventListener'}
+var js_attr=self.js[attr]
+if(self.js_func && self.js_func[attr]!==undefined){js_attr=self.js_func[attr]}
 if(js_attr !==undefined){if(typeof js_attr=='function'){
 var res=function(){var args=[],arg
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){if(arguments[i].$nat!=undefined){
 throw TypeError("A Javascript function can't "+
 "take keyword arguments")}else{args.push(pyobj2jsobj(arguments[i]))}}
-if(attr==='replace' && obj.js===location){location.replace(args[0])
+if(attr==='replace' && self.js===location){location.replace(args[0])
 return}
-var res=js_attr.apply(obj.js,args)
+var res=js_attr.apply(self.js,args)
 if(typeof res=='object')return JSObject(res)
 if(res===undefined)return None
 return $B.$JS2Py(res)}
 res.__repr__=function(){return '<function '+attr+'>'}
 res.__str__=function(){return '<function '+attr+'>'}
-return{__class__:$JSObjectDict,js:res,js_func:js_attr}}else{if(Array.isArray(obj.js[attr])){return obj.js[attr]}
-return $B.$JS2Py(obj.js[attr])}}else if(obj.js===window && attr==='$$location'){
+return{__class__:$JSObjectDict,js:res,js_func:js_attr}}else{if(Array.isArray(self.js[attr])){return self.js[attr]}
+return $B.$JS2Py(self.js[attr])}}else if(self.js===window && attr==='$$location'){
 return $Location()}
 var res
-var mro=obj.__class__.__mro__
+var mro=self.__class__.__mro__
 for(var i=0,_len_i=mro.length;i < _len_i;i++){var v=mro[i][attr]
 if(v!==undefined){res=v
 break}}
 if(res!==undefined){if(typeof res==='function'){
-return function(){var args=[obj],arg
+return function(){var args=[self],arg
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){arg=arguments[i]
 if(arg &&(arg.__class__===$JSObjectDict ||arg.__class__===$JSConstructorDict)){args.push(arg.js)}else{args.push(arg)}}
-return res.apply(obj,args)}}
+return res.apply(self,args)}}
 return $B.$JS2Py(res)}else{
-throw _b_.AttributeError("no attribute "+attr+' for '+obj.js)}}
+throw _b_.AttributeError("no attribute "+attr+' for '+self.js)}}
 $JSObjectDict.__getitem__=function(self,rank){try{return getattr(self.js,'__getitem__')(rank)}
 catch(err){if(self.js[rank]!==undefined){return JSObject(self.js[rank])}
 throw _b_.KeyError(rank)}}
@@ -6138,20 +6147,21 @@ throw Error(info+'\n'+err.__class__.__name__+
 $JSObjectDict.__setitem__=$JSObjectDict.__setattr__
 $JSObjectDict.__str__=$JSObjectDict.__repr__
 var no_dict={'string':true,'function':true,'number':true,'boolean':true}
+$JSObjectDict.bind=function(self,evt,func){return $JSObjectDict.__getattribute__(self,'addEventListener').js(evt,func)}
 $JSObjectDict.to_dict=function(self){
 var res=_b_.dict()
 for(var key in self.js){var value=self.js[key]
 if(typeof value=='object' && !Array.isArray(value)){_b_.dict.$dict.__setitem__(res,key,$JSObjectDict.to_dict(JSObject(value)))}else{_b_.dict.$dict.__setitem__(res,key,value)}}
 return res}
-function JSObject(obj){if(obj===null){return _b_.None}
-if(typeof obj=='function'){return{__class__:$JSObjectDict,js:obj}}
-var klass=$B.get_class(obj)
+function JSObject(self){if(self===null){return _b_.None}
+if(typeof self=='function'){return{__class__:$JSObjectDict,js:self}}
+var klass=$B.get_class(self)
 if(klass===_b_.list.$dict){
-if(obj.__brython__)return obj
-return{__class__:$JSObjectDict,js:obj}}
-if(klass===_b_.float.$dict)return _b_.float(obj)
-if(klass!==undefined)return obj
-return{__class__:$JSObjectDict,js:obj}}
+if(self.__brython__)return self
+return{__class__:$JSObjectDict,js:self}}
+if(klass===_b_.float.$dict)return _b_.float(self)
+if(klass!==undefined)return self
+return{__class__:$JSObjectDict,js:self}}
 JSObject.__class__=$B.$factory
 JSObject.$dict=$JSObjectDict
 $JSObjectDict.$factory=JSObject
@@ -6199,26 +6209,25 @@ fake_qs="?v="+$B.UUID()}
 var timer=setTimeout(function(){$xmlhttp.abort()
 throw _b_.ImportError("No module named '"+module+"'")},5000)
 return[$xmlhttp,fake_qs,timer]}
-function $download_module(module,url){var imp=$importer()
-var $xmlhttp=imp[0],fake_qs=imp[1],timer=imp[2],res=null
+function $download_module(module,url){var imp=$importer(),$xmlhttp=imp[0],fake_qs=imp[1],timer=imp[2],res=null,mod_name=module.__name__
 $xmlhttp.open('GET',url+fake_qs,false)
 if($B.$CORS){$xmlhttp.onload=function(){if($xmlhttp.status==200 ||$xmlhttp.status==0){res=$xmlhttp.responseText}else{
-res=_b_.FileNotFoundError("No module named '"+module+"'")}}
-$xmlhttp.onerror=function(){res=_b_.FileNotFoundError("No module named '"+module+"'")}}else{
+res=_b_.FileNotFoundError("No module named '"+mod_name+"'")}}
+$xmlhttp.onerror=function(){res=_b_.FileNotFoundError("No module named '"+mod_name+"'")}}else{
 $xmlhttp.onreadystatechange=function(){if($xmlhttp.readyState==4){window.clearTimeout(timer)
-if($xmlhttp.status==200 ||$xmlhttp.status==0){res=$xmlhttp.responseText}
-else{
+if($xmlhttp.status==200 ||$xmlhttp.status==0){res=$xmlhttp.responseText
+module.$last_modified=$xmlhttp.getResponseHeader('Last-Modified')}else{
 console.log('Error '+$xmlhttp.status+
-' means that Python module '+module+
+' means that Python module '+mod_name+
 ' was not found at url '+url)
-res=_b_.FileNotFoundError("No module named '"+module+"'")}}}}
+res=_b_.FileNotFoundError("No module named '"+mod_name+"'")}}}}
 if('overrideMimeType' in $xmlhttp){$xmlhttp.overrideMimeType("text/plain")}
 $xmlhttp.send()
-if(res==null)throw _b_.FileNotFoundError("No module named '"+module+"' (res is null)")
+if(res==null)throw _b_.FileNotFoundError("No module named '"+mod_name+"' (res is null)")
 if(res.constructor===Error){throw res}
 return res}
 $B.$download_module=$download_module
-function import_js(module,path){try{var module_contents=$download_module(module.name,path)}
+function import_js(module,path){try{var module_contents=$download_module(module,path)}
 catch(err){return null}
 run_js(module_contents,path,module)
 return true}
@@ -6244,8 +6253,9 @@ for(var i=0,_len_i=kk.length;i < _len_i;i++){console.log(kk[i])
 if(kk[i].charAt(0)=='$'){console.log(eval(kk[i]))}}
 console.log('---')}
 function import_py(module,path,package){
-var mod_name=module.__name__,module_contents=$download_module(mod_name,path)
+var mod_name=module.__name__,module_contents=$download_module(module,path)
 $B.imported[mod_name].$is_package=module.$is_package
+$B.imported[mod_name].$last_modified=module.$last_modified
 if(path.substr(path.length-12)=='/__init__.py'){
 $B.imported[mod_name].__package__=mod_name
 $B.imported[mod_name].$is_package=module.$is_package=true}else if(package){$B.imported[mod_name].__package__=package}else{var mod_elts=mod_name.split('.')
@@ -6386,7 +6396,7 @@ self={__class__: vfs_hook.$dict,path: path};
 vfs_hook.$dict.load_vfs(self);
 return self;}
 vfs_hook.__class__=$B.$factory
-vfs_hook.$dict={$factory: vfs_hook,__class__: $B.$type,__name__: 'VfsPathFinder',load_vfs: function(self){try{var code=$download_module('<VFS>',self.path)}
+vfs_hook.$dict={$factory: vfs_hook,__class__: $B.$type,__name__: 'VfsPathFinder',load_vfs: function(self){try{var code=$download_module({__name__:'<VFS>'},self.path)}
 catch(e){self.vfs=undefined;
 throw new _b_.ImportError(e.$message ||e.message);}
 eval(code);
@@ -6417,7 +6427,7 @@ modpaths=modpaths.concat([[base_path + '.pyc.js','pyc.js',false],[base_path + '/
 if(tryall ||hint=='py'){
 modpaths=modpaths.concat([[base_path + '.py','py',false],[base_path + '/__init__.py','py',true]]);}
 for(var j=0;notfound && j < modpaths.length;++j){try{var file_info=modpaths[j];
-loader_data.code=$download_module(fullname,file_info[0]);
+loader_data.code=$download_module({__name__:fullname},file_info[0]);
 notfound=false;
 loader_data.type=file_info[1];
 loader_data.is_package=file_info[2];
@@ -6460,7 +6470,7 @@ modsep='.';
 var modobj=$B.imported[_mod_name];
 if(modobj==_b_.None){
 throw _b_.ImportError(_mod_name)}
-else if(modobj===undefined){try{window.import_hooks(_mod_name,origin,__path__)}
+else if(modobj===undefined){try{window.import_hooks(_mod_name,__path__)}
 catch(err){delete $B.imported[_mod_name]}
 if(is_none($B.imported[_mod_name])){throw _b_.ImportError(_mod_name)}
 else{
@@ -6471,13 +6481,9 @@ if(fromlist.length > 0){
 return $B.imported[mod_name]}
 else{
 return $B.imported[parsed_name[0]]}}
-$B.$import=function(mod_name,origin,fromlist,aliases,locals){var parts=mod_name.split('.');
+$B.$import=function(mod_name,fromlist,aliases,locals){var parts=mod_name.split('.');
 if(mod_name[mod_name.length - 1]=='.'){parts.pop()}
-if(mod_name[0]=='.'){
-norm_parts=_b_.getattr($B.imported[origin],'__package__','');
-norm_parts=(norm_parts=='')?['']:(norm_parts + '.').split('.');}
-else{
-var norm_parts=[]}
+var norm_parts=[]
 prefix=true;
 for(var i=0,_len_i=parts.length;i < _len_i;i++){var p=parts[i];
 if(prefix && p==''){
@@ -9828,7 +9834,8 @@ $B.$BRgenerator.__class__=$B.$type})(__BRYTHON__)
 ;(function($B){var modules={}
 modules['browser']={$package: true,$is_package: true,__package__:'browser',__file__:$B.brython_path.replace(/\/*$/g,'')+
 '/Lib/browser/__init__.py',alert:function(message){window.alert($B.builtins.str(message))},confirm: $B.JSObject(window.confirm),console:$B.JSObject(window.console),document:$B.DOMNode(document),doc: $B.DOMNode(document),
-DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},prompt: function(message,default_value){return $B.JSObject(window.prompt(message,default_value||''))},win: $B.win,window: $B.win,URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},prompt: function(message,default_value){return $B.JSObject(window.prompt(message,default_value||''))},reload: function(){
+for(var mod in $B.imported){if($B.imported[mod].$last_modified){console.log('check',mod,$B.imported[mod].__file__,$B.imported[mod].$last_modified)}}},win: $B.win,window: $B.win,URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
 var regex=new RegExp("[\\?&]" + name + "=([^&#]*)"),results=regex.exec(location.search);
 results=results===null ? "" : decodeURIComponent(results[1].replace(/\+/g," "));
 return $B.builtins.str(results);}}
@@ -9906,7 +9913,7 @@ for(var attr in modules){load(attr,modules[attr])}
 modules['browser'].html=modules['browser.html']})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,
 $sys=$B.imported['_sys'];
-function import_hooks(mod_name,origin,_path,module){
+function import_hooks(mod_name,_path,module){
 if(is_none(module)){module=undefined;}
 var _meta_path=_b_.getattr($sys,'meta_path');
 var spec=undefined;

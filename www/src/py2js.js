@@ -2769,35 +2769,34 @@ function $FromCtx(context){
             indent = $get_node(this).indent,
             head= ' '.repeat(indent);
         
-//        //console.log('from',this.module)
-//        var _mod = this.module.replace(/\$/g,''), package, packages=[]
-//        while(_mod.length>0){
-//            if(_mod.charAt(0)=='.'){
-//                if(package===undefined){
-//                    package = $B.imported[mod].__package__
-//                    if(package==''){console.log('package vide 1 pour $B.imported['+mod+']')}
-//                }else{
-//                    package = $B.imported[package]
-//                    if(package==''){console.log('package vide 3 pour $B.imported['+package+']')}
-//                }
-//                if(package===undefined){
-//                    return 'throw SystemError("Parent module \'\' not loaded, cannot perform relative import")'
-//                }else{
-//                    packages.push(package)
-//                }
-//                _mod = _mod.substr(1)
-//            }else{
-//                break
-//            }
-//        }
-//        if(_mod){packages.push(_mod)}
-//        this.module = packages.join('.')
+        var _mod = this.module.replace(/\$/g,''), package, packages=[]
+        while(_mod.length>0){
+            if(_mod.charAt(0)=='.'){
+                if(package===undefined){
+                    package = $B.imported[mod].__package__
+                    if(package==''){console.log('package vide 1 pour $B.imported['+mod+']')}
+                }else{
+                    package = $B.imported[package]
+                    if(package==''){console.log('package vide 3 pour $B.imported['+package+']')}
+                }
+                if(package===undefined){
+                    return 'throw SystemError("Parent module \'\' not loaded, cannot perform relative import")'
+                }else{
+                    packages.push(package)
+                }
+                _mod = _mod.substr(1)
+            }else{
+                break
+            }
+        }
+        if(_mod){packages.push(_mod)}
+        this.module = packages.join('.')
 
         // FIXME : Replacement still needed ?
         var mod_name = this.module.replace(/\$/g,''),
             localns = '$locals_'+scope.id.replace(/\./g,'_');
         res[pos++] = '$B.$import("';
-        res[pos++] = mod_name+'","'+mod+'",["';
+        res[pos++] = mod_name+'",["';
         res[pos++] = this.names.join('","')+'"], {';
         var sep = '';
         for (var attr in this.aliases) {
@@ -3306,7 +3305,7 @@ function $ImportCtx(context){
                     '{}' : ('{"' + mod_name + '" : "' +
                     this.tree[i].alias + '"}'),
                 localns = '$locals_'+scope.id.replace(/\./g,'_');
-            res[pos++]='$B.$import("'+mod_name+'","'+mod+'", [],'+aliases+',' +
+            res[pos++]='$B.$import("'+mod_name+'", [],'+aliases+',' +
                                    localns + ');'
 
 //            if(this.tree[i].name == this.tree[i].alias){
