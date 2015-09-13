@@ -17,6 +17,14 @@
         prompt: function(message, default_value){
             return $B.JSObject(window.prompt(message, default_value||''))
         },
+        reload: function(){
+            // Check if imported scripts have been modified
+            for(var mod in $B.imported){
+                if($B.imported[mod].$last_modified){
+                    console.log('check', mod, $B.imported[mod].__file__, $B.imported[mod].$last_modified)
+                }
+            }
+        },
         win: $B.win,
         window: $B.win,
         URLParameter:function(name) {
