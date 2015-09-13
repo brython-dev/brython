@@ -11,6 +11,19 @@ var $module=(function($B) {
     prompt: function(message, default_value){
         return $B.JSObject(window.prompt(message, default_value||''))
     },
+    reload: function(){
+        // Try to reload all scripts and all imported modules
+        var scripts=document.getElementsByTagName('script'),$elts=[]
+        // Freeze the list of scripts here ; other scripts can be inserted on
+        // the fly by viruses
+        for(var i=0;i<scripts.length;i++){
+            var script = scripts[i]
+            if(script.type!="text/python" && script.type!="text/python3"){
+                $elts.push(script)
+            }
+        }
+        console.log('scripts to reload', $elts)
+    },
     win: $B.win,
     window: $B.win,
     URLParameter:function(name) {
