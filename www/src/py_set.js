@@ -567,7 +567,7 @@ function frozenset(){
     var $ =  $B.args('frozenset', 1, {iterable:null},['iterable'],
         arguments,{iterable:null},null,null)
     if($.iterable===null){return $empty_frozenset}
-    else if(_b_.isinstance($.iterable,frozenset)){return $.iterable}
+    else if($.iterable.__class__==$FrozensetDict){return $.iterable}
     
     var res = set($.iterable)
     if(res.$items.length==0){return $empty_frozenset}
