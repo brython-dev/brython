@@ -12,7 +12,7 @@ function add_pos(v1, v2){
     // v1, v2 : strings
     // Return an instance of LongInt
 
-    var res = '', carry = 0, iself=v1.length, sv=0
+    var res = '', carry = 0, iself=v1.length, sv=0, x
     for(var i=v2.length-1;i>=0;i--){
         iself--
         if(iself<0){sv=0}else{sv=parseInt(v1.charAt(iself))}
@@ -155,7 +155,7 @@ function mul_pos(x, y){
 
     // If products[pos] has more digits than chunk_size, report the carry
     // at position pos+1
-    var nb = len-1
+    var nb = len-1, pos
     for(var i=0;i<len-1;i++){
         var chunks = split_chunks(products[i].toString(), chunk_size)
         for(var j=1;j<chunks.length;j++){
@@ -181,7 +181,7 @@ function mul_pos(x, y){
 function sub_pos(v1, v2){
     // Substraction of positive numbers with v1>=v2
 
-    var res = '', carry = 0, i1=v1.length, sv=0
+    var res = '', carry = 0, i1=v1.length, sv=0, x
     
     // For all digits in v2, starting by the rightmost, substract it from
     // the matching digit in v1

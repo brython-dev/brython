@@ -15,6 +15,7 @@
    */
   function import_hooks(mod_name, _path, module) {
     // Default argument binding
+    var is_none = $B.is_none
     if (is_none(module)) {
         module = undefined;
     }
@@ -108,5 +109,5 @@
     return _sys_modules[_spec_name];
   }
 
-window.import_hooks=import_hooks
+$B.import_hooks=import_hooks
 })(__BRYTHON__)

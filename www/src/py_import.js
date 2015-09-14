@@ -703,13 +703,13 @@ delete _path;
 delete _type;
 delete _sys_paths;
 
-window.is_none = function (o) {
+$B.is_none = function (o) {
     return o === undefined || o == _b_.None;
 }
 
 // Default __import__ function
 // TODO: Include at runtime in importlib.__import__
-$B.$__import__ = function (mod_name, globals, locals, fromlist, level){
+$B.$__import__ = function (mod_name, locals, fromlist, level){
    // [Import spec] Halt import logic
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.');
@@ -721,11 +721,6 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
    if (modobj === undefined) {
        // [Import spec] Argument defaults and preconditions
        // get name of module this was called in
-       if (is_none(globals)) {
-            var current_frame = $B.frames_stack[$B.frames_stack.length-1];
-            globals = current_frame[3];
-       }
-       var origin = globals.__name__
        if (is_none(fromlist)) {
             fromlist = [];
        }
@@ -744,7 +739,7 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
                 throw _b_.ImportError(_mod_name) 
             }
             else if (modobj === undefined) {
-                try {window.import_hooks(_mod_name, __path__)}
+                try {$B.import_hooks(_mod_name, __path__)}
                 catch(err) {
                     delete $B.imported[_mod_name]
                 }
@@ -790,18 +785,17 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
  * found or loaded
  *
  * @param {string}      Module name specified in the import statement
- * @param {string}      Name of the module invoking the import statement
  * @param {list}        Attribute names specified in from statement
  * @param {dict}        Aliases used to override local variable name bindings
  * @param {dict}        Local namespace import bindings will be applied upon
  * @return None
  */
-$B.$import = function(mod_name,fromlist, aliases, locals){
+$B.$import = function(mod_name, fromlist, aliases, locals){
     var parts = mod_name.split('.');
     // For . , .. and so on , remove one relative step
     if (mod_name[mod_name.length - 1] == '.') { parts.pop() }
-    var norm_parts = []
-    prefix = true;
+    var norm_parts = [],
+        prefix = true;
     for(var i = 0, _len_i = parts.length; i < _len_i;i++){
         var p = parts[i];
         if (prefix && p == '') {
@@ -826,16 +820,16 @@ $B.$import = function(mod_name,fromlist, aliases, locals){
     //if ($B.$options.debug == 10) {show_ns()}
 
     // [Import spec] Resolve __import__ in global namespace
-    var current_frame = $B.frames_stack[$B.frames_stack.length-1];
-    globals = current_frame[3];
-    __import__ = globals['__import__'];
+    var current_frame = $B.frames_stack[$B.frames_stack.length-1],
+        globals = current_frame[3],
+        __import__ = globals['__import__'];
     if (__import__ === undefined) {
         // [Import spec] Fall back to
         __import__ = $B.$__import__;
     }
     // FIXME: Should we need locals dict supply it in, now it is useless
     var modobj = _b_.getattr(__import__,
-                             '__call__')(mod_name, globals, undefined, fromlist, 0);
+                             '__call__')(mod_name, undefined, fromlist, 0);
 
     // Apply bindings upon local namespace
     if (!fromlist || fromlist.length == 0) {
@@ -885,7 +879,7 @@ $B.$import = function(mod_name,fromlist, aliases, locals){
                     try {
                         _b_.getattr(__import__,
                                     '__call__')(mod_name + '.' + name,
-                                                globals, undefined, [], 0);
+                                                 undefined, [], 0);
                     }
                     catch ($err2) {
                         if ($err2.__class__ = _b_.ImportError.$dict) {

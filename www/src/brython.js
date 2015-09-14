@@ -61,7 +61,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-13 16:14:16.035452"
+__BRYTHON__.compiled_date="2015-09-14 08:54:34.737598"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1163,7 +1163,7 @@ this.transformed=true
 return offset}
 this.to_js=function(func_name){this.js_processed=true
 func_name=func_name ||this.tree[0].to_js()
-if(this.decorated){func_name=this.alias}
+if(this.decorated){func_name='var '+this.alias}
 return func_name+'=(function()'}}
 function $DelCtx(C){
 this.type='del'
@@ -6033,14 +6033,14 @@ var $ObjectDict=_b_.object.$dict
 var $LocationDict={__class__:$B.$type,__name__:'Location'}
 $LocationDict.__mro__=[$LocationDict,$ObjectDict]
 function $Location(){
-var self={}
-for(var x in window.location){if(typeof window.location[x]==='function'){self[x]=(function(f){return function(){return f.apply(window.location,arguments)}})(window.location[x])}else{self[x]=window.location[x]}}
-if(self['replace']===undefined){
-self['replace']=function(url){window.location=url}}
-self.__class__=$LocationDict
-self.toString=function(){return window.location.toString()}
-self.__repr__=self.__str__=self.toString
-return self}
+var obj={}
+for(var x in window.location){if(typeof window.location[x]==='function'){obj[x]=(function(f){return function(){return f.apply(window.location,arguments)}})(window.location[x])}else{obj[x]=window.location[x]}}
+if(obj['replace']===undefined){
+obj['replace']=function(url){window.location=url}}
+obj.__class__=$LocationDict
+obj.toString=function(){return window.location.toString()}
+obj.__repr__=obj.__str__=obj.toString
+return obj}
 $LocationDict.$factory=$Location
 $Location.$dict=$LocationDict
 var $JSConstructorDict={__class__:$B.$type,__name__:'JSConstructor'}
@@ -6051,9 +6051,9 @@ var factory=self.func.bind.apply(self.func,args)
 var res=new factory()
 return $B.$JS2Py(res)}
 $JSConstructorDict.__mro__=[$JSConstructorDict,$ObjectDict]
-function JSConstructor(self){
+function JSConstructor(obj){
 return{
-__class__:$JSConstructorDict,func:self.js_func}}
+__class__:$JSConstructorDict,func:obj.js_func}}
 JSConstructor.__class__=$B.$factory
 JSConstructor.$dict=$JSConstructorDict
 $JSConstructorDict.$factory=JSConstructor
@@ -6153,15 +6153,15 @@ var res=_b_.dict()
 for(var key in self.js){var value=self.js[key]
 if(typeof value=='object' && !Array.isArray(value)){_b_.dict.$dict.__setitem__(res,key,$JSObjectDict.to_dict(JSObject(value)))}else{_b_.dict.$dict.__setitem__(res,key,value)}}
 return res}
-function JSObject(self){if(self===null){return _b_.None}
-if(typeof self=='function'){return{__class__:$JSObjectDict,js:self}}
-var klass=$B.get_class(self)
+function JSObject(obj){if(obj===null){return _b_.None}
+if(typeof obj=='function'){return{__class__:$JSObjectDict,js:obj}}
+var klass=$B.get_class(obj)
 if(klass===_b_.list.$dict){
-if(self.__brython__)return self
-return{__class__:$JSObjectDict,js:self}}
-if(klass===_b_.float.$dict)return _b_.float(self)
-if(klass!==undefined)return self
-return{__class__:$JSObjectDict,js:self}}
+if(obj.__brython__)return obj
+return{__class__:$JSObjectDict,js:obj}}
+if(klass===_b_.float.$dict)return _b_.float(obj)
+if(klass!==undefined)return obj
+return{__class__:$JSObjectDict,js:obj}}
 JSObject.__class__=$B.$factory
 JSObject.$dict=$JSObjectDict
 $JSObjectDict.$factory=JSObject
@@ -6453,15 +6453,12 @@ $B.path_importer_cache[_path]=url_hook(_path,_type);}
 delete _path;
 delete _type;
 delete _sys_paths;
-window.is_none=function(o){return o===undefined ||o==_b_.None;}
-$B.$__import__=function(mod_name,globals,locals,fromlist,level){
+$B.is_none=function(o){return o===undefined ||o==_b_.None;}
+$B.$__import__=function(mod_name,locals,fromlist,level){
 var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.');
 if(modobj==_b_.None){
 throw _b_.ImportError(parent_name)}
 if(modobj===undefined){
-if(is_none(globals)){var current_frame=$B.frames_stack[$B.frames_stack.length-1];
-globals=current_frame[3];}
-var origin=globals.__name__
 if(is_none(fromlist)){fromlist=[];}
 if(is_none(level)){level=0;}
 for(var i=0,modsep='',_mod_name='',l=parsed_name.length - 1,__path__=_b_.None;i <=l;++i){var _parent_name=_mod_name;
@@ -6470,7 +6467,7 @@ modsep='.';
 var modobj=$B.imported[_mod_name];
 if(modobj==_b_.None){
 throw _b_.ImportError(_mod_name)}
-else if(modobj===undefined){try{window.import_hooks(_mod_name,__path__)}
+else if(modobj===undefined){try{$B.import_hooks(_mod_name,__path__)}
 catch(err){delete $B.imported[_mod_name]}
 if(is_none($B.imported[_mod_name])){throw _b_.ImportError(_mod_name)}
 else{
@@ -6483,8 +6480,7 @@ else{
 return $B.imported[parsed_name[0]]}}
 $B.$import=function(mod_name,fromlist,aliases,locals){var parts=mod_name.split('.');
 if(mod_name[mod_name.length - 1]=='.'){parts.pop()}
-var norm_parts=[]
-prefix=true;
+var norm_parts=[],prefix=true;
 for(var i=0,_len_i=parts.length;i < _len_i;i++){var p=parts[i];
 if(prefix && p==''){
 elt=norm_parts.pop();
@@ -6496,12 +6492,10 @@ var mod_name=norm_parts.join('.')
 if($B.$options.debug==10){console.log('$import '+mod_name+' origin '+origin)
 console.log('use VFS ? '+$B.use_VFS)
 console.log('use static stdlib paths ? '+$B.static_stdlib_import)}
-var current_frame=$B.frames_stack[$B.frames_stack.length-1];
-globals=current_frame[3];
-__import__=globals['__import__'];
+var current_frame=$B.frames_stack[$B.frames_stack.length-1],globals=current_frame[3],__import__=globals['__import__'];
 if(__import__===undefined){
 __import__=$B.$__import__;}
-var modobj=_b_.getattr(__import__,'__call__')(mod_name,globals,undefined,fromlist,0);
+var modobj=_b_.getattr(__import__,'__call__')(mod_name,undefined,fromlist,0);
 if(!fromlist ||fromlist.length==0){
 var alias=aliases[mod_name];
 if(alias){locals[alias]=$B.imported[mod_name];}
@@ -6521,7 +6515,7 @@ try{
 locals[alias]=_b_.getattr(modobj,name);}
 catch($err1){
 try{
-_b_.getattr(__import__,'__call__')(mod_name + '.' + name,globals,undefined,[],0);}
+_b_.getattr(__import__,'__call__')(mod_name + '.' + name,undefined,[],0);}
 catch($err2){if($err2.__class__=_b_.ImportError.$dict){throw _b_.ImportError("cannot import name '" + name + "'")}
 throw $err2;}
 try{
@@ -7087,7 +7081,7 @@ _b_.int=int})(__BRYTHON__)
 eval($B.InjectBuiltins())
 var $LongIntDict={__class__:$B.$type,__name__:'int'}
 function add_pos(v1,v2){
-var res='',carry=0,iself=v1.length,sv=0
+var res='',carry=0,iself=v1.length,sv=0,x
 for(var i=v2.length-1;i>=0;i--){iself--
 if(iself<0){sv=0}else{sv=parseInt(v1.charAt(iself))}
 x=(carry+sv+parseInt(v2.charAt(i))).toString()
@@ -7150,7 +7144,7 @@ var cx=split_chunks(x,chunk_size),cy=split_chunks(y,chunk_size)
 var products={},len=cx.length+cy.length
 for(var i=0;i<len-1;i++){products[i]=0}
 for(var i=0;i<cx.length;i++){for(var j=0;j<cy.length;j++){products[i+j]+=cx[i]*cy[j]}}
-var nb=len-1
+var nb=len-1,pos
 for(var i=0;i<len-1;i++){var chunks=split_chunks(products[i].toString(),chunk_size)
 for(var j=1;j<chunks.length;j++){pos=i+j
 if(products[pos]===undefined){products[pos]=parseInt(chunks[j]);nb=pos}
@@ -7163,7 +7157,7 @@ result=s+result;
 i++}
 return LongInt(result)}
 function sub_pos(v1,v2){
-var res='',carry=0,i1=v1.length,sv=0
+var res='',carry=0,i1=v1.length,sv=0,x
 for(var i=v2.length-1;i>=0;i--){i1--
 sv=parseInt(v1.charAt(i1))
 x=(sv-carry-parseInt(v2.charAt(i)))
@@ -9041,7 +9035,6 @@ if(_hash==-1)_hash=590923713
 return self.__hashvalue__=_hash}
 $FrozensetDict.__init__=function(){
 var $=$B.args('__init__',1,{self:null},['self'],arguments,{},'args','kw')
-console.log('__init__',$.args)
 return $N}
 $empty_frozenset={__class__:$FrozensetDict,$items:[]}
 function frozenset(){var $=$B.args('frozenset',1,{iterable:null},['iterable'],arguments,{iterable:null},null,null)
@@ -9914,6 +9907,7 @@ modules['browser'].html=modules['browser.html']})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,
 $sys=$B.imported['_sys'];
 function import_hooks(mod_name,_path,module){
+var is_none=$B.is_none
 if(is_none(module)){module=undefined;}
 var _meta_path=_b_.getattr($sys,'meta_path');
 var spec=undefined;
@@ -9958,7 +9952,7 @@ catch(e){delete $B.modules[_spec_name];
 delete _sys_modules[_spec_name];
 throw e;}}}
 return _sys_modules[_spec_name];}
-window.import_hooks=import_hooks})(__BRYTHON__)
+$B.import_hooks=import_hooks})(__BRYTHON__)
 ;(function($B){_b_=$B.builtins
 $B.execution_object={}
 $B.execution_object.queue=[]

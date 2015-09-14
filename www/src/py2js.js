@@ -2246,7 +2246,7 @@ function $DefCtx(context){
         this.js_processed=true
 
         func_name = func_name || this.tree[0].to_js()
-        if(this.decorated){func_name=this.alias}
+        if(this.decorated){func_name='var '+this.alias}
         return func_name+'=(function()'
     }
 }
@@ -2811,34 +2811,6 @@ function $FromCtx(context){
             scope.blurred = true
         }
 
-//        if(this.names[0]=='*'){
-//            res += '$B.$import("'+this.module+'","'+mod+'")\n'
-//            res += head+'var $mod=$B.imported["'+this.module+'"]\n'
-//            res += head+'for(var $attr in $mod){\n'
-//            res +="if($attr.substr(0,1)!=='_'){\n"+head
-//            res += '$locals_'+scope.id.replace(/\./g,'_')+'[$attr]'
-//            res += '=$mod[$attr]\n'+head+'}}'
-//            
-//            // Set attribute to indicate that the scope has a 
-//            // 'from X import *' : this will make name resolution harder :-(
-//            scope.blurred = true
-//        
-//        }else{
-//            res += '$B.$import_from("'+this.module+'",['
-//            res += '"' + this.names.join('","') + '"'
-//            res += '],"'+mod+'");\n'
-//            var _is_module=scope.ntype === 'module'
-//            for(var i=0;i<this.names.length;i++){
-//                var name=this.names[i]
-//                var alias = this.aliases[name]||name
-//                
-//                res += head+'try{$locals_'+scope.id.replace(/\./g,'_')+'["'+ alias+'"]'
-//                res += '=getattr($B.imported["'+this.module+'"],"'+name+'")}\n'
-//                res += 'catch($err'+$loop_num+'){if($err'+$loop_num+'.__class__'
-//                res += '===AttributeError.$dict){$err'+$loop_num+'.__class__'
-//                res += '=ImportError.$dict};throw $err'+$loop_num+'};'            
-//            }
-//        }
         res[pos++] = '\n'+head+'None;';
         return res.join('');
     }
@@ -7193,7 +7165,7 @@ function brython(options){
             console.log(kk1[i])
         }
     }
-    */           
+    */
     
 }
 $B.$operators = $operators
