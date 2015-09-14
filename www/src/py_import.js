@@ -709,7 +709,7 @@ $B.is_none = function (o) {
 
 // Default __import__ function
 // TODO: Include at runtime in importlib.__import__
-$B.$__import__ = function (mod_name, locals, fromlist, level){
+$B.$__import__ = function (mod_name, locals, fromlist){
    // [Import spec] Halt import logic
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.');
@@ -723,9 +723,6 @@ $B.$__import__ = function (mod_name, locals, fromlist, level){
        // get name of module this was called in
        if (is_none(fromlist)) {
             fromlist = [];
-       }
-       if (is_none(level)) {
-            level = 0;
        }
        // TODO: Async module download and request multiplexing
        for (var i = 0, modsep = '', _mod_name = '', l = parsed_name.length - 1,
@@ -829,7 +826,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     }
     // FIXME: Should we need locals dict supply it in, now it is useless
     var modobj = _b_.getattr(__import__,
-                             '__call__')(mod_name, undefined, fromlist, 0);
+                             '__call__')(mod_name, undefined, fromlist);
 
     // Apply bindings upon local namespace
     if (!fromlist || fromlist.length == 0) {
@@ -879,7 +876,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                     try {
                         _b_.getattr(__import__,
                                     '__call__')(mod_name + '.' + name,
-                                                 undefined, [], 0);
+                                                 undefined, []);
                     }
                     catch ($err2) {
                         if ($err2.__class__ = _b_.ImportError.$dict) {
