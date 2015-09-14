@@ -1096,7 +1096,7 @@ $StringDict.isidentifier = function(self) {
   return /^[a-z][0-9a-z_]+$/i.test(self)
 }
 
-$StringDict.islower = function(self) {return /^[a-z]+$/.test(self)}
+$StringDict.islower = function(self) {return self==self.toLowerCase()}
 
 // not sure how to handle unicode variables
 $StringDict.isnumeric = function(self) {return /^[0-9]+$/.test(self)}
@@ -1108,7 +1108,7 @@ $StringDict.isspace = function(self) {return /^\s+$/i.test(self)}
 
 $StringDict.istitle = function(self) {return /^([A-Z][a-z]+)(\s[A-Z][a-z]+)$/i.test(self)}
 
-$StringDict.isupper = function(self) {return /^[A-Z]+$/.test(self)}
+$StringDict.isupper = function(self) {return self==self.toUpperCase()}
 
 $StringDict.join = function(self,obj){
     var iterable=iter(obj)
