@@ -398,7 +398,7 @@ function $AssignCtx(context, check_unbound){
     
     var ctx = context
     while(ctx){
-        if(ctx.type=='assert'){$_SyntaxError(context,'invalid syntax')}
+        if(ctx.type=='assert'){$_SyntaxError(context,'invalid syntax - assign')}
         ctx = ctx.parent
     }
     
@@ -1609,7 +1609,7 @@ function $DecoratorCtx(context){
         var func_rank=rank+1,children=node.parent.children
         var decorators = [this.tree]
         while(1){
-            if(func_rank>=children.length){$_SyntaxError(context)}
+            if(func_rank>=children.length){$_SyntaxError(context,['decorator expects function'])}
             else if(children[func_rank].context.type=='node_js'){func_rank++}
             else if(children[func_rank].context.tree[0].type==='decorator'){
                 decorators.push(children[func_rank].context.tree[0].tree)
@@ -2774,10 +2774,8 @@ function $FromCtx(context){
             if(_mod.charAt(0)=='.'){
                 if(package===undefined){
                     package = $B.imported[mod].__package__
-                    if(package==''){console.log('package vide 1 pour $B.imported['+mod+']')}
                 }else{
                     package = $B.imported[package]
-                    if(package==''){console.log('package vide 3 pour $B.imported['+package+']')}
                 }
                 if(package===undefined){
                     return 'throw SystemError("Parent module \'\' not loaded, cannot perform relative import")'
@@ -3277,25 +3275,8 @@ function $ImportCtx(context){
                     '{}' : ('{"' + mod_name + '" : "' +
                     this.tree[i].alias + '"}'),
                 localns = '$locals_'+scope.id.replace(/\./g,'_');
-            res[pos++]='$B.$import("'+mod_name+'", [],'+aliases+',' +
+            res[pos++] = '$B.$import("'+mod_name+'", [],'+aliases+',' +
                                    localns + ');'
-
-//            if(this.tree[i].name == this.tree[i].alias){
-//                var parts = this.tree[i].name.split('.')
-//                // $import returns an object
-//                // for "import a.b.c" this object has attributes
-//                // "a", "a.b" and "a.b.c", values are the matching modules
-//                for(var j=0;j<parts.length;j++){
-//                    var imp_key = parts.slice(0,j+1).join('.')
-//                    var obj_attr = ''
-//                    for(var k=0;k<j+1;k++){obj_attr+='["'+parts[k]+'"]'}
-//                    res[pos++]='$locals'+obj_attr+'=$B.imported["'+imp_key+'"];'
-//                }
-//            }else{
-//                res[pos++]='$locals_'+scope.id.replace(/\./g,'_')
-//                res[pos++]='["'+this.tree[i].alias
-//                res[pos++]='"]=$B.imported["'+this.tree[i].name+'"];'
-//            }
         }
         // add None for interactive console
         return res.join('') + 'None;'
@@ -5077,7 +5058,9 @@ function $transition(context,token){
         if(token==='id' && context.tree.length===0){
             return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
         }
-        if(token==='eol') return $transition(context.parent,token)
+        if(token==='eol') {
+            return $transition(context.parent,token)
+        }
         $_SyntaxError(context,'token '+token+' after '+context)
       case 'def':
         switch(token) {

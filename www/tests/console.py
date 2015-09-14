@@ -134,6 +134,9 @@ def myKeyPress(event):
                         traceback.print_exc()
                     doc['code'].value += '>>> '
                     _status = "main"
+                elif str(msg) == 'decorator expects function':
+                    doc['code'].value += '... '
+                    _status = "block"
                 else:
                     traceback.print_exc()
                     doc['code'].value += '>>> '

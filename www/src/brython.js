@@ -61,7 +61,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-14 08:54:34.737598"
+__BRYTHON__.compiled_date="2015-09-14 18:20:11.835436"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -222,7 +222,7 @@ new $NodeJSCtx(new_node,js)
 node.add(new_node)}}
 function $AssignCtx(C,check_unbound){
 var ctx=C
-while(ctx){if(ctx.type=='assert'){$_SyntaxError(C,'invalid syntax')}
+while(ctx){if(ctx.type=='assert'){$_SyntaxError(C,'invalid syntax - assign')}
 ctx=ctx.parent}
 check_unbound=check_unbound===undefined
 this.type='assign'
@@ -864,7 +864,7 @@ this.tree=[]
 this.toString=function(){return '(decorator) '+this.tree}
 this.transform=function(node,rank){var func_rank=rank+1,children=node.parent.children
 var decorators=[this.tree]
-while(1){if(func_rank>=children.length){$_SyntaxError(C)}
+while(1){if(func_rank>=children.length){$_SyntaxError(C,['decorator expects function'])}
 else if(children[func_rank].C.type=='node_js'){func_rank++}
 else if(children[func_rank].C.tree[0].type==='decorator'){decorators.push(children[func_rank].C.tree[0].tree)
 children.splice(func_rank,1)}else{break}}
@@ -1445,9 +1445,7 @@ this.toString=function(){return '(from) '+this.module+' (import) '+this.names+'(
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),mod=$get_module(this).module,res=[],pos=0,indent=$get_node(this).indent,head=' '.repeat(indent);
 var _mod=this.module.replace(/\$/g,''),package,packages=[]
-while(_mod.length>0){if(_mod.charAt(0)=='.'){if(package===undefined){package=$B.imported[mod].__package__
-if(package==''){console.log('package vide 1 pour $B.imported['+mod+']')}}else{package=$B.imported[package]
-if(package==''){console.log('package vide 3 pour $B.imported['+package+']')}}
+while(_mod.length>0){if(_mod.charAt(0)=='.'){if(package===undefined){package=$B.imported[mod].__package__}else{package=$B.imported[package]}
 if(package===undefined){return 'throw SystemError("Parent module \'\' not loaded, cannot perform relative import")'}else{packages.push(package)}
 _mod=_mod.substr(1)}else{break}}
 if(_mod){packages.push(_mod)}
@@ -2659,7 +2657,7 @@ if(token=='eol')return C.parent
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'decorator':
 if(token==='id' && C.tree.length===0){return $transition(new $AbstractExprCtx(C,false),token,arguments[2])}
-if(token==='eol')return $transition(C.parent,token)
+if(token==='eol'){return $transition(C.parent,token)}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'def':
 switch(token){case 'id':
@@ -6454,13 +6452,12 @@ delete _path;
 delete _type;
 delete _sys_paths;
 $B.is_none=function(o){return o===undefined ||o==_b_.None;}
-$B.$__import__=function(mod_name,locals,fromlist,level){
+$B.$__import__=function(mod_name,locals,fromlist){
 var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.');
 if(modobj==_b_.None){
 throw _b_.ImportError(parent_name)}
 if(modobj===undefined){
 if(is_none(fromlist)){fromlist=[];}
-if(is_none(level)){level=0;}
 for(var i=0,modsep='',_mod_name='',l=parsed_name.length - 1,__path__=_b_.None;i <=l;++i){var _parent_name=_mod_name;
 _mod_name +=modsep + parsed_name[i];
 modsep='.';
@@ -6495,7 +6492,7 @@ console.log('use static stdlib paths ? '+$B.static_stdlib_import)}
 var current_frame=$B.frames_stack[$B.frames_stack.length-1],globals=current_frame[3],__import__=globals['__import__'];
 if(__import__===undefined){
 __import__=$B.$__import__;}
-var modobj=_b_.getattr(__import__,'__call__')(mod_name,undefined,fromlist,0);
+var modobj=_b_.getattr(__import__,'__call__')(mod_name,undefined,fromlist);
 if(!fromlist ||fromlist.length==0){
 var alias=aliases[mod_name];
 if(alias){locals[alias]=$B.imported[mod_name];}
@@ -6515,7 +6512,7 @@ try{
 locals[alias]=_b_.getattr(modobj,name);}
 catch($err1){
 try{
-_b_.getattr(__import__,'__call__')(mod_name + '.' + name,undefined,[],0);}
+_b_.getattr(__import__,'__call__')(mod_name + '.' + name,undefined,[]);}
 catch($err2){if($err2.__class__=_b_.ImportError.$dict){throw _b_.ImportError("cannot import name '" + name + "'")}
 throw $err2;}
 try{
