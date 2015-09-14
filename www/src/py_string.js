@@ -767,14 +767,18 @@ $StringDict.center = function(self,width,fillchar){
     return res
 }
 
-$StringDict.count = function(self,elt){
-    if(!(typeof elt==="string")){throw _b_.TypeError(
-        "Can't convert '"+elt.__class__.__name__+"' object to str implicitly")}
+$StringDict.count = function(){
+    var $ = $B.args('count', 4, {self:null, sub:null, start:null, stop:null},
+        ['self', 'sub', 'start', 'stop'], arguments, {start:0, stop:null},
+        null, null)
+    if(!(typeof $.sub==="string")){throw _b_.TypeError(
+        "Can't convert '"+$.sub.__class__.__name__+"' object to str implicitly")}
     //needs to be non overlapping occurrences of substring in string.
-    var n=0, pos=0
-    while(1){
-        pos=self.indexOf(elt,pos)
-        if(pos>=0){ n++; pos+=elt.length} else break;
+    var n=0, pos=$.start
+    if($.stop===null){$.stop=$.self.length}
+    while(pos<$.stop){
+        pos=$.self.indexOf($.sub,pos)
+        if(pos>=0){ n++; pos+=$.sub.length} else break;
     }
     return n
 }
