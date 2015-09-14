@@ -117,5 +117,8 @@ assert "" in "test"
 assert "" in ""
 assert not "a" in ""
 
+# issue 285
+assert "ab"[1:0:-1] == 'b'
+
 print("passed all tests...")
 

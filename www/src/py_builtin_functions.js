@@ -1275,7 +1275,8 @@ function setattr(obj,attr,value){
     if(obj.__class__===$B.$factory){ 
         // Setting attribute of a class means updating the class
         // dictionary, not the class factory function
-        if(obj.$dict.$methods && typeof value=='function'){
+        if(obj.$dict.$methods && typeof value=='function' 
+            && value.__class__!==$B.$factory){
             // update attribute $methods
             obj.$dict.$methods[attr] = $B.make_method(attr, obj.$dict, value, value)
             return None
@@ -1909,8 +1910,7 @@ $TracebackDict.__getattribute__ = function(self, attr){
                 return src.split('\n')[parseInt(info[0]-1)]
             }
         case 'tb_next':
-            if(self.stack.length==1){return None}
-            else{return traceback(self.stack.slice(0, self.stack.length-1))}
+            return None // XXX fix me
         default:
             return $TracebackDict[attr]
     }
@@ -2069,11 +2069,11 @@ var BaseException = function (msg,js_exc){
     err.$py_error = true
     err.$stack = $B.frames_stack.slice()
     err.traceback = traceback({
-            tb_frame:frame($B.frames_stack),
-            tb_lineno:-1,
-            tb_lasti:'',
-            tb_next: None   // fix me
-        })
+        tb_frame:frame($B.frames_stack),
+        tb_lineno:-1,
+        tb_lasti:'',
+        tb_next: None   // fix me
+    })
     $B.current_exception = err
     return err
 }

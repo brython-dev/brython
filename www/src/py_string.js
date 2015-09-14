@@ -79,10 +79,10 @@ $StringDict.__getitem__ = function(self,arg){
             var stop = arg.stop===None ? getattr(self,'__len__')() : arg.stop
         }else{
             var start = arg.start===None ? getattr(self,'__len__')()-1 : arg.start
-            var stop = arg.stop===None ? 0 : arg.stop
+            var stop = arg.stop===None ? -1 : arg.stop
         }
         if(start<0) start+=self.length
-        if(stop<0) stop+=self.length
+        if(stop<0 && arg.stop!==None) stop+=self.length
         var res = '',i=null
         if(step>0){
             if(stop<=start) return ''

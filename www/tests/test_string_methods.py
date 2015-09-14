@@ -68,4 +68,11 @@ assert "bghggbazertyhbg".strip("bhg") == "azerty"
 
 assert "zer".upper() == "ZER"
 
+# issue 286
+assert "a1".islower()
+assert "B?".isupper()
+
+# issue 287
+assert 'abb'.count('b', 2) == 1
+
 print("passed all tests...")
