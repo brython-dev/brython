@@ -89,7 +89,7 @@ $StringDict.__getitem__ = function(self,arg){
             for(var i=start;i<stop;i+=step) res += self.charAt(i)
         } else {
             if(stop>=start) return ''
-            for(var i=start;i>=stop;i+=step) res += self.charAt(i)
+            for(var i=start;i>stop;i+=step) res += self.charAt(i)
         } 
         return res
     }
