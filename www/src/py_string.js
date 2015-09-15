@@ -772,7 +772,7 @@ $StringDict.count = function(){
         ['self', 'sub', 'start', 'stop'], arguments, {start:null, stop:null},
         null, null)
     if(!(typeof $.sub==="string")){throw _b_.TypeError(
-        "Can't convert '"+$.sub.__class__.__name__+"' object to str implicitly")}
+        "Can't convert '"+$B.get_class($.sub).__name__+"' object to str implicitly")}
     var substr = $.self
     if($.start!==null){
         var _slice
