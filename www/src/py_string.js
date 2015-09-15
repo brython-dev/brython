@@ -836,10 +836,30 @@ $StringDict.endswith = function(self){
 }
 
 $StringDict.expandtabs = function(self, tabsize) {
-    tabsize=tabsize || 8
-    var _str=''
-    for (var i=0; i < tabsize; i++) _str+=' ' 
-    return self.valueOf().replace(/\t/g, _str)
+    var $ = $B.args('expandtabs', 2, {self:null, tabsize:null},
+        ['self', 'tabsize'], arguments, {tabsize:8}, null, null)
+    var s=$B.$GetInt($.tabsize), col=0,pos=0,res=''
+    if(s==1){return self.replace(/\t/g,' ')}
+    while(pos<self.length){
+        var car = self.charAt(pos)
+        switch(car){
+            case '\t':
+                while(col%s > 0){res += ' ';col++}
+                break
+            case '\r':
+            case '\n':
+                res += car
+                col = 0
+                break
+            default:
+                res += car
+                col++
+                break
+        }
+        pos++
+    }
+    
+    return res
 }
 
 $StringDict.find = function(self){
