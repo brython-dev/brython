@@ -2544,15 +2544,17 @@ function $ForExpr(context){
             }
             var h = '\n'+' '.repeat(node.indent+4)
             var js = idt+'=$B.sub('+start+',1);'+h+'var $stop_'+num +'=$B.$GetInt('+
-                stop+')'+h+
-                'var $safe'+num+'= typeof '+idt+'=="number" && typeof '+
+                stop+'),'+h+
+                '    $next'+num+'= '+idt+','+h+
+                '    $safe'+num+'= typeof $next'+num+'=="number" && typeof '+
                 '$stop_'+num+'=="number";'+h+'while(true)'
             
             var for_node = new $Node()  
             new $NodeJSCtx(for_node,js)
             
-            for_node.add($NodeJS('if($safe'+num+'){var $next'+num+'='+idt+'+1'+'}'))
-            for_node.add($NodeJS('else{var $next'+num+'=$B.add('+idt+',1)}'))
+            for_node.add($NodeJS('if($safe'+num+'){$next'+num+'+=1'+'}'))
+            for_node.add($NodeJS('else{$next'+num+'=$B.add($next'+num+',1)}'))
+            for_node.add($NodeJS(idt+' = $next'+num))
             for_node.add($NodeJS('if($safe'+num+' && $next'+num+'>= $stop_'+
                 num+'){break}'))
             for_node.add($NodeJS('else if(!$safe'+num+
