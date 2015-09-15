@@ -769,15 +769,27 @@ $StringDict.center = function(self,width,fillchar){
 
 $StringDict.count = function(){
     var $ = $B.args('count', 4, {self:null, sub:null, start:null, stop:null},
-        ['self', 'sub', 'start', 'stop'], arguments, {start:0, stop:null},
+        ['self', 'sub', 'start', 'stop'], arguments, {start:null, stop:null},
         null, null)
     if(!(typeof $.sub==="string")){throw _b_.TypeError(
         "Can't convert '"+$.sub.__class__.__name__+"' object to str implicitly")}
-    //needs to be non overlapping occurrences of substring in string.
-    var n=0, pos=$.start
-    if($.stop===null){$.stop=$.self.length}
-    while(pos<$.stop){
-        pos=$.self.indexOf($.sub,pos)
+    var substr = $.self
+    if($.start!==null){
+        var _slice
+        if($.stop!==null){_slice = _b_.slice($.start, $.stop)}
+        else{_slice = _b_.slice($.start,$.self.length)}
+        substr = $StringDict.__getitem__.apply(null, [$.self].concat(_slice))
+    }else{
+        if($.self.length+$.sub.length==0){return 1} // ''.count('') = 1
+    }
+    if($.sub.length==0){
+        if($.start==$.self.length){return 1} // 'aaa'.count('',3) = 1
+        else if(substr.length==0){return 0} // 'aaa'.count('',4) = 0
+        return substr.length+1
+    }
+    var n=0, pos=0
+    while(pos<substr.length){
+        pos=substr.indexOf($.sub,pos)
         if(pos>=0){ n++; pos+=$.sub.length} else break;
     }
     return n
