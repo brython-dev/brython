@@ -862,43 +862,33 @@ $StringDict.expandtabs = function(self, tabsize) {
     return res
 }
 
-$StringDict.find = function(self){
+$StringDict.find = function(){
     // Return the lowest index in the string where substring sub is found, 
     // such that sub is contained in the slice s[start:end]. Optional 
     // arguments start and end are interpreted as in slice notation. 
     // Return -1 if sub is not found.
-    var start=0,end=self.length
-    var $ns=$B.args("$StringDict.find",4,
+    var $=$B.args("$StringDict.find",4,
         {self:null, sub:null, start:null, end:null}, 
         ['self', 'sub', 'start','end'],
-        arguments,{start:0, end:self.length},null,null)
-    for(var attr in $ns){eval('var '+attr+'=$ns[attr]')}
-    if(!isinstance(sub,str)){throw _b_.TypeError(
-        "Can't convert '"+sub.__class__.__name__+"' object to str implicitly")}
-    if(!isinstance(start,_b_.int)||!isinstance(end,_b_.int)){
+        arguments,{start:0,end:null},null,null)
+    if(!isinstance($.sub,str)){throw _b_.TypeError(
+        "Can't convert '"+$B.get_class($.sub).__name__+
+        "' object to str implicitly")}
+    if($.start===_b_.None){$.start=0}
+    if($.end===null || $.end===_b_.None){$.end=$.self.length}
+    if(!isinstance($.start,_b_.int)||!isinstance($.end,_b_.int)){
         throw _b_.TypeError(
         "slice indices must be integers or None or have an __index__ method")}
-    var s = self.substring(start,end)
-    var esc_sub = ''
-    for(var i=0, _len_i = sub.length; i < _len_i;i++){
-        switch(sub.charAt(i)) {
-          case '[':
-          case '.':
-          case '*':
-          case '+':
-          case '?':
-          case '|':
-          case '(':
-          case ')':
-          case '$':
-          case '^':
-            esc_sub += '\\'
-        }
-        esc_sub += sub.charAt(i)
+    var s = $.self.substring($.start,$.end)
+
+    if($.sub.length==0 && $.start==$.self.length){return $.self.length}
+    if(s.length+$.sub.length==0){return -1}
+
+    var last_search = s.length-$.sub.length
+    for(var i=0;i<=last_search;i++){
+        if(s.substr(i, $.sub.length)==$.sub){return $.start+i}
     }
-    var res = s.search(esc_sub)
-    if(res==-1) return -1
-    return start+res
+    return -1
 }
 
 // Next function used by method .format()

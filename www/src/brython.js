@@ -61,7 +61,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-15 15:38:47.032406"
+__BRYTHON__.compiled_date="2015-09-18 12:13:53.788443"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -3854,6 +3854,8 @@ var $href_elts=$href.split('/')
 $href_elts.pop()
 if(options.pythonpath!==undefined)$B.path=options.pythonpath
 if(options.re_module !==undefined){if(options.re_module=='pyre' ||options.re_module=='jsre'){$B.$options.re=options.re}}
+$B.scripts=[]
+$B.js={}
 var kk=Object.keys(window)
 var first_script=true,module_name;
 if(options.ipy_id!==undefined){module_name='__main__';
@@ -3878,6 +3880,7 @@ throw $err}}else{for(var $i=0;$i<$elts.length;$i++){var $elt=$elts[$i]
 if($elt.type=="text/python"||$elt.type==="text/python3"){if($elt.id){module_name=$elt.id}
 else if(first_script){module_name='__main__';first_script=false}
 else{module_name='__main__'+$B.UUID()}
+$B.scripts.push(module_name)
 var $src=null
 if($elt.src){
 if(window.XMLHttpRequest){
@@ -3902,6 +3905,7 @@ $B.$py_module_path[module_name]=$href}
 try{
 var $root=$B.py2js($src,module_name,module_name,'__builtins__')
 var $js=$root.to_js()
+$B.js[module_name]=$js
 if($B.debug>1)console.log($js)
 if($B.async_enabled){$js=$B.execution_object.source_conversion($js)
 eval($js)}else{
@@ -8140,31 +8144,21 @@ col++
 break}
 pos++}
 return res}
-$StringDict.find=function(self){
-var start=0,end=self.length
-var $ns=$B.args("$StringDict.find",4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:self.length},null,null)
-for(var attr in $ns){eval('var '+attr+'=$ns[attr]')}
-if(!isinstance(sub,str)){throw _b_.TypeError(
-"Can't convert '"+sub.__class__.__name__+"' object to str implicitly")}
-if(!isinstance(start,_b_.int)||!isinstance(end,_b_.int)){throw _b_.TypeError(
+$StringDict.find=function(){
+var $=$B.args("$StringDict.find",4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:null},null,null)
+if(!isinstance($.sub,str)){throw _b_.TypeError(
+"Can't convert '"+$B.get_class($.sub).__name__+
+"' object to str implicitly")}
+if($.start===_b_.None){$.start=0}
+if($.end===null ||$.end===_b_.None){$.end=$.self.length}
+if(!isinstance($.start,_b_.int)||!isinstance($.end,_b_.int)){throw _b_.TypeError(
 "slice indices must be integers or None or have an __index__ method")}
-var s=self.substring(start,end)
-var esc_sub=''
-for(var i=0,_len_i=sub.length;i < _len_i;i++){switch(sub.charAt(i)){case '[':
-case '.':
-case '*':
-case '+':
-case '?':
-case '|':
-case '(':
-case ')':
-case '$':
-case '^':
-esc_sub +='\\'}
-esc_sub +=sub.charAt(i)}
-var res=s.search(esc_sub)
-if(res==-1)return -1
-return start+res}
+var s=$.self.substring($.start,$.end)
+if($.sub.length==0 && $.start==$.self.length){return $.self.length}
+if(s.length+$.sub.length==0){return -1}
+var last_search=s.length-$.sub.length
+for(var i=0;i<=last_search;i++){if(s.substr(i,$.sub.length)==$.sub){return $.start+i}}
+return -1}
 function parse_format(fmt_string){
 var elts=fmt_string.split(':'),name,conv,spec,name_ext=[]
 if(elts.length==1){
@@ -9850,7 +9844,15 @@ $B.$BRgenerator.__class__=$B.$type})(__BRYTHON__)
 modules['browser']={$package: true,$is_package: true,__package__:'browser',__file__:$B.brython_path.replace(/\/*$/g,'')+
 '/Lib/browser/__init__.py',alert:function(message){window.alert($B.builtins.str(message))},confirm: $B.JSObject(window.confirm),console:$B.JSObject(window.console),document:$B.DOMNode(document),doc: $B.DOMNode(document),
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},prompt: function(message,default_value){return $B.JSObject(window.prompt(message,default_value||''))},reload: function(){
-for(var mod in $B.imported){if($B.imported[mod].$last_modified){console.log('check',mod,$B.imported[mod].__file__,$B.imported[mod].$last_modified)}}},win: $B.win,window: $B.win,URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+var scripts=document.getElementsByTagName('script'),js_scripts=[]
+for(var i=0;i<scripts.length;i++){if(scripts[i].type===undefined ||
+scripts[i].type=='text/javascript'){js_scripts.push(scripts[i])
+if(scripts[i].src){var new_script=document.createElement('SCRIPT')
+console.log(scripts[i].src)}}}
+console.log(js_scripts)
+for(var i=0;i<$B.scripts.length;i++){var name=$B.scripts[i]
+console.log('script:',name)}
+for(var mod in $B.imported){if($B.imported[mod].$last_modified){console.log('check',mod,$B.imported[mod].__file__,$B.imported[mod].$last_modified)}else{console.log('no date for mod',mod)}}},win: $B.win,window: $B.win,URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
 var regex=new RegExp("[\\?&]" + name + "=([^&#]*)"),results=regex.exec(location.search);
 results=results===null ? "" : decodeURIComponent(results[1].replace(/\+/g," "));
 return $B.builtins.str(results);}}
