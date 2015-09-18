@@ -776,13 +776,17 @@ $StringDict.casefold = function(self) {
 }
 
 $StringDict.center = function(self,width,fillchar){
-    if(fillchar===undefined){fillchar=' '}else{fillchar=fillchar}
-    if(width<=self.length) return self
+    var $=$B.args("center",3,
+        {self:null, width:null, fillchar:null},
+        ['self', 'width', 'fillchar'],
+        arguments,{fillchar:' '},null,null)
+
+    if($.width<=self.length) return self
     
-    var pad = parseInt((width-self.length)/2)
-    var res = Array(pad+1).join(fillchar) // is this statement faster than the for loop below?
+    var pad = parseInt(($.width-self.length)/2)
+    var res = $.fillchar.repeat(pad)
     res += self + res
-    if(res.length<width){res += fillchar}
+    if(res.length<$.width){res += $.fillchar}
     return res
 }
 
@@ -1174,10 +1178,12 @@ $StringDict.join = function(self,obj){
     return res.substr(0,res.length-self.length)
 }
 
-$StringDict.ljust = function(self, width, fillchar) {
-  if (width <= self.length) return self
-  if (fillchar === undefined) fillchar=' '
-  return self + Array(width - self.length + 1).join(fillchar)
+$StringDict.ljust = function(self) {
+    var $=$B.args('ljust',3,{self:null,width:null,fillchar:null},
+        ['self','width','fillchar'],arguments,{fillchar:' '},null,null)
+
+    if ($.width <= self.length) return self
+    return self + $.fillchar.repeat($.width - self.length)
 }
 
 $StringDict.lower = function(){
@@ -1186,11 +1192,10 @@ $StringDict.lower = function(){
 }
 
 $StringDict.lstrip = function(self,x){
-    var pattern = null
-    if(x==undefined){pattern="\\s*"}
-    else{pattern = "["+x+"]*"}
-    var sp = new RegExp("^"+pattern)
-    return self.replace(sp,"")
+    var $=$B.args('lstrip',2,{self:null,chars:null},['self','chars'],
+            arguments,{chars:_b_.None},null,null)
+    if($.chars===_b_.None){return $.self.replace(/^\s+/,'')}
+    return $.self.replace(new RegExp("^["+$.chars+"]*"),"")
 }
 
 // note, maketrans should be a static function.
@@ -1241,8 +1246,12 @@ $StringDict.replace = function(self, old, _new, count) {
         ['self','old','$$new','count'], arguments, {count:-1},null,null),
         count=$.count,self=$.self,old=$.old,_new=$.$$new
     // Validate type of old
-    if (!isinstance(old,_b_.str)||!isinstance(_new,_b_.str)) {
+    if (!isinstance(old,_b_.str)) {
         throw _b_.TypeError("Can't convert '" + $B.get_class(old).__name__ + 
+            "' object to str implicitly");
+    }    
+    if (!isinstance(_new,_b_.str)) {
+        throw _b_.TypeError("Can't convert '" + $B.get_class(_new).__name__ + 
             "' object to str implicitly");
     }    
     // Validate instance type of 'count'
@@ -1321,15 +1330,14 @@ $StringDict.rindex = function(){
 }
 
 $StringDict.rjust = function(self) {
-    var $ns=$B.args("$StringDict.rjust",3,
+    var $=$B.args("rjust",3,
         {self:null, width:null, fillchar:null},
         ['self', 'width', 'fillchar'],
         arguments,{fillchar:' '},null,null)
-    for(var attr in $ns){eval('var '+attr+'=$ns[attr]')}
 
-    if (width <= self.length) return self
+    if ($.width <= self.length) return self
 
-    return Array(width - self.length + 1).join(fillchar) + self
+    return $.fillchar.repeat($.width - self.length) + self
 }
 
 $StringDict.rpartition = function(self,sep) {
@@ -1368,10 +1376,10 @@ $StringDict.rsplit = function(self) {
 }
 
 $StringDict.rstrip = function(self,x){
-    if(x==undefined){var pattern="\\s*"}
-    else{var pattern = "["+x+"]*"}
-    sp = new RegExp(pattern+'$')
-    return str(self.replace(sp,""))
+    var $=$B.args('rstrip',2,{self:null,chars:null},['self','chars'],
+            arguments,{chars:_b_.None},null,null)
+    if($.chars===_b_.None){return $.self.replace(/\s+$/,'')}
+    return $.self.replace(new RegExp("["+$.chars+"]*$"),"")
 }
 
 $StringDict.split = function(){
@@ -1455,14 +1463,17 @@ $StringDict.startswith = function(self){
     return false
 }
 
-$StringDict.strip = function(self,x){
-    if(x==undefined){x = "\\s"}
-    return $StringDict.rstrip($StringDict.lstrip(self,x),x)
+$StringDict.strip = function(){
+    var $=$B.args('strip',2,{self:null,chars:null},['self','chars'],
+            arguments,{chars:_b_.None},null,null)
+    return $StringDict.rstrip($StringDict.lstrip($.self,$.chars),$.chars)
 }
 
 $StringDict.swapcase = function(self) {
+    var $=$B.args('swapcase',1,{self:null},['self'],
+            arguments,{},null,null)
     //inspired by http://www.geekpedia.com/code69_Swap-string-case-using-JavaScript.html
-    return self.replace(/([a-z])|([A-Z])/g, function($0,$1,$2)
+    return $.self.replace(/([a-z])|([A-Z])/g, function($0,$1,$2)
         { return ($1) ? $0.toUpperCase() : $0.toLowerCase()
     })
 }
@@ -1490,11 +1501,16 @@ $StringDict.upper = function(){
 }
 
 $StringDict.zfill = function(self, width) {
-  if (width === undefined || width <= self.length || !self.isnumeric()) {
-     return self
-  }
-
-  return Array(width - self.length +1).join('0');
+    var $=$B.args('zfill',2,{self:null,width:null},
+        ['self','width'],arguments,{},null,null)
+    if ($.width <= self.length) {return self}
+    switch(self.charAt(0)){
+        case '+':
+        case '-':
+            return self.charAt(0)+'0'.repeat($.width-self.length)+self.substr(1)
+        default:
+            return '0'.repeat(width - self.length)+self
+    }
 }
 
 function str(arg){
