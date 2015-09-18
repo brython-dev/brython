@@ -6982,6 +6982,9 @@ function brython(options){
           $B.$options.re=options.re
        }
     }
+    
+    $B.scripts = []
+    $B.js = {} // maps script name to JS conversion
 
     // Save initial Javascript namespace
     var kk = Object.keys(window)
@@ -7051,6 +7054,7 @@ function brython(options){
                 if($elt.id){module_name=$elt.id}
                 else if(first_script){module_name='__main__'; first_script=false}
                 else{module_name = '__main__'+$B.UUID()}
+                $B.scripts.push(module_name)
             
                 // Get Python source code
                 var $src = null
@@ -7097,6 +7101,7 @@ function brython(options){
                     var $root = $B.py2js($src,module_name,module_name,'__builtins__')
                     //earney
                     var $js = $root.to_js()
+                    $B.js[module_name] = $js
                     if($B.debug>1) console.log($js)
 
                     if ($B.async_enabled) {
