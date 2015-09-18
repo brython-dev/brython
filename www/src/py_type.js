@@ -436,11 +436,16 @@ $B.$type.__getattribute__=function(klass,attr){
         // __new__ is a static method
         if(attr=='__new__'){res.$type='staticmethod'}
         var res1 = get_func.apply(null,[res,$B.builtins.None,klass])
-        var args
+
+        if(res1.__class__===$B.$factory){
+            // attribute is a class
+            return res1        
+        }
+
         if(typeof res1=='function'){
             res.__name__ = attr
             // method
-            var __self__,__func__=res1,__repr__,__str__
+            var __self__,__func__=res1,__repr__,__str__, args
             //console.log('attr '+attr+' of '+klass.__name__+' $type '+res.$type+'\n'+res)
             switch (res.$type) {
                 case undefined:
