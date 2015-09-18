@@ -10,6 +10,25 @@ var $StringDict = {__class__:$B.$type,
     $native:true
 }
 
+function normalize_start_end($){
+    if($.start===null||$.start===_b_.None){$.start = 0}
+    else if($.start<0){$.start += $.self.length; $.start=Math.max(0, $.start)}
+    if($.end===null||$.end===_b_.None){$.end = $.self.length}
+    else if($.end<0){$.end += $.self.length; $.end=Math.max(0, $.end)}
+
+    if(!isinstance($.start,_b_.int)||!isinstance($.end,_b_.int)){
+        throw _b_.TypeError(
+            "slice indices must be integers or None or have an __index__ method")}
+
+}
+
+function norm_pos(pos, s, default_if_None){
+    // For a string s, return a position >=0 is pos is negative or None
+    if(pos>=0){return pos}
+    else if(pos===_b_.None||pos===null){return default_if_None}
+    else{pos+=s.lengh;return Math.max(0, pos)}
+}
+
 $StringDict.__add__ = function(self,other){
     if(!(typeof other==="string")){
         try{return getattr(other,'__radd__')(self)}
@@ -874,8 +893,8 @@ $StringDict.find = function(){
     if(!isinstance($.sub,str)){throw _b_.TypeError(
         "Can't convert '"+$B.get_class($.sub).__name__+
         "' object to str implicitly")}
-    if($.start===_b_.None){$.start=0}
-    if($.end===null || $.end===_b_.None){$.end=$.self.length}
+    normalize_start_end($)
+
     if(!isinstance($.start,_b_.int)||!isinstance($.end,_b_.int)){
         throw _b_.TypeError(
         "slice indices must be integers or None or have an __index__ method")}
@@ -1063,7 +1082,7 @@ $StringDict.format_map = function(self) {
 
 $StringDict.index = function(self){
     // Like find(), but raise ValueError when the substring is not found.
-    var res = $StringDict.find.apply(self,arguments)
+    var res = $StringDict.find.apply(null,arguments)
     if(res===-1) throw _b_.ValueError("substring not found")
     return res
 }
@@ -1161,7 +1180,10 @@ $StringDict.ljust = function(self, width, fillchar) {
   return self + Array(width - self.length + 1).join(fillchar)
 }
 
-$StringDict.lower = function(self){return self.toLowerCase()}
+$StringDict.lower = function(){
+    var $=$B.args('lower',1,{self:null},['self'],arguments,{},null,null)
+    return $.self.toLowerCase()
+}
 
 $StringDict.lstrip = function(self,x){
     var pattern = null
@@ -1215,19 +1237,39 @@ $StringDict.replace = function(self, old, _new, count) {
     // Replaces occurrences of 'old' by '_new'. Count references
     // the number of times to replace. In CPython, negative or undefined 
     // values of count means replace all.
-    if (count === undefined) {
-        count = -1;
-    } else {
-        // Validate instance type of 'count'
-        if (!isinstance(count,[_b_.int,_b_.float])) {
-            throw _b_.TypeError("'" + str(count.__class__) + "' object cannot be interpreted as an integer");
-        } else if (isinstance(count, _b_.float)) {
-            throw _b_.TypeError("integer argument expected, got float");
-        }
+    var $ = $B.args('replace', 4, {self:null,old:null,$$new:null,count:null},
+        ['self','old','$$new','count'], arguments, {count:-1},null,null),
+        count=$.count,self=$.self,old=$.old,_new=$.$$new
+    // Validate instance type of 'count'
+    if (!isinstance(count,[_b_.int,_b_.float])) {
+        throw _b_.TypeError("'" + $B.get_class(count).__name__ + 
+            "' object cannot be interpreted as an integer");
+    } else if (isinstance(count, _b_.float)) {
+        throw _b_.TypeError("integer argument expected, got float");
+    }
+    if(count==0){return self}
+    if(count.__class__==$B.LongInt.$dict){count=parseInt(count.value)}
+    if(old==''){
+        if(_new==''){return self}
+        if(self==''){return _new}
+        var elts=self.split('')
+        if(count>-1 && elts.length>=count){
+            var rest = elts.slice(count).join('')
+            return _new+elts.slice(0, count).join(_new)+rest
+        }else{return _new+elts.join(_new)+_new}
+    }else{
+        var elts = $StringDict.split(self,old,count)
     }
 
-    var res = self.valueOf();
-    var pos = -1;
+    var res = self, pos = -1
+    if(old.length==0){
+        var res = _new
+        for(var i=0;i<elts.length;i++){
+            res += elts[i]+_new
+        }
+        return res+rest
+    }
+    
     if (count < 0) count = res.length;
     while (count > 0) {
         pos = res.indexOf(old, pos);
@@ -1244,25 +1286,31 @@ $StringDict.rfind = function(self){
     // Return the highest index in the string where substring sub is found, 
     // such that sub is contained within s[start:end]. Optional arguments 
     // start and end are interpreted as in slice notation. Return -1 on failure.
-    var $ns=$B.args("$StringDict.find",4,
+    var $=$B.args("rfind",4,
         {self:null, sub:null, start:null, end:null},
         ['self', 'sub', 'start', 'end'],
-        arguments,{start:0, end:self.length},null,null)
-    for(var attr in $ns){eval('var '+attr+'=$ns[attr]')}
-    if(!isinstance(sub,str)){throw _b_.TypeError(
-        "Can't convert '"+sub.__class__.__name__+"' object to str implicitly")}
-    if(!isinstance(start,_b_.int)||!isinstance(end,_b_.int)){throw _b_.TypeError(
-        "slice indices must be integers or None or have an __index__ method")}
+        arguments,{start:0, end:null},null,null)
 
-    var s = self.substring(start,end)
+    normalize_start_end($)
 
-    // why not use lastIndexOf, which passes all brython tests..?
-    return self.lastIndexOf(sub)
+    if(!isinstance($.sub,str)){throw _b_.TypeError(
+        "Can't convert '"+$B.get_class($.sub).__name__+"' object to str implicitly")}
+
+    if($.sub.length==0){
+        if($.start>$.self.length){return -1}
+        else{return $.self.length}
+    }
+    var sublen = $.sub.length
+        
+    for(var i=$.end-sublen;i>=$.start;i--){
+        if($.self.substr(i, sublen)==$.sub){return i}
+    }
+    return -1
 }
 
 $StringDict.rindex = function(){
     // Like rfind() but raises ValueError when the substring sub is not found
-    var res = $StringDict.rfind.apply(this,arguments)
+    var res = $StringDict.rfind.apply(null,arguments)
     if(res==-1){throw _b_.ValueError("substring not found")}
     return res
 }
@@ -1296,26 +1344,22 @@ $StringDict.rpartition = function(self,sep) {
 }
 
 $StringDict.rsplit = function(self) {
-    var args = [], pos=0
-    for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-    var $ns=$B.args("$StringDict.rsplit",0,{},[],args,{},'args','kw')
-    var sep=None,maxsplit=-1
-    if($ns['args'].length>=1){sep=$ns['args'][0]}
-    if($ns['args'].length==2){maxsplit=$ns['args'][1]}
-    maxsplit = _b_.dict.$dict.get($ns['kw'],'maxsplit',maxsplit)
+    var $=$B.args("rsplit",3,{self:null,sep:null,maxsplit:null},
+        ['self','sep','maxsplit'],arguments,
+        {sep:_b_.None, maxsplit:-1},null,null),
+        sep=$.sep,maxsplit=$.maxsplit,self=$.self
 
-    //var array=$StringDict.split(self) 
-
-    var array=$StringDict.split(self, sep) 
-
-    if (array.length <= maxsplit || maxsplit == -1) return array
-
-    var s=[]
+    // Use split on the reverse of the string and of separator
+    var rev_str = $.self.split('').reverse().join(''),
+        rev_sep = sep === _b_.None ? sep : $.sep.split('').reverse().join(''),
+        rev_res = $StringDict.split(rev_str, rev_sep, $.maxsplit)
     
-    s = array.splice(array.length - maxsplit, array.length)
-    s.splice(0, 0, array.join(sep))
-    
-    return s
+    // Reverse the list, then each string inside the list
+    rev_res.reverse()
+    for(var i=0;i<rev_res.length;i++){
+        rev_res[i] = rev_res[i].split('').reverse().join('')
+    }
+    return rev_res
 }
 
 $StringDict.rstrip = function(self,x){
@@ -1325,16 +1369,15 @@ $StringDict.rstrip = function(self,x){
     return str(self.replace(sp,""))
 }
 
-$StringDict.split = function(self){
+$StringDict.split = function(){
     var args = [], pos=0
-    for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-    var $ns=$B.args("$StringDict.split",0,{},[],args,{},'args','kw')
-    var sep=None,maxsplit=-1
-    if($ns['args'].length>=1){sep=$ns['args'][0]}
-    if($ns['args'].length==2){maxsplit=$ns['args'][1]}
-    maxsplit = _b_.dict.$dict.get($ns['kw'],'maxsplit',maxsplit)
+    var $=$B.args("split",3,{self:null,sep:null,maxsplit:null},
+        ['self','sep','maxsplit'],arguments,
+        {sep:_b_.None, maxsplit:-1},null,null)
+    var sep=$.sep,maxsplit=$.maxsplit,self=$.self
+    if(maxsplit.__class__===$B.LongInt.$dict){maxsplit=parseInt(maxsplit.value)}
     if(sep=='') throw _b_.ValueError('empty separator')
-    if(sep===None){
+    if(sep===_b_.None){
         var res = []
         var pos = 0
         while(pos<self.length&&self.charAt(pos).search(/\s/)>-1){pos++}
@@ -1363,38 +1406,24 @@ $StringDict.split = function(self){
         }
         return res
     }else{
-        var esc_sep = ''
-        for(var i=0, _len_i = sep.length; i < _len_i;i++){
-            switch(sep.charAt(i)) {
-              case '*':
-              case '+':
-              case '.':
-              case '[':
-              case ']':
-              case '(':
-              case ')':
-              case '|':
-              case '$':
-              case '^':
-                esc_sep += '\\'
+        var res = [],s='',pos=0,seplen=sep.length
+        if(maxsplit==0){return [self]}
+        while(pos<self.length){
+            if(self.substr(pos,seplen)==sep){
+                res.push(s)
+                pos += seplen
+                if(maxsplit>-1 && res.length>=maxsplit){
+                    res.push(self.substr(pos))
+                    return res
+                }
+                s= ''
+            }else{
+                s += self.charAt(pos)
+                pos++
             }
-            esc_sep += sep.charAt(i)
         }
-        var re = new RegExp(esc_sep)
-        if (maxsplit==-1){
-            // use native Javascript split on self
-            return self.valueOf().split(re,maxsplit)
-        }
-
-        // javascript split behavior is different from python when
-        // a maxsplit argument is supplied. (see javascript string split
-        // function docs for details)
-        var l=self.valueOf().split(re,-1)
-        var a=l.slice(0, maxsplit)
-        var b=l.slice(maxsplit, l.length)
-        if (b.length > 0) a.push(b.join(sep))
-
-        return a
+        res.push(s)
+        return res
     }
 }
 
@@ -1450,7 +1479,10 @@ $StringDict.translate = function(self,table) {
     return res.join('')
 }
 
-$StringDict.upper = function(self){return self.toUpperCase()}
+$StringDict.upper = function(){
+    var $=$B.args('lower',1,{self:null},['self'],arguments,{},null,null)
+    return $.self.toUpperCase()
+}
 
 $StringDict.zfill = function(self, width) {
   if (width === undefined || width <= self.length || !self.isnumeric()) {

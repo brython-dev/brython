@@ -61,7 +61,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-18 12:13:53.788443"
+__BRYTHON__.compiled_date="2015-09-18 20:43:07.408420"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4217,9 +4217,10 @@ if(get_func===undefined &&(typeof res=='function')){get_func=function(x){return 
 if(get_func===undefined)return res
 if(attr=='__new__'){res.$type='staticmethod'}
 var res1=get_func.apply(null,[res,$B.builtins.None,klass])
-var args
+if(res1.__class__===$B.$factory){
+return res1 }
 if(typeof res1=='function'){res.__name__=attr
-var __self__,__func__=res1,__repr__,__str__
+var __self__,__func__=res1,__repr__,__str__,args
 switch(res.$type){case undefined:
 case 'function':
 case 'instancemethod':
@@ -7800,6 +7801,16 @@ _b_.object.$dict.__bases__=tuple()})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var $ObjectDict=object.$dict
 var $StringDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'str',$native:true}
+function normalize_start_end($){if($.start===null||$.start===_b_.None){$.start=0}
+else if($.start<0){$.start +=$.self.length;$.start=Math.max(0,$.start)}
+if($.end===null||$.end===_b_.None){$.end=$.self.length}
+else if($.end<0){$.end +=$.self.length;$.end=Math.max(0,$.end)}
+if(!isinstance($.start,_b_.int)||!isinstance($.end,_b_.int)){throw _b_.TypeError(
+"slice indices must be integers or None or have an __index__ method")}}
+function norm_pos(pos,s,default_if_None){
+if(pos>=0){return pos}
+else if(pos===_b_.None||pos===null){return default_if_None}
+else{pos+=s.lengh;return Math.max(0,pos)}}
 $StringDict.__add__=function(self,other){if(!(typeof other==="string")){try{return getattr(other,'__radd__')(self)}
 catch(err){throw _b_.TypeError(
 "Can't convert "+$B.get_class(other).__name__+" to str implicitely")}}
@@ -8149,9 +8160,9 @@ var $=$B.args("$StringDict.find",4,{self:null,sub:null,start:null,end:null},['se
 if(!isinstance($.sub,str)){throw _b_.TypeError(
 "Can't convert '"+$B.get_class($.sub).__name__+
 "' object to str implicitly")}
-if($.start===_b_.None){$.start=0}
-if($.end===null ||$.end===_b_.None){$.end=$.self.length}
-if(!isinstance($.start,_b_.int)||!isinstance($.end,_b_.int)){throw _b_.TypeError(
+normalize_start_end($)
+if(!isinstance($.start,_b_.int)||!isinstance($.end,_b_.int)){console.log('start',$.start,'end',$.end)
+throw _b_.TypeError(
 "slice indices must be integers or None or have an __index__ method")}
 var s=$.self.substring($.start,$.end)
 if($.sub.length==0 && $.start==$.self.length){return $.self.length}
@@ -8222,7 +8233,7 @@ res +=_b_.getattr(value,'__format__')(fmt.spec)}
 return res}
 $StringDict.format_map=function(self){throw NotImplementedError("function format_map not implemented yet");}
 $StringDict.index=function(self){
-var res=$StringDict.find.apply(self,arguments)
+var res=$StringDict.find.apply(null,arguments)
 if(res===-1)throw _b_.ValueError("substring not found")
 return res}
 $StringDict.isalnum=function(self){return /^[a-z0-9]+$/i.test(self)}
@@ -8284,7 +8295,8 @@ return res.substr(0,res.length-self.length)}
 $StringDict.ljust=function(self,width,fillchar){if(width <=self.length)return self
 if(fillchar===undefined)fillchar=' '
 return self + Array(width - self.length + 1).join(fillchar)}
-$StringDict.lower=function(self){return self.toLowerCase()}
+$StringDict.lower=function(){var $=$B.args('lower',1,{self:null},['self'],arguments,{},null,null)
+return $.self.toLowerCase()}
 $StringDict.lstrip=function(self,x){var pattern=null
 if(x==undefined){pattern="\\s*"}
 else{pattern="["+x+"]*"}
@@ -8308,10 +8320,20 @@ for(var i=0,_len_i=specials.length;i < _len_i;i++){var re=new RegExp('\\'+specia
 str=str.replace(re,"\\"+specials.charAt(i))}
 return str}
 $StringDict.replace=function(self,old,_new,count){
-if(count===undefined){count=-1;}else{
-if(!isinstance(count,[_b_.int,_b_.float])){throw _b_.TypeError("'" + str(count.__class__)+ "' object cannot be interpreted as an integer");}else if(isinstance(count,_b_.float)){throw _b_.TypeError("integer argument expected, got float");}}
-var res=self.valueOf();
-var pos=-1;
+var $=$B.args('replace',4,{self:null,old:null,$$new:null,count:null},['self','old','$$new','count'],arguments,{count:-1},null,null),count=$.count,self=$.self,old=$.old,_new=$.$$new
+if(!isinstance(count,[_b_.int,_b_.float])){throw _b_.TypeError("'" + $B.get_class(count).__name__ + 
+"' object cannot be interpreted as an integer");}else if(isinstance(count,_b_.float)){throw _b_.TypeError("integer argument expected, got float");}
+if(count==0){return self}
+if(count.__class__==$B.LongInt.$dict){count=parseInt(count.value)}
+if(old==''){if(_new==''){return self}
+if(self==''){return _new}
+var elts=self.split('')
+if(count>-1 && elts.length>=count){var rest=elts.slice(count).join('')
+return _new+elts.slice(0,count).join(_new)+rest}else{return _new+elts.join(_new)+_new}}else{var elts=$StringDict.split(self,old,count)}
+var res=self,pos=-1
+if(old.length==0){var res=_new
+for(var i=0;i<elts.length;i++){res +=elts[i]+_new}
+return res+rest}
 if(count < 0)count=res.length;
 while(count > 0){pos=res.indexOf(old,pos);
 if(pos < 0)
@@ -8321,16 +8343,17 @@ pos=pos + _new.length;
 count--;}
 return res;}
 $StringDict.rfind=function(self){
-var $ns=$B.args("$StringDict.find",4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:self.length},null,null)
-for(var attr in $ns){eval('var '+attr+'=$ns[attr]')}
-if(!isinstance(sub,str)){throw _b_.TypeError(
-"Can't convert '"+sub.__class__.__name__+"' object to str implicitly")}
-if(!isinstance(start,_b_.int)||!isinstance(end,_b_.int)){throw _b_.TypeError(
-"slice indices must be integers or None or have an __index__ method")}
-var s=self.substring(start,end)
-return self.lastIndexOf(sub)}
+var $=$B.args("rfind",4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:null},null,null)
+normalize_start_end($)
+if(!isinstance($.sub,str)){throw _b_.TypeError(
+"Can't convert '"+$B.get_class($.sub).__name__+"' object to str implicitly")}
+if($.sub.length==0){if($.start>$.self.length){return -1}
+else{return $.self.length}}
+var sublen=$.sub.length
+for(var i=$.end-sublen;i>=$.start;i--){if($.self.substr(i,sublen)==$.sub){return i}}
+return -1}
 $StringDict.rindex=function(){
-var res=$StringDict.rfind.apply(this,arguments)
+var res=$StringDict.rfind.apply(null,arguments)
 if(res==-1){throw _b_.ValueError("substring not found")}
 return res}
 $StringDict.rjust=function(self){var $ns=$B.args("$StringDict.rjust",3,{self:null,width:null,fillchar:null},['self','width','fillchar'],arguments,{fillchar:' '},null,null)
@@ -8342,32 +8365,21 @@ return}
 var pos=self.length-sep.length
 while(1){if(self.substr(pos,sep.length)==sep){return _b_.tuple([self.substr(0,pos),sep,self.substr(pos+sep.length)])}else{pos--
 if(pos<0){return _b_.tuple(['','',self])}}}}
-$StringDict.rsplit=function(self){var args=[],pos=0
-for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-var $ns=$B.args("$StringDict.rsplit",0,{},[],args,{},'args','kw')
-var sep=None,maxsplit=-1
-if($ns['args'].length>=1){sep=$ns['args'][0]}
-if($ns['args'].length==2){maxsplit=$ns['args'][1]}
-maxsplit=_b_.dict.$dict.get($ns['kw'],'maxsplit',maxsplit)
-var array=$StringDict.split(self,sep)
-if(array.length <=maxsplit ||maxsplit==-1)return array
-var s=[]
-s=array.splice(array.length - maxsplit,array.length)
-s.splice(0,0,array.join(sep))
-return s}
+$StringDict.rsplit=function(self){var $=$B.args("rsplit",3,{self:null,sep:null,maxsplit:null},['self','sep','maxsplit'],arguments,{sep:_b_.None,maxsplit:-1},null,null),sep=$.sep,maxsplit=$.maxsplit,self=$.self
+var rev_str=$.self.split('').reverse().join(''),rev_sep=sep===_b_.None ? sep : $.sep.split('').reverse().join(''),rev_res=$StringDict.split(rev_str,rev_sep,$.maxsplit)
+rev_res.reverse()
+for(var i=0;i<rev_res.length;i++){rev_res[i]=rev_res[i].split('').reverse().join('')}
+return rev_res}
 $StringDict.rstrip=function(self,x){if(x==undefined){var pattern="\\s*"}
 else{var pattern="["+x+"]*"}
 sp=new RegExp(pattern+'$')
 return str(self.replace(sp,""))}
-$StringDict.split=function(self){var args=[],pos=0
-for(var i=1,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-var $ns=$B.args("$StringDict.split",0,{},[],args,{},'args','kw')
-var sep=None,maxsplit=-1
-if($ns['args'].length>=1){sep=$ns['args'][0]}
-if($ns['args'].length==2){maxsplit=$ns['args'][1]}
-maxsplit=_b_.dict.$dict.get($ns['kw'],'maxsplit',maxsplit)
+$StringDict.split=function(){var args=[],pos=0
+var $=$B.args("split",3,{self:null,sep:null,maxsplit:null},['self','sep','maxsplit'],arguments,{sep:_b_.None,maxsplit:-1},null,null)
+var sep=$.sep,maxsplit=$.maxsplit,self=$.self
+if(maxsplit.__class__===$B.LongInt.$dict){maxsplit=parseInt(maxsplit.value)}
 if(sep=='')throw _b_.ValueError('empty separator')
-if(sep===None){var res=[]
+if(sep===_b_.None){var res=[]
 var pos=0
 while(pos<self.length&&self.charAt(pos).search(/\s/)>-1){pos++}
 if(pos===self.length-1){return[self]}
@@ -8381,27 +8393,16 @@ name=''}}
 pos++
 if(pos>self.length-1){if(name){res.push(name)}
 break}}
-return res}else{var esc_sep=''
-for(var i=0,_len_i=sep.length;i < _len_i;i++){switch(sep.charAt(i)){case '*':
-case '+':
-case '.':
-case '[':
-case ']':
-case '(':
-case ')':
-case '|':
-case '$':
-case '^':
-esc_sep +='\\'}
-esc_sep +=sep.charAt(i)}
-var re=new RegExp(esc_sep)
-if(maxsplit==-1){
-return self.valueOf().split(re,maxsplit)}
-var l=self.valueOf().split(re,-1)
-var a=l.slice(0,maxsplit)
-var b=l.slice(maxsplit,l.length)
-if(b.length > 0)a.push(b.join(sep))
-return a}}
+return res}else{var res=[],s='',pos=0,seplen=sep.length
+if(maxsplit==0){return[self]}
+while(pos<self.length){if(self.substr(pos,seplen)==sep){res.push(s)
+pos +=seplen
+if(maxsplit>-1 && res.length>=maxsplit){res.push(self.substr(pos))
+return res}
+s=''}else{s +=self.charAt(pos)
+pos++}}
+res.push(s)
+return res}}
 $StringDict.splitlines=function(self){return $StringDict.split(self,'\n')}
 $StringDict.startswith=function(self){
 var $ns=$B.args("$StringDict.startswith",4,{self:null,prefix:null,start:null,end:null},['self','prefix','start','end'],arguments,{start:0,end:self.length-1},null,null)
@@ -8424,7 +8425,8 @@ if(isinstance(table,_b_.dict)){for(var i=0,_len_i=self.length;i < _len_i;i++){va
 if(repl==-1){res[pos++]=self.charAt(i)}
 else if(repl!==None){res[pos++]=repl}}}
 return res.join('')}
-$StringDict.upper=function(self){return self.toUpperCase()}
+$StringDict.upper=function(){var $=$B.args('lower',1,{self:null},['self'],arguments,{},null,null)
+return $.self.toUpperCase()}
 $StringDict.zfill=function(self,width){if(width===undefined ||width <=self.length ||!self.isnumeric()){return self}
 return Array(width - self.length +1).join('0');}
 function str(arg){if(arg===undefined)return ''
