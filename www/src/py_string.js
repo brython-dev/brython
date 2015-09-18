@@ -1240,6 +1240,11 @@ $StringDict.replace = function(self, old, _new, count) {
     var $ = $B.args('replace', 4, {self:null,old:null,$$new:null,count:null},
         ['self','old','$$new','count'], arguments, {count:-1},null,null),
         count=$.count,self=$.self,old=$.old,_new=$.$$new
+    // Validate type of old
+    if (!isinstance(old,_b_.str)||!isinstance(_new,_b_.str)) {
+        throw _b_.TypeError("Can't convert '" + $B.get_class(old).__name__ + 
+            "' object to str implicitly");
+    }    
     // Validate instance type of 'count'
     if (!isinstance(count,[_b_.int,_b_.float])) {
         throw _b_.TypeError("'" + $B.get_class(count).__name__ + 
