@@ -478,4 +478,9 @@ if False: x+=2;x+=3
 for n in range(2): x+=1;x+=1
 assert x==4
 
+# issue 280
+for n in range(5):
+    pass
+assert n==4
+
 print('passed all tests')

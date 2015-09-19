@@ -61,7 +61,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-18 22:44:58.994873"
+__BRYTHON__.compiled_date="2015-09-19 18:49:52.388294"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1337,7 +1337,6 @@ var for_node=new $Node()
 new $NodeJSCtx(for_node,js)
 for_node.add($NodeJS('if($safe'+num+'){$next'+num+'+=1'+'}'))
 for_node.add($NodeJS('else{$next'+num+'=$B.add($next'+num+',1)}'))
-for_node.add($NodeJS(idt+' = $next'+num))
 for_node.add($NodeJS('if($safe'+num+' && $next'+num+'>= $stop_'+
 num+'){break}'))
 for_node.add($NodeJS('else if(!$safe'+num+
@@ -1867,6 +1866,9 @@ this.type='op'
 this.op=op
 this.parent=C.parent
 this.tree=[C]
+this.scope=$get_scope(this)
+if(C.type=="expr"){if(['int','float','str'].indexOf(C.tree[0].type)>-1){this.left_type=C.tree[0].type}else if(C.tree[0].type=="id"){var binding=$B.bound[this.scope.id][C.tree[0].value]
+if(binding){this.left_type=binding.type}}}
 C.parent.tree.pop()
 C.parent.tree.push(this)
 this.toString=function(){return '(op '+this.op+') ['+this.tree+']'}
@@ -1938,9 +1940,7 @@ return this.tree[0].to_js()+ '!==' + this.tree[1].to_js()
 case '*':
 case '+':
 case '-':
-var op=this.op
-var vars=[]
-var has_float_lit=false
+var op=this.op,vars=[],has_float_lit=false,scope=$get_scope(this)
 function is_simple(elt){if(elt.type=='expr' && elt.tree[0].type=='int'){return true}
 else if(elt.type=='expr' && elt.tree[0].type=='float'){has_float_lit=true
 return true}else if(elt.type=='expr' && elt.tree[0].type=='list_or_tuple'
@@ -1951,12 +1951,27 @@ if(vars.indexOf(_var)==-1){vars.push(_var)}
 return true}else if(elt.type=='op' &&['*','+','-'].indexOf(elt.op)>-1){for(var i=0;i<elt.tree.length;i++){if(!is_simple(elt.tree[i])){return false}}
 return true}
 return false}
+function get_type(ns,v){var t
+if(['int','float','str'].indexOf(v.type)>-1){t=v.type}else if(v.type=='id' && ns[v.value]){t=ns[v.value].type}
+return t}
 var e0=this.tree[0],e1=this.tree[1]
 if(is_simple(this)){var v0=this.tree[0].tree[0]
 var v1=this.tree[1].tree[0]
 if(vars.length==0 && !has_float_lit){
 return this.simple_js()}else if(vars.length==0){
-return 'new $B.$FloatClass('+this.simple_js()+')'}else{
+return 'new Number('+this.simple_js()+')'}else{
+var ns=$B.bound[scope.id],t0=get_type(ns,v0),t1=get_type(ns,v1)
+if((t0=='float' && t1=='float')||
+(this.op=='+' && t0=='str' && t1=='str')){this.result_type=t0
+return v0.to_js()+this.op+v1.to_js()}else if(['int','float'].indexOf(t0)>-1 &&
+['int','float'].indexOf(t1)>-1){if(t0=='int' && t1=='int'){this.result_type='int'}
+else{this.result_type='float'}
+switch(this.op){case '+':
+return '$B.add('+v0.to_js()+','+v1.to_js()+')'
+case '-':
+return '$B.sub('+v0.to_js()+','+v1.to_js()+')'
+case '*':
+return '$B.mul('+v0.to_js()+','+v1.to_js()+')'}}
 var tests=[],tests1=[],pos=0
 for(var i=0;i<vars.length;i++){
 tests[pos]='typeof '+vars[i]+'.valueOf() == "number"'
@@ -2511,6 +2526,9 @@ if(token==='eol')return $transition(C.parent,token)
 $_SyntaxError(C,token)
 case 'assign':
 if(token==='eol'){if(C.tree[1].type=='abstract_expr'){$_SyntaxError(C,'token '+token+' after '+C)}
+if(C.tree[0].type=="expr" && C.tree[0].tree[0].type=="id"){var var_name=C.tree[0].tree[0].value,scope=$get_scope(C)
+if($B.bound[scope.id][var_name]){var right=C.tree[1].tree[0]
+if(['int','str','float'].indexOf(right.type)>-1){$B.bound[scope.id][var_name]={type:right.type,value:right.to_js()}}else if(right.type=="id" && $B.bound[scope.id][right.value]){$B.bound[scope.id][var_name]=$B.bound[scope.id][right.value]}}}
 return $transition(C.parent,'eol')}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'attribute':
@@ -3318,6 +3336,10 @@ case '~':
 return new $UnaryCtx(C,arguments[2])}
 default:
 if(C.tree[C.tree.length-1].type=='abstract_expr'){$_SyntaxError(C,'token '+token+' after '+C)}}
+var t0=C.tree[0],t1=C.tree[1]
+if(t0.tree && t1.tree){t0=t0.tree[0]
+t1=t1.tree[0]
+console.log('end of op',C.op,t0,t1)}
 return $transition(C.parent,token)
 case 'packed':
 if(token==='id'){new $IdCtx(C,arguments[2]);return C.parent}

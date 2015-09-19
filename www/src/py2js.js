@@ -2554,7 +2554,6 @@ function $ForExpr(context){
             
             for_node.add($NodeJS('if($safe'+num+'){$next'+num+'+=1'+'}'))
             for_node.add($NodeJS('else{$next'+num+'=$B.add($next'+num+',1)}'))
-            for_node.add($NodeJS(idt+' = $next'+num))
             for_node.add($NodeJS('if($safe'+num+' && $next'+num+'>= $stop_'+
                 num+'){break}'))
             for_node.add($NodeJS('else if(!$safe'+num+
