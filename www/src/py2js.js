@@ -3685,6 +3685,17 @@ function $OpCtx(context,op){
     this.op = op
     this.parent = context.parent
     this.tree = [context]
+    this.scope = $get_scope(this)
+    
+    // Get type of left operand
+    if(context.type=="expr"){
+        if(['int','float','str'].indexOf(context.tree[0].type)>-1){
+            this.left_type = context.tree[0].type
+        }else if(context.tree[0].type=="id"){
+            var binding = $B.bound[this.scope.id][context.tree[0].value]
+            if(binding){this.left_type=binding.type}
+        }
+    }
     
     // operation replaces left operand
     context.parent.tree.pop()
@@ -3785,9 +3796,10 @@ function $OpCtx(context,op){
           case '*':
           case '+':
           case '-':
-            var op = this.op
-            var vars = []
-            var has_float_lit = false
+            var op = this.op,
+                vars = [],
+                has_float_lit = false,
+                scope = $get_scope(this)
             function is_simple(elt){
                 if(elt.type=='expr' && elt.tree[0].type=='int'){return true}
                 else if(elt.type=='expr' && elt.tree[0].type=='float'){
@@ -3810,6 +3822,15 @@ function $OpCtx(context,op){
                 }
                 return false
             }
+            function get_type(ns, v){
+                var t
+                if(['int','float','str'].indexOf(v.type)>-1){
+                    t = v.type
+                }else if(v.type=='id' && ns[v.value]){
+                    t = ns[v.value].type
+                }
+                return t
+            }
             var e0=this.tree[0],e1=this.tree[1]
             if(is_simple(this)){
                 var v0 = this.tree[0].tree[0]
@@ -3819,9 +3840,31 @@ function $OpCtx(context,op){
                     return this.simple_js()
                 }else if(vars.length==0){
                     // numeric literals with at least one float
-                    return 'new $B.$FloatClass('+this.simple_js()+')'
+                    return 'new Number('+this.simple_js()+')'
                 }else{
                     // at least one variable
+                    var ns = $B.bound[scope.id],
+                        t0 = get_type(ns, v0),
+                        t1 = get_type(ns, v1)
+                    // Static analysis told us the type of both ids
+                    if((t0=='float' && t1=='float') ||
+                          (this.op=='+' && t0=='str' && t1=='str')){
+                        this.result_type = t0
+                        return v0.to_js()+this.op+v1.to_js()
+                    }else if(['int','float'].indexOf(t0)>-1 &&
+                             ['int','float'].indexOf(t1)>-1){
+                        if(t0=='int' && t1=='int'){this.result_type='int'}
+                        else{this.result_type='float'}
+                        switch(this.op){
+                            case '+':
+                                return '$B.add('+v0.to_js()+','+v1.to_js()+')'
+                            case '-':
+                                return '$B.sub('+v0.to_js()+','+v1.to_js()+')'
+                            case '*':
+                                return '$B.mul('+v0.to_js()+','+v1.to_js()+')'
+                        }
+                    }
+                        
                     var tests = [], tests1=[], pos=0
                     for(var i=0;i<vars.length;i++){
                         // Test if all variables are numbers
@@ -4863,6 +4906,20 @@ function $transition(context,token){
         if(token==='eol'){
             if(context.tree[1].type=='abstract_expr'){
                 $_SyntaxError(context,'token '+token+' after '+context)
+            }
+            // If left is an id, update binding to the type of right operand
+            if(context.tree[0].type=="expr" && context.tree[0].tree[0].type=="id"){
+                var var_name = context.tree[0].tree[0].value,
+                    scope = $get_scope(context)
+                if($B.bound[scope.id][var_name]){
+                    var right = context.tree[1].tree[0]
+                    if(['int','str','float'].indexOf(right.type)>-1){
+                        $B.bound[scope.id][var_name]={type:right.type,
+                            value:right.to_js()}
+                    }else if(right.type=="id" && $B.bound[scope.id][right.value]){
+                        $B.bound[scope.id][var_name] = $B.bound[scope.id][right.value]
+                    }
+                }
             }
             return $transition(context.parent,'eol')
         }
@@ -6023,6 +6080,12 @@ function $transition(context,token){
               $_SyntaxError(context,'token '+token+' after '+context)
             }
         }// switch
+        var t0=context.tree[0], t1=context.tree[1]
+        if(t0.tree && t1.tree){
+            t0 = t0.tree[0]
+            t1 = t1.tree[0]
+            console.log('end of op', context.op,t0,t1)
+        }
         return $transition(context.parent,token)
       case 'packed':
         if(token==='id'){new $IdCtx(context,arguments[2]);return context.parent}
