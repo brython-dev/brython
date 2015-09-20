@@ -777,13 +777,34 @@ function issubclass(klass,classinfo){
     //throw _b_.TypeError("issubclass() arg 2 must be a class or tuple of classes")
 }
 
+// Utility class for iterators built from objects that have a __getitem__ and
+// __len__ method
+var iterator_class = $B.make_class({name:'iterator',
+    init:function(self,getitem,len){
+        self.getitem = getitem
+        self.len = len
+        self.counter = -1
+    }
+})
+iterator_class.$dict.__next__ = function(self){
+    self.counter++
+    if(self.counter==self.len){throw _b_.StopIteration('')}
+    try{return self.getitem(self.counter)}
+    catch(err){throw _b_.StopIteration('')}
+}
+
 function iter(obj){
     try{return getattr(obj,'__iter__')()}
     catch(err){
+        var gi = getattr(obj,'__getitem__',null),
+            ln = getattr(obj,'__len__',null)
+        if(gi!==null && ln!==null){
+          var len = getattr(ln,'__call__')()
+          return iterator_class(gi,len)
+      }
       throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not iterable")
     }
 }
-
 
 function len(obj){
     try{return getattr(obj,'__len__')()}
