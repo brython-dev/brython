@@ -61,7 +61,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-20 17:29:08.324252"
+__BRYTHON__.compiled_date="2015-09-20 21:55:31.167336"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4060,6 +4060,14 @@ function object(){return{__class__:$ObjectDict}}
 object.$dict=$ObjectDict
 $ObjectDict.$factory=object
 object.__repr__=object.__str__=function(){return "<class 'object'>"}
+$B.make_class=function(class_obj){
+function A(){var res={__class__:A.$dict}
+if(class_obj.init){class_obj.init.apply(null,[res].concat(Array.prototype.slice.call(arguments)))}
+return res}
+A.__class__=$B.$factory
+A.$dict={$factory: A,__class__: $B.type,__name__: class_obj.name}
+A.$dict.__mro__=[A.$dict,object.$dict]
+return A}
 return object})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 $B.$class_constructor=function(class_name,class_obj,parents,parents_names,kwargs){var cl_dict=_b_.dict(),bases=null
@@ -5089,8 +5097,18 @@ if(classinfo.__class__.is_class){if(klass.$dict.__mro__.indexOf(classinfo.$dict)
 var hook=getattr(classinfo,'__subclasscheck__',null)
 if(hook!==null){return hook(klass)}
 return false}
+var iterator_class=$B.make_class({name:'iterator',init:function(self,getitem,len){self.getitem=getitem
+self.len=len
+self.counter=-1}})
+iterator_class.$dict.__next__=function(self){self.counter++
+if(self.counter==self.len){throw _b_.StopIteration('')}
+try{return self.getitem(self.counter)}
+catch(err){throw _b_.StopIteration('')}}
 function iter(obj){try{return getattr(obj,'__iter__')()}
-catch(err){throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not iterable")}}
+catch(err){var gi=getattr(obj,'__getitem__',null),ln=getattr(obj,'__len__',null)
+if(gi!==null && ln!==null){var len=getattr(ln,'__call__')()
+return iterator_class(gi,len)}
+throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not iterable")}}
 function len(obj){try{return getattr(obj,'__len__')()}
 catch(err){throw _b_.TypeError("object of type '"+$B.get_class(obj).__name__+"' has no len()")}}
 function locals(){
@@ -7828,10 +7846,10 @@ if($.end===null||$.end===_b_.None){$.end=$.self.length}
 else if($.end<0){$.end +=$.self.length;$.end=Math.max(0,$.end)}
 if(!isinstance($.start,_b_.int)||!isinstance($.end,_b_.int)){throw _b_.TypeError(
 "slice indices must be integers or None or have an __index__ method")}}
-function norm_pos(pos,s,default_if_None){
-if(pos>=0){return pos}
-else if(pos===_b_.None||pos===null){return default_if_None}
-else{pos+=s.lengh;return Math.max(0,pos)}}
+function reverse(s){
+return s.split('').reverse().join('')}
+function check_str(obj){if(!_b_.isinstance(obj,str)){throw _b_.TypeError("can't convert '"+
+$B.get_class(obj).__name__+"' object to str implicitely")}}
 $StringDict.__add__=function(self,other){if(!(typeof other==="string")){try{return getattr(other,'__radd__')(self)}
 catch(err){throw _b_.TypeError(
 "Can't convert "+$B.get_class(other).__name__+" to str implicitely")}}
@@ -8090,7 +8108,8 @@ throw _b_.ValueError("incomplete format")}
 pos=newpos + 1}while(pos < length)
 return ret}
 $StringDict.__mro__=[$StringDict,$ObjectDict]
-$StringDict.__mul__=function(self,other){if(!isinstance(other,_b_.int)){throw _b_.TypeError(
+$StringDict.__mul__=function(self,other){var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],arguments,{},null,null)
+if(!isinstance(other,_b_.int)){throw _b_.TypeError(
 "Can't multiply sequence by non-int of type '"+
 $B.get_class(other).__name__+"'")}
 $res=''
@@ -8180,9 +8199,7 @@ pos++}
 return res}
 $StringDict.find=function(){
 var $=$B.args("$StringDict.find",4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:null},null,null)
-if(!isinstance($.sub,str)){throw _b_.TypeError(
-"Can't convert '"+$B.get_class($.sub).__name__+
-"' object to str implicitly")}
+check_str($.sub)
 normalize_start_end($)
 if(!isinstance($.start,_b_.int)||!isinstance($.end,_b_.int)){throw _b_.TypeError(
 "slice indices must be integers or None or have an __index__ method")}
@@ -8326,16 +8343,15 @@ pos++}
 return true}
 $StringDict.isupper=function(){var $=$B.args('isupper',1,{self:null},['self'],arguments,{},null,null)
 return $.self==$.self.toUpperCase()&& $.self.search(/^\s*$/)==-1}
-$StringDict.join=function(self,obj){var iterable=iter(obj)
-var res='',count=0
-while(1){try{var obj2=next(iterable)
+$StringDict.join=function(){var $=$B.args('join',2,{self:null,iterable:null},['self','iterable'],arguments,{},null,null)
+var iterable=_b_.iter($.iterable)
+var res=[],count=0
+while(1){try{var obj2=_b_.next(iterable)
 if(!isinstance(obj2,str)){throw _b_.TypeError(
 "sequence item "+count+": expected str instance, "+$B.get_class(obj2).__name__+" found")}
-res +=obj2+self
-count++}catch(err){if(err.__name__==='StopIteration'){break}
+res.push(obj2)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 else{throw err}}}
-if(count==0)return ''
-return res.substr(0,res.length-self.length)}
+return res.join($.self)}
 $StringDict.ljust=function(self){var $=$B.args('ljust',3,{self:null,width:null,fillchar:null},['self','width','fillchar'],arguments,{fillchar:' '},null,null)
 if($.width <=self.length)return self
 return self + $.fillchar.repeat($.width - self.length)}
@@ -8351,11 +8367,12 @@ _t[_ndx]=to.source[i]}
 var _d=dict()
 for(var i=0;i < 256;i++){_b_.dict.$dict.__setitem__(_d,i,_t[i])}
 return _d}
-$StringDict.partition=function(self,sep){if(sep===undefined){throw Error("sep argument is required");
-return}
-var i=self.indexOf(sep)
-if(i==-1)return _b_.tuple([self,'',''])
-return _b_.tuple([self.substring(0,i),sep,self.substring(i+sep.length)])}
+$StringDict.partition=function(){var $=$B.args('partition',2,{self:null,sep:null},['self','sep'],arguments,{},null,null)
+if($.sep==''){throw _b_.ValueError('empty separator')}
+check_str($.sep)
+var i=$.self.indexOf($.sep)
+if(i==-1)return _b_.tuple([$.self,'',''])
+return _b_.tuple([$.self.substring(0,i),$.sep,$.self.substring(i+$.sep.length)])}
 function $re_escape(str)
 {var specials="[.*+?|()$^"
 for(var i=0,_len_i=specials.length;i < _len_i;i++){var re=new RegExp('\\'+specials.charAt(i),'g')
@@ -8363,10 +8380,8 @@ str=str.replace(re,"\\"+specials.charAt(i))}
 return str}
 $StringDict.replace=function(self,old,_new,count){
 var $=$B.args('replace',4,{self:null,old:null,$$new:null,count:null},['self','old','$$new','count'],arguments,{count:-1},null,null),count=$.count,self=$.self,old=$.old,_new=$.$$new
-if(!isinstance(old,_b_.str)){throw _b_.TypeError("Can't convert '" + $B.get_class(old).__name__ + 
-"' object to str implicitly");}
-if(!isinstance(_new,_b_.str)){throw _b_.TypeError("Can't convert '" + $B.get_class(_new).__name__ + 
-"' object to str implicitly");}
+check_str(old)
+check_str(_new)
 if(!isinstance(count,[_b_.int,_b_.float])){throw _b_.TypeError("'" + $B.get_class(count).__name__ + 
 "' object cannot be interpreted as an integer");}else if(isinstance(count,_b_.float)){throw _b_.TypeError("integer argument expected, got float");}
 if(count==0){return self}
@@ -8391,8 +8406,7 @@ return res;}
 $StringDict.rfind=function(self){
 var $=$B.args("rfind",4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:null},null,null)
 normalize_start_end($)
-if(!isinstance($.sub,str)){throw _b_.TypeError(
-"Can't convert '"+$B.get_class($.sub).__name__+"' object to str implicitly")}
+check_str($.sub)
 if($.sub.length==0){if($.start>$.self.length){return -1}
 else{return $.self.length}}
 var sublen=$.sub.length
@@ -8405,15 +8419,16 @@ return res}
 $StringDict.rjust=function(self){var $=$B.args("rjust",3,{self:null,width:null,fillchar:null},['self','width','fillchar'],arguments,{fillchar:' '},null,null)
 if($.width <=self.length)return self
 return $.fillchar.repeat($.width - self.length)+ self}
-$StringDict.rpartition=function(self,sep){if(sep===undefined){throw Error("sep argument is required");
-return}
-var pos=self.length-sep.length
-while(1){if(self.substr(pos,sep.length)==sep){return _b_.tuple([self.substr(0,pos),sep,self.substr(pos+sep.length)])}else{pos--
-if(pos<0){return _b_.tuple(['','',self])}}}}
+$StringDict.rpartition=function(self,sep){var $=$B.args('rpartition',2,{self:null,sep:null},['self','sep'],arguments,{},null,null)
+check_str($.sep)
+var self=reverse($.self),sep=reverse($.sep)
+var items=$StringDict.partition(self,sep).reverse()
+for(var i=0;i<items.length;i++){items[i]=items[i].split('').reverse().join('')}
+return items}
 $StringDict.rsplit=function(self){var $=$B.args("rsplit",3,{self:null,sep:null,maxsplit:null},['self','sep','maxsplit'],arguments,{sep:_b_.None,maxsplit:-1},null,null),sep=$.sep,maxsplit=$.maxsplit,self=$.self
-var rev_str=$.self.split('').reverse().join(''),rev_sep=sep===_b_.None ? sep : $.sep.split('').reverse().join(''),rev_res=$StringDict.split(rev_str,rev_sep,$.maxsplit)
+var rev_str=reverse($.self),rev_sep=sep===_b_.None ? sep : reverse($.sep),rev_res=$StringDict.split(rev_str,rev_sep,$.maxsplit)
 rev_res.reverse()
-for(var i=0;i<rev_res.length;i++){rev_res[i]=rev_res[i].split('').reverse().join('')}
+for(var i=0;i<rev_res.length;i++){rev_res[i]=reverse(rev_res[i])}
 return rev_res}
 $StringDict.rstrip=function(self,x){var $=$B.args('rstrip',2,{self:null,chars:null},['self','chars'],arguments,{chars:_b_.None},null,null)
 if($.chars===_b_.None){return $.self.replace(/\s+$/,'')}
@@ -8447,23 +8462,44 @@ s=''}else{s +=self.charAt(pos)
 pos++}}
 res.push(s)
 return res}}
-$StringDict.splitlines=function(self){return $StringDict.split(self,'\n')}
-$StringDict.startswith=function(self){
-var $ns=$B.args("$StringDict.startswith",4,{self:null,prefix:null,start:null,end:null},['self','prefix','start','end'],arguments,{start:0,end:self.length-1},null,null)
-var prefixes=$ns['prefix']
+$StringDict.splitlines=function(self){var $=$B.args('splitlines',2,{self:null,keepends:null},['self','keepends'],arguments,{keepends:false},null,null)
+if(!_b_.isinstance($.keepends,[_b_.bool,_b_.int])){throw _b_.TypeError('integer argument expected, got '+
+$B.get_class($.keepends).__name)}
+var keepends=_b_.int($.keepends)
+if(keepends){var res=[],start=pos,pos=0,x,self=$.self
+while(pos<self.length){if(self.substr(pos,2)=='\r\n'){res.push(self.substring(start,pos+2))
+start=pos+2
+pos=start}else if(self.charAt(pos)=='\r' ||self.charAt(pos)=='\n'){res.push(self.substring(start,pos+1))
+start=pos+1
+pos=start}else{pos++}}
+var rest=self.substr(start)
+if(rest){res.push(rest)}
+return res}else{var self=$.self.replace(/[\r\n]$/,'')
+return self.split(/\n|\r\n|\r/)}}
+$StringDict.startswith=function(){
+var $=$B.args("startswith",4,{self:null,prefix:null,start:null,end:null},['self','prefix','start','end'],arguments,{start:0,end:null},null,null)
+normalize_start_end($)
+var prefixes=$.prefix
 if(!isinstance(prefixes,_b_.tuple)){prefixes=[prefixes]}
-var start=$ns['start']
-var end=$ns['end']
-var s=self.substr(start,end+1)
-for(var i=0,_len_i=prefixes.length;i < _len_i;i++){if(s.indexOf(prefixes[i])==0)return true}
+var s=$.self.substring($.start,$.end)
+for(var i=0,_len_i=prefixes.length;i < _len_i;i++){prefix=prefixes[i]
+if(!_b_.isinstance(prefix,str)){throw _b_.TypeError(
+"endswith first arg must be str or a tuple of str, not int")}
+if(s.substr(0,prefix.length)==prefix)return true}
 return false}
 $StringDict.strip=function(){var $=$B.args('strip',2,{self:null,chars:null},['self','chars'],arguments,{chars:_b_.None},null,null)
 return $StringDict.rstrip($StringDict.lstrip($.self,$.chars),$.chars)}
 $StringDict.swapcase=function(self){var $=$B.args('swapcase',1,{self:null},['self'],arguments,{},null,null)
 return $.self.replace(/([a-z])|([A-Z])/g,function($0,$1,$2)
 {return($1)? $0.toUpperCase(): $0.toLowerCase()})}
-$StringDict.title=function(self){
-return self.replace(/\w\S*/g,function(txt){return txt.charAt(0).toUpperCase()+ txt.substr(1).toLowerCase();});}
+$StringDict.title=function(self){var $=$B.args('title',1,{self:null},['self'],arguments,{},null,null)
+var res='',previous=false
+function is_cased(c){return c.toLowerCase()!=c.toUpperCase()}
+for(var i=0;i<$.self.length;i++){var char=$.self.charAt(i),cased=is_cased(char)
+if(!previous && cased){res +=char.toUpperCase()}else if(previous){res+=char.toLowerCase()}
+else{res+=char}
+previous=cased}
+return res}
 $StringDict.translate=function(self,table){var res=[],pos=0
 if(isinstance(table,_b_.dict)){for(var i=0,_len_i=self.length;i < _len_i;i++){var repl=_b_.dict.$dict.get(table,self.charCodeAt(i),-1)
 if(repl==-1){res[pos++]=self.charAt(i)}
