@@ -299,9 +299,7 @@ var trailing_dot = /\.$/
 
 var validate_precision = function(precision) {
     // force precision to limits of javascript
-    if (precision > 20) {
-        throw _b_.ValueError("precision too big")
-    }
+    if (precision > 20) { precision = 20 }
 }
 
 // gG
@@ -836,22 +834,26 @@ $StringDict.encode = function(self, encoding) {
     return _b_.bytes(self, encoding)
 }
 
-$StringDict.endswith = function(self){
+$StringDict.endswith = function(){
     // Return True if the string ends with the specified suffix, otherwise 
     // return False. suffix can also be a tuple of suffixes to look for. 
     // With optional start, test beginning at that position. With optional 
     // end, stop comparing at that position.
-    var $ns=$B.args("$StringDict.endswith",4,
+    var $=$B.args("endswith",4,
         {self:null, suffix:null, start:null, end:null}, 
         ['self', 'suffix', 'start', 'end'],
-        arguments,{start:0, end:self.length-1},null,null)
-    var suffixes = $ns['suffix']
+        arguments,{start:0, end:null},null,null)
+
+    normalize_start_end($)
+
+    var suffixes = $.suffix
     if(!isinstance(suffixes,_b_.tuple)){suffixes=[suffixes]}
-    var start = $ns['start'],
-        end = $ns['end']
-    var s = self.substr(start,end+1)
+    
+    var s = $.self.substring($.start,$.end)
     for(var i=0, _len_i = suffixes.length; i < _len_i;i++){
         suffix = suffixes[i]
+        if(!_b_.isinstance(suffix, str)){throw _b_.TypeError(
+            "endswith first arg must be str or a tuple of str, not int")}
         if(suffix.length<=s.length &&
             s.substr(s.length-suffix.length)==suffix) return true
     }
@@ -1091,73 +1093,122 @@ $StringDict.index = function(self){
     return res
 }
 
-$StringDict.isalnum = function(self) {return /^[a-z0-9]+$/i.test(self)}
+$StringDict.isalnum = function() {
+    var $=$B.args('isalnum',1,{self:null},['self'],arguments,{},null,null)
+    return /^[a-z0-9]+$/i.test($.self)
+}
 
-$StringDict.isalpha = function(self) {return /^[a-z]+$/i.test(self)}
+$StringDict.isalpha = function(self) {
+    var $=$B.args('isalpha',1,{self:null},['self'],arguments,{},null,null)
+    return /^[a-z]+$/i.test($.self)
+}
 
-$StringDict.isdecimal = function(self) {
+$StringDict.isdecimal = function(){
+    var $=$B.args('isdecimal',1,{self:null},['self'],arguments,{},null,null)
   // this is not 100% correct
-  return /^[0-9]+$/.test(self)
+  return /^[0-9]+$/.test($.self)
 }
 
-$StringDict.isdigit = function(self) { return /^[0-9]+$/.test(self)}
-
-$StringDict.isidentifier = function(self) {
-
-  switch(self) {
-    case 'False':
-    case 'None':
-    case 'True':
-    case 'and':
-    case 'as':
-    case 'assert':
-    case 'break':
-    case 'class':
-    case 'continue':
-    case 'def':
-    case 'del':
-    case 'elif':
-    case 'else':
-    case 'except':
-    case 'finally':
-    case 'for':
-    case 'from':
-    case 'global':
-    case 'if':
-    case 'import':
-    case 'in':
-    case 'is':
-    case 'lambda':
-    case 'nonlocal':
-    case 'not':
-    case 'or':
-    case 'pass':
-    case 'raise':
-    case 'return':
-    case 'try':
-    case 'while':
-    case 'with':
-    case 'yield':
-      return true
-  }
-
-  // fixme..  this isn't complete but should be a good start
-  return /^[a-z][0-9a-z_]+$/i.test(self)
+$StringDict.isdigit = function() {
+    var $=$B.args('isdigit',1,{self:null},['self'],arguments,{},null,null)
+    return /^[0-9]+$/.test($.self)
 }
 
-$StringDict.islower = function(self) {return self==self.toLowerCase()}
+$StringDict.isidentifier = function() {
+    var $=$B.args('isidentifier',1,{self:null},['self'],arguments,{},null,null)
+
+    switch($.self) {
+        case 'False':
+        case 'None':
+        case 'True':
+        case 'and':
+        case 'as':
+        case 'assert':
+        case 'break':
+        case 'class':
+        case 'continue':
+        case 'def':
+        case 'del':
+        case 'elif':
+        case 'else':
+        case 'except':
+        case 'finally':
+        case 'for':
+        case 'from':
+        case 'global':
+        case 'if':
+        case 'import':
+        case 'in':
+        case 'is':
+        case 'lambda':
+        case 'nonlocal':
+        case 'not':
+        case 'or':
+        case 'pass':
+        case 'raise':
+        case 'return':
+        case 'try':
+        case 'while':
+        case 'with':
+        case 'yield':
+          return true
+      }
+
+      // fixme..  this isn't complete but should be a good start
+      return /^[a-z][0-9a-z_]+$/i.test($.self)
+}
+
+$StringDict.islower = function() {
+    var $=$B.args('islower',1,{self:null},['self'],arguments,{},null,null)
+    // A string only made of whitespace is not lower for Python
+    return $.self==$.self.toLowerCase() && $.self.search(/^\s*$/)==-1
+}
 
 // not sure how to handle unicode variables
-$StringDict.isnumeric = function(self) {return /^[0-9]+$/.test(self)}
+$StringDict.isnumeric = function() {
+    var $=$B.args('isnumeric',1,{self:null},['self'],arguments,{},null,null)
+    return /^[0-9]+$/.test($.self)
+}
 
 // inspired by http://www.codingforums.com/archive/index.php/t-17925.html
-$StringDict.isprintable = function(self) {return !/[^ -~]/.test(self)}
+$StringDict.isprintable = function() {
+    var $=$B.args('isprintable',1,{self:null},['self'],arguments,{},null,null)
+    return !/[^ -~]/.test($.self)
+}
 
-$StringDict.isspace = function(self) {return /^\s+$/i.test(self)}
+$StringDict.isspace = function() {
+    var $=$B.args('isspace',1,{self:null},['self'],arguments,{},null,null)
+    return /^\s+$/i.test($.self)
+}
 
-$StringDict.istitle = function(self) {return /^([A-Z][a-z]+)(\s[A-Z][a-z]+)$/i.test(self)}
+$StringDict.istitle = function() {
+    var $=$B.args('istitle',1,{self:null},['self'],arguments,{},null,null)
+    if($.self.search(/^\s*$/)>-1){return false}
+    
+    function get_case(char){
+        if(char.toLowerCase()==char.toUpperCase()){return false}
+        else if(char==char.toLowerCase()){return 'lower'}
+        else{return 'upper'}
+    }
+    var pos=0,char,previous=false
+    while(pos<$.self.length){
+        char = $.self.charAt(pos)
+        if(previous===undefined){previous=get_case(char)}
+        else{
+            _case = get_case(char)
+            if(_case=='upper' && previous){return false}
+            else if(_case=='lower' && !previous){return false}
+            previous=_case
+        }
+        pos++
+    }
+    return true
+}
 
-$StringDict.isupper = function(self) {return self==self.toUpperCase()}
+$StringDict.isupper = function() {
+    var $=$B.args('isupper',1,{self:null},['self'],arguments,{},null,null)
+    return $.self==$.self.toUpperCase() && $.self.search(/^\s*$/)==-1
+}
 
 $StringDict.join = function(self,obj){
     var iterable=iter(obj)

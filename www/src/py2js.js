@@ -6083,7 +6083,6 @@ function $transition(context,token){
         if(t0.tree && t1.tree){
             t0 = t0.tree[0]
             t1 = t1.tree[0]
-            console.log('end of op', context.op,t0,t1)
         }
         return $transition(context.parent,token)
       case 'packed':
