@@ -28,6 +28,9 @@ $B.path = [$path+'Lib', $path+'libs', $script_dir, $path+'Lib/site-packages']
 // __BRYTHON__.bound[scope.id]
 $B.bound = {}
 
+// Information on the type of a variable by lexical analysis
+$B.type = {}
+
 // for the time being, a flag will be used to know if we should 
 // enable async functionality.
 $B.async_enabled=false

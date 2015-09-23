@@ -472,6 +472,28 @@ function $AssignCtx(context, check_unbound){
         }
     }//if
     
+    this.guess_type = function(){
+        //console.log('guess type,', this.tree[0],this.tree[1])
+        if(this.tree[0].type=="expr" && this.tree[0].tree[0].type=="id"){
+            var var_name = this.tree[0].tree[0].value,
+                scope = $get_scope(this)
+            if($B.bound[scope.id][var_name]){
+                var right = this.tree[1].tree[0]
+                if(['int','str','float'].indexOf(right.type)>-1){
+                    $B.bound[scope.id][var_name]={type:right.type,
+                        value:right.to_js()}
+                }else if(right.type=="id" && $B.bound[scope.id][right.value]){
+                    $B.bound[scope.id][var_name] = $B.bound[scope.id][right.value]
+                }
+            }
+        }else if(this.tree[0].type=='assign'){
+            var right = this.tree[0].tree[1].tree[0]
+            this.tree[0].guess_type()
+        }else{
+            //console.log(this.tree[0])
+        }
+    }
+    
     this.toString = function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
     
     this.transform = function(node,rank){
@@ -1819,6 +1841,7 @@ function $DefCtx(context){
         $B.modules[this.id] = this.parent.node
         
         $B.bound[this.id] = {}
+        $B.type[this.id] = {}
         
         // If function is defined inside another function, add the name
         // to local names
@@ -4907,19 +4930,7 @@ function $transition(context,token){
                 $_SyntaxError(context,'token '+token+' after '+context)
             }
             // If left is an id, update binding to the type of right operand
-            if(context.tree[0].type=="expr" && context.tree[0].tree[0].type=="id"){
-                var var_name = context.tree[0].tree[0].value,
-                    scope = $get_scope(context)
-                if($B.bound[scope.id][var_name]){
-                    var right = context.tree[1].tree[0]
-                    if(['int','str','float'].indexOf(right.type)>-1){
-                        $B.bound[scope.id][var_name]={type:right.type,
-                            value:right.to_js()}
-                    }else if(right.type=="id" && $B.bound[scope.id][right.value]){
-                        $B.bound[scope.id][var_name] = $B.bound[scope.id][right.value]
-                    }
-                }
-            }
+            context.guess_type()
             return $transition(context.parent,'eol')
         }
         $_SyntaxError(context,'token '+token+' after '+context)
@@ -6874,6 +6885,8 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     $B.bound[module]['__doc__'] = true
     $B.bound[module]['__name__'] = true
     $B.bound[module]['__file__'] = true
+
+    $B.type[module] = $B.type[module] || {}
 
     $B.$py_src[locals_id]=src
     var root = $tokenize(src,module,locals_id,parent_block_id,line_info)
