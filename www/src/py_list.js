@@ -326,6 +326,9 @@ $ListDict.clear = function(self){ while(self.length){self.pop()};return $N}
 $ListDict.copy = function(self){return self.slice(0,self.length)}
 
 $ListDict.count = function(self,elt){
+    var l = arguments.length - 1
+    if(l!=1){throw _b_.TypeError(
+        "count() takes exactly one argument ("+l+" given)")}
     var res = 0
     _eq=getattr(elt, '__eq__')
     var i=self.length
@@ -334,8 +337,9 @@ $ListDict.count = function(self,elt){
 }
 
 $ListDict.extend = function(self,other){
-    if(arguments.length!=2){throw _b_.TypeError(
-        "extend() takes exactly one argument ("+arguments.length+" given)")}
+    var l = arguments.length - 1
+    if(l!=1){throw _b_.TypeError(
+        "extend() takes exactly one argument ("+l+" given)")}
     other = iter(other)
     var pos=self.length
     while(1){
