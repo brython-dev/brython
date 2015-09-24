@@ -136,11 +136,17 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
     }else if(klass===$B.$FunctionDict){
         // Transform arguments
         return function(){
-            var args = []
-            for(var i=0;i<arguments.length;i++){
-                args.push(jsobj2pyobj(arguments[i]))
+            try{
+                var args = []
+                for(var i=0;i<arguments.length;i++){
+                    args.push(jsobj2pyobj(arguments[i]))
+                }
+                return pyobj.apply(null, args)
+            }catch(err){
+                console.log(_b_.getattr(err,'info'))
+                console.log(err.__name__+':', err.args[0])
+                throw err
             }
-            return pyobj.apply(null, args)
         }
 
     }else{
