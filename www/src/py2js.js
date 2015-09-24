@@ -475,6 +475,8 @@ function $AssignCtx(context, check_unbound){
     this.guess_type = function(){
         //console.log('guess type,', this.tree[0],this.tree[1])
         if(this.tree[0].type=="expr" && this.tree[0].tree[0].type=="id"){
+            $set_type(scope.id,this.tree[0],this.tree[1])
+            /*
             var var_name = this.tree[0].tree[0].value,
                 scope = $get_scope(this)
             if($B.bound[scope.id][var_name]){
@@ -486,8 +488,11 @@ function $AssignCtx(context, check_unbound){
                     $B.bound[scope.id][var_name] = $B.bound[scope.id][right.value]
                 }
             }
+            */
         }else if(this.tree[0].type=='assign'){
+            var left = this.tree[0].tree[0].tree[0]
             var right = this.tree[0].tree[1].tree[0]
+            $set_type(scope.id, right, this.tree[1].tree[0])
             this.tree[0].guess_type()
         }else{
             //console.log(this.tree[0])
@@ -1358,6 +1363,7 @@ function $ClassCtx(context){
         this.name = name
         this.id = context.node.module+'_'+name+'_'+this.random
         $B.bound[this.id] = {}
+        $B.type[this.id] = {}
         if ($B.async_enabled) $B.block[this.id] = {}
         $B.modules[this.id] = this.parent.node
         this.parent.node.id = this.id
@@ -1375,6 +1381,7 @@ function $ClassCtx(context){
         
         // bind name
         $B.bound[this.scope.id][name] = this
+        $B.type[this.scope.id][name] = 'class'
 
         // if function is defined inside another function, add the name
         // to local names
@@ -1843,9 +1850,15 @@ function $DefCtx(context){
         $B.bound[this.id] = {}
         $B.type[this.id] = {}
         
+        $B.bound[this.scope.id][name]=this
+        try{
+            $B.type[this.scope.id][name]='function'
+        }catch(err){
+            console.log(err, this.scope.id)
+        }
+        
         // If function is defined inside another function, add the name
         // to local names
-        $B.bound[this.scope.id][name]=this
         id_ctx.bound = true
         if(scope.is_function){
             if(scope.context.tree[0].locals.indexOf(name)==-1){
@@ -2405,12 +2418,18 @@ function $ExceptCtx(context){
     context.tree[context.tree.length]=this
     this.tree = []
     this.expect = 'id'
+    this.scope = $get_scope(this)
 
     this.toString = function(){return '(except) '}
 
     this.set_alias = function(alias){
         this.tree[0].alias = alias
-        $B.bound[$get_scope(this).id][alias] = true
+        $B.bound[this.scope.id][alias] = true
+        try{
+            $B.type[this.scope.id][alias] = 'exception'
+        }catch(err){
+            console.log(err,this.scope.id)
+        }
     }
     
     this.to_js = function(){
@@ -2777,6 +2796,7 @@ function $FromCtx(context){
         for(var i=0;i<this.names.length;i++){
             var name = this.aliases[this.names[i]] || this.names[i]
             $B.bound[scope.id][name] = true
+            $B.type[scope.id][name] = false // impossible to know...
         }
     }
     
@@ -2874,6 +2894,7 @@ function $FuncArgIdCtx(context,name){
         $_SyntaxError(context,["duplicate argument '"+name+"' in function definition"])
     }
     $B.bound[node.id][name] = 'arg'
+    $B.type[node.id][name] = false
 
     this.tree = []
     context.tree[context.tree.length]=this
@@ -2919,6 +2940,7 @@ function $FuncStarArgCtx(context,op){
             $_SyntaxError(context,["duplicate argument '"+name+"' in function definition"])
         }
         $B.bound[this.node.id][name] = 'arg'
+        $B.type[this.node.id][name] = false
 
         // add to locals of function
         var ctx = context
@@ -3032,6 +3054,7 @@ function $IdCtx(context,value){
         // An id defined as a target in a "for" loop, or as "packed" 
         // (eg "a, *b = [1, 2, 3]") is bound
         $B.bound[scope.id][value]=true
+        $B.type[scope.id][value] = false // can be improved !
         this.bound = true
     }
 
@@ -3118,6 +3141,7 @@ function $IdCtx(context,value){
         // Build the list of scopes where the variable name is bound
         while(1){
             if($B.bound[scope.id]===undefined){console.log('name '+val+' undef '+scope.id)}
+            if($B.type[scope.id]===undefined){console.log('name '+val+' type undef '+scope.id)}
             if($B._globals[scope.id]!==undefined &&
                 $B._globals[scope.id][val]!==undefined){
                 found = [gs]
@@ -3277,13 +3301,17 @@ function $ImportCtx(context){
         var scope = $get_scope(this)
         for(var i=0;i<this.tree.length;i++){
             if(this.tree[i].name==this.tree[i].alias){
-                var name = this.tree[i].name
-                var parts = name.split('.')
-                if(parts.length==1){$B.bound[scope.id][name]=true}
-                else{$B.bound[scope.id][parts[0]]=true}
+                var name = this.tree[i].name,
+                    parts = name.split('.'),
+                    bound = name
+                if(parts.length>1){
+                    bound = parts[0]
+                }
             }else{
-                $B.bound[scope.id][this.tree[i].alias] = true
+                bound = this.tree[i].alias
             }
+            $B.bound[scope.id][bound] = true
+            $B.type[scope.id][bound] = 'module'
         }
     }
     
@@ -3595,6 +3623,7 @@ function $NodeCtx(node){
     if(scope==null){
         scope = tree_node.parent || tree_node // module
     }
+    this.node.locals = clone($B.type[scope.id])
             
     this.toString = function(){return 'node '+this.tree}
 
@@ -4001,13 +4030,13 @@ function $RaiseCtx(context){
 
     this.to_js = function(){
         this.js_processed=true
-        var res = ';$B.leave_frame();'
-        if(this.tree.length===0) return res+'$B.$raise()'
+        var res = ''
+        if(this.tree.length===0) return '$B.$raise()'
         var exc = this.tree[0], exc_js = exc.to_js()
         
         if(exc.type==='id' ||
             (exc.type==='expr' && exc.tree[0].type==='id')){
-            res += 'if(isinstance('+exc_js+',type)){throw '+exc_js+'()}'
+            res = 'if(isinstance('+exc_js+',type)){throw '+exc_js+'()}'
             return res + 'else{throw '+exc_js+'}'
         }
         // if raise had a 'from' clause, ignore it
@@ -4406,6 +4435,7 @@ function $WithCtx(context){
     this.set_alias = function(arg){
         this.tree[this.tree.length-1].alias = arg
         $B.bound[this.scope.id][arg] = true
+        $B.type[this.scope.id][arg] = false
         if(this.scope.ntype !== 'module'){
             // add to function local names
             this.scope.context.tree[0].locals.push(arg)
@@ -4797,6 +4827,30 @@ function $get_node(context){
     var ctx = context
     while(ctx.parent){ctx=ctx.parent}
     return ctx.node
+}
+
+function $set_type(scope_id, expr, value){
+    // If expr is an id, set its type if we can extract something from value
+    if(expr.type=='expr'){expr=expr.tree[0]}
+    if(value.type=='expr'){value=value.tree[0]}
+    if($B.type[scope_id]===undefined){return}
+    if(expr.type=="id"){
+        switch(value.type){
+            case 'int':
+            case 'str':
+                $B.type[scope_id][expr.value] = value.type
+                return
+            case 'list_or_tuple':
+            case 'dict_or_set':
+                $B.type[scope_id][expr.value] = value.real
+                return
+            case 'id':
+                $B.type[scope_id][expr.value] = $B.type[scope_id][value.value]
+                return
+                
+        }
+    }
+    $B.type[scope_id][expr.value] = false
 }
 
 function $ws(n){
@@ -6887,6 +6941,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     $B.bound[module]['__file__'] = true
 
     $B.type[module] = $B.type[module] || {}
+    $B.type[locals_id] = $B.type[locals_id] || {}
 
     $B.$py_src[locals_id]=src
     var root = $tokenize(src,module,locals_id,parent_block_id,line_info)
