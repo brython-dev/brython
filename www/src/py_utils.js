@@ -346,8 +346,10 @@ $B.$lambda = function(env,args,body){
 
 $B.$search = function(name, global_ns){
     var res = global_ns[name]
-    //if(res===undefined){console.log('no '+name+' in global ns '+$B.keys(global_ns))}
-    return res !== undefined ? res : $B.$NameError(name)
+    if(res===undefined){
+        throw _b_.NameError(name)
+    }
+    return res
 }
 
 // transform native JS types into Brython types
