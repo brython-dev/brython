@@ -486,4 +486,7 @@ assert n==4
 # issue 294
 assert int.from_bytes(bytes=b'some_bytes',byteorder='big') == 545127616933790290830707
 
+# issue 296
+assert [4,0,4].index(4,1) == 2
+
 print('passed all tests')

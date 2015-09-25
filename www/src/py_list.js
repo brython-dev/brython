@@ -352,12 +352,16 @@ $ListDict.extend = function(self,other){
     return $N
 }
 
-$ListDict.index = function(self,elt){
-    var _eq = getattr(elt, '__eq__')
-    for(var i=0, _len_i = self.length; i < _len_i;i++){
-        if(_eq(self[i])) return i
+$ListDict.index = function(){
+    var $ = $B.args('index',4,{self:null,x:null,i:null,j:null},
+        ['self','x','i','j'],arguments,{i:0,j:null},null,null)
+        
+    var _eq = getattr($.x, '__eq__')
+    if($.j===null){$.j=$.self.length}
+    for(var i=$.i; i < $.j;i++){
+        if(_eq($.self[i])) return i
     }
-    throw _b_.ValueError(_b_.str(elt)+" is not in list")
+    throw _b_.ValueError(_b_.str($.x)+" is not in list")
 }
 
 $ListDict.insert = function(self,i,item){self.splice(i,0,item);return $N}
