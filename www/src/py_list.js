@@ -84,10 +84,7 @@ $ListDict.__delitem__ = function(self,arg){
 }
 
 $ListDict.__eq__ = function(self,other){
-    // compare object "self" to class "list"
-    if(other===undefined) return self===list
-
-    if($B.get_class(other)===$B.get_class(self)){
+    if(isinstance(other, $B.get_class(self).$factory)){
        if(other.length==self.length){
             var i=self.length
             while(i--) {
@@ -95,16 +92,6 @@ $ListDict.__eq__ = function(self,other){
             }
             return true
        }
-    }
-
-    if (isinstance(other, [_b_.set, _b_.tuple, _b_.list])) {
-       if (self.length != getattr(other, '__len__')()) return false
-
-       var i=self.length
-       while(i--) {
-          if (!getattr(other, '__contains__')(self[i])) return false
-       }
-       return true
     }
     return false
 }
@@ -245,9 +232,10 @@ $ListDict.__mro__ = [$ListDict,$ObjectDict]
 $ListDict.__mul__ = function(self,other){
     if(isinstance(other,_b_.int)) {  //this should be faster..
        var res=[],
-           $temp = self.slice(0,self.length), 
+           $temp = self.slice(), 
            len=$temp.length
        for(var i=0;i<other;i++){for(var j=0;j<len;j++){res.push($temp[j])}}
+       res.__class__ = self.__class__
        return res
     }
     
@@ -275,6 +263,9 @@ $ListDict.__repr__ = function(self){
 }
 
 $ListDict.__setitem__ = function(self,arg,value){
+    if(isinstance(self,tuple)){
+        throw _b_.TypeError("'tuple' object does not support item assignment")
+    }
     if(isinstance(arg,_b_.int)){
         var pos = arg
         if(arg<0) pos=self.length+pos

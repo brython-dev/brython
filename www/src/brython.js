@@ -62,7 +62,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-25 20:53:15.466627"
+__BRYTHON__.compiled_date="2015-09-25 21:29:51.313222"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -377,7 +377,7 @@ if(left.type==='sub'){
 var seq=left.value.to_js(),temp='$temp'+$loop_num
 $loop_num++
 var res='var '+temp+'='+seq+'\n'+
-'if(Array.isArray('+temp+')){'
+'if(Array.isArray('+temp+') && !'+temp+'.__class__){'
 if(left.tree.length==1){res +='$B.set_list_key('+temp+','+
 (left.tree[0].to_js()+''||'null')+','+
 right.to_js()+')'}else if(left.tree.length==2){res +='$B.set_list_slice('+temp+','+
@@ -4962,7 +4962,7 @@ for(var attr in obj){if(attr.charAt(0)!=='$' && attr!=='__class__'){res[pos++]=a
 res.sort()
 return res}
 function divmod(x,y){var klass=$B.get_class(x)
-return[klass.__floordiv__(x,y),klass.__mod__(x,y)]}
+return _b_.tuple([klass.__floordiv__(x,y),klass.__mod__(x,y)])}
 var $EnumerateDict={__class__:$B.$type,__name__:'enumerate'}
 $EnumerateDict.__mro__=[$EnumerateDict,$ObjectDict]
 function enumerate(){var $ns=$B.args("enumerate",2,{iterable:null,start:null},['iterable','start'],arguments,{start:0},null,null)
@@ -7668,15 +7668,9 @@ return $N}
 if(hasattr(arg,'__int__')||hasattr(arg,'__index__')){$ListDict.__delitem__(self,_b_.int(arg))
 return $N}
 throw _b_.TypeError('list indices must be integer, not '+_b_.str(arg.__class__))}
-$ListDict.__eq__=function(self,other){
-if(other===undefined)return self===list
-if($B.get_class(other)===$B.get_class(self)){if(other.length==self.length){var i=self.length
+$ListDict.__eq__=function(self,other){if(isinstance(other,$B.get_class(self).$factory)){if(other.length==self.length){var i=self.length
 while(i--){if(!getattr(self[i],'__eq__')(other[i]))return false}
 return true}}
-if(isinstance(other,[_b_.set,_b_.tuple,_b_.list])){if(self.length !=getattr(other,'__len__')())return false
-var i=self.length
-while(i--){if(!getattr(other,'__contains__')(self[i]))return false}
-return true}
 return false}
 $ListDict.__getitem__=function(self,arg){if(isinstance(arg,_b_.int)){var items=self.valueOf()
 var pos=arg
@@ -7740,8 +7734,9 @@ $ListDict.__len__=function(self){return self.length}
 $ListDict.__lt__=function(self,other){return !$ListDict.__ge__(self,other)}
 $ListDict.__mro__=[$ListDict,$ObjectDict]
 $ListDict.__mul__=function(self,other){if(isinstance(other,_b_.int)){
-var res=[],$temp=self.slice(0,self.length),len=$temp.length
+var res=[],$temp=self.slice(),len=$temp.length
 for(var i=0;i<other;i++){for(var j=0;j<len;j++){res.push($temp[j])}}
+res.__class__=self.__class__
 return res}
 if(hasattr(other,'__int__')||hasattr(other,'__index__')){return $ListDict.__mul__(self,_b_.int(other))}
 throw _b_.TypeError("can't multiply sequence by non-int of type '"+
@@ -7752,7 +7747,8 @@ var _r=self.map(_b_.repr)
 if(self.__class__===$TupleDict){if(self.length==1){return '('+_r[0]+',)'}
 return '('+_r.join(', ')+')'}
 return '['+_r.join(', ')+']'}
-$ListDict.__setitem__=function(self,arg,value){if(isinstance(arg,_b_.int)){var pos=arg
+$ListDict.__setitem__=function(self,arg,value){if(isinstance(self,tuple)){throw _b_.TypeError("'tuple' object does not support item assignment")}
+if(isinstance(arg,_b_.int)){var pos=arg
 if(arg<0)pos=self.length+pos
 if(pos>=0 && pos<self.length){self[pos]=value}
 else{throw _b_.IndexError('list index out of range')}

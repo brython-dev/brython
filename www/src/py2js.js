@@ -709,7 +709,7 @@ function $AssignCtx(context, check_unbound){
               var seq = left.value.to_js(), temp='$temp'+$loop_num
               $loop_num++
               var res = 'var '+temp+'='+seq+'\n'+
-                  'if(Array.isArray('+temp+')){'
+                  'if(Array.isArray('+temp+') && !'+temp+'.__class__){'
               if(left.tree.length==1){
                   res += '$B.set_list_key('+temp+','+
                       (left.tree[0].to_js()+''||'null')+','+

@@ -489,4 +489,13 @@ assert int.from_bytes(bytes=b'some_bytes',byteorder='big') == 545127616933790290
 # issue 296
 assert [4,0,4].index(4,1) == 2
 
+#issue 297
+assert type((1,)*2) == tuple
+
+t = 1,2
+try:
+    t[0]=1
+except TypeError:
+    pass
+
 print('passed all tests')

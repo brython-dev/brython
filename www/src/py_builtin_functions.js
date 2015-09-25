@@ -239,7 +239,7 @@ function dir(obj){
 //divmod() (built in function)
 function divmod(x,y) {
    var klass = $B.get_class(x)
-   return [klass.__floordiv__(x,y), klass.__mod__(x,y)]
+   return _b_.tuple([klass.__floordiv__(x,y), klass.__mod__(x,y)])
 }
 
 var $EnumerateDict = {__class__:$B.$type,__name__:'enumerate'}
