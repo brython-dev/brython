@@ -262,7 +262,10 @@ $ListDict.__repr__ = function(self){
     return '['+_r.join(', ')+']'
 }
 
-$ListDict.__setitem__ = function(self,arg,value){
+$ListDict.__setitem__ = function(){
+    var $=$B.args('__setitem__',3,{self:null,key:null,value},
+        ['self','key','value'],arguments,{},null,null),
+        self=$.self, arg=$.key, value=$.value
     if(isinstance(self,tuple)){
         throw _b_.TypeError("'tuple' object does not support item assignment")
     }
@@ -274,9 +277,13 @@ $ListDict.__setitem__ = function(self,arg,value){
         return $N
     }
     if(isinstance(arg,slice)){
-        var start = arg.start===None ? 0 : arg.start
-        var stop = arg.stop===None ? self.length : arg.stop
-        var step = arg.step===None ? 1 : arg.step
+        var start = arg.start===None ? null : arg.start
+        var stop = arg.stop===None ? null : arg.stop
+        var step = arg.step===None ? null : arg.step
+        if(step===null){$B.set_list_slice(self,start,stop,value)}
+        else{$B.set_list_slice_step(self,start,stop,step,value)}
+        return $N
+        /*
         if(start<0) start=self.length+start
         if(stop<0) stop=self.length+stop
         self.splice(start,stop-start)
@@ -285,14 +292,19 @@ $ListDict.__setitem__ = function(self,arg,value){
         var $temp
         if(Array.isArray(value)){$temp = Array.prototype.slice.call(value)}
         else if(hasattr(value,'__iter__')){$temp = list(value)}
-        if($temp!==undefined){
-            for(var i=$temp.length-1;i>=0;i--){
-                self.splice(start,0,$temp[i])
+        
+        if(step==1){
+            if($temp!==undefined){
+                for(var i=$temp.length-1;i>=0;i--){
+                    self.splice(start,0,$temp[i])
+                }
+                return $N
             }
-            return $N
+        }else{
+        
         }
-
         throw _b_.TypeError("can only assign an iterable")
+        */
     }
 
     if (hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
@@ -310,20 +322,33 @@ $B.make_rmethods($ListDict)
 
 var _ops=['add', 'sub']
 
-$ListDict.append = function(self,other){self[self.length]=other;return $N}
+$ListDict.append = function(){
+    var $=$B.args('append',2,{self:null,x:null},['self','x'],
+        arguments,{},null,null)
+    $.self[$.self.length]=$.x
+    return $N
+}
 
-$ListDict.clear = function(self){ while(self.length){self.pop()};return $N}
+$ListDict.clear = function(){
+    var $=$B.args('clear',1,{self:null},['self'],
+        arguments,{},null,null)
+    while($.self.length){$.self.pop()}
+    return $N
+}
 
-$ListDict.copy = function(self){return self.slice(0,self.length)}
+$ListDict.copy = function(){
+    var $=$B.args('copy',1,{self:null},['self'],
+        arguments,{},null,null)
+    return $.self.slice()
+}
 
-$ListDict.count = function(self,elt){
-    var l = arguments.length - 1
-    if(l!=1){throw _b_.TypeError(
-        "count() takes exactly one argument ("+l+" given)")}
+$ListDict.count = function(){
+    var $=$B.args('count',2,{self:null,x:null},['self','x'],
+        arguments,{},null,null)
     var res = 0
-    _eq=getattr(elt, '__eq__')
-    var i=self.length
-    while (i--) if (_eq(self[i])) res++
+    _eq=getattr($.x, '__eq__')
+    var i=$.self.length
+    while (i--) if (_eq($.self[i])) res++
     return res
 }
 
@@ -488,11 +513,11 @@ $ListDict.sort = function(self){
 $B.set_func_names($ListDict)
 
 // constructor for built-in type 'list'
-function list(obj){
-    if(arguments.length===0) return []
-    if(arguments.length>1){
-        throw _b_.TypeError("list() takes at most 1 argument ("+arguments.length+" given)")
-    }
+function list(){
+    var $=$B.args('list',1,{obj:null},['obj'],arguments,{obj:null},null,null),
+        obj = $.obj
+    if(obj===null) return []
+
     if(Array.isArray(obj)){ // most simple case
         obj = obj.slice() // list(t) is not t
         obj.__brython__ = true;
@@ -503,13 +528,14 @@ function list(obj){
         }
         return obj
     }
-    var res = [], pos=0
-    var arg = iter(obj)
-    var next_func = getattr(arg,'__next__')
+    var res = [], 
+        pos=0, 
+        arg = iter(obj),
+        next_func = getattr(arg,'__next__')
     while(1){
         try{res[pos++]=next_func()}
         catch(err){
-            if(err.__name__!='StopIteration'){throw err}
+            if(!isinstance(err, _b_.StopIteration)){throw err}
             break
         }
     }

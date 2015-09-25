@@ -6,10 +6,11 @@ import sys
 import os
 from functools import cmp_to_key
 
-from test import support, seq_tests
+import unittest
+from test import support
 
 
-class CommonTest(seq_tests.CommonTest):
+class CommonTest(unittest.TestCase):
 
     def test_init(self):
         # Iterable arg is optional
@@ -513,7 +514,7 @@ class CommonTest(seq_tests.CommonTest):
         self.assertEqual(u, list("ham"))
 
     def test_iadd(self):
-        super().test_iadd()
+        #super().test_iadd()
         u = self.type2test([0, 1])
         u2 = u
         u += [2, 3]
@@ -583,3 +584,10 @@ class CommonTest(seq_tests.CommonTest):
             def __iter__(self):
                 raise KeyboardInterrupt
         self.assertRaises(KeyboardInterrupt, list, F())
+
+CommonTest.type2test = list
+test = CommonTest()
+for method in dir(test):
+    if method.startswith('test_'):
+        print(method)
+        getattr(test, method)()

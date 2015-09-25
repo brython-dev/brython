@@ -62,7 +62,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-25 21:39:24.183988"
+__BRYTHON__.compiled_date="2015-09-25 23:06:17.028146"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -5193,11 +5193,12 @@ iterator_class.$dict.__next__=function(self){self.counter++
 if(self.counter==self.len){throw _b_.StopIteration('')}
 try{return self.getitem(self.counter)}
 catch(err){throw _b_.StopIteration('')}}
-function iter(obj){try{return getattr(obj,'__iter__')()}
+function iter(obj){try{var _iter=getattr(obj,'__iter__')}
 catch(err){var gi=getattr(obj,'__getitem__',null),ln=getattr(obj,'__len__',null)
 if(gi!==null && ln!==null){var len=getattr(ln,'__call__')()
 return iterator_class(gi,len)}
-throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not iterable")}}
+throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not iterable")}
+return _iter()}
 function len(obj){try{return getattr(obj,'__len__')()}
 catch(err){throw _b_.TypeError("object of type '"+$B.get_class(obj).__name__+"' has no len()")}}
 function locals(){
@@ -5468,7 +5469,7 @@ case 3:
 start=args[0]
 stop=args[1]
 step=args[2]}
-if(step==0)throw ValueError("slice step must not be zero")
+if(step==0)throw _b_.ValueError("slice step must not be zero")
 var res={__class__ : $SliceDict,start:start,stop:stop,step:step}
 res.__repr__=res.__str__=function(){return 'slice('+start+','+stop+','+step+')'}
 return res}
@@ -7747,40 +7748,38 @@ var _r=self.map(_b_.repr)
 if(self.__class__===$TupleDict){if(self.length==1){return '('+_r[0]+',)'}
 return '('+_r.join(', ')+')'}
 return '['+_r.join(', ')+']'}
-$ListDict.__setitem__=function(self,arg,value){if(isinstance(self,tuple)){throw _b_.TypeError("'tuple' object does not support item assignment")}
+$ListDict.__setitem__=function(){var $=$B.args('__setitem__',3,{self:null,key:null,value},['self','key','value'],arguments,{},null,null),self=$.self,arg=$.key,value=$.value
+if(isinstance(self,tuple)){throw _b_.TypeError("'tuple' object does not support item assignment")}
 if(isinstance(arg,_b_.int)){var pos=arg
 if(arg<0)pos=self.length+pos
 if(pos>=0 && pos<self.length){self[pos]=value}
 else{throw _b_.IndexError('list index out of range')}
 return $N}
-if(isinstance(arg,slice)){var start=arg.start===None ? 0 : arg.start
-var stop=arg.stop===None ? self.length : arg.stop
-var step=arg.step===None ? 1 : arg.step
-if(start<0)start=self.length+start
-if(stop<0)stop=self.length+stop
-self.splice(start,stop-start)
-var $temp
-if(Array.isArray(value)){$temp=Array.prototype.slice.call(value)}
-else if(hasattr(value,'__iter__')){$temp=list(value)}
-if($temp!==undefined){for(var i=$temp.length-1;i>=0;i--){self.splice(start,0,$temp[i])}
+if(isinstance(arg,slice)){var start=arg.start===None ? null : arg.start
+var stop=arg.stop===None ? null : arg.stop
+var step=arg.step===None ? null : arg.step
+if(step===null){$B.set_list_slice(self,start,stop,value)}
+else{$B.set_list_slice_step(self,start,stop,step,value)}
 return $N}
-throw _b_.TypeError("can only assign an iterable")}
 if(hasattr(arg,'__int__')||hasattr(arg,'__index__')){$ListDict.__setitem__(self,_b_.int(arg),value)
 return $N}
 throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)}
 $ListDict.__str__=$ListDict.__repr__
 $B.make_rmethods($ListDict)
 var _ops=['add','sub']
-$ListDict.append=function(self,other){self[self.length]=other;return $N}
-$ListDict.clear=function(self){while(self.length){self.pop()};return $N}
-$ListDict.copy=function(self){return self.slice(0,self.length)}
-$ListDict.count=function(self,elt){var l=arguments.length - 1
-if(l!=1){throw _b_.TypeError(
-"count() takes exactly one argument ("+l+" given)")}
+$ListDict.append=function(){var $=$B.args('append',2,{self:null,x:null},['self','x'],arguments,{},null,null)
+$.self[$.self.length]=$.x
+return $N}
+$ListDict.clear=function(){var $=$B.args('clear',1,{self:null},['self'],arguments,{},null,null)
+while($.self.length){$.self.pop()}
+return $N}
+$ListDict.copy=function(){var $=$B.args('copy',1,{self:null},['self'],arguments,{},null,null)
+return $.self.slice()}
+$ListDict.count=function(){var $=$B.args('count',2,{self:null,x:null},['self','x'],arguments,{},null,null)
 var res=0
-_eq=getattr(elt,'__eq__')
-var i=self.length
-while(i--)if(_eq(self[i]))res++
+_eq=getattr($.x,'__eq__')
+var i=$.self.length
+while(i--)if(_eq($.self[i]))res++
 return res}
 $ListDict.extend=function(self,other){var l=arguments.length - 1
 if(l!=1){throw _b_.TypeError(
@@ -7855,8 +7854,8 @@ else{$qsort(func,self,0,self.length)}
 if(reverse)$ListDict.reverse(self)
 return(self.__brython__ ? $N : self)}
 $B.set_func_names($ListDict)
-function list(obj){if(arguments.length===0)return[]
-if(arguments.length>1){throw _b_.TypeError("list() takes at most 1 argument ("+arguments.length+" given)")}
+function list(){var $=$B.args('list',1,{obj:null},['obj'],arguments,{obj:null},null,null),obj=$.obj
+if(obj===null)return[]
 if(Array.isArray(obj)){
 obj=obj.slice()
 obj.__brython__=true;
@@ -7864,11 +7863,9 @@ if(obj.__class__==$TupleDict){var res=obj.slice()
 res.__class__=$ListDict
 return res}
 return obj}
-var res=[],pos=0
-var arg=iter(obj)
-var next_func=getattr(arg,'__next__')
+var res=[],pos=0,arg=iter(obj),next_func=getattr(arg,'__next__')
 while(1){try{res[pos++]=next_func()}
-catch(err){if(err.__name__!='StopIteration'){throw err}
+catch(err){if(!isinstance(err,_b_.StopIteration)){throw err}
 break}}
 res.__brython__=true 
 return res}

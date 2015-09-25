@@ -794,7 +794,7 @@ iterator_class.$dict.__next__ = function(self){
 }
 
 function iter(obj){
-    try{return getattr(obj,'__iter__')()}
+    try{var _iter = getattr(obj,'__iter__')}
     catch(err){
         var gi = getattr(obj,'__getitem__',null),
             ln = getattr(obj,'__len__',null)
@@ -804,6 +804,7 @@ function iter(obj){
       }
       throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not iterable")
     }
+    return _iter()
 }
 
 function len(obj){
@@ -1392,7 +1393,7 @@ function slice(){
         step = args[2]
     } //switch
 
-    if(step==0) throw ValueError("slice step must not be zero")
+    if(step==0) throw _b_.ValueError("slice step must not be zero")
     var res = {
         __class__ : $SliceDict,
         start:start,
