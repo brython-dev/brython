@@ -476,26 +476,13 @@ function $AssignCtx(context, check_unbound){
         //console.log('guess type,', this.tree[0],this.tree[1])
         if(this.tree[0].type=="expr" && this.tree[0].tree[0].type=="id"){
             $set_type(scope.id,this.tree[0],this.tree[1])
-            /*
-            var var_name = this.tree[0].tree[0].value,
-                scope = $get_scope(this)
-            if($B.bound[scope.id][var_name]){
-                var right = this.tree[1].tree[0]
-                if(['int','str','float'].indexOf(right.type)>-1){
-                    $B.bound[scope.id][var_name]={type:right.type,
-                        value:right.to_js()}
-                }else if(right.type=="id" && $B.bound[scope.id][right.value]){
-                    $B.bound[scope.id][var_name] = $B.bound[scope.id][right.value]
-                }
-            }
-            */
         }else if(this.tree[0].type=='assign'){
             var left = this.tree[0].tree[0].tree[0]
             var right = this.tree[0].tree[1].tree[0]
             $set_type(scope.id, right, this.tree[1].tree[0])
             this.tree[0].guess_type()
         }else{
-            //console.log(this.tree[0])
+            //console.log('guess type', this.tree[0])
         }
     }
     
@@ -691,25 +678,26 @@ function $AssignCtx(context, check_unbound){
           // This is because the code generated for exec() or eval()
           // can't be inserted as the third parameter of a function
           
-          var node = $get_node(this)
+          var node = $get_node(this),
+              right_js = right.to_js()
           
           var res='', rvar='', $var='$temp'+$loop_num
           if(right.type=='expr' && right.tree[0]!==undefined &&
              right.tree[0].type=='call' &&
              ('eval' == right.tree[0].func.value ||
               'exec' == right.tree[0].func.value)) {
-             res += 'var '+$var+'='+right.to_js()+';\n'
+             res += 'var '+$var+'='+right_js+';\n'
              rvar = $var
-             $loop_num++
           }else if(right.type=='expr' && right.tree[0]!==undefined &&
               right.tree[0].type=='sub'){
-             res += 'var '+$var+'='+right.to_js()+';\n'
+             res += 'var '+$var+'='+right_js+';\n'
              rvar = $var
           }else{
-             rvar = right.to_js()
+             rvar = right_js
           }
                 
           if(left.type==='attribute'){ // assign to attribute
+              $loop_num++
               left.func = 'setattr'
               res += left.to_js()
               left.func = 'getattr'
@@ -717,68 +705,39 @@ function $AssignCtx(context, check_unbound){
               return res + ','+rvar+');None;'
           }
           if(left.type==='sub'){ // assign to item
-              if(Array.isArray){
-                  // If browser supports Array.isArray, test if the subscripted
-                  // object is an array, if all subscription are integers or 
-                  // ids, and if the assigned item exists
-                  // If so, use the Javascript syntax a[x] = y
-                  // Else use __setitem__
-                  function is_simple(elt){
-                      return (elt.type=='expr' &&
-                          ['int','id'].indexOf(elt.tree[0].type)>-1)
-                  }
-                  var exprs = []
-                  if(left.tree.length==1){
-                      var left_seq = left, args = [], pos=0, ix = 0
-                      while(left_seq.value.type=='sub' && left_seq.tree.length==1){
-                          if(is_simple(left_seq.tree[0])){
-                              args[pos++]='['+left_seq.tree[0].to_js()+']'
-                          }else{
-                              var $var='$temp_ix'+$loop_num
-                              exprs.push('var '+$var+'_'+ix+'='+left_seq.tree[0].to_js())
-                              args[pos++]='['+$var+'_'+ix+']'
-                              left_seq.tree[0]={type:'id',
-                                  to_js:(function(rank){
-                                      return function(){return $var+'_'+rank}
-                                      })(ix)
-                              }
-                              ix++
-                          }
-                          left_seq=left_seq.value
-                      }
-                      
-                      if(is_simple(left_seq.tree[0])){
-                          args.unshift('['+left_seq.tree[0].to_js()+']')
-                      }else{
-                          exprs.push('var $temp_ix'+$loop_num+'_'+ix+'='+left_seq.tree[0].to_js())
-                          args.unshift('[$temp_ix'+$loop_num+'_'+ix+']')
-                          ix++
-                      }
-                      
-                      if (left_seq.value.type!=='id'){
-                          var val = '$temp_ix'+$loop_num+'_'+ix
-                          exprs.push('var '+val+'='+left_seq.value.to_js())
-                      }else{
-                          var val = left_seq.value.to_js()
-                      }
-                      res += exprs.join(';\n')+';\n'
-                      
-                      res += 'Array.isArray('+val+') && '
-                      res += val+args.join('')+'!==undefined ? '
-                      res += val+args.join('')+'='+rvar
-                      res += ' : '
-
-                    res += '$B.$setitem('+left.value.to_js()
-                    res += ','+left.tree[0].to_js()+','+rvar+');None;'
-                    return res
-                }
-            }
-            
-            left.func = 'setitem' // just for to_js()
-            res += left.to_js()
-            res = res.substr(0,res.length-1) // remove trailing )
-            left.func = 'getitem' // restore default function
-            return res + ','+rvar+');None;'
+              
+              var seq = left.value.to_js(), temp='$temp'+$loop_num
+              $loop_num++
+              var res = 'var '+temp+'='+seq+'\n'+
+                  'if(Array.isArray('+temp+')){'
+              if(left.tree.length==1){
+                  res += '$B.set_list_key('+temp+','+
+                      (left.tree[0].to_js()+''||'null')+','+
+                      right.to_js()+')'
+              }else if(left.tree.length==2){
+                  res += '$B.set_list_slice('+temp+','+
+                      (left.tree[0].to_js()+''||'null')+','+
+                      (left.tree[1].to_js()+''||'null')+','+
+                      right.to_js()+')'
+              }else if(left.tree.length==3){
+                  res += '$B.set_list_slice_step('+temp+','+
+                      (left.tree[0].to_js()+''||'null')+','+
+                      (left.tree[1].to_js()+''||'null')+','+
+                      (left.tree[2].to_js()+''||'null')+','+
+                      right.to_js()+')'
+              }
+              res += '\n}else{'
+              if(left.tree.length==1){
+                  res += '$B.$setitem('+left.value.to_js()
+                    res += ','+left.tree[0].to_js()+','+right_js+')};None;'
+              }else{
+                  left.func = 'setitem' // just for to_js()
+                  res += left.to_js()
+                  res = res.substr(0,res.length-1) // remove trailing )
+                  left.func = 'getitem' // restore default function
+                  res += ','+right_js+')};None;'
+              }
+              return res
           }
         }
         return left.to_js()+'='+right.to_js()
@@ -4201,55 +4160,56 @@ function $SubCtx(context){
 
     this.to_js = function(){
         this.js_processed=true
-        // In assignment to subscriptions, eg a[x][y], a flag "marked" is set
-        // to use the shortcut a[x] instead of the complete code with getattr
-        if(this.marked){
-            var val = this.value.to_js()
-            var res = 'getattr('+val+',"__'+this.func+'__")('
-            if(this.tree.length===1) return res+this.tree[0].to_js()+')'
-    
-            //res += 'slice('
+        if(this.func=='getitem' && this.value.type=='id'){
+            var type = $get_node(this).locals[this.value.value]
+            if(type=='list'||type=='tuple'){
+                if(this.tree.length==1){
+                    return '$B.list_key($locals["'+this.value.value+
+                        '"], '+this.tree[0].to_js()+')'
+                }else if(this.tree.length==2){
+                    return '$B.list_slice($locals["'+this.value.value+
+                        '"], '+(this.tree[0].to_js()||"null")+','+
+                        (this.tree[1].to_js()||"null")+')'
+                }else if(this.tree.length==3){
+                    return '$B.list_slice_step($locals["'+this.value.value+
+                        '"], '+(this.tree[0].to_js()||"null")+','+
+                        (this.tree[1].to_js()||"null")+','+
+                        (this.tree[2].to_js()||"null")+')'
+                }
+            }
+        }
+        if(this.func=='getitem' && this.tree.length==1){
+            return '$B.$getitem('+this.value.to_js()+',' + this.tree[0].to_js()+')'
+        }
+        var res='', shortcut = false
+        if(this.func!=='delitem' && Array.isArray && 
+            this.tree.length==1 && !this.in_sub){
+            var expr = '', x = this
+            shortcut = true
+            while(x.value.type=='sub'){
+                expr += '['+x.tree[0].to_js()+']'
+                x.value.in_sub = true
+                x = x.value
+            }
+            var subs = x.value.to_js()+'['+x.tree[0].to_js()+']'
+            res += '((Array.isArray('+x.value.to_js()+') || '
+            res += 'typeof '+x.value.to_js()+'=="string")'
+            res += ' && '+subs+'!==undefined ?'
+            res += subs+expr+ ' : '
+        }
+        var val = this.value.to_js()
+        res += 'getattr('+val+',"__'+this.func+'__")('
+        if(this.tree.length===1){
+            res += this.tree[0].to_js()+')'
+        }else{
             var res1=[], pos=0
             for(var i=0;i<this.tree.length;i++){
                 if(this.tree[i].type==='abstract_expr'){res1[pos++]='None'}
                 else{res1[pos++]=this.tree[i].to_js()}
-                //if(i<this.tree.length-1){res+=','}
             }
-            return res+'slice(' + res1.join(',') + '))'
-        }else{
-            if(this.func=='getitem' && this.tree.length==1){
-                return '$B.$getitem('+this.value.to_js()+',' + this.tree[0].to_js()+')'
-            }
-            var res='', shortcut = false
-            if(this.func!=='delitem' && Array.isArray && 
-                this.tree.length==1 && !this.in_sub){
-                var expr = '', x = this
-                shortcut = true
-                while(x.value.type=='sub'){
-                    expr += '['+x.tree[0].to_js()+']'
-                    x.value.in_sub = true
-                    x = x.value
-                }
-                var subs = x.value.to_js()+'['+x.tree[0].to_js()+']'
-                res += '((Array.isArray('+x.value.to_js()+') || '
-                res += 'typeof '+x.value.to_js()+'=="string")'
-                res += ' && '+subs+'!==undefined ?'
-                res += subs+expr+ ' : '
-            }
-            var val = this.value.to_js()
-            res += 'getattr('+val+',"__'+this.func+'__")('
-            if(this.tree.length===1){
-                res += this.tree[0].to_js()+')'
-            }else{
-                var res1=[], pos=0
-                for(var i=0;i<this.tree.length;i++){
-                    if(this.tree[i].type==='abstract_expr'){res1[pos++]='None'}
-                    else{res1[pos++]=this.tree[i].to_js()}
-                }
-                res += 'slice(' + res1.join(',') + '))'
-            }
-            return shortcut ? res+')' : res
+            res += 'slice(' + res1.join(',') + '))'
         }
+        return shortcut ? res+')' : res
     }
 }
 
@@ -4832,7 +4792,11 @@ function $get_node(context){
 function $set_type(scope_id, expr, value){
     // If expr is an id, set its type if we can extract something from value
     if(expr.type=='expr'){expr=expr.tree[0]}
-    if(value.type=='expr'){value=value.tree[0]}
+    while(value.type=='expr' && value.tree.length==1){value=value.tree[0]}
+    if(value.type=='list_or_tuple' && value.real=='tuple' && 
+        value.tree.length==1){
+            return $set_type(scope_id, expr, value.tree[0])
+    }
     if($B.type[scope_id]===undefined){return}
     if(expr.type=="id"){
         switch(value.type){
@@ -4847,7 +4811,6 @@ function $set_type(scope_id, expr, value){
             case 'id':
                 $B.type[scope_id][expr.value] = $B.type[scope_id][value.value]
                 return
-                
         }
     }
     $B.type[scope_id][expr.value] = false

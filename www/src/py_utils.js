@@ -378,6 +378,53 @@ $B.$JS2Py = function(src){
     return $B.JSObject(src)
 }
 
+// Functions used if we can guess the type from lexical analysis
+$B.list_key = function(obj, key){
+    key = $B.$GetInt(key)
+    if(key<0){key += obj.length}
+    var res = obj[key]
+    if(res===undefined){throw _b_.IndexError("list index out of range")}
+    return res
+}
+
+$B.list_slice = function(obj, start, stop){
+    if(start===null){start=0}
+    else{
+        start=$B.$GetInt(start)
+        if(start<0){start=Math.min(0, start+obj.length)}
+    }
+    if(stop===null){return obj.slice(start)}
+    stop = $B.$GetInt(stop)
+    if(stop<0){stop=Math.max(0, stop+obj.length)}
+    return obj.slice(start, stop)
+}
+
+$B.list_slice_step = function(obj, start, stop, step){
+    if(step===null||step==1){return $B.list_slice(obj,start,stop)}
+
+    if(step==0){throw _b_.ValueError("slice step cannot be zero")}
+    step = $B.$GetInt(step)
+
+    if(start===null){start = step >=0 ? 0 : obj.length-1}
+    else{
+        start=$B.$GetInt(start)
+        if(start<0){start=Math.min(0, start+obj.length)}
+    }
+    if(stop===null){stop = step >= 0 ? obj.length : -1}
+    else{
+        stop = $B.$GetInt(stop)
+        if(stop<0){stop=Math.max(0, stop+obj.length)}
+    }
+    if(step==-1){return obj.slice(stop, start).reverse()}
+    var res=[], len=obj.length
+    if(step>0){
+        for(var i=start;i<stop;i+=step){res.push(obj[i])}
+    }else{
+        for(var i=start;i>stop;i+=step){res.push(obj[i])}    
+    }
+    return res
+}
+
 // get item
 function index_error(obj){
     var type = typeof obj=='string' ? 'string' : 'list'
@@ -401,6 +448,62 @@ $B.$getitem = function(obj, item){
     }
     return _b_.getattr(obj,'__getitem__')(item)
 }
+
+// Set list key or slice
+$B.set_list_key = function(obj,key,value){
+    key = $B.$GetInt(key)
+    if(key<0){key+=obj.length}
+    if(obj[key]===undefined){
+        console.log(obj, key)
+        throw _b_.IndexError('list assignment index out of range')
+    }
+    obj[key]=value
+}
+
+$B.set_list_slice = function(obj,start,stop,value){
+    if(start===null){start=0}
+    else{
+        start=$B.$GetInt(start)
+        if(start<0){start=Math.min(0, start+obj.length)}
+    }
+    if(stop===null){stop=obj.length}
+    stop = $B.$GetInt(stop)
+    if(stop<0){stop=Math.max(0, stop+obj.length)}
+    var res = _b_.list(value)
+    obj.splice.apply(obj,[start, stop-start].concat(res))
+}
+
+$B.set_list_slice_step = function(obj,start,stop,step,value){
+    if(step===null||step==1){return $B.set_list_slice(obj,start,stop,value)}
+
+    if(step==0){throw _b_.ValueError("slice step cannot be zero")}
+    step = $B.$GetInt(step)
+
+    if(start===null){start=0}
+    else{
+        start=$B.$GetInt(start)
+        if(start<0){start=Math.min(0, start+obj.length)}
+    }
+    if(stop===null){return obj.slice(start)}
+    stop = $B.$GetInt(stop)
+    if(stop<0){stop=Math.max(0, stop+obj.length)}
+    var res = _b_.list(value),j=0,test,nb=0
+    if(step>0){test = function(i){return i<stop}}
+    else{test = function(i){return i>stop}}
+    for(var i=start;test(i);i+=step){
+        if(res[j]===undefined){
+            throw _b_.ValueError('attempt to assign sequence of size '+
+                res.length+' to extended slice of size '+i)
+        }
+        obj[i]=res[j]
+        j++
+    }
+    if(j<res.length){
+        throw _b_.ValueError('attempt to assign sequence of size '+
+            res.length+' to extended slice of size '+j)
+    }
+}
+
 
 $B.$setitem = function(obj,item,value){
     if(Array.isArray(obj) && typeof item=='number'){
@@ -877,7 +980,7 @@ $B.InjectBuiltins=function() {
 
 $B.$GetInt=function(value) {
   // convert value to an integer
-  if(typeof value=="number"){return value}
+  if(typeof value=="number"||value.constructor===Number){return value}
   else if(typeof value==="boolean"){return value ? 1 : 0}
   else if (_b_.isinstance(value, _b_.int)) {return value}
   else if (_b_.isinstance(value, _b_.float)) {return value.valueOf()}
