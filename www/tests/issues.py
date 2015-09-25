@@ -498,4 +498,9 @@ try:
 except TypeError:
     pass
 
+# issue 298
+n = 1
+for n in range(n): pass
+assert n == 0
+
 print('passed all tests')

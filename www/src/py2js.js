@@ -2544,7 +2544,7 @@ function $ForExpr(context){
                 var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()
             }
             var h = '\n'+' '.repeat(node.indent+4)
-            var js = idt+'=$B.sub('+start+',1);'+h+'var $stop_'+num +'=$B.$GetInt('+
+            var js = idt+'='+start+';'+h+'var $stop_'+num +'=$B.$GetInt('+
                 stop+'),'+h+
                 '    $next'+num+'= '+idt+','+h+
                 '    $safe'+num+'= typeof $next'+num+'=="number" && typeof '+
@@ -2553,14 +2553,14 @@ function $ForExpr(context){
             var for_node = new $Node()  
             new $NodeJSCtx(for_node,js)
             
-            for_node.add($NodeJS('if($safe'+num+'){$next'+num+'+=1'+'}'))
-            for_node.add($NodeJS('else{$next'+num+'=$B.add($next'+num+',1)}'))
             for_node.add($NodeJS('if($safe'+num+' && $next'+num+'>= $stop_'+
                 num+'){break}'))
             for_node.add($NodeJS('else if(!$safe'+num+
                 ' && $B.ge($next'+num+', $stop_'+num+
                 ')){break}'))
             for_node.add($NodeJS(idt+' = $next'+num))            
+            for_node.add($NodeJS('if($safe'+num+'){$next'+num+'+=1'+'}'))
+            for_node.add($NodeJS('else{$next'+num+'=$B.add($next'+num+',1)}'))
             // Add the loop body            
             for(var i=0;i<children.length;i++){
                 for_node.add(children[i].clone())
