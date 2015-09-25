@@ -2049,7 +2049,6 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
             }
             info+='\n'
         }
-        console.log('attr info, stack',self.$stack.length)
         for(var i=0;i<self.$stack.length;i++){
             var frame = self.$stack[i]
             if(frame[1].$line_info===undefined){continue}

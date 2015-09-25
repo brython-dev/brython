@@ -62,7 +62,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-24 21:59:33.139803"
+__BRYTHON__.compiled_date="2015-09-25 20:42:18.045024"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -357,52 +357,45 @@ var left=this.tree[0]
 if(left.type==='expr')left=left.tree[0]
 var right=this.tree[1]
 if(left.type=='attribute' ||left.type=='sub'){
-var node=$get_node(this)
+var node=$get_node(this),right_js=right.to_js()
 var res='',rvar='',$var='$temp'+$loop_num
 if(right.type=='expr' && right.tree[0]!==undefined &&
 right.tree[0].type=='call' &&
 ('eval'==right.tree[0].func.value ||
-'exec'==right.tree[0].func.value)){res +='var '+$var+'='+right.to_js()+';\n'
-rvar=$var
-$loop_num++}else if(right.type=='expr' && right.tree[0]!==undefined &&
-right.tree[0].type=='sub'){res +='var '+$var+'='+right.to_js()+';\n'
-rvar=$var}else{rvar=right.to_js()}
+'exec'==right.tree[0].func.value)){res +='var '+$var+'='+right_js+';\n'
+rvar=$var}else if(right.type=='expr' && right.tree[0]!==undefined &&
+right.tree[0].type=='sub'){res +='var '+$var+'='+right_js+';\n'
+rvar=$var}else{rvar=right_js}
 if(left.type==='attribute'){
+$loop_num++
 left.func='setattr'
 res +=left.to_js()
 left.func='getattr'
 res=res.substr(0,res.length-1)
 return res + ','+rvar+');None;'}
 if(left.type==='sub'){
-if(Array.isArray){
-function is_simple(elt){return(elt.type=='expr' &&
-['int','id'].indexOf(elt.tree[0].type)>-1)}
-var exprs=[]
-if(left.tree.length==1){var left_seq=left,args=[],pos=0,ix=0
-while(left_seq.value.type=='sub' && left_seq.tree.length==1){if(is_simple(left_seq.tree[0])){args[pos++]='['+left_seq.tree[0].to_js()+']'}else{var $var='$temp_ix'+$loop_num
-exprs.push('var '+$var+'_'+ix+'='+left_seq.tree[0].to_js())
-args[pos++]='['+$var+'_'+ix+']'
-left_seq.tree[0]={type:'id',to_js:(function(rank){return function(){return $var+'_'+rank}})(ix)}
-ix++}
-left_seq=left_seq.value}
-if(is_simple(left_seq.tree[0])){args.unshift('['+left_seq.tree[0].to_js()+']')}else{exprs.push('var $temp_ix'+$loop_num+'_'+ix+'='+left_seq.tree[0].to_js())
-args.unshift('[$temp_ix'+$loop_num+'_'+ix+']')
-ix++}
-if(left_seq.value.type!=='id'){var val='$temp_ix'+$loop_num+'_'+ix
-exprs.push('var '+val+'='+left_seq.value.to_js())}else{var val=left_seq.value.to_js()}
-res +=exprs.join(';\n')+';\n'
-res +='Array.isArray('+val+') && '
-res +=val+args.join('')+'!==undefined ? '
-res +=val+args.join('')+'='+rvar
-res +=' : '
-res +='$B.$setitem('+left.value.to_js()
-res +=','+left.tree[0].to_js()+','+rvar+');None;'
-return res}}
-left.func='setitem' 
+var seq=left.value.to_js(),temp='$temp'+$loop_num
+$loop_num++
+var res='var '+temp+'='+seq+'\n'+
+'if(Array.isArray('+temp+')){'
+if(left.tree.length==1){res +='$B.set_list_key('+temp+','+
+(left.tree[0].to_js()+''||'null')+','+
+right.to_js()+')'}else if(left.tree.length==2){res +='$B.set_list_slice('+temp+','+
+(left.tree[0].to_js()+''||'null')+','+
+(left.tree[1].to_js()+''||'null')+','+
+right.to_js()+')'}else if(left.tree.length==3){res +='$B.set_list_slice_step('+temp+','+
+(left.tree[0].to_js()+''||'null')+','+
+(left.tree[1].to_js()+''||'null')+','+
+(left.tree[2].to_js()+''||'null')+','+
+right.to_js()+')'}
+res +='\n}else{'
+if(left.tree.length==1){res +='$B.$setitem('+left.value.to_js()
+res +=','+left.tree[0].to_js()+','+right_js+')};None;'}else{left.func='setitem' 
 res +=left.to_js()
 res=res.substr(0,res.length-1)
 left.func='getitem' 
-return res + ','+rvar+');None;'}}
+res +=','+right_js+')};None;'}
+return res}}
 return left.to_js()+'='+right.to_js()}}
 function $AttrCtx(C){
 this.type='attribute'
@@ -2135,13 +2128,15 @@ this.parent=C
 this.tree=[]
 this.toString=function(){return '(sub) (value) '+this.value+' (tree) '+this.tree}
 this.to_js=function(){this.js_processed=true
-if(this.marked){var val=this.value.to_js()
-var res='getattr('+val+',"__'+this.func+'__")('
-if(this.tree.length===1)return res+this.tree[0].to_js()+')'
-var res1=[],pos=0
-for(var i=0;i<this.tree.length;i++){if(this.tree[i].type==='abstract_expr'){res1[pos++]='None'}
-else{res1[pos++]=this.tree[i].to_js()}}
-return res+'slice(' + res1.join(',')+ '))'}else{if(this.func=='getitem' && this.tree.length==1){return '$B.$getitem('+this.value.to_js()+',' + this.tree[0].to_js()+')'}
+if(this.func=='getitem' && this.value.type=='id'){var type=$get_node(this).locals[this.value.value]
+if(type=='list'||type=='tuple'){if(this.tree.length==1){return '$B.list_key($locals["'+this.value.value+
+'"], '+this.tree[0].to_js()+')'}else if(this.tree.length==2){return '$B.list_slice($locals["'+this.value.value+
+'"], '+(this.tree[0].to_js()||"null")+','+
+(this.tree[1].to_js()||"null")+')'}else if(this.tree.length==3){return '$B.list_slice_step($locals["'+this.value.value+
+'"], '+(this.tree[0].to_js()||"null")+','+
+(this.tree[1].to_js()||"null")+','+
+(this.tree[2].to_js()||"null")+')'}}}
+if(this.func=='getitem' && this.tree.length==1){return '$B.$getitem('+this.value.to_js()+',' + this.tree[0].to_js()+')'}
 var res='',shortcut=false
 if(this.func!=='delitem' && Array.isArray && 
 this.tree.length==1 && !this.in_sub){var expr='',x=this
@@ -2160,7 +2155,7 @@ if(this.tree.length===1){res +=this.tree[0].to_js()+')'}else{var res1=[],pos=0
 for(var i=0;i<this.tree.length;i++){if(this.tree[i].type==='abstract_expr'){res1[pos++]='None'}
 else{res1[pos++]=this.tree[i].to_js()}}
 res +='slice(' + res1.join(',')+ '))'}
-return shortcut ? res+')' : res}}}
+return shortcut ? res+')' : res}}
 function $TargetListCtx(C){
 this.type='target_list'
 this.parent=C
@@ -2456,7 +2451,9 @@ while(ctx.parent){ctx=ctx.parent}
 return ctx.node}
 function $set_type(scope_id,expr,value){
 if(expr.type=='expr'){expr=expr.tree[0]}
-if(value.type=='expr'){value=value.tree[0]}
+while(value.type=='expr' && value.tree.length==1){value=value.tree[0]}
+if(value.type=='list_or_tuple' && value.real=='tuple' && 
+value.tree.length==1){return $set_type(scope_id,expr,value.tree[0])}
 if($B.type[scope_id]===undefined){return}
 if(expr.type=="id"){switch(value.type){case 'int':
 case 'str':
@@ -4541,6 +4538,31 @@ if(src.constructor===Array||$B.$isNodeList(src)){var res=[],pos=0
 for(var i=0,_len_i=src.length;i<_len_i;i++)res[pos++]=$B.$JS2Py(src[i])
 return res}}
 return $B.JSObject(src)}
+$B.list_key=function(obj,key){key=$B.$GetInt(key)
+if(key<0){key +=obj.length}
+var res=obj[key]
+if(res===undefined){throw _b_.IndexError("list index out of range")}
+return res}
+$B.list_slice=function(obj,start,stop){if(start===null){start=0}
+else{start=$B.$GetInt(start)
+if(start<0){start=Math.min(0,start+obj.length)}}
+if(stop===null){return obj.slice(start)}
+stop=$B.$GetInt(stop)
+if(stop<0){stop=Math.max(0,stop+obj.length)}
+return obj.slice(start,stop)}
+$B.list_slice_step=function(obj,start,stop,step){if(step===null||step==1){return $B.list_slice(obj,start,stop)}
+if(step==0){throw _b_.ValueError("slice step cannot be zero")}
+step=$B.$GetInt(step)
+if(start===null){start=step >=0 ? 0 : obj.length-1}
+else{start=$B.$GetInt(start)
+if(start<0){start=Math.min(0,start+obj.length)}}
+if(stop===null){stop=step >=0 ? obj.length : -1}
+else{stop=$B.$GetInt(stop)
+if(stop<0){stop=Math.max(0,stop+obj.length)}}
+if(step==-1){return obj.slice(stop,start).reverse()}
+var res=[],len=obj.length
+if(step>0){for(var i=start;i<stop;i+=step){res.push(obj[i])}}else{for(var i=start;i>stop;i+=step){res.push(obj[i])}}
+return res}
 function index_error(obj){var type=typeof obj=='string' ? 'string' : 'list'
 throw _b_.IndexError(type+" index out of range")}
 $B.$getitem=function(obj,item){if(typeof item=='number'){if(Array.isArray(obj)||typeof obj=='string'){item=item >=0 ? item : obj.length+item
@@ -4552,6 +4574,37 @@ if((Array.isArray(obj)||typeof obj=='string')
 if(obj[item]!==undefined){return obj[item]}
 else{index_error(obj)}}
 return _b_.getattr(obj,'__getitem__')(item)}
+$B.set_list_key=function(obj,key,value){key=$B.$GetInt(key)
+if(key<0){key+=obj.length}
+if(obj[key]===undefined){console.log(obj,key)
+throw _b_.IndexError('list assignment index out of range')}
+obj[key]=value}
+$B.set_list_slice=function(obj,start,stop,value){if(start===null){start=0}
+else{start=$B.$GetInt(start)
+if(start<0){start=Math.min(0,start+obj.length)}}
+if(stop===null){stop=obj.length}
+stop=$B.$GetInt(stop)
+if(stop<0){stop=Math.max(0,stop+obj.length)}
+var res=_b_.list(value)
+obj.splice.apply(obj,[start,stop-start].concat(res))}
+$B.set_list_slice_step=function(obj,start,stop,step,value){if(step===null||step==1){return $B.set_list_slice(obj,start,stop,value)}
+if(step==0){throw _b_.ValueError("slice step cannot be zero")}
+step=$B.$GetInt(step)
+if(start===null){start=0}
+else{start=$B.$GetInt(start)
+if(start<0){start=Math.min(0,start+obj.length)}}
+if(stop===null){return obj.slice(start)}
+stop=$B.$GetInt(stop)
+if(stop<0){stop=Math.max(0,stop+obj.length)}
+var res=_b_.list(value),j=0,test,nb=0
+if(step>0){test=function(i){return i<stop}}
+else{test=function(i){return i>stop}}
+for(var i=start;test(i);i+=step){if(res[j]===undefined){throw _b_.ValueError('attempt to assign sequence of size '+
+res.length+' to extended slice of size '+i)}
+obj[i]=res[j]
+j++}
+if(j<res.length){throw _b_.ValueError('attempt to assign sequence of size '+
+res.length+' to extended slice of size '+j)}}
 $B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& typeof item=='number'){if(item<0){item+=obj.length}
 if(obj[item]===undefined){throw _b_.IndexError("list assignment index out of range")}
 obj[item]=value
@@ -4744,7 +4797,7 @@ $B.InjectBuiltins=function(){var _str=["var _b_=$B.builtins"],pos=1
 for(var $b in $B.builtins)_str[pos++]='var ' + $b +'=_b_["'+$b+'"]'
 return _str.join(';')}
 $B.$GetInt=function(value){
-if(typeof value=="number"){return value}
+if(typeof value=="number"||value.constructor===Number){return value}
 else if(typeof value==="boolean"){return value ? 1 : 0}
 else if(_b_.isinstance(value,_b_.int)){return value}
 else if(_b_.isinstance(value,_b_.float)){return value.valueOf()}
@@ -5708,7 +5761,6 @@ if(self.$js_exc!==undefined){for(var attr in self.$js_exc){if(attr==='message')c
 try{info +='\n    '+attr+' : '+self.$js_exc[attr]}
 catch(_err){}}
 info+='\n'}
-console.log('attr info, stack',self.$stack.length)
 for(var i=0;i<self.$stack.length;i++){var frame=self.$stack[i]
 if(frame[1].$line_info===undefined){continue}
 var line_info=frame[1].$line_info.split(',')
@@ -6900,10 +6952,8 @@ function $err(op,other){var msg="unsupported operand type(s) for "+op
 msg +=": 'int' and '"+$B.get_class(other).__name__+"'"
 throw _b_.TypeError(msg)}
 var $IntDict={__class__:$B.$type,__name__:'int',__dir__:$ObjectDict.__dir__,toString:function(){return '$IntDict'},$native:true}
-$IntDict.from_bytes=function(){var $ns=$B.args("from_bytes",3,{x:null,byteorder:null,signed:null},['x','byteorder','signed'],arguments,{signed:False},'args','kw')
-var x=$ns['x']
-var byteorder=$ns['byteorder']
-var signed=$ns['signed']||_b_.dict.$dict.get($ns['kw'],'signed',False)
+$IntDict.from_bytes=function(){var $=$B.args("from_bytes",3,{bytes:null,byteorder:null,signed:null},['bytes','byteorder','signed'],arguments,{signed:False},null,null)
+var x=$.bytes,byteorder=$.byteorder,signed=$.signed
 var _bytes,_len
 if(isinstance(x,[_b_.list,_b_.tuple])){_bytes=x
 _len=len(x)}else if(isinstance(x,[_b_.bytes,_b_.bytearray])){_bytes=x.source

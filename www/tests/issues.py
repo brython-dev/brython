@@ -483,4 +483,7 @@ for n in range(5):
     pass
 assert n==4
 
+# issue 294
+assert int.from_bytes(bytes=b'some_bytes',byteorder='big') == 545127616933790290830707
+
 print('passed all tests')
