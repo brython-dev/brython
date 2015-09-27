@@ -415,7 +415,7 @@ $B.list_slice_step = function(obj, start, stop, step){
         stop = $B.$GetInt(stop)
         if(stop<0){stop=Math.max(0, stop+obj.length)}
     }
-    if(step==-1){return obj.slice(stop, start).reverse()}
+    //if(step==-1){return obj.slice(stop, start).reverse()}
     var res=[], len=obj.length
     if(step>0){
         for(var i=start;i<stop;i+=step){res.push(obj[i])}
