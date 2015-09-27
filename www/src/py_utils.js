@@ -391,7 +391,7 @@ $B.list_slice = function(obj, start, stop){
     if(start===null){start=0}
     else{
         start=$B.$GetInt(start)
-        if(start<0){start=Math.min(0, start+obj.length)}
+        if(start<0){start=Math.max(0, start+obj.length)}
     }
     if(stop===null){return obj.slice(start)}
     stop = $B.$GetInt(stop)
@@ -451,7 +451,13 @@ $B.$getitem = function(obj, item){
 
 // Set list key or slice
 $B.set_list_key = function(obj,key,value){
-    key = $B.$GetInt(key)
+    try{key = $B.$GetInt(key)}
+    catch(err){
+        if(_b_.isinstance(key, _b_.slice)){
+            return $B.set_list_slice_step(obj,key.start,
+                key.stop,key.step,value)
+        }
+    }
     if(key<0){key+=obj.length}
     if(obj[key]===undefined){
         console.log(obj, key)
@@ -464,7 +470,7 @@ $B.set_list_slice = function(obj,start,stop,value){
     if(start===null){start=0}
     else{
         start=$B.$GetInt(start)
-        if(start<0){start=Math.min(0, start+obj.length)}
+        if(start<0){start=Math.max(0, start+obj.length)}
     }
     if(stop===null){stop=obj.length}
     stop = $B.$GetInt(stop)
@@ -479,28 +485,33 @@ $B.set_list_slice_step = function(obj,start,stop,step,value){
     if(step==0){throw _b_.ValueError("slice step cannot be zero")}
     step = $B.$GetInt(step)
 
-    if(start===null){start=0}
+    if(start===null){start = step>0 ? 0 : obj.length-1}
     else{
         start=$B.$GetInt(start)
         if(start<0){start=Math.min(0, start+obj.length)}
     }
-    if(stop===null){return obj.slice(start)}
-    stop = $B.$GetInt(stop)
-    if(stop<0){stop=Math.max(0, stop+obj.length)}
-    var res = _b_.list(value),j=0,test,nb=0
+    
+    if(stop===null){stop = step>0 ? obj.length : -1}
+    else{
+        stop = $B.$GetInt(stop)
+        if(stop<0){stop=Math.max(0, stop+obj.length)}
+    }
+    
+    var repl = _b_.list(value),j=0,test,nb=0
     if(step>0){test = function(i){return i<stop}}
     else{test = function(i){return i>stop}}
-    for(var i=start;test(i);i+=step){
-        if(res[j]===undefined){
+
+    // Test if number of values in the specified slice is equal to the
+    // length of the replacement sequence
+    for(var i=start;test(i);i+=step){nb++}
+    if(nb!=repl.length){
             throw _b_.ValueError('attempt to assign sequence of size '+
-                res.length+' to extended slice of size '+i)
-        }
-        obj[i]=res[j]
-        j++
+                repl.length+' to extended slice of size '+nb)
     }
-    if(j<res.length){
-        throw _b_.ValueError('attempt to assign sequence of size '+
-            res.length+' to extended slice of size '+j)
+
+    for(var i=start;test(i);i+=step){
+        obj[i]=repl[j]
+        j++
     }
 }
 

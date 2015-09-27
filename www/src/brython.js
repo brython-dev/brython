@@ -62,7 +62,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,2,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-09-25 23:06:17.028146"
+__BRYTHON__.compiled_date="2015-09-27 16:17:34.240700"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4545,7 +4545,7 @@ if(res===undefined){throw _b_.IndexError("list index out of range")}
 return res}
 $B.list_slice=function(obj,start,stop){if(start===null){start=0}
 else{start=$B.$GetInt(start)
-if(start<0){start=Math.min(0,start+obj.length)}}
+if(start<0){start=Math.max(0,start+obj.length)}}
 if(stop===null){return obj.slice(start)}
 stop=$B.$GetInt(stop)
 if(stop<0){stop=Math.max(0,stop+obj.length)}
@@ -4574,14 +4574,15 @@ if((Array.isArray(obj)||typeof obj=='string')
 if(obj[item]!==undefined){return obj[item]}
 else{index_error(obj)}}
 return _b_.getattr(obj,'__getitem__')(item)}
-$B.set_list_key=function(obj,key,value){key=$B.$GetInt(key)
+$B.set_list_key=function(obj,key,value){try{key=$B.$GetInt(key)}
+catch(err){if(_b_.isinstance(key,_b_.slice)){return $B.set_list_slice_step(obj,key.start,key.stop,key.step,value)}}
 if(key<0){key+=obj.length}
 if(obj[key]===undefined){console.log(obj,key)
 throw _b_.IndexError('list assignment index out of range')}
 obj[key]=value}
 $B.set_list_slice=function(obj,start,stop,value){if(start===null){start=0}
 else{start=$B.$GetInt(start)
-if(start<0){start=Math.min(0,start+obj.length)}}
+if(start<0){start=Math.max(0,start+obj.length)}}
 if(stop===null){stop=obj.length}
 stop=$B.$GetInt(stop)
 if(stop<0){stop=Math.max(0,stop+obj.length)}
@@ -4590,21 +4591,20 @@ obj.splice.apply(obj,[start,stop-start].concat(res))}
 $B.set_list_slice_step=function(obj,start,stop,step,value){if(step===null||step==1){return $B.set_list_slice(obj,start,stop,value)}
 if(step==0){throw _b_.ValueError("slice step cannot be zero")}
 step=$B.$GetInt(step)
-if(start===null){start=0}
+if(start===null){start=step>0 ? 0 : obj.length-1}
 else{start=$B.$GetInt(start)
 if(start<0){start=Math.min(0,start+obj.length)}}
-if(stop===null){return obj.slice(start)}
-stop=$B.$GetInt(stop)
-if(stop<0){stop=Math.max(0,stop+obj.length)}
-var res=_b_.list(value),j=0,test,nb=0
+if(stop===null){stop=step>0 ? obj.length : -1}
+else{stop=$B.$GetInt(stop)
+if(stop<0){stop=Math.max(0,stop+obj.length)}}
+var repl=_b_.list(value),j=0,test,nb=0
 if(step>0){test=function(i){return i<stop}}
 else{test=function(i){return i>stop}}
-for(var i=start;test(i);i+=step){if(res[j]===undefined){throw _b_.ValueError('attempt to assign sequence of size '+
-res.length+' to extended slice of size '+i)}
-obj[i]=res[j]
-j++}
-if(j<res.length){throw _b_.ValueError('attempt to assign sequence of size '+
-res.length+' to extended slice of size '+j)}}
+for(var i=start;test(i);i+=step){nb++}
+if(nb!=repl.length){throw _b_.ValueError('attempt to assign sequence of size '+
+repl.length+' to extended slice of size '+nb)}
+for(var i=start;test(i);i+=step){obj[i]=repl[j]
+j++}}
 $B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& typeof item=='number'){if(item<0){item+=obj.length}
 if(obj[item]===undefined){throw _b_.IndexError("list assignment index out of range")}
 obj[item]=value
@@ -5469,24 +5469,17 @@ case 3:
 start=args[0]
 stop=args[1]
 step=args[2]}
-if(step==0)throw _b_.ValueError("slice step must not be zero")
 var res={__class__ : $SliceDict,start:start,stop:stop,step:step}
 res.__repr__=res.__str__=function(){return 'slice('+start+','+stop+','+step+')'}
 return res}
 slice.__class__=$B.$factory
 slice.$dict=$SliceDict
 $SliceDict.$factory=slice
-function sorted(){var $ns=$B.args('sorted',1,{iterable:null},['iterable'],arguments,{},null,'kw')
-if($ns['iterable']===undefined)throw _b_.TypeError("sorted expected 1 positional argument, got 0")
-var iterable=$ns['iterable']
-var key=_b_.dict.$dict.get($ns['kw'],'key',None)
-var reverse=_b_.dict.$dict.get($ns['kw'],'reverse',false)
-var obj=_b_.list(iterable)
-var args=[obj],pos=1
-if(key !==None)args[pos++]={$nat:'kw',kw:{key:key}}
-if(reverse)args[pos++]={$nat:'kw',kw:{reverse:true}}
+function sorted(){var $=$B.args('sorted',1,{iterable:null},['iterable'],arguments,{},null,'kw')
+var _list=_b_.list(iter($.iterable)),args=[_list]
+for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
 _b_.list.$dict.sort.apply(null,args)
-return obj}
+return _list}
 var $StaticmethodDict={__class__:$B.$type,__name__:'staticmethod'}
 $StaticmethodDict.__mro__=[$StaticmethodDict,$ObjectDict]
 function staticmethod(func){func.$type='staticmethod'
@@ -5813,7 +5806,8 @@ exc.__name__='Internal Javascript error: '+(js_exc.__name__ ||js_exc.name)
 exc.__class__=_b_.Exception.$dict
 if(js_exc.name=='ReferenceError'){exc.__name__='NameError'
 exc.__class__=_b_.NameError.$dict
-js_exc.message=js_exc.message.replace('$$','')}
+js_exc.message=js_exc.message.replace('$$','')}else if(js_exc.name=="InternalError"){exc.__name__='RuntimeError'
+exc.__class__=_b_.RuntimeError.$dict}
 exc.$message=js_exc.message ||'<'+js_exc+'>'
 exc.args=_b_.tuple([exc.$message])
 exc.info=''
@@ -7653,14 +7647,16 @@ if(arg<0)pos=self.length+pos
 if(pos>=0 && pos<self.length){self.splice(pos,1)
 return $N}
 throw _b_.IndexError('list index out of range')}
-if(isinstance(arg,_b_.slice)){var start=arg.start;if(start===None){start=0}
-var stop=arg.stop;if(stop===None){stop=self.length}
-var step=arg.step ||1
+if(isinstance(arg,_b_.slice)){var step=arg.step;if(step===None){step=1}
+var start=arg.start
+if(start===None){start=step>0 ? 0 : self.length}
+var stop=arg.stop
+if(stop===None){stop=step >0 ? self.length : 0}
 if(start<0)start=self.length+start
 if(stop<0)stop=self.length+stop
 var res=[],i=null,pos=0
 if(step>0){if(stop>start){for(var i=start;i<stop;i+=step){if(self[i]!==undefined){res[pos++]=i}}}}else{
-if(stop<start){for(var i=start;i>stop;i+=step.value){if(self[i]!==undefined){res[pos++]=i}}
+if(stop<start){for(var i=start;i>stop;i+=step){if(self[i]!==undefined){res[pos++]=i}}
 res.reverse()}}
 var i=res.length
 while(i--){
@@ -7673,23 +7669,24 @@ $ListDict.__eq__=function(self,other){if(isinstance(other,$B.get_class(self).$fa
 while(i--){if(!getattr(self[i],'__eq__')(other[i]))return false}
 return true}}
 return false}
-$ListDict.__getitem__=function(self,arg){if(isinstance(arg,_b_.int)){var items=self.valueOf()
-var pos=arg
-if(arg<0)pos=items.length+pos
+$ListDict.__getitem__=function(self,arg){var $=$B.args('__getitem__',2,{self:null,key:null},['self','key'],arguments,{},null,null),self=$.self,key=$.key
+if(isinstance(key,_b_.int)){var items=self.valueOf()
+var pos=key
+if(key<0)pos=items.length+pos
 if(pos>=0 && pos<items.length)return items[pos]
 throw _b_.IndexError('list index out of range')}
-if(isinstance(arg,_b_.slice)){
-var step=arg.step===None ? 1 : arg.step
+if(isinstance(key,_b_.slice)){
+var step=key.step===None ? 1 : key.step
 if(step==0){throw Error('ValueError : slice step cannot be zero');}
 var length=self.length;
 var start,end;
-if(arg.start===None){start=step<0 ? length-1 : 0;}else{
-start=arg.start;
+if(key.start===None){start=step<0 ? length-1 : 0;}else{
+start=key.start;
 if(start < 0)start +=length;
 if(start < 0)start=step<0 ? -1 : 0
 if(start >=length)start=step<0 ? length-1 : length;}
-if(arg.stop===None){stop=step<0 ? -1 : length;}else{
-stop=arg.stop;
+if(key.stop===None){stop=step<0 ? -1 : length;}else{
+stop=key.stop;
 if(stop < 0)stop +=length
 if(stop < 0)stop=step<0 ? -1 : 0
 if(stop >=length)stop=step<0 ? length-1 : length;}
@@ -7700,8 +7697,8 @@ return res;}else{
 if(stop > start)return res;
 for(var i=start;i>stop;i+=step){res[pos++]=items[i]}
 return res;}}
-if(hasattr(arg,'__int__')||hasattr(arg,'__index__')){return $ListDict.__getitem__(self,_b_.int(arg))}
-throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)}
+if(hasattr(key,'__int__')||hasattr(key,'__index__')){return $ListDict.__getitem__(self,_b_.int(key))}
+throw _b_.TypeError('list indices must be integer, not '+key.__class__.__name__)}
 $ListDict.__ge__=function(self,other){if(!isinstance(other,[list,_b_.tuple])){throw _b_.TypeError("unorderable types: list() >= "+
 $B.get_class(other).__name__+'()')}
 var i=0
@@ -7716,8 +7713,15 @@ while(i<self.length){if(i>=other.length)return true
 if(getattr(self[i],'__eq__')(other[i])){i++}
 else return(getattr(self[i],'__gt__')(other[i]))}
 return false}
-$ListDict.__iadd__=function(self,other){for(var i=0;i < other.length;i++){self.push(other[i])}
-return self}
+$ListDict.__iadd__=function(){var $=$B.args('__iadd__',2,{self:null,x:null},['self','x'],arguments,{},null,null)
+var x=list(iter($.x))
+for(var i=0;i < x.length;i++){$.self.push(x[i])}
+return $.self}
+$ListDict.__imul__=function(){var $=$B.args('__imul__',2,{self:null,x:null},['self','x'],arguments,{},null,null)
+var x=$B.$GetInt($.x),len=$.self.length,pos=len
+if(x==0){$ListDict.clear($.self);return $.self}
+for(var i=1;i < x;i++){for(j=0;j<len;j++){$.self[pos++]=$.self[j]}}
+return $.self}
 $ListDict.__init__=function(self,arg){var len_func=getattr(self,'__len__'),pop_func=getattr(self,'pop')
 while(len_func())pop_func()
 if(arg===undefined)return $N
@@ -7744,18 +7748,20 @@ throw _b_.TypeError("can't multiply sequence by non-int of type '"+
 $B.get_class(other).__name__+"'")}
 $ListDict.__ne__=function(self,other){return !$ListDict.__eq__(self,other)}
 $ListDict.__repr__=function(self){if(self===undefined)return "<class 'list'>"
-var _r=self.map(_b_.repr)
+var _r=[]
+for(var i=0;i<self.length;i++){if(self[i]===self){_r.push('[...]')}
+else{_r.push(_b_.repr(self[i]))}}
 if(self.__class__===$TupleDict){if(self.length==1){return '('+_r[0]+',)'}
 return '('+_r.join(', ')+')'}
 return '['+_r.join(', ')+']'}
-$ListDict.__setitem__=function(){var $=$B.args('__setitem__',3,{self:null,key:null,value},['self','key','value'],arguments,{},null,null),self=$.self,arg=$.key,value=$.value
+$ListDict.__setitem__=function(){var $=$B.args('__setitem__',3,{self:null,key:null,value:null},['self','key','value'],arguments,{},null,null),self=$.self,arg=$.key,value=$.value
 if(isinstance(self,tuple)){throw _b_.TypeError("'tuple' object does not support item assignment")}
 if(isinstance(arg,_b_.int)){var pos=arg
 if(arg<0)pos=self.length+pos
 if(pos>=0 && pos<self.length){self[pos]=value}
 else{throw _b_.IndexError('list index out of range')}
 return $N}
-if(isinstance(arg,slice)){var start=arg.start===None ? null : arg.start
+if(isinstance(arg,_b_.slice)){var start=arg.start===None ? null : arg.start
 var stop=arg.stop===None ? null : arg.stop
 var step=arg.step===None ? null : arg.step
 if(step===null){$B.set_list_slice(self,start,stop,value)}
@@ -7781,37 +7787,40 @@ _eq=getattr($.x,'__eq__')
 var i=$.self.length
 while(i--)if(_eq($.self[i]))res++
 return res}
-$ListDict.extend=function(self,other){var l=arguments.length - 1
-if(l!=1){throw _b_.TypeError(
-"extend() takes exactly one argument ("+l+" given)")}
-other=iter(other)
-var pos=self.length
-while(1){try{self[pos++]=next(other)}
-catch(err){if(err.__name__=='StopIteration'){break}
-else{throw err}}}
+$ListDict.extend=function(){var $=$B.args('extend',2,{self:null,t:null},['self','t'],arguments,{},null,null)
+other=list(iter($.t))
+for(var i=0;i<other.length;i++){$.self.push(other[i])}
 return $N}
-$ListDict.index=function(){var $=$B.args('index',4,{self:null,x:null,i:null,j:null},['self','x','i','j'],arguments,{i:0,j:null},null,null)
+$ListDict.index=function(){var $=$B.args('index',4,{self:null,x:null,start:null,stop:null},['self','x','start','stop'],arguments,{start:null,stop:null},null,null),self=$.self,start=$.start,stop=$.stop
 var _eq=getattr($.x,'__eq__')
-if($.j===null){$.j=$.self.length}
-for(var i=$.i;i < $.j;i++){if(_eq($.self[i]))return i}
+if(start===null){start=0}
+else{if(start.__class__===$B.LongInt.$dict){start=parseInt(start.value)*(start.pos ? 1 : -1)}
+if(start<0){start=Math.max(0,start+self.length)}}
+if(stop===null){stop=self.length}
+else{if(stop.__class__===$B.LongInt.$dict){stop=parseInt(stop.value)*(stop.pos ? 1 : -1)}
+if(stop<0){stop=Math.min(self.length,stop+self.length)}}
+for(var i=start;i < stop;i++){if(_eq(self[i]))return i}
 throw _b_.ValueError(_b_.str($.x)+" is not in list")}
-$ListDict.insert=function(self,i,item){self.splice(i,0,item);return $N}
-$ListDict.remove=function(self,elt){var _eq=getattr(elt,'__eq__')
-for(var i=0,_len_i=self.length;i < _len_i;i++){if(_eq(self[i])){self.splice(i,1)
-return $N}}
-throw _b_.ValueError(_b_.str(elt)+" is not in list")}
-$ListDict.pop=function(self,pos){if(pos===undefined){
-return self.splice(self.length-1,1)[0]}
-if(arguments.length==2){if(isinstance(pos,_b_.int)){var res=self[pos]
+$ListDict.insert=function(){var $=$B.args('insert',3,{self:null,i:null,item:null},['self','i','item'],arguments,{},null,null)
+$.self.splice($.i,0,$.item)
+return $N}
+$ListDict.pop=function(){var $=$B.args('pop',2,{self:null,pos:null},['self','pos'],arguments,{pos:null},null,null),self=$.self,pos=$.pos
+if(pos===null){pos=self.length-1}
+pos=$B.$GetInt(pos)
+if(pos<0){pos+=self.length}
+var res=self[pos]
+if(res===undefined){throw _b_.IndexError('pop index out of range')}
 self.splice(pos,1)
 return res}
-throw _b_.TypeError(pos.__class__+" object cannot be interpreted as an integer")}
-throw _b_.TypeError("pop() takes at most 1 argument ("+(arguments.length-1)+' given)')}
-$ListDict.reverse=function(self){var _len=self.length-1
-var i=parseInt(self.length/2)
-while(i--){var buf=self[i]
-self[i]=self[_len-i]
-self[_len-i]=buf}
+$ListDict.remove=function(){var $=$B.args('remove',2,{self:null,x:null},['self','x'],arguments,{},null,null)
+var _eq=getattr($.x,'__eq__')
+for(var i=0,_len_i=$.self.length;i < _len_i;i++){if(getattr($.self[i],'__eq__')($.x)){$.self.splice(i,1)
+return $N}}
+throw _b_.ValueError(_b_.str($.x)+" is not in list")}
+$ListDict.reverse=function(self){var $=$B.args('reverse',1,{self:null},['self'],arguments,{},null,null),_len=$.self.length-1,i=parseInt($.self.length/2)
+while(i--){var buf=$.self[i]
+$.self[i]=$.self[_len-i]
+$.self[_len-i]=buf}
 return $N}
 function $partition(arg,array,begin,end,pivot)
 {var piv=array[pivot];
@@ -7821,7 +7830,10 @@ if(arg===null){if(array.$cl!==false){
 var le_func=_b_.getattr(array.$cl,'__le__')
 for(var ix=begin;ix<end-1;++ix){if(le_func(array[ix],piv)){array=swap(array,store,ix);
 ++store;}}}else{for(var ix=begin;ix<end-1;++ix){if(getattr(array[ix],'__le__')(piv)){array=swap(array,store,ix);
-++store;}}}}else{for(var ix=begin;ix<end-1;++ix){if(getattr(arg(array[ix]),'__le__')(arg(piv))){array=swap(array,store,ix);
+++store;}}}}else{var len=array.length
+for(var ix=begin;ix<end-1;++ix){var x=arg(array[ix])
+if(array.length!==len){throw ValueError('list modified during sort')}
+if(getattr(x,'__le__')(arg(piv))){array=swap(array,store,ix);
 ++store;}}}
 array=swap(array,end-1,store);
 return store;}
@@ -7830,7 +7842,7 @@ _array[a]=_array[b];
 _array[b]=tmp;
 return _array}
 function $qsort(arg,array,begin,end)
-{if(end-1>begin){var pivot=begin+Math.floor(Math.random()*(end-begin));
+{if(end-1>begin){var pivot=begin+Math.floor(Math.random()*(end-begin)),len=array.length
 pivot=$partition(arg,array,begin,end,pivot);
 $qsort(arg,array,begin,pivot);
 $qsort(arg,array,pivot+1,end);}}
@@ -7840,12 +7852,14 @@ var cl=$B.get_class(self[0]),i=self.length
 while(i--){
 if($B.get_class(self[i])!==cl)return false}
 return cl}
-$ListDict.sort=function(self){var func=null
+$ListDict.sort=function(self){var $=$B.args('sort',1,{self:null},['self'],arguments,{},null,'kw')
+var func=null
 var reverse=false
-for(var i=1,_len_i=arguments.length;i < _len_i;i++){var arg=arguments[i]
-if(arg.$nat=='kw'){var kw_args=arg.kw
-for(var key in kw_args){if(key=='key'){func=getattr(kw_args[key],'__call__')}
-else if(key=='reverse'){reverse=kw_args[key]}}}}
+var kw_args=$.kw,keys=_b_.list(_b_.dict.$dict.keys(kw_args))
+for(var i=0;i<keys.length;i++){if(keys[i]=="key"){func=getattr(kw_args.$string_dict[keys[i]],'__call__')}
+else if(keys[i]=='reverse'){reverse=kw_args.$string_dict[keys[i]]}
+else{throw _b_.TypeError("'"+keys[i]+
+"' is an invalid keyword argument for this function")}}
 if(self.length==0)return
 self.$cl=$elts_class(self)
 if(func===null && self.$cl===_b_.str.$dict){self.sort()}

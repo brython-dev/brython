@@ -1393,7 +1393,6 @@ function slice(){
         step = args[2]
     } //switch
 
-    if(step==0) throw _b_.ValueError("slice step must not be zero")
     var res = {
         __class__ : $SliceDict,
         start:start,
@@ -1410,20 +1409,13 @@ slice.$dict = $SliceDict
 $SliceDict.$factory = slice
 
 function sorted () {
-    var $ns=$B.args('sorted',1,{iterable:null},['iterable'],
+    var $=$B.args('sorted',1,{iterable:null},['iterable'],
         arguments,{},null,'kw')
-    if($ns['iterable']===undefined) throw _b_.TypeError("sorted expected 1 positional argument, got 0")
-    var iterable=$ns['iterable']
-    var key = _b_.dict.$dict.get($ns['kw'],'key',None)
-    var reverse = _b_.dict.$dict.get($ns['kw'],'reverse',false)
-
-    var obj = _b_.list(iterable)
-    // pass arguments to list.sort()
-    var args = [obj], pos=1
-    if (key !== None) args[pos++]={$nat:'kw',kw:{key:key}}
-    if(reverse) args[pos++]={$nat:'kw',kw:{reverse:true}}
+    var _list = _b_.list(iter($.iterable)),
+        args = [_list]
+    for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
     _b_.list.$dict.sort.apply(null,args)
-    return obj
+    return _list
 }
 
 // staticmethod() built in function
@@ -2149,6 +2141,9 @@ $B.exception = function(js_exc){
             exc.__name__='NameError'
             exc.__class__=_b_.NameError.$dict
             js_exc.message = js_exc.message.replace('$$','')
+        }else if(js_exc.name=="InternalError"){
+            exc.__name__='RuntimeError'
+            exc.__class__=_b_.RuntimeError.$dict
         }
         exc.$message = js_exc.message || '<'+js_exc+'>'
         exc.args = _b_.tuple([exc.$message])

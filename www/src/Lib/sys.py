@@ -51,7 +51,10 @@ def getfilesystemencoding(*args,**kw):
     Return the encoding used to convert Unicode filenames in
     operating system filenames."""
     return 'utf-8'
-    
+
+def getrecursionlimit():
+    return 200
+
 maxsize=2**63-1
 
 maxunicode=1114111

@@ -59,6 +59,7 @@ class CommonTest(unittest.TestCase):
         d.extend(range(200,400))
         d.append(d)
         d.append(400)
+        """
         try:
             with open(support.TESTFN, "w") as fo:
                 fo.write(str(d))
@@ -66,6 +67,7 @@ class CommonTest(unittest.TestCase):
                 self.assertEqual(fo.read(), repr(d))
         finally:
             os.remove(support.TESTFN)
+        """
 
     def test_set_subscript(self):
         a = self.type2test(range(20))
@@ -585,6 +587,7 @@ class CommonTest(unittest.TestCase):
                 raise KeyboardInterrupt
         self.assertRaises(KeyboardInterrupt, list, F())
 
+import sys
 CommonTest.type2test = list
 test = CommonTest()
 for method in dir(test):
