@@ -4161,18 +4161,19 @@ function $SubCtx(context){
     this.to_js = function(){
         this.js_processed=true
         if(this.func=='getitem' && this.value.type=='id'){
-            var type = $get_node(this).locals[this.value.value]
+            var type = $get_node(this).locals[this.value.value],
+                val = this.value.to_js()
             if(type=='list'||type=='tuple'){
                 if(this.tree.length==1){
-                    return '$B.list_key($locals["'+this.value.value+
-                        '"], '+this.tree[0].to_js()+')'
+                    return '$B.list_key('+val+
+                        ', '+this.tree[0].to_js()+')'
                 }else if(this.tree.length==2){
-                    return '$B.list_slice($locals["'+this.value.value+
-                        '"], '+(this.tree[0].to_js()||"null")+','+
+                    return '$B.list_slice('+val+
+                        ', '+(this.tree[0].to_js()||"null")+','+
                         (this.tree[1].to_js()||"null")+')'
                 }else if(this.tree.length==3){
-                    return '$B.list_slice_step($locals["'+this.value.value+
-                        '"], '+(this.tree[0].to_js()||"null")+','+
+                    return '$B.list_slice_step('+val+
+                        ', '+(this.tree[0].to_js()||"null")+','+
                         (this.tree[1].to_js()||"null")+','+
                         (this.tree[2].to_js()||"null")+')'
                 }
