@@ -19,14 +19,13 @@ var $IntDict = {__class__:$B.$type,
 }
 
 $IntDict.from_bytes = function() {
-  var $ns=$B.args("from_bytes", 3, 
-      {x:null, byteorder:null, signed:null}, ['x', 'byteorder', 'signed'],
-      arguments, {signed:False}, 'args', 'kw')
+  var $=$B.args("from_bytes", 3, 
+      {bytes:null, byteorder:null, signed:null}, ['bytes', 'byteorder', 'signed'],
+      arguments, {signed:False}, null, null)
 
-  var x = $ns['x']
-  var byteorder = $ns['byteorder']
-  var signed = $ns['signed'] || _b_.dict.$dict.get($ns['kw'],'signed', False)
-
+  var x = $.bytes,
+      byteorder = $.byteorder,
+      signed = $.signed
   var _bytes, _len
   if (isinstance(x, [_b_.list, _b_.tuple])) {
      _bytes=x

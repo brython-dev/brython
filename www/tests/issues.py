@@ -478,4 +478,29 @@ if False: x+=2;x+=3
 for n in range(2): x+=1;x+=1
 assert x==4
 
+# issue 280
+for n in range(5):
+    pass
+assert n==4
+
+# issue 294
+assert int.from_bytes(bytes=b'some_bytes',byteorder='big') == 545127616933790290830707
+
+# issue 296
+assert [4,0,4].index(4,1) == 2
+
+#issue 297
+assert type((1,)*2) == tuple
+
+t = 1,2
+try:
+    t[0]=1
+except TypeError:
+    pass
+
+# issue 298
+n = 1
+for n in range(n): pass
+assert n == 0
+
 print('passed all tests')

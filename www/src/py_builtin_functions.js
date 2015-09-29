@@ -160,7 +160,8 @@ function compile(source, filename, mode) {
 
     var root = $B.py2js(source,module_name,[module_name],local_name)
     
-    return {__class__:$B.$CodeObjectDict,src:source,
+    return {__class__:$B.$CodeObjectDict,
+        src:source,
         name:source.__name__ || '<module>',
         filename:filename, 
         mode:mode
@@ -239,7 +240,7 @@ function dir(obj){
 //divmod() (built in function)
 function divmod(x,y) {
    var klass = $B.get_class(x)
-   return [klass.__floordiv__(x,y), klass.__mod__(x,y)]
+   return _b_.tuple([klass.__floordiv__(x,y), klass.__mod__(x,y)])
 }
 
 var $EnumerateDict = {__class__:$B.$type,__name__:'enumerate'}
@@ -777,13 +778,45 @@ function issubclass(klass,classinfo){
     //throw _b_.TypeError("issubclass() arg 2 must be a class or tuple of classes")
 }
 
-function iter(obj){
-    try{return getattr(obj,'__iter__')()}
-    catch(err){
-      throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not iterable")
+// Utility class for iterators built from objects that have a __getitem__ and
+// __len__ method
+var iterator_class = $B.make_class({name:'iterator',
+    init:function(self,getitem,len){
+        self.getitem = getitem
+        self.len = len
+        self.counter = -1
     }
+})
+iterator_class.$dict.__next__ = function(self){
+    self.counter++
+    if(self.len!==null && self.counter==self.len){throw _b_.StopIteration('')}
+    try{return self.getitem(self.counter)}
+    catch(err){throw _b_.StopIteration('')}
 }
 
+function iter(obj){
+    try{var _iter = getattr(obj,'__iter__')}
+    catch(err){
+        var gi = getattr(obj,'__getitem__',null),
+            ln = getattr(obj,'__len__',null)
+        if(gi!==null){
+            if(ln!==null){
+                var len = getattr(ln,'__call__')()
+                return iterator_class(gi,len)
+            }else{
+                return iterator_class(gi,null)
+            }
+      }
+      throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not iterable")
+    }
+    var res = _iter()
+    try{getattr(res,'__next__')}
+    catch(err){
+        if(isinstance(err,_b_.AttributeError)){throw _b_.TypeError(
+            "iter() returned non-iterator of type '"+$B.get_class(res).__name__+"'")}
+    }
+    return res
+}
 
 function len(obj){
     try{return getattr(obj,'__len__')()}
@@ -1132,11 +1165,36 @@ $RangeDict.__repr__ = $RangeDict.__str__ = function(self){
 }
 
 function range(){
-    var $ns=$B.args('range',0,{},[],arguments,{},'args',null)
-    var args = $ns['args']
-    if(args.length>3){throw _b_.TypeError(
-        "range expected at most 3 arguments, got "+args.length)
+    var $=$B.args('range',3,{start:null,stop:null,step:null},
+        ['start','stop','step'],arguments,{stop:null,step:null},null,null),
+        start=$.start,stop=$.stop,step=$.step,safe
+    if(stop===null && step===null){
+        stop = $B.$GetInt(start)
+        safe = typeof stop==="number"
+        return{__class__:$RangeDict,
+            start: 0,
+            stop: stop,
+            step: 1,
+            $is_range: true,
+            $safe: safe
+        }
     }
+    if(step===null){step=1}
+    start = $B.$GetInt(start)
+    stop = $B.$GetInt(stop)
+    step = $B.$GetInt(step)
+    safe = (typeof start=='number' && typeof stop=='number' &&
+        typeof step=='number')
+    return {__class__: $RangeDict,
+        start: $B.$GetInt(start),
+        stop: $B.$GetInt(stop),
+        step: $B.$GetInt(step),
+        $is_range: true,
+        $safe: safe
+    }
+    /*   
+    start = $B.$GetInt(start)
+    stop
     for(var i=0;i<args.length;i++){
         if(typeof args[i]!='number'&&!isinstance(args[i],[_b_.int])||
             !hasattr(args[i],'__index__')){
@@ -1163,6 +1221,7 @@ function range(){
     res.$safe = (typeof start=='number' && typeof stop=='number' &&
         typeof step=='number')
     return res
+    */
 }
 range.__class__ = $B.$factory
 range.$dict = $RangeDict
@@ -1284,7 +1343,7 @@ function setattr(obj,attr,value){
     }
     
     var res = obj[attr], klass=$B.get_class(obj)
-    if(res===undefined){
+    if(res===undefined && klass){
         var mro = klass.__mro__, _len = mro.length
         for(var i=0;i<_len;i++){
             res = mro[i][attr]
@@ -1371,7 +1430,6 @@ function slice(){
         step = args[2]
     } //switch
 
-    if(step==0) throw ValueError("slice step must not be zero")
     var res = {
         __class__ : $SliceDict,
         start:start,
@@ -1388,20 +1446,13 @@ slice.$dict = $SliceDict
 $SliceDict.$factory = slice
 
 function sorted () {
-    var $ns=$B.args('sorted',1,{iterable:null},['iterable'],
+    var $=$B.args('sorted',1,{iterable:null},['iterable'],
         arguments,{},null,'kw')
-    if($ns['iterable']===undefined) throw _b_.TypeError("sorted expected 1 positional argument, got 0")
-    var iterable=$ns['iterable']
-    var key = _b_.dict.$dict.get($ns['kw'],'key',None)
-    var reverse = _b_.dict.$dict.get($ns['kw'],'reverse',false)
-
-    var obj = _b_.list(iterable)
-    // pass arguments to list.sort()
-    var args = [obj], pos=1
-    if (key !== None) args[pos++]={$nat:'kw',kw:{key:key}}
-    if(reverse) args[pos++]={$nat:'kw',kw:{reverse:true}}
+    var _list = _b_.list(iter($.iterable)),
+        args = [_list]
+    for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
     _b_.list.$dict.sort.apply(null,args)
-    return obj
+    return _list
 }
 
 // staticmethod() built in function
@@ -2036,6 +2087,7 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
             info += '\n  module '+line_info[1]+' line '+line_info[0]
             var line = lines[parseInt(line_info[0])-1]
             if(line) line=line.replace(/^[ ]+/g, '')
+            if(line===undefined){console.log('line undef...',line_info,$B.$py_src[line_info[1]])}
             info += '\n    '+line
         }
         return info
@@ -2060,10 +2112,8 @@ var BaseException = function (msg,js_exc){
     var err = Error()
     err.__name__ = 'BaseException'
     err.$js_exc = js_exc
-    
-    if(msg===undefined) msg='BaseException'
    
-    err.args = _b_.tuple([msg])
+    err.args = msg === undefined ? _b_.tuple() : _b_.tuple([msg])
     err.$message = msg
     err.__class__ = $BaseExceptionDict
     err.$py_error = true
@@ -2127,6 +2177,9 @@ $B.exception = function(js_exc){
             exc.__name__='NameError'
             exc.__class__=_b_.NameError.$dict
             js_exc.message = js_exc.message.replace('$$','')
+        }else if(js_exc.name=="InternalError"){
+            exc.__name__='RuntimeError'
+            exc.__class__=_b_.RuntimeError.$dict
         }
         exc.$message = js_exc.message || '<'+js_exc+'>'
         exc.args = _b_.tuple([exc.$message])
@@ -2162,6 +2215,7 @@ $B.builtins_block = {id:'__builtins__',module:'__builtins__'}
 $B.modules['__builtins__'] = $B.builtins_block
 $B.bound['__builtins__'] = {'__BRYTHON__':true, '$eval':true, '$open': true}
 $B.bound['__builtins__']['BaseException'] = true
+$B.type['__builtins__'] = {}
 
 _b_.__BRYTHON__ = __BRYTHON__
 

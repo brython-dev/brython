@@ -335,6 +335,31 @@ object.$dict = $ObjectDict
 $ObjectDict.$factory = object
 object.__repr__ = object.__str__ = function(){return "<class 'object'>"}
 
+$B.make_class = function(class_obj){
+    // class_obj has at least an attribute "name", and possibly an attribute
+    // init
+
+    function A(){
+        var res = {__class__:A.$dict}
+        if(class_obj.init){
+            class_obj.init.apply(null, 
+                [res].concat(Array.prototype.slice.call(arguments)))
+        }
+        return res
+    }
+
+    A.__class__ = $B.$factory
+
+    A.$dict = {
+        $factory: A,
+        __class__: $B.type,
+        __name__: class_obj.name
+    }
+    A.$dict.__mro__ = [A.$dict, object.$dict]
+
+    return A
+}
+
 return object
 
 })(__BRYTHON__)

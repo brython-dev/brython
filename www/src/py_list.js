@@ -25,11 +25,14 @@ $ListDict.__add__ = function(self,other){
 }
 
 $ListDict.__contains__ = function(self,item){
+    var $=$B.args('__contains__',2,{self:null,item:null},['self','item'],
+        arguments,{},null,null), 
+        self=$.self, 
+        item=$.item
     var _eq = getattr(item, '__eq__')
     var i=self.length
     while(i--) {
-        try{if(_eq(self[i])) return true
-        }catch(err){}
+        if(_eq(self[i])) return true
     }
     return false
 }
@@ -46,9 +49,11 @@ $ListDict.__delitem__ = function(self,arg){
         throw _b_.IndexError('list index out of range')
     }
     if(isinstance(arg,_b_.slice)) {
-        var start = arg.start;if(start===None){start=0}
-        var stop = arg.stop;if(stop===None){stop=self.length}
-        var step = arg.step || 1
+        var step = arg.step;if(step===None){step=1}
+        var start = arg.start
+        if(start===None){start = step>0 ? 0 : self.length}
+        var stop = arg.stop
+        if(stop===None){stop = step >0 ? self.length : 0}
         if(start<0) start=self.length+start
         if(stop<0) stop=self.length+stop
         var res = [],i=null, pos=0
@@ -60,7 +65,7 @@ $ListDict.__delitem__ = function(self,arg){
             }
         } else {
             if(stop<start){
-                for(var i=start;i>stop;i+=step.value){
+                for(var i=start;i>stop;i+=step){
                     if(self[i]!==undefined){res[pos++]=i}
                 }
                 res.reverse() // must be in ascending order
@@ -84,10 +89,7 @@ $ListDict.__delitem__ = function(self,arg){
 }
 
 $ListDict.__eq__ = function(self,other){
-    // compare object "self" to class "list"
-    if(other===undefined) return self===list
-
-    if($B.get_class(other)===$B.get_class(self)){
+    if(isinstance(other, $B.get_class(self).$factory)){
        if(other.length==self.length){
             var i=self.length
             while(i--) {
@@ -96,49 +98,42 @@ $ListDict.__eq__ = function(self,other){
             return true
        }
     }
-
-    if (isinstance(other, [_b_.set, _b_.tuple, _b_.list])) {
-       if (self.length != getattr(other, '__len__')()) return false
-
-       var i=self.length
-       while(i--) {
-          if (!getattr(other, '__contains__')(self[i])) return false
-       }
-       return true
-    }
     return false
 }
 
 $ListDict.__getitem__ = function(self,arg){
+    var $=$B.args('__getitem__',2,{self:null,key:null},
+        ['self','key'],arguments,{},null,null),
+        self=$.self, key=$.key
 
-    if(isinstance(arg,_b_.int)){
+    if(isinstance(key,_b_.int)){
         var items=self.valueOf()
-        var pos = arg
-        if(arg<0) pos=items.length+pos
+        var pos = key
+        if(key<0) pos=items.length+pos
         if(pos>=0 && pos<items.length) return items[pos]
         
         throw _b_.IndexError('list index out of range')
     }
-    if (isinstance(arg,_b_.slice)) {
+    if (isinstance(key,_b_.slice)) {
         /* Find the real values for start, stop and step */
-        var step = arg.step===None ? 1 : arg.step
+        var step = key.step===None ? 1 : key.step
         if (step == 0) {
             throw Error('ValueError : slice step cannot be zero');
         }
         var length = self.length;
         var start, end;
-        if (arg.start === None) {
+        if (key.start === None) {
             start = step<0 ? length-1 : 0;
         } else {
-            start = arg.start;
+            start = key.start;
             if (start < 0) start += length;
             if (start < 0) start = step<0 ? -1 : 0
             if (start >= length) start = step<0 ? length-1 : length;
         }
-        if (arg.stop === None) {
+        if (key.stop === None) {
             stop = step<0 ? -1 : length;
         } else {
-            stop = arg.stop;
+            stop = key.stop;
             if (stop < 0) stop += length
             if (stop < 0) stop = step<0 ? -1 : 0
             if (stop >= length) stop = step<0 ? length-1 : length;
@@ -160,11 +155,11 @@ $ListDict.__getitem__ = function(self,arg){
         }
     }
 
-    if (hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
-       return $ListDict.__getitem__(self, _b_.int(arg))
+    if (hasattr(key, '__int__') || hasattr(key, '__index__')) {
+       return $ListDict.__getitem__(self, _b_.int(key))
     }
 
-    throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
+    throw _b_.TypeError('list indices must be integer, not '+key.__class__.__name__)
 }
 
 $ListDict.__ge__ = function(self,other){
@@ -200,11 +195,27 @@ $ListDict.__gt__ = function(self,other){
     return false
 }
 
-$ListDict.__iadd__ = function(self, other) {
-    for (var i = 0; i < other.length; i++) {
-        self.push(other[i])
+$ListDict.__iadd__ = function() {
+    var $=$B.args('__iadd__',2,{self:null,x:null},['self','x'],
+        arguments,{},null,null)
+    var x = list(iter($.x))
+    for (var i = 0; i < x.length; i++) {
+        $.self.push(x[i])
     }
-    return self
+    return $.self
+}
+
+$ListDict.__imul__ = function() {
+    var $=$B.args('__imul__',2,{self:null,x:null},['self','x'],
+        arguments,{},null,null)
+    var x = $B.$GetInt($.x),len=$.self.length,pos=len
+    if(x==0){$ListDict.clear($.self);return $.self}
+    for (var i = 1; i < x; i++) {
+        for(j=0;j<len;j++){
+            $.self[pos++]=$.self[j]
+        }
+    }
+    return $.self
 }
 
 $ListDict.__init__ = function(self,arg){
@@ -245,9 +256,10 @@ $ListDict.__mro__ = [$ListDict,$ObjectDict]
 $ListDict.__mul__ = function(self,other){
     if(isinstance(other,_b_.int)) {  //this should be faster..
        var res=[],
-           $temp = self.slice(0,self.length), 
+           $temp = self.slice(), 
            len=$temp.length
        for(var i=0;i<other;i++){for(var j=0;j<len;j++){res.push($temp[j])}}
+       res.__class__ = self.__class__
        return res
     }
     
@@ -265,7 +277,12 @@ $ListDict.__ne__ = function(self,other){return !$ListDict.__eq__(self,other)}
 $ListDict.__repr__ = function(self){
     if(self===undefined) return "<class 'list'>"
 
-    var _r=self.map(_b_.repr)
+    var _r=[]
+    for(var i=0;i<self.length;i++){
+        if(self[i]===self){_r.push('[...]')}
+        else{_r.push(_b_.repr(self[i]))}
+    }
+    
 
     if (self.__class__===$TupleDict){
         if(self.length==1){return '('+_r[0]+',)'}
@@ -274,7 +291,13 @@ $ListDict.__repr__ = function(self){
     return '['+_r.join(', ')+']'
 }
 
-$ListDict.__setitem__ = function(self,arg,value){
+$ListDict.__setitem__ = function(){
+    var $=$B.args('__setitem__',3,{self:null,key:null,value:null},
+        ['self','key','value'],arguments,{},null,null),
+        self=$.self, arg=$.key, value=$.value
+    if(isinstance(self,tuple)){
+        throw _b_.TypeError("'tuple' object does not support item assignment")
+    }
     if(isinstance(arg,_b_.int)){
         var pos = arg
         if(arg<0) pos=self.length+pos
@@ -282,26 +305,13 @@ $ListDict.__setitem__ = function(self,arg,value){
         else {throw _b_.IndexError('list index out of range')}
         return $N
     }
-    if(isinstance(arg,slice)){
-        var start = arg.start===None ? 0 : arg.start
-        var stop = arg.stop===None ? self.length : arg.stop
-        var step = arg.step===None ? 1 : arg.step
-        if(start<0) start=self.length+start
-        if(stop<0) stop=self.length+stop
-        self.splice(start,stop-start)
-        // copy items in a temporary JS array
-        // otherwise, a[:0]=a fails
-        var $temp
-        if(Array.isArray(value)){$temp = Array.prototype.slice.call(value)}
-        else if(hasattr(value,'__iter__')){$temp = list(value)}
-        if($temp!==undefined){
-            for(var i=$temp.length-1;i>=0;i--){
-                self.splice(start,0,$temp[i])
-            }
-            return $N
-        }
-
-        throw _b_.TypeError("can only assign an iterable")
+    if(isinstance(arg,_b_.slice)){
+        var start = arg.start===None ? null : arg.start
+        var stop = arg.stop===None ? null : arg.stop
+        var step = arg.step===None ? null : arg.step
+        if(step===null){$B.set_list_slice(self,start,stop,value)}
+        else{$B.set_list_slice_step(self,start,stop,step,value)}
+        return $N
     }
 
     if (hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
@@ -319,78 +329,112 @@ $B.make_rmethods($ListDict)
 
 var _ops=['add', 'sub']
 
-$ListDict.append = function(self,other){self[self.length]=other;return $N}
-
-$ListDict.clear = function(self){ while(self.length){self.pop()};return $N}
-
-$ListDict.copy = function(self){return self.slice(0,self.length)}
-
-$ListDict.count = function(self,elt){
-    var res = 0
-    _eq=getattr(elt, '__eq__')
-    var i=self.length
-    while (i--) if (_eq(self[i])) res++
-    return res
-}
-
-$ListDict.extend = function(self,other){
-    if(arguments.length!=2){throw _b_.TypeError(
-        "extend() takes exactly one argument ("+arguments.length+" given)")}
-    other = iter(other)
-    var pos=self.length
-    while(1){
-        try{self[pos++]=next(other)}
-        catch(err){
-            if(err.__name__=='StopIteration'){break}
-            else{throw err}
-        }
-    }
+$ListDict.append = function(){
+    var $=$B.args('append',2,{self:null,x:null},['self','x'],
+        arguments,{},null,null)
+    $.self[$.self.length]=$.x
     return $N
 }
 
-$ListDict.index = function(self,elt){
-    var _eq = getattr(elt, '__eq__')
-    for(var i=0, _len_i = self.length; i < _len_i;i++){
-        if(_eq(self[i])) return i
-    }
-    throw _b_.ValueError(_b_.str(elt)+" is not in list")
+$ListDict.clear = function(){
+    var $=$B.args('clear',1,{self:null},['self'],
+        arguments,{},null,null)
+    while($.self.length){$.self.pop()}
+    return $N
 }
 
-$ListDict.insert = function(self,i,item){self.splice(i,0,item);return $N}
+$ListDict.copy = function(){
+    var $=$B.args('copy',1,{self:null},['self'],
+        arguments,{},null,null)
+    return $.self.slice()
+}
 
-$ListDict.remove = function(self,elt){
-    var _eq = getattr(elt, '__eq__')
-    for(var i=0, _len_i = self.length; i < _len_i;i++){
-        if(_eq(self[i])){
-            self.splice(i,1)
+$ListDict.count = function(){
+    var $=$B.args('count',2,{self:null,x:null},['self','x'],
+        arguments,{},null,null)
+    var res = 0
+    _eq=getattr($.x, '__eq__')
+    var i=$.self.length
+    while (i--) if (_eq($.self[i])) res++
+    return res
+}
+
+$ListDict.extend = function(){
+    var $=$B.args('extend',2,{self:null,t:null},['self','t'],
+        arguments,{},null,null)
+    other = list(iter($.t))
+    for(var i=0;i<other.length;i++){$.self.push(other[i])}
+    return $N
+}
+
+$ListDict.index = function(){
+    var $ = $B.args('index',4,{self:null,x:null,start:null,stop:null},
+        ['self','x','start','stop'],arguments,
+        {start:null,stop:null},null,null),
+        self=$.self, start=$.start, stop=$.stop
+    var _eq = getattr($.x, '__eq__')
+    if(start===null){start=0}
+    else{
+        if(start.__class__===$B.LongInt.$dict){
+            start=parseInt(start.value)*(start.pos ? 1 : -1)
+        }
+        if(start<0){start=Math.max(0,start+self.length)}
+    }
+    if(stop===null){stop=self.length}
+    else{
+        if(stop.__class__===$B.LongInt.$dict){
+            stop=parseInt(stop.value)*(stop.pos ? 1 : -1)
+        }
+        if(stop<0){stop=Math.min(self.length,stop+self.length)}
+    }
+    for(var i=start; i < stop;i++){
+        if(_eq(self[i])) return i
+    }
+    throw _b_.ValueError(_b_.str($.x)+" is not in list")
+}
+
+$ListDict.insert = function(){
+    var $=$B.args('insert',3,{self:null,i:null,item:null},
+        ['self','i','item'],arguments,{},null,null)
+    $.self.splice($.i,0,$.item)
+    return $N
+}
+
+$ListDict.pop = function(){
+    var $=$B.args('pop',2,{self:null,pos:null},['self','pos'],
+        arguments,{pos:null},null,null),
+        self=$.self, pos=$.pos
+        
+    if(pos===null){pos=self.length-1}
+    pos = $B.$GetInt(pos)
+    if(pos<0){pos+=self.length}
+    var res = self[pos]
+    if(res===undefined){throw _b_.IndexError('pop index out of range')}
+    self.splice(pos,1)
+    return res
+}
+
+$ListDict.remove = function(){
+    var $=$B.args('remove',2,{self:null,x:null},['self','x'],arguments,{},
+        null,null)
+    var _eq = getattr($.x, '__eq__')
+    for(var i=0, _len_i = $.self.length; i < _len_i;i++){
+        if(getattr($.self[i],'__eq__')($.x)){
+            $.self.splice(i,1)
             return $N
         }
     }
-    throw _b_.ValueError(_b_.str(elt)+" is not in list")
-}
-
-$ListDict.pop = function(self,pos){
-    if(pos===undefined){ // can't use self.pop() : too much recursion !
-        return self.splice(self.length-1,1)[0]
-    }
-    if(arguments.length==2){
-        if(isinstance(pos,_b_.int)){
-            var res = self[pos]
-            self.splice(pos,1)
-            return res
-        }
-        throw _b_.TypeError(pos.__class__+" object cannot be interpreted as an integer")
-    } 
-    throw _b_.TypeError("pop() takes at most 1 argument ("+(arguments.length-1)+' given)')
+    throw _b_.ValueError(_b_.str($.x)+" is not in list")
 }
 
 $ListDict.reverse = function(self){
-    var _len=self.length-1
-    var i=parseInt(self.length/2)
+    var $=$B.args('reverse',1,{self:null},['self'],arguments,{},null,null),
+        _len=$.self.length-1,
+        i=parseInt($.self.length/2)
     while (i--) {
-        var buf = self[i]
-        self[i] = self[_len-i]
-        self[_len-i] = buf
+        var buf = $.self[i]
+        $.self[i] = $.self[_len-i]
+        $.self[_len-i] = buf
     }
     return $N
 }
@@ -403,7 +447,7 @@ function $partition(arg,array,begin,end,pivot)
     var store=begin;
     if(arg===null){
         if(array.$cl!==false){
-            // Optimisation : if all elements have the same time, the 
+            // Optimisation : if all elements have the same type, the 
             // comparison function __le__ can be computed once
             var le_func = _b_.getattr(array.$cl, '__le__')
             for(var ix=begin;ix<end-1;++ix) {
@@ -421,8 +465,13 @@ function $partition(arg,array,begin,end,pivot)
             }
         }
     }else{
+        var len=array.length
         for(var ix=begin;ix<end-1;++ix) {
-            if(getattr(arg(array[ix]),'__le__')(arg(piv))) {
+            var x = arg(array[ix])
+            // If the comparison function changes the array size, raise
+            // ValueError
+            if(array.length!==len){throw ValueError('list modified during sort')}
+            if(getattr(x,'__le__')(arg(piv))) {
                 array = swap(array, store, ix);
                 ++store;
             }
@@ -442,7 +491,8 @@ function swap(_array,a,b){
 function $qsort(arg,array, begin, end)
 {
     if(end-1>begin) {
-        var pivot=begin+Math.floor(Math.random()*(end-begin));
+        var pivot=begin+Math.floor(Math.random()*(end-begin)),
+            len = array.length
         pivot=$partition(arg,array, begin, end, pivot);
         $qsort(arg,array, begin, pivot);
         $qsort(arg,array, pivot+1, end);
@@ -462,17 +512,17 @@ function $elts_class(self){
 }
 
 $ListDict.sort = function(self){
+    var $=$B.args('sort',1,{self:null},['self'],arguments,{},
+        null,'kw')
+    
     var func=null
     var reverse = false
-    for(var i=1, _len_i = arguments.length; i < _len_i;i++){
-        var arg = arguments[i]
-        if(arg.$nat=='kw'){
-            var kw_args = arg.kw
-            for(var key in kw_args){
-                if(key=='key'){func=getattr(kw_args[key],'__call__')}
-                else if(key=='reverse'){reverse=kw_args[key]}
-            }
-        }
+    var kw_args = $.kw, keys=_b_.list(_b_.dict.$dict.keys(kw_args))
+    for(var i=0;i<keys.length;i++){
+        if(keys[i]=="key"){func=getattr(kw_args.$string_dict[keys[i]],'__call__')}
+        else if(keys[i]=='reverse'){reverse=kw_args.$string_dict[keys[i]]}
+        else{throw _b_.TypeError("'"+keys[i]+
+            "' is an invalid keyword argument for this function")}
     }
     if(self.length==0) return
     self.$cl = $elts_class(self)
@@ -480,7 +530,9 @@ $ListDict.sort = function(self){
     else if(func===null && self.$cl===_b_.int.$dict){
         self.sort(function(a,b){return a-b})
     }
-    else{$qsort(func,self,0,self.length)}
+    else{
+        $qsort(func,self,0,self.length)
+    }
     if(reverse) $ListDict.reverse(self)
     // Javascript libraries might use the return value
     return (self.__brython__ ? $N : self)
@@ -489,11 +541,11 @@ $ListDict.sort = function(self){
 $B.set_func_names($ListDict)
 
 // constructor for built-in type 'list'
-function list(obj){
-    if(arguments.length===0) return []
-    if(arguments.length>1){
-        throw _b_.TypeError("list() takes at most 1 argument ("+arguments.length+" given)")
-    }
+function list(){
+    var $=$B.args('list',1,{obj:null},['obj'],arguments,{obj:null},null,null),
+        obj = $.obj
+    if(obj===null) return []
+
     if(Array.isArray(obj)){ // most simple case
         obj = obj.slice() // list(t) is not t
         obj.__brython__ = true;
@@ -504,13 +556,14 @@ function list(obj){
         }
         return obj
     }
-    var res = [], pos=0
-    var arg = iter(obj)
-    var next_func = getattr(arg,'__next__')
+    var res = [], 
+        pos=0, 
+        arg = iter(obj),
+        next_func = getattr(arg,'__next__')
     while(1){
         try{res[pos++]=next_func()}
         catch(err){
-            if(err.__name__!='StopIteration'){throw err}
+            if(!isinstance(err, _b_.StopIteration)){throw err}
             break
         }
     }

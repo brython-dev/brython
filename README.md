@@ -71,6 +71,15 @@ create a new folder "app" at the same level as "site" and create a file "index.h
 with the HTML example above.
 Point the browser to [http://localhost:8000/app](http://localhost:8000/app) to see the result.
 
+Another option, with no installation, is to use the distribution available
+online through [rawgit](https://rawgit.com/) :
+
+```xml
+<script type="text/javascript" 
+    src="https://cdn.rawgit.com/brython-dev/brython/master/www/src/brython.js">
+</script>
+```
+
 Test Brython online
 ===================
 If you want to test Brython online you can visit the following:

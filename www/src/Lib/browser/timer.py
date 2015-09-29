@@ -27,3 +27,8 @@ def request_animation_frame(func):
 
 def cancel_animation_frame(int_id):
     window.cancelAnimationFrame(int_id)
+
+def set_loop_timeout(x):
+    # set a variable used to stop loops that last more than x seconds
+    assert isinstance(x, int)
+    __BRYTHON__.loop_timeout = x

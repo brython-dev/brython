@@ -22,11 +22,14 @@ function normalize_start_end($){
 
 }
 
-function norm_pos(pos, s, default_if_None){
-    // For a string s, return a position >=0 is pos is negative or None
-    if(pos>=0){return pos}
-    else if(pos===_b_.None||pos===null){return default_if_None}
-    else{pos+=s.lengh;return Math.max(0, pos)}
+function reverse(s){
+    // Reverse a string
+    return s.split('').reverse().join('')
+}
+
+function check_str(obj){
+    if(!_b_.isinstance(obj,str)){throw _b_.TypeError("can't convert '"+
+      $B.get_class(obj).__name__+"' object to str implicitely")}
 }
 
 $StringDict.__add__ = function(self,other){
@@ -299,9 +302,7 @@ var trailing_dot = /\.$/
 
 var validate_precision = function(precision) {
     // force precision to limits of javascript
-    if (precision > 20) {
-        throw _b_.ValueError("precision too big")
-    }
+    if (precision > 20) { precision = 20 }
 }
 
 // gG
@@ -711,6 +712,8 @@ $StringDict.__mod__ = function(self, args) {
 $StringDict.__mro__ = [$StringDict,$ObjectDict]
 
 $StringDict.__mul__ = function(self,other){
+    var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],
+        arguments,{},null,null)
     if(!isinstance(other,_b_.int)){throw _b_.TypeError(
         "Can't multiply sequence by non-int of type '"+
             $B.get_class(other).__name__+"'")}
@@ -836,22 +839,26 @@ $StringDict.encode = function(self, encoding) {
     return _b_.bytes(self, encoding)
 }
 
-$StringDict.endswith = function(self){
+$StringDict.endswith = function(){
     // Return True if the string ends with the specified suffix, otherwise 
     // return False. suffix can also be a tuple of suffixes to look for. 
     // With optional start, test beginning at that position. With optional 
     // end, stop comparing at that position.
-    var $ns=$B.args("$StringDict.endswith",4,
+    var $=$B.args("endswith",4,
         {self:null, suffix:null, start:null, end:null}, 
         ['self', 'suffix', 'start', 'end'],
-        arguments,{start:0, end:self.length-1},null,null)
-    var suffixes = $ns['suffix']
+        arguments,{start:0, end:null},null,null)
+
+    normalize_start_end($)
+
+    var suffixes = $.suffix
     if(!isinstance(suffixes,_b_.tuple)){suffixes=[suffixes]}
-    var start = $ns['start'],
-        end = $ns['end']
-    var s = self.substr(start,end+1)
+    
+    var s = $.self.substring($.start,$.end)
     for(var i=0, _len_i = suffixes.length; i < _len_i;i++){
         suffix = suffixes[i]
+        if(!_b_.isinstance(suffix, str)){throw _b_.TypeError(
+            "endswith first arg must be str or a tuple of str, not int")}
         if(suffix.length<=s.length &&
             s.substr(s.length-suffix.length)==suffix) return true
     }
@@ -894,9 +901,7 @@ $StringDict.find = function(){
         {self:null, sub:null, start:null, end:null}, 
         ['self', 'sub', 'start','end'],
         arguments,{start:0,end:null},null,null)
-    if(!isinstance($.sub,str)){throw _b_.TypeError(
-        "Can't convert '"+$B.get_class($.sub).__name__+
-        "' object to str implicitly")}
+    check_str($.sub)
     normalize_start_end($)
 
     if(!isinstance($.start,_b_.int)||!isinstance($.end,_b_.int)){
@@ -1091,91 +1096,141 @@ $StringDict.index = function(self){
     return res
 }
 
-$StringDict.isalnum = function(self) {return /^[a-z0-9]+$/i.test(self)}
+$StringDict.isalnum = function() {
+    var $=$B.args('isalnum',1,{self:null},['self'],arguments,{},null,null)
+    return /^[a-z0-9]+$/i.test($.self)
+}
 
-$StringDict.isalpha = function(self) {return /^[a-z]+$/i.test(self)}
+$StringDict.isalpha = function(self) {
+    var $=$B.args('isalpha',1,{self:null},['self'],arguments,{},null,null)
+    return /^[a-z]+$/i.test($.self)
+}
 
-$StringDict.isdecimal = function(self) {
+$StringDict.isdecimal = function(){
+    var $=$B.args('isdecimal',1,{self:null},['self'],arguments,{},null,null)
   // this is not 100% correct
-  return /^[0-9]+$/.test(self)
+  return /^[0-9]+$/.test($.self)
 }
 
-$StringDict.isdigit = function(self) { return /^[0-9]+$/.test(self)}
-
-$StringDict.isidentifier = function(self) {
-
-  switch(self) {
-    case 'False':
-    case 'None':
-    case 'True':
-    case 'and':
-    case 'as':
-    case 'assert':
-    case 'break':
-    case 'class':
-    case 'continue':
-    case 'def':
-    case 'del':
-    case 'elif':
-    case 'else':
-    case 'except':
-    case 'finally':
-    case 'for':
-    case 'from':
-    case 'global':
-    case 'if':
-    case 'import':
-    case 'in':
-    case 'is':
-    case 'lambda':
-    case 'nonlocal':
-    case 'not':
-    case 'or':
-    case 'pass':
-    case 'raise':
-    case 'return':
-    case 'try':
-    case 'while':
-    case 'with':
-    case 'yield':
-      return true
-  }
-
-  // fixme..  this isn't complete but should be a good start
-  return /^[a-z][0-9a-z_]+$/i.test(self)
+$StringDict.isdigit = function() {
+    var $=$B.args('isdigit',1,{self:null},['self'],arguments,{},null,null)
+    return /^[0-9]+$/.test($.self)
 }
 
-$StringDict.islower = function(self) {return self==self.toLowerCase()}
+$StringDict.isidentifier = function() {
+    var $=$B.args('isidentifier',1,{self:null},['self'],arguments,{},null,null)
+
+    switch($.self) {
+        case 'False':
+        case 'None':
+        case 'True':
+        case 'and':
+        case 'as':
+        case 'assert':
+        case 'break':
+        case 'class':
+        case 'continue':
+        case 'def':
+        case 'del':
+        case 'elif':
+        case 'else':
+        case 'except':
+        case 'finally':
+        case 'for':
+        case 'from':
+        case 'global':
+        case 'if':
+        case 'import':
+        case 'in':
+        case 'is':
+        case 'lambda':
+        case 'nonlocal':
+        case 'not':
+        case 'or':
+        case 'pass':
+        case 'raise':
+        case 'return':
+        case 'try':
+        case 'while':
+        case 'with':
+        case 'yield':
+          return true
+      }
+
+      // fixme..  this isn't complete but should be a good start
+      return /^[a-z][0-9a-z_]+$/i.test($.self)
+}
+
+$StringDict.islower = function() {
+    var $=$B.args('islower',1,{self:null},['self'],arguments,{},null,null)
+    // A string only made of whitespace is not lower for Python
+    return $.self==$.self.toLowerCase() && $.self.search(/^\s*$/)==-1
+}
 
 // not sure how to handle unicode variables
-$StringDict.isnumeric = function(self) {return /^[0-9]+$/.test(self)}
+$StringDict.isnumeric = function() {
+    var $=$B.args('isnumeric',1,{self:null},['self'],arguments,{},null,null)
+    return /^[0-9]+$/.test($.self)
+}
 
 // inspired by http://www.codingforums.com/archive/index.php/t-17925.html
-$StringDict.isprintable = function(self) {return !/[^ -~]/.test(self)}
+$StringDict.isprintable = function() {
+    var $=$B.args('isprintable',1,{self:null},['self'],arguments,{},null,null)
+    return !/[^ -~]/.test($.self)
+}
 
-$StringDict.isspace = function(self) {return /^\s+$/i.test(self)}
+$StringDict.isspace = function() {
+    var $=$B.args('isspace',1,{self:null},['self'],arguments,{},null,null)
+    return /^\s+$/i.test($.self)
+}
 
-$StringDict.istitle = function(self) {return /^([A-Z][a-z]+)(\s[A-Z][a-z]+)$/i.test(self)}
+$StringDict.istitle = function() {
+    var $=$B.args('istitle',1,{self:null},['self'],arguments,{},null,null)
+    if($.self.search(/^\s*$/)>-1){return false}
+    
+    function get_case(char){
+        if(char.toLowerCase()==char.toUpperCase()){return false}
+        else if(char==char.toLowerCase()){return 'lower'}
+        else{return 'upper'}
+    }
+    var pos=0,char,previous=false
+    while(pos<$.self.length){
+        char = $.self.charAt(pos)
+        if(previous===undefined){previous=get_case(char)}
+        else{
+            _case = get_case(char)
+            if(_case=='upper' && previous){return false}
+            else if(_case=='lower' && !previous){return false}
+            previous=_case
+        }
+        pos++
+    }
+    return true
+}
 
-$StringDict.isupper = function(self) {return self==self.toUpperCase()}
+$StringDict.isupper = function() {
+    var $=$B.args('isupper',1,{self:null},['self'],arguments,{},null,null)
+    return $.self==$.self.toUpperCase() && $.self.search(/^\s*$/)==-1
+}
 
-$StringDict.join = function(self,obj){
-    var iterable=iter(obj)
-    var res = '',count=0
+$StringDict.join = function(){
+    var $=$B.args('join',2,{self:null,iterable:null},
+        ['self', 'iterable'], arguments, {}, null, null)
+    
+    var iterable=_b_.iter($.iterable)
+    var res = [],count=0
     while(1){
         try{
-            var obj2 = next(iterable)
+            var obj2 = _b_.next(iterable)
             if(!isinstance(obj2,str)){throw _b_.TypeError(
                 "sequence item "+count+": expected str instance, "+$B.get_class(obj2).__name__+" found")}
-            res += obj2+self
-            count++
+            res.push(obj2)
         }catch(err){
-            if(err.__name__==='StopIteration'){break}
+            if(_b_.isinstance(err, _b_.StopIteration)){break}
             else{throw err}
         }
     }
-    if(count==0) return ''
-    return res.substr(0,res.length-self.length)
+    return res.join($.self)
 }
 
 $StringDict.ljust = function(self) {
@@ -1218,14 +1273,15 @@ $StringDict.maketrans = function(from, to) {
    return _d
 }
 
-$StringDict.partition = function(self,sep) {
-  if (sep === undefined) {
-     throw Error("sep argument is required");
-     return
-  }
-  var i=self.indexOf(sep)
-  if (i== -1) return _b_.tuple([self, '', ''])
-  return _b_.tuple([self.substring(0,i), sep, self.substring(i+sep.length)])
+$StringDict.partition = function() {
+    var $=$B.args('partition',2,{self:null,sep:null},['self','sep'],
+        arguments,{},null,null)
+  if($.sep==''){throw _b_.ValueError('empty separator')}
+  check_str($.sep)
+  var i=$.self.indexOf($.sep)
+  if (i== -1) return _b_.tuple([$.self, '', ''])
+  return _b_.tuple([$.self.substring(0,i), $.sep, 
+      $.self.substring(i+$.sep.length)])
 }
 
 function $re_escape(str)
@@ -1246,14 +1302,8 @@ $StringDict.replace = function(self, old, _new, count) {
         ['self','old','$$new','count'], arguments, {count:-1},null,null),
         count=$.count,self=$.self,old=$.old,_new=$.$$new
     // Validate type of old
-    if (!isinstance(old,_b_.str)) {
-        throw _b_.TypeError("Can't convert '" + $B.get_class(old).__name__ + 
-            "' object to str implicitly");
-    }    
-    if (!isinstance(_new,_b_.str)) {
-        throw _b_.TypeError("Can't convert '" + $B.get_class(_new).__name__ + 
-            "' object to str implicitly");
-    }    
+    check_str(old)
+    check_str(_new)
     // Validate instance type of 'count'
     if (!isinstance(count,[_b_.int,_b_.float])) {
         throw _b_.TypeError("'" + $B.get_class(count).__name__ + 
@@ -1307,9 +1357,8 @@ $StringDict.rfind = function(self){
 
     normalize_start_end($)
 
-    if(!isinstance($.sub,str)){throw _b_.TypeError(
-        "Can't convert '"+$B.get_class($.sub).__name__+"' object to str implicitly")}
-
+    check_str($.sub)
+    
     if($.sub.length==0){
         if($.start>$.self.length){return -1}
         else{return $.self.length}
@@ -1341,19 +1390,16 @@ $StringDict.rjust = function(self) {
 }
 
 $StringDict.rpartition = function(self,sep) {
-  if (sep === undefined) {
-     throw Error("sep argument is required");
-     return
-  }
-  var pos=self.length-sep.length
-  while(1){
-      if(self.substr(pos,sep.length)==sep){
-          return _b_.tuple([self.substr(0,pos),sep,self.substr(pos+sep.length)])
-      }else{
-          pos--
-          if(pos<0){return _b_.tuple(['','',self])}
-      }
-  }
+    var $=$B.args('rpartition',2,{self:null,sep:null},['self','sep'],
+        arguments,{},null,null)
+    check_str($.sep)
+    var self = reverse($.self), 
+        sep = reverse($.sep)
+    var items = $StringDict.partition(self,sep).reverse()
+    for(var i=0;i<items.length;i++){
+        items[i]=items[i].split('').reverse().join('')
+    }
+    return items
 }
 
 $StringDict.rsplit = function(self) {
@@ -1363,14 +1409,14 @@ $StringDict.rsplit = function(self) {
         sep=$.sep,maxsplit=$.maxsplit,self=$.self
 
     // Use split on the reverse of the string and of separator
-    var rev_str = $.self.split('').reverse().join(''),
-        rev_sep = sep === _b_.None ? sep : $.sep.split('').reverse().join(''),
+    var rev_str = reverse($.self),
+        rev_sep = sep === _b_.None ? sep : reverse($.sep),
         rev_res = $StringDict.split(rev_str, rev_sep, $.maxsplit)
     
     // Reverse the list, then each string inside the list
     rev_res.reverse()
     for(var i=0;i<rev_res.length;i++){
-        rev_res[i] = rev_res[i].split('').reverse().join('')
+        rev_res[i] = reverse(rev_res[i])
     }
     return rev_res
 }
@@ -1440,27 +1486,61 @@ $StringDict.split = function(){
     }
 }
 
-$StringDict.splitlines = function(self){return $StringDict.split(self,'\n')}
+$StringDict.splitlines = function(self){
+    var $=$B.args('splitlines',2,{self:null,keepends:null},
+        ['self','keepends'],arguments,{keepends:false},null,null)
+    if(!_b_.isinstance($.keepends,[_b_.bool, _b_.int])){
+        throw _b_.TypeError('integer argument expected, got '+
+            $B.get_class($.keepends).__name)
+    }
+    var keepends = _b_.int($.keepends)
+    // Remove trailing line breaks
+    if(keepends){
+        var res = [],start=pos,pos=0,x,self=$.self
+        while(pos<self.length){
+            if(self.substr(pos,2)=='\r\n'){
+                res.push(self.substring(start,pos+2))
+                start = pos+2
+                pos = start
+            }else if(self.charAt(pos)=='\r' || self.charAt(pos)=='\n'){
+                res.push(self.substring(start,pos+1))
+                start = pos+1
+                pos = start
+            }else{pos++}
+        }
+        var rest = self.substr(start)
+        if(rest){res.push(rest)}
+        return res
+    }else{
+        var self = $.self.replace(/[\r\n]$/,'')
+        return self.split(/\n|\r\n|\r/)
+    }
+}
 
-$StringDict.startswith = function(self){
+$StringDict.startswith = function(){
     // Return True if string starts with the prefix, otherwise return False. 
     // prefix can also be a tuple of prefixes to look for. With optional 
     // start, test string beginning at that position. With optional end, 
     // stop comparing string at that position.
-    var $ns=$B.args("$StringDict.startswith",4,
+    var $=$B.args("startswith",4,
         {self:null, prefix:null, start:null, end:null}, 
         ['self', 'prefix', 'start', 'end'],
-        arguments,{start:0, end:self.length-1},null,null)
-    var prefixes = $ns['prefix']
-    if(!isinstance(prefixes,_b_.tuple)){prefixes=[prefixes]}
-    var start = $ns['start']
-    var end = $ns['end']
-    var s = self.substr(start,end+1)
+        arguments,{start:0, end:null},null,null)
 
-    for (var i=0, _len_i = prefixes.length; i < _len_i; i++) {
-        if (s.indexOf(prefixes[i]) == 0) return true
+    normalize_start_end($)
+
+    var prefixes = $.prefix
+    if(!isinstance(prefixes,_b_.tuple)){prefixes=[prefixes]}
+    
+    var s = $.self.substring($.start,$.end)
+    for(var i=0, _len_i = prefixes.length; i < _len_i;i++){
+        prefix = prefixes[i]
+        if(!_b_.isinstance(prefix, str)){throw _b_.TypeError(
+            "endswith first arg must be str or a tuple of str, not int")}
+        if(s.substr(0,prefix.length)==prefix) return true
     }
     return false
+
 }
 
 $StringDict.strip = function(){
@@ -1479,8 +1559,24 @@ $StringDict.swapcase = function(self) {
 }
 
 $StringDict.title = function(self) {
-    //inspired from http://stackoverflow.com/questions/196972/convert-string-to-title-case-with-javascript
-    return self.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+    var $=$B.args('title',1,{self:null},['self'],arguments,{},null,null)
+
+    // Transform letters after a non-cased character to uppercase
+    var res = '',previous=false
+
+    function is_cased(c){
+        return c.toLowerCase() != c.toUpperCase()
+    }
+
+    for(var i=0;i<$.self.length;i++){
+        var char = $.self.charAt(i), cased = is_cased(char)
+        if(!previous && cased){
+            res += char.toUpperCase()
+        }else if(previous){res+=char.toLowerCase()}
+        else{res+=char}
+        previous = cased
+    }
+    return res
 }
 
 $StringDict.translate = function(self,table) {

@@ -3,7 +3,7 @@ Preguntas frecuentes
 
 __P__ : _¿Cómo es el rendimiento de Brython cuando se compara con Javascript u otras soluciones que permiten usar Python en el navegador?_
 
-__R__ : Comparado a Javascript, el ratio puede ser muy diferente de un programa a otro pero en general se podría decir que es entre 3 y 5 veces más lento. Dispones de una consola Javascript en la propia distribución de Brython o en la [página oficial del proyecto](http://brython.info/tests/js_console.html), se puede usar para medir el tiempo de ejecución de un programa Javascript comparado a su equivalente en Python (deseleccionando el checkbox "debug").
+__R__ : Comparado a Javascript, el ratio puede ser muy diferente de un programa a otro. Dispones de una consola Javascript en la propia distribución de Brython o en la [página oficial del proyecto](http://brython.info/tests/js_console.html), se puede usar para medir el tiempo de ejecución de un programa Javascript comparado a su equivalente en Python (deseleccionando el checkbox "debug").
 
 La diferencia se debe a dos factores :
 
