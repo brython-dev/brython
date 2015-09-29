@@ -1551,13 +1551,16 @@ function $ConditionCtx(context,token){
             // execution time
             if(__BRYTHON__.loop_timeout){
                 var h = '\n'+' '.repeat($get_node(this).indent),
+                    h4 = h+' '.repeat(4),
                     num = this.loop_num,
                     test_timeout = h+'var $time'+num+' = new Date()'+h+
-                    'function $test_timeout'+num+'(){if((new Date())-$time'+
-                    num+'>'+__BRYTHON__.loop_timeout*1000+
-                    '){throw _b_.RuntimeError("script timeout")}'+h+'return true}'
+                    'function $test_timeout'+num+'()'+h4+
+                    '{if((new Date())-$time'+num+'>'+
+                    __BRYTHON__.loop_timeout*1000+
+                    '){throw _b_.RuntimeError("script timeout")}'+
+                    h4+'return true'+h+'}\n'
                 res.splice(0,0,test_timeout)
-                res.push('$test_timeout'+num+' && ')
+                res.push('$test_timeout'+num+'() && ')
             }
             res.push('$locals["$no_break'+this.loop_num+'"] && ')
                 
