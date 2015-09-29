@@ -473,13 +473,12 @@ function $AssignCtx(context, check_unbound){
     }//if
     
     this.guess_type = function(){
-        //console.log('guess type,', this.tree[0],this.tree[1])
         if(this.tree[0].type=="expr" && this.tree[0].tree[0].type=="id"){
-            $set_type(scope.id,this.tree[0],this.tree[1])
+            $set_type(scope,this.tree[0],this.tree[1])
         }else if(this.tree[0].type=='assign'){
             var left = this.tree[0].tree[0].tree[0]
             var right = this.tree[0].tree[1].tree[0]
-            $set_type(scope.id, right, this.tree[1].tree[0])
+            $set_type(scope, right, this.tree[1].tree[0])
             this.tree[0].guess_type()
         }else{
             //console.log('guess type', this.tree[0])
@@ -706,10 +705,15 @@ function $AssignCtx(context, check_unbound){
           }
           if(left.type==='sub'){ // assign to item
               
-              var seq = left.value.to_js(), temp='$temp'+$loop_num
+              var seq = left.value.to_js(), temp='$temp'+$loop_num, type
+              if(left.value.type=='id'){
+                  type = $get_node(this).locals[left.value.value]
+              }
               $loop_num++
-              var res = 'var '+temp+'='+seq+'\n'+
-                  'if(Array.isArray('+temp+') && !'+temp+'.__class__){'
+              var res = 'var '+temp+'='+seq+'\n'
+              if(type!=='list'){
+                  res += 'if(Array.isArray('+temp+') && !'+temp+'.__class__){'
+              }
               if(left.tree.length==1){
                   res += '$B.set_list_key('+temp+','+
                       (left.tree[0].to_js()+''||'null')+','+
@@ -726,6 +730,7 @@ function $AssignCtx(context, check_unbound){
                       (left.tree[2].to_js()+''||'null')+','+
                       right.to_js()+')'
               }
+              if(type=='list'){return res}
               res += '\n}else{'
               if(left.tree.length==1){
                   res += '$B.$setitem('+left.value.to_js()
@@ -888,7 +893,6 @@ function $AugmentedAssignCtx(context, op){
             // is a safe integer
             js += '&& '+left+op1+right+'>$B.min_int && '+left+op1+right+
                 '< $B.max_int){'
-            
             js += right_is_int ? '(' : '(typeof $temp=="number" && '
             js += 'typeof '+left1+'=="number") ? '
 
@@ -4790,31 +4794,62 @@ function $get_node(context){
     return ctx.node
 }
 
-function $set_type(scope_id, expr, value){
+function $get_blocks(name, scope){
+    var res = []
+    while(true){
+        if($B.bound[scope.id][name]!==undefined){res.push(scope.id)}
+        if(scope.parent_block){
+            if(scope.parent_block.id=='__builtins__'){
+                if(scope.blurred){return false}
+            }
+        }else{break}
+        scope = scope.parent_block
+    }
+    return res
+}
+
+function $set_type(scope, expr, value){
     // If expr is an id, set its type if we can extract something from value
     if(expr.type=='expr'){expr=expr.tree[0]}
     while(value.type=='expr' && value.tree.length==1){value=value.tree[0]}
     if(value.type=='list_or_tuple' && value.real=='tuple' && 
         value.tree.length==1){
-            return $set_type(scope_id, expr, value.tree[0])
+            return $set_type(scope.id, expr, value.tree[0])
     }
-    if($B.type[scope_id]===undefined){return}
+    if($B.type[scope.id]===undefined){return}
     if(expr.type=="id"){
         switch(value.type){
             case 'int':
             case 'str':
-                $B.type[scope_id][expr.value] = value.type
+                $B.type[scope.id][expr.value] = value.type
                 return
             case 'list_or_tuple':
             case 'dict_or_set':
-                $B.type[scope_id][expr.value] = value.real
+                $B.type[scope.id][expr.value] = value.real
                 return
             case 'id':
-                $B.type[scope_id][expr.value] = $B.type[scope_id][value.value]
+                $B.type[scope.id][expr.value] = $B.type[scope.id][value.value]
                 return
+            case 'call':
+                var func_name = value.func.value
+                if($B.bound.__builtins__[func_name]!==undefined){
+                    var blocks = $get_blocks(func_name, scope)
+                    if(blocks.length==1 && blocks[0]=='__builtins__'){
+                        switch(func_name){
+                            case 'int':
+                            case 'list':
+                            case 'str':
+                                $B.type[scope.id][expr.value] = func_name
+                                return
+                        }
+                    }
+                }
+                break
+            default:
+                break
         }
     }
-    $B.type[scope_id][expr.value] = false
+    $B.type[scope.id][expr.value] = false
 }
 
 function $ws(n){
