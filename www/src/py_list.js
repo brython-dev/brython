@@ -25,11 +25,14 @@ $ListDict.__add__ = function(self,other){
 }
 
 $ListDict.__contains__ = function(self,item){
+    var $=$B.args('__contains__',2,{self:null,item:null},['self','item'],
+        arguments,{},null,null), 
+        self=$.self, 
+        item=$.item
     var _eq = getattr(item, '__eq__')
     var i=self.length
     while(i--) {
-        try{if(_eq(self[i])) return true
-        }catch(err){}
+        if(_eq(self[i])) return true
     }
     return false
 }
