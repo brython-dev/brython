@@ -1343,7 +1343,7 @@ function setattr(obj,attr,value){
     }
     
     var res = obj[attr], klass=$B.get_class(obj)
-    if(res===undefined){
+    if(res===undefined && klass){
         var mro = klass.__mro__, _len = mro.length
         for(var i=0;i<_len;i++){
             res = mro[i][attr]

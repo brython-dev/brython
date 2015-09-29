@@ -1546,14 +1546,28 @@ function $ConditionCtx(context,token){
         // so that an optional "else" clause will not be run.
         var res = [tok+'(bool('], pos=1
         if(tok=='while'){
-            res[pos++]= '$locals["$no_break'+this.loop_num+'"] && '
+            // If a timeout has been set for loops by
+            // browser.timer.set_loop_timeout(), create code to control
+            // execution time
+            if(__BRYTHON__.loop_timeout){
+                var h = '\n'+' '.repeat($get_node(this).indent),
+                    num = this.loop_num,
+                    test_timeout = h+'var $time'+num+' = new Date()'+h+
+                    'function $test_timeout'+num+'(){if((new Date())-$time'+
+                    num+'>'+__BRYTHON__.loop_timeout*1000+
+                    '){throw _b_.RuntimeError("script timeout")}'+h+'return true}'
+                res.splice(0,0,test_timeout)
+                res.push('$test_timeout'+num+' && ')
+            }
+            res.push('$locals["$no_break'+this.loop_num+'"] && ')
+                
         }
         if(this.tree.length==1){
-            res[pos++]= $to_js(this.tree)+'))'
+            res.push($to_js(this.tree)+'))')
         }else{ // syntax "if cond : do_something" in the same line
-            res[pos++]=this.tree[0].to_js()+'))'
+            res.push(this.tree[0].to_js()+'))')
             if(this.tree[1].tree.length>0){
-                res[pos++]='{'+this.tree[1].to_js()+'}'
+                res.push('{'+this.tree[1].to_js()+'}')
             }
         }
         return res.join('')
@@ -2477,12 +2491,23 @@ function $ForExpr(context){
     
     this.transform = function(node,rank){
     
-        var scope = $get_scope(this)
-        var mod_name = scope.module
-        var target = this.tree[0]
-        var iterable = this.tree[1]
-        var num = this.loop_num
-        var local_ns = '$locals_'+scope.id.replace(/\./g,'_')
+        var scope = $get_scope(this),
+            mod_name = scope.module,
+            target = this.tree[0],
+            iterable = this.tree[1],
+            num = this.loop_num,
+            local_ns = '$locals_'+scope.id.replace(/\./g,'_'),
+            h = '\n'+' '.repeat(node.indent+4)
+
+        if(__BRYTHON__.loop_timeout){
+            // If the option "loop_timeout" has been set by
+            // browser.timer.set_loop_timeout, create code to initialise
+            // the timer, and the function to test at each iteration
+            var test_timeout = 'var $time'+num+' = new Date()'+h+
+                'function $test_timeout'+num+'(){if((new Date())-$time'+
+                num+'>'+__BRYTHON__.loop_timeout*1000+
+                '){throw _b_.RuntimeError("script timeout")}'+h+'return true}'
+        }
 
         // Because loops like "for x in range(...)" are very common and can be
         // optimised, check if the target is a call to the builtin function
@@ -2547,13 +2572,16 @@ function $ForExpr(context){
             }else{
                 var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()
             }
-            var h = '\n'+' '.repeat(node.indent+4)
             var js = idt+'='+start+';'+h+'var $stop_'+num +'=$B.$GetInt('+
                 stop+'),'+h+
                 '    $next'+num+'= '+idt+','+h+
                 '    $safe'+num+'= typeof $next'+num+'=="number" && typeof '+
-                '$stop_'+num+'=="number";'+h+'while(true)'
-            
+                '$stop_'+num+'=="number";'+h
+            if(__BRYTHON__.loop_timeout){
+                js += test_timeout+h+'while($test_timeout'+num+'())'
+            }else{
+                js += 'while(true)'
+            }
             var for_node = new $Node()  
             new $NodeJSCtx(for_node,js)
             
@@ -2671,8 +2699,15 @@ function $ForExpr(context){
         }
 
         var while_node = new $Node()
-        if(this.has_break){js = 'while('+local_ns+'["$no_break'+num+'"])'}
-        else{js='while(1)'}
+        if(__BRYTHON__.loop_timeout){
+            js = test_timeout+h
+            if(this.has_break){js += 'while($test_timeout'+num+'() && '+
+                local_ns+'["$no_break'+num+'"])'}
+            else{js += 'while($test_timeout'+num+'())'}
+        }else{
+            if(this.has_break){js = 'while('+local_ns+'["$no_break'+num+'"])'}
+            else{js='while(1)'}
+        }
         new $NodeJSCtx(while_node,js)
         while_node.context.loop_num = num // used for "else" clauses
         while_node.context.type = 'for' // used in $add_line_num

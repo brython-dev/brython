@@ -46,7 +46,7 @@ import sys
 import traceback
 import dis
 
-from browser import document as doc, window, alert, console
+from browser import document as doc, window, alert, console, prompt
 from browser import timer
 from browser.local_storage import storage
 
@@ -105,6 +105,18 @@ def set_debug(ev):
     else:
         __BRYTHON__.debug = 0
 
+def set_loop_timeout(ev):
+    if ev.target.checked:
+        timeout = prompt('Loop timeout, in seconds')
+        try:
+            __BRYTHON__.loop_timeout = int(timeout)
+            doc['timeout_value'].text = '%s s.' %timeout
+        except:
+            alert('Invalid value for timeout : %s' %timeout)
+    else:
+        __BRYTHON__.loop_timeout = False
+        doc['timeout_value'].text = ''
+
 __BRYTHON__.debug = int(doc['set_debug'].checked)
 
 # bindings
@@ -115,6 +127,7 @@ doc['show_js'].bind('click',editor.show_js)
 doc['run'].bind('click',lambda ev:run())
 doc['show_console'].bind('click',editor.show_console)
 doc['files'].bind('change',editor.load_script)
+doc['set_loop_timeout'].bind('change',set_loop_timeout)
 </script>
 
 <script type="text/python3">
@@ -171,6 +184,8 @@ Test:
   <div style="float:left">
     <button id="run">run</button>
     debug<input type="checkbox" id="set_debug" checked>
+    loop timeout<input type="checkbox" id="set_loop_timeout" autocomplete="off">
+    <span id="timeout_value"></span>
   </div>
   <div style="float:right">
     <button id="show_console">Show console</button>
@@ -180,6 +195,15 @@ Test:
 
 <div style="width:100%;height:100%;">
 <textarea id="console" autocomplete="off"></textarea>
+</div>
+
+<div id="timeout_dialog" title="Set timeout for loops" style="visibility:hidden">
+    <form>
+     <fieldset>
+      <label for="loop_timeout">Timeout (sec.)</label>
+      <input type="text" name="timeout" id="timeout" value="20" class="text ui-widget-content ui-corner-all">
+     </fieldset>
+    </form>
 </div>
 
 </div>
