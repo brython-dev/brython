@@ -517,7 +517,7 @@ $B.set_list_slice_step = function(obj,start,stop,step,value){
 
 
 $B.$setitem = function(obj,item,value){
-    if(Array.isArray(obj) && typeof item=='number'){
+    if(Array.isArray(obj) && typeof item=='number' && !_b_.isinstance(obj,_b_.tuple)){
         if(item<0){item+=obj.length}
         if(obj[item]===undefined){throw _b_.IndexError("list assignment index out of range")}
         obj[item]=value

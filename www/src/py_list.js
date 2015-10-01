@@ -295,9 +295,9 @@ $ListDict.__setitem__ = function(){
     var $=$B.args('__setitem__',3,{self:null,key:null,value:null},
         ['self','key','value'],arguments,{},null,null),
         self=$.self, arg=$.key, value=$.value
-    if(isinstance(self,tuple)){
-        throw _b_.TypeError("'tuple' object does not support item assignment")
-    }
+    //if(isinstance(self,tuple)){
+        //throw _b_.TypeError("'tuple' object does not support item assignment")
+    //}
     if(isinstance(arg,_b_.int)){
         var pos = arg
         if(arg<0) pos=self.length+pos

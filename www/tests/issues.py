@@ -503,4 +503,11 @@ n = 1
 for n in range(n): pass
 assert n == 0
 
+#issue 301 
+t = 1,2
+try:
+    t[0]=1
+except TypeError:
+    print('Correct TypeError')
+
 print('passed all tests')
