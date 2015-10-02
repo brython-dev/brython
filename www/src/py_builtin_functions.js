@@ -706,7 +706,18 @@ function __import__(mod_name, globals, locals, fromlist, level) {
 }
 
 //not a direct alias of prompt: input has no default value
-function input(src) {return prompt(src)}
+function input(src) {
+    var stdin = ($B.imported.sys && $B.imported.sys.stdin || $B.stdin);
+    // $B.stdout.write(src); // uncomment if we are to mimic the behavior in the console
+    if (stdin.__original__) { return prompt(src); }
+    var val = _b_.getattr(stdin, 'readline')();
+    val = val.split('\n')[0];
+    if (stdin.len === stdin.pos){
+        _b_.getattr(stdin, 'close')();
+    }
+    // $B.stdout.write(val+'\n'); // uncomment if we are to mimic the behavior in the console
+    return val;
+}
 
 function isinstance(obj,arg){
     if(obj===null) return arg===None
