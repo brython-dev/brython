@@ -1950,7 +1950,7 @@ function $DefCtx(context){
 
         // Get id of global scope
         var global_scope = scope
-        if(global_scope.parent_block===undefined){alert('undef ')}
+        if(global_scope.parent_block===undefined){alert('undef '+global_scope);console.log(global_scope)}
         while(global_scope.parent_block.id !== '__builtins__'){
             global_scope=global_scope.parent_block
         }
@@ -6480,11 +6480,11 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     root.module = module
     root.id = locals_id
     $B.modules[root.id] = root
-    $B.$py_src[locals_id] = src
+    //$B.$py_src[locals_id] = src
     if(locals_id==parent_block_id){
         root.parent_block = $B.modules[parent_block_id].parent_block || $B.modules['__builtins__']
     }else{
-        root.parent_block = $B.modules[parent_block_id]
+        root.parent_block = $B.modules[parent_block_id] || $B.modules['__builtins__']
     }
     root.line_info = line_info
     root.indent = -1
@@ -6965,6 +6965,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     if(locals_is_module){
         locals_id = locals_id[0]
     }
+    
     var local_ns = '$locals_'+locals_id.replace(/\./g,'_')
     
     var global_ns = '$locals_'+module.replace(/\./g,'_')
@@ -6980,7 +6981,7 @@ $B.py2js = function(src,module,locals_id,parent_block_id, line_info){
     $B.type[module] = $B.type[module] || {}
     $B.type[locals_id] = $B.type[locals_id] || {}
 
-    $B.$py_src[locals_id]=src
+    $B.$py_src[locals_id] = $B.$py_src[locals_id] || src
     var root = $tokenize(src,module,locals_id,parent_block_id,line_info)
     root.transform()
 

@@ -154,18 +154,18 @@ $B.$CodeObjectDict.__str__ = $B.$CodeObjectDict.__repr__
 $B.$CodeObjectDict.__mro__ = [$B.$CodeObjectDict,$ObjectDict]
 
 function compile(source, filename, mode) {
+    var $=$B.args('compile', 6,
+        {source:null, filename:null, mode:null, flags:null, dont_inherit:null,
+         optimize:null},
+         ['source', 'filename', 'mode', 'flags', 'dont_inherit','optimize'],
+         arguments,{flags:0, dont_inherit:false, optimize:-1},null,null)
     
     var module_name = 'exec_' + $B.UUID()
     var local_name = module_name; //'' + $B.UUID()
 
     var root = $B.py2js(source,module_name,[module_name],local_name)
-    
-    return {__class__:$B.$CodeObjectDict,
-        src:source,
-        name:source.__name__ || '<module>',
-        filename:filename, 
-        mode:mode
-    }
+    $.__class__ = $B.$CodeObjectDict
+    return $
 }
 
 compile.__class__ = $B.factory
@@ -289,7 +289,9 @@ function $eval(src, _globals, _locals){
 
     var is_exec = arguments[3]=='exec', module_name, leave = false
 
-    if(src.__class__===$B.$CodeObjectDict){src = src.src}
+    if(src.__class__===$B.$CodeObjectDict){
+        src = src.source
+    }
 
     if(_globals===undefined){
         module_name = current_globals_name
@@ -299,6 +301,7 @@ function $eval(src, _globals, _locals){
         module_name = _b_.dict.$dict.get(_globals, '__name__', 
             'exec_'+$B.UUID())
         $B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id]
+        $B.$py_src[module_name] = src
 
         // Initialise locals object
         if (!$B.async_enabled) eval('var $locals_'+module_name+'={}')
@@ -315,15 +318,22 @@ function $eval(src, _globals, _locals){
         }
     }
     if(_locals===undefined){
-        local_name = module_name
+        local_name = 'exec_'+$B.UUID()
+        if(_globals !== undefined){
+            var root = $B.py2js(src,module_name,[local_name],module_name)
+        }else{
+            // Insert locals name in namespace
+            eval('$locals_'+current_locals_name+"=current_frame[1]")
+            var root = $B.py2js(src,module_name,[local_name],current_locals_id)
+        }
     }else{
         if(_locals.id === undefined){_locals.id = 'exec_'+$B.UUID()}
         local_name = _locals.id
+        var root = $B.py2js(src,module_name,[module_name],local_name)
     }
  
     
     try{
-        var root = $B.py2js(src,module_name,[module_name],local_name)
         // If the Python function is eval(), not exec(), check that the source
         // is an expression_
         if(!is_exec){
@@ -2079,6 +2089,7 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
             }
             info+='\n'
         }
+        console.log('exc info, stack length',self.$stack.length)
         for(var i=0;i<self.$stack.length;i++){
             var frame = self.$stack[i]
             if(frame[1].$line_info===undefined){continue}

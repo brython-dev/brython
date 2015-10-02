@@ -152,6 +152,18 @@ $B.$list_comp = function(env){
     // Called for list comprehensions
     // "env" is a list of [local_name, local_ns] lists for all the enclosing
     // namespaces
+
+    var s = $B.frames_stack, locals_id, globals_id
+    for(var i=s.length-1;i>0;i--){
+        if(locals_id===undefined){locals_id=s[i][0]}
+        else if(locals_id!=globals_id){break}
+        if(globals_id===undefined){globals_id=s[i][2]}
+        locals_id = locals_id.replace(/\./g,'_')
+        globals_id = globals_id.replace(/\./g,'_')
+        eval('$locals_'+locals_id+'=s[i][1]')
+        eval('$locals_'+globals_id+'=s[i][3]')
+    }
+    
     var $ix = $B.UUID()
     var $py = "x"+$ix+"=[]\n", indent = 0
     for(var $i=2, _len_$i = arguments.length; $i < _len_$i;$i++){
@@ -184,7 +196,10 @@ $B.$list_comp = function(env){
         eval($js)
         var res = eval('$locals_'+listcomp_name+'["x"+$ix]')
     }
-    catch(err){throw $B.exception(err)}
+    catch(err){
+        console.log('list comp error\n',err)
+        throw $B.exception(err)
+    }
     finally{
         clear(listcomp_name)
     }
@@ -568,6 +583,7 @@ $B.$syntax_err_line = function(exc,module,pos) {
     var pos2line = {}
     var lnum=1
     var src = $B.$py_src[module]
+    if(src===undefined){console.log('no src for', module)}
     var line_pos = {1:0}
     for(var i=0, _len_i = src.length; i < _len_i;i++){
         pos2line[i]=lnum
