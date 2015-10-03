@@ -3534,7 +3534,7 @@ function $ListOrTupleCtx(context,real){
         
         switch(this.real) {
           case 'list':
-            return '['+$to_js(this.tree)+']'
+            return 'list(['+$to_js(this.tree)+'])'
           case 'list_comp':
           case 'gen_expr':
           case 'dict_or_set_comp':

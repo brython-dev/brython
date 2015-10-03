@@ -508,6 +508,12 @@ t = 1,2
 try:
     t[0]=1
 except TypeError:
-    print('Correct TypeError')
+    pass
+else:
+    raise Exception('should have raised TypeError')
+
+# issue 305
+a = [1, 2, 3]
+assert a.sort() is None
 
 print('passed all tests')
