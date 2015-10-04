@@ -302,8 +302,12 @@ $IntDict.__rshift__ = function(self,other){
 }
 
 $IntDict.__setattr__ = function(self,attr,value){
-    if(self.__class__===$IntDict){
-        throw _b_.AttributeError("'int' object has no attribute "+attr+"'")
+    if(typeof self=="number"){
+        if($IntDict[attr]===undefined){
+            throw _b_.AttributeError("'int' object has no attribute '"+attr+"'")
+        }else{
+            throw _b_.AttributeError("'int' object attribute '"+attr+"' is read-only")
+        }
     }
     // subclasses of int can have attributes set
     self[attr] = value

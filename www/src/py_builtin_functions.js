@@ -287,7 +287,7 @@ function $eval(src, _globals, _locals){
     var current_globals_id = current_frame[2]
     var current_globals_name = current_globals_id.replace(/\./,'_')
 
-    var is_exec = arguments[3]=='exec', module_name, leave = false
+    var is_exec = arguments[3]=='exec', module_name, local_name, leave = false
 
     if(src.__class__===$B.$CodeObjectDict){
         src = src.source
@@ -318,11 +318,11 @@ function $eval(src, _globals, _locals){
         }
     }
     if(_locals===undefined){
-        local_name = 'exec_'+$B.UUID()
         if(_globals !== undefined){
-            var root = $B.py2js(src,module_name,[local_name],module_name)
+            var root = $B.py2js(src,module_name,[module_name],module_name)
         }else{
             // Insert locals name in namespace
+            local_name = 'exec_'+$B.UUID()
             eval('$locals_'+current_locals_name+"=current_frame[1]")
             var root = $B.py2js(src,module_name,[local_name],current_locals_id)
         }
@@ -353,6 +353,8 @@ function $eval(src, _globals, _locals){
         var js = root.to_js()
         if ($B.async_enabled) js=$B.execution_object.source_conversion(js) 
         //js=js.replace("@@", "\'", 'g')
+        
+        console.log(js)
  
         var res = eval(js)
 
@@ -1389,15 +1391,15 @@ function setattr(obj,attr,value){
     }
     
     // Search the __setattr__ method
-    var setattr=false
+    var _setattr=false
     if(klass!==undefined){
         for(var i=0, _len=klass.__mro__.length;i<_len;i++){
-            setattr = klass.__mro__[i].__setattr__
-            if(setattr){break}
+            _setattr = klass.__mro__[i].__setattr__
+            if(_setattr){break}
         }
     }
     
-    if(!setattr){obj[attr]=value}else{setattr(obj,attr,value)}
+    if(!_setattr){obj[attr]=value}else{_setattr(obj,attr,value)}
     return None
 }
 
@@ -2100,7 +2102,6 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
             }
             info+='\n'
         }
-        console.log('exc info, stack length',self.$stack.length)
         for(var i=0;i<self.$stack.length;i++){
             var frame = self.$stack[i]
             if(frame[1].$line_info===undefined){continue}

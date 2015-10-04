@@ -1,3 +1,5 @@
+from tester import assertRaises
+
 # issue 5
 assert(isinstance(__debug__,bool))
 
@@ -505,6 +507,8 @@ assert n == 0
 
 #issue 301 
 t = 1,2
+assertRaises(TypeError, t, '__setitem__', 0, 1)
+
 try:
     t[0]=1
 except TypeError:
@@ -515,5 +519,10 @@ else:
 # issue 305
 a = [1, 2, 3]
 assert a.sort() is None
+
+# issue 307
+x = 1
+assertRaises(AttributeError, setattr, x, '__add__', 1)
+assertRaises(AttributeError, setattr, x, 'y', 1)
 
 print('passed all tests')

@@ -404,6 +404,19 @@ $FloatDict.__repr__ = $FloatDict.__str__ = function(self){
     return _b_.str(res)
 }
 
+$FloatDict.__setattr__ = function(self,attr,value){
+    if(self.constructor===Number){
+        if($FloatDict[attr]===undefined){
+            throw _b_.AttributeError("'float' object has no attribute '"+attr+"'")
+        }else{
+            throw _b_.AttributeError("'float' object attribute '"+attr+"' is read-only")
+        }
+    }
+    // subclasses of float can have attributes set
+    self[attr] = value
+    return $N
+}
+
 $FloatDict.__truediv__ = function(self,other){
     if(isinstance(other,[_b_.int, float])){
         if(other.valueOf()==0) throw ZeroDivisionError('division by zero')
