@@ -72,7 +72,17 @@ with the HTML example above.
 Point the browser to [http://localhost:8000/app](http://localhost:8000/app) to see the result.
 
 Another option, with no installation, is to use the distribution available
-online through [rawgit](https://rawgit.com/) :
+online through [rawgit](https://rawgit.com/). You can either use the latest stable
+release, for instance for release 3.2.2 :
+
+```xml
+<script type="text/javascript"
+    src="https://cdn.rawgit.com/brython-dev/brython/3.2.2/www/src/brython.js">
+</script>
+```
+
+or the current, unstable development version :
+
 
 ```xml
 <script type="text/javascript" 
