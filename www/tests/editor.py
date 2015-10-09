@@ -1,7 +1,7 @@
 import sys
 import time
 import traceback
-import dis
+import javascript
 
 from browser import document as doc, window, alert
 
@@ -105,7 +105,7 @@ def run(*args):
 
 def show_js(ev):
     src = editor.getValue()
-    doc["console"].value = dis.dis(src)
+    doc["console"].value = javascript.py2js(src, '__main__')
 
 if has_ace:
     reset_src()

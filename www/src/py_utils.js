@@ -153,17 +153,7 @@ $B.$list_comp = function(env){
     // "env" is a list of [local_name, local_ns] lists for all the enclosing
     // namespaces
 
-    var s = $B.frames_stack, locals_id, globals_id
-    for(var i=s.length-1;i>0;i--){
-        if(locals_id===undefined){locals_id=s[i][0]}
-        else if(locals_id!=globals_id){break}
-        if(globals_id===undefined){globals_id=s[i][2]}
-        locals_id = locals_id.replace(/\./g,'_')
-        globals_id = globals_id.replace(/\./g,'_')
-        eval('$locals_'+locals_id+'=s[i][1]')
-        eval('$locals_'+globals_id+'=s[i][3]')
-    }
-    
+        
     var $ix = $B.UUID()
     var $py = "x"+$ix+"=[]\n", indent = 0
     for(var $i=2, _len_$i = arguments.length; $i < _len_$i;$i++){
@@ -180,13 +170,14 @@ $B.$list_comp = function(env){
         var sc_id = '$locals_'+env[i][0].replace(/\./,'_')
         eval('var '+sc_id+'=env[i][1]')
     }
-    var local_name = env[0][0]
-    var module_env = env[env.length-1]
-    var module_name = module_env[0]
+    
+    var locals_id = env[0][0],
+        module_obj = env[env.length-1],
+        globals_id = module_obj[0]
 
     var listcomp_name = 'lc'+$ix
 
-    var $root = $B.py2js($py,module_name,listcomp_name,local_name,
+    var $root = $B.py2js($py, globals_id, listcomp_name, locals_id,
         $B.line_info)
     
     $root.caller = $B.line_info
@@ -203,7 +194,7 @@ $B.$list_comp = function(env){
     finally{
         clear(listcomp_name)
     }
-
+    
     return res
 }
 
@@ -1024,7 +1015,22 @@ $B.$GetInt=function(value) {
       "' object cannot be interpreted as an integer")
 }
 
+$B.int_or_bool = function(v){
+    switch(typeof v){
+        case "bool":
+            return v ? 1 : 0
+        case "number":
+            return v
+        case "object":
+            if(v.__class__===$B.LongInt.$dict){return v}
+        default:
+            throw _b_.TypeError("'"+$B.get_class(v).__name__+
+                "' object cannot be interpreted as an integer")
+    }
+}
+
 $B.enter_frame = function(frame){
+    if($B.frames_stack===undefined){alert('frames stack udef')}
     $B.frames_stack[$B.frames_stack.length]=frame
 }
 

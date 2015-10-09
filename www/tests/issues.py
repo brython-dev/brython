@@ -507,7 +507,7 @@ assert n == 0
 
 #issue 301 
 t = 1,2
-assertRaises(TypeError, t, '__setitem__', 0, 1)
+assertRaises(TypeError, t.__setitem__, 0, 1)
 
 try:
     t[0]=1

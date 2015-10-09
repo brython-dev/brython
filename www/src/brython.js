@@ -62,7 +62,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-10-03 18:13:01.220987"
+__BRYTHON__.compiled_date="2015-10-09 12:00:26.169737"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1745,13 +1745,10 @@ this.toString=function(){return '(lambda) '+this.args_start+' '+this.body_start}
 this.to_js=function(){this.js_processed=true
 var module=$get_module(this)
 var src=$B.$py_src[module.id]
-var qesc=new RegExp('"',"g")
-var args=src.substring(this.args_start,this.body_start).replace(qesc,'\\"')
-var body=src.substring(this.body_start+1,this.body_end).replace(qesc,'\\"')
+var qesc=new RegExp('"',"g"),
+args=src.substring(this.args_start,this.body_start).replace(qesc,'\\"'),body=src.substring(this.body_start+1,this.body_end).replace(qesc,'\\"')
 body=body.replace(/\n/g,' ')
-var scope=$get_scope(this)
-var sc=scope
-var env=[],pos=0
+var scope=$get_scope(this),sc=scope,env=[],pos=0
 while(sc && sc.id!=='__builtins__'){env[pos++]='["'+sc.id+'",$locals_'+sc.id.replace(/\./g,'_')+']'
 sc=sc.parent_block}
 var env_string='['+env.join(', ')+']'
@@ -2254,7 +2251,6 @@ node.parent.insert(pos,else_node)
 pos++}
 var frame_node=new $Node()
 var js=';$B.frames_stack = $locals["$frame'+$loop_num+'"];'
-js +='delete $locals["$frame'+$loop_num+'"];'
 new $NodeJSCtx(frame_node,js)
 node.parent.insert(pos,frame_node)
 $loop_num++}
@@ -3865,6 +3861,7 @@ src=src.replace(/\r\n/gm,'\n')
 if(src.charAt(src.length-1)!="\n"){src+='\n'}
 var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
+var internal=locals_id.charAt(0)=='$'
 var local_ns='$locals_'+locals_id.replace(/\./g,'_')
 var global_ns='$locals_'+module.replace(/\./g,'_')
 $B.bound[module]=$B.bound[module]||{}
@@ -3878,24 +3875,24 @@ var root=$tokenize(src,module,locals_id,parent_block_id,line_info)
 root.transform()
 var js=['var $B = __BRYTHON__;\n'],pos=1
 js[pos++]='eval(__BRYTHON__.InjectBuiltins());\n\n'
-if(locals_is_module){js[pos]='var '+local_ns+'=$locals_'+module+', '}else{js[pos]='var '+local_ns+'=$B.imported["'+locals_id+'"] || {}, '}
-js[pos++]+='$locals='+local_ns+';'
-var new_node=new $Node()
-new $NodeJSCtx(new_node,js.join(''))
-root.insert(0,new_node)
+js[pos]='var '
+if(locals_is_module){js[pos]+=local_ns+'=$locals_'+module+', '}else if(!internal){js[pos]+=local_ns+'=$B.imported["'+locals_id+'"] || {}, '}
+js[pos]+='$locals='+local_ns+';'
+var offset=0
+root.insert(0,$NodeJS(js.join('')))
+offset++
+if(!internal){
 var ds_node=new $Node()
 new $NodeJSCtx(ds_node,local_ns+'["__doc__"]='+(root.doc_string||'None')+';')
-root.insert(1,ds_node)
+root.insert(offset++,ds_node)
 var name_node=new $Node()
 var lib_module=module
-try{if(module.substr(0,9)=='__main__,'){lib_module='__main__;'}}catch(err){alert(module)
-throw err}
-new $NodeJSCtx(name_node,local_ns+'["__name__"]="'+locals_id+'";')
-root.insert(2,name_node)
+new $NodeJSCtx(name_node,local_ns+'["__name__"]='+local_ns+'["__name__"] || "'+locals_id+'";')
+root.insert(offset++,name_node)
 var file_node=new $Node()
 new $NodeJSCtx(file_node,local_ns+'["__file__"]="'+$B.$py_module_path[module]+'";None;\n')
-root.insert(3,file_node)
-root.insert(4,$NodeJS('$B.enter_frame(["'+locals_id+'", '+local_ns+','+
+root.insert(offset++,file_node)}
+root.insert(offset++,$NodeJS('$B.enter_frame(["'+locals_id+'", '+local_ns+','+
 '"'+module+'", '+global_ns+']);\n'))
 if($B.debug>0){$add_line_num(root,null,module)}
 if($B.debug>=2){var t1=new Date().getTime()
@@ -4454,14 +4451,6 @@ return res}
 function clear(ns){
 delete $B.vars[ns],$B.bound[ns],$B.modules[ns],$B.imported[ns]}
 $B.$list_comp=function(env){
-var s=$B.frames_stack,locals_id,globals_id
-for(var i=s.length-1;i>0;i--){if(locals_id===undefined){locals_id=s[i][0]}
-else if(locals_id!=globals_id){break}
-if(globals_id===undefined){globals_id=s[i][2]}
-locals_id=locals_id.replace(/\./g,'_')
-globals_id=globals_id.replace(/\./g,'_')
-eval('$locals_'+locals_id+'=s[i][1]')
-eval('$locals_'+globals_id+'=s[i][3]')}
 var $ix=$B.UUID()
 var $py="x"+$ix+"=[]\n",indent=0
 for(var $i=2,_len_$i=arguments.length;$i < _len_$i;$i++){$py +=' '.repeat(indent)
@@ -4471,11 +4460,9 @@ $py +=' '.repeat(indent)
 $py +='x'+$ix+'.append('+arguments[1].join('\n')+')\n'
 for(var i=0;i<env.length;i++){var sc_id='$locals_'+env[i][0].replace(/\./,'_')
 eval('var '+sc_id+'=env[i][1]')}
-var local_name=env[0][0]
-var module_env=env[env.length-1]
-var module_name=module_env[0]
+var locals_id=env[0][0],module_obj=env[env.length-1],globals_id=module_obj[0]
 var listcomp_name='lc'+$ix
-var $root=$B.py2js($py,module_name,listcomp_name,local_name,$B.line_info)
+var $root=$B.py2js($py,globals_id,listcomp_name,locals_id,$B.line_info)
 $root.caller=$B.line_info
 var $js=$root.to_js()
 try{eval($js)
@@ -4843,7 +4830,8 @@ try{var v=_b_.getattr(value,'__int__')();return v}catch(e){}
 try{var v=_b_.getattr(value,'__index__')();return v}catch(e){}
 throw _b_.TypeError("'"+$B.get_class(value).__name__+
 "' object cannot be interpreted as an integer")}
-$B.enter_frame=function(frame){$B.frames_stack[$B.frames_stack.length]=frame}
+$B.enter_frame=function(frame){if($B.frames_stack===undefined){alert('frames stack udef')}
+$B.frames_stack[$B.frames_stack.length]=frame}
 $B.leave_frame=function(){
 if($B.frames_stack.length>1){$B.frames_stack.pop()}}
 var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
@@ -5017,27 +5005,25 @@ enumerate.$dict=$EnumerateDict
 $EnumerateDict.$factory=enumerate
 function $eval(src,_globals,_locals){var current_frame=$B.frames_stack[$B.frames_stack.length-1]
 if(current_frame===undefined){alert('current frame undef pour '+src.substr(0,30))}
-var current_locals_id=current_frame[0]
-var current_locals_name=current_locals_id.replace(/\./,'_')
-var current_globals_id=current_frame[2]
-var current_globals_name=current_globals_id.replace(/\./,'_')
-var is_exec=arguments[3]=='exec',module_name,leave=false
+var current_locals_id=current_frame[0].replace(/\./,'_'),current_globals_id=current_frame[2].replace(/\./,'_')
+var is_exec=arguments[3]=='exec',leave=false
 if(src.__class__===$B.$CodeObjectDict){src=src.source}
-if(_globals===undefined){module_name=current_globals_name
-$B.$py_module_path[module_name]=$B.$py_module_path[current_globals_id]
-eval('var $locals_'+module_name+'=current_frame[3]')}else{module_name=_b_.dict.$dict.get(_globals,'__name__','exec_'+$B.UUID())
-$B.$py_module_path[module_name]=$B.$py_module_path[current_globals_id]
-$B.$py_src[module_name]=src
-if(!$B.async_enabled)eval('var $locals_'+module_name+'={}')
-var items=_b_.dict.$dict.items(_globals),item
+var globals_id='$exec_'+$B.UUID(),locals_id,parent_block_id
+if(_locals===_globals ||_locals===undefined){locals_id=globals_id}else{locals_id='$exec_'+$B.UUID()}
+eval('var $locals_'+globals_id+' = {}')
+eval('var $locals_'+locals_id+' = {}')
+if(_globals===undefined){for(var attr in current_frame[3]){eval('$locals_'+globals_id+'["'+attr+
+'"] = current_frame[3]["'+attr+'"]')}
+parent_block_id=current_globals_id
+eval('var $locals_'+current_globals_id+'=current_frame[3]')}else{var items=_b_.dict.$dict.items(_globals),item
 while(1){try{var item=next(items)
-eval('$locals_'+module_name+'["'+item[0]+'"] = item[1]')}catch(err){break}}}
-if(_locals===undefined){local_name='exec_'+$B.UUID()
-if(_globals !==undefined){var root=$B.py2js(src,module_name,[local_name],module_name)}else{
-eval('$locals_'+current_locals_name+"=current_frame[1]")
-var root=$B.py2js(src,module_name,[local_name],current_locals_id)}}else{if(_locals.id===undefined){_locals.id='exec_'+$B.UUID()}
-local_name=_locals.id
-var root=$B.py2js(src,module_name,[module_name],local_name)}
+eval('$locals_'+globals_id+'["'+item[0]+'"] = item[1]')}catch(err){break}}
+parent_block_id='__builtins__'}
+if(_locals===undefined){if(_globals!==undefined){eval('var $locals_'+locals_id+' = $locals_'+globals_id)}else{for(var attr in current_frame[1]){eval('$locals_'+locals_id+'["'+attr+
+'"] = current_frame[1]["'+attr+'"]')}}}else{var items=_b_.dict.$dict.items(_locals),item
+while(1){try{var item=next(items)
+eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')}catch(err){break}}}
+var root=$B.py2js(src,globals_id,locals_id,parent_block_id)
 try{
 if(!is_exec){
 root.children.pop()
@@ -5049,17 +5035,16 @@ throw _b_.SyntaxError("eval() argument must be an expression")}}
 var js=root.to_js()
 if($B.async_enabled)js=$B.execution_object.source_conversion(js)
 var res=eval(js)
-if(_globals!==undefined){
-var ns=eval('$locals_'+module_name)
-var setitem=getattr(_globals,'__setitem__')
-for(var attr in ns){setitem(attr,ns[attr])}}
-$B.imported[module_name]=ns
-if(_locals!==undefined){
-var ns=eval('$locals_'+local_name)
+var gns=eval('$locals_'+globals_id)
+if(_locals!==undefined){var lns=eval('$locals_'+locals_id)
 var setitem=getattr(_locals,'__setitem__')
-for(var attr in ns){setitem(attr,ns[attr])}}
+for(var attr in lns){setitem(attr,lns[attr])}}else{for(var attr in lns){current_frame[1][attr]=lns[attr]}}
+if(_globals!==undefined){
+var setitem=getattr(_globals,'__setitem__')
+for(var attr in gns){setitem(attr,gns[attr])}}else{for(var attr in gns){current_frame[3][attr]=gns[attr]}}
 if(res===undefined)return _b_.None
-return res}catch(err){if(err.$py_error===undefined){throw $B.exception(err)}
+return res}catch(err){
+if(err.$py_error===undefined){throw $B.exception(err)}
 throw err}finally{if(leave){$B.leave_frame()}}}
 $eval.$is_func=true
 function show_frames(){
@@ -5193,7 +5178,8 @@ function id(obj){if(isinstance(obj,[_b_.str,_b_.int,_b_.float])){return getattr(
 else{return obj.$id=$B.UUID()}}
 function __import__(mod_name,globals,locals,fromlist,level){
 var $=$B.args('__import__',5,{name:null,globals:null,locals:null,fromlist:null,level:null},['name','globals','locals','fromlist','level'],arguments,{globals:None,locals:None,fromlist:_b_.tuple(),level:0},null,null)
-return $B.$__import__($.name,$.globals,$.locals,$.fromlist,$.level);}
+console.log('__import__',$)
+return $B.$__import__($.name,$.locals,$.fromlist);}
 function input(src){var stdin=($B.imported.sys && $B.imported.sys.stdin ||$B.stdin);
 if(stdin.__original__){return prompt(src);}
 var val=_b_.getattr(stdin,'readline')();
@@ -5802,7 +5788,6 @@ if(self.$js_exc!==undefined){for(var attr in self.$js_exc){if(attr==='message')c
 try{info +='\n    '+attr+' : '+self.$js_exc[attr]}
 catch(_err){}}
 info+='\n'}
-console.log('exc info, stack length',self.$stack.length)
 for(var i=0;i<self.$stack.length;i++){var frame=self.$stack[i]
 if(frame[1].$line_info===undefined){continue}
 var line_info=frame[1].$line_info.split(',')
@@ -5913,7 +5898,8 @@ if(name=='super'){name='$$super'}
 if(name=='eval'){name='$eval'}
 $B.builtin_funcs[name]=true}
 $B.builtin_funcs['$eval']=true
-var other_builtins=['Ellipsis','False','None','True','__build_class__','__debug__','__doc__','__import__','__name__','__package__','copyright','credits','license','NotImplemented','type']
+var other_builtins=['Ellipsis','False','None','True','__debug__','__import__',
+'copyright','credits','license','NotImplemented','type']
 var builtin_names=builtin_funcs.concat(other_builtins)
 for(var i=0;i<builtin_names.length;i++){var name=builtin_names[i]
 var orig_name=name
@@ -6100,7 +6086,8 @@ if(to_unicode[enc]===undefined){load_encoder(enc)
 to_unicode[enc]={}
 for(var attr in from_unicode[enc]){to_unicode[enc][from_unicode[enc][attr]]=attr}}}
 function load_encoder(enc){
-if(from_unicode[enc]===undefined){var mod=_b_.__import__('encodings.'+enc),table=mod[enc].decoding_table
+if(from_unicode[enc]===undefined){try{var mod=_b_.__import__('encodings.'+enc)}catch(err){throw err}
+var table=mod[enc].decoding_table
 from_unicode[enc]={}
 for(var i=0;i<table.length;i++){from_unicode[enc][table.charCodeAt(i)]=i}}}
 function decode(b,encoding,errors){var s='',enc=normalise(encoding)
@@ -6464,6 +6451,7 @@ try{var js=(compiled)? module_contents : root.to_js()
 if($B.$options.debug==10){console.log('code for module '+module.__name__)
 console.log(js)}
 eval(js)}catch(err){console.log(err+' for module '+module.__name__)
+if(module.__name__=='codecs'){console.log(js)}
 console.log('message: '+err.$message)
 console.log('filename: '+err.fileName)
 console.log('linenum: '+err.lineNumber)
@@ -6909,6 +6897,9 @@ if(isNaN(self.valueOf()))return 'nan'
 var res=self.valueOf()+'' 
 if(res.indexOf('.')==-1)res+='.0'
 return _b_.str(res)}
+$FloatDict.__setattr__=function(self,attr,value){if(self.constructor===Number){if($FloatDict[attr]===undefined){throw _b_.AttributeError("'float' object has no attribute '"+attr+"'")}else{throw _b_.AttributeError("'float' object attribute '"+attr+"' is read-only")}}
+self[attr]=value
+return $N}
 $FloatDict.__truediv__=function(self,other){if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0)throw ZeroDivisionError('division by zero')
 return float(self/other)}
 if(isinstance(other,_b_.complex)){var cmod=other.real*other.real+other.imag*other.imag
@@ -7129,7 +7120,7 @@ $IntDict.__rshift__=function(self,other){if(isinstance(other,int)){return int($B
 var rrshift=getattr(other,'__rrshift__',null)
 if(rrshift!==null){return rrshift(self)}
 $err('>>',other)}
-$IntDict.__setattr__=function(self,attr,value){if(self.__class__===$IntDict){throw _b_.AttributeError("'int' object has no attribute "+attr+"'")}
+$IntDict.__setattr__=function(self,attr,value){if(typeof self=="number"){if($IntDict[attr]===undefined){throw _b_.AttributeError("'int' object has no attribute '"+attr+"'")}else{throw _b_.AttributeError("'int' object attribute '"+attr+"' is read-only")}}
 self[attr]=value
 return $N}
 $IntDict.__str__=$IntDict.__repr__

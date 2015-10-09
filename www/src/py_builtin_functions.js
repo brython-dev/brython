@@ -282,60 +282,76 @@ function $eval(src, _globals, _locals){
 
     var current_frame = $B.frames_stack[$B.frames_stack.length-1]
     if(current_frame===undefined){alert('current frame undef pour '+src.substr(0,30))}
-    var current_locals_id = current_frame[0]
-    var current_locals_name = current_locals_id.replace(/\./,'_')
-    var current_globals_id = current_frame[2]
-    var current_globals_name = current_globals_id.replace(/\./,'_')
+    var current_locals_id = current_frame[0].replace(/\./,'_'),
+        current_globals_id = current_frame[2].replace(/\./,'_')
 
-    var is_exec = arguments[3]=='exec', module_name, local_name, leave = false
+    var is_exec = arguments[3]=='exec',leave = false
 
     if(src.__class__===$B.$CodeObjectDict){
         src = src.source
     }
-
-    if(_globals===undefined){
-        module_name = current_globals_name
-        $B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id]
-        eval('var $locals_'+module_name+'=current_frame[3]')        
+    
+    // code will be run in a specific block
+    var globals_id = '$exec_'+$B.UUID(),
+        locals_id,
+        parent_block_id
+    if(_locals===_globals || _locals===undefined){
+        locals_id = globals_id
     }else{
-        module_name = _b_.dict.$dict.get(_globals, '__name__', 
-            'exec_'+$B.UUID())
-        $B.$py_module_path[module_name] = $B.$py_module_path[current_globals_id]
-        $B.$py_src[module_name] = src
-
-        // Initialise locals object
-        if (!$B.async_enabled) eval('var $locals_'+module_name+'={}')
-
-        // Add names/values defined in _globals
+        locals_id = '$exec_'+$B.UUID()
+    }
+    // Initialise the object for block namespaces
+    eval('var $locals_'+globals_id+' = {}')
+    eval('var $locals_'+locals_id+' = {}')
+    
+    // Initialise block globals
+    if(_globals===undefined){
+        for(var attr in current_frame[3]){
+            eval('$locals_'+globals_id+'["'+attr+
+                '"] = current_frame[3]["'+attr+'"]')
+        }
+        parent_block_id = current_globals_id
+        eval('var $locals_'+current_globals_id+'=current_frame[3]')
+    }else{
         var items = _b_.dict.$dict.items(_globals), item
         while(1){
             try{
                 var item = next(items)
-                eval('$locals_'+module_name+'["'+item[0]+'"] = item[1]')
+                eval('$locals_'+globals_id+'["'+item[0]+'"] = item[1]')
+            }catch(err){
+                break
+            }
+        }
+        parent_block_id = '__builtins__'
+    }
+
+    // Initialise block locals
+    if(_locals===undefined){
+        if(_globals!==undefined){
+            eval('var $locals_'+locals_id+' = $locals_'+globals_id)        
+        }else{
+            for(var attr in current_frame[1]){
+                eval('$locals_'+locals_id+'["'+attr+
+                    '"] = current_frame[1]["'+attr+'"]')
+            }
+        }
+    }else{
+        var items = _b_.dict.$dict.items(_locals), item
+        while(1){
+            try{
+                var item = next(items)
+                eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')
             }catch(err){
                 break
             }
         }
     }
-    if(_locals===undefined){
-        if(_globals !== undefined){
-            var root = $B.py2js(src,module_name,[module_name],module_name)
-        }else{
-            // Insert locals name in namespace
-            local_name = 'exec_'+$B.UUID()
-            eval('$locals_'+current_locals_name+"=current_frame[1]")
-            var root = $B.py2js(src,module_name,[local_name],current_locals_id)
-        }
-    }else{
-        if(_locals.id === undefined){_locals.id = 'exec_'+$B.UUID()}
-        local_name = _locals.id
-        var root = $B.py2js(src,module_name,[module_name],local_name)
-    }
- 
-    
+        
+    var root = $B.py2js(src, globals_id, locals_id, parent_block_id)
+
     try{
         // If the Python function is eval(), not exec(), check that the source
-        // is an expression_
+        // is an expression
         if(!is_exec){
             // last instruction is 'leave frame' ; we must remove it, 
             // otherwise eval() would return None
@@ -351,37 +367,44 @@ function $eval(src, _globals, _locals){
         }
 
         var js = root.to_js()
+        
         if ($B.async_enabled) js=$B.execution_object.source_conversion(js) 
         //js=js.replace("@@", "\'", 'g')
-        
-        console.log(js)
  
+        //console.log(module_id, local_id, $B.imported[module_id])
         var res = eval(js)
+        var gns = eval('$locals_'+globals_id)
 
+        // Update _locals with the namespace after execution
+        if(_locals!==undefined){
+            var lns = eval('$locals_'+locals_id)
+            var setitem = getattr(_locals,'__setitem__')
+            for(var attr in lns){setitem(attr, lns[attr])}
+        }else{
+            for(var attr in lns){current_frame[1][attr] = lns[attr]}
+        }
+        
         if(_globals!==undefined){
             // Update _globals with the namespace after execution
-            var ns = eval('$locals_'+module_name)
             var setitem = getattr(_globals,'__setitem__')
-            for(var attr in ns){
-                setitem(attr, ns[attr])
+            for(var attr in gns){
+                setitem(attr, gns[attr])
             }
-        }
-        $B.imported[module_name] = ns
-
-        // fixme: some extra variables are bleeding into locals...
-        /*  This also causes issues for unittests */
-        if(_locals!==undefined){
-            // Update _globals with the namespace after execution
-            var ns = eval('$locals_'+local_name)
-            var setitem = getattr(_locals,'__setitem__')
-            for(var attr in ns){
-                setitem(attr, ns[attr])
+        }else{
+            for(var attr in gns){
+                current_frame[3][attr] = gns[attr]
             }
         }
         
+        // fixme: some extra variables are bleeding into locals...
+        /*  This also causes issues for unittests */
         if(res===undefined) return _b_.None
         return res
     }catch(err){
+        //console.log('eval error\n', err)
+        //console.log(js)
+        //console.log('globals ns', eval('$locals_'+globals_id),'local',
+        //    eval('$locals_'+locals_id))
         if(err.$py_error===undefined){throw $B.exception(err)}
         throw err
     }finally{
@@ -704,7 +727,8 @@ function __import__(mod_name, globals, locals, fromlist, level) {
         ['name', 'globals', 'locals', 'fromlist', 'level'],
         arguments, {globals:None, locals:None, fromlist:_b_.tuple(), level:0},
         null, null)
-    return $B.$__import__($.name, $.globals, $.locals, $.fromlist, $.level);
+    console.log('__import__', $)
+    return $B.$__import__($.name, $.locals, $.fromlist);
 }
 
 //not a direct alias of prompt: input has no default value
@@ -1203,48 +1227,18 @@ function range(){
         }
     }
     if(step===null){step=1}
-    start = $B.$GetInt(start)
-    stop = $B.$GetInt(stop)
-    step = $B.$GetInt(step)
+    start = int_or_bool(start)
+    stop = int_or_bool(stop)
+    step = int_or_bool(step)
     safe = (typeof start=='number' && typeof stop=='number' &&
         typeof step=='number')
     return {__class__: $RangeDict,
-        start: $B.$GetInt(start),
-        stop: $B.$GetInt(stop),
-        step: $B.$GetInt(step),
+        start: start,
+        stop: stop,
+        step: step,
         $is_range: true,
         $safe: safe
     }
-    /*   
-    start = $B.$GetInt(start)
-    stop
-    for(var i=0;i<args.length;i++){
-        if(typeof args[i]!='number'&&!isinstance(args[i],[_b_.int])||
-            !hasattr(args[i],'__index__')){
-            throw _b_.TypeError("'"+args[i]+"' object cannot be interpreted as an integer")
-        }
-    }
-    var start=0
-    var stop=0
-    var step=1
-    if(args.length==1){stop = $B.$GetInt(args[0])}
-    else if(args.length>=2){
-        start = args[0]
-        stop = args[1]
-    }
-    if(args.length>=3) step=args[2]
-    if(step==0){throw ValueError("range() arg 3 must not be zero")}
-    var res = {
-        __class__ : $RangeDict,
-        start:start,
-        stop:stop,
-        step:step,
-        $is_range:true
-    }
-    res.$safe = (typeof start=='number' && typeof stop=='number' &&
-        typeof step=='number')
-    return res
-    */
 }
 range.__class__ = $B.$factory
 range.$dict = $RangeDict
@@ -1391,15 +1385,15 @@ function setattr(obj,attr,value){
     }
     
     // Search the __setattr__ method
-    var _setattr=false
+    var setattr=false
     if(klass!==undefined){
         for(var i=0, _len=klass.__mro__.length;i<_len;i++){
-            _setattr = klass.__mro__[i].__setattr__
-            if(_setattr){break}
+            setattr = klass.__mro__[i].__setattr__
+            if(setattr){break}
         }
     }
     
-    if(!_setattr){obj[attr]=value}else{_setattr(obj,attr,value)}
+    if(!setattr){obj[attr]=value}else{setattr(obj,attr,value)}
     return None
 }
 
@@ -2102,6 +2096,7 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
             }
             info+='\n'
         }
+        
         for(var i=0;i<self.$stack.length;i++){
             var frame = self.$stack[i]
             if(frame[1].$line_info===undefined){continue}
@@ -2320,8 +2315,8 @@ for(var i=0;i<builtin_funcs.length;i++){
 $B.builtin_funcs['$eval'] = true
 
 var other_builtins = [ 'Ellipsis', 'False',  'None', 'True', 
-'__build_class__', '__debug__', '__doc__', '__import__', '__name__', 
-'__package__', 'copyright', 'credits', 'license', 'NotImplemented', 'type']
+'__debug__', '__import__', //'__name__', '__doc__', '__package__', '__build_class__', 
+'copyright', 'credits', 'license', 'NotImplemented', 'type']
 
 var builtin_names = builtin_funcs.concat(other_builtins)
 
