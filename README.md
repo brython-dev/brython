@@ -109,12 +109,13 @@ Documentation
 =============
 Documentation is available on the [official site](http://www.brython.info "Brython Homepage").
 You can read the docs in [English](http://brython.info/doc/en/index.html),
-[French](http://brython.info/doc/fr/index.html),
-[Spanish](http://brython.info/doc/es/index.html) and
-[Portuguese](http://brython.info/doc/pt/index.html).
+[French](http://brython.info/doc/fr/index.html) and
+[Spanish](http://brython.info/doc/es/index.html).
+
 The most updated docs usually are the English and French versions so if you 
 want to be up-to-date, please, use these versions.
 
+Curious about [how Brython works](https://github.com/brython-dev/brython/wiki/How%20Brython%20works) ?
 
 Community (questions, feedback, issues, new features, ...)
 ==========================================================
