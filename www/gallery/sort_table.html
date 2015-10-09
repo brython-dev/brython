@@ -153,7 +153,7 @@ title <= html.TH('Population'+link_num.clone())
 t <= title
 
 rows = []
-for i in range(len(lines)/4):
+for i in range(int(len(lines)/4)):
     row = html.TR()
     for j in range(2):
         row <= html.TD(lines[4*i+j])
