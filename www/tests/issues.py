@@ -525,4 +525,14 @@ x = 1
 assertRaises(AttributeError, setattr, x, '__add__', 1)
 assertRaises(AttributeError, setattr, x, 'y', 1)
 
+# issue 310
+assert 4 in range(5)
+assert 4 in range(0, 5, 2)
+assert not 1 in range(0, 5, 2)
+
+assert 1 in range(10, 0, -1)
+assert 10 in range(10, 0, -1)
+assert not 1 in range(10, 0, -2)
+assert not 0 in range(10, 0, -2)
+
 print('passed all tests')

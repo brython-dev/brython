@@ -1123,14 +1123,28 @@ var $RangeDict = {__class__:$B.$type,
 }
 
 $RangeDict.__contains__ = function(self,other){
-    var x = iter(self)
-    while(1){
-        try{
-            var y = $RangeDict.__next__(x)
-            if(getattr(y,'__eq__')(other)){return true}
-        }catch(err){return false}
+    try{other = $B.int_or_bool(other)}
+    catch(err){return false}
+    
+    if(self.$safe){
+        var res = (other-self.start)/self.step
+        if(res==Math.floor(res)){
+            if(self.start<self.stop){return other>=self.start && other<self.stop}
+            else{return other<=self.start && other>self.stop}
+        }else{
+            return false
+        }
+    }else{ // long integers
+    
+        var x = iter(self)
+        while(1){
+            try{
+                var y = $RangeDict.__next__(x)
+                if(getattr(y,'__eq__')(other)){return true}
+            }catch(err){console.log(err);return false}
+        }
+        return false
     }
-    return false
 }
 
 $RangeDict.__getitem__ = function(self,rank){
@@ -1227,9 +1241,9 @@ function range(){
         }
     }
     if(step===null){step=1}
-    start = int_or_bool(start)
-    stop = int_or_bool(stop)
-    step = int_or_bool(step)
+    start = $B.int_or_bool(start)
+    stop = $B.int_or_bool(stop)
+    step = $B.int_or_bool(step)
     safe = (typeof start=='number' && typeof stop=='number' &&
         typeof step=='number')
     return {__class__: $RangeDict,

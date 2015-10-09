@@ -62,7 +62,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-10-09 12:00:26.169737"
+__BRYTHON__.compiled_date="2015-10-09 18:05:25.055458"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1342,7 +1342,7 @@ if(range_is_builtin){new $NodeJSCtx(test_range_node,'if(1)')}else{new $NodeJSCtx
 new_nodes[pos++]=test_range_node
 var idt=target.to_js()
 if($range.tree.length==1){var start=0,stop=$range.tree[0].to_js()}else{var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()}
-var js=idt+'='+start+';'+h+'var $stop_'+num +'=$B.$GetInt('+
+var js=idt+'='+start+';'+h+'var $stop_'+num +'=$B.int_or_bool('+
 stop+'),'+h+
 '    $next'+num+'= '+idt+','+h+
 '    $safe'+num+'= typeof $next'+num+'=="number" && typeof '+
@@ -4830,6 +4830,15 @@ try{var v=_b_.getattr(value,'__int__')();return v}catch(e){}
 try{var v=_b_.getattr(value,'__index__')();return v}catch(e){}
 throw _b_.TypeError("'"+$B.get_class(value).__name__+
 "' object cannot be interpreted as an integer")}
+$B.int_or_bool=function(v){switch(typeof v){case "bool":
+return v ? 1 : 0
+case "number":
+return v
+case "object":
+if(v.__class__===$B.LongInt.$dict){return v}
+default:
+throw _b_.TypeError("'"+$B.get_class(v).__name__+
+"' object cannot be interpreted as an integer")}}
 $B.enter_frame=function(frame){if($B.frames_stack===undefined){alert('frames stack udef')}
 $B.frames_stack[$B.frames_stack.length]=frame}
 $B.leave_frame=function(){
@@ -5356,10 +5365,15 @@ property.__class__=$B.$factory
 property.$dict=$PropertyDict
 $PropertyDict.$factory=property
 var $RangeDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'range',$native:true}
-$RangeDict.__contains__=function(self,other){var x=iter(self)
+$RangeDict.__contains__=function(self,other){try{other=$B.int_or_bool(other)}
+catch(err){return false}
+if(self.$safe){var res=(other-self.start)/self.step
+if(res==Math.floor(res)){if(self.start<self.stop){return other>=self.start && other<self.stop}
+else{return other<=self.start && other>self.stop}}else{return false}}else{
+var x=iter(self)
 while(1){try{var y=$RangeDict.__next__(x)
-if(getattr(y,'__eq__')(other)){return true}}catch(err){return false}}
-return false}
+if(getattr(y,'__eq__')(other)){return true}}catch(err){console.log(err);return false}}
+return false}}
 $RangeDict.__getitem__=function(self,rank){if(typeof rank !="number"){rank=$B.$GetInt(rank)}
 var res=self.start + rank*self.step
 if((self.step>0 && res >=self.stop)||
@@ -5390,12 +5404,12 @@ if(stop===null && step===null){stop=$B.$GetInt(start)
 safe=typeof stop==="number"
 return{__class__:$RangeDict,start: 0,stop: stop,step: 1,$is_range: true,$safe: safe}}
 if(step===null){step=1}
-start=$B.$GetInt(start)
-stop=$B.$GetInt(stop)
-step=$B.$GetInt(step)
+start=$B.int_or_bool(start)
+stop=$B.int_or_bool(stop)
+step=$B.int_or_bool(step)
 safe=(typeof start=='number' && typeof stop=='number' &&
 typeof step=='number')
-return{__class__: $RangeDict,start: $B.$GetInt(start),stop: $B.$GetInt(stop),step: $B.$GetInt(step),$is_range: true,$safe: safe}}
+return{__class__: $RangeDict,start: start,stop: stop,step: step,$is_range: true,$safe: safe}}
 range.__class__=$B.$factory
 range.$dict=$RangeDict
 $RangeDict.$factory=range
@@ -6086,8 +6100,7 @@ if(to_unicode[enc]===undefined){load_encoder(enc)
 to_unicode[enc]={}
 for(var attr in from_unicode[enc]){to_unicode[enc][from_unicode[enc][attr]]=attr}}}
 function load_encoder(enc){
-if(from_unicode[enc]===undefined){try{var mod=_b_.__import__('encodings.'+enc)}catch(err){throw err}
-var table=mod[enc].decoding_table
+if(from_unicode[enc]===undefined){var mod=_b_.__import__('encodings.'+enc),table=mod[enc].decoding_table
 from_unicode[enc]={}
 for(var i=0;i<table.length;i++){from_unicode[enc][table.charCodeAt(i)]=i}}}
 function decode(b,encoding,errors){var s='',enc=normalise(encoding)
@@ -6451,7 +6464,6 @@ try{var js=(compiled)? module_contents : root.to_js()
 if($B.$options.debug==10){console.log('code for module '+module.__name__)
 console.log(js)}
 eval(js)}catch(err){console.log(err+' for module '+module.__name__)
-if(module.__name__=='codecs'){console.log(js)}
 console.log('message: '+err.$message)
 console.log('filename: '+err.fileName)
 console.log('linenum: '+err.lineNumber)
