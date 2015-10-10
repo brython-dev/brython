@@ -829,31 +829,8 @@ $B.pyobject2jsobject=function (obj){
     if (_b_.hasattr(obj, '__dict__')) {
        return $B.pyobject2jsobject(_b_.getattr(obj, '__dict__'))
     }
-    throw _b_.TypeError(str(obj)+' is not JSON serializable')
-}
-
-
-// override IDBObjectStore's add, put, etc functions since we need
-// to convert python style objects to a js object type
-
-if (window.IDBObjectStore !== undefined) {
-    window.IDBObjectStore.prototype._put=window.IDBObjectStore.prototype.put
-    window.IDBObjectStore.prototype.put=function(obj, key) {
-       var myobj = $B.pyobject2jsobject(obj)
-       return window.IDBObjectStore.prototype._put.apply(this, [myobj, key]);
-    }
-    
-    window.IDBObjectStore.prototype._add=window.IDBObjectStore.prototype.add
-    window.IDBObjectStore.prototype.add=function(obj, key) {
-       var myobj= $B.pyobject2jsobject(obj);
-       return window.IDBObjectStore.prototype._add.apply(this, [myobj, key]);
-    }
-}
-
-if (window.IDBRequest !== undefined) {
-    window.IDBRequest.prototype.pyresult=function() {
-       return $B.jsobject2pyobject(this.result);
-    }
+    console.log('error', obj)
+    throw _b_.TypeError(_b_.str(obj)+' is not JSON serializable')
 }
 
 $B.set_line = function(line_num,module_name){

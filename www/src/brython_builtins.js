@@ -119,20 +119,6 @@ if(has_storage){
     $B.has_session_storage = false
 }
 
-var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB
-$B.has_indexedDB = indexedDB !== undefined
-if($B.has_indexedDB){
-    $B.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction
-    $B.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange
-    
-    $B.indexedDB = function(){return $B.JSObject(indexedDB)}
-}
-
-$B.re = function(pattern,flags){return $B.JSObject(new RegExp(pattern,flags))}
-$B.has_json = typeof(JSON)!=="undefined"
-
-$B.has_websocket = window.WebSocket!==undefined
-
 $B.globals = function(){
     // Can be used in Javascript console to inspect global namespace
     return $B.frames_stack[$B.frames_stack.length-1][3]

@@ -210,10 +210,10 @@ $JSObjectDict.__getattribute__ = function(self,attr){
                     location.replace(args[0])
                     return
                 }
-                var res = js_attr.apply(self.js,args)
-                if(typeof res == 'object') return JSObject(res)
-                if(res===undefined) return None
-                return $B.$JS2Py(res)
+                var result = js_attr.apply(self.js,args)
+                if(typeof result == 'object') return JSObject(result)
+                if(result===undefined) return None
+                return $B.$JS2Py(result)
             }
             res.__repr__ = function(){return '<function '+attr+'>'}
             res.__str__ = function(){return '<function '+attr+'>'}
