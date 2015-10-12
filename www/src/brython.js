@@ -54,7 +54,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-10-10 12:58:30.095250"
+__BRYTHON__.compiled_date="2015-10-12 22:34:28.826256"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4842,7 +4842,13 @@ return res}else{return z}}
 $B.div=function(x,y){var z=x/y
 if(x>min_int && x<max_int && y>min_int && y<max_int
 && z>min_int && z<max_int){return z}
-else{return z}}
+else{return $B.LongInt.$dict.__truediv__($B.LongInt(x),$B.LongInt(y))}}
+$B.eq=function(x,y){if(x>min_int && x<max_int && y>min_int && y<max_int){return x==y}
+return $B.LongInt.$dict.__eq__($B.LongInt(x),$B.LongInt(y))}
+$B.floordiv=function(x,y){var z=x/y
+if(x>min_int && x<max_int && y>min_int && y<max_int
+&& z>min_int && z<max_int){return Math.floor(z)}
+else{return $B.LongInt.$dict.__floordiv__($B.LongInt(x),$B.LongInt(y))}}
 $B.mul=function(x,y){var z=x*y
 if(x>min_int && x<max_int && y>min_int && y<max_int
 && z>min_int && z<max_int){return z}
@@ -4905,8 +4911,7 @@ if(obj.__class__===$B.LongInt.$dict){if(obj.pos)return prefix + $B.LongInt.$dict
 return '-' + prefix + $B.LongInt.$dict.to_base(-obj,base)}
 var value=$B.$GetInt(obj)
 if(value===undefined){
-throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')
-return}
+throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')}
 if(value >=0)return prefix + value.toString(base);
 return '-' + prefix +(-value).toString(base);}
 function bin(obj){if(isinstance(obj,_b_.int)){return $builtin_base_convert_helper(obj,2)}
@@ -5173,7 +5178,6 @@ function id(obj){if(isinstance(obj,[_b_.str,_b_.int,_b_.float])){return getattr(
 else{return obj.$id=$B.UUID()}}
 function __import__(mod_name,globals,locals,fromlist,level){
 var $=$B.args('__import__',5,{name:null,globals:null,locals:null,fromlist:null,level:null},['name','globals','locals','fromlist','level'],arguments,{globals:None,locals:None,fromlist:_b_.tuple(),level:0},null,null)
-console.log('__import__',$)
 return $B.$__import__($.name,$.locals,$.fromlist);}
 function input(src){var stdin=($B.imported.sys && $B.imported.sys.stdin ||$B.stdin);
 if(stdin.__original__){return prompt(src);}
@@ -5351,20 +5355,37 @@ property.__class__=$B.$factory
 property.$dict=$PropertyDict
 $PropertyDict.$factory=property
 var $RangeDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'range',$native:true}
-$RangeDict.__contains__=function(self,other){try{other=$B.int_or_bool(other)}
-catch(err){return false}
-if(self.$safe){var res=(other-self.start)/self.step
-if(res==Math.floor(res)){if(self.start<self.stop){return other>=self.start && other<self.stop}
-else{return other<=self.start && other>self.stop}}else{return false}}else{
-var x=iter(self)
-while(1){try{var y=$RangeDict.__next__(x)
-if(getattr(y,'__eq__')(other)){return true}}catch(err){console.log(err);return false}}
-return false}}
-$RangeDict.__getitem__=function(self,rank){if(typeof rank !="number"){rank=$B.$GetInt(rank)}
-var res=self.start + rank*self.step
-if((self.step>0 && res >=self.stop)||
-(self.step<0 && res < self.stop)){throw _b_.IndexError('range object index out of range')}
+$RangeDict.__contains__=function(self,other){if($RangeDict.__len__(self)==0){return false}
+try{other=$B.int_or_bool(other)}
+catch(err){try{if(getattr(other,'__eq__')(_b_.int(other))){other=_b_.int(other)}
+else{return false}}catch(err){return false}}
+var sub=$B.sub(other,self.start),fl=$B.floordiv(sub,self.step),res=$B.mul(self.step,fl)
+if($B.eq(res,sub)){if($B.gt(self.stop,self.start)){return $B.ge(other,self.start)&& $B.gt(self.stop,other)}else{return $B.ge(self.start,other)&& $B.gt(other,self.stop)}}else{return false}}
+$RangeDict.__delattr__=function(self,attr,value){throw _b_.AttributeError('readonly attribute')}
+$RangeDict.__eq__=function(self,other){if(isinstance(other,range)){var len=$RangeDict.__len__(self)
+if(!$B.eq(len,$RangeDict.__len__(other))){return false}
+if(len==0){return true}
+if(!$B.eq(self.start,other.start)){return false}
+if(len==1){return true}
+return $B.eq(self.step,other.step)}
+return false}
+function norm_slice(s,len){return{start: s.start===_b_.None ? 0 : s.start,stop: s.stop===_b_.None ? len : s.stop,step: s.step===_b_.None ? 1 : s.step}}
+function compute_item(r,i){var len=$RangeDict.__len__(r)
+if(len==0){return r.start}
+else if(i>len){return r.stop}
+return $B.add(r.start,$B.mul(r.step,i))}
+$RangeDict.__getitem__=function(self,rank){if(isinstance(rank,_b_.slice)){var norm=norm_slice(rank,$RangeDict.__len__(self)),substep=$B.mul(self.step,norm.step),substart=compute_item(self,norm.start),substop=compute_item(self,norm.stop)
+return range(substart,substop,substep)}
+if(typeof rank !="number"){rank=$B.$GetInt(rank)}
+if($B.gt(0,rank)){rank=$B.add(rank,$RangeDict.__len__(self))}
+var res=$B.add(self.start,$B.mul(rank,self.step))
+if(($B.gt(self.step,0)&&($B.ge(res,self.stop)||$B.gt(self.start,res)))||
+($B.gt(0,self.step)&&($B.ge(self.stop,res)||$B.gt(res,self.start)))){throw _b_.IndexError('range object index out of range')}
 return res }
+$RangeDict.__hash__=function(self){var len=$RangeDict.__len__(self)
+if(len==0){return hash(_b_.tuple([0,None,None]))}
+if(len==1){return hash(_b_.tuple([1,self.start,None]))}
+return hash(_b_.tuple([len,self.start,self.step]))}
 $RangeIterator=function(obj){return{__class__:$RangeIterator.$dict,obj: obj}}
 $RangeIterator.__class__=$B.$factory
 $RangeIterator.$dict={__class__: $B.$type,__name__: 'range_iterator',$factory: $RangeIterator,__iter__: function(self){return self},__next__: function(self){return next(self.obj)}}
@@ -5372,8 +5393,15 @@ $RangeIterator.$dict.__mro__=[$RangeIterator.$dict,$ObjectDict]
 $RangeDict.__iter__=function(self){var res={__class__ : $RangeDict,start:self.start,stop:self.stop,step:self.step}
 if(self.$safe){res.$counter=self.start-self.step}else{res.$counter=$B.sub(self.start,self.step)}
 return $RangeIterator(res)}
-$RangeDict.__len__=function(self){if(self.step>0)return 1+_b_.int((self.stop-1-self.start)/self.step)
-return 1+_b_.int((self.start-1-self.stop)/-self.step)}
+$RangeDict.__len__=function(self){var len
+if($B.gt(self.step,0)){if($B.ge(self.start,self.stop)){return 0}
+var n=$B.sub(self.stop,$B.add(1,self.start)),q=$B.floordiv(n,self.step)
+len=$B.add(1,q)}else{if($B.ge(self.stop,self.start)){return 0}
+var n=$B.sub(self.start,$B.add(1,self.stop)),q=$B.floordiv(n,$B.mul(-1,self.step))
+len=$B.add(1,q)}
+if($B.maxsize===undefined){$B.maxsize=$B.LongInt.$dict.__pow__($B.LongInt(2),63)
+$B.maxsize=$B.LongInt.$dict.__sub__($B.maxsize,1)}
+return len}
 $RangeDict.__next__=function(self){if(self.$safe){self.$counter +=self.step
 if((self.step>0 && self.$counter >=self.stop)
 ||(self.step<0 && self.$counter <=self.stop)){throw _b_.StopIteration('')}}else{self.$counter=$B.add(self.$counter,self.step)
@@ -5385,14 +5413,30 @@ $RangeDict.__reversed__=function(self){return range($B.sub(self.stop,1),$B.sub(s
 $RangeDict.__repr__=$RangeDict.__str__=function(self){var res='range('+_b_.str(self.start)+', '+_b_.str(self.stop)
 if(self.step!=1)res +=', '+_b_.str(self.step)
 return res+')'}
+$RangeDict.__setattr__=function(self,attr,value){throw _b_.AttributeError('readonly attribute')}
+$RangeDict.descriptors={start: function(self){return self.start},step: function(self){return self.step},stop: function(self){return self.stop}}
+$RangeDict.count=function(self,ob){if(isinstance(ob,[_b_.int,_b_.float,_b_.bool])){return _b_.int($RangeDict.__contains__(self,ob))}else{var comp=getattr(ob,'__eq__'),it=$RangeDict.__iter__(self)
+_next=$RangeIterator.$dict.__next__,nb=0
+while(true){try{if(comp(_next(it))){nb++}}catch(err){if(isinstance(err,_b_.StopIteration)){return nb}
+throw err}}}}
+$RangeDict.index=function(self,other){var $=$B.args('index',2,{self:null,other:null},['self','other'],arguments,{},null,null),self=$.self,other=$.other
+if(isinstance(other,[_b_.int,_b_.float,_b_.bool])){var sub=$B.sub(other,self.start),fl=$B.floordiv(sub,self.step),res=$B.mul(self.step,fl)
+if($B.eq(res,sub)){if(($B.gt(self.stop,self.start)&& $B.ge(other,self.start)
+&& $B.gt(self.stop,other))||
+($B.ge(self.start,self.stop)&& $B.ge(self.start,other)
+&& $B.gt(other,self.stop))){return fl}else{throw _b_.ValueError(_b_.str(other)+' not in range')}}else{throw _b_.ValueError(_b_.str(other)+' not in range')}}else{var comp=getattr(other,'__eq__'),it=$RangeDict.__iter__(self),_next=$RangeIterator.$dict.__next__,nb=0
+while(true){try{if(comp(_next(it))){return nb}
+nb++}catch(err){if(isinstance(err,_b_.StopIteration)){throw _b_.ValueError(_b_.str(other)+' not in range')}
+throw err}}}}
 function range(){var $=$B.args('range',3,{start:null,stop:null,step:null},['start','stop','step'],arguments,{stop:null,step:null},null,null),start=$.start,stop=$.stop,step=$.step,safe
-if(stop===null && step===null){stop=$B.$GetInt(start)
+if(stop===null && step===null){stop=$B.int_or_bool(start)
 safe=typeof stop==="number"
 return{__class__:$RangeDict,start: 0,stop: stop,step: 1,$is_range: true,$safe: safe}}
 if(step===null){step=1}
 start=$B.int_or_bool(start)
 stop=$B.int_or_bool(stop)
 step=$B.int_or_bool(step)
+if(step==0){throw _b_.ValueError("range() arg 3 must not be zero")}
 safe=(typeof start=='number' && typeof stop=='number' &&
 typeof step=='number')
 return{__class__: $RangeDict,start: start,stop: stop,step: step,$is_range: true,$safe: safe}}
@@ -7286,10 +7330,8 @@ var left=v1.substr(0,v2.length)
 if(v1<v2){left=v1.substr(0,v2.length+1)}
 var right=v1.substr(left.length)
 var mv2={}
-var jsv2=parseInt(v2.substr(0,15))
 while(true){
-var jsleft=parseInt(left.substr(0,15))
-var candidate=Math.floor(jsleft/jsv2).toString()
+var candidate=Math.floor(parseInt(left)/parseInt(v2))+''
 if(mv2[candidate]===undefined){mv2[candidate]=mul_pos(v2,candidate).value}
 if(comp_pos(left,mv2[candidate])==-1){
 candidate--
@@ -7526,7 +7568,7 @@ Math.round(n)===n &&
 MIN_SAFE_INTEGER <=n &&
 n <=MAX_SAFE_INTEGER);}
 function intOrLong(long){
-var v=parseInt(long.value)
+var v=parseInt(long.value)*(long.pos ? 1 : -1)
 if(v>MIN_SAFE_INTEGER && v<MAX_SAFE_INTEGER){return v}
 return long}
 function LongInt(value,base){if(arguments.length>2){throw _b_.TypeError("LongInt takes at most 2 arguments ("+

@@ -76,9 +76,6 @@ function divmod_pos(v1, v2){
         // mv2 maps integers i from 2 to 9 to i*v2, used as a cache to avoid
         // having to compute i*v2 each time
         var mv2 = {}
-        // Javascript "safe integer" with the 15 first digits in v2,
-        // used in the algorithm to test candidate values
-        var jsv2 = parseInt(v2.substr(0,15))
 
         // Division algorithm
         // At each step in the division, v1 is split into substrings
@@ -89,9 +86,8 @@ function divmod_pos(v1, v2){
         // It stops when right is empty
         while(true){
             // Uses JS division to test an approximate result
-            var jsleft = parseInt(left.substr(0,15))
-            var candidate = Math.floor(jsleft/jsv2).toString()
-
+            var candidate = Math.floor(parseInt(left)/parseInt(v2))+''
+            
             // Check that candidate is the correct result
             // Start by computing candidate*v2 : for this, use the table
             // mv2, which stores the multiples of v2 already calculated
@@ -530,6 +526,7 @@ $LongIntDict.__truediv__ = function(self, other){
     }else{throw TypeError("unsupported operand type(s) for /: 'int' and '"+
         $B.get_class(other).__name__+"'")}
 }
+
 $LongIntDict.__xor__ = function(self, other){
     other = LongInt(other)
     var v1 = $LongIntDict.__index__(self)
@@ -591,7 +588,7 @@ function isSafeInteger(n) {
 function intOrLong(long){
     // If the result of an operation on LongInt instances is a safe
     // integer, convert it to a Javascript number
-    var v = parseInt(long.value)
+    var v = parseInt(long.value) * (long.pos ? 1 : -1)
     if(v>MIN_SAFE_INTEGER && v<MAX_SAFE_INTEGER){return v}
     return long
 }

@@ -1039,12 +1039,30 @@ $B.add = function(x,y){
         return res
     }else{return z}
 }
+
 $B.div = function(x,y){
     var z = x/y
     if(x>min_int && x<max_int && y>min_int && y<max_int
         && z>min_int && z<max_int){return z}
-    else{return z}
+    else{
+        return $B.LongInt.$dict.__truediv__($B.LongInt(x), $B.LongInt(y))
+    }
 }
+
+$B.eq = function(x,y){
+    if(x>min_int && x<max_int && y>min_int && y<max_int){return x==y}
+    return $B.LongInt.$dict.__eq__($B.LongInt(x), $B.LongInt(y))
+}
+
+$B.floordiv = function(x,y){
+    var z = x/y
+    if(x>min_int && x<max_int && y>min_int && y<max_int
+        && z>min_int && z<max_int){return Math.floor(z)}
+    else{
+        return $B.LongInt.$dict.__floordiv__($B.LongInt(x), $B.LongInt(y))
+    }
+}
+
 $B.mul = function(x,y){
     var z = x*y
     if(x>min_int && x<max_int && y>min_int && y<max_int
@@ -1063,7 +1081,7 @@ $B.sub = function(x,y){
         return $B.LongInt.$dict.__sub__($B.LongInt(x), $B.LongInt(y))
     }else{return z}
 }
-// gretaer or equal
+// greater or equal
 $B.ge = function(x,y){
     if(typeof x=='number' && typeof y== 'number'){return x>=y}
     // a safe int is >= to a long int if the long int is negative

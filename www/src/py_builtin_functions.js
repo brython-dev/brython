@@ -75,7 +75,6 @@ function $builtin_base_convert_helper(obj, base) {
   if (value === undefined) {
      // need to raise an error
      throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')
-     return
   }
 
   if (value >=0) return prefix + value.toString(base);
@@ -727,7 +726,6 @@ function __import__(mod_name, globals, locals, fromlist, level) {
         ['name', 'globals', 'locals', 'fromlist', 'level'],
         arguments, {globals:None, locals:None, fromlist:_b_.tuple(), level:0},
         null, null)
-    console.log('__import__', $)
     return $B.$__import__($.name, $.locals, $.fromlist);
 }
 
@@ -1123,40 +1121,83 @@ var $RangeDict = {__class__:$B.$type,
 }
 
 $RangeDict.__contains__ = function(self,other){
+    if($RangeDict.__len__(self)==0){return false}
     try{other = $B.int_or_bool(other)}
-    catch(err){return false}
+    catch(err){
+        try{
+            if(getattr(other,'__eq__')(_b_.int(other))){other=_b_.int(other)}
+            else{return false}
+        }catch(err){return false}
+    }
     
-    if(self.$safe){
-        var res = (other-self.start)/self.step
-        if(res==Math.floor(res)){
-            if(self.start<self.stop){return other>=self.start && other<self.stop}
-            else{return other<=self.start && other>self.stop}
+    var sub = $B.sub(other, self.start),
+        fl = $B.floordiv(sub, self.step),
+        res = $B.mul(self.step, fl)
+    if($B.eq(res, sub)){
+        if($B.gt(self.stop, self.start)){
+            return $B.ge(other, self.start) && $B.gt(self.stop, other)
         }else{
-            return false
+            return $B.ge(self.start, other) && $B.gt(other, self.stop)
         }
-    }else{ // long integers
-    
-        var x = iter(self)
-        while(1){
-            try{
-                var y = $RangeDict.__next__(x)
-                if(getattr(y,'__eq__')(other)){return true}
-            }catch(err){console.log(err);return false}
-        }
+    }else{
         return false
     }
 }
 
+$RangeDict.__delattr__ = function(self, attr, value){
+    throw _b_.AttributeError('readonly attribute')
+}
+
+$RangeDict.__eq__ = function(self, other){
+    if(isinstance(other, range)){
+        var len = $RangeDict.__len__(self)
+        if(!$B.eq(len,$RangeDict.__len__(other))){return false}
+        if(len==0){return true}
+        if(!$B.eq(self.start,other.start)){return false}
+        if(len==1){return true}
+        return $B.eq(self.step, other.step)
+    }
+    return false
+}
+
+function norm_slice(s, len){
+    return {start: s.start === _b_.None ? 0 : s.start,
+        stop: s.stop === _b_.None ? len : s.stop,
+        step: s.step === _b_.None ? 1 : s.step
+    }
+}
+function compute_item(r, i){
+    var len = $RangeDict.__len__(r)
+    if(len==0){return r.start}
+    else if(i>len){return r.stop}
+    return $B.add(r.start, $B.mul(r.step, i))
+}
+
 $RangeDict.__getitem__ = function(self,rank){
+    if(isinstance(rank, _b_.slice)){
+        var norm = norm_slice(rank, $RangeDict.__len__(self)),
+            substep = $B.mul(self.step, norm.step),
+            substart = compute_item(self, norm.start),
+            substop = compute_item(self, norm.stop)
+        return range(substart, substop, substep)
+    }
     if(typeof rank != "number") {
       rank=$B.$GetInt(rank)
     }
-    var res = self.start + rank*self.step
-    if((self.step>0 && res >= self.stop) ||
-        (self.step<0 && res < self.stop)){
+    if($B.gt(0, rank)){rank = $B.add(rank, $RangeDict.__len__(self))}
+    var res = $B.add(self.start, $B.mul(rank, self.step))
+    if(($B.gt(self.step,0) && ($B.ge(res, self.stop) || $B.gt(self.start, res))) ||
+        ($B.gt(0, self.step) && ($B.ge(self.stop, res) || $B.gt(res, self.start)))){
             throw _b_.IndexError('range object index out of range')
     }
     return res   
+}
+
+$RangeDict.__hash__ = function(self){
+    var len = $RangeDict.__len__(self)
+    if(len==0){return hash(_b_.tuple([0, None, None]))}
+    if(len==1){return hash(_b_.tuple([1, self.start, None]))}
+    return hash(_b_.tuple([len, self.start, self.step]))
 }
 
 $RangeIterator = function(obj){
@@ -1190,9 +1231,25 @@ $RangeDict.__iter__ = function(self){
 }
 
 $RangeDict.__len__ = function(self){
-    if(self.step>0) return 1+_b_.int((self.stop-1-self.start)/self.step)
-
-    return 1+_b_.int((self.start-1-self.stop)/-self.step)
+    var len
+    if($B.gt(self.step,0)){
+        if($B.ge(self.start, self.stop)){return 0}
+        // len is 1+(self.stop-self.start-1)/self.step
+        var n = $B.sub(self.stop, $B.add(1, self.start)),
+            q = $B.floordiv(n, self.step)
+        len = $B.add(1, q)
+    }else{
+        if($B.ge(self.stop, self.start)){return 0}
+        var n = $B.sub(self.start, $B.add(1, self.stop)),
+            q = $B.floordiv(n, $B.mul(-1, self.step))
+        len = $B.add(1, q)
+    }
+    //if($B.gt(len, $B.maxsise)){throw _b_.OverflowError("range len too big")}
+    if($B.maxsize===undefined){
+        $B.maxsize = $B.LongInt.$dict.__pow__($B.LongInt(2), 63)
+        $B.maxsize = $B.LongInt.$dict.__sub__($B.maxsize, 1)
+    }
+    return len
 }
 
 $RangeDict.__next__ = function(self){
@@ -1225,12 +1282,81 @@ $RangeDict.__repr__ = $RangeDict.__str__ = function(self){
     return res+')'
 }
 
+$RangeDict.__setattr__ = function(self, attr, value){
+    throw _b_.AttributeError('readonly attribute')
+}
+
+$RangeDict.descriptors = {
+    start: function(self){return self.start},
+    step: function(self){return self.step},
+    stop: function(self){return self.stop}
+}
+
+$RangeDict.count = function(self, ob){
+    if(isinstance(ob, [_b_.int, _b_.float, _b_.bool])){
+        return _b_.int($RangeDict.__contains__(self, ob))
+    }else{
+        var comp = getattr(ob, '__eq__'),
+            it = $RangeDict.__iter__(self)
+            _next = $RangeIterator.$dict.__next__,
+            nb = 0
+        while(true){
+            try{
+                if(comp(_next(it))){nb++}
+            }catch(err){
+                if(isinstance(err, _b_.StopIteration)){
+                    return nb
+                }
+                throw err
+            }
+        }
+    }
+}
+
+$RangeDict.index = function(self, other){
+    var $ = $B.args('index', 2, {self:null, other:null},['self','other'],
+        arguments,{},null,null),
+        self=$.self, other=$.other
+    if(isinstance(other, [_b_.int, _b_.float, _b_.bool])){
+        var sub = $B.sub(other, self.start),
+            fl = $B.floordiv(sub, self.step),
+            res = $B.mul(self.step, fl)
+        if($B.eq(res, sub)){
+            if(($B.gt(self.stop, self.start) && $B.ge(other, self.start) 
+                && $B.gt(self.stop, other)) ||
+                ($B.ge(self.start, self.stop) && $B.ge(self.start, other) 
+                && $B.gt(other, self.stop))){
+                    return fl
+            }else{throw _b_.ValueError(_b_.str(other)+' not in range')}
+        }else{
+            throw _b_.ValueError(_b_.str(other)+' not in range')            
+        }    
+    }else{
+        var comp = getattr(other, '__eq__'),
+            it = $RangeDict.__iter__(self),
+            _next = $RangeIterator.$dict.__next__,
+            nb = 0
+        while(true){
+            try{
+                if(comp(_next(it))){return nb}
+                nb++
+            }catch(err){
+                if(isinstance(err, _b_.StopIteration)){
+                    throw _b_.ValueError(_b_.str(other)+' not in range')
+                }
+                throw err
+            }
+        }
+    }
+}
+
+
 function range(){
     var $=$B.args('range',3,{start:null,stop:null,step:null},
         ['start','stop','step'],arguments,{stop:null,step:null},null,null),
         start=$.start,stop=$.stop,step=$.step,safe
     if(stop===null && step===null){
-        stop = $B.$GetInt(start)
+        stop = $B.int_or_bool(start)
         safe = typeof stop==="number"
         return{__class__:$RangeDict,
             start: 0,
@@ -1244,6 +1370,7 @@ function range(){
     start = $B.int_or_bool(start)
     stop = $B.int_or_bool(stop)
     step = $B.int_or_bool(step)
+    if(step==0){throw _b_.ValueError("range() arg 3 must not be zero")}
     safe = (typeof start=='number' && typeof stop=='number' &&
         typeof step=='number')
     return {__class__: $RangeDict,
