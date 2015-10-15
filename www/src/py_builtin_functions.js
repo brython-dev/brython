@@ -1160,12 +1160,6 @@ $RangeDict.__eq__ = function(self, other){
     return false
 }
 
-function norm_slice(s, len){
-    return {start: s.start === _b_.None ? 0 : s.start,
-        stop: s.stop === _b_.None ? len : s.stop,
-        step: s.step === _b_.None ? 1 : s.step
-    }
-}
 function compute_item(r, i){
     var len = $RangeDict.__len__(r)
     if(len==0){return r.start}
@@ -1175,7 +1169,7 @@ function compute_item(r, i){
 
 $RangeDict.__getitem__ = function(self,rank){
     if(isinstance(rank, _b_.slice)){
-        var norm = norm_slice(rank, $RangeDict.__len__(self)),
+        var norm = _b_.slice.$dict.$conv(rank, $RangeDict.__len__(self)),
             substep = $B.mul(self.step, norm.step),
             substart = compute_item(self, norm.start),
             substop = compute_item(self, norm.stop)
@@ -1539,9 +1533,60 @@ function setattr(obj,attr,value){
 }
 
 // slice
-var $SliceDict = {__class__:$B.$type, __name__:'slice'}
+var $SliceDict = {__class__:$B.$type, __name__:'slice', $native:true}
 
 $SliceDict.__mro__ = [$SliceDict,$ObjectDict]
+
+$SliceDict.__repr__ = $SliceDict.__str__ = function(self){
+        return 'slice('+_b_.str(self.start)+','+
+            _b_.str(self.stop)+','+_b_.str(self.step)+')'
+    }
+
+$SliceDict.__setattr__ = function(self, attr, value){
+    throw _b_.AttributeError('readonly attribute')
+}
+
+$SliceDict.$conv = function(self, len){
+    // Internal method, uses the integer len to set
+    // start, stop, step to integers
+    return {start: self.start === _b_.None ? 0 : self.start,
+        stop: self.stop === _b_.None ? len : self.stop,
+        step: self.step === _b_.None ? 1 : self.step
+    }
+}
+
+$SliceDict.$conv_for_seq = function(self, len){
+    // Internal method, uses the integer len to set
+    // start, stop, step to integers
+    var step = self.step===None ? 1 : self.step
+    if (step == 0) {
+        throw Error('ValueError : slice step cannot be zero');
+    }
+    var start, end;
+    if (self.start === None) {
+        start = step<0 ? len-1 : 0;
+    } else {
+        start = self.start;
+        if (start < 0) start += len;
+        if (start < 0) start = step<0 ? -1 : 0
+        if (start >= len) start = step<0 ? len-1 : len;
+    }
+    if (self.stop === None) {
+        stop = step<0 ? -1 : len;
+    } else {
+        stop = self.stop;
+        if (stop < 0) stop += len
+        if (stop < 0) stop = step<0 ? -1 : 0
+        if (stop >= len) stop = step<0 ? len-1 : len;
+    }
+    return {start: start, stop: stop, step: step}
+}
+
+$SliceDict.descriptors = {
+    start: function(self){return self.start},
+    step: function(self){return self.step},
+    stop: function(self){return self.stop}
+}
 
 $SliceDict.indices = function (self, length) {
   var len=$B.$GetInt(length)
@@ -1559,43 +1604,26 @@ $SliceDict.indices = function (self, length) {
 }
 
 function slice(){
-    var $ns=$B.args('slice',0,{},[],arguments,{},'args',null)
-    var args = $ns['args']
-    if(args.length>3){throw _b_.TypeError(
-        "slice expected at most 3 arguments, got "+args.length)
-    }else if(args.length==0){
-        throw _b_.TypeError('slice expected at least 1 argument, got 0')
-    }
+    var $=$B.args('slice',3,{start:null, stop:null, step:null},
+        ['start', 'stop', 'step'],arguments,{stop:null, step:null},
+        null,null),
+        start, stop, step
 
-    var start=0, stop=0, step=1
-    // If some arguments can be interpreted as integers, do the conversion
-    for(var i=0;i<args.length;i++){
-        try{args[i]=$B.$GetInt(args[i])}
-        catch(err){}
+    if($.stop===null && $.step===null){
+        start = _b_.None
+        stop = $.start
+        step = _b_.None
+    }else{
+        start = $.start
+        stop = $.stop
+        step = $.step === null ? _b_.None : $.step
     }
-    switch(args.length) {
-      case 1:
-        step = start = None
-        stop = args[0]
-        break
-      case 2:
-        start = args[0]
-        stop = args[1]
-        break
-      case 3:
-        start = args[0]
-        stop = args[1]
-        step = args[2]
-    } //switch
 
     var res = {
         __class__ : $SliceDict,
         start:start,
         stop:stop,
         step:step
-    }
-    res.__repr__ = res.__str__ = function(){
-        return 'slice('+start+','+stop+','+step+')'
     }
     return res
 }

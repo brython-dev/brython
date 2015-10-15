@@ -95,16 +95,8 @@ $StringDict.__getitem__ = function(self,arg){
         throw _b_.IndexError('string index out of range')
     }
     if(isinstance(arg,slice)) {
-        var step = arg.step===None ? 1 : arg.step
-        if(step>0){
-            var start = arg.start===None ? 0 : arg.start
-            var stop = arg.stop===None ? getattr(self,'__len__')() : arg.stop
-        }else{
-            var start = arg.start===None ? getattr(self,'__len__')()-1 : arg.start
-            var stop = arg.stop===None ? -1 : arg.stop
-        }
-        if(start<0) start+=self.length
-        if(stop<0 && arg.stop!==None) stop+=self.length
+        var s=_b_.slice.$dict.$conv_for_seq(arg, self.length),
+            start=s.start, stop=s.stop, step=s.step
         var res = '',i=null
         if(step>0){
             if(stop<=start) return ''

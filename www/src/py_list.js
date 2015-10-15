@@ -115,31 +115,11 @@ $ListDict.__getitem__ = function(self,arg){
         throw _b_.IndexError('list index out of range')
     }
     if (isinstance(key,_b_.slice)) {
-        /* Find the real values for start, stop and step */
-        var step = key.step===None ? 1 : key.step
-        if (step == 0) {
-            throw Error('ValueError : slice step cannot be zero');
-        }
-        var length = self.length;
-        var start, end;
-        if (key.start === None) {
-            start = step<0 ? length-1 : 0;
-        } else {
-            start = key.start;
-            if (start < 0) start += length;
-            if (start < 0) start = step<0 ? -1 : 0
-            if (start >= length) start = step<0 ? length-1 : length;
-        }
-        if (key.stop === None) {
-            stop = step<0 ? -1 : length;
-        } else {
-            stop = key.stop;
-            if (stop < 0) stop += length
-            if (stop < 0) stop = step<0 ? -1 : 0
-            if (stop >= length) stop = step<0 ? length-1 : length;
-        }
-        /* Return the sliced list  */
-        var res = [], i=null, items=self.valueOf(), pos=0
+        // Find integer values for start, stop and step
+        var s = _b_.slice.$dict.$conv_for_seq(key, self.length)
+        // Return the sliced list
+        var res=[], i=null, items=self.valueOf(), pos=0,
+            start=s.start, stop=s.stop, step=s.step
         if (step > 0) {
             if (stop <= start) return res;
             for(var i=start; i<stop; i+=step) {
@@ -159,7 +139,8 @@ $ListDict.__getitem__ = function(self,arg){
        return $ListDict.__getitem__(self, _b_.int(key))
     }
 
-    throw _b_.TypeError('list indices must be integer, not '+key.__class__.__name__)
+    throw _b_.TypeError('list indices must be integer, not '+
+        $B.get_class(key).__name__)
 }
 
 $ListDict.__ge__ = function(self,other){
