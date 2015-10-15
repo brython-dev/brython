@@ -3133,6 +3133,17 @@ function $IdCtx(context,value){
         else if(val=='__BRYTHON__' || val == '$B'){return val}
 
         var innermost = $get_scope(this)
+        /*
+        if(val=='list'){
+            console.log(val, 'innermost', innermost)
+            var node = $get_node(this), scope=innermost
+            console.log('locals', node.locals)
+            while(scope){
+                console.log('locals of scope', scope.id, scope.locals)
+                scope = scope.parent_block
+            }
+        }
+        */
         var scope = innermost, found=[], module = scope.module
         
         // get global scope
@@ -3240,6 +3251,16 @@ function $IdCtx(context,value){
                     }
                 }else if(scope.id==scope.module){
                     if(!this.bound && scope===innermost && this.env[val]===undefined){
+                        var locs = $get_node(this).locals || {}
+                        if(locs[val]===undefined){
+                            // Name is bound in scope, but after the current node
+                            // If it is a builtin name, use the builtin
+                            // Cf issue #311
+                            if(found.length>1 && found[1].id == '__builtins__'){
+                                this.is_builtin = true
+                                return val+$to_js(this.tree,'')
+                            }
+                        }
                         return '$B.$search("'+val+'", $locals_'+scope.id.replace(/\./g,'_')+')'
                     }
                     val = scope_ns+'["'+val+'"]'
