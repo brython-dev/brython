@@ -28,6 +28,6 @@ def urlopen(url, data=None, timeout=None):
        _ajax.send(data)
 
     if isinstance(result.text, str):
-       return FileIO(result.text), url, {'status': result.status}
+       return FileIO(result.text) #, url, {'status': result.status}
 
-    return FileIO(result.text()), url, {'status': result.status}
+    return FileIO(result.text()) #, url, {'status': result.status}
