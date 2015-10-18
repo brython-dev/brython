@@ -7266,16 +7266,18 @@ function brython(options){
                     defined_ids[elt.id] = true
                 }
             }
-        }        
+        }
         for(var $i=0;$i<$elts.length;$i++){
             var $elt = $elts[$i]
             if($elt.type=="text/python"||$elt.type==="text/python3"){
 
                 if($elt.id){module_name=$elt.id}
-                else if(first_script){module_name='__main__'; first_script=false}
-                else{module_name = '__main__'+$B.UUID()}
-                while(defined_ids[module_name]!==undefined){
-                    module_name = '__main__'+$B.UUID()
+                else{
+                    if(first_script){module_name='__main__'; first_script=false}
+                    else{module_name = '__main__'+$B.UUID()}
+                    while(defined_ids[module_name]!==undefined){
+                        module_name = '__main__'+$B.UUID()
+                    }
                 }
                 $B.scripts.push(module_name)
             
