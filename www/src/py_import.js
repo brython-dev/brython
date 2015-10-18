@@ -685,7 +685,7 @@ url_hook.$dict = {
 url_hook.$dict.__mro__ = [url_hook.$dict, _b_.object.$dict]
 
 // FIXME : Add this code elsewhere ?
-$B.path_hooks = [vfs_hook, url_hook];
+$B.$path_hooks = [vfs_hook, url_hook];
 $B.path_importer_cache = {};
 // see #247 - By adding these early some unnecesary AJAX requests are not sent
 var _sys_paths = [[$B.script_dir + '/', 'py'],
@@ -901,7 +901,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     }
 }
 
-$B.meta_path = [finder_VFS, finder_stdlib_static, finder_path];
+$B.$meta_path = [finder_VFS, finder_stdlib_static, finder_path];
 
 function optimize_import_for_path(path, filetype) {
     if (path.slice(-1) != '/') { path = path + '/' }
