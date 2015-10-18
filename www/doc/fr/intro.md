@@ -3,10 +3,7 @@ du W3C :
 
 > _Qu'est-ce que le Document Object Model?_
 
-> _Le Document Object Model est une interface indépendante d'une plateforme 
-> __ou d'un langage__ qui permet aux programmes et aux scripts d'accéder 
-> dynamiquement au contenu, à la structure et au style des documents, et de 
-> les mettre à jour_
+> _Le Document Object Model est une interface indépendante d'une plateforme __ou d'un langage__ qui permet aux programmes et aux scripts d'accéder dynamiquement au contenu, à la structure et au style des documents, et de les mettre à jour_
 
 L'objectif de Brython est d'utiliser Python comme langage de script pour les 
 navigateurs web, à la place de Javascript

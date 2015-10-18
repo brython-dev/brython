@@ -7261,7 +7261,8 @@ function brython(options){
             var elt = $elts[i]
             if(elt.id){
                 if(defined_ids[elt.id]){
-                    throw _b_.ValueError('Found 2 scripts with the same id: '+elt.id)
+                    throw Error("Brython error : Found 2 scripts with the same id '"+
+                        elt.id+"'")
                 }else{
                     defined_ids[elt.id] = true
                 }

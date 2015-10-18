@@ -26,13 +26,45 @@ Brython supports all the keywords and most functions of Python 3 :
 By default, `print()` will output to the web browser console and so are the 
 error messages. `sys.stderr` and `sys.stdout` can be assigned to an object 
 with a `write()` method, and this allows for the redirection of output to go 
-to a window or text area, for example
+to a window or text area, for example.
 
 `sys.stdin` is not implemented at this time, however there is an `input()` 
 built-in function that will open a blocking input dialog (a prompt).
 
 To open a print dialog (to a printer), call `window.print` (`window` is 
-defined in module **browser**)
+defined in module **browser**).
 
 The built-in functions `memoryview(), vars()` are not implemented in the 
-current version
+current version.
+
+Built-in value `__name__`
+-------------------------
+
+The built-in variable `__name__` is set to the value of the attribute `id`
+of the script. For instance:
+
+```python
+<script type="text/python" id="myscript">
+assert __name__ == 'myscript'
+</script>
+```
+
+If 2 scripts have the same `id`, an exception is raised.
+
+For scripts that don't have an explicit `id` set :
+
+- if no script has its `id` set to `__main__`, the first "unnamed" script has
+  its `__name__` set to `__main__`. So, if there only one script in the page,
+  it will be able to run the usual test :
+
+<blockquote>
+```python
+<script type="text/python">
+if __name__=='__main__':
+    print('hello !')
+</script>
+```
+</blockquote>
+
+- for the other unnamed scripts, `__name__` is set to a random string starting
+  with `__main__`

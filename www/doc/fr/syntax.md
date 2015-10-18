@@ -48,3 +48,35 @@ Quelques particularités liées au contexte d'exécution dans un navigateur :
 Ne sont pas pris en charge dans la version actuelle les fonctions intégrées 
 `memoryview(),  vars()`
 
+
+Valeur intégrée `__name__`
+--------------------------
+
+La valeur intégrée `__name__` est celle de l'attribut `id` du script. Par
+exemple:
+
+```python
+<script type="text/python" id="monscript">
+assert __name__ == 'monscript'
+</script>
+```
+
+Si 2 scripts ont le même `id`, une exception est déclenchée.
+
+Pour les scripts dont l'attribut `id` n'est pas défini :
+
+- si aucun autre script n'a un `id` qui vaut `__main__`, pour le premier 
+  script sans `id`, '__name__' prend la valeur `__main__`. Ainsi, s'il n'y a
+  qu'un script dans la page, il pourra exécuter le test habituel :
+
+<blockquote>
+```python
+<script type="text/python">
+if __name__=='__main__':
+    print('hello !')
+</script>
+```
+</blockquote>
+
+- pour les autres scripts sans `id`, `__name__` prend une valeur aléatoire qui
+  commence par `__main__`
