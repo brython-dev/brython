@@ -484,24 +484,22 @@ def tee(iterable, n=2):
 
 class zip_longest:
     def __init__(self, *args, fillvalue = None):
-        self.args = args
+        self.args = [iter(arg) for arg in args]
         self.fillvalue = fillvalue
-        self.max_length = max([len(arg) for arg in self.args])
         self.units = len(args)
-        self.counter = 0
     
     def __iter__(self):
         return self
     
     def __next__(self):
-        if self.counter == self.max_length:
+        temp = []
+        nb = 0
+        for i in range(self.units):
+            try:
+                temp.append(next(self.args[i]))
+                nb += 1
+            except StopIteration:
+                temp.append(self.fillvalue)
+        if nb==0:
             raise StopIteration
-        else:
-            temp = []
-            for i in range(self.units):
-                try:
-                    temp.append(self.args[i][self.counter])
-                except:
-                    temp.append(self.fillvalue)
-            self.counter = self.counter + 1
-            return tuple(temp)
+        return tuple(temp)
