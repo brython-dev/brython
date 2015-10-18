@@ -54,7 +54,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-10-18 16:10:12.331608"
+__BRYTHON__.compiled_date="2015-10-18 21:05:22.599154"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -3963,7 +3963,8 @@ try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($tra
 throw $err}}else{
 var defined_ids={}
 for(var i=0;i<$elts.length;i++){var elt=$elts[i]
-if(elt.id){if(defined_ids[elt.id]){throw _b_.ValueError('Found 2 scripts with the same id: '+elt.id)}else{defined_ids[elt.id]=true}}}
+if(elt.id){if(defined_ids[elt.id]){throw Error("Brython error : Found 2 scripts with the same id '"+
+elt.id+"'")}else{defined_ids[elt.id]=true}}}
 for(var $i=0;$i<$elts.length;$i++){var $elt=$elts[$i]
 if($elt.type=="text/python"||$elt.type==="text/python3"){if($elt.id){module_name=$elt.id}
 else{if(first_script){module_name='__main__';first_script=false}
@@ -4850,8 +4851,8 @@ case "number":
 return v
 case "object":
 if(v.__class__===$B.LongInt.$dict){return v}
-var method=_b_.getattr(v,'__index__',null)
-if(method!==null){return $B.int_or_bool(_b_.getattr(method,'__call__')())}
+else{throw _b_.TypeError("'"+$B.get_class(v).__name__+
+"' object cannot be interpreted as an integer")}
 default:
 throw _b_.TypeError("'"+$B.get_class(v).__name__+
 "' object cannot be interpreted as an integer")}}
@@ -5456,7 +5457,7 @@ _next=$RangeIterator.$dict.__next__,nb=0
 while(true){try{if(comp(_next(it))){nb++}}catch(err){if(isinstance(err,_b_.StopIteration)){return nb}
 throw err}}}}
 $RangeDict.index=function(self,other){var $=$B.args('index',2,{self:null,other:null},['self','other'],arguments,{},null,null),self=$.self,other=$.other
-try{other=$B.int_value(other)}catch(err){var comp=getattr(other,'__eq__'),it=$RangeDict.__iter__(self),_next=$RangeIterator.$dict.__next__,nb=0
+try{other=$B.int_or_bool(other)}catch(err){var comp=getattr(other,'__eq__'),it=$RangeDict.__iter__(self),_next=$RangeIterator.$dict.__next__,nb=0
 while(true){try{if(comp(_next(it))){return nb}
 nb++}catch(err){if(isinstance(err,_b_.StopIteration)){throw _b_.ValueError(_b_.str(other)+' not in range')}
 throw err}}}
@@ -5562,16 +5563,16 @@ $SliceDict.__setattr__=function(self,attr,value){throw _b_.AttributeError('reado
 $SliceDict.$conv=function(self,len){
 return{start: self.start===_b_.None ? 0 : self.start,stop: self.stop===_b_.None ? len : self.stop,step: self.step===_b_.None ? 1 : self.step}}
 $SliceDict.$conv_for_seq=function(self,len){
-var step=self.step===None ? 1 : self.step,step_is_neg=$B.gt(0,step),len_1=$B.sub(len,1)
+var step=self.step===None ? 1 : $B.PyNumber_Index(self.step),step_is_neg=$B.gt(0,step),len_1=$B.sub(len,1)
 if(step==0){throw Error('ValueError : slice step cannot be zero');}
 var start,end;
 if(self.start===None){start=step_is_neg ? len_1 : 0;}else{
-start=self.start;
+start=$B.PyNumber_Index(self.start);
 if($B.gt(0,start))start=$B.add(start,len);
 if($B.gt(0,start))start=step<0 ? -1 : 0
 if($B.ge(start,len))start=step<0 ? len_1 : len;}
 if(self.stop===None){stop=step_is_neg ? -1 : len;}else{
-stop=self.stop;
+stop=$B.PyNumber_Index(self.stop);
 if($B.gt(0,stop))stop +=len
 if($B.gt(0,stop))stop=step<0 ? -1 : 0
 if($B.ge(stop,len))stop=step_is_neg ? len_1 : len;}

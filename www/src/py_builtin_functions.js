@@ -1313,7 +1313,7 @@ $RangeDict.index = function(self, other){
         arguments,{},null,null),
         self=$.self, other=$.other
     try{
-        other = $B.int_value(other)
+        other = $B.int_or_bool(other)
     }catch(err){
         var comp = getattr(other, '__eq__'),
             it = $RangeDict.__iter__(self),
@@ -1559,7 +1559,7 @@ $SliceDict.$conv = function(self, len){
 $SliceDict.$conv_for_seq = function(self, len){
     // Internal method, uses the integer len to set
     // start, stop, step to integers
-    var step = self.step===None ? 1 : self.step,
+    var step = self.step===None ? 1 : $B.PyNumber_Index(self.step),
         step_is_neg = $B.gt(0, step),
         len_1 = $B.sub(len, 1)
     if (step == 0) {
@@ -1569,7 +1569,7 @@ $SliceDict.$conv_for_seq = function(self, len){
     if (self.start === None) {
         start = step_is_neg ? len_1 : 0;
     } else {
-        start = self.start;
+        start = $B.PyNumber_Index(self.start);
         if ($B.gt(0, start)) start = $B.add(start, len);
         if ($B.gt(0, start)) start = step<0 ? -1 : 0
         if ($B.ge(start, len)) start = step<0 ? len_1 : len;
@@ -1577,7 +1577,7 @@ $SliceDict.$conv_for_seq = function(self, len){
     if (self.stop === None) {
         stop = step_is_neg ? -1 : len;
     } else {
-        stop = self.stop;
+        stop = $B.PyNumber_Index(self.stop);
         if ($B.gt(0, stop)) stop += len
         if ($B.gt(0, stop)) stop = step<0 ? -1 : 0
         if ($B.ge(stop, len)) stop = step_is_neg ? len_1 : len;

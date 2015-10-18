@@ -1017,9 +1017,9 @@ $B.int_or_bool = function(v){
             return v
         case "object":
             if(v.__class__===$B.LongInt.$dict){return v}
-            var method = _b_.getattr(v, '__index__', null)
-            if(method!==null){
-                return $B.int_or_bool(_b_.getattr(method, '__call__')())
+            else{
+                throw _b_.TypeError("'"+$B.get_class(v).__name__+
+                "' object cannot be interpreted as an integer")
             }
         default:
             throw _b_.TypeError("'"+$B.get_class(v).__name__+

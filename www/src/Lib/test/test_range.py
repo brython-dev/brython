@@ -532,7 +532,6 @@ class RangeTest(tester.Tester):
 
     def test_issue11845(self):
         r = range(*slice(1, 18, 2).indices(20))
-        print(r)
         values = {None, 0, 1, -1, 2, -2, 5, -5, 19, -19,
                   20, -20, 21, -21, 30, -30, 99, -99}
         for i in values:
