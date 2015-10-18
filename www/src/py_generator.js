@@ -352,7 +352,7 @@ $BRGeneratorDict.__next__ = function(self){
         self.gi_running = false
         // The line "leave_frame" is not inserted in the function body for
         // generators, so we must call it here to pop from frames stack
-        $B.leave_frame()
+        $B.leave_frame(self.iter_id)
     }
 
     if(res===undefined){throw StopIteration("")}

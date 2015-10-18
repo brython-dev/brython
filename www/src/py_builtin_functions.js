@@ -345,7 +345,6 @@ function $eval(src, _globals, _locals){
             }
         }
     }
-        
     var root = $B.py2js(src, globals_id, locals_id, parent_block_id)
 
     try{
@@ -1124,10 +1123,10 @@ $RangeDict.__contains__ = function(self,other){
     if($RangeDict.__len__(self)==0){return false}
     try{other = $B.int_or_bool(other)}
     catch(err){
-        try{
-            if(getattr(other,'__eq__')(_b_.int(other))){other=_b_.int(other)}
-            else{return false}
-        }catch(err){return false}
+        // If other is not an integer, test if it is equal to
+        // one of the items in range
+        try{$RangeDict.index(self, other); return true}
+        catch(err){return false}
     }
     
     var sub = $B.sub(other, self.start),
@@ -1169,7 +1168,7 @@ function compute_item(r, i){
 
 $RangeDict.__getitem__ = function(self,rank){
     if(isinstance(rank, _b_.slice)){
-        var norm = _b_.slice.$dict.$conv(rank, $RangeDict.__len__(self)),
+        var norm = _b_.slice.$dict.$conv_for_seq(rank, $RangeDict.__len__(self)),
             substep = $B.mul(self.step, norm.step),
             substart = compute_item(self, norm.start),
             substop = compute_item(self, norm.stop)
@@ -1266,8 +1265,10 @@ $RangeDict.__next__ = function(self){
 $RangeDict.__mro__ = [$RangeDict,$ObjectDict]
 
 $RangeDict.__reversed__ = function(self){
-    return range($B.sub(self.stop,1),$B.sub(self.start,1),
-        $B.sub(0,self.step))
+    var n = $B.sub($RangeDict.__len__(self), 1)
+    return range($B.add(self.start, $B.mul(n, self.step)),
+        $B.sub(self.start,self.step),
+        $B.mul(-1,self.step))
 }
 
 $RangeDict.__repr__ = $RangeDict.__str__ = function(self){
@@ -1311,21 +1312,9 @@ $RangeDict.index = function(self, other){
     var $ = $B.args('index', 2, {self:null, other:null},['self','other'],
         arguments,{},null,null),
         self=$.self, other=$.other
-    if(isinstance(other, [_b_.int, _b_.float, _b_.bool])){
-        var sub = $B.sub(other, self.start),
-            fl = $B.floordiv(sub, self.step),
-            res = $B.mul(self.step, fl)
-        if($B.eq(res, sub)){
-            if(($B.gt(self.stop, self.start) && $B.ge(other, self.start) 
-                && $B.gt(self.stop, other)) ||
-                ($B.ge(self.start, self.stop) && $B.ge(self.start, other) 
-                && $B.gt(other, self.stop))){
-                    return fl
-            }else{throw _b_.ValueError(_b_.str(other)+' not in range')}
-        }else{
-            throw _b_.ValueError(_b_.str(other)+' not in range')            
-        }    
-    }else{
+    try{
+        other = $B.int_value(other)
+    }catch(err){
         var comp = getattr(other, '__eq__'),
             it = $RangeDict.__iter__(self),
             _next = $RangeIterator.$dict.__next__,
@@ -1342,15 +1331,27 @@ $RangeDict.index = function(self, other){
             }
         }
     }
+    var sub = $B.sub(other, self.start),
+        fl = $B.floordiv(sub, self.step),
+        res = $B.mul(self.step, fl)
+    if($B.eq(res, sub)){
+        if(($B.gt(self.stop, self.start) && $B.ge(other, self.start) 
+            && $B.gt(self.stop, other)) ||
+            ($B.ge(self.start, self.stop) && $B.ge(self.start, other) 
+            && $B.gt(other, self.stop))){
+                return fl
+        }else{throw _b_.ValueError(_b_.str(other)+' not in range')}
+    }else{
+        throw _b_.ValueError(_b_.str(other)+' not in range')            
+    }
 }
-
 
 function range(){
     var $=$B.args('range',3,{start:null,stop:null,step:null},
         ['start','stop','step'],arguments,{stop:null,step:null},null,null),
         start=$.start,stop=$.stop,step=$.step,safe
     if(stop===null && step===null){
-        stop = $B.int_or_bool(start)
+        stop = $B.PyNumber_Index(start)
         safe = typeof stop==="number"
         return{__class__:$RangeDict,
             start: 0,
@@ -1361,9 +1362,9 @@ function range(){
         }
     }
     if(step===null){step=1}
-    start = $B.int_or_bool(start)
-    stop = $B.int_or_bool(stop)
-    step = $B.int_or_bool(step)
+    start = $B.PyNumber_Index(start)
+    stop = $B.PyNumber_Index(stop)
+    step = $B.PyNumber_Index(step)
     if(step==0){throw _b_.ValueError("range() arg 3 must not be zero")}
     safe = (typeof start=='number' && typeof stop=='number' &&
         typeof step=='number')
@@ -1558,26 +1559,28 @@ $SliceDict.$conv = function(self, len){
 $SliceDict.$conv_for_seq = function(self, len){
     // Internal method, uses the integer len to set
     // start, stop, step to integers
-    var step = self.step===None ? 1 : self.step
+    var step = self.step===None ? 1 : self.step,
+        step_is_neg = $B.gt(0, step),
+        len_1 = $B.sub(len, 1)
     if (step == 0) {
         throw Error('ValueError : slice step cannot be zero');
     }
     var start, end;
     if (self.start === None) {
-        start = step<0 ? len-1 : 0;
+        start = step_is_neg ? len_1 : 0;
     } else {
         start = self.start;
-        if (start < 0) start += len;
-        if (start < 0) start = step<0 ? -1 : 0
-        if (start >= len) start = step<0 ? len-1 : len;
+        if ($B.gt(0, start)) start = $B.add(start, len);
+        if ($B.gt(0, start)) start = step<0 ? -1 : 0
+        if ($B.ge(start, len)) start = step<0 ? len_1 : len;
     }
     if (self.stop === None) {
-        stop = step<0 ? -1 : len;
+        stop = step_is_neg ? -1 : len;
     } else {
         stop = self.stop;
-        if (stop < 0) stop += len
-        if (stop < 0) stop = step<0 ? -1 : 0
-        if (stop >= len) stop = step<0 ? len-1 : len;
+        if ($B.gt(0, stop)) stop += len
+        if ($B.gt(0, stop)) stop = step<0 ? -1 : 0
+        if ($B.ge(stop, len)) stop = step_is_neg ? len_1 : len;
     }
     return {start: start, stop: stop, step: step}
 }
@@ -2130,7 +2133,7 @@ var $TracebackDict = {__class__:$B.$type,
     __name__:'traceback'
 }
 $TracebackDict.__getattribute__ = function(self, attr){
-    var last_frame = self.stack.tb_frame,
+    var last_frame = $B.last(self.stack),
         line_info = last_frame.$line_info
 
     switch(attr){
@@ -2265,7 +2268,6 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
             }
             info+='\n'
         }
-        
         for(var i=0;i<self.$stack.length;i++){
             var frame = self.$stack[i]
             if(frame[1].$line_info===undefined){continue}
@@ -2305,12 +2307,14 @@ var BaseException = function (msg,js_exc){
     err.__class__ = $BaseExceptionDict
     err.$py_error = true
     err.$stack = $B.frames_stack.slice()
+    /*
     err.traceback = traceback({
         tb_frame:frame($B.frames_stack),
         tb_lineno:-1,
         tb_lasti:'',
         tb_next: None   // fix me
     })
+    */
     $B.current_exception = err
     return err
 }
@@ -2396,6 +2400,10 @@ $B.is_exc=function(exc,exc_list){
         if(issubclass(exc_class,exc_list[i])) return true
     }
     return false
+}
+
+$B.clear_exc = function(){
+    $B.current_exception = null
 }
 
 $B.builtins_block = {id:'__builtins__',module:'__builtins__'}

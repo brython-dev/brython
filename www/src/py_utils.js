@@ -992,6 +992,23 @@ $B.$GetInt=function(value) {
       "' object cannot be interpreted as an integer")
 }
 
+$B.PyNumber_Index = function(item){
+    switch(typeof item){
+        case "bool":
+            return item ? 1 : 0
+        case "number":
+            return item
+        case "object":
+            if(item.__class__===$B.LongInt.$dict){return item}
+            var method = _b_.getattr(item, '__index__', null)
+            if(method!==null){
+                return $B.int_or_bool(_b_.getattr(method, '__call__')())
+            }
+        default:
+            throw _b_.TypeError("'"+$B.get_class(item).__name__+
+                "' object cannot be interpreted as an integer")
+    }
+}
 $B.int_or_bool = function(v){
     switch(typeof v){
         case "bool":
@@ -1000,9 +1017,32 @@ $B.int_or_bool = function(v){
             return v
         case "object":
             if(v.__class__===$B.LongInt.$dict){return v}
+            var method = _b_.getattr(v, '__index__', null)
+            if(method!==null){
+                return $B.int_or_bool(_b_.getattr(method, '__call__')())
+            }
         default:
             throw _b_.TypeError("'"+$B.get_class(v).__name__+
                 "' object cannot be interpreted as an integer")
+    }
+}
+
+$B.int_value = function(v){
+    // If v is an integer, return v
+    // If it's a boolean, return 0 or 1
+    // If it's a complex with v.imag=0, return int_value(v.real)
+    // If it's a float that equals an integer, return it
+    // Else throw ValueError
+    try{return $B.int_or_bool(v)}
+    catch(err){
+        if(_b_.isinstance(v, _b_.complex) && v.imag==0){
+            return $B.int_or_bool(v.real)
+        }else if(isinstance(v, _b_.float) && v==Math.floor(v)){
+            return Math.floor(v)
+        }else{
+            throw _b_.TypeError("'"+$B.get_class(v).__name__+
+                "' object cannot be interpreted as an integer")
+        }
     }
 }
 
@@ -1011,10 +1051,11 @@ $B.enter_frame = function(frame){
     $B.frames_stack[$B.frames_stack.length]=frame
 }
 
-$B.leave_frame = function(){
+$B.leave_frame = function(arg){
     // We must leave at least the frame for the main program
     if($B.frames_stack.length>1){
-        $B.frames_stack.pop()
+        var top = $B.last($B.frames_stack)
+       $B.frames_stack.pop()
         //delete $B.modules[frame[0]],$B.$py_src[frame[0]]
     }
 }

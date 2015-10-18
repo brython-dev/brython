@@ -2106,7 +2106,7 @@ function $DefCtx(context){
         if(last_instr.type!=='return' && this.type!='generator'){
             new_node = new $Node()
             new $NodeJSCtx(new_node,
-                ';$B.leave_frame();return None;')
+                ';$B.leave_frame("'+this.id+'");return None;')
             def_func_node.add(new_node)
         }
 
@@ -2755,7 +2755,7 @@ function $ForExpr(context){
         var catch_node = new $Node()
 
         var js = 'catch($err){if($B.is_exc($err,[StopIteration]))'
-        js += '{delete $locals["$next'+num+'"];break;}'
+        js += '{delete $locals["$next'+num+'"];$B.clear_exc();break;}'
         js += 'else{throw($err)}}'        
 
         new $NodeJSCtx(catch_node,js)
@@ -4111,9 +4111,32 @@ function $ReturnCtx(context){
         if(scope.ntype=='generator'){
             return 'return [$B.generator_return(' + $to_js(this.tree)+')]'
         }
-        return 'var $res = '+$to_js(this.tree)+';'+
-            'if($B.frames_stack.length>1){$B.frames_stack.pop()}'+
-            ';return $res'
+        // In most cases, returning from a function means leaving the 
+        // execution frame ; but if the return is in a "try" with a "finally"
+        // clause, we must remain in the same frame
+        var node = $get_node(this),
+            leave_frame = true
+        
+        while(node && leave_frame){
+            if(node.is_try){
+                pnode = node.parent, flag=false
+                for(var i=0;i<pnode.children.length;i++){
+                    var child = pnode.children[i]
+                    if(!flag && child===node){flag=true;continue}
+                    if(flag){
+                        if(child.context.tree[0].type=="single_kw" &&
+                            child.context.tree[0].token=="finally"){
+                                leave_frame = false
+                                break
+                        }
+                    }
+                }
+            }
+            node = node.parent
+        }
+        var res = 'var $res = '+$to_js(this.tree)+';'
+        if(leave_frame){res += '$B.leave_frame($local_name);'}
+        return res+'return $res'
     }
 }
 
@@ -7051,7 +7074,7 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     
     // leave frame at the end of module
     var new_node = new $Node()
-    new $NodeJSCtx(new_node,'\n;$B.leave_frame("'+module+'");\n')
+    new $NodeJSCtx(new_node,'\n;$B.leave_frame("'+locals_id+'");\n')
     root.add(new_node)
 
     return root
@@ -7232,6 +7255,18 @@ function brython(options){
             throw $err
         }
     }else{
+        // Get all explicitely defined ids, to avoid overriding
+        var defined_ids = {}
+        for(var i=0;i<$elts.length;i++){
+            var elt = $elts[i]
+            if(elt.id){
+                if(defined_ids[elt.id]){
+                    throw _b_.ValueError('Found 2 scripts with the same id: '+elt.id)
+                }else{
+                    defined_ids[elt.id] = true
+                }
+            }
+        }        
         for(var $i=0;$i<$elts.length;$i++){
             var $elt = $elts[$i]
             if($elt.type=="text/python"||$elt.type==="text/python3"){
@@ -7239,6 +7274,9 @@ function brython(options){
                 if($elt.id){module_name=$elt.id}
                 else if(first_script){module_name='__main__'; first_script=false}
                 else{module_name = '__main__'+$B.UUID()}
+                while(defined_ids[module_name]!==undefined){
+                    module_name = '__main__'+$B.UUID()
+                }
                 $B.scripts.push(module_name)
             
                 // Get Python source code
