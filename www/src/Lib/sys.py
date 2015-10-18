@@ -17,6 +17,8 @@ byteorder='little'
 
 def exc_info():
     exc = __BRYTHON__.current_exception
+    if exc is None:
+        return(None, None, None)
     return (exc.__class__,exc,exc.traceback)
     
 exec_prefix = __BRYTHON__.brython_path
