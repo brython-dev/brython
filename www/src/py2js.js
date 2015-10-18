@@ -7122,8 +7122,10 @@ function brython(options){
         // Remove /Lib and /libs in sys.path :
         // if we use the static list and the module
         // was not find in it, it's no use searching twice in the same place
-        $B.path.shift()
-        $B.path.shift()
+        if($B.path.length>3) {
+            $B.path.shift()
+            $B.path.shift()
+        }
     }
     // Always use the defaut finder using sys.path
     meta_path.push($B.$meta_path[2])
