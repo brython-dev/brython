@@ -7107,16 +7107,18 @@ function brython(options){
     // - finder_path : search module at different urls
     
     var meta_path = []
+    var path_hooks = []
 
     // $B.use_VFS is set to true if the script py_VFS.js or brython_dist.js
     // has been loaded in the page. In this case we use the VFS
-    if($B.use_VFS){meta_path.push($B.meta_path[0])}
-    // Otherwise, remove the function using VFS in $B.path_hooks
-    else{$B.path_hooks.shift()}
+    if($B.use_VFS){
+        meta_path.push($B.$meta_path[0])
+        path_hooks.push($B.$path_hooks[0])
+    }
 
     if(options.static_stdlib_import!==false){
         // Add finder using static paths
-        meta_path.push($B.meta_path[1])
+        meta_path.push($B.$meta_path[1])
         // Remove /Lib and /libs in sys.path :
         // if we use the static list and the module
         // was not find in it, it's no use searching twice in the same place
@@ -7124,8 +7126,10 @@ function brython(options){
         $B.path.shift()
     }
     // Always use the defaut finder using sys.path
-    meta_path.push($B.meta_path[2])
-    $B.meta_path = meta_path   
+    meta_path.push($B.$meta_path[2])
+    $B.meta_path = meta_path
+    path_hooks.push($B.$path_hooks[1])
+    $B.path_hooks = path_hooks  
     
     // Option to run code on demand and not all the scripts defined in a page
     // The following lines are included to allow to run brython scripts in
