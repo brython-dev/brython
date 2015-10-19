@@ -1,4 +1,5 @@
 from browser import ajax
+from . import error
 
 class FileIO:
   def __init__(self, data):
@@ -13,7 +14,8 @@ def urlopen(url, data=None, timeout=None):
 
     def on_complete(req):
         global result
-        result=req
+        if req.status == 200:
+            result=req
 
     _ajax=ajax.ajax()
     _ajax.bind('complete', on_complete)
@@ -27,7 +29,9 @@ def urlopen(url, data=None, timeout=None):
        _ajax.open('POST', url, False)
        _ajax.send(data)
 
-    if isinstance(result.text, str):
-       return FileIO(result.text) #, url, {'status': result.status}
-
-    return FileIO(result.text()) #, url, {'status': result.status}
+    if result is not None:
+        if isinstance(result.text, str):
+           return FileIO(result.text) #, url, {'status': result.status}
+    
+        return FileIO(result.text()) #, url, {'status': result.status}
+    raise error.HTTPError('file not found')
