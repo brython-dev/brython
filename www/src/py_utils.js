@@ -460,8 +460,9 @@ $B.set_list_key = function(obj,key,value){
     try{key = $B.$GetInt(key)}
     catch(err){
         if(_b_.isinstance(key, _b_.slice)){
-            return $B.set_list_slice_step(obj,key.start,
-                key.stop,key.step,value)
+            var s = _b_.slice.$dict.$conv_for_seq(key, obj.length)
+            return $B.set_list_slice_step(obj,s.start,
+                s.stop,s.step,value)
         }
     }
     if(key<0){key+=obj.length}
@@ -1009,6 +1010,7 @@ $B.PyNumber_Index = function(item){
                 "' object cannot be interpreted as an integer")
     }
 }
+
 $B.int_or_bool = function(v){
     switch(typeof v){
         case "bool":

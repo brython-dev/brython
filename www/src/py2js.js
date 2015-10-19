@@ -2822,7 +2822,6 @@ function $FromCtx(context){
             if(_mod.charAt(0)=='.'){
                 if(package===undefined){
                     package = $B.imported[mod].__package__
-                    console.log('from . undef, set to __package__ of', mod, package)
                 }else{
                     package = $B.imported[package]
                 }
@@ -2840,8 +2839,7 @@ function $FromCtx(context){
         }
         if(_mod){packages.push(_mod)}
         this.module = packages.join('.')
-        console.log('from', this.module)
-
+        
         // FIXME : Replacement still needed ?
         var mod_name = this.module.replace(/\$/g,''),
             localns = '$locals_'+scope.id.replace(/\./g,'_');
