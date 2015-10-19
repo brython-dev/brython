@@ -33,7 +33,7 @@ except:
     editor.setValue = set_value
     has_ace = False
 
-if sys.has_local_storage:
+if hasattr(window, 'localStorage'):
     from browser.local_storage import storage
 else:
     storage = None
