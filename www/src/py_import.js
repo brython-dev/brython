@@ -192,6 +192,7 @@ function import_py(module,path,package){
     if(path.substr(path.length-12)=='/__init__.py'){
         //module.is_package = true
         $B.imported[mod_name].__package__ = mod_name
+        $B.imported[mod_name].__path__ = path
         $B.imported[mod_name].$is_package = module.$is_package = true
     }else if(package){
         $B.imported[mod_name].__package__ = package
@@ -373,7 +374,6 @@ finder_stdlib_static.$dict = {
     },
     exec_module : function(cls, module) {
         var metadata = module.__spec__.loader_state;
-        delete module.__spec__['loader_state'];
         module.$is_package = metadata.is_package; 
         if (metadata.ext == 'py') {
             import_py(module, metadata.path, module.__package__);
@@ -381,14 +381,17 @@ finder_stdlib_static.$dict = {
         else {
             import_js(module, metadata.path);
         }
+        delete module.__spec__['loader_state'];
     },
     find_module: function(cls, name, path){
+        var spec = cls.$dict.find_spec(cls, name, path)
+        if(spec===_b_.None){return _b_.None}
         return {__class__:Loader,
             load_module:function(name, path){
-                var spec = cls.$dict.find_spec(cls, name, path)
                 var mod = module(name)
                 $B.imported[name] = mod
                 mod.__spec__ = spec
+                mod.__package__ = spec.parent
                 cls.$dict.exec_module(cls, mod)
             }
         }
@@ -473,7 +476,7 @@ finder_path.$dict = {
     },
 
     find_module: function(cls, name, path){
-        return finder_path.find_spec(cls, name, path)
+        return finder_path.$dict.find_spec(cls, name, path)
     },
 
     find_spec : function(cls, fullname, path, prev_module) {
@@ -710,7 +713,6 @@ $B.is_none = function (o) {
 // Default __import__ function
 // TODO: Include at runtime in importlib.__import__
 $B.$__import__ = function (mod_name, locals, fromlist){
-    console.log('__import__', mod_name)
    // [Import spec] Halt import logic
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.');
