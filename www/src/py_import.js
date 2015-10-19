@@ -710,6 +710,7 @@ $B.is_none = function (o) {
 // Default __import__ function
 // TODO: Include at runtime in importlib.__import__
 $B.$__import__ = function (mod_name, locals, fromlist){
+    console.log('__import__', mod_name)
    // [Import spec] Halt import logic
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.');
