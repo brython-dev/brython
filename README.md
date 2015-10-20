@@ -53,27 +53,9 @@ It supports lastest specs of HTML5/CSS3, and can use CSS Frameworks like Bootstr
 
 Getting started
 ===============
-In the Releases section, load the latest version of the Brython site mirror,
-unzip it and start the built-in web server `server.py`. This will point your
-browser to [http://localhost:8000/site](http://localhost:8000/site):
-you access a clone of the [Brython site](http://brython.info "Brython Homepage")
-with an online editor, a console similar to the CPython interpreter,
-a gallery with many examples and a comprehensive documentation.
-
-```bash
-git clone https://github.com/brython-dev/brython.git
-cd brython
-python server.py
-```
-
-Once you are familiar with the examples...,
-create a new folder "app" at the same level as "site" and create a file "index.html"
-with the HTML example above.
-Point the browser to [http://localhost:8000/app](http://localhost:8000/app) to see the result.
-
-Another option, with no installation, is to use the distribution available
-online through [rawgit](https://rawgit.com/). You can either use the latest stable
-release, for instance for release 3.2.2 :
+The most simple way to get started, without anything to install, is to use the 
+distribution available online through [rawgit](https://rawgit.com/). You can 
+either choose the latest stable release, for instance for release 3.2.2 :
 
 ```xml
 <script type="text/javascript"
@@ -81,14 +63,35 @@ release, for instance for release 3.2.2 :
 </script>
 ```
 
-or the current, unstable development version :
-
+or the current development version :
 
 ```xml
 <script type="text/javascript" 
     src="https://cdn.rawgit.com/brython-dev/brython/master/www/src/brython.js">
 </script>
 ```
+
+You can also install the development environment locally, either by cloning the
+project :
+
+```bash
+git clone https://github.com/brython-dev/brython.git
+cd brython
+python server.py
+```
+
+or by loading the latest of the Brython site mirror from the releases page.
+
+In both cases, start the built-in web server : `python server.py`. This will 
+point your browser to [http://localhost:8000/site](http://localhost:8000/site):
+you access a clone of the [Brython site](http://brython.info "Brython Homepage")
+with an online editor, a console similar to the CPython interpreter,
+a gallery with many examples and a comprehensive documentation.
+
+Once you are familiar with the examples, create a new folder "app" at the same
+level as "site" and create a file "index.html" with the HTML example above.
+Point the browser to [http://localhost:8000/app](http://localhost:8000/app) to 
+see the result.
 
 Test Brython online
 ===================
