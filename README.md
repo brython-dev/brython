@@ -12,7 +12,7 @@ Here is a simple example of an HTML page running Python:
     <html>
 
         <head>
-            <script src="/src/brython.js"></script>
+            <script type="text/javascript" src="/path/to/brython.js"></script>
         </head>
 
         <body onload="brython()">
@@ -35,8 +35,8 @@ Here is a simple example of an HTML page running Python:
 
 To use Brython, all there is to do is:
 
-1. Load the script [brython.js](http://brython.info/src/brython_dist.js "Brython from the site brython.info").
-2. Run the function brython() on page load, like `<body onload=brython()>`.
+1. Load the script [brython.js](http://brython.info/src/brython.js "Brython from the site brython.info").
+2. Run the function `brython()` on page load, like `<body onload=brython()>`.
 3. Write Python code inside tags `<script type="text/python">` or linking it.
 
 
