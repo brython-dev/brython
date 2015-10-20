@@ -80,7 +80,8 @@ cd brython
 python server.py
 ```
 
-or by loading the latest of the Brython site mirror from the releases page.
+or by loading the latest version of the Brython site mirror from the 
+[releases page](https://github.com/brython-dev/brython/releases).
 
 In both cases, start the built-in web server : `python server.py`. This will 
 point your browser to [http://localhost:8000/site](http://localhost:8000/site):
