@@ -2851,7 +2851,7 @@ function $FromCtx(context){
             res[pos++] = sep + '"'+attr+'": "'+this.aliases[attr]+'"';
             sep = ',';
         }
-        res[pos++] = '}, '+localns+');';
+        res[pos++] = '}, '+localns+', true);';
                      
         if(this.names[0]=='*'){
             // Set attribute to indicate that the scope has a 
@@ -3355,12 +3355,83 @@ function $ImportCtx(context){
                     this.tree[i].alias + '"}'),
                 localns = '$locals_'+scope.id.replace(/\./g,'_');
             res[pos++] = '$B.$import("'+mod_name+'", [],'+aliases+',' +
-                                   localns + ');'
+                                   localns + ', true);'
         }
         // add None for interactive console
         return res.join('') + 'None;'
     }
 }
+
+function $IMPRTCtx(context){
+    // Class for keyword "import"
+    this.type = 'import'
+    this.parent = context
+    this.tree = []
+    context.tree[context.tree.length]=this
+    this.expect = 'id'
+
+    this.toString = function(){return 'import '+this.tree}
+    
+    this.bind_names = function(){
+        // For "import X", set X in the list of names bound in current scope
+        var scope = $get_scope(this)
+        for(var i=0;i<this.tree.length;i++){
+            if(this.tree[i].name==this.tree[i].alias){
+                var name = this.tree[i].name,
+                    parts = name.split('.'),
+                    bound = name
+                if(parts.length>1){
+                    bound = parts[0]
+                }
+            }else{
+                bound = this.tree[i].alias
+            }
+            $B.bound[scope.id][bound] = true
+            $B.type[scope.id][bound] = 'module'
+        }
+    }
+    
+    this.transform = function(node, rank){
+        // If there are more than one module name, split line
+        for(var i=1;i<this.tree.length;i++){
+            var new_node = new $Node()
+            var ctx = new $IMPRTCtx(new $NodeCtx(new_node))
+            ctx.tree = [this.tree[i]]
+            node.parent.insert(rank+1, new_node)
+        }
+        this.tree.splice(1, this.tree.length)
+        // All the code that starts after IMPRT is put in a function
+        // called when the module has finished importing
+        var name = this.tree[0].name,
+            js = '$locals["'+name+'"]= $B.imported["'+name+'"]'
+        node.add($NodeJS(js))
+        for(var i=rank+1;i<node.parent.children.length;i++){
+            node.add(node.parent.children[i])
+        }
+        node.parent.children.splice(rank+1, node.parent.children.length)
+        node.parent.add($NodeJS(')'))
+    }
+    
+    this.to_js = function(){
+        this.js_processed=true
+        var scope = $get_scope(this)
+        var mod = scope.module
+
+        var res = [], pos=0
+        for(var i=0;i<this.tree.length;i++){
+            var mod_name = this.tree[i].name,
+                aliases = (this.tree[i].name == this.tree[i].alias)?
+                    '{}' : ('{"' + mod_name + '" : "' +
+                    this.tree[i].alias + '"}'),
+                localns = '$locals_'+scope.id.replace(/\./g,'_');
+            res[pos++] = '$B.$import_non_blocking("'+mod_name+'", [],'+aliases+',' +
+                                   localns + ', function()'
+        }
+        // add None for interactive console
+        return res.join('')
+    }
+}
+
 
 function $ImportedModuleCtx(context,name){
     this.type = 'imported module'
@@ -6130,6 +6201,8 @@ function $transition(context,token){
             return new $FromCtx(context)
           case 'import':
             return new $ImportCtx(context)
+          case 'IMPRT': // experimental for non blocking imports
+            return new $IMPRTCtx(context)
           case 'global':
             return new $GlobalCtx(context)
           case 'nonlocal':
@@ -6502,7 +6575,8 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         "for","lambda","try","finally","raise","def","from",
         "nonlocal","while","del","global","with",
         "as","elif","else","if","yield","assert","import",
-        "except","raise","in","not","pass","with","continue","__debugger__"
+        "except","raise","in","not","pass","with","continue","__debugger__",
+        "IMPRT" // experimental for non blocking import
         //"False","None","True","continue",
         // "and',"or","is"
         ]

@@ -13,7 +13,8 @@
    *                                    Value of parent package's __path__
    * @param module          {module}    [Optional] Existing module, for reload only
    */
-  function import_hooks(mod_name, _path, module) {
+  function import_hooks(mod_name, _path, module, blocking) {
+      console.log(mod_name, 'blocking', blocking)
     // Default argument binding
     var is_none = $B.is_none
     if (is_none(module)) {
@@ -97,8 +98,9 @@
         }
         else {
             $B.modules[_spec_name] = _sys_modules[_spec_name] = module;
-            try { _b_.getattr(exec_module, '__call__')(module) }
+            try { _b_.getattr(exec_module, '__call__')(module, blocking); console.log('import hooks ok', module.__name__) }
             catch (e) {
+                console.log(e)
                 delete $B.modules[_spec_name];
                 delete _sys_modules[_spec_name];
                 throw e;
