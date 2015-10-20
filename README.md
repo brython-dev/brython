@@ -53,6 +53,8 @@ It supports lastest specs of HTML5/CSS3, and can use CSS Frameworks like Bootstr
 
 Getting started
 ===============
+Zero install !
+--------------
 The most simple way to get started, without anything to install, is to use the 
 distribution available online through [rawgit](https://rawgit.com/). You can 
 either choose the latest stable release, for instance for release 3.2.2 :
@@ -71,6 +73,8 @@ or the current development version :
 </script>
 ```
 
+Local install
+-------------
 You can also install the development environment locally, either by cloning the
 project :
 
