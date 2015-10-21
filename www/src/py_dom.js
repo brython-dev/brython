@@ -17,6 +17,7 @@ function $getMouseOffset(target, ev){
 }
 
 function $getPosition(e){
+    console.log('enter get position', e)
     var left = 0;
     var top  = 0;
     var width = e.width || e.offsetWidth;
@@ -30,7 +31,7 @@ function $getPosition(e){
 
     left += e.offsetLeft;
     top  += e.offsetTop;
-
+    console.log('end get position', left, top, width, height)
     return {left:left, top:top, width:width, height:height};
 }
 
@@ -415,15 +416,21 @@ DOMNodeDict.__getattribute__ = function(self,attr){
       case 'children':
       case 'html':
       case 'id':
-      case 'left':
       case 'parent':
       case 'query':
       case 'text':
-      case 'top':
       case 'value':
-      case 'height':
-      case 'width':
         return DOMNodeDict[attr](self)
+
+      case 'height':
+      case 'left':
+      case 'top':
+      case 'width':
+        if(self.elt instanceof SVGElement){
+            return self.elt.getAttributeNS(null, attr)
+        }
+        try{return _b_.int($getPosition(self.elt)[attr])}
+        catch(err){return _b_.getattr(self.elt, attr)}      
       case 'clear':
       case 'remove':
         return function(){DOMNodeDict[attr](self,arguments[0])}
@@ -584,6 +591,10 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
           return DOMNodeDict['set_'+attr](self,value)
         }
         var attr1 = attr.replace('_','-').toLowerCase()
+        if(self.elt instanceof SVGElement){
+            self.elt.setAttributeNS(null, attr1, value)
+            return
+        }
         if(self.elt[attr1]!==undefined){self.elt[attr1]=value;return}
         var res = self.elt.getAttribute(attr1)
         if(res!==undefined&&res!==null){self.elt.setAttribute(attr1,value)}
@@ -793,15 +804,7 @@ DOMNodeDict.getSelectionRange = function(self){ // for TEXTAREA
     }
 }
 
-DOMNodeDict.height = function(self){
-    return _b_.int($getPosition(self.elt)["height"])
-}
-
 DOMNodeDict.html = function(self){return self.elt.innerHTML}
-
-DOMNodeDict.left = function(self){
-    return _b_.int($getPosition(self.elt)["left"])
-}
 
 DOMNodeDict.id = function(self){
     if(self.elt.id !== undefined) return self.elt.id
@@ -831,10 +834,6 @@ DOMNodeDict.remove = function(self,child){
         }else{ch_elt = ch_elt.parentElement}
     }
     if(!flag){throw _b_.ValueError('element '+child+' is not inside '+self)}
-}
-
-DOMNodeDict.top = function(self){
-    return _b_.int($getPosition(self.elt)["top"])
 }
 
 DOMNodeDict.reset = function(self){ // for FORM
@@ -873,11 +872,6 @@ DOMNodeDict.set_class_name = function(self,arg){
 
 DOMNodeDict.set_html = function(self,value){
     self.elt.innerHTML=str(value)
-}
-
-DOMNodeDict.set_left = function(self, value){
-    console.log('set left')
-    self.elt.style.left = value
 }
 
 DOMNodeDict.set_style = function(self,style){ // style is a dict
@@ -977,11 +971,6 @@ DOMNodeDict.unbind = function(self,event){
 }
 
 DOMNodeDict.value = function(self){return self.elt.value}
-
-DOMNodeDict.width = function(self){
-    return _b_.int($getPosition(self.elt)["width"])
-}
-
 
 // return query string as an object with methods to access keys and values
 // same interface as cgi.FieldStorage, with getvalue / getlist / getfirst

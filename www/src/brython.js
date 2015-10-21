@@ -54,7 +54,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-10-19 16:48:19.232930"
+__BRYTHON__.compiled_date="2015-10-21 10:29:24.223611"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1471,7 +1471,7 @@ res[pos++]=this.names.join('","')+'"], {';
 var sep='';
 for(var attr in this.aliases){res[pos++]=sep + '"'+attr+'": "'+this.aliases[attr]+'"';
 sep=',';}
-res[pos++]='}, '+localns+');';
+res[pos++]='}, '+localns+', true);';
 if(this.names[0]=='*'){
 scope.blurred=true}
 res[pos++]='\n'+head+'None;';
@@ -1680,8 +1680,42 @@ for(var i=0;i<this.tree.length;i++){var mod_name=this.tree[i].name,aliases=(this
 '{}' :('{"' + mod_name + '" : "' +
 this.tree[i].alias + '"}'),localns='$locals_'+scope.id.replace(/\./g,'_');
 res[pos++]='$B.$import("'+mod_name+'", [],'+aliases+',' +
-localns + ');'}
+localns + ', true);'}
 return res.join('')+ 'None;'}}
+function $IMPRTCtx(C){
+this.type='import'
+this.parent=C
+this.tree=[]
+C.tree[C.tree.length]=this
+this.expect='id'
+this.toString=function(){return 'import '+this.tree}
+this.bind_names=function(){
+var scope=$get_scope(this)
+for(var i=0;i<this.tree.length;i++){if(this.tree[i].name==this.tree[i].alias){var name=this.tree[i].name,parts=name.split('.'),bound=name
+if(parts.length>1){bound=parts[0]}}else{bound=this.tree[i].alias}
+$B.bound[scope.id][bound]=true
+$B.type[scope.id][bound]='module'}}
+this.transform=function(node,rank){
+for(var i=1;i<this.tree.length;i++){var new_node=new $Node()
+var ctx=new $IMPRTCtx(new $NodeCtx(new_node))
+ctx.tree=[this.tree[i]]
+node.parent.insert(rank+1,new_node)}
+this.tree.splice(1,this.tree.length)
+var name=this.tree[0].name,js='$locals["'+name+'"]= $B.imported["'+name+'"]'
+node.add($NodeJS(js))
+for(var i=rank+1;i<node.parent.children.length;i++){node.add(node.parent.children[i])}
+node.parent.children.splice(rank+1,node.parent.children.length)
+node.parent.add($NodeJS(')'))}
+this.to_js=function(){this.js_processed=true
+var scope=$get_scope(this)
+var mod=scope.module
+var res=[],pos=0
+for(var i=0;i<this.tree.length;i++){var mod_name=this.tree[i].name,aliases=(this.tree[i].name==this.tree[i].alias)?
+'{}' :('{"' + mod_name + '" : "' +
+this.tree[i].alias + '"}'),localns='$locals_'+scope.id.replace(/\./g,'_');
+res[pos++]='$B.$import_non_blocking("'+mod_name+'", [],'+aliases+',' +
+localns + ', function()'}
+return res.join('')}}
 function $ImportedModuleCtx(C,name){this.type='imported module'
 this.toString=function(){return ' (imported module) '+this.name}
 this.parent=C
@@ -3320,6 +3354,8 @@ case 'from':
 return new $FromCtx(C)
 case 'import':
 return new $ImportCtx(C)
+case 'IMPRT': 
+return new $IMPRTCtx(C)
 case 'global':
 return new $GlobalCtx(C)
 case 'nonlocal':
@@ -3580,7 +3616,7 @@ var br_open={"(":0,"[":0,"{":0}
 var br_close={")":"(","]":"[","}":"{"}
 var br_stack=""
 var br_pos=[]
-var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","not","pass","with","continue","__debugger__"
+var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","not","pass","with","continue","__debugger__","IMPRT" 
 ]
 var unsupported=[]
 var $indented=['class','def','for','condition','single_kw','try','except','with']
@@ -6470,33 +6506,41 @@ fake_qs="?v="+$B.UUID()}
 var timer=setTimeout(function(){$xmlhttp.abort()
 throw _b_.ImportError("No module named '"+module+"'")},5000)
 return[$xmlhttp,fake_qs,timer]}
-function $download_module(module,url){var imp=$importer(),$xmlhttp=imp[0],fake_qs=imp[1],timer=imp[2],res=null,mod_name=module.__name__
-$xmlhttp.open('GET',url+fake_qs,false)
+function $download_module(module,url,package,blocking){var imp=$importer(),$xmlhttp=imp[0],fake_qs=imp[1],timer=imp[2],res=null,mod_name=module.__name__,no_block=Array.isArray(blocking)||blocking===false
+if(no_block){$xmlhttp.open('GET',url+fake_qs,true)}else{$xmlhttp.open('GET',url+fake_qs,false)}
 if($B.$CORS){$xmlhttp.onload=function(){if($xmlhttp.status==200 ||$xmlhttp.status==0){res=$xmlhttp.responseText}else{
 res=_b_.FileNotFoundError("No module named '"+mod_name+"'")}}
 $xmlhttp.onerror=function(){res=_b_.FileNotFoundError("No module named '"+mod_name+"'")}}else{
 $xmlhttp.onreadystatechange=function(){if($xmlhttp.readyState==4){window.clearTimeout(timer)
 if($xmlhttp.status==200 ||$xmlhttp.status==0){res=$xmlhttp.responseText
-module.$last_modified=$xmlhttp.getResponseHeader('Last-Modified')}else{
+module.$last_modified=$xmlhttp.getResponseHeader('Last-Modified')
+if(no_block){var ext=url.substr(url.length-2)
+if(ext=='py'){try{import_py1(module,mod_name,url,package,res)}
+catch(err){console.log(err);throw err}}else if(ext=='js'){try{run_js(res,url,module)}
+catch(err){console.log(err);throw err}}
+blocking[1]()
+return}}else{
 console.log('Error '+$xmlhttp.status+
 ' means that Python module '+mod_name+
 ' was not found at url '+url)
 res=_b_.FileNotFoundError("No module named '"+mod_name+"'")}}}}
 if('overrideMimeType' in $xmlhttp){$xmlhttp.overrideMimeType("text/plain")}
 $xmlhttp.send()
+if(!no_block){
 if(res==null)throw _b_.FileNotFoundError("No module named '"+mod_name+"' (res is null)")
 if(res.constructor===Error){throw res}
-return res}
+return res}}
 $B.$download_module=$download_module
-function import_js(module,path){try{var module_contents=$download_module(module,path)}
-catch(err){return null}
+function import_js(module,path,blocking){try{var module_contents=$download_module(module,path,undefined,blocking)
+if(Array.isArray(blocking)){return}}catch(err){return null}
 run_js(module_contents,path,module)
 return true}
 function run_js(module_contents,path,module){
 try{eval(module_contents);}catch(err){console.log(err)
 throw err}
 try{$module}
-catch(err){throw _b_.ImportError("name '$module' is not defined in module")}
+catch(err){console.log('no $module')
+throw _b_.ImportError("name '$module' is not defined in module")}
 if(module !==undefined){
 for(var attr in $module){module[attr]=$module[attr];}
 $module=module;}
@@ -6508,13 +6552,26 @@ return "<module '"+module.name+"' from "+path+" >"}
 $module.toString=function(){return "<module '"+module.name+"' from "+path+" >"}
 if(module.name !='builtins'){
 $module.__file__=path}}
+$B.imported[module.__name__]=$module
 return true}
 function show_ns(){var kk=Object.keys(window)
 for(var i=0,_len_i=kk.length;i < _len_i;i++){console.log(kk[i])
 if(kk[i].charAt(0)=='$'){console.log(eval(kk[i]))}}
 console.log('---')}
-function import_py(module,path,package){
-var mod_name=module.__name__,module_contents=$download_module(module,path)
+function import_py1(module,mod_name,path,package,module_contents){console.log('import py1',mod_name)
+$B.imported[mod_name].$is_package=module.$is_package
+$B.imported[mod_name].$last_modified=module.$last_modified
+if(path.substr(path.length-12)=='/__init__.py'){
+$B.imported[mod_name].__package__=mod_name
+$B.imported[mod_name].__path__=path
+$B.imported[mod_name].$is_package=module.$is_package=true}else if(package){$B.imported[mod_name].__package__=package}else{var mod_elts=mod_name.split('.')
+mod_elts.pop()
+$B.imported[mod_name].__package__=mod_elts.join('.')}
+$B.imported[mod_name].__file__=path
+return run_py(module_contents,path,module)}
+function import_py(module,path,package,blocking){
+var mod_name=module.__name__,module_contents=$download_module(module,path,package,blocking)
+if(Array.isArray(blocking)){return}
 $B.imported[mod_name].$is_package=module.$is_package
 $B.imported[mod_name].$last_modified=module.$last_modified
 if(path.substr(path.length-12)=='/__init__.py'){
@@ -6593,11 +6650,11 @@ finder_VFS.$dict.find_spec.$type='classmethod'
 function finder_stdlib_static(){return{__class__:finder_stdlib_static.$dict}}
 finder_stdlib_static.__class__=$B.$factory
 finder_stdlib_static.$dict={$factory : finder_stdlib_static,__class__ : $B.$type,__name__ : 'StdlibStatic',create_module : function(cls,spec){
-return _b_.None;},exec_module : function(cls,module){var metadata=module.__spec__.loader_state;
+return _b_.None;},exec_module : function(cls,module,blocking){var metadata=module.__spec__.loader_state;
 module.$is_package=metadata.is_package;
-if(metadata.ext=='py'){import_py(module,metadata.path,module.__package__);}
+if(metadata.ext=='py'){import_py(module,metadata.path,module.__package__,blocking);}
 else{
-import_js(module,metadata.path);}
+import_js(module,metadata.path,blocking);}
 delete module.__spec__['loader_state'];},find_module: function(cls,name,path){var spec=cls.$dict.find_spec(cls,name,path)
 if(spec===_b_.None){return _b_.None}
 return{__class__:Loader,load_module:function(name,path){var mod=module(name)
@@ -6718,7 +6775,7 @@ delete _path;
 delete _type;
 delete _sys_paths;
 $B.is_none=function(o){return o===undefined ||o==_b_.None;}
-$B.$__import__=function(mod_name,locals,fromlist){
+$B.$__import__=function(mod_name,locals,fromlist,blocking){
 var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.');
 if(modobj==_b_.None){
 throw _b_.ImportError(parent_name)}
@@ -6730,18 +6787,24 @@ modsep='.';
 var modobj=$B.imported[_mod_name];
 if(modobj==_b_.None){
 throw _b_.ImportError(_mod_name)}
-else if(modobj===undefined){try{$B.import_hooks(_mod_name,__path__)}
+else if(modobj===undefined){if(blocking===undefined){console.log('blocking undef',_mod_name)}
+try{$B.import_hooks(_mod_name,__path__,undefined,blocking)}
 catch(err){delete $B.imported[_mod_name]}
 if(is_none($B.imported[_mod_name])){throw _b_.ImportError(_mod_name)}
 else{
 if(_parent_name){_b_.setattr($B.imported[_parent_name],parsed_name[i],$B.imported[_mod_name]);}}}
 if(i < l){try{__path__=_b_.getattr($B.imported[_mod_name],'__path__')}
 catch(e){throw _b_.ImportError(_mod_name)}}}}
+else if(Array.isArray(blocking)){var frames=$B.frames_stack
+for(var i=0;i<frames.length;i++){var locals_id='$locals_'+frames[i][0].replace(/\./g,'_')
+eval('var '+locals_id+'=frames[i][1]')}
+eval('var $locals='+locals_id)
+blocking[1]()}
 if(fromlist.length > 0){
 return $B.imported[mod_name]}
 else{
 return $B.imported[parsed_name[0]]}}
-$B.$import=function(mod_name,fromlist,aliases,locals){var parts=mod_name.split('.');
+$B.$import=function(mod_name,fromlist,aliases,locals,blocking){var parts=mod_name.split('.');
 if(mod_name[mod_name.length - 1]=='.'){parts.pop()}
 var norm_parts=[],prefix=true;
 for(var i=0,_len_i=parts.length;i < _len_i;i++){var p=parts[i];
@@ -6758,7 +6821,7 @@ console.log('use static stdlib paths ? '+$B.static_stdlib_import)}
 var current_frame=$B.frames_stack[$B.frames_stack.length-1],globals=current_frame[3],__import__=globals['__import__'];
 if(__import__===undefined){
 __import__=$B.$__import__;}
-var modobj=_b_.getattr(__import__,'__call__')(mod_name,undefined,fromlist);
+var modobj=_b_.getattr(__import__,'__call__')(mod_name,undefined,fromlist,blocking);
 if(!fromlist ||fromlist.length==0){
 var alias=aliases[mod_name];
 if(alias){locals[alias]=$B.imported[mod_name];}
@@ -6778,13 +6841,14 @@ try{
 locals[alias]=_b_.getattr(modobj,name);}
 catch($err1){
 try{
-_b_.getattr(__import__,'__call__')(mod_name + '.' + name,undefined,[]);}
+_b_.getattr(__import__,'__call__')(mod_name + '.' + name,undefined,[],blocking);}
 catch($err2){if($err2.__class__=_b_.ImportError.$dict){throw _b_.ImportError("cannot import name '" + name + "'")}
 throw $err2;}
 try{
 locals[alias]=_b_.getattr(modobj,name);}
 catch($err3){console.log('error',$err3)
 if($err3.__class__===_b_.AttributeError.$dict){$err3.__class__=_b_.ImportError.$dict;}}}}}}}
+$B.$import_non_blocking=function(mod_name,fromlist,aliases,locals,func){$B.$import(mod_name,fromlist,aliases,locals,[false,func,locals])}
 $B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path];
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!='/'){path=path + '/' }
 $B.path_importer_cache[path]=url_hook(path,filetype);}
@@ -9384,7 +9448,8 @@ function $getMouseOffset(target,ev){ev=ev ||window.event;
 var docPos=$getPosition(target);
 var mousePos=$mouseCoords(ev);
 return{x:mousePos.x - docPos.x,y:mousePos.y - docPos.y};}
-function $getPosition(e){var left=0;
+function $getPosition(e){console.log('enter get position',e)
+var left=0;
 var top=0;
 var width=e.width ||e.offsetWidth;
 var height=e.height ||e.offsetHeight;
@@ -9393,6 +9458,7 @@ top +=e.offsetTop;
 e=e.offsetParent;}
 left +=e.offsetLeft;
 top +=e.offsetTop;
+console.log('end get position',left,top,width,height)
 return{left:left,top:top,width:width,height:height};}
 function $mouseCoords(ev){var posx=0;
 var posy=0;
@@ -9563,15 +9629,18 @@ DOMNodeDict.__getattribute__=function(self,attr){switch(attr){case 'class_name':
 case 'children':
 case 'html':
 case 'id':
-case 'left':
 case 'parent':
 case 'query':
 case 'text':
-case 'top':
 case 'value':
-case 'height':
-case 'width':
 return DOMNodeDict[attr](self)
+case 'height':
+case 'left':
+case 'top':
+case 'width':
+if(self.elt instanceof SVGElement){return self.elt.getAttributeNS(null,attr)}
+try{return _b_.int($getPosition(self.elt)[attr])}
+catch(err){return _b_.getattr(self.elt,attr)}
 case 'clear':
 case 'remove':
 return function(){DOMNodeDict[attr](self,arguments[0])}
@@ -9646,6 +9715,8 @@ if(!_b_.bool(value)){
 DOMNodeDict.unbind(self,attr.substr(2))}else{
 DOMNodeDict.bind(self,attr.substr(2),value)}}else{if(DOMNodeDict['set_'+attr]!==undefined){return DOMNodeDict['set_'+attr](self,value)}
 var attr1=attr.replace('_','-').toLowerCase()
+if(self.elt instanceof SVGElement){self.elt.setAttributeNS(null,attr1,value)
+return}
 if(self.elt[attr1]!==undefined){self.elt[attr1]=value;return}
 var res=self.elt.getAttribute(attr1)
 if(res!==undefined&&res!==null){self.elt.setAttribute(attr1,value)}
@@ -9746,9 +9817,7 @@ var obj=self.elt
 return function(ctx){return JSObject(obj.getContext(ctx))}}
 DOMNodeDict.getSelectionRange=function(self){
 if(self.elt['getSelectionRange']!==undefined){return self.elt.getSelectionRange.apply(null,arguments)}}
-DOMNodeDict.height=function(self){return _b_.int($getPosition(self.elt)["height"])}
 DOMNodeDict.html=function(self){return self.elt.innerHTML}
-DOMNodeDict.left=function(self){return _b_.int($getPosition(self.elt)["left"])}
 DOMNodeDict.id=function(self){if(self.elt.id !==undefined)return self.elt.id
 return None}
 DOMNodeDict.options=function(self){
@@ -9762,7 +9831,6 @@ while(ch_elt.parentElement){if(ch_elt.parentElement===elt){elt.removeChild(ch_el
 flag=true
 break}else{ch_elt=ch_elt.parentElement}}
 if(!flag){throw _b_.ValueError('element '+child+' is not inside '+self)}}
-DOMNodeDict.top=function(self){return _b_.int($getPosition(self.elt)["top"])}
 DOMNodeDict.reset=function(self){
 return function(){self.elt.reset()}}
 DOMNodeDict.style=function(self){
@@ -9777,8 +9845,6 @@ range.moveStart('character',end_pos);
 range.select();}})(this)}}
 DOMNodeDict.set_class_name=function(self,arg){self.elt.setAttribute('class',arg)}
 DOMNodeDict.set_html=function(self,value){self.elt.innerHTML=str(value)}
-DOMNodeDict.set_left=function(self,value){console.log('set left')
-self.elt.style.left=value}
 DOMNodeDict.set_style=function(self,style){
 if(!_b_.isinstance(style,_b_.dict)){throw TypeError('style must be dict, not '+$B.get_class(style).__name__)}
 var items=_b_.list(_b_.dict.$dict.items(style))
@@ -9822,7 +9888,6 @@ flag=true
 break}}
 if(!flag){throw KeyError('missing callback for event '+event)}}}
 DOMNodeDict.value=function(self){return self.elt.value}
-DOMNodeDict.width=function(self){return _b_.int($getPosition(self.elt)["width"])}
 var $QueryDict={__class__:$B.$type,__name__:'query'}
 $QueryDict.__contains__=function(self,key){return self._keys.indexOf(key)>-1}
 $QueryDict.__getitem__=function(self,key){
@@ -10239,7 +10304,7 @@ for(var attr in modules){load(attr,modules[attr])}
 modules['browser'].html=modules['browser.html']})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,
 $sys=$B.imported['_sys'];
-function import_hooks(mod_name,_path,module){
+function import_hooks(mod_name,_path,module,blocking){
 var is_none=$B.is_none
 if(is_none(module)){module=undefined;}
 var _meta_path=_b_.getattr($sys,'meta_path');
@@ -10280,8 +10345,9 @@ if(is_none(exec_module)){
 module=_b_.getattr(_b_.getattr(_loader,'load_module'),'__call__')(_spec_name);}
 else{
 $B.modules[_spec_name]=_sys_modules[_spec_name]=module;
-try{_b_.getattr(exec_module,'__call__')(module)}
-catch(e){delete $B.modules[_spec_name];
+try{_b_.getattr(exec_module,'__call__')(module,blocking)}
+catch(e){console.log(e)
+delete $B.modules[_spec_name];
 delete _sys_modules[_spec_name];
 throw e;}}}
 return _sys_modules[_spec_name];}
