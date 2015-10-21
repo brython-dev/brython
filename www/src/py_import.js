@@ -81,7 +81,6 @@ function $importer(){
 }
 
 function $download_module(module,url,package,blocking){
-    console.log('download', module.__name__, blocking, url)
     var imp = $importer(),
         $xmlhttp = imp[0],fake_qs=imp[1],timer=imp[2],res=null,
         mod_name = module.__name__,
@@ -420,7 +419,6 @@ finder_stdlib_static.$dict = {
         return _b_.None;
     },
     exec_module : function(cls, module, blocking) {
-        console.log('exec module', module.__name__, blocking)
         var metadata = module.__spec__.loader_state;
         module.$is_package = metadata.is_package; 
         if (metadata.ext == 'py') {

@@ -14,7 +14,6 @@
    * @param module          {module}    [Optional] Existing module, for reload only
    */
   function import_hooks(mod_name, _path, module, blocking) {
-      console.log(mod_name, 'blocking', blocking)
     // Default argument binding
     var is_none = $B.is_none
     if (is_none(module)) {
@@ -98,7 +97,7 @@
         }
         else {
             $B.modules[_spec_name] = _sys_modules[_spec_name] = module;
-            try { _b_.getattr(exec_module, '__call__')(module, blocking); console.log('import hooks ok', module.__name__) }
+            try { _b_.getattr(exec_module, '__call__')(module, blocking) }
             catch (e) {
                 console.log(e)
                 delete $B.modules[_spec_name];
