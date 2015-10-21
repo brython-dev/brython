@@ -335,7 +335,6 @@ $Style.__class__ = $B.$factory
 $Style.$dict = $StyleDict
 $StyleDict.$factory = $Style
 
-
 var DOMNode = $B.DOMNode = function(elt){ 
     // returns the element, enriched with an attribute $brython_id for 
     // equality testing and with all the attributes of Node
@@ -461,6 +460,13 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         // IE returns the properties of a DOMNode (eg parentElement)
         // as "attribute", so we must check that this[attr] is not
         // defined
+        if(res!==undefined&&res!==null&&self.elt[attr]===undefined){
+            // now we're sure it's an attribute
+            return res
+        }
+    }
+    if(self.elt.getAttributeNS!==undefined){
+        res = self.elt.getAttributeNS(null, attr)
         if(res!==undefined&&res!==null&&self.elt[attr]===undefined){
             // now we're sure it's an attribute
             return res
