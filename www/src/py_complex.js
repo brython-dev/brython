@@ -88,7 +88,7 @@ $ComplexDict.__new__ = function(cls){
     return {__class__:cls.$dict}
 }
 
-//$ComplexDict.__or__ = function(self,other){return self}
+$ComplexDict.__pos__ = function(self){return self}
 
 $ComplexDict.__pow__ = function(self,other){
     $UnsupportedOpType("**",complex,$B.get_class(other))

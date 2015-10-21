@@ -458,6 +458,19 @@ function format(value, format_spec) {
   throw _b_.NotImplementedError("__format__ is not implemented for object '" + _b_.str(value) + "'")
 }
 
+function attr_error(attr, cname){
+    var msg = "bad operand type for unary #: '"+cname+"'"
+    switch(attr){
+        case '__neg__':
+            throw _b_.TypeError(msg.replace('#','-'))
+        case '__pos__':
+            throw _b_.TypeError(msg.replace('#','+'))
+        case '__invert__':
+            throw _b_.TypeError(msg.replace('#','~'))        
+        default:
+            throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")
+    }
+}
 
 function getattr(obj,attr,_default){
 
@@ -536,10 +549,7 @@ function getattr(obj,attr,_default){
                 return klass.descriptors[attr](obj)
             }
             else{
-                if(_default===undefined){
-                    throw _b_.AttributeError(klass.__name__+
-                        " object has no attribute '"+attr+"'")
-                }
+                if(_default===undefined){attr_error(attr, klass.__name__)}
                 return _default
             }
         }
@@ -605,7 +615,8 @@ function getattr(obj,attr,_default){
     
     var cname = klass.__name__
     if(is_class) cname=obj.__name__
-    throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")
+    
+    attr_error(attr, cname)
 }
 
 //globals() (built in function)
@@ -2307,14 +2318,6 @@ var BaseException = function (msg,js_exc){
     err.__class__ = $BaseExceptionDict
     err.$py_error = true
     err.$stack = $B.frames_stack.slice()
-    /*
-    err.traceback = traceback({
-        tb_frame:frame($B.frames_stack),
-        tb_lineno:-1,
-        tb_lasti:'',
-        tb_next: None   // fix me
-    })
-    */
     $B.current_exception = err
     return err
 }

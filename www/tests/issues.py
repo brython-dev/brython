@@ -535,4 +535,20 @@ assert 10 in range(10, 0, -1)
 assert not 1 in range(10, 0, -2)
 assert not 0 in range(10, 0, -2)
 
+# issue
+class Test():
+    def __pos__(self):
+        return 'plus'
+    def __neg__(self):
+        return 'minus'
+    def __invert__(self):
+        return 'invert'
+a = Test()
+assert +a == 'plus'
+assert -a == 'minus'
+assert ~a == 'invert'
+
+for x in 1, 1.2, 1+2j, 2**54:
+    assert +x == x
+    
 print('passed all tests')

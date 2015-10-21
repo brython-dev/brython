@@ -77,7 +77,7 @@ var $op_order = [['or'],['and'],
     ['+'],
     ['-'],
     ['*','/','//','%'],
-    ['unary_neg','unary_inv'],
+    ['unary_neg','unary_inv','unary_pos'],
     ['**']
 ]
 
@@ -1166,7 +1166,7 @@ function $CallCtx(context){
                    // form " -(x+2) "
                    switch(this.func.op) {
                       case '+':
-                        return $to_js(this.tree)
+                        return 'getattr('+$to_js(this.tree)+',"__pos__")()'
                       case '-':
                         return 'getattr('+$to_js(this.tree)+',"__neg__")()'
                       case '~':
@@ -3914,10 +3914,12 @@ function $OpCtx(context,op){
           case 'not_in':
             return '!$B.$is_member('+$to_js(this.tree)+')'
           case 'unary_neg':
+          case 'unary_pos':
           case 'unary_inv':
             // For unary operators, the left operand is the unary sign(s)
             var op, method
             if(this.op=='unary_neg'){op='-';method='__neg__'}
+            else if(this.op=='unary_pos'){op='-';method='__pos__'}
             else{op='~';method='__invert__'}
             // for integers or float, replace their value using
             // Javascript operators
@@ -5091,9 +5093,6 @@ function $transition(context,token){
           case 'op':
             var tg = arguments[2]
             switch(tg) {
-              case '+':
-                // ignore unary +
-                return context
               case '*':
                 context.parent.tree.pop() // remove abstract expression
                 var commas = context.with_commas
@@ -5101,11 +5100,13 @@ function $transition(context,token){
                 return new $PackedCtx(new $ExprCtx(context,'expr',commas))
               case '-':
               case '~':
+              case '+':
                 // create a left argument for operator "unary"
                 context.parent.tree.pop()
                 var left = new $UnaryCtx(context.parent,tg)
                 // create the operator "unary"
                 if(tg=='-'){var op_expr = new $OpCtx(left,'unary_neg')}
+                else if(tg=='+'){var op_expr = new $OpCtx(left,'unary_pos')}
                 else{var op_expr = new $OpCtx(left,'unary_inv')}
                 return new $AbstractExprCtx(op_expr,false)
             }
@@ -5190,10 +5191,9 @@ function $transition(context,token){
             switch(arguments[2]) {
               case '-':
               case '~':
+              case '+':
                 context.expect = ','
                 return $transition(new $CallArgCtx(context),token,arguments[2])
-              case '+':
-                return context
               case '*':
                 context.has_star = true;
                 return new $StarArgCtx(context)
@@ -5464,6 +5464,7 @@ function $transition(context,token){
                         var left = new $UnaryCtx(context,arguments[2])
                         // create the operator "unary"
                         if(arguments[2]=='-'){var op_expr = new $OpCtx(left,'unary_neg')}
+                        else if(arguments[2]=='+'){var op_expr = new $OpCtx(left,'unary_pos')}
                         else{var op_expr = new $OpCtx(left,'unary_inv')}
                         return new $AbstractExprCtx(op_expr,false)
                     }//switch
@@ -6461,14 +6462,15 @@ function $transition(context,token){
             else if(context.op==='~'){value=~value}
             return $transition(context.parent.parent,token,value)
           case 'id':
-            // replace by x.__neg__(), x.__invert__ or x
+            // replace by x.__neg__(), x.__invert__ or x.__pos__
             context.parent.parent.tree.pop()
             var expr = new $ExprCtx(context.parent.parent,'call',false)
             var expr1 = new $ExprCtx(expr,'id',false)
             new $IdCtx(expr1,arguments[2]) // create id
-            if (context.op !== '+'){
+            if (true){ //context.op !== '+'){
                var repl = new $AttrCtx(expr)
-               if(context.op==='-'){repl.name='__neg__'}
+               if(context.op==='+'){repl.name='__pos__'}
+               else if(context.op==='-'){repl.name='__neg__'}
                else{repl.name='__invert__'}
                // method is called with no argument
                var call = new $CallCtx(expr)

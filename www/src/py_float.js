@@ -387,6 +387,8 @@ $FloatDict.__ne__ = function(self,other){return !$FloatDict.__eq__(self,other)}
 
 $FloatDict.__neg__ = function(self,other){return float(-self)}
 
+$FloatDict.__pos__ = function(self){return self}
+
 $FloatDict.__pow__= function(self,other){
     if(isinstance(other,[_b_.int, float])) return float(Math.pow(self,other))
     if(hasattr(other,'__rpow__')) return getattr(other,'__rpow__')(self)

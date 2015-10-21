@@ -264,7 +264,7 @@ $IntDict.__new__ = function(cls){
     return {__class__:cls.$dict}
 }
 
-//$IntDict.__or__ = function(self,other){return self | other} // bitwise OR
+$IntDict.__pos__ = function(self){return self}
 
 $IntDict.__pow__ = function(self,other){
     if(isinstance(other, int)) {

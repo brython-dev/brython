@@ -429,6 +429,7 @@ $LongIntDict.__or__ = function(self, other){
     return intOrLong(LongInt(res, 2))
 }
 
+$LongIntDict.__pos__ = function(self){return self}
 
 $LongIntDict.__pow__ = function(self, power){
     if (typeof power == "number") {

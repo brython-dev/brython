@@ -54,7 +54,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-10-21 16:31:07.145309"
+__BRYTHON__.compiled_date="2015-10-21 18:09:45.596567"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -75,7 +75,7 @@ return res}
 var $operators={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","**":"pow","//":"floordiv","<<":"lshift",">>":"rshift","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor","+":"add","-":"sub","*":"mul","/":"truediv","%":"mod","&":"and","|":"or","~":"invert","^":"xor","<":"lt",">":"gt","<=":"le",">=":"ge","==":"eq","!=":"ne","or":"or","and":"and","in":"in","is":"is","not_in":"not_in","is_not":"is_not" }
 var $augmented_assigns={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor"}
 var noassign=$B.list2obj(['True','False','None','__debug__'])
-var $op_order=[['or'],['and'],['in','not_in'],['<','<=','>','>=','!=','==','is','is_not'],['|'],['^'],['&'],['>>','<<'],['+'],['-'],['*','/','//','%'],['unary_neg','unary_inv'],['**']
+var $op_order=[['or'],['and'],['in','not_in'],['<','<=','>','>=','!=','==','is','is_not'],['|'],['^'],['&'],['>>','<<'],['+'],['-'],['*','/','//','%'],['unary_neg','unary_inv','unary_pos'],['**']
 ]
 var $op_weight={}
 var $weight=1
@@ -618,7 +618,7 @@ break
 default:
 if(this.func.type=='unary'){
 switch(this.func.op){case '+':
-return $to_js(this.tree)
+return 'getattr('+$to_js(this.tree)+',"__pos__")()'
 case '-':
 return 'getattr('+$to_js(this.tree)+',"__neg__")()'
 case '~':
@@ -1972,9 +1972,11 @@ return '$B.$is_member('+$to_js(this.tree)+')'
 case 'not_in':
 return '!$B.$is_member('+$to_js(this.tree)+')'
 case 'unary_neg':
+case 'unary_pos':
 case 'unary_inv':
 var op,method
 if(this.op=='unary_neg'){op='-';method='__neg__'}
+else if(this.op=='unary_pos'){op='-';method='__pos__'}
 else{op='~';method='__invert__'}
 if(this.tree[1].type=="expr"){var x=this.tree[1].tree[0]
 switch(x.type){case 'int':
@@ -2587,18 +2589,18 @@ case 'lambda':
 return new $LambdaCtx(new $ExprCtx(C,'lambda',commas))
 case 'op':
 var tg=arguments[2]
-switch(tg){case '+':
-return C
-case '*':
+switch(tg){case '*':
 C.parent.tree.pop()
 var commas=C.with_commas
 C=C.parent
 return new $PackedCtx(new $ExprCtx(C,'expr',commas))
 case '-':
 case '~':
+case '+':
 C.parent.tree.pop()
 var left=new $UnaryCtx(C.parent,tg)
 if(tg=='-'){var op_expr=new $OpCtx(left,'unary_neg')}
+else if(tg=='+'){var op_expr=new $OpCtx(left,'unary_pos')}
 else{var op_expr=new $OpCtx(left,'unary_inv')}
 return new $AbstractExprCtx(op_expr,false)}
 $_SyntaxError(C,'token '+token+' after '+C)
@@ -2665,10 +2667,9 @@ case 'op':
 C.expect=','
 switch(arguments[2]){case '-':
 case '~':
+case '+':
 C.expect=','
 return $transition(new $CallArgCtx(C),token,arguments[2])
-case '+':
-return C
 case '*':
 C.has_star=true;
 return new $StarArgCtx(C)
@@ -2866,6 +2867,7 @@ case '~':
 C.expect=','
 var left=new $UnaryCtx(C,arguments[2])
 if(arguments[2]=='-'){var op_expr=new $OpCtx(left,'unary_neg')}
+else if(arguments[2]=='+'){var op_expr=new $OpCtx(left,'unary_pos')}
 else{var op_expr=new $OpCtx(left,'unary_inv')}
 return new $AbstractExprCtx(op_expr,false)}
 $_SyntaxError(C,'token '+token+' after '+C)}
@@ -3552,8 +3554,10 @@ C.parent.parent.tree.pop()
 var expr=new $ExprCtx(C.parent.parent,'call',false)
 var expr1=new $ExprCtx(expr,'id',false)
 new $IdCtx(expr1,arguments[2])
-if(C.op !=='+'){var repl=new $AttrCtx(expr)
-if(C.op==='-'){repl.name='__neg__'}
+if(true){
+var repl=new $AttrCtx(expr)
+if(C.op==='+'){repl.name='__pos__'}
+else if(C.op==='-'){repl.name='__neg__'}
 else{repl.name='__invert__'}
 var call=new $CallCtx(expr)
 return expr1}
@@ -5147,6 +5151,15 @@ return{
 __class__: $FilterDict,__next__: __next__}}
 function format(value,format_spec){if(hasattr(value,'__format__'))return getattr(value,'__format__')(format_spec)
 throw _b_.NotImplementedError("__format__ is not implemented for object '" + _b_.str(value)+ "'")}
+function attr_error(attr,cname){var msg="bad operand type for unary #: '"+cname+"'"
+switch(attr){case '__neg__':
+throw _b_.TypeError(msg.replace('#','-'))
+case '__pos__':
+throw _b_.TypeError(msg.replace('#','+'))
+case '__invert__':
+throw _b_.TypeError(msg.replace('#','~'))
+default:
+throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")}}
 function getattr(obj,attr,_default){var klass=$B.get_class(obj)
 if(klass===undefined){
 if(obj[attr]!==undefined)return $B.$JS2Py(obj[attr])
@@ -5181,8 +5194,7 @@ return obj[attr]}}}
 if(klass.$native){if(klass[attr]===undefined){var object_attr=_b_.object.$dict[attr]
 if(object_attr!==undefined){klass[attr]=object_attr}
 else if(klass.descriptors && klass.descriptors[attr]!==undefined){return klass.descriptors[attr](obj)}
-else{if(_default===undefined){throw _b_.AttributeError(klass.__name__+
-" object has no attribute '"+attr+"'")}
+else{if(_default===undefined){attr_error(attr,klass.__name__)}
 return _default}}
 if(typeof klass[attr]=='function'){
 if(attr=='__new__')return klass[attr].apply(null,arguments)
@@ -5211,7 +5223,7 @@ if(res!==undefined){return res}
 if(_default !==undefined)return _default
 var cname=klass.__name__
 if(is_class)cname=obj.__name__
-throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")}
+attr_error(attr,cname)}
 function globals(){
 var globals_obj=$B.last($B.frames_stack)[3]
 var _a=[]
@@ -6437,8 +6449,7 @@ $JSObjectDict.__len__=function(self){try{return getattr(self.js,'__len__')()}
 catch(err){throw _b_.AttributeError(self.js+' has no attribute __len__')}}
 $JSObjectDict.__mro__=[$JSObjectDict,$ObjectDict]
 $JSObjectDict.__repr__=function(self){return "<JSObject wraps "+self.js+">"}
-$JSObjectDict.__setattr__=function(self,attr,value){console.log('setattr',attr,value)
-if(isinstance(value,JSObject)){self.js[attr]=value.js}
+$JSObjectDict.__setattr__=function(self,attr,value){if(isinstance(value,JSObject)){self.js[attr]=value.js}
 else{self.js[attr]=value
 if(typeof value=='function'){self.js[attr]=function(){var args=[]
 for(var i=0,len=arguments.length;i<len;i++){args.push(jsobj2pyobj(arguments[i]))}
@@ -7050,6 +7061,7 @@ if(hasattr(other,'__rmul__'))return getattr(other,'__rmul__')(self)
 $err('*',other)}
 $FloatDict.__ne__=function(self,other){return !$FloatDict.__eq__(self,other)}
 $FloatDict.__neg__=function(self,other){return float(-self)}
+$FloatDict.__pos__=function(self){return self}
 $FloatDict.__pow__=function(self,other){if(isinstance(other,[_b_.int,float]))return float(Math.pow(self,other))
 if(hasattr(other,'__rpow__'))return getattr(other,'__rpow__')(self)
 $err("** or pow()",other)}
@@ -7267,6 +7279,7 @@ $IntDict.__name__='int'
 $IntDict.__neg__=function(self){return -self}
 $IntDict.__new__=function(cls){if(cls===undefined){throw _b_.TypeError('int.__new__(): not enough arguments')}
 return{__class__:cls.$dict}}
+$IntDict.__pos__=function(self){return self}
 $IntDict.__pow__=function(self,other){if(isinstance(other,int)){switch(other.valueOf()){case 0:
 return int(1)
 case 1:
@@ -7608,6 +7621,7 @@ var res=v1.substr(0,start)
 for(var i=0;i<v2.length;i++){if(v1.charAt(start+i)=='1' ||v2.charAt(i)=='1'){res +='1'}
 else{res +='0'}}
 return intOrLong(LongInt(res,2))}
+$LongIntDict.__pos__=function(self){return self}
 $LongIntDict.__pow__=function(self,power){if(typeof power=="number"){power=LongInt(_b_.str(power))}else if(!isinstance(power,LongInt)){var msg="power must be a LongDict, not '"
 throw TypeError(msg+$B.get_class(power).__name__+"'")}
 if(!power.pos){if(self.value=='1'){return self}
@@ -7768,6 +7782,7 @@ $ComplexDict.__ne__=function(self,other){return !$ComplexDict.__eq__(self,other)
 $ComplexDict.__neg__=function(self){return complex(-self.real,-self.imag)}
 $ComplexDict.__new__=function(cls){if(cls===undefined)throw _b_.TypeError('complex.__new__(): not enough arguments')
 return{__class__:cls.$dict}}
+$ComplexDict.__pos__=function(self){return self}
 $ComplexDict.__pow__=function(self,other){$UnsupportedOpType("**",complex,$B.get_class(other))}
 $ComplexDict.__str__=$ComplexDict.__repr__=function(self){if(self.real==0)return self.imag+'j'
 if(self.imag>=0)return '('+self.real+'+'+self.imag+'j)'
