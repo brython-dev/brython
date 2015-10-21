@@ -6738,6 +6738,11 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                             escaped=true;end+=1
                         }
                     }
+                } else if(src.charAt(end)=='\n' && _type!='triple_string'){
+                    // In a string with single quotes, line feed not following
+                    // a backslash raises SyntaxError
+                    $pos = end
+                    $_SyntaxError(context, ["EOL while scanning string literal"])
                 } else if(src.charAt(end)==car){
                     if(_type=="triple_string" && src.substr(end,3)!=car+car+car){
                         zone += src.charAt(end)

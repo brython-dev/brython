@@ -54,7 +54,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-10-21 10:29:24.223611"
+__BRYTHON__.compiled_date="2015-10-21 10:42:07.383611"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -3706,7 +3706,9 @@ lnum++}else{
 if(end < src.length-1 &&
 is_escaped[src.charAt(end+1)]==undefined){zone +='\\'}
 zone+='\\'
-escaped=true;end+=1}}}else if(src.charAt(end)==car){if(_type=="triple_string" && src.substr(end,3)!=car+car+car){zone +=src.charAt(end)
+escaped=true;end+=1}}}else if(src.charAt(end)=='\n' && _type!='triple_string'){
+$pos=end
+$_SyntaxError(C,["EOL while scanning string literal"])}else if(src.charAt(end)==car){if(_type=="triple_string" && src.substr(end,3)!=car+car+car){zone +=src.charAt(end)
 end++}else{
 found=true
 $pos=pos
@@ -6787,8 +6789,7 @@ modsep='.';
 var modobj=$B.imported[_mod_name];
 if(modobj==_b_.None){
 throw _b_.ImportError(_mod_name)}
-else if(modobj===undefined){if(blocking===undefined){console.log('blocking undef',_mod_name)}
-try{$B.import_hooks(_mod_name,__path__,undefined,blocking)}
+else if(modobj===undefined){try{$B.import_hooks(_mod_name,__path__,undefined,blocking)}
 catch(err){delete $B.imported[_mod_name]}
 if(is_none($B.imported[_mod_name])){throw _b_.ImportError(_mod_name)}
 else{
@@ -7939,18 +7940,14 @@ if(self.__class__===$TupleDict){if(self.length==1){return '('+_r[0]+',)'}
 return '('+_r.join(', ')+')'}
 return '['+_r.join(', ')+']'}
 $ListDict.__setitem__=function(){var $=$B.args('__setitem__',3,{self:null,key:null,value:null},['self','key','value'],arguments,{},null,null),self=$.self,arg=$.key,value=$.value
-console.log('__setitem__',arg)
 if(isinstance(arg,_b_.int)){var pos=arg
 if(arg<0)pos=self.length+pos
 if(pos>=0 && pos<self.length){self[pos]=value}
 else{throw _b_.IndexError('list index out of range')}
 return $N}
-if(isinstance(arg,_b_.slice)){console.log('list setitem',arg)
-var s=_b_.slice.$dict.$conv_for_seq(arg,self.length)
-console.log('s',s)
+if(isinstance(arg,_b_.slice)){var s=_b_.slice.$dict.$conv_for_seq(arg,self.length)
 if(arg.step===null){$B.set_list_slice(self,s.start,s.stop,value)}
 else{$B.set_list_slice_step(self,s.start,s.stop,s.step,value)}
-console.log('ok',self)
 return $N}
 if(hasattr(arg,'__int__')||hasattr(arg,'__index__')){$ListDict.__setitem__(self,_b_.int(arg),value)
 return $N}
@@ -10346,8 +10343,7 @@ module=_b_.getattr(_b_.getattr(_loader,'load_module'),'__call__')(_spec_name);}
 else{
 $B.modules[_spec_name]=_sys_modules[_spec_name]=module;
 try{_b_.getattr(exec_module,'__call__')(module,blocking)}
-catch(e){console.log(e)
-delete $B.modules[_spec_name];
+catch(e){delete $B.modules[_spec_name];
 delete _sys_modules[_spec_name];
 throw e;}}}
 return _sys_modules[_spec_name];}
