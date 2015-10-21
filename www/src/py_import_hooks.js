@@ -99,7 +99,6 @@
             $B.modules[_spec_name] = _sys_modules[_spec_name] = module;
             try { _b_.getattr(exec_module, '__call__')(module, blocking) }
             catch (e) {
-                console.log(e)
                 delete $B.modules[_spec_name];
                 delete _sys_modules[_spec_name];
                 throw e;

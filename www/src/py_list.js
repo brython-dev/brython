@@ -276,10 +276,6 @@ $ListDict.__setitem__ = function(){
     var $=$B.args('__setitem__',3,{self:null,key:null,value:null},
         ['self','key','value'],arguments,{},null,null),
         self=$.self, arg=$.key, value=$.value
-    //if(isinstance(self,tuple)){
-        //throw _b_.TypeError("'tuple' object does not support item assignment")
-    //}
-    console.log('__setitem__', arg)
     if(isinstance(arg,_b_.int)){
         var pos = arg
         if(arg<0) pos=self.length+pos
@@ -288,12 +284,9 @@ $ListDict.__setitem__ = function(){
         return $N
     }
     if(isinstance(arg,_b_.slice)){
-        console.log('list setitem', arg)
         var s = _b_.slice.$dict.$conv_for_seq(arg, self.length)
-        console.log('s', s)
         if(arg.step===null){$B.set_list_slice(self, s.start, s.stop, value)}
         else{$B.set_list_slice_step(self, s.start, s.stop, s.step, value)}
-        console.log('ok', self)
         return $N
     }
 

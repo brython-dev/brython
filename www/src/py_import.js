@@ -785,7 +785,6 @@ $B.$__import__ = function (mod_name, locals, fromlist, blocking){
                 throw _b_.ImportError(_mod_name) 
             }
             else if (modobj === undefined) {
-                if(blocking===undefined){console.log('blocking undef', _mod_name)}
                 try {$B.import_hooks(_mod_name, __path__, undefined, blocking)}
                 catch(err) {
                     delete $B.imported[_mod_name]
