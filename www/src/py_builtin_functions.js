@@ -1993,11 +1993,14 @@ $BoolDict.__lshift__ = function(self,other){return self.valueOf() << other}
 
 $BoolDict.__lt__ = function(self,other){return !$BoolDict.__ge__(self,other)}
 
-
 $BoolDict.__mul__ = function(self,other){
     if(self.valueOf()) return other
     return 0;
 }
+
+$BoolDict.__neg__ = function(self){return -$B.int_or_bool(self)}
+
+$BoolDict.__pos__ = $B.int_or_bool
 
 $BoolDict.__repr__ = $BoolDict.__str__ = function(self){
     if(self.valueOf()) return "True"

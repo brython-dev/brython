@@ -550,5 +550,7 @@ assert ~a == 'invert'
 
 for x in 1, 1.2, 1+2j, 2**54:
     assert +x == x
+
+assert -True == -1
     
 print('passed all tests')

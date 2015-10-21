@@ -995,7 +995,7 @@ $B.$GetInt=function(value) {
 
 $B.PyNumber_Index = function(item){
     switch(typeof item){
-        case "bool":
+        case "boolean":
             return item ? 1 : 0
         case "number":
             return item
@@ -1013,7 +1013,7 @@ $B.PyNumber_Index = function(item){
 
 $B.int_or_bool = function(v){
     switch(typeof v){
-        case "bool":
+        case "boolean":
             return v ? 1 : 0
         case "number":
             return v
