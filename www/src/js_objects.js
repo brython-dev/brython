@@ -69,6 +69,8 @@ $JSConstructorDict.$factory = JSConstructor
 
 var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj) {
     switch(jsobj) {
+      case undefined:
+          return _b_.None
       case true:
       case false:
         return jsobj
@@ -143,6 +145,7 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
                 }
                 return pyobj.apply(null, args)
             }catch(err){
+                console.log(err)
                 console.log(_b_.getattr(err,'info'))
                 console.log(err.__name__+':', err.args[0])
                 throw err
@@ -270,7 +273,6 @@ $JSObjectDict.__getitem__ = function(self,rank){
     }
 }
 
-var $JSObject_iterator = $B.$iterator_class('JS object iterator')
 $JSObjectDict.__iter__ = function(self){
     if(window.Symbol && self.js[Symbol.iterator]!==undefined){
         // Javascript objects that support the iterable protocol, such as Map
@@ -278,7 +280,9 @@ $JSObjectDict.__iter__ = function(self){
         for(var item in self.js){ if( self.js.hasOwnProperty( item ) ) { items.push(jsobj2pyobj(item))} }
         return $B.$iterator(items, $JSObject_iterator)
     }
-    return $B.$iterator(self.js,$JSObject_iterator)
+    // Else iterate on the dictionary built from the JS object
+    var _dict = $JSObjectDict.to_dict(self)
+    return _b_.dict.$dict.__iter__(_dict)
 }
 
 $JSObjectDict.__len__ = function(self){
@@ -293,6 +297,7 @@ $JSObjectDict.__mro__ = [$JSObjectDict,$ObjectDict]
 $JSObjectDict.__repr__ = function(self){return "<JSObject wraps "+self.js+">"}
 
 $JSObjectDict.__setattr__ = function(self,attr,value){
+    console.log('setattr', attr, value)
     if(isinstance(value,JSObject)){self.js[attr]=value.js}
     else{
         self.js[attr]=value
