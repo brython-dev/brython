@@ -1898,7 +1898,9 @@ var $ZipDict = {__class__:$B.$type,__name__:'zip'}
 
 var $zip_iterator = $B.$iterator_class('zip_iterator')
 $ZipDict.__iter__ = function(self){
-    return $B.$iterator(self.items,$zip_iterator)
+    // issue #317 : iterator is not reset at each call to zip()
+    return self.$iterator = self.$iterator || 
+        $B.$iterator(self.items,$zip_iterator)
 }
 
 $ZipDict.__mro__ = [$ZipDict,$ObjectDict]
