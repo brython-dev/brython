@@ -17,7 +17,6 @@ function $getMouseOffset(target, ev){
 }
 
 function $getPosition(e){
-    console.log('enter get position', e)
     var left = 0;
     var top  = 0;
     var width = e.width || e.offsetWidth;
@@ -31,7 +30,7 @@ function $getPosition(e){
 
     left += e.offsetLeft;
     top  += e.offsetTop;
-    console.log('end get position', left, top, width, height)
+
     return {left:left, top:top, width:width, height:height};
 }
 
@@ -401,7 +400,8 @@ DOMNodeDict.__delitem__ = function(self,key){
         if(res){res.parentNode.removeChild(res)}
         else{throw KeyError(key)}
     }else{ // other node : remove by rank in child nodes
-        self.elt.removeChild(self.elt.childNodes[key])
+        console.log('delitem')
+        self.elt.parentNode.removeChild(self.elt)
     }
 }
 
