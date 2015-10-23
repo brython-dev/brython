@@ -103,7 +103,7 @@ Function called in case of SyntaxError
 */
 
 function $_SyntaxError(context,msg,indent){
-    //console.log('syntax error, context '+context+' msg '+msg)
+    console.log('syntax error, context '+context+' msg '+msg)
     var ctx_node = context
     while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
     var tree_node = ctx_node.node
@@ -2793,6 +2793,30 @@ function $FromCtx(context){
         if(name=='*'){this.scope.blurred = true}
     }
     
+    this.transform = function(node, rank){
+        if(!this.blocking){
+            // Experimental : for non blocking import, wrap code after the
+            // "from" statement in a function
+            var mod_name = this.module.replace(/\$/g,'')
+            if(this.names[0]=='*'){
+                node.add($NodeJS('for(var $attr in $B.imported["'+mod_name+
+                    '"]){$locals[$attr]=$B.imported["'+mod_name+'"][$attr]};'))
+            }else{
+                for(var i=0;i<this.names.length;i++){
+                    var name = this.names[i]
+                    node.add($NodeJS('$locals["'+(this.aliases[name]||name)+
+                        '"]=$B.imported["'+mod_name+'"]["'+name+'"]'))
+                }
+            }
+
+            for(var i=rank+1;i<node.parent.children.length;i++){
+                node.add(node.parent.children[i])
+            }
+            node.parent.children.splice(rank+1, node.parent.children.length)
+            node.parent.add($NodeJS(')'))
+        }
+    }
+    
     this.bind_names = function(){
         // Called at the end of the 'from' statement
         // Binds the names or aliases in current scope
@@ -2843,15 +2867,33 @@ function $FromCtx(context){
         // FIXME : Replacement still needed ?
         var mod_name = this.module.replace(/\$/g,''),
             localns = '$locals_'+scope.id.replace(/\./g,'_');
-        res[pos++] = '$B.$import("';
-        res[pos++] = mod_name+'",["';
-        res[pos++] = this.names.join('","')+'"], {';
-        var sep = '';
-        for (var attr in this.aliases) {
-            res[pos++] = sep + '"'+attr+'": "'+this.aliases[attr]+'"';
-            sep = ',';
+        if(this.blocking){
+            res[pos++] = '$B.$import("';
+            res[pos++] = mod_name+'",["';
+            res[pos++] = this.names.join('","')+'"], {';
+            var sep = '';
+            for (var attr in this.aliases) {
+                res[pos++] = sep + '"'+attr+'": "'+this.aliases[attr]+'"';
+                sep = ',';
+            }
+            res[pos++] = '}, {}, true);';
+            
+            // Add names to local namespace
+            if(this.names[0]=='*'){
+                res[pos++] = '\n'+head+'for(var $attr in $B.imported["'+mod_name+
+                    '"]){$locals[$attr]=$B.imported["'+mod_name+'"][$attr]};'
+            }else{
+                for(var i=0;i<this.names.length;i++){
+                    var name = this.names[i]
+                    res[pos++] = '\n'+head+'$locals["'+(this.aliases[name]||name)+
+                        '"]=$B.imported["'+mod_name+'"]["'+name+'"];'
+                }
+            }
+            res[pos++] = '\n'+head+'None;';
+
+        }else{
+            res[pos++] = '$B.$import_non_blocking("'+mod_name+'", function()'
         }
-        res[pos++] = '}, '+localns+', true);';
                      
         if(this.names[0]=='*'){
             // Set attribute to indicate that the scope has a 
@@ -2859,7 +2901,6 @@ function $FromCtx(context){
             scope.blurred = true
         }
 
-        res[pos++] = '\n'+head+'None;';
         return res.join('');
     }
 }
@@ -3403,7 +3444,7 @@ function $IMPRTCtx(context){
         // All the code that starts after IMPRT is put in a function
         // called when the module has finished importing
         var name = this.tree[0].name,
-            js = '$locals["'+name+'"]= $B.imported["'+name+'"]'
+            js = '$locals["'+this.tree[0].alias+'"]= $B.imported["'+name+'"]'
         node.add($NodeJS(js))
         for(var i=rank+1;i<node.parent.children.length;i++){
             node.add(node.parent.children[i])
@@ -3424,8 +3465,7 @@ function $IMPRTCtx(context){
                     '{}' : ('{"' + mod_name + '" : "' +
                     this.tree[i].alias + '"}'),
                 localns = '$locals_'+scope.id.replace(/\./g,'_');
-            res[pos++] = '$B.$import_non_blocking("'+mod_name+'", [],'+aliases+',' +
-                                   localns + ', function()'
+            res[pos++] = '$B.$import_non_blocking("'+mod_name+'", function()'
         }
         // add None for interactive console
         return res.join('')
@@ -5784,6 +5824,8 @@ function $transition(context,token){
               return context
             }
           case 'import':
+          case 'IMPRT':
+            context.blocking = token=='import'
             if(context.expect==='module'){
               context.expect = 'id'
               return context

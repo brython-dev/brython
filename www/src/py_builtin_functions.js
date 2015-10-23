@@ -357,7 +357,7 @@ function $eval(src, _globals, _locals){
             leave = true
             var instr = root.children[root.children.length-1]
             var type = instr.context.tree[0].type
-            if (!('expr' == type || 'list_or_tuple' == type)) {
+            if (!('expr' == type || 'list_or_tuple' == type || 'op'==type)) {
                 //console.log('not expression '+instr.context.tree[0])
                 //$B.line_info="1,"+module_name
                 throw _b_.SyntaxError("eval() argument must be an expression")
@@ -400,7 +400,7 @@ function $eval(src, _globals, _locals){
         return res
     }catch(err){
         //console.log('eval error\n', err)
-        //console.log(js)
+        //console.log(root,js)
         //console.log('globals ns', eval('$locals_'+globals_id),'local',
         //    eval('$locals_'+locals_id))
         if(err.$py_error===undefined){throw $B.exception(err)}

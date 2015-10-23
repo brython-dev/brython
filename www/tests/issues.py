@@ -535,7 +535,7 @@ assert 10 in range(10, 0, -1)
 assert not 1 in range(10, 0, -2)
 assert not 0 in range(10, 0, -2)
 
-# issue
+# issue 316
 class Test():
     def __pos__(self):
         return 'plus'
@@ -552,5 +552,7 @@ for x in 1, 1.2, 1+2j, 2**54:
     assert +x == x
 
 assert -True == -1
-    
+
+# issue 317
+assert eval("-1") == -1
 print('passed all tests')
