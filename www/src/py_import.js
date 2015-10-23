@@ -87,6 +87,7 @@ function $download_module(module,url,package,blocking){
         no_block = Array.isArray(blocking) || blocking===false
 
     if(no_block){
+        console.log('download non blocking', mod_name)
         $xmlhttp.open('GET',url+fake_qs,true)
     }else{
         $xmlhttp.open('GET',url+fake_qs,false)    
@@ -119,6 +120,7 @@ function $download_module(module,url,package,blocking){
                         try{run_js(res, url, module)}
                         catch(err){console.log(err);throw err}
                     }
+                    console.log('non blocking ok', mod_name)
                     blocking[1]()
                     return
                 }
@@ -209,7 +211,7 @@ function show_ns(){
 }
 
 function import_py1(module, mod_name, path, package, module_contents){
-    console.log('import py1', mod_name)
+    console.log('importpy1', mod_name)
     $B.imported[mod_name].$is_package = module.$is_package
     $B.imported[mod_name].$last_modified = module.$last_modified
     if(path.substr(path.length-12)=='/__init__.py'){
@@ -438,7 +440,7 @@ finder_stdlib_static.$dict = {
                 $B.imported[name] = mod
                 mod.__spec__ = spec
                 mod.__package__ = spec.parent
-                cls.$dict.exec_module(cls, mod)
+                cls.$dict.exec_module(cls, mod, spec.blocking)
             }
         }
     },
@@ -787,6 +789,7 @@ $B.$__import__ = function (mod_name, locals, fromlist, blocking){
             else if (modobj === undefined) {
                 try {$B.import_hooks(_mod_name, __path__, undefined, blocking)}
                 catch(err) {
+                    console.log(err)
                     delete $B.imported[_mod_name]
                 }
 
@@ -868,7 +871,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, blocking){
     var mod_name = norm_parts.join('.')
 
     if ($B.$options.debug == 10) {
-       console.log('$import '+mod_name+' origin '+origin)
+       console.log('$import '+mod_name)
        console.log('use VFS ? '+$B.use_VFS)
        console.log('use static stdlib paths ? '+$B.static_stdlib_import)  
     }
@@ -959,8 +962,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals, blocking){
     }
 }
 
-$B.$import_non_blocking = function(mod_name, fromlist, aliases, locals, func){
-    $B.$import(mod_name, fromlist, aliases, locals, [false, func, locals])
+$B.$import_non_blocking = function(mod_name, func){
+    console.log('import non blocking', mod_name)
+    $B.$import(mod_name, [], [], {}, [false, func])
 }
 
 $B.$meta_path = [finder_VFS, finder_stdlib_static, finder_path];
