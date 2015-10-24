@@ -11,38 +11,9 @@ La diferencia se debe a dos factores :
 
 - El código Javascript generado por Brython debe cumplir con las especificaciones de Python, incluyendo la naturaleza dinámica de la búsqueda de atributos, lo que provoca que el código Javascript creado no esté optimizado.
 
-Comparado con otras soluciones que traducen Python a Javascript, algunas [comparaciones imaginativas](http://pyppet.blogspot.fr/2013/11/brython-vs-pythonjs.html) mencionan una proporción de 1 a 7500 frente a Brython : no se proporciona ninguna información pero es obvio que la comparación no está hecha en condiciones comparables ; en las mismas condiciones (corriendo un script en un navegador web) es complicado imaginar como se puede ser más rápido que Javascript nativo...
+Algunas [comparaciones imaginativas](http://pyppet.blogspot.fr/2013/11/brython-vs-pythonjs.html) mencionan una proporción de 1 a 7500 frente a Brython : no se proporciona ninguna información pero es obvio que la comparación no está hecha en condiciones comparables ; en las mismas condiciones (corriendo un script en un navegador web) es complicado imaginar como se puede ser más rápido que Javascript nativo...
 
-Además, el ejemplo que se presenta en la página:
-
-    N = 100000
-    a = 0
-    for i in range(N):
-        a += 1
-
-que PythonJS traduce a:
-
-    var N=100000;
-    var a=0;
-    for(var i=0;i<N;i++){
-        a += 1
-    }
-
-si el código se modifica a algo como esto:
-
-    def range(N):
-        return ['spam', 'eggs']
-
-    for i in range(100000):
-        print(i)
-
-Brython crea un resultado correcto mientras que PythonJS sigue traduciendo el bucle como si `range()` fuera la función interna (built-in) con el mismo nombre.
-
-No es necesario mencionar que, en el caso que `a` sea una lista en lugar de un entero, los resultados obtenidos mediante PythonJS no sen exactamente los que un desarrollador Python podría esperar,...
-
-Brython pretende ser tan rápido como sea posible y, como los ejemplos de la galería muestran, es lo suficientemente rápido para la mayoría de los usos para los que está pensado, desarrollo web front-end. Pero, además, pretende cubrir la sintaxis Python al 100%, lo que incluye producir los mismos mensajes de error que CPython, incluso si esto conlleva un javascript más lento.
-
-No se han encontrado comparaciones serias entre las soluciones que se pueden encontrar en [esta lista](http://stromberg.dnsalias.org/~strombrg/pybrowser/python-browser.html) mantenida por Dan Stromberg. Nada prueba que el código Javascript generado por soluciones escritas en Python sean más rápidas que las generadas mediante Brython. Y el ciclo de desarrollo con soluciones escritas en Python como Pyjamas / pyjs es, obviamente, más largo que con Brython.
+Comparado con otras soluciones que traducen Python a Javascript, un benchmark está disponible en el [blog de Pierre Quentel](https://brythonista.wordpress.com/2015/03/28/comparing-the-speed-of-cpython-brython-skulpt-and-pypy-js/) (creador y principal desarrollador de Brython). Se compara Brython, [Skulpt](http://skulpt.org) y [pypy.js](http://pypyjs.org/demo/). Hay que ser prudente con este tipo de benchmarks entre implementaciones, pero con las capacidades incluidas en las pruebas, Brython es, en general, más rápido que pypy.js, el cual, a su vez, es más rápido que Skulpt. En algunos casos, Brython es más rápido que la implementación Python de referencia, CPython.
 
 __P__ : _Veo muchos errores 404 en la consola del navegador cuando se ejecutan scripts Brython, ¿A qué es debido?_
 
