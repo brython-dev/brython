@@ -45,6 +45,10 @@ Para la gestión de eventos, los elementos de una página disponen de los siguie
 
 > elimina la asociación de la  función _handler_ al  evento llamado _evt\_name_. Si se omite _handler_, elimina todas las asociaciones para el evento
 
+<code>elt.events(_evt\_name_)</code>
+
+> devuelve la lista de funciones que maneja el evento llamado _evt\_name_
+
 Objetos `DOMEvent`
 ------------------
 
@@ -258,4 +262,14 @@ from browser import document
 
 eval(document["zzz_source"].text)
 </script>
+
+
+Creando y ejecutando un evento
+------------------------------
+
+`DOMEvent(`_evt\_name_`)` 
+> Crea un evento del tipo _evt\_name_ como si fuera cualquier otro tipo de evento, e.g. _keydown, mousemove_, etc.
+
+`element.dispatchEvent(`event`)`
+> Ejecuta el evento en el `elemento` especificado
 

@@ -6,10 +6,10 @@ Para importar módulos o paquetes Brython usa el mismo mecanismo que CPython: pa
 - __libs/X.js__ (módulos Javascript, para los módulos en la librería estándar que no se pueden escribir en Python)
 - __Lib/X.py__
 - __Lib/X/\_\_init\_\_.py__
+- __&lt;current\_dir&gt;/X.py__ (current\_dir es la carpeta del script que realiza el import)
+- __&lt;current\_dir&gt;/X/\_\_init\_\_.py__
 - __Lib/site-packages/X.py__
 - __Lib/site-packages/X/\_\_init\_\_.py__
-
-si ninguno de estos ficheros existe, las urls __X.py__ y __X/\_\_init\_\_.py__ en el directorio del script que realizar el import.
 
 Debido a que el navegador no tiene acceso directo al sistema de ficheros, la búsqueda de un fichero debe realizarse mediante una llamada Ajax, que devolverá un mensaje de error si no encuentra el fichero en la ruta especificada.
 
