@@ -54,7 +54,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-10-23 20:42:37.781993"
+__BRYTHON__.compiled_date="2015-10-25 19:05:18.101160"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -6381,9 +6381,7 @@ __class__:$JSConstructorDict,func:obj.js_func}}
 JSConstructor.__class__=$B.$factory
 JSConstructor.$dict=$JSConstructorDict
 $JSConstructorDict.$factory=JSConstructor
-var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj){switch(jsobj){case undefined:
-return _b_.None
-case true:
+var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj){switch(jsobj){case true:
 case false:
 return jsobj}
 if(Array.isArray(jsobj))return _b_.list(jsobj)
@@ -6409,7 +6407,8 @@ for(var j=0,_len_j=items.length;j < _len_j;j++){jsobj[items[j][0]]=pyobj2jsobj(i
 return jsobj}else if(klass===$B.builtins.float.$dict){
 return pyobj.valueOf()}else if(klass===$B.$FunctionDict){
 return function(){try{var args=[]
-for(var i=0;i<arguments.length;i++){args.push(jsobj2pyobj(arguments[i]))}
+for(var i=0;i<arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}
+else{args.push(jsobj2pyobj(arguments[i]))}}
 return pyobj.apply(null,args)}catch(err){console.log(err)
 console.log(_b_.getattr(err,'info'))
 console.log(err.__name__+':',err.args[0])
@@ -6457,9 +6456,12 @@ throw _b_.AttributeError("no attribute "+attr+' for '+self.js)}}
 $JSObjectDict.__getitem__=function(self,rank){try{return getattr(self.js,'__getitem__')(rank)}
 catch(err){if(self.js[rank]!==undefined){return JSObject(self.js[rank])}
 throw _b_.KeyError(rank)}}
-$JSObjectDict.__iter__=function(self){if(window.Symbol && self.js[Symbol.iterator]!==undefined){
-var items=[]
-for(var item in self.js){if(self.js.hasOwnProperty(item )){items.push(jsobj2pyobj(item))}}
+var $JSObject_iterator=$B.$iterator_class('JS object iterator')
+$JSObjectDict.__iter__=function(self){var items=[]
+if(window.Symbol && self.js[Symbol.iterator]!==undefined){
+if(self.js.length!==undefined && self.js.item!==undefined){for(var i=0;i<self.js.length ;i++){items.push(self.js[i])}}else{for(var item in self.js){if(self.js.hasOwnProperty(item )){items.push(jsobj2pyobj(item))}}}
+return $B.$iterator(items,$JSObject_iterator)}else if(self.js.length!==undefined && self.js.item !==undefined){
+for(var i=0;i<self.js.length ;i++){items.push(self.js[i])}
 return $B.$iterator(items,$JSObject_iterator)}
 var _dict=$JSObjectDict.to_dict(self)
 return _b_.dict.$dict.__iter__(_dict)}
@@ -9646,7 +9648,10 @@ DOMNodeDict.__mro__=[DOMNodeDict,_b_.object.$dict]
 DOMNodeDict.__add__=function(self,other){
 var res=$TagSum()
 res.children=[self],pos=1
-if(isinstance(other,$TagSum)){for(var $i=0;$i<other.children.length;$i++){res.children[pos++]=other.children[$i]}}else if(isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.list,_b_.dict,_b_.set,_b_.tuple])){res.children[pos++]=DOMNode(document.createTextNode(_b_.str(other)))}else{res.children[pos++]=other}
+if(isinstance(other,$TagSum)){res.children=res.children.concat(other.children)}else if(isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.list,_b_.dict,_b_.set,_b_.tuple])){res.children[pos++]=DOMNode(document.createTextNode(_b_.str(other)))}else if(isinstance(other,DOMNode)){res.children[pos++]=other}else{
+try{res.children=res.children.concat(_b_.list(other))}
+catch(err){throw _b_.TypeError("can't add '"+
+$B.get_class(other).__name__+"' object to DOMNode instance")}}
 return res}
 DOMNodeDict.__bool__=function(self){return true}
 DOMNodeDict.__class__=$B.$type
@@ -9730,8 +9735,12 @@ var elt=self.elt
 if(self.elt.nodeType===9){elt=self.elt.body}
 if(isinstance(other,$TagSum)){var $i=0
 for($i=0;$i<other.children.length;$i++){elt.appendChild(other.children[$i].elt)}}else if(typeof other==="string" ||typeof other==="number"){var $txt=document.createTextNode(other.toString())
-elt.appendChild($txt)}else{
-elt.appendChild(other.elt)}}
+elt.appendChild($txt)}else if(isinstance(other,DOMNode)){
+elt.appendChild(other.elt)}else{try{
+var items=_b_.list(other)
+for(var i=0;i<items.length;i++){DOMNodeDict.__le__(self,items[i])}}catch(err){throw _b_.TypeError("can't add '"+
+$B.get_class(other).__name__+
+"' object to DOMNode instance")}}}
 DOMNodeDict.__len__=function(self){return self.elt.childNodes.length}
 DOMNodeDict.__mul__=function(self,other){if(isinstance(other,_b_.int)&& other.valueOf()>0){var res=$TagSum()
 var pos=res.children.length
@@ -10280,8 +10289,9 @@ var self=$ns['self']
 var args=$ns['args']
 if(args.length==1){var first=args[0]
 if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){self.elt.appendChild(document.createTextNode(_b_.str(first)))}else if(first.__class__===$TagSumDict){for(var i=0,_len_i=first.children.length;i < _len_i;i++){self.elt.appendChild(first.children[i].elt)}}else{
-try{self.elt.appendChild(first.elt)}
-catch(err){throw _b_.ValueError('wrong element '+first)}}}
+if(_b_.isinstance(first,$B.DOMNode)){self.elt.appendChild(first.elt)}else{try{
+var items=_b_.list(first)
+for(var i=0;i<items.length;i++){$B.DOMNode.$dict.__le__(self,items[i])}}catch(err){throw _b_.ValueError('wrong element '+first)}}}}
 var items=_b_.list(_b_.dict.$dict.items($ns['kw']))
 for(var i=0,_len_i=items.length;i < _len_i;i++){
 var arg=items[i][0]

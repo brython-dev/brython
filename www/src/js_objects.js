@@ -69,8 +69,6 @@ $JSConstructorDict.$factory = JSConstructor
 
 var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj) {
     switch(jsobj) {
-      case undefined:
-          return _b_.None
       case true:
       case false:
         return jsobj
@@ -141,7 +139,8 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
             try{
                 var args = []
                 for(var i=0;i<arguments.length;i++){
-                    args.push(jsobj2pyobj(arguments[i]))
+                    if(arguments[i]===undefined){args.push(_b_.None)}
+                    else{args.push(jsobj2pyobj(arguments[i]))}
                 }
                 return pyobj.apply(null, args)
             }catch(err){
@@ -273,11 +272,28 @@ $JSObjectDict.__getitem__ = function(self,rank){
     }
 }
 
+var $JSObject_iterator = $B.$iterator_class('JS object iterator')
 $JSObjectDict.__iter__ = function(self){
+    var items = []
     if(window.Symbol && self.js[Symbol.iterator]!==undefined){
         // Javascript objects that support the iterable protocol, such as Map
-        var items = []
-        for(var item in self.js){ if( self.js.hasOwnProperty( item ) ) { items.push(jsobj2pyobj(item))} }
+        // For the moment don't use "for(var item of self.js)" for 
+        // compatibility with uglifyjs
+        // If object has length and item(), it's a collection : iterate on 
+        // its items
+        if(self.js.length!==undefined && self.js.item!==undefined){
+            for(var i=0; i<self.js.length ; i++){items.push(self.js[i])}
+        }else{
+            for(var item in self.js){ 
+                if( self.js.hasOwnProperty( item ) ) {
+                    items.push(jsobj2pyobj(item))
+                } 
+            }
+        }
+        return $B.$iterator(items, $JSObject_iterator)
+    }else if(self.js.length!==undefined && self.js.item !== undefined){
+        // collection
+        for(var i=0; i<self.js.length ; i++){items.push(self.js[i])}
         return $B.$iterator(items, $JSObject_iterator)
     }
     // Else iterate on the dictionary built from the JS object
