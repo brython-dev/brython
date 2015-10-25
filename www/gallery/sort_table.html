@@ -71,7 +71,7 @@ t0 = time.time()
 
 orders = {}
 
-def sort_by_col(evt,numeric=False):
+def sort_by_col(evt, numeric=False):
     cell = evt.target
     th_elt = cell.parent # TH cell
     for i,th in enumerate(title.children):
@@ -104,8 +104,7 @@ def sort_by_col(evt,numeric=False):
     if ascending == 'down':
         rows.reverse()
 
-    for i in range(len(rows)):
-        t <= rows[i]
+    t <= rows
 
 lines = ['Allemagne','Berlin',357026,81.8,
 'Autriche','Vienne',83871,8.40,
@@ -155,19 +154,14 @@ t <= title
 rows = []
 for i in range(int(len(lines)/4)):
     row = html.TR()
-    for j in range(2):
-        row <= html.TD(lines[4*i+j])
-    for j in range(2,4):
-        row <= html.TD(lines[4*i+j],align="right")
+    row <= (html.TD(lines[4*i+j]) for j in range(2))
+    row <= (html.TD(lines[4*i+j],align="right") for j in range(2, 4))
     rows.append(row)
 
-for row in rows:
-    t <= row
+t <= rows
 
 table <= t
 doc <= table
-
-x = html.P()+html.A('r')
 
 foot = html.P()+html.I('Ecrit en '+html.A('Brython',href="http://www.brython.info"))
 
