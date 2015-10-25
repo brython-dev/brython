@@ -88,9 +88,21 @@
                         for(var i=0, _len_i = first.children.length; i < _len_i;i++){
                             self.elt.appendChild(first.children[i].elt)
                         }
-                    } else { // argument is another DOMNode instance
-                        try{self.elt.appendChild(first.elt)}
-                        catch(err){throw _b_.ValueError('wrong element '+first)}
+                    } else {
+                        if(_b_.isinstance(first, $B.DOMNode)){
+                            self.elt.appendChild(first.elt)
+                        }else{
+                            try{
+                                // If the argument is an iterable other than
+                                // str, add the items
+                                var items = _b_.list(first)
+                                for(var i=0;i<items.length;i++){
+                                    $B.DOMNode.$dict.__le__(self, items[i])
+                                }
+                            }catch(err){
+                                throw _b_.ValueError('wrong element '+first)
+                            }
+                        }
                     }
                 }
         

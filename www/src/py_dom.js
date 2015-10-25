@@ -368,11 +368,19 @@ DOMNodeDict.__add__ = function(self,other){
     var res = $TagSum()
     res.children = [self], pos=1
     if(isinstance(other,$TagSum)){
-        for(var $i=0;$i<other.children.length;$i++){res.children[pos++]=other.children[$i]}
+        res.children = res.children.concat(other.children)
     } else if(isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.list,
                                 _b_.dict,_b_.set,_b_.tuple])){
         res.children[pos++]=DOMNode(document.createTextNode(_b_.str(other)))
-    }else{res.children[pos++]=other}
+    }else if(isinstance(other, DOMNode)){
+        res.children[pos++] = other
+    }else{
+        // If other is iterable, add all items
+        try{res.children=res.children.concat(_b_.list(other))}
+        catch(err){throw _b_.TypeError("can't add '"+
+            $B.get_class(other).__name__+"' object to DOMNode instance")
+        }
+    }
     return res
 }
 
@@ -541,8 +549,21 @@ DOMNodeDict.__le__ = function(self,other){
     }else if(typeof other==="string" || typeof other==="number"){
         var $txt = document.createTextNode(other.toString())
         elt.appendChild($txt)
-    }else{ // other is a DOMNode instance
+    }else if(isinstance(other, DOMNode)){
+        // other is a DOMNode instance
         elt.appendChild(other.elt)
+    }else{ 
+        try{
+            // If other is an iterable, add the items
+            var items = _b_.list(other)
+            for(var i=0; i<items.length; i++){
+                DOMNodeDict.__le__(self, items[i])
+            }
+        }catch(err){
+            throw _b_.TypeError("can't add '"+
+                $B.get_class(other).__name__+
+                "' object to DOMNode instance")
+        }
     }
 }
 
