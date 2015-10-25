@@ -1,6 +1,7 @@
 from browser import document, html, alert, local_storage
-import jqueryui
 import json
+
+import ui
 
 storage = local_storage.storage
 
@@ -180,20 +181,24 @@ def sheet_names():
         if name.startswith(prefix)]
 
 def select_sheet(ev):
-    menu_file.close()
     names = sheet_names()
     names.sort()
     
     if names:
-        d = ui.dialog.SelectDialog("Open sheet...",
-            "Sheet name",names, open_sheet)
+        d = ui.Dialog("Open sheet...")
+        d.add_ok_cancel(ok=open_sheet)
+        d.body <= html.SPAN('File', style=dict(marginRight='10px'))
+        d.body <= html.SELECT(html.OPTION(name) for name in names)
     else:
-        d = ui.dialog.Dialog()
-        d.set_title("Error")
-        d.set_body("No sheet found")
-        return
+        d = ui.Dialog("Error")
+        d.body <= "No sheet found"
+    document <= d
 
-def open_sheet(sheet_name):
+def open_sheet(dialog):
+    select = dialog.get(selector='select')[0]
+    print(select)
+    dialog.close()
+    sheet_name = select.options[select.selectedIndex].value
     data = json.loads(storage['brython_spreadsheet%s' %sheet_name])
     print(data)
 
@@ -213,13 +218,24 @@ def open_sheet(sheet_name):
             cell.text = eval(entry[1:])
 
 def save_as(ev):
-    d = ui.dialog.EntryDialog("Save sheet as...","Name",save_sheet)
-    d.entry.bind('keydown', lambda ev: ev.stopPropagation())
+    d = ui.Dialog("Save sheet as...")
+    d.add_ok_cancel(ok=save_sheet, cancel=cancel_save_as)
+    d.body <= html.SPAN('File name', style=dict(marginRight='10px'))
+    d.body <= html.INPUT()
+    document.unbind('keydown')
+    
+    document <= d
 
+def cancel_save_as(dialog):
+    document.bind('keydown', doc_keydown)
+    dialog.close()
+    
 def confirm_override(widget):
     save_sheet_content(widget.sheet_name)
 
-def save_sheet(sheet_name):
+def save_sheet(dialog):
+    document.bind('keydown', doc_keydown)
+    sheet_name = dialog.get(selector='input')[0].value
     if not sheet_name.strip():
         d = ui.dialog.Dialog()
         d.set_title("Error")
@@ -274,14 +290,14 @@ def load(sheet_name=None):
     
     panel <= title
     
-    menu = Menu()
+    menu = ui.Menu()
 
-    menu_file = BarItem(menu, 'File')
-    MenuListItem(menu_file, 'New')
-    MenuListItem(menu_file, 'Open...', select_sheet)
-    MenuListItem(menu_file, 'Save as...', save_as)
+    menu_file = menu.add('File')
+    menu_file.add('New', None)
+    menu_file.add('Open...', select_sheet)
+    menu_file.add('Save as...', save_as)
   
-    panel <= menu
+    panel <= html.SPAN(menu)
 
     panel <= html.BR()
     cell_editor = html.INPUT(style=dict(width="200px"), Id="current")
