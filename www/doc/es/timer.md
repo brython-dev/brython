@@ -12,30 +12,26 @@ Implementa métodos que permiten la ejecución de funciones de forma repetida o 
 > En este ejemplo el color del texto en la caja negra cambiará después de 3 segundos.
 
 <div style="padding-left:50px;">
-<div id="st-example" style="background-color:#dddddd;">
-    from browser import document as doc
-    from browser import timer
-    
-    def change_color():
-        doc['st-text'].style.color = "blue"
-    
-    def press_button(ev):
-        timer.set_timeout(change_color, 3000)
+```exec_on_load
+from browser import document as doc
+from browser import timer
 
-    doc['st-button'].bind('click', press_button)
-</div>
+def change_color():
+    doc['first-text'].style.color = "blue"
 
-<script type="text/python">
-exec(doc["st-example"].text)
-</script>
+def press_button(ev):
+    timer.set_timeout(change_color, 3000)
+
+doc['first-button'].bind('click', press_button)
+```
 
 <table cellpadding=10>
 <tr>
 <td style="width:100px;">
-<button id="st-button">Press</button>
+<button id="first-button">Press</button>
 </td>
 <td>
-<div id="st-text" style="background-color:black;color:#ffffff;padding:10px;font-family:courier;font-weight:bold;font-size:14px;">Este color cambiará después de 3s</div>
+<div id="first-text" style="background-color:black;color:#ffffff;padding:10px;font-family:courier;font-weight:bold;font-size:14px;">This color will change after 3s</div>
 </td>
 </tr>
 </table>
@@ -50,31 +46,24 @@ exec(doc["st-example"].text)
 > Veamos el ejemplo previo. Ahora tienes la posibilidad de para la ejecución antes de que se cumplan los tres segundos.
 
 <div style="padding-left:50px;">
-<div id="ct-example" style="background-color:#dddddd;">
-    from browser import document as doc
-    from browser import timer
-    
-    idtimer = 1
-    
-    def change_color():
-        doc['ct-text'].style.color = "blue"
-    
-    def press_button(ev):
-        global idtimer
-        idtimer = timer.set_timeout(change_color, 3000)
-        
-    def stop_button(ev):
-        global idtimer
-        timer.clear_timeout(idtimer)
+```exec_on_load
+from browser import document, timer
 
-    doc['ct-start'].bind('click', press_button)
-    doc['ct-stop'].bind('click', stop_button)
-    
-</div>
+idtimer = 1
 
-<script type="text/python">
-exec(doc["ct-example"].text)
-</script>
+def change_color_two():
+    document['ct-text2'].style.color = "blue"
+
+def press_button_two(ev):
+    global idtimer
+    idtimer = timer.set_timeout(change_color_two, 3000)
+    
+def stop_button(ev):
+    timer.clear_timeout(idtimer)
+
+document['ct-start'].bind('click', press_button_two)
+document['ct-stop'].bind('click', stop_button)
+```
 
 <table cellpadding=10>
 <tr>
@@ -84,7 +73,7 @@ exec(doc["ct-example"].text)
 <button id="ct-stop">Stop</button>
 </td>
 <td>
-<div id="ct-text" style="background-color:black;color:#ffffff;padding:10px;font-family:courier;font-weight:bold;font-size:14px;">Este color cambiará después de 3s</div>
+<div id="ct-text2" style="background-color:black;color:#ffffff;padding:10px;font-family:courier;font-weight:bold;font-size:14px;">This color will change after 3s</div>
 </td>
 </tr>
 </table>
@@ -108,48 +97,44 @@ exec(doc["ct-example"].text)
 > Aquí abajo puedes ver un ejemplo donde se usa conjuntamente `set_interval` y `cancel_interval`:
 
 <div style="padding-left:50px;">
-<div id="py-source" style="background-color:#dddddd;">
-    import time
-    from browser import timer
-    from browser import document as doc
-    
-    _timer = None
-    counter = 0
-    
-    def show():
-        doc['_timer'].text = '%.2f' %(time.time()-counter)
-    
-    def start_timer(ev):
-        global _timer,counter
-        if _timer is None:
-            counter = time.time()
-            _timer = timer.set_interval(show,10)
-            doc['start'].text = 'Hold'
-        elif _timer == 'hold': # restart
-            # restart timer
-            counter = time.time()-float(doc['_timer'].text)
-            _timer = timer.set_interval(show,10)
-            doc['start'].text = 'Hold'
-        else: # hold
-            timer.clear_interval(_timer)
-            _timer = 'hold'
-            doc['start'].text = 'Restart'
-    
-    def stop_timer(ev):
-        global _timer
+```exec_on_load
+import time
+from browser import document as doc
+from browser import timer
+
+_timer = None
+counter = 0
+
+def show():
+    doc['_timer'].text = '%.2f' %(time.time()-counter)
+
+def start_timer(ev):
+    global _timer,counter
+    if _timer is None:
+        counter = time.time()
+        _timer = timer.set_interval(show,10)
+        doc['start'].text = 'Hold'
+    elif _timer == 'hold': # restart
+        # restart timer
+        counter = time.time()-float(doc['_timer'].text)
+        _timer = timer.set_interval(show,10)
+        doc['start'].text = 'Hold'
+    else: # hold
         timer.clear_interval(_timer)
-        _timer = None
-        t = 0
-        doc['_timer'].text = '%.2f' %0
-        doc['start'].text = 'Start'
+        _timer = 'hold'
+        doc['start'].text = 'Restart'
 
-    doc['start'].bind('click', start_timer)
-    doc['stop'].bind('click', stop_timer)
-</div>
+def stop_timer(ev):
+    global _timer
+    timer.clear_interval(_timer)
+    _timer = None
+    t = 0
+    doc['_timer'].text = '%.2f' %0
+    doc['start'].text = 'Start'
 
-<script type='text/python'>
-exec(doc['py-source'].text)
-</script>
+doc['start'].bind('click', start_timer)
+doc['stop'].bind('click', stop_timer)
+```
 
 <table cellpadding=10>
 <tr>
@@ -179,51 +164,47 @@ exec(doc['py-source'].text)
 > Debajo puedes ver un ejemplo donde se usa `request_animation_frame` y `cancel_animation_frame`:
 
 <div style="padding-left:50px;">
-<div id="raf-example" style="background-color:#dddddd;">
-    from browser.timer import request_animation_frame as raf
-    from browser.timer import cancel_animation_frame as caf
-    from browser import document as doc
-    from browser import window as win
-    from time import time
-    from browser.html import CANVAS, BUTTON
-    import math
+```exec_on_load
+from browser.timer import request_animation_frame as raf
+from browser.timer import cancel_animation_frame as caf
+from browser import document as doc
+from browser import window as win
+from time import time
+from browser.html import CANVAS, BUTTON
+import math
 
-    ctx = doc['raf-canvas'].getContext( '2d' ) 
+ctx = doc['raf-canvas'].getContext( '2d' ) 
 
-    toggle = True
+toggle = True
 
-    def draw():
-        t = time() * 3
-        x = math.sin(t) * 96 + 128
-        y = math.cos(t * 0.9) * 96 + 128
-        global toggle
-        if toggle:
-            toggle = False
-        else:
-            toggle = True
-        ctx.fillStyle = 'rgb(200,200,20)' if toggle else 'rgb(20,20,200)'
-        ctx.beginPath()
-        ctx.arc( x, y, 6, 0, math.pi * 2, True)
-        ctx.closePath()
-        ctx.fill()
+def draw():
+    t = time() * 3
+    x = math.sin(t) * 96 + 128
+    y = math.cos(t * 0.9) * 96 + 128
+    global toggle
+    if toggle:
+        toggle = False
+    else:
+        toggle = True
+    ctx.fillStyle = 'rgb(200,200,20)' if toggle else 'rgb(20,20,200)'
+    ctx.beginPath()
+    ctx.arc( x, y, 6, 0, math.pi * 2, True)
+    ctx.closePath()
+    ctx.fill()
 
-    def animate(i):
-        global id
-        id = raf(animate)
-        draw()
+def animate(i):
+    global id
+    id = raf(animate)
+    draw()
 
-    def stop(i):
-        global id
-        print(id)
-        caf(id)
+def stop(i):
+    global id
+    print(id)
+    caf(id)
 
-    doc['btn-animate'].bind('click', animate)
-    doc['btn-stop'].bind('click', stop)
-</div>
-
-<script type='text/python'>
-exec(doc['raf-example'].text)
-</script>
+doc['btn-animate'].bind('click', animate)
+doc['btn-stop'].bind('click', stop)
+```
 
 <table cellpadding=10>
 <tr>

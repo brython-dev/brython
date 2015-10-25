@@ -1,30 +1,14 @@
-Sintaxis
---------
-
-Brython usa la misma sintaxis que Python:
-
-- Los espacios en blanco son significativos e importantes y definen bloques
-- Las listas se crean con `[]` o `list()`, Las tuplas se crean con `()` o `tuple()`, los diccionarios se crean con `{}` o `dict()` y los conjuntos (sets) se crean con  `set()`
-- listas, diccionarios y conjuntos por comprensión (comprehension):
-- 
- -`[ expr for item in iterable if condition ]`
- -` dict((i,2*i) for i in range(5))`
- -`set(x for x in 'abcdcga')`
-
-- generadores (keyword `yield`), expresiones generadoras : `foo(x for x in bar if x>5)`
-- operador ternario: `x = r1 if condition else r2`
-- Las funciones pueden ser definidas con cualquier combinaci&oacute;n de argumentos fijos, argumentos por defecto, argumentos posicionales variables y argumentos de palabras clave variables : <br>`def foo(x, y=0, \*args, \*\*kw):`
-- Desempaquetado de argumentos en listas o diccionarios en llamadas a funciones : `x = foo(\*args, \*\*kw)`
-- clases con herencia múltiple
-- decoradores
-- imports : 
- - `import foo`
- - `from foo import X`
- - `import foo as bar`
- - `from foo import X as Y`
- - `from foo import *`
+Brython implementa Python version 3, basado en la [referencia del lenguaje Python](https://docs.python.org/3/reference/index.html)
  
-Keywords y funciones integradas (built-in functions)
+La implementación tiene en cuenta las limitaciones de los navegadores, en particular
+aquellas relacionadas con el sistema de ficheros. La escritura es imposible Writing is impossible y la lectura está
+limitada a aquellas carpetas accesibles mediante una petición Ajax.
+
+Debido a las restricciones de Javascript, Brython soporta los enteros  de forma correctasolo en el rango
+ [-2**53, 2**53]. Existe un módulo específico para programas qque manejan enteros
+ de longitud arbitraria. 
+ 
+ Keywords y funciones integradas (built-in functions)
 ----------------------------------------------------
 
 Brython soporta la mayor parte de keywords y funciones de Python 3 :
@@ -40,4 +24,37 @@ Para abrir un diálogo de impresión (a una impresora), llama a `window.print` (
 
 Lo siguiente no ha sido implementado en la versi&oacute;n actual : 
 
-- built-in functions `help(),  memoryview(), vars()`
+- built-in functions `memoryview(), vars()`
+
+
+Valor Built-in `__name__`
+-------------------------
+
+La variable built-in `__name__` se fija al valor del atributo `id`
+del script. Por ejemplo:
+
+```python
+<script type="text/python" id="myscript">
+assert __name__ == 'myscript'
+</script>
+```
+
+Si 2 scripts poseen la misma `id`, se lanzará una excepción.
+
+Para los scripts que no disponen de una `id` de forma explícita :
+
+- Si ningún script tiene su `id` fijada a `__main__`, el primer script 'sin nombre' tendrá su `__name__` asociado a
+ `__main__`. De esta forma, si solo hay un script en la página,
+  será capaz de ejecutar los tests :
+
+<blockquote>
+```python
+<script type="text/python">
+if __name__=='__main__':
+    print('hello !')
+</script>
+```
+</blockquote>
+
+- Para el resto de script 'sin nombre', `__name__` se ajustará a un string aleatorio que comenzará 
+ por `__main__`

@@ -93,6 +93,18 @@ Si el objeto Javascript es una función, los argumentos que se le pasan a la
 función Python se convierten a objetos Javascripts, usando la tabla anterior 
 de forma opuesta
 
+Hay que tener cuidado, una función Javascript no se puede llamar con *kwargs*, esto
+lanzará una excepción `TypeError` : si la función está definida por
+
+>    function foo(x, y)
+
+y se la llama desde un script Brython mediante
+
+>    window.foo(y=0, x=1)
+
+pasando los argumentos en el orden incorrecto no sería posible, ya que 
+el script Brython no conoce como ha sifo definida la función Javascript.
+
 ### Usando constructores Javascript
 
 Si una función Javascript es un objecto constructor, puede ser llamado en 
