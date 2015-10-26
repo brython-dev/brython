@@ -103,7 +103,7 @@ Function called in case of SyntaxError
 */
 
 function $_SyntaxError(context,msg,indent){
-    console.log('syntax error, context '+context+' msg '+msg)
+    //console.log('syntax error, context '+context+' msg '+msg)
     var ctx_node = context
     while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
     var tree_node = ctx_node.node

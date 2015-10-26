@@ -54,7 +54,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-10-25 19:05:18.101160"
+__BRYTHON__.compiled_date="2015-10-26 21:25:59.511914"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -84,7 +84,7 @@ for(var $j=0;$j<_tmp.length;$j++){$op_weight[_tmp[$j]]=$weight}
 $weight++}
 var $loop_num=0
 $B.func_magic=Math.random().toString(36).substr(2,8)
-function $_SyntaxError(C,msg,indent){console.log('syntax error, C '+C+' msg '+msg)
+function $_SyntaxError(C,msg,indent){
 var ctx_node=C
 while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node
@@ -5458,97 +5458,6 @@ return p}
 property.__class__=$B.$factory
 property.$dict=$PropertyDict
 $PropertyDict.$factory=property
-var $RangeDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'range',$native:true}
-$RangeDict.__contains__=function(self,other){if($RangeDict.__len__(self)==0){return false}
-try{other=$B.int_or_bool(other)}
-catch(err){
-try{$RangeDict.index(self,other);return true}
-catch(err){return false}}
-var sub=$B.sub(other,self.start),fl=$B.floordiv(sub,self.step),res=$B.mul(self.step,fl)
-if($B.eq(res,sub)){if($B.gt(self.stop,self.start)){return $B.ge(other,self.start)&& $B.gt(self.stop,other)}else{return $B.ge(self.start,other)&& $B.gt(other,self.stop)}}else{return false}}
-$RangeDict.__delattr__=function(self,attr,value){throw _b_.AttributeError('readonly attribute')}
-$RangeDict.__eq__=function(self,other){if(isinstance(other,range)){var len=$RangeDict.__len__(self)
-if(!$B.eq(len,$RangeDict.__len__(other))){return false}
-if(len==0){return true}
-if(!$B.eq(self.start,other.start)){return false}
-if(len==1){return true}
-return $B.eq(self.step,other.step)}
-return false}
-function compute_item(r,i){var len=$RangeDict.__len__(r)
-if(len==0){return r.start}
-else if(i>len){return r.stop}
-return $B.add(r.start,$B.mul(r.step,i))}
-$RangeDict.__getitem__=function(self,rank){if(isinstance(rank,_b_.slice)){var norm=_b_.slice.$dict.$conv_for_seq(rank,$RangeDict.__len__(self)),substep=$B.mul(self.step,norm.step),substart=compute_item(self,norm.start),substop=compute_item(self,norm.stop)
-return range(substart,substop,substep)}
-if(typeof rank !="number"){rank=$B.$GetInt(rank)}
-if($B.gt(0,rank)){rank=$B.add(rank,$RangeDict.__len__(self))}
-var res=$B.add(self.start,$B.mul(rank,self.step))
-if(($B.gt(self.step,0)&&($B.ge(res,self.stop)||$B.gt(self.start,res)))||
-($B.gt(0,self.step)&&($B.ge(self.stop,res)||$B.gt(res,self.start)))){throw _b_.IndexError('range object index out of range')}
-return res }
-$RangeDict.__hash__=function(self){var len=$RangeDict.__len__(self)
-if(len==0){return hash(_b_.tuple([0,None,None]))}
-if(len==1){return hash(_b_.tuple([1,self.start,None]))}
-return hash(_b_.tuple([len,self.start,self.step]))}
-$RangeIterator=function(obj){return{__class__:$RangeIterator.$dict,obj: obj}}
-$RangeIterator.__class__=$B.$factory
-$RangeIterator.$dict={__class__: $B.$type,__name__: 'range_iterator',$factory: $RangeIterator,__iter__: function(self){return self},__next__: function(self){return next(self.obj)}}
-$RangeIterator.$dict.__mro__=[$RangeIterator.$dict,$ObjectDict]
-$RangeDict.__iter__=function(self){var res={__class__ : $RangeDict,start:self.start,stop:self.stop,step:self.step}
-if(self.$safe){res.$counter=self.start-self.step}else{res.$counter=$B.sub(self.start,self.step)}
-return $RangeIterator(res)}
-$RangeDict.__len__=function(self){var len
-if($B.gt(self.step,0)){if($B.ge(self.start,self.stop)){return 0}
-var n=$B.sub(self.stop,$B.add(1,self.start)),q=$B.floordiv(n,self.step)
-len=$B.add(1,q)}else{if($B.ge(self.stop,self.start)){return 0}
-var n=$B.sub(self.start,$B.add(1,self.stop)),q=$B.floordiv(n,$B.mul(-1,self.step))
-len=$B.add(1,q)}
-if($B.maxsize===undefined){$B.maxsize=$B.LongInt.$dict.__pow__($B.LongInt(2),63)
-$B.maxsize=$B.LongInt.$dict.__sub__($B.maxsize,1)}
-return len}
-$RangeDict.__next__=function(self){if(self.$safe){self.$counter +=self.step
-if((self.step>0 && self.$counter >=self.stop)
-||(self.step<0 && self.$counter <=self.stop)){throw _b_.StopIteration('')}}else{self.$counter=$B.add(self.$counter,self.step)
-if(($B.gt(self.step,0)&& $B.ge(self.$counter,self.stop))
-||($B.gt(0,self.step)&& $B.ge(self.stop,self.$counter))){throw _b_.StopIteration('')}}
-return self.$counter}
-$RangeDict.__mro__=[$RangeDict,$ObjectDict]
-$RangeDict.__reversed__=function(self){var n=$B.sub($RangeDict.__len__(self),1)
-return range($B.add(self.start,$B.mul(n,self.step)),$B.sub(self.start,self.step),$B.mul(-1,self.step))}
-$RangeDict.__repr__=$RangeDict.__str__=function(self){var res='range('+_b_.str(self.start)+', '+_b_.str(self.stop)
-if(self.step!=1)res +=', '+_b_.str(self.step)
-return res+')'}
-$RangeDict.__setattr__=function(self,attr,value){throw _b_.AttributeError('readonly attribute')}
-$RangeDict.descriptors={start: function(self){return self.start},step: function(self){return self.step},stop: function(self){return self.stop}}
-$RangeDict.count=function(self,ob){if(isinstance(ob,[_b_.int,_b_.float,_b_.bool])){return _b_.int($RangeDict.__contains__(self,ob))}else{var comp=getattr(ob,'__eq__'),it=$RangeDict.__iter__(self)
-_next=$RangeIterator.$dict.__next__,nb=0
-while(true){try{if(comp(_next(it))){nb++}}catch(err){if(isinstance(err,_b_.StopIteration)){return nb}
-throw err}}}}
-$RangeDict.index=function(self,other){var $=$B.args('index',2,{self:null,other:null},['self','other'],arguments,{},null,null),self=$.self,other=$.other
-try{other=$B.int_or_bool(other)}catch(err){var comp=getattr(other,'__eq__'),it=$RangeDict.__iter__(self),_next=$RangeIterator.$dict.__next__,nb=0
-while(true){try{if(comp(_next(it))){return nb}
-nb++}catch(err){if(isinstance(err,_b_.StopIteration)){throw _b_.ValueError(_b_.str(other)+' not in range')}
-throw err}}}
-var sub=$B.sub(other,self.start),fl=$B.floordiv(sub,self.step),res=$B.mul(self.step,fl)
-if($B.eq(res,sub)){if(($B.gt(self.stop,self.start)&& $B.ge(other,self.start)
-&& $B.gt(self.stop,other))||
-($B.ge(self.start,self.stop)&& $B.ge(self.start,other)
-&& $B.gt(other,self.stop))){return fl}else{throw _b_.ValueError(_b_.str(other)+' not in range')}}else{throw _b_.ValueError(_b_.str(other)+' not in range')}}
-function range(){var $=$B.args('range',3,{start:null,stop:null,step:null},['start','stop','step'],arguments,{stop:null,step:null},null,null),start=$.start,stop=$.stop,step=$.step,safe
-if(stop===null && step===null){stop=$B.PyNumber_Index(start)
-safe=typeof stop==="number"
-return{__class__:$RangeDict,start: 0,stop: stop,step: 1,$is_range: true,$safe: safe}}
-if(step===null){step=1}
-start=$B.PyNumber_Index(start)
-stop=$B.PyNumber_Index(stop)
-step=$B.PyNumber_Index(step)
-if(step==0){throw _b_.ValueError("range() arg 3 must not be zero")}
-safe=(typeof start=='number' && typeof stop=='number' &&
-typeof step=='number')
-return{__class__: $RangeDict,start: start,stop: stop,step: step,$is_range: true,$safe: safe}}
-range.__class__=$B.$factory
-range.$dict=$RangeDict
-$RangeDict.$factory=range
 function repr(obj){if(obj.__class__===$B.$factory){
 var func=$B.$type.__getattribute__(obj.$dict.__class__,'__repr__')
 return func(obj)}
@@ -5623,48 +5532,6 @@ if(klass!==undefined){for(var i=0,_len=klass.__mro__.length;i<_len;i++){setattr=
 if(setattr){break}}}
 if(!setattr){obj[attr]=value}else{setattr(obj,attr,value)}
 return None}
-var $SliceDict={__class__:$B.$type,__name__:'slice',$native:true}
-$SliceDict.__mro__=[$SliceDict,$ObjectDict]
-$SliceDict.__repr__=$SliceDict.__str__=function(self){return 'slice('+_b_.str(self.start)+','+
-_b_.str(self.stop)+','+_b_.str(self.step)+')'}
-$SliceDict.__setattr__=function(self,attr,value){throw _b_.AttributeError('readonly attribute')}
-$SliceDict.$conv=function(self,len){
-return{start: self.start===_b_.None ? 0 : self.start,stop: self.stop===_b_.None ? len : self.stop,step: self.step===_b_.None ? 1 : self.step}}
-$SliceDict.$conv_for_seq=function(self,len){
-var step=self.step===None ? 1 : $B.PyNumber_Index(self.step),step_is_neg=$B.gt(0,step),len_1=$B.sub(len,1)
-if(step==0){throw Error('ValueError : slice step cannot be zero');}
-var start,end;
-if(self.start===None){start=step_is_neg ? len_1 : 0;}else{
-start=$B.PyNumber_Index(self.start);
-if($B.gt(0,start))start=$B.add(start,len);
-if($B.gt(0,start))start=step<0 ? -1 : 0
-if($B.ge(start,len))start=step<0 ? len_1 : len;}
-if(self.stop===None){stop=step_is_neg ? -1 : len;}else{
-stop=$B.PyNumber_Index(self.stop);
-if($B.gt(0,stop))stop +=len
-if($B.gt(0,stop))stop=step<0 ? -1 : 0
-if($B.ge(stop,len))stop=step_is_neg ? len_1 : len;}
-return{start: start,stop: stop,step: step}}
-$SliceDict.descriptors={start: function(self){return self.start},step: function(self){return self.step},stop: function(self){return self.stop}}
-$SliceDict.indices=function(self,length){var len=$B.$GetInt(length)
-if(len < 0)_b_.ValueError('length should not be negative')
-if(self.step > 0){var _len=min(len,self.stop)
-return _b_.tuple([self.start,_len,self.step])}else if(self.step==_b_.None){var _len=min(len,self.stop)
-var _start=self.start
-if(_start==_b_.None)_start=0
-return _b_.tuple([_start,_len,1])}
-_b_.NotImplementedError("Error! negative step indices not implemented yet")}
-function slice(){var $=$B.args('slice',3,{start:null,stop:null,step:null},['start','stop','step'],arguments,{stop:null,step:null},null,null),start,stop,step
-if($.stop===null && $.step===null){start=_b_.None
-stop=$.start
-step=_b_.None}else{start=$.start
-stop=$.stop
-step=$.step===null ? _b_.None : $.step}
-var res={__class__ : $SliceDict,start:start,stop:stop,step:step}
-return res}
-slice.__class__=$B.$factory
-slice.$dict=$SliceDict
-$SliceDict.$factory=slice
 function sorted(){var $=$B.args('sorted',1,{iterable:null},['iterable'],arguments,{},null,'kw')
 var _list=_b_.list(iter($.iterable)),args=[_list]
 for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
@@ -6086,6 +5953,143 @@ _b_['$eval']=$eval
 _b_['open']=$url_open
 _b_['print']=$print
 _b_['$$super']=$$super})(__BRYTHON__)
+
+;(function($B){var _b_=$B.builtins,None=_b_.None
+var $RangeDict={__class__:$B.$type,__dir__:_b_.object.$dict.__dir__,__name__:'range',$native:true}
+$RangeDict.__contains__=function(self,other){if($RangeDict.__len__(self)==0){return false}
+try{other=$B.int_or_bool(other)}
+catch(err){
+try{$RangeDict.index(self,other);return true}
+catch(err){return false}}
+var sub=$B.sub(other,self.start),fl=$B.floordiv(sub,self.step),res=$B.mul(self.step,fl)
+if($B.eq(res,sub)){if($B.gt(self.stop,self.start)){return $B.ge(other,self.start)&& $B.gt(self.stop,other)}else{return $B.ge(self.start,other)&& $B.gt(other,self.stop)}}else{return false}}
+$RangeDict.__delattr__=function(self,attr,value){throw _b_.AttributeError('readonly attribute')}
+$RangeDict.__eq__=function(self,other){if(_b_.isinstance(other,range)){var len=$RangeDict.__len__(self)
+if(!$B.eq(len,$RangeDict.__len__(other))){return false}
+if(len==0){return true}
+if(!$B.eq(self.start,other.start)){return false}
+if(len==1){return true}
+return $B.eq(self.step,other.step)}
+return false}
+function compute_item(r,i){var len=$RangeDict.__len__(r)
+if(len==0){return r.start}
+else if(i>len){return r.stop}
+return $B.add(r.start,$B.mul(r.step,i))}
+$RangeDict.__getitem__=function(self,rank){if(_b_.isinstance(rank,_b_.slice)){var norm=_b_.slice.$dict.$conv_for_seq(rank,$RangeDict.__len__(self)),substep=$B.mul(self.step,norm.step),substart=compute_item(self,norm.start),substop=compute_item(self,norm.stop)
+return range(substart,substop,substep)}
+if(typeof rank !="number"){rank=$B.$GetInt(rank)}
+if($B.gt(0,rank)){rank=$B.add(rank,$RangeDict.__len__(self))}
+var res=$B.add(self.start,$B.mul(rank,self.step))
+if(($B.gt(self.step,0)&&($B.ge(res,self.stop)||$B.gt(self.start,res)))||
+($B.gt(0,self.step)&&($B.ge(self.stop,res)||$B.gt(res,self.start)))){throw _b_.IndexError('range object index out of range')}
+return res }
+$RangeDict.__hash__=function(self){var len=$RangeDict.__len__(self)
+if(len==0){return hash(_b_.tuple([0,None,None]))}
+if(len==1){return hash(_b_.tuple([1,self.start,None]))}
+return hash(_b_.tuple([len,self.start,self.step]))}
+$RangeIterator=function(obj){return{__class__:$RangeIterator.$dict,obj: obj}}
+$RangeIterator.__class__=$B.$factory
+$RangeIterator.$dict={__class__: $B.$type,__name__: 'range_iterator',$factory: $RangeIterator,__iter__: function(self){return self},__next__: function(self){return _b_.next(self.obj)}}
+$RangeIterator.$dict.__mro__=[$RangeIterator.$dict,_b_.object.$dict]
+$RangeDict.__iter__=function(self){var res={__class__ : $RangeDict,start:self.start,stop:self.stop,step:self.step}
+if(self.$safe){res.$counter=self.start-self.step}else{res.$counter=$B.sub(self.start,self.step)}
+return $RangeIterator(res)}
+$RangeDict.__len__=function(self){var len
+if($B.gt(self.step,0)){if($B.ge(self.start,self.stop)){return 0}
+var n=$B.sub(self.stop,$B.add(1,self.start)),q=$B.floordiv(n,self.step)
+len=$B.add(1,q)}else{if($B.ge(self.stop,self.start)){return 0}
+var n=$B.sub(self.start,$B.add(1,self.stop)),q=$B.floordiv(n,$B.mul(-1,self.step))
+len=$B.add(1,q)}
+if($B.maxsize===undefined){$B.maxsize=$B.LongInt.$dict.__pow__($B.LongInt(2),63)
+$B.maxsize=$B.LongInt.$dict.__sub__($B.maxsize,1)}
+return len}
+$RangeDict.__next__=function(self){if(self.$safe){self.$counter +=self.step
+if((self.step>0 && self.$counter >=self.stop)
+||(self.step<0 && self.$counter <=self.stop)){throw _b_.StopIteration('')}}else{self.$counter=$B.add(self.$counter,self.step)
+if(($B.gt(self.step,0)&& $B.ge(self.$counter,self.stop))
+||($B.gt(0,self.step)&& $B.ge(self.stop,self.$counter))){throw _b_.StopIteration('')}}
+return self.$counter}
+$RangeDict.__mro__=[$RangeDict,_b_.object.$dict]
+$RangeDict.__reversed__=function(self){var n=$B.sub($RangeDict.__len__(self),1)
+return range($B.add(self.start,$B.mul(n,self.step)),$B.sub(self.start,self.step),$B.mul(-1,self.step))}
+$RangeDict.__repr__=$RangeDict.__str__=function(self){var res='range('+_b_.str(self.start)+', '+_b_.str(self.stop)
+if(self.step!=1)res +=', '+_b_.str(self.step)
+return res+')'}
+$RangeDict.__setattr__=function(self,attr,value){throw _b_.AttributeError('readonly attribute')}
+$RangeDict.descriptors={start: function(self){return self.start},step: function(self){return self.step},stop: function(self){return self.stop}}
+$RangeDict.count=function(self,ob){if(_b_.isinstance(ob,[_b_.int,_b_.float,_b_.bool])){return _b_.int($RangeDict.__contains__(self,ob))}else{var comp=getattr(ob,'__eq__'),it=$RangeDict.__iter__(self)
+_next=$RangeIterator.$dict.__next__,nb=0
+while(true){try{if(comp(_next(it))){nb++}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){return nb}
+throw err}}}}
+$RangeDict.index=function(self,other){var $=$B.args('index',2,{self:null,other:null},['self','other'],arguments,{},null,null),self=$.self,other=$.other
+try{other=$B.int_or_bool(other)}catch(err){var comp=getattr(other,'__eq__'),it=$RangeDict.__iter__(self),_next=$RangeIterator.$dict.__next__,nb=0
+while(true){try{if(comp(_next(it))){return nb}
+nb++}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){throw _b_.ValueError(_b_.str(other)+' not in range')}
+throw err}}}
+var sub=$B.sub(other,self.start),fl=$B.floordiv(sub,self.step),res=$B.mul(self.step,fl)
+if($B.eq(res,sub)){if(($B.gt(self.stop,self.start)&& $B.ge(other,self.start)
+&& $B.gt(self.stop,other))||
+($B.ge(self.start,self.stop)&& $B.ge(self.start,other)
+&& $B.gt(other,self.stop))){return fl}else{throw _b_.ValueError(_b_.str(other)+' not in range')}}else{throw _b_.ValueError(_b_.str(other)+' not in range')}}
+function range(){var $=$B.args('range',3,{start:null,stop:null,step:null},['start','stop','step'],arguments,{stop:null,step:null},null,null),start=$.start,stop=$.stop,step=$.step,safe
+if(stop===null && step===null){stop=$B.PyNumber_Index(start)
+safe=typeof stop==="number"
+return{__class__:$RangeDict,start: 0,stop: stop,step: 1,$is_range: true,$safe: safe}}
+if(step===null){step=1}
+start=$B.PyNumber_Index(start)
+stop=$B.PyNumber_Index(stop)
+step=$B.PyNumber_Index(step)
+if(step==0){throw _b_.ValueError("range() arg 3 must not be zero")}
+safe=(typeof start=='number' && typeof stop=='number' &&
+typeof step=='number')
+return{__class__: $RangeDict,start: start,stop: stop,step: step,$is_range: true,$safe: safe}}
+range.__class__=$B.$factory
+range.$dict=$RangeDict
+$RangeDict.$factory=range
+var $SliceDict={__class__:$B.$type,__name__:'slice',$native:true}
+$SliceDict.__mro__=[$SliceDict,_b_.object.$dict]
+$SliceDict.__repr__=$SliceDict.__str__=function(self){return 'slice('+_b_.str(self.start)+','+
+_b_.str(self.stop)+','+_b_.str(self.step)+')'}
+$SliceDict.__setattr__=function(self,attr,value){throw _b_.AttributeError('readonly attribute')}
+$SliceDict.$conv=function(self,len){
+return{start: self.start===_b_.None ? 0 : self.start,stop: self.stop===_b_.None ? len : self.stop,step: self.step===_b_.None ? 1 : self.step}}
+$SliceDict.$conv_for_seq=function(self,len){
+var step=self.step===None ? 1 : $B.PyNumber_Index(self.step),step_is_neg=$B.gt(0,step),len_1=$B.sub(len,1)
+if(step==0){throw Error('ValueError : slice step cannot be zero');}
+var start,end;
+if(self.start===None){start=step_is_neg ? len_1 : 0;}else{
+start=$B.PyNumber_Index(self.start);
+if($B.gt(0,start))start=$B.add(start,len);
+if($B.gt(0,start))start=step<0 ? -1 : 0
+if($B.ge(start,len))start=step<0 ? len_1 : len;}
+if(self.stop===None){stop=step_is_neg ? -1 : len;}else{
+stop=$B.PyNumber_Index(self.stop);
+if($B.gt(0,stop))stop +=len
+if($B.gt(0,stop))stop=step<0 ? -1 : 0
+if($B.ge(stop,len))stop=step_is_neg ? len_1 : len;}
+return{start: start,stop: stop,step: step}}
+$SliceDict.descriptors={start: function(self){return self.start},step: function(self){return self.step},stop: function(self){return self.stop}}
+$SliceDict.indices=function(self,length){var len=$B.$GetInt(length)
+if(len < 0)_b_.ValueError('length should not be negative')
+if(self.step > 0){var _len=min(len,self.stop)
+return _b_.tuple([self.start,_len,self.step])}else if(self.step==_b_.None){var _len=min(len,self.stop)
+var _start=self.start
+if(_start==_b_.None)_start=0
+return _b_.tuple([_start,_len,1])}
+_b_.NotImplementedError("Error! negative step indices not implemented yet")}
+function slice(){var $=$B.args('slice',3,{start:null,stop:null,step:null},['start','stop','step'],arguments,{stop:null,step:null},null,null),start,stop,step
+if($.stop===null && $.step===null){start=_b_.None
+stop=$.start
+step=_b_.None}else{start=$.start
+stop=$.stop
+step=$.step===null ? _b_.None : $.step}
+var res={__class__ : $SliceDict,start:start,stop:stop,step:step}
+return res}
+slice.__class__=$B.$factory
+slice.$dict=$SliceDict
+$SliceDict.$factory=slice
+_b_.range=range
+_b_.slice=slice})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 var $ObjectDict=_b_.object.$dict
 var isinstance=_b_.isinstance,getattr=_b_.getattr,None=_b_.None
@@ -6502,7 +6506,7 @@ $JSObjectDict.$factory=JSObject
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','calendar','codecs','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.module1','site-packages.module4','site-packages.test_sp','site-packages.tester','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','calendar','codecs','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','site-packages.tester','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
