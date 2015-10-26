@@ -516,6 +516,12 @@ $ListDict.sort = function(self){
 
 $B.set_func_names($ListDict)
 
+// function used for list literals
+$B.$list = function(t){
+    t.__brython__ = true;
+    return t
+}
+
 // constructor for built-in type 'list'
 function list(){
     var $=$B.args('list',1,{obj:null},['obj'],arguments,{obj:null},null,null),
