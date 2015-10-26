@@ -63,7 +63,7 @@ a.glink {
 
 img.logo {
   border-width:0;
-  height:28px;
+  height:auto;
   padding:0;
   width:auto
 }
