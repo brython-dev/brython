@@ -18,8 +18,6 @@ function abs(obj){
     throw _b_.TypeError("Bad operand type for abs(): '"+$B.get_class(obj)+"'")
 }
 
-function _alert(src){alert(_b_.str(src))}
-
 function all(obj){
     var iterable = iter(obj)
     while(1){
@@ -108,16 +106,6 @@ function bool(obj){ // return true or false
     }// switch
 }
 
-bool.__class__ = $B.$type
-bool.__mro__ = [bool,object]
-bool.__name__ = 'bool'
-bool.__repr__ = bool.__str__ = function(){return "<class 'bool'>"}
-bool.toString = bool.__str__
-bool.__hash__ = function() {
-    if(this.valueOf()) return 1
-    return 0
-}
-
 function callable(obj) {return hasattr(obj,'__call__')}
 
 function chr(i) {
@@ -127,21 +115,16 @@ function chr(i) {
 }
 
 //classmethod() (built in function)
-var $ClassmethodDict = {__class__:$B.$type,__name__:'classmethod'}
-$ClassmethodDict.__mro__=[$ClassmethodDict,$ObjectDict]
 function classmethod(func) {
     func.$type = 'classmethod'
     return func
 }
 classmethod.__class__=$B.$factory
-classmethod.$dict = $ClassmethodDict
-$ClassmethodDict.$factory = classmethod
-function $class(obj,info){
-    this.obj = obj
-    this.__name__ = info
-    this.__class__ = $B.$type
-    this.__mro__ = [this,$ObjectDict]
-}
+classmethod.$dict = {__class__:$B.$type,
+    __name__:'classmethod',
+    $factory: classmethod
+}    
+classmethod.$dict.__mro__ = [classmethod.$dict, $ObjectDict]
 
 //compile() (built in function)
 $B.$CodeObjectDict = {
@@ -239,7 +222,8 @@ function dir(obj){
 //divmod() (built in function)
 function divmod(x,y) {
    var klass = $B.get_class(x)
-   return _b_.tuple([klass.__floordiv__(x,y), klass.__mod__(x,y)])
+   return _b_.tuple([getattr(klass, '__floordiv__')(x,y), 
+       getattr(klass, '__mod__')(x,y)])
 }
 
 var $EnumerateDict = {__class__:$B.$type,__name__:'enumerate'}
@@ -410,18 +394,6 @@ function $eval(src, _globals, _locals){
     }
 }
 $eval.$is_func = true
-
-function show_frames(){
-    //console.log($B.frames_stack)
-    var ch = ''
-    for(var i=0;i<$B.frames_stack.length;i++){
-        var frame = $B.frames_stack[i]
-        ch += '['+frame[0][0]
-        if($B.debug>0){ch += ' line '+frame[0][2]}
-        ch += ', '+frame[1][0]+'] '
-    }
-    return ch
-}
 
 function exec(src, globals, locals){
     return $eval(src, globals, locals,'exec') || _b_.None
@@ -830,7 +802,6 @@ function issubclass(klass,classinfo){
     
     return false
 
-    //throw _b_.TypeError("issubclass() arg 2 must be a class or tuple of classes")
 }
 
 // Utility class for iterators built from objects that have a __getitem__ and
@@ -868,7 +839,8 @@ function iter(obj){
     try{getattr(res,'__next__')}
     catch(err){
         if(isinstance(err,_b_.AttributeError)){throw _b_.TypeError(
-            "iter() returned non-iterator of type '"+$B.get_class(res).__name__+"'")}
+            "iter() returned non-iterator of type '"+
+             $B.get_class(res).__name__+"'")}
     }
     return res
 }
@@ -876,7 +848,8 @@ function iter(obj){
 function len(obj){
     try{return getattr(obj,'__len__')()}
     catch(err){
-     throw _b_.TypeError("object of type '"+$B.get_class(obj).__name__+"' has no len()")
+        throw _b_.TypeError("object of type '"+$B.get_class(obj).__name__+
+            "' has no len()")
     }
 }
 
@@ -997,7 +970,8 @@ function min(){
 function next(obj){
     var ga = getattr(obj,'__next__')
     if(ga!==undefined) return ga()
-    throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not an iterator")
+    throw _b_.TypeError("'"+$B.get_class(obj).__name__+
+        "' object is not an iterator")
 }
 
 
@@ -1025,13 +999,16 @@ function ord(c) {
     switch($B.get_class(c)) {
       case _b_.str.$dict:
         if (c.length == 1) return c.charCodeAt(0)     // <= strobj.charCodeAt(index)
-        throw _b_.TypeError('ord() expected a character, but string of length ' + c.length + ' found') 
+        throw _b_.TypeError('ord() expected a character, but string of length ' + 
+            c.length + ' found') 
       case _b_.bytes.$dict:
       case _b_.bytearray.$dict:
         if (c.source.length == 1) return c.source[0]     // <= strobj.charCodeAt(index)
-        throw _b_.TypeError('ord() expected a character, but string of length ' + c.source.length + ' found')       
+        throw _b_.TypeError('ord() expected a character, but string of length ' + 
+            c.source.length + ' found')       
       default:
-        throw _b_.TypeError('ord() expected a character, but ' + $B.get_class(c).__name__ + ' was found') 
+        throw _b_.TypeError('ord() expected a character, but ' + 
+            $B.get_class(c).__name__ + ' was found') 
     }
 }
 
@@ -1077,15 +1054,10 @@ function $print(){
 $print.__name__ = 'print'
 $print.is_func = true
 
-function $prompt(text,fill){return prompt(text,fill || '')}
-
 // property (built in function)
 var $PropertyDict = {
     __class__ : $B.$type,
     __name__ : 'property',
-    __repr__ : function(){return "<property object>"},
-    __str__ : function(){return "<property object>"},
-    toString : function(){return "property"}
 }
 $PropertyDict.__mro__ = [$PropertyDict,$ObjectDict]
 $B.$PropertyDict = $PropertyDict
@@ -1524,7 +1496,6 @@ function $url_open(){
     }
 }
 
-
 var $ZipDict = {__class__:$B.$type,__name__:'zip'}
 
 var $zip_iterator = $B.$iterator_class('zip_iterator')
@@ -1842,7 +1813,6 @@ function frame(stack, pos){
     if(pos===undefined){pos = fs.length-1}
     if(fs.length){
         var _frame = fs[pos]
-        if(_frame[1]===undefined){alert('frame undef '+stack+' '+Array.isArray(stack)+' is frames stack '+(stack===$B.frames_stack))}
         var locals_id = _frame[0]
         try{
             res.f_locals = $B.obj_dict(_frame[1])
@@ -1859,7 +1829,6 @@ function frame(stack, pos){
         }
         if(pos>0){res.f_back = frame(stack, pos-1)}
         else{res.f_back = None}
-        //res.f_code = {__class__:$B.$CodeObjectDict,
         res.f_code = {__class__:$B.$CodeDict,
             co_code:None, // XXX fix me
             co_name: locals_id, // idem
@@ -2131,7 +2100,7 @@ for(var i=0;i<builtin_funcs.length;i++){
 $B.builtin_funcs['$eval'] = true
 
 var other_builtins = [ 'Ellipsis', 'False',  'None', 'True', 
-'__debug__', '__import__', //'__name__', '__doc__', '__package__', '__build_class__', 
+'__debug__', '__import__', 
 'copyright', 'credits', 'license', 'NotImplemented', 'type']
 
 var builtin_names = builtin_funcs.concat(other_builtins)
@@ -2158,24 +2127,6 @@ for(var i=0;i<builtin_names.length;i++){
             // used by inspect module
             _b_[name].__module__ = 'builtins'
             _b_[name].__name__ = name
-
-/*
-            //define some default values for __code__
-            var _c=_b_[name].__code__
-
-            _c=_c || {}
-            _c.co_filename='builtins'
-            _c.co_code='' + _b_[name]
-            _c.co_flags=0
-            _c.co_name=name
-            _c.co_names=_c.co_names || []
-            _c.co_nlocals=_c.co_nlocals || 0
-            _c.co_comments=_c.co_comments || ''
-
-            _c.co_kwonlyargcount=_c.co_kwonlyargcount || 0
-
-            _b_[name].__code__=_c
-*/
             _b_[name].__defaults__= _b_[name].__defaults__ || []
             _b_[name].__kwdefaults__= _b_[name].__kwdefaults__ || {}
             _b_[name].__annotations__= _b_[name].__annotations__ || {}
@@ -2186,7 +2137,6 @@ for(var i=0;i<builtin_names.length;i++){
     catch(err){}
 }
 
-$B._alert = _alert
 _b_['$eval']=$eval
 
 _b_['open']=$url_open

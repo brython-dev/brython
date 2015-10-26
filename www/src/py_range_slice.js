@@ -270,7 +270,7 @@ function range(){
 range.__class__ = $B.$factory
 range.$dict = $RangeDict
 $RangeDict.$factory = range
-
+range.$is_func = true
 
 // slice
 // slice
@@ -373,7 +373,7 @@ function slice(){
 slice.__class__ = $B.$factory
 slice.$dict = $SliceDict
 $SliceDict.$factory = slice
-
+slice.$is_func = true
 
 _b_.range = range
 _b_.slice = slice

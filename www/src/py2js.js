@@ -1100,40 +1100,7 @@ function $CallCtx(context){
             }
         }
         var func_js = this.func.to_js()
-        // After to_js() is called, if the block where the function is defined
-        // is identified, this.func.found is $B.bound[block_id][func_name]
-        // If the name matches a function or a class defined in the same 
-        // script, this.func.found is the instance of $DefCtx or $ClassCtx
-        // We can use it to compare the function signature and the arguments
-        // passed in the call
-        // For the moment we only use it if the function only accepts 
-        // positional arguments
-
-        var ctx = this.func.found
-        if(ctx && ctx.type=='def'){
-            var flag = (ctx.default_list.length==0 && !ctx.other_args &&
-                !ctx.other_kw && ctx.after_star.length==0)
-            if(flag){
-                var args = []
-                if(this.tree.length==ctx.positional_list.length){
-                    for(var i=0;i<this.tree.length;i++){
-                        if(this.tree[i].type!='call_arg' ||
-                            this.tree[i].tree[0].type !=='expr'){
-                            flag=false
-                            break
-                        }else{
-                            args.push(ctx.positional_list[i]+':'+
-                                this.tree[i].to_js())
-                        }
-                    }
-                }
-                if(flag){
-                    args = '{$nat:"args"},{'+args.join(',')+'}'
-                    //return func_js+'('+args+')'
-                }
-            }
-        }
-
+        
         if(this.func!==undefined) {
             switch(this.func.value) {
               case 'classmethod':

@@ -54,7 +54,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-10-26 21:25:59.511914"
+__BRYTHON__.compiled_date="2015-10-26 22:13:19.076327"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -594,15 +594,6 @@ this.to_js=function(){this.js_processed=true
 if(this.tree.length>0){if(this.tree[this.tree.length-1].tree.length==0){
 this.tree.pop()}}
 var func_js=this.func.to_js()
-var ctx=this.func.found
-if(ctx && ctx.type=='def'){var flag=(ctx.default_list.length==0 && !ctx.other_args &&
-!ctx.other_kw && ctx.after_star.length==0)
-if(flag){var args=[]
-if(this.tree.length==ctx.positional_list.length){for(var i=0;i<this.tree.length;i++){if(this.tree[i].type!='call_arg' ||
-this.tree[i].tree[0].type !=='expr'){flag=false
-break}else{args.push(ctx.positional_list[i]+':'+
-this.tree[i].to_js())}}}
-if(flag){args='{$nat:"args"},{'+args.join(',')+'}'}}}
 if(this.func!==undefined){switch(this.func.value){case 'classmethod':
 return 'classmethod('+$to_js(this.tree)+')'
 case '$$super':
@@ -4981,7 +4972,6 @@ function abs(obj){if(isinstance(obj,_b_.int))return _b_.int(Math.abs(obj));
 if(isinstance(obj,_b_.float))return _b_.float(Math.abs(obj));
 if(hasattr(obj,'__abs__')){return getattr(obj,'__abs__')()};
 throw _b_.TypeError("Bad operand type for abs(): '"+$B.get_class(obj)+"'")}
-function _alert(src){alert(_b_.str(src))}
 function all(obj){var iterable=iter(obj)
 while(1){try{var elt=next(iterable)
 if(!bool(elt))return false}catch(err){return true}}}
@@ -5024,27 +5014,14 @@ default:
 try{return getattr(obj,'__bool__')()}
 catch(err){try{return getattr(obj,'__len__')()>0}
 catch(err){return true}}}}
-bool.__class__=$B.$type
-bool.__mro__=[bool,object]
-bool.__name__='bool'
-bool.__repr__=bool.__str__=function(){return "<class 'bool'>"}
-bool.toString=bool.__str__
-bool.__hash__=function(){if(this.valueOf())return 1
-return 0}
 function callable(obj){return hasattr(obj,'__call__')}
 function chr(i){if(i < 0 ||i > 1114111)_b_.ValueError('Outside valid range')
 return String.fromCharCode(i)}
-var $ClassmethodDict={__class__:$B.$type,__name__:'classmethod'}
-$ClassmethodDict.__mro__=[$ClassmethodDict,$ObjectDict]
 function classmethod(func){func.$type='classmethod'
 return func}
 classmethod.__class__=$B.$factory
-classmethod.$dict=$ClassmethodDict
-$ClassmethodDict.$factory=classmethod
-function $class(obj,info){this.obj=obj
-this.__name__=info
-this.__class__=$B.$type
-this.__mro__=[this,$ObjectDict]}
+classmethod.$dict={__class__:$B.$type,__name__:'classmethod',$factory: classmethod}
+classmethod.$dict.__mro__=[classmethod.$dict,$ObjectDict]
 $B.$CodeObjectDict={__class__:$B.$type,__name__:'code',__repr__:function(self){return '<code object '+self.name+', file '+self.filename+'>'},}
 $B.$CodeObjectDict.__str__=$B.$CodeObjectDict.__repr__
 $B.$CodeObjectDict.__mro__=[$B.$CodeObjectDict,$ObjectDict]
@@ -5086,7 +5063,7 @@ for(var attr in obj){if(attr.charAt(0)!=='$' && attr!=='__class__'){res[pos++]=a
 res.sort()
 return res}
 function divmod(x,y){var klass=$B.get_class(x)
-return _b_.tuple([klass.__floordiv__(x,y),klass.__mod__(x,y)])}
+return _b_.tuple([getattr(klass,'__floordiv__')(x,y),getattr(klass,'__mod__')(x,y)])}
 var $EnumerateDict={__class__:$B.$type,__name__:'enumerate'}
 $EnumerateDict.__mro__=[$EnumerateDict,$ObjectDict]
 function enumerate(){var $ns=$B.args("enumerate",2,{iterable:null,start:null},['iterable','start'],arguments,{start:0},null,null)
@@ -5143,13 +5120,6 @@ return res}catch(err){
 if(err.$py_error===undefined){throw $B.exception(err)}
 throw err}finally{if(leave){$B.leave_frame()}}}
 $eval.$is_func=true
-function show_frames(){
-var ch=''
-for(var i=0;i<$B.frames_stack.length;i++){var frame=$B.frames_stack[i]
-ch +='['+frame[0][0]
-if($B.debug>0){ch +=' line '+frame[0][2]}
-ch +=', '+frame[1][0]+'] '}
-return ch}
 function exec(src,globals,locals){return $eval(src,globals,locals,'exec')||_b_.None}
 exec.$is_func=true
 var $FilterDict={__class__:$B.$type,__name__:'filter'}
@@ -5340,10 +5310,12 @@ throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not iterable")}
 var res=_iter()
 try{getattr(res,'__next__')}
 catch(err){if(isinstance(err,_b_.AttributeError)){throw _b_.TypeError(
-"iter() returned non-iterator of type '"+$B.get_class(res).__name__+"'")}}
+"iter() returned non-iterator of type '"+
+$B.get_class(res).__name__+"'")}}
 return res}
 function len(obj){try{return getattr(obj,'__len__')()}
-catch(err){throw _b_.TypeError("object of type '"+$B.get_class(obj).__name__+"' has no len()")}}
+catch(err){throw _b_.TypeError("object of type '"+$B.get_class(obj).__name__+
+"' has no len()")}}
 function locals(){
 var locals_obj=$B.last($B.frames_stack)[1]
 return $B.obj_dict(locals_obj)}
@@ -5400,7 +5372,8 @@ for(var i=0;i<arguments.length;i++){args[pos++]=arguments[i]}
 return $extreme(args,'__lt__')}
 function next(obj){var ga=getattr(obj,'__next__')
 if(ga!==undefined)return ga()
-throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not an iterator")}
+throw _b_.TypeError("'"+$B.get_class(obj).__name__+
+"' object is not an iterator")}
 function _NotImplemented(){return{__class__:_NotImplemented.$dict}}
 _NotImplemented.__class__=$B.$factory
 _NotImplemented.$dict={$factory: _NotImplemented,__class__: $B.$type,__name__: 'NotImplementedType'}
@@ -5411,13 +5384,16 @@ function oct(x){return $builtin_base_convert_helper(x,8)}
 function ord(c){
 switch($B.get_class(c)){case _b_.str.$dict:
 if(c.length==1)return c.charCodeAt(0)
-throw _b_.TypeError('ord() expected a character, but string of length ' + c.length + ' found')
+throw _b_.TypeError('ord() expected a character, but string of length ' + 
+c.length + ' found')
 case _b_.bytes.$dict:
 case _b_.bytearray.$dict:
 if(c.source.length==1)return c.source[0]
-throw _b_.TypeError('ord() expected a character, but string of length ' + c.source.length + ' found')
+throw _b_.TypeError('ord() expected a character, but string of length ' + 
+c.source.length + ' found')
 default:
-throw _b_.TypeError('ord() expected a character, but ' + $B.get_class(c).__name__ + ' was found')}}
+throw _b_.TypeError('ord() expected a character, but ' + 
+$B.get_class(c).__name__ + ' was found')}}
 function pow(){var $ns=$B.args('pow',3,{x:null,y:null,z:null},['x','y','z'],arguments,{z:null},null,null)
 var x=$ns['x'],y=$ns['y'],z=$ns['z']
 if(z===null){var a,b
@@ -5440,8 +5416,7 @@ getattr(file,'write')(args.map(_b_.str).join(sep)+end)
 return None}
 $print.__name__='print'
 $print.is_func=true
-function $prompt(text,fill){return prompt(text,fill ||'')}
-var $PropertyDict={__class__ : $B.$type,__name__ : 'property',__repr__ : function(){return "<property object>"},__str__ : function(){return "<property object>"},toString : function(){return "property"}}
+var $PropertyDict={__class__ : $B.$type,__name__ : 'property',}
 $PropertyDict.__mro__=[$PropertyDict,$ObjectDict]
 $B.$PropertyDict=$PropertyDict
 function property(fget,fset,fdel,doc){var p={__class__ : $PropertyDict,__doc__ : doc ||"",$type:fget.$type,fget:fget,fset:fset,fdel:fdel,toString:function(){return '<property>'}}
@@ -5785,7 +5760,6 @@ var fs=stack
 var res={__class__:$FrameDict,f_builtins :{}}
 if(pos===undefined){pos=fs.length-1}
 if(fs.length){var _frame=fs[pos]
-if(_frame[1]===undefined){alert('frame undef '+stack+' '+Array.isArray(stack)+' is frames stack '+(stack===$B.frames_stack))}
 var locals_id=_frame[0]
 try{res.f_locals=$B.obj_dict(_frame[1])}catch(err){console.log('err '+err)
 throw err}
@@ -5926,8 +5900,7 @@ if(name=='super'){name='$$super'}
 if(name=='eval'){name='$eval'}
 $B.builtin_funcs[name]=true}
 $B.builtin_funcs['$eval']=true
-var other_builtins=['Ellipsis','False','None','True','__debug__','__import__',
-'copyright','credits','license','NotImplemented','type']
+var other_builtins=['Ellipsis','False','None','True','__debug__','__import__','copyright','credits','license','NotImplemented','type']
 var builtin_names=builtin_funcs.concat(other_builtins)
 for(var i=0;i<builtin_names.length;i++){var name=builtin_names[i]
 var orig_name=name
@@ -5948,7 +5921,6 @@ _b_[name].__kwdefaults__=_b_[name].__kwdefaults__ ||{}
 _b_[name].__annotations__=_b_[name].__annotations__ ||{}}
 _b_[name].__doc__=_b_[name].__doc__ ||''}
 catch(err){}}
-$B._alert=_alert
 _b_['$eval']=$eval
 _b_['open']=$url_open
 _b_['print']=$print
@@ -6046,6 +6018,7 @@ return{__class__: $RangeDict,start: start,stop: stop,step: step,$is_range: true,
 range.__class__=$B.$factory
 range.$dict=$RangeDict
 $RangeDict.$factory=range
+range.$is_func=true
 var $SliceDict={__class__:$B.$type,__name__:'slice',$native:true}
 $SliceDict.__mro__=[$SliceDict,_b_.object.$dict]
 $SliceDict.__repr__=$SliceDict.__str__=function(self){return 'slice('+_b_.str(self.start)+','+
@@ -6088,6 +6061,7 @@ return res}
 slice.__class__=$B.$factory
 slice.$dict=$SliceDict
 $SliceDict.$factory=slice
+slice.$is_func=true
 _b_.range=range
 _b_.slice=slice})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
@@ -6831,8 +6805,7 @@ var modobj=$B.imported[_mod_name];
 if(modobj==_b_.None){
 throw _b_.ImportError(_mod_name)}
 else if(modobj===undefined){try{$B.import_hooks(_mod_name,__path__,undefined,blocking)}
-catch(err){console.log(err)
-delete $B.imported[_mod_name]}
+catch(err){delete $B.imported[_mod_name]}
 if(is_none($B.imported[_mod_name])){throw _b_.ImportError(_mod_name)}
 else{
 if(_parent_name){_b_.setattr($B.imported[_parent_name],parsed_name[i],$B.imported[_mod_name]);}}}
