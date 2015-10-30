@@ -37,7 +37,7 @@ La syntaxe pour créer un objet (par exemple un lien hypertexte) est :
 `A(`*[content,[attributes]]*`)`
 
 > *content* est le noeud «fils» de l'objet ; il peut s'agir d'un objet Python
-> comme une chaîne de caractères, un nombre, une liste, etc., ou bien une
+> comme une chaîne de caractères, un nombre, etc., ou bien une
 > instance d'une autre classe du module **html**.
 
 > *attributes* est une suite de mots-clés correspondant aux
@@ -45,6 +45,16 @@ La syntaxe pour créer un objet (par exemple un lien hypertexte) est :
 > balise HTML. Les traits d'union (`-`) doivent être remplacés par des soulignés
 > (`_`) : *http\_equiv* et pas *http-equiv* (sinon le `-` serait interprété comme
 > le signe moins).
+
+Si *content* est un itérable autre qu'une chaine de caractères, tous les
+éléments sont ajoutés comme descendants de l'élément. Par exemple :
+
+```python
+html.UL(html.LI('item %s' %i) for i in range(5))
+```
+
+crée une liste non ordonnée avec les balises `<li>` définies dans l'expression
+générateur.
 
 Pour l’attribut *style*, la valeur fournie doit être un dictionnaire :
 
@@ -89,15 +99,25 @@ On peut aussi créer plusieurs éléments de même niveau par addition (symbole
 row = html.TR(html.TH('Nom')+html.TH('Prénom'))
 ```
 
+et on peut ajouter tous les éléments d'un itérable en une seule opération :
+
+```python
+from browser.html import *
+
+t = TABLE()
+t <= TR(TH('Number')+TH('Square'))
+t <= (TR(TD(i)+TD(i*i)) for i in range(10))
+```
+
 En combinant ces opérateurs et la syntaxe Python, voici comment créer une boîte
 de sélection à partir d'une liste :
 
 ```python
-items = ['un','deux','trois']
-sel = html.SELECT()
-for i, elt in enumerate(items):
-    sel <= html.OPTION(elt, value=i)
-doc <= sel
+from browser import document
+from browser.html import *
+
+document <= SELECT(OPTION(elt, value=i) 
+    for i, elt in enumerate(['one', 'two', 'three']))
 ```
 
 Noter que la création d'une instance d'une classe relative aux balises HTML

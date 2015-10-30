@@ -39,7 +39,7 @@ The syntax to create an object (e.g. a hyperlink) is :
 `A(`*[content,[attributes]]*`)`
 
 > *content* is the child node of the the object ; it can be a Python object 
-> such as a string, a number, a list etc., or an instance of another class in 
+> such as a string, a number, etc., or an instance of another class in 
 > the **html** module
 
 > *attributes* is a sequence of keywords corresponding to the 
@@ -47,6 +47,16 @@ The syntax to create an object (e.g. a hyperlink) is :
 > the HTML tag. If the attribute contains a hyphen (`-`) it must be replaced by
 > an underscore (`_`) : *http\_equiv* and not *http-equiv* (the `-` would be
 > interpreted as the minus sign).
+
+
+If *content* is an iterable (other than a string), all the items in the
+iterable become children of the object. For instance :
+
+```python
+html.UL(html.LI('item %s' %i) for i in range(5))
+```
+
+creates an unordered list with the `<li>` tags in the generator expression
 
 For the *style* attribute, the value must be a dictionary :
 
@@ -91,15 +101,25 @@ sign :
 row = html.TR(html.TH('LastName') + html.TH('FirstName'))
 ```
 
+and you can add all the items in an iterable :
+
+```python
+from browser.html import *
+
+t = TABLE()
+t <= TR(TH('Number')+TH('Square'))
+t <= (TR(TD(i)+TD(i*i)) for i in range(10))
+```
+
 Here is how to create a selection box from a list (by combining these 
 operators and Python syntax) :
 
 ```python
-items = ['one', 'two', 'three']
-sel = html.SELECT()
-for i, elt in enumerate(items):
-    sel <= html.OPTION(elt, value = i)
-document <= sel
+from browser import document
+from browser.html import *
+
+document <= SELECT(OPTION(elt, value=i) 
+    for i, elt in enumerate(['one', 'two', 'three']))
 ```
 
 It is important to note that the creation of an instance of a class involves 
