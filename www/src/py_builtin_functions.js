@@ -1751,8 +1751,10 @@ var $TracebackDict = {__class__:$B.$type,
     __name__:'traceback'
 }
 $TracebackDict.__getattribute__ = function(self, attr){
-    var last_frame = $B.last(self.stack),
-        line_info = last_frame.$line_info
+    if(self.stack.length==0){alert('no stack', attr)}
+    var last_frame = $B.last(self.stack)
+    if(last_frame==undefined){alert('last frame undef ');console.log(self.stack, Object.keys(self.stack))}
+    var line_info = last_frame[1].$line_info
 
     switch(attr){
         case 'tb_frame':
@@ -1764,11 +1766,14 @@ $TracebackDict.__getattribute__ = function(self, attr){
             if(line_info===undefined){return '<unknown>'}
             else{
                 var info = line_info.split(',')
-                var src = $B.$py_src[line_info[1]]
-                return src.split('\n')[parseInt(info[0]-1)]
+                var src = $B.$py_src[info[1]]
+                if(src!==undefined){
+                    return src.split('\n')[parseInt(info[0]-1)].trim()
+                }else{return '<unknown>'}
             }
         case 'tb_next':
-            return None // XXX fix me
+            if(self.stack.length==1){return None}
+            else{return traceback(self.stack.slice(0, self.stack.length-1))}
         default:
             return $TracebackDict[attr]
     }
@@ -1827,12 +1832,12 @@ function frame(stack, pos){
         }else{
             res.f_lineno = -1
         }
-        if(pos>0){res.f_back = frame(stack, pos-1)}
-        else{res.f_back = None}
+        //if(pos!==undefined && pos>1){res.f_back = frame(stack, pos-1)}
+        //else{res.f_back = None}
         res.f_code = {__class__:$B.$CodeDict,
             co_code:None, // XXX fix me
             co_name: locals_id, // idem
-            co_filename: "<unknown>" // idem
+            co_filename: _frame[3].__name__ // idem
         }
     }
     return res
@@ -1984,12 +1989,7 @@ $B.exception = function(js_exc){
         exc.args = _b_.tuple([exc.$message])
         exc.info = ''
         exc.$py_error = true
-        exc.traceback = traceback({
-            tb_frame:frame($B.frames_stack),
-            tb_lineno:-1,
-            tb_lasti:'',
-            tb_next: None   // fix me
-        })
+        exc.traceback = traceback($B.frames_stack)
     }else{
         var exc = js_exc
     }
