@@ -19,3 +19,6 @@ def format_exc(limit=None,chain=True):
 
 def format_exception(_type, value, tb, limit=None, chain=True):
     return ['%s\n' %_type,'%s\n' %value]    
+
+def extract_tb(tb, limit=None):
+    return tb
