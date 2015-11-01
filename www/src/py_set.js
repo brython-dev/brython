@@ -30,9 +30,9 @@ $SetDict.__and__ = function(self, other, accept_iter){
 $SetDict.__contains__ = function(self,item){
     if(self.$num && (typeof item=='number')){return self.$items.indexOf(item)>-1}
     if(self.$str && (typeof item=='string')){return self.$items.indexOf(item)>-1}
+    var eq_func = _b_.getattr(item, '__eq__')
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
-        try{if(_.getattr(self.$items[i],'__eq__')(item)) return true
-        }catch(err){void(0)}
+        if(_.getattr(self.$items[i],'__eq__')(item)) return true
     }
     return false
 }
@@ -101,37 +101,26 @@ $SetDict.__gt__ = function(self, other){
 }
 
 $SetDict.__init__ = function(self){
-    var args = []
-    for(var i=1, _len_i = arguments.length; i < _len_i;i++){
-        args.push(arguments[i])
+    var $ = $B.args('__init__', 2, {self:null, iterable:null},
+        ['self', 'iterable'], arguments, {iterable:[]}, null,null),
+        self = $.self, iterable= $.iterable
+
+    if(_.isinstance(iterable,[set,frozenset])){
+        self.$items = iterable.$items
+        return $N
     }
-    if(args.length==0) return $N
-    if(args.length==1){    // must be an iterable
-        var arg=args[0]
-        if(_.isinstance(arg,[set,frozenset])){
-            self.$items = arg.$items
-            return $N
-        }
+    var it = _b_.iter(iterable),
+        obj = {$items:[],$str:true,$num:true}
+    while(1){
         try{
-            var iterable = _.iter(arg)
+            var item = _.next(it)
+            $SetDict.add(obj,item)
         }catch(err){
-            console.log(err)
-            console.log('arg', arg)
-            throw _.TypeError("'"+arg.__class__.__name__+"' object is not iterable")
+            if(_b_.isinstance(err, _b_.StopIteration)){break}
+            throw err
         }
-        var obj = {$items:[],$str:true,$num:true}
-        while(1){
-            try{var item = _.next(iterable)
-                $SetDict.add(obj,item)
-            }catch(err){
-                if(_b_.isinstance(err, _b_.StopIteration)){break}
-                throw err
-            }
-        }
-        self.$items = obj.$items
-    } else {
-        throw _.TypeError("set expected at most 1 argument, got "+args.length)
     }
+    self.$items = obj.$items
     return $N
 }
 

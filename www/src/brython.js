@@ -54,7 +54,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-10-26 22:23:51.976527"
+__BRYTHON__.compiled_date="2015-11-01 18:35:11.789615"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -5727,7 +5727,10 @@ $Function.__class__=$B.$factory
 $FunctionDict.$factory=$Function
 $Function.$dict=$FunctionDict
 var $TracebackDict={__class__:$B.$type,__name__:'traceback'}
-$TracebackDict.__getattribute__=function(self,attr){var last_frame=$B.last(self.stack),line_info=last_frame.$line_info
+$TracebackDict.__getattribute__=function(self,attr){if(self.stack.length==0){alert('no stack',attr)}
+var last_frame=$B.last(self.stack)
+if(last_frame==undefined){alert('last frame undef ');console.log(self.stack,Object.keys(self.stack))}
+var line_info=last_frame[1].$line_info
 switch(attr){case 'tb_frame':
 return frame(self.stack)
 case 'tb_lineno':
@@ -5736,10 +5739,11 @@ else{return parseInt(line_info.split(',')[0])}
 case 'tb_lasti':
 if(line_info===undefined){return '<unknown>'}
 else{var info=line_info.split(',')
-var src=$B.$py_src[line_info[1]]
-return src.split('\n')[parseInt(info[0]-1)]}
+var src=$B.$py_src[info[1]]
+if(src!==undefined){return src.split('\n')[parseInt(info[0]-1)].trim()}else{return '<unknown>'}}
 case 'tb_next':
-return None 
+if(self.stack.length==1){return None}
+else{return traceback(self.stack.slice(0,self.stack.length-1))}
 default:
 return $TracebackDict[attr]}}
 $TracebackDict.__mro__=[$TracebackDict,$ObjectDict]
@@ -5766,11 +5770,9 @@ throw err}
 res.f_globals=$B.obj_dict(_frame[3])
 if($B.debug>0){if(_frame[1].$line_info===undefined){return 1}
 res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}else{res.f_lineno=-1}
-if(pos>0){res.f_back=frame(stack,pos-1)}
-else{res.f_back=None}
 res.f_code={__class__:$B.$CodeDict,co_code:None,
 co_name: locals_id,
-co_filename: "<unknown>" }}
+co_filename: _frame[3].__name__ }}
 return res}
 frame.__class__=$B.$factory
 frame.$dict=$FrameDict
@@ -5846,7 +5848,7 @@ exc.$message=js_exc.message ||'<'+js_exc+'>'
 exc.args=_b_.tuple([exc.$message])
 exc.info=''
 exc.$py_error=true
-exc.traceback=traceback({tb_frame:frame($B.frames_stack),tb_lineno:-1,tb_lasti:'',tb_next: None })}else{var exc=js_exc}
+exc.traceback=traceback($B.frames_stack)}else{var exc=js_exc}
 exc.$stack=$B.frames_stack.slice()
 $B.current_exception=exc
 return exc}
@@ -5926,8 +5928,7 @@ _b_['open']=$url_open
 _b_['print']=$print
 _b_['$$super']=$$super})(__BRYTHON__)
 
-;(function($B){var _b_=$B.builtins,None=_b_.None
-var $RangeDict={__class__:$B.$type,__dir__:_b_.object.$dict.__dir__,__name__:'range',$native:true}
+;(function($B){var _b_=$B.builtins,None=_b_.None,$RangeDict={__class__:$B.$type,__dir__:_b_.object.$dict.__dir__,__name__:'range',$native:true}
 $RangeDict.__contains__=function(self,other){if($RangeDict.__len__(self)==0){return false}
 try{other=$B.int_or_bool(other)}
 catch(err){
@@ -5956,9 +5957,9 @@ if(($B.gt(self.step,0)&&($B.ge(res,self.stop)||$B.gt(self.start,res)))||
 ($B.gt(0,self.step)&&($B.ge(self.stop,res)||$B.gt(res,self.start)))){throw _b_.IndexError('range object index out of range')}
 return res }
 $RangeDict.__hash__=function(self){var len=$RangeDict.__len__(self)
-if(len==0){return hash(_b_.tuple([0,None,None]))}
-if(len==1){return hash(_b_.tuple([1,self.start,None]))}
-return hash(_b_.tuple([len,self.start,self.step]))}
+if(len==0){return _b_.hash(_b_.tuple([0,None,None]))}
+if(len==1){return _b_.hash(_b_.tuple([1,self.start,None]))}
+return _b_.hash(_b_.tuple([len,self.start,self.step]))}
 $RangeIterator=function(obj){return{__class__:$RangeIterator.$dict,obj: obj}}
 $RangeIterator.__class__=$B.$factory
 $RangeIterator.$dict={__class__: $B.$type,__name__: 'range_iterator',$factory: $RangeIterator,__iter__: function(self){return self},__next__: function(self){return _b_.next(self.obj)}}
@@ -5989,12 +5990,12 @@ if(self.step!=1)res +=', '+_b_.str(self.step)
 return res+')'}
 $RangeDict.__setattr__=function(self,attr,value){throw _b_.AttributeError('readonly attribute')}
 $RangeDict.descriptors={start: function(self){return self.start},step: function(self){return self.step},stop: function(self){return self.stop}}
-$RangeDict.count=function(self,ob){if(_b_.isinstance(ob,[_b_.int,_b_.float,_b_.bool])){return _b_.int($RangeDict.__contains__(self,ob))}else{var comp=getattr(ob,'__eq__'),it=$RangeDict.__iter__(self)
+$RangeDict.count=function(self,ob){if(_b_.isinstance(ob,[_b_.int,_b_.float,_b_.bool])){return _b_.int($RangeDict.__contains__(self,ob))}else{var comp=_b_.getattr(ob,'__eq__'),it=$RangeDict.__iter__(self)
 _next=$RangeIterator.$dict.__next__,nb=0
 while(true){try{if(comp(_next(it))){nb++}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){return nb}
 throw err}}}}
 $RangeDict.index=function(self,other){var $=$B.args('index',2,{self:null,other:null},['self','other'],arguments,{},null,null),self=$.self,other=$.other
-try{other=$B.int_or_bool(other)}catch(err){var comp=getattr(other,'__eq__'),it=$RangeDict.__iter__(self),_next=$RangeIterator.$dict.__next__,nb=0
+try{other=$B.int_or_bool(other)}catch(err){var comp=_b_.getattr(other,'__eq__'),it=$RangeDict.__iter__(self),_next=$RangeIterator.$dict.__next__,nb=0
 while(true){try{if(comp(_next(it))){return nb}
 nb++}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){throw _b_.ValueError(_b_.str(other)+' not in range')}
 throw err}}}
@@ -6044,8 +6045,8 @@ return{start: start,stop: stop,step: step}}
 $SliceDict.descriptors={start: function(self){return self.start},step: function(self){return self.step},stop: function(self){return self.stop}}
 $SliceDict.indices=function(self,length){var len=$B.$GetInt(length)
 if(len < 0)_b_.ValueError('length should not be negative')
-if(self.step > 0){var _len=min(len,self.stop)
-return _b_.tuple([self.start,_len,self.step])}else if(self.step==_b_.None){var _len=min(len,self.stop)
+if(self.step > 0){var _len=_b_.min(len,self.stop)
+return _b_.tuple([self.start,_len,self.step])}else if(self.step==_b_.None){var _len=_b_.min(len,self.stop)
 var _start=self.start
 if(_start==_b_.None)_start=0
 return _b_.tuple([_start,_len,1])}
@@ -6480,7 +6481,7 @@ $JSObjectDict.$factory=JSObject
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','calendar','codecs','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','site-packages.tester','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','calendar','codecs','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.module18','site-packages.test_sp','site-packages.tester','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
@@ -9233,7 +9234,8 @@ for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_.getattr(other,'__cont
 return res}
 $SetDict.__contains__=function(self,item){if(self.$num &&(typeof item=='number')){return self.$items.indexOf(item)>-1}
 if(self.$str &&(typeof item=='string')){return self.$items.indexOf(item)>-1}
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){try{if(_.getattr(self.$items[i],'__eq__')(item))return true}catch(err){void(0)}}
+var eq_func=_b_.getattr(item,'__eq__')
+for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_.getattr(self.$items[i],'__eq__')(item))return true}
 return false}
 $SetDict.__eq__=function(self,other){
 if(other===undefined)return self===set
@@ -9256,22 +9258,14 @@ return false}
 $SetDict.__format__=function(self,format_string){return $SetDict.__str__(self)}
 $SetDict.__ge__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return !$SetDict.__lt__(self,other)}else{return _b_.object.$dict.__ge__(self,other)}}
 $SetDict.__gt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return !$SetDict.__le__(self,other)}else{return _b_.object.$dict.__gt__(self,other)}}
-$SetDict.__init__=function(self){var args=[]
-for(var i=1,_len_i=arguments.length;i < _len_i;i++){args.push(arguments[i])}
-if(args.length==0)return $N
-if(args.length==1){
-var arg=args[0]
-if(_.isinstance(arg,[set,frozenset])){self.$items=arg.$items
+$SetDict.__init__=function(self){var $=$B.args('__init__',2,{self:null,iterable:null},['self','iterable'],arguments,{iterable:[]},null,null),self=$.self,iterable=$.iterable
+if(_.isinstance(iterable,[set,frozenset])){self.$items=iterable.$items
 return $N}
-try{var iterable=_.iter(arg)}catch(err){console.log(err)
-console.log('arg',arg)
-throw _.TypeError("'"+arg.__class__.__name__+"' object is not iterable")}
-var obj={$items:[],$str:true,$num:true}
-while(1){try{var item=_.next(iterable)
+var it=_b_.iter(iterable),obj={$items:[],$str:true,$num:true}
+while(1){try{var item=_.next(it)
 $SetDict.add(obj,item)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
-self.$items=obj.$items}else{
-throw _.TypeError("set expected at most 1 argument, got "+args.length)}
+self.$items=obj.$items
 return $N}
 var $set_iterator=$B.$iterator_class('set iterator')
 $SetDict.__iter__=function(self){var it=$B.$iterator(self.$items,$set_iterator),len=self.$items.length,nxt=it.__next__
