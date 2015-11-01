@@ -2,13 +2,12 @@
 ;(function($B){
 
 var _b_ = $B.builtins,
-    None = _b_.None
-
-var $RangeDict = {__class__:$B.$type,
-    __dir__:_b_.object.$dict.__dir__,
-    __name__:'range',
-    $native:true
-}
+    None = _b_.None,
+    $RangeDict = {__class__:$B.$type,
+        __dir__:_b_.object.$dict.__dir__,
+        __name__:'range',
+        $native:true
+    }
 
 $RangeDict.__contains__ = function(self,other){
     if($RangeDict.__len__(self)==0){return false}
@@ -79,9 +78,9 @@ $RangeDict.__getitem__ = function(self,rank){
 
 $RangeDict.__hash__ = function(self){
     var len = $RangeDict.__len__(self)
-    if(len==0){return hash(_b_.tuple([0, None, None]))}
-    if(len==1){return hash(_b_.tuple([1, self.start, None]))}
-    return hash(_b_.tuple([len, self.start, self.step]))
+    if(len==0){return _b_.hash(_b_.tuple([0, None, None]))}
+    if(len==1){return _b_.hash(_b_.tuple([1, self.start, None]))}
+    return _b_.hash(_b_.tuple([len, self.start, self.step]))
 }
 
 $RangeIterator = function(obj){
@@ -182,7 +181,7 @@ $RangeDict.count = function(self, ob){
     if(_b_.isinstance(ob, [_b_.int, _b_.float, _b_.bool])){
         return _b_.int($RangeDict.__contains__(self, ob))
     }else{
-        var comp = getattr(ob, '__eq__'),
+        var comp = _b_.getattr(ob, '__eq__'),
             it = $RangeDict.__iter__(self)
             _next = $RangeIterator.$dict.__next__,
             nb = 0
@@ -206,7 +205,7 @@ $RangeDict.index = function(self, other){
     try{
         other = $B.int_or_bool(other)
     }catch(err){
-        var comp = getattr(other, '__eq__'),
+        var comp = _b_.getattr(other, '__eq__'),
             it = $RangeDict.__iter__(self),
             _next = $RangeIterator.$dict.__next__,
             nb = 0
@@ -335,10 +334,10 @@ $SliceDict.indices = function (self, length) {
   var len=$B.$GetInt(length)
   if (len < 0) _b_.ValueError('length should not be negative')
   if (self.step > 0) {
-     var _len = min(len, self.stop)
+     var _len = _b_.min(len, self.stop)
      return _b_.tuple([self.start, _len, self.step])
   } else if (self.step == _b_.None) {
-     var _len = min(len, self.stop)
+     var _len = _b_.min(len, self.stop)
      var _start = self.start
      if (_start == _b_.None) _start = 0
      return _b_.tuple([_start, _len, 1])
