@@ -376,7 +376,7 @@ $B.$type.__getattribute__=function(klass,attr){
         // search in classes hierarchy, following method resolution order
 
         var mro = klass.__mro__
-        if(mro===undefined){console.log('attr '+attr+' mro undefined for class '+klass+' name '+klass.__name__)}
+        if(mro===undefined){console.log('attr '+attr+' mro undefined for class '+klass+' name '+klass.__name__, klass, klass.__class__)}
         for(var i=0;i<mro.length;i++){
             var v=mro[i][attr]
             if(v!==undefined){
