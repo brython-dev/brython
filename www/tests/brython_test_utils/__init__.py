@@ -25,6 +25,13 @@ def discover_brython_test_modules():
           ("test_string_format.py", "string format"),
           ("test_string_methods.py", "string methods")
         ]),
+        ("CPython tests", [
+           ("std_test_dict.py", "dict"),
+           ("std_test_list.py", "list"),
+           ("std_test_range.py", "range"),
+           ("std_test_set.py", "set"),
+           ("std_string_tests.py", "string")
+        ]),
         ("Issues", [
           ("issues_gc.py", "issues (GC)"),
           ("issues_bb.py", "issues (BB)"),
@@ -54,6 +61,8 @@ def populate_testmod_input(elem, selected=None):
     from browser import html
     groups = discover_brython_test_modules()
     for label, options in groups:
+        if selected and label not in selected:
+            continue
         g = html.OPTGROUP(label=label)
         elem <= g
         for filenm, caption in options:
