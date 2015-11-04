@@ -4,6 +4,20 @@ var _ = $B.builtins, $N = _.None
 
 // set
 
+// Create an object of the same type as obj
+function create_type(obj){
+    return $B.get_class(obj).$factory()
+}
+
+// Create a clone of the object : same type, same items
+// Can't use general $B.clone because both objects would reference the same
+// array $items
+function clone(obj){
+    var res = create_type(obj)
+    res.$items = obj.$items.slice()
+    return res    
+}
+
 var $SetDict = {
     __class__:$B.$type,
     __dir__:_.object.$dict.__dir__,
@@ -18,7 +32,7 @@ $SetDict.__add__ = function(self,other){
 
 $SetDict.__and__ = function(self, other, accept_iter){
     $test(accept_iter, other)
-    var res = set()
+    var res = create_type(self)
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
         if(_.getattr(other,'__contains__')(self.$items[i])){
             $SetDict.add(res,self.$items[i])
@@ -30,11 +44,18 @@ $SetDict.__and__ = function(self, other, accept_iter){
 $SetDict.__contains__ = function(self,item){
     if(self.$num && (typeof item=='number')){return self.$items.indexOf(item)>-1}
     if(self.$str && (typeof item=='string')){return self.$items.indexOf(item)>-1}
+    if(! _b_.isinstance(item, set)){
+        _b_.hash(item) // raises TypeError if item is not hashable
+        // If item is a set, "item in self" is True if item compares equal to 
+        // one of the set items
+    }
+    
     var eq_func = _b_.getattr(item, '__eq__')
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
         if(_.getattr(self.$items[i],'__eq__')(item)) return true
     }
     return false
+
 }
 
 $SetDict.__eq__ = function(self,other){
@@ -181,34 +202,35 @@ $SetDict.__or__ = function(self,other,accept_iter){
 }
 
 $SetDict.__str__ = $SetDict.toString = $SetDict.__repr__ = function(self){
-    if(self===undefined) return "<class 'set'>"
-    var head='',tail=''
     frozen = self.$real === 'frozen'
+    self.$cycle = self.$cycle === undefined ? 0 : self.$cycle+1
     if(self.$items.length===0){
         if(frozen) return 'frozenset()'
         return 'set()'
     }
-    if(self.__class__===$SetDict && frozen){
-        head = 'frozenset('
+    var klass_name = $B.get_class(self).__name__,
+        head = klass_name+'(',
         tail = ')'
-    }else if(self.__class__!==$SetDict){ // subclasses
-        head = self.__class__.__name__+'('
-        tail = ')'
-    }
-    //var res = "{"
+    if(head=='set('){head='{';tail='}'}
     var res=[]
-    for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
-        res.push(_.repr(self.$items[i]))
-        //if(i<self.$items.length-1){res += ', '}
+    if(self.$cycle){
+        self.$cycle--
+        return klass_name+'(...)'
     }
-    res = '{' + res.join(', ')+'}'
+    for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
+        var r = _.repr(self.$items[i])
+        if(r===self||r===self.$items[i]){res.push('{...}')}
+        else{res.push(r)}
+    }
+    res = res.join(', ')
+    self.$cycle--
     return head+res+tail
 }
 
 $SetDict.__sub__ = function(self, other, accept_iter){
     // Return a new set with elements in the set that are not in the others
     $test(accept_iter, other, '-')
-    var res = set()
+    var res = create_type(self)
     var cfunc = _.getattr(other,'__contains__')
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
         if(!cfunc(self.$items[i])){
@@ -221,7 +243,7 @@ $SetDict.__sub__ = function(self, other, accept_iter){
 $SetDict.__xor__ = function(self, other, accept_iter){
     // Return a new set with elements in either the set or other but not both
     $test(accept_iter, other, '^')
-    var res = set()
+    var res = create_type(self)
     var cfunc = _.getattr(other,'__contains__')
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
         if(!cfunc(self.$items[i])){
@@ -277,6 +299,7 @@ $SetDict.copy = function(){
     var $ = $B.args('copy', 1, {self:null},['self'],
         arguments, {}, null, null)
     if(_b_.isinstance($.self, frozenset)){return $.self}
+    else if(_b_.isinstance($.self, set)){return $B.clone($.self)}
     var res = set() // copy returns an instance of set, even for subclasses
     for(var i=0, _len_i = $.self.$items.length; i < _len_i;i++){
         res.$items[i]=$.self.$items[i]
@@ -443,24 +466,30 @@ require their arguments to be sets. This precludes error-prone constructions
 like set('abc') & 'cbs' in favor of the more readable 
 set('abc').intersection('cbs').
 */
-$SetDict.symmetric_difference = function(self, other){
-    return $SetDict.__xor__(self, set(other))
+
+$SetDict.difference = function(){
+    var $ = $B.args('difference', 1, {self:null}, 
+        ['self'], arguments,{},'args',null)
+    if($.args.length==0){return $SetDict.copy($.self)}
+    
+    var res = clone($.self)
+    for(var i=0;i<$.args.length;i++){
+        res = $SetDict.__sub__(res, set($.args[i]))
+    }
+    return res
 }
-$SetDict.difference = function(self, other){
-    return $SetDict.__sub__(self, set(other))
-}
-$SetDict.intersection = function(self, other){
-    return $SetDict.__and__(self, set(other))
-}
-$SetDict.issubset = function(self, other){
-    return $SetDict.__le__(self, set(other))
-}
-$SetDict.issuperset = function(self, other){
-    return $SetDict.__ge__(self, set(other))
-}
-$SetDict.union = function(self, other){
-    return $SetDict.__or__(self, set(other))
-}
+
+var fc = $SetDict.difference+'' // source code
+eval('$SetDict.intersection = '+
+    fc.replace(/difference/g, 'intersection').replace('__sub__', '__and__'))
+eval('$SetDict.symmetric_difference = '+
+    fc.replace(/difference/g, 'symmetric_difference').replace('__sub__', '__xor__'))
+eval('$SetDict.issubset = '+
+    fc.replace(/difference/g, 'issubset').replace('__sub__', '__le__'))
+eval('$SetDict.issuperset = '+
+    fc.replace(/difference/g, 'issuperset').replace('__sub__', '__ge__'))
+eval('$SetDict.union = '+
+    fc.replace(/difference/g, 'union').replace('__sub__', '__or__'))
 
 function set(){
     // Instances of set have attributes $str and $num
@@ -484,16 +513,7 @@ var $FrozensetDict = {__class__:$B.$type,__name__:'frozenset'}
 
 $FrozensetDict.__mro__ = [$FrozensetDict,_.object.$dict]
 
-$FrozensetDict.__str__=$FrozensetDict.toString=$FrozensetDict.__repr__ = function(self){
-    if(self===undefined) return "<class 'frozenset'>"
-    if(self.$items.length===0) return 'frozenset()'
 
-    var res=[]
-    for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
-        res.push(_.repr(self.$items[i]))
-    }
-    return 'frozenset({'+res.join(', ')+'})'
-}
 
 for(var attr in $SetDict){
     switch(attr) {
@@ -550,16 +570,17 @@ $FrozensetDict.__init__ = function(){
 }
 
 // Singleton for empty frozensets
-$empty_frozenset = {__class__:$FrozensetDict, $items:[]}
+var singleton_id = Math.floor(Math.random()*Math.pow(2,40))
+function empty_frozenset(){return {__class__:$FrozensetDict, $items:[], $id:singleton_id}}
 
 function frozenset(){
-    var $ =  $B.args('frozenset', 1, {iterable:null},['iterable'],
+    var $ = $B.args('frozenset', 1, {iterable:null},['iterable'],
         arguments,{iterable:null},null,null)
-    if($.iterable===null){return $empty_frozenset}
+    if($.iterable===null){return empty_frozenset()}
     else if($.iterable.__class__==$FrozensetDict){return $.iterable}
     
     var res = set($.iterable)
-    if(res.$items.length==0){return $empty_frozenset}
+    if(res.$items.length==0){return empty_frozenset()}
     res.__class__ = $FrozensetDict
     return res
 }
