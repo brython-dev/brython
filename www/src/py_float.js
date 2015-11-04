@@ -118,10 +118,6 @@ $FloatDict.__getformat__ = function(arg){
     throw _b_.ValueError("__getformat__() argument 1 must be 'double' or 'float'")
 }
 
-$FloatDict.__getitem__ = function(){
-    throw _b_.TypeError("'float' object is not subscriptable")
-}
-
 function preformat(self, fmt){
     if(fmt.empty){return _b_.str(self)}
     if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type)==-1){
