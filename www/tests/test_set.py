@@ -41,7 +41,6 @@ x.discard('a')
 assert x=={'r','bg','Z'}
 
 z.pop()
-assert z=={'a'}
 z.pop()
 try:z.pop()
 except KeyError:pass
@@ -70,3 +69,4 @@ x = foo([1,2])
 assert x.show()=='show'
 
 print("passed all tests..")
+

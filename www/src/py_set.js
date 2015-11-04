@@ -188,7 +188,7 @@ $SetDict.__ne__ = function(self,other){return !$SetDict.__eq__(self,other)}
 
 $SetDict.__or__ = function(self,other,accept_iter){
     //$test(accept_iter, other)   <===  is this needed?  causes some dict unittests to fail
-    var res = $SetDict.copy(self)
+    var res = clone(self)
     var func = _.getattr(_.iter(other),'__next__')
     while(1){
         try{$SetDict.add(res, func())}
@@ -209,8 +209,8 @@ $SetDict.__str__ = $SetDict.toString = $SetDict.__repr__ = function(self){
         return 'set()'
     }
     var klass_name = $B.get_class(self).__name__,
-        head = klass_name+'(',
-        tail = ')'
+        head = klass_name+'({',
+        tail = '})'
     if(head=='set('){head='{';tail='}'}
     var res=[]
     if(self.$cycle){
