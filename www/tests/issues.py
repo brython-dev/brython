@@ -556,3 +556,13 @@ assert -True == -1
 # issue 317
 assert eval("-1") == -1
 print('passed all tests')
+
+# issue 322
+a = 0000
+b = int(00)
+c = 000 + 1
+d = 0000 * 10
+assert a == 0
+assert b == 0
+assert c == 1
+assert d == 0
