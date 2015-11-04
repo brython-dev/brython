@@ -6890,7 +6890,14 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
             }
             // literal like "077" is not valid in Python3
             if(src.charAt(pos+1).search(/\d/)>-1){
-                $_SyntaxError(context,('invalid literal starting with 0'))
+                // literal like "000" is valid in Python3
+                if(parseInt(src.substr(pos)) === 0){
+                    res = int_pattern.exec(src.substr(pos))
+                    $pos = pos
+                    context = $transition(context,'int',[10,res[0]])
+                    pos += res[0].length
+                    break
+                }else{$_SyntaxError(context,('invalid literal starting with 0'))}
             }
           case '0':
           case '1':
