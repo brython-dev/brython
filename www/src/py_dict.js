@@ -378,7 +378,13 @@ $DictDict.__repr__ = function(self){
         var res = []
         for(var attr in self.$jsobj){
             if(attr.charAt(0)=='$' || attr=='__class__'){continue}
-            else{res.push("'"+attr+"': "+_b_.repr(self.$jsobj[attr]))}
+            else{
+                try{
+                    res.push("'"+attr+"': "+_b_.repr(self.$jsobj[attr]))
+                }catch(err){
+                    // FIX ME
+                }
+            }
         }
         return '{'+res.join(', ')+'}'
     }
@@ -470,26 +476,12 @@ $DictDict.copy = function(self){
 }
 
 $DictDict.get = function(self, key, _default){
-    if (_default === undefined) _default=None
-    switch(typeof key) {
-      case 'string':
-        return self.$string_dict[key] || _default
-      case 'number':
-        return self.$numeric_dict[key] || _default
+    try{return $DictDict.__getitem__(self, key)}
+    catch(err){
+        if(_b_.isinstance(err, _b_.KeyError)){
+            return _default === undefined ? None : _default
+        }else{throw err}
     }
-
-    var _key=hash(key)
-    if (self.$object_dict[_key] != undefined) {
-       var _eq=getattr(key, '__eq__')
-       var i=self.$object_dict[_key].length
-       while(i--) {
-           if (_eq(self.$object_dict[_key][i][0])) 
-              return self.$object_dict[_key][i][1] 
-       }
-    }
-
-    if(_default!==undefined) return _default
-    return None
 }
 
 var $dict_itemsDict = $B.$iterator_class('dict_items')
