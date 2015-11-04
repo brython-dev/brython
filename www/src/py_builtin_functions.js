@@ -592,14 +592,11 @@ function getattr(obj,attr,_default){
 }
 
 //globals() (built in function)
+
 function globals(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
-    var globals_obj = $B.last($B.frames_stack)[3]
-    //return $B.obj_dict(globals_obj)
-    var _a=[]
-    for (var key in globals_obj) _a.push([key, globals_obj[key]])
-    return _b_.dict(_a)
+    return $B.obj_dict($B.last($B.frames_stack)[3])
 }
 
 function hasattr(obj,attr){
@@ -852,7 +849,6 @@ function len(obj){
             "' has no len()")
     }
 }
-
 
 function locals(){
     // The last item in __BRYTHON__.frames_stack is
@@ -1839,6 +1835,7 @@ function frame(stack, pos){
             co_name: locals_id, // idem
             co_filename: _frame[3].__name__ // idem
         }
+        if(res.f_code.co_filename===undefined){console.log(_frame[0],_frame[1],_frame[2],_frame[3]);alert('no cofilename')}
     }
     return res
 }
