@@ -1400,7 +1400,8 @@ function $ClassCtx(context){
 
         // add attribute __module__
         rank++
-        js = name_ref+'.$dict.__module__="'+$get_module(this).module+'"'
+        js = name_ref+'.$dict.__module__=$locals_'+
+            $get_module(this).module.replace(/\./g, '_')+'.__name__'
         var mod_node = new $Node()
         new $NodeJSCtx(mod_node,js)
         node.parent.insert(rank+1,mod_node)
