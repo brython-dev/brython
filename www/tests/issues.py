@@ -555,7 +555,6 @@ assert -True == -1
 
 # issue 317
 assert eval("-1") == -1
-print('passed all tests')
 
 # issue 322
 a = 0000
@@ -566,3 +565,9 @@ assert a == 0
 assert b == 0
 assert c == 1
 assert d == 0
+
+
+# ==========================================
+# Finally, report that all tests have passed
+# ==========================================
+print('passed all tests')
