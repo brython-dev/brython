@@ -389,7 +389,7 @@ DOMNodeDict.__bool__ = function(self){return true}
 DOMNodeDict.__class__ = $B.$type
 
 DOMNodeDict.__contains__ = function(self,key){
-    try{self.__getitem__(key);return True}
+    try{DOMNodeDict.__getitem__(self, key);return True}
     catch(err){return False}
 }
 
@@ -661,9 +661,11 @@ DOMNodeDict.bind = function(self,event){
                         var msg = _b_.getattr(err, 'info')+
                             '\n'+err.__class__.__name__
                         if(err.args){msg += ': '+err.args[0]}
-                        getattr($B.stderr,"write")(msg)
+                        try{getattr($B.stderr,"write")(msg)}
+                        catch(err){console.log(msg)}
                     }else{
-                        getattr($B.stderr,"write")(err)
+                        try{getattr($B.stderr,"write")(err)}
+                        catch(err1){console.log(err)}
                     }
                 }
             }}
