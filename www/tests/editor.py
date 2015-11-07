@@ -62,8 +62,9 @@ class cOutput:
     def flush(self):
         pass
 
-sys.stdout = cOutput()
-sys.stderr = cOutput()
+if "console" in doc:
+    sys.stdout = cOutput()
+    sys.stderr = cOutput()
 
 def to_str(xx):
     return str(xx)
