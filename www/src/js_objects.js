@@ -320,7 +320,7 @@ $JSObjectDict.__setattr__ = function(self,attr,value){
             self.js[attr] = function(){
                 var args = []
                 for(var i=0, len=arguments.length;i<len;i++){
-                    args.push(jsobj2pyobj(arguments[i]))
+                    args.push($B.$JS2Py(arguments[i]))
                 }
                 try{return value.apply(null, args)}
                 catch(err){
