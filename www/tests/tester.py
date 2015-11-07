@@ -124,9 +124,7 @@ class Tester:
     def run(self, *methods):
         if not methods:
             methods = [m for m in dir(self) if m.startswith('test_')]
-        print('Test '+type(self).__name__)
-        print('{:20}{:4} {:5} Status'.format('Test', 'Line', 'Time'))
-        print('-'*37)
+        report = TestReport(type(self).__name__)
         for method in methods:
             if method.startswith('test'):
                 f = getattr(self, method)
@@ -136,11 +134,11 @@ class Tester:
                 t0 = time.time()
                 try:
                     f()
-                    print('{:<20}{:4} {:5} ok '.format(method[5:25], lineno,
-                        round((time.time()-t0)*1000)))
+                    report.add(method[5:], lineno,
+                        round((time.time()-t0)*1000), 'ok')
                 except SkipTest as exc:
-                    print('{:<20}{:4} {:5} skipped '.format(method[5:25], lineno,
-                        round((time.time()-t0)*1000)))
+                    report.add(method[5:], lineno,
+                        round((time.time()-t0)*1000), 'skipped')
                 except Exception as exc:
                     errmsg = str(exc)
                     errline = '<nc>'
@@ -148,7 +146,6 @@ class Tester:
                     try:
                         fname = tb.tb_frame.f_code.co_filename
                     except:
-                        print(method, 'fcode', tb.tb_frame.f_globals)
                         fname = '<nc>'
                     while True:
                         if fname == type(self).__module__:
@@ -158,11 +155,52 @@ class Tester:
                         if tb is None:
                             break
                         fname = tb.tb_frame.f_code.co_filename
-                    print('{:<20}{:4} {:5} error line {}: {} '.format(
-                        method[5:25], lineno, round((time.time()-t0)*1000),
-                        errline, errmsg))
-        print()
+                    report.add(method[5:], lineno, 
+                        round((time.time()-t0)*1000), 'fail', 
+                        'line {}\n{}'.format(errline, errmsg))
+        return report
+
+class MethodReport:
+    """Stores the results on a method : line number, execution time, status
+    (one of "ok", "skipped", "error") and optional additional information"""
     
+    def __init__(self, lineno, time, status, args):
+        self.lineno = lineno
+        self.time = time
+        self.status = status
+        self.args = args
+    
+    
+class TestReport:
+    """Used to store the results of tests on a class"""
+    
+    def __init__(self, class_name):
+        self.class_name = class_name
+        self.records = {}
+    
+    def add(self, method, lineno, time, status, *args):
+        self.records[method] = MethodReport(lineno, time, status, args)
+    
+    def format_html(self, name="test_report"):
+        """Returns the report as an HTML table"""
+        html = ('<table id="%s" class="report">\n' %name +
+            '<tr class="header"><th>Method</th><th>Line</th><th>Time (ms)</th>'+
+            '<th>Status</th><th>Comments</th></tr>\n')
+        methods = list(self.records.keys())
+        methods.sort()
+        for method in methods:
+            value = self.records[method]
+            html += ('<tr class="method"><td>{0}</td>'+
+                '<td class="number">{1.lineno}</td>'+
+                '<td class="number">{1.time}</td>'+
+                '<td class="report_cell">{1.status}</td>').format(method, value)
+            if value.args:
+                html += '<td><pre>{}</pre></td>'.format(value.args[0])
+            else:
+                html += '<td>&nbsp;</td>'
+            html += '</tr>\n'
+        return html + '</table>'
+         
 TestCase = Tester # unittest interface
 
 tester = Tester()
