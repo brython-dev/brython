@@ -1943,7 +1943,7 @@ $B.exception = function(js_exc){
     
     if(!js_exc.$py_error){
         // Print complete Javascript traceback in console
-        console.log(js_exc)
+        //console.log(js_exc)
         
         if($B.debug>0 && js_exc.info===undefined){
             var _frame = $B.last($B.frames_stack)
