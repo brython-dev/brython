@@ -705,7 +705,7 @@ function __import__(mod_name, globals, locals, fromlist, level) {
         ['name', 'globals', 'locals', 'fromlist', 'level'],
         arguments, {globals:None, locals:None, fromlist:_b_.tuple(), level:0},
         null, null)
-    return $B.$__import__($.name, $.locals, $.fromlist);
+    return $B.$__import__($.name, $.globals, $.locals, $.fromlist);
 }
 
 //not a direct alias of prompt: input has no default value
@@ -1968,7 +1968,7 @@ $B.exception = function(js_exc){
                     js_exc.info_in_msg = true
                 }
             }else{
-                console.log('error '+js_exc)
+                console.log('error ', js_exc)
             }
         }
         var exc = Error()

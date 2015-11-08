@@ -760,7 +760,7 @@ $B.is_none = function (o) {
 
 // Default __import__ function
 // TODO: Include at runtime in importlib.__import__
-$B.$__import__ = function (mod_name, locals, fromlist, blocking){
+$B.$__import__ = function (mod_name, globals, locals, fromlist, blocking){
    // [Import spec] Halt import logic
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.');
@@ -886,7 +886,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, blocking){
     }
     // FIXME: Should we need locals dict supply it in, now it is useless
     var modobj = _b_.getattr(__import__,
-                             '__call__')(mod_name, undefined, fromlist, blocking);
+                             '__call__')(mod_name, globals, undefined, fromlist, blocking);
 
     // Apply bindings upon local namespace
     if (!fromlist || fromlist.length == 0) {
@@ -934,9 +934,8 @@ $B.$import = function(mod_name, fromlist, aliases, locals, blocking){
                     // [Import spec] attempt to import a submodule with that name ...
                     // FIXME : level = 0 ? level = 1 ?
                     try {
-                        _b_.getattr(__import__,
-                                    '__call__')(mod_name + '.' + name,
-                                                 undefined, [], blocking);
+                        _b_.getattr(__import__, '__call__')(mod_name + '.' + name, 
+                            globals, undefined, [], blocking);
                     }
                     catch ($err2) {
                         if ($err2.__class__ = _b_.ImportError.$dict) {
