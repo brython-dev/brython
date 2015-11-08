@@ -4,10 +4,10 @@ It is a helper module to speed up interpreter start-up."""
 
 default_action = """default"""
 
-filters = "[('ignore', None, <type 'exceptions.DeprecationWarning'>, None, 0), 
-    ('ignore', None, <type 'exceptions.PendingDeprecationWarning'>, None, 0), 
-    ('ignore', None, <type 'exceptions.ImportWarning'>, None, 0), 
-    ('ignore', None, <type 'exceptions.BytesWarning'>, None, 0)]"
+filters = [('ignore', None, DeprecationWarning, None, 0), 
+    ('ignore', None, PendingDeprecationWarning, None, 0), 
+    ('ignore', None, ImportWarning, None, 0), 
+    ('ignore', None, BytesWarning, None, 0)]
 
 once_registry = {}
 
