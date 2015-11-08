@@ -54,7 +54,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-11-07 08:57:25.834354"
+__BRYTHON__.compiled_date="2015-11-08 15:04:36.482673"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -3938,7 +3938,6 @@ js[pos]+='$locals='+local_ns+';'
 var offset=0
 root.insert(0,$NodeJS(js.join('')))
 offset++
-if(!internal){
 var ds_node=new $Node()
 new $NodeJSCtx(ds_node,local_ns+'["__doc__"]='+(root.doc_string||'None')+';')
 root.insert(offset++,ds_node)
@@ -3948,7 +3947,7 @@ new $NodeJSCtx(name_node,local_ns+'["__name__"]='+local_ns+'["__name__"] || "'+l
 root.insert(offset++,name_node)
 var file_node=new $Node()
 new $NodeJSCtx(file_node,local_ns+'["__file__"]="'+$B.$py_module_path[module]+'";None;\n')
-root.insert(offset++,file_node)}
+root.insert(offset++,file_node)
 root.insert(offset++,$NodeJS('$B.enter_frame(["'+locals_id+'", '+local_ns+','+
 '"'+module+'", '+global_ns+']);\n'))
 if($B.debug>0){$add_line_num(root,null,module)}
@@ -5255,7 +5254,7 @@ function id(obj){if(isinstance(obj,[_b_.str,_b_.int,_b_.float])){return getattr(
 else{return obj.$id=$B.UUID()}}
 function __import__(mod_name,globals,locals,fromlist,level){
 var $=$B.args('__import__',5,{name:null,globals:null,locals:null,fromlist:null,level:null},['name','globals','locals','fromlist','level'],arguments,{globals:None,locals:None,fromlist:_b_.tuple(),level:0},null,null)
-return $B.$__import__($.name,$.locals,$.fromlist);}
+return $B.$__import__($.name,$.globals,$.locals,$.fromlist);}
 function input(src){var stdin=($B.imported.sys && $B.imported.sys.stdin ||$B.stdin);
 if(stdin.__original__){return prompt(src);}
 var val=_b_.getattr(stdin,'readline')();
@@ -5839,7 +5838,7 @@ if($B.$py_src[mod_name]===undefined){console.log('pas de py_src pour '+mod_name)
 var lines=$B.$py_src[mod_name].split('\n')
 js_exc.message +="\n  module '"+lib_module+"' line "+line_num
 js_exc.message +='\n'+lines[line_num-1]
-js_exc.info_in_msg=true}}else{console.log('error '+js_exc)}}
+js_exc.info_in_msg=true}}else{console.log('error ',js_exc)}}
 var exc=Error()
 exc.__name__='Internal Javascript error: '+(js_exc.__name__ ||js_exc.name)
 exc.__class__=_b_.Exception.$dict
@@ -6796,7 +6795,7 @@ delete _path;
 delete _type;
 delete _sys_paths;
 $B.is_none=function(o){return o===undefined ||o==_b_.None;}
-$B.$__import__=function(mod_name,locals,fromlist,blocking){
+$B.$__import__=function(mod_name,globals,locals,fromlist,blocking){
 var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.');
 if(modobj==_b_.None){
 throw _b_.ImportError(parent_name)}
@@ -6841,7 +6840,7 @@ console.log('use static stdlib paths ? '+$B.static_stdlib_import)}
 var current_frame=$B.frames_stack[$B.frames_stack.length-1],globals=current_frame[3],__import__=globals['__import__'];
 if(__import__===undefined){
 __import__=$B.$__import__;}
-var modobj=_b_.getattr(__import__,'__call__')(mod_name,undefined,fromlist,blocking);
+var modobj=_b_.getattr(__import__,'__call__')(mod_name,globals,undefined,fromlist,blocking);
 if(!fromlist ||fromlist.length==0){
 var alias=aliases[mod_name];
 if(alias){locals[alias]=$B.imported[mod_name];}
@@ -6861,7 +6860,7 @@ try{
 locals[alias]=_b_.getattr(modobj,name);}
 catch($err1){
 try{
-_b_.getattr(__import__,'__call__')(mod_name + '.' + name,undefined,[],blocking);}
+_b_.getattr(__import__,'__call__')(mod_name + '.' + name,globals,undefined,[],blocking);}
 catch($err2){if($err2.__class__=_b_.ImportError.$dict){throw _b_.ImportError("cannot import name '" + name + "'")}
 throw $err2;}
 try{
@@ -7516,6 +7515,10 @@ if(x<0){res=(10+x)+res;carry=1}
 else{res=x+res;carry=0}}
 while(res.charAt(0)=='0' && res.length>1){res=res.substr(1)}
 return{__class__:$LongIntDict,value:res,pos:true}}
+$LongIntDict.$from_float=function(value){var s=Math.abs(value).toString(),value=s
+if(s.search('e')>-1){var t=/-?(\d)(\.\d+)?e([+-])(\d*)/.exec(s),n1=t[1],n2=t[2],pos=t[3],exp=t[4]
+if(pos=='+'){if(n2===undefined){value=n1+'0'.repeat(exp-1)}else{value=n1+n2+'0'.repeat(exp-1-n2.length)}}}
+return{__class__:$LongIntDict,value: value,pos: value >=0}}
 $LongIntDict.__abs__=function(self){return{__class__:$LongIntDict,value: self.value,pos:true}}
 $LongIntDict.__add__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float(parseInt(self.value)+other.value)}
 if(typeof other=='number')other=LongInt(_b_.str(other))
