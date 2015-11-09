@@ -141,7 +141,10 @@ $DictDict.values = function(self){
 
 $DictDict.__bool__ = function (self) {return $DictDict.__len__(self) > 0}
 
-$DictDict.__contains__ = function(self,item){
+$DictDict.__contains__ = function(){
+    var $ = $B.args('__contains__', 2, {self:null, item:null},
+        ['self', 'item'], arguments, {}, null, null),
+        self=$.self, item=$.item
     if(self.$jsobj) return self.$jsobj[item]!==undefined
     switch(typeof item) {
       case 'string':
@@ -456,8 +459,10 @@ $DictDict.__str__ = $DictDict.__repr__
 // add "reflected" methods
 $B.make_rmethods($DictDict)
 
-$DictDict.clear = function(self){
+$DictDict.clear = function(){
     // Remove all items from the dictionary.
+    var $ = $B.args('clear',1,{self:null},['self'],arguments,{},null,null),
+        self = $.self
 
     self.$numeric_dict={}
     self.$string_dict={}
@@ -470,29 +475,11 @@ $DictDict.clear = function(self){
 
 $DictDict.copy = function(self){
     // Return a shallow copy of the dictionary
-    var res = _b_.dict()
+    var $ = $B.args('copy',1,{self:null},['self'],arguments,{},null,null),
+        self = $.self,
+        res = _b_.dict()
     $copy_dict(res, self)
     return res
-}
-
-$DictDict.get = function(self, key, _default){
-    try{return $DictDict.__getitem__(self, key)}
-    catch(err){
-        if(_b_.isinstance(err, _b_.KeyError)){
-            return _default === undefined ? None : _default
-        }else{throw err}
-    }
-}
-
-var $dict_itemsDict = $B.$iterator_class('dict_items')
-
-$DictDict.items = function(self){
-    if (arguments.length > 1) {
-       var _len=arguments.length - 1
-       var _msg="items() takes no arguments ("+_len+" given)"
-       throw _b_.TypeError(_msg)
-    }
-    return $iterator_wrapper(new $item_iterator(self), $dict_itemsDict)
 }
 
 $DictDict.fromkeys = function(keys,value){
@@ -511,6 +498,28 @@ $DictDict.fromkeys = function(keys,value){
             throw err
         }
     }
+}
+
+$DictDict.get = function(self, key, _default){
+    var $ = $B.args('get', 3, {self:null, key:null, _default:null},
+        ['self', 'key', '_default'], arguments, {_default:$N}, null, null)
+        
+    try{return $DictDict.__getitem__($.self, $.key)}
+    catch(err){
+        if(_b_.isinstance(err, _b_.KeyError)){return $._default}
+        else{throw err}
+    }
+}
+
+var $dict_itemsDict = $B.$iterator_class('dict_items')
+
+$DictDict.items = function(self){
+    if (arguments.length > 1) {
+       var _len=arguments.length - 1
+       var _msg="items() takes no arguments ("+_len+" given)"
+       throw _b_.TypeError(_msg)
+    }
+    return $iterator_wrapper(new $item_iterator(self), $dict_itemsDict)
 }
 
 $DictDict.pop = function(self,key,_default){
