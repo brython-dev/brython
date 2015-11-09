@@ -25,6 +25,11 @@ $B.vars={}
 $B._globals={}
 $B.frames_stack=[]
 $B.builtins={__repr__:function(){return "<module 'builtins>'"},__str__:function(){return "<module 'builtins'>"},}
+$B.builtins_block={id:'__builtins__',module:'__builtins__'}
+$B.modules['__builtins__']=$B.builtins_block
+$B.bound['__builtins__']={'__BRYTHON__':true,'$eval':true,'$open': true}
+$B.bound['__builtins__']['BaseException']=true
+$B.type['__builtins__']={}
 $B.builtin_funcs={}
 $B.__getattr__=function(attr){return this[attr]}
 $B.__setattr__=function(attr,value){
@@ -54,7 +59,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-11-08 22:05:19.668118"
+__BRYTHON__.compiled_date="2015-11-09 08:25:41.434118"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -5728,6 +5733,40 @@ var $Function=function(){}
 $Function.__class__=$B.$factory
 $FunctionDict.$factory=$Function
 $Function.$dict=$FunctionDict
+_b_.__BRYTHON__=__BRYTHON__
+var builtin_funcs=['abs','all','any','ascii','bin','bool','bytearray','bytes','callable','chr','classmethod','compile','complex','delattr','dict','dir','divmod','enumerate','eval','exec','exit','filter','float','format','frozenset','getattr','globals','hasattr','hash','help','hex','id','input','int','isinstance','issubclass','iter','len','list','locals','map','max','memoryview','min','next','object','oct','open','ord','pow','print','property','quit','range','repr','reversed','round','set','setattr','slice','sorted','staticmethod','str','sum','$$super','tuple','type','vars','zip']
+for(var i=0;i<builtin_funcs.length;i++){var name=builtin_funcs[i]
+if(name=='open'){name1='$url_open'}
+if(name=='super'){name='$$super'}
+if(name=='eval'){name='$eval'}
+$B.builtin_funcs[name]=true}
+$B.builtin_funcs['$eval']=true
+var other_builtins=['Ellipsis','False','None','True','__debug__','__import__','copyright','credits','license','NotImplemented','type']
+var builtin_names=builtin_funcs.concat(other_builtins)
+for(var i=0;i<builtin_names.length;i++){var name=builtin_names[i]
+var orig_name=name
+var name1=name
+if(name=='open'){name1='$url_open'}
+if(name=='super'){name='$$super'}
+if(name=='eval'){name=name1='$eval'}
+if(name=='print'){name1='$print'}
+$B.bound['__builtins__'][name]=true
+try{_b_[name]=eval(name1)
+if($B.builtin_funcs[name]!==undefined){
+if(_b_[name].__repr__===undefined){
+_b_[name].__repr__=_b_[name].__str__=(function(x){return function(){return '<built-in function '+x+'>'}})(orig_name)}
+_b_[name].__module__='builtins'
+_b_[name].__name__=name
+_b_[name].__defaults__=_b_[name].__defaults__ ||[]
+_b_[name].__kwdefaults__=_b_[name].__kwdefaults__ ||{}
+_b_[name].__annotations__=_b_[name].__annotations__ ||{}}
+_b_[name].__doc__=_b_[name].__doc__ ||''}
+catch(err){}}
+_b_['$eval']=$eval
+_b_['open']=$url_open
+_b_['print']=$print
+_b_['$$super']=$$super})(__BRYTHON__)
+;(function($B){eval($B.InjectBuiltins())
 var $TracebackDict={__class__:$B.$type,__name__:'traceback'}
 $TracebackDict.__getattribute__=function(self,attr){if(self.stack.length==0){alert('no stack',attr)}
 var last_frame=$B.last(self.stack)
@@ -5748,14 +5787,14 @@ if(self.stack.length==1){return None}
 else{return traceback(self.stack.slice(0,self.stack.length-1))}
 default:
 return $TracebackDict[attr]}}
-$TracebackDict.__mro__=[$TracebackDict,$ObjectDict]
+$TracebackDict.__mro__=[$TracebackDict,_b_.object.$dict]
 $TracebackDict.__str__=function(self){return '<traceback object>'}
 function traceback(stack){return{__class__ : $TracebackDict,stack : stack}}
 traceback.__class__=$B.$factory
 traceback.$dict=$TracebackDict
 $TracebackDict.$factory=traceback
 var $FrameDict={__class__:$B.$type,__name__:'frame'}
-$FrameDict.__mro__=[$FrameDict,$ObjectDict]
+$FrameDict.__mro__=[$FrameDict,_b_.object.$dict]
 function to_dict(obj){var res=_b_.dict()
 var setitem=_b_.dict.$dict.__setitem__
 for(var attr in obj){if(attr.charAt(0)=='$'){continue}
@@ -5785,7 +5824,7 @@ var $BaseExceptionDict={__class__:$B.$type,__bases__ :[_b_.object],__module__:'b
 $BaseExceptionDict.__init__=function(self){self.args=_b_.tuple([arguments[1]])}
 $BaseExceptionDict.__repr__=function(self){return self.__class__.__name__+repr(self.args)}
 $BaseExceptionDict.__str__=function(self){return self.args[0]}
-$BaseExceptionDict.__mro__=[$BaseExceptionDict,$ObjectDict]
+$BaseExceptionDict.__mro__=[$BaseExceptionDict,_b_.object.$dict]
 $BaseExceptionDict.__new__=function(cls){var err=_b_.BaseException()
 err.__name__=cls.$dict.__name__
 err.__class__=cls.$dict
@@ -5860,12 +5899,6 @@ var exc_class=exc.__class__.$factory
 for(var i=0;i<exc_list.length;i++){if(issubclass(exc_class,exc_list[i]))return true}
 return false}
 $B.clear_exc=function(){$B.current_exception=null}
-$B.builtins_block={id:'__builtins__',module:'__builtins__'}
-$B.modules['__builtins__']=$B.builtins_block
-$B.bound['__builtins__']={'__BRYTHON__':true,'$eval':true,'$open': true}
-$B.bound['__builtins__']['BaseException']=true
-$B.type['__builtins__']={}
-_b_.__BRYTHON__=__BRYTHON__
 function $make_exc(names,parent){
 var _str=[],pos=0
 for(var i=0;i<names.length;i++){var name=names[i]
@@ -5896,39 +5929,7 @@ $make_exc(['DeprecationWarning','PendingDeprecationWarning','RuntimeWarning','Sy
 $make_exc(['EnvironmentError','IOError','VMSError','WindowsError'],_b_.OSError)
 $B.$NameError=function(name){
 throw _b_.NameError(name)}
-$B.$TypeError=function(msg){throw _b_.TypeError(msg)}
-var builtin_funcs=['abs','all','any','ascii','bin','bool','bytearray','bytes','callable','chr','classmethod','compile','complex','delattr','dict','dir','divmod','enumerate','eval','exec','exit','filter','float','format','frozenset','getattr','globals','hasattr','hash','help','hex','id','input','int','isinstance','issubclass','iter','len','list','locals','map','max','memoryview','min','next','object','oct','open','ord','pow','print','property','quit','range','repr','reversed','round','set','setattr','slice','sorted','staticmethod','str','sum','$$super','tuple','type','vars','zip']
-for(var i=0;i<builtin_funcs.length;i++){var name=builtin_funcs[i]
-if(name=='open'){name1='$url_open'}
-if(name=='super'){name='$$super'}
-if(name=='eval'){name='$eval'}
-$B.builtin_funcs[name]=true}
-$B.builtin_funcs['$eval']=true
-var other_builtins=['Ellipsis','False','None','True','__debug__','__import__','copyright','credits','license','NotImplemented','type']
-var builtin_names=builtin_funcs.concat(other_builtins)
-for(var i=0;i<builtin_names.length;i++){var name=builtin_names[i]
-var orig_name=name
-var name1=name
-if(name=='open'){name1='$url_open'}
-if(name=='super'){name='$$super'}
-if(name=='eval'){name=name1='$eval'}
-if(name=='print'){name1='$print'}
-$B.bound['__builtins__'][name]=true
-try{_b_[name]=eval(name1)
-if($B.builtin_funcs[name]!==undefined){
-if(_b_[name].__repr__===undefined){
-_b_[name].__repr__=_b_[name].__str__=(function(x){return function(){return '<built-in function '+x+'>'}})(orig_name)}
-_b_[name].__module__='builtins'
-_b_[name].__name__=name
-_b_[name].__defaults__=_b_[name].__defaults__ ||[]
-_b_[name].__kwdefaults__=_b_[name].__kwdefaults__ ||{}
-_b_[name].__annotations__=_b_[name].__annotations__ ||{}}
-_b_[name].__doc__=_b_[name].__doc__ ||''}
-catch(err){}}
-_b_['$eval']=$eval
-_b_['open']=$url_open
-_b_['print']=$print
-_b_['$$super']=$$super})(__BRYTHON__)
+$B.$TypeError=function(msg){throw _b_.TypeError(msg)}})(__BRYTHON__)
 
 ;(function($B){var _b_=$B.builtins,None=_b_.None,$RangeDict={__class__:$B.$type,__dir__:_b_.object.$dict.__dir__,__name__:'range',$native:true}
 $RangeDict.__contains__=function(self,other){if($RangeDict.__len__(self)==0){return false}
