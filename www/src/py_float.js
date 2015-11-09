@@ -549,7 +549,6 @@ var float = function (value){
            if (isFinite(value)) return $FloatClass(eval(value))
        }
     }
-    console.log('error', value)
     throw _b_.ValueError("Could not convert to float(): '"+_b_.str(value)+"'")
 }
 float.__class__ = $B.$factory
