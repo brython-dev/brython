@@ -601,7 +601,8 @@ function $AssignCtx(context, check_unbound){
             var packed = null
             for(var i=0;i<left_items.length;i++){
                 var expr = left_items[i]
-                if(expr.type=='expr' && expr.tree[0].type=='packed'){
+                if(expr.type=='packed' ||
+                  (expr.type=='expr' && expr.tree[0].type=='packed')){
                     packed = i
                     break
                 }
@@ -2461,7 +2462,6 @@ function $ForExpr(context){
     this.toString = function(){return '(for) '+this.tree}
     
     this.transform = function(node,rank){
-    
         var scope = $get_scope(this),
             mod_name = scope.module,
             target = this.tree[0],
@@ -6318,7 +6318,11 @@ function $transition(context,token){
         }
         return $transition(context.parent,token)
       case 'packed':
-        if(token==='id'){new $IdCtx(context,arguments[2]);return context.parent}
+        if(token==='id'){
+            new $IdCtx(context,arguments[2])
+            context.parent.expect = ','
+            return context.parent
+        }
         $_SyntaxError(context,'token '+token+' after '+context)
       case 'pass':
         if(token==='eol') return context.parent
@@ -6360,6 +6364,13 @@ function $transition(context,token){
       case 'star_arg':
         switch(token) {
           case 'id':
+            if(context.parent.type=="target_list"){
+                context.tree.push(arguments[2])
+                context.parent.expect = ','
+                console.log('return parent', context.parent)
+                return context.parent
+            }
+            return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
           case 'imaginary':
           case 'int':
           case 'float':
@@ -6426,6 +6437,11 @@ function $transition(context,token){
               new $IdCtx(context,arguments[2])
               return context
             }
+          case 'op':
+            if(context.expect=='id' && arguments[2]=='*'){
+                // form "for a, *b in X"
+                return new $PackedCtx(context)
+            }
           case '(':
           case '[':
             if(context.expect==='id'){
@@ -6442,7 +6458,9 @@ function $transition(context,token){
             }
         } //switch
 
-        if(context.expect===',') return $transition(context.parent,token,arguments[2])
+        if(context.expect===',') {
+            return $transition(context.parent,token,arguments[2])
+        }
         $_SyntaxError(context,'token '+token+' after '+context)
       case 'ternary':
         if(token==='else'){

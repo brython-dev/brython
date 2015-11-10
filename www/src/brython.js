@@ -59,7 +59,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-11-09 08:25:41.434118"
+__BRYTHON__.compiled_date="2015-11-10 21:03:54.868382"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -314,7 +314,8 @@ new $NodeJSCtx(rlist_node,js)
 new_nodes[pos++]=rlist_node
 var packed=null
 for(var i=0;i<left_items.length;i++){var expr=left_items[i]
-if(expr.type=='expr' && expr.tree[0].type=='packed'){packed=i
+if(expr.type=='packed' ||
+(expr.type=='expr' && expr.tree[0].type=='packed')){packed=i
 break}}
 var check_node=new $Node()
 var min_length=left_items.length
@@ -3451,7 +3452,9 @@ if(t0.tree && t1.tree){t0=t0.tree[0]
 t1=t1.tree[0]}
 return $transition(C.parent,token)
 case 'packed':
-if(token==='id'){new $IdCtx(C,arguments[2]);return C.parent}
+if(token==='id'){new $IdCtx(C,arguments[2])
+C.parent.expect=','
+return C.parent}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'pass':
 if(token==='eol')return C.parent
@@ -3477,6 +3480,11 @@ if(token===':')return $BodyCtx(C)
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'star_arg':
 switch(token){case 'id':
+if(C.parent.type=="target_list"){C.tree.push(arguments[2])
+C.parent.expect=','
+console.log('return parent',C.parent)
+return C.parent}
+return $transition(new $AbstractExprCtx(C,false),token,arguments[2])
 case 'imaginary':
 case 'int':
 case 'float':
@@ -3530,6 +3538,9 @@ switch(token){case 'id':
 if(C.expect==='id'){C.expect=','
 new $IdCtx(C,arguments[2])
 return C}
+case 'op':
+if(C.expect=='id' && arguments[2]=='*'){
+return new $PackedCtx(C)}
 case '(':
 case '[':
 if(C.expect==='id'){C.expect=','
@@ -3540,7 +3551,7 @@ if(C.expect===',')return C.parent
 case ',':
 if(C.expect==','){C.expect='id'
 return C}}
-if(C.expect===',')return $transition(C.parent,token,arguments[2])
+if(C.expect===','){return $transition(C.parent,token,arguments[2])}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'ternary':
 if(token==='else'){C.in_else=true
@@ -7151,7 +7162,6 @@ case '':
 throw _b_.ValueError('count not convert string to float')
 default:
 if(isFinite(value))return $FloatClass(eval(value))}}
-console.log('error',value)
 throw _b_.ValueError("Could not convert to float(): '"+_b_.str(value)+"'")}
 float.__class__=$B.$factory
 float.$dict=$FloatDict
@@ -8969,7 +8979,8 @@ var _msg="values() takes no arguments ("+_len+" given)"
 throw _b_.TypeError(_msg)}
 return $iterator_wrapper(new $value_iterator(self),$dict_valuesDict)}
 $DictDict.__bool__=function(self){return $DictDict.__len__(self)> 0}
-$DictDict.__contains__=function(self,item){if(self.$jsobj)return self.$jsobj[item]!==undefined
+$DictDict.__contains__=function(){var $=$B.args('__contains__',2,{self:null,item:null},['self','item'],arguments,{},null,null),self=$.self,item=$.item
+if(self.$jsobj)return self.$jsobj[item]!==undefined
 switch(typeof item){case 'string':
 return self.$string_dict[item]!==undefined
 case 'number':
@@ -9119,7 +9130,8 @@ self.$object_dict[_key]=[[key,value]]}
 return $N}
 $DictDict.__str__=$DictDict.__repr__
 $B.make_rmethods($DictDict)
-$DictDict.clear=function(self){
+$DictDict.clear=function(){
+var $=$B.args('clear',1,{self:null},['self'],arguments,{},null,null),self=$.self
 self.$numeric_dict={}
 self.$string_dict={}
 self.$str_hash={}
@@ -9127,16 +9139,9 @@ self.$object_dict={}
 if(self.$jsobj)self.$jsobj={}
 return $N}
 $DictDict.copy=function(self){
-var res=_b_.dict()
+var $=$B.args('copy',1,{self:null},['self'],arguments,{},null,null),self=$.self,res=_b_.dict()
 $copy_dict(res,self)
 return res}
-$DictDict.get=function(self,key,_default){try{return $DictDict.__getitem__(self,key)}
-catch(err){if(_b_.isinstance(err,_b_.KeyError)){return _default===undefined ? None : _default}else{throw err}}}
-var $dict_itemsDict=$B.$iterator_class('dict_items')
-$DictDict.items=function(self){if(arguments.length > 1){var _len=arguments.length - 1
-var _msg="items() takes no arguments ("+_len+" given)"
-throw _b_.TypeError(_msg)}
-return $iterator_wrapper(new $item_iterator(self),$dict_itemsDict)}
 $DictDict.fromkeys=function(keys,value){
 if(value===undefined)value=None
 var res=dict()
@@ -9144,6 +9149,15 @@ var keys_iter=_b_.iter(keys)
 while(1){try{var key=_b_.next(keys_iter)
 $DictDict.__setitem__(res,key,value)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return res}
 throw err}}}
+$DictDict.get=function(self,key,_default){var $=$B.args('get',3,{self:null,key:null,_default:null},['self','key','_default'],arguments,{_default:$N},null,null)
+try{return $DictDict.__getitem__($.self,$.key)}
+catch(err){if(_b_.isinstance(err,_b_.KeyError)){return $._default}
+else{throw err}}}
+var $dict_itemsDict=$B.$iterator_class('dict_items')
+$DictDict.items=function(self){if(arguments.length > 1){var _len=arguments.length - 1
+var _msg="items() takes no arguments ("+_len+" given)"
+throw _b_.TypeError(_msg)}
+return $iterator_wrapper(new $item_iterator(self),$dict_itemsDict)}
 $DictDict.pop=function(self,key,_default){try{var res=$DictDict.__getitem__(self,key)
 $DictDict.__delitem__(self,key)
 return res}catch(err){if(err.__name__==='KeyError'){if(_default!==undefined)return _default

@@ -566,6 +566,10 @@ assert b == 0
 assert c == 1
 assert d == 0
 
+# unpacking in target list
+for a,*b in [[1, 2, 3]]:
+    assert a == 1
+    assert b == [2, 3]
 
 # ==========================================
 # Finally, report that all tests have passed
