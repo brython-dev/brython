@@ -59,7 +59,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-11-10 21:03:54.868382"
+__BRYTHON__.compiled_date="2015-11-11 18:19:44.033150"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -2745,7 +2745,7 @@ break
 case ',':
 if(C.expect===','){if(C.parent.kwargs && 
 ['kwarg','double_star_arg'].indexOf($B.last(C.parent.tree).tree[0].type)==-1){$_SyntaxError(C,['non-keyword arg after keyword arg'])}
-return new $CallArgCtx(C.parent)}
+return $transition(C.parent,token,arguments[2])}
 console.log('C '+C+'token '+token+' expect '+C.expect)}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'class':
@@ -4168,11 +4168,14 @@ catch(err){}}
 if(attr.substr(0,2)=='__' && attr.substr(attr.length-2)=='__'){var attr1=attr.substr(2,attr.length-4)
 var rank=opnames.indexOf(attr1)
 if(rank > -1){var rop='__r'+opnames[rank]+'__' 
-return function(){try{
-if($B.$get_class(arguments[0])===klass){throw Error('')}
-return _b_.getattr(arguments[0],rop)(obj)}catch(err){var msg="unsupported operand types for "+opsigns[rank]+": '"
-msg +=klass.__name__+"' and '" 
-throw _b_.TypeError(msg)}}}}}}
+var func=function(){try{
+if($B.get_class(arguments[0])===klass){throw Error('')}
+return _b_.getattr(arguments[0],rop)(obj)}catch(err){var msg="unsupported operand types for "+
+opsigns[rank]+": '"+ klass.__name__+"' and '"+
+$B.get_class(arguments[0]).__name__+"'"
+throw _b_.TypeError(msg)}}
+func.$infos={__name__ : klass.__name__+'.'+attr}
+return func}}}}
 $ObjectDict.__gt__=$ObjectNI('__gt__','>')
 $ObjectDict.__hash__=function(self){$B.$py_next_hash+=1;
 return $B.$py_next_hash;}
@@ -4548,8 +4551,7 @@ $root.caller=$B.line_info
 var $js=$root.to_js()
 try{eval($js)
 var res=eval('$locals_'+listcomp_name+'["x"+$ix]')}
-catch(err){console.log('list comp error\n',err)
-throw $B.exception(err)}
+catch(err){throw $B.exception(err)}
 finally{clear(listcomp_name)}
 return res}
 $B.$list_comp1=function(items){
@@ -4843,7 +4845,6 @@ break}}
 return{'_type_': 'iter',data: _a}}
 if(_b_.hasattr(obj,'__getstate__')){return _b_.getattr(obj,'__getstate__')()}
 if(_b_.hasattr(obj,'__dict__')){return $B.pyobject2jsobject(_b_.getattr(obj,'__dict__'))}
-console.log('error',obj)
 throw _b_.TypeError(_b_.str(obj)+' is not JSON serializable')}
 $B.set_line=function(line_num,module_name){$B.line_info=line_num+','+module_name
 return _b_.None}
@@ -5820,8 +5821,8 @@ var locals_id=_frame[0]
 try{res.f_locals=$B.obj_dict(_frame[1])}catch(err){console.log('err '+err)
 throw err}
 res.f_globals=$B.obj_dict(_frame[3])
-if($B.debug>0){if(_frame[1].$line_info===undefined){return 1}
-res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}else{res.f_lineno=-1}
+if($B.debug>0){if(_frame[1].$line_info===undefined){res.f_lineno=-1}
+else{res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}}else{res.f_lineno=-1}
 res.f_code={__class__:$B.$CodeDict,co_code:None,
 co_name: locals_id,
 co_filename: _frame[3].__name__ }
@@ -5834,7 +5835,7 @@ $B._frame=frame
 var $BaseExceptionDict={__class__:$B.$type,__bases__ :[_b_.object],__module__:'builtins',__name__:'BaseException'}
 $BaseExceptionDict.__init__=function(self){self.args=_b_.tuple([arguments[1]])}
 $BaseExceptionDict.__repr__=function(self){return self.__class__.__name__+repr(self.args)}
-$BaseExceptionDict.__str__=function(self){return self.args[0]}
+$BaseExceptionDict.__str__=function(self){return _b_.str(self.args[0])}
 $BaseExceptionDict.__mro__=[$BaseExceptionDict,_b_.object.$dict]
 $BaseExceptionDict.__new__=function(cls){var err=_b_.BaseException()
 err.__name__=cls.$dict.__name__
@@ -6171,6 +6172,9 @@ $BytesDict.__le__=function(self,other){return _b_.list.$dict.__le__(self.source,
 $BytesDict.__len__=function(self){return self.source.length}
 $BytesDict.__lt__=function(self,other){return _b_.list.$dict.__lt__(self.source,other.source)}
 $BytesDict.__mro__=[$BytesDict,$ObjectDict]
+$BytesDict.__mul__=function(){var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],arguments,{},null,null),other=$B.PyNumber_Index($.other),res=bytes()
+for(var i=0;i<other;i++){res.source=res.source.concat($.self.source)}
+return res}
 $BytesDict.__ne__=function(self,other){return !$BytesDict.__eq__(self,other)}
 $BytesDict.__repr__=$BytesDict.__str__=function(self){var res="b'"
 for(var i=0,_len_i=self.source.length;i < _len_i;i++){var s=self.source[i]
@@ -7134,6 +7138,12 @@ default:
 var $opfunc='__'+$B.$operators[$op]+'__'
 if($FloatDict[$opfunc]===undefined){eval('$FloatDict.'+$opfunc+"="+$notimplemented.replace(/OPERATOR/gm,$op))}}}
 function $FloatClass(value){return new Number(value)}
+function to_digits(s){
+var arabic_digits='\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669',res=''
+for(var i=0;i<s.length;i++){var x=arabic_digits.indexOf(s[i])
+if(x>-1){res +=x}
+else{res +=s[i]}}
+return res}
 var float=function(value){switch(value){case undefined:
 return $FloatClass(0.0)
 case Number.MAX_VALUE:
@@ -7142,7 +7152,9 @@ case -Number.MAX_VALUE:
 return $FloatClass(-Infinity)}
 if(typeof value=="number")return $FloatClass(value)
 if(isinstance(value,float)){return value}
-if(isinstance(value,_b_.bytes)){return $FloatClass(parseFloat(getattr(value,'decode')('latin-1')))}
+if(isinstance(value,_b_.bytes)){var s=getattr(value,'decode')('latin-1')
+console.log('float bytes',s)
+return float(getattr(value,'decode')('latin-1'))}
 if(hasattr(value,'__float__')){return $FloatClass(getattr(value,'__float__')())}
 if(typeof value=='string'){value=value.trim()
 switch(value.toLowerCase()){case '+inf':
@@ -7161,8 +7173,13 @@ return -Number.NaN
 case '':
 throw _b_.ValueError('count not convert string to float')
 default:
-if(isFinite(value))return $FloatClass(eval(value))}}
-throw _b_.ValueError("Could not convert to float(): '"+_b_.str(value)+"'")}
+value=to_digits(value)
+if(isFinite(value))return $FloatClass(eval(value))
+else{
+_b_.str.$dict.encode(value,'latin-1')
+throw _b_.ValueError("Could not convert to float(): '"+_b_.str(value)+"'")}}}
+throw _b_.TypeError("float() argument must be a string or a number, not '"+
+$B.get_class(value).__name__+"'")}
 float.__class__=$B.$factory
 float.$dict=$FloatDict
 $FloatDict.$factory=float
@@ -8897,7 +8914,7 @@ pos+=2;car=spec.charAt(pos)
 while(car && digits.indexOf(car)>-1){this.precision+=car;pos++;car=spec.charAt(pos)}
 this.precision=parseInt(this.precision)}
 if(car && types.indexOf(car)>-1){this.type=car;pos++;car=spec.charAt(pos)}
-if(pos!==spec.length){console.log('error',spec,this,pos,spec.charAt(pos))
+if(pos!==spec.length){
 throw _b_.ValueError("Invalid format specifier")}}
 this.toString=function(){return(this.fill===undefined ? '' : _b_.str(this.fill))+
 (this.align||'')+

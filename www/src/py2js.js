@@ -5291,7 +5291,8 @@ function $transition(context,token){
                 ['kwarg','double_star_arg'].indexOf($B.last(context.parent.tree).tree[0].type)==-1){
                   $_SyntaxError(context, ['non-keyword arg after keyword arg'])
               }
-              return new $CallArgCtx(context.parent)
+              //return new $CallArgCtx(context.parent)
+              return $transition(context.parent, token, arguments[2])
             }
             console.log('context '+context+'token '+token+' expect '+context.expect)
         }// switch
