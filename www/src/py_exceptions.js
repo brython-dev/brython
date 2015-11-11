@@ -83,8 +83,8 @@ function frame(stack, pos){
         }
         res.f_globals = $B.obj_dict(_frame[3])
         if($B.debug>0){
-            if(_frame[1].$line_info === undefined){return 1}
-            res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])
+            if(_frame[1].$line_info === undefined){res.f_lineno=-1}
+            else{res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])}
         }else{
             res.f_lineno = -1
         }
@@ -122,7 +122,7 @@ $BaseExceptionDict.__repr__ = function(self){
 }
 
 $BaseExceptionDict.__str__ = function(self){
-    return self.args[0]
+    return _b_.str(self.args[0])
 }
 
 $BaseExceptionDict.__mro__ = [$BaseExceptionDict,_b_.object.$dict]
