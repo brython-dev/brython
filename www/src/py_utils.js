@@ -188,7 +188,6 @@ $B.$list_comp = function(env){
         var res = eval('$locals_'+listcomp_name+'["x"+$ix]')
     }
     catch(err){
-        console.log('list comp error\n',err)
         throw $B.exception(err)
     }
     finally{
@@ -830,7 +829,6 @@ $B.pyobject2jsobject=function (obj){
     if (_b_.hasattr(obj, '__dict__')) {
        return $B.pyobject2jsobject(_b_.getattr(obj, '__dict__'))
     }
-    console.log('error', obj)
     throw _b_.TypeError(_b_.str(obj)+' is not JSON serializable')
 }
 

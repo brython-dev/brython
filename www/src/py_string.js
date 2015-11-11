@@ -1748,7 +1748,7 @@ $B.parse_format_spec = function(spec){
         }
         if(car && types.indexOf(car)>-1){this.type=car;pos++;car=spec.charAt(pos)}
         if(pos!==spec.length){
-            console.log('error', spec, this, pos, spec.charAt(pos))
+            //console.log('error', spec, this, pos, spec.charAt(pos))
             throw _b_.ValueError("Invalid format specifier")
         }
     }    
