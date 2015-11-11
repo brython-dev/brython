@@ -1,6 +1,7 @@
 # Python test set -- built-in functions
 
-import tester
+import unittest
+from test import support
 
 import sys
 import pickle
@@ -21,7 +22,7 @@ def pyrange_reversed(start, stop, step):
     return pyrange(stop - step, start - step, -step)
 
 
-class RangeTest(tester.Tester):
+class RangeTest(unittest.TestCase):
     def assert_iterators_equal(self, xs, ys, test_id, limit=None):
         # check that an iterator xs matches the expected results ys,
         # up to a given limit.
@@ -622,13 +623,8 @@ class RangeTest(tester.Tester):
             del rangeobj.step
 
 def test_main():
-    test.support.run_unittest(RangeTest)
+    support.run_unittest(RangeTest)
 
 if __name__ == "__main__":
-    test = RangeTest()
-    methods = [m for m in dir(test) if m.startswith('test_')]
-    methods.sort()
-    for method in methods:
-        print(method)
-        getattr(test, method)()
+    test_main()
 
