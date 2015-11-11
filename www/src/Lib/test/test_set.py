@@ -702,7 +702,7 @@ class TestFrozenSet(TestJointOps, unittest.TestCase):
         self.assertEqual(hash(f), hash(f))
 
     def test_hash_effectiveness(self):
-        n = 13
+        n = 8 #13
         hashvalues = set()
         addhashvalue = hashvalues.add
         elemmasks = [(i+1, 1<<i) for i in range(n)]
