@@ -80,8 +80,10 @@ class _AssertRaisesContext(_AssertRaisesBaseContext):
 
 class Tester:
     
-    def assertEqual(self, result, expected):
+    def assertEqual(self, result, expected, msg=None):
         if result != expected:
+            if msg is not None:
+                raise AssertionError(msg)
             raise AssertionError('assertEqual, expected %s, got %s' 
                 %(expected, result))
 
@@ -97,6 +99,10 @@ class Tester:
     def assertIs(self, a, b):
         if not a is b:
             raise AssertionError('%s is %s should be true' %(a,b))
+
+    def assertIsInstance(self, obj, klass):
+        if not isinstance(obj, klass):
+            raise AssertionError('%s is not an instance of %s' %(obj, klass))
 
     def assertIsNot(self, a, b):
         if a is b:
@@ -137,6 +143,7 @@ class Tester:
                     report.add(method[5:], lineno,
                         round((time.time()-t0)*1000), 'ok')
                 except SkipTest as exc:
+                    print('skip test', exc)
                     report.add(method[5:], lineno,
                         round((time.time()-t0)*1000), 'skipped')
                 except Exception as exc:
@@ -184,7 +191,7 @@ class TestReport:
     def format_html(self, name="test_report"):
         """Returns the report as an HTML table"""
         html = ('<table id="%s" class="report">\n' %name +
-            '<tr class="header"><th>Method</th><th>Line</th><th>Time (ms)</th>'+
+            '<tr class="header"><th>Test</th><th>Line</th><th>Time (ms)</th>'+
             '<th>Status</th><th>Comments</th></tr>\n')
         methods = list(self.records.keys())
         methods.sort()
@@ -208,6 +215,26 @@ assertRaises = tester.assertRaises
 
 class SkipTest(Exception):
     pass
+
+def skip(msg):
+    def decorator(f):
+        def g(*args, **kw):
+            print('raise skip test')
+            raise SkipTest(msg)
+        return g
+    return decorator
+
+def skipUnless(condition, msg):
+    if condition:
+        def decorator(f):
+            return f
+    else:
+        def decorator(f):
+            def g(*args, **kw):
+                print('raise skip test')
+                raise SkipTest(msg)
+            return g
+    return decorator
 
 class Support:
 
