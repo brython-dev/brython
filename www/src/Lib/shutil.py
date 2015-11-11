@@ -13,22 +13,26 @@ import collections
 import errno
 import tarfile
 
-try:
+"""try:
     import bz2
     del bz2
     _BZ2_SUPPORTED = True
 except ImportError:
-    _BZ2_SUPPORTED = False
+    _BZ2_SUPPORTED = False"""
+
+_BZ2_SUPPORTED = False
 
 try:
     from pwd import getpwnam
 except ImportError:
     getpwnam = None
 
-try:
+"""try:
     from grp import getgrnam
 except ImportError:
-    getgrnam = None
+    getgrnam = None"""
+
+getgrnam = None
 
 __all__ = ["copyfileobj", "copyfile", "copymode", "copystat", "copy", "copy2",
            "copytree", "move", "rmtree", "Error", "SpecialFileError",

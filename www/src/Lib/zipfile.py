@@ -14,7 +14,7 @@ import shutil
 import struct
 import binascii
 
-
+"""
 try:
     import zlib # We may need its compression method
     crc32 = zlib.crc32
@@ -31,6 +31,11 @@ try:
     import lzma # We may need its compression method
 except ImportError:
     lzma = None
+"""
+zlib = None
+crc32 = binascii.crc32
+bz2 = None
+lzma = None
 
 __all__ = ["BadZipFile", "BadZipfile", "error",
            "ZIP_STORED", "ZIP_DEFLATED", "ZIP_BZIP2", "ZIP_LZMA",

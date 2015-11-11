@@ -42,25 +42,29 @@ try:
 except ImportError:
     zlib = None
 
-try:
+"""try:
     import gzip
 except ImportError:
-    gzip = None
+    gzip = None"""
+gzip = None
 
-try:
+"""try:
     import bz2
 except ImportError:
-    bz2 = None
+    bz2 = None"""
+bz2 = None
 
-try:
+"""try:
     import lzma
 except ImportError:
-    lzma = None
+    lzma = None"""
+lzma = None
 
-try:
+"""try:
     import resource
 except ImportError:
-    resource = None
+    resource = None"""
+resource = None
 
 __all__ = [
     # globals
