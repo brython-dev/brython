@@ -251,17 +251,20 @@ $ObjectDict.__getattribute__ = function(obj,attr){
             var rank = opnames.indexOf(attr1)
             if(rank > -1){
                 var rop = '__r'+opnames[rank]+'__' // name of reflected operator
-                return function(){
+                var func = function(){
                     try{
                         // Operands must be of different types
-                        if($B.$get_class(arguments[0])===klass){throw Error('')}
+                        if($B.get_class(arguments[0])===klass){throw Error('')}
                         return _b_.getattr(arguments[0],rop)(obj)
                     }catch(err){
-                        var msg = "unsupported operand types for "+opsigns[rank]+": '"
-                        msg += klass.__name__+"' and '" //+arguments[0].__class__.__name__+"'"
+                        var msg = "unsupported operand types for "+
+                            opsigns[rank]+": '"+ klass.__name__+"' and '"+
+                            $B.get_class(arguments[0]).__name__+"'"
                         throw _b_.TypeError(msg)
                     }
                 }
+                func.$infos = {__name__ : klass.__name__+'.'+attr}
+                return func
             }
         }
         //throw AttributeError('object '+obj.__class__.__name__+" has no attribute '"+attr+"'")
