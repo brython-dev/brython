@@ -506,6 +506,18 @@ function $FloatClass(value){
     return new Number(value)
 }
 
+function to_digits(s){
+    // Transform a string to another string where all arabic-indic digits
+    // are converted to latin digits
+    var arabic_digits = '\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669',
+        res = ''
+    for(var i=0;i<s.length;i++){
+        var x = arabic_digits.indexOf(s[i])
+        if(x>-1){res += x}
+        else{res += s[i]}
+    }
+    return res
+}
 
 // constructor for built-in class 'float'
 var float = function (value){
@@ -522,7 +534,9 @@ var float = function (value){
     if(typeof value=="number") return $FloatClass(value)
     if(isinstance(value,float)) {return value}
     if(isinstance(value,_b_.bytes)) {
-      return $FloatClass(parseFloat(getattr(value,'decode')('latin-1')))
+      var s = getattr(value,'decode')('latin-1')
+      console.log('float bytes', s)
+      return float(getattr(value,'decode')('latin-1'))
     }
     if(hasattr(value, '__float__')) {
       return $FloatClass(getattr(value, '__float__')())
@@ -546,10 +560,16 @@ var float = function (value){
          case '':
            throw _b_.ValueError('count not convert string to float')
          default:
+           value = to_digits(value) // convert arabic-indic digits to latin
            if (isFinite(value)) return $FloatClass(eval(value))
+           else {
+               _b_.str.$dict.encode(value, 'latin-1') // raises UnicodeEncodeError if not valid    
+               throw _b_.ValueError("Could not convert to float(): '"+_b_.str(value)+"'")
+           }
        }
     }
-    throw _b_.ValueError("Could not convert to float(): '"+_b_.str(value)+"'")
+    throw _b_.TypeError("float() argument must be a string or a number, not '"+
+        $B.get_class(value).__name__+"'")
 }
 float.__class__ = $B.$factory
 float.$dict = $FloatDict

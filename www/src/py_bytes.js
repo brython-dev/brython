@@ -223,6 +223,17 @@ $BytesDict.__lt__ = function(self,other){
 
 $BytesDict.__mro__ = [$BytesDict,$ObjectDict]
 
+$BytesDict.__mul__ = function(){
+    var $ = $B.args('__mul__', 2, {self:null, other:null}, ['self', 'other'],
+        arguments, {}, null, null),
+        other = $B.PyNumber_Index($.other),
+        res = bytes()
+    for(var i=0; i<other; i++){
+        res.source = res.source.concat($.self.source)
+    }
+    return res
+}
+
 $BytesDict.__ne__ = function(self,other){return !$BytesDict.__eq__(self,other)}
 
 $BytesDict.__repr__ = $BytesDict.__str__ = function(self){
