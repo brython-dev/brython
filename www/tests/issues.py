@@ -571,6 +571,17 @@ for a,*b in [[1, 2, 3]]:
     assert a == 1
     assert b == [2, 3]
 
+# related to issue 327
+def f():
+    for i in 1,2:
+        if i==2:
+            x = a
+        else:
+            a = 1
+    return x
+
+assert f()==1
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
