@@ -59,8 +59,8 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-11-11 18:19:44.033150"
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2015-11-12 22:21:26.400070"
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_locale","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
 
@@ -232,19 +232,15 @@ var scope=$get_scope(this)
 if(C.type=='expr' && C.tree[0].type=='call'){$_SyntaxError(C,["can't assign to function call "])}else if(C.type=='list_or_tuple' ||
 (C.type=='expr' && C.tree[0].type=='list_or_tuple')){if(C.type=='expr'){C=C.tree[0]}
 for(var i=0;i<C.tree.length;i++){var assigned=C.tree[i].tree[0]
-if(assigned.type=='id' && check_unbound){$B.bound[scope.id][assigned.value]=true
-var scope=$get_scope(this)
-if(scope.ntype=='def' ||scope.ntype=='generator'){$check_unbound(assigned,scope,assigned.value)}}else if(assigned.type=='call'){$_SyntaxError(C,["can't assign to function call"])}}}else if(C.type=='assign'){for(var i=0;i<C.tree.length;i++){var assigned=C.tree[i].tree[0]
-if(assigned.type=='id'){if(scope.ntype=='def' ||scope.ntype=='generator'){$check_unbound(assigned,scope,assigned.value)}
-$B.bound[scope.id][assigned.value]=true}}}else{var assigned=C.tree[0]
+if(assigned.type=='id' && check_unbound){$B.bound[scope.id][assigned.value]=true}else if(assigned.type=='call'){$_SyntaxError(C,["can't assign to function call"])}}}else if(C.type=='assign'){for(var i=0;i<C.tree.length;i++){var assigned=C.tree[i].tree[0]
+if(assigned.type=='id'){$B.bound[scope.id][assigned.value]=true}}}else{var assigned=C.tree[0]
 if(assigned && assigned.type=='id'){if(noassign[assigned.value]===true){$_SyntaxError(C,["can't assign to keyword"])}
 if(!$B._globals[scope.id]||
 $B._globals[scope.id][assigned.value]===undefined){
 var node=$get_node(this)
 node.bound_before=$B.keys($B.bound[scope.id])
 $B.bound[scope.id][assigned.value]=true
-assigned.bound=true}
-if(scope.ntype=='def' ||scope.ntype=='generator'){$check_unbound(assigned,scope,assigned.value)}}}
+assigned.bound=true}}}
 this.guess_type=function(){if(this.tree[0].type=="expr" && this.tree[0].tree[0].type=="id"){$set_type(scope,this.tree[0],this.tree[1])}else if(this.tree[0].type=='assign'){var left=this.tree[0].tree[0].tree[0]
 var right=this.tree[0].tree[1].tree[0]
 $set_type(scope,right,this.tree[1].tree[0])
@@ -414,13 +410,24 @@ C.parent.tree.pop()
 C.parent.tree[C.parent.tree.length]=this
 this.op=op
 this.tree=[C]
-if(C.type=='expr' && C.tree[0].type=='id' &&
-noassign[C.tree[0].value]===true){$_SyntaxError(C,["can't assign to keyword"])}
 var scope=this.scope=$get_scope(this)
+if(C.type=='expr' && C.tree[0].type=='id'){var name=C.tree[0].value
+if(noassign[name]===true){$_SyntaxError(C,["can't assign to keyword"])}else if((scope.ntype=='def'||scope.ntype=='generator')&&
+$B.bound[scope.id][name]===undefined){if(scope.globals===undefined ||scope.globals.indexOf(name)==-1){
+this.unboundError=name}}}
 $get_node(this).bound_before=$B.keys($B.bound[scope.id])
 this.module=scope.module
 this.toString=function(){return '(augm assign) '+this.tree}
-this.transform=function(node,rank){var func='__'+$operators[op]+'__'
+this.transform=function(node,rank){if(this.unboundError!=undefined){var line_num=node.line_num
+node.parent.children.splice(rank,1)
+var js='throw UnboundLocalError('+
+"\"local variable '"+this.unboundError+
+"' referenced before assignment\")"
+var new_node=$NodeJS(js)
+new_node.line_num=line_num
+node.parent.insert(rank,new_node)
+return}
+var func='__'+$operators[op]+'__'
 var offset=0,parent=node.parent
 var line_num=node.line_num,lnum_set=false
 parent.children.splice(rank,1)
@@ -1551,22 +1558,6 @@ $B._globals[this.scope.id]=$B._globals[this.scope.id]||{}
 this.add=function(name){$B._globals[this.scope.id][name]=true}
 this.to_js=function(){this.js_processed=true
 return ''}}
-function $check_unbound(assigned,scope,varname){
-if(scope.var2node && scope.var2node[varname]){if(scope.C.tree[0].locals.indexOf(varname)>-1)return
-for(var i=0;i<scope.var2node[varname].length;i++){var ctx=scope.var2node[varname][i]
-if(ctx==assigned){delete scope.var2node[varname]
-break}else{while(ctx.parent){ctx=ctx.parent}
-var ctx_node=ctx.node
-var pnode=ctx_node.parent
-for(var rank=0;rank<pnode.children.length;rank++){if(pnode.children[rank]===ctx_node){break}}
-var new_node=new $Node()
-var js='throw UnboundLocalError("local variable '+"'"
-js +=varname+"'"+' referenced before assignment")'
-if(ctx.tree[0].type=='condition' && 
-ctx.tree[0].token=='elif'){js='else if(1){'+js+'}'}
-new $NodeJSCtx(new_node,js)
-pnode.insert(rank,new_node)}}}
-if(scope.C.tree[0].locals.indexOf(varname)==-1){scope.C.tree[0].locals.push(varname)}}
 function $IdCtx(C,value){
 this.type='id'
 this.toString=function(){return '(id) '+this.value+':'+(this.tree||'')}
@@ -1589,7 +1580,7 @@ else if(ctx.vars.indexOf(value)===-1){ctx.vars.push(value)}
 if(this.call_arg&&ctx.type==='lambda'){if(ctx.locals===undefined){ctx.locals=[value]}
 else{ctx.locals.push(value)}}}
 ctx=ctx.parent}
-var scope=$get_scope(this)
+var scope=this.scope=$get_scope(this)
 if(C.type=='target_list' ||C.type=='packed'){
 $B.bound[scope.id][value]=true
 $B.type[scope.id][value]=false 
@@ -1598,21 +1589,8 @@ if(scope.ntype=='def' ||scope.ntype=='generator'){
 var _ctx=this.parent
 while(_ctx){if(_ctx.type=='list_or_tuple' && _ctx.is_comp())return
 _ctx=_ctx.parent}
-if(C.type=='target_list'){if(C.parent.type=='for'){
-$check_unbound(this,scope,value)}else if(C.parent.type=='comp_for'){
-var comprehension=C.parent.parent.parent
-if(comprehension.parent && comprehension.parent.type=='call_arg'){
-comprehension=comprehension.parent}
-var remove=[],pos=0
-if(scope.var2node && scope.var2node[value]){for(var i=0;i<scope.var2node[value].length;i++){var ctx=scope.var2node[value][i]
-while(ctx.parent){if(ctx===comprehension.parent){remove[pos++]=i
-break}
-ctx=ctx.parent}}}
-while(i-->0){
-scope.var2node[value].splice(i,1)}}}else if(C.type=='expr' && C.parent.type=='comp_if'){
-return}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=[value]}else if(scope.globals.indexOf(value)==-1){scope.globals.push(value)}}else if(scope.globals===undefined ||scope.globals.indexOf(value)==-1){
-if(scope.var2node===undefined){scope.var2node={}
-scope.var2node[value]=[this]}else if(scope.var2node[value]===undefined){scope.var2node[value]=[this]}else{scope.var2node[value].push(this)}}}
+if(C.type=='expr' && C.parent.type=='comp_if'){
+return}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=[value]}else if(scope.globals.indexOf(value)==-1){scope.globals.push(value)}}}
 this.to_js=function(arg){this.js_processed=true
 var val=this.value
 if(val=='eval')val='$eval'
@@ -1655,12 +1633,12 @@ this.is_builtin=true}}else if(scope.id==scope.module){if(!this.bound && scope===
 if(locs[val]===undefined){
 if(found.length>1 && found[1].id=='__builtins__'){this.is_builtin=true
 return val+$to_js(this.tree,'')}}
-return '$B.$search("'+val+'", $locals_'+scope.id.replace(/\./g,'_')+')'}
+return '$B.$search("'+val+'")'}
 val=scope_ns+'["'+val+'"]'}else{val=scope_ns+'["'+val+'"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns+'["'+val+'"]'}else{val='$locals["'+val+'"]'}}else{
 val=scope_ns+'["'+val+'"]'}
 return val+$to_js(this.tree,'')}else{
 this.unknown_binding=true
-return '$B.$search("'+val+'", '+global_ns+')'}}}
+return '$B.$search("'+val+'")'}}}
 function $ImaginaryCtx(C,value){
 this.type='imaginary'
 this.value=value
@@ -1761,12 +1739,6 @@ if(ctx.kwargs===undefined){ctx.kwargs=[value]}
 else if(ctx.kwargs.indexOf(value)===-1){ctx.kwargs.push(value)}
 else{$_SyntaxError(C,['keyword argument repeated'])}
 var scope=$get_scope(this)
-switch(scope.ntype){case 'def':
-case 'generator':
-var ix=null,varname=C.tree[0].value
-if(scope.var2node[varname]!==undefined){for(var i=0;i<scope.var2node[varname].length;i++){if(scope.var2node[varname][i]==C.tree[0]){ix=i
-break}}
-scope.var2node[varname].splice(ix,1)}}
 this.toString=function(){return 'kwarg '+this.tree[0]+'='+this.tree[1]}
 this.to_js=function(){this.js_processed=true
 var key=this.tree[0].value
@@ -2467,13 +2439,6 @@ if((elt.type=='condition' && elt.token=="while")
 ||node.C.type=='for'){node.add($NodeJS('$locals.$line_info="'+node.line_num+','+
 mod_id+'";'))}
 return offset}}
-function $clear_ns(ctx){
-var scope=$get_scope(ctx)
-if(scope.is_function){if(scope.var2node){for(var name in scope.var2node){var remove=[],pos=0
-for(var j=0;j<scope.var2node[name].length;j++){var elt=scope.var2node[name][j].parent
-while(elt.parent){if(elt===ctx){remove[pos++]=j;break}
-elt=elt.parent}}
-for(var k=remove.length-1;k>=0;k--){scope.var2node[name].splice(remove[k],1)}}}}}
 function $get_docstring(node){var doc_string=''
 if(node.children.length>0){var firstchild=node.children[0]
 if(firstchild.C.tree && firstchild.C.tree[0].type=='expr'){if(firstchild.C.tree[0].tree[0].type=='str')
@@ -2709,7 +2674,6 @@ case '=':
 if(C.expect===','){return new $ExprCtx(new $KwArgCtx(C),'kw_value',false)}
 break
 case 'for':
-$clear_ns(C)
 var lst=new $ListOrTupleCtx(C,'gen_expr')
 lst.vars=C.vars 
 lst.locals=C.locals
@@ -2834,7 +2798,6 @@ if(C.real==='dict_or_set'){C.real='dict'}
 if(C.real==='dict'){C.expect=','
 return new $AbstractExprCtx(C,false)}else{$_SyntaxError(C,'token '+token+' after '+C)}
 case 'for':
-$clear_ns(C)
 if(C.real==='dict_or_set'){C.real='set_comp'}
 else{C.real='dict_comp'}
 var lst=new $ListOrTupleCtx(C,'dict_or_set_comp')
@@ -3271,7 +3234,6 @@ return C
 case 'for':
 if(C.real==='list'){C.real='list_comp'}
 else{C.real='gen_expr'}
-$clear_ns(C)
 C.intervals=[C.start+1]
 C.expression=C.tree
 C.tree=[]
@@ -4632,9 +4594,13 @@ var $res=eval('$locals_'+lambda_name+'["'+$res+'"]')
 $res.__module__=module_name
 $res.__name__='<lambda>'
 return $res}
-$B.$search=function(name,global_ns){var res=global_ns[name]
-if(res===undefined){throw _b_.NameError(name)}
-return res}
+$B.$search=function(name,global_ns){
+var frame=$B.last($B.frames_stack)
+if(frame[1][name]!==undefined){return frame[1][name]}
+else if(frame[3][name]!==undefined){return frame[3][name]}
+else{if(frame[0]==frame[2]){throw _b_.NameError(name)}
+else{throw _b_.UnboundLocalError("local variable '"+name+
+"' referenced before assignment")}}}
 $B.$JS2Py=function(src){if(typeof src==='number'){if(src%1===0)return src
 return _b_.float(src)}
 if(src===null||src===undefined)return _b_.None
@@ -4936,8 +4902,7 @@ catch(err){if(_b_.isinstance(v,_b_.complex)&& v.imag==0){return $B.int_or_bool(v
 $B.enter_frame=function(frame){if($B.frames_stack===undefined){alert('frames stack udef')}
 $B.frames_stack[$B.frames_stack.length]=frame}
 $B.leave_frame=function(arg){
-if($B.frames_stack.length>1){var top=$B.last($B.frames_stack)
-$B.frames_stack.pop()}}
+$B.frames_stack.pop()}
 var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
 $B.is_safe_int=function(){for(var i=0;i<arguments.length;i++){var arg=arguments[i]
 if(arg<min_int ||arg>max_int){return false}}
@@ -6499,7 +6464,7 @@ $JSObjectDict.$factory=JSObject
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','atexit','base64','binascii','bisect','calendar','codecs','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pickle','platform','posix','posixpath','pprint','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.module18','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_locale','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','module6','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','pwd','py_compile','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.module18','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var js=['_ajax','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']

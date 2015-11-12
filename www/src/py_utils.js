@@ -350,11 +350,15 @@ $B.$lambda = function(env,args,body){
 // but introduced by "from A import *" or by exec
 
 $B.$search = function(name, global_ns){
-    var res = global_ns[name]
-    if(res===undefined){
-        throw _b_.NameError(name)
+    // search in local and global namespaces
+    var frame = $B.last($B.frames_stack)
+    if(frame[1][name]!==undefined){return frame[1][name]}
+    else if(frame[3][name]!==undefined){return frame[3][name]}
+    else{
+        if(frame[0]==frame[2]){throw _b_.NameError(name)}
+        else{throw _b_.UnboundLocalError("local variable '"+name+
+                "' referenced before assignment")}
     }
-    return res
 }
 
 // transform native JS types into Brython types
@@ -1053,11 +1057,11 @@ $B.enter_frame = function(frame){
 
 $B.leave_frame = function(arg){
     // We must leave at least the frame for the main program
-    if($B.frames_stack.length>1){
-        var top = $B.last($B.frames_stack)
+    //if($B.frames_stack.length>1){
+    //    var top = $B.last($B.frames_stack)
        $B.frames_stack.pop()
         //delete $B.modules[frame[0]],$B.$py_src[frame[0]]
-    }
+    //}
 }
 
 var min_int=Math.pow(-2, 53), max_int=Math.pow(2,53)-1

@@ -425,10 +425,6 @@ function $AssignCtx(context, check_unbound){
             var assigned = context.tree[i].tree[0]
             if(assigned.type=='id' && check_unbound){
                 $B.bound[scope.id][assigned.value] = true
-                var scope = $get_scope(this)
-                if(scope.ntype=='def' || scope.ntype=='generator'){
-                    $check_unbound(assigned,scope,assigned.value)
-                }
             }else if(assigned.type=='call'){
                 $_SyntaxError(context,["can't assign to function call"])
             }
@@ -437,9 +433,6 @@ function $AssignCtx(context, check_unbound){
         for(var i=0;i<context.tree.length;i++){
             var assigned = context.tree[i].tree[0]
             if(assigned.type=='id'){
-                if(scope.ntype=='def' || scope.ntype=='generator'){
-                    $check_unbound(assigned,scope,assigned.value)
-                }
                 $B.bound[scope.id][assigned.value] = true
             }
         }
@@ -465,9 +458,6 @@ function $AssignCtx(context, check_unbound){
                 node.bound_before = $B.keys($B.bound[scope.id])
                 $B.bound[scope.id][assigned.value] = true
                 assigned.bound = true
-            }
-            if(scope.ntype=='def' || scope.ntype=='generator'){
-                $check_unbound(assigned,scope,assigned.value)
             }
         }
     }//if
@@ -776,13 +766,22 @@ function $AugmentedAssignCtx(context, op){
     this.op = op
     this.tree = [context]
 
-    if(context.type=='expr' && context.tree[0].type=='id' &&
-        noassign[context.tree[0].value]===true){
-                $_SyntaxError(context,["can't assign to keyword"])
-    }
-    
     var scope = this.scope = $get_scope(this)
 
+    if(context.type=='expr' && context.tree[0].type=='id'){
+        var name = context.tree[0].value
+        if(noassign[name]===true){
+            $_SyntaxError(context,["can't assign to keyword"])
+        }else if((scope.ntype=='def'||scope.ntype=='generator') &&
+            $B.bound[scope.id][name]===undefined){
+            if(scope.globals===undefined || scope.globals.indexOf(name)==-1){
+            // Can't do augmented assign to a variable not defined in 
+            // local scope
+                this.unboundError = name
+            }
+        }
+    }
+    
     // Store the names already bound
     $get_node(this).bound_before = $B.keys($B.bound[scope.id])
     
@@ -791,6 +790,17 @@ function $AugmentedAssignCtx(context, op){
     this.toString = function(){return '(augm assign) '+this.tree}
 
     this.transform = function(node,rank){
+        if(this.unboundError!=undefined){
+            var line_num = node.line_num
+            node.parent.children.splice(rank, 1)
+            var js = 'throw UnboundLocalError('+
+                "\"local variable '"+this.unboundError+
+                "' referenced before assignment\")"
+            var new_node = $NodeJS(js)
+            new_node.line_num = line_num
+            node.parent.insert(rank, new_node)
+            return
+        }
         var func = '__'+$operators[op]+'__'
 
         var offset=0, parent=node.parent
@@ -2992,45 +3002,6 @@ function $GlobalCtx(context){
     }
 }
 
-function $check_unbound(assigned,scope,varname){
-    // Check if the variable varname in context "assigned" was
-    // referenced in the scope
-    // If so, replace statement by UnboundLocalError
-    if(scope.var2node && scope.var2node[varname]){
-        if(scope.context.tree[0].locals.indexOf(varname)>-1) return
-
-        for(var i=0;i<scope.var2node[varname].length;i++){
-            var ctx = scope.var2node[varname][i]
-            if(ctx==assigned){
-                delete scope.var2node[varname]
-                break
-            }else{
-                while(ctx.parent){ctx=ctx.parent}
-                var ctx_node = ctx.node
-                var pnode = ctx_node.parent
-                for(var rank=0;rank<pnode.children.length;rank++){
-                    if(pnode.children[rank]===ctx_node){break}
-                }
-                var new_node = new $Node()
-                var js = 'throw UnboundLocalError("local variable '+"'"
-                js += varname+"'"+' referenced before assignment")'
-                
-                // If the id is in a "elif", the exception must be in
-                // a "else if" otherwise there is a Javascript syntax error
-                if(ctx.tree[0].type=='condition' && 
-                    ctx.tree[0].token=='elif'){
-                    js = 'else if(1){'+js+'}'
-                }
-                new $NodeJSCtx(new_node,js)
-                pnode.insert(rank,new_node)
-            }
-        }
-    }
-    if(scope.context.tree[0].locals.indexOf(varname)==-1){
-        scope.context.tree[0].locals.push(varname)
-    }
-}
-
 function $IdCtx(context,value){
     // Class for identifiers (variable names)
     this.type = 'id'
@@ -3063,7 +3034,7 @@ function $IdCtx(context,value){
         ctx = ctx.parent
     }
 
-    var scope = $get_scope(this)
+    var scope = this.scope = $get_scope(this)
     
     if(context.type=='target_list' || context.type=='packed'){
         // An id defined as a target in a "for" loop, or as "packed" 
@@ -3081,39 +3052,7 @@ function $IdCtx(context,value){
             if(_ctx.type=='list_or_tuple' && _ctx.is_comp()) return
             _ctx = _ctx.parent
         }
-        if(context.type=='target_list'){
-            if(context.parent.type=='for'){
-                // a "for" loop inside the function creates a local variable : 
-                // check if it was not referenced before
-                $check_unbound(this,scope,value)
-            }else if(context.parent.type=='comp_for'){
-                // Inside a comprehension
-                // The variables of the same name in the returned elements before "for" 
-                // are not referenced in the function block
-                var comprehension = context.parent.parent.parent
-                if(comprehension.parent && comprehension.parent.type=='call_arg'){
-                    // for the form "func(x for x in iterable)"
-                    comprehension = comprehension.parent
-                }
-                var remove = [], pos=0
-                if(scope.var2node && scope.var2node[value]){
-                    for(var i=0;i<scope.var2node[value].length;i++){
-                        var ctx = scope.var2node[value][i]
-                        while(ctx.parent){
-                            if(ctx===comprehension.parent){
-                                remove[pos++]=i
-                                break
-                            }
-                            ctx = ctx.parent
-                        }
-                    }
-                }
-                while(i-->0) {
-                    //for(var i=remove.length-1;i>=0;i--){
-                    scope.var2node[value].splice(i,1)
-                }
-            }
-        }else if(context.type=='expr' && context.parent.type=='comp_if'){
+        if(context.type=='expr' && context.parent.type=='comp_if'){
             // form {x for x in foo if x>5} : don't put x in referenced names
             return
         }else if(context.type=='global'){
@@ -3121,16 +3060,6 @@ function $IdCtx(context,value){
                 scope.globals = [value]
             }else if(scope.globals.indexOf(value)==-1){
                 scope.globals.push(value)
-            }
-        }else if(scope.globals===undefined || scope.globals.indexOf(value)==-1){
-            // variable referenced in the function
-            if(scope.var2node===undefined){
-                scope.var2node = {}
-                scope.var2node[value] = [this]
-            }else if(scope.var2node[value]===undefined){
-                scope.var2node[value] = [this]
-            }else{
-                scope.var2node[value].push(this)
             }
         }
     }
@@ -3144,17 +3073,7 @@ function $IdCtx(context,value){
         else if(val=='__BRYTHON__' || val == '$B'){return val}
 
         var innermost = $get_scope(this)
-        /*
-        if(val=='list'){
-            console.log(val, 'innermost', innermost)
-            var node = $get_node(this), scope=innermost
-            console.log('locals', node.locals)
-            while(scope){
-                console.log('locals of scope', scope.id, scope.locals)
-                scope = scope.parent_block
-            }
-        }
-        */
+
         var scope = innermost, found=[], module = scope.module
         
         // get global scope
@@ -3272,7 +3191,7 @@ function $IdCtx(context,value){
                                 return val+$to_js(this.tree,'')
                             }
                         }
-                        return '$B.$search("'+val+'", $locals_'+scope.id.replace(/\./g,'_')+')'
+                        return '$B.$search("'+val+'")'
                     }
                     val = scope_ns+'["'+val+'"]'
                 }else{
@@ -3302,8 +3221,8 @@ function $IdCtx(context,value){
             // If the name exists at run time in the global namespace, use it,
             // else raise a NameError
             // Function $search is defined in py_utils.js
-
-            return '$B.$search("'+val+'", '+global_ns+')'
+            
+            return '$B.$search("'+val+'")'
         }
     }
 }
@@ -3503,24 +3422,6 @@ function $KwArgCtx(context){
     // If the keyword argument occurs inside a function, remove the occurence
     // from referenced variables in the function
     var scope = $get_scope(this)
-
-    switch(scope.ntype) {
-      case 'def':
-      case 'generator':
-        //if(scope.ntype=='def' || scope.ntype=='generator'){
-        var ix = null,varname=context.tree[0].value
-        //ui slider caused an issue in which scope.var2node[varname] is undefined
-        // so lets check for that.
-        if (scope.var2node[varname] !== undefined) {
-           for(var i=0;i<scope.var2node[varname].length;i++){
-             if(scope.var2node[varname][i]==context.tree[0]){
-                ix = i
-                break
-             }
-           }
-           scope.var2node[varname].splice(ix,1)
-        }
-    }
 
     this.toString = function(){return 'kwarg '+this.tree[0]+'='+this.tree[1]}
 
@@ -4873,30 +4774,6 @@ function $add_line_num(node,rank){
     }
 }
 
-function $clear_ns(ctx){
-    // Function called when it turns out that a list or tuple is a comprehension
-    // If the list is in a function, the names defined in the display so far must 
-    // be removed from the function namespace
-    var scope = $get_scope(ctx)
-    if(scope.is_function){
-        if(scope.var2node){
-            for(var name in scope.var2node){
-                var remove = [],pos=0
-                for(var j=0;j<scope.var2node[name].length;j++){
-                    var elt = scope.var2node[name][j].parent
-                    while(elt.parent){
-                        if(elt===ctx){remove[pos++]=j;break}
-                        elt=elt.parent
-                    }
-                }
-                for(var k=remove.length-1;k>=0;k--){
-                    scope.var2node[name].splice(remove[k],1)
-                }
-            }
-        }
-    }
-}
-
 function $get_docstring(node){
     var doc_string=''
     if(node.children.length>0){
@@ -5240,7 +5117,6 @@ function $transition(context,token){
             break
           case 'for':
             // comprehension
-            $clear_ns(context) // if inside function
             var lst = new $ListOrTupleCtx(context,'gen_expr')
             lst.vars = context.vars // copy variables
             lst.locals = context.locals
@@ -5419,7 +5295,6 @@ function $transition(context,token){
                     }else{$_SyntaxError(context,'token '+token+' after '+context)}
                   case 'for':
                     // comprehension
-                    $clear_ns(context) // if defined inside a function
                     if(context.real==='dict_or_set'){context.real = 'set_comp'}
                     else{context.real='dict_comp'}
                     var lst = new $ListOrTupleCtx(context,'dict_or_set_comp')
@@ -6090,7 +5965,6 @@ function $transition(context,token){
                    else{context.real='gen_expr'}
                    // remove names already referenced in list from the function
                    // references
-                   $clear_ns(context)
                    context.intervals = [context.start+1]
                    context.expression = context.tree
                    context.tree = [] // reset tree
