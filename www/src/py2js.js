@@ -775,9 +775,10 @@ function $AugmentedAssignCtx(context, op){
         }else if((scope.ntype=='def'||scope.ntype=='generator') &&
             $B.bound[scope.id][name]===undefined){
             if(scope.globals===undefined || scope.globals.indexOf(name)==-1){
-            // Can't do augmented assign to a variable not defined in 
-            // local scope
-                this.unboundError = name
+            // Augmented assign to a variable not yet defined in 
+            // local scope : set attribute "unbound" to the id. If not defined
+            // in the rest of the block this will raise an UnboundLocalError
+                context.tree[0].unbound = true
             }
         }
     }
@@ -790,17 +791,6 @@ function $AugmentedAssignCtx(context, op){
     this.toString = function(){return '(augm assign) '+this.tree}
 
     this.transform = function(node,rank){
-        if(this.unboundError!=undefined){
-            var line_num = node.line_num
-            node.parent.children.splice(rank, 1)
-            var js = 'throw UnboundLocalError('+
-                "\"local variable '"+this.unboundError+
-                "' referenced before assignment\")"
-            var new_node = $NodeJS(js)
-            new_node.line_num = line_num
-            node.parent.insert(rank, new_node)
-            return
-        }
         var func = '__'+$operators[op]+'__'
 
         var offset=0, parent=node.parent
@@ -814,7 +804,8 @@ function $AugmentedAssignCtx(context, op){
 
         if(left_is_id){
             var left_id = this.tree[0].tree[0].value,
-                was_bound = $B.bound[this.scope.id][left_id]!==undefined
+                was_bound = $B.bound[this.scope.id][left_id]!==undefined,
+                left_id_unbound = this.tree[0].tree[0].unbound
         }
             
         var right_is_int = (this.tree[1].type=='expr' && 
@@ -891,7 +882,7 @@ function $AugmentedAssignCtx(context, op){
         // Since augmented assignement can't be applied to a function call
         // the shortcut will not be used in this case
         
-        prefix = prefix && !context.tree[0].unknown_binding
+        prefix = prefix && !context.tree[0].unknown_binding && left_id_unbound===undefined
         var op1 = op.charAt(0)
         if(prefix){
             var left1 = in_class ? '$left' : left
@@ -951,13 +942,18 @@ function $AugmentedAssignCtx(context, op){
         offset ++
 
         // create node for "foo = foo + bar"
+
         var aa1 = new $Node()
         aa1.id = this.scope.id
         var ctx1 = new $NodeCtx(aa1)
         var expr1 = new $ExprCtx(ctx1,'clone',false)
-        expr1.tree = context.tree
-        for(var i=0;i<expr1.tree.length;i++){
-            expr1.tree[i].parent = expr1
+        if(left_id_unbound){
+            new $RawJSCtx(expr1, '$locals["'+left_id+'"]')
+        }else{
+            expr1.tree = context.tree
+            for(var i=0;i<expr1.tree.length;i++){
+                expr1.tree[i].parent = expr1
+            }
         }
         var assign1 = new $AssignCtx(expr1)
         var new_op = new $OpCtx(expr1,op.substr(0,op.length-1))
@@ -967,7 +963,7 @@ function $AugmentedAssignCtx(context, op){
         expr1.parent.tree.pop()
         expr1.parent.tree.push(assign1)
         new_node.add(aa1)
-        
+
         // create node for "else"
         var aa2 = new $Node()
         new $NodeJSCtx(aa2,'else')
@@ -3067,11 +3063,27 @@ function $IdCtx(context,value){
     this.to_js = function(arg){
         this.js_processed=true
         var val = this.value
+        
+        var is_local = $B.bound[this.scope.id][val]!==undefined
+        var bound_before = $get_node(this).bound_before
+        
+        // If name is bound in the scope, but not yet bound when this
+        // instance of $IdCtx was created, it is resolved by a call to
+        // $search or $local_search
+        this.unbound = this.unbound || (is_local && !this.bound && 
+            bound_before && bound_before.indexOf(val)==-1)
+        if(this.unbound){
+            if(this.scope.ntype=='def' || this.scope.ntype=='generator'){
+                return '$B.$local_search("'+val+'")'
+            }else{
+                return '$B.$search("'+val+'")'
+            }
+        }
 
         // Special cases
         if(val=='eval') val = '$eval'
         else if(val=='__BRYTHON__' || val == '$B'){return val}
-
+        
         var innermost = $get_scope(this)
 
         var scope = innermost, found=[], module = scope.module
@@ -3127,9 +3139,9 @@ function $IdCtx(context,value){
         if(found.length>0){
             if(found.length>1 && found[0].context){
                 if(found[0].context.tree[0].type=='class' && !this.bound){
-                    var bound_before = $get_node(this).bound_before, res
                     var ns0='$locals_'+found[0].id.replace(/\./g,'_'),
-                        ns1='$locals_'+found[1].id.replace(/\./g,'_')
+                        ns1='$locals_'+found[1].id.replace(/\./g,'_'),
+                        res
 
                     // If the id is referenced in a class body, and an id of
                     // the same name is bound in an upper scope, we must check

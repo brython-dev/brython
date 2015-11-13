@@ -354,10 +354,21 @@ $B.$search = function(name, global_ns){
     var frame = $B.last($B.frames_stack)
     if(frame[1][name]!==undefined){return frame[1][name]}
     else if(frame[3][name]!==undefined){return frame[3][name]}
+    else if(_b_[name]!==undefined){return _b_[name]}
     else{
         if(frame[0]==frame[2]){throw _b_.NameError(name)}
         else{throw _b_.UnboundLocalError("local variable '"+name+
                 "' referenced before assignment")}
+    }
+}
+
+$B.$local_search = function(name){
+    // search in local namespace
+    var frame = $B.last($B.frames_stack)
+    if(frame[1][name]!==undefined){return frame[1][name]}
+    else{
+        throw _b_.UnboundLocalError("local variable '"+name+
+                "' referenced before assignment")
     }
 }
 

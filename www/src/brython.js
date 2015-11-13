@@ -59,7 +59,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-11-12 22:21:26.400070"
+__BRYTHON__.compiled_date="2015-11-13 09:58:30.888137"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_locale","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -414,26 +414,17 @@ var scope=this.scope=$get_scope(this)
 if(C.type=='expr' && C.tree[0].type=='id'){var name=C.tree[0].value
 if(noassign[name]===true){$_SyntaxError(C,["can't assign to keyword"])}else if((scope.ntype=='def'||scope.ntype=='generator')&&
 $B.bound[scope.id][name]===undefined){if(scope.globals===undefined ||scope.globals.indexOf(name)==-1){
-this.unboundError=name}}}
+C.tree[0].unbound=true}}}
 $get_node(this).bound_before=$B.keys($B.bound[scope.id])
 this.module=scope.module
 this.toString=function(){return '(augm assign) '+this.tree}
-this.transform=function(node,rank){if(this.unboundError!=undefined){var line_num=node.line_num
-node.parent.children.splice(rank,1)
-var js='throw UnboundLocalError('+
-"\"local variable '"+this.unboundError+
-"' referenced before assignment\")"
-var new_node=$NodeJS(js)
-new_node.line_num=line_num
-node.parent.insert(rank,new_node)
-return}
-var func='__'+$operators[op]+'__'
+this.transform=function(node,rank){var func='__'+$operators[op]+'__'
 var offset=0,parent=node.parent
 var line_num=node.line_num,lnum_set=false
 parent.children.splice(rank,1)
 var left_is_id=(this.tree[0].type=='expr' && 
 this.tree[0].tree[0].type=='id')
-if(left_is_id){var left_id=this.tree[0].tree[0].value,was_bound=$B.bound[this.scope.id][left_id]!==undefined}
+if(left_is_id){var left_id=this.tree[0].tree[0].value,was_bound=$B.bound[this.scope.id][left_id]!==undefined,left_id_unbound=this.tree[0].tree[0].unbound}
 var right_is_int=(this.tree[1].type=='expr' && 
 this.tree[1].tree[0].type=='int')
 var right=right_is_int ? this.tree[1].tree[0].to_js(): '$temp'
@@ -475,7 +466,7 @@ parent.insert(rank+offset,new_node)
 in_class=true
 offset++}}}
 var left=C.tree[0].to_js()
-prefix=prefix && !C.tree[0].unknown_binding
+prefix=prefix && !C.tree[0].unknown_binding && left_id_unbound===undefined
 var op1=op.charAt(0)
 if(prefix){var left1=in_class ? '$left' : left
 var new_node=new $Node()
@@ -521,8 +512,8 @@ var aa1=new $Node()
 aa1.id=this.scope.id
 var ctx1=new $NodeCtx(aa1)
 var expr1=new $ExprCtx(ctx1,'clone',false)
-expr1.tree=C.tree
-for(var i=0;i<expr1.tree.length;i++){expr1.tree[i].parent=expr1}
+if(left_id_unbound){new $RawJSCtx(expr1,'$locals["'+left_id+'"]')}else{expr1.tree=C.tree
+for(var i=0;i<expr1.tree.length;i++){expr1.tree[i].parent=expr1}}
 var assign1=new $AssignCtx(expr1)
 var new_op=new $OpCtx(expr1,op.substr(0,op.length-1))
 new_op.parent=assign1
@@ -1593,6 +1584,11 @@ if(C.type=='expr' && C.parent.type=='comp_if'){
 return}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=[value]}else if(scope.globals.indexOf(value)==-1){scope.globals.push(value)}}}
 this.to_js=function(arg){this.js_processed=true
 var val=this.value
+var is_local=$B.bound[this.scope.id][val]!==undefined
+var bound_before=$get_node(this).bound_before
+this.unbound=this.unbound ||(is_local && !this.bound && 
+bound_before && bound_before.indexOf(val)==-1)
+if(this.unbound){if(this.scope.ntype=='def' ||this.scope.ntype=='generator'){return '$B.$local_search("'+val+'")'}else{return '$B.$search("'+val+'")'}}
 if(val=='eval')val='$eval'
 else if(val=='__BRYTHON__' ||val=='$B'){return val}
 var innermost=$get_scope(this)
@@ -1614,8 +1610,7 @@ scope.C.tree[0].env.indexOf(val)>-1){found.push(scope)}}else{if($B.bound[scope.i
 if(scope.parent_block){scope=scope.parent_block}
 else{break}}
 this.found=found
-if(found.length>0){if(found.length>1 && found[0].C){if(found[0].C.tree[0].type=='class' && !this.bound){var bound_before=$get_node(this).bound_before,res
-var ns0='$locals_'+found[0].id.replace(/\./g,'_'),ns1='$locals_'+found[1].id.replace(/\./g,'_')
+if(found.length>0){if(found.length>1 && found[0].C){if(found[0].C.tree[0].type=='class' && !this.bound){var ns0='$locals_'+found[0].id.replace(/\./g,'_'),ns1='$locals_'+found[1].id.replace(/\./g,'_'),res
 if(bound_before){if(bound_before.indexOf(val)>-1){this.found=$B.bound[found[0].id][val]
 res=ns0}else{this.found=$B.bound[found[1].id][val]
 res=ns1}
@@ -4598,9 +4593,15 @@ $B.$search=function(name,global_ns){
 var frame=$B.last($B.frames_stack)
 if(frame[1][name]!==undefined){return frame[1][name]}
 else if(frame[3][name]!==undefined){return frame[3][name]}
+else if(_b_[name]!==undefined){return _b_[name]}
 else{if(frame[0]==frame[2]){throw _b_.NameError(name)}
 else{throw _b_.UnboundLocalError("local variable '"+name+
 "' referenced before assignment")}}}
+$B.$local_search=function(name){
+var frame=$B.last($B.frames_stack)
+if(frame[1][name]!==undefined){return frame[1][name]}
+else{throw _b_.UnboundLocalError("local variable '"+name+
+"' referenced before assignment")}}
 $B.$JS2Py=function(src){if(typeof src==='number'){if(src%1===0)return src
 return _b_.float(src)}
 if(src===null||src===undefined)return _b_.None
