@@ -4486,6 +4486,31 @@ function $WithCtx(context){
     }
 
     this.transform = function(node,rank){
+    
+        while(this.tree.length>1){
+            /*
+            with A() as a, B() as b:
+                suite
+
+            is equivalent to
+            
+            with A() as a:
+                with B() as b:
+                    suite
+            */
+
+            var suite = node.children,
+                item = this.tree.pop(),
+                new_node = new $Node(),
+                ctx = new $NodeCtx(new_node),
+                with_ctx = new $WithCtx(ctx)
+            item.parent = with_ctx
+            with_ctx.tree = [item]
+            for(var i=0;i<suite.length;i++){
+                new_node.add(suite[i])
+            }
+            node.children = [new_node]
+        }
 
         /* PEP 243 says that
         
