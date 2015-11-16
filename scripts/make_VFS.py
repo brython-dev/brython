@@ -129,7 +129,7 @@ def process(filename, exclude_dirs=['unittest','test','site-packages']):
                 _data = open(file_name, encoding='utf-8').read()
             
                 if _ext == '.py':
-                   _data = python_minifier.minify(_data)
+                   _data = python_minifier.minify(_data, preserve_lines=True)
 
                 _vfs_filename = os.path.join(_root, _file).replace(_main_root, '')
                 _vfs_filename = _vfs_filename.replace("\\", "/")
