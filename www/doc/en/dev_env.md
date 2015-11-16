@@ -7,7 +7,7 @@ file starting with "Brython\_site\_mirror" and unzip it in a directory (we
 refer to this directory as brython_directory in the next paragraphs).
 
 A web server is necessary to test the scripts locally while developing. Any web 
-server that can serve files with the brython_directory as document root will 
+server that can serve files with the brython_directory/www as document root will 
 work ; you can use the built-in web server provided in the distribution : open 
 a console window, go to the directory, and run `python server.py`. This will 
 start the server on port 8000 (edit _server.py_ to change the port number).
