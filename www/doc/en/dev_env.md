@@ -10,8 +10,8 @@ A web server is necessary to test the scripts locally while developing. Any web
 server that can serve files with the brython_directory/www as document root will 
 work ; you can use the built-in web server provided in the distribution : open 
 a console window, go to the directory, and run `python server.py`. This will 
-start the server on port 8000 (if you want to use other port number you can use, 
-for instance, `python server.py --port 8001` to use port 8001).
+start the server on port 8000 (if you want to use a different port number you can use
+`python server.py --port 8001` to use port 8001).
 
 Once the server is started, point your web browser to _http://localhost:8000/_ :
 the same page as the [Brython site homepage](http://www.brython.info) should
