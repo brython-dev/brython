@@ -30,7 +30,10 @@ Create a new directory (eg "test") in _brython_directory/www_. With a text edito
     </html>
 
 
-Point the browser to _http://localhost:8000/test/index.html_ : bingo ! you have written your first Brython script!!
+Point the browser to _http://localhost:8000/test/index.html_ : bingo, you have 
+written your first Brython script!!
 
-Use this environment for testing and developing. Just remember to point the script _brython.js_ to the right location relatively to the directory where the HTML page stands.
+Use this environment for testing and developing. Just remember to point the 
+script _brython.js_ to the right location relatively to the directory where the 
+HTML page stands.
 
