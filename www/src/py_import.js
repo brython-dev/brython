@@ -258,7 +258,7 @@ $B.run_py=run_py=function(module_contents,path,module,compiled) {
     if (!compiled) {
         var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
         $B.$py_module_path[module.__name__]=path
-
+        
         var root = $B.py2js(module_contents,module.__name__,
             module.__name__,'__builtins__')
 
@@ -279,6 +279,7 @@ $B.run_py=run_py=function(module_contents,path,module,compiled) {
         var ex_node = new $Node('expression')
         new $NodeJSCtx(ex_node,')(__BRYTHON__)')
         root.add(ex_node)
+        
     }
 
     try{
@@ -766,7 +767,7 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level, blocking)
        parsed_name = mod_name.split('.');
    if (modobj == _b_.None) {
        // [Import spec] Stop loading loop right away
-       throw _b_.ImportError(parent_name) 
+       throw _b_.ImportError(mod_name) 
    }
 
    if (modobj === undefined) {
@@ -776,8 +777,8 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level, blocking)
             fromlist = [];
        }
        // TODO: Async module download and request multiplexing
-       for (var i = 0, modsep = '', _mod_name = '', l = parsed_name.length - 1,
-                __path__ = _b_.None; i <= l; ++i) {
+       for (var i = 0, modsep = '', _mod_name = '', len = parsed_name.length - 1,
+                __path__ = _b_.None; i <= len; ++i) {
             var _parent_name = _mod_name;
             _mod_name += modsep + parsed_name[i];
             modsep = '.';
@@ -806,9 +807,18 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level, blocking)
             }
             // else { } // [Import spec] Module cache hit . Nothing to do.
             // [Import spec] If __path__ can not be accessed an ImportError is raised
-            if (i < l) {
+            if (i < len) {
                 try { __path__ = _b_.getattr($B.imported[_mod_name], '__path__') }
-                catch (e) { throw _b_.ImportError(_mod_name) }
+                catch (e) { 
+                    // If this is the last but one part, and the last part is
+                    // an attribute of module, and this attribute is a module,
+                    // return it. This is the case for os.path for instance
+                    if(i==len-1 && $B.imported[_mod_name][parsed_name[len]] && 
+                        $B.imported[_mod_name][parsed_name[len]].__class__===$B.$ModuleDict){
+                        return $B.imported[_mod_name][parsed_name[len]]
+                    }
+                    throw _b_.ImportError(_mod_name) 
+                }
             }
        }
    }
