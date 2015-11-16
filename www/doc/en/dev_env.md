@@ -1,14 +1,24 @@
 Development environment
 -----------------------
 
-Developers should use the environment available for [download](https://github.com/brython-dev/brython/releases) : choose the zip file starting with "Brython\_site\_mirror" and unzip it in a directory (we refer to this directory as brython_directory in the
-next paragraphs).
+Developers should use the environment available for 
+[download](https://github.com/brython-dev/brython/releases) : choose the zip 
+file starting with "Brython\_site\_mirror" and unzip it in a directory (we 
+refer to this directory as brython_directory in the next paragraphs).
 
-A web server is necessary to test the scripts locally while developing. Any web server that can serve files with the brython_directory as document root will work ; you can use the built-in web server provided in the distribution : open a console window, go to the directory, and run `python server.py`. This will start the server on port 8000 (edit _server.py_ to change the port number).
+A web server is necessary to test the scripts locally while developing. Any web 
+server that can serve files with the brython_directory as document root will 
+work ; you can use the built-in web server provided in the distribution : open 
+a console window, go to the directory, and run `python server.py`. This will 
+start the server on port 8000 (edit _server.py_ to change the port number).
 
-Once the server is started, point your web browser to _http://localhost:8000/_ : you should see the same page as the [Brython site homepage](http://www.brython.info).
+Once the server is started, point your web browser to _http://localhost:8000/_ :
+the same page as the [Brython site homepage](http://www.brython.info) should
+appear.
 
-Create a new directory (eg "test") in _brython_directory/www_. With a text editor, create a file called _index.html_ with the content below and save it in the directory _brython_directory/www/test/index.html_:
+Create a new directory (eg "test") in _brython_directory/www_. With a text 
+editor, create a file called _index.html_ with the content below and save it in 
+the directory _brython_directory/www/test/index.html_:
 
     <html>
     <head>
