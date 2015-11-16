@@ -3,7 +3,7 @@ Development environment
 
 Developers should use the environment available for 
 [download](https://github.com/brython-dev/brython/releases) : choose the zip 
-file starting with "BrythonX.Y.Z\_site\_mirror" where X.Y.Z is the latest
+file starting with "BrythonX.Y.Z\_site\_mirror" where X.Y.Z is the 
 version number and unzip it in a directory (we refer to this directory as brython_directory in the next paragraphs).
 
 A web server is necessary to test the scripts locally while developing. Any web 
@@ -16,9 +16,9 @@ Once the server is started, point your web browser to _http://localhost:8000/_ :
 the same page as the [Brython site homepage](http://www.brython.info) should
 appear.
 
-Create a new directory (eg "test") in _brython_directory/www_. With a text 
+Create a new directory (eg "whatever") in _brython_directory/www_. With a text 
 editor, create a file called _index.html_ with the content below and save it in 
-the directory _brython_directory/www/test/index.html_:
+the directory _brython_directory/www/whatever/index.html_:
 
     <html>
     <head>
@@ -40,7 +40,7 @@ the directory _brython_directory/www/test/index.html_:
     </html>
 
 
-Point the browser to _http://localhost:8000/test/index.html_ : bingo, you have 
+Point the browser to _http://localhost:8000/whatever/index.html_ : bingo, you have 
 written your first Brython script!!
 
 Use this environment for testing and developing. Just remember to point the 
