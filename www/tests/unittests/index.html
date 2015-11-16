@@ -3,36 +3,6 @@
 <head>
 <meta charset="iso-8859-1">
 
-<script type="text/javascript" src="../../src/brython_builtins.js"></script>
-<script type="text/javascript" src="../../src/version_info.js"></script>
-<script type="text/javascript" src="../../src/identifiers_re.js"></script>
-<script type="text/javascript" src="../../src/py2js.js"></script>
-<script type="text/javascript" src="../../src/py_object.js"></script>
-<script type="text/javascript" src="../../src/py_type.js"></script>
-<script type="text/javascript" src="../../src/py_utils.js"></script>
-<script type="text/javascript" src="../../src/py_builtin_functions.js"></script>
-<script type="text/javascript" src="../../src/py_exceptions.js"></script>
-<script type="text/javascript" src="../../src/py_range_slice.js"></script>
-<script type="text/javascript" src="../../src/py_bytes.js"></script>
-<script type="text/javascript" src="../../src/py_set.js"></script>
-<script type="text/javascript" src="../../src/js_objects.js"></script>
-<script type="text/javascript" src="../../src/stdlib_paths.js"></script>
-<script type="text/javascript" src="../../src/py_import.js"></script>
-
-<script type="text/javascript" src="../../src/py_string.js"></script>
-<script type="text/javascript" src="../../src/py_int.js"></script>
-<script type="text/javascript" src="../../src/py_long_int.js"></script>
-<script type="text/javascript" src="../../src/py_float.js"></script>
-<script type="text/javascript" src="../../src/py_complex.js"></script>
-<script type="text/javascript" src="../../src/py_dict.js"></script>
-<script type="text/javascript" src="../../src/py_list.js"></script>
-<script type="text/javascript" src="../../src/py_generator.js"></script>
-<script type="text/javascript" src="../../src/py_dom.js"></script>
-
-<script type="text/javascript" src="../../src/builtin_modules.js"></script>
-<script type="text/javascript" src="../../src/py_import_hooks.js"></script>
-<script type="text/javascript" src="../../src/async.js"></script>
-
 <link rel="stylesheet" href="../../doc/doc_brython.css">
 <style>
 #report {
@@ -200,7 +170,19 @@ Brython version: <span id="version"></span>
 <div id="container" style="clear:both; width:100%;height:50%;overflow:auto">
 </div>
 
-<script type="text/javascript" src="../../../src/py_VFS.js"></script>
+<button onclick="show_frames()">Show frames</button>
+<script>
+function show_frames(){
+    var stack = __BRYTHON__.frames_stack
+    console.log('frames stack', stack.length)
+    for(var i=0;i<stack.length;i++){
+        var frame = stack[i], lines=__BRYTHON__.$py_src[frame[2]].split('\n'),
+            line_num = parseInt(frame[1].$line_info.split(',')[0])
+        console.log(i, frame[0], frame[1].$line_info, frame[2], lines[line_num-1])
+    }
+}
+</script>
+<script type="text/javascript" src="/src/brython_dist.js"></script>
 
 </body>
 </html>
