@@ -573,6 +573,16 @@ for a,*b in [[1, 2, 3]]:
 
 # related to issue 327
 def f():
+    a += 1
+
+assertRaises(UnboundLocalError, f)
+
+def f():
+    a = a+1
+
+assertRaises(UnboundLocalError, f)
+
+def f():
     for i in 1,2:
         if i==2:
             x = a
@@ -581,6 +591,16 @@ def f():
     return x
 
 assert f()==1
+
+def f():
+    for i in 1,2:
+        if i==2:
+            a += 1
+        else:
+            a = 1
+    return a
+
+assert f()==2
 
 # ==========================================
 # Finally, report that all tests have passed
