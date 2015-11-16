@@ -20,6 +20,9 @@ var $script_dir = $B.script_dir = $href_elts.join('/')
 // Mapping between a module name and its path (url)
 $B.$py_module_path = {}
 
+// Mapping between a Python module name and its source code
+$B.$py_src = {}
+
 // __BRYTHON__.path is the list of paths where Python modules are searched
 $B.path = [$path+'Lib', $path+'libs', $script_dir, $path+'Lib/site-packages']
 

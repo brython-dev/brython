@@ -7077,27 +7077,20 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     root.insert(0, $NodeJS(js.join('')))
     offset++
 
-    //if(!internal){
-        // module doc string
-        var ds_node = new $Node()
-        new $NodeJSCtx(ds_node, local_ns+'["__doc__"]='+(root.doc_string||'None')+';')
-        root.insert(offset++,ds_node)
-        // name
-        var name_node = new $Node()
-        var lib_module = module
-        new $NodeJSCtx(name_node,local_ns+'["__name__"]='+local_ns+'["__name__"] || "'+locals_id+'";')
-        root.insert(offset++,name_node)
-        // file
-        var file_node = new $Node()
-        new $NodeJSCtx(file_node,local_ns+'["__file__"]="'+$B.$py_module_path[module]+'";None;\n')
-        root.insert(offset++,file_node)
-    /*
-    }else{
-        for(var i=$B.frames_stack.length-1;i>=0;i--){
-            console.log(i, $B.frames_stack[i][2], $B.frames_stack[i][3].__file__)
-        }
-    }
-    */
+    // module doc string
+    var ds_node = new $Node()
+    new $NodeJSCtx(ds_node, local_ns+'["__doc__"]='+(root.doc_string||'None')+';')
+    root.insert(offset++,ds_node)
+    // name
+    var name_node = new $Node()
+    var lib_module = module
+    new $NodeJSCtx(name_node,local_ns+'["__name__"]='+local_ns+'["__name__"] || "'+locals_id+'";')
+    root.insert(offset++,name_node)
+    // file
+    var file_node = new $Node()
+    new $NodeJSCtx(file_node,local_ns+'["__file__"]="'+$B.$py_module_path[module]+'";None;\n')
+    root.insert(offset++,file_node)
+
     root.insert(offset++, $NodeJS('$B.enter_frame(["'+locals_id+'", '+local_ns+','+
         '"'+module+'", '+global_ns+']);\n'))
         
@@ -7118,7 +7111,6 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
 
 function brython(options){
     var _b_=$B.builtins
-    $B.$py_src = {}
     
     // meta_path used in py_import.js
     if ($B.meta_path === undefined) {
