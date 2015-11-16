@@ -20,8 +20,9 @@ import token
 import tokenize
 import re
 import io
+from keyword import kwlist
 
-def minify(src):
+def minify(src, preserve_lines=False):
     
     # tokenize expects method readline of file in binary mode
     file_obj = io.BytesIO(src.encode('utf-8'))
@@ -40,7 +41,7 @@ def minify(src):
     token_generator = tokenize.tokenize(file_obj.readline)    
 
     for item in token_generator:
-
+        
         # update brackets stack if necessary
         if token.tok_name[item.type]=='OP':
             if item.string in '([{':
@@ -60,6 +61,7 @@ def minify(src):
             continue
 
         if sline>line: # first token in a line
+            
             if not brackets and item.type==tokenize.STRING:
                 if last_type in [tokenize.NEWLINE, tokenize.INDENT, None]:
                     # If not inside a bracket, replace a string starting a
@@ -67,6 +69,8 @@ def minify(src):
                     # It will be removed if the next line has the same
                     # indentation.
                     out += ' '*indent+"''"
+                    if preserve_lines:
+                        out += '\n'*item.string.count('\n')
                     continue
             out += ' '*indent # start with current indentation
             if item.type not in [tokenize.INDENT, tokenize.COMMENT]:
@@ -84,11 +88,16 @@ def minify(src):
                 # If not inside a bracket, ignore string after newline or
                 # indent
                 out += "''"
+                if preserve_lines:
+                    out += '\n'*item.string.count('\n')
                 continue
             if item.type in [tokenize.NAME, tokenize.NUMBER, tokenize.OP] and \
                 last_type in [tokenize.NAME, tokenize.NUMBER]:
-                # insert a space between names and numbers
-                out += ' '
+                # insert a space when needed
+                if item.type != tokenize.OP \
+                    or item.string not in ',()[].=:{}+&' \
+                    or (last_type == tokenize.NAME and last_item.string in kwlist):
+                        out += ' '
             elif item.type == tokenize.STRING and \
                 item.string[0] in 'rbu' and \
                 last_type in [tokenize.NAME, tokenize.NUMBER]:
@@ -97,24 +106,29 @@ def minify(src):
             out += item.string
 
         line = item.end[0]
+        last_item = item
         if item.type==tokenize.NL and last_type==tokenize.COMMENT:
             # NL after COMMENT is interpreted as NEWLINE
             last_type = tokenize.NEWLINE
         else:
             last_type = item.type
 
-    # remove empty line at the start of the script (doc string)
-    out = re.sub("^''\n", '', out)
-        
-    # remove consecutive empty lines
-    out = re.sub('\n( *\n)+', '\n', out)
+    # replace lines with only whitespace by empty lines
+    out = re.sub('^\s+$', '', out, re.M)
 
-    # remove lines with an empty string followed by a line that starts with 
-    # the same indent
-    def repl(mo):
-        if mo.groups()[0]==mo.groups()[1]:
-            return '\n'+mo.groups()[1]
-        return mo.string[mo.start(): mo.end()]
-    out = re.sub("\n( *)''\n( *)", repl, out)
+    if not preserve_lines:
+        # remove empty line at the start of the script (doc string)
+        out = re.sub("^''\n", '', out)
+            
+        # remove consecutive empty lines
+        out = re.sub('\n( *\n)+', '\n', out)
+    
+        # remove lines with an empty string followed by a line that starts with 
+        # the same indent
+        def repl(mo):
+            if mo.groups()[0]==mo.groups()[1]:
+                return '\n'+mo.groups()[1]
+            return mo.string[mo.start(): mo.end()]
+        out = re.sub("\n( *)''\n( *)", repl, out)
     
     return out
