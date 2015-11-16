@@ -3,8 +3,8 @@ Development environment
 
 Developers should use the environment available for 
 [download](https://github.com/brython-dev/brython/releases) : choose the zip 
-file starting with "Brython\_site\_mirror" and unzip it in a directory (we 
-refer to this directory as brython_directory in the next paragraphs).
+file starting with "BrythonX.Y.Z\_site\_mirror" where X.Y.Z is the latest
+version number and unzip it in a directory (we refer to this directory as brython_directory in the next paragraphs).
 
 A web server is necessary to test the scripts locally while developing. Any web 
 server that can serve files with the brython_directory/www as document root will 
