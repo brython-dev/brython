@@ -3,6 +3,7 @@
 
 import json
 import os
+import re
 
 import javascript_minifier
 import python_minifier
@@ -122,7 +123,9 @@ def process(filename, exclude_dirs=['unittest','test','site-packages']):
             for _file in _files:
                 _ext = os.path.splitext(_file)[1]
                 if _ext not in ('.js', '.py'):
-                   continue
+                    continue
+                if re.match(r'^module\d+\..*$', _file):
+                    continue
                 nb += 1
 
                 file_name = os.path.join(_root, _file)
