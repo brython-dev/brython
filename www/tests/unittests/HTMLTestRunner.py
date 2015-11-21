@@ -165,6 +165,7 @@ class _TestResult(TestResult):
             if fname == test.__class__.__module__:
                 infos.append(tb.tb_lineno)
             tb = tb.tb_next
+        infos = infos or ['<nc>']
         try:
             str(err[1]).splitlines()
         except:
