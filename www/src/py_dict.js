@@ -468,7 +468,7 @@ $DictDict.fromkeys = function(){
     var $ = $B.args('fromkeys', 2, {keys:null, value:null},
         ['keys', 'value'], arguments, {}, null, null),
         keys=$.keys, value=$.value
-    console.log(keys, value)
+
     // class method
     if(value===undefined) value=None
     var res = dict()
