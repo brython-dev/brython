@@ -17,9 +17,9 @@ Once the server is started, point your web browser to _http://localhost:8000/_ :
 the same page as the [Brython site homepage](http://www.brython.info) should
 appear.
 
-Create a new directory (eg "whatever") in _brython_directory/www_. With a text 
+Create a new directory (eg "whatever") in _brython\_directory/www_. With a text 
 editor, create a file called _index.html_ with the content below and save it in 
-the directory _brython_directory/www/whatever/index.html_:
+the directory _brython\_directory/www/whatever/index.html_:
 
     <html>
     <head>
