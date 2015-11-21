@@ -46,16 +46,15 @@ document['container'].style.height='%dpx' % (_height-_top-10)
 from browser import timer
 from browser import document, alert, window, html
 
-
-
 import sys
+import os
 from test import support
 import unittest
 import HTMLTestRunner
 
 del document["msgbox"]
 
-sys.path.append("../../src/Lib/test")
+sys.path.append(os.path.join(os.getcwd(), "Lib", "test"))
 
 def flush(*args):
     from javascript import console
