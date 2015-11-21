@@ -110,7 +110,6 @@ function $_SyntaxError(context,msg,indent){
     var module = tree_node.module
     var line_num = tree_node.line_num
     if(indent!==undefined){line_num++}
-    $B.frames_stack.push([module,{$line_info:line_num+','+module}])
     if(indent===undefined){
         if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],$pos)}
         if(msg==="Triple string end not found"){
@@ -1944,16 +1943,17 @@ function $DefCtx(context){
         nodes.push(new_node)
 
         // Push id in frames stack
-        var new_node = new $Node()
-        var js = ';$B.enter_frame([$local_name, $locals,'
-        js += '"'+global_scope.id+'", '+global_ns+']);' 
-        new_node.enter_frame = true
-        new $NodeJSCtx(new_node,js)
-        nodes.push(new_node)
+        var enter_frame_node = new $Node(),
+            enter_frame_node_rank = nodes.length
+        var js = ';$B.enter_frame([$local_name, $locals,'+
+            '"'+global_scope.id+'", '+global_ns+']);' 
+        enter_frame_node.enter_frame = true
+        new $NodeJSCtx(enter_frame_node,js)
+        nodes.push(enter_frame_node)
 
         this.env = []
     
-        // Code in the worst case, uses MakeArgs1 in py_utils.js
+        // Code in the worst case, uses $B.args in py_utils.js
 
         var make_args_nodes = []
         var func_ref = '$locals_'+scope.id.replace(/\./g,'_')+'["'+this.name+'"]'
@@ -2079,10 +2079,7 @@ function $DefCtx(context){
 
         var last_instr = node.children[node.children.length-1].context.tree[0]
         if(last_instr.type!=='return' && this.type!='generator'){
-            new_node = new $Node()
-            new $NodeJSCtx(new_node,
-                ';$B.leave_frame("'+this.id+'");return None;')
-            def_func_node.add(new_node)
+            def_func_node.add($NodeJS('return None'))
         }
 
         // Remove children of original node
@@ -2227,6 +2224,29 @@ function $DefCtx(context){
            }
         }
         */
+
+        // wrap everything in a try/finally to be sure to exit from frame
+        if(this.type=='def'){
+            var parent = enter_frame_node.parent
+            for(var pos=0;pos<parent.children.length && 
+                parent.children[pos]!==enter_frame_node;pos++){}
+            var try_node = new $Node(),
+                children = parent.children.slice(pos+1, parent.children.length),
+                ctx = new $NodeCtx(try_node)
+            parent.insert(pos+1, try_node)
+            new $TryCtx(ctx)
+            for(var i=0;i<children.length;i++){
+                try_node.add(children[i])
+            }
+            parent.children.splice(pos+2,parent.children.length)
+            
+            var finally_node = new $Node(),
+                ctx = new $NodeCtx(finally_node)
+            new $SingleKwCtx(ctx, 'finally')
+            finally_node.add($NodeJS('$B.leave_frame($local_name)'))
+            
+            parent.add(finally_node)
+        }        
 
         this.transformed = true
         
@@ -4111,10 +4131,12 @@ function $ReturnCtx(context){
         // execution frame ; but if the return is in a "try" with a "finally"
         // clause, we must remain in the same frame
         var node = $get_node(this),
-            leave_frame = true
+            leave_frame = true,
+            in_try = false
         
         while(node && leave_frame){
             if(node.is_try){
+                in_try = true
                 pnode = node.parent, flag=false
                 for(var i=0;i<pnode.children.length;i++){
                     var child = pnode.children[i]
@@ -4130,9 +4152,24 @@ function $ReturnCtx(context){
             }
             node = node.parent
         }
-        var res = 'var $res = '+$to_js(this.tree)+';'
-        if(leave_frame){res += '$B.leave_frame($local_name);'}
-        return res+'return $res'
+        
+        // Executing the target of "return" might raise an exception.
+        
+        if(leave_frame && !in_try){
+            // Computing the target of "return" may raise an exception
+            // If the return is in a try clause, this exception is handled
+            // somewhere else
+            var res = 'try{var $res = '+$to_js(this.tree)+';'+
+                '$B.leave_frame($local_name);return $res}catch(err){'+
+                '$B.leave_frame($local_name);throw err}'
+        }else if(leave_frame){
+            var res = 'var $res = '+$to_js(this.tree)+';'+
+                '$B.leave_frame($local_name);return $res'
+        }else{
+            var res = "return "+$to_js(this.tree)
+        }
+        var res = "return "+$to_js(this.tree)
+        return res
     }
 }
 
@@ -4362,9 +4399,10 @@ function $TryCtx(context){
         // Transform node into Javascript 'try' (necessary if
         // "try" inside a "for" loop)
         // add a boolean $failed, used to run the 'else' clause
-        var js = $var+'=false;'
-        js += '$locals["$frame'+$loop_num+'"]=$B.frames_stack.slice();'
-        js += 'try'
+        var js = $var+'=false;'+
+            // '$locals["$frame'+$loop_num+'"]=$B.frames_stack.slice();'+
+            // 'console.log("save frames", $B.last($B.frames_stack)[0]);'+
+            'try'
         new $NodeJSCtx(node, js)
         node.is_try = true // used in generators
         
@@ -4435,10 +4473,15 @@ function $TryCtx(context){
             pos++
         }
         // restore frames stack as before the try clause
+        /*
         var frame_node = new $Node()
-        var js = ';$B.frames_stack = $locals["$frame'+$loop_num+'"];'
+        var js = ';$B.frames_stack = $locals["$frame'+$loop_num+'"];'+
+            'console.log("restore frames", $B.last($B.frames_stack)[0]);'
+
         new $NodeJSCtx(frame_node, js)
         node.parent.insert(pos, frame_node)
+        */
+        
         $loop_num++
     }
 
@@ -7091,20 +7134,37 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     new $NodeJSCtx(file_node,local_ns+'["__file__"]="'+$B.$py_module_path[module]+'";None;\n')
     root.insert(offset++,file_node)
 
+    var enter_frame_pos = offset
     root.insert(offset++, $NodeJS('$B.enter_frame(["'+locals_id+'", '+local_ns+','+
         '"'+module+'", '+global_ns+']);\n'))
-        
+
+    // Wrap code in a try/finally to make sure we leave the frame
+    var try_node = new $Node(),
+        children = root.children.slice(enter_frame_pos+1, root.children.length),
+        ctx = new $NodeCtx(try_node)
+    root.insert(enter_frame_pos+1, try_node)
+    new $TryCtx(ctx)
+    
+    // Add module body to the "try" clause
+    if(children.length==0){children=[$NodeJS('')]} // in case the script is empty
+    for(var i=0;i<children.length;i++){
+        try_node.add(children[i])
+    }
+    root.children.splice(enter_frame_pos+2, root.children.length)
+    
+    var finally_node = new $Node(),
+        ctx = new $NodeCtx(finally_node)
+    new $SingleKwCtx(ctx, 'finally')
+    finally_node.add($NodeJS('$B.leave_frame("'+locals_id+'")'))
+    
+    root.add(finally_node)
+    
     if($B.debug>0){$add_line_num(root,null,module)}
     
     if($B.debug>=2){
         var t1 = new Date().getTime()
         console.log('module '+module+' translated in '+(t1 - t0)+' ms')
     }
-    
-    // leave frame at the end of module
-    var new_node = new $Node()
-    new $NodeJSCtx(new_node,'\n;$B.leave_frame("'+locals_id+'");\n')
-    root.add(new_node)
 
     return root
 }

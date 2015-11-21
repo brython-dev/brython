@@ -335,16 +335,21 @@ function $eval(src, _globals, _locals){
         // If the Python function is eval(), not exec(), check that the source
         // is an expression
         if(!is_exec){
-            // last instruction is 'leave frame' ; we must remove it, 
-            // otherwise eval() would return None
-            root.children.pop()
-            leave = true
-            var instr = root.children[root.children.length-1]
+            var try_node = root.children[root.children.length-2],
+                instr = $B.last(try_node.children)
             var type = instr.context.tree[0].type
             if (!('expr' == type || 'list_or_tuple' == type || 'op'==type)) {
-                //console.log('not expression '+instr.context.tree[0])
                 //$B.line_info="1,"+module_name
-                throw _b_.SyntaxError("eval() argument must be an expression")
+                throw _b_.SyntaxError("eval() argument must be an expression",
+                    '<string>', 1, 1, src)
+            }else{
+                // If the source is an expression, what we must execute is the
+                // block inside the "try" clause : if we run root, since it's
+                // wrapped in try / finally, the value produced by 
+                // eval(root.to_js()) will be None
+                var children = try_node.children
+                root.children.splice(root.children.length-2, 2)
+                for(var i=0;i<children.length;i++){root.add(children[i])}
             }
         }
 
@@ -390,7 +395,11 @@ function $eval(src, _globals, _locals){
         if(err.$py_error===undefined){throw $B.exception(err)}
         throw err
     }finally{
-        if(leave){$B.leave_frame()}
+        if(!is_exec){
+            // For eval(), the finally clause with "leave_frame" was removed
+            // so we must execute it here
+            $B.leave_frame(locals_id)
+        }
     }
 }
 $eval.$is_func = true

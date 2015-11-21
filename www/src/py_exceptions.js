@@ -136,6 +136,7 @@ $BaseExceptionDict.__new__ = function(cls){
 
 $BaseExceptionDict.__getattr__ = function(self, attr){
     if(attr=='info'){
+
         var info = 'Traceback (most recent call last):'
 
         if(self.$js_exc!==undefined){
@@ -175,13 +176,13 @@ $BaseExceptionDict.with_traceback = function(self, tb){
 
 $B.set_func_names($BaseExceptionDict)
 
-var BaseException = function (msg,js_exc){
+var BaseException = function (){
     var err = Error()
     err.__name__ = 'BaseException'
-    err.$js_exc = js_exc
+    //err.$js_exc = js_exc
    
-    err.args = msg === undefined ? _b_.tuple() : _b_.tuple([msg])
-    err.$message = msg
+    err.args = _b_.tuple(Array.prototype.slice.call(arguments))
+    err.$message = arguments[0]
     err.__class__ = $BaseExceptionDict
     err.$py_error = true
     err.$stack = $B.frames_stack.slice()
@@ -234,6 +235,7 @@ $B.exception = function(js_exc){
         var exc = Error()
         exc.__name__ = 'Internal Javascript error: '+(js_exc.__name__ || js_exc.name)
         exc.__class__ = _b_.Exception.$dict
+        exc.$js_exc = js_exc
         if(js_exc.name=='ReferenceError'){
             exc.__name__='NameError'
             exc.__class__=_b_.NameError.$dict
@@ -246,11 +248,10 @@ $B.exception = function(js_exc){
         exc.args = _b_.tuple([exc.$message])
         exc.info = ''
         exc.$py_error = true
-        exc.traceback = traceback($B.frames_stack)
+        exc.$stack = $B.frames_stack.slice()
     }else{
         var exc = js_exc
     }
-    exc.$stack = $B.frames_stack.slice()
     $B.current_exception = exc
     return exc
 }
