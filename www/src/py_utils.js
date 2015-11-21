@@ -608,7 +608,7 @@ $B.$syntax_err_line = function(exc,module,pos) {
     //  line=line.substr(1)
     //  lpos--
     //}
-    exc.args = _b_.tuple([$B.$getitem(exc.args,0),_b_.tuple([module, line_num, lpos, line])])
+    exc.args = _b_.tuple([$B.$getitem(exc.args,0), module, line_num, lpos, line])
 }
 
 $B.$SyntaxError = function(module,msg,pos) {
@@ -1062,17 +1062,20 @@ $B.int_value = function(v){
 }
 
 $B.enter_frame = function(frame){
+    // Enter execution frame : save on top of frames stack
     if($B.frames_stack===undefined){alert('frames stack udef')}
     $B.frames_stack[$B.frames_stack.length]=frame
 }
 
 $B.leave_frame = function(arg){
-    // We must leave at least the frame for the main program
-    //if($B.frames_stack.length>1){
-    //    var top = $B.last($B.frames_stack)
-       $B.frames_stack.pop()
-        //delete $B.modules[frame[0]],$B.$py_src[frame[0]]
-    //}
+    // Leave execution frame
+    if($B.frames_stack.length==0){console.log('empty stack');return}
+    var last = $B.last($B.frames_stack)
+    if(last[0]!=arg){
+        // print a warning if arg is not on top of frames stack
+        console.log('leave error', 'leaving', arg, 'last on stack', last[0])
+    }
+    $B.frames_stack.pop()
 }
 
 var min_int=Math.pow(-2, 53), max_int=Math.pow(2,53)-1
