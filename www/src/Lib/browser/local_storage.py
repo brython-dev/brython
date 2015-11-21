@@ -1,7 +1,7 @@
 # local storage in browser
 import sys
 from javascript import JSObject
-from browser import window
+from browser import window, console
 
 has_local_storage = hasattr(window, 'localStorage')
 
@@ -27,7 +27,7 @@ class LocalStorage():
         if (not isinstance(key, str)):
             raise TypeError("key must be string")
         res = __BRYTHON__.JSObject(self.store.getItem(key))
-        if res:
+        if res is not None:
             return res
         raise KeyError(key)
 
