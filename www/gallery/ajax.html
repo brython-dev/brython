@@ -20,6 +20,8 @@ a.sort_link{margin-left:10px;text-decoration:none}
 <button id="timeout">timeout</button>
 
 <script id="ascript" type="text/python">
+import time
+
 from browser import document as doc
 from browser import ajax
 
@@ -36,11 +38,15 @@ def err_msg():
 
 timeout = 4
 
+def fake_qs():
+    return '?foo=%s' %time.time()
+
 def go(url):
     req = ajax.ajax()
     req.bind('complete',on_complete)
     req.set_timeout(timeout,err_msg)
-    req.open('GET',url,True)
+    req.open('GET',url+fake_qs(),True)
+    print('send get request')
     req.send()
 
 def post(url):
