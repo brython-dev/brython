@@ -1063,12 +1063,14 @@ $B.int_value = function(v){
 
 $B.enter_frame = function(frame){
     // Enter execution frame : save on top of frames stack
+    //console.log('enter frame', frame[0])
     if($B.frames_stack===undefined){alert('frames stack udef')}
     $B.frames_stack[$B.frames_stack.length]=frame
 }
 
 $B.leave_frame = function(arg){
     // Leave execution frame
+    //console.log('leave frame', arg)
     if($B.frames_stack.length==0){console.log('empty stack');return}
     var last = $B.last($B.frames_stack)
     if(last[0]!=arg){
@@ -1076,6 +1078,7 @@ $B.leave_frame = function(arg){
         console.log('leave error', 'leaving', arg, 'last on stack', last[0])
     }
     $B.frames_stack.pop()
+    //console.log($B.frames_stack.length, 'frames remain')
 }
 
 var min_int=Math.pow(-2, 53), max_int=Math.pow(2,53)-1

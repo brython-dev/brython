@@ -264,9 +264,10 @@ $EnumerateDict.$factory = enumerate
 function $eval(src, _globals, _locals){
 
     var current_frame = $B.frames_stack[$B.frames_stack.length-1]
-    if(current_frame===undefined){alert('current frame undef pour '+src.substr(0,30))}
-    var current_locals_id = current_frame[0].replace(/\./,'_'),
-        current_globals_id = current_frame[2].replace(/\./,'_')
+    if(current_frame!==undefined){
+        var current_locals_id = current_frame[0].replace(/\./,'_'),
+            current_globals_id = current_frame[2].replace(/\./,'_')
+    }
 
     var is_exec = arguments[3]=='exec',leave = false
 
@@ -329,7 +330,8 @@ function $eval(src, _globals, _locals){
             }
         }
     }
-    var root = $B.py2js(src, globals_id, locals_id, parent_block_id)
+    var root = $B.py2js(src, globals_id, locals_id, parent_block_id),
+        leave_frame = true
 
     try{
         // If the Python function is eval(), not exec(), check that the source
@@ -339,7 +341,7 @@ function $eval(src, _globals, _locals){
                 instr = $B.last(try_node.children)
             var type = instr.context.tree[0].type
             if (!('expr' == type || 'list_or_tuple' == type || 'op'==type)) {
-                //$B.line_info="1,"+module_name
+                leave_frame = false
                 throw _b_.SyntaxError("eval() argument must be an expression",
                     '<string>', 1, 1, src)
             }else{
@@ -349,16 +351,16 @@ function $eval(src, _globals, _locals){
                 // eval(root.to_js()) will be None
                 var children = try_node.children
                 root.children.splice(root.children.length-2, 2)
-                for(var i=0;i<children.length;i++){root.add(children[i])}
+                for(var i=0;i<children.length;i++){
+                    root.add(children[i])
+                }
             }
         }
 
         var js = root.to_js()
         
         if ($B.async_enabled) js=$B.execution_object.source_conversion(js) 
-        //js=js.replace("@@", "\'", 'g')
  
-        //console.log(module_id, local_id, $B.imported[module_id])
         var res = eval(js)
         var gns = eval('$locals_'+globals_id)
 
@@ -388,14 +390,10 @@ function $eval(src, _globals, _locals){
         if(res===undefined) return _b_.None
         return res
     }catch(err){
-        //console.log('eval error\n', err)
-        //console.log(root,js)
-        //console.log('globals ns', eval('$locals_'+globals_id),'local',
-        //    eval('$locals_'+locals_id))
         if(err.$py_error===undefined){throw $B.exception(err)}
         throw err
     }finally{
-        if(!is_exec){
+        if(!is_exec && leave_frame){
             // For eval(), the finally clause with "leave_frame" was removed
             // so we must execute it here
             $B.leave_frame(locals_id)
