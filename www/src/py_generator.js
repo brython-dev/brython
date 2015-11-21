@@ -340,20 +340,22 @@ $BRGeneratorDict.__next__ = function(self){
     // Call the function _next to yield a value
     try{
         var res = self._next.apply(null, self.args)
+    }catch(err){
+        var last_frame = $B.last($B.frames_stack)
+        self._next = function(){
+            var $locals = $B.vars[self.iter_id]
+            // Must enter a frame with the correct local id, to balance the
+            // call to leave_frame in the "finally" clause
+            $B.enter_frame([self.iter_id, $locals,self.env[0],{}])
+            throw StopIteration('after exception')
+        }
+        clear_ns(self.iter_id)
+        throw err
+    }finally{
         self.gi_running = false
         // The line "leave_frame" is not inserted in the function body for
         // generators, so we must call it here to pop from frames stack
         $B.leave_frame(self.iter_id)
-    }catch(err){
-        var last_frame = $B.last($B.frames_stack)
-        self._next = function(){
-            var _err = StopIteration('after exception')
-            _err.caught = true
-            throw _err
-        }
-        clear_ns(self.iter_id)
-        self.gi_running = false
-        throw err
     }
     if(res===undefined){throw StopIteration("")}
 

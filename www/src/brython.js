@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,3,'final',0]
 __BRYTHON__.__MAGIC__="3.2.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-11-21 17:37:09.249137"
+__BRYTHON__.compiled_date="2015-11-21 21:20:41.966639"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_locale","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -9134,7 +9134,6 @@ var $=$B.args('copy',1,{self:null},['self'],arguments,{},null,null),self=$.self,
 $copy_dict(res,self)
 return res}
 $DictDict.fromkeys=function(){var $=$B.args('fromkeys',2,{keys:null,value:null},['keys','value'],arguments,{},null,null),keys=$.keys,value=$.value
-console.log(keys,value)
 if(value===undefined)value=None
 var res=dict()
 var keys_iter=_b_.iter(keys)
@@ -10146,15 +10145,13 @@ self._next=$B.$generators[self.iter_id]}
 if(self.gi_running){throw _b_.ValueError("ValueError: generator already executing")}
 self.gi_running=true
 for(var i=0;i<self.env.length;i++){eval('var $locals_'+self.env[i][0]+'=self.env[i][1]')}
-try{var res=self._next.apply(null,self.args)
-self.gi_running=false
-$B.leave_frame(self.iter_id)}catch(err){var last_frame=$B.last($B.frames_stack)
-self._next=function(){var _err=StopIteration('after exception')
-_err.caught=true
-throw _err}
+try{var res=self._next.apply(null,self.args)}catch(err){var last_frame=$B.last($B.frames_stack)
+self._next=function(){var $locals=$B.vars[self.iter_id]
+$B.enter_frame([self.iter_id,$locals,self.env[0],{}])
+throw StopIteration('after exception')}
 clear_ns(self.iter_id)
-self.gi_running=false
-throw err}
+throw err}finally{self.gi_running=false
+$B.leave_frame(self.iter_id)}
 if(res===undefined){throw StopIteration("")}
 if(res[0].__class__==$GeneratorReturn){
 self._next=function(){throw StopIteration("after generator return")}
