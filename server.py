@@ -10,6 +10,18 @@ served from subdirectory cgi-bin
 import os
 import sys
 from webbrowser import open_new_tab
+import argparse
+
+# port to be used when the server runs locally
+parser = argparse.ArgumentParser()
+parser.add_argument('--port', 
+    help="The port to be used by the local server")
+args = parser.parse_args()
+
+if args.port:
+    port = int(args.port)
+else:
+    port = 8000
 
 # generate static doc pages if not already present
 if not os.path.exists(os.path.join(os.getcwd(),'www','static_doc')):
@@ -40,7 +52,7 @@ class RequestHandler(CGIHTTPRequestHandler):
             return os.path.join(cgi_dir,*elts[2:])
         return CGIHTTPRequestHandler.translate_path(self, path)
 
-server_address, handler = ('', 8000), RequestHandler
+server_address, handler = ('', port), RequestHandler
 httpd = server.HTTPServer(server_address, handler)
 print(__doc__)
 print(("Server running on port http://localhost:{}.".format(server_address[1])))
