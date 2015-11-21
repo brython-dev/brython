@@ -1043,7 +1043,7 @@ $QueryDict.getlist = function(self,key){
 }
 
 $QueryDict.getvalue = function(self,key,_default){
-    try{return self.__getitem__(key)}
+    try{return $QueryDict.__getitem__(self, key)}
     catch(err){
         if(_default===undefined) return None
         return _default
