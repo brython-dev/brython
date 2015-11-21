@@ -56,18 +56,11 @@ var $item_generator = function(d) {
     var pos=0
     for (var k in d.$numeric_dict) {
         items[pos++]=[parseFloat(k), d.$numeric_dict[k]]
-        if(items[pos-1]===undefined){console.log('numeric undef')}
     }
 
-    for (var k in d.$string_dict) {
-        items[pos++]=[k, d.$string_dict[k]]
-        if(items[pos-1]===undefined){console.log('string undef')}
-    }
+    for (var k in d.$string_dict) {items[pos++]=[k, d.$string_dict[k]]}
 
-    for (var k in d.$object_dict) {
-        items[pos++] = d.$object_dict[k]
-        if(items[pos-1]===undefined){console.log('object undef')}
-    }
+    for (var k in d.$object_dict) {items[pos++] = d.$object_dict[k]}
 
     this.items=items
     this.length=items.length
@@ -393,10 +386,6 @@ $DictDict.__repr__ = function(self){
     var items = new $item_generator(self).as_list()
     for (var i=0; i < items.length; i++) {
         var itm = items[i]
-        if(itm===undefined){
-            console.log('item', i, 'undefined')
-            console.log(items.length,'items')
-        }
         if (_objs.indexOf(itm[1]) > -1 && _b_.isinstance(itm[1], [_b_.dict,_b_.list,_b_.set, _b_.tuple])) {
            var value='?'+_b_.type(itm[1])
            if(isinstance(itm[1], dict)) value='{...}'
