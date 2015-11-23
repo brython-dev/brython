@@ -471,9 +471,7 @@ function getattr(obj,attr,_default){
            return obj
         } else if (klass===$B.JSObject.$dict && typeof obj.js=='function'){
           return function(){
-            var res = obj.js.apply(null,arguments)
-            if(res===undefined) return _b_.None
-            return $B.JSObject(res)
+            return $B.$JS2Py(obj.js.apply(null,arguments))
           }
         }
         break

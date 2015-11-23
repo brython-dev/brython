@@ -212,10 +212,7 @@ $JSObjectDict.__getattribute__ = function(self,attr){
                     location.replace(args[0])
                     return
                 }
-                var result = js_attr.apply(self.js,args)
-                if(typeof result == 'object') return JSObject(result)
-                if(result===undefined) return None
-                return $B.$JS2Py(result)
+                return $B.$JS2Py(js_attr.apply(self.js,args))
             }
             res.__repr__ = function(){return '<function '+attr+'>'}
             res.__str__ = function(){return '<function '+attr+'>'}
@@ -326,8 +323,11 @@ $JSObjectDict.__setattr__ = function(self,attr,value){
                 catch(err){
                     err = $B.exception(err)
                     var info = _b_.getattr(err,'info')
-                    throw Error(info+'\n'+err.__class__.__name__+
-                        ': '+_b_.repr(err.args[0]))
+                    err.toString = function(){
+                        return info+'\n'+err.__class__.__name__+
+                        ': '+_b_.repr(err.args[0])
+                    }
+                    throw err
                 }
             }
         }
