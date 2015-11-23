@@ -579,12 +579,13 @@ function getattr(obj,attr,_default){
         console.log(attr+' is not a function '+attr_func)
     }
 
+
     try{var res = attr_func(obj,attr)}
     catch(err){
         if(_default!==undefined) return _default
         throw err
     }
-    
+
     if(res!==undefined) {
         return res
     }

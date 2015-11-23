@@ -418,6 +418,7 @@ DOMNodeDict.__eq__ = function(self,other){
 }
 
 DOMNodeDict.__getattribute__ = function(self,attr){
+
     switch(attr) {
       case 'class_name':
       case 'children':
@@ -463,6 +464,7 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         attr='location'
         break
     }//switch
+
     if(self.elt.getAttribute!==undefined){
         res = self.elt.getAttribute(attr)
         // IE returns the properties of a DOMNode (eg parentElement)
@@ -473,13 +475,18 @@ DOMNodeDict.__getattribute__ = function(self,attr){
             return res
         }
     }
+
     if(self.elt.getAttributeNS!==undefined){
         res = self.elt.getAttributeNS(null, attr)
-        if(res!==undefined&&res!==null&&self.elt[attr]===undefined){
+        // If attribute is not set, modern browsers return undefined or null
+        // but old versions of Android browser return the empty string !!!
+        if(res!==undefined && res!==null && res!="" &&
+            self.elt[attr]===undefined){
             // now we're sure it's an attribute
             return res
         }
     }
+        
     if(self.elt[attr]!==undefined){
         res = self.elt[attr]
         if(typeof res==="function"){
