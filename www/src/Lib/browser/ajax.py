@@ -3,27 +3,55 @@ import _ajax
 from browser import window, timer
 from javascript import JSConstructor
 
+readyStates = {
+    0: "uninitialized", # The initial value.
+    1: "open", # The open() method has been successfully called.
+    2: "sent", # The UA successfully completed the request, but no data has 
+               # yet been received.
+    3: "receiving", # Immediately before receiving the message body (if any).
+                    # All HTTP headers have been received. 
+    4: "loaded" # The data transfer has been completed.
+}
+
 class ajax:
 
     def __init__(self):
         self.xmlhttp = JSConstructor(window.XMLHttpRequest)()
-    
+        self.xmlhttp.onreadystatechange = self.state_change
+        self.bindings = {}
+        self.timer = None
+
+    def state_change(self, req):
+        # called every time the Ajax object state changes
+
+        # get event : uninitialized, open, sent, receiving or loaded
+        event = readyStates[self.xmlhttp.readyState]
+
+        # if a binding is registered for the event, call the callback
+        if event in self.bindings:
+            self.bindings[event](self.xmlhttp)
+            
     def open(self, method, url, async=True):
         self.xmlhttp.open(method, url, async)
     
     def bind(self, event, callback):
-        if event=='complete':
-            event = 'load'
-        
-        def func(req):
-            if hasattr(req, 'timer'):
-                timer.clear_timeout(req.timer)
-                del req.timer
-            req.text = req.responseText
-            return callback(req)
 
-        setattr(self.xmlhttp, 'on%s' %event, 
-            lambda *x, self=self: func(self.xmlhttp))
+        if event=='complete':
+            event = 'loaded'
+
+        if not event in readyStates.values():
+            raise ValueError('event must be one of %s' 
+                %str(list(readyStates.values())))
+        
+        def func(obj):
+            if event=="loaded" and self.timer is not None:
+                timer.clear_timeout(self.timer)
+                self.timer = None
+            obj.text = obj.responseText
+            obj.xml = obj.responseXML
+            return callback(obj)
+
+        self.bindings[event] = func
     
     def send(self, data=None):
         if data is None:
@@ -41,6 +69,7 @@ class ajax:
     def set_timeout(self, seconds, func):
         def callback():
             self.xmlhttp.abort()
-            del self.xmlhttp.timer
+            timer.clear_timeout(self.timer)
+            self.timer = None
             func()
-        self.xmlhttp.timer = timer.set_timeout(callback, seconds*1000)
+        self.timer = timer.set_timeout(callback, seconds*1000)
