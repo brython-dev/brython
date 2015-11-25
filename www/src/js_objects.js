@@ -327,6 +327,7 @@ $JSObjectDict.__setattr__ = function(self,attr,value){
                         return info+'\n'+err.__class__.__name__+
                         ': '+_b_.repr(err.args[0])
                     }
+                    console.log(err+'')
                     throw err
                 }
             }
