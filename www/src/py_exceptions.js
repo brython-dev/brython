@@ -208,7 +208,7 @@ $B.exception = function(js_exc){
         
         if($B.debug>0 && js_exc.info===undefined){
             var _frame = $B.last($B.frames_stack)
-            if(_frame[1].$line_info!==undefined){
+            if(_frame && _frame[1].$line_info!==undefined){
                 var line_info = _frame[1].$line_info.split(',')
                 var mod_name = line_info[1]
                 var module = $B.modules[mod_name]
