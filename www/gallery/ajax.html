@@ -26,8 +26,6 @@ from browser import document as doc
 from browser import ajax
 
 def on_complete(req):
-    print(req.readyState)
-    print('status',req.status)
     if req.status==200 or req.status==0:
         doc["result"].html = req.text
     else:
@@ -46,7 +44,6 @@ def go(url):
     req.bind('complete',on_complete)
     req.set_timeout(timeout,err_msg)
     req.open('GET',url+fake_qs(),True)
-    print('send get request')
     req.send()
 
 def post(url):
