@@ -169,6 +169,12 @@ $JSObjectDict.__bool__ = function(self){
     return (new Boolean(self.js)).valueOf()
 }
 
+$JSObjectDict.__delattr__ = function(self, attr){
+    _b_.getattr(self, attr) // raises AttributeError if necessary
+    delete self.js[attr]
+    return _b_.None
+}
+
 $JSObjectDict.__dir__ = function(self){
     return Object.keys(self.js)
 }

@@ -135,7 +135,7 @@ $DOMEventDict.__getattribute__ = function(self,attr){
         if(self.dataTransfer!==undefined) return $Clipboard(self.dataTransfer)
         return self['data']
       case 'target':
-        if(self.target===undefined) return DOMNode(self.srcElement)
+        if(self.target===undefined) return DOMNode(self.target)
         return DOMNode(self.target)
       case 'char':
         return String.fromCharCode(self.which)

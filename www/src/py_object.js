@@ -63,7 +63,11 @@ var opnames = ['add','sub','mul','truediv','floordiv','mod','pow',
     'lshift','rshift','and','xor','or']
 var opsigns = ['+','-','*','/','//','%','**','<<','>>','&','^', '|']
 
-$ObjectDict.__delattr__ = function(self,attr){delete self[attr]; return _b_.None}
+$ObjectDict.__delattr__ = function(self,attr){
+    _b_.getattr(self, attr) // raises AttributeError if necessary
+    delete self[attr]; 
+    return _b_.None
+}
 
 $ObjectDict.__dir__ = function(self) {
     var objects = [self], pos=1
