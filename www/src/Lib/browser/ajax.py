@@ -49,7 +49,15 @@ class ajax:
                 self.timer = None
             obj.text = obj.responseText
             obj.xml = obj.responseXML
-            return callback(obj)
+            try:
+                return callback(obj)
+            except Exception as exc:
+                import sys
+                msg = exc.__name__
+                if exc.args:
+                    msg += ': %s' %exc.args[0]
+                msg += '\n'+exc.info
+                sys.stderr.write(msg)
 
         self.bindings[event] = func
     
