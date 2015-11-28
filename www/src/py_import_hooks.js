@@ -24,10 +24,12 @@
 
     var spec = undefined;
     for (var i=0, _len_i = _meta_path.length; i < _len_i && is_none(spec); i++) {
-        var _finder=_meta_path[i];
-        spec=_b_.getattr(_b_.getattr(_finder, 'find_spec'),
-                         '__call__')(mod_name, _path, undefined);
-        spec.blocking = blocking
+        var _finder=_meta_path[i],
+            find_spec = _b_.getattr(_finder, 'find_spec', null)
+        if(find_spec !== null){
+            spec=_b_.getattr(find_spec, '__call__')(mod_name, _path, undefined);
+            spec.blocking = blocking
+        }
     } //for
 
     if (is_none(spec)) {

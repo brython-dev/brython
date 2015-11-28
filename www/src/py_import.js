@@ -291,15 +291,19 @@ $B.run_py=run_py=function(module_contents,path,module,compiled) {
         eval(js)
 
     }catch(err){
+        /*
         console.log(err+' for module '+module.__name__)
-        //console.log(module_contents)
-        //for(var attr in err){
-            //console.log(attr, err[attr])
-        //}
+        console.log(err)
+        //console.log(module_contents
+        for(var attr in err){
+            console.log(attr, err[attr])
+        }
+        console.log(_b_.getattr(err, 'info'))
         console.log('message: '+err.$message)
         console.log('filename: '+err.fileName)
         console.log('linenum: '+err.lineNumber)
         if($B.debug>0){console.log('line info '+ $B.line_info)}
+        */
         throw err
     }
 
@@ -791,6 +795,7 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level, blocking)
                 try {$B.import_hooks(_mod_name, __path__, undefined, blocking)}
                 catch(err) {
                     delete $B.imported[_mod_name]
+                    throw err
                 }
 
                 if (is_none($B.imported[_mod_name])) {
