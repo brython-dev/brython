@@ -92,7 +92,6 @@ def show_test(event):
     tab = window.open('show.html?file=%s' %mod.__file__)
 
 document["btn_test"].bind('click', choose_test)
-document["btn_show"].bind('click', show_test)
 </script>
 
 </head>
@@ -101,20 +100,22 @@ document["btn_show"].bind('click', show_test)
                        static_stdlib_import: true
                        })">
 
-<div style="width:100%">
+<h1 style="padding-left:3%;">CPython tests</h1>
+
+<div style="width:94%;padding: 0 3% 0 3%;">
 <div style="float:left">
 UnitTests:
 <select id="test">
   <option value="">--choose test--</option>
-  <option value="buffer_tests">buffer_tests</option>
-  <option value="relimport">Relative Imports</option>
+  <!-- option value="buffer_tests">buffer_tests</option -->
+  <!-- option value="relimport">Relative Imports</option -->
   <option value="test_abc">test_abc</option>
   <option value="test_base64">test_base64</option>
   <option value="test_binop">test_binop</option>
   <option value="test_collections">test_collections</option>
   <option value="test_compare">test_compare</option>
   <option value="test_contains">test_contains</option>
-  <option value="test_datetime">test_datetime</option>
+  <!-- option value="test_datetime">test_datetime</option -->
   <option value="test_decimal">test_decimal</option>
   <option value="test_decorators">test_decorators</option>
   <option value="test_defaultdict">test_defaultdict</option>
@@ -126,34 +127,34 @@ UnitTests:
   <option value="test_format">test_format</option>
   <option value="test_fractions">test_fractions</option>
   <option value="test_funcattrs">test_funcattrs</option>
-  <option value="test_generators">test_generators</option>
-  <option value="test_genericpath">test_genericpath</option>
+  <!-- option value="test_generators">test_generators</option -->
+  <!-- option value="test_genericpath">test_genericpath</option -->
   <option value="test_global">test_global</option>
-  <option value="test_grammar">test_grammar</option>
+  <!-- option value="test_grammar">test_grammar</option -->
   <option value="test_hash">test_hash</option>
   <option value="test_hashlib">test_hashlib</option>
   <option value="test_heapq">test_heapq</option>
   <option value="test_html">test_html</option>
   <option value="test_imp">test_imp</option>
-  <option value="test_import">test_import</option>
+  <!-- option value="test_import">test_import</option -->
   <option value="test_index">test_index</option>
   <option value="test_int">test_int</option>
   <option value="test_int_literal">test_int_literal</option>
-  <option value="test_isinstance">test_isinstance</option>
-  <option value="test_list">test_list</option>
-  <option value="test_math">test_math</option>
-  <option value="test_metaclass">test_metaclass</option>
+  <!-- option value="test_isinstance">test_isinstance</option -->
+  <!-- option value="test_list">test_list</option -->
+  <!-- option value="test_math">test_math</option -->
+  <!-- option value="test_metaclass">test_metaclass</option-->
   <option value="test_module">test_module</option>
   <option value="test_operator">test_operator</option>
-  <option value="test_os">test_os</option>
+  <!-- option value="test_os">test_os</option -->
   <option value="test_random">test_random</option>
   <option value="test_re">test_re</option>
   <option value="test_set">test_set</option>
   <option value="test_string">test_string</option>
-  <option value="test_with">test_with</option>
+  <!-- option value="test_with">test_with</option -->
 </select>
 <button id="btn_test">Run test</button>
-<button id="btn_show">Show test</button>
+
 </div>
 
 <div style="float:right">
@@ -162,25 +163,14 @@ Brython version: <span id="version"></span>
 </div>
 
 <div id="msgbox" 
-    style="position:absolute; left:100px; top:100px; width: 200px; 
+    style="position:absolute; left:100px; top:200px; width: 200px; 
     height:auto; background-color:#9ed5d5; padding:40px; color:#000">
     Loading...</div>
 
 <div id="container" style="clear:both; width:100%;height:50%;overflow:auto">
 </div>
 
-<button onclick="show_frames()">Show frames</button>
-<script>
-function show_frames(){
-    var stack = __BRYTHON__.frames_stack
-    console.log('frames stack', stack.length)
-    for(var i=0;i<stack.length;i++){
-        var frame = stack[i], lines=__BRYTHON__.$py_src[frame[2]].split('\n'),
-            line_num = parseInt(frame[1].$line_info.split(',')[0])
-        console.log(i, frame[0], frame[1].$line_info, frame[2], lines[line_num-1])
-    }
-}
-</script>
+
 <script type="text/javascript" src="/src/brython_dist.js"></script>
 
 </body>
