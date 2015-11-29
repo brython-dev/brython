@@ -6831,7 +6831,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
             if(pos<src.length-1 && /^\d$/.test(src.charAt(pos+1))){
                 // number starting with . : add a 0 before the point
                 var j = pos+1
-                while(j<src.length && src.charAt(j).search(/\d/)>-1){j++}
+                while(j<src.length && src.charAt(j).search(/\d|e|E/)>-1){j++}
                 context = $transition(context,'float','0'+src.substr(pos,j-pos))
                 pos = j
                 break
