@@ -5103,7 +5103,7 @@ function $transition(context,token){
           case '=':
             $_SyntaxError(context,token)
           case 'yield':
-            return new $AbstractExprCtx(new $YieldCtx(context),false)
+            return new $AbstractExprCtx(new $YieldCtx(context),true)
           case ':':
             return $transition(context.parent,token,arguments[2])
           case ')':
