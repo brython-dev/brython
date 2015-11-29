@@ -5226,7 +5226,7 @@ function $transition(context,token){
           case ')':
             if(context.parent.kwargs &&
               $B.last(context.parent.tree).tree[0] && // if call ends with ,)
-              ['kwarg','double_star_arg'].indexOf($B.last(context.parent.tree).tree[0].type)==-1){
+              ['kwarg','star_arg','double_star_arg'].indexOf($B.last(context.parent.tree).tree[0].type)==-1){
                 $_SyntaxError(context, ['non-keyword arg after keyword arg'])
             }
             if(context.tree.length>0){
@@ -5244,7 +5244,8 @@ function $transition(context,token){
           case ',':
             if (context.expect===',') {
               if(context.parent.kwargs && 
-                ['kwarg','double_star_arg'].indexOf($B.last(context.parent.tree).tree[0].type)==-1){
+                ['kwarg','star_arg', 'double_star_arg'].indexOf($B.last(context.parent.tree).tree[0].type)==-1){
+                    console.log('err2')
                   $_SyntaxError(context, ['non-keyword arg after keyword arg'])
               }
               //return new $CallArgCtx(context.parent)
