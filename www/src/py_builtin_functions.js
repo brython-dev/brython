@@ -1731,6 +1731,9 @@ $FunctionDict.__getattribute__ = function(self, attr){
                 res[attr]=self.$infos.__code__[attr]
             }
             return res
+        }else if(attr=='__annotations__'){
+            // annotations is stored as a Javascript object
+            return $B.obj_dict(self.$infos[attr])
         }else{
             return self.$infos[attr]
         }

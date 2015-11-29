@@ -103,7 +103,7 @@ Function called in case of SyntaxError
 */
 
 function $_SyntaxError(context,msg,indent){
-    //console.log('syntax error, context '+context+' msg '+msg)
+    //console.log('syntax error, context '+context,' msg ',msg)
     var ctx_node = context
     while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
     var tree_node = ctx_node.node
@@ -352,6 +352,17 @@ function $AbstractExprCtx(context,with_commas){
         if(this.type==='list') return '['+$to_js(this.tree)+']'
         return $to_js(this.tree)
     }
+}
+
+function $AnnotationCtx(context){
+    // Class for annotations, eg "def f(x:int) -> list:" 
+    this.type = 'annotation'
+    this.parent = context
+    this.tree = []
+    // annotation is stored in attribute "annotations" of parent, not "tree"
+    context.annotation = this
+    this.toString = function(){return '(annotation) '+this.tree}
+    this.to_js = function(){return $to_js(this.tree)}
 }
 
 function $AssertCtx(context){
@@ -1876,6 +1887,8 @@ function $DefCtx(context){
         this.__defaults__ = []
         this.slots = []
         var slot_list = []
+        var annotations = []
+        if(this.annotation){annotations.push('"return":'+this.annotation.to_js())}
         
         var func_args = this.tree[1].tree
         for(var i=0;i<func_args.length;i++){
@@ -1896,8 +1909,11 @@ function $DefCtx(context){
                 if(arg.op == '*'){this.star_arg = arg.name}
                 else if(arg.op=='**'){this.kw_arg = arg.name}
             }
+            if(arg.annotation){
+                annotations.push(arg.name+': '+arg.annotation.to_js())
+            }
         }
-
+        
         // Flags
         var flags = 67
         if(this.star_arg){flags |= 4}
@@ -2181,6 +2197,14 @@ function $DefCtx(context){
         new $NodeJSCtx(new_node,js)
         node.parent.insert(rank+offset,new_node)
         offset++
+
+        // Add attribute __annotations__
+        js = '    __annotations__: {'+annotations.join(',')+'},'
+        new_node = new $Node()
+        new $NodeJSCtx(new_node,js)
+        node.parent.insert(rank+offset,new_node)
+        offset++
+
 
         for(var attr in $B.bound[this.id]){this.varnames[attr]=true}
         var co_varnames = []
@@ -5002,7 +5026,7 @@ function $arbo(ctx){
 
 function $transition(context,token){
 
-    //console.log('context '+context+' token '+token)
+    //console.log('context '+context+' token '+token, arguments[2])
     
     switch(context.type) {
       case 'abstract_expr':
@@ -5095,6 +5119,8 @@ function $transition(context,token){
               }// switch   
         }// switch
         return $transition(context.parent,token,arguments[2])
+      case 'annotation':
+        return $transition(context.parent, token)
       case 'assert':
         if(token==='eol') return $transition(context.parent,token)
         $_SyntaxError(context,token)
@@ -5319,6 +5345,8 @@ function $transition(context,token){
             }
             context.has_args=true;
             return new $FuncArgs(context)
+          case 'annotation':
+            return new $AbstractExprCtx(new $AnnotationCtx(context), true)
           case ':':
             if(context.has_args) return $BodyCtx(context)
         }//switch
@@ -5688,9 +5716,11 @@ function $transition(context,token){
             }
             break
           case '=':
-            if(context.expect===','){
+           if(context.expect===','){
                if(context.parent.type==="call_arg"){
                   return new $AbstractExprCtx(new $KwArgCtx(context),true)
+               }else if(context.parent.type=="annotation"){
+                   return $transition(context.parent.parent, token, arguments[2])
                }
                 
                while(context.parent!==undefined) context=context.parent
@@ -5819,6 +5849,9 @@ function $transition(context,token){
             }else{
                 return $transition(context.parent,token)
             }
+          case ':':
+            // annotation associated with a function parameter
+            return new $AbstractExprCtx(new $AnnotationCtx(context), false)
         }
         $_SyntaxError(context,'token '+token+' after '+context)
       case 'func_args':
@@ -5861,20 +5894,21 @@ function $transition(context,token){
             }
             context.set_name(arguments[2])
             context.parent.names.push(arguments[2])
-            return context.parent
+            return context //.parent
           case ',':
+          case ')':
             if (context.name===undefined){
                // anonymous star arg - found in configparser
                context.set_name('$dummy')
                context.parent.names.push('$dummy')
-               return $transition(context.parent,token)
             }
-            break
-          case ')':
-            // anonymous star arg - found in configparser
-            context.set_name('$dummy')
-            context.parent.names.push('$dummy')
             return $transition(context.parent,token)
+          case ':':
+            // annotation associated with a function parameter
+            if(context.name===undefined){
+                $_SyntaxError(context, 'annotation on an unnamed parameter')
+            }
+            return new $AbstractExprCtx(new $AnnotationCtx(context), false)
         }// switch
         $_SyntaxError(context,'token '+token+' after '+context)
       case 'global':
@@ -7013,6 +7047,13 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
           //case 'i':
           //case 'n':
             // operators
+            
+            // special case for annotation syntax
+            if(car=='-' && src.charAt(pos+1)=='>'){
+                context = $transition(context,'annotation')
+                pos += 2
+                continue
+            }
             // find longest match
             var op_match = ""
             for(var op_sign in $operators){
