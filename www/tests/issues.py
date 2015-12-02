@@ -610,6 +610,12 @@ def f():
 
 assert f()==2
 
+# issue 335
+def f():
+    "hello"("3")
+
+assertRaises(TypeError, f)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

@@ -4324,19 +4324,27 @@ function $StringCtx(context,value){
         this.js_processed=true
         var res = '', type = null
         for(var i=0;i<this.tree.length;i++){
-            var value=this.tree[i], is_bytes = value.charAt(0)=='b'
-            if(type==null){
-                type=is_bytes
-                if(is_bytes){res+='bytes('}
-            }else if(type!=is_bytes){
-                return '$B.$TypeError("can\'t concat bytes to str")'
-            }
-            if(!is_bytes){
-                res += value.replace(/\n/g,'\\n\\\n')
+            if(this.tree[i].type=="call"){
+                // syntax like "hello"(*args, **kw) raises TypeError
+                // cf issue 335
+                var js = '(function(){throw TypeError("'+"'str'"+
+                    ' object is not callable")}())'
+                return js
             }else{
-                res += value.substr(1).replace(/\n/g,'\\n\\\n')
+                var value=this.tree[i], is_bytes = value.charAt(0)=='b'
+                if(type==null){
+                    type=is_bytes
+                    if(is_bytes){res+='bytes('}
+                }else if(type!=is_bytes){
+                    return '$B.$TypeError("can\'t concat bytes to str")'
+                }
+                if(!is_bytes){
+                    res += value.replace(/\n/g,'\\n\\\n')
+                }else{
+                    res += value.substr(1).replace(/\n/g,'\\n\\\n')
+                }
+                if(i<this.tree.length-1){res+='+'}
             }
-            if(i<this.tree.length-1){res+='+'}
         }
         if(is_bytes){res += ',"ISO-8859-1")'}
         return res
@@ -6442,7 +6450,10 @@ function $transition(context,token){
           case '[':
             return new $AbstractExprCtx(new $SubCtx(context.parent),false)
           case '(':
-            return new $CallCtx(context)
+            // Strings are not callable. We replace the string by a call to
+            // an object that will raise the correct exception
+            context.parent.tree[0] = context
+            return new $CallCtx(context.parent)
           case 'str':
             context.tree.push(arguments[2])
             return context

@@ -445,7 +445,9 @@ function attr_error(attr, cname){
         case '__pos__':
             throw _b_.TypeError(msg.replace('#','+'))
         case '__invert__':
-            throw _b_.TypeError(msg.replace('#','~'))        
+            throw _b_.TypeError(msg.replace('#','~'))   
+        case '__call__':
+            throw _b_.TypeError("'"+cname+"'"+' object is not callable')     
         default:
             throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")
     }
@@ -593,7 +595,7 @@ function getattr(obj,attr,_default){
     
     var cname = klass.__name__
     if(is_class) cname=obj.__name__
-    
+        
     attr_error(attr, cname)
 }
 
