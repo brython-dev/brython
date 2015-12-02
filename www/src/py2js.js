@@ -412,7 +412,6 @@ function $AssignCtx(context, check_unbound){
         ctx = ctx.parent
     }
     
-    
     check_unbound = check_unbound === undefined
     
     this.type = 'assign'
@@ -431,13 +430,9 @@ function $AssignCtx(context, check_unbound){
     }else if(context.type=='list_or_tuple' || 
         (context.type=='expr' && context.tree[0].type=='list_or_tuple')){
         if(context.type=='expr'){context = context.tree[0]}
-        for(var i=0;i<context.tree.length;i++){
-            var assigned = context.tree[i].tree[0]
-            if(assigned.type=='id' && check_unbound){
-                $B.bound[scope.id][assigned.value] = true
-            }else if(assigned.type=='call'){
-                $_SyntaxError(context,["can't assign to function call"])
-            }
+        // Bind all the ids in the list or tuple
+        for(var name in context.ids()){
+            $B.bound[scope.id][name] = true
         }
     }else if(context.type=='assign'){
         for(var i=0;i<context.tree.length;i++){
@@ -597,7 +592,7 @@ function $AssignCtx(context, check_unbound){
             new_nodes[pos++]=rlist_node
             
             // If there is a packed tuple in the list of left items, store
-            // its rank in the liste
+            // its rank in the list
             var packed = null
             for(var i=0;i<left_items.length;i++){
                 var expr = left_items[i]
@@ -3181,7 +3176,42 @@ function $IdCtx(context,value){
         */
 
         if(found.length>0){
+            // If name is not in the left part of an assignment, 
+            // and it is bound in the current block but not yet bound when the
+            // line is parsed,
+            // and it is not declared as nonlocal,
+            // and it is not an internal variable starting with "$",
+            // return the execution of function $B.$local_search(val) in
+            // py_utils.js that searches the name in the local namespace
+            // and raises UnboundLocalError if it is undefined
+            
+            // The id may be valid in code like :
+            
+            // def f():
+            //     for i in range(2):
+            //         if i==1:
+            //             return x   # x is local but not yet found by parser
+            //         elif i==0:
+            //             x = 'ok'
+
+            if(!this.bound && found[0].context && found[0]===innermost
+                && val.charAt(0)!='$'){
+                var locs = $get_node(this).locals || {},
+                    nonlocs = innermost.nonlocals
+                if(locs[val]===undefined && 
+                    (nonlocs===undefined || nonlocs[val]===undefined)){
+                    return '$B.$local_search("'+val+'")'
+                }
+            }
             if(found.length>1 && found[0].context){
+                if(val=="axd"){
+                    console.log(val, found)
+                    if(!this.bound){
+                        if(locs[val]===undefined){
+                            return '$B.$search("'+val+'")'
+                        }
+                    }
+                }
                 if(found[0].context.tree[0].type=='class' && !this.bound){
                     var ns0='$locals_'+found[0].id.replace(/\./g,'_'),
                         ns1='$locals_'+found[1].id.replace(/\./g,'_'),
@@ -3571,6 +3601,24 @@ function $ListOrTupleCtx(context,real){
         }
         return $B.$py_src[ident]
     }
+    
+    this.ids = function(){
+        // Return an object indexed by all "simple" variable names in the list
+        // or tuple, ie not calls, subscriptions etc.
+        var _ids = {}
+        for(var i=0;i<this.tree.length;i++){
+            var item = this.tree[i]
+            if(item.type=='id'){_ids[item.value]=true}
+            else if(item.type=='expr' && item.tree[0].type=="id"){
+                _ids[item.tree[0].value]=true
+            }else if(item.type=='list_or_tuple' ||
+                (item.type=="expr" && item.tree[0].type=='list_or_tuple')){
+                if(item.type=="expr"){item=item.tree[0]}
+                for(var attr in item.ids()){_ids[attr]=true}
+            }
+        }
+        return _ids
+    }
 
     this.to_js = function(){
         this.js_processed=true
@@ -3684,7 +3732,11 @@ function $NodeCtx(node){
     if(scope==null){
         scope = tree_node.parent || tree_node // module
     }
-    this.node.locals = clone($B.type[scope.id])
+    
+    // When a new node is created, a copy of the names currently
+    // bound in the scope is created. It is used in $IdCtx to detect
+    // names that are referenced but not yet bound in the scope
+    this.node.locals = clone($B.bound[scope.id])
             
     this.toString = function(){return 'node '+this.tree}
 
@@ -3732,6 +3784,8 @@ function $NonlocalCtx(context){
     this.expect = 'id'
 
     this.scope = $get_scope(this)
+    this.scope.nonlocals = this.scope.nonlocals || {}
+    
     if(this.scope.context===undefined){
         $_SyntaxError(context,["nonlocal declaration not allowed at module level"])
     }
@@ -3743,6 +3797,7 @@ function $NonlocalCtx(context){
             $_SyntaxError(context,["name '"+name+"' is parameter and nonlocal"])
         }
         this.names[name] = [false, $pos]
+        this.scope.nonlocals[name] = true
     }
     
     this.transform = function(node, rank){
@@ -5746,7 +5801,7 @@ function $transition(context,token){
         }//switch
         return $transition(context.parent,token)
       case 'expr_not':
-        if(token==='in'){ // expr not in : operator
+        if(token=='in'){ // expr not in : operator
             context.parent.tree.pop()
             return new $AbstractExprCtx(new $OpCtx(context.parent,'not_in'),false)
         }
@@ -5762,7 +5817,7 @@ function $transition(context,token){
       case 'from':
         switch(token) {
           case 'id':
-            if(context.expect==='id'){
+            if(context.expect=='id'){
               context.add_name(arguments[2])
               context.expect = ','
               return context
@@ -5773,22 +5828,22 @@ function $transition(context,token){
               return context
             }
           case '.':
-            if(context.expect==='module'){
-              if(token==='id'){context.module += arguments[2]}
+            if(context.expect=='module'){
+              if(token=='id'){context.module += arguments[2]}
               else{context.module += '.'}
               return context
             }
           case 'import':
           case 'IMPRT':
             context.blocking = token=='import'
-            if(context.expect==='module'){
+            if(context.expect=='module'){
               context.expect = 'id'
               return context
             }
           case 'op':
 
-            if(arguments[2]==='*' && context.expect==='id' 
-              && context.names.length ===0){
+            if(arguments[2]=='*' && context.expect=='id' 
+              && context.names.length ==0){
                if($get_scope(context).ntype!=='module'){
                    $_SyntaxError(context,["import * only allowed at module level"])
                }
@@ -5797,7 +5852,7 @@ function $transition(context,token){
                return context
             }
           case ',':
-            if(context.expect===','){
+            if(context.expect==','){
               context.expect = 'id'
               return context
             }
@@ -5809,17 +5864,17 @@ function $transition(context,token){
                 return $transition(context.parent,token)
             }
           case 'as':
-            if (context.expect ===',' || context.expect==='eol'){
+            if (context.expect ==',' || context.expect=='eol'){
                context.expect='alias'
                return context
             }
           case '(':
-            if (context.expect === 'id') {
+            if (context.expect == 'id') {
                context.expect='id'
                return context
             }
           case ')':
-            if (context.expect === ',') {
+            if (context.expect == ',' || context.expect=='id') {
                context.expect='eol'
                return context
             }

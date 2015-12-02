@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-11-29 17:53:58.806327"
+__BRYTHON__.compiled_date="2015-12-02 16:44:58.194457"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","jsdatetime","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_locale","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -238,8 +238,7 @@ this.tree=[C]
 var scope=$get_scope(this)
 if(C.type=='expr' && C.tree[0].type=='call'){$_SyntaxError(C,["can't assign to function call "])}else if(C.type=='list_or_tuple' ||
 (C.type=='expr' && C.tree[0].type=='list_or_tuple')){if(C.type=='expr'){C=C.tree[0]}
-for(var i=0;i<C.tree.length;i++){var assigned=C.tree[i].tree[0]
-if(assigned.type=='id' && check_unbound){$B.bound[scope.id][assigned.value]=true}else if(assigned.type=='call'){$_SyntaxError(C,["can't assign to function call"])}}}else if(C.type=='assign'){for(var i=0;i<C.tree.length;i++){var assigned=C.tree[i].tree[0]
+for(var name in C.ids()){$B.bound[scope.id][name]=true}}else if(C.type=='assign'){for(var i=0;i<C.tree.length;i++){var assigned=C.tree[i].tree[0]
 if(assigned.type=='id'){$B.bound[scope.id][assigned.value]=true}}}else{var assigned=C.tree[0]
 if(assigned && assigned.type=='id'){if(noassign[assigned.value]===true){$_SyntaxError(C,["can't assign to keyword"])}
 if(!$B._globals[scope.id]||
@@ -1635,7 +1634,14 @@ scope.C.tree[0].env.indexOf(val)>-1){found.push(scope)}}else{if($B.bound[scope.i
 if(scope.parent_block){scope=scope.parent_block}
 else{break}}
 this.found=found
-if(found.length>0){if(found.length>1 && found[0].C){if(found[0].C.tree[0].type=='class' && !this.bound){var ns0='$locals_'+found[0].id.replace(/\./g,'_'),ns1='$locals_'+found[1].id.replace(/\./g,'_'),res
+if(found.length>0){
+if(!this.bound && found[0].C && found[0]===innermost
+&& val.charAt(0)!='$'){var locs=$get_node(this).locals ||{},nonlocs=innermost.nonlocals
+if(locs[val]===undefined && 
+(nonlocs===undefined ||nonlocs[val]===undefined)){return '$B.$local_search("'+val+'")'}}
+if(found.length>1 && found[0].C){if(val=="axd"){console.log(val,found)
+if(!this.bound){if(locs[val]===undefined){return '$B.$search("'+val+'")'}}}
+if(found[0].C.tree[0].type=='class' && !this.bound){var ns0='$locals_'+found[0].id.replace(/\./g,'_'),ns1='$locals_'+found[1].id.replace(/\./g,'_'),res
 if(bound_before){if(bound_before.indexOf(val)>-1){this.found=$B.bound[found[0].id][val]
 res=ns0}else{this.found=$B.bound[found[1].id][val]
 res=ns1}
@@ -1813,6 +1819,14 @@ while($B.$py_src[ident]===undefined && $B.modules[ident].parent_block){ident=$B.
 if($B.$py_src[ident]===undefined){
 return $B.$py_src[scope.module]}
 return $B.$py_src[ident]}
+this.ids=function(){
+var _ids={}
+for(var i=0;i<this.tree.length;i++){var item=this.tree[i]
+if(item.type=='id'){_ids[item.value]=true}
+else if(item.type=='expr' && item.tree[0].type=="id"){_ids[item.tree[0].value]=true}else if(item.type=='list_or_tuple' ||
+(item.type=="expr" && item.tree[0].type=='list_or_tuple')){if(item.type=="expr"){item=item.tree[0]}
+for(var attr in item.ids()){_ids[attr]=true}}}
+return _ids}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this)
 var sc=scope
@@ -1865,7 +1879,7 @@ _break_flag=true}
 if(_break_flag)break
 tree_node=tree_node.parent}
 if(scope==null){scope=tree_node.parent ||tree_node }
-this.node.locals=clone($B.type[scope.id])
+this.node.locals=clone($B.bound[scope.id])
 this.toString=function(){return 'node '+this.tree}
 this.to_js=function(){this.js_processed=true
 if(this.tree.length>1){var new_node=new $Node()
@@ -1895,10 +1909,12 @@ this.names={}
 C.tree[C.tree.length]=this
 this.expect='id'
 this.scope=$get_scope(this)
+this.scope.nonlocals=this.scope.nonlocals ||{}
 if(this.scope.C===undefined){$_SyntaxError(C,["nonlocal declaration not allowed at module level"])}
 this.toString=function(){return 'global '+this.tree}
 this.add=function(name){if($B.bound[this.scope.id][name]=='arg'){$_SyntaxError(C,["name '"+name+"' is parameter and nonlocal"])}
-this.names[name]=[false,$pos]}
+this.names[name]=[false,$pos]
+this.scope.nonlocals[name]=true}
 this.transform=function(node,rank){var pscope=this.scope.parent_block
 if(pscope.C===undefined){$_SyntaxError(C,["no binding for nonlocal '"+
 $B.last(Object.keys(this.names))+"' found"])}else{while(pscope!==undefined && pscope.C!==undefined){for(var name in this.names){if($B.bound[pscope.id][name]!==undefined){this.names[name]=[true]}}
@@ -3047,7 +3063,7 @@ if(ctx.type=='expr' && ctx.parent && ctx.parent.type=='op'){ctx=ctx.parent}}
 return new $AbstractExprCtx(new $TernaryCtx(ctx),false)}}
 return $transition(C.parent,token)
 case 'expr_not':
-if(token==='in'){
+if(token=='in'){
 C.parent.tree.pop()
 return new $AbstractExprCtx(new $OpCtx(C.parent,'not_in'),false)}
 $_SyntaxError(C,'token '+token+' after '+C)
@@ -3059,29 +3075,29 @@ return $BodyCtx(C)}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'from':
 switch(token){case 'id':
-if(C.expect==='id'){C.add_name(arguments[2])
+if(C.expect=='id'){C.add_name(arguments[2])
 C.expect=','
 return C}
 if(C.expect==='alias'){C.aliases[C.names[C.names.length-1]]=arguments[2]
 C.expect=','
 return C}
 case '.':
-if(C.expect==='module'){if(token==='id'){C.module +=arguments[2]}
+if(C.expect=='module'){if(token=='id'){C.module +=arguments[2]}
 else{C.module +='.'}
 return C}
 case 'import':
 case 'IMPRT':
 C.blocking=token=='import'
-if(C.expect==='module'){C.expect='id'
+if(C.expect=='module'){C.expect='id'
 return C}
 case 'op':
-if(arguments[2]==='*' && C.expect==='id' 
-&& C.names.length===0){if($get_scope(C).ntype!=='module'){$_SyntaxError(C,["import * only allowed at module level"])}
+if(arguments[2]=='*' && C.expect=='id' 
+&& C.names.length==0){if($get_scope(C).ntype!=='module'){$_SyntaxError(C,["import * only allowed at module level"])}
 C.add_name('*')
 C.expect='eol'
 return C}
 case ',':
-if(C.expect===','){C.expect='id'
+if(C.expect==','){C.expect='id'
 return C}
 case 'eol':
 switch(C.expect){case ',':
@@ -3089,13 +3105,13 @@ case 'eol':
 C.bind_names()
 return $transition(C.parent,token)}
 case 'as':
-if(C.expect===',' ||C.expect==='eol'){C.expect='alias'
+if(C.expect==',' ||C.expect=='eol'){C.expect='alias'
 return C}
 case '(':
-if(C.expect==='id'){C.expect='id'
+if(C.expect=='id'){C.expect='id'
 return C}
 case ')':
-if(C.expect===','){C.expect='eol'
+if(C.expect==',' ||C.expect=='id'){C.expect='eol'
 return C}}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'func_arg_id':

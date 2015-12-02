@@ -571,7 +571,7 @@ for a,*b in [[1, 2, 3]]:
     assert a == 1
     assert b == [2, 3]
 
-# related to issue 327
+# issue 327
 def f():
     a += 1
 
@@ -581,6 +581,14 @@ def f():
     a = a+1
 
 assertRaises(UnboundLocalError, f)
+
+a = 3
+
+def plus():
+    print(a)
+    a = 7
+
+assertRaises(UnboundLocalError, plus)
 
 def f():
     for i in 1,2:
