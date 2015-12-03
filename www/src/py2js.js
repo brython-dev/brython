@@ -4953,6 +4953,14 @@ function $add_line_num(node,rank){
     }
 }
 
+function $previous(context){
+    var previous = context.node.parent.children[context.node.parent.children.length-2]
+    if(!previous || !previous.context){
+        $_SyntaxError(context, 'keyword not following correct keyword')
+    }
+    return previous.context.tree[0]
+}
+
 function $get_docstring(node){
     var doc_string=''
     if(node.children.length>0){
@@ -6261,15 +6269,35 @@ function $transition(context,token){
           case 'for':
             return new $TargetListCtx(new $ForExpr(context))
           case 'if':
-          case 'elif':
           case 'while':
             return new $AbstractExprCtx(new $ConditionCtx(context,token),false)
+          case 'elif':
+            var previous = $previous(context)
+            if(['condition'].indexOf(previous.type)==-1 ||
+                previous.token=='while'){
+                $_SyntaxError(context, 'elif after '+previous.type)       
+            }
+            return new $AbstractExprCtx(new $ConditionCtx(context,token),false)
           case 'else':
+            var previous = $previous(context)
+            if(['condition', 'except', 'for'].indexOf(previous.type)==-1){
+                $_SyntaxError(context, 'else after '+previous.type)       
+            }
+            return new $SingleKwCtx(context,token)
           case 'finally':
+            var previous = $previous(context)
+            if(['try', 'except'].indexOf(previous.type)==-1 &&
+                (previous.type!='single_kw' || previous.token!='else')){
+                $_SyntaxError(context, 'finally after '+previous.type)       
+            }
             return new $SingleKwCtx(context,token)
           case 'try':
             return new $TryCtx(context)
           case 'except':
+            var previous = $previous(context)
+            if(['try', 'except'].indexOf(previous.type)==-1){
+                $_SyntaxError(context, 'except after '+previous.type)       
+            }
             return new $ExceptCtx(context)
           case 'assert':
             return new $AbstractExprCtx(new $AssertCtx(context),'assert',true)
