@@ -516,6 +516,9 @@ except TypeError:
 else:
     raise Exception('should have raised TypeError')
 
+# issue 303
+assert "{0:.{1}f}".format(1.123,1) == "1.1"
+
 # issue 305
 a = [1, 2, 3]
 assert a.sort() is None

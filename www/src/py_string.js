@@ -1012,11 +1012,18 @@ $StringDict.format = function(self) {
 
                         if(fmt_obj.spec!==undefined){
                             // "spec" may contain "nested replacement fields"
-                            // In this case, evaluate them using the keyword
-                            // arguments passed to format()
+                            // In this case, evaluate them using the positional
+                            // or keyword arguments passed to format()
                             function replace_nested(name, key){
-                                var x = _b_.dict.$dict.__getitem__($.kw, key)
-                                return x
+                                if(/\d+/.exec(key)){
+                                    // If key is numeric, search in positional
+                                    // arguments
+                                    return _b_.tuple.$dict.__getitem__($.args, 
+                                        parseInt(key))
+                                }else{
+                                    // Else try in keyword arguments
+                                    return _b_.dict.$dict.__getitem__($.kw, key)
+                                }
                             }
                             fmt_obj.spec = fmt_obj.spec.replace(/\{(.+?)\}/g, 
                                 replace_nested)
