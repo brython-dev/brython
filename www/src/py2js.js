@@ -447,6 +447,9 @@ function $AssignCtx(context, check_unbound){
             if(noassign[assigned.value]===true){
                 $_SyntaxError(context,["can't assign to keyword"])
             }
+            // Attribute bound of an id indicates if it is being
+            // bound, as it is the case in the left part of an assignment
+            assigned.bound = true
             if(!$B._globals[scope.id] || 
                 $B._globals[scope.id][assigned.value]===undefined){
                 // A value is going to be assigned to a name
@@ -462,7 +465,6 @@ function $AssignCtx(context, check_unbound){
                 var node = $get_node(this)
                 node.bound_before = $B.keys($B.bound[scope.id])
                 $B.bound[scope.id][assigned.value] = true
-                assigned.bound = true
             }
         }
     }//if
@@ -3140,6 +3142,15 @@ function $IdCtx(context,value){
             if($B.type[scope.id]===undefined){console.log('name '+val+' type undef '+scope.id)}
             if($B._globals[scope.id]!==undefined &&
                 $B._globals[scope.id][val]!==undefined){
+                // Variable is declared as global. If the name is bound in the global
+                // scope, use it ; if the name is being bound, bind it in the global namespace. 
+                // Else return a call to a function that searches the name in globals,
+                // and throws NameError if not found
+                if($B.bound[gs.id][val]!==undefined || this.bound){
+                    return global_ns+'["'+val+'"]'
+                }else{
+                    return '$B.$global_search("'+val+'")'
+                }
                 found = [gs]
                 break
             }
@@ -3166,8 +3177,9 @@ function $IdCtx(context,value){
             else{break}
         }
         this.found = found
+
         /*
-        if(val=='int'){
+        if(val=='axd'){
             console.log(val,'bound in')
             for(var i=0;i<found.length;i++){
                 console.log(i,found[i].id)

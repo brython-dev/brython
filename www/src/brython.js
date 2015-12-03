@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-12-02 22:51:09.162511"
+__BRYTHON__.compiled_date="2015-12-03 16:39:25.144564"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","jsdatetime","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_locale","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -241,12 +241,12 @@ if(C.type=='expr' && C.tree[0].type=='call'){$_SyntaxError(C,["can't assign to f
 for(var name in C.ids()){$B.bound[scope.id][name]=true}}else if(C.type=='assign'){for(var i=0;i<C.tree.length;i++){var assigned=C.tree[i].tree[0]
 if(assigned.type=='id'){$B.bound[scope.id][assigned.value]=true}}}else{var assigned=C.tree[0]
 if(assigned && assigned.type=='id'){if(noassign[assigned.value]===true){$_SyntaxError(C,["can't assign to keyword"])}
+assigned.bound=true
 if(!$B._globals[scope.id]||
 $B._globals[scope.id][assigned.value]===undefined){
 var node=$get_node(this)
 node.bound_before=$B.keys($B.bound[scope.id])
-$B.bound[scope.id][assigned.value]=true
-assigned.bound=true}}}
+$B.bound[scope.id][assigned.value]=true}}}
 this.guess_type=function(){if(this.tree[0].type=="expr" && this.tree[0].tree[0].type=="id"){$set_type(scope,this.tree[0],this.tree[1])}else if(this.tree[0].type=='assign'){var left=this.tree[0].tree[0].tree[0]
 var right=this.tree[0].tree[1].tree[0]
 $set_type(scope,right,this.tree[1].tree[0])
@@ -1623,7 +1623,9 @@ var global_ns='$locals_'+gs.id.replace(/\./g,'_')
 while(1){if($B.bound[scope.id]===undefined){console.log('name '+val+' undef '+scope.id)}
 if($B.type[scope.id]===undefined){console.log('name '+val+' type undef '+scope.id)}
 if($B._globals[scope.id]!==undefined &&
-$B._globals[scope.id][val]!==undefined){found=[gs]
+$B._globals[scope.id][val]!==undefined){
+if($B.bound[gs.id][val]!==undefined ||this.bound){return global_ns+'["'+val+'"]'}else{return '$B.$global_search("'+val+'")'}
+found=[gs]
 break}
 if(scope===innermost){
 var bound_before=$get_node(this).bound_before
@@ -4665,6 +4667,10 @@ else if(_b_[name]!==undefined){return _b_[name]}
 else{if(frame[0]==frame[2]){throw _b_.NameError(name)}
 else{throw _b_.UnboundLocalError("local variable '"+name+
 "' referenced before assignment")}}}
+$B.$global_search=function(name){
+var frame=$B.last($B.frames_stack)
+if(frame[3][name]!==undefined){return frame[3][name]}
+else{throw _b_.NameError(name)}}
 $B.$local_search=function(name){
 var frame=$B.last($B.frames_stack)
 if(frame[1][name]!==undefined){return frame[1][name]}

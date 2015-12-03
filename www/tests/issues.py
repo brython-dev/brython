@@ -590,6 +590,12 @@ def plus():
 
 assertRaises(UnboundLocalError, plus)
 
+def plus():
+    global axd
+    print(axd)
+
+assertRaises(NameError, plus)
+
 def f():
     for i in 1,2:
         if i==2:

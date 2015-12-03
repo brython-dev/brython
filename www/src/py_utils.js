@@ -362,6 +362,15 @@ $B.$search = function(name, global_ns){
     }
 }
 
+$B.$global_search = function(name){
+    // search in global namespace
+    var frame = $B.last($B.frames_stack)
+    if(frame[3][name]!==undefined){return frame[3][name]}
+    else{
+        throw _b_.NameError(name)
+    }
+}
+
 $B.$local_search = function(name){
     // search in local namespace
     var frame = $B.last($B.frames_stack)
