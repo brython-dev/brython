@@ -1301,7 +1301,7 @@ function $ClassCtx(context){
     var scope = this.scope = $get_scope(this)
     this.parent.node.parent_block = scope
     this.parent.node.bound = {} // will store the names bound in the function
-
+    
     this.set_name = function(name){
         this.random = $B.UUID()
         this.name = name
@@ -1431,6 +1431,7 @@ function $ClassCtx(context){
         node.parent.insert(rank+2,end_node)
 
         this.transformed = true
+        
     }
     this.to_js = function(){
         this.js_processed=true
@@ -2206,7 +2207,6 @@ function $DefCtx(context){
         for(var attr in $B.bound[this.id]){this.varnames[attr]=true}
         var co_varnames = []
         for(var attr in this.varnames){co_varnames.push('"'+attr+'"')}
-        
         
         // Add attribute __code__
         var h = '\n'+' '.repeat(indent+8)
@@ -4520,12 +4520,14 @@ function $TryCtx(context){
         var pos = rank+2
         var has_default = false // is there an "except:" ?
         var has_else = false // is there an "else" clause ?
+        var has_finally = false
         while(1){
             if(pos===node.parent.children.length){break}
             var ctx = node.parent.children[pos].context.tree[0]
             if(ctx.type==='except'){
                 // move the except clauses below catch_node
                 if(has_else){$_SyntaxError(context,"'except' or 'finally' after 'else'")}
+                if(has_finally){$_SyntaxError(context,"'except' after 'finally'")}
                 ctx.error_name = '$err'+$loop_num
                 if(ctx.tree.length>0 && ctx.tree[0].alias!==null
                     && ctx.tree[0].alias!==undefined){
@@ -4545,10 +4547,11 @@ function $TryCtx(context){
                 }
                 node.parent.children.splice(pos,1)
             }else if(ctx.type==='single_kw' && ctx.token==='finally'){
-                if(has_else){$_SyntaxError(context,"'finally' after 'else'")}
+                has_finally = true
                 pos++
             }else if(ctx.type==='single_kw' && ctx.token==='else'){
                 if(has_else){$_SyntaxError(context,"more than one 'else'")}
+                if(has_finally){$_SyntaxError(context,"'else' after 'finally'")}
                 has_else = true
                 var else_body = node.parent.children[pos]
                 node.parent.children.splice(pos,1)
@@ -4564,6 +4567,7 @@ function $TryCtx(context){
         }
         if(has_else){
             var else_node = new $Node()
+            else_node.module = scope.module
             new $NodeJSCtx(else_node,'if(!$B.$failed'+$loop_num+')')
             for(var i=0;i<else_body.children.length;i++){
                 else_node.add(else_body.children[i])
