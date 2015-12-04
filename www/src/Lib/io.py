@@ -289,6 +289,8 @@ class RawIOBase:
     def write(self,b):
         pass
 
+# XXX Brython : the following are here just to avoid AttributeError
+BufferedIOBase = RawIOBase
 BufferedReader = RawIOBase
 
 #from _io import *
