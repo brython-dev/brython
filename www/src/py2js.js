@@ -354,6 +354,14 @@ function $AbstractExprCtx(context,with_commas){
     }
 }
 
+function $AliasCtx(context){
+    // Class for context manager alias
+    this.type = 'ctx_manager_alias'
+    this.parent = context
+    this.tree = []
+    context.tree[context.tree.length-1].alias = this
+}
+
 function $AnnotationCtx(context){
     // Class for annotations, eg "def f(x:int) -> list:" 
     this.type = 'annotation'
@@ -5419,7 +5427,12 @@ function $transition(context,token){
         $_SyntaxError(context,'token '+token+' after '+context)
       case 'continue':
         if(token=='eol') return context.parent
-        $_SyntaxError(context,'token '+token+' after '+context)      
+        $_SyntaxError(context,'token '+token+' after '+context)   
+      case 'ctx_manager_alias':
+        case ',':
+        case ':':
+          return $transition(context.parent, token, arguments[2])
+        $_SyntaxError(context,'token '+token+' after '+context)          
       case 'decorator':
         if(token==='id' && context.tree.length===0){
             return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
@@ -6648,12 +6661,7 @@ function $transition(context,token){
             }
             break
           case 'as':
-            if(context.expect==='as'){ // if aliased, must be the only exception
-                context.expect = 'alias'
-                context.has_alias = true
-                return context
-            }
-            break
+            return new $AbstractExprCtx(new $AliasCtx(context))
           case ':':
             switch(context.expect) {
               case 'id':
@@ -6667,8 +6675,9 @@ function $transition(context,token){
                context.parenth = true
                return context
             }else if(context.expect=='alias'){
+               console.log('context', context, 'token', token)
                context.expect = ':'
-               return $transition(new $AbstractExprCtx(context,false),token)
+               return new $TargetListCtx(context,false)
             }
             break
           case ')':
