@@ -1,7 +1,9 @@
 # hack to return special attributes
 from _sys import *
+
 _getframe = Getframe
 from javascript import JSObject
+from browser import window
 
 brython_debug_mode = __BRYTHON__.debug
 
@@ -63,7 +65,7 @@ maxunicode=1114111
 # #path_hooks = list(JSObject(__BRYTHON__.path_hooks))
 # meta_path=__BRYTHON__.meta_path
 
-platform="brython"
+platform = "brython"
 
 prefix = __BRYTHON__.brython_path
 
