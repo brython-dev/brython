@@ -6209,7 +6209,7 @@ function $transition(context,token){
                    }
                    break
                }// switch
-
+                   
                switch(token) {
                  case '=':
                    if (context.real=='tuple' && context.implicit===true){
@@ -6222,8 +6222,14 @@ function $transition(context,token){
                    } 
                    break
                  case ')':
-                 case ']':
                    break
+                 case ']':
+                   if(context.real=='tuple' && context.implicit===true){
+                       // Syntax like d[1,]=2
+                       return $transition(context.parent, token, arguments[2])
+                   }else{
+                       break
+                   }
                  case ',':
                    $_SyntaxError(context,'unexpected comma inside list')
                  default:
