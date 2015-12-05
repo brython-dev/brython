@@ -2512,11 +2512,13 @@ function $ForExpr(context){
         var scope = $get_scope(this),
             mod_name = scope.module,
             target = this.tree[0],
+            target_is_1_tuple = target.tree.length==1 && target.expect == 'id',
             iterable = this.tree[1],
             num = this.loop_num,
             local_ns = '$locals_'+scope.id.replace(/\./g,'_'),
             h = '\n'+' '.repeat(node.indent+4)
 
+        
         if(__BRYTHON__.loop_timeout){
             // If the option "loop_timeout" has been set by
             // browser.timer.set_loop_timeout, create code to initialise
@@ -2532,6 +2534,7 @@ function $ForExpr(context){
         // "range"
         var $range = false
         if(target.tree.length==1 &&
+            target.expct != 'id' &&
             iterable.type=='expr' &&
             iterable.tree[0].type=='expr' &&
             iterable.tree[0].tree[0].type=='call'){
@@ -2762,7 +2765,14 @@ function $ForExpr(context){
         iter_node.id = this.module
         var context = new $NodeCtx(iter_node) // create ordinary node
         var target_expr = new $ExprCtx(context,'left',true)
-        target_expr.tree = target.tree
+        if(target_is_1_tuple){
+            // assign to a one-element tuple for "for x, in ..."
+            var t = new $ListOrTupleCtx(target_expr)
+            t.real = 'tuple'
+            t.tree = target.tree
+        }else{
+            target_expr.tree = target.tree
+        }
         var assign = new $AssignCtx(target_expr) // assignment to left operand
         assign.tree[1] = new $JSCode('$locals["$next'+num+'"]()')
         try_node.add(iter_node)
@@ -6559,6 +6569,9 @@ function $transition(context,token){
         } //switch
 
         if(context.expect===',') {
+            return $transition(context.parent,token,arguments[2])
+        }else if(token=='in'){
+            // Support syntax "for x, in ..."
             return $transition(context.parent,token,arguments[2])
         }
         $_SyntaxError(context,'token '+token+' after '+context)
