@@ -6682,6 +6682,9 @@ function $transition(context,token){
               (context.expect == ',' || context.expect == 'as')) {
                 context.expect='id'
                 return context
+            }else if(context.expect=='as'){
+                context.expect = 'id'
+                return context
             }else if(context.expect==':'){
                 context.expect = 'id'
                 return context
