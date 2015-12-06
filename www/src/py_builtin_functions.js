@@ -454,7 +454,6 @@ function attr_error(attr, cname){
 }
 
 function getattr(obj,attr,_default){
-
     var klass = $B.get_class(obj)
     
     if(klass===undefined){
@@ -524,15 +523,14 @@ function getattr(obj,attr,_default){
         if(klass[attr]===undefined){
             var object_attr = _b_.object.$dict[attr]
             if(object_attr!==undefined){klass[attr]=object_attr}
-            else if(klass.descriptors && klass.descriptors[attr]!==undefined){
-                return klass.descriptors[attr](obj)
-            }
             else{
                 if(_default===undefined){attr_error(attr, klass.__name__)}
                 return _default
             }
         }
-        
+        if(klass.descriptors && klass.descriptors[attr]!==undefined){
+            return klass[attr](obj)
+        }
         if(typeof klass[attr]=='function'){
             // new is a static method
             if(attr=='__new__') return klass[attr].apply(null,arguments)
