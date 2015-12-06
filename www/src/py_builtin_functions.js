@@ -1388,43 +1388,34 @@ $Reader.read = function(self,nb){
     if(nb===undefined) return self.$content
    
     self.$counter+=nb
+    if(self.$bin){
+        var res = self.$content.source.slice(self.$counter-nb, self.$counter)
+        return _b_.bytes(res)
+    }
     return self.$content.substr(self.$counter-nb,nb)
 }
 
 $Reader.readable = function(self){return true}
 
 $Reader.readline = function(self,limit){
+    // set line counter
+    self.$lc = self.$lc === undefined ? -1 : self.$lc
+
     if(self.closed===true) throw _b_.ValueError('I/O operation on closed file')
-
-    var line = ''
-    if(limit===undefined||limit===-1) limit=null
-
-    while(1){
-        if(self.$counter>=self.$content.length-1) break
-        
-        var car = self.$content.charAt(self.$counter)
-        if(car=='\n'){self.$counter++;return line}
-
-        line += car
-        if(limit!==null && line.length>=limit) return line
-        self.$counter++
+    
+    if(self.$lc==self.$lines.length-1){
+        return self.$bin ? _b_.bytes() : ''
     }
-    return '0'   // return empty string when EOF has been reached.
+    self.$lc++
+    var res = self.$lines[self.$lc]
+    self.$counter += (self.$bin ? res.source.length : res.length)
+    return res
 }
 
 $Reader.readlines = function(self,hint){
     if(self.closed===true) throw _b_.ValueError('I/O operation on closed file')
-    var x = self.$content.substr(self.$counter).split('\n')
-    if(hint && hint!==-1){
-        var y=[],size=0, pos=0
-        while(1){
-            var z = x.shift()
-            size += z.length
-            y[pos++]=z
-            if(size>hint || x.length==0) return y
-        }
-    }
-    return x
+    self.$lc = self.$lc === undefined ? -1 : self.$lc
+    return self.$lines.slice(self.$lc+1)
 }
 
 $Reader.seek = function(self,offset,whence){
@@ -1461,6 +1452,7 @@ function $url_open(){
     for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
     if(args.length>0) var mode=args[0]
     if(args.length>1) var encoding=args[1]
+    var is_binary = mode.search('b')>-1
     if(isinstance(file,$B.JSObject)) return new $OpenFile(file.js,mode,encoding)
     if(isinstance(file,_b_.str)){
         // read the file content and return an object with file object methods
@@ -1477,21 +1469,31 @@ function $url_open(){
                 $res = _b_.IOError('Could not open file '+file+' : status '+status) 
             }else{
                 $res = req.responseText
+                if(is_binary){
+                    $res=_b_.str.$dict.encode($res, 'utf-8')
+                }
             }
         }
         // add fake query string to avoid caching
         var fake_qs = '?foo='+$B.UUID()
         req.open('GET',file+fake_qs,false)
-        var is_binary = mode.search('b')>-1
         if(is_binary){
-            req.overrideMimeType('text/plain; charset=iso-8859-1');
+            req.overrideMimeType('text/plain; charset=utf-8');
         }
         req.send()
         if($res.constructor===Error) throw $res
 
+        if(is_binary){
+            var lf = _b_.bytes('\n', 'ascii'),
+                lines = _b_.bytes.$dict.split($res, lf)
+            for(var i=0;i<lines.length-1;i++){lines[i].source.push(10)}
+        }else{
+            var lines = $res.split('\n')
+            for(var i=0;i<lines.length-1;i++){lines[i]+='\n'}
+        }
+
         // return the file-like object
-        var lines = $res.split('\n')
-        var res = {$content:$res,$counter:0,$lines:lines,
+        var res = {$content:$res,$counter:0,$lines:lines,$bin:is_binary,
             closed:False,encoding:encoding,mode:mode,name:file
         }
         res.__class__ = is_binary ? $BufferedReader : $TextIOWrapper

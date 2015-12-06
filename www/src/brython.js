@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-12-06 09:32:30.030823"
+__BRYTHON__.compiled_date="2015-12-06 12:01:30.680081"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","jsdatetime","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_locale","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -5670,26 +5670,21 @@ $Reader.close=function(self){self.closed=true}
 $Reader.read=function(self,nb){if(self.closed===true)throw _b_.ValueError('I/O operation on closed file')
 if(nb===undefined)return self.$content
 self.$counter+=nb
+if(self.$bin){var res=self.$content.source.slice(self.$counter-nb,self.$counter)
+return _b_.bytes(res)}
 return self.$content.substr(self.$counter-nb,nb)}
 $Reader.readable=function(self){return true}
-$Reader.readline=function(self,limit){if(self.closed===true)throw _b_.ValueError('I/O operation on closed file')
-var line=''
-if(limit===undefined||limit===-1)limit=null
-while(1){if(self.$counter>=self.$content.length-1)break
-var car=self.$content.charAt(self.$counter)
-if(car=='\n'){self.$counter++;return line}
-line +=car
-if(limit!==null && line.length>=limit)return line
-self.$counter++}
-return '0' }
+$Reader.readline=function(self,limit){
+self.$lc=self.$lc===undefined ? -1 : self.$lc
+if(self.closed===true)throw _b_.ValueError('I/O operation on closed file')
+if(self.$lc==self.$lines.length-1){return self.$bin ? _b_.bytes(): ''}
+self.$lc++
+var res=self.$lines[self.$lc]
+self.$counter +=(self.$bin ? res.source.length : res.length)
+return res}
 $Reader.readlines=function(self,hint){if(self.closed===true)throw _b_.ValueError('I/O operation on closed file')
-var x=self.$content.substr(self.$counter).split('\n')
-if(hint && hint!==-1){var y=[],size=0,pos=0
-while(1){var z=x.shift()
-size +=z.length
-y[pos++]=z
-if(size>hint ||x.length==0)return y}}
-return x}
+self.$lc=self.$lc===undefined ? -1 : self.$lc
+return self.$lines.slice(self.$lc+1)}
 $Reader.seek=function(self,offset,whence){if(self.closed===True)throw _b_.ValueError('I/O operation on closed file')
 if(whence===undefined)whence=0
 if(whence===0){self.$counter=offset}
@@ -5707,21 +5702,24 @@ var $ns=$B.args('open',3,{file:null,mode:null,encoding:null},['file','mode','enc
 for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
 if(args.length>0)var mode=args[0]
 if(args.length>1)var encoding=args[1]
+var is_binary=mode.search('b')>-1
 if(isinstance(file,$B.JSObject))return new $OpenFile(file.js,mode,encoding)
 if(isinstance(file,_b_.str)){
 if(window.XMLHttpRequest){
 var req=new XMLHttpRequest();}else{
 var req=new ActiveXObject("Microsoft.XMLHTTP");}
 req.onreadystatechange=function(){var status=req.status
-if(status===404){$res=_b_.IOError('File '+file+' not found')}else if(status!==200){$res=_b_.IOError('Could not open file '+file+' : status '+status)}else{$res=req.responseText}}
+if(status===404){$res=_b_.IOError('File '+file+' not found')}else if(status!==200){$res=_b_.IOError('Could not open file '+file+' : status '+status)}else{$res=req.responseText
+if(is_binary){$res=_b_.str.$dict.encode($res,'utf-8')}}}
 var fake_qs='?foo='+$B.UUID()
 req.open('GET',file+fake_qs,false)
-var is_binary=mode.search('b')>-1
-if(is_binary){req.overrideMimeType('text/plain; charset=iso-8859-1');}
+if(is_binary){req.overrideMimeType('text/plain; charset=utf-8');}
 req.send()
 if($res.constructor===Error)throw $res
-var lines=$res.split('\n')
-var res={$content:$res,$counter:0,$lines:lines,closed:False,encoding:encoding,mode:mode,name:file}
+if(is_binary){var lf=_b_.bytes('\n','ascii'),lines=_b_.bytes.$dict.split($res,lf)
+for(var i=0;i<lines.length-1;i++){lines[i].source.push(10)}}else{var lines=$res.split('\n')
+for(var i=0;i<lines.length-1;i++){lines[i]+='\n'}}
+var res={$content:$res,$counter:0,$lines:lines,$bin:is_binary,closed:False,encoding:encoding,mode:mode,name:file}
 res.__class__=is_binary ? $BufferedReader : $TextIOWrapper
 return res}}
 var $ZipDict={__class__:$B.$type,__name__:'zip'}
@@ -6287,6 +6285,15 @@ for(var i=0;i < 256;i++)_t[i]=i
 for(var i=0,_len_i=from.source.length;i < _len_i;i++){var _ndx=from.source[i]
 _t[_ndx]=to.source[i]}
 return bytes(_t)}
+$BytesDict.split=function(){var $=$B.args('split',2,{self:null,sep:null},['self','sep'],arguments,{},null,null),res=[],start=0,stop=0
+var seps=$.sep.source,len=seps.length,src=$.self.source,blen=src.length
+while(stop<blen){var match=true
+for(var i=0;i<len && match;i++){if(src[stop+i]!=seps[i]){match=false}}
+if(match){res.push(bytes(src.slice(start,stop)))
+start=stop+len
+stop=start}else{stop++}}
+if(match ||(stop>start)){res.push(bytes(src.slice(start,stop)))}
+return res}
 function _strip(self,cars,lr){if(cars===undefined){cars=[],pos=0
 var ws='\r\n \t'
 for(var i=0,_len_i=ws.length;i < _len_i;i++)cars[pos++]=ws.charCodeAt(i)}else if(isinstance(cars,bytes)){cars=cars.source}else{throw _b_.TypeError("Type str doesn't support the buffer API")}
