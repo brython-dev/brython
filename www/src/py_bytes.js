@@ -306,6 +306,32 @@ $BytesDict.maketrans=function(from, to) {
     return bytes(_t)
 }
 
+$BytesDict.split = function(){
+    var $ = $B.args('split', 2, {self:null, sep:null}, ['self', 'sep'],
+        arguments, {}, null, null),
+        res=[], start=0, stop=0
+    var seps = $.sep.source, 
+        len = seps.length, 
+        src = $.self.source,
+        blen = src.length
+        
+    while(stop<blen){
+        var match=true
+        for(var i=0;i<len && match;i++){
+            if(src[stop+i]!=seps[i]){match=false}
+        }
+        if(match){
+            res.push(bytes(src.slice(start, stop)))
+            start = stop+len
+            stop = start
+        }else{
+            stop++
+        }
+    }
+    if(match || (stop>start)){res.push(bytes(src.slice(start, stop)))}
+    return res
+}
+
 function _strip(self,cars,lr){
     if(cars===undefined){
         cars = [], pos=0
