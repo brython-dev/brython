@@ -3092,7 +3092,8 @@ function $IdCtx(context,value){
 
     var scope = this.scope = $get_scope(this)
     
-    if(context.type=='target_list' || context.type=='packed'){
+    if(context.type=='target_list' || context.type=='packed' ||
+        (context.type=='expr' && context.parent.type=='target_list')){
         // An id defined as a target in a "for" loop, or as "packed" 
         // (eg "a, *b = [1, 2, 3]") is bound
         $B.bound[scope.id][value]=true
@@ -5697,6 +5698,10 @@ function $transition(context,token){
             if (context.expect === ',') return new $ExprNot(context)
             break
           case 'in':
+            if(context.parent.type=='target_list'){
+                // expr used for target list
+                return $transition(context.parent, token)
+            }
             if(context.expect===',') return $transition(context,'op','in')
             break
           case ',':
@@ -6566,8 +6571,7 @@ function $transition(context,token){
           case 'id':
             if(context.expect==='id'){
               context.expect = ','
-              new $IdCtx(context,arguments[2])
-              return context
+              return new $IdCtx(new $ExprCtx(context, 'target', false),arguments[2])
             }
           case 'op':
             if(context.expect=='id' && arguments[2]=='*'){
