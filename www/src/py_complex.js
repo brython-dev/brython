@@ -11,7 +11,8 @@ function $UnsupportedOpType(op,class1,class2){
 var $ComplexDict = {__class__:$B.$type,
     __dir__:$ObjectDict.__dir__,
     __name__:'complex',
-    $native:true
+    $native:true,
+    descriptors:{real:true, imag:true}
 }
 
 $ComplexDict.__abs__ = function(self,other){return complex(abs(self.real),abs(self.imag))}
@@ -180,10 +181,12 @@ for(var $op in $B.$comps){
 $B.make_rmethods($ComplexDict)
 
 // Descriptors to return real and imag
-$ComplexDict.descriptors = {
-    'real': function(self){return new Number(self.real)},
-    'imag': function(self){return new Number(self.imag)}
-}
+//$ComplexDict.descriptors = {
+    //'real': function(self){return new Number(self.real)},
+    //'imag': function(self){return new Number(self.imag)}
+//}
+$ComplexDict.real = function(self){return new Number(self.real)}
+$ComplexDict.imag = function(self){return new Number(self.imag)}
 
 var complex_re = /^(\d*\.?\d*)([\+\-]?)(\d*\.?\d*)(j?)$/
 
