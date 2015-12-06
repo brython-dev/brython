@@ -111,6 +111,13 @@ $ObjectDict.__eq__ = function(self,other){
     return self===other
 }
 
+$ObjectDict.__format__ = function(){
+    var $ = $B.args('__format__', 2, {self:null, spec:null},
+        ['self', 'spec'], arguments, {}, null, null)
+    if($.spec!==''){throw _b_.TypeError("non-empty format string passed to object.__format__")}
+    return _b_.getattr($.self, '__repr__')()
+}
+
 $ObjectDict.__ge__ = $ObjectNI('__ge__','>=')
 
 $ObjectDict.__getattribute__ = function(obj,attr){
