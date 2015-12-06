@@ -274,7 +274,7 @@
         stdout : {
             __get__:function(){return $B.stdout},
             __set__:function(self, obj, value){$B.stdout = value},
-            write:function(data){_b_.getattr($B.stdout,"write")(data)}
+            write:function(data){console.log('stdout write');_b_.getattr($B.stdout,"write")(data)}
             },
         stdin : $B.stdin
     }

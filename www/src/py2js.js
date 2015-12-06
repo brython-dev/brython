@@ -2833,7 +2833,7 @@ function $FromCtx(context){
             var mod_name = this.module.replace(/\$/g,'')
             if(this.names[0]=='*'){
                 node.add($NodeJS('for(var $attr in $B.imported["'+mod_name+
-                    '"]){$locals[$attr]=$B.imported["'+mod_name+'"][$attr]};'))
+                    '"]){if($attr.charAt(0)!=="_"){$locals[$attr]=$B.imported["'+mod_name+'"][$attr]}};'))
             }else{
                 for(var i=0;i<this.names.length;i++){
                     var name = this.names[i]
@@ -2914,7 +2914,8 @@ function $FromCtx(context){
             // Add names to local namespace
             if(this.names[0]=='*'){
                 res[pos++] = '\n'+head+'for(var $attr in $B.imported["'+mod_name+
-                    '"]){$locals[$attr]=$B.imported["'+mod_name+'"][$attr]};'
+                    '"]){if($attr.charAt(0)!=="_"){'+
+                    '$locals[$attr]=$B.imported["'+mod_name+'"][$attr]}};'
             }else{
                 for(var i=0;i<this.names.length;i++){
                     var name = this.names[i]
@@ -5427,11 +5428,13 @@ function $transition(context,token){
         $_SyntaxError(context,'token '+token+' after '+context)
       case 'continue':
         if(token=='eol') return context.parent
-        $_SyntaxError(context,'token '+token+' after '+context)   
+        $_SyntaxError(context,'token '+token+' after '+context)
       case 'ctx_manager_alias':
-        case ',':
-        case ':':
-          return $transition(context.parent, token, arguments[2])
+        switch(token){
+          case ',':
+          case ':':
+            return $transition(context.parent, token, arguments[2])
+        }
         $_SyntaxError(context,'token '+token+' after '+context)          
       case 'decorator':
         if(token==='id' && context.tree.length===0){

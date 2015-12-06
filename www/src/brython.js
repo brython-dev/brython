@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-12-05 22:18:29.177706"
+__BRYTHON__.compiled_date="2015-12-06 09:03:27.309145"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","jsdatetime","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_locale","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -1482,7 +1482,7 @@ if(name=='*'){this.scope.blurred=true}}
 this.transform=function(node,rank){if(!this.blocking){
 var mod_name=this.module.replace(/\$/g,'')
 if(this.names[0]=='*'){node.add($NodeJS('for(var $attr in $B.imported["'+mod_name+
-'"]){$locals[$attr]=$B.imported["'+mod_name+'"][$attr]};'))}else{for(var i=0;i<this.names.length;i++){var name=this.names[i]
+'"]){if($attr.charAt(0)!=="_"){$locals[$attr]=$B.imported["'+mod_name+'"][$attr]}};'))}else{for(var i=0;i<this.names.length;i++){var name=this.names[i]
 node.add($NodeJS('$locals["'+(this.aliases[name]||name)+
 '"]=$B.imported["'+mod_name+'"]["'+name+'"]'))}}
 for(var i=rank+1;i<node.parent.children.length;i++){node.add(node.parent.children[i])}
@@ -1511,7 +1511,8 @@ for(var attr in this.aliases){res[pos++]=sep + '"'+attr+'": "'+this.aliases[attr
 sep=',';}
 res[pos++]='}, {}, true);';
 if(this.names[0]=='*'){res[pos++]='\n'+head+'for(var $attr in $B.imported["'+mod_name+
-'"]){$locals[$attr]=$B.imported["'+mod_name+'"][$attr]};'}else{for(var i=0;i<this.names.length;i++){var name=this.names[i]
+'"]){if($attr.charAt(0)!=="_"){'+
+'$locals[$attr]=$B.imported["'+mod_name+'"][$attr]}};'}else{for(var i=0;i<this.names.length;i++){var name=this.names[i]
 res[pos++]='\n'+head+'$locals["'+(this.aliases[name]||name)+
 '"]=$B.imported["'+mod_name+'"]["'+name+'"];'}}
 res[pos++]='\n'+head+'None;';}else{res[pos++]='$B.$import_non_blocking("'+mod_name+'", function()'}
@@ -2811,9 +2812,9 @@ case 'continue':
 if(token=='eol')return C.parent
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'ctx_manager_alias':
-case ',':
+switch(token){case ',':
 case ':':
-return $transition(C.parent,token,arguments[2])
+return $transition(C.parent,token,arguments[2])}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'decorator':
 if(token==='id' && C.tree.length===0){return $transition(new $AbstractExprCtx(C,false),token,arguments[2])}
@@ -10431,7 +10432,7 @@ Getframe : function(depth){return $B._frame($B.frames_stack,depth)},modules :
 {'__get__':function(){return $B.path_hooks},'__set__':function(self,obj,value){$B.path_hooks=value }},path_importer_cache: 
 {'__get__':function(){return _b_.dict($B.JSObject($B.path_importer_cache))},'__set__':function(self,obj,value){throw _b_.TypeError("Read only property 'sys.path_importer_cache'")}},stderr :{
 __get__:function(){return $B.stderr},__set__:function(self,obj,value){$B.stderr=value},write:function(data){_b_.getattr($B.stderr,"write")(data)}},stdout :{
-__get__:function(){return $B.stdout},__set__:function(self,obj,value){$B.stdout=value},write:function(data){_b_.getattr($B.stdout,"write")(data)}},stdin : $B.stdin}
+__get__:function(){return $B.stdout},__set__:function(self,obj,value){$B.stdout=value},write:function(data){console.log('stdout write');_b_.getattr($B.stdout,"write")(data)}},stdin : $B.stdin}
 function load(name,module_obj){
 module_obj.__class__=$B.$ModuleDict
 module_obj.__name__=name
