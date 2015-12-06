@@ -310,7 +310,7 @@ def mkdir(*args,**kw):
     The mode argument is ignored on Windows."""
     pass
 
-def _open(path, flags, mode=0o777, *args, dir_fd=None):
+def open(path, flags, mode=0o777, *args, dir_fd=None):
     """open(path, flags, mode=0o777, *, dir_fd=None)    
     Open a file for low level IO.  Returns a file handle (integer).
     
