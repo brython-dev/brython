@@ -625,6 +625,28 @@ def f():
 
 assertRaises(TypeError, f)
 
+# issue 343
+a76gf = 0   
+
+def f():
+    a76gf = 1   
+    def g():
+        nonlocal a76gf
+        a76gf=a76gf+1
+        return a76gf
+    assert g()==2
+f()
+
+# issue 344
+def f():
+    a2fx = 1   
+    def g():
+        nonlocal a2fx
+        a2fx = 2
+    g()
+    assert a2fx == 2
+f()
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

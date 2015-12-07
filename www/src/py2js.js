@@ -3127,13 +3127,16 @@ function $IdCtx(context,value){
         
         var is_local = $B.bound[this.scope.id][val]!==undefined
         var bound_before = $get_node(this).bound_before
+        if(this.scope.nonlocals && this.scope.nonlocals[val]!==undefined){
+            this.nonlocal = true
+        }
         
         // If name is bound in the scope, but not yet bound when this
         // instance of $IdCtx was created, it is resolved by a call to
         // $search or $local_search
         this.unbound = this.unbound || (is_local && !this.bound && 
             bound_before && bound_before.indexOf(val)==-1)
-        if(this.unbound){
+        if(this.unbound && !this.nonlocal){
             if(this.scope.ntype=='def' || this.scope.ntype=='generator'){
                 return '$B.$local_search("'+val+'")'
             }else{
@@ -3146,6 +3149,7 @@ function $IdCtx(context,value){
         else if(val=='__BRYTHON__' || val == '$B'){return val}
         
         var innermost = $get_scope(this)
+        
 
         var scope = innermost, found=[], module = scope.module
         
@@ -3197,6 +3201,7 @@ function $IdCtx(context,value){
             else{break}
         }
         this.found = found
+        if(this.nonlocal && found[0]===innermost){found.shift()}
 
         /*
         if(val=='axd'){
