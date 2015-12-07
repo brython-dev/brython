@@ -625,6 +625,12 @@ def f():
 
 assertRaises(TypeError, f)
 
+# issue 342
+try:
+    from .spam import eggs
+except SystemError as ie:
+    assert str(ie)=="Parent module '' not loaded, cannot perform relative import"
+
 # issue 343
 a76gf = 0   
 
@@ -646,6 +652,7 @@ def f():
     g()
     assert a2fx == 2
 f()
+
 
 # ==========================================
 # Finally, report that all tests have passed

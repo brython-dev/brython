@@ -2878,12 +2878,15 @@ function $FromCtx(context){
         while(_mod.length>0){
             if(_mod.charAt(0)=='.'){
                 if(package===undefined){
-                    package = $B.imported[mod].__package__
+                    if($B.imported[mod]!==undefined){
+                        package = $B.imported[mod].__package__
+                    }
                 }else{
                     package = $B.imported[package]
                 }
                 if(package===undefined){
-                    return 'throw SystemError("Parent module \'\' not loaded, cannot perform relative import")'
+                    return 'throw SystemError("Parent module \'\' not loaded,'+
+                        ' cannot perform relative import")'
                 }else if(package=='None'){
                     console.log('package is None !')
                 }else{
