@@ -71,7 +71,7 @@ $B.$isNodeList = function(nodes) {
     // detect-htmlcollection-nodelist-in-javascript
     try{
         var result = Object.prototype.toString.call(nodes);
-        var re = new RegExp("^\\[object (HTMLCollection|NodeList|Object)\\]$")     
+        var re = new RegExp("^\\[object (HTMLCollection|NodeList)\\]$")     
         return (typeof nodes === 'object'
             && re.exec(result)!==null
             && nodes.hasOwnProperty('length')
