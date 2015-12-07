@@ -7359,6 +7359,71 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     return root
 }
 
+function load_ext(ext_scripts){
+    // Use a web worker to load external scripts
+    var w = new Worker($B.brython_path+"load_file.js");
+    w.postMessage(ext_scripts)
+    w.onmessage = function(event) {
+        var res = ''
+        for(var i=0;i<event.data.length;i++){
+            if(event.data[i].src===null){
+                throw Error("cannot load script "+
+                    event.data[i].name+' at '+event.data[i].url+
+                    ': error '+event.data[i].status)
+            }else{
+                res += event.data[i].url+' '+event.data[i].src.length+'\n';
+                run_script(event.data[i])
+            }
+        }
+    }
+}
+
+function run_script(script){
+    // script has attributes url, src, name
+
+    $B.$py_module_path[script.name]=script.url
+
+    try{
+        // Conversion of Python source code to Javascript
+
+        var $root = $B.py2js(script.src,script.name,script.name,'__builtins__')
+        var $js = $root.to_js()
+        // Run resulting Javascript
+        eval($js)
+        $B.imported[script.name] = $locals
+        
+    }catch($err){
+        if($B.debug>1){
+            console.log($err)
+            for(var attr in $err){
+               console.log(attr+' : ', $err[attr])
+            }
+        }
+
+        // If the error was not caught by the Python runtime, build an
+        // instance of a Python exception
+        if($err.$py_error===undefined){
+            console.log('Javascript error', $err)
+            //console.log($js)
+            //for(var attr in $err){console.log(attr+': '+$err[attr])}
+            $err=_b_.RuntimeError($err+'')
+        }
+
+        // Print the error traceback on the standard error stream
+        var $trace = _b_.getattr($err,'info')+'\n'+$err.__name__+
+            ': ' +$err.args
+        try{
+            _b_.getattr($B.stderr,'write')($trace)
+        }catch(print_exc_err){
+            console.log($trace)
+        }
+        // Throw the error to stop execution
+        throw $err
+    }
+
+
+}
+
 function brython(options){
     var _b_=$B.builtins
     
@@ -7552,6 +7617,7 @@ function brython(options){
                 }
             }
         }
+        var inner_scripts = {}, ext_scripts = {}
         for(var $i=0;$i<$elts.length;$i++){
             var $elt = $elts[$i]
             if($elt.type=="text/python"||$elt.type==="text/python3"){
@@ -7571,6 +7637,8 @@ function brython(options){
                 if($elt.src){ 
                     // format <script type="text/python" src="python_script.py">
                     // get source code by an Ajax call
+                    ext_scripts[module_name] = {url:$elt.src}
+                    /*
                     if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
                         var $xmlhttp=new XMLHttpRequest();
                     }else{// code for IE6, IE5
@@ -7599,11 +7667,16 @@ function brython(options){
                         // should be the last used when importing scripts
                         $B.path.splice(0,0,$src_path)
                     }
+                    */
                 }else{
                     // Get source code inside the script element
                     var $src = ($elt.innerHTML || $elt.textContent)
+                    inner_scripts[module_name] = $src
                     $B.$py_module_path[module_name] = $href
+                    run_script({name: module_name, src: $src, url: $href})
                 }
+                
+                /*
 
                 try{
                     // Conversion of Python source code to Javascript
@@ -7653,10 +7726,13 @@ function brython(options){
                     // Throw the error to stop execution
                     throw $err
                 }
+                */
 
             }
         }
     }
+    
+    load_ext(ext_scripts)
 
     /* Uncomment to check the names added in global Javascript namespace
     var kk1 = Object.keys(window)
