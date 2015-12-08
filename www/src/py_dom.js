@@ -60,6 +60,7 @@ var $DOMNodeAttrs = ['nodeName','nodeValue','nodeType','parentNode',
     'attributes','ownerDocument']
 
 $B.$isNode = function(obj){
+    if(obj===document){return true}
     for(var i=0;i<$DOMNodeAttrs.length;i++){
         if(obj[$DOMNodeAttrs[i]]===undefined) return false
     }
@@ -418,7 +419,6 @@ DOMNodeDict.__eq__ = function(self,other){
 }
 
 DOMNodeDict.__getattribute__ = function(self,attr){
-
     switch(attr) {
       case 'class_name':
       case 'children':

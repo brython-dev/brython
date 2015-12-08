@@ -392,8 +392,11 @@ $B.$JS2Py = function(src){
     if(klass!==undefined){
         if(klass===_b_.list.$dict){
             for(var i=0, _len_i = src.length; i< _len_i;i++) src[i] = $B.$JS2Py(src[i])
+        }else if(klass===$B.JSObject.$dict){
+            src = src.js
+        }else{
+            return src
         }
-        return src
     }
     if(typeof src=="object"){
         if($B.$isNode(src)) return $B.DOMNode(src)

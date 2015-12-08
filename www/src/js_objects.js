@@ -371,12 +371,8 @@ function JSObject(obj){
     // a function defined in Javascript. It must be wrapped in a JSObject
     // so that when called, the arguments are transformed into JS values
     if(typeof obj=='function'){return {__class__:$JSObjectDict,js:obj}}
+
     var klass = $B.get_class(obj)
-    if(klass===_b_.list.$dict){
-        // JS arrays not created by list() must be wrapped
-        if(obj.__brython__) return obj
-        return {__class__:$JSObjectDict,js:obj}
-    }
     // we need to do this or nan is returned, when doing json.loads(...)
     if (klass === _b_.float.$dict) return _b_.float(obj)
 

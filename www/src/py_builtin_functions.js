@@ -456,7 +456,7 @@ function attr_error(attr, cname){
 function getattr(obj,attr,_default){
 
     var klass = $B.get_class(obj)
-    
+
     if(klass===undefined){
         // for native JS objects used in Python code
         if(obj[attr]!==undefined) return $B.$JS2Py(obj[attr])
