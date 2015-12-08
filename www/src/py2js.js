@@ -7368,21 +7368,31 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
 }
 
 function load_ext(ext_scripts){
-    // Use a web worker to load external scripts
-    var w = new Worker($B.brython_path+"load_file.js");
-    w.postMessage(ext_scripts)
-    w.onmessage = function(event) {
-        var res = ''
-        for(var i=0;i<event.data.length;i++){
-            if(event.data[i].src===null){
-                throw Error("cannot load script "+
-                    event.data[i].name+' at '+event.data[i].url+
-                    ': error '+event.data[i].status)
+    var found = []
+    function callback(ev){
+        req = ev.target
+        if(req.readyState==4){
+            if(req.status==200){
+                run_script({name:req.module_name, 
+                    url:req.responseURL, 
+                    src:req.responseText})
+                if(ext_scripts.length>0){
+                    load_ext(ext_scripts)
+                }
             }else{
-                res += event.data[i].url+' '+event.data[i].src.length+'\n';
-                run_script(event.data[i])
+                throw Error("cannot load script "+
+                    req.module_name+' at '+req.responseURL+
+                    ': error '+req.status)
             }
         }
+    }
+    if(ext_scripts.length>0){
+        var script = ext_scripts.shift()
+        var req = new XMLHttpRequest()
+        req.onreadystatechange = callback
+        req.module_name = script.name
+        req.open('GET', script.url, true)
+        req.send()
     }
 }
 
@@ -7625,7 +7635,7 @@ function brython(options){
                 }
             }
         }
-        var inner_scripts = {}, ext_scripts = {}
+        var inner_scripts = {}, ext_scripts = []
         for(var $i=0;$i<$elts.length;$i++){
             var $elt = $elts[$i]
             if($elt.type=="text/python"||$elt.type==="text/python3"){
@@ -7645,7 +7655,7 @@ function brython(options){
                 if($elt.src){ 
                     // format <script type="text/python" src="python_script.py">
                     // get source code by an Ajax call
-                    ext_scripts[module_name] = {url:$elt.src}
+                    ext_scripts.push({name:module_name, url:$elt.src})
                     /*
                     if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
                         var $xmlhttp=new XMLHttpRequest();
