@@ -53,6 +53,17 @@ $TracebackDict.$factory = traceback
 var $FrameDict = {__class__:$B.$type,
     __name__:'frame'
 }
+
+$FrameDict.__getattr__ = function(self, attr){
+    // Used for f_back to avoid computing it when the frame object
+    // is initialised
+    if(attr=='f_back'){
+        if(self.$pos>0){
+            return frame(self.$stack, self.$pos-1)
+        }
+    }
+}
+
 $FrameDict.__mro__ = [$FrameDict, _b_.object.$dict]
 
 function to_dict(obj){
@@ -69,9 +80,11 @@ function frame(stack, pos){
     var mod_name = stack[2]
     var fs = stack
     var res = {__class__:$FrameDict,
-        f_builtins : {} // XXX fix me
+        f_builtins : {}, // XXX fix me
+        $stack: stack,
     }
     if(pos===undefined){pos = fs.length-1}
+    res.$pos = pos
     if(fs.length){
         var _frame = fs[pos]
         var locals_id = _frame[0]
