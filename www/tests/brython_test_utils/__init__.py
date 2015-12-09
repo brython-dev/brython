@@ -25,6 +25,9 @@ def discover_brython_test_modules():
           ("test_string_format.py", "string format"),
           ("test_string_methods.py", "string methods")
         ]),
+        ("DOM interface", [
+            ("dom.py", "DOM")
+        ]),
         ("Issues", [
           ("issues_gc.py", "issues (GC)"),
           ("issues_bb.py", "issues (BB)"),
