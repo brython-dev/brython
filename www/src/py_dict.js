@@ -465,12 +465,11 @@ $DictDict.copy = function(self){
 
 $DictDict.fromkeys = function(){
 
-    var $ = $B.args('fromkeys', 2, {keys:null, value:null},
-        ['keys', 'value'], arguments, {}, null, null),
+    var $ = $B.args('fromkeys', 3, {cls:null, keys:null, value:null},
+        ['cls', 'keys', 'value'], arguments, {value:_b_.None}, null, null),
         keys=$.keys, value=$.value
 
     // class method
-    if(value===undefined) value=None
     var res = dict()
     var keys_iter = _b_.iter(keys)
     while(1){
@@ -485,6 +484,7 @@ $DictDict.fromkeys = function(){
         }
     }
 }
+$DictDict.fromkeys.$type = 'classmethod'
 
 $DictDict.get = function(){
     var $ = $B.args('get', 3, {self:null, key:null, _default:null},
