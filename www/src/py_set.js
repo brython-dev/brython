@@ -299,7 +299,6 @@ $SetDict.copy = function(){
     var $ = $B.args('copy', 1, {self:null},['self'],
         arguments, {}, null, null)
     if(_b_.isinstance($.self, frozenset)){return $.self}
-    else if(_b_.isinstance($.self, set)){return $B.clone($.self)}
     var res = set() // copy returns an instance of set, even for subclasses
     for(var i=0, _len_i = $.self.$items.length; i < _len_i;i++){
         res.$items[i]=$.self.$items[i]
