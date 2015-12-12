@@ -670,6 +670,9 @@ i = implementation()
 assert isinstance(i, implementation)
 assert isinstance(i, interface)
 
+# issue 348
+x, y = y, x = 2, 3
+assert x, y == 3, 2
 
 # ==========================================
 # Finally, report that all tests have passed

@@ -413,7 +413,6 @@ function $AssignCtx(context, check_unbound){
     disabled if a new AssignCtx object is created afterwards by method
     transform()
     */
-    
     var ctx = context
     while(ctx){
         if(ctx.type=='assert'){$_SyntaxError(context,'invalid syntax - assign')}
@@ -494,8 +493,39 @@ function $AssignCtx(context, check_unbound){
     
     this.transform = function(node,rank){
         // rank is the rank of this line in node
-        var scope =$get_scope(this)
+        var scope = $get_scope(this)
 
+        var left = this.tree[0],
+            right = this.tree[1],
+            assigned = []
+
+        while(left.type=='assign'){
+            assigned.push(left.tree[1])
+            left = left.tree[0]
+        }
+        if(assigned.length>0){
+            assigned.push(left)
+            
+            // replace current node by '$tempXXX = <right>'
+            var ctx = node.context
+            ctx.tree = []
+            var nleft = new $RawJSCtx(ctx, 'var $temp'+$loop_num)
+            nleft.tree = ctx.tree
+            nassign = new $AssignCtx(nleft)
+            nassign.tree[1] = right
+
+            // create nodes with target set to right, from left to right            
+            for(var i=0;i<assigned.length;i++){
+                var new_node = new $Node(),
+                    node_ctx = new $NodeCtx(new_node)
+                node.parent.insert(rank+1,new_node)
+                assigned[i].parent = node_ctx
+                var assign = new $AssignCtx(assigned[i])
+                new $RawJSCtx(assign, '$temp'+$loop_num)
+            }
+            return assigned.length-1
+        }
+        /*
         var left = this.tree[0]
         while(left.type==='assign'){ 
             // chained assignment : x=y=z
@@ -504,10 +534,11 @@ function $AssignCtx(context, check_unbound){
             var new_node = new $Node()
             var node_ctx = new $NodeCtx(new_node)
             node_ctx.tree = [left]
-            node.parent.insert(rank+1,new_node)
+            //node.parent.insert(rank+1,new_node)
             this.tree[0] = left.tree[1]
             left = this.tree[0]
         }
+        */
         var left_items = null
         switch(left.type) {
           case 'expr':
@@ -531,7 +562,7 @@ function $AssignCtx(context, check_unbound){
           case 'list_or_tuple':
             left_items = left.tree
         }
-        if(left_items===null) {return}    
+        if(left_items===null) {return}  
         var right = this.tree[1]
 
         var right_items = null
