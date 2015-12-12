@@ -71,10 +71,12 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     
     // Create the factory function of the class
     if(meta_new.__func__===$B.$type.__new__){
-        var factory = _b_.type.$dict.__new__(_b_.type,class_name,bases,cl_dict)
+        var factory = _b_.type.$dict.__new__(_b_.type, class_name, bases, cl_dict)
     }else{
         var factory = meta_new(metaclass, class_name, bases, cl_dict)
     }
+    
+    class_dict.$factory = factory
         
     // Set new class as subclass of its parents
     for(var i=0;i<parents.length;i++){
@@ -290,7 +292,8 @@ $B.$type.__new__ = function(cls, name, bases, cl_dict){
         __bases__ : bases,
         __dict__ : cl_dict,
         $methods : {},
-        $slots: cl_dict.$slots
+        $slots: cl_dict.$slots,
+        $nanjrigole: 99
     }
 
     // set class attributes for faster lookups
@@ -309,12 +312,14 @@ $B.$type.__new__ = function(cls, name, bases, cl_dict){
     
     // Reset the attribute __class__
     class_dict.__class__ = class_dict.__mro__[1].__class__
-    
     // create the factory function
+    /*
     var creator = $instance_creator(class_dict)
     var factory = function(){
         return creator.apply(null, arguments)
     }
+    */
+    var factory = $instance_creator(class_dict)
 
     factory.__class__ = $B.$factory
     factory.$dict = class_dict
@@ -324,7 +329,7 @@ $B.$type.__new__ = function(cls, name, bases, cl_dict){
     // so that instance.__class__ compares equal to factory
     factory.__eq__ = function(other){return other===factory.__class__}
     class_dict.$factory = factory
-    
+        
     // type() returns the factory function
     return factory
 }

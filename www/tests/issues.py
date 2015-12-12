@@ -653,6 +653,23 @@ def f():
     assert a2fx == 2
 f()
 
+# issue 347
+from abc import ABCMeta, abstractmethod
+
+class interface(metaclass=ABCMeta):
+    @abstractmethod
+    def test(self):
+        return
+
+class implementation(interface):
+    def test(self):
+        return
+
+i = implementation()
+
+assert isinstance(i, implementation)
+assert isinstance(i, interface)
+
 
 # ==========================================
 # Finally, report that all tests have passed
