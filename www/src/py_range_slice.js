@@ -6,7 +6,8 @@ var _b_ = $B.builtins,
     $RangeDict = {__class__:$B.$type,
         __dir__:_b_.object.$dict.__dir__,
         __name__:'range',
-        $native:true
+        $native:true,
+        descriptors:{start:true,step:true,stop:true}
     }
 
 $RangeDict.__contains__ = function(self,other){
@@ -171,11 +172,14 @@ $RangeDict.__setattr__ = function(self, attr, value){
     throw _b_.AttributeError('readonly attribute')
 }
 
-$RangeDict.descriptors = {
-    start: function(self){return self.start},
-    step: function(self){return self.step},
-    stop: function(self){return self.stop}
-}
+//$RangeDict.descriptors = {
+    //start: function(self){return self.start},
+    //step: function(self){return self.step},
+    //stop: function(self){return self.stop}
+//}
+$RangeDict.start = function(self){return self.start}
+$RangeDict.step = function(self){return self.step},
+$RangeDict.stop = function(self){return self.stop}
 
 $RangeDict.count = function(self, ob){
     if(_b_.isinstance(ob, [_b_.int, _b_.float, _b_.bool])){
@@ -273,7 +277,11 @@ range.$is_func = true
 
 // slice
 // slice
-var $SliceDict = {__class__:$B.$type, __name__:'slice', $native:true}
+var $SliceDict = {__class__:$B.$type, 
+	__name__:'slice', 
+	$native:true,
+	descriptors:{start:true,step:true,stop:true}
+}
 
 $SliceDict.__mro__ = [$SliceDict, _b_.object.$dict]
 
@@ -324,11 +332,14 @@ $SliceDict.$conv_for_seq = function(self, len){
     return {start: start, stop: stop, step: step}
 }
 
-$SliceDict.descriptors = {
-    start: function(self){return self.start},
-    step: function(self){return self.step},
-    stop: function(self){return self.stop}
-}
+//$SliceDict.descriptors = {
+    //start: function(self){return self.start},
+    //step: function(self){return self.step},
+    //stop: function(self){return self.stop}
+//}
+$SliceDict.start = function(self){return self.start}
+$SliceDict.step = function(self){return self.step}
+$SliceDict.stop = function(self){return self.stop}
 
 $SliceDict.indices = function (self, length) {
   var len=$B.$GetInt(length)
