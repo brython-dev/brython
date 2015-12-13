@@ -670,6 +670,25 @@ i = implementation()
 assert isinstance(i, implementation)
 assert isinstance(i, interface)
 
+# classes with abstract methods can't be instanciated
+class A(metaclass=ABCMeta):
+    @abstractmethod
+    def foo(self): pass
+
+assertRaises(TypeError, A)
+
+# same for subclasses
+class B(A):
+    pass
+
+assertRaises(TypeError, B)
+
+# class C overrides foo so it has no abstract method, it can have instances
+class C(A):
+    def foo(self): return 42
+
+assert C().foo() == 42
+
 # issue 348
 x, y = y, x = 2, 3
 assert x, y == 3, 2

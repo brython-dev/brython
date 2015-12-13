@@ -43,6 +43,25 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     }
 
     class_dict.__mro__ = [class_dict].concat(make_mro(bases, cl_dict))
+
+    // Check if at least one method is abstract (cf PEP 3119)
+    // If this is the case, the class cannot be instanciated
+    var is_instanciable = true, non_abstract_methods = {}, abstract_methods = {}
+    for(var i=0;i<class_dict.__mro__.length;i++){
+        var kdict = class_dict.__mro__[i]
+        for(var attr in kdict){
+            if(non_abstract_methods[attr]){continue}
+            var v = kdict[attr]
+            if(typeof v=='function' && v.__class__!==$B.$factory){
+                if(v.__isabstractmethod__===true){
+                    is_instanciable = false
+                    abstract_methods[attr]=true
+                }else{
+                    non_abstract_methods[attr]=true
+                }
+            }
+        }
+    }
     
     // Check if class has __slots__
     var slots = []
@@ -96,8 +115,16 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
           metaclass.$dict[member].$type='classmethod'
        }
     }
-    
+        
     factory.$is_func = true
+    
+    if(!is_instanciable){
+        function nofactory(){
+            throw _b_.TypeError("Can't instantiate abstract class interface"+
+                " with abstract methods "+Object.keys(abstract_methods).join(', '))}
+        for(var attr in factory){nofactory[attr] = factory[attr]}
+        return nofactory
+    }
     return factory
 }
 
@@ -292,8 +319,7 @@ $B.$type.__new__ = function(cls, name, bases, cl_dict){
         __bases__ : bases,
         __dict__ : cl_dict,
         $methods : {},
-        $slots: cl_dict.$slots,
-        $nanjrigole: 99
+        $slots: cl_dict.$slots
     }
 
     // set class attributes for faster lookups
@@ -517,6 +543,12 @@ $B.$type.__getattribute__=function(klass,attr){
 
 
 function $instance_creator(klass){
+    // The class may not be instanciable if it has at least one abstract method
+    if(klass.$instanciable!==undefined){
+        console.log('klass', klass.__name__,'not instanciable')
+        return function(){throw _b_.TypeError("Can't instantiate abstract "+
+            "class interface with abstract methods")}
+    }
     // return the function to initalise a class instance
     var new_func = null
     try{new_func = _b_.getattr(klass,'__new__')}

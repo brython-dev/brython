@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-12-12 22:29:38.943526"
+__BRYTHON__.compiled_date="2015-12-13 22:10:52.406980"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4303,6 +4303,12 @@ var class_dict={__name__ : class_name.replace('$$',''),__bases__ : bases,__dict_
 var items=$B.$dict_items(cl_dict);
 for(var i=0;i<items.length;i++){class_dict[items[i][0]]=items[i][1]}
 class_dict.__mro__=[class_dict].concat(make_mro(bases,cl_dict))
+var is_instanciable=true,non_abstract_methods={},abstract_methods={}
+for(var i=0;i<class_dict.__mro__.length;i++){var kdict=class_dict.__mro__[i]
+for(var attr in kdict){if(non_abstract_methods[attr]){continue}
+var v=kdict[attr]
+if(typeof v=='function' && v.__class__!==$B.$factory){if(v.__isabstractmethod__===true){is_instanciable=false
+abstract_methods[attr]=true}else{non_abstract_methods[attr]=true}}}}
 var slots=[]
 for(var i=0;i<class_dict.__mro__.length;i++){var _slots=class_dict.__mro__[i].__slots__
 if(_slots!==undefined){_slots=_b_.list(_slots)
@@ -4320,6 +4326,10 @@ for(var attr in class_dict){factory.$dict[attr]=class_dict[attr]}
 factory.$dict.$factory=factory
 for(var member in metaclass.$dict){if(typeof metaclass.$dict[member]=='function' && member !='__new__'){metaclass.$dict[member].$type='classmethod'}}
 factory.$is_func=true
+if(!is_instanciable){function nofactory(){throw _b_.TypeError("Can't instantiate abstract class interface"+
+" with abstract methods "+Object.keys(abstract_methods).join(', '))}
+for(var attr in factory){nofactory[attr]=factory[attr]}
+return nofactory}
 return factory}
 $B.$class_constructor1=function(class_name,class_obj){if(class_obj.__init__===undefined){var creator=function(){this.__class__=class_obj}}else{var creator=function(args){this.__class__=class_obj
 class_obj.__init__.apply(null,[this].concat(Array.prototype.slice.call(args)))}}
@@ -4398,7 +4408,7 @@ $B.$type.__class__=$B.$type
 $B.$type.__mro__=[$B.$type,_b_.object.$dict]
 _b_.type.$dict=$B.$type
 $B.$type.__new__=function(cls,name,bases,cl_dict){
-var class_dict={__class__ : $B.$type,__name__ : name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict,$methods :{},$slots: cl_dict.$slots,$nanjrigole: 99}
+var class_dict={__class__ : $B.$type,__name__ : name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict,$methods :{},$slots: cl_dict.$slots}
 var items=$B.$dict_items(cl_dict);
 for(var i=0;i<items.length;i++){var name=items[i][0],v=items[i][1]
 class_dict[name]=v
@@ -4503,6 +4513,9 @@ method.__doc__=res.__doc__ ||''
 method.im_class=klass
 return method}}}
 function $instance_creator(klass){
+if(klass.$instanciable!==undefined){console.log('klass',klass.__name__,'not instanciable')
+return function(){throw _b_.TypeError("Can't instantiate abstract "+
+"class interface with abstract methods")}}
 var new_func=null
 try{new_func=_b_.getattr(klass,'__new__')}
 catch(err){}
