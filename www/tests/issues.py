@@ -133,6 +133,20 @@ assert C.foo.abc == 1
 assert C.foo.xyz == "haha"
 assert C.foo.booh == 42
 
+# issue 115
+a = 1
+assert a.numerator == 1
+assert a.denominator == 1
+assert a.real == 1
+assert a.imag == 0
+assert isinstance(a.imag, int) == True
+a = 1 + 2j
+assert a.real == 1
+assert a.imag == 2
+assert isinstance(a.real, float) == True
+assert isinstance(a.imag, float) == True
+
+
 # issue 118
 class A:
     def toString(self):

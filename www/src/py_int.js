@@ -17,7 +17,9 @@ var $IntDict = {__class__:$B.$type,
     toString:function(){return '$IntDict'},
     $native:true,
     descriptors:{'numerator':true,
-		         'denominator':true}
+		         'denominator':true,
+                 'imag':true,
+                 'real':true}
 }
 
 $IntDict.from_bytes = function() {
@@ -341,8 +343,12 @@ $IntDict.bit_length = function(self){
     return s.length       // len('100101') --> 6
 }
 
+// descriptors
 $IntDict.numerator = function(self){return self}
 $IntDict.denominator = function(self){return int(1)}
+$IntDict.imag = function(self){return int(0)}
+$IntDict.real = function(self){return self}
+
 
 $B.max_int32= (1<<30) * 2 - 1
 $B.min_int32= - $B.max_int32
