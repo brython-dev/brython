@@ -268,6 +268,14 @@ $JSObjectDict.__getattribute__ = function(self,attr){
 }
 
 $JSObjectDict.__getitem__ = function(self,rank){
+    if(typeof self.js.length=='number' &&
+        typeof self.js.item=='function'){
+            var rank_to_int = _b_.int(rank)
+            if(rank_to_int<0){rank_to_int+=self.js.length}
+            var res = self.js.item(rank_to_int)
+            if(res===undefined){throw _b_.KeyError(rank)}
+            return res
+    }
     try{return getattr(self.js,'__getitem__')(rank)}
     catch(err){
         if(self.js[rank]!==undefined){return JSObject(self.js[rank])}
@@ -305,6 +313,7 @@ $JSObjectDict.__iter__ = function(self){
 }
 
 $JSObjectDict.__len__ = function(self){
+    if(typeof self.js.length=='number'){return self.js.length}
     try{return getattr(self.js,'__len__')()}
     catch(err){
         throw _b_.AttributeError(self.js+' has no attribute __len__')
