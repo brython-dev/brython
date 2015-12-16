@@ -707,6 +707,14 @@ assert C().foo() == 42
 x, y = y, x = 2, 3
 assert x, y == 3, 2
 
+# issue 350
+a = float("-inf")
+b = float("-infinity")
+assert a == b
+assert repr(a) == '-inf'
+assert a * 1. == b
+assert a * 1 == b # This test fails...
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
