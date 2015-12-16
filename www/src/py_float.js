@@ -551,7 +551,7 @@ var float = function (value){
            return Number.POSITIVE_INFINITY
          case '-inf':
          case '-infinity':
-           return Number.NEGATIVE_INFINTY
+           return Number.NEGATIVE_INFINITY
          case '+nan':
          case 'nan':
            return Number.NaN
