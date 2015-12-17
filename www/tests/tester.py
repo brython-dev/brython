@@ -207,7 +207,16 @@ class TestReport:
                 html += '<td>&nbsp;</td>'
             html += '</tr>\n'
         return html + '</table>'
-         
+
+    def __str__(self):
+        res = 'Class %s\n' %self.class_name
+        methods = list(self.records.keys())
+        methods.sort()
+        for method in methods:
+            report = self.records[method]
+            res += '{:15} {1.status} {1.lineno}\n    {1.args[0]}'.format(method, report)
+        return res
+
 TestCase = Tester # unittest interface
 
 tester = Tester()

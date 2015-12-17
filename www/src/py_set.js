@@ -42,7 +42,16 @@ $SetDict.__and__ = function(self, other, accept_iter){
 }
 
 $SetDict.__contains__ = function(self,item){
-    if(self.$num && (typeof item=='number')){return self.$items.indexOf(item)>-1}
+    if(self.$num && (typeof item=='number')){
+        if(isNaN(item)){ // special case for NaN
+            for(var i=self.$items.length-1;i>=0;i--){
+                if(isNaN(self.$items[i])){return true}
+            }
+            return false
+        }else{
+            return self.$items.indexOf(item)>-1
+        }
+    }
     if(self.$str && (typeof item=='string')){return self.$items.indexOf(item)>-1}
     if(! _b_.isinstance(item, set)){
         _b_.hash(item) // raises TypeError if item is not hashable

@@ -715,6 +715,10 @@ assert repr(a) == '-inf'
 assert a * 1. == b
 assert a * 1 == b # This test fails...
 
+# issue 352
+a = float("inf")
+assert a*1 == a
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

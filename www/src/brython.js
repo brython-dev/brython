@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-12-15 22:34:47.440831"
+__BRYTHON__.compiled_date="2015-12-17 17:48:17.264457"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -5520,19 +5520,9 @@ throw _b_.TypeError('ord() expected a character, but ' +
 $B.get_class(c).__name__ + ' was found')}}
 function pow(){var $ns=$B.args('pow',3,{x:null,y:null,z:null},['x','y','z'],arguments,{z:null},null,null)
 var x=$ns['x'],y=$ns['y'],z=$ns['z']
-if(z===null){var a,b
-if(isinstance(x,_b_.float)){a=x.valueOf()}
-else if(isinstance(x,_b_.int)){a=x}
-else{throw _b_.TypeError("unsupported operand type(s) for ** or pow()")}
-if(isinstance(y,_b_.float)){b=y.valueOf()}
-else if(isinstance(y,_b_.int)){b=y}
-else{throw _b_.TypeError("unsupported operand type(s) for ** or pow()")}
-var res=Math.pow(a,b)}else{var _err="pow() 3rd argument not allowed unless all arguments are integers"
-if(!isinstance(x,_b_.int))throw _b_.TypeError(_err)
-if(!isinstance(y,_b_.int))throw _b_.TypeError(_err)
-if(!isinstance(z,_b_.int))throw _b_.TypeError(_err)
-var res=Math.pow(x,y)%z}
-return $B.get_class(res).$factory(res)}
+var res=getattr(x,'__pow__')(y)
+if(z===null){return res}
+else{return getattr(res,'__mod__')(z)}}
 function $print(){var $ns=$B.args('print',0,{},[],arguments,{},'args','kw')
 var ks=$ns['kw'].$string_dict
 var end=ks['end']===undefined ? '\n' : ks['end'],sep=ks['sep']===undefined ? ' ' : ks['sep'],file=ks['file']===undefined ? $B.stdout : ks['file'],args=$ns['args']
@@ -7038,7 +7028,8 @@ while(!(Math.round(_temp/i)==_temp/i))i*=10
 return _b_.tuple([_b_.int(_temp*i),_b_.int(i)])}
 $FloatDict.__bool__=function(self){return _b_.bool(self.valueOf())}
 $FloatDict.__class__=$B.$type
-$FloatDict.__eq__=function(self,other){if(isinstance(other,_b_.int))return self==other
+$FloatDict.__eq__=function(self,other){if(isNaN(self)&& isNaN(other)){return true}
+if(isinstance(other,_b_.int))return self==other
 if(isinstance(other,float)){
 return self.valueOf()==other.valueOf()}
 if(isinstance(other,_b_.complex)){if(other.imag !=0)return false
@@ -7196,7 +7187,9 @@ $FloatDict.is_integer=function(self){return _b_.int(self)==self}
 $FloatDict.__mod__=function(self,other){
 if(other==0){throw ZeroDivisionError('float modulo')}
 if(isinstance(other,_b_.int))return new Number((self%other+other)%other)
-if(isinstance(other,float)){return new Number(((self%other)+other)%other)}
+if(isinstance(other,float)){
+var q=Math.floor(self/other),r=self-other*q
+return new Number(r)}
 if(isinstance(other,_b_.bool)){var bool_value=0;
 if(other.valueOf())bool_value=1;
 return new Number((self%bool_value+bool_value)%bool_value)}
@@ -7215,7 +7208,13 @@ $err('*',other)}
 $FloatDict.__ne__=function(self,other){return !$FloatDict.__eq__(self,other)}
 $FloatDict.__neg__=function(self,other){return float(-self)}
 $FloatDict.__pos__=function(self){return self}
-$FloatDict.__pow__=function(self,other){if(isinstance(other,[_b_.int,float]))return float(Math.pow(self,other))
+$FloatDict.__pow__=function(self,other){if(isinstance(other,[_b_.int,float])){if(self==1){return self}
+if(self==-1 && !isFinite(other)&& !isNaN(other)){return new Number(1)}
+if(self==0 && other<0){throw _b_.ZeroDivisionError("0.0 cannot be raised to a negative power")}
+console.log(self,other,self<0,isinstance(other,_b_.int))
+if(self<0 && !isinstance(other,_b_.int)){
+return _b_.complex.$dict.__pow__(_b_.complex(self,0),other)}
+return float(Math.pow(self,other))}
 if(hasattr(other,'__rpow__'))return getattr(other,'__rpow__')(self)
 $err("** or pow()",other)}
 $FloatDict.__repr__=$FloatDict.__str__=function(self){if(self===float)return "<class 'float'>"
@@ -7287,7 +7286,6 @@ return $FloatClass(-Infinity)}
 if(typeof value=="number")return $FloatClass(value)
 if(isinstance(value,float)){return value}
 if(isinstance(value,_b_.bytes)){var s=getattr(value,'decode')('latin-1')
-console.log('float bytes',s)
 return float(getattr(value,'decode')('latin-1'))}
 if(hasattr(value,'__float__')){return $FloatClass(getattr(value,'__float__')())}
 if(typeof value=='string'){value=value.trim()
@@ -7298,7 +7296,7 @@ case 'infinity':
 return Number.POSITIVE_INFINITY
 case '-inf':
 case '-infinity':
-return Number.NEGATIVE_INFINTY
+return Number.NEGATIVE_INFINITY
 case '+nan':
 case 'nan':
 return Number.NaN
@@ -7775,7 +7773,13 @@ if(shift.value=='0'){break}}}
 return intOrLong({__class__:$LongIntDict,value:res,pos:self.pos})}
 $LongIntDict.__mod__=function(self,other){return intOrLong($LongIntDict.__divmod__(self,other)[1])}
 $LongIntDict.__mro__=[$LongIntDict,_b_.int.$dict,_b_.object.$dict]
-$LongIntDict.__mul__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float(parseInt(self.value)*other)}
+$LongIntDict.__mul__=function(self,other){switch(self){case Number.NEGATIVE_INFINITY:
+case Number.POSITIVE_INFINITY:
+var eq=_b_.getattr(other,'__eq__')
+if(eq(0)){return NaN}
+else if(_b_.getattr(other,'__gt__')(0)){return self}
+else{return -self}}
+if(isinstance(other,_b_.float)){return _b_.float(parseInt(self.value)*other)}
 if(typeof other=='number')other=LongInt(_b_.str(other))
 var res=mul_pos(self.value,other.value)
 if(self.pos==other.pos){return intOrLong(res)}
@@ -7881,7 +7885,7 @@ arguments.length+" given)")}
 if(base===undefined){base=10}
 else if(!isinstance(base,int)){throw TypeError("'"+$B.get_class(base).__name__+"' object cannot be interpreted as an integer")}
 if(base<0 ||base==1 ||base>36){throw ValueError("LongInt() base must be >= 2 and <= 36")}
-if(isinstance(value,_b_.float)){console.log('arg is float',value)
+if(isinstance(value,_b_.float)){if(value===Number.POSITIVE_INFINITY ||value===Number.NEGATIVE_INFINITY){return value}
 if(value>=0){value=new Number(Math.round(value.value))}
 else{value=new Number(Math.ceil(value.value))}}else if(isinstance(value,_b_.bool)){if(value.valueOf())return int(1)
 return int(0)}
@@ -7953,7 +7957,14 @@ $ComplexDict.__neg__=function(self){return complex(-self.real,-self.imag)}
 $ComplexDict.__new__=function(cls){if(cls===undefined)throw _b_.TypeError('complex.__new__(): not enough arguments')
 return{__class__:cls.$dict}}
 $ComplexDict.__pos__=function(self){return self}
-$ComplexDict.__pow__=function(self,other){$UnsupportedOpType("**",complex,$B.get_class(other))}
+$ComplexDict.__pow__=function(self,other){
+console.log('complex pow')
+var norm=Math.sqrt((self.real*self.real)+(self.imag*self.imag)),sin=self.imag/norm,cos=self.real/norm,res=Math.pow(norm,other),angle
+if(cos==0){angle=sin==1 ? Math.PI : 3*Math.PI/2}
+else{angle=Math.atan(sin/cos)
+angle=angle<0 ? angle+Math.PI : angle}
+console.log(sin,cos,angle,angle/Math.PI,res)
+return complex(res*Math.sin(angle*other),res*Math.cos(angle*other))}
 $ComplexDict.__str__=$ComplexDict.__repr__=function(self){if(self.real==0)return self.imag+'j'
 if(self.imag>=0)return '('+self.real+'+'+self.imag+'j)'
 return '('+self.real+'-'+(-self.imag)+'j)'}
@@ -9388,7 +9399,9 @@ $SetDict.__and__=function(self,other,accept_iter){$test(accept_iter,other)
 var res=create_type(self)
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_.getattr(other,'__contains__')(self.$items[i])){$SetDict.add(res,self.$items[i])}}
 return res}
-$SetDict.__contains__=function(self,item){if(self.$num &&(typeof item=='number')){return self.$items.indexOf(item)>-1}
+$SetDict.__contains__=function(self,item){if(self.$num &&(typeof item=='number')){if(isNaN(item)){
+for(var i=self.$items.length-1;i>=0;i--){if(isNaN(self.$items[i])){return true}}
+return false}else{return self.$items.indexOf(item)>-1}}
 if(self.$str &&(typeof item=='string')){return self.$items.indexOf(item)>-1}
 if(! _b_.isinstance(item,set)){_b_.hash(item)}
 var eq_func=_b_.getattr(item,'__eq__')

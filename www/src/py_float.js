@@ -32,6 +32,7 @@ $FloatDict.__bool__ = function(self){return _b_.bool(self.valueOf())}
 $FloatDict.__class__ = $B.$type
 
 $FloatDict.__eq__ = function(self,other){
+    if(isNaN(self) && isNaN(other)){return true}
     if(isinstance(other,_b_.int)) return self==other
     if(isinstance(other,float)) {
       // new Number(1.2)==new Number(1.2) returns false !!!
@@ -342,7 +343,11 @@ $FloatDict.__mod__ = function(self,other) {
     if(isinstance(other,_b_.int)) return new Number((self%other+other)%other)
     
     if(isinstance(other,float)){
-        return new Number(((self%other)+other)%other)
+        // use truncated division
+        // cf https://en.wikipedia.org/wiki/Modulo_operation
+        var q = Math.floor(self/other),
+            r = self-other*q
+        return new Number(r)
     }
     if(isinstance(other,_b_.bool)){ 
         var bool_value=0; 
@@ -386,7 +391,19 @@ $FloatDict.__neg__ = function(self,other){return float(-self)}
 $FloatDict.__pos__ = function(self){return self}
 
 $FloatDict.__pow__= function(self,other){
-    if(isinstance(other,[_b_.int, float])) return float(Math.pow(self,other))
+    if(isinstance(other,[_b_.int, float])){
+        if(self==1){return self} // even for Infinity or NaN
+        if(self==-1 && !isFinite(other) && !isNaN(other)){return new Number(1)}
+        if(self==0 && other<0){
+            throw _b_.ZeroDivisionError("0.0 cannot be raised to a negative power")
+        }
+        console.log(self, other, self<0, isinstance(other, _b_.int))
+        if(self<0 && !isinstance(other, _b_.int)){
+            // -1**0.5 = i
+            return _b_.complex.$dict.__pow__(_b_.complex(self, 0), other)
+        }
+        return float(Math.pow(self,other))
+    }
     if(hasattr(other,'__rpow__')) return getattr(other,'__rpow__')(self)
     $err("** or pow()",other)
 }
@@ -535,7 +552,6 @@ var float = function (value){
     if(isinstance(value,float)) {return value}
     if(isinstance(value,_b_.bytes)) {
       var s = getattr(value,'decode')('latin-1')
-      console.log('float bytes', s)
       return float(getattr(value,'decode')('latin-1'))
     }
     if(hasattr(value, '__float__')) {

@@ -1018,27 +1018,9 @@ function pow() {
     var $ns=$B.args('pow',3,{x:null,y:null,z:null},['x','y','z'],
         arguments,{z:null},null,null)
     var x=$ns['x'],y=$ns['y'],z=$ns['z']
-    if(z === null){
-        var a,b
-        if(isinstance(x, _b_.float)){a=x.valueOf()}
-        else if(isinstance(x, _b_.int)){a=x}
-        else {throw _b_.TypeError("unsupported operand type(s) for ** or pow()")}
-        
-        if (isinstance(y, _b_.float)){b=y.valueOf()}
-        else if (isinstance(y, _b_.int)){b=y}
-        else {throw _b_.TypeError("unsupported operand type(s) for ** or pow()")}
-        var res = Math.pow(a,b)
-    }else{
-        var _err="pow() 3rd argument not allowed unless all arguments are integers"
-
-        if (!isinstance(x, _b_.int)) throw _b_.TypeError(_err)
-        if (!isinstance(y, _b_.int)) throw _b_.TypeError(_err)
-        if (!isinstance(z, _b_.int)) throw _b_.TypeError(_err)
-
-        var res = Math.pow(x,y)%z
-    }
-    // return result with correct type, int or float
-    return $B.get_class(res).$factory(res)
+    var res = getattr(x,'__pow__')(y)
+    if(z === null){return res}
+    else{return getattr(res,'__mod__')(z)}
 }
 
 function $print(){

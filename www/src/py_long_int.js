@@ -418,6 +418,14 @@ $LongIntDict.__mod__ = function(self, other){
 $LongIntDict.__mro__ = [$LongIntDict, _b_.int.$dict, _b_.object.$dict]
 
 $LongIntDict.__mul__ = function(self, other){
+    switch(self){
+        case Number.NEGATIVE_INFINITY:
+        case Number.POSITIVE_INFINITY:
+            var eq = _b_.getattr(other, '__eq__')
+            if(eq(0)){return NaN} // infinity * 0 = NaN
+            else if(_b_.getattr(other, '__gt__')(0)){return self}
+            else{return -self}
+    } 
     if(isinstance(other, _b_.float)){
         return _b_.float(parseInt(self.value)*other)
     }
@@ -625,7 +633,9 @@ function LongInt(value, base){
         throw ValueError("LongInt() base must be >= 2 and <= 36")
     }
     if(isinstance(value, _b_.float)){
-        console.log('arg is float', value)
+        if(value===Number.POSITIVE_INFINITY || value===Number.NEGATIVE_INFINITY){
+            return value
+        }
         if(value>=0){value=new Number(Math.round(value.value))}
         else{value=new Number(Math.ceil(value.value))}
     } else if(isinstance(value, _b_.bool)){
