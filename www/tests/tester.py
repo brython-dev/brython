@@ -252,6 +252,9 @@ class Support:
             raise SkipTest('CPython test only')
         return f
 
+    def requires_IEEE_754(self, func):
+        return func
+
 support = Support()
 
 if __name__=='__main__':

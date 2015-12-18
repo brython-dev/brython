@@ -92,6 +92,7 @@ def show_test(event):
     tab = window.open('show.html?file=%s' %mod.__file__)
 
 document["btn_test"].bind('click', choose_test)
+document["btn_show"].bind('click', show_test)
 </script>
 
 </head>
@@ -154,6 +155,7 @@ UnitTests:
   <!-- option value="test_with">test_with</option -->
 </select>
 <button id="btn_test">Run test</button>
+<button id="btn_show">Show test</button>
 
 </div>
 
