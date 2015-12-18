@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-12-18 09:53:10.923214"
+__BRYTHON__.compiled_date="2015-12-18 20:56:01.572691"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -7210,10 +7210,16 @@ $err('*',other)}
 $FloatDict.__ne__=function(self,other){return !$FloatDict.__eq__(self,other)}
 $FloatDict.__neg__=function(self,other){return float(-self)}
 $FloatDict.__pos__=function(self){return self}
-$FloatDict.__pow__=function(self,other){if(isinstance(other,[_b_.int,float])){if(self==1){return self}
-if(self==-1 && !isFinite(other)&& !isNaN(other)){return new Number(1)}
-if(self==0 && other<0){throw _b_.ZeroDivisionError("0.0 cannot be raised to a negative power")}
-if(self<0 && !isinstance(other,_b_.int)){
+$FloatDict.__pow__=function(self,other){var other_int=isinstance(other,_b_.int)
+if(other_int ||isinstance(other,float)){if(self==1){return self}
+if(other==0){return new Number(1)}
+if(self==-1 && 
+(!isFinite(other)||other.__class__===$B.LongInt.$dict ||!$B.is_safe_int(other))
+&& !isNaN(other)){return new Number(1)}
+else if(self==0 && isFinite(other)&& other<0){throw _b_.ZeroDivisionError("0.0 cannot be raised to a negative power")}else if(self==Number.NEGATIVE_INFINITY && !isNaN(other)){if(other<0 && other%2==1){return new Number(-0.0)}else if(other<0){return new Number(0)}
+else if(other>0 && other%2==1){return Number.NEGATIVE_INFINITY}else{return Number.POSITIVE_INFINITY}}else if(self==Number.POSITIVE_INFINITY && !isNaN(other)){return other>0 ? self : new Number(0)}
+if(other==Number.NEGATIVE_INFINITY && !isNaN(self)){return Math.abs(self)<1 ? Number.POSITIVE_INFINITY : new Number(0)}else if(other==Number.POSITIVE_INFINITY && !isNaN(self)){return Math.abs(self)<1 ? new Number(0): Number.POSITIVE_INFINITY}
+if(self<0 && !_b_.getattr(other,'__eq__')(_b_.int(other))){
 return _b_.complex.$dict.__pow__(_b_.complex(self,0),other)}
 return float(Math.pow(self,other))}
 if(hasattr(other,'__rpow__'))return getattr(other,'__rpow__')(self)
@@ -7681,10 +7687,10 @@ if(x<0){res=(10+x)+res;carry=1}
 else{res=x+res;carry=0}}
 while(res.charAt(0)=='0' && res.length>1){res=res.substr(1)}
 return{__class__:$LongIntDict,value:res,pos:true}}
-$LongIntDict.$from_float=function(value){var s=Math.abs(value).toString(),value=s
+$LongIntDict.$from_float=function(value){var s=Math.abs(value).toString(),v=s
 if(s.search('e')>-1){var t=/-?(\d)(\.\d+)?e([+-])(\d*)/.exec(s),n1=t[1],n2=t[2],pos=t[3],exp=t[4]
-if(pos=='+'){if(n2===undefined){value=n1+'0'.repeat(exp-1)}else{value=n1+n2+'0'.repeat(exp-1-n2.length)}}}
-return{__class__:$LongIntDict,value: value,pos: value >=0}}
+if(pos=='+'){if(n2===undefined){v=n1+'0'.repeat(exp-1)}else{v=n1+n2+'0'.repeat(exp-1-n2.length)}}}
+return{__class__:$LongIntDict,value: v,pos: value >=0}}
 $LongIntDict.__abs__=function(self){return{__class__:$LongIntDict,value: self.value,pos:true}}
 $LongIntDict.__add__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float(parseInt(self.value)+other.value)}
 if(typeof other=='number')other=LongInt(_b_.str(other))

@@ -212,19 +212,19 @@ function sub_pos(v1, v2){
 // Special methods to implement operations on instances of LongInt
 $LongIntDict.$from_float = function(value){
     var s = Math.abs(value).toString(),
-        value = s
+        v = s
     if(s.search('e')>-1){
         var t = /-?(\d)(\.\d+)?e([+-])(\d*)/.exec(s),
             n1 = t[1], n2 = t[2], pos = t[3], exp = t[4]
         if(pos=='+'){
             if(n2===undefined){
-                value = n1+'0'.repeat(exp-1)
+                v = n1+'0'.repeat(exp-1)
             }else{
-                value = n1+n2+'0'.repeat(exp-1-n2.length)
+                v = n1+n2+'0'.repeat(exp-1-n2.length)
             }
         }        
     }
-    return {__class__:$LongIntDict, value: value,
+    return {__class__:$LongIntDict, value: v,
         pos: value >= 0}
 }
 

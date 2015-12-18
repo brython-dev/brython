@@ -391,13 +391,32 @@ $FloatDict.__neg__ = function(self,other){return float(-self)}
 $FloatDict.__pos__ = function(self){return self}
 
 $FloatDict.__pow__= function(self,other){
-    if(isinstance(other,[_b_.int, float])){
+    var other_int = isinstance(other, _b_.int)
+    if(other_int || isinstance(other, float)){
         if(self==1){return self} // even for Infinity or NaN
-        if(self==-1 && !isFinite(other) && !isNaN(other)){return new Number(1)}
-        if(self==0 && other<0){
+        if(other==0){return new Number(1)}
+
+        if(self==-1 && 
+            (!isFinite(other) || other.__class__===$B.LongInt.$dict || !$B.is_safe_int(other))
+             && !isNaN(other) ){return new Number(1)}
+        else if(self==0 && isFinite(other) && other<0){
             throw _b_.ZeroDivisionError("0.0 cannot be raised to a negative power")
+        }else if(self==Number.NEGATIVE_INFINITY && !isNaN(other)){
+            if(other<0 && other%2==1){
+                return new Number(-0.0)
+            }else if(other<0){return new Number(0)}
+            else if(other>0 && other%2==1){
+                return Number.NEGATIVE_INFINITY
+            }else{return Number.POSITIVE_INFINITY}
+        }else if(self==Number.POSITIVE_INFINITY && !isNaN(other)){
+            return other>0 ? self : new Number(0)
         }
-        if(self<0 && !isinstance(other, _b_.int)){
+        if(other==Number.NEGATIVE_INFINITY && !isNaN(self)){
+            return Math.abs(self)<1 ? Number.POSITIVE_INFINITY : new Number(0)
+        }else if(other==Number.POSITIVE_INFINITY  && !isNaN(self)){
+            return Math.abs(self)<1 ? new Number(0) : Number.POSITIVE_INFINITY
+        }
+        if(self<0 && !_b_.getattr(other,'__eq__')(_b_.int(other))){
             // use complex power
             return _b_.complex.$dict.__pow__(_b_.complex(self, 0), other)
         }
