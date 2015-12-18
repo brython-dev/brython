@@ -92,21 +92,17 @@ $ComplexDict.__new__ = function(cls){
 $ComplexDict.__pos__ = function(self){return self}
 
 $ComplexDict.__pow__ = function(self,other){
-    // complex power : use Moivre formula (sin(x) + i cos(x))**y = sin(xy)+i cos(xy)
-    console.log('complex pow')
+    // complex power : use Moivre formula (cos(x) + i sin(x))**y = cos(xy)+i sin(xy)
     var norm = Math.sqrt((self.real*self.real)+(self.imag*self.imag)),
         sin = self.imag/norm,
         cos = self.real/norm,
         res = Math.pow(norm, other),
         angle
     
-    if(cos==0){angle = sin==1 ? Math.PI : 3*Math.PI/2}
-    else{
-        angle = Math.atan(sin/cos)
-        angle = angle<0 ? angle+Math.PI : angle
-    }
-    console.log(sin, cos, angle, angle/Math.PI, res)
-    return complex(res*Math.sin(angle*other), res*Math.cos(angle*other))
+    if(cos==0){angle = sin==1 ? Math.PI/2 : 3*Math.PI/2}
+    else if(sin==0){angle = cos==1 ? 0 : Math.PI}
+    else{angle = Math.atan(sin/cos)}
+    return complex(res*Math.cos(angle*other), res*Math.sin(angle*other))
     
 }
 

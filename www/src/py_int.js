@@ -17,7 +17,7 @@ var $IntDict = {__class__:$B.$type,
     toString:function(){return '$IntDict'},
     $native:true,
     descriptors:{'numerator':true,
-		         'denominator':true,
+                 'denominator':true,
                  'imag':true,
                  'real':true}
 }
@@ -275,12 +275,18 @@ $IntDict.__pow__ = function(self,other){
           return int(self.valueOf())
       }
       var res = Math.pow(self.valueOf(),other.valueOf()) 
+      if(!isFinite(res)){return res}
       if(res>$B.min_int && res<$B.max_int){return res}
-      else{return int($B.LongInt.$dict.__pow__($B.LongInt(self),
-         $B.LongInt(other)))}
+      else{
+          return int($B.LongInt.$dict.__pow__($B.LongInt(self),
+             $B.LongInt(other)))}
     }
     if(isinstance(other, _b_.float)) { 
-      return new Number(Math.pow(self.valueOf(), other.valueOf()))
+        if(self>=0){return new Number(Math.pow(self, other.valueOf()))}
+        else{
+            // use complex power
+            return _b_.complex.$dict.__pow__(_b_.complex(self, 0), other)
+        }
     }
     if(hasattr(other,'__rpow__')) return getattr(other,'__rpow__')(self)
     $err("**",other)

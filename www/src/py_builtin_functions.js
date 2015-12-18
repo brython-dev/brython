@@ -1020,7 +1020,13 @@ function pow() {
     var x=$ns['x'],y=$ns['y'],z=$ns['z']
     var res = getattr(x,'__pow__')(y)
     if(z === null){return res}
-    else{return getattr(res,'__mod__')(z)}
+    else{
+        if(!isinstance(x, _b_.int) || !isinstance(y, _b_.int)){
+            throw _b_.TypeError("pow() 3rd argument not allowed unless "+
+                "all arguments are integers")
+        }
+        return getattr(res,'__mod__')(z)
+    }
 }
 
 function $print(){

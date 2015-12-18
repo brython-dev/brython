@@ -397,9 +397,8 @@ $FloatDict.__pow__= function(self,other){
         if(self==0 && other<0){
             throw _b_.ZeroDivisionError("0.0 cannot be raised to a negative power")
         }
-        console.log(self, other, self<0, isinstance(other, _b_.int))
         if(self<0 && !isinstance(other, _b_.int)){
-            // -1**0.5 = i
+            // use complex power
             return _b_.complex.$dict.__pow__(_b_.complex(self, 0), other)
         }
         return float(Math.pow(self,other))
