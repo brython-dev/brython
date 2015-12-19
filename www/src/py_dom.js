@@ -630,9 +630,13 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
             return
         }
         if(self.elt[attr1]!==undefined){self.elt[attr1]=value;return}
-        var res = self.elt.getAttribute(attr1)
-        if(res!==undefined&&res!==null){self.elt.setAttribute(attr1,value)}
-        else{
+        if(typeof self.elt.getAttribute=='function' && 
+            typeof self.elt.setAttribute=='function'){
+                var res = self.elt.getAttribute(attr1)
+                if(res!==undefined&&res!==null){
+                    self.elt.setAttribute(attr1,value)
+                }
+        }else{
             self.elt[attr]=value
         }
     }
@@ -926,8 +930,6 @@ DOMNodeDict.set_style = function(self,style){ // style is a dict
               case 'left':
               case 'width':
               case 'borderWidth':
-                //if(['top','left','height','width','borderWidth'].indexOf(key)>-1
-                // && isinstance(value,_b_.int)){value = value+'px'}
                 if(isinstance(value,_b_.int)){value = value+'px'}
             }
             self.elt.style[key] = value

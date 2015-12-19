@@ -467,7 +467,7 @@ $B.$getitem = function(obj, item){
     if(typeof item=='number'){
         if(Array.isArray(obj) || typeof obj=='string'){
             item = item >=0 ? item : obj.length+item
-            if(obj[item]!==undefined){return $B.$JS2Py(obj[item])}
+            if(obj[item]!==undefined){return obj[item]}
             else{index_error(obj)}
         }
     }
