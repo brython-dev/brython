@@ -1212,7 +1212,11 @@ function setattr(obj,attr,value){
     if(res!==undefined){
         // descriptor protocol : if obj has attribute attr and this attribute 
         // has a method __set__(), use it
-        if(res.__set__!==undefined){res.__set__(res,obj,value); return None}
+        /*
+        if(res.__set__!==undefined){
+            res.__set__(res,obj,value); 
+            return None}
+        */
         var __set__ = getattr(res,'__set__',null)
         if(__set__ && (typeof __set__=='function')) {
             __set__.apply(res,[obj,value]);return None
