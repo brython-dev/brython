@@ -9,33 +9,48 @@ Comme le nom des attributs peut être différent d'un navigateur à l'autre, Bry
 <tr>
 <th>Nom</th><th>Type</th><th>Description</th><th>L = lecture seule<br>L/E = lecture + écriture</th>
 </tr>
-<tr>
-<td>*text*</td><td>chaine</td><td>le texte contenu dans l'élément</td><td>L/E</td>
-</tr>
-<tr>
-<td>*html*</td><td>chaine</td><td>le code HTML  contenu dans l'élément</td><td>L/E</td>
-</tr>
-<tr>
-<td>*left, top*</td><td>entiers</td><td>la position de l'élément par rapport au bord supérieur gauche de la page</td><td>L</td>
-</tr>
+
 <tr>
 <td>*children*</td><td>liste</td><td>les éléments "descendants" de l'élément</td><td>L</td>
 </tr>
-<tr>
-<td>*parent*</td><td>instance de `DOMNode`</td><td>l'élément parent de l'élément (`None` pour `document`)</td><td>L</td>
-</tr>
+
 <tr>
 <td>*class_name*</td><td>chaine</td><td>le nom de la classe de l'élément (attribut *class* de la balise)<br></td><td>L/E</td>
 </tr>
+
 <tr>
 <td>*clear*</td><td>fonction</td><td><code>`elt.clear()</code>` supprime tous les descendants de l'élément</td><td>L</td>
 </tr>
+
+<tr>
+<td>*html*</td><td>chaine</td><td>le code HTML  contenu dans l'élément</td><td>L/E</td>
+</tr>
+
+<tr>
+<td>*left*</td><td>entier</td><td>la position de l'élément par rapport au bord gauche du premier parent positionné (1)</td><td>L/E</td>
+</tr>
+
+<tr>
+<td>*parent*</td><td>instance de `DOMNode`</td><td>l'élément parent de l'élément (`None` pour `document`)</td><td>L</td>
+</tr>
+
 <tr>
 <td>*remove*</td><td>fonction</td><td><code>`elt.remove(`_child_`)`</code> supprime *child* de la liste des descendants de l'élément</td><td>L</td>
 </tr>
+
+<tr>
+<td>*text*</td><td>chaine</td><td>le texte contenu dans l'élément</td><td>L/E</td>
+</tr>
+
+<tr>
+<td>*top*</td><td>entier</td><td>la position de l'élément par rapport au bord supérieur du premier parent positionné (1) </td><td>L/E</td>
+</tr>
+
 </table>
 
-Pour ajouter un descendant à un élément, on utilise l'opérateur `<=` (à visualiser comme une flèche vers la gauche, pas comme "inférieur ou égal")
+(1) En remontant dans l'arbre DOM, on s'arrête au premier élément dont l'attribut `style.position` est défini à une valeur autre que "static". `left` et `top` ont le même mode de calcul que `style.left` et `style.top` mais sont des valeurs entières et pas des chaines de caractères se terminant par `px`.
+
+Pour ajouter un descendant à un élément, on utilise l'opérateur __<=__ (à visualiser comme une flèche vers la gauche, pas comme "inférieur ou égal")
 
 >    from browser import document, html
 >    document['zone'] <= html.INPUT(Id="data")
