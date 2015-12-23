@@ -5,9 +5,7 @@
 <title>Brython - 15-puzzle demo</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-<script type="text/javascript"
-    src="debug/brython.js">
-</script>
+<script type="text/javascript" src="debug/brython.js"></script>
 
 
 <style type="text/css" media="screen">
@@ -116,9 +114,11 @@ def click_cell(ev):
         ev.target.bind('mousemove', move_cell)
         ev.target.bind('touchmove', move_cell)
         
-        # Binding for move end
+        # Binding for move end or cell leave
         ev.target.bind('mouseup', release_cell)
+        ev.target.bind('mouseleave', release_cell)
         ev.target.bind('touchend', release_cell)
+        ev.target.bind('touchleave', release_cell)
         
         # Store initial position of moving cells
         del coords[:]
@@ -152,13 +152,18 @@ def check_done():
 def release_cell(ev):
     """Handler for mouse or finger release"""
     global erow, ecol
-    
+
+    # remove all bindings    
     for cell in moving:
-        cell.unbind('mousemove')
-        cell.unbind('touchmove')
+        # remove all bindings
+        cell.unbind()
+        
+        # restore bindings for mousedown and touchstart
+        cell.bind('mousedown', click_cell)
+        cell.bind('touchstart', click_cell)
 
     target = ev.target
-    
+   
     # Row and column of cell when move stops
     row = round(target.top/side)
     col = round(target.left/side)
@@ -298,6 +303,7 @@ def no_sel(ev):
 document.bind('mousedown', no_sel)
 document.bind('mousemove', no_sel)
 document.bind('touchmove', no_sel)
+
 
 init()
 </script>
