@@ -863,9 +863,13 @@ DOMNodeDict.parent = function(self){
 
 DOMNodeDict.left = {
     '__get__': function(self){
-        return parseInt(self.elt.style.left)
+        var res = parseInt(self.elt.style.left)
+        if(isNaN(res)){
+            throw _b_.AttributeError("node has no attribute 'top'")
+        }
+        return res
     },
-    '__set__': function(self, value){
+    '__set__': function(obj, self, value){
         self.elt.style.left = value+'px'
     }
 }
@@ -904,7 +908,7 @@ DOMNodeDict.top = {
         }
         return res
     },
-    '__set__': function(self, value){
+    '__set__': function(obj, self, value){
         self.elt.style.top = value+'px'
     }
 }
@@ -992,10 +996,18 @@ DOMNodeDict.trigger = function (self, etype){
 DOMNodeDict.unbind = function(self,event){
     // unbind functions from the event (event = "click", "mouseover" etc.)
     // if no function is specified, remove all callback functions
+    // If no event is specified, remove all callbacks for all events
     var _id
     if(self.elt.nodeType==9){_id=0}else{_id=self.elt.$brython_id}
     if(!_b_.dict.$dict.__contains__($B.events, _id)) return
     var item = _b_.dict.$dict.__getitem__($B.events, _id)
+    
+    if(event===undefined){
+        var events = _b_.list(_b_.dict.$dict.keys(item))
+        for(var i=0;i<events.length;i++){DOMNodeDict.unbind(self, events[i])}
+        return
+    }
+    
     if(!_b_.dict.$dict.__contains__(item, event)) return
 
     var events = _b_.dict.$dict.__getitem__(item, event)
