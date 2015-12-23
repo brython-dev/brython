@@ -85,7 +85,7 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     if(missing.length>0){
 
         if(missing.length==1){
-            throw _b_.TypeError($fname+" missing 1 positional argument: '"+missing[0]+"'")
+            throw _b_.TypeError($fname+" missing 1 positional argument: "+missing[0])
         }else{
             var msg = $fname+" missing "+missing.length+" positional arguments: "
             msg += missing.join(' and ')
