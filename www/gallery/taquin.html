@@ -172,6 +172,10 @@ def release_cell(ev):
     has_moved = [row, col] != [target.row, target.col]
 
     if has_moved:
+        # Previous position of target becomes the empty cell
+        erow, ecol = target.row, target.col
+        grid[erow][ecol] = None
+
         # Delta row and column
         drow, dcol = row-target.row, col-target.col
 
@@ -179,20 +183,12 @@ def release_cell(ev):
         for cell in moving:
             cell.row += drow
             cell.col += dcol
+            grid[cell.row][cell.col] = cell
 
-    # Recompute position of all cells
-    # This could be done more elegantly but computing based on touch events
-    # leads to unstable results ; this is safer
-    full = list(range(16))
-    for cell in cells:
+    # Reset position of moving cells
+    for cell in moving:
         cell.left = cell.col*side
         cell.top = cell.row*side
-        grid[cell.row][cell.col] = cell
-        full.remove(4*cell.row+cell.col)
-
-    empty = full[0]
-    erow, ecol = divmod(empty, 4)
-    grid[erow][ecol] = None
 
     # Check if puzzle is solved
     if has_moved:
