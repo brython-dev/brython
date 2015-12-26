@@ -149,6 +149,12 @@ $BaseExceptionDict.__new__ = function(cls){
 
 $BaseExceptionDict.__getattr__ = function(self, attr){
     if(attr=='info'){
+        var name = self.__class__.__name__
+        if(name=='SyntaxError' || name=='IndentationError'){
+            return 'File "'+self.args[1]+'", line '+self.args[2]+'\n    '+
+                self.args[4]
+            
+        }
 
         var info = 'Traceback (most recent call last):'
 

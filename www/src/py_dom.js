@@ -865,7 +865,7 @@ DOMNodeDict.left = {
     '__get__': function(self){
         var res = parseInt(self.elt.style.left)
         if(isNaN(res)){
-            throw _b_.AttributeError("node has no attribute 'top'")
+            throw _b_.AttributeError("node has no attribute 'left'")
         }
         return res
     },

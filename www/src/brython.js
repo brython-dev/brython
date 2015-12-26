@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-12-23 08:29:25.023458"
+__BRYTHON__.compiled_date="2015-12-26 17:38:14.509629"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_datetime","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -4069,8 +4069,9 @@ $B.imported[script.name]=$locals}catch($err){if($B.debug>1){console.log($err)
 for(var attr in $err){console.log(attr+' : ',$err[attr])}}
 if($err.$py_error===undefined){console.log('Javascript error',$err)
 $err=_b_.RuntimeError($err+'')}
-var $trace=_b_.getattr($err,'info')+'\n'+$err.__name__+
-': ' +$err.args
+var name=$err.__name__
+var $trace=_b_.getattr($err,'info')+'\n'+name+': '
+if(name=='SyntaxError' ||name=='IndentationError'){$trace +=$err.args[0]}else{$trace +=$err.args}
 try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
 throw $err}}
 function brython(options){var _b_=$B.builtins
@@ -5941,7 +5942,10 @@ $BaseExceptionDict.__new__=function(cls){var err=_b_.BaseException()
 err.__name__=cls.$dict.__name__
 err.__class__=cls.$dict
 return err}
-$BaseExceptionDict.__getattr__=function(self,attr){if(attr=='info'){var info='Traceback (most recent call last):'
+$BaseExceptionDict.__getattr__=function(self,attr){if(attr=='info'){var name=self.__class__.__name__
+if(name=='SyntaxError' ||name=='IndentationError'){return 'File "'+self.args[1]+'", line '+self.args[2]+'\n    '+
+self.args[4]}
+var info='Traceback (most recent call last):'
 if(self.$js_exc!==undefined){for(var attr in self.$js_exc){if(attr==='message')continue
 try{info +='\n    '+attr+' : '+self.$js_exc[attr]}
 catch(_err){}}
@@ -10037,7 +10041,7 @@ return new $OptionsClass(self.elt)}
 DOMNodeDict.parent=function(self){if(self.elt.parentElement)return DOMNode(self.elt.parentElement)
 return None}
 DOMNodeDict.left={'__get__': function(self){var res=parseInt(self.elt.style.left)
-if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'top'")}
+if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'left'")}
 return res},'__set__': function(obj,self,value){self.elt.style.left=value+'px'}}
 DOMNodeDict.remove=function(self,child){
 var elt=self.elt,flag=false,ch_elt=child.elt
@@ -10462,7 +10466,10 @@ dict.__init__=function(){var $ns=$B.args('pow',1,{self:null},['self'],arguments,
 var self=$ns['self']
 var args=$ns['args']
 if(args.length==1){var first=args[0]
-if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){self.elt.appendChild(document.createTextNode(_b_.str(first)))}else if(first.__class__===$TagSumDict){for(var i=0,_len_i=first.children.length;i < _len_i;i++){self.elt.appendChild(first.children[i].elt)}}else{
+if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
+var span=document.createElement('SPAN')
+span.innerHTML=_b_.str(first)
+self.elt.appendChild(span)}else if(first.__class__===$TagSumDict){for(var i=0,_len_i=first.children.length;i < _len_i;i++){self.elt.appendChild(first.children[i].elt)}}else{
 if(_b_.isinstance(first,$B.DOMNode)){self.elt.appendChild(first.elt)}else{try{
 var items=_b_.list(first)
 for(var i=0;i<items.length;i++){$B.DOMNode.$dict.__le__(self,items[i])}}catch(err){throw _b_.ValueError('wrong element '+first)}}}}
