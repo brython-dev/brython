@@ -73,25 +73,42 @@ zwidth = dim - 2*d - 2*padding
 side = int(zwidth/4)
 zone.style.width = zone.style.height = 4*side
 
+# Get position of zone upper left corner relative to window
+ztop, zleft = zone.offsetLeft, zone.offsetTop
+elt = zone.offsetParent
+while elt:
+    zleft += elt.offsetLeft
+    ztop += elt.offsetTop
+    elt = elt.offsetParent
+
 # Global variables
 X0 = Y0 = None # Initial mouse or finger position
 allow = None   # Possible move direction : 'right', 'left', 'up' or 'down'
 moving = []    # List of moving cells : between clicked cell and empty cell
 coords = []    # Initial position of moving cells
+rect = None    # Current clicked cell
 
 def click_cell(ev):
     """Handler for mouse click or finger touch"""
-    global X0, Y0, moving, allow
+    global X0, Y0, moving, allow, rect
     
     if ev.type == 'touchstart':
         if len(ev.targetTouches)>1:
             return
-    
-    rect = ev.target
-    
-    # get row and col of clicked cell
-    row = rect.top//side
-    col = rect.left//side
+
+    # New mouse / finger position
+    if ev.type == 'mousedown':
+        X, Y = ev.x, ev.y
+    else:
+        touch = ev.targetTouches[0]
+        X, Y = touch.pageX, touch.pageY
+
+    row = (Y-ztop)//side
+    col = (X-zleft)//side
+    rect = grid[row][col]
+
+    if rect is None:
+        return
 
     # Cell can be moved if in same row or column as the empty cell    
     if row==erow or col==ecol:
@@ -109,16 +126,6 @@ def click_cell(ev):
             else:
                 allow = 'up'
                 moving = [grid[i][col] for i in range(erow+1, row+1)]
-
-        # Binding for mouse/finger movement
-        ev.target.bind('mousemove', move_cell)
-        ev.target.bind('touchmove', move_cell)
-        
-        # Binding for move end or cell leave
-        ev.target.bind('mouseup', release_cell)
-        ev.target.bind('mouseleave', release_cell)
-        ev.target.bind('touchend', release_cell)
-        ev.target.bind('touchleave', release_cell)
         
         # Store initial position of moving cells
         del coords[:]
@@ -139,10 +146,7 @@ def check_done():
         if cell.row != cell.srow or cell.col!=cell.scol:
             return
 
-    # Unbind mouse click / touch
-    for cell in cells:
-        cell.unbind('touchstart')
-        cell.unbind('mousedown')
+    zone.unbind()
 
     alert('Bravo !')
     
@@ -151,18 +155,11 @@ def check_done():
 
 def release_cell(ev):
     """Handler for mouse or finger release"""
-    global erow, ecol
+    global erow, ecol, rect
 
-    # remove all bindings    
-    for cell in moving:
-        # remove all bindings
-        cell.unbind()
-        
-        # restore bindings for mousedown and touchstart
-        cell.bind('mousedown', click_cell)
-        cell.bind('touchstart', click_cell)
-
-    target = ev.target
+    target = rect
+    if target is None:
+        return
    
     # Row and column of cell when move stops
     row = round(target.top/side)
@@ -194,9 +191,14 @@ def release_cell(ev):
     if has_moved:
         check_done()
 
+    rect = None
+
 def move_cell(ev):
     """Handler for mouse or finger move"""
 
+    if rect is None:
+        return
+   
     # New mouse / finger position
     if ev.type == 'mousemove':
         X, Y = ev.x, ev.y
@@ -270,8 +272,8 @@ def init(*args):
                 rect.srow, rect.scol = divmod(num, 4)
                 
                 # Bindings for mouse click or touch
-                rect.bind('mousedown', click_cell)
-                rect.bind('touchstart', click_cell)
+                #rect.bind('mousedown', click_cell)
+                #rect.bind('touchstart', click_cell)
 
                 # Draw cell
                 zone <= rect
@@ -291,9 +293,19 @@ def init(*args):
 
         grid.append(cell_row)
 
+        zone.bind('mousedown', click_cell)
+        zone.bind('mousemove', move_cell)
+        zone.bind('mouseup', release_cell)
+
+        zone.bind('touchstart', click_cell)
+        zone.bind('touchmove', move_cell)
+        zone.bind('touchend', release_cell)
+
 def no_sel(ev):
     ev.preventDefault()
     ev.stopPropagation()
+
+
 
 # avoid default behaviour to select text when dragging mouse 
 document.bind('mousedown', no_sel)
