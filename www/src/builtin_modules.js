@@ -83,7 +83,10 @@
                 if(args.length==1){
                     var first=args[0]
                     if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
-                        self.elt.appendChild(document.createTextNode(_b_.str(first)))
+                        // Append a SPAN with "first" as HTML content (not text)
+                        var span = document.createElement('SPAN')
+                        span.innerHTML = _b_.str(first)
+                        self.elt.appendChild(span)
                     } else if(first.__class__===$TagSumDict){
                         for(var i=0, _len_i = first.children.length; i < _len_i;i++){
                             self.elt.appendChild(first.children[i].elt)
