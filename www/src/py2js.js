@@ -6761,10 +6761,9 @@ function $transition(context,token){
     } // switch(context.type)
 }
 
-$B.forbidden = ['super',
-    'case','catch','constructor','Date','delete',
-    'default','Error','history','function','location','Math',
-    'new','null','Number','RegExp','this','throw','var',
+$B.forbidden = ['case','catch','constructor','Date','delete',
+    'default','enum','extends','Error','history','function','location',
+    'Math','new','null','Number','RegExp','super','this','throw','var',
     'toString']
 
 var s_escaped = 'abfnrtvxuU"'+"'"+'\\', is_escaped={}
