@@ -432,14 +432,14 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         return DOMNodeDict[attr](self)
 
       case 'height':
-      //case 'left':
-      //case 'top':
+      case 'left':
+      case 'top':
       case 'width':
         if(self.elt instanceof SVGElement){
             return self.elt.getAttributeNS(null, attr)
         }
-        try{return _b_.int($getPosition(self.elt)[attr])}
-        catch(err){return _b_.getattr(self.elt, attr)}      
+        return DOMNodeDict[attr].__get__(self)
+        break
       case 'clear':
       case 'remove':
         return function(){DOMNodeDict[attr](self,arguments[0])}
@@ -865,6 +865,9 @@ DOMNodeDict.getSelectionRange = function(self){ // for TEXTAREA
 
 DOMNodeDict.height = {
     '__get__': function(self){
+        // Special case for Canvas
+        // http://stackoverflow.com/questions/4938346/canvas-width-and-height-in-html5
+        if(self.elt.tagName=='CANVAS'){return self.elt.height}
         var res = parseInt(self.elt.style.height)
         if(isNaN(res)){
             throw _b_.AttributeError("node has no attribute 'height'")
@@ -872,7 +875,8 @@ DOMNodeDict.height = {
         return res
     },
     '__set__': function(obj, self, value){
-        self.elt.style.height = value+'px'
+        if(self.elt.tagName=='CANVAS'){self.elt.height=value}
+        else{self.elt.style.height = value+'px'}
     }
 }
 
@@ -1078,6 +1082,9 @@ DOMNodeDict.value = function(self){return self.elt.value}
 
 DOMNodeDict.width = {
     '__get__': function(self){
+        // Special case for Canvas
+        // http://stackoverflow.com/questions/4938346/canvas-width-and-height-in-html5
+        if(self.elt.tagName=='CANVAS'){return self.elt.width}
         var res = parseInt(self.elt.style.width)
         if(isNaN(res)){
             throw _b_.AttributeError("node has no attribute 'width'")
@@ -1085,6 +1092,7 @@ DOMNodeDict.width = {
         return res
     },
     '__set__': function(obj, self, value){
+        if(self.elt.tagName=='CANVAS'){self.elt.width=value}
         self.elt.style.width = value+'px'
     }
 }
