@@ -954,7 +954,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, blocking){
                             globals, undefined, [], 0);
                     }
                     catch ($err2) {
-                        if ($err2.__class__ = _b_.ImportError.$dict) {
+                        if ($err2.__class__ === _b_.ImportError.$dict) {
                             throw _b_.ImportError("cannot import name '" + name + "'")
                         }
                         throw $err2;
