@@ -56,6 +56,12 @@ import random
 container = document['container'] # Game board
 zone = document['zone'] # Zone where cells move
 
+def trace(*args):
+    msg = ''
+    for arg in args:
+        msg += str(arg)+' '
+    alert(msg)
+    
 # Window dimensions
 width = window.innerWidth
 height = window.innerHeight
@@ -103,9 +109,11 @@ def click_cell(ev):
         touch = ev.targetTouches[0]
         X, Y = touch.pageX, touch.pageY
 
-    row = (Y-ztop)//side
-    col = (X-zleft)//side
+    row = int((Y-ztop)/side)
+    col = int((X-zleft)/side)
     rect = grid[row][col]
+
+    #trace(row, col, rect)
 
     if rect is None:
         return
