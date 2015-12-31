@@ -645,6 +645,24 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
 
 DOMNodeDict.__setitem__ = function(self,key,value){self.elt.childNodes[key]=value}
 
+DOMNodeDict.abs_left = {
+    __get__: function(self){
+        return $getPosition(self.elt).left
+    },
+    __set__: function(){
+        throw _b_.AttributeError("'DOMNode' objectattribute 'abs_left' is read-only")
+    }
+}
+
+DOMNodeDict.abs_top = {
+    __get__: function(self){
+        return $getPosition(self.elt).top
+    },
+    __set__: function(){
+        throw _b_.AttributeError("'DOMNode' objectattribute 'abs_top' is read-only")
+    }
+}
+
 DOMNodeDict.bind = function(self,event){
     // bind functions to the event (event = "click", "mouseover" etc.)
     var _id
@@ -1044,6 +1062,19 @@ DOMNodeDict.unbind = function(self,event){
 }
 
 DOMNodeDict.value = function(self){return self.elt.value}
+
+DOMNodeDict.width = {
+    '__get__': function(self){
+        var res = parseInt(self.elt.style.width)
+        if(isNaN(res)){
+            throw _b_.AttributeError("node has no attribute 'width'")
+        }
+        return res
+    },
+    '__set__': function(obj, self, value){
+        self.elt.style.width = value+'px'
+    }
+}
 
 // return query string as an object with methods to access keys and values
 // same interface as cgi.FieldStorage, with getvalue / getlist / getfirst
