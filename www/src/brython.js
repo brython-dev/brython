@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2015-12-26 17:38:14.509629"
+__BRYTHON__.compiled_date="2015-12-31 10:48:28.915597"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_datetime","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -3697,8 +3697,7 @@ C.from=true
 C.tree=[]
 return new $AbstractExprCtx(C,true)}
 return $transition(C.parent,token)}}
-$B.forbidden=['super','case','catch','constructor','Date','delete','default','Error','history','function','location','Math','new','null','Number','RegExp','this','throw','var','toString']
-var s_escaped='abfnrtvxuU"'+"'"+'\\',is_escaped={}
+$B.forbidden=['case','catch','constructor','Date','delete','default','enum','extends','Error','history','function','location','Math','new','null','Number','RegExp','super','this','throw','var',var s_escaped='abfnrtvxuU"'+"'"+'\\',is_escaped={}
 for(var i=0;i<s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
 function $tokenize(src,module,locals_id,parent_block_id,line_info){var delimiters=[["#","\n","comment"],['"""','"""',"triple_string"],["'","'","string"],['"','"',"string"],["r'","'","raw_string"],['r"','"',"raw_string"]]
 var br_open={"(":0,"[":0,"{":0}
@@ -7027,11 +7026,24 @@ function $err(op,other){var msg="unsupported operand type(s) for "+op
 msg +=": 'float' and '"+$.get_class(other).__name__+"'"
 throw _b_.TypeError(msg)}
 var $FloatDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'float',$native:true}
-$FloatDict.as_integer_ratio=function(self){if(Math.round(self.valueOf())==self.valueOf()){return _b_.tuple([_b_.int(self.valueOf()),_b_.int(1)])}
-var _temp=self.valueOf()
-var i=10
-while(!(Math.round(_temp/i)==_temp/i))i*=10
-return _b_.tuple([_b_.int(_temp*i),_b_.int(i)])}
+$FloatDict.as_integer_ratio=function(self){if(self.valueOf()==Number.POSITIVE_INFINITY ||
+self.valueOf()==Number.NEGATIVE_INFINITY){throw _b_.OverflowError("Cannot pass infinity to float.as_integer_ratio.")}
+if(!Number.isFinite(self.valueOf())){throw _b_.ValueError("Cannot pass NaN to float.as_integer_ratio.")}
+var tmp=_b_.$frexp(self.valueOf())
+var fp=tmp[0]
+var exponent=tmp[1]
+for(var i=0;i < 300;i++){if(fp==Math.floor(fp)){break}else{
+fp *=2
+exponent--}}
+numerator=float(fp)
+py_exponent=abs(exponent)
+denominator=1
+console.log(exponent,py_exponent,numerator,denominator)
+py_exponent=_b_.getattr(int(denominator),"__lshift__")(py_exponent)
+if(exponent > 0){numerator=numerator * py_exponent}else{
+denominator=py_exponent}
+console.log(exponent,py_exponent,numerator,denominator)
+return _b_.tuple([_b_.int(numerator),_b_.int(denominator)])}
 $FloatDict.__bool__=function(self){return _b_.bool(self.valueOf())}
 $FloatDict.__class__=$B.$type
 $FloatDict.__eq__=function(self,other){if(isNaN(self)&& isNaN(other)){return true}
@@ -9936,6 +9948,8 @@ if(res!==undefined&&res!==null){self.elt.setAttribute(attr1,value)
 return}}
 self.elt[attr]=value}}
 DOMNodeDict.__setitem__=function(self,key,value){self.elt.childNodes[key]=value}
+DOMNodeDict.abs_left={__get__: function(self){return $getPosition(self.elt).left},__set__: function(){throw _b_.AttributeError("'DOMNode' objectattribute 'abs_left' is read-only")}}
+DOMNodeDict.abs_top={__get__: function(self){return $getPosition(self.elt).top},__set__: function(){throw _b_.AttributeError("'DOMNode' objectattribute 'abs_top' is read-only")}}
 DOMNodeDict.bind=function(self,event){
 var _id
 if(self.elt.nodeType===9){_id=0}
@@ -10033,6 +10047,9 @@ var obj=self.elt
 return function(ctx){return JSObject(obj.getContext(ctx))}}
 DOMNodeDict.getSelectionRange=function(self){
 if(self.elt['getSelectionRange']!==undefined){return self.elt.getSelectionRange.apply(null,arguments)}}
+DOMNodeDict.height={'__get__': function(self){var res=parseInt(self.elt.style.height)
+if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'height'")}
+return res},'__set__': function(obj,self,value){self.elt.style.height=value+'px'}}
 DOMNodeDict.html=function(self){return self.elt.innerHTML}
 DOMNodeDict.id=function(self){if(self.elt.id !==undefined)return self.elt.id
 return None}
@@ -10113,6 +10130,9 @@ flag=true
 break}}
 if(!flag){throw KeyError('missing callback for event '+event)}}}
 DOMNodeDict.value=function(self){return self.elt.value}
+DOMNodeDict.width={'__get__': function(self){var res=parseInt(self.elt.style.width)
+if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'width'")}
+return res},'__set__': function(obj,self,value){self.elt.style.width=value+'px'}}
 var $QueryDict={__class__:$B.$type,__name__:'query'}
 $QueryDict.__contains__=function(self,key){return self._keys.indexOf(key)>-1}
 $QueryDict.__getitem__=function(self,key){
