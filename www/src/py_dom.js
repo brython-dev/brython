@@ -863,6 +863,19 @@ DOMNodeDict.getSelectionRange = function(self){ // for TEXTAREA
     }
 }
 
+DOMNodeDict.height = {
+    '__get__': function(self){
+        var res = parseInt(self.elt.style.height)
+        if(isNaN(res)){
+            throw _b_.AttributeError("node has no attribute 'height'")
+        }
+        return res
+    },
+    '__set__': function(obj, self, value){
+        self.elt.style.height = value+'px'
+    }
+}
+
 DOMNodeDict.html = function(self){return self.elt.innerHTML}
 
 DOMNodeDict.id = function(self){
