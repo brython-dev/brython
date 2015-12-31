@@ -30,4 +30,16 @@ assert x.show() == 'show'
 assert str(x)=="{1: 2}"
 assert isinstance(x,dict)
 
+_list = []
+data = {"var":[1,2,3]}
+data["var2"] = data.get("var")
+
+_list = list(data.items())
+_list.append(("other", data))
+assert repr(_list)=="[('var', [1, 2, 3]), ('var2', [1, 2, 3]), ('other', {'var': [1, 2, 3], 'var2': [1, 2, 3]})]"
+
+d = {}
+d[1] = d
+assert repr(d) == '{1: {...}}'
+
 print("passed all tests..")

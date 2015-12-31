@@ -226,7 +226,7 @@ $DictDict.__getitem__ = function(){
         if(self.$jsobj[arg]===undefined){return None}
         return self.$jsobj[arg]
     }
-
+    
     switch(typeof arg) {
       case 'string':
         if (self.$string_dict[arg] !== undefined) return self.$string_dict[arg]
@@ -386,14 +386,8 @@ $DictDict.__repr__ = function(self){
     var items = new $item_generator(self).as_list()
     for (var i=0; i < items.length; i++) {
         var itm = items[i]
-        if (_objs.indexOf(itm[1]) > -1 && _b_.isinstance(itm[1], [_b_.dict,_b_.list,_b_.set, _b_.tuple])) {
-           var value='?'+_b_.type(itm[1])
-           if(isinstance(itm[1], dict)) value='{...}'
-           res[pos++]=repr(itm[0])+': '+ value
-        } else {
-           if (_objs.indexOf(itm[1]) == -1) _objs.push(itm[1])
-           res[pos++]=repr(itm[0])+': '+repr(itm[1])
-        }
+        if(itm[1]===self){res[pos++]=repr(itm[0])+': {...}'}
+        else{res[pos++]=repr(itm[0])+': '+repr(itm[1])}
     }
     return '{'+ res.join(', ') +'}'
 }
@@ -489,7 +483,7 @@ $DictDict.fromkeys.$type = 'classmethod'
 $DictDict.get = function(){
     var $ = $B.args('get', 3, {self:null, key:null, _default:null},
         ['self', 'key', '_default'], arguments, {_default:$N}, null, null)
-        
+    
     try{return $DictDict.__getitem__($.self, $.key)}
     catch(err){
         if(_b_.isinstance(err, _b_.KeyError)){return $._default}
