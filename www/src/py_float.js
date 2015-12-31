@@ -17,14 +17,40 @@ var $FloatDict = {__class__:$B.$type,
     $native:true}
 
 $FloatDict.as_integer_ratio=function(self) {
-   if (Math.round(self.valueOf()) == self.valueOf()){
-       return _b_.tuple([_b_.int(self.valueOf()), _b_.int(1)])
-   }
-   var _temp=self.valueOf()
-   var i=10
-   while (!(Math.round(_temp/i) == _temp/i)) i*=10
+    if (self.valueOf() == Number.POSITIVE_INFINITY || 
+        self.valueOf() == Number.NEGATIVE_INFINITY){
+        throw _b_.OverflowError("Cannot pass infinity to float.as_integer_ratio.")
+    }
+    if (!Number.isFinite(self.valueOf())){
+        throw _b_.ValueError("Cannot pass NaN to float.as_integer_ratio.")
+    }
+    
+    var tmp = _b_.$frexp(self.valueOf())
+    var fp = tmp[0]
+    var exponent = tmp[1]
+    
+    for (var i = 0; i < 300; i++){
+        if (fp == Math.floor(fp)){
+            break
+        } else {
+            fp *= 2
+            exponent--
+        }
+    }
+    
+    numerator = float(fp)
+    py_exponent = abs(exponent)
+    denominator = 1
+    console.log(exponent, py_exponent, numerator, denominator)
+    py_exponent = _b_.getattr(int(denominator),"__lshift__")(py_exponent)
+    if (exponent > 0){
+        numerator = numerator * py_exponent
+    } else {
+        denominator = py_exponent
+    }
+    console.log(exponent, py_exponent, numerator, denominator)
 
-   return _b_.tuple([_b_.int(_temp*i), _b_.int(i)])
+    return _b_.tuple([_b_.int(numerator), _b_.int(denominator)])
 }
 
 $FloatDict.__bool__ = function(self){return _b_.bool(self.valueOf())}
