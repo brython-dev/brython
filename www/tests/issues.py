@@ -719,6 +719,15 @@ assert a * 1 == b # This test fails...
 a = float("inf")
 assert a*1 == a
 
+# issue 355
+class kk:
+    def __init__(self, enum):
+        pass
+
+lambda enum: enum
+
+def foo(enum): pass
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
