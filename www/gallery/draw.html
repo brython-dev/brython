@@ -1,0 +1,80 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+        "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"> 
+<head>
+<title>Brython - Draw</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<script type="text/javascript" src="/src/brython.js"></script>
+<script type="text/javascript" src="/src/py_utils.js"></script>
+
+<style type="text/css" media="screen">
+  body { 
+    font: 12px/15px Calibri, Verdana;
+    margin: 0px;
+    background:#ddd;
+    padding: 0px;
+  }
+#container{
+    position: absolute;
+    border-width:1px;
+    border-radius: 10px;
+    border-style: solid;
+    border-color: #000;
+    background-color: #333;
+}
+#zone {
+    background-color:#fff;
+    color: #fff;
+    padding: 0px;
+}
+#tools{
+    position: absolute;
+    border-width:1px;
+    border-radius: 10px;
+    border-style: solid;
+    border-color: #000;
+    text-align: center;
+}
+.color_panel{
+    position: absolute;
+    background-color: yellow;
+}
+.square{
+    position: absolute;
+    color: #000; 
+    background: #fcfff4; /* old browsers */
+    background: linear-gradient(to bottom, #fcfff4 0%,#dfe5d7 40%,#b3bead 100%);
+    /* background-color: orange; */
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 5px;
+    border-color: #200;
+    text-align: center;
+}
+button {
+    font-size : 2em;
+    background-color: #ccc;
+    border-color: white black black white;
+}
+.slider{
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 10px;
+    background-color: #000;
+}
+
+</style>
+
+</head>   
+<body onload="brython(1)">
+
+<script type="text/python" src="draw.py"></script>
+
+<div id="container">
+    <canvas id="zone"></canvas>
+</div>
+<div id="tools"></div>
+</body>
+</html>
