@@ -12,12 +12,12 @@ var $mod = {
         if (attr == 'new') return $hashlib_new;
         return this[attr]
     },
-    md5: function() {return $hashlib_new('md5')},
-    sha1: function() {return $hashlib_new('sha1')},
-    sha224: function() {return $hashlib_new('sha224')},
-    sha256: function() {return $hashlib_new('sha256')},
-    sha384: function() {return $hashlib_new('sha384')},
-    sha512: function() {return $hashlib_new('sha512')},
+    md5: function(obj) {return $hashlib_new('md5', obj)},
+    sha1: function(obj) {return $hashlib_new('sha1', obj)},
+    sha224: function(obj) {return $hashlib_new('sha224', obj)},
+    sha256: function(obj) {return $hashlib_new('sha256', obj)},
+    sha384: function(obj) {return $hashlib_new('sha384', obj)},
+    sha512: function(obj) {return $hashlib_new('sha512', obj)},
 
     algorithms_guaranteed: ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512'],
     algorithms_available:  ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']
@@ -54,7 +54,26 @@ function $get_CryptoJS_lib(alg) {
    }
 }
 
-function $hashlib_new(alg) {
+function bytes2WordArray(obj){
+    // Transform a bytes object into an instance of class WordArray
+    // defined in CryptoJS
+    if(!_b_.isinstance(obj, _b_.bytes)){
+        throw _b_.TypeError("expected bytes, got "+
+            $B.get_class(obj).__name__)
+    }
+
+    var words = []
+    for(var i=0;i<obj.source.length;i+=4){
+        var word = obj.source.slice(i, i+4)
+        while(word.length<4){word.push(0)}
+        var w = word[3] +(word[2]<<8)+(word[1]<<16)+(word[0]<<24)
+        words.push(w)
+    }
+    return {words: words, sigBytes:obj.source.length}
+}
+
+function $hashlib_new(alg, obj) {
+
     switch(alg) {
       case 'md5':
       case 'sha1':
@@ -67,21 +86,36 @@ function $hashlib_new(alg) {
             $B.CryptoJS.algo[ALG] === undefined) $get_CryptoJS_lib(alg)
 
         this.hash = $B.CryptoJS.algo[ALG].create()
+        if(obj!==undefined){
+            this.hash.update(bytes2WordArray(obj))
+        }
         break
       default:
         $raise('AttributeError', 'Invalid hash algorithm:' + alg)
     }
  
     this.__class__ = $B.$type
-    this.__getattr__ = function(attr){return $getattr(this,attr)}
+
     this.__str__ = function(){return this.hexdigest()}
-    this.update = function(msg){this.hash.update(msg)}
-    this.copy = function(){return this.hash.clone()}
+
+    this.update = function(msg){
+        this.hash.update(bytes2WordArray(msg))
+    }
+    this.copy = function(){
+        return this.hash.clone()
+    }
+    
+    this.digest = function(){
+        var obj = this.hash.clone().finalize().toString(),
+            res = []
+        for(var i=0;i<obj.length;i+=2){
+            res.push(parseInt(obj.substr(i,2), 16))
+        }
+        return _b_.bytes(res)
+    }
 
     this.hexdigest = function() {
-        var temp=this.hash.clone()
-        temp=temp.finalize()
-        return temp.toString()
+        return this.hash.clone().finalize().toString()
     }
 
     return this
