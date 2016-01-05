@@ -231,6 +231,12 @@ donnée = 10
 
 assert donnée + машина + ήλιος == 23
 
+# Korean
+def 안녕하세요():
+    return "hello"
+
+assert 안녕하세요()=="hello"
+
 # functions and methods
 class foo:
     def method(self, x):

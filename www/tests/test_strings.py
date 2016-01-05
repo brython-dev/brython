@@ -120,5 +120,13 @@ assert not "a" in ""
 # issue 285
 assert "ab"[1:0:-1] == 'b'
 
-print("passed all tests...")
+# identifiers
+assert "x".isidentifier()
+assert not "x ".isidentifier()
+assert not "x;".isidentifier()
+assert not "x$".isidentifier()
+assert "André".isidentifier()
+assert "안녕하세요".isidentifier()
+assert not "1x".isidentifier()
 
+print("passed all tests...")

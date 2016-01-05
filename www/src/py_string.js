@@ -1119,14 +1119,12 @@ $StringDict.isdigit = function() {
 $StringDict.isidentifier = function() {
     var $=$B.args('isidentifier',1,{self:null},['self'],arguments,{},null,null)
     
-    // Use regular expressions defined in identifiers_re.js    
-    if($B.re_XID_Start.exec($.self.charAt(0))){
-        for(var i=1;i<$.self.length;i++){
-            if($B.re_XID_Continue.exec($.self.charAt(i))===null){return false}
-        }
-        return true
-    }
-    return false
+    if($.self.search(/\$/)>-1){return false}
+    var last = $.self.charAt($.self.length-1)
+    if(' \n;'.search(last)>-1){return false}
+    var dummy = {}
+    try{eval("dummy."+$.self); return true}
+    catch(err){return false}
 }
 
 $StringDict.islower = function() {

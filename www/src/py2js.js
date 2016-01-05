@@ -6790,16 +6790,17 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     var $indented = ['class','def','for','condition','single_kw','try','except','with']
     // from https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Reserved_Words
 
-    var punctuation = {',':0,':':0} //,';':0}
-    var int_pattern = new RegExp("^\\d+(j|J)?")
-    var float_pattern1 = new RegExp("^\\d+\\.\\d*([eE][+-]?\\d+)?(j|J)?")
-    var float_pattern2 = new RegExp("^\\d+([eE][+-]?\\d+)(j|J)?")
-    var hex_pattern = new RegExp("^0[xX]([0-9a-fA-F]+)")
-    var octal_pattern = new RegExp("^0[oO]([0-7]+)")
-    var binary_pattern = new RegExp("^0[bB]([01]+)")
-    var id_pattern = new RegExp("[\\$_a-zA-Z]\\w*")
-    var qesc = new RegExp('"',"g") // escape double quotes
-    var sqesc = new RegExp("'","g") // escape single quotes
+    var punctuation = {',':0,':':0} //,';':0},
+        int_pattern = new RegExp("^\\d+(j|J)?"),
+        float_pattern1 = new RegExp("^\\d+\\.\\d*([eE][+-]?\\d+)?(j|J)?"),
+        float_pattern2 = new RegExp("^\\d+([eE][+-]?\\d+)(j|J)?"),
+        hex_pattern = new RegExp("^0[xX]([0-9a-fA-F]+)"),
+        octal_pattern = new RegExp("^0[oO]([0-7]+)"),
+        binary_pattern = new RegExp("^0[bB]([01]+)"),
+        id_pattern = new RegExp("[\\$_a-zA-Z]\\w*"),
+        qesc = new RegExp('"',"g"), // escape double quotes
+        sqesc = new RegExp("'","g"), // escape single quotes
+        dummy = {} // used to test valid identifiers
     
     var context = null
     var root = new $Node('module')
@@ -6994,14 +6995,27 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
             continue
         }
         // identifier ?
-        if(name==""){
-            if($B.re_XID_Start.exec(car)){
-                name=car // identifier start
-                pos++
-                while(pos<src.length && $B.re_XID_Continue.exec(src.charAt(pos))){
-                    name+=src.charAt(pos)
-                    pos++
+        if(name=="" && car!='$'){
+            try{
+                eval("dummy."+car+"=0")
+                var idpos = pos+1
+                while(idpos<src.length){
+                    var idcar = src.charAt(idpos)
+                    if(idcar==' '||idcar=='\n'||idcar==';'||idcar=='$'){
+                        name = src.substring(pos, idpos)
+                        break
+                    }
+                    try{
+                        eval("dummy."+src.substring(pos, idpos+1))
+                        idpos++
+                    }catch(err){
+                        name = src.substring(pos, idpos)
+                        break
+                    }
                 }
+            }catch(err){}
+            if(name){
+                pos += name.length
                 if(kwdict.indexOf(name)>-1){
                     $pos = pos-name.length
                     if(unsupported.indexOf(name)>-1){
