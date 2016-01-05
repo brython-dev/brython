@@ -1118,46 +1118,15 @@ $StringDict.isdigit = function() {
 
 $StringDict.isidentifier = function() {
     var $=$B.args('isidentifier',1,{self:null},['self'],arguments,{},null,null)
-
-    switch($.self) {
-        case 'False':
-        case 'None':
-        case 'True':
-        case 'and':
-        case 'as':
-        case 'assert':
-        case 'break':
-        case 'class':
-        case 'continue':
-        case 'def':
-        case 'del':
-        case 'elif':
-        case 'else':
-        case 'except':
-        case 'finally':
-        case 'for':
-        case 'from':
-        case 'global':
-        case 'if':
-        case 'import':
-        case 'in':
-        case 'is':
-        case 'lambda':
-        case 'nonlocal':
-        case 'not':
-        case 'or':
-        case 'pass':
-        case 'raise':
-        case 'return':
-        case 'try':
-        case 'while':
-        case 'with':
-        case 'yield':
-          return true
-      }
-
-      // fixme..  this isn't complete but should be a good start
-      return /^[a-z][0-9a-z_]+$/i.test($.self)
+    
+    // Use regular expressions defined in identifiers_re.js    
+    if($B.re_XID_Start.exec($.self.charAt(0))){
+        for(var i=1;i<$.self.length;i++){
+            if($B.re_XID_Continue.exec($.self.charAt(i))===null){return false}
+        }
+        return true
+    }
+    return false
 }
 
 $StringDict.islower = function() {

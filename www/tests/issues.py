@@ -728,6 +728,9 @@ lambda enum: enum
 
 def foo(enum): pass
 
+# issue 360
+assert "André".isidentifier()
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

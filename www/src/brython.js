@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-01-04 23:03:53.487156"
+__BRYTHON__.compiled_date="2016-01-05 16:39:31.032469"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_datetime","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
@@ -8796,41 +8796,9 @@ return /^[0-9]+$/.test($.self)}
 $StringDict.isdigit=function(){var $=$B.args('isdigit',1,{self:null},['self'],arguments,{},null,null)
 return /^[0-9]+$/.test($.self)}
 $StringDict.isidentifier=function(){var $=$B.args('isidentifier',1,{self:null},['self'],arguments,{},null,null)
-switch($.self){case 'False':
-case 'None':
-case 'True':
-case 'and':
-case 'as':
-case 'assert':
-case 'break':
-case 'class':
-case 'continue':
-case 'def':
-case 'del':
-case 'elif':
-case 'else':
-case 'except':
-case 'finally':
-case 'for':
-case 'from':
-case 'global':
-case 'if':
-case 'import':
-case 'in':
-case 'is':
-case 'lambda':
-case 'nonlocal':
-case 'not':
-case 'or':
-case 'pass':
-case 'raise':
-case 'return':
-case 'try':
-case 'while':
-case 'with':
-case 'yield':
+if($B.re_XID_Start.exec($.self.charAt(0))){for(var i=1;i<$.self.length;i++){if($B.re_XID_Continue.exec($.self.charAt(i))===null){return false}}
 return true}
-return /^[a-z][0-9a-z_]+$/i.test($.self)}
+return false}
 $StringDict.islower=function(){var $=$B.args('islower',1,{self:null},['self'],arguments,{},null,null)
 return $.self==$.self.toLowerCase()&& $.self.search(/^\s*$/)==-1}
 $StringDict.isnumeric=function(){var $=$B.args('isnumeric',1,{self:null},['self'],arguments,{},null,null)
