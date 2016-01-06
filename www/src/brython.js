@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-01-05 22:14:37.893458"
+__BRYTHON__.compiled_date="2016-01-06 15:17:44.641621"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_datetime","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -8840,13 +8840,27 @@ return $.self.toLowerCase()}
 $StringDict.lstrip=function(self,x){var $=$B.args('lstrip',2,{self:null,chars:null},['self','chars'],arguments,{chars:_b_.None},null,null)
 if($.chars===_b_.None){return $.self.replace(/^\s+/,'')}
 return $.self.replace(new RegExp("^["+$.chars+"]*"),"")}
-$StringDict.maketrans=function(from,to){var _t=[]
-for(var i=0;i < 256;i++)_t[i]=String.fromCharCode(i)
-for(var i=0,_len_i=from.source.length;i < _len_i;i++){var _ndx=from.source[i].charCodeAt(0)
-_t[_ndx]=to.source[i]}
-var _d=dict()
-for(var i=0;i < 256;i++){_b_.dict.$dict.__setitem__(_d,i,_t[i])}
-return _d}
+$StringDict.maketrans=function(){var $=$B.args('maketrans',3,{x:null,y:null,z:null},['x','y','z'],arguments,{y:null,z:null},null,null)
+var _t=_b_.dict()
+for(var i=0;i < 256;i++)_t.$numeric_dict[i]=i
+if($.y===null && $.z===null){
+if(!_b_.isinstance($.x,_b_.dict)){throw _b_.TypeError('maketrans only argument must be a dict')}
+var items=_b_.list(_b_.dict.$dict.items($.x))
+for(var i=0,len=items.length;i<len;i++){var k=items[i][0],v=items[i][1]
+if(!_b_.isinstance(k,_b_.int)){if(_b_.isinstance(k,_b_.str)&& k.length==1){k=_b_.ord(k)}
+else{throw _b_.TypeError("dictionary key "+k+
+" is not int or 1-char string")}}
+if(v!==_b_.None && !_b_.isinstance(v,[_b_.int,_b_.str])){throw _b_.TypeError("dictionary value "+v+
+" is not None, integer or string")}
+_t.$numeric_dict[k]=v}
+return _t}else{
+if(!(_b_.isinstance($.x,_b_.str)&& _b_.isinstance($.y,_b_.str))){throw _b_.TypeError("maketrans arguments must be strings")}else if($.x.length!==$.y.length){throw _b_.TypeError("maketrans arguments must be strings or same length")}else{var toNone={}
+if($.z!==null){
+if(!_b_.isinstance($.z,_b_.str)){throw _b_.TypeError('maketrans third argument must be a string')}
+for(var i=0,len=$.z.length;i<len;i++){toNone[_b_.ord($.z.charAt(i))]=true}}
+for(var i=0,len=$.x.length;i<len;i++){_t.$numeric_dict[_b_.ord($.x.charAt(i))]=_b_.ord($.y.charAt(i))}
+for(var k in toNone){_t.$numeric_dict[k]=_b_.None}
+return _t}}}
 $StringDict.partition=function(){var $=$B.args('partition',2,{self:null,sep:null},['self','sep'],arguments,{},null,null)
 if($.sep==''){throw _b_.ValueError('empty separator')}
 check_str($.sep)
@@ -8983,7 +8997,7 @@ return res}
 $StringDict.translate=function(self,table){var res=[],pos=0
 if(isinstance(table,_b_.dict)){for(var i=0,_len_i=self.length;i < _len_i;i++){var repl=_b_.dict.$dict.get(table,self.charCodeAt(i),-1)
 if(repl==-1){res[pos++]=self.charAt(i)}
-else if(repl!==None){res[pos++]=repl}}}
+else if(repl!==None){res[pos++]=_b_.chr(repl)}}}
 return res.join('')}
 $StringDict.upper=function(){var $=$B.args('lower',1,{self:null},['self'],arguments,{},null,null)
 return $.self.toUpperCase()}

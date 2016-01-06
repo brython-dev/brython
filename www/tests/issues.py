@@ -731,6 +731,12 @@ def foo(enum): pass
 # issue 360
 assert "André".isidentifier()
 
+# issue 361
+FULL_ENGLISH_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+FULL_ENTEAN_ALPHABET =  "AZYXEWVTISRLPNOMQKJHUGFDCB"
+tran_tab = str.maketrans(FULL_ENGLISH_ALPHABET, FULL_ENTEAN_ALPHABET, 'sh')
+assert "PETEshelley".translate(tran_tab) == "MEHEelley"
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

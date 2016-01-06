@@ -1220,23 +1220,66 @@ $StringDict.lstrip = function(self,x){
 }
 
 // note, maketrans should be a static function.
-$StringDict.maketrans = function(from, to) {
-   var _t=[]
-   // make 'default' translate table
-   for(var i=0; i < 256; i++) _t[i]=String.fromCharCode(i)
+$StringDict.maketrans = function() {
+    var $ = $B.args('maketrans', 3, {x:null,y:null,z:null},['x','y','z'],
+        arguments, {y:null, z:null}, null, null)
+        
+    var _t=_b_.dict()
+    // make 'default' translate table
+    for(var i=0; i < 256; i++) _t.$numeric_dict[i]=i
 
-   // make substitution in the translation table
-   for(var i=0, _len_i = from.source.length; i < _len_i; i++) {
-      var _ndx=from.source[i].charCodeAt(0)     //retrieve ascii code of char
-      _t[_ndx]=to.source[i]
-   }
-
-   // create a data structure that string.translate understands
-   var _d=dict()
-   for(var i=0; i < 256; i++) {
-      _b_.dict.$dict.__setitem__(_d, i, _t[i])
-   }
-   return _d
+    if($.y===null && $.z===null){
+        // If there is only one argument, it must be a dictionary mapping 
+        // Unicode ordinals (integers) or characters (strings of length 1) to 
+        // Unicode ordinals, strings (of arbitrary lengths) or None. Character 
+        // keys will then be converted to ordinals.
+        if(!_b_.isinstance($.x, _b_.dict)){
+            throw _b_.TypeError('maketrans only argument must be a dict')
+        }
+        var items = _b_.list(_b_.dict.$dict.items($.x))
+        for(var i=0, len=items.length;i<len;i++){
+            var k = items[i][0], v=items[i][1]
+            if(!_b_.isinstance(k, _b_.int)){
+                if(_b_.isinstance(k, _b_.str) && k.length==1){k = _b_.ord(k)}
+                else{throw _b_.TypeError("dictionary key "+k+
+                    " is not int or 1-char string")}
+            }
+            if(v!==_b_.None && !_b_.isinstance(v, [_b_.int, _b_.str])){
+                throw _b_.TypeError("dictionary value "+v+
+                    " is not None, integer or string")
+            }
+             _t.$numeric_dict[k] = v
+        }
+        return _t
+    }else{
+        // If there are two arguments, they must be strings of equal length, 
+        // and in the resulting dictionary, each character in x will be mapped
+        // to the character at the same position in y
+        if(!(_b_.isinstance($.x, _b_.str) && _b_.isinstance($.y, _b_.str))){
+            throw _b_.TypeError("maketrans arguments must be strings")
+        }else if($.x.length!==$.y.length){
+            throw _b_.TypeError("maketrans arguments must be strings or same length")
+        }else{
+            var toNone = {}
+            if($.z!==null){
+                // If there is a third argument, it must be a string, whose 
+                // characters will be mapped to None in the result
+                if(!_b_.isinstance($.z, _b_.str)){
+                    throw _b_.TypeError('maketrans third argument must be a string')
+                }
+                for(var i=0,len=$.z.length;i<len;i++){
+                    toNone[_b_.ord($.z.charAt(i))] = true
+                }
+            }                
+            for(var i=0,len=$.x.length;i<len;i++){
+                _t.$numeric_dict[_b_.ord($.x.charAt(i))] = _b_.ord($.y.charAt(i))
+            }
+            for(var k in toNone){
+                _t.$numeric_dict[k] = _b_.None
+            }
+            return _t
+        }
+    }
 }
 
 $StringDict.partition = function() {
@@ -1551,7 +1594,7 @@ $StringDict.translate = function(self,table) {
        for (var i=0, _len_i = self.length; i < _len_i; i++) {
            var repl = _b_.dict.$dict.get(table,self.charCodeAt(i),-1)
            if(repl==-1){res[pos++]=self.charAt(i)}
-           else if(repl!==None){res[pos++]=repl}
+           else if(repl!==None){res[pos++]=_b_.chr(repl)}
        }
     }
     return res.join('')
