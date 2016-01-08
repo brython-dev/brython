@@ -887,6 +887,17 @@ DOMNodeDict.id = function(self){
     return None
 }
 
+DOMNodeDict.inside = function(self, other){
+    // Test if a node is inside another node
+    other = other.elt
+    var elt = self.elt
+    while(true){
+        if(other===elt){return true}
+        elt = elt.parentElement
+        if(!elt){return false}
+    }
+}
+
 DOMNodeDict.options = function(self){ // for SELECT tag
     return new $OptionsClass(self.elt)
 }
@@ -1093,7 +1104,7 @@ DOMNodeDict.width = {
     },
     '__set__': function(obj, self, value){
         if(self.elt.tagName=='CANVAS'){self.elt.width=value}
-        self.elt.style.width = value+'px'
+        else{self.elt.style.width = value+'px'}
     }
 }
 
