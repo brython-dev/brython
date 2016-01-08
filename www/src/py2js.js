@@ -3275,6 +3275,7 @@ function $IdCtx(context,value){
                 }
             }
             if(found.length>1 && found[0].context){
+                /*
                 if(val=="axd"){
                     console.log(val, found)
                     if(!this.bound){
@@ -3283,6 +3284,7 @@ function $IdCtx(context,value){
                         }
                     }
                 }
+                */
                 if(found[0].context.tree[0].type=='class' && !this.bound){
                     var ns0='$locals_'+found[0].id.replace(/\./g,'_'),
                         ns1='$locals_'+found[1].id.replace(/\./g,'_'),
@@ -3350,7 +3352,13 @@ function $IdCtx(context,value){
                         }
                         return '$B.$search("'+val+'")'
                     }
-                    val = scope_ns+'["'+val+'"]'
+                    if(!this.bound && scope!==innermost){
+                        if(innermost.locals===undefined || innermost.locals[val]===undefined){
+                            // If name is referenced in an upper block, it may be
+                            // still undefined, cf. issue #362
+                            val = '$B.$check_def("'+val+'",'+scope_ns+'["'+val+'"])'
+                        }else{val = scope_ns+'["'+val+'"]'}
+                    }else{val = scope_ns+'["'+val+'"]'}
                 }else{
                     val = scope_ns+'["'+val+'"]'
                 }
@@ -3363,7 +3371,12 @@ function $IdCtx(context,value){
             }else{
                 // name was found between innermost and the global of builtins
                 // namespace
-                val = scope_ns+'["'+val+'"]'
+                if(innermost.locals===undefined ||
+                    innermost.locals[val]===undefined){
+                        val = '$B.$check_def_free("'+val+'",'+scope_ns+'["'+val+'"])'
+                }else{
+                    val = scope_ns+'["'+val+'"]'
+                }
             }
             return val+$to_js(this.tree,'')
         }else{

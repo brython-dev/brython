@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-01-06 15:17:44.641621"
+__BRYTHON__.compiled_date="2016-01-08 18:57:59.894035"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_datetime","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1661,8 +1661,7 @@ if(!this.bound && found[0].C && found[0]===innermost
 && val.charAt(0)!='$'){var locs=$get_node(this).locals ||{},nonlocs=innermost.nonlocals
 if(locs[val]===undefined && 
 (nonlocs===undefined ||nonlocs[val]===undefined)){return '$B.$local_search("'+val+'")'}}
-if(found.length>1 && found[0].C){if(val=="axd"){console.log(val,found)
-if(!this.bound){if(locs[val]===undefined){return '$B.$search("'+val+'")'}}}
+if(found.length>1 && found[0].C){
 if(found[0].C.tree[0].type=='class' && !this.bound){var ns0='$locals_'+found[0].id.replace(/\./g,'_'),ns1='$locals_'+found[1].id.replace(/\./g,'_'),res
 if(bound_before){if(bound_before.indexOf(val)>-1){this.found=$B.bound[found[0].id][val]
 res=ns0}else{this.found=$B.bound[found[1].id][val]
@@ -1682,8 +1681,10 @@ if(locs[val]===undefined){
 if(found.length>1 && found[1].id=='__builtins__'){this.is_builtin=true
 return val+$to_js(this.tree,'')}}
 return '$B.$search("'+val+'")'}
-val=scope_ns+'["'+val+'"]'}else{val=scope_ns+'["'+val+'"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns+'["'+val+'"]'}else{val='$locals["'+val+'"]'}}else{
-val=scope_ns+'["'+val+'"]'}
+if(!this.bound && scope!==innermost){if(innermost.locals===undefined ||innermost.locals[val]===undefined){
+val='$B.$check_def("'+val+'",'+scope_ns+'["'+val+'"])'}else{val=scope_ns+'["'+val+'"]'}}else{val=scope_ns+'["'+val+'"]'}}else{val=scope_ns+'["'+val+'"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns+'["'+val+'"]'}else{val='$locals["'+val+'"]'}}else{
+if(innermost.locals===undefined ||
+innermost.locals[val]===undefined){val='$B.$check_def_free("'+val+'",'+scope_ns+'["'+val+'"])'}else{val=scope_ns+'["'+val+'"]'}}
 return val+$to_js(this.tree,'')}else{
 this.unknown_binding=true
 return '$B.$search("'+val+'")'}}}
@@ -4736,6 +4737,13 @@ var frame=$B.last($B.frames_stack)
 if(frame[1][name]!==undefined){return frame[1][name]}
 else{throw _b_.UnboundLocalError("local variable '"+name+
 "' referenced before assignment")}}
+$B.$check_def=function(name,value){
+if(value!==undefined){return value}
+throw _b_.NameError(name)}
+$B.$check_def_free=function(name,value){
+if(value!==undefined){return value}
+throw _b_.NameError("free variable '"+name+
+"' referenced before assignment in enclosing scope")}
 $B.$JS2Py=function(src){if(typeof src==='number'){if(src%1===0)return src
 return _b_.float(src)}
 if(src===null||src===undefined)return _b_.None
@@ -10038,6 +10046,12 @@ else{self.elt.style.height=value+'px'}}}
 DOMNodeDict.html=function(self){return self.elt.innerHTML}
 DOMNodeDict.id=function(self){if(self.elt.id !==undefined)return self.elt.id
 return None}
+DOMNodeDict.inside=function(self,other){
+other=other.elt
+var elt=self.elt
+while(true){if(other===elt){return true}
+elt=elt.parentElement
+if(!elt){return false}}}
 DOMNodeDict.options=function(self){
 return new $OptionsClass(self.elt)}
 DOMNodeDict.parent=function(self){if(self.elt.parentElement)return DOMNode(self.elt.parentElement)
@@ -10120,7 +10134,7 @@ if(self.elt.tagName=='CANVAS'){return self.elt.width}
 var res=parseInt(self.elt.style.width)
 if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'width'")}
 return res},'__set__': function(obj,self,value){if(self.elt.tagName=='CANVAS'){self.elt.width=value}
-self.elt.style.width=value+'px'}}
+else{self.elt.style.width=value+'px'}}}
 var $QueryDict={__class__:$B.$type,__name__:'query'}
 $QueryDict.__contains__=function(self,key){return self._keys.indexOf(key)>-1}
 $QueryDict.__getitem__=function(self,key){

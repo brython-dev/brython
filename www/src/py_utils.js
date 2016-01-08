@@ -381,6 +381,19 @@ $B.$local_search = function(name){
     }
 }
 
+$B.$check_def = function(name, value){
+    // Check if value is not undefined
+    if(value!==undefined){return value}
+    throw _b_.NameError(name)
+}
+
+$B.$check_def_free = function(name, value){
+    // Check if value is not undefined
+    if(value!==undefined){return value}
+    throw _b_.NameError("free variable '"+name+
+        "' referenced before assignment in enclosing scope")
+}
+
 // transform native JS types into Brython types
 $B.$JS2Py = function(src){
     if(typeof src==='number'){
