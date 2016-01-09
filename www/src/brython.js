@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-01-09 15:09:20.752888"
+__BRYTHON__.compiled_date="2016-01-09 15:43:41.963782"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_datetime","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1685,7 +1685,7 @@ if(locs[val]===undefined){
 if(found.length>1 && found[1].id=='__builtins__'){this.is_builtin=true
 return val+$to_js(this.tree,'')}}
 return '$B.$search("'+val+'")'}else{
-val='$B.$check_def("'+val+'",'+scope_ns+'["'+val+'"])'}}}else{val=scope_ns+'["'+val+'"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns+'["'+val+'"]'}else{val='$locals["'+val+'"]'}}else if(!this.bound && !this.augm_assign){
+val='$B.$check_def("'+val+'",'+scope_ns+'["'+val+'"])'}}}else{val=scope_ns+'["'+val+'"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns+'["'+val+'"]'}else if(!this.bound && !this.augm_assign){val='$B.$check_def_local("'+val+'",$locals["'+val+'"])'}else{val='$locals["'+val+'"]'}}else if(!this.bound && !this.augm_assign){
 val='$B.$check_def_free("'+val+'",'+scope_ns+'["'+val+'"])'}else{val=scope_ns+'["'+val+'"]'}
 return val+$to_js(this.tree,'')}else{
 this.unknown_binding=true
@@ -4743,6 +4743,10 @@ else{throw _b_.UnboundLocalError("local variable '"+name+
 $B.$check_def=function(name,value){
 if(value!==undefined){return value}
 throw _b_.NameError(name)}
+$B.$check_def_local=function(name,value){
+if(value!==undefined){return value}
+throw _b_.UnboundLocalError("local variable '"+name+
+"' referenced before assignment")}
 $B.$check_def_free=function(name,value){
 if(value!==undefined){return value}
 throw _b_.NameError("free variable '"+name+

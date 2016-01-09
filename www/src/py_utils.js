@@ -387,6 +387,13 @@ $B.$check_def = function(name, value){
     throw _b_.NameError(name)
 }
 
+$B.$check_def_local = function(name, value){
+    // Check if value is not undefined
+    if(value!==undefined){return value}
+    throw _b_.UnboundLocalError("local variable '"+name+
+        "' referenced before assignment")
+}
+
 $B.$check_def_free = function(name, value){
     // Check if value is not undefined
     if(value!==undefined){return value}

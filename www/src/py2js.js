@@ -3257,15 +3257,6 @@ function $IdCtx(context,value){
         this.found = found
         if(this.nonlocal && found[0]===innermost){found.shift()}
 
-        /*
-        if(val=='axd'){
-            console.log(val,'bound in')
-            for(var i=0;i<found.length;i++){
-                console.log(i,found[i].id)
-            }
-        }
-        */
-
         if(found.length>0){
             // If name is not in the left part of an assignment, 
             // and it is bound in the current block but not yet bound when the
@@ -3379,6 +3370,8 @@ function $IdCtx(context,value){
             }else if(scope===innermost){
                 if($B._globals[scope.id] && $B._globals[scope.id][val]){
                     val = global_ns+'["'+val+'"]'
+                }else if(!this.bound && !this.augm_assign){
+                    val = '$B.$check_def_local("'+val+'",$locals["'+val+'"])'
                 }else{
                     val = '$locals["'+val+'"]'
                 }
