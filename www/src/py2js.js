@@ -404,9 +404,9 @@ function $AssertCtx(context){
     }
 }
 
-function $AssignCtx(context, check_unbound){
+function $AssignCtx(context){ //, check_unbound){
     /*
-    Context for the assignment operator "="
+    Class for the assignment operator "="
     context is the left operand of assignment
     check_unbound is used to check unbound local variables
     This check is done when the AssignCtx object is created, but must be
@@ -419,7 +419,7 @@ function $AssignCtx(context, check_unbound){
         ctx = ctx.parent
     }
     
-    check_unbound = check_unbound === undefined
+    //check_unbound = check_unbound === undefined
     
     this.type = 'assign'
     // replace parent by "this" in parent tree
@@ -837,6 +837,7 @@ function $AugmentedAssignCtx(context, op){
     this.toString = function(){return '(augm assign) '+this.tree}
 
     this.transform = function(node,rank){
+        
         var func = '__'+$operators[op]+'__'
 
         var offset=0, parent=node.parent
@@ -849,6 +850,25 @@ function $AugmentedAssignCtx(context, op){
             this.tree[0].tree[0].type=='id')
 
         if(left_is_id){
+            // Set attribute "augm_assign" of $IdCtx instance, so that
+            // the id will not be resolved with $B.$check_undef()
+            this.tree[0].tree[0].augm_assign = true
+            
+            // If left part is an id we must check that it is defined, otherwise
+            // raise NameError
+            // Example :
+            // 
+            // if False:
+            //     a = 0
+            // a += 1
+
+            // For performance reasons, this is only implemented in debug mode
+            if($B.debug>0){
+                var check_node = $NodeJS('$B.$check_def("'+
+                    this.tree[0].tree[0].value+'", '+this.tree[0].to_js()+')')
+                node.parent.insert(rank, check_node)
+                offset++
+            }
             var left_id = this.tree[0].tree[0].value,
                 was_bound = $B.bound[this.scope.id][left_id]!==undefined,
                 left_id_unbound = this.tree[0].tree[0].unbound
@@ -3275,16 +3295,7 @@ function $IdCtx(context,value){
                 }
             }
             if(found.length>1 && found[0].context){
-                /*
-                if(val=="axd"){
-                    console.log(val, found)
-                    if(!this.bound){
-                        if(locs[val]===undefined){
-                            return '$B.$search("'+val+'")'
-                        }
-                    }
-                }
-                */
+
                 if(found[0].context.tree[0].type=='class' && !this.bound){
                     var ns0='$locals_'+found[0].id.replace(/\./g,'_'),
                         ns1='$locals_'+found[1].id.replace(/\./g,'_'),
@@ -3339,26 +3350,29 @@ function $IdCtx(context,value){
                         this.is_builtin = true
                     }
                 }else if(scope.id==scope.module){
-                    if(!this.bound && scope===innermost && this.env[val]===undefined){
-                        var locs = $get_node(this).locals || {}
-                        if(locs[val]===undefined){
-                            // Name is bound in scope, but after the current node
-                            // If it is a builtin name, use the builtin
-                            // Cf issue #311
-                            if(found.length>1 && found[1].id == '__builtins__'){
-                                this.is_builtin = true
-                                return val+$to_js(this.tree,'')
+                    if(this.bound || this.augm_assign){
+                        val = scope_ns+'["'+val+'"]'
+                    }else{
+                        if(scope===innermost && this.env[val]===undefined){
+                            var locs = $get_node(this).locals || {}
+                            if(locs[val]===undefined){
+                                // Name is bound in scope, but after the current node
+                                // If it is a builtin name, use the builtin
+                                // Cf issue #311
+                                if(found.length>1 && found[1].id == '__builtins__'){
+                                    this.is_builtin = true
+                                    return val+$to_js(this.tree,'')
+                                }
                             }
-                        }
-                        return '$B.$search("'+val+'")'
-                    }
-                    if(!this.bound && scope!==innermost){
-                        if(innermost.locals===undefined || innermost.locals[val]===undefined){
+                            return '$B.$search("'+val+'")'
+                        }else{ // if(scope!==innermost){
                             // If name is referenced in an upper block, it may be
                             // still undefined, cf. issue #362
                             val = '$B.$check_def("'+val+'",'+scope_ns+'["'+val+'"])'
-                        }else{val = scope_ns+'["'+val+'"]'}
-                    }else{val = scope_ns+'["'+val+'"]'}
+                        //}else{
+                        //    val = scope_ns+'["'+val+'"]'
+                        }
+                    }
                 }else{
                     val = scope_ns+'["'+val+'"]'
                 }
@@ -3368,15 +3382,12 @@ function $IdCtx(context,value){
                 }else{
                     val = '$locals["'+val+'"]'
                 }
-            }else{
+            }else if(!this.bound && !this.augm_assign){
                 // name was found between innermost and the global of builtins
                 // namespace
-                if(innermost.locals===undefined ||
-                    innermost.locals[val]===undefined){
-                        val = '$B.$check_def_free("'+val+'",'+scope_ns+'["'+val+'"])'
-                }else{
-                    val = scope_ns+'["'+val+'"]'
-                }
+                val = '$B.$check_def_free("'+val+'",'+scope_ns+'["'+val+'"])'
+            }else{
+                val = scope_ns+'["'+val+'"]'
             }
             return val+$to_js(this.tree,'')
         }else{
@@ -7463,6 +7474,7 @@ function run_script(script){
 
         var $root = $B.py2js(script.src,script.name,script.name,'__builtins__')
         var $js = $root.to_js()
+        if($B.debug>1){console.log($js)}
         // Run resulting Javascript
         eval($js)
         $B.imported[script.name] = $locals

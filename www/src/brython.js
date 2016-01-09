@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-01-08 18:57:59.894035"
+__BRYTHON__.compiled_date="2016-01-09 15:09:20.752888"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_datetime","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -228,11 +228,10 @@ var js='throw AssertionError("AssertionError")'
 if(message !==null){js='throw AssertionError(str('+message.to_js()+'))'}
 new $NodeJSCtx(new_node,js)
 node.add(new_node)}}
-function $AssignCtx(C,check_unbound){
+function $AssignCtx(C){
 var ctx=C
 while(ctx){if(ctx.type=='assert'){$_SyntaxError(C,'invalid syntax - assign')}
 ctx=ctx.parent}
-check_unbound=check_unbound===undefined
 this.type='assign'
 C.parent.tree.pop()
 C.parent.tree[C.parent.tree.length]=this
@@ -441,7 +440,13 @@ var line_num=node.line_num,lnum_set=false
 parent.children.splice(rank,1)
 var left_is_id=(this.tree[0].type=='expr' && 
 this.tree[0].tree[0].type=='id')
-if(left_is_id){var left_id=this.tree[0].tree[0].value,was_bound=$B.bound[this.scope.id][left_id]!==undefined,left_id_unbound=this.tree[0].tree[0].unbound}
+if(left_is_id){
+this.tree[0].tree[0].augm_assign=true
+if($B.debug>0){var check_node=$NodeJS('$B.$check_def("'+
+this.tree[0].tree[0].value+'", '+this.tree[0].to_js()+')')
+node.parent.insert(rank,check_node)
+offset++}
+var left_id=this.tree[0].tree[0].value,was_bound=$B.bound[this.scope.id][left_id]!==undefined,left_id_unbound=this.tree[0].tree[0].unbound}
 var right_is_int=(this.tree[1].type=='expr' && 
 this.tree[1].tree[0].type=='int')
 var right=right_is_int ? this.tree[1].tree[0].to_js(): '$temp'
@@ -1661,8 +1666,7 @@ if(!this.bound && found[0].C && found[0]===innermost
 && val.charAt(0)!='$'){var locs=$get_node(this).locals ||{},nonlocs=innermost.nonlocals
 if(locs[val]===undefined && 
 (nonlocs===undefined ||nonlocs[val]===undefined)){return '$B.$local_search("'+val+'")'}}
-if(found.length>1 && found[0].C){
-if(found[0].C.tree[0].type=='class' && !this.bound){var ns0='$locals_'+found[0].id.replace(/\./g,'_'),ns1='$locals_'+found[1].id.replace(/\./g,'_'),res
+if(found.length>1 && found[0].C){if(found[0].C.tree[0].type=='class' && !this.bound){var ns0='$locals_'+found[0].id.replace(/\./g,'_'),ns1='$locals_'+found[1].id.replace(/\./g,'_'),res
 if(bound_before){if(bound_before.indexOf(val)>-1){this.found=$B.bound[found[0].id][val]
 res=ns0}else{this.found=$B.bound[found[1].id][val]
 res=ns1}
@@ -1676,15 +1680,13 @@ var scope_ns='$locals_'+scope.id.replace(/\./g,'_')
 if(scope.C===undefined){
 if(scope.id=='__builtins__'){if(gs.blurred){
 val='('+global_ns+'["'+val+'"] || '+val+')'}else{
-this.is_builtin=true}}else if(scope.id==scope.module){if(!this.bound && scope===innermost && this.env[val]===undefined){var locs=$get_node(this).locals ||{}
+this.is_builtin=true}}else if(scope.id==scope.module){if(this.bound ||this.augm_assign){val=scope_ns+'["'+val+'"]'}else{if(scope===innermost && this.env[val]===undefined){var locs=$get_node(this).locals ||{}
 if(locs[val]===undefined){
 if(found.length>1 && found[1].id=='__builtins__'){this.is_builtin=true
 return val+$to_js(this.tree,'')}}
-return '$B.$search("'+val+'")'}
-if(!this.bound && scope!==innermost){if(innermost.locals===undefined ||innermost.locals[val]===undefined){
-val='$B.$check_def("'+val+'",'+scope_ns+'["'+val+'"])'}else{val=scope_ns+'["'+val+'"]'}}else{val=scope_ns+'["'+val+'"]'}}else{val=scope_ns+'["'+val+'"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns+'["'+val+'"]'}else{val='$locals["'+val+'"]'}}else{
-if(innermost.locals===undefined ||
-innermost.locals[val]===undefined){val='$B.$check_def_free("'+val+'",'+scope_ns+'["'+val+'"])'}else{val=scope_ns+'["'+val+'"]'}}
+return '$B.$search("'+val+'")'}else{
+val='$B.$check_def("'+val+'",'+scope_ns+'["'+val+'"])'}}}else{val=scope_ns+'["'+val+'"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns+'["'+val+'"]'}else{val='$locals["'+val+'"]'}}else if(!this.bound && !this.augm_assign){
+val='$B.$check_def_free("'+val+'",'+scope_ns+'["'+val+'"])'}else{val=scope_ns+'["'+val+'"]'}
 return val+$to_js(this.tree,'')}else{
 this.unknown_binding=true
 return '$B.$search("'+val+'")'}}}
@@ -4062,6 +4064,7 @@ $B.$py_module_path[script.name]=script.url
 try{
 var $root=$B.py2js(script.src,script.name,script.name,'__builtins__')
 var $js=$root.to_js()
+if($B.debug>1){console.log($js)}
 eval($js)
 $B.imported[script.name]=$locals}catch($err){if($B.debug>1){console.log($err)
 for(var attr in $err){console.log(attr+' : ',$err[attr])}}

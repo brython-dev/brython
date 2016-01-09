@@ -368,7 +368,9 @@ function $eval(src, _globals, _locals){
         if(_locals!==undefined){
             var lns = eval('$locals_'+locals_id)
             var setitem = getattr(_locals,'__setitem__')
-            for(var attr in lns){setitem(attr, lns[attr])}
+            for(var attr in lns){
+                setitem(attr, lns[attr])
+            }
         }else{
             for(var attr in lns){current_frame[1][attr] = lns[attr]}
         }
