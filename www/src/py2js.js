@@ -864,8 +864,9 @@ function $AugmentedAssignCtx(context, op){
 
             // For performance reasons, this is only implemented in debug mode
             if($B.debug>0){
-                var check_node = $NodeJS('$B.$check_def("'+
-                    this.tree[0].tree[0].value+'", '+this.tree[0].to_js()+')')
+                var check_node = $NodeJS('if('+this.tree[0].to_js()+
+                    '===undefined){throw NameError("name \''+
+                    this.tree[0].tree[0].value+'\' is not defined")}')
                 node.parent.insert(rank, check_node)
                 offset++
             }
