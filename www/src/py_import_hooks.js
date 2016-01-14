@@ -34,7 +34,7 @@
 
     if (is_none(spec)) {
         // No import spec found
-        throw _b_.ImportError(mod_name);
+        throw _b_.ImportError('No module named '+mod_name);
     }
 
     var _loader = _b_.getattr(spec, 'loader', _b_.None),

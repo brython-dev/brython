@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,4,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-01-09 15:43:41.963782"
+__BRYTHON__.compiled_date="2016-01-14 17:25:12.976104"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_datetime","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -442,8 +442,9 @@ var left_is_id=(this.tree[0].type=='expr' &&
 this.tree[0].tree[0].type=='id')
 if(left_is_id){
 this.tree[0].tree[0].augm_assign=true
-if($B.debug>0){var check_node=$NodeJS('$B.$check_def("'+
-this.tree[0].tree[0].value+'", '+this.tree[0].to_js()+')')
+if($B.debug>0){var check_node=$NodeJS('if('+this.tree[0].to_js()+
+'===undefined){throw NameError("name \''+
+                    this.tree[0].tree[0].value+'\' is not defined")}')
 node.parent.insert(rank,check_node)
 offset++}
 var left_id=this.tree[0].tree[0].value,was_bound=$B.bound[this.scope.id][left_id]!==undefined,left_id_unbound=this.tree[0].tree[0].unbound}
@@ -7017,10 +7018,7 @@ var alias=aliases[name]||name;
 try{
 locals[alias]=_b_.getattr(modobj,name);}
 catch($err1){
-try{
-_b_.getattr(__import__,'__call__')(mod_name + '.' + name,globals,undefined,[],0);}
-catch($err2){if($err2.__class__===_b_.ImportError.$dict){throw _b_.ImportError("cannot import name '" + name + "'")}
-throw $err2;}
+_b_.getattr(__import__,'__call__')(mod_name + '.' + name,globals,undefined,[],0);
 try{
 locals[alias]=_b_.getattr(modobj,name);}
 catch($err3){
@@ -10573,7 +10571,7 @@ for(var i=0,_len_i=_meta_path.length;i < _len_i && is_none(spec);i++){var _finde
 if(find_spec !==null){spec=_b_.getattr(find_spec,'__call__')(mod_name,_path,undefined);
 spec.blocking=blocking}}
 if(is_none(spec)){
-throw _b_.ImportError(mod_name);}
+throw _b_.ImportError('No module named '+mod_name);}
 var _loader=_b_.getattr(spec,'loader',_b_.None),_sys_modules=$B.imported,_spec_name=_b_.getattr(spec,'name');
 if(is_none(module)){
 if(!is_none(_loader)){var create_module=_b_.getattr(_loader,'create_module',_b_.None);

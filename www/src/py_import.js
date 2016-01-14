@@ -949,16 +949,8 @@ $B.$import = function(mod_name, fromlist, aliases, locals, blocking){
                 catch ($err1) {
                     // [Import spec] attempt to import a submodule with that name ...
                     // FIXME : level = 0 ? level = 1 ?
-                    try {
-                        _b_.getattr(__import__, '__call__')(mod_name + '.' + name, 
-                            globals, undefined, [], 0);
-                    }
-                    catch ($err2) {
-                        if ($err2.__class__ === _b_.ImportError.$dict) {
-                            throw _b_.ImportError("cannot import name '" + name + "'")
-                        }
-                        throw $err2;
-                    }
+                    _b_.getattr(__import__, '__call__')(mod_name + '.' + name, 
+                        globals, undefined, [], 0);
                     try {
                         // [Import spec] ... then check imported module again for name
                         locals[alias] = _b_.getattr(modobj, name);
