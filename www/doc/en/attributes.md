@@ -32,8 +32,8 @@ attribute *class*)</td><td>R/W</td>
 </tr>
 
 <tr>
-<td>*clear*</td><td>function</td><td><code>`elt.clear()</code>` removes all the 
-descendants of the element</td><td>L</td>
+<td>*clear*</td><td>méthod</td><td><code>`elt.clear()</code>` removes all the 
+descendants of the element</td><td>-</td>
 </tr>
 
 <tr>
@@ -43,6 +43,11 @@ descendants of the element</td><td>L</td>
 <tr>
 <td>*html*</td><td>string</td><td>the HTML code inside the element</td>
 <td>R/W</td>
+</tr>
+
+<tr>
+<td>*inside*</td><td>method</td><td>`elt.inside(other)` tests if `elt` is
+contained inside element `other`</td><td>-</td>
 </tr>
 
 <tr>

@@ -27,7 +27,7 @@ Comme le nom des attributs peut être différent d'un navigateur à l'autre, Bry
 </tr>
 
 <tr>
-<td>*clear*</td><td>fonction</td><td><code>`elt.clear()</code>` supprime tous les descendants de l'élément</td><td>L</td>
+<td>*clear*</td><td>méthode</td><td><code>`elt.clear()</code>` supprime tous les descendants de l'élément</td><td>-</td>
 </tr>
 
 <tr>
@@ -36,6 +36,10 @@ Comme le nom des attributs peut être différent d'un navigateur à l'autre, Bry
 
 <tr>
 <td>*html*</td><td>chaine</td><td>le code HTML  contenu dans l'élément</td><td>L/E</td>
+</tr>
+
+<tr>
+<td>*inside*</td><td>méthode</td><td>`elt.inside(autre)` teste si `elt` est contenu dans l'élément `autre`</td><td>-</td>
 </tr>
 
 <tr>
