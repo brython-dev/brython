@@ -1,13 +1,21 @@
 Attributs et méthodes des éléments
 ----------------------------------
 
-Les éléments de la page possèdent des attributs et des méthodes qui dépendent du type de l'objet ; on peut les trouver sur de nombreux sites Internet
+Les éléments de la page possèdent des attributs et des méthodes qui dépendent du type de l'objet ; ils sont définis dans les spécifications du W3C et on peut les trouver sur de nombreux sites Internet.
 
 Comme le nom des attributs peut être différent d'un navigateur à l'autre, Brython définit des attributs supplémentaires qui fonctionnent dans tous les cas :
 
 <table border=1 cellpadding=3>
 <tr>
 <th>Nom</th><th>Type</th><th>Description</th><th>L = lecture seule<br>L/E = lecture + écriture</th>
+</tr>
+
+<tr>
+<td>*abs_left*</td><td>entier</td><td>position de l'élément par rapport au bord gauche de l'écran</td><td>L</td>
+</tr>
+
+<tr>
+<td>*abs_top*</td><td>entier</td><td>position de l'élément par rapport au bord supérieur de l'écran</td><td>L</td>
 </tr>
 
 <tr>
@@ -20,6 +28,10 @@ Comme le nom des attributs peut être différent d'un navigateur à l'autre, Bry
 
 <tr>
 <td>*clear*</td><td>fonction</td><td><code>`elt.clear()</code>` supprime tous les descendants de l'élément</td><td>L</td>
+</tr>
+
+<tr>
+<td>*height*</td><td>entier</td><td>hauteur de l'élément en pixels (2)</td><td>L/E</td>
 </tr>
 
 <tr>
@@ -46,9 +58,16 @@ Comme le nom des attributs peut être différent d'un navigateur à l'autre, Bry
 <td>*top*</td><td>entier</td><td>la position de l'élément par rapport au bord supérieur du premier parent positionné (1) </td><td>L/E</td>
 </tr>
 
+<tr>
+<td>*width*</td><td>entier</td><td>largeur de l'élément en pixels (2)</td><td>L/E</td>
+</tr>
+
+
 </table>
 
 (1) En remontant dans l'arbre DOM, on s'arrête au premier élément dont l'attribut `style.position` est défini à une valeur autre que "static". `left` et `top` ont le même mode de calcul que `style.left` et `style.top` mais sont des valeurs entières et pas des chaines de caractères se terminant par `px`.
+
+(2) Même mode de calcul que `style.heigth` ou `style.width` mais ce sont des valeurs entières
 
 Pour ajouter un descendant à un élément, on utilise l'opérateur __<=__ (à visualiser comme une flèche vers la gauche, pas comme "inférieur ou égal")
 
