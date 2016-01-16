@@ -6,7 +6,6 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 <script type="text/javascript" src="/src/brython.js"></script>
-<script type="text/javascript" src="/src/py_utils.js"></script>
 
 <style type="text/css" media="screen">
   body { 
@@ -28,7 +27,7 @@
     color: #fff;
     padding: 0px;
 }
-#tools{
+.tools{
     position: absolute;
     border-width:1px;
     border-radius: 10px;
@@ -36,9 +35,26 @@
     border-color: #000;
     text-align: center;
 }
+.tool{
+    position: absolute;
+    border-width:1px;
+    border-style: solid;
+    border-color: #000;
+    text-align: center;
+    cursor: default;
+}
+.selected{
+    border-width: 4px;
+}
+.thickness{
+    background-color: #fff;
+}
 .color_panel{
     position: absolute;
-    background-color: yellow;
+    background-color: #fff;
+    border-style: solid;
+    border-color: #000;
+    border-width: 1px;
 }
 .square{
     position: absolute;
@@ -70,11 +86,336 @@ button {
 </head>   
 <body onload="brython(1)">
 
-<script type="text/python" src="draw.py"></script>
+<script type="text/python">
+from browser import window, document, alert, html, timer
+
+container = document['container'] # Game board
+zone = document['zone'] # Zone where cells move
+ctx = zone.getContext('2d')
+
+# Window dimensions
+width = window.innerWidth
+height = window.innerHeight
+tools_pos = "right" if width > height else "left"
+
+dim = min(width, height)
+
+d = int(0.03*dim) # Distance of board to top and left of browser window
+padding = int(dim/25) # Board padding
+
+# Adapt container and zone dimensions to browser window dimensions
+container.top = container.left = d
+container.style.width = container.style.height = dim-2*d-2*padding
+container.style.padding = '%spx' %padding
+
+zwidth = dim - 2*d - 2*padding
+zone.height = zwidth
+zone.width = zwidth
+
+# Get position of zone upper left corner relative to window
+ztop, zleft = zone.abs_top, zone.abs_left
+
+class Panel:
+
+    def __init__(self, zone):
+        self.X0 = self.Y0 = None    # Initial mouse or finger position
+        self.tool = 'pen'      # Current tool
+        self.drawing = False   # Current state
+        
+        self.color = '#000000'
+        self.bgcolor = '#ffffff'
+        self.rubber_size = int(zwidth/50)
+        self.line_width = 2
+
+        self.set_bindings()
+
+    def set_bindings(self):       
+        zone.bind('mousedown', self.click)
+        zone.bind('mousemove', self.move)
+        zone.bind('mouseup', self.release)
+        
+        zone.bind('touchstart', self.click)
+        zone.bind('touchmove', self.move)
+        zone.bind('touchend', self.release)
+    
+    def mouse_pos(self, ev):
+        # New mouse / finger position
+        if ev.type[:5] == 'mouse' or ev.type=='click':
+            x, y = ev.pageX, ev.pageY
+        else:
+            touch = ev.targetTouches[0]
+            x, y = touch.pageX, touch.pageY
+
+        return x, y
+    
+    def click(self, ev):
+        """Handler for mousedown or finger touch"""
+        
+        if ev.type == 'touchstart':
+            if len(ev.targetTouches)>1:
+                return
+            self.rubber_size = int(zwidth/25)
+
+        # New mouse / finger position
+        self.X0, self.Y0 = self.mouse_pos(ev)
+
+        if self.tool == 'pen':
+            ctx.lineWidth = self.line_width
+            ctx.strokeStyle = self.color
+            ctx.beginPath()
+            ctx.moveTo(self.X0-zleft, self.Y0-ztop)
+
+        elif self.tool == 'rubber':
+            ctx.beginPath()
+            ctx.fillStyle = self.bgcolor
+
+        self.drawing = True
+    
+    def release(self, ev):
+        """Handler for mouse or finger release"""
+        self.drawing = False
+        if self.tool == 'pen':
+            ctx.closePath()
+    
+    def move(self, ev):
+        """Handler for mouse or finger move"""
+    
+        if not self.drawing:
+            return
+      
+        # New mouse / finger position
+        X, Y = self.mouse_pos(ev)
+    
+        if self.tool == 'pen':
+            ctx.lineTo(X-zleft, Y-ztop)
+            ctx.stroke()
+            self.X0, self.Y0 = X, Y
+
+        elif self.tool == 'rubber':
+            ctx.rect(X-zleft, Y-ztop,
+                2*self.line_width, 2*self.line_width)
+            ctx.fill()
+
+def no_sel(ev):
+    ev.preventDefault()
+    ev.stopPropagation()
+
+# avoid default behaviour to select text when dragging mouse 
+document.bind('mousedown', no_sel)
+document.bind('mousemove', no_sel)
+document.bind('touchmove', no_sel)
+
+class ColorPicker:
+
+    def __init__(self):
+        """Initialize a color picker for pen color"""
+        
+        self.color_panel = color_panel = html.DIV(Class="color_panel")
+        document.bind('mousedown', self.remove)
+        document.bind('touchstart', self.remove)
+        color_panel.top = zwidth//10
+        color_panel.left = zwidth//10
+        color_panel.style.width = int(0.9*zwidth)
+        color_panel.style.height = int(0.9*zwidth)
+        
+        # grid to choose a color from
+        values = ['0','8','f']
+        colors = []
+        for i, r in enumerate(values):
+            for j, g in enumerate(values):
+                for k, b in enumerate(values):
+                    colors.append((i+j+k, r+g+b))
+
+        colors.sort()
+
+        # print grid
+        nb = 5
+        cw = int(0.75*zwidth/(1.1*nb))
+        padding = int(0.03*zwidth)
+
+        for rank, (_, color) in enumerate(colors[1:-1]):
+            row, col = divmod(rank, nb)
+            cell = html.DIV('&nbsp;',
+                    style=dict(position="absolute",
+                                left = padding+int(col*1.1*cw),
+                                top = padding+int(row*1.1*cw),
+                                width = cw,
+                                height = cw,
+                                backgroundColor = '#'+color,
+                                lineHeight = int(0.01*zwidth)
+                                )
+                   )
+            cell.bind('click', self.pick_rgb)
+            color_panel <= cell
+        # black and white
+        for (col, row, color) in [(1, nb, 'fff'), (3,nb,'000')]:
+            cell = html.DIV('&nbsp;',
+                    style=dict(position="absolute",
+                                left = padding+int(col*1.1*cw),
+                                top = padding+int(row*1.1*cw),
+                                width = cw,
+                                height = cw,
+                                backgroundColor = '#'+color,
+                                borderStyle='solid',
+                                borderColor='#000',
+                                borderWidth=1,
+                                lineHeight = int(0.01*zwidth)
+                                )
+                   )
+            cell.bind('click', self.pick_rgb)
+            color_panel <= cell
+
+    def show(self):
+        container <= self.color_panel
+
+    def remove(self, ev):
+        """If color panel is on, clicking outside of it removes it"""
+        ev.stopPropagation()
+        if not ev.target.inside(self.color_panel):
+            container.remove(self.color_panel)
+            document.unbind('mousedown', self.remove)
+            document.unbind('touchstart', self.remove)
+
+    def pick_rgb(self, ev):
+        ev.stopPropagation()
+        new_color = ev.target.style.backgroundColor
+        panel.color = new_color
+        tools.btn_color.style.backgroundColor = new_color
+        container.remove(self.color_panel)
+        document.unbind('mousedown', self.remove)
+        document.unbind('touchstart', self.remove)
+        
+class ThicknessPicker:
+
+    def __init__(self):
+        """Initialize a color picker for pen color"""
+        
+        self.thickness_panel = thickness_panel = html.DIV(Class="color_panel")
+        document.bind('mousedown', self.remove)
+        document.bind('touchstart', self.remove)
+        thickness_panel.top = zwidth//10
+        thickness_panel.left = zwidth//10
+        self.w = w = int(0.9*zwidth)
+        thickness_panel.style.width = w
+        thickness_panel.style.height = w
+        
+        thickness_panel <= html.IMG(src='thickness.png', width=w, height=w)
+        thickness_panel.bind('click', self.pick)
+
+    def show(self):
+        container <= self.thickness_panel
+
+    def remove(self, ev):
+        """If color panel is on, clicking outside of it removes it"""
+        ev.stopPropagation()
+        if not ev.target.inside(self.thickness_panel):
+            container.remove(self.thickness_panel)
+            document.unbind('mousedown', self.remove)
+            document.unbind('touchstart', self.remove)
+
+    def pick(self, ev):
+        ev.stopPropagation()
+        
+        y = ev.y - self.thickness_panel.abs_top
+        panel.line_width = min(round(4*self.w/100), round(5*y/100))
+        
+        container.remove(self.thickness_panel)
+        document.unbind('mousedown', self.remove)
+        document.unbind('touchstart', self.remove)
+        
+
+class ToolBox:
+
+    def __init__(self):
+        self.tools = tools = html.DIV(Class="tools")
+        
+        if tools_pos == "right":
+            tools.top = int(2*padding)
+            tools.left = dim
+            tools.width = int(0.25*container.width)
+            tools.height = int(0.9*(container.offsetHeight-2*padding))
+            w = h = int(tools.width/2)
+            btn_left = int(w/2)
+        else:
+            tools.top = dim+2*padding
+            tools.left = 2*padding
+            tools.width = int(0.9*(container.offsetWidth-2*padding))
+            tools.height = int(0.25*container.height)
+            w = h = int(tools.height/2)
+            btn_top = int(w/2)
+
+        for i, (car, tool) in enumerate([('pen.png', 'pen'), 
+            ('eraser.png', 'rubber')]):
+            btn = html.DIV(Class="tool")
+            if tools_pos=="right":
+                btn.top = int(h*(0.5+1.5*i))
+                btn.left = btn_left
+            else:
+                btn.top = btn_top
+                btn.left = int(w*(0.5+1.5*i))
+            btn.width = btn.height = w
+            btn <= html.IMG(src=car, width=w, height='w')
+            btn.bind('click', lambda ev, tool=tool:self.select(tool))
+            tools <= btn
+
+        # mark pen as selected
+        tools.children[0].classList.add('selected')
+        
+        # choose pen color
+        self.btn_color = btn_color = html.DIV('&nbsp;', Class='tool')
+        btn_color.style.backgroundColor = panel.color
+        if tools_pos=="right":
+            btn_color.top = int(3.5*h)
+            btn_color.left = btn_left
+        else:
+            btn_color.top = btn_top
+            btn_color.left = int(3.5*w)
+        btn_color.width = btn_color.height = w
+        btn_color.bind('click', lambda ev:self.select('color'))
+        tools <= btn_color
+        
+        # choose pen thickness
+        self.btn_thickness = btn_thickness = html.DIV(Class='tool')
+        btn_thickness.style.backgroundColor = '#fff'
+        if tools_pos=="right":
+            btn_thickness.top = int(5*h)
+            btn_thickness.left = btn_left
+        else:
+            btn_thickness.top = btn_top
+            btn_thickness.left = int(5*w)
+        btn_thickness.width = btn_thickness.height = w
+
+        btn_thickness <= html.IMG(src="thickness.png", width=w, height=w)        
+        
+        btn_thickness.bind('click', lambda ev:self.select('thickness'))
+        tools <= btn_thickness
+        
+        container <= self.tools
+
+    def select(self, tool):
+        if tool=='pen':
+            panel.tool = tool
+            self.tools.children[1].classList.remove('selected')
+            self.tools.children[0].classList.add('selected')
+            zone.style.cursor = 'default'
+        elif tool=='rubber':
+            panel.tool = tool
+            self.tools.children[0].classList.remove('selected')
+            self.tools.children[1].classList.add('selected')
+            zone.style.cursor = 'pointer'
+        elif tool == 'color':
+            ColorPicker().show()
+        elif tool == 'thickness':
+            ThicknessPicker().show()
+
+panel = Panel(zone)
+tools = ToolBox()
+
+</script>
 
 <div id="container">
     <canvas id="zone"></canvas>
 </div>
-<div id="tools"></div>
+
 </body>
 </html>
