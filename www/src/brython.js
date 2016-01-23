@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,5,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-01-22 23:05:29.738131"
+__BRYTHON__.compiled_date="2016-01-23 13:59:50.445545"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -8148,7 +8148,7 @@ while(len_func())pop_func()
 if(arg===undefined)return $N
 var arg=iter(arg)
 var next_func=getattr(arg,'__next__')
-var pos=self.length
+var pos=len_func()
 while(1){try{self[pos++]=next_func()}
 catch(err){if(err.__name__=='StopIteration'){break}
 else{throw err}}}
@@ -8309,17 +8309,19 @@ $ListDict.$factory=list
 list.$is_func=true
 list.__module__='builtins'
 list.__bases__=[]
-var $ListSubclassDict={__class__:$B.$type,__name__:'list'}
-for(var $attr in $ListDict){if(typeof $ListDict[$attr]=='function'){$ListSubclassDict[$attr]=(function(attr){return function(){var args=[]
-if(arguments.length>0){var args=[arguments[0].valueOf()]
+var $ListSubclassDict={__class__:$B.$type,__name__:'list',__new__: function(cls){return{__class__:cls.$dict,$t:[]}}}
+for(var $attr in $ListDict){if(typeof $ListDict[$attr]=='function' && 
+$ListDict[$attr].__class__!==$B.$factory){
+$ListDict[$attr]=(function(attr){var method=$ListDict[attr],func=function(){var self=arguments[0]
+if(self.$t!==undefined){var args=[self.$t]
+for(var i=1,len=arguments.length;i<len;i++){args.push(arguments[i])}
+return method.apply(null,args)}else{return method.apply(null,arguments)}}
+return func})($attr)
+$ListSubclassDict[$attr]=(function(attr){return function(){var args=[]
+if(arguments.length>0){var args=[arguments[0].$t]
 var pos=1
 for(var i=1,_len_i=arguments.length;i < _len_i;i++){args[pos++]=arguments[i]}}
 return $ListDict[attr].apply(null,args)}})($attr)}}
-$ListSubclassDict.__init__=function(self){var res=[],args=[res],pos=1
-for(var i=1;i<arguments.length;i++){args[pos++]=arguments[i]}
-$ListDict.__init__.apply(null,args)
-self.valueOf=function(){return res}
-return $N}
 $ListSubclassDict.__mro__=[$ListSubclassDict,$ObjectDict]
 $B.$ListSubclassFactory={__class__:$B.$factory,$dict:$ListSubclassDict}
 function $tuple(arg){return arg}

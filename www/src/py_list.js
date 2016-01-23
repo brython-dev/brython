@@ -206,7 +206,7 @@ $ListDict.__init__ = function(self,arg){
     if(arg===undefined) return $N
     var arg = iter(arg)
     var next_func = getattr(arg,'__next__')
-    var pos=self.length
+    var pos=len_func()
     while(1){
         try{self[pos++]=next_func()}
         catch(err){
@@ -226,7 +226,9 @@ $ListDict.__le__ = function(self,other){
     return !$ListDict.__gt__(self,other)
 }
 
-$ListDict.__len__ = function(self){return self.length}
+$ListDict.__len__ = function(self){
+    return self.length
+}
 
 $ListDict.__lt__ = function(self,other){
     return !$ListDict.__ge__(self,other)
@@ -561,21 +563,46 @@ list.__module__='builtins'
 list.__bases__=[]
 
 
-// dictionary and factory for subclasses of list
+// Dictionary and factory for subclasses of list
+// Instances of list subclasses are not Javascript arrays, but
+// objects with an attribute $t which is a Javascript array
 var $ListSubclassDict = {
     __class__:$B.$type,
-    __name__:'list'
+    __name__:'list',
+    __new__: function(cls){return {__class__:cls.$dict, $t: []}}
 }
 
-// the methods in subclass apply the methods in $ListDict to the
-// result of instance.valueOf(), which is a Javascript list
 for(var $attr in $ListDict){
-    if(typeof $ListDict[$attr]=='function'){
+
+    if(typeof $ListDict[$attr]=='function' && 
+      $ListDict[$attr].__class__!==$B.$factory){
+
+        // For each method of built-in list instances, add a check on the 
+        // argument "self" ; if it has the attribute $t set, it is a subclass 
+        // of list, so the method must operate on self.$t
+        // Cf issue 364
+        $ListDict[$attr] = (function(attr){
+            var method = $ListDict[attr],
+                func = function(){
+                    var self = arguments[0]
+                    if(self.$t!==undefined){
+                        var args = [self.$t]
+                        for(var i=1, len=arguments.length; i<len; i++){
+                            args.push(arguments[i])
+                        }
+                        return method.apply(null, args)
+                    }else{return method.apply(null, arguments)}
+                }
+            return func
+        })($attr)
+
+        // The methods in subclasses apply the methods in $ListDict to the
+        // attribute $t, which is a Javascript list
         $ListSubclassDict[$attr]=(function(attr){
             return function(){
                 var args = []
                 if(arguments.length>0){
-                    var args = [arguments[0].valueOf()]
+                    var args = [arguments[0].$t]
                     var pos=1
                     for(var i=1, _len_i = arguments.length; i < _len_i;i++){
                         args[pos++]=arguments[i]
@@ -586,13 +613,7 @@ for(var $attr in $ListDict){
         })($attr)
     }
 }
-$ListSubclassDict.__init__ = function(self){
-    var res = [], args=[res], pos=1
-    for(var i=1;i<arguments.length;i++){args[pos++]=arguments[i]}
-    $ListDict.__init__.apply(null, args)
-    self.valueOf = function(){return res}
-    return $N
-}
+
 $ListSubclassDict.__mro__ = [$ListSubclassDict,$ObjectDict]
 
 // factory for list subclasses
