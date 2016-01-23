@@ -626,7 +626,8 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
           return DOMNodeDict['set_'+attr](self,value)
         }
         var attr1 = attr.replace('_','-').toLowerCase()
-        if(self.elt instanceof SVGElement){
+        if(self.elt instanceof SVGElement && 
+            self.elt.getAttributeNS(null, attr1)!==null){
             self.elt.setAttributeNS(null, attr1, value)
             return
         }
