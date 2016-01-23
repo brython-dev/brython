@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 3, 0, 'alpha', 0]
-// implementation [3, 2, 4, 'final', 0]
+// implementation [3, 2, 5, 'alpha', 0]
 // version compiled from commented, indented source files at github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
 ;(function($B){
@@ -57,10 +57,10 @@ $B.has_local_storage=false
 $B.has_session_storage=false}
 $B.globals=function(){
 return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
-__BRYTHON__.implementation=[3,2,4,'final',0]
-__BRYTHON__.__MAGIC__="3.2.4"
+__BRYTHON__.implementation=[3,2,5,'alpha',0]
+__BRYTHON__.__MAGIC__="3.2.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-01-16 09:01:25.098836"
+__BRYTHON__.compiled_date="2016-01-22 23:05:29.738131"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -9934,7 +9934,8 @@ if(!_b_.bool(value)){
 DOMNodeDict.unbind(self,attr.substr(2))}else{
 DOMNodeDict.bind(self,attr.substr(2),value)}}else{if(DOMNodeDict['set_'+attr]!==undefined){return DOMNodeDict['set_'+attr](self,value)}
 var attr1=attr.replace('_','-').toLowerCase()
-if(self.elt instanceof SVGElement){self.elt.setAttributeNS(null,attr1,value)
+if(self.elt instanceof SVGElement && 
+self.elt.getAttributeNS(null,attr1)!==null){self.elt.setAttributeNS(null,attr1,value)
 return}
 if(self.elt[attr1]!==undefined){self.elt[attr1]=value;return}
 if(typeof self.elt.getAttribute=='function' && 
