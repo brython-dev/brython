@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,5,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-01-23 13:59:50.445545"
+__BRYTHON__.compiled_date="2016-01-24 19:39:23.880175"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -9891,7 +9891,7 @@ func.__name__=attr
 return func}
 if(attr=='options')return $Options(self.elt)
 if(attr=='style')return $Style(self.elt[attr])
-return $B.$JS2Py(self.elt[attr])}
+return $B.JSObject(self.elt[attr])}
 return $ObjectDict.__getattribute__(self,attr)}
 DOMNodeDict.__getitem__=function(self,key){if(self.elt.nodeType===9){
 if(typeof key==="string"){var res=self.elt.getElementById(key)
@@ -10048,9 +10048,9 @@ if(self.elt['getSelectionRange']!==undefined){return self.elt.getSelectionRange.
 DOMNodeDict.height={'__get__': function(self){
 if(self.elt.tagName=='CANVAS'){return self.elt.height}
 var res=parseInt(self.elt.style.height)
-if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'height'")}
+if(isNaN(res)){return self.elt.offsetHeight}
 return res},'__set__': function(obj,self,value){if(self.elt.tagName=='CANVAS'){self.elt.height=value}
-else{self.elt.style.height=value+'px'}}}
+self.elt.style.height=value+'px'}}
 DOMNodeDict.html=function(self){return self.elt.innerHTML}
 DOMNodeDict.id=function(self){if(self.elt.id !==undefined)return self.elt.id
 return None}
@@ -10140,9 +10140,11 @@ DOMNodeDict.value=function(self){return self.elt.value}
 DOMNodeDict.width={'__get__': function(self){
 if(self.elt.tagName=='CANVAS'){return self.elt.width}
 var res=parseInt(self.elt.style.width)
-if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'width'")}
-return res},'__set__': function(obj,self,value){if(self.elt.tagName=='CANVAS'){self.elt.width=value}
-else{self.elt.style.width=value+'px'}}}
+if(isNaN(res)){
+return self.elt.offsetWidth}
+return res},'__set__': function(obj,self,value){if(self.elt.tagName=='CANVAS'){
+self.elt.width=value}
+self.elt.style.width=value+'px'}}
 var $QueryDict={__class__:$B.$type,__name__:'query'}
 $QueryDict.__contains__=function(self,key){return self._keys.indexOf(key)>-1}
 $QueryDict.__getitem__=function(self,key){
