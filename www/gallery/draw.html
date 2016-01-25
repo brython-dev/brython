@@ -29,10 +29,6 @@
 }
 .tools{
     position: absolute;
-    border-width:1px;
-    border-radius: 10px;
-    border-style: solid;
-    border-color: #000;
     text-align: center;
 }
 .tool{
@@ -93,24 +89,39 @@ container = document['container'] # Game board
 zone = document['zone'] # Zone where cells move
 ctx = zone.getContext('2d')
 
-# Window dimensions
+# window dimensions
 width = window.innerWidth
 height = window.innerHeight
-tools_pos = "right" if width > height else "left"
-
 dim = min(width, height)
-
-d = int(0.03*dim) # Distance of board to top and left of browser window
 padding = int(dim/25) # Board padding
 
+width = int(0.95*width)
+height = int(0.95*height)
+
+# we keep the smallest dimension as is, and split the largest to
+# leave 10% for toolbar
+if width>height:
+    cwidth = width - int(height/4)
+    cheight = height
+    tools_pos = {'orient': "right",
+        'top': 0, 'left': cwidth+padding, 
+        'width': int(height/4), 'height': height}
+else:
+    cwidth = width
+    cheight = height - int(width/4)
+    tools_pos = {'orient': "bottom",
+        'top': cheight+padding, 'left': 0,
+        'width': width, 'height': int(width/4)}
+
 # Adapt container and zone dimensions to browser window dimensions
-container.top = container.left = d
-container.style.width = container.style.height = dim-2*d-2*padding
+container.top = container.left = 0
+container.width = cwidth-padding
+container.height = cheight-padding
 container.style.padding = '%spx' %padding
 
-zwidth = dim - 2*d - 2*padding
-zone.height = zwidth
-zone.width = zwidth
+zwidth = dim - 2*padding
+zone.height = container.height
+zone.width = container.width
 
 # Get position of zone upper left corner relative to window
 ztop, zleft = zone.abs_top, zone.abs_left
@@ -179,6 +190,8 @@ class Panel:
     
     def move(self, ev):
         """Handler for mouse or finger move"""
+        ev.stopPropagation()
+        ev.preventDefault()
     
         if not self.drawing:
             return
@@ -196,14 +209,6 @@ class Panel:
                 2*self.line_width, 2*self.line_width)
             ctx.fill()
 
-def no_sel(ev):
-    ev.preventDefault()
-    ev.stopPropagation()
-
-# avoid default behaviour to select text when dragging mouse 
-document.bind('mousedown', no_sel)
-document.bind('mousemove', no_sel)
-document.bind('touchmove', no_sel)
 
 class ColorPicker:
 
@@ -329,25 +334,22 @@ class ToolBox:
     def __init__(self):
         self.tools = tools = html.DIV(Class="tools")
         
-        if tools_pos == "right":
-            tools.top = int(2*padding)
-            tools.left = dim
-            tools.width = int(0.25*container.width)
-            tools.height = int(0.9*(container.offsetHeight-2*padding))
+        tools.top = tools_pos['top']
+        tools.left = tools_pos['left']
+        tools.width = tools_pos['width']
+        tools.height = tools_pos['height']
+        
+        if tools_pos['orient'] == "right":
             w = h = int(tools.width/2)
             btn_left = int(w/2)
         else:
-            tools.top = dim+2*padding
-            tools.left = 2*padding
-            tools.width = int(0.9*(container.offsetWidth-2*padding))
-            tools.height = int(0.25*container.height)
             w = h = int(tools.height/2)
             btn_top = int(w/2)
 
         for i, (car, tool) in enumerate([('pen.png', 'pen'), 
             ('eraser.png', 'rubber')]):
             btn = html.DIV(Class="tool")
-            if tools_pos=="right":
+            if tools_pos['orient']=="right":
                 btn.top = int(h*(0.5+1.5*i))
                 btn.left = btn_left
             else:
@@ -364,7 +366,7 @@ class ToolBox:
         # choose pen color
         self.btn_color = btn_color = html.DIV('&nbsp;', Class='tool')
         btn_color.style.backgroundColor = panel.color
-        if tools_pos=="right":
+        if tools_pos['orient']=="right":
             btn_color.top = int(3.5*h)
             btn_color.left = btn_left
         else:
@@ -377,7 +379,7 @@ class ToolBox:
         # choose pen thickness
         self.btn_thickness = btn_thickness = html.DIV(Class='tool')
         btn_thickness.style.backgroundColor = '#fff'
-        if tools_pos=="right":
+        if tools_pos['orient']=="right":
             btn_thickness.top = int(5*h)
             btn_thickness.left = btn_left
         else:
@@ -408,6 +410,17 @@ class ToolBox:
         elif tool == 'thickness':
             ThicknessPicker().show()
 
+
+def no_sel(ev):
+    ev.preventDefault()
+    ev.stopPropagation()
+
+# avoid default behaviour to select text when dragging mouse 
+document.bind('mousedown', no_sel)
+document.bind('mousemove', no_sel)
+document.bind('touchmove', no_sel)
+
+# build panel and tool box
 panel = Panel(zone)
 tools = ToolBox()
 
