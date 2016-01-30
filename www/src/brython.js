@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,5,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-01-30 08:38:23.348088"
+__BRYTHON__.compiled_date="2016-01-30 10:36:32.034740"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -7024,11 +7024,10 @@ var alias=aliases[name]||name;
 try{
 locals[alias]=_b_.getattr(modobj,name);}
 catch($err1){
-_b_.getattr(__import__,'__call__')(mod_name + '.' + name,globals,undefined,[],0);
-try{
+try{_b_.getattr(__import__,'__call__')(mod_name + '.' + name,globals,undefined,[],0);
 locals[alias]=_b_.getattr(modobj,name);}
 catch($err3){
-if($err3.__class__===_b_.AttributeError.$dict){$err3.__class__=_b_.ImportError.$dict;}}}}}}}
+throw _b_.ImportError("cannot import name '"+name+"'")}}}}}}
 $B.$import_non_blocking=function(mod_name,func){console.log('import non blocking',mod_name)
 $B.$import(mod_name,[],[],{},[false,func])}
 $B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path];
