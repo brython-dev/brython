@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,5,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-01-24 19:39:23.880175"
+__BRYTHON__.compiled_date="2016-01-30 08:38:23.348088"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5066,7 +5066,9 @@ $B.add=function(x,y){var z=x+y
 if(x>min_int && x<max_int && y>min_int && y<max_int
 && z>min_int && z<max_int){return z}
 else if((typeof x=='number' ||x.__class__===$B.LongInt.$dict)
-&&(typeof y=='number' ||y.__class__===$B.LongInt.$dict)){var res=$B.LongInt.$dict.__add__($B.LongInt(x),$B.LongInt(y))
+&&(typeof y=='number' ||y.__class__===$B.LongInt.$dict)){if((typeof x=='number' && isNaN(x))||
+(typeof y=='number' && isNaN(y))){return _b_.float('nan')}
+var res=$B.LongInt.$dict.__add__($B.LongInt(x),$B.LongInt(y))
 return res}else{return z}}
 $B.div=function(x,y){var z=x/y
 if(x>min_int && x<max_int && y>min_int && y<max_int
@@ -5082,12 +5084,16 @@ $B.mul=function(x,y){var z=x*y
 if(x>min_int && x<max_int && y>min_int && y<max_int
 && z>min_int && z<max_int){return z}
 else if((typeof x=='number' ||x.__class__===$B.LongInt.$dict)
-&&(typeof y=='number' ||y.__class__===$B.LongInt.$dict)){return $B.LongInt.$dict.__mul__($B.LongInt(x),$B.LongInt(y))}else{return z}}
+&&(typeof y=='number' ||y.__class__===$B.LongInt.$dict)){if((typeof x=='number' && isNaN(x))||
+(typeof y=='number' && isNaN(y))){return _b_.float('nan')}
+return $B.LongInt.$dict.__mul__($B.LongInt(x),$B.LongInt(y))}else{return z}}
 $B.sub=function(x,y){var z=x-y
 if(x>min_int && x<max_int && y>min_int && y<max_int
 && z>min_int && z<max_int){return z}
 else if((typeof x=='number' ||x.__class__===$B.LongInt.$dict)
-&&(typeof y=='number' ||y.__class__===$B.LongInt.$dict)){return $B.LongInt.$dict.__sub__($B.LongInt(x),$B.LongInt(y))}else{return z}}
+&&(typeof y=='number' ||y.__class__===$B.LongInt.$dict)){if((typeof x=='number' && isNaN(x))||
+(typeof y=='number' && isNaN(y))){return _b_.float('nan')}
+return $B.LongInt.$dict.__sub__($B.LongInt(x),$B.LongInt(y))}else{return z}}
 $B.ge=function(x,y){if(typeof x=='number' && typeof y=='number'){return x>=y}
 else if(typeof x=='number' && typeof y!='number'){return !y.pos}
 else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
@@ -9024,8 +9030,10 @@ return self.charAt(0)+'0'.repeat($.width-self.length)+self.substr(1)
 default:
 return '0'.repeat(width - self.length)+self}}
 function str(arg){if(arg===undefined)return ''
-switch(typeof arg){case 'string': return arg
-case 'number': return arg.toString()}
+switch(typeof arg){case 'string':
+return arg
+case 'number': 
+if(isFinite(arg)){return arg.toString()}}
 try{if(arg.__class__===$B.$factory){
 var func=$B.$type.__getattribute__(arg.$dict.__class__,'__str__')
 if(func.__func__===_b_.object.$dict.__str__){return func(arg)}

@@ -1129,6 +1129,8 @@ $B.add = function(x,y){
         && z>min_int && z<max_int){return z}
     else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
         && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
+        if((typeof x=='number' && isNaN(x)) ||
+            (typeof y=='number' && isNaN(y))){return _b_.float('nan')}
         var res = $B.LongInt.$dict.__add__($B.LongInt(x), $B.LongInt(y))
         return res
     }else{return z}
@@ -1163,6 +1165,8 @@ $B.mul = function(x,y){
         && z>min_int && z<max_int){return z}
     else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
         && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
+        if((typeof x=='number' && isNaN(x)) ||
+            (typeof y=='number' && isNaN(y))){return _b_.float('nan')}
         return $B.LongInt.$dict.__mul__($B.LongInt(x), $B.LongInt(y))
     }else{return z}
 }
@@ -1172,6 +1176,8 @@ $B.sub = function(x,y){
         && z>min_int && z<max_int){return z}
     else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
         && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
+        if((typeof x=='number' && isNaN(x)) ||
+            (typeof y=='number' && isNaN(y))){return _b_.float('nan')}
         return $B.LongInt.$dict.__sub__($B.LongInt(x), $B.LongInt(y))
     }else{return z}
 }

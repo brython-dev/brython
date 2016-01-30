@@ -1621,8 +1621,10 @@ $StringDict.zfill = function(self, width) {
 function str(arg){
     if(arg===undefined) return ''
     switch(typeof arg) {
-      case 'string': return arg
-      case 'number': return arg.toString()
+      case 'string':
+          return arg
+      case 'number': 
+          if(isFinite(arg)){return arg.toString()}
     }
     
     try{

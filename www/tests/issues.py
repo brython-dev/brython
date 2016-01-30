@@ -713,7 +713,7 @@ b = float("-infinity")
 assert a == b
 assert repr(a) == '-inf'
 assert a * 1. == b
-assert a * 1 == b # This test fails...
+assert a * 1 == b
 
 # issue 352
 a = float("inf")
@@ -747,6 +747,11 @@ assert isinstance(z, A)
 assert z == [1, 2, 3]
 assert len(z) == 3
 assert list.__len__(z) == 3
+
+# issue 363
+a = float('nan')
+b = 1
+c = a-b
 
 # ==========================================
 # Finally, report that all tests have passed
