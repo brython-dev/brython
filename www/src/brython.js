@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,5,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-01-30 11:57:09.522049"
+__BRYTHON__.compiled_date="2016-01-31 21:01:41.903375"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -9218,7 +9218,8 @@ if(sk!==undefined && _b_.getattr(arg,'__eq__')(sk)){return self.$string_dict[sk]
 if(self.$numeric_dict[_key]!==undefined &&
 _b_.getattr(arg,'__eq__')(_key)){return self.$numeric_dict[_key]}
 if(self.$object_dict[_key]!==undefined){return self.$object_dict[_key][1]}
-if(hasattr(self,'__missing__'))return getattr(self,'__missing__')(arg)
+if(self.__class__!==$DictDict){try{var missing_method=getattr(self.__class__.$factory,'__missing__')
+return missing_method(self,arg)}catch(err){}}
 throw KeyError(_b_.str(arg))}
 $DictDict.__hash__=function(self){if(self===undefined){return $DictDict.__hashvalue__ ||$B.$py_next_hash-- }
 throw _b_.TypeError("unhashable type: 'dict'");}
