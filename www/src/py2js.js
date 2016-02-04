@@ -51,7 +51,7 @@ var $operators = {
     "/":"truediv","%":"mod","&":"and","|":"or","~":"invert",
     "^":"xor","<":"lt",">":"gt",
     "<=":"le",">=":"ge","==":"eq","!=":"ne",
-    "or":"or","and":"and", "in":"in",
+    "or":"or","and":"and", "in":"in", "not": "not",
     "is":"is","not_in":"not_in","is_not":"is_not" // fake
 }
 
@@ -67,7 +67,7 @@ var $augmented_assigns = {
 var noassign = $B.list2obj(['True','False','None','__debug__'])
 
 // Operators weight for precedence
-var $op_order = [['or'],['and'],
+var $op_order = [['or'],['and'],['not'],
     ['in','not_in'],
     ['<','<=','>','>=','!=','==','is','is_not'],
     ['|'],
@@ -5262,6 +5262,11 @@ function $transition(context,token){
                 else if(tg=='+'){var op_expr = new $OpCtx(left,'unary_pos')}
                 else{var op_expr = new $OpCtx(left,'unary_inv')}
                 return new $AbstractExprCtx(op_expr,false)
+              case 'not':
+                context.parent.tree.pop() // remove abstract expression
+                var commas = context.with_commas
+                context = context.parent
+                return new $NotCtx(new $ExprCtx(context,'not',commas))
             }
             $_SyntaxError(context,'token '+token+' after '+context)
           case '=':
@@ -5825,6 +5830,16 @@ function $transition(context,token){
                 context.parent = expr
                 var new_op = new $OpCtx(context,op)
                 return new $AbstractExprCtx(new_op,false)
+            }else{
+                // issue #371
+                if(op === 'and' || op === 'or'){
+                    while(repl.parent.type==='not'||
+                        (repl.parent.type==='expr'&&repl.parent.parent.type==='not')){
+                        // 'and' and 'or' have higher precedence than 'not'
+                        repl = repl.parent
+                        op_parent = repl.parent
+                    }
+                }
             }
             if(repl.type==='op') {
                 var _flag=false
@@ -6799,7 +6814,8 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         "for","lambda","try","finally","raise","def","from",
         "nonlocal","while","del","global","with",
         "as","elif","else","if","yield","assert","import",
-        "except","raise","in","not","pass","with","continue","__debugger__",
+        "except","raise","in", //"not",
+        "pass","with","continue","__debugger__",
         "IMPRT" // experimental for non blocking import
         //"False","None","True","continue",
         // "and',"or","is"
@@ -7039,26 +7055,39 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                     if(unsupported.indexOf(name)>-1){
                         $_SyntaxError(context,"Unsupported Python keyword '"+name+"'")                    
                     }
-                    // if keyword is "not", see if it is followed by "in"
-                    if(name=='not'){
+                    context = $transition(context,name)
+                } else if($operators[name]!==undefined 
+                    && $B.forbidden.indexOf(name)==-1) { 
+                    // Literal operators : "and", "or", "is", "not"
+                    // The additional test is to exclude the name "constructor"
+                    if(name=='is'){
+                        // if keyword is "is", see if it is followed by "not"
+                        var re = /^\s+not\s+/
+                        var res = re.exec(src.substr(pos))
+                        if(res!==null){
+                            pos += res[0].length
+                            $pos = pos-name.length
+                            context = $transition(context,'op','is_not')
+                        }else{
+                            $pos = pos-name.length
+                            context = $transition(context,'op', name)
+                        }
+                    }else if(name=='not'){
+                        // if keyword is "not", see if it is followed by "in"
                         var re = /^\s+in\s+/
                         var res = re.exec(src.substr(pos))
                         if(res!==null){
                             pos += res[0].length
+                            $pos = pos-name.length
                             context = $transition(context,'op','not_in')
                         }else{
+                            $pos = pos-name.length
                             context = $transition(context,name)
                         }
                     }else{
-                        context = $transition(context,name)
+                        $pos = pos-name.length
+                        context = $transition(context,'op',name)
                     }
-                } else if($operators[name]!==undefined 
-                    && $B.forbidden.indexOf(name)==-1) { 
-                    // Names "and", "or"
-                    // The additional test is to exclude the name 
-                    // "constructor"
-                    $pos = pos-name.length
-                    context = $transition(context,'op',name)
                 } else if((src.charAt(pos)=='"'||src.charAt(pos)=="'")
                     && ['r','b','u','rb','br'].indexOf(name.toLowerCase())!==-1){
                     string_modifier = name.toLowerCase()

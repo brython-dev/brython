@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,5,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-01-31 21:01:41.903375"
+__BRYTHON__.compiled_date="2016-02-04 18:14:14.589393"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -76,10 +76,10 @@ $B.list2obj=function(list,value){var res={},i=list.length
 if(value===undefined){value=true}
 while(i-->0){res[list[i]]=value}
 return res}
-var $operators={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","**":"pow","//":"floordiv","<<":"lshift",">>":"rshift","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor","+":"add","-":"sub","*":"mul","/":"truediv","%":"mod","&":"and","|":"or","~":"invert","^":"xor","<":"lt",">":"gt","<=":"le",">=":"ge","==":"eq","!=":"ne","or":"or","and":"and","in":"in","is":"is","not_in":"not_in","is_not":"is_not" }
+var $operators={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","**":"pow","//":"floordiv","<<":"lshift",">>":"rshift","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor","+":"add","-":"sub","*":"mul","/":"truediv","%":"mod","&":"and","|":"or","~":"invert","^":"xor","<":"lt",">":"gt","<=":"le",">=":"ge","==":"eq","!=":"ne","or":"or","and":"and","in":"in","not": "not","is":"is","not_in":"not_in","is_not":"is_not" }
 var $augmented_assigns={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor"}
 var noassign=$B.list2obj(['True','False','None','__debug__'])
-var $op_order=[['or'],['and'],['in','not_in'],['<','<=','>','>=','!=','==','is','is_not'],['|'],['^'],['&'],['>>','<<'],['+'],['-'],['*','/','//','%'],['unary_neg','unary_inv','unary_pos'],['**']
+var $op_order=[['or'],['and'],['not'],['in','not_in'],['<','<=','>','>=','!=','==','is','is_not'],['|'],['^'],['&'],['>>','<<'],['+'],['-'],['*','/','//','%'],['unary_neg','unary_inv','unary_pos'],['**']
 ]
 var $op_weight={}
 var $weight=1
@@ -2654,7 +2654,12 @@ var left=new $UnaryCtx(C.parent,tg)
 if(tg=='-'){var op_expr=new $OpCtx(left,'unary_neg')}
 else if(tg=='+'){var op_expr=new $OpCtx(left,'unary_pos')}
 else{var op_expr=new $OpCtx(left,'unary_inv')}
-return new $AbstractExprCtx(op_expr,false)}
+return new $AbstractExprCtx(op_expr,false)
+case 'not':
+C.parent.tree.pop()
+var commas=C.with_commas
+C=C.parent
+return new $NotCtx(new $ExprCtx(C,'not',commas))}
 $_SyntaxError(C,'token '+token+' after '+C)
 case '=':
 $_SyntaxError(C,token)
@@ -3056,7 +3061,11 @@ var expr=new $ExprCtx(op_parent,'operand',C.with_commas)
 expr.expect=','
 C.parent=expr
 var new_op=new $OpCtx(C,op)
-return new $AbstractExprCtx(new_op,false)}
+return new $AbstractExprCtx(new_op,false)}else{
+if(op==='and' ||op==='or'){while(repl.parent.type==='not'||
+(repl.parent.type==='expr'&&repl.parent.parent.type==='not')){
+repl=repl.parent
+op_parent=repl.parent}}}
 if(repl.type==='op'){var _flag=false
 switch(repl.op){case '<':
 case '<=':
@@ -3707,7 +3716,8 @@ var br_open={"(":0,"[":0,"{":0}
 var br_close={")":"(","]":"[","}":"{"}
 var br_stack=""
 var br_pos=[]
-var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","not","pass","with","continue","__debugger__","IMPRT" 
+var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in",
+"pass","with","continue","__debugger__","IMPRT" 
 ]
 var unsupported=[]
 var $indented=['class','def','for','condition','single_kw','try','except','with']
@@ -3823,13 +3833,22 @@ break}}}catch(err){}
 if(name){pos +=name.length
 if(kwdict.indexOf(name)>-1){$pos=pos-name.length
 if(unsupported.indexOf(name)>-1){$_SyntaxError(C,"Unsupported Python keyword '"+name+"'")}
-if(name=='not'){var re=/^\s+in\s+/
+C=$transition(C,name)}else if($operators[name]!==undefined 
+&& $B.forbidden.indexOf(name)==-1){
+if(name=='is'){
+var re=/^\s+not\s+/
 var res=re.exec(src.substr(pos))
 if(res!==null){pos +=res[0].length
-C=$transition(C,'op','not_in')}else{C=$transition(C,name)}}else{C=$transition(C,name)}}else if($operators[name]!==undefined 
-&& $B.forbidden.indexOf(name)==-1){
 $pos=pos-name.length
-C=$transition(C,'op',name)}else if((src.charAt(pos)=='"'||src.charAt(pos)=="'")
+C=$transition(C,'op','is_not')}else{$pos=pos-name.length
+C=$transition(C,'op',name)}}else if(name=='not'){
+var re=/^\s+in\s+/
+var res=re.exec(src.substr(pos))
+if(res!==null){pos +=res[0].length
+$pos=pos-name.length
+C=$transition(C,'op','not_in')}else{$pos=pos-name.length
+C=$transition(C,name)}}else{$pos=pos-name.length
+C=$transition(C,'op',name)}}else if((src.charAt(pos)=='"'||src.charAt(pos)=="'")
 &&['r','b','u','rb','br'].indexOf(name.toLowerCase())!==-1){string_modifier=name.toLowerCase()
 name=""
 continue}else{

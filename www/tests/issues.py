@@ -753,6 +753,9 @@ a = float('nan')
 b = 1
 c = a-b
 
+# issue 371
+assert (not 'x' in ['x', 'y'] and 2==1) == False
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
