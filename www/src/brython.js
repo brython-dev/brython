@@ -4077,7 +4077,7 @@ if(ext_scripts.length>0){var script=ext_scripts.shift()
 var req=new XMLHttpRequest()
 req.onreadystatechange=callback
 req.module_name=script.name
-req.open('GET',script.url,true)
+req.open('GET',script.url,false)
 req.send()}}
 function run_script(script){
 $B.$py_module_path[script.name]=script.url
@@ -4166,12 +4166,15 @@ while(defined_ids[module_name]!==undefined){module_name='__main__'+$B.UUID()}}
 $B.scripts.push(module_name)
 var $src=null
 if($elt.src){
-ext_scripts.push({name:module_name,url:$elt.src})}else{
+var temp_ext_scripts =[]
+temp_ext_scripts.push({name:module_name,url:$elt.src})
+load_ext(temp_ext_scripts)
+/*ext_scripts.push({name:module_name,url:$elt.src})*/}else{
 var $src=($elt.innerHTML ||$elt.textContent)
 inner_scripts[module_name]=$src
 $B.$py_module_path[module_name]=$href
 run_script({name: module_name,src: $src,url: $href})}}}}
-load_ext(ext_scripts)}
+/*load_ext(ext_scripts)*/}
 $B.$operators=$operators
 $B.$Node=$Node
 $B.$NodeJSCtx=$NodeJSCtx
