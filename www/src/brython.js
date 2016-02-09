@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,5,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-02-04 18:14:14.589393"
+__BRYTHON__.compiled_date="2016-02-09 18:58:22.123025"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -6530,13 +6530,14 @@ var $JSConstructorDict={__class__:$B.$type,__name__:'JSConstructor'}
 $JSConstructorDict.__call__=function(self){
 var args=[null]
 for(var i=1,_len_i=arguments.length;i < _len_i;i++){args.push(pyobj2jsobj(arguments[i]))}
-var factory=self.func.bind.apply(self.func,args)
-var res=new factory()
+if(typeof self.func=='function'){var factory=self.func.bind.apply(self.func,args)
+var res=new factory()}else{
+var res=Object.create(self.func.prototype)}
 return $B.$JS2Py(res)}
 $JSConstructorDict.__mro__=[$JSConstructorDict,$ObjectDict]
-function JSConstructor(obj){
+function JSConstructor(obj){var func=obj.js_func===undefined ? obj.js : obj.js_func
 return{
-__class__:$JSConstructorDict,func:obj.js_func}}
+__class__:$JSConstructorDict,func:func}}
 JSConstructor.__class__=$B.$factory
 JSConstructor.$dict=$JSConstructorDict
 $JSConstructorDict.$factory=JSConstructor
@@ -8598,10 +8599,8 @@ var sign_flag=function(val,flags){flags.sign=true}
 var alternate_flag=function(val,flags){flags.alternate=true}
 var char_mapping={'s': str_format,'d': num_format,'i': num_format,'u': num_format,'o': octal_format,'r': repr_format,'a': ascii_format,'g': function(val,flags){return floating_point_format(val,false,flags)},'G': function(val,flags){return floating_point_format(val,true,flags)},'f': function(val,flags){return floating_point_decimal_format(val,false,flags)},'F': function(val,flags){return floating_point_decimal_format(val,true,flags)},'e': function(val,flags){return floating_point_exponential_format(val,false,flags)},'E': function(val,flags){return floating_point_exponential_format(val,true,flags)},'x': function(val,flags){return signed_hex_format(val,false,flags)},'X': function(val,flags){return signed_hex_format(val,true,flags)},'c': single_char_format,'0': function(val,flags){return num_flag('0',flags)},'1': function(val,flags){return num_flag('1',flags)},'2': function(val,flags){return num_flag('2',flags)},'3': function(val,flags){return num_flag('3',flags)},'4': function(val,flags){return num_flag('4',flags)},'5': function(val,flags){return num_flag('5',flags)},'6': function(val,flags){return num_flag('6',flags)},'7': function(val,flags){return num_flag('7',flags)},'8': function(val,flags){return num_flag('8',flags)},'9': function(val,flags){return num_flag('9',flags)},'-': neg_flag,' ': space_flag,'+': sign_flag,'.': decimal_point_flag,'#': alternate_flag}
 var UnsupportedChar=function(){this.name="UnsupportedChar"}
-$StringDict.__mod__=function(self,args){var length=self.length
-var pos=0 |0
-var argpos=null
-if(args && _b_.isinstance(args,_b_.tuple)){argpos=0 |0}
+$StringDict.__mod__=function(self,args){var length=self.length,pos=0 |0,argpos=null,getitem
+if(_b_.isinstance(args,_b_.tuple)){argpos=0 |0}else{getitem=_b_.getattr(args,'__getitem__',null)}
 var ret=''
 var $get_kwarg_string=function(s){
 ++pos
@@ -8610,17 +8609,15 @@ if(!rslt){throw _b_.ValueError("incomplete format key")}
 var key=rslt[1]
 newpos +=rslt[0].length
 try{
-var self=_b_.getattr(args.__class__,'__getitem__')(args,key)}catch(err){if(err.name==="KeyError"){throw err}
+var self=getitem(key)}catch(err){if(err.name==="KeyError"){throw err}
 throw _b_.TypeError("format requires a mapping")}
 return get_string_value(s,self)}
 var $get_arg_string=function(s){
 var self
 if(argpos===null){
 self=args}else{
-try{
-self=args[argpos++]}
-catch(err){if(err.name==="IndexError"){throw _b_.TypeError("not enough arguments for format string")}else{
-throw err}}}
+self=args[argpos++]
+if(self===undefined){throw _b_.TypeError("not enough arguments for format string")}}
 return get_string_value(s,self)}
 var get_string_value=function(s,self){
 var flags={'pad_char': ' '}
@@ -8640,6 +8637,7 @@ cls=typeof(self)}}else{
 cls=cls.__name__}
 throw _b_.TypeError("%" + try_char + " format: a number is required, not " + cls)}else{
 throw err}}}while(true)}
+var nbph=0 
 do{
 var newpos=self.indexOf('%',pos)
 if(newpos < 0){ret +=self.substring(pos)
@@ -8647,12 +8645,13 @@ break}
 ret +=self.substring(pos,newpos)
 ++newpos
 if(newpos < length){if(self[newpos]==='%'){ret +='%'}else{
-var tmp
+nbph++
 if(self[newpos]==='('){++newpos
 ret +=$get_kwarg_string(self)}else{
 ret +=$get_arg_string(self)}}}else{
 throw _b_.ValueError("incomplete format")}
 pos=newpos + 1}while(pos < length)
+if(argpos!==null){if(args.length>argpos){throw _b_.TypeError('not enough arguments for format string')}else if(args.length<argpos){throw _b_.TypeError('not all arguments converted during string formatting')}}else if(nbph==0){throw _b_.TypeError('not all arguments converted during string formatting')}
 return ret}
 $StringDict.__mro__=[$StringDict,$ObjectDict]
 $StringDict.__mul__=function(self,other){var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],arguments,{},null,null)

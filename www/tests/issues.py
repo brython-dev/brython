@@ -756,6 +756,11 @@ c = a-b
 # issue 371
 assert (not 'x' in ['x', 'y'] and 2==1) == False
 
+# issue 375
+def f():
+    "test" %3
+assertRaises(TypeError, f)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
