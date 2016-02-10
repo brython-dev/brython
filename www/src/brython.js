@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,5,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-02-10 21:57:34.433770"
+__BRYTHON__.compiled_date="2016-02-10 22:42:08.003689"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4076,18 +4076,21 @@ if($B.debug>0){$add_line_num(root,null,module)}
 if($B.debug>=2){var t1=new Date().getTime()
 console.log('module '+module+' translated in '+(t1 - t0)+' ms')}
 return root}
-function load_ext(ext_scripts){var found=[]
+function load_scripts(scripts){
 function callback(ev){req=ev.target
 if(req.readyState==4){if(req.status==200){run_script({name:req.module_name,url:req.responseURL,src:req.responseText})
-if(ext_scripts.length>0){load_ext(ext_scripts)}}else{throw Error("cannot load script "+
+if(scripts.length>0){load_scripts(scripts)}}else{throw Error("cannot load script "+
 req.module_name+' at '+req.responseURL+
 ': error '+req.status)}}}
-if(ext_scripts.length>0){var script=ext_scripts.shift()
+if(scripts.length>0){var script=scripts.shift()
+if(script['src']===undefined){
 var req=new XMLHttpRequest()
 req.onreadystatechange=callback
 req.module_name=script.name
 req.open('GET',script.url,true)
-req.send()}}
+req.send()}else{
+run_script(script)
+load_scripts(scripts)}}}
 function run_script(script){
 $B.$py_module_path[script.name]=script.url
 try{
@@ -4166,7 +4169,7 @@ var defined_ids={}
 for(var i=0;i<$elts.length;i++){var elt=$elts[i]
 if(elt.id){if(defined_ids[elt.id]){throw Error("Brython error : Found 2 scripts with the same id '"+
 elt.id+"'")}else{defined_ids[elt.id]=true}}}
-var inner_scripts={},ext_scripts=[]
+var scripts=[]
 for(var $i=0;$i<$elts.length;$i++){var $elt=$elts[$i]
 if($elt.type=="text/python"||$elt.type==="text/python3"){if($elt.id){module_name=$elt.id}
 else{if(first_script){module_name='__main__';first_script=false}
@@ -4175,12 +4178,11 @@ while(defined_ids[module_name]!==undefined){module_name='__main__'+$B.UUID()}}
 $B.scripts.push(module_name)
 var $src=null
 if($elt.src){
-ext_scripts.push({name:module_name,url:$elt.src})}else{
+scripts.push({name:module_name,url:$elt.src})}else{
 var $src=($elt.innerHTML ||$elt.textContent)
-inner_scripts[module_name]=$src
 $B.$py_module_path[module_name]=$href
-run_script({name: module_name,src: $src,url: $href})}}}}
-load_ext(ext_scripts)}
+scripts.push({name: module_name,src: $src,url: $href})}}}}
+load_scripts(scripts)}
 $B.$operators=$operators
 $B.$Node=$Node
 $B.$NodeJSCtx=$NodeJSCtx
