@@ -297,11 +297,13 @@ function $eval(src, _globals, _locals){
         parent_block_id = current_globals_id
         eval('var $locals_'+current_globals_id+'=current_frame[3]')
     }else{
+        $B.bound[globals_id] = {}
         var items = _b_.dict.$dict.items(_globals), item
         while(1){
             try{
                 var item = next(items)
                 eval('$locals_'+globals_id+'["'+item[0]+'"] = item[1]')
+                $B.bound[globals_id][item[0]]=true
             }catch(err){
                 break
             }

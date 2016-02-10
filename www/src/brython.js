@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,5,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-02-09 18:58:22.123025"
+__BRYTHON__.compiled_date="2016-02-10 21:57:34.433770"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -683,6 +683,12 @@ var args_str=pos_args.join(', ')
 if(star_args){args_str='$B.extend_list('+args_str
 if(pos_args.length>0){args_str +=','}
 args_str +='_b_.list('+star_args+'))'}
+if(this.func.value=="fghjk"){var kw_args_str='{'+kw_args.join(', ')+'}'
+if(dstar_args){kw_args_str='$B.extend("'+this.func.value+'",'+kw_args_str
+kw_args_str +=','+dstar_args+')'}else if(kw_args_str=='{}'){kw_args_str=''}
+var res='getattr('+func_js+',"__call__")('+args_str
+if(kw_args_str.length>0){res +=', '+kw_args_str}
+return res + ')'}
 var kw_args_str='{'+kw_args.join(', ')+'}'
 if(dstar_args){kw_args_str='{$nat:"kw",kw:$B.extend("'+this.func.value+'",'+kw_args_str
 kw_args_str +=','+dstar_args+')}'}else if(kw_args_str!=='{}'){kw_args_str='{$nat:"kw",kw:'+kw_args_str+'}'}else{kw_args_str=''}
@@ -1662,6 +1668,7 @@ if(scope.parent_block){scope=scope.parent_block}
 else{break}}
 this.found=found
 if(this.nonlocal && found[0]===innermost){found.shift()}
+if(val=='fghj'){console.log('found for',val,found)}
 if(found.length>0){
 if(!this.bound && found[0].C && found[0]===innermost
 && val.charAt(0)!='$'){var locs=$get_node(this).locals ||{},nonlocs=innermost.nonlocals
@@ -1681,7 +1688,9 @@ var scope_ns='$locals_'+scope.id.replace(/\./g,'_')
 if(scope.C===undefined){
 if(scope.id=='__builtins__'){if(gs.blurred){
 val='('+global_ns+'["'+val+'"] || '+val+')'}else{
-this.is_builtin=true}}else if(scope.id==scope.module){if(this.bound ||this.augm_assign){val=scope_ns+'["'+val+'"]'}else{if(scope===innermost && this.env[val]===undefined){var locs=$get_node(this).locals ||{}
+this.is_builtin=true}}else if(scope.id==scope.module){if(val=='fghj'){console.log('module level',this.augm_assign)}
+if(this.bound ||this.augm_assign){if(val=='fghj'){console.log('simple',val)}
+val=scope_ns+'["'+val+'"]'}else{if(scope===innermost && this.env[val]===undefined){var locs=$get_node(this).locals ||{}
 if(locs[val]===undefined){
 if(found.length>1 && found[1].id=='__builtins__'){this.is_builtin=true
 return val+$to_js(this.tree,'')}}
@@ -4588,6 +4597,16 @@ $MethodFactory.$dict=$B.$MethodDict
 $B.$InstanceMethodDict={__class__:$B.$type,__name__:'instancemethod',__mro__:[_b_.object.$dict],$factory:$MethodFactory}})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 $B.args=function($fname,argcount,slots,var_names,$args,$dobj,extra_pos_args,extra_kw_args){
+if($fname=='fghjk'){var pos_args=$args[0],nb_pos_args=pos_args.length,nb_var_names=var_names.length,kw_args=$args[1]
+if(extra_pos_args!==null){slots[extra_pos_args]=[]}
+if(extra_kw_args!==null){slots[extra_kw_args]=_b_.dict()}
+if(nb_pos_args==var_names.length){for(var i=0;i<pos_args.length;i++){slots[var_names[i]]=pos_args[i]}}else if(nb_pos_args>nb_var_names){if(extra_pos_args!==null){for(var i=0;i<nb_var_names;i++){slots[var_names[i]]=pos_args[i]}
+slots[extra_pos_args]=pos_args.slice(nb_var_names)}}
+for(var attr in kw_args){if(slots[attr]===undefined){if(extra_kw_args){slots[extra_kw_args].$string_dict[attr]=kw_args[attr]}
+else{throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")}}else{if(slots[attr]!==null){console.log(slots)
+throw _b_.TypeError($fname+"() got multiple values for argument '"+attr+"'")}
+slots[attr]=kw_args[i]}}
+return slots}
 var has_kw_args=false,nb_pos=$args.length,$ns
 if(nb_pos>0 && $args[nb_pos-1].$nat=='kw'){has_kw_args=true
 nb_pos--
@@ -5254,9 +5273,11 @@ eval('var $locals_'+locals_id+' = {}')
 if(_globals===undefined){for(var attr in current_frame[3]){eval('$locals_'+globals_id+'["'+attr+
 '"] = current_frame[3]["'+attr+'"]')}
 parent_block_id=current_globals_id
-eval('var $locals_'+current_globals_id+'=current_frame[3]')}else{var items=_b_.dict.$dict.items(_globals),item
+eval('var $locals_'+current_globals_id+'=current_frame[3]')}else{$B.bound[globals_id]={}
+var items=_b_.dict.$dict.items(_globals),item
 while(1){try{var item=next(items)
-eval('$locals_'+globals_id+'["'+item[0]+'"] = item[1]')}catch(err){break}}
+eval('$locals_'+globals_id+'["'+item[0]+'"] = item[1]')
+$B.bound[globals_id][item[0]]=true}catch(err){break}}
 parent_block_id='__builtins__'}
 if(_locals===undefined){if(_globals!==undefined){eval('var $locals_'+locals_id+' = $locals_'+globals_id)}else{for(var attr in current_frame[1]){eval('$locals_'+locals_id+'["'+attr+
 '"] = current_frame[1]["'+attr+'"]')}}}else{var items=_b_.dict.$dict.items(_locals),item

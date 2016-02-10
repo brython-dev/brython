@@ -848,7 +848,7 @@ function $AugmentedAssignCtx(context, op){
         
         var left_is_id = (this.tree[0].type=='expr' && 
             this.tree[0].tree[0].type=='id')
-
+        
         if(left_is_id){
             // Set attribute "augm_assign" of $IdCtx instance, so that
             // the id will not be resolved with $B.$check_undef()
@@ -1273,6 +1273,20 @@ function $CallCtx(context){
                 if(pos_args.length>0){args_str += ','}
                 args_str += '_b_.list('+star_args+'))'
             }
+
+            if(this.func.value=="fghjk"){
+                var kw_args_str = '{'+kw_args.join(', ')+'}'
+                if(dstar_args){
+                    kw_args_str = '$B.extend("'+this.func.value+'",'+kw_args_str
+                    kw_args_str += ','+dstar_args+')'
+                }else if(kw_args_str=='{}'){
+                    kw_args_str = ''
+                }
+                var res = 'getattr('+func_js+',"__call__")('+args_str
+                if(kw_args_str.length>0){res += ', '+kw_args_str}
+                return res + ')'
+            }        
+
             var kw_args_str = '{'+kw_args.join(', ')+'}'
             if(dstar_args){
                 kw_args_str = '{$nat:"kw",kw:$B.extend("'+this.func.value+'",'+kw_args_str
@@ -1282,6 +1296,9 @@ function $CallCtx(context){
             }else{
                 kw_args_str = ''
             }
+
+
+
             if(star_args && kw_args_str){
                 args_str += '.concat(['+kw_args_str+'])'            
             }else{
@@ -1298,7 +1315,7 @@ function $CallCtx(context){
             }else{
                 args_str = '('+args_str+')'
             }
-            
+
             if($B.debug>0){
                 // On debug mode, always use getattr(func,"__call__") to manage
                 // the call stack and get correct error messages
@@ -3257,6 +3274,8 @@ function $IdCtx(context,value){
         }
         this.found = found
         if(this.nonlocal && found[0]===innermost){found.shift()}
+        
+        if(val=='fghj'){console.log('found for', val, found)}
 
         if(found.length>0){
             // If name is not in the left part of an assignment, 
@@ -3342,7 +3361,9 @@ function $IdCtx(context,value){
                         this.is_builtin = true
                     }
                 }else if(scope.id==scope.module){
+                    if(val=='fghj'){console.log('module level', this.augm_assign)}
                     if(this.bound || this.augm_assign){
+                        if(val=='fghj'){console.log('simple', val)}
                         val = scope_ns+'["'+val+'"]'
                     }else{
                         if(scope===innermost && this.env[val]===undefined){
@@ -3396,7 +3417,7 @@ function $IdCtx(context,value){
             // If the name exists at run time in the global namespace, use it,
             // else raise a NameError
             // Function $search is defined in py_utils.js
-            
+
             return '$B.$search("'+val+'")'
         }
     }
@@ -7454,7 +7475,7 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
         var t1 = new Date().getTime()
         console.log('module '+module+' translated in '+(t1 - t0)+' ms')
     }
-
+    
     return root
 }
 
