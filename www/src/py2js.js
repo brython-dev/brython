@@ -1275,6 +1275,7 @@ function $CallCtx(context){
             }
 
             if(this.func.value=="fghjk"){
+                console.log('fghjk')
                 var kw_args_str = '{'+kw_args.join(', ')+'}'
                 if(dstar_args){
                     kw_args_str = '$B.extend("'+this.func.value+'",'+kw_args_str
@@ -1282,7 +1283,7 @@ function $CallCtx(context){
                 }else if(kw_args_str=='{}'){
                     kw_args_str = ''
                 }
-                var res = 'getattr('+func_js+',"__call__")('+args_str
+                var res = 'getattr('+func_js+',"__call__")(['+args_str+']'
                 if(kw_args_str.length>0){res += ', '+kw_args_str}
                 return res + ')'
             }        
@@ -2048,10 +2049,18 @@ function $DefCtx(context){
 
         var make_args_nodes = []
         var func_ref = '$locals_'+scope.id.replace(/\./g,'_')+'["'+this.name+'"]'
-        var js = 'var $ns = $B.args("'+this.name+'", '
+        if(this.name=='fghjk'){
+            var js = 'var $ns = $B.argsfast("'+this.name+'", '
+        }else{
+            var js = 'var $ns = $B.args("'+this.name+'", '
+        }
         js += this.argcount+', {'+this.slots.join(', ')+'}, '
         js += '['+slot_list.join(', ')+'], '
-        js += 'arguments, '
+        if(this.name=='fghjk'){
+            js += 'pos_args, kw_args, '
+        }else{
+            js += 'arguments, '
+        }
         if(defs1.length){js += '$defaults, '}
         else{js += '{}, '}
         js += this.other_args+', '+this.other_kw+');'
@@ -2158,7 +2167,7 @@ function $DefCtx(context){
             var params = Object.keys(this.varnames).concat(['$extra']).join(', ')
             new $NodeJSCtx(def_func_node,'return function('+params+')')
         }else{
-            new $NodeJSCtx(def_func_node,'return function()')
+            new $NodeJSCtx(def_func_node,'return function(pos_args, kw_args)')
         }
         def_func_node.is_def_func = true
         def_func_node.module = this.module
