@@ -227,6 +227,7 @@ $B.exception = function(js_exc){
         
         if($B.debug>0 && js_exc.info===undefined){
             var _frame = $B.last($B.frames_stack)
+            if(_frame===undefined){_frame=$B.pmframe} // use post-mortem frame
             if(_frame && _frame[1].$line_info!==undefined){
                 var line_info = _frame[1].$line_info.split(',')
                 var mod_name = line_info[1]
@@ -242,9 +243,14 @@ $B.exception = function(js_exc){
                     if($B.$py_src[mod_name]===undefined){
                         console.log('pas de py_src pour '+mod_name)
                     }
-                    var lines = $B.$py_src[mod_name].split('\n')
-                    js_exc.message += "\n  module '"+lib_module+"' line "+line_num
-                    js_exc.message += '\n'+lines[line_num-1]
+                    var lines = $B.$py_src[mod_name].split('\n'),
+                        msg = js_exc.message.toString()
+                    // For some weird reason, nothing can be added to js_exc.message
+                    // so we have to create another attribute with the complete
+                    // error message including line in source code
+                    msg += "\n  module '"+lib_module+"' line "+line_num
+                    msg += '\n'+lines[line_num-1]
+                    js_exc.msg = msg
                     js_exc.info_in_msg = true
                 }
             }else{
@@ -263,7 +269,7 @@ $B.exception = function(js_exc){
             exc.__name__='RuntimeError'
             exc.__class__=_b_.RuntimeError.$dict
         }
-        exc.$message = js_exc.message || '<'+js_exc+'>'
+        exc.$message = js_exc.msg || '<'+js_exc+'>'
         exc.args = _b_.tuple([exc.$message])
         exc.info = ''
         exc.$py_error = true

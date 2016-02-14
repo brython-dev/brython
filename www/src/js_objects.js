@@ -55,7 +55,6 @@ $JSConstructorDict.__call__ = function(self){
 $JSConstructorDict.__mro__ = [$JSConstructorDict,$ObjectDict]
 
 function JSConstructor(obj){
-    //if(obj.__class__===$JSObjectDict){obj = obj.js}
     return {
         __class__:$JSConstructorDict,
         func:obj.js_func
@@ -357,7 +356,14 @@ $JSObjectDict.__str__ = $JSObjectDict.__repr__
 var no_dict = {'string':true,'function':true,'number':true,'boolean':true}
 
 $JSObjectDict.bind = function(self, evt, func){
-    return $JSObjectDict.__getattribute__(self, 'addEventListener').js(evt, func)
+    var f = function(){
+        try{
+            func.apply(null, arguments)
+        }catch(err){
+            throw $B.exception(err)
+        }
+    }
+    return $JSObjectDict.__getattribute__(self, 'addEventListener').js(evt, f)
 }
 
 $JSObjectDict.to_dict = function(self){

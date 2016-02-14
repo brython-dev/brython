@@ -4621,7 +4621,10 @@ function $TryCtx(context){
         // Fake line to start the 'else if' clauses
         var new_node = new $Node()
         // Set the boolean $failed to true
-        new $NodeJSCtx(new_node,$var+'=true;if(0){}')
+        // Set attribute "pmframe" (post mortem frame) to $B in case an error
+        // happens in a callback function ; in this case the frame would be
+        // lost at the time the exception is handled by $B.exception
+        new $NodeJSCtx(new_node,$var+'=true;$B.pmframe=$B.last($B.frames_stack);if(0){}')
         catch_node.insert(0,new_node)
         
         var pos = rank+2
