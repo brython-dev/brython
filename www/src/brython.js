@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,5,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-02-19 21:09:28.786580"
+__BRYTHON__.compiled_date="2016-02-19 21:32:20.601044"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -6442,8 +6442,11 @@ if(from_unicode[enc]===undefined){var mod=_b_.__import__('encodings.'+enc),table
 from_unicode[enc]={}
 for(var i=0;i<table.length;i++){from_unicode[enc][table.charCodeAt(i)]=i}}}
 function decode(b,encoding,errors){var s='',enc=normalise(encoding)
-switch(enc){case 'utf-8':
+switch(enc){case 'utf_8':
+case 'utf-8':
 case 'utf8':
+case 'U8':
+case 'UTF':
 var i=0,cp
 var _int_800=_int('800'),_int_c2=_int('c2'),_int_1000=_int('1000')
 var _int_e0=_int('e0'),_int_e1=_int('e1'),_int_e3=_int('e3')
@@ -6465,9 +6468,15 @@ i +=3}else{if(errors=='surrogateescape'){s+='\\udc' + _hex(b[i])
 i+=1}else{
 $UnicodeDecodeError(encoding,i)}}}}
 break;
-case 'latin1':
-case 'iso8859_1':
+case 'latin_1':
 case 'windows1252':
+case 'iso-8859-1':
+case 'iso8859-1':
+case '8859':
+case 'cp819':
+case 'latin':
+case 'latin1':
+case 'L1':
 for(var i=0,_len_i=b.length;i < _len_i;i++)s +=String.fromCharCode(b[i])
 break;
 case 'ascii':
