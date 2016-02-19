@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,5,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-02-11 16:43:53.006020"
+__BRYTHON__.compiled_date="2016-02-19 21:09:28.786580"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -683,10 +683,11 @@ var args_str=pos_args.join(', ')
 if(star_args){args_str='$B.extend_list('+args_str
 if(pos_args.length>0){args_str +=','}
 args_str +='_b_.list('+star_args+'))'}
-if(this.func.value=="fghjk"){var kw_args_str='{'+kw_args.join(', ')+'}'
+if(this.func.value=="fghjk"){console.log('fghjk')
+var kw_args_str='{'+kw_args.join(', ')+'}'
 if(dstar_args){kw_args_str='$B.extend("'+this.func.value+'",'+kw_args_str
 kw_args_str +=','+dstar_args+')'}else if(kw_args_str=='{}'){kw_args_str=''}
-var res='getattr('+func_js+',"__call__")('+args_str
+var res='getattr('+func_js+',"__call__")(['+args_str+']'
 if(kw_args_str.length>0){res +=', '+kw_args_str}
 return res + ')'}
 var kw_args_str='{'+kw_args.join(', ')+'}'
@@ -1042,10 +1043,10 @@ nodes.push(enter_frame_node)
 this.env=[]
 var make_args_nodes=[]
 var func_ref='$locals_'+scope.id.replace(/\./g,'_')+'["'+this.name+'"]'
-var js='var $ns = $B.args("'+this.name+'", '
+if(this.name=='fghjk'){var js='var $ns = $B.argsfast("'+this.name+'", '}else{var js='var $ns = $B.args("'+this.name+'", '}
 js +=this.argcount+', {'+this.slots.join(', ')+'}, '
 js +='['+slot_list.join(', ')+'], '
-js +='arguments, '
+if(this.name=='fghjk'){js +='pos_args, kw_args, '}else{js +='arguments, '}
 if(defs1.length){js +='$defaults, '}
 else{js +='{}, '}
 js +=this.other_args+', '+this.other_kw+');'
@@ -1105,7 +1106,7 @@ nodes.push(make_args_nodes[1])}
 for(var i=nodes.length-1;i>=0;i--){node.children.splice(0,0,nodes[i])}
 var def_func_node=new $Node()
 if(only_positional){var params=Object.keys(this.varnames).concat(['$extra']).join(', ')
-new $NodeJSCtx(def_func_node,'return function('+params+')')}else{new $NodeJSCtx(def_func_node,'return function()')}
+new $NodeJSCtx(def_func_node,'return function('+params+')')}else{new $NodeJSCtx(def_func_node,'return function(pos_args, kw_args)')}
 def_func_node.is_def_func=true
 def_func_node.module=this.module
 for(var i=0;i<node.children.length;i++){def_func_node.add(node.children[i])}
@@ -2313,7 +2314,7 @@ new $NodeJSCtx(catch_node,'catch($err'+$loop_num+')')
 catch_node.is_catch=true
 node.parent.insert(rank+1,catch_node)
 var new_node=new $Node()
-new $NodeJSCtx(new_node,$var+'=true;if(0){}')
+new $NodeJSCtx(new_node,$var+'=true;$B.pmframe=$B.last($B.frames_stack);if(0){}')
 catch_node.insert(0,new_node)
 var pos=rank+2
 var has_default=false 
@@ -4599,16 +4600,6 @@ $MethodFactory.$dict=$B.$MethodDict
 $B.$InstanceMethodDict={__class__:$B.$type,__name__:'instancemethod',__mro__:[_b_.object.$dict],$factory:$MethodFactory}})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 $B.args=function($fname,argcount,slots,var_names,$args,$dobj,extra_pos_args,extra_kw_args){
-if($fname=='fghjk'){var pos_args=$args[0],nb_pos_args=pos_args.length,nb_var_names=var_names.length,kw_args=$args[1]
-if(extra_pos_args!==null){slots[extra_pos_args]=[]}
-if(extra_kw_args!==null){slots[extra_kw_args]=_b_.dict()}
-if(nb_pos_args==var_names.length){for(var i=0;i<pos_args.length;i++){slots[var_names[i]]=pos_args[i]}}else if(nb_pos_args>nb_var_names){if(extra_pos_args!==null){for(var i=0;i<nb_var_names;i++){slots[var_names[i]]=pos_args[i]}
-slots[extra_pos_args]=pos_args.slice(nb_var_names)}}
-for(var attr in kw_args){if(slots[attr]===undefined){if(extra_kw_args){slots[extra_kw_args].$string_dict[attr]=kw_args[attr]}
-else{throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")}}else{if(slots[attr]!==null){console.log(slots)
-throw _b_.TypeError($fname+"() got multiple values for argument '"+attr+"'")}
-slots[attr]=kw_args[i]}}
-return slots}
 var has_kw_args=false,nb_pos=$args.length,$ns
 if(nb_pos>0 && $args[nb_pos-1].$nat=='kw'){has_kw_args=true
 nb_pos--
@@ -4632,6 +4623,22 @@ slots[key]=value}}}
 var missing=[]
 for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}
 else{missing.push("'"+attr+"'")}}}
+if(missing.length>0){if(missing.length==1){throw _b_.TypeError($fname+" missing 1 positional argument: "+missing[0])}else{var msg=$fname+" missing "+missing.length+" positional arguments: "
+msg +=missing.join(' and ')
+throw _b_.TypeError(msg)}}
+return slots}
+$B.argsfast=function($fname,argcount,slots,var_names,pos_args,kw_args,$dobj,extra_pos_args,extra_kw_args){
+var nb_pos_args=pos_args.length,nb_var_names=var_names.length
+if(extra_pos_args!==null){slots[extra_pos_args]=[]}
+if(extra_kw_args!==null){slots[extra_kw_args]=_b_.dict()}
+if(nb_pos_args<=nb_var_names){for(var i=0;i<nb_pos_args;i++){slots[var_names[i]]=pos_args[i]}}else if(nb_pos_args>nb_var_names){if(extra_pos_args!==null){for(var i=0;i<nb_var_names;i++){slots[var_names[i]]=pos_args[i]}
+slots[extra_pos_args]=pos_args.slice(nb_var_names)}}
+for(var attr in kw_args){if(slots[attr]===undefined){if(extra_kw_args){slots[extra_kw_args].$string_dict[attr]=kw_args[attr]}
+else{throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")}}else{if(slots[attr]!==null){throw _b_.TypeError($fname+"() got multiple values for argument '"+attr+"'")}
+slots[attr]=kw_args[i]}}
+var missing=[]
+for(var attr in slots){if(slots[attr]===null){if($dobj[attr]===undefined){missing.push(attr)}
+slots[attr]=$dobj[attr]}}
 if(missing.length>0){if(missing.length==1){throw _b_.TypeError($fname+" missing 1 positional argument: "+missing[0])}else{var msg=$fname+" missing "+missing.length+" positional arguments: "
 msg +=missing.join(' and ')
 throw _b_.TypeError(msg)}}
@@ -6042,6 +6049,7 @@ _b_.BaseException=BaseException
 $B.exception=function(js_exc){
 if(!js_exc.$py_error){
 if($B.debug>0 && js_exc.info===undefined){var _frame=$B.last($B.frames_stack)
+if(_frame===undefined){_frame=$B.pmframe}
 if(_frame && _frame[1].$line_info!==undefined){var line_info=_frame[1].$line_info.split(',')
 var mod_name=line_info[1]
 var module=$B.modules[mod_name]
@@ -6050,9 +6058,10 @@ var mod_name=line_info[1]}
 var lib_module=mod_name
 var line_num=parseInt(line_info[0])
 if($B.$py_src[mod_name]===undefined){console.log('pas de py_src pour '+mod_name)}
-var lines=$B.$py_src[mod_name].split('\n')
-js_exc.message +="\n  module '"+lib_module+"' line "+line_num
-js_exc.message +='\n'+lines[line_num-1]
+var lines=$B.$py_src[mod_name].split('\n'),msg=js_exc.message.toString()
+msg +="\n  module '"+lib_module+"' line "+line_num
+msg +='\n'+lines[line_num-1]
+js_exc.msg=msg
 js_exc.info_in_msg=true}}else{console.log('error ',js_exc)}}
 var exc=Error()
 exc.__name__='Internal Javascript error: '+(js_exc.__name__ ||js_exc.name)
@@ -6062,7 +6071,7 @@ if(js_exc.name=='ReferenceError'){exc.__name__='NameError'
 exc.__class__=_b_.NameError.$dict
 js_exc.message=js_exc.message.replace('$$','')}else if(js_exc.name=="InternalError"){exc.__name__='RuntimeError'
 exc.__class__=_b_.RuntimeError.$dict}
-exc.$message=js_exc.message ||'<'+js_exc+'>'
+exc.$message=js_exc.msg ||'<'+js_exc+'>'
 exc.args=_b_.tuple([exc.$message])
 exc.info=''
 exc.$py_error=true
@@ -6553,14 +6562,12 @@ var $JSConstructorDict={__class__:$B.$type,__name__:'JSConstructor'}
 $JSConstructorDict.__call__=function(self){
 var args=[null]
 for(var i=1,_len_i=arguments.length;i < _len_i;i++){args.push(pyobj2jsobj(arguments[i]))}
-if(typeof self.func=='function'){var factory=self.func.bind.apply(self.func,args)
-var res=new factory()}else{
-var res=Object.create(self.func.prototype)}
+var factory=self.func.bind.apply(self.func,args)
+var res=new factory()
 return $B.$JS2Py(res)}
 $JSConstructorDict.__mro__=[$JSConstructorDict,$ObjectDict]
-function JSConstructor(obj){var func=obj.js_func===undefined ? obj.js : obj.js_func
-return{
-__class__:$JSConstructorDict,func:func}}
+function JSConstructor(obj){return{
+__class__:$JSConstructorDict,func:obj.js_func}}
 JSConstructor.__class__=$B.$factory
 JSConstructor.$dict=$JSConstructorDict
 $JSConstructorDict.$factory=JSConstructor
@@ -6673,7 +6680,8 @@ throw err}}}}}
 $JSObjectDict.__setitem__=$JSObjectDict.__setattr__
 $JSObjectDict.__str__=$JSObjectDict.__repr__
 var no_dict={'string':true,'function':true,'number':true,'boolean':true}
-$JSObjectDict.bind=function(self,evt,func){return $JSObjectDict.__getattribute__(self,'addEventListener').js(evt,func)}
+$JSObjectDict.bind=function(self,evt,func){var f=function(){try{func.apply(null,arguments)}catch(err){throw $B.exception(err)}}
+return $JSObjectDict.__getattribute__(self,'addEventListener').js(evt,f)}
 $JSObjectDict.to_dict=function(self){
 var res=_b_.dict()
 for(var key in self.js){var value=self.js[key]
