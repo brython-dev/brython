@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,5,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-02-19 21:32:20.601044"
+__BRYTHON__.compiled_date="2016-02-23 11:45:19.107808"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5163,6 +5163,7 @@ return result + pattern;}}
 _b_.__debug__=false
 var $ObjectDict=_b_.object.$dict
 $B.$comps={'>':'gt','>=':'ge','<':'lt','<=':'le'}
+$B.$inv_comps={'>': 'le','>=': 'lt','<': 'ge','<=': 'gt'}
 function abs(obj){if(isinstance(obj,_b_.int))return _b_.int(Math.abs(obj));
 if(isinstance(obj,_b_.float))return _b_.float(Math.abs(obj));
 if(hasattr(obj,'__abs__')){return getattr(obj,'__abs__')()};
@@ -7114,11 +7115,9 @@ exponent--}}
 numerator=float(fp)
 py_exponent=abs(exponent)
 denominator=1
-console.log(exponent,py_exponent,numerator,denominator)
 py_exponent=_b_.getattr(int(denominator),"__lshift__")(py_exponent)
 if(exponent > 0){numerator=numerator * py_exponent}else{
 denominator=py_exponent}
-console.log(exponent,py_exponent,numerator,denominator)
 return _b_.tuple([_b_.int(numerator),_b_.int(denominator)])}
 $FloatDict.__bool__=function(self){return _b_.bool(self.valueOf())}
 $FloatDict.__class__=$B.$type
@@ -7349,11 +7348,19 @@ eval('$FloatDict.__'+$ops[$op]+'__ = '+$opf)}
 var $comp_func=function(self,other){if(isinstance(other,_b_.int)){if(other.__class__===$B.LongInt.$dict){return self > parseInt(other.value)}
 return self > other.valueOf()}
 if(isinstance(other,float))return self > other
+if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.$dict.__hash__(other)}
+if(hasattr(other,'__int__')||hasattr(other,'__index__')){return $IntDict.__gt__(self,$B.$GetInt(other))}
+var inv_op=getattr(other,'__le__',null)
+if(inv_op !==null){return inv_op(self)}
+var inv_op=getattr(other,'__le__',null)
+if(inv_op !==null){return inv_op(self)}
 throw _b_.TypeError(
 "unorderable types: "+self.__class__.__name__+'() > '+$B.get_class(other).__name__+"()")}
 $comp_func +='' 
-var $comps={'>':'gt','>=':'ge','<':'lt','<=':'le'}
-for(var $op in $comps){eval("$FloatDict.__"+$comps[$op]+'__ = '+$comp_func.replace(/>/gm,$op))}
+for(var $op in $B.$comps){eval("$FloatDict.__"+$B.$comps[$op]+'__ = '+
+$comp_func.replace(/>/gm,$op).
+replace(/__gt__/gm,'__'+$B.$comps[$op]+'__').
+replace(/__le__/,'__'+$B.$inv_comps[$op]+'__'))}
 $B.make_rmethods($FloatDict)
 var $notimplemented=function(self,other){throw _b_.TypeError(
 "unsupported operand types for OPERATOR: '"+self.__class__.__name__+
@@ -7616,11 +7623,15 @@ if(isinstance(other,int))return self.valueOf()> other.valueOf()
 if(isinstance(other,_b_.float))return self.valueOf()> other.valueOf()
 if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.$dict.__hash__(other)}
 if(hasattr(other,'__int__')||hasattr(other,'__index__')){return $IntDict.__gt__(self,$B.$GetInt(other))}
+var inv_op=getattr(other,'__le__',null)
+if(inv_op !==null){return inv_op(self)}
 throw _b_.TypeError(
 "unorderable types: int() > "+$B.get_class(other).__name__+"()")}
 $comp_func +='' 
 for(var $op in $B.$comps){eval("$IntDict.__"+$B.$comps[$op]+'__ = '+
-$comp_func.replace(/>/gm,$op).replace(/__gt__/gm,'__'+$B.$comps[$op]+'__'))}
+$comp_func.replace(/>/gm,$op).
+replace(/__gt__/gm,'__'+$B.$comps[$op]+'__').
+replace(/__le__/,'__'+$B.$inv_comps[$op]+'__'))}
 $B.make_rmethods($IntDict)
 var $valid_digits=function(base){var digits=''
 if(base===0)return '0'

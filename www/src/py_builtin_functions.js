@@ -9,6 +9,8 @@ var $ObjectDict = _b_.object.$dict
 
 // maps comparison operator to method names
 $B.$comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
+// maps comparison operator to name of inverse operator (eg <= for >)
+$B.$inv_comps = {'>': 'le', '>=': 'lt', '<': 'ge', '<=': 'gt'}
 
 function abs(obj){
     if(isinstance(obj,_b_.int)) return _b_.int(Math.abs(obj));

@@ -434,13 +434,21 @@ var $comp_func = function(self,other){
     if (hasattr(other, '__int__') || hasattr(other, '__index__')) {
        return $IntDict.__gt__(self, $B.$GetInt(other))
     }
+
+    // See if other has the opposite operator, eg <= for >
+    var inv_op = getattr(other, '__le__', null)
+    if(inv_op !== null){return inv_op(self)}
+
     throw _b_.TypeError(
         "unorderable types: int() > "+$B.get_class(other).__name__+"()")
 }
 $comp_func += '' // source codevar $comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
+
 for(var $op in $B.$comps){
     eval("$IntDict.__"+$B.$comps[$op]+'__ = '+
-          $comp_func.replace(/>/gm,$op).replace(/__gt__/gm,'__'+$B.$comps[$op]+'__'))
+          $comp_func.replace(/>/gm,$op).
+              replace(/__gt__/gm,'__'+$B.$comps[$op]+'__').
+              replace(/__le__/, '__'+$B.$inv_comps[$op]+'__'))
 }
 
 // add "reflected" methods
