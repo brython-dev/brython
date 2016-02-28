@@ -40,7 +40,7 @@ $B.language=window.navigator.userLanguage ||window.navigator.language
 $B.charset=document.characterSet ||document.inputEncoding ||"utf-8"
 $B.max_int=Math.pow(2,53)-1
 $B.min_int=-$B.max_int
-$B.$py_next_hash=-Math.pow(2,53)
+$B.$py_next_hash=Math.pow(2,53)-1
 $B.$py_UUID=0
 $B.lambda_magic=Math.random().toString(36).substr(2,8)
 $B.callbacks={}
@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,5,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-02-23 11:45:19.107808"
+__BRYTHON__.compiled_date="2016-02-28 21:38:25.337382"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4287,7 +4287,7 @@ throw _b_.TypeError(msg)}}
 func.$infos={__name__ : klass.__name__+'.'+attr}
 return func}}}}
 $ObjectDict.__gt__=$ObjectNI('__gt__','>')
-$ObjectDict.__hash__=function(self){$B.$py_next_hash+=1;
+$ObjectDict.__hash__=function(self){$B.$py_next_hash--;
 return $B.$py_next_hash;}
 $ObjectDict.__init__=function(){return _b_.None}
 $ObjectDict.__le__=$ObjectNI('__le__','<=')
@@ -5417,10 +5417,10 @@ if(isinstance(obj,_b_.int))return obj.valueOf()
 if(isinstance(obj,bool))return _b_.int(obj)
 if(obj.__hash__ !==undefined){return obj.__hashvalue__=obj.__hash__()}
 var hashfunc=getattr(obj,'__hash__',_b_.None)
-if(hashfunc==_b_.None)return $B.$py_next_hash++
+if(hashfunc==_b_.None)return $B.$py_next_hash--
 if(hashfunc.$infos===undefined){return obj.__hashvalue__=hashfunc()}
 if(hashfunc.$infos.__func__===_b_.object.$dict.__hash__){if(getattr(obj,'__eq__').$infos.__func__!==_b_.object.$dict.__eq__){throw _b_.TypeError("unhashable type: '"+
-$B.get_class(obj).__name__+"'")}else{return $B.$py_next_hash++}}else{return obj.__hashvalue__=hashfunc()}}
+$B.get_class(obj).__name__+"'")}else{return $B.$py_next_hash--}}else{return obj.__hashvalue__=hashfunc()}}
 function _get_builtins_doc(){if($B.builtins_doc===undefined){
 var url=$B.brython_path
 if(url.charAt(url.length-1)=='/'){url=url.substr(0,url.length-1)}

@@ -630,7 +630,7 @@ function hash(obj){
     }
     var hashfunc = getattr(obj, '__hash__', _b_.None)
 
-    if (hashfunc == _b_.None) return $B.$py_next_hash++
+    if (hashfunc == _b_.None) return $B.$py_next_hash--
 
     if(hashfunc.$infos === undefined){
         return obj.__hashvalue__ = hashfunc()
@@ -652,7 +652,7 @@ function hash(obj){
             throw _b_.TypeError("unhashable type: '"+
                 $B.get_class(obj).__name__+"'")
         }else{
-            return $B.$py_next_hash++
+            return $B.$py_next_hash--
         }
     }else{
         return obj.__hashvalue__= hashfunc()

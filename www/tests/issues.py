@@ -761,6 +761,33 @@ def f():
     "test" %3
 assertRaises(TypeError, f)
 
+# issues 387 and 388
+class A():
+    pass
+
+class B():
+    pass
+
+a1 = A()
+a2 = A()
+
+assert hash(A) != hash(B)
+assert hash(A) != hash(a1)
+assert hash(A) != hash(a2)
+
+class A():
+    pass
+
+class B():
+    pass
+
+d = {A: "class A"}
+
+def test():
+    d[B]
+
+assertRaises(KeyError, test)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
