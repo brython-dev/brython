@@ -71,7 +71,7 @@ function $importer(){
             fake_qs=''
             break;
        default:
-            fake_qs="?v="+$B.UUID()
+            fake_qs="?v="+(new Date().getTime())
     }
 
     var timer = setTimeout( function() {
