@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 3, 0, 'alpha', 0]
-// implementation [3, 2, 5, 'alpha', 0]
+// implementation [3, 2, 6, 'alpha', 0]
 // version compiled from commented, indented source files at github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
 ;(function($B){
@@ -57,10 +57,10 @@ $B.has_local_storage=false
 $B.has_session_storage=false}
 $B.globals=function(){
 return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
-__BRYTHON__.implementation=[3,2,5,'alpha',0]
-__BRYTHON__.__MAGIC__="3.2.5"
+__BRYTHON__.implementation=[3,2,6,'alpha',0]
+__BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-02-28 21:38:25.337382"
+__BRYTHON__.compiled_date="2016-03-05 09:18:20.393571"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4746,12 +4746,12 @@ eval($js)
 var $res1=eval('$locals_ge'+$ix)["res"+$ix]
 var $GenExprDict={__class__:$B.$type,__name__:'generator',toString:function(){return '(generator)'}}
 $GenExprDict.__mro__=[$GenExprDict,_b_.object.$dict]
-$GenExprDict.__iter__=function(self){return self}
+$GenExprDict.__iter__=function(self){self.$counter=-1;return self}
 $GenExprDict.__next__=function(self){self.$counter +=1
 if(self.$counter==self.value.length){throw _b_.StopIteration('')}
 return self.value[self.$counter]}
 $GenExprDict.$factory={__class__:$B.$factory,$dict:$GenExprDict}
-var $res2={value:$res1,__class__:$GenExprDict,$counter:-1}
+var $res2={value:$res1,__class__:$GenExprDict}
 $res2.toString=function(){return 'ge object'}
 return $res2}
 $B.$lambda=function(env,args,body){

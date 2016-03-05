@@ -1,7 +1,7 @@
-__BRYTHON__.implementation = [3, 2, 5, 'alpha', 0]
-__BRYTHON__.__MAGIC__ = "3.2.5"
+__BRYTHON__.implementation = [3, 2, 6, 'alpha', 0]
+__BRYTHON__.__MAGIC__ = "3.2.6"
 __BRYTHON__.version_info = [3, 3, 0, 'alpha', 0]
-__BRYTHON__.compiled_date = "2016-02-28 21:38:25.337382"
+__BRYTHON__.compiled_date = "2016-03-05 09:18:20.393571"
 __BRYTHON__.builtin_module_names = ["posix","sys","errno", "time","_ajax",
     "_browser",
     "_html",

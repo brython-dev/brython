@@ -362,7 +362,7 @@ $B.$gen_expr = function(env){
         toString:function(){return '(generator)'}
     }
     $GenExprDict.__mro__ = [$GenExprDict,_b_.object.$dict]
-    $GenExprDict.__iter__ = function(self){return self}
+    $GenExprDict.__iter__ = function(self){self.$counter=-1;return self}
     $GenExprDict.__next__ = function(self){
         self.$counter += 1
         if(self.$counter==self.value.length){
@@ -371,7 +371,7 @@ $B.$gen_expr = function(env){
         return self.value[self.$counter]
     }
     $GenExprDict.$factory = {__class__:$B.$factory,$dict:$GenExprDict}
-    var $res2 = {value:$res1,__class__:$GenExprDict,$counter:-1}
+    var $res2 = {value:$res1,__class__:$GenExprDict}
     $res2.toString = function(){return 'ge object'}
     return $res2
 }
