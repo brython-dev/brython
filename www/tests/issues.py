@@ -790,8 +790,8 @@ assertRaises(KeyError, test)
 
 # issue 389
 gen = (n * n for n in range(10))
-list(gen)
 assert list(gen) == [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+assert list(gen) == []
 
 # ==========================================
 # Finally, report that all tests have passed
