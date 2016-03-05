@@ -786,158 +786,6 @@ function $AssignCtx(context){ //, check_unbound){
     }
 }
 
-function $AsyncForExpr(context){
-    // Class for keyword "for" outside of comprehensions
-    this.type = 'asyncfor'
-    this.parent = context
-    this.tree = []
-    context.tree[context.tree.length]=this
-    this.loop_num = $loop_num
-    this.module = $get_scope(this).module
-    $loop_num++
-    
-    this.toString = function(){return '(for) '+this.tree}
-    
-    this.transform = function(node,rank){
-        var scope = $get_scope(this),
-            mod_name = scope.module,
-            target = this.tree[0],
-            target_is_1_tuple = target.tree.length==1 && target.expect == 'id',
-            iterable = this.tree[1],
-            num = this.loop_num,
-            local_ns = '$locals_'+scope.id.replace(/\./g,'_'),
-            h = '\n'+' '.repeat(node.indent+4)
-
-        // nodes that will be inserted at the position of the original "for" loop
-        var new_nodes = [], pos=0
-        
-        // save original children (loop body)
-        var children = node.children
-
-        var offset = 0
-        
-        // Line to declare the function that produces the next item from
-        // the iterable
-        var new_node = new $Node()
-        new_node.line_num = $get_node(this).line_num
-        var js = '$locals["$next'+num+'"]'
-        js += '=getattr(iter('+iterable.to_js()+'),"__next__");\n'
-        
-        new $NodeJSCtx(new_node,js)
-        new_nodes[pos++]=new_node
-
-        if(this.has_break){
-            // If there is a "break" in the loop, add a boolean
-            // used if there is an "else" clause and in generators
-            new_node = new $Node()
-            new $NodeJSCtx(new_node,local_ns+'["$no_break'+num+'"]=true;')
-            new_nodes[pos++]=new_node
-        }
-
-        var loop_func_node = new $Node()
-        
-        js = 'function $loop'+num+'()'
-
-        new $NodeJSCtx(loop_func_node,js)
-        loop_func_node.context.loop_num = num // used for "else" clauses
-        loop_func_node.context.type = 'for' // used in $add_line_num
-        loop_func_node.line_num = node.line_num
-        if(scope.ntype=='generator'){
-            // used in generators to signal a loop start
-            loop_func_node.loop_start = num
-        }
-        
-        new_nodes[pos++]=loop_func_node
-        
-        // node to start loop
-        new_nodes[pos++] = new $NodeJS('$loop'+num+'()')
-        
-        node.parent.children.splice(rank,1)
-        for(var i=new_nodes.length-1;i>=0;i--){
-            node.parent.insert(rank,new_nodes[i])
-        }
-        offset += new_nodes.length
-
-        var try_node = new $Node()
-        new $NodeJSCtx(try_node,'try')
-        loop_func_node.add(try_node)
-
-        var iter_node = new $Node()
-        // Parent of iter_node must be the same as current node, otherwise
-        // targets are bound in global scope
-        iter_node.parent = $get_node(this).parent
-        iter_node.id = this.module
-        var context = new $NodeCtx(iter_node) // create ordinary node
-        var target_expr = new $ExprCtx(context,'left',true)
-        if(target_is_1_tuple){
-            // assign to a one-element tuple for "for x, in ..."
-            var t = new $ListOrTupleCtx(target_expr)
-            t.real = 'tuple'
-            t.tree = target.tree
-        }else{
-            target_expr.tree = target.tree
-        }
-        var assign = new $AssignCtx(target_expr) // assignment to left operand
-        assign.tree[1] = new $JSCode('$locals["$next'+num+'"]()')
-        try_node.add(iter_node)
-
-        // set new loop children
-        for(var i=0;i<children.length;i++){
-            try_node.add(children[i].clone())
-        }
-
-        var catch_node = new $Node()
-        new $NodeJSCtx(catch_node, 'catch($err'+num+')')
-        loop_func_node.add(catch_node)
-        
-        catch_node.add(new $NodeJS('console.log($err'+num+')'))
-
-        // If the for loop has an else clause, execute it if no break
-        if(this.else_node!==undefined){
-            var break_node = new $Node()
-            new $NodeJSCtx(break_node, 'if('+local_ns+'["$no_break'+num+
-                '"])')
-            catch_node.add(break_node)
-            for(var i=0;i<this.else_node.children.length;i++){
-                break_node.add(this.else_node.children[i])
-            }
-            // erase original "else" node
-            new $NodeJSCtx(this.else_node, '')
-            this.else_node.children = []
-        }
-
-        catch_node.add(new $NodeJS('if(!$B.is_exc($err'+num+',[StopIteration]))'+
-            '{throw $err'+num+'}'))
-        
-        // Execute the rest of the block after "for" and optional "else" block
-        var next_rank = rank+offset+1 
-        for(var i=rank+offset+1;i<node.parent.children.length;i++){
-            catch_node.add(node.parent.children[i].clone())
-        }
-        
-        // End loop
-        catch_node.add(new $NodeJS('return'))        
-        
-        // Remove original rest of block
-        node.parent.children.splice(rank+offset+1)
-        
-        // loop
-        var loop_node = new $NodeJS('setTimeout($loop'+num+', 0)')
-        loop_node.line_num = node.line_num
-        loop_func_node.add(loop_node)
-
-        node.children = []
-        //$loop_num++
-        return 0
-    }
-
-    this.to_js = function(){
-        this.js_processed=true
-        var iterable = this.tree.pop()
-        return 'for '+$to_js(this.tree)+' in '+iterable.to_js()
-    }
-}
-
 function $AttrCtx(context){
     // Class for object attributes (eg x in obj.x)
     this.type = 'attribute'
@@ -6574,8 +6422,6 @@ function $transition(context,token){
             return new $DefCtx(context)
           case 'for':
             return new $TargetListCtx(new $ForExpr(context))
-          case 'asyncfor':
-            return new $TargetListCtx(new $AsyncForExpr(context))
           case 'if':
           case 'while':
             return new $AbstractExprCtx(new $ConditionCtx(context,token),false)
@@ -7011,8 +6857,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         "as","elif","else","if","yield","assert","import",
         "except","raise","in", //"not",
         "pass","with","continue","__debugger__",
-        "IMPRT", // experimental for non blocking import
-        "asyncfor" // experimental for asynchronous "for" loop
+        "IMPRT" // experimental for non blocking import
         //"False","None","True","continue",
         // "and',"or","is"
         ]

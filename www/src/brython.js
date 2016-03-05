@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,6,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-03-05 15:44:04.417831"
+__BRYTHON__.compiled_date="2016-03-05 21:54:22.314894"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -408,83 +408,6 @@ left.func='getitem'
 res +=','+right_js+')};None;'}
 return res}}
 return left.to_js()+'='+right.to_js()}}
-function $AsyncForExpr(C){
-this.type='asyncfor'
-this.parent=C
-this.tree=[]
-C.tree[C.tree.length]=this
-this.loop_num=$loop_num
-this.module=$get_scope(this).module
-$loop_num++
-this.toString=function(){return '(for) '+this.tree}
-this.transform=function(node,rank){var scope=$get_scope(this),mod_name=scope.module,target=this.tree[0],target_is_1_tuple=target.tree.length==1 && target.expect=='id',iterable=this.tree[1],num=this.loop_num,local_ns='$locals_'+scope.id.replace(/\./g,'_'),h='\n'+' '.repeat(node.indent+4)
-var new_nodes=[],pos=0
-var children=node.children
-var offset=0
-var new_node=new $Node()
-new_node.line_num=$get_node(this).line_num
-var js='$locals["$next'+num+'"]'
-js +='=getattr(iter('+iterable.to_js()+'),"__next__");\n'
-new $NodeJSCtx(new_node,js)
-new_nodes[pos++]=new_node
-if(this.has_break){
-new_node=new $Node()
-new $NodeJSCtx(new_node,local_ns+'["$no_break'+num+'"]=true;')
-new_nodes[pos++]=new_node}
-var loop_func_node=new $Node()
-js='function $loop'+num+'()'
-new $NodeJSCtx(loop_func_node,js)
-loop_func_node.C.loop_num=num 
-loop_func_node.C.type='for' 
-loop_func_node.line_num=node.line_num
-if(scope.ntype=='generator'){
-loop_func_node.loop_start=num}
-new_nodes[pos++]=loop_func_node
-new_nodes[pos++]=new $NodeJS('$loop'+num+'()')
-node.parent.children.splice(rank,1)
-for(var i=new_nodes.length-1;i>=0;i--){node.parent.insert(rank,new_nodes[i])}
-offset +=new_nodes.length
-var try_node=new $Node()
-new $NodeJSCtx(try_node,'try')
-loop_func_node.add(try_node)
-var iter_node=new $Node()
-iter_node.parent=$get_node(this).parent
-iter_node.id=this.module
-var C=new $NodeCtx(iter_node)
-var target_expr=new $ExprCtx(C,'left',true)
-if(target_is_1_tuple){
-var t=new $ListOrTupleCtx(target_expr)
-t.real='tuple'
-t.tree=target.tree}else{target_expr.tree=target.tree}
-var assign=new $AssignCtx(target_expr)
-assign.tree[1]=new $JSCode('$locals["$next'+num+'"]()')
-try_node.add(iter_node)
-for(var i=0;i<children.length;i++){try_node.add(children[i].clone())}
-var catch_node=new $Node()
-new $NodeJSCtx(catch_node,'catch($err'+num+')')
-loop_func_node.add(catch_node)
-catch_node.add(new $NodeJS('console.log($err'+num+')'))
-if(this.else_node!==undefined){var break_node=new $Node()
-new $NodeJSCtx(break_node,'if('+local_ns+'["$no_break'+num+
-'"])')
-catch_node.add(break_node)
-for(var i=0;i<this.else_node.children.length;i++){break_node.add(this.else_node.children[i])}
-new $NodeJSCtx(this.else_node,'')
-this.else_node.children=[]}
-catch_node.add(new $NodeJS('if(!$B.is_exc($err'+num+',[StopIteration]))'+
-'{throw $err'+num+'}'))
-var next_rank=rank+offset+1 
-for(var i=rank+offset+1;i<node.parent.children.length;i++){catch_node.add(node.parent.children[i].clone())}
-catch_node.add(new $NodeJS('return'))
-node.parent.children.splice(rank+offset+1)
-var loop_node=new $NodeJS('setTimeout($loop'+num+', 0)')
-loop_node.line_num=node.line_num
-loop_func_node.add(loop_node)
-node.children=[]
-return 0}
-this.to_js=function(){this.js_processed=true
-var iterable=this.tree.pop()
-return 'for '+$to_js(this.tree)+' in '+iterable.to_js()}}
 function $AttrCtx(C){
 this.type='attribute'
 this.value=C.tree[0]
@@ -3505,8 +3428,6 @@ case 'def':
 return new $DefCtx(C)
 case 'for':
 return new $TargetListCtx(new $ForExpr(C))
-case 'asyncfor':
-return new $TargetListCtx(new $AsyncForExpr(C))
 case 'if':
 case 'while':
 return new $AbstractExprCtx(new $ConditionCtx(C,token),false)
@@ -3810,8 +3731,7 @@ var br_close={")":"(","]":"[","}":"{"}
 var br_stack=""
 var br_pos=[]
 var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in",
-"pass","with","continue","__debugger__","IMPRT",
-"asyncfor" 
+"pass","with","continue","__debugger__","IMPRT" 
 ]
 var unsupported=[]
 var $indented=['class','def','for','condition','single_kw','try','except','with']
