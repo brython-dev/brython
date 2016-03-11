@@ -19,6 +19,10 @@ var $ListDict = {__class__:$B.$type,
     __dir__:$ObjectDict.__dir__}
 
 $ListDict.__add__ = function(self,other){
+    if($B.get_class(self)!==$B.get_class(other)){
+        throw TypeError('can only concatenate list (not "'+
+            $B.get_class(other).__name__+'") to list')
+    }
     var res = self.valueOf().concat(other.valueOf())
     if(isinstance(self,tuple)) res = tuple(res)
     return res
@@ -106,6 +110,8 @@ $ListDict.__getitem__ = function(self,arg){
         ['self','key'],arguments,{},null,null),
         self=$.self, key=$.key
 
+    var klass = $B.get_class(self).$factory
+
     if(isinstance(key,_b_.int)){
         var items=self.valueOf()
         var pos = key
@@ -125,13 +131,13 @@ $ListDict.__getitem__ = function(self,arg){
             for(var i=start; i<stop; i+=step) {
                res[pos++]=items[i]
             }
-            return res;
+            return klass(res);
         } else {
             if (stop > start) return res;
             for(var i=start; i>stop; i+=step) {
                res[pos++]=items[i]
             }
-            return res;
+            return klass(res);
         }
     }
 

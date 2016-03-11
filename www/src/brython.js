@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,6,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-03-05 21:54:22.314894"
+__BRYTHON__.compiled_date="2016-03-11 17:13:11.750618"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4608,7 +4608,7 @@ var has_kw_args=false,nb_pos=$args.length,$ns
 if(nb_pos>0 && $args[nb_pos-1].$nat=='kw'){has_kw_args=true
 nb_pos--
 var kw_args=$args[nb_pos].kw}
-if(extra_pos_args){slots[extra_pos_args]=[]}
+if(extra_pos_args){slots[extra_pos_args]=_b_.tuple()}
 if(extra_kw_args){slots[extra_kw_args]=_b_.dict()}
 if(nb_pos>argcount){
 if(extra_pos_args===null){
@@ -8147,7 +8147,9 @@ var args=[],pos=0
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){args[pos++]=arguments[i]}
 return new $ListDict(args)}
 var $ListDict={__class__:$B.$type,__name__:'list',$native:true,__dir__:$ObjectDict.__dir__}
-$ListDict.__add__=function(self,other){var res=self.valueOf().concat(other.valueOf())
+$ListDict.__add__=function(self,other){if($B.get_class(self)!==$B.get_class(other)){throw TypeError('can only concatenate list (not "'+
+$B.get_class(other).__name__+'") to list')}
+var res=self.valueOf().concat(other.valueOf())
 if(isinstance(self,tuple))res=tuple(res)
 return res}
 $ListDict.__contains__=function(self,item){var $=$B.args('__contains__',2,{self:null,item:null},['self','item'],arguments,{},null,null),self=$.self,item=$.item
@@ -8183,6 +8185,7 @@ while(i--){if(!getattr(self[i],'__eq__')(other[i]))return false}
 return true}}
 return false}
 $ListDict.__getitem__=function(self,arg){var $=$B.args('__getitem__',2,{self:null,key:null},['self','key'],arguments,{},null,null),self=$.self,key=$.key
+var klass=$B.get_class(self).$factory
 if(isinstance(key,_b_.int)){var items=self.valueOf()
 var pos=key
 if(key<0)pos=items.length+pos
@@ -8193,10 +8196,10 @@ var s=_b_.slice.$dict.$conv_for_seq(key,self.length)
 var res=[],i=null,items=self.valueOf(),pos=0,start=s.start,stop=s.stop,step=s.step
 if(step > 0){if(stop <=start)return res;
 for(var i=start;i<stop;i+=step){res[pos++]=items[i]}
-return res;}else{
+return klass(res);}else{
 if(stop > start)return res;
 for(var i=start;i>stop;i+=step){res[pos++]=items[i]}
-return res;}}
+return klass(res);}}
 if(hasattr(key,'__int__')||hasattr(key,'__index__')){return $ListDict.__getitem__(self,_b_.int(key))}
 throw _b_.TypeError('list indices must be integer, not '+
 $B.get_class(key).__name__)}

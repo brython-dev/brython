@@ -793,6 +793,12 @@ gen = (n * n for n in range(10))
 assert list(gen) == [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
 assert list(gen) == []
 
+# issue 391
+def f():
+    ["a"]+5
+
+assertRaises(TypeError, f)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

@@ -26,7 +26,7 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
         var kw_args=$args[nb_pos].kw
     }
 
-    if(extra_pos_args){slots[extra_pos_args]=[]}
+    if(extra_pos_args){slots[extra_pos_args]=_b_.tuple()}
     if(extra_kw_args){slots[extra_kw_args]=_b_.dict()}
 
     if(nb_pos>argcount){
