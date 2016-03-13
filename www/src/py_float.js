@@ -494,7 +494,9 @@ $FloatDict.__truediv__ = function(self,other){
 // operations
 var $op_func = function(self,other){
     if(isinstance(other,_b_.int)){
-        if(other.__class__===$B.LongInt.$dict){
+        if(typeof other=='boolean'){
+            return other ? self-1 : self
+        }else if(other.__class__===$B.LongInt.$dict){
             return float(self-parseInt(other.value))
         }else{return float(self-other)}
     }

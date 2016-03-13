@@ -386,13 +386,14 @@ for(var $op in $ops){
 
 // code for + and -
 var $op_func = function(self,other){
-
     if(isinstance(other,int)){
         if(typeof other=='number'){
             var res = self.valueOf()-other.valueOf()
             if(res>=$B.min_int && res<=$B.max_int){return res}
             else{return $B.LongInt.$dict.__sub__($B.LongInt(self), 
                 $B.LongInt(other))}
+        }else if(typeof other=="boolean"){
+            return other ? self-1 : self
         }else{
             return $B.LongInt.$dict.__sub__($B.LongInt(self), 
                 $B.LongInt(other))        

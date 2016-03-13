@@ -799,6 +799,10 @@ def f():
 
 assertRaises(TypeError, f)
 
+# sum with booleans
+assert sum([True, False]) == 1
+assert 1.2+True == 2.2
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
