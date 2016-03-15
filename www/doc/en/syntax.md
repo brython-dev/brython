@@ -23,19 +23,37 @@ Brython supports all the keywords and most functions of Python 3 :
   `round(), set(), setattr(), slice(), sorted(), str(), sum(), super(), `
   `tuple(), type(), zip(), __import__()`
 
-By default, `print()` will output to the web browser console and so are the 
-error messages. `sys.stderr` and `sys.stdout` can be assigned to an object 
-with a `write()` method, and this allows for the redirection of output to go 
-to a window or text area, for example.
-
-`sys.stdin` is not implemented at this time, however there is an `input()` 
-built-in function that will open a blocking input dialog (a prompt).
-
-To open a print dialog (to a printer), call `window.print` (`window` is 
-defined in module **browser**).
-
 The built-in functions `memoryview(), vars()` are not implemented in the 
 current version.
+
+Here are a few features and limitations imposed by the browser and Javascript :
+
+- the built-in function `open()` takes as argument the url of the file to
+  open. Since it is read with an Ajax call, it must be in the same domain as
+  the script. The object returned by `open()` has the usual reading and access
+  methods : `read, readlines, seek, tell, close`
+
+- by default, `print()` will output to the web browser console and so are the 
+  error messages. `sys.stderr` and `sys.stdout` can be assigned to an object 
+  with a `write()` method, and this allows for the redirection of output to go 
+  to a window or text area, for example.
+
+- to open a print dialog (to a printer), call `window.print` (`window` is 
+  defined in module **browser**).
+
+- `sys.stdin` is not implemented at this time, however there is an `input()` 
+  built-in function that will open a blocking input dialog (a prompt).
+
+- the objects lifecycle is managed by the Javascript garbage collector, 
+  Brython doesn't manage reference counting like CPython. Therefore, method
+  `__del__()` is not called when a class instance is no more referenced.
+
+- functions such as `time.sleep()` that block execution during a given time,
+  or until an event is triggered, are not managed because there is no 
+  Javascript equivalent. In this case, the application must be written with
+  the functions of module **browser.timer** (eg `set_timeout()`, 
+  `set_interval()`), or by event handlers (method `bind()` of DOM elements).
+
 
 Built-in value `__name__`
 -------------------------
