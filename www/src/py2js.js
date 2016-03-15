@@ -2712,7 +2712,7 @@ function $ForExpr(context){
                 for_node.add(children[i].clone())
             }
             // Add a line to reset the line number
-            for_node.add($NodeJS('$locals.line_info="'+node.line_num+','+
+            for_node.add($NodeJS('$locals.$line_info="'+node.line_num+','+
                 scope.id+'"; None;'))
             
             // Check if current "for" loop is inside another "for" loop
