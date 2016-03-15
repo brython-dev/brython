@@ -2713,7 +2713,7 @@ function $ForExpr(context){
             }
             // Add a line to reset the line number
             for_node.add($NodeJS('$locals.line_info="'+node.line_num+','+
-                scope.id+'"'))
+                scope.id+'"; None;'))
             
             // Check if current "for" loop is inside another "for" loop
             var in_loop=false

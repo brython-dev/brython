@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,6,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-03-13 18:46:46.195853"
+__BRYTHON__.compiled_date="2016-03-15 07:44:21.653011"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1399,7 +1399,7 @@ for_node.add($NodeJS('if($safe'+num+'){$next'+num+'+=1'+'}'))
 for_node.add($NodeJS('else{$next'+num+'=$B.add($next'+num+',1)}'))
 for(var i=0;i<children.length;i++){for_node.add(children[i].clone())}
 for_node.add($NodeJS('$locals.line_info="'+node.line_num+','+
-scope.id+'"'))
+scope.id+'"; None;'))
 var in_loop=false
 if(scope.ntype=='module'){var pnode=node.parent
 while(pnode){if(pnode.for_wrapper){in_loop=true;break}
