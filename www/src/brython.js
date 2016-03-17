@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,6,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-03-15 07:58:52.098549"
+__BRYTHON__.compiled_date="2016-03-17 21:01:32.422858"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -6702,7 +6702,7 @@ for(var key in self.js){var value=self.js[key]
 if(typeof value=='object' && !Array.isArray(value)){_b_.dict.$dict.__setitem__(res,key,$JSObjectDict.to_dict(JSObject(value)))}else{_b_.dict.$dict.__setitem__(res,key,value)}}
 return res}
 function JSObject(obj){if(obj===null){return _b_.None}
-if(typeof obj=='function'){return{__class__:$JSObjectDict,js:obj}}
+if(typeof obj=='function'){return{__class__:$JSObjectDict,js:obj,js_func:obj}}
 var klass=$B.get_class(obj)
 if(klass===_b_.float.$dict)return _b_.float(obj)
 if(klass!==undefined)return obj
