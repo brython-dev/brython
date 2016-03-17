@@ -39,7 +39,7 @@ $Location.$dict = $LocationDict
 var $JSConstructorDict = {__class__:$B.$type,__name__:'JSConstructor'}
 
 $JSConstructorDict.__call__ = function(self){
-    // self.js is a constructor
+    // self.func is a constructor
     // It takes Javascript arguments so we must convert
     // those passed to the Python function
     var args = [null]
@@ -196,7 +196,7 @@ $JSObjectDict.__getattribute__ = function(self,attr){
             // where the arguments passed to the Python function G are converted to Javascript
             // objects usable by the underlying function F
             var res = function(){
-                var args = [],arg
+                var args = []
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     if(arguments[i].$nat!=undefined){
                         //
@@ -217,10 +217,25 @@ $JSObjectDict.__getattribute__ = function(self,attr){
                     location.replace(args[0])
                     return
                 }
-                return $B.$JS2Py(js_attr.apply(self.js,args))
+                // normally, we provide self.js as `this` to simulate js method call
+                var new_this = self.js;
+                // but if we get explicit `this` (e.g. through apply call) we should pass it on
+                if (this !== null && this !== undefined && this !== window) {
+                    new_this = this
+                }
+                var result = js_attr.apply(new_this,args)
+                // NOTE: fix for situations when wrapped function is constructor (thus it does not return and value is lost)
+                // this has side effect that non-constructor functions returning nothing will return `this` instead, which can break something
+                // 
+                if (result === undefined) {
+                    result = this
+                }
+                return $B.$JS2Py(result)
             }
             res.__repr__ = function(){return '<function '+attr+'>'}
             res.__str__ = function(){return '<function '+attr+'>'}
+            // this is very important for class-emulating functions
+            res.prototype = js_attr.prototype
             return {__class__:$JSObjectDict,js:res,js_func:js_attr}
         }else{
             if(Array.isArray(self.js[attr])){return self.js[attr]}
@@ -247,7 +262,7 @@ $JSObjectDict.__getattribute__ = function(self,attr){
             // res is the function in one of parent classes
             // return a function that takes self as first argument
             return function(){
-                var args = [self],arg
+                var args = [self]
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     arg = arguments[i]
                     if(arg && (arg.__class__===$JSObjectDict || arg.__class__===$JSConstructorDict)){
