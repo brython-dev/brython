@@ -385,7 +385,7 @@ function JSObject(obj){
     // If obj is a function, calling it with JSObject implies that it is
     // a function defined in Javascript. It must be wrapped in a JSObject
     // so that when called, the arguments are transformed into JS values
-    if(typeof obj=='function'){return {__class__:$JSObjectDict,js:obj}}
+    if(typeof obj=='function'){return {__class__:$JSObjectDict,js:obj,js_func:obj}}
 
     var klass = $B.get_class(obj)
     // we need to do this or nan is returned, when doing json.loads(...)
