@@ -41,21 +41,7 @@
 <script type="text/javascript" src="../src/py_import_hooks.js"></script>
 <script type="text/javascript" src="../src/async.js"></script>
 
-<script>
-function empty_list(){return []}
-function list1(){return [1, 2, 'a', ['b']]}
-function jsobj(){return {a:1}}
-
-// test if an object with length and item() supports subscription
-function subscriptable(data){
-    return {data: data,
-        length: data.length,
-        item: function(rank){
-            return data.charAt(rank)
-        }
-    }
-}
-</script>
+<script src="dom_js_tests.js"></script>
 
 <script type="text/python3" id="tests">
 import time
