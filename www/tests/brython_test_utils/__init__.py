@@ -81,6 +81,8 @@ def run(src):
     return state, t0, t1
 
 def run_test_module(filename, base_path=''):
+    if base_path and not base_path.endswith('/'):
+        base_path += '/'
     src = open(base_path + filename).read()
     return run(src)
 

@@ -5,16 +5,17 @@ import unittest
 
 # TODO: Not needed if test cases are written in unittest style
 class BrythonModuleTestCase(unittest.TestCase):
-    def __init__(self, modname, caption):
+    def __init__(self, modname, caption, base_path=''):
         unittest.TestCase.__init__(self)
         self.modname = modname
         self.caption = caption
+        self.base_path = base_path
 
     def shortDescription(self):
         return "Brython test module '%s'" % self.caption
 
     def runTest(self):
-        status, tstart, tend = utils.run_test_module(self.modname)
+        status, tstart, tend = utils.run_test_module(self.modname, self.base_path)
         # TODO: Record and output generated traceback
         self.assertEquals(1, status,
                           "Failure detected for module '%s'" % self.modname);
@@ -74,10 +75,10 @@ class OneTimeTestResult(unittest.TestResult):
                                         self.testsRun, self.lastOutcome)
 
 
-def load_brython_test_cases():
+def load_brython_test_cases(base_path=''):
     return unittest.TestSuite(
                 NamedTestSuite('Brython : ' + label,
-                               (BrythonModuleTestCase(filenm, caption)
+                               (BrythonModuleTestCase(filenm, caption, base_path)
                                         for filenm, caption in options)
                                )
                 for label, options in utils.discover_brython_test_modules()

@@ -46,26 +46,13 @@
     <script type="text/javascript" src="../../src/async.js"></script>
 
 <!-- Test cases -->
-    <script type="text/javascript">
-      window.qunit_unittest_wrapper = function(test, result) {
-        return function(assert) {
-            test_call =  __BRYTHON__.builtins.getattr(test, '__call__')
-            test_call(result);
-            var msg = '';
-            if (result.details !== __BRYTHON__.builtins.None) {
-                msg = '[' + result.lastOutcome + '] - ' + result.details;
-            }
-            assert.ok(__BRYTHON__.builtins.getattr(result, 'wasSuccessful')(),
-                      msg)
-        }
-      }
-    </script>
+    <script type="text/javascript" src="unittest.js"></script>
 
 <script type="text/python3">
 
 # Add /www/tests (i.e. parent) folder to PYTHONPATH
 import _sys, sys
-sys.path.append('..')
+sys.path[0] = '..'
 
 # TODO : Optimize imports from known locations
 from _importlib import optimize_import_for_path
@@ -98,7 +85,7 @@ def qunit_add_tests(suite):
         qunit_add_tests(suite)
 
 
-qunit_add_tests(test_utils.load_brython_test_cases())
+qunit_add_tests(test_utils.load_brython_test_cases('..'))
 </script>
 
   </body>
