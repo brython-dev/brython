@@ -152,10 +152,10 @@ def a2b_base64(s):
     def next_valid_char(s, pos):
         for i in range(pos + 1, len(s)):
             c = s[i]
-            if c < '\x7f':
+            if c < 0x7f:
                 try:
-                    table_a2b_base64[c]
-                    return c
+                    table_a2b_base64[chr(c)]
+                    return chr(c)
                 except KeyError:
                     pass
         return None

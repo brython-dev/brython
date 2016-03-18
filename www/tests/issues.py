@@ -813,6 +813,20 @@ eval = A()
 
 assert [c for c in range(10) if eval.b[c] == 0] == [3]
 
+# issue 394
+import base64
+b = b"\x7F\x7B\xED\x96"
+b64 = base64.b64encode(b)
+assert b64 == b"f3vtlg=="
+newb = base64.b64decode(b64)
+assert newb == b
+
+e = base64.b64encode(b'data to encode')
+assert e == b"ZGF0YSB0byBlbmNvZGU="
+assert base64.b64decode(e, validate=True) == b'data to encode'
+
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
