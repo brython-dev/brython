@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,6,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-03-17 21:01:32.422858"
+__BRYTHON__.compiled_date="2016-03-18 15:13:46.586553"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1647,8 +1647,7 @@ if(this.scope.nonlocals && this.scope.nonlocals[val]!==undefined){this.nonlocal=
 this.unbound=this.unbound ||(is_local && !this.bound && 
 bound_before && bound_before.indexOf(val)==-1)
 if(this.unbound && !this.nonlocal){if(this.scope.ntype=='def' ||this.scope.ntype=='generator'){return '$B.$local_search("'+val+'")'}else{return '$B.$search("'+val+'")'}}
-if(val=='eval')val='$eval'
-else if(val=='__BRYTHON__' ||val=='$B'){return val}
+if(val=='__BRYTHON__' ||val=='$B'){return val}
 var innermost=$get_scope(this)
 var scope=innermost,found=[],module=scope.module
 var gs=innermost
@@ -3722,7 +3721,7 @@ C.from=true
 C.tree=[]
 return new $AbstractExprCtx(C,true)}
 return $transition(C.parent,token)}}
-$B.forbidden=['case','catch','constructor','Date','delete','default','enum','extends','Error','history','function','location','Math','new','null','Number','RegExp','super','this','throw','var','toString']
+$B.forbidden=['case','catch','constructor','Date','delete','default','enum','eval','extends','Error','history','function','location','Math','new','null','Number','RegExp','super','this','throw','var','toString']
 var s_escaped='abfnrtvxuU"'+"'"+'\\',is_escaped={}
 for(var i=0;i<s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
 function $tokenize(src,module,locals_id,parent_block_id,line_info){var delimiters=[["#","\n","comment"],['"""','"""',"triple_string"],["'","'","string"],['"','"',"string"],["r'","'","raw_string"],['r"','"',"raw_string"]]
@@ -5944,7 +5943,7 @@ _b_[name].__kwdefaults__=_b_[name].__kwdefaults__ ||{}
 _b_[name].__annotations__=_b_[name].__annotations__ ||{}}
 _b_[name].__doc__=_b_[name].__doc__ ||''}
 catch(err){}}
-_b_['$eval']=$eval
+_b_['$$eval']=$eval
 _b_['open']=$url_open
 _b_['print']=$print
 _b_['$$super']=$$super})(__BRYTHON__)

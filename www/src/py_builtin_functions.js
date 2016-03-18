@@ -1810,7 +1810,7 @@ for(var i=0;i<builtin_names.length;i++){
     catch(err){}
 }
 
-_b_['$eval']=$eval
+_b_['$$eval']=$eval
 
 _b_['open']=$url_open
 _b_['print']=$print

@@ -3233,8 +3233,8 @@ function $IdCtx(context,value){
         }
 
         // Special cases
-        if(val=='eval') val = '$eval'
-        else if(val=='__BRYTHON__' || val == '$B'){return val}
+        //if(val=='eval') val = '$eval'
+        if(val=='__BRYTHON__' || val == '$B'){return val}
         
         var innermost = $get_scope(this)
         
@@ -4397,7 +4397,8 @@ function $SingleKwCtx(context,token){
         var pctx = pnode.children[rank-1].context
         if(pctx.tree.length>0){
             var elt = pctx.tree[0]
-            if(elt.type=='for' || elt.type=='asyncfor' ||
+            if(elt.type=='for' || 
+elt.type=='asyncfor' ||
                 (elt.type=='condition' && elt.token=='while')){
                 elt.has_break = true
                 elt.else_node = $get_node(this)
@@ -6836,7 +6837,7 @@ function $transition(context,token){
 }
 
 $B.forbidden = ['case','catch','constructor','Date','delete',
-    'default','enum','extends','Error','history','function','location',
+    'default','enum','eval','extends','Error','history','function','location',
     'Math','new','null','Number','RegExp','super','this','throw','var',
     'toString']
 

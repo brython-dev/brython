@@ -803,6 +803,16 @@ assertRaises(TypeError, f)
 assert sum([True, False]) == 1
 assert 1.2+True == 2.2
 
+# issue #392
+class A:
+  def __init__(self):
+    self.b = [1 for n in range(10)]
+    self.b[3] = 0
+
+eval = A()
+
+assert [c for c in range(10) if eval.b[c] == 0] == [3]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
