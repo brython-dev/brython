@@ -7835,7 +7835,7 @@ function brython(options){
         }
     }
     
-    load_ext(ext_scripts)
+    $B._load_scripts(ext_scripts)
 
     /* Uncomment to check the names added in global Javascript namespace
     var kk1 = Object.keys(window)
