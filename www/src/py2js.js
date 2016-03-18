@@ -7429,22 +7429,37 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     return root
 }
 
-function load_ext(ext_scripts){
+function load_ext(ext_scripts, run_script, onerror){
+    if (run_script === undefined) {
+      run_script = $B._run_script;
+    }
     var found = []
     function callback(ev){
         req = ev.target
         if(req.readyState==4){
             if(req.status==200){
-                run_script({name:req.module_name, 
-                    url:req.responseURL, 
-                    src:req.responseText})
+                try {
+                    run_script({name:req.module_name, 
+                        url:req.responseURL, 
+                        src:req.responseText})
+                }
+                catch (e) {
+                    if (onerror === undefined) { throw e; }
+                    else { onerror(e); }
+                }
                 if(ext_scripts.length>0){
                     load_ext(ext_scripts)
                 }
             }else{
-                throw Error("cannot load script "+
-                    req.module_name+' at '+req.responseURL+
-                    ': error '+req.status)
+                try {
+                    throw Error("cannot load script "+
+                        req.module_name+' at '+req.responseURL+
+                        ': error '+req.status)
+                }
+                catch (e) {
+                    if (onerror === undefined) { throw e; }
+                    else { onerror(e); }
+                }
             }
         }
     }
@@ -7457,6 +7472,8 @@ function load_ext(ext_scripts){
         req.send()
     }
 }
+
+$B._load_scripts = load_ext;
 
 function run_script(script){
     // script has attributes url, src, name
@@ -7507,6 +7524,8 @@ function run_script(script){
 
 
 }
+
+$B._run_script = run_script;
 
 function brython(options){
     var _b_=$B.builtins
