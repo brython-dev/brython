@@ -70,15 +70,17 @@ def populate_testmod_input(elem, selected=None):
 
 def run(src):
     t0 = time.perf_counter()
+    msg = ''
     try:
         ns = {'__name__':'__main__'}
         exec(src, ns)
         state = 1
     except Exception as exc:
-        traceback.print_exc(file=sys.stderr)
+        msg = traceback.format_exc()
+        print(msg, file=sys.stderr)
         state = 0
     t1 = time.perf_counter()
-    return state, t0, t1
+    return state, t0, t1, msg
 
 def run_test_module(filename, base_path=''):
     if base_path and not base_path.endswith('/'):

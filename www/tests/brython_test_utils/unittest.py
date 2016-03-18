@@ -15,10 +15,12 @@ class BrythonModuleTestCase(unittest.TestCase):
         return "Brython test module '%s'" % self.caption
 
     def runTest(self):
-        status, tstart, tend = utils.run_test_module(self.modname, self.base_path)
+        status, tstart, tend, msg = utils.run_test_module(self.modname,
+                                                     self.base_path)
         # TODO: Record and output generated traceback
         self.assertEquals(1, status,
-                          "Failure detected for module '%s'" % self.modname);
+                          "Failure detected for module '%s'\n\n"
+                          "%s" % (self.modname, msg));
 
 
 class NamedTestSuite(unittest.BaseTestSuite):
