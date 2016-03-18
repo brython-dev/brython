@@ -4,7 +4,7 @@
     <!-- Online install -->
     <link rel="stylesheet" type="text/css" href="//code.jquery.com/qunit/qunit-1.18.0.css" />
     <!-- Local install for Travis-CI -->
-    <link rel="stylesheet" type="text/css" href="../../qunit/qunit-1.18.0.css" />
+    <link rel="stylesheet" type="text/css" href="../../../qunit/qunit-1.18.0.css" />
   </head>
   <body onload="brython({debug:1, cache:'none', static_stdlib_import:true})">
     <!-- QUnit init -->
@@ -13,36 +13,37 @@
     <!-- Online install -->
     <script src="//code.jquery.com/qunit/qunit-1.18.0.js"></script>
     <!-- Local install for Travis-CI -->
-    <script src="../../qunit/qunit-1.18.0.js"></script>
+    <script src="../../../qunit/qunit-1.18.0.js"></script>
 
     <!-- Brython init -->
-    <script type="text/javascript" src="../src/brython_builtins.js"></script>
-    <script type="text/javascript" src="../src/version_info.js"></script>
-    <script type="text/javascript" src="../src/identifiers_re.js"></script>
-    <script type="text/javascript" src="../src/py2js.js"></script>
-    <script type="text/javascript" src="../src/py_object.js"></script>
-    <script type="text/javascript" src="../src/py_type.js"></script>
-    <script type="text/javascript" src="../src/py_utils.js"></script>
-    <script type="text/javascript" src="../src/py_builtin_functions.js"></script>
-    <script type="text/javascript" src="../src/py_bytes.js"></script>
-    <script type="text/javascript" src="../src/py_set.js"></script>
-    <script type="text/javascript" src="../src/js_objects.js"></script>
-    <script type="text/javascript" src="../src/stdlib_paths.js"></script>
-    <script type="text/javascript" src="../src/py_import.js"></script>
+    <script type="text/javascript" src="../../src/brython_builtins.js"></script>
+    <script type="text/javascript" src="../../src/version_info.js"></script>
+    <script type="text/javascript" src="../../src/py2js.js"></script>
+    <script type="text/javascript" src="../../src/py_object.js"></script>
+    <script type="text/javascript" src="../../src/py_type.js"></script>
+    <script type="text/javascript" src="../../src/py_utils.js"></script>
+    <script type="text/javascript" src="../../src/py_builtin_functions.js"></script>
+    <script type="text/javascript" src="../../src/py_exceptions.js"></script>
+    <script type="text/javascript" src="../../src/py_range_slice.js"></script>
+    <script type="text/javascript" src="../../src/py_bytes.js"></script>
+    <script type="text/javascript" src="../../src/py_set.js"></script>
+    <script type="text/javascript" src="../../src/js_objects.js"></script>
+    <script type="text/javascript" src="../../src/stdlib_paths.js"></script>
+    <script type="text/javascript" src="../../src/py_import.js"></script>
 
-    <script type="text/javascript" src="../src/py_string.js"></script>
-    <script type="text/javascript" src="../src/py_int.js"></script>
-    <script type="text/javascript" src="../src/py_long_int.js"></script>
-    <script type="text/javascript" src="../src/py_float.js"></script>
-    <script type="text/javascript" src="../src/py_complex.js"></script>
-    <script type="text/javascript" src="../src/py_dict.js"></script>
-    <script type="text/javascript" src="../src/py_list.js"></script>
-    <script type="text/javascript" src="../src/py_generator.js"></script>
-    <script type="text/javascript" src="../src/py_dom.js"></script>
+    <script type="text/javascript" src="../../src/py_string.js"></script>
+    <script type="text/javascript" src="../../src/py_int.js"></script>
+    <script type="text/javascript" src="../../src/py_long_int.js"></script>
+    <script type="text/javascript" src="../../src/py_float.js"></script>
+    <script type="text/javascript" src="../../src/py_complex.js"></script>
+    <script type="text/javascript" src="../../src/py_dict.js"></script>
+    <script type="text/javascript" src="../../src/py_list.js"></script>
+    <script type="text/javascript" src="../../src/py_generator.js"></script>
+    <script type="text/javascript" src="../../src/py_dom.js"></script>
 
-    <script type="text/javascript" src="../src/builtin_modules.js"></script>
-    <script type="text/javascript" src="../src/py_import_hooks.js"></script>
-    <script type="text/javascript" src="../src/async.js"></script>
+    <script type="text/javascript" src="../../src/builtin_modules.js"></script>
+    <script type="text/javascript" src="../../src/py_import_hooks.js"></script>
+    <script type="text/javascript" src="../../src/async.js"></script>
 
 <!-- Test cases -->
     <script type="text/javascript">
@@ -59,6 +60,18 @@
         }
       }
     </script>
+
+<script type="text/python3">
+
+# Add /www/tests (i.e. parent) folder to PYTHONPATH
+import _sys, sys
+sys.path.append('..')
+
+# TODO : Optimize imports from known locations
+from _importlib import optimize_import_for_path
+optimize_import_for_path('..', 'py')
+
+</script>
 
 <script type="text/python3">
 from javascript import JSObject
