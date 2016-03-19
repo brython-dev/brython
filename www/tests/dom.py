@@ -15,3 +15,5 @@ assert Foo().foo == 'hi'
 # test dynamic constructor creation
 Constructor = JSConstructor(window.base_class.extend())
 assert Constructor().name == 'base'
+assert Constructor().extra == 'extra'
+

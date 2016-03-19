@@ -24,9 +24,12 @@ function base_class() {
     this.name = 'base';
 }
 
+base_class.extra = 'extra';
+
 base_class.extend = function() {
     var parent = this;
     return function() {
+        this.extra = parent.extra;
         return parent.apply(this, arguments);
     }
 }
