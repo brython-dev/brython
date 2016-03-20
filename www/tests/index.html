@@ -83,7 +83,7 @@ def run():
     if storage is not None:
        storage["py_src"] = src
 
-    state, t0, t1 = utils.run(src)
+    state, t0, t1, _ = utils.run(src)
     output = doc["console"].value
 
     print('<completed in %6.2f ms>' % ((t1 - t0) * 1000.0))
