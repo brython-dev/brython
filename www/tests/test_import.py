@@ -47,7 +47,7 @@ else:
 print('Testing VFS for .py files')
 
 # Add VFS file URL at the beginning of import search path
-vfs_url = __BRYTHON__.script_dir + '/test.vfs.js'
+vfs_url = __BRYTHON__.brython_path + '../tests/test.vfs.js'
 sys.path.insert(0, vfs_url)
 
 from hello import *
@@ -69,7 +69,7 @@ assert test_issue7.yyy() == 246
 print('Testing VFS for .pyc files')
 
 # Override VFS entry in sys.path
-vfs_pyc_url = __BRYTHON__.script_dir + '/test_pyc.vfs.js'
+vfs_pyc_url = __BRYTHON__.brython_path + '../tests/test_pyc.vfs.js'
 sys.path[0] = vfs_pyc_url
 
 from hello_pyc import *
@@ -92,7 +92,7 @@ assert test_issue7_pyc.yyy() == 369
 print('Testing deployment of .pyc.js files')
 
 # Install in sys.path the folder containing compiled py modules
-pyc_path = __BRYTHON__.script_dir + '/pycache'
+pyc_path = __BRYTHON__.brython_path + '../tests/pycache'
 sys.path[0] = pyc_path
 
 # Optimize module imports
