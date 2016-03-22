@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,6,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-03-18 18:42:08.751635"
+__BRYTHON__.compiled_date="2016-03-22 18:36:20.489412"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -3022,12 +3022,14 @@ case 'int':
 case 'float':
 case 'str':
 case 'bytes':
+case 'lamdba':
+$_SyntaxError(C,'token '+token+' after '+C)
+break
 case '[':
 case '(':
 case '{':
 case '.':
 case 'not':
-case 'lamdba':
 if(C.expect==='expr'){C.expect=','
 return $transition(new $AbstractExprCtx(C,false),token,arguments[2])}}
 switch(token){case 'not':

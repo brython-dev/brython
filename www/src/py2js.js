@@ -5786,12 +5786,14 @@ function $transition(context,token){
           case 'float':
           case 'str':
           case 'bytes':
+          case 'lamdba':
+            $_SyntaxError(context,'token '+token+' after '+context)
+            break
           case '[':
           case '(':
           case '{':
           case '.':
           case 'not':
-          case 'lamdba':
             if(context.expect==='expr'){
               context.expect = ','
               return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
