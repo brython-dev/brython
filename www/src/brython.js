@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,6,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-03-22 18:36:20.489412"
+__BRYTHON__.compiled_date="2016-03-25 18:03:16.395119"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4810,7 +4810,7 @@ if(src===null||src===undefined)return _b_.None
 var klass=$B.get_class(src)
 if(klass!==undefined){if(klass===_b_.list.$dict){for(var i=0,_len_i=src.length;i< _len_i;i++)src[i]=$B.$JS2Py(src[i])}else if(klass===$B.JSObject.$dict){src=src.js}else{return src}}
 if(typeof src=="object"){if($B.$isNode(src))return $B.DOMNode(src)
-if($B.$isEvent(src))return $B.DOMEvent(src)
+if($B.$isEvent(src))return $B.$DOMEvent(src)
 if(src.constructor===Array||$B.$isNodeList(src)){var res=[],pos=0
 for(var i=0,_len_i=src.length;i<_len_i;i++)res[pos++]=$B.$JS2Py(src[i])
 return res}}
@@ -9818,6 +9818,7 @@ if(ev.stopPropagation===undefined){ev.stopPropagation=function(){ev.cancelBubble
 ev.__repr__=function(){return '<DOMEvent object>'}
 ev.toString=ev.__str__=ev.__repr__
 return ev}
+$B.$DOMEvent=$DOMEvent
 $B.DOMEvent=function(evt_name){
 return $DOMEvent(new Event(evt_name))}
 $B.DOMEvent.__class__=$B.$factory

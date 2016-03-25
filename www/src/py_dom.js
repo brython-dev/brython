@@ -165,6 +165,8 @@ function $DOMEvent(ev){
     return ev
 }
 
+$B.$DOMEvent = $DOMEvent
+
 $B.DOMEvent = function(evt_name){
     // Factory to create instances of DOMEvent, based on an event name
     return $DOMEvent(new Event(evt_name))
