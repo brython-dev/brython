@@ -7,4 +7,4 @@ if hasattr(window, 'WebSocket'):
 else:
     supported = False
     def WebSocket(*args,**kw):
-        throw NotImplementedError
+        raise NotImplementedError

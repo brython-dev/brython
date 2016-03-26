@@ -103,7 +103,7 @@ Function called in case of SyntaxError
 */
 
 function $_SyntaxError(context,msg,indent){
-    //console.log('syntax error, context '+context,' msg ',msg)
+    console.log('syntax error, context '+context,' msg ',msg)
     var ctx_node = context
     while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
     var tree_node = ctx_node.node
@@ -6877,8 +6877,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         binary_pattern = new RegExp("^0[bB]([01]+)"),
         id_pattern = new RegExp("[\\$_a-zA-Z]\\w*"),
         qesc = new RegExp('"',"g"), // escape double quotes
-        sqesc = new RegExp("'","g"), // escape single quotes
-        dummy = {} // used to test valid identifiers
+        sqesc = new RegExp("'","g") // escape single quotes
     
     var context = null
     var root = new $Node('module')
@@ -7074,26 +7073,20 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         }
         // identifier ?
         if(name=="" && car!='$'){
-            try{
-                eval("dummy."+car+"=0")
-                var idpos = pos+1
-                while(idpos<src.length){
-                    var idcar = src.charAt(idpos)
-                    if(idcar==' '||idcar=='\n'||idcar==';'||idcar=='$'){
-                        name = src.substring(pos, idpos)
-                        break
-                    }
-                    try{
-                        eval("dummy."+src.substring(pos, idpos+1))
-                        idpos++
-                    }catch(err){
-                        name = src.substring(pos, idpos)
-                        break
-                    }
+            // regexIdentifier is defined in brython_builtins.js. It is a regular
+            // expression that matches all the valid Python identifier names,
+            // including those in non-latin writings (cf issue #358)
+            if($B.regexIdentifier.exec(car)){
+                name=car // identifier start
+                var p0=pos
+                pos++
+                while(pos<src.length && $B.regexIdentifier.exec(src.substring(p0, pos+1))){
+                    name+=src.charAt(pos)
+                    pos++
                 }
-            }catch(err){}
+            }
             if(name){
-                pos += name.length
+                //pos += name.length
                 if(kwdict.indexOf(name)>-1){
                     $pos = pos-name.length
                     if(unsupported.indexOf(name)>-1){

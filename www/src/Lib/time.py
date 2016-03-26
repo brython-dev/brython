@@ -210,9 +210,15 @@ def time():
     return float(date().getTime()/1000)
 
 def sleep(secs):
-    start = date().getTime()
-    while date().getTime() - start < secs * 1000.:
-        pass
+    """Javascript can't block execution for a given time, expect by an
+    infinite loop that freezes the browser. It's better to raise an
+    exception"""
+    #start = date().getTime()
+    #while date().getTime() - start < secs * 1000.:
+    #    pass
+    raise NotImplementedError("Blocking functions like time.sleep() are not "
+        "supported in the browser. Use functions in module browser.timer "
+        "instead.")
 
 def strftime(_format,t = None):
     

@@ -243,42 +243,8 @@ def ismount(path):
 # variable expansion.)
 
 def expanduser(path):
-    """Expand ~ and ~user constructions.  If user or $HOME is unknown,
-    do nothing."""
-    if isinstance(path, bytes):
-        tilde = b'~'
-    else:
-        tilde = '~'
-    if not path.startswith(tilde):
-        return path
-    sep = _get_sep(path)
-    i = path.find(sep, 1)
-    if i < 0:
-        i = len(path)
-    if i == 1:
-        if 'HOME' not in os.environ:
-            import pwd
-            userhome = pwd.getpwuid(os.getuid()).pw_dir
-        else:
-            userhome = os.environ['HOME']
-    else:
-        import pwd
-        name = path[1:i]
-        if isinstance(name, bytes):
-            name = str(name, 'ASCII')
-        try:
-            pwent = pwd.getpwnam(name)
-        except KeyError:
-            return path
-        userhome = pwent.pw_dir
-    if isinstance(path, bytes):
-        userhome = os.fsencode(userhome)
-        root = b'/'
-    else:
-        root = '/'
-    userhome = userhome.rstrip(root)
-    return (userhome + path[i:]) or root
-
+    """Not relevant for Brython, always return path."""
+    return path
 
 # Expand paths containing shell variable substitutions.
 # This expands the forms $variable and ${variable} only.

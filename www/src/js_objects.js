@@ -336,7 +336,10 @@ $JSObjectDict.__len__ = function(self){
 
 $JSObjectDict.__mro__ = [$JSObjectDict,$ObjectDict]
 
-$JSObjectDict.__repr__ = function(self){return "<JSObject wraps "+self.js+">"}
+$JSObjectDict.__repr__ = function(self){
+    if(self.js instanceof Date){return self.js.toString()}
+    return "<JSObject wraps "+self.js+">"
+}
 
 $JSObjectDict.__setattr__ = function(self,attr,value){
     if(isinstance(value,JSObject)){self.js[attr]=value.js}
@@ -378,7 +381,8 @@ $JSObjectDict.bind = function(self, evt, func){
             throw $B.exception(err)
         }
     }
-    return $JSObjectDict.__getattribute__(self, 'addEventListener').js(evt, f)
+    self.js.addEventListener(evt, func)
+    return _b_.None
 }
 
 $JSObjectDict.to_dict = function(self){
