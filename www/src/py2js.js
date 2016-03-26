@@ -6877,8 +6877,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         binary_pattern = new RegExp("^0[bB]([01]+)"),
         id_pattern = new RegExp("[\\$_a-zA-Z]\\w*"),
         qesc = new RegExp('"',"g"), // escape double quotes
-        sqesc = new RegExp("'","g"), // escape single quotes
-        dummy = {} // used to test valid identifiers
+        sqesc = new RegExp("'","g") // escape single quotes
     
     var context = null
     var root = new $Node('module')
@@ -7074,6 +7073,9 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         }
         // identifier ?
         if(name=="" && car!='$'){
+            // regexIdentifier is defined in brython_builtins.js. It is a regular
+            // expression that matches all the valid Python identifier names,
+            // including those in non-latin writings (cf issue #358)
             if($B.regexIdentifier.exec(car)){
                 name=car // identifier start
                 var p0=pos
