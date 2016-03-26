@@ -23,6 +23,9 @@ Brython supporte tous les mots-clés et la plupart des fonctions de Python 3 :
   `round(), set(), setattr(), slice(), sorted(), str(), sum(), super(), `
   `tuple(), type(), zip(), __import__`
 
+Ne sont pas pris en charge dans la version actuelle les fonctions intégrées 
+`memoryview(),  vars()`
+
 Quelques particularités liées au contexte d'exécution dans un navigateur :
 
 - la fonction `open()` prend comme argument l'url du fichier à ouvrir ; comme 
@@ -45,8 +48,17 @@ Quelques particularités liées au contexte d'exécution dans un navigateur :
 >>    from browser import window
 >>    window.print(text)
 
-Ne sont pas pris en charge dans la version actuelle les fonctions intégrées 
-`memoryview(),  vars()`
+- le cycle de vie des objets est géré par le ramasse-miettes de Javascript,
+  Brython ne gère pas le comptage de référence comme CPython, donc la
+  méthode `__del__()` n'est pas appelée quand une instance de classe n'est 
+  plus référencée.
+
+- les fonctions comme `time.sleep()` qui bloquent l'exécution pendant une
+  durée donnée, ou en attendant qu'un événement se produise, ne sont pas
+  gérées parce qu'il n'y a pas d'équivalent en Javascript : il faut utiliser
+  dans ce cas les fonctions du module **browser.timer** telles que 
+  `set_timeout()` ou `set_interval()`, ou des gestionnaires d'événements
+  (méthode `bind()` des éléments DOM).
 
 
 Valeur intégrée `__name__`

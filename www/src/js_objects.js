@@ -39,7 +39,7 @@ $Location.$dict = $LocationDict
 var $JSConstructorDict = {__class__:$B.$type,__name__:'JSConstructor'}
 
 $JSConstructorDict.__call__ = function(self){
-    // self.js is a constructor
+    // self.func is a constructor
     // It takes Javascript arguments so we must convert
     // those passed to the Python function
     var args = [null]
@@ -55,7 +55,6 @@ $JSConstructorDict.__call__ = function(self){
 $JSConstructorDict.__mro__ = [$JSConstructorDict,$ObjectDict]
 
 function JSConstructor(obj){
-    //if(obj.__class__===$JSObjectDict){obj = obj.js}
     return {
         __class__:$JSConstructorDict,
         func:obj.js_func
@@ -197,7 +196,7 @@ $JSObjectDict.__getattribute__ = function(self,attr){
             // where the arguments passed to the Python function G are converted to Javascript
             // objects usable by the underlying function F
             var res = function(){
-                var args = [],arg
+                var args = []
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     if(arguments[i].$nat!=undefined){
                         //
@@ -218,10 +217,25 @@ $JSObjectDict.__getattribute__ = function(self,attr){
                     location.replace(args[0])
                     return
                 }
-                return $B.$JS2Py(js_attr.apply(self.js,args))
+                // normally, we provide self.js as `this` to simulate js method call
+                var new_this = self.js;
+                // but if we get explicit `this` (e.g. through apply call) we should pass it on
+                if (this !== null && this !== undefined && this !== window) {
+                    new_this = this
+                }
+                var result = js_attr.apply(new_this,args)
+                // NOTE: fix for situations when wrapped function is constructor (thus it does not return and value is lost)
+                // this has side effect that non-constructor functions returning nothing will return `this` instead, which can break something
+                // 
+                if (result === undefined) {
+                    result = this
+                }
+                return $B.$JS2Py(result)
             }
             res.__repr__ = function(){return '<function '+attr+'>'}
             res.__str__ = function(){return '<function '+attr+'>'}
+            // this is very important for class-emulating functions
+            res.prototype = js_attr.prototype
             return {__class__:$JSObjectDict,js:res,js_func:js_attr}
         }else{
             if(Array.isArray(self.js[attr])){return self.js[attr]}
@@ -248,7 +262,7 @@ $JSObjectDict.__getattribute__ = function(self,attr){
             // res is the function in one of parent classes
             // return a function that takes self as first argument
             return function(){
-                var args = [self],arg
+                var args = [self]
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     arg = arguments[i]
                     if(arg && (arg.__class__===$JSObjectDict || arg.__class__===$JSConstructorDict)){
@@ -357,7 +371,14 @@ $JSObjectDict.__str__ = $JSObjectDict.__repr__
 var no_dict = {'string':true,'function':true,'number':true,'boolean':true}
 
 $JSObjectDict.bind = function(self, evt, func){
-    return $JSObjectDict.__getattribute__(self, 'addEventListener').js(evt, func)
+    var f = function(){
+        try{
+            func.apply(null, arguments)
+        }catch(err){
+            throw $B.exception(err)
+        }
+    }
+    return $JSObjectDict.__getattribute__(self, 'addEventListener').js(evt, f)
 }
 
 $JSObjectDict.to_dict = function(self){
@@ -379,7 +400,7 @@ function JSObject(obj){
     // If obj is a function, calling it with JSObject implies that it is
     // a function defined in Javascript. It must be wrapped in a JSObject
     // so that when called, the arguments are transformed into JS values
-    if(typeof obj=='function'){return {__class__:$JSObjectDict,js:obj}}
+    if(typeof obj=='function'){return {__class__:$JSObjectDict,js:obj,js_func:obj}}
 
     var klass = $B.get_class(obj)
     // we need to do this or nan is returned, when doing json.loads(...)

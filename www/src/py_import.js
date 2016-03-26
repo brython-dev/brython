@@ -71,7 +71,7 @@ function $importer(){
             fake_qs=''
             break;
        default:
-            fake_qs="?v="+$B.UUID()
+            fake_qs="?v="+(new Date().getTime())
     }
 
     var timer = setTimeout( function() {
@@ -136,7 +136,7 @@ function $download_module(module,url,package,blocking){
     }
     if('overrideMimeType' in $xmlhttp){$xmlhttp.overrideMimeType("text/plain")}
     $xmlhttp.send()
-    
+
     if(!no_block){
 
         //sometimes chrome doesn't set res correctly, so if res == null, assume no module found
@@ -949,17 +949,15 @@ $B.$import = function(mod_name, fromlist, aliases, locals, blocking){
                 catch ($err1) {
                     // [Import spec] attempt to import a submodule with that name ...
                     // FIXME : level = 0 ? level = 1 ?
-                    _b_.getattr(__import__, '__call__')(mod_name + '.' + name, 
-                        globals, undefined, [], 0);
-                    try {
+                    try{
+                        _b_.getattr(__import__, '__call__')(mod_name + '.' + name, 
+                            globals, undefined, [], 0);
                         // [Import spec] ... then check imported module again for name
                         locals[alias] = _b_.getattr(modobj, name);
                     }
                     catch ($err3) {
                         // [Import spec] On attribute not found , raise ImportError
-                        if ($err3.__class__ === _b_.AttributeError.$dict) {
-                            $err3.__class__ = _b_.ImportError.$dict;
-                        }
+                        throw _b_.ImportError("cannot import name '"+name+"'")
                     }
                 }
             }

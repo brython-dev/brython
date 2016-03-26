@@ -285,7 +285,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
 $ObjectDict.__gt__ = $ObjectNI('__gt__','>')
 
 $ObjectDict.__hash__ = function (self) { 
-    $B.$py_next_hash+=1; 
+    $B.$py_next_hash--; 
     return $B.$py_next_hash;
 }
 

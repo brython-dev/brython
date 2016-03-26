@@ -579,11 +579,14 @@ var UnsupportedChar = function() {
 
 $StringDict.__mod__ = function(self, args) {
 
-    var length = self.length
-    var pos = 0 |0
-    var argpos = null
-    if (args && _b_.isinstance(args, _b_.tuple)) {
+    var length = self.length,
+        pos = 0 |0,
+        argpos = null,
+        getitem
+    if (_b_.isinstance(args, _b_.tuple)) {
         argpos = 0 |0
+    }else{
+        getitem = _b_.getattr(args,'__getitem__', null)
     }
     var ret = ''
     var $get_kwarg_string = function(s) {
@@ -596,7 +599,7 @@ $StringDict.__mod__ = function(self, args) {
         var key = rslt[1]
         newpos += rslt[0].length
         try {
-            var self = _b_.getattr(args.__class__,'__getitem__')(args, key)
+            var self = getitem(key)
         } catch(err) {
             if (err.name === "KeyError") {
                 throw err
@@ -615,15 +618,9 @@ $StringDict.__mod__ = function(self, args) {
             // args is the value
             self = args
         } else {
-            try {
-                self = args[argpos++]
-            }
-            catch(err) {
-                if (err.name === "IndexError") {
-                    throw _b_.TypeError("not enough arguments for format string")
-                } else {
-                    throw err
-                }
+            self = args[argpos++]
+            if(self===undefined){
+                throw _b_.TypeError("not enough arguments for format string")
             }
         }
         return get_string_value(s, self)
@@ -671,6 +668,7 @@ $StringDict.__mod__ = function(self, args) {
             }
         } while (true)
     }
+    var nbph = 0 // number of placeholders
     do {
         var newpos = self.indexOf('%', pos)
         if (newpos < 0) {
@@ -683,7 +681,7 @@ $StringDict.__mod__ = function(self, args) {
             if (self[newpos] === '%') {
                 ret += '%'
             } else {
-                var tmp
+                nbph++
                 if (self[newpos] === '(') {
                     ++newpos
                     ret += $get_kwarg_string(self)
@@ -697,7 +695,16 @@ $StringDict.__mod__ = function(self, args) {
         }
         pos = newpos + 1
     } while (pos < length)
-
+    
+    if(argpos!==null){
+        if(args.length>argpos){
+            throw _b_.TypeError('not enough arguments for format string')
+        }else if(args.length<argpos){
+            throw _b_.TypeError('not all arguments converted during string formatting')
+        }
+    }else if(nbph==0){
+        throw _b_.TypeError('not all arguments converted during string formatting')
+    }
     return ret
 }
 
@@ -1621,8 +1628,10 @@ $StringDict.zfill = function(self, width) {
 function str(arg){
     if(arg===undefined) return ''
     switch(typeof arg) {
-      case 'string': return arg
-      case 'number': return arg.toString()
+      case 'string':
+          return arg
+      case 'number': 
+          if(isFinite(arg)){return arg.toString()}
     }
     
     try{

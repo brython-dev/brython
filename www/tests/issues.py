@@ -713,7 +713,7 @@ b = float("-infinity")
 assert a == b
 assert repr(a) == '-inf'
 assert a * 1. == b
-assert a * 1 == b # This test fails...
+assert a * 1 == b
 
 # issue 352
 a = float("inf")
@@ -747,6 +747,85 @@ assert isinstance(z, A)
 assert z == [1, 2, 3]
 assert len(z) == 3
 assert list.__len__(z) == 3
+
+# issue 363
+a = float('nan')
+b = 1
+c = a-b
+
+# issue 371
+assert (not 'x' in ['x', 'y'] and 2==1) == False
+
+# issue 375
+def f():
+    "test" %3
+assertRaises(TypeError, f)
+
+# issues 387 and 388
+class A():
+    pass
+
+class B():
+    pass
+
+a1 = A()
+a2 = A()
+
+assert hash(A) != hash(B)
+assert hash(A) != hash(a1)
+assert hash(A) != hash(a2)
+
+class A():
+    pass
+
+class B():
+    pass
+
+d = {A: "class A"}
+
+def test():
+    d[B]
+
+assertRaises(KeyError, test)
+
+# issue 389
+gen = (n * n for n in range(10))
+assert list(gen) == [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+assert list(gen) == []
+
+# issue 391
+def f():
+    ["a"]+5
+
+assertRaises(TypeError, f)
+
+# sum with booleans
+assert sum([True, False]) == 1
+assert 1.2+True == 2.2
+
+# issue #392
+class A:
+  def __init__(self):
+    self.b = [1 for n in range(10)]
+    self.b[3] = 0
+
+eval = A()
+
+assert [c for c in range(10) if eval.b[c] == 0] == [3]
+
+# issue 394
+import base64
+b = b"\x7F\x7B\xED\x96"
+b64 = base64.b64encode(b)
+assert b64 == b"f3vtlg=="
+newb = base64.b64decode(b64)
+assert newb == b
+
+e = base64.b64encode(b'data to encode')
+assert e == b"ZGF0YSB0byBlbmNvZGU="
+assert base64.b64decode(e, validate=True) == b'data to encode'
+
+
 
 # ==========================================
 # Finally, report that all tests have passed

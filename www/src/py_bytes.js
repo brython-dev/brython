@@ -460,8 +460,11 @@ function decode(b,encoding,errors){
     var s='', enc=normalise(encoding)
 
     switch(enc) {
+      case 'utf_8':
       case 'utf-8':
       case 'utf8':
+      case 'U8':
+      case 'UTF':
         var i=0,cp
         var _int_800=_int('800'), _int_c2=_int('c2'), _int_1000=_int('1000')
         var _int_e0=_int('e0'), _int_e1=_int('e1'), _int_e3=_int('e3')
@@ -509,9 +512,15 @@ function decode(b,encoding,errors){
             }
         }
         break;
-      case 'latin1':
-      case 'iso8859_1':
+      case 'latin_1':
       case 'windows1252':
+      case 'iso-8859-1':
+      case 'iso8859-1':
+      case '8859':
+      case 'cp819':
+      case 'latin':
+      case 'latin1':
+      case 'L1':
         for(var i=0, _len_i = b.length; i < _len_i;i++) s += String.fromCharCode(b[i])
         break;
       case 'ascii':

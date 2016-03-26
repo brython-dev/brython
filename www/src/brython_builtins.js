@@ -92,7 +92,7 @@ $B.min_int = -$B.max_int
 
 // Used to compute the hash value of some objects (see 
 // py_builtin_functions.js)
-$B.$py_next_hash = -Math.pow(2,53)
+$B.$py_next_hash = Math.pow(2,53)-1
 
 // $py_UUID guarantees a unique id.  Do not use this variable 
 // directly, use the $B.UUID function defined in py_utils.js

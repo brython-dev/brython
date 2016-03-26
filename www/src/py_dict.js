@@ -217,7 +217,6 @@ $DictDict.__eq__ = function(){
 }
 
 $DictDict.__getitem__ = function(){
-
     var $ = $B.args('__getitem__', 2, {self:null, arg:null},
         ['self', 'arg'], arguments, {}, null, null),
         self=$.self, arg=$.arg
@@ -249,9 +248,12 @@ $DictDict.__getitem__ = function(){
     if (self.$object_dict[_key] !== undefined) {
         return self.$object_dict[_key][1]
     }
-
-    if(hasattr(self, '__missing__')) return getattr(self, '__missing__')(arg)
-
+    if(self.__class__!==$DictDict){
+        try{
+            var missing_method = getattr(self.__class__.$factory, '__missing__')
+            return missing_method(self, arg)
+        }catch(err){}
+    }
     throw KeyError(_b_.str(arg))
 }
 

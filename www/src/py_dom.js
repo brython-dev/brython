@@ -515,7 +515,7 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         }
         if(attr=='options') return $Options(self.elt)
         if(attr=='style') return $Style(self.elt[attr])
-        return $B.$JS2Py(self.elt[attr])
+        return $B.JSObject(self.elt[attr])
     }
     return $ObjectDict.__getattribute__(self,attr)
 }
@@ -871,13 +871,14 @@ DOMNodeDict.height = {
         if(self.elt.tagName=='CANVAS'){return self.elt.height}
         var res = parseInt(self.elt.style.height)
         if(isNaN(res)){
-            throw _b_.AttributeError("node has no attribute 'height'")
+            return self.elt.offsetHeight
+            //throw _b_.AttributeError("node has no attribute 'height'")
         }
         return res
     },
     '__set__': function(obj, self, value){
         if(self.elt.tagName=='CANVAS'){self.elt.height=value}
-        else{self.elt.style.height = value+'px'}
+        self.elt.style.height = value+'px'
     }
 }
 
@@ -1099,13 +1100,18 @@ DOMNodeDict.width = {
         if(self.elt.tagName=='CANVAS'){return self.elt.width}
         var res = parseInt(self.elt.style.width)
         if(isNaN(res)){
-            throw _b_.AttributeError("node has no attribute 'width'")
+            //throw _b_.AttributeError("node has no attribute 'width'")
+            return self.elt.offsetWidth
         }
         return res
     },
     '__set__': function(obj, self, value){
-        if(self.elt.tagName=='CANVAS'){self.elt.width=value}
-        else{self.elt.style.width = value+'px'}
+        if(self.elt.tagName=='CANVAS'){
+            // for CANVAS, we must set both elt.widdth and elt.style.width
+            // to the same value, else content is scaled in the browser
+            self.elt.width=value
+        }
+        self.elt.style.width = value+'px'
     }
 }
 

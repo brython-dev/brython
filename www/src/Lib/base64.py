@@ -6,10 +6,11 @@
 # Modified 30-Dec-2003 by Barry Warsaw to add full RFC 3548 support
 # Modified 22-May-2007 by Guido van Rossum to use bytes everywhere
 
-import re
-import struct
-import binascii
+#import re
+#import struct
+#import binascii
 
+import _base64 # Javascript module in libs
 
 __all__ = [
     # Legacy interface exports traditional RFC 1521 Base64 encodings
@@ -56,15 +57,13 @@ def b64encode(s, altchars=None):
     """
     if not isinstance(s, bytes_types):
         raise TypeError("expected bytes, not %s" % s.__class__.__name__)
-    # Strip off the trailing newline
-    encoded = binascii.b2a_base64(s)[:-1]
     if altchars is not None:
         if not isinstance(altchars, bytes_types):
+            print('wrong altchars')
             raise TypeError("expected bytes, not %s"
                             % altchars.__class__.__name__)
-        assert len(altchars) == 2, repr(altchars)
-        return encoded.translate(bytes.maketrans(b'+/', altchars))
-    return encoded
+        assert len(altchars) >= 2, repr(altchars)
+    return _base64.Base64.encode(s, altchars)
 
 
 def b64decode(s, altchars=None, validate=False):
@@ -81,14 +80,11 @@ def b64decode(s, altchars=None, validate=False):
     discarded prior to the padding check.  If validate is True,
     non-base64-alphabet characters in the input result in a binascii.Error.
     """
-    s = _bytes_from_decode_data(s)
     if altchars is not None:
         altchars = _bytes_from_decode_data(altchars)
         assert len(altchars) == 2, repr(altchars)
         s = s.translate(bytes.maketrans(altchars, b'+/'))
-    if validate and not re.match(b'^[A-Za-z0-9+/]*={0,2}$', s):
-        raise binascii.Error('Non-base64 digit found')
-    return binascii.a2b_base64(s)
+    return _base64.Base64.decode(s, altchars, validate)
 
 
 def standard_b64encode(s):

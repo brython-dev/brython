@@ -9,6 +9,8 @@ var $ObjectDict = _b_.object.$dict
 
 // maps comparison operator to method names
 $B.$comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
+// maps comparison operator to name of inverse operator (eg <= for >)
+$B.$inv_comps = {'>': 'le', '>=': 'lt', '<': 'ge', '<=': 'gt'}
 
 function abs(obj){
     if(isinstance(obj,_b_.int)) return _b_.int(Math.abs(obj));
@@ -297,11 +299,13 @@ function $eval(src, _globals, _locals){
         parent_block_id = current_globals_id
         eval('var $locals_'+current_globals_id+'=current_frame[3]')
     }else{
+        $B.bound[globals_id] = {}
         var items = _b_.dict.$dict.items(_globals), item
         while(1){
             try{
                 var item = next(items)
                 eval('$locals_'+globals_id+'["'+item[0]+'"] = item[1]')
+                $B.bound[globals_id][item[0]]=true
             }catch(err){
                 break
             }
@@ -626,7 +630,7 @@ function hash(obj){
     }
     var hashfunc = getattr(obj, '__hash__', _b_.None)
 
-    if (hashfunc == _b_.None) return $B.$py_next_hash++
+    if (hashfunc == _b_.None) return $B.$py_next_hash--
 
     if(hashfunc.$infos === undefined){
         return obj.__hashvalue__ = hashfunc()
@@ -648,7 +652,7 @@ function hash(obj){
             throw _b_.TypeError("unhashable type: '"+
                 $B.get_class(obj).__name__+"'")
         }else{
-            return $B.$py_next_hash++
+            return $B.$py_next_hash--
         }
     }else{
         return obj.__hashvalue__= hashfunc()
@@ -1806,7 +1810,7 @@ for(var i=0;i<builtin_names.length;i++){
     catch(err){}
 }
 
-_b_['$eval']=$eval
+_b_['$$eval']=$eval
 
 _b_['open']=$url_open
 _b_['print']=$print

@@ -26,7 +26,7 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
         var kw_args=$args[nb_pos].kw
     }
 
-    if(extra_pos_args){slots[extra_pos_args]=[]}
+    if(extra_pos_args){slots[extra_pos_args]=_b_.tuple()}
     if(extra_kw_args){slots[extra_kw_args]=_b_.dict()}
 
     if(nb_pos>argcount){
@@ -96,6 +96,70 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
 
     return slots
     
+}
+
+// Experimental new version, should be faster
+$B.argsfast = function($fname, argcount, slots, var_names, pos_args, kw_args,
+    $dobj, extra_pos_args, extra_kw_args){
+    // builds a namespace from the arguments provided in $args
+    // in a function defined like foo(x,y,z=1,*args,u,v,**kw) the parameters are
+    // $fname = "f"
+    // argcount = 3 (for x, y , z)
+    // slots = {x:null, y:null, z:null}
+    // var_names = ['x', 'y', 'z']
+    // $dobj = {'z':1}
+    // extra_pos_args = 'args'
+    // extra_kw_args = 'kw'
+    
+    var nb_pos_args = pos_args.length,
+        nb_var_names = var_names.length
+    if(extra_pos_args!==null){slots[extra_pos_args] = []}
+    if(extra_kw_args!==null){slots[extra_kw_args] = _b_.dict()}
+    
+    if(nb_pos_args<=nb_var_names){
+        for(var i=0;i<nb_pos_args;i++){
+            slots[var_names[i]]=pos_args[i]
+        }
+    }else if(nb_pos_args>nb_var_names){
+        if(extra_pos_args!==null){
+            for(var i=0;i<nb_var_names;i++){
+                slots[var_names[i]] = pos_args[i]
+            }
+            slots[extra_pos_args] = pos_args.slice(nb_var_names)
+        }
+    }
+    for(var attr in kw_args){
+        if(slots[attr]===undefined){
+            if(extra_kw_args){slots[extra_kw_args].$string_dict[attr]=kw_args[attr]}
+            else{
+                throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")
+            }
+        }else{
+            if(slots[attr]!==null){
+                throw _b_.TypeError($fname+"() got multiple values for argument '"+attr+"'")
+            }
+            slots[attr] = kw_args[i]
+        }
+    }
+    var missing = []
+    for(var attr in slots){
+        if(slots[attr]===null){
+            if($dobj[attr]===undefined){
+                missing.push(attr)
+            }
+            slots[attr] = $dobj[attr]
+        }
+    }
+    if(missing.length>0){
+        if(missing.length==1){
+            throw _b_.TypeError($fname+" missing 1 positional argument: "+missing[0])
+        }else{
+            var msg = $fname+" missing "+missing.length+" positional arguments: "
+            msg += missing.join(' and ')
+            throw _b_.TypeError(msg)
+        }    
+    }
+    return slots
 }
 
 $B.get_class = function(obj){
@@ -301,7 +365,7 @@ $B.$gen_expr = function(env){
     $GenExprDict.__iter__ = function(self){return self}
     $GenExprDict.__next__ = function(self){
         self.$counter += 1
-        if(self.$counter==self.value.length){
+        if(self.$counter>=self.value.length){
             throw _b_.StopIteration('')
         }
         return self.value[self.$counter]
@@ -1129,6 +1193,8 @@ $B.add = function(x,y){
         && z>min_int && z<max_int){return z}
     else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
         && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
+        if((typeof x=='number' && isNaN(x)) ||
+            (typeof y=='number' && isNaN(y))){return _b_.float('nan')}
         var res = $B.LongInt.$dict.__add__($B.LongInt(x), $B.LongInt(y))
         return res
     }else{return z}
@@ -1163,6 +1229,8 @@ $B.mul = function(x,y){
         && z>min_int && z<max_int){return z}
     else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
         && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
+        if((typeof x=='number' && isNaN(x)) ||
+            (typeof y=='number' && isNaN(y))){return _b_.float('nan')}
         return $B.LongInt.$dict.__mul__($B.LongInt(x), $B.LongInt(y))
     }else{return z}
 }
@@ -1172,6 +1240,8 @@ $B.sub = function(x,y){
         && z>min_int && z<max_int){return z}
     else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
         && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
+        if((typeof x=='number' && isNaN(x)) ||
+            (typeof y=='number' && isNaN(y))){return _b_.float('nan')}
         return $B.LongInt.$dict.__sub__($B.LongInt(x), $B.LongInt(y))
     }else{return z}
 }

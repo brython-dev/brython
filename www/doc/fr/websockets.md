@@ -4,14 +4,18 @@ module **browser.websocket**
 Les Web sockets, définies dans HTML5, sont un moyen de gérer une communication
 bidirectionnelle entre le client et le serveur
 
-Le module définit une fonction :
+Le module définit un booléen
 
-`websocket(`_hote_`)`
+`supported`
+> indique si le protocole WebSocket est supporté par le navigateur
+
+et une fonction
+
+`WebSocket(`_hote_`)`
 > _hote_ est l'adresse d'un serveur qui supporte le protocole WebSocket. 
-> Renvoie un objet `WebSocket`
-
-> Si le navigateur ne gère pas ce protocole, une exception 
+> Renvoie un objet `WebSocket`. Si le navigateur ne gère pas ce protocole, une exception 
 > `NotImplementedError` est déclenchée. 
+
 
 Les objets `WebSocket` possèdent les méthodes suivantes :
 
@@ -80,7 +84,7 @@ def on_close(evt):
 
 ws = None
 def _open(ev):
-    if not __BRYTHON__.has_websocket:
+    if not websocket.supported:
         alert("WebSocket n'est pas pris en charge par votre navigateur")
         return
     global ws

@@ -51,7 +51,7 @@ var $operators = {
     "/":"truediv","%":"mod","&":"and","|":"or","~":"invert",
     "^":"xor","<":"lt",">":"gt",
     "<=":"le",">=":"ge","==":"eq","!=":"ne",
-    "or":"or","and":"and", "in":"in",
+    "or":"or","and":"and", "in":"in", "not": "not",
     "is":"is","not_in":"not_in","is_not":"is_not" // fake
 }
 
@@ -67,7 +67,7 @@ var $augmented_assigns = {
 var noassign = $B.list2obj(['True','False','None','__debug__'])
 
 // Operators weight for precedence
-var $op_order = [['or'],['and'],
+var $op_order = [['or'],['and'],['not'],
     ['in','not_in'],
     ['<','<=','>','>=','!=','==','is','is_not'],
     ['|'],
@@ -848,7 +848,7 @@ function $AugmentedAssignCtx(context, op){
         
         var left_is_id = (this.tree[0].type=='expr' && 
             this.tree[0].tree[0].type=='id')
-
+        
         if(left_is_id){
             // Set attribute "augm_assign" of $IdCtx instance, so that
             // the id will not be resolved with $B.$check_undef()
@@ -1122,8 +1122,15 @@ function $BreakCtx(context){
     this.to_js = function(){
         this.js_processed=true
         var scope = $get_scope(this)
-        var res = ';$locals_'+scope.id.replace(/\./g,'_')
-        return res + '["$no_break'+this.loop_ctx.loop_num+'"]=false;break;'
+        var res = ';$locals_'+scope.id.replace(/\./g,'_')+
+            '["$no_break'+this.loop_ctx.loop_num+'"]=false'
+
+        if(this.loop_ctx.type!='asyncfor'){
+            res += ';break'
+        }else{
+            res += ';throw StopIteration('+this.loop_ctx.loop_num+')'
+        }
+        return res
     }
 }
 
@@ -1273,6 +1280,21 @@ function $CallCtx(context){
                 if(pos_args.length>0){args_str += ','}
                 args_str += '_b_.list('+star_args+'))'
             }
+
+            if(this.func.value=="fghjk"){
+                console.log('fghjk')
+                var kw_args_str = '{'+kw_args.join(', ')+'}'
+                if(dstar_args){
+                    kw_args_str = '$B.extend("'+this.func.value+'",'+kw_args_str
+                    kw_args_str += ','+dstar_args+')'
+                }else if(kw_args_str=='{}'){
+                    kw_args_str = ''
+                }
+                var res = 'getattr('+func_js+',"__call__")(['+args_str+']'
+                if(kw_args_str.length>0){res += ', '+kw_args_str}
+                return res + ')'
+            }        
+
             var kw_args_str = '{'+kw_args.join(', ')+'}'
             if(dstar_args){
                 kw_args_str = '{$nat:"kw",kw:$B.extend("'+this.func.value+'",'+kw_args_str
@@ -1282,6 +1304,9 @@ function $CallCtx(context){
             }else{
                 kw_args_str = ''
             }
+
+
+
             if(star_args && kw_args_str){
                 args_str += '.concat(['+kw_args_str+'])'            
             }else{
@@ -1298,7 +1323,7 @@ function $CallCtx(context){
             }else{
                 args_str = '('+args_str+')'
             }
-            
+
             if($B.debug>0){
                 // On debug mode, always use getattr(func,"__call__") to manage
                 // the call stack and get correct error messages
@@ -2031,10 +2056,18 @@ function $DefCtx(context){
 
         var make_args_nodes = []
         var func_ref = '$locals_'+scope.id.replace(/\./g,'_')+'["'+this.name+'"]'
-        var js = 'var $ns = $B.args("'+this.name+'", '
+        if(this.name=='fghjk'){
+            var js = 'var $ns = $B.argsfast("'+this.name+'", '
+        }else{
+            var js = 'var $ns = $B.args("'+this.name+'", '
+        }
         js += this.argcount+', {'+this.slots.join(', ')+'}, '
         js += '['+slot_list.join(', ')+'], '
-        js += 'arguments, '
+        if(this.name=='fghjk'){
+            js += 'pos_args, kw_args, '
+        }else{
+            js += 'arguments, '
+        }
         if(defs1.length){js += '$defaults, '}
         else{js += '{}, '}
         js += this.other_args+', '+this.other_kw+');'
@@ -2141,7 +2174,7 @@ function $DefCtx(context){
             var params = Object.keys(this.varnames).concat(['$extra']).join(', ')
             new $NodeJSCtx(def_func_node,'return function('+params+')')
         }else{
-            new $NodeJSCtx(def_func_node,'return function()')
+            new $NodeJSCtx(def_func_node,'return function(pos_args, kw_args)')
         }
         def_func_node.is_def_func = true
         def_func_node.module = this.module
@@ -2679,8 +2712,8 @@ function $ForExpr(context){
                 for_node.add(children[i].clone())
             }
             // Add a line to reset the line number
-            for_node.add($NodeJS('$locals.line_info="'+node.line_num+','+
-                scope.id+'"'))
+            for_node.add($NodeJS('$locals.$line_info="'+node.line_num+','+
+                scope.id+'"; None;'))
             
             // Check if current "for" loop is inside another "for" loop
             var in_loop=false
@@ -3200,8 +3233,8 @@ function $IdCtx(context,value){
         }
 
         // Special cases
-        if(val=='eval') val = '$eval'
-        else if(val=='__BRYTHON__' || val == '$B'){return val}
+        //if(val=='eval') val = '$eval'
+        if(val=='__BRYTHON__' || val == '$B'){return val}
         
         var innermost = $get_scope(this)
         
@@ -3257,6 +3290,8 @@ function $IdCtx(context,value){
         }
         this.found = found
         if(this.nonlocal && found[0]===innermost){found.shift()}
+        
+        if(val=='fghj'){console.log('found for', val, found)}
 
         if(found.length>0){
             // If name is not in the left part of an assignment, 
@@ -3342,7 +3377,9 @@ function $IdCtx(context,value){
                         this.is_builtin = true
                     }
                 }else if(scope.id==scope.module){
+                    if(val=='fghj'){console.log('module level', this.augm_assign)}
                     if(this.bound || this.augm_assign){
+                        if(val=='fghj'){console.log('simple', val)}
                         val = scope_ns+'["'+val+'"]'
                     }else{
                         if(scope===innermost && this.env[val]===undefined){
@@ -3396,7 +3433,7 @@ function $IdCtx(context,value){
             // If the name exists at run time in the global namespace, use it,
             // else raise a NameError
             // Function $search is defined in py_utils.js
-            
+
             return '$B.$search("'+val+'")'
         }
     }
@@ -4361,8 +4398,10 @@ function $SingleKwCtx(context,token){
         if(pctx.tree.length>0){
             var elt = pctx.tree[0]
             if(elt.type=='for' || 
+elt.type=='asyncfor' ||
                 (elt.type=='condition' && elt.token=='while')){
                 elt.has_break = true
+                elt.else_node = $get_node(this)
                 this.loop_num = elt.loop_num
             }
         }
@@ -4591,7 +4630,10 @@ function $TryCtx(context){
         // Fake line to start the 'else if' clauses
         var new_node = new $Node()
         // Set the boolean $failed to true
-        new $NodeJSCtx(new_node,$var+'=true;if(0){}')
+        // Set attribute "pmframe" (post mortem frame) to $B in case an error
+        // happens in a callback function ; in this case the frame would be
+        // lost at the time the exception is handled by $B.exception
+        new $NodeJSCtx(new_node,$var+'=true;$B.pmframe=$B.last($B.frames_stack);if(0){}')
         catch_node.insert(0,new_node)
         
         var pos = rank+2
@@ -5262,6 +5304,11 @@ function $transition(context,token){
                 else if(tg=='+'){var op_expr = new $OpCtx(left,'unary_pos')}
                 else{var op_expr = new $OpCtx(left,'unary_inv')}
                 return new $AbstractExprCtx(op_expr,false)
+              case 'not':
+                context.parent.tree.pop() // remove abstract expression
+                var commas = context.with_commas
+                context = context.parent
+                return new $NotCtx(new $ExprCtx(context,'not',commas))
             }
             $_SyntaxError(context,'token '+token+' after '+context)
           case '=':
@@ -5739,12 +5786,14 @@ function $transition(context,token){
           case 'float':
           case 'str':
           case 'bytes':
+          case 'lamdba':
+            $_SyntaxError(context,'token '+token+' after '+context)
+            break
           case '[':
           case '(':
           case '{':
           case '.':
           case 'not':
-          case 'lamdba':
             if(context.expect==='expr'){
               context.expect = ','
               return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
@@ -5825,6 +5874,16 @@ function $transition(context,token){
                 context.parent = expr
                 var new_op = new $OpCtx(context,op)
                 return new $AbstractExprCtx(new_op,false)
+            }else{
+                // issue #371
+                if(op === 'and' || op === 'or'){
+                    while(repl.parent.type==='not'||
+                        (repl.parent.type==='expr'&&repl.parent.parent.type==='not')){
+                        // 'and' and 'or' have higher precedence than 'not'
+                        repl = repl.parent
+                        op_parent = repl.parent
+                    }
+                }
             }
             if(repl.type==='op') {
                 var _flag=false
@@ -6780,7 +6839,7 @@ function $transition(context,token){
 }
 
 $B.forbidden = ['case','catch','constructor','Date','delete',
-    'default','enum','extends','Error','history','function','location',
+    'default','enum','eval','extends','Error','history','function','location',
     'Math','new','null','Number','RegExp','super','this','throw','var',
     'toString']
 
@@ -6799,7 +6858,8 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         "for","lambda","try","finally","raise","def","from",
         "nonlocal","while","del","global","with",
         "as","elif","else","if","yield","assert","import",
-        "except","raise","in","not","pass","with","continue","__debugger__",
+        "except","raise","in", //"not",
+        "pass","with","continue","__debugger__",
         "IMPRT" // experimental for non blocking import
         //"False","None","True","continue",
         // "and',"or","is"
@@ -7039,26 +7099,39 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                     if(unsupported.indexOf(name)>-1){
                         $_SyntaxError(context,"Unsupported Python keyword '"+name+"'")                    
                     }
-                    // if keyword is "not", see if it is followed by "in"
-                    if(name=='not'){
+                    context = $transition(context,name)
+                } else if($operators[name]!==undefined 
+                    && $B.forbidden.indexOf(name)==-1) { 
+                    // Literal operators : "and", "or", "is", "not"
+                    // The additional test is to exclude the name "constructor"
+                    if(name=='is'){
+                        // if keyword is "is", see if it is followed by "not"
+                        var re = /^\s+not\s+/
+                        var res = re.exec(src.substr(pos))
+                        if(res!==null){
+                            pos += res[0].length
+                            $pos = pos-name.length
+                            context = $transition(context,'op','is_not')
+                        }else{
+                            $pos = pos-name.length
+                            context = $transition(context,'op', name)
+                        }
+                    }else if(name=='not'){
+                        // if keyword is "not", see if it is followed by "in"
                         var re = /^\s+in\s+/
                         var res = re.exec(src.substr(pos))
                         if(res!==null){
                             pos += res[0].length
+                            $pos = pos-name.length
                             context = $transition(context,'op','not_in')
                         }else{
+                            $pos = pos-name.length
                             context = $transition(context,name)
                         }
                     }else{
-                        context = $transition(context,name)
+                        $pos = pos-name.length
+                        context = $transition(context,'op',name)
                     }
-                } else if($operators[name]!==undefined 
-                    && $B.forbidden.indexOf(name)==-1) { 
-                    // Names "and", "or"
-                    // The additional test is to exclude the name 
-                    // "constructor"
-                    $pos = pos-name.length
-                    context = $transition(context,'op',name)
                 } else if((src.charAt(pos)=='"'||src.charAt(pos)=="'")
                     && ['r','b','u','rb','br'].indexOf(name.toLowerCase())!==-1){
                     string_modifier = name.toLowerCase()
@@ -7425,55 +7498,88 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
         var t1 = new Date().getTime()
         console.log('module '+module+' translated in '+(t1 - t0)+' ms')
     }
-
+    
     return root
 }
 
-function load_ext(ext_scripts, run_script, onerror){
+function load_scripts(scripts, run_script, onerror){
+    // Loads and runs the scripts in the order they are placed in the page
+    // Script can be internal (code inside the <script></script> tag) or
+    // external (<script src="external_script.py"></script>)
+
     if (run_script === undefined) {
       run_script = $B._run_script;
     }
-    var found = []
-    function callback(ev){
-        req = ev.target
-        if(req.readyState==4){
-            if(req.status==200){
-                try {
-                    run_script({name:req.module_name, 
-                        url:req.responseURL, 
-                        src:req.responseText})
+
+    // Callback function when an external script is loaded
+    function callback(ev, script){
+        var ok = false,
+            skip = false;
+        if (ev !== null) {
+            req = ev.target
+            if(req.readyState==4){
+                if(req.status==200){
+                    ok = true;
+                    script = {name:req.module_name, 
+                              url:req.responseURL,   
+                              src:req.responseText};
                 }
-                catch (e) {
-                    if (onerror === undefined) { throw e; }
-                    else { onerror(e); }
-                }
-                if(ext_scripts.length>0){
-                    load_ext(ext_scripts)
-                }
-            }else{
-                try {
-                    throw Error("cannot load script "+
-                        req.module_name+' at '+req.responseURL+
-                        ': error '+req.status)
-                }
-                catch (e) {
-                    if (onerror === undefined) { throw e; }
-                    else { onerror(e); }
-                }
+            }
+            else {
+                // AJAX request with readyState !== 4 => NOP
+                skip = true;
+            }
+        }
+        else {
+            // All data is supplied in script arg
+            ok = true;
+        }
+        if (skip) { return; }
+        if (ok) {
+            try {
+                run_script(script)
+            }
+            catch (e) {
+                if (onerror === undefined) { throw e; }
+                else { onerror(e); }
+            }
+            if(scripts.length>0){
+                load_scripts(scripts)
+            }
+        }else{      
+            try {
+                throw Error("cannot load script "+
+                    req.module_name+' at '+req.responseURL+
+                    ': error '+req.status)
+            }
+            catch (e) {
+                if (onerror === undefined) { throw e; }
+                else { onerror(e); }
             }
         }
     }
-    if(ext_scripts.length>0){
-        var script = ext_scripts.shift()
-        var req = new XMLHttpRequest()
-        req.onreadystatechange = callback
-        req.module_name = script.name
-        req.open('GET', script.url, true)
-        req.send()
+
+    var noajax = true
+    // Loop for efficient usage of the calling stack (faster than recursion?)
+    while(scripts.length>0 && noajax){
+        var script = scripts.shift()
+        if(script['src']===undefined){
+            // External script : load it by an Ajax call
+            noajax = false;
+            var req = new XMLHttpRequest()
+            req.onreadystatechange = callback
+            req.module_name = script.name
+            req.open('GET', script.url, true)
+            req.send()
+        }else{
+            // Internal script : execute it
+            callback(null, script)
+            load_scripts(scripts)
+        }
     }
 }
 
-$B._load_scripts = load_ext;
+$B._load_scripts = load_scripts;
 
 function run_script(script){
     // script has attributes url, src, name
@@ -7521,8 +7627,6 @@ function run_script(script){
         // Throw the error to stop execution
         throw $err
     }
-
-
 }
 
 $B._run_script = run_script;
@@ -7720,7 +7824,7 @@ function brython(options){
                 }
             }
         }
-        var inner_scripts = {}, ext_scripts = []
+        var scripts = []
         for(var $i=0;$i<$elts.length;$i++){
             var $elt = $elts[$i]
             if($elt.type=="text/python"||$elt.type==="text/python3"){
@@ -7740,102 +7844,24 @@ function brython(options){
                 if($elt.src){ 
                     // format <script type="text/python" src="python_script.py">
                     // get source code by an Ajax call
-                    ext_scripts.push({name:module_name, url:$elt.src})
-                    /*
-                    if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
-                        var $xmlhttp=new XMLHttpRequest();
-                    }else{// code for IE6, IE5
-                        var $xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
-                    }
-                    $xmlhttp.onreadystatechange = function(){
-                        var state = this.readyState
-                        if(state===4){
-                            $src = $xmlhttp.responseText
-                        }
-                    }
-                    $xmlhttp.open('GET',$elt.src,false)
-                    $xmlhttp.send()
-                    if($xmlhttp.status != 200){
-                        var msg = "can't open file '"+$elt.src
-                        msg += "': No such file or directory"
-                        console.log(msg)
-                        return
-                    }
-                    $B.$py_module_path[module_name]=$elt.src
-                    var $src_elts = $elt.src.split('/')
-                    $src_elts.pop()
-                    var $src_path = $src_elts.join('/')
-                    if ($B.path.indexOf($src_path) == -1) {
-                        // insert in first position : folder /Lib with built-in modules
-                        // should be the last used when importing scripts
-                        $B.path.splice(0,0,$src_path)
-                    }
-                    */
+                    scripts.push({name:module_name, url:$elt.src})
                 }else{
                     // Get source code inside the script element
                     var $src = ($elt.innerHTML || $elt.textContent)
-                    inner_scripts[module_name] = $src
                     $B.$py_module_path[module_name] = $href
-                    run_script({name: module_name, src: $src, url: $href})
+                    scripts.push({name: module_name, src: $src, url: $href})
                 }
-                
-                /*
-
-                try{
-                    // Conversion of Python source code to Javascript
-
-                    var $root = $B.py2js($src,module_name,module_name,'__builtins__')
-                    //earney
-                    var $js = $root.to_js()
-                    $B.js[module_name] = $js
-                    if($B.debug>1) console.log($js)
-
-                    if ($B.async_enabled) {
-                       $js = $B.execution_object.source_conversion($js) 
-                       
-                       //console.log($js)
-                       eval($js)
-                    } else {
-                       // Run resulting Javascript
-                       eval($js)
-                    }
-                    $B.imported[module_name] = $locals
-                    
-                }catch($err){
-                    if($B.debug>1){
-                        console.log($err)
-                        for(var attr in $err){
-                           console.log(attr+' : ', $err[attr])
-                        }
-                    }
-
-                    // If the error was not caught by the Python runtime, build an
-                    // instance of a Python exception
-                    if($err.$py_error===undefined){
-                        console.log('Javascript error', $err)
-                        //console.log($js)
-                        //for(var attr in $err){console.log(attr+': '+$err[attr])}
-                        $err=_b_.RuntimeError($err+'')
-                    }
-
-                    // Print the error traceback on the standard error stream
-                    var $trace = _b_.getattr($err,'info')+'\n'+$err.__name__+
-                        ': ' +$err.args
-                    try{
-                        _b_.getattr($B.stderr,'write')($trace)
-                    }catch(print_exc_err){
-                        console.log($trace)
-                    }
-                    // Throw the error to stop execution
-                    throw $err
-                }
-                */
-
             }
         }
     }
     
-    $B._load_scripts(ext_scripts)
+    /*
+    load_ext(ext_scripts)
+    for(var i=0;i<inner_scripts.length;i++){
+        run_script(inner_scripts[i])
+    }
+    */
+    $B._load_scripts(scripts)
 
     /* Uncomment to check the names added in global Javascript namespace
     var kk1 = Object.keys(window)

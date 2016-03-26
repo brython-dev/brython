@@ -1,8 +1,3 @@
-
-/*
- * Javascript code needed to run tests included in dom.py
- */
-
 function empty_list(){return []}
 function list1(){return [1, 2, 'a', ['b']]}
 function jsobj(){return {a:1}}
@@ -17,3 +12,9 @@ function subscriptable(data){
     }
 }
 
+// test constructors
+function get_constructor() {
+    return function() {
+        this.foo = 'hi';
+    };
+}
