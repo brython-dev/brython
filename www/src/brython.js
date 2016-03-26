@@ -60,7 +60,7 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,2,6,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-03-25 18:03:16.395119"
+__BRYTHON__.compiled_date="2016-03-26 09:11:32.036705"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -6685,7 +6685,8 @@ $JSObjectDict.__len__=function(self){if(typeof self.js.length=='number'){return 
 try{return getattr(self.js,'__len__')()}
 catch(err){throw _b_.AttributeError(self.js+' has no attribute __len__')}}
 $JSObjectDict.__mro__=[$JSObjectDict,$ObjectDict]
-$JSObjectDict.__repr__=function(self){return "<JSObject wraps "+self.js+">"}
+$JSObjectDict.__repr__=function(self){if(self.js instanceof Date){return self.js.toString()}
+return "<JSObject wraps "+self.js+">"}
 $JSObjectDict.__setattr__=function(self,attr,value){if(isinstance(value,JSObject)){self.js[attr]=value.js}
 else{self.js[attr]=value
 if(typeof value=='function'){self.js[attr]=function(){var args=[]
@@ -6701,7 +6702,8 @@ $JSObjectDict.__setitem__=$JSObjectDict.__setattr__
 $JSObjectDict.__str__=$JSObjectDict.__repr__
 var no_dict={'string':true,'function':true,'number':true,'boolean':true}
 $JSObjectDict.bind=function(self,evt,func){var f=function(){try{func.apply(null,arguments)}catch(err){throw $B.exception(err)}}
-return $JSObjectDict.__getattribute__(self,'addEventListener').js(evt,f)}
+self.js.addEventListener(evt,func)
+return _b_.None}
 $JSObjectDict.to_dict=function(self){
 var res=_b_.dict()
 for(var key in self.js){var value=self.js[key]
