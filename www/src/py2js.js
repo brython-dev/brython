@@ -103,7 +103,7 @@ Function called in case of SyntaxError
 */
 
 function $_SyntaxError(context,msg,indent){
-    //console.log('syntax error, context '+context,' msg ',msg)
+    console.log('syntax error, context '+context,' msg ',msg)
     var ctx_node = context
     while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
     var tree_node = ctx_node.node
@@ -7074,26 +7074,17 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         }
         // identifier ?
         if(name=="" && car!='$'){
-            try{
-                eval("dummy."+car+"=0")
-                var idpos = pos+1
-                while(idpos<src.length){
-                    var idcar = src.charAt(idpos)
-                    if(idcar==' '||idcar=='\n'||idcar==';'||idcar=='$'){
-                        name = src.substring(pos, idpos)
-                        break
-                    }
-                    try{
-                        eval("dummy."+src.substring(pos, idpos+1))
-                        idpos++
-                    }catch(err){
-                        name = src.substring(pos, idpos)
-                        break
-                    }
+            if($B.regexIdentifier.exec(car)){
+                name=car // identifier start
+                var p0=pos
+                pos++
+                while(pos<src.length && $B.regexIdentifier.exec(src.substring(p0, pos+1))){
+                    name+=src.charAt(pos)
+                    pos++
                 }
-            }catch(err){}
+            }
             if(name){
-                pos += name.length
+                //pos += name.length
                 if(kwdict.indexOf(name)>-1){
                     $pos = pos-name.length
                     if(unsupported.indexOf(name)>-1){
