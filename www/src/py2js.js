@@ -439,13 +439,13 @@ function $AssignCtx(context){ //, check_unbound){
         if(context.type=='expr'){context = context.tree[0]}
         // Bind all the ids in the list or tuple
         for(var name in context.ids()){
-            $B.bound[scope.id][name] = true
+            $bind(name, scope.id, scope.level)
         }
     }else if(context.type=='assign'){
         for(var i=0;i<context.tree.length;i++){
             var assigned = context.tree[i].tree[0]
             if(assigned.type=='id'){
-                $B.bound[scope.id][assigned.value] = true
+                $bind(assigned.value, scope.id, scope.level)
             }
         }
     }else{
@@ -471,7 +471,7 @@ function $AssignCtx(context){ //, check_unbound){
                 // first, and it is the builtin "range"
                 var node = $get_node(this)
                 node.bound_before = $B.keys($B.bound[scope.id])
-                $B.bound[scope.id][assigned.value] = true
+                $bind(assigned.value, scope.id, scope.level)
             }
         }
     }//if
@@ -1409,6 +1409,7 @@ function $ClassCtx(context){
         this.parent.node.parent_block = parent_block
         
         // bind name
+        this.level = this.scope.level
         $B.bound[this.scope.id][name] = this
         $B.type[this.scope.id][name] = 'class'
 
@@ -1898,6 +1899,7 @@ function $DefCtx(context){
         $B.bound[this.id] = {}
         $B.type[this.id] = {}
         
+        this.level = this.scope.level
         $B.bound[this.scope.id][name]=this
         try{
             $B.type[this.scope.id][name]='function'
@@ -2513,7 +2515,7 @@ function $ExceptCtx(context){
 
     this.set_alias = function(alias){
         this.tree[0].alias = alias
-        $B.bound[this.scope.id][alias] = true
+        $B.bound[this.scope.id][alias] = {level: this.scope.level}
         try{
             $B.type[this.scope.id][alias] = 'exception'
         }catch(err){
@@ -2941,7 +2943,7 @@ function $FromCtx(context){
         var scope = $get_scope(this)
         for(var i=0;i<this.names.length;i++){
             var name = this.aliases[this.names[i]] || this.names[i]
-            $B.bound[scope.id][name] = true
+            $B.bound[scope.id][name] = {level: scope.level}
             $B.type[scope.id][name] = false // impossible to know...
         }
     }
@@ -3062,7 +3064,7 @@ function $FuncArgIdCtx(context,name){
     if($B.bound[node.id][name]){
         $_SyntaxError(context,["duplicate argument '"+name+"' in function definition"])
     }
-    $B.bound[node.id][name] = 'arg'
+    $B.bound[node.id][name] = {level:1} // we are sure the name is defined in function
     $B.type[node.id][name] = false
 
     this.tree = []
@@ -3108,7 +3110,7 @@ function $FuncStarArgCtx(context,op){
         if($B.bound[this.node.id][name]){
             $_SyntaxError(context,["duplicate argument '"+name+"' in function definition"])
         }
-        $B.bound[this.node.id][name] = 'arg'
+        $B.bound[this.node.id][name] = {level:1}
         $B.type[this.node.id][name] = false
 
         // add to locals of function
@@ -3184,7 +3186,7 @@ function $IdCtx(context,value){
         (context.type=='expr' && context.parent.type=='target_list')){
         // An id defined as a target in a "for" loop, or as "packed" 
         // (eg "a, *b = [1, 2, 3]") is bound
-        $B.bound[scope.id][value]=true
+        $B.bound[scope.id][value]={level: scope.level}
         $B.type[scope.id][value] = false // can be improved !
         this.bound = true
     }
@@ -3377,9 +3379,10 @@ function $IdCtx(context,value){
                         this.is_builtin = true
                     }
                 }else if(scope.id==scope.module){
-                    if(val=='fghj'){console.log('module level', this.augm_assign)}
+                    // Name found at module level
                     if(this.bound || this.augm_assign){
-                        if(val=='fghj'){console.log('simple', val)}
+                        // If the id is in the left part of a binding or
+                        // an augmented assign, eg "x = 0" or "x += 5"
                         val = scope_ns+'["'+val+'"]'
                     }else{
                         if(scope===innermost && this.env[val]===undefined){
@@ -3393,13 +3396,23 @@ function $IdCtx(context,value){
                                     return val+$to_js(this.tree,'')
                                 }
                             }
+                            // Call a function to return the value if it is defined
+                            // in locals or globals, or throw a NameError
                             return '$B.$search("'+val+'")'
-                        }else{ // if(scope!==innermost){
-                            // If name is referenced in an upper block, it may be
-                            // still undefined, cf. issue #362
-                            val = '$B.$check_def("'+val+'",'+scope_ns+'["'+val+'"])'
-                        //}else{
-                        //    val = scope_ns+'["'+val+'"]'
+                        }else{
+                            if(scope.level<=2){
+                                // Name was bound in an instruction at indentation
+                                // level 0 in the block : we are sure the name is
+                                // defined in local scope
+                                val = scope_ns+'["'+val+'"]'
+                            }else{
+                                // Else we must check if the name is actually
+                                // defined, cf issue #362. This can be the case 
+                                // in code like :
+                                //     if False:
+                                //         x = 0
+                                val = '$B.$check_def("'+val+'",'+scope_ns+'["'+val+'"])'
+                            }
                         }
                     }
                 }else{
@@ -3409,7 +3422,18 @@ function $IdCtx(context,value){
                 if($B._globals[scope.id] && $B._globals[scope.id][val]){
                     val = global_ns+'["'+val+'"]'
                 }else if(!this.bound && !this.augm_assign){
-                    val = '$B.$check_def_local("'+val+'",$locals["'+val+'"])'
+                    if(scope.level<=3){
+                        // Name is bound at indentation level 0 in the block :
+                        // we are sure that it is defined in locals
+                        val = '$locals["'+val+'"]'
+                    }else{
+                        // The name might not have actually been bound, eg in
+                        //     def f():
+                        //         if False:
+                        //             x = 0
+                        //         print(x)
+                        val = '$B.$check_def_local("'+val+'",$locals["'+val+'"])'
+                    }
                 }else{
                     val = '$locals["'+val+'"]'
                 }
@@ -3477,7 +3501,7 @@ function $ImportCtx(context){
             }else{
                 bound = this.tree[i].alias
             }
-            $B.bound[scope.id][bound] = true
+            $B.bound[scope.id][bound] = {level: scope.level}
             $B.type[scope.id][bound] = 'module'
         }
     }
@@ -3501,76 +3525,6 @@ function $ImportCtx(context){
         return res.join('') + 'None;'
     }
 }
-
-function $IMPRTCtx(context){
-    // Class for keyword "import"
-    this.type = 'import'
-    this.parent = context
-    this.tree = []
-    context.tree[context.tree.length]=this
-    this.expect = 'id'
-
-    this.toString = function(){return 'import '+this.tree}
-    
-    this.bind_names = function(){
-        // For "import X", set X in the list of names bound in current scope
-        var scope = $get_scope(this)
-        for(var i=0;i<this.tree.length;i++){
-            if(this.tree[i].name==this.tree[i].alias){
-                var name = this.tree[i].name,
-                    parts = name.split('.'),
-                    bound = name
-                if(parts.length>1){
-                    bound = parts[0]
-                }
-            }else{
-                bound = this.tree[i].alias
-            }
-            $B.bound[scope.id][bound] = true
-            $B.type[scope.id][bound] = 'module'
-        }
-    }
-    
-    this.transform = function(node, rank){
-        // If there are more than one module name, split line
-        for(var i=1;i<this.tree.length;i++){
-            var new_node = new $Node()
-            var ctx = new $IMPRTCtx(new $NodeCtx(new_node))
-            ctx.tree = [this.tree[i]]
-            node.parent.insert(rank+1, new_node)
-        }
-        this.tree.splice(1, this.tree.length)
-        // All the code that starts after IMPRT is put in a function
-        // called when the module has finished importing
-        var name = this.tree[0].name,
-            js = '$locals["'+this.tree[0].alias+'"]= $B.imported["'+name+'"]'
-        node.add($NodeJS(js))
-        for(var i=rank+1;i<node.parent.children.length;i++){
-            node.add(node.parent.children[i])
-        }
-        node.parent.children.splice(rank+1, node.parent.children.length)
-        node.parent.add($NodeJS(')'))
-    }
-    
-    this.to_js = function(){
-        this.js_processed=true
-        var scope = $get_scope(this)
-        var mod = scope.module
-
-        var res = [], pos=0
-        for(var i=0;i<this.tree.length;i++){
-            var mod_name = this.tree[i].name,
-                aliases = (this.tree[i].name == this.tree[i].alias)?
-                    '{}' : ('{"' + mod_name + '" : "' +
-                    this.tree[i].alias + '"}'),
-                localns = '$locals_'+scope.id.replace(/\./g,'_');
-            res[pos++] = '$B.$import_non_blocking("'+mod_name+'", function()'
-        }
-        // add None for interactive console
-        return res.join('')
-    }
-}
-
 
 function $ImportedModuleCtx(context,name){
     this.type = 'imported module'
@@ -4742,7 +4696,7 @@ function $WithCtx(context){
 
     this.set_alias = function(arg){
         this.tree[this.tree.length-1].alias = arg
-        $B.bound[this.scope.id][arg] = true
+        $B.bound[this.scope.id][arg] = {level: this.scope.level}
         $B.type[this.scope.id][arg] = false
         if(this.scope.ntype !== 'module'){
             // add to function local names
@@ -5076,6 +5030,18 @@ function $add_line_num(node,rank){
     }
 }
 
+function $bind(name, scope_id, level){
+    // Bind a name in scope_id
+    if($B.bound[scope_id][name]!==undefined){
+        // If the name is already bound, use the smallest level
+        if(level>=$B.bound[scope_id][name].level){
+            $B.bound[scope_id][name].level = level
+        }
+    }else{
+        $B.bound[scope_id][name] = {level: level}
+    }
+}
+
 function $previous(context){
     var previous = context.node.parent.children[context.node.parent.children.length-2]
     if(!previous || !previous.context){
@@ -5101,8 +5067,9 @@ function $get_scope(context){
     // Return null for the root node
     var ctx_node = context.parent
     while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
-    var tree_node = ctx_node.node
-    var scope = null
+    var tree_node = ctx_node.node,
+        scope = null,
+        level = 1
 
     while(tree_node.parent && tree_node.parent.type!=='module'){
         var ntype = tree_node.parent.context.tree[0].type
@@ -5113,15 +5080,16 @@ function $get_scope(context){
           case 'generator':
             var scope = tree_node.parent
             scope.ntype = ntype
-            scope.elt = scope.context.tree[0]
             scope.is_function = ntype!='class'
+            scope.level = level
             return scope
         }
         tree_node = tree_node.parent
+        level++
     }
     var scope = tree_node.parent || tree_node // module
     scope.ntype = "module"
-    scope.elt = scope.module
+    scope.level = level
     return scope
 }
 
@@ -6013,7 +5981,6 @@ function $transition(context,token){
               return context
             }
           case 'import':
-          case 'IMPRT':
             context.blocking = token=='import'
             if(context.expect=='module'){
               context.expect = 'id'
@@ -6462,8 +6429,6 @@ function $transition(context,token){
             return new $FromCtx(context)
           case 'import':
             return new $ImportCtx(context)
-          case 'IMPRT': // experimental for non blocking imports
-            return new $IMPRTCtx(context)
           case 'global':
             return new $GlobalCtx(context)
           case 'nonlocal':
@@ -6859,8 +6824,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         "nonlocal","while","del","global","with",
         "as","elif","else","if","yield","assert","import",
         "except","raise","in", //"not",
-        "pass","with","continue","__debugger__",
-        "IMPRT" // experimental for non blocking import
+        "pass","with","continue","__debugger__"
         //"False","None","True","continue",
         // "and',"or","is"
         ]
