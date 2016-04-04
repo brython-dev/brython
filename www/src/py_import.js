@@ -975,7 +975,8 @@ $B.$meta_path = [finder_VFS, finder_stdlib_static, finder_path];
 function optimize_import_for_path(path, filetype) {
     if (path.slice(-1) != '/') { path = path + '/' }
     // Ensure sys is loaded
-    $B.path_importer_cache[path] = url_hook(path, filetype);
+    var value = (filetype == 'none')? _b_.None : url_hook(path, filetype);
+    $B.path_importer_cache[path] = value;
 }
 
 // Introspection for builtin importers

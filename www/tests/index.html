@@ -156,6 +156,10 @@ for key in trans:
         doc[key].html = trans[key][language]
 </script>
 
+<!-- Needed in sys.path init tests , see test_import.py -->
+<link rel="pythonpath" href="/nowhere1" hreflang="none" />
+<link rel="pythonpath" href="/nowhere2" hreflang="x-none" />
+
 </head>
 
 <body onload="brython({debug:1, cache:'none', static_stdlib_import:true})">

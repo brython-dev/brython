@@ -119,5 +119,13 @@ finally:
     # Ensure that this path will not affect subsequent import
     sys.path.remove(pyc_path);
 
+# Test setting sys.path using link tags
+from browser import doc
+
+l = doc.location
+base_url = l.protocol + '//' + l.host
+assert __BRYTHON__.path_importer_cache[base_url + '/nowhere1/'] is None
+assert __BRYTHON__.path_importer_cache[base_url + '/nowhere2/'] is None
+
 print('passed all tests')
 

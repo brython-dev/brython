@@ -7710,6 +7710,19 @@ function brython(options){
     // Save initial Javascript namespace
     var kk = Object.keys(window)
     
+    // Get all links with rel=pythonpath and add them to sys.path
+    var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
+        _importlib = $B.modules['_importlib'];
+    for (var i=0, e; e = path_links[i]; ++i) {
+        $B.path.push(e.href);
+        // TODO: Implement VFS prefetch
+        var filetype = e.hreflang;
+        if (filetype) {
+            if (filetype.slice(0,2) == 'x-') filetype = filetype.slice(2);
+            _importlib.optimize_import_for_path(e.href, filetype);
+        }
+    }
+
     // Get all scripts with type = text/python or text/python3 and run them
 
     var first_script = true, module_name;

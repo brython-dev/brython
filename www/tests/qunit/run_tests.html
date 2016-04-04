@@ -5,6 +5,10 @@
     <link rel="stylesheet" type="text/css" href="//code.jquery.com/qunit/qunit-1.18.0.css" />
     <!-- Local install for Travis-CI -->
     <link rel="stylesheet" type="text/css" href="../../../qunit/qunit-1.18.0.css" />
+
+    <!-- Needed in sys.path init tests , see test_import.py -->
+    <link rel="pythonpath" href="/nowhere1" hreflang="none" />
+    <link rel="pythonpath" href="/nowhere2" hreflang="x-none" />
   </head>
   <body onload="brython({debug:1, cache:'none', static_stdlib_import:true})">
     <!-- QUnit init -->
