@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,6,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-03-26 15:24:02.306520"
+__BRYTHON__.compiled_date="2016-04-02 15:26:52.318855"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -241,15 +241,15 @@ this.tree=[C]
 var scope=$get_scope(this)
 if(C.type=='expr' && C.tree[0].type=='call'){$_SyntaxError(C,["can't assign to function call "])}else if(C.type=='list_or_tuple' ||
 (C.type=='expr' && C.tree[0].type=='list_or_tuple')){if(C.type=='expr'){C=C.tree[0]}
-for(var name in C.ids()){$B.bound[scope.id][name]=true}}else if(C.type=='assign'){for(var i=0;i<C.tree.length;i++){var assigned=C.tree[i].tree[0]
-if(assigned.type=='id'){$B.bound[scope.id][assigned.value]=true}}}else{var assigned=C.tree[0]
+for(var name in C.ids()){$bind(name,scope.id,scope.level)}}else if(C.type=='assign'){for(var i=0;i<C.tree.length;i++){var assigned=C.tree[i].tree[0]
+if(assigned.type=='id'){$bind(assigned.value,scope.id,scope.level)}}}else{var assigned=C.tree[0]
 if(assigned && assigned.type=='id'){if(noassign[assigned.value]===true){$_SyntaxError(C,["can't assign to keyword"])}
 assigned.bound=true
 if(!$B._globals[scope.id]||
 $B._globals[scope.id][assigned.value]===undefined){
 var node=$get_node(this)
 node.bound_before=$B.keys($B.bound[scope.id])
-$B.bound[scope.id][assigned.value]=true}}}
+$bind(assigned.value,scope.id,scope.level)}}}
 this.guess_type=function(){if(this.tree[0].type=="expr" && this.tree[0].tree[0].type=="id"){$set_type(scope,this.tree[0],this.tree[1])}else if(this.tree[0].type=='assign'){var left=this.tree[0].tree[0].tree[0]
 var right=this.tree[0].tree[1].tree[0]
 $set_type(scope,right,this.tree[1].tree[0])
@@ -741,6 +741,7 @@ while(parent_block.C &&
 'def' !=parent_block.C.tree[0].type &&
 'generator' !=parent_block.C.tree[0].type){parent_block=parent_block.parent}
 this.parent.node.parent_block=parent_block
+this.level=this.scope.level
 $B.bound[this.scope.id][name]=this
 $B.type[this.scope.id][name]='class'
 if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)}}}
@@ -967,6 +968,7 @@ this.parent.node.module=this.module
 $B.modules[this.id]=this.parent.node
 $B.bound[this.id]={}
 $B.type[this.id]={}
+this.level=this.scope.level
 $B.bound[this.scope.id][name]=this
 try{$B.type[this.scope.id][name]='function'}catch(err){console.log(err,this.scope.id)}
 id_ctx.bound=true
@@ -1301,7 +1303,7 @@ this.expect='id'
 this.scope=$get_scope(this)
 this.toString=function(){return '(except) '}
 this.set_alias=function(alias){this.tree[0].alias=alias
-$B.bound[this.scope.id][alias]=true
+$B.bound[this.scope.id][alias]={level: this.scope.level}
 try{$B.type[this.scope.id][alias]='exception'}catch(err){console.log(err,this.scope.id)}}
 this.to_js=function(){
 this.js_processed=true
@@ -1513,7 +1515,7 @@ node.parent.add($NodeJS(')'))}}
 this.bind_names=function(){
 var scope=$get_scope(this)
 for(var i=0;i<this.names.length;i++){var name=this.aliases[this.names[i]]||this.names[i]
-$B.bound[scope.id][name]=true
+$B.bound[scope.id][name]={level: scope.level}
 $B.type[scope.id][name]=false }}
 this.toString=function(){return '(from) '+this.module+' (import) '+this.names+'(as)'+this.aliases}
 this.to_js=function(){this.js_processed=true
@@ -1562,7 +1564,7 @@ this.parent=C
 if(C.has_star_arg){C.parent.after_star.push('"'+name+'"')}else{C.parent.positional_list.push(name)}
 var node=$get_node(this)
 if($B.bound[node.id][name]){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}
-$B.bound[node.id][name]='arg'
+$B.bound[node.id][name]={level:1}
 $B.type[node.id][name]=false
 this.tree=[]
 C.tree[C.tree.length]=this
@@ -1586,7 +1588,7 @@ this.toString=function(){return '(func star arg '+this.op+') '+this.name}
 this.set_name=function(name){this.name=name
 if(name=='$dummy'){return}
 if($B.bound[this.node.id][name]){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}
-$B.bound[this.node.id][name]='arg'
+$B.bound[this.node.id][name]={level:1}
 $B.type[this.node.id][name]=false
 var ctx=C
 while(ctx.parent!==undefined){if(ctx.type==='def'){ctx.locals.push(name)
@@ -1631,7 +1633,7 @@ ctx=ctx.parent}
 var scope=this.scope=$get_scope(this)
 if(C.type=='target_list' ||C.type=='packed' ||
 (C.type=='expr' && C.parent.type=='target_list')){
-$B.bound[scope.id][value]=true
+$B.bound[scope.id][value]={level: scope.level}
 $B.type[scope.id][value]=false 
 this.bound=true}
 if(scope.ntype=='def' ||scope.ntype=='generator'){
@@ -1691,14 +1693,17 @@ var scope_ns='$locals_'+scope.id.replace(/\./g,'_')
 if(scope.C===undefined){
 if(scope.id=='__builtins__'){if(gs.blurred){
 val='('+global_ns+'["'+val+'"] || '+val+')'}else{
-this.is_builtin=true}}else if(scope.id==scope.module){if(val=='fghj'){console.log('module level',this.augm_assign)}
-if(this.bound ||this.augm_assign){if(val=='fghj'){console.log('simple',val)}
+this.is_builtin=true}}else if(scope.id==scope.module){
+if(this.bound ||this.augm_assign){
 val=scope_ns+'["'+val+'"]'}else{if(scope===innermost && this.env[val]===undefined){var locs=$get_node(this).locals ||{}
 if(locs[val]===undefined){
 if(found.length>1 && found[1].id=='__builtins__'){this.is_builtin=true
 return val+$to_js(this.tree,'')}}
-return '$B.$search("'+val+'")'}else{
-val='$B.$check_def("'+val+'",'+scope_ns+'["'+val+'"])'}}}else{val=scope_ns+'["'+val+'"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns+'["'+val+'"]'}else if(!this.bound && !this.augm_assign){val='$B.$check_def_local("'+val+'",$locals["'+val+'"])'}else{val='$locals["'+val+'"]'}}else if(!this.bound && !this.augm_assign){
+return '$B.$search("'+val+'")'}else{if(scope.level<=2){
+val=scope_ns+'["'+val+'"]'}else{
+val='$B.$check_def("'+val+'",'+scope_ns+'["'+val+'"])'}}}}else{val=scope_ns+'["'+val+'"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns+'["'+val+'"]'}else if(!this.bound && !this.augm_assign){if(scope.level<=3){
+val='$locals["'+val+'"]'}else{
+val='$B.$check_def_local("'+val+'",$locals["'+val+'"])'}}else{val='$locals["'+val+'"]'}}else if(!this.bound && !this.augm_assign){
 val='$B.$check_def_free("'+val+'",'+scope_ns+'["'+val+'"])'}else{val=scope_ns+'["'+val+'"]'}
 return val+$to_js(this.tree,'')}else{
 this.unknown_binding=true
@@ -1723,7 +1728,7 @@ this.bind_names=function(){
 var scope=$get_scope(this)
 for(var i=0;i<this.tree.length;i++){if(this.tree[i].name==this.tree[i].alias){var name=this.tree[i].name,parts=name.split('.'),bound=name
 if(parts.length>1){bound=parts[0]}}else{bound=this.tree[i].alias}
-$B.bound[scope.id][bound]=true
+$B.bound[scope.id][bound]={level: scope.level}
 $B.type[scope.id][bound]='module'}}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this)
@@ -1735,39 +1740,6 @@ this.tree[i].alias + '"}'),localns='$locals_'+scope.id.replace(/\./g,'_');
 res[pos++]='$B.$import("'+mod_name+'", [],'+aliases+',' +
 localns + ', true);'}
 return res.join('')+ 'None;'}}
-function $IMPRTCtx(C){
-this.type='import'
-this.parent=C
-this.tree=[]
-C.tree[C.tree.length]=this
-this.expect='id'
-this.toString=function(){return 'import '+this.tree}
-this.bind_names=function(){
-var scope=$get_scope(this)
-for(var i=0;i<this.tree.length;i++){if(this.tree[i].name==this.tree[i].alias){var name=this.tree[i].name,parts=name.split('.'),bound=name
-if(parts.length>1){bound=parts[0]}}else{bound=this.tree[i].alias}
-$B.bound[scope.id][bound]=true
-$B.type[scope.id][bound]='module'}}
-this.transform=function(node,rank){
-for(var i=1;i<this.tree.length;i++){var new_node=new $Node()
-var ctx=new $IMPRTCtx(new $NodeCtx(new_node))
-ctx.tree=[this.tree[i]]
-node.parent.insert(rank+1,new_node)}
-this.tree.splice(1,this.tree.length)
-var name=this.tree[0].name,js='$locals["'+this.tree[0].alias+'"]= $B.imported["'+name+'"]'
-node.add($NodeJS(js))
-for(var i=rank+1;i<node.parent.children.length;i++){node.add(node.parent.children[i])}
-node.parent.children.splice(rank+1,node.parent.children.length)
-node.parent.add($NodeJS(')'))}
-this.to_js=function(){this.js_processed=true
-var scope=$get_scope(this)
-var mod=scope.module
-var res=[],pos=0
-for(var i=0;i<this.tree.length;i++){var mod_name=this.tree[i].name,aliases=(this.tree[i].name==this.tree[i].alias)?
-'{}' :('{"' + mod_name + '" : "' +
-this.tree[i].alias + '"}'),localns='$locals_'+scope.id.replace(/\./g,'_');
-res[pos++]='$B.$import_non_blocking("'+mod_name+'", function()'}
-return res.join('')}}
 function $ImportedModuleCtx(C,name){this.type='imported module'
 this.toString=function(){return ' (imported module) '+this.name}
 this.parent=C
@@ -2378,7 +2350,7 @@ this.expect='as'
 this.scope=$get_scope(this)
 this.toString=function(){return '(with) '+this.tree}
 this.set_alias=function(arg){this.tree[this.tree.length-1].alias=arg
-$B.bound[this.scope.id][arg]=true
+$B.bound[this.scope.id][arg]={level: this.scope.level}
 $B.type[this.scope.id][arg]=false
 if(this.scope.ntype !=='module'){
 this.scope.C.tree[0].locals.push(arg)}}
@@ -2527,6 +2499,9 @@ if((elt.type=='condition' && elt.token=="while")
 ||node.C.type=='for'){node.add($NodeJS('$locals.$line_info="'+node.line_num+','+
 mod_id+'";'))}
 return offset}}
+function $bind(name,scope_id,level){
+if($B.bound[scope_id][name]!==undefined){
+if(level>=$B.bound[scope_id][name].level){$B.bound[scope_id][name].level=level}}else{$B.bound[scope_id][name]={level: level}}}
 function $previous(C){var previous=C.node.parent.children[C.node.parent.children.length-2]
 if(!previous ||!previous.C){$_SyntaxError(C,'keyword not following correct keyword')}
 return previous.C.tree[0]}
@@ -2538,21 +2513,21 @@ return doc_string}
 function $get_scope(C){
 var ctx_node=C.parent
 while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
-var tree_node=ctx_node.node
-var scope=null
+var tree_node=ctx_node.node,scope=null,level=1
 while(tree_node.parent && tree_node.parent.type!=='module'){var ntype=tree_node.parent.C.tree[0].type
 switch(ntype){case 'def':
 case 'class':
 case 'generator':
 var scope=tree_node.parent
 scope.ntype=ntype
-scope.elt=scope.C.tree[0]
 scope.is_function=ntype!='class'
+scope.level=level
 return scope}
-tree_node=tree_node.parent}
+tree_node=tree_node.parent
+level++}
 var scope=tree_node.parent ||tree_node 
 scope.ntype="module"
-scope.elt=scope.module
+scope.level=level
 return scope}
 function $get_module(C){
 var ctx_node=C.parent
@@ -3154,7 +3129,6 @@ if(C.expect=='module'){if(token=='id'){C.module +=arguments[2]}
 else{C.module +='.'}
 return C}
 case 'import':
-case 'IMPRT':
 C.blocking=token=='import'
 if(C.expect=='module'){C.expect='id'
 return C}
@@ -3459,8 +3433,6 @@ case 'from':
 return new $FromCtx(C)
 case 'import':
 return new $ImportCtx(C)
-case 'IMPRT': 
-return new $IMPRTCtx(C)
 case 'global':
 return new $GlobalCtx(C)
 case 'nonlocal':
@@ -3733,14 +3705,13 @@ var br_close={")":"(","]":"[","}":"{"}
 var br_stack=""
 var br_pos=[]
 var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in",
-"pass","with","continue","__debugger__","IMPRT" 
+"pass","with","continue","__debugger__"
 ]
 var unsupported=[]
 var $indented=['class','def','for','condition','single_kw','try','except','with']
 var punctuation={',':0,':':0}
 int_pattern=new RegExp("^\\d+(j|J)?"),float_pattern1=new RegExp("^\\d+\\.\\d*([eE][+-]?\\d+)?(j|J)?"),float_pattern2=new RegExp("^\\d+([eE][+-]?\\d+)(j|J)?"),hex_pattern=new RegExp("^0[xX]([0-9a-fA-F]+)"),octal_pattern=new RegExp("^0[oO]([0-7]+)"),binary_pattern=new RegExp("^0[bB]([01]+)"),id_pattern=new RegExp("[\\$_a-zA-Z]\\w*"),qesc=new RegExp('"',"g"),
-sqesc=new RegExp("'","g"),
-dummy={}
+sqesc=new RegExp("'","g")
 var C=null
 var root=new $Node('module')
 root.module=module
@@ -3838,7 +3809,8 @@ if(src.charAt(end)=='\n'){lnum++}
 end++}}
 if(!found){if(_type==="triple_string"){$_SyntaxError(C,"Triple string end not found")}else{$_SyntaxError(C,"String end not found")}}
 continue}
-if(name=="" && car!='$'){if($B.regexIdentifier.exec(car)){name=car 
+if(name=="" && car!='$'){
+if($B.regexIdentifier.exec(car)){name=car 
 var p0=pos
 pos++
 while(pos<src.length && $B.regexIdentifier.exec(src.substring(p0,pos+1))){name+=src.charAt(pos)
