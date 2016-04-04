@@ -562,6 +562,9 @@ finder_path.$dict = {
                     $B.path_importer_cache[path_entry] = _b_.None;
                 }
             }
+            // Skip this path entry if finder turns out to be None
+            if (is_none(finder))
+                continue;
             var spec = _b_.getattr(_b_.getattr(finder, 'find_spec'),
                                    '__call__')(fullname, prev_module);
             if (!is_none(spec)) {
