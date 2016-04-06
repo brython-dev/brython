@@ -123,9 +123,13 @@ finally:
 from browser import doc
 
 l = doc.location
-base_url = l.protocol + '//' + l.host
-assert __BRYTHON__.path_importer_cache[base_url + '/nowhere1/'] is None
-assert __BRYTHON__.path_importer_cache[base_url + '/nowhere2/'] is None
+none_path = doc['link_none1'].href + '/'
+assert __BRYTHON__.path_importer_cache[none_path] is None
+none_path = doc['link_none2'].href + '/'
+assert __BRYTHON__.path_importer_cache[none_path] is None
+
+empty_vfs_url = doc['link_empty_vfs'].href + '/'
+assert __BRYTHON__.path_importer_cache[empty_vfs_url].vfs is not None
 
 print('passed all tests')
 

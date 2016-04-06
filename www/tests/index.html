@@ -157,8 +157,9 @@ for key in trans:
 </script>
 
 <!-- Needed in sys.path init tests , see test_import.py -->
-<link rel="pythonpath" href="/nowhere1" hreflang="none" />
-<link rel="pythonpath" href="/nowhere2" hreflang="x-none" />
+<link id="link_none1" rel="pythonpath" href="/nowhere1" hreflang="none" />
+<link id="link_none2" rel="pythonpath" href="/nowhere2" hreflang="x-none" />
+<link id="link_empty_vfs" rel="pythonpath prefetch" href="test.empty.vfs.js" />
 
 </head>
 

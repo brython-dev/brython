@@ -7714,8 +7714,14 @@ function brython(options){
     var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
         _importlib = $B.modules['_importlib'];
     for (var i=0, e; e = path_links[i]; ++i) {
-        $B.path.push(e.href);
-        // TODO: Implement VFS prefetch
+        var href = e.href;
+        $B.path.push(href);
+        if (href.slice(-7).toLowerCase() == '.vfs.js' &&
+                (' ' + e.rel + ' ').indexOf(' prefetch ') != -1) {
+            // Prefetch VFS file
+            $B.path_importer_cache[href + '/'] =
+                    $B.imported['_importlib'].VFSPathFinder(href)
+        }
         var filetype = e.hreflang;
         if (filetype) {
             if (filetype.slice(0,2) == 'x-') filetype = filetype.slice(2);
