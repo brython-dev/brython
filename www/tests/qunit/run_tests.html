@@ -6,6 +6,9 @@
     <!-- Local install for Travis-CI -->
     <link rel="stylesheet" type="text/css" href="../../../qunit/qunit-1.18.0.css" />
 
+    <!-- Add www/tests (i.e. parent) folder to PYTHONPATH -->
+    <link rel="pythonpath" href=".." hreflang="py" />
+
     <!-- Needed in sys.path init tests , see test_import.py -->
     <link rel="pythonpath" href="/nowhere1" hreflang="none" />
     <link rel="pythonpath" href="/nowhere2" hreflang="x-none" />
@@ -54,18 +57,6 @@
 
 <!-- Test cases -->
     <script type="text/javascript" src="unittest.js"></script>
-
-<script type="text/python3">
-
-# Add /www/tests (i.e. parent) folder to PYTHONPATH
-import _sys, sys
-sys.path[0] = '..'
-
-# TODO : Optimize imports from known locations
-from _importlib import optimize_import_for_path
-optimize_import_for_path('..', 'py')
-
-</script>
 
 <script type="text/python3">
 from javascript import JSObject
