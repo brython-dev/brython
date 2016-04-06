@@ -5925,7 +5925,12 @@ function $transition(context,token){
                    return $transition(context.parent.parent, token, arguments[2])
                }
                 
-               while(context.parent!==undefined) context=context.parent
+               while(context.parent!==undefined){
+                   context=context.parent
+                   if(context.type=='condition'){
+                       $_SyntaxError(context,'token '+token+' after '+context)
+                   }
+               }
                context = context.tree[0]
                return new $AbstractExprCtx(new $AssignCtx(context),true)
             }

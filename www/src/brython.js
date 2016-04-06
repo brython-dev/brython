@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,6,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-04-02 15:26:52.318855"
+__BRYTHON__.compiled_date="2016-04-06 14:22:44.057092"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -3094,7 +3094,8 @@ if(C.expect===','){return new $AbstractExprCtx(new $AugmentedAssignCtx(C,argumen
 break
 case '=':
 if(C.expect===','){if(C.parent.type==="call_arg"){return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(C.parent.type=="annotation"){return $transition(C.parent.parent,token,arguments[2])}
-while(C.parent!==undefined)C=C.parent
+while(C.parent!==undefined){C=C.parent
+if(C.type=='condition'){$_SyntaxError(C,'token '+token+' after '+C)}}
 C=C.tree[0]
 return new $AbstractExprCtx(new $AssignCtx(C),true)}
 break
@@ -4052,21 +4053,39 @@ if($B.debug>0){$add_line_num(root,null,module)}
 if($B.debug>=2){var t1=new Date().getTime()
 console.log('module '+module+' translated in '+(t1 - t0)+' ms')}
 return root}
-function load_scripts(scripts){
-function callback(ev){req=ev.target
-if(req.readyState==4){if(req.status==200){run_script({name:req.module_name,url:req.responseURL,src:req.responseText})
-if(scripts.length>0){load_scripts(scripts)}}else{throw Error("cannot load script "+
+function load_scripts(scripts,run_script,onerror){
+if(run_script===undefined){run_script=$B._run_script;}
+function callback(ev,script){var ok=false,skip=false;
+if(ev !==null){req=ev.target
+if(req.readyState==4){if(req.status==200){ok=true;
+script={name:req.module_name,url:req.responseURL,src:req.responseText};}}
+else{
+skip=true;}}
+else{
+ok=true;}
+if(skip){return;}
+if(ok){try{
+run_script(script)}
+catch(e){if(onerror===undefined){throw e;}
+else{onerror(e);}}
+if(scripts.length>0){load_scripts(scripts)}}else{try{
+throw Error("cannot load script "+
 req.module_name+' at '+req.responseURL+
-': error '+req.status)}}}
-if(scripts.length>0){var script=scripts.shift()
+': error '+req.status)}
+catch(e){if(onerror===undefined){throw e;}
+else{onerror(e);}}}}
+var noajax=true
+while(scripts.length>0 && noajax){var script=scripts.shift()
 if(script['src']===undefined){
+noajax=false;
 var req=new XMLHttpRequest()
 req.onreadystatechange=callback
 req.module_name=script.name
 req.open('GET',script.url,true)
 req.send()}else{
-run_script(script)
+callback(null,script)
 load_scripts(scripts)}}}
+$B._load_scripts=load_scripts;
 function run_script(script){
 $B.$py_module_path[script.name]=script.url
 try{
@@ -4083,6 +4102,7 @@ var $trace=_b_.getattr($err,'info')+'\n'+name+': '
 if(name=='SyntaxError' ||name=='IndentationError'){$trace +=$err.args[0]}else{$trace +=$err.args}
 try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
 throw $err}}
+$B._run_script=run_script;
 function brython(options){var _b_=$B.builtins
 if($B.meta_path===undefined){$B.meta_path=[]}
 $B.$options={}
@@ -4158,7 +4178,7 @@ scripts.push({name:module_name,url:$elt.src})}else{
 var $src=($elt.innerHTML ||$elt.textContent)
 $B.$py_module_path[module_name]=$href
 scripts.push({name: module_name,src: $src,url: $href})}}}}
-load_scripts(scripts)}
+$B._load_scripts(scripts)}
 $B.$operators=$operators
 $B.$Node=$Node
 $B.$NodeJSCtx=$NodeJSCtx
