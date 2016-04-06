@@ -6013,6 +6013,8 @@ function $transition(context,token){
               case 'eol':
                 context.bind_names()
                 return $transition(context.parent,token)
+              default:
+                $_SyntaxError(context,['trailing comma not allowed without surrounding parentheses'])
             }
           case 'as':
             if (context.expect ==',' || context.expect=='eol'){
