@@ -47,7 +47,7 @@ import sys
 sys.path.append('http://samedomain.tld/new/path')
 ```
 
-The URL may point to a folder deployed in the server side or to a user-provider VFS file. In the later case file name must end with `.vfs.js` extension. Modules code may be written as Python source code (i.e. `py` file type), compiled javascript modules (i.e. `pyc.js` file type) and pure Javascript modules (i.e. `.js` file type). Initially the import machinery will try to find a match for each file type at a given path. Once it is found, for performance reasons only the matching file type will be attempted for that path when processing subsequent import statements. In other words , all modules deployed under a given folder and its subfolders must be of the same type.
+The URL may point to a folder deployed in the server side or to a user-provider VFS file. In the later case file name must end with `.vfs.js` extension. Modules code may be written as Python source code (i.e. `py` file type), compiled javascript modules (i.e. `pyc.js` file type) and pure Javascript modules (i.e. `.js` file type). Initially the import machinery will try to find a match for each file type at a given path. Once it is found, for performance reasons only the matching file type will be attempted for that path when processing subsequent import statements. In other words, all modules deployed under a given folder and its subfolders must be of the same type.
 
 It is possible to optimize the initial file type discovery procedure by biasing the import machinery as follows.
 
