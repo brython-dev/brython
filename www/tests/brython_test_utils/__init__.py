@@ -41,12 +41,12 @@ def discover_brython_test_modules():
           ("test_collections.py", "collections"),
           ("test_datetime.py", "datetime"),
           ("test_hashlib.py", "hashlib"),
-          ("test_indexedDB.py", "indexedDB"),
+          #("test_indexedDB.py", "indexedDB"),
           ("test_itertools.py", "itertools"),
           ("test_json.py", "JSON"),
           ("test_math.py", "math"),
           ("test_storage.py", "storage"),
-#          ("test_time.py", "time"),
+          #("test_time.py", "time"),
           ("test_types.py", "types"),
           ("test_struct.py", "struct")
         ])]
