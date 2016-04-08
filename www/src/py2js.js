@@ -5816,24 +5816,17 @@ function $transition(context,token){
                     && !(op1.op=='**' && op=='**') // cf. issue #250
                     ){
                         repl=op1;op1=op1.parent
+                }else if(op1.type=="not" && $op_weight['not']>$op_weight[op]){
+                    repl=op1;op1=op1.parent
                 }else{break}
             }
             if(repl===null){
-                if(op === 'and' || op === 'or'){
-                    while(context.parent.type==='not'||
-                        (context.parent.type==='expr'&&context.parent.parent.type==='not')){
-                        // 'and' and 'or' have higher precedence than 'not'
+                while(1){
+                    if(context.parent!==op1){
                         context = context.parent
                         op_parent = context.parent
-                    }
-                }else{
-                    while(1){
-                        if(context.parent!==op1){
-                            context = context.parent
-                            op_parent = context.parent
-                        }else{
-                            break
-                        }
+                    }else{
+                        break
                     }
                 }
                 context.parent.tree.pop()

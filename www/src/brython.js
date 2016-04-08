@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,6,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-04-06 14:34:24.845175"
+__BRYTHON__.compiled_date="2016-04-08 17:31:27.657486"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -3041,12 +3041,9 @@ while(1){if(op1.type==='expr'){op1=op1.parent}
 else if(op1.type==='op'
 &&$op_weight[op1.op]>=$op_weight[op]
 && !(op1.op=='**' && op=='**')
-){repl=op1;op1=op1.parent}else{break}}
-if(repl===null){if(op==='and' ||op==='or'){while(C.parent.type==='not'||
-(C.parent.type==='expr'&&C.parent.parent.type==='not')){
-C=C.parent
-op_parent=C.parent}}else{while(1){if(C.parent!==op1){C=C.parent
-op_parent=C.parent}else{break}}}
+){repl=op1;op1=op1.parent}else if(op1.type=="not" && $op_weight['not']>$op_weight[op]){repl=op1;op1=op1.parent}else{break}}
+if(repl===null){while(1){if(C.parent!==op1){C=C.parent
+op_parent=C.parent}else{break}}
 C.parent.tree.pop()
 var expr=new $ExprCtx(op_parent,'operand',C.with_commas)
 expr.expect=','
@@ -4143,6 +4140,16 @@ if(options.re_module !==undefined){if(options.re_module=='pyre' ||options.re_mod
 $B.scripts=[]
 $B.js={}
 var kk=Object.keys(window)
+var path_links=document.querySelectorAll('head link[rel~=pythonpath]'),_importlib=$B.modules['_importlib'];
+for(var i=0,e;e=path_links[i];++i){var href=e.href;
+$B.path.push(href);
+if(href.slice(-7).toLowerCase()=='.vfs.js' &&
+(' ' + e.rel + ' ').indexOf(' prefetch ')!=-1){
+$B.path_importer_cache[href + '/']=
+$B.imported['_importlib'].VFSPathFinder(href)}
+var filetype=e.hreflang;
+if(filetype){if(filetype.slice(0,2)=='x-')filetype=filetype.slice(2);
+_importlib.optimize_import_for_path(e.href,filetype);}}
 var first_script=true,module_name;
 if(options.ipy_id!==undefined){module_name='__main__';
 var $src="";
@@ -6948,6 +6955,8 @@ finder=_b_.getattr(hook,'__call__')(path_entry)
 finder_notfound=false;}
 catch(e){if(e.__class__ !==_b_.ImportError.$dict){throw e;}}}
 if(finder_notfound){$B.path_importer_cache[path_entry]=_b_.None;}}
+if(is_none(finder))
+continue;
 var spec=_b_.getattr(_b_.getattr(finder,'find_spec'),'__call__')(fullname,prev_module);
 if(!is_none(spec)){return spec;}}
 return _b_.None;}}
@@ -7097,7 +7106,8 @@ $B.$import_non_blocking=function(mod_name,func){console.log('import non blocking
 $B.$import(mod_name,[],[],{},[false,func])}
 $B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path];
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!='/'){path=path + '/' }
-$B.path_importer_cache[path]=url_hook(path,filetype);}
+var value=(filetype=='none')? _b_.None : url_hook(path,filetype);
+$B.path_importer_cache[path]=value;}
 _importlib_module={__class__ : $B.$ModuleDict,__name__ : '_importlib',Loader: Loader,VFSFinder: finder_VFS,StdlibStatic: finder_stdlib_static,ImporterPath: finder_path,VFSPathFinder : vfs_hook,UrlPathFinder: url_hook,optimize_import_for_path : optimize_import_for_path}
 _importlib_module.__repr__=_importlib_module.__str__=function(){return "<module '_importlib' (built-in)>"}
 $B.imported['_importlib']=$B.modules['_importlib']=_importlib_module})(__BRYTHON__)

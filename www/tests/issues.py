@@ -825,7 +825,16 @@ e = base64.b64encode(b'data to encode')
 assert e == b"ZGF0YSB0byBlbmNvZGU="
 assert base64.b64decode(e, validate=True) == b'data to encode'
 
-
+# issue 412
+assert not True and not False or True
+assert False and not False or True
+assert False and not False or not False
+assert False and not True or True
+assert False and not True or not False
+assert not True and not True or True
+assert not True and not True or not False
+assert not True and not False or True
+assert not True and not False or not False
 
 # ==========================================
 # Finally, report that all tests have passed
