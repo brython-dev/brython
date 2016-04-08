@@ -34,3 +34,40 @@ This method is time consuming for scripts that must import many modules (for ins
    To disable this option and force the lookup by Ajax calls on all the possible locations, the function __brython()__ must be invoked with the option `static_stdlib_import` set to `false`
 
 Note that modules must be encoded in utf-8 ; the encoding declaration at the top of the script is ignored
+
+### Configuring the import machinery
+
+Since version 3.2.1 Brython's import machinery complies to a notable subset of [the Python 3.5 import system specification](http://docs.python.org/3/reference/import), including PEP 302, PEP 328, PEP 366, PEP 451. At this moment support for other import specifications is either partial or non-existing , which includes PEP 402 (by design?), 
+and PEP 338. Access to Brython built-in finders and loaders is possible by importing ``_importlib` module.
+
+The most straightforward way to import user modules deployed under an specific URL is to add the URL to `sys.path` as follows.
+
+```
+import sys
+sys.path.append('http://samedomain.tld/new/path')
+```
+
+The URL may point to a folder deployed in the server side or to a user-provider VFS file. In the later case file name must end with `.vfs.js` extension. Modules code may be written as Python source code (i.e. `py` file type), compiled javascript modules (i.e. `pyc.js` file type) and pure Javascript modules (i.e. `.js` file type). Initially the import machinery will try to find a match for each file type at a given path. Once it is found, for performance reasons only the matching file type will be attempted for that path when processing subsequent import statements. In other words , all modules deployed under a given folder and its subfolders must be of the same type.
+
+It is possible to optimize the initial file type discovery procedure by biasing the import machinery as follows.
+
+```
+import _importlib
+# file_type may be one of 'py', 'pyc.js', 'js', 'none'
+_importlib.optimize_import_for_path('http://samedomain.tld/new/path', file_type)
+```
+
+A much more declarative approach for adding an entry in `sys.path` consists in including, in the document's `<head />`, `<link />` tags with `rel="pythonpath"` attribute set, e.g.
+
+   `<link rel="pythonpath" href="http://samedomain.tld/new/path" />`
+
+File type optimization is possible by adding standard `hreflang` attribute, e.g.
+
+   `<link rel="pythonpath" href="http://samedomain.tld/new/path" hreflang="py" />`
+
+VFS files may be pre-loaded at Brython initialization time by adding `prefetch` in the element's `rel` attribute, like shown below.
+
+   `<link rel="pythonpath prefetch" href="http://samedomain.tld/path/to/file.vfs.js" />`
+
+The values supplied in `href` attribute may be relative and will be resolved by the browser according to its own rules.
+
