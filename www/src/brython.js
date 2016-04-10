@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,6,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-04-08 17:31:27.657486"
+__BRYTHON__.compiled_date="2016-04-10 09:51:52.306631"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -10037,7 +10037,8 @@ return}
 if(self.elt[attr1]!==undefined){self.elt[attr1]=value;return}
 if(typeof self.elt.getAttribute=='function' && 
 typeof self.elt.setAttribute=='function'){var res=self.elt.getAttribute(attr1)
-if(res!==undefined&&res!==null){self.elt.setAttribute(attr1,value)
+if(res!==undefined&&res!==null&&res!=''){if(value===false){self.elt.removeAttribute(attr1)}else{self.elt.setAttribute(attr1,value)}
+console.log(self.elt)
 return}}
 self.elt[attr]=value}}
 DOMNodeDict.__setitem__=function(self,key,value){self.elt.childNodes[key]=value}

@@ -616,6 +616,7 @@ DOMNodeDict.__str__ = DOMNodeDict.__repr__ = function(self){
 }
 
 DOMNodeDict.__setattr__ = function(self,attr,value){
+
    if(attr.substr(0,2)=='on'){ // event
         if (!_b_.bool(value)) { // remove all callbacks attached to event
             DOMNodeDict.unbind(self,attr.substr(2))
@@ -627,21 +628,45 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
         if(DOMNodeDict['set_'+attr]!==undefined) {
           return DOMNodeDict['set_'+attr](self,value)
         }
+        // Setting an attribute to an instance of DOMNode can mean 2 
+        // different things:
+        // - setting an attribute to the DOM element, eg elt.href = ...
+        //   sets <A href="...">
+        // - setting an arbitrary attribute to the Python object
+        //
+        // The first option is used if the DOM element supports getAttribute 
+        // (or getAttributeNS for SVG elements), and if this method applied to
+        // the attribute returns a value.
+        // Otherwise, the second option is used.
+
+        // Case-insensitive version of the attribute. Also replaces _ by -
+        // to support setting attributes that have a -  
         var attr1 = attr.replace('_','-').toLowerCase()
+        
         if(self.elt instanceof SVGElement && 
             self.elt.getAttributeNS(null, attr1)!==null){
             self.elt.setAttributeNS(null, attr1, value)
             return
         }
+
         if(self.elt[attr1]!==undefined){self.elt[attr1]=value;return}
+
         if(typeof self.elt.getAttribute=='function' && 
             typeof self.elt.setAttribute=='function'){
                 var res = self.elt.getAttribute(attr1)
-                if(res!==undefined&&res!==null){
-                    self.elt.setAttribute(attr1,value)
+                if(res!==undefined&&res!==null&&res!=''){
+                    if(value===false){
+                        self.elt.removeAttribute(attr1)
+                    }else{
+                        self.elt.setAttribute(attr1,value)
+                    }
+                    console.log(self.elt)
                     return
                 }
         }
+        
+        // No attribute was found on the DOM element : set it to the DOMNode
+        // instance
         self.elt[attr]=value
     }
 }
