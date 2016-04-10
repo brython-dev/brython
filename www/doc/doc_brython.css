@@ -106,11 +106,17 @@ li {
 }
 
 pre.marked {
-  color:#339
+  color:#339;
+  font-size: 13px;
+}
+
+pre.python {
+  font-size: 13px;
 }
 
 code {
-  color:#339
+  color:#339;
+  font-size: 13px;
 }
 
 em {

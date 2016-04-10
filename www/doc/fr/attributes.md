@@ -71,20 +71,27 @@ Comme le nom des attributs peut être différent d'un navigateur à l'autre, Bry
 
 (1) En remontant dans l'arbre DOM, on s'arrête au premier élément dont l'attribut `style.position` est défini à une valeur autre que "static". `left` et `top` ont le même mode de calcul que `style.left` et `style.top` mais sont des valeurs entières et pas des chaines de caractères se terminant par `px`.
 
-(2) Même mode de calcul que `style.heigth` ou `style.width` mais ce sont des valeurs entières
+(2) Même mode de calcul que `style.height` ou `style.width` mais ce sont des valeurs entières
 
 Pour ajouter un descendant à un élément, on utilise l'opérateur __<=__ (à visualiser comme une flèche vers la gauche, pas comme "inférieur ou égal")
 
->    from browser import document, html
->    document['zone'] <= html.INPUT(Id="data")
+```python
+from browser import document, html
+document['zone'] <= html.INPUT(Id="data")
+```
 
 On peut itérer sur les enfants d'un élément par la syntaxe classique Python : 
->    for child in element:
->        (...)
+
+```python
+for child in element:
+    (...)
+```
 
 Pour détruire un élément, utiliser le mot-clé `del`
->    zone = document['zone']
->    del zone
+```python
+zone = document['zone']
+del zone
+```
 
 La collection `options` associée à un objet SELECT a l'interface d'une liste Python :
 
