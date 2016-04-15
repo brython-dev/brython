@@ -4033,7 +4033,7 @@ function $OpCtx(context,op){
             // For unary operators, the left operand is the unary sign(s)
             var op, method
             if(this.op=='unary_neg'){op='-';method='__neg__'}
-            else if(this.op=='unary_pos'){op='-';method='__pos__'}
+            else if(this.op=='unary_pos'){op='+';method='__pos__'}
             else{op='~';method='__invert__'}
             // for integers or float, replace their value using
             // Javascript operators

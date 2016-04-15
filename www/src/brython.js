@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,6,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-04-10 09:51:52.306631"
+__BRYTHON__.compiled_date="2016-04-15 17:18:09.973536"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1067,8 +1067,9 @@ this.after_star.length==0){
 only_positional=true
 var pos_nodes=[]
 if($B.debug>0 ||this.positional_list.length>0){
+nodes.push($NodeJS('var $len = arguments.length;'))
 var new_node=new $Node()
-var js='if(arguments.length>0 && arguments[arguments.length-1].$nat)'
+var js='if($len>0 && arguments[$len-1].$nat)'
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 new_node.add(make_args_nodes[0])
@@ -1100,18 +1101,19 @@ js +=' but more were given")}'
 new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 wrong_nb_node.add(new_node)}
-for(var i=0;i<this.positional_list.length;i++){var arg=this.positional_list[i]
+if(this.positional_list.length>0){if(this.type=='generator'){for(var i=0;i<this.positional_list.length;i++){var arg=this.positional_list[i]
 var new_node=new $Node()
-var js='$locals["'+arg+'"]=('+arg+
-'.is_float ? _b_.float('+arg+'.value) : '+arg+')'
-js='$locals["'+arg+'"]='+arg
+var js='$locals["'+arg+'"]='+arg
 new $NodeJSCtx(new_node,js)
-else_node.add(new_node)}}else{nodes.push(make_args_nodes[0])
+else_node.add(new_node)}}else{var pargs=[]
+for(var i=0;i<this.positional_list.length;i++){var arg=this.positional_list[i]
+pargs.push(arg+':'+arg)}
+else_node.add($NodeJS(local_ns+'=$locals={'+pargs.join(', ')+'}'))}}}else{nodes.push(make_args_nodes[0])
 nodes.push(make_args_nodes[1])}
 for(var i=nodes.length-1;i>=0;i--){node.children.splice(0,0,nodes[i])}
 var def_func_node=new $Node()
 if(only_positional){var params=Object.keys(this.varnames).concat(['$extra']).join(', ')
-new $NodeJSCtx(def_func_node,'return function('+params+')')}else{new $NodeJSCtx(def_func_node,'return function(pos_args, kw_args)')}
+new $NodeJSCtx(def_func_node,'return function('+params+')')}else{new $NodeJSCtx(def_func_node,'return function()')}
 def_func_node.is_def_func=true
 def_func_node.module=this.module
 for(var i=0;i<node.children.length;i++){def_func_node.add(node.children[i])}
@@ -1678,6 +1680,8 @@ if(found.length>0){
 if(!this.bound && found[0].C && found[0]===innermost
 && val.charAt(0)!='$'){var locs=$get_node(this).locals ||{},nonlocs=innermost.nonlocals
 if(locs[val]===undefined && 
+((innermost.type!='def' ||innermost.type!='generator')&&
+innermost.C.tree[0].args.indexOf(val)==-1)&&
 (nonlocs===undefined ||nonlocs[val]===undefined)){return '$B.$local_search("'+val+'")'}}
 if(found.length>1 && found[0].C){if(found[0].C.tree[0].type=='class' && !this.bound){var ns0='$locals_'+found[0].id.replace(/\./g,'_'),ns1='$locals_'+found[1].id.replace(/\./g,'_'),res
 if(bound_before){if(bound_before.indexOf(val)>-1){this.found=$B.bound[found[0].id][val]
@@ -2004,7 +2008,7 @@ case 'unary_pos':
 case 'unary_inv':
 var op,method
 if(this.op=='unary_neg'){op='-';method='__neg__'}
-else if(this.op=='unary_pos'){op='-';method='__pos__'}
+else if(this.op=='unary_pos'){op='+';method='__pos__'}
 else{op='~';method='__invert__'}
 if(this.tree[1].type=="expr"){var x=this.tree[1].tree[0]
 switch(x.type){case 'int':
@@ -4605,7 +4609,7 @@ $B.$InstanceMethodDict={__class__:$B.$type,__name__:'instancemethod',__mro__:[_b
 ;(function($B){var _b_=$B.builtins
 $B.args=function($fname,argcount,slots,var_names,$args,$dobj,extra_pos_args,extra_kw_args){
 var has_kw_args=false,nb_pos=$args.length,$ns
-if(nb_pos>0 && $args[nb_pos-1].$nat=='kw'){has_kw_args=true
+if(nb_pos>0 && $args[nb_pos-1].$nat){has_kw_args=true
 nb_pos--
 var kw_args=$args[nb_pos].kw}
 if(extra_pos_args){slots[extra_pos_args]=_b_.tuple()}
@@ -5101,13 +5105,9 @@ try{return $B.int_or_bool(v)}
 catch(err){if(_b_.isinstance(v,_b_.complex)&& v.imag==0){return $B.int_or_bool(v.real)}else if(isinstance(v,_b_.float)&& v==Math.floor(v)){return Math.floor(v)}else{throw _b_.TypeError("'"+$B.get_class(v).__name__+
 "' object cannot be interpreted as an integer")}}}
 $B.enter_frame=function(frame){
-if($B.frames_stack===undefined){alert('frames stack udef')}
-$B.frames_stack[$B.frames_stack.length]=frame}
+$B.frames_stack.push(frame)}
 $B.leave_frame=function(arg){
 if($B.frames_stack.length==0){console.log('empty stack');return}
-var last=$B.last($B.frames_stack)
-if(last[0]!=arg){
-console.log('leave error','leaving',arg,'last on stack',last[0])}
 $B.frames_stack.pop()}
 var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
 $B.is_safe_int=function(){for(var i=0;i<arguments.length;i++){var arg=arguments[i]
