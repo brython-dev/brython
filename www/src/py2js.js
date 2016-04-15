@@ -2098,8 +2098,10 @@ function $DefCtx(context){
                 // In calls, keyword arguments are passed as the last
                 // argument, an object with attribute $nat set to "kw"
                 
+                nodes.push($NodeJS('var $len = arguments.length;'))
+                
                 var new_node = new $Node()
-                var js = 'if(arguments.length>0 && arguments[arguments.length-1].$nat)'
+                var js = 'if($len>0 && arguments[$len-1].$nat)'
                 new $NodeJSCtx(new_node,js)
                 nodes.push(new_node)
                 
@@ -2151,14 +2153,23 @@ function $DefCtx(context){
                 wrong_nb_node.add(new_node)
             }
             
-            for(var i=0;i<this.positional_list.length;i++){
-                var arg = this.positional_list[i]
-                var new_node = new $Node()
-                var js = '$locals["'+arg+'"]=('+arg+
-                    '.is_float ? _b_.float('+arg+'.value) : '+arg+')'
-                js = '$locals["'+arg+'"]='+arg
-                new $NodeJSCtx(new_node,js)
-                else_node.add(new_node)
+            if(this.positional_list.length>0){
+                if(this.type=='generator'){
+                    for(var i=0;i<this.positional_list.length;i++){
+                        var arg = this.positional_list[i]
+                        var new_node = new $Node()
+                        var js = '$locals["'+arg+'"]='+arg
+                        new $NodeJSCtx(new_node,js)
+                        else_node.add(new_node)
+                    }
+                }else{
+                    var pargs = []
+                    for(var i=0;i<this.positional_list.length;i++){
+                        var arg = this.positional_list[i]
+                        pargs.push(arg+':'+arg)
+                    }
+                    else_node.add($NodeJS(local_ns+'=$locals={'+pargs.join(', ')+'}'))
+                }
             }
 
         }else{
@@ -2176,7 +2187,7 @@ function $DefCtx(context){
             var params = Object.keys(this.varnames).concat(['$extra']).join(', ')
             new $NodeJSCtx(def_func_node,'return function('+params+')')
         }else{
-            new $NodeJSCtx(def_func_node,'return function(pos_args, kw_args)')
+            new $NodeJSCtx(def_func_node,'return function()')
         }
         def_func_node.is_def_func = true
         def_func_node.module = this.module
@@ -3220,7 +3231,7 @@ function $IdCtx(context,value){
         if(this.scope.nonlocals && this.scope.nonlocals[val]!==undefined){
             this.nonlocal = true
         }
-        
+
         // If name is bound in the scope, but not yet bound when this
         // instance of $IdCtx was created, it is resolved by a call to
         // $search or $local_search
@@ -3318,7 +3329,10 @@ function $IdCtx(context,value){
                 && val.charAt(0)!='$'){
                 var locs = $get_node(this).locals || {},
                     nonlocs = innermost.nonlocals
+                    
                 if(locs[val]===undefined && 
+                    ((innermost.type!='def' || innermost.type!='generator') &&
+                        innermost.context.tree[0].args.indexOf(val)==-1) &&
                     (nonlocs===undefined || nonlocs[val]===undefined)){
                     return '$B.$local_search("'+val+'")'
                 }

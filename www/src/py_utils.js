@@ -20,7 +20,7 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     
     // If the function call had keywords arguments, they are in the last
     // element of $args
-    if(nb_pos>0 && $args[nb_pos-1].$nat=='kw'){
+    if(nb_pos>0 && $args[nb_pos-1].$nat){
         has_kw_args=true
         nb_pos--
         var kw_args=$args[nb_pos].kw
@@ -1160,19 +1160,21 @@ $B.int_value = function(v){
 $B.enter_frame = function(frame){
     // Enter execution frame : save on top of frames stack
     //console.log('enter frame', frame[0])
-    if($B.frames_stack===undefined){alert('frames stack udef')}
-    $B.frames_stack[$B.frames_stack.length]=frame
+    //if($B.frames_stack===undefined){alert('frames stack udef')}
+    $B.frames_stack.push(frame)
 }
 
 $B.leave_frame = function(arg){
     // Leave execution frame
     //console.log('leave frame', arg)
     if($B.frames_stack.length==0){console.log('empty stack');return}
+    /*
     var last = $B.last($B.frames_stack)
     if(last[0]!=arg){
         // print a warning if arg is not on top of frames stack
         console.log('leave error', 'leaving', arg, 'last on stack', last[0])
     }
+    */
     $B.frames_stack.pop()
     //console.log($B.frames_stack.length, 'frames remain')
 }
