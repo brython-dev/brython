@@ -2056,20 +2056,16 @@ function $DefCtx(context){
     
         // Code in the worst case, uses $B.args in py_utils.js
 
-        var make_args_nodes = []
-        var func_ref = '$locals_'+scope.id.replace(/\./g,'_')+'["'+this.name+'"]'
-        if(this.name=='fghjk'){
-            var js = 'var $ns = $B.argsfast("'+this.name+'", '
-        }else{
-            var js = 'var $ns = $B.args("'+this.name+'", '
-        }
-        js += this.argcount+', {'+this.slots.join(', ')+'}, '
-        js += '['+slot_list.join(', ')+'], '
-        if(this.name=='fghjk'){
-            js += 'pos_args, kw_args, '
-        }else{
-            js += 'arguments, '
-        }
+        var make_args_nodes = [],
+            func_ref = '$locals_'+scope.id.replace(/\./g,'_')+'["'+this.name+'"]'
+
+        // If function is not a generator, $locals is the result of $B.args
+        var js = this.type=='def' ? local_ns+' = $locals' : 'var $ns'
+        
+        js += ' = $B.args("'+this.name+'", '+
+            this.argcount+', {'+this.slots.join(', ')+'}, '+
+            '['+slot_list.join(', ')+'], arguments, '
+
         if(defs1.length){js += '$defaults, '}
         else{js += '{}, '}
         js += this.other_args+', '+this.other_kw+');'
@@ -2078,9 +2074,12 @@ function $DefCtx(context){
         new $NodeJSCtx(new_node,js)
         make_args_nodes.push(new_node)
 
-        var new_node = new $Node()
-        new $NodeJSCtx(new_node,'for(var $var in $ns){$locals[$var]=$ns[$var]};')
-        make_args_nodes.push(new_node)
+        if(this.type=='generator'){
+            // Update $locals with the result of $B.args
+            var new_node = new $Node()
+            new $NodeJSCtx(new_node,'for(var $var in $ns){$locals[$var]=$ns[$var]};')
+            make_args_nodes.push(new_node)
+        }
         
         var only_positional = false
         if(defaults.length==0 && this.other_args===null && this.other_kw===null &&
@@ -2108,11 +2107,12 @@ function $DefCtx(context){
                 // If at least one argument is not "simple", fall back to 
                 // $B.args()
                 new_node.add(make_args_nodes[0])
-                new_node.add(make_args_nodes[1])
+                if(make_args_nodes.length>1){new_node.add(make_args_nodes[1])}
             
                 var else_node = new $Node()
                 new $NodeJSCtx(else_node,'else')
                 nodes.push(else_node)
+                
             }
             
             if($B.debug>0){
@@ -2128,11 +2128,11 @@ function $DefCtx(context){
                 if(pos_len>0){
                     // Test if missing arguments
                     
-                    js = 'if(arguments.length<'+pos_len+')'
-                    js += '{var $missing='+pos_len+'-arguments.length;'
-                    js += 'throw TypeError("'+this.name+'() missing "+$missing+'
-                    js += '" positional argument"+($missing>1 ? "s" : "")+": "'
-                    js += '+new Array('+positional_str+').slice(arguments.length))}'
+                    js = 'if(arguments.length<'+pos_len+')'+
+                        '{var $missing='+pos_len+'-arguments.length;'+
+                        'throw TypeError("'+this.name+'() missing "+$missing+'+
+                        '" positional argument"+($missing>1 ? "s" : "")+": "'+
+                        '+new Array('+positional_str+').slice(arguments.length))}'
                     new_node = new $Node()
                     new $NodeJSCtx(new_node,js)
                     wrong_nb_node.add(new_node)
@@ -2174,8 +2174,10 @@ function $DefCtx(context){
 
         }else{
             nodes.push(make_args_nodes[0])
-            nodes.push(make_args_nodes[1])
+            if(make_args_nodes.length>1){nodes.push(make_args_nodes[1])}
         }
+
+        nodes.push($NodeJS('$B.frames_stack[$B.frames_stack.length-1][1] = $locals'))
 
         for(var i=nodes.length-1;i>=0;i--){
             node.children.splice(0,0,nodes[i])
@@ -2184,7 +2186,7 @@ function $DefCtx(context){
         // Node that replaces the original "def" line
         var def_func_node = new $Node()
         if(only_positional){
-            var params = Object.keys(this.varnames).concat(['$extra']).join(', ')
+            var params = Object.keys(this.varnames).join(', ')
             new $NodeJSCtx(def_func_node,'return function('+params+')')
         }else{
             new $NodeJSCtx(def_func_node,'return function()')

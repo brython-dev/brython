@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,6,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-04-15 17:18:09.973536"
+__BRYTHON__.compiled_date="2016-04-16 08:46:27.115853"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1046,21 +1046,21 @@ enter_frame_node.enter_frame=true
 new $NodeJSCtx(enter_frame_node,js)
 nodes.push(enter_frame_node)
 this.env=[]
-var make_args_nodes=[]
-var func_ref='$locals_'+scope.id.replace(/\./g,'_')+'["'+this.name+'"]'
-if(this.name=='fghjk'){var js='var $ns = $B.argsfast("'+this.name+'", '}else{var js='var $ns = $B.args("'+this.name+'", '}
-js +=this.argcount+', {'+this.slots.join(', ')+'}, '
-js +='['+slot_list.join(', ')+'], '
-if(this.name=='fghjk'){js +='pos_args, kw_args, '}else{js +='arguments, '}
+var make_args_nodes=[],func_ref='$locals_'+scope.id.replace(/\./g,'_')+'["'+this.name+'"]'
+var js=this.type=='def' ? local_ns+' = $locals' : 'var $ns'
+js +=' = $B.args("'+this.name+'", '+
+this.argcount+', {'+this.slots.join(', ')+'}, '+
+'['+slot_list.join(', ')+'], arguments, '
 if(defs1.length){js +='$defaults, '}
 else{js +='{}, '}
 js +=this.other_args+', '+this.other_kw+');'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 make_args_nodes.push(new_node)
+if(this.type=='generator'){
 var new_node=new $Node()
 new $NodeJSCtx(new_node,'for(var $var in $ns){$locals[$var]=$ns[$var]};')
-make_args_nodes.push(new_node)
+make_args_nodes.push(new_node)}
 var only_positional=false
 if(defaults.length==0 && this.other_args===null && this.other_kw===null &&
 this.after_star.length==0){
@@ -1073,7 +1073,7 @@ var js='if($len>0 && arguments[$len-1].$nat)'
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 new_node.add(make_args_nodes[0])
-new_node.add(make_args_nodes[1])
+if(make_args_nodes.length>1){new_node.add(make_args_nodes[1])}
 var else_node=new $Node()
 new $NodeJSCtx(else_node,'else')
 nodes.push(else_node)}
@@ -1084,11 +1084,11 @@ var wrong_nb_node=new $Node()
 new $NodeJSCtx(wrong_nb_node,js)
 else_node.add(wrong_nb_node)
 if(pos_len>0){
-js='if(arguments.length<'+pos_len+')'
-js +='{var $missing='+pos_len+'-arguments.length;'
-js +='throw TypeError("'+this.name+'() missing "+$missing+'
-js +='" positional argument"+($missing>1 ? "s" : "")+": "'
-js +='+new Array('+positional_str+').slice(arguments.length))}'
+js='if(arguments.length<'+pos_len+')'+
+'{var $missing='+pos_len+'-arguments.length;'+
+'throw TypeError("'+this.name+'() missing "+$missing+'+
+'" positional argument"+($missing>1 ? "s" : "")+": "'+
+'+new Array('+positional_str+').slice(arguments.length))}'
 new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 wrong_nb_node.add(new_node)
@@ -1109,10 +1109,11 @@ else_node.add(new_node)}}else{var pargs=[]
 for(var i=0;i<this.positional_list.length;i++){var arg=this.positional_list[i]
 pargs.push(arg+':'+arg)}
 else_node.add($NodeJS(local_ns+'=$locals={'+pargs.join(', ')+'}'))}}}else{nodes.push(make_args_nodes[0])
-nodes.push(make_args_nodes[1])}
+if(make_args_nodes.length>1){nodes.push(make_args_nodes[1])}}
+nodes.push($NodeJS('$B.frames_stack[$B.frames_stack.length-1][1] = $locals'))
 for(var i=nodes.length-1;i>=0;i--){node.children.splice(0,0,nodes[i])}
 var def_func_node=new $Node()
-if(only_positional){var params=Object.keys(this.varnames).concat(['$extra']).join(', ')
+if(only_positional){var params=Object.keys(this.varnames).join(', ')
 new $NodeJSCtx(def_func_node,'return function('+params+')')}else{new $NodeJSCtx(def_func_node,'return function()')}
 def_func_node.is_def_func=true
 def_func_node.module=this.module
