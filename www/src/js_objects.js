@@ -219,6 +219,10 @@ $JSObjectDict.__getattribute__ = function(self,attr){
                 }
                 // normally, we provide self.js as `this` to simulate js method call
                 var new_this = self.js;
+                if (self.js_func) {
+                    // if self is a wrapped function, unwrap it back
+                    new_this = self.js_func;
+                }
                 // but if we get explicit `this` (e.g. through apply call) we should pass it on
                 if (this !== null && this !== undefined && this !== window) {
                     new_this = this
