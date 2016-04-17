@@ -38,7 +38,7 @@ def axis(color = "black", linethick = 3):
     #Draw of y axis
     draw_line(20, 20, 20, 420, linethick = linethick, color = color)
 
-def axis_color():
+def axis_color(ev):
     axis(color = doc["axis_color"].value)
 
 def figure_title():
@@ -46,6 +46,9 @@ def figure_title():
     ctx.fillStyle = "gray"
     ctx.font = "bold 16px Arial"
     ctx.fillText(doc["titletext"].value, 410, 20)
+    
+def title_update(ev):
+    figure_title()
     
 dataset = []
 def graph():
@@ -66,24 +69,18 @@ axis(color = "black", linethick = 5)
 figure_title()
 work = timer.set_interval(graph, 100)
 
-# Some "adds" :-P
-#dicc = {'Pybonacci (on wordpress)':'http://pybonacci.wordpress.com',
-#        'Pybonacci (on Twitter)':'https://twitter.com/Pybonacci'
-#       }
-#for clave in dicc.keys():
-#    doc <= P()
-#    doc <= 'Pulsa en: ' + A(clave, href=dicc[clave])
-
+doc['btn-axis'].bind('click', axis_color)
+doc['btn-title'].bind('click', title_update)
         </script>
 
 
 <table>
     <tr>
         <td rowspan="3"><textarea id="console" cols=30 rows=30></textarea></td>
-        <td><input id="axis_color" value="black"><button onclick="axis_color()">Change axis color</button></td>
+        <td><input id="axis_color" value="black"><button id="btn-axis">Change axis color</button></td>
     </tr>
     <tr>
-        <td><input id="titletext" value="This is the title"><button onclick="figure_title()">Change title</button></td>
+        <td><input id="titletext" value="This is the title"><button id="btn-title">Change title</button></td>
     </tr>
     <tr>
         <td><canvas id="plotarea" width="840" height="440"></canvas></td>
