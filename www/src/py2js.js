@@ -7681,7 +7681,7 @@ function brython(options){
     
     // Option to run code on demand and not all the scripts defined in a page
     // The following lines are included to allow to run brython scripts in
-    // the IPython notebook using a cell magic. Have a look at
+    // the IPython/Jupyter notebook using a cell magic. Have a look at
     // https://github.com/kikocorreoso/brythonmagic for more info.
     if(options.ipy_id!==undefined){
        var $elts = [];
@@ -7853,7 +7853,7 @@ function brython(options){
         run_script(inner_scripts[i])
     }
     */
-    $B._load_scripts(scripts)
+    if (options.ipy_id === undefined){$B._load_scripts(scripts)}
 
     /* Uncomment to check the names added in global Javascript namespace
     var kk1 = Object.keys(window)
