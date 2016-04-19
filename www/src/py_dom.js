@@ -445,6 +445,10 @@ DOMNodeDict.__getattribute__ = function(self,attr){
       case 'clear':
       case 'remove':
         return function(){DOMNodeDict[attr](self,arguments[0])}
+      case 'replace_child':
+          return function(){
+			  DOMNodeDict[attr](self, arguments[0], arguments[1])
+		  }
       case 'headers':
         if(self.elt.nodeType==9){
           // HTTP headers
@@ -963,6 +967,17 @@ DOMNodeDict.remove = function(self,child){
         }else{ch_elt = ch_elt.parentElement}
     }
     if(!flag){throw _b_.ValueError('element '+child+' is not inside '+self)}
+}
+
+DOMNodeDict.replace_child = function(self, new_child, old_child){
+    if(!('replaceChild' in self.elt)){
+      throw _b_.AttributeError("object has no attribute 'replaceChild'")
+    }
+    if(old_child.elt instanceof HTMLElement && old_child.elt.parentNode === self.elt){
+	  self.elt.replaceChild(new_child.elt, old_child.elt)
+	}else{
+	  throw _b_.AttributeError("Element to be removed is not an 'HTMLElement'")
+	}   
 }
 
 DOMNodeDict.reset = function(self){ // for FORM
