@@ -229,7 +229,10 @@ function make_mro(bases, cl_dict){
         if(bases[i]===_b_.str) bases[i] = $B.$StringSubclassFactory
         else if(bases[i]===_b_.list) bases[i] = $B.$ListSubclassFactory
         var bmro = [], pos=0
-        var _tmp=bases[i].$dict.__mro__
+        if(bases[i].$dict===undefined ||
+            bases[i].$dict.__mro__===undefined){
+            throw _b_.TypeError('Object passed as base class is not a class')
+        }
         for(var k=0;k<_tmp.length;k++){
             bmro[pos++]=_tmp[k]
         }
