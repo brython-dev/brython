@@ -2177,7 +2177,7 @@ function $DefCtx(context){
             if(make_args_nodes.length>1){nodes.push(make_args_nodes[1])}
         }
 
-        nodes.push($NodeJS('$B.frames_stack[$B.frames_stack.length-1][1] = $locals'))
+        nodes.push($NodeJS('$B.frames_stack[$B.frames_stack.length-1][1] = $locals;'))
 
         for(var i=nodes.length-1;i>=0;i--){
             node.children.splice(0,0,nodes[i])
