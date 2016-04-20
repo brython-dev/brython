@@ -232,7 +232,7 @@ function make_mro(bases, cl_dict){
         if(bases[i].$dict===undefined ||
             bases[i].$dict.__mro__===undefined){
             throw _b_.TypeError('Object passed as base class is not a class')
-        }
+        }else{var _tmp=bases[i].$dict.__mro__}
         for(var k=0;k<_tmp.length;k++){
             bmro[pos++]=_tmp[k]
         }
