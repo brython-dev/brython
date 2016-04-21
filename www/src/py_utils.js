@@ -189,11 +189,12 @@ $B.get_class = function(obj){
             obj.__class__=$B.$FunctionDict
             return $B.$FunctionDict
           case 'object':
-            if(obj.constructor===Array) {
-              obj.__class__=_b_.list.$dict
-              return _b_.list.$dict
-            }
-            else if(obj.constructor===Number) return _b_.float.$dict
+            if(Array.isArray(obj)){
+                if(Object.getPrototypeOf(obj)===Array.prototype) {
+                  obj.__class__=_b_.list.$dict
+                  return _b_.list.$dict
+                }
+            }else if(obj.constructor===Number) return _b_.float.$dict
             break
         }
     }
@@ -485,7 +486,8 @@ $B.$JS2Py = function(src){
     if(typeof src=="object"){
         if($B.$isNode(src)) return $B.DOMNode(src)
         if($B.$isEvent(src)) return $B.$DOMEvent(src)
-        if(src.constructor===Array||$B.$isNodeList(src)){
+        if((Array.isArray(src) &&Object.getPrototypeOf(src)===Array.prototype)||
+            $B.$isNodeList(src)){
             var res = [], pos=0
             for(var i=0,_len_i=src.length;i<_len_i;i++) res[pos++]=$B.$JS2Py(src[i])
             return res
