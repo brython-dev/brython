@@ -1609,7 +1609,9 @@ function $ConditionCtx(context,token){
     this.to_js = function(){
         this.js_processed=true
         var tok = this.token
-        if(tok==='elif'){tok='else if'}
+        if(tok==='elif'){
+            tok='else if'
+        }
         // In a "while" loop, the flag "$no_break" is initially set to false.
         // If the loop exits with a "break" this flag will be set to "true",
         // so that an optional "else" clause will not be run.
@@ -1632,7 +1634,9 @@ function $ConditionCtx(context,token){
                 res.push('$test_timeout'+num+'() && ')
             }
             res.push('$locals["$no_break'+this.loop_num+'"] && ')
-                
+        }else if(tok=='else if'){
+            var line_info = $get_node(this).line_num+','+$get_scope(this).id
+            res.push('($locals.$line_info="'+line_info+'") && ')
         }
         if(this.tree.length==1){
             res.push($to_js(this.tree)+'))')
@@ -2553,7 +2557,12 @@ function $ExceptCtx(context){
         for(var i=0;i<this.tree.length;i++){
             res[pos++]=this.tree[i].to_js()
         }
-        return 'else if($B.is_exc('+this.error_name+',['+res.join(',')+']))'
+        var lnum = ''
+        if($B.debug>0){
+            lnum = '($locals.$line_info="'+$get_node(this).line_num+','+
+                this.scope.id+'") && '
+        }
+        return 'else if('+lnum+'$B.is_exc('+this.error_name+',['+res.join(',')+']))'
     }
 }
 

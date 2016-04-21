@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,6,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-04-21 18:13:35.011862"
+__BRYTHON__.compiled_date="2016-04-21 21:30:18.253919"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -870,7 +870,8 @@ __BRYTHON__.loop_timeout*1000+
 h4+'return true'+h+'}\n'
 res.splice(0,0,test_timeout)
 res.push('$test_timeout'+num+'() && ')}
-res.push('$locals["$no_break'+this.loop_num+'"] && ')}
+res.push('$locals["$no_break'+this.loop_num+'"] && ')}else if(tok=='else if'){var line_info=$get_node(this).line_num+','+$get_scope(this).id
+res.push('($locals.$line_info="'+line_info+'") && ')}
 if(this.tree.length==1){res.push($to_js(this.tree)+'))')}else{
 res.push(this.tree[0].to_js()+'))')
 if(this.tree[1].tree.length>0){res.push('{'+this.tree[1].to_js()+'}')}}
@@ -1316,7 +1317,10 @@ case 1:
 if(this.tree[0].name==='Exception')return 'else if(1)'}
 var res=[],pos=0
 for(var i=0;i<this.tree.length;i++){res[pos++]=this.tree[i].to_js()}
-return 'else if($B.is_exc('+this.error_name+',['+res.join(',')+']))'}}
+var lnum=''
+if($B.debug>0){lnum='($locals.$line_info="'+$get_node(this).line_num+','+
+this.scope.id+'") && '}
+return 'else if('+lnum+'$B.is_exc('+this.error_name+',['+res.join(',')+']))'}}
 function $ExprCtx(C,name,with_commas){
 this.type='expr'
 this.name=name
