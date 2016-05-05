@@ -1335,15 +1335,7 @@ function $CallCtx(context){
                 // from this node until we reach the current node being processed. 
                 // Take output from to_js and append to execution_object.
                 
-                var res=""
-                if (_block) {
-                   //earney
-                   res="@@;$B.execution_object.$append($jscode, 10); "
-                   res+="$B.execution_object.$execute_next_segment(); "
-                   res+="$jscode=@@"
-                }
-                
-                res += 'getattr('+func_js+',"__call__")'
+                var res = 'getattr('+func_js+',"__call__")'
                 return res+args_str
             }
 
