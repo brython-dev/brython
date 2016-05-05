@@ -54,7 +54,7 @@ timeout = 4
 
 def go(url):
     req = ajax()
-    req.on_complete = on_complete
+    req.bind("complete", on_complete)
     req.set_timeout(timeout,err_msg)
     req.open('GET',url,True)
     req.send()
