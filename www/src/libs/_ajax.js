@@ -14,18 +14,19 @@ function ajax(){
     }
     xmlhttp.onreadystatechange = function(){
         // here, "this" refers to xmlhttp
+        console.log(this)
         var state = this.readyState
         var req = this.$ajax
         req.js.text = this.responseText
         var timer = this.$requestTimer
-        var obj = this
-        if(state===0 && 'on_uninitialized' in req){req.on_uninitialized(req)}
-        else if(state===1 && 'on_loading' in req){req.on_loading(req)}
-        else if(state===2 && 'on_loaded' in req){req.on_loaded(req)}
-        else if(state===3 && 'on_interactive' in req){req.on_interactive(req)}
-        else if(state===4 && 'on_complete' in req){
+        if(state==4){console.log('state', state, this.oncomplete)}
+        if(state===0 && this.onuninitialized){this.onuninitialized(req)}
+        else if(state===1 && this.onloading){this.onloading(req)}
+        else if(state===2 && this.onloaded){this.onloaded(req)}
+        else if(state===3 && this.oninteractive){this.oninteractive(req)}
+        else if(state===4 && this.oncomplete){
             if(timer !== null){window.clearTimeout(timer)}
-            req.on_complete(req)
+            this.oncomplete(req)
         }
     }
     var res = {__class__:ajax.$dict, js:xmlhttp}
@@ -55,18 +56,19 @@ ajax.$dict = {
     __repr__ : function(self){return '<object Ajax>'},
     __str__ : function(self){return '<object Ajax>'},
     
-    bind : function(self,evt,func){
-        // req.bind(evt,func) is the same as req.on_evt = func
-        self['on_'+evt] = func
+    bind : function(self, evt, func){
+        // req.bind(evt,func) is the same as req.onevt = func
+        self.js['on'+evt] = func
         return $N
     },
     
     send : function(self,params){
         // params can be Python dictionary or string
+        //self.js.onreadystatechange = function(ev){console.log(ev.target)}
         var res = ''
         if(!params){
             self.js.send();
-            return;
+            return $N;
         }else if(isinstance(params,str)){
             res = params
         }else if(isinstance(params,dict)){
@@ -86,6 +88,7 @@ ajax.$dict = {
             throw _b_.TypeError("send() argument must be string or dictionary, not '"+str(params.__class__)+"'")
         }
         self.js.send(res)
+        return $N
     },
     
     set_header : function(self,key,value){
