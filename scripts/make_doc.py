@@ -19,8 +19,18 @@ for path in src_paths:
     if not os.path.exists(path):
         os.mkdir(path)
 
+# copy css
 shutil.copy(os.path.join(md_doc_path,'doc_brython.css'),
     os.path.join(static_doc_path,'doc_brython.css'))
+
+# copy images
+images_dir_src = os.path.join(md_doc_path,'images')
+images_dir_dest = os.path.join(static_doc_path,'images')
+if not os.path.exists(images_dir_dest):
+    os.mkdir(images_dir_dest)
+
+for img in os.listdir(images_dir_src):
+    shutil.copy(os.path.join(images_dir_src, img), images_dir_dest)
 
 for lang in ['fr', 'en', 'es']: 
     dest_path = os.path.join(static_doc_path, lang)
