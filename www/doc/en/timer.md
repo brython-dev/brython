@@ -83,7 +83,7 @@ document['ct-stop'].bind('click', stop_button)
 </table>
 </div>
 
-`set_interval(`_fonction,ms_`)`
+`set_interval(`_function, ms_`)`
 > launches repeated execution of the *function* every *ms* milliseconds. This
 > function returns an object usable in the following function
 
