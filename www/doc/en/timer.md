@@ -84,8 +84,8 @@ document['ct-stop'].bind('click', stop_button)
 </div>
 
 `set_interval(`_function, ms_`)`
-> launches repeated execution of the *function* every *ms* milliseconds. This
-> function returns an object usable in the following function
+> launches repeated execution of the *function* every *ms* milliseconds and 
+> returns an object usable in function `clear_interval` described below.
 
 > It is a wrapper of the `setInterval` function in javascript. Official docs 
 > can be found [here](http://www.w3.org/TR/2011/WD-html5-20110525/timers.html#dom-windowtimers-setinterval).
