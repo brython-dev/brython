@@ -1,4 +1,6 @@
 [![Stories in Ready](https://badge.waffle.io/brython-dev/brython.svg?label=ready&title=Ready)](http://waffle.io/brython-dev/brython)
+[![Travis](https://api.travis-ci.org/brython-dev/brython.svg)](https://travis-ci.org/brython-dev/brython)
+
 
 brython
 =======
