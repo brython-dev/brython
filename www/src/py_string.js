@@ -1136,8 +1136,10 @@ $StringDict.isidentifier = function() {
 
 $StringDict.islower = function() {
     var $=$B.args('islower',1,{self:null},['self'],arguments,{},null,null)
+    // $B.cased_letters_regexp is in brython_builtins.js
     // A string only made of whitespace is not lower for Python
-    return $.self==$.self.toLowerCase() && $.self.search(/^\s*$/)==-1
+    return ($B.cased_letters_regexp.exec($.self)!==null) &&
+        $.self==$.self.toLowerCase() && $.self.search(/^\s*$/)==-1
 }
 
 // not sure how to handle unicode variables
@@ -1183,7 +1185,9 @@ $StringDict.istitle = function() {
 
 $StringDict.isupper = function() {
     var $=$B.args('isupper',1,{self:null},['self'],arguments,{},null,null)
-    return $.self==$.self.toUpperCase() && $.self.search(/^\s*$/)==-1
+    // $B.cased_letters_regexp is in brython_builtins.js
+    return ($B.cased_letters_regexp.exec($.self)!==null) &&
+        $.self==$.self.toUpperCase() && $.self.search(/^\s*$/)==-1
 }
 
 $StringDict.join = function(){

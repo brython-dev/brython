@@ -836,6 +836,16 @@ assert not True and not True or not False
 assert not True and not False or True
 assert not True and not False or not False
 
+# issue 423
+assert 'a'.islower()
+assert 'A'.isupper()
+assert 'Ⰰ'.isupper() # U+2C00 	GLAGOLITIC CAPITAL LETTER AZU
+assert 'a0123'.islower()
+assert not '0123'.islower() # no uppercase, lowercase or titlecase letter
+assert not '0123'.isupper()
+assert not '!!!'.isupper()
+assert not '!!!'.islower()
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
