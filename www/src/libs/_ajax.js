@@ -14,12 +14,10 @@ function ajax(){
     }
     xmlhttp.onreadystatechange = function(){
         // here, "this" refers to xmlhttp
-        console.log(this)
         var state = this.readyState
         var req = this.$ajax
         req.js.text = this.responseText
         var timer = this.$requestTimer
-        if(state==4){console.log('state', state, this.oncomplete)}
         if(state===0 && this.onuninitialized){this.onuninitialized(req)}
         else if(state===1 && this.onloading){this.onloading(req)}
         else if(state===2 && this.onloaded){this.onloaded(req)}
