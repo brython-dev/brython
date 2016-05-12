@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-05-12 11:36:42.521842"
+__BRYTHON__.compiled_date="2016-05-12 21:14:56.600313"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1698,12 +1698,13 @@ var scope_ns='$locals_'+scope.id.replace(/\./g,'_')
 if(scope.C===undefined){
 if(scope.id=='__builtins__'){if(gs.blurred){
 val='('+global_ns+'["'+val+'"] || '+val+')'}else{
+if(val!=='__builtins__'){val='$B.builtins.'+val}
 this.is_builtin=true}}else if(scope.id==scope.module){
 if(this.bound ||this.augm_assign){
 val=scope_ns+'["'+val+'"]'}else{if(scope===innermost && this.env[val]===undefined){var locs=$get_node(this).locals ||{}
 if(locs[val]===undefined){
 if(found.length>1 && found[1].id=='__builtins__'){this.is_builtin=true
-return val+$to_js(this.tree,'')}}
+return '$B.builtins.'+val+$to_js(this.tree,'')}}
 return '$B.$search("'+val+'")'}else{if(scope.level<=2){
 val=scope_ns+'["'+val+'"]'}else{
 val='$B.$check_def("'+val+'",'+scope_ns+'["'+val+'"])'}}}}else{val=scope_ns+'["'+val+'"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns+'["'+val+'"]'}else if(!this.bound && !this.augm_assign){if(scope.level<=3){
@@ -6733,6 +6734,8 @@ for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]})(__BRYTHON__
 $B.$ModuleDict={__class__ : $B.$type,__name__ : 'module'}
 $B.$ModuleDict.__repr__=$B.$ModuleDict.__str__=function(self){return '<module '+self.__name__+'>'}
 $B.$ModuleDict.__mro__=[$B.$ModuleDict,_b_.object.$dict]
+$B.$ModuleDict.__setattr__=function(self,attr,value){if(self.__name__=='__builtins__'){
+$B.builtins[attr]=value}else{self[attr]=value}}
 function module(name,doc,package){return{__class__:$B.$ModuleDict,__name__:name,__doc__:doc||_b_.None,__package__:package||_b_.None}}
 module.__class__=$B.$factory
 module.$dict=$B.$ModuleDict
@@ -10662,7 +10665,12 @@ module_obj.__name__=name
 module_obj.__repr__=module_obj.__str__=function(){return "<module '"+name+"' (built-in)>"}
 $B.imported[name]=$B.modules[name]=module_obj}
 for(var attr in modules){load(attr,modules[attr])}
-modules['browser'].html=modules['browser.html']})(__BRYTHON__)
+modules['browser'].html=modules['browser.html']
+$B.builtins.__builtins__=$B.$ModuleDict.$factory('__builtins__','Python builtins')
+for(var attr in $B.builtins){$B.builtins.__builtins__[attr]=$B.builtins[attr]}
+$B.builtins.__builtins__.__setattr__=function(attr,value){console.log('set attr of builtins',attr)
+$B.builtins[attr]=value}
+$B.bound.__builtins__.__builtins__=$B.builtins.__builtins__})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,
 $sys=$B.imported['_sys'];
 function import_hooks(mod_name,_path,module,blocking){

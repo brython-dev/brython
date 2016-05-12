@@ -13,6 +13,15 @@ $B.$ModuleDict.__repr__ = $B.$ModuleDict.__str__ = function(self){
 }
 $B.$ModuleDict.__mro__ = [$B.$ModuleDict,_b_.object.$dict]
 
+$B.$ModuleDict.__setattr__ = function(self, attr, value){
+    if(self.__name__=='__builtins__'){
+        // set a Python builtin
+        $B.builtins[attr] = value
+    }else{
+        self[attr] = value
+    }
+}
+
 function module(name,doc,package){
     return {__class__:$B.$ModuleDict,
         __name__:name,

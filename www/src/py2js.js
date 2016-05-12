@@ -3391,8 +3391,9 @@ function $IdCtx(context,value){
                         // name is not overridden
                         val = '('+global_ns+'["'+val+'"] || '+val+')'
                     }else{
-                        // Keep the name as is, it is introduced in the 
-                        // namespace at the beginning of the script
+                        // Builtin name ; it might be redefined inside the 
+                        // script, eg to redefine open()
+                        if(val!=='__builtins__'){val = '$B.builtins.'+val}
                         this.is_builtin = true
                     }
                 }else if(scope.id==scope.module){
@@ -3410,7 +3411,7 @@ function $IdCtx(context,value){
                                 // Cf issue #311
                                 if(found.length>1 && found[1].id == '__builtins__'){
                                     this.is_builtin = true
-                                    return val+$to_js(this.tree,'')
+                                    return '$B.builtins.'+val+$to_js(this.tree,'')
                                 }
                             }
                             // Call a function to return the value if it is defined

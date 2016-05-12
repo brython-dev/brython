@@ -295,6 +295,18 @@
 
     for(var attr in modules){load(attr, modules[attr])}
     modules['browser'].html = modules['browser.html']
+
+    // Set builtin name __builtins__
+    $B.builtins.__builtins__ = $B.$ModuleDict.$factory('__builtins__',
+        'Python builtins')
+    for(var attr in $B.builtins){
+        $B.builtins.__builtins__[attr] = $B.builtins[attr]
+    }
+    $B.builtins.__builtins__.__setattr__ = function(attr, value){
+        console.log('set attr of builtins', attr)
+        $B.builtins[attr] = value
+    }
+    $B.bound.__builtins__.__builtins__ = $B.builtins.__builtins__
           
 })(__BRYTHON__)
 
