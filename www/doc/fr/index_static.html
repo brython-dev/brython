@@ -17,10 +17,11 @@ header.show('../<prefix>/', 'fr')
 
 
 def run(ev):
-    # run the code in the elt after the button
-    ix = ev.target.parent.children.index(ev.target)
-    elt = ev.target.parent.children[ix+1]
-    exec(elt.text,{})
+    # run the code in the element after the button
+    tg = ev.target
+    while tg.tagName != 'BUTTON':
+        tg = tg.parent
+    exec(tg.python_code,{})
     elt.focus()
 
 target = 'content'
@@ -35,6 +36,8 @@ for elt in document[target].get(selector='.exec'):
     elt.focus()
     btn = html.BUTTON('▶')
     btn.bind('click', run)
+    # set attribute python_code, used when button is hit
+    btn.python_code = src
     elt.parent.insertBefore(btn, elt)
 for elt in document[target].get(selector='.exec_on_load'):
     # Python code executed on page load
