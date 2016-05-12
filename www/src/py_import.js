@@ -46,21 +46,6 @@ function parent_package(mod_name) {
 function $importer(){
     // returns the XMLHTTP object to handle imports
     var $xmlhttp = new XMLHttpRequest();
-    if ($B.$CORS && "withCredentials" in $xmlhttp) {
-       // Check if the XMLHttpRequest object has a "withCredentials" property.
-       // "withCredentials" only exists on XMLHTTPRequest2 objects.
-    } else if ($B.$CORS && typeof window.XDomainRequest != "undefined") {
-      // Otherwise, check if XDomainRequest.
-      // XDomainRequest only exists in IE, and is IE's way of making CORS requests.
-      $xmlhttp = new window.XDomainRequest();
-    } else if (window.XMLHttpRequest){
-      // Otherwise, CORS is not supported by the browser. or CORS is not activated by developer/programmer
-      // code for IE7+, Firefox, Chrome, Opera, Safari
-      //$xmlhttp=new XMLHttpRequest();  // we have already an instance of XMLHttpRequest
-    }else{// code for IE6, IE5
-      // Otherwise, CORS is not supported by the browser. or CORS is not activated by developer/programmer
-      $xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
-    }
 
     var fake_qs;
     switch ($B.$options.cache) {

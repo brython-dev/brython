@@ -7637,10 +7637,6 @@ function brython(options){
     // function open() - see py_builtin_functions.js
     if (options.open !== undefined) _b_.open = options.open
 
-    // Cross-origin resource sharing
-    $B.$CORS=false 
-    if (options.CORS !== undefined) $B.$CORS = options.CORS
-
     $B.$options=options
     
     // Set $B.meta_path, the list of finders to use for imports

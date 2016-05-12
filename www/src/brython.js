@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-05-12 11:16:08.292248"
+__BRYTHON__.compiled_date="2016-05-12 11:36:42.521842"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4118,8 +4118,6 @@ _b_.__debug__=$B.debug>0
 if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
 $B.static_stdlib_import=options.static_stdlib_import
 if(options.open !==undefined)_b_.open=options.open
-$B.$CORS=false 
-if(options.CORS !==undefined)$B.$CORS=options.CORS
 $B.$options=options
 var meta_path=[]
 var path_hooks=[]
@@ -6750,9 +6748,6 @@ parts.pop();
 return parts.join('.');}
 function $importer(){
 var $xmlhttp=new XMLHttpRequest();
-if($B.$CORS && "withCredentials" in $xmlhttp){}else if($B.$CORS && typeof window.XDomainRequest !="undefined"){
-$xmlhttp=new window.XDomainRequest();}else if(window.XMLHttpRequest){}else{
-$xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");}
 var fake_qs;
 switch($B.$options.cache){case 'version':
 fake_qs="?v="+$B.version_info[2]
