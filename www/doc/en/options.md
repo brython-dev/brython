@@ -17,12 +17,20 @@ To run the Python scripts in the page, you must call the function `brython()` on
 - *debug* : debug level (see above)
 - *static\_stdlib\_import* : boolean, indicates if, in order to import modules or packages from the standard library, the static mapping table in the script __stdlib\_paths.js__ should be used. Defaults to `true`
 - *pythonpath* : a list of paths where imported modules should be searched
-- *ipy_id* : by default, the function `brython()` runs all the scripts in the page. This option specifies a list of element idifiers (tag attribute `id`) whose text content must be run as Python code. See [brythonmagic](https://github.com/kikocorreoso/brythonmagic) for more information
+- *ipy_id* : by default, the function `brython()` runs all the scripts in the page. This option specifies a list of element identifiers (tag attribute `id`) whose text content must be run as Python code. See [brythonmagic](https://github.com/kikocorreoso/brythonmagic) for more information
+- *open* is meant to specify an alternative implementation of the builtin function `open`, for instance one which would use local storage. But **for compatibility with Python this should be implemented by setting `__builtins__.open` - which currenlty doesn't work. When it does this option will be removed so use it under your own responsability** 
+- *re_module* allow the users to specify the `re` module they want to use as a default. Valid values are 'pyre' for python's `re` module and 'jsre' for brython's customized `re` module. Default is for brython to guess which to use by looking at complexity of the `re` pattern. **Following the Python philosophy, *explicit is better than implicit*, so this option would be deprecated in future versions of brython. In future versions if one wants to use the javascript `RegExp` engine should explicitly state it in the code. E.g.:**
 
-Example
--------
+>    from browser import window
+>    from javascript import JSConstructor
+
+>    jsre = JSConstructor(window.RegExp)
+>    mo = jsre(r'a(.*)e').exec('aBCDe')
+>    print(mo)
+
+Example of `brython` options usage:
+-----------------------------------
 
 >    brython({debug:1, ipy_id:['hello']})
 
 will run the content of the element with id "hello" with debug level 1
-
