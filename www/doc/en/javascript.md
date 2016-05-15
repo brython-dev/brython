@@ -42,9 +42,10 @@ Example
 
 Using `JSConstructor` with the Javascript library three.js :
 
+>    from browser import window
 >    from javascript import JSConstructor
 >    
->    cameraC = JSConstructor( THREE.PerspectiveCamera )
->    camera = cameraC( 75, 1, 1, 10000 )
+>    cameraC = JSConstructor(window.THREE.PerspectiveCamera)
+>    camera = cameraC(75, 1, 1, 10000)
 
 > See [three](../../gallery/three.html) for a full functional example

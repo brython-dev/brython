@@ -44,9 +44,10 @@ Exemple
 
 Utilisation de `JSConstructor` avec la bibliothèque Javascript three.js :
 
+>    from browser import window
 >    from javascript import JSConstructor
 >    
->    cameraC = JSConstructor(THREE.PerspectiveCamera)
+>    cameraC = JSConstructor(window.THREE.PerspectiveCamera)
 >    camera = cameraC(75, 1, 1, 10000)
 
 > Voir [la démo three](../../gallery/three.html) pour une démonstration
