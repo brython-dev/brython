@@ -1760,7 +1760,7 @@ function $DecoratorCtx(context){
 
         for(var i=0;i<decorators.length;i++){
           //var dec = this.dec_ids[i]
-          res += this.dec_ids[i]+'('
+          res += 'getattr('+this.dec_ids[i]+',"__call__")('
           tail +=')'
         }
         res += (obj.decorated ? obj.alias : ref)+tail+';'

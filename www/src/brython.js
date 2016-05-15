@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-05-12 21:14:56.600313"
+__BRYTHON__.compiled_date="2016-05-15 20:58:27.510079"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -914,7 +914,7 @@ var scope=$get_scope(this)
 var ref='$locals["'+obj.name+'"]'
 var res=ref+'='
 for(var i=0;i<decorators.length;i++){
-res +=this.dec_ids[i]+'('
+res +='getattr('+this.dec_ids[i]+',"__call__")('
 tail +=')'}
 res +=(obj.decorated ? obj.alias : ref)+tail+';'
 $B.bound[scope.id][obj.name]=true
@@ -5912,6 +5912,8 @@ return res}else if(attr=='__annotations__'){
 return $B.obj_dict(self.$infos[attr])}else{return self.$infos[attr]}}else{return _b_.object.$dict.__getattribute__(self,attr)}}
 $FunctionDict.__repr__=$FunctionDict.__str__=function(self){return '<function '+self.$infos.__name__+'>'}
 $FunctionDict.__mro__=[$FunctionDict,$ObjectDict]
+$FunctionDict.__setattr__=function(self,attr,value){if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
+else{self[attr]=value}}
 var $Function=function(){}
 $Function.__class__=$B.$factory
 $FunctionDict.$factory=$Function
