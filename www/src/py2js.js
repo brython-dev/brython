@@ -2043,7 +2043,7 @@ function $DefCtx(context){
         var enter_frame_node = new $Node(),
             enter_frame_node_rank = nodes.length
         var js = ';$B.enter_frame([$local_name, $locals,'+
-            '"'+global_scope.id+'", '+global_ns+']);' 
+            '"'+global_scope.id+'", '+global_ns+', this]);' 
         enter_frame_node.enter_frame = true
         new $NodeJSCtx(enter_frame_node,js)
         nodes.push(enter_frame_node)

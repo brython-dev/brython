@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-05-15 20:58:27.510079"
+__BRYTHON__.compiled_date="2016-05-15 21:51:09.943960"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1038,7 +1038,7 @@ new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 var enter_frame_node=new $Node(),enter_frame_node_rank=nodes.length
 var js=';$B.enter_frame([$local_name, $locals,'+
-'"'+global_scope.id+'", '+global_ns+']);' 
+'"'+global_scope.id+'", '+global_ns+', this]);' 
 enter_frame_node.enter_frame=true
 new $NodeJSCtx(enter_frame_node,js)
 nodes.push(enter_frame_node)
@@ -6610,13 +6610,15 @@ for(var i=0,_len_i=pyobj.length;i < _len_i;i++){res.push(pyobj2jsobj(pyobj[i]))}
 return res}else if(klass===_b_.dict.$dict){
 var jsobj={}
 var items=_b_.list(_b_.dict.$dict.items(pyobj))
-for(var j=0,_len_j=items.length;j < _len_j;j++){jsobj[items[j][0]]=pyobj2jsobj(items[j][1])}
+for(var j=0,_len_j=items.length;j < _len_j;j++){if(typeof items[j][1]=='function'){
+items[j][1].bind(jsobj)}
+jsobj[items[j][0]]=pyobj2jsobj(items[j][1])}
 return jsobj}else if(klass===$B.builtins.float.$dict){
 return pyobj.valueOf()}else if(klass===$B.$FunctionDict){
 return function(){try{var args=[]
 for(var i=0;i<arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}
 else{args.push(jsobj2pyobj(arguments[i]))}}
-return pyobj.apply(null,args)}catch(err){console.log(err)
+return pyobj.apply(this,args)}catch(err){console.log(err)
 console.log(_b_.getattr(err,'info'))
 console.log(err.__name__+':',err.args[0])
 throw err}}}else{
@@ -10650,7 +10652,7 @@ var content=$B.builtins.getattr(file_obj,'read')()
 eval(content)
 if(names!==undefined){if(!Array.isArray(names)){throw $B.builtins.TypeError("argument 'names' should be a list, not '"+$B.get_class(names).__name__)}else{for(var i=0;i<names.length;i++){try{window[names[i]]=eval(names[i])}
 catch(err){throw $B.builtins.NameError("name '"+names[i]+"' not found in script "+script_url)}}}}},py2js: function(src,module_name){if(is_none(module_name)){module_name='__main__'+$B.UUID()}
-return $B.py2js(src,module_name,module_name,'__builtins__').to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)}}
+return $B.py2js(src,module_name,module_name,'__builtins__').to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},$$this: function(){return $B.jsobj2pyobj($B.last($B.frames_stack)[4])}}
 var _b_=$B.builtins
 modules['_sys']={__file__:$B.brython_path+'/libs/_sys.js',
 Getframe : function(depth){return $B._frame($B.frames_stack,depth)},modules :

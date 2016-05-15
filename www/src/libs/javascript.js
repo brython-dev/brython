@@ -27,6 +27,8 @@ var $module=(function($B) {
         return $B.py2js(src,module_name,module_name,'__builtins__').to_js()
     },
     pyobj2jsobj:function(obj){ return $B.pyobj2jsobj(obj)},
-    jsobj2pyobj:function(obj){ return $B.jsobj2pyobj(obj)}
+    jsobj2pyobj:function(obj){ return $B.jsobj2pyobj(obj)},
+    $$this: function(){return this}
+    
   }
 })(__BRYTHON__)

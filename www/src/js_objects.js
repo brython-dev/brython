@@ -123,6 +123,10 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
         var jsobj = {}
         var items = _b_.list(_b_.dict.$dict.items(pyobj))
         for(var j=0, _len_j = items.length; j < _len_j;j++){
+            if(typeof items[j][1]=='function'){
+                // set "this" to jsobj
+                items[j][1].bind(jsobj)
+            }
             jsobj[items[j][0]] = pyobj2jsobj(items[j][1])
         }
         return jsobj
@@ -141,7 +145,7 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
                     if(arguments[i]===undefined){args.push(_b_.None)}
                     else{args.push(jsobj2pyobj(arguments[i]))}
                 }
-                return pyobj.apply(null, args)
+                return pyobj.apply(this, args)
             }catch(err){
                 console.log(err)
                 console.log(_b_.getattr(err,'info'))
