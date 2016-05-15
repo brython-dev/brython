@@ -850,6 +850,16 @@ assert not '!!!'.islower()
 assert "{:.0f}".format(2.1) == "2"
 assert "{:.0f}".format(-2.1) == "-2"
 
+# set attribute __doc__ of a function
+def test():
+    """original text"""
+    pass
+
+
+assert test.__doc__ == """original text"""
+test.__doc__ = "new text"
+assert test.__doc__ == "new text"
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

@@ -1740,13 +1740,20 @@ $FunctionDict.__getattribute__ = function(self, attr){
         return _b_.object.$dict.__getattribute__(self, attr)
     }
 }
+
 $FunctionDict.__repr__=$FunctionDict.__str__ = function(self){
     return '<function '+self.$infos.__name__+'>'
 }
 
 $FunctionDict.__mro__ = [$FunctionDict,$ObjectDict]
+
+$FunctionDict.__setattr__ = function(self, attr, value){
+    if(self.$infos[attr]!==undefined){self.$infos[attr] = value}
+    else{self[attr] = value}
+}
+
 var $Function = function(){}
-$Function.__class__=$B.$factory
+$Function.__class__ = $B.$factory
 $FunctionDict.$factory = $Function
 $Function.$dict = $FunctionDict
 
