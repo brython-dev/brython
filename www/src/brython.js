@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-05-15 21:51:09.943960"
+__BRYTHON__.compiled_date="2016-05-16 22:04:13.505576"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -975,7 +975,6 @@ this.transform=function(node,rank){
 if(this.transformed!==undefined)return
 var scope=this.scope
 var pb=this.parent.node
-var flag=this.name.substr(0,4)=='func'
 while(pb && pb.C){if(pb.C.tree[0].type=='def'){this.inside_function=true
 break}
 pb=pb.parent}
@@ -2148,7 +2147,7 @@ this.tree.pop()
 new $IdCtx(new $ExprCtx(this,'rvalue',false),'None')}
 var scope=$get_scope(this)
 if(scope.ntype=='generator'){return 'return [$B.generator_return(' + $to_js(this.tree)+')]'}
-var node=$get_node(this),leave_frame=true,in_try=false
+var node=$get_node(this),pnode,flag,leave_frame=true,in_try=false
 while(node && leave_frame){if(node.is_try){in_try=true
 pnode=node.parent,flag=false
 for(var i=0;i<pnode.children.length;i++){var child=pnode.children[i]
@@ -3715,8 +3714,7 @@ var kwdict=["class","return","break","for","lambda","try","finally","raise","def
 ]
 var unsupported=[]
 var $indented=['class','def','for','condition','single_kw','try','except','with']
-var punctuation={',':0,':':0}
-int_pattern=new RegExp("^\\d+(j|J)?"),float_pattern1=new RegExp("^\\d+\\.\\d*([eE][+-]?\\d+)?(j|J)?"),float_pattern2=new RegExp("^\\d+([eE][+-]?\\d+)(j|J)?"),hex_pattern=new RegExp("^0[xX]([0-9a-fA-F]+)"),octal_pattern=new RegExp("^0[oO]([0-7]+)"),binary_pattern=new RegExp("^0[bB]([01]+)"),id_pattern=new RegExp("[\\$_a-zA-Z]\\w*"),qesc=new RegExp('"',"g"),
+var punctuation={',':0,':':0},int_pattern=new RegExp("^\\d+(j|J)?"),float_pattern1=new RegExp("^\\d+\\.\\d*([eE][+-]?\\d+)?(j|J)?"),float_pattern2=new RegExp("^\\d+([eE][+-]?\\d+)(j|J)?"),hex_pattern=new RegExp("^0[xX]([0-9a-fA-F]+)"),octal_pattern=new RegExp("^0[oO]([0-7]+)"),binary_pattern=new RegExp("^0[bB]([01]+)"),id_pattern=new RegExp("[\\$_a-zA-Z]\\w*"),qesc=new RegExp('"',"g"),
 sqesc=new RegExp("'","g")
 var C=null
 var root=new $Node('module')
@@ -4118,7 +4116,8 @@ $B.debug=options.debug
 _b_.__debug__=$B.debug>0
 if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
 $B.static_stdlib_import=options.static_stdlib_import
-if(options.open !==undefined)_b_.open=options.open
+if(options.open !==undefined){_b_.open=options.open;
+console.log("DeprecationWarning: \'open\' option of \'brython\' function will be deprecated in future versions of Brython.");}
 $B.$options=options
 var meta_path=[]
 var path_hooks=[]
@@ -4140,7 +4139,8 @@ var $href=$B.script_path=window.location.href
 var $href_elts=$href.split('/')
 $href_elts.pop()
 if(options.pythonpath!==undefined)$B.path=options.pythonpath
-if(options.re_module !==undefined){if(options.re_module=='pyre' ||options.re_module=='jsre'){$B.$options.re=options.re}}
+if(options.re_module !==undefined){if(options.re_module=='pyre' ||options.re_module=='jsre'){$B.$options.re=options.re}
+console.log("DeprecationWarning: \'re_module\' option of \'brython\' function will be deprecated in future versions of Brython.")}
 $B.scripts=[]
 $B.js={}
 var kk=Object.keys(window)
@@ -4389,13 +4389,12 @@ $B.make_method=function(attr,klass,func,func1){
 var __self__,__func__=func,__repr__,__str__,method
 switch(func.$type){case undefined:
 case 'function':
-method=function(instance){var instance_method=function(){var local_args=[instance]
-var pos=local_args.length
-for(var i=0,_len_i=arguments.length;i < _len_i;i++){local_args[pos++]=arguments[i]}
 var f=_b_.getattr(func,'__get__',func)
-return f.apply(null,local_args)}
+method=function(instance){var instance_method=function(){var local_args=[instance]
+for(var i=0,_len_i=arguments.length;i < _len_i;i++){local_args.push(arguments[i])}
+return f.apply(instance,local_args)}
 instance_method.__class__=$B.$MethodDict
-instance_method.$infos={__class__:klass.$factory,__func__:func,__name__:attr,__self__:instance}
+instance_method.$infos={__class__:klass.$factory,__func__:f,__name__:attr,__self__:instance}
 return instance_method}
 break
 case 'instancemethod':

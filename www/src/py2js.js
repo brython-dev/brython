@@ -1924,7 +1924,6 @@ function $DefCtx(context){
         // this.inside_function : set if the function is defined inside 
         // another function
         var pb = this.parent.node
-        var flag = this.name.substr(0,4)=='func'
         
         while(pb && pb.context){
             if(pb.context.tree[0].type=='def'){
@@ -4307,7 +4306,7 @@ function $ReturnCtx(context){
         // In most cases, returning from a function means leaving the 
         // execution frame ; but if the return is in a "try" with a "finally"
         // clause, we must remain in the same frame
-        var node = $get_node(this),
+        var node = $get_node(this), pnode, flag,
             leave_frame = true,
             in_try = false
         
@@ -6850,7 +6849,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     var $indented = ['class','def','for','condition','single_kw','try','except','with']
     // from https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Reserved_Words
 
-    var punctuation = {',':0,':':0} //,';':0},
+    var punctuation = {',':0,':':0}, 
         int_pattern = new RegExp("^\\d+(j|J)?"),
         float_pattern1 = new RegExp("^\\d+\\.\\d*([eE][+-]?\\d+)?(j|J)?"),
         float_pattern2 = new RegExp("^\\d+([eE][+-]?\\d+)(j|J)?"),
