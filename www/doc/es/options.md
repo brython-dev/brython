@@ -21,12 +21,15 @@ Para ejecutar scripts Python en la página, deberás llamar a la función `bryth
 - *open* sirve para especificar una implementación alternativa de la función builtin `open`. Por ejemplo, alguien podría desear usar *local storage*. Pero, **por compatibilidad con Python esto debería implementarse en `__builtins__.open` - que actualmente no funciona. Cuando funcione esto último esta opción se eliminará, por tanto, debes usarla bajo tu propia responsabilidad** 
 - *re_module* permite a los usuarios especificar el módulo `re` que desean usar por defecto. Valores válidos serían 'pyre' para el módulo `re` de python o 'jsre' para el módulo `re` escrito en javascript. El valor por defecto es que brython adivine cual debe usar basándose en la complejidad del patrón `re`. **Siguiendo la filosofía de Python, *explícito es mejor que implícito*, por tanto, esta opción dejará de estar disponible en futuras versiones de brython. En futuras versiones, si alguien desea usar el motor `RegExp` de javascript debería indicarlo explícitamente en el código. E.g.:**
 
->    from browser import window
->    from javascript import JSConstructor
 
->    jsre = JSConstructor(window.RegExp)
->    mo = jsre(r'a(.*)e').exec('aBCDe')
->    print(mo)
+```python
+from browser import window
+from javascript import JSConstructor
+
+jsre = JSConstructor(window.RegExp)
+mo = jsre(r'a(.*)e').exec('aBCDe')
+print(mo)
+```
 
 Ejemplo de uso de las opciones de la función `brython`:
 -------------------------------------------------------
