@@ -1,0 +1,22 @@
+{
+  "name": "brython",
+  "version": "3.2.6",
+  "description": "Python 3 in the browser",
+  "main": "brython.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brython-dev/brython.git"
+  },
+  "keywords": [
+    "Python"
+  ],
+  "author": "Pierre Quentel",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/brython-dev/brython/issues"
+  },
+  "homepage": "https://github.com/brython-dev/brython#readme"
+}
