@@ -7636,7 +7636,10 @@ function brython(options){
 
     // If options has an attribute "open", it will be used by the built-in
     // function open() - see py_builtin_functions.js
-    if (options.open !== undefined) _b_.open = options.open
+    if (options.open !== undefined) {
+        _b_.open = options.open;
+        console.log("DeprecationWarning: \'open\' option of \'brython\' function will be deprecated in future versions of Brython.");
+    }
 
     $B.$options=options
     
@@ -7716,6 +7719,7 @@ function brython(options){
        if (options.re_module == 'pyre' || options.re_module=='jsre') {
           $B.$options.re=options.re
        }
+       console.log("DeprecationWarning: \'re_module\' option of \'brython\' function will be deprecated in future versions of Brython.")
     }
     
     $B.scripts = []
