@@ -150,5 +150,8 @@ Agile Development
 [![Throughput Graph](https://graphs.waffle.io/brython-dev/brython/throughput.svg)](https://waffle.io/brython-dev/brython/metrics)
 
 
-Many thanks to [[BrowserStack]](http://www.browserstack.com) for providing an access
+Thank you
+=========
+
+- [BrowserStack](http://www.browserstack.com) for providing an access
 to their online testing environment.
