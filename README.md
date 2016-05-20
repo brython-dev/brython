@@ -148,3 +148,7 @@ Agile Development
 - **Throughput Graph:** *Statistics about our work...*
 
 [![Throughput Graph](https://graphs.waffle.io/brython-dev/brython/throughput.svg)](https://waffle.io/brython-dev/brython/metrics)
+
+
+Many thanks to [[BrowserStack]](http://www.browserstack.com) for providing an access
+to their online testing environment.
