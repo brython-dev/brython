@@ -855,10 +855,18 @@ def test():
     """original text"""
     pass
 
-
 assert test.__doc__ == """original text"""
 test.__doc__ = "new text"
 assert test.__doc__ == "new text"
+
+# issue 433
+assert 10**1j == (-0.6682015101903132+0.743980336957493j)
+assert 10.5**(3+1j) == (-814.610144261598+822.4998197514079j)
+
+import math
+assert math.e**1j == (0.5403023058681398+0.8414709848078965j)
+
+assert (1+2j)**1j == (0.2291401859804338+0.23817011512167555j)
 
 # ==========================================
 # Finally, report that all tests have passed

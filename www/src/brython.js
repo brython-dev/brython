@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-05-16 22:04:13.505576"
+__BRYTHON__.compiled_date="2016-05-24 21:47:55.359343"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5354,7 +5354,9 @@ if(_default!==undefined)return _default
 throw _b_.AttributeError('object has no attribute '+attr)}
 switch(attr){case '__call__':
 if(typeof obj=='function'){if(obj.$blocking){console.log('calling blocking function '+obj.__name__)}
-return obj}else if(klass===$B.JSObject.$dict && typeof obj.js=='function'){return function(){return $B.JSObject(obj.js.apply(null,arguments))}}
+return obj}else if(klass===$B.JSObject.$dict && typeof obj.js=='function'){return function(){var res=obj.js.apply(null,arguments)
+if(res===undefined){return None}
+return $B.JSObject(res)}}
 break
 case '__class__':
 return klass.$factory
@@ -7332,7 +7334,8 @@ else if(other>0 && other%2==1){return Number.NEGATIVE_INFINITY}else{return Numbe
 if(other==Number.NEGATIVE_INFINITY && !isNaN(self)){return Math.abs(self)<1 ? Number.POSITIVE_INFINITY : new Number(0)}else if(other==Number.POSITIVE_INFINITY && !isNaN(self)){return Math.abs(self)<1 ? new Number(0): Number.POSITIVE_INFINITY}
 if(self<0 && !_b_.getattr(other,'__eq__')(_b_.int(other))){
 return _b_.complex.$dict.__pow__(_b_.complex(self,0),other)}
-return float(Math.pow(self,other))}
+return float(Math.pow(self,other))}else if(isinstance(other,_b_.complex)){var img=other.imag,preal=Math.pow(self,other.real),ln=Math.log(self)
+return _b_.complex(preal*Math.cos(ln),preal*Math.sin(ln))}
 if(hasattr(other,'__rpow__'))return getattr(other,'__rpow__')(self)
 $err("** or pow()",other)}
 $FloatDict.__repr__=$FloatDict.__str__=function(self){if(self===float)return "<class 'float'>"
@@ -7578,7 +7581,8 @@ if(res>$B.min_int && res<$B.max_int){return res}
 else{return int($B.LongInt.$dict.__pow__($B.LongInt(self),$B.LongInt(other)))}}
 if(isinstance(other,_b_.float)){if(self>=0){return new Number(Math.pow(self,other.valueOf()))}
 else{
-return _b_.complex.$dict.__pow__(_b_.complex(self,0),other)}}
+return _b_.complex.$dict.__pow__(_b_.complex(self,0),other)}}else if(isinstance(other,_b_.complex)){var img=other.imag,preal=Math.pow(self,other.real),ln=Math.log(self)
+return _b_.complex(preal*Math.cos(ln),preal*Math.sin(ln))}
 if(hasattr(other,'__rpow__'))return getattr(other,'__rpow__')(self)
 $err("**",other)}
 $IntDict.__repr__=function(self){if(self===int)return "<class 'int'>"
@@ -8090,12 +8094,18 @@ $ComplexDict.__neg__=function(self){return complex(-self.real,-self.imag)}
 $ComplexDict.__new__=function(cls){if(cls===undefined)throw _b_.TypeError('complex.__new__(): not enough arguments')
 return{__class__:cls.$dict}}
 $ComplexDict.__pos__=function(self){return self}
-$ComplexDict.__pow__=function(self,other){
-var norm=Math.sqrt((self.real*self.real)+(self.imag*self.imag)),sin=self.imag/norm,cos=self.real/norm,res=Math.pow(norm,other),angle
+function complex2expo(cx){var norm=Math.sqrt((cx.real*cx.real)+(cx.imag*cx.imag)),sin=cx.imag/norm,cos=cx.real/norm,angle
 if(cos==0){angle=sin==1 ? Math.PI/2 : 3*Math.PI/2}
 else if(sin==0){angle=cos==1 ? 0 : Math.PI}
 else{angle=Math.atan(sin/cos)}
-return complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}
+return{norm: norm,angle: angle}}
+$ComplexDict.__pow__=function(self,other){
+var exp=complex2expo(self),angle=exp.angle,res=Math.pow(exp.norm,other)
+if(_b_.isinstance(other,[_b_.int,_b_.float])){return complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}else if(_b_.isinstance(other,complex)){
+var x=other.real,y=other.imag
+var pw=Math.pow(exp.norm,x)*Math.pow(Math.E,-y*angle),theta=y*Math.log(exp.norm)-x*angle
+return complex(pw*Math.cos(theta),pw*Math.sin(theta))}else{throw _b_.TypeError("unsupported operand type(s) for ** or pow(): "+
+"'complex' and '"+$B.get_class(other).__name__+"'")}}
 $ComplexDict.__str__=$ComplexDict.__repr__=function(self){if(self.real==0)return self.imag+'j'
 if(self.imag>=0)return '('+self.real+'+'+self.imag+'j)'
 return '('+self.real+'-'+(-self.imag)+'j)'}

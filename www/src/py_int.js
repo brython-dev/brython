@@ -287,6 +287,11 @@ $IntDict.__pow__ = function(self,other){
             // use complex power
             return _b_.complex.$dict.__pow__(_b_.complex(self, 0), other)
         }
+    }else if(isinstance(other, _b_.complex)){
+        var img = other.imag,
+            preal = Math.pow(self,  other.real),
+            ln = Math.log(self)
+        return _b_.complex(preal*Math.cos(ln), preal*Math.sin(ln))
     }
     if(hasattr(other,'__rpow__')) return getattr(other,'__rpow__')(self)
     $err("**",other)

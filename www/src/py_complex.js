@@ -91,19 +91,37 @@ $ComplexDict.__new__ = function(cls){
 
 $ComplexDict.__pos__ = function(self){return self}
 
-$ComplexDict.__pow__ = function(self,other){
-    // complex power : use Moivre formula (cos(x) + i sin(x))**y = cos(xy)+i sin(xy)
-    var norm = Math.sqrt((self.real*self.real)+(self.imag*self.imag)),
-        sin = self.imag/norm,
-        cos = self.real/norm,
-        res = Math.pow(norm, other),
+function complex2expo(cx){
+    var norm = Math.sqrt((cx.real*cx.real)+(cx.imag*cx.imag)),
+        sin = cx.imag/norm,
+        cos = cx.real/norm,
         angle
     
     if(cos==0){angle = sin==1 ? Math.PI/2 : 3*Math.PI/2}
     else if(sin==0){angle = cos==1 ? 0 : Math.PI}
     else{angle = Math.atan(sin/cos)}
-    return complex(res*Math.cos(angle*other), res*Math.sin(angle*other))
+    return {norm: norm, angle: angle}
+}
+
+$ComplexDict.__pow__ = function(self,other){
+    // complex power : use Moivre formula (cos(x) + i sin(x))**y = cos(xy)+i sin(xy)
+    var exp = complex2expo(self),
+        angle = exp.angle,
+        res = Math.pow(exp.norm, other)
     
+    if(_b_.isinstance(other, [_b_.int, _b_.float])){
+        return complex(res*Math.cos(angle*other), res*Math.sin(angle*other))
+    }else if(_b_.isinstance(other, complex)){
+        // (r*e**Ai)**(x+iy) = (e**iAx)*(e**-Ay)
+        var x = other.real,
+            y = other.imag
+        var pw = Math.pow(exp.norm, x)*Math.pow(Math.E, -y*angle),
+            theta = y*Math.log(exp.norm)-x*angle
+        return complex(pw*Math.cos(theta), pw*Math.sin(theta))      
+    }else{
+        throw _b_.TypeError("unsupported operand type(s) for ** or pow(): "+
+            "'complex' and '"+$B.get_class(other).__name__+"'")
+    }
 }
 
 $ComplexDict.__str__ = $ComplexDict.__repr__ = function(self){
