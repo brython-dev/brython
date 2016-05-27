@@ -868,6 +868,13 @@ assert math.e**1j == (0.5403023058681398+0.8414709848078965j)
 
 assert (1+2j)**1j == (0.2291401859804338+0.23817011512167555j)
 
+# issue 434
+import collections
+Set = collections.defaultdict(lambda: None)
+Set[0]
+Set[int]
+Set[str]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

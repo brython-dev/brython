@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-05-24 21:47:55.359343"
+__BRYTHON__.compiled_date="2016-05-27 15:04:40.805779"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5074,8 +5074,8 @@ if(typeof value=="number"||value.constructor===Number){return value}
 else if(typeof value==="boolean"){return value ? 1 : 0}
 else if(_b_.isinstance(value,_b_.int)){return value}
 else if(_b_.isinstance(value,_b_.float)){return value.valueOf()}
-try{var v=_b_.getattr(value,'__int__')();return v}catch(e){}
-try{var v=_b_.getattr(value,'__index__')();return v}catch(e){}
+if(value.__class__!==$B.$factory){try{var v=_b_.getattr(value,'__int__')();return v}catch(e){}
+try{var v=_b_.getattr(value,'__index__')();return v}catch(e){}}
 throw _b_.TypeError("'"+$B.get_class(value).__name__+
 "' object cannot be interpreted as an integer")}
 $B.PyNumber_Index=function(item){switch(typeof item){case "boolean":

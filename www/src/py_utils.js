@@ -557,6 +557,7 @@ $B.$getitem = function(obj, item){
             else{index_error(obj)}
         }
     }
+    
     try{item=$B.$GetInt(item)}catch(err){}
     if((Array.isArray(obj) || typeof obj=='string')
         && typeof item=='number'){
@@ -1098,8 +1099,10 @@ $B.$GetInt=function(value) {
   else if(typeof value==="boolean"){return value ? 1 : 0}
   else if (_b_.isinstance(value, _b_.int)) {return value}
   else if (_b_.isinstance(value, _b_.float)) {return value.valueOf()}
-  try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){}
-  try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){}
+  if(value.__class__!==$B.$factory){
+      try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){}
+      try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){}
+  }
   throw _b_.TypeError("'"+$B.get_class(value).__name__+
       "' object cannot be interpreted as an integer")
 }
