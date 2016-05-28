@@ -6,9 +6,10 @@ var _b_=$B.builtins
 $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwargs){
     var cl_dict=_b_.dict(),bases=null
     // transform class object into a dictionary
-    var setitem=_b_.dict.$dict.__setitem__
+    //var setitem=_b_.dict.$dict.__setitem__
     for(var attr in class_obj){
-        setitem(cl_dict,attr,class_obj[attr])
+        //setitem(cl_dict,attr,class_obj[attr])
+        cl_dict.$string_dict[attr] = class_obj[attr]
     }
     // check if parents are defined
     if(parents!==undefined){
@@ -156,6 +157,7 @@ $B.$class_constructor1 = function(class_name,class_obj){
 
 $B.make_method = function(attr, klass, func, func1){
     // Return a method, based on a function defined in a class
+
     var __self__,__func__= func,__repr__,__str__, method
     switch(func.$type) {
       case undefined:
@@ -189,8 +191,8 @@ $B.make_method = function(attr, klass, func, func1){
       case 'classmethod':
         // class method : called with the class as first argument
         method = function(){
-            var class_method = function(){
-                var local_args = [klass]
+            var class_method = function(){                
+                var local_args = [klass.$factory]
                 var pos=local_args.length
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     local_args[pos++]=arguments[i]
@@ -431,7 +433,7 @@ $B.$type.__getattribute__=function(klass,attr){
                 }
             }
         }
-
+        
         if(res===undefined){
             // search a method __getattr__
             var getattr=null
@@ -479,7 +481,6 @@ $B.$type.__getattribute__=function(klass,attr){
             res.__name__ = attr
             // method
             var __self__,__func__=res1,__repr__,__str__, args
-            //console.log('attr '+attr+' of '+klass.__name__+' $type '+res.$type+'\n'+res)
             switch (res.$type) {
                 case undefined:
                 case 'function':
