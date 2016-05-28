@@ -155,7 +155,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
             return res
         }
     }
-
+    
     if(res!==undefined){
 
         if(res.__class__===_b_.property.$dict){
@@ -226,7 +226,9 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                 // In function myfunc, self.repr is an instance of MyRepr,
                 // it must be used as is, not transformed into a method
 
-                else if(res1.__class__===$B.$MethodDict) return res
+                else if(res1.__class__===$B.$MethodDict){
+                    return res
+                }
 
                 // instance method object
                 return $B.make_method(attr, klass, res, res1)(obj)

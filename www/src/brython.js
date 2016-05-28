@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-05-27 15:04:40.805779"
+__BRYTHON__.compiled_date="2016-05-28 16:37:36.116489"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4271,7 +4271,7 @@ if(attr=='__new__'){res.$type='staticmethod'}
 var res1=__get__.apply(null,[res,obj,klass])
 if(typeof res1=='function'){
 if(res1.__class__===$B.$factory)return res
-else if(res1.__class__===$B.$MethodDict)return res
+else if(res1.__class__===$B.$MethodDict){return res}
 return $B.make_method(attr,klass,res,res1)(obj)}else{
 return res1}}
 return res}else{
@@ -4332,8 +4332,8 @@ return A}
 return object})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 $B.$class_constructor=function(class_name,class_obj,parents,parents_names,kwargs){var cl_dict=_b_.dict(),bases=null
-var setitem=_b_.dict.$dict.__setitem__
-for(var attr in class_obj){setitem(cl_dict,attr,class_obj[attr])}
+for(var attr in class_obj){
+cl_dict.$string_dict[attr]=class_obj[attr]}
 if(parents!==undefined){for(var i=0;i<parents.length;i++){if(parents[i]===undefined){
 $B.line_info=class_obj.$def_line
 throw _b_.NameError("name '"+parents_names[i]+"' is not defined")}}}
@@ -4400,7 +4400,7 @@ break
 case 'instancemethod':
 return func
 case 'classmethod':
-method=function(){var class_method=function(){var local_args=[klass]
+method=function(){var class_method=function(){var local_args=[klass.$factory]
 var pos=local_args.length
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){local_args[pos++]=arguments[i]}
 return func.apply(null,local_args)}
@@ -6010,8 +6010,9 @@ frame.__class__=$B.$factory
 frame.$dict=$FrameDict
 $FrameDict.$factory=frame
 $B._frame=frame
-var $BaseExceptionDict={__class__:$B.$type,__bases__ :[_b_.object],__module__:'builtins',__name__:'BaseException'}
-$BaseExceptionDict.__init__=function(self){self.args=_b_.tuple([arguments[1]])}
+var $BaseExceptionDict={__class__:$B.$type,__bases__ :[_b_.object],__module__:'builtins',__name__:'BaseException',args:[]}
+$BaseExceptionDict.__init__=function(self){var args=arguments[1]===undefined ?[]:[arguments[1]]
+self.args=_b_.tuple(args)}
 $BaseExceptionDict.__repr__=function(self){return self.__class__.__name__+repr(self.args)}
 $BaseExceptionDict.__str__=function(self){return _b_.str(self.args[0])}
 $BaseExceptionDict.__mro__=[$BaseExceptionDict,_b_.object.$dict]
@@ -6066,7 +6067,8 @@ if(module){if(module.caller!==undefined){
 var mod_name=line_info[1]}
 var lib_module=mod_name
 var line_num=parseInt(line_info[0])
-if($B.$py_src[mod_name]===undefined){console.log('pas de py_src pour '+mod_name)}
+if($B.$py_src[mod_name]===undefined){console.log('pas de py_src pour '+mod_name)
+console.log(js_exc)}
 var lines=$B.$py_src[mod_name].split('\n'),msg=js_exc.message.toString()
 msg +="\n  module '"+lib_module+"' line "+line_num
 msg +='\n'+lines[line_num-1]
@@ -9316,12 +9318,14 @@ if(self.$string_dict[arg]!==undefined)return self.$string_dict[arg]
 break
 case 'number':
 if(self.$numeric_dict[arg]!==undefined)return self.$numeric_dict[arg]}
-var _key=hash(arg)
+var _key=_b_.getattr(arg,'__hash__')(),_eq=_b_.getattr(arg,'__eq__')
 var sk=self.$str_hash[_key]
-if(sk!==undefined && _b_.getattr(arg,'__eq__')(sk)){return self.$string_dict[sk]}
-if(self.$numeric_dict[_key]!==undefined &&
-_b_.getattr(arg,'__eq__')(_key)){return self.$numeric_dict[_key]}
-if(self.$object_dict[_key]!==undefined){return self.$object_dict[_key][1]}
+if(sk!==undefined && _eq(sk)){return self.$string_dict[sk]}
+if(self.$numeric_dict[_key]!==undefined && _eq(_key)){return self.$numeric_dict[_key]}
+var obj_ref=self.$object_dict[_key]
+if(obj_ref!==undefined){
+_eq(self.$object_dict[_key][0])
+return self.$object_dict[_key][1]}
 if(self.__class__!==$DictDict){try{var missing_method=getattr(self.__class__.$factory,'__missing__')
 return missing_method(self,arg)}catch(err){}}
 throw KeyError(_b_.str(arg))}
@@ -9403,6 +9407,9 @@ return $N}
 var sk=self.$str_hash[_key]
 if(sk!==undefined && _eq(sk)){self.$string_dict[sk]=value
 return $N}
+var obj_ref=self.$object_dict[_key]
+if(obj_ref!==undefined){
+_eq(self.$object_dict[_key][0])}
 self.$object_dict[_key]=[key,value]
 return $N}
 $DictDict.__str__=$DictDict.__repr__
@@ -9420,7 +9427,8 @@ var $=$B.args('copy',1,{self:null},['self'],arguments,{},null,null),self=$.self,
 $copy_dict(res,self)
 return res}
 $DictDict.fromkeys=function(){var $=$B.args('fromkeys',3,{cls:null,keys:null,value:null},['cls','keys','value'],arguments,{value:_b_.None},null,null),keys=$.keys,value=$.value
-var res=dict()
+console.log('cls',$.cls,$.cls())
+var res=$.cls()
 var keys_iter=_b_.iter(keys)
 while(1){try{var key=_b_.next(keys_iter)
 $DictDict.__setitem__(res,key,value)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return res}

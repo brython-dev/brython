@@ -236,16 +236,22 @@ $DictDict.__getitem__ = function(){
 
     // since the key is more complex use 'default' method of getting item
 
-    var _key=hash(arg)
+    var _key = _b_.getattr(arg, '__hash__')(),
+        _eq = _b_.getattr(arg, '__eq__')
+
     var sk = self.$str_hash[_key]
-    if (sk!==undefined && _b_.getattr(arg,'__eq__')(sk)){
+    if (sk!==undefined && _eq(sk)){
         return self.$string_dict[sk]
     }
-    if (self.$numeric_dict[_key]!==undefined &&
-        _b_.getattr(arg,'__eq__')(_key)){
-         return self.$numeric_dict[_key]   
+    if (self.$numeric_dict[_key]!==undefined && _eq(_key)){
+         return self.$numeric_dict[_key]
     }
-    if (self.$object_dict[_key] !== undefined) {
+
+    var obj_ref = self.$object_dict[_key]
+    if(obj_ref!==undefined){
+        // An object with the same hash is already stored
+        // Lookup should fail if equality raises an exception
+        _eq(self.$object_dict[_key][0])
         return self.$object_dict[_key][1]
     }
     if(self.__class__!==$DictDict){
@@ -416,7 +422,7 @@ $DictDict.__setitem__ = function(self,key,value){
 
     var _key=hash(key)
     var _eq=getattr(key, '__eq__')
-
+    
     if(self.$numeric_dict[_key]!==undefined && _eq(_key)){
         self.$numeric_dict[_key] = value
         return $N
@@ -427,7 +433,13 @@ $DictDict.__setitem__ = function(self,key,value){
         return $N
     }
 
-    self.$object_dict[_key]=[key, value]
+    var obj_ref = self.$object_dict[_key]
+    if(obj_ref!==undefined){
+        // An object with the same hash is already stored
+        // Lookup should fail if equality raises an exception
+        _eq(self.$object_dict[_key][0])
+    }
+    self.$object_dict[_key] = [key, value]
     return $N
 }
 
@@ -464,9 +476,9 @@ $DictDict.fromkeys = function(){
     var $ = $B.args('fromkeys', 3, {cls:null, keys:null, value:null},
         ['cls', 'keys', 'value'], arguments, {value:_b_.None}, null, null),
         keys=$.keys, value=$.value
-
+    console.log('cls', $.cls, $.cls())
     // class method
-    var res = dict()
+    var res = $.cls() //dict()
     var keys_iter = _b_.iter(keys)
     while(1){
         try{
