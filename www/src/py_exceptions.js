@@ -123,11 +123,13 @@ $B._frame=frame
 var $BaseExceptionDict = {__class__:$B.$type,
     __bases__ : [_b_.object],
     __module__:'builtins',
-    __name__:'BaseException'
+    __name__:'BaseException',
+    args: []
 }
 
 $BaseExceptionDict.__init__ = function(self){
-    self.args = _b_.tuple([arguments[1]])
+    var args = arguments[1] === undefined ? [] : [arguments[1]]
+    self.args = _b_.tuple(args)
 }
 
 $BaseExceptionDict.__repr__ = function(self){
@@ -242,6 +244,7 @@ $B.exception = function(js_exc){
                     var line_num = parseInt(line_info[0])
                     if($B.$py_src[mod_name]===undefined){
                         console.log('pas de py_src pour '+mod_name)
+                        console.log(js_exc)
                     }
                     var lines = $B.$py_src[mod_name].split('\n'),
                         msg = js_exc.message.toString()
