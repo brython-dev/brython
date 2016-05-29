@@ -156,7 +156,11 @@
         
         function makeFactory(tagName){
             var factory = function(){
-                var res = $B.DOMNode(document.createElement(tagName))
+                if(tagName=='SVG'){
+                    var res = $B.DOMNode(document.createElementNS("http://www.w3.org/2000/svg", "svg"))
+                }else{
+                    var res = $B.DOMNode(document.createElement(tagName))
+                }
                 res.__class__ = dicts[tagName]
                 // apply __init__
                 var args = [res].concat(Array.prototype.slice.call(arguments))
@@ -180,7 +184,7 @@
                     'ISINDEX','KBD','LABEL','LEGEND','LI','LINK','MAP','MENU',
                     'META','NOFRAMES','NOSCRIPT','OBJECT','OL','OPTGROUP',
                     'OPTION','P','PARAM','PRE','Q','S','SAMP','SCRIPT','SELECT',
-                    'SMALL','SPAN','STRIKE','STRONG','STYLE','SUB','SUP',
+                    'SMALL','SPAN','STRIKE','STRONG','STYLE','SUB','SUP', 'SVG',
                     'TABLE','TBODY','TD','TEXTAREA','TFOOT','TH','THEAD',
                     'TITLE','TR','TT','U','UL','VAR',
                     // HTML5 tags
