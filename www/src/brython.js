@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-05-29 09:22:08.205226"
+__BRYTHON__.compiled_date="2016-05-29 22:14:43.747294"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -2285,7 +2285,7 @@ break
 default:
 $_SyntaxError(C,"missing clause after 'try' 2")}}
 var scope=$get_scope(this)
-var $var='$B.$failed'+$loop_num
+var $var='var $failed'+$loop_num
 var js=$var+'=false;'+
 'try'
 new $NodeJSCtx(node,js)
@@ -2331,7 +2331,7 @@ new $SingleKwCtx(ctx,'else')
 new_node.add($NodeJS('throw $err'+$loop_num))}
 if(has_else){var else_node=new $Node()
 else_node.module=scope.module
-new $NodeJSCtx(else_node,'if(!$B.$failed'+$loop_num+')')
+new $NodeJSCtx(else_node,'if(!$failed'+$loop_num+')')
 for(var i=0;i<else_body.children.length;i++){else_node.add(else_body.children[i])}
 node.parent.insert(pos,else_node)
 pos++}
@@ -9427,7 +9427,6 @@ var $=$B.args('copy',1,{self:null},['self'],arguments,{},null,null),self=$.self,
 $copy_dict(res,self)
 return res}
 $DictDict.fromkeys=function(){var $=$B.args('fromkeys',3,{cls:null,keys:null,value:null},['cls','keys','value'],arguments,{value:_b_.None},null,null),keys=$.keys,value=$.value
-console.log('cls',$.cls,$.cls())
 var res=$.cls()
 var keys_iter=_b_.iter(keys)
 while(1){try{var key=_b_.next(keys_iter)

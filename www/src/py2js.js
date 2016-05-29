@@ -4580,7 +4580,7 @@ function $TryCtx(context){
         }
         var scope = $get_scope(this)
         
-        var $var='$B.$failed'+$loop_num
+        var $var='var $failed'+$loop_num
 
         // Transform node into Javascript 'try' (necessary if
         // "try" inside a "for" loop)
@@ -4658,7 +4658,7 @@ function $TryCtx(context){
         if(has_else){
             var else_node = new $Node()
             else_node.module = scope.module
-            new $NodeJSCtx(else_node,'if(!$B.$failed'+$loop_num+')')
+            new $NodeJSCtx(else_node,'if(!$failed'+$loop_num+')')
             for(var i=0;i<else_body.children.length;i++){
                 else_node.add(else_body.children[i])
             }

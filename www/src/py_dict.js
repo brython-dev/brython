@@ -476,7 +476,7 @@ $DictDict.fromkeys = function(){
     var $ = $B.args('fromkeys', 3, {cls:null, keys:null, value:null},
         ['cls', 'keys', 'value'], arguments, {value:_b_.None}, null, null),
         keys=$.keys, value=$.value
-    console.log('cls', $.cls, $.cls())
+
     // class method
     var res = $.cls() //dict()
     var keys_iter = _b_.iter(keys)
