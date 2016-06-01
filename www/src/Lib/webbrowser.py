@@ -13,6 +13,17 @@ def open(url, new=0, autoraise=True):
     new window or tab is not controllable
     on the client side. autoraise not available.
     """
+    # javascript window.open doesn't work if you do not specify the protocol
+    # A solution is the next hack:
+    if '://' in url:
+        if url[:6] == 'ftp://':
+            print('entro')
+        else:
+            protocol = url.split('//:')[0]
+            url = url.replace(protocol + '//:', '//')
+    else:
+        url = '//' + url
+    print(url)
     if window.open(url, _target[new]):
 		return True
     return False
