@@ -10,10 +10,19 @@ A web server is necessary to test the scripts locally while developing. Any web
 server that can serve files with the brython_directory/www as document root will 
 work ; you can use the built-in web server provided in the distribution : open 
 a console window, go to the directory, and run `python server.py`. This will 
-start the server on port 8000 (if you want to use a different port number you can use
-`python server.py --port 8001` to use port 8001).
+start the server on port 8000 and it will create the 
+*static_doc* folder. Options for the *server.py* script:
 
-Once the server is started, point your web browser to _http://localhost:8000/_ :
+* `--port <int>`: if you want to use a different port number you can use
+`python server.py --port 8001` to use port 8001).
+* `--no-docs`: when you are testing stuff sometimes it is no necessary to create
+the *static_doc* folder. If you want to avoid this step you can do 
+`python server.py --no-docs`. WARNING: If you use this option then the docs will
+not be available in your localhost.
+
+Once the server is started, point your web browser to _http://localhost:8000/_ 
+(or http://localhost:<port> if you used the option 
+`python server.py --port <port>`):
 the same page as the [Brython site homepage](http://www.brython.info) should
 appear.
 
