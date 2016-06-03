@@ -11,8 +11,15 @@ Il faut un serveur web pour tester les scripts localement dans la phase de
 développement. Tout serveur qui peut accéder aux fichiers avec le répertoire 
 Brython comme racine convient ; vous pouvez utiliser le serveur web intégré à
 la distribution : ouvrez une fenêtre de console, allez dans le répertoire et 
-exécutez `python server.py`. Ceci lancera le serveur sur le port 8000 (pour
-un autre numéro de port : `python server.py --port 8001`).
+exécutez `python server.py`. Ceci lancera le serveur sur le port 8000 et
+créera la version statique de la documentation si elle n'est pas déjà
+présente. Les options pour le script *server.py* sont:
+
+* `--port <int>`: pour choisir un autre numéro de port que 8000.
+* `--no-docs`: en phase de test il est parfois inutile de générer la
+documentation statique (ce qui prend un certain temps). Pour ne pas la générer
+vous pouvez faire `python server.py --no-docs`. ATTENTION: dans ce cas
+la documentation ne sera pas disponible sur le serveur local.
 
 Une fois que le serveur est lancé, pointez votre navigateur web sur 
 _http://localhost:8000_ : vous devriez voir la même page que la page 
