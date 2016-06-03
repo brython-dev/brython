@@ -14,8 +14,16 @@ import argparse
 
 # port to be used when the server runs locally
 parser = argparse.ArgumentParser()
-parser.add_argument('--port', 
-    help="The port to be used by the local server")
+parser.add_argument('--port', help="The port to be used by the local server")
+
+# generate docs?
+# when testing new code on your repo it is not necessary to generate docs all
+# the time so this option allows you to avoid this process
+parser.add_argument(
+    '--no-docs', 
+    help="Do not generate static docs.", 
+    action="store_true")
+
 args = parser.parse_args()
 
 if args.port:
@@ -23,14 +31,15 @@ if args.port:
 else:
     port = 8000
 
-# generate static doc pages if not already present
-if not os.path.exists(os.path.join(os.getcwd(),'www','static_doc')):
-    save_dir = os.getcwd()
-    os.chdir(os.path.join(os.getcwd(),'scripts'))
-    make_doc = open('make_doc.py', "rb").read()
-    make_doc = make_doc.decode("utf-8")
-    exec(make_doc)
-    os.chdir(save_dir)
+if not args.no_docs:
+    # generate static doc pages if not already present
+    if not os.path.exists(os.path.join(os.getcwd(),'www','static_doc')):
+        save_dir = os.getcwd()
+        os.chdir(os.path.join(os.getcwd(),'scripts'))
+        make_doc = open('make_doc.py', "rb").read()
+        make_doc = make_doc.decode("utf-8")
+        exec(make_doc)
+        os.chdir(save_dir)
 
 os.chdir(os.path.join(os.getcwd(), 'www'))
 
