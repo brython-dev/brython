@@ -74,8 +74,13 @@ orders = {}
 
 def sort_by_col(evt, numeric=False):
     cell = evt.target
-    th_elt = cell.parent.parent # TH cell
+    
+    # get title cell
+    th_elt = cell.parent
+    while th_elt.tagName != 'TH':
+        th_elt = th_elt.parent
 
+    # get column of title cell
     for i,th in enumerate(title.children):
         if th==th_elt:
             col_num = i

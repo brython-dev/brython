@@ -28,9 +28,6 @@
                     if(scripts[i].src){
                         var new_script = document.createElement('SCRIPT')
                         console.log(scripts[i].src)
-                        //new_script.src = scripts[i].src
-                        //scripts[i].parentElement.appendChild(new_script)
-                        //scripts[i].parentElement.removeChild(scripts[i])
                     }
                 }
             }
@@ -39,8 +36,6 @@
             for(var i=0;i<$B.scripts.length;i++){
                 var name = $B.scripts[i]
                 console.log('script:', name)
-                //console.log($B.$py_src[name])
-                //console.log($B.js[name])
             }
             // Check if imported scripts have been modified
             for(var mod in $B.imported){
@@ -83,10 +78,8 @@
                 if(args.length==1){
                     var first=args[0]
                     if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
-                        // Append a SPAN with "first" as HTML content (not text)
-                        var span = document.createElement('SPAN')
-                        span.innerHTML = _b_.str(first)
-                        self.elt.appendChild(span)
+                        // set "first" as HTML content (not text)
+                        self.elt.innerHTML = _b_.str(first)
                     } else if(first.__class__===$TagSumDict){
                         for(var i=0, _len_i = first.children.length; i < _len_i;i++){
                             self.elt.appendChild(first.children[i].elt)
