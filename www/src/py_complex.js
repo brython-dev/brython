@@ -15,7 +15,7 @@ var $ComplexDict = {__class__:$B.$type,
     descriptors:{real:true, imag:true}
 }
 
-$ComplexDict.__abs__ = function(self,other){return complex(abs(self.real),abs(self.imag))}
+$ComplexDict.__abs__ = function(self){return Math.sqrt(Math.pow(self.real,2)+Math.pow(self.imag,2))}
 
 $ComplexDict.__bool__ = function(self){return new Boolean(self.real || self.imag)}
 
