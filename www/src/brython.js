@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-03 07:55:36.918055"
+__BRYTHON__.compiled_date="2016-06-06 21:23:48.367380"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -8064,7 +8064,7 @@ $B.LongInt=LongInt})(__BRYTHON__)
 var $ObjectDict=_b_.object.$dict
 function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError("unsupported operand type(s) for "+op+": '"+class1+"' and '"+class2+"'")}
 var $ComplexDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'complex',$native:true,descriptors:{real:true,imag:true}}
-$ComplexDict.__abs__=function(self,other){return complex(abs(self.real),abs(self.imag))}
+$ComplexDict.__abs__=function(self){return Math.sqrt(Math.pow(self.real,2)+Math.pow(self.imag,2))}
 $ComplexDict.__bool__=function(self){return new Boolean(self.real ||self.imag)}
 $ComplexDict.__class__=$B.$type
 $ComplexDict.__eq__=function(self,other){if(isinstance(other,complex))return self.real==other.real && self.imag==other.imag
@@ -9975,8 +9975,9 @@ if(self.elt instanceof SVGElement){return self.elt.getAttributeNS(null,attr)}
 return DOMNodeDict[attr].__get__(self)
 break
 case 'clear':
+case 'closest':
 case 'remove':
-return function(){DOMNodeDict[attr](self,arguments[0])}
+return function(){return DOMNodeDict[attr](self,arguments[0])}
 case 'headers':
 if(self.elt.nodeType==9){
 var req=new XMLHttpRequest();
@@ -10108,6 +10109,11 @@ var items=_b_.list(_d.items(events))
 for(var i=0;i<items.length;i++){var event=items[i][0]
 for(var j=0;j<items[i][1].length;j++){DOMNodeDict.bind(res,event,items[i][1][j][0])}}}
 return res}
+DOMNodeDict.closest=function(self,tagName){
+var res=self.elt,tagName=tagName.toLowerCase()
+while(res.tagName.toLowerCase()!=tagName){res=res.parentNode
+if(res===undefined){throw _b_.KeyError('no parent of type '+tagName)}}
+return DOMNode(res)}
 DOMNodeDict.events=function(self,event){var _id
 if(self.elt.nodeType===9){_id=0}
 else{_id=self.elt.$brython_id}
@@ -10606,7 +10612,9 @@ console.log(scripts[i].src)}}}
 console.log(js_scripts)
 for(var i=0;i<$B.scripts.length;i++){var name=$B.scripts[i]
 console.log('script:',name)}
-for(var mod in $B.imported){if($B.imported[mod].$last_modified){console.log('check',mod,$B.imported[mod].__file__,$B.imported[mod].$last_modified)}else{console.log('no date for mod',mod)}}},win: $B.win,window: $B.win,URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+for(var mod in $B.imported){if($B.imported[mod].$last_modified){console.log('check',mod,$B.imported[mod].__file__,$B.imported[mod].$last_modified)}else{console.log('no date for mod',mod)}}},select: function(css_selector){var elts=document.querySelectorAll(css_selector),DOMNode=$B.DOMNodeDict.$factory,res=[]
+for(var i=0;i<elts.length;i++){res.push(DOMNode(elts[i]))}
+return res},win: $B.win,window: $B.win,URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
 var regex=new RegExp("[\\?&]" + name + "=([^&#]*)"),results=regex.exec(location.search);
 results=results===null ? "" : decodeURIComponent(results[1].replace(/\+/g," "));
 return $B.builtins.str(results);}}
@@ -10669,7 +10677,13 @@ catch(err){throw $B.builtins.NameError("name '"+names[i]+"' not found in script 
 return $B.py2js(src,module_name,module_name,'__builtins__').to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},$$this: function(){return $B.jsobj2pyobj($B.last($B.frames_stack)[4])}}
 var _b_=$B.builtins
 modules['_sys']={__file__:$B.brython_path+'/libs/_sys.js',
-Getframe : function(depth){return $B._frame($B.frames_stack,depth)},modules :
+Getframe : function(depth){return $B._frame($B.frames_stack,depth)},argv:
+{'__get__':function(){var locals_id=$B.last($B.frames_stack)[0]
+res=[locals_id]
+if($B.$options.args!==undefined){var options=$B.$options.args[locals_id]
+if(options !==undefined){if(Array.isArray(options)){var pyobj=$B.jsobj2pyobj(options)
+res=res.concat(pyobj)}}}
+return res},'__set__':function(){throw _b_.TypeError("Read only property 'sys.argv'")}},modules :
 {'__get__':function(){return _b_.dict($B.JSObject($B.imported))},'__set__':function(self,obj,value){throw _b_.TypeError("Read only property 'sys.modules'")}},path: 
 {'__get__':function(){return $B.path},'__set__':function(self,obj,value){$B.path=value }},meta_path: 
 {'__get__':function(){return $B.meta_path},'__set__':function(self,obj,value){$B.meta_path=value }},path_hooks: 
