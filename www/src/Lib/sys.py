@@ -7,8 +7,6 @@ from browser import window
 
 brython_debug_mode = __BRYTHON__.debug
 
-argv = ['__main__']
-
 base_exec_prefix = __BRYTHON__.brython_path
 
 base_prefix = __BRYTHON__.brython_path

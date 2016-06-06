@@ -46,6 +46,15 @@
                 }
             }
         },
+        select: function(css_selector){
+            var elts = document.querySelectorAll(css_selector),
+                DOMNode = $B.DOMNodeDict.$factory,
+                res = []
+            for(var i=0;i<elts.length;i++){
+                res.push(DOMNode(elts[i]))
+            }
+            return res
+        },
         win: $B.win,
         window: $B.win,
         URLParameter:function(name) {
@@ -247,6 +256,23 @@
         Getframe : function(depth){
             return $B._frame($B.frames_stack, depth)
         },
+        argv:
+            {'__get__':function(){
+                    var locals_id = $B.last($B.frames_stack)[0]
+                    res = [locals_id]
+                    if($B.$options.args!==undefined){
+                        var options = $B.$options.args[locals_id]
+                        if(options !== undefined){
+                            if(Array.isArray(options)){
+                                var pyobj = $B.jsobj2pyobj(options)
+                                res = res.concat(pyobj)
+                            }
+                        }
+                    }
+                    return res
+                },
+             '__set__':function(){throw _b_.TypeError("Read only property 'sys.argv'")}
+            },
         modules :
             {'__get__':function(){return _b_.dict($B.JSObject($B.imported))},
              '__set__':function(self, obj, value){ throw _b_.TypeError("Read only property 'sys.modules'") }
