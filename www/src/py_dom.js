@@ -443,8 +443,9 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         return DOMNodeDict[attr].__get__(self)
         break
       case 'clear':
+      case 'closest':
       case 'remove':
-        return function(){DOMNodeDict[attr](self,arguments[0])}
+        return function(){return DOMNodeDict[attr](self,arguments[0])}
       case 'headers':
         if(self.elt.nodeType==9){
           // HTTP headers
@@ -779,6 +780,20 @@ DOMNodeDict.clone = function(self){
         }
     }
     return res
+}
+
+DOMNodeDict.closest = function(self, tagName){
+    // Returns the first parent of self with specified tagName
+    // Raises KeyError if not found
+    var res = self.elt,
+        tagName = tagName.toLowerCase()
+    while(res.tagName.toLowerCase() != tagName){
+        res = res.parentNode
+        if(res===undefined){
+            throw _b_.KeyError('no parent of type '+tagName)
+        }
+    }
+    return DOMNode(res)
 }
 
 DOMNodeDict.events = function(self, event){
