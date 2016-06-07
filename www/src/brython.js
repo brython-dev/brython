@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-06 21:23:48.367380"
+__BRYTHON__.compiled_date="2016-06-07 09:06:56.816574"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4612,14 +4612,16 @@ var has_kw_args=false,nb_pos=$args.length,$ns
 if(nb_pos>0 && $args[nb_pos-1].$nat){has_kw_args=true
 nb_pos--
 var kw_args=$args[nb_pos].kw}
-if(extra_pos_args){slots[extra_pos_args]=_b_.tuple()}
-if(extra_kw_args){slots[extra_kw_args]=_b_.dict()}
+if(extra_pos_args){slots[extra_pos_args]=[];
+slots[extra_pos_args].__class__=_b_.tuple.$dict}
+if(extra_kw_args){
+slots[extra_kw_args]={__class__:_b_.dict.$dict,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{},length: 0}}
 if(nb_pos>argcount){
 if(extra_pos_args===null){
 msg=$fname+"() takes "+argcount+' positional argument'+
 (argcount> 1 ? '' : 's')+ ' but more were given'
 throw _b_.TypeError(msg)}else{
-slots[extra_pos_args]=_b_.tuple(Array.prototype.slice.call($args,argcount,nb_pos))
+for(var i=argcount;i<nb_pos;i++){slots[extra_pos_args].push($args[i])}
 nb_pos=argcount}}
 for(var i=0;i<nb_pos;i++){slots[var_names[i]]=$args[i]}
 if(has_kw_args){for(var key in kw_args){var value=kw_args[key],key=key.replace(/\$/g,'')
@@ -4631,22 +4633,6 @@ slots[key]=value}}}
 var missing=[]
 for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}
 else{missing.push("'"+attr+"'")}}}
-if(missing.length>0){if(missing.length==1){throw _b_.TypeError($fname+" missing 1 positional argument: "+missing[0])}else{var msg=$fname+" missing "+missing.length+" positional arguments: "
-msg +=missing.join(' and ')
-throw _b_.TypeError(msg)}}
-return slots}
-$B.argsfast=function($fname,argcount,slots,var_names,pos_args,kw_args,$dobj,extra_pos_args,extra_kw_args){
-var nb_pos_args=pos_args.length,nb_var_names=var_names.length
-if(extra_pos_args!==null){slots[extra_pos_args]=[]}
-if(extra_kw_args!==null){slots[extra_kw_args]=_b_.dict()}
-if(nb_pos_args<=nb_var_names){for(var i=0;i<nb_pos_args;i++){slots[var_names[i]]=pos_args[i]}}else if(nb_pos_args>nb_var_names){if(extra_pos_args!==null){for(var i=0;i<nb_var_names;i++){slots[var_names[i]]=pos_args[i]}
-slots[extra_pos_args]=pos_args.slice(nb_var_names)}}
-for(var attr in kw_args){if(slots[attr]===undefined){if(extra_kw_args){slots[extra_kw_args].$string_dict[attr]=kw_args[attr]}
-else{throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")}}else{if(slots[attr]!==null){throw _b_.TypeError($fname+"() got multiple values for argument '"+attr+"'")}
-slots[attr]=kw_args[i]}}
-var missing=[]
-for(var attr in slots){if(slots[attr]===null){if($dobj[attr]===undefined){missing.push(attr)}
-slots[attr]=$dobj[attr]}}
 if(missing.length>0){if(missing.length==1){throw _b_.TypeError($fname+" missing 1 positional argument: "+missing[0])}else{var msg=$fname+" missing "+missing.length+" positional arguments: "
 msg +=missing.join(' and ')
 throw _b_.TypeError(msg)}}
