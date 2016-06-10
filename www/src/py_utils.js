@@ -305,7 +305,7 @@ $B.$gen_expr = function(env){
     var $root = $B.py2js($py,module_name,genexpr_name,local_name,
         $B.line_info)
     var $js = $root.to_js()
-
+    
     eval($js)
     
     var $res1 = eval('$locals_ge'+$ix)["res"+$ix]
@@ -813,6 +813,16 @@ $B.jsobject2pyobject=function(obj){
         return _b_.False
     }
 
+    if(typeof obj==='object' && !Array.isArray(obj) &&
+        obj.__class__===undefined){
+        // transform JS object into a Python dict
+        var res = _b_.dict()
+        for(var attr in obj){
+           res.$string_dict[attr] = $B.jsobject2pyobject(obj[attr])
+        }
+        return res
+    }
+
     if(_b_.isinstance(obj,_b_.list)){
         var res = [], pos=0
         for(var i=0, _len_i = obj.length; i < _len_i;i++){
@@ -833,16 +843,6 @@ $B.jsobject2pyobject=function(obj){
 
     if(obj._type_ === 'iter') { // this is an iterator
        return _b_.iter(obj.data)
-    }
-
-    if(typeof obj==='object' && obj.__class__===undefined){
-        // transform JS object into a Python dict
-        var res = _b_.dict()
-        var si=_b_.dict.$dict.__setitem__
-        for(var attr in obj){
-           si(res, attr,$B.jsobject2pyobject(obj[attr]))
-        }
-        return res
     }
 
     return $B.JSObject(obj)

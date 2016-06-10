@@ -287,17 +287,19 @@ function $eval(src, _globals, _locals){
         locals_id = '$exec_'+$B.UUID()
     }
     // Initialise the object for block namespaces
-    eval('var $locals_'+globals_id+' = {}')
-    eval('var $locals_'+locals_id+' = {}')
+    eval('var $locals_'+globals_id+' = {}\nvar $locals_'+locals_id+' = {}')
     
     // Initialise block globals
     if(_globals===undefined){
+        var gobj = current_frame[3],
+            ex = ''
         for(var attr in current_frame[3]){
-            eval('$locals_'+globals_id+'["'+attr+
-                '"] = current_frame[3]["'+attr+'"]')
+            ex == '$locals_'+globals_id+'["'+attr+
+                '"] = gobj["'+attr+'"]';
         }
         parent_block_id = current_globals_id
-        eval('var $locals_'+current_globals_id+'=current_frame[3]')
+        ex += 'var $locals_'+current_globals_id+'=gobj;'
+        eval(ex)
     }else{
         $B.bound[globals_id] = {}
         var items = _b_.dict.$dict.items(_globals), item
@@ -318,10 +320,13 @@ function $eval(src, _globals, _locals){
         if(_globals!==undefined){
             eval('var $locals_'+locals_id+' = $locals_'+globals_id)        
         }else{
+            var lobj = current_frame[1],
+                ex = ''
             for(var attr in current_frame[1]){
-                eval('$locals_'+locals_id+'["'+attr+
-                    '"] = current_frame[1]["'+attr+'"]')
+                ex += '$locals_'+locals_id+'["'+attr+
+                    '"] = current_frame[1]["'+attr+'"];'
             }
+            eval(ex)
         }
     }else{
         var items = _b_.dict.$dict.items(_locals), item
@@ -334,6 +339,9 @@ function $eval(src, _globals, _locals){
             }
         }
     }
+    //var nb_modules = Object.keys(__BRYTHON__.modules).length
+    //console.log('before exec', nb_modules)
+
     var root = $B.py2js(src, globals_id, locals_id, parent_block_id),
         leave_frame = true
 
@@ -399,10 +407,13 @@ function $eval(src, _globals, _locals){
         if(err.$py_error===undefined){throw $B.exception(err)}
         throw err
     }finally{
+        
+        delete __BRYTHON__.modules[globals_id]
+        delete __BRYTHON__.modules[locals_id]
         if(!is_exec && leave_frame){
             // For eval(), the finally clause with "leave_frame" was removed
             // so we must execute it here
-            $B.leave_frame(locals_id)
+            $B.frames_stack.pop()
         }
     }
 }
@@ -460,7 +471,17 @@ function attr_error(attr, cname){
 }
 
 function getattr(obj,attr,_default){
-    var klass = $B.get_class(obj)
+
+    var klass = obj.__class__
+    
+    if(klass===undefined){
+        // avoid calling $B.get_class in simple cases for performance
+        if(typeof obj=='string'){klass = _b_.str.$dict}
+        else if(typeof obj=='number'){
+            klass = obj % 1 == 0 ? _b_.int.$dict : _b_.float.$dict
+        }
+        else{klass = $B.get_class(obj)}
+    }
 
     if(klass===undefined){
         // for native JS objects used in Python code
@@ -747,22 +768,16 @@ function isinstance(obj,arg){
     }
     if(arg===_b_.int &&(obj===True || obj===False)){return True}
         
-    var klass = $B.get_class(obj)
-    if (klass === undefined) {
-       switch(arg) {
-         case _b_.int:
-           return ((typeof obj)=="number"||obj.constructor===Number)&&(obj.valueOf()%1===0)
-         case _b_.float:
-           return ((typeof obj=="number" && obj.valueOf()%1!==0))||
-                   (klass===_b_.float.$dict)
-         case _b_.str:
-           return (typeof obj=="string"||klass===_b_.str.$dict)
-         case _b_.list:
-           return (obj.constructor===Array)
-         default:
-           return false
-       }
+    var klass = obj.__class__
+    
+    if(klass==undefined){
+        if(typeof obj=='string' && arg==_b_.str){return true}
+        if(obj.contructor==Number && arg==_b_.float){return true}
+        if(typeof obj=='number' && arg==_b_.int){return true}
+        klass = $B.get_class(obj)
     }
+
+    if (klass === undefined) { return false }
 
    // arg is the class constructor ; the attribute __class__ is the 
    // class dictionary, ie arg.$dict

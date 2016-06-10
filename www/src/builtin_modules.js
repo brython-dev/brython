@@ -240,8 +240,7 @@
             return $B.py2js(src,module_name,module_name,'__builtins__').to_js()
         },
         pyobj2jsobj:function(obj){ return $B.pyobj2jsobj(obj)},
-        jsobj2pyobj:function(obj){ return $B.jsobj2pyobj(obj)},
-        $$this: function(){return $B.jsobj2pyobj($B.last($B.frames_stack)[4])}
+        jsobj2pyobj:function(obj){ return $B.jsobj2pyobj(obj)}
     }
 
     // _sys module is at the core of Brython since it is paramount for

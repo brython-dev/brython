@@ -1890,8 +1890,11 @@ function $DefCtx(context){
         this.parent.node.module = this.module
         
         // Add to modules dictionary - used in list comprehensions
+        $B.added = $B.added || {}
+        $B.added[this.module] = $B.added[this.module] || {}
+        $B.added[this.module][this.id] = true
+        //console.log('add', this.id, 'to modules of', this.module)
         $B.modules[this.id] = this.parent.node
-        
         $B.bound[this.id] = {}
         $B.type[this.id] = {}
         
@@ -2041,8 +2044,8 @@ function $DefCtx(context){
         // Push id in frames stack
         var enter_frame_node = new $Node(),
             enter_frame_node_rank = nodes.length
-        var js = ';$B.enter_frame([$local_name, $locals,'+
-            '"'+global_scope.id+'", '+global_ns+', this]);' 
+        var js = ';$B.frames_stack.push([$local_name, $locals,'+
+            '"'+global_scope.id+'", '+global_ns+']);' 
         enter_frame_node.enter_frame = true
         new $NodeJSCtx(enter_frame_node,js)
         nodes.push(enter_frame_node)
@@ -2367,7 +2370,7 @@ function $DefCtx(context){
             var finally_node = new $Node(),
                 ctx = new $NodeCtx(finally_node)
             new $SingleKwCtx(ctx, 'finally')
-            finally_node.add($NodeJS('$B.leave_frame($local_name)'))
+            finally_node.add($NodeJS('$B.frames_stack.pop()'))
             
             parent.add(finally_node)
         }        

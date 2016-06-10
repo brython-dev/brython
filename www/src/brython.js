@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-10 15:12:10.045640"
+__BRYTHON__.compiled_date="2016-06-10 18:48:03.120514"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -962,6 +962,9 @@ this.id=this.id.replace(/\./g,'_')
 this.id +='_'+ $B.UUID()
 this.parent.node.id=this.id
 this.parent.node.module=this.module
+$B.added=$B.added ||{}
+$B.added[this.module]=$B.added[this.module]||{}
+$B.added[this.module][this.id]=true
 $B.modules[this.id]=this.parent.node
 $B.bound[this.id]={}
 $B.type[this.id]={}
@@ -1036,8 +1039,8 @@ new_node.locals_def=true
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 var enter_frame_node=new $Node(),enter_frame_node_rank=nodes.length
-var js=';$B.enter_frame([$local_name, $locals,'+
-'"'+global_scope.id+'", '+global_ns+', this]);' 
+var js=';$B.frames_stack.push([$local_name, $locals,'+
+'"'+global_scope.id+'", '+global_ns+']);' 
 enter_frame_node.enter_frame=true
 new $NodeJSCtx(enter_frame_node,js)
 nodes.push(enter_frame_node)
@@ -1210,7 +1213,7 @@ for(var i=0;i<children.length;i++){try_node.add(children[i])}
 parent.children.splice(pos+2,parent.children.length)
 var finally_node=new $Node(),ctx=new $NodeCtx(finally_node)
 new $SingleKwCtx(ctx,'finally')
-finally_node.add($NodeJS('$B.leave_frame($local_name)'))
+finally_node.add($NodeJS('$B.frames_stack.pop()'))
 parent.add(finally_node)}
 this.transformed=true
 return offset}
@@ -4965,6 +4968,11 @@ case true:
 return _b_.True
 case false:
 return _b_.False}
+if(typeof obj==='object' && !Array.isArray(obj)&&
+obj.__class__===undefined){
+var res=_b_.dict()
+for(var attr in obj){res.$string_dict[attr]=$B.jsobject2pyobject(obj[attr])}
+return res}
 if(_b_.isinstance(obj,_b_.list)){var res=[],pos=0
 for(var i=0,_len_i=obj.length;i < _len_i;i++){res[pos++]=$B.jsobject2pyobject(obj[i])}
 return res}
@@ -4973,11 +4981,6 @@ return obj}
 return obj}
 if(obj._type_==='iter'){
 return _b_.iter(obj.data)}
-if(typeof obj==='object' && obj.__class__===undefined){
-var res=_b_.dict()
-var si=_b_.dict.$dict.__setitem__
-for(var attr in obj){si(res,attr,$B.jsobject2pyobject(obj[attr]))}
-return res}
 return $B.JSObject(obj)}
 $B.pyobject2jsobject=function(obj){
 switch(obj){case _b_.None:
@@ -5268,19 +5271,22 @@ var is_exec=arguments[3]=='exec',leave=false
 if(src.__class__===$B.$CodeObjectDict){src=src.source}
 var globals_id='$exec_'+$B.UUID(),locals_id,parent_block_id
 if(_locals===_globals ||_locals===undefined){locals_id=globals_id}else{locals_id='$exec_'+$B.UUID()}
-eval('var $locals_'+globals_id+' = {}')
-eval('var $locals_'+locals_id+' = {}')
-if(_globals===undefined){for(var attr in current_frame[3]){eval('$locals_'+globals_id+'["'+attr+
-'"] = current_frame[3]["'+attr+'"]')}
+eval('var $locals_'+globals_id+' = {}\nvar $locals_'+locals_id+' = {}')
+if(_globals===undefined){var gobj=current_frame[3],ex=''
+for(var attr in current_frame[3]){ex=='$locals_'+globals_id+'["'+attr+
+'"] = gobj["'+attr+'"]';}
 parent_block_id=current_globals_id
-eval('var $locals_'+current_globals_id+'=current_frame[3]')}else{$B.bound[globals_id]={}
+ex +='var $locals_'+current_globals_id+'=gobj;'
+eval(ex)}else{$B.bound[globals_id]={}
 var items=_b_.dict.$dict.items(_globals),item
 while(1){try{var item=next(items)
 eval('$locals_'+globals_id+'["'+item[0]+'"] = item[1]')
 $B.bound[globals_id][item[0]]=true}catch(err){break}}
 parent_block_id='__builtins__'}
-if(_locals===undefined){if(_globals!==undefined){eval('var $locals_'+locals_id+' = $locals_'+globals_id)}else{for(var attr in current_frame[1]){eval('$locals_'+locals_id+'["'+attr+
-'"] = current_frame[1]["'+attr+'"]')}}}else{var items=_b_.dict.$dict.items(_locals),item
+if(_locals===undefined){if(_globals!==undefined){eval('var $locals_'+locals_id+' = $locals_'+globals_id)}else{var lobj=current_frame[1],ex=''
+for(var attr in current_frame[1]){ex +='$locals_'+locals_id+'["'+attr+
+'"] = current_frame[1]["'+attr+'"];'}
+eval(ex)}}else{var items=_b_.dict.$dict.items(_locals),item
 while(1){try{var item=next(items)
 eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')}catch(err){break}}}
 var root=$B.py2js(src,globals_id,locals_id,parent_block_id),leave_frame=true
@@ -5304,8 +5310,10 @@ var setitem=getattr(_globals,'__setitem__')
 for(var attr in gns){setitem(attr,gns[attr])}}else{for(var attr in gns){current_frame[3][attr]=gns[attr]}}
 if(res===undefined)return _b_.None
 return res}catch(err){if(err.$py_error===undefined){throw $B.exception(err)}
-throw err}finally{if(!is_exec && leave_frame){
-$B.leave_frame(locals_id)}}}
+throw err}finally{delete __BRYTHON__.modules[globals_id]
+delete __BRYTHON__.modules[locals_id]
+if(!is_exec && leave_frame){
+$B.frames_stack.pop()}}}
 $eval.$is_func=true
 function exec(src,globals,locals){return $eval(src,globals,locals,'exec')||_b_.None}
 exec.$is_func=true
@@ -5333,7 +5341,11 @@ case '__call__':
 throw _b_.TypeError("'"+cname+"'"+' object is not callable')
 default:
 throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")}}
-function getattr(obj,attr,_default){var klass=$B.get_class(obj)
+function getattr(obj,attr,_default){var klass=obj.__class__
+if(klass===undefined){
+if(typeof obj=='string'){klass=_b_.str.$dict}
+else if(typeof obj=='number'){klass=obj % 1==0 ? _b_.int.$dict : _b_.float.$dict}
+else{klass=$B.get_class(obj)}}
 if(klass===undefined){
 if(obj[attr]!==undefined)return $B.$JS2Py(obj[attr])
 if(_default!==undefined)return _default
@@ -5450,18 +5462,12 @@ if(obj===undefined)return false
 if(arg.constructor===Array){for(var i=0;i<arg.length;i++){if(isinstance(obj,arg[i]))return true}
 return false}
 if(arg===_b_.int &&(obj===True ||obj===False)){return True}
-var klass=$B.get_class(obj)
-if(klass===undefined){switch(arg){case _b_.int:
-return((typeof obj)=="number"||obj.constructor===Number)&&(obj.valueOf()%1===0)
-case _b_.float:
-return((typeof obj=="number" && obj.valueOf()%1!==0))||
-(klass===_b_.float.$dict)
-case _b_.str:
-return(typeof obj=="string"||klass===_b_.str.$dict)
-case _b_.list:
-return(obj.constructor===Array)
-default:
-return false}}
+var klass=obj.__class__
+if(klass==undefined){if(typeof obj=='string' && arg==_b_.str){return true}
+if(obj.contructor==Number && arg==_b_.float){return true}
+if(typeof obj=='number' && arg==_b_.int){return true}
+klass=$B.get_class(obj)}
+if(klass===undefined){return false }
 if(arg.$dict===undefined){return false}
 if(klass==$B.$factory){klass=obj.$dict.__class__}
 for(var i=0;i<klass.__mro__.length;i++){var kl=klass.__mro__[i]
@@ -9462,8 +9468,9 @@ $DictDict.values=function(self){if(arguments.length > 1){var _len=arguments.leng
 var _msg="values() takes no arguments ("+_len+" given)"
 throw _b_.TypeError(_msg)}
 return $iterator_wrapper(new $value_iterator(self),$dict_valuesDict)}
-function dict(args,second){if(second===undefined && Array.isArray(args)){
-var res={__class__:$DictDict,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{},length: 0}
+function dict(args,second){var res={__class__:$DictDict,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{},length: 0}
+if(args===undefined){return res}
+if(second===undefined){if(Array.isArray(args)){
 var i=-1,stop=args.length-1
 var si=$DictDict.__setitem__
 while(i++<stop){var item=args[i]
@@ -9477,9 +9484,19 @@ break
 default:
 si(res,item[0],item[1])
 break}}
-return res}
-var res={__class__:$DictDict}
-$DictDict.clear(res)
+return res}else if(args.$nat=='kw'){
+var kw=args['kw']
+for(var attr in kw){switch(typeof attr){case 'string':
+res.$string_dict[attr]=kw[attr]
+res.$str_hash[str_hash(attr)]=attr
+break;
+case 'number':
+res.$numeric_dict[attr]=kw[attr]
+break
+default:
+si(res,attr,kw[attr])
+break}}
+return res}}
 var _args=[res],pos=1
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){_args[pos++]=arguments[i]}
 $DictDict.__init__.apply(null,_args)
@@ -10660,7 +10677,7 @@ var content=$B.builtins.getattr(file_obj,'read')()
 eval(content)
 if(names!==undefined){if(!Array.isArray(names)){throw $B.builtins.TypeError("argument 'names' should be a list, not '"+$B.get_class(names).__name__)}else{for(var i=0;i<names.length;i++){try{window[names[i]]=eval(names[i])}
 catch(err){throw $B.builtins.NameError("name '"+names[i]+"' not found in script "+script_url)}}}}},py2js: function(src,module_name){if(is_none(module_name)){module_name='__main__'+$B.UUID()}
-return $B.py2js(src,module_name,module_name,'__builtins__').to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},$$this: function(){return $B.jsobj2pyobj($B.last($B.frames_stack)[4])}}
+return $B.py2js(src,module_name,module_name,'__builtins__').to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)}}
 var _b_=$B.builtins
 modules['_sys']={__file__:$B.brython_path+'/libs/_sys.js',
 Getframe : function(depth){return $B._frame($B.frames_stack,depth)},argv:

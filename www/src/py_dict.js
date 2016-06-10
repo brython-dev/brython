@@ -609,38 +609,59 @@ $DictDict.values = function(self){
 
 function dict(args, second){
 
-    if(second===undefined && Array.isArray(args)){
-        // Form "dict([[key1, value1], [key2,value2], ...])"
-        var res = {__class__:$DictDict,
-            $numeric_dict : {},
-            $object_dict : {},
-            $string_dict : {},
-            $str_hash: {},
-            length: 0
-        }
-        var i = -1, stop = args.length-1
-        var si = $DictDict.__setitem__
-        while(i++<stop){
-            var item=args[i]
-            switch(typeof item[0]) {
-              case 'string':
-                res.$string_dict[item[0]]=item[1]
-                res.$str_hash[str_hash(item[0])]=item[0]
-                break;
-              case 'number':
-                res.$numeric_dict[item[0]]=item[1]
-                break
-              default:
-                si(res, item[0], item[1])
-                break
+    var res = {__class__:$DictDict,
+        $numeric_dict : {},
+        $object_dict : {},
+        $string_dict : {},
+        $str_hash: {},
+        length: 0
+    }
+    
+    if(args===undefined){return res}
+        
+    if(second===undefined){
+        if(Array.isArray(args)){
+            // Form "dict([[key1, value1], [key2,value2], ...])"
+            var i = -1, stop = args.length-1
+            var si = $DictDict.__setitem__
+            while(i++<stop){
+                var item=args[i]
+                switch(typeof item[0]) {
+                  case 'string':
+                    res.$string_dict[item[0]]=item[1]
+                    res.$str_hash[str_hash(item[0])]=item[0]
+                    break;
+                  case 'number':
+                    res.$numeric_dict[item[0]]=item[1]
+                    break
+                  default:
+                    si(res, item[0], item[1])
+                    break
+                }
             }
+            return res
+        }else if(args.$nat=='kw'){
+            // Form dict(k1=v1, k2=v2...)
+            var kw = args['kw']
+            for(var attr in kw){
+                switch(typeof attr) {
+                  case 'string':
+                    res.$string_dict[attr]=kw[attr]
+                    res.$str_hash[str_hash(attr)]=attr
+                    break;
+                  case 'number':
+                    res.$numeric_dict[attr]=kw[attr]
+                    break
+                  default:
+                    si(res, attr, kw[attr])
+                    break
+                }
+            }
+            return res
         }
-        return res
     }
 
     // apply __init__ with arguments of dict()
-    var res = {__class__:$DictDict}
-    $DictDict.clear(res)
     var _args = [res], pos=1
     for(var i=0, _len_i = arguments.length; i < _len_i;i++){_args[pos++]=arguments[i]}
     $DictDict.__init__.apply(null,_args)
