@@ -264,8 +264,14 @@
                         var options = $B.$options.args[locals_id]
                         if(options !== undefined){
                             if(Array.isArray(options)){
-                                var pyobj = $B.jsobj2pyobj(options)
-                                res = res.concat(pyobj)
+                                for(var i=0, len=options.length;i<len;i++){
+                                    if(typeof options[i]=='string' ||
+                                        typeof options[i]=='number'){
+                                        res.push(options[i])
+                                    }else{
+                                        throw _b_.ValueError("can only pass strings or numbers in options.args")
+                                    }
+                                }
                             }
                         }
                     }

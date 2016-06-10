@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-07 09:06:56.816574"
+__BRYTHON__.compiled_date="2016-06-10 15:12:10.045640"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -10667,8 +10667,8 @@ Getframe : function(depth){return $B._frame($B.frames_stack,depth)},argv:
 {'__get__':function(){var locals_id=$B.last($B.frames_stack)[0]
 res=[locals_id]
 if($B.$options.args!==undefined){var options=$B.$options.args[locals_id]
-if(options !==undefined){if(Array.isArray(options)){var pyobj=$B.jsobj2pyobj(options)
-res=res.concat(pyobj)}}}
+if(options !==undefined){if(Array.isArray(options)){for(var i=0,len=options.length;i<len;i++){if(typeof options[i]=='string' ||
+typeof options[i]=='number'){res.push(options[i])}else{throw _b_.ValueError("can only pass strings or numbers in options.args")}}}}}
 return res},'__set__':function(){throw _b_.TypeError("Read only property 'sys.argv'")}},modules :
 {'__get__':function(){return _b_.dict($B.JSObject($B.imported))},'__set__':function(self,obj,value){throw _b_.TypeError("Read only property 'sys.modules'")}},path: 
 {'__get__':function(){return $B.path},'__set__':function(self,obj,value){$B.path=value }},meta_path: 
