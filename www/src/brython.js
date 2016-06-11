@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-10 18:48:03.120514"
+__BRYTHON__.compiled_date="2016-06-11 18:35:54.665476"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1712,7 +1712,12 @@ val=scope_ns+'["'+val+'"]'}else{
 val='$B.$check_def("'+val+'",'+scope_ns+'["'+val+'"])'}}}}else{val=scope_ns+'["'+val+'"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns+'["'+val+'"]'}else if(!this.bound && !this.augm_assign){if(scope.level<=3){
 val='$locals["'+val+'"]'}else{
 val='$B.$check_def_local("'+val+'",$locals["'+val+'"])'}}else{val='$locals["'+val+'"]'}}else if(!this.bound && !this.augm_assign){
-val='$B.$check_def_free("'+val+'",'+scope_ns+'["'+val+'"])'}else{val=scope_ns+'["'+val+'"]'}
+if(scope.ntype=='generator'){
+var up=0,
+sc=innermost
+while(sc!==scope){up++;sc=sc.parent_block}
+var scope_name="$B.frames_stack[$B.frames_stack.length-1-"+up+"][1]"
+val='$B.$check_def_free("'+val+'",'+scope_name+'["'+val+'"])'}else{val='$B.$check_def_free("'+val+'",'+scope_ns+'["'+val+'"])'}}else{val=scope_ns+'["'+val+'"]'}
 return val+$to_js(this.tree,'')}else{
 this.unknown_binding=true
 return '$B.$search("'+val+'")'}}}
@@ -1862,6 +1867,7 @@ var src=this.get_src()
 var res1=[],items=[]
 var qesc=new RegExp('"',"g")
 for(var i=1;i<this.intervals.length;i++){var txt=src.substring(this.intervals[i-1],this.intervals[i])
+items.push(txt)
 var lines=txt.split('\n')
 var res2=[],pos=0
 for(var j=0;j<lines.length;j++){var txt=lines[j]
@@ -1872,7 +1878,16 @@ txt=txt.replace(qesc,'\\"')
 res2[pos++]='"'+txt+'"'}
 res1.push('['+res2.join(',')+']')}
 switch(this.real){case 'list_comp':
-return '$B.$list_comp('+env_string+','+res1+')'
+var local_name=scope.id.replace(/\./g,'_')
+var lc=$B.$list_comp(items),
+$py=lc[0],ix=lc[1],listcomp_name='lc'+ix,local_name=scope.id.replace(/\./g,'_')
+var $save_pos=$pos
+var $root=$B.py2js($py,module_name,listcomp_name,local_name,$B.line_info)
+$pos=$save_pos
+var $js=$root.to_js()
+$js +='return $locals_lc'+ix+'["x'+ix+'"]'
+$js='(function(){'+$js+'})()'
+return $js
 case 'dict_or_set_comp':
 if(this.expression.length===1){return '$B.$gen_expr('+env_string+','+res1+')'}
 return '$B.$dict_comp('+env_string+','+res1+')'}
@@ -4669,35 +4684,17 @@ for(var arg in loc)res[arg]=loc[arg]
 return res}
 function clear(ns){
 delete $B.vars[ns],$B.bound[ns],$B.modules[ns],$B.imported[ns]}
-$B.$list_comp=function(env){
-var $ix=$B.UUID()
-var $py="x"+$ix+"=[]\n",indent=0
-for(var $i=2,_len_$i=arguments.length;$i < _len_$i;$i++){$py +=' '.repeat(indent)
-$py +=arguments[$i].join('')+':\n'
+$B.$list_comp=function(items){
+var ix=$B.UUID()
+var py="x"+ix+"=[]\n",indent=0
+for(var i=1,len=items.length;i < len;i++){py +=' '.repeat(indent)
+var item=items[i]
+item=item.replace(/\s*$/,'')
+py +=item+':\n'
 indent +=4}
-$py +=' '.repeat(indent)
-$py +='x'+$ix+'.append('+arguments[1].join('\n')+')\n'
-for(var i=0;i<env.length;i++){var sc_id='$locals_'+env[i][0].replace(/\./,'_')
-eval('var '+sc_id+'=env[i][1]')}
-var locals_id=env[0][0],module_obj=env[env.length-1],globals_id=module_obj[0]
-var listcomp_name='lc'+$ix
-var $root=$B.py2js($py,globals_id,listcomp_name,locals_id,$B.line_info)
-$root.caller=$B.line_info
-var $js=$root.to_js()
-try{eval($js)
-var res=eval('$locals_'+listcomp_name+'["x"+$ix]')}
-catch(err){throw $B.exception(err)}
-finally{clear(listcomp_name)}
-return res}
-$B.$list_comp1=function(items){
-var $ix=$B.UUID()
-var $py="x"+$ix+"=[]\n",indent=0
-for(var $i=1,_len_$i=items.length;$i < _len_$i;$i++){$py +=' '.repeat(indent)
-$py +=items[$i]+':\n'
-indent +=4}
-$py +=' '.repeat(indent)
-$py +='x'+$ix+'.append('+items[0]+')\n'
-return[$py,$ix]}
+py +=' '.repeat(indent)
+py +='x'+ix+'.append('+items[0]+')\n'
+return[py,ix]}
 $B.$dict_comp=function(env){
 var $ix=$B.UUID()
 var $res='res'+$ix

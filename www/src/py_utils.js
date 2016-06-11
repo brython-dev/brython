@@ -166,69 +166,22 @@ function clear(ns){
     delete $B.vars[ns], $B.bound[ns], $B.modules[ns], $B.imported[ns]
 }
 
-$B.$list_comp = function(env){
+$B.$list_comp = function(items){
     // Called for list comprehensions
-    // "env" is a list of [local_name, local_ns] lists for all the enclosing
-    // namespaces
-
-        
-    var $ix = $B.UUID()
-    var $py = "x"+$ix+"=[]\n", indent = 0
-    for(var $i=2, _len_$i = arguments.length; $i < _len_$i;$i++){
-        $py += ' '.repeat(indent)
-        $py += arguments[$i].join('')+':\n'
+    //console.log('items',items.length)
+    var ix = $B.UUID()
+    var py = "x"+ix+"=[]\n", indent = 0
+    for(var i=1, len = items.length; i < len;i++){
+        py += ' '.repeat(indent)
+        var item = items[i]
+        item = item.replace(/\s*$/, '')
+        py += item+':\n'
         indent += 4
     }
-    $py += ' '.repeat(indent)
-    $py += 'x'+$ix+'.append('+arguments[1].join('\n')+')\n'
-    
-    // Create the variables for enclosing namespaces, they may be referenced
-    // in the comprehension
-    for(var i=0;i<env.length;i++){
-        var sc_id = '$locals_'+env[i][0].replace(/\./,'_')
-        eval('var '+sc_id+'=env[i][1]')
-    }
-    
-    var locals_id = env[0][0],
-        module_obj = env[env.length-1],
-        globals_id = module_obj[0]
-
-    var listcomp_name = 'lc'+$ix
-
-    var $root = $B.py2js($py, globals_id, listcomp_name, locals_id,
-        $B.line_info)
-    
-    $root.caller = $B.line_info
-
-    var $js = $root.to_js()
-    try{
-        eval($js)
-        var res = eval('$locals_'+listcomp_name+'["x"+$ix]')
-    }
-    catch(err){
-        throw $B.exception(err)
-    }
-    finally{
-        clear(listcomp_name)
-    }
-    
-    return res
-}
-
-$B.$list_comp1 = function(items){
-    // Called for list comprehensions
-    //console.log('items',items)
-    var $ix = $B.UUID()
-    var $py = "x"+$ix+"=[]\n", indent = 0
-    for(var $i=1, _len_$i = items.length; $i < _len_$i;$i++){
-        $py += ' '.repeat(indent)
-        $py += items[$i]+':\n'
-        indent += 4
-    }
-    $py += ' '.repeat(indent)
-    $py += 'x'+$ix+'.append('+items[0]+')\n'
+    py += ' '.repeat(indent)
+    py += 'x'+ix+'.append('+items[0]+')\n'
         
-    return [$py,$ix]
+    return [py,ix]
 }
 
 

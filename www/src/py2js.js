@@ -3460,7 +3460,19 @@ function $IdCtx(context,value){
             }else if(!this.bound && !this.augm_assign){
                 // name was found between innermost and the global of builtins
                 // namespace
-                val = '$B.$check_def_free("'+val+'",'+scope_ns+'["'+val+'"])'
+                if(scope.ntype=='generator'){
+                    // If the name is bound in a generator, we must search the value
+                    // in the locals object for the currently executed function. It
+                    // can be found as the second element of the frame stack at the
+                    // same level up than the generator function
+                    var up = 0, // number of levels of the generator above innermost
+                        sc = innermost
+                    while(sc!==scope){up++;sc=sc.parent_block}
+                    var scope_name = "$B.frames_stack[$B.frames_stack.length-1-"+up+"][1]"
+                    val = '$B.$check_def_free("'+val+'",'+scope_name+'["'+val+'"])'
+                }else{
+                    val = '$B.$check_def_free("'+val+'",'+scope_ns+'["'+val+'"])'
+                }
             }else{
                 val = scope_ns+'["'+val+'"]'
             }
@@ -3749,6 +3761,7 @@ function $ListOrTupleCtx(context,real){
             var qesc = new RegExp('"',"g") // to escape double quotes in arguments
             for(var i=1;i<this.intervals.length;i++){
                 var txt = src.substring(this.intervals[i-1],this.intervals[i])
+                items.push(txt)
                 var lines = txt.split('\n')
                 var res2=[], pos=0
 
@@ -3766,13 +3779,12 @@ function $ListOrTupleCtx(context,real){
 
             switch(this.real) {
               case 'list_comp':
-                /*
                 var local_name = scope.id.replace(/\./g,'_')
-                var lc = $B.$list_comp1(items),
+                var lc = $B.$list_comp(items), // defined in py_utils.js
                     $py = lc[0], ix=lc[1],
                     listcomp_name = 'lc'+ix,
                     local_name = scope.id.replace(/\./g,'_')
-                console.log('list comp\n',$py)
+                //console.log('list comp\n',$py)
                 var $save_pos = $pos
                 var $root = $B.py2js($py,module_name,listcomp_name,local_name,
                     $B.line_info)
@@ -3782,9 +3794,7 @@ function $ListOrTupleCtx(context,real){
                 $js += 'return $locals_lc'+ix+'["x'+ix+'"]'
                 $js = '(function(){'+$js+'})()'
                 return $js
-                */
                 
-                return '$B.$list_comp('+env_string+','+res1+')'
               case 'dict_or_set_comp':
                 if(this.expression.length===1){
                   return '$B.$gen_expr('+env_string+','+res1+')'
