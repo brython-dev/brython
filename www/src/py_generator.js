@@ -333,10 +333,11 @@ $BRGeneratorDict.__next__ = function(self){
     self.gi_running = true
     
     // restore environment namespaces
+    
     for(var i=0;i<self.env.length;i++){
         eval('var $locals_'+self.env[i][0]+'=self.env[i][1]')
     }
-
+    
     // Call the function _next to yield a value
     try{
         var res = self._next.apply(null, self.args)
@@ -550,19 +551,27 @@ $BRGeneratorDict.$$throw = function(self, value){
     return $BRGeneratorDict.__next__(self)
 }
 
-$B.$BRgenerator = function(env, func_name, def_id){
+$B.$BRgenerator = function(env, func_name, func, def_id){
 
     // Creates a function that will return an iterator
     // env : list of namespaces where the generator function stands
     // func_name : function name
     // def_id : generator function identifier
 
-    var def_node = $B.modules[def_id]
+    if(func.$def_node){
+        var def_node = func.$def_node
+        delete $B.modules[def_id]
+    }else{
+        var def_node = func.$def_node = $B.modules[def_id]
+    }
+    if(def_node===undefined){
+        console.log('def node undef', def_id)
+    }
     var def_ctx = def_node.context.tree[0]
     var counter = 0 // used to identify the function run for each next()
     
     // Original function
-    var func = env[0][1][func_name]
+    //var func = env[0][1][func_name]
     $B.generators = $B.generators || {}
     $B.$generators = $B.$generators || {}
 

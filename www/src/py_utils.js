@@ -222,6 +222,8 @@ $B.$dict_comp = function(env){
     eval($js)
 
     var res = eval('$locals_'+dictcomp_name+'["'+$res+'"]')
+    
+    $B.clear_ns(dictcomp_name)
 
     return res
 }
@@ -280,6 +282,10 @@ $B.$gen_expr = function(env){
     $GenExprDict.$factory = {__class__:$B.$factory,$dict:$GenExprDict}
     var $res2 = {value:$res1,__class__:$GenExprDict,$counter:-1}
     $res2.toString = function(){return 'ge object'}
+    
+    delete $B.modules[genexpr_name]
+    $B.clear_ns(genexpr_name)
+    
     return $res2
 }
 
@@ -314,9 +320,27 @@ $B.$lambda = function(env,args,body){
 
     $res.__module__ = module_name
     $res.__name__ = '<lambda>'
+    
+    delete $B.modules[lambda_name]
+    $B.clear_ns(lambda_name)
+    
     return $res
 }
 
+$B.clear_ns = function(name){
+    // Remove name from __BRYTHON__.mdoules, and all the keys that start with name
+    //delete __BRYTHON__.modules[name]
+    var keys = [],
+        len = name.length
+    for(var key in __BRYTHON__.modules){
+        if(key.substr(0, len)==name && key!==name){keys.push(key)}
+    }
+    for(var i=0; i<keys.length;i++){
+        delete __BRYTHON__.modules[keys[i]]
+        delete __BRYTHON__.bound[keys[i]]
+        delete __BRYTHON__.type[keys[i]]
+    }
+}
 // Function used to resolve names not defined in Python source
 // but introduced by "from A import *" or by exec
 
@@ -328,7 +352,9 @@ $B.$search = function(name, global_ns){
     else if(_b_[name]!==undefined){return _b_[name]}
     else{
         if(frame[0]==frame[2]){throw _b_.NameError(name)}
-        else{throw _b_.UnboundLocalError("local variable '"+name+
+        else{
+            console.log(name,'not found in',frame)
+            throw _b_.UnboundLocalError("local variable '"+name+
                 "' referenced before assignment")}
     }
 }

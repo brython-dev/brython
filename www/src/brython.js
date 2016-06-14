@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-11 18:35:54.665476"
+__BRYTHON__.compiled_date="2016-06-14 23:20:53.379542"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1136,7 +1136,8 @@ while(sc && sc.id!=='__builtins__'){var sc_id=sc.id.replace(/\./g,'_')
 if(sc===scope){env[pos++]='["'+sc_id+'",$locals]'}else{env[pos++]='["'+sc_id+'",$locals_'+sc_id+']'}
 sc=sc.parent_block}
 var env_string='['+env.join(', ')+']'
-js='$B.$BRgenerator('+env_string+',"'+this.name+'","'+this.id+'")'
+js='$B.$BRgenerator('+env_string+',"'+this.name+'", $locals_'+
+scope.id.replace(/\./g,'_')+'["'+this.name+'"],"'+this.id+'")'
 var gen_node=new $Node()
 gen_node.id=this.module
 var ctx=new $NodeCtx(gen_node)
@@ -1885,6 +1886,8 @@ var $save_pos=$pos
 var $root=$B.py2js($py,module_name,listcomp_name,local_name,$B.line_info)
 $pos=$save_pos
 var $js=$root.to_js()
+delete $B.modules[listcomp_name]
+$B.clear_ns(listcomp_name)
 $js +='return $locals_lc'+ix+'["x'+ix+'"]'
 $js='(function(){'+$js+'})()'
 return $js
@@ -4122,7 +4125,7 @@ var name=$err.__name__
 var $trace=_b_.getattr($err,'info')+'\n'+name+': '
 if(name=='SyntaxError' ||name=='IndentationError'){$trace +=$err.args[0]}else{$trace +=$err.args}
 try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
-throw $err}}
+throw $err}finally{$B.clear_ns(script.name)}}
 $B._run_script=run_script;
 function brython(options){var _b_=$B.builtins
 if($B.meta_path===undefined){$B.meta_path=[]}
@@ -4716,6 +4719,7 @@ $root.caller=$B.line_info
 var $js=$root.to_js()
 eval($js)
 var res=eval('$locals_'+dictcomp_name+'["'+$res+'"]')
+$B.clear_ns(dictcomp_name)
 return res}
 $B.$gen_expr=function(env){
 var $ix=$B.UUID()
@@ -4746,6 +4750,8 @@ return self.value[self.$counter]}
 $GenExprDict.$factory={__class__:$B.$factory,$dict:$GenExprDict}
 var $res2={value:$res1,__class__:$GenExprDict,$counter:-1}
 $res2.toString=function(){return 'ge object'}
+delete $B.modules[genexpr_name]
+$B.clear_ns(genexpr_name)
 return $res2}
 $B.$lambda=function(env,args,body){
 var rand=$B.UUID()
@@ -4763,14 +4769,23 @@ eval($js)
 var $res=eval('$locals_'+lambda_name+'["'+$res+'"]')
 $res.__module__=module_name
 $res.__name__='<lambda>'
+delete $B.modules[lambda_name]
+$B.clear_ns(lambda_name)
 return $res}
+$B.clear_ns=function(name){
+var keys=[],len=name.length
+for(var key in __BRYTHON__.modules){if(key.substr(0,len)==name && key!==name){keys.push(key)}}
+for(var i=0;i<keys.length;i++){delete __BRYTHON__.modules[keys[i]]
+delete __BRYTHON__.bound[keys[i]]
+delete __BRYTHON__.type[keys[i]]}}
 $B.$search=function(name,global_ns){
 var frame=$B.last($B.frames_stack)
 if(frame[1][name]!==undefined){return frame[1][name]}
 else if(frame[3][name]!==undefined){return frame[3][name]}
 else if(_b_[name]!==undefined){return _b_[name]}
 else{if(frame[0]==frame[2]){throw _b_.NameError(name)}
-else{throw _b_.UnboundLocalError("local variable '"+name+
+else{console.log(name,'not found in',frame)
+throw _b_.UnboundLocalError("local variable '"+name+
 "' referenced before assignment")}}}
 $B.$global_search=function(name){
 var frame=$B.last($B.frames_stack)
@@ -5309,6 +5324,8 @@ if(res===undefined)return _b_.None
 return res}catch(err){if(err.$py_error===undefined){throw $B.exception(err)}
 throw err}finally{delete __BRYTHON__.modules[globals_id]
 delete __BRYTHON__.modules[locals_id]
+$B.clear_ns(globals_id)
+$B.clear_ns(locals_id)
 if(!is_exec && leave_frame){
 $B.frames_stack.pop()}}}
 $eval.$is_func=true
@@ -6865,7 +6882,7 @@ $B.imported[module.__name__]=module
 return true}catch(err){console.log(''+err+' '+' for module '+module.name)
 for(var attr in err)console.log(attr+' '+err[attr])
 if($B.debug>0){console.log('line info '+__BRYTHON__.line_info)}
-throw err}}
+throw err}finally{}}
 function new_spec(fields){
 fields.__class__=$B.$ModuleDict
 return fields;}
@@ -10568,11 +10585,12 @@ return $BRGeneratorDict.__next__(self)}
 $BRGeneratorDict.$$throw=function(self,value){if(_b_.isinstance(value,_b_.type))value=value()
 self.sent_value={__class__:$B.$GeneratorSendError,err:value}
 return $BRGeneratorDict.__next__(self)}
-$B.$BRgenerator=function(env,func_name,def_id){
-var def_node=$B.modules[def_id]
+$B.$BRgenerator=function(env,func_name,func,def_id){
+if(func.$def_node){var def_node=func.$def_node
+delete $B.modules[def_id]}else{var def_node=func.$def_node=$B.modules[def_id]}
+if(def_node===undefined){console.log('def node undef',def_id)}
 var def_ctx=def_node.C.tree[0]
 var counter=0 
-var func=env[0][1][func_name]
 $B.generators=$B.generators ||{}
 $B.$generators=$B.$generators ||{}
 var module=def_node.module 

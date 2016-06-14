@@ -2243,7 +2243,8 @@ function $DefCtx(context){
             }
             var env_string = '['+env.join(', ')+']'
 
-          js = '$B.$BRgenerator('+env_string+',"'+this.name+'","'+this.id+'")'
+          js = '$B.$BRgenerator('+env_string+',"'+this.name+'", $locals_'+
+              scope.id.replace(/\./g, '_')+'["'+this.name+'"],"'+this.id+'")'
           var gen_node = new $Node()
           gen_node.id = this.module
           var ctx = new $NodeCtx(gen_node)
@@ -3784,13 +3785,17 @@ function $ListOrTupleCtx(context,real){
                     $py = lc[0], ix=lc[1],
                     listcomp_name = 'lc'+ix,
                     local_name = scope.id.replace(/\./g,'_')
-                //console.log('list comp\n',$py)
                 var $save_pos = $pos
                 var $root = $B.py2js($py,module_name,listcomp_name,local_name,
                     $B.line_info)
+                
                 $pos = $save_pos
                 
                 var $js = $root.to_js()
+                
+                delete $B.modules[listcomp_name]
+                $B.clear_ns(listcomp_name)
+
                 $js += 'return $locals_lc'+ix+'["x'+ix+'"]'
                 $js = '(function(){'+$js+'})()'
                 return $js
@@ -7485,7 +7490,7 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
         var t1 = new Date().getTime()
         console.log('module '+module+' translated in '+(t1 - t0)+' ms')
     }
-    
+        
     return root
 }
 
@@ -7613,6 +7618,8 @@ function run_script(script){
         }
         // Throw the error to stop execution
         throw $err
+    }finally{
+        $B.clear_ns(script.name)
     }
 }
 
