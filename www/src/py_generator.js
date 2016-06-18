@@ -336,13 +336,14 @@ $BRGeneratorDict.__next__ = function(self){
     
     for(var i=0;i<self.env.length;i++){
         eval('var $locals_'+self.env[i][0]+'=self.env[i][1]')
+        //console.log('restore', 'var $locals_'+self.env[i][0]+'=self.env[i][1]')
     }
     
     // Call the function _next to yield a value
     try{
         var res = self._next.apply(null, self.args)
     }catch(err){
-        var last_frame = $B.last($B.frames_stack)
+        //console.log(err, self._next+'')
         self._next = function(){
             var $locals = $B.vars[self.iter_id]
             // Must enter a frame with the correct local id, to balance the
@@ -358,7 +359,15 @@ $BRGeneratorDict.__next__ = function(self){
         // generators, so we must call it here to pop from frames stack
         $B.leave_frame(self.iter_id)
     }
-    if(res===undefined){throw StopIteration("")}
+    
+    if(res===undefined){
+        self._next = function(){
+            var $locals = $B.vars[self.iter_id]
+            $B.enter_frame([self.iter_id, $locals,self.env[0],{}])
+            throw StopIteration('iterator is exhausted')
+        }
+        throw StopIteration("")
+    }
 
     if(res[0].__class__==$GeneratorReturn){
         // The function may have ordinary "return" lines, in this case
@@ -557,7 +566,8 @@ $B.$BRgenerator = function(env, func_name, func, def_id){
     // env : list of namespaces where the generator function stands
     // func_name : function name
     // def_id : generator function identifier
-
+    
+    
     if(func.$def_node){
         var def_node = func.$def_node
         delete $B.modules[def_id]
@@ -570,8 +580,7 @@ $B.$BRgenerator = function(env, func_name, func, def_id){
     var def_ctx = def_node.context.tree[0]
     var counter = 0 // used to identify the function run for each next()
     
-    // Original function
-    //var func = env[0][1][func_name]
+    // environment : list of [block_name, block_obj] lists
     $B.generators = $B.generators || {}
     $B.$generators = $B.$generators || {}
 

@@ -2230,6 +2230,21 @@ function $DefCtx(context){
         // function, based on the original function
         if(this.type==='generator' && !this.declared){
 
+            var code = ['var env=[], module=$B.last($B.frames_stack)[2]',
+                'for(var i=$B.frames_stack.length-1; i>=0; i--){',
+                '    var frame = $B.frames_stack[i]',
+                '    if(frame[2]!=module){break}',
+                '    env.push([frame[0], frame[1]])',
+                '}',
+                'env.push([module, $B.last($B.frames_stack)[3]])',
+                //'console.log("generator env", env, $B.frames_stack)'
+            ]
+            for(var i=0;i<code.length;i++){
+                node.parent.insert(rank+offset,
+                    $NodeJS(code[i]))
+                offset++
+            }
+
             var sc = scope
             var env = [], pos=0
             while(sc && sc.id!=='__builtins__'){
@@ -2243,7 +2258,7 @@ function $DefCtx(context){
             }
             var env_string = '['+env.join(', ')+']'
 
-          js = '$B.$BRgenerator('+env_string+',"'+this.name+'", $locals_'+
+          js = '$B.$BRgenerator(env,"'+this.name+'", $locals_'+
               scope.id.replace(/\./g, '_')+'["'+this.name+'"],"'+this.id+'")'
           var gen_node = new $Node()
           gen_node.id = this.module
@@ -3302,6 +3317,7 @@ function $IdCtx(context,value){
                     if($B.bound[scope.id][val]){found.push(scope)}
                 }
             }else{
+                //console.log(val, scope.id, Object.keys($B.bound))
                 if($B.bound[scope.id][val]){found.push(scope)}
             }
             if(scope.parent_block){scope=scope.parent_block}
@@ -3747,7 +3763,8 @@ function $ListOrTupleCtx(context,real){
     this.to_js = function(){
         this.js_processed=true
         var scope = $get_scope(this)
-        var sc = scope
+        var sc = scope,
+            scope_id = scope.id.replace(/\//g, '_')
         var env = [], pos=0
         while(sc && sc.id!=='__builtins__'){
             if(sc===scope){
@@ -3758,8 +3775,7 @@ function $ListOrTupleCtx(context,real){
             sc = sc.parent_block
         }
         var env_string = '['+env.join(', ')+']'
-        var module = $get_module(this),
-            module_name = module.id.replace(/\./g,'_')
+        var module_name = $get_module(this).module
         
         switch(this.real) {
           case 'list':
@@ -3820,7 +3836,9 @@ function $ListOrTupleCtx(context,real){
 
             // Generator expression
             // Pass the module name and the id of current block
-            return '$B.$gen_expr('+env_string+','+res1+')'
+            
+            return $B.$gen_expr1(module_name, scope_id, items)
+            //return '$B.$gen_expr('+env_string+','+res1+')'
           case 'tuple':
             if(this.tree.length===1 && this.has_comma===undefined){
                 return this.tree[0].to_js()

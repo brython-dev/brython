@@ -261,8 +261,6 @@ $B.$gen_expr = function(env){
         $B.line_info)
     var $js = $root.to_js()
     
-    console.log($js)
-    
     eval($js)
     
     var $res1 = eval('$locals_ge'+$ix)["res"+$ix]
@@ -289,6 +287,45 @@ $B.$gen_expr = function(env){
     $B.clear_ns(genexpr_name)
     
     return $res2
+}
+
+$B.$gen_expr1 = function(module_name, parent_block_id, items){
+    // Called for generator expressions
+    // "env" is a list of [local_name, local_ns] lists for all the enclosing
+    // namespaces
+    
+    var $ix = $B.UUID()
+    var py = 'def ge'+$ix+'():\n'
+    var indent=1
+    for(var i=1, len = items.length; i < len;i++){
+        py += ' '.repeat(indent)
+        var item = items[i].replace(/\s+$/,'').replace(/\n/g, ' ')
+        py += item+':\n'
+        indent += 4
+    }
+    py+=' '.repeat(indent)
+    py += 'yield '+items[0]
+    
+    var genexpr_name = 'ge'+$ix
+    
+    var root = $B.py2js(py, module_name, genexpr_name, parent_block_id,
+        $B.line_info)
+    
+    var js = root.to_js()
+    var lines = js.split('\n')
+    
+    var header = 'for(var i=0;i<$B.frames_stack.length;i++){\n'+
+        '    var frame = $B.frames_stack[i];\n'+
+        '    eval("var $locals_"+frame[2].replace(/\\./g,"_")+" = frame[3]")\n'+
+        '}\n'
+    
+    lines.splice(2, 0, header)
+    
+    js = lines.join('\n')
+    js += '\nreturn $locals_'+genexpr_name+'["'+genexpr_name+'"]();\n'
+    js = '(function(){'+js+'})()\n'
+        
+    return js
 }
 
 $B.clear_ns = function(name){
@@ -358,9 +395,18 @@ $B.$check_def_local = function(name, value){
 $B.$check_def_free = function(name, value){
     // Check if value is not undefined
     if(value!==undefined){return value}
+    var res
+    for(var i=$B.frames_stack.length-1;i>=0;i--){
+        var frame = $B.frames_stack[i]
+        res = $B.frames_stack[i][1][name]
+        if(res!==undefined){return res}
+        res = $B.frames_stack[i][3][name]
+        if(res!==undefined){return res}
+    }
     throw _b_.NameError("free variable '"+name+
         "' referenced before assignment in enclosing scope")
 }
+
 
 // transform native JS types into Brython types
 $B.$JS2Py = function(src){

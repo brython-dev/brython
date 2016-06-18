@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-18 09:44:06.670078"
+__BRYTHON__.compiled_date="2016-06-18 17:45:29.494070"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1130,13 +1130,17 @@ var ret_node=new $Node()
 new $NodeJSCtx(ret_node,')();')
 node.parent.insert(rank+1,ret_node)
 var offset=2
-if(this.type==='generator' && !this.declared){var sc=scope
+if(this.type==='generator' && !this.declared){var code=['var env=[], module=$B.last($B.frames_stack)[2]','for(var i=$B.frames_stack.length-1; i>=0; i--){','    var frame = $B.frames_stack[i]','    if(frame[2]!=module){break}','    env.push([frame[0], frame[1]])','}','env.push([module, $B.last($B.frames_stack)[3]])',
+]
+for(var i=0;i<code.length;i++){node.parent.insert(rank+offset,$NodeJS(code[i]))
+offset++}
+var sc=scope
 var env=[],pos=0
 while(sc && sc.id!=='__builtins__'){var sc_id=sc.id.replace(/\./g,'_')
 if(sc===scope){env[pos++]='["'+sc_id+'",$locals]'}else{env[pos++]='["'+sc_id+'",$locals_'+sc_id+']'}
 sc=sc.parent_block}
 var env_string='['+env.join(', ')+']'
-js='$B.$BRgenerator('+env_string+',"'+this.name+'", $locals_'+
+js='$B.$BRgenerator(env,"'+this.name+'", $locals_'+
 scope.id.replace(/\./g,'_')+'["'+this.name+'"],"'+this.id+'")'
 var gen_node=new $Node()
 gen_node.id=this.module
@@ -1674,7 +1678,8 @@ var bound_before=$get_node(this).bound_before
 if(bound_before && !this.bound){if(bound_before.indexOf(val)>-1){found.push(scope)}
 else if(scope.C &&
 scope.C.tree[0].type=='def' &&
-scope.C.tree[0].env.indexOf(val)>-1){found.push(scope)}}else{if($B.bound[scope.id][val]){found.push(scope)}}}else{if($B.bound[scope.id][val]){found.push(scope)}}
+scope.C.tree[0].env.indexOf(val)>-1){found.push(scope)}}else{if($B.bound[scope.id][val]){found.push(scope)}}}else{
+if($B.bound[scope.id][val]){found.push(scope)}}
 if(scope.parent_block){scope=scope.parent_block}
 else{break}}
 this.found=found
@@ -1857,12 +1862,16 @@ for(var attr in item.ids()){_ids[attr]=true}}}
 return _ids}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this)
-var sc=scope
-var env=[],pos=0
-while(sc && sc.id!=='__builtins__'){if(sc===scope){env[pos++]='["'+sc.id+'",$locals]'}else{env[pos++]='["'+sc.id+'",$locals_'+sc.id.replace(/\./g,'_')+']'}
+var sc=scope,scope_id=scope.id.replace(/\//g, '_')
+        var env = [], pos=0
+        while(sc && sc.id!=='__builtins__'){
+            if(sc===scope){
+                env[pos++]='["'+sc.id+'",$locals]'
+            }else{
+                env[pos++]='["'+sc.id+'",$locals_'+sc.id.replace(/\./g,'_')+']'}
 sc=sc.parent_block}
 var env_string='['+env.join(', ')+']'
-var module=$get_module(this),module_name=module.id.replace(/\./g,'_')
+var module_name=$get_module(this).module
 switch(this.real){case 'list':
 return '$B.$list(['+$to_js(this.tree)+'])'
 case 'list_comp':
@@ -1898,7 +1907,7 @@ return $js
 case 'dict_or_set_comp':
 if(this.expression.length===1){return '$B.$gen_expr('+env_string+','+res1+')'}
 return '$B.$dict_comp('+env_string+','+res1+')'}
-return '$B.$gen_expr('+env_string+','+res1+')'
+return $B.$gen_expr1(module_name,scope_id,items)
 case 'tuple':
 if(this.tree.length===1 && this.has_comma===undefined){return this.tree[0].to_js()}
 return 'tuple(['+$to_js(this.tree)+'])'}}}
@@ -4757,6 +4766,29 @@ $res2.toString=function(){return 'ge object'}
 delete $B.modules[genexpr_name]
 $B.clear_ns(genexpr_name)
 return $res2}
+$B.$gen_expr1=function(module_name,parent_block_id,items){
+var $ix=$B.UUID()
+var py='def ge'+$ix+'():\n'
+var indent=1
+for(var i=1,len=items.length;i < len;i++){py +=' '.repeat(indent)
+var item=items[i].replace(/\s+$/,'').replace(/\n/g,' ')
+py +=item+':\n'
+indent +=4}
+py+=' '.repeat(indent)
+py +='yield '+items[0]
+var genexpr_name='ge'+$ix
+var root=$B.py2js(py,module_name,genexpr_name,parent_block_id,$B.line_info)
+var js=root.to_js()
+var lines=js.split('\n')
+var header='for(var i=0;i<$B.frames_stack.length;i++){\n'+
+'    var frame = $B.frames_stack[i];\n'+
+'    eval("var $locals_"+frame[2].replace(/\\./g,"_")+" = frame[3]")\n'+
+'}\n'
+lines.splice(2,0,header)
+js=lines.join('\n')
+js +='\nreturn $locals_'+genexpr_name+'["'+genexpr_name+'"]();\n'
+js='(function(){'+js+'})()\n'
+return js}
 $B.clear_ns=function(name){
 var keys=[],len=name.length
 for(var key in __BRYTHON__.modules){if(key.substr(0,len)==name && key!==name){keys.push(key)}}
@@ -4790,6 +4822,12 @@ throw _b_.UnboundLocalError("local variable '"+name+
 "' referenced before assignment")}
 $B.$check_def_free=function(name,value){
 if(value!==undefined){return value}
+var res
+for(var i=$B.frames_stack.length-1;i>=0;i--){var frame=$B.frames_stack[i]
+res=$B.frames_stack[i][1][name]
+if(res!==undefined){return res}
+res=$B.frames_stack[i][3][name]
+if(res!==undefined){return res}}
 throw _b_.NameError("free variable '"+name+
 "' referenced before assignment in enclosing scope")}
 $B.$JS2Py=function(src){if(typeof src==='number'){if(src%1===0)return src
@@ -10488,14 +10526,17 @@ self._next=$B.$generators[self.iter_id]}
 if(self.gi_running){throw _b_.ValueError("ValueError: generator already executing")}
 self.gi_running=true
 for(var i=0;i<self.env.length;i++){eval('var $locals_'+self.env[i][0]+'=self.env[i][1]')}
-try{var res=self._next.apply(null,self.args)}catch(err){var last_frame=$B.last($B.frames_stack)
+try{var res=self._next.apply(null,self.args)}catch(err){
 self._next=function(){var $locals=$B.vars[self.iter_id]
 $B.enter_frame([self.iter_id,$locals,self.env[0],{}])
 throw StopIteration('after exception')}
 clear_ns(self.iter_id)
 throw err}finally{self.gi_running=false
 $B.leave_frame(self.iter_id)}
-if(res===undefined){throw StopIteration("")}
+if(res===undefined){self._next=function(){var $locals=$B.vars[self.iter_id]
+$B.enter_frame([self.iter_id,$locals,self.env[0],{}])
+throw StopIteration('iterator is exhausted')}
+throw StopIteration("")}
 if(res[0].__class__==$GeneratorReturn){
 self._next=function(){throw StopIteration("after generator return")}
 clear_ns(self.iter_id)
