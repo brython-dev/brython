@@ -3652,18 +3652,29 @@ function $LambdaCtx(context){
         var src = $B.$py_src[module.id]
         
         var qesc = new RegExp('"',"g"), // to escape double quotes in arguments
-            args = src.substring(this.args_start,this.body_start).replace(qesc,'\\"'),
-            body = src.substring(this.body_start+1,this.body_end).replace(qesc,'\\"')
+            args = src.substring(this.args_start,this.body_start),
+            body = src.substring(this.body_start+1,this.body_end)
         body = body.replace(/\n/g,' ')
 
-        var scope = $get_scope(this), sc = scope, env = [], pos=0
-        while(sc && sc.id!=='__builtins__'){
-            env[pos++]='["'+sc.id+'",$locals_'+sc.id.replace(/\./g,'_')+']'
-            sc = sc.parent_block
-        }
-        var env_string = '['+env.join(', ')+']'
-
-        return '$B.$lambda('+env_string+',"'+args+'","'+body+'")'
+        var scope = $get_scope(this)
+        
+        var rand = $B.UUID(),
+            func_name = 'lambda_'+$B.lambda_magic+'_'+rand,
+            py = 'def '+func_name+'('+args+'):\n'
+        py += '    return '+body
+        
+        var lambda_name = 'lambda'+rand,
+            module_name = module.id.replace(/\./g, '_'),
+            scope_id = scope.id.replace(/\./g, '_')
+    
+        var js = $B.py2js(py, module_name, lambda_name, scope_id).to_js()
+        
+        js = '(function(){\n'+js+'\nreturn $locals.'+func_name+'\n})()'
+        
+        delete $B.modules[lambda_name]
+        $B.clear_ns(lambda_name)
+        
+        return js
     }
 }
 

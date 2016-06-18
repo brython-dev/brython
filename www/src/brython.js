@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-14 23:20:53.379542"
+__BRYTHON__.compiled_date="2016-06-18 09:44:06.670078"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1808,13 +1808,17 @@ this.to_js=function(){this.js_processed=true
 var module=$get_module(this)
 var src=$B.$py_src[module.id]
 var qesc=new RegExp('"',"g"),
-args=src.substring(this.args_start,this.body_start).replace(qesc,'\\"'),body=src.substring(this.body_start+1,this.body_end).replace(qesc,'\\"')
+args=src.substring(this.args_start,this.body_start),body=src.substring(this.body_start+1,this.body_end)
 body=body.replace(/\n/g,' ')
-var scope=$get_scope(this),sc=scope,env=[],pos=0
-while(sc && sc.id!=='__builtins__'){env[pos++]='["'+sc.id+'",$locals_'+sc.id.replace(/\./g,'_')+']'
-sc=sc.parent_block}
-var env_string='['+env.join(', ')+']'
-return '$B.$lambda('+env_string+',"'+args+'","'+body+'")'}}
+var scope=$get_scope(this)
+var rand=$B.UUID(),func_name='lambda_'+$B.lambda_magic+'_'+rand,py='def '+func_name+'('+args+'):\n'
+py +='    return '+body
+var lambda_name='lambda'+rand,module_name=module.id.replace(/\./g,'_'),scope_id=scope.id.replace(/\./g,'_')
+var js=$B.py2js(py,module_name,lambda_name,scope_id).to_js()
+js='(function(){\n'+js+'\nreturn $locals.'+func_name+'\n})()'
+delete $B.modules[lambda_name]
+$B.clear_ns(lambda_name)
+return js}}
 function $ListOrTupleCtx(C,real){
 this.type='list_or_tuple'
 this.start=$pos
@@ -4753,25 +4757,6 @@ $res2.toString=function(){return 'ge object'}
 delete $B.modules[genexpr_name]
 $B.clear_ns(genexpr_name)
 return $res2}
-$B.$lambda=function(env,args,body){
-var rand=$B.UUID()
-var $res='lambda_'+$B.lambda_magic+'_'+rand
-var $py='def '+$res+'('+args+'):\n'
-$py +='    return '+body
-for(var i=0;i<env.length;i++){var sc_id='$locals_'+env[i][0].replace(/\./g,'_')
-eval('var '+sc_id+'=env[i][1]')}
-var local_name=env[0][0]
-var module_env=env[env.length-1]
-var module_name=module_env[0]
-var lambda_name='lambda'+rand
-var $js=$B.py2js($py,module_name,lambda_name,local_name).to_js()
-eval($js)
-var $res=eval('$locals_'+lambda_name+'["'+$res+'"]')
-$res.__module__=module_name
-$res.__name__='<lambda>'
-delete $B.modules[lambda_name]
-$B.clear_ns(lambda_name)
-return $res}
 $B.clear_ns=function(name){
 var keys=[],len=name.length
 for(var key in __BRYTHON__.modules){if(key.substr(0,len)==name && key!==name){keys.push(key)}}
@@ -5588,6 +5573,9 @@ var NotImplemented={__class__ : _NotImplemented.$dict,__str__: function(){return
 function $not(obj){return !bool(obj)}
 function oct(x){return $builtin_base_convert_helper(x,8)}
 function ord(c){
+if(typeof c=='string'){if(c.length==1)return c.charCodeAt(0)
+throw _b_.TypeError('ord() expected a character, but string of length ' + 
+c.length + ' found')}
 switch($B.get_class(c)){case _b_.str.$dict:
 if(c.length==1)return c.charCodeAt(0)
 throw _b_.TypeError('ord() expected a character, but string of length ' + 
@@ -5658,7 +5646,7 @@ if(!isinstance(n,_b_.int)){throw _b_.TypeError(
 "'"+n.__class__+"' object cannot be interpreted as an integer")}
 var mult=Math.pow(10,n)
 return _b_.int.$dict.__truediv__(Number(Math.round(arg.valueOf()*mult)),mult)}
-function setattr(obj,attr,value){if(!isinstance(attr,_b_.str)){throw _b_.TypeError("setattr(): attribute name must be string")}
+function setattr(obj,attr,value){if(!(typeof attr=='string')){throw _b_.TypeError("setattr(): attribute name must be string")}
 switch(attr){case 'alert':
 case 'case':
 case 'catch':
@@ -5690,7 +5678,7 @@ if(obj.$dict.$methods && typeof value=='function'
 && value.__class__!==$B.$factory){
 obj.$dict.$methods[attr]=$B.make_method(attr,obj.$dict,value,value)
 return None}else{obj.$dict[attr]=value;return None}}
-var res=obj[attr],klass=$B.get_class(obj)
+var res=obj[attr],klass=obj.__class__ ||$B.get_class(obj)
 if(res===undefined && klass){var mro=klass.__mro__,_len=mro.length
 for(var i=0;i<_len;i++){res=mro[i][attr]
 if(res!==undefined)break}}
@@ -5700,10 +5688,10 @@ var __set__=getattr(res,'__set__',null)
 if(__set__ &&(typeof __set__=='function')){__set__.apply(res,[obj,value]);return None}}
 if(klass && klass.$slots && klass.$slots[attr]===undefined){throw _b_.AttributeError("'"+klass.__name__+"' object has no attribute'"+
 attr+"'")}
-var setattr=false
-if(klass!==undefined){for(var i=0,_len=klass.__mro__.length;i<_len;i++){setattr=klass.__mro__[i].__setattr__
-if(setattr){break}}}
-if(!setattr){obj[attr]=value}else{setattr(obj,attr,value)}
+var _setattr=false
+if(klass!==undefined){for(var i=0,_len=klass.__mro__.length;i<_len;i++){_setattr=klass.__mro__[i].__setattr__
+if(_setattr){break}}}
+if(!_setattr){obj[attr]=value}else{_setattr(obj,attr,value)}
 return None}
 function sorted(){var $=$B.args('sorted',1,{iterable:null},['iterable'],arguments,{},null,'kw')
 var _list=_b_.list(iter($.iterable)),args=[_list]

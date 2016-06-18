@@ -261,6 +261,8 @@ $B.$gen_expr = function(env){
         $B.line_info)
     var $js = $root.to_js()
     
+    console.log($js)
+    
     eval($js)
     
     var $res1 = eval('$locals_ge'+$ix)["res"+$ix]
@@ -287,44 +289,6 @@ $B.$gen_expr = function(env){
     $B.clear_ns(genexpr_name)
     
     return $res2
-}
-
-$B.$lambda = function(env,args,body){
-    // Called for anonymous functions (lambda)
-    // "env" is a list of [local_name, local_ns] lists for all the enclosing
-    // namespaces
-    // "args" are the arguments, "body" is the function body
-
-    var rand = $B.UUID()
-    var $res = 'lambda_'+$B.lambda_magic+'_'+rand
-    var $py = 'def '+$res+'('+args+'):\n'
-    $py += '    return '+body
-    
-    // Create the variables for enclosing namespaces, they may be referenced
-    // in the function
-    for(var i=0;i<env.length;i++){
-        var sc_id = '$locals_'+env[i][0].replace(/\./g,'_')
-        eval('var '+sc_id+'=env[i][1]')
-    }
-    var local_name = env[0][0]
-    var module_env = env[env.length-1]
-    var module_name = module_env[0]
-
-    var lambda_name = 'lambda'+rand
-    
-    var $js = $B.py2js($py,module_name,lambda_name,local_name).to_js()
-    
-    eval($js)
-    
-    var $res = eval('$locals_'+lambda_name+'["'+$res+'"]')
-
-    $res.__module__ = module_name
-    $res.__name__ = '<lambda>'
-    
-    delete $B.modules[lambda_name]
-    $B.clear_ns(lambda_name)
-    
-    return $res
 }
 
 $B.clear_ns = function(name){
