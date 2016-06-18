@@ -1024,6 +1024,11 @@ function oct(x) {return $builtin_base_convert_helper(x, 8)}
 function ord(c) {
     //return String.charCodeAt(c)  <= this returns an undefined function error
     // see http://msdn.microsoft.com/en-us/library/ie/hza4d04f(v=vs.94).aspx
+    if(typeof c=='string'){
+        if (c.length == 1) return c.charCodeAt(0)     // <= strobj.charCodeAt(index)
+        throw _b_.TypeError('ord() expected a character, but string of length ' + 
+            c.length + ' found')
+    }
     switch($B.get_class(c)) {
       case _b_.str.$dict:
         if (c.length == 1) return c.charCodeAt(0)     // <= strobj.charCodeAt(index)
@@ -1181,7 +1186,7 @@ function round(arg,n){
 
 function setattr(obj,attr,value){
 
-    if(!isinstance(attr,_b_.str)){
+    if(!(typeof attr=='string')){
         throw _b_.TypeError("setattr(): attribute name must be string")
     }
 
@@ -1227,7 +1232,8 @@ function setattr(obj,attr,value){
         }else{obj.$dict[attr]=value;return None}
     }
     
-    var res = obj[attr], klass=$B.get_class(obj)
+    var res = obj[attr], 
+        klass = obj.__class__ || $B.get_class(obj)
     if(res===undefined && klass){
         var mro = klass.__mro__, _len = mro.length
         for(var i=0;i<_len;i++){
@@ -1255,15 +1261,15 @@ function setattr(obj,attr,value){
     }
     
     // Search the __setattr__ method
-    var setattr=false
+    var _setattr=false
     if(klass!==undefined){
         for(var i=0, _len=klass.__mro__.length;i<_len;i++){
-            setattr = klass.__mro__[i].__setattr__
-            if(setattr){break}
+            _setattr = klass.__mro__[i].__setattr__
+            if(_setattr){break}
         }
     }
     
-    if(!setattr){obj[attr]=value}else{setattr(obj,attr,value)}
+    if(!_setattr){obj[attr]=value}else{_setattr(obj,attr,value)}
     return None
 }
 
