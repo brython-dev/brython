@@ -168,13 +168,12 @@ function clear(ns){
 
 $B.$list_comp = function(items){
     // Called for list comprehensions
-    //console.log('items',items.length)
     var ix = $B.UUID()
     var py = "x"+ix+"=[]\n", indent = 0
     for(var i=1, len = items.length; i < len;i++){
         py += ' '.repeat(indent)
         var item = items[i]
-        item = item.replace(/\s*$/, '')
+        item = item.replace(/\s*$/, '').replace(/\s+/g, ' ')
         py += item+':\n'
         indent += 4
     }

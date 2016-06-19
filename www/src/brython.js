@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-19 17:37:51.195325"
+__BRYTHON__.compiled_date="2016-06-19 17:49:33.460492"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4708,7 +4708,7 @@ var ix=$B.UUID()
 var py="x"+ix+"=[]\n",indent=0
 for(var i=1,len=items.length;i < len;i++){py +=' '.repeat(indent)
 var item=items[i]
-item=item.replace(/\s*$/,'')
+item=item.replace(/\s*$/,'').replace(/\s+/g,' ')
 py +=item+':\n'
 indent +=4}
 py +=' '.repeat(indent)
