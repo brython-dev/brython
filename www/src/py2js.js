@@ -3187,6 +3187,7 @@ function $GlobalCtx(context){
 
 function $IdCtx(context,value){
     // Class for identifiers (variable names)
+    
     this.type = 'id'
     this.toString = function(){return '(id) '+this.value+':'+(this.tree||'')}
     this.value = value
@@ -3249,6 +3250,15 @@ function $IdCtx(context,value){
     }
     
     this.to_js = function(arg){
+        
+        // Store the result in this.result
+        // For generator expressions, to_js() is called in $make_node and
+        // $B.bound has been deleted
+        
+        if(this.result!==undefined && this.scope.ntype=='generator'){
+            return this.result
+        }
+        
         this.js_processed=true
         var val = this.value
         
@@ -3289,7 +3299,9 @@ function $IdCtx(context,value){
         
         // Build the list of scopes where the variable name is bound
         while(1){
-            if($B.bound[scope.id]===undefined){console.log('name '+val+' undef '+scope.id)}
+            if($B.bound[scope.id]===undefined){
+                console.log('name '+val+' undef '+scope.id)
+            }
             if($B.type[scope.id]===undefined){console.log('name '+val+' type undef '+scope.id)}
             if($B._globals[scope.id]!==undefined &&
                 $B._globals[scope.id][val]!==undefined){
@@ -3298,9 +3310,11 @@ function $IdCtx(context,value){
                 // Else return a call to a function that searches the name in globals,
                 // and throws NameError if not found
                 if($B.bound[gs.id][val]!==undefined || this.bound){
-                    return global_ns+'["'+val+'"]'
+                    this.result = global_ns+'["'+val+'"]'
+                    return this.result
                 }else{
-                    return '$B.$global_search("'+val+'")'
+                    this.result = '$B.$global_search("'+val+'")'
+                    return this.result
                 }
                 found = [gs]
                 break
@@ -3323,6 +3337,9 @@ function $IdCtx(context,value){
                 }
             }else{
                 //console.log(val, scope.id, Object.keys($B.bound))
+                if($B.bound[scope.id] === undefined){
+                    console.log('no bound', scope.id)
+                }
                 if($B.bound[scope.id][val]){found.push(scope)}
             }
             if(scope.parent_block){scope=scope.parent_block}
@@ -3361,7 +3378,8 @@ function $IdCtx(context,value){
                     ((innermost.type!='def' || innermost.type!='generator') &&
                         innermost.context.tree[0].args.indexOf(val)==-1) &&
                     (nonlocs===undefined || nonlocs[val]===undefined)){
-                    return '$B.$local_search("'+val+'")'
+                    this.result = '$B.$local_search("'+val+'")'
+                    return this.result
                 }
             }
             if(found.length>1 && found[0].context){
@@ -3392,12 +3410,14 @@ function $IdCtx(context,value){
                             this.found = $B.bound[found[1].id][val]
                             res = ns1
                         }
-                        return res+'["'+val+'"]'
+                        this.result = res+'["'+val+'"]'
+                        return this.result
                     }else{
                         this.found = false
                         var res = ns0 + '["'+val+'"]!==undefined ? '
                         res += ns0 + '["'+val+'"] : '
-                        return res + ns1 + '["'+val+'"]'
+                        this.result = res + ns1 + '["'+val+'"]'
+                        return this.result
                     }
                 }
             }
@@ -3435,12 +3455,14 @@ function $IdCtx(context,value){
                                 // Cf issue #311
                                 if(found.length>1 && found[1].id == '__builtins__'){
                                     this.is_builtin = true
-                                    return '$B.builtins.'+val+$to_js(this.tree,'')
+                                    this.result = '$B.builtins.'+val+$to_js(this.tree,'')
+                                    return this.result
                                 }
                             }
                             // Call a function to return the value if it is defined
                             // in locals or globals, or throw a NameError
-                            return '$B.$search("'+val+'")'
+                            this.result = '$B.$search("'+val+'")'
+                            return this.result
                         }else{
                             if(scope.level<=2){
                                 // Name was bound in an instruction at indentation
@@ -3498,7 +3520,8 @@ function $IdCtx(context,value){
             }else{
                 val = scope_ns+'["'+val+'"]'
             }
-            return val+$to_js(this.tree,'')
+            this.result = val+$to_js(this.tree,'')
+            return this.result
         }else{
             // Name was not found in bound names
             // It may have been introduced in the globals namespace by an exec,
@@ -3512,7 +3535,8 @@ function $IdCtx(context,value){
             // else raise a NameError
             // Function $search is defined in py_utils.js
 
-            return '$B.$search("'+val+'")'
+            this.result = '$B.$search("'+val+'")'
+            return this.result
         }
     }
 }
@@ -3893,6 +3917,7 @@ function $NodeCtx(node){
     this.toString = function(){return 'node '+this.tree}
 
     this.to_js = function(){
+        if(this.js!==undefined){return this.js}
         this.js_processed=true
         if(this.tree.length>1){
             var new_node = new $Node()
@@ -3902,8 +3927,12 @@ function $NodeCtx(node){
             this.tree.pop()
             node.add(new_node)
         }
-        if(node.children.length==0){return $to_js(this.tree)+';'}
-        return $to_js(this.tree)
+        if(node.children.length==0){
+            this.js = $to_js(this.tree)+';'
+        }else{
+            this.js = $to_js(this.tree)
+        }
+        return this.js
     }
 }
 

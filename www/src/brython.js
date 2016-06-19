@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-19 17:49:33.460492"
+__BRYTHON__.compiled_date="2016-06-19 19:24:39.228843"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1654,7 +1654,9 @@ while(_ctx){if(_ctx.type=='list_or_tuple' && _ctx.is_comp())return
 _ctx=_ctx.parent}
 if(C.type=='expr' && C.parent.type=='comp_if'){
 return}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=[value]}else if(scope.globals.indexOf(value)==-1){scope.globals.push(value)}}}
-this.to_js=function(arg){this.js_processed=true
+this.to_js=function(arg){
+if(this.result!==undefined && this.scope.ntype=='generator'){return this.result}
+this.js_processed=true
 var val=this.value
 var is_local=$B.bound[this.scope.id][val]!==undefined
 var bound_before=$get_node(this).bound_before
@@ -1672,7 +1674,9 @@ while(1){if($B.bound[scope.id]===undefined){console.log('name '+val+' undef '+sc
 if($B.type[scope.id]===undefined){console.log('name '+val+' type undef '+scope.id)}
 if($B._globals[scope.id]!==undefined &&
 $B._globals[scope.id][val]!==undefined){
-if($B.bound[gs.id][val]!==undefined ||this.bound){return global_ns+'["'+val+'"]'}else{return '$B.$global_search("'+val+'")'}
+if($B.bound[gs.id][val]!==undefined ||this.bound){this.result=global_ns+'["'+val+'"]'
+return this.result}else{this.result='$B.$global_search("'+val+'")'
+return this.result}
 found=[gs]
 break}
 if(scope===innermost){
@@ -1681,6 +1685,7 @@ if(bound_before && !this.bound){if(bound_before.indexOf(val)>-1){found.push(scop
 else if(scope.C &&
 scope.C.tree[0].type=='def' &&
 scope.C.tree[0].env.indexOf(val)>-1){found.push(scope)}}else{if($B.bound[scope.id][val]){found.push(scope)}}}else{
+if($B.bound[scope.id]===undefined){console.log('no bound',scope.id)}
 if($B.bound[scope.id][val]){found.push(scope)}}
 if(scope.parent_block){scope=scope.parent_block}
 else{break}}
@@ -1693,15 +1698,18 @@ if(!this.bound && found[0].C && found[0]===innermost
 if(locs[val]===undefined && 
 ((innermost.type!='def' ||innermost.type!='generator')&&
 innermost.C.tree[0].args.indexOf(val)==-1)&&
-(nonlocs===undefined ||nonlocs[val]===undefined)){return '$B.$local_search("'+val+'")'}}
+(nonlocs===undefined ||nonlocs[val]===undefined)){this.result='$B.$local_search("'+val+'")'
+return this.result}}
 if(found.length>1 && found[0].C){if(found[0].C.tree[0].type=='class' && !this.bound){var ns0='$locals_'+found[0].id.replace(/\./g,'_'),ns1='$locals_'+found[1].id.replace(/\./g,'_'),res
 if(bound_before){if(bound_before.indexOf(val)>-1){this.found=$B.bound[found[0].id][val]
 res=ns0}else{this.found=$B.bound[found[1].id][val]
 res=ns1}
-return res+'["'+val+'"]'}else{this.found=false
+this.result=res+'["'+val+'"]'
+return this.result}else{this.found=false
 var res=ns0 + '["'+val+'"]!==undefined ? '
 res +=ns0 + '["'+val+'"] : '
-return res + ns1 + '["'+val+'"]'}}}
+this.result=res + ns1 + '["'+val+'"]'
+return this.result}}}
 var scope=found[0]
 this.found=$B.bound[scope.id][val]
 var scope_ns='$locals_'+scope.id.replace(/\./g,'_')
@@ -1714,8 +1722,10 @@ if(this.bound ||this.augm_assign){
 val=scope_ns+'["'+val+'"]'}else{if(scope===innermost && this.env[val]===undefined){var locs=$get_node(this).locals ||{}
 if(locs[val]===undefined){
 if(found.length>1 && found[1].id=='__builtins__'){this.is_builtin=true
-return '$B.builtins.'+val+$to_js(this.tree,'')}}
-return '$B.$search("'+val+'")'}else{if(scope.level<=2){
+this.result='$B.builtins.'+val+$to_js(this.tree,'')
+return this.result}}
+this.result='$B.$search("'+val+'")'
+return this.result}else{if(scope.level<=2){
 val=scope_ns+'["'+val+'"]'}else{
 val='$B.$check_def("'+val+'",'+scope_ns+'["'+val+'"])'}}}}else{val=scope_ns+'["'+val+'"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns+'["'+val+'"]'}else if(!this.bound && !this.augm_assign){if(scope.level<=3){
 val='$locals["'+val+'"]'}else{
@@ -1726,9 +1736,11 @@ sc=innermost
 while(sc!==scope){up++;sc=sc.parent_block}
 var scope_name="$B.frames_stack[$B.frames_stack.length-1-"+up+"][1]"
 val='$B.$check_def_free("'+val+'",'+scope_name+'["'+val+'"])'}else{val='$B.$check_def_free("'+val+'",'+scope_ns+'["'+val+'"])'}}else{val=scope_ns+'["'+val+'"]'}
-return val+$to_js(this.tree,'')}else{
+this.result=val+$to_js(this.tree,'')
+return this.result}else{
 this.unknown_binding=true
-return '$B.$search("'+val+'")'}}}
+this.result='$B.$search("'+val+'")'
+return this.result}}}
 function $ImaginaryCtx(C,value){
 this.type='imaginary'
 this.value=value
@@ -1933,15 +1945,16 @@ tree_node=tree_node.parent}
 if(scope==null){scope=tree_node.parent ||tree_node }
 this.node.locals=clone($B.bound[scope.id])
 this.toString=function(){return 'node '+this.tree}
-this.to_js=function(){this.js_processed=true
+this.to_js=function(){if(this.js!==undefined){return this.js}
+this.js_processed=true
 if(this.tree.length>1){var new_node=new $Node()
 var ctx=new $NodeCtx(new_node)
 ctx.tree=[this.tree[1]]
 new_node.indent=node.indent+4
 this.tree.pop()
 node.add(new_node)}
-if(node.children.length==0){return $to_js(this.tree)+';'}
-return $to_js(this.tree)}}
+if(node.children.length==0){this.js=$to_js(this.tree)+';'}else{this.js=$to_js(this.tree)}
+return this.js}}
 function $NodeJS(js){var node=new $Node()
 new $NodeJSCtx(node,js)
 return node}
@@ -10383,7 +10396,7 @@ $B.win=win})(__BRYTHON__)
 var _b_=$B.builtins
 eval($B.InjectBuiltins())
 $B.make_node=function(top_node,node){
-var ctx_js=node.C.to_js()
+if(node.C.$genjs){var ctx_js=node.C.$genjs}else{var ctx_js=node.C.$genjs=node.C.to_js()}
 var is_cond=false,is_except=false,is_else=false
 if(node.locals_def){
 var iter_name=top_node.iter_id

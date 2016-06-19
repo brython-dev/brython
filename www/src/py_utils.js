@@ -231,7 +231,7 @@ $B.$gen_expr = function(env){
     // Called for generator expressions
     // "env" is a list of [local_name, local_ns] lists for all the enclosing
     // namespaces
-
+    
     var $ix = $B.UUID()
     var $res = 'res'+$ix
     var $py = $res+"=[]\n"
@@ -323,7 +323,7 @@ $B.$gen_expr1 = function(module_name, parent_block_id, items, line_num){
     js = lines.join('\n')
     js += '\nreturn $locals_'+genexpr_name+'["'+genexpr_name+'"]();\n'
     js = '(function(){'+js+'})()\n'
-        
+    
     return js
 }
 

@@ -28,7 +28,12 @@ $B.make_node = function(top_node, node){
     // for the modified function that will return iterators
     // top_node is the root node of the modified function
 
-    var ctx_js = node.context.to_js()
+    // cache context.to_js
+    if(node.context.$genjs){
+        var ctx_js = node.context.$genjs
+    }else{
+        var ctx_js = node.context.$genjs = node.context.to_js()
+    }
     var is_cond = false, is_except = false,is_else=false
     
     if(node.locals_def){
@@ -566,7 +571,6 @@ $B.$BRgenerator = function(env, func_name, func, def_id){
     // env : list of namespaces where the generator function stands
     // func_name : function name
     // def_id : generator function identifier
-    
     
     if(func.$def_node){
         var def_node = func.$def_node
