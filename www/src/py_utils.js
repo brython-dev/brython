@@ -180,7 +180,7 @@ $B.$list_comp = function(items){
     }
     py += ' '.repeat(indent)
     py += 'x'+ix+'.append('+items[0]+')\n'
-        
+    
     return [py,ix]
 }
 
@@ -289,7 +289,7 @@ $B.$gen_expr = function(env){
     return $res2
 }
 
-$B.$gen_expr1 = function(module_name, parent_block_id, items){
+$B.$gen_expr1 = function(module_name, parent_block_id, items, line_num){
     // Called for generator expressions
     // "env" is a list of [local_name, local_ns] lists for all the enclosing
     // namespaces
@@ -309,7 +309,7 @@ $B.$gen_expr1 = function(module_name, parent_block_id, items){
     var genexpr_name = 'ge'+$ix
     
     var root = $B.py2js(py, module_name, genexpr_name, parent_block_id,
-        $B.line_info)
+        line_num)
     
     var js = root.to_js()
     var lines = js.split('\n')
@@ -614,54 +614,6 @@ for(var i=0, _len_i = augm_ops.length; i < _len_i;i++){
     var augm_code = augm_item_src.replace(/add/g,augm_ops[i][1])
     augm_code = augm_code.replace(/\+=/g,augm_ops[i][0])
     eval('$B.augm_item_'+augm_ops[i][1]+'='+augm_code)
-}
-
-// exceptions
-$B.$raise= function(){
-    // Used for "raise" without specifying an exception
-    // If there is an exception in the stack, use it, else throw a simple Exception
-    var es = $B.current_exception
-    if(es!==undefined) throw es
-    throw _b_.RuntimeError('No active exception to reraise')
-}
-
-$B.$syntax_err_line = function(exc,module,pos) {
-    // map position to line number
-    var pos2line = {}
-    var lnum=1
-    var src = $B.$py_src[module]
-    if(src===undefined){console.log('no src for', module)}
-    var line_pos = {1:0}
-    for(var i=0, _len_i = src.length; i < _len_i;i++){
-        pos2line[i]=lnum
-        if(src.charAt(i)=='\n'){line_pos[++lnum]=i}
-    }
-    var line_num = pos2line[pos]
-    exc.$line_info = line_num+','+module
-
-    var lines = src.split('\n')
-    var line = lines[line_num-1]
-    var lpos = pos-line_pos[line_num]
-    var len=line.length
-    line=line.replace(/^\s*/,'')
-    lpos-=len-line.length
-    //while(line && line.charAt(0)==' '){
-    //  line=line.substr(1)
-    //  lpos--
-    //}
-    exc.args = _b_.tuple([$B.$getitem(exc.args,0), module, line_num, lpos, line])
-}
-
-$B.$SyntaxError = function(module,msg,pos) {
-    var exc = _b_.SyntaxError(msg)
-    $B.$syntax_err_line(exc,module,pos)
-    throw exc
-}
-
-$B.$IndentationError = function(module,msg,pos) {
-    var exc = _b_.IndentationError(msg)
-    $B.$syntax_err_line(exc,module,pos)
-    throw exc
 }
 
 // function used if a function call has an argument **kw

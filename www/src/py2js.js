@@ -103,21 +103,26 @@ Function called in case of SyntaxError
 */
 
 function $_SyntaxError(context,msg,indent){
-    console.log('syntax error, context '+context,' msg ',msg)
+    //console.log('syntax error, context '+context,' msg ',msg)
     var ctx_node = context
     while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
-    var tree_node = ctx_node.node
+    var tree_node = ctx_node.node,
+        root = tree_node
+    while(root.parent!==undefined){root=root.parent}
     var module = tree_node.module
     var line_num = tree_node.line_num
+    if(root.line_info){
+        line_num = root.line_info
+    }
     if(indent!==undefined){line_num++}
     if(indent===undefined){
         if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],$pos)}
         if(msg==="Triple string end not found"){
             // add an extra argument : used in interactive mode to
             // prompt for the rest of the triple-quoted string
-            $B.$SyntaxError(module,'invalid syntax : triple string end not found',$pos)
+            $B.$SyntaxError(module,'invalid syntax : triple string end not found',$pos, line_num)
         }
-        $B.$SyntaxError(module,'invalid syntax',$pos)
+        $B.$SyntaxError(module,'invalid syntax',$pos, line_num)
     }else{throw $B.$IndentationError(module,msg,$pos)}
 }
 
@@ -3804,28 +3809,31 @@ function $ListOrTupleCtx(context,real){
                 }
                 res1.push('['+res2.join(',')+']')
             }
+            
+            var line_num = $get_node(this).line_num
 
             switch(this.real) {
               case 'list_comp':
                 var local_name = scope.id.replace(/\./g,'_')
                 var lc = $B.$list_comp(items), // defined in py_utils.js
-                    $py = lc[0], ix=lc[1],
+                    py = lc[0], ix=lc[1],
                     listcomp_name = 'lc'+ix,
                     local_name = scope.id.replace(/\./g,'_')
-                var $save_pos = $pos
-                var $root = $B.py2js($py,module_name,listcomp_name,local_name,
-                    $B.line_info)
-                
-                $pos = $save_pos
-                
-                var $js = $root.to_js()
+                var save_pos = $pos
+                                
+                var root = $B.py2js(py,module_name,listcomp_name,local_name,
+                    line_num)
+
+                $pos = save_pos
+                    
+                var js = root.to_js()
                 
                 delete $B.modules[listcomp_name]
                 $B.clear_ns(listcomp_name)
 
-                $js += 'return $locals_lc'+ix+'["x'+ix+'"]'
-                $js = '(function(){'+$js+'})()'
-                return $js
+                js += 'return $locals_lc'+ix+'["x'+ix+'"]'
+                js = '(function(){'+js+'})()'
+                return js
                 
               case 'dict_or_set_comp':
                 if(this.expression.length===1){
@@ -3837,7 +3845,7 @@ function $ListOrTupleCtx(context,real){
             // Generator expression
             // Pass the module name and the id of current block
             
-            return $B.$gen_expr1(module_name, scope_id, items)
+            return $B.$gen_expr1(module_name, scope_id, items, line_num)
             //return '$B.$gen_expr('+env_string+','+res1+')'
           case 'tuple':
             if(this.tree.length===1 && this.has_comma===undefined){
@@ -6912,7 +6920,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     root.module = module
     root.id = locals_id
     $B.modules[root.id] = root
-    //$B.$py_src[locals_id] = src
+    
     if(locals_id==parent_block_id){
         root.parent_block = $B.modules[parent_block_id].parent_block || $B.modules['__builtins__']
     }else{

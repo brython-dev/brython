@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,7,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.7"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-18 17:45:29.494070"
+__BRYTHON__.compiled_date="2016-06-19 17:37:51.195325"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -90,17 +90,19 @@ for(var $j=0;$j<_tmp.length;$j++){$op_weight[_tmp[$j]]=$weight}
 $weight++}
 var $loop_num=0
 $B.func_magic=Math.random().toString(36).substr(2,8)
-function $_SyntaxError(C,msg,indent){console.log('syntax error, C '+C,' msg ',msg)
+function $_SyntaxError(C,msg,indent){
 var ctx_node=C
 while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
-var tree_node=ctx_node.node
+var tree_node=ctx_node.node,root=tree_node
+while(root.parent!==undefined){root=root.parent}
 var module=tree_node.module
 var line_num=tree_node.line_num
+if(root.line_info){line_num=root.line_info}
 if(indent!==undefined){line_num++}
 if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],$pos)}
 if(msg==="Triple string end not found"){
-$B.$SyntaxError(module,'invalid syntax : triple string end not found',$pos)}
-$B.$SyntaxError(module,'invalid syntax',$pos)}else{throw $B.$IndentationError(module,msg,$pos)}}
+$B.$SyntaxError(module,'invalid syntax : triple string end not found',$pos,line_num)}
+$B.$SyntaxError(module,'invalid syntax',$pos,line_num)}else{throw $B.$IndentationError(module,msg,$pos)}}
 function $Node(type){this.type=type
 this.children=[]
 this.yield_atoms=[]
@@ -1891,23 +1893,24 @@ txt=txt.replace(/\\/g,'\\\\')
 txt=txt.replace(qesc,'\\"')
 res2[pos++]='"'+txt+'"'}
 res1.push('['+res2.join(',')+']')}
+var line_num=$get_node(this).line_num
 switch(this.real){case 'list_comp':
 var local_name=scope.id.replace(/\./g,'_')
 var lc=$B.$list_comp(items),
-$py=lc[0],ix=lc[1],listcomp_name='lc'+ix,local_name=scope.id.replace(/\./g,'_')
-var $save_pos=$pos
-var $root=$B.py2js($py,module_name,listcomp_name,local_name,$B.line_info)
-$pos=$save_pos
-var $js=$root.to_js()
+py=lc[0],ix=lc[1],listcomp_name='lc'+ix,local_name=scope.id.replace(/\./g,'_')
+var save_pos=$pos
+var root=$B.py2js(py,module_name,listcomp_name,local_name,line_num)
+$pos=save_pos
+var js=root.to_js()
 delete $B.modules[listcomp_name]
 $B.clear_ns(listcomp_name)
-$js +='return $locals_lc'+ix+'["x'+ix+'"]'
-$js='(function(){'+$js+'})()'
-return $js
+js +='return $locals_lc'+ix+'["x'+ix+'"]'
+js='(function(){'+js+'})()'
+return js
 case 'dict_or_set_comp':
 if(this.expression.length===1){return '$B.$gen_expr('+env_string+','+res1+')'}
 return '$B.$dict_comp('+env_string+','+res1+')'}
-return $B.$gen_expr1(module_name,scope_id,items)
+return $B.$gen_expr1(module_name,scope_id,items,line_num)
 case 'tuple':
 if(this.tree.length===1 && this.has_comma===undefined){return this.tree[0].to_js()}
 return 'tuple(['+$to_js(this.tree)+'])'}}}
@@ -4766,7 +4769,7 @@ $res2.toString=function(){return 'ge object'}
 delete $B.modules[genexpr_name]
 $B.clear_ns(genexpr_name)
 return $res2}
-$B.$gen_expr1=function(module_name,parent_block_id,items){
+$B.$gen_expr1=function(module_name,parent_block_id,items,line_num){
 var $ix=$B.UUID()
 var py='def ge'+$ix+'():\n'
 var indent=1
@@ -4777,7 +4780,7 @@ indent +=4}
 py+=' '.repeat(indent)
 py +='yield '+items[0]
 var genexpr_name='ge'+$ix
-var root=$B.py2js(py,module_name,genexpr_name,parent_block_id,$B.line_info)
+var root=$B.py2js(py,module_name,genexpr_name,parent_block_id,line_num)
 var js=root.to_js()
 var lines=js.split('\n')
 var header='for(var i=0;i<$B.frames_stack.length;i++){\n'+
@@ -4928,33 +4931,6 @@ var augm_ops=[['-=','sub'],['*=','mul']]
 for(var i=0,_len_i=augm_ops.length;i < _len_i;i++){var augm_code=augm_item_src.replace(/add/g,augm_ops[i][1])
 augm_code=augm_code.replace(/\+=/g,augm_ops[i][0])
 eval('$B.augm_item_'+augm_ops[i][1]+'='+augm_code)}
-$B.$raise=function(){
-var es=$B.current_exception
-if(es!==undefined)throw es
-throw _b_.RuntimeError('No active exception to reraise')}
-$B.$syntax_err_line=function(exc,module,pos){
-var pos2line={}
-var lnum=1
-var src=$B.$py_src[module]
-if(src===undefined){console.log('no src for',module)}
-var line_pos={1:0}
-for(var i=0,_len_i=src.length;i < _len_i;i++){pos2line[i]=lnum
-if(src.charAt(i)=='\n'){line_pos[++lnum]=i}}
-var line_num=pos2line[pos]
-exc.$line_info=line_num+','+module
-var lines=src.split('\n')
-var line=lines[line_num-1]
-var lpos=pos-line_pos[line_num]
-var len=line.length
-line=line.replace(/^\s*/,'')
-lpos-=len-line.length
-exc.args=_b_.tuple([$B.$getitem(exc.args,0),module,line_num,lpos,line])}
-$B.$SyntaxError=function(module,msg,pos){var exc=_b_.SyntaxError(msg)
-$B.$syntax_err_line(exc,module,pos)
-throw exc}
-$B.$IndentationError=function(module,msg,pos){var exc=_b_.IndentationError(msg)
-$B.$syntax_err_line(exc,module,pos)
-throw exc}
 $B.extend=function(fname,arg,mapping){var it=_b_.iter(mapping),getter=_b_.getattr(mapping,'__getitem__')
 while(true){try{var key=_b_.next(it)
 if(typeof key!=='string'){throw _b_.TypeError(fname+"() keywords must be strings")}
@@ -5985,6 +5961,33 @@ _b_['open']=$url_open
 _b_['print']=$print
 _b_['$$super']=$$super})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
+$B.$raise=function(){
+var es=$B.current_exception
+if(es!==undefined)throw es
+throw _b_.RuntimeError('No active exception to reraise')}
+$B.$syntax_err_line=function(exc,module,pos,line_num){
+var pos2line={}
+var lnum=1
+var src=$B.$py_src[module]
+if(src===undefined){console.log('no src for',module)}
+var line_pos={1:0}
+for(var i=0,_len_i=src.length;i < _len_i;i++){pos2line[i]=lnum
+if(src.charAt(i)=='\n'){line_pos[++lnum]=i}}
+if(line_num===undefined){line_num=pos2line[pos]}
+exc.$line_info=line_num+','+module
+var lines=src.split('\n')
+var line=lines[line_num-1]
+var lpos=pos-line_pos[line_num]
+var len=line.length
+line=line.replace(/^\s*/,'')
+lpos-=len-line.length
+exc.args=_b_.tuple([$B.$getitem(exc.args,0),module,line_num,lpos,line])}
+$B.$SyntaxError=function(module,msg,pos,line_num){var exc=_b_.SyntaxError(msg)
+$B.$syntax_err_line(exc,module,pos,line_num)
+throw exc}
+$B.$IndentationError=function(module,msg,pos){var exc=_b_.IndentationError(msg)
+$B.$syntax_err_line(exc,module,pos)
+throw exc}
 var $TracebackDict={__class__:$B.$type,__name__:'traceback'}
 $TracebackDict.__getattribute__=function(self,attr){if(self.stack.length==0){alert('no stack',attr)}
 var last_frame=$B.last(self.stack)
