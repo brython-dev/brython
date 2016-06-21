@@ -75,6 +75,22 @@ or the current development version :
 </script>
 ```
 
+The previous code will allow you to use raw python code but imports will fail as they are implemented using ajax calls and it will not work using http://rawgit.com/. If you want to test your projects using a standalone javascript file with the [available stdlib](https://github.com/brython-dev/brython/tree/master/www/src/Lib) included (so import would work) you should use:
+
+```xml
+<script type="text/javascript"
+    src="https://cdn.rawgit.com/brython-dev/brython/3.2.2/www/src/brython_dist.js">
+</script>
+```
+
+or the current development version :
+
+```xml
+<script type="text/javascript" 
+    src="https://cdn.rawgit.com/brython-dev/brython/master/www/src/brython_dist.js">
+</script>
+```
+
 Local install
 -------------
 You can also install the development environment locally, either by cloning the
