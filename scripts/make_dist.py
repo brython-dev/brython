@@ -20,12 +20,23 @@ if(sys.version_info[0]!=3):
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
-implementation = [3, 2, 7, 'alpha', 0]
+implementation = [3, 2, 7, 'final', 0]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
 if implementation[3] == 'rc':
     vname += 'rc%s' % implementation[4]
+
+# update package.json
+package_file = os.path.join(pdir, 'package.json')
+with open(package_file, encoding="utf-8") as fobj:
+    package_info = fobj.read()
+    package_info = re.sub('"version": "(.*)"', 
+        '"version": "{}"'.format(vname),
+        package_info)
+
+with open(package_file, "w", encoding="utf-8") as fobj:
+    fobj.write(package_info)
 
 abs_path = lambda _pth: os.path.join(os.path.dirname(os.getcwd()), 'www', 'src', _pth)
 now = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
@@ -106,3 +117,4 @@ make_VFS.process(os.path.join(pdir, 'www', 'src', 'py_VFS.js'))
 with open(os.path.join(pdir, 'www', 'src', 'brython_dist.js'), 'w') as distrib_file:
     distrib_file.write(open(os.path.join(pdir, 'www', 'src', 'brython.js')).read())
     distrib_file.write(open(os.path.join(pdir, 'www', 'src', 'py_VFS.js')).read())
+
