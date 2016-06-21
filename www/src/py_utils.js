@@ -114,7 +114,6 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     
 }
 
-
 $B.get_class = function(obj){
     // generally we get the attribute __class__ of an object by obj.__class__
     // but Javascript builtins used by Brython (functions, numbers, strings...)
