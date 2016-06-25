@@ -182,6 +182,8 @@ $ListDict.__gt__ = function(self,other){
     return false
 }
 
+$ListDict.__hash__ = None
+
 $ListDict.__iadd__ = function() {
     var $=$B.args('__iadd__',2,{self:null,x:null},['self','x'],
         arguments,{},null,null)

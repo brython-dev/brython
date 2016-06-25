@@ -892,6 +892,10 @@ assert False == False
 assert not (True == None)
 assert True != None
 
+# issue 451
+import copy
+assert copy.copy({1}) == {1}
+assert copy.copy({1:2}) == {1:2}
 
 # ==========================================
 # Finally, report that all tests have passed

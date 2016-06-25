@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-25 10:23:35.211811"
+__BRYTHON__.compiled_date="2016-06-25 15:04:34.831127"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5400,8 +5400,9 @@ case '__subclasses__':
 if(klass===$B.$factory){var subclasses=obj.$dict.$subclasses ||[]
 return function(){return subclasses}}
 break}
-if(typeof obj=='function'){if(attr !==undefined && obj[attr]!==undefined){if(attr=='__module__'){
-return obj[attr]}}}
+if(typeof obj=='function'){var value=obj.__class__===$B.$factory ? obj.$dict[attr]: obj[attr]
+if(value !==undefined){if(attr=='__module__' ||attr=='__hash__'){
+return value}}}
 if(klass.$native){if(klass[attr]===undefined){var object_attr=_b_.object.$dict[attr]
 if(object_attr!==undefined){klass[attr]=object_attr}
 else{if(_default===undefined){attr_error(attr,klass.__name__)}
@@ -5446,6 +5447,7 @@ if(obj.__hashvalue__ !==undefined)return obj.__hashvalue__
 if(isinstance(obj,_b_.int))return obj.valueOf()
 if(isinstance(obj,bool))return _b_.int(obj)
 if(obj.__hash__ !==undefined){return obj.__hashvalue__=obj.__hash__()}
+if(obj.__class__===$B.$factory){return obj.__hashvalue__=$B.$py_next_hash--}
 var hashfunc=getattr(obj,'__hash__',_b_.None)
 if(hashfunc==_b_.None)return $B.$py_next_hash--
 if(hashfunc.$infos===undefined){return obj.__hashvalue__=hashfunc()}
@@ -8291,6 +8293,7 @@ while(i<self.length){if(i>=other.length)return true
 if(getattr(self[i],'__eq__')(other[i])){i++}
 else return(getattr(self[i],'__gt__')(other[i]))}
 return false}
+$ListDict.__hash__=None
 $ListDict.__iadd__=function(){var $=$B.args('__iadd__',2,{self:null,x:null},['self','x'],arguments,{},null,null)
 var x=list(iter($.x))
 for(var i=0;i < x.length;i++){$.self.push(x[i])}
@@ -9364,7 +9367,7 @@ if(self.$string_dict[arg]!==undefined)return self.$string_dict[arg]
 break
 case 'number':
 if(self.$numeric_dict[arg]!==undefined)return self.$numeric_dict[arg]}
-var _key=_b_.getattr(arg,'__hash__')(),_eq=_b_.getattr(arg,'__eq__')
+var _key=_b_.hash(arg),_eq=_b_.getattr(arg,'__eq__')
 var sk=self.$str_hash[_key]
 if(sk!==undefined && _eq(sk)){return self.$string_dict[sk]}
 if(self.$numeric_dict[_key]!==undefined && _eq(_key)){return self.$numeric_dict[_key]}
@@ -9375,8 +9378,7 @@ return self.$object_dict[_key][1]}
 if(self.__class__!==$DictDict){try{var missing_method=getattr(self.__class__.$factory,'__missing__')
 return missing_method(self,arg)}catch(err){}}
 throw KeyError(_b_.str(arg))}
-$DictDict.__hash__=function(self){if(self===undefined){return $DictDict.__hashvalue__ ||$B.$py_next_hash-- }
-throw _b_.TypeError("unhashable type: 'dict'");}
+$DictDict.__hash__=None
 $DictDict.__init__=function(self){var args=[],pos=0
 for(var i=1;i<arguments.length;i++){args[pos++]=arguments[i]}
 $DictDict.clear(self)

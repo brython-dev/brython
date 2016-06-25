@@ -226,6 +226,7 @@ $DictDict.__getitem__ = function(){
         return self.$jsobj[arg]
     }
     
+    
     switch(typeof arg) {
       case 'string':
         if (self.$string_dict[arg] !== undefined) return self.$string_dict[arg]
@@ -236,7 +237,7 @@ $DictDict.__getitem__ = function(){
 
     // since the key is more complex use 'default' method of getting item
 
-    var _key = _b_.getattr(arg, '__hash__')(),
+    var _key = _b_.hash(arg),
         _eq = _b_.getattr(arg, '__eq__')
 
     var sk = self.$str_hash[_key]
@@ -263,12 +264,7 @@ $DictDict.__getitem__ = function(){
     throw KeyError(_b_.str(arg))
 }
 
-$DictDict.__hash__ = function(self) {
-    if (self === undefined) {
-       return $DictDict.__hashvalue__ || $B.$py_next_hash--  // for hash of dict type (not instance of dict)
-    }
-    throw _b_.TypeError("unhashable type: 'dict'");
-}
+$DictDict.__hash__ = None
 
 $DictDict.__init__ = function(self){
     var args = [], pos=0

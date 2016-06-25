@@ -545,9 +545,10 @@ function getattr(obj,attr,_default){
     }//switch
 
     if(typeof obj == 'function') {
-      if(attr !== undefined && obj[attr] !== undefined) {
-        if (attr == '__module__') { // put other attrs here too..
-          return obj[attr]
+      var value = obj.__class__ === $B.$factory ? obj.$dict[attr] : obj[attr]
+      if(value !== undefined) {
+        if (attr == '__module__' || attr =='__hash__') { // put other attrs here too..
+          return value
         } 
       }
     }
@@ -653,6 +654,9 @@ function hash(obj){
     if (isinstance(obj, bool)) return _b_.int(obj)
     if (obj.__hash__ !== undefined) {
        return obj.__hashvalue__=obj.__hash__()
+    }
+    if(obj.__class__===$B.$factory){
+        return obj.__hashvalue__ = $B.$py_next_hash--
     }
     var hashfunc = getattr(obj, '__hash__', _b_.None)
 
