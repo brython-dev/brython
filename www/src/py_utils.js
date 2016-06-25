@@ -592,19 +592,23 @@ $B.$setitem = function(obj,item,value){
 $B.augm_item_add = function(obj,item,incr){
     if(Array.isArray(obj) && typeof item=="number" &&
         obj[item]!==undefined){
-        obj[item]+=incr
-        return
+            if(Array.isArray(obj[item]) && Array.isArray(incr)){
+                obj[item] = obj[item].concat(incr)
+                return
+            }else if(typeof obj[item]=='string' && typeof incr=='string'){
+                obj[item] += incr
+                return
+            }
     }
     var ga = _b_.getattr
     try{
         var augm_func = ga(ga(obj,'__getitem__')(item),'__iadd__')
-        console.log('has augmfunc')
     }catch(err){
         ga(obj,'__setitem__')(item,
             ga(ga(obj,'__getitem__')(item),'__add__')(incr))
         return
     }
-    augm_func(value)
+    augm_func(incr)
 }
 var augm_item_src = ''+$B.augm_item_add
 var augm_ops = [['-=','sub'],['*=','mul']]
