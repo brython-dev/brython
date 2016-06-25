@@ -885,6 +885,13 @@ a = [[1]]
 a[0] += [2]
 assert a == [[1, 2]]
 
+# issue 450
+assert True == True
+assert True != False
+assert False == False
+assert not (True == None)
+assert True != None
+
 
 # ==========================================
 # Finally, report that all tests have passed

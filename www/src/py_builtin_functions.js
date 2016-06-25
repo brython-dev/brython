@@ -1596,13 +1596,11 @@ var True = true
 var False = false
 
 $BoolDict.__eq__ = function(self,other){
-    if(self.valueOf()) return !!other
-    return !other
+    return self.valueOf() ? bool(other) : !bool(other)
 }
 
 $BoolDict.__ne__ = function(self,other){
-    if(self.valueOf()) return !other
-    return !!other
+    return self.valueOf() ? !bool(other) : bool(other)
 }
 
 $BoolDict.__ge__ = function(self,other){

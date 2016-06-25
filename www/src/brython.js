@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-25 09:54:42.523707"
+__BRYTHON__.compiled_date="2016-06-25 10:23:35.211811"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5871,10 +5871,8 @@ $BoolDict.__add__=function(self,other){if(self.valueOf())return other + 1;
 return other;}
 var True=true
 var False=false
-$BoolDict.__eq__=function(self,other){if(self.valueOf())return !!other
-return !other}
-$BoolDict.__ne__=function(self,other){if(self.valueOf())return !other
-return !!other}
+$BoolDict.__eq__=function(self,other){return self.valueOf()? bool(other): !bool(other)}
+$BoolDict.__ne__=function(self,other){return self.valueOf()? !bool(other): bool(other)}
 $BoolDict.__ge__=function(self,other){return _b_.int.$dict.__ge__($BoolDict.__hash__(self),other)}
 $BoolDict.__gt__=function(self,other){return _b_.int.$dict.__gt__($BoolDict.__hash__(self),other)}
 $BoolDict.__hash__=$BoolDict.__index__=$BoolDict.__int__=function(self){if(self.valueOf())return 1
