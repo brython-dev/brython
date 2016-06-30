@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-30 13:44:06.432069"
+__BRYTHON__.compiled_date="2016-06-30 14:08:40.396028"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4770,7 +4770,8 @@ var header='for(var i=0;i<$B.frames_stack.length;i++){\n'+
 '}\n'
 lines.splice(2,0,header)
 js=lines.join('\n')
-js +='\nreturn $locals_'+genexpr_name+'["'+genexpr_name+'"]();\n'
+js +='\nvar $res = $locals_'+genexpr_name+'["'+genexpr_name+'"]();\n'+
+'$res.is_gen_expr=true;\nreturn $res\n'
 js='(function(){'+js+'})()\n'
 return js}
 $B.clear_ns=function(name){
@@ -10588,7 +10589,8 @@ self._next=$B.generators[self.iter_id]
 return yielded_value}
 $BRGeneratorDict.__mro__=[$BRGeneratorDict,_b_.object.$dict]
 $BRGeneratorDict.$factory={__class__:$B.$factory,$dict: $BRGeneratorDict}
-$BRGeneratorDict.__repr__=$BRGeneratorDict.__str__=function(self){return '<generator '+self.func_name+' '+self.iter_id+'>'}
+$BRGeneratorDict.__repr__=$BRGeneratorDict.__str__=function(self){return '<generator object '+
+(self.is_gen_expr ? '<genexpr>' : self.func_name)+'>'}
 $BRGeneratorDict.close=function(self,value){self.sent_value=_b_.GeneratorExit()
 try{var res=$BRGeneratorDict.__next__(self)
 if(res!==_b_.None){throw _b_.RuntimeError("closed generator returned a value")}}catch(err){if($B.is_exc(err,[_b_.StopIteration,_b_.GeneratorExit])){return _b_.None}

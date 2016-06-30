@@ -536,7 +536,8 @@ $BRGeneratorDict.__mro__ = [$BRGeneratorDict,_b_.object.$dict]
 $BRGeneratorDict.$factory = {__class__:$B.$factory, $dict: $BRGeneratorDict}
 
 $BRGeneratorDict.__repr__ = $BRGeneratorDict.__str__ = function(self){
-    return '<generator '+self.func_name+' '+self.iter_id+'>'
+    return '<generator object '+
+        (self.is_gen_expr ? '<genexpr>' : self.func_name)+'>'
 }
 
 $BRGeneratorDict.close = function(self, value){

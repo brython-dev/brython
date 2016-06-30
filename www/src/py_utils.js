@@ -260,7 +260,8 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
     lines.splice(2, 0, header)
     
     js = lines.join('\n')
-    js += '\nreturn $locals_'+genexpr_name+'["'+genexpr_name+'"]();\n'
+    js += '\nvar $res = $locals_'+genexpr_name+'["'+genexpr_name+'"]();\n'+
+        '$res.is_gen_expr=true;\nreturn $res\n'
     js = '(function(){'+js+'})()\n'
     
     return js
