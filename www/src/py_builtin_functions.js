@@ -496,9 +496,6 @@ function getattr(obj,attr,_default){
     switch(attr) {
       case '__call__':
         if (typeof obj=='function'){
-           if(obj.$blocking){
-             console.log('calling blocking function '+obj.__name__)
-           }
            return obj
         } else if (klass===$B.JSObject.$dict && typeof obj.js=='function'){
           return function(){
@@ -611,7 +608,6 @@ function getattr(obj,attr,_default){
     if(typeof attr_func!=='function'){
         console.log(attr+' is not a function '+attr_func)
     }
-
 
     try{var res = attr_func(obj,attr)}
     catch(err){
@@ -1245,6 +1241,8 @@ function setattr(obj,attr,value){
             if(res!==undefined) break
         }
     }
+    
+    $B.nbset = $B.nbset||1
 
     if(res!==undefined){
         // descriptor protocol : if obj has attribute attr and this attribute 
@@ -1252,9 +1250,21 @@ function setattr(obj,attr,value){
         if(res.__set__!==undefined){
             res.__set__(res, obj, value); return None
         }
-        var __set__ = getattr(res,'__set__',null)
-        if(__set__ && (typeof __set__=='function')) {
-            __set__.apply(res,[obj,value]);return None
+        var rcls = res.__class__,
+            __set1__
+        if(rcls!==undefined){
+            for(var i=0, _len=rcls.__mro__.length;i<_len;i++){
+                __set1__ = rcls.__mro__[i].__set__
+                if(__set1__){
+                    break
+                }
+            }
+        }
+        if(__set1__!==undefined){
+            var __set__ = getattr(res,'__set__',null)
+            if(__set__ && (typeof __set__=='function')) {
+                __set__.apply(res,[obj,value]);return None
+            }
         }
     }
 

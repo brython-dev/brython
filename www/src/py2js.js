@@ -1328,6 +1328,8 @@ function $CallCtx(context){
             }else{
                 args_str = '('+args_str+')'
             }
+            
+            /*
 
             if($B.debug>0){
                 // On debug mode, always use getattr(func,"__call__") to manage
@@ -1343,6 +1345,7 @@ function $CallCtx(context){
                 var res = 'getattr('+func_js+',"__call__")'
                 return res+args_str
             }
+            */
 
             if(this.tree.length>-1){
               if(this.func.type=='id'){
@@ -1358,16 +1361,18 @@ function $CallCtx(context){
                           return func_js+args_str
                       }
                   }
-                  var res = '('+func_js+'.$is_func ? '
+                  var res = '(typeof '+func_js+'=="function" ? '
                   res += func_js+' : '
                   res += 'getattr('+func_js+',"__call__"))'+args_str
               }else{
-                  var res = 'getattr('+func_js+',"__call__")'+args_str
+                  var res = '(typeof '+func_js+'=="function" ? '+func_js+ ' : getattr('+
+                            func_js+',"__call__"))'+args_str
               }
               return res
             }
 
-            return 'getattr('+func_js+',"__call__")()'
+            return '(typeof '+func_js+'=="function" ? '+func_js+ ' : getattr('+
+                func_js+',"__call__"))()'
         }
     }
 }

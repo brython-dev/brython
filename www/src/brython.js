@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-30 14:08:40.396028"
+__BRYTHON__.compiled_date="2016-06-30 15:44:39.793458"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -703,18 +703,17 @@ if(star_args && kw_args_str){args_str +='.concat(['+kw_args_str+'])' }else{if(ar
 else if(!args_str){args_str=kw_args_str}}
 if(star_args){
 args_str='.apply(null,'+args_str+')'}else{args_str='('+args_str+')'}
-if($B.debug>0){
-var res='getattr('+func_js+',"__call__")'
-return res+args_str}
 if(this.tree.length>-1){if(this.func.type=='id'){if(this.func.is_builtin){
 if($B.builtin_funcs[this.func.value]!==undefined){return func_js+args_str}}else{var bound_obj=this.func.found
 if(bound_obj &&(bound_obj.type=='class' ||
 bound_obj.type=='def')){return func_js+args_str}}
-var res='('+func_js+'.$is_func ? '
+var res='(typeof '+func_js+'=="function" ? '
 res +=func_js+' : '
-res +='getattr('+func_js+',"__call__"))'+args_str}else{var res='getattr('+func_js+',"__call__")'+args_str}
+res +='getattr('+func_js+',"__call__"))'+args_str}else{var res='(typeof '+func_js+'=="function" ? '+func_js+ ' : getattr('+
+func_js+',"__call__"))'+args_str}
 return res}
-return 'getattr('+func_js+',"__call__")()'}}}
+return '(typeof '+func_js+'=="function" ? '+func_js+ ' : getattr('+
+func_js+',"__call__"))()'}}}
 function $ClassCtx(C){
 this.type='class'
 this.parent=C
@@ -5346,8 +5345,7 @@ if(obj[attr]!==undefined)return $B.$JS2Py(obj[attr])
 if(_default!==undefined)return _default
 throw _b_.AttributeError('object has no attribute '+attr)}
 switch(attr){case '__call__':
-if(typeof obj=='function'){if(obj.$blocking){console.log('calling blocking function '+obj.__name__)}
-return obj}else if(klass===$B.JSObject.$dict && typeof obj.js=='function'){return function(){var res=obj.js.apply(null,arguments)
+if(typeof obj=='function'){return obj}else if(klass===$B.JSObject.$dict && typeof obj.js=='function'){return function(){var res=obj.js.apply(null,arguments)
 if(res===undefined){return None}
 return $B.JSObject(res)}}
 break
@@ -5680,10 +5678,14 @@ var res=obj[attr],klass=obj.__class__ ||$B.get_class(obj)
 if(res===undefined && klass){var mro=klass.__mro__,_len=mro.length
 for(var i=0;i<_len;i++){res=mro[i][attr]
 if(res!==undefined)break}}
+$B.nbset=$B.nbset||1
 if(res!==undefined){
 if(res.__set__!==undefined){res.__set__(res,obj,value);return None}
-var __set__=getattr(res,'__set__',null)
-if(__set__ &&(typeof __set__=='function')){__set__.apply(res,[obj,value]);return None}}
+var rcls=res.__class__,__set1__
+if(rcls!==undefined){for(var i=0,_len=rcls.__mro__.length;i<_len;i++){__set1__=rcls.__mro__[i].__set__
+if(__set1__){break}}}
+if(__set1__!==undefined){var __set__=getattr(res,'__set__',null)
+if(__set__ &&(typeof __set__=='function')){__set__.apply(res,[obj,value]);return None}}}
 if(klass && klass.$slots && klass.$slots[attr]===undefined){throw _b_.AttributeError("'"+klass.__name__+"' object has no attribute'"+
 attr+"'")}
 var _setattr=false
@@ -6016,8 +6018,8 @@ var locals_id=_frame[0]
 try{res.f_locals=$B.obj_dict(_frame[1])}catch(err){console.log('err '+err)
 throw err}
 res.f_globals=$B.obj_dict(_frame[3])
-if($B.debug>0){if(_frame[1].$line_info===undefined){res.f_lineno=-1}
-else{res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}}else{res.f_lineno=-1}
+if(_frame[1].$line_info===undefined){res.f_lineno=-1}
+else{res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}
 res.f_code={__class__:$B.$CodeDict,co_code:None,
 co_name: locals_id,
 co_filename: _frame[3].__name__ }
@@ -6075,7 +6077,7 @@ $BaseExceptionDict.$factory=BaseException
 _b_.BaseException=BaseException
 $B.exception=function(js_exc){
 if(!js_exc.$py_error){
-if($B.debug>0 && js_exc.info===undefined){var _frame=$B.last($B.frames_stack)
+if(js_exc.info===undefined){var _frame=$B.last($B.frames_stack)
 if(_frame===undefined){_frame=$B.pmframe}
 if(_frame && _frame[1].$line_info!==undefined){var line_info=_frame[1].$line_info.split(',')
 var mod_name=line_info[1]
@@ -10603,7 +10605,7 @@ return $BRGeneratorDict.__next__(self)}
 $B.$BRgenerator=function(env,func_name,func,def_id){
 if(func.$def_node){var def_node=func.$def_node
 delete $B.modules[def_id]}else{var def_node=func.$def_node=$B.modules[def_id]}
-if(def_node===undefined){console.log('def node undef',def_id)}
+if(def_node===undefined){console.log('def node undef',def_id,func,func.$def_node)}
 var def_ctx=def_node.C.tree[0]
 var counter=0 
 $B.generators=$B.generators ||{}

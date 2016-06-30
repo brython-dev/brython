@@ -145,14 +145,10 @@ function frame(stack, pos){
             throw err
         }
         res.f_globals = $B.obj_dict(_frame[3])
-        if($B.debug>0){
-            if(_frame[1].$line_info === undefined){res.f_lineno=-1}
-            else{res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])}
-        }else{
-            res.f_lineno = -1
-        }
-        //if(pos!==undefined && pos>1){res.f_back = frame(stack, pos-1)}
-        //else{res.f_back = None}
+        
+        if(_frame[1].$line_info === undefined){res.f_lineno=-1}
+        else{res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])}
+
         res.f_code = {__class__:$B.$CodeDict,
             co_code:None, // XXX fix me
             co_name: locals_id, // idem
@@ -277,7 +273,7 @@ $B.exception = function(js_exc){
         // Print complete Javascript traceback in console
         //console.log(js_exc)
         
-        if($B.debug>0 && js_exc.info===undefined){
+        if(js_exc.info===undefined){
             var _frame = $B.last($B.frames_stack)
             if(_frame===undefined){_frame=$B.pmframe} // use post-mortem frame
             if(_frame && _frame[1].$line_info!==undefined){

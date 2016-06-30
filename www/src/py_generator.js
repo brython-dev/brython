@@ -580,7 +580,7 @@ $B.$BRgenerator = function(env, func_name, func, def_id){
         var def_node = func.$def_node = $B.modules[def_id]
     }
     if(def_node===undefined){
-        console.log('def node undef', def_id)
+        console.log('def node undef', def_id, func, func.$def_node)
     }
     var def_ctx = def_node.context.tree[0]
     var counter = 0 // used to identify the function run for each next()
