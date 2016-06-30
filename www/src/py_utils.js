@@ -226,68 +226,8 @@ $B.$dict_comp = function(env){
     return res
 }
 
-$B.$gen_expr = function(env){
-    // Called for generator expressions
-    // "env" is a list of [local_name, local_ns] lists for all the enclosing
-    // namespaces
-    
-    var $ix = $B.UUID()
-    var $res = 'res'+$ix
-    var $py = $res+"=[]\n"
-    var indent=0
-    for(var $i=2, _len_$i = arguments.length; $i < _len_$i;$i++){
-        $py+=' '.repeat(indent)
-        $py += arguments[$i].join(' ')+':\n'
-        indent += 4
-    }
-    $py+=' '.repeat(indent)
-    $py += $res+'.append('+arguments[1].join('\n')+')'
-    
-    // Create the variables for enclosing namespaces, they may be referenced
-    // in the expression
-    for(var i=0;i<env.length;i++){
-        var sc_id = '$locals_'+env[i][0].replace(/\./g,'_')
-        eval('var '+sc_id+'=env[i][1]')
-    }
-    var local_name = env[0][0]
-    var module_env = env[env.length-1]
-    var module_name = module_env[0]
-    
-    var genexpr_name = 'ge'+$ix
 
-    var $root = $B.py2js($py,module_name,genexpr_name,local_name,
-        $B.line_info)
-    var $js = $root.to_js()
-    
-    eval($js)
-    
-    var $res1 = eval('$locals_ge'+$ix)["res"+$ix]
-
-    var $GenExprDict = {
-        __class__:$B.$type,
-        __name__:'generator',
-        toString:function(){return '(generator)'}
-    }
-    $GenExprDict.__mro__ = [$GenExprDict,_b_.object.$dict]
-    $GenExprDict.__iter__ = function(self){return self}
-    $GenExprDict.__next__ = function(self){
-        self.$counter += 1
-        if(self.$counter>=self.value.length){
-            throw _b_.StopIteration('')
-        }
-        return self.value[self.$counter]
-    }
-    $GenExprDict.$factory = {__class__:$B.$factory,$dict:$GenExprDict}
-    var $res2 = {value:$res1,__class__:$GenExprDict,$counter:-1}
-    $res2.toString = function(){return 'ge object'}
-    
-    delete $B.modules[genexpr_name]
-    $B.clear_ns(genexpr_name)
-    
-    return $res2
-}
-
-$B.$gen_expr1 = function(module_name, parent_block_id, items, line_num){
+$B.$gen_expr = function(module_name, parent_block_id, items, line_num){
     // Called for generator expressions
     // "env" is a list of [local_name, local_ns] lists for all the enclosing
     // namespaces

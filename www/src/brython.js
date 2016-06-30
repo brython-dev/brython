@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-06-25 15:04:34.831127"
+__BRYTHON__.compiled_date="2016-06-30 13:44:06.432069"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1920,9 +1920,9 @@ js +='return $locals_lc'+ix+'["x'+ix+'"]'
 js='(function(){'+js+'})()'
 return js
 case 'dict_or_set_comp':
-if(this.expression.length===1){return '$B.$gen_expr('+env_string+','+res1+')'}
+if(this.expression.length===1){return $B.$gen_expr(module_name,scope_id,items,line_num)}
 return '$B.$dict_comp('+env_string+','+res1+')'}
-return $B.$gen_expr1(module_name,scope_id,items,line_num)
+return $B.$gen_expr(module_name,scope_id,items,line_num)
 case 'tuple':
 if(this.tree.length===1 && this.has_comma===undefined){return this.tree[0].to_js()}
 return 'tuple(['+$to_js(this.tree)+'])'}}}
@@ -4750,39 +4750,7 @@ eval($js)
 var res=eval('$locals_'+dictcomp_name+'["'+$res+'"]')
 $B.clear_ns(dictcomp_name)
 return res}
-$B.$gen_expr=function(env){
-var $ix=$B.UUID()
-var $res='res'+$ix
-var $py=$res+"=[]\n"
-var indent=0
-for(var $i=2,_len_$i=arguments.length;$i < _len_$i;$i++){$py+=' '.repeat(indent)
-$py +=arguments[$i].join(' ')+':\n'
-indent +=4}
-$py+=' '.repeat(indent)
-$py +=$res+'.append('+arguments[1].join('\n')+')'
-for(var i=0;i<env.length;i++){var sc_id='$locals_'+env[i][0].replace(/\./g,'_')
-eval('var '+sc_id+'=env[i][1]')}
-var local_name=env[0][0]
-var module_env=env[env.length-1]
-var module_name=module_env[0]
-var genexpr_name='ge'+$ix
-var $root=$B.py2js($py,module_name,genexpr_name,local_name,$B.line_info)
-var $js=$root.to_js()
-eval($js)
-var $res1=eval('$locals_ge'+$ix)["res"+$ix]
-var $GenExprDict={__class__:$B.$type,__name__:'generator',toString:function(){return '(generator)'}}
-$GenExprDict.__mro__=[$GenExprDict,_b_.object.$dict]
-$GenExprDict.__iter__=function(self){return self}
-$GenExprDict.__next__=function(self){self.$counter +=1
-if(self.$counter>=self.value.length){throw _b_.StopIteration('')}
-return self.value[self.$counter]}
-$GenExprDict.$factory={__class__:$B.$factory,$dict:$GenExprDict}
-var $res2={value:$res1,__class__:$GenExprDict,$counter:-1}
-$res2.toString=function(){return 'ge object'}
-delete $B.modules[genexpr_name]
-$B.clear_ns(genexpr_name)
-return $res2}
-$B.$gen_expr1=function(module_name,parent_block_id,items,line_num){
+$B.$gen_expr=function(module_name,parent_block_id,items,line_num){
 var $ix=$B.UUID()
 var py='def ge'+$ix+'():\n'
 var indent=1

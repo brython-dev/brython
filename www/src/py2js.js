@@ -3861,7 +3861,7 @@ function $ListOrTupleCtx(context,real){
                 
               case 'dict_or_set_comp':
                 if(this.expression.length===1){
-                  return '$B.$gen_expr('+env_string+','+res1+')'
+                    return $B.$gen_expr(module_name, scope_id, items, line_num)
                 }
                 return '$B.$dict_comp('+env_string+','+res1+')'
             }
@@ -3869,8 +3869,8 @@ function $ListOrTupleCtx(context,real){
             // Generator expression
             // Pass the module name and the id of current block
             
-            return $B.$gen_expr1(module_name, scope_id, items, line_num)
-            //return '$B.$gen_expr('+env_string+','+res1+')'
+            return $B.$gen_expr(module_name, scope_id, items, line_num)
+
           case 'tuple':
             if(this.tree.length===1 && this.has_comma===undefined){
                 return this.tree[0].to_js()
