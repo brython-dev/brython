@@ -424,19 +424,17 @@ function $AssignCtx(context){ //, check_unbound){
         ctx = ctx.parent
     }
     
-    //check_unbound = check_unbound === undefined
-    
     this.type = 'assign'
     // replace parent by "this" in parent tree
     context.parent.tree.pop()
-    //context.parent.tree.push(this)
     context.parent.tree[context.parent.tree.length]=this
 
     this.parent = context.parent
     this.tree = [context]
 
-    var scope = $get_scope(this)
-    
+    var scope = $get_scope(this),
+        level = $get_level(this)
+        
     if(context.type=='expr' && context.tree[0].type=='call'){
           $_SyntaxError(context,["can't assign to function call "])
     }else if(context.type=='list_or_tuple' || 
@@ -444,13 +442,13 @@ function $AssignCtx(context){ //, check_unbound){
         if(context.type=='expr'){context = context.tree[0]}
         // Bind all the ids in the list or tuple
         for(var name in context.ids()){
-            $bind(name, scope.id, scope.level)
+            $bind(name, scope.id, level)
         }
     }else if(context.type=='assign'){
         for(var i=0;i<context.tree.length;i++){
             var assigned = context.tree[i].tree[0]
             if(assigned.type=='id'){
-                $bind(assigned.value, scope.id, scope.level)
+                $bind(assigned.value, scope.id, level)
             }
         }
     }else{
@@ -476,7 +474,7 @@ function $AssignCtx(context){ //, check_unbound){
                 // first, and it is the builtin "range"
                 var node = $get_node(this)
                 node.bound_before = $B.keys($B.bound[scope.id])
-                $bind(assigned.value, scope.id, scope.level)
+                $bind(assigned.value, scope.id, level)
             }
         }
     }//if
@@ -1286,20 +1284,6 @@ function $CallCtx(context){
                 args_str += '_b_.list('+star_args+'))'
             }
 
-            if(this.func.value=="fghjk"){
-                console.log('fghjk')
-                var kw_args_str = '{'+kw_args.join(', ')+'}'
-                if(dstar_args){
-                    kw_args_str = '$B.extend("'+this.func.value+'",'+kw_args_str
-                    kw_args_str += ','+dstar_args+')'
-                }else if(kw_args_str=='{}'){
-                    kw_args_str = ''
-                }
-                var res = 'getattr('+func_js+',"__call__")(['+args_str+']'
-                if(kw_args_str.length>0){res += ', '+kw_args_str}
-                return res + ')'
-            }        
-
             var kw_args_str = '{'+kw_args.join(', ')+'}'
             if(dstar_args){
                 kw_args_str = '{$nat:"kw",kw:$B.extend("'+this.func.value+'",'+kw_args_str
@@ -1309,8 +1293,6 @@ function $CallCtx(context){
             }else{
                 kw_args_str = ''
             }
-
-
 
             if(star_args && kw_args_str){
                 args_str += '.concat(['+kw_args_str+'])'            
@@ -1328,24 +1310,6 @@ function $CallCtx(context){
             }else{
                 args_str = '('+args_str+')'
             }
-            
-            /*
-
-            if($B.debug>0){
-                // On debug mode, always use getattr(func,"__call__") to manage
-                // the call stack and get correct error messages
-
-                // somehow we need to loop up through the context parents
-                // until we reach the root, or until we reach a node
-                // that has not been processed yet (js_processed=false)
-                // we then do a to_js (setting each js_processed to true)
-                // from this node until we reach the current node being processed. 
-                // Take output from to_js and append to execution_object.
-                
-                var res = 'getattr('+func_js+',"__call__")'
-                return res+args_str
-            }
-            */
 
             if(this.tree.length>-1){
               if(this.func.type=='id'){
@@ -3204,7 +3168,9 @@ function $IdCtx(context,value){
     this.scope = $get_scope(this)
     this.blurred_scope = this.scope.blurred
     this.env = clone($B.bound[this.scope.id])
-
+    
+    this.level = $get_level(this)
+    
     var ctx = context
     while(ctx.parent!==undefined){
         switch(ctx.type) {
@@ -3229,7 +3195,7 @@ function $IdCtx(context,value){
         (context.type=='expr' && context.parent.type=='target_list')){
         // An id defined as a target in a "for" loop, or as "packed" 
         // (eg "a, *b = [1, 2, 3]") is bound
-        $B.bound[scope.id][value]={level: scope.level}
+        $B.bound[scope.id][value]={level: $get_level(this)}
         $B.type[scope.id][value] = false // can be improved !
         this.bound = true
     }
@@ -3267,8 +3233,10 @@ function $IdCtx(context,value){
         this.js_processed=true
         var val = this.value
         
-        var is_local = $B.bound[this.scope.id][val]!==undefined
-        var bound_before = $get_node(this).bound_before
+        var is_local = $B.bound[this.scope.id][val]!==undefined,
+            this_node = $get_node(this),
+            bound_before = this_node.bound_before
+
         if(this.scope.nonlocals && this.scope.nonlocals[val]!==undefined){
             this.nonlocal = true
         }
@@ -3353,8 +3321,6 @@ function $IdCtx(context,value){
         this.found = found
         if(this.nonlocal && found[0]===innermost){found.shift()}
         
-        if(val=='fghj'){console.log('found for', val, found)}
-
         if(found.length>0){
             // If name is not in the left part of an assignment, 
             // and it is bound in the current block but not yet bound when the
@@ -3491,18 +3457,26 @@ function $IdCtx(context,value){
                 if($B._globals[scope.id] && $B._globals[scope.id][val]){
                     val = global_ns+'["'+val+'"]'
                 }else if(!this.bound && !this.augm_assign){
-                    if(scope.level<=3){
+                    //if(scope.level<=3){
                         // Name is bound at indentation level 0 in the block :
                         // we are sure that it is defined in locals
-                        val = '$locals["'+val+'"]'
-                    }else{
+                        //val = '$locals["'+val+'"]'
+                    //}else{
                         // The name might not have actually been bound, eg in
                         //     def f():
                         //         if False:
                         //             x = 0
                         //         print(x)
-                        val = '$B.$check_def_local("'+val+'",$locals["'+val+'"])'
-                    }
+                        var bind_level
+                        if(this_node.locals && this_node.locals[val]){
+                            bind_level = this_node.locals[val].level
+                        }
+                        if(bind_level!==undefined && bind_level<=this.level){
+                            val = '$locals["'+val+'"]'
+                        }else{
+                            val = '$B.$check_def_local("'+val+'",$locals["'+val+'"])'
+                        }
+                    //}
                 }else{
                     val = '$locals["'+val+'"]'
                 }
@@ -5140,7 +5114,7 @@ function $bind(name, scope_id, level){
     // Bind a name in scope_id
     if($B.bound[scope_id][name]!==undefined){
         // If the name is already bound, use the smallest level
-        if(level>=$B.bound[scope_id][name].level){
+        if(level<$B.bound[scope_id][name].level){
             $B.bound[scope_id][name].level = level
         }
     }else{
@@ -5197,6 +5171,16 @@ function $get_scope(context){
     scope.ntype = "module"
     scope.level = level
     return scope
+}
+
+function $get_level(ctx){
+    var nd = $get_node(ctx),
+        level = 0
+    while(nd.parent!==undefined){
+        level++
+        nd = nd.parent
+    }
+    return level
 }
 
 function $get_module(context){

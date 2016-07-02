@@ -323,9 +323,10 @@ $B.$check_def = function(name, value){
     if(value!==undefined){return value}
     throw _b_.NameError(name)
 }
-
+$B.counter = 0
 $B.$check_def_local = function(name, value){
     // Check if value is not undefined
+    $B.counter++
     if(value!==undefined){return value}
     throw _b_.UnboundLocalError("local variable '"+name+
         "' referenced before assignment")
@@ -954,7 +955,10 @@ $B.PyNumber_Index = function(item){
             if(item.__class__===$B.LongInt.$dict){return item}
             var method = _b_.getattr(item, '__index__', null)
             if(method!==null){
-                return $B.int_or_bool(_b_.getattr(method, '__call__')())
+                method = typeof method=='function' ? 
+                            method : 
+                            _b_.getattr(method, '__call__')
+                return $B.int_or_bool(method)
             }
         default:
             throw _b_.TypeError("'"+$B.get_class(item).__name__+

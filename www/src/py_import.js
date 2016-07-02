@@ -548,7 +548,7 @@ finder_path.$dict = {
                      ++j) {
                     var hook = $B.path_hooks[j];
                     try {
-                        finder = _b_.getattr(hook, '__call__')(path_entry)
+                        finder = (typeof hook=='function' ? hook : _b_.getattr(hook, '__call__'))(path_entry)
                         finder_notfound = false;
                     }
                     catch (e) {
@@ -562,8 +562,11 @@ finder_path.$dict = {
             // Skip this path entry if finder turns out to be None
             if (is_none(finder))
                 continue;
-            var spec = _b_.getattr(_b_.getattr(finder, 'find_spec'),
-                                   '__call__')(fullname, prev_module);
+            var find_spec = _b_.getattr(finder, 'find_spec'),
+                fs_func = typeof find_spec=='function' ? 
+                    find_spec : 
+                    _b_.getattr(find_spec, '__call__'),
+                spec = fs_func(fullname, prev_module);
             if (!is_none(spec)) {
                 return spec;
             }
@@ -901,8 +904,10 @@ $B.$import = function(mod_name, fromlist, aliases, locals, blocking){
         __import__ = $B.$__import__;
     }
     // FIXME: Should we need locals dict supply it in, now it is useless
-    var modobj = _b_.getattr(__import__, '__call__')(mod_name, globals, 
-        undefined, fromlist, 0);
+    var importer = typeof __import__=='function' ? 
+                        __import__ : 
+                        _b_.getattr(__import__, '__call__'),
+        modobj = importer(mod_name, globals, undefined, fromlist, 0);
 
     // Apply bindings upon local namespace
     if (!fromlist || fromlist.length == 0) {
