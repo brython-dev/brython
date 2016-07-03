@@ -122,7 +122,7 @@ $ObjectDict.__ge__ = $ObjectNI('__ge__','>=')
 
 $ObjectDict.__getattribute__ = function(obj,attr){
     
-    var klass = $B.get_class(obj)
+    var klass = obj.__class__ || $B.get_class(obj)
     if(attr==='__class__'){
         return klass.$factory
     }
@@ -130,12 +130,13 @@ $ObjectDict.__getattribute__ = function(obj,attr){
     
     if(res===undefined){
         // search in classes hierarchy, following method resolution order
-        //if(attr=='show'){console.log('object getattr '+attr+' of obj '+obj)}
         var mro = klass.__mro__
         for(var i=0, _len_i = mro.length; i < _len_i;i++){
             if(mro[i].$methods){
                 var method = mro[i].$methods[attr]
-                if(method!==undefined){return method(obj)}
+                if(method!==undefined){
+                    return method(obj)
+                }
             }
             var v=mro[i][attr]
             if(v!==undefined){

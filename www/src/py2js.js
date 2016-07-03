@@ -2234,6 +2234,8 @@ function $DefCtx(context){
 
           js = '$B.$BRgenerator(env,"'+this.name+'", $locals_'+
               scope.id.replace(/\./g, '_')+'["'+this.name+'"],"'+this.id+'")'
+          //return $B.$BRgenerator1(env,this.name, 
+          //    scope.id.replace(/\./g, '_'),this.id)
           var gen_node = new $Node()
           gen_node.id = this.module
           var ctx = new $NodeCtx(gen_node)
@@ -2324,23 +2326,6 @@ function $DefCtx(context){
         new_node = new $Node()
         new $NodeJSCtx(new_node,js)
         node.parent.insert(rank+offset, new_node)
-        
-        /*
-        var _block=false
-        if ($B.async_enabled) {
-           //earney
-           if ($B.block[scope.id] && $B.block[scope.id][this.name]) {
-              //earney
-              var js="@@;$B.execution_object.$append($jscode, 10); "
-              js+="$B.execution_object.$execute_next_segment(); "
-              js+="$jscode=@@"
-
-              var new_node = new $Node()
-              new $NodeJSCtx(new_node,js)
-              nodes.push(new_node)
-           }
-        }
-        */
 
         // wrap everything in a try/finally to be sure to exit from frame
         if(this.type=='def'){
@@ -2593,6 +2578,13 @@ function $FloatCtx(context,value){
     context.tree[context.tree.length]=this
     this.to_js = function(){
         this.js_processed=true
+        // number literal
+        if(/^\d+$/.exec(this.value) || 
+            /^\d+\.\d*$/.exec(this.value)){
+                var value = parseFloat(this.value)
+                return '(new Number('+this.value+'))'
+        }
+        
         return 'float('+this.value+')'
     }
 }
@@ -2619,7 +2611,6 @@ function $ForExpr(context){
             local_ns = '$locals_'+scope.id.replace(/\./g,'_'),
             h = '\n'+' '.repeat(node.indent+4)
 
-        
         if(__BRYTHON__.loop_timeout){
             // If the option "loop_timeout" has been set by
             // browser.timer.set_loop_timeout, create code to initialise

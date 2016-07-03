@@ -618,7 +618,7 @@ var float = function (value){
         return $FloatClass(-Infinity)
     }//switch
     
-    if(typeof value=="number") return $FloatClass(value)
+    if(typeof value=="number") return new Number(value)
     if(isinstance(value,float)) {return value}
     if(isinstance(value,_b_.bytes)) {
       var s = getattr(value,'decode')('latin-1')

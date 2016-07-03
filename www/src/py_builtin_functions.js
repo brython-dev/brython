@@ -5,7 +5,8 @@ eval($B.InjectBuiltins())
 
 _b_.__debug__ = false
 
-var $ObjectDict = _b_.object.$dict
+var $ObjectDict = _b_.object.$dict,
+    odga = $ObjectDict.__getattribute__
 
 // maps comparison operator to method names
 $B.$comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
@@ -199,7 +200,7 @@ function dir(obj){
         return res
     }
     
-    var klass = $B.get_class(obj)
+    var klass = obj.__class__ || $B.get_class(obj)
     
     if(klass && klass.is_class){obj=obj.$dict}
     else {
@@ -223,7 +224,7 @@ function dir(obj){
 
 //divmod() (built in function)
 function divmod(x,y) {
-   var klass = $B.get_class(x)
+   var klass = x.__class__ || $B.get_class(x)
    return _b_.tuple([getattr(klass, '__floordiv__')(x,y), 
        getattr(klass, '__mod__')(x,y)])
 }
@@ -473,8 +474,25 @@ function attr_error(attr, cname){
     }
 }
 
+$B.counter = {}
+$B.nb_odga = 0
+$B.show_getattr = function(){
+    var items = []
+    for(var attr in $B.counter){items.push([$B.counter[attr], attr])}
+    items.sort(function(x,y){
+        return x[0]>y[0] ? 1 : x[0]==y[0] ? 0 : -1
+    })
+    items.reverse()
+    for(var i=0;i<10;i++){console.log(items[i])}
+}
+
 function getattr(obj,attr,_default){
 
+    /*
+    if($B.counter[attr]==undefined){$B.counter[attr]=1}
+    else{$B.counter[attr]++}
+    */
+    
     var klass = obj.__class__
     
     if(klass===undefined){
@@ -492,7 +510,7 @@ function getattr(obj,attr,_default){
         if(_default!==undefined) return _default
         throw _b_.AttributeError('object has no attribute '+attr)
     }
-
+    
     switch(attr) {
       case '__call__':
         if (typeof obj=='function'){
@@ -600,7 +618,7 @@ function getattr(obj,attr,_default){
             }
             console.log('obj class '+dir(klass)+' str '+klass)
         }
-        for(var i=0;i<mro.length;i++){
+        for(var i=0, len=mro.length;i<len;i++){
             attr_func = mro[i]['__getattribute__']
             if(attr_func!==undefined){break}
         }
@@ -608,8 +626,16 @@ function getattr(obj,attr,_default){
     if(typeof attr_func!=='function'){
         console.log(attr+' is not a function '+attr_func)
     }
+    
+    if(attr_func===odga){
+        var res = obj[attr]
+        if(res!==undefined && res.__set__===undefined){
+            $B.nb_odga++
+            return obj[attr]
+        }
+    }
 
-    try{var res = attr_func(obj,attr)}
+    try{var res = attr_func(obj, attr)}
     catch(err){
         if(_default!==undefined) return _default
         throw err
@@ -676,7 +702,7 @@ function hash(obj){
     if(hashfunc.$infos.__func__===_b_.object.$dict.__hash__){
         if(getattr(obj,'__eq__').$infos.__func__!==_b_.object.$dict.__eq__){
             throw _b_.TypeError("unhashable type: '"+
-                $B.get_class(obj).__name__+"'")
+                $B.get_class(obj).__name__+"'", 'hash')
         }else{
             return $B.$py_next_hash--
         }
@@ -770,7 +796,7 @@ function isinstance(obj,arg){
         return false
     }
     if(arg===_b_.int &&(obj===True || obj===False)){return True}
-        
+
     var klass = obj.__class__
     
     if(klass==undefined){

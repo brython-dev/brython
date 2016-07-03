@@ -648,4 +648,85 @@ $B.$BRgenerator.__repr__ = function(){return "<class 'generator'>"}
 $B.$BRgenerator.__str__ = function(){return "<class 'generator'>"} 
 $B.$BRgenerator.__class__ = $B.$type
 
+$B.$BRgenerator1 = function(env, name, func, def_id){
+    var def_node = $B.modules[def_id]
+    var def_ctx = def_node.context.tree[0]
+    console.log(def_ctx)
+
+    var counter = 0 // used to identify the function run for each next()
+    
+    // environment : list of [block_name, block_obj] lists
+    $B.generators = $B.generators || {}
+    $B.$generators = $B.$generators || {}
+
+    var module = def_node.module // module name
+
+    var iter_id = 'XXXX'
+
+    var func_root = new $B.genNode(def_ctx.to_js('$B.$generators["'+iter_id+'"]'))
+    func_root.scope = env[0][1]
+    func_root.module = module
+    func_root.yields = []
+    func_root.loop_ends = {}
+    func_root.def_id = def_id
+    func_root.iter_id = iter_id
+
+    for(var i=0, len = def_node.children.length; i < len;i++){
+        func_root.addChild($B.make_node(func_root, def_node.children[i]))
+    }
+    console.log('ok gen', func_root.src())
+    var func_node = func_root.children[1].children[0]
+
+
+    var iterator = function(){
+        var args = [], pos=0
+        for(var i=0,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
+
+        // create an id for the iterator
+        var iter_id = def_id+'_'+counter++
+        
+        // Names bound in generator are also bound in iterator
+        $B.bound[iter_id] = {}
+        for(var attr in $B.bound[def_id]){$B.bound[iter_id][attr] = true}
+
+        // Create a tree structure based on the generator tree
+        // iter_id is used in the node where the iterator resets local
+        // namespace
+        var func_root = new $B.genNode(def_ctx.to_js('$B.$generators["'+iter_id+'"]'))
+        func_root.scope = env[0][1]
+        func_root.module = module
+        func_root.yields = []
+        func_root.loop_ends = {}
+        func_root.def_id = def_id
+        func_root.iter_id = iter_id
+        for(var i=0, _len_i = def_node.children.length; i < _len_i;i++){
+            func_root.addChild($B.make_node(func_root, def_node.children[i]))
+        }
+        var func_node = func_root.children[1].children[0]
+        
+        var obj = {
+            __class__ : $BRGeneratorDict,
+            args:args,
+            def_id:def_id,
+            def_ctx:def_ctx,
+            def_node:def_node,
+            env:env,
+            func:func,
+            func_name:func_name,
+            func_root:func_root,
+            module:module,
+            func_node:func_node,
+            next_root:func_root,
+            gi_running:false,
+            iter_id:iter_id,
+            id:iter_id,
+            num:0
+        }
+        obj.parent_block = def_node.parent_block
+        return obj        
+    }
+
+    return ['genrator', env, name, func, def_id]
+}
+
 })(__BRYTHON__)
