@@ -6,9 +6,7 @@ var _b_=$B.builtins
 $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwargs){
     var cl_dict=_b_.dict(),bases=null
     // transform class object into a dictionary
-    //var setitem=_b_.dict.$dict.__setitem__
     for(var attr in class_obj){
-        //setitem(cl_dict,attr,class_obj[attr])
         cl_dict.$string_dict[attr] = class_obj[attr]
     }
     // check if parents are defined
@@ -154,10 +152,8 @@ $B.$class_constructor1 = function(class_name,class_obj){
     return factory
 }
 
-
-$B.make_method = function(attr, klass, func, func1){
+$B.make_method = function(attr, klass, func){
     // Return a method, based on a function defined in a class
-
     var __self__,__func__= func,__repr__,__str__, method
     switch(func.$type) {
       case undefined:
