@@ -1268,16 +1268,13 @@ function setattr(obj,attr,value){
         }
     }
     
-    $B.nbset = $B.nbset||1
-
     if(res!==undefined){
         // descriptor protocol : if obj has attribute attr and this attribute 
         // has a method __set__(), use it
         if(res.__set__!==undefined){
             res.__set__(res, obj, value); return None
         }
-        var rcls = res.__class__,
-            __set1__
+        var rcls = res.__class__, __set1__
         if(rcls!==undefined){
             for(var i=0, _len=rcls.__mro__.length;i<_len;i++){
                 __set1__ = rcls.__mro__[i].__set__

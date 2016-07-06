@@ -168,6 +168,10 @@ function clear(ns){
 
 $B.$list_comp = function(items){
     // Called for list comprehensions
+    // items[0] is the Python code for the comprehension expression
+    // items[1:] is the loops and conditions in the comprehension
+    // For instance in [ x*2 for x in A if x>2 ],
+    // items is ["x*2", "for x in A", "if x>2"]
     var ix = $B.UUID()
     var py = "x"+ix+"=[]\n", indent = 0
     for(var i=1, len = items.length; i < len;i++){
@@ -183,50 +187,35 @@ $B.$list_comp = function(items){
     return [py,ix]
 }
 
-
-$B.$dict_comp = function(env){
+$B.$dict_comp = function(module_name, parent_block_id, items, line_num){
     // Called for dict comprehensions
-    // "env" is a list of [local_name, local_ns] lists for all the enclosing
-    // namespaces
+    // items[0] is the Python code for the comprehension expression
+    // items[1:] is the loops and conditions in the comprehension
+    // For instance in { x:x*2 for x in A if x>2 },
+    // items is ["x:x*2", "for x in A", "if x>2"]
 
-    var $ix = $B.UUID()
-    var $res = 'res'+$ix
-    var $py = $res+"={}\n"
-    var indent=0
-    for(var $i=2, _len_$i = arguments.length; $i < _len_$i;$i++){
-        $py+=' '.repeat(indent)
-        $py += arguments[$i]+':\n'
-        indent += 4
+    var ix = $B.UUID(),
+        res = 'res'+ix,
+        py = res+"={}\n", // Python code
+        indent=0
+    for(var i=1, len=items.length;i<len;i++){
+        py += '    '.repeat(indent)
+        var item = items[i].replace(/\s+$/,'').replace(/\n/g, ' ')
+        py += item+':\n'
+        indent++
     }
-    $py+=' '.repeat(indent)
-    $py += $res+'.update({'+arguments[1].join('\n')+'})'
-
-    // Create the variables for enclosing namespaces, they may be referenced
-    // in the comprehension
-    for(var i=0;i<env.length;i++){
-        var sc_id = '$locals_'+env[i][0].replace(/\./,'_')
-        eval('var '+sc_id+'=env[i][1]')
-    }
-    var local_name = env[0][0]
-    var module_env = env[env.length-1]
-    var module_name = module_env[0]
-
-    var dictcomp_name = 'dc'+$ix
+    py += '    '.repeat(indent) + res + '.update({'+items[0]+'})'
     
-    var $root = $B.py2js($py,module_name,dictcomp_name,local_name,
-        $B.line_info)
-    $root.caller = $B.line_info
-
-    var $js = $root.to_js()
-    eval($js)
-
-    var res = eval('$locals_'+dictcomp_name+'["'+$res+'"]')
+    var dictcomp_name = 'dc'+ix,
+        root = $B.py2js(py, module_name, dictcomp_name, parent_block_id,
+            line_num),
+        js = root.to_js()
+    js += '\nreturn $locals["'+res+'"]\n'
     
+    js = '(function(){'+js+'})()'
     $B.clear_ns(dictcomp_name)
-
-    return res
+    return js
 }
-
 
 $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
     // Called for generator expressions

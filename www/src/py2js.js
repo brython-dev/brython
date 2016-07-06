@@ -3833,7 +3833,9 @@ function $ListOrTupleCtx(context,real){
                 if(this.expression.length===1){
                     return $B.$gen_expr(module_name, scope_id, items, line_num)
                 }
-                return '$B.$dict_comp('+env_string+','+res1+')'
+
+                return $B.$dict_comp(module_name, scope_id, items, line_num)
+                
             }
 
             // Generator expression

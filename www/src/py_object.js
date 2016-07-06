@@ -232,7 +232,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                 }
 
                 // instance method object
-                return $B.make_method(attr, klass, res, res1)(obj)
+                return $B.make_method(attr, klass, res)(obj)
                 
             }else{
                 // result of __get__ is not a function
