@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-07-06 15:03:26.583246"
+__BRYTHON__.compiled_date="2016-07-10 18:00:15.775216"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4293,14 +4293,12 @@ $ObjectDict.__format__=function(){var $=$B.args('__format__',2,{self:null,spec:n
 if($.spec!==''){throw _b_.TypeError("non-empty format string passed to object.__format__")}
 return _b_.getattr($.self,'__repr__')()}
 $ObjectDict.__ge__=$ObjectNI('__ge__','>=')
-$B.counter_mro=0
 $ObjectDict.__getattribute__=function(obj,attr){var klass=obj.__class__ ||$B.get_class(obj)
 if(attr==='__class__'){return klass.$factory}
 var res=obj[attr],args=[]
 if(res===undefined){
 var mro=klass.__mro__
-for(var i=0,_len_i=mro.length;i < _len_i;i++){$B.counter_mro++
-if(mro[i].$methods){var method=mro[i].$methods[attr]
+for(var i=0,_len_i=mro.length;i < _len_i;i++){if(mro[i].$methods){var method=mro[i].$methods[attr]
 if(method!==undefined){return method(obj)}}
 var v=mro[i][attr]
 if(v!==undefined){res=v
@@ -9752,12 +9750,17 @@ eval('$SetDict.intersection = '+
 fc.replace(/difference/g,'intersection').replace('__sub__','__and__'))
 eval('$SetDict.symmetric_difference = '+
 fc.replace(/difference/g,'symmetric_difference').replace('__sub__','__xor__'))
-eval('$SetDict.issubset = '+
-fc.replace(/difference/g,'issubset').replace('__sub__','__le__'))
-eval('$SetDict.issuperset = '+
-fc.replace(/difference/g,'issuperset').replace('__sub__','__ge__'))
 eval('$SetDict.union = '+
 fc.replace(/difference/g,'union').replace('__sub__','__or__'))
+$SetDict.issubset=function(){var $=$B.args('issubset',2,{self:null,other:null},['self','other'],arguments,{},'args',null),func=_b_.getattr($.other,'__contains__')
+for(var i=0,len=$.self.$items.length;i<len;i++){if(!func($.self.$items[i])){return false}}
+return true}
+$SetDict.issuperset=function(){var $=$B.args('issuperset',2,{self:null,other:null},['self','other'],arguments,{},'args',null)
+var func=_b_.getattr($.self,'__contains__'),it=_b_.iter($.other)
+while(true){try{var item=_b_.next(it)
+if(!func(item)){return false}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){return true}
+throw err}}
+return true}
 function set(){
 var res={__class__:$SetDict,$str:true,$num:true,$items:[]}
 var args=[res].concat(Array.prototype.slice.call(arguments))

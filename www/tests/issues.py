@@ -897,6 +897,13 @@ import copy
 assert copy.copy({1}) == {1}
 assert copy.copy({1:2}) == {1:2}
 
+# issue 456
+assert {0, 1, 2}.issuperset([0, 1])
+assert not {0, 1, 2}.issuperset([2, 3])
+
+assert {0, 1}.issubset(range(3))
+assert not {7, 8}.issubset([6, 7])
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

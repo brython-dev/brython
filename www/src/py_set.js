@@ -492,12 +492,35 @@ eval('$SetDict.intersection = '+
     fc.replace(/difference/g, 'intersection').replace('__sub__', '__and__'))
 eval('$SetDict.symmetric_difference = '+
     fc.replace(/difference/g, 'symmetric_difference').replace('__sub__', '__xor__'))
-eval('$SetDict.issubset = '+
-    fc.replace(/difference/g, 'issubset').replace('__sub__', '__le__'))
-eval('$SetDict.issuperset = '+
-    fc.replace(/difference/g, 'issuperset').replace('__sub__', '__ge__'))
 eval('$SetDict.union = '+
     fc.replace(/difference/g, 'union').replace('__sub__', '__or__'))
+
+$SetDict.issubset = function(){
+    var $ = $B.args('issubset', 2, {self:null, other:null}, 
+        ['self', 'other'], arguments,{},'args',null),
+        func = _b_.getattr($.other, '__contains__')
+    for(var i=0, len=$.self.$items.length; i<len; i++){
+        if(!func($.self.$items[i])){return false}
+    }
+    return true
+}
+
+$SetDict.issuperset = function(){
+    var $ = $B.args('issuperset', 2, {self:null, other:null}, 
+        ['self', 'other'], arguments,{},'args',null)
+    var func = _b_.getattr($.self, '__contains__'),
+        it = _b_.iter($.other)
+    while(true){
+        try{
+            var item = _b_.next(it)
+            if(!func(item)){return false}
+        }catch(err){
+            if(_b_.isinstance(err, _b_.StopIteration)){return true}
+            throw err
+        }
+    }
+    return true
+}
 
 function set(){
     // Instances of set have attributes $str and $num
