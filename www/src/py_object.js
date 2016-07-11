@@ -309,11 +309,6 @@ $ObjectDict.__ne__ = function(self,other){
     return !_b_.getattr(self, '__eq__')(other)
 }
 
-$ObjectDict.__or__ = function(self,other){
-    if(_b_.bool(self)) return self
-    return other
-}
-
 $ObjectDict.__repr__ = function(self){
     if(self===object) return "<class 'object'>"
     if(self.__class__===$B.$factory) return "<class '"+self.$dict.__name__+"'>"

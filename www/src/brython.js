@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-07-10 18:00:15.775216"
+__BRYTHON__.compiled_date="2016-07-11 22:30:21.187039"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -2778,7 +2778,7 @@ return new $StarArgCtx(C)
 case '**':
 C.has_dstar=true
 return new $DoubleStarArgCtx(C)}
-throw Error('SyntaxError')}
+$_SyntaxError(C,token)}
 return $transition(C.parent,token,arguments[2])
 case 'call_arg':
 switch(token){case 'id':
@@ -4353,8 +4353,6 @@ $ObjectDict.__mro__=[$ObjectDict]
 $ObjectDict.__new__=function(cls){if(cls===undefined){throw _b_.TypeError('object.__new__(): not enough arguments')}
 return{__class__ : cls.$dict}}
 $ObjectDict.__ne__=function(self,other){return !_b_.getattr(self,'__eq__')(other)}
-$ObjectDict.__or__=function(self,other){if(_b_.bool(self))return self
-return other}
 $ObjectDict.__repr__=function(self){if(self===object)return "<class 'object'>"
 if(self.__class__===$B.$factory)return "<class '"+self.$dict.__name__+"'>"
 if(self.__class__.__module__!==undefined){return "<"+self.__class__.__module__+"."+self.__class__.__name__+" object>"}else{return "<"+self.__class__.__name__+" object>"}}
