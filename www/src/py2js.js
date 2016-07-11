@@ -5454,7 +5454,7 @@ function $transition(context,token){
                 context.has_dstar = true
                 return new $DoubleStarArgCtx(context)
             } //switch(arguments[2])
-            throw Error('SyntaxError')
+            $_SyntaxError(context, token)
         } //switch (token)
 
         return $transition(context.parent,token,arguments[2])
