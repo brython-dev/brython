@@ -457,4 +457,16 @@ def permutations(pool):
 z = permutations(range(5))
 assert next(z) == (0, 1, 2, 3, 4)
 
+# return with a value (Python 3.3+)
+def f():
+    yield 1
+    return 3
+
+g = f()
+assert next(g) == 1
+try:
+    next(g)
+except StopIteration as exc:
+    assert exc.value == 3
+
 print('passed all tests...')

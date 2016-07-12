@@ -4721,15 +4721,6 @@ function $TryCtx(context){
             node.parent.insert(pos,else_node)
             pos++
         }
-        // restore frames stack as before the try clause
-        /*
-        var frame_node = new $Node()
-        var js = ';$B.frames_stack = $locals["$frame'+$loop_num+'"];'+
-            'console.log("restore frames", $B.last($B.frames_stack)[0]);'
-
-        new $NodeJSCtx(frame_node, js)
-        node.parent.insert(pos, frame_node)
-        */
         
         $loop_num++
     }
@@ -6645,7 +6636,7 @@ function $transition(context,token){
       case 'return':
         var no_args = context.tree[0].type=='abstract_expr'
         // if 'return' has an agument inside a generator, raise a SyntaxError
-        if(!no_args){
+        if(false){ //!no_args){
             var scope = $get_scope(context)
             if(scope.ntype=='generator'){
                 $_SyntaxError(context,["'return' with argument inside generator"])

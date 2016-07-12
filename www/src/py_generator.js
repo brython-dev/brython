@@ -264,7 +264,9 @@ $B.$GeneratorSendError = {}
 
 // Class used for "return" inside a generator function
 var $GeneratorReturn = {}
-$B.generator_return = function(){return {__class__:$GeneratorReturn}}
+$B.generator_return = function(value){
+    return {__class__:$GeneratorReturn, value:value}
+}
 
 function in_loop(node){
 
@@ -377,9 +379,9 @@ $BRGeneratorDict.__next__ = function(self){
     if(res[0].__class__==$GeneratorReturn){
         // The function may have ordinary "return" lines, in this case
         // the iteration stops
-        self._next = function(){throw StopIteration("after generator return")}
+        self._next = function(){throw StopIteration(res[0].value)}
         clear_ns(self.iter_id)
-        throw StopIteration('')
+        throw StopIteration(res[0].value)
     }
 
     // In the _next function, a "yield" returns a 2-element tuple, the

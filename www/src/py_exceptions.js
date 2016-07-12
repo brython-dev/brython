@@ -243,17 +243,16 @@ $BaseExceptionDict.with_traceback = function(self, tb){
 
 $B.set_func_names($BaseExceptionDict)
 
+
 var BaseException = function (){
     var err = Error()
     err.__name__ = 'BaseException'
-    //err.$js_exc = js_exc
-   
     err.args = _b_.tuple(Array.prototype.slice.call(arguments))
-    err.$message = arguments[0]
     err.__class__ = $BaseExceptionDict
     err.$py_error = true
     err.$stack = $B.frames_stack.slice()
     $B.current_exception = err
+    //placeholder//
     return err
 }
 
@@ -318,8 +317,8 @@ $B.exception = function(js_exc){
             exc.__name__='RuntimeError'
             exc.__class__=_b_.RuntimeError.$dict
         }
-        exc.$message = js_exc.msg || '<'+js_exc+'>'
-        exc.args = _b_.tuple([exc.$message])
+        var $message = js_exc.msg || '<'+js_exc+'>'
+        exc.args = _b_.tuple([$message])
         exc.info = ''
         exc.$py_error = true
         exc.$stack = $B.frames_stack.slice()
@@ -347,12 +346,23 @@ $B.clear_exc = function(){
 }
 
 function $make_exc(names,parent){
-    // create a class for exception called "name"
+    // Creates the exception classes that inherit from parent
+    // names is the list of exception names
     var _str=[], pos=0
     for(var i=0;i<names.length;i++){
-        var name = names[i]
+        var name = names[i],
+            code = ''
+        if(Array.isArray(name)){
+            // If name is an array, its first item is the exception name
+            // and the second is a piece of code to replace the placeholder
+            // in BaseException source code
+            var code = name[1], 
+                name = name[0]
+        }
+        // create a class for exception called "name"
         $B.bound['__builtins__'][name] = true
         var $exc = (BaseException+'').replace(/BaseException/g,name)
+        $exc = $exc.replace('//placeholder//', code)
         // class dictionary
         _str[pos++]='var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}'
         _str[pos++]='$'+name+'Dict.__bases__ = [parent]'
@@ -368,7 +378,8 @@ function $make_exc(names,parent){
 }
 
 $make_exc(['SystemExit','KeyboardInterrupt','GeneratorExit','Exception'],BaseException)
-$make_exc(['StopIteration','ArithmeticError','AssertionError','AttributeError',
+$make_exc([['StopIteration','err.value = arguments[0]'],
+    'ArithmeticError','AssertionError','AttributeError',
     'BufferError','EOFError','ImportError','LookupError','MemoryError',
     'NameError','OSError','ReferenceError','RuntimeError','SyntaxError',
     'SystemError','TypeError','ValueError','Warning'],_b_.Exception)
@@ -403,5 +414,8 @@ $B.$NameError = function(name){
 $B.$TypeError = function(msg){
     throw _b_.TypeError(msg)
 }
+
+console.log(_b_.StopIteration+'')
+
 
 })(__BRYTHON__)

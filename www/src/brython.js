@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-07-11 22:30:21.187039"
+__BRYTHON__.compiled_date="2016-07-12 21:51:31.852798"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -3588,7 +3588,8 @@ return $transition(C.parent,token)}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'return':
 var no_args=C.tree[0].type=='abstract_expr'
-if(!no_args){var scope=$get_scope(C)
+if(false){
+var scope=$get_scope(C)
 if(scope.ntype=='generator'){$_SyntaxError(C,["'return' with argument inside generator"])}
 scope.has_return_with_arguments=true}
 return $transition(C.parent,token)
@@ -5325,15 +5326,12 @@ case '__call__':
 throw _b_.TypeError("'"+cname+"'"+' object is not callable')
 default:
 throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")}}
-$B.counter={}
-$B.nb_odga=0
 $B.show_getattr=function(){var items=[]
 for(var attr in $B.counter){items.push([$B.counter[attr],attr])}
 items.sort(function(x,y){return x[0]>y[0]? 1 : x[0]==y[0]? 0 : -1})
 items.reverse()
 for(var i=0;i<10;i++){console.log(items[i])}}
-function getattr(obj,attr,_default){
-var klass=obj.__class__
+function getattr(obj,attr,_default){var klass=obj.__class__
 if(klass===undefined){
 if(typeof obj=='string'){klass=_b_.str.$dict}
 else if(typeof obj=='number'){klass=obj % 1==0 ? _b_.int.$dict : _b_.float.$dict}
@@ -5394,15 +5392,14 @@ for(var i=0,len=mro.length;i<len;i++){attr_func=mro[i]['__getattribute__']
 if(attr_func!==undefined){break}}}
 if(typeof attr_func!=='function'){console.log(attr+' is not a function '+attr_func)}
 if(attr_func===odga){var res=obj[attr]
-if(res!==undefined && res.__set__===undefined){$B.nb_odga++
-return obj[attr]}}
+if(res!==undefined && res.__set__===undefined){return obj[attr]}}
 try{var res=attr_func(obj,attr)}
 catch(err){if(_default!==undefined)return _default
 throw err}
 if(res!==undefined){return res}
-if(_default !==undefined)return _default
+if(_default !==undefined){return _default}
 var cname=klass.__name__
-if(is_class)cname=obj.__name__
+if(is_class){cname=obj.__name__}
 attr_error(attr,cname)}
 function globals(){
 return $B.obj_dict($B.last($B.frames_stack)[3])}
@@ -6065,7 +6062,6 @@ $B.set_func_names($BaseExceptionDict)
 var BaseException=function(){var err=Error()
 err.__name__='BaseException'
 err.args=_b_.tuple(Array.prototype.slice.call(arguments))
-err.$message=arguments[0]
 err.__class__=$BaseExceptionDict
 err.$py_error=true
 err.$stack=$B.frames_stack.slice()
@@ -6101,8 +6097,8 @@ if(js_exc.name=='ReferenceError'){exc.__name__='NameError'
 exc.__class__=_b_.NameError.$dict
 js_exc.message=js_exc.message.replace('$$','')}else if(js_exc.name=="InternalError"){exc.__name__='RuntimeError'
 exc.__class__=_b_.RuntimeError.$dict}
-exc.$message=js_exc.msg ||'<'+js_exc+'>'
-exc.args=_b_.tuple([exc.$message])
+var $message=js_exc.msg ||'<'+js_exc+'>'
+exc.args=_b_.tuple([$message])
 exc.info=''
 exc.$py_error=true
 exc.$stack=$B.frames_stack.slice()}else{var exc=js_exc}
@@ -6116,9 +6112,12 @@ return false}
 $B.clear_exc=function(){$B.current_exception=null}
 function $make_exc(names,parent){
 var _str=[],pos=0
-for(var i=0;i<names.length;i++){var name=names[i]
+for(var i=0;i<names.length;i++){var name=names[i],code=''
+if(Array.isArray(name)){
+var code=name[1],name=name[0]}
 $B.bound['__builtins__'][name]=true
 var $exc=(BaseException+'').replace(/BaseException/g,name)
+$exc=$exc.replace('//placeholder//',code)
 _str[pos++]='var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}'
 _str[pos++]='$'+name+'Dict.__bases__ = [parent]'
 _str[pos++]='$'+name+'Dict.__module__ = "builtins"'
@@ -6129,7 +6128,7 @@ _str[pos++]='$'+name+'Dict.$factory=_b_.'+name
 _str[pos++]='_b_.'+name+'.$dict=$'+name+'Dict'}
 eval(_str.join(';'))}
 $make_exc(['SystemExit','KeyboardInterrupt','GeneratorExit','Exception'],BaseException)
-$make_exc(['StopIteration','ArithmeticError','AssertionError','AttributeError','BufferError','EOFError','ImportError','LookupError','MemoryError','NameError','OSError','ReferenceError','RuntimeError','SyntaxError','SystemError','TypeError','ValueError','Warning'],_b_.Exception)
+$make_exc([['StopIteration','err.value = arguments[0]'],'ArithmeticError','AssertionError','AttributeError','BufferError','EOFError','ImportError','LookupError','MemoryError','NameError','OSError','ReferenceError','RuntimeError','SyntaxError','SystemError','TypeError','ValueError','Warning'],_b_.Exception)
 $make_exc(['FloatingPointError','OverflowError','ZeroDivisionError'],_b_.ArithmeticError)
 $make_exc(['IndexError','KeyError'],_b_.LookupError)
 $make_exc(['UnboundLocalError'],_b_.NameError)
@@ -6144,7 +6143,8 @@ $make_exc(['DeprecationWarning','PendingDeprecationWarning','RuntimeWarning','Sy
 $make_exc(['EnvironmentError','IOError','VMSError','WindowsError'],_b_.OSError)
 $B.$NameError=function(name){
 throw _b_.NameError(name)}
-$B.$TypeError=function(msg){throw _b_.TypeError(msg)}})(__BRYTHON__)
+$B.$TypeError=function(msg){throw _b_.TypeError(msg)}
+console.log(_b_.StopIteration+'')})(__BRYTHON__)
 
 ;(function($B){var _b_=$B.builtins,None=_b_.None,$RangeDict={__class__:$B.$type,__dir__:_b_.object.$dict.__dir__,__name__:'range',$native:true,descriptors:{start:true,step:true,stop:true}}
 $RangeDict.__contains__=function(self,other){if($RangeDict.__len__(self)==0){return false}
@@ -10491,7 +10491,7 @@ this.toString=function(){return '<Node '+this.data+'>'}}
 $B.GeneratorBreak={}
 $B.$GeneratorSendError={}
 var $GeneratorReturn={}
-$B.generator_return=function(){return{__class__:$GeneratorReturn}}
+$B.generator_return=function(value){return{__class__:$GeneratorReturn,value:value}}
 function in_loop(node){
 while(node){if(node.loop_start!==undefined)return node
 node=node.parent}
@@ -10534,9 +10534,9 @@ $B.enter_frame([self.iter_id,$locals,self.env[0],{}])
 throw StopIteration('iterator is exhausted')}
 throw StopIteration("")}
 if(res[0].__class__==$GeneratorReturn){
-self._next=function(){throw StopIteration("after generator return")}
+self._next=function(){throw StopIteration(res[0].value)}
 clear_ns(self.iter_id)
-throw StopIteration('')}
+throw StopIteration(res[0].value)}
 var yielded_value=res[0],yield_node_id=res[1]
 if(yield_node_id==self.yield_node_id){return yielded_value}
 self.yield_node_id=yield_node_id
