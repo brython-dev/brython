@@ -474,8 +474,6 @@ function attr_error(attr, cname){
     }
 }
 
-$B.counter = {}
-$B.nb_odga = 0
 $B.show_getattr = function(){
     var items = []
     for(var attr in $B.counter){items.push([$B.counter[attr], attr])}
@@ -488,11 +486,6 @@ $B.show_getattr = function(){
 
 function getattr(obj,attr,_default){
 
-    /*
-    if($B.counter[attr]==undefined){$B.counter[attr]=1}
-    else{$B.counter[attr]++}
-    */
-    
     var klass = obj.__class__
     
     if(klass===undefined){
@@ -630,7 +623,6 @@ function getattr(obj,attr,_default){
     if(attr_func===odga){
         var res = obj[attr]
         if(res!==undefined && res.__set__===undefined){
-            $B.nb_odga++
             return obj[attr]
         }
     }
@@ -641,13 +633,11 @@ function getattr(obj,attr,_default){
         throw err
     }
 
-    if(res!==undefined) {
-        return res
-    }
-    if(_default !==undefined) return _default
+    if(res!==undefined){return res}
+    if(_default !==undefined){return _default}
     
     var cname = klass.__name__
-    if(is_class) cname=obj.__name__
+    if(is_class){cname=obj.__name__}
         
     attr_error(attr, cname)
 }
