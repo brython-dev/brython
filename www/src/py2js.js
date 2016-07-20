@@ -6634,18 +6634,6 @@ function $transition(context,token){
         }//switch
         $_SyntaxError(context,'token '+token+' after '+context)
       case 'return':
-        var no_args = context.tree[0].type=='abstract_expr'
-        // if 'return' has an agument inside a generator, raise a SyntaxError
-        if(false){ //!no_args){
-            var scope = $get_scope(context)
-            if(scope.ntype=='generator'){
-                $_SyntaxError(context,["'return' with argument inside generator"])
-            }
-            // If the function is a generator but no 'yield' has been handled
-            // yet, store the information that function has a return with 
-            // arguments, to throw the SyntaxError when the 'yield' is handled
-            scope.has_return_with_arguments = true
-        }
         return $transition(context.parent,token)
       case 'single_kw':
         if(token===':') return $BodyCtx(context)
