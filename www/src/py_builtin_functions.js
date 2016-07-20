@@ -382,6 +382,7 @@ function $eval(src, _globals, _locals){
             var lns = eval('$locals_'+locals_id)
             var setitem = getattr(_locals,'__setitem__')
             for(var attr in lns){
+                if(attr.charAt(0)=='$'){continue}
                 setitem(attr, lns[attr])
             }
         }else{
@@ -392,6 +393,7 @@ function $eval(src, _globals, _locals){
             // Update _globals with the namespace after execution
             var setitem = getattr(_globals,'__setitem__')
             for(var attr in gns){
+                if(attr.charAt(0)=='$'){continue}
                 setitem(attr, gns[attr])
             }
         }else{
@@ -1545,7 +1547,7 @@ function $url_open(){
             closed:False,encoding:encoding,mode:mode,name:file
         }
         res.__class__ = is_binary ? $BufferedReader : $TextIOWrapper
-
+        
         return res
     }
 }

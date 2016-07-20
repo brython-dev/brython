@@ -354,7 +354,7 @@ finder_VFS.$dict = {
         delete module.__spec__['loader_state'];
         var ext = stored[0],
             module_contents = stored[1];
-        module.$is_package = stored[2];
+        module.$is_package = stored[2] || false;
         var path = $B.brython_path+'Lib/'+module.__name__
         if(module.$is_package){path += '/__init__.py'}
         module.__file__ = path

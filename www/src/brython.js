@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-07-12 21:51:31.852798"
+__BRYTHON__.compiled_date="2016-07-20 08:19:26.371442"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -3587,11 +3587,6 @@ case 'eol':
 return $transition(C.parent,token)}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'return':
-var no_args=C.tree[0].type=='abstract_expr'
-if(false){
-var scope=$get_scope(C)
-if(scope.ntype=='generator'){$_SyntaxError(C,["'return' with argument inside generator"])}
-scope.has_return_with_arguments=true}
 return $transition(C.parent,token)
 case 'single_kw':
 if(token===':')return $BodyCtx(C)
@@ -5287,10 +5282,12 @@ var res=eval(js)
 var gns=eval('$locals_'+globals_id)
 if(_locals!==undefined){var lns=eval('$locals_'+locals_id)
 var setitem=getattr(_locals,'__setitem__')
-for(var attr in lns){setitem(attr,lns[attr])}}else{for(var attr in lns){current_frame[1][attr]=lns[attr]}}
+for(var attr in lns){if(attr.charAt(0)=='$'){continue}
+setitem(attr,lns[attr])}}else{for(var attr in lns){current_frame[1][attr]=lns[attr]}}
 if(_globals!==undefined){
 var setitem=getattr(_globals,'__setitem__')
-for(var attr in gns){setitem(attr,gns[attr])}}else{for(var attr in gns){current_frame[3][attr]=gns[attr]}}
+for(var attr in gns){if(attr.charAt(0)=='$'){continue}
+setitem(attr,gns[attr])}}else{for(var attr in gns){current_frame[3][attr]=gns[attr]}}
 if(res===undefined)return _b_.None
 return res}catch(err){if(err.$py_error===undefined){throw $B.exception(err)}
 throw err}finally{delete __BRYTHON__.modules[globals_id]
@@ -6143,8 +6140,7 @@ $make_exc(['DeprecationWarning','PendingDeprecationWarning','RuntimeWarning','Sy
 $make_exc(['EnvironmentError','IOError','VMSError','WindowsError'],_b_.OSError)
 $B.$NameError=function(name){
 throw _b_.NameError(name)}
-$B.$TypeError=function(msg){throw _b_.TypeError(msg)}
-console.log(_b_.StopIteration+'')})(__BRYTHON__)
+$B.$TypeError=function(msg){throw _b_.TypeError(msg)}})(__BRYTHON__)
 
 ;(function($B){var _b_=$B.builtins,None=_b_.None,$RangeDict={__class__:$B.$type,__dir__:_b_.object.$dict.__dir__,__name__:'range',$native:true,descriptors:{start:true,step:true,stop:true}}
 $RangeDict.__contains__=function(self,other){if($RangeDict.__len__(self)==0){return false}
@@ -6659,8 +6655,9 @@ self.js[attr]===undefined &&
 self.js['addEventListener']!==undefined){attr='addEventListener'}
 var js_attr=self.js[attr]
 if(self.js_func && self.js_func[attr]!==undefined){js_attr=self.js_func[attr]}
-if(js_attr !==undefined){if(typeof js_attr=='function'){
-var res=function(){var args=[]
+if(js_attr !==undefined){if(typeof js_attr=='function'){if(attr=='setValue'){console.log('get function',attr)}
+var res=function(){
+var args=[]
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){if(arguments[i].$nat!=undefined){
 throw TypeError("A Javascript function can't "+
 "take keyword arguments")}else{args.push(pyobj2jsobj(arguments[i]))}}
@@ -6905,7 +6902,7 @@ finder_VFS.$dict={$factory: finder_VFS,__class__: $B.$type,__name__: 'VFSFinder'
 return _b_.None;},exec_module : function(cls,module){var stored=module.__spec__.loader_state.stored;
 delete module.__spec__['loader_state'];
 var ext=stored[0],module_contents=stored[1];
-module.$is_package=stored[2];
+module.$is_package=stored[2]||false;
 var path=$B.brython_path+'Lib/'+module.__name__
 if(module.$is_package){path +='/__init__.py'}
 module.__file__=path

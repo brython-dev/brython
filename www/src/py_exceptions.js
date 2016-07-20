@@ -415,7 +415,4 @@ $B.$TypeError = function(msg){
     throw _b_.TypeError(msg)
 }
 
-console.log(_b_.StopIteration+'')
-
-
 })(__BRYTHON__)

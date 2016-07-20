@@ -196,10 +196,12 @@ $JSObjectDict.__getattribute__ = function(self,attr){
 
     if(js_attr !== undefined){
         if(typeof js_attr=='function'){
+            if(attr=='setValue'){console.log('get function', attr)}
             // If the attribute of a JSObject is a function F, it is converted to a function G
             // where the arguments passed to the Python function G are converted to Javascript
             // objects usable by the underlying function F
             var res = function(){
+                //if(attr=='setValue'){console.log('run function')}
                 var args = []
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     if(arguments[i].$nat!=undefined){
@@ -231,6 +233,7 @@ $JSObjectDict.__getattribute__ = function(self,attr){
                 if (this !== null && this !== undefined && this !== window) {
                     new_this = this
                 }
+                //if(attr=='setValue'){console.log('get result')}
                 var result = js_attr.apply(new_this,args)
                 // NOTE: fix for situations when wrapped function is constructor (thus it does not return and value is lost)
                 // this has side effect that non-constructor functions returning nothing will return `this` instead, which can break something
@@ -244,6 +247,7 @@ $JSObjectDict.__getattribute__ = function(self,attr){
             res.__str__ = function(){return '<function '+attr+'>'}
             // this is very important for class-emulating functions
             res.prototype = js_attr.prototype
+            //if(attr=='setValue'){console.log('return jsobject', res)}
             return {__class__:$JSObjectDict,js:res,js_func:js_attr}
         }else{
             if(Array.isArray(self.js[attr])){return self.js[attr]}
