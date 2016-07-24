@@ -904,6 +904,25 @@ assert not {0, 1, 2}.issuperset([2, 3])
 assert {0, 1}.issubset(range(3))
 assert not {7, 8}.issubset([6, 7])
 
+# issue 465
+class A:
+    def __init__(self, value):
+        self.value = value
+    def __enter__(self):
+        return self
+    def __exit__(self, *args):
+        pass
+    def __str__(self):
+        return str(self.value)
+a = A(1)
+with a as x:
+    assert str(x) == "1"
+
+with A(2) as x:
+    assert str(x) == "2"
+
+with A(3):
+    pass
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

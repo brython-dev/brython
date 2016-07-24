@@ -3587,6 +3587,74 @@ function $ImportedModuleCtx(context,name){
     }
 }
 
+function $IMPRTCtx(context){
+    // Class for keyword "import"
+    this.type = 'import'
+    this.parent = context
+    this.tree = []
+    context.tree[context.tree.length]=this
+    this.expect = 'id'
+
+    this.toString = function(){return 'import '+this.tree}
+    
+    this.bind_names = function(){
+        // For "import X", set X in the list of names bound in current scope
+        var scope = $get_scope(this)
+        for(var i=0;i<this.tree.length;i++){
+            if(this.tree[i].name==this.tree[i].alias){
+                var name = this.tree[i].name,
+                    parts = name.split('.'),
+                    bound = name
+                if(parts.length>1){
+                    bound = parts[0]
+                }
+            }else{
+                bound = this.tree[i].alias
+            }
+            $B.bound[scope.id][bound] = true
+            $B.type[scope.id][bound] = 'module'
+        }
+    }
+    
+    this.transform = function(node, rank){
+        // If there are more than one module name, split line
+        for(var i=1;i<this.tree.length;i++){
+            var new_node = new $Node()
+            var ctx = new $IMPRTCtx(new $NodeCtx(new_node))
+            ctx.tree = [this.tree[i]]
+            node.parent.insert(rank+1, new_node)
+        }
+        this.tree.splice(1, this.tree.length)
+        // All the code that starts after IMPRT is put in a function
+        // called when the module has finished importing
+        var name = this.tree[0].name,
+            js = '$locals["'+this.tree[0].alias+'"]= $B.imported["'+name+'"]'
+        node.add($NodeJS(js))
+        for(var i=rank+1;i<node.parent.children.length;i++){
+            node.add(node.parent.children[i])
+        }
+        node.parent.children.splice(rank+1, node.parent.children.length)
+        node.parent.add($NodeJS(')'))
+    }
+    
+    this.to_js = function(){
+        this.js_processed=true
+        var scope = $get_scope(this)
+        var mod = scope.module
+
+        var res = [], pos=0
+        for(var i=0;i<this.tree.length;i++){
+            var mod_name = this.tree[i].name,
+                aliases = (this.tree[i].name == this.tree[i].alias)?
+                    '{}' : ('{"' + mod_name + '" : "' +
+                    this.tree[i].alias + '"}'),
+                localns = '$locals_'+scope.id.replace(/\./g,'_');
+            res[pos++] = '$B.$import_non_blocking("'+mod_name+'", function()'
+        }
+        // add None for interactive console
+        return res.join('')
+    }
+}
 function $IntCtx(context,value){
     // Class for literal integers
     // value is a 2-elt tuple [base, value_as_string] where
@@ -4759,6 +4827,7 @@ function $WithCtx(context){
     this.toString = function(){return '(with) '+this.tree}
 
     this.set_alias = function(arg){
+        console.log('set with alias', arg)
         this.tree[this.tree.length-1].alias = arg
         $B.bound[this.scope.id][arg] = {level: this.scope.level}
         $B.type[this.scope.id][arg] = false
@@ -4794,7 +4863,7 @@ function $WithCtx(context){
             }
             node.children = [new_node]
         }
-
+        
         /* PEP 243 says that
         
         with EXPR as VAR:
@@ -4891,7 +4960,7 @@ function $WithCtx(context){
         
         // if there is an alias, insert the value
         if(this.tree[0].alias){
-            var alias = this.tree[0].alias
+            var alias = this.tree[0].alias.tree[0].tree[0].value
             var js = '$locals'+'["'+alias+'"] = $value'+num
             var value_node = new $Node()
             new $NodeJSCtx(value_node, js)
@@ -6503,6 +6572,8 @@ function $transition(context,token){
             return new $FromCtx(context)
           case 'import':
             return new $ImportCtx(context)
+          case 'IMPRT': // experimental for non blocking imports
+            return new $IMPRTCtx(context)
           case 'global':
             return new $GlobalCtx(context)
           case 'nonlocal':
@@ -6825,7 +6896,6 @@ function $transition(context,token){
                context.parenth = true
                return context
             }else if(context.expect=='alias'){
-               console.log('context', context, 'token', token)
                context.expect = ':'
                return new $TargetListCtx(context,false)
             }
@@ -6886,8 +6956,8 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         "nonlocal","while","del","global","with",
         "as","elif","else","if","yield","assert","import",
         "except","raise","in", //"not",
-        "pass","with","continue","__debugger__"
-        //"False","None","True","continue",
+        "pass","with","continue","__debugger__",
+        "IMPRT" // experimental for asynchronous imports
         // "and',"or","is"
         ]
     var unsupported = []

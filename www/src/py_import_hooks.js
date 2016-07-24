@@ -27,7 +27,7 @@
         var _finder=_meta_path[i],
             find_spec = _b_.getattr(_finder, 'find_spec', null)
         if(find_spec !== null){
-            spec=_b_.getattr(find_spec, '__call__')(mod_name, _path, undefined);
+            spec=_b_.getattr(find_spec, '__call__')(mod_name, _path, undefined, blocking);
             spec.blocking = blocking
         }
     } //for

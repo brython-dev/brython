@@ -206,8 +206,11 @@ function show_ns(){
 
 function import_py1(module, mod_name, path, package, module_contents){
     console.log('importpy1', mod_name)
-    $B.imported[mod_name].$is_package = module.$is_package
-    $B.imported[mod_name].$last_modified = module.$last_modified
+    $B.imported[mod_name]={
+        __class__: $B.$ModuleDict,
+        $is_package: module.$is_package,
+        $last_modified: module.$last_modified
+    }
     if(path.substr(path.length-12)=='/__init__.py'){
         //module.is_package = true
         $B.imported[mod_name].__package__ = mod_name
@@ -529,7 +532,7 @@ finder_path.$dict = {
         return finder_path.$dict.find_spec(cls, name, path)
     },
 
-    find_spec : function(cls, fullname, path, prev_module) {
+    find_spec : function(cls, fullname, path, prev_module, blocking) {
         if (is_none(path)) {
             // [Import spec] Top-level import , use sys.path
             path = $B.path
@@ -565,8 +568,9 @@ finder_path.$dict = {
             var find_spec = _b_.getattr(finder, 'find_spec'),
                 fs_func = typeof find_spec=='function' ? 
                     find_spec : 
-                    _b_.getattr(find_spec, '__call__'),
-                spec = fs_func(fullname, prev_module);
+                    _b_.getattr(find_spec, '__call__')
+
+            var spec = fs_func(fullname, prev_module, blocking);
             if (!is_none(spec)) {
                 return spec;
             }
@@ -675,7 +679,7 @@ url_hook.$dict = {
                                    "(unbound)") + ' at ' + self.path_entry + '>'
     },
 
-    find_spec : function(self, fullname, module) {
+    find_spec : function(self, fullname, module, blocking) {
         var loader_data = {},
             notfound = true,
             hint = self.hint,
@@ -700,8 +704,10 @@ url_hook.$dict = {
 
         for (var j = 0; notfound && j < modpaths.length; ++j) {
             try{
-                var file_info = modpaths[j];
-                loader_data.code=$download_module({__name__:fullname}, file_info[0]);
+                var file_info = modpaths[j],
+                    module = {__name__:fullname, $is_package: false}
+                loader_data.code=$download_module(module, 
+                    file_info[0], undefined, blocking);
                 notfound = false;
                 loader_data.type = file_info[1];
                 loader_data.is_package = file_info[2];
@@ -770,6 +776,7 @@ $B.is_none = function (o) {
 // TODO: Include at runtime in importlib.__import__
 $B.$__import__ = function (mod_name, globals, locals, fromlist, level, blocking){
    // [Import spec] Halt import logic
+   //if(blocking!==true){console.log('__import__ not blocking', mod_name)}
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.');
    if (modobj == _b_.None) {
@@ -907,7 +914,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, blocking){
     var importer = typeof __import__=='function' ? 
                         __import__ : 
                         _b_.getattr(__import__, '__call__'),
-        modobj = importer(mod_name, globals, undefined, fromlist, 0);
+        modobj = importer(mod_name, globals, undefined, fromlist, 0, blocking);
 
     // Apply bindings upon local namespace
     if (!fromlist || fromlist.length == 0) {
@@ -973,6 +980,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, blocking){
 $B.$import_non_blocking = function(mod_name, func){
     console.log('import non blocking', mod_name)
     $B.$import(mod_name, [], [], {}, [false, func])
+    console.log('after async import', $B.imported[mod_name])
 }
 
 $B.$meta_path = [finder_VFS, finder_stdlib_static, finder_path];

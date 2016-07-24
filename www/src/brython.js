@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-07-20 08:19:26.371442"
+__BRYTHON__.compiled_date="2016-07-24 21:11:28.238718"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1776,6 +1776,39 @@ this.alias=name
 C.tree[C.tree.length]=this
 this.to_js=function(){this.js_processed=true
 return '"'+this.name+'"'}}
+function $IMPRTCtx(C){
+this.type='import'
+this.parent=C
+this.tree=[]
+C.tree[C.tree.length]=this
+this.expect='id'
+this.toString=function(){return 'import '+this.tree}
+this.bind_names=function(){
+var scope=$get_scope(this)
+for(var i=0;i<this.tree.length;i++){if(this.tree[i].name==this.tree[i].alias){var name=this.tree[i].name,parts=name.split('.'),bound=name
+if(parts.length>1){bound=parts[0]}}else{bound=this.tree[i].alias}
+$B.bound[scope.id][bound]=true
+$B.type[scope.id][bound]='module'}}
+this.transform=function(node,rank){
+for(var i=1;i<this.tree.length;i++){var new_node=new $Node()
+var ctx=new $IMPRTCtx(new $NodeCtx(new_node))
+ctx.tree=[this.tree[i]]
+node.parent.insert(rank+1,new_node)}
+this.tree.splice(1,this.tree.length)
+var name=this.tree[0].name,js='$locals["'+this.tree[0].alias+'"]= $B.imported["'+name+'"]'
+node.add($NodeJS(js))
+for(var i=rank+1;i<node.parent.children.length;i++){node.add(node.parent.children[i])}
+node.parent.children.splice(rank+1,node.parent.children.length)
+node.parent.add($NodeJS(')'))}
+this.to_js=function(){this.js_processed=true
+var scope=$get_scope(this)
+var mod=scope.module
+var res=[],pos=0
+for(var i=0;i<this.tree.length;i++){var mod_name=this.tree[i].name,aliases=(this.tree[i].name==this.tree[i].alias)?
+'{}' :('{"' + mod_name + '" : "' +
+this.tree[i].alias + '"}'),localns='$locals_'+scope.id.replace(/\./g,'_');
+res[pos++]='$B.$import_non_blocking("'+mod_name+'", function()'}
+return res.join('')}}
 function $IntCtx(C,value){
 this.type='int'
 this.value=value
@@ -2399,7 +2432,8 @@ this.tree=[]
 this.expect='as'
 this.scope=$get_scope(this)
 this.toString=function(){return '(with) '+this.tree}
-this.set_alias=function(arg){this.tree[this.tree.length-1].alias=arg
+this.set_alias=function(arg){console.log('set with alias',arg)
+this.tree[this.tree.length-1].alias=arg
 $B.bound[this.scope.id][arg]={level: this.scope.level}
 $B.type[this.scope.id][arg]=false
 if(this.scope.ntype !=='module'){
@@ -2441,7 +2475,7 @@ var try_node=new $Node()
 try_node.is_try=true
 new $NodeJSCtx(try_node,'try')
 node.add(try_node)
-if(this.tree[0].alias){var alias=this.tree[0].alias
+if(this.tree[0].alias){var alias=this.tree[0].alias.tree[0].tree[0].value
 var js='$locals'+'["'+alias+'"] = $value'+num
 var value_node=new $Node()
 new $NodeJSCtx(value_node,js)
@@ -3487,6 +3521,8 @@ case 'from':
 return new $FromCtx(C)
 case 'import':
 return new $ImportCtx(C)
+case 'IMPRT': 
+return new $IMPRTCtx(C)
 case 'global':
 return new $GlobalCtx(C)
 case 'nonlocal':
@@ -3722,8 +3758,7 @@ return $BodyCtx(C)}
 break
 case '(':
 if(C.expect==='id' && C.tree.length===0){C.parenth=true
-return C}else if(C.expect=='alias'){console.log('C',C,'token',token)
-C.expect=':'
+return C}else if(C.expect=='alias'){C.expect=':'
 return new $TargetListCtx(C,false)}
 break
 case ')':
@@ -3755,7 +3790,7 @@ var br_close={")":"(","]":"[","}":"{"}
 var br_stack=""
 var br_pos=[]
 var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in",
-"pass","with","continue","__debugger__"
+"pass","with","continue","__debugger__","IMPRT" 
 ]
 var unsupported=[]
 var $indented=['class','def','for','condition','single_kw','try','except','with']
@@ -6655,7 +6690,7 @@ self.js[attr]===undefined &&
 self.js['addEventListener']!==undefined){attr='addEventListener'}
 var js_attr=self.js[attr]
 if(self.js_func && self.js_func[attr]!==undefined){js_attr=self.js_func[attr]}
-if(js_attr !==undefined){if(typeof js_attr=='function'){if(attr=='setValue'){console.log('get function',attr)}
+if(js_attr !==undefined){if(typeof js_attr=='function'){
 var res=function(){
 var args=[]
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){if(arguments[i].$nat!=undefined){
@@ -6841,8 +6876,7 @@ for(var i=0,_len_i=kk.length;i < _len_i;i++){console.log(kk[i])
 if(kk[i].charAt(0)=='$'){console.log(eval(kk[i]))}}
 console.log('---')}
 function import_py1(module,mod_name,path,package,module_contents){console.log('importpy1',mod_name)
-$B.imported[mod_name].$is_package=module.$is_package
-$B.imported[mod_name].$last_modified=module.$last_modified
+$B.imported[mod_name]={__class__: $B.$ModuleDict,$is_package: module.$is_package,$last_modified: module.$last_modified}
 if(path.substr(path.length-12)=='/__init__.py'){
 $B.imported[mod_name].__package__=mod_name
 $B.imported[mod_name].__path__=path
@@ -6966,7 +7000,7 @@ return _b_.None;},exec_module : function(cls,module){var _spec=_b_.getattr(modul
 module.$is_package=_spec.loader_state.is_package,delete _spec.loader_state['code'];
 var src_type=_spec.loader_state.type
 if(src_type=='py' ||src_type=='pyc.js'){run_py(code,_spec.origin,module,src_type=='pyc.js');}
-else if(_spec.loader_state.type=='js'){run_js(code,_spec.origin,module)}},find_module: function(cls,name,path){return finder_path.$dict.find_spec(cls,name,path)},find_spec : function(cls,fullname,path,prev_module){if(is_none(path)){
+else if(_spec.loader_state.type=='js'){run_js(code,_spec.origin,module)}},find_module: function(cls,name,path){return finder_path.$dict.find_spec(cls,name,path)},find_spec : function(cls,fullname,path,prev_module,blocking){if(is_none(path)){
 path=$B.path}
 for(var i=0,li=path.length;i<li;++i){var path_entry=path[i];
 if(path_entry[path_entry.length - 1]!='/'){path_entry +='/'}
@@ -6984,7 +7018,8 @@ if(is_none(finder))
 continue;
 var find_spec=_b_.getattr(finder,'find_spec'),fs_func=typeof find_spec=='function' ? 
 find_spec : 
-_b_.getattr(find_spec,'__call__'),spec=fs_func(fullname,prev_module);
+_b_.getattr(find_spec,'__call__')
+var spec=fs_func(fullname,prev_module,blocking);
 if(!is_none(spec)){return spec;}}
 return _b_.None;}}
 finder_path.$dict.__mro__=[finder_path.$dict,_b_.object.$dict]
@@ -7021,7 +7056,7 @@ vfs_hook.$dict.__mro__=[vfs_hook.$dict,_b_.object.$dict]
 function url_hook(path_entry,hint){return{__class__: url_hook.$dict,path_entry:path_entry,hint:hint }}
 url_hook.__class__=$B.$factory
 url_hook.$dict={$factory: url_hook,__class__: $B.$type,__name__ : 'UrlPathFinder',__repr__: function(self){return '<UrlPathFinder' +(self.hint? " for '" + self.hint + "'":
-"(unbound)")+ ' at ' + self.path_entry + '>'},find_spec : function(self,fullname,module){var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry + fullname.match(/[^.]+$/g)[0],modpaths=[];
+"(unbound)")+ ' at ' + self.path_entry + '>'},find_spec : function(self,fullname,module,blocking){var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry + fullname.match(/[^.]+$/g)[0],modpaths=[];
 var tryall=hint===undefined;
 if(tryall ||hint=='js'){
 modpaths=[[base_path + '.js','js',false]];}
@@ -7029,8 +7064,8 @@ if(tryall ||hint=='pyc.js'){
 modpaths=modpaths.concat([[base_path + '.pyc.js','pyc.js',false],[base_path + '/__init__.pyc.js','pyc.js',true]]);}
 if(tryall ||hint=='py'){
 modpaths=modpaths.concat([[base_path + '.py','py',false],[base_path + '/__init__.py','py',true]]);}
-for(var j=0;notfound && j < modpaths.length;++j){try{var file_info=modpaths[j];
-loader_data.code=$download_module({__name__:fullname},file_info[0]);
+for(var j=0;notfound && j < modpaths.length;++j){try{var file_info=modpaths[j],module={__name__:fullname,$is_package: false}
+loader_data.code=$download_module(module,file_info[0],undefined,blocking);
 notfound=false;
 loader_data.type=file_info[1];
 loader_data.is_package=file_info[2];
@@ -7108,7 +7143,7 @@ if(__import__===undefined){
 __import__=$B.$__import__;}
 var importer=typeof __import__=='function' ? 
 __import__ : 
-_b_.getattr(__import__,'__call__'),modobj=importer(mod_name,globals,undefined,fromlist,0);
+_b_.getattr(__import__,'__call__'),modobj=importer(mod_name,globals,undefined,fromlist,0,blocking);
 if(!fromlist ||fromlist.length==0){
 var alias=aliases[mod_name];
 if(alias){locals[alias]=$B.imported[mod_name];}
@@ -7132,7 +7167,8 @@ locals[alias]=_b_.getattr(modobj,name);}
 catch($err3){
 throw _b_.ImportError("cannot import name '"+name+"'")}}}}}}
 $B.$import_non_blocking=function(mod_name,func){console.log('import non blocking',mod_name)
-$B.$import(mod_name,[],[],{},[false,func])}
+$B.$import(mod_name,[],[],{},[false,func])
+console.log('after async import',$B.imported[mod_name])}
 $B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path];
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!='/'){path=path + '/' }
 var value=(filetype=='none')? _b_.None : url_hook(path,filetype);
@@ -10788,7 +10824,7 @@ if(is_none(module)){module=undefined;}
 var _meta_path=_b_.getattr($sys,'meta_path');
 var spec=undefined;
 for(var i=0,_len_i=_meta_path.length;i < _len_i && is_none(spec);i++){var _finder=_meta_path[i],find_spec=_b_.getattr(_finder,'find_spec',null)
-if(find_spec !==null){spec=_b_.getattr(find_spec,'__call__')(mod_name,_path,undefined);
+if(find_spec !==null){spec=_b_.getattr(find_spec,'__call__')(mod_name,_path,undefined,blocking);
 spec.blocking=blocking}}
 if(is_none(spec)){
 throw _b_.ImportError('No module named '+mod_name);}
