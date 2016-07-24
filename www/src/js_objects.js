@@ -196,7 +196,6 @@ $JSObjectDict.__getattribute__ = function(self,attr){
 
     if(js_attr !== undefined){
         if(typeof js_attr=='function'){
-            if(attr=='setValue'){console.log('get function', attr)}
             // If the attribute of a JSObject is a function F, it is converted to a function G
             // where the arguments passed to the Python function G are converted to Javascript
             // objects usable by the underlying function F
