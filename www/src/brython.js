@@ -62,7 +62,7 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-07-24 21:29:04.632140"
+__BRYTHON__.compiled_date="2016-07-24 22:26:01.782590"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -700,13 +700,9 @@ if(this.tree.length>-1){if(this.func.type=='id'){if(this.func.is_builtin){
 if($B.builtin_funcs[this.func.value]!==undefined){return func_js+args_str}}else{var bound_obj=this.func.found
 if(bound_obj &&(bound_obj.type=='class' ||
 bound_obj.type=='def')){return func_js+args_str}}
-var res='(typeof '+func_js+'=="function" ? '
-res +=func_js+' : '
-res +='getattr('+func_js+',"__call__"))'+args_str}else{var res='(typeof '+func_js+'=="function" ? '+func_js+ ' : getattr('+
-func_js+',"__call__"))'+args_str}
+var res='getattr('+func_js+',"__call__")'+args_str}else{var res='getattr('+func_js+',"__call__")'+args_str}
 return res}
-return '(typeof '+func_js+'=="function" ? '+func_js+ ' : getattr('+
-func_js+',"__call__"))()'}}}
+return 'getattr('+func_js+',"__call__")'+args_str}}}
 function $ClassCtx(C){
 this.type='class'
 this.parent=C

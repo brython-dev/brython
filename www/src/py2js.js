@@ -1325,18 +1325,14 @@ function $CallCtx(context){
                           return func_js+args_str
                       }
                   }
-                  var res = '(typeof '+func_js+'=="function" ? '
-                  res += func_js+' : '
-                  res += 'getattr('+func_js+',"__call__"))'+args_str
+                  var res = 'getattr('+func_js+',"__call__")'+args_str
               }else{
-                  var res = '(typeof '+func_js+'=="function" ? '+func_js+ ' : getattr('+
-                            func_js+',"__call__"))'+args_str
+                  var res = 'getattr('+func_js+',"__call__")'+args_str
               }
               return res
             }
 
-            return '(typeof '+func_js+'=="function" ? '+func_js+ ' : getattr('+
-                func_js+',"__call__"))()'
+            return 'getattr('+func_js+',"__call__")'+args_str
         }
     }
 }
