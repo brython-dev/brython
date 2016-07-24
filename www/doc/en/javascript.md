@@ -14,14 +14,14 @@ It defines two classes and a function :
 > <code>JSConstructor(_jsconstr_)</code> returns a Brython object. This object 
 > is callable ; it returns the object built by the constructor *jsconstr*, 
 > tranformed into a Python object according to the conversion table in
-> <a href="jsojects.html">Javascript objects and libraries</a>.
+> <a href="jsobjects.html">Javascript objects and libraries</a>.
 
 **javascript**.`JSObject`
 > Class for Javascript objects that can't be converted "naturally" into Python
 > objects when they are referenced as attributes of `browser.window`. This
 > class is used internally by Brython and should not be used in scripts.
 
-> See <a href="jsojects.html">Javascript objects and libraries</a>.
+> See <a href="jsobjects.html">Javascript objects and libraries</a>.
 
 **javascript**.`load(`_script\_url[,names]_`)`
 > Load the Javascript script at address _script\_url_ and loads the list of
