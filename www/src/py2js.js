@@ -6145,8 +6145,10 @@ function $transition(context,token){
               case 'eol':
                 context.bind_names()
                 return $transition(context.parent,token)
-              default:
+              case 'id':
                 $_SyntaxError(context,['trailing comma not allowed without surrounding parentheses'])
+              default:
+                $_SyntaxError(context,['invalid syntax'])
             }
           case 'as':
             if (context.expect ==',' || context.expect=='eol'){
