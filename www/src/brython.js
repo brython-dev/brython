@@ -3228,8 +3228,10 @@ switch(C.expect){case ',':
 case 'eol':
 C.bind_names()
 return $transition(C.parent,token)
+case 'id':
+$_SyntaxError(C,['trailing comma not allowed without surrounding parentheses'])
 default:
-$_SyntaxError(C,['trailing comma not allowed without surrounding parentheses'])}
+$_SyntaxError(C,['invalid syntax'])}
 case 'as':
 if(C.expect==',' ||C.expect=='eol'){C.expect='alias'
 return C}
