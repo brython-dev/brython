@@ -345,6 +345,11 @@ $BRGeneratorDict.__next__ = function(self){
         eval('var $locals_'+self.env[i][0]+'=self.env[i][1]')
         //console.log('restore', 'var $locals_'+self.env[i][0]+'=self.env[i][1]')
     }
+    for(var i=0;i<$B.frames_stack.length;i++){
+        var frame = $B.frames_stack[i]
+        eval('var $locals_'+frame[0].replace(/\./g, '_')+'=frame[1]')
+        eval('var $locals_'+frame[2].replace(/\./g, '_')+'=frame[3]')
+    }
     
     // Call the function _next to yield a value
     try{

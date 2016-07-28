@@ -469,4 +469,7 @@ try:
 except StopIteration as exc:
     assert exc.value == 3
 
+# issue 470
+assert eval('bytes(0 for x in [])') == b''
+
 print('passed all tests...')
