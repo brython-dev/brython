@@ -62,8 +62,8 @@ $B.cased_letters_regexp=/[\u0041-\u005A\u0061-\u007A\u00B5\u00C0-\u00D6\u00D8-\u
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-07-28 15:56:16.752304"
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2016-07-28 18:46:34.945027"
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
 var keys=$B.keys=function(obj){var res=[],pos=0
@@ -10553,7 +10553,7 @@ throw err}
 self._next=$B.$generators[self.iter_id]}
 if(self.gi_running){throw _b_.ValueError("ValueError: generator already executing")}
 self.gi_running=true
-for(var i=0;i<self.env.length;i++){eval('var $locals_'+self.env[i][0]+'=self.env[i][1]')}
+for(var i=0;i<self.env.length;i++){eval('var $locals_'+self.env[i][0].replace(/\./g,'_')+'=self.env[i][1]')}
 for(var i=0;i<$B.frames_stack.length;i++){var frame=$B.frames_stack[i]
 eval('var $locals_'+frame[0].replace(/\./g,'_')+'=frame[1]')
 eval('var $locals_'+frame[2].replace(/\./g,'_')+'=frame[3]')}
