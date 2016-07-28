@@ -3228,8 +3228,10 @@ switch(C.expect){case ',':
 case 'eol':
 C.bind_names()
 return $transition(C.parent,token)
+case 'id':
+$_SyntaxError(C,['trailing comma not allowed without surrounding parentheses'])
 default:
-$_SyntaxError(C,['trailing comma not allowed without surrounding parentheses'])}
+$_SyntaxError(C,['invalid syntax'])}
 case 'as':
 if(C.expect==',' ||C.expect=='eol'){C.expect='alias'
 return C}
@@ -5228,6 +5230,7 @@ var module_name='exec_' + $B.UUID()
 var local_name=module_name;
 var root=$B.py2js(source,module_name,[module_name],local_name)
 $.__class__=$B.$CodeObjectDict
+$.co_flags=$.flags
 return $}
 compile.__class__=$B.factory
 $B.$CodeObjectDict.$factory=compile

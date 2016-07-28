@@ -150,6 +150,7 @@ function compile(source, filename, mode) {
 
     var root = $B.py2js(source,module_name,[module_name],local_name)
     $.__class__ = $B.$CodeObjectDict
+    $.co_flags = $.flags
     return $
 }
 
