@@ -1653,7 +1653,7 @@ def _get_supported_file_loaders():
     return [extensions, source, bytecode]
 
 
-def __import__(name, globals=None, locals=None, fromlist=(), level=0):
+def __import__(name, globals=None, locals=None, fromlist=(), level=0, blocking=True):
     """Import a module.
 
     The 'globals' argument is used to infer where the import is occuring from
