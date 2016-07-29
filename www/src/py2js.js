@@ -7555,8 +7555,8 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     root.insert(offset++,file_node)
 
     var enter_frame_pos = offset
-    root.insert(offset++, $NodeJS('$B.enter_frame(["'+locals_id+'", '+local_ns+','+
-        '"'+module+'", '+global_ns+']);\n'))
+    root.insert(offset++, $NodeJS('$B.enter_frame(["'+locals_id.replace(/\./g,'_')+'", '+local_ns+','+
+        '"'+module.replace(/\./g,'_')+'", '+global_ns+', "a"]);\n'))
 
     // Wrap code in a try/finally to make sure we leave the frame
     var try_node = new $Node(),
