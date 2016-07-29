@@ -342,7 +342,7 @@ $BRGeneratorDict.__next__ = function(self){
     // restore environment namespaces
     
     for(var i=0;i<self.env.length;i++){
-        eval('var $locals_'+self.env[i][0]+'=self.env[i][1]')
+        eval('var $locals_'+self.env[i][0].replace(/\./g, '_')+'=self.env[i][1]')
         //console.log('restore', 'var $locals_'+self.env[i][0]+'=self.env[i][1]')
     }
     for(var i=0;i<$B.frames_stack.length;i++){
