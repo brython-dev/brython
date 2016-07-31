@@ -12,7 +12,7 @@ __all__ = ['__import__', 'import_module', 'invalidate_caches']
 import _imp  # Just the builtin component, NOT the full Python module
 import sys
 
-from . import machinery   #fix me brython
+from . import machinery
 
 try:
     import _frozen_importlib as _bootstrap
