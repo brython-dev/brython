@@ -75,6 +75,7 @@ with open(abs_path('version_info.js'), 'w') as vinfo_file_out:
 import make_stdlib_static
 # build brython.js from base Javascript files
 sources = [
+    'unicode.min',
     'brython_builtins', 'version_info', 'py2js', 
     'py_object', 'py_type', 'py_utils', 'py_builtin_functions', 
     'py_exceptions', 'py_range_slice', 'py_bytes', 'js_objects', 

@@ -768,14 +768,23 @@ var $notimplemented = function(self,other){
     throw NotImplementedError("OPERATOR not implemented for class str")
 }
 
-$StringDict.capitalize = function(self){
-    if(self.length==0) return ''
-    return self.charAt(0).toUpperCase()+self.substr(1).toLowerCase()
-}
-
-$StringDict.casefold = function(self) {
-    throw _b_.NotImplementedError("function casefold not implemented yet");
-}
+$StringDict.title = unicode.title;
+$StringDict.capitalize = unicode.capitalize;
+$StringDict.casefold = unicode.casefold;
+$StringDict.islower = unicode.islower;
+$StringDict.isupper = unicode.isupper;
+$StringDict.istitle = unicode.istitle;
+$StringDict.isspace = unicode.isspace;
+$StringDict.isalpha = unicode.isalpha;
+$StringDict.isalnum = unicode.isalnum;
+$StringDict.isdecimal = unicode.isdecimal;
+$StringDict.isdigit = unicode.isdigit;
+$StringDict.isnumeric = unicode.isnumeric;
+$StringDict.isidentifier = unicode.isidentifier;
+$StringDict.isprintable = unicode.isprintable;
+$StringDict.lower = unicode.lower;
+$StringDict.swapcase = unicode.swapcase;
+$StringDict.upper = unicode.upper;
 
 $StringDict.center = function(self,width,fillchar){
     var $=$B.args("center",3,
@@ -1102,94 +1111,6 @@ $StringDict.index = function(self){
     return res
 }
 
-$StringDict.isalnum = function() {
-    var $=$B.args('isalnum',1,{self:null},['self'],arguments,{},null,null)
-    return /^[a-z0-9]+$/i.test($.self)
-}
-
-$StringDict.isalpha = function(self) {
-    var $=$B.args('isalpha',1,{self:null},['self'],arguments,{},null,null)
-    return /^[a-z]+$/i.test($.self)
-}
-
-$StringDict.isdecimal = function(){
-    var $=$B.args('isdecimal',1,{self:null},['self'],arguments,{},null,null)
-  // this is not 100% correct
-  return /^[0-9]+$/.test($.self)
-}
-
-$StringDict.isdigit = function() {
-    var $=$B.args('isdigit',1,{self:null},['self'],arguments,{},null,null)
-    return /^[0-9]+$/.test($.self)
-}
-
-$StringDict.isidentifier = function() {
-    var $=$B.args('isidentifier',1,{self:null},['self'],arguments,{},null,null)
-    
-    if($.self.search(/\$/)>-1){return false}
-    var last = $.self.charAt($.self.length-1)
-    if(' \n;'.search(last)>-1){return false}
-    var dummy = {}
-    try{eval("dummy."+$.self); return true}
-    catch(err){return false}
-}
-
-$StringDict.islower = function() {
-    var $=$B.args('islower',1,{self:null},['self'],arguments,{},null,null)
-    // $B.cased_letters_regexp is in brython_builtins.js
-    // A string only made of whitespace is not lower for Python
-    return ($B.cased_letters_regexp.exec($.self)!==null) &&
-        $.self==$.self.toLowerCase() && $.self.search(/^\s*$/)==-1
-}
-
-// not sure how to handle unicode variables
-$StringDict.isnumeric = function() {
-    var $=$B.args('isnumeric',1,{self:null},['self'],arguments,{},null,null)
-    return /^[0-9]+$/.test($.self)
-}
-
-// inspired by http://www.codingforums.com/archive/index.php/t-17925.html
-$StringDict.isprintable = function() {
-    var $=$B.args('isprintable',1,{self:null},['self'],arguments,{},null,null)
-    return !/[^ -~]/.test($.self)
-}
-
-$StringDict.isspace = function() {
-    var $=$B.args('isspace',1,{self:null},['self'],arguments,{},null,null)
-    return /^\s+$/i.test($.self)
-}
-
-$StringDict.istitle = function() {
-    var $=$B.args('istitle',1,{self:null},['self'],arguments,{},null,null)
-    if($.self.search(/^\s*$/)>-1){return false}
-    
-    function get_case(char){
-        if(char.toLowerCase()==char.toUpperCase()){return false}
-        else if(char==char.toLowerCase()){return 'lower'}
-        else{return 'upper'}
-    }
-    var pos=0,char,previous=false
-    while(pos<$.self.length){
-        char = $.self.charAt(pos)
-        if(previous===undefined){previous=get_case(char)}
-        else{
-            _case = get_case(char)
-            if(_case=='upper' && previous){return false}
-            else if(_case=='lower' && !previous){return false}
-            previous=_case
-        }
-        pos++
-    }
-    return true
-}
-
-$StringDict.isupper = function() {
-    var $=$B.args('isupper',1,{self:null},['self'],arguments,{},null,null)
-    // $B.cased_letters_regexp is in brython_builtins.js
-    return ($B.cased_letters_regexp.exec($.self)!==null) &&
-        $.self==$.self.toUpperCase() && $.self.search(/^\s*$/)==-1
-}
-
 $StringDict.join = function(){
     var $=$B.args('join',2,{self:null,iterable:null},
         ['self', 'iterable'], arguments, {}, null, null)
@@ -1216,11 +1137,6 @@ $StringDict.ljust = function(self) {
 
     if ($.width <= self.length) return self
     return self + $.fillchar.repeat($.width - self.length)
-}
-
-$StringDict.lower = function(){
-    var $=$B.args('lower',1,{self:null},['self'],arguments,{},null,null)
-    return $.self.toLowerCase()
 }
 
 $StringDict.lstrip = function(self,x){
@@ -1569,36 +1485,6 @@ $StringDict.strip = function(){
     return $StringDict.rstrip($StringDict.lstrip($.self,$.chars),$.chars)
 }
 
-$StringDict.swapcase = function(self) {
-    var $=$B.args('swapcase',1,{self:null},['self'],
-            arguments,{},null,null)
-    //inspired by http://www.geekpedia.com/code69_Swap-string-case-using-JavaScript.html
-    return $.self.replace(/([a-z])|([A-Z])/g, function($0,$1,$2)
-        { return ($1) ? $0.toUpperCase() : $0.toLowerCase()
-    })
-}
-
-$StringDict.title = function(self) {
-    var $=$B.args('title',1,{self:null},['self'],arguments,{},null,null)
-
-    // Transform letters after a non-cased character to uppercase
-    var res = '',previous=false
-
-    function is_cased(c){
-        return c.toLowerCase() != c.toUpperCase()
-    }
-
-    for(var i=0;i<$.self.length;i++){
-        var char = $.self.charAt(i), cased = is_cased(char)
-        if(!previous && cased){
-            res += char.toUpperCase()
-        }else if(previous){res+=char.toLowerCase()}
-        else{res+=char}
-        previous = cased
-    }
-    return res
-}
-
 $StringDict.translate = function(self,table) {
     var res = [], pos=0
     if (isinstance(table, _b_.dict)) {
@@ -1609,11 +1495,6 @@ $StringDict.translate = function(self,table) {
        }
     }
     return res.join('')
-}
-
-$StringDict.upper = function(){
-    var $=$B.args('lower',1,{self:null},['self'],arguments,{},null,null)
-    return $.self.toUpperCase()
 }
 
 $StringDict.zfill = function(self, width) {
