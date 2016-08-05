@@ -813,6 +813,9 @@ eval = A()
 
 assert [c for c in range(10) if eval.b[c] == 0] == [3]
 
+# restore original "eval"
+eval = __builtins__.eval
+
 # issue 394
 import base64
 b = b"\x7F\x7B\xED\x96"
@@ -923,6 +926,11 @@ with A(2) as x:
 
 with A(3):
     pass
+
+# ternary is an expression
+a = eval('1 if 3 == 4 else 0')
+assert a == 0
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

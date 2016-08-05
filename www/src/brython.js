@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-08-04 10:54:41.891058"
+__BRYTHON__.compiled_date="2016-08-05 08:43:01.710078"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5306,11 +5306,17 @@ var root=$B.py2js(src,globals_id,locals_id,parent_block_id),leave_frame=true
 try{
 if(!is_exec){var try_node=root.children[root.children.length-2],instr=$B.last(try_node.children)
 var type=instr.C.tree[0].type
-if(!('expr'==type ||'list_or_tuple'==type ||'op'==type)){leave_frame=false
-throw _b_.SyntaxError("eval() argument must be an expression",'<string>',1,1,src)}else{
+switch(type){case 'expr':
+case 'list_or_tuple':
+case 'op':
+case 'ternary':
 var children=try_node.children
 root.children.splice(root.children.length-2,2)
-for(var i=0;i<children.length;i++){root.add(children[i])}}}
+for(var i=0;i<children.length;i++){root.add(children[i])}
+break
+default:
+leave_frame=false
+throw _b_.SyntaxError("eval() argument must be an expression",'<string>',1,1,src)}}
 var js=root.to_js()
 if($B.async_enabled)js=$B.execution_object.source_conversion(js)
 var res=eval(js)

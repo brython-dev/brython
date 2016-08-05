@@ -354,20 +354,26 @@ function $eval(src, _globals, _locals){
             var try_node = root.children[root.children.length-2],
                 instr = $B.last(try_node.children)
             var type = instr.context.tree[0].type
-            if (!('expr' == type || 'list_or_tuple' == type || 'op'==type)) {
-                leave_frame = false
-                throw _b_.SyntaxError("eval() argument must be an expression",
-                    '<string>', 1, 1, src)
-            }else{
-                // If the source is an expression, what we must execute is the
-                // block inside the "try" clause : if we run root, since it's
-                // wrapped in try / finally, the value produced by 
-                // eval(root.to_js()) will be None
-                var children = try_node.children
-                root.children.splice(root.children.length-2, 2)
-                for(var i=0;i<children.length;i++){
-                    root.add(children[i])
-                }
+            switch(type){
+            
+                case 'expr':
+                case 'list_or_tuple':
+                case 'op':
+                case 'ternary':
+                    // If the source is an expression, what we must execute is the
+                    // block inside the "try" clause : if we run root, since it's
+                    // wrapped in try / finally, the value produced by 
+                    // eval(root.to_js()) will be None
+                    var children = try_node.children
+                    root.children.splice(root.children.length-2, 2)
+                    for(var i=0;i<children.length;i++){
+                        root.add(children[i])
+                    }
+                    break
+                default:
+                    leave_frame = false
+                    throw _b_.SyntaxError("eval() argument must be an expression",
+                        '<string>', 1, 1, src)
             }
         }
 
