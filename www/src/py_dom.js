@@ -543,9 +543,8 @@ DOMNodeDict.__getitem__ = function(self,key){
     }
 }
 
-DOMNodeDict.__iter__ = function(self){ // for iteration
-    self.$counter = -1
-    return self
+DOMNodeDict.__iter__ = function(self){ // for iteration on element children
+    return iter(DOMNodeDict.children(self))
 }
 
 DOMNodeDict.__le__ = function(self,other){
@@ -967,6 +966,7 @@ DOMNodeDict.left = {
 DOMNodeDict.remove = function(self,child){
     // Remove child from self
     // If child is not inside self, throw ValueError
+    console.log('child', child)
     var elt=self.elt,flag=false,ch_elt=child.elt
     if(self.elt.nodeType==9){elt=self.elt.body}
 

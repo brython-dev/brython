@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-08-05 08:43:01.710078"
+__BRYTHON__.compiled_date="2016-08-10 11:34:56.840013"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -10057,8 +10057,7 @@ throw KeyError(key)}else{try{var elts=self.elt.getElementsByTagName(key.$dict.__
 for(var $i=0;$i<elts.length;$i++)res[pos++]=DOMNode(elts[$i])
 return res}catch(err){throw KeyError(str(key))}}}else{throw _b_.TypeError('DOMNode object is not subscriptable')}}
 DOMNodeDict.__iter__=function(self){
-self.$counter=-1
-return self}
+return iter(DOMNodeDict.children(self))}
 DOMNodeDict.__le__=function(self,other){
 var elt=self.elt
 if(self.elt.nodeType===9){elt=self.elt.body}
@@ -10231,6 +10230,7 @@ DOMNodeDict.left={'__get__': function(self){var res=parseInt(self.elt.style.left
 if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'left'")}
 return res},'__set__': function(obj,self,value){self.elt.style.left=value+'px'}}
 DOMNodeDict.remove=function(self,child){
+console.log('child',child)
 var elt=self.elt,flag=false,ch_elt=child.elt
 if(self.elt.nodeType==9){elt=self.elt.body}
 while(ch_elt.parentElement){if(ch_elt.parentElement===elt){elt.removeChild(ch_elt)
