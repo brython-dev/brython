@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-08-10 11:34:56.840013"
+__BRYTHON__.compiled_date="2016-08-22 13:12:35.133133"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -6714,8 +6714,8 @@ return $B.$JS2Py(result)}
 res.__repr__=function(){return '<function '+attr+'>'}
 res.__str__=function(){return '<function '+attr+'>'}
 res.prototype=js_attr.prototype
-return{__class__:$JSObjectDict,js:res,js_func:js_attr}}else{if(Array.isArray(self.js[attr])){return self.js[attr]}
-return $B.$JS2Py(self.js[attr])}}else if(self.js===window && attr==='$$location'){
+return{__class__:$JSObjectDict,js:res,js_func:js_attr}}else{if(Array.isArray(js_attr)){return js_attr}
+return $B.$JS2Py(js_attr)}}else if(self.js===window && attr==='$$location'){
 return $Location()}
 var res
 var mro=self.__class__.__mro__

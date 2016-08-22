@@ -249,8 +249,8 @@ $JSObjectDict.__getattribute__ = function(self,attr){
             //if(attr=='setValue'){console.log('return jsobject', res)}
             return {__class__:$JSObjectDict,js:res,js_func:js_attr}
         }else{
-            if(Array.isArray(self.js[attr])){return self.js[attr]}
-            return $B.$JS2Py(self.js[attr])
+            if(Array.isArray(js_attr)){return js_attr}
+            return $B.$JS2Py(js_attr)
         }
     }else if(self.js===window && attr==='$$location'){
         // special lookup because of Firefox bug 
