@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-08-22 13:12:35.133133"
+__BRYTHON__.compiled_date="2016-08-24 15:18:52.508559"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1032,6 +1032,11 @@ nodes.push(new_node)
 var enter_frame_node=new $Node(),enter_frame_node_rank=nodes.length
 var js=';$B.frames_stack.push([$local_name, $locals,'+
 '"'+global_scope.id+'", '+global_ns+']);' 
+if($B.profile > 1){if(this.scope.ntype=='class'){fname=this.scope.C.tree[0].name+'.'+this.name}
+else fname=this.name
+if(node.parent && node.parent.id){fmod=node.parent.id.slice(0,node.parent.id.indexOf('_'))}
+else fmod='';
+js=";$B.$profile.call('"+fmod+"','"+fname+"',"+node.line_num+",$locals.$line_info)"+js;}
 enter_frame_node.enter_frame=true
 new $NodeJSCtx(enter_frame_node,js)
 nodes.push(enter_frame_node)
@@ -1209,6 +1214,7 @@ for(var i=0;i<children.length;i++){try_node.add(children[i])}
 parent.children.splice(pos+2,parent.children.length)
 var finally_node=new $Node(),ctx=new $NodeCtx(finally_node)
 new $SingleKwCtx(ctx,'finally')
+if($B.profile > 0){finally_node.add($NodeJS('$B.$profile.return()'))}
 finally_node.add($NodeJS('$B.frames_stack.pop()'))
 parent.add(finally_node)}
 this.transformed=true
@@ -2558,6 +2564,24 @@ node.parent.insert(rank+1,new_node)}}
 this.to_js=function(){this.js_processed=true
 if(this.from===undefined)return $to_js(this.tree)||'None'
 return $to_js(this.tree)}}
+function $add_profile(node,rank){if(node.type==='module'){var i=0
+while(i<node.children.length){i +=$add_profile(node.children[i],i)}}else{var elt=node.C.tree[0],offset=1
+var flag=true
+var pnode=node
+while(pnode.parent!==undefined){pnode=pnode.parent}
+var mod_id=pnode.id
+if(node.line_num===undefined){flag=false}
+if(elt.type==='condition' && elt.token==='elif'){flag=false}
+else if(elt.type==='except'){flag=false}
+else if(elt.type==='single_kw'){flag=false}
+if(flag){
+var new_node=new $Node()
+new $NodeJSCtx(new_node,';$B.$profile.count("'+mod_id+'",'+node.line_num+');')
+node.parent.insert(rank,new_node)
+offset=2}
+var i=0
+while(i<node.children.length)i+=$add_profile(node.children[i],i)
+return offset}}
 function $add_line_num(node,rank){if(node.type==='module'){var i=0
 while(i<node.children.length){i +=$add_line_num(node.children[i],i)}}else{var elt=node.C.tree[0],offset=1
 var flag=true
@@ -4131,6 +4155,7 @@ var finally_node=new $Node(),ctx=new $NodeCtx(finally_node)
 new $SingleKwCtx(ctx,'finally')
 finally_node.add($NodeJS('$B.leave_frame("'+locals_id+'")'))
 root.add(finally_node)
+if($B.profile>0){$add_profile(root,null,module)}
 if($B.debug>0){$add_line_num(root,null,module)}
 if($B.debug>=2){var t1=new Date().getTime()
 console.log('module '+module+' translated in '+(t1 - t0)+' ms')}
@@ -4193,6 +4218,9 @@ if(typeof options==='number')options={'debug':options}
 if(options.debug===undefined){options.debug=0 }
 $B.debug=options.debug
 _b_.__debug__=$B.debug>0
+if(options.profile===undefined){options.profile=0}
+$B.profile=options.profile
+if($B.profile>0){if(options.profile_start){_b_.__profile__.start();}}
 if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
 $B.static_stdlib_import=options.static_stdlib_import
 if(options.open !==undefined){_b_.open=options.open;
@@ -5110,6 +5138,72 @@ $B.frames_stack.push(frame)}
 $B.leave_frame=function(arg){
 if($B.frames_stack.length==0){console.log('empty stack');return}
 $B.frames_stack.pop()}
+_b_.__profile__={}
+$B.$profile=(function(profile){var call_times={},call_stack=[],line_start=[],profile_start=null,active=false,paused=false,cumulated=0;
+var _fhash=function(module,fname,line){return module+"."+fname+":"+line;}
+var _hash=function(module,line){return module+":"+line;}
+var _finish_line=function(){if(profile.time_lines){if(line_start.length==2){line_end_tm=new Date()
+line_start_tm=line_start[0]
+h=line_start[1]
+if(!(h in profile.linetimes)){profile.linetimes[h]=0}
+profile.linetimes[h]+=(line_end_tm-line_start_tm)
+line_start=[]}}}
+var _start_line=function(h){line_start=[new Date(),h]}
+var $profile={'call':function(module,fname,line,caller){if($B.profile > 1 && active){_finish_line()
+var h=_fhash(module,fname,line)
+if(!(h in call_times)){call_times[h]=[];}
+call_times[h].push([new Date(),caller])
+call_stack.push(h)}},'return':function(){if($B.profile > 1 && profile.active){_finish_line()
+var h=call_stack.pop(h)
+var t_end=new Date();
+if(h in call_times){var data=call_times[h].pop();
+t_start=data[0]
+caller=data[1]
+t_duration=t_end-t_start;
+if(!(h in profile.calls)){profile.calls[h]=0;
+profile.callcount[h]=0;
+profile.callers[h]={};}
+profile.calls[h]+=t_duration;
+profile.callcount[h]+=1;
+if(!(caller in profile.callers[h])){profile.callers[h][caller]=0}
+profile.callers[h][caller]+=t_duration;}}},'count':function(module,line){if(profile.active){_finish_line()
+var h=_hash(module,line);
+_start_line(h)
+if(!(h in profile.counters)){profile.counters[h]=0;}
+profile.counters[h]++;}},'pause':function(){elapsed=(new Date())-profile_start
+cumulated +=elapsed
+active=false
+paused=true
+profile.active=false
+profile.paused=true},'start':function(){if($B.profile > 0){if(! paused )$B.$profile.clear();
+else{paused=false;profile.paused=true;}
+active=true
+profile.active=true
+profile_start=new Date()}},'stop':function(){profile.profile_duration=((new Date())-profile_start)+cumulated
+active=false
+paused=false
+profile.paused=false
+profile.active=false},'clear':function(){cumulated=0
+profile.counters={};
+profile.calls={};
+profile.callcount={};
+profile.callers={};
+profile.linetimes={};},'__repr__':function(){var res=""
+if($B.profile <=0){res="Profiling disabled"}else{
+res="Profiling enabled;"
+if($B.profile > 1)res+="Function timing enabled;";
+else res+="Function timing disabled;"
+if(profile.time_lines)res+='Line timing enabled';
+else res+='Line timing disabled';
+if(active)res+=" status: ACTIVE ("+((new Date())-profile_start)+"ms)";
+else if(paused)res+=" status: PAUSED ("+cumulated+"ms)";
+else res+=" status: INACTIVE";}
+return res}}
+profile.start=$profile.start;
+profile.stop=$profile.stop;
+profile.pause=$profile.pause;
+profile.__repr__=$profile.__repr__
+return $profile;})(_b_.__profile__)
 var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
 $B.is_safe_int=function(){for(var i=0;i<arguments.length;i++){var arg=arguments[i]
 if(arg<min_int ||arg>max_int){return false}}

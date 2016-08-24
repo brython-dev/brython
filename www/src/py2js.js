@@ -2348,8 +2348,7 @@ function $DefCtx(context){
             var finally_node = new $Node(),
                 ctx = new $NodeCtx(finally_node)
             new $SingleKwCtx(ctx, 'finally')
-            if ( $B.profile > 1){finally_node.add($NodeJS('$B.$profile.return();$B.frames_stack.pop()'))}
-            else finally_node.add($NodeJS('$B.frames_stack.pop()'))
+            if ( $B.profile > 0){finally_node.add($NodeJS('$B.$profile.return()'))}
             finally_node.add($NodeJS('$B.frames_stack.pop()'))
             
             parent.add(finally_node)
