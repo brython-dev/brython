@@ -2016,6 +2016,13 @@ function $DefCtx(context){
             enter_frame_node_rank = nodes.length
         var js = ';$B.frames_stack.push([$local_name, $locals,'+
             '"'+global_scope.id+'", '+global_ns+']);' 
+        if ($B.profile > 1) {
+            if(this.scope.ntype=='class'){fname=this.scope.context.tree[0].name+'.'+this.name}
+            else fname = this.name
+            if (node.parent && node.parent.id) {fmod = node.parent.id.slice(0,node.parent.id.indexOf('_'))}
+            else fmod='';
+            js = ";$B.$profile.call('"+fmod+"','"+fname+"',"+node.line_num+",$locals.$line_info)"+js;
+        }
         enter_frame_node.enter_frame = true
         new $NodeJSCtx(enter_frame_node,js)
         nodes.push(enter_frame_node)
@@ -2341,6 +2348,8 @@ function $DefCtx(context){
             var finally_node = new $Node(),
                 ctx = new $NodeCtx(finally_node)
             new $SingleKwCtx(ctx, 'finally')
+            if ( $B.profile > 1){finally_node.add($NodeJS('$B.$profile.return();$B.frames_stack.pop()'))}
+            else finally_node.add($NodeJS('$B.frames_stack.pop()'))
             finally_node.add($NodeJS('$B.frames_stack.pop()'))
             
             parent.add(finally_node)
@@ -5116,6 +5125,39 @@ function $YieldCtx(context){
     }
 }
 
+function $add_profile(node,rank){
+    if(node.type==='module'){
+        var i=0
+        while(i<node.children.length){
+            i += $add_profile(node.children[i],i)
+        }
+    }else{
+        var elt=node.context.tree[0],offset=1
+        var flag = true
+        var pnode = node
+        while(pnode.parent!==undefined){pnode=pnode.parent}
+        var mod_id = pnode.id
+        // ignore lines added in transform()
+        if(node.line_num===undefined){flag=false}
+        // Don't add line num before try,finally,else,elif
+        // because it would throw a syntax error in Javascript
+        if(elt.type==='condition' && elt.token==='elif'){flag=false}
+        else if(elt.type==='except'){flag=false}
+        else if(elt.type==='single_kw'){flag=false}
+        if(flag){
+            // add a trailing None for interactive mode
+            var new_node = new $Node()
+            new $NodeJSCtx(new_node,';$B.$profile.count("'+mod_id+'",'+node.line_num+');')
+            node.parent.insert(rank,new_node)
+            offset = 2
+        }
+        var i=0
+        while(i<node.children.length) i+=$add_profile(node.children[i],i)
+
+            return offset
+    }
+}
+
 function $add_line_num(node,rank){
     if(node.type==='module'){
         var i=0
@@ -7579,6 +7621,7 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     
     root.add(finally_node)
     
+    if($B.profile>0){$add_profile(root,null,module)}
     if($B.debug>0){$add_line_num(root,null,module)}
     
     if($B.debug>=2){
@@ -7741,6 +7784,12 @@ function brython(options){
     $B.debug = options.debug
     // set built-in variable __debug__
     _b_.__debug__ = $B.debug>0
+
+    if(options.profile === undefined){ options.profile = 0}
+    $B.profile = options.profile
+    if ($B.profile>0){
+        if(options.profile_start){ _b_.__profile__.start();}
+    }
 
     // For imports, default mode is to search modules of the standard library
     // using a static mapping stored in stdlib_paths.js

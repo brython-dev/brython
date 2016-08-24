@@ -1014,6 +1014,126 @@ $B.leave_frame = function(arg){
     //console.log($B.frames_stack.length, 'frames remain')
 }
 
+_b_.__profile__ = {}
+$B.$profile = (function(profile) {
+    var call_times={}, call_stack=[],line_start=[], profile_start=null,active=false,paused=false,cumulated=0;
+    var _fhash = function(module,fname,line){return module+"."+fname+":"+line;}
+    var _hash = function(module,line){return module+":"+line;}
+    var _finish_line = function() {
+        if (profile.time_lines) {
+            if (line_start.length == 2) {
+                line_end_tm = new Date()
+                line_start_tm = line_start[0]
+                h = line_start[1]
+                if (! (h in profile.linetimes)) {profile.linetimes[h]=0}
+                profile.linetimes[h]+=(line_end_tm-line_start_tm)
+                line_start = []
+            }
+        }
+    }
+    var _start_line = function(h){
+        line_start = [new Date(),h]
+    }
+
+    var $profile = {
+        'call':function(module,fname,line,caller){
+            if ($B.profile > 1 && active) {
+                _finish_line()
+                var h = _fhash(module,fname,line)
+                if (!(h in call_times)) {call_times[h]=[];}
+                call_times[h].push([new Date(),caller])
+                call_stack.push(h)
+            }
+        },
+        'return':function(){
+            if ($B.profile > 1 && profile.active) {
+                _finish_line()
+                var h = call_stack.pop(h)
+                var t_end = new Date();
+                if (h in call_times) {
+                    var data = call_times[h].pop();
+                    t_start = data[0]
+                    caller = data[1]
+                    t_duration = t_end-t_start;
+                    if (!(h in profile.calls)) {
+                        profile.calls[h]=0;
+                        profile.callcount[h]=0;
+                        profile.callers[h]={};
+                    }
+                    profile.calls[h]+=t_duration;
+                    profile.callcount[h]+=1;
+                    if (!(caller in profile.callers[h])) {profile.callers[h][caller]=0}
+                    profile.callers[h][caller]+=t_duration;
+                }
+            }
+        },
+        'count':function(module,line){
+            if (profile.active) {
+                _finish_line()
+                var h = _hash(module,line);
+                _start_line(h)
+                if (!(h in profile.counters)) { profile.counters[h]=0;}
+                profile.counters[h]++;
+            }
+        },
+        'pause':function() {
+            elapsed =  (new Date())-profile_start
+            cumulated += elapsed
+            active=false
+            paused=true
+            profile.active=false
+            profile.paused=true
+
+        },
+        'start':function() {
+            if ($B.profile > 0) {
+                if (! paused ) $B.$profile.clear();
+               else {paused = false;profile.paused=true;}
+               active=true
+               profile.active=true
+               profile_start = new Date()
+            }
+
+        },
+        'stop':function() {
+            profile.profile_duration = ((new Date())-profile_start)+cumulated
+            active=false
+            paused=false
+            profile.paused=false
+            profile.active=false
+        },
+        'clear':function(){
+            cumulated = 0
+            profile.counters={};
+            profile.calls={};
+            profile.callcount={};
+            profile.callers={};
+            profile.linetimes={};
+        },
+        '__repr__':function(){
+            var res = ""
+            if ($B.profile <= 0) {
+                res="Profiling disabled"
+            } else {
+                res = "Profiling enabled;"
+                if ($B.profile > 1) res+= "Function timing enabled;";
+               else res+= "Function timing disabled;"
+                   if (profile.time_lines) res+='Line timing enabled';
+               else res+='Line timing disabled';
+               if (active) res+=" status: ACTIVE ("+((new Date())-profile_start)+"ms)";
+               else if (paused) res+=" status: PAUSED ("+cumulated+"ms)";
+               else res+= " status: INACTIVE";
+            }
+            return res
+        }
+    }
+    profile.start = $profile.start;
+    profile.stop = $profile.stop;
+    profile.pause = $profile.pause;
+    profile.__repr__ = $profile.__repr__
+    return $profile;
+})(_b_.__profile__)
+
 var min_int=Math.pow(-2, 53), max_int=Math.pow(2,53)-1
 
 $B.is_safe_int = function(){
