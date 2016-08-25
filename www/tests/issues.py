@@ -931,6 +931,13 @@ with A(3):
 a = eval('1 if 3 == 4 else 0')
 assert a == 0
 
+# issue 480
+
+def test(throw=True):
+    pass
+
+test(throw=False)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

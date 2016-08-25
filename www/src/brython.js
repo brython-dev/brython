@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-08-24 15:18:52.508559"
+__BRYTHON__.compiled_date="2016-08-25 14:52:51.647153"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4728,7 +4728,7 @@ throw _b_.TypeError(msg)}else{
 for(var i=argcount;i<nb_pos;i++){slots[extra_pos_args].push($args[i])}
 nb_pos=argcount}}
 for(var i=0;i<nb_pos;i++){slots[var_names[i]]=$args[i]}
-if(has_kw_args){for(var key in kw_args){var value=kw_args[key],key=key.replace(/\$/g,'')
+if(has_kw_args){for(var key in kw_args){var value=kw_args[key]
 if(slots[key]===undefined){
 if(extra_kw_args){
 slots[extra_kw_args].$string_dict[key]=value}else{throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")}}else if(slots[key]!==null){

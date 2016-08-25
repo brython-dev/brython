@@ -69,7 +69,7 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     // Then fill slots with keyword arguments, if any
     if(has_kw_args){
         for(var key in kw_args){
-            var value=kw_args[key], key = key.replace(/\$/g,'')
+            var value=kw_args[key]
             if(slots[key]===undefined){
                 // The name of the keyword argument doesn't match any of the
                 // formal parameters
