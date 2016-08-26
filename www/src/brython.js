@@ -63,8 +63,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-08-25 14:52:51.647153"
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2016-08-26 22:50:08.000807"
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
 var keys=$B.keys=function(obj){var res=[],pos=0
@@ -4220,7 +4220,6 @@ $B.debug=options.debug
 _b_.__debug__=$B.debug>0
 if(options.profile===undefined){options.profile=0}
 $B.profile=options.profile
-if($B.profile>0){if(options.profile_start){_b_.__profile__.start();}}
 if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
 $B.static_stdlib_import=options.static_stdlib_import
 if(options.open !==undefined){_b_.open=options.open;
@@ -5138,72 +5137,75 @@ $B.frames_stack.push(frame)}
 $B.leave_frame=function(arg){
 if($B.frames_stack.length==0){console.log('empty stack');return}
 $B.frames_stack.pop()}
-_b_.__profile__={}
-$B.$profile=(function(profile){var call_times={},call_stack=[],line_start=[],profile_start=null,active=false,paused=false,cumulated=0;
+$B.$profile_data={}
+$B.$profile=(function(profile){var call_times={},
+_START=0,
+_CALLER=1,_CUMULATED=2,_LAST_RESUMED=3,call_stack=[],
+profile_start=null,
+active=false,
+paused=false,
+cumulated=0;
 var _fhash=function(module,fname,line){return module+"."+fname+":"+line;}
 var _hash=function(module,line){return module+":"+line;}
-var _finish_line=function(){if(profile.time_lines){if(line_start.length==2){line_end_tm=new Date()
-line_start_tm=line_start[0]
-h=line_start[1]
-if(!(h in profile.linetimes)){profile.linetimes[h]=0}
-profile.linetimes[h]+=(line_end_tm-line_start_tm)
-line_start=[]}}}
-var _start_line=function(h){line_start=[new Date(),h]}
-var $profile={'call':function(module,fname,line,caller){if($B.profile > 1 && active){_finish_line()
+var _is_recursive=function(h){for(i=0;i<call_stack.length;i++)
+if(call_stack[i]==h)return true;
+return false;}
+var $profile={'call':function(module,fname,line,caller){if($B.profile > 1 && active){var ctime=new Date();
 var h=_fhash(module,fname,line)
 if(!(h in call_times)){call_times[h]=[];}
-call_times[h].push([new Date(),caller])
-call_stack.push(h)}},'return':function(){if($B.profile > 1 && profile.active){_finish_line()
-var h=call_stack.pop(h)
-var t_end=new Date();
-if(h in call_times){var data=call_times[h].pop();
-t_start=data[0]
-caller=data[1]
+if(call_stack.length > 0){in_func=call_stack[call_stack.length-1];
+func_stack=call_times[in_func]
+inner_most_call=func_stack[func_stack.length-1];
+inner_most_call[_CUMULATED]+=(ctime-inner_most_call[_LAST_RESUMED])}
+call_times[h].push([ctime,caller,0,ctime])
+call_stack.push(h)}},'return':function(){if($B.profile > 1 && active){var h=call_stack.pop()
+if(h in call_times){var t_end=new Date();
+var data=call_times[h].pop();
+t_start=data[_START]
+caller=data[_CALLER]
 t_duration=t_end-t_start;
-if(!(h in profile.calls)){profile.calls[h]=0;
-profile.callcount[h]=0;
+t_in_func=data[_CUMULATED]+(t_end-data[_LAST_RESUMED]);
+if(!(h in profile.call_times)){profile.call_times[h]=0;
+profile.call_times_proper[h]=0;
+profile.call_counts[h]=0;
+profile.call_counts_norec[h]=0;
 profile.callers[h]={};}
-profile.calls[h]+=t_duration;
-profile.callcount[h]+=1;
-if(!(caller in profile.callers[h])){profile.callers[h][caller]=0}
-profile.callers[h][caller]+=t_duration;}}},'count':function(module,line){if(profile.active){_finish_line()
-var h=_hash(module,line);
-_start_line(h)
-if(!(h in profile.counters)){profile.counters[h]=0;}
-profile.counters[h]++;}},'pause':function(){elapsed=(new Date())-profile_start
+profile.call_times[h]+=t_duration;
+profile.call_times_proper[h]+=t_in_func;
+profile.call_counts[h]+=1;
+if(!(caller in profile.callers[h])){profile.callers[h][caller]=[0,0,0,0]}
+if(! _is_recursive(h)){profile.call_counts_norec[h]+=1;
+profile.callers[h][caller][3]++;}
+profile.callers[h][caller][0]+=t_duration;
+profile.callers[h][caller][1]+=t_in_func;
+profile.callers[h][caller][2]++;
+if(call_stack.length > 0){
+in_func=call_stack[call_stack.length-1];
+func_stack=call_times[in_func];
+inner_most_call=func_stack[func_stack.length-1];
+inner_most_call[_LAST_RESUMED]=new Date();}}}},'count':function(module,line){if(active){var h=_hash(module,line);
+if(!(h in profile.line_counts)){profile.line_counts[h]=0;}
+profile.line_counts[h]++;}},'pause':function(){if(active){elapsed=(new Date())-profile_start
 cumulated +=elapsed
 active=false
-paused=true
-profile.active=false
-profile.paused=true},'start':function(){if($B.profile > 0){if(! paused )$B.$profile.clear();
-else{paused=false;profile.paused=true;}
+paused=true}},'start':function(){if($B.profile > 0){if(! paused )$B.$profile.clear();
+else{paused=false;}
 active=true
-profile.active=true
-profile_start=new Date()}},'stop':function(){profile.profile_duration=((new Date())-profile_start)+cumulated
+profile_start=new Date()}},'stop':function(){if(active ||paused){profile.profile_duration=((new Date())-profile_start)+cumulated
 active=false
-paused=false
-profile.paused=false
-profile.active=false},'clear':function(){cumulated=0
-profile.counters={};
-profile.calls={};
-profile.callcount={};
+paused=false}},'clear':function(){cumulated=0;
+profile.line_counts={};
+profile.call_times={};
+profile.call_times_proper={};
+profile.call_counts={};
+profile.call_counts_norec={};
 profile.callers={};
-profile.linetimes={};},'__repr__':function(){var res=""
-if($B.profile <=0){res="Profiling disabled"}else{
-res="Profiling enabled;"
-if($B.profile > 1)res+="Function timing enabled;";
-else res+="Function timing disabled;"
-if(profile.time_lines)res+='Line timing enabled';
-else res+='Line timing disabled';
-if(active)res+=" status: ACTIVE ("+((new Date())-profile_start)+"ms)";
-else if(paused)res+=" status: PAUSED ("+cumulated+"ms)";
-else res+=" status: INACTIVE";}
-return res}}
-profile.start=$profile.start;
-profile.stop=$profile.stop;
-profile.pause=$profile.pause;
-profile.__repr__=$profile.__repr__
-return $profile;})(_b_.__profile__)
+active=false;
+paused=false;},'status':function(){if($B.profile <=0)return "Disabled";
+if(active)return "Collecting data: active";
+else if(paused)return "Collecting data: paused";
+else return "Stopped";},}
+return $profile;})($B.$profile_data)
 var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
 $B.is_safe_int=function(){for(var i=0;i<arguments.length;i++){var arg=arguments[i]
 if(arg<min_int ||arg>max_int){return false}}
@@ -6881,9 +6883,9 @@ $JSObjectDict.$factory=JSObject
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
-var js=['_ajax','_base64','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
+var js=['_ajax','_base64','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_profile','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
 var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]})(__BRYTHON__)

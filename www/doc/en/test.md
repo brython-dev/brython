@@ -1,7 +1,7 @@
 
 
-Testing and debugging
----------------------
+Testing, debugging and profiling
+--------------------------------
 
 ### Interactive test
 
@@ -10,7 +10,6 @@ The Brythons site, or its mirror available for download, include a console where
 Please note that the namespace is not refreshed when you click on "run", you must reload the page for that
 
 For debugging and testing Brython, a number of test scripts are grouped in the directory `tests` ; you can access them by clicking the link  "Test pages" in the console, then select the different tests and run them
-
 
 ### Debugging scripts
 
@@ -166,3 +165,84 @@ The following is the debugger public API you can find more details description i
 
 **Brython_Debugger**.`on_step_update(cb)`
 > cb is called whenever a state is changed using setState
+
+### Profiling scripts
+
+To enable profiling one has to pass the "profile" option to the brython function:
+
+> brython({'profile':1})
+
+When the `profile` option is > 0 the compiler adds additional code to the generated
+javascript which collects profiling information. To `profile` module provides access
+to this information. It strives to provide an interface largely similar to the `profile`
+module from the standard python distribution.
+
+The notable difference is that it does not allow user-defined timers and does not
+do any callibration. Methods which in the standard module save the data to a file
+save a JSON-serialized version of the data to the browser's local storage instead.
+
+#### Basic usage:
+
+>       from profile import Profile
+>
+>       p = Profile()
+>       p.enable()
+>       do_something()
+>       do_something_else()
+>       p.create_stats()
+
+Which will print out something like:
+
+>           1 run in 0.249 seconds
+>
+>       Ordered by: standard name (averaged over 1 run)
+>
+>       ncalls  tottime  percall  cumtime  var percall  module.function:lineno
+>        101/1    0.023    0.000    1.012        0.010               .fact:180
+
+where each line corresponds to a function and the different columns correspond  to
+
+    ncalls      is the total number number of times the function was called
+                (if the function was called non-recursively, the second number
+                behind the backslash indicates how many calls were top-level calls
+                in the recursion)
+
+    tottime     is the total time (in seconds) spent in the function not including subcalls
+
+    percall     is the average time spent in the function per call, not including subcalls
+
+    cumtime     is the total time spent in function including subcalls
+
+    var percall is the average time spent in function per one non-recursive call
+
+    standard name is the name of the function in the form module.function_name:line_number
+
+Optionally one can also use the following form, taking advantage of running the code
+several times and averaging it out:
+
+>       from profile import Profile
+>
+>       p = Profile()
+>       p.call(function_to_profile,200,arg1,arg2,kwarg1=v1)
+
+which will print out something like:
+
+>           200 runs in 0.249 seconds
+>
+>       Ordered by: standard name (averaged over 1 run)
+>
+>       ncalls  tottime  percall  cumtime  var percall  module.function:lineno
+>        101/1    0.023    0.000    1.012        0.010  function_to_profile:16
+
+Collected profile data can be saved to local storage for later use:
+
+>        p.dump_stats('run1')
+
+Profile data can also be read back:
+
+>        data = Stats('run1')
+
+And aggregated together
+
+>        data.add(p.dump_stats())
+>        print(data)
