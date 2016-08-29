@@ -1376,6 +1376,24 @@ $SuperDict.__getattribute__ = function(self,attr){
                 return res.__get__(res, self.__self_class__)
             }
             if(self.__self_class__!==None){
+                if(mro[i]===_b_.object.$dict){
+                    var klass = self.__self_class__.__class__
+                    if(klass!==$B.$type){
+                        var start = -1
+                        for(var j=0;j<klass.__mro__.length;j++){
+                            if(klass.__mro__[j]===self.__thisclass__.$dict){
+                                start=j+1
+                                break
+                            }
+                        }
+                        if(start>-1){
+                            for(var j=start;j<klass.__mro__.length;j++){
+                                var res1 = klass.__mro__[j][attr]
+                                if(res1!==undefined){ res = res1; break}
+                            }
+                        }
+                    }
+                }
                 var _args = [self.__self_class__]
                 if(attr=='__new__'){_args=[]}
                 var method = (function(initial_args){

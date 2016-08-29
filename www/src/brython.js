@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-08-29 21:38:03.839008"
+__BRYTHON__.compiled_date="2016-08-29 22:45:18.477776"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5850,7 +5850,13 @@ for(var i=1;i<mro.length;i++){
 res=mro[i][attr]
 if(res!==undefined){
 if(res.__class__===$PropertyDict){return res.__get__(res,self.__self_class__)}
-if(self.__self_class__!==None){var _args=[self.__self_class__]
+if(self.__self_class__!==None){if(mro[i]===_b_.object.$dict){var klass=self.__self_class__.__class__
+if(klass!==$B.$type){var start=-1
+for(var j=0;j<klass.__mro__.length;j++){if(klass.__mro__[j]===self.__thisclass__.$dict){start=j+1
+break}}
+if(start>-1){for(var j=start;j<klass.__mro__.length;j++){var res1=klass.__mro__[j][attr]
+if(res1!==undefined){res=res1;break}}}}}
+var _args=[self.__self_class__]
 if(attr=='__new__'){_args=[]}
 var method=(function(initial_args){return function(){
 var local_args=initial_args.slice()

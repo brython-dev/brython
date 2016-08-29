@@ -949,6 +949,51 @@ d = {a:1,b:2}
 assert d[a] == 1
 assert d[b] == 2
 
+# issue 481
+flag = False
+
+def extend_instance(obj, cls):
+    """
+        Apply mixins to a class instance after creation
+        (thanks http://stackoverflow.com/questions/8544983/dynamically-mixin-a-base-class-to-an-instance-in-python)
+    """
+
+    base_cls = obj.__class__
+    base_cls_name = obj.__class__.__name__
+    obj.__class__ = type("Extended"+base_cls_name, (cls,base_cls),{})
+    
+class Mixin(object):
+    def __setattr__(self, name, value):
+        if not name.startswith('_'):
+            #print("Mixin setting", name, "to", value, super().__setattr__)
+            super().__setattr__(name,value)
+        else:
+            super().__setattr__(name,value)
+
+class Test:
+    def __init__(self):
+        self._dct={}
+
+    def __setattr__(self,name,value):
+        global flag
+        if not name.startswith('_'):
+            self._dct[name]=value
+            #print("Test setting", name, "to", value)
+            flag = True
+        else:
+            super().__setattr__(name,value)
+    def __getattr__(self):
+        if not name.startswith('_'):
+            return self._dct[name]
+        else:
+            return getattr(self,name)
+
+t=Test()
+extend_instance(t,Mixin)
+t.c=20
+assert flag
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
