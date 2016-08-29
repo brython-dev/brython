@@ -34,6 +34,16 @@ function ajax(){
 
 ajax.__class__ = $B.$factory
 
+var add_to_res = function(res,key,val) {
+    if (isinstance(val,list)) {
+        for (j = 0; j < val.length; j++) {
+            add_to_res(res,key,val[j])
+        }
+    } else if (val instanceof File || val instanceof Blob) {
+        res.append(key,val)
+    } else res.append(key,str(val))
+}
+
 ajax.$dict = {
 
     __class__:$B.$type,
@@ -70,18 +80,11 @@ ajax.$dict = {
         }else if(isinstance(params,str)){
             res = params
         }else if(isinstance(params,dict)){
+            res = new FormData()
             var items = _b_.list(_b_.dict.$dict.items(params))
             for(var i=0, _len_i = items.length; i < _len_i;i++){
-                var key = encodeURIComponent(str(items[i][0]));
-                if (isinstance(items[i][1],list)) {
-                    for (j = 0; j < items[i][1].length; j++) {
-                        res += key +'=' + encodeURIComponent(str(items[i][1][j])) + '&'
-                    }
-                } else {
-                    res += key + '=' + encodeURIComponent(str(items[i][1])) + '&'
-                }
+                add_to_res(res,str(items[i][0]),items[i][1])
             }
-            res = res.substr(0,res.length-1)
         }else{
             throw _b_.TypeError("send() argument must be string or dictionary, not '"+str(params.__class__)+"'")
         }
