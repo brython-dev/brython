@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-08-25 14:52:51.647153"
+__BRYTHON__.compiled_date="2016-08-29 21:38:03.839008"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4402,8 +4402,9 @@ throw _b_.TypeError(msg)}}
 func.$infos={__name__ : klass.__name__+'.'+attr}
 return func}}}}
 $ObjectDict.__gt__=$ObjectNI('__gt__','>')
-$ObjectDict.__hash__=function(self){$B.$py_next_hash--;
-return $B.$py_next_hash;}
+$ObjectDict.__hash__=function(self){var hash=self.__hashvalue__
+if(hash!==undefined){return hash}
+return self.__hashvalue__=$B.$py_next_hash--;}
 $ObjectDict.__init__=function(){return _b_.None}
 $ObjectDict.__le__=$ObjectNI('__le__','<=')
 $ObjectDict.__lt__=$ObjectNI('__lt__','<')
@@ -4591,9 +4592,7 @@ if(klass['__setattr__']!==undefined)return klass['__setattr__']
 return function(key,value){klass[key]=value}
 case '__delattr__':
 if(klass['__delattr__']!==undefined)return klass['__delattr__']
-return function(key){delete klass[key]}
-case '__hash__':
-return function(){if(arguments.length==0)return klass.__hashvalue__ ||$B.$py_next_hash--}}
+return function(key){delete klass[key]}}
 var res=klass[attr],is_class=true
 if(res===undefined){
 var mro=klass.__mro__
@@ -5546,10 +5545,10 @@ if(isinstance(obj,bool))return _b_.int(obj)
 if(obj.__hash__ !==undefined){return obj.__hashvalue__=obj.__hash__()}
 if(obj.__class__===$B.$factory){return obj.__hashvalue__=$B.$py_next_hash--}
 var hashfunc=getattr(obj,'__hash__',_b_.None)
-if(hashfunc==_b_.None)return $B.$py_next_hash--
+if(hashfunc==_b_.None)return obj.__hashvalue__=$B.$py_next_hash--
 if(hashfunc.$infos===undefined){return obj.__hashvalue__=hashfunc()}
 if(hashfunc.$infos.__func__===_b_.object.$dict.__hash__){if(getattr(obj,'__eq__').$infos.__func__!==_b_.object.$dict.__eq__){throw _b_.TypeError("unhashable type: '"+
-$B.get_class(obj).__name__+"'",'hash')}else{return $B.$py_next_hash--}}else{return obj.__hashvalue__=hashfunc()}}
+$B.get_class(obj).__name__+"'",'hash')}else{return _b_.object.$dict.__hash__(obj)}}else{return obj.__hashvalue__=hashfunc()}}
 function _get_builtins_doc(){if($B.builtins_doc===undefined){
 var url=$B.brython_path
 if(url.charAt(url.length-1)=='/'){url=url.substr(0,url.length-1)}
@@ -5992,10 +5991,10 @@ $BoolDict.__setattr__=function(self,attr){return no_set_attr($BoolDict,attr)}
 $BoolDict.__sub__=function(self,other){if(self.valueOf())return 1-other;
 return -other;}
 $BoolDict.__xor__=function(self,other){return self.valueOf()!=other.valueOf()}
-var $EllipsisDict={__class__:$B.$type,__name__:'Ellipsis',}
-$EllipsisDict.__mro__=[$ObjectDict]
-$EllipsisDict.$factory=$EllipsisDict
-var Ellipsis={__bool__ : function(){return True},__class__ : $EllipsisDict,__repr__ : function(){return 'Ellipsis'},__str__ : function(){return 'Ellipsis'},toString : function(){return 'Ellipsis'}}
+var $EllipsisDict={__class__:$B.$type,__name__:'ellipsis'}
+$EllipsisDict.__mro__=[$EllipsisDict,$ObjectDict]
+var Ellipsis={$dict: $EllipsisDict,__bool__ : function(){return True},__class__ : $EllipsisDict}
+$EllipsisDict.$factory=Ellipsis
 for(var $key in $B.$comps){
 switch($B.$comps[$key]){case 'ge':
 case 'gt':

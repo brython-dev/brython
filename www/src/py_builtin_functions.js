@@ -680,8 +680,8 @@ function hash(obj){
         return obj.__hashvalue__ = $B.$py_next_hash--
     }
     var hashfunc = getattr(obj, '__hash__', _b_.None)
-
-    if (hashfunc == _b_.None) return $B.$py_next_hash--
+    
+    if (hashfunc == _b_.None) return obj.__hashvalue__=$B.$py_next_hash--
 
     if(hashfunc.$infos === undefined){
         return obj.__hashvalue__ = hashfunc()
@@ -703,7 +703,7 @@ function hash(obj){
             throw _b_.TypeError("unhashable type: '"+
                 $B.get_class(obj).__name__+"'", 'hash')
         }else{
-            return $B.$py_next_hash--
+            return _b_.object.$dict.__hash__(obj)
         }
     }else{
         return obj.__hashvalue__= hashfunc()
@@ -1686,18 +1686,16 @@ $BoolDict.__xor__ = function(self, other) {
 }
 
 var $EllipsisDict = {__class__:$B.$type,
-    __name__:'Ellipsis',
+    __name__:'ellipsis'
 }
-$EllipsisDict.__mro__ = [$ObjectDict]
-$EllipsisDict.$factory = $EllipsisDict
+$EllipsisDict.__mro__ = [$EllipsisDict, $ObjectDict]
 
 var Ellipsis = {
+    $dict: $EllipsisDict,
     __bool__ : function(){return True},
-    __class__ : $EllipsisDict,
-    __repr__ : function(){return 'Ellipsis'},
-    __str__ : function(){return 'Ellipsis'},
-    toString : function(){return 'Ellipsis'}
+    __class__ : $EllipsisDict
 }
+$EllipsisDict.$factory = Ellipsis
 
 for(var $key in $B.$comps){ // Ellipsis is not orderable with any type
     switch($B.$comps[$key]) {

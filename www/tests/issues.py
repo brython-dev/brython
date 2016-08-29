@@ -938,6 +938,17 @@ def test(throw=True):
 
 test(throw=False)
 
+# issue 485
+class Test:
+    pass
+
+a = Test()
+b = Test()
+d = {a:1,b:2}
+
+assert d[a] == 1
+assert d[b] == 2
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
