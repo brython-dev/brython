@@ -172,17 +172,11 @@ function preformat(self, fmt){
     }
     
     if(fmt.precision!==undefined){
-        // Use Javascript toPrecision to get the correct result
-        // The argument of toPrecision is the number of digits after .
-        // For format type f, precision is the total number of digits, so we
-        // must add the number of digits before "."
+        // Use Javascript toFixed to get the correct result
+        // The argument of toFixed is the number of digits after .
         var prec = fmt.precision
         if(prec==0){return Math.round(self)+''}
-        if(prec && 'fF%'.indexOf(fmt.type)>-1){
-            var pos_pt = Math.abs(self).toString().search(/\./)
-            if(pos_pt>-1){prec+=pos_pt}else{prec=Math.abs(self).toString().length}
-        }
-        var res = self.toPrecision(prec),
+        var res = self.toFixed(prec),
             pt_pos=res.indexOf('.')
         if(fmt.type!==undefined && 
             (fmt.type=='%' || fmt.type.toLowerCase()=='f')){
