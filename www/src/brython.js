@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-08-30 20:47:01.102321"
+__BRYTHON__.compiled_date="2016-08-30 20:49:57.350402"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -7365,9 +7365,7 @@ return res }
 if(fmt.precision!==undefined){
 var prec=fmt.precision
 if(prec==0){return Math.round(self)+''}
-if(prec && 'fF%'.indexOf(fmt.type)>-1){var pos_pt=Math.abs(self).toString().search(/\./)
-if(pos_pt>-1){prec+=pos_pt}else{prec=Math.abs(self).toString().length}}
-var res=self.toPrecision(prec),pt_pos=res.indexOf('.')
+var res=self.toFixed(prec),pt_pos=res.indexOf('.')
 if(fmt.type!==undefined && 
 (fmt.type=='%' ||fmt.type.toLowerCase()=='f')){if(pt_pos==-1){res +='.'+'0'.repeat(fmt.precision)}
 else{missing=fmt.precision-res.length+pt_pos+1
