@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-08-29 22:45:18.477776"
+__BRYTHON__.compiled_date="2016-08-30 20:47:01.102321"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -10932,33 +10932,3 @@ delete _sys_modules[_spec_name];
 throw e;}}}
 return _sys_modules[_spec_name];}
 $B.import_hooks=import_hooks})(__BRYTHON__)
-;(function($B){_b_=$B.builtins
-$B.execution_object={}
-$B.execution_object.queue=[]
-$B.execution_object.start_flag=true
-$B.execution_object.$execute_next_segment=function(){if($B.execution_object.queue.length==0){return}
-$B.execution_object.start_flag=false
-var element=$B.execution_object.queue.shift()
-var code=element[0]
-var delay=10
-if(element.length==2)delay=element[1]
-setTimeout(function(){
-console.log(code)
-try{eval(code)}catch(e){console.log(e)}
-$B.execution_object.start_flag=$B.execution_object.queue.length==0;},delay);}
-$B.execution_object.$append=function(code,delay){$B.execution_object.queue.push([code,delay]);
-if($B.execution_object.start_flag)$B.execution_object.$execute_next_segment()}
-$B.execution_object.source_conversion=function(js){js=js.replace("\n","",'g')
-js=js.replace("'","\\'",'g')
-js=js.replace('"','\\"','g')
-js=js.replace("@@","\'",'g')
-js+="';$B.execution_object.$append($jscode, 10); "
-js+="$B.execution_object.$execute_next_segment(); "
-return "var $jscode='" + js}
-_b_['brython_block']=function(f,sec){if(sec===undefined ||sec==_b_.None)sec=1
-return f}
-$B.builtin_funcs['brython_block']=true
-$B.bound['__builtins__']['brython_block']=true
-_b_['brython_async']=function(f){return f}
-$B.builtin_funcs['brython_async']=true
-$B.bound['__builtins__']['brython_async']=true})(__BRYTHON__)
