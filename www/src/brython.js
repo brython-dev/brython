@@ -63,8 +63,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-08-29 14:11:58.489289"
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2016-08-30 20:49:57.350402"
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
 var keys=$B.keys=function(obj){var res=[],pos=0
@@ -4402,8 +4402,9 @@ throw _b_.TypeError(msg)}}
 func.$infos={__name__ : klass.__name__+'.'+attr}
 return func}}}}
 $ObjectDict.__gt__=$ObjectNI('__gt__','>')
-$ObjectDict.__hash__=function(self){$B.$py_next_hash--;
-return $B.$py_next_hash;}
+$ObjectDict.__hash__=function(self){var hash=self.__hashvalue__
+if(hash!==undefined){return hash}
+return self.__hashvalue__=$B.$py_next_hash--;}
 $ObjectDict.__init__=function(){return _b_.None}
 $ObjectDict.__le__=$ObjectNI('__le__','<=')
 $ObjectDict.__lt__=$ObjectNI('__lt__','<')
@@ -4591,9 +4592,7 @@ if(klass['__setattr__']!==undefined)return klass['__setattr__']
 return function(key,value){klass[key]=value}
 case '__delattr__':
 if(klass['__delattr__']!==undefined)return klass['__delattr__']
-return function(key){delete klass[key]}
-case '__hash__':
-return function(){if(arguments.length==0)return klass.__hashvalue__ ||$B.$py_next_hash--}}
+return function(key){delete klass[key]}}
 var res=klass[attr],is_class=true
 if(res===undefined){
 var mro=klass.__mro__
@@ -5546,10 +5545,10 @@ if(isinstance(obj,bool))return _b_.int(obj)
 if(obj.__hash__ !==undefined){return obj.__hashvalue__=obj.__hash__()}
 if(obj.__class__===$B.$factory){return obj.__hashvalue__=$B.$py_next_hash--}
 var hashfunc=getattr(obj,'__hash__',_b_.None)
-if(hashfunc==_b_.None)return $B.$py_next_hash--
+if(hashfunc==_b_.None)return obj.__hashvalue__=$B.$py_next_hash--
 if(hashfunc.$infos===undefined){return obj.__hashvalue__=hashfunc()}
 if(hashfunc.$infos.__func__===_b_.object.$dict.__hash__){if(getattr(obj,'__eq__').$infos.__func__!==_b_.object.$dict.__eq__){throw _b_.TypeError("unhashable type: '"+
-$B.get_class(obj).__name__+"'",'hash')}else{return $B.$py_next_hash--}}else{return obj.__hashvalue__=hashfunc()}}
+$B.get_class(obj).__name__+"'",'hash')}else{return _b_.object.$dict.__hash__(obj)}}else{return obj.__hashvalue__=hashfunc()}}
 function _get_builtins_doc(){if($B.builtins_doc===undefined){
 var url=$B.brython_path
 if(url.charAt(url.length-1)=='/'){url=url.substr(0,url.length-1)}
@@ -5851,7 +5850,13 @@ for(var i=1;i<mro.length;i++){
 res=mro[i][attr]
 if(res!==undefined){
 if(res.__class__===$PropertyDict){return res.__get__(res,self.__self_class__)}
-if(self.__self_class__!==None){var _args=[self.__self_class__]
+if(self.__self_class__!==None){if(mro[i]===_b_.object.$dict){var klass=self.__self_class__.__class__
+if(klass!==$B.$type){var start=-1
+for(var j=0;j<klass.__mro__.length;j++){if(klass.__mro__[j]===self.__thisclass__.$dict){start=j+1
+break}}
+if(start>-1){for(var j=start;j<klass.__mro__.length;j++){var res1=klass.__mro__[j][attr]
+if(res1!==undefined){res=res1;break}}}}}
+var _args=[self.__self_class__]
 if(attr=='__new__'){_args=[]}
 var method=(function(initial_args){return function(){
 var local_args=initial_args.slice()
@@ -5992,10 +5997,10 @@ $BoolDict.__setattr__=function(self,attr){return no_set_attr($BoolDict,attr)}
 $BoolDict.__sub__=function(self,other){if(self.valueOf())return 1-other;
 return -other;}
 $BoolDict.__xor__=function(self,other){return self.valueOf()!=other.valueOf()}
-var $EllipsisDict={__class__:$B.$type,__name__:'Ellipsis',}
-$EllipsisDict.__mro__=[$ObjectDict]
-$EllipsisDict.$factory=$EllipsisDict
-var Ellipsis={__bool__ : function(){return True},__class__ : $EllipsisDict,__repr__ : function(){return 'Ellipsis'},__str__ : function(){return 'Ellipsis'},toString : function(){return 'Ellipsis'}}
+var $EllipsisDict={__class__:$B.$type,__name__:'ellipsis'}
+$EllipsisDict.__mro__=[$EllipsisDict,$ObjectDict]
+var Ellipsis={$dict: $EllipsisDict,__bool__ : function(){return True},__class__ : $EllipsisDict}
+$EllipsisDict.$factory=Ellipsis
 for(var $key in $B.$comps){
 switch($B.$comps[$key]){case 'ge':
 case 'gt':
@@ -7360,9 +7365,7 @@ return res }
 if(fmt.precision!==undefined){
 var prec=fmt.precision
 if(prec==0){return Math.round(self)+''}
-if(prec && 'fF%'.indexOf(fmt.type)>-1){var pos_pt=Math.abs(self).toString().search(/\./)
-if(pos_pt>-1){prec+=pos_pt}else{prec=Math.abs(self).toString().length}}
-var res=self.toPrecision(prec),pt_pos=res.indexOf('.')
+var res=self.toFixed(prec),pt_pos=res.indexOf('.')
 if(fmt.type!==undefined && 
 (fmt.type=='%' ||fmt.type.toLowerCase()=='f')){if(pt_pos==-1){res +='.'+'0'.repeat(fmt.precision)}
 else{missing=fmt.precision-res.length+pt_pos+1
@@ -10927,33 +10930,3 @@ delete _sys_modules[_spec_name];
 throw e;}}}
 return _sys_modules[_spec_name];}
 $B.import_hooks=import_hooks})(__BRYTHON__)
-;(function($B){_b_=$B.builtins
-$B.execution_object={}
-$B.execution_object.queue=[]
-$B.execution_object.start_flag=true
-$B.execution_object.$execute_next_segment=function(){if($B.execution_object.queue.length==0){return}
-$B.execution_object.start_flag=false
-var element=$B.execution_object.queue.shift()
-var code=element[0]
-var delay=10
-if(element.length==2)delay=element[1]
-setTimeout(function(){
-console.log(code)
-try{eval(code)}catch(e){console.log(e)}
-$B.execution_object.start_flag=$B.execution_object.queue.length==0;},delay);}
-$B.execution_object.$append=function(code,delay){$B.execution_object.queue.push([code,delay]);
-if($B.execution_object.start_flag)$B.execution_object.$execute_next_segment()}
-$B.execution_object.source_conversion=function(js){js=js.replace("\n","",'g')
-js=js.replace("'","\\'",'g')
-js=js.replace('"','\\"','g')
-js=js.replace("@@","\'",'g')
-js+="';$B.execution_object.$append($jscode, 10); "
-js+="$B.execution_object.$execute_next_segment(); "
-return "var $jscode='" + js}
-_b_['brython_block']=function(f,sec){if(sec===undefined ||sec==_b_.None)sec=1
-return f}
-$B.builtin_funcs['brython_block']=true
-$B.bound['__builtins__']['brython_block']=true
-_b_['brython_async']=function(f){return f}
-$B.builtin_funcs['brython_async']=true
-$B.bound['__builtins__']['brython_async']=true})(__BRYTHON__)
