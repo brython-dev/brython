@@ -85,6 +85,10 @@ ajax.$dict = {
             for(var i=0, _len_i = items.length; i < _len_i;i++){
                 add_to_res(res,str(items[i][0]),items[i][1])
             }
+            // The FormData object serializes the data in the 'multipart/form-data'
+            // content-type so we may as well override that header if it was set
+            // by the user.
+            self.js.setRequestHeader('content-type','multipart/form-data')
         }else{
             throw _b_.TypeError("send() argument must be string or dictionary, not '"+str(params.__class__)+"'")
         }
