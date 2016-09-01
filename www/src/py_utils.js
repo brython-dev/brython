@@ -1014,125 +1014,146 @@ $B.leave_frame = function(arg){
     //console.log($B.frames_stack.length, 'frames remain')
 }
 
-_b_.__profile__ = {}
+$B.$profile_data = {}
 $B.$profile = (function(profile) {
-    var call_times={}, call_stack=[],line_start=[], profile_start=null,active=false,paused=false,cumulated=0;
+    var call_times={},      // indexed by function-hash,
+                            //   - given a function it contains a stack with an element for
+                            //     each currently running call of the function
+                            //     the element is a quadruple:
+                            //         start of the function call
+                            //         hash of the caller (from where the function was invoked)
+                            //         cumulated time spent in function not-including subcalls up to last subcall
+                            //         time when the function was last resumed after a subcall (or the time when
+                            //         started runnig if there were no subcalls)
+        _START = 0,         //  used as indices to access elements of call_times
+        _CALLER = 1,
+        _CUMULATED = 2,
+        _LAST_RESUMED =3,
+        call_stack=[],      // contains hashes of the currently running functions (in call-order)
+        profile_start=null, // Time when profiling started (or restarted after being paused)
+        active=false,       // true when collecting data
+        paused=false,       // true when paused
+        cumulated=0;        // cumulated time of data collection from first start until last restart after a pause.
+
     var _fhash = function(module,fname,line){return module+"."+fname+":"+line;}
     var _hash = function(module,line){return module+":"+line;}
-    var _finish_line = function() {
-        if (profile.time_lines) {
-            if (line_start.length == 2) {
-                line_end_tm = new Date()
-                line_start_tm = line_start[0]
-                h = line_start[1]
-                if (! (h in profile.linetimes)) {profile.linetimes[h]=0}
-                profile.linetimes[h]+=(line_end_tm-line_start_tm)
-                line_start = []
-            }
-        }
+    var _is_recursive = function(h) {
+        for(i=0;i<call_stack.length;i++)
+            if (call_stack[i] == h) return true;
+        return false;
     }
-    var _start_line = function(h){
-        line_start = [new Date(),h]
-    }
+
+
+
 
     var $profile = {
         'call':function(module,fname,line,caller){
             if ($B.profile > 1 && active) {
-                _finish_line()
+                var ctime = new Date();
                 var h = _fhash(module,fname,line)
                 if (!(h in call_times)) {call_times[h]=[];}
-                call_times[h].push([new Date(),caller])
+                if (call_stack.length > 0) {
+                    in_func = call_stack[call_stack.length-1];
+                    func_stack = call_times[in_func]
+                    inner_most_call = func_stack[func_stack.length-1];
+                    inner_most_call[_CUMULATED] += (ctime-inner_most_call[_LAST_RESUMED])
+                }
+                call_times[h].push([ctime,caller,0,ctime]) // start time, caller hash, duration without subcalls, start_of_last_subcall
                 call_stack.push(h)
             }
         },
         'return':function(){
-            if ($B.profile > 1 && profile.active) {
-                _finish_line()
-                var h = call_stack.pop(h)
-                var t_end = new Date();
+            if ($B.profile > 1 && active) {
+                var h = call_stack.pop()
                 if (h in call_times) {
+                    var t_end = new Date();
                     var data = call_times[h].pop();
-                    t_start = data[0]
-                    caller = data[1]
+                    t_start = data[_START]
+                    caller = data[_CALLER]
                     t_duration = t_end-t_start;
-                    if (!(h in profile.calls)) {
-                        profile.calls[h]=0;
-                        profile.callcount[h]=0;
+                    t_in_func = data[_CUMULATED] + (t_end-data[_LAST_RESUMED]);
+                    if (!(h in profile.call_times)) {
+                        profile.call_times[h]=0;
+                        profile.call_times_proper[h]=0;
+                        profile.call_counts[h]=0;
+                        profile.call_counts_norec[h]=0;
                         profile.callers[h]={};
                     }
-                    profile.calls[h]+=t_duration;
-                    profile.callcount[h]+=1;
-                    if (!(caller in profile.callers[h])) {profile.callers[h][caller]=0}
-                    profile.callers[h][caller]+=t_duration;
+                    profile.call_times[h]+=t_duration;
+                    profile.call_times_proper[h]+=t_in_func;
+                    profile.call_counts[h]+=1;
+                    if (!(caller in profile.callers[h])) {
+                        profile.callers[h][caller]=[0,0,0,0]
+                    }
+                    if (! _is_recursive(h) ) {
+                        profile.call_counts_norec[h]+=1;
+                        profile.callers[h][caller][3]++;       // Nuber norec calls (for given caller)
+                    }
+                    profile.callers[h][caller][0]+=t_duration; // Total time including subcalls (for given caller)
+                    profile.callers[h][caller][1]+=t_in_func;  // Total time excluding subcalls (for given caller)
+                    profile.callers[h][caller][2]++;           // Nuber of calls (for given caller)
+
+                    if ( call_stack.length > 0) {              // We are returning into a function call, need to update
+                                                            // its last resume time
+                        in_func = call_stack[call_stack.length-1];
+                        func_stack = call_times[in_func];
+                        inner_most_call = func_stack[func_stack.length-1];
+                        inner_most_call[_LAST_RESUMED] = new Date();
+                    }
                 }
             }
         },
         'count':function(module,line){
-            if (profile.active) {
-                _finish_line()
+            if (active) {
                 var h = _hash(module,line);
-                _start_line(h)
-                if (!(h in profile.counters)) { profile.counters[h]=0;}
-                profile.counters[h]++;
+                if (!(h in profile.line_counts)) { profile.line_counts[h]=0;}
+                profile.line_counts[h]++;
             }
         },
         'pause':function() {
-            elapsed =  (new Date())-profile_start
-            cumulated += elapsed
-            active=false
-            paused=true
-            profile.active=false
-            profile.paused=true
-
+            if (active) {
+                elapsed =  (new Date())-profile_start
+                cumulated += elapsed
+                active=false
+                paused=true
+            }
         },
         'start':function() {
             if ($B.profile > 0) {
                 if (! paused ) $B.$profile.clear();
-               else {paused = false;profile.paused=true;}
+               else {paused = false;}
                active=true
-               profile.active=true
                profile_start = new Date()
             }
 
         },
         'stop':function() {
-            profile.profile_duration = ((new Date())-profile_start)+cumulated
-            active=false
-            paused=false
-            profile.paused=false
-            profile.active=false
+            if (active || paused) {
+                profile.profile_duration = ((new Date())-profile_start)+cumulated
+                active=false
+                paused=false
+            }
         },
         'clear':function(){
-            cumulated = 0
-            profile.counters={};
-            profile.calls={};
-            profile.callcount={};
+            cumulated = 0;
+            profile.line_counts={};
+            profile.call_times={};
+            profile.call_times_proper={};
+            profile.call_counts={};
+            profile.call_counts_norec={};
             profile.callers={};
-            profile.linetimes={};
+            active = false;
+            paused = false;
         },
-        '__repr__':function(){
-            var res = ""
-            if ($B.profile <= 0) {
-                res="Profiling disabled"
-            } else {
-                res = "Profiling enabled;"
-                if ($B.profile > 1) res+= "Function timing enabled;";
-               else res+= "Function timing disabled;"
-                   if (profile.time_lines) res+='Line timing enabled';
-               else res+='Line timing disabled';
-               if (active) res+=" status: ACTIVE ("+((new Date())-profile_start)+"ms)";
-               else if (paused) res+=" status: PAUSED ("+cumulated+"ms)";
-               else res+= " status: INACTIVE";
-            }
-            return res
-        }
+        'status':function() {
+            if ($B.profile <= 0) return "Disabled";
+            if (active) return "Collecting data: active";
+            else if (paused) return "Collecting data: paused";
+            else return "Stopped";
+        },
     }
-    profile.start = $profile.start;
-    profile.stop = $profile.stop;
-    profile.pause = $profile.pause;
-    profile.__repr__ = $profile.__repr__
     return $profile;
-})(_b_.__profile__)
+})($B.$profile_data)
 
 var min_int=Math.pow(-2, 53), max_int=Math.pow(2,53)-1
 

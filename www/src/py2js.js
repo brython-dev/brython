@@ -7786,9 +7786,6 @@ function brython(options){
 
     if(options.profile === undefined){ options.profile = 0}
     $B.profile = options.profile
-    if ($B.profile>0){
-        if(options.profile_start){ _b_.__profile__.start();}
-    }
 
     // For imports, default mode is to search modules of the standard library
     // using a static mapping stored in stdlib_paths.js
