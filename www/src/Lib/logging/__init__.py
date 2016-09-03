@@ -502,7 +502,7 @@ class Formatter(object):
         # See issues #9427, #1553375. Commented out for now.
         #if getattr(self, 'fullstack', False):
         #    traceback.print_stack(tb.tb_frame.f_back, file=sio)
-        traceback.print_exception(ei[0], ei[1], tb, None, sio)
+        traceback.print_exc(file=sio)
         s = sio.getvalue()
         sio.close()
         if s[-1:] == "\n":
@@ -881,16 +881,12 @@ class Handler(Filterer):
         The record which was being processed is passed in to this method.
         """
         if raiseExceptions and sys.stderr:  # see issue 13807
-            ei = sys.exc_info()
             try:
-                traceback.print_exception(ei[0], ei[1], ei[2],
-                                          None, sys.stderr)
+                traceback.print_exc(file=sys.stderr)
                 sys.stderr.write('Logged from file %s, line %s\n' % (
                                  record.filename, record.lineno))
             except IOError: #pragma: no cover
                 pass    # see issue 5971
-            finally:
-                del ei
 
 class StreamHandler(Handler):
     """
