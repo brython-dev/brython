@@ -1020,7 +1020,7 @@ class _StderrHandler(StreamHandler):
 class ConsoleHandler(Handler):
     """
     A handler class which writes logging records, appropriately formatted,
-    to the browser console.
+    to the browser's debug console.
     """
 
     def emit(self, record):
@@ -1028,11 +1028,9 @@ class ConsoleHandler(Handler):
         Emit a record.
 
         If a formatter is specified, it is used to format the record.
-        The record is then written to the stream with a trailing newline.  If
-        exception information is present, it is formatted using
-        traceback.print_exception and appended to the stream.  If the stream
-        has an 'encoding' attribute, it is used to determine how to do the
-        output to the stream.
+        The record is then written to the browser's debug console.
+        If exception information is present, it is formatted using
+        traceback.print_exception and appended to the console.
         """
         try:
             msg = self.format(record)
