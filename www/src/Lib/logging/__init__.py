@@ -25,11 +25,12 @@ To use, simply 'import logging' and log away!
 
 import sys, os, time, io, traceback, warnings, weakref
 from string import Template
+from browser import console
 
 __all__ = ['BASIC_FORMAT', 'BufferingFormatter', 'CRITICAL', 'DEBUG', 'ERROR',
            'FATAL', 'FileHandler', 'Filter', 'Formatter', 'Handler', 'INFO',
            'LogRecord', 'Logger', 'LoggerAdapter', 'NOTSET', 'NullHandler',
-           'StreamHandler', 'WARN', 'WARNING', 'addLevelName', 'basicConfig',
+           'StreamHandler', 'ConsoleHandler', 'WARN', 'WARNING', 'addLevelName', 'basicConfig',
            'captureWarnings', 'critical', 'debug', 'disable', 'error',
            'exception', 'fatal', 'getLevelName', 'getLogger', 'getLoggerClass',
            'info', 'log', 'makeLogRecord', 'setLoggerClass', 'warn', 'warning',
@@ -1016,7 +1017,30 @@ class _StderrHandler(StreamHandler):
         return sys.stderr
 
 
-_defaultLastResort = _StderrHandler(WARNING)
+class ConsoleHandler(Handler):
+    """
+    A handler class which writes logging records, appropriately formatted,
+    to the browser console.
+    """
+
+    def emit(self, record):
+        """
+        Emit a record.
+
+        If a formatter is specified, it is used to format the record.
+        The record is then written to the stream with a trailing newline.  If
+        exception information is present, it is formatted using
+        traceback.print_exception and appended to the stream.  If the stream
+        has an 'encoding' attribute, it is used to determine how to do the
+        output to the stream.
+        """
+        try:
+            msg = self.format(record)
+            console.log(msg)
+        except:
+            self.handleError(record)
+
+_defaultLastResort = ConsoleHandler(WARNING)
 lastResort = _defaultLastResort
 
 #---------------------------------------------------------------------------
@@ -1700,7 +1724,10 @@ def basicConfig(**kwargs):
                     h = FileHandler(filename, mode)
                 else:
                     stream = kwargs.get("stream")
-                    h = StreamHandler(stream)
+                    if stream:
+                        h = StreamHandler(stream)
+                    else:
+                        h = ConsoleHandler()
                 handlers = [h]
             fs = kwargs.get("format", BASIC_FORMAT)
             dfs = kwargs.get("datefmt", None)
