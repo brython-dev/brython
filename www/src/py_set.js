@@ -1,6 +1,7 @@
 ;(function($B){
 
-var _ = $B.builtins, $N = _.None
+var _b_=$B.builtins
+var $N=_b_.None
 
 // set
 
@@ -20,13 +21,13 @@ function clone(obj){
 
 var $SetDict = {
     __class__:$B.$type,
-    __dir__:_.object.$dict.__dir__,
+    __dir__:_b_.object.$dict.__dir__,
     __name__:'set',
     $native:true
 }
 
 $SetDict.__add__ = function(self,other){
-    throw _.TypeError("unsupported operand type(s) for +: 'set' and " + 
+    throw _b_.TypeError("unsupported operand type(s) for +: 'set' and " + 
         typeof other )
 }
 
@@ -34,7 +35,7 @@ $SetDict.__and__ = function(self, other, accept_iter){
     $test(accept_iter, other)
     var res = create_type(self)
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
-        if(_.getattr(other,'__contains__')(self.$items[i])){
+        if(_b_.getattr(other,'__contains__')(self.$items[i])){
             $SetDict.add(res,self.$items[i])
         }
     }
@@ -61,7 +62,7 @@ $SetDict.__contains__ = function(self,item){
     
     var eq_func = _b_.getattr(item, '__eq__')
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
-        if(_.getattr(self.$items[i],'__eq__')(item)) return true
+        if(_b_.getattr(self.$items[i],'__eq__')(item)) return true
     }
     return false
 
@@ -71,7 +72,7 @@ $SetDict.__eq__ = function(self,other){
     // compare class set
     if(other===undefined) return self===set
     
-    if(_.isinstance(other,_.set)){
+    if(_b_.isinstance(other,_b_.set)){
       if(other.$items.length==self.$items.length){
         for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
            if($SetDict.__contains__(self,other.$items[i])===false) return false
@@ -81,24 +82,24 @@ $SetDict.__eq__ = function(self,other){
       return false
     }
 
-    if(_.isinstance(other,[_.list])){
-      if(_.len(other)!=self.$items.length) return false
+    if(_b_.isinstance(other,[_b_.list])){
+      if(_b_.len(other)!=self.$items.length) return false
 
-      for(var i=0, _len_i = _.len(other); i < _len_i;i++){
+      for(var i=0, _len_i = _b_.len(other); i < _len_i;i++){
          var _value=getattr(other, '__getitem__')(i)
          if($SetDict.__contains__(self, _value)===false) return false
       }
       return true
     }
 
-    if(_.hasattr(other, '__iter__')) { // is an iterator
-      if(_.len(other)!=self.$items.length) return false
+    if(_b_.hasattr(other, '__iter__')) { // is an iterator
+      if(_b_.len(other)!=self.$items.length) return false
       
-      var _it=_.iter(other)
+      var _it=_b_.iter(other)
       
       while(1) {
          try {
-           var e=_.next(_it)
+           var e=_b_.next(_it)
            if(!$SetDict.__contains__(self, e)) return false
          } catch(err) {
            if(err.__name__=="StopIteration") {break}
@@ -135,7 +136,7 @@ $SetDict.__init__ = function(self){
         ['self', 'iterable'], arguments, {iterable:[]}, null,null),
         self = $.self, iterable= $.iterable
 
-    if(_.isinstance(iterable,[set,frozenset])){
+    if(_b_.isinstance(iterable,[set,frozenset])){
         self.$items = iterable.$items
         return $N
     }
@@ -143,7 +144,7 @@ $SetDict.__init__ = function(self){
         obj = {$items:[],$str:true,$num:true}
     while(1){
         try{
-            var item = _.next(it)
+            var item = _b_.next(it)
             $SetDict.add(obj,item)
         }catch(err){
             if(_b_.isinstance(err, _b_.StopIteration)){break}
@@ -170,7 +171,7 @@ $SetDict.__iter__ = function(self){
 
 $SetDict.__le__ = function(self,other){
     if(_b_.isinstance(other,[set, frozenset])){
-        var cfunc = _.getattr(other,'__contains__')
+        var cfunc = _b_.getattr(other,'__contains__')
         for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
             if(!cfunc(self.$items[i])) return false
         }
@@ -185,24 +186,24 @@ $SetDict.__len__ = function(self){return self.$items.length}
 $SetDict.__lt__ = function(self,other){
     if(_b_.isinstance(other,[set, frozenset])){
         return ($SetDict.__le__(self,other) &&
-            $SetDict.__len__(self)<_.getattr(other,'__len__')())
+            $SetDict.__len__(self)<_b_.getattr(other,'__len__')())
     }else{
         return _b_.object.$dict['__lt__'](self, other) // try other > self
     }
 }
 
-$SetDict.__mro__ = [$SetDict,_.object.$dict]
+$SetDict.__mro__ = [$SetDict,_b_.object.$dict]
 
 $SetDict.__ne__ = function(self,other){return !$SetDict.__eq__(self,other)}
 
 $SetDict.__or__ = function(self,other,accept_iter){
     //$test(accept_iter, other)   <===  is this needed?  causes some dict unittests to fail
     var res = clone(self)
-    var func = _.getattr(_.iter(other),'__next__')
+    var func = _b_.getattr(_b_.iter(other),'__next__')
     while(1){
         try{$SetDict.add(res, func())}
         catch(err){
-            if(_.isinstance(err, _.StopIteration)){break}
+            if(_b_.isinstance(err, _b_.StopIteration)){break}
             throw err
         }
     }
@@ -227,7 +228,7 @@ $SetDict.__str__ = $SetDict.toString = $SetDict.__repr__ = function(self){
         return klass_name+'(...)'
     }
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
-        var r = _.repr(self.$items[i])
+        var r = _b_.repr(self.$items[i])
         if(r===self||r===self.$items[i]){res.push('{...}')}
         else{res.push(r)}
     }
@@ -240,7 +241,7 @@ $SetDict.__sub__ = function(self, other, accept_iter){
     // Return a new set with elements in the set that are not in the others
     $test(accept_iter, other, '-')
     var res = create_type(self)
-    var cfunc = _.getattr(other,'__contains__')
+    var cfunc = _b_.getattr(other,'__contains__')
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
         if(!cfunc(self.$items[i])){
             res.$items.push(self.$items[i])
@@ -253,7 +254,7 @@ $SetDict.__xor__ = function(self, other, accept_iter){
     // Return a new set with elements in either the set or other but not both
     $test(accept_iter, other, '^')
     var res = create_type(self)
-    var cfunc = _.getattr(other,'__contains__')
+    var cfunc = _b_.getattr(other,'__contains__')
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
         if(!cfunc(self.$items[i])){
             $SetDict.add(res,self.$items[i])
@@ -268,7 +269,7 @@ $SetDict.__xor__ = function(self, other, accept_iter){
 }
 
 function $test(accept_iter, other, op){
-    if(accept_iter===undefined && !_.isinstance(other,[set, frozenset])){
+    if(accept_iter===undefined && !_b_.isinstance(other,[set, frozenset])){
         throw _b_.TypeError("unsupported operand type(s) for "+op+
             ": 'set' and '"+$B.get_class(other).__name__+"'")
     }
@@ -289,7 +290,7 @@ $SetDict.add = function(){
         if(self.$items.indexOf(item)==-1){self.$items.push(item)}
         return $N
     }
-    var cfunc = _.getattr(item,'__eq__')
+    var cfunc = _b_.getattr(item,'__eq__')
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
         if(cfunc(self.$items[i])) return
     }
@@ -385,13 +386,13 @@ $SetDict.isdisjoint = function(){
         {self:null,other:null},['self','other'],
         arguments, {},null,null)
     for(var i=0, _len_i = $.self.$items.length; i < _len_i;i++){
-        if(_.getattr($.other,'__contains__')($.self.$items[i])) return false
+        if(_b_.getattr($.other,'__contains__')($.self.$items[i])) return false
     }
     return true
 }
 
 $SetDict.pop = function(self){
-    if(self.$items.length===0) throw _.KeyError('pop from an empty set')
+    if(self.$items.length===0) throw _b_.KeyError('pop from an empty set')
     return self.$items.pop()
 }
 
@@ -402,17 +403,17 @@ $SetDict.remove = function(self,item){
     if(!_b_.isinstance(item, set)){_b_.hash(item)}
     if (typeof item == 'string' || typeof item == 'number') {
        var _i=self.$items.indexOf(item) 
-       if (_i == -1) throw _.KeyError(item)
+       if (_i == -1) throw _b_.KeyError(item)
        self.$items.splice(_i,1)
        return $N
     }
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
-        if(_.getattr(self.$items[i],'__eq__')(item)){
+        if(_b_.getattr(self.$items[i],'__eq__')(item)){
             self.$items.splice(i,1)
             return $N
         }
     }
-    throw _.KeyError(item)
+    throw _b_.KeyError(item)
 }
 
 $SetDict.symmetric_difference_update = function(self, s){
@@ -542,7 +543,7 @@ $B.set_func_names($SetDict)
 
 var $FrozensetDict = {__class__:$B.$type,__name__:'frozenset'}
 
-$FrozensetDict.__mro__ = [$FrozensetDict,_.object.$dict]
+$FrozensetDict.__mro__ = [$FrozensetDict,_b_.object.$dict]
 
 
 
@@ -582,7 +583,7 @@ $FrozensetDict.__hash__ = function(self) {
    _hash *=self.$items.length   
 
    for (var i=0, _len_i = self.$items.length; i < _len_i; i++) {
-      var _h=_.hash(self.$items[i])
+      var _h=_b_.hash(self.$items[i])
       _hash ^= ((_h ^ 89869747) ^ (_h << 16)) * 3644798167
    }
 
@@ -622,7 +623,7 @@ $FrozensetDict.$factory = frozenset
 
 $B.set_func_names($FrozensetDict)
 
-_.set = set
-_.frozenset = frozenset
+_b_.set = set
+_b_.frozenset = frozenset
 
 })(__BRYTHON__)
