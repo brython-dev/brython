@@ -25,11 +25,12 @@ To use, simply 'import logging' and log away!
 
 import sys, os, time, io, traceback, warnings, weakref
 from string import Template
+from browser import console
 
 __all__ = ['BASIC_FORMAT', 'BufferingFormatter', 'CRITICAL', 'DEBUG', 'ERROR',
            'FATAL', 'FileHandler', 'Filter', 'Formatter', 'Handler', 'INFO',
            'LogRecord', 'Logger', 'LoggerAdapter', 'NOTSET', 'NullHandler',
-           'StreamHandler', 'WARN', 'WARNING', 'addLevelName', 'basicConfig',
+           'StreamHandler', 'ConsoleHandler', 'WARN', 'WARNING', 'addLevelName', 'basicConfig',
            'captureWarnings', 'critical', 'debug', 'disable', 'error',
            'exception', 'fatal', 'getLevelName', 'getLogger', 'getLoggerClass',
            'info', 'log', 'makeLogRecord', 'setLoggerClass', 'warn', 'warning',
@@ -501,7 +502,7 @@ class Formatter(object):
         # See issues #9427, #1553375. Commented out for now.
         #if getattr(self, 'fullstack', False):
         #    traceback.print_stack(tb.tb_frame.f_back, file=sio)
-        traceback.print_exception(ei[0], ei[1], tb, None, sio)
+        traceback.print_exc(file=sio)
         s = sio.getvalue()
         sio.close()
         if s[-1:] == "\n":
@@ -880,16 +881,12 @@ class Handler(Filterer):
         The record which was being processed is passed in to this method.
         """
         if raiseExceptions and sys.stderr:  # see issue 13807
-            ei = sys.exc_info()
             try:
-                traceback.print_exception(ei[0], ei[1], ei[2],
-                                          None, sys.stderr)
+                traceback.print_exc(file=sys.stderr)
                 sys.stderr.write('Logged from file %s, line %s\n' % (
                                  record.filename, record.lineno))
             except IOError: #pragma: no cover
                 pass    # see issue 5971
-            finally:
-                del ei
 
 class StreamHandler(Handler):
     """
@@ -1016,7 +1013,28 @@ class _StderrHandler(StreamHandler):
         return sys.stderr
 
 
-_defaultLastResort = _StderrHandler(WARNING)
+class ConsoleHandler(Handler):
+    """
+    A handler class which writes logging records, appropriately formatted,
+    to the browser's debug console.
+    """
+
+    def emit(self, record):
+        """
+        Emit a record.
+
+        If a formatter is specified, it is used to format the record.
+        The record is then written to the browser's debug console.
+        If exception information is present, it is formatted using
+        traceback.print_exception and appended to the console.
+        """
+        try:
+            msg = self.format(record)
+            console.log(msg)
+        except:
+            self.handleError(record)
+
+_defaultLastResort = ConsoleHandler(WARNING)
 lastResort = _defaultLastResort
 
 #---------------------------------------------------------------------------
@@ -1700,7 +1718,10 @@ def basicConfig(**kwargs):
                     h = FileHandler(filename, mode)
                 else:
                     stream = kwargs.get("stream")
-                    h = StreamHandler(stream)
+                    if stream:
+                        h = StreamHandler(stream)
+                    else:
+                        h = ConsoleHandler()
                 handlers = [h]
             fs = kwargs.get("format", BASIC_FORMAT)
             dfs = kwargs.get("datefmt", None)
