@@ -63,8 +63,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-08-30 20:49:57.350402"
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2016-09-04 16:09:39.857850"
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
 var keys=$B.keys=function(obj){var res=[],pos=0
@@ -4220,7 +4220,6 @@ $B.debug=options.debug
 _b_.__debug__=$B.debug>0
 if(options.profile===undefined){options.profile=0}
 $B.profile=options.profile
-if($B.profile>0){if(options.profile_start){_b_.__profile__.start();}}
 if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
 $B.static_stdlib_import=options.static_stdlib_import
 if(options.open !==undefined){_b_.open=options.open;
@@ -5137,72 +5136,75 @@ $B.frames_stack.push(frame)}
 $B.leave_frame=function(arg){
 if($B.frames_stack.length==0){console.log('empty stack');return}
 $B.frames_stack.pop()}
-_b_.__profile__={}
-$B.$profile=(function(profile){var call_times={},call_stack=[],line_start=[],profile_start=null,active=false,paused=false,cumulated=0;
+$B.$profile_data={}
+$B.$profile=(function(profile){var call_times={},
+_START=0,
+_CALLER=1,_CUMULATED=2,_LAST_RESUMED=3,call_stack=[],
+profile_start=null,
+active=false,
+paused=false,
+cumulated=0;
 var _fhash=function(module,fname,line){return module+"."+fname+":"+line;}
 var _hash=function(module,line){return module+":"+line;}
-var _finish_line=function(){if(profile.time_lines){if(line_start.length==2){line_end_tm=new Date()
-line_start_tm=line_start[0]
-h=line_start[1]
-if(!(h in profile.linetimes)){profile.linetimes[h]=0}
-profile.linetimes[h]+=(line_end_tm-line_start_tm)
-line_start=[]}}}
-var _start_line=function(h){line_start=[new Date(),h]}
-var $profile={'call':function(module,fname,line,caller){if($B.profile > 1 && active){_finish_line()
+var _is_recursive=function(h){for(i=0;i<call_stack.length;i++)
+if(call_stack[i]==h)return true;
+return false;}
+var $profile={'call':function(module,fname,line,caller){if($B.profile > 1 && active){var ctime=new Date();
 var h=_fhash(module,fname,line)
 if(!(h in call_times)){call_times[h]=[];}
-call_times[h].push([new Date(),caller])
-call_stack.push(h)}},'return':function(){if($B.profile > 1 && profile.active){_finish_line()
-var h=call_stack.pop(h)
-var t_end=new Date();
-if(h in call_times){var data=call_times[h].pop();
-t_start=data[0]
-caller=data[1]
+if(call_stack.length > 0){in_func=call_stack[call_stack.length-1];
+func_stack=call_times[in_func]
+inner_most_call=func_stack[func_stack.length-1];
+inner_most_call[_CUMULATED]+=(ctime-inner_most_call[_LAST_RESUMED])}
+call_times[h].push([ctime,caller,0,ctime])
+call_stack.push(h)}},'return':function(){if($B.profile > 1 && active){var h=call_stack.pop()
+if(h in call_times){var t_end=new Date();
+var data=call_times[h].pop();
+t_start=data[_START]
+caller=data[_CALLER]
 t_duration=t_end-t_start;
-if(!(h in profile.calls)){profile.calls[h]=0;
-profile.callcount[h]=0;
+t_in_func=data[_CUMULATED]+(t_end-data[_LAST_RESUMED]);
+if(!(h in profile.call_times)){profile.call_times[h]=0;
+profile.call_times_proper[h]=0;
+profile.call_counts[h]=0;
+profile.call_counts_norec[h]=0;
 profile.callers[h]={};}
-profile.calls[h]+=t_duration;
-profile.callcount[h]+=1;
-if(!(caller in profile.callers[h])){profile.callers[h][caller]=0}
-profile.callers[h][caller]+=t_duration;}}},'count':function(module,line){if(profile.active){_finish_line()
-var h=_hash(module,line);
-_start_line(h)
-if(!(h in profile.counters)){profile.counters[h]=0;}
-profile.counters[h]++;}},'pause':function(){elapsed=(new Date())-profile_start
+profile.call_times[h]+=t_duration;
+profile.call_times_proper[h]+=t_in_func;
+profile.call_counts[h]+=1;
+if(!(caller in profile.callers[h])){profile.callers[h][caller]=[0,0,0,0]}
+if(! _is_recursive(h)){profile.call_counts_norec[h]+=1;
+profile.callers[h][caller][3]++;}
+profile.callers[h][caller][0]+=t_duration;
+profile.callers[h][caller][1]+=t_in_func;
+profile.callers[h][caller][2]++;
+if(call_stack.length > 0){
+in_func=call_stack[call_stack.length-1];
+func_stack=call_times[in_func];
+inner_most_call=func_stack[func_stack.length-1];
+inner_most_call[_LAST_RESUMED]=new Date();}}}},'count':function(module,line){if(active){var h=_hash(module,line);
+if(!(h in profile.line_counts)){profile.line_counts[h]=0;}
+profile.line_counts[h]++;}},'pause':function(){if(active){elapsed=(new Date())-profile_start
 cumulated +=elapsed
 active=false
-paused=true
-profile.active=false
-profile.paused=true},'start':function(){if($B.profile > 0){if(! paused )$B.$profile.clear();
-else{paused=false;profile.paused=true;}
+paused=true}},'start':function(){if($B.profile > 0){if(! paused )$B.$profile.clear();
+else{paused=false;}
 active=true
-profile.active=true
-profile_start=new Date()}},'stop':function(){profile.profile_duration=((new Date())-profile_start)+cumulated
+profile_start=new Date()}},'stop':function(){if(active ||paused){profile.profile_duration=((new Date())-profile_start)+cumulated
 active=false
-paused=false
-profile.paused=false
-profile.active=false},'clear':function(){cumulated=0
-profile.counters={};
-profile.calls={};
-profile.callcount={};
+paused=false}},'clear':function(){cumulated=0;
+profile.line_counts={};
+profile.call_times={};
+profile.call_times_proper={};
+profile.call_counts={};
+profile.call_counts_norec={};
 profile.callers={};
-profile.linetimes={};},'__repr__':function(){var res=""
-if($B.profile <=0){res="Profiling disabled"}else{
-res="Profiling enabled;"
-if($B.profile > 1)res+="Function timing enabled;";
-else res+="Function timing disabled;"
-if(profile.time_lines)res+='Line timing enabled';
-else res+='Line timing disabled';
-if(active)res+=" status: ACTIVE ("+((new Date())-profile_start)+"ms)";
-else if(paused)res+=" status: PAUSED ("+cumulated+"ms)";
-else res+=" status: INACTIVE";}
-return res}}
-profile.start=$profile.start;
-profile.stop=$profile.stop;
-profile.pause=$profile.pause;
-profile.__repr__=$profile.__repr__
-return $profile;})(_b_.__profile__)
+active=false;
+paused=false;},'status':function(){if($B.profile <=0)return "Disabled";
+if(active)return "Collecting data: active";
+else if(paused)return "Collecting data: paused";
+else return "Stopped";},}
+return $profile;})($B.$profile_data)
 var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
 $B.is_safe_int=function(){for(var i=0;i<arguments.length;i++){var arg=arguments[i]
 if(arg<min_int ||arg>max_int){return false}}
@@ -6886,9 +6888,9 @@ $JSObjectDict.$factory=JSObject
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
-var js=['_ajax','_base64','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
+var js=['_ajax','_base64','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_profile','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
 var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]})(__BRYTHON__)
@@ -9653,17 +9655,18 @@ $B.mappingproxy=mappingproxy
 $B.obj_dict=function(obj){var res=dict()
 res.$jsobj=obj
 return res}})(__BRYTHON__)
-;(function($B){var _=$B.builtins,$N=_.None
+;(function($B){var _b_=$B.builtins
+var $N=_b_.None
 function create_type(obj){return $B.get_class(obj).$factory()}
 function clone(obj){var res=create_type(obj)
 res.$items=obj.$items.slice()
 return res }
-var $SetDict={__class__:$B.$type,__dir__:_.object.$dict.__dir__,__name__:'set',$native:true}
-$SetDict.__add__=function(self,other){throw _.TypeError("unsupported operand type(s) for +: 'set' and " + 
+var $SetDict={__class__:$B.$type,__dir__:_b_.object.$dict.__dir__,__name__:'set',$native:true}
+$SetDict.__add__=function(self,other){throw _b_.TypeError("unsupported operand type(s) for +: 'set' and " + 
 typeof other )}
 $SetDict.__and__=function(self,other,accept_iter){$test(accept_iter,other)
 var res=create_type(self)
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_.getattr(other,'__contains__')(self.$items[i])){$SetDict.add(res,self.$items[i])}}
+for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_b_.getattr(other,'__contains__')(self.$items[i])){$SetDict.add(res,self.$items[i])}}
 return res}
 $SetDict.__contains__=function(self,item){if(self.$num &&(typeof item=='number')){if(isNaN(item)){
 for(var i=self.$items.length-1;i>=0;i--){if(isNaN(self.$items[i])){return true}}
@@ -9671,22 +9674,22 @@ return false}else{return self.$items.indexOf(item)>-1}}
 if(self.$str &&(typeof item=='string')){return self.$items.indexOf(item)>-1}
 if(! _b_.isinstance(item,set)){_b_.hash(item)}
 var eq_func=_b_.getattr(item,'__eq__')
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_.getattr(self.$items[i],'__eq__')(item))return true}
+for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_b_.getattr(self.$items[i],'__eq__')(item))return true}
 return false}
 $SetDict.__eq__=function(self,other){
 if(other===undefined)return self===set
-if(_.isinstance(other,_.set)){if(other.$items.length==self.$items.length){for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if($SetDict.__contains__(self,other.$items[i])===false)return false}
+if(_b_.isinstance(other,_b_.set)){if(other.$items.length==self.$items.length){for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if($SetDict.__contains__(self,other.$items[i])===false)return false}
 return true}
 return false}
-if(_.isinstance(other,[_.list])){if(_.len(other)!=self.$items.length)return false
-for(var i=0,_len_i=_.len(other);i < _len_i;i++){var _value=getattr(other,'__getitem__')(i)
+if(_b_.isinstance(other,[_b_.list])){if(_b_.len(other)!=self.$items.length)return false
+for(var i=0,_len_i=_b_.len(other);i < _len_i;i++){var _value=getattr(other,'__getitem__')(i)
 if($SetDict.__contains__(self,_value)===false)return false}
 return true}
-if(_.hasattr(other,'__iter__')){
-if(_.len(other)!=self.$items.length)return false
-var _it=_.iter(other)
+if(_b_.hasattr(other,'__iter__')){
+if(_b_.len(other)!=self.$items.length)return false
+var _it=_b_.iter(other)
 while(1){try{
-var e=_.next(_it)
+var e=_b_.next(_it)
 if(!$SetDict.__contains__(self,e))return false}catch(err){if(err.__name__=="StopIteration"){break}
 throw err}}
 return true}
@@ -9695,10 +9698,10 @@ $SetDict.__format__=function(self,format_string){return $SetDict.__str__(self)}
 $SetDict.__ge__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return !$SetDict.__lt__(self,other)}else{return _b_.object.$dict.__ge__(self,other)}}
 $SetDict.__gt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return !$SetDict.__le__(self,other)}else{return _b_.object.$dict.__gt__(self,other)}}
 $SetDict.__init__=function(self){var $=$B.args('__init__',2,{self:null,iterable:null},['self','iterable'],arguments,{iterable:[]},null,null),self=$.self,iterable=$.iterable
-if(_.isinstance(iterable,[set,frozenset])){self.$items=iterable.$items
+if(_b_.isinstance(iterable,[set,frozenset])){self.$items=iterable.$items
 return $N}
 var it=_b_.iter(iterable),obj={$items:[],$str:true,$num:true}
-while(1){try{var item=_.next(it)
+while(1){try{var item=_b_.next(it)
 $SetDict.add(obj,item)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
 self.$items=obj.$items
@@ -9708,19 +9711,19 @@ $SetDict.__iter__=function(self){var it=$B.$iterator(self.$items,$set_iterator),
 it.__next__=function(){if(it.__len__()!=len){throw _b_.RuntimeError("size changed during iteration")}
 return nxt()}
 return it}
-$SetDict.__le__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){var cfunc=_.getattr(other,'__contains__')
+$SetDict.__le__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){var cfunc=_b_.getattr(other,'__contains__')
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(!cfunc(self.$items[i]))return false}
 return true}else{return _b_.object.$dict.__le__(self,other)}}
 $SetDict.__len__=function(self){return self.$items.length}
 $SetDict.__lt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return($SetDict.__le__(self,other)&&
-$SetDict.__len__(self)<_.getattr(other,'__len__')())}else{return _b_.object.$dict['__lt__'](self,other)}}
-$SetDict.__mro__=[$SetDict,_.object.$dict]
+$SetDict.__len__(self)<_b_.getattr(other,'__len__')())}else{return _b_.object.$dict['__lt__'](self,other)}}
+$SetDict.__mro__=[$SetDict,_b_.object.$dict]
 $SetDict.__ne__=function(self,other){return !$SetDict.__eq__(self,other)}
 $SetDict.__or__=function(self,other,accept_iter){
 var res=clone(self)
-var func=_.getattr(_.iter(other),'__next__')
+var func=_b_.getattr(_b_.iter(other),'__next__')
 while(1){try{$SetDict.add(res,func())}
-catch(err){if(_.isinstance(err,_.StopIteration)){break}
+catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
 res.__class__=self.__class__
 return res}
@@ -9733,7 +9736,7 @@ if(head=='set('){head='{';tail='}'}
 var res=[]
 if(self.$cycle){self.$cycle--
 return klass_name+'(...)'}
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){var r=_.repr(self.$items[i])
+for(var i=0,_len_i=self.$items.length;i < _len_i;i++){var r=_b_.repr(self.$items[i])
 if(r===self||r===self.$items[i]){res.push('{...}')}
 else{res.push(r)}}
 res=res.join(', ')
@@ -9742,17 +9745,17 @@ return head+res+tail}
 $SetDict.__sub__=function(self,other,accept_iter){
 $test(accept_iter,other,'-')
 var res=create_type(self)
-var cfunc=_.getattr(other,'__contains__')
+var cfunc=_b_.getattr(other,'__contains__')
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(!cfunc(self.$items[i])){res.$items.push(self.$items[i])}}
 return res}
 $SetDict.__xor__=function(self,other,accept_iter){
 $test(accept_iter,other,'^')
 var res=create_type(self)
-var cfunc=_.getattr(other,'__contains__')
+var cfunc=_b_.getattr(other,'__contains__')
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(!cfunc(self.$items[i])){$SetDict.add(res,self.$items[i])}}
 for(var i=0,_len_i=other.$items.length;i < _len_i;i++){if(!$SetDict.__contains__(self,other.$items[i])){$SetDict.add(res,other.$items[i])}}
 return res}
-function $test(accept_iter,other,op){if(accept_iter===undefined && !_.isinstance(other,[set,frozenset])){throw _b_.TypeError("unsupported operand type(s) for "+op+
+function $test(accept_iter,other,op){if(accept_iter===undefined && !_b_.isinstance(other,[set,frozenset])){throw _b_.TypeError("unsupported operand type(s) for "+op+
 ": 'set' and '"+$B.get_class(other).__name__+"'")}}
 $B.make_rmethods($SetDict)
 $SetDict.add=function(){var $=$B.args('add',2,{self:null,item:null},['self','item'],arguments,{},null,null),self=$.self,item=$.item
@@ -9761,7 +9764,7 @@ if(self.$str && !(typeof item=='string')){self.$str=false}
 if(self.$num && !(typeof item=='number')){self.$num=false}
 if(self.$num||self.$str){if(self.$items.indexOf(item)==-1){self.$items.push(item)}
 return $N}
-var cfunc=_.getattr(item,'__eq__')
+var cfunc=_b_.getattr(item,'__eq__')
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(cfunc(self.$items[i]))return}
 self.$items.push(item)
 return $N}
@@ -9797,20 +9800,20 @@ remove.sort().reverse()
 for(var j=0;j<remove.length;j++){self.$items.splice(remove[j],1)}}
 return $N}
 $SetDict.isdisjoint=function(){var $=$B.args('is_disjoint',2,{self:null,other:null},['self','other'],arguments,{},null,null)
-for(var i=0,_len_i=$.self.$items.length;i < _len_i;i++){if(_.getattr($.other,'__contains__')($.self.$items[i]))return false}
+for(var i=0,_len_i=$.self.$items.length;i < _len_i;i++){if(_b_.getattr($.other,'__contains__')($.self.$items[i]))return false}
 return true}
-$SetDict.pop=function(self){if(self.$items.length===0)throw _.KeyError('pop from an empty set')
+$SetDict.pop=function(self){if(self.$items.length===0)throw _b_.KeyError('pop from an empty set')
 return self.$items.pop()}
 $SetDict.remove=function(self,item){
 var $=$B.args('remove',2,{self:null,item:null},['self','item'],arguments,{},null,null),self=$.self,item=$.item
 if(!_b_.isinstance(item,set)){_b_.hash(item)}
 if(typeof item=='string' ||typeof item=='number'){var _i=self.$items.indexOf(item)
-if(_i==-1)throw _.KeyError(item)
+if(_i==-1)throw _b_.KeyError(item)
 self.$items.splice(_i,1)
 return $N}
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_.getattr(self.$items[i],'__eq__')(item)){self.$items.splice(i,1)
+for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_b_.getattr(self.$items[i],'__eq__')(item)){self.$items.splice(i,1)
 return $N}}
-throw _.KeyError(item)}
+throw _b_.KeyError(item)}
 $SetDict.symmetric_difference_update=function(self,s){
 var $=$B.args('symmetric_difference_update',2,{self:null,s:null},['self','s'],arguments,{},null,null),self=$.self,s=$.s
 var _next=_b_.getattr(_b_.iter(s),'__next__'),item,remove=[],add=[]
@@ -9864,7 +9867,7 @@ $SetDict.$factory=set
 $SetDict.__new__=$B.$__new__(set)
 $B.set_func_names($SetDict)
 var $FrozensetDict={__class__:$B.$type,__name__:'frozenset'}
-$FrozensetDict.__mro__=[$FrozensetDict,_.object.$dict]
+$FrozensetDict.__mro__=[$FrozensetDict,_b_.object.$dict]
 for(var attr in $SetDict){switch(attr){case 'add':
 case 'clear':
 case 'discard':
@@ -9878,7 +9881,7 @@ $FrozensetDict.__hash__=function(self){if(self===undefined){return $FrozensetDic
 if(self.__hashvalue__ !==undefined)return self.__hashvalue__
 var _hash=1927868237
 _hash *=self.$items.length 
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){var _h=_.hash(self.$items[i])
+for(var i=0,_len_i=self.$items.length;i < _len_i;i++){var _h=_b_.hash(self.$items[i])
 _hash ^=((_h ^ 89869747)^(_h << 16))* 3644798167}
 _hash=_hash * 69069 + 907133923
 if(_hash==-1)_hash=590923713
@@ -9900,8 +9903,8 @@ frozenset.$dict=$FrozensetDict
 $FrozensetDict.__new__=$B.$__new__(frozenset)
 $FrozensetDict.$factory=frozenset
 $B.set_func_names($FrozensetDict)
-_.set=set
-_.frozenset=frozenset})(__BRYTHON__)
+_b_.set=set
+_b_.frozenset=frozenset})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var $ObjectDict=_b_.object.$dict
 var JSObject=$B.JSObject
