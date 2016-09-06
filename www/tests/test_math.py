@@ -103,4 +103,10 @@ class StrangeCeil:
 
 assert math.ceil(StrangeCeil()) == "this is a string"
 
+assert math.nan != math.nan
+assert math.inf > 10
+assert math.inf > -10
+assert -math.inf < 10
+assert -math.inf < -10
+
 print("passed all tests..")
