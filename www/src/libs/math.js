@@ -331,9 +331,9 @@ var _mod = {
         var b = $ns['b'];
         var rel_tol = $ns['rel_tol'];
         var abs_tol = $ns['abs_tol'];
-        if (_b_.$isinf(a) || _b_.$isinf(b)){return false}
         if (rel_tol < 0.0 || abs_tol < 0.0) throw ValueError('tolerances must be non-negative')
         if (a == b){return True}
+        if (_b_.$isinf(a) || _b_.$isinf(b)){return false}
         var diff = _b_.$fabs(b - a);
         var result = ((diff <= _b_.$fabs(rel_tol * b)) || (diff <= _b_.$fabs(rel_tol * a))) || (diff <= _b_.$fabs(abs_tol));
         return result},
