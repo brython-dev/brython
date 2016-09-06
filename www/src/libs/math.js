@@ -317,6 +317,7 @@ var _mod = {
        var x1=float_check(x);
        var y1=float_check(y);
        return float(Math.sqrt(x1*x1 + y1*y1))},
+    inf: float(Infinity),
     isfinite:function(x) {return isFinite(float_check(x))},
     isinf:function(x) {return _b_.$isinf(float_check(x))},
     isnan:function(x) {return isNaN(float_check(x))},
@@ -367,7 +368,8 @@ var _mod = {
        var i=float(x1-x2)
        return _b_.tuple([i, float(x2)])
     },
-    pi : float(Math.PI),
+    nan: float(Number.NaN),
+	pi : float(Math.PI),
     pow: function(x,y) {
         var x1=float_check(x)
         var y1=float_check(y)
