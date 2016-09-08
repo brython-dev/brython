@@ -573,6 +573,8 @@ $BRGeneratorDict.$$throw = function(self, value){
     return $BRGeneratorDict.__next__(self)
 }
 
+$B.gen_counter = 0 // used to identify the function run for each next()
+
 $B.$BRgenerator = function(env, func_name, func, def_id){
 
     // Creates a function that will return an iterator
@@ -590,7 +592,6 @@ $B.$BRgenerator = function(env, func_name, func, def_id){
         console.log('def node undef', def_id, func, func.$def_node)
     }
     var def_ctx = def_node.context.tree[0]
-    var counter = 0 // used to identify the function run for each next()
     
     // environment : list of [block_name, block_obj] lists
     $B.generators = $B.generators || {}
@@ -603,8 +604,8 @@ $B.$BRgenerator = function(env, func_name, func, def_id){
         for(var i=0,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
 
         // create an id for the iterator
-        var iter_id = def_id+'_'+counter++
-        
+        var iter_id = def_id+'_'+$B.gen_counter++
+
         // Names bound in generator are also bound in iterator
         $B.bound[iter_id] = {}
         for(var attr in $B.bound[def_id]){$B.bound[iter_id][attr] = true}

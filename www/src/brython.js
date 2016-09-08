@@ -63,8 +63,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-09-04 16:09:39.857850"
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2016-09-08 20:50:31.679927"
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
 var keys=$B.keys=function(obj){var res=[],pos=0
@@ -3206,11 +3206,15 @@ C=C.tree[0]
 return new $AbstractExprCtx(new $AssignCtx(C),true)}
 break
 case 'if':
-if(C.parent.type!=='comp_iterable'){
+var in_comp=false,ctx=C.parent
+while(true){if(ctx.type=='comp_iterable'){in_comp=true;break}
+else if(ctx.parent!==undefined){ctx=ctx.parent}
+else{break}}
+if(in_comp){break}
 var ctx=C
 while(ctx.parent && ctx.parent.type=='op'){ctx=ctx.parent
 if(ctx.type=='expr' && ctx.parent && ctx.parent.type=='op'){ctx=ctx.parent}}
-return new $AbstractExprCtx(new $TernaryCtx(ctx),false)}}
+return new $AbstractExprCtx(new $TernaryCtx(ctx),false)}
 return $transition(C.parent,token)
 case 'expr_not':
 if(token=='in'){
@@ -6892,7 +6896,7 @@ var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv',
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var js=['_ajax','_base64','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_profile','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
+var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.lys','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]})(__BRYTHON__)
 
 ;(function($B){var _b_=$B.builtins
@@ -7023,12 +7027,16 @@ root.add(ex_node)}
 try{var js=(compiled)? module_contents : root.to_js()
 if($B.$options.debug==10){console.log('code for module '+module.__name__)
 console.log(js)}
-eval(js)}catch(err){
+eval(js)
+if($B.$options.save_js){$B.compile_size=$B.compile_size ||''
+$B.compile_size +=module.__name__+';'+module_contents.length+';'+js.length+'\n'
+console.log(module.__name__,'Python',module_contents.length,'JS',js.length)}}catch(err){
 throw err}
 try{
 var mod=eval('$module')
 for(var attr in mod){module[attr]=mod[attr];}
 module.__initializing__=false
+if($B.$options.save_js){module.$js=js}
 $B.imported[module.__name__]=module
 return true}catch(err){console.log(''+err+' '+' for module '+module.name)
 for(var attr in err)console.log(attr+' '+err[attr])
@@ -10711,18 +10719,18 @@ return $BRGeneratorDict.__next__(self)}
 $BRGeneratorDict.$$throw=function(self,value){if(_b_.isinstance(value,_b_.type))value=value()
 self.sent_value={__class__:$B.$GeneratorSendError,err:value}
 return $BRGeneratorDict.__next__(self)}
+$B.gen_counter=0 
 $B.$BRgenerator=function(env,func_name,func,def_id){
 if(func.$def_node){var def_node=func.$def_node
 delete $B.modules[def_id]}else{var def_node=func.$def_node=$B.modules[def_id]}
 if(def_node===undefined){console.log('def node undef',def_id,func,func.$def_node)}
 var def_ctx=def_node.C.tree[0]
-var counter=0 
 $B.generators=$B.generators ||{}
 $B.$generators=$B.$generators ||{}
 var module=def_node.module 
 var res=function(){var args=[],pos=0
 for(var i=0,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-var iter_id=def_id+'_'+counter++
+var iter_id=def_id+'_'+$B.gen_counter++
 $B.bound[iter_id]={}
 for(var attr in $B.bound[def_id]){$B.bound[iter_id][attr]=true}
 var func_root=new $B.genNode(def_ctx.to_js('$B.$generators["'+iter_id+'"]'))
