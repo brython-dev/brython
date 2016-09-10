@@ -863,7 +863,9 @@ test.__doc__ = "new text"
 assert test.__doc__ == "new text"
 
 # issue 433
-assert 10**1j == (-0.6682015101903132+0.743980336957493j)
+# Once pull request 494 is integrated we should
+# use `math.isclose` instead of testing for equality
+assert 10**1j == (-0.6682015101903132+0.7439803369574931j)
 assert 10.5**(3+1j) == (-814.610144261598+822.4998197514079j)
 
 import math
