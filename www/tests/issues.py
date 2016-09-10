@@ -993,6 +993,11 @@ extend_instance(t,Mixin)
 t.c=20
 assert flag
 
+# bug in comprehensions
+a = [1, 2]
+b = [3, 4]
+odd = [x for x in a+b if x%2]
+assert odd == [1, 3]
 
 # ==========================================
 # Finally, report that all tests have passed

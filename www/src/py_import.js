@@ -286,6 +286,47 @@ $B.run_py=run_py=function(module_contents,path,module,compiled) {
            console.log(js)
         }
         eval(js)
+        
+        if($B.$options.save_js){
+
+            $B.compile_size = $B.compile_size || ''
+            $B.compile_size += module.__name__+';'+module_contents.length+';'+js.length+'\n'
+            console.log(module.__name__, 'Python', module_contents.length, 'JS', js.length)
+            
+            /*
+            var xhr = new XMLHttpRequest();
+            console.log('encoded js', module.__name__, js.length)
+            xhr.open('POST', '/cgi-bin/save_js.py', true);
+            xhr.onreadystatechange = function(ev){
+                if(xhr.readyState == 4 && xhr.status==200){console.log(xhr.responseText)}
+            }
+            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            var payload = 'name='+module.__name__+'&js='+js
+            xhr.setRequestHeader("Content-length", payload.length);
+            xhr.send(payload);
+            */
+
+            /*
+
+            var data = new FormData();
+            js = js.replace(/\r\n/g, '\n')
+            js = js.replace(/\n+/g, '\n')
+            console.log(js.length)
+
+            data.append(module.__name__, js)
+            jQuery.ajax({
+                url: '/cgi-bin/save_js.py',
+                data: data,
+                cache: false,
+                contentType: false,
+                processData: false,
+                type: 'POST',
+                success: function(data){
+                    console.log(data);
+                }
+            });
+            */
+        }
 
     }catch(err){
         /*
@@ -312,6 +353,9 @@ $B.run_py=run_py=function(module_contents,path,module,compiled) {
             module[attr] = mod[attr];
         }
         module.__initializing__ = false
+        if($B.$options.save_js){
+            module.$js = js
+        }
         // $B.imported[mod.__name__] must be the module object, so that
         // setting attributes in a program affects the module namespace
         // See issue #7

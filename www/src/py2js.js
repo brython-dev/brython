@@ -185,7 +185,7 @@ function $Node(type){
 
     this.to_js = function(indent){
         // Convert the node into a string with the translation in Javascript
-
+        
         if(this.js!==undefined) return this.js
 
         this.res = []
@@ -3886,7 +3886,7 @@ function $ListOrTupleCtx(context,real){
                     listcomp_name = 'lc'+ix,
                     local_name = scope.id.replace(/\./g,'_')
                 var save_pos = $pos
-                                
+
                 var root = $B.py2js(py,module_name,listcomp_name,local_name,
                     line_num)
 
@@ -6109,7 +6109,14 @@ function $transition(context,token){
             }
             break
           case 'if':
-            if(context.parent.type!=='comp_iterable'){ 
+            var in_comp = false,
+                ctx = context.parent
+            while(true){
+                if(ctx.type=='comp_iterable'){in_comp=true;break}
+                else if(ctx.parent!==undefined){ctx = ctx.parent}
+                else{break}
+            }
+            if(in_comp){break}
               // Ternary operator : "expr1 if cond else expr2"
               // If the part before "if" is an operation, apply operator
               // precedence
@@ -6122,7 +6129,6 @@ function $transition(context,token){
                 }
               }
               return new $AbstractExprCtx(new $TernaryCtx(ctx),false)
-            }
         }//switch
         return $transition(context.parent,token)
       case 'expr_not':
@@ -7627,7 +7633,7 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
         var t1 = new Date().getTime()
         console.log('module '+module+' translated in '+(t1 - t0)+' ms')
     }
-        
+    
     return root
 }
 
