@@ -76,13 +76,5 @@ nosetests.xml
 *.nja
 
 # Temporary QUnit folder
-qunit/
-
-node_modules
-www/static_doc/
-phantomjs
-dist
-*kdev*
-
-
+#qunit/
 
