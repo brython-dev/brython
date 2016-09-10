@@ -868,11 +868,11 @@ assert test.__doc__ == "new text"
 # use `math.isclose` instead of `my_isclose`
 # Floats should not test for equality !
 import math
-def my_isclose(a, b, rel_tol=1e-09):
+def my_isclose(a, b, rel_tol=1e-09, abs_tol=1e-09):
     if a == b:
         return True
     diff = abs(a-b)
-    return diff <= abs(a*rel_tol) or diff <= abs(b*rel_tol)
+    return diff <= abs(a)*rel_tol or diff <= abs(b)*rel_tol or diff <= abs_tol
 
 assert my_isclose(10**1j, (-0.6682015101903132+0.7439803369574931j))
 assert my_isclose(10.5**(3+1j), (-814.610144261598+822.4998197514079j))
