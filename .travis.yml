@@ -6,5 +6,5 @@ before_install:
   - wget -O qunit/qunit-1.18.0.js  http://code.jquery.com/qunit/qunit-1.18.0.js
   - git clone http://github.com/ariya/phantomjs
 script:
-  - phantomjs phantomjs/examples/run-qunit.js www/tests/run_qunit.html
+  - phantomjs phantomjs/examples/run-qunit.js www/tests/qunit/run_tests.html
 
