@@ -232,15 +232,13 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
         indent += 4
     }
     py+=' '.repeat(indent)
-    py += 'yield '+items[0]
-    
-    var genexpr_name = 'ge'+$ix
-    
-    var root = $B.py2js(py, module_name, genexpr_name, parent_block_id,
-        line_num)
-    
-    var js = root.to_js()
-    var lines = js.split('\n')
+    py += 'yield ('+items[0]+')'
+
+    var genexpr_name = 'ge'+$ix,
+        root = $B.py2js(py, module_name, genexpr_name, parent_block_id,
+        line_num),
+        js = root.to_js(),
+        lines = js.split('\n')
     
     var header = 'for(var i=0;i<$B.frames_stack.length;i++){\n'+
         '    var frame = $B.frames_stack[i];\n'+

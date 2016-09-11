@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-09-11 16:11:25.043143"
+__BRYTHON__.compiled_date="2016-09-11 20:47:29.686048"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1626,7 +1626,7 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 if(C.parent.type==='call_arg')this.call_arg=true
-this.scope=$get_scope(this)
+var scope=this.scope=$get_scope(this)
 this.blurred_scope=this.scope.blurred
 this.env=clone($B.bound[this.scope.id])
 this.level=$get_level(this)
@@ -1641,7 +1641,6 @@ else if(ctx.vars.indexOf(value)===-1){ctx.vars.push(value)}
 if(this.call_arg&&ctx.type==='lambda'){if(ctx.locals===undefined){ctx.locals=[value]}
 else{ctx.locals.push(value)}}}
 ctx=ctx.parent}
-var scope=this.scope=$get_scope(this)
 if(C.type=='target_list' ||C.type=='packed' ||
 (C.type=='expr' && C.parent.type=='target_list')){
 $B.bound[scope.id][value]={level: $get_level(this)}
@@ -1663,8 +1662,7 @@ this.unbound=this.unbound ||(is_local && !this.bound &&
 bound_before && bound_before.indexOf(val)==-1)
 if(this.unbound && !this.nonlocal){if(this.scope.ntype=='def' ||this.scope.ntype=='generator'){return '$B.$local_search("'+val+'")'}else{return '$B.$search("'+val+'")'}}
 if(val=='__BRYTHON__' ||val=='$B'){return val}
-var innermost=$get_scope(this)
-var scope=innermost,found=[],module=scope.module
+var innermost=$get_scope(this),scope=innermost,found=[],module=scope.module
 var gs=innermost
 while(gs.parent_block && gs.parent_block.id!=='__builtins__'){gs=gs.parent_block}
 var global_ns='$locals_'+gs.id.replace(/\./g,'_')
@@ -1906,17 +1904,16 @@ else if(item.type=='expr' && item.tree[0].type=="id"){_ids[item.tree[0].value]=t
 for(var attr in item.ids()){_ids[attr]=true}}}
 return _ids}
 this.to_js=function(){this.js_processed=true
-var scope=$get_scope(this)
-var sc=scope,scope_id=scope.id.replace(/\//g, '_')
-        var env = [], pos=0
+var scope=$get_scope(this),sc=scope,scope_id=scope.id.replace(/\//g, '_'),
+            env = [], 
+            pos=0
         while(sc && sc.id!=='__builtins__'){
             if(sc===scope){
                 env[pos++]='["'+sc.id+'",$locals]'
             }else{
                 env[pos++]='["'+sc.id+'",$locals_'+sc.id.replace(/\./g,'_')+']'}
 sc=sc.parent_block}
-var env_string='['+env.join(', ')+']'
-var module_name=$get_module(this).module
+var env_string='['+env.join(', ')+']',module_name=$get_module(this).module
 switch(this.real){case 'list':
 return '$B.$list(['+$to_js(this.tree)+'])'
 case 'list_comp':
@@ -4805,11 +4802,8 @@ var item=items[i].replace(/\s+$/,'').replace(/\n/g,' ')
 py +=item+':\n'
 indent +=4}
 py+=' '.repeat(indent)
-py +='yield '+items[0]
-var genexpr_name='ge'+$ix
-var root=$B.py2js(py,module_name,genexpr_name,parent_block_id,line_num)
-var js=root.to_js()
-var lines=js.split('\n')
+py +='yield ('+items[0]+')'
+var genexpr_name='ge'+$ix,root=$B.py2js(py,module_name,genexpr_name,parent_block_id,line_num),js=root.to_js(),lines=js.split('\n')
 var header='for(var i=0;i<$B.frames_stack.length;i++){\n'+
 '    var frame = $B.frames_stack[i];\n'+
 '    eval("var $locals_"+frame[2].replace(/\\./g,"_")+" = frame[3]")\n'+
@@ -10621,12 +10615,12 @@ catch(err){console.log("cant eval\n"+src+'\n'+err)
 clear_ns(self.iter_id)
 throw err}
 self._next=$B.$generators[self.iter_id]}
-if(self.gi_running){throw _b_.ValueError("ValueError: generator already executing")}
-self.gi_running=true
 for(var i=0;i<self.env.length;i++){eval('var $locals_'+self.env[i][0].replace(/\./g,'_')+'=self.env[i][1]')}
 for(var i=0;i<$B.frames_stack.length;i++){var frame=$B.frames_stack[i]
 eval('var $locals_'+frame[0].replace(/\./g,'_')+'=frame[1]')
 eval('var $locals_'+frame[2].replace(/\./g,'_')+'=frame[3]')}
+if(self.gi_running){throw _b_.ValueError("ValueError: generator already executing")}
+self.gi_running=true
 try{var res=self._next.apply(null,self.args)}catch(err){
 self._next=function(){var $locals=$B.vars[self.iter_id]
 $B.enter_frame([self.iter_id,$locals,self.env[0],{}])

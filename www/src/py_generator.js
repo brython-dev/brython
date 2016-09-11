@@ -332,13 +332,6 @@ $BRGeneratorDict.__next__ = function(self){
         self._next = $B.$generators[self.iter_id]
     }
     
-    // Cannot resume a generator already running
-    if(self.gi_running){
-        throw _b_.ValueError("ValueError: generator already executing")
-    }
-    
-    self.gi_running = true
-    
     // restore environment namespaces
     
     for(var i=0;i<self.env.length;i++){
@@ -350,7 +343,14 @@ $BRGeneratorDict.__next__ = function(self){
         eval('var $locals_'+frame[0].replace(/\./g, '_')+'=frame[1]')
         eval('var $locals_'+frame[2].replace(/\./g, '_')+'=frame[3]')
     }
+
+    // Cannot resume a generator already running
+    if(self.gi_running){
+        throw _b_.ValueError("ValueError: generator already executing")
+    }
     
+    self.gi_running = true
+        
     // Call the function _next to yield a value
     try{
         var res = self._next.apply(null, self.args)
@@ -581,7 +581,7 @@ $B.$BRgenerator = function(env, func_name, func, def_id){
     // env : list of namespaces where the generator function stands
     // func_name : function name
     // def_id : generator function identifier
-    
+
     if(func.$def_node){
         var def_node = func.$def_node
         delete $B.modules[def_id]

@@ -3160,7 +3160,7 @@ function $IdCtx(context,value){
     context.tree[context.tree.length]=this
     if(context.parent.type==='call_arg') this.call_arg=true
     
-    this.scope = $get_scope(this)
+    var scope = this.scope = $get_scope(this)
     this.blurred_scope = this.scope.blurred
     this.env = clone($B.bound[this.scope.id])
     
@@ -3184,8 +3184,6 @@ function $IdCtx(context,value){
         ctx = ctx.parent
     }
 
-    var scope = this.scope = $get_scope(this)
-    
     if(context.type=='target_list' || context.type=='packed' ||
         (context.type=='expr' && context.parent.type=='target_list')){
         // An id defined as a target in a "for" loop, or as "packed" 
@@ -3214,7 +3212,7 @@ function $IdCtx(context,value){
             }
         }
     }
-    
+
     this.to_js = function(arg){
         
         // Store the result in this.result
@@ -3253,10 +3251,8 @@ function $IdCtx(context,value){
         //if(val=='eval') val = '$eval'
         if(val=='__BRYTHON__' || val == '$B'){return val}
         
-        var innermost = $get_scope(this)
-        
-
-        var scope = innermost, found=[], module = scope.module
+        var innermost = $get_scope(this),
+            scope = innermost, found=[], module = scope.module
         
         // get global scope
         var gs = innermost
@@ -3833,10 +3829,11 @@ function $ListOrTupleCtx(context,real){
 
     this.to_js = function(){
         this.js_processed=true
-        var scope = $get_scope(this)
-        var sc = scope,
-            scope_id = scope.id.replace(/\//g, '_')
-        var env = [], pos=0
+        var scope = $get_scope(this),
+            sc = scope,
+            scope_id = scope.id.replace(/\//g, '_'),
+            env = [], 
+            pos=0
         while(sc && sc.id!=='__builtins__'){
             if(sc===scope){
                 env[pos++]='["'+sc.id+'",$locals]'
@@ -3845,8 +3842,8 @@ function $ListOrTupleCtx(context,real){
             }
             sc = sc.parent_block
         }
-        var env_string = '['+env.join(', ')+']'
-        var module_name = $get_module(this).module
+        var env_string = '['+env.join(', ')+']',
+            module_name = $get_module(this).module
         
         switch(this.real) {
           case 'list':
@@ -3912,7 +3909,7 @@ function $ListOrTupleCtx(context,real){
 
             // Generator expression
             // Pass the module name and the id of current block
-            
+            // $B.$gen_expr is in py_utils.js
             return $B.$gen_expr(module_name, scope_id, items, line_num)
 
           case 'tuple':
