@@ -59,6 +59,9 @@ assert abs(3 + 4j) == 5
 assert abs(4 + 3j) == 5.0
 assert abs(4 + 3j) == abs(3 + 4j)
 
+# issue 498
+assert (1+2j)*2.4 == 2.4 + 4.8j
+
 assert hash(1.0) == 1
 
 r = 0

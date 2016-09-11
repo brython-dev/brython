@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-09-08 20:50:31.679927"
+__BRYTHON__.compiled_date="2016-09-11 16:11:25.043143"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -7027,16 +7027,12 @@ root.add(ex_node)}
 try{var js=(compiled)? module_contents : root.to_js()
 if($B.$options.debug==10){console.log('code for module '+module.__name__)
 console.log(js)}
-eval(js)
-if($B.$options.save_js){$B.compile_size=$B.compile_size ||''
-$B.compile_size +=module.__name__+';'+module_contents.length+';'+js.length+'\n'
-console.log(module.__name__,'Python',module_contents.length,'JS',js.length)}}catch(err){
+eval(js)}catch(err){
 throw err}
 try{
 var mod=eval('$module')
 for(var attr in mod){module[attr]=mod[attr];}
 module.__initializing__=false
-if($B.$options.save_js){module.$js=js}
 $B.imported[module.__name__]=module
 return true}catch(err){console.log(''+err+' '+' for module '+module.name)
 for(var attr in err)console.log(attr+' '+err[attr])
@@ -8250,12 +8246,13 @@ $ComplexDict.__init__=function(self,real,imag){self.toString=function(){return '
 $ComplexDict.__invert__=function(self){return ~self}
 $ComplexDict.__mod__=function(self,other){throw _b_.TypeError("TypeError: can't mod complex numbers.")}
 $ComplexDict.__mro__=[$ComplexDict,$ObjectDict]
-$ComplexDict.__mul__=function(self,other){if(isinstance(other,complex))
+$ComplexDict.__mul__=function(self,other){console.log('complex mul',other)
+if(isinstance(other,complex))
 return complex(self.real*other.real-self.imag*other.imag,self.imag*other.real + self.real*other.imag)
 if(isinstance(other,_b_.int))
 return complex(self.real*other.valueOf(),self.imag*other.valueOf())
 if(isinstance(other,_b_.float))
-return complex(self.real*other.value,self.imag*other.value)
+return complex(self.real*other,self.imag*other)
 if(isinstance(other,_b_.bool)){if(other.valueOf())return self
 return complex(0)}
 $UnsupportedOpType("*",complex,other)}
