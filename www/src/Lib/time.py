@@ -204,7 +204,10 @@ def monotonic():
     return javascript.JSObject(window.performance.now)()/1000.
 
 def perf_counter():
-    return float(date().getTime()/1000.0)
+    return javascript.JSObject(window.performance.now)()/1000.
+
+def process_time():
+    return javascript.JSObject(window.performance.now)()/1000.
 
 def time():
     return float(date().getTime()/1000)
@@ -376,8 +379,29 @@ CLOCK_MONOTONIC_RAW = _clock_msg % "https://docs.python.org/3/library/time.html#
 CLOCK_PROCESS_CPUTIME_ID = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_PROCESS_CPUTIME_ID"
 CLOCK_REALTIME = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_REALTIME"
 CLOCK_THREAD_CPUTIME_ID = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_THREAD_CPUTIME_ID"
-get_clock_info = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.get_clock_info")
-process_time = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.process_time")
+
+class ClockInfo:
+    adjustable = False
+    monotonic = True
+
+
+from collections import namedtuple
+ClockInfo = namedtuple('ClockInfo', ['adjustable', 'implementation', 'monotonic', 'resolution'])
+
+
+def get_clock_info(cl):
+    if cl == 'monotonic':
+        return ClockInfo(adjustable=False,
+                         implementation='window.performance.now',
+                         monotonic=True,
+                         resolution=0.000001)
+    elif cl == 'perf_counter' or cl == 'process_time':
+        return ClockInfo(adjustable=False,
+                         implementation='date.getTime',
+                         monotonic=False,
+                         resolution=0.001)
+    else:
+        _clock_xx("https://docs.python.org/3/library/time.html#time.get_clock_info")
 
 def tzset():
     raise NotImplementedError()
