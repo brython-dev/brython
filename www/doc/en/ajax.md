@@ -59,7 +59,11 @@ request state
 `send(`_[data]_`)`
 > sends (starts) the request. The optional argument _data_ is ignored if the 
 > method is not POST ; it must be a dictionary, or a string representing the url
-> encoding of key-value pairs.
+> encoding of key-value pairs. If you want to send files, you need to pass
+> a dictionary with one of the keys a File object, e.g. provided you have
+> an input element of type `file` and id `upload_file` you could send the
+> user selected file under the key `upload` by calling
+> `send({'upload':doc["upload_file"].elt.files[0]})`
 
 `status`
 > an integer representing the HTTP status of the request. The most usual are 
