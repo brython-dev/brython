@@ -1,10 +1,23 @@
 language: javascript
 
+cache:
+  directories:
+    - "travis_phantomjs"
+
 before_install:
   - mkdir qunit
   - wget -O qunit/qunit-1.18.0.css http://code.jquery.com/qunit/qunit-1.18.0.css
   - wget -O qunit/qunit-1.18.0.js  http://code.jquery.com/qunit/qunit-1.18.0.js
-  - git clone http://github.com/ariya/phantomjs
+  - npm install testem
+
+before_script:
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
+  - chmod a+x scripts/ensure_phantomjs.sh
+  - scripts/ensure_phantomjs.sh
+  - export PATH=$PWD/travis_phantomjs/phantomjs-2.1.1-linux-x86_64/bin:$PATH
+
 script:
-  - phantomjs phantomjs/examples/run-qunit.js www/tests/run_qunit.html
+  - ./node_modules/.bin/testem -t www/tests/qunit/run_tests.html ci
+  #- phantomjs phantomjs/examples/run-qunit.js www/tests/qunit/run_tests.html
 

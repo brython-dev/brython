@@ -1537,16 +1537,20 @@ function $url_open(){
             var req=new ActiveXObject("Microsoft.XMLHTTP");
         }
         req.onreadystatechange = function(){
-            var status = req.status
-            if(status===404){
-                $res = _b_.IOError('File '+file+' not found')
-            }else if(status!==200){
-                $res = _b_.IOError('Could not open file '+file+' : status '+status) 
-            }else{
-                $res = req.responseText
-                if(is_binary){
-                    $res=_b_.str.$dict.encode($res, 'utf-8')
+            try {
+                var status = req.status
+                if(status===404){
+                    $res = _b_.IOError('File '+file+' not found')
+                }else if(status!==200){
+                    $res = _b_.IOError('Could not open file '+file+' : status '+status)
+                }else{
+                    $res = req.responseText
+                    if(is_binary){
+                        $res=_b_.str.$dict.encode($res, 'utf-8')
+                    }
                 }
+            } catch (err) {
+                $res = _b_.IOError('Could not open file '+file+' : error '+err)
             }
         }
         // add fake query string to avoid caching
