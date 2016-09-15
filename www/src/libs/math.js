@@ -317,6 +317,26 @@ var _mod = {
        var x1=float_check(x);
        var y1=float_check(y);
        return float(Math.sqrt(x1*x1 + y1*y1))},
+    inf: float('inf'),
+    isclose:function(){
+        var $ns = $B.args("isclose",
+                          4,
+                          {a:null,b:null,rel_tol:null,abs_tol:null},
+                          ['a', 'b', 'rel_tol', 'abs_tol'],
+                          arguments,
+                          {rel_tol:1e-09, abs_tol:0.0}, 
+                          null, 
+                          null)
+        var a = $ns['a'];
+        var b = $ns['b'];
+        var rel_tol = $ns['rel_tol'];
+        var abs_tol = $ns['abs_tol'];
+        if (rel_tol < 0.0 || abs_tol < 0.0) throw ValueError('tolerances must be non-negative')
+        if (a == b){return True}
+        if (_b_.$isinf(a) || _b_.$isinf(b)){return false}
+        var diff = _b_.$fabs(b - a);
+        var result = ((diff <= _b_.$fabs(rel_tol * b)) || (diff <= _b_.$fabs(rel_tol * a))) || (diff <= _b_.$fabs(abs_tol));
+        return result},
     isfinite:function(x) {return isFinite(float_check(x))},
     isinf:function(x) {return _b_.$isinf(float_check(x))},
     isnan:function(x) {return isNaN(float_check(x))},
@@ -367,7 +387,8 @@ var _mod = {
        var i=float(x1-x2)
        return _b_.tuple([i, float(x2)])
     },
-    pi : float(Math.PI),
+    nan: float('nan'),
+	pi : float(Math.PI),
     pow: function(x,y) {
         var x1=float_check(x)
         var y1=float_check(y)
