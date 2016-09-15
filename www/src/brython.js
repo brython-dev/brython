@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-09-11 20:47:29.686048"
+__BRYTHON__.compiled_date="2016-09-15 08:12:20.314151"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4230,6 +4230,8 @@ var meta_path=[]
 var path_hooks=[]
 if($B.use_VFS){meta_path.push($B.$meta_path[0])
 path_hooks.push($B.$path_hooks[0])}
+if(options.use_compiled){
+meta_path.push($B.$meta_path[3])}
 if(options.static_stdlib_import!==false){
 meta_path.push($B.$meta_path[1])
 if($B.path.length>3){$B.path.shift()
@@ -5928,9 +5930,10 @@ if(isinstance(file,_b_.str)){
 if(window.XMLHttpRequest){
 var req=new XMLHttpRequest();}else{
 var req=new ActiveXObject("Microsoft.XMLHTTP");}
-req.onreadystatechange=function(){var status=req.status
+req.onreadystatechange=function(){try{
+var status=req.status
 if(status===404){$res=_b_.IOError('File '+file+' not found')}else if(status!==200){$res=_b_.IOError('Could not open file '+file+' : status '+status)}else{$res=req.responseText
-if(is_binary){$res=_b_.str.$dict.encode($res,'utf-8')}}}
+if(is_binary){$res=_b_.str.$dict.encode($res,'utf-8')}}}catch(err){$res=_b_.IOError('Could not open file '+file+' : error '+err)}}
 var fake_qs='?foo='+$B.UUID()
 req.open('GET',file+fake_qs,false)
 if(is_binary){req.overrideMimeType('text/plain; charset=utf-8');}
@@ -6203,6 +6206,7 @@ err.__class__=$BaseExceptionDict
 err.$py_error=true
 err.$stack=$B.frames_stack.slice()
 $B.current_exception=err
+eval('//placeholder//');
 return err}
 BaseException.__class__=$B.$factory
 BaseException.$dict=$BaseExceptionDict
@@ -7064,6 +7068,41 @@ finder_VFS.$dict.create_module.$type='classmethod'
 finder_VFS.$dict.exec_module.$type='classmethod'
 finder_VFS.$dict.find_module.$type='classmethod'
 finder_VFS.$dict.find_spec.$type='classmethod'
+function finder_compiled(){console.log('finder compiled')
+return{__class__:finder_compiled.$dict}}
+finder_compiled.__class__=$B.$factory
+finder_compiled.$dict={$factory: finder_compiled,__class__: $B.$type,__name__: 'CompiledPath',create_module : function(cls,spec){
+return _b_.None;},exec_module : function(cls,module){console.log('exec module',module)
+var _spec=_b_.getattr(module,'__spec__'),code=_spec.loader_state.code;
+module.$is_package=_spec.loader_state.is_package,delete _spec.loader_state['code'];
+var src_type=_spec.loader_state.type
+console.log('src type',src_type)
+run_js(code,_spec.origin,module)},find_module: function(cls,name,path){return finder_compiled.$dict.find_spec(cls,name,path)},find_spec : function(cls,fullname,path,prev_module,blocking){console.log('precompiled find spec',fullname,path)
+if(!$B.$options.use_compiled){return _b_.None }
+console.log('precompiled is used')
+if(is_none(path)){
+path=$B.path}
+var path_entry='/compiled/'+fullname+'.js'
+var finder=$B.path_importer_cache[path_entry];
+if(finder===undefined){var hook=precompiled_hook;
+console.log('path entry',hook)
+try{
+finder=(typeof hook=='function' ? hook : _b_.getattr(hook,'__call__'))(path_entry)
+finder_notfound=false;}
+catch(e){if(e.__class__ !==_b_.ImportError.$dict){throw e;}}
+if(finder_notfound){$B.path_importer_cache[path_entry]=_b_.None;}}
+console.log('finder',finder)
+var find_spec=_b_.getattr(finder,'find_spec'),fs_func=typeof find_spec=='function' ? 
+find_spec : 
+_b_.getattr(find_spec,'__call__')
+var spec=fs_func(fullname,prev_module,blocking);
+if(!is_none(spec)){return spec;}
+return _b_.None;}}
+finder_compiled.$dict.__mro__=[finder_compiled.$dict,_b_.object.$dict]
+finder_compiled.$dict.create_module.$type='classmethod'
+finder_compiled.$dict.exec_module.$type='classmethod'
+finder_compiled.$dict.find_module.$type='classmethod'
+finder_compiled.$dict.find_spec.$type='classmethod'
 function finder_stdlib_static(){return{__class__:finder_stdlib_static.$dict}}
 finder_stdlib_static.__class__=$B.$factory
 finder_stdlib_static.$dict={$factory : finder_stdlib_static,__class__ : $B.$type,__name__ : 'StdlibStatic',create_module : function(cls,spec){
@@ -7187,7 +7226,32 @@ cached: _b_.None,parent: loader_data.is_package? fullname :
 parent_package(fullname),has_location: _b_.True});}
 return _b_.None;},invalidate_caches : function(self){}}
 url_hook.$dict.__mro__=[url_hook.$dict,_b_.object.$dict]
-$B.$path_hooks=[vfs_hook,url_hook];
+function precompiled_hook(path_entry,hint){console.log('precompiled hook',path_entry,hint)
+return{__class__: precompiled_hook.$dict,path_entry:path_entry,hint:hint }}
+precompiled_hook.__class__=$B.$factory
+precompiled_hook.$dict={$factory: precompiled_hook,__class__: $B.$type,__name__ : 'PrecompiledPathFinder',__repr__: function(self){return '<PrecompiledPathFinder' +(self.hint? " for '" + self.hint + "'":
+"(unbound)")+ ' at ' + self.path_entry + '>'},find_spec : function(self,fullname,module,blocking){console.log('use precompiled_hook',fullname)
+var loader_data={},notfound=true,hint=self.hint,base_path='/compiled/'+ fullname+'.js',modpaths=[base_path];
+console.log(self.path_entry)
+try{var file_info=[self.path_entry,'py',false],module={__name__:fullname,$is_package: false}
+loader_data.code=$download_module(module,file_info[0],undefined,blocking);
+notfound=false;
+loader_data.type=file_info[1];
+loader_data.is_package=file_info[2];
+if(hint===undefined){self.hint=file_info[1];
+$B.path_importer_cache[self.path_entry]=self;}
+if(loader_data.is_package){
+$B.path_importer_cache[base_path + '/']=
+url_hook(base_path + '/',self.hint);}
+loader_data.path=file_info[0];}catch(err){}
+if(!notfound){return new_spec({name : fullname,loader: finder_compiled,origin : loader_data.path,
+submodule_search_locations: loader_data.is_package?[base_path]:
+_b_.None,loader_state: loader_data,
+cached: _b_.None,parent: loader_data.is_package? fullname :
+parent_package(fullname),has_location: _b_.True});}
+return _b_.None;},invalidate_caches : function(self){}}
+precompiled_hook.$dict.__mro__=[precompiled_hook.$dict,_b_.object.$dict]
+$B.$path_hooks=[precompiled_hook,vfs_hook,url_hook];
 $B.path_importer_cache={};
 var _sys_paths=[[$B.script_dir + '/','py'],[$B.brython_path + 'Lib/','py'],[$B.brython_path + 'Lib/site-packages/','py'],[$B.brython_path + 'libs/','js']];
 for(i=0;i < _sys_paths.length;++i){var _path=_sys_paths[i],_type=_path[1];
@@ -7274,7 +7338,7 @@ throw _b_.ImportError("cannot import name '"+name+"'")}}}}}}
 $B.$import_non_blocking=function(mod_name,func){console.log('import non blocking',mod_name)
 $B.$import(mod_name,[],[],{},[false,func])
 console.log('after async import',$B.imported[mod_name])}
-$B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path];
+$B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path,finder_compiled];
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!='/'){path=path + '/' }
 var value=(filetype=='none')? _b_.None : url_hook(path,filetype);
 $B.path_importer_cache[path]=value;}
@@ -7305,7 +7369,7 @@ denominator=py_exponent}
 return _b_.tuple([_b_.int(numerator),_b_.int(denominator)])}
 $FloatDict.__bool__=function(self){return _b_.bool(self.valueOf())}
 $FloatDict.__class__=$B.$type
-$FloatDict.__eq__=function(self,other){if(isNaN(self)&& isNaN(other)){return true}
+$FloatDict.__eq__=function(self,other){if(isNaN(self)&& isNaN(other)){return false}
 if(isinstance(other,_b_.int))return self==other
 if(isinstance(other,float)){
 return self.valueOf()==other.valueOf()}
@@ -10743,31 +10807,18 @@ return res}
 $B.$BRgenerator.__repr__=function(){return "<class 'generator'>"}
 $B.$BRgenerator.__str__=function(){return "<class 'generator'>"}
 $B.$BRgenerator.__class__=$B.$type
-$B.$BRgenerator1=function(env,name,func,def_id){var def_node=$B.modules[def_id]
+$B.$BRgenerator2=function(func_name,func,def_id,def_node){
+if(def_node===undefined){console.log('def node undef',def_id,func,func.$def_node)}
 var def_ctx=def_node.C.tree[0]
-console.log(def_ctx)
-var counter=0 
 $B.generators=$B.generators ||{}
 $B.$generators=$B.$generators ||{}
 var module=def_node.module 
-var iter_id='XXXX'
-var func_root=new $B.genNode(def_ctx.to_js('$B.$generators["'+iter_id+'"]'))
-func_root.scope=env[0][1]
-func_root.module=module
-func_root.yields=[]
-func_root.loop_ends={}
-func_root.def_id=def_id
-func_root.iter_id=iter_id
-for(var i=0,len=def_node.children.length;i < len;i++){func_root.addChild($B.make_node(func_root,def_node.children[i]))}
-console.log('ok gen',func_root.src())
-var func_node=func_root.children[1].children[0]
-var iterator=function(){var args=[],pos=0
+var res=function(){var args=[],pos=0
 for(var i=0,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-var iter_id=def_id+'_'+counter++
+var iter_id=def_id+'_'+$B.gen_counter++
 $B.bound[iter_id]={}
 for(var attr in $B.bound[def_id]){$B.bound[iter_id][attr]=true}
 var func_root=new $B.genNode(def_ctx.to_js('$B.$generators["'+iter_id+'"]'))
-func_root.scope=env[0][1]
 func_root.module=module
 func_root.yields=[]
 func_root.loop_ends={}
@@ -10775,10 +10826,76 @@ func_root.def_id=def_id
 func_root.iter_id=iter_id
 for(var i=0,_len_i=def_node.children.length;i < _len_i;i++){func_root.addChild($B.make_node(func_root,def_node.children[i]))}
 var func_node=func_root.children[1].children[0]
-var obj={__class__ : $BRGeneratorDict,args:args,def_id:def_id,def_ctx:def_ctx,def_node:def_node,env:env,func:func,func_name:func_name,func_root:func_root,module:module,func_node:func_node,next_root:func_root,gi_running:false,iter_id:iter_id,id:iter_id,num:0}
+console.log('first _next',func_root.src()+'\n)()')
+console.log('yields',func_root.yields)
+var obj={__class__ : $BRGeneratorDict,args:args,def_id:def_id,def_ctx:def_ctx,def_node:def_node,func:func,func_name:func_name,func_root:func_root,module:module,func_node:func_node,next_root:func_root,gi_running:false,iter_id:iter_id,id:iter_id,num:0}
+$B.modules[iter_id]=obj
 obj.parent_block=def_node.parent_block
-return obj }
-return['genrator',env,name,func,def_id]}})(__BRYTHON__)
+for(var i=0;i<func_root.yields.length;i++){make_next(obj,i)}
+return obj}
+res.__call__=function(){console.log('call generator');return res.apply(null,arguments)}
+res.__repr__=function(){return "<function "+func.__name__+">"}
+return res}
+function make_next(self,yield_node_id){
+var exit_node=self.func_root.yields[yield_node_id]
+exit_node.replaced=false
+var root=new $B.genNode(self.def_ctx.to_js('__BRYTHON__.generators["'+self.iter_id+'"]'))
+root.addChild(self.func_root.children[0].clone())
+var fnode=self.func_root.children[1].clone()
+root.addChild(fnode)
+func_node=self.func_root.children[1]
+var js='var $locals = $B.vars["'+self.iter_id+
+'"], $local_name="'+self.iter_id+'";'
+fnode.addChild(new $B.genNode(js))
+var env=['t0','t1']
+fnode.addChild(new $B.genNode('$B.enter_frame(["'+self.iter_id+
+'",$locals,"'+env[0]+'",$locals_'+env[0]+']);'))
+while(1){
+var exit_parent=exit_node.parent
+var rest=[],pos=0
+var has_break=false
+var start=exit_node.rank+1
+if(exit_node.loop_start!==undefined){
+start=exit_node.rank}else if(exit_node.is_cond){
+while(start<exit_parent.children.length &&
+(exit_parent.children[start].is_except ||
+exit_parent.children[start].is_else)){start++}}else if(exit_node.is_try ||exit_node.is_except){
+while(start<exit_parent.children.length &&
+(exit_parent.children[start].is_except ||
+exit_parent.children[start].is_else)){start++}}
+for(var i=start,_len_i=exit_parent.children.length;i < _len_i;i++){var clone=exit_parent.children[i].clone_tree(null,true)
+rest[pos++]=clone
+if(clone.has_break()){has_break=true}}
+if(has_break){
+var rest_try=new $B.genNode('try')
+for(var i=0,_len_i=rest.length;i < _len_i;i++){rest_try.addChild(rest[i])}
+var catch_test='catch(err)'
+catch_test +='{if(err.__class__!==$B.GeneratorBreak)'
+catch_test +='{throw err}}'
+catch_test=new $B.genNode(catch_test)
+rest=[rest_try,catch_test]}
+var tries=in_try(exit_node)
+if(tries.length==0){
+for(var i=0;i<rest.length;i++){fnode.addChild(rest[i])}}else{
+var tree=[],pos=0
+for(var i=0;i<tries.length;i++){var try_node=tries[i],try_clone=try_node.clone()
+if(i==0){for(var j=0;j<rest.length;j++){try_clone.addChild(rest[j])}}
+var children=[try_clone],cpos=1
+for(var j=try_node.rank+1;j<try_node.parent.children.length;j++){if(try_node.parent.children[j].is_except){children[cpos++]=try_node.parent.children[j].clone_tree(null,true)}else{break}}
+tree[pos++]=children}
+var parent=fnode
+while(tree.length){children=tree.pop()
+for(var i=0;i<children.length;i++){parent.addChild(children[i])}
+parent=children[0]}}
+exit_node=exit_parent
+if(exit_node===self.func_root){break}}
+self.next_root=root
+var next_src=root.src()+'\n)()'
+try{eval(next_src)}
+catch(err){console.log('error '+err+'\n'+next_src);throw err}
+_next=$B.generators[self.iter_id]
+console.log(_next+'')
+return _next}})(__BRYTHON__)
 ;(function($B){var modules={}
 modules['browser']={$package: true,$is_package: true,__package__:'browser',__file__:$B.brython_path.replace(/\/*$/g,'')+
 '/Lib/browser/__init__.py',alert:function(message){window.alert($B.builtins.str(message))},confirm: $B.JSObject(window.confirm),console:$B.JSObject(window.console),document:$B.DOMNode(document),doc: $B.DOMNode(document),

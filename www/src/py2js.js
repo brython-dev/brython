@@ -228,7 +228,6 @@ function $Node(type){
         // just been inserted
         
         if(this.yield_atoms.length>0){
-            console.log('je suis un générateur')
             // If the node contains 'yield' atoms, we must split the node into
             // several nodes
             // The line 'a = yield X' is transformed into 4 lines :
@@ -305,6 +304,7 @@ function $Node(type){
           }
           if(ctx_offset===undefined){ctx_offset=1}
 
+            /*
             if(this.context && this.context.tree!==undefined &&
                 this.context.tree[0].type=="generator"){
                     console.log('generator transformed')
@@ -312,9 +312,10 @@ function $Node(type){
                         def_ctx = def_node.context.tree[0]
                     console.log('def ctx', def_ctx)
                     var g = $B.$BRgenerator2('test', function(){}, 'f5', def_node)
-                    console.log(g)
-                    console.log(g())
-            }    
+                    //console.log(g)
+                    //console.log(g())
+            }
+            */   
 
           return ctx_offset
         }
