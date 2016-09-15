@@ -252,7 +252,7 @@ var BaseException = function (){
     err.$py_error = true
     err.$stack = $B.frames_stack.slice()
     $B.current_exception = err
-    //placeholder//
+    eval('//placeholder//');
     return err
 }
 

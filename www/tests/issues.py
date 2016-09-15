@@ -1009,6 +1009,22 @@ b = [3, 4]
 odd = [x for x in a+b if x%2]
 assert odd == [1, 3]
 
+# Bug in generators (GitHub Issue #502)
+
+def test_gen():
+    for i in range(1):
+        yield i
+    return 20
+
+g = test_gen()
+next(g)
+try:
+    next(g)
+except StopIteration as exc:
+    assert exc.value == 20
+
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
