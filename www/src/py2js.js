@@ -228,6 +228,7 @@ function $Node(type){
         // just been inserted
         
         if(this.yield_atoms.length>0){
+            console.log('je suis un générateur')
             // If the node contains 'yield' atoms, we must split the node into
             // several nodes
             // The line 'a = yield X' is transformed into 4 lines :
@@ -303,6 +304,18 @@ function $Node(type){
               i += offset
           }
           if(ctx_offset===undefined){ctx_offset=1}
+
+            if(this.context && this.context.tree!==undefined &&
+                this.context.tree[0].type=="generator"){
+                    console.log('generator transformed')
+                    var def_node = this,
+                        def_ctx = def_node.context.tree[0]
+                    console.log('def ctx', def_ctx)
+                    var g = $B.$BRgenerator2('test', function(){}, 'f5', def_node)
+                    console.log(g)
+                    console.log(g())
+            }    
+
           return ctx_offset
         }
     }
@@ -2237,6 +2250,7 @@ function $DefCtx(context){
 
           js = '$B.$BRgenerator(env,"'+this.name+'", $locals_'+
               scope.id.replace(/\./g, '_')+'["'+this.name+'"],"'+this.id+'")'
+          
           //return $B.$BRgenerator1(env,this.name, 
           //    scope.id.replace(/\./g, '_'),this.id)
           var gen_node = new $Node()
@@ -7825,6 +7839,11 @@ function brython(options){
         path_hooks.push($B.$path_hooks[0])
     }
 
+    if(options.use_compiled){
+        // Add finder using precompiled JS scripts
+        meta_path.push($B.$meta_path[3])
+    }
+
     if(options.static_stdlib_import!==false){
         // Add finder using static paths
         meta_path.push($B.$meta_path[1])
@@ -7836,6 +7855,7 @@ function brython(options){
             $B.path.shift()
         }
     }
+    
     // Always use the defaut finder using sys.path
     meta_path.push($B.$meta_path[2])
     $B.meta_path = meta_path
