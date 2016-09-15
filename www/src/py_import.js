@@ -408,6 +408,88 @@ finder_VFS.$dict.find_module.$type = 'classmethod'
 finder_VFS.$dict.find_spec.$type = 'classmethod'
 
 /**
+ * Search an import path for .py modules
+ */
+function finder_compiled(){
+    console.log('finder compiled')
+    return {__class__:finder_compiled.$dict}
+}
+finder_compiled.__class__ = $B.$factory
+
+finder_compiled.$dict = {
+    $factory: finder_compiled,
+    __class__: $B.$type,
+    __name__: 'CompiledPath',
+
+    create_module : function(cls, spec) {
+        // Fallback to default module creation
+        return _b_.None;
+    },
+
+    exec_module : function(cls, module) {
+        console.log('exec module', module)
+        var _spec = _b_.getattr(module, '__spec__'),
+            code = _spec.loader_state.code;
+        module.$is_package = _spec.loader_state.is_package,
+        delete _spec.loader_state['code'];
+        var src_type = _spec.loader_state.type
+        console.log('src type', src_type)
+        run_js(code, _spec.origin, module)
+    },
+
+    find_module: function(cls, name, path){
+        return finder_compiled.$dict.find_spec(cls, name, path)
+    },
+
+    find_spec : function(cls, fullname, path, prev_module, blocking) {
+        console.log('precompiled find spec', fullname, path)
+        if(!$B.$options.use_compiled){ return _b_.None }
+        console.log('precompiled is used')
+
+        if (is_none(path)) {
+            // [Import spec] Top-level import , use sys.path
+            path = $B.path
+        }
+        var path_entry = '/compiled/'+fullname+'.js'
+        // Try path hooks cache first
+        var finder = $B.path_importer_cache[path_entry];
+        if (finder === undefined) {
+            var hook = precompiled_hook;
+            console.log('path entry', hook)
+            try {
+                finder = (typeof hook=='function' ? hook : _b_.getattr(hook, '__call__'))(path_entry)
+                finder_notfound = false;
+            }
+            catch (e) {
+                if (e.__class__ !== _b_.ImportError.$dict) { throw e; }
+            }
+            if (finder_notfound) {
+                $B.path_importer_cache[path_entry] = _b_.None;
+            }
+        }
+        console.log('finder', finder)
+        var find_spec = _b_.getattr(finder, 'find_spec'),
+            fs_func = typeof find_spec=='function' ? 
+                find_spec : 
+                _b_.getattr(find_spec, '__call__')
+
+        var spec = fs_func(fullname, prev_module, blocking);
+        if (!is_none(spec)) {
+            return spec;
+        }
+        return _b_.None;
+    }
+}
+
+finder_compiled.$dict.__mro__ = [finder_compiled.$dict,
+    _b_.object.$dict]
+finder_compiled.$dict.create_module.$type = 'classmethod'
+finder_compiled.$dict.exec_module.$type = 'classmethod'
+finder_compiled.$dict.find_module.$type = 'classmethod'
+finder_compiled.$dict.find_spec.$type = 'classmethod'
+
+
+/**
  * Module importer optimizing module lookups via stdlib_paths.js
  */
 
@@ -748,8 +830,88 @@ url_hook.$dict = {
 }
 url_hook.$dict.__mro__ = [url_hook.$dict, _b_.object.$dict]
 
+/**
+ * Find modules deployed in a hierarchy under a given base URL
+ *
+ * @param {string}      search path URL, used as a reference during ihe import
+ * @param {string}      one of 'js', 'py' or undefined (i.e. yet unknown)
+ */
+
+function precompiled_hook(path_entry, hint) { 
+    console.log('precompiled hook', path_entry, hint)
+    return {__class__: precompiled_hook.$dict, 
+        path_entry:path_entry, hint:hint }
+}
+precompiled_hook.__class__ = $B.$factory
+
+precompiled_hook.$dict = {
+    $factory: precompiled_hook,
+    __class__: $B.$type,
+    __name__ : 'PrecompiledPathFinder',
+    __repr__: function(self) {
+        return '<PrecompiledPathFinder' + (self.hint? " for '" + self.hint + "'":
+                                   "(unbound)") + ' at ' + self.path_entry + '>'
+    },
+
+    find_spec : function(self, fullname, module, blocking) {
+        console.log('use precompiled_hook', fullname)
+        var loader_data = {},
+            notfound = true,
+            hint = self.hint,
+            base_path = '/compiled/'+ fullname+'.js',
+            modpaths = [base_path];
+        
+        console.log(self.path_entry)
+
+        try{
+            var file_info = [self.path_entry, 'py', false],
+                module = {__name__:fullname, $is_package: false}
+            loader_data.code=$download_module(module, 
+                file_info[0], undefined, blocking);
+            notfound = false;
+            loader_data.type = file_info[1];
+            loader_data.is_package = file_info[2];
+            if (hint === undefined) {
+                self.hint = file_info[1];
+                // Top-level import
+                $B.path_importer_cache[self.path_entry] = self;
+            }
+            if (loader_data.is_package) {
+                // Populate cache in advance to speed up submodule imports
+                $B.path_importer_cache[base_path + '/'] =
+                        url_hook(base_path + '/', self.hint);
+            }
+            loader_data.path = file_info[0];
+        }catch(err){
+        }
+        if (!notfound) {
+            return new_spec({
+                name : fullname,
+                loader: finder_compiled,
+                origin : loader_data.path,
+                // FIXME: Namespace packages ?
+                submodule_search_locations: loader_data.is_package? [base_path]:
+                                                                    _b_.None,
+                loader_state: loader_data,
+                // FIXME : Where exactly compiled module is stored ?
+                cached: _b_.None,
+                parent: loader_data.is_package? fullname :
+                                                parent_package(fullname),
+                has_location: _b_.True});
+        }
+        return _b_.None;
+    },
+
+    invalidate_caches : function(self) {
+        // TODO: Implement
+    }
+}
+precompiled_hook.$dict.__mro__ = [precompiled_hook.$dict, 
+    _b_.object.$dict]
+
 // FIXME : Add this code elsewhere ?
-$B.$path_hooks = [vfs_hook, url_hook];
+$B.$path_hooks = [precompiled_hook, vfs_hook, url_hook];
+
 $B.path_importer_cache = {};
 // see #247 - By adding these early some unnecesary AJAX requests are not sent
 var _sys_paths = [[$B.script_dir + '/', 'py'],
@@ -982,7 +1144,7 @@ $B.$import_non_blocking = function(mod_name, func){
     console.log('after async import', $B.imported[mod_name])
 }
 
-$B.$meta_path = [finder_VFS, finder_stdlib_static, finder_path];
+$B.$meta_path = [finder_VFS, finder_stdlib_static, finder_path, finder_compiled];
 
 function optimize_import_for_path(path, filetype) {
     if (path.slice(-1) != '/') { path = path + '/' }
