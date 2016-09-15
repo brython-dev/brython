@@ -863,13 +863,23 @@ test.__doc__ = "new text"
 assert test.__doc__ == "new text"
 
 # issue 433
-assert 10**1j == (-0.6682015101903132+0.743980336957493j)
-assert 10.5**(3+1j) == (-814.610144261598+822.4998197514079j)
 
+# Once pull request 494 is integrated we should
+# use `math.isclose` instead of `my_isclose`
+# Floats should not test for equality !
 import math
-assert math.e**1j == (0.5403023058681398+0.8414709848078965j)
+def my_isclose(a, b, rel_tol=1e-09, abs_tol=1e-09):
+    if a == b:
+        return True
+    diff = abs(a-b)
+    return diff <= abs(a)*rel_tol or diff <= abs(b)*rel_tol or diff <= abs_tol
 
-assert (1+2j)**1j == (0.2291401859804338+0.23817011512167555j)
+assert my_isclose(10**1j, (-0.6682015101903132+0.7439803369574931j))
+assert my_isclose(10.5**(3+1j), (-814.610144261598+822.4998197514079j))
+
+assert my_isclose(math.e**1j, (0.5403023058681398+0.8414709848078965j))
+
+assert my_isclose((1+2j)**1j, (0.2291401859804338+0.23817011512167555j))
 
 # issue 434
 import collections
@@ -998,6 +1008,22 @@ a = [1, 2]
 b = [3, 4]
 odd = [x for x in a+b if x%2]
 assert odd == [1, 3]
+
+# Bug in generators (GitHub Issue #502)
+
+def test_gen():
+    for i in range(1):
+        yield i
+    return 20
+
+g = test_gen()
+next(g)
+try:
+    next(g)
+except StopIteration as exc:
+    assert exc.value == 20
+
+
 
 # ==========================================
 # Finally, report that all tests have passed

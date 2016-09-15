@@ -103,4 +103,27 @@ class StrangeCeil:
 
 assert math.ceil(StrangeCeil()) == "this is a string"
 
+# tests for math.nan and math.inf (some tests could be shared with py_float.js)
+assert math.nan != math.nan
+assert math.inf > 10
+assert math.inf > -10
+assert -math.inf < 10
+assert -math.inf < -10
+
+# tests for math.isclose
+cases = [
+    {'a': 1e10, 'b': 1.00001e10, 'rel_tol': 1e-09, 'abs_tol': 0.0},
+    {'a': 1e-7, 'b': 1e-8, 'rel_tol': 1e-09, 'abs_tol': 0.0},
+    {'a': 1e-8, 'b': 1e-9, 'rel_tol': 1e-09, 'abs_tol': 0.0},
+    {'a': 1e10, 'b': 1.0001e10, 'rel_tol': 1e-09, 'abs_tol': 0.0},
+    {'a': 1.0, 'b': 1.0, 'rel_tol': 1e-09, 'abs_tol': 0.0},
+    {'a': 1.0, 'b': 1.01, 'rel_tol': 1, 'abs_tol': 0.0},
+    {'a': 1.0, 'b': 1.01, 'rel_tol': 0.001, 'abs_tol': 0.0},
+    {'a': math.nan, 'b': math.nan, 'rel_tol': 1e-09, 'abs_tol': 0.0},
+    {'a': math.inf, 'b': 10, 'rel_tol': 1e-09, 'abs_tol': 0.0}
+]
+expected = [False, False, False, False, True, True, False, False, False]
+for case, result in zip(cases, expected):
+    assert math.isclose(**case) == result
+
 print("passed all tests..")

@@ -57,7 +57,7 @@ $FloatDict.__bool__ = function(self){return _b_.bool(self.valueOf())}
 $FloatDict.__class__ = $B.$type
 
 $FloatDict.__eq__ = function(self,other){
-    if(isNaN(self) && isNaN(other)){return true}
+    if(isNaN(self) && isNaN(other)){return false}
     if(isinstance(other,_b_.int)) return self==other
     if(isinstance(other,float)) {
       // new Number(1.2)==new Number(1.2) returns false !!!
