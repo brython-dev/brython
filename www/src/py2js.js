@@ -304,18 +304,21 @@ function $Node(type){
           }
           if(ctx_offset===undefined){ctx_offset=1}
 
-            /*
             if(this.context && this.context.tree!==undefined &&
                 this.context.tree[0].type=="generator"){
-                    console.log('generator transformed')
                     var def_node = this,
                         def_ctx = def_node.context.tree[0]
-                    console.log('def ctx', def_ctx)
-                    var g = $B.$BRgenerator2('test', function(){}, 'f5', def_node)
-                    //console.log(g)
-                    //console.log(g())
+                    if(def_ctx.name=='fgnx'){
+                        var g = $B.$BRgenerator2(def_ctx.name, 
+                            def_ctx.id, def_node),
+                            block_id = this.parent_block.id.replace(/\./g, '_'),
+                            res = '$locals_'+block_id+'["fgnx"] = $B.genfunc(['+g+'])'
+                        
+                        this.parent.children.splice(rank, 2)
+                        this.parent.insert(rank+offset-1,
+                            $NodeJS(res))
+                    }
             }
-            */   
 
           return ctx_offset
         }
@@ -2219,7 +2222,8 @@ function $DefCtx(context){
         
         // If function is a generator, add a line to build the generator
         // function, based on the original function
-        if(this.type==='generator' && !this.declared){
+        if(this.type==='generator' && !this.declared &&
+            this.name != 'fgnx'){
 
             var code = ['var env=[], module=$B.last($B.frames_stack)[2]',
                 'for(var i=$B.frames_stack.length-1; i>=0; i--){',
@@ -2264,6 +2268,7 @@ function $DefCtx(context){
           var js_ctx = new $NodeJSCtx(assign,js)
           expr1.tree.push(js_ctx)
           node.parent.insert(rank+offset,gen_node) 
+
           this.declared = true
           offset++
         }

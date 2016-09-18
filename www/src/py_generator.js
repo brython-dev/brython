@@ -658,82 +658,62 @@ $B.$BRgenerator.__repr__ = function(){return "<class 'generator'>"}
 $B.$BRgenerator.__str__ = function(){return "<class 'generator'>"} 
 $B.$BRgenerator.__class__ = $B.$type
 
-$B.$BRgenerator2 = function(func_name, func, def_id, def_node){
+$B.$BRgenerator2 = function(func_name, def_id, def_node){
 
     // Creates a function that will return an iterator
     // env : list of namespaces where the generator function stands
     // func_name : function name
     // def_id : generator function identifier
     
-    if(def_node===undefined){
-        console.log('def node undef', def_id, func, func.$def_node)
-    }
-
     var def_ctx = def_node.context.tree[0]
     
     // environment : list of [block_name, block_obj] lists
     $B.generators = $B.generators || {}
     $B.$generators = $B.$generators || {}
 
-    var module = def_node.module // module name
+    var module = def_node.module, // module name
+        iter_id = def_id+'_tbd' // XXX
 
-    var res = function(){
-        var args = [], pos=0
-        for(var i=0,_len_i=arguments.length;i<_len_i;i++){args[pos++]=arguments[i]}
-
-        // create an id for the iterator
-        var iter_id = def_id+'_'+$B.gen_counter++
-
-        // Names bound in generator are also bound in iterator
-        $B.bound[iter_id] = {}
-        for(var attr in $B.bound[def_id]){$B.bound[iter_id][attr] = true}
-
-        // Create a tree structure based on the generator tree
-        // iter_id is used in the node where the iterator resets local
-        // namespace
-        var func_root = new $B.genNode(def_ctx.to_js('$B.$generators["'+iter_id+'"]'))
-        func_root.module = module
-        func_root.yields = []
-        func_root.loop_ends = {}
-        func_root.def_id = def_id
-        func_root.iter_id = iter_id
-        for(var i=0, _len_i = def_node.children.length; i < _len_i;i++){
-            func_root.addChild($B.make_node(func_root, def_node.children[i]))
-        }
-        var func_node = func_root.children[1].children[0]
-        console.log('first _next', func_root.src()+'\n)()')
-        console.log('yields', func_root.yields)
-        
-        var obj = {
-            __class__ : $BRGeneratorDict,
-            args:args,
-            def_id:def_id,
-            def_ctx:def_ctx,
-            def_node:def_node,
-            func:func,
-            func_name:func_name,
-            func_root:func_root,
-            module:module,
-            func_node:func_node,
-            next_root:func_root,
-            gi_running:false,
-            iter_id:iter_id,
-            id:iter_id,
-            num:0
-        }
-        
-        $B.modules[iter_id] = obj
-        obj.parent_block = def_node.parent_block
-
-        for(var i=0; i<func_root.yields.length;i++){
-            make_next(obj, i)
-        }
-
-        return obj
+    // Create a tree structure based on the generator tree
+    // iter_id is used in the node where the iterator resets local
+    // namespace
+    var func_root = new $B.genNode(def_ctx.to_js())
+    func_root.module = module
+    func_root.yields = []
+    func_root.loop_ends = {}
+    func_root.def_id = def_id
+    func_root.iter_id = iter_id
+    for(var i=0, _len_i = def_node.children.length; i < _len_i;i++){
+        func_root.addChild($B.make_node(func_root, def_node.children[i]))
     }
-    res.__call__ = function(){console.log('call generator');return res.apply(null,arguments)}
-    res.__repr__ = function(){return "<function "+func.__name__+">"}
-    return res
+    var func_node = func_root.children[1].children[0]
+    
+    var obj = {
+        __class__ : $BRGeneratorDict,
+        def_ctx:def_ctx,
+        def_id:def_id,
+        func_name:func_name,
+        func_root:func_root,
+        module:module,
+        gi_running:false,
+        iter_id:iter_id,
+        id:iter_id,
+        num:0
+    }
+    
+    var src = func_root.children[1].src(),
+        raw_src = src.substr(src.search('function'))
+    
+    var funcs = [raw_src]
+    
+    $B.modules[iter_id] = obj
+    obj.parent_block = def_node.parent_block
+
+    for(var i=0; i<func_root.yields.length;i++){
+        funcs.push(make_next(obj, i))
+    }
+
+    return funcs
 }
 
 function make_next(self, yield_node_id){
@@ -750,7 +730,7 @@ function make_next(self, yield_node_id){
     // Create root node of new function and add the initialisation 
     // instructions
     
-    var root = new $B.genNode(self.def_ctx.to_js('__BRYTHON__.generators["'+self.iter_id+'"]'))
+    var root = new $B.genNode(self.def_ctx.to_js())
     root.addChild(self.func_root.children[0].clone())
     var fnode = self.func_root.children[1].clone()
     root.addChild(fnode)
@@ -761,9 +741,8 @@ function make_next(self, yield_node_id){
         '"], $local_name="'+self.iter_id+'";'
     fnode.addChild(new $B.genNode(js))
     // add a node to enter the frame
-    var env = ['t0', 't1'] //$B.last(self.env)
     fnode.addChild(new $B.genNode('$B.enter_frame(["'+self.iter_id+
-        '",$locals,"'+env[0]+'",$locals_'+env[0]+']);'))
+        '",$locals,"'+self.module+'",$locals_'+self.module+']);'))
 
     // To build the new function, we must identify the rest of the function to
     // run after the exit node
@@ -864,16 +843,50 @@ function make_next(self, yield_node_id){
      
     // Set self._next to the code of the function for next iteration
 
-    self.next_root = root
-    var next_src = root.src()+'\n)()'
-    try{eval(next_src)}
-    catch(err){console.log('error '+err+'\n'+next_src);throw err}
-
-    // Evaluation of souce code sets the object $B.generators[self.iter_id]    
-    _next = $B.generators[self.iter_id]
-    console.log(_next+'')
-    return _next
+    var src = root.children[1].src(),
+        raw_src = src.substr(src.search('function')),
+        next_src = raw_src
+    return next_src
 }
 
+var $gen_it = {
+    __class__: $B.$type,
+    __name__: "generator"
+}
+$gen_it.__mro__ = [$gen_it, _b_.object.$dict]
+
+$gen_it.__iter__ = function(self){return self}
+
+$gen_it.__next__ = function(self){
+    if(self.finished){throw _b_.StopIteration()}
+    if(self.next===undefined){
+        self.finished = true
+        throw _b_.StopIteration()
+    }
+    var res = self.next.apply(null, self.args)
+    if(res===undefined){throw _b_.StopIteration()}
+    else if(res[0].__class__==$GeneratorReturn){
+        // The function may have ordinary "return" lines, in this case
+        // the iteration stops
+        self.finished = true
+        throw StopIteration(res[0].value)
+    }
+
+    self.next = self.nexts[res[1]]
+    return res[0]
+}
+    
+$B.genfunc = function(funcs){
+    // Transform a list of functions into a generator object, ie a function
+    // that returns an iterator
+    return function(){
+        return {
+            __class__: $gen_it,
+            args: Array.prototype.slice.call(arguments),
+            nexts: funcs.slice(1),
+            next: funcs[0]
+        }
+    }
+}
 
 })(__BRYTHON__)
