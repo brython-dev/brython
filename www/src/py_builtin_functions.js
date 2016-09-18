@@ -379,8 +379,6 @@ function $eval(src, _globals, _locals){
 
         var js = root.to_js()
         
-        if ($B.async_enabled) js=$B.execution_object.source_conversion(js) 
- 
         var res = eval(js)
         var gns = eval('$locals_'+globals_id)
 
