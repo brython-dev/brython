@@ -310,6 +310,8 @@ function clear_ns(iter_id){
 $BRGeneratorDict.__next__ = function(self){
 
     // Function called for each iteration
+    
+    //console.log('generator __next__', self, self.gi_running)
 
     var scope_id = self.func_root.scope.id
 
@@ -672,7 +674,7 @@ $B.$BRgenerator2 = function(func_name, def_id, def_node){
     $B.$generators = $B.$generators || {}
 
     var module = def_node.module, // module name
-        iter_id = def_id+'_tbd' // XXX
+        iter_id = 'XXX' // XXX
 
     // Create a tree structure based on the generator tree
     // iter_id is used in the node where the iterator resets local
@@ -855,24 +857,57 @@ var $gen_it = {
 }
 $gen_it.__mro__ = [$gen_it, _b_.object.$dict]
 
-$gen_it.__iter__ = function(self){return self}
+$gen_it.__iter__ = function(self){
+    return self
+}
 
 $gen_it.__next__ = function(self){
-    if(self.finished){throw _b_.StopIteration()}
+    if(!self.$started){
+        // For the first iteration, freeze environment
+        
+        for(var i=0; i<$B.frames_stack.length; i++){
+            var frame = $B.frames_stack[i]
+            for(var attr in frame[3]){
+                $B.vars[self.iter_id][attr] = frame[3][attr]
+            }
+            for(var attr in frame[1]){
+                $B.vars[self.iter_id][attr] = frame[1][attr]
+            }
+        }
+        self.$started = true
+    }
+    if(self.$finished){throw _b_.StopIteration()}
+    if(self.gi_running==true){
+        throw ValueError("generator already executing")
+    }
+    self.gi_running = true
     if(self.next===undefined){
-        self.finished = true
+        self.$finished = true
         throw _b_.StopIteration()
     }
-    var res = self.next.apply(null, self.args)
+    
+    try{
+        var res = self.next.apply(null, self.args)
+    }catch(err){
+        self.$finished=true
+        throw err
+    }finally{
+        // The line "leave_frame" is not inserted in the function body for
+        // generators, so we must call it here to pop from frames stack
+        self.gi_running = false
+        $B.leave_frame(self.iter_id)
+    }
+
     if(res===undefined){throw _b_.StopIteration()}
     else if(res[0].__class__==$GeneratorReturn){
         // The function may have ordinary "return" lines, in this case
         // the iteration stops
-        self.finished = true
+        self.$finished = true
         throw StopIteration(res[0].value)
     }
 
     self.next = self.nexts[res[1]]
+    self.gi_running = false
     return res[0]
 }
     
@@ -880,12 +915,49 @@ $B.genfunc = function(funcs){
     // Transform a list of functions into a generator object, ie a function
     // that returns an iterator
     return function(){
-        return {
+        var iter_id = '$gen'+$B.gen_counter++
+        
+        $B.vars[iter_id] = {}
+
+        // save current namespace
+        var re = []
+        for(var i=0;i<$B.frames_stack.length;i++){
+            var frame = $B.frames_stack[i],
+                local = frame[0].replace(/\./g, '_').replace(/\$/g, '\\$'),
+                global = frame[2].replace(/\./g, '_').replace(/\$/g, '\\$')
+            re.push(new RegExp('\\$locals_'+local+'([^_])', 'g'))
+            if(local!=global){
+                re.push(new RegExp('\\$locals_'+global+'([^_])', 'g'))
+            }
+        }
+        
+        var gfuncs = []
+        for(var i=0; i<funcs.length;i++){
+            var new_func = (funcs[i]+'').replace(/XXX/g, iter_id)
+            for(var j=0; j<re.length; j++){
+                new_func = new_func.replace(re[j], 
+                    '$B.vars["'+iter_id+'"]$1')
+            }
+            try{
+                eval('var f='+new_func)
+            }catch(err){
+                console.log(err)
+                console.log(new_func+'')
+                throw err
+            }
+            gfuncs.push(f)
+        }
+        
+        var res = {
             __class__: $gen_it,
             args: Array.prototype.slice.call(arguments),
-            nexts: funcs.slice(1),
-            next: funcs[0]
+            nexts: gfuncs.slice(1),
+            next: gfuncs[0],
+            iter_id: iter_id,
+            gi_running: false,
+            $started: false
         }
+        return res
     }
 }
 

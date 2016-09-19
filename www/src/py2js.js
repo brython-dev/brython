@@ -308,11 +308,12 @@ function $Node(type){
                 this.context.tree[0].type=="generator"){
                     var def_node = this,
                         def_ctx = def_node.context.tree[0]
-                    if(def_ctx.name=='fgnx'){
+                    if(def_ctx.name.substr(0, 4)=='fgnx'){
                         var g = $B.$BRgenerator2(def_ctx.name, 
                             def_ctx.id, def_node),
                             block_id = this.parent_block.id.replace(/\./g, '_'),
-                            res = '$locals_'+block_id+'["fgnx"] = $B.genfunc(['+g+'])'
+                            res = '$locals_'+block_id+'["'+def_ctx.name+
+                                '"] = $B.genfunc(['+g+'])'
                         
                         this.parent.children.splice(rank, 2)
                         this.parent.insert(rank+offset-1,
