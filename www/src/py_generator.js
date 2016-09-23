@@ -147,7 +147,6 @@ $B.make_node = function(top_node, node){
 
 $B.make_node2 = function(top_node, node){
 
-    console.log('make node 2')
     // Transforms a node from the original generator function into a node
     // for the modified function that will return iterators
     // top_node is the root node of the modified function
@@ -224,8 +223,7 @@ $B.make_node2 = function(top_node, node){
             // set when methods send() or throw() of the generators are
             // inovked
 
-            var js = '$sent'+ctx_js+'=$B.modules["'
-            js += top_node.iter_id+'"].sent_value || None;'
+            var js = '$sent'+ctx_js+'=self.sent_value || None;'
             
             // If method throw was called, raise the exception
             js += 'if($sent'+ctx_js+'.__class__===$B.$GeneratorSendError)'
@@ -235,7 +233,7 @@ $B.make_node2 = function(top_node, node){
             js += '$yield_value'+ctx_js+'=$sent'+ctx_js+';'
             
             // Reset sent_value value to None for the next iteration
-            js += '$B.modules["'+top_node.iter_id+'"].sent_value=None'
+            js += 'self.sent_value=None'
             new_node.data = js
 
         }else if(ctype=='break'){
@@ -831,9 +829,19 @@ $B.$BRgenerator2 = function(func_name, def_id, def_node){
     var src = func_root.children[1].src(),
         raw_src = src.substr(src.search('function'))
     
+    var first_line = func_root.children[0].src()
+    var def_pos = first_line.search(/\$defaults/)
+    if(def_pos>-1){
+        var $default = first_line.substr(def_pos)
+        // remove trailing ;
+        $default = $default.substr(0, $default.length-2)
+        // replace string $default by the object
+        raw_src = raw_src.replace(/\$defaults/g, $default)
+    }
+
     var funcs = [raw_src]
     
-    $B.modules[iter_id] = obj
+    //$B.modules[iter_id] = obj
     obj.parent_block = def_node.parent_block
 
     for(var i=0; i<func_root.yields.length;i++){
@@ -1001,6 +1009,7 @@ $gen_it.__next__ = function(self){
     try{
         var res = self.next.apply(self, self.args)
     }catch(err){
+        console.log(self.next+'')
         self.$finished=true
         throw err
     }finally{
@@ -1008,7 +1017,6 @@ $gen_it.__next__ = function(self){
         // generators, so we must call it here to pop from frames stack
         self.gi_running = false
         $B.leave_frame(self.iter_id)
-        console.log($B.frames_stack.length, 'frames')
     }
 
     if(res===undefined){throw _b_.StopIteration()}
@@ -1023,7 +1031,13 @@ $gen_it.__next__ = function(self){
     self.gi_running = false
     return res[0]
 }
-    
+
+$gen_it.$$throw = function(self, value){
+    if(_b_.isinstance(value,_b_.type)) value=value()
+    self.sent_value = {__class__:$B.$GeneratorSendError,err:value}
+    return $gen_it.__next__(self)
+}
+
 $B.genfunc = function(funcs){
     // Transform a list of functions into a generator object, ie a function
     // that returns an iterator
