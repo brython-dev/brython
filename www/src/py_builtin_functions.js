@@ -1192,7 +1192,10 @@ $ReversedDict.$factory = reversed
 
 function round(arg,n){
     if(!isinstance(arg,[_b_.int,_b_.float])){
-        throw _b_.TypeError("type "+arg.__class__+" doesn't define __round__ method")
+        if (! hasattr(arg,'__round__'))
+            throw _b_.TypeError("type "+arg.__class__+" doesn't define __round__ method")
+        if(n===undefined) return getattr(arg,'__round__')()
+        else return getattr(arg,'__round__')(n)
     }
     
     if(isinstance(arg, _b_.float) && (arg.value === Infinity || arg.value === -Infinity)) {
@@ -1204,7 +1207,11 @@ function round(arg,n){
     if(!isinstance(n,_b_.int)){throw _b_.TypeError(
         "'"+n.__class__+"' object cannot be interpreted as an integer")}
     var mult = Math.pow(10,n)
-    return _b_.int.$dict.__truediv__(Number(Math.round(arg.valueOf()*mult)),mult)
+    if(isinstance(arg, _b_.float)) {
+        return _b_.float(_b_.int.$dict.__truediv__(Number(Math.round(arg.valueOf()*mult)),mult))
+    } else {
+        return _b_.int(_b_.int.$dict.__truediv__(Number(Math.round(arg.valueOf()*mult)),mult))
+    }
 }
 
 function setattr(obj,attr,value){

@@ -1024,6 +1024,27 @@ except StopIteration as exc:
     assert exc.value == 20
 
 
+# Bug in round (GitHub Issue #506)
+
+class TestRound:
+    def __round__(self, n=None):
+        if n is None:
+            return 10
+        else:
+            return n
+tr = TestRound()
+
+
+assert type(round(3.0)) == int, "Round called without second argument should return int"
+assert type(round(3.1111, 3)) == float, "Round called without second argument should return same type as first arg"
+assert type(round(3.0, 0)) == float, "Round called without second argument should return same type as first arg"
+assert round(3.1111, 3) == 3.111
+assert type(round(0, 3)) == int, "Round called without second argument should return same type as first arg"
+assert round(tr, 3) == 3, "Round called on obj with __round__ method should use it"
+assert round(tr) == 10, "Round called on obj with __round__ method should use it"
+
+
+
 
 # ==========================================
 # Finally, report that all tests have passed
