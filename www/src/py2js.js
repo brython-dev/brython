@@ -94,9 +94,6 @@ for (var $i=0;$i<$op_order.length;$i++){
 // Variable used to generate random names used in loops
 var $loop_num = 0
 
-// Magic value passed as first argument to functions in simple cases
-$B.func_magic = Math.random().toString(36).substr(2,8)
-
 /*
 Function called in case of SyntaxError
 ======================================
