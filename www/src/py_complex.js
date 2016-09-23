@@ -61,7 +61,6 @@ $ComplexDict.__mod__ = function(self,other) {
 $ComplexDict.__mro__ = [$ComplexDict,$ObjectDict]
 
 $ComplexDict.__mul__ = function(self,other){
-    console.log('complex mul', other)
     if(isinstance(other,complex))
       return complex(self.real*other.real-self.imag*other.imag, 
           self.imag*other.real + self.real*other.imag)
