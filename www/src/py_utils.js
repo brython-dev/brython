@@ -233,10 +233,9 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
     }
     py+=' '.repeat(indent)
     py += 'yield ('+items[0]+')'
-
+    
     var genexpr_name = 'ge'+$ix,
-        root = $B.py2js(py, module_name, genexpr_name, parent_block_id,
-        line_num),
+        root = $B.py2js(py, module_name, genexpr_name, parent_block_id, line_num),
         js = root.to_js(),
         lines = js.split('\n')
     
@@ -245,12 +244,12 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
         '    eval("var $locals_"+frame[2].replace(/\\./g,"_")+" = frame[3]")\n'+
         '}\n'
     
-    lines.splice(2, 0, header)
-    
     js = lines.join('\n')
     js += '\nvar $res = $locals_'+genexpr_name+'["'+genexpr_name+'"]();\n'+
         '$res.is_gen_expr=true;\nreturn $res\n'
     js = '(function(){'+js+'})()\n'
+
+    $B.clear_ns(genexpr_name)
     
     return js
 }
@@ -261,13 +260,14 @@ $B.clear_ns = function(name){
     var keys = [],
         len = name.length
     for(var key in __BRYTHON__.modules){
-        if(key.substr(0, len)==name && key!==name){keys.push(key)}
+        if(key.substr(0, len)==name){
+            delete __BRYTHON__.modules[key]
+            delete __BRYTHON__.bound[key]
+            delete __BRYTHON__.type[key]
+        }
     }
-    for(var i=0; i<keys.length;i++){
-        delete __BRYTHON__.modules[keys[i]]
-        delete __BRYTHON__.bound[keys[i]]
-        delete __BRYTHON__.type[keys[i]]
-    }
+    var alt_name = name.replace(/\./g, '_')
+    if(alt_name!=name){$B.clear_ns(alt_name)}
 }
 // Function used to resolve names not defined in Python source
 // but introduced by "from A import *" or by exec

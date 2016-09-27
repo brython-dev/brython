@@ -301,6 +301,8 @@ $B.run_py=run_py=function(module_contents,path,module,compiled) {
         if($B.debug>0){console.log('line info '+ $B.line_info)}
         */
         throw err
+    }finally{
+        $B.clear_ns(module.__name__)
     }
 
     try{

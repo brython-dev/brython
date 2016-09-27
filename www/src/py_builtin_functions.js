@@ -145,10 +145,11 @@ function compile(source, filename, mode) {
          ['source', 'filename', 'mode', 'flags', 'dont_inherit','optimize'],
          arguments,{flags:0, dont_inherit:false, optimize:-1},null,null)
     
-    var module_name = 'exec_' + $B.UUID()
+    var module_name = '$exec_' + $B.UUID()
     var local_name = module_name; //'' + $B.UUID()
 
     var root = $B.py2js(source,module_name,[module_name],local_name)
+    $B.clear_ns(module_name)
     $.__class__ = $B.$CodeObjectDict
     $.co_flags = $.flags
     return $
@@ -416,8 +417,6 @@ function $eval(src, _globals, _locals){
         throw err
     }finally{
         
-        delete __BRYTHON__.modules[globals_id]
-        delete __BRYTHON__.modules[locals_id]
         $B.clear_ns(globals_id)
         $B.clear_ns(locals_id)
 
@@ -493,6 +492,7 @@ $B.show_getattr = function(){
 
 function getattr(obj,attr,_default){
 
+    if(obj===undefined){console.log('get attr', attr, 'of undefined')}
     var klass = obj.__class__
     
     if(klass===undefined){
