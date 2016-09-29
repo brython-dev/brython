@@ -24,6 +24,7 @@ storage['brython_test'] = doc['zone'].value
 
 ```exec
 from browser import alert
+from browser.local_storage import storage
 alert(storage['brython_test'])
 ```
 

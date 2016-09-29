@@ -21,13 +21,15 @@ alert(document['zone'].text)
 ### Montrer le code HTML
 
 ```exec
+from browser import document, alert
 alert(document['zone'].html)
 ```
 
 ### Montrer la valeur saisie dans le champ
 
 ```exec
-# doc['entry'] est le champ de saisie
+from browser import document, alert
+# document['entry'] est le champ de saisie
 alert(document['entry'].value)
 ```
 </td>

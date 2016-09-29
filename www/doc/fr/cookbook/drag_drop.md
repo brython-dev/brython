@@ -7,6 +7,7 @@ Solution
 --------
 
 Brython implémente une API basée sur la spécification du HTML5 pour le glisser-déposer. Dans la forme basique présentée dans cet exemple, elle consiste à définir des fonctions de rappel pour 3 événements :
+
 - _dragstart_ sur l'élément déplaçable (quand l'utilisateur commence à le faire glisser)
 - _dragover_ sur la zone de destination (quand l'objet déplacé se positionne dessus)
 - _drop_ sur la zone de destination (quand l'utilisateur relâche le bouton de la souris)
@@ -29,15 +30,15 @@ panel = doc["panel"] # zone jaune
 
 source = doc["source"] # zone rouge
 # on la place à (10,10) du bord supérieur gauche du panel
-source.style.top = "%spx" %(10+panel.top)
-source.style.left = "%spx" %(10+panel.left)
+source.style.top = "%spx" %(10+panel.abs_top)
+source.style.left = "%spx" %(10+panel.abs_left)
 # rend la zone rouge déplaçable
 source.draggable = True
 
 dest = doc["dest"] # zone verte
 # on la place à (10,150) du bord supérieur gauche du panel
-dest.style.top = "%spx" %(10+panel.top)
-dest.style.left = "%spx" %(150+panel.left)
+dest.style.top = "%spx" %(10+panel.abs_top)
+dest.style.left = "%spx" %(150+panel.abs_left)
 
 # quand la souris passe sur l'objet déplaçable, changer le curseur
 def mouse_over(ev):

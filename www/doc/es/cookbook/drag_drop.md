@@ -42,15 +42,15 @@ panel = document["panel"] # yellow zone
 
 source = document["source"] # red zone
 # localizado en (10,10) desde la esquina superior izquierda del panel
-source.style.top = "%spx" %(10+panel.top)
-source.style.left = "%spx" %(10+panel.left)
+source.style.top = "%spx" %(10+panel.abs_top)
+source.style.left = "%spx" %(10+panel.abs_left)
 # hacer roja a la zona arrastrable
 source.draggable = True
 
 dest = document["dest"] # green zone
 # localizado en (10,150) desde la esquina superior izquierda del panel
-dest.style.top = "%spx" %(10+panel.top)
-dest.style.left = "%spx" %(150+panel.left)
+dest.style.top = "%spx" %(10+panel.abs_top)
+dest.style.left = "%spx" %(150+panel.abs_left)
 
 # Cuando el ratón se encuentra sobre el elemento arrastrable, cambiar el cursor
 def mouse_over(ev):

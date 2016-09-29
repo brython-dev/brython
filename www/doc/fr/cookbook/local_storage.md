@@ -24,6 +24,8 @@ storage['brython_test'] = document['zone'].value
 ### Montrer la valeur stockée
 
 ```exec
+from browser import alert
+from browser.local_storage import storage
 alert(storage['brython_test'])
 ```
 

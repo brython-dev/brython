@@ -17,6 +17,7 @@ almacenar cadenas de valores asociados a cadenas de claves
 ```exec
 from browser import document
 from browser.local_storage import storage
+
 storage['brython_test'] = document['zone'].value
 ```
 
@@ -24,6 +25,8 @@ storage['brython_test'] = document['zone'].value
 
 ```exec
 from browser import alert
+from browser.local_storage import storage
+
 alert(storage['brython_test'])
 ```
 

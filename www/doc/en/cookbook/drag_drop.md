@@ -7,6 +7,7 @@ Solution
 --------
 
 Brython implements an API based on HTML5 drag and drop specification. In the basic form presented in this example, it consists in defining callback functions for 3 events :
+
 - _dragstart_ on the draggable element (when the user starts dragging it)
 - _dragover_ on the destination zone (when the draggable element is moved over it)
 - _drop_ on the destination zone (when the user releases the mouse button)
@@ -29,15 +30,15 @@ panel = doc["panel"] # yellow zone
 
 source = doc["source"] # red zone
 # place it at (10,10) from panel top left corner
-source.style.top = "%spx" %(10+panel.top)
-source.style.left = "%spx" %(10+panel.left)
+source.style.top = "%spx" %(10+panel.abs_top)
+source.style.left = "%spx" %(10+panel.abs_left)
 # make red zone draggable
 source.draggable = True
 
 dest = doc["dest"] # green zone
 # place it at (10,150) from panel top left corner
-dest.style.top = "%spx" %(10+panel.top)
-dest.style.left = "%spx" %(150+panel.left)
+dest.style.top = "%spx" %(10+panel.abs_top)
+dest.style.left = "%spx" %(150+panel.abs_left)
 
 # when mouse is over the draggable element, change cursor
 def mouse_over(ev):

@@ -13,8 +13,8 @@ Solución
 ### Mostrar texto
 
 ```exec
-from browser import document
-from browser import alert
+from browser import alert, document
+
 # document['zone'] is the colored cell
 alert(document['zone'].text)
 ```
@@ -22,12 +22,14 @@ alert(document['zone'].text)
 ### Mostrar código HTML
 
 ```exec
+from browser import alert, document
 alert(document['zone'].html)
 ```
 
 ### Mostrar texto introducido
 
 ```exec
+from browser import alert, document
 # document['entry'] es el campo de entrada
 alert(document['entry'].value)
 ```

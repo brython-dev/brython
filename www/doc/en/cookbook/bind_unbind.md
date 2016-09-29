@@ -17,7 +17,7 @@ from browser import document
 from browser import alert
 
 def myevent(ev):
-    alert('ça marche !')
+    alert('it works !')
 
 def counter():
     alert('%s event(s) attached to "click"' 
@@ -26,13 +26,13 @@ def counter():
 def bind_click(ev):
     document['myblock'].bind('click', myevent)
     counter()
-    document['mymessage'].text='événement attaché, cliquer pour voir...'
+    document['mymessage'].text='event is bound, just click to see...'
 
 def unbind_click(ev):
     if document['myblock'].events('click'):
         document['myblock'].unbind('click', myevent)
         counter()
-        document['mymessage'].text='clic désactivé'
+        document['mymessage'].text='click disabled'
 
 document['bind_click'].bind('click', bind_click)
 document['unbind_click'].bind('click', unbind_click)
