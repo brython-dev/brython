@@ -143,40 +143,64 @@ Por ejemplo :
 En la siguiente porción de código tenemos un ejemplo más completo de cómo 
 podrías usar la popular librería jQuery :
 
-    <html>
-    <head>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js">
-    </script>
-    <script src="../../src/brython.js"></script>
-    </head>
-    
-    <script type="text/python">
-    from browser import document, window
-        
-    def change_color(ev):
-        _divs=document.get(selector='div')
-        for _div in _divs:
-            if _div.style.color != "blue":
-                _div.style.color = "blue"
-            else:
-                _div.style.color = "red"
-        
-    # creating an alias for "$" in jQuery would cause a SyntaxError in Python
-    # so we assign jQuery to a variable named jq
+```
+<html>
+<head>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js">
+</script>
+<script src="/src/brython.js"></script>
+</head>
 
-    jq = window.jQuery.noConflict(True)
-    _jQuery = jq("body")
-    _jQuery.click(change_color)    
-    </script>
-    
-    <body onload="brython()">
+<script type="text/python">
+from browser import window
 
-      <div>Click here</div>
-      <div>to iterate through</div>
-      <div>these divs.</div>
-     
-    </body>
-    </html>
+jq = window.jQuery
+
+# Ajax call
+def onSuccess(data, status, req):
+    print(data)
+    print(status)
+
+jq.ajax('/cgi-bin/post_test.py',
+    {'data':
+        {'foo': 56},
+     'success': onSuccess
+    }
+)
+
+# add an option to a SELECT box
+jq('#sel').append('<option>three')
+
+# access element attributes
+assert jq('#c').attr('id') == 'c'
+
+# define a callback for a click on a button
+def callback(ev):
+    print(jq(ev.target).text())
+
+jq('#btn').on('click', callback)
+
+# we can even use "each" to iterate on SPAN elements
+def show(i, obj):
+    print(i, obj)
+
+jq.each(jq('span'), show)  
+</script>
+
+<body onload="brython(1)">
+
+<select id="sel">
+  <option value="one">one
+  <option value="two">two
+</select>
+
+<span id="c"></span>
+
+<button id="btn">click</button>
+ 
+</body>
+</html>
+```
 
 ### Otros ejemplos
 

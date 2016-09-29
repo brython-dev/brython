@@ -138,38 +138,64 @@ Par exemple :
 Voici un exemple plus complet qui montre comment utiliser la populaire 
 librairie jQuery :
 
-    <html>
-    <head>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js">
-    </script>
-    <script src="../../src/brython.js"></script>
-    </head>
-    
-    <script type="text/python">
-    from browser import document, window
-    
-    def change_color(ev):
-      _divs=document.get(selector='div')
-      for _div in _divs:
-          if _div.style.color != "blue":
-             _div.style.color = "blue"
-          else:
-             _div.style.color = "red"
-    
-    # créer un alias pour "$" de jQuery (causerait une SyntaxError en Python)
-    jq = window.jQuery.noConflict(True)
-    _jQuery = jq("body")
-    _jQuery.click(change_color)    
-    </script>
-    
-    <body onload="brython()">
+```
+<html>
+<head>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js">
+</script>
+<script src="/src/brython.js"></script>
+</head>
 
-      <div>Cliquer ici</div>
-      <div>pour parcourir</div>
-      <div>ces divs.</div>
-     
-    </body>
-    </html>
+<script type="text/python">
+from browser import window
+
+jq = window.jQuery
+
+# appel Ajax
+def onSuccess(data, status, req):
+    print(data)
+    print(status)
+
+jq.ajax('/cgi-bin/post_test.py',
+    {'data':
+        {'foo': 56},
+     'success': onSuccess
+    }
+)
+
+# ajouter une option à un menu déroulant SELECT
+jq('#sel').append('<option>three')
+
+# accéder aux attributs d'un élément
+assert jq('#c').attr('id') == 'c'
+
+# définir une fonction associée au clic sur un bouton
+def callback(ev):
+    print(jq(ev.target).text())
+
+jq('#btn').on('click', callback)
+
+# on peut même utiliser "each" pour itérer sur des éléments
+def show(i, obj):
+    print(i, obj)
+
+jq.each(jq('span'), show)  
+</script>
+
+<body onload="brython(1)">
+
+<select id="sel">
+  <option value="one">one
+  <option value="two">two
+</select>
+
+<span id="c"></span>
+
+<button id="btn">click</button>
+ 
+</body>
+</html>
+```
     
 ### Autres exemples
 
