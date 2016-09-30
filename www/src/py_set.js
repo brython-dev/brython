@@ -192,7 +192,7 @@ $SetDict.__lt__ = function(self,other){
     }
 }
 
-$SetDict.__mro__ = [$SetDict,_b_.object.$dict]
+$SetDict.__mro__ = [_b_.object.$dict]
 
 $SetDict.__ne__ = function(self,other){return !$SetDict.__eq__(self,other)}
 
@@ -543,7 +543,7 @@ $B.set_func_names($SetDict)
 
 var $FrozensetDict = {__class__:$B.$type,__name__:'frozenset'}
 
-$FrozensetDict.__mro__ = [$FrozensetDict,_b_.object.$dict]
+$FrozensetDict.__mro__ = [_b_.object.$dict]
 
 
 

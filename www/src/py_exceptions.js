@@ -84,7 +84,7 @@ $TracebackDict.__getattribute__ = function(self, attr){
     }
 }
 
-$TracebackDict.__mro__ = [$TracebackDict, _b_.object.$dict]
+$TracebackDict.__mro__ = [_b_.object.$dict]
 
 $TracebackDict.__str__ = function(self){return '<traceback object>'}
 
@@ -113,7 +113,7 @@ $FrameDict.__getattr__ = function(self, attr){
     }
 }
 
-$FrameDict.__mro__ = [$FrameDict, _b_.object.$dict]
+$FrameDict.__mro__ = [_b_.object.$dict]
 
 function to_dict(obj){
     var res = _b_.dict()
@@ -188,7 +188,7 @@ $BaseExceptionDict.__str__ = function(self){
     return _b_.str(self.args[0])
 }
 
-$BaseExceptionDict.__mro__ = [$BaseExceptionDict,_b_.object.$dict]
+$BaseExceptionDict.__mro__ = [_b_.object.$dict]
 
 $BaseExceptionDict.__new__ = function(cls){
     var err = _b_.BaseException()
@@ -204,7 +204,6 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
         if(name=='SyntaxError' || name=='IndentationError'){
             return 'File "'+self.args[1]+'", line '+self.args[2]+'\n    '+
                 self.args[4]
-            
         }
 
         var info = 'Traceback (most recent call last):'
@@ -349,7 +348,7 @@ $B.clear_exc = function(){
     $B.current_exception = null
 }
 
-function $make_exc(names,parent){
+function $make_exc(names, parent){
     // Creates the exception classes that inherit from parent
     // names is the list of exception names
     var _str=[], pos=0
@@ -371,7 +370,7 @@ function $make_exc(names,parent){
         _str[pos++]='var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}'
         _str[pos++]='$'+name+'Dict.__bases__ = [parent]'
         _str[pos++]='$'+name+'Dict.__module__ = "builtins"'
-        _str[pos++]='$'+name+'Dict.__mro__=[$'+name+'Dict].concat(parent.$dict.__mro__)'
+        _str[pos++]='$'+name+'Dict.__mro__=[_b_.'+parent.$dict.__name__+'.$dict].concat(parent.$dict.__mro__)'
         // class constructor
         _str[pos++]='_b_.'+name+'='+$exc
         _str[pos++]='_b_.'+name+'.__class__=$B.$factory'

@@ -354,7 +354,7 @@ $DictDict.__len__ = function(self) {
     return _count
 }
 
-$DictDict.__mro__ = [$DictDict,$ObjectDict]
+$DictDict.__mro__ = [$ObjectDict]
 
 $DictDict.__ne__ = function(self,other){return !$DictDict.__eq__(self,other)}
 
@@ -688,7 +688,7 @@ var mappingproxyDict = {
     __class__ : $B.$type,
     __name__ : "mappingproxy"
 }
-mappingproxyDict.__mro__ = [mappingproxyDict, _b_.object.$dict]
+mappingproxyDict.__mro__ = [_b_.object.$dict]
 
 mappingproxyDict.__setitem__ = function(){
     throw _b_.TypeError("'mappingproxy' object does not support item assignment")

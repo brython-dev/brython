@@ -76,7 +76,7 @@ var hashDict = {
     __class__: $B.$type,
     __name__: 'hash'
 }
-hashDict.__mro__ = [hashDict, _b_.object.$dict]
+hashDict.__mro__ = [_b_.object.$dict]
 
 hashDict.update = function(self, msg){
     self.hash.update(bytes2WordArray(msg))

@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-09-30 14:12:40.394110"
+__BRYTHON__.compiled_date="2016-09-30 19:17:46.595165"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4304,8 +4304,9 @@ var opsigns=['+','-','*','/','//','%','**','<<','>>','&','^','|']
 $ObjectDict.__delattr__=function(self,attr){_b_.getattr(self,attr)
 delete self[attr];
 return _b_.None}
-$ObjectDict.__dir__=function(self){var objects=[self],pos=1
-var mro=$B.get_class(self).__mro__
+$ObjectDict.__dir__=function(self){var objects=[self],pos=1,klass=self.__class__ ||$B.get_class(self)
+var mro=klass.__mro__
+if(mro[0]!==klass){mro.splice(0,0,klass)}
 for(var i=0,_len_i=mro.length;i < _len_i;i++){objects[pos++]=mro[i]}
 var res=[],pos=0
 for(var i=0,_len_i=objects.length;i < _len_i;i++){for(var attr in objects[i]){
@@ -4332,6 +4333,7 @@ if(attr==='__class__'){return klass.$factory}
 var res=obj[attr],args=[]
 if(res===undefined){
 var mro=klass.__mro__
+if(mro[0]!==klass){mro.splice(0,0,klass)}
 for(var i=0,_len_i=mro.length;i < _len_i;i++){if(mro[i].$methods){var method=mro[i].$methods[attr]
 if(method!==undefined){return method(obj)}}
 var v=mro[i][attr]
@@ -4360,6 +4362,7 @@ return res1}}
 return res}else{
 var _ga=obj['__getattr__']
 if(_ga===undefined){var mro=klass.__mro__
+if(mro[0]!==klass){mro.splice(0,0,klass)}
 if(mro===undefined){console.log('in getattr mro undefined for '+obj)}
 for(var i=0,_len_i=mro.length;i < _len_i;i++){var v=mro[i]['__getattr__']
 if(v!==undefined){_ga=v
@@ -4384,7 +4387,7 @@ return self.__hashvalue__=$B.$py_next_hash--;}
 $ObjectDict.__init__=function(){return _b_.None}
 $ObjectDict.__le__=$ObjectNI('__le__','<=')
 $ObjectDict.__lt__=$ObjectNI('__lt__','<')
-$ObjectDict.__mro__=[$ObjectDict]
+$ObjectDict.__mro__=[]
 $ObjectDict.__new__=function(cls){if(cls===undefined){throw _b_.TypeError('object.__new__(): not enough arguments')}
 return{__class__ : cls.$dict}}
 $ObjectDict.__ne__=function(self,other){return !_b_.getattr(self,'__eq__')(other)}
@@ -4425,19 +4428,20 @@ if(key=='metaclass'){metaclass=val}}
 var class_dict={__name__ : class_name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict}
 var items=$B.$dict_items(cl_dict);
 for(var i=0;i<items.length;i++){class_dict[items[i][0]]=items[i][1]}
-class_dict.__mro__=[class_dict].concat(make_mro(bases,cl_dict))
-var is_instanciable=true,non_abstract_methods={},abstract_methods={}
-for(var i=0;i<class_dict.__mro__.length;i++){var kdict=class_dict.__mro__[i]
+class_dict.__mro__=make_mro(bases,cl_dict)
+var is_instanciable=true,non_abstract_methods={},abstract_methods={},mro=class_dict.__mro__
+if(mro[0]!==class_dict){mro.splice(0,0,class_dict)}
+for(var i=0;i<mro.length;i++){var kdict=mro[i]
 for(var attr in kdict){if(non_abstract_methods[attr]){continue}
 var v=kdict[attr]
 if(typeof v=='function' && v.__class__!==$B.$factory){if(v.__isabstractmethod__===true){is_instanciable=false
 abstract_methods[attr]=true}else{non_abstract_methods[attr]=true}}}}
 var slots=[]
-for(var i=0;i<class_dict.__mro__.length;i++){var _slots=class_dict.__mro__[i].__slots__
+for(var i=0;i<mro.length;i++){var _slots=mro[i].__slots__
 if(_slots!==undefined){_slots=_b_.list(_slots)
 for(var j=0;j<_slots.length;j++){cl_dict.$slots=cl_dict.$slots ||{}
 cl_dict.$slots[_slots[j]]=class_dict.__mro__[i]}}}
-for(var i=1;i<class_dict.__mro__.length;i++){if(class_dict.__mro__[i].__class__ !==$B.$type){metaclass=class_dict.__mro__[i].__class__.$factory}}
+for(var i=1;i<mro.length;i++){if(mro[i].__class__ !==$B.$type){metaclass=mro[i].__class__.$factory}}
 class_dict.__class__=metaclass.$dict
 var meta_new=$B.$type.__getattribute__(metaclass.$dict,'__new__')
 if(meta_new.__func__===$B.$type.__new__){var factory=_b_.type.$dict.__new__(_b_.type,class_name,bases,cl_dict)}else{var factory=meta_new(metaclass,class_name,bases,cl_dict)}
@@ -4500,7 +4504,8 @@ if(bases[i]===_b_.str)bases[i]=$B.$StringSubclassFactory
 else if(bases[i]===_b_.list)bases[i]=$B.$ListSubclassFactory
 var bmro=[],pos=0
 if(bases[i].$dict===undefined ||
-bases[i].$dict.__mro__===undefined){throw _b_.TypeError('Object passed as base class is not a class')}else{var _tmp=bases[i].$dict.__mro__}
+bases[i].$dict.__mro__===undefined){throw _b_.TypeError('Object passed as base class is not a class')}else{var _tmp=bases[i].$dict.__mro__
+if(_tmp[0]!==bases[i].$dict){_tmp.splice(0,0,bases[i].$dict)}}
 for(var k=0;k<_tmp.length;k++){bmro[pos++]=_tmp[k]}
 seqs[pos1++]=bmro}
 if(bases.indexOf(_b_.object)==-1){bases=bases.concat(_b_.tuple([_b_.object]))}
@@ -4528,7 +4533,7 @@ return $B.$type.__new__(_b_.type,obj,bases,cl_dict)}
 _b_.type.__class__=$B.$factory
 $B.$type={$factory: _b_.type,__name__:'type'}
 $B.$type.__class__=$B.$type
-$B.$type.__mro__=[$B.$type,_b_.object.$dict]
+$B.$type.__mro__=[_b_.object.$dict]
 _b_.type.$dict=$B.$type
 $B.$type.__new__=function(cls,name,bases,cl_dict){
 var class_dict={__class__ : $B.$type,__name__ : name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict,$methods :{},$slots: cl_dict.$slots}
@@ -4538,8 +4543,8 @@ class_dict[name]=v
 if(typeof v=='function' 
 && v.__class__!==$B.$factory
 && v.__class__!==$B.$MethodDict){class_dict.$methods[name]=$B.make_method(name,class_dict,v,v)}}
-class_dict.__mro__=[class_dict].concat(make_mro(bases,cl_dict))
-class_dict.__class__=class_dict.__mro__[1].__class__
+class_dict.__mro__=make_mro(bases,cl_dict)
+class_dict.__class__=class_dict.__mro__[0].__class__
 var factory=$instance_creator(class_dict)
 factory.__class__=$B.$factory
 factory.$dict=class_dict
@@ -4548,7 +4553,7 @@ factory.__eq__=function(other){return other===factory.__class__}
 class_dict.$factory=factory
 return factory}
 $B.$factory={__class__:$B.$type,$factory:_b_.type,is_class:true}
-$B.$factory.__mro__=[$B.$factory,$B.$type,_b_.object.$dict]
+$B.$factory.__mro__=[$B.$type,_b_.object.$dict]
 _b_.type.__class__=$B.$factory
 _b_.object.$dict.__class__=$B.$type
 _b_.object.__class__=$B.$factory
@@ -4573,12 +4578,13 @@ var res=klass[attr],is_class=true
 if(res===undefined){
 var mro=klass.__mro__
 if(mro===undefined){console.log('attr '+attr+' mro undefined for class '+klass+' name '+klass.__name__,klass,klass.__class__)}
+if(mro[0]!==klass){mro.splice(0,0,klass)}
 for(var i=0;i<mro.length;i++){var v=mro[i][attr]
 if(v!==undefined){res=v
 break}}
 var cl_mro=klass.__class__.__mro__
+if(cl_mro[0]!==klass.__class__){cl_mro.splice(0,0,klass.__class__)}
 if(res===undefined){
-var cl_mro=klass.__class__.__mro__
 if(cl_mro!==undefined){for(var i=0;i<cl_mro.length;i++){var v=cl_mro[i][attr]
 if(v!==undefined){res=v
 break}}}}
@@ -4665,7 +4671,7 @@ function member_descriptor(klass,attr){return{__class__:member_descriptor.$dict,
 member_descriptor.__class__=$B.$factory
 member_descriptor.$dict={__class__: $B.$type,__name__: 'member_descriptor',$factory: member_descriptor,__str__: function(self){return "<member '"+self.attr+"' of '"+self.klass.__name__+
 "' objects>"}}
-member_descriptor.$dict.__mro__=[member_descriptor.$dict ,_b_.object.$dict]
+member_descriptor.$dict.__mro__=[_b_.object.$dict]
 function $MethodFactory(){}
 $MethodFactory.__class__=$B.$factory
 $B.$MethodDict={__class__:$B.$type,__name__:'method',$factory:$MethodFactory}
@@ -4679,7 +4685,7 @@ var infos=self.$infos.__func__.$infos
 if(infos && infos[attr]){if(attr=='__code__'){var res={__class__:$B.$CodeDict}
 for(var attr in infos.__code__){res[attr]=infos.__code__[attr]}
 return res}else{return infos[attr]}}else{return _b_.object.$dict.__getattribute__(self,attr)}}
-$B.$MethodDict.__mro__=[$B.$MethodDict,_b_.object.$dict]
+$B.$MethodDict.__mro__=[_b_.object.$dict]
 $B.$MethodDict.__repr__=$B.$MethodDict.__str__=function(self){var res='<bound method '+self.$infos.__class__.$dict.__name__+'.' 
 res +=self.$infos.__name__+' of '
 return res+_b_.str(self.$infos.__self__)+'>'}
@@ -4968,7 +4974,7 @@ try{var elt=f(i)
 if(_b_.getattr(elt,"__eq__")(item))return true}catch(err){if(err.__name__=='IndexError')return false
 throw err}}}}
 var $io={__class__:$B.$type,__name__:'io'}
-$io.__mro__=[$io,_b_.object.$dict]
+$io.__mro__=[_b_.object.$dict]
 $B.stderr={__class__:$io,write:function(data){console.log(data)},flush:function(){}}
 $B.stderr_buff='' 
 $B.stdout={__class__:$io,write: function(data){console.log(data)},flush:function(){}}
@@ -5025,7 +5031,7 @@ throw _b_.StopIteration("StopIteration")},__repr__:function(){return "<"+klass._
 res.__str__=res.toString=res.__repr__
 return res}
 $B.$iterator_class=function(name){var res={__class__:$B.$type,__name__:name,}
-res.__mro__=[res,_b_.object.$dict]
+res.__mro__=[_b_.object.$dict]
 function as_array(s){var _a=[],pos=0
 var _it=_b_.iter(s)
 while(1){try{
@@ -5050,7 +5056,7 @@ eval('res.'+_op+'='+_f.replace(new RegExp('__or__','g'),_op))}
 res.$factory={__class__:$B.$factory,$dict:res}
 return res}
 $B.$CodeDict={__class__:$B.$type,__name__:'code'}
-$B.$CodeDict.__mro__=[$B.$CodeDict,_b_.object.$dict]
+$B.$CodeDict.__mro__=[_b_.object.$dict]
 function _code(){}
 _code.__class__=$B.$factory
 _code.$dict=$B.$CodeDict
@@ -5310,10 +5316,10 @@ function classmethod(func){func.$type='classmethod'
 return func}
 classmethod.__class__=$B.$factory
 classmethod.$dict={__class__:$B.$type,__name__:'classmethod',$factory: classmethod}
-classmethod.$dict.__mro__=[classmethod.$dict,$ObjectDict]
+classmethod.$dict.__mro__=[$ObjectDict]
 $B.$CodeObjectDict={__class__:$B.$type,__name__:'code',__repr__:function(self){return '<code object '+self.name+', file '+self.filename+'>'},}
 $B.$CodeObjectDict.__str__=$B.$CodeObjectDict.__repr__
-$B.$CodeObjectDict.__mro__=[$B.$CodeObjectDict,$ObjectDict]
+$B.$CodeObjectDict.__mro__=[$ObjectDict]
 function compile(source,filename,mode){var $=$B.args('compile',6,{source:null,filename:null,mode:null,flags:null,dont_inherit:null,optimize:null},['source','filename','mode','flags','dont_inherit','optimize'],arguments,{flags:0,dont_inherit:false,optimize:-1},null,null)
 var module_name='$exec_' + $B.UUID()
 var local_name=module_name;
@@ -5330,6 +5336,7 @@ function delattr(obj,attr){
 var klass=$B.get_class(obj)
 var res=obj[attr]
 if(res===undefined){var mro=klass.__mro__
+if(mro[0]!==klass){mro.splice(0,0,klass)}
 for(var i=0;i<mro.length;i++){var res=mro[i][attr]
 if(res!==undefined){break}}}
 if(res!==undefined && res.__delete__!==undefined){res.__delete__(res,obj,attr)}else{getattr(obj,'__delattr__')(attr)}
@@ -5356,7 +5363,7 @@ return res}
 function divmod(x,y){var klass=x.__class__ ||$B.get_class(x)
 return _b_.tuple([getattr(klass,'__floordiv__')(x,y),getattr(klass,'__mod__')(x,y)])}
 var $EnumerateDict={__class__:$B.$type,__name__:'enumerate'}
-$EnumerateDict.__mro__=[$EnumerateDict,$ObjectDict]
+$EnumerateDict.__mro__=[$ObjectDict]
 function enumerate(){var $ns=$B.args("enumerate",2,{iterable:null,start:null},['iterable','start'],arguments,{start:0},null,null)
 var _iter=iter($ns["iterable"])
 var _start=$ns["start"]
@@ -5428,7 +5435,7 @@ function exec(src,globals,locals){return $eval(src,globals,locals,'exec')||_b_.N
 exec.$is_func=true
 var $FilterDict={__class__:$B.$type,__name__:'filter'}
 $FilterDict.__iter__=function(self){return self}
-$FilterDict.__repr__=$FilterDict.__str__=function(){return "<filter object>"},$FilterDict.__mro__=[$FilterDict,$ObjectDict]
+$FilterDict.__repr__=$FilterDict.__str__=function(){return "<filter object>"},$FilterDict.__mro__=[$ObjectDict]
 function filter(){if(arguments.length!=2){throw _b_.TypeError(
 "filter expected 2 arguments, got "+arguments.length)}
 var func=arguments[0],iterable=iter(arguments[1])
@@ -5480,8 +5487,9 @@ return $B.builtins_doc[builtin_names[i]]}}
 break
 case '__mro__':
 if(klass===$B.$factory){
-var res=[],pos=0
-for(var i=0;i<obj.$dict.__mro__.length;i++){res[pos++]=obj.$dict.__mro__[i].$factory}
+var res=[],pos=0,mro=obj.$dict.__mro__
+if(mro[0]!==obj.$dict){mro.splice(0,0,obj.$dict)}
+for(var i=0;i<mro.length;i++){res[pos++]=mro[i].$factory}
 return res}
 break
 case '__subclasses__':
@@ -5510,6 +5518,7 @@ var is_class=klass.is_class,mro,attr_func
 if(is_class){attr_func=$B.$type.__getattribute__
 if(obj.$dict===undefined){console.log('obj '+obj+' $dict undefined')}
 obj=obj.$dict}else{var mro=klass.__mro__
+if(mro[0]!==klass){mro.splice(0,0,klass)}
 if(mro===undefined){console.log('in getattr '+attr+' mro undefined for '+obj+' dir '+dir(obj)+' class '+obj.__class__)
 for(var _attr in obj){console.log('obj attr '+_attr+' : '+obj[_attr])}
 console.log('obj class '+dir(klass)+' str '+klass)}
@@ -5588,7 +5597,9 @@ klass=$B.get_class(obj)}
 if(klass===undefined){return false }
 if(arg.$dict===undefined){return false}
 if(klass==$B.$factory){klass=obj.$dict.__class__}
-for(var i=0;i<klass.__mro__.length;i++){var kl=klass.__mro__[i]
+var mro=klass.__mro__
+if(mro[0]!==klass){mro.splice(0,0,klass)}
+for(var i=0;i<mro.length;i++){var kl=mro[i]
 if(kl===arg.$dict){return true}
 else if(arg===_b_.str && 
 kl===$B.$StringSubclassFactory.$dict){return true}
@@ -5601,7 +5612,9 @@ function issubclass(klass,classinfo){if(arguments.length!==2){throw _b_.TypeErro
 if(!klass.__class__ ||klass.__class__!==$B.$factory){throw _b_.TypeError("issubclass() arg 1 must be a class")}
 if(isinstance(classinfo,_b_.tuple)){for(var i=0;i<classinfo.length;i++){if(issubclass(klass,classinfo[i]))return true}
 return false}
-if(classinfo.__class__.is_class){if(klass.$dict.__mro__.indexOf(classinfo.$dict)>-1){return true}}
+if(classinfo.__class__.is_class){var mro=klass.$dict.__mro__
+if(mro[0]!==klass.$dict){mro.splice(0,0,klass.$dict)}
+if(mro.indexOf(classinfo.$dict)>-1){return true}}
 var hook=getattr(classinfo,'__subclasscheck__',null)
 if(hook!==null){return hook(klass)}
 return false}
@@ -5630,7 +5643,7 @@ function locals(){
 var locals_obj=$B.last($B.frames_stack)[1]
 return $B.obj_dict(locals_obj)}
 var $MapDict={__class__:$B.$type,__name__:'map'}
-$MapDict.__mro__=[$MapDict,$ObjectDict]
+$MapDict.__mro__=[$ObjectDict]
 $MapDict.__iter__=function(self){return self}
 function map(){var func=getattr(arguments[0],'__call__')
 var iter_args=[],pos=0
@@ -5682,7 +5695,7 @@ throw _b_.TypeError("'"+$B.get_class(obj).__name__+
 function _NotImplemented(){return{__class__:_NotImplemented.$dict}}
 _NotImplemented.__class__=$B.$factory
 _NotImplemented.$dict={$factory: _NotImplemented,__class__: $B.$type,__name__: 'NotImplementedType'}
-_NotImplemented.$dict.__mro__=[_NotImplemented.$dict,$ObjectDict]
+_NotImplemented.$dict.__mro__=[$ObjectDict]
 var NotImplemented={__class__ : _NotImplemented.$dict,__str__: function(){return 'NotImplemented'}}
 function $not(obj){return !bool(obj)}
 function oct(x){return $builtin_base_convert_helper(x,8)}
@@ -5717,7 +5730,7 @@ return None}
 $print.__name__='print'
 $print.is_func=true
 var $PropertyDict={__class__ : $B.$type,__name__ : 'property',}
-$PropertyDict.__mro__=[$PropertyDict,$ObjectDict]
+$PropertyDict.__mro__=[$ObjectDict]
 $B.$PropertyDict=$PropertyDict
 function property(fget,fset,fdel,doc){var p={__class__ : $PropertyDict,__doc__ : doc ||"",$type:fget.$type,fget:fget,fset:fset,fdel:fdel,toString:function(){return '<property>'}}
 p.__get__=function(self,obj,objtype){if(obj===undefined)return self
@@ -5740,7 +5753,7 @@ var func=getattr(obj,'__repr__')
 if(func!==undefined){return func()}
 throw _b_.AttributeError("object has no attribute __repr__")}
 var $ReversedDict={__class__:$B.$type,__name__:'reversed'}
-$ReversedDict.__mro__=[$ReversedDict,$ObjectDict]
+$ReversedDict.__mro__=[$ObjectDict]
 $ReversedDict.__iter__=function(self){return self}
 $ReversedDict.__next__=function(self){self.$counter--
 if(self.$counter<0)throw _b_.StopIteration('')
@@ -5797,20 +5810,26 @@ if(obj.$dict.$methods && typeof value=='function'
 obj.$dict.$methods[attr]=$B.make_method(attr,obj.$dict,value,value)
 return None}else{obj.$dict[attr]=value;return None}}
 var res=obj[attr],klass=obj.__class__ ||$B.get_class(obj)
-if(res===undefined && klass){var mro=klass.__mro__,_len=mro.length
+if(res===undefined && klass){var mro=klass.__mro__
+if(mro[0]!==klass){mro.splice(0,0,klass)}
+var _len=mro.length
 for(var i=0;i<_len;i++){res=mro[i][attr]
 if(res!==undefined)break}}
 if(res!==undefined){
 if(res.__set__!==undefined){res.__set__(res,obj,value);return None}
 var rcls=res.__class__,__set1__
-if(rcls!==undefined){for(var i=0,_len=rcls.__mro__.length;i<_len;i++){__set1__=rcls.__mro__[i].__set__
+if(rcls!==undefined){var mro=rcls.__mro__
+if(mro[0]!==rcls){mro.splice(0,0,rcls)}
+for(var i=0,_len=mro.length;i<_len;i++){__set1__=mro[i].__set__
 if(__set1__){break}}}
 if(__set1__!==undefined){var __set__=getattr(res,'__set__',null)
 if(__set__ &&(typeof __set__=='function')){__set__.apply(res,[obj,value]);return None}}}
 if(klass && klass.$slots && klass.$slots[attr]===undefined){throw _b_.AttributeError("'"+klass.__name__+"' object has no attribute'"+
 attr+"'")}
 var _setattr=false
-if(klass!==undefined){for(var i=0,_len=klass.__mro__.length;i<_len;i++){_setattr=klass.__mro__[i].__setattr__
+if(klass!==undefined){var mro=klass.__mro__
+if(mro[0]!==klass){mro.splice(0,0,klass)}
+for(var i=0,_len=mro.length;i<_len;i++){_setattr=mro[i].__setattr__
 if(_setattr){break}}}
 if(!_setattr){obj[attr]=value}else{_setattr(obj,attr,value)}
 return None}
@@ -5820,7 +5839,7 @@ for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
 _b_.list.$dict.sort.apply(null,args)
 return _list}
 var $StaticmethodDict={__class__:$B.$type,__name__:'staticmethod'}
-$StaticmethodDict.__mro__=[$StaticmethodDict,$ObjectDict]
+$StaticmethodDict.__mro__=[$ObjectDict]
 function staticmethod(func){func.$type='staticmethod'
 return func}
 staticmethod.__class__=$B.$factory
@@ -5839,15 +5858,17 @@ var $SuperDict={__class__:$B.$type,__name__:'super'}
 $SuperDict.__getattribute__=function(self,attr){if($SuperDict[attr]!==undefined){
 return function(){return $SuperDict[attr](self)}}
 var mro=self.__thisclass__.$dict.__mro__,res
+if(mro[0]!==self.__thisclass__.$dict){mro.splice(0,0,self.__thisclass__.$dict)}
 for(var i=1;i<mro.length;i++){
 res=mro[i][attr]
 if(res!==undefined){
 if(res.__class__===$PropertyDict){return res.__get__(res,self.__self_class__)}
 if(self.__self_class__!==None){if(mro[i]===_b_.object.$dict){var klass=self.__self_class__.__class__
-if(klass!==$B.$type){var start=-1
-for(var j=0;j<klass.__mro__.length;j++){if(klass.__mro__[j]===self.__thisclass__.$dict){start=j+1
+if(klass!==$B.$type){var start=-1,mro=klass.__mro__
+if(mro[0]!==klass){mro.splice(0,0,klass)}
+for(var j=0;j<mro.length;j++){if(mro[j]===self.__thisclass__.$dict){start=j+1
 break}}
-if(start>-1){for(var j=start;j<klass.__mro__.length;j++){var res1=klass.__mro__[j][attr]
+if(start>-1){for(var j=start;j<mro.length;j++){var res1=mro[j][attr]
 if(res1!==undefined){res=res1;break}}}}}
 var _args=[self.__self_class__]
 if(attr=='__new__'){_args=[]}
@@ -5864,7 +5885,7 @@ method.__self__=self
 return method}
 return res}}
 throw _b_.AttributeError("object 'super' has no attribute '"+attr+"'")}
-$SuperDict.__mro__=[$SuperDict,$ObjectDict]
+$SuperDict.__mro__=[$ObjectDict]
 $SuperDict.__repr__=$SuperDict.__str__=function(self){var res="<super: <class '"+self.__thisclass__.$dict.__name__+"'"
 if(self.__self_class__!==undefined){res +=', <'+self.__self_class__.__class__.__name__+' object>'}
 return res+'>'}
@@ -5878,7 +5899,7 @@ $Reader.__enter__=function(self){return self}
 $Reader.__exit__=function(self){return false}
 $Reader.__iter__=function(self){return iter(self.$lines)}
 $Reader.__len__=function(self){return self.lines.length}
-$Reader.__mro__=[$Reader,$ObjectDict]
+$Reader.__mro__=[$ObjectDict]
 $Reader.close=function(self){self.closed=true}
 $Reader.read=function(self,nb){if(self.closed===true)throw _b_.ValueError('I/O operation on closed file')
 if(nb===undefined)return self.$content
@@ -5907,9 +5928,9 @@ $Reader.seekable=function(self){return true}
 $Reader.tell=function(self){return self.$counter}
 $Reader.writable=function(self){return false}
 var $BufferedReader={__class__:$B.$type,__name__:'_io.BufferedReader'}
-$BufferedReader.__mro__=[$BufferedReader,$Reader,$ObjectDict]
+$BufferedReader.__mro__=[$Reader,$ObjectDict]
 var $TextIOWrapper={__class__:$B.$type,__name__:'_io.TextIOWrapper'}
-$TextIOWrapper.__mro__=[$TextIOWrapper,$Reader,$ObjectDict]
+$TextIOWrapper.__mro__=[$Reader,$ObjectDict]
 function $url_open(){
 var $ns=$B.args('open',3,{file:null,mode:null,encoding:null},['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},'args','kw'),$res
 for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
@@ -5941,7 +5962,7 @@ var $zip_iterator=$B.$iterator_class('zip_iterator')
 $ZipDict.__iter__=function(self){
 return self.$iterator=self.$iterator ||
 $B.$iterator(self.items,$zip_iterator)}
-$ZipDict.__mro__=[$ZipDict,$ObjectDict]
+$ZipDict.__mro__=[$ObjectDict]
 function zip(){var res={__class__:$ZipDict,items:[]}
 if(arguments.length==0)return res
 var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
@@ -5964,7 +5985,7 @@ function no_set_attr(klass,attr){if(klass[attr]!==undefined){throw _b_.Attribute
 attr+"' is read-only")}else{throw _b_.AttributeError("'"+klass.__name__+
 "' object has no attribute '"+attr+"'")}}
 var $BoolDict=$B.$BoolDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'bool',$native:true}
-$BoolDict.__mro__=[$BoolDict,$ObjectDict]
+$BoolDict.__mro__=[$ObjectDict]
 bool.__class__=$B.$factory
 bool.$dict=$BoolDict
 $BoolDict.$factory=bool
@@ -5992,7 +6013,7 @@ $BoolDict.__sub__=function(self,other){if(self.valueOf())return 1-other;
 return -other;}
 $BoolDict.__xor__=function(self,other){return self.valueOf()!=other.valueOf()}
 var $EllipsisDict={__class__:$B.$type,__name__:'ellipsis'}
-$EllipsisDict.__mro__=[$EllipsisDict,$ObjectDict]
+$EllipsisDict.__mro__=[$ObjectDict]
 var Ellipsis={$dict: $EllipsisDict,__bool__ : function(){return True},__class__ : $EllipsisDict}
 $EllipsisDict.$factory=Ellipsis
 for(var $key in $B.$comps){
@@ -6004,7 +6025,7 @@ Ellipsis['__'+$B.$comps[$key]+'__']=(function(k){return function(other){throw _b
 $B.get_class(other).__name__)}})($key)}}
 for(var $func in Ellipsis){if(typeof Ellipsis[$func]==='function'){Ellipsis[$func].__str__=(function(f){return function(){return "<method-wrapper "+f+" of Ellipsis object>"}})($func)}}
 var $NoneDict={__class__:$B.$type,__name__:'NoneType'}
-$NoneDict.__mro__=[$NoneDict,$ObjectDict]
+$NoneDict.__mro__=[$ObjectDict]
 $NoneDict.__setattr__=function(self,attr){return no_set_attr($NoneDict,attr)}
 var None={__bool__ : function(){return False},__class__ : $NoneDict,__hash__ : function(){return 0},__repr__ : function(){return 'None'},__str__ : function(){return 'None'},toString : function(){return 'None'}}
 $NoneDict.$factory=function(){return None}
@@ -6020,10 +6041,10 @@ $NoneDict['__'+key+'__']=(function(op){return function(other){throw _b_.TypeErro
 $B.get_class(other).__name__+"()")}})($op)}}
 for(var $func in None){if(typeof None[$func]==='function'){None[$func].__str__=(function(f){return function(){return "<method-wrapper "+f+" of NoneType object>"}})($func)}}
 var $FunctionCodeDict={__class__:$B.$type,__name__:'function code'}
-$FunctionCodeDict.__mro__=[$FunctionCodeDict,$ObjectDict]
+$FunctionCodeDict.__mro__=[$ObjectDict]
 $FunctionCodeDict.$factory={__class__:$B.$factory,$dict:$FunctionCodeDict}
 var $FunctionGlobalsDict={__class:$B.$type,__name__:'function globals'}
-$FunctionGlobalsDict.__mro__=[$FunctionGlobalsDict,$ObjectDict]
+$FunctionGlobalsDict.__mro__=[$ObjectDict]
 $FunctionGlobalsDict.$factory={__class__:$B.$factory,$dict:$FunctionGlobalsDict}
 var $FunctionDict=$B.$FunctionDict={__class__:$B.$type,__code__:{__class__:$FunctionCodeDict,__name__:'function code'},__globals__:{__class__:$FunctionGlobalsDict,__name__:'function globals'},__name__:'function'}
 $FunctionDict.__getattribute__=function(self,attr){
@@ -6032,7 +6053,7 @@ for(var attr in self.$infos.__code__){res[attr]=self.$infos.__code__[attr]}
 return res}else if(attr=='__annotations__'){
 return $B.obj_dict(self.$infos[attr])}else{return self.$infos[attr]}}else{return _b_.object.$dict.__getattribute__(self,attr)}}
 $FunctionDict.__repr__=$FunctionDict.__str__=function(self){return '<function '+self.$infos.__name__+'>'}
-$FunctionDict.__mro__=[$FunctionDict,$ObjectDict]
+$FunctionDict.__mro__=[$ObjectDict]
 $FunctionDict.__setattr__=function(self,attr,value){if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
 else{self[attr]=value}}
 var $Function=function(){}
@@ -6121,7 +6142,7 @@ if(self.stack.length==1){return None}
 else{return traceback(self.stack.slice(0,self.stack.length-1))}
 default:
 return $TracebackDict[attr]}}
-$TracebackDict.__mro__=[$TracebackDict,_b_.object.$dict]
+$TracebackDict.__mro__=[_b_.object.$dict]
 $TracebackDict.__str__=function(self){return '<traceback object>'}
 function traceback(stack){return{__class__ : $TracebackDict,stack : stack}}
 traceback.__class__=$B.$factory
@@ -6130,7 +6151,7 @@ $TracebackDict.$factory=traceback
 var $FrameDict={__class__:$B.$type,__name__:'frame'}
 $FrameDict.__getattr__=function(self,attr){
 if(attr=='f_back'){if(self.$pos>0){return frame(self.$stack,self.$pos-1)}}}
-$FrameDict.__mro__=[$FrameDict,_b_.object.$dict]
+$FrameDict.__mro__=[_b_.object.$dict]
 function to_dict(obj){var res=_b_.dict()
 var setitem=_b_.dict.$dict.__setitem__
 for(var attr in obj){if(attr.charAt(0)=='$'){continue}
@@ -6164,7 +6185,7 @@ $BaseExceptionDict.__init__=function(self){var args=arguments[1]===undefined ?[]
 self.args=_b_.tuple(args)}
 $BaseExceptionDict.__repr__=function(self){return self.__class__.__name__+repr(self.args)}
 $BaseExceptionDict.__str__=function(self){return _b_.str(self.args[0])}
-$BaseExceptionDict.__mro__=[$BaseExceptionDict,_b_.object.$dict]
+$BaseExceptionDict.__mro__=[_b_.object.$dict]
 $BaseExceptionDict.__new__=function(cls){var err=_b_.BaseException()
 err.__name__=cls.$dict.__name__
 err.__class__=cls.$dict
@@ -6256,7 +6277,7 @@ $exc=$exc.replace('//placeholder//',code)
 _str[pos++]='var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}'
 _str[pos++]='$'+name+'Dict.__bases__ = [parent]'
 _str[pos++]='$'+name+'Dict.__module__ = "builtins"'
-_str[pos++]='$'+name+'Dict.__mro__=[$'+name+'Dict].concat(parent.$dict.__mro__)'
+_str[pos++]='$'+name+'Dict.__mro__=[_b_.'+parent.$dict.__name__+'.$dict].concat(parent.$dict.__mro__)'
 _str[pos++]='_b_.'+name+'='+$exc
 _str[pos++]='_b_.'+name+'.__class__=$B.$factory'
 _str[pos++]='$'+name+'Dict.$factory=_b_.'+name
@@ -6315,7 +6336,7 @@ return _b_.hash(_b_.tuple([len,self.start,self.step]))}
 var $RangeIterator=function(obj){return{__class__:$RangeIterator.$dict,obj: obj}}
 $RangeIterator.__class__=$B.$factory
 $RangeIterator.$dict={__class__: $B.$type,__name__: 'range_iterator',$factory: $RangeIterator,__iter__: function(self){return self},__next__: function(self){return _b_.next(self.obj)}}
-$RangeIterator.$dict.__mro__=[$RangeIterator.$dict,_b_.object.$dict]
+$RangeIterator.$dict.__mro__=[_b_.object.$dict]
 $RangeDict.__iter__=function(self){var res={__class__ : $RangeDict,start:self.start,stop:self.stop,step:self.step}
 if(self.$safe){res.$counter=self.start-self.step}else{res.$counter=$B.sub(self.start,self.step)}
 return $RangeIterator(res)}
@@ -6334,7 +6355,7 @@ if((self.step>0 && self.$counter >=self.stop)
 if(($B.gt(self.step,0)&& $B.ge(self.$counter,self.stop))
 ||($B.gt(0,self.step)&& $B.ge(self.stop,self.$counter))){throw _b_.StopIteration('')}}
 return self.$counter}
-$RangeDict.__mro__=[$RangeDict,_b_.object.$dict]
+$RangeDict.__mro__=[_b_.object.$dict]
 $RangeDict.__reversed__=function(self){var n=$B.sub($RangeDict.__len__(self),1)
 return range($B.add(self.start,$B.mul(n,self.step)),$B.sub(self.start,self.step),$B.mul(-1,self.step))}
 $RangeDict.__repr__=$RangeDict.__str__=function(self){var res='range('+_b_.str(self.start)+', '+_b_.str(self.stop)
@@ -6374,7 +6395,7 @@ range.$dict=$RangeDict
 $RangeDict.$factory=range
 range.$is_func=true
 var $SliceDict={__class__:$B.$type,__name__:'slice',$native:true,descriptors:{start:true,step:true,stop:true}}
-$SliceDict.__mro__=[$SliceDict,_b_.object.$dict]
+$SliceDict.__mro__=[_b_.object.$dict]
 $SliceDict.__repr__=$SliceDict.__str__=function(self){return 'slice('+_b_.str(self.start)+','+
 _b_.str(self.stop)+','+_b_.str(self.step)+')'}
 $SliceDict.__setattr__=function(self,attr,value){throw _b_.AttributeError('readonly attribute')}
@@ -6432,7 +6453,7 @@ for(var i=1,_len_i=arguments.length;i < _len_i;i++)args[pos++]=arguments[i]
 return _b_.list.$dict[m].apply(null,args)}})(method)}
 var $bytearray_iterator=$B.$iterator_class('bytearray_iterator')
 $BytearrayDict.__iter__=function(self){return $B.$iterator(self.source,$bytearray_iterator)}
-$BytearrayDict.__mro__=[$BytearrayDict,$ObjectDict]
+$BytearrayDict.__mro__=[$ObjectDict]
 $BytearrayDict.__repr__=$BytearrayDict.__str__=function(self){return 'bytearray('+$BytesDict.__repr__(self)+")"}
 $BytearrayDict.__setitem__=function(self,arg,value){if(isinstance(arg,_b_.int)){if(!isinstance(value,_b_.int)){throw _b_.TypeError('an integer is required')}else if(value>255){throw _b_.ValueError("byte must be in range(0, 256)")}
 var pos=arg
@@ -6511,7 +6532,7 @@ self.errors=errors}
 $BytesDict.__le__=function(self,other){return _b_.list.$dict.__le__(self.source,other.source)}
 $BytesDict.__len__=function(self){return self.source.length}
 $BytesDict.__lt__=function(self,other){return _b_.list.$dict.__lt__(self.source,other.source)}
-$BytesDict.__mro__=[$BytesDict,$ObjectDict]
+$BytesDict.__mro__=[$ObjectDict]
 $BytesDict.__mul__=function(){var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],arguments,{},null,null),other=$B.PyNumber_Index($.other),res=bytes()
 for(var i=0;i<other;i++){res.source=res.source.concat($.self.source)}
 return res}
@@ -6719,7 +6740,7 @@ _b_.bytearray=bytearray})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var $ObjectDict=_b_.object.$dict
 var $LocationDict={__class__:$B.$type,__name__:'Location'}
-$LocationDict.__mro__=[$LocationDict,$ObjectDict]
+$LocationDict.__mro__=[$ObjectDict]
 function $Location(){
 var obj={}
 for(var x in window.location){if(typeof window.location[x]==='function'){obj[x]=(function(f){return function(){return f.apply(window.location,arguments)}})(window.location[x])}else{obj[x]=window.location[x]}}
@@ -6738,7 +6759,7 @@ for(var i=1,_len_i=arguments.length;i < _len_i;i++){args.push(pyobj2jsobj(argume
 var factory=self.func.bind.apply(self.func,args)
 var res=new factory()
 return $B.$JS2Py(res)}
-$JSConstructorDict.__mro__=[$JSConstructorDict,$ObjectDict]
+$JSConstructorDict.__mro__=[$ObjectDict]
 function JSConstructor(obj){return{
 __class__:$JSConstructorDict,func:obj.js_func}}
 JSConstructor.__class__=$B.$factory
@@ -6816,6 +6837,7 @@ return $B.$JS2Py(js_attr)}}else if(self.js===window && attr==='$$location'){
 return $Location()}
 var res
 var mro=self.__class__.__mro__
+if(mro[0]!==self.__class__){mro.splice(0,0,self.__class__)}
 for(var i=0,_len_i=mro.length;i < _len_i;i++){var v=mro[i][attr]
 if(v!==undefined){res=v
 break}}
@@ -6847,7 +6869,7 @@ return _b_.dict.$dict.__iter__(_dict)}
 $JSObjectDict.__len__=function(self){if(typeof self.js.length=='number'){return self.js.length}
 try{return getattr(self.js,'__len__')()}
 catch(err){throw _b_.AttributeError(self.js+' has no attribute __len__')}}
-$JSObjectDict.__mro__=[$JSObjectDict,$ObjectDict]
+$JSObjectDict.__mro__=[$ObjectDict]
 $JSObjectDict.__repr__=function(self){if(self.js instanceof Date){return self.js.toString()}
 return "<JSObject wraps "+self.js+">"}
 $JSObjectDict.__setattr__=function(self,attr,value){if(isinstance(value,JSObject)){self.js[attr]=value.js}
@@ -6894,7 +6916,7 @@ for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]})(__BRYTHON__
 ;(function($B){var _b_=$B.builtins
 $B.$ModuleDict={__class__ : $B.$type,__name__ : 'module'}
 $B.$ModuleDict.__repr__=$B.$ModuleDict.__str__=function(self){return '<module '+self.__name__+'>'}
-$B.$ModuleDict.__mro__=[$B.$ModuleDict,_b_.object.$dict]
+$B.$ModuleDict.__mro__=[_b_.object.$dict]
 $B.$ModuleDict.__setattr__=function(self,attr,value){if(self.__name__=='__builtins__'){
 $B.builtins[attr]=value}else{self[attr]=value}}
 function module(name,doc,package){return{__class__:$B.$ModuleDict,__name__:name,__doc__:doc||_b_.None,__package__:package||_b_.None}}
@@ -6903,7 +6925,7 @@ module.$dict=$B.$ModuleDict
 $B.$ModuleDict.$factory=module
 var loader=function(){}
 var Loader={__class__:$B.$type,__name__ : 'Loader'}
-Loader.__mro__=[Loader,_b_.object.$dict]
+Loader.__mro__=[_b_.object.$dict]
 Loader.$factory=loader
 loader.$dict=Loader
 loader.__class__=$B.$factory
@@ -7058,7 +7080,7 @@ return new_spec({name : fullname,loader: cls,
 origin : is_builtin? 'built-in' : 'py_VFS',
 submodule_search_locations: is_package?[]: _b_.None,loader_state:{stored: stored},
 cached: _b_.None,parent: is_package? fullname : parent_package(fullname),has_location: _b_.False});}}
-finder_VFS.$dict.__mro__=[finder_VFS.$dict,_b_.object.$dict]
+finder_VFS.$dict.__mro__=[_b_.object.$dict]
 finder_VFS.$dict.create_module.$type='classmethod'
 finder_VFS.$dict.exec_module.$type='classmethod'
 finder_VFS.$dict.find_module.$type='classmethod'
@@ -7093,7 +7115,7 @@ _b_.getattr(find_spec,'__call__')
 var spec=fs_func(fullname,prev_module,blocking);
 if(!is_none(spec)){return spec;}
 return _b_.None;}}
-finder_compiled.$dict.__mro__=[finder_compiled.$dict,_b_.object.$dict]
+finder_compiled.$dict.__mro__=[_b_.object.$dict]
 finder_compiled.$dict.create_module.$type='classmethod'
 finder_compiled.$dict.exec_module.$type='classmethod'
 finder_compiled.$dict.find_module.$type='classmethod'
@@ -7127,7 +7149,7 @@ cached: _b_.None,parent: is_pkg? fullname :
 parent_package(fullname),has_location: _b_.True});
 return res}}
 return _b_.None;}}
-finder_stdlib_static.$dict.__mro__=[finder_stdlib_static.$dict,_b_.object.$dict]
+finder_stdlib_static.$dict.__mro__=[_b_.object.$dict]
 finder_stdlib_static.$dict.create_module.$type='classmethod'
 finder_stdlib_static.$dict.exec_module.$type='classmethod'
 finder_stdlib_static.$dict.find_module.$type='classmethod'
@@ -7161,7 +7183,7 @@ _b_.getattr(find_spec,'__call__')
 var spec=fs_func(fullname,prev_module,blocking);
 if(!is_none(spec)){return spec;}}
 return _b_.None;}}
-finder_path.$dict.__mro__=[finder_path.$dict,_b_.object.$dict]
+finder_path.$dict.__mro__=[_b_.object.$dict]
 finder_path.$dict.create_module.$type='classmethod'
 finder_path.$dict.exec_module.$type='classmethod'
 finder_path.$dict.find_module.$type='classmethod'
@@ -7191,7 +7213,7 @@ origin : self.path + '#' + fullname,
 submodule_search_locations: is_package?[self.path]:
 _b_.None,loader_state:{stored: stored},
 cached: _b_.None,parent: is_package? fullname : parent_package(fullname),has_location: _b_.True});},invalidate_caches: function(self){self.vfs=undefined;}}
-vfs_hook.$dict.__mro__=[vfs_hook.$dict,_b_.object.$dict]
+vfs_hook.$dict.__mro__=[_b_.object.$dict]
 function url_hook(path_entry,hint){return{__class__: url_hook.$dict,path_entry:path_entry,hint:hint }}
 url_hook.__class__=$B.$factory
 url_hook.$dict={$factory: url_hook,__class__: $B.$type,__name__ : 'UrlPathFinder',__repr__: function(self){return '<UrlPathFinder' +(self.hint? " for '" + self.hint + "'":
@@ -7220,7 +7242,7 @@ _b_.None,loader_state: loader_data,
 cached: _b_.None,parent: loader_data.is_package? fullname :
 parent_package(fullname),has_location: _b_.True});}
 return _b_.None;},invalidate_caches : function(self){}}
-url_hook.$dict.__mro__=[url_hook.$dict,_b_.object.$dict]
+url_hook.$dict.__mro__=[_b_.object.$dict]
 function precompiled_hook(path_entry,hint){console.log('precompiled hook',path_entry,hint)
 return{__class__: precompiled_hook.$dict,path_entry:path_entry,hint:hint }}
 precompiled_hook.__class__=$B.$factory
@@ -7245,7 +7267,7 @@ _b_.None,loader_state: loader_data,
 cached: _b_.None,parent: loader_data.is_package? fullname :
 parent_package(fullname),has_location: _b_.True});}
 return _b_.None;},invalidate_caches : function(self){}}
-precompiled_hook.$dict.__mro__=[precompiled_hook.$dict,_b_.object.$dict]
+precompiled_hook.$dict.__mro__=[_b_.object.$dict]
 $B.$path_hooks=[precompiled_hook,vfs_hook,url_hook];
 $B.path_importer_cache={};
 var _sys_paths=[[$B.script_dir + '/','py'],[$B.brython_path + 'Lib/','py'],[$B.brython_path + 'Lib/site-packages/','py'],[$B.brython_path + 'libs/','js']];
@@ -7530,7 +7552,7 @@ if(other.valueOf())bool_value=1;
 return new Number((self%bool_value+bool_value)%bool_value)}
 if(hasattr(other,'__rmod__'))return getattr(other,'__rmod__')(self)
 $err('%',other)}
-$FloatDict.__mro__=[$FloatDict,$ObjectDict]
+$FloatDict.__mro__=[$ObjectDict]
 $FloatDict.__mul__=function(self,other){if(isinstance(other,_b_.int)){if(other.__class__==$B.LongInt.$dict){return new Number(self*parseFloat(other.value))}
 return new Number(self*other)}
 if(isinstance(other,float))return new Number(self*other)
@@ -7769,7 +7791,7 @@ if(other==0){throw _b_.ZeroDivisionError(
 return(self%other+other)%other}
 if(hasattr(other,'__rmod__'))return getattr(other,'__rmod__')(self)
 $err('%',other)}
-$IntDict.__mro__=[$IntDict,$ObjectDict]
+$IntDict.__mro__=[$ObjectDict]
 $IntDict.__mul__=function(self,other){var val=self.valueOf()
 if(typeof other==="string"){return other.repeat(val)}
 if(isinstance(other,int)){var res=self*other
@@ -8129,7 +8151,7 @@ if(shift==0){break}}else{shift=sub_pos(shift.value,'1')
 if(shift.value=='0'){break}}}
 return intOrLong({__class__:$LongIntDict,value:res,pos:self.pos})}
 $LongIntDict.__mod__=function(self,other){return intOrLong($LongIntDict.__divmod__(self,other)[1])}
-$LongIntDict.__mro__=[$LongIntDict,_b_.int.$dict,_b_.object.$dict]
+$LongIntDict.__mro__=[_b_.int.$dict,_b_.object.$dict]
 $LongIntDict.__mul__=function(self,other){switch(self){case Number.NEGATIVE_INFINITY:
 case Number.POSITIVE_INFINITY:
 var eq=_b_.getattr(other,'__eq__')
@@ -8297,7 +8319,7 @@ return self.imag*1000003+self.real}
 $ComplexDict.__init__=function(self,real,imag){self.toString=function(){return '('+real+'+'+imag+'j)'}}
 $ComplexDict.__invert__=function(self){return ~self}
 $ComplexDict.__mod__=function(self,other){throw _b_.TypeError("TypeError: can't mod complex numbers.")}
-$ComplexDict.__mro__=[$ComplexDict,$ObjectDict]
+$ComplexDict.__mro__=[$ObjectDict]
 $ComplexDict.__mul__=function(self,other){if(isinstance(other,complex))
 return complex(self.real*other.real-self.imag*other.imag,self.imag*other.real + self.real*other.imag)
 if(isinstance(other,_b_.int))
@@ -8487,7 +8509,7 @@ $ListDict.__iter__=function(self){return $B.$iterator(self,$list_iterator)}
 $ListDict.__le__=function(self,other){return !$ListDict.__gt__(self,other)}
 $ListDict.__len__=function(self){return self.length}
 $ListDict.__lt__=function(self,other){return !$ListDict.__ge__(self,other)}
-$ListDict.__mro__=[$ListDict,$ObjectDict]
+$ListDict.__mro__=[$ObjectDict]
 $ListDict.__mul__=function(self,other){if(isinstance(other,_b_.int)){
 var res=[],$temp=self.slice(),len=$temp.length
 for(var i=0;i<other;i++){for(var j=0;j<len;j++){res.push($temp[j])}}
@@ -8651,7 +8673,7 @@ if(arguments.length>0){var args=[arguments[0].$t]
 var pos=1
 for(var i=1,_len_i=arguments.length;i < _len_i;i++){args[pos++]=arguments[i]}}
 return $ListDict[attr].apply(null,args)}})($attr)}}
-$ListSubclassDict.__mro__=[$ListSubclassDict,$ObjectDict]
+$ListSubclassDict.__mro__=[$ObjectDict]
 $B.$ListSubclassFactory={__class__:$B.$factory,$dict:$ListSubclassDict}
 function $tuple(arg){return arg}
 var $TupleDict={__class__:$B.$type,__name__:'tuple',$native:true}
@@ -8688,7 +8710,7 @@ var x=0x345678
 for(var i=0,_len_i=self.length;i < _len_i;i++){var y=_b_.hash(self[i]);
 x=(1000003 * x)^ y & 0xFFFFFFFF;}
 return x}
-$TupleDict.__mro__=[$TupleDict,$ObjectDict]
+$TupleDict.__mro__=[$ObjectDict]
 $TupleDict.__name__='tuple'
 $B.set_func_names($TupleDict)
 _b_.list=list
@@ -8957,7 +8979,7 @@ throw _b_.ValueError("incomplete format")}
 pos=newpos + 1}while(pos < length)
 if(argpos!==null){if(args.length>argpos){throw _b_.TypeError('not enough arguments for format string')}else if(args.length<argpos){throw _b_.TypeError('not all arguments converted during string formatting')}}else if(nbph==0){throw _b_.TypeError('not all arguments converted during string formatting')}
 return ret}
-$StringDict.__mro__=[$StringDict,$ObjectDict]
+$StringDict.__mro__=[$ObjectDict]
 $StringDict.__mul__=function(self,other){var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],arguments,{},null,null)
 if(!isinstance(other,_b_.int)){throw _b_.TypeError(
 "Can't multiply sequence by non-int of type '"+
@@ -9338,7 +9360,7 @@ for(var $attr in $StringDict){if(typeof $StringDict[$attr]=='function'){$StringS
 if(arguments.length>0){var args=[arguments[0].valueOf()],pos=1
 for(var i=1,_len_i=arguments.length;i < _len_i;i++){args[pos++]=arguments[i]}}
 return $StringDict[attr].apply(null,args)}})($attr)}}
-$StringSubclassDict.__mro__=[$StringSubclassDict,$ObjectDict]
+$StringSubclassDict.__mro__=[$ObjectDict]
 $B.$StringSubclassFactory={__class__:$B.$factory,$dict:$StringSubclassDict}
 _b_.str=str
 $B.parse_format_spec=function(spec){if(spec==''){this.empty=true}
@@ -9548,7 +9570,7 @@ for(var k in self.$numeric_dict)_count++
 for(var k in self.$string_dict)_count++
 for(var k in self.$object_dict)_count+=self.$object_dict[k].length
 return _count}
-$DictDict.__mro__=[$DictDict,$ObjectDict]
+$DictDict.__mro__=[$ObjectDict]
 $DictDict.__ne__=function(self,other){return !$DictDict.__eq__(self,other)}
 $DictDict.__next__=function(self){if(self.$iter==null){self.$iter=new $item_generator(self)}
 try{
@@ -9699,7 +9721,7 @@ $B.$dict_items=function(d){return new $item_generator(d).as_list()}
 $B.$copy_dict=$copy_dict 
 $B.$dict_get_copy=$DictDict.copy 
 var mappingproxyDict={__class__ : $B.$type,__name__ : "mappingproxy"}
-mappingproxyDict.__mro__=[mappingproxyDict,_b_.object.$dict]
+mappingproxyDict.__mro__=[_b_.object.$dict]
 mappingproxyDict.__setitem__=function(){throw _b_.TypeError("'mappingproxy' object does not support item assignment")}
 function mappingproxy(obj){var res=obj_dict(obj)
 res.__class__=mappingproxyDict
@@ -9773,7 +9795,7 @@ return true}else{return _b_.object.$dict.__le__(self,other)}}
 $SetDict.__len__=function(self){return self.$items.length}
 $SetDict.__lt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return($SetDict.__le__(self,other)&&
 $SetDict.__len__(self)<_b_.getattr(other,'__len__')())}else{return _b_.object.$dict['__lt__'](self,other)}}
-$SetDict.__mro__=[$SetDict,_b_.object.$dict]
+$SetDict.__mro__=[_b_.object.$dict]
 $SetDict.__ne__=function(self,other){return !$SetDict.__eq__(self,other)}
 $SetDict.__or__=function(self,other,accept_iter){
 var res=clone(self)
@@ -9923,7 +9945,7 @@ $SetDict.$factory=set
 $SetDict.__new__=$B.$__new__(set)
 $B.set_func_names($SetDict)
 var $FrozensetDict={__class__:$B.$type,__name__:'frozenset'}
-$FrozensetDict.__mro__=[$FrozensetDict,_b_.object.$dict]
+$FrozensetDict.__mro__=[_b_.object.$dict]
 for(var attr in $SetDict){switch(attr){case 'add':
 case 'clear':
 case 'discard':
@@ -10014,7 +10036,7 @@ for(var i=0;i<$DOMEventAttrs_IE.length;i++){if(obj[$DOMEventAttrs_IE[i]]===undef
 return true}
 var $NodeTypes={1:"ELEMENT",2:"ATTRIBUTE",3:"TEXT",4:"CDATA_SECTION",5:"ENTITY_REFERENCE",6:"ENTITY",7:"PROCESSING_INSTRUCTION",8:"COMMENT",9:"DOCUMENT",10:"DOCUMENT_TYPE",11:"DOCUMENT_FRAGMENT",12:"NOTATION"}
 var $DOMEventDict={__class__:$B.$type,__name__:'DOMEvent'}
-$DOMEventDict.__mro__=[$DOMEventDict,$ObjectDict]
+$DOMEventDict.__mro__=[$ObjectDict]
 $DOMEventDict.__getattribute__=function(self,attr){switch(attr){case 'x':
 return $mouseCoords(self).x
 case 'y':
@@ -10047,7 +10069,7 @@ $B.DOMEvent.$dict=$DOMEventDict
 $DOMEventDict.$factory=$B.DOMEvent
 var $ClipboardDict={__class__:$B.$type,__name__:'Clipboard'}
 $ClipboardDict.__getitem__=function(self,name){return self.data.getData(name)}
-$ClipboardDict.__mro__=[$ClipboardDict,$ObjectDict]
+$ClipboardDict.__mro__=[$ObjectDict]
 $ClipboardDict.__setitem__=function(self,name,value){self.data.setData(name,value)}
 function $Clipboard(data){
 return{
@@ -10087,7 +10109,7 @@ var $OptionsDict={__class__:$B.$type,__name__:'Options'}
 $OptionsDict.__delitem__=function(self,arg){self.parent.options.remove(arg.elt)}
 $OptionsDict.__getitem__=function(self,key){return DOMNode(self.parent.options[key])}
 $OptionsDict.__len__=function(self){return self.parent.options.length}
-$OptionsDict.__mro__=[$OptionsDict,$ObjectDict]
+$OptionsDict.__mro__=[$ObjectDict]
 $OptionsDict.__setattr__=function(self,attr,value){self.parent.options[attr]=value}
 $OptionsDict.__setitem__=function(self,attr,value){self.parent.options[attr]=$B.$JS2Py(value)}
 $OptionsDict.__str__=function(self){return "<object Options wraps "+self.parent.options+">"}
@@ -10098,7 +10120,7 @@ $OptionsDict.item=function(self,index){return self.parent.options.item(index)}
 $OptionsDict.namedItem=function(self,name){return self.parent.options.namedItem(name)}
 $OptionsDict.remove=function(self,arg){self.parent.options.remove(arg.elt)}
 var $StyleDict={__class__:$B.$type,__name__:'CSSProperty'}
-$StyleDict.__mro__=[$StyleDict,$ObjectDict]
+$StyleDict.__mro__=[$ObjectDict]
 $StyleDict.__getattr__=function(self,attr){return $ObjectDict.__getattribute__(self.js,attr)}
 $StyleDict.__setattr__=function(self,attr,value){if(attr.toLowerCase()==='float'){self.js.cssFloat=value
 self.js.styleFloat=value}else{switch(attr){case 'top':
@@ -10127,7 +10149,7 @@ DOMNodeDict={__class__ : $B.$type,__name__ : 'DOMNode'}
 DOMNode.__class__=$B.$factory
 DOMNode.$dict=DOMNodeDict 
 DOMNodeDict.$factory=DOMNode
-DOMNodeDict.__mro__=[DOMNodeDict,_b_.object.$dict]
+DOMNodeDict.__mro__=[_b_.object.$dict]
 DOMNodeDict.__add__=function(self,other){
 var res=$TagSum()
 res.children=[self],pos=1
@@ -10473,7 +10495,7 @@ if(result.length==1)return result[0]
 return result}
 var $QueryDict_iterator=$B.$iterator_class('query string iterator')
 $QueryDict.__iter__=function(self){return $B.$iterator(self._keys,$QueryDict_iterator)}
-$QueryDict.__mro__=[$QueryDict,$ObjectDict]
+$QueryDict.__mro__=[$ObjectDict]
 $QueryDict.getfirst=function(self,key,_default){
 var result=self._values[key]
 if(result===undefined){if(_default===undefined)return None
@@ -10501,7 +10523,7 @@ var $TagSumDict={__class__ : $B.$type,__name__:'TagSum'}
 $TagSumDict.appendChild=function(self,child){self.children.push(child)}
 $TagSumDict.__add__=function(self,other){if($B.get_class(other)===$TagSumDict){self.children=self.children.concat(other.children)}else if(isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.dict,_b_.set,_b_.list])){self.children=self.children.concat(DOMNode(document.createTextNode(other)))}else{self.children.push(other)}
 return self}
-$TagSumDict.__mro__=[$TagSumDict,$ObjectDict]
+$TagSumDict.__mro__=[$ObjectDict]
 $TagSumDict.__radd__=function(self,other){var res=$TagSum()
 res.children=self.children.concat(DOMNode(document.createTextNode(other)))
 return res}
@@ -10736,7 +10758,7 @@ if(exit_node===self.func_root){break}}
 var src=root.children[1].src(),next_src=src.substr(src.search('function'))
 return next_src}
 var $gen_it={__class__: $B.$type,__name__: "generator"}
-$gen_it.__mro__=[$gen_it,_b_.object.$dict]
+$gen_it.__mro__=[_b_.object.$dict]
 $gen_it.__enter__=function(self){console.log("generator.__enter__ called")}
 $gen_it.__exit__=function(self){console.log("generator.__exit__ called")}
 $gen_it.__iter__=function(self){return self}
@@ -10820,7 +10842,7 @@ eval(js+'",function(){'+value+'})')}else if(arg.toLowerCase()=="style"){$B.DOMNo
 if(value!==false){
 try{arg=arg.toLowerCase().replace('_','-')
 self.elt.setAttribute(arg,value)}catch(err){throw _b_.ValueError("can't set attribute "+arg)}}}}}
-dict.__mro__=[dict,$B.DOMNodeDict,$B.builtins.object.$dict]
+dict.__mro__=[$B.DOMNodeDict,$B.builtins.object.$dict]
 dict.__new__=function(cls){
 var res=$B.DOMNode(document.createElement(tagName))
 res.__class__=cls.$dict

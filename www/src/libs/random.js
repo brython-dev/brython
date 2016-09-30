@@ -941,7 +941,7 @@ Random.$dict = {
     __init__: function(self){self.$r = _Random()},
     __getattribute__: function(self, attr){return self.$r[attr]}
 }
-Random.$dict.__mro__ = [Random.$dict, $B.builtins.object.$dict]
+Random.$dict.__mro__ = [$B.builtins.object.$dict]
 
 var $module = _Random()
 
@@ -958,7 +958,7 @@ $module.SystemRandom = function(){
             throw $B.builtins.NotImplementedError()
         }
     }
-    f.$dict.__mro__ = [f.$dict, $B.builtins.object.$dict]
+    f.$dict.__mro__ = [$B.builtins.object.$dict]
     return f()
 }
 

@@ -650,7 +650,7 @@ $B.$is_member = function(item,_set){
 // default standard output and error
 // can be reset by sys.stdout or sys.stderr
 var $io = {__class__:$B.$type,__name__:'io'}
-$io.__mro__ = [$io,_b_.object.$dict]
+$io.__mro__ = [_b_.object.$dict]
 
 $B.stderr = {
     __class__:$io,
@@ -803,7 +803,7 @@ $B.$iterator_class = function(name){
         __name__:name,
     }
 
-    res.__mro__ = [res,_b_.object.$dict]
+    res.__mro__ = [_b_.object.$dict]
 
     function as_array(s) {
        var _a=[], pos=0
@@ -867,7 +867,7 @@ $B.$iterator_class = function(name){
 
 // class dict of functions attribute __code__
 $B.$CodeDict = {__class__:$B.$type,__name__:'code'}
-$B.$CodeDict.__mro__ = [$B.$CodeDict,_b_.object.$dict]
+$B.$CodeDict.__mro__ = [_b_.object.$dict]
 
 function _code(){}
 _code.__class__ = $B.$factory

@@ -124,7 +124,7 @@ var $NodeTypes = {1:"ELEMENT",
 
 var $DOMEventDict = {__class__:$B.$type,__name__:'DOMEvent'}
 
-$DOMEventDict.__mro__ = [$DOMEventDict,$ObjectDict]
+$DOMEventDict.__mro__ = [$ObjectDict]
 
 $DOMEventDict.__getattribute__ = function(self,attr){
     switch(attr) {
@@ -180,7 +180,7 @@ var $ClipboardDict = {__class__:$B.$type,__name__:'Clipboard'}
 
 $ClipboardDict.__getitem__=function(self,name){return self.data.getData(name)}
 
-$ClipboardDict.__mro__ = [$ClipboardDict,$ObjectDict]
+$ClipboardDict.__mro__ = [$ObjectDict]
 
 $ClipboardDict.__setitem__=function(self,name,value){self.data.setData(name,value)}
 
@@ -269,7 +269,7 @@ $OptionsDict.__getitem__ = function(self,key){
     
 $OptionsDict.__len__ = function(self) {return self.parent.options.length}
 
-$OptionsDict.__mro__ = [$OptionsDict,$ObjectDict]
+$OptionsDict.__mro__ = [$ObjectDict]
 
 $OptionsDict.__setattr__ = function(self,attr,value){
     self.parent.options[attr]=value
@@ -306,7 +306,7 @@ $OptionsDict.remove = function(self,arg){self.parent.options.remove(arg.elt)}
     
 var $StyleDict = {__class__:$B.$type,__name__:'CSSProperty'}
 
-$StyleDict.__mro__ = [$StyleDict,$ObjectDict]
+$StyleDict.__mro__ = [$ObjectDict]
 
 $StyleDict.__getattr__ = function(self,attr){
     return $ObjectDict.__getattribute__(self.js,attr)
@@ -363,7 +363,7 @@ DOMNode.__class__ = $B.$factory
 DOMNode.$dict = DOMNodeDict // for isinstance
 DOMNodeDict.$factory = DOMNode
 
-DOMNodeDict.__mro__ = [DOMNodeDict,_b_.object.$dict]
+DOMNodeDict.__mro__ = [_b_.object.$dict]
 
 
 DOMNodeDict.__add__ = function(self,other){
@@ -1179,7 +1179,7 @@ $QueryDict.__iter__ = function(self){
     return $B.$iterator(self._keys,$QueryDict_iterator)
 }
 
-$QueryDict.__mro__ = [$QueryDict,$ObjectDict]
+$QueryDict.__mro__ = [$ObjectDict]
 
 $QueryDict.getfirst = function(self,key,_default){
     // returns the first value associated with key
@@ -1247,7 +1247,7 @@ $TagSumDict.__add__ = function(self,other){
     return self
 }
 
-$TagSumDict.__mro__ = [$TagSumDict,$ObjectDict]
+$TagSumDict.__mro__ = [$ObjectDict]
 
 $TagSumDict.__radd__ = function(self,other){
     var res = $TagSum()

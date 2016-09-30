@@ -70,8 +70,11 @@ $ObjectDict.__delattr__ = function(self,attr){
 }
 
 $ObjectDict.__dir__ = function(self) {
-    var objects = [self], pos=1
-    var mro = $B.get_class(self).__mro__
+    var objects = [self], 
+        pos=1,
+        klass = self.__class__ || $B.get_class(self)
+    var mro = klass.__mro__
+    if(mro[0]!==klass){mro.splice(0, 0, klass)}
     for (var i=0, _len_i = mro.length; i < _len_i; i++) {
         objects[pos++]=mro[i]
     }
@@ -131,6 +134,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
     if(res===undefined){
         // search in classes hierarchy, following method resolution order
         var mro = klass.__mro__
+        if(mro[0]!==klass){mro.splice(0, 0, klass)}
         for(var i=0, _len_i = mro.length; i < _len_i;i++){
             if(mro[i].$methods){
                 var method = mro[i].$methods[attr]
@@ -246,6 +250,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         var _ga = obj['__getattr__']
         if(_ga===undefined){
             var mro = klass.__mro__
+            if(mro[0]!==klass){mro.splice(0, 0, klass)}
             if(mro===undefined){console.log('in getattr mro undefined for '+obj)}
             for(var i=0, _len_i = mro.length; i < _len_i;i++){
                 var v=mro[i]['__getattr__']
@@ -299,7 +304,7 @@ $ObjectDict.__le__ = $ObjectNI('__le__','<=')
 
 $ObjectDict.__lt__ = $ObjectNI('__lt__','<')
 
-$ObjectDict.__mro__ = [$ObjectDict]
+$ObjectDict.__mro__ = []
 
 $ObjectDict.__new__ = function(cls){
     if(cls===undefined){throw _b_.TypeError('object.__new__(): not enough arguments')}

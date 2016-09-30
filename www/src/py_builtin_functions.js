@@ -127,7 +127,7 @@ classmethod.$dict = {__class__:$B.$type,
     __name__:'classmethod',
     $factory: classmethod
 }    
-classmethod.$dict.__mro__ = [classmethod.$dict, $ObjectDict]
+classmethod.$dict.__mro__ = [$ObjectDict]
 
 //compile() (built in function)
 $B.$CodeObjectDict = {
@@ -136,7 +136,7 @@ $B.$CodeObjectDict = {
     __repr__:function(self){return '<code object '+self.name+', file '+self.filename+'>'},
 }
 $B.$CodeObjectDict.__str__ = $B.$CodeObjectDict.__repr__
-$B.$CodeObjectDict.__mro__ = [$B.$CodeObjectDict,$ObjectDict]
+$B.$CodeObjectDict.__mro__ = [$ObjectDict]
 
 function compile(source, filename, mode) {
     var $=$B.args('compile', 6,
@@ -171,6 +171,7 @@ function delattr(obj, attr) {
     var res = obj[attr]
     if(res===undefined){
         var mro = klass.__mro__
+        if(mro[0]!==klass){mro.splice(0, 0, klass)}
         for(var i=0;i<mro.length;i++){
             var res = mro[i][attr]
             if(res!==undefined){break}
@@ -232,7 +233,7 @@ function divmod(x,y) {
 }
 
 var $EnumerateDict = {__class__:$B.$type,__name__:'enumerate'}
-$EnumerateDict.__mro__ = [$EnumerateDict,$ObjectDict]
+$EnumerateDict.__mro__ = [$ObjectDict]
 
 function enumerate(){
     var $ns = $B.args("enumerate",2,{iterable:null,start:null},
@@ -438,7 +439,7 @@ exec.$is_func = true
 var $FilterDict = {__class__:$B.$type,__name__:'filter'}
 $FilterDict.__iter__ = function(self){return self}
 $FilterDict.__repr__ = $FilterDict.__str__ = function(){return "<filter object>"},
-$FilterDict.__mro__ = [$FilterDict,$ObjectDict]
+$FilterDict.__mro__ = [$ObjectDict]
 
 function filter(){
     if(arguments.length!=2){throw _b_.TypeError(
@@ -544,9 +545,12 @@ function getattr(obj,attr,_default){
             // The attribute __mro__ of classes is a list of class
             // dictionaries ; it must be returned as a list of class
             // factory functions
-            var res = [], pos=0
-            for(var i=0;i<obj.$dict.__mro__.length;i++){
-                res[pos++]=obj.$dict.__mro__[i].$factory
+            var res = [], 
+                pos = 0, 
+                mro = obj.$dict.__mro__
+            if(mro[0]!==obj.$dict){mro.splice(0, 0, obj.$dict)}
+            for(var i=0;i<mro.length;i++){
+                res[pos++]=mro[i].$factory
             }
             return res
         }
@@ -611,6 +615,7 @@ function getattr(obj,attr,_default){
         obj=obj.$dict
     }else{
         var mro = klass.__mro__
+        if(mro[0]!==klass){mro.splice(0, 0, klass)}
         if(mro===undefined){
             console.log('in getattr '+attr+' mro undefined for '+obj+' dir '+dir(obj)+' class '+obj.__class__)
             for(var _attr in obj){
@@ -645,7 +650,7 @@ function getattr(obj,attr,_default){
     
     var cname = klass.__name__
     if(is_class){cname=obj.__name__}
-        
+    
     attr_error(attr, cname)
 }
 
@@ -815,8 +820,11 @@ function isinstance(obj,arg){
    // Return true if one of the parents of obj class is arg
    // If one of the parents is the class used to inherit from str, obj is an
    // instance of str ; same for list
-   for(var i=0;i<klass.__mro__.length;i++){
-      var kl = klass.__mro__[i]
+   var mro = klass.__mro__
+   if(mro[0]!==klass){mro.splice(0, 0, klass)}
+   
+   for(var i=0;i<mro.length;i++){
+      var kl = mro[i]
       if(kl === arg.$dict){return true}
       else if(arg===_b_.str && 
           kl===$B.$StringSubclassFactory.$dict){return true}
@@ -845,7 +853,9 @@ function issubclass(klass,classinfo){
       return false
     }
     if(classinfo.__class__.is_class){
-      if(klass.$dict.__mro__.indexOf(classinfo.$dict)>-1){return true}
+        var mro = klass.$dict.__mro__
+        if(mro[0]!==klass.$dict){mro.splice(0, 0, klass.$dict)}
+        if(mro.indexOf(classinfo.$dict)>-1){return true}
     }
     
     // Search __subclasscheck__ on classinfo
@@ -914,7 +924,7 @@ function locals(){
 
 
 var $MapDict = {__class__:$B.$type,__name__:'map'}
-$MapDict.__mro__ = [$MapDict,$ObjectDict]
+$MapDict.__mro__ = [$ObjectDict]
 $MapDict.__iter__ = function (self){return self}
 
 function map(){
@@ -1033,7 +1043,7 @@ _NotImplemented.$dict = {
     __class__: $B.$type,
     __name__: 'NotImplementedType'
 }
-_NotImplemented.$dict.__mro__ = [_NotImplemented.$dict, $ObjectDict]
+_NotImplemented.$dict.__mro__ = [$ObjectDict]
 
 var NotImplemented = {__class__ : _NotImplemented.$dict, 
     __str__: function(){return 'NotImplemented'}
@@ -1102,7 +1112,7 @@ var $PropertyDict = {
     __class__ : $B.$type,
     __name__ : 'property',
 }
-$PropertyDict.__mro__ = [$PropertyDict,$ObjectDict]
+$PropertyDict.__mro__ = [$ObjectDict]
 $B.$PropertyDict = $PropertyDict
 
 function property(fget, fset, fdel, doc) {
@@ -1155,7 +1165,7 @@ function repr(obj){
 }
 
 var $ReversedDict = {__class__:$B.$type,__name__:'reversed'}
-$ReversedDict.__mro__ = [$ReversedDict,$ObjectDict]
+$ReversedDict.__mro__ = [$ObjectDict]
 $ReversedDict.__iter__ = function(self){return self}
 $ReversedDict.__next__ = function(self){
     self.$counter--
@@ -1264,7 +1274,9 @@ function setattr(obj,attr,value){
     var res = obj[attr], 
         klass = obj.__class__ || $B.get_class(obj)
     if(res===undefined && klass){
-        var mro = klass.__mro__, _len = mro.length
+        var mro = klass.__mro__
+        if(mro[0]!==klass){mro.splice(0, 0, klass)}
+        var _len = mro.length
         for(var i=0;i<_len;i++){
             res = mro[i][attr]
             if(res!==undefined) break
@@ -1279,8 +1291,10 @@ function setattr(obj,attr,value){
         }
         var rcls = res.__class__, __set1__
         if(rcls!==undefined){
-            for(var i=0, _len=rcls.__mro__.length;i<_len;i++){
-                __set1__ = rcls.__mro__[i].__set__
+            var mro = rcls.__mro__
+            if(mro[0]!==rcls){mro.splice(0, 0, rcls)}
+            for(var i=0, _len=mro.length;i<_len;i++){
+                __set1__ = mro[i].__set__
                 if(__set1__){
                     break
                 }
@@ -1303,8 +1317,10 @@ function setattr(obj,attr,value){
     // Search the __setattr__ method
     var _setattr=false
     if(klass!==undefined){
-        for(var i=0, _len=klass.__mro__.length;i<_len;i++){
-            _setattr = klass.__mro__[i].__setattr__
+        var mro = klass.__mro__
+        if(mro[0]!==klass){mro.splice(0, 0, klass)}
+        for(var i=0, _len=mro.length;i<_len;i++){
+            _setattr = mro[i].__setattr__
             if(_setattr){break}
         }
     }
@@ -1325,7 +1341,7 @@ function sorted () {
 
 // staticmethod() built in function
 var $StaticmethodDict = {__class__:$B.$type,__name__:'staticmethod'}
-$StaticmethodDict.__mro__ = [$StaticmethodDict,$ObjectDict]
+$StaticmethodDict.__mro__ = [$ObjectDict]
 
 function staticmethod(func) {
     func.$type = 'staticmethod'
@@ -1372,6 +1388,7 @@ $SuperDict.__getattribute__ = function(self,attr){
         return function(){return $SuperDict[attr](self)}
     }
     var mro = self.__thisclass__.$dict.__mro__,res
+    if(mro[0]!==self.__thisclass__.$dict){mro.splice(0, 0, self.__thisclass__.$dict)}
     for(var i=1;i<mro.length;i++){ // start with 1 = ignores the class where super() is defined
         res = mro[i][attr]
         if(res!==undefined){
@@ -1383,16 +1400,18 @@ $SuperDict.__getattribute__ = function(self,attr){
                 if(mro[i]===_b_.object.$dict){
                     var klass = self.__self_class__.__class__
                     if(klass!==$B.$type){
-                        var start = -1
-                        for(var j=0;j<klass.__mro__.length;j++){
-                            if(klass.__mro__[j]===self.__thisclass__.$dict){
+                        var start = -1,
+                            mro = klass.__mro__
+                        if(mro[0]!==klass){mro.splice(0, 0, klass)}
+                        for(var j=0;j<mro.length;j++){
+                            if(mro[j]===self.__thisclass__.$dict){
                                 start=j+1
                                 break
                             }
                         }
                         if(start>-1){
-                            for(var j=start;j<klass.__mro__.length;j++){
-                                var res1 = klass.__mro__[j][attr]
+                            for(var j=start;j<mro.length;j++){
+                                var res1 = mro[j][attr]
                                 if(res1!==undefined){ res = res1; break}
                             }
                         }
@@ -1427,7 +1446,7 @@ $SuperDict.__getattribute__ = function(self,attr){
     throw _b_.AttributeError("object 'super' has no attribute '"+attr+"'")
 }
 
-$SuperDict.__mro__ = [$SuperDict,$ObjectDict]
+$SuperDict.__mro__ = [$ObjectDict]
 
 $SuperDict.__repr__=$SuperDict.__str__=function(self){
     var res = "<super: <class '"+self.__thisclass__.$dict.__name__+"'"
@@ -1458,7 +1477,7 @@ $Reader.__iter__ = function(self){return iter(self.$lines)}
 
 $Reader.__len__ = function(self){return self.lines.length}
 
-$Reader.__mro__ = [$Reader,$ObjectDict]
+$Reader.__mro__ = [$ObjectDict]
 
 $Reader.close = function(self){self.closed = true}
 
@@ -1513,11 +1532,11 @@ $Reader.writable = function(self){return false}
 
 var $BufferedReader = {__class__:$B.$type,__name__:'_io.BufferedReader'}
 
-$BufferedReader.__mro__ = [$BufferedReader,$Reader,$ObjectDict]
+$BufferedReader.__mro__ = [$Reader,$ObjectDict]
 
 var $TextIOWrapper = {__class__:$B.$type,__name__:'_io.TextIOWrapper'}
 
-$TextIOWrapper.__mro__ = [$TextIOWrapper,$Reader,$ObjectDict]
+$TextIOWrapper.__mro__ = [$Reader,$ObjectDict]
 
 function $url_open(){
     // first argument is file : can be a string, or an instance of a DOM File object
@@ -1595,7 +1614,7 @@ $ZipDict.__iter__ = function(self){
         $B.$iterator(self.items,$zip_iterator)
 }
 
-$ZipDict.__mro__ = [$ZipDict,$ObjectDict]
+$ZipDict.__mro__ = [$ObjectDict]
 
 function zip(){
     var res = {__class__:$ZipDict,items:[]}
@@ -1643,7 +1662,7 @@ var $BoolDict = $B.$BoolDict = {__class__:$B.$type,
     __name__:'bool',
     $native:true
 }
-$BoolDict.__mro__ = [$BoolDict,$ObjectDict]
+$BoolDict.__mro__ = [$ObjectDict]
 bool.__class__ = $B.$factory
 bool.$dict = $BoolDict
 $BoolDict.$factory = bool
@@ -1715,7 +1734,7 @@ $BoolDict.__xor__ = function(self, other) {
 var $EllipsisDict = {__class__:$B.$type,
     __name__:'ellipsis'
 }
-$EllipsisDict.__mro__ = [$EllipsisDict, $ObjectDict]
+$EllipsisDict.__mro__ = [$ObjectDict]
 
 var Ellipsis = {
     $dict: $EllipsisDict,
@@ -1748,7 +1767,7 @@ for(var $func in Ellipsis){
 
 var $NoneDict = {__class__:$B.$type,__name__:'NoneType'}
 
-$NoneDict.__mro__ = [$NoneDict,$ObjectDict]
+$NoneDict.__mro__ = [$ObjectDict]
 
 $NoneDict.__setattr__ = function(self, attr){
     return no_set_attr($NoneDict, attr)
@@ -1791,11 +1810,11 @@ for(var $func in None){
 
 // add attributes to native Function
 var $FunctionCodeDict = {__class__:$B.$type,__name__:'function code'}
-$FunctionCodeDict.__mro__ = [$FunctionCodeDict,$ObjectDict]
+$FunctionCodeDict.__mro__ = [$ObjectDict]
 $FunctionCodeDict.$factory = {__class__:$B.$factory, $dict:$FunctionCodeDict}
 
 var $FunctionGlobalsDict = {__class:$B.$type,__name__:'function globals'}
-$FunctionGlobalsDict.__mro__ = [$FunctionGlobalsDict,$ObjectDict]
+$FunctionGlobalsDict.__mro__ = [$ObjectDict]
 $FunctionGlobalsDict.$factory = {__class__:$B.$factory, $dict:$FunctionGlobalsDict}
 
 var $FunctionDict = $B.$FunctionDict = {
@@ -1830,7 +1849,7 @@ $FunctionDict.__repr__=$FunctionDict.__str__ = function(self){
     return '<function '+self.$infos.__name__+'>'
 }
 
-$FunctionDict.__mro__ = [$FunctionDict,$ObjectDict]
+$FunctionDict.__mro__ = [$ObjectDict]
 
 $FunctionDict.__setattr__ = function(self, attr, value){
     if(self.$infos[attr]!==undefined){self.$infos[attr] = value}

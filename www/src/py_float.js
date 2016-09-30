@@ -378,7 +378,7 @@ $FloatDict.__mod__ = function(self,other) {
     $err('%',other)
 }
 
-$FloatDict.__mro__ = [$FloatDict,$ObjectDict]
+$FloatDict.__mro__ = [$ObjectDict]
 
 $FloatDict.__mul__ = function(self,other){
     if(isinstance(other,_b_.int)){

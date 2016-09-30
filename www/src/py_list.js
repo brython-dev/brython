@@ -242,7 +242,7 @@ $ListDict.__lt__ = function(self,other){
     return !$ListDict.__ge__(self,other)
 }
 
-$ListDict.__mro__ = [$ListDict,$ObjectDict]
+$ListDict.__mro__ = [$ObjectDict]
 
 $ListDict.__mul__ = function(self,other){
     if(isinstance(other,_b_.int)) {  //this should be faster..
@@ -622,7 +622,7 @@ for(var $attr in $ListDict){
     }
 }
 
-$ListSubclassDict.__mro__ = [$ListSubclassDict,$ObjectDict]
+$ListSubclassDict.__mro__ = [$ObjectDict]
 
 // factory for list subclasses
 $B.$ListSubclassFactory = {
@@ -708,7 +708,7 @@ $TupleDict.__hash__ = function (self) {
   return x
 }
 
-$TupleDict.__mro__ = [$TupleDict,$ObjectDict]
+$TupleDict.__mro__ = [$ObjectDict]
 $TupleDict.__name__ = 'tuple'
 
 // set __repr__ and __str__

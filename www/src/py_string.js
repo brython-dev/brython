@@ -708,7 +708,7 @@ $StringDict.__mod__ = function(self, args) {
     return ret
 }
 
-$StringDict.__mro__ = [$StringDict,$ObjectDict]
+$StringDict.__mro__ = [$ObjectDict]
 
 $StringDict.__mul__ = function(self,other){
     var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],
@@ -1584,7 +1584,7 @@ for(var $attr in $StringDict){
         })($attr)
     }
 }
-$StringSubclassDict.__mro__ = [$StringSubclassDict,$ObjectDict]
+$StringSubclassDict.__mro__ = [$ObjectDict]
 
 // factory for str subclasses
 $B.$StringSubclassFactory = {

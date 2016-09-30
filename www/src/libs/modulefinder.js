@@ -4,7 +4,7 @@ var _b_=$B.builtins
 var _mod = {}
 
 $ModuleFinderDict = {__class__:$B.$type,__name__:'ModuleFinder'}
-$ModuleFinderDict.__mro__ = [$ModuleFinderDict,_b_.object.$dict]
+$ModuleFinderDict.__mro__ = [_b_.object.$dict]
 
 $ModuleFinderDict.run_script = function(self, pathname){
     // pathname is the url of a Python script

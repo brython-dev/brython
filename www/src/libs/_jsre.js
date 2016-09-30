@@ -59,7 +59,7 @@ var $module=(function($B){
         __class__:$B.$type,
         __name__:'SRE_Pattern'
     }
-    $SRE_PatternDict.__mro__ = [$SRE_PatternDict,object.$dict]
+    $SRE_PatternDict.__mro__ = [object.$dict]
     $SRE_PatternDict.findall = function(self,string){
         return obj.findall(self.pattern,string,self.flags)
     }

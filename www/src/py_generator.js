@@ -501,7 +501,7 @@ var $gen_it = {
     __name__: "generator"
 }
 
-$gen_it.__mro__ = [$gen_it, _b_.object.$dict]
+$gen_it.__mro__ = [_b_.object.$dict]
 
 //fix me, need to investigate __enter__ and __exit__ and what they do
 $gen_it.__enter__ = function(self){console.log("generator.__enter__ called")}

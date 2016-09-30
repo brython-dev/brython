@@ -58,7 +58,7 @@ $ComplexDict.__mod__ = function(self,other) {
     throw _b_.TypeError("TypeError: can't mod complex numbers.")
 }
 
-$ComplexDict.__mro__ = [$ComplexDict,$ObjectDict]
+$ComplexDict.__mro__ = [$ObjectDict]
 
 $ComplexDict.__mul__ = function(self,other){
     if(isinstance(other,complex))

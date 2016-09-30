@@ -11,7 +11,7 @@ $B.$ModuleDict = {
 $B.$ModuleDict.__repr__ = $B.$ModuleDict.__str__ = function(self){
     return '<module '+self.__name__+'>'
 }
-$B.$ModuleDict.__mro__ = [$B.$ModuleDict,_b_.object.$dict]
+$B.$ModuleDict.__mro__ = [_b_.object.$dict]
 
 $B.$ModuleDict.__setattr__ = function(self, attr, value){
     if(self.__name__=='__builtins__'){
@@ -38,7 +38,7 @@ var loader = function(){}
 var Loader = {__class__:$B.$type,
     __name__ : 'Loader'
 }
-Loader.__mro__ = [Loader, _b_.object.$dict]
+Loader.__mro__ = [_b_.object.$dict]
 Loader.$factory = loader
 loader.$dict = Loader
 loader.__class__ = $B.$factory
@@ -406,7 +406,7 @@ finder_VFS.$dict = {
     }
 }
 
-finder_VFS.$dict.__mro__ = [finder_VFS.$dict, _b_.object.$dict]
+finder_VFS.$dict.__mro__ = [_b_.object.$dict]
 finder_VFS.$dict.create_module.$type = 'classmethod'
 finder_VFS.$dict.exec_module.$type = 'classmethod'
 finder_VFS.$dict.find_module.$type = 'classmethod'
@@ -486,8 +486,7 @@ finder_compiled.$dict = {
     }
 }
 
-finder_compiled.$dict.__mro__ = [finder_compiled.$dict,
-    _b_.object.$dict]
+finder_compiled.$dict.__mro__ = [_b_.object.$dict]
 finder_compiled.$dict.create_module.$type = 'classmethod'
 finder_compiled.$dict.exec_module.$type = 'classmethod'
 finder_compiled.$dict.find_module.$type = 'classmethod'
@@ -575,8 +574,7 @@ finder_stdlib_static.$dict = {
         return _b_.None;
     }
 }
-finder_stdlib_static.$dict.__mro__ = [finder_stdlib_static.$dict,
-    _b_.object.$dict]
+finder_stdlib_static.$dict.__mro__ = [_b_.object.$dict]
 finder_stdlib_static.$dict.create_module.$type = 'classmethod'
 finder_stdlib_static.$dict.exec_module.$type = 'classmethod'
 finder_stdlib_static.$dict.find_module.$type = 'classmethod'
@@ -665,8 +663,7 @@ finder_path.$dict = {
     }
 }
 
-finder_path.$dict.__mro__ = [finder_path.$dict,
-    _b_.object.$dict]
+finder_path.$dict.__mro__ = [_b_.object.$dict]
 finder_path.$dict.create_module.$type = 'classmethod'
 finder_path.$dict.exec_module.$type = 'classmethod'
 finder_path.$dict.find_module.$type = 'classmethod'
@@ -742,7 +739,7 @@ vfs_hook.$dict = {
         self.vfs = undefined;
     }
 }
-vfs_hook.$dict.__mro__ = [vfs_hook.$dict, _b_.object.$dict]
+vfs_hook.$dict.__mro__ = [_b_.object.$dict]
 
 /**
  * Find modules deployed in a hierarchy under a given base URL
@@ -833,7 +830,7 @@ url_hook.$dict = {
         // TODO: Implement
     }
 }
-url_hook.$dict.__mro__ = [url_hook.$dict, _b_.object.$dict]
+url_hook.$dict.__mro__ = [_b_.object.$dict]
 
 /**
  * Find modules deployed in a hierarchy under a given base URL
@@ -911,8 +908,7 @@ precompiled_hook.$dict = {
         // TODO: Implement
     }
 }
-precompiled_hook.$dict.__mro__ = [precompiled_hook.$dict, 
-    _b_.object.$dict]
+precompiled_hook.$dict.__mro__ = [_b_.object.$dict]
 
 // FIXME : Add this code elsewhere ?
 $B.$path_hooks = [precompiled_hook, vfs_hook, url_hook];

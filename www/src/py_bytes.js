@@ -27,7 +27,7 @@ var $bytearray_iterator = $B.$iterator_class('bytearray_iterator')
 $BytearrayDict.__iter__ = function(self){
     return $B.$iterator(self.source,$bytearray_iterator)
 }
-$BytearrayDict.__mro__ = [$BytearrayDict,$ObjectDict]
+$BytearrayDict.__mro__ = [$ObjectDict]
 
 $BytearrayDict.__repr__ = $BytearrayDict.__str__ = function(self){
     return 'bytearray('+$BytesDict.__repr__(self)+")"
@@ -221,7 +221,7 @@ $BytesDict.__lt__ = function(self,other){
     return _b_.list.$dict.__lt__(self.source,other.source)
 }
 
-$BytesDict.__mro__ = [$BytesDict,$ObjectDict]
+$BytesDict.__mro__ = [$ObjectDict]
 
 $BytesDict.__mul__ = function(){
     var $ = $B.args('__mul__', 2, {self:null, other:null}, ['self', 'other'],

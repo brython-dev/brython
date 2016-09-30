@@ -215,7 +215,7 @@ $IntDict.__mod__ = function(self,other) {
     $err('%',other)
 }
 
-$IntDict.__mro__ = [$IntDict,$ObjectDict]
+$IntDict.__mro__ = [$ObjectDict]
 
 $IntDict.__mul__ = function(self,other){
 

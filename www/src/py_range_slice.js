@@ -97,7 +97,7 @@ $RangeIterator.$dict = {
     
     __next__: function(self){return _b_.next(self.obj)}
 }
-$RangeIterator.$dict.__mro__ = [$RangeIterator.$dict, _b_.object.$dict]
+$RangeIterator.$dict.__mro__ = [_b_.object.$dict]
 
 $RangeDict.__iter__ = function(self){
     var res = {
@@ -153,7 +153,7 @@ $RangeDict.__next__ = function(self){
     return self.$counter
 }
 
-$RangeDict.__mro__ = [$RangeDict, _b_.object.$dict]
+$RangeDict.__mro__ = [_b_.object.$dict]
 
 $RangeDict.__reversed__ = function(self){
     var n = $B.sub($RangeDict.__len__(self), 1)
@@ -283,7 +283,7 @@ var $SliceDict = {__class__:$B.$type,
     descriptors:{start:true,step:true,stop:true}
 }
 
-$SliceDict.__mro__ = [$SliceDict, _b_.object.$dict]
+$SliceDict.__mro__ = [_b_.object.$dict]
 
 $SliceDict.__repr__ = $SliceDict.__str__ = function(self){
         return 'slice('+_b_.str(self.start)+','+

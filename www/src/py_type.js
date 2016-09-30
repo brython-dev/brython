@@ -41,13 +41,20 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         class_dict[items[i][0]] = items[i][1]
     }
 
-    class_dict.__mro__ = [class_dict].concat(make_mro(bases, cl_dict))
+    //class_dict.__mro__ = [class_dict].concat(make_mro(bases, cl_dict))
+    class_dict.__mro__ = make_mro(bases, cl_dict)
 
     // Check if at least one method is abstract (cf PEP 3119)
     // If this is the case, the class cannot be instanciated
-    var is_instanciable = true, non_abstract_methods = {}, abstract_methods = {}
-    for(var i=0;i<class_dict.__mro__.length;i++){
-        var kdict = class_dict.__mro__[i]
+    var is_instanciable = true, 
+        non_abstract_methods = {}, 
+        abstract_methods = {},
+        mro = class_dict.__mro__
+
+    if(mro[0] !== class_dict){mro.splice(0, 0, class_dict)}
+
+    for(var i=0;i<mro.length;i++){
+        var kdict = mro[i]
         for(var attr in kdict){
             if(non_abstract_methods[attr]){continue}
             var v = kdict[attr]
@@ -64,8 +71,8 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     
     // Check if class has __slots__
     var slots = []
-    for(var i=0;i<class_dict.__mro__.length;i++){
-        var _slots = class_dict.__mro__[i].__slots__
+    for(var i=0;i<mro.length;i++){
+        var _slots = mro[i].__slots__
         if(_slots!==undefined){
             _slots = _b_.list(_slots)
             for(var j=0;j<_slots.length;j++){
@@ -77,9 +84,9 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
 
     // If no metaclass is specified for the class, see if one of the parents 
     // has a metaclass set
-    for(var i=1;i<class_dict.__mro__.length;i++){
-        if(class_dict.__mro__[i].__class__ !== $B.$type){
-            metaclass = class_dict.__mro__[i].__class__.$factory
+    for(var i=1;i<mro.length;i++){
+        if(mro[i].__class__ !== $B.$type){
+            metaclass = mro[i].__class__.$factory
         }
     }
     class_dict.__class__ = metaclass.$dict
@@ -229,7 +236,10 @@ function make_mro(bases, cl_dict){
         if(bases[i].$dict===undefined ||
             bases[i].$dict.__mro__===undefined){
             throw _b_.TypeError('Object passed as base class is not a class')
-        }else{var _tmp=bases[i].$dict.__mro__}
+        }else{
+            var _tmp=bases[i].$dict.__mro__
+            if(_tmp[0]!==bases[i].$dict){_tmp.splice(0, 0, bases[i].$dict)}
+        }
         for(var k=0;k<_tmp.length;k++){
             bmro[pos++]=_tmp[k]
         }
@@ -294,7 +304,7 @@ _b_.type.__class__ = $B.$factory
 
 $B.$type = {$factory: _b_.type, __name__:'type'}
 $B.$type.__class__ = $B.$type
-$B.$type.__mro__ = [$B.$type,_b_.object.$dict]
+$B.$type.__mro__ = [_b_.object.$dict]
 _b_.type.$dict = $B.$type
 
 $B.$type.__new__ = function(cls, name, bases, cl_dict){
@@ -334,17 +344,13 @@ $B.$type.__new__ = function(cls, name, bases, cl_dict){
         }
     }
     
-    class_dict.__mro__ = [class_dict].concat(make_mro(bases, cl_dict))
+    //class_dict.__mro__ = [class_dict].concat(make_mro(bases, cl_dict))
+    class_dict.__mro__ = make_mro(bases, cl_dict)
     
     // Reset the attribute __class__
-    class_dict.__class__ = class_dict.__mro__[1].__class__
+    class_dict.__class__ = class_dict.__mro__[0].__class__
+    
     // create the factory function
-    /*
-    var creator = $instance_creator(class_dict)
-    var factory = function(){
-        return creator.apply(null, arguments)
-    }
-    */
     var factory = $instance_creator(class_dict)
 
     factory.__class__ = $B.$factory
@@ -366,7 +372,7 @@ $B.$factory = {
     $factory:_b_.type,
     is_class:true
 }
-$B.$factory.__mro__ = [$B.$factory,$B.$type,_b_.object.$dict]
+$B.$factory.__mro__ = [$B.$type, _b_.object.$dict]
 
 _b_.type.__class__ = $B.$factory
 
@@ -409,6 +415,7 @@ $B.$type.__getattribute__=function(klass,attr){
 
         var mro = klass.__mro__
         if(mro===undefined){console.log('attr '+attr+' mro undefined for class '+klass+' name '+klass.__name__, klass, klass.__class__)}
+        if(mro[0]!==klass){mro.splice(0, 0, klass)}
         for(var i=0;i<mro.length;i++){
             var v=mro[i][attr]
             if(v!==undefined){
@@ -417,9 +424,9 @@ $B.$type.__getattribute__=function(klass,attr){
             }
         }
         var cl_mro = klass.__class__.__mro__
+        if(cl_mro[0]!==klass.__class__){cl_mro.splice(0, 0, klass.__class__)}
         if(res===undefined){
             // try in klass class
-            var cl_mro = klass.__class__.__mro__
             if(cl_mro!==undefined){
                 for(var i=0;i<cl_mro.length;i++){
                     var v=cl_mro[i][attr]
@@ -621,7 +628,7 @@ member_descriptor.$dict = {
         return "<member '"+self.attr+"' of '"+self.klass.__name__+
         "' objects>"}
 }
-member_descriptor.$dict.__mro__ = [member_descriptor.$dict , _b_.object.$dict]
+member_descriptor.$dict.__mro__ = [_b_.object.$dict]
 
 // used as the factory for method objects
 function $MethodFactory(){}
@@ -661,7 +668,7 @@ $B.$MethodDict.__getattribute__ = function(self, attr){
         return _b_.object.$dict.__getattribute__(self, attr)
     }
 }
-$B.$MethodDict.__mro__=[$B.$MethodDict, _b_.object.$dict]
+$B.$MethodDict.__mro__=[_b_.object.$dict]
 $B.$MethodDict.__repr__ = $B.$MethodDict.__str__ = function(self){
     var res = '<bound method '+self.$infos.__class__.$dict.__name__+'.' 
     res += self.$infos.__name__+' of '

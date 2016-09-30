@@ -79,7 +79,7 @@ function makeTagDict(tagName){
         }
     }
 
-    dict.__mro__ = [dict,$B.DOMNodeDict,$B.builtins.object.$dict]
+    dict.__mro__ = [$B.DOMNodeDict,$B.builtins.object.$dict]
 
     dict.__new__ = function(cls){
         var res = $B.DOMNode(document.createElementNS($svgNS,tagName))

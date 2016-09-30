@@ -6,7 +6,7 @@ var $ObjectDict = _b_.object.$dict
 
 var $LocationDict = {__class__:$B.$type,__name__:'Location'}
 
-$LocationDict.__mro__ = [$LocationDict,$ObjectDict]
+$LocationDict.__mro__ = [$ObjectDict]
 
 function $Location(){ // used because of Firefox bug #814622
     var obj = {}
@@ -52,7 +52,7 @@ $JSConstructorDict.__call__ = function(self){
     return $B.$JS2Py(res)
 }
 
-$JSConstructorDict.__mro__ = [$JSConstructorDict,$ObjectDict]
+$JSConstructorDict.__mro__ = [$ObjectDict]
 
 function JSConstructor(obj){
     return {
@@ -261,6 +261,7 @@ $JSObjectDict.__getattribute__ = function(self,attr){
     var res
     // search in classes hierarchy, following method resolution order
     var mro = self.__class__.__mro__
+    if(mro[0]!==self.__class__){mro.splice(0, 0, self.__class__)}
     for(var i=0, _len_i = mro.length; i < _len_i;i++){
         var v=mro[i][attr]
         if(v!==undefined){
@@ -345,7 +346,7 @@ $JSObjectDict.__len__ = function(self){
     }
 }
 
-$JSObjectDict.__mro__ = [$JSObjectDict,$ObjectDict]
+$JSObjectDict.__mro__ = [$ObjectDict]
 
 $JSObjectDict.__repr__ = function(self){
     if(self.js instanceof Date){return self.js.toString()}
