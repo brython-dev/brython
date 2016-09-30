@@ -684,10 +684,10 @@ function LongInt(value, base){
     if(base!=10){
         // Conversion to base 10
         var coef = '1', v10 = LongInt(0),
-            pos = value.length, digit_base10
+            pos = value.length
         while(pos--){
-            digit_base10 = parseInt(value.charAt(pos), base).toString()
-            digit_by_coef = mul_pos(coef, digit_base10).value
+            var digit_base10 = parseInt(value.charAt(pos), base).toString(),
+                digit_by_coef = mul_pos(coef, digit_base10).value
             v10 = add_pos(v10.value, digit_by_coef)
             coef = mul_pos(coef, base.toString()).value
         }

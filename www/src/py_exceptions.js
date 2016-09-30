@@ -32,10 +32,6 @@ $B.$syntax_err_line = function(exc,module,pos,line_num) {
     var len=line.length
     line=line.replace(/^\s*/,'')
     lpos-=len-line.length
-    //while(line && line.charAt(0)==' '){
-    //  line=line.substr(1)
-    //  lpos--
-    //}
     exc.args = _b_.tuple([$B.$getitem(exc.args,0), module, line_num, lpos, line])
 }
 
@@ -59,9 +55,12 @@ var $TracebackDict = {__class__:$B.$type,
 $TracebackDict.__getattribute__ = function(self, attr){
     if(self.stack.length==0){alert('no stack', attr)}
     var last_frame = $B.last(self.stack)
-    if(last_frame==undefined){alert('last frame undef ');console.log(self.stack, Object.keys(self.stack))}
+    if(last_frame==undefined){
+        alert('last frame undef ');
+        console.log(self.stack, Object.keys(self.stack))
+    }
     var line_info = last_frame[1].$line_info
-
+    
     switch(attr){
         case 'tb_frame':
             return frame(self.stack)
@@ -154,7 +153,10 @@ function frame(stack, pos){
             co_name: locals_id, // idem
             co_filename: _frame[3].__name__ // idem
         }
-        if(res.f_code.co_filename===undefined){console.log(_frame[0],_frame[1],_frame[2],_frame[3]);alert('no cofilename')}
+        if(res.f_code.co_filename===undefined){
+            console.log(_frame[0],_frame[1],_frame[2],_frame[3]);
+            alert('no cofilename')
+        }
     }
     return res
 }
@@ -196,6 +198,7 @@ $BaseExceptionDict.__new__ = function(cls){
 }
 
 $BaseExceptionDict.__getattr__ = function(self, attr){
+
     if(attr=='info'){
         var name = self.__class__.__name__
         if(name=='SyntaxError' || name=='IndentationError'){
@@ -218,6 +221,7 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
             var frame = self.$stack[i]
             if(frame[1].$line_info===undefined){continue}
             var line_info = frame[1].$line_info.split(',')
+            if($B.$py_src[line_info[1]]===undefined){continue}
             var lines = $B.$py_src[line_info[1]].split('\n')
             info += '\n  module '+line_info[1]+' line '+line_info[0]
             var line = lines[parseInt(line_info[0])-1]

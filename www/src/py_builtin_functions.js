@@ -943,19 +943,18 @@ function $extreme(args,op){ // used by min() and max()
     if(op==='__gt__') $op_name = "max"
 
     if(args.length==0){throw _b_.TypeError($op_name+" expected 1 arguments, got 0")}
-    var last_arg = args[args.length-1]
-    var nb_args = args.length
-    var has_kw_args = false
-    var has_default = false
-    var func = false
+    var last_arg = args[args.length-1],
+        nb_args = args.length,
+        has_kw_args = false,
+        has_default = false,
+        func = false
     if(last_arg.$nat=='kw'){
         nb_args--
         last_arg = last_arg.kw
         for(var attr in last_arg){
             switch(attr){
                 case 'key':
-                    var func = last_arg[attr]
-                    has_key = true
+                    func = last_arg[attr]
                     break
                 case '$$default': // Brython changes "default" to "$$default"
                     var default_value = last_arg[attr]
@@ -1528,7 +1527,8 @@ function $url_open(){
     //var mode = 'r',encoding='utf-8'
     var $ns=$B.args('open',3,{file:null,mode:null,encoding:null},
         ['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},
-        'args','kw')
+        'args','kw'),
+        $res
     for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
     if(args.length>0) var mode=args[0]
     if(args.length>1) var encoding=args[1]
@@ -1543,13 +1543,13 @@ function $url_open(){
         }
         req.onreadystatechange = function(){
             try {
-                var status = req.status
+                var status = this.status
                 if(status===404){
                     $res = _b_.IOError('File '+file+' not found')
                 }else if(status!==200){
                     $res = _b_.IOError('Could not open file '+file+' : status '+status)
                 }else{
-                    $res = req.responseText
+                    $res = this.responseText
                     if(is_binary){
                         $res=_b_.str.$dict.encode($res, 'utf-8')
                     }

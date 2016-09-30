@@ -716,7 +716,7 @@ $StringDict.__mul__ = function(self,other){
     if(!isinstance(other,_b_.int)){throw _b_.TypeError(
         "Can't multiply sequence by non-int of type '"+
             $B.get_class(other).__name__+"'")}
-    $res = ''
+    var $res = ''
     for(var i=0;i<other;i++){$res+=self.valueOf()}
     return $res
 }
@@ -864,7 +864,7 @@ $StringDict.endswith = function(){
     
     var s = $.self.substring($.start,$.end)
     for(var i=0, _len_i = suffixes.length; i < _len_i;i++){
-        suffix = suffixes[i]
+        var suffix = suffixes[i]
         if(!_b_.isinstance(suffix, str)){throw _b_.TypeError(
             "endswith first arg must be str or a tuple of str, not int")}
         if(suffix.length<=s.length &&
@@ -1692,7 +1692,7 @@ $B.format_width = function(s, fmt){
                     return fill.repeat(missing)+s            
                 }
             case '^':
-                left = parseInt(missing/2)
+                var left = parseInt(missing/2)
                 return fill.repeat(left)+s+fill.repeat(missing-left)
         }
     }

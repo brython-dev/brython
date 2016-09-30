@@ -91,7 +91,7 @@ var $copy_dict = function(left, right) {
     while(i--) si(left, _l[i][0], _l[i][1])
 }
 
-$iterator_wrapper = function(items,klass){
+var $iterator_wrapper = function(items,klass){
     var res = {
         __class__:klass,
         __iter__:function(){items.iter.i=0; return res},

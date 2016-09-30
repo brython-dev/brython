@@ -78,7 +78,8 @@ function $download_module(module,url,package,blocking){
     var imp = $importer(),
         $xmlhttp = imp[0],fake_qs=imp[1],timer=imp[2],res=null,
         mod_name = module.__name__,
-        no_block = Array.isArray(blocking) || blocking===false
+        no_block = Array.isArray(blocking) || blocking===false,
+        res
 
     if(no_block){
         console.log('download non blocking', mod_name)
@@ -100,11 +101,11 @@ function $download_module(module,url,package,blocking){
       }
     } else {
       $xmlhttp.onreadystatechange = function(){
-        if($xmlhttp.readyState==4){
+        if(this.readyState==4){
             window.clearTimeout(timer)
-            if($xmlhttp.status==200 || $xmlhttp.status==0){
-                res=$xmlhttp.responseText
-                module.$last_modified = $xmlhttp.getResponseHeader('Last-Modified')
+            if(this.status==200 || $xmlhttp.status==0){
+                res=this.responseText
+                module.$last_modified = this.getResponseHeader('Last-Modified')
                 if(no_block){
                     var ext = url.substr(url.length-2)
                     if(ext=='py'){
@@ -120,7 +121,7 @@ function $download_module(module,url,package,blocking){
                 }
             }else{
                 // don't throw an exception here, it will not be caught (issue #30)
-                console.log('Error '+$xmlhttp.status+
+                console.log('Error '+this.status+
                     ' means that Python module '+mod_name+
                     ' was not found at url '+url)
                 res = _b_.FileNotFoundError("No module named '"+mod_name+"'")
@@ -251,7 +252,7 @@ function import_py(module,path,package,blocking){
 }
 
 //$B.run_py is needed for import hooks..
-$B.run_py=run_py=function(module_contents,path,module,compiled) {
+function run_py(module_contents,path,module,compiled) {
     if (!compiled) {
         var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
         $B.$py_module_path[module.__name__]=path
@@ -329,6 +330,8 @@ $B.run_py=run_py=function(module_contents,path,module,compiled) {
         //console.log('clear', module.__name__)
     }
 }
+
+$B.run_py = run_py
 
 function new_spec(fields) {
     // TODO : Implement ModuleSpec class i.e. not a module object

@@ -182,7 +182,7 @@ function preformat(self, fmt){
             (fmt.type=='%' || fmt.type.toLowerCase()=='f')){
             if(pt_pos==-1){res += '.'+'0'.repeat(fmt.precision)}
             else{
-                missing = fmt.precision-res.length+pt_pos+1
+                var missing = fmt.precision-res.length+pt_pos+1
                 if(missing>0)res += '0'.repeat(missing)
             }
         }else{

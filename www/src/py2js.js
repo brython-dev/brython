@@ -241,7 +241,7 @@ function $Node(type){
                 // create a line to store the yield expression in a
                 // temporary variable
                 var temp_node = new $Node()
-                var js = '$yield_value'+$loop_num
+                var js = 'var $yield_value'+$loop_num
                 js += '='+(this.yield_atoms[i].to_js() || 'None')
                 new $NodeJSCtx(temp_node,js)
                 this.parent.insert(rank+offset, temp_node)
@@ -2787,7 +2787,7 @@ function $ForExpr(context){
 
                 if(this.has_break){
                     var no_break = new $Node()
-                    new $NodeJSCtx(no_break,'$no_break'+num+'=$res'+num)
+                    new $NodeJSCtx(no_break,'var $no_break'+num+'=$res'+num)
                     test_range_node.add(no_break)
                 }
 
@@ -3783,6 +3783,7 @@ function $LambdaCtx(context){
         js = '(function(){\n'+js+'\nreturn $locals.'+func_name+'\n})()'
         
         $B.clear_ns(lambda_name)
+        delete $B.$py_src[lambda_name]
         
         return js
     }
@@ -3919,6 +3920,7 @@ function $ListOrTupleCtx(context,real){
                 var js = root.to_js()
                 
                 $B.clear_ns(listcomp_name)
+                delete $B.$py_src[listcomp_name]
 
                 js += 'return $locals_lc'+ix+'["x'+ix+'"]'
                 js = '(function(){'+js+'})()'
@@ -7574,6 +7576,12 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     var file_node = new $Node()
     new $NodeJSCtx(file_node,local_ns+'["__file__"]="'+$B.$py_module_path[module]+'";None;\n')
     root.insert(offset++,file_node)
+    // if line_info is provided, store it
+    if(line_info !== undefined){
+        var line_node = new $Node()
+        new $NodeJSCtx(line_node,local_ns+'.$line="'+line_info+'";None;\n')
+        root.insert(offset++,line_node)
+    }
 
     var enter_frame_pos = offset
     root.insert(offset++, $NodeJS('$B.enter_frame(["'+locals_id.replace(/\./g,'_')+'", '+local_ns+','+
@@ -7625,11 +7633,11 @@ function load_scripts(scripts, run_script, onerror){
         var ok = false,
             skip = false;
         if (ev !== null) {
-            req = ev.target
+            var req = ev.target
             if(req.readyState==4){
                 if(req.status==200){
                     ok = true;
-                    script = {name:req.module_name, 
+                    var script = {name:req.module_name, 
                               url:req.responseURL,   
                               src:req.responseText};
                 }

@@ -303,7 +303,7 @@ function _Random(){
         Return n random bytes suitable for cryptographic use.
         */
         
-        randbytes= []
+        var randbytes= []
         for(i=0;i<n;i++){randbytes.push(parseInt(_random()*256))}
         return _b_.bytes(randbytes)
     }
@@ -383,27 +383,27 @@ function _Random(){
                 // variables with non-integral shape parameters",
                 // Applied Statistics, (1977), 26, No. 1, p71-74
     
-                ainv = Math.sqrt(2.0 * alpha - 1.0)
-                bbb = alpha - LOG4
-                ccc = alpha + ainv
+                var ainv = Math.sqrt(2.0 * alpha - 1.0),
+                    bbb = alpha - LOG4,
+                    ccc = alpha + ainv
     
                 while(true){
-                    u1 = _random()
+                    var u1 = _random()
                     if(!((1e-7 < u1) && (u1 < .9999999))){
                         continue
                     }
-                    u2 = 1.0 - _random()
-                    v = Math.log(u1/(1.0-u1))/ainv
-                    x = alpha*Math.exp(v)
-                    z = u1*u1*u2
-                    r = bbb+ccc*v-x
+                    var u2 = 1.0 - _random(),
+                        v = Math.log(u1/(1.0-u1))/ainv,
+                        x = alpha*Math.exp(v),
+                        z = u1*u1*u2,
+                        r = bbb+ccc*v-x
                     if((r + SG_MAGICCONST - 4.5*z >= 0.0) || r >= Math.log(z)){
                         return x * beta
                     }
                 }
             }else if(alpha == 1.0){
                 // expovariate(1)
-                u = _random()
+                var u = _random()
                 while(u <= 1e-7){u = _random()}
                 return -Math.log(u) * beta
             }else{
@@ -412,12 +412,13 @@ function _Random(){
                 // Uses ALGORITHM GS of Statistical Computing - Kennedy & Gentle
     
                 while(true){
-                    u = _random()
-                    b = (Math.E + alpha)/Math.E
-                    p = b*u
+                    var u = _random(),
+                        b = (Math.E + alpha)/Math.E,
+                        p = b*u,
+                        x
                     if(p <= 1.0){x = Math.pow(p, (1.0/alpha))}
                     else{x = -Math.log((b-p)/alpha)}
-                    u1 = _random()
+                    var u1 = _random()
                     if(p > 1.0){
                         if(u1 <= Math.pow(x, alpha - 1.0)){
                             break
@@ -463,12 +464,12 @@ function _Random(){
                 mu = $.mu,
                 sigma = $.sigma
     
-            z = gauss_next
+            var z = gauss_next
             gauss_next = null
             if(z===null){
-                x2pi = _random() * Math.PI * 2
-                g2rad = Math.sqrt(-2.0 * Math.log(1.0 - _random()))
-                z = Math.cos(x2pi) * g2rad
+                var x2pi = _random() * Math.PI * 2,
+                    g2rad = Math.sqrt(-2.0 * Math.log(1.0 - _random())),
+                    z = Math.cos(x2pi) * g2rad
                 gauss_next = Math.sin(x2pi) * g2rad
             }
             return mu + z*sigma
@@ -485,8 +486,8 @@ function _Random(){
             if(k != _b_.int(k)){
                 throw _b_.TypeError('number of bits should be an integer')
             }
-            numbytes = (k + 7) // bits / 8 and rounded up
-            x = _b_.int.$dict.from_bytes(_urandom(numbytes), 'big')
+            var numbytes = (k + 7), // bits / 8 and rounded up
+                x = _b_.int.$dict.from_bytes(_urandom(numbytes), 'big')
             return _b_.getattr(x, '__rshift__')(
                 _b_.getattr(numbytes*8,'__sub__')(k))
         },
@@ -519,10 +520,10 @@ function _Random(){
                 sigma = $.sigma
     
             while(true){
-                u1 = _random()
-                u2 = 1.0 - _random()
-                z = NV_MAGICCONST*(u1-0.5)/u2
-                zz = z*z/4.0
+                var u1 = _random(),
+                    u2 = 1.0 - _random(),
+                    z = NV_MAGICCONST*(u1-0.5)/u2,
+                    zz = z*z/4.0
                 if(zz <= -Math.log(u2)){break}
             }
             return mu + z*sigma
@@ -535,7 +536,7 @@ function _Random(){
             var $ = $B.args('paretovariate', 1, {alpha:null}, ['alpha'],
                         arguments, {}, null, null)
     
-            u = 1 - _random()
+            var u = 1 - _random()
             return 1 / Math.pow(u,1/$.alpha)
         },
             
@@ -633,13 +634,13 @@ function _Random(){
             if(!_b_.hasattr(population, '__len__')){
                 throw _b_.TypeError("Population must be a sequence or set.  For dicts, use list(d).")
             }
-            n = _b_.getattr(population, '__len__')()
+            var n = _b_.getattr(population, '__len__')()
     
             if(k<0 || k>n){
                 throw _b_.ValueError("Sample larger than population")
             }
-            result = []
-            setsize = 21        // size of a small set minus size of an empty list
+            var result = [],
+                setsize = 21        // size of a small set minus size of an empty list
             if(k > 5){
                 setsize += Math.pow(4, Math.ceil(Math.log(k * 3, 4))) // table size for big sets
             }
@@ -649,14 +650,14 @@ function _Random(){
                     var pool = population.slice()
                 }else{var pool = _b_.list(population)}
                 for(var i=0;i<k;i++){ //invariant:  non-selected at [0,n-i)
-                    j = _randbelow(n-i)
+                    var j = _randbelow(n-i)
                     result[i] = pool[j]
                     pool[j] = pool[n-i-1]   // move non-selected item into vacancy
                 }
             }else{
                 selected = {}
                 for(var i=0;i<k;i++){
-                    j = _randbelow(n)
+                    var j = _randbelow(n)
                     while(selected[j]!==undefined){
                         j = _randbelow(n)
                     }
@@ -762,8 +763,8 @@ function _Random(){
     
             if(Array.isArray(x)){
                 for(var i=x.length-1;i>=0;i--){
-                    j = Math.floor(random() * (i+1))
-                    var temp = x[j]
+                    var j = Math.floor(random() * (i+1)),
+                        temp = x[j]
                     x[j] = x[i]
                     x[i] = temp
                 }
@@ -773,8 +774,8 @@ function _Random(){
                     x_set = _b_.getattr(x, '__setitem__')
                 
                 for(i=len-1;i>=0;i--){
-                    j = Math.floor(random() * (i+1))
-                    var temp = x_get(j)
+                    var j = Math.floor(random() * (i+1)),
+                        temp = x_get(j)
                     x_set(j, x_get(i))
                     x_set(i, temp)
                 }
@@ -848,25 +849,24 @@ function _Random(){
     
             if(kappa <= 1e-6){return TWOPI * _random()}
     
-            s = 0.5 / kappa
-            r = s + Math.sqrt(1.0 + s * s)
+            var s = 0.5 / kappa,
+                r = s + Math.sqrt(1.0 + s * s)
     
             while(true){
-                u1 = _random()
-                z = Math.cos(Math.PI * u1)
-    
-                d = z / (r + z)
-                u2 = _random()
+                var u1 = _random(),
+                    z = Math.cos(Math.PI * u1),
+                    d = z / (r + z),
+                    u2 = _random()
                 if((u2 < 1.0 - d * d) || 
                     (u2 <= (1.0 - d) * Math.exp(d))){
                         break
                 }
             }
-            q = 1.0 / r
-            f = (q + z) / (1.0 + q * z)
-            u3 = _random()
-            if(u3 > 0.5){theta = (mu + Math.acos(f)) % TWOPI}
-            else{theta = (mu - Math.acos(f)) % TWOPI}
+            var q = 1.0 / r,
+                f = (q + z) / (1.0 + q * z),
+                u3 = _random()
+            if(u3 > 0.5){var theta = (mu + Math.acos(f)) % TWOPI}
+            else{var theta = (mu - Math.acos(f)) % TWOPI}
             return theta
         },
     
@@ -883,7 +883,7 @@ function _Random(){
                 alpha = $.alpha,
                 beta = $.beta
     
-            u = 1 - _random()
+            var u = 1 - _random()
             return alpha * Math.pow(-Math.log(u), 1/beta)
         },
         
@@ -919,7 +919,7 @@ function _Random(){
             alpha = $.alpha,
             beta = $.beta
     
-        y = res.gammavariate(alpha, 1)
+        var y = res.gammavariate(alpha, 1)
         if(y == 0){return _b_.float(0)}
         else{return y / (y + res.gammavariate(beta, 1))}
     }

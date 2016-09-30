@@ -23,7 +23,7 @@ var _b_=$B.builtins
 eval($B.InjectBuiltins())
 
 
-$B.make_node2 = function(top_node, node){
+function make_node(top_node, node){
 
     // Transforms a node from the original generator function into a node
     // for the modified function that will return iterators
@@ -109,7 +109,7 @@ $B.make_node2 = function(top_node, node){
                   '{throw sent_value.err}'
 
             // Else set the yielded value to sent_value
-            js += '$yield_value'+ctx_js+'=sent_value;'
+            js += 'var $yield_value'+ctx_js+'=sent_value;'
             
             // Reset sent_value value to None for the next iteration
             js += 'this.sent_value=None'
@@ -136,14 +136,13 @@ $B.make_node2 = function(top_node, node){
 
         // Recursion
         for(var i=0, _len_i = node.children.length; i < _len_i;i++){
-            new_node.addChild($B.make_node2(top_node, node.children[i]))
+            new_node.addChild(make_node(top_node, node.children[i]))
         }
     }
     return new_node
 }
 
 $B.genNode = function(data, parent){
-    _indent = 4
     this.data = data
     this.parent = parent
     this.children = []
@@ -319,7 +318,7 @@ $B.$BRgenerator2 = function(func_name, blocks, def_id, def_node){
     func_root.def_id = def_id
     func_root.iter_id = iter_id
     for(var i=0, _len_i = def_node.children.length; i < _len_i;i++){
-        func_root.addChild($B.make_node2(func_root, def_node.children[i]))
+        func_root.addChild(make_node(func_root, def_node.children[i]))
     }
     var func_node = func_root.children[1].children[0]
     
@@ -383,12 +382,12 @@ function make_next(self, yield_node_id){
     root.addChild(self.func_root.children[0].clone())
     var fnode = self.func_root.children[1].clone()
     root.addChild(fnode)
-    func_node = self.func_root.children[1]
+    var func_node = self.func_root.children[1]
     
     // restore namespaces
     var js =  'for(var attr in this.blocks){eval("var "+attr+"=this.blocks[attr]");};'+
-        'var $locals = $locals_'+self.iter_id+' = this.env, $local_name="'+
-        self.iter_id+'";'
+        'var $locals_'+self.iter_id+' = this.env, $locals = $locals_'+
+            self.iter_id+', $local_name="'+self.iter_id+'";'
         
     fnode.addChild(new $B.genNode(js))
     // add a node to enter the frame

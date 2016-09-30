@@ -211,8 +211,8 @@ $SetDict.__or__ = function(self,other,accept_iter){
     return res
 }
 
-$SetDict.__str__ = $SetDict.toString = $SetDict.__repr__ = function(self){
-    frozen = self.$real === 'frozen'
+$SetDict.__str__ = $SetDict.__repr__ = function(self){
+    var frozen = self.$real === 'frozen'
     self.$cycle = self.$cycle === undefined ? 0 : self.$cycle+1
     if(self.$items.length===0){
         if(frozen) return 'frozenset()'

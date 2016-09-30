@@ -84,7 +84,7 @@ $RangeDict.__hash__ = function(self){
     return _b_.hash(_b_.tuple([len, self.start, self.step]))
 }
 
-$RangeIterator = function(obj){
+var $RangeIterator = function(obj){
     return {__class__:$RangeIterator.$dict, obj: obj}
 }
 $RangeIterator.__class__ = $B.$factory
@@ -278,9 +278,9 @@ range.$is_func = true
 // slice
 // slice
 var $SliceDict = {__class__:$B.$type, 
-	__name__:'slice', 
-	$native:true,
-	descriptors:{start:true,step:true,stop:true}
+    __name__:'slice', 
+    $native:true,
+    descriptors:{start:true,step:true,stop:true}
 }
 
 $SliceDict.__mro__ = [$SliceDict, _b_.object.$dict]

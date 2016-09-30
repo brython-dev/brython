@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-09-27 19:40:43.894447"
+__BRYTHON__.compiled_date="2016-09-30 14:12:40.394110"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -157,7 +157,7 @@ this.parent.children.splice(rank,1)
 var offset=0
 for(var i=0;i<this.yield_atoms.length;i++){
 var temp_node=new $Node()
-var js='$yield_value'+$loop_num
+var js='var $yield_value'+$loop_num
 js +='='+(this.yield_atoms[i].to_js()||'None')
 new $NodeJSCtx(temp_node,js)
 this.parent.insert(rank+offset,temp_node)
@@ -1444,7 +1444,7 @@ var end_func_node=new $Node()
 new $NodeJSCtx(end_func_node,'var $res'+num+'=$f'+num+'();')
 test_range_node.add(end_func_node)
 if(this.has_break){var no_break=new $Node()
-new $NodeJSCtx(no_break,'$no_break'+num+'=$res'+num)
+new $NodeJSCtx(no_break,'var $no_break'+num+'=$res'+num)
 test_range_node.add(no_break)}}else{
 test_range_node.add(for_node)}
 if(range_is_builtin){node.parent.children.splice(rank,1)
@@ -1870,6 +1870,7 @@ var lambda_name='lambda'+rand,module_name=module.id.replace(/\./g,'_'),scope_id=
 var js=$B.py2js(py,module_name,lambda_name,scope_id).to_js()
 js='(function(){\n'+js+'\nreturn $locals.'+func_name+'\n})()'
 $B.clear_ns(lambda_name)
+delete $B.$py_src[lambda_name]
 return js}}
 function $ListOrTupleCtx(C,real){
 this.type='list_or_tuple'
@@ -1947,6 +1948,7 @@ var root=$B.py2js(py,module_name,listcomp_name,local_name,line_num)
 $pos=save_pos
 var js=root.to_js()
 $B.clear_ns(listcomp_name)
+delete $B.$py_src[listcomp_name]
 js +='return $locals_lc'+ix+'["x'+ix+'"]'
 js='(function(){'+js+'})()'
 return js
@@ -4113,6 +4115,9 @@ root.insert(offset++,name_node)
 var file_node=new $Node()
 new $NodeJSCtx(file_node,local_ns+'["__file__"]="'+$B.$py_module_path[module]+'";None;\n')
 root.insert(offset++,file_node)
+if(line_info !==undefined){var line_node=new $Node()
+new $NodeJSCtx(line_node,local_ns+'.$line="'+line_info+'";None;\n')
+root.insert(offset++,line_node)}
 var enter_frame_pos=offset
 root.insert(offset++,$NodeJS('$B.enter_frame(["'+locals_id.replace(/\./g,'_')+'", '+local_ns+','+
 '"'+module.replace(/\./g,'_')+'", '+global_ns+', "a"]);\n'))
@@ -4134,9 +4139,9 @@ return root}
 function load_scripts(scripts,run_script,onerror){
 if(run_script===undefined){run_script=$B._run_script;}
 function callback(ev,script){var ok=false,skip=false;
-if(ev !==null){req=ev.target
+if(ev !==null){var req=ev.target
 if(req.readyState==4){if(req.status==200){ok=true;
-script={name:req.module_name,url:req.responseURL,src:req.responseText};}}
+var script={name:req.module_name,url:req.responseURL,src:req.responseText};}}
 else{
 skip=true;}}
 else{
@@ -4763,6 +4768,7 @@ var dictcomp_name='dc'+ix,root=$B.py2js(py,module_name,dictcomp_name,parent_bloc
 js +='\nreturn $locals["'+res+'"]\n'
 js='(function(){'+js+'})()'
 $B.clear_ns(dictcomp_name)
+delete $B.$py_src[dictcomp_name]
 return js}
 $B.$gen_expr=function(module_name,parent_block_id,items,line_num){
 var $ix=$B.UUID()
@@ -4784,6 +4790,7 @@ js +='\nvar $res = $locals_'+genexpr_name+'["'+genexpr_name+'"]();\n'+
 '$res.is_gen_expr=true;\nreturn $res\n'
 js='(function(){'+js+'})()\n'
 $B.clear_ns(genexpr_name)
+delete $B.$py_src[genexpr_name]
 return js}
 $B.clear_ns=function(name){
 var keys=[],len=name.length
@@ -4798,8 +4805,7 @@ if(frame[1][name]!==undefined){return frame[1][name]}
 else if(frame[3][name]!==undefined){return frame[3][name]}
 else if(_b_[name]!==undefined){return _b_[name]}
 else{if(frame[0]==frame[2]){throw _b_.NameError(name)}
-else{console.log(name,'not found in',frame)
-throw _b_.UnboundLocalError("local variable '"+name+
+else{throw _b_.UnboundLocalError("local variable '"+name+
 "' referenced before assignment")}}}
 $B.$global_search=function(name){
 var frame=$B.last($B.frames_stack)
@@ -5106,6 +5112,23 @@ $B.frames_stack.push(frame)}
 $B.leave_frame=function(arg){
 if($B.frames_stack.length==0){console.log('empty stack');return}
 $B.frames_stack.pop()}
+function len(obj){
+if(typeof obj=='number'){return 2}
+else if(typeof obj=='string'){return obj.length}
+else if(typeof obj=='boolean'){return 1}
+else if(typeof obj=='function'){return 'Function '+obj.toString().length}
+else if(Array.isArray(obj)){var olen=0
+for(var i=0;i<obj.length;i++){if(obj[i]===obj){console.log('loop',i);continue}
+olen +=len(obj[i])}
+return 'Array '+olen}else if(typeof obj=='object'){var olen='Object '+Object.keys(obj).length
+for(var attr in obj){if(obj[attr]===obj){olen +='<loop> '+attr+' '}
+else{olen +=attr+' '}}
+return olen}else{console.log('unknown type',typeof obj)}}
+$B.memory=function(){
+var keys=Object.keys(__BRYTHON__)
+console.log(keys.length,'keys')
+for(var attr in $B){if(typeof $B[attr]=='function'){continue}
+console.log(attr,len($B[attr]))}}
 $B.$profile_data={}
 $B.$profile=(function(profile){var call_times={},
 _START=0,
@@ -5621,16 +5644,11 @@ function $extreme(args,op){
 var $op_name='min'
 if(op==='__gt__')$op_name="max"
 if(args.length==0){throw _b_.TypeError($op_name+" expected 1 arguments, got 0")}
-var last_arg=args[args.length-1]
-var nb_args=args.length
-var has_kw_args=false
-var has_default=false
-var func=false
+var last_arg=args[args.length-1],nb_args=args.length,has_kw_args=false,has_default=false,func=false
 if(last_arg.$nat=='kw'){nb_args--
 last_arg=last_arg.kw
 for(var attr in last_arg){switch(attr){case 'key':
-var func=last_arg[attr]
-has_key=true
+func=last_arg[attr]
 break
 case '$$default': 
 var default_value=last_arg[attr]
@@ -5893,7 +5911,7 @@ $BufferedReader.__mro__=[$BufferedReader,$Reader,$ObjectDict]
 var $TextIOWrapper={__class__:$B.$type,__name__:'_io.TextIOWrapper'}
 $TextIOWrapper.__mro__=[$TextIOWrapper,$Reader,$ObjectDict]
 function $url_open(){
-var $ns=$B.args('open',3,{file:null,mode:null,encoding:null},['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},'args','kw')
+var $ns=$B.args('open',3,{file:null,mode:null,encoding:null},['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},'args','kw'),$res
 for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
 if(args.length>0)var mode=args[0]
 if(args.length>1)var encoding=args[1]
@@ -5904,8 +5922,8 @@ if(window.XMLHttpRequest){
 var req=new XMLHttpRequest();}else{
 var req=new ActiveXObject("Microsoft.XMLHTTP");}
 req.onreadystatechange=function(){try{
-var status=req.status
-if(status===404){$res=_b_.IOError('File '+file+' not found')}else if(status!==200){$res=_b_.IOError('Could not open file '+file+' : status '+status)}else{$res=req.responseText
+var status=this.status
+if(status===404){$res=_b_.IOError('File '+file+' not found')}else if(status!==200){$res=_b_.IOError('Could not open file '+file+' : status '+status)}else{$res=this.responseText
 if(is_binary){$res=_b_.str.$dict.encode($res,'utf-8')}}}catch(err){$res=_b_.IOError('Could not open file '+file+' : error '+err)}}
 var fake_qs='?foo='+$B.UUID()
 req.open('GET',file+fake_qs,false)
@@ -6085,7 +6103,8 @@ throw exc}
 var $TracebackDict={__class__:$B.$type,__name__:'traceback'}
 $TracebackDict.__getattribute__=function(self,attr){if(self.stack.length==0){alert('no stack',attr)}
 var last_frame=$B.last(self.stack)
-if(last_frame==undefined){alert('last frame undef ');console.log(self.stack,Object.keys(self.stack))}
+if(last_frame==undefined){alert('last frame undef ');
+console.log(self.stack,Object.keys(self.stack))}
 var line_info=last_frame[1].$line_info
 switch(attr){case 'tb_frame':
 return frame(self.stack)
@@ -6133,7 +6152,8 @@ else{res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}
 res.f_code={__class__:$B.$CodeDict,co_code:None,
 co_name: locals_id,
 co_filename: _frame[3].__name__ }
-if(res.f_code.co_filename===undefined){console.log(_frame[0],_frame[1],_frame[2],_frame[3]);alert('no cofilename')}}
+if(res.f_code.co_filename===undefined){console.log(_frame[0],_frame[1],_frame[2],_frame[3]);
+alert('no cofilename')}}
 return res}
 frame.__class__=$B.$factory
 frame.$dict=$FrameDict
@@ -6160,6 +6180,7 @@ info+='\n'}
 for(var i=0;i<self.$stack.length;i++){var frame=self.$stack[i]
 if(frame[1].$line_info===undefined){continue}
 var line_info=frame[1].$line_info.split(',')
+if($B.$py_src[line_info[1]]===undefined){continue}
 var lines=$B.$py_src[line_info[1]].split('\n')
 info +='\n  module '+line_info[1]+' line '+line_info[0]
 var line=lines[parseInt(line_info[0])-1]
@@ -6291,7 +6312,7 @@ $RangeDict.__hash__=function(self){var len=$RangeDict.__len__(self)
 if(len==0){return _b_.hash(_b_.tuple([0,None,None]))}
 if(len==1){return _b_.hash(_b_.tuple([1,self.start,None]))}
 return _b_.hash(_b_.tuple([len,self.start,self.step]))}
-$RangeIterator=function(obj){return{__class__:$RangeIterator.$dict,obj: obj}}
+var $RangeIterator=function(obj){return{__class__:$RangeIterator.$dict,obj: obj}}
 $RangeIterator.__class__=$B.$factory
 $RangeIterator.$dict={__class__: $B.$type,__name__: 'range_iterator',$factory: $RangeIterator,__iter__: function(self){return self},__next__: function(self){return _b_.next(self.obj)}}
 $RangeIterator.$dict.__mro__=[$RangeIterator.$dict,_b_.object.$dict]
@@ -6352,7 +6373,7 @@ range.__class__=$B.$factory
 range.$dict=$RangeDict
 $RangeDict.$factory=range
 range.$is_func=true
-var $SliceDict={__class__:$B.$type,	__name__:'slice',	$native:true,	descriptors:{start:true,step:true,stop:true}}
+var $SliceDict={__class__:$B.$type,__name__:'slice',$native:true,descriptors:{start:true,step:true,stop:true}}
 $SliceDict.__mro__=[$SliceDict,_b_.object.$dict]
 $SliceDict.__repr__=$SliceDict.__str__=function(self){return 'slice('+_b_.str(self.start)+','+
 _b_.str(self.stop)+','+_b_.str(self.step)+')'}
@@ -6903,15 +6924,15 @@ fake_qs="?v="+(new Date().getTime())}
 var timer=setTimeout(function(){$xmlhttp.abort()
 throw _b_.ImportError("No module named '"+module+"'")},5000)
 return[$xmlhttp,fake_qs,timer]}
-function $download_module(module,url,package,blocking){var imp=$importer(),$xmlhttp=imp[0],fake_qs=imp[1],timer=imp[2],res=null,mod_name=module.__name__,no_block=Array.isArray(blocking)||blocking===false
+function $download_module(module,url,package,blocking){var imp=$importer(),$xmlhttp=imp[0],fake_qs=imp[1],timer=imp[2],res=null,mod_name=module.__name__,no_block=Array.isArray(blocking)||blocking===false,res
 if(no_block){console.log('download non blocking',mod_name)
 $xmlhttp.open('GET',url+fake_qs,true)}else{$xmlhttp.open('GET',url+fake_qs,false)}
 if($B.$CORS){$xmlhttp.onload=function(){if($xmlhttp.status==200 ||$xmlhttp.status==0){res=$xmlhttp.responseText}else{
 res=_b_.FileNotFoundError("No module named '"+mod_name+"'")}}
 $xmlhttp.onerror=function(){res=_b_.FileNotFoundError("No module named '"+mod_name+"'")}}else{
-$xmlhttp.onreadystatechange=function(){if($xmlhttp.readyState==4){window.clearTimeout(timer)
-if($xmlhttp.status==200 ||$xmlhttp.status==0){res=$xmlhttp.responseText
-module.$last_modified=$xmlhttp.getResponseHeader('Last-Modified')
+$xmlhttp.onreadystatechange=function(){if(this.readyState==4){window.clearTimeout(timer)
+if(this.status==200 ||$xmlhttp.status==0){res=this.responseText
+module.$last_modified=this.getResponseHeader('Last-Modified')
 if(no_block){var ext=url.substr(url.length-2)
 if(ext=='py'){try{import_py1(module,mod_name,url,package,res)}
 catch(err){console.log(err);throw err}}else if(ext=='js'){try{run_js(res,url,module)}
@@ -6919,7 +6940,7 @@ catch(err){console.log(err);throw err}}
 console.log('non blocking ok',mod_name)
 blocking[1]()
 return}}else{
-console.log('Error '+$xmlhttp.status+
+console.log('Error '+this.status+
 ' means that Python module '+mod_name+
 ' was not found at url '+url)
 res=_b_.FileNotFoundError("No module named '"+mod_name+"'")}}}}
@@ -6980,7 +7001,7 @@ mod_elts.pop()
 $B.imported[mod_name].__package__=mod_elts.join('.')}
 $B.imported[mod_name].__file__=path
 return run_py(module_contents,path,module)}
-$B.run_py=run_py=function(module_contents,path,module,compiled){if(!compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
+function run_py(module_contents,path,module,compiled){if(!compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 $B.$py_module_path[module.__name__]=path
 var root=$B.py2js(module_contents,module.__name__,module.__name__,'__builtins__')
 var body=root.children
@@ -7009,6 +7030,7 @@ return true}catch(err){console.log(''+err+' '+' for module '+module.name)
 for(var attr in err)console.log(attr+' '+err[attr])
 if($B.debug>0){console.log('line info '+__BRYTHON__.line_info)}
 throw err}finally{}}
+$B.run_py=run_py
 function new_spec(fields){
 fields.__class__=$B.$ModuleDict
 return fields;}
@@ -7405,7 +7427,7 @@ if(prec==0){return Math.round(self)+''}
 var res=self.toFixed(prec),pt_pos=res.indexOf('.')
 if(fmt.type!==undefined && 
 (fmt.type=='%' ||fmt.type.toLowerCase()=='f')){if(pt_pos==-1){res +='.'+'0'.repeat(fmt.precision)}
-else{missing=fmt.precision-res.length+pt_pos+1
+else{var missing=fmt.precision-res.length+pt_pos+1
 if(missing>0)res +='0'.repeat(missing)}}else{var res1=self.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search('e')+1))
 if(exp<-4 ||exp>=fmt.precision-1){res=res1
 if(Math.abs(exp)<10){res=res.substr(0,res.length-1)+'0'+
@@ -8245,9 +8267,8 @@ for(var i=0;i<value.length;i++){if(value.charAt(i)=='.' && point==-1){point=i}
 else if(!is_digits[value.charAt(i)]){throw ValueError('LongInt argument is not a valid number: "'+value+'"')}}
 if(point!=-1){value=value.substr(0,point)}
 if(base!=10){
-var coef='1',v10=LongInt(0),pos=value.length,digit_base10
-while(pos--){digit_base10=parseInt(value.charAt(pos),base).toString()
-digit_by_coef=mul_pos(coef,digit_base10).value
+var coef='1',v10=LongInt(0),pos=value.length
+while(pos--){var digit_base10=parseInt(value.charAt(pos),base).toString(),digit_by_coef=mul_pos(coef,digit_base10).value
 v10=add_pos(v10.value,digit_by_coef)
 coef=mul_pos(coef,base.toString()).value}
 return v10}
@@ -8941,7 +8962,7 @@ $StringDict.__mul__=function(self,other){var $=$B.args('__mul__',2,{self:null,ot
 if(!isinstance(other,_b_.int)){throw _b_.TypeError(
 "Can't multiply sequence by non-int of type '"+
 $B.get_class(other).__name__+"'")}
-$res=''
+var $res=''
 for(var i=0;i<other;i++){$res+=self.valueOf()}
 return $res}
 $StringDict.__ne__=function(self,other){return other!==self.valueOf()}
@@ -9016,7 +9037,7 @@ normalize_start_end($)
 var suffixes=$.suffix
 if(!isinstance(suffixes,_b_.tuple)){suffixes=[suffixes]}
 var s=$.self.substring($.start,$.end)
-for(var i=0,_len_i=suffixes.length;i < _len_i;i++){suffix=suffixes[i]
+for(var i=0,_len_i=suffixes.length;i < _len_i;i++){var suffix=suffixes[i]
 if(!_b_.isinstance(suffix,str)){throw _b_.TypeError(
 "endswith first arg must be str or a tuple of str, not int")}
 if(suffix.length<=s.length &&
@@ -9372,7 +9393,7 @@ return fill.repeat(missing)+s
 case '=':
 if('+-'.indexOf(s.charAt(0))>-1){return s.charAt(0)+fill.repeat(missing)+s.substr(1)}else{return fill.repeat(missing)+s }
 case '^':
-left=parseInt(missing/2)
+var left=parseInt(missing/2)
 return fill.repeat(left)+s+fill.repeat(missing-left)}}
 return s}})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
@@ -9418,7 +9439,7 @@ var $copy_dict=function(left,right){var _l=new $item_generator(right).as_list()
 var si=$DictDict.__setitem__
 var i=_l.length
 while(i--)si(left,_l[i][0],_l[i][1])}
-$iterator_wrapper=function(items,klass){var res={__class__:klass,__iter__:function(){items.iter.i=0;return res},__len__:function(){return items.length()},__next__:function(){return items.next()},__repr__:function(){return klass.__name__+'('+ new $item_generator(items).as_list().join(',')+ ')'},}
+var $iterator_wrapper=function(items,klass){var res={__class__:klass,__iter__:function(){items.iter.i=0;return res},__len__:function(){return items.length()},__next__:function(){return items.next()},__repr__:function(){return klass.__name__+'('+ new $item_generator(items).as_list().join(',')+ ')'},}
 res.__str__=res.toString=res.__repr__
 return res}
 $DictDict.__bool__=function(self){var $=$B.args('__bool__',1,{self:null},['self'],arguments,{},null,null)
@@ -9762,7 +9783,7 @@ catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
 res.__class__=self.__class__
 return res}
-$SetDict.__str__=$SetDict.toString=$SetDict.__repr__=function(self){frozen=self.$real==='frozen'
+$SetDict.__str__=$SetDict.__repr__=function(self){var frozen=self.$real==='frozen'
 self.$cycle=self.$cycle===undefined ? 0 : self.$cycle+1
 if(self.$items.length===0){if(frozen)return 'frozenset()'
 return 'set()'}
@@ -10507,7 +10528,7 @@ $B.win=win})(__BRYTHON__)
 ;(function($B){
 var _b_=$B.builtins
 eval($B.InjectBuiltins())
-$B.make_node2=function(top_node,node){
+function make_node(top_node,node){
 if(node.C.$genjs){var ctx_js=node.C.$genjs}else{var ctx_js=node.C.$genjs=node.C.to_js()}
 var is_cond=false,is_except=false,is_else=false
 if(node.locals_def){
@@ -10544,7 +10565,7 @@ var yield_node_id=top_node.yields.length
 var js='var sent_value = this.sent_value || None;'
 js +='if(sent_value.__class__===$B.$GeneratorSendError)'+
 '{throw sent_value.err}'
-js +='$yield_value'+ctx_js+'=sent_value;'
+js +='var $yield_value'+ctx_js+'=sent_value;'
 js +='this.sent_value=None'
 new_node.data=js}else if(ctype=='break'){
 new_node.is_break=true
@@ -10557,10 +10578,9 @@ new_node.is_try=node.is_try
 new_node.is_else=is_else
 new_node.loop_start=node.loop_start
 new_node.is_set_yield_value=node.is_set_yield_value
-for(var i=0,_len_i=node.children.length;i < _len_i;i++){new_node.addChild($B.make_node2(top_node,node.children[i]))}}
+for(var i=0,_len_i=node.children.length;i < _len_i;i++){new_node.addChild(make_node(top_node,node.children[i]))}}
 return new_node}
-$B.genNode=function(data,parent){_indent=4
-this.data=data
+$B.genNode=function(data,parent){this.data=data
 this.parent=parent
 this.children=[]
 this.has_child=false
@@ -10645,7 +10665,7 @@ func_root.yields=[]
 func_root.loop_ends={}
 func_root.def_id=def_id
 func_root.iter_id=iter_id
-for(var i=0,_len_i=def_node.children.length;i < _len_i;i++){func_root.addChild($B.make_node2(func_root,def_node.children[i]))}
+for(var i=0,_len_i=def_node.children.length;i < _len_i;i++){func_root.addChild(make_node(func_root,def_node.children[i]))}
 var func_node=func_root.children[1].children[0]
 var obj={__class__ : $BRGeneratorDict,blocks: blocks,def_ctx:def_ctx,def_id:def_id,func_name:func_name,func_root:func_root,module:module,gi_running:false,iter_id:iter_id,id:iter_id,num:0}
 var src=func_root.children[1].src(),raw_src=src.substr(src.search('function'))
@@ -10667,10 +10687,10 @@ var root=new $B.genNode(self.def_ctx.to_js())
 root.addChild(self.func_root.children[0].clone())
 var fnode=self.func_root.children[1].clone()
 root.addChild(fnode)
-func_node=self.func_root.children[1]
+var func_node=self.func_root.children[1]
 var js='for(var attr in this.blocks){eval("var "+attr+"=this.blocks[attr]");};'+
-'var $locals = $locals_'+self.iter_id+' = this.env, $local_name="'+
-self.iter_id+'";'
+'var $locals_'+self.iter_id+' = this.env, $locals = $locals_'+
+self.iter_id+', $local_name="'+self.iter_id+'";'
 fnode.addChild(new $B.genNode(js))
 fnode.addChild(new $B.genNode('$B.enter_frame(["'+self.iter_id+
 '",$locals,"'+self.module+'",$locals_'+self.module+']);'))

@@ -72,7 +72,39 @@ function bytes2WordArray(obj){
     return {words: words, sigBytes:obj.source.length}
 }
 
+var hashDict = {
+    __class__: $B.$type,
+    __name__: 'hash'
+}
+hashDict.__mro__ = [hashDict, _b_.object.$dict]
+
+hashDict.update = function(self, msg){
+    self.hash.update(bytes2WordArray(msg))
+}
+
+hashDict.copy = function(self){
+    return self.hash.clone()
+}
+    
+hashDict.digest = function(self){
+    var obj = self.hash.clone().finalize().toString(),
+        res = []
+    for(var i=0;i<obj.length;i+=2){
+        res.push(parseInt(obj.substr(i,2), 16))
+    }
+    return _b_.bytes(res)
+}
+
+hashDict.hexdigest = function(self) {
+    return self.hash.clone().finalize().toString()
+}
+
+
 function $hashlib_new(alg, obj) {
+
+    var res = {
+        __class__: hashDict
+    }
 
     switch(alg) {
       case 'md5':
@@ -85,41 +117,21 @@ function $hashlib_new(alg, obj) {
         if ($B.Crypto === undefined || 
             $B.CryptoJS.algo[ALG] === undefined) $get_CryptoJS_lib(alg)
 
-        this.hash = $B.CryptoJS.algo[ALG].create()
+        res.hash = $B.CryptoJS.algo[ALG].create()
         if(obj!==undefined){
-            this.hash.update(bytes2WordArray(obj))
+            res.hash.update(bytes2WordArray(obj))
         }
         break
       default:
         $raise('AttributeError', 'Invalid hash algorithm:' + alg)
     }
  
-    this.__class__ = $B.$type
-
-    this.__str__ = function(){return this.hexdigest()}
-
-    this.update = function(msg){
-        this.hash.update(bytes2WordArray(msg))
-    }
-    this.copy = function(){
-        return this.hash.clone()
-    }
-    
-    this.digest = function(){
-        var obj = this.hash.clone().finalize().toString(),
-            res = []
-        for(var i=0;i<obj.length;i+=2){
-            res.push(parseInt(obj.substr(i,2), 16))
-        }
-        return _b_.bytes(res)
-    }
-
-    this.hexdigest = function() {
-        return this.hash.clone().finalize().toString()
-    }
-
-    return this
+    return res
 }
+
+$hashlib_new.$type = $B.$factory
+hashDict.$factory = $hashlib_new
+$hashlib_new.$dict = hashDict
 
 return $mod
 

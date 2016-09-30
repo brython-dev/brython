@@ -214,6 +214,8 @@ $B.$dict_comp = function(module_name, parent_block_id, items, line_num){
     
     js = '(function(){'+js+'})()'
     $B.clear_ns(dictcomp_name)
+    delete $B.$py_src[dictcomp_name]
+
     return js
 }
 
@@ -250,6 +252,7 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
     js = '(function(){'+js+'})()\n'
 
     $B.clear_ns(genexpr_name)
+    delete $B.$py_src[genexpr_name]
     
     return js
 }
@@ -266,6 +269,7 @@ $B.clear_ns = function(name){
             delete __BRYTHON__.type[key]
         }
     }
+    
     var alt_name = name.replace(/\./g, '_')
     if(alt_name!=name){$B.clear_ns(alt_name)}
 }
@@ -281,7 +285,6 @@ $B.$search = function(name, global_ns){
     else{
         if(frame[0]==frame[2]){throw _b_.NameError(name)}
         else{
-            console.log(name,'not found in',frame)
             throw _b_.UnboundLocalError("local variable '"+name+
                 "' referenced before assignment")}
     }
@@ -1010,6 +1013,42 @@ $B.leave_frame = function(arg){
     */
     $B.frames_stack.pop()
     //console.log($B.frames_stack.length, 'frames remain')
+}
+
+function len(obj){
+    //console.log(obj.toString().substr(0,20), typeof obj)
+    if(typeof obj=='number'){return 2}
+    else if(typeof obj=='string'){return obj.length}
+    else if(typeof obj=='boolean'){return 1}
+    else if(typeof obj=='function'){return 'Function '+obj.toString().length}
+    else if(Array.isArray(obj)){
+        var olen = 0
+        for(var i=0;i<obj.length;i++){
+            if(obj[i]===obj){console.log('loop', i);continue}
+            olen += len(obj[i])
+        }
+        return 'Array '+olen
+    }else if(typeof obj=='object'){
+        var olen = 'Object '+Object.keys(obj).length
+        for(var attr in obj){ 
+            if(obj[attr]===obj){olen += '<loop> '+attr+' '}
+            else{olen += attr+' '}
+        }
+        return olen
+    }else{
+        console.log('unknown type', typeof obj)
+    }
+    
+}
+
+$B.memory = function(){
+    // Function to show memory usage
+    var keys = Object.keys(__BRYTHON__)
+    console.log(keys.length, 'keys')
+    for(var attr in $B){
+        if(typeof $B[attr]=='function'){continue}
+        console.log(attr, len($B[attr]))
+    }
 }
 
 $B.$profile_data = {}
