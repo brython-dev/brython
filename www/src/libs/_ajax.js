@@ -15,20 +15,22 @@ function ajax(){
     xmlhttp.onreadystatechange = function(){
         // here, "this" refers to xmlhttp
         var state = this.readyState
-        var req = this.$ajax
-        req.js.text = this.responseText
+        res.js.text = this.responseText
         var timer = this.$requestTimer
-        if(state===0 && this.onuninitialized){this.onuninitialized(req)}
-        else if(state===1 && this.onloading){this.onloading(req)}
-        else if(state===2 && this.onloaded){this.onloaded(req)}
-        else if(state===3 && this.oninteractive){this.oninteractive(req)}
+        if(state===0 && this.onuninitialized){this.onuninitialized(res)}
+        else if(state===1 && this.onloading){this.onloading(res)}
+        else if(state===2 && this.onloaded){this.onloaded(res)}
+        else if(state===3 && this.oninteractive){this.oninteractive(res)}
         else if(state===4 && this.oncomplete){
             if(timer !== null){window.clearTimeout(timer)}
-            this.oncomplete(req)
+            this.oncomplete(res)
         }
     }
-    var res = {__class__:ajax.$dict, js:xmlhttp}
-    xmlhttp.$ajax = res
+    var res = {
+        __class__: ajax.$dict, 
+        js: xmlhttp,
+        headers: {}
+    }
     return res
 }
 
@@ -80,15 +82,29 @@ ajax.$dict = {
         }else if(isinstance(params,str)){
             res = params
         }else if(isinstance(params,dict)){
-            res = new FormData()
-            var items = _b_.list(_b_.dict.$dict.items(params))
-            for(var i=0, _len_i = items.length; i < _len_i;i++){
-                add_to_res(res,str(items[i][0]),items[i][1])
+            if(self.headers['content-type'] == 'multipart/form-data'){
+                // The FormData object serializes the data in the 'multipart/form-data'
+                // content-type so we may as well override that header if it was set
+                // by the user.
+                res = new FormData()
+                var items = _b_.list(_b_.dict.$dict.items(params))
+                for(var i=0, _len_i = items.length; i < _len_i;i++){
+                    add_to_res(res,str(items[i][0]),items[i][1])
+                }
+            }else{
+                var items = _b_.list(_b_.dict.$dict.items(params))
+                for(var i=0, _len_i = items.length; i < _len_i;i++){
+                    var key = encodeURIComponent(str(items[i][0]));
+                    if (isinstance(items[i][1],list)) {
+                        for (j = 0; j < items[i][1].length; j++) {
+                            res += key +'=' + encodeURIComponent(str(items[i][1][j])) + '&'
+                        }
+                    } else {
+                        res += key + '=' + encodeURIComponent(str(items[i][1])) + '&'
+                    }
+                }
+                res = res.substr(0,res.length-1)
             }
-            // The FormData object serializes the data in the 'multipart/form-data'
-            // content-type so we may as well override that header if it was set
-            // by the user.
-            self.js.setRequestHeader('content-type','multipart/form-data')
         }else{
             throw _b_.TypeError("send() argument must be string or dictionary, not '"+str(params.__class__)+"'")
         }
@@ -98,6 +114,7 @@ ajax.$dict = {
     
     set_header : function(self,key,value){
         self.js.setRequestHeader(key,value)
+        self.headers[key.toLowerCase()] = value.toLowerCase()
     },
     
     set_timeout : function(self,seconds,func){
