@@ -170,8 +170,7 @@ function delattr(obj, attr) {
     var klass = $B.get_class(obj)
     var res = obj[attr]
     if(res===undefined){
-        var mro = klass.__mro__
-        if(mro[0]!==klass){mro.splice(0, 0, klass)}
+        var mro = $B.mro(klass)
         for(var i=0;i<mro.length;i++){
             var res = mro[i][attr]
             if(res!==undefined){break}
@@ -547,8 +546,7 @@ function getattr(obj,attr,_default){
             // factory functions
             var res = [], 
                 pos = 0, 
-                mro = obj.$dict.__mro__
-            if(mro[0]!==obj.$dict){mro.splice(0, 0, obj.$dict)}
+                mro = $B.mro(obj.$dict)
             for(var i=0;i<mro.length;i++){
                 res[pos++]=mro[i].$factory
             }
@@ -614,8 +612,7 @@ function getattr(obj,attr,_default){
         if(obj.$dict===undefined){console.log('obj '+obj+' $dict undefined')}
         obj=obj.$dict
     }else{
-        var mro = klass.__mro__
-        if(mro[0]!==klass){mro.splice(0, 0, klass)}
+        var mro = $B.mro(klass)
         if(mro===undefined){
             console.log('in getattr '+attr+' mro undefined for '+obj+' dir '+dir(obj)+' class '+obj.__class__)
             for(var _attr in obj){
@@ -820,8 +817,7 @@ function isinstance(obj,arg){
    // Return true if one of the parents of obj class is arg
    // If one of the parents is the class used to inherit from str, obj is an
    // instance of str ; same for list
-   var mro = klass.__mro__
-   if(mro[0]!==klass){mro.splice(0, 0, klass)}
+   var mro = $B.mro(klass)
    
    for(var i=0;i<mro.length;i++){
       var kl = mro[i]
@@ -853,8 +849,7 @@ function issubclass(klass,classinfo){
       return false
     }
     if(classinfo.__class__.is_class){
-        var mro = klass.$dict.__mro__
-        if(mro[0]!==klass.$dict){mro.splice(0, 0, klass.$dict)}
+        var mro = $B.mro(klass.$dict)
         if(mro.indexOf(classinfo.$dict)>-1){return true}
     }
     
@@ -1274,8 +1269,7 @@ function setattr(obj,attr,value){
     var res = obj[attr], 
         klass = obj.__class__ || $B.get_class(obj)
     if(res===undefined && klass){
-        var mro = klass.__mro__
-        if(mro[0]!==klass){mro.splice(0, 0, klass)}
+        var mro = $B.mro(klass)
         var _len = mro.length
         for(var i=0;i<_len;i++){
             res = mro[i][attr]
@@ -1291,8 +1285,7 @@ function setattr(obj,attr,value){
         }
         var rcls = res.__class__, __set1__
         if(rcls!==undefined){
-            var mro = rcls.__mro__
-            if(mro[0]!==rcls){mro.splice(0, 0, rcls)}
+            var mro = $B.mro(rcls)
             for(var i=0, _len=mro.length;i<_len;i++){
                 __set1__ = mro[i].__set__
                 if(__set1__){
@@ -1317,8 +1310,7 @@ function setattr(obj,attr,value){
     // Search the __setattr__ method
     var _setattr=false
     if(klass!==undefined){
-        var mro = klass.__mro__
-        if(mro[0]!==klass){mro.splice(0, 0, klass)}
+        var mro = $B.mro(klass)
         for(var i=0, _len=mro.length;i<_len;i++){
             _setattr = mro[i].__setattr__
             if(_setattr){break}
@@ -1387,8 +1379,8 @@ $SuperDict.__getattribute__ = function(self,attr){
     if($SuperDict[attr]!==undefined){ // for __repr__ and __str__
         return function(){return $SuperDict[attr](self)}
     }
-    var mro = self.__thisclass__.$dict.__mro__,res
-    if(mro[0]!==self.__thisclass__.$dict){mro.splice(0, 0, self.__thisclass__.$dict)}
+    var mro = $B.mro(self.__thisclass__.$dict), res
+
     for(var i=1;i<mro.length;i++){ // start with 1 = ignores the class where super() is defined
         res = mro[i][attr]
         if(res!==undefined){
@@ -1401,8 +1393,7 @@ $SuperDict.__getattribute__ = function(self,attr){
                     var klass = self.__self_class__.__class__
                     if(klass!==$B.$type){
                         var start = -1,
-                            mro = klass.__mro__
-                        if(mro[0]!==klass){mro.splice(0, 0, klass)}
+                            mro = $B.mro(klass)
                         for(var j=0;j<mro.length;j++){
                             if(mro[j]===self.__thisclass__.$dict){
                                 start=j+1

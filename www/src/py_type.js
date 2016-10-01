@@ -49,9 +49,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     var is_instanciable = true, 
         non_abstract_methods = {}, 
         abstract_methods = {},
-        mro = class_dict.__mro__
-
-    if(mro[0] !== class_dict){mro.splice(0, 0, class_dict)}
+        mro = $B.mro(class_dict)
 
     for(var i=0;i<mro.length;i++){
         var kdict = mro[i]
@@ -151,7 +149,7 @@ $B.$class_constructor1 = function(class_name,class_obj){
     factory.$dict = class_obj
     class_obj.__class__ = $B.$type
     class_obj.__name__ = class_name
-    class_obj.__mro__ = [class_obj, _b_.object.$dict]
+    class_obj.__mro__ = [_b_.object.$dict]
     for(var attr in class_obj){
         factory.prototype[attr] = class_obj[attr]
     }
@@ -237,8 +235,7 @@ function make_mro(bases, cl_dict){
             bases[i].$dict.__mro__===undefined){
             throw _b_.TypeError('Object passed as base class is not a class')
         }else{
-            var _tmp=bases[i].$dict.__mro__
-            if(_tmp[0]!==bases[i].$dict){_tmp.splice(0, 0, bases[i].$dict)}
+            var _tmp = $B.mro(bases[i].$dict)
         }
         for(var k=0;k<_tmp.length;k++){
             bmro[pos++]=_tmp[k]
@@ -380,9 +377,7 @@ _b_.type.__class__ = $B.$factory
 _b_.object.$dict.__class__ = $B.$type
 _b_.object.__class__ = $B.$factory
 
-$B.$type.__getattribute__=function(klass,attr){
-    // klass is a class dictionary : in getattr(obj,attr), if obj is a factory,
-    // we call $type.__getattribute__(obj.$dict,attr)
+$B.$type.__getattribute__=function(klass, attr){
     
     switch(attr) {
       case '__call__':
@@ -401,21 +396,15 @@ $B.$type.__getattribute__=function(klass,attr){
       case '__delattr__':
         if(klass['__delattr__']!==undefined) return klass['__delattr__']
         return function(key){delete klass[key]}
-      /* case '__hash__':
-        return function() {
-           if (arguments.length == 0) return klass.__hashvalue__ || $B.$py_next_hash--
-        }
-      */
     }//switch
     //console.log('get attr '+attr+' of klass '+klass)
-    var res = klass[attr],is_class=true
+    var res = klass[attr], is_class=true
 
     if(res===undefined){
         // search in classes hierarchy, following method resolution order
 
-        var mro = klass.__mro__
+        var mro = $B.mro(klass)
         if(mro===undefined){console.log('attr '+attr+' mro undefined for class '+klass+' name '+klass.__name__, klass, klass.__class__)}
-        if(mro[0]!==klass){mro.splice(0, 0, klass)}
         for(var i=0;i<mro.length;i++){
             var v=mro[i][attr]
             if(v!==undefined){
@@ -423,8 +412,7 @@ $B.$type.__getattribute__=function(klass,attr){
                 break
             }
         }
-        var cl_mro = klass.__class__.__mro__
-        if(cl_mro[0]!==klass.__class__){cl_mro.splice(0, 0, klass.__class__)}
+        var cl_mro = $B.mro(klass.__class__)
         if(res===undefined){
             // try in klass class
             if(cl_mro!==undefined){

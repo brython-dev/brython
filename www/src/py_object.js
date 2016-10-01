@@ -73,8 +73,7 @@ $ObjectDict.__dir__ = function(self) {
     var objects = [self], 
         pos=1,
         klass = self.__class__ || $B.get_class(self)
-    var mro = klass.__mro__
-    if(mro[0]!==klass){mro.splice(0, 0, klass)}
+    var mro = $B.mro(klass)
     for (var i=0, _len_i = mro.length; i < _len_i; i++) {
         objects[pos++]=mro[i]
     }
@@ -133,8 +132,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
     
     if(res===undefined){
         // search in classes hierarchy, following method resolution order
-        var mro = klass.__mro__
-        if(mro[0]!==klass){mro.splice(0, 0, klass)}
+        var mro = $B.mro(klass)
         for(var i=0, _len_i = mro.length; i < _len_i;i++){
             if(mro[i].$methods){
                 var method = mro[i].$methods[attr]
@@ -249,8 +247,8 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         // search __getattr__
         var _ga = obj['__getattr__']
         if(_ga===undefined){
-            var mro = klass.__mro__
-            if(mro[0]!==klass){mro.splice(0, 0, klass)}
+            var mro = $B.mro(klass)
+            //if(mro[0]!==klass){mro.splice(0, 0, klass)}
             if(mro===undefined){console.log('in getattr mro undefined for '+obj)}
             for(var i=0, _len_i = mro.length; i < _len_i;i++){
                 var v=mro[i]['__getattr__']
@@ -369,11 +367,10 @@ $B.make_class = function(class_obj){
     A.__class__ = $B.$factory
 
     A.$dict = {
-        $factory: A,
         __class__: $B.type,
         __name__: class_obj.name
     }
-    A.$dict.__mro__ = [A.$dict, object.$dict]
+    A.$dict.__mro__ = [object.$dict]
 
     return A
 }

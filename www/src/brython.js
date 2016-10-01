@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-09-30 19:17:46.595165"
+__BRYTHON__.compiled_date="2016-10-01 10:37:48.616547"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4305,8 +4305,7 @@ $ObjectDict.__delattr__=function(self,attr){_b_.getattr(self,attr)
 delete self[attr];
 return _b_.None}
 $ObjectDict.__dir__=function(self){var objects=[self],pos=1,klass=self.__class__ ||$B.get_class(self)
-var mro=klass.__mro__
-if(mro[0]!==klass){mro.splice(0,0,klass)}
+var mro=$B.mro(klass)
 for(var i=0,_len_i=mro.length;i < _len_i;i++){objects[pos++]=mro[i]}
 var res=[],pos=0
 for(var i=0,_len_i=objects.length;i < _len_i;i++){for(var attr in objects[i]){
@@ -4332,8 +4331,7 @@ $ObjectDict.__getattribute__=function(obj,attr){var klass=obj.__class__ ||$B.get
 if(attr==='__class__'){return klass.$factory}
 var res=obj[attr],args=[]
 if(res===undefined){
-var mro=klass.__mro__
-if(mro[0]!==klass){mro.splice(0,0,klass)}
+var mro=$B.mro(klass)
 for(var i=0,_len_i=mro.length;i < _len_i;i++){if(mro[i].$methods){var method=mro[i].$methods[attr]
 if(method!==undefined){return method(obj)}}
 var v=mro[i][attr]
@@ -4361,8 +4359,7 @@ return $B.make_method(attr,klass,res)(obj)}else{
 return res1}}
 return res}else{
 var _ga=obj['__getattr__']
-if(_ga===undefined){var mro=klass.__mro__
-if(mro[0]!==klass){mro.splice(0,0,klass)}
+if(_ga===undefined){var mro=$B.mro(klass)
 if(mro===undefined){console.log('in getattr mro undefined for '+obj)}
 for(var i=0,_len_i=mro.length;i < _len_i;i++){var v=mro[i]['__getattr__']
 if(v!==undefined){_ga=v
@@ -4411,8 +4408,8 @@ function A(){var res={__class__:A.$dict}
 if(class_obj.init){class_obj.init.apply(null,[res].concat(Array.prototype.slice.call(arguments)))}
 return res}
 A.__class__=$B.$factory
-A.$dict={$factory: A,__class__: $B.type,__name__: class_obj.name}
-A.$dict.__mro__=[A.$dict,object.$dict]
+A.$dict={__class__: $B.type,__name__: class_obj.name}
+A.$dict.__mro__=[object.$dict]
 return A}
 return object})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
@@ -4429,8 +4426,7 @@ var class_dict={__name__ : class_name.replace('$$',''),__bases__ : bases,__dict_
 var items=$B.$dict_items(cl_dict);
 for(var i=0;i<items.length;i++){class_dict[items[i][0]]=items[i][1]}
 class_dict.__mro__=make_mro(bases,cl_dict)
-var is_instanciable=true,non_abstract_methods={},abstract_methods={},mro=class_dict.__mro__
-if(mro[0]!==class_dict){mro.splice(0,0,class_dict)}
+var is_instanciable=true,non_abstract_methods={},abstract_methods={},mro=$B.mro(class_dict)
 for(var i=0;i<mro.length;i++){var kdict=mro[i]
 for(var attr in kdict){if(non_abstract_methods[attr]){continue}
 var v=kdict[attr]
@@ -4466,7 +4462,7 @@ factory.__name__=class_name
 factory.$dict=class_obj
 class_obj.__class__=$B.$type
 class_obj.__name__=class_name
-class_obj.__mro__=[class_obj,_b_.object.$dict]
+class_obj.__mro__=[_b_.object.$dict]
 for(var attr in class_obj){factory.prototype[attr]=class_obj[attr]}
 class_obj.$factory=factory
 return factory}
@@ -4504,8 +4500,7 @@ if(bases[i]===_b_.str)bases[i]=$B.$StringSubclassFactory
 else if(bases[i]===_b_.list)bases[i]=$B.$ListSubclassFactory
 var bmro=[],pos=0
 if(bases[i].$dict===undefined ||
-bases[i].$dict.__mro__===undefined){throw _b_.TypeError('Object passed as base class is not a class')}else{var _tmp=bases[i].$dict.__mro__
-if(_tmp[0]!==bases[i].$dict){_tmp.splice(0,0,bases[i].$dict)}}
+bases[i].$dict.__mro__===undefined){throw _b_.TypeError('Object passed as base class is not a class')}else{var _tmp=$B.mro(bases[i].$dict)}
 for(var k=0;k<_tmp.length;k++){bmro[pos++]=_tmp[k]}
 seqs[pos1++]=bmro}
 if(bases.indexOf(_b_.object)==-1){bases=bases.concat(_b_.tuple([_b_.object]))}
@@ -4557,8 +4552,7 @@ $B.$factory.__mro__=[$B.$type,_b_.object.$dict]
 _b_.type.__class__=$B.$factory
 _b_.object.$dict.__class__=$B.$type
 _b_.object.__class__=$B.$factory
-$B.$type.__getattribute__=function(klass,attr){
-switch(attr){case '__call__':
+$B.$type.__getattribute__=function(klass,attr){switch(attr){case '__call__':
 return $instance_creator(klass)
 case '__eq__':
 return function(other){return klass.$factory===other}
@@ -4576,14 +4570,12 @@ if(klass['__delattr__']!==undefined)return klass['__delattr__']
 return function(key){delete klass[key]}}
 var res=klass[attr],is_class=true
 if(res===undefined){
-var mro=klass.__mro__
+var mro=$B.mro(klass)
 if(mro===undefined){console.log('attr '+attr+' mro undefined for class '+klass+' name '+klass.__name__,klass,klass.__class__)}
-if(mro[0]!==klass){mro.splice(0,0,klass)}
 for(var i=0;i<mro.length;i++){var v=mro[i][attr]
 if(v!==undefined){res=v
 break}}
-var cl_mro=klass.__class__.__mro__
-if(cl_mro[0]!==klass.__class__){cl_mro.splice(0,0,klass.__class__)}
+var cl_mro=$B.mro(klass.__class__)
 if(res===undefined){
 if(cl_mro!==undefined){for(var i=0;i<cl_mro.length;i++){var v=cl_mro[i][attr]
 if(v!==undefined){res=v
@@ -5118,23 +5110,10 @@ $B.frames_stack.push(frame)}
 $B.leave_frame=function(arg){
 if($B.frames_stack.length==0){console.log('empty stack');return}
 $B.frames_stack.pop()}
-function len(obj){
-if(typeof obj=='number'){return 2}
-else if(typeof obj=='string'){return obj.length}
-else if(typeof obj=='boolean'){return 1}
-else if(typeof obj=='function'){return 'Function '+obj.toString().length}
-else if(Array.isArray(obj)){var olen=0
-for(var i=0;i<obj.length;i++){if(obj[i]===obj){console.log('loop',i);continue}
-olen +=len(obj[i])}
-return 'Array '+olen}else if(typeof obj=='object'){var olen='Object '+Object.keys(obj).length
-for(var attr in obj){if(obj[attr]===obj){olen +='<loop> '+attr+' '}
-else{olen +=attr+' '}}
-return olen}else{console.log('unknown type',typeof obj)}}
-$B.memory=function(){
-var keys=Object.keys(__BRYTHON__)
-console.log(keys.length,'keys')
-for(var attr in $B){if(typeof $B[attr]=='function'){continue}
-console.log(attr,len($B[attr]))}}
+$B.mro=function(klass){var items=klass.__mro__.slice(klass)
+if(items[0]!==klass){items.splice(0,0,klass)}
+else{console.log('anomalie',klass)}
+return items}
 $B.$profile_data={}
 $B.$profile=(function(profile){var call_times={},
 _START=0,
@@ -5248,8 +5227,7 @@ $B.gt=function(x,y){if(typeof x=='number' && typeof y=='number'){return x>y}
 else if(typeof x=='number' && typeof y!='number'){return !y.pos}
 else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
 else{return $B.LongInt.$dict.__gt__(x,y)}}
-window.is_none=function(o){return o===undefined ||o==_b_.None;}
-window.is_none=function(o){return o===undefined ||o==_b_.None;}})(__BRYTHON__)
+$B.is_none=function(o){return o===undefined ||o==_b_.None;}})(__BRYTHON__)
 if(!Array.indexOf){Array.prototype.indexOf=function(obj){for(var i=0,_len_i=this.length;i < _len_i;i++)if(this[i]==obj)return i
 return -1}}
 if(!String.prototype.repeat){String.prototype.repeat=function(count){if(count < 1)return '';
@@ -5335,8 +5313,7 @@ var __debug__=$B.debug>0
 function delattr(obj,attr){
 var klass=$B.get_class(obj)
 var res=obj[attr]
-if(res===undefined){var mro=klass.__mro__
-if(mro[0]!==klass){mro.splice(0,0,klass)}
+if(res===undefined){var mro=$B.mro(klass)
 for(var i=0;i<mro.length;i++){var res=mro[i][attr]
 if(res!==undefined){break}}}
 if(res!==undefined && res.__delete__!==undefined){res.__delete__(res,obj,attr)}else{getattr(obj,'__delattr__')(attr)}
@@ -5487,8 +5464,7 @@ return $B.builtins_doc[builtin_names[i]]}}
 break
 case '__mro__':
 if(klass===$B.$factory){
-var res=[],pos=0,mro=obj.$dict.__mro__
-if(mro[0]!==obj.$dict){mro.splice(0,0,obj.$dict)}
+var res=[],pos=0,mro=$B.mro(obj.$dict)
 for(var i=0;i<mro.length;i++){res[pos++]=mro[i].$factory}
 return res}
 break
@@ -5517,8 +5493,7 @@ return klass[attr]}
 var is_class=klass.is_class,mro,attr_func
 if(is_class){attr_func=$B.$type.__getattribute__
 if(obj.$dict===undefined){console.log('obj '+obj+' $dict undefined')}
-obj=obj.$dict}else{var mro=klass.__mro__
-if(mro[0]!==klass){mro.splice(0,0,klass)}
+obj=obj.$dict}else{var mro=$B.mro(klass)
 if(mro===undefined){console.log('in getattr '+attr+' mro undefined for '+obj+' dir '+dir(obj)+' class '+obj.__class__)
 for(var _attr in obj){console.log('obj attr '+_attr+' : '+obj[_attr])}
 console.log('obj class '+dir(klass)+' str '+klass)}
@@ -5597,8 +5572,7 @@ klass=$B.get_class(obj)}
 if(klass===undefined){return false }
 if(arg.$dict===undefined){return false}
 if(klass==$B.$factory){klass=obj.$dict.__class__}
-var mro=klass.__mro__
-if(mro[0]!==klass){mro.splice(0,0,klass)}
+var mro=$B.mro(klass)
 for(var i=0;i<mro.length;i++){var kl=mro[i]
 if(kl===arg.$dict){return true}
 else if(arg===_b_.str && 
@@ -5612,8 +5586,7 @@ function issubclass(klass,classinfo){if(arguments.length!==2){throw _b_.TypeErro
 if(!klass.__class__ ||klass.__class__!==$B.$factory){throw _b_.TypeError("issubclass() arg 1 must be a class")}
 if(isinstance(classinfo,_b_.tuple)){for(var i=0;i<classinfo.length;i++){if(issubclass(klass,classinfo[i]))return true}
 return false}
-if(classinfo.__class__.is_class){var mro=klass.$dict.__mro__
-if(mro[0]!==klass.$dict){mro.splice(0,0,klass.$dict)}
+if(classinfo.__class__.is_class){var mro=$B.mro(klass.$dict)
 if(mro.indexOf(classinfo.$dict)>-1){return true}}
 var hook=getattr(classinfo,'__subclasscheck__',null)
 if(hook!==null){return hook(klass)}
@@ -5810,16 +5783,14 @@ if(obj.$dict.$methods && typeof value=='function'
 obj.$dict.$methods[attr]=$B.make_method(attr,obj.$dict,value,value)
 return None}else{obj.$dict[attr]=value;return None}}
 var res=obj[attr],klass=obj.__class__ ||$B.get_class(obj)
-if(res===undefined && klass){var mro=klass.__mro__
-if(mro[0]!==klass){mro.splice(0,0,klass)}
+if(res===undefined && klass){var mro=$B.mro(klass)
 var _len=mro.length
 for(var i=0;i<_len;i++){res=mro[i][attr]
 if(res!==undefined)break}}
 if(res!==undefined){
 if(res.__set__!==undefined){res.__set__(res,obj,value);return None}
 var rcls=res.__class__,__set1__
-if(rcls!==undefined){var mro=rcls.__mro__
-if(mro[0]!==rcls){mro.splice(0,0,rcls)}
+if(rcls!==undefined){var mro=$B.mro(rcls)
 for(var i=0,_len=mro.length;i<_len;i++){__set1__=mro[i].__set__
 if(__set1__){break}}}
 if(__set1__!==undefined){var __set__=getattr(res,'__set__',null)
@@ -5827,8 +5798,7 @@ if(__set__ &&(typeof __set__=='function')){__set__.apply(res,[obj,value]);return
 if(klass && klass.$slots && klass.$slots[attr]===undefined){throw _b_.AttributeError("'"+klass.__name__+"' object has no attribute'"+
 attr+"'")}
 var _setattr=false
-if(klass!==undefined){var mro=klass.__mro__
-if(mro[0]!==klass){mro.splice(0,0,klass)}
+if(klass!==undefined){var mro=$B.mro(klass)
 for(var i=0,_len=mro.length;i<_len;i++){_setattr=mro[i].__setattr__
 if(_setattr){break}}}
 if(!_setattr){obj[attr]=value}else{_setattr(obj,attr,value)}
@@ -5857,15 +5827,13 @@ return res}
 var $SuperDict={__class__:$B.$type,__name__:'super'}
 $SuperDict.__getattribute__=function(self,attr){if($SuperDict[attr]!==undefined){
 return function(){return $SuperDict[attr](self)}}
-var mro=self.__thisclass__.$dict.__mro__,res
-if(mro[0]!==self.__thisclass__.$dict){mro.splice(0,0,self.__thisclass__.$dict)}
+var mro=$B.mro(self.__thisclass__.$dict),res
 for(var i=1;i<mro.length;i++){
 res=mro[i][attr]
 if(res!==undefined){
 if(res.__class__===$PropertyDict){return res.__get__(res,self.__self_class__)}
 if(self.__self_class__!==None){if(mro[i]===_b_.object.$dict){var klass=self.__self_class__.__class__
-if(klass!==$B.$type){var start=-1,mro=klass.__mro__
-if(mro[0]!==klass){mro.splice(0,0,klass)}
+if(klass!==$B.$type){var start=-1,mro=$B.mro(klass)
 for(var j=0;j<mro.length;j++){if(mro[j]===self.__thisclass__.$dict){start=j+1
 break}}
 if(start>-1){for(var j=start;j<mro.length;j++){var res1=mro[j][attr]
@@ -6836,8 +6804,7 @@ return{__class__:$JSObjectDict,js:res,js_func:js_attr}}else{if(Array.isArray(js_
 return $B.$JS2Py(js_attr)}}else if(self.js===window && attr==='$$location'){
 return $Location()}
 var res
-var mro=self.__class__.__mro__
-if(mro[0]!==self.__class__){mro.splice(0,0,self.__class__)}
+var mro=$B.mro(self.__class__)
 for(var i=0,_len_i=mro.length;i < _len_i;i++){var v=mro[i][attr]
 if(v!==undefined){res=v
 break}}
@@ -7097,7 +7064,7 @@ console.log('src type',src_type)
 run_js(code,_spec.origin,module)},find_module: function(cls,name,path){return finder_compiled.$dict.find_spec(cls,name,path)},find_spec : function(cls,fullname,path,prev_module,blocking){console.log('precompiled find spec',fullname,path)
 if(!$B.$options.use_compiled){return _b_.None }
 console.log('precompiled is used')
-if(is_none(path)){
+if($B.is_none(path)){
 path=$B.path}
 var path_entry='/compiled/'+fullname+'.js'
 var finder=$B.path_importer_cache[path_entry];
@@ -7113,7 +7080,7 @@ var find_spec=_b_.getattr(finder,'find_spec'),fs_func=typeof find_spec=='functio
 find_spec : 
 _b_.getattr(find_spec,'__call__')
 var spec=fs_func(fullname,prev_module,blocking);
-if(!is_none(spec)){return spec;}
+if(!$B.is_none(spec)){return spec;}
 return _b_.None;}}
 finder_compiled.$dict.__mro__=[_b_.object.$dict]
 finder_compiled.$dict.create_module.$type='classmethod'
@@ -7161,7 +7128,7 @@ return _b_.None;},exec_module : function(cls,module){var _spec=_b_.getattr(modul
 module.$is_package=_spec.loader_state.is_package,delete _spec.loader_state['code'];
 var src_type=_spec.loader_state.type
 if(src_type=='py' ||src_type=='pyc.js'){run_py(code,_spec.origin,module,src_type=='pyc.js');}
-else if(_spec.loader_state.type=='js'){run_js(code,_spec.origin,module)}},find_module: function(cls,name,path){return finder_path.$dict.find_spec(cls,name,path)},find_spec : function(cls,fullname,path,prev_module,blocking){if(is_none(path)){
+else if(_spec.loader_state.type=='js'){run_js(code,_spec.origin,module)}},find_module: function(cls,name,path){return finder_path.$dict.find_spec(cls,name,path)},find_spec : function(cls,fullname,path,prev_module,blocking){if($B.is_none(path)){
 path=$B.path}
 for(var i=0,li=path.length;i<li;++i){var path_entry=path[i];
 if(path_entry[path_entry.length - 1]!='/'){path_entry +='/'}
@@ -7175,13 +7142,13 @@ finder=(typeof hook=='function' ? hook : _b_.getattr(hook,'__call__'))(path_entr
 finder_notfound=false;}
 catch(e){if(e.__class__ !==_b_.ImportError.$dict){throw e;}}}
 if(finder_notfound){$B.path_importer_cache[path_entry]=_b_.None;}}
-if(is_none(finder))
+if($B.is_none(finder))
 continue;
 var find_spec=_b_.getattr(finder,'find_spec'),fs_func=typeof find_spec=='function' ? 
 find_spec : 
 _b_.getattr(find_spec,'__call__')
 var spec=fs_func(fullname,prev_module,blocking);
-if(!is_none(spec)){return spec;}}
+if(!$B.is_none(spec)){return spec;}}
 return _b_.None;}}
 finder_path.$dict.__mro__=[_b_.object.$dict]
 finder_path.$dict.create_module.$type='classmethod'
@@ -7277,13 +7244,12 @@ $B.path_importer_cache[_path]=url_hook(_path,_type);}
 delete _path;
 delete _type;
 delete _sys_paths;
-$B.is_none=function(o){return o===undefined ||o==_b_.None;}
 $B.$__import__=function(mod_name,globals,locals,fromlist,level,blocking){
 var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.');
 if(modobj==_b_.None){
 throw _b_.ImportError(mod_name)}
 if(modobj===undefined){
-if(is_none(fromlist)){fromlist=[];}
+if($B.is_none(fromlist)){fromlist=[];}
 for(var i=0,modsep='',_mod_name='',len=parsed_name.length - 1,__path__=_b_.None;i <=len;++i){var _parent_name=_mod_name;
 _mod_name +=modsep + parsed_name[i];
 modsep='.';
@@ -7293,7 +7259,7 @@ throw _b_.ImportError(_mod_name)}
 else if(modobj===undefined){try{$B.import_hooks(_mod_name,__path__,undefined,blocking)}
 catch(err){delete $B.imported[_mod_name]
 throw err}
-if(is_none($B.imported[_mod_name])){throw _b_.ImportError(_mod_name)}
+if($B.is_none($B.imported[_mod_name])){throw _b_.ImportError(_mod_name)}
 else{
 if(_parent_name){_b_.setattr($B.imported[_parent_name],parsed_name[i],$B.imported[_mod_name]);}}}
 if(i < len){try{__path__=_b_.getattr($B.imported[_mod_name],'__path__')}
@@ -10905,21 +10871,20 @@ $B.bound.__builtins__.__builtins__=$B.builtins.__builtins__})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,
 $sys=$B.imported['_sys'];
 function import_hooks(mod_name,_path,module,blocking){
-var is_none=$B.is_none
-if(is_none(module)){module=undefined;}
+if($B.is_none(module)){module=undefined;}
 var _meta_path=_b_.getattr($sys,'meta_path');
 var spec=undefined;
-for(var i=0,_len_i=_meta_path.length;i < _len_i && is_none(spec);i++){var _finder=_meta_path[i],find_spec=_b_.getattr(_finder,'find_spec',null)
+for(var i=0,_len_i=_meta_path.length;i < _len_i && $B.is_none(spec);i++){var _finder=_meta_path[i],find_spec=_b_.getattr(_finder,'find_spec',null)
 if(find_spec !==null){spec=_b_.getattr(find_spec,'__call__')(mod_name,_path,undefined,blocking);
 spec.blocking=blocking}}
-if(is_none(spec)){
+if($B.is_none(spec)){
 throw _b_.ImportError('No module named '+mod_name);}
 var _loader=_b_.getattr(spec,'loader',_b_.None),_sys_modules=$B.imported,_spec_name=_b_.getattr(spec,'name');
-if(is_none(module)){
-if(!is_none(_loader)){var create_module=_b_.getattr(_loader,'create_module',_b_.None);
-if(!is_none(create_module)){module=_b_.getattr(create_module,'__call__')(spec);}}
+if($B.is_none(module)){
+if(!$B.is_none(_loader)){var create_module=_b_.getattr(_loader,'create_module',_b_.None);
+if(!$B.is_none(create_module)){module=_b_.getattr(create_module,'__call__')(spec);}}
 if(module===undefined){throw _b_.ImportError(mod_name)}
-if(is_none(module)){
+if($B.is_none(module)){
 module=$B.$ModuleDict.$factory(mod_name);
 var mod_desc=_b_.getattr(spec,'origin');
 if(_b_.getattr(spec,'has_location')){mod_desc="from '" + mod_desc + "'";}
@@ -10932,17 +10897,17 @@ module.__loader__=_loader;
 module.__package__=_b_.getattr(spec,'parent','');
 module.__spec__=spec;
 var locs=_b_.getattr(spec,'submodule_search_locations');
-if(module.$is_package=!is_none(locs)){module.__path__=locs;}
+if(module.$is_package=!$B.is_none(locs)){module.__path__=locs;}
 if(_b_.getattr(spec,'has_location')){module.__file__=_b_.getattr(spec,'origin')
 $B.$py_module_path[module.__name__]=module.__file__;}
 var cached=_b_.getattr(spec,'cached');
-if(!is_none(cached)){module.__cached__=cached;}
-if(is_none(_loader)){if(!is_none(locs)){$B.modules[_spec_name]=_sys_modules[_spec_name]=module;}
+if(!$B.is_none(cached)){module.__cached__=cached;}
+if($B.is_none(_loader)){if(!$B.is_none(locs)){$B.modules[_spec_name]=_sys_modules[_spec_name]=module;}
 else{
 throw _b_.ImportError(mod_name);}}
 else{
 var exec_module=_b_.getattr(_loader,'exec_module',_b_.None);
-if(is_none(exec_module)){
+if($B.is_none(exec_module)){
 module=_b_.getattr(_b_.getattr(_loader,'load_module'),'__call__')(_spec_name);}
 else{
 $B.modules[_spec_name]=_sys_modules[_spec_name]=module;

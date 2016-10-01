@@ -1015,40 +1015,11 @@ $B.leave_frame = function(arg){
     //console.log($B.frames_stack.length, 'frames remain')
 }
 
-function len(obj){
-    //console.log(obj.toString().substr(0,20), typeof obj)
-    if(typeof obj=='number'){return 2}
-    else if(typeof obj=='string'){return obj.length}
-    else if(typeof obj=='boolean'){return 1}
-    else if(typeof obj=='function'){return 'Function '+obj.toString().length}
-    else if(Array.isArray(obj)){
-        var olen = 0
-        for(var i=0;i<obj.length;i++){
-            if(obj[i]===obj){console.log('loop', i);continue}
-            olen += len(obj[i])
-        }
-        return 'Array '+olen
-    }else if(typeof obj=='object'){
-        var olen = 'Object '+Object.keys(obj).length
-        for(var attr in obj){ 
-            if(obj[attr]===obj){olen += '<loop> '+attr+' '}
-            else{olen += attr+' '}
-        }
-        return olen
-    }else{
-        console.log('unknown type', typeof obj)
-    }
-    
-}
-
-$B.memory = function(){
-    // Function to show memory usage
-    var keys = Object.keys(__BRYTHON__)
-    console.log(keys.length, 'keys')
-    for(var attr in $B){
-        if(typeof $B[attr]=='function'){continue}
-        console.log(attr, len($B[attr]))
-    }
+$B.mro = function(klass){
+    var items = klass.__mro__.slice(klass)
+    if(items[0]!==klass){items.splice(0, 0, klass)}
+    else{console.log('anomalie', klass)}
+    return items
 }
 
 $B.$profile_data = {}
@@ -1079,9 +1050,6 @@ $B.$profile = (function(profile) {
             if (call_stack[i] == h) return true;
         return false;
     }
-
-
-
 
     var $profile = {
         'call':function(module,fname,line,caller){
@@ -1276,13 +1244,9 @@ $B.gt = function(x,y){
     else{return $B.LongInt.$dict.__gt__(x, y)}
 }
 
-window.is_none = function (o) {
+$B.is_none = function (o) {
     return o === undefined || o == _b_.None;
 }
-
-    window.is_none = function (o) {
-        return o === undefined || o == _b_.None;
-    }
 
 })(__BRYTHON__)
 

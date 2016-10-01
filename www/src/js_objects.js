@@ -260,8 +260,7 @@ $JSObjectDict.__getattribute__ = function(self,attr){
     
     var res
     // search in classes hierarchy, following method resolution order
-    var mro = self.__class__.__mro__
-    if(mro[0]!==self.__class__){mro.splice(0, 0, self.__class__)}
+    var mro = $B.mro(self.__class__)
     for(var i=0, _len_i = mro.length; i < _len_i;i++){
         var v=mro[i][attr]
         if(v!==undefined){

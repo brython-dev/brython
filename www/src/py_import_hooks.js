@@ -15,15 +15,14 @@
    */
   function import_hooks(mod_name, _path, module, blocking) {
     // Default argument binding
-    var is_none = $B.is_none
-    if (is_none(module)) {
+    if ($B.is_none(module)) {
         module = undefined;
     }
 
     var _meta_path=_b_.getattr($sys, 'meta_path');
     
     var spec = undefined;
-    for (var i=0, _len_i = _meta_path.length; i < _len_i && is_none(spec); i++) {
+    for (var i=0, _len_i = _meta_path.length; i < _len_i && $B.is_none(spec); i++) {
         var _finder=_meta_path[i],
             find_spec = _b_.getattr(_finder, 'find_spec', null)
         if(find_spec !== null){
@@ -32,7 +31,7 @@
         }
     } //for
 
-    if (is_none(spec)) {
+    if ($B.is_none(spec)) {
         // No import spec found
         throw _b_.ImportError('No module named '+mod_name);
     }
@@ -41,16 +40,16 @@
         _sys_modules = $B.imported,
         _spec_name = _b_.getattr(spec, 'name');
     // Import spec represents a match
-    if (is_none(module)) {
+    if ($B.is_none(module)) {
         // Create module object
-        if (!is_none(_loader)) {
+        if (!$B.is_none(_loader)) {
             var create_module = _b_.getattr(_loader, 'create_module', _b_.None);
-            if (!is_none(create_module)) {
+            if (!$B.is_none(create_module)) {
                 module = _b_.getattr(create_module, '__call__')(spec);
             }
         }
         if(module===undefined){throw _b_.ImportError(mod_name)}
-        if (is_none(module)) {
+        if ($B.is_none(module)) {
             // FIXME : Initialize __doc__ and __package__
             module = $B.$ModuleDict.$factory(mod_name);
             var mod_desc = _b_.getattr(spec, 'origin');
@@ -71,7 +70,7 @@
 
     var locs = _b_.getattr(spec, 'submodule_search_locations');
     // Brython-specific var
-    if (module.$is_package = !is_none(locs)) {
+    if (module.$is_package = !$B.is_none(locs)) {
         module.__path__ = locs;
     }
     if (_b_.getattr(spec, 'has_location')) {
@@ -79,12 +78,12 @@
         $B.$py_module_path[module.__name__] = module.__file__;
     }
     var cached = _b_.getattr(spec, 'cached');
-    if (!is_none(cached)) {
+    if (!$B.is_none(cached)) {
         module.__cached__ = cached;
     }
 
-    if (is_none(_loader)) {
-        if (!is_none(locs)) {
+    if ($B.is_none(_loader)) {
+        if (!$B.is_none(locs)) {
             $B.modules[_spec_name] = _sys_modules[_spec_name] = module;
         }
         else {
@@ -93,7 +92,7 @@
     }
     else {
         var exec_module = _b_.getattr(_loader, 'exec_module', _b_.None);
-        if (is_none(exec_module)) {
+        if ($B.is_none(exec_module)) {
             // FIXME : Remove !!! Backwards compat in CPython
             module = _b_.getattr(_b_.getattr(_loader, 'load_module'),
                                  '__call__')(_spec_name);

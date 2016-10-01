@@ -451,7 +451,7 @@ finder_compiled.$dict = {
         if(!$B.$options.use_compiled){ return _b_.None }
         console.log('precompiled is used')
 
-        if (is_none(path)) {
+        if ($B.is_none(path)) {
             // [Import spec] Top-level import , use sys.path
             path = $B.path
         }
@@ -479,7 +479,7 @@ finder_compiled.$dict = {
                 _b_.getattr(find_spec, '__call__')
 
         var spec = fs_func(fullname, prev_module, blocking);
-        if (!is_none(spec)) {
+        if (!$B.is_none(spec)) {
             return spec;
         }
         return _b_.None;
@@ -617,7 +617,7 @@ finder_path.$dict = {
     },
 
     find_spec : function(cls, fullname, path, prev_module, blocking) {
-        if (is_none(path)) {
+        if ($B.is_none(path)) {
             // [Import spec] Top-level import , use sys.path
             path = $B.path
         }
@@ -647,7 +647,7 @@ finder_path.$dict = {
                 }
             }
             // Skip this path entry if finder turns out to be None
-            if (is_none(finder))
+            if ($B.is_none(finder))
                 continue;
             var find_spec = _b_.getattr(finder, 'find_spec'),
                 fs_func = typeof find_spec=='function' ? 
@@ -655,7 +655,7 @@ finder_path.$dict = {
                     _b_.getattr(find_spec, '__call__')
 
             var spec = fs_func(fullname, prev_module, blocking);
-            if (!is_none(spec)) {
+            if (!$B.is_none(spec)) {
                 return spec;
             }
         }
@@ -930,10 +930,6 @@ delete _path;
 delete _type;
 delete _sys_paths;
 
-$B.is_none = function (o) {
-    return o === undefined || o == _b_.None;
-}
-
 // Default __import__ function
 // TODO: Include at runtime in importlib.__import__
 $B.$__import__ = function (mod_name, globals, locals, fromlist, level, blocking){
@@ -949,7 +945,7 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level, blocking)
    if (modobj === undefined) {
        // [Import spec] Argument defaults and preconditions
        // get name of module this was called in
-       if (is_none(fromlist)) {
+       if ($B.is_none(fromlist)) {
             fromlist = [];
        }
        // TODO: Async module download and request multiplexing
@@ -970,7 +966,7 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level, blocking)
                     throw err
                 }
 
-                if (is_none($B.imported[_mod_name])) {
+                if ($B.is_none($B.imported[_mod_name])) {
                     throw _b_.ImportError(_mod_name) 
                 }
                 else {
