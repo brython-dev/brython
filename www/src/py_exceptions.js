@@ -221,8 +221,10 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
             if(frame[1].$line_info===undefined){continue}
             var line_info = frame[1].$line_info.split(',')
             if($B.$py_src[line_info[1]]===undefined){continue}
-            var lines = $B.$py_src[line_info[1]].split('\n')
-            info += '\n  module '+line_info[1]+' line '+line_info[0]
+            var lines = $B.$py_src[line_info[1]].split('\n'),
+                module = line_info[1]
+            if(module.charAt(0)=='$'){module = '<module>'}
+            info += '\n  module '+module+' line '+line_info[0]
             var line = lines[parseInt(line_info[0])-1]
             if(line) line=line.replace(/^[ ]+/g, '')
             if(line===undefined){console.log('line undef...',line_info,$B.$py_src[line_info[1]])}

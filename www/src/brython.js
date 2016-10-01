@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-10-01 15:40:21.232073"
+__BRYTHON__.compiled_date="2016-10-01 16:18:47.588989"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -6152,8 +6152,9 @@ for(var i=0;i<self.$stack.length;i++){var frame=self.$stack[i]
 if(frame[1].$line_info===undefined){continue}
 var line_info=frame[1].$line_info.split(',')
 if($B.$py_src[line_info[1]]===undefined){continue}
-var lines=$B.$py_src[line_info[1]].split('\n')
-info +='\n  module '+line_info[1]+' line '+line_info[0]
+var lines=$B.$py_src[line_info[1]].split('\n'),module=line_info[1]
+if(module.charAt(0)=='$'){module='<module>'}
+info +='\n  module '+module+' line '+line_info[0]
 var line=lines[parseInt(line_info[0])-1]
 if(line)line=line.replace(/^[ ]+/g,'')
 if(line===undefined){console.log('line undef...',line_info,$B.$py_src[line_info[1]])}
