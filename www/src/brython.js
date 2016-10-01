@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-10-01 10:37:48.616547"
+__BRYTHON__.compiled_date="2016-10-01 11:15:45.849798"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -859,16 +859,7 @@ this.to_js=function(){this.js_processed=true
 var tok=this.token
 if(tok==='elif'){tok='else if'}
 var res=[tok+'(bool('],pos=1
-if(tok=='while'){
-if(__BRYTHON__.loop_timeout){var h='\n'+' '.repeat($get_node(this).indent),h4=h+' '.repeat(4),num=this.loop_num,test_timeout=h+'var $time'+num+' = new Date()'+h+
-'function $test_timeout'+num+'()'+h4+
-'{if((new Date())-$time'+num+'>'+
-__BRYTHON__.loop_timeout*1000+
-'){throw _b_.RuntimeError("script timeout")}'+
-h4+'return true'+h+'}\n'
-res.splice(0,0,test_timeout)
-res.push('$test_timeout'+num+'() && ')}
-res.push('$locals["$no_break'+this.loop_num+'"] && ')}else if(tok=='else if'){var line_info=$get_node(this).line_num+','+$get_scope(this).id
+if(tok=='while'){res.push('$locals["$no_break'+this.loop_num+'"] && ')}else if(tok=='else if'){var line_info=$get_node(this).line_num+','+$get_scope(this).id
 res.push('($locals.$line_info="'+line_info+'") && ')}
 if(this.tree.length==1){res.push($to_js(this.tree)+'))')}else{
 res.push(this.tree[0].to_js()+'))')
@@ -1374,11 +1365,6 @@ this.module=$get_scope(this).module
 $loop_num++
 this.toString=function(){return '(for) '+this.tree}
 this.transform=function(node,rank){var scope=$get_scope(this),mod_name=scope.module,target=this.tree[0],target_is_1_tuple=target.tree.length==1 && target.expect=='id',iterable=this.tree[1],num=this.loop_num,local_ns='$locals_'+scope.id.replace(/\./g,'_'),h='\n'+' '.repeat(node.indent+4)
-if(__BRYTHON__.loop_timeout){
-var test_timeout='var $time'+num+' = new Date()'+h+
-'function $test_timeout'+num+'(){if((new Date())-$time'+
-num+'>'+__BRYTHON__.loop_timeout*1000+
-'){throw _b_.RuntimeError("script timeout")}'+h+'return true}'}
 var $range=false
 if(target.tree.length==1 &&
 target.expct !='id' &&
@@ -1410,8 +1396,7 @@ var js=idt+'='+start+';'+h+'var $stop_'+num +'=$B.int_or_bool('+
 stop+'),'+h+
 '    $next'+num+'= '+idt+','+h+
 '    $safe'+num+'= typeof $next'+num+'=="number" && typeof '+
-'$stop_'+num+'=="number";'+h
-if(__BRYTHON__.loop_timeout){js +=test_timeout+h+'while($test_timeout'+num+'())'}else{js +='while(true)'}
+'$stop_'+num+'=="number";'+h+'while(true)'
 var for_node=new $Node()
 new $NodeJSCtx(for_node,js)
 for_node.add($NodeJS('if($safe'+num+' && $next'+num+'>= $stop_'+
@@ -1472,11 +1457,8 @@ new_node=new $Node()
 new $NodeJSCtx(new_node,local_ns+'["$no_break'+num+'"]=true;')
 new_nodes[pos++]=new_node}
 var while_node=new $Node()
-if(__BRYTHON__.loop_timeout){js=test_timeout+h
-if(this.has_break){js +='while($test_timeout'+num+'() && '+
-local_ns+'["$no_break'+num+'"])'}
-else{js +='while($test_timeout'+num+'())'}}else{if(this.has_break){js='while('+local_ns+'["$no_break'+num+'"])'}
-else{js='while(1)'}}
+if(this.has_break){js='while('+local_ns+'["$no_break'+num+'"])'}
+else{js='while(1)'}
 new $NodeJSCtx(while_node,js)
 while_node.C.loop_num=num 
 while_node.C.type='for' 
@@ -6877,7 +6859,7 @@ var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv',
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var js=['_ajax','_base64','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_profile','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.lys','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
+var pkglist=['browser','collections','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]})(__BRYTHON__)
 
 ;(function($B){var _b_=$B.builtins

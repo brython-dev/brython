@@ -1604,22 +1604,6 @@ function $ConditionCtx(context,token){
         // so that an optional "else" clause will not be run.
         var res = [tok+'(bool('], pos=1
         if(tok=='while'){
-            // If a timeout has been set for loops by
-            // browser.timer.set_loop_timeout(), create code to control
-            // execution time
-            if(__BRYTHON__.loop_timeout){
-                var h = '\n'+' '.repeat($get_node(this).indent),
-                    h4 = h+' '.repeat(4),
-                    num = this.loop_num,
-                    test_timeout = h+'var $time'+num+' = new Date()'+h+
-                    'function $test_timeout'+num+'()'+h4+
-                    '{if((new Date())-$time'+num+'>'+
-                    __BRYTHON__.loop_timeout*1000+
-                    '){throw _b_.RuntimeError("script timeout")}'+
-                    h4+'return true'+h+'}\n'
-                res.splice(0,0,test_timeout)
-                res.push('$test_timeout'+num+'() && ')
-            }
             res.push('$locals["$no_break'+this.loop_num+'"] && ')
         }else if(tok=='else if'){
             var line_info = $get_node(this).line_num+','+$get_scope(this).id
@@ -2643,16 +2627,6 @@ function $ForExpr(context){
             local_ns = '$locals_'+scope.id.replace(/\./g,'_'),
             h = '\n'+' '.repeat(node.indent+4)
 
-        if(__BRYTHON__.loop_timeout){
-            // If the option "loop_timeout" has been set by
-            // browser.timer.set_loop_timeout, create code to initialise
-            // the timer, and the function to test at each iteration
-            var test_timeout = 'var $time'+num+' = new Date()'+h+
-                'function $test_timeout'+num+'(){if((new Date())-$time'+
-                num+'>'+__BRYTHON__.loop_timeout*1000+
-                '){throw _b_.RuntimeError("script timeout")}'+h+'return true}'
-        }
-
         // Because loops like "for x in range(...)" are very common and can be
         // optimised, check if the target is a call to the builtin function
         // "range"
@@ -2721,12 +2695,7 @@ function $ForExpr(context){
                 stop+'),'+h+
                 '    $next'+num+'= '+idt+','+h+
                 '    $safe'+num+'= typeof $next'+num+'=="number" && typeof '+
-                '$stop_'+num+'=="number";'+h
-            if(__BRYTHON__.loop_timeout){
-                js += test_timeout+h+'while($test_timeout'+num+'())'
-            }else{
-                js += 'while(true)'
-            }
+                '$stop_'+num+'=="number";'+h+'while(true)'
             var for_node = new $Node()  
             new $NodeJSCtx(for_node,js)
             
@@ -2847,15 +2816,10 @@ function $ForExpr(context){
         }
 
         var while_node = new $Node()
-        if(__BRYTHON__.loop_timeout){
-            js = test_timeout+h
-            if(this.has_break){js += 'while($test_timeout'+num+'() && '+
-                local_ns+'["$no_break'+num+'"])'}
-            else{js += 'while($test_timeout'+num+'())'}
-        }else{
-            if(this.has_break){js = 'while('+local_ns+'["$no_break'+num+'"])'}
-            else{js='while(1)'}
-        }
+
+        if(this.has_break){js = 'while('+local_ns+'["$no_break'+num+'"])'}
+        else{js='while(1)'}
+
         new $NodeJSCtx(while_node,js)
         while_node.context.loop_num = num // used for "else" clauses
         while_node.context.type = 'for' // used in $add_line_num
