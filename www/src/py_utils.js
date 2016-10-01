@@ -1016,7 +1016,7 @@ $B.leave_frame = function(arg){
 }
 
 $B.mro = function(klass){
-    var items = klass.__mro__.slice(klass)
+    var items = klass.__mro__.slice()
     if(items[0]!==klass){items.splice(0, 0, klass)}
     else{console.log('anomalie', klass)}
     return items

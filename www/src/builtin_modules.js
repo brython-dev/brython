@@ -1,4 +1,4 @@
-;(function($B) {
+ ;(function($B) {
     var modules = {}
     modules['browser'] = {
         $package: true,

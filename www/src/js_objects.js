@@ -233,7 +233,9 @@ $JSObjectDict.__getattribute__ = function(self,attr){
                     new_this = this
                 }
                 //if(attr=='setValue'){console.log('get result')}
-                var result = js_attr.apply(new_this,args)
+                
+                var result = js_attr.apply(new_this, args)
+
                 // NOTE: fix for situations when wrapped function is constructor (thus it does not return and value is lost)
                 // this has side effect that non-constructor functions returning nothing will return `this` instead, which can break something
                 // 

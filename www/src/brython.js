@@ -63,7 +63,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-10-01 11:15:45.849798"
+__BRYTHON__.compiled_date="2016-10-01 13:43:51.992754"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5092,7 +5092,7 @@ $B.frames_stack.push(frame)}
 $B.leave_frame=function(arg){
 if($B.frames_stack.length==0){console.log('empty stack');return}
 $B.frames_stack.pop()}
-$B.mro=function(klass){var items=klass.__mro__.slice(klass)
+$B.mro=function(klass){var items=klass.__mro__.slice()
 if(items[0]!==klass){items.splice(0,0,klass)}
 else{console.log('anomalie',klass)}
 return items}
@@ -10747,7 +10747,7 @@ return res}}
 $B.genfunc.__class__=$B.$factory
 $B.genfunc.$dict=$gen_it
 $gen_it.$factory=$B.genfunc})(__BRYTHON__)
-;(function($B){var modules={}
+ ;(function($B){var modules={}
 modules['browser']={$package: true,$is_package: true,__package__:'browser',__file__:$B.brython_path.replace(/\/*$/g,'')+
 '/Lib/browser/__init__.py',alert:function(message){window.alert($B.builtins.str(message))},confirm: $B.JSObject(window.confirm),console:$B.JSObject(window.console),document:$B.DOMNode(document),doc: $B.DOMNode(document),
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},prompt: function(message,default_value){return $B.JSObject(window.prompt(message,default_value||''))},reload: function(){
