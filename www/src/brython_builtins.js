@@ -31,9 +31,6 @@ $B.path = [$path+'Lib', $path+'libs', $script_dir, $path+'Lib/site-packages']
 // __BRYTHON__.bound[scope.id]
 $B.bound = {}
 
-// Information on the type of a variable by lexical analysis
-$B.type = {}
-
 // for the time being, a flag will be used to know if we should 
 // enable async functionality.
 $B.async_enabled=false
@@ -67,7 +64,6 @@ $B.builtins_block = {id:'__builtins__',module:'__builtins__'}
 $B.modules['__builtins__'] = $B.builtins_block
 $B.bound['__builtins__'] = {'__BRYTHON__':true, '$eval':true, '$open': true}
 $B.bound['__builtins__']['BaseException'] = true
-$B.type['__builtins__'] = {}
 
 // Builtin functions : used in py2js to simplify the code produced by a call
 $B.builtin_funcs = {}

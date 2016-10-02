@@ -43,13 +43,17 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
 
     //class_dict.__mro__ = [class_dict].concat(make_mro(bases, cl_dict))
     class_dict.__mro__ = make_mro(bases, cl_dict)
+    
+    if(class_name=='ABCMeta'){
+        console.log(class_name, class_dict.__mro__)
+    }
 
     // Check if at least one method is abstract (cf PEP 3119)
     // If this is the case, the class cannot be instanciated
     var is_instanciable = true, 
         non_abstract_methods = {}, 
         abstract_methods = {},
-        mro = $B.mro(class_dict)
+        mro = [class_dict].concat(class_dict.__mro__)
 
     for(var i=0;i<mro.length;i++){
         var kdict = mro[i]
@@ -87,6 +91,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
             metaclass = mro[i].__class__.$factory
         }
     }
+    
     class_dict.__class__ = metaclass.$dict
     
     // Get method __new__ of metaclass
@@ -107,9 +112,16 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         parents[i].$dict.$subclasses.push(factory)
     }
 
+    if(class_name=='ABCMeta'){
+        console.log(class_name, class_dict.__mro__)
+    }
+
+
     if(metaclass===_b_.type) return factory
     
-    for(var attr in class_dict){factory.$dict[attr] = class_dict[attr]}
+    for(var attr in class_dict){
+        factory.$dict[attr] = class_dict[attr]
+    }
 
     factory.$dict.$factory = factory
 
@@ -129,6 +141,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         for(var attr in factory){nofactory[attr] = factory[attr]}
         return nofactory
     }
+
     return factory
 }
 
@@ -234,8 +247,12 @@ function make_mro(bases, cl_dict){
         if(bases[i].$dict===undefined ||
             bases[i].$dict.__mro__===undefined){
             throw _b_.TypeError('Object passed as base class is not a class')
-        }else{
-            var _tmp = $B.mro(bases[i].$dict)
+        }
+        bmro[pos++] = bases[i].$dict
+        var _tmp = bases[i].$dict.__mro__
+        if(_tmp[0]===bases[i].$dict){
+            console.log('bizarre', bases[i].$dict)
+            _tmp.splice(0, 1)
         }
         for(var k=0;k<_tmp.length;k++){
             bmro[pos++]=_tmp[k]
@@ -343,12 +360,23 @@ $B.$type.__new__ = function(cls, name, bases, cl_dict){
     
     //class_dict.__mro__ = [class_dict].concat(make_mro(bases, cl_dict))
     class_dict.__mro__ = make_mro(bases, cl_dict)
+    if(class_dict.__mro__[0]===class_dict){
+        console.log('first is class', class_dict)
+    }
     
     // Reset the attribute __class__
     class_dict.__class__ = class_dict.__mro__[0].__class__
+
+    if(class_dict.__mro__[0]===class_dict){
+        console.log('358 first is class', class_dict)
+    }
     
     // create the factory function
     var factory = $instance_creator(class_dict)
+
+    if(class_dict.__mro__[0]===class_dict){
+        console.log('365 first is class', class_dict)
+    }
 
     factory.__class__ = $B.$factory
     factory.$dict = class_dict
@@ -358,6 +386,7 @@ $B.$type.__new__ = function(cls, name, bases, cl_dict){
     // so that instance.__class__ compares equal to factory
     factory.__eq__ = function(other){return other===factory.__class__}
     class_dict.$factory = factory
+
         
     // type() returns the factory function
     return factory
@@ -403,37 +432,50 @@ $B.$type.__getattribute__=function(klass, attr){
     if(res===undefined){
         // search in classes hierarchy, following method resolution order
 
-        var mro = $B.mro(klass)
-        if(mro===undefined){console.log('attr '+attr+' mro undefined for class '+klass+' name '+klass.__name__, klass, klass.__class__)}
-        for(var i=0;i<mro.length;i++){
-            var v=mro[i][attr]
-            if(v!==undefined){
-                res = v
-                break
+        var v = klass[attr]
+        if(v===undefined){
+            var mro = klass.__mro__
+            for(var i=0;i<mro.length;i++){
+                var v=mro[i][attr]
+                if(v!==undefined){
+                    res = v
+                    break
+                }
             }
-        }
-        var cl_mro = $B.mro(klass.__class__)
+        }else{res=v}
+
         if(res===undefined){
             // try in klass class
-            if(cl_mro!==undefined){
-                for(var i=0;i<cl_mro.length;i++){
-                    var v=cl_mro[i][attr]
-                    if(v!==undefined){
-                        res = v
-                        break
+            var v = klass.__class__[attr]
+            if(v===undefined){
+                var cl_mro = klass.__class__.__mro__
+                if(cl_mro!==undefined){
+                    for(var i=0;i<cl_mro.length;i++){
+                        var v=cl_mro[i][attr]
+                        if(v!==undefined){
+                            res = v
+                            break
+                        }
                     }
                 }
+            }else{
+                res = v
             }
         }
         
         if(res===undefined){
             // search a method __getattr__
-            var getattr=null
-            for(var i=0;i<cl_mro.length;i++){
-                if(cl_mro[i].__getattr__!==undefined){
-                    getattr = cl_mro[i].__getattr__
-                    break
+            var getattr=null,
+                v = klass.__class__.__getattr__
+            if(v===undefined){
+                for(var i=0;i<cl_mro.length;i++){
+                    if(cl_mro[i].__getattr__!==undefined){
+                        getattr = cl_mro[i].__getattr__
+                        break
+                    }
                 }
+            }else{
+                getattr = v
             }
             if(getattr!==null){
                 if(getattr.$type=='classmethod'){
@@ -538,6 +580,11 @@ $B.$type.__getattribute__=function(klass, attr){
 
 
 function $instance_creator(klass){
+
+    if(klass.__mro__[0]===klass){
+        console.log('559 first is class', klass)
+    }
+
     // The class may not be instanciable if it has at least one abstract method
     if(klass.$instanciable!==undefined){
         console.log('klass', klass.__name__,'not instanciable')
@@ -552,6 +599,10 @@ function $instance_creator(klass){
     var init_func = null
     try{init_func = _b_.getattr(klass,'__init__')}
     catch(err){}
+
+    if(klass.__mro__[0]===klass){
+        console.log('578 first is class', klass)
+    }
     
     // Variable "simple" is set if class only has one parent and this
     // parent is "object" or "type"

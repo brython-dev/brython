@@ -170,10 +170,13 @@ function delattr(obj, attr) {
     var klass = $B.get_class(obj)
     var res = obj[attr]
     if(res===undefined){
-        var mro = $B.mro(klass)
-        for(var i=0;i<mro.length;i++){
-            var res = mro[i][attr]
-            if(res!==undefined){break}
+        res = klass[attr]
+        if(res===undefined){
+            var mro = klass.__mro__
+            for(var i=0;i<mro.length;i++){
+                var res = mro[i][attr]
+                if(res!==undefined){break}
+            }
         }
     }
     if(res!==undefined && res.__delete__!==undefined){
@@ -544,9 +547,9 @@ function getattr(obj,attr,_default){
             // The attribute __mro__ of classes is a list of class
             // dictionaries ; it must be returned as a list of class
             // factory functions
-            var res = [], 
+            var res = [obj.$dict], 
                 pos = 0, 
-                mro = $B.mro(obj.$dict)
+                mro = obj.$dict.__mro__
             for(var i=0;i<mro.length;i++){
                 res[pos++]=mro[i].$factory
             }
@@ -612,17 +615,13 @@ function getattr(obj,attr,_default){
         if(obj.$dict===undefined){console.log('obj '+obj+' $dict undefined')}
         obj=obj.$dict
     }else{
-        var mro = $B.mro(klass)
-        if(mro===undefined){
-            console.log('in getattr '+attr+' mro undefined for '+obj+' dir '+dir(obj)+' class '+obj.__class__)
-            for(var _attr in obj){
-                console.log('obj attr '+_attr+' : '+obj[_attr])
+        attr_func = klass.__getattribute__
+        if(attr_func===undefined){
+            var mro = klass.__mro__
+            for(var i=0, len=mro.length;i<len;i++){
+                attr_func = mro[i]['__getattribute__']
+                if(attr_func!==undefined){break}
             }
-            console.log('obj class '+dir(klass)+' str '+klass)
-        }
-        for(var i=0, len=mro.length;i<len;i++){
-            attr_func = mro[i]['__getattribute__']
-            if(attr_func!==undefined){break}
         }
     }
     if(typeof attr_func!=='function'){
@@ -817,15 +816,18 @@ function isinstance(obj,arg){
    // Return true if one of the parents of obj class is arg
    // If one of the parents is the class used to inherit from str, obj is an
    // instance of str ; same for list
-   var mro = $B.mro(klass)
-   
-   for(var i=0;i<mro.length;i++){
-      var kl = mro[i]
+
+   function check(kl, arg){
       if(kl === arg.$dict){return true}
       else if(arg===_b_.str && 
           kl===$B.$StringSubclassFactory.$dict){return true}
       else if(arg===_b_.list && 
           kl===$B.$ListSubclassFactory.$dict){return true}
+   }
+   if(check(klass, arg)){return true}
+   var mro = klass.__mro__
+   for(var i=0;i<mro.length;i++){
+      if(check(mro[i], arg)){return true}
    }
 
     // Search __instancecheck__ on arg
@@ -849,8 +851,8 @@ function issubclass(klass,classinfo){
       return false
     }
     if(classinfo.__class__.is_class){
-        var mro = $B.mro(klass.$dict)
-        if(mro.indexOf(classinfo.$dict)>-1){return true}
+        if(klass.$dict===classinfo.$dict ||
+            klass.$dict.__mro__.indexOf(classinfo.$dict)>-1){return true}
     }
     
     // Search __subclasscheck__ on classinfo
@@ -1269,11 +1271,14 @@ function setattr(obj,attr,value){
     var res = obj[attr], 
         klass = obj.__class__ || $B.get_class(obj)
     if(res===undefined && klass){
-        var mro = $B.mro(klass)
-        var _len = mro.length
-        for(var i=0;i<_len;i++){
-            res = mro[i][attr]
-            if(res!==undefined) break
+        res = klass[attr]
+        if(res===undefined){
+            var mro = klass.__mro__,
+                _len = mro.length
+            for(var i=0;i<_len;i++){
+                res = mro[i][attr]
+                if(res!==undefined) break
+            }
         }
     }
     
@@ -1285,11 +1290,14 @@ function setattr(obj,attr,value){
         }
         var rcls = res.__class__, __set1__
         if(rcls!==undefined){
-            var mro = $B.mro(rcls)
-            for(var i=0, _len=mro.length;i<_len;i++){
-                __set1__ = mro[i].__set__
-                if(__set1__){
-                    break
+            var __set1__ = rcls.__set__
+            if(__set1__===undefined){
+                var mro = rcls.__mro__
+                for(var i=0, _len=mro.length;i<_len;i++){
+                    __set1__ = mro[i].__set__
+                    if(__set1__){
+                        break
+                    }
                 }
             }
         }
@@ -1310,10 +1318,13 @@ function setattr(obj,attr,value){
     // Search the __setattr__ method
     var _setattr=false
     if(klass!==undefined){
-        var mro = $B.mro(klass)
-        for(var i=0, _len=mro.length;i<_len;i++){
-            _setattr = mro[i].__setattr__
-            if(_setattr){break}
+        _setattr = klass.__setattr__
+        if(_setattr===undefined){
+            var mro = klass.__mro__
+            for(var i=0, _len=mro.length;i<_len;i++){
+                _setattr = mro[i].__setattr__
+                if(_setattr){break}
+            }
         }
     }
     
@@ -1379,9 +1390,10 @@ $SuperDict.__getattribute__ = function(self,attr){
     if($SuperDict[attr]!==undefined){ // for __repr__ and __str__
         return function(){return $SuperDict[attr](self)}
     }
-    var mro = $B.mro(self.__thisclass__.$dict), res
-
-    for(var i=1;i<mro.length;i++){ // start with 1 = ignores the class where super() is defined
+    
+    var mro = self.__thisclass__.$dict.__mro__, 
+        res
+    for(var i=0;i<mro.length;i++){ // ignore the class where super() is defined
         res = mro[i][attr]
         if(res!==undefined){
             // if super() is called with a second argument, the result is bound
@@ -1392,17 +1404,18 @@ $SuperDict.__getattribute__ = function(self,attr){
                 if(mro[i]===_b_.object.$dict){
                     var klass = self.__self_class__.__class__
                     if(klass!==$B.$type){
+                        if(klass.__mro__[0]===klass){console.log('anomalie', klass)}
                         var start = -1,
-                            mro = $B.mro(klass)
-                        for(var j=0;j<mro.length;j++){
-                            if(mro[j]===self.__thisclass__.$dict){
+                            mro2 = [klass].concat(klass.__mro__)
+                        for(var j=0;j<mro2.length;j++){
+                            if(mro2[j]===self.__thisclass__.$dict){
                                 start=j+1
                                 break
                             }
                         }
                         if(start>-1){
-                            for(var j=start;j<mro.length;j++){
-                                var res1 = mro[j][attr]
+                            for(var j=start;j<mro2.length;j++){
+                                var res1 = mro2[j][attr]
                                 if(res1!==undefined){ res = res1; break}
                             }
                         }

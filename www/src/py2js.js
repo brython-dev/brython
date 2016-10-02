@@ -1379,7 +1379,6 @@ function $ClassCtx(context){
         this.name = name
         this.id = context.node.module+'_'+name+'_'+this.random
         $B.bound[this.id] = {}
-        //$B.type[this.id] = {}
         if ($B.async_enabled) $B.block[this.id] = {}
         $B.modules[this.id] = this.parent.node
         this.parent.node.id = this.id
@@ -1398,7 +1397,6 @@ function $ClassCtx(context){
         // bind name
         this.level = this.scope.level
         $B.bound[this.scope.id][name] = this
-        //$B.type[this.scope.id][name] = 'class'
 
         // if function is defined inside another function, add the name
         // to local names
@@ -1868,22 +1866,11 @@ function $DefCtx(context){
         this.parent.node.id = this.id
         this.parent.node.module = this.module
         
-        // Add to modules dictionary - used in list comprehensions
-        $B.added = $B.added || {}
-        $B.added[this.module] = $B.added[this.module] || {}
-        $B.added[this.module][this.id] = true
-        //console.log('add', this.id, 'to modules of', this.module)
         $B.modules[this.id] = this.parent.node
         $B.bound[this.id] = {}
-        //$B.type[this.id] = {}
         
         this.level = this.scope.level
         $B.bound[this.scope.id][name]=this
-        try{
-            //$B.type[this.scope.id][name]='function'
-        }catch(err){
-            console.log(err, this.scope.id)
-        }
         
         // If function is defined inside another function, add the name
         // to local names
@@ -2518,11 +2505,6 @@ function $ExceptCtx(context){
     this.set_alias = function(alias){
         this.tree[0].alias = alias
         $B.bound[this.scope.id][alias] = {level: this.scope.level}
-        try{
-            //$B.type[this.scope.id][alias] = 'exception'
-        }catch(err){
-            console.log(err,this.scope.id)
-        }
     }
     
     this.to_js = function(){
@@ -2937,7 +2919,6 @@ function $FromCtx(context){
         for(var i=0;i<this.names.length;i++){
             var name = this.aliases[this.names[i]] || this.names[i]
             $B.bound[scope.id][name] = {level: scope.level}
-            //$B.type[scope.id][name] = false // impossible to know...
         }
     }
     
@@ -3058,7 +3039,6 @@ function $FuncArgIdCtx(context,name){
         $_SyntaxError(context,["duplicate argument '"+name+"' in function definition"])
     }
     $B.bound[node.id][name] = {level:1} // we are sure the name is defined in function
-    //$B.type[node.id][name] = false
 
     this.tree = []
     context.tree[context.tree.length]=this
@@ -3104,7 +3084,6 @@ function $FuncStarArgCtx(context,op){
             $_SyntaxError(context,["duplicate argument '"+name+"' in function definition"])
         }
         $B.bound[this.node.id][name] = {level:1}
-        //$B.type[this.node.id][name] = false
 
         // add to locals of function
         var ctx = context
@@ -3181,7 +3160,6 @@ function $IdCtx(context,value){
         // An id defined as a target in a "for" loop, or as "packed" 
         // (eg "a, *b = [1, 2, 3]") is bound
         $B.bound[scope.id][value]={level: $get_level(this)}
-        //$B.type[scope.id][value] = false // can be improved !
         this.bound = true
     }
 
@@ -3258,7 +3236,6 @@ function $IdCtx(context,value){
             if($B.bound[scope.id]===undefined){
                 console.log('name '+val+' undef '+scope.id)
             }
-            //if($B.type[scope.id]===undefined){console.log('name '+val+' type undef '+scope.id)}
             if($B._globals[scope.id]!==undefined &&
                 $B._globals[scope.id][val]!==undefined){
                 // Variable is declared as global. If the name is bound in the global
@@ -3542,7 +3519,6 @@ function $ImportCtx(context){
                 bound = this.tree[i].alias
             }
             $B.bound[scope.id][bound] = {level: scope.level}
-            //$B.type[scope.id][bound] = 'module'
         }
     }
     
@@ -3604,7 +3580,6 @@ function $IMPRTCtx(context){
                 bound = this.tree[i].alias
             }
             $B.bound[scope.id][bound] = true
-            //$B.type[scope.id][bound] = 'module'
         }
     }
     
@@ -7503,8 +7478,6 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     $B.bound[module]['__name__'] = true
     $B.bound[module]['__file__'] = true
 
-    //$B.type[module] = $B.type[module] || {}
-    //$B.type[locals_id] = $B.type[locals_id] || {}
     $B.$py_src[locals_id] = $B.$py_src[locals_id] || src
     var root = $tokenize(src,module,locals_id,parent_block_id,line_info)
     root.transform()

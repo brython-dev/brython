@@ -73,7 +73,8 @@ $ObjectDict.__dir__ = function(self) {
     var objects = [self], 
         pos=1,
         klass = self.__class__ || $B.get_class(self)
-    var mro = $B.mro(klass)
+    objects[pos++] = klass
+    var mro = klass.__mro__
     for (var i=0, _len_i = mro.length; i < _len_i; i++) {
         objects[pos++]=mro[i]
     }
@@ -132,23 +133,28 @@ $ObjectDict.__getattribute__ = function(obj,attr){
     
     if(res===undefined){
         // search in classes hierarchy, following method resolution order
-        var mro = $B.mro(klass)
-        for(var i=0, _len_i = mro.length; i < _len_i;i++){
-            if(mro[i].$methods){
-                var method = mro[i].$methods[attr]
+        function check(obj, kl, attr){
+            if(kl.$methods){
+                var method = kl.$methods[attr]
                 if(method!==undefined){
                     return method(obj)
                 }
             }
-            var v=mro[i][attr]
+            var v=kl[attr]
             if(v!==undefined){
-                res = v
-                break
-            }else if(attr=='__str__' && mro[i]['__repr__']!==undefined){
+                return v
+            }else if(attr=='__str__' && kl['__repr__']!==undefined){
                 // If the class doesn't define __str__ but defines __repr__,
                 // use __repr__
-                res = mro[i]['repr']
-                break
+                return kl['__repr__']
+            }
+        }
+        res = check(obj, klass, attr)
+        if(res===undefined){
+            var mro = klass.__mro__
+            for(var i=0, _len_i = mro.length; i < _len_i;i++){
+                res = check(obj, mro[i], attr)
+                if(res!==undefined){break}
             }
         }
     }else{
@@ -247,14 +253,14 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         // search __getattr__
         var _ga = obj['__getattr__']
         if(_ga===undefined){
-            var mro = $B.mro(klass)
-            //if(mro[0]!==klass){mro.splice(0, 0, klass)}
-            if(mro===undefined){console.log('in getattr mro undefined for '+obj)}
-            for(var i=0, _len_i = mro.length; i < _len_i;i++){
-                var v=mro[i]['__getattr__']
-                if(v!==undefined){
-                    _ga = v
-                    break
+            _ga = klass['__getattr__']
+            if(_ga===undefined){
+                var mro = klass.__mro__
+                for(var i=0, len=mro.length; i < len;i++){
+                    _ga = mro[i]['__getattr__']
+                    if(_ga!==undefined){
+                        break
+                    }
                 }
             }
         }

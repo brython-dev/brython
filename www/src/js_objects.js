@@ -260,14 +260,16 @@ $JSObjectDict.__getattribute__ = function(self,attr){
         return $Location()
     }
     
-    var res
-    // search in classes hierarchy, following method resolution order
-    var mro = $B.mro(self.__class__)
-    for(var i=0, _len_i = mro.length; i < _len_i;i++){
-        var v=mro[i][attr]
-        if(v!==undefined){
-            res = v
-            break
+    var res = self.__class__[attr]
+    if(res===undefined){
+        // search in classes hierarchy, following method resolution order
+        var mro = self.__class__.__mro__
+        for(var i=0, _len_i = mro.length; i < _len_i;i++){
+            var v=mro[i][attr]
+            if(v!==undefined){
+                res = v
+                break
+            }
         }
     }
     if(res!==undefined){

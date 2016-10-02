@@ -266,7 +266,6 @@ $B.clear_ns = function(name){
         if(key.substr(0, len)==name){
             delete __BRYTHON__.modules[key]
             delete __BRYTHON__.bound[key]
-            delete __BRYTHON__.type[key]
         }
     }
     
@@ -1015,11 +1014,18 @@ $B.leave_frame = function(arg){
     //console.log($B.frames_stack.length, 'frames remain')
 }
 
-$B.mro = function(klass){
-    var items = klass.__mro__.slice()
-    if(items[0]!==klass){items.splice(0, 0, klass)}
-    else{console.log('anomalie', klass)}
-    return items
+$B.memory = function(){
+    var info = []
+    for(var attr in __BRYTHON__){
+       var obj = __BRYTHON__[attr]
+       if(obj===null){continue}
+       if(Array.isArray(obj)){info.push([obj.length, attr])}
+       else if(typeof obj=='object'){info.push([Object.keys(obj).length, attr])}
+   }
+   info.sort(function(x, y){return x[0]-y[0]})
+   for(var i=0, len=info.length; i<len;i++){
+       console.log(info[i][0], info[i][1], __BRYTHON__[info[i][1]])
+   }
 }
 
 $B.$profile_data = {}
