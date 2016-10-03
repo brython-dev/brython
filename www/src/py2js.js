@@ -7548,10 +7548,12 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     if($B.profile>0){$add_profile(root,null,module)}
     if($B.debug>0){$add_line_num(root,null,module)}
     
+    var t1 = new Date().getTime()
     if($B.debug>=2){
-        var t1 = new Date().getTime()
         console.log('module '+module+' translated in '+(t1 - t0)+' ms')
     }
+    
+    $B.compile_time += t1-t0
     
     return root
 }
@@ -7707,6 +7709,8 @@ function brython(options){
     $B.debug = options.debug
     // set built-in variable __debug__
     _b_.__debug__ = $B.debug>0
+    
+    $B.compile_time = 0
 
     if(options.profile === undefined){ options.profile = 0}
     $B.profile = options.profile

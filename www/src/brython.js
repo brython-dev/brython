@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-10-03 08:00:43.926910"
+__BRYTHON__.compiled_date="2016-10-03 18:50:47.930091"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4108,8 +4108,9 @@ finally_node.add($NodeJS('$B.leave_frame("'+locals_id+'")'))
 root.add(finally_node)
 if($B.profile>0){$add_profile(root,null,module)}
 if($B.debug>0){$add_line_num(root,null,module)}
-if($B.debug>=2){var t1=new Date().getTime()
-console.log('module '+module+' translated in '+(t1 - t0)+' ms')}
+var t1=new Date().getTime()
+if($B.debug>=2){console.log('module '+module+' translated in '+(t1 - t0)+' ms')}
+$B.compile_time +=t1-t0
 return root}
 function load_scripts(scripts,run_script,onerror){
 if(run_script===undefined){run_script=$B._run_script;}
@@ -4169,6 +4170,7 @@ if(typeof options==='number')options={'debug':options}
 if(options.debug===undefined){options.debug=0 }
 $B.debug=options.debug
 _b_.__debug__=$B.debug>0
+$B.compile_time=0
 if(options.profile===undefined){options.profile=0}
 $B.profile=options.profile
 if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
@@ -4402,7 +4404,6 @@ var class_dict={__name__ : class_name.replace('$$',''),__bases__ : bases,__dict_
 var items=$B.$dict_items(cl_dict);
 for(var i=0;i<items.length;i++){class_dict[items[i][0]]=items[i][1]}
 class_dict.__mro__=make_mro(bases,cl_dict)
-if(class_name=='ABCMeta'){console.log(class_name,class_dict.__mro__)}
 var is_instanciable=true,non_abstract_methods={},abstract_methods={},mro=[class_dict].concat(class_dict.__mro__)
 for(var i=0;i<mro.length;i++){var kdict=mro[i]
 for(var attr in kdict){if(non_abstract_methods[attr]){continue}
@@ -4421,7 +4422,6 @@ if(meta_new.__func__===$B.$type.__new__){var factory=_b_.type.$dict.__new__(_b_.
 class_dict.$factory=factory
 for(var i=0;i<parents.length;i++){parents[i].$dict.$subclasses=parents[i].$dict.$subclasses ||[]
 parents[i].$dict.$subclasses.push(factory)}
-if(class_name=='ABCMeta'){console.log(class_name,class_dict.__mro__)}
 if(metaclass===_b_.type)return factory
 for(var attr in class_dict){factory.$dict[attr]=class_dict[attr]}
 factory.$dict.$factory=factory
@@ -7044,30 +7044,23 @@ finder_VFS.$dict.create_module.$type='classmethod'
 finder_VFS.$dict.exec_module.$type='classmethod'
 finder_VFS.$dict.find_module.$type='classmethod'
 finder_VFS.$dict.find_spec.$type='classmethod'
-function finder_compiled(){console.log('finder compiled')
-return{__class__:finder_compiled.$dict}}
+function finder_compiled(){return{__class__:finder_compiled.$dict}}
 finder_compiled.__class__=$B.$factory
 finder_compiled.$dict={$factory: finder_compiled,__class__: $B.$type,__name__: 'CompiledPath',create_module : function(cls,spec){
-return _b_.None;},exec_module : function(cls,module){console.log('exec module',module)
-var _spec=_b_.getattr(module,'__spec__'),code=_spec.loader_state.code;
+return _b_.None;},exec_module : function(cls,module){var _spec=_b_.getattr(module,'__spec__'),code=_spec.loader_state.code;
 module.$is_package=_spec.loader_state.is_package,delete _spec.loader_state['code'];
 var src_type=_spec.loader_state.type
-console.log('src type',src_type)
-run_js(code,_spec.origin,module)},find_module: function(cls,name,path){return finder_compiled.$dict.find_spec(cls,name,path)},find_spec : function(cls,fullname,path,prev_module,blocking){console.log('precompiled find spec',fullname,path)
-if(!$B.$options.use_compiled){return _b_.None }
-console.log('precompiled is used')
+run_js(code,_spec.origin,module)},find_module: function(cls,name,path){return finder_compiled.$dict.find_spec(cls,name,path)},find_spec : function(cls,fullname,path,prev_module,blocking){if(!$B.$options.use_compiled){return _b_.None }
 if($B.is_none(path)){
 path=$B.path}
 var path_entry='/compiled/'+fullname+'.js'
 var finder=$B.path_importer_cache[path_entry];
 if(finder===undefined){var hook=precompiled_hook;
-console.log('path entry',hook)
 try{
 finder=(typeof hook=='function' ? hook : _b_.getattr(hook,'__call__'))(path_entry)
 finder_notfound=false;}
 catch(e){if(e.__class__ !==_b_.ImportError.$dict){throw e;}}
 if(finder_notfound){$B.path_importer_cache[path_entry]=_b_.None;}}
-console.log('finder',finder)
 var find_spec=_b_.getattr(finder,'find_spec'),fs_func=typeof find_spec=='function' ? 
 find_spec : 
 _b_.getattr(find_spec,'__call__')
@@ -7202,13 +7195,10 @@ cached: _b_.None,parent: loader_data.is_package? fullname :
 parent_package(fullname),has_location: _b_.True});}
 return _b_.None;},invalidate_caches : function(self){}}
 url_hook.$dict.__mro__=[_b_.object.$dict]
-function precompiled_hook(path_entry,hint){console.log('precompiled hook',path_entry,hint)
-return{__class__: precompiled_hook.$dict,path_entry:path_entry,hint:hint }}
+function precompiled_hook(path_entry,hint){return{__class__: precompiled_hook.$dict,path_entry:path_entry,hint:hint }}
 precompiled_hook.__class__=$B.$factory
 precompiled_hook.$dict={$factory: precompiled_hook,__class__: $B.$type,__name__ : 'PrecompiledPathFinder',__repr__: function(self){return '<PrecompiledPathFinder' +(self.hint? " for '" + self.hint + "'":
-"(unbound)")+ ' at ' + self.path_entry + '>'},find_spec : function(self,fullname,module,blocking){console.log('use precompiled_hook',fullname)
-var loader_data={},notfound=true,hint=self.hint,base_path='/compiled/'+ fullname+'.js',modpaths=[base_path];
-console.log(self.path_entry)
+"(unbound)")+ ' at ' + self.path_entry + '>'},find_spec : function(self,fullname,module,blocking){var loader_data={},notfound=true,hint=self.hint,base_path='/compiled/'+ fullname+'.js',modpaths=[base_path];
 try{var file_info=[self.path_entry,'py',false],module={__name__:fullname,$is_package: false}
 loader_data.code=$download_module(module,file_info[0],undefined,blocking);
 notfound=false;
@@ -7254,8 +7244,8 @@ throw err}
 if($B.is_none($B.imported[_mod_name])){throw _b_.ImportError(_mod_name)}
 else{
 if(_parent_name){_b_.setattr($B.imported[_parent_name],parsed_name[i],$B.imported[_mod_name]);}}}
-if(i < len){try{__path__=_b_.getattr($B.imported[_mod_name],'__path__')}
-catch(e){
+if(i < len){try{
+__path__=_b_.getattr($B.imported[_mod_name],'__path__')}catch(e){
 if(i==len-1 && $B.imported[_mod_name][parsed_name[len]]&& 
 $B.imported[_mod_name][parsed_name[len]].__class__===$B.$ModuleDict){return $B.imported[_mod_name][parsed_name[len]]}
 throw _b_.ImportError(_mod_name)}}}}
