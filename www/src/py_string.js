@@ -737,8 +737,6 @@ $StringDict.__repr__ = function(self){
     return res
 }
 
-$StringDict.__setattr__ = function(self,attr,value){return setattr(self,attr,value)}
-
 $StringDict.__setitem__ = function(self,attr,value){
     throw _b_.TypeError("'str' object does not support item assignment")
 }

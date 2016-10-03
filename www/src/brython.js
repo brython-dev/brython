@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,8,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.8"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-10-02 10:12:00.214413"
+__BRYTHON__.compiled_date="2016-10-03 08:00:43.926910"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4728,8 +4728,6 @@ $B.$mkdict=function(glob,loc){var res={}
 for(var arg in glob)res[arg]=glob[arg]
 for(var arg in loc)res[arg]=loc[arg]
 return res}
-function clear(ns){
-delete $B.vars[ns],$B.bound[ns],$B.modules[ns],$B.imported[ns]}
 $B.$list_comp=function(items){
 var ix=$B.UUID()
 var py="x"+ix+"=[]\n",indent=0
@@ -8954,7 +8952,6 @@ if(res.search('"')==-1 && res.search("'")==-1){return "'"+res+"'"}else if(self.s
 var qesc=new RegExp("'","g")
 res="'"+res.replace(qesc,"\\'")+"'" 
 return res}
-$StringDict.__setattr__=function(self,attr,value){return setattr(self,attr,value)}
 $StringDict.__setitem__=function(self,attr,value){throw _b_.TypeError("'str' object does not support item assignment")}
 $StringDict.__str__=function(self){if(self===undefined)return "<class 'str'>"
 return self.toString()}

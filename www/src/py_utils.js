@@ -55,8 +55,6 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
             for(var i=argcount;i<nb_pos;i++){
                 slots[extra_pos_args].push($args[i])
             }
-            //slots[extra_pos_args] = _b_.tuple(Array.prototype.slice.call($args,
-            //    argcount,nb_pos))
             // For the next step of the algorithm, only use the arguments
             // before these extra arguments
             nb_pos = argcount
@@ -129,7 +127,6 @@ $B.get_class = function(obj, from){
                return _b_.int.$dict
             }
             // this is a float
-            //obj= _b_.float(obj)
             obj.__class__=_b_.float.$dict
             return _b_.float.$dict
           case 'string':
@@ -159,11 +156,6 @@ $B.$mkdict = function(glob,loc){
     for(var arg in glob) res[arg]=glob[arg]
     for(var arg in loc) res[arg]=loc[arg]
     return res
-}
-
-function clear(ns){
-    // delete temporary structures
-    delete $B.vars[ns], $B.bound[ns], $B.modules[ns], $B.imported[ns]
 }
 
 $B.$list_comp = function(items){
