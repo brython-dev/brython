@@ -44,10 +44,6 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     //class_dict.__mro__ = [class_dict].concat(make_mro(bases, cl_dict))
     class_dict.__mro__ = make_mro(bases, cl_dict)
     
-    if(class_name=='ABCMeta'){
-        console.log(class_name, class_dict.__mro__)
-    }
-
     // Check if at least one method is abstract (cf PEP 3119)
     // If this is the case, the class cannot be instanciated
     var is_instanciable = true, 
@@ -111,11 +107,6 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         parents[i].$dict.$subclasses  = parents[i].$dict.$subclasses || []
         parents[i].$dict.$subclasses.push(factory)
     }
-
-    if(class_name=='ABCMeta'){
-        console.log(class_name, class_dict.__mro__)
-    }
-
 
     if(metaclass===_b_.type) return factory
     

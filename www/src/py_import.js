@@ -148,7 +148,9 @@ function import_js(module,path,blocking) {
     try{
         var module_contents=$download_module(module, path, undefined, blocking)
         if(Array.isArray(blocking)){return}
-    }catch(err){return null}
+    }catch(err){
+        return null
+    }
     run_js(module_contents,path,module)
     return true
 }
@@ -167,6 +169,7 @@ function run_js(module_contents,path,module){
         console.log('no $module')
         throw _b_.ImportError("name '$module' is not defined in module")
     }
+
     if (module !== undefined) {
         // FIXME : This might not be efficient . Refactor js modules instead.
         // Overwrite original module object . Needed e.g. for reload()
@@ -416,7 +419,6 @@ finder_VFS.$dict.find_spec.$type = 'classmethod'
  * Search an import path for .py modules
  */
 function finder_compiled(){
-    console.log('finder compiled')
     return {__class__:finder_compiled.$dict}
 }
 finder_compiled.__class__ = $B.$factory
@@ -432,13 +434,11 @@ finder_compiled.$dict = {
     },
 
     exec_module : function(cls, module) {
-        console.log('exec module', module)
         var _spec = _b_.getattr(module, '__spec__'),
             code = _spec.loader_state.code;
         module.$is_package = _spec.loader_state.is_package,
         delete _spec.loader_state['code'];
         var src_type = _spec.loader_state.type
-        console.log('src type', src_type)
         run_js(code, _spec.origin, module)
     },
 
@@ -447,9 +447,7 @@ finder_compiled.$dict = {
     },
 
     find_spec : function(cls, fullname, path, prev_module, blocking) {
-        console.log('precompiled find spec', fullname, path)
         if(!$B.$options.use_compiled){ return _b_.None }
-        console.log('precompiled is used')
 
         if ($B.is_none(path)) {
             // [Import spec] Top-level import , use sys.path
@@ -460,7 +458,6 @@ finder_compiled.$dict = {
         var finder = $B.path_importer_cache[path_entry];
         if (finder === undefined) {
             var hook = precompiled_hook;
-            console.log('path entry', hook)
             try {
                 finder = (typeof hook=='function' ? hook : _b_.getattr(hook, '__call__'))(path_entry)
                 finder_notfound = false;
@@ -472,7 +469,6 @@ finder_compiled.$dict = {
                 $B.path_importer_cache[path_entry] = _b_.None;
             }
         }
-        console.log('finder', finder)
         var find_spec = _b_.getattr(finder, 'find_spec'),
             fs_func = typeof find_spec=='function' ? 
                 find_spec : 
@@ -840,7 +836,6 @@ url_hook.$dict.__mro__ = [_b_.object.$dict]
  */
 
 function precompiled_hook(path_entry, hint) { 
-    console.log('precompiled hook', path_entry, hint)
     return {__class__: precompiled_hook.$dict, 
         path_entry:path_entry, hint:hint }
 }
@@ -856,15 +851,13 @@ precompiled_hook.$dict = {
     },
 
     find_spec : function(self, fullname, module, blocking) {
-        console.log('use precompiled_hook', fullname)
+
         var loader_data = {},
             notfound = true,
             hint = self.hint,
             base_path = '/compiled/'+ fullname+'.js',
             modpaths = [base_path];
         
-        console.log(self.path_entry)
-
         try{
             var file_info = [self.path_entry, 'py', false],
                 module = {__name__:fullname, $is_package: false}
@@ -981,8 +974,9 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level, blocking)
             // else { } // [Import spec] Module cache hit . Nothing to do.
             // [Import spec] If __path__ can not be accessed an ImportError is raised
             if (i < len) {
-                try { __path__ = _b_.getattr($B.imported[_mod_name], '__path__') }
-                catch (e) { 
+                try { 
+                    __path__ = _b_.getattr($B.imported[_mod_name], '__path__') 
+                } catch (e) { 
                     // If this is the last but one part, and the last part is
                     // an attribute of module, and this attribute is a module,
                     // return it. This is the case for os.path for instance
