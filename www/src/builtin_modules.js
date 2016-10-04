@@ -234,7 +234,7 @@
             }
         },
         py2js: function(src, module_name){
-            if (is_none(module_name)) {
+            if ($B.is_none(module_name)) {
                 module_name = '__main__'+$B.UUID()
             }
             return $B.py2js(src,module_name,module_name,'__builtins__').to_js()

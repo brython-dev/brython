@@ -25,7 +25,7 @@ def open(url, new=0, autoraise=True):
         url = '//' + url
     print(url)
     if window.open(url, _target[new]):
-		return True
+        return True
     return False
 
 def open_new(url):
