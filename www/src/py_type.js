@@ -68,7 +68,6 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     }
     
     // Check if class has __slots__
-    var slots = []
     for(var i=0;i<mro.length;i++){
         var _slots = mro[i].__slots__
         if(_slots!==undefined){
@@ -163,7 +162,7 @@ $B.$class_constructor1 = function(class_name,class_obj){
 
 $B.make_method = function(attr, klass, func){
     // Return a method, based on a function defined in a class
-    var __self__,__func__= func,__repr__,__str__, method
+    var method
     switch(func.$type) {
       case undefined:
       case 'function':
@@ -418,7 +417,7 @@ $B.$type.__getattribute__=function(klass, attr){
         return function(key){delete klass[key]}
     }//switch
     //console.log('get attr '+attr+' of klass '+klass)
-    var res = klass[attr], is_class=true
+    var res = klass[attr]
 
     if(res===undefined){
         // search in classes hierarchy, following method resolution order

@@ -146,9 +146,9 @@ function compile(source, filename, mode) {
          arguments,{flags:0, dont_inherit:false, optimize:-1},null,null)
     
     var module_name = '$exec_' + $B.UUID()
-    var local_name = module_name; //'' + $B.UUID()
+    //var local_name = module_name; //'' + $B.UUID()
 
-    var root = $B.py2js(source,module_name,[module_name],local_name)
+    //var root = $B.py2js(source,module_name,[module_name],local_name)
     $B.clear_ns(module_name)
     $.__class__ = $B.$CodeObjectDict
     $.co_flags = $.flags
@@ -299,10 +299,12 @@ function $eval(src, _globals, _locals){
     if(_globals===undefined){
         var gobj = current_frame[3],
             ex = ''
+        /*
         for(var attr in current_frame[3]){
             ex == '$locals_'+globals_id+'["'+attr+
                 '"] = gobj["'+attr+'"]';
         }
+        */
         parent_block_id = current_globals_id
         ex += 'var $locals_'+current_globals_id+'=gobj;'
         eval(ex)
@@ -952,7 +954,6 @@ function $extreme(args,op){ // used by min() and max()
     if(args.length==0){throw _b_.TypeError($op_name+" expected 1 arguments, got 0")}
     var last_arg = args[args.length-1],
         nb_args = args.length,
-        has_kw_args = false,
         has_default = false,
         func = false
     if(last_arg.$nat=='kw'){
@@ -969,7 +970,6 @@ function $extreme(args,op){ // used by min() and max()
                     break
                 default:
                     throw _b_.TypeError("'"+attr+"' is an invalid keyword argument for this function")
-                    break
             }
         }
     }
@@ -1253,8 +1253,8 @@ function setattr(obj,attr,value){
       case '__class__':
         // Setting the attribute __class__ : value is the factory function,
         // we must set __class__ to the class dictionary
-        obj.__class__ = value.$dict;return None
-        break
+        obj.__class__ = value.$dict;
+        return None
     }
     
     if(obj.__class__===$B.$factory){ 
@@ -1627,7 +1627,6 @@ function zip(){
     var _args = $ns['args']
     var args = [], pos=0
     for(var i=0;i<_args.length;i++){args[pos++]=iter(_args[i])}
-    var kw = $ns['kw']
     var rank=0,items=[]
     while(1){
         var line=[],flag=true, pos=0

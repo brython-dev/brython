@@ -126,7 +126,6 @@ function to_dict(obj){
 }
 
 function frame(stack, pos){
-    var mod_name = stack[2]
     var fs = stack
     var res = {__class__:$FrameDict,
         f_builtins : {}, // XXX fix me

@@ -129,7 +129,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
     if(attr==='__class__'){
         return klass.$factory
     }
-    var res = obj[attr],args=[]
+    var res = obj[attr]
     
     if(res===undefined){
         // search in classes hierarchy, following method resolution order

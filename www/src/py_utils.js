@@ -15,8 +15,7 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     // extra_kw_args = 'kw'
         
     var has_kw_args = false, 
-        nb_pos = $args.length,
-        $ns
+        nb_pos = $args.length
     
     // If the function call had keywords arguments, they are in the last
     // element of $args
@@ -233,11 +232,6 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
         js = root.to_js(),
         lines = js.split('\n')
     
-    var header = 'for(var i=0;i<$B.frames_stack.length;i++){\n'+
-        '    var frame = $B.frames_stack[i];\n'+
-        '    eval("var $locals_"+frame[2].replace(/\\./g,"_")+" = frame[3]")\n'+
-        '}\n'
-    
     js = lines.join('\n')
     js += '\nvar $res = $locals_'+genexpr_name+'["'+genexpr_name+'"]();\n'+
         '$res.is_gen_expr=true;\nreturn $res\n'
@@ -252,8 +246,7 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
 $B.clear_ns = function(name){
     // Remove name from __BRYTHON__.mdoules, and all the keys that start with name
     //delete __BRYTHON__.modules[name]
-    var keys = [],
-        len = name.length
+    var len = name.length
     for(var key in __BRYTHON__.modules){
         if(key.substr(0, len)==name){
             delete __BRYTHON__.modules[key]
@@ -318,7 +311,6 @@ $B.$check_def_free = function(name, value){
     if(value!==undefined){return value}
     var res
     for(var i=$B.frames_stack.length-1;i>=0;i--){
-        var frame = $B.frames_stack[i]
         res = $B.frames_stack[i][1][name]
         if(res!==undefined){return res}
         res = $B.frames_stack[i][3][name]
@@ -397,7 +389,7 @@ $B.list_slice_step = function(obj, start, stop, step){
         if(stop<0){stop=Math.max(0, stop+obj.length)}
     }
     
-    var res=[], len=obj.length
+    var res=[]
     if(step>0){
         for(var i=start;i<stop;i+=step){res.push(obj[i])}
     }else{
