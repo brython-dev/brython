@@ -10,6 +10,7 @@ import re
 import sys
 import tarfile
 import zipfile
+import subprocess
 
 import javascript_minifier
 
@@ -20,7 +21,7 @@ if(sys.version_info[0]!=3):
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
-implementation = [3, 2, 8, 'final', 0]
+implementation = [3, 2, 9, 'alpha', 0]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
@@ -91,12 +92,21 @@ res += '// version compiled from commented, indented source files '
 res += 'at github.com/brython-dev/brython\n'
 src_size = 0
 
-for fname in sources:
-    src = open(abs_path(fname)+'.js').read() + '\n'
-    src_size += len(src)
-    res += javascript_minifier.minify(src)
+cmd = 'uglifyjs ../www/src/{}.js -c -o test_ugl.js'
 
-res = res.replace('context', 'C')
+for fname in sources:
+    #src = open(abs_path(fname)+'.js').read() + '\n'
+    #src_size += len(src)
+    #res += javascript_minifier.minify(src)
+
+    subprocess.call(cmd.format(fname).split(),
+        shell=True)
+    with open('test_ugl.js') as fobj:
+        src = fobj.read()+'\n'
+        src_size += len(src)
+        res += src
+
+#res = res.replace('context', 'C')
 
 with open(abs_path('brython.js'), 'w') as the_brythonjs_file_output:
     the_brythonjs_file_output.write(res)
