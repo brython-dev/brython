@@ -305,36 +305,34 @@ function $Node(type){
                 this.context.tree[0].type=="generator"){
                     var def_node = this,
                         def_ctx = def_node.context.tree[0]
-                    if(true){ //def_ctx.name.substr(0, 4)=='fgnx'){
-                        var blocks = [],
-                            node = def_node.parent_block
-                         
-                        while(true){
-                            var node_id = node.id.replace(/\./g, '_')
-                            blocks.push('"$locals_'+node_id+'": $locals_'+node_id)
-                            node = node.parent_block
-                            if(node===undefined || node.id == '__builtins__'){break}
-                        }
-                        blocks = '{'+blocks+'}'
-                        if(def_ctx.name=='fgnx'){
-                            console.log('blocks', blocks)
-                        }
-                        
-                        var parent = this.parent
-                        while(parent!==undefined && parent.id===undefined){
-                            parent = parent.parent
-                        }
-
-                        var g = $B.$BRgenerator2(def_ctx.name, blocks,
-                            def_ctx.id, def_node),
-                            block_id = parent.id.replace(/\./g, '_'),
-                            res = '$locals_'+block_id+'["'+def_ctx.name+
-                                '"] = $B.genfunc("'+def_ctx.name+'", '+blocks+
-                                ',['+g+'])'
-                        this.parent.children.splice(rank, 2)
-                        this.parent.insert(rank+offset-1,
-                            $NodeJS(res))
+                    var blocks = [],
+                        node = def_node.parent_block
+                     
+                    while(true){
+                        var node_id = node.id.replace(/\./g, '_')
+                        blocks.push('"$locals_'+node_id+'": $locals_'+node_id)
+                        node = node.parent_block
+                        if(node===undefined || node.id == '__builtins__'){break}
                     }
+                    blocks = '{'+blocks+'}'
+                    if(def_ctx.name=='fgnx'){
+                        console.log('blocks', blocks)
+                    }
+                    
+                    var parent = this.parent
+                    while(parent!==undefined && parent.id===undefined){
+                        parent = parent.parent
+                    }
+
+                    var g = $B.$BRgenerator2(def_ctx.name, blocks,
+                        def_ctx.id, def_node),
+                        block_id = parent.id.replace(/\./g, '_'),
+                        res = '$locals_'+block_id+'["'+def_ctx.name+
+                            '"] = $B.genfunc("'+def_ctx.name+'", '+blocks+
+                            ',['+g+'])'
+                    this.parent.children.splice(rank, 2)
+                    this.parent.insert(rank+offset-1,
+                        $NodeJS(res))
             }
 
           return ctx_offset
@@ -580,7 +578,6 @@ function $AssignCtx(context){ //, check_unbound){
                 // check if name in globals
                 if($B._globals && $B._globals[scope.id]
                     && $B._globals[scope.id][name]){
-                        void(0)
                 }else{
                     left.tree[0].bound = true
                 }
@@ -694,7 +691,6 @@ function $AssignCtx(context){ //, check_unbound){
                 new_nodes[pos++]=check_node
             }
 
-            var j=0
             for(var i=0;i<left_items.length;i++){
 
                 var new_node = new $Node()
@@ -742,8 +738,7 @@ function $AssignCtx(context){ //, check_unbound){
           // This is because the code generated for exec() or eval()
           // can't be inserted as the third parameter of a function
           
-          var node = $get_node(this),
-              right_js = right.to_js()
+          var right_js = right.to_js()
           
           var res='', rvar='', $var='$temp'+$loop_num
           if(right.type=='expr' && right.tree[0]!==undefined &&
@@ -943,7 +938,6 @@ function $AugmentedAssignCtx(context, op){
           case '/=':
             if(left_is_id){
               var scope = this.scope,
-                  local_ns = '$local_'+scope.id.replace(/\./g,'_'),
                   global_ns = '$local_'+scope.module.replace(/\./g,'_'),
                   prefix
               switch(scope.ntype) {
@@ -1600,7 +1594,7 @@ function $ConditionCtx(context,token){
         // In a "while" loop, the flag "$no_break" is initially set to false.
         // If the loop exits with a "break" this flag will be set to "true",
         // so that an optional "else" clause will not be run.
-        var res = [tok+'(bool('], pos=1
+        var res = [tok+'(bool(']
         if(tok=='while'){
             res.push('$locals["$no_break'+this.loop_num+'"] && ')
         }else if(tok=='else if'){
@@ -1729,11 +1723,10 @@ function $DecoratorCtx(context){
         }
 
         // add a line after decorated element
-        var callable = children[func_rank].context
-        var tail=''
-        var scope = $get_scope(this)
-        var ref = '$locals["'+obj.name+'"]'
-        var res = ref+'='
+        var tail='',
+            scope = $get_scope(this),
+            ref = '$locals["'+obj.name+'"]',
+            res = ref+'='
 
         for(var i=0;i<decorators.length;i++){
           //var dec = this.dec_ids[i]
@@ -1906,12 +1899,8 @@ function $DefCtx(context){
         this.doc_string = $get_docstring(node)
         this.rank = rank // save rank if we must add generator declaration
 
-        // list of names declared as "global"      
-        var fglobs = this.parent.node.globals
-        
         // block indentation
         var indent = node.indent+16
-        var header = ' '.repeat(indent)
         
         // List of enclosing functions
         
@@ -2009,9 +1998,8 @@ function $DefCtx(context){
 
         // Push id in frames stack
         var enter_frame_node = new $Node(),
-            enter_frame_node_rank = nodes.length
-        var js = ';$B.frames_stack.push([$local_name, $locals,'+
-            '"'+global_scope.id+'", '+global_ns+']);' 
+            js = ';$B.frames_stack.push([$local_name, $locals,'+
+                '"'+global_scope.id+'", '+global_ns+']);' 
         if ($B.profile > 1) {
             if(this.scope.ntype=='class'){fname=this.scope.context.tree[0].name+'.'+this.name}
             else fname = this.name
@@ -2027,8 +2015,7 @@ function $DefCtx(context){
     
         // Code in the worst case, uses $B.args in py_utils.js
 
-        var make_args_nodes = [],
-            func_ref = '$locals_'+scope.id.replace(/\./g,'_')+'["'+this.name+'"]'
+        var make_args_nodes = []
 
         // If function is not a generator, $locals is the result of $B.args
         var js = this.type=='def' ? local_ns+' = $locals' : 'var $ns'
@@ -2059,7 +2046,6 @@ function $DefCtx(context){
             // a faster version of argument parsing than by calling function
             // $B.args
             only_positional = true
-            var pos_nodes = []
             
             if($B.debug>0 || this.positional_list.length>0){
 
@@ -2198,59 +2184,6 @@ function $DefCtx(context){
         node.parent.insert(rank+1,ret_node)
 
         var offset = 2
-        
-        // If function is a generator, add a line to build the generator
-        // function, based on the original function
-        if(this.type==='generator' && !this.declared &&
-            false){ //this.name.substr(0, 4) != 'fgnx'){
-
-            var code = ['var env=[], module=$B.last($B.frames_stack)[2]',
-                'for(var i=$B.frames_stack.length-1; i>=0; i--){',
-                '    var frame = $B.frames_stack[i]',
-                '    if(frame[2]!=module){break}',
-                '    env.push([frame[0], frame[1]])',
-                '}',
-                'env.push([module, $B.last($B.frames_stack)[3]])',
-                //'console.log("generator env", env, $B.frames_stack)'
-            ]
-            for(var i=0;i<code.length;i++){
-                node.parent.insert(rank+offset,
-                    $NodeJS(code[i]))
-                offset++
-            }
-
-            var sc = scope
-            var env = [], pos=0
-            while(sc && sc.id!=='__builtins__'){
-                var sc_id = sc.id.replace(/\./g,'_')
-                if(sc===scope){
-                    env[pos++]='["'+sc_id+'",$locals]'
-                }else{
-                    env[pos++]='["'+sc_id+'",$locals_'+sc_id+']'
-                }
-                sc = sc.parent_block
-            }
-            var env_string = '['+env.join(', ')+']'
-
-          js = '$B.$BRgenerator(env,"'+this.name+'", $locals_'+
-              scope.id.replace(/\./g, '_')+'["'+this.name+'"],"'+this.id+'")'
-          
-          //return $B.$BRgenerator1(env,this.name, 
-          //    scope.id.replace(/\./g, '_'),this.id)
-          var gen_node = new $Node()
-          gen_node.id = this.module
-          var ctx = new $NodeCtx(gen_node)
-          var expr = new $ExprCtx(ctx,'id',false)
-          var name_ctx = new $IdCtx(expr,this.name)
-          var assign = new $AssignCtx(expr)
-          var expr1 = new $ExprCtx(assign,'id',false)
-          var js_ctx = new $NodeJSCtx(assign,js)
-          expr1.tree.push(js_ctx)
-          node.parent.insert(rank+offset,gen_node) 
-
-          this.declared = true
-          offset++
-        }
 
         var prefix = this.tree[0].to_js()
         if(this.decorated){prefix=this.alias}
@@ -2392,8 +2325,7 @@ function $DelCtx(context){
             return res.join(';')
         }else{
             var expr = this.tree[0].tree[0]
-            var scope = $get_scope(this)
-
+            
             switch(expr.type) {
                 case 'id':
                     return 'delete '+expr.to_js()+';'
@@ -2579,7 +2511,6 @@ function $FloatCtx(context,value){
         // number literal
         if(/^\d+$/.exec(this.value) || 
             /^\d+\.\d*$/.exec(this.value)){
-                var value = parseFloat(this.value)
                 return '(new Number('+this.value+'))'
         }
         
@@ -2601,7 +2532,6 @@ function $ForExpr(context){
     
     this.transform = function(node,rank){
         var scope = $get_scope(this),
-            mod_name = scope.module,
             target = this.tree[0],
             target_is_1_tuple = target.tree.length==1 && target.expect == 'id',
             iterable = this.tree[1],
@@ -2962,8 +2892,7 @@ function $FromCtx(context){
         this.module = packages.join('.')
         
         // FIXME : Replacement still needed ?
-        var mod_name = this.module.replace(/\$/g,''),
-            localns = '$locals_'+scope.id.replace(/\./g,'_');
+        var mod_name = this.module.replace(/\$/g,'')
         if(this.blocking){
             res[pos++] = '$B.$import("';
             res[pos++] = mod_name+'",["';
@@ -3222,7 +3151,7 @@ function $IdCtx(context,value){
         if(val=='__BRYTHON__' || val == '$B'){return val}
         
         var innermost = $get_scope(this),
-            scope = innermost, found=[], module = scope.module
+            scope = innermost, found=[]
         
         // get global scope
         var gs = innermost
@@ -3249,8 +3178,6 @@ function $IdCtx(context,value){
                     this.result = '$B.$global_search("'+val+'")'
                     return this.result
                 }
-                found = [gs]
-                break
             }
             if(scope===innermost){
                 // Handle the case when the same name is used at both sides
@@ -3524,10 +3451,9 @@ function $ImportCtx(context){
     
     this.to_js = function(){
         this.js_processed=true
-        var scope = $get_scope(this)
-        var mod = scope.module
-
-        var res = [], pos=0
+        var scope = $get_scope(this),
+            res = [], 
+            pos=0
         for(var i=0;i<this.tree.length;i++){
             var mod_name = this.tree[i].name,
                 aliases = (this.tree[i].name == this.tree[i].alias)?
@@ -3606,16 +3532,10 @@ function $IMPRTCtx(context){
     
     this.to_js = function(){
         this.js_processed=true
-        var scope = $get_scope(this)
-        var mod = scope.module
-
-        var res = [], pos=0
+        var res = [], 
+            pos=0
         for(var i=0;i<this.tree.length;i++){
-            var mod_name = this.tree[i].name,
-                aliases = (this.tree[i].name == this.tree[i].alias)?
-                    '{}' : ('{"' + mod_name + '" : "' +
-                    this.tree[i].alias + '"}'),
-                localns = '$locals_'+scope.id.replace(/\./g,'_');
+            var mod_name = this.tree[i].name
             res[pos++] = '$B.$import_non_blocking("'+mod_name+'", function()'
         }
         // add None for interactive console
@@ -3668,10 +3588,6 @@ function $KwArgCtx(context){
     else if(ctx.kwargs.indexOf(value)===-1){ctx.kwargs.push(value)}
     else{$_SyntaxError(context,['keyword argument repeated'])}
 
-    // If the keyword argument occurs inside a function, remove the occurence
-    // from referenced variables in the function
-    var scope = $get_scope(this)
-
     this.toString = function(){return 'kwarg '+this.tree[0]+'='+this.tree[1]}
 
     this.to_js = function(){
@@ -3701,8 +3617,7 @@ function $LambdaCtx(context){
 
         var src = $B.$py_src[module.id]
         
-        var qesc = new RegExp('"',"g"), // to escape double quotes in arguments
-            args = src.substring(this.args_start,this.body_start),
+        var args = src.substring(this.args_start,this.body_start),
             body = src.substring(this.body_start+1,this.body_end)
         body = body.replace(/\n/g,' ')
 
@@ -3809,8 +3724,7 @@ function $ListOrTupleCtx(context,real){
             }
             sc = sc.parent_block
         }
-        var env_string = '['+env.join(', ')+']',
-            module_name = $get_module(this).module
+        var module_name = $get_module(this).module
         
         switch(this.real) {
           case 'list':
@@ -4971,21 +4885,12 @@ function $WithCtx(context){
     this.to_js = function(){
         this.js_processed=true
         var indent = $get_node(this).indent, h=' '.repeat(indent),
-            num = this.num, 
-            scope = $get_scope(this)
+            num = this.num
         var res = 'var $ctx_manager'+num+' = '+this.tree[0].to_js()+
             '\n'+h+'var $ctx_manager_exit'+num+
             '= getattr($ctx_manager'+num+',"__exit__")\n'+
             h+'var $value'+num+' = getattr($ctx_manager'+num+
             ',"__enter__")()\n'
-        /*            
-        if(this.tree[0].alias){
-            var alias = this.tree[0].alias
-            res += h+'$locals_'+scope.id.replace(/\./g,'_')
-            res += '["'+alias+'"] = getattr($ctx_manager'+num+
-                ',"__enter__")()\n'
-        }
-        */
         res += h+'var $exc'+num+' = true\n'
         return res + h+'try'
     }
@@ -5748,7 +5653,6 @@ function $transition(context,token){
             }
             return $transition(context.parent,token,arguments[2])
         }
-        break
       case 'double_star_arg':
         switch(token) {
           case 'id':
@@ -6808,17 +6712,12 @@ function $transition(context,token){
             var expr = new $ExprCtx(context.parent.parent,'call',false)
             var expr1 = new $ExprCtx(expr,'id',false)
             new $IdCtx(expr1,arguments[2]) // create id
-            if (true){ //context.op !== '+'){
-               var repl = new $AttrCtx(expr)
-               if(context.op==='+'){repl.name='__pos__'}
-               else if(context.op==='-'){repl.name='__neg__'}
-               else{repl.name='__invert__'}
-               // method is called with no argument
-               var call = new $CallCtx(expr)
-               // new context is the expression above the id
-               return expr1
-            }
-            return context.parent
+            var repl = new $AttrCtx(expr)
+            if(context.op==='+'){repl.name='__pos__'}
+            else if(context.op==='-'){repl.name='__neg__'}
+            else{repl.name='__invert__'}
+            // new context is the expression above the id
+            return expr1
           case 'op':
             if ('+' == arguments[2] || '-' == arguments[2]) {
                var op = arguments[2]
@@ -6904,10 +6803,6 @@ var s_escaped = 'abfnrtvxuU"'+"'"+'\\', is_escaped={}
 for(var i=0;i<s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
 
 function $tokenize(src,module,locals_id,parent_block_id,line_info){
-    var delimiters = [["#","\n","comment"],['"""','"""',"triple_string"],
-        ["'","'","string"],['"','"',"string"],
-        ["r'","'","raw_string"],['r"','"',"raw_string"]]
-    var br_open = {"(":0,"[":0,"{":0}
     var br_close = {")":"(","]":"[","}":"{"}
     var br_stack = ""
     var br_pos = []
@@ -6924,17 +6819,13 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     var $indented = ['class','def','for','condition','single_kw','try','except','with']
     // from https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Reserved_Words
 
-    var punctuation = {',':0,':':0}, 
-        int_pattern = new RegExp("^\\d+(j|J)?"),
+    var int_pattern = new RegExp("^\\d+(j|J)?"),
         float_pattern1 = new RegExp("^\\d+\\.\\d*([eE][+-]?\\d+)?(j|J)?"),
         float_pattern2 = new RegExp("^\\d+([eE][+-]?\\d+)(j|J)?"),
         hex_pattern = new RegExp("^0[xX]([0-9a-fA-F]+)"),
         octal_pattern = new RegExp("^0[oO]([0-7]+)"),
-        binary_pattern = new RegExp("^0[bB]([01]+)"),
-        id_pattern = new RegExp("[\\$_a-zA-Z]\\w*"),
-        qesc = new RegExp('"',"g"), // escape double quotes
-        sqesc = new RegExp("'","g") // escape single quotes
-    
+        binary_pattern = new RegExp("^0[bB]([01]+)")
+        
     var context = null
     var root = new $Node('module')
     root.module = module
@@ -6959,7 +6850,6 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
 
     var lnum = 1
     while(pos<src.length){
-        var flag = false
         var car = src.charAt(pos)
         // build tree structure from indentation
         if(indent===null){
@@ -7506,7 +7396,6 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     root.insert(offset++,ds_node)
     // name
     var name_node = new $Node()
-    var lib_module = module
     new $NodeJSCtx(name_node,local_ns+'["__name__"]='+local_ns+'["__name__"] || "'+locals_id+'";')
     root.insert(offset++,name_node)
     // file
@@ -7966,3 +7855,4 @@ $B.brython = brython
               
 })(__BRYTHON__)
 var brython = __BRYTHON__.brython
+
