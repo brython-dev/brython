@@ -389,13 +389,6 @@ $JSObjectDict.__str__ = $JSObjectDict.__repr__
 var no_dict = {'string':true,'function':true,'number':true,'boolean':true}
 
 $JSObjectDict.bind = function(self, evt, func){
-    var f = function(){
-        try{
-            func.apply(null, arguments)
-        }catch(err){
-            throw $B.exception(err)
-        }
-    }
     self.js.addEventListener(evt, func)
     return _b_.None
 }

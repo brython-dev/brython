@@ -320,7 +320,6 @@ $B.$BRgenerator2 = function(func_name, blocks, def_id, def_node){
     for(var i=0, _len_i = def_node.children.length; i < _len_i;i++){
         func_root.addChild(make_node(func_root, def_node.children[i]))
     }
-    var func_node = func_root.children[1].children[0]
     
     var obj = {
         __class__ : $BRGeneratorDict,
@@ -382,7 +381,6 @@ function make_next(self, yield_node_id){
     root.addChild(self.func_root.children[0].clone())
     var fnode = self.func_root.children[1].clone()
     root.addChild(fnode)
-    var func_node = self.func_root.children[1]
     
     // restore namespaces
     var js =  'for(var attr in this.blocks){eval("var "+attr+"=this.blocks[attr]");};'+
@@ -513,7 +511,7 @@ $gen_it.__iter__ = function(self){
 
 $gen_it.__next__ = function(self){
     if(self.$finished){throw _b_.StopIteration()}
-    if(self.gi_running==true){
+    if(self.gi_running===true){
         throw ValueError("generator already executing")
     }
     self.gi_running = true

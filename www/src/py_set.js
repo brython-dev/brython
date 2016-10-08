@@ -60,7 +60,6 @@ $SetDict.__contains__ = function(self,item){
         // one of the set items
     }
     
-    var eq_func = _b_.getattr(item, '__eq__')
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
         if(_b_.getattr(self.$items[i],'__eq__')(item)) return true
     }
@@ -596,8 +595,6 @@ $FrozensetDict.__hash__ = function(self) {
 
 $FrozensetDict.__init__ = function(){
     // doesn't do anything
-    var $=$B.args('__init__', 1, {self:null}, ['self'], 
-        arguments, {}, 'args', 'kw')
     return $N
 }
 

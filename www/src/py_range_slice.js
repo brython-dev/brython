@@ -312,7 +312,7 @@ $SliceDict.$conv_for_seq = function(self, len){
     if (step == 0) {
         throw Error('ValueError : slice step cannot be zero');
     }
-    var start, end;
+    var start
     if (self.start === None) {
         start = step_is_neg ? len_1 : 0;
     } else {

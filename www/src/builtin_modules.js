@@ -26,7 +26,6 @@
                     scripts[i].type=='text/javascript'){
                     js_scripts.push(scripts[i])
                     if(scripts[i].src){
-                        var new_script = document.createElement('SCRIPT')
                         console.log(scripts[i].src)
                     }
                 }

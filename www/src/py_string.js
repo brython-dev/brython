@@ -191,7 +191,6 @@ var format_int_precision = function(val, flags) {
     } else {
        s=val.toString()
     }
-    var sign = s[0]
     if (s[0] === '-') {
         return '-' + get_char_array(precision - s.length + 1, '0') + s.slice(1)
     }
@@ -710,14 +709,14 @@ $StringDict.__mod__ = function(self, args) {
 
 $StringDict.__mro__ = [$ObjectDict]
 
-$StringDict.__mul__ = function(self,other){
+$StringDict.__mul__ = function(){
     var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],
         arguments,{},null,null)
-    if(!isinstance(other,_b_.int)){throw _b_.TypeError(
+    if(!isinstance($.other,_b_.int)){throw _b_.TypeError(
         "Can't multiply sequence by non-int of type '"+
-            $B.get_class(other).__name__+"'")}
+            $B.get_class($.other).__name__+"'")}
     var $res = ''
-    for(var i=0;i<other;i++){$res+=self.valueOf()}
+    for(var i=0;i<$.other;i++){$res+=$.self.valueOf()}
     return $res
 }
 
@@ -983,7 +982,12 @@ $StringDict.format = function(self) {
     // - elements of even rank are literal text
     // - elements of odd rank are "format objects", built from the
     //   format strings in self (of the form {...})
-    var pos=0, _len=self.length, car, text='', parts=[], rank=0, defaults={}
+    var pos=0, 
+        _len=self.length, 
+        car, 
+        text='', 
+        parts=[], 
+        rank=0
 
     while(pos<_len){
         car = self.charAt(pos)
@@ -1340,7 +1344,7 @@ $StringDict.rsplit = function(self) {
     var $=$B.args("rsplit",3,{self:null,sep:null,maxsplit:null},
         ['self','sep','maxsplit'],arguments,
         {sep:_b_.None, maxsplit:-1},null,null),
-        sep=$.sep,maxsplit=$.maxsplit,self=$.self
+        sep=$.sep
 
     // Use split on the reverse of the string and of separator
     var rev_str = reverse($.self),
@@ -1363,7 +1367,7 @@ $StringDict.rstrip = function(self,x){
 }
 
 $StringDict.split = function(){
-    var args = [], pos=0
+    var pos=0
     var $=$B.args("split",3,{self:null,sep:null,maxsplit:null},
         ['self','sep','maxsplit'],arguments,
         {sep:_b_.None, maxsplit:-1},null,null)
@@ -1372,7 +1376,6 @@ $StringDict.split = function(){
     if(sep=='') throw _b_.ValueError('empty separator')
     if(sep===_b_.None){
         var res = []
-        var pos = 0
         while(pos<self.length&&self.charAt(pos).search(/\s/)>-1){pos++}
         if(pos===self.length-1){return [self]}
         var name = ''
@@ -1399,7 +1402,7 @@ $StringDict.split = function(){
         }
         return res
     }else{
-        var res = [],s='',pos=0,seplen=sep.length
+        var res = [],s='',seplen=sep.length
         if(maxsplit==0){return [self]}
         while(pos<self.length){
             if(self.substr(pos,seplen)==sep){
@@ -1430,7 +1433,10 @@ $StringDict.splitlines = function(self){
     var keepends = _b_.int($.keepends)
     // Remove trailing line breaks
     if(keepends){
-        var res = [],start=pos,pos=0,x,self=$.self
+        var res = [],
+            start=pos,
+            pos=0,
+            self=$.self
         while(pos<self.length){
             if(self.substr(pos,2)=='\r\n'){
                 res.push(self.substring(start,pos+2))

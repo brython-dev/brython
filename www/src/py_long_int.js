@@ -61,7 +61,7 @@ function divmod_pos(v1, v2){
     // v1, v2 : strings, represent 2 positive integers A and B
     // Return [a, b] where a and b are instances of LongInt
     // a = A // B, b = A % B
-    var v1_init = v1, quotient, mod
+    var quotient, mod
     if(comp_pos(v1, v2)==-1){ // a < b
         quotient='0'
         mod = LongInt(v1)
@@ -69,7 +69,7 @@ function divmod_pos(v1, v2){
         quotient = '1';
         mod = LongInt('0')
     }else{
-        var quotient = '', v1_init = v1
+        var quotient = ''
         var left = v1.substr(0, v2.length)
         if(v1<v2){left = v1.substr(0, v2.length+1)}
         var right = v1.substr(left.length)
@@ -350,8 +350,9 @@ $LongIntDict.__index__ = function(self){
     
     // XXX to do : negative integers
     
-    var res = '', pos=self.value.length,
-        temp = self.value, d
+    var res = '',
+        temp = self.value, 
+        d
     while(true){
         d = divmod_pos(temp, '2')
         res = d[1].value + res

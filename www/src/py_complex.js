@@ -133,10 +133,10 @@ $ComplexDict.__str__ = $ComplexDict.__repr__ = function(self){
 $ComplexDict.__sqrt__= function(self) {
   if (self.imag == 0) return complex(Math.sqrt(self.real))
 
-  var r=self.real, i=self.imag
-  var _sqrt=Math.sqrt(r*r+i*i)
-  var _a = Math.sqrt((r + sqrt)/2)
-  var _b = Number.sign(i) * Math.sqrt((-r + sqrt)/2)
+  var r=self.real, 
+      i=self.imag,
+      _a = Math.sqrt((r + sqrt)/2),
+      _b = Number.sign(i) * Math.sqrt((-r + sqrt)/2)
 
   return complex(_a, _b)
 }

@@ -442,8 +442,7 @@ $FloatDict.__pow__= function(self,other){
         }
         return float(Math.pow(self,other))
     }else if(isinstance(other, _b_.complex)){
-        var img = other.imag,
-            preal = Math.pow(self,  other.real),
+        var preal = Math.pow(self,  other.real),
             ln = Math.log(self)
         return _b_.complex(preal*Math.cos(ln), preal*Math.sin(ln))
     }

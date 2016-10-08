@@ -288,8 +288,7 @@ $IntDict.__pow__ = function(self,other){
             return _b_.complex.$dict.__pow__(_b_.complex(self, 0), other)
         }
     }else if(isinstance(other, _b_.complex)){
-        var img = other.imag,
-            preal = Math.pow(self,  other.real),
+        var preal = Math.pow(self,  other.real),
             ln = Math.log(self)
         return _b_.complex(preal*Math.cos(ln), preal*Math.sin(ln))
     }

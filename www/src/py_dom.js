@@ -441,7 +441,6 @@ DOMNodeDict.__getattribute__ = function(self,attr){
             return self.elt.getAttributeNS(null, attr)
         }
         return DOMNodeDict[attr].__get__(self)
-        break
       case 'clear':
       case 'closest':
       case 'remove':

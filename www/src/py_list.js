@@ -403,7 +403,6 @@ $ListDict.pop = function(){
 $ListDict.remove = function(){
     var $=$B.args('remove',2,{self:null,x:null},['self','x'],arguments,{},
         null,null)
-    var _eq = getattr($.x, '__eq__')
     for(var i=0, _len_i = $.self.length; i < _len_i;i++){
         if(getattr($.self[i],'__eq__')($.x)){
             $.self.splice(i,1)
@@ -477,8 +476,8 @@ function swap(_array,a,b){
 function $qsort(arg,array, begin, end)
 {
     if(end-1>begin) {
-        var pivot=begin+Math.floor(Math.random()*(end-begin)),
-            len = array.length
+        var pivot=begin+Math.floor(Math.random()*(end-begin))
+
         pivot=$partition(arg,array, begin, end, pivot);
         $qsort(arg,array, begin, pivot);
         $qsort(arg,array, pivot+1, end);

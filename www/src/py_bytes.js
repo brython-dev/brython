@@ -47,7 +47,6 @@ $BytearrayDict.__setitem__ = function(self,arg,value){
     } else if(isinstance(arg,_b_.slice)){
         var start = arg.start===None ? 0 : arg.start
         var stop = arg.stop===None ? self.source.length : arg.stop
-        var step = arg.step===None ? 1 : arg.step
 
         if(start<0) start=self.source.length+start
         if(stop<0) stop=self.source.length+stop
@@ -93,7 +92,6 @@ $BytearrayDict.insert = function(self,pos,b){
 }
 
 function bytearray(source, encoding, errors) {
-    var _bytes = bytes(source, encoding, errors)
     var obj = {__class__:$BytearrayDict}
     $BytearrayDict.__init__(obj,source,encoding,errors)
     return obj
@@ -543,7 +541,6 @@ function decode(b,encoding,errors){
             else{s += String.fromCharCode(b[i])}
         }
         break;
-        throw _b_.LookupError("unknown encoding: "+encoding)
     }
     return s
 }

@@ -105,9 +105,9 @@ var $iterator_wrapper = function(items,klass){
     return res
 }
 
-$DictDict.__bool__ = function (self) {
+$DictDict.__bool__ = function () {
     var $=$B.args('__bool__',1,{self:null},['self'],arguments,{},null,null)
-    return $DictDict.__len__(self) > 0
+    return $DictDict.__len__($.self) > 0
 }
 
 $DictDict.__contains__ = function(){
@@ -385,9 +385,9 @@ $DictDict.__repr__ = function(self){
         }
         return '{'+res.join(', ')+'}'
     }
-    var _objs=[self]  // used to elimate recursion
-    var res=[], pos=0
-    var items = new $item_generator(self).as_list()
+    var res=[], 
+        pos=0,
+        items = new $item_generator(self).as_list()
     for (var i=0; i < items.length; i++) {
         var itm = items[i]
         if(itm[1]===self){res[pos++]=repr(itm[0])+': {...}'}

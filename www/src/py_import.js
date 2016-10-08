@@ -438,7 +438,6 @@ finder_compiled.$dict = {
             code = _spec.loader_state.code;
         module.$is_package = _spec.loader_state.is_package,
         delete _spec.loader_state['code'];
-        var src_type = _spec.loader_state.type
         run_js(code, _spec.origin, module)
     },
 
@@ -536,7 +535,7 @@ finder_stdlib_static.$dict = {
             if(address===undefined){
                 var elts = fullname.split('.')
                 if(elts.length>1){
-                    var mod_name = elts.pop()
+                    elts.pop()
                     var package = $B.stdlib[elts.join('.')]
                     if(package && package[1]){address = ['py']}
                 }
@@ -855,8 +854,7 @@ precompiled_hook.$dict = {
         var loader_data = {},
             notfound = true,
             hint = self.hint,
-            base_path = '/compiled/'+ fullname+'.js',
-            modpaths = [base_path];
+            base_path = '/compiled/'+ fullname+'.js'
         
         try{
             var file_info = [self.path_entry, 'py', false],
