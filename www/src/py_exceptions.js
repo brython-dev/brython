@@ -217,8 +217,8 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
         }
         for(var i=0;i<self.$stack.length;i++){
             var frame = self.$stack[i]
-            if(frame[1].$line_info===undefined){continue}
-            var line_info = frame[1].$line_info.split(',')
+            if(frame[3].$line_info===undefined){continue}
+            var line_info = frame[3].$line_info.split(',')
             if($B.$py_src[line_info[1]]===undefined){continue}
             var lines = $B.$py_src[line_info[1]].split('\n'),
                 module = line_info[1]
