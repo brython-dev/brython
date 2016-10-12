@@ -1534,6 +1534,12 @@ function str(arg){
             var func = $B.$type.__getattribute__(arg.$dict.__class__,'__str__')
             if(func.__func__===_b_.object.$dict.__str__){return func(arg)}
             return func()
+        }else if(arg.__class__===$B.$type){ // experimental
+            var func = $B.$type.__getattribute__(arg.__class__,'__str__')
+            if(func.__func__===_b_.object.$dict.__str__){
+                return func(arg)
+            }
+            return func()
         }
 
         var f = getattr(arg,'__str__')

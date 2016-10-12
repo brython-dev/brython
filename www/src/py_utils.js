@@ -994,7 +994,9 @@ $B.leave_frame = function(arg){
         console.log('leave error', 'leaving', arg, 'last on stack', last[0])
     }
     */
-    $B.frames_stack.pop()
+    var frame = $B.frames_stack.pop()
+    frame[0] = null
+    frame[1] = null
     //console.log($B.frames_stack.length, 'frames remain')
 }
 

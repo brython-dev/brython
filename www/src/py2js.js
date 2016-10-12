@@ -1430,11 +1430,7 @@ function $ClassCtx(context){
         var name_ref = ';$locals_'+scope.id.replace(/\./g,'_')
         name_ref += '["'+this.name+'"]'
         
-        if(this.name=="FF"){ // experimental
-            var js = [name_ref +'=$B.$class_constructor1("'+this.name], pos=1
-        }else{
-            var js = [name_ref +'=$B.$class_constructor("'+this.name], pos=1
-        }
+        var js = [name_ref +'=$B.$class_constructor("'+this.name], pos=1
         js[pos++]= '",$'+this.name+'_'+this.random
         if(this.args!==undefined){ // class def has arguments
             var arg_tree = this.args.tree,args=[],kw=[]
@@ -1473,14 +1469,21 @@ function $ClassCtx(context){
         rank++
         var ds_node = new $Node()
         js = name_ref+'.$dict.__doc__='
+        if(this.name=='classXXX'){ // experimental
+            js = name_ref+'.__doc__='
+        }
         js += (this.doc_string || 'None')+';'
         new $NodeJSCtx(ds_node,js)
         node.parent.insert(rank+1,ds_node)      
 
         // add attribute __module__
         rank++
-        js = name_ref+'.$dict.__module__=$locals_'+
-            $get_module(this).module.replace(/\./g, '_')+'.__name__'
+        js = name_ref+'.$dict.__module__=$locals_'
+        if(this.name=='classXXX'){ // experimental
+            js = name_ref+'.__module__=$locals_'
+        }
+        
+        js += $get_module(this).module.replace(/\./g, '_')+'.__name__'
         var mod_node = new $Node()
         new $NodeJSCtx(mod_node,js)
         node.parent.insert(rank+1,mod_node)
@@ -7754,6 +7757,7 @@ function brython(options){
             $B.clear_ns(module_name)
             
         }catch($err){
+            console.log($err)
             if($B.debug>1){
                 console.log($err)
                 for(var attr in $err){
@@ -7832,6 +7836,7 @@ function brython(options){
         run_script(inner_scripts[i])
     }
     */
+
     if (options.ipy_id === undefined){$B._load_scripts(scripts)}
 
     /* Uncomment to check the names added in global Javascript namespace

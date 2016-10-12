@@ -531,6 +531,9 @@ function getattr(obj,attr,_default){
       case '__class__':
         // attribute __class__ is set for all Python objects
         // return the factory function
+        if(klass.__name__=='classXXX'){ // experimental
+            return klass
+        }
         return klass.$factory
       case '__dict__':
         // attribute __dict__ returns a dictionary wrapping obj
@@ -545,6 +548,16 @@ function getattr(obj,attr,_default){
         }
         break
       case '__mro__':
+        if(klass.__name__=='classXXX'){ // experimental
+            console.log('newmro')
+            var res = [obj], 
+                pos = 0, 
+                mro = obj.__mro__
+            for(var i=0;i<mro.length;i++){
+                res[pos++]=mro[i]
+            }
+            return res
+        }
         if(klass===$B.$factory){
             // The attribute __mro__ of classes is a list of class
             // dictionaries ; it must be returned as a list of class

@@ -107,8 +107,12 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         parents[i].$dict.$subclasses.push(factory)
     }
 
-    if(metaclass===_b_.type) return factory
-    
+    if(metaclass===_b_.type) {
+        if(class_name=='classXXX'){ // experimental
+            return class_dict
+        }
+        return factory
+    }
     for(var attr in class_dict){
         factory.$dict[attr] = class_dict[attr]
     }
