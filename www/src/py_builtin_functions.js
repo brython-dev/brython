@@ -1211,7 +1211,7 @@ $ReversedDict.$factory = reversed
 
 function round(arg,n){
     if(!isinstance(arg,[_b_.int,_b_.float])){
-        if (! hasattr(arg,'__round__'))
+        if (!hasattr(arg,'__round__'))
             throw _b_.TypeError("type "+arg.__class__+" doesn't define __round__ method")
         if(n===undefined) return getattr(arg,'__round__')()
         else return getattr(arg,'__round__')(n)
@@ -1221,8 +1221,15 @@ function round(arg,n){
       throw _b_.OverflowError("cannot convert float infinity to integer")
     }
 
-    if(n===undefined) return _b_.int(Math.round(arg))
-    
+    if(n===undefined){
+		var floor = Math.floor(arg)
+        var diff = Math.abs(arg-floor)
+        if (diff == 0.5){
+            if (floor % 2){return Math.round(arg)}else{return Math.floor(arg)}
+        }else{
+    		return _b_.int(Math.round(arg))
+        }
+    }
     if(!isinstance(n,_b_.int)){throw _b_.TypeError(
         "'"+n.__class__+"' object cannot be interpreted as an integer")}
     var mult = Math.pow(10,n)
