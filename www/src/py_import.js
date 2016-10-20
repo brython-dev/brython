@@ -159,6 +159,7 @@ function run_js(module_contents,path,module){
     // FIXME : Enhanced module isolation e.g. run_js arg names , globals ...
     try{
         eval(module_contents);
+        if($B.$options.store){module.$js = module_contents}
     }catch(err){
         console.log(err)
         throw err
@@ -317,6 +318,9 @@ function run_py(module_contents,path,module,compiled) {
             module[attr] = mod[attr];
         }
         module.__initializing__ = false
+        if($B.$options.store){
+            module.$js = js
+        }
         // $B.imported[mod.__name__] must be the module object, so that
         // setting attributes in a program affects the module namespace
         // See issue #7
@@ -901,8 +905,9 @@ precompiled_hook.$dict = {
 }
 precompiled_hook.$dict.__mro__ = [_b_.object.$dict]
 
-// FIXME : Add this code elsewhere ?
-$B.$path_hooks = [precompiled_hook, vfs_hook, url_hook];
+// List of path hooks. It is changed by function brython() depending
+// on the options passed
+$B.$path_hooks = [vfs_hook, url_hook, precompiled_hook];
 
 $B.path_importer_cache = {};
 // see #247 - By adding these early some unnecesary AJAX requests are not sent

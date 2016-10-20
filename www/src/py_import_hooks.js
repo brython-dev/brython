@@ -30,7 +30,7 @@
             spec.blocking = blocking
         }
     } //for
-
+    
     if ($B.is_none(spec)) {
         // No import spec found
         throw _b_.ImportError('No module named '+mod_name);
@@ -39,6 +39,7 @@
     var _loader = _b_.getattr(spec, 'loader', _b_.None),
         _sys_modules = $B.imported,
         _spec_name = _b_.getattr(spec, 'name');
+
     // Import spec represents a match
     if ($B.is_none(module)) {
         // Create module object

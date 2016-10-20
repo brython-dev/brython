@@ -95,18 +95,18 @@ src_size = 0
 cmd = 'uglifyjs ../www/src/{}.js -c -o test_ugl.js'
 
 for fname in sources:
-    #src = open(abs_path(fname)+'.js').read() + '\n'
-    #src_size += len(src)
-    #res += javascript_minifier.minify(src)
+    src = open(abs_path(fname)+'.js').read() + '\n'
+    src_size += len(src)
+    res += javascript_minifier.minify(src)
 
-    subprocess.call(cmd.format(fname).split(),
-        shell=True)
-    with open('test_ugl.js') as fobj:
-        src = fobj.read()+'\n'
-        src_size += len(src)
-        res += src
+    #subprocess.call(cmd.format(fname).split(),
+    #    shell=True)
+    #with open('test_ugl.js') as fobj:
+    #    src = fobj.read()+'\n'
+    #    src_size += len(src)
+    #    res += src
 
-#res = res.replace('context', 'C')
+res = res.replace('context', 'C')
 
 with open(abs_path('brython.js'), 'w') as the_brythonjs_file_output:
     the_brythonjs_file_output.write(res)
