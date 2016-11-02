@@ -148,9 +148,6 @@ class ScriptsFinder(html.parser.HTMLParser):
         imports = ImportLister()
         imports.visit(ast.parse(src))
         for name, _from in imports.imports.items():
-            if name=="locale":
-                print(src[:1000], path)
-                input()
             if _from is None:
                 self.resolve_import(path, name)
             else:
@@ -159,9 +156,6 @@ class ScriptsFinder(html.parser.HTMLParser):
     def resolve_import(self, script_path, name):
         """Find module source code, based on script path and name
         """
-        if name=="doctest":
-            print(name, script_path)
-            input()
         if name in self.imported or name in self.not_found:
             return
         elts = name.split('.')
@@ -239,7 +233,7 @@ class ScriptsFinder(html.parser.HTMLParser):
 
 if __name__ == '__main__':
 
-    finder = ScriptsFinder(os.path.join(www, 'gallery', 'kanban.html'))
+    finder = ScriptsFinder(os.path.join(www, 'gallery', 'clock.html'))
     
     for line in finder.imports:
         print(line)
