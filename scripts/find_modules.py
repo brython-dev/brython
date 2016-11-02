@@ -67,9 +67,37 @@ class ScriptsFinder(html.parser.HTMLParser):
             src = fobj.read()
             self.feed(src)
 
-            for script, [script_path, src] in self.scripts.items():
+            # After self.feed, self.scripts is a dictionary with
+            # all the internal and external Python scripts in the
+            # HTML document
+            for script_id, [script_path, src] in self.scripts.items():
                 self.find_modules(script_path, src)
+
+            # After find_modules we have a dictionary of all the modules
+            # and packages found
+            items = sorted(self.imported.items())
+            
+            # Normalise the qualified module or package name
+            # self.imports is a sorted list of 3-element lists, giving
+            # for all modules and packages needed by the HTML page :
+            # - its qualified name
+            # - its type : "js_module" (built-in Javascript module, in libs),
+            #   "module" or "package"
+            # - its absolute path in the file system
+            self.imports = imports = []
+            for key, (typ, path) in items:
+                if typ=='module':
+                    for lib in paths:
+                        if path.startswith(lib):
+                            elts = os.path.split(path[len(lib):].lstrip(os.sep))
+                            elts = [x for x in elts if x]
+                            elts[-1] = os.path.splitext(elts[-1])[0]
+                            key = '.'.join(elts)
+                imports.append([key, typ, 
+                    '/'.join(path[len(www)+1:].split(os.sep))])
         
+            imports.sort()
+
     def handle_starttag(self, tag, attrs):
         """Set self.python to True if tag is script and
         type = text/python and src is not set
@@ -116,27 +144,32 @@ class ScriptsFinder(html.parser.HTMLParser):
 
 
     def find_modules(self, path, src):
-        """Parse source code, store all imports"""
+        """Parse source code, resolve all imports"""
         imports = ImportLister()
         imports.visit(ast.parse(src))
         for name, _from in imports.imports.items():
+            if name=="locale":
+                print(src[:1000], path)
+                input()
             if _from is None:
                 self.resolve_import(path, name)
             else:
                 self.resolve_import_from(path, name, _from)
 
     def resolve_import(self, script_path, name):
-        """Find module source based on script path and name
+        """Find module source code, based on script path and name
         """
+        if name=="doctest":
+            print(name, script_path)
+            input()
         if name in self.imported or name in self.not_found:
             return
-        print('resolve', name)
         elts = name.split('.')
         for mod_path in [paths[0], js_path, script_path, paths[1]]:
             if mod_path is js_path:
                 module_filename = os.path.join(js_path, name+'.js')
                 if os.path.exists(module_filename):
-                    self.imported[name] = 'module', module_filename
+                    self.imported[name] = 'js_module', module_filename
                     return
                 continue
             for elt in elts[:-1]:
@@ -181,6 +214,7 @@ class ScriptsFinder(html.parser.HTMLParser):
         if typ == "package":
             # form "from package import name"
             # search a module name.py in package directory
+            # or a module __init__.py in the subdirectory "name"
             package_path = os.path.dirname(filename)
             module_filename = os.path.join(package_path, name+'.py')
             package_filename = os.path.join(package_path, name, '__init__.py')
@@ -205,12 +239,14 @@ class ScriptsFinder(html.parser.HTMLParser):
 
 if __name__ == '__main__':
 
-    finder = ScriptsFinder(os.path.join(www, 'gallery', 'clock.html'))
+    finder = ScriptsFinder(os.path.join(www, 'gallery', 'kanban.html'))
     
-    items = sorted(finder.imported.items())
-    for key, value in items:
-        print(key, value)
-    
-    print()
-    
+    for line in finder.imports:
+        print(line)
+
+    with open(os.path.join(www, 'gallery', 'imports.txt'), 'w', 
+        encoding='utf-8') as out:
+        for name, typ, url in finder.imports:
+            out.write('{} {} {}\n'.format(name, typ, url))
+
     print('Not found\n', finder.not_found)
