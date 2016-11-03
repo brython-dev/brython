@@ -40,6 +40,7 @@ a.sort_link{
 
 <script type="text/python">
 import javascript
+from browser import ajax
 
 imports = [[x.strip() for x in line.split()]
     for line in open('imports.txt').readlines()
@@ -59,8 +60,17 @@ for name, typ, url in imports:
         js = src
     compiled[name] = js
 
-print(length)
-print(len(str(compiled)))
+print('uncompiled length', length)
+print('compiled length', len(str(compiled)))
+
+def callback(ev):
+    print(ev)
+
+req = ajax.ajax()
+req.open('POST', 'http://localhost:8060/save_compiled', True)
+req.set_header('Content-Type', 'application/x-www-form-urlencoded')
+req.bind('complete', callback)
+req.send(compiled)
 </script>
 
 </form>
