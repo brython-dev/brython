@@ -139,6 +139,18 @@ class ScriptsFinder(html.parser.HTMLParser):
     
     def handle_data(self, data):
         if self.python:
+            if data.strip():
+                indent = 0
+                lines = data.split('\n')
+                print(lines)
+                for line in lines:
+                    if line:
+                        indent = len(line)-len(line.lstrip())
+                        break
+                print('indent', indent)
+                if indent:
+                    lines = [line[indent:] for line in lines]
+                    data = '\n'.join(lines)
             self.scripts[self._id] = [self.script_path, data.encode('utf-8')]
         self.python = False
 
@@ -159,7 +171,8 @@ class ScriptsFinder(html.parser.HTMLParser):
         if name in self.imported or name in self.not_found:
             return
         elts = name.split('.')
-        for mod_path in [paths[0], js_path, script_path, paths[1]]:
+        script_folder = os.path.dirname(script_path)
+        for mod_path in [paths[0], js_path, script_folder, paths[2]]:
             if mod_path is js_path:
                 module_filename = os.path.join(js_path, name+'.js')
                 if os.path.exists(module_filename):
@@ -233,14 +246,25 @@ class ScriptsFinder(html.parser.HTMLParser):
 
 if __name__ == '__main__':
 
-    finder = ScriptsFinder(os.path.join(www, 'gallery', 'clock.html'))
+    brython_page = os.path.join(www, 'app', 'test_bundle.html')
+    finder = ScriptsFinder(brython_page)
     
     for line in finder.imports:
         print(line)
 
+    builtin_modules = ['browser', 'browser.html', 'javascript', '_sys']
+
     with open(os.path.join(www, 'gallery', 'imports.txt'), 'w', 
         encoding='utf-8') as out:
         for name, typ, url in finder.imports:
+            # exclude the modules that will be in brython_dist.js
+            if name in builtin_modules:
+                continue
+            if url.startswith('src/libs/'):
+                continue
+            if url.startswith('src/Lib') and not \
+                url.startswith('src/Lib/site-packages'):
+                    continue
             out.write('{} {} {}\n'.format(name, typ, url))
 
     print('Not found\n', finder.not_found)
