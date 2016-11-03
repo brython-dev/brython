@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<meta charset="utf-8">
+<head>
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+td {
+    border-style:solid;
+    border-width: 0px 0px 1px 0px;
+    border-color: #000;
+    padding:3px;
+}
+
+th {
+    border-style:solid;
+    border-width: 1px;
+    border-color: #000;
+    background-color: #61D7A4;
+    padding: 4px;
+}
+
+span{font-size:15px;
+    margin-left:10px;}
+a.sort_link{
+    margin-left:10px;
+    font-size: 15px;
+    text-decoration:none;
+}
+
+</style>
+
+<script type="text/javascript" src="../src/brython_dist.js"></script>
+<script type="text/javascript" src="jquery-1.11.2.min.js"></script>
+
+</head>
+<body onLoad="brython({debug:1})">
+
+<script type="text/python">
+import javascript
+
+imports = [[x.strip() for x in line.split()]
+    for line in open('imports.txt').readlines()
+    if line.strip()
+    ]
+
+compiled = {}
+
+length = 0
+
+for name, typ, url in imports:
+    src = open('/'+url).read()
+    length += len(src)
+    if typ != 'js_module':
+        js = javascript.py2js(src)
+    else:
+        js = src
+    compiled[name] = js
+
+print(length)
+print(len(str(compiled)))
+</script>
+
+</form>
+</body>
+</html>
