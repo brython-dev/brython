@@ -2,6 +2,53 @@
 
 eval($B.InjectBuiltins())
 
+if (!String.prototype.trim) {
+  // Polyfill for older browsers
+  // The code does not use a regex to make it a bit faster.
+  // Implementation taken from a comment by Timo on the blog:
+  // http://blog.stevenlevithan.com/archives/faster-trim-javascript
+  String.prototype.trim = function () {
+    var c;
+    for (var i = 0; i < this.length; i++) {
+        c = this.charCodeAt(i);
+        if (c == 32 || c == 10 || c == 13 || c == 9 || c == 12 || c == 11 || c == 160 || c == 5760 || c == 6158 || c == 8192 || c == 8193 || c == 8194 || c == 8195 || c == 8196 || c == 8197 || c == 8198 || c == 8199 || c == 8200 || c == 8201 || c == 8202 || c == 8232 || c == 8233 || c == 8239 || c == 8287 || c == 12288 || c == 65279)
+        continue; else break;
+    }
+    for (var j = this.length - 1; j >= i; j--) {
+        c = this.charCodeAt(j);
+        if (c == 32 || c == 10 || c == 13 || c == 9 || c == 12 || c == 11 || c == 160 || c == 5760 || c == 6158 || c == 8192 || c == 8193 || c == 8194 || c == 8195 || c == 8196 || c == 8197 || c == 8198 || c == 8199 || c == 8200 || c == 8201 || c == 8202 || c == 8232 || c == 8233 || c == 8239 || c == 8287 || c == 12288 || c == 65279)
+        continue; else break;
+    }
+    return this.substring(i, j + 1);
+  }
+}
+if (!String.prototype.trimLeft) {
+  // Convenience method for browsers which do not have a native trimLeft
+  // (which is a nonstandard extension in Firefox and Chrome)
+  String.prototype.trimLeft = function () {
+    var c;
+    for (var i = 0; i < this.length; i++) {
+        c = this.charCodeAt(i);
+        if (c == 32 || c == 10 || c == 13 || c == 9 || c == 12 || c == 11 || c == 160 || c == 5760 || c == 6158 || c == 8192 || c == 8193 || c == 8194 || c == 8195 || c == 8196 || c == 8197 || c == 8198 || c == 8199 || c == 8200 || c == 8201 || c == 8202 || c == 8232 || c == 8233 || c == 8239 || c == 8287 || c == 12288 || c == 65279)
+        continue; else break;
+    }
+    return this.substring(i);
+  };
+}
+if (!String.prototype.trimRight) {
+  String.prototype.trimRight = function () {
+    // Convenience method for browsers which do not have a native trimRight
+    // (which is a nonstandard extension in Firefox and Chrome)
+    var c;
+    for (var j = this.length - 1; j >= 0; j--) {
+        c = this.charCodeAt(j);
+        if (c == 32 || c == 10 || c == 13 || c == 9 || c == 12 || c == 11 || c == 160 || c == 5760 || c == 6158 || c == 8192 || c == 8193 || c == 8194 || c == 8195 || c == 8196 || c == 8197 || c == 8198 || c == 8199 || c == 8200 || c == 8201 || c == 8202 || c == 8232 || c == 8233 || c == 8239 || c == 8287 || c == 12288 || c == 65279)
+        continue; else break;
+    }
+    return this.substring(0, j + 1);
+  };
+}
+    
 var $ObjectDict = object.$dict
 
 var $StringDict = {__class__:$B.$type,
@@ -1144,8 +1191,13 @@ $StringDict.ljust = function(self) {
 $StringDict.lstrip = function(self,x){
     var $=$B.args('lstrip',2,{self:null,chars:null},['self','chars'],
             arguments,{chars:_b_.None},null,null)
-    if($.chars===_b_.None){return $.self.replace(/^\s+/,'')}
-    return $.self.replace(new RegExp("^["+$.chars+"]*"),"")
+    if($.chars===_b_.None){return $.self.trimLeft()}
+    for (var i = 0; i < $.self.length; i++) {
+        if ($.chars.indexOf($.self.charAt(i)) === -1) {
+            return $.self.substring(i);
+        }
+    }
+    return '';
 }
 
 // note, maketrans should be a static function.
@@ -1362,8 +1414,13 @@ $StringDict.rsplit = function(self) {
 $StringDict.rstrip = function(self,x){
     var $=$B.args('rstrip',2,{self:null,chars:null},['self','chars'],
             arguments,{chars:_b_.None},null,null)
-    if($.chars===_b_.None){return $.self.replace(/\s+$/,'')}
-    return $.self.replace(new RegExp("["+$.chars+"]*$"),"")
+    if($.chars===_b_.None){return $.self.trimRight()}
+    for (var j = $.self.length-1; j >= 0; j--) {
+        if ($.chars.indexOf($.self.charAt(j)) === -1) {
+            return $.self.substring(0,j+1);
+        }
+    }
+    return '';
 }
 
 $StringDict.split = function(){
@@ -1486,7 +1543,18 @@ $StringDict.startswith = function(){
 $StringDict.strip = function(){
     var $=$B.args('strip',2,{self:null,chars:null},['self','chars'],
             arguments,{chars:_b_.None},null,null)
-    return $StringDict.rstrip($StringDict.lstrip($.self,$.chars),$.chars)
+    if($.chars===_b_.None){return $.self.trim()}
+    for (var i = 0; i < $.self.length; i++) {
+        if ($.chars.indexOf($.self.charAt(i)) === -1) {
+            break;
+        }
+    }
+    for (var j = $.self.length-1; j >= i; j--) {
+        if ($.chars.indexOf($.self.charAt(j)) === -1) {
+            break;
+        }
+    }
+    return $.self.substring(i,j+1);
 }
 
 $StringDict.translate = function(self,table) {
