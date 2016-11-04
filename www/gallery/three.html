@@ -2,7 +2,7 @@
 <head>
     <title>Getting Started with Three.js - Brython version</title>
     <meta charset="iso-8859-1">
-    <script src="three.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r79/three.min.js"></script>
 <script type="text/javascript" src="../src/brython.js"></script>
 
     <script type="text/python">
@@ -32,7 +32,7 @@
         mesh = meshC( geometry, material )
         scene.add( mesh );
 
-        rendererC = JSConstructor(THREE.CanvasRenderer)
+        rendererC = JSConstructor(THREE.WebGLRenderer)
         renderer = rendererC()
         renderer.setSize( 444,444);
 

@@ -1043,7 +1043,12 @@ assert type(round(0, 3)) == int, "Round called without second argument should re
 assert round(tr, 3) == 3, "Round called on obj with __round__ method should use it"
 assert round(tr) == 10, "Round called on obj with __round__ method should use it"
 
-
+# Bankers rounding (issue #513)
+assert round(-9.5) == -10
+assert round(-0.5) == 0
+assert round(2.5) == 2
+assert round(9.5) == 10
+assert round(100.5) == 100
 
 
 # ==========================================

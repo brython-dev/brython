@@ -24,6 +24,20 @@ x = 'str' 'ing'
 assert x=='string'
 assert 'str'.strip() + 'ing'=='string'
 
+assert ' str '.strip() == 'str'
+assert ' str '.rstrip() == ' str'
+assert ' str '.lstrip() == 'str '
+
+assert "\t\n str\t\n ".strip() == 'str'
+assert "\t\n str\t\n ".rstrip() == '\t\n str'
+assert "\t\n str\t\n ".lstrip() == 'str\t\n '
+
+# GH Issue 521: handle brackets (and other special characters) correctly
+assert '[str]'.rstrip(']') == '[str'
+assert '[str]'.lstrip('[') == 'str]'
+assert '[-^str-]'.strip('[^a-b]') == 'str'
+assert '[-^str-]'.strip('^a-b') == '[-^str-]'
+
 # string methods
 x='fooss'
 assert x.replace('o','X',20) == 'fXXss'
