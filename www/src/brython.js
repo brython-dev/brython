@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,9,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.9"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-11-04 16:26:51.973230"
+__BRYTHON__.compiled_date="2016-11-04 16:44:16.719509"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -2332,6 +2332,7 @@ catch_node.insert(catch_node.children.length,node.parent.children[pos])
 if(ctx.tree.length===0){if(has_default){$_SyntaxError(C,'more than one except: line')}
 has_default=true}
 node.parent.children.splice(pos,1)}else if(ctx.type==='single_kw' && ctx.token==='finally'){has_finally=true
+var finally_node=node.parent.children[pos]
 pos++}else if(ctx.type==='single_kw' && ctx.token==='else'){if(has_else){$_SyntaxError(C,"more than one 'else'")}
 if(has_finally){$_SyntaxError(C,"'else' after 'finally'")}
 has_else=true
@@ -2346,7 +2347,7 @@ if(has_else){var else_node=new $Node()
 else_node.module=scope.module
 new $NodeJSCtx(else_node,'if(!$failed'+$loop_num+')')
 for(var i=0;i<else_body.children.length;i++){else_node.add(else_body.children[i])}
-node.parent.insert(pos,else_node)
+if(has_finally){finally_node.insert(0,else_node)}else{node.parent.insert(pos,else_node)}
 pos++}
 $loop_num++}
 this.to_js=function(){this.js_processed=true

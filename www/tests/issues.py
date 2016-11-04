@@ -1055,6 +1055,19 @@ borders_distance = [(-5, 0), (4, 0), (0, -3), (0, 4)]
 mx, my = min(borders_distance, key=lambda m: abs(m[0] + m[1]))
 assert (mx, my) == (0, -3)
 
+# issue 500
+order = []
+try:
+    order.append('try')
+except KeyError as exc:
+    order.append('except')
+else:
+    order.append('else')
+finally:
+    order.append('finally')
+
+assert order == ['try', 'else', 'finally']
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

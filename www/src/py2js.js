@@ -4648,6 +4648,7 @@ function $TryCtx(context){
                 node.parent.children.splice(pos,1)
             }else if(ctx.type==='single_kw' && ctx.token==='finally'){
                 has_finally = true
+                var finally_node = node.parent.children[pos]
                 pos++
             }else if(ctx.type==='single_kw' && ctx.token==='else'){
                 if(has_else){$_SyntaxError(context,"more than one 'else'")}
@@ -4672,7 +4673,14 @@ function $TryCtx(context){
             for(var i=0;i<else_body.children.length;i++){
                 else_node.add(else_body.children[i])
             }
-            node.parent.insert(pos,else_node)
+            // If the try block has a "finally" node, the "else" node must
+            // be put in it, because the "else" block must be executed
+            // before finally - cf issue #500
+            if(has_finally){
+                finally_node.insert(0, else_node)
+            }else{
+                node.parent.insert(pos,else_node)
+            }
             pos++
         }
         
