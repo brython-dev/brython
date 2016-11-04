@@ -78,12 +78,11 @@ class OneTimeTestResult(unittest.TestResult):
 
 
 def load_brython_test_cases(base_path=''):
-    return unittest.TestSuite(
-                NamedTestSuite('Brython : ' + label,
-                               (BrythonModuleTestCase(filenm, caption, base_path)
-                                        for filenm, caption in options)
-                               )
-                for label, options in utils.discover_brython_test_modules()
-            )
-
+    ret = []
+    for label, options in utils.discover_brython_test_modules():
+        tcs = []
+        for filenm, caption in options:
+            tcs.append(BrythonModuleTestCase(filenm, caption, base_path))
+        ret.append(NamedTestSuite('Brython :' + label, tcs))
+    return unittest.TestSuite(ret)
 
