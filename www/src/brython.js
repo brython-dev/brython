@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,9,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.9"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-10-20 21:41:23.968897"
+__BRYTHON__.compiled_date="2016-11-04 13:47:31.540736"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5675,12 +5675,14 @@ return res}catch(err){throw _b_.TypeError("argument to reversed() must be a sequ
 reversed.__class__=$B.$factory
 reversed.$dict=$ReversedDict
 $ReversedDict.$factory=reversed
-function round(arg,n){if(!isinstance(arg,[_b_.int,_b_.float])){if(! hasattr(arg,'__round__'))
+function round(arg,n){if(!isinstance(arg,[_b_.int,_b_.float])){if(!hasattr(arg,'__round__'))
 throw _b_.TypeError("type "+arg.__class__+" doesn't define __round__ method")
 if(n===undefined)return getattr(arg,'__round__')()
 else return getattr(arg,'__round__')(n)}
 if(isinstance(arg,_b_.float)&&(arg.value===Infinity ||arg.value===-Infinity)){throw _b_.OverflowError("cannot convert float infinity to integer")}
-if(n===undefined)return _b_.int(Math.round(arg))
+if(n===undefined){		var floor=Math.floor(arg)
+var diff=Math.abs(arg-floor)
+if(diff==0.5){if(floor % 2){return Math.round(arg)}else{return Math.floor(arg)}}else{		return _b_.int(Math.round(arg))}}
 if(!isinstance(n,_b_.int)){throw _b_.TypeError(
 "'"+n.__class__+"' object cannot be interpreted as an integer")}
 var mult=Math.pow(10,n)
@@ -6808,7 +6810,7 @@ $JSObjectDict.$factory=JSObject
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_module_in_site_packages','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var js=['_ajax','_base64','_browser','_html','_jsre','_multiprocessing','_posixsubprocess','_profile','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','javascript','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
@@ -8605,6 +8607,27 @@ _b_.list=list
 _b_.tuple=tuple
 _b_.object.$dict.__bases__=tuple()})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
+if(!String.prototype.trim){
+String.prototype.trim=function(){var c;
+for(var i=0;i < this.length;i++){c=this.charCodeAt(i);
+if(c==32 ||c==10 ||c==13 ||c==9 ||c==12 ||c==11 ||c==160 ||c==5760 ||c==6158 ||c==8192 ||c==8193 ||c==8194 ||c==8195 ||c==8196 ||c==8197 ||c==8198 ||c==8199 ||c==8200 ||c==8201 ||c==8202 ||c==8232 ||c==8233 ||c==8239 ||c==8287 ||c==12288 ||c==65279)
+continue;else break;}
+for(var j=this.length - 1;j >=i;j--){c=this.charCodeAt(j);
+if(c==32 ||c==10 ||c==13 ||c==9 ||c==12 ||c==11 ||c==160 ||c==5760 ||c==6158 ||c==8192 ||c==8193 ||c==8194 ||c==8195 ||c==8196 ||c==8197 ||c==8198 ||c==8199 ||c==8200 ||c==8201 ||c==8202 ||c==8232 ||c==8233 ||c==8239 ||c==8287 ||c==12288 ||c==65279)
+continue;else break;}
+return this.substring(i,j + 1);}}
+if(!String.prototype.trimLeft){
+String.prototype.trimLeft=function(){var c;
+for(var i=0;i < this.length;i++){c=this.charCodeAt(i);
+if(c==32 ||c==10 ||c==13 ||c==9 ||c==12 ||c==11 ||c==160 ||c==5760 ||c==6158 ||c==8192 ||c==8193 ||c==8194 ||c==8195 ||c==8196 ||c==8197 ||c==8198 ||c==8199 ||c==8200 ||c==8201 ||c==8202 ||c==8232 ||c==8233 ||c==8239 ||c==8287 ||c==12288 ||c==65279)
+continue;else break;}
+return this.substring(i);};}
+if(!String.prototype.trimRight){String.prototype.trimRight=function(){
+var c;
+for(var j=this.length - 1;j >=0;j--){c=this.charCodeAt(j);
+if(c==32 ||c==10 ||c==13 ||c==9 ||c==12 ||c==11 ||c==160 ||c==5760 ||c==6158 ||c==8192 ||c==8193 ||c==8194 ||c==8195 ||c==8196 ||c==8197 ||c==8198 ||c==8199 ||c==8200 ||c==8201 ||c==8202 ||c==8232 ||c==8233 ||c==8239 ||c==8287 ||c==12288 ||c==65279)
+continue;else break;}
+return this.substring(0,j + 1);};}
 var $ObjectDict=object.$dict
 var $StringDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'str',$native:true}
 function normalize_start_end($){if($.start===null||$.start===_b_.None){$.start=0}
@@ -9061,8 +9084,9 @@ $StringDict.ljust=function(self){var $=$B.args('ljust',3,{self:null,width:null,f
 if($.width <=self.length)return self
 return self + $.fillchar.repeat($.width - self.length)}
 $StringDict.lstrip=function(self,x){var $=$B.args('lstrip',2,{self:null,chars:null},['self','chars'],arguments,{chars:_b_.None},null,null)
-if($.chars===_b_.None){return $.self.replace(/^\s+/,'')}
-return $.self.replace(new RegExp("^["+$.chars+"]*"),"")}
+if($.chars===_b_.None){return $.self.trimLeft()}
+for(var i=0;i < $.self.length;i++){if($.chars.indexOf($.self.charAt(i))===-1){return $.self.substring(i);}}
+return '';}
 $StringDict.maketrans=function(){var $=$B.args('maketrans',3,{x:null,y:null,z:null},['x','y','z'],arguments,{y:null,z:null},null,null)
 var _t=_b_.dict()
 for(var i=0;i < 256;i++)_t.$numeric_dict[i]=i
@@ -9148,8 +9172,9 @@ rev_res.reverse()
 for(var i=0;i<rev_res.length;i++){rev_res[i]=reverse(rev_res[i])}
 return rev_res}
 $StringDict.rstrip=function(self,x){var $=$B.args('rstrip',2,{self:null,chars:null},['self','chars'],arguments,{chars:_b_.None},null,null)
-if($.chars===_b_.None){return $.self.replace(/\s+$/,'')}
-return $.self.replace(new RegExp("["+$.chars+"]*$"),"")}
+if($.chars===_b_.None){return $.self.trimRight()}
+for(var j=$.self.length-1;j >=0;j--){if($.chars.indexOf($.self.charAt(j))===-1){return $.self.substring(0,j+1);}}
+return '';}
 $StringDict.split=function(){var pos=0
 var $=$B.args("split",3,{self:null,sep:null,maxsplit:null},['self','sep','maxsplit'],arguments,{sep:_b_.None,maxsplit:-1},null,null)
 var sep=$.sep,maxsplit=$.maxsplit,self=$.self
@@ -9204,7 +9229,10 @@ if(!_b_.isinstance(prefix,str)){throw _b_.TypeError(
 if(s.substr(0,prefix.length)==prefix)return true}
 return false}
 $StringDict.strip=function(){var $=$B.args('strip',2,{self:null,chars:null},['self','chars'],arguments,{chars:_b_.None},null,null)
-return $StringDict.rstrip($StringDict.lstrip($.self,$.chars),$.chars)}
+if($.chars===_b_.None){return $.self.trim()}
+for(var i=0;i < $.self.length;i++){if($.chars.indexOf($.self.charAt(i))===-1){break;}}
+for(var j=$.self.length-1;j >=i;j--){if($.chars.indexOf($.self.charAt(j))===-1){break;}}
+return $.self.substring(i,j+1);}
 $StringDict.translate=function(self,table){var res=[],pos=0
 if(isinstance(table,_b_.dict)){for(var i=0,_len_i=self.length;i < _len_i;i++){var repl=_b_.dict.$dict.get(table,self.charCodeAt(i),-1)
 if(repl==-1){res[pos++]=self.charAt(i)}
