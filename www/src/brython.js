@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,9,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.9"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-11-04 14:01:13.755764"
+__BRYTHON__.compiled_date="2016-11-04 16:26:51.973230"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -328,15 +328,15 @@ for(var i=new_nodes.length-1;i>=0;i--){node.parent.insert(rank,new_nodes[i])}
 $loop_num++}else{
 var new_node=new $Node()
 new_node.line_num=node.line_num
-var js='var $right'+$loop_num+'=getattr'
+var rname='$right'+$loop_num
+var js='var '+rname+' = getattr'
 js +='(iter('+right.to_js()+'),"__next__");'
 new $NodeJSCtx(new_node,js)
 var new_nodes=[new_node],pos=1
 var rlist_node=new $Node()
-var $var='$rlist'+$loop_num
-js='var '+$var+'=[], $pos=0;'
-js +='while(1){try{'+$var+'[$pos++]=$right'
-js +=$loop_num+'()}catch(err){break}};'
+var rlname='$rlist'+$loop_num
+js='var '+rlname+'=[], $pos=0;'+'while(1){try{'+rlname+
+'[$pos++] = '+rname+'()}catch(err){break}};'
 new $NodeJSCtx(rlist_node,js)
 new_nodes[pos++]=rlist_node
 var packed=null
@@ -347,17 +347,17 @@ break}}
 var check_node=new $Node()
 var min_length=left_items.length
 if(packed!==null){min_length--}
-js='if($rlist'+$loop_num+'.length<'+min_length+')'
-js +='{throw ValueError("need more than "+$rlist'+$loop_num
-js +='.length+" value" + ($rlist'+$loop_num+'.length>1 ?'
-js +=' "s" : "")+" to unpack")}'
+js='if('+rlname+'.length<'+min_length+')'+
+'{throw ValueError("need more than "+'+rlname+
+'.length+" value" + ('+rlname+'.length>1 ?'+
+' "s" : "")+" to unpack")}'
 new $NodeJSCtx(check_node,js)
 new_nodes[pos++]=check_node
 if(packed==null){var check_node=new $Node()
 var min_length=left_items.length
-js='if($rlist'+$loop_num+'.length>'+min_length+')'
-js +='{throw ValueError("too many values to unpack '
-js +='(expected '+left_items.length+')")}'
+js='if('+rlname+'.length>'+min_length+')'+
+'{throw ValueError("too many values to unpack '+
+'(expected '+left_items.length+')")}'
 new $NodeJSCtx(check_node,js)
 new_nodes[pos++]=check_node}
 for(var i=0;i<left_items.length;i++){var new_node=new $Node()
@@ -365,9 +365,9 @@ new_node.id=scope.id
 var C=new $NodeCtx(new_node)
 left_items[i].parent=C
 var assign=new $AssignCtx(left_items[i],false)
-var js='$rlist'+$loop_num
-if(packed==null ||i<packed){js +='['+i+']'}else if(i==packed){js +='.slice('+i+',$rlist'+$loop_num+'.length-'
-js +=(left_items.length-i-1)+')'}else{js +='[$rlist'+$loop_num+'.length-'+(left_items.length-i)+']'}
+var js=rlname
+if(packed==null ||i<packed){js +='['+i+']'}else if(i==packed){js +='.slice('+i+','+rlname+'.length-'+
+(left_items.length-i-1)+')'}else{js +='['+rlname+'.length-'+(left_items.length-i)+']'}
 assign.tree[1]=new $JSCode(js)
 new_nodes[pos++]=new_node}
 node.parent.children.splice(rank,1)

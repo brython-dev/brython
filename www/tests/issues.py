@@ -1050,6 +1050,10 @@ assert round(2.5) == 2
 assert round(9.5) == 10
 assert round(100.5) == 100
 
+# issue 523
+borders_distance = [(-5, 0), (4, 0), (0, -3), (0, 4)]
+mx, my = min(borders_distance, key=lambda m: abs(m[0] + m[1]))
+assert (mx, my) == (0, -3)
 
 # ==========================================
 # Finally, report that all tests have passed

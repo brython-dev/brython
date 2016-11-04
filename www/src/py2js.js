@@ -642,18 +642,19 @@ function $AssignCtx(context){ //, check_unbound){
             
             // set attribute line_num for debugging
             new_node.line_num = node.line_num
+            
+            var rname = '$right'+$loop_num
 
-            var js = 'var $right'+$loop_num+'=getattr'
+            var js = 'var '+rname+' = getattr'
             js += '(iter('+right.to_js()+'),"__next__");'
             new $NodeJSCtx(new_node,js)
 
             var new_nodes = [new_node], pos=1
             
             var rlist_node = new $Node()
-            var $var='$rlist'+$loop_num
-            js = 'var '+$var+'=[], $pos=0;'
-            js += 'while(1){try{'+$var+'[$pos++]=$right'
-            js += $loop_num+'()}catch(err){break}};'
+            var rlname='$rlist'+$loop_num
+            js = 'var '+rlname+'=[], $pos=0;'+'while(1){try{'+rlname+
+                '[$pos++] = '+rname+'()}catch(err){break}};'
             new $NodeJSCtx(rlist_node, js)
             new_nodes[pos++]=rlist_node
             
@@ -673,10 +674,10 @@ function $AssignCtx(context){ //, check_unbound){
             var check_node = new $Node()
             var min_length = left_items.length
             if(packed!==null){min_length--}
-            js = 'if($rlist'+$loop_num+'.length<'+min_length+')'
-            js += '{throw ValueError("need more than "+$rlist'+$loop_num
-            js += '.length+" value" + ($rlist'+$loop_num+'.length>1 ?'
-            js += ' "s" : "")+" to unpack")}'
+            js = 'if('+rlname+'.length<'+min_length+')'+
+                 '{throw ValueError("need more than "+'+rlname+
+                 '.length+" value" + ('+rlname+'.length>1 ?'+
+                 ' "s" : "")+" to unpack")}'
             new $NodeJSCtx(check_node,js)
             new_nodes[pos++]=check_node
 
@@ -684,9 +685,9 @@ function $AssignCtx(context){ //, check_unbound){
             if(packed==null){
                 var check_node = new $Node()
                 var min_length = left_items.length
-                js = 'if($rlist'+$loop_num+'.length>'+min_length+')'
-                js += '{throw ValueError("too many values to unpack '
-                js += '(expected '+left_items.length+')")}'
+                js = 'if('+rlname+'.length>'+min_length+')'+
+                     '{throw ValueError("too many values to unpack '+
+                     '(expected '+left_items.length+')")}'
                 new $NodeJSCtx(check_node,js)
                 new_nodes[pos++]=check_node
             }
@@ -698,14 +699,14 @@ function $AssignCtx(context){ //, check_unbound){
                 var context = new $NodeCtx(new_node) // create ordinary node
                 left_items[i].parent = context
                 var assign = new $AssignCtx(left_items[i], false) // assignment to left operand
-                var js = '$rlist'+$loop_num
+                var js = rlname
                 if(packed==null || i<packed){
                     js += '['+i+']'
                 }else if(i==packed){
-                    js += '.slice('+i+',$rlist'+$loop_num+'.length-'
-                    js += (left_items.length-i-1)+')'
+                    js += '.slice('+i+','+rlname+'.length-'+
+                          (left_items.length-i-1)+')'
                 }else{
-                    js += '[$rlist'+$loop_num+'.length-'+(left_items.length-i)+']'
+                    js += '['+rlname+'.length-'+(left_items.length-i)+']'
                 }
                 assign.tree[1] = new $JSCode(js) // right part of the assignment
                 new_nodes[pos++]=new_node
