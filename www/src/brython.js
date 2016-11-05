@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,9,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.9"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-11-04 16:44:16.719509"
+__BRYTHON__.compiled_date="2016-11-05 08:45:09.839783"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -487,7 +487,7 @@ switch(op){case '+=':
 case '-=':
 case '*=':
 case '/=':
-if(left_is_id){var scope=this.scope,global_ns='$local_'+scope.module.replace(/\./g,'_'),prefix
+if(left_is_id){var scope=this.scope,global_ns='$local_'+scope.module.replace(/\./g,'_')
 switch(scope.ntype){case 'module':
 prefix=global_ns
 break
@@ -503,7 +503,7 @@ parent.insert(rank+offset,new_node)
 in_class=true
 offset++}}}
 var left=C.tree[0].to_js()
-prefix=prefix && !C.tree[0].unknown_binding && left_id_unbound===undefined
+prefix=prefix && !C.tree[0].unknown_binding && !left_id_unbound
 var op1=op.charAt(0)
 if(prefix){var left1=in_class ? '$left' : left
 var new_node=new $Node()

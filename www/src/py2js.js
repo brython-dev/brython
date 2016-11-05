@@ -898,10 +898,10 @@ function $AugmentedAssignCtx(context, op){
                 was_bound = $B.bound[this.scope.id][left_id]!==undefined,
                 left_id_unbound = this.tree[0].tree[0].unbound
         }
-            
+        
         var right_is_int = (this.tree[1].type=='expr' && 
             this.tree[1].tree[0].type=='int')
-        
+
         var right = right_is_int ? this.tree[1].tree[0].to_js() : '$temp'
 
         if(!right_is_int){
@@ -939,8 +939,7 @@ function $AugmentedAssignCtx(context, op){
           case '/=':
             if(left_is_id){
               var scope = this.scope,
-                  global_ns = '$local_'+scope.module.replace(/\./g,'_'),
-                  prefix
+                  global_ns = '$local_'+scope.module.replace(/\./g,'_')
               switch(scope.ntype) {
                 case 'module':
                   prefix = global_ns
@@ -972,8 +971,9 @@ function $AugmentedAssignCtx(context, op){
         // Since augmented assignement can't be applied to a function call
         // the shortcut will not be used in this case
         
-        prefix = prefix && !context.tree[0].unknown_binding && left_id_unbound===undefined
+        prefix = prefix && !context.tree[0].unknown_binding && !left_id_unbound
         var op1 = op.charAt(0)
+        
         if(prefix){
             var left1 = in_class ? '$left' : left
             var new_node = new $Node()
