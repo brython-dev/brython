@@ -7703,8 +7703,11 @@ function brython(options){
     
     // List of URLs where imported modules should be searched
     // A list can be provided as attribute of options
-    if (options.pythonpath!==undefined) $B.path = options.pythonpath
-
+    if (options.pythonpath!==undefined){
+        $B.path = options.pythonpath
+        $B.$options.static_stdlib_import = false
+    }
+    
     // Allow user to specify the re module they want to use as a default
     // Valid values are 'pyre' for pythons re module and 
     // 'jsre' for brythons customized re module

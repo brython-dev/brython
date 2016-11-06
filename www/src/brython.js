@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,9,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.9"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-11-05 08:45:09.839783"
+__BRYTHON__.compiled_date="2016-11-06 18:28:02.790488"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4147,7 +4147,8 @@ if(script.type=="text/python" ||script.type=="text/python3"){$elts.push(script)}
 var $href=$B.script_path=window.location.href
 var $href_elts=$href.split('/')
 $href_elts.pop()
-if(options.pythonpath!==undefined)$B.path=options.pythonpath
+if(options.pythonpath!==undefined){$B.path=options.pythonpath
+$B.$options.static_stdlib_import=false}
 if(options.re_module !==undefined){if(options.re_module=='pyre' ||options.re_module=='jsre'){$B.$options.re=options.re}
 console.log("DeprecationWarning: \'re_module\' option of \'brython\' function will be deprecated in future versions of Brython.")}
 $B.scripts=[]
@@ -7033,7 +7034,7 @@ return{__class__:Loader,load_module:function(name,path){var mod=module(name)
 $B.imported[name]=mod
 mod.__spec__=spec
 mod.__package__=spec.parent
-cls.$dict.exec_module(cls,mod,spec.blocking)}}},find_spec: function(cls,fullname,path,prev_module){if($B.stdlib){var address=$B.stdlib[fullname];
+cls.$dict.exec_module(cls,mod,spec.blocking)}}},find_spec: function(cls,fullname,path,prev_module){if($B.stdlib && $B.$options.static_stdlib_import){var address=$B.stdlib[fullname];
 if(address===undefined){var elts=fullname.split('.')
 if(elts.length>1){elts.pop()
 var package=$B.stdlib[elts.join('.')]

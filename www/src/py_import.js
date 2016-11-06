@@ -534,7 +534,7 @@ finder_stdlib_static.$dict = {
         }
     },
     find_spec: function(cls, fullname, path, prev_module) {
-        if ($B.stdlib) {
+        if ($B.stdlib && $B.$options.static_stdlib_import) {
             var address = $B.stdlib[fullname];
             if(address===undefined){
                 var elts = fullname.split('.')
