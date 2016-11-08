@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,9,'alpha',0]
 __BRYTHON__.__MAGIC__="3.2.9"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-11-06 18:28:02.790488"
+__BRYTHON__.compiled_date="2016-11-08 14:56:58.436571"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4102,9 +4102,9 @@ eval($js)
 $B.imported[script.name]=$locals}catch($err){if($B.debug>1){console.log($err)
 for(var attr in $err){console.log(attr+' : ',$err[attr])}}
 if($err.$py_error===undefined){console.log('Javascript error',$err)
-$err=_b_.RuntimeError($err+'')}
+$err=$B.builtins.RuntimeError($err+'')}
 var name=$err.__name__
-var $trace=_b_.getattr($err,'info')+'\n'+name+': '
+var $trace=$B.builtins.getattr($err,'info')+'\n'+name+': '
 if(name=='SyntaxError' ||name=='IndentationError'){$trace +=$err.args[0]}else{$trace +=$err.args}
 try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
 throw $err}finally{$B.clear_ns(script.name)}}

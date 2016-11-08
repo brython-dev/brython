@@ -7566,7 +7566,7 @@ function run_script(script){
             console.log('Javascript error', $err)
             //console.log($js)
             //for(var attr in $err){console.log(attr+': '+$err[attr])}
-            $err=_b_.RuntimeError($err+'')
+            $err=$B.builtins.RuntimeError($err+'')
         }
 
         // Print the error traceback on the standard error stream
