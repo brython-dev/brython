@@ -7571,7 +7571,7 @@ function run_script(script){
 
         // Print the error traceback on the standard error stream
         var name = $err.__name__
-        var $trace = _b_.getattr($err,'info')+'\n'+name+': '
+        var $trace = $B.builtins.getattr($err,'info')+'\n'+name+': '
         if(name=='SyntaxError' || name=='IndentationError'){
             $trace += $err.args[0]
         }else{$trace += $err.args}
