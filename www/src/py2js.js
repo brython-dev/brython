@@ -3,6 +3,7 @@
 ;(function($B){
 
 var js,$pos,res,$op
+var _b_ = $B.builtins
 
 
 /* 
@@ -7566,12 +7567,12 @@ function run_script(script){
             console.log('Javascript error', $err)
             //console.log($js)
             //for(var attr in $err){console.log(attr+': '+$err[attr])}
-            $err=$B.builtins.RuntimeError($err+'')
+            $err=_b_.RuntimeError($err+'')
         }
 
         // Print the error traceback on the standard error stream
         var name = $err.__name__
-        var $trace = $B.builtins.getattr($err,'info')+'\n'+name+': '
+        var $trace = _b_.getattr($err,'info')+'\n'+name+': '
         if(name=='SyntaxError' || name=='IndentationError'){
             $trace += $err.args[0]
         }else{$trace += $err.args}
@@ -7590,7 +7591,6 @@ function run_script(script){
 $B._run_script = run_script;
 
 function brython(options){
-    var _b_=$B.builtins
     
     // meta_path used in py_import.js
     if ($B.meta_path === undefined) {
