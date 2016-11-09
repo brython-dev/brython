@@ -8,6 +8,8 @@ via collections; they are defined here only to alleviate certain
 bootstrapping issues.  Unit tests are in test_collections.
 """
 
+# Brython fix me
+# ABCMeta is not used and abstractmethod is hardcoded in the module
 #from abc import ABCMeta, abstractmethod
 import sys
 

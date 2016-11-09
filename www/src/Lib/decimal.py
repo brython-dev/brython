@@ -141,6 +141,7 @@ __all__ = [
 __version__ = '1.70'    # Highest version of the spec this complies with
                         # See http://speleotrove.com/decimal/
 
+# Copy is not used at this moment in the module
 #import copy as _copy
 import math as _math
 import numbers as _numbers
@@ -151,7 +152,8 @@ try:
     DecimalTuple = _namedtuple('DecimalTuple', 'sign digits exponent')
 except ImportError:
     DecimalTuple = lambda *args: args
-    
+
+# Moved from below as it is used globally    
 import _jsre as re
 
 # Rounding
@@ -6478,6 +6480,8 @@ else:
     del s1, s2, name
     from _decimal import *
 
+# Brython fix me
+# This is not used at this moment
 #if __name__ == '__main__':
     #import doctest, decimal
     #doctest.testmod(decimal)
