@@ -55,7 +55,9 @@ setup(
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     package_data={
-        'data': ['server.py', 'index.html', 'lib/brython.js',
+        'data': ['server.py', 'index.html', 'make_bundle.py',
+            'python_minifier.py', 
+            'lib/brython.js',
             'lib/brython_stdlib.js'],
     }
 
