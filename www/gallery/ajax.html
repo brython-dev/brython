@@ -17,7 +17,6 @@ a.sort_link{margin-left:10px;text-decoration:none}
 <button id="i_dont_exist">file not found</button>
 <button id="get_test">GET request</button>
 <button id="post_test">POST request</button>
-<button id="timeout">timeout</button>
 
 <script id="ascript" type="text/python">
 import time
@@ -59,7 +58,6 @@ doc['get_text'].bind('click',lambda ev:go('ajax_data.txt'))
 doc['i_dont_exist'].bind('click',lambda ev:go('i_dont_exist.txt'))
 doc['get_test'].bind('click',lambda ev:go('/cgi-bin/get_test.py'))
 doc['post_test'].bind('click',lambda ev:post('/cgi-bin/post_test.py'))
-doc['timeout'].bind('click',lambda ev:go('/cgi-bin/timeout.py'))
 </script>
 
 </body>
