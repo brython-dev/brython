@@ -17,7 +17,7 @@ setup(
     author='Pierre Quentel',
     author_email='quentel.pierre@orange.fr',
     
-    packages = ['data'],
+    packages = ['data', 'data.tools'],
 
     # Choose your license
     license='BSD',
@@ -55,10 +55,12 @@ setup(
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     package_data={
-        'data': ['server.py', 'index.html', 'make_bundle.py',
-            'python_minifier.py', 
-            'lib/brython.js',
-            'lib/brython_stdlib.js'],
+        'data': ['server.py', 
+            'index.html', 
+            'update_bundle.py',
+            '.bundle-ignore',
+            'dist/brython.js',
+            'dist/brython_modules.js'],
     }
 
 )

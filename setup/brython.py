@@ -14,21 +14,21 @@ if os.listdir(os.getcwd()):
     import sys
     sys.exit()
 
-for path in 'server.py', 'index.html':
+for path in '.bundle-ignore', 'server.py', 'index.html', 'update_bundle.py':
     shutil.copyfile(os.path.join(src_path, path),
         path)
 
 # tools to generate a distribution for the project - WIP
 os.mkdir('tools')
-for path in 'make_bundle.py', 'python_minifier.py':
-    shutil.copyfile(os.path.join(src_path, path),
-        os.path.join('tools', path))
+for path in os.listdir(os.path.join(src_path, 'tools')):
+    fullpath = os.path.join(src_path, 'tools', path)
+    if os.path.isfile(fullpath):
+        shutil.copyfile(fullpath,
+            os.path.join('tools', path))
 
 # put core Brython script (brython.js) and a bundle of the standard
 # distribution
 os.mkdir('dist')
-shutil.copyfile(os.path.join(src_path, 'lib', 'brython.js'),
-    os.path.join(os.getcwd(), 'dist', 'brython.js'))
-shutil.copyfile(os.path.join(src_path, 'lib', 'brython_stdlib.js'),
-    os.path.join(os.getcwd(), 'dist', 'brython_stdlib.js'))
-
+for path in os.listdir(os.path.join(src_path, 'dist')):
+    shutil.copyfile(os.path.join(src_path, 'dist', path),
+        os.path.join(os.getcwd(), 'dist', path))

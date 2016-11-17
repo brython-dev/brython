@@ -6,7 +6,7 @@ import os
 import json
 import fnmatch
 
-import python_minifier
+from . import python_minifier
 
 def bundle(folder):
     # check if there is an ".bundle-ignore" file
@@ -18,6 +18,8 @@ def bundle(folder):
     paths = []
     res = {}
     for dirpath, dirnames, filenames in os.walk(folder):
+        if '__pycache__' in dirnames:
+            dirnames.remove('__pycache__')
         exclude_dir = []
         for dirname in dirnames:
             init_path = os.path.join(dirpath, dirname, '__init__.py')
@@ -29,6 +31,7 @@ def bundle(folder):
             name, ext = os.path.splitext(filename)
             if ext == '.py':
                 fullpath = os.path.join(dirpath, filename)[len(folder)+1:]
+                fullpath = fullpath.replace(os.sep, '/')
                 for match in ignore:
                     if fnmatch.fnmatch(fullpath, match):
                         break
@@ -37,6 +40,7 @@ def bundle(folder):
                     if parts[-1]=='__init__.py':
                         mod_name = '.'.join(parts[:-1])
                         is_package = True
+                        print('package', mod_name)
                     else:
                         parts[-1] = parts[-1].split('.')[0]
                         mod_name = '.'.join(parts)
