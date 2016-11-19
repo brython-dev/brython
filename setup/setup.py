@@ -57,7 +57,6 @@ setup(
     package_data={
         'data': ['server.py', 
             'index.html', 
-            'update_bundle.py',
             '.bundle-ignore',
             'dist/brython.js',
             'dist/brython_stdlib.js',
