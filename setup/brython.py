@@ -26,8 +26,9 @@ for path in os.listdir(os.path.join(src_path, 'tools')):
         shutil.copyfile(fullpath,
             os.path.join('tools', path))
 
-# put core Brython script (brython.js) and a bundle of the standard
-# distribution
+# put core Brython script (brython.js), the standard distribution
+# and brython_mdoules.js, a bundle of the modules required by the application,
+# initialised with the standard distribution
 os.mkdir('dist')
 for path in os.listdir(os.path.join(src_path, 'dist')):
     shutil.copyfile(os.path.join(src_path, 'dist', path),

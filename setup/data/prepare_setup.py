@@ -15,14 +15,17 @@ for folder in folders:
     res.update(make_bundle.bundle(folder))
 
 # copy stdlib in dist/brython_modules.js
+# and initialise brython_modules.js with the same content
 lib_dir = os.path.join(os.getcwd(), 'dist')
 if not os.path.exists(lib_dir):
     os.mkdir(lib_dir)
 
-bundle_path = os.path.join(lib_dir, 'brython_modules.js')
-with open(bundle_path, 'w', encoding='utf-8') as out:
-    out.write('__BRYTHON__.use_VFS = true;\n')
-    out.write('__BRYTHON__.VFS = {}\n'.format(json.dumps(res)))
+bundle_names = ['brython_stdlib.js', 'brython_modules.js']
+for name in bundle_names:
+    bundle_path = os.path.join(lib_dir, name)
+    with open(bundle_path, 'w', encoding='utf-8') as out:
+        out.write('__BRYTHON__.use_VFS = true;\n')
+        out.write('__BRYTHON__.VFS = {}\n'.format(json.dumps(res)))
 
 # copy brython.js
 shutil.copyfile(os.path.join(www, 'src', 'brython.js'),

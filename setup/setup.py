@@ -60,7 +60,9 @@ setup(
             'update_bundle.py',
             '.bundle-ignore',
             'dist/brython.js',
-            'dist/brython_modules.js'],
+            'dist/brython_stdlib.js',
+            'dist/brython_modules.js',
+            ],
     }
 
 )
