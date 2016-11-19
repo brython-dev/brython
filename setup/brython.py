@@ -23,17 +23,9 @@ if args.install:
         import sys
         sys.exit()
     
-    for path in '.bundle-ignore', 'server.py', 'index.html', 'update_bundle.py':
+    for path in '.bundle-ignore', 'server.py', 'index.html':
         shutil.copyfile(os.path.join(src_path, path),
             path)
-    
-    # tools to generate a distribution for the project - WIP
-    os.mkdir('tools')
-    for path in os.listdir(os.path.join(src_path, 'tools')):
-        fullpath = os.path.join(src_path, 'tools', path)
-        if os.path.isfile(fullpath):
-            shutil.copyfile(fullpath,
-                os.path.join('tools', path))
     
     # put core Brython script (brython.js), the standard distribution
     # and brython_mdoules.js, a bundle of the modules required by the 
@@ -45,7 +37,7 @@ if args.install:
 
 if args.update:
     print('Update Brython modules')
-    from tools import make_bundle
+    from data.tools import make_bundle
     
     folder = os.getcwd()
     more_modules = make_bundle.bundle(folder)
