@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,9,'final',0]
 __BRYTHON__.__MAGIC__="3.2.9"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-11-20 09:48:21.409580"
+__BRYTHON__.compiled_date="2016-11-20 10:08:08.617484"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","jsre","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -6140,7 +6140,6 @@ BaseException.$dict=$BaseExceptionDict
 $BaseExceptionDict.$factory=BaseException
 _b_.BaseException=BaseException
 $B.exception=function(js_exc){
-console.log('exception',js_exc)
 if(!js_exc.$py_error){
 if(js_exc.info===undefined){var _frame=$B.last($B.frames_stack)
 if(_frame===undefined){_frame=$B.pmframe}
@@ -7659,10 +7658,11 @@ if(fmt.type && 'eEfFgG%'.indexOf(fmt.type)!=-1){
 return _b_.float.$dict.__format__(self,format_spec)}
 fmt.align=fmt.align ||'>'
 var res=preformat(self,fmt)
-if(fmt.comma){var len=res.length,nb=Math.ceil(res.length/3),chunks=[]
-for(var i=0;i<nb;i++){chunks.push(res.substring(len-3*i-3,len-3*i))}
+if(fmt.comma){var sign=res[0]=='-' ? '-' : '',rest=res.substr(sign.length),len=rest.length,nb=Math.ceil(rest.length/3),chunks=[]
+for(var i=0;i<nb;i++){chunks.push(rest.substring(len-3*i-3,len-3*i))}
 chunks.reverse()
-res=chunks.join(',')}
+console.log('chunks for comma',chunks)
+res=sign+chunks.join(',')}
 return $B.format_width(res,fmt)}
 $IntDict.__floordiv__=function(self,other){if(isinstance(other,int)){if(other==0)throw ZeroDivisionError('division by zero')
 return Math.floor(self/other)}

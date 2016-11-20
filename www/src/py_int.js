@@ -142,12 +142,17 @@ $IntDict.__format__ = function(self,format_spec){
     fmt.align = fmt.align || '>'
     var res = preformat(self, fmt)
     if(fmt.comma){
-        var len = res.length, nb = Math.ceil(res.length/3), chunks = []
+        var sign = res[0]=='-' ? '-' : '',
+            rest = res.substr(sign.length),
+            len = rest.length, 
+            nb = Math.ceil(rest.length/3), 
+            chunks = []
         for(var i=0;i<nb;i++){
-            chunks.push(res.substring(len-3*i-3, len-3*i))
+            chunks.push(rest.substring(len-3*i-3, len-3*i))
         }
         chunks.reverse()
-        res = chunks.join(',')
+        console.log('chunks for comma', chunks)
+        res = sign+chunks.join(',')
     }
     return $B.format_width(res, fmt)
 }

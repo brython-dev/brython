@@ -1068,6 +1068,10 @@ finally:
 
 assert order == ['try', 'else', 'finally']
 
+# issue 529
+x = [-644475]
+assert "{:,}".format(int(x[0])) == "-644,475"
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
