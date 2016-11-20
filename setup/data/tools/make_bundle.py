@@ -36,7 +36,7 @@ def bundle(folder):
                     if fnmatch.fnmatch(fullpath, match):
                         break
                 else:
-                    parts = fullpath.split(os.sep)
+                    parts = fullpath.split('/')
                     if parts[-1]=='__init__.py':
                         mod_name = '.'.join(parts[:-1])
                         is_package = True

@@ -10,14 +10,17 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--install', help='Install Brython locally',
     action="store_true")
+parser.add_argument('--reset', help='Reset brython_modules.js to stdlib',
+    action="store_true")
 parser.add_argument('--update', help='Update brython_modules.js',
     action="store_true")
 args = parser.parse_args()
 
 if args.install:
-    print('Installing brython')
-    src_path = os.path.join(os.path.dirname(__file__), 'data')
+    print('Installing Brython')
     
+    src_path = os.path.join(os.path.dirname(__file__), 'data')
+
     if os.listdir(os.getcwd()):
         print('Brython can only be installed in an empty folder')
         import sys
@@ -28,12 +31,17 @@ if args.install:
             path)
     
     # put core Brython script (brython.js), the standard distribution
-    # and brython_mdoules.js, a bundle of the modules required by the 
+    # and brython_modules.js, a bundle of the modules required by the 
     # application, initialised with the standard distribution
     os.mkdir('dist')
     for path in os.listdir(os.path.join(src_path, 'dist')):
         shutil.copyfile(os.path.join(src_path, 'dist', path),
             os.path.join(os.getcwd(), 'dist', path))
+
+if args.reset:
+    print('Reset brython_modules.js to standard distribution')
+    shutil.copyfile(os.path.join(os.getcwd(), 'dist', 'brython_stdlib.js'),
+        os.path.join(os.getcwd(), 'dist', 'brython_modules.js'))
 
 if args.update:
     print('Update Brython modules')
