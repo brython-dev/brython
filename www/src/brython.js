@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,9,'final',0]
 __BRYTHON__.__MAGIC__="3.2.9"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-11-20 09:25:23.247753"
+__BRYTHON__.compiled_date="2016-11-20 09:48:21.409580"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","jsre","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -6110,8 +6110,8 @@ try{info +='\n    '+attr+' : '+self.$js_exc[attr]}
 catch(_err){}}
 info+='\n'}
 for(var i=0;i<self.$stack.length;i++){var frame=self.$stack[i]
-if(frame[3].$line_info===undefined){continue}
-var line_info=frame[3].$line_info.split(',')
+if(!frame[1]||!frame[1].$line_info){continue}
+var line_info=frame[1].$line_info.split(',')
 if($B.$py_src[line_info[1]]===undefined){continue}
 var lines=$B.$py_src[line_info[1]].split('\n'),module=line_info[1]
 if(module.charAt(0)=='$'){module='<module>'}
@@ -6140,6 +6140,7 @@ BaseException.$dict=$BaseExceptionDict
 $BaseExceptionDict.$factory=BaseException
 _b_.BaseException=BaseException
 $B.exception=function(js_exc){
+console.log('exception',js_exc)
 if(!js_exc.$py_error){
 if(js_exc.info===undefined){var _frame=$B.last($B.frames_stack)
 if(_frame===undefined){_frame=$B.pmframe}
