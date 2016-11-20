@@ -7673,7 +7673,7 @@ function brython(options){
     meta_path.push($B.$meta_path[2])
     $B.meta_path = meta_path
     path_hooks.push($B.$path_hooks[1])
-    $B.path_hooks = path_hooks  
+    $B.path_hooks = path_hooks
     
     // Option to run code on demand and not all the scripts defined in a page
     // The following lines are included to allow to run brython scripts in

@@ -511,7 +511,16 @@ function getattr(obj,attr,_default){
 
     if(klass===undefined){
         // for native JS objects used in Python code
-        if(obj[attr]!==undefined) return $B.$JS2Py(obj[attr])
+        if(obj[attr]!==undefined){
+            if(typeof obj[attr]=="function"){
+                return function(){
+                    // In function, "this" is set to the object
+                    return $B.$JS2Py(obj[attr].apply(obj, arguments))
+                }
+            }else{
+                return $B.$JS2Py(obj[attr])
+            }
+        }
         if(_default!==undefined) return _default
         throw _b_.AttributeError('object has no attribute '+attr)
     }
@@ -1222,12 +1231,12 @@ function round(arg,n){
     }
 
     if(n===undefined){
-		var floor = Math.floor(arg)
+        var floor = Math.floor(arg)
         var diff = Math.abs(arg-floor)
         if (diff == 0.5){
             if (floor % 2){return Math.round(arg)}else{return Math.floor(arg)}
         }else{
-    		return _b_.int(Math.round(arg))
+            return _b_.int(Math.round(arg))
         }
     }
     if(!isinstance(n,_b_.int)){throw _b_.TypeError(
