@@ -498,6 +498,7 @@ $B.show_getattr = function(){
 function getattr(obj,attr,_default){
 
     if(obj===undefined){console.log('get attr', attr, 'of undefined')}
+    
     var klass = obj.__class__
     
     if(klass===undefined){
@@ -515,7 +516,7 @@ function getattr(obj,attr,_default){
             if(typeof obj[attr]=="function"){
                 return function(){
                     // In function, "this" is set to the object
-                    return $B.$JS2Py(obj[attr].apply(obj, arguments))
+                    return obj[attr].apply(obj, arguments)
                 }
             }else{
                 return $B.$JS2Py(obj[attr])
@@ -609,6 +610,7 @@ function getattr(obj,attr,_default){
             return klass[attr](obj)
         }
         if(typeof klass[attr]=='function'){
+            
             // new is a static method
             if(attr=='__new__') return klass[attr].apply(null,arguments)
             

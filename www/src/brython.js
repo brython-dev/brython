@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,2,9,'final',0]
 __BRYTHON__.__MAGIC__="3.2.9"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-11-20 10:08:08.617484"
+__BRYTHON__.compiled_date="2016-11-21 18:05:45.544133"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","jsre","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5381,7 +5381,7 @@ else if(typeof obj=='number'){klass=obj % 1==0 ? _b_.int.$dict : _b_.float.$dict
 else{klass=$B.get_class(obj)}}
 if(klass===undefined){
 if(obj[attr]!==undefined){if(typeof obj[attr]=="function"){return function(){
-return $B.$JS2Py(obj[attr].apply(obj,arguments))}}else{return $B.$JS2Py(obj[attr])}}
+return obj[attr].apply(obj,arguments)}}else{return $B.$JS2Py(obj[attr])}}
 if(_default!==undefined)return _default
 throw _b_.AttributeError('object has no attribute '+attr)}
 switch(attr){case '__call__':
@@ -10789,20 +10789,21 @@ catch(err){throw $B.builtins.NameError("name '"+names[i]+"' not found in script 
 return $B.py2js(src,module_name,module_name,'__builtins__').to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)}}
 var _b_=$B.builtins
 modules['_sys']={__file__:$B.brython_path+'/libs/_sys.js',
-Getframe : function(depth){return $B._frame($B.frames_stack,depth)},argv:
-{'__get__':function(){var locals_id=$B.last($B.frames_stack)[0]
+Getframe : function(depth){return $B._frame($B.frames_stack,depth)},argv:{
+__get__: function(){var locals_id=$B.last($B.frames_stack)[0]
 res=[locals_id]
 if($B.$options.args!==undefined){var options=$B.$options.args[locals_id]
 if(options !==undefined){if(Array.isArray(options)){for(var i=0,len=options.length;i<len;i++){if(typeof options[i]=='string' ||
 typeof options[i]=='number'){res.push(options[i])}else{throw _b_.ValueError("can only pass strings or numbers in options.args")}}}}}
-return res},'__set__':function(){throw _b_.TypeError("Read only property 'sys.argv'")}},modules :
-{'__get__':function(){return _b_.dict($B.JSObject($B.imported))},'__set__':function(self,obj,value){throw _b_.TypeError("Read only property 'sys.modules'")}},path: 
-{'__get__':function(){return $B.path},'__set__':function(self,obj,value){$B.path=value }},meta_path: 
-{'__get__':function(){return $B.meta_path},'__set__':function(self,obj,value){$B.meta_path=value }},path_hooks: 
-{'__get__':function(){return $B.path_hooks},'__set__':function(self,obj,value){$B.path_hooks=value }},path_importer_cache: 
-{'__get__':function(){return _b_.dict($B.JSObject($B.path_importer_cache))},'__set__':function(self,obj,value){throw _b_.TypeError("Read only property 'sys.path_importer_cache'")}},stderr :{
-__get__:function(){return $B.stderr},__set__:function(self,obj,value){$B.stderr=value},write:function(data){_b_.getattr($B.stderr,"write")(data)}},stdout :{
-__get__:function(){return $B.stdout},__set__:function(self,obj,value){$B.stdout=value},write:function(data){console.log('stdout write');_b_.getattr($B.stdout,"write")(data)}},stdin : $B.stdin}
+return res},__set__: function(){throw _b_.TypeError("Read only property 'sys.argv'")}},modules:{
+__get__: function(){return _b_.dict($B.JSObject($B.imported))},__set__: function(self,obj,value){throw _b_.TypeError("Read only property 'sys.modules'")}},path:{
+__get__: function(){return $B.path},__set__: function(self,obj,value){$B.path=value;console.log('path set to',$B.path)}},meta_path:{
+__get__: function(){return $B.meta_path},__set__: function(self,obj,value){$B.meta_path=value }},path_hooks:{
+__get__: function(){return $B.path_hooks},__set__: function(self,obj,value){$B.path_hooks=value }},path_importer_cache:{
+__get__: function(){return _b_.dict($B.JSObject($B.path_importer_cache))},__set__: function(self,obj,value){throw _b_.TypeError("Read only property"+
+" 'sys.path_importer_cache'")}},stderr:{
+__get__: function(){return $B.stderr},__set__: function(self,obj,value){$B.stderr=value},write: function(data){_b_.getattr($B.stderr,"write")(data)}},stdout:{
+__get__: function(){return $B.stdout},__set__: function(self,obj,value){$B.stdout=value},write: function(data){console.log('stdout write');_b_.getattr($B.stdout,"write")(data)}},stdin : $B.stdin}
 function load(name,module_obj){
 module_obj.__class__=$B.$ModuleDict
 module_obj.__name__=name
@@ -10815,11 +10816,10 @@ for(var attr in $B.builtins){$B.builtins.__builtins__[attr]=$B.builtins[attr]}
 $B.builtins.__builtins__.__setattr__=function(attr,value){console.log('set attr of builtins',attr)
 $B.builtins[attr]=value}
 $B.bound.__builtins__.__builtins__=$B.builtins.__builtins__})(__BRYTHON__)
-;(function($B){var _b_=$B.builtins,
-$sys=$B.imported['_sys'];
+;(function($B){var _b_=$B.builtins
 function import_hooks(mod_name,_path,module,blocking){
 if($B.is_none(module)){module=undefined;}
-var _meta_path=_b_.getattr($sys,'meta_path');
+var _meta_path=$B.meta_path;
 var spec=undefined;
 for(var i=0,_len_i=_meta_path.length;i < _len_i && $B.is_none(spec);i++){var _finder=_meta_path[i],find_spec=_b_.getattr(_finder,'find_spec',null)
 if(find_spec !==null){spec=_b_.getattr(find_spec,'__call__')(mod_name,_path,undefined,blocking);

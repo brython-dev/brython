@@ -1,8 +1,8 @@
 ;(function($B) {
-  var _b_=$B.builtins,
+  var _b_=$B.builtins
       // Static binding in function closure needed for import hooks
       // to stick to builtin cache even if module is overriden in sys.modules
-      $sys = $B.imported['_sys'];
+      //$sys = $B.imported['sys'];
 
   /**
    * [Import spec] [PEP 302] Brython import machinery
@@ -19,7 +19,7 @@
         module = undefined;
     }
 
-    var _meta_path=_b_.getattr($sys, 'meta_path');
+    var _meta_path=$B.meta_path;
     
     var spec = undefined;
     for (var i=0, _len_i = _meta_path.length; i < _len_i && $B.is_none(spec); i++) {
