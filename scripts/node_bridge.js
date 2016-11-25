@@ -10,11 +10,17 @@ Will brython replace Cython one day?  Only time will tell.
 
 */
 
-var fs = require('fs');
+var fs = require('fs'),
+    path = require('path'),
+    brythonSrcPath = path.join(__dirname, '..', 'www', 'src', 'brython.js');
 
 document={};
+document.getElementsByTagName = () => [{src: ''}];
 window={};
+window.location = {href: ''};
 window.navigator={}
+window.confirm = () => true;
+window.console = console;
 document.$py_src = {}
 document.$debug = 0
 
@@ -28,7 +34,7 @@ __BRYTHON__.scope = {}
 __BRYTHON__.modules = {}
 
 // Read and eval library
-jscode = fs.readFileSync('../src/brython.js','utf8');
+jscode = fs.readFileSync(brythonSrcPath, 'utf8');
 eval(jscode);
 
 //function node_import(module,alias,names) {
@@ -136,7 +142,7 @@ $compile_python=function(module_contents,module) {
 function execute_python_script(filename) {
   _py_src=fs.readFileSync(filename, 'utf8')
   __BRYTHON__.$py_module_path['__main__']='./'
-  var root = __BRYTHON__.py2js(_py_src,'__main__')
+  var root = __BRYTHON__.py2js(_py_src,'__main__', '__main__', '__builtins__')
   var js = root.to_js()
   //console.log(js);
   eval(js);
