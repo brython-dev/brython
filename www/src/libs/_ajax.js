@@ -68,7 +68,22 @@ ajax.$dict = {
     
     bind : function(self, evt, func){
         // req.bind(evt,func) is the same as req.onevt = func
-        self.js['on'+evt] = func
+        self.js['on'+evt] = function(){
+            try{
+                return func.apply(null, arguments)
+            }catch(err){
+                if(err.__class__!==undefined){
+                    var msg = _b_.getattr(err, 'info')+
+                        '\n'+err.__class__.__name__
+                    if(err.args){msg += ': '+err.args[0]}
+                    try{getattr($B.stderr,"write")(msg)}
+                    catch(err){console.log(msg)}
+                }else{
+                    try{getattr($B.stderr,"write")(err)}
+                    catch(err1){console.log(err)}
+                }
+            }
+        }
         return $N
     },
     
