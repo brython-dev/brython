@@ -383,14 +383,15 @@ function make_next(self, yield_node_id){
     root.addChild(fnode)
     
     // restore namespaces
-    var js =  'for(var attr in this.blocks){eval("var "+attr+"=this.blocks[attr]");};'+
-        'var $locals_'+self.iter_id+' = this.env, $locals = $locals_'+
-            self.iter_id+', $local_name="'+self.iter_id+'";'
+    var js =  'for(var attr in this.blocks){eval("var "+attr+"='+
+        'this.blocks[attr]");};var $locals_'+self.iter_id+' = this.env,'+
+        ' $locals = $locals_'+self.iter_id+', $local_name="'+self.iter_id+'";'
         
     fnode.addChild(new $B.genNode(js))
     // add a node to enter the frame
     fnode.addChild(new $B.genNode('$B.enter_frame(["'+self.iter_id+
-        '",$locals,"'+self.module+'",$locals_'+self.module+']);'))
+        '",$locals,"'+self.module+'",$locals_'+
+        self.module.replace(/\./g, '_')+']);'))
 
     // To build the new function, we must identify the rest of the function to
     // run after the exit node

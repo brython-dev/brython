@@ -1,7 +1,7 @@
-__BRYTHON__.implementation = [3, 2, 9, 'final', 0]
-__BRYTHON__.__MAGIC__ = "3.2.9"
+__BRYTHON__.implementation = [3, 3, 0, 'alpha', 0]
+__BRYTHON__.__MAGIC__ = "3.3.0"
 __BRYTHON__.version_info = [3, 3, 0, 'alpha', 0]
-__BRYTHON__.compiled_date = "2016-11-21 18:05:45.544133"
+__BRYTHON__.compiled_date = "2016-11-28 21:28:03.325734"
 __BRYTHON__.builtin_module_names = ["posix","sys","errno", "time","_ajax",
     "_base64",
     "_browser",
@@ -17,7 +17,6 @@ __BRYTHON__.builtin_module_names = ["posix","sys","errno", "time","_ajax",
     "hashlib",
     "javascript",
     "json",
-    "jsre",
     "long_int",
     "math",
     "modulefinder",
