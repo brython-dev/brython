@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,0,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-11-28 21:28:03.325734"
+__BRYTHON__.compiled_date="2016-11-28 22:59:01.609930"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1681,7 +1681,7 @@ val='$B.$check_def_free("'+val+'",'+scope_name+'["'+val+'"])'}else{val='$B.$chec
 this.result=val+$to_js(this.tree,'')
 return this.result}else{
 this.unknown_binding=true
-this.result='$B.$search("'+val+'")'
+this.result='$B.$global_search("'+val+'")'
 return this.result}}}
 function $ImaginaryCtx(C,value){
 this.type='imaginary'
@@ -4042,7 +4042,8 @@ if(line_info !==undefined){var line_node=new $Node()
 new $NodeJSCtx(line_node,local_ns+'.$line="'+line_info+'";None;\n')
 root.insert(offset++,line_node)}
 var enter_frame_pos=offset
-root.insert(offset++,$NodeJS('$B.enter_frame(["'+locals_id.replace(/\./g,'_')+'", '+local_ns+','+
+root.insert(offset++,$NodeJS('$B.enter_frame(["'+
+locals_id.replace(/\./g,'_')+'", '+local_ns+','+
 '"'+module.replace(/\./g,'_')+'", '+global_ns+', "a"]);\n'))
 var try_node=new $Node(),children=root.children.slice(enter_frame_pos+1,root.children.length),ctx=new $NodeCtx(try_node)
 root.insert(enter_frame_pos+1,try_node)
@@ -4735,13 +4736,14 @@ var frame=$B.last($B.frames_stack)
 if(frame[1][name]!==undefined){return frame[1][name]}
 else if(frame[3][name]!==undefined){return frame[3][name]}
 else if(_b_[name]!==undefined){return _b_[name]}
-else{if(frame[0]==frame[2]){throw _b_.NameError(name)}
+else{if(frame[0]==frame[2]){throw _b_.NameError("name '"+name+
+"' is not defined")}
 else{throw _b_.UnboundLocalError("local variable '"+name+
 "' referenced before assignment")}}}
 $B.$global_search=function(name){
 var frame=$B.last($B.frames_stack)
 if(frame[3][name]!==undefined){return frame[3][name]}
-else{throw _b_.NameError(name)}}
+else{throw _b_.NameError("name '"+name+"' is not defined")}}
 $B.$local_search=function(name){
 var frame=$B.last($B.frames_stack)
 if(frame[1][name]!==undefined){return frame[1][name]}
@@ -4749,7 +4751,7 @@ else{throw _b_.UnboundLocalError("local variable '"+name+
 "' referenced before assignment")}}
 $B.$check_def=function(name,value){
 if(value!==undefined){return value}
-throw _b_.NameError(name)}
+throw _b_.NameError("name '"+name+"' is not defined")}
 $B.$check_def_local=function(name,value){
 if(value!==undefined){return value}
 throw _b_.UnboundLocalError("local variable '"+name+
@@ -5041,9 +5043,7 @@ $B.enter_frame=function(frame){
 $B.frames_stack.push(frame)}
 $B.leave_frame=function(arg){
 if($B.frames_stack.length==0){console.log('empty stack');return}
-var frame=$B.frames_stack.pop()
-frame[0]=null
-frame[1]=null}
+var frame=$B.frames_stack.pop()}
 $B.memory=function(){var info=[]
 for(var attr in __BRYTHON__){var obj=__BRYTHON__[attr]
 if(obj===null){continue}
@@ -5987,7 +5987,7 @@ var orig_name=name
 var name1=name
 if(name=='open'){name1='$url_open'}
 if(name=='super'){name='$$super'}
-if(name=='eval'){name=name1='$eval'}
+if(name=='eval'){name=name1='$$eval'}
 if(name=='print'){name1='$print'}
 $B.bound['__builtins__'][name]=true
 try{_b_[name]=eval(name1)
@@ -6189,7 +6189,8 @@ $exc=$exc.replace('//placeholder//',code)
 _str[pos++]='var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}'
 _str[pos++]='$'+name+'Dict.__bases__ = [parent]'
 _str[pos++]='$'+name+'Dict.__module__ = "builtins"'
-_str[pos++]='$'+name+'Dict.__mro__=[_b_.'+parent.$dict.__name__+'.$dict].concat(parent.$dict.__mro__)'
+_str[pos++]='$'+name+'Dict.__mro__=[_b_.'+parent.$dict.__name__+
+'.$dict].concat(parent.$dict.__mro__)'
 _str[pos++]='_b_.'+name+'='+$exc
 _str[pos++]='_b_.'+name+'.__class__=$B.$factory'
 _str[pos++]='$'+name+'Dict.$factory=_b_.'+name
@@ -6210,7 +6211,7 @@ $make_exc(['UnicodeDecodeError','UnicodeEncodeError','UnicodeTranslateError'],_b
 $make_exc(['DeprecationWarning','PendingDeprecationWarning','RuntimeWarning','SyntaxWarning','UserWarning','FutureWarning','ImportWarning','UnicodeWarning','BytesWarning','ResourceWarning'],_b_.Warning)
 $make_exc(['EnvironmentError','IOError','VMSError','WindowsError'],_b_.OSError)
 $B.$NameError=function(name){
-throw _b_.NameError(name)}
+throw _b_.NameError("name '"+name+"' is not defined")}
 $B.$TypeError=function(msg){throw _b_.TypeError(msg)}})(__BRYTHON__)
 
 ;(function($B){var _b_=$B.builtins,None=_b_.None,$RangeDict={__class__:$B.$type,__dir__:_b_.object.$dict.__dir__,__name__:'range',$native:true,descriptors:{start:true,step:true,stop:true}}
@@ -7661,7 +7662,6 @@ var res=preformat(self,fmt)
 if(fmt.comma){var sign=res[0]=='-' ? '-' : '',rest=res.substr(sign.length),len=rest.length,nb=Math.ceil(rest.length/3),chunks=[]
 for(var i=0;i<nb;i++){chunks.push(rest.substring(len-3*i-3,len-3*i))}
 chunks.reverse()
-console.log('chunks for comma',chunks)
 res=sign+chunks.join(',')}
 return $B.format_width(res,fmt)}
 $IntDict.__floordiv__=function(self,other){if(isinstance(other,int)){if(other==0)throw ZeroDivisionError('division by zero')

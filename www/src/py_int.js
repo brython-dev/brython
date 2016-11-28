@@ -151,7 +151,6 @@ $IntDict.__format__ = function(self,format_spec){
             chunks.push(rest.substring(len-3*i-3, len-3*i))
         }
         chunks.reverse()
-        console.log('chunks for comma', chunks)
         res = sign+chunks.join(',')
     }
     return $B.format_width(res, fmt)

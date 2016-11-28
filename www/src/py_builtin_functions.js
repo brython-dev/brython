@@ -1929,7 +1929,7 @@ for(var i=0;i<builtin_names.length;i++){
     var name1 = name
     if(name=='open'){name1 = '$url_open'}
     if(name=='super'){name = '$$super'}
-    if(name=='eval'){name = name1 = '$eval'}
+    if(name=='eval'){name = name1 = '$$eval'}
     if(name=='print'){name1 = '$print'}
     $B.bound['__builtins__'][name] = true
     try{

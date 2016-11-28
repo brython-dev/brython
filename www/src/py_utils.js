@@ -267,7 +267,8 @@ $B.$search = function(name, global_ns){
     else if(frame[3][name]!==undefined){return frame[3][name]}
     else if(_b_[name]!==undefined){return _b_[name]}
     else{
-        if(frame[0]==frame[2]){throw _b_.NameError(name)}
+        if(frame[0]==frame[2]){throw _b_.NameError("name '"+name+
+            "' is not defined")}
         else{
             throw _b_.UnboundLocalError("local variable '"+name+
                 "' referenced before assignment")}
@@ -279,7 +280,7 @@ $B.$global_search = function(name){
     var frame = $B.last($B.frames_stack)
     if(frame[3][name]!==undefined){return frame[3][name]}
     else{
-        throw _b_.NameError(name)
+        throw _b_.NameError("name '"+name+"' is not defined")
     }
 }
 
@@ -296,7 +297,7 @@ $B.$local_search = function(name){
 $B.$check_def = function(name, value){
     // Check if value is not undefined
     if(value!==undefined){return value}
-    throw _b_.NameError(name)
+    throw _b_.NameError("name '"+name+"' is not defined")
 }
 
 $B.$check_def_local = function(name, value){
@@ -995,8 +996,8 @@ $B.leave_frame = function(arg){
     }
     */
     var frame = $B.frames_stack.pop()
-    frame[0] = null
-    frame[1] = null
+    //frame[0] = null
+    //frame[1] = null
     //console.log($B.frames_stack.length, 'frames remain')
 }
 

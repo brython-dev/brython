@@ -3406,7 +3406,7 @@ function $IdCtx(context,value){
             // else raise a NameError
             // Function $search is defined in py_utils.js
 
-            this.result = '$B.$search("'+val+'")'
+            this.result = '$B.$global_search("'+val+'")'
             return this.result
         }
     }
@@ -7423,7 +7423,8 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     }
 
     var enter_frame_pos = offset
-    root.insert(offset++, $NodeJS('$B.enter_frame(["'+locals_id.replace(/\./g,'_')+'", '+local_ns+','+
+    root.insert(offset++, $NodeJS('$B.enter_frame(["'+
+        locals_id.replace(/\./g,'_')+'", '+local_ns+','+
         '"'+module.replace(/\./g,'_')+'", '+global_ns+', "a"]);\n'))
 
     // Wrap code in a try/finally to make sure we leave the frame

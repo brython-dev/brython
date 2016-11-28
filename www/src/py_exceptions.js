@@ -199,6 +199,7 @@ $BaseExceptionDict.__new__ = function(cls){
 $BaseExceptionDict.__getattr__ = function(self, attr){
 
     if(attr=='info'){
+
         var name = self.__class__.__name__
         if(name=='SyntaxError' || name=='IndentationError'){
             return 'File "'+self.args[1]+'", line '+self.args[2]+'\n    '+
@@ -371,7 +372,8 @@ function $make_exc(names, parent){
         _str[pos++]='var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}'
         _str[pos++]='$'+name+'Dict.__bases__ = [parent]'
         _str[pos++]='$'+name+'Dict.__module__ = "builtins"'
-        _str[pos++]='$'+name+'Dict.__mro__=[_b_.'+parent.$dict.__name__+'.$dict].concat(parent.$dict.__mro__)'
+        _str[pos++]='$'+name+'Dict.__mro__=[_b_.'+parent.$dict.__name__+
+            '.$dict].concat(parent.$dict.__mro__)'
         // class constructor
         _str[pos++]='_b_.'+name+'='+$exc
         _str[pos++]='_b_.'+name+'.__class__=$B.$factory'
@@ -413,7 +415,7 @@ $B.$NameError = function(name){
     // Used if a name is not found in the bound names
     // It is converted into 
     // $globals[name] !== undefined ? $globals[name] : __BRYTHON__.$NameError(name)
-    throw _b_.NameError(name)
+    throw _b_.NameError("name '"+name+"' is not defined")
 }
 $B.$TypeError = function(msg){
     throw _b_.TypeError(msg)

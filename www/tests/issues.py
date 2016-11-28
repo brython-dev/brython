@@ -1072,6 +1072,15 @@ assert order == ['try', 'else', 'finally']
 x = [-644475]
 assert "{:,}".format(int(x[0])) == "-644,475"
 
+# issue 533
+err = """def f():
+    x = yaz
+f()"""
+try:
+    exec(err)
+except NameError:
+    pass
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
