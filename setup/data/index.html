@@ -7,8 +7,15 @@
 body{
     font-size: 14px;
     font-family: Helvetica;
-    margin-left: 15%;
-    margin-right: 15%;
+    margin-left: 20%;
+    margin-right: 20%;
+}
+
+a{
+    color: #00f;
+}
+a.visited{
+    color: #00f;
 }
 
 .panel{
@@ -38,11 +45,12 @@ pre.python{
     font-family: Consolas, Courier New;
     font-weight: bold;
     color: #113;
-    background-color: #8cc;
-    border-width: 1 1 1 5;
+    background-color: #cef968;
+    border-width: 1 1 1 3;
     border-color: #113;
     border-style: solid;
-    width:80%;
+    width:90%;
+    margin-top: 2em;
 }
 
 .zone{
@@ -55,8 +63,10 @@ pre.python{
 }
 
 code{
-    color: #333;
-    background-color: #ddd;
+    font-family: Consolas, Courier New;
+    font-weight: bold;
+    color: #113;
+    background-color: #cef968;
 }
 </style>
 
@@ -111,7 +121,7 @@ Here are a few examples of how you can use Brython to interact with a web page.
 <p><code>document</code> is an object representing the HTML document ; <code>document[element_id]</code> is the element with attribute id equal to element_id. In these examples, <code>document["buttonN"]</code> is a reference to the button you click on, and <code>document["zoneN"]</code> is the bordered zone at the right of the button.
 <p>Setting the attribute <code>text</code> of an element changes its text content.
 <p><code>bind()</code> is a method that defines the function to call when an event occurs on the element. When the user clicks on the element, this event is called "click". The last line means : when the user clicks on the element (here, the button with the text "change the text of an element"), call the function <code>change()</code>.
-The function takes one element, an object representing the event.
+The function takes one argument, an object representing the event.
 </code>
 </span>
 </div>
@@ -123,17 +133,16 @@ The function takes one element, an object representing the event.
     <script type="text/python" id="script2">
     from browser import document
     
-    def change(event):
-        color = document["zone2"].style.color
-        document["zone2"].style.color = "orange" if color == "blue" else "blue"
-        document["zone2"].style.backgroundColor = "gray" if color == "blue" \
-            else "yellow"
-        document["zone2"].style.fontWeight = "bold" if color == "blue" \
-            else "normal"
-        document["zone2"].style.fontSize = "18px" if color == "blue" \
-            else "14px"
-        
+    element = document["zone2"]
     
+    def change(event):
+        style = element.style
+        color = style.color
+        style.color = "orange" if color == "blue" else "blue"
+        style.backgroundColor = "gray" if color == "blue" else "yellow"
+        style.fontWeight = "bold" if color == "blue" else "normal"
+        style.fontSize = "18px" if color == "blue" else "14px"
+        
     document["button2"].bind("click", change)
     </script>
     
@@ -429,7 +438,7 @@ The function takes one element, an object representing the event.
 
 
 <div class="example" id="ex13">
-    <button id="button13">select elements by tag name</button>
+    <button id="button13">select elements by CSS selectors</button>
     <span id="zone13" class="zone"></span>
     
     <script type="text/python" id="script13">
@@ -449,7 +458,7 @@ The function takes one element, an object representing the event.
     
     <span class="comment">
     We have seen how to get an element by its id : <code>document[element_id]</code>. 
-    <p>The method <code>get(selector=css_selector)</code> provides a way to select elements based on the CSS selector syntax. Passing the name of a tag returns a list of all the elements with this tag ; passing <code>.klass</code> returns a list of all the elements whose attribute <code>class</code> is set to this class. You can easily find external resources on CSS selectors.
+    <p>The method <code>get(selector=css_selector)</code> provides a way to select elements based on the CSS selector syntax. Passing the name of a tag returns a list of all the elements with this tag ; passing <code>.zone</code> returns a list of all the elements whose attribute <code>class</code> is set to <code>"zone"</code>. You can easily find external resources on CSS selectors.
     </span>
 </div>
 
@@ -488,24 +497,24 @@ The function takes one element, an object representing the event.
     </div>
     
     <script type="text/python" id="script15">
-    from browser import document, timer
+    from browser import document, window
     
     moving = document["rot15"]
     x = 0
-    dx = 2
+    dx = 3
     run = None
     
     def change(event):
         global run
         if run is None:
             # start animation
-            run = timer.set_interval(animate, 10)
+            animloop(10000)
         else:
             # stop animation
-            timer.clear_interval(run)
+            window.cancelAnimationFrame(run)
             run = None
     
-    def animate():
+    def render():
         global x, dx
         moving.style.transform = "translate({}px,0)".format(x)
         x += dx
@@ -516,14 +525,21 @@ The function takes one element, an object representing the event.
             dx = -dx
             moving.html = "&#9658;" # right triangle
 
+    def animloop(t):
+        global run
+        run = window.requestAnimationFrame(animloop)
+        render()
+
     document['button15'].bind('click', change)
     </script>
 
     <pre class="python"></pre>
     
     <span class="comment">
-    <p>
-    <p>To move the element, we use another <code>transform</code> function, <code>translate(x, y)</code>.
+    The browser window provides 2 functions to start and stop an animation : <code>requestAnimationFrame</code> and <code>cancelAnimationFrame</code>.
+    <p>When the user clicks on the button, the animation is started by calling the function <code>animloop</code> with an arbitrary argument. <code>window.requestAnimationFrame</code>, called with the function itself as argument, returns a reference to the animation. The drawing function, <code>render()</code> is called ; the loop is then executed repeatedly under the control of the animation loop.
+    <p>In <code>render()</code>, to put the element at a specific location, we use another <code>transform</code> function, <code>translate(x, y)</code>. The moving element bounces, and its shape changes, when its position reaches the box borders.
+    <p>If the user clicks the button again, calling <code>window.cancelAnimationFrame</code> on the animation object stops the animation.
     </span>
 </div>
 
