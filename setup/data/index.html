@@ -10,6 +10,7 @@ body{
     margin-left: 15%;
     margin-right: 15%;
 }
+
 .panel{
     position: absolute;
     top: 100;
@@ -19,6 +20,7 @@ body{
     background-color: #ccc;
     padding: 10;
 }
+
 button{
     background-color: #800;
     color: #fff;
@@ -27,12 +29,22 @@ button{
     border-color: #000;
     border-width: 2px;
 }
+
 div.example{
     margin-top: 2em;
 }
+
 pre.python{
-    color: #333;
+    font-family: Consolas, Courier New;
+    font-weight: bold;
+    color: #113;
+    background-color: #8cc;
+    border-width: 1 1 1 5;
+    border-color: #113;
+    border-style: solid;
+    width:80%;
 }
+
 .zone{
     margin-left: 5em;
     padding: 1em;
@@ -41,6 +53,7 @@ pre.python{
     border-style: solid;
     width: 20em;
 }
+
 code{
     color: #333;
     background-color: #ddd;
@@ -276,8 +289,39 @@ The function takes one element, an object representing the event.
     </code>
     </span>
     
-    
 </div>
+
+
+<div class="example" id="ex12">
+    <button id="button12">create a dropdown menu</button>
+    <span id="zone12" class="zone"></span>
+    
+    <script type="text/python" id="script12">
+    from browser import document, alert, html
+    
+    def show(event):
+        dropdown = event.target
+        num = dropdown.selectedIndex
+        alert("Selected: {}".format(dropdown.options[num].value))
+
+    def change(event):
+        document["zone12"] <= 'Your choice : '
+        dropdown = html.SELECT(html.OPTION("Choice {}".format(i)) 
+            for i in range(5))
+        dropdown.bind('change', show)
+        document["zone12"] <= dropdown
+    
+    document['button12'].bind('click', change)
+    </script>
+    
+    <pre class="python"></pre>
+    
+    <span class="comment">
+    We build the dropdown menu by a SELECT element, using a generator expression with the OPTION elements displayed in the menu.
+    <p>When the user changes the selected option in the menu, the event "change" is triggered on the SELECT box. The function <code>show(event)</code> is called ; <code>event.target</code> is the element itself. A SELECT element has an attribute <code>selectedIndex</code>, the rank of the selected item in the list of options, available by its attribute <code>options</code>. The OPTION element itself has an attribute <code>value</code>, here the option text.
+    </span>
+</div>
+
 
 <div class="example" id="ex8">
     <button id="button8">draw in a canvas</button>
@@ -383,21 +427,6 @@ The function takes one element, an object representing the event.
     <p>The position of an element can be changed by defining its attributes <code>left</code> and <code>top</code>.    </span>
 </div>
 
-<div class="example" id="ex12">
-    <button id="button12">create a dropdown menu</button>
-    <span id="zone12" class="zone"></span>
-    
-    <script type="text/python" id="script12">
-    from browser import document, html
-    
-    def change(event):
-        document["zone12"] <= 'Your choice : '
-        document["zone12"] <= html.SELECT(html.OPTION("Choice {}".format(i))
-            for i in range(5))
-    
-    document['button12'].bind('click', change)
-    </script>
-</div>
 
 <div class="example" id="ex13">
     <button id="button13">select elements by tag name</button>
@@ -610,6 +639,7 @@ for example in document.get(selector=".example"):
     # add the Python source inside the example
     script = example.get(selector="script")[0]
     src = script.text
+    maxlen = max(len(line) for line in src.splitlines())
     code_elt = example.get(selector="pre")
     if code_elt:
         code_elt[0].text = src
@@ -623,8 +653,8 @@ for example in document.get(selector=".example"):
     # add an anchor for the example
     example.insertBefore(html.A(name=example.id), example.childNodes[0])
 </script>
-<script src="dist/brython.js"></script>
-<script src="dist/brython_modules.js"></script>
+<script src="brython.js"></script>
+<script src="brython_modules.js"></script>
 
 </body>
 
