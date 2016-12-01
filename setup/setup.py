@@ -13,7 +13,7 @@ if not os.path.exists(os.path.join(os.getcwd(), 'data', 'dist',
 setup(
     name='brython',
 
-    version='0.0.2',
+    version='0.0.3',
 
     description='Brython is an implementation of Python 3 running in the browser',
 
@@ -62,12 +62,12 @@ setup(
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     package_data={
-        'data': ['server.py', 
+        'data': [
             'index.html', 
             '.bundle-ignore',
-            'dist/brython.js',
-            'dist/brython_stdlib.js',
-            'dist/brython_modules.js',
+            'brython.js',
+            'brython_stdlib.js',
+            'brython_modules.js',
             ],
     }
 

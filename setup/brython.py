@@ -26,18 +26,11 @@ if args.install:
         import sys
         sys.exit()
     
-    for path in '.bundle-ignore', 'server.py', 'index.html':
-        shutil.copyfile(os.path.join(src_path, path),
-            path)
+    for path in ('.bundle-ignore', 'index.html', 'brython.js',
+        'brython_stdlib.js', 'brython_modules.js'):
+            shutil.copyfile(os.path.join(src_path, path),
+                path)
     
-    # put core Brython script (brython.js), the standard distribution
-    # and brython_modules.js, a bundle of the modules required by the 
-    # application, initialised with the standard distribution
-    os.mkdir('dist')
-    for path in os.listdir(os.path.join(src_path, 'dist')):
-        shutil.copyfile(os.path.join(src_path, 'dist', path),
-            os.path.join(os.getcwd(), 'dist', path))
-
 if args.reset:
     print('Reset brython_modules.js to standard distribution')
     shutil.copyfile(os.path.join(os.getcwd(), 'dist', 'brython_stdlib.js'),
