@@ -416,6 +416,17 @@ DOMNodeDict.__delitem__ = function(self,key){
     }
 }
 
+DOMNodeDict.__delattr__ = function(self,attr){
+    if(attr.substr(0,2)=='on'){ // event
+        DOMNodeDict.unbind(self,attr.substr(2))
+    }else{
+    if(self.elt[attr1]!==undefined){delete self.elt[attr1]}
+    else{self.elt.removeAttribute(attr1)}
+    }
+}
+
+
+
 DOMNodeDict.__eq__ = function(self,other){
     return self.elt==other.elt
 }
@@ -978,6 +989,27 @@ DOMNodeDict.remove = function(self,child){
     }
     if(!flag){throw _b_.ValueError('element '+child+' is not inside '+self)}
 }
+
+DOMNodeDict.insertBefore = function(self,child,referenceNode){
+    // Insert child before referenceNode
+    var elt=self.elt
+    if(self.elt.nodeType==9){elt=self.elt.body}
+    try {
+        elt.insertBefore(child.elt,referenceNode.elt)
+    } catch(ex) {
+        throw KeyError('Reference node '+referenceNode+' not found in '+self)
+    }
+}
+
+DOMNodeDict.insert = function(self,index,child){
+    // Insert child before @index-th child
+    var elt=self.elt
+    if(self.elt.nodeType==9){elt=self.elt.body}
+    if (index >= elt.childNodes.length){ elt.appendChild(child.elt) }
+    else if (index >= 0) {elt.insertBefore(child.elt,elt.childNodes[index])}
+    else throw IndexError('Child index '+index+' out of range.')
+}
+
 
 DOMNodeDict.reset = function(self){ // for FORM
     return function(){self.elt.reset()}
