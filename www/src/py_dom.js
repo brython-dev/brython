@@ -940,6 +940,108 @@ DOMNodeDict.inside = function(self, other){
     }
 }
 
+// this stuff copied from jQuery with some modifications
+
+rnothtmlwhite = ( /[^\x20\t\r\n\f]+/g );
+
+function stripAndCollapse( value ) {
+		var tokens = value.match( rnothtmlwhite ) || [];
+		return tokens.join( " " );
+}
+
+DOMNodeDict.add_class = function(self, classes) {
+    // add an HTML class
+	var elem, cur, curValue, clazz, j, finalValue,
+		i = 0;
+		
+	if (typeof classes === 'string') {
+	    classes = [classes];
+	}
+	curValue = DOMNodeDict.class_name(self);
+	cur = self.elt.nodeType === 1 && ( " " + stripAndCollapse( curValue ) + " " );
+
+	if ( cur ) {
+		j = 0;
+		while ( ( clazz = classes[ j++ ] ) ) {
+			if ( cur.indexOf( " " + clazz + " " ) < 0 ) {
+				cur += clazz + " ";
+			}
+		}
+
+		// Only assign if different to avoid unneeded rendering.
+		finalValue = stripAndCollapse( cur );
+		if ( curValue !== finalValue ) {
+			self.elt.setAttribute( "class", finalValue );
+		}
+	}
+}
+
+DOMNodeDict.remove_class = function(self, classes) {
+	var elem, cur, curValue, clazz, j, finalValue,
+		i = 0;
+
+	if (typeof classes === 'string') {
+	    classes = [classes];
+	}
+
+
+	curValue = DOMNodeDict.class_name(self);
+
+	cur = self.elt.nodeType === 1 && ( " " + stripAndCollapse( curValue ) + " " );
+
+	if ( cur ) {
+		j = 0;
+		while ( ( clazz = classes[ j++ ] ) ) {
+
+			// Remove *all* instances
+			while ( cur.indexOf( " " + clazz + " " ) > -1 ) {
+				cur = cur.replace( " " + clazz + " ", " " );
+			}
+		}
+
+		// Only assign if different to avoid unneeded rendering.
+		finalValue = stripAndCollapse( cur );
+		if ( curValue !== finalValue ) {
+			self.elt.setAttribute( "class", finalValue );
+		}
+	}
+}
+
+
+
+DOMNodeDict.has_class = function(self, class_) {
+	var className, elem,
+		i = 0;
+
+	className = " " + class_ + " ";
+
+	if ( self.elt.nodeType === 1 &&
+		( " " + stripAndCollapse( DOMNodeDict.class_name(self) ) + " " ).indexOf( className ) > -1 ) {
+			return true;
+	}
+
+	return false;
+}
+
+DOMNodeDict.toggle_class = function(self, classes) {
+    var clazz, i;
+	if (typeof classes === 'string') {
+	    classes = [classes];
+	}
+	
+	i = 0;
+	while( (clazz = classes[i++]) ) {
+	    if (DOMNodeDict.has_class(self, clazz)) {
+	        DOMNodeDict.remove_class(self, clazz);
+	    }
+	    else {
+	        DOMNodeDict.add_class(self, clazz);
+	    }
+	}
+}
+
+// end of class-mutating stuff cribbed from jQuery
+
 DOMNodeDict.options = function(self){ // for SELECT tag
     return new $OptionsClass(self.elt)
 }
