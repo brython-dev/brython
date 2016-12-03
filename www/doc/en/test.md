@@ -60,7 +60,7 @@ to learn more about the chrome developer tools visit their documentation or this
 
 ### Debugging Python Code
 
-A simple time-travel step back and forth debugger is implimented [here](../../tests/debugger.html)
+A simple time-travel step back and forth debugger is implemented [here](../../tests/debugger.html)
 
 As of this writing it is not full featured and supports only line step.
 You will find documentation on how each function in the debugger works (in case you want to build on it)
