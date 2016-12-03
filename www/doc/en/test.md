@@ -41,9 +41,9 @@ generates :
 
 ### Debugging Javascript Generated Python Code
 
-> TL;DR if you want to use the browser builtin debugger to step through your python js code write `__debugger__` in your code and open the developer tools.
+> TL;DR if you want to use the browser builtin debugger to step through your python Javascript code write `__debugger__` in your code and open the developer tools.
 
-This statement is equivalent to the javascript `debugger` statement.
+This statement is equivalent to the Javascript `debugger` statement.
 
 Modern browsers such as FireFox and Google Chrome have built in debuggers, these debuggers allow developers to step through the code stepping into function calls and out (you know like debuggers in IDEs)
 
@@ -144,7 +144,7 @@ The following is the debugger public API you can find more details description i
 > returns all recorded states
 
 **Brython_Debugger**.`set_trace_limit(Number)`
-> The maximum number of steps executed before the debugger halts, defult 10000
+> The maximum number of steps executed before the debugger halts, default 10000
 
 **Brython_Debugger**.`set_trace(obj)`
 > object should contain the data you want paced later to the set_trace function
@@ -178,7 +178,7 @@ to this information. It strives to provide an interface largely similar to the `
 module from the standard python distribution.
 
 The notable difference is that it does not allow user-defined timers and does not
-do any callibration. Methods which in the standard module save the data to a file
+do any calibration. Methods which in the standard module save the data to a file
 save a JSON-serialized version of the data to the browser's local storage instead.
 
 #### Basic usage:
