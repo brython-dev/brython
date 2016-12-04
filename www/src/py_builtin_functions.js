@@ -597,6 +597,7 @@ function getattr(obj,attr,_default){
         } 
       }
     }
+        
     if(klass.$native){
         if(klass[attr]===undefined){
             var object_attr = _b_.object.$dict[attr]

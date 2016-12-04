@@ -353,6 +353,10 @@ $JSObjectDict.__mro__ = [$ObjectDict]
 
 $JSObjectDict.__repr__ = function(self){
     if(self.js instanceof Date){return self.js.toString()}
+    var proto = Object.getPrototypeOf(self.js)
+    if(proto){
+        return "<"+proto.constructor.name+" object>"
+    }
     return "<JSObject wraps "+self.js+">"
 }
 

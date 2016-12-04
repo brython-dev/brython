@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,0,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-11-28 22:59:01.609930"
+__BRYTHON__.compiled_date="2016-12-04 17:21:06.651627"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4201,6 +4201,7 @@ var $src=null
 if($elt.src){
 scripts.push({name:module_name,url:$elt.src})}else{
 var $src=($elt.innerHTML ||$elt.textContent)
+$src=$src.replace(/^\n/,'')
 $B.$py_module_path[module_name]=$href
 scripts.push({name: module_name,src: $src,url: $href})}}}}
 if(options.ipy_id===undefined){$B._load_scripts(scripts)}}
@@ -6781,6 +6782,8 @@ try{return getattr(self.js,'__len__')()}
 catch(err){throw _b_.AttributeError(self.js+' has no attribute __len__')}}
 $JSObjectDict.__mro__=[$ObjectDict]
 $JSObjectDict.__repr__=function(self){if(self.js instanceof Date){return self.js.toString()}
+var proto=Object.getPrototypeOf(self.js)
+if(proto){return "<"+proto.constructor.name+" object>"}
 return "<JSObject wraps "+self.js+">"}
 $JSObjectDict.__setattr__=function(self,attr,value){if(isinstance(value,JSObject)){self.js[attr]=value.js}
 else{self.js[attr]=value
@@ -10088,6 +10091,10 @@ if(res){res.parentNode.removeChild(res)}
 else{throw KeyError(key)}}else{
 console.log('delitem')
 self.elt.parentNode.removeChild(self.elt)}}
+DOMNodeDict.__dir__=function(self){var res=[]
+for(var attr in self.elt){res.push(attr)}
+for(var attr in DOMNodeDict){if(res.indexOf(attr)==-1){res.push(attr)}}
+return res}
 DOMNodeDict.__eq__=function(self,other){return self.elt==other.elt}
 DOMNodeDict.__getattribute__=function(self,attr){switch(attr){case 'class_name':
 case 'children':
@@ -10132,17 +10139,20 @@ if(self.elt.getAttributeNS!==undefined){res=self.elt.getAttributeNS(null,attr)
 if(res!==undefined && res!==null && res!="" &&
 self.elt[attr]===undefined){
 return res}}
-if(self.elt[attr]!==undefined){res=self.elt[attr]
+var res=self.elt[attr]
+if(res!==undefined){if(res===null){return _b_.None}
 if(typeof res==="function"){var func=(function(f,elt){return function(){var args=[],pos=0
 for(var i=0;i<arguments.length;i++){var arg=arguments[i]
 if(isinstance(arg,JSObject)){args[pos++]=arg.js}else if(isinstance(arg,DOMNode)){args[pos++]=arg.elt}else if(arg===_b_.None){args[pos++]=null}else{args[pos++]=arg}}
 var result=f.apply(elt,args)
 return $B.$JS2Py(result)}})(res,self.elt)
-func.__name__=attr
+func.$infos={__name__ : attr}
+func.$is_func=true
 return func}
 if(attr=='options')return $Options(self.elt)
 if(attr=='style')return $Style(self.elt[attr])
-return $B.JSObject(self.elt[attr])}
+if($B.$isNode(res)){return DOMNode(res)}
+return $B.JSObject(res)}
 return $ObjectDict.__getattribute__(self,attr)}
 DOMNodeDict.__getitem__=function(self,key){if(self.elt.nodeType===9){
 if(typeof key==="string"){var res=self.elt.getElementById(key)
@@ -10303,11 +10313,15 @@ DOMNodeDict.getSelectionRange=function(self){
 if(self.elt['getSelectionRange']!==undefined){return self.elt.getSelectionRange.apply(null,arguments)}}
 DOMNodeDict.height={'__get__': function(self){
 if(self.elt.tagName=='CANVAS'){return self.elt.height}
+if(self.elt.style===undefined){return _b_.None}
 var res=parseInt(self.elt.style.height)
 if(isNaN(res)){return self.elt.offsetHeight}
 return res},'__set__': function(obj,self,value){if(self.elt.tagName=='CANVAS'){self.elt.height=value}
 self.elt.style.height=value+'px'}}
-DOMNodeDict.html=function(self){return self.elt.innerHTML}
+DOMNodeDict.html=function(self){var res=self.elt.innerHTML
+if(res===undefined){if(self.elt.nodeType==9){res=self.elt.body.innerHTML}
+else{res=_b_.None}}
+return res}
 DOMNodeDict.id=function(self){if(self.elt.id !==undefined)return self.elt.id
 return None}
 DOMNodeDict.inside=function(self,other){
@@ -10316,13 +10330,14 @@ var elt=self.elt
 while(true){if(other===elt){return true}
 elt=elt.parentElement
 if(!elt){return false}}}
+DOMNodeDict.left={'__get__': function(self){if(self.elt.style===undefined){return _b_.None}
+var res=parseInt(self.elt.style.left)
+if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'left'")}
+return res},'__set__': function(obj,self,value){self.elt.style.left=value+'px'}}
 DOMNodeDict.options=function(self){
 return new $OptionsClass(self.elt)}
 DOMNodeDict.parent=function(self){if(self.elt.parentElement)return DOMNode(self.elt.parentElement)
 return None}
-DOMNodeDict.left={'__get__': function(self){var res=parseInt(self.elt.style.left)
-if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'left'")}
-return res},'__set__': function(obj,self,value){self.elt.style.left=value+'px'}}
 DOMNodeDict.remove=function(self,child){
 console.log('child',child)
 var elt=self.elt,flag=false,ch_elt=child.elt
@@ -10336,7 +10351,8 @@ return function(){self.elt.reset()}}
 DOMNodeDict.style=function(self){
 self.elt.style.float=self.elt.style.cssFloat ||self.style.styleFloat
 return $B.JSObject(self.elt.style)}
-DOMNodeDict.top={'__get__': function(self){var res=parseInt(self.elt.style.top)
+DOMNodeDict.top={'__get__': function(self){if(self.elt.style===undefined){return _b_.None}
+var res=parseInt(self.elt.style.top)
 if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'top'")}
 return res},'__set__': function(obj,self,value){self.elt.style.top=value+'px'}}
 DOMNodeDict.setSelectionRange=function(self){
@@ -10347,7 +10363,9 @@ range.moveEnd('character',start_pos);
 range.moveStart('character',end_pos);
 range.select();}})(this)}}
 DOMNodeDict.set_class_name=function(self,arg){self.elt.setAttribute('class',arg)}
-DOMNodeDict.set_html=function(self,value){self.elt.innerHTML=str(value)}
+DOMNodeDict.set_html=function(self,value){var elt=self.elt
+if(elt.nodeType==9){elt=elt.body}
+elt.innerHTML=str(value)}
 DOMNodeDict.set_style=function(self,style){
 if(!_b_.isinstance(style,_b_.dict)){throw TypeError('style must be dict, not '+$B.get_class(style).__name__)}
 var items=_b_.list(_b_.dict.$dict.items(style))
@@ -10359,12 +10377,18 @@ case 'width':
 case 'borderWidth':
 if(isinstance(value,_b_.int)){value=value+'px'}}
 self.elt.style[key]=value}}}
-DOMNodeDict.set_text=function(self,value){self.elt.innerText=str(value)
-self.elt.textContent=str(value)}
+DOMNodeDict.set_text=function(self,value){var elt=self.elt
+if(elt.nodeType==9){elt=elt.body}
+elt.innerText=str(value)
+elt.textContent=str(value)}
 DOMNodeDict.set_value=function(self,value){self.elt.value=str(value)}
 DOMNodeDict.submit=function(self){
 return function(){self.elt.submit()}}
-DOMNodeDict.text=function(self){return self.elt.innerText ||self.elt.textContent}
+DOMNodeDict.text=function(self){var elt=self.elt
+if(elt.nodeType==9){elt=elt.body}
+var res=elt.innerText ||elt.textContent
+if(res===null){res=_b_.None}
+return res}
 DOMNodeDict.toString=function(self){if(self===undefined)return 'DOMNode'
 return self.elt.nodeName}
 DOMNodeDict.trigger=function(self,etype){
@@ -10393,9 +10417,10 @@ events.splice(j,1)
 flag=true
 break}}
 if(!flag){throw KeyError('missing callback for event '+event)}}}
-DOMNodeDict.value=function(self){return self.elt.value}
+DOMNodeDict.value=function(self){return self.elt.value===undefined ? _b_.None : self.elt.value}
 DOMNodeDict.width={'__get__': function(self){
 if(self.elt.tagName=='CANVAS'){return self.elt.width}
+if(self.elt.style===undefined){return _b_.None}
 var res=parseInt(self.elt.style.width)
 if(isNaN(res)){
 return self.elt.offsetWidth}
@@ -10781,7 +10806,7 @@ obj[tag]=makeFactory(tag)
 dicts[tag].$factory=obj[tag]}
 $B.tag_classes=dicts
 return obj})(__BRYTHON__)
-modules['javascript']={__file__:$B.brython_path+'/libs/javascript.js',JSObject: $B.JSObject,JSConstructor: $B.JSConstructor,console: $B.JSObject(window.console),load:function(script_url,names){
+modules['javascript']={__file__:$B.brython_path+'/libs/javascript.js',JSObject: $B.JSObject,JSConstructor: $B.JSConstructor,load:function(script_url,names){
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()
 eval(content)

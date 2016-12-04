@@ -214,7 +214,6 @@
         __file__:$B.brython_path+'/libs/javascript.js',
         JSObject: $B.JSObject,
         JSConstructor: $B.JSConstructor,
-        console: $B.JSObject(window.console),
         load:function(script_url, names){
             // Load and eval() the Javascript file at script_url
             // Set the names in array "names" in the Javacript global namespace

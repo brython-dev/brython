@@ -7837,6 +7837,8 @@ function brython(options){
                 }else{
                     // Get source code inside the script element
                     var $src = ($elt.innerHTML || $elt.textContent)
+                    // remove leading CR if any
+                    $src = $src.replace(/^\n/, '')
                     $B.$py_module_path[module_name] = $href
                     scripts.push({name: module_name, src: $src, url: $href})
                 }

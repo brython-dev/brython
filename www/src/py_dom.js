@@ -416,6 +416,17 @@ DOMNodeDict.__delitem__ = function(self,key){
     }
 }
 
+DOMNodeDict.__dir__ = function(self){
+    var res = []
+    // generic DOM attributes
+    for(var attr in self.elt){res.push(attr)}
+    // Brython-specific attributes
+    for(var attr in DOMNodeDict){
+        if(res.indexOf(attr)==-1){res.push(attr)}
+    }
+    return res
+}
+
 DOMNodeDict.__eq__ = function(self,other){
     return self.elt==other.elt
 }
@@ -490,8 +501,10 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         }
     }
         
-    if(self.elt[attr]!==undefined){
-        res = self.elt[attr]
+    var res = self.elt[attr]
+    
+    if(res!==undefined){
+        if(res===null){return _b_.None}
         if(typeof res==="function"){
             var func = (function(f,elt){
                 return function(){
@@ -512,12 +525,14 @@ DOMNodeDict.__getattribute__ = function(self,attr){
                     return $B.$JS2Py(result)
                 }
             })(res,self.elt)
-            func.__name__ = attr
+            func.$infos = {__name__ : attr}
+            func.$is_func = true
             return func
         }
         if(attr=='options') return $Options(self.elt)
         if(attr=='style') return $Style(self.elt[attr])
-        return $B.JSObject(self.elt[attr])
+        if($B.$isNode(res)){return DOMNode(res)}
+        return $B.JSObject(res)
     }
     return $ObjectDict.__getattribute__(self,attr)
 }
@@ -909,6 +924,7 @@ DOMNodeDict.height = {
         // Special case for Canvas
         // http://stackoverflow.com/questions/4938346/canvas-width-and-height-in-html5
         if(self.elt.tagName=='CANVAS'){return self.elt.height}
+        if(self.elt.style===undefined){return _b_.None}
         var res = parseInt(self.elt.style.height)
         if(isNaN(res)){
             return self.elt.offsetHeight
@@ -922,7 +938,14 @@ DOMNodeDict.height = {
     }
 }
 
-DOMNodeDict.html = function(self){return self.elt.innerHTML}
+DOMNodeDict.html = function(self){
+    var res = self.elt.innerHTML
+    if(res===undefined){
+        if(self.elt.nodeType==9){res = self.elt.body.innerHTML}
+        else{res = _b_.None}
+    }
+    return res
+}
 
 DOMNodeDict.id = function(self){
     if(self.elt.id !== undefined) return self.elt.id
@@ -940,17 +963,9 @@ DOMNodeDict.inside = function(self, other){
     }
 }
 
-DOMNodeDict.options = function(self){ // for SELECT tag
-    return new $OptionsClass(self.elt)
-}
-
-DOMNodeDict.parent = function(self){
-    if(self.elt.parentElement) return DOMNode(self.elt.parentElement)
-    return None
-}
-
 DOMNodeDict.left = {
     '__get__': function(self){
+        if(self.elt.style===undefined){return _b_.None}    
         var res = parseInt(self.elt.style.left)
         if(isNaN(res)){
             throw _b_.AttributeError("node has no attribute 'left'")
@@ -960,6 +975,15 @@ DOMNodeDict.left = {
     '__set__': function(obj, self, value){
         self.elt.style.left = value+'px'
     }
+}
+
+DOMNodeDict.options = function(self){ // for SELECT tag
+    return new $OptionsClass(self.elt)
+}
+
+DOMNodeDict.parent = function(self){
+    if(self.elt.parentElement) return DOMNode(self.elt.parentElement)
+    return None
 }
 
 DOMNodeDict.remove = function(self,child){
@@ -991,6 +1015,7 @@ DOMNodeDict.style = function(self){
 
 DOMNodeDict.top = {
     '__get__': function(self){
+        if(self.elt.style===undefined){return _b_.None}
         var res = parseInt(self.elt.style.top)
         if(isNaN(res)){
             throw _b_.AttributeError("node has no attribute 'top'")
@@ -1027,7 +1052,9 @@ DOMNodeDict.set_class_name = function(self,arg){
 }
 
 DOMNodeDict.set_html = function(self,value){
-    self.elt.innerHTML=str(value)
+    var elt = self.elt
+    if(elt.nodeType==9){elt = elt.body}
+    elt.innerHTML=str(value)
 }
 
 DOMNodeDict.set_style = function(self,style){ // style is a dict
@@ -1054,8 +1081,10 @@ DOMNodeDict.set_style = function(self,style){ // style is a dict
 }
 
 DOMNodeDict.set_text = function(self,value){
-    self.elt.innerText=str(value)
-    self.elt.textContent=str(value)
+    var elt = self.elt
+    if(elt.nodeType==9){elt = elt.body}
+    elt.innerText=str(value)
+    elt.textContent=str(value)
 }
 
 DOMNodeDict.set_value = function(self,value){self.elt.value = str(value)}
@@ -1064,7 +1093,15 @@ DOMNodeDict.submit = function(self){ // for FORM
     return function(){self.elt.submit()}
 }
 
-DOMNodeDict.text = function(self){return self.elt.innerText || self.elt.textContent}
+DOMNodeDict.text = function(self){
+    var elt = self.elt
+    if(elt.nodeType==9){elt = elt.body}
+    var res = elt.innerText || elt.textContent
+    if(res===null){
+        res = _b_.None
+    }
+    return res
+}
     
 DOMNodeDict.toString = function(self){
     if(self===undefined) return 'DOMNode'
@@ -1132,13 +1169,16 @@ DOMNodeDict.unbind = function(self,event){
     }
 }
 
-DOMNodeDict.value = function(self){return self.elt.value}
+DOMNodeDict.value = function(self){
+    return self.elt.value === undefined ? _b_.None : self.elt.value
+}
 
 DOMNodeDict.width = {
     '__get__': function(self){
         // Special case for Canvas
         // http://stackoverflow.com/questions/4938346/canvas-width-and-height-in-html5
         if(self.elt.tagName=='CANVAS'){return self.elt.width}
+        if(self.elt.style===undefined){return _b_.None}
         var res = parseInt(self.elt.style.width)
         if(isNaN(res)){
             //throw _b_.AttributeError("node has no attribute 'width'")
