@@ -445,6 +445,8 @@ The function takes one argument, an object representing the event.
     from browser import document, html
     
     def change(event):
+        document["zone13"].clear()
+
         buttons = document.get(selector="button")
         document["zone13"] <= "On this page there are {} buttons ".format(len(buttons))
         
