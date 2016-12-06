@@ -14,7 +14,7 @@ var $module=(function($B) {
                 throw $B.builtins.TypeError("argument 'names' should be a list, not '"+$B.get_class(names).__name__)
             }else{
                 for(var i=0;i<names.length;i++){
-                    try{window[names[i]]=eval(names[i])}
+                    try{window[names[i].replace(".", "_")]=eval(names[i])}
                     catch(err){throw $B.builtins.NameError("name '"+names[i]+"' not found in script "+script_url)}
                 }
             }
