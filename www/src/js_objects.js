@@ -296,14 +296,21 @@ $JSObjectDict.__getattribute__ = function(self,attr){
     }
 }
 
-$JSObjectDict.__getitem__ = function(self,rank){
-    if(typeof self.js.length=='number' &&
-        typeof self.js.item=='function'){
-            var rank_to_int = _b_.int(rank)
-            if(rank_to_int<0){rank_to_int+=self.js.length}
-            var res = self.js.item(rank_to_int)
-            if(res===undefined){throw _b_.KeyError(rank)}
-            return res
+$JSObjectDict.__getitem__ = function(self, rank){
+    if(typeof self.js.length=='number'){
+        if((typeof rank=="number" || typeof rank=="boolean") &&
+            typeof self.js.item=='function'){
+                var rank_to_int = _b_.int(rank)
+                if(rank_to_int<0){rank_to_int+=self.js.length}
+                var res = JSObject(self.js.item(rank_to_int))
+                if(res===undefined){throw _b_.KeyError(rank)}
+                return res
+        }else if(typeof rank=="string" && 
+            typeof self.js.getNamedItem=='function'){
+             var res = JSObject(self.js.getNamedItem(rank))
+             if(res===undefined){throw _b_.keyError(rank)}
+             return res
+        }
     }
     try{return getattr(self.js,'__getitem__')(rank)}
     catch(err){
@@ -322,7 +329,7 @@ $JSObjectDict.__iter__ = function(self){
         // If object has length and item(), it's a collection : iterate on 
         // its items
         if(self.js.length!==undefined && self.js.item!==undefined){
-            for(var i=0; i<self.js.length ; i++){items.push(self.js[i])}
+            for(var i=0; i<self.js.length ; i++){items.push(JSObject(self.js[i]))}
         }else{
             for(var item in self.js){ 
                 if( self.js.hasOwnProperty( item ) ) {
@@ -333,7 +340,7 @@ $JSObjectDict.__iter__ = function(self){
         return $B.$iterator(items, $JSObject_iterator)
     }else if(self.js.length!==undefined && self.js.item !== undefined){
         // collection
-        for(var i=0; i<self.js.length ; i++){items.push(self.js[i])}
+        for(var i=0; i<self.js.length ; i++){items.push(JSObject(self.js[i]))}
         return $B.$iterator(items, $JSObject_iterator)
     }
     // Else iterate on the dictionary built from the JS object
@@ -355,7 +362,12 @@ $JSObjectDict.__repr__ = function(self){
     if(self.js instanceof Date){return self.js.toString()}
     var proto = Object.getPrototypeOf(self.js)
     if(proto){
-        return "<"+proto.constructor.name+" object>"
+        var name = proto.constructor.name
+        if(name===undefined){ // IE
+            var proto_str = proto.constructor.toString()
+            name = proto_str.substring(8, proto_str.length-1)
+        }
+        return "<"+name+" object>"
     }
     return "<JSObject wraps "+self.js+">"
 }

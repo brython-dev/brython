@@ -1,8 +1,10 @@
 var $module=(function($B) {
+
   return {
     JSObject: $B.JSObject,
+
     JSConstructor: $B.JSConstructor,
-    console: $B.JSObject(window.console),
+
     load:function(script_url, names){
         // Load and eval() the Javascript file at script_url
         // Set the names in array "names" in the Javacript global namespace
@@ -11,11 +13,13 @@ var $module=(function($B) {
         eval(content)
         if(names!==undefined){
             if(!Array.isArray(names)){
-                throw $B.builtins.TypeError("argument 'names' should be a list, not '"+$B.get_class(names).__name__)
+                throw $B.builtins.TypeError("argument 'names' should be a "+
+                    "list, not '"+$B.get_class(names).__name__)
             }else{
                 for(var i=0;i<names.length;i++){
                     try{window[names[i]]=eval(names[i])}
-                    catch(err){throw $B.builtins.NameError("name '"+names[i]+"' not found in script "+script_url)}
+                    catch(err){throw $B.builtins.NameError("name '"+names[i]+
+                        "' not found in script "+script_url)}
                 }
             }
         }

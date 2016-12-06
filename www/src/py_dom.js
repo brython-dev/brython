@@ -338,6 +338,8 @@ $Style.$dict = $StyleDict
 $StyleDict.$factory = $Style
 
 var DOMNode = $B.DOMNode = function(elt){ 
+    if(typeof elt=="number" || typeof elt=="boolean" ||
+        typeof elt=="string"){return elt}
     // returns the element, enriched with an attribute $brython_id for 
     // equality testing and with all the attributes of Node
     var res = {}
@@ -346,11 +348,6 @@ var DOMNode = $B.DOMNode = function(elt){
     if(elt['$brython_id']===undefined||elt.nodeType===9){
         // add a unique id for comparisons
         elt.$brython_id='DOM-'+$B.UUID()
-        // add attributes of Node to element
-        res.__repr__ = res.__str__ = res.toString = function(){
-            var res = "<DOMNode object type '"
-            return res+$NodeTypes[elt.nodeType]+"' name '"+elt.nodeName+"'>"
-        }
     }
     res.__class__ = DOMNodeDict
     return res
@@ -435,7 +432,6 @@ DOMNodeDict.__getattribute__ = function(self,attr){
 
     switch(attr) {
       case 'class_name':
-      case 'children':
       case 'html':
       case 'id':
       case 'parent':
@@ -532,12 +528,12 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         if(attr=='options') return $Options(self.elt)
         if(attr=='style') return $Style(self.elt[attr])
         if($B.$isNode(res)){return DOMNode(res)}
-        return $B.JSObject(res)
+        return DOMNode(res)
     }
     return $ObjectDict.__getattribute__(self,attr)
 }
 
-DOMNodeDict.__getitem__ = function(self,key){
+DOMNodeDict.__getitem__ = function(self, key){
     if(self.elt.nodeType===9){ // Document
         if(typeof key==="string"){
             var res = self.elt.getElementById(key)
@@ -553,12 +549,39 @@ DOMNodeDict.__getitem__ = function(self,key){
             }
         }
     }else{
+        if(typeof self.elt.length=='number'){
+            if((typeof key=="number" || typeof key=="boolean") &&
+                typeof self.elt.item=='function'){
+                    var key_to_int = _b_.int(key)
+                    if(key_to_int<0){key_to_int+=self.elt.length}
+                    var res = DOMNode(self.elt.item(key_to_int))
+                    if(res===undefined){throw _b_.KeyError(key)}
+                    return res
+            }else if(typeof key=="string" && 
+                typeof self.elt.getNamedItem=='function'){
+                 var res = DOMNode(self.elt.getNamedItem(key))
+                 if(res===undefined){throw _b_.keyError(key)}
+                 return res
+            }
+        }
         throw _b_.TypeError('DOMNode object is not subscriptable')
     }
 }
 
-DOMNodeDict.__iter__ = function(self){ // for iteration on element children
-    return iter(DOMNodeDict.children(self))
+DOMNodeDict.__iter__ = function(self){ 
+    // iteration on a Node
+    if(self.elt.length!==undefined && typeof self.elt.item=="function"){
+        var items = []
+        for(var i=0, len=self.elt.length; i<len; i++){
+            items.push(DOMNode(self.elt.item(i)))
+        }
+    }else if(self.elt.childNodes!==undefined){
+        var items = []
+        for(var i=0, len=self.elt.childNodes.length; i<len; i++){
+            items.push(DOMNode(self.elt.childNodes[i]))
+        }
+    }
+    return iter(items)
 }
 
 DOMNodeDict.__le__ = function(self,other){
@@ -623,8 +646,15 @@ DOMNodeDict.__radd__ = function(self,other){ // add to a string
 }
 
 DOMNodeDict.__str__ = DOMNodeDict.__repr__ = function(self){
-    if(self===undefined) return "<class 'DOMNode'>"
-    
+    var proto = Object.getPrototypeOf(self.elt)
+    if(proto){
+        var name = proto.constructor.name
+        if(name===undefined){ // IE
+            var proto_str = proto.constructor.toString()
+            name = proto_str.substring(8, proto_str.length-1)
+        }
+        return "<"+name+" object>"
+    }    
     var res = "<DOMNode object type '"
     return res+$NodeTypes[self.elt.nodeType]+"' name '"+self.elt.nodeName+"'>"
 }
@@ -753,9 +783,11 @@ DOMNodeDict.bind = function(self,event){
 }
 
 DOMNodeDict.children = function(self){
-    var res = [], pos=0
-    for(var i=0;i<self.elt.childNodes.length;i++){
-        res[pos++]=DOMNode(self.elt.childNodes[i])
+    var res = [], pos=0, elt = self.elt
+    console.log(elt, elt.childNodes)
+    if(elt.nodeType==9){elt = elt.body}
+    for(var i=0;i<elt.childNodes.length;i++){
+        res[pos++]=DOMNode(elt.childNodes[i])
     }
     return res
 }
@@ -989,7 +1021,6 @@ DOMNodeDict.parent = function(self){
 DOMNodeDict.remove = function(self,child){
     // Remove child from self
     // If child is not inside self, throw ValueError
-    console.log('child', child)
     var elt=self.elt,flag=false,ch_elt=child.elt
     if(self.elt.nodeType==9){elt=self.elt.body}
 

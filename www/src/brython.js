@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,0,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-12-04 17:21:06.651627"
+__BRYTHON__.compiled_date="2016-12-06 20:15:04.787397"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -6759,21 +6759,24 @@ if(arg &&(arg.__class__===$JSObjectDict ||arg.__class__===$JSConstructorDict)){a
 return res.apply(self,args)}}
 return $B.$JS2Py(res)}else{
 throw _b_.AttributeError("no attribute "+attr+' for '+self.js)}}
-$JSObjectDict.__getitem__=function(self,rank){if(typeof self.js.length=='number' &&
+$JSObjectDict.__getitem__=function(self,rank){if(typeof self.js.length=='number'){if((typeof rank=="number" ||typeof rank=="boolean")&&
 typeof self.js.item=='function'){var rank_to_int=_b_.int(rank)
 if(rank_to_int<0){rank_to_int+=self.js.length}
-var res=self.js.item(rank_to_int)
+var res=JSObject(self.js.item(rank_to_int))
 if(res===undefined){throw _b_.KeyError(rank)}
-return res}
+return res}else if(typeof rank=="string" && 
+typeof self.js.getNamedItem=='function'){var res=JSObject(self.js.getNamedItem(rank))
+if(res===undefined){throw _b_.keyError(rank)}
+return res}}
 try{return getattr(self.js,'__getitem__')(rank)}
 catch(err){if(self.js[rank]!==undefined){return JSObject(self.js[rank])}
 throw _b_.KeyError(rank)}}
 var $JSObject_iterator=$B.$iterator_class('JS object iterator')
 $JSObjectDict.__iter__=function(self){var items=[]
 if(window.Symbol && self.js[Symbol.iterator]!==undefined){
-if(self.js.length!==undefined && self.js.item!==undefined){for(var i=0;i<self.js.length ;i++){items.push(self.js[i])}}else{for(var item in self.js){if(self.js.hasOwnProperty(item )){items.push(jsobj2pyobj(item))}}}
+if(self.js.length!==undefined && self.js.item!==undefined){for(var i=0;i<self.js.length ;i++){items.push(JSObject(self.js[i]))}}else{for(var item in self.js){if(self.js.hasOwnProperty(item )){items.push(jsobj2pyobj(item))}}}
 return $B.$iterator(items,$JSObject_iterator)}else if(self.js.length!==undefined && self.js.item !==undefined){
-for(var i=0;i<self.js.length ;i++){items.push(self.js[i])}
+for(var i=0;i<self.js.length ;i++){items.push(JSObject(self.js[i]))}
 return $B.$iterator(items,$JSObject_iterator)}
 var _dict=$JSObjectDict.to_dict(self)
 return _b_.dict.$dict.__iter__(_dict)}
@@ -6783,7 +6786,11 @@ catch(err){throw _b_.AttributeError(self.js+' has no attribute __len__')}}
 $JSObjectDict.__mro__=[$ObjectDict]
 $JSObjectDict.__repr__=function(self){if(self.js instanceof Date){return self.js.toString()}
 var proto=Object.getPrototypeOf(self.js)
-if(proto){return "<"+proto.constructor.name+" object>"}
+if(proto){var name=proto.constructor.name
+if(name===undefined){
+var proto_str=proto.constructor.toString()
+name=proto_str.substring(8,proto_str.length-1)}
+return "<"+name+" object>"}
 return "<JSObject wraps "+self.js+">"}
 $JSObjectDict.__setattr__=function(self,attr,value){if(isinstance(value,JSObject)){self.js[attr]=value.js}
 else{self.js[attr]=value
@@ -10055,14 +10062,13 @@ return{__class__:$StyleDict,js:style}}
 $Style.__class__=$B.$factory
 $Style.$dict=$StyleDict
 $StyleDict.$factory=$Style
-var DOMNode=$B.DOMNode=function(elt){
+var DOMNode=$B.DOMNode=function(elt){if(typeof elt=="number" ||typeof elt=="boolean" ||
+typeof elt=="string"){return elt}
 var res={}
 res.$dict={}
 res.elt=elt 
 if(elt['$brython_id']===undefined||elt.nodeType===9){
-elt.$brython_id='DOM-'+$B.UUID()
-res.__repr__=res.__str__=res.toString=function(){var res="<DOMNode object type '"
-return res+$NodeTypes[elt.nodeType]+"' name '"+elt.nodeName+"'>"}}
+elt.$brython_id='DOM-'+$B.UUID()}
 res.__class__=DOMNodeDict
 return res}
 DOMNodeDict={__class__ : $B.$type,__name__ : 'DOMNode'}
@@ -10097,7 +10103,6 @@ for(var attr in DOMNodeDict){if(res.indexOf(attr)==-1){res.push(attr)}}
 return res}
 DOMNodeDict.__eq__=function(self,other){return self.elt==other.elt}
 DOMNodeDict.__getattribute__=function(self,attr){switch(attr){case 'class_name':
-case 'children':
 case 'html':
 case 'id':
 case 'parent':
@@ -10152,16 +10157,28 @@ return func}
 if(attr=='options')return $Options(self.elt)
 if(attr=='style')return $Style(self.elt[attr])
 if($B.$isNode(res)){return DOMNode(res)}
-return $B.JSObject(res)}
+return DOMNode(res)}
 return $ObjectDict.__getattribute__(self,attr)}
 DOMNodeDict.__getitem__=function(self,key){if(self.elt.nodeType===9){
 if(typeof key==="string"){var res=self.elt.getElementById(key)
 if(res)return DOMNode(res)
 throw KeyError(key)}else{try{var elts=self.elt.getElementsByTagName(key.$dict.__name__),res=[],pos=0
 for(var $i=0;$i<elts.length;$i++)res[pos++]=DOMNode(elts[$i])
-return res}catch(err){throw KeyError(str(key))}}}else{throw _b_.TypeError('DOMNode object is not subscriptable')}}
+return res}catch(err){throw KeyError(str(key))}}}else{if(typeof self.elt.length=='number'){if((typeof key=="number" ||typeof key=="boolean")&&
+typeof self.elt.item=='function'){var key_to_int=_b_.int(key)
+if(key_to_int<0){key_to_int+=self.elt.length}
+var res=DOMNode(self.elt.item(key_to_int))
+if(res===undefined){throw _b_.KeyError(key)}
+return res}else if(typeof key=="string" && 
+typeof self.elt.getNamedItem=='function'){var res=DOMNode(self.elt.getNamedItem(key))
+if(res===undefined){throw _b_.keyError(key)}
+return res}}
+throw _b_.TypeError('DOMNode object is not subscriptable')}}
 DOMNodeDict.__iter__=function(self){
-return iter(DOMNodeDict.children(self))}
+if(self.elt.length!==undefined && typeof self.elt.item=="function"){var items=[]
+for(var i=0,len=self.elt.length;i<len;i++){items.push(DOMNode(self.elt.item(i)))}}else if(self.elt.childNodes!==undefined){var items=[]
+for(var i=0,len=self.elt.childNodes.length;i<len;i++){items.push(DOMNode(self.elt.childNodes[i]))}}
+return iter(items)}
 DOMNodeDict.__le__=function(self,other){
 var elt=self.elt
 if(self.elt.nodeType===9){elt=self.elt.body}
@@ -10188,7 +10205,12 @@ var res=$TagSum()
 var txt=DOMNode(document.createTextNode(other))
 res.children=[txt,self]
 return res}
-DOMNodeDict.__str__=DOMNodeDict.__repr__=function(self){if(self===undefined)return "<class 'DOMNode'>"
+DOMNodeDict.__str__=DOMNodeDict.__repr__=function(self){var proto=Object.getPrototypeOf(self.elt)
+if(proto){var name=proto.constructor.name
+if(name===undefined){
+var proto_str=proto.constructor.toString()
+name=proto_str.substring(8,proto_str.length-1)}
+return "<"+name+" object>"}
 var res="<DOMNode object type '"
 return res+$NodeTypes[self.elt.nodeType]+"' name '"+self.elt.nodeName+"'>"}
 DOMNodeDict.__setattr__=function(self,attr,value){if(attr.substr(0,2)=='on'){
@@ -10230,8 +10252,10 @@ catch(err1){console.log(err)}}}}}
 if(window.addEventListener){self.elt.addEventListener(event,callback,false)}else if(window.attachEvent){self.elt.attachEvent("on"+event,callback)}
 evlist[pos++]=[func,callback]}
 return self}
-DOMNodeDict.children=function(self){var res=[],pos=0
-for(var i=0;i<self.elt.childNodes.length;i++){res[pos++]=DOMNode(self.elt.childNodes[i])}
+DOMNodeDict.children=function(self){var res=[],pos=0,elt=self.elt
+console.log(elt,elt.childNodes)
+if(elt.nodeType==9){elt=elt.body}
+for(var i=0;i<elt.childNodes.length;i++){res[pos++]=DOMNode(elt.childNodes[i])}
 return res}
 DOMNodeDict.clear=function(self){
 var elt=self.elt
@@ -10339,7 +10363,6 @@ return new $OptionsClass(self.elt)}
 DOMNodeDict.parent=function(self){if(self.elt.parentElement)return DOMNode(self.elt.parentElement)
 return None}
 DOMNodeDict.remove=function(self,child){
-console.log('child',child)
 var elt=self.elt,flag=false,ch_elt=child.elt
 if(self.elt.nodeType==9){elt=self.elt.body}
 while(ch_elt.parentElement){if(ch_elt.parentElement===elt){elt.removeChild(ch_elt)
