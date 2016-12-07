@@ -389,8 +389,12 @@ DOMNodeDict.__bool__ = function(self){return true}
 DOMNodeDict.__class__ = $B.$type
 
 DOMNodeDict.__contains__ = function(self,key){
-    try{DOMNodeDict.__getitem__(self, key);return True}
-    catch(err){return False}
+    if(self.elt.length!==undefined && typeof self.elt.item == "function"){
+        for(var i=0,len=self.elt.length;i<len;i++){
+            if(self.elt.item(i)===key.elt){return true}
+        }
+    }
+    return false
 }
 
 DOMNodeDict.__del__ = function(self){
@@ -614,7 +618,7 @@ DOMNodeDict.__le__ = function(self,other){
     }
 }
 
-DOMNodeDict.__len__ = function(self){return self.elt.childNodes.length}
+DOMNodeDict.__len__ = function(self){return self.elt.length}
 
 DOMNodeDict.__mul__ = function(self,other){
     if(isinstance(other,_b_.int) && other.valueOf()>0){
