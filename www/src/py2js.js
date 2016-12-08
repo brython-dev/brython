@@ -7553,7 +7553,7 @@ function run_script(script){
         if($B.debug>1){console.log($js)}
         // Run resulting Javascript
         eval($js)
-        $B.imported[script.name] = $locals
+        //$B.imported[script.name] = $locals
     }catch($err){
         if($B.debug>1){
             console.log($err)
