@@ -1241,11 +1241,11 @@ $B.is_none = function (o) {
     return o === undefined || o == _b_.None;
 }
 
-$B.bundle = function(){
+$B.imports = function(){
     // pops up the list of modules currently imported
     // can be used to generate a bundle
     var w = window.open('', '', 'width="50%",height=400,resizeable,scrollbars');
-    w.document.write("Currently used modules. Copy and paste in file "+
+    w.document.write("Currently imported modules. Copy and paste in file "+
         "<b>.bundle-include</b> in your application folder, then run "+
         "<code>python -m brython --update</code> to generate a new version "+
         "of <b>brython_modules.js</b><p>")
