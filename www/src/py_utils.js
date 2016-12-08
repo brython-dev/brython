@@ -1244,8 +1244,11 @@ $B.is_none = function (o) {
 $B.bundle = function(){
     // pops up the list of modules currently imported
     // can be used to generate a bundle
-    var w = window.open('', '', 'width=400,height=400,resizeable,scrollbars');
-    w.document.write("Currently used modules")
+    var w = window.open('', '', 'width="50%",height=400,resizeable,scrollbars');
+    w.document.write("Currently used modules. Copy and paste in file "+
+        "<b>.bundle-include</b> in your application folder, then run "+
+        "<code>python -m brython --update</code> to generate a new version "+
+        "of <b>brython_modules.js</b><p>")
     w.document.write("<TEXTAREA rows=20 cols=40>")
     for(var attr in $B.imported){
         w.document.write(attr+'\n')
