@@ -41,13 +41,13 @@ if args.update:
     from data.tools import make_bundle
     
     folder = os.getcwd()
+    
     more_modules = make_bundle.bundle(folder)
     
     print('add modules', list(more_modules))
     
     # read modules in /dist/brython_stdlib
-    bm_path = os.path.join(folder, 'dist', 'brython_stdlib.js')
-    with open(bm_path, encoding="utf-8") as fobj:
+    with open("brython_stdlib.js", encoding="utf-8") as fobj:
         src = fobj.read()
     # skip first line
     src = src[src.find('\n'):].lstrip()
@@ -58,8 +58,17 @@ if args.update:
     
     # update with new modules
     mods.update(more_modules)
+    
+    # if there is a file .bundle-modules, use it to select only the requested
+    # modules
+    include_path = ".bundle-include"
+
+    if os.path.exists(include_path):
+        with open(include_path, encoding="utf-8") as fobj:
+            bundle_list = [m.strip() for m in fobj]
+        mods = {k:v for (k, v) in mods.items() if k in bundle_list}
+    
     # save new version of brython_modules
-    bm_path = os.path.join(folder, 'dist', 'brython_modules.js')
-    with open(bm_path, "w", encoding="utf-8") as out:
+    with open("brython_modules.js", "w", encoding="utf-8") as out:
         out.write('__BRYTHON__.use_VFS = true;\n')
         out.write('__BRYTHON__.VFS = {}\n'.format(json.dumps(mods)))    
