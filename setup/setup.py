@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 import os
 
-if not os.path.exists(os.path.join(os.getcwd(), 'data', 'dist',
+if not os.path.exists(os.path.join(os.getcwd(), 'data', 
     'brython_modules.js')):
         print('/data/dist/brython_modules.js not present. Use'
             ' /data/prepare_setup.py to generate it')
