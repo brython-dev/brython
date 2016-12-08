@@ -1241,6 +1241,19 @@ $B.is_none = function (o) {
     return o === undefined || o == _b_.None;
 }
 
+$B.bundle = function(){
+    // pops up the list of modules currently imported
+    // can be used to generate a bundle
+    var w = window.open('', '', 'width=400,height=400,resizeable,scrollbars');
+    w.document.write("Currently used modules")
+    w.document.write("<TEXTAREA rows=20 cols=40>")
+    for(var attr in $B.imported){
+        w.document.write(attr+'\n')
+    }
+    w.document.write("</TEXTAREA>")
+    w.document.close(); // needed for chrome and safari
+}
+
 })(__BRYTHON__)
 
 // IE doesn't implement indexOf on Arrays
