@@ -389,6 +389,11 @@ DOMNodeDict.__bool__ = function(self){return true}
 DOMNodeDict.__class__ = $B.$type
 
 DOMNodeDict.__contains__ = function(self,key){
+    // For document, if key is a string, "key in document" tells if an element
+    // with id "key" is in the document
+    if(self.elt.nodeType==9 && typeof key=="string"){
+        return document.getElementById(key)!==null
+    }
     if(self.elt.length!==undefined && typeof self.elt.item == "function"){
         for(var i=0,len=self.elt.length;i<len;i++){
             if(self.elt.item(i)===key.elt){return true}

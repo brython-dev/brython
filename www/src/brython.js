@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,0,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-12-07 15:12:13.006866"
+__BRYTHON__.compiled_date="2016-12-08 15:39:41.280197"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4100,8 +4100,7 @@ try{
 var $root=$B.py2js(script.src,script.name,script.name,'__builtins__')
 var $js=$root.to_js()
 if($B.debug>1){console.log($js)}
-eval($js)
-$B.imported[script.name]=$locals}catch($err){if($B.debug>1){console.log($err)
+eval($js)}catch($err){if($B.debug>1){console.log($err)
 for(var attr in $err){console.log(attr+' : ',$err[attr])}}
 if($err.$py_error===undefined){console.log('Javascript error',$err)
 $err=_b_.RuntimeError($err+'')}
@@ -5165,7 +5164,14 @@ $B.gt=function(x,y){if(typeof x=='number' && typeof y=='number'){return x>y}
 else if(typeof x=='number' && typeof y!='number'){return !y.pos}
 else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
 else{return $B.LongInt.$dict.__gt__(x,y)}}
-$B.is_none=function(o){return o===undefined ||o==_b_.None;}})(__BRYTHON__)
+$B.is_none=function(o){return o===undefined ||o==_b_.None;}
+$B.bundle=function(){
+var w=window.open('','','width=400,height=400,resizeable,scrollbars');
+w.document.write("Currently used modules")
+w.document.write("<TEXTAREA rows=20 cols=40>")
+for(var attr in $B.imported){w.document.write(attr+'\n')}
+w.document.write("</TEXTAREA>")
+w.document.close();}})(__BRYTHON__)
 if(!Array.indexOf){Array.prototype.indexOf=function(obj){for(var i=0,_len_i=this.length;i < _len_i;i++)if(this[i]==obj)return i
 return -1}}
 if(!String.prototype.repeat){String.prototype.repeat=function(count){if(count < 1)return '';
@@ -10086,7 +10092,9 @@ $B.get_class(other).__name__+"' object to DOMNode instance")}}
 return res}
 DOMNodeDict.__bool__=function(self){return true}
 DOMNodeDict.__class__=$B.$type
-DOMNodeDict.__contains__=function(self,key){if(self.elt.length!==undefined && typeof self.elt.item=="function"){for(var i=0,len=self.elt.length;i<len;i++){if(self.elt.item(i)===key.elt){return true}}}
+DOMNodeDict.__contains__=function(self,key){
+if(self.elt.nodeType==9 && typeof key=="string"){return document.getElementById(key)!==null}
+if(self.elt.length!==undefined && typeof self.elt.item=="function"){for(var i=0,len=self.elt.length;i<len;i++){if(self.elt.item(i)===key.elt){return true}}}
 return false}
 DOMNodeDict.__del__=function(self){
 if(!self.elt.parentNode){throw _b_.ValueError("can't delete "+str(elt))}
