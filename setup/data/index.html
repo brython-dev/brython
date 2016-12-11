@@ -29,12 +29,13 @@ a.visited{
 }
 
 button{
-    background-color: #800;
-    color: #fff;
-    font-weight: bold;
+    background-color: #dadada;
+    color: #113;
     border-style: solid;
     border-color: #000;
-    border-width: 2px;
+    border-width: 1px;
+    border-radius: 3px;
+    font-size: 1.2em;
 }
 
 div.example{
@@ -45,8 +46,8 @@ pre.python{
     font-family: Consolas, Courier New;
     font-weight: bold;
     color: #113;
-    background-color: #cef968;
-    border-width: 1 1 1 3;
+    background-color: #dadada;
+    border-width: 0 0 0 2;
     border-color: #113;
     border-style: solid;
     width:90%;
@@ -66,7 +67,7 @@ code{
     font-family: Consolas, Courier New;
     font-weight: bold;
     color: #113;
-    background-color: #cef968;
+    background-color: #dadada;
 }
 </style>
 
@@ -585,13 +586,14 @@ The function takes one argument, an object representing the event.
 
 <div class="example" id="ex10">
     <button id="button10">send an Ajax request</button>
-    Position of the International Space Station <span id="zone10" style="padding-left:1em;"></span>
+    <p><div id="zone10" class="zone" style="padding-left:1em;"></div>
     
     <script type="text/python"  id="script10">
     from browser import document, ajax
     
     url = "http://api.open-notify.org/iss-now.json"
-    
+    msg = "Position of the International Space Station at {}: {}"
+
     def complete(request):
         import json
         import datetime
@@ -599,7 +601,7 @@ The function takes one argument, an object representing the event.
         position = data['iss_position']
         ts = data['timestamp']
         now = datetime.datetime.fromtimestamp(ts)
-        document["zone10"].text = "at {}: {}".format(now, position) 
+        document["zone10"].text = msg.format(now, position) 
         
     def change(event):
         req = ajax.ajax()
