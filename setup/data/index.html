@@ -12,10 +12,10 @@ body{
 }
 
 a{
-    color: #00f;
+    color: #333;
 }
 a.visited{
-    color: #00f;
+    color: #333;
 }
 
 .panel{
@@ -42,16 +42,19 @@ div.example{
     margin-top: 2em;
 }
 
-pre.python{
+pre{
     font-family: Consolas, Courier New;
-    font-weight: bold;
     color: #113;
-    background-color: #dadada;
+    background: linear-gradient(to right, #ccc, #fff);
     border-width: 0 0 0 2;
-    border-color: #113;
+    border-color: #aac;
     border-style: solid;
     width:90%;
     margin-top: 2em;
+}
+
+pre.html{
+    padding: 0.5em;
 }
 
 .zone{
@@ -65,35 +68,42 @@ pre.python{
 
 code{
     font-family: Consolas, Courier New;
-    font-weight: bold;
     color: #113;
-    background-color: #dadada;
+    padding-left: 0.2em;
+    padding-right: 0.2em;
 }
+
+code.file{
+    background-color: #fff;
+    font-weigth: bold;
+    font-style: italic;
+}
+
 </style>
 
 </head>
 
 <body onload="brython(1)">
 
-<h1>Introduction to Brython</h1>
+<h1 style="text-align: center">Introduction to Brython</h1>
 
 Brython is made to develop applications for the browser in Python. To enable it, the HTML page must have this structure :
 
-<pre>&lt;html&gt;
+<pre class="html">&lt;html&gt;
 &lt;head&gt;
-<b style="color:#080;">&lt;script src="/brython.js"&gt;&lt;/script&gt;
+<b>&lt;script src="/brython.js"&gt;&lt;/script&gt;
 &lt;script src="/brython_modules.js"&gt;&lt;/script&gt;</b>
 &lt;/head&gt;
-&lt;body <b style="color:#800;">onload="brython()"</b>&gt;
-<b style="color:#00f;">&lt;script type="text/python"&gt;
+&lt;body <b>onload="brython()"</b>&gt;
+<b>&lt;script type="text/python"&gt;
 # python code here
 &lt;/script&gt;</b>
 &lt;/body&gt;
 &lt;/html&gt;
 </pre>
 
-<p><b style="color:#080;font-family:courier">brython.js</b> is the Brython engine. <b style="color:#080;font-family:courier;">brython_modules.js</b> includes all the modules in the standard distribution. 
-<p>The function <b style="color:#800;font-family:courier">brython()</b>, defined in <b style="color:#080;font-family:courier">brython.js</b>, is executed when the page has finished loading : it scans the Python scripts in the page, ie the code inside script tags with the attribute <b style="color:#00f;font-family:courier;">type="text/python"</b>, and runs them.
+<p><code class="file">brython.js</code> is the Brython engine. <code class="file">brython_modules.js</code> includes all the modules in the standard distribution. 
+<p>The function <code>brython()</code>, defined in <code class="file">brython.js</code>, is executed when the page has finished loading : it scans the Python scripts in the page, ie the code inside script tags with the attribute <code>type="text/python"</code>, and runs them.
 
 <p>
 Here are a few examples of how you can use Brython to interact with a web page.
@@ -118,8 +128,8 @@ Here are a few examples of how you can use Brython to interact with a web page.
     
     <pre class="python"></pre>
     
-    <span class="comment"><code>browser</code> is a Python-specific module that defines the objects used to interact with the page ; it is included in <b style="color:#080;font-family:courier;">brython_modules.js</b>. 
-<p><code>document</code> is an object representing the HTML document ; <code>document[element_id]</code> is the element with attribute id equal to element_id. In these examples, <code>document["buttonN"]</code> is a reference to the button you click on, and <code>document["zoneN"]</code> is the bordered zone at the right of the button.
+    <span class="comment"><code>browser</code> is a Python-specific module that defines the objects used to interact with the page ; it is included in <code class="file">brython_modules.js</code>. 
+<p><code>document</code> is an object representing the HTML document ; <code>document[element_id]</code> is the element with attribute id equal to element_id. In these examples, <code>document["button1"]</code> is a reference to the button you click on, and <code>document["zone1"]</code> is the bordered zone at the right of the button.
 <p>Setting the attribute <code>text</code> of an element changes its text content.
 <p><code>bind()</code> is a method that defines the function to call when an event occurs on the element. When the user clicks on the element, this event is called "click". The last line means : when the user clicks on the element (here, the button with the text "change the text of an element"), call the function <code>change()</code>.
 The function takes one argument, an object representing the event.
@@ -129,7 +139,7 @@ The function takes one argument, an object representing the event.
 
 <div class="example" id="ex2">
     <button id="button2">change the style of an element</button>
-    <span id="zone2" style="color:blue;background-color:yellow;" class="zone">coloured content</span>
+    <span id="zone2" style="color:blue;background-color:#aad;" class="zone">coloured content</span>
     
     <script type="text/python" id="script2">
     from browser import document
@@ -139,8 +149,8 @@ The function takes one argument, an object representing the event.
     def change(event):
         style = element.style
         color = style.color
-        style.color = "orange" if color == "blue" else "blue"
-        style.backgroundColor = "gray" if color == "blue" else "yellow"
+        style.color = "#cc8" if color == "blue" else "blue"
+        style.backgroundColor = "gray" if color == "blue" else "#aad"
         style.fontWeight = "bold" if color == "blue" else "normal"
         style.fontSize = "18px" if color == "blue" else "14px"
         
