@@ -1257,6 +1257,37 @@ $B.imports = function(){
     w.document.close(); // needed for chrome and safari
 }
 
+$B.compiled_imports = function(){
+    // return the code of compiled version of imported scripts
+    if(!$B.use_VFS){
+        console.log('only works with VFS')
+        return
+    }
+    var res = {}
+    for(var attr in $B.imported){
+        var info = $B.VFS[attr]
+        if(info!==undefined){
+            var lang = info[0],
+                src = info[1]
+            if(lang=='.js'){
+                res[attr] = ['.js', src]
+            }else{
+                res[attr] = ['.js', $B.py2js(src, attr, attr,'__builtins__').to_js()]
+                if(info[2]!==undefined){res[attr].push(info[2])}
+            }
+        }
+    }
+    var w = window.open('', '', 
+            'width="80%",height=400,resizeable,scrollbars')
+    w.document.write("Currently imported modules. Copy and paste in file "+
+        "<b>brython_modules.js</b> in your application folder<p>"+
+        "<TEXTAREA rows=20 cols=40>"+
+        "__BRYTHON__.use_VFS = true;\n__BRYTHON__.VFS = ")
+    w.document.write(JSON.stringify(res))
+    w.document.write("</TEXTAREA>")
+    w.document.close(); // needed for chrome and safari
+}
+
 })(__BRYTHON__)
 
 // IE doesn't implement indexOf on Arrays

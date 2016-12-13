@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,0,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-12-08 19:01:09.622682"
+__BRYTHON__.compiled_date="2016-12-13 10:02:57.928914"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5174,6 +5174,22 @@ w.document.write("Currently imported modules. Copy and paste in file "+
 w.document.write("<TEXTAREA rows=20 cols=40>")
 for(var attr in $B.imported){w.document.write(attr+'\n')}
 w.document.write("</TEXTAREA>")
+w.document.close();}
+$B.compiled_imports=function(){
+if(!$B.use_VFS){console.log('only works with VFS')
+return}
+var res={}
+for(var attr in $B.imported){var info=$B.VFS[attr]
+if(info!==undefined){var lang=info[0],src=info[1]
+if(lang=='.js'){res[attr]=['.js',src]}else{res[attr]=['.js',$B.py2js(src,attr,attr,'__builtins__').to_js()]
+if(info[2]!==undefined){res[attr].push(info[2])}}}}
+var w=window.open('','','width="80%",height=400,resizeable,scrollbars')
+w.document.write("Currently imported modules. Copy and paste in file "+
+"<b>brython_modules.js</b> in your application folder<p>"+
+"<TEXTAREA rows=20 cols=40>"+
+"__BRYTHON__.use_VFS = true;\n__BRYTHON__.VFS = ")
+w.document.write(JSON.stringify(res))
+w.document.write("</TEXTAREA>")
 w.document.close();}})(__BRYTHON__)
 if(!Array.indexOf){Array.prototype.indexOf=function(obj){for(var i=0,_len_i=this.length;i < _len_i;i++)if(this[i]==obj)return i
 return -1}}
@@ -10159,7 +10175,16 @@ var res=self.elt[attr]
 if(res!==undefined){if(res===null){return _b_.None}
 if(typeof res==="function"){var func=(function(f,elt){return function(){var args=[],pos=0
 for(var i=0;i<arguments.length;i++){var arg=arguments[i]
-if(isinstance(arg,JSObject)){args[pos++]=arg.js}else if(isinstance(arg,DOMNode)){args[pos++]=arg.elt}else if(arg===_b_.None){args[pos++]=null}else{args[pos++]=arg}}
+if(typeof arg=="function"){var f1=function(){try{return arg.apply(null,arguments)}
+catch(err){if(err.__class__!==undefined){var msg=_b_.getattr(err,'info')+
+'\n'+err.__class__.__name__
+if(err.args){msg +=': '+err.args[0]}
+try{getattr($B.stderr,"write")(msg)}
+catch(err){console.log(msg)}}else{try{getattr($B.stderr,"write")(err)}
+catch(err1){console.log(err)}}
+throw err}}
+args[pos++]=f1}
+else if(isinstance(arg,JSObject)){args[pos++]=arg.js}else if(isinstance(arg,DOMNode)){args[pos++]=arg.elt}else if(arg===_b_.None){args[pos++]=null}else{args[pos++]=arg}}
 var result=f.apply(elt,args)
 return $B.$JS2Py(result)}})(res,self.elt)
 func.$infos={__name__ : attr}
