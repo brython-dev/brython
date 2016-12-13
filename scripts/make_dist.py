@@ -118,9 +118,42 @@ def run():
     
     make_VFS.process(os.path.join(pdir, 'www', 'src', 'py_VFS.js'))
     # make distribution with core + libraries
-    with open(os.path.join(pdir, 'www', 'src', 'brython_dist.js'), 'w') as distrib_file:
-        distrib_file.write(open(os.path.join(pdir, 'www', 'src', 'brython.js')).read())
-        distrib_file.write(open(os.path.join(pdir, 'www', 'src', 'py_VFS.js')).read())
+    src_dir = os.path.join(pdir, 'www', 'src')
+    with open(os.path.join(src_dir, 'brython_dist.js'), 'w') as distrib_file:
+        distrib_file.write(open(os.path.join(src_dir, 'brython.js')).read())
+        distrib_file.write(open(os.path.join(src_dir, 'py_VFS.js')).read())
+
+    # copy files in folder /setup
+    import shutil
+    sdir = os.path.join(pdir, 'setup', 'data')
+    shutil.copyfile(os.path.join(src_dir, 'brython.js'),
+        os.path.join(sdir, 'brython.js'))
+    shutil.copyfile(os.path.join(src_dir, 'py_VFS.js'),
+        os.path.join(sdir, 'brython_stdlib.js'))
+    shutil.copyfile(os.path.join(src_dir, 'py_VFS.js'),
+        os.path.join(sdir, 'brython_modules.js'))
+
+    # create zip files
+    import tarfile
+    import zipfile
+    
+    name = 'Brython-{}'.format(vname)
+    dest_path = os.path.join(sdir, name)
+    dist1 = tarfile.open(dest_path + '.tar.gz', mode='w:gz')
+    dist2 = tarfile.open(dest_path+'.tar.bz2', mode='w:bz2')
+    dist3 = zipfile.ZipFile(dest_path + '.zip', mode='w',
+                            compression=zipfile.ZIP_DEFLATED)
+    
+    paths = ['index.html', 'brython.js', 'brython_stdlib.js', 
+        'brython_modules.js']
+    
+    for arc, wfunc in (dist1, dist1.add), (dist2, dist2.add), (dist3, dist3.write):
+        for path in paths:
+            wfunc(os.path.join(sdir, path), 
+                arcname=os.path.join(name, path))
+    
+        arc.close()
+        
     
 if __name__=="__main__":
     run()
