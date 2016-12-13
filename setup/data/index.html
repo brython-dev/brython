@@ -7,8 +7,8 @@
 body{
     font-size: 14px;
     font-family: Helvetica;
-    margin-left: 20%;
-    margin-right: 20%;
+    margin-left: 5%;
+    margin-right: 5%;
 }
 
 a{
@@ -49,7 +49,6 @@ pre{
     border-width: 0 0 0 2;
     border-color: #aac;
     border-style: solid;
-    width:90%;
     margin-top: 2em;
 }
 
@@ -87,30 +86,86 @@ code.file{
 
 <h1 style="text-align: center">Introduction to Brython</h1>
 
-Brython is made to develop applications for the browser in Python. To enable it, the HTML page must have this structure :
-
-<pre class="html">&lt;html&gt;
-&lt;head&gt;
-<b>&lt;script src="/brython.js"&gt;&lt;/script&gt;
-&lt;script src="/brython_modules.js"&gt;&lt;/script&gt;</b>
-&lt;/head&gt;
-&lt;body <b>onload="brython()"</b>&gt;
-<b>&lt;script type="text/python"&gt;
-# python code here
-&lt;/script&gt;</b>
-&lt;/body&gt;
-&lt;/html&gt;
-</pre>
-
-<p><code class="file">brython.js</code> is the Brython engine. <code class="file">brython_modules.js</code> includes all the modules in the standard distribution. 
-<p>The function <code>brython()</code>, defined in <code class="file">brython.js</code>, is executed when the page has finished loading : it scans the Python scripts in the page, ie the code inside script tags with the attribute <code>type="text/python"</code>, and runs them.
-
-<p>
 Here are a few examples of how you can use Brython to interact with a web page.
 
-<div>
-    <ul id="menu">
-    </ul>
+<div style="display:table">
+  <div style="display: table-row">
+    <div style="display: table-cell; width:30%; vertical-align: top;">
+      <ul id="menu">
+      </ul>
+    </div>
+    <div style="display:table-cell; width:65%;" id="panel">
+      <b>panel</b>
+    </div>
+  </div>
+</div>
+
+
+<div class="example" id="ex0">
+    <button id="button0">display an alert box</button>
+    
+    <script type="text/python" id="script0">
+    from browser import document, alert
+    
+    def hello(ev):
+        alert("Hello !")
+    
+    document["button0"].bind("click", hello)
+    </script>
+
+    <pre class="python"></pre>
+
+    <span class="comment">
+    <code>browser</code> is a Brython-specific module that defines the objects used to interact with the page. 
+    <p><code>document</code> is an object representing the HTML document ; <code>document[element_id]</code> is the element with attribute id equal to element_id. In this example, <code>document["button0"]</code> is a reference to the button you click on.
+<p><code>bind()</code> is a method that defines the function to call when an event occurs on the element. When the user clicks on the element, this event is called "click". The last line means : when the user clicks on the element (here, the button with the text "display an alert box"), call the function <code>hello()</code>.
+The function takes one argument, an object representing the event.
+    <p><code>alert</code> is used to display small popup windows.
+    </span>
+</div>
+
+<div class="example" id="ex5">
+    <button id="button5">write in the browser console</button>
+    
+    <script type="text/python" id="script5">
+    from browser import document
+    
+    document["button5"].bind("click", lambda ev: print("Hello !"))
+    </script>
+    
+    <pre class="python"></pre>
+
+    <span class="comment">
+    By default, <code>print()</code> writes message in the browser console window (to open it, do Ctrl+Maj+K on Firefox, Ctrl+Maj+J on Chrome, F12 on IE, etc).
+    <p>Like in Python, the output can be reset by setting <code>sys.stdout</code> to an object with a method <code>write()</code>.
+    </span>
+</div>
+
+<div class="example" id="ex13">
+    <button id="button13">select elements by CSS selectors</button>
+    <span id="zone13" class="zone"></span>
+    
+    <script type="text/python" id="script13">
+    from browser import document, html
+    
+    def change(event):
+        document["zone13"].clear()
+
+        buttons = document.get(selector="button")
+        document["zone13"] <= "On this page there are {} buttons ".format(len(buttons))
+        
+        zones = document.get(selector=".zone")
+        document["zone13"] <= "and {} elements with class 'zone'".format(len(zones))
+    
+    document['button13'].bind('click', change)
+    </script>
+
+    <pre class="python"></pre>
+    
+    <span class="comment">
+    We have seen how to get an element by its id : <code>document[element_id]</code>. Here, <code>document["zone13"]</code> is the bordered box at the right of the button.
+    <p>The method <code>get(selector=css_selector)</code> provides a way to select elements based on the <a href="http://www.w3schools.com/cssref/css_selectors.asp" target="_blank">CSS selector syntax</a>. Passing the name of a tag returns a list of all the elements with this tag ; passing <code>.zone</code> returns a list of all the elements whose attribute <code>class</code> is set to <code>"zone"</code>. You can easily find external resources on CSS selectors.
+    </span>
 </div>
 
 <div class="example" id="ex1">
@@ -121,18 +176,17 @@ Here are a few examples of how you can use Brython to interact with a web page.
     from browser import document
     
     def change(event):
-        document["zone1"].text = "New content"
+        document["zone1"].textContent = "New content"
     
     document["button1"].bind("click", change)
     </script>
     
     <pre class="python"></pre>
     
-    <span class="comment"><code>browser</code> is a Python-specific module that defines the objects used to interact with the page ; it is included in <code class="file">brython_modules.js</code>. 
-<p><code>document</code> is an object representing the HTML document ; <code>document[element_id]</code> is the element with attribute id equal to element_id. In these examples, <code>document["button1"]</code> is a reference to the button you click on, and <code>document["zone1"]</code> is the bordered zone at the right of the button.
-<p>Setting the attribute <code>text</code> of an element changes its text content.
-<p><code>bind()</code> is a method that defines the function to call when an event occurs on the element. When the user clicks on the element, this event is called "click". The last line means : when the user clicks on the element (here, the button with the text "change the text of an element"), call the function <code>change()</code>.
-The function takes one argument, an object representing the event.
+    <span class="comment">
+    The attributes and methods of the elements are described in the Document Object Model (DOM), which is abundantly documented (by the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model" target="_blank">Mozilla Developer Network</a> for instance). 
+    <p><code>textContent</code> is an attribute of <a href="https://developer.mozilla.org/en-US/docs/Web/API/Node" target="_blank">Node</a> instances ; it is used to get or set an element's text content.
+    <p>Brython supports all the DOM methods and attributes ; for text content it provides a shortcut, <code>text</code>, so that the function body can also be written : <code>document["zone1"].text = "New Content"</code>.
 </code>
 </span>
 </div>
@@ -160,7 +214,9 @@ The function takes one argument, an object representing the event.
     <pre class="python"></pre>
 
     <span class="comment">
-    The attributes and methods of the elements are described in the Document Object Model (DOM), which is abundantly documented. One of these attributes is <code>style</code>, which itself has (among many others) the attributes <code>color</code> (text color), <code>backgroundColor</code> (background color), <code>fontWeigth</code> ("bold" or "normal"), <code>fontSize</code> (size of the letters, in pixels).
+    Elements have an attribute <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/style" target="_blank"><code>style</code></a>, which itself has (among many others) the attributes <code>color</code> (text color), <code>backgroundColor</code> (background color), <code>fontWeigth</code> ("bold" or "normal"), <code>fontSize</code> (size of the letters, in pixels), etc.
+    <p>Look <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference" target="_blank">here</a> for a reference on CSS. 
+    <p>Note that the attribute names that have a hyphen is CSS are written in camelCase in Python code : for instance, to set the CSS attribute <code>background-color</code>, the syntax is <code>style.backgroundColor</code>
     </span>
 
 </div>
@@ -182,46 +238,41 @@ The function takes one argument, an object representing the event.
     <pre class="python"></pre>
 
     <span class="comment">
-    <code>display</code> is another attribute of DOM elements. Setting it to <code>"none"</code> hides the element.
+    <code>display</code> is another attribute of <code>style</code>. Setting it to <code>"none"</code> hides the element.
     </span>
 </div>
 
-<div class="example" id="ex4">
-    <button id="button4">display a popup message</button>
+<div class="example" id="ex6_std">
+    <button id="button6_std">insert an element (standard DOM methods)</button>
+    <span id="zone6_str" class="zone">initial content</span>
     
-    <script type="text/python" id="script4">
-    from browser import document, alert
+    <script type="text/python" id="script6_std">
+    from browser import document, html
     
-    document["button4"].bind("click", lambda ev: alert("Hello !"))
+    element = document.getElementById("zone6_std")
+    nb = 0
+    
+    def change(event):
+        global nb
+        elt = document.createElement("B")
+        txt = document.createTextNode(" {}".format(nb))
+        elt.appendChild(txt)
+        element.appendChild(elt)
+        nb += 1
+    
+    document["button6_std"].addEventListener("click", change)
     </script>
 
     <pre class="python"></pre>
 
-    <span class="comment">
-    <code>alert</code> is used to display small popup windows.
-    <p>Note that here, since the callback function is short, it is defined in a lambda function.
+    <span class="comment">This example uses the standard DOM methods to create elements (<a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/createElement" target="_blank"><code>document.createElement()</code></a>, <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/createTextNode" target="_blank"><code>createTextNode()</code></a>) and append them to other elements or to the document (<a href="https://developer.mozilla.org/en-US/docs/Web/API/Node/appendChild" target="_blank"><code>Node.appendChild()</code></a>).
+    <p>Note that on the last line, we use the standard DOM method <a href="https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener" target="_blank"><code>EventTarget.addEventListener()</code></a> : the method <code>bind()</code> used in the other examples is Brython-specific.
     </span>
-</div>
 
-<div class="example" id="ex5">
-    <button id="button5">write in the browser console</button>
-    
-    <script type="text/python" id="script5">
-    from browser import document
-    
-    document["button5"].bind("click", lambda ev: print("Hello !"))
-    </script>
-    
-    <pre class="python"></pre>
-
-    <span class="comment">
-    By default, <code>print()</code> writes message in the browser console window (to open it, do Ctrl+Maj+K on Firefox, Ctrl+Maj+J on Chrome, F12 on IE, etc).
-    <p>Like in Python, the output can be reset by setting <code>sys.stdout</code> to an object with a method <code>write()</code>.
-    </span>
 </div>
 
 <div class="example" id="ex6">
-    <button id="button6">insert an element</button>
+    <button id="button6">insert an element (Brython style)</button>
     <span id="zone6" class="zone">initial content</span>
     
     <script type="text/python" id="script6">
@@ -248,33 +299,6 @@ The function takes one argument, an object representing the event.
 
 </div>
 
-<div class="example" id="ex6_1">
-    <button id="button6_1">insert an element (standard DOM methods)</button>
-    <span id="zone6_1" class="zone">initial content</span>
-    
-    <script type="text/python" id="script6_1">
-    from browser import document, html
-    
-    element = document.getElementById("zone6_1")
-    nb = 0
-    
-    def change(event):
-        global nb
-        elt = document.createElement("B")
-        txt = document.createTextNode(" {}".format(nb))
-        elt.appendChild(txt)
-        element.appendChild(elt)
-        nb += 1
-    
-    document["button6_1"].addEventListener("click", change)
-    </script>
-
-    <pre class="python"></pre>
-
-    <span class="comment">This is the same as the previous example ; Brython provides an alternative syntax, but supports all the standard DOM features.
-    </span>
-
-</div>
 
 <div class="example" id="ex7">
     <button id="button7">insert an HTML table</button>
@@ -447,34 +471,6 @@ The function takes one argument, an object representing the event.
     <p>The position of an element can be changed by defining its attributes <code>left</code> and <code>top</code>.    </span>
 </div>
 
-
-<div class="example" id="ex13">
-    <button id="button13">select elements by CSS selectors</button>
-    <span id="zone13" class="zone"></span>
-    
-    <script type="text/python" id="script13">
-    from browser import document, html
-    
-    def change(event):
-        document["zone13"].clear()
-
-        buttons = document.get(selector="button")
-        document["zone13"] <= "On this page there are {} buttons ".format(len(buttons))
-        
-        zones = document.get(selector=".zone")
-        document["zone13"] <= "and {} elements with class 'zone'".format(len(zones))
-    
-    document['button13'].bind('click', change)
-    </script>
-
-    <pre class="python"></pre>
-    
-    <span class="comment">
-    We have seen how to get an element by its id : <code>document[element_id]</code>. 
-    <p>The method <code>get(selector=css_selector)</code> provides a way to select elements based on the CSS selector syntax. Passing the name of a tag returns a list of all the elements with this tag ; passing <code>.zone</code> returns a list of all the elements whose attribute <code>class</code> is set to <code>"zone"</code>. You can easily find external resources on CSS selectors.
-    </span>
-</div>
-
 <div class="example" id="ex14">
     <button id="button14">rotate an element</button>
     <span id="zone14" class="zone">
@@ -521,7 +517,7 @@ The function takes one argument, an object representing the event.
         global run
         if run is None:
             # start animation
-            animloop(10000)
+            animloop(1)
         else:
             # stop animation
             window.cancelAnimationFrame(run)
@@ -557,7 +553,7 @@ The function takes one argument, an object representing the event.
 </div>
 
 <div class="example" id="ex16">
-    <button id="button16">get value of form fields</button>
+    <button id="button16">get the value of form fields</button>
     <p><div id="zone16" class="zone"></div>
     
     <p><div style="width:30%; padding-left:3em; background-color:#ddd;">
@@ -634,7 +630,7 @@ The function takes one argument, an object representing the event.
 
 
 <div class="example" id="ex11">
-    <button id="button11">use javascript objects : Date()</button>
+    <button id="button11">use javascript objects : Date</button>
     <span id="zone11" class="zone"></span>
     
     <script type="text/python" id="script11">
@@ -661,10 +657,48 @@ The function takes one argument, an object representing the event.
     </span>
 </div>
 
+<div class="example" id="ex17">
+    <button id="button17">use javascript objects : RegExp</button>
+    <span id="zone17" class="zone"></span>
+    
+    <script type="text/python" id="script17">
+    from browser import document, window
+    import javascript
+    
+    RegExp = javascript.JSConstructor(window.RegExp)
+    
+    def change(event):
+        regexp = RegExp("A(.*?)\d", "g")
+        
+        document['zone17'].text = regexp.exec("essAii8 avec Ahh7")
+    
+    document['button17'].bind('click', change)
+    </script>
+    
+    <pre class="python"></pre>
+    
+    <span class="comment">
+    Similarly, Brython provides the modules <code class="module">re</code> for regular expressions, but it can also use the Javascript RegExp class.
+    </span>
+</div>
+
 
 <script type="text/python">
 from browser import document, html
 
+current = None
+
+def load_example(ev):
+    global current
+    if current is not None:
+        document[current].style.display = "none"
+        document <= document[current]
+    example_id = ev.target.num
+    document["panel"].clear()
+    document["panel"] <= document[example_id]
+    document[example_id].style.display="block"
+    current = example_id
+    
 for example in document.get(selector=".example"):
     # add the Python source inside the example
     script = example.get(selector="script")[0]
@@ -678,10 +712,15 @@ for example in document.get(selector=".example"):
 
     # create a menu entry
     button = example.get(selector="button")[0]
-    document["menu"] <= html.LI(html.A(button.text, href="#"+example.id))
+    anchor = html.A(button.text, href="#")
+    anchor.num = example.id
+
+    anchor.bind("click", load_example)
+    document["menu"] <= html.LI(anchor)
     
-    # add an anchor for the example
-    example.insertBefore(html.A(name=example.id), example.childNodes[0])
+    # hide the element
+    example.style.display = "none"
+
 </script>
 <script src="brython.js"></script>
 <script src="brython_modules.js"></script>
