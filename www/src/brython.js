@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,0,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-12-13 10:02:57.928914"
+__BRYTHON__.compiled_date="2016-12-13 11:54:08.043659"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -10113,7 +10113,8 @@ DOMNodeDict.__bool__=function(self){return true}
 DOMNodeDict.__class__=$B.$type
 DOMNodeDict.__contains__=function(self,key){
 if(self.elt.nodeType==9 && typeof key=="string"){return document.getElementById(key)!==null}
-if(self.elt.length!==undefined && typeof self.elt.item=="function"){for(var i=0,len=self.elt.length;i<len;i++){if(self.elt.item(i)===key.elt){return true}}}
+key=key.elt !==undefined ? key.elt : key
+if(self.elt.length!==undefined && typeof self.elt.item=="function"){for(var i=0,len=self.elt.length;i<len;i++){if(self.elt.item(i)===key){return true}}}
 return false}
 DOMNodeDict.__del__=function(self){
 if(!self.elt.parentNode){throw _b_.ValueError("can't delete "+str(elt))}
@@ -10401,6 +10402,8 @@ return None}
 DOMNodeDict.remove=function(self,child){
 var elt=self.elt,flag=false,ch_elt=child.elt
 if(self.elt.nodeType==9){elt=self.elt.body}
+if(typeof self.elt.remove=="function"){self.elt.remove(child)
+return None}
 while(ch_elt.parentElement){if(ch_elt.parentElement===elt){elt.removeChild(ch_elt)
 flag=true
 break}else{ch_elt=ch_elt.parentElement}}

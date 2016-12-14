@@ -394,9 +394,10 @@ DOMNodeDict.__contains__ = function(self,key){
     if(self.elt.nodeType==9 && typeof key=="string"){
         return document.getElementById(key)!==null
     }
+    key = key.elt !==undefined ? key.elt : key
     if(self.elt.length!==undefined && typeof self.elt.item == "function"){
         for(var i=0,len=self.elt.length;i<len;i++){
-            if(self.elt.item(i)===key.elt){return true}
+            if(self.elt.item(i)===key){return true}
         }
     }
     return false
@@ -1051,6 +1052,10 @@ DOMNodeDict.remove = function(self,child){
     // If child is not inside self, throw ValueError
     var elt=self.elt,flag=false,ch_elt=child.elt
     if(self.elt.nodeType==9){elt=self.elt.body}
+    if(typeof self.elt.remove=="function"){
+        self.elt.remove(child)
+        return None
+    }
 
     while(ch_elt.parentElement){
         if(ch_elt.parentElement===elt){
