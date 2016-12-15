@@ -6,7 +6,7 @@ var $ObjectDict = _b_.object.$dict
 
 function $err(op,other){
     var msg = "unsupported operand type(s) for "+op
-    msg += ": 'float' and '"+$.get_class(other).__name__+"'"
+    msg += ": 'float' and '"+$B.get_class(other).__name__+"'"
     throw _b_.TypeError(msg)
 }
 
