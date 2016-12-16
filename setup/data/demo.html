@@ -47,6 +47,9 @@ button{
     border-radius: 3px;
     font-size: 1.2em;
 }
+button.btn-ls{
+    font-size: 1em;
+}
 
 div.example{
     margin-top: 2em;
@@ -102,7 +105,7 @@ code.file{
 
 <body onload="brython(1)">
 
-<h1 style="text-align: center">Introduction to Brython</h1>
+<a class="menu" href="demo.html"><h1 style="text-align: center">Introduction to Brython</h1></a>
 
 <div style="display:table">
   <div style="display: table-row">
@@ -111,10 +114,12 @@ code.file{
       </ul>
     </div>
     <div style="display:table-cell; width:65%;" id="panel">
-    <p>This page shows a few examples of how you can interact with a web page using Python as the scripting language : create new elements, access and modify existing elements, create graphics, animations, send Ajax requests, etc.
-    <p>The scripts use objects - elements shown in the page, styles applied to these elements, events, etc. - that are described in the Document Object Model (DOM), defined by the W3C. The reference used in this page is the the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model" target="_blank">Mozilla Developer Network</a> (MDN) documentation.
-    <p>Although the DOM is by nature language-independant, most examples in the MDN documentation are written with Javascript, not (yet&nbsp;;-) in Python. The translation is usually straightforward, since Brython supports all the DOM types and their attributes and methods.
-    <p>In some cases, Brython adds a more Pythonic syntax : you will discover them by browsing the examples.
+      <div id="home">
+        <p>This page shows a few examples of how you can interact with a web page using Python as the scripting language : create new elements, access and modify existing elements, create graphics, animations, send Ajax requests, etc.
+        <p>The scripts use objects - elements shown in the page, styles applied to these elements, events, etc. - that are described in the Document Object Model (DOM), defined by the W3C. The reference used in this page is the the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model" target="_blank">Mozilla Developer Network</a> (MDN) documentation.
+        <p>Although the DOM is by nature language-independant, most examples in the MDN documentation are written with Javascript, not (yet&nbsp;;-) in Python. The translation is usually straightforward, since Brython supports all the DOM types and their attributes and methods.
+        <p>In some cases, Brython adds a more Pythonic syntax : you will discover them by browsing the examples.
+      </div>
     </div>
   </div>
 </div>
@@ -663,6 +668,83 @@ The function takes one argument, an object representing the event.
     </span>
 </div>
 
+<div class="example" id="ex_ls">
+    <button id="button_ls">use local storage</button>
+    <p><div id="zone_ls" style="padding-left:1em;"></div>
+    
+    <script type="text/python"  id="script_ls">
+    from browser import document, window
+    from browser.html import TABLE, TR, TD, INPUT, BUTTON
+    
+    zone = document["zone_ls"]
+
+    """Test if the browser supports local storage"""
+    try:
+        storage = window.localStorage
+        storage.setItem("x", "x")
+        storage.removeItem("x")
+    except:
+        storage = None
+
+    def action(ev):
+        """User clicked on "add" or "remove" button"""
+        button = ev.target
+        row = button.closest("TR")
+        if button.text == "remove":
+            key = row.get(selector="TD")[0].text
+            storage.removeItem(key)
+        else:
+            key, value = [x.value for x in row.get(selector="INPUT")]
+            if key.strip():
+                storage.setItem(key, value)
+        # refresh table
+        show()
+
+    def update_value(ev):
+        """If a value field has been modified, update storage"""
+        row = ev.target.closest("TR")
+        key = row.get(selector="TD")[0].text
+        value = row.get(selector="INPUT")[0].value
+        storage.setItem(key, value)
+        
+    def show(*args):
+        """Shows the data stored locally, add buttons to add / remove items"""
+        zone.clear()
+        
+        if storage is None:
+            zone <= "No local storage for this browser"
+            return
+
+        table = TABLE()
+        for i in range(storage.length):
+            key = storage.key(i)
+            value = storage.getItem(key)
+            value_field = INPUT(value=value)
+            value_field.bind("change", update_value)
+            table <= TR(TD(key) + TD(value_field)+
+                TD(BUTTON("remove", Class="btn-ls")))
+
+        table <= TR(TD(INPUT()) + TD(INPUT()) +
+            TD(BUTTON("add", Class="btn-ls")))
+
+        zone <= table
+        
+        for button in document["zone_ls"].get(selector="button"):
+            button.bind("click", action)
+
+    document["button_ls"].bind("click", show)
+    </script>
+
+    <pre class="python"></pre>
+
+    <span class="comment">
+    The <a href="https://developer.mozilla.org/en-US/docs/Web/API/Storage" target="_blank">Storage</a> API allows local storage of key/value pairs.
+    <p>Notice the use of method <code>elt.closest(tagName)</code> to get the first DOM element with the specified tag name above <code>elt</code>.
+    <p>The event "change" on the INPUT field is triggered when the field loses focus, if the value has been modified.
+    </span>
+
+</div>
+
 <div class="example" id="ex10">
     <button id="button10">send an Ajax request</button>
     <p><div id="zone10" class="zone" style="padding-left:1em;"></div>
@@ -778,7 +860,26 @@ The function takes one argument, an object representing the event.
 <script type="text/python">
 from browser import document, html
 
-current = None
+# create first menu entry
+
+def home(ev):
+    global current
+    if current is not None:
+        document[current].style.display = "none"
+        document <= document[current]
+        document["a"+current].style.fontWeight = "normal"
+    example_id = "home"
+    ev.target.style.fontWeight = "bold"
+    document["panel"].clear()
+    document["panel"] <= document[example_id]
+    document[example_id].style.display="block"
+    current = example_id
+
+anchor = html.A("Home", Class="menu", href="#", id="ahome")
+anchor.bind("click", home)
+
+document["menu"] <= html.LI(anchor)
+current = "home"
 
 def load_example(ev):
     global current
@@ -817,7 +918,7 @@ for example in document.get(selector=".example"):
 
 </script>
 <script src="brython.js"></script>
-<script src="brython_modules.js"></script>
+<script src="brython_stdlib.js"></script>
 
 </body>
 
