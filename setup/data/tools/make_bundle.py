@@ -8,13 +8,15 @@ import fnmatch
 
 from . import python_minifier
 
-def bundle(folder):
-    # check if there is an ".bundle-ignore" file
-    ignore_path = os.path.join(folder, '.bundle-ignore')
-    ignore = []
-    if os.path.exists(ignore_path):
-        ignore = [line.strip() for line in
-            open(ignore_path, encoding='utf-8').readlines()]
+def bundle(folder, ignore=None):
+    if ignore is None:
+        # check if there is an ".bundle-ignore" file
+        ignore = []
+        ignore_path = os.path.join(folder, '.bundle-ignore')
+        if os.path.exists(ignore_path):
+            ignore = [line.strip() for line in
+                open(ignore_path, encoding='utf-8').readlines()]
+
     paths = []
     res = {}
     for dirpath, dirnames, filenames in os.walk(folder):
