@@ -17,7 +17,7 @@ body {
   
 }
 
-a.navig:link,a:link,a:hover {
+a.navig:link,a:link,a:hover,a.navig:visited {
   color:#1767B7;
   text-decoration:none
 }

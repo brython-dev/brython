@@ -23,6 +23,8 @@ In both cases the directory has the following files :
 - __demo.html__ : a page with a few examples of how to use Brython for
   client-side development
 
+__brython.js__ includes very often used modules : `browser, browser.html, javascript`.
+
 If your application uses modules of the standard distribution, you need to 
 include __brython_stdlib.js__ besides __brython.js__:
 

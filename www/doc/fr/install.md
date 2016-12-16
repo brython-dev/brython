@@ -23,6 +23,9 @@ Dans les deux cas vous disposez des fichiers suivants :
   standard supportés par Brython
 - __demo.html__ : une page qui donne quelques exemples d'utilisation de Brython
 
+__brython.js__ contient quelques modules très utilisés : `browser, browser.html, `
+`javascript`.
+
 Si votre application utilise des modules de la distribution standard, il faut
 inclure __brython_stdlib.js__ en plus de __brython.js__:
 
