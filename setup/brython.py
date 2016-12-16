@@ -8,16 +8,19 @@ import json
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--install', help='Install Brython locally',
+parser.add_argument('--install', help='Install Brython in an empty directory',
+    action="store_true")
+parser.add_argument('--modules', 
+    help='Create brython_modules.js with all the modules used by the application',
     action="store_true")
 parser.add_argument('--reset', help='Reset brython_modules.js to stdlib',
     action="store_true")
-parser.add_argument('--update', help='Update brython_modules.js',
+parser.add_argument('--update', help='Update Brython scripts',
     action="store_true")
 args = parser.parse_args()
 
 if args.install:
-    print('Installing Brython')
+    print('Installing Brython in an empty directory')
     
     src_path = os.path.join(os.path.dirname(__file__), 'data')
 
@@ -26,23 +29,29 @@ if args.install:
         import sys
         sys.exit()
     
-    for path in ('.bundle-ignore', 'index.html', 'brython.js',
-        'brython_stdlib.js', 'brython_modules.js'):
-            shutil.copyfile(os.path.join(src_path, path),
-                path)
-    
-if args.reset:
-    print('Reset brython_modules.js to standard distribution')
-    shutil.copyfile(os.path.join(os.getcwd(), 'dist', 'brython_stdlib.js'),
-        os.path.join(os.getcwd(), 'dist', 'brython_modules.js'))
+    for path in 'demo.html', 'brython.js', 'brython_stdlib.js':
+        shutil.copyfile(os.path.join(src_path, path), path)
 
 if args.update:
-    print('Update Brython modules')
+    print('Update Brython scripts')
+
+    src_path = os.path.join(os.path.dirname(__file__), 'data')
+
+    for path in 'demo.html', 'brython.js', 'brython_stdlib.js':
+        shutil.copyfile(os.path.join(src_path, path), path)
+        
+if args.reset:
+    print('Reset brython_modules.js to standard distribution')
+    shutil.copyfile(os.path.join(os.getcwd(), 'brython_stdlib.js'),
+        os.path.join(os.getcwd(), 'brython_modules.js'))
+
+if args.modules:
+    print('Create brython_modules.js with all the modules used by the application')
     from data.tools import make_bundle
     
     folder = os.getcwd()
     
-    more_modules = make_bundle.bundle(folder)
+    more_modules = make_bundle.bundle(folder, ignore=["*.js"])
     
     print('add modules', list(more_modules))
     
