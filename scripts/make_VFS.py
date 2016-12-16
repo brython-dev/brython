@@ -154,7 +154,7 @@ def process(filename, exclude_dirs=['unittest','test','site-packages']):
     print('%s files, %s errors' % (nb, nb_err))
     with open(filename, "w") as file_to_write_VFS:
       file_to_write_VFS.write('__BRYTHON__.use_VFS = true;\n')
-      file_to_write_VFS.write('__BRYTHON__.VFS=%s;\n\n' % json.dumps(_VFS))
+      file_to_write_VFS.write('__BRYTHON__.VFS=%s\n\n' % json.dumps(_VFS))
 
 
 ###############################################################################
