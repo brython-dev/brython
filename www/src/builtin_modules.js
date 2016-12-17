@@ -80,16 +80,16 @@
         
             dict.__init__ = function(){
                 var $ns=$B.args('pow',1,{self:null},['self'],arguments,
-                    {},'args','kw')
-                var self = $ns['self']
-                var args = $ns['args']
+                    {},'args','kw'),
+                    self = $ns['self'],
+                    args = $ns['args']
                 if(args.length==1){
                     var first=args[0]
                     if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
                         // set "first" as HTML content (not text)
                         self.elt.innerHTML = _b_.str(first)
                     } else if(first.__class__===$TagSumDict){
-                        for(var i=0, _len_i = first.children.length; i < _len_i;i++){
+                        for(var i=0, len = first.children.length; i < len;i++){
                             self.elt.appendChild(first.children[i].elt)
                         }
                     } else {
@@ -112,10 +112,10 @@
         
                 // attributes
                 var items = _b_.list(_b_.dict.$dict.items($ns['kw']))
-                for(var i=0, _len_i = items.length; i < _len_i;i++){
+                for(var i=0, len = items.length; i < len;i++){
                     // keyword arguments
-                    var arg = items[i][0]
-                    var value = items[i][1]
+                    var arg = items[i][0],
+                        value = items[i][1]
                     if(arg.toLowerCase().substr(0,2)==="on"){ 
                         // Event binding passed as argument "onclick", "onfocus"...
                         // Better use method bind of DOMNode objects
@@ -138,7 +138,7 @@
                 }
             }
         
-            dict.__mro__ = [$B.DOMNodeDict,$B.builtins.object.$dict]
+            dict.__mro__ = [$B.DOMNodeDict, $B.builtins.object.$dict]
         
             dict.__new__ = function(cls){
                 // __new__ must be defined explicitely : it returns an instance of
@@ -165,7 +165,7 @@
                 res.__class__ = dicts[tagName]
                 // apply __init__
                 var args = [res].concat(Array.prototype.slice.call(arguments))
-                dicts[tagName].__init__.apply(null,args)
+                dicts[tagName].__init__.apply(null, args)
                 return res
             }
             factory.__class__=$B.$factory
@@ -198,9 +198,9 @@
                     'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY']
         
         // create classes
-        var obj = new Object()
-        var dicts = {}
-        for(var i=0, _len_i = $tags.length; i < _len_i;i++){
+        var obj = {},
+            dicts = {}
+        for(var i=0, len = $tags.length; i < len;i++){
             var tag = $tags[i]
             dicts[tag] = makeTagDict(tag)
             obj[tag] = makeFactory(tag)
@@ -222,11 +222,13 @@
             eval(content)
             if(names!==undefined){
                 if(!Array.isArray(names)){
-                    throw $B.builtins.TypeError("argument 'names' should be a list, not '"+$B.get_class(names).__name__)
+                    throw $B.builtins.TypeError("argument 'names' should be a"+
+                        " list, not '"+$B.get_class(names).__name__)
                 }else{
                     for(var i=0;i<names.length;i++){
                         try{window[names[i]]=eval(names[i])}
-                        catch(err){throw $B.builtins.NameError("name '"+names[i]+"' not found in script "+script_url)}
+                        catch(err){throw $B.builtins.NameError("name '"+
+                            names[i]+"' not found in script "+script_url)}
                     }
                 }
             }
@@ -341,7 +343,6 @@
         $B.builtins.__builtins__[attr] = $B.builtins[attr]
     }
     $B.builtins.__builtins__.__setattr__ = function(attr, value){
-        console.log('set attr of builtins', attr)
         $B.builtins[attr] = value
     }
     $B.bound.__builtins__.__builtins__ = $B.builtins.__builtins__

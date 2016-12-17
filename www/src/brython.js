@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,0,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-12-15 12:29:01.395770"
+__BRYTHON__.compiled_date="2016-12-17 09:30:58.001675"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -10823,19 +10823,16 @@ modules['browser.html']=(function($B){var _b_=$B.builtins
 var $TagSumDict=$B.$TagSum.$dict
 function makeTagDict(tagName){
 var dict={__class__:$B.$type,__name__:tagName}
-dict.__init__=function(){var $ns=$B.args('pow',1,{self:null},['self'],arguments,{},'args','kw')
-var self=$ns['self']
-var args=$ns['args']
+dict.__init__=function(){var $ns=$B.args('pow',1,{self:null},['self'],arguments,{},'args','kw'),self=$ns['self'],args=$ns['args']
 if(args.length==1){var first=args[0]
 if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
-self.elt.innerHTML=_b_.str(first)}else if(first.__class__===$TagSumDict){for(var i=0,_len_i=first.children.length;i < _len_i;i++){self.elt.appendChild(first.children[i].elt)}}else{
+self.elt.innerHTML=_b_.str(first)}else if(first.__class__===$TagSumDict){for(var i=0,len=first.children.length;i < len;i++){self.elt.appendChild(first.children[i].elt)}}else{
 if(_b_.isinstance(first,$B.DOMNode)){self.elt.appendChild(first.elt)}else{try{
 var items=_b_.list(first)
 for(var i=0;i<items.length;i++){$B.DOMNode.$dict.__le__(self,items[i])}}catch(err){throw _b_.ValueError('wrong element '+first)}}}}
 var items=_b_.list(_b_.dict.$dict.items($ns['kw']))
-for(var i=0,_len_i=items.length;i < _len_i;i++){
-var arg=items[i][0]
-var value=items[i][1]
+for(var i=0,len=items.length;i < len;i++){
+var arg=items[i][0],value=items[i][1]
 if(arg.toLowerCase().substr(0,2)==="on"){
 var js='$B.DOMNodeDict.bind(self,"'
 js +=arg.toLowerCase().substr(2)
@@ -10860,9 +10857,8 @@ return factory}
 var $tags=['A','ABBR','ACRONYM','ADDRESS','APPLET','AREA','B','BASE','BASEFONT','BDO','BIG','BLOCKQUOTE','BODY','BR','BUTTON','CAPTION','CENTER','CITE','CODE','COL','COLGROUP','DD','DEL','DFN','DIR','DIV','DL','DT','EM','FIELDSET','FONT','FORM','FRAME','FRAMESET','H1','H2','H3','H4','H5','H6','HEAD','HR','HTML','I','IFRAME','IMG','INPUT','INS','ISINDEX','KBD','LABEL','LEGEND','LI','LINK','MAP','MENU','META','NOFRAMES','NOSCRIPT','OBJECT','OL','OPTGROUP','OPTION','P','PARAM','PRE','Q','S','SAMP','SCRIPT','SELECT','SMALL','SPAN','STRIKE','STRONG','STYLE','SUB','SUP','SVG','TABLE','TBODY','TD','TEXTAREA','TFOOT','TH','THEAD','TITLE','TR','TT','U','UL','VAR',
 'ARTICLE','ASIDE','AUDIO','BDI','CANVAS','COMMAND','DATA','DATALIST','EMBED','FIGCAPTION','FIGURE','FOOTER','HEADER','KEYGEN','MAIN','MARK','MATH','METER','NAV','OUTPUT','PROGRESS','RB','RP','RT','RTC','RUBY','SECTION','SOURCE','TEMPLATE','TIME','TRACK','VIDEO','WBR',
 'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY']
-var obj=new Object()
-var dicts={}
-for(var i=0,_len_i=$tags.length;i < _len_i;i++){var tag=$tags[i]
+var obj={},dicts={}
+for(var i=0,len=$tags.length;i < len;i++){var tag=$tags[i]
 dicts[tag]=makeTagDict(tag)
 obj[tag]=makeFactory(tag)
 dicts[tag].$factory=obj[tag]}
@@ -10872,8 +10868,10 @@ modules['javascript']={__file__:$B.brython_path+'/libs/javascript.js',JSObject: 
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()
 eval(content)
-if(names!==undefined){if(!Array.isArray(names)){throw $B.builtins.TypeError("argument 'names' should be a list, not '"+$B.get_class(names).__name__)}else{for(var i=0;i<names.length;i++){try{window[names[i]]=eval(names[i])}
-catch(err){throw $B.builtins.NameError("name '"+names[i]+"' not found in script "+script_url)}}}}},py2js: function(src,module_name){if($B.is_none(module_name)){module_name='__main__'+$B.UUID()}
+if(names!==undefined){if(!Array.isArray(names)){throw $B.builtins.TypeError("argument 'names' should be a"+
+" list, not '"+$B.get_class(names).__name__)}else{for(var i=0;i<names.length;i++){try{window[names[i]]=eval(names[i])}
+catch(err){throw $B.builtins.NameError("name '"+
+names[i]+"' not found in script "+script_url)}}}}},py2js: function(src,module_name){if($B.is_none(module_name)){module_name='__main__'+$B.UUID()}
 return $B.py2js(src,module_name,module_name,'__builtins__').to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)}}
 var _b_=$B.builtins
 modules['_sys']={__file__:$B.brython_path+'/libs/_sys.js',
@@ -10901,8 +10899,7 @@ for(var attr in modules){load(attr,modules[attr])}
 modules['browser'].html=modules['browser.html']
 $B.builtins.__builtins__=$B.$ModuleDict.$factory('__builtins__','Python builtins')
 for(var attr in $B.builtins){$B.builtins.__builtins__[attr]=$B.builtins[attr]}
-$B.builtins.__builtins__.__setattr__=function(attr,value){console.log('set attr of builtins',attr)
-$B.builtins[attr]=value}
+$B.builtins.__builtins__.__setattr__=function(attr,value){$B.builtins[attr]=value}
 $B.bound.__builtins__.__builtins__=$B.builtins.__builtins__})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 function import_hooks(mod_name,_path,module,blocking){
