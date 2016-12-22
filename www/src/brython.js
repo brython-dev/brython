@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,0,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-12-17 09:30:58.001675"
+__BRYTHON__.compiled_date="2016-12-22 08:59:38.861241"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -8752,8 +8752,7 @@ s=val.toString()}
 if(s[0]==='-'){return '-' + get_char_array(precision - s.length + 1,'0')+ s.slice(1)}
 return get_char_array(precision - s.length,'0')+ s}
 var format_float_precision=function(val,upper,flags,modifier){var precision=flags.precision
-if(isFinite(val)){val=modifier(val,precision,flags,upper)
-return val}
+if(isFinite(val)){return modifier(val,precision,flags,upper)}
 if(val===Infinity){val='inf'}else if(val===-Infinity){val='-inf'}else{
 val='nan'}
 if(upper){return val.toUpperCase()}
@@ -8801,8 +8800,8 @@ if(!flags.alternate){var trl=trailing_zeros.exec(val)
 if(trl){val=trl[1].replace(trailing_dot,'')+ trl[3]}}else{
 if(flags.precision <=1){val=val[0]+ '.' + val.substring(1)}}
 return format_padding(val,flags)}
-flags.precision +=numzeros
-return format_padding(format_sign(val,flags)+ format_float_precision(val,upper,flags,function(val,precision){val=val.toFixed(min(precision,v_len - dot_idx)+ numzeros)}),flags)}
+flags.precision=(flags.precision ||0)+ numzeros
+return format_padding(format_sign(val,flags)+ format_float_precision(val,upper,flags,function(val,precision){return val.toFixed(min(precision,v_len - dot_idx)+ numzeros)}),flags)}
 if(dot_idx > flags.precision){val=format_sign(val,flags)+ format_float_precision(val,upper,flags,_floating_g_exp_helper)
 if(!flags.alternate){var trl=trailing_zeros.exec(val)
 if(trl){val=trl[1].replace(trailing_dot,'')+ trl[3]}}else{

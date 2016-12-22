@@ -248,8 +248,7 @@ var format_float_precision = function(val, upper, flags, modifier) {
     var precision = flags.precision
     // val is a float
     if (isFinite(val)) {
-        val = modifier(val, precision, flags, upper)
-        return val
+        return modifier(val, precision, flags, upper)
     }
     if (val === Infinity) {
         val = 'inf'
@@ -374,10 +373,10 @@ var floating_point_format = function(val, upper, flags) {
             }
             return format_padding(val, flags)
         }
-        flags.precision += numzeros
+        flags.precision = (flags.precision || 0) + numzeros
         return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags, 
             function(val, precision) {
-                val = val.toFixed(min(precision, v_len - dot_idx) + numzeros)
+                return val.toFixed(min(precision, v_len - dot_idx) + numzeros)
             }), flags)
     }
     
