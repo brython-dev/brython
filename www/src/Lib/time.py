@@ -369,7 +369,7 @@ def strptime(string, _format):
 _clock_msg = """Browser cannot access CPU. See '%s'"""
 def _clock_xx(url):
     raise NotImplementedError(_clock_msg % url)
-clock = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.clock")
+clock = time #lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.clock")
 clock_getres = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.clock_getres")
 clock_gettime = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.clock_gettime")
 clock_settime = lambda: _clock_xx("https://docs.python.org/3/library/time.html#time.clock_settime")
