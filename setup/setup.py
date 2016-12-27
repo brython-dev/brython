@@ -10,12 +10,17 @@ if not os.path.exists(os.path.join(os.getcwd(), 'data',
         import sys
         sys.exit()
 
+with open('README.rst', encoding='utf-8') as fobj:
+    LONG_DESCRIPTION = fobj.read()
+
 setup(
     name='brython',
 
-    version='0.0.5',
+    version='0.0.7',
 
     description='Brython is an implementation of Python 3 running in the browser',
+    
+    long_description = LONG_DESCRIPTION,
 
     # The project's main homepage.
     url='http://brython.info',
