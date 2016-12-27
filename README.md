@@ -59,11 +59,11 @@ Zero install !
 --------------
 The most simple way to get started, without anything to install, is to use the 
 distribution available online through [rawgit](https://rawgit.com/). You can 
-either choose the latest stable release, for instance for release 3.2.2 :
+either choose the latest stable release, for instance for release 3.2.9 :
 
 ```xml
 <script type="text/javascript"
-    src="https://cdn.rawgit.com/brython-dev/brython/3.2.2/www/src/brython.js">
+    src="https://cdn.rawgit.com/brython-dev/brython/3.2.9/www/src/brython.js">
 </script>
 ```
 
@@ -75,11 +75,15 @@ or the current development version :
 </script>
 ```
 
-The previous code will allow you to use raw python code but imports will fail as they are implemented using ajax calls and it will not work using http://rawgit.com/. If you want to test your projects using a standalone javascript file with the [available stdlib](https://github.com/brython-dev/brython/tree/master/www/src/Lib) included (so import would work) you should use:
+The previous code will allow you to use raw python code, but if you import
+modules from the standard library this will be slow as they are implemented 
+using ajax calls. If you want to test your projects using a standalone 
+javascript file with the [available stdlib](https://github.com/brython-dev/brython/tree/master/www/src/Lib) 
+included you should use:
 
 ```xml
 <script type="text/javascript"
-    src="https://cdn.rawgit.com/brython-dev/brython/3.2.2/www/src/brython_dist.js">
+    src="https://cdn.rawgit.com/brython-dev/brython/3.2.9/www/src/brython_dist.js">
 </script>
 ```
 
@@ -93,28 +97,28 @@ or the current development version :
 
 Local install
 -------------
-You can also install the development environment locally, either by cloning the
-project :
+To install Brython locally, if you have a CPython distribution with `pip` :
 
 ```bash
-git clone https://github.com/brython-dev/brython.git
-cd brython
-python server.py
+pip install brython
 ```
 
-or by loading the latest version of the Brython site mirror from the 
+then create a new directory and run
+
+```bash
+python -m brython --install
+```
+
+or by loading the latest version of the Brython zip file from the 
 [releases page](https://github.com/brython-dev/brython/releases).
 
-In both cases, start the built-in web server : `python server.py`. This will 
-point your browser to [http://localhost:8000/site](http://localhost:8000/site):
-you access a clone of the [Brython site](http://brython.info "Brython Homepage")
-with an online editor, a console similar to the CPython interpreter,
-a gallery with many examples and a comprehensive documentation.
+In both cases, the distribution includes __brython.js__ (the core Brython engine)
+and __brython_stdlib.js__ (a bundle of all the files in the standard distribution).
 
-Once you are familiar with the examples, create a new folder "app" at the same
-level as "site" and create a file "index.html" with the HTML example above.
-Point the browser to [http://localhost:8000/app](http://localhost:8000/app) to 
-see the result.
+It also includes the page __index.html__ that shows a few examples of how you 
+can interact with a web page using Python as the scripting language : create 
+new elements, access and modify existing elements, create graphics, animations, 
+send Ajax requests, etc.
 
 Test Brython online
 ===================
