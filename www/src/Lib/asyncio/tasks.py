@@ -268,6 +268,7 @@ class Task(futures.Future):
             self = None  # Needed to break cycles when an exception occurs.
             raise
         else:
+            result = ensure_future(result, loop=self._loop)
             if isinstance(result, futures.Future):
                 # Yielded Future must come from Future.__iter__().
                 #
