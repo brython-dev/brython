@@ -36,10 +36,10 @@ BASE_DIR = up(os.path.abspath(__file__), 1)
 def get_git_hash():
     if 'TRAVIS_COMMIT' in os.environ:
         # If we are running in TravisCI, get the commit id from the environment
-        return os.environ['TRAVIS_COMMIT']
+        return str(os.environ['TRAVIS_COMMIT'], encoding='ascii')
     else:
         # Otherwise use the output of `git rev-parse`
-        return subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
+        return str(subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip(), encoding='ascii')
 
 
 def find_benchmarks(restrict_to='', skip=''):
@@ -178,6 +178,7 @@ def run_benchmarks(restrict_to='', skip='', only=None, n_runs=5):
             brython_results['info'].update({
                 'runid': runid,
                 'githash': githash,
+                'rundate': rundate,
                 'br_runtime': br_stop-br_start,
                 'cp_runtime': -1,
             })
@@ -205,6 +206,7 @@ def run_benchmarks(restrict_to='', skip='', only=None, n_runs=5):
         cpython_results['info'].update({
             'runid': runid,
             'githash': githash,
+            'rundate': rundate,
             'br_runtime': -1,
             'cp_runtime': cp_stop-cp_start,
         })
@@ -226,7 +228,7 @@ def run_benchmarks(restrict_to='', skip='', only=None, n_runs=5):
 
 
 INFO_COLS = ['runid', 'githash', 'rundate', 'runtime', 'cp_runtime', 'br_runtime',
-             'setuptime', 'brython_startup', 'platform', 'version', 'pystones', 'octane']
+             'setup_time', 'brython_startup', 'platform', 'version', 'pystones', 'octane']
 DATA_COLS = ['avg', 'dev', 'corr_dev', 'min', 'max', 'runs', 'messages']
 
 
@@ -395,7 +397,7 @@ def convert(runid, br, cp, runtime, format):
         })
     else:
         if br is not None:
-            githash = br['githash']
+            githash = br['info']['githash']
             octane = round(float(br['info']['octane'])/1000, 4)
             runtime = round(br['info']['runtime'], 4)
             runtimerel = "("+str(round(runtime/octane, 4))+" relative)"
@@ -424,7 +426,7 @@ def convert(runid, br, cp, runtime, format):
         else:
             BR = ""
         if cp is not None:
-            githash = br['githash']
+            githash = cp['info']['githash']
             if br is not None:
                 octane = round(float(br['info']['octane'])/1000, 4)
             else:
