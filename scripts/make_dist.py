@@ -144,8 +144,7 @@ def run():
     dist3 = zipfile.ZipFile(dest_path + '.zip', mode='w',
                             compression=zipfile.ZIP_DEFLATED)
     
-    paths = ['index.html', 'brython.js', 'brython_stdlib.js', 
-        'brython_modules.js']
+    paths = ['demo.html', 'brython.js', 'brython_stdlib.js']
     
     for arc, wfunc in (dist1, dist1.add), (dist2, dist2.add), (dist3, dist3.write):
         for path in paths:
