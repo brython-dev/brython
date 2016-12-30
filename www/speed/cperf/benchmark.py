@@ -1,17 +1,22 @@
+#!/usr/bin/env python3
+
+from time import time
+setup_time = 0
+start_setup = time()
+
 import asyncio
+import io
 import json
 import logging
 import math
 import os
 import sys
 
-from time import time
-
 logger = logging.getLogger(__name__)
 
 if sys.platform == 'brython':
     from asyncio.timer import ImmediateFuture
-    from browser import ajax, html, window, document as doc
+    from browser import ajax, html, window, console, document as doc
     from pystone import pystones
 else:
 
@@ -124,34 +129,47 @@ class Reporter:
             req.send({'log': json.dumps(args)})
 
     def post_results(self):
+        self.log("Posting results")
         bench_time, stones = pystones()
         info = {
             'pystones': stones,
             'platform': sys.platform,
             'version': sys.version,
-            'octane': -1
+            'octane': -1,
+            'setup_time': round(setup_time, 4),
+            'brython_startup': -1,
         }
         data = {
             'info': info,
             'results': self.results
         }
         if sys.platform == 'brython':
+            if window.octane_score == -1:
+                window.on_octane_finished = self.post_results
+                return None
             info['octane'] = window.octane_score
+            info['startup'] = window.brython_startup
             req = ajax.ajax()
             req.open('POST', '/results', True)
             req.set_header('content-type', 'application/x-www-form-urlencoded')
             req.send({'results': json.dumps(data), 'format': 'json'})
         else:
             print(json.dumps(data))
+            exit(0)
 
 report = Reporter()
 
 
 def single_run(code):
-    start = time()
-    exec(code)
-    run_time = time()-start
-    return run_time
+    try:
+        old_stdout = sys.stdout
+        sys.stdout = buf = io.StringIO()
+        start = time()
+        exec(code, {}, {})
+        run_time = time()-start
+        return run_time
+    finally:
+        sys.stdout = old_stdout
 
 
 @asyncio.coroutine
@@ -198,20 +216,27 @@ def run_benchmark(file_name, n_runs):
 
 @asyncio.coroutine
 def run_all(n_runs):
-    for b_path in benchmarks:
-        report.start_benchmark(b_path)
-        try:
-            b_res = yield from run_benchmark(b_path, n_runs)
-        except Exception as ex:
-            logging.warn(str(ex))
-            b_res = {}
-        report.finish_benchmark(b_res)
-    report.post_results()
+    try:
+        for b_path in benchmarks:
+            report.start_benchmark(b_path)
+            try:
+                b_res = yield from run_benchmark(b_path, n_runs)
+            except Exception as ex:
+                logging.warn(str(ex))
+                b_res = {}
+            report.finish_benchmark(b_res)
+        report.post_results()
+    except Exception as ex:
+        logging.warn(str(ex))
+        report.log(ex)
 
 
 def run_suite():
     event_loop = asyncio.get_event_loop()
     asyncio.ensure_future(run_all(N_RUNS))
     event_loop.run_forever()
+
+stop_setup = time()
+setup_time = stop_setup-start_setup
 
 run_suite()

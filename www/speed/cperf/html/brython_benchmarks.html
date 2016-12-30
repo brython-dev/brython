@@ -4,26 +4,26 @@
 <meta charset="utf-8">
 
 <!-- OCTANE -->
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/base.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/richards.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/deltablue.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/crypto.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/raytrace.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/earley-boyer.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/regexp.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/splay.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/navier-stokes.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/pdfjs.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/mandreel.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/gbemu-part1.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/gbemu-part2.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/code-load.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/box2d.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/zlib.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/zlib-data.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/typescript.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/typescript-input.js"></script>
-<script type="text/javascript" src="/static/www/speed/cperf/static/Octane/typescript-compiler.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/base.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/richards.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/deltablue.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/crypto.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/raytrace.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/earley-boyer.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/regexp.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/splay.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/navier-stokes.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/pdfjs.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/mandreel.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/gbemu-part1.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/gbemu-part2.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/code-load.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/box2d.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/zlib.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/zlib-data.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/typescript.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/typescript-input.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/typescript-compiler.js"></script>
 
 <script type="text/javascript">
   var completed = 0;
@@ -33,6 +33,7 @@
   var skipBenchmarks = typeof skipBenchmarks === "undefined" ? [] : skipBenchmarks;
   var results = [];
   var octane_score = -1;
+  var brython_startup = -1;
 
   function ShowBox(name) {
     var box = document.getElementById("current_test");
@@ -66,9 +67,9 @@
     document.getElementById("running").style.display='none';
     var score_elt = document.getElementById("octane-score");
     if (success) {
-      score_elt.innerHTML = score;
+      score_elt.innerHTML = "<b>"+score+"</b>"
     } else {
-      score_elt.innerHTML = score + "(incomplete)";
+      score_elt.innerHTML = "<b>"+score+"</b> (incomplete)";
     }
     document.getElementById("done").style.display='block';
 
@@ -78,6 +79,7 @@
       result: score
     });
     octane_score = score;
+    if ( on_octane_finished ) on_octane_finished()
   }
 
   function Run() {
@@ -93,7 +95,10 @@
 
   function Load() {
     if (window.document.URL.indexOf('skip_zlib=1') >= 0) skipBenchmarks.push("zlib");
+    br_start = new Date()
     brython({cache:'none', static_stdlib_import:true})
+    br_stop = new Date()
+    brython_startup = br_stop-br_start
     Run();
   }
 
@@ -156,7 +161,7 @@ body {
     width: 50%;
 }
 </style>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="/static/www/speed/cperf/html/bootstrap.min.css">
 
 
 </head>
