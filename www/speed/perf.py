@@ -13,15 +13,10 @@ import sys
 import time
 
 from cperf.bottle import Bottle, static_file, request
-import cperf.ply
+import cperf.ply as ply
 
 # List of files in benchmarks directory which are not benchmarks
 IGNORE_LIST = ['header.py', 'bm_ai.py', 'pystone.py', 'pystone_proc8.py', 'util.py', 'float.py']
-
-# Default plot.ly credentials
-PLOTLY_USERNAME = ""
-PLOTLY_API_KEY = ""
-
 
 # Setup Logging
 FORMAT = '%(asctime)-15s %(message)s'
@@ -237,13 +232,14 @@ DATA_COLS = ['avg', 'dev', 'corr_dev', 'min', 'max', 'runs', 'messages']
 
 def res_to_row(grids, info, result):
     name = result['name']
-    row = {info[c] for c in INFO_COLS}.update({result[c] for c in DATA_COLS})
+    row = {c: info[c] for c in INFO_COLS}
+    row.update({c: result[c] for c in DATA_COLS})
     if name not in grids:
         grids[name] = []
     grids[name].append(row)
 
 
-def post_2_plotly(brython_results, cpython_results):
+def post_2_plotly(user, api_key, brython_results, cpython_results):
     grids = {}
     if brython_results is not None:
         for bres in brython_results['results']:
@@ -251,7 +247,7 @@ def post_2_plotly(brython_results, cpython_results):
     if cpython_results is not None:
         for bres in cpython_results['results']:
             res_to_row(grids, cpython_results['info'], bres)
-    client = ply.Client(PLOTLY_USERNAME, PLOTLY_API_KEY)
+    client = ply.Client(user, api_key)
     for grid, rows in grids.items():
         client.create_or_append(grid, INFO_COLS+DATA_COLS, rows)
 
@@ -480,8 +476,8 @@ def parse_args():
     parser.add_argument('--runs', type=int,     help='run each benchmark given number of times', default=5)
 
     parser.add_argument('--post2plotly',        help='post results to plot.ly',                 action='store_true')
-    parser.add_argument('--plotly_username',    help='plot.ly username',                        default=PLOTLY_USERNAME)
-    parser.add_argument('--plotly_api_key',     help='plot.ly api_key',                         default=PLOTLY_API_KEY)
+    parser.add_argument('--plotly_username',    help='plot.ly username',                        default="")
+    parser.add_argument('--plotly_api_key',     help='plot.ly api_key',                         default="")
 
     parser.add_argument('--save2sqlite',        help='save results to a sqlite database',       action='store_true')
     parser.add_argument('--dbfile',             help='the sqlite database file to use',         default='benchmark_results.db')
@@ -503,9 +499,7 @@ def main():
     elif args.command == 'run':
         runid, br, cp, runtime = run_benchmarks(args.benchmarks, args.skip, args.only, args.runs)
         if args.post2plotly:
-            PLOTLY_USERNAME = args.plotly_username
-            PLOTLY_API_KEY = args.plotly_api_key
-            post_2_plotly(br, cp)
+            post_2_plotly(args.plotly_username, args.plotly_api_key, br, cp)
         if args.save2sqlite:
             save2sqlite(runid, br, cp, args.dbfile)
         if args.output is None:

@@ -27,23 +27,25 @@ class Client:
         self.api_key = api_key
         self._files = None
 
+    def _load_files_response(self, resp):
+        for file in resp['children']['results']:
+            file_meta = {
+                'name': file['filename'],
+                'type': file['filetype'],
+                'id': file['fid'],
+                'grid_url': file['api_urls']['grids']
+            }
+            self._files.append(file_meta)
+        return resp['children']['first'], resp['children']['next'], resp['children']['last']
+
     def list_files(self, no_cache=False):
         if self._files is None or no_cache:
-            resp = requests.get(
-                self._url('folders')+'/home',
-                headers=self._headers(),
-                verify=True
-            )
-            res = []
-            for file in resp.json()['children']['results']:
-                file_meta = {
-                    'name': file['filename'],
-                    'type': file['filetype'],
-                    'id': file['fid'],
-                    'grid_url': file['api_urls']['grids']
-                }
-                res.push(file_meta)
-            self._files = res
+            self._files = []
+            resp = requests.get(self._url('folders')+'/home', headers=self._headers(), verify=True).json()
+            first_page, next_page, last_page = self._load_files_response(resp)
+            while next_page is not None:
+                resp = requests.get(next_page, headers=self._headers(), verify=True).json()
+                first_page, next_page, last_page = self._load_files_response(resp)
         return self._files
 
     def grid_exists(self, name):
@@ -71,15 +73,16 @@ class Client:
         resp = requests.post(
             self._url('grids'),
             headers=self._headers(),
-            data=payload,
+            json=payload,
             verify=True
         )
+        grid = resp.json()
         if self._files is not None:
-            self._files.push({
+            self._files.append({
                 'name': name,
                 'type': 'grid',
-                'id': '',
-                'grid_url': ''
+                'id': grid['file']['fid'],
+                'grid_url': grid['file']['api_urls']['grids']
             })
         return resp
 
@@ -94,8 +97,8 @@ class Client:
             'rows': [[row[c] for c in col_headers] for row in rows]
         }
         resp = requests.post(
-            self._grid_url(grid_name),
-            data=payload,
+            self._grid_url(grid_name)+'/row',
+            json=payload,
             headers=self._headers(),
             verify=True
         )
