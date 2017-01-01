@@ -59,12 +59,14 @@ var $DOMNodeAttrs = ['nodeName','nodeValue','nodeType','parentNode',
     'childNodes','firstChild','lastChild','previousSibling','nextSibling',
     'attributes','ownerDocument']
 
-$B.$isNode = function(obj){
-    if(obj===document){return true}
-    for(var i=0;i<$DOMNodeAttrs.length;i++){
-        if(obj[$DOMNodeAttrs[i]]===undefined) return false
-    }
-    return true
+$B.$isNode = function(o){
+    // copied from http://stackoverflow.com/questions/384286/
+    // javascript-isdom-how-do-you-check-if-a-javascript-object-is-a-dom-object
+  return (
+    typeof Node === "object" ? o instanceof Node : 
+    o && typeof o === "object" && typeof o.nodeType === "number" && 
+    typeof o.nodeName==="string"
+  );
 }
 
 $B.$isNodeList = function(nodes) {

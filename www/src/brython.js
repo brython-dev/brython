@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-01 10:48:08.462341"
+__BRYTHON__.compiled_date="2017-01-01 17:49:28.591602"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1047,13 +1047,15 @@ var new_node=new $Node()
 new $NodeJSCtx(new_node,'for(var $var in $ns){$locals[$var]=$ns[$var]};')
 make_args_nodes.push(new_node)}
 var only_positional=false
-if(defaults.length==0 && this.other_args===null && this.other_kw===null &&
-this.after_star.length==0){
+if(this.other_args===null && this.other_kw===null &&
+this.after_star.length==0 
+&& defaults.length==0
+){
 only_positional=true
 if($B.debug>0 ||this.positional_list.length>0){
 nodes.push($NodeJS('var $len = arguments.length;'))
 var new_node=new $Node()
-var js='if($len>0 && arguments[$len-1].$nat)'
+var js='if($len>0 && arguments[$len-1].$nat!==undefined)'
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 new_node.add(make_args_nodes[0])
@@ -9956,9 +9958,12 @@ res.__getattr__=function(attr){return this[attr]}
 res.__class__="MouseCoords"
 return res}
 var $DOMNodeAttrs=['nodeName','nodeValue','nodeType','parentNode','childNodes','firstChild','lastChild','previousSibling','nextSibling','attributes','ownerDocument']
-$B.$isNode=function(obj){if(obj===document){return true}
-for(var i=0;i<$DOMNodeAttrs.length;i++){if(obj[$DOMNodeAttrs[i]]===undefined)return false}
-return true}
+$B.$isNode=function(o){
+return(
+typeof Node==="object" ? o instanceof Node : 
+o && typeof o==="object" && typeof o.nodeType==="number" && 
+typeof o.nodeName==="string"
+);}
 $B.$isNodeList=function(nodes){
 try{var result=Object.prototype.toString.call(nodes);
 var re=new RegExp("^\\[object (HTMLCollection|NodeList)\\]$")

@@ -2038,15 +2038,17 @@ function $DefCtx(context){
         make_args_nodes.push(new_node)
 
         if(this.type=='generator'){
-            // Update $locals with the result of $B.args
+            // For generators, update $locals with the result of $B.args
             var new_node = new $Node()
             new $NodeJSCtx(new_node,'for(var $var in $ns){$locals[$var]=$ns[$var]};')
             make_args_nodes.push(new_node)
         }
         
         var only_positional = false
-        if(defaults.length==0 && this.other_args===null && this.other_kw===null &&
-            this.after_star.length==0){
+        if(this.other_args===null && this.other_kw===null &&
+            this.after_star.length==0 
+            && defaults.length==0
+            ){
             // If function only takes positional arguments, we can generate
             // a faster version of argument parsing than by calling function
             // $B.args
@@ -2062,7 +2064,7 @@ function $DefCtx(context){
                 nodes.push($NodeJS('var $len = arguments.length;'))
                 
                 var new_node = new $Node()
-                var js = 'if($len>0 && arguments[$len-1].$nat)'
+                var js = 'if($len>0 && arguments[$len-1].$nat!==undefined)'
                 new $NodeJSCtx(new_node,js)
                 nodes.push(new_node)
                 
