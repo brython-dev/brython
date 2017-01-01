@@ -5,7 +5,7 @@ import os
 import cgi
 import time
 
-print('Content-type: text/html\n\n')
+print('Content-type: text/html\n')
 
 if os.environ['REMOTE_ADDR']!='127.0.0.1':
     print('forbidden access')
@@ -14,4 +14,4 @@ else:
     src = fs['src'].value
     t0 = time.perf_counter()
     exec(src)
-    print('CPython: %6.2f ms' % ((time.perf_counter() - t0) * 1000.0))
+    print('%6.2f' % ((time.perf_counter() - t0) * 1000.0))

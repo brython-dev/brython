@@ -42,9 +42,11 @@
 <!-- script type="text/javascript" src="../src/async.js"></script -->
 
 <script type="text/python3">
-from browser import document as doc
+from browser import document as doc, window
 from browser import timer
+from browser.html import *
 import time
+import sys
 
 import editor
 
@@ -60,6 +62,8 @@ def set_debug(ev):
 
 __BRYTHON__.debug = int(doc['set_debug'].checked)
 
+results = []
+
 def test_next():
     global script_num,failed
     script_num += 1
@@ -69,7 +73,9 @@ def test_next():
         src = open(option.value).read()
         doc['files'].selectedIndex = script_num
         editor.editor.setValue(src)
-        state = editor.run()
+        state, result = editor.run()
+        result['test'] = option.value
+        results.append(result)
         if state == 0:
             failed.append(option.text)
         timer.set_timeout(test_next,500)
@@ -77,12 +83,29 @@ def test_next():
         doc['console'].value = ''
         print('completed all tests in %.2f s' %(time.time()-t_start))
         print('failed : %s' %failed)
+        w = window.open()
+        
+        head = w.document.get(selector="head")
+        head[0] <= LINK(rel="stylesheet", href=__BRYTHON__.brython_path+"/doc/doc_brython.css")
+        
+        body = w.document.body
+        table = TABLE(border=1)
+        table <= TR(TH('test')+TH('Brython'))
+        for result in results:
+            row = TR()
+            row <= TD(result['test'])
+            row <= TD(int(100*float(result['Brython'])/float(result['CPython'])),
+                align="right")
+            table <= row
+        body <= H1("Brython performance (base 100 = CPython)")
+        body <= table
     
 def test_all(ev):
-    global script_num,failed,t_start
+    global script_num, failed, t_start, results
     script_num = -1
     t_start = time.time()
     failed = []
+    results = []
     test_next()
 
 def set_debug(ev):
