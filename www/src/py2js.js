@@ -2082,37 +2082,12 @@ function $DefCtx(context){
                 // we got the right number of arguments
                 var pos_len = this.positional_list.length
 
-                js = 'if($len!='+pos_len+')'
-                var wrong_nb_node = new $Node()
-                new $NodeJSCtx(wrong_nb_node,js)
-                else_node.add(wrong_nb_node)
-                
-                if(pos_len>0){
-                    // Test if missing arguments
+                js = 'if($len!='+pos_len+'){$B.wrong_nb_args("'+this.name+
+                    '", $len, '+pos_len
+                if(positional_str.length>0){ js += ', ['+positional_str+']'}
+                js += ')}'
                     
-                    js = 'if($len<'+pos_len+')'+
-                        '{var $missing='+pos_len+'-$len;'+
-                        'throw TypeError("'+this.name+'() missing "+$missing+'+
-                        '" positional argument"+($missing>1 ? "s" : "")+": "'+
-                        '+new Array('+positional_str+').slice($len))}'
-                    new_node = new $Node()
-                    new $NodeJSCtx(new_node,js)
-                    wrong_nb_node.add(new_node)
-                
-                    js = 'else if'
-                }else{
-                    js = 'if'
-                }
-    
-                // Test if too many arguments
-                js += '($len>'+pos_len+')'
-                js += '{throw TypeError("'+this.name+'() takes '+pos_len
-                js += ' positional argument'
-                js += (pos_len>1 ? "s" : "")
-                js += ' but more were given")}'
-                new_node = new $Node()
-                new $NodeJSCtx(new_node,js)
-                wrong_nb_node.add(new_node)
+                else_node.add($NodeJS(js))
             }
             
             if(this.positional_list.length>0){

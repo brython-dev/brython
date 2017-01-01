@@ -111,6 +111,18 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     
 }
 
+$B.wrong_nb_args = function(name, received, expected, positional){
+    if(received<expected){
+        var missing = expected-received
+        throw _b_.TypeError(name+'() missing '+missing+
+            ' positional argument'+(missing>1 ? 's' : '')+': '+
+            positional.slice(received))
+    }else{
+        throw _b_.TypeError(name+'() takes '+expected+' positional argument'+
+            (expected>1 ? 's' : '') + ' but more were given')
+    }
+}
+
 $B.get_class = function(obj, from){
     // generally we get the attribute __class__ of an object by obj.__class__
     // but Javascript builtins used by Brython (functions, numbers, strings...)

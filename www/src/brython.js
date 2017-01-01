@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2016-12-30 14:41:26.567099"
+__BRYTHON__.compiled_date="2017-01-01 10:48:08.462341"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1063,28 +1063,11 @@ new $NodeJSCtx(else_node,'else')
 nodes.push(else_node)}
 if($B.debug>0){
 var pos_len=this.positional_list.length
-js='if(arguments.length!='+pos_len+')'
-var wrong_nb_node=new $Node()
-new $NodeJSCtx(wrong_nb_node,js)
-else_node.add(wrong_nb_node)
-if(pos_len>0){
-js='if(arguments.length<'+pos_len+')'+
-'{var $missing='+pos_len+'-arguments.length;'+
-'throw TypeError("'+this.name+'() missing "+$missing+'+
-'" positional argument"+($missing>1 ? "s" : "")+": "'+
-'+new Array('+positional_str+').slice(arguments.length))}'
-new_node=new $Node()
-new $NodeJSCtx(new_node,js)
-wrong_nb_node.add(new_node)
-js='else if'}else{js='if'}
-js +='(arguments.length>'+pos_len+')'
-js +='{throw TypeError("'+this.name+'() takes '+pos_len
-js +=' positional argument'
-js +=(pos_len>1 ? "s" : "")
-js +=' but more were given")}'
-new_node=new $Node()
-new $NodeJSCtx(new_node,js)
-wrong_nb_node.add(new_node)}
+js='if($len!='+pos_len+'){$B.wrong_nb_args("'+this.name+
+'", $len, '+pos_len
+if(positional_str.length>0){js +=', ['+positional_str+']'}
+js +=')}'
+else_node.add($NodeJS(js))}
 if(this.positional_list.length>0){if(this.type=='generator'){for(var i=0;i<this.positional_list.length;i++){var arg=this.positional_list[i]
 var new_node=new $Node()
 var js='$locals["'+arg+'"]='+arg
@@ -4655,6 +4638,11 @@ if(missing.length>0){if(missing.length==1){throw _b_.TypeError($fname+" missing 
 msg +=missing.join(' and ')
 throw _b_.TypeError(msg)}}
 return slots}
+$B.wrong_nb_args=function(name,received,expected,positional){if(received<expected){var missing=expected-received
+throw _b_.TypeError(name+'() missing '+missing+
+' positional argument'+(missing>1 ? 's' : '')+': '+
+positional.slice(received))}else{throw _b_.TypeError(name+'() takes '+expected+' positional argument'+
+(expected>1 ? 's' : '')+ ' but more were given')}}
 $B.get_class=function(obj,from){
 if(obj===null){return $B.$NoneDict}
 var klass=obj.__class__
