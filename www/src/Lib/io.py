@@ -278,6 +278,7 @@ class StringIO:
 
 TextIOWrapper = StringIO
 
+
 class RawIOBase:
 
     def read(self,n=-1):
@@ -292,5 +293,6 @@ class RawIOBase:
 # XXX Brython : the following are here just to avoid AttributeError
 BufferedIOBase = RawIOBase
 BufferedReader = RawIOBase
+BytesIO = StringIO
 
 #from _io import *
