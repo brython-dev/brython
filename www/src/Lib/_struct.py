@@ -439,6 +439,23 @@ def _clearcache():
     "Clear the internal cache."
     # No cache in this implementation
 
+class Struct:
+    
+    def __init__(self, fmt):
+        self.format = fmt
+    
+    def pack(self, *args):
+        return pack(self.format, *args)
+
+    def pack_into(self, *args):
+        return pack_into(self.format, *args)
+
+    def unpack(self, *args):
+        return unpack(self.format, *args)
+
+    def unpack_from(self, *args):
+        return unpack_from(self.format, *args)
+
 if __name__=='__main__':
     t = pack('Bf',1,2)
     print(t, len(t))
