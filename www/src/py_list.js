@@ -697,12 +697,17 @@ $TupleDict.__eq__ = function(self,other){
     return $ListDict.__eq__(self,other)
 }
 
+function c_mul(a, b){
+    s = ((parseInt(a) * b) & 0xFFFFFFFF).toString(16)
+    return parseInt(s.substr(0, s.length-1), 16)
+}
+
 $TupleDict.__hash__ = function (self) {
   // http://nullege.com/codes/show/src%40p%40y%40pypy-HEAD%40pypy%40rlib%40test%40test_objectmodel.py/145/pypy.rlib.objectmodel._hash_float/python
-  var x= 0x345678
+  var x= 0x3456789
   for(var i=0, _len_i = self.length; i < _len_i; i++) {
      var y=_b_.hash(self[i]);
-     x=(1000003 * x) ^ y & 0xFFFFFFFF;
+     x=c_mul(1000003, x) ^ y & 0xFFFFFFFF;
   }
   return x
 }

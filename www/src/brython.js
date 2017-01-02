@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-01 17:49:28.591602"
+__BRYTHON__.compiled_date="2017-01-02 21:38:41.541129"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -8626,10 +8626,12 @@ $TupleDict.__setitem__=function(){throw _b_.TypeError("'tuple' object does not s
 $TupleDict.__eq__=function(self,other){
 if(other===undefined)return self===tuple
 return $ListDict.__eq__(self,other)}
+function c_mul(a,b){s=((parseInt(a)* b)& 0xFFFFFFFF).toString(16)
+return parseInt(s.substr(0,s.length-1),16)}
 $TupleDict.__hash__=function(self){
-var x=0x345678
+var x=0x3456789
 for(var i=0,_len_i=self.length;i < _len_i;i++){var y=_b_.hash(self[i]);
-x=(1000003 * x)^ y & 0xFFFFFFFF;}
+x=c_mul(1000003,x)^ y & 0xFFFFFFFF;}
 return x}
 $TupleDict.__mro__=[$ObjectDict]
 $TupleDict.__name__='tuple'

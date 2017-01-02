@@ -31,3 +31,16 @@ t = (1,8)
 assert t.__class__ == tuple
 assert isinstance(t,tuple)
 assert str(t)=='(1, 8)'
+
+# bug reported on the mailing list
+d = {}
+d[ (1,3) ] = None
+d[ (-1,3) ] = None
+d[ (1,-3) ] = None
+d[ (-1,-3) ] = None
+
+assert d == { (1, 3): None,
+    (-1, 3): None,
+    (1, -3): None,
+    (-1, -3): None
+}
