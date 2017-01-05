@@ -546,23 +546,29 @@ for(var i=0, _len_i = augm_ops.length; i < _len_i;i++){
     eval('$B.augm_item_'+augm_ops[i][1]+'='+augm_code)
 }
 
-// function used if a function call has an argument **kw
-$B.extend = function(fname, arg, mapping){
-    var it = _b_.iter(mapping), getter = _b_.getattr(mapping,'__getitem__')
-    while (true){
-        try{
-            var key = _b_.next(it)
-            if(typeof key!=='string'){
-                throw _b_.TypeError(fname+"() keywords must be strings")
+$B.extend = function(fname, arg){
+    // Called if a function call has **kw arguments
+    // arg is a dictionary with the keyword arguments entered with the
+    // syntax key=value
+    // The next arguments of $B.extend are the mappings to unpack
+    for(var i=2; i<arguments.length; i++){
+        var mapping = arguments[i]
+        var it = _b_.iter(mapping), getter = _b_.getattr(mapping,'__getitem__')
+        while (true){
+            try{
+                var key = _b_.next(it)
+                if(typeof key!=='string'){
+                    throw _b_.TypeError(fname+"() keywords must be strings")
+                }
+                if(arg[key]!==undefined){
+                    throw _b_.TypeError(
+                        fname+"() got multiple values for argument '"+key+"'")
+                }
+                arg[key] = getter(key)
+            }catch(err){
+                if(_b_.isinstance(err,[_b_.StopIteration])){break}
+                throw err
             }
-            if(arg[key]!==undefined){
-                throw _b_.TypeError(
-                    fname+"() got multiple values for argument '"+key+"'")
-            }
-            arg[key] = getter(key)
-        }catch(err){
-            if(_b_.isinstance(err,[_b_.StopIteration])){break}
-            throw err
         }
     }
     return arg

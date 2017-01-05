@@ -1257,58 +1257,94 @@ function $CallCtx(context){
             }
             
             // build positional arguments list and keyword arguments object
-            var pos_args = [], kw_args = [], star_args = null, dstar_args = null
+            var positional = [], 
+                kw_args = [], 
+                star_args = false, 
+                dstar_args = []
+
             for(var i=0;i<this.tree.length;i++){
                 var arg = this.tree[i], type
                 switch(arg.type){
                     case 'star_arg':
-                        star_args = arg.tree[0].tree[0].to_js()
+                        star_args = true
+                        positional.push([arg.tree[0].tree[0].to_js(), '*']) 
                         break
                     case 'double_star_arg':
-                        dstar_args = arg.tree[0].tree[0].to_js()
+                        dstar_args.push(arg.tree[0].tree[0].to_js())
                         break
                     case 'id':
-                        pos_args.push(arg.to_js())
+                        positional.push([arg.to_js(), 's'])
                         break
                     default:
                         if(arg.tree[0]===undefined){console.log('bizarre', arg)}
-                        else{type=arg.tree[0].type} //console.log(this.func.value+' pas de tree pour arg '+arg)}
+                        else{type=arg.tree[0].type}
                         switch(type){
                             case 'expr':
-                                pos_args.push(arg.to_js())
+                                positional.push([arg.to_js(), 's'])
                                 break
                             case 'kwarg':
                                 kw_args.push(arg.tree[0].tree[0].value+':'+arg.tree[0].tree[1].to_js())
                                 break
                             case 'list_or_tuple':
                             case 'op':
-                                pos_args.push(arg.to_js())
+                                positional.push([arg.to_js(), 's'])
                                 break
                             case 'star_arg':
-                                star_args = arg.tree[0].tree[0].to_js()
+                                star_args = true
+                                positional.push([arg.tree[0].tree[0].to_js(), '*'])
                                 break
                             case 'double_star_arg':
-                                dstar_args = arg.tree[0].tree[0].to_js()
+                                dstar_args.push(arg.tree[0].tree[0].to_js())
                                 break
                             default:
-                                pos_args.push(arg.to_js())
+                                positional.push([arg.to_js(), 's'])
                                 break
                         }
                         break
                 }
             }
-            
-            var args_str = pos_args.join(', ')
+
+            var args_str //= pos_args.join(', ')
+
             if(star_args){
-                args_str = '$B.extend_list('+args_str
-                if(pos_args.length>0){args_str += ','}
-                args_str += '_b_.list('+star_args+'))'
+                // If there are "star arguments", eg in f(*t, 1, 2, *(8,))
+                // the argument is a list such as 
+                // list(t).concat([1, 2]).concat(list((8, )))
+                // This argument will be passed as the argument "args" in a
+                // call f.apply(null, args)
+                var p = []
+                for(var i=0, len=positional.length; i<len; i++){
+                    arg = positional[i]
+                    if(arg[1]=='*'){ // star argument
+                        p.push('_b_.list('+arg[0]+')')
+                    }else{
+                        var elt = [positional[i][0]]
+                        // list the following arguments until the end, or
+                        // until the next star argument
+                        i++
+                        while(i<len && positional[i][1]=='s'){
+                            elt.push(positional[i][0])
+                            i++
+                        }
+                        i--
+                        p.push('['+elt.join(',')+']')
+                    }
+                }
+                args_str = p[0]
+                for(var i=1;i<p.length;i++){
+                    args_str += '.concat('+p[i]+')'
+                }
+            }else{
+                for(var i=0, len=positional.length; i<len; i++){
+                    positional[i] = positional[i][0]
+                }
+                args_str = positional.join(', ')
             }
 
             var kw_args_str = '{'+kw_args.join(', ')+'}'
-            if(dstar_args){
+            if(dstar_args.length){
                 kw_args_str = '{$nat:"kw",kw:$B.extend("'+this.func.value+'",'+kw_args_str
-                kw_args_str += ','+dstar_args+')}'
+                kw_args_str += ','+dstar_args.join(', ')+')}'
             }else if(kw_args_str!=='{}'){
                 kw_args_str = '{$nat:"kw",kw:'+kw_args_str+'}'
             }else{
@@ -5417,6 +5453,7 @@ function $transition(context,token){
                     return new $DoubleStarArgCtx(context)
                }//switch
             }
+            console.log('syntax error, token', token, 'expected', context.expect)
             $_SyntaxError(context,'token '+token+' after '+context)
           case ')':
             if(context.parent.kwargs &&
@@ -5659,7 +5696,6 @@ function $transition(context,token){
           case 'lambda':
             return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
           case ',':
-            return context.parent
           case ')':
             return $transition(context.parent,token)
           case ':':

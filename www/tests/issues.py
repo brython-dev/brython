@@ -705,7 +705,7 @@ assert C().foo() == 42
 
 # issue 348
 x, y = y, x = 2, 3
-assert x, y == 3, 2
+assert x, y == (3, 2)
 
 # issue 350
 a = float("-inf")
@@ -1080,6 +1080,24 @@ try:
     exec(err)
 except NameError:
     pass
+
+# issue 542
+def test(*args):
+    return args
+
+a01 = [0, 1]
+
+assert test(*a01, 2, 3) == (0, 1, 2, 3)
+
+args = a01 + [2, 3]
+assert test(*args) == (0, 1, 2, 3)
+
+def test(**kw):
+    return kw
+
+d1 = {'x': 2}
+d2 = {'y': 3}
+assert test(u=1, **d1, **d2) == {'u': 1, 'x': 2, 'y': 3}
 
 # ==========================================
 # Finally, report that all tests have passed

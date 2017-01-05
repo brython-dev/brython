@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-02 21:38:41.541129"
+__BRYTHON__.compiled_date="2017-01-05 18:12:45.078996"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -662,47 +662,59 @@ var _block=false
 if($B.async_enabled){var scope=$get_scope(this.func)
 if($B.block[scope.id]===undefined){}
 else if($B.block[scope.id][this.func.value])_block=true}
-var pos_args=[],kw_args=[],star_args=null,dstar_args=null
+var positional=[],kw_args=[],star_args=false,dstar_args=[]
 for(var i=0;i<this.tree.length;i++){var arg=this.tree[i],type
 switch(arg.type){case 'star_arg':
-star_args=arg.tree[0].tree[0].to_js()
+star_args=true
+positional.push([arg.tree[0].tree[0].to_js(),'*'])
 break
 case 'double_star_arg':
-dstar_args=arg.tree[0].tree[0].to_js()
+dstar_args.push(arg.tree[0].tree[0].to_js())
 break
 case 'id':
-pos_args.push(arg.to_js())
+positional.push([arg.to_js(),'s'])
 break
 default:
 if(arg.tree[0]===undefined){console.log('bizarre',arg)}
 else{type=arg.tree[0].type}
 switch(type){case 'expr':
-pos_args.push(arg.to_js())
+positional.push([arg.to_js(),'s'])
 break
 case 'kwarg':
 kw_args.push(arg.tree[0].tree[0].value+':'+arg.tree[0].tree[1].to_js())
 break
 case 'list_or_tuple':
 case 'op':
-pos_args.push(arg.to_js())
+positional.push([arg.to_js(),'s'])
 break
 case 'star_arg':
-star_args=arg.tree[0].tree[0].to_js()
+star_args=true
+positional.push([arg.tree[0].tree[0].to_js(),'*'])
 break
 case 'double_star_arg':
-dstar_args=arg.tree[0].tree[0].to_js()
+dstar_args.push(arg.tree[0].tree[0].to_js())
 break
 default:
-pos_args.push(arg.to_js())
+positional.push([arg.to_js(),'s'])
 break}
 break}}
-var args_str=pos_args.join(', ')
-if(star_args){args_str='$B.extend_list('+args_str
-if(pos_args.length>0){args_str +=','}
-args_str +='_b_.list('+star_args+'))'}
+var args_str 
+if(star_args){
+var p=[]
+for(var i=0,len=positional.length;i<len;i++){arg=positional[i]
+if(arg[1]=='*'){
+p.push('_b_.list('+arg[0]+')')}else{var elt=[positional[i][0]]
+i++
+while(i<len && positional[i][1]=='s'){elt.push(positional[i][0])
+i++}
+i--
+p.push('['+elt.join(',')+']')}}
+args_str=p[0]
+for(var i=1;i<p.length;i++){args_str +='.concat('+p[i]+')'}}else{for(var i=0,len=positional.length;i<len;i++){positional[i]=positional[i][0]}
+args_str=positional.join(', ')}
 var kw_args_str='{'+kw_args.join(', ')+'}'
-if(dstar_args){kw_args_str='{$nat:"kw",kw:$B.extend("'+this.func.value+'",'+kw_args_str
-kw_args_str +=','+dstar_args+')}'}else if(kw_args_str!=='{}'){kw_args_str='{$nat:"kw",kw:'+kw_args_str+'}'}else{kw_args_str=''}
+if(dstar_args.length){kw_args_str='{$nat:"kw",kw:$B.extend("'+this.func.value+'",'+kw_args_str
+kw_args_str +=','+dstar_args.join(', ')+')}'}else if(kw_args_str!=='{}'){kw_args_str='{$nat:"kw",kw:'+kw_args_str+'}'}else{kw_args_str=''}
 if(star_args && kw_args_str){args_str +='.concat(['+kw_args_str+'])' }else{if(args_str && kw_args_str){args_str +=','+kw_args_str}
 else if(!args_str){args_str=kw_args_str}}
 if(star_args){
@@ -2765,6 +2777,7 @@ case '*':
 return new $StarArgCtx(C)
 case '**':
 return new $DoubleStarArgCtx(C)}}
+console.log('syntax error, token',token,'expected',C.expect)
 $_SyntaxError(C,'token '+token+' after '+C)
 case ')':
 if(C.parent.kwargs &&
@@ -2939,7 +2952,6 @@ case 'not':
 case 'lambda':
 return $transition(new $AbstractExprCtx(C,false),token,arguments[2])
 case ',':
-return C.parent
 case ')':
 return $transition(C.parent,token)
 case ':':
@@ -4853,13 +4865,15 @@ var augm_ops=[['-=','sub'],['*=','mul']]
 for(var i=0,_len_i=augm_ops.length;i < _len_i;i++){var augm_code=augm_item_src.replace(/add/g,augm_ops[i][1])
 augm_code=augm_code.replace(/\+=/g,augm_ops[i][0])
 eval('$B.augm_item_'+augm_ops[i][1]+'='+augm_code)}
-$B.extend=function(fname,arg,mapping){var it=_b_.iter(mapping),getter=_b_.getattr(mapping,'__getitem__')
+$B.extend=function(fname,arg){
+for(var i=2;i<arguments.length;i++){var mapping=arguments[i]
+var it=_b_.iter(mapping),getter=_b_.getattr(mapping,'__getitem__')
 while(true){try{var key=_b_.next(it)
 if(typeof key!=='string'){throw _b_.TypeError(fname+"() keywords must be strings")}
 if(arg[key]!==undefined){throw _b_.TypeError(
 fname+"() got multiple values for argument '"+key+"'")}
 arg[key]=getter(key)}catch(err){if(_b_.isinstance(err,[_b_.StopIteration])){break}
-throw err}}
+throw err}}}
 return arg}
 $B.extend_list=function(){
 var res=Array.prototype.slice.call(arguments,0,arguments.length-1),last=$B.last(arguments)
