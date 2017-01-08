@@ -33,7 +33,7 @@ except ImportError: #pragma: no cover
     threading = None
 
 
-from brython_handlers import XMLHTTPHandler
+from .brython_handlers import XMLHTTPHandler
 #
 # Some constants...
 #
