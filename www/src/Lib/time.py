@@ -1,8 +1,9 @@
 from browser import window
-import javascript
 
-# use Javascript Date constructor
-date = javascript.JSConstructor(window.Date)
+# Javascript Date constructor
+date = window.Date.new
+
+now = window.Date.now
 
 #daylight = 0 # fix me.. returns Non zero if DST timezone is defined
 
@@ -201,13 +202,13 @@ def mktime(t):
     return (d1 - d2) / 1000.
 
 def monotonic():
-    return javascript.JSObject(window.performance.now)()/1000.
+    return now()/1000.
 
 def perf_counter():
-    return javascript.JSObject(window.performance.now)()/1000.
+    return now()/1000.
 
 def process_time():
-    return javascript.JSObject(window.performance.now)()/1000.
+    return now()/1000.
 
 def time():
     return float(date().getTime()/1000)
@@ -379,8 +380,6 @@ CLOCK_MONOTONIC_RAW = _clock_msg % "https://docs.python.org/3/library/time.html#
 CLOCK_PROCESS_CPUTIME_ID = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_PROCESS_CPUTIME_ID"
 CLOCK_REALTIME = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_REALTIME"
 CLOCK_THREAD_CPUTIME_ID = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_THREAD_CPUTIME_ID"
-
-
 
 
 def get_clock_info(cl):
