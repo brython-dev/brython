@@ -497,7 +497,7 @@ $B.show_getattr = function(){
 
 function getattr(obj,attr,_default){
 
-    if(obj===undefined){console.log('get attr', attr, 'of undefined')}
+    //if(obj===undefined){console.log('get attr', attr, 'of undefined')}
     
     var klass = obj.__class__
     
@@ -586,6 +586,11 @@ function getattr(obj,attr,_default){
               var subclasses = obj.$dict.$subclasses || []
               return function(){return subclasses}
           }
+        break
+      case '$$new':
+        if (klass===$B.JSObject.$dict && obj.js_func !== undefined){
+          return $B.JSConstructor(obj)
+        }
         break
     }//switch
 
