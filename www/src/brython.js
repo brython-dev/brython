@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-08 17:10:06.022890"
+__BRYTHON__.compiled_date="2017-01-08 17:54:25.211767"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -9720,7 +9720,7 @@ if(_b_.isinstance(other,_b_.set)){if(other.$items.length==self.$items.length){fo
 return true}
 return false}
 if(_b_.isinstance(other,[_b_.list])){if(_b_.len(other)!=self.$items.length)return false
-for(var i=0,_len_i=_b_.len(other);i < _len_i;i++){var _value=getattr(other,'__getitem__')(i)
+for(var i=0,_len_i=_b_.len(other);i < _len_i;i++){var _value=_b_.getattr(other,'__getitem__')(i)
 if($SetDict.__contains__(self,_value)===false)return false}
 return true}
 if(_b_.hasattr(other,'__iter__')){
@@ -9820,7 +9820,7 @@ while(true){try{item=_next()
 var _type=typeof item
 if(_type=='string' ||_type=="number"){var _index=self.$items.indexOf(item)
 if(_index > -1){self.$items.splice(_index,1)}}else{
-for(var j=0;j < self.$items.length;j++){if(getattr(self.$items[j],'__eq__')(item)){self.$items.splice(j,1)}}}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
+for(var j=0;j < self.$items.length;j++){if(_b_.getattr(self.$items[j],'__eq__')(item)){self.$items.splice(j,1)}}}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}}
 return $N}
 $SetDict.discard=function(){var $=$B.args('discard',2,{self:null,item:null},['self','item'],arguments,{},null,null)
