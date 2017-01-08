@@ -5574,8 +5574,6 @@ function $transition(context,token){
                 return new $SubCtx(context.parent)
               case '(':
                 return new $CallArgCtx(new $CallCtx(context))
-              case 'op':
-                return new $AbstractExprCtx(new $OpCtx(context,arguments[2]),false)
             }
             return $transition(context.parent,token,arguments[2])
         }else{
@@ -7886,7 +7884,7 @@ $B.$NodeJSCtx = $NodeJSCtx
 // we can use $B.brython
 
 $B.brython = brython
-              
+
 })(__BRYTHON__)
 var brython = __BRYTHON__.brython
 
