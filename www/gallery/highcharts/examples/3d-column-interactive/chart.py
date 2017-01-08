@@ -1,7 +1,6 @@
 from browser import document, window
-from javascript import JSConstructor
 
-b_highchart = JSConstructor(window.Highcharts.Chart)
+b_highchart = window.Highcharts.Chart.new
 
 chart = b_highchart({
     'chart': {

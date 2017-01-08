@@ -808,12 +808,9 @@ The function takes one argument, an object representing the event.
     
     <script type="text/python" id="script11">
     from browser import document, window
-    from javascript import JSConstructor
-    
-    Date = JSConstructor(window.Date)
     
     def show_date(event):
-        date = Date()
+        date = window.Date.new()
         document['zone11'].text = '{}-{:02}-{:02} at {:02}:{:02}:{:02}'.format(
             date.getFullYear(), date.getMonth()+1, date.getDate(), 
             date.getHours(), date.getMinutes(), date.getSeconds())
@@ -826,7 +823,7 @@ The function takes one argument, an object representing the event.
     <span class="comment">
     Brython provides the modules <code class="module">time</code> and <code class="module">datetime</code> of the standard distribution, but it can also interact with the objects defined by Javascript.
     <p>To use such objects, import the object <code>window</code> from module <code class="module">browser</code> : it is used to get a reference to all the objects defined in the Javascript global namespace. 
-    <p>Because the Javascript object <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date" target="_blank"><code>Date</code></a> is a constructor (ie a function that returns new objects with the syntax <i>var date = new Date()</i>) we create the equivalent function in Brython with the function <code>JSConstructor</code> defined in module <code class="module">javascript</code>.
+    <p>Because the Javascript object <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date" target="_blank"><code>Date</code></a> is a constructor (ie a function that returns new objects with the syntax <i>var date = new Date()</i>), we create Brython objects with the attribute <code>new</code>.
     <p>We then use the attributes of the Javascript instance of <code>Date()</code> such as <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getFullYear" target="_blank"><code>getFullYear</code></a> with the usual Python syntax.
     </span>
 </div>
@@ -837,14 +834,10 @@ The function takes one argument, an object representing the event.
     
     <script type="text/python" id="script17">
     from browser import document, window
-    from javascript import JSConstructor
-    
-    RegExp = JSConstructor(window.RegExp)
-    String = JSConstructor(window.String)
-    
     
     def change(event):
-        document['zone17'].text = String("abracadabra").replace(RegExp("a", "g"), "i")
+        s = window.String.new("abracadabra")
+        document['zone17'].text = s.replace(window.RegExp.new("a", "g"), "i")
     
     document['button17'].bind('click', change)
     </script>

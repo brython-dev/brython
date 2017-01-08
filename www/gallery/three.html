@@ -14,25 +14,25 @@
         THREE = window.THREE
         print(THREE)
 
-        cameraC = JSConstructor( THREE.PerspectiveCamera )
+        cameraC = THREE.PerspectiveCamera.new
         camera = cameraC( 75, 1, 1, 10000 )
         camera.position.z = 1000;
         print('ok')
 
-        sceneC = JSConstructor( THREE.Scene );
-        scene = sceneC();
+        sceneC = THREE.Scene.new
+        scene = sceneC()
 
-        geometryC = JSConstructor(THREE.CubeGeometry)
+        geometryC = THREE.CubeGeometry.new
         geometry = geometryC(200, 200, 200)
-        materialC = JSConstructor( THREE.MeshBasicMaterial )
+        materialC = THREE.MeshBasicMaterial.new
 
         material = materialC( { "color": "#ff0000", "wireframe": True } )
 
-        meshC = JSConstructor(THREE.Mesh)
+        meshC = THREE.Mesh.new
         mesh = meshC( geometry, material )
         scene.add( mesh );
 
-        rendererC = JSConstructor(THREE.WebGLRenderer)
+        rendererC = THREE.WebGLRenderer.new
         renderer = rendererC()
         renderer.setSize( 444,444);
 
