@@ -115,7 +115,7 @@ or by loading the latest version of the Brython zip file from the
 In both cases, the distribution includes __brython.js__ (the core Brython engine)
 and __brython_stdlib.js__ (a bundle of all the files in the standard distribution).
 
-It also includes the page __index.html__ that shows a few examples of how you 
+It also includes the page __demo.html__ that shows a few examples of how you 
 can interact with a web page using Python as the scripting language : create 
 new elements, access and modify existing elements, create graphics, animations, 
 send Ajax requests, etc.
