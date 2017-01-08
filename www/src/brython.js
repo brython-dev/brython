@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-05 18:12:45.078996"
+__BRYTHON__.compiled_date="2017-01-08 10:49:08.491387"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5403,7 +5403,7 @@ for(var attr in $B.counter){items.push([$B.counter[attr],attr])}
 items.sort(function(x,y){return x[0]>y[0]? 1 : x[0]==y[0]? 0 : -1})
 items.reverse()
 for(var i=0;i<10;i++){console.log(items[i])}}
-function getattr(obj,attr,_default){if(obj===undefined){console.log('get attr',attr,'of undefined')}
+function getattr(obj,attr,_default){
 var klass=obj.__class__
 if(klass===undefined){
 if(typeof obj=='string'){klass=_b_.str.$dict}
@@ -5443,6 +5443,10 @@ break
 case '__subclasses__':
 if(klass===$B.$factory){var subclasses=obj.$dict.$subclasses ||[]
 return function(){return subclasses}}
+break
+case '$$new':
+console.log('call new',obj)
+if(klass===$B.JSObject.$dict && obj.js_func !==undefined){return $B.JSConstructor(obj)}
 break}
 if(typeof obj=='function'){var value=obj.__class__===$B.$factory ? obj.$dict[attr]: obj[attr]
 if(value !==undefined){if(attr=='__module__' ||attr=='__hash__'){
@@ -6749,12 +6753,15 @@ $JSObjectDict.__dir__=function(self){return Object.keys(self.js)}
 $JSObjectDict.__getattribute__=function(self,attr){if(attr.substr(0,2)=='$$')attr=attr.substr(2)
 if(self.js===null)return $ObjectDict.__getattribute__(None,attr)
 if(attr==='__class__')return $JSObjectDict
+if(attr=='$$new'){
+console.log('attr new of',obj)
+return JSConstructor(obj.js_func)}
 if(self.__class__===$JSObjectDict && attr=="$bind" && 
 self.js[attr]===undefined &&
 self.js['addEventListener']!==undefined){attr='addEventListener'}
 var js_attr=self.js[attr]
 if(self.js_func && self.js_func[attr]!==undefined){js_attr=self.js_func[attr]}
-if(js_attr !==undefined){if(typeof js_attr=='function'){
+if(js_attr !==undefined){if(typeof js_attr=='function'){if(attr=='Blob'){console.log(attr,js_attr)}
 var res=function(){
 var args=[]
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){if(arguments[i].$nat!=undefined){
@@ -9698,7 +9705,7 @@ var $N=_b_.None
 function create_type(obj){return $B.get_class(obj).$factory()}
 function clone(obj){var res=create_type(obj)
 res.$items=obj.$items.slice()
-return res }
+return res}
 var $SetDict={__class__:$B.$type,__dir__:_b_.object.$dict.__dir__,__name__:'set',$native:true}
 $SetDict.__add__=function(self,other){throw _b_.TypeError("unsupported operand type(s) for +: 'set' and " + 
 typeof other )}
@@ -9833,7 +9840,7 @@ for(var j=0;j<self.$items.length;j++){var _item=self.$items[j],_type=typeof _ite
 if(_type=='string' ||_type=="number"){if(s.$items.indexOf(_item)==-1){remove.push(j)}}else{var found=false
 for(var k=0;!found && k < s.$items.length;k++){if(_b_.getattr(s.$items[k],'__eq__')(_item)){found=true}}
 if(!found){remove.push(j)}}}
-remove.sort().reverse()
+remove.sort(function(x,y){return x-y}).reverse()
 for(var j=0;j<remove.length;j++){self.$items.splice(remove[j],1)}}
 return $N}
 $SetDict.isdisjoint=function(){var $=$B.args('is_disjoint',2,{self:null,other:null},['self','other'],arguments,{},null,null)
@@ -9863,7 +9870,7 @@ for(var j=0;!found && j < self.$items.length;j++){if(_b_.getattr(self.$items[j],
 found=true}}
 if(!found){add.push(item)}}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
-remove.sort().reverse()
+remove.sort(function(x,y){return x-y}).reverse()
 for(var i=0;i<remove.length;i++){if(remove[i]!=remove[i-1]){self.$items.splice(remove[i],1)}}
 for(var i=0;i<add.length;i++){$SetDict.add(self,add[i])}
 return $N}
@@ -10023,8 +10030,9 @@ ev.__repr__=function(){return '<DOMEvent object>'}
 ev.toString=ev.__str__=ev.__repr__
 return ev}
 $B.$DOMEvent=$DOMEvent
-$B.DOMEvent=function(evt_name){
-return $DOMEvent(new Event(evt_name))}
+$B.DOMEvent=function(evt_name,eventType){
+var klass=eventType===undefined ? Event : eventType.js_func
+return $DOMEvent(new klass(evt_name))}
 $B.DOMEvent.__class__=$B.$factory
 $B.DOMEvent.$dict=$DOMEventDict
 $DOMEventDict.$factory=$B.DOMEvent
