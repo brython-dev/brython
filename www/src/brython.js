@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-08 10:49:08.491387"
+__BRYTHON__.compiled_date="2017-01-08 13:30:38.736439"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -2859,9 +2859,7 @@ case 'dict_or_set':
 if(C.closed){switch(token){case '[':
 return new $SubCtx(C.parent)
 case '(':
-return new $CallArgCtx(new $CallCtx(C))
-case 'op':
-return new $AbstractExprCtx(new $OpCtx(C,arguments[2]),false)}
+return new $CallArgCtx(new $CallCtx(C))}
 return $transition(C.parent,token,arguments[2])}else{if(C.expect===','){switch(token){case '}':
 switch(C.real){case 'dict_or_set':
 if(C.tree.length !==1)break
@@ -5445,7 +5443,6 @@ if(klass===$B.$factory){var subclasses=obj.$dict.$subclasses ||[]
 return function(){return subclasses}}
 break
 case '$$new':
-console.log('call new',obj)
 if(klass===$B.JSObject.$dict && obj.js_func !==undefined){return $B.JSConstructor(obj)}
 break}
 if(typeof obj=='function'){var value=obj.__class__===$B.$factory ? obj.$dict[attr]: obj[attr]
@@ -6753,15 +6750,12 @@ $JSObjectDict.__dir__=function(self){return Object.keys(self.js)}
 $JSObjectDict.__getattribute__=function(self,attr){if(attr.substr(0,2)=='$$')attr=attr.substr(2)
 if(self.js===null)return $ObjectDict.__getattribute__(None,attr)
 if(attr==='__class__')return $JSObjectDict
-if(attr=='$$new'){
-console.log('attr new of',obj)
-return JSConstructor(obj.js_func)}
 if(self.__class__===$JSObjectDict && attr=="$bind" && 
 self.js[attr]===undefined &&
 self.js['addEventListener']!==undefined){attr='addEventListener'}
 var js_attr=self.js[attr]
 if(self.js_func && self.js_func[attr]!==undefined){js_attr=self.js_func[attr]}
-if(js_attr !==undefined){if(typeof js_attr=='function'){if(attr=='Blob'){console.log(attr,js_attr)}
+if(js_attr !==undefined){if(typeof js_attr=='function'){
 var res=function(){
 var args=[]
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){if(arguments[i].$nat!=undefined){
@@ -10030,9 +10024,8 @@ ev.__repr__=function(){return '<DOMEvent object>'}
 ev.toString=ev.__str__=ev.__repr__
 return ev}
 $B.$DOMEvent=$DOMEvent
-$B.DOMEvent=function(evt_name,eventType){
-var klass=eventType===undefined ? Event : eventType.js_func
-return $DOMEvent(new klass(evt_name))}
+$B.DOMEvent=function(evt_name){
+return $DOMEvent(new Event(evt_name))}
 $B.DOMEvent.__class__=$B.$factory
 $B.DOMEvent.$dict=$DOMEventDict
 $DOMEventDict.$factory=$B.DOMEvent

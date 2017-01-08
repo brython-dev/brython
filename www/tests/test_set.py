@@ -68,5 +68,11 @@ class foo(set):
 x = foo([1,2])
 assert x.show()=='show'
 
+# issue 543
+assert {''} | {0} == {'', 0}
+
+s = set(range(20))
+s.intersection_update({5})
+assert s == {5}
 print("passed all tests..")
 

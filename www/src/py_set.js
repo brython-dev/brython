@@ -16,7 +16,7 @@ function create_type(obj){
 function clone(obj){
     var res = create_type(obj)
     res.$items = obj.$items.slice()
-    return res    
+    return res
 }
 
 var $SetDict = {
@@ -374,7 +374,7 @@ $SetDict.intersection_update = function(){
               if(!found){remove.push(j)}
            }
        }
-       remove.sort().reverse()
+       remove.sort(function(x,y){return x-y}).reverse()
        for(var j=0;j<remove.length;j++){self.$items.splice(remove[j],1)}
     }
     return $N
@@ -445,7 +445,7 @@ $SetDict.symmetric_difference_update = function(self, s){
            throw err
        }
     }
-    remove.sort().reverse()
+    remove.sort(function(x,y){return x-y}).reverse()
     for(var i=0;i<remove.length;i++){
         if(remove[i]!=remove[i-1]){self.$items.splice(remove[i], 1)}
     }
