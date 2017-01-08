@@ -85,7 +85,7 @@ $SetDict.__eq__ = function(self,other){
       if(_b_.len(other)!=self.$items.length) return false
 
       for(var i=0, _len_i = _b_.len(other); i < _len_i;i++){
-         var _value=getattr(other, '__getitem__')(i)
+         var _value=_b_.getattr(other, '__getitem__')(i)
          if($SetDict.__contains__(self, _value)===false) return false
       }
       return true
@@ -333,7 +333,7 @@ $SetDict.difference_update = function(self){
                   } 
                } else {
                   for (var j=0; j < self.$items.length; j++) {
-                    if (getattr(self.$items[j], '__eq__')(item)) {
+                    if (_b_.getattr(self.$items[j], '__eq__')(item)) {
                       self.$items.splice(j,1)
                     }
                   }
