@@ -368,10 +368,6 @@ $B.$type.__new__ = function(cls, name, bases, cl_dict){
     // create the factory function
     var factory = $instance_creator(class_dict)
 
-    if(class_dict.__mro__[0]===class_dict){
-        console.log('365 first is class', class_dict)
-    }
-
     factory.__class__ = $B.$factory
     factory.$dict = class_dict
     factory.$is_func = true // to speed up calls
@@ -504,7 +500,7 @@ $B.$type.__getattribute__=function(klass, attr){
             // attribute is a class
             return res1        
         }
-
+        
         if(typeof res1=='function'){
             res.__name__ = attr
             // method
@@ -517,6 +513,10 @@ $B.$type.__getattribute__=function(klass, attr){
                     args = []
                     __repr__ = __str__ = function(attr){
                         return function(){
+                            if(klass.$native){
+                                return "<method '"+attr+"' of '"+
+                                    klass.__name__+"' objects>"
+                            }
                             return '<function '+klass.__name__+'.'+attr+'>'            
                         }
                     }(attr)
@@ -526,7 +526,7 @@ $B.$type.__getattribute__=function(klass, attr){
                     args = [klass.$factory]
                     __self__ = klass
                     __repr__ = __str__ = function(){
-                        var x = '<bound method '+klass.__name__+'.'+attr
+                        var x = '<built-in method '+klass.__name__+'.'+attr
                         x += ' of '+klass.__name__+'>'
                         return x
                     }
@@ -541,33 +541,33 @@ $B.$type.__getattribute__=function(klass, attr){
                     }(attr)
                     break;
             } // switch
-
+            
             // return a method that adds initial args to the function
             // arguments
-            var method = (function(initial_args){
+            var method = (function(initial_args, attr){
                     return function(){
                         // class method
                         // make a local copy of initial args
-                        var local_args = initial_args.slice()
-                        var pos=local_args.length
+                        var local_args = initial_args.slice(),
+                            pos=local_args.length
                         for(var i=0;i < arguments.length;i++){
                             local_args[pos++]=arguments[i]
                         }
-                        return res.apply(null,local_args)
-                    }})(args)
-                method.__class__ = $B.$FunctionDict
-                method.__eq__ = function(other){
-                    return other.__func__ === __func__
-                }
-                for(var attr in res){method[attr]=res[attr]}
-                method.__func__ = __func__
-                method.__repr__ = __repr__
-                method.__self__ = __self__
-                method.__str__ = __str__
-                method.__code__ = {'__class__': $B.CodeDict}
-                method.__doc__ = res.__doc__ || ''
-                method.im_class = klass
-                return method
+                        return res.apply(null, local_args)
+                    }})(args, attr)
+            method.__class__ = $B.$FunctionDict
+            method.__eq__ = function(other){
+                return other.__func__ === __func__
+            }
+            for(var attr in res){method[attr]=res[attr]}
+            method.__func__ = __func__
+            method.__repr__ = __repr__
+            method.__self__ = __self__
+            method.__str__ = __str__
+            method.__code__ = {'__class__': $B.CodeDict}
+            method.__doc__ = res.__doc__ || ''
+            method.im_class = klass
+            return method
         }
     }
 }
