@@ -1099,6 +1099,13 @@ d1 = {'x': 2}
 d2 = {'y': 3}
 assert test(u=1, **d1, **d2) == {'u': 1, 'x': 2, 'y': 3}
 
+# issue 545
+k = 3
+nb = 0
+for k in range(k):
+    nb += 1
+assert nb == 3
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

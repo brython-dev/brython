@@ -2621,9 +2621,9 @@ function $ForExpr(context){
             }else{
                 var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()
             }
-            var js = idt+'='+start+';'+h+'var $stop_'+num +'=$B.int_or_bool('+
-                stop+'),'+h+
-                '    $next'+num+'= '+idt+','+h+
+            var js = 'var $stop_'+num +'=$B.int_or_bool('+
+                stop+');'+h+idt+'='+start+';'+h+
+                '    var $next'+num+'= '+idt+','+h+
                 '    $safe'+num+'= typeof $next'+num+'=="number" && typeof '+
                 '$stop_'+num+'=="number";'+h+'while(true)'
             var for_node = new $Node()  
