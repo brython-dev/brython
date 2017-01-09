@@ -474,12 +474,15 @@ $DictDict.fromkeys = function(){
         keys=$.keys, value=$.value
 
     // class method
-    var res = $.cls() //dict()
-    var keys_iter = _b_.iter(keys)
+    var klass = $.cls,
+        res = klass(),
+        keys_iter = _b_.iter(keys)
+
     while(1){
         try{
             var key = _b_.next(keys_iter)
-            $DictDict.__setitem__(res,key,value)
+            if(klass===dict){$DictDict.__setitem__(res, key, value)}
+            else{_b_.getattr(res, "__setitem__")(key,value)}
         }catch(err){
             if($B.is_exc(err,[_b_.StopIteration])){
                 return res
@@ -670,6 +673,8 @@ $DictDict.$factory = dict
 $DictDict.__new__ = $B.$__new__(dict)
 
 _b_.dict = dict
+
+$B.set_func_names($DictDict)
 
 // following are used for faster access elsewhere
 $B.$dict_iterator = function(d) { return new $item_generator(d) }
