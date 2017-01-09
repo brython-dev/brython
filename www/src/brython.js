@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-08 17:54:25.211767"
+__BRYTHON__.compiled_date="2017-01-09 21:40:16.177737"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4474,7 +4474,6 @@ if(class_dict.__mro__[0]===class_dict){console.log('first is class',class_dict)}
 class_dict.__class__=class_dict.__mro__[0].__class__
 if(class_dict.__mro__[0]===class_dict){console.log('358 first is class',class_dict)}
 var factory=$instance_creator(class_dict)
-if(class_dict.__mro__[0]===class_dict){console.log('365 first is class',class_dict)}
 factory.__class__=$B.$factory
 factory.$dict=class_dict
 factory.$is_func=true 
@@ -4537,12 +4536,14 @@ switch(res.$type){case undefined:
 case 'function':
 case 'instancemethod':
 args=[]
-__repr__=__str__=function(attr){return function(){return '<function '+klass.__name__+'.'+attr+'>' }}(attr)
+__repr__=__str__=function(attr){return function(){if(klass.$native){return "<method '"+attr+"' of '"+
+klass.__name__+"' objects>"}
+return '<function '+klass.__name__+'.'+attr+'>' }}(attr)
 break;
 case 'classmethod':
 args=[klass.$factory]
 __self__=klass
-__repr__=__str__=function(){var x='<bound method '+klass.__name__+'.'+attr
+__repr__=__str__=function(){var x='<built-in method '+klass.__name__+'.'+attr
 x +=' of '+klass.__name__+'>'
 return x}
 break;
@@ -4550,11 +4551,10 @@ case 'staticmethod':
 args=[]
 __repr__=__str__=function(attr){return function(){return '<function '+klass.__name__+'.'+attr+'>'}}(attr)
 break;}
-var method=(function(initial_args){return function(){
-var local_args=initial_args.slice()
-var pos=local_args.length
+var method=(function(initial_args,attr){return function(){
+var local_args=initial_args.slice(),pos=local_args.length
 for(var i=0;i < arguments.length;i++){local_args[pos++]=arguments[i]}
-return res.apply(null,local_args)}})(args)
+return res.apply(null,local_args)}})(args,attr)
 method.__class__=$B.$FunctionDict
 method.__eq__=function(other){return other.__func__===__func__}
 for(var attr in res){method[attr]=res[attr]}
@@ -5455,6 +5455,12 @@ return _default}}
 if(klass.descriptors && klass.descriptors[attr]!==undefined){return klass[attr](obj)}
 if(typeof klass[attr]=='function'){
 if(attr=='__new__')return klass[attr].apply(null,arguments)
+if(klass[attr].$type=='classmethod'){var res=function(){var args=[klass.$factory]
+for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
+return klass[attr].apply(null,args)}
+res.$type='classmethod'
+res.$infos=klass[attr].$infos
+return res}
 var method=function(){var args=[obj],pos=1
 for(var i=0;i<arguments.length;i++){args[pos++]=arguments[i]}
 return klass[attr].apply(null,args)}
@@ -5494,7 +5500,9 @@ if(isinstance(obj,bool))return _b_.int(obj)
 if(obj.__hash__ !==undefined){return obj.__hashvalue__=obj.__hash__()}
 if(obj.__class__===$B.$factory){return obj.__hashvalue__=$B.$py_next_hash--}
 var hashfunc=getattr(obj,'__hash__',_b_.None)
-if(hashfunc==_b_.None)return obj.__hashvalue__=$B.$py_next_hash--
+if(hashfunc==_b_.None){
+throw _b_.TypeError("unhashable type: '"+
+$B.get_class(obj).__name__+"'",'hash')}
 if(hashfunc.$infos===undefined){return obj.__hashvalue__=hashfunc()}
 if(hashfunc.$infos.__func__===_b_.object.$dict.__hash__){if(getattr(obj,'__eq__').$infos.__func__!==_b_.object.$dict.__eq__){throw _b_.TypeError("unhashable type: '"+
 $B.get_class(obj).__name__+"'",'hash')}else{return _b_.object.$dict.__hash__(obj)}}else{return obj.__hashvalue__=hashfunc()}}
@@ -9585,10 +9593,10 @@ var $=$B.args('copy',1,{self:null},['self'],arguments,{},null,null),self=$.self,
 $copy_dict(res,self)
 return res}
 $DictDict.fromkeys=function(){var $=$B.args('fromkeys',3,{cls:null,keys:null,value:null},['cls','keys','value'],arguments,{value:_b_.None},null,null),keys=$.keys,value=$.value
-var res=$.cls()
-var keys_iter=_b_.iter(keys)
+var klass=$.cls,res=klass(),keys_iter=_b_.iter(keys)
 while(1){try{var key=_b_.next(keys_iter)
-$DictDict.__setitem__(res,key,value)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return res}
+if(klass===dict){$DictDict.__setitem__(res,key,value)}
+else{_b_.getattr(res,"__setitem__")(key,value)}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return res}
 throw err}}}
 $DictDict.fromkeys.$type='classmethod'
 $DictDict.get=function(){var $=$B.args('get',3,{self:null,key:null,_default:null},['self','key','_default'],arguments,{_default:$N},null,null)
@@ -9672,6 +9680,7 @@ dict.$dict=$DictDict
 $DictDict.$factory=dict
 $DictDict.__new__=$B.$__new__(dict)
 _b_.dict=dict
+$B.set_func_names($DictDict)
 $B.$dict_iterator=function(d){return new $item_generator(d)}
 $B.$dict_length=$DictDict.__len__
 $B.$dict_getitem=$DictDict.__getitem__
@@ -9800,7 +9809,10 @@ $SetDict.add=function(){var $=$B.args('add',2,{self:null,item:null},['self','ite
 _b_.hash(item)
 if(self.$str && !(typeof item=='string')){self.$str=false}
 if(self.$num && !(typeof item=='number')){self.$num=false}
-if(self.$num||self.$str){if(self.$items.indexOf(item)==-1){self.$items.push(item)}
+if(self.$num||self.$str){var ix=self.$items.indexOf(item)
+if(ix==-1){self.$items.push(item)}
+else{
+if(item!==self.$items[ix]){self.$items.push(item)}}
 return $N}
 var cfunc=_b_.getattr(item,'__eq__')
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(cfunc(self.$items[i]))return}

@@ -286,7 +286,13 @@ $SetDict.add = function(){
     if(self.$str && !(typeof item=='string')){self.$str=false}
     if(self.$num && !(typeof item=='number')){self.$num=false}
     if(self.$num||self.$str){
-        if(self.$items.indexOf(item)==-1){self.$items.push(item)}
+        var ix = self.$items.indexOf(item)
+        if(ix==-1){self.$items.push(item)}
+        else{
+            // issue 543 : for some Javascript implementations, 
+            // [''].indexOf(0) is 0, not -1, so {''}.add(0) is {''}
+            if(item!==self.$items[ix]){self.$items.push(item)}
+        }
         return $N
     }
     var cfunc = _b_.getattr(item,'__eq__')
