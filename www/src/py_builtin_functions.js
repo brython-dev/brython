@@ -602,7 +602,7 @@ function getattr(obj,attr,_default){
         } 
       }
     }
-        
+    
     if(klass.$native){
         if(klass[attr]===undefined){
             var object_attr = _b_.object.$dict[attr]
@@ -616,9 +616,21 @@ function getattr(obj,attr,_default){
             return klass[attr](obj)
         }
         if(typeof klass[attr]=='function'){
-            
+        
             // new is a static method
             if(attr=='__new__') return klass[attr].apply(null,arguments)
+            
+            // return classmethods unchanged
+            if(klass[attr].$type=='classmethod'){
+                var res = function(){
+                    var args = [klass.$factory]
+                    for(var i=0; i<arguments.length;i++){args.push(arguments[i])}
+                    return klass[attr].apply(null, args)
+                }
+                res.$type = 'classmethod'
+                res.$infos = klass[attr].$infos
+                return res
+            }
             
             var method = function(){
                 var args = [obj], pos=1
@@ -667,7 +679,9 @@ function getattr(obj,attr,_default){
         }
     }
 
-    try{var res = attr_func(obj, attr)}
+    try{
+        var res = attr_func(obj, attr)
+    }
     catch(err){
         if(_default!==undefined) return _default
         throw err
@@ -711,8 +725,12 @@ function hash(obj){
         return obj.__hashvalue__ = $B.$py_next_hash--
     }
     var hashfunc = getattr(obj, '__hash__', _b_.None)
-    
-    if (hashfunc == _b_.None) return obj.__hashvalue__=$B.$py_next_hash--
+
+    if (hashfunc == _b_.None){
+        // return obj.__hashvalue__=$B.$py_next_hash--
+        throw _b_.TypeError("unhashable type: '"+
+                $B.get_class(obj).__name__+"'", 'hash')
+    }
 
     if(hashfunc.$infos === undefined){
         return obj.__hashvalue__ = hashfunc()
