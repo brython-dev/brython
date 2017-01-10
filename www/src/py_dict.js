@@ -193,8 +193,6 @@ $DictDict.__eq__ = function(){
         ['self', 'other'], arguments, {}, null, null),
         self=$.self, other=$.other
 
-    console.log('eq', self, other)
-    
     if(!isinstance(other,dict)) return false
     
     if ($DictDict.__len__(self) != $DictDict.__len__(other)){return false}

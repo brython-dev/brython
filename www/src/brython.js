@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-10 22:26:49.371445"
+__BRYTHON__.compiled_date="2017-01-10 22:49:26.508069"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1578,7 +1578,10 @@ this.blurred_scope=this.scope.blurred
 this.env=clone($B.bound[this.scope.id])
 this.level=$get_level(this)
 var ctx=C
-while(ctx.parent!==undefined){switch(ctx.type){case 'list_or_tuple':
+while(ctx.parent!==undefined){switch(ctx.type){case 'ctx_manager_alias':
+$B.bound[scope.id][value]={level: $get_level(this)}
+break
+case 'list_or_tuple':
 case 'dict_or_set':
 case 'call_arg':
 case 'def':
@@ -9472,7 +9475,6 @@ if(self.$object_dict[_key]!==undefined){delete self.$object_dict[_key]}
 if(self.$jsobj)delete self.$jsobj[arg]
 return $N}
 $DictDict.__eq__=function(){var $=$B.args('__eq__',2,{self:null,other:null},['self','other'],arguments,{},null,null),self=$.self,other=$.other
-console.log('eq',self,other)
 if(!isinstance(other,dict))return false
 if($DictDict.__len__(self)!=$DictDict.__len__(other)){return false}
 if((self.$numeric_dict.length!=other.$numeric_dict.length)||

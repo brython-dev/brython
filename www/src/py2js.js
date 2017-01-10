@@ -3087,6 +3087,10 @@ function $IdCtx(context,value){
     var ctx = context
     while(ctx.parent!==undefined){
         switch(ctx.type) {
+          case 'ctx_manager_alias':
+              // an alias in "with ctx_manager as obj" is bound
+              $B.bound[scope.id][value]={level: $get_level(this)}
+              break
           case 'list_or_tuple':
           case 'dict_or_set':
           case 'call_arg':
