@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-10 21:27:40.651470"
+__BRYTHON__.compiled_date="2017-01-10 22:26:49.371445"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -9432,7 +9432,9 @@ var $copy_dict=function(left,right){var _l=new $item_generator(right).as_list()
 var si=$DictDict.__setitem__
 var i=_l.length
 while(i--)si(left,_l[i][0],_l[i][1])}
-var $iterator_wrapper=function(items,klass){var res={__class__:klass,__iter__:function(){items.iter.i=0;return res},__len__:function(){return items.length()},__next__:function(){return items.next()},__repr__:function(){return klass.__name__+'('+ new $item_generator(items).as_list().join(',')+ ')'},}
+var $iterator_wrapper=function(items,klass){var res={__class__:klass,__iter__:function(){items.iter.i=0;return res},__len__:function(){return items.length()},__next__:function(){return items.next()},__repr__:function(){var s=[]
+for(var i=0,len=items.length();i<len;i++){s.push(_b_.repr(items.next()))}
+return klass.__name__+'(['+ s.join(',')+ '])'},}
 res.__str__=res.toString=res.__repr__
 return res}
 $DictDict.__bool__=function(){var $=$B.args('__bool__',1,{self:null},['self'],arguments,{},null,null)
@@ -9470,6 +9472,7 @@ if(self.$object_dict[_key]!==undefined){delete self.$object_dict[_key]}
 if(self.$jsobj)delete self.$jsobj[arg]
 return $N}
 $DictDict.__eq__=function(){var $=$B.args('__eq__',2,{self:null,other:null},['self','other'],arguments,{},null,null),self=$.self,other=$.other
+console.log('eq',self,other)
 if(!isinstance(other,dict))return false
 if($DictDict.__len__(self)!=$DictDict.__len__(other)){return false}
 if((self.$numeric_dict.length!=other.$numeric_dict.length)||
@@ -9477,7 +9480,8 @@ if((self.$numeric_dict.length!=other.$numeric_dict.length)||
 (self.$object_dict.length!=other.$object_dict.length)){return false}
 for(var k in self.$numeric_dict){if(!_b_.getattr(other.$numeric_dict[k],'__eq__')(self.$numeric_dict[k])){return false}}
 for(var k in self.$string_dict){if(!_b_.getattr(other.$string_dict[k],'__eq__')(self.$string_dict[k])){return false}}
-for(var k in self.$object_dict){if(!_b_.getattr(other.$object_dict[k][1],'__eq__')(self.$object_dict[k][1])){return false}}
+for(var k in self.$object_dict){console.log('key in object dict',k)
+if(!_b_.getattr(other.$object_dict[k][1],'__eq__')(self.$object_dict[k][1])){return false}}
 return true}
 $DictDict.__getitem__=function(){var $=$B.args('__getitem__',2,{self:null,arg:null},['self','arg'],arguments,{},null,null),self=$.self,arg=$.arg
 if(self.$jsobj){if(self.$jsobj[arg]===undefined){return None}
@@ -9621,7 +9625,7 @@ throw err}}
 $DictDict.popitem=function(self){try{var itm=new $item_iterator(self).next()
 $DictDict.__delitem__(self,itm[0])
 return _b_.tuple(itm)}catch(err){if(err.__name__=="StopIteration"){throw KeyError("'popitem(): dictionary is empty'")}}}
-$DictDict.setdefault=function(){var $=$B.args('setdefault',3,{self:null,key: null,_default:null},['self','key','_default'],arguments,{},null,null),self=$.self,key=$.key,_default=$._default
+$DictDict.setdefault=function(){var $=$B.args('setdefault',3,{self:null,key: null,_default:null},['self','key','_default'],arguments,{_default:$N},null,null),self=$.self,key=$.key,_default=$._default
 try{return $DictDict.__getitem__(self,key)}
 catch(err){if(_default===undefined)_default=None
 $DictDict.__setitem__(self,key,_default)

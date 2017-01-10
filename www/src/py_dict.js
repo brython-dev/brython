@@ -568,7 +568,7 @@ $DictDict.popitem = function(self){
 $DictDict.setdefault = function(){
 
     var $ = $B.args('setdefault', 3, {self:null, key: null, _default:null},
-        ['self', 'key', '_default'], arguments, {}, null, null),
+        ['self', 'key', '_default'], arguments, {_default:$N}, null, null),
         self=$.self, key=$.key, _default=$._default
 
     try{return $DictDict.__getitem__(self,key)}
