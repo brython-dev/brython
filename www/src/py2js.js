@@ -118,9 +118,9 @@ function $_SyntaxError(context,msg,indent){
         if(msg==="Triple string end not found"){
             // add an extra argument : used in interactive mode to
             // prompt for the rest of the triple-quoted string
-            $B.$SyntaxError(module,'invalid syntax : triple string end not found',$pos, line_num)
+            $B.$SyntaxError(module,'invalid syntax : triple string end not found',$pos, line_num, root)
         }
-        $B.$SyntaxError(module,'invalid syntax',$pos, line_num)
+        $B.$SyntaxError(module,'invalid syntax',$pos, line_num, root)
     }else{throw $B.$IndentationError(module,msg,$pos)}
 }
 
@@ -3630,13 +3630,15 @@ function $LambdaCtx(context){
     this.toString = function(){return '(lambda) '+this.args_start+' '+this.body_start}
     
     this.to_js = function(){
-        this.js_processed=true
-        var module = $get_module(this)
-
-        var src = $B.$py_src[module.id]
         
-        var args = src.substring(this.args_start,this.body_start),
+        this.js_processed=true
+        
+        var node = $get_node(this),
+            module = $get_module(this),
+            src = $B.$py_src[module.id],
+            args = src.substring(this.args_start,this.body_start),
             body = src.substring(this.body_start+1,this.body_end)
+        
         body = body.replace(/\n/g,' ')
 
         var scope = $get_scope(this)
@@ -3649,8 +3651,8 @@ function $LambdaCtx(context){
         var lambda_name = 'lambda'+rand,
             module_name = module.id.replace(/\./g, '_'),
             scope_id = scope.id.replace(/\./g, '_')
-    
-        var js = $B.py2js(py, module_name, lambda_name, scope_id).to_js()
+        
+        var js = $B.py2js(py, module_name, lambda_name, scope_id, node.line_num).to_js()
         
         js = '(function(){\n'+js+'\nreturn $locals.'+func_name+'\n})()'
         

@@ -35,7 +35,11 @@ $B.$syntax_err_line = function(exc,module,pos,line_num) {
     exc.args = _b_.tuple([$B.$getitem(exc.args,0), module, line_num, lpos, line])
 }
 
-$B.$SyntaxError = function(module, msg, pos, line_num) {
+$B.$SyntaxError = function(module, msg, pos, line_num, root) {
+    if(root!==undefined && root.line_info!==undefined){
+        // this may happen for syntax errors inside a lambda
+        line_num=root.line_info
+    }
     var exc = _b_.SyntaxError(msg)
     $B.$syntax_err_line(exc,module,pos,line_num)
     throw exc

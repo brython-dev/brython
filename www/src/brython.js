@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-09 22:28:47.507109"
+__BRYTHON__.compiled_date="2017-01-10 21:07:42.201247"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -100,8 +100,8 @@ if(root.line_info){line_num=root.line_info}
 if(indent!==undefined){line_num++}
 if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],$pos)}
 if(msg==="Triple string end not found"){
-$B.$SyntaxError(module,'invalid syntax : triple string end not found',$pos,line_num)}
-$B.$SyntaxError(module,'invalid syntax',$pos,line_num)}else{throw $B.$IndentationError(module,msg,$pos)}}
+$B.$SyntaxError(module,'invalid syntax : triple string end not found',$pos,line_num,root)}
+$B.$SyntaxError(module,'invalid syntax',$pos,line_num,root)}else{throw $B.$IndentationError(module,msg,$pos)}}
 function $Node(type){this.type=type
 this.children=[]
 this.yield_atoms=[]
@@ -1787,15 +1787,13 @@ this.vars=[]
 this.locals=[]
 this.toString=function(){return '(lambda) '+this.args_start+' '+this.body_start}
 this.to_js=function(){this.js_processed=true
-var module=$get_module(this)
-var src=$B.$py_src[module.id]
-var args=src.substring(this.args_start,this.body_start),body=src.substring(this.body_start+1,this.body_end)
+var node=$get_node(this),module=$get_module(this),src=$B.$py_src[module.id],args=src.substring(this.args_start,this.body_start),body=src.substring(this.body_start+1,this.body_end)
 body=body.replace(/\n/g,' ')
 var scope=$get_scope(this)
 var rand=$B.UUID(),func_name='lambda_'+$B.lambda_magic+'_'+rand,py='def '+func_name+'('+args+'):\n'
 py +='    return '+body
 var lambda_name='lambda'+rand,module_name=module.id.replace(/\./g,'_'),scope_id=scope.id.replace(/\./g,'_')
-var js=$B.py2js(py,module_name,lambda_name,scope_id).to_js()
+var js=$B.py2js(py,module_name,lambda_name,scope_id,node.line_num).to_js()
 js='(function(){\n'+js+'\nreturn $locals.'+func_name+'\n})()'
 $B.clear_ns(lambda_name)
 delete $B.$py_src[lambda_name]
@@ -6066,7 +6064,9 @@ var len=line.length
 line=line.replace(/^\s*/,'')
 lpos-=len-line.length
 exc.args=_b_.tuple([$B.$getitem(exc.args,0),module,line_num,lpos,line])}
-$B.$SyntaxError=function(module,msg,pos,line_num){var exc=_b_.SyntaxError(msg)
+$B.$SyntaxError=function(module,msg,pos,line_num,root){if(root!==undefined && root.line_info!==undefined){
+line_num=root.line_info}
+var exc=_b_.SyntaxError(msg)
 $B.$syntax_err_line(exc,module,pos,line_num)
 throw exc}
 $B.$IndentationError=function(module,msg,pos){var exc=_b_.IndentationError(msg)
