@@ -99,7 +99,13 @@ var $iterator_wrapper = function(items,klass){
         __next__:function(){
             return items.next()
         },
-        __repr__:function(){return klass.__name__+'('+ new $item_generator(items).as_list().join(',') + ')'},
+        __repr__:function(){
+            var s = []
+            for(var i=0, len=items.length(); i<len; i++){
+                s.push(_b_.repr(items.next()))
+            }
+            return klass.__name__+'(['+ s.join(',') + '])'
+        },
     }
     res.__str__ = res.toString = res.__repr__
     return res
@@ -187,6 +193,8 @@ $DictDict.__eq__ = function(){
         ['self', 'other'], arguments, {}, null, null),
         self=$.self, other=$.other
 
+    console.log('eq', self, other)
+    
     if(!isinstance(other,dict)) return false
     
     if ($DictDict.__len__(self) != $DictDict.__len__(other)){return false}
@@ -207,6 +215,7 @@ $DictDict.__eq__ = function(){
         }
     }
     for(var k in self.$object_dict){
+        console.log('key in object dict', k)
         if(!_b_.getattr(other.$object_dict[k][1],'__eq__')(self.$object_dict[k][1])){
             return false
         }
@@ -269,7 +278,6 @@ $DictDict.__hash__ = None
 $DictDict.__init__ = function(self){
     var args = [], pos=0
     for(var i=1;i<arguments.length;i++){args[pos++]=arguments[i]}
-    $DictDict.clear(self)
 
     switch(args.length) {
       case 0:

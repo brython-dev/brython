@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-10 21:07:42.201247"
+__BRYTHON__.compiled_date="2017-01-10 21:27:40.651470"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_browser","_html","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","javascript","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -9501,7 +9501,6 @@ throw KeyError(_b_.str(arg))}
 $DictDict.__hash__=None
 $DictDict.__init__=function(self){var args=[],pos=0
 for(var i=1;i<arguments.length;i++){args[pos++]=arguments[i]}
-$DictDict.clear(self)
 switch(args.length){case 0:
 return
 case 1:
