@@ -340,6 +340,7 @@ $Style.$dict = $StyleDict
 $StyleDict.$factory = $Style
 
 var DOMNode = $B.DOMNode = function(elt){ 
+    if(elt.__class__===DOMNodeDict){return elt}
     if(typeof elt=="number" || typeof elt=="boolean" ||
         typeof elt=="string"){return elt}
     // returns the element, enriched with an attribute $brython_id for 
@@ -558,7 +559,6 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         }
         if(attr=='options') return $Options(self.elt)
         if(attr=='style') return $Style(self.elt[attr])
-        if($B.$isNode(res)){return DOMNode(res)}
         return DOMNode(res)
     }
     return $ObjectDict.__getattribute__(self,attr)
