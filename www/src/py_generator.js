@@ -136,7 +136,8 @@ function make_node(top_node, node){
 
         // Recursion
         for(var i=0, _len_i = node.children.length; i < _len_i;i++){
-            new_node.addChild(make_node(top_node, node.children[i]))
+            var nd = make_node(top_node, node.children[i])
+            if(nd!==undefined){new_node.addChild(nd)}
         }
     }
     return new_node
@@ -318,7 +319,9 @@ $B.$BRgenerator2 = function(func_name, blocks, def_id, def_node){
     func_root.def_id = def_id
     func_root.iter_id = iter_id
     for(var i=0, _len_i = def_node.children.length; i < _len_i;i++){
-        func_root.addChild(make_node(func_root, def_node.children[i]))
+        var nd = make_node(func_root, def_node.children[i])
+        if(nd===undefined){continue}
+        func_root.addChild(nd)
     }
     
     var obj = {
@@ -335,7 +338,7 @@ $B.$BRgenerator2 = function(func_name, blocks, def_id, def_node){
         num:0
     }
     
-    var src = func_root.children[1].src(),
+    var src = func_root.src(), //children[1].src(),
         raw_src = src.substr(src.search('function'))
     
     var first_line = func_root.children[0].src()
@@ -345,7 +348,7 @@ $B.$BRgenerator2 = function(func_name, blocks, def_id, def_node){
         // remove trailing ";"
         $default = $default.substr(0, $default.length-2)
         // replace string $default by the object
-        raw_src = raw_src.replace(/\$defaults/g, $default)
+        //raw_src = raw_src.replace(/\$defaults/g, $default)
     }
     
     var funcs = ['"'+escape(raw_src)+'"']
@@ -378,8 +381,8 @@ function make_next(self, yield_node_id){
     // instructions
     
     var root = new $B.genNode(self.def_ctx.to_js())
-    root.addChild(self.func_root.children[0].clone())
-    var fnode = self.func_root.children[1].clone()
+    //root.addChild(self.func_root.children[0].clone())
+    var fnode = self.func_root.clone()
     root.addChild(fnode)
     
     // restore namespaces
@@ -407,7 +410,7 @@ function make_next(self, yield_node_id){
     while(1){
 
         // Compute the rest of the block to run after exit_node
-
+        
         var exit_parent = exit_node.parent
         var rest = [], pos=0
         var has_break = false
@@ -490,8 +493,9 @@ function make_next(self, yield_node_id){
     }
      
     // return the code of the function for next iteration
-    var src = root.children[1].src(),
+    var src = root.children[0].src(),
         next_src = src.substr(src.search('function'))
+    
     return next_src
 }
 
