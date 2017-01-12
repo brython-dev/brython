@@ -524,7 +524,7 @@ $gen_it.__next__ = function(self){
         self.$finished = true
         throw _b_.StopIteration()
     }
-    
+
     try{
         var res = self.next.apply(self, self.args)
     }catch(err){

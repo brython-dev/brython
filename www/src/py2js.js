@@ -331,7 +331,7 @@ function $Node(type){
                         res = '$locals_'+block_id+'["'+def_ctx.name+
                             '"] = $B.genfunc("'+def_ctx.name+'", '+blocks+
                             ',['+g+'])'
-                    this.parent.children.splice(rank, 2)
+                    this.parent.children.splice(rank, 1)
                     this.parent.insert(rank+offset-1,
                         $NodeJS(res))
             }
@@ -2068,7 +2068,8 @@ function $DefCtx(context){
             this.argcount+', {'+this.slots.join(', ')+'}, '+
             '['+slot_list.join(', ')+'], arguments, '
 
-        if(defs1.length){js += '$defaults, '}
+        if(defs1.length){js += '$locals_'+scope.id.replace(/\./g, '_')+'["'+
+            this.name+'"].$defaults, '}
         else{js += '{}, '}
         js += this.other_args+', '+this.other_kw+');'
 
@@ -2193,7 +2194,12 @@ function $DefCtx(context){
         var default_node = new $Node()
         var js = ';_b_.None;'
         //if(defs1.length>0){js = 'var $defaults = {'+defs1.join(',')+'};'}
-        if(defs1.length>0){js = 'var $defaults = '+prefix+'.$defaults'} //defs1.join(',')+'};'}
+        if(defs1.length>0){
+            var ref = (this.type=='generator') ? prefix : 
+                '$locals_'+scope.id.replace(/\./g, '_')+'["'+this.name+
+                '"]'
+            js = 'var $defaults = 0; //'+ref+'.$defaults;' //defs1.join(',')+'};'
+        }
         new $NodeJSCtx(default_node,js)
         node.insert(0,default_node)
 
