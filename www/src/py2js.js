@@ -2061,13 +2061,13 @@ function $DefCtx(context){
         // If function is not a generator, $locals is the result of $B.args
         var js = this.type=='def' ? local_ns+' = $locals' : 'var $ns'
         
-        js += ' = $B.args($locals_'+scope.id.replace(/\./g, '_')+'.'+this.name+', '+
+        js += ' = $B.args("'+this.name+'", '+
             this.argcount+', {'+this.slots.join(', ')+'}, '+
-            '[], arguments, '
+            '['+slot_list.join(', ')+'], arguments, '
 
-        if(defs1.length){js += '$defaults)'}
-        else{js += '{})'}
-        //js += this.other_args+', '+this.other_kw+');'
+        if(defs1.length){js += '$defaults, '}
+        else{js += '{}, '}
+        js += this.other_args+', '+this.other_kw+');'
 
         var new_node = new $Node()
         new $NodeJSCtx(new_node,js)
@@ -2215,19 +2215,6 @@ function $DefCtx(context){
         var name_decl = new $Node()
         new $NodeJSCtx(name_decl,js)
         node.parent.insert(rank+offset,name_decl)
-        offset++
-
-        // Brython-specific attributes
-        node.parent.insert(rank+offset, 
-            $NodeJS('    $extra_pos_args: '+this.other_args+','))
-        offset++
-
-        node.parent.insert(rank+offset, 
-            $NodeJS('    $extra_kw_args: '+this.other_kw+','))
-        offset++
-
-        node.parent.insert(rank+offset, 
-            $NodeJS('    $var_names: ['+slot_list.join(', ')+'],'))
         offset++
 
         // Add attribute __name__
