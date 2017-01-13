@@ -1,0 +1,69 @@
+<html>
+<head>
+    <title>Getting Started with bokeh - Brython version</title>
+    <meta charset="iso-8859-1">
+    <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.0.min.js"></script>
+    
+  
+    
+    <link rel="stylesheet" type="text/css" href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.0.css">
+    <script type="text/javascript" src="../src/brython.js"></script>
+
+    <script type="text/python">
+        from browser import document, window
+        import random
+
+        # 'importing' the bokehJS library
+        Bokeh = window.Bokeh
+        plt = Bokeh.Plotting
+
+        # set up some data
+        M = 100
+        xx = []
+        yy = []
+        colors = []
+        radii = []
+        for y in range(0, M, 4):
+            for x in range(0, M, 4):
+                xx.append(x)
+                yy.append(y)
+                colors.append(plt.color(50+2*x, 30+2*y, 150))
+                radii.append(random.random() * 0.4 + 1.7)
+
+        # create a data source
+        source = Bokeh.ColumnDataSource.new({
+            'data': {'x': xx, 'y': yy, 'radius': radii, 'colors': colors}
+        })
+
+        # make the plot and add some tools
+        tools = "pan,crosshair,wheel_zoom,box_zoom,reset,save"
+        p = plt.figure({'title': "Colorful Scatter", 'tools': tools})
+
+
+        # call the circle glyph method to add some circle glyphs
+        circles = p.circle({'field': "x" }, {'field': "y" }, {
+            'source': source,
+            'radius': radii,
+            'fill_color': colors,
+            'fill_alpha': 0.6,
+            'line_color': None
+        })
+
+        # show the plot
+        mydiv = document['myplot']
+        # below, as a second parameter you can pass an HTML element like below
+        plt.show(p, mydiv.elt)
+        # but also a css selector could be used so the next line would be also 
+        # valid
+        # plt.show(p, '#myplot')
+
+    </script>
+
+</head>
+<body onload="brython(2)">
+    <h1>Example of an interactive plot using bokeh</h1>
+    <p>In this example we are using <a href="http://bokeh.pydata.org/en/latest/docs/user_guide/bokehjs.html" target="_blank">bokehJS</a>, used internally by <a href="http://bokeh.pydata.org/en/latest/" target="_blank">bokeh</a> to render the plots in the browser.</p>
+    <p><a href="https://jsfiddle.net/fbnLa3tz/" target="_blank">Here</a> you have a jsfiddle working example that you can modify to learn how it works.</p>
+    <div id="myplot"></div>
+</body>
+</html>
