@@ -6528,7 +6528,7 @@ function $transition(context,token){
         if(context.op===undefined){
             $_SyntaxError(context,['context op undefined '+context])
         }
-        if(context.op.substr(0,5)=='unary'){
+        if(context.op.substr(0,5)=='unary' && token != 'eol'){
             if(context.parent.type=='assign' || context.parent.type=='return'){
                 // create and return a tuple whose first element is context
                 context.parent.tree.pop()

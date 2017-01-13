@@ -1118,6 +1118,10 @@ assert True & False is False
 assert True | False is True
 assert True ^ False is True
 
+# issue 551
+y=-1;
+assert y == -1
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
