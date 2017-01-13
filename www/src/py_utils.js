@@ -13,6 +13,13 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     // $dobj = {'z':1}
     // extra_pos_args = 'args'
     // extra_kw_args = 'kw'
+    
+    if(typeof $fname=='function'){
+        extra_pos_args = $fname.$infos.$extra_pos_args
+        extra_kw_args = $fname.$infos.$extra_kw_args
+        var_names = $fname.$infos.$var_names
+        $fname = $fname.$infos.__name__
+    }
         
     var has_kw_args = false, 
         nb_pos = $args.length

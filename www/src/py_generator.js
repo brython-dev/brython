@@ -492,6 +492,7 @@ function make_next(self, yield_node_id){
     // return the code of the function for next iteration
     var src = root.children[1].src(),
         next_src = src.substr(src.search('function'))
+        
     return next_src
 }
 

@@ -57,7 +57,7 @@ var $operators = {
 }
 
 // Mapping between augmented assignment operators and method names 
-var $augmented_assigns = {
+var $augmented_assigns = $B.augmented_assigns = {
     "//=":"ifloordiv",">>=":"irshift","<<=":"ilshift",
     "**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv",
     "%=":"imod",
@@ -2061,13 +2061,13 @@ function $DefCtx(context){
         // If function is not a generator, $locals is the result of $B.args
         var js = this.type=='def' ? local_ns+' = $locals' : 'var $ns'
         
-        js += ' = $B.args("'+this.name+'", '+
+        js += ' = $B.args($locals_'+scope.id.replace(/\./g, '_')+'.'+this.name+', '+
             this.argcount+', {'+this.slots.join(', ')+'}, '+
-            '['+slot_list.join(', ')+'], arguments, '
+            '[], arguments, '
 
-        if(defs1.length){js += '$defaults, '}
-        else{js += '{}, '}
-        js += this.other_args+', '+this.other_kw+');'
+        if(defs1.length){js += '$defaults)'}
+        else{js += '{})'}
+        //js += this.other_args+', '+this.other_kw+');'
 
         var new_node = new $Node()
         new $NodeJSCtx(new_node,js)
@@ -2216,7 +2216,20 @@ function $DefCtx(context){
         new $NodeJSCtx(name_decl,js)
         node.parent.insert(rank+offset,name_decl)
         offset++
-        
+
+        // Brython-specific attributes
+        node.parent.insert(rank+offset, 
+            $NodeJS('    $extra_pos_args: '+this.other_args+','))
+        offset++
+
+        node.parent.insert(rank+offset, 
+            $NodeJS('    $extra_kw_args: '+this.other_kw+','))
+        offset++
+
+        node.parent.insert(rank+offset, 
+            $NodeJS('    $var_names: ['+slot_list.join(', ')+'],'))
+        offset++
+
         // Add attribute __name__
         js = '    __name__:"'
         if(this.scope.ntype=='class'){js+=this.scope.context.tree[0].name+'.'}
