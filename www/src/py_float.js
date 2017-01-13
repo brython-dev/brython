@@ -543,7 +543,7 @@ var $comp_func = function(self,other){
     if(inv_op !== null){return inv_op(self)}
 
     throw _b_.TypeError(
-        "unorderable types: "+self.__class__.__name__+'() > '+$B.get_class(other).__name__+"()")
+        'unorderable types: float() > '+$B.get_class(other).__name__+"()")
 }
 
 $comp_func += '' // source code
@@ -560,26 +560,18 @@ $B.make_rmethods($FloatDict)
 // unsupported operations
 var $notimplemented = function(self,other){
     throw _b_.TypeError(
-        "unsupported operand types for OPERATOR: '"+self.__class__.__name__+
-            "' and '"+$B.get_class(other).__name__+"'")
+        "unsupported operand types for OPERATOR: 'float' and '"+
+            $B.get_class(other).__name__+"'")
 }
 $notimplemented += '' // coerce to string
 for(var $op in $B.$operators){
     // use __add__ for __iadd__ etc, so don't define __iadd__ below
-    switch($op) {
-      case '+=':
-      case '-=':
-      case '*=':
-      case '/=':
-      case '%=':
-        //if(['+=','-=','*=','/=','%='].indexOf($op)>-1) continue
-        break
-      default:
+    if($B.augmented_assigns[$op] === undefined){
         var $opfunc = '__'+$B.$operators[$op]+'__'
         if($FloatDict[$opfunc]===undefined){
             eval('$FloatDict.'+$opfunc+"="+$notimplemented.replace(/OPERATOR/gm,$op))
         }
-    }//switch
+    }
 }
 
 function $FloatClass(value){

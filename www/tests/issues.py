@@ -1106,6 +1106,13 @@ for k in range(k):
     nb += 1
 assert nb == 3
 
+# issue 549
+a = 5.0
+a **= 2
+assert a == 25.0
+a //= 25
+assert a == 1.0
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

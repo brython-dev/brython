@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-11 14:17:01.904105"
+__BRYTHON__.compiled_date="2017-01-13 21:38:10.205618"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -79,7 +79,7 @@ if(value===undefined){value=true}
 while(i-->0){res[list[i]]=value}
 return res}
 var $operators={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","**":"pow","//":"floordiv","<<":"lshift",">>":"rshift","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor","+":"add","-":"sub","*":"mul","/":"truediv","%":"mod","&":"and","|":"or","~":"invert","^":"xor","<":"lt",">":"gt","<=":"le",">=":"ge","==":"eq","!=":"ne","or":"or","and":"and","in":"in","not": "not","is":"is","not_in":"not_in","is_not":"is_not" }
-var $augmented_assigns={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor"}
+var $augmented_assigns=$B.augmented_assigns={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor"}
 var noassign=$B.list2obj(['True','False','None','__debug__'])
 var $op_order=[['or'],['and'],['not'],['in','not_in'],['<','<=','>','>=','!=','==','is','is_not'],['|'],['^'],['&'],['>>','<<'],['+'],['-'],['*','/','//','%'],['unary_neg','unary_inv','unary_pos'],['**']
 ]
@@ -1045,12 +1045,11 @@ nodes.push(enter_frame_node)
 this.env=[]
 var make_args_nodes=[]
 var js=this.type=='def' ? local_ns+' = $locals' : 'var $ns'
-js +=' = $B.args("'+this.name+'", '+
+js +=' = $B.args($locals_'+scope.id.replace(/\./g,'_')+'.'+this.name+', '+
 this.argcount+', {'+this.slots.join(', ')+'}, '+
-'['+slot_list.join(', ')+'], arguments, '
-if(defs1.length){js +='$defaults, '}
-else{js +='{}, '}
-js +=this.other_args+', '+this.other_kw+');'
+'[], arguments, '
+if(defs1.length){js +='$defaults)'}
+else{js +='{})'}
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 make_args_nodes.push(new_node)
@@ -1119,6 +1118,12 @@ js=prefix+'.$infos = {'
 var name_decl=new $Node()
 new $NodeJSCtx(name_decl,js)
 node.parent.insert(rank+offset,name_decl)
+offset++
+node.parent.insert(rank+offset,$NodeJS('    $extra_pos_args: '+this.other_args+','))
+offset++
+node.parent.insert(rank+offset,$NodeJS('    $extra_kw_args: '+this.other_kw+','))
+offset++
+node.parent.insert(rank+offset,$NodeJS('    $var_names: ['+slot_list.join(', ')+'],'))
 offset++
 js='    __name__:"'
 if(this.scope.ntype=='class'){js+=this.scope.C.tree[0].name+'.'}
@@ -4622,6 +4627,10 @@ $MethodFactory.$dict=$B.$MethodDict
 $B.$InstanceMethodDict={__class__:$B.$type,__name__:'instancemethod',__mro__:[_b_.object.$dict],$factory:$MethodFactory}})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 $B.args=function($fname,argcount,slots,var_names,$args,$dobj,extra_pos_args,extra_kw_args){
+if(typeof $fname=='function'){extra_pos_args=$fname.$infos.$extra_pos_args
+extra_kw_args=$fname.$infos.$extra_kw_args
+var_names=$fname.$infos.$var_names
+$fname=$fname.$infos.__name__}
 var has_kw_args=false,nb_pos=$args.length
 if(nb_pos>0 && $args[nb_pos-1].$nat){has_kw_args=true
 nb_pos--
@@ -5406,8 +5415,7 @@ function getattr(obj,attr,_default){
 var klass=obj.__class__
 if(klass===undefined){
 if(typeof obj=='string'){klass=_b_.str.$dict}
-else if(typeof obj=='number'){klass=obj % 1==0 ? _b_.int.$dict : _b_.float.$dict}
-else{klass=$B.get_class(obj)}}
+else if(typeof obj=='number'){klass=obj % 1==0 ? _b_.int.$dict : _b_.float.$dict}else if(obj instanceof Number){klass=_b_.float.$dict}else{klass=$B.get_class(obj)}}
 if(klass===undefined){
 if(obj[attr]!==undefined){if(typeof obj[attr]=="function"){return function(){
 return obj[attr].apply(obj,arguments)}}else{return $B.$JS2Py(obj[attr])}}
@@ -7571,7 +7579,7 @@ if(inv_op !==null){return inv_op(self)}
 var inv_op=getattr(other,'__le__',null)
 if(inv_op !==null){return inv_op(self)}
 throw _b_.TypeError(
-"unorderable types: "+self.__class__.__name__+'() > '+$B.get_class(other).__name__+"()")}
+'unorderable types: float() > '+$B.get_class(other).__name__+"()")}
 $comp_func +='' 
 for(var $op in $B.$comps){eval("$FloatDict.__"+$B.$comps[$op]+'__ = '+
 $comp_func.replace(/>/gm,$op).
@@ -7579,18 +7587,11 @@ replace(/__gt__/gm,'__'+$B.$comps[$op]+'__').
 replace(/__le__/,'__'+$B.$inv_comps[$op]+'__'))}
 $B.make_rmethods($FloatDict)
 var $notimplemented=function(self,other){throw _b_.TypeError(
-"unsupported operand types for OPERATOR: '"+self.__class__.__name__+
-"' and '"+$B.get_class(other).__name__+"'")}
+"unsupported operand types for OPERATOR: 'float' and '"+
+$B.get_class(other).__name__+"'")}
 $notimplemented +='' 
 for(var $op in $B.$operators){
-switch($op){case '+=':
-case '-=':
-case '*=':
-case '/=':
-case '%=':
-break
-default:
-var $opfunc='__'+$B.$operators[$op]+'__'
+if($B.augmented_assigns[$op]===undefined){var $opfunc='__'+$B.$operators[$op]+'__'
 if($FloatDict[$opfunc]===undefined){eval('$FloatDict.'+$opfunc+"="+$notimplemented.replace(/OPERATOR/gm,$op))}}}
 function $FloatClass(value){return new Number(value)}
 function to_digits(s){

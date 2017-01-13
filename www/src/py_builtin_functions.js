@@ -506,8 +506,11 @@ function getattr(obj,attr,_default){
         if(typeof obj=='string'){klass = _b_.str.$dict}
         else if(typeof obj=='number'){
             klass = obj % 1 == 0 ? _b_.int.$dict : _b_.float.$dict
+        }else if(obj instanceof Number){
+            klass = _b_.float.$dict
+        }else{
+            klass = $B.get_class(obj)
         }
-        else{klass = $B.get_class(obj)}
     }
 
     if(klass===undefined){
