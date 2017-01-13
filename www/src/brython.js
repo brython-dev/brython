@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-13 22:04:47.486977"
+__BRYTHON__.compiled_date="2017-01-13 22:37:42.960967"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5935,34 +5935,12 @@ $ZipDict.$factory=zip
 function no_set_attr(klass,attr){if(klass[attr]!==undefined){throw _b_.AttributeError("'"+klass.__name__+"' object attribute '"+
 attr+"' is read-only")}else{throw _b_.AttributeError("'"+klass.__name__+
 "' object has no attribute '"+attr+"'")}}
-var $BoolDict=$B.$BoolDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'bool',$native:true}
-$BoolDict.__mro__=[$ObjectDict]
+var $BoolDict=$B.$BoolDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'bool'}
 bool.__class__=$B.$factory
 bool.$dict=$BoolDict
 $BoolDict.$factory=bool
-$BoolDict.__add__=function(self,other){if(self.valueOf())return other + 1;
-return other;}
 var True=true
 var False=false
-$BoolDict.__eq__=function(self,other){return self.valueOf()? bool(other): !bool(other)}
-$BoolDict.__ne__=function(self,other){return self.valueOf()? !bool(other): bool(other)}
-$BoolDict.__ge__=function(self,other){return _b_.int.$dict.__ge__($BoolDict.__hash__(self),other)}
-$BoolDict.__gt__=function(self,other){return _b_.int.$dict.__gt__($BoolDict.__hash__(self),other)}
-$BoolDict.__hash__=$BoolDict.__index__=$BoolDict.__int__=function(self){if(self.valueOf())return 1
-return 0}
-$BoolDict.__le__=function(self,other){return !$BoolDict.__gt__(self,other)}
-$BoolDict.__lshift__=function(self,other){return self.valueOf()<< other}
-$BoolDict.__lt__=function(self,other){return !$BoolDict.__ge__(self,other)}
-$BoolDict.__mul__=function(self,other){if(self.valueOf())return other
-return 0;}
-$BoolDict.__neg__=function(self){return -$B.int_or_bool(self)}
-$BoolDict.__pos__=$B.int_or_bool
-$BoolDict.__repr__=$BoolDict.__str__=function(self){if(self.valueOf())return "True"
-return "False"}
-$BoolDict.__setattr__=function(self,attr){return no_set_attr($BoolDict,attr)}
-$BoolDict.__sub__=function(self,other){if(self.valueOf())return 1-other;
-return -other;}
-$BoolDict.__xor__=function(self,other){return self.valueOf()!=other.valueOf()}
 var $EllipsisDict={__class__:$B.$type,__name__:'ellipsis'}
 $EllipsisDict.__mro__=[$ObjectDict]
 var Ellipsis={$dict: $EllipsisDict,__bool__ : function(){return True},__class__ : $EllipsisDict}
@@ -7908,7 +7886,32 @@ throw _b_.ValueError(
 int.$dict=$IntDict
 int.__class__=$B.$factory
 $IntDict.$factory=int
-_b_.int=int})(__BRYTHON__)
+_b_.int=int
+var $BoolDict=_b_.bool.$dict
+$BoolDict.__add__=function(self,other){if(self.valueOf())return other + 1;
+return other;}
+$BoolDict.__and__=function(self,other){return bool($IntDict.__and__(self,other))}
+$BoolDict.__eq__=function(self,other){return self.valueOf()? bool(other): !bool(other)}
+$BoolDict.__ne__=function(self,other){return self.valueOf()? !bool(other): bool(other)}
+$BoolDict.__ge__=function(self,other){return _b_.int.$dict.__ge__($BoolDict.__hash__(self),other)}
+$BoolDict.__gt__=function(self,other){return _b_.int.$dict.__gt__($BoolDict.__hash__(self),other)}
+$BoolDict.__hash__=$BoolDict.__index__=$BoolDict.__int__=function(self){if(self.valueOf())return 1
+return 0}
+$BoolDict.__le__=function(self,other){return !$BoolDict.__gt__(self,other)}
+$BoolDict.__lshift__=function(self,other){return self.valueOf()<< other}
+$BoolDict.__lt__=function(self,other){return !$BoolDict.__ge__(self,other)}
+$BoolDict.__mul__=function(self,other){if(self.valueOf())return other
+return 0;}
+$BoolDict.__neg__=function(self){return -$B.int_or_bool(self)}
+$BoolDict.__or__=function(self,other){return bool($IntDict.__or__(self,other))}
+$BoolDict.__pos__=$B.int_or_bool
+$BoolDict.__repr__=$BoolDict.__str__=function(self){if(self.valueOf())return "True"
+return "False"}
+$BoolDict.__setattr__=function(self,attr){return no_set_attr($BoolDict,attr)}
+$BoolDict.__sub__=function(self,other){if(self.valueOf())return 1-other;
+return -other;}
+$BoolDict.__xor__=function(self,other){return self.valueOf()!=other.valueOf()}
+$BoolDict.__mro__=[$IntDict,_b_.object.$dict]})(__BRYTHON__)
 ;(function($B){
 eval($B.InjectBuiltins())
 var $LongIntDict={__class__:$B.$type,__name__:'int'}
@@ -10916,10 +10919,11 @@ module_obj.__repr__=module_obj.__str__=function(){return "<module '"+name+"' (bu
 $B.imported[name]=$B.modules[name]=module_obj}
 for(var attr in modules){load(attr,modules[attr])}
 modules['browser'].html=modules['browser.html']
-$B.builtins.__builtins__=$B.$ModuleDict.$factory('__builtins__','Python builtins')
-for(var attr in $B.builtins){$B.builtins.__builtins__[attr]=$B.builtins[attr]}
-$B.builtins.__builtins__.__setattr__=function(attr,value){$B.builtins[attr]=value}
-$B.bound.__builtins__.__builtins__=$B.builtins.__builtins__})(__BRYTHON__)
+var _b_=$B.builtins
+_b_.__builtins__=$B.$ModuleDict.$factory('__builtins__','Python builtins')
+for(var attr in $B.builtins){_b_.__builtins__[attr]=_b_[attr]}
+_b_.__builtins__.__setattr__=function(attr,value){_b_[attr]=value}
+$B.bound.__builtins__.__builtins__=_b_.__builtins__})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 function import_hooks(mod_name,_path,module,blocking){
 if($B.is_none(module)){module=undefined;}

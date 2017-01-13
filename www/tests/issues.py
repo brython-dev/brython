@@ -1113,6 +1113,11 @@ assert a == 25.0
 a //= 25
 assert a == 1.0
 
+# issue 550
+assert True & False is False
+assert True | False is True
+assert True ^ False is True
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

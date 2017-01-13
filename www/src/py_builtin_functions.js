@@ -1720,77 +1720,18 @@ function no_set_attr(klass, attr){
 
 var $BoolDict = $B.$BoolDict = {__class__:$B.$type,
     __dir__:$ObjectDict.__dir__,
-    __name__:'bool',
-    $native:true
+    __name__:'bool'
+    //$native:true
 }
-$BoolDict.__mro__ = [$ObjectDict]
 bool.__class__ = $B.$factory
 bool.$dict = $BoolDict
-$BoolDict.$factory = bool
 
-$BoolDict.__add__ = function(self,other){
-    if(self.valueOf()) return other + 1;
-    return other;
-}
+$BoolDict.$factory = bool
 
 // True and False are the same as Javascript true and false
 
 var True = true
 var False = false
-
-$BoolDict.__eq__ = function(self,other){
-    return self.valueOf() ? bool(other) : !bool(other)
-}
-
-$BoolDict.__ne__ = function(self,other){
-    return self.valueOf() ? !bool(other) : bool(other)
-}
-
-$BoolDict.__ge__ = function(self,other){
-    return _b_.int.$dict.__ge__($BoolDict.__hash__(self),other)
-}
-
-$BoolDict.__gt__ = function(self,other){
-    return _b_.int.$dict.__gt__($BoolDict.__hash__(self),other)
-}
-
-$BoolDict.__hash__ = $BoolDict.__index__= $BoolDict.__int__=function(self) {
-   if(self.valueOf()) return 1
-   return 0
-}
-
-$BoolDict.__le__ = function(self,other){return !$BoolDict.__gt__(self,other)}
-
-$BoolDict.__lshift__ = function(self,other){return self.valueOf() << other}
-
-$BoolDict.__lt__ = function(self,other){return !$BoolDict.__ge__(self,other)}
-
-$BoolDict.__mul__ = function(self,other){
-    if(self.valueOf()) return other
-    return 0;
-}
-
-$BoolDict.__neg__ = function(self){return -$B.int_or_bool(self)}
-
-$BoolDict.__pos__ = $B.int_or_bool
-
-$BoolDict.__repr__ = $BoolDict.__str__ = function(self){
-    if(self.valueOf()) return "True"
-    return "False"
-}
-
-$BoolDict.__setattr__ = function(self, attr){
-    return no_set_attr($BoolDict, attr)
-}
-
-$BoolDict.__sub__ = function(self,other){
-    if(self.valueOf()) return 1-other;
-    return -other;
-}
-
-$BoolDict.__xor__ = function(self, other) {
-    return self.valueOf() != other.valueOf()
-}
 
 var $EllipsisDict = {__class__:$B.$type,
     __name__:'ellipsis'
