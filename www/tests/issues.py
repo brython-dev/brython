@@ -1106,6 +1106,12 @@ for k in range(k):
     nb += 1
 assert nb == 3
 
+# issue 547
+a = (1,)
+b = a
+a += (2,)
+assert b == (1,)
+
 # issue 549
 a = 5.0
 a **= 2

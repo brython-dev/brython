@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-13 23:03:06.082085"
+__BRYTHON__.compiled_date="2017-01-14 09:19:52.434169"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -8631,6 +8631,8 @@ $TupleDict.$factory=tuple
 $TupleDict.__new__=$B.$__new__(tuple)
 tuple.__module__='builtins'
 for(var attr in $ListDict){switch(attr){case '__delitem__':
+case '__iadd__':
+case '__imul__':
 case '__setitem__':
 case 'append':
 case 'extend':

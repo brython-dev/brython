@@ -662,6 +662,8 @@ tuple.__module__='builtins'
 for(var attr in $ListDict){
     switch(attr) {
       case '__delitem__':
+      case '__iadd__':
+      case '__imul__':
       case '__setitem__':
       case 'append':
       case 'extend':

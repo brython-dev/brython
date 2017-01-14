@@ -552,20 +552,7 @@ function $AssignCtx(context){ //, check_unbound){
             }
             return assigned.length-1
         }
-        /*
-        var left = this.tree[0]
-        while(left.type==='assign'){ 
-            // chained assignment : x=y=z
-            // transform current node to "y=z"
-            // and add a new node "x=y"
-            var new_node = new $Node()
-            var node_ctx = new $NodeCtx(new_node)
-            node_ctx.tree = [left]
-            //node.parent.insert(rank+1,new_node)
-            this.tree[0] = left.tree[1]
-            left = this.tree[0]
-        }
-        */
+
         var left_items = null
         switch(left.type) {
           case 'expr':
