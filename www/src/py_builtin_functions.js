@@ -1896,6 +1896,7 @@ $FunctionDict.__getattribute__ = function(self, attr){
             // annotations is stored as a Javascript object
             return $B.obj_dict(self.$infos[attr])
         }else{
+            console.log('func attr', attr, self.$infos, self.$defaults)
             return self.$infos[attr]
         }
     }else{
