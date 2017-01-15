@@ -54,17 +54,20 @@ Para que el script Python se pueda procesar es necesario incluir _brython.js_ y 
 Si el programa Python es extenso, otra opción sería escribirlo en un fichero separado y cargarlo usando el atributo _src_ de la etiqueta _script_ :
 
     <html>
+    
     <head>
     <script src="/brython.js"></script>
     </head>
+
     <body onload="brython()">
     <script type="text/python" src="test.py"></script>
     <input id="zone"><button id="mybutton">click!</button>
     </body>
+
     </html>
 
 Hay que resaltar que, en este caso, el script Python será cargado mediante una llamada Ajax : deberá, por tanto, estar localizado en el mismo dominio que la página HTML.
 
-En los dos ejemplos de código anteriores, cuando pulsamos el botón del ratón, el evento onclick llama y ejecuta la función `echo()`, definida en el script Python. Esta función obtiene el valor mediante el elemento INPUT, a través de su id (_zone_). Esto se consigue mediante la sintaxis `document["zone"]` : `document` definido en el módulo **browser**, es un objeto que representa el objeto que se muestra en el navegador. Se comporta como un diccionario cuyas claves son los ids de los elementos del DOM. Por tanto, en nuestro ejemplo, `document["zone"]` es un objeto que 'mapea' el elemento INPUT ; la propiedad _value_ contiene el valor del objeto.
+En los dos ejemplos de código anteriores, cuando pulsamos el botón del ratón, el evento onclick llama y ejecuta la función `echo()`, definida en el script Python. Esta función obtiene el valor mediante el elemento INPUT, a través de su id (_zone_). Esto se consigue mediante la sintaxis `document["zone"]` : `document` definido en el módulo **browser**, es un objeto que representa el documento que se muestra en el navegador. Se comporta como un diccionario cuyas claves son los ids de los elementos del DOM. Por tanto, en nuestro ejemplo, `document["zone"]` es un objeto que 'mapea' el elemento INPUT ; la propiedad _value_ contiene el valor del objeto.
 
 En Brython, el 'output' se puede obtener de varias formas, incluyendo la función integrada `alert()` (también definida en el módulo **browser**) que muestra una ventana ('popup window') con el texto que hemos pasado como argumento.
