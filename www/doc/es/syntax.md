@@ -4,10 +4,6 @@ La implementación tiene en cuenta las limitaciones de los navegadores, en parti
 aquellas relacionadas con el sistema de ficheros. La escritura es imposible Writing is impossible y la lectura está
 limitada a aquellas carpetas accesibles mediante una petición Ajax.
 
-Debido a las restricciones de Javascript, Brython soporta los enteros  de forma correctasolo en el rango
- [-2**53, 2**53]. Existe un módulo específico para programas qque manejan enteros
- de longitud arbitraria. 
- 
  Keywords y funciones integradas (built-in functions)
 ----------------------------------------------------
 
@@ -16,15 +12,35 @@ Brython soporta la mayor parte de keywords y funciones de Python 3 :
 - keywords : `as, assert, break, class, continue, def, del, elif, else, except, False, finally, for, from, global, if, import, is, lambda, None, nonlocal, pass, return, True, try, while, with, yield`
 - built-in functions : `abs(), all(), any(), ascii(), bin(), bool(), bytes(), callable(), chr(), classmethod(), delattr(), dict(), dir(), divmod(), enumerate(), eval(), exec(), filter(), float(), frozenset(), getattr(), globals(), hasattr(), hash(), hex(), id(), input(), int(), isinstance(), iter(), len(), list(), locals(), map(), max(), min(), next(), object(), open(), ord(), pow(), print(), property(), range(), repr(), reversed(), round(), set(), setattr(), slice(), sorted(), str(), sum(), super(), tuple(), type(), zip(), __import__()`
 
-Por defecto, `print()` mostrará la salida en la consola del navegador de la misma forma que sucede con los errores. `sys.stderr` y `sys.stdout` se pueden asignar a un objeto usando el método `write()` permitiendo la redirección del 'output' a una ventana o área texto. 
+Las funciones integradas (_built-in_) `memoryview(), vars()` no han sido implementadas en la versión actual.
 
-`sys.stdin`, de momento, no ha sido implementado, sin embargo, existe la función integrada (built-in function) `input()` que abre un di&aacute;logo bloqueante de entrada (un 'prompt').
+Algunas de las características y limitaciones impuestas por el navegador y Javascript :
 
-Para abrir un diálogo de impresión (a una impresora), llama a `window.print` (`window` se encuentra definido en el módulo **browser**)
+- la función built-in `open()` toma como argumento la url del fichero a
+  abrir. Debido a que se abre mediante una llamada Ajax, el fichero debe estar en el mismo dominio que
+  el script que lo llama. El objeto devuelto por `open()` dispone de los métodos de lectura y acceso
+  habituales : `read, readlines, seek, tell, close`
 
-Lo siguiente no ha sido implementado en la versi&oacute;n actual : 
+- por defecto, `print()` mostrará la salida en la consola del navegador de la misma forma que sucede 
+  con los errores. `sys.stderr` y `sys.stdout` se pueden asignar a un objeto usando 
+  el método `write()` permitiendo la redirección del 'output' a una ventana o área texto. 
 
-- built-in functions `memoryview(), vars()`
+- para abrir un diálogo de impresión (a una impresora), llama a `window.print` 
+  (`window` se encuentra definido en el módulo **browser**)
+
+- `sys.stdin`, de momento, no ha sido implementado, sin embargo, existe la 
+  función integrada (built-in function) `input()` que abre un diálogo bloqueante 
+  de entrada (un 'prompt').
+
+- el ciclo de vida de los objetos se gestiona mediante el recolector de basura (garbage collector)
+  de Javascript, Brython no gestiona el conteo de referencias (reference counting) como sí hace CPython. 
+  Por tanto,  no se llama al método `__del__()` cuando una instancia de una clase no se vuelve a referenciar.
+
+- funciones como `time.sleep()`, que bloquean la ejecución durante un tiempo dado
+  o hasta que se 'dispara' un evento, no se gestionan debido a que no existe un equivalente
+  en Javascript. En este caso, la aplicación debe ser escrita con las funciones
+  del módulo **browser.timer** (eg `set_timeout()`, 
+  `set_interval()`), o mediante manejadores de eventos (método `bind()` de los elementos del DOM).
 
 
 Valor Built-in `__name__`
@@ -56,5 +72,5 @@ if __name__=='__main__':
 ```
 </blockquote>
 
-- Para el resto de script 'sin nombre', `__name__` se ajustará a un string aleatorio que comenzará 
+- Para el resto de scripts 'sin nombre', `__name__` se ajustará a un string aleatorio que comenzará 
  por `__main__`
