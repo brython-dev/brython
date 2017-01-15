@@ -8,7 +8,7 @@ dico = {
     'title': {
         'en':'Brython distribution vs CPython',
         'fr':'Comparaison des distributions Brython et CPython',
-        'es':'Brython distribution vs CPython'
+        'es':'Distribución Brython vs CPython'
     },'dir': {
         'en':'Directory',
         'fr':'Répertoire',
@@ -16,7 +16,7 @@ dico = {
      },'both': {
          'en':'Files in both distributions',
          'fr':'Fichiers communs aux deux distributions',
-         'es':'Archivos comunes a ambas distribuciones'
+         'es':'Archivos comunes en ambas distribuciones'
      },'specific': {
          'en':'Brython-specific',
          'fr':'Spécifiques à Brython',
@@ -28,7 +28,7 @@ dico = {
      },'missing': {
          'en':'Directories in CPython distribution missing in Brython',
          'fr':'Répertoires de la distribution CPython absents de Brython',
-         'es':'Directorios en CPython ausente de distribución en Brython'
+         'es':'Directorios en CPython ausentes en la distribución en Brython'
      }
 }
 
