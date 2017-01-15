@@ -11,16 +11,16 @@ Introducción
 
 Supón que tenemos un elemento del tipo botón en una página, como el siguiente : <button>un botón</button>
 
-Si pulsas sobre el mismo no sucederá nada, debido a que no eexiste ninguna instrucción sobre como reaccionar con un click (i.e., al pulsar el botón). Para ello, la acción para definir esto se realiza mediante la siguiente sintaxis :
+Si pulsas sobre el mismo no sucederá nada, debido a que no existe ninguna instrucción sobre como reaccionar con un click (i.e., al pulsar el botón). Para ello, la acción para definir esto se realiza mediante la siguiente sintaxis :
 
 >    btn.bind('click', show)
 
-El primer argumento de `bind` es el tipo de eveento que el botón deberá manejar ; El segundo argumento es una función que toma un único argumento, una instancia de la clase `DOMEvent`. Por ejemplo :
+El primer argumento de `bind` es el tipo de evento que el botón deberá manejar ; El segundo argumento es una función que toma un único argumento, una instancia de la clase `DOMEvent`. Por ejemplo :
 
 >    def show(ev):
 >        print('ok !')
 
-(recuerda que para ver llos resultados del `print` deberás tener abierta la consola del navegador)
+(recuerda que para ver los resultados del `print` deberás tener abierta la consola del navegador)
 
 Las instancias de `DOMEvent` poseen un número de atributos que dependen del tipo de evente. En el caso de un click y, de forma más general para eventos relacionados con el ratón, los atributos incluyen
 
@@ -61,7 +61,7 @@ Cualquiera que sea el tipo de evento, las instancias de la clase `DOMEvent` pose
 <tr>
 <td>
 `bubbles`
-> boolean0, indica si el evento ascenderá a través del DOM o no
+> booleano, indica si el evento ascenderá a través del DOM o no
 </td>
 <td>
 <button id="_bubbles">test</button>
@@ -121,7 +121,7 @@ document['_defaultPrevented'].bind('click',lambda ev:alert('defaultPrevented : %
 <tr>
 <td>
 `eventPhase`
-> entero, indica la fase del flujo del evento([event flow](http://www.w3.org/TR/DOM-Level-3-Events/#event-flow)) que está siendo evaluada
+> entero, indica la fase del flujo del evento ([event flow](http://www.w3.org/TR/DOM-Level-3-Events/#event-flow)) que está siendo evaluada
 </td>
 <td>
 <button id="_eventPhase">test</button>
@@ -183,7 +183,7 @@ document['_type'].bind('click',lambda ev:alert('type : %s ' %ev.type))
 y los siguientes métodos
 
 `preventDefault()`
-> previene de ls ejecución de la acción por defecto asociada al evento
+> previene de la ejecución de la acción por defecto asociada al evento
 
 > **Ejemplo**
 
