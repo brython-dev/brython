@@ -105,7 +105,32 @@ Brython script doesn't know the signature of the Javascript function.
 ### Using Javascript constructors
 
 If a Javascript function is an object constructor, that can be called in 
-Javascript code with the keyword `new`, it can be used in Brython by 
+Javascript code with the keyword `new`, it can be used in Brython using 
+the `new` special method added by Brython to the Javascript object.
+
+For instance : 
+
+    <script type="text/javascript">
+    function Rectangle(x0,y0,x1,y1){
+        this.x0 = x0
+        this.y0 = y0
+        this.x1 = x1
+        this.y1 = y1
+        this.surface = function(){return (x1-x0)*(y1-y0)}
+    }
+    </script>
+    
+    <script type="text/python">
+    from browser import alert, window
+
+    rectangle = window.Rectangle
+    alert(rectangle.new(10,10,30,30).surface())
+    </script>
+
+Another alternative that will be deprecated in future versions of Brython 
+and is not recommended would be the following one: as before, if a Javascript 
+function is an object constructor, that can be called in 
+Javascript code with the keyword `new` it can be used in Brython by 
 transforming it with the function `JSConstructor()` defined in module 
 **javascript**.
 

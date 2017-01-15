@@ -55,15 +55,15 @@ atributos del objeto `window` definido en el módulo **browser**
 
 Por ejemplo :
 
-    <script type="text/javascript">
-    circle = {surface:function(r){return 3.14*r*r}}
-    </script>
-    
-    <script type="text/python">
-    from browser import document, window
-    
-    document['result'].value = window.circle.surface(10)
-    </script>
+>    <script type="text/javascript">
+>    circle = {surface:function(r){return 3.14*r*r}}
+>    </script>
+>    
+>    <script type="text/python">
+>    from browser import document, window
+>    
+>    document['result'].value = window.circle.surface(10)
+>    </script>
     
 Los objetos Javascript se convierten a su equivalente en Python mediante de la
 siguiente forma:
@@ -107,7 +107,32 @@ el script Brython no conoce como ha sifo definida la función Javascript.
 
 ### Usando constructores Javascript
 
-Si una función Javascript es un objecto constructor, puede ser llamado en 
+Si una función Javascript es un objeto constructor, puede ser llamado en 
+código Javascript mediante la palabra clave `new`, se podría llamar en Brython
+usando el método especial `new` añadida por Brython al objeto Javascript.
+
+Por ejemplo : 
+
+    <script type="text/javascript">
+    function Rectangle(x0,y0,x1,y1){
+        this.x0 = x0
+        this.y0 = y0
+        this.x1 = x1
+        this.y1 = y1
+        this.surface = function(){return (x1-x0)*(y1-y0)}
+    }
+    </script>
+    
+    <script type="text/python">
+    from browser import alert, window
+
+    rectangle = window.Rectangle
+    alert(rectangle.new(10,10,30,30).surface())
+    </script>
+
+Otra alternativa que dejará de ser mantenida en futuras versiones de Brython y
+que no se recomienda usar sería la siguiente: como antes, si una función Javascript 
+es un objecto constructor, puede ser llamado en 
 código Javascript mediante la palabra clave `new`, se podría usar en Brython 
 transformando esa palabra clave en la función integrada `JSConstructor()` 
 definida en el módulo **javascript**
