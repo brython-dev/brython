@@ -14,10 +14,10 @@ podemos acceder a este elemento mediante
 
 También podríamos obtener todos los elementos de un tipo determinado, por ejemplo todos los enlaces de hipertexto (HTML tag `A`), usando la siguiente sintaxis
 
-    from browser import document as doc
+    from browser import document
     from browser import html
 
-    links = doc[html.A]
+    links = document[html.A]
 
 Por último, todos los elementos de la página tienen un método `get()` que puede usarse para buscar elementos :
 
