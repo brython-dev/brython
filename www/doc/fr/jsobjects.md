@@ -107,7 +107,31 @@ script Brython ne connait pas la signature de la fonction Javascript.
 
 Si une fonction Javascript est un constructeur d'objets, qu'on peut appeler 
 dans du code Javascript avec le mot-clé `new`, on peut l'utiliser avec Brython 
-en la transformant par la fonction `JSConstructor()` du module **javascript**.
+en utilisant la méthode spéciale `new` ajoutée par Brython à l'objet
+Javascript.
+
+Par exemple :
+
+    <script type="text/javascript">
+    function Rectangle(x0,y0,x1,y1){
+        this.x0 = x0
+        this.y0 = y0
+        this.x1 = x1
+        this.y1 = y1
+        this.surface = function(){return (x1-x0)*(y1-y0)}
+    }
+    </script>
+    
+    <script type="text/python">
+    from browser import alert, window
+    
+    rectangle = window.Rectangle
+    alert(rectangle.new(10,10,30,30).surface())
+    </script>
+
+Une autre possibilité, qui n'est pas recommandée et sera dépréciée dans les
+futures versions de Brython, est de transformer le constructeur par la fonction 
+`JSConstructor()` du module **javascript**.
 
 <code>JSConstructor(_constr_)</code> renvoie une fonction qui, quand on lui 
 passe des arguments, retourne un objet Python correspondant à l'objet 
