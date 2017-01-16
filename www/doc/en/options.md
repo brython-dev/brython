@@ -18,6 +18,7 @@ To run the Python scripts in the page, you must call the function `brython()` on
 - *static\_stdlib\_import* : boolean, indicates if, in order to import modules or packages from the standard library, the static mapping table in the script __stdlib\_paths.js__ should be used. Defaults to `true`
 - *pythonpath* : a list of paths where imported modules should be searched
 - *ipy_id* : by default, the function `brython()` runs all the scripts in the page. This option specifies a list of element identifiers (tag attribute `id`) whose text content must be run as Python code. See [brythonmagic](https://github.com/kikocorreoso/brythonmagic) for more information
+- *profile* : When the `profile` option is > 0 the compiler adds additional code to the generated javascript which collects profiling information. To `profile` module provides access to this information. It strives to provide an interface largely similar to the `profile` module from the standard python distribution. See (Testing, debugging and profiling)[http://brython.info/static_doc/en/test.html] for more information
 
 
 Example of `brython` options usage:

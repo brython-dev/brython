@@ -36,13 +36,23 @@ La sintaxis para crear un objeto (eg un hiperenlace) es :
 
 <code>A(*[content,[attributes]]*)</code>
 
-> _content_ es el nodo hijo del objeto ; puede ser un objeto Python como un string, 
-> un número, una lista, etc, o una instancia de otra clase del módulo `html`.
+> *content* es el nodo hijo del objeto ; puede ser un objeto Python como un string, 
+> un número, una lista, etc, o una instancia de otra clase del módulo **html**.
 >
-> _attributes_ es una secuencia de palabras clave (keywords) correspondientes a los
+> *attributes* es una secuencia de palabras clave (keywords) correspondientes a los
 >  [atributos](http://www.w3.org/TR/html5-author/index.html#attributes-1) de la etiqueta HTML. 
 > Si el atributo contiene un guión (`-`) deberá ser reemplazado por un guión bajo (`_`): _http\_equiv_ 
 > en lugar de _http-quiv_ (el símbolo `-` será interpretado como el signo 'menos').
+
+
+Si *content* es un iterable (que no sea un string), todos los elementos en el
+iterable se convierten en hijos del objeto. Por ejemplo :
+
+```python
+html.UL(html.LI('item %s' %i) for i in range(5))
+```
+
+crea una lista desordenada con las etiquetas `<li>` en la expresión generador
 
 Para el atributo _style_, el valor debe ser un diccionario :
 
@@ -57,9 +67,9 @@ d = html.DIV('Brython', style=dict('height':100, 'width':200))
 ```
 
 Las palabras clave de los argumentos de _style_ deben ser escritos usando la sintaxis Javascript
-en lugar de la sintaxis CSS : backgroundColor en vez de background-color.
+en lugar de la sintaxis CSS : *backgroundColor* en vez de *background-color*.
 
-Para evitar conflictos con la palabra clave de Python, el atributo _class_ se debe escribir con la primera letra en mayúscula :
+Para evitar conflictos con la palabra clave de Python, el atributo *class* se debe escribir con la primera letra en mayúscula :
 
 ```python
 d = html.DIV('Brython', Class="container")
@@ -84,99 +94,118 @@ También se pueden crear múltiples elementos al mismo nivel usando el signo má
 row = html.TR(html.TH('LastName') + html.TH('FirstName'))
 ```
 
+y puedes añadir todos los elementos en un iterable :
+
+```python
+from browser.html import *
+
+t = TABLE()
+t <= TR(TH('Number')+TH('Square'))
+t <= (TR(TD(i)+TD(i*i)) for i in range(10))
+```
+
+
 Aquí se puede ver como crear una caja de selección a partir de una lista (mediante la combinación de los operadores descritos y sintaxis Python) :
 
 ```python
-items = ['one', 'two', 'three']
-sel = html.SELECT()
-for i, elt in enumerate(items):
-    sel <= html.OPTION(elt, value = i)
-doc <= sel
+from browser import document
+from browser.html import *
+
+document <= SELECT(OPTION(elt, value=i) 
+    for i, elt in enumerate(['one', 'two', 'three']))
 ```
 
-Es importante resaltar que la creación de una instancia de una clase conlleva la creación HTML a partir de un único objeto DOM. Si asignamos la instancia a una variable, no podrá ser usada en varios sitios. Por ejemplo, con este codigo :
+Es importante resaltar que la creación de una instancia de una clase conlleva 
+la creación HTML a partir de un único objeto DOM. Si asignamos la instancia a 
+una variable, no podrá ser usada en varios sitios. Por ejemplo, con este codigo :
 
 ```python
 link = html.A('Python', href='http://www.python.org')
-doc <= 'Official Python Website: ' + link
-doc <= html.P() + 'I repeat: the site is ' + link
+document <= 'Official Python Website: ' + link
+document <= html.P() + 'I repeat: the site is ' + link
 ```
 
 El link solo se mostrará en la segunda línea. Una solución sería clonar el objeto original :
 
 ```python
 link = html.A('Python', href='http://www.python.org')
-doc <= 'Official Python Website: ' + link
-doc <= html.P() + 'I repeat: the site is ' + link.clone()
+document <= 'Official Python Website: ' + link
+document <= html.P() + 'I repeat: the site is ' + link.clone()
 ```
 
-Como regla general, los atributos de las instancias de clases HTML tienen el mismo nombre que los objetos DOM correspondientes. Por ejemplo, podemos obtener la opción seleccionada por el atributo `selectedIndex` del objeto `SELECT`. Brython añade algunas cosas que permiten que la manipulación sea un poco más Pythónica
+Como regla general, los atributos de las instancias de clases HTML tienen 
+el mismo nombre que los objetos DOM correspondientes. Por ejemplo, podemos 
+obtener la opción seleccionada por el atributo `selectedIndex` del objeto 
+`SELECT`. Brython añade algunas cosas que permiten que la manipulación sea 
+un poco más Pythónica
 
-Veamos un ejemplo más completo. El código a continuación ha creado la estructura del panel azul. El panel azul es un elemento `div` con el atributo `id="container"`.
+Veamos un ejemplo más completo. El código a continuación ha creado la 
+estructura del panel azul. El panel azul es un elemento `div` con el 
+atributo `id="container"`.
 
-Usaremos este `div` para crear una estructura HTML 'poco elegante' con un `div`, una tabla, un formulario y un elemento canvas HTML5:
+Usaremos este `div` para crear una estructura HTML 'poco elegante' con 
+un `div`, una tabla, un formulario y un elemento canvas HTML5:
 
 <div style="padding-left:50px;">
 <table cellpadding=10>
 <tr>
 <td style="width:100px;">
-<div id="html-doc" style="background-color:#dddddd;">
-    # First of all, the import of some libraries
-    from browser import document as doc
-    from browser import html
-    
-    # All the elements will be inserted in the div with the "container" id
-    container = doc['container']
-    
-    # We create a new div element
-    newdiv = html.DIV(id = "new-div")
-    # Now we add some style
-    newdiv.style = {"padding": "5px", 
-                   "backgroundColor": "#ADD8E6"}
-    
-    # Now, lets add a table with a column with numbers and a
-    # column with a word on each cell
-    text = "Brython is really cool"
-    textlist = text.split()
-    table = html.TABLE()
-    for i, word in enumerate(textlist):
-        table <= html.TR(html.TD(i + 1) + 
-                         html.TD(word))
-    # Now we add some style to the table
-    table.style = {"padding": "5px", 
-                   "backgroundColor": "#aaaaaa",
-                   "width": "100%"}
-    # Now we add the table to the new div previously created
-    newdiv <= table + html.BR()
-    
-    # a form? why not?
-    form = html.FORM()
-    input1 = html.INPUT(type="text", name="firstname", value="First name")
-    input2 = html.INPUT(type="text", name="lastname", value="Last name")
-    input3 = html.BUTTON("Button with no action!")
-    form <= input1 + html.BR() + input2 + html.BR() + input3
-    
-    newdiv <= form + html.BR()
-    
-    # Finally, we will add something more 'HTML5istic', a canvas with
-    # a color gradient in the newdiv previously created and below the form
-    canvas = html.CANVAS(width = 300, height = 300)
-    canvas.style = {"width": "100%"}
-    ctx = canvas.getContext('2d')
-    ctx.rect(0, 0, 300, 300)
-    grd = ctx.createRadialGradient(150, 150, 10, 150, 150, 150)
-    grd.addColorStop(0, '#8ED6FF')
-    grd.addColorStop(1, '#004CB3')
-    ctx.fillStyle = grd
-    ctx.fill()
-    
-    newdiv <= canvas
-    
-    # And finally we append the newdiv element
-    # to the parent, in this case the div with the "container" id
-    container <= newdiv
-    
-</div>
+```exec_on_load
+# First of all, the import of some libraries
+from browser import document as doc
+from browser import html
+
+# All the elements will be inserted in the div with the "container" id
+container = doc['container']
+
+# We create a new div element
+newdiv = html.DIV(id = "new-div")
+# Now we add some style
+newdiv.style = {"padding": "5px", 
+               "backgroundColor": "#ADD8E6"}
+
+# Now, lets add a table with a column with numbers and a
+# column with a word on each cell
+text = "Brython is really cool"
+textlist = text.split()
+table = html.TABLE()
+for i, word in enumerate(textlist):
+    table <= html.TR(html.TD(i + 1) + 
+                     html.TD(word))
+# Now we add some style to the table
+table.style = {"padding": "5px", 
+               "backgroundColor": "#aaaaaa",
+               "width": "100%"}
+# Now we add the table to the new div previously created
+newdiv <= table + html.BR()
+
+# a form? why not?
+form = html.FORM()
+input1 = html.INPUT(type="text", name="firstname", value="First name")
+input2 = html.INPUT(type="text", name="lastname", value="Last name")
+input3 = html.BUTTON("Button with no action!")
+form <= input1 + html.BR() + input2 + html.BR() + input3
+
+newdiv <= form + html.BR()
+
+# Finally, we will add something more 'HTML5istic', a canvas with
+# a color gradient in the newdiv previously created and below the form
+canvas = html.CANVAS(width = 300, height = 300)
+canvas.style = {"width": "100%"}
+ctx = canvas.getContext('2d')
+ctx.rect(0, 0, 300, 300)
+grd = ctx.createRadialGradient(150, 150, 10, 150, 150, 150)
+grd.addColorStop(0, '#8ED6FF')
+grd.addColorStop(1, '#004CB3')
+ctx.fillStyle = grd
+ctx.fill()
+
+newdiv <= canvas
+
+# And finally we append the newdiv element
+# to the parent, in this case the div with the "container" id
+container <= newdiv
+```
 </td>
 <td>
 <div id="container"></div>
@@ -184,7 +213,3 @@ Usaremos este `div` para crear una estructura HTML 'poco elegante' con un `div`,
 </tr>
 </table>
 </div>
-
-<script type="text/python">
-exec(doc["html-doc"].text)
-</script>

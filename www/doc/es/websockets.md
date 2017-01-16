@@ -5,11 +5,16 @@ Los Web sockets, definidos en HTML5, son una manera de manejar comunicación bid
 
 El módulo define una función :
 
-`websocket(`_host_`)`
+`supported`
 
-> _host_ define la localización de un servidor que soporta el protocolo WebSocket. devuelve un objeto `WebSocket`
+> indica si el protocolo está soportado por el navegador 
 
-> Si tu navegador no soporta WebSocket, se obtendrá un `NotImplementedError`
+y una función: 
+
+`WebSocket(`_host_`)`
+
+> _host_ define la localización de un servidor que soporta el protocolo WebSocket. devuelve un objeto `WebSocket`.
+> Si el navegador no soporta `WebSocket`, se lanzará un `NotImplementedError` 
 
 Un objeto `WebSocket` dispone de los siguientes métodos :
 
@@ -52,61 +57,60 @@ Un objeto `WebSocket` dispone de los siguientes métodos :
 Ejemplo :
 <table>
 <tr>
-<td id="py_source">
-    from browser import alert, document as doc
-    from browser import websocket
-    
-    def on_open(evt):
-        doc['sendbtn'].disabled = False
-        doc['closebtn'].disabled = False
-        doc['openbtn'].disabled = True
-    
-    def on_message(evt):
-        # message reeived from server
-        alert("Mensaje recibido : %s" %evt.data)
-    
-    def on_close(evt):
-        # websocket is closed
-        alert("Se ha cerrado la conexión")
-        doc['openbtn'].disabled = False
-        doc['closebtn'].disabled = True
-        doc['sendbtn'].disabled = True
-    
-    ws = None
-    def _open(ev):
-        if not __BRYTHON__.has_websocket:
-            alert("Tu navegador no soporta WebSocket")
-            return
-        global ws
-        # open a web socket
-        ws = websocket.WebSocket("wss://echo.websocket.org")
-        # bind functions to web socket events
-        ws.bind('open',on_open)
-        ws.bind('message',on_message)
-        ws.bind('close',on_close)
-    
-    def send(ev):
-        data = doc["data"].value
-        if data:
-            ws.send(data)
-    
-    def close_connection(ev):
-        ws.close()
-        doc['openbtn'].disabled = False
+<td>
+```exec_on_load
+from browser import alert, document as doc
+from browser import websocket
 
-    doc['openbtn'].bind('click', _open)
-    doc['sendbtn'].bind('click', send)
-    doc['closebtn'].bind('click', close_connection)
-        
+def on_open(evt):
+    doc['sendbtn'].disabled = False
+    doc['closebtn'].disabled = False
+    doc['openbtn'].disabled = True
+
+def on_message(evt):
+    # message reeived from server
+    alert("Message received : %s" %evt.data)
+
+def on_close(evt):
+    # websocket is closed
+    alert("Connection is closed")
+    doc['openbtn'].disabled = False
+    doc['closebtn'].disabled = True
+    doc['sendbtn'].disabled = True
+
+ws = None
+def _open(ev):
+    if not websocket.supported:
+        alert("WebSocket is not supported by your browser")
+        return
+    global ws
+    # open a web socket
+    ws = websocket.WebSocket("wss://echo.websocket.org")
+    # bind functions to web socket events
+    ws.bind('open',on_open)
+    ws.bind('message',on_message)
+    ws.bind('close',on_close)
+
+def send(ev):
+    data = doc["data"].value
+    if data:
+        ws.send(data)
+
+def close_connection(ev):
+    ws.close()
+    doc['openbtn'].disabled = False
+
+doc['openbtn'].bind('click', _open)
+doc['sendbtn'].bind('click', send)
+doc['closebtn'].bind('click', close_connection)
+```        
 </td>
+
 <td valign="top">
-<script type='text/python'>
-exec(doc['py_source'].text)
-</script>
-
-<button id="openbtn">Abrir conexión</button>
-<br><input id="data"><button id="sendbtn" disabled>Enviar</button>
-<p><button id="closebtn" disabled>Cerrar conexión</button>
+<button id="openbtn">Open connection</button>
+<br><input id="data"><button id="sendbtn" disabled>Send</button>
+<p><button id="closebtn" disabled>Close connection</button>
 </td>
+
 </tr>
 </table>

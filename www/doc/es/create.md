@@ -5,7 +5,7 @@ Brython existe para poder programar aplicaciones web,es decir, páginas HTML en 
 
 Una página web está hecha de elementos (textos, imágenes, sonidos,...) que pueden ser incluidos en la página de dos formas :
 
-- escribiendo código HTML con etiquetes, por ejemplo
+- escribiendo código HTML con etiquetas, por ejemplo
 
 >    <html>
 >    <body>

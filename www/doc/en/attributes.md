@@ -32,7 +32,7 @@ attribute *class*)</td><td>R/W</td>
 </tr>
 
 <tr>
-<td>*clear*</td><td>méthod</td><td><code>`elt.clear()</code>` removes all the 
+<td>*clear*</td><td>method</td><td><code>`elt.clear()</code>` removes all the 
 descendants of the element</td><td>-</td>
 </tr>
 

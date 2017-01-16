@@ -1,5 +1,5 @@
-Pruebas y depuraci&oacute;n
----------------------------
+Pruebas y depuración y profiling
+--------------------------------
 
 ### Pruebas interactivas
 
@@ -20,13 +20,13 @@ de los errores sint&aacute;cticos (o en los lugares definidos mediante `sys.stde
 
 Por ejemplo, el c&oacute;digo
 
-    x = $a
+>    x = $a
 
 genera el mensaje
 
-    SyntaxError: unknown token [$]
-    module '__main__' line 1
-    x = $a
+>    SyntaxError: unknown token [$]
+>    module '__main__' line 1
+>    x = $a
         ^
 
 Si seleccionamos el nivel de depuraci&oacute;n 1 en la llamada a la funci&oacute;n 
@@ -36,20 +36,20 @@ aquel creado por Python3
 
 Este código:
 
-    x = [1,2]
-    x[3]
+>    x = [1,2]
+>    x[3]
 
 genera:
 
-    IndexError: list index out of range
-    module '__main__' line 2
-    x[3]
+>    IndexError: list index out of range
+>    module '__main__' line 2
+>    x[3]
 
 ### Depurando el código Javascript generado a partir de código Python
 
 > TL;DR si deseas usar el depurador integrado en el navegador para ir paso a paso a través de tu 
-código javascript generado debes escribir `__debugger__` en tu código y abrir las herramientas para 
-desarrolladores.
+> código javascript generado debes escribir `__debugger__` en tu código y abrir las herramientas para 
+> desarrolladores.
 
 Esta declaración es similar a la declaración javascript `debugger`.
 
@@ -66,7 +66,7 @@ declaración añade un breakpoint en el script por lo que durante el tiempo de e
 herramientas para desarrolladores están abiertas detendrá la ejecución y comenzará una sesión
 de depuración en ese punto.
 
-Hemos añadido la intérprete Brython la keyword `__debugger__` que será traducida por el tokenizer 
+Hemos añadido al intérprete Brython la keyword `__debugger__` que será traducida por el tokenizer 
 a `debugger` lanzando el mismo proceso.
 
 Para probarlo puedes ir al editor, teclear `__debugger__` en tu código, abrir las herramientas para 
@@ -204,3 +204,85 @@ En las siguientes líneas se detalla la API pública del depurador. Puedes encon
 
 **Brython_Debugger**.`on_step_update(cb)`
 > cb será llamado cuando se cambie un estado usando `setState`.
+
+### Profiling scripts
+
+Para permitir el profiling debemos pasar la opción "profile" a la función `brython`:
+
+> brython({'profile':1})
+
+Cuando la opción `profile` es > 0 el compilador añade código opcional al código
+Javascript generado que recolecta información del profiling. El módulo `profile` 
+provee de acceso a esta finformación. Intenta proveer una interfaz similar al módulo
+`profile` de la distribución estándar de CPython.
+
+La diferencia más notable es que no permite temporizadores definidos por 
+el usuario y no hace calibración. Métodos que en el módulo estándar guardan la información 
+a un fichero en Brython se guardan en el *local storage* del navegador usando
+una versión JSON.
+
+#### Uso básico:
+
+>       from profile import Profile
+>
+>       p = Profile()
+>       p.enable()
+>       do_something()
+>       do_something_else()
+>       p.create_stats()
+
+Que mostrará en pantalla algo como:
+
+>           1 run in 0.249 seconds
+>
+>       Ordered by: standard name (averaged over 1 run)
+>
+>       ncalls  tottime  percall  cumtime  var percall  module.function:lineno
+>        101/1    0.023    0.000    1.012        0.010               .fact:180
+
+donde cada línea corresponde a una función y las diferentes columnas corresponden a
+
+    ncalls      es el número total de veces que la función ha sido llamada
+                (si la función fue llamada de forma no recursiva, el segundo número
+                después del *backslash* indica cuantas llamadas fueron de primer nivel
+                en la recursión)
+
+    tottime     es el tiempo total (en segundos) usado en la función sin incluir sub-llamadas
+
+    percall     es el tiempo promedio usado en la función por llamada, sin incluir sub-llamadas
+
+    cumtime     es el tiempo total usado en la función incluyendo subllamadas
+
+    var percall es el tiempo promedio usado en la función por una llamada no recursiva
+
+    standard name es el nombre de la función en la forma module.function_name:line_number
+
+Opcionalmente se puede usar la siguiente forma, obteniendo ventaja de correr el código
+varias veces y promediándolo:
+
+>       from profile import Profile
+>
+>       p = Profile()
+>       p.call(function_to_profile,200,arg1,arg2,kwarg1=v1)
+
+que mostrará en pantalla algo como:
+
+>           200 runs in 0.249 seconds
+>
+>       Ordered by: standard name (averaged over 1 run)
+>
+>       ncalls  tottime  percall  cumtime  var percall  module.function:lineno
+>        101/1    0.023    0.000    1.012        0.010  function_to_profile:16
+
+Los datos recolectados en el *profiling* se pueden guardar en el *local storage* para poder ser usados posteriormente:
+
+>        p.dump_stats('run1')
+
+Los datos de un *profiling* se pueden leer de vuelta también:
+
+>        data = Stats('run1')
+
+Y se pueden agregar conjuntamente
+
+>        data.add(p.dump_stats())
+>        print(data)
