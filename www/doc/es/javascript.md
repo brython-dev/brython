@@ -8,7 +8,7 @@ Define dos clases y una función:
 
 **javascript**.`JSConstructor`
 > es una clase cuyas instancias representan constructores Javascript, (ie funciones usadas con la 
- palabra clave en Javascript `new`)
+> palabra clave en Javascript `new`)
 
 > <code>JSConstructor(_jsconstr_)</code> devuelve un objeto Brython. Este objeto permite llamadas; 
 > devuelve el objeto construido por el constructor *jsconstr*, transformado en un objeto Python 
