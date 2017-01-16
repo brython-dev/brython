@@ -13,6 +13,25 @@
         doc: $B.DOMNode(document),   //want to use document instead of doc
         DOMEvent:$B.DOMEvent,
         DOMNode:$B.DOMNode,
+        load:function(script_url, names){
+            // Load and eval() the Javascript file at script_url
+            // Set the names in array "names" in the Javacript global namespace
+            var file_obj = $B.builtins.open(script_url)
+            var content = $B.builtins.getattr(file_obj, 'read')()
+            eval(content)
+            if(names!==undefined){
+                if(!Array.isArray(names)){
+                    throw $B.builtins.TypeError("argument 'names' should be a"+
+                        " list, not '"+$B.get_class(names).__name__)
+                }else{
+                    for(var i=0;i<names.length;i++){
+                        try{window[names[i]]=eval(names[i])}
+                        catch(err){throw $B.builtins.NameError("name '"+
+                            names[i]+"' not found in script "+script_url)}
+                    }
+                }
+            }
+        },
         mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},
         prompt: function(message, default_value){
             return $B.JSObject(window.prompt(message, default_value||''))
@@ -212,9 +231,19 @@
 
     modules['javascript'] = {
         __file__:$B.brython_path+'/libs/javascript.js',
-        JSObject: $B.JSObject,
-        JSConstructor: $B.JSConstructor,
+        JSObject: function(){
+            console.log('The module "javascript" is deprecrated. '+
+                'Please refer to the documentation.')
+            return $B.JSObject.apply(null, arguments)
+        },
+        JSConstructor: function(){
+            console.log('The module "javascript" is deprecrated. '+
+                'Please refer to the documentation.')
+            return $B.JSConstructor.apply(null, arguments)
+        },
         load:function(script_url, names){
+            console.log('The module "javascript" is deprecrated. '+
+                'Please refer to the documentation.')
             // Load and eval() the Javascript file at script_url
             // Set the names in array "names" in the Javacript global namespace
             var file_obj = $B.builtins.open(script_url)

@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-14 09:19:52.434169"
+__BRYTHON__.compiled_date="2017-01-16 22:04:01.210723"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -10828,7 +10828,14 @@ $gen_it.$factory=$B.genfunc})(__BRYTHON__)
  ;(function($B){var modules={}
 modules['browser']={$package: true,$is_package: true,__package__:'browser',__file__:$B.brython_path.replace(/\/*$/g,'')+
 '/Lib/browser/__init__.py',alert:function(message){window.alert($B.builtins.str(message))},confirm: $B.JSObject(window.confirm),console:$B.JSObject(window.console),document:$B.DOMNode(document),doc: $B.DOMNode(document),
-DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},prompt: function(message,default_value){return $B.JSObject(window.prompt(message,default_value||''))},reload: function(){
+DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,load:function(script_url,names){
+var file_obj=$B.builtins.open(script_url)
+var content=$B.builtins.getattr(file_obj,'read')()
+eval(content)
+if(names!==undefined){if(!Array.isArray(names)){throw $B.builtins.TypeError("argument 'names' should be a"+
+" list, not '"+$B.get_class(names).__name__)}else{for(var i=0;i<names.length;i++){try{window[names[i]]=eval(names[i])}
+catch(err){throw $B.builtins.NameError("name '"+
+names[i]+"' not found in script "+script_url)}}}}},mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},prompt: function(message,default_value){return $B.JSObject(window.prompt(message,default_value||''))},reload: function(){
 var scripts=document.getElementsByTagName('script'),js_scripts=[]
 for(var i=0;i<scripts.length;i++){if(scripts[i].type===undefined ||
 scripts[i].type=='text/javascript'){js_scripts.push(scripts[i])
@@ -10888,7 +10895,12 @@ obj[tag]=makeFactory(tag)
 dicts[tag].$factory=obj[tag]}
 $B.tag_classes=dicts
 return obj})(__BRYTHON__)
-modules['javascript']={__file__:$B.brython_path+'/libs/javascript.js',JSObject: $B.JSObject,JSConstructor: $B.JSConstructor,load:function(script_url,names){
+modules['javascript']={__file__:$B.brython_path+'/libs/javascript.js',JSObject: function(){console.log('The module "javascript" is deprecrated. '+
+'Please refer to the documentation.')
+return $B.JSObject.apply(null,arguments)},JSConstructor: function(){console.log('The module "javascript" is deprecrated. '+
+'Please refer to the documentation.')
+return $B.JSConstructor.apply(null,arguments)},load:function(script_url,names){console.log('The module "javascript" is deprecrated. '+
+'Please refer to the documentation.')
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()
 eval(content)
