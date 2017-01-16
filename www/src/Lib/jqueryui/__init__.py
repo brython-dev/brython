@@ -28,8 +28,7 @@ key/value pairs :
 jq['tags'].autocomplete(source=availableTags)
 
 """
-from browser import html, document, window
-import javascript
+from browser import html, document, window, load
 
 _path = __file__[:__file__.rfind('/')]+'/'
 
@@ -47,8 +46,8 @@ document <= html.LINK(rel="stylesheet",
 # fully loaded in the page, so "window.jQuery" raises an exception
 
 # Load jQuery and put name 'jQuery' in the global Javascript namespace
-javascript.load(_path+'jquery-1.11.2.min.js', ['jQuery'])
-javascript.load(_path+'jquery-ui.min.js')
+load(_path+'jquery-1.11.2.min.js', ['jQuery'])
+load(_path+'jquery-ui.min.js')
 
 _jqui = window.jQuery.noConflict(True)
 
