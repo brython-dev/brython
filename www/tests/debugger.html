@@ -6,14 +6,16 @@
 <link rel="stylesheet" href="../doc/doc_brython.css">
 <link rel="stylesheet" href="console.css">
 
+<script type="text/javascript" src="../src/unicode.min.js"></script>
 <script type="text/javascript" src="../src/brython_builtins.js"></script>
 <script type="text/javascript" src="../src/version_info.js"></script>
-<script type="text/javascript" src="../src/identifiers_re.js"></script>
 <script type="text/javascript" src="../src/py2js.js"></script>
 <script type="text/javascript" src="../src/py_object.js"></script>
 <script type="text/javascript" src="../src/py_type.js"></script>
 <script type="text/javascript" src="../src/py_utils.js"></script>
 <script type="text/javascript" src="../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../src/py_exceptions.js"></script>
+<script type="text/javascript" src="../src/py_range_slice.js"></script>
 <script type="text/javascript" src="../src/py_bytes.js"></script>
 <script type="text/javascript" src="../src/py_set.js"></script>
 <script type="text/javascript" src="../src/js_objects.js"></script>
@@ -32,8 +34,6 @@
 
 <script type="text/javascript" src="../src/builtin_modules.js"></script>
 <script type="text/javascript" src="../src/py_import_hooks.js"></script>
-<script type="text/javascript" src="../src/async.js"></script>
-
 <script type="text/javascript" src="../src/py_VFS.js"></script>
 
 <script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
@@ -63,18 +63,13 @@ trans = {
                    'es':'Poner los bugs en el ',
                    'fr':"Signalez les bugs dans l'"},
     'test_page':{'en':'Tests page','es':'P&aacute;gina de pruebas','fr':'Page de tests'},
-    'run':{'en':'run','es':'ejecutar','fr':'ex?cuter'},
+    'run':{'en':'run','es':'ejecutar','fr':'exécuter'},
     'clear':{'en':'clear','es':'borrar','fr':'effacer'}
 }
 
 for key in trans:
     if key in doc:
         doc[key].html = trans[key].get(language,trans[key]['en'])
-
-# link to test page
-tplink = doc['test_page']
-if qs_lang:
-    tplink.href += '?lang=%s' %qs_lang
 
 # bindings
 # next functions are defined in debugger.py
@@ -117,11 +112,11 @@ doc["add_main"].bind('click', add_main)
 </script>
 
 </head>
-<body onload="brython({debug:1, cache:'version'})">
+<body onload="brython({debug:1})">
 
 <table id=banner cellpadding=0 cellspacing=0>
 <tr id=banner_row >
-<td class="logo"><a href="../index.html"><img src="../brython.svg" class="logo"></a></td>
+<td class="logo"><a href="../index.html"><img src="../brython.png" class="logo"></a></td>
 </tr>
 </table>
 
@@ -160,16 +155,7 @@ doc["add_main"].bind('click', add_main)
 </div>
 </div>
 
-<div style="float:left;margin-top:50px">
-    <a href="//github.com/brython-dev/brython/issues" title="Please report Bugs on the GitHub Issue Tracker !">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="#000" width="16" height="16" viewBox="0 0 32 16"><path d="m31.9 10.5v-2.05l-6-.02c-.2-2.29-1-4.41-2.2-6.11h5.1l2.2-8.93-1.94-.5-1.83 7.39-5.44-.01c-.03-.02-.05-.04-.08-.06.2-.64.32-1.3.32-2 .01-3.37-2.66-6.11-5.95-6.12-3.32-.01-6 2.72-5.97 6.09-.01.7.11 1.36.31 1.98-.03.02-.05.04-.08.06h-5.51l-1.79-7.4-1.93.49 2.16 8.95h5.1c-1.24 1.7-2.06 3.8-2.25 6.12l-6-.02v2.05l6 .02c.11 1.46.48 2.83 1.04 4.08h-3.87l-2.2 8.93 1.94.5 1.83-7.39h3.51c1.83 2.48 4.59 4.09 7.68 4.06 3.1 0 5.86-1.57 7.7-4.06h3.51l1.79 7.39 1.93-.48-2.16-8.95h-3.87c.45-1.3.81-2.69.93-4.09l6 .02"/></svg>
-        Bugs?
-    </a><br>
-    <a href='index.html' id=test_page >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="#000"><path d="m7.75.5c-4.28 0-7.75 3.47-7.75 7.75 0 4.25 3.47 7.75 7.75 7.75 4.25 0 7.75-3.5 7.75-7.75 0-4.28-3.5-7.75-7.75-7.75m0 13.6c-3.21 0-5.81-2.6-5.81-5.81s2.6-5.81 5.81-5.81 5.81 2.6 5.81 5.81-2.6 5.81-5.81 5.81m-.97-9.72a.969 .969 0 0 0 1.94 0 .969 .969 0 1 0 -1.94 0m2.91.96a.969 .969 0 0 0 1.94 0 .969 .969 0 1 0 -1.94 0m-5.81 0a.969 .969 0 0 0 1.94 0 .969 .969 0 1 0 -1.94 0m2.91 5.81v.97h1.94v-.97l-.98-4.89z"/></svg>
-        Unittests?
-    </a>
-</div>
+
 
 </body>
 </html>

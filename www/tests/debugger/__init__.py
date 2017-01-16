@@ -5,7 +5,6 @@ import dis
 
 from browser import document as doc, window, alert
 
-
 Debugger = window.Brython_Debugger
 
 # set height of container to 66% of screen
@@ -38,7 +37,7 @@ except:
     has_ace = False
 
 
-if sys.has_local_storage:
+if hasattr(window, "localStorage"):
     from browser.local_storage import storage
 else:
     storage = None
