@@ -290,7 +290,7 @@ function run_py(module_contents,path,module,compiled) {
            console.log('code for module '+module.__name__)
            console.log(js)
         }
-        if(module.__name__=="sre_compile"){console.log(js)}
+        if(module.__name__=="time"){console.log(js)}
         eval(js)
     }catch(err){
         console.log(err+' for module '+module.__name__)

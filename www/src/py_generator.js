@@ -528,9 +528,9 @@ $gen_it.__next__ = function(self){
     try{
         var res = self.next.apply(self, self.args)
     }catch(err){
-        /*
         console.log('error in __next__ of', self.name)
         console.log(self.next+'')
+        /*
         console.log(err)
         */
         self.$finished=true

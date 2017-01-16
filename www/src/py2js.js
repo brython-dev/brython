@@ -333,7 +333,9 @@ function $Node(type){
                             '"] = $B.genfunc("'+def_ctx.name+'", '+blocks+
                             ',['+g+'])'
                         */
-                        res = 'var '+def_ctx.name+def_ctx.num+' = $B.genfunc("'+
+                        name = def_ctx.decorated ? def_ctx.alias : 
+                            def_ctx.name+def_ctx.num,
+                        res = 'var '+name+' = $B.genfunc("'+
                             def_ctx.name+'", '+blocks+',['+g+'])'
                     this.parent.children.splice(rank, 1)
                     this.parent.insert(rank+offset-1,
@@ -2069,6 +2071,12 @@ function $DefCtx(context){
 
         var make_args_nodes = []
 
+        var name = (this.decorated ? this.alias : this.name+this.num)
+        var default_ref = name+'.$defaults'
+        if(this.type=="generator"){
+            default_ref = prefix+'.$defaults'
+        }
+
         // If function is not a generator, $locals is the result of $B.args
         var js = this.type=='def' ? local_ns+' = $locals' : 'var $ns'
         
@@ -2076,7 +2084,7 @@ function $DefCtx(context){
             this.argcount+', {'+this.slots.join(', ')+'}, '+
             '['+slot_list.join(', ')+'], arguments, '
 
-        if(defs1.length){js += '$defaults, '}
+        if(defs1.length){js += default_ref+', '}
         else{js += '{}, '}
         js += this.other_args+', '+this.other_kw+');'
 
@@ -2192,8 +2200,12 @@ function $DefCtx(context){
         // the same number of lines for subsequent transformations
         var default_node = new $Node()
         var js = ';_b_.None;'
-        if(defs1.length>0){
-            js = 'var $defaults = '+this.name+this.num+'.$defaults;'
+        if(false){ //defs1.length>0){
+            js = 'var $defaults = '+name+'.$defaults;'
+            if(this.type="generator"){
+                console.log('default in gen', prefix)
+                js = 'var $defaults = '+prefix+'.$defaults;'
+            }
         }
         new $NodeJSCtx(default_node,js)
         node.insert(0,default_node)
@@ -2201,17 +2213,11 @@ function $DefCtx(context){
         // Add the new function definition
         node.add(def_func_node)
 
-        // Final line to run close and run the closure
-        var ret_node = new $Node()
-        new $NodeJSCtx(ret_node,')();')
-        //node.parent.insert(rank+1,ret_node)
-
         var offset = 1
 
         var indent = node.indent
         
         // Set to local
-        var name = (this.decorated ? this.alias : this.name+this.num)
         js = prefix+'='+name
         node.parent.insert(rank+offset, $NodeJS(js))
         offset++
@@ -2310,7 +2316,9 @@ function $DefCtx(context){
             for(var i=0;i<children.length;i++){
                 try_node.add(children[i])
             }
+            console.log(children[i-1])
             parent.children.splice(pos+2,parent.children.length)
+            try_node.add($NodeJS('return None'))
             
             var finally_node = new $Node(),
                 ctx = new $NodeCtx(finally_node)
