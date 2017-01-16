@@ -1,5 +1,5 @@
-módulo browser.markdown
------------------------
+módulo **browser.markdown**
+---------------------------
 
 markdown es un modo de formateo de texto adaptado a la publicación en Internet, siendo más sencillo de editar que HTML
 
