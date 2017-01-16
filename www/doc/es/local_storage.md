@@ -5,9 +5,14 @@ Este módulo usa el almacenamiento local definido en HTML5. La especificación s
 
 ¿Qué es el el almacenamiento local (**`localStorage de HTML5`**): 
 
-- localStorage es una base de datos clave-valor qye funciona en el cliente, i.e. los datos se almacenan en el navegador del usuario. Esto significa que los datos se guardan dentro del navegador en tu máquina. Esto también significa que los datos almacenados solo estarán disponibles para el usuario en la misma máquina y mismo navegador. Recuerda que `local_storage` es por navegador y no por ordenador.
-- Las claves y valores son cadenas por lo que si introduces, por ejemplo, una lista cuando intentes acceder a esos valores obtendrás una cadena en lugar de la lista original. ¡¡Recuerda esto!!
+- localStorage es una base de datos clave-valor que funciona en el cliente, i.e. los datos se almacenan en el navegador del usuario. Esto significa que los datos se guardan dentro del navegador en tu máquina. Esto también significa que los datos almacenados solo estarán disponibles para el usuario en la misma máquina y mismo navegador. Recuerda que `local_storage` es por navegador y no por ordenador.
+- Las claves y valores son cadenas.
 - Las claves y valores se almacenan de forma persistente en un protocolo, dominio y puerto específicos. Las bases de datos `local_storage` trabajan en el ámbito de un origen HTML5, basicamente la tupla (esquema, host, puerto, i.e. `scheme://host:port`). Esto significa que la base de datos será compartida en todas las páginas alojadas en el mismo dominio, incluso de forma concurrente mediante múltiples pestañas del navegador. Sin embargo, una página que se conecte por `http://` no podrá ver una base de datos que fue creada mediante una sesión `https://`.
+
+HTML5 define dos tipos de almacenamiento, *local storage* y *session storage* ; 
+el primero es *persistente*, i.e. mantiene los datos en el almacén cuando el 
+usuario cierra la ventana ; con el segundo se pierden los datos cuando el 
+usuario cierra la ventana. 
 
 En Brython, el **local storage de HTML5** se encuentra implementado en el paquete **`browser`** en los siguientes módulos:
 
@@ -16,7 +21,6 @@ En Brython, el **local storage de HTML5** se encuentra implementado en el paquet
 > _local storage_. Se puede interactuar con el mismo como si fuera un diccionario 
 > Python, sin embargo, hay que tener en cuenta que las claves y los valores están 
 > restringidos a cadenas.
-
 - **session\_storage**
 > Este módulo también permite acceder al objeto `storage`, que permite acceder a
 > _session storage_ que es similar al anterior. Usa **session\_storage** cuando 
