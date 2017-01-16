@@ -1,6 +1,27 @@
 module **javascript**
 ---------------------
 
+**WARNING : module javascript is deprecated, starting at version 3.3.1.**
+
+- instead of `JSConstructor`, use the attribute `new`, for instance instead of
+
+```
+    from javascript import JSConstructor
+    f = JSConstructor(window.f)
+```
+
+use
+
+```
+    f = window.f.new
+```
+
+- `JSObject` is useless, the attributes of the object `window` are already instances of class `JSObject`
+
+- function `load()` has been moved to module `browser`
+
+<hr>
+
 The module **javascript** allows interaction with the objects defined in 
 Javascript programs and libraries present in the same page as the Brython 
 program.

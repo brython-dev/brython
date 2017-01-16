@@ -18,6 +18,20 @@ Le paquetage **browser** définit les noms et les modules intégrés spécifique
 **browser**.`DOMNode`
 > la classe des noeuds DOM
 
+**browser**.`load(`_script\_url[,noms]_`)`
+> Fonction pour charger le script Javascript à l'adresse _script\_url_ et 
+> insérer la liste de _noms_ dans l'espace de noms du programme.
+
+> Cette fonction utilise un appel Ajax bloquant. Il faut l'utiliser quand on
+> ne peut pas insérer la librairie Javascript dans la page html par
+> `<script src="prog.js"></script>`. 
+
+> Par exemple, le module **jqueryui** de la bibliothèque standard Brython
+> fournit une interface avec la librairie Javascript jQueryUI. Si on écrit un
+> script Brython qui utilise ce module, on fait simplement `import jqueryui`
+> sans insérer les librairies Javascript dans la page. C'est le module 
+> **jqueryui** qui les charge, en utilisant cette fonction `load()`
+
 **browser**.`prompt(`_message[,defaut]_`)`
 > une fonction qui affiche le _message_ dans une fenêtre et une zone de saisie. Retourne la valeur saisie ; si aucune valeur n'est saisie, retourne _defaut_, ou la chaine vide si _defaut_ n'est pas fourni
 
