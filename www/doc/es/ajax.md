@@ -57,7 +57,10 @@ estado de la petición
 `send(`_[data]_`)`
 > envía (inicia) la petición. El argumento opcional _data_ será ignorado si el  
 > método no es POST ; debe ser un diccionario o una cadena representando la codificación url
-> de los pares clave-valor.
+> de los pares clave-valor. Si deseas enviar ficheros, necesitarás pasar un diccionario siendo una de las claves
+> un objeto File, e.g. en caso que tengas un elemento _input_ de tipo `file` e _id_ `upload_file` 
+> podrías enviar el fichero seleccionado por el usuario bajo la clave `upload` mediante una 
+> llamada `send({'upload':doc["upload_file"].elt.files[0]})`
 
 `status`
 > es un entero que representa el estatus HTTP de la petición. Los valores más usuales son 200 (ok) y 404 (file not found)
@@ -67,6 +70,8 @@ estado de la petición
 
 `xml`
 > la respuesta del servidor como un objeto DOM
+
+
 
 ### Ejemplo
 
@@ -89,7 +94,6 @@ req.set_header('content-type','application/x-www-form-urlencoded')
 # envía datos como un diccionario
 req.send({'x':0, 'y':1})
 ```
-
 Para envíar datos via el método GET, se debe incluir en la cadena de la petición
 
 ```python
