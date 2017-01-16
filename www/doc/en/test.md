@@ -105,10 +105,10 @@ The following is the debugger public API you can find more details description i
 
 
 **Brython_Debugger**.`start_debugger()`
-> start the debugging session, takes code to debug as parameter as well as an optional boolean flag for whether to live debug or record. Currently live debug is not supported and debugging by default starts in record mode.  The on_debugging_started callback is called at the end of this step
+> start the debugging session, takes code to debug as parameter as well as an optional boolean flag for whether to live debug or record. Currently live debug is not supported and debugging by default starts in record mode.  The `on_debugging_started` callback is called at the end of this step
 
 **Brython_Debugger**.`stop_debugger()`
-> function to call when you want to stop the debugging session on_debugging_end is called at this step
+> function to call when you want to stop the debugging session `on_debugging_end` is called at this step
 
 **Brython_Debugger**.`step_debugger()`
 > This function when called steps forward one step in the recorded debugging session
