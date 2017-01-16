@@ -1,6 +1,5 @@
 # session storage in browser
 import sys
-from javascript import JSObject
 from browser import window
 from .local_storage import LocalStorage
 

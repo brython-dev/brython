@@ -1,6 +1,5 @@
 # local storage in browser
 import sys
-from javascript import JSObject
 from browser import window, console
 
 has_local_storage = hasattr(window, 'localStorage')
@@ -14,7 +13,7 @@ class LocalStorage():
     def __init__(self):
         if not has_local_storage:
             raise EnvironmentError("LocalStorage not available")
-        self.store = JSObject(window.localStorage)
+        self.store = window.localStorage
 
     def __delitem__(self, key):
         if (not isinstance(key, str)):
@@ -26,15 +25,15 @@ class LocalStorage():
     def __getitem__(self, key):
         if (not isinstance(key, str)):
             raise TypeError("key must be string")
-        res = __BRYTHON__.JSObject(self.store.getItem(key))
+        res = self.store.getItem(key)
         if res is not None:
             return res
         raise KeyError(key)
 
     def __setitem__(self, key, value):
-        if (not isinstance(key, str)):
+        if not isinstance(key, str):
             raise TypeError("key must be string")
-        if (not isinstance(value, str)):
+        if not isinstance(value, str):
             raise TypeError("value must be string")
         self.store.setItem(key, value)
 
@@ -42,7 +41,7 @@ class LocalStorage():
     def __contains__(self, key):
         if (not isinstance(key, str)):
             raise TypeError("key must be string")
-        res = __BRYTHON__.JSObject(self.store.getItem(key))
+        res = self.store.getItem(key)
         if res is None:
             return False
         return True
@@ -54,7 +53,7 @@ class LocalStorage():
     def get(self, key, default=None):
         if (not isinstance(key, str)):
             raise TypeError("key must be string")
-        return __BRYTHON__.JSObject(self.store.getItem(key)) or default
+        return self.store.getItem(key) or default
 
     def pop(self, key, default=__UnProvided()):
         if (not isinstance(key, str)):
@@ -74,10 +73,10 @@ class LocalStorage():
     # while a real dict provides a view, returning a generator would less helpful than simply returning a list
     # and creating a custom iterator is overkill and would likely result in slower performance
     def keys(self):
-        return [__BRYTHON__.JSObject(self.store.key(i)) for i in range(self.store.length)]
+        return [self.store.key(i) for i in range(self.store.length)]
 
     def values(self):
-        return [__BRYTHON__.JSObject(self.__getitem__(k)) for k in self.keys()]
+        return [self.__getitem__(k) for k in self.keys()]
 
     def items(self):
         return list(zip(self.keys(), self.values()))

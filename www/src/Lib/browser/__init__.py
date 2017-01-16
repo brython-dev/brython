@@ -6,4 +6,4 @@ from .local_storage import LocalStorage
 from .session_storage import SessionStorage
 from .object_storage import ObjectStorage
 
-WebSocket = javascript.JSConstructor(window.WebSocket)
+WebSocket = window.WebSocket.new
