@@ -27,9 +27,9 @@ The package **browser** groups the built-in Brython-specific names and modules
 > `<script src="prog.js"></script>`. 
 
 > For instance, the module **jqueryui** in Brython standard library
-> provides an interface with the Javascript librairy jQueryUI. To use it in a 
+> provides an interface with the Javascript library jQueryUI. To use it in a 
 > Brython script, you simply write `import jqueryui` without inserting the
-> Javascript librairies in the page. It's the module **jqueryui** that
+> Javascript libraries in the page. It's the module **jqueryui** that
 > loads them, using this function `load()`
 
 **browser**.`prompt(`_message[,default]_`)`
