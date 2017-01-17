@@ -1,6 +1,27 @@
 módulo **javascript**
 ---------------------
 
+**ALERTA : el módulo javascript dejará de estar mantenido, empezando en la versión 3.3.1.**
+
+- En lugar de `JSConstructor`, debes usar el atributo `new`. Por ejemplo, en lugar de
+
+```
+    from javascript import JSConstructor
+    f = JSConstructor(window.f)
+```
+
+usa
+
+```
+    f = window.f.new
+```
+
+- `JSObject` no tiene mucha utilidad, los atributos del objeto `window` ya son instancias de la clase `JSObject`
+
+- la función `load()` ha sido movida al módulo `browser`
+
+<hr>
+
 El módulo **javascript** permite la interacción con objetos definidos en otros programas o librerías 
 escritos en javascript presentes en la misma página donde se encuentra el script Brython
 
