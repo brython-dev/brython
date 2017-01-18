@@ -253,10 +253,23 @@ ev.stopPropagation()
 Créer et déclencher un événement
 --------------------------------
 
-`DOMEvent(`_nom\_evt_`)` 
-> Crée un événement de type _nom\_evt_ comme _keydown, mousemove_, etc.
+Pour déclencher un événement sur un élément, consulter d'abord la
+[référence des événements](https://developer.mozilla.org/en-US/docs/Web/Events) ; par
+exemple, l'événement "click" utilise l'interface DOM `MouseEvent`, disponible
+en Brython par `window.MouseEvent`.
 
+`MouseEvent` est un constructeur, donc pour créer l'objet événement, on
+utilise son attribut `new` :
 
-`element.dispatchEvent(`_event_`)`
-> Déclenche l'événement _event_ sur l'élément spécifié
+```python
+evenement = window.MouseEvent.new("click")
+```
+
+puis
+
+```python
+element.dispatchEvent(evenement)
+```
+
+déclenche l'événement event sur l'élément spécifié.
 

@@ -261,8 +261,22 @@ eval(document["zzz_source"].text)
 Creating and firing an event
 ----------------------------
 
-`DOMEvent(`_evt\_name_`)` 
-> Creates an event of type _evt\_name_ such as _keydown, mousemove_, etc.
+If you want to fire an event on an element, first check the 
+[Event reference](https://developer.mozilla.org/en-US/docs/Web/Events) ; for
+instance, the event "click" uses the DOM interface `MouseEvent`, available
+in Brython by `window.MouseEvent`.
 
-`element.dispatchEvent(`event`)`
-> Fires the event on the specified `element`
+`MouseEvent` is a constructor, so to create the event object use its
+attribute `new` :
+
+```python
+event = window.MouseEvent.new("click")
+```
+
+then
+
+```python
+element.dispatchEvent(event)
+```
+
+fires the event on the specified element.
