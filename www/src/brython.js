@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-16 22:16:09.643387"
+__BRYTHON__.compiled_date="2017-01-18 21:32:53.656529"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1092,6 +1092,7 @@ pargs.push(arg+':'+arg)}
 else_node.add($NodeJS(local_ns+'=$locals={'+pargs.join(', ')+'}'))}}}else{nodes.push(make_args_nodes[0])
 if(make_args_nodes.length>1){nodes.push(make_args_nodes[1])}}
 nodes.push($NodeJS('$B.frames_stack[$B.frames_stack.length-1][1] = $locals;'))
+nodes.push($NodeJS('$B.js_this = this;'))
 for(var i=nodes.length-1;i>=0;i--){node.children.splice(0,0,nodes[i])}
 var def_func_node=new $Node()
 if(only_positional){var params=Object.keys(this.varnames).join(', ')
@@ -1591,7 +1592,10 @@ else if(ctx.vars.indexOf(value)===-1){ctx.vars.push(value)}
 if(this.call_arg&&ctx.type==='lambda'){if(ctx.locals===undefined){ctx.locals=[value]}
 else{ctx.locals.push(value)}}}
 ctx=ctx.parent}
-if(C.type=='target_list' ||C.type=='packed' ||
+if(C.type=='packed'){
+$B.bound[scope.id][value]={level: $get_level(this)}
+this.bound=true}
+if(C.type=='target_list' ||
 (C.type=='expr' && C.parent.type=='target_list')){
 $B.bound[scope.id][value]={level: $get_level(this)}
 this.bound=true}
@@ -1632,6 +1636,7 @@ if($B.bound[scope.id][val]){found.push(scope)}}
 if(scope.parent_block){scope=scope.parent_block}
 else{break}}
 this.found=found
+if(val=="sxz"){console.log('found',val,found)}
 if(this.nonlocal && found[0]===innermost){found.shift()}
 if(found.length>0){
 if(!this.bound && found[0].C && found[0]===innermost
@@ -1873,7 +1878,7 @@ var local_name=scope.id.replace(/\./g,'_')
 var lc=$B.$list_comp(items),
 py=lc[0],ix=lc[1],listcomp_name='lc'+ix,local_name=scope.id.replace(/\./g,'_')
 var save_pos=$pos
-var root=$B.py2js(py,module_name,listcomp_name,local_name,line_num)
+var root=$B.py2js({src:py,is_comp:true},module_name,listcomp_name,local_name,line_num)
 $pos=save_pos
 var js=root.to_js()
 $B.clear_ns(listcomp_name)
@@ -3725,6 +3730,8 @@ root.line_info=line_info
 root.indent=-1
 if(locals_id!==module){$B.bound[locals_id]={}}
 var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
+if(typeof src=="object"){root.is_comp=src.is_comp
+src=src.src}
 var lnum=1
 while(pos<src.length){var car=src.charAt(pos)
 if(indent===null){var indent=0
@@ -4002,7 +4009,9 @@ if(C!==null && $indented.indexOf(C.tree[0].type)>-1){$pos=pos-1
 $_SyntaxError(C,'expected an indented block',pos)}
 return root}
 $B.py2js=function(src,module,locals_id,parent_block_id,line_info){
-var t0=new Date().getTime()
+var t0=new Date().getTime(),is_comp=false
+if(typeof src=='object'){is_comp=src.is_comp
+src=src.src}
 src=src.replace(/\r\n/gm,'\n')
 if(src.charAt(src.length-1)!="\n"){src+='\n'}
 var locals_is_module=Array.isArray(locals_id)
@@ -4015,7 +4024,8 @@ $B.bound[module]['__doc__']=true
 $B.bound[module]['__name__']=true
 $B.bound[module]['__file__']=true
 $B.$py_src[locals_id]=$B.$py_src[locals_id]||src
-var root=$tokenize(src,module,locals_id,parent_block_id,line_info)
+var root=$tokenize({src:src,is_comp:is_comp},module,locals_id,parent_block_id,line_info)
+root.is_comp=is_comp
 root.transform()
 var js=['var $B = __BRYTHON__;\n'],pos=1
 js[pos++]='eval(__BRYTHON__.InjectBuiltins());\n\n'
@@ -10895,11 +10905,12 @@ obj[tag]=makeFactory(tag)
 dicts[tag].$factory=obj[tag]}
 $B.tag_classes=dicts
 return obj})(__BRYTHON__)
-modules['javascript']={__file__:$B.brython_path+'/libs/javascript.js',JSObject: function(){console.log('The module "javascript" is deprecrated. '+
+modules['javascript']={__file__:$B.brython_path+'/libs/javascript.js',$$this: function(){
+return $B.JSObject($B.js_this)},JSObject: function(){console.log('"javascript.JSObject" is deprecrated. '+
 'Please refer to the documentation.')
-return $B.JSObject.apply(null,arguments)},JSConstructor: function(){console.log('The module "javascript" is deprecrated. '+
+return $B.JSObject.apply(null,arguments)},JSConstructor: function(){console.log('"javascript.JSConstructor" is deprecrated. '+
 'Please refer to the documentation.')
-return $B.JSConstructor.apply(null,arguments)},load:function(script_url,names){console.log('The module "javascript" is deprecrated. '+
+return $B.JSConstructor.apply(null,arguments)},load:function(script_url,names){console.log('"javascript.load" is deprecrated. '+
 'Please refer to the documentation.')
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()

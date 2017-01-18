@@ -231,18 +231,23 @@
 
     modules['javascript'] = {
         __file__:$B.brython_path+'/libs/javascript.js',
+        $$this: function(){
+            // returns the content of Javascript "this"
+            // $B.js_this is set to "this" at the beginning of each function
+            return $B.JSObject($B.js_this)
+        },
         JSObject: function(){
-            console.log('The module "javascript" is deprecrated. '+
+            console.log('"javascript.JSObject" is deprecrated. '+
                 'Please refer to the documentation.')
             return $B.JSObject.apply(null, arguments)
         },
         JSConstructor: function(){
-            console.log('The module "javascript" is deprecrated. '+
+            console.log('"javascript.JSConstructor" is deprecrated. '+
                 'Please refer to the documentation.')
             return $B.JSConstructor.apply(null, arguments)
         },
         load:function(script_url, names){
-            console.log('The module "javascript" is deprecrated. '+
+            console.log('"javascript.load" is deprecrated. '+
                 'Please refer to the documentation.')
             // Load and eval() the Javascript file at script_url
             // Set the names in array "names" in the Javacript global namespace

@@ -1,33 +1,14 @@
 module **javascript**
 ---------------------
 
-**AVERTISSEMENT : le module javascript est déprécié à partir de la version 3.3.1.**
-
-- à la place de `JSConstructor`, utiliser l'attribut `new`, par exemple à la place de
-
-```
-    from javascript import JSConstructor
-    f = JSConstructor(window.f)
-```
-
-utiliser
-
-```
-    f = window.f.new
-```
-
-- `JSObject` est inutile, les attributs de l'objet `window` sont déjà des instances de la classe `JSObject`
-
-- la fonction `load()` est transférée dans le module `browser`
-
-<hr>
 Le module **javascript** permet d'interagir avec les objets définis dans les
 bibliothèques et programmes Javascript présents dans la même page que le
 programme Brython.
 
-Il définit deux classes et une fonction :
+**javascript**.`JSConstructor(`_js\_constructor_`)`
 
-**javascript**.`JSConstructor`
+> _AVERTISSEMENT : cette fonction est dépréciée à partir de la version 3.1.1. A la place de `py_class = JSConstructor(js_class)` utilisez `py_class = js_class.new`_
+
 > Classe dont les instances représentent des constructeurs Javascript,
 > c'est-à-dire des fonctions utilisées avec le mot-clé Javascript `new`.
 
@@ -37,15 +18,20 @@ Il définit deux classes et une fonction :
 > Python en suivant le tableau de la page 
 > <a href="jsojects.html">Objets et librairies Javascript</a>.
 
-**javascript**.`JSObject`
+**javascript**.`JSObject(`_js\_object_`)`
+
+> _AVERTISSEMENT : cette fonction est dépréciée à partir de la version 3.1.1. Les attributs de l'objet `window` sont déjà des instances de la classe `JSObject`_
+
 > Classe des objets Javascript qui ne peuvent pas être convertis 
 > "naturellement" en objets Python quand on les référence comme attributs
-> de `browser.window`. Cette classe est interne à Brython et n'est normalement
-> pas utilisée dans les programmes.
+> de `browser.window`.
 
 > Voir <a href="jsojects.html">Objets et librairies Javascript</a>.
 
 **javascript**.`load(`_script\_url[,noms]_`)`
+
+> _AVERTISSEMENT : cette fonction est dépréciée à partir de la version 3.1.1. Utilisez la fonction `load` du module **browser**_
+
 > Fonction pour charger le script Javascript à l'adresse _script\_url_ et 
 > insérer la liste de _noms_ dans l'espace de noms du programme.
 
@@ -59,17 +45,10 @@ Il définit deux classes et une fonction :
 > sans insérer les librairies Javascript dans la page. C'est le module 
 > **jqueryui** qui les charge, en utilisant cette fonction `load()`
 
-Exemple
--------
+**javascript**.`py2js(`_src_`)`
+> Renvoie le code Javascript généré à partir du code source Python _src_.
 
-Utilisation de `JSConstructor` avec la bibliothèque Javascript three.js :
-
->    from browser import window
->    from javascript import JSConstructor
->    
->    cameraC = JSConstructor(window.THREE.PerspectiveCamera)
->    camera = cameraC(75, 1, 1, 10000)
-
-> Voir [la démo three](../../gallery/three.html) pour une démonstration
-> grandeur nature.
+**javascript**.`this()`
+> Renvoie l'objet Brython correspondant au mot-cle Javascript `this`. Peut
+> être nécessaire dans l'utilisation de certains frameworks Javascript.
 

@@ -2140,6 +2140,12 @@ function $DefCtx(context){
         }
 
         nodes.push($NodeJS('$B.frames_stack[$B.frames_stack.length-1][1] = $locals;'))
+        
+        // set __BRYTHON__.js_this to Javascript "this"
+        // To use some JS libraries it may be necessary to know what "this" 
+        // is set to ; in Brython it is available as the result of function
+        // __this__() in module javascript
+        nodes.push($NodeJS('$B.js_this = this;'))
 
         for(var i=nodes.length-1;i>=0;i--){
             node.children.splice(0,0,nodes[i])
@@ -3093,13 +3099,21 @@ function $IdCtx(context,value){
         ctx = ctx.parent
     }
 
-    if(context.type=='target_list' || context.type=='packed' ||
-        (context.type=='expr' && context.parent.type=='target_list')){
-        // An id defined as a target in a "for" loop, or as "packed" 
-        // (eg "a, *b = [1, 2, 3]") is bound
+    if(context.type=='packed'){
+        // An id defined as "packed" (eg "a, *b = [1, 2, 3]") is bound
         $B.bound[scope.id][value]={level: $get_level(this)}
         this.bound = true
     }
+
+    if(context.type=='target_list' ||
+        (context.type=='expr' && context.parent.type=='target_list')){
+        // An id defined as a target in a "for" loop, or as "packed" 
+        // (eg "a, *b = [1, 2, 3]") is bound
+        // except when parsing a comprehension : cf issue 553
+        $B.bound[scope.id][value]={level: $get_level(this)}
+        this.bound = true
+    }
+    
 
     if(scope.ntype=='def' || scope.ntype=='generator'){
         // if variable is declared inside a comprehension, 
@@ -3215,6 +3229,7 @@ function $IdCtx(context,value){
             else{break}
         }
         this.found = found
+        if(val=="sxz"){console.log('found', val, found)}
         if(this.nonlocal && found[0]===innermost){found.shift()}
         
         if(found.length>0){
@@ -3775,9 +3790,9 @@ function $ListOrTupleCtx(context,real){
                     listcomp_name = 'lc'+ix,
                     local_name = scope.id.replace(/\./g,'_')
                 var save_pos = $pos
-
-                var root = $B.py2js(py,module_name,listcomp_name,local_name,
-                    line_num)
+                
+                var root = $B.py2js({src:py, is_comp:true}, module_name, 
+                    listcomp_name, local_name, line_num)
 
                 $pos = save_pos
                     
@@ -6865,6 +6880,10 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         indent = null,
         string_modifier = false
 
+    if(typeof src=="object"){
+        root.is_comp = src.is_comp
+        src = src.src
+    }
     var lnum = 1
     while(pos<src.length){
         var car = src.charAt(pos)
@@ -7361,7 +7380,13 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     //
     // Returns a tree structure representing the Python source code
     
-    var t0 = new Date().getTime()
+    var t0 = new Date().getTime(),
+        is_comp = false
+    
+    if(typeof src=='object'){
+        is_comp = src.is_comp
+        src = src.src
+    }
   
     // Normalise line ends and script end
     src = src.replace(/\r\n/gm,'\n')
@@ -7386,7 +7411,9 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     $B.bound[module]['__file__'] = true
 
     $B.$py_src[locals_id] = $B.$py_src[locals_id] || src
-    var root = $tokenize(src,module,locals_id,parent_block_id,line_info)
+    var root = $tokenize({src:src, is_comp:is_comp},
+        module,locals_id,parent_block_id,line_info)
+    root.is_comp = is_comp
     root.transform()
 
     // Create internal variables
