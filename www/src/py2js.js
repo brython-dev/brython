@@ -325,7 +325,7 @@ function $Node(type){
                         parent = parent.parent
                     }
 
-                    var g = $B.$BRgenerator2(def_ctx.name, blocks,
+                    var g = $B.$BRgenerator(def_ctx.name, blocks,
                         def_ctx.id, def_node),
                         block_id = parent.id.replace(/\./g, '_'),
                         res = '$locals_'+block_id+'["'+def_ctx.name+
@@ -545,6 +545,7 @@ function $AssignCtx(context){ //, check_unbound){
             for(var i=0;i<assigned.length;i++){
                 var new_node = new $Node(),
                     node_ctx = new $NodeCtx(new_node)
+                new_node.locals = node.locals
                 node.parent.insert(rank+1,new_node)
                 assigned[i].parent = node_ctx
                 var assign = new $AssignCtx(assigned[i])
@@ -608,8 +609,10 @@ function $AssignCtx(context){ //, check_unbound){
                 new_nodes[pos++]=new_node
             }
             for(var i=0;i<left_items.length;i++){
-                var new_node = new $Node()
-                new_node.id = $get_node(this).module
+                var new_node = new $Node(),
+                    this_node = $get_node(this)
+                new_node.id = this_node.module
+                new_node.locals = this.node.locals
                 var context = new $NodeCtx(new_node) // create ordinary node
                 left_items[i].parent = context
                 // assignment to left operand
@@ -3069,11 +3072,14 @@ function $IdCtx(context,value){
     this.parent = context
     this.tree = []
     context.tree[context.tree.length]=this
-    if(context.parent.type==='call_arg') this.call_arg=true
     
     var scope = this.scope = $get_scope(this)
     this.blurred_scope = this.scope.blurred
     this.env = clone($B.bound[this.scope.id])
+
+    if(context.parent.type==='call_arg') {
+        this.call_arg=true
+    }
     
     this.level = $get_level(this)
     
@@ -3206,7 +3212,7 @@ function $IdCtx(context,value){
                 // Handle the case when the same name is used at both sides
                 // of an assignment and the right side is defined in an
                 // upper scope, eg "range = range"
-                var bound_before = $get_node(this).bound_before
+                var bound_before = this_node.bound_before
 
                 if(bound_before && !this.bound){
                     if(bound_before.indexOf(val)>-1){found.push(scope)}
@@ -3216,7 +3222,22 @@ function $IdCtx(context,value){
                          found.push(scope)
                     }
                 }else{
-                    if($B.bound[scope.id][val]){found.push(scope)}
+                    if($B.bound[scope.id][val]){
+                        // the name is bound somewhere in the local scope
+                        if(!this.bound && this_node.locals[val]===undefined){
+                            // the name is referenced (not bound) but it was 
+                            // not bound before the current statement
+                            if(!scope.is_comp && 
+                                    (!scope.parent_block || 
+                                        !scope.parent_block.is_comp)){
+                                // put scope in found, except if the scope is
+                                // a comprehension or generator expression
+                                found.push(scope)
+                            }
+                        }else{
+                            found.push(scope)
+                        }
+                    }
                 }
             }else{
                 //console.log(val, scope.id, Object.keys($B.bound))
@@ -3229,7 +3250,6 @@ function $IdCtx(context,value){
             else{break}
         }
         this.found = found
-        if(val=="sxz"){console.log('found', val, found)}
         if(this.nonlocal && found[0]===innermost){found.shift()}
         
         if(found.length>0){
@@ -3307,7 +3327,7 @@ function $IdCtx(context,value){
             var scope = found[0]
             this.found = $B.bound[scope.id][val]
             var scope_ns = '$locals_'+scope.id.replace(/\./g,'_')
-            
+
             if(scope.context===undefined){
                 // name found at module level
                 if(scope.id=='__builtins__'){
@@ -3330,7 +3350,7 @@ function $IdCtx(context,value){
                         val = scope_ns+'["'+val+'"]'
                     }else{
                         if(scope===innermost && this.env[val]===undefined){
-                            var locs = $get_node(this).locals || {}
+                            var locs = this_node.locals || {}
                             if(locs[val]===undefined){
                                 // Name is bound in scope, but after the current node
                                 // If it is a builtin name, use the builtin
@@ -4960,7 +4980,7 @@ function $YieldCtx(context){
           $_SyntaxError(context,'yield atom must be inside ()')
     }
 
-    var scope = $get_scope(this)
+    var scope = this.scope = $get_scope(this)
     if(!scope.is_function){
         $_SyntaxError(context,["'yield' outside function"])
     }else if(scope.has_return_with_arguments){
@@ -4983,15 +5003,18 @@ function $YieldCtx(context){
             // replace "yield from X" by "for $temp in X: yield $temp"
 
             var new_node = new $Node()
+            new_node.locals = node.locals
             node.parent.children.splice(rank,1)
             node.parent.insert(rank, new_node)
 
             var for_ctx = new $ForExpr(new $NodeCtx(new_node))
             new $IdCtx(new $ExprCtx(for_ctx,'id',false),'$temp'+$loop_num)
+            $B.bound[this.scope.id]['$temp'+$loop_num] = true
             for_ctx.tree[1] = this.tree[0]
             this.tree[0].parent = for_ctx
 
             var yield_node = new $Node()
+            new_node.locals = node.locals
             new_node.add(yield_node)
             new $IdCtx(new $YieldCtx(new $NodeCtx(yield_node)),'$temp'+$loop_num)
 

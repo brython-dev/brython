@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-18 21:32:53.656529"
+__BRYTHON__.compiled_date="2017-01-19 17:13:21.081713"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -198,7 +198,7 @@ blocks='{'+blocks+'}'
 if(def_ctx.name=='fgnx'){console.log('blocks',blocks)}
 var parent=this.parent
 while(parent!==undefined && parent.id===undefined){parent=parent.parent}
-var g=$B.$BRgenerator2(def_ctx.name,blocks,def_ctx.id,def_node),block_id=parent.id.replace(/\./g,'_'),res='$locals_'+block_id+'["'+def_ctx.name+
+var g=$B.$BRgenerator(def_ctx.name,blocks,def_ctx.id,def_node),block_id=parent.id.replace(/\./g,'_'),res='$locals_'+block_id+'["'+def_ctx.name+
 '"] = $B.genfunc("'+def_ctx.name+'", '+blocks+
 ',['+g+'])'
 this.parent.children.splice(rank,2)
@@ -283,6 +283,7 @@ nleft.tree=ctx.tree
 nassign=new $AssignCtx(nleft)
 nassign.tree[1]=right
 for(var i=0;i<assigned.length;i++){var new_node=new $Node(),node_ctx=new $NodeCtx(new_node)
+new_node.locals=node.locals
 node.parent.insert(rank+1,new_node)
 assigned[i].parent=node_ctx
 var assign=new $AssignCtx(assigned[i])
@@ -317,8 +318,9 @@ for(var i=0;i<right_items.length;i++){var js=$var+'[$pos++]='+right_items[i].to_
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 new_nodes[pos++]=new_node}
-for(var i=0;i<left_items.length;i++){var new_node=new $Node()
-new_node.id=$get_node(this).module
+for(var i=0;i<left_items.length;i++){var new_node=new $Node(),this_node=$get_node(this)
+new_node.id=this_node.module
+new_node.locals=this.node.locals
 var C=new $NodeCtx(new_node)
 left_items[i].parent=C
 var assign=new $AssignCtx(left_items[i],false)
@@ -1573,10 +1575,10 @@ this.value=value
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
-if(C.parent.type==='call_arg')this.call_arg=true
 var scope=this.scope=$get_scope(this)
 this.blurred_scope=this.scope.blurred
 this.env=clone($B.bound[this.scope.id])
+if(C.parent.type==='call_arg'){this.call_arg=true}
 this.level=$get_level(this)
 var ctx=C
 while(ctx.parent!==undefined){switch(ctx.type){case 'ctx_manager_alias':
@@ -1626,17 +1628,21 @@ if($B.bound[gs.id][val]!==undefined ||this.bound){this.result=global_ns+'["'+val
 return this.result}else{this.result='$B.$global_search("'+val+'")'
 return this.result}}
 if(scope===innermost){
-var bound_before=$get_node(this).bound_before
+var bound_before=this_node.bound_before
 if(bound_before && !this.bound){if(bound_before.indexOf(val)>-1){found.push(scope)}
 else if(scope.C &&
 scope.C.tree[0].type=='def' &&
-scope.C.tree[0].env.indexOf(val)>-1){found.push(scope)}}else{if($B.bound[scope.id][val]){found.push(scope)}}}else{
+scope.C.tree[0].env.indexOf(val)>-1){found.push(scope)}}else{if($B.bound[scope.id][val]){
+if(!this.bound && this_node.locals[val]===undefined){
+if(!scope.is_comp && 
+(!scope.parent_block ||
+!scope.parent_block.is_comp)){
+found.push(scope)}}else{found.push(scope)}}}}else{
 if($B.bound[scope.id]===undefined){console.log('no bound',scope.id)}
 if($B.bound[scope.id][val]){found.push(scope)}}
 if(scope.parent_block){scope=scope.parent_block}
 else{break}}
 this.found=found
-if(val=="sxz"){console.log('found',val,found)}
 if(this.nonlocal && found[0]===innermost){found.shift()}
 if(found.length>0){
 if(!this.bound && found[0].C && found[0]===innermost
@@ -1665,7 +1671,7 @@ val='('+global_ns+'["'+val+'"] || '+val+')'}else{
 if(val!=='__builtins__'){val='$B.builtins.'+val}
 this.is_builtin=true}}else if(scope.id==scope.module){
 if(this.bound ||this.augm_assign){
-val=scope_ns+'["'+val+'"]'}else{if(scope===innermost && this.env[val]===undefined){var locs=$get_node(this).locals ||{}
+val=scope_ns+'["'+val+'"]'}else{if(scope===innermost && this.env[val]===undefined){var locs=this_node.locals ||{}
 if(locs[val]===undefined){
 if(found.length>1 && found[1].id=='__builtins__'){this.is_builtin=true
 this.result='$B.builtins.'+val+$to_js(this.tree,'')
@@ -2471,7 +2477,7 @@ ctx.node.yield_atoms.push(this)
 break;
 default:
 $_SyntaxError(C,'yield atom must be inside ()')}
-var scope=$get_scope(this)
+var scope=this.scope=$get_scope(this)
 if(!scope.is_function){$_SyntaxError(C,["'yield' outside function"])}else if(scope.has_return_with_arguments){$_SyntaxError(C,["'return' with argument inside generator"])}
 var def=scope.C.tree[0]
 def.type='generator'
@@ -2479,13 +2485,16 @@ def.yields.push(this)
 this.toString=function(){return '(yield) '+(this.from ? '(from) ' : '')+this.tree}
 this.transform=function(node,rank){if(this.from===true){
 var new_node=new $Node()
+new_node.locals=node.locals
 node.parent.children.splice(rank,1)
 node.parent.insert(rank,new_node)
 var for_ctx=new $ForExpr(new $NodeCtx(new_node))
 new $IdCtx(new $ExprCtx(for_ctx,'id',false),'$temp'+$loop_num)
+$B.bound[this.scope.id]['$temp'+$loop_num]=true
 for_ctx.tree[1]=this.tree[0]
 this.tree[0].parent=for_ctx
 var yield_node=new $Node()
+new_node.locals=node.locals
 new_node.add(yield_node)
 new $IdCtx(new $YieldCtx(new $NodeCtx(yield_node)),'$temp'+$loop_num)
 var ph_node=new $Node()
@@ -4712,7 +4721,7 @@ var item=items[i].replace(/\s+$/,'').replace(/\n/g,' ')
 py +=item+':\n'
 indent++}
 py +='    '.repeat(indent)+ res + '.update({'+items[0]+'})'
-var dictcomp_name='dc'+ix,root=$B.py2js(py,module_name,dictcomp_name,parent_block_id,line_num),js=root.to_js()
+var dictcomp_name='dc'+ix,root=$B.py2js({src:py,is_comp:true},module_name,dictcomp_name,parent_block_id,line_num),js=root.to_js()
 js +='\nreturn $locals["'+res+'"]\n'
 js='(function(){'+js+'})()'
 $B.clear_ns(dictcomp_name)
@@ -4728,7 +4737,7 @@ py +=item+':\n'
 indent +=4}
 py+=' '.repeat(indent)
 py +='yield ('+items[0]+')'
-var genexpr_name='ge'+$ix,root=$B.py2js(py,module_name,genexpr_name,parent_block_id,line_num),js=root.to_js(),lines=js.split('\n')
+var genexpr_name='ge'+$ix,root=$B.py2js({src:py,is_comp:true},module_name,genexpr_name,parent_block_id,line_num),js=root.to_js(),lines=js.split('\n')
 js=lines.join('\n')
 js +='\nvar $res = $locals_'+genexpr_name+'["'+genexpr_name+'"]();\n'+
 '$res.is_gen_expr=true;\nreturn $res\n'
@@ -10714,7 +10723,7 @@ pnode=pnode.parent}
 return tries}
 var $BRGeneratorDict={__class__:$B.$type,__name__:'generator'}
 $B.gen_counter=0 
-$B.$BRgenerator2=function(func_name,blocks,def_id,def_node){
+$B.$BRgenerator=function(func_name,blocks,def_id,def_node){
 var def_ctx=def_node.C.tree[0]
 var module=def_node.module,
 iter_id=def_id

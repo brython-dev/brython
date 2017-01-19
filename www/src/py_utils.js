@@ -210,8 +210,8 @@ $B.$dict_comp = function(module_name, parent_block_id, items, line_num){
     py += '    '.repeat(indent) + res + '.update({'+items[0]+'})'
     
     var dictcomp_name = 'dc'+ix,
-        root = $B.py2js(py, module_name, dictcomp_name, parent_block_id,
-            line_num),
+        root = $B.py2js({src:py, is_comp:true}, module_name, dictcomp_name, 
+            parent_block_id, line_num),
         js = root.to_js()
     js += '\nreturn $locals["'+res+'"]\n'
     
@@ -240,7 +240,8 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
     py += 'yield ('+items[0]+')'
     
     var genexpr_name = 'ge'+$ix,
-        root = $B.py2js(py, module_name, genexpr_name, parent_block_id, line_num),
+        root = $B.py2js({src:py, is_comp:true}, module_name, genexpr_name, 
+            parent_block_id, line_num),
         js = root.to_js(),
         lines = js.split('\n')
     

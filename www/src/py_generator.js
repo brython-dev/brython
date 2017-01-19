@@ -296,7 +296,7 @@ var $BRGeneratorDict = {__class__:$B.$type,__name__:'generator'}
 
 $B.gen_counter = 0 // used to identify the function run for each next()
 
-$B.$BRgenerator2 = function(func_name, blocks, def_id, def_node){
+$B.$BRgenerator = function(func_name, blocks, def_id, def_node){
 
     // Creates a function that will return an iterator
     // func_name : function name

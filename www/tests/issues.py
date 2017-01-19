@@ -1128,6 +1128,14 @@ assert True ^ False is True
 y=-1;
 assert y == -1
 
+# issue 553
+sxz = 'abc'
+assert [sxz for sxz in sxz] == ['a', 'b', 'c']
+assert {sxz for sxz in sxz} == {'a', 'b', 'c'}
+assert {sxz:sxz for sxz in sxz} == {'a': 'a', 'b': 'b', 'c': 'c'}
+g = (sxz for sxz in sxz)
+assert list(g) == ['a', 'b', 'c']
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
