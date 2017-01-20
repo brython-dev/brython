@@ -18,7 +18,7 @@ program.
 > _WARNING : this function is deprecated since version 3.1.1. Instead of `py_class = JSConstructor(js_class)` use `py_class = js_class.new`_
 
 
-**javascript**.`JSObject(`_js\_objet_`)`
+**javascript**.`JSObject(`_js\_object_`)`
 
 > Class for Javascript objects that can't be converted "naturally" into Python
 > objects when they are referenced as attributes of `browser.window`. This
