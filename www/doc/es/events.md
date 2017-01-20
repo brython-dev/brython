@@ -267,7 +267,6 @@ eval(document["zzz_source"].text)
 Creando y ejecutando un evento
 ------------------------------
 
-`DOMEvent(`_evt\_name_`)` 
 Si deseas disparar un evento en un elemento primero revisa la
 [referencia de Eventos](https://developer.mozilla.org/en-US/docs/Web/Events) ; por
 ejemplo, el evento "click" usa la interfaz `MouseEvent` del DOM, disponible
