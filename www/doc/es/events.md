@@ -268,8 +268,23 @@ Creando y ejecutando un evento
 ------------------------------
 
 `DOMEvent(`_evt\_name_`)` 
-> Crea un evento del tipo _evt\_name_ como si fuera cualquier otro tipo de evento, e.g. _keydown, mousemove_, etc.
+Si deseas disparar un evento en un elemento primero revisa la
+[referencia de Eventos](https://developer.mozilla.org/en-US/docs/Web/Events) ; por
+ejemplo, el evento "click" usa la interfaz `MouseEvent` del DOM, disponible
+en Brython mediante `window.MouseEvent`.
 
 `element.dispatchEvent(`event`)`
-> Ejecuta el evento en el `elemento` especificado
+`MouseEvent` es un constructor, por tanto, para crear el objeto evento usa su
+atributo `new` :
 
+```python
+event = window.MouseEvent.new("click")
+```
+
+y después
+
+```python
+element.dispatchEvent(event)
+```
+
+dispara el evento en el elemento especificado.
