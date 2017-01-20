@@ -272,7 +272,6 @@ Si deseas disparar un evento en un elemento primero revisa la
 ejemplo, el evento "click" usa la interfaz `MouseEvent` del DOM, disponible
 en Brython mediante `window.MouseEvent`.
 
-`element.dispatchEvent(`event`)`
 `MouseEvent` es un constructor, por tanto, para crear el objeto evento usa su
 atributo `new` :
 
