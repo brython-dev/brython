@@ -19,6 +19,9 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     
     // If the function call had keywords arguments, they are in the last
     // element of $args
+    if(nb_pos>0 && $args[nb_pos-1]===undefined){
+        console.log('naomalie', '['+$fname+']', nb_pos, $args)
+    }
     if(nb_pos>0 && $args[nb_pos-1].$nat){
         has_kw_args=true
         nb_pos--

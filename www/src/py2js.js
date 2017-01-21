@@ -328,10 +328,16 @@ function $Node(type){
                     var g = $B.$BRgenerator(def_ctx.name, blocks,
                         def_ctx.id, def_node),
                         block_id = parent.id.replace(/\./g, '_'),
+                        /*
                         res = '$locals_'+block_id+'["'+def_ctx.name+
                             '"] = $B.genfunc("'+def_ctx.name+'", '+blocks+
                             ',['+g+'])'
-                    this.parent.children.splice(rank, 2)
+                        */
+                        name = def_ctx.decorated ? def_ctx.alias : 
+                            def_ctx.name+def_ctx.num,
+                        res = 'var '+name+' = $B.genfunc("'+
+                            def_ctx.name+'", '+blocks+',['+g+'])'
+                    this.parent.children.splice(rank, 1)
                     this.parent.insert(rank+offset-1,
                         $NodeJS(res))
             }
@@ -1874,6 +1880,10 @@ function $DefCtx(context){
 
     this.module = scope.module
     
+    // num used if several functions have the same name
+    this.num = $loop_num
+    $loop_num++
+    
     // Arrays for arguments
     this.positional_list = []
     this.default_list = []
@@ -2015,6 +2025,10 @@ function $DefCtx(context){
         }
         var global_ns = '$locals_'+global_scope.id.replace(/\./g,'_')
 
+        
+        var prefix = this.tree[0].to_js()
+        if(this.decorated){prefix=this.alias}
+        
         // Add lines of code to node children
         
         // Declare object holding local variables
@@ -2048,6 +2062,12 @@ function $DefCtx(context){
 
         var make_args_nodes = []
 
+        var name = (this.decorated ? this.alias : this.name+this.num)
+        var default_ref = name+'.$defaults'
+        if(this.type=="generator"){
+            default_ref = prefix+'.$defaults'
+        }
+
         // If function is not a generator, $locals is the result of $B.args
         var js = this.type=='def' ? local_ns+' = $locals' : 'var $ns'
         
@@ -2055,7 +2075,7 @@ function $DefCtx(context){
             this.argcount+', {'+this.slots.join(', ')+'}, '+
             '['+slot_list.join(', ')+'], arguments, '
 
-        if(defs1.length){js += '$defaults, '}
+        if(defs1.length){js += default_ref+', '}
         else{js += '{}, '}
         js += this.other_args+', '+this.other_kw+');'
 
@@ -2072,9 +2092,8 @@ function $DefCtx(context){
         
         var only_positional = false
         if(this.other_args===null && this.other_kw===null &&
-            this.after_star.length==0 
-            && defaults.length==0
-            ){
+            this.after_star.length==0
+            && defaults.length==0){
             // If function only takes positional arguments, we can generate
             // a faster version of argument parsing than by calling function
             // $B.args
@@ -2156,27 +2175,20 @@ function $DefCtx(context){
 
         // Node that replaces the original "def" line
         var def_func_node = new $Node()
+        this.params = ''
         if(only_positional){
-            var params = Object.keys(this.varnames).join(', ')
-            new $NodeJSCtx(def_func_node,'return function('+params+')')
+            this.params = Object.keys(this.varnames).join(', ')
+            new $NodeJSCtx(def_func_node,'')
         }else{
-            new $NodeJSCtx(def_func_node,'return function()')
+            new $NodeJSCtx(def_func_node,'')
         }
         def_func_node.is_def_func = true
         def_func_node.module = this.module
-
-        // Add function body to def_func_node
-        for(var i=0;i<node.children.length;i++){
-            def_func_node.add(node.children[i])
-        }
 
         var last_instr = node.children[node.children.length-1].context.tree[0]
         if(last_instr.type!=='return' && this.type!='generator'){
             def_func_node.add($NodeJS('return None'))
         }
-
-        // Remove children of original node
-        node.children = []
 
         // Start with a line to define default values, if any
         // This line must be outside of the function body because default
@@ -2185,29 +2197,37 @@ function $DefCtx(context){
         // the same number of lines for subsequent transformations
         var default_node = new $Node()
         var js = ';_b_.None;'
-        if(defs1.length>0){js = 'var $defaults = {'+defs1.join(',')+'};'}
+        if(false){ //defs1.length>0){
+            js = 'var $defaults = '+name+'.$defaults;'
+            if(this.type="generator"){
+                console.log('default in gen', prefix)
+                js = 'var $defaults = '+prefix+'.$defaults;'
+            }
+        }
         new $NodeJSCtx(default_node,js)
         node.insert(0,default_node)
 
         // Add the new function definition
         node.add(def_func_node)
 
-        // Final line to run close and run the closure
-        var ret_node = new $Node()
-        new $NodeJSCtx(ret_node,')();')
-        node.parent.insert(rank+1,ret_node)
+        var offset = 1
 
-        var offset = 2
-
-        var prefix = this.tree[0].to_js()
-        if(this.decorated){prefix=this.alias}
-        
         var indent = node.indent
+        
+        // Set to local
+        js = prefix+'='+name
+        node.parent.insert(rank+offset, $NodeJS(js))
+        offset++
+        
+        // Add $defaults
+        js = name+'.$defaults = {'+defs1.join(',')+'};'
+        node.parent.insert(rank+offset, $NodeJS(js))
+        offset++
 
         // Create attribute $infos for the function
         // Adding only one attribute is much faster than adding all the 
         // keys/values in $infos
-        js = prefix+'.$infos = {'
+        js = name+'.$infos = {'
         var name_decl = new $Node()
         new $NodeJSCtx(name_decl,js)
         node.parent.insert(rank+offset,name_decl)
@@ -2227,6 +2247,10 @@ function $DefCtx(context){
         new_node = new $Node()
         new $NodeJSCtx(new_node,'    __defaults__ : ['+this.__defaults__.join(', ')+'],')
         node.parent.insert(rank+offset,new_node)
+        offset++
+
+        js = '    $defaults : {'+defs1.join(',')+'},'
+        node.parent.insert(rank+offset, $NodeJS(js))
         offset++
         
         // Add attribute __module__
@@ -2278,7 +2302,7 @@ function $DefCtx(context){
 
         // wrap everything in a try/finally to be sure to exit from frame
         if(this.type=='def'){
-            var parent = enter_frame_node.parent
+            var parent = node //enter_frame_node.parent
             for(var pos=0;pos<parent.children.length && 
                 parent.children[pos]!==enter_frame_node;pos++){}
             var try_node = new $Node(),
@@ -2289,7 +2313,9 @@ function $DefCtx(context){
             for(var i=0;i<children.length;i++){
                 try_node.add(children[i])
             }
+            console.log(children[i-1])
             parent.children.splice(pos+2,parent.children.length)
+            try_node.add($NodeJS('return None'))
             
             var finally_node = new $Node(),
                 ctx = new $NodeCtx(finally_node)
@@ -2308,9 +2334,10 @@ function $DefCtx(context){
     this.to_js = function(func_name){
         this.js_processed=true
 
-        func_name = func_name || this.tree[0].to_js()
-        if(this.decorated){func_name='var '+this.alias}
-        return func_name+'=(function()'
+        func_name = func_name || this.name+this.num
+        if(this.decorated){func_name=this.alias}
+        //else{func_name = 'var '+this.name+' = '+func_name}
+        return 'function '+func_name+'('+this.params+')'
     }
 }
 
@@ -3213,6 +3240,10 @@ function $IdCtx(context,value){
                 // of an assignment and the right side is defined in an
                 // upper scope, eg "range = range"
                 var bound_before = this_node.bound_before
+                
+                if(scope.context && scope.context.tree[0].type=='def'){
+                    //console.log('def', scope.context)
+                }
 
                 if(bound_before && !this.bound){
                     if(bound_before.indexOf(val)>-1){found.push(scope)}
@@ -3687,6 +3718,7 @@ function $LambdaCtx(context){
         
         return js
     }
+
 }
 
 function $ListOrTupleCtx(context,real){
@@ -4198,7 +4230,7 @@ function $OpCtx(context,op){
                     res[pos++]=this.simple_js()
 
                     // Else wrap simple formula in a float
-                    res[pos++]=' : new $B.$FloatClass('+this.simple_js()+')'
+                    res[pos++]=' : new Number('+this.simple_js()+')'
 
                     // Close integers test
                     res[pos++]=')'
@@ -5484,7 +5516,6 @@ function $transition(context,token){
                     return new $DoubleStarArgCtx(context)
                }//switch
             }
-            console.log('syntax error, token', token, 'expected', context.expect)
             $_SyntaxError(context,'token '+token+' after '+context)
           case ')':
             if(context.parent.kwargs &&
@@ -5725,6 +5756,7 @@ function $transition(context,token){
           case 'lambda':
             return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
           case ',':
+            return context.parent
           case ')':
             return $transition(context.parent,token)
           case ':':
@@ -7927,7 +7959,8 @@ $B.$NodeJSCtx = $NodeJSCtx
 // we can use $B.brython
 
 $B.brython = brython
-
+              
 })(__BRYTHON__)
 var brython = __BRYTHON__.brython
+
 
