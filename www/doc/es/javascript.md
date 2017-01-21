@@ -1,49 +1,32 @@
 módulo **javascript**
 ---------------------
 
-**ALERTA : el módulo javascript dejará de estar mantenido, empezando en la versión 3.3.1.**
-
-- En lugar de `JSConstructor`, debes usar el atributo `new`. Por ejemplo, en lugar de
-
-```
-    from javascript import JSConstructor
-    f = JSConstructor(window.f)
-```
-
-usa
-
-```
-    f = window.f.new
-```
-
-- `JSObject` no tiene mucha utilidad, los atributos del objeto `window` ya son instancias de la clase `JSObject`
-
-- la función `load()` ha sido movida al módulo `browser`
-
-<hr>
-
 El módulo **javascript** permite la interacción con objetos definidos en otros programas o librerías 
 escritos en javascript presentes en la misma página donde se encuentra el script Brython
 
-Define dos clases y una función:
+**javascript**.`JSConstructor(`_constructor_`)`
 
-**javascript**.`JSConstructor`
-> es una clase cuyas instancias representan constructores Javascript, (ie funciones usadas con la 
-> palabra clave en Javascript `new`)
+> Clase cuyas instancias representan constructores Javascript, ie funciones usadas con la 
+> palabra clave en Javascript `new`.
 
-> <code>JSConstructor(_jsconstr_)</code> devuelve un objeto Brython. Este objeto permite llamadas; 
-> devuelve el objeto construido por el constructor *jsconstr*, transformado en un objeto Python 
+> <code>JSConstructor(_constructor_)</code> devuelve un objeto Brython. Este objeto permite llamadas; 
+> devuelve el objeto construido por el constructor *constructor*, transformado en un objeto Python 
 > de acuerdo a la tabla de conversión en <a href="jsojects.html">objetos y librerías Javascript</a>.
 
+> _ALERTA : esta función dejará de estar mantenida desde la versión 3.1.1. En lugar de `py_class = JSConstructor(js_class)` usa `py_class = js_class.new`_
 
-**javascript**.`JSObject`
-> Clase para objetos Javascript que pueden convertirse "de forma natural" "naturally" a objetos Python
+**javascript**.`JSObject(`_js\_object_`)`
+
+> Clase para objetos Javascript que pueden convertirse "de forma natural" a objetos Python
 > cuando se referencian como atributos de `browser.window`. Esta clase
 > se usa internamente por Brython y no debería ser usada en scripts.
 
 > Ver <a href="jsojects.html">objetos y librerías Javascript</a>.
 
+> _ALERTA : esta función dejará de estar ,mantenida desde la versión 3.1.1. Los atributos del objeto `window` ya son instancias de la clase `JSObject`_
+
 **javascript**.`load(`_script\_url[,names]_`)`
+
 > Llama al script Javascript que se encuentra en la dirección _script\_url_ y carga el listado de
 > _names_ en el espacio de nombres del programa.
 
@@ -57,15 +40,13 @@ Define dos clases y una función:
 > Javascript en la página. Será el módulo **jqueryui** el que
 > las cargará, usando esta función `load()`
 
-Ejemplo
--------
+> _ALERTA : esta función dejará de estar ,mantenida desde la versión 3.1.1. Usa la función `load` en el módulo **browser**_
 
-Usando `JSConstructor` con la librería javascript three.js:
+**javascript**.`py2js(`_src_`)`
 
->    from browser import window
->    from javascript import JSConstructor
->    
->    cameraC = JSConstructor(window.THREE.PerspectiveCamera)
->    camera = cameraC(75, 1, 1, 10000)
+> Devuelve el código Javascript generado por Brython a partir del código fuente Python _src_.
 
-> Ver [three](../../gallery/three.html) para ver el ejemplo en acción
+**javascript**.`this()`
+
+> Devuelve el objeto Brython equivalente al objeto Javascript `this`. Puede ser útil cuando se usan frameworks 
+> Javascript, eg cuando una función _callback_ usa el valor de `this`.
