@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-19 17:13:21.081713"
+__BRYTHON__.compiled_date="2017-01-21 17:56:42.891235"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -198,10 +198,11 @@ blocks='{'+blocks+'}'
 if(def_ctx.name=='fgnx'){console.log('blocks',blocks)}
 var parent=this.parent
 while(parent!==undefined && parent.id===undefined){parent=parent.parent}
-var g=$B.$BRgenerator(def_ctx.name,blocks,def_ctx.id,def_node),block_id=parent.id.replace(/\./g,'_'),res='$locals_'+block_id+'["'+def_ctx.name+
-'"] = $B.genfunc("'+def_ctx.name+'", '+blocks+
-',['+g+'])'
-this.parent.children.splice(rank,2)
+var g=$B.$BRgenerator(def_ctx.name,blocks,def_ctx.id,def_node),block_id=parent.id.replace(/\./g,'_'),
+name=def_ctx.decorated ? def_ctx.alias : 
+def_ctx.name+def_ctx.num,res='var '+name+' = $B.genfunc("'+
+def_ctx.name+'", '+blocks+',['+g+'])'
+this.parent.children.splice(rank,1)
 this.parent.insert(rank+offset-1,$NodeJS(res))}
 return ctx_offset}}
 this.clone=function(){var res=new $Node(this.type)
@@ -953,6 +954,8 @@ while(pb && pb.C){if(pb.C.tree[0].type=='def'){this.inside_function=true
 break}
 pb=pb.parent_block}
 this.module=scope.module
+this.num=$loop_num
+$loop_num++
 this.positional_list=[]
 this.default_list=[]
 this.other_args=null
@@ -1027,6 +1030,8 @@ var global_scope=scope
 if(global_scope.parent_block===undefined){alert('undef '+global_scope);console.log(global_scope)}
 while(global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.parent_block}
 var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
+var prefix=this.tree[0].to_js()
+if(this.decorated){prefix=this.alias}
 var local_ns='$locals_'+this.id
 js='var '+local_ns+'={}, '
 js +='$local_name="'+this.id+'",$locals='+local_ns+';'
@@ -1046,11 +1051,14 @@ new $NodeJSCtx(enter_frame_node,js)
 nodes.push(enter_frame_node)
 this.env=[]
 var make_args_nodes=[]
+var name=(this.decorated ? this.alias : this.name+this.num)
+var default_ref=name+'.$defaults'
+if(this.type=="generator"){default_ref=prefix+'.$defaults'}
 var js=this.type=='def' ? local_ns+' = $locals' : 'var $ns'
 js +=' = $B.args("'+this.name+'", '+
 this.argcount+', {'+this.slots.join(', ')+'}, '+
 '['+slot_list.join(', ')+'], arguments, '
-if(defs1.length){js +='$defaults, '}
+if(defs1.length){js +=default_ref+', '}
 else{js +='{}, '}
 js +=this.other_args+', '+this.other_kw+');'
 var new_node=new $Node()
@@ -1062,9 +1070,8 @@ new $NodeJSCtx(new_node,'for(var $var in $ns){$locals[$var]=$ns[$var]};')
 make_args_nodes.push(new_node)}
 var only_positional=false
 if(this.other_args===null && this.other_kw===null &&
-this.after_star.length==0 
-&& defaults.length==0
-){
+this.after_star.length==0
+&& defaults.length==0){
 only_positional=true
 if($B.debug>0 ||this.positional_list.length>0){
 nodes.push($NodeJS('var $len = arguments.length;'))
@@ -1097,28 +1104,31 @@ nodes.push($NodeJS('$B.frames_stack[$B.frames_stack.length-1][1] = $locals;'))
 nodes.push($NodeJS('$B.js_this = this;'))
 for(var i=nodes.length-1;i>=0;i--){node.children.splice(0,0,nodes[i])}
 var def_func_node=new $Node()
-if(only_positional){var params=Object.keys(this.varnames).join(', ')
-new $NodeJSCtx(def_func_node,'return function('+params+')')}else{new $NodeJSCtx(def_func_node,'return function()')}
+this.params=''
+if(only_positional){this.params=Object.keys(this.varnames).join(', ')
+new $NodeJSCtx(def_func_node,'')}else{new $NodeJSCtx(def_func_node,'')}
 def_func_node.is_def_func=true
 def_func_node.module=this.module
-for(var i=0;i<node.children.length;i++){def_func_node.add(node.children[i])}
 var last_instr=node.children[node.children.length-1].C.tree[0]
 if(last_instr.type!=='return' && this.type!='generator'){def_func_node.add($NodeJS('return None'))}
-node.children=[]
 var default_node=new $Node()
 var js=';_b_.None;'
-if(defs1.length>0){js='var $defaults = {'+defs1.join(',')+'};'}
+if(false){
+js='var $defaults = '+name+'.$defaults;'
+if(this.type="generator"){console.log('default in gen',prefix)
+js='var $defaults = '+prefix+'.$defaults;'}}
 new $NodeJSCtx(default_node,js)
 node.insert(0,default_node)
 node.add(def_func_node)
-var ret_node=new $Node()
-new $NodeJSCtx(ret_node,')();')
-node.parent.insert(rank+1,ret_node)
-var offset=2
-var prefix=this.tree[0].to_js()
-if(this.decorated){prefix=this.alias}
+var offset=1
 var indent=node.indent
-js=prefix+'.$infos = {'
+js=prefix+'='+name
+node.parent.insert(rank+offset,$NodeJS(js))
+offset++
+js=name+'.$defaults = {'+defs1.join(',')+'};'
+node.parent.insert(rank+offset,$NodeJS(js))
+offset++
+js=name+'.$infos = {'
 var name_decl=new $Node()
 new $NodeJSCtx(name_decl,js)
 node.parent.insert(rank+offset,name_decl)
@@ -1134,6 +1144,9 @@ var module=$get_module(this)
 new_node=new $Node()
 new $NodeJSCtx(new_node,'    __defaults__ : ['+this.__defaults__.join(', ')+'],')
 node.parent.insert(rank+offset,new_node)
+offset++
+js='    $defaults : {'+defs1.join(',')+'},'
+node.parent.insert(rank+offset,$NodeJS(js))
 offset++
 var module=$get_module(this)
 new_node=new $Node()
@@ -1169,14 +1182,16 @@ js +='None;'
 new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank+offset,new_node)
-if(this.type=='def'){var parent=enter_frame_node.parent
+if(this.type=='def'){var parent=node 
 for(var pos=0;pos<parent.children.length && 
 parent.children[pos]!==enter_frame_node;pos++){}
 var try_node=new $Node(),children=parent.children.slice(pos+1,parent.children.length),ctx=new $NodeCtx(try_node)
 parent.insert(pos+1,try_node)
 new $TryCtx(ctx)
 for(var i=0;i<children.length;i++){try_node.add(children[i])}
+console.log(children[i-1])
 parent.children.splice(pos+2,parent.children.length)
+try_node.add($NodeJS('return None'))
 var finally_node=new $Node(),ctx=new $NodeCtx(finally_node)
 new $SingleKwCtx(ctx,'finally')
 if($B.profile > 0){finally_node.add($NodeJS('$B.$profile.return()'))}
@@ -1185,9 +1200,9 @@ parent.add(finally_node)}
 this.transformed=true
 return offset}
 this.to_js=function(func_name){this.js_processed=true
-func_name=func_name ||this.tree[0].to_js()
-if(this.decorated){func_name='var '+this.alias}
-return func_name+'=(function()'}}
+func_name=func_name ||this.name+this.num
+if(this.decorated){func_name=this.alias}
+return 'function '+func_name+'('+this.params+')'}}
 function $DelCtx(C){
 this.type='del'
 this.parent=C
@@ -1629,6 +1644,7 @@ return this.result}else{this.result='$B.$global_search("'+val+'")'
 return this.result}}
 if(scope===innermost){
 var bound_before=this_node.bound_before
+if(scope.C && scope.C.tree[0].type=='def'){}
 if(bound_before && !this.bound){if(bound_before.indexOf(val)>-1){found.push(scope)}
 else if(scope.C &&
 scope.C.tree[0].type=='def' &&
@@ -2090,7 +2106,7 @@ tests1[pos++]='typeof '+vars[i]+' == "number"'}
 var res=[tests.join(' && ')+' ? '],pos=1
 res[pos++]='('+tests1.join(' && ')+' ? '
 res[pos++]=this.simple_js()
-res[pos++]=' : new $B.$FloatClass('+this.simple_js()+')'
+res[pos++]=' : new Number('+this.simple_js()+')'
 res[pos++]=')'
 if(this.op=='+'){res[pos++]=' : (typeof '+this.tree[0].to_js()+'=="string"'
 res[pos++]=' && typeof '+this.tree[1].to_js()
@@ -2792,7 +2808,6 @@ case '*':
 return new $StarArgCtx(C)
 case '**':
 return new $DoubleStarArgCtx(C)}}
-console.log('syntax error, token',token,'expected',C.expect)
 $_SyntaxError(C,'token '+token+' after '+C)
 case ')':
 if(C.parent.kwargs &&
@@ -4642,6 +4657,7 @@ $B.$InstanceMethodDict={__class__:$B.$type,__name__:'instancemethod',__mro__:[_b
 ;(function($B){var _b_=$B.builtins
 $B.args=function($fname,argcount,slots,var_names,$args,$dobj,extra_pos_args,extra_kw_args){
 var has_kw_args=false,nb_pos=$args.length
+if(nb_pos>0 && $args[nb_pos-1]===undefined){console.log('naomalie','['+$fname+']',nb_pos,$args)}
 if(nb_pos>0 && $args[nb_pos-1].$nat){has_kw_args=true
 nb_pos--
 var kw_args=$args[nb_pos].kw}
@@ -5999,7 +6015,8 @@ $FunctionDict.__getattribute__=function(self,attr){
 if(self.$infos && self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__:$B.$CodeDict}
 for(var attr in self.$infos.__code__){res[attr]=self.$infos.__code__[attr]}
 return res}else if(attr=='__annotations__'){
-return $B.obj_dict(self.$infos[attr])}else{return self.$infos[attr]}}else{return _b_.object.$dict.__getattribute__(self,attr)}}
+return $B.obj_dict(self.$infos[attr])}else{console.log('func attr',attr,self.$infos,self.$defaults)
+return self.$infos[attr]}}else{return _b_.object.$dict.__getattribute__(self,attr)}}
 $FunctionDict.__repr__=$FunctionDict.__str__=function(self){return '<function '+self.$infos.__name__+'>'}
 $FunctionDict.__mro__=[$ObjectDict]
 $FunctionDict.__setattr__=function(self,attr,value){if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
@@ -6999,7 +7016,10 @@ root.add(ex_node)}
 try{var js=(compiled)? module_contents : root.to_js()
 if($B.$options.debug==10){console.log('code for module '+module.__name__)
 console.log(js)}
-eval(js)}catch(err){
+if(module.__name__=="time"){console.log(js)}
+eval(js)}catch(err){console.log(err+' for module '+module.__name__)
+console.log(err)
+console.log(js)
 throw err}finally{$B.clear_ns(module.__name__)}
 try{
 var mod=eval('$module')
@@ -10646,7 +10666,8 @@ new_node.is_try=node.is_try
 new_node.is_else=is_else
 new_node.loop_start=node.loop_start
 new_node.is_set_yield_value=node.is_set_yield_value
-for(var i=0,_len_i=node.children.length;i < _len_i;i++){new_node.addChild(make_node(top_node,node.children[i]))}}
+for(var i=0,_len_i=node.children.length;i < _len_i;i++){var nd=make_node(top_node,node.children[i])
+if(nd!==undefined){new_node.addChild(nd)}}}
 return new_node}
 $B.genNode=function(data,parent){this.data=data
 this.parent=parent
@@ -10733,14 +10754,16 @@ func_root.yields=[]
 func_root.loop_ends={}
 func_root.def_id=def_id
 func_root.iter_id=iter_id
-for(var i=0,_len_i=def_node.children.length;i < _len_i;i++){func_root.addChild(make_node(func_root,def_node.children[i]))}
+for(var i=0,_len_i=def_node.children.length;i < _len_i;i++){var nd=make_node(func_root,def_node.children[i])
+if(nd===undefined){continue}
+func_root.addChild(nd)}
 var obj={__class__ : $BRGeneratorDict,blocks: blocks,def_ctx:def_ctx,def_id:def_id,func_name:func_name,func_root:func_root,module:module,gi_running:false,iter_id:iter_id,id:iter_id,num:0}
-var src=func_root.children[1].src(),raw_src=src.substr(src.search('function'))
+var src=func_root.src(),
+raw_src=src.substr(src.search('function'))
 var first_line=func_root.children[0].src()
 var def_pos=first_line.search(/\$defaults/)
 if(def_pos>-1){var $default=first_line.substr(def_pos)
-$default=$default.substr(0,$default.length-2)
-raw_src=raw_src.replace(/\$defaults/g,$default)}
+$default=$default.substr(0,$default.length-2)}
 var funcs=['"'+escape(raw_src)+'"']
 obj.parent_block=def_node.parent_block
 for(var i=0;i<func_root.yields.length;i++){funcs.push('"'+escape(make_next(obj,i))+'"')}
@@ -10751,8 +10774,7 @@ function make_next(self,yield_node_id){
 var exit_node=self.func_root.yields[yield_node_id]
 exit_node.replaced=false
 var root=new $B.genNode(self.def_ctx.to_js())
-root.addChild(self.func_root.children[0].clone())
-var fnode=self.func_root.children[1].clone()
+var fnode=self.func_root.clone()
 root.addChild(fnode)
 var js='for(var attr in this.blocks){eval("var "+attr+"='+
 'this.blocks[attr]");};var $locals_'+self.iter_id+' = this.env,'+
@@ -10800,7 +10822,7 @@ for(var i=0;i<children.length;i++){parent.addChild(children[i])}
 parent=children[0]}}
 exit_node=exit_parent
 if(exit_node===self.func_root){break}}
-var src=root.children[1].src(),next_src=src.substr(src.search('function'))
+var src=root.children[0].src(),next_src=src.substr(src.search('function'))
 return next_src}
 var $gen_it={__class__: $B.$type,__name__: "generator"}
 $gen_it.__mro__=[_b_.object.$dict]
@@ -10812,7 +10834,8 @@ if(self.gi_running===true){throw ValueError("generator already executing")}
 self.gi_running=true
 if(self.next===undefined){self.$finished=true
 throw _b_.StopIteration()}
-try{var res=self.next.apply(self,self.args)}catch(err){
+try{var res=self.next.apply(self,self.args)}catch(err){console.log('error in __next__ of',self.name)
+console.log(self.next+'')
 self.$finished=true
 throw err}finally{
 self.gi_running=false

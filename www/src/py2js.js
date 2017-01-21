@@ -5756,7 +5756,6 @@ function $transition(context,token){
           case 'lambda':
             return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
           case ',':
-            return context.parent
           case ')':
             return $transition(context.parent,token)
           case ':':
