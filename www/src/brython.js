@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-21 17:56:42.891235"
+__BRYTHON__.compiled_date="2017-01-21 18:19:04.951235"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1142,11 +1142,9 @@ node.parent.insert(rank+offset,name_decl)
 offset++
 var module=$get_module(this)
 new_node=new $Node()
-new $NodeJSCtx(new_node,'    __defaults__ : ['+this.__defaults__.join(', ')+'],')
+new $NodeJSCtx(new_node,'    __defaults__ : __builtins__.tuple(Object.values('+name+
+'.$defaults)),')
 node.parent.insert(rank+offset,new_node)
-offset++
-js='    $defaults : {'+defs1.join(',')+'},'
-node.parent.insert(rank+offset,$NodeJS(js))
 offset++
 var module=$get_module(this)
 new_node=new $Node()

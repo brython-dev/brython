@@ -1136,6 +1136,17 @@ assert {sxz:sxz for sxz in sxz} == {'a': 'a', 'b': 'b', 'c': 'c'}
 g = (sxz for sxz in sxz)
 assert list(g) == ['a', 'b', 'c']
 
+# issue 554
+nbcalls = 0
+def f():
+    global nbcalls
+    nbcalls += 1
+
+def g(unused_arg=f()):
+    pass
+ 
+assert nbcalls == 1
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

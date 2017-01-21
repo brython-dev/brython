@@ -2245,14 +2245,12 @@ function $DefCtx(context){
         // Add attribute __defaults__
         var module = $get_module(this)
         new_node = new $Node()
-        new $NodeJSCtx(new_node,'    __defaults__ : ['+this.__defaults__.join(', ')+'],')
+        new $NodeJSCtx(new_node,
+            '    __defaults__ : __builtins__.tuple(Object.values('+name+
+            '.$defaults)),')
         node.parent.insert(rank+offset,new_node)
         offset++
 
-        js = '    $defaults : {'+defs1.join(',')+'},'
-        node.parent.insert(rank+offset, $NodeJS(js))
-        offset++
-        
         // Add attribute __module__
         var module = $get_module(this)
         new_node = new $Node()
