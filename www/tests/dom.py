@@ -1,5 +1,4 @@
 from browser import window
-from javascript import JSConstructor
 
 assert window.empty_list() == []
 assert window.list1() == [1, 2, 'a', ['b']]
@@ -9,11 +8,11 @@ c = window.subscriptable('abracadabra')
 assert len(c) == 11
 assert c[2] == 'r'
 
-Foo = JSConstructor(window.get_constructor())
+Foo = window.get_constructor().new
 assert Foo().foo == 'hi'
 
 # test dynamic constructor creation
-Constructor = JSConstructor(window.base_class.extend())
+Constructor = window.base_class.extend().new
 assert Constructor().name == 'base'
 assert Constructor().extra == 'extra'
 

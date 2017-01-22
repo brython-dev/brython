@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-21 18:19:04.951235"
+__BRYTHON__.compiled_date="2017-01-22 17:53:19.189446"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -195,7 +195,6 @@ blocks.push('"$locals_'+node_id+'": $locals_'+node_id)
 node=node.parent_block
 if(node===undefined ||node.id=='__builtins__'){break}}
 blocks='{'+blocks+'}'
-if(def_ctx.name=='fgnx'){console.log('blocks',blocks)}
 var parent=this.parent
 while(parent!==undefined && parent.id===undefined){parent=parent.parent}
 var g=$B.$BRgenerator(def_ctx.name,blocks,def_ctx.id,def_node),block_id=parent.id.replace(/\./g,'_'),
@@ -1115,8 +1114,7 @@ var default_node=new $Node()
 var js=';_b_.None;'
 if(false){
 js='var $defaults = '+name+'.$defaults;'
-if(this.type="generator"){console.log('default in gen',prefix)
-js='var $defaults = '+prefix+'.$defaults;'}}
+if(this.type="generator"){js='var $defaults = '+prefix+'.$defaults;'}}
 new $NodeJSCtx(default_node,js)
 node.insert(0,default_node)
 node.add(def_func_node)
@@ -1142,7 +1140,7 @@ node.parent.insert(rank+offset,name_decl)
 offset++
 var module=$get_module(this)
 new_node=new $Node()
-new $NodeJSCtx(new_node,'    __defaults__ : __builtins__.tuple(Object.values('+name+
+new $NodeJSCtx(new_node,'    __defaults__ : $B.builtins.tuple(Object.values('+name+
 '.$defaults)),')
 node.parent.insert(rank+offset,new_node)
 offset++
@@ -1183,13 +1181,12 @@ node.parent.insert(rank+offset,new_node)
 if(this.type=='def'){var parent=node 
 for(var pos=0;pos<parent.children.length && 
 parent.children[pos]!==enter_frame_node;pos++){}
-var try_node=new $Node(),children=parent.children.slice(pos+1,parent.children.length),ctx=new $NodeCtx(try_node)
+var try_node=new $Node(),children=parent.children.slice(pos+1),ctx=new $NodeCtx(try_node)
 parent.insert(pos+1,try_node)
 new $TryCtx(ctx)
-for(var i=0;i<children.length;i++){try_node.add(children[i])}
-console.log(children[i-1])
+for(var i=0;i<children.length;i++){if(children[i].is_def_func){
+for(var j=0;j<children[i].children.length;j++){try_node.add(children[i].children[j])}}else{try_node.add(children[i])}}
 parent.children.splice(pos+2,parent.children.length)
-try_node.add($NodeJS('return None'))
 var finally_node=new $Node(),ctx=new $NodeCtx(finally_node)
 new $SingleKwCtx(ctx,'finally')
 if($B.profile > 0){finally_node.add($NodeJS('$B.$profile.return()'))}
@@ -1616,7 +1613,8 @@ $B.bound[scope.id][value]={level: $get_level(this)}
 this.bound=true}
 if(scope.ntype=='def' ||scope.ntype=='generator'){
 var _ctx=this.parent
-while(_ctx){if(_ctx.type=='list_or_tuple' && _ctx.is_comp())return
+while(_ctx){if(_ctx.type=='list_or_tuple' && _ctx.is_comp()){this.in_comp=true
+return}
 _ctx=_ctx.parent}
 if(C.type=='expr' && C.parent.type=='comp_if'){
 return}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=[value]}else if(scope.globals.indexOf(value)==-1){scope.globals.push(value)}}}
@@ -1642,7 +1640,6 @@ return this.result}else{this.result='$B.$global_search("'+val+'")'
 return this.result}}
 if(scope===innermost){
 var bound_before=this_node.bound_before
-if(scope.C && scope.C.tree[0].type=='def'){}
 if(bound_before && !this.bound){if(bound_before.indexOf(val)>-1){found.push(scope)}
 else if(scope.C &&
 scope.C.tree[0].type=='def' &&
@@ -6013,8 +6010,7 @@ $FunctionDict.__getattribute__=function(self,attr){
 if(self.$infos && self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__:$B.$CodeDict}
 for(var attr in self.$infos.__code__){res[attr]=self.$infos.__code__[attr]}
 return res}else if(attr=='__annotations__'){
-return $B.obj_dict(self.$infos[attr])}else{console.log('func attr',attr,self.$infos,self.$defaults)
-return self.$infos[attr]}}else{return _b_.object.$dict.__getattribute__(self,attr)}}
+return $B.obj_dict(self.$infos[attr])}else{return self.$infos[attr]}}else{return _b_.object.$dict.__getattribute__(self,attr)}}
 $FunctionDict.__repr__=$FunctionDict.__str__=function(self){return '<function '+self.$infos.__name__+'>'}
 $FunctionDict.__mro__=[$ObjectDict]
 $FunctionDict.__setattr__=function(self,attr,value){if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
@@ -7014,7 +7010,6 @@ root.add(ex_node)}
 try{var js=(compiled)? module_contents : root.to_js()
 if($B.$options.debug==10){console.log('code for module '+module.__name__)
 console.log(js)}
-if(module.__name__=="time"){console.log(js)}
 eval(js)}catch(err){console.log(err+' for module '+module.__name__)
 console.log(err)
 console.log(js)
@@ -10832,8 +10827,7 @@ if(self.gi_running===true){throw ValueError("generator already executing")}
 self.gi_running=true
 if(self.next===undefined){self.$finished=true
 throw _b_.StopIteration()}
-try{var res=self.next.apply(self,self.args)}catch(err){console.log('error in __next__ of',self.name)
-console.log(self.next+'')
+try{var res=self.next.apply(self,self.args)}catch(err){
 self.$finished=true
 throw err}finally{
 self.gi_running=false

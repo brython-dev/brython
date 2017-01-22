@@ -316,9 +316,6 @@ function $Node(type){
                         if(node===undefined || node.id == '__builtins__'){break}
                     }
                     blocks = '{'+blocks+'}'
-                    if(def_ctx.name=='fgnx'){
-                        console.log('blocks', blocks)
-                    }
                     
                     var parent = this.parent
                     while(parent!==undefined && parent.id===undefined){
@@ -2200,7 +2197,6 @@ function $DefCtx(context){
         if(false){ //defs1.length>0){
             js = 'var $defaults = '+name+'.$defaults;'
             if(this.type="generator"){
-                console.log('default in gen', prefix)
                 js = 'var $defaults = '+prefix+'.$defaults;'
             }
         }
@@ -2246,7 +2242,7 @@ function $DefCtx(context){
         var module = $get_module(this)
         new_node = new $Node()
         new $NodeJSCtx(new_node,
-            '    __defaults__ : __builtins__.tuple(Object.values('+name+
+            '    __defaults__ : $B.builtins.tuple(Object.values('+name+
             '.$defaults)),')
         node.parent.insert(rank+offset,new_node)
         offset++
@@ -2304,16 +2300,23 @@ function $DefCtx(context){
             for(var pos=0;pos<parent.children.length && 
                 parent.children[pos]!==enter_frame_node;pos++){}
             var try_node = new $Node(),
-                children = parent.children.slice(pos+1, parent.children.length),
+                children = parent.children.slice(pos+1),
                 ctx = new $NodeCtx(try_node)
             parent.insert(pos+1, try_node)
             new $TryCtx(ctx)
             for(var i=0;i<children.length;i++){
-                try_node.add(children[i])
+                if(children[i].is_def_func){
+                    //console.log('def func', children[i])
+                    for(var j=0;j<children[i].children.length;j++){
+                        try_node.add(children[i].children[j])
+                    }                        
+                }else{
+                    try_node.add(children[i])
+                }
+                //console.log(i, children[i].context)
             }
-            console.log(children[i-1])
             parent.children.splice(pos+2,parent.children.length)
-            try_node.add($NodeJS('return None'))
+            //try_node.add($NodeJS('return None'))
             
             var finally_node = new $Node(),
                 ctx = new $NodeCtx(finally_node)
@@ -3138,9 +3141,7 @@ function $IdCtx(context,value){
 
     if(context.type=='target_list' ||
         (context.type=='expr' && context.parent.type=='target_list')){
-        // An id defined as a target in a "for" loop, or as "packed" 
-        // (eg "a, *b = [1, 2, 3]") is bound
-        // except when parsing a comprehension : cf issue 553
+        // An id defined as a target in a "for" loop is bound
         $B.bound[scope.id][value]={level: $get_level(this)}
         this.bound = true
     }
@@ -3151,7 +3152,10 @@ function $IdCtx(context,value){
         // don't add it to function namespace
         var _ctx=this.parent
         while(_ctx){
-            if(_ctx.type=='list_or_tuple' && _ctx.is_comp()) return
+            if(_ctx.type=='list_or_tuple' && _ctx.is_comp()){
+                this.in_comp = true
+                return
+            }
             _ctx = _ctx.parent
         }
         if(context.type=='expr' && context.parent.type=='comp_if'){
@@ -3175,6 +3179,7 @@ function $IdCtx(context,value){
         if(this.result!==undefined && this.scope.ntype=='generator'){
             return this.result
         }
+        
         
         this.js_processed=true
         var val = this.value
@@ -3239,10 +3244,6 @@ function $IdCtx(context,value){
                 // upper scope, eg "range = range"
                 var bound_before = this_node.bound_before
                 
-                if(scope.context && scope.context.tree[0].type=='def'){
-                    //console.log('def', scope.context)
-                }
-
                 if(bound_before && !this.bound){
                     if(bound_before.indexOf(val)>-1){found.push(scope)}
                     else if(scope.context &&

@@ -528,9 +528,9 @@ $gen_it.__next__ = function(self){
     try{
         var res = self.next.apply(self, self.args)
     }catch(err){
+        /*
         console.log('error in __next__ of', self.name)
         console.log(self.next+'')
-        /*
         console.log(err)
         */
         self.$finished=true
@@ -541,6 +541,9 @@ $gen_it.__next__ = function(self){
         self.gi_running = false
         $B.leave_frame(self.iter_id)
     }
+    
+    // Brython replaces "yield x" by "return [x, next_rank]"
+    // next_rank is the rank of the function to call after this yield
 
     if(res===undefined){throw _b_.StopIteration()}
     else if(res[0].__class__==$GeneratorReturn){
