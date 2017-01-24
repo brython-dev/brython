@@ -35,7 +35,7 @@ function make_node(top_node, node){
     }else{
         var ctx_js = node.context.$genjs = node.context.to_js()
     }
-    var is_cond = false, is_except = false,is_else=false
+    var is_cond = false, is_except = false,is_else=false,is_continue
     
     if(node.locals_def){
         // Transforms the node where local namespace is reset
@@ -115,12 +115,11 @@ function make_node(top_node, node){
             js += 'this.sent_value=None'
             new_node.data = js
 
-        }else if(ctype=='break'){
+        }else if(ctype=='break' || ctype=="continue"){
 
-            // For a "break", loop_num is a reference to the loop that is
-            // broken
-
-            new_node.is_break = true
+            // For a "break" or "continue", loop_num is a reference 
+            // to the loop that is broken or continued
+            new_node['is_'+ctype] = true
             new_node.loop_num = node.context.tree[0].loop_ctx.loop_num
 
         }
@@ -203,6 +202,7 @@ $B.genNode = function(data, parent){
             res.data += 'err.__class__=$B.GeneratorBreak;throw err;'
             res.is_break = true
         }
+        res.is_continue = this.is_continue
         res.has_child = this.has_child
         res.is_cond = this.is_cond
         res.is_except = this.is_except
@@ -213,17 +213,25 @@ $B.genNode = function(data, parent){
         res.no_break = true
         res.is_yield = this.is_yield
         for(var i=0, _len_i = this.children.length; i < _len_i;i++){
+            if(this.children[i].is_continue){
+                // If a child is "continue", replace it by "void(0)" and 
+                // don't add the following lines
+                res.addChild(new $B.genNode('void(0)'))
+                break
+            }
             res.addChild(this.children[i].clone_tree(exit_node, head))
             if(this.children[i].is_break){res.no_break=false}
         }
         return res
     }
-    
-    this.has_break = function(){
-        if(this.is_break){return true}
+
+    this.has = function(keyword){
+        // keyword is "break" or "continue"
+        // Checks if node is break, or one of its children has the keyword
+        if(this['is_'+keyword]){return true}
         else{
             for(var i=0, _len_i = this.children.length; i < _len_i;i++){
-                if(this.children[i].has_break()){return true}
+                if(this.children[i].has(keyword)){return true}
             }
         }
         return false
@@ -347,17 +355,15 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
         var $default = first_line.substr(def_pos)
         // remove trailing ";"
         $default = $default.substr(0, $default.length-2)
-        // replace string $default by the object
-        //raw_src = raw_src.replace(/\$defaults/g, $default)
     }
     
-    var funcs = ['"'+escape(raw_src)+'"']
+    var funcs = [raw_src]
     
     //$B.modules[iter_id] = obj
     obj.parent_block = def_node.parent_block
 
     for(var i=0; i<func_root.yields.length;i++){
-        funcs.push('"'+escape(make_next(obj, i))+'"')
+        funcs.push(make_next(obj, i))
     }
     
     delete $B.modules[iter_id]
@@ -381,7 +387,6 @@ function make_next(self, yield_node_id){
     // instructions
     
     var root = new $B.genNode(self.def_ctx.to_js())
-    //root.addChild(self.func_root.children[0].clone())
     var fnode = self.func_root.clone()
     root.addChild(fnode)
     
@@ -411,9 +416,11 @@ function make_next(self, yield_node_id){
 
         // Compute the rest of the block to run after exit_node
         
-        var exit_parent = exit_node.parent
-        var rest = [], pos=0
-        var has_break = false
+        var exit_parent = exit_node.parent,
+            rest = [], 
+            pos=0,
+            has_break,
+            has_continue
         
         // "start" is the position where the rest of the block starts
         // By default it is the node of rank exit_node.rank+1
@@ -437,8 +444,9 @@ function make_next(self, yield_node_id){
 
         for(var i=start, _len_i = exit_parent.children.length; i < _len_i;i++){
             var clone = exit_parent.children[i].clone_tree(null,true)
+            if(clone.has('continue')){has_continue=true; break}
             rest[pos++]=clone
-            if(clone.has_break()){has_break=true}
+            if(clone.has('break')){has_break=true}
         }
 
         // add rest of block to new function

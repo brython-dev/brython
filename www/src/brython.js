@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-22 17:53:19.189446"
+__BRYTHON__.compiled_date="2017-01-24 18:07:31.104664"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -197,8 +197,7 @@ if(node===undefined ||node.id=='__builtins__'){break}}
 blocks='{'+blocks+'}'
 var parent=this.parent
 while(parent!==undefined && parent.id===undefined){parent=parent.parent}
-var g=$B.$BRgenerator(def_ctx.name,blocks,def_ctx.id,def_node),block_id=parent.id.replace(/\./g,'_'),
-name=def_ctx.decorated ? def_ctx.alias : 
+var g=$B.$BRgenerator(def_ctx.name,blocks,def_ctx.id,def_node),block_id=parent.id.replace(/\./g,'_'),name=def_ctx.decorated ? def_ctx.alias : 
 def_ctx.name+def_ctx.num,res='var '+name+' = $B.genfunc("'+
 def_ctx.name+'", '+blocks+',['+g+'])'
 this.parent.children.splice(rank,1)
@@ -580,33 +579,35 @@ var body_node=new $Node()
 body_node.line_num=tree_node.line_num
 tree_node.insert(0,body_node)
 return new $NodeCtx(body_node)}
-function $BreakCtx(C){
-this.type='break'
-this.toString=function(){return 'break '}
-this.parent=C
-C.tree[C.tree.length]=this
+function set_loop_C(C,kw){
 var ctx_node=C
 while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node
 var loop_node=tree_node.parent
 var break_flag=false
 while(1){if(loop_node.type==='module'){
-$_SyntaxError(C,'break outside of a loop')}else{var ctx=loop_node.C.tree[0]
+$_SyntaxError(C,kw+' outside of a loop')}else{var ctx=loop_node.C.tree[0]
 if(ctx.type==='condition' && ctx.token==='while'){this.loop_ctx=ctx
-ctx.has_break=true
+ctx['has_'+kw]=true
 break}
 switch(ctx.type){case 'for':
 this.loop_ctx=ctx
-ctx.has_break=true
+ctx['has_'+kw]=true
 break_flag=true
 break
 case 'def':
 case 'generator':
 case 'class':
-$_SyntaxError(C,'break outside of a loop')
+$_SyntaxError(C,kw+' outside of a loop')
 default:
 loop_node=loop_node.parent}
-if(break_flag)break}}
+if(break_flag)break}}}
+function $BreakCtx(C){
+this.type='break'
+this.toString=function(){return 'break '}
+this.parent=C
+C.tree[C.tree.length]=this
+set_loop_C.apply(this,[C,'break'])
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this)
 var res=';$locals_'+scope.id.replace(/\./g,'_')+
@@ -882,7 +883,9 @@ return res.join('')}}
 function $ContinueCtx(C){
 this.type='continue'
 this.parent=C
+$get_node(this).is_continue=true
 C.tree[C.tree.length]=this
+set_loop_C.apply(this,[C,'continue'])
 this.toString=function(){return '(continue)'}
 this.to_js=function(){this.js_processed=true
 return 'continue'}}
@@ -10611,7 +10614,7 @@ var _b_=$B.builtins
 eval($B.InjectBuiltins())
 function make_node(top_node,node){
 if(node.C.$genjs){var ctx_js=node.C.$genjs}else{var ctx_js=node.C.$genjs=node.C.to_js()}
-var is_cond=false,is_except=false,is_else=false
+var is_cond=false,is_except=false,is_else=false,is_continue
 if(node.locals_def){
 var iter_name=top_node.iter_id
 ctx_js='for(var attr in this.blocks){eval("var "+attr+"=this.blocks[attr]");};'+
@@ -10648,8 +10651,8 @@ js +='if(sent_value.__class__===$B.$GeneratorSendError)'+
 '{throw sent_value.err}'
 js +='var $yield_value'+ctx_js+'=sent_value;'
 js +='this.sent_value=None'
-new_node.data=js}else if(ctype=='break'){
-new_node.is_break=true
+new_node.data=js}else if(ctype=='break' ||ctype=="continue"){
+new_node['is_'+ctype]=true
 new_node.loop_num=node.C.tree[0].loop_ctx.loop_num}
 new_node.is_yield=(ctype=='yield'||ctype=='return')
 new_node.is_cond=is_cond
@@ -10696,6 +10699,7 @@ if(head && this.is_break){res.data='$locals["$no_break'+this.loop_num+'"]=false;
 res.data +='var err = new Error("break");'
 res.data +='err.__class__=$B.GeneratorBreak;throw err;'
 res.is_break=true}
+res.is_continue=this.is_continue
 res.has_child=this.has_child
 res.is_cond=this.is_cond
 res.is_except=this.is_except
@@ -10705,11 +10709,15 @@ res.loop_num=this.loop_num
 res.loop_start=this.loop_start
 res.no_break=true
 res.is_yield=this.is_yield
-for(var i=0,_len_i=this.children.length;i < _len_i;i++){res.addChild(this.children[i].clone_tree(exit_node,head))
+for(var i=0,_len_i=this.children.length;i < _len_i;i++){if(this.children[i].is_continue){
+res.addChild(new $B.genNode('void(0)'))
+break}
+res.addChild(this.children[i].clone_tree(exit_node,head))
 if(this.children[i].is_break){res.no_break=false}}
 return res}
-this.has_break=function(){if(this.is_break){return true}
-else{for(var i=0,_len_i=this.children.length;i < _len_i;i++){if(this.children[i].has_break()){return true}}}
+this.has=function(keyword){
+if(this['is_'+keyword]){return true}
+else{for(var i=0,_len_i=this.children.length;i < _len_i;i++){if(this.children[i].has(keyword)){return true}}}
 return false}
 this.indent_src=function(indent){return ' '.repeat(indent*indent)}
 this.src=function(indent){
@@ -10757,9 +10765,9 @@ var first_line=func_root.children[0].src()
 var def_pos=first_line.search(/\$defaults/)
 if(def_pos>-1){var $default=first_line.substr(def_pos)
 $default=$default.substr(0,$default.length-2)}
-var funcs=['"'+escape(raw_src)+'"']
+var funcs=[raw_src]
 obj.parent_block=def_node.parent_block
-for(var i=0;i<func_root.yields.length;i++){funcs.push('"'+escape(make_next(obj,i))+'"')}
+for(var i=0;i<func_root.yields.length;i++){funcs.push(make_next(obj,i))}
 delete $B.modules[iter_id]
 delete $B.bound[iter_id]
 return funcs}
@@ -10777,9 +10785,7 @@ fnode.addChild(new $B.genNode('$B.enter_frame(["'+self.iter_id+
 '",$locals,"'+self.module+'",$locals_'+
 self.module.replace(/\./g,'_')+']);'))
 while(1){
-var exit_parent=exit_node.parent
-var rest=[],pos=0
-var has_break=false
+var exit_parent=exit_node.parent,rest=[],pos=0,has_break,has_continue
 var start=exit_node.rank+1
 if(exit_node.loop_start!==undefined){
 start=exit_node.rank}else if(exit_node.is_cond){
@@ -10790,8 +10796,9 @@ while(start<exit_parent.children.length &&
 (exit_parent.children[start].is_except ||
 exit_parent.children[start].is_else)){start++}}
 for(var i=start,_len_i=exit_parent.children.length;i < _len_i;i++){var clone=exit_parent.children[i].clone_tree(null,true)
+if(clone.has('continue')){has_continue=true;break}
 rest[pos++]=clone
-if(clone.has_break()){has_break=true}}
+if(clone.has('break')){has_break=true}}
 if(has_break){
 var rest_try=new $B.genNode('try')
 for(var i=0,_len_i=rest.length;i < _len_i;i++){rest_try.addChild(rest[i])}

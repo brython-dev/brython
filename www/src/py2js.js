@@ -325,11 +325,6 @@ function $Node(type){
                     var g = $B.$BRgenerator(def_ctx.name, blocks,
                         def_ctx.id, def_node),
                         block_id = parent.id.replace(/\./g, '_'),
-                        /*
-                        res = '$locals_'+block_id+'["'+def_ctx.name+
-                            '"] = $B.genfunc("'+def_ctx.name+'", '+blocks+
-                            ',['+g+'])'
-                        */
                         name = def_ctx.decorated ? def_ctx.alias : 
                             def_ctx.name+def_ctx.num,
                         res = 'var '+name+' = $B.genfunc("'+
@@ -1083,6 +1078,50 @@ function $BodyCtx(context){
     return new $NodeCtx(body_node)
 }
 
+function set_loop_context(context, kw){
+    // For keywords "continue" and "break"
+    // "this" is the instance of $BreakCtx or $ContinueCtx
+    // We search the loop to "break" or "continue"
+    // The attribute loop_ctx of "this" is set to the loop context
+    // The attribute "has_break" or "has_continue" is set on the loop context
+    var ctx_node = context
+    while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
+    var tree_node = ctx_node.node
+    var loop_node = tree_node.parent
+    var break_flag=false
+    while(1){
+        if(loop_node.type==='module'){
+            // "break" is not inside a loop
+            $_SyntaxError(context,kw+' outside of a loop')
+        }else{
+            var ctx = loop_node.context.tree[0]
+
+            if(ctx.type==='condition' && ctx.token==='while'){
+                this.loop_ctx = ctx
+                ctx['has_'+kw] = true
+                break
+            }
+
+            switch(ctx.type) {
+              case 'for':
+                this.loop_ctx = ctx
+                ctx['has_'+kw] = true
+                break_flag=true
+                break
+              case 'def':
+              case 'generator':
+              case 'class':
+                // "break" must not be inside a def or class, even if they are
+                // enclosed in a loop
+                $_SyntaxError(context,kw+' outside of a loop')
+              default:
+                loop_node=loop_node.parent
+            }//switch
+            if (break_flag) break
+        }//if
+    }//while
+}
+
 function $BreakCtx(context){
     // Used for the keyword "break"
     // A flag is associated to the enclosing "for" or "while" loop
@@ -1094,47 +1133,8 @@ function $BreakCtx(context){
     this.parent = context
     context.tree[context.tree.length]=this
 
-    // get loop context
-    var ctx_node = context
-    while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
-    var tree_node = ctx_node.node
-    var loop_node = tree_node.parent
-    var break_flag=false
-    while(1){
-        if(loop_node.type==='module'){
-            // "break" is not inside a loop
-            $_SyntaxError(context,'break outside of a loop')
-        }else{
-            var ctx = loop_node.context.tree[0]
-            //var _ctype=ctx.type
-
-            if(ctx.type==='condition' && ctx.token==='while'){
-                this.loop_ctx = ctx
-                ctx.has_break = true
-                break
-            }
-
-            switch(ctx.type) {
-              case 'for':
-                //if(_ctype==='for' || (_ctype==='condition' && ctx.token==='while')){
-                this.loop_ctx = ctx
-                ctx.has_break = true
-                break_flag=true
-                break
-              case 'def':
-              case 'generator':
-              case 'class':
-                //}else if('def'==_ctype || 'generator'==_ctype || 'class'==_ctype){
-                // "break" must not be inside a def or class, even if they are
-                // enclosed in a loop
-                $_SyntaxError(context,'break outside of a loop')
-              default:
-                //}else{
-                loop_node=loop_node.parent
-            }//switch
-            if (break_flag) break
-        }//if
-    }//while
+    // set information related to the associated loop
+    set_loop_context.apply(this, [context, 'break'])
 
     this.to_js = function(){
         this.js_processed=true
@@ -1651,7 +1651,11 @@ function $ContinueCtx(context){
     // Class for keyword "continue"
     this.type = 'continue'
     this.parent = context
+    $get_node(this).is_continue = true
     context.tree[context.tree.length]=this
+
+    // set information related to the associated loop
+    set_loop_context.apply(this, [context, 'continue'])
 
     this.toString = function(){return '(continue)'}
     
