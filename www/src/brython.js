@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-25 14:01:19.409589"
+__BRYTHON__.compiled_date="2017-01-25 14:44:58.647401"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -2002,7 +2002,9 @@ if(comps[this.op]!==undefined){var method=comps[this.op]
 if(this.tree[0].type=='expr' && this.tree[1].type=='expr'){var t0=this.tree[0].tree[0],t1=this.tree[1].tree[0]
 switch(t1.type){case 'int':
 switch(t0.type){case 'int':
-return t0.to_js()+this.op+t1.to_js()
+if(t0.value>$B.min_int && t0.value<$B.max_int &&
+t1.value>$B.min_int && t1.value<$B.max_int){return t0.to_js()+this.op+t1.to_js()}else{return 'getattr('+this.tree[0].to_js()+',"__'+
+method+'__")('+this.tree[1].to_js()+')'}
 case 'str':
 return '$B.$TypeError("unorderable types: int() < str()")'
 case 'id':
@@ -5240,7 +5242,7 @@ return result + pattern;}}
 _b_.__debug__=false
 var $ObjectDict=_b_.object.$dict,odga=$ObjectDict.__getattribute__
 $B.$comps={'>':'gt','>=':'ge','<':'lt','<=':'le'}
-$B.$inv_comps={'>': 'le','>=': 'lt','<': 'ge','<=': 'gt'}
+$B.$inv_comps={'>': 'lt','>=': 'le','<': 'gt','<=': 'gt'}
 function abs(obj){if(isinstance(obj,_b_.int))return _b_.int(Math.abs(obj));
 if(isinstance(obj,_b_.float))return _b_.float(Math.abs(obj));
 if(hasattr(obj,'__abs__')){return getattr(obj,'__abs__')()};
@@ -7841,12 +7843,12 @@ var $ops={'+':'add','-':'sub'}
 for(var $op in $ops){var opf=$op_func.replace(/-/gm,$op)
 opf=opf.replace(new RegExp('sub','gm'),$ops[$op])
 eval('$IntDict.__'+$ops[$op]+'__ = '+opf)}
-var $comp_func=function(self,other){if(other.__class__===$B.LongInt.$dict)return $B.LongInt.$dict.__gt__($B.LongInt(self),other)
+var $comp_func=function(self,other){if(other.__class__===$B.LongInt.$dict){return $B.LongInt.$dict.__lt__(other,$B.LongInt(self))}
 if(isinstance(other,int))return self.valueOf()> other.valueOf()
 if(isinstance(other,_b_.float))return self.valueOf()> other.valueOf()
 if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.$dict.__hash__(other)}
 if(hasattr(other,'__int__')||hasattr(other,'__index__')){return $IntDict.__gt__(self,$B.$GetInt(other))}
-var inv_op=getattr(other,'__le__',null)
+var inv_op=getattr(other,'__lt__',null)
 if(inv_op !==null){return inv_op(self)}
 throw _b_.TypeError(
 "unorderable types: int() > "+$B.get_class(other).__name__+"()")}
@@ -7854,7 +7856,7 @@ $comp_func +=''
 for(var $op in $B.$comps){eval("$IntDict.__"+$B.$comps[$op]+'__ = '+
 $comp_func.replace(/>/gm,$op).
 replace(/__gt__/gm,'__'+$B.$comps[$op]+'__').
-replace(/__le__/,'__'+$B.$inv_comps[$op]+'__'))}
+replace(/__lt__/,'__'+$B.$inv_comps[$op]+'__'))}
 $B.make_rmethods($IntDict)
 var $valid_digits=function(base){var digits=''
 if(base===0)return '0'

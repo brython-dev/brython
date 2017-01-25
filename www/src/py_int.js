@@ -434,7 +434,7 @@ for(var $op in $ops){
 
 // comparison methods
 var $comp_func = function(self,other){
-    if (other.__class__ === $B.LongInt.$dict) return $B.LongInt.$dict.__gt__($B.LongInt(self), other)
+    if (other.__class__ === $B.LongInt.$dict) {return $B.LongInt.$dict.__lt__(other, $B.LongInt(self))}
     if(isinstance(other,int)) return self.valueOf() > other.valueOf()
     if(isinstance(other,_b_.float)) return self.valueOf() > other.valueOf()
     if(isinstance(other,_b_.bool)) {
@@ -444,8 +444,8 @@ var $comp_func = function(self,other){
        return $IntDict.__gt__(self, $B.$GetInt(other))
     }
 
-    // See if other has the opposite operator, eg <= for >
-    var inv_op = getattr(other, '__le__', null)
+    // See if other has the opposite operator, eg < for >
+    var inv_op = getattr(other, '__lt__', null)
     if(inv_op !== null){return inv_op(self)}
 
     throw _b_.TypeError(
@@ -457,7 +457,7 @@ for(var $op in $B.$comps){
     eval("$IntDict.__"+$B.$comps[$op]+'__ = '+
           $comp_func.replace(/>/gm,$op).
               replace(/__gt__/gm,'__'+$B.$comps[$op]+'__').
-              replace(/__le__/, '__'+$B.$inv_comps[$op]+'__'))
+              replace(/__lt__/, '__'+$B.$inv_comps[$op]+'__'))
 }
 
 // add "reflected" methods

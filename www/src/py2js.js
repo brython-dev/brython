@@ -4074,7 +4074,13 @@ function $OpCtx(context,op){
                   case 'int':
                     switch (t0.type) {
                       case 'int':
-                        return t0.to_js()+this.op+t1.to_js()
+                        if(t0.value>$B.min_int && t0.value<$B.max_int &&
+                            t1.value>$B.min_int && t1.value<$B.max_int){
+                                return t0.to_js()+this.op+t1.to_js()
+                        }else{
+                            return 'getattr('+this.tree[0].to_js()+',"__'+
+                                method+'__")('+this.tree[1].to_js()+')'
+                        }
                       case 'str':
                         return '$B.$TypeError("unorderable types: int() < str()")'
                       case 'id':
