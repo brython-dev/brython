@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-24 18:07:31.104664"
+__BRYTHON__.compiled_date="2017-01-25 14:01:19.409589"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -189,9 +189,10 @@ i +=offset}
 if(ctx_offset===undefined){ctx_offset=1}
 if(this.C && this.C.tree!==undefined &&
 this.C.tree[0].type=="generator"){var def_node=this,def_ctx=def_node.C.tree[0]
-var blocks=[],node=def_node.parent_block
-while(true){var node_id=node.id.replace(/\./g,'_')
-blocks.push('"$locals_'+node_id+'": $locals_'+node_id)
+var blocks=[],node=def_node.parent_block,is_comp=node.is_comp
+while(true){var node_id=node.id.replace(/\./g,'_'),block='"$locals_'+node_id+'": '
+if(is_comp){block +='$B.clone($locals_'+node_id+')'}else{block +='$locals_'+node_id}
+blocks.push(block)
 node=node.parent_block
 if(node===undefined ||node.id=='__builtins__'){break}}
 blocks='{'+blocks+'}'

@@ -1147,6 +1147,11 @@ def g(unused_arg=f()):
  
 assert nbcalls == 1
 
+# issue 499
+data = [1, 2, 3]
+data = (item for item in data)
+assert list(data) == [1, 2, 3]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

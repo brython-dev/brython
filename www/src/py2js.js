@@ -307,11 +307,18 @@ function $Node(type){
                     var def_node = this,
                         def_ctx = def_node.context.tree[0]
                     var blocks = [],
-                        node = def_node.parent_block
-                     
+                        node = def_node.parent_block,
+                        is_comp = node.is_comp
+                    
                     while(true){
-                        var node_id = node.id.replace(/\./g, '_')
-                        blocks.push('"$locals_'+node_id+'": $locals_'+node_id)
+                        var node_id = node.id.replace(/\./g, '_'),
+                            block = '"$locals_'+node_id+'": '
+                        if(is_comp){
+                            block += '$B.clone($locals_'+node_id+')'
+                        }else{
+                            block += '$locals_'+node_id
+                        }
+                        blocks.push(block)
                         node = node.parent_block
                         if(node===undefined || node.id == '__builtins__'){break}
                     }
