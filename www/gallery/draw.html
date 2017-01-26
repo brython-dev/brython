@@ -277,7 +277,7 @@ class ColorPicker:
         """If color panel is on, clicking outside of it removes it"""
         ev.stopPropagation()
         if not ev.target.inside(self.color_panel):
-            container.remove(self.color_panel)
+            container.removeChild(self.color_panel)
             document.unbind('mousedown', self.remove)
             document.unbind('touchstart', self.remove)
 
@@ -286,7 +286,7 @@ class ColorPicker:
         new_color = ev.target.style.backgroundColor
         panel.color = new_color
         tools.btn_color.style.backgroundColor = new_color
-        container.remove(self.color_panel)
+        container.removeChild(self.color_panel)
         document.unbind('mousedown', self.remove)
         document.unbind('touchstart', self.remove)
         
@@ -314,7 +314,7 @@ class ThicknessPicker:
         """If color panel is on, clicking outside of it removes it"""
         ev.stopPropagation()
         if not ev.target.inside(self.thickness_panel):
-            container.remove(self.thickness_panel)
+            container.removeChild(self.thickness_panel)
             document.unbind('mousedown', self.remove)
             document.unbind('touchstart', self.remove)
 
@@ -324,7 +324,7 @@ class ThicknessPicker:
         y = ev.y - self.thickness_panel.abs_top
         panel.line_width = min(round(4*self.w/100), round(5*y/100))
         
-        container.remove(self.thickness_panel)
+        container.removeChild(self.thickness_panel)
         document.unbind('mousedown', self.remove)
         document.unbind('touchstart', self.remove)
         

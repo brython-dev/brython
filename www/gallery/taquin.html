@@ -239,7 +239,7 @@ def init(*args):
     
     # Remove existing cells if it is not the first game
     for cell in cells:
-        cell.parent.remove(cell)
+        cell.parent.removeChild(cell)
 
     del cells[:]
     del grid[:]

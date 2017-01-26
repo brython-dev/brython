@@ -284,8 +284,7 @@ class KanbanView:
 
 # ----------------------------------------------------------
 def clear_node(node):
-    for child in list(node):
-        node.remove(child)
+    node.clear()
 
 # ----------------------------------------------------------
 def percent(p):
