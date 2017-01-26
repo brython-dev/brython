@@ -1050,23 +1050,17 @@ DOMNodeDict.parent = function(self){
 }
 
 DOMNodeDict.remove = function(self,child){
-    // Remove child from self
-    // If child is not inside self, throw ValueError
-    var elt=self.elt,flag=false,ch_elt=child.elt
-    if(self.elt.nodeType==9){elt=self.elt.body}
+    // In versions <= 3.1.1 elt.remove(child) would remove child from the
+    // element, where child could be a descendant of element at any level
+    // This was confusing with the new .remove() method of DOM elements
+    console.log('WARNING - since version 3.1.2, method remove() is the '+
+        'DOM Node method of the same name.')
     if(typeof self.elt.remove=="function"){
         self.elt.remove(child)
         return None
+    }else{
+        throw _b_.AttributeError(_b_.str(self)+" has no attribute 'remove'")
     }
-
-    while(ch_elt.parentElement){
-        if(ch_elt.parentElement===elt){
-            elt.removeChild(ch_elt)
-            flag = true
-            break
-        }else{ch_elt = ch_elt.parentElement}
-    }
-    if(!flag){throw _b_.ValueError('element '+child+' is not inside '+self)}
 }
 
 DOMNodeDict.reset = function(self){ // for FORM

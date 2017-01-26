@@ -2036,9 +2036,61 @@ function $DefCtx(context){
         
         var prefix = this.tree[0].to_js()
         if(this.decorated){prefix=this.alias}
+        var name = (this.decorated ? this.alias : this.name+this.num)
+
         
         // Add lines of code to node children
+
+        /*
+        nodes.push($NodeJS('var $len=arguments.length, $kwargs={}, $arg'))
+        nodes.push($NodeJS('if($len && arguments[$len-1].$nat){$kwargs=arguments[$len-1].kw;$len--}'))
+        if(this.args.length){
+            var js = this.positional_list.concat(this.default_list).join(', ')
+            if(this.star_arg){js += ', '+this.star_arg+'=[]'}
+            if(this.kw_arg){js+= ', '+this.kw_arg+'=$kwargs'}
+            if(js){ nodes.push($NodeJS('var '+js)) }
+        }
+        if(slot_list.length){
+            nodes.push($NodeJS('var $args = ['+slot_list.join(', ')+']'))
+        }
         
+        nodes.push($NodeJS('var $locs = '+name+'.$defaults'))
+        nodes.push($NodeJS('for(var $attr in $kwargs){$locs[$attr]='+
+            '$kwargs[$attr]}'))
+        js = 'for(var $i=0;$i<$len;$i++){$arg = $args[$i]; $locs[$arg]='+
+            '$locs[$attr]===undefined ? arguments[$i] : $B.duplicate("'+
+            this.name+'", $arg)}'
+        nodes.push($NodeJS(js))
+
+        for(var i=0;i<this.positional_list.length;i++){
+            var pos_arg = this.positional_list[i]
+            js = pos_arg+' = arguments['+i+']!==undefined ? ($kwargs.'+
+                pos_arg+'!==undefined ? $B.duplicate("'+this.name+'", "'+
+                pos_arg+'") : '+
+                'arguments['+i+']) : $kwargs.'+pos_arg+' === undefined ? '+
+                'Error("missing") : $kwargs.'+pos_arg
+            if(this.kw_arg){js += '; delete '+this.kw_arg+'.'+pos_arg}
+            nodes.push($NodeJS(js))
+        }
+        for(var j=0;j<this.default_list.length;j++){
+            var pos_arg = this.default_list[j]
+            js = pos_arg+' = arguments['+(i+j)+']!==undefined ? ($kwargs.'+
+                pos_arg+'!==undefined ? Error("duplicate") : '+
+                'arguments['+i+']) : $kwargs.'+pos_arg+' === undefined ? '+
+                name+'.$defaults.'+pos_arg+' : $kwargs.'+pos_arg
+            if(this.kw_arg){js += '; delete '+this.kw_arg+'.'+pos_arg}
+            nodes.push($NodeJS(js))
+        }
+        if(this.star_arg){
+            js = 'for(var $i='+(i+j)+';$i<$len;$i++){'+this.star_arg+'.push('+
+                'arguments[$i])}'
+            nodes.push($NodeJS(js))
+        }
+
+
+        nodes.push($NodeJS('console.log($locs)'))
+        */
+
         // Declare object holding local variables
         var local_ns = '$locals_'+this.id
         js = 'var '+local_ns+'={}, '
@@ -2070,7 +2122,6 @@ function $DefCtx(context){
 
         var make_args_nodes = []
 
-        var name = (this.decorated ? this.alias : this.name+this.num)
         var default_ref = name+'.$defaults'
         if(this.type=="generator"){
             default_ref = prefix+'.$defaults'

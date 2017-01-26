@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-25 14:44:58.647401"
+__BRYTHON__.compiled_date="2017-01-26 21:28:12.848955"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1035,6 +1035,7 @@ while(global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.
 var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
 var prefix=this.tree[0].to_js()
 if(this.decorated){prefix=this.alias}
+var name=(this.decorated ? this.alias : this.name+this.num)
 var local_ns='$locals_'+this.id
 js='var '+local_ns+'={}, '
 js +='$local_name="'+this.id+'",$locals='+local_ns+';'
@@ -1054,7 +1055,6 @@ new $NodeJSCtx(enter_frame_node,js)
 nodes.push(enter_frame_node)
 this.env=[]
 var make_args_nodes=[]
-var name=(this.decorated ? this.alias : this.name+this.num)
 var default_ref=name+'.$defaults'
 if(this.type=="generator"){default_ref=prefix+'.$defaults'}
 var js=this.type=='def' ? local_ns+' = $locals' : 'var $ns'
@@ -4658,7 +4658,6 @@ $B.$InstanceMethodDict={__class__:$B.$type,__name__:'instancemethod',__mro__:[_b
 ;(function($B){var _b_=$B.builtins
 $B.args=function($fname,argcount,slots,var_names,$args,$dobj,extra_pos_args,extra_kw_args){
 var has_kw_args=false,nb_pos=$args.length
-if(nb_pos>0 && $args[nb_pos-1]===undefined){console.log('naomalie','['+$fname+']',nb_pos,$args)}
 if(nb_pos>0 && $args[nb_pos-1].$nat){has_kw_args=true
 nb_pos--
 var kw_args=$args[nb_pos].kw}
@@ -4692,6 +4691,7 @@ throw _b_.TypeError(name+'() missing '+missing+
 ' positional argument'+(missing>1 ? 's' : '')+': '+
 positional.slice(received))}else{throw _b_.TypeError(name+'() takes '+expected+' positional argument'+
 (expected>1 ? 's' : '')+ ' but more were given')}}
+$B.duplicate=function(fname,arg){throw _b_.TypeError(fname+"() got multiple values for argument '"+arg+"'")}
 $B.get_class=function(obj,from){
 if(obj===null){return $B.$NoneDict}
 var klass=obj.__class__
@@ -5208,7 +5208,7 @@ $B.imports=function(){
 var w=window.open('','','width="50%",height=400,resizeable,scrollbars');
 w.document.write("Currently imported modules. Copy and paste in file "+
 "<b>.bundle-include</b> in your application folder, then run "+
-"<code>python -m brython --update</code> to generate a new version "+
+"<code>python -m brython --modules</code> to generate a new version "+
 "of <b>brython_modules.js</b><p>")
 w.document.write("<TEXTAREA rows=20 cols=40>")
 for(var attr in $B.imported){w.document.write(attr+'\n')}
@@ -10462,14 +10462,10 @@ return new $OptionsClass(self.elt)}
 DOMNodeDict.parent=function(self){if(self.elt.parentElement)return DOMNode(self.elt.parentElement)
 return None}
 DOMNodeDict.remove=function(self,child){
-var elt=self.elt,flag=false,ch_elt=child.elt
-if(self.elt.nodeType==9){elt=self.elt.body}
+console.log('WARNING - since version 3.1.2, method remove() is the '+
+'DOM Node method of the same name.')
 if(typeof self.elt.remove=="function"){self.elt.remove(child)
-return None}
-while(ch_elt.parentElement){if(ch_elt.parentElement===elt){elt.removeChild(ch_elt)
-flag=true
-break}else{ch_elt=ch_elt.parentElement}}
-if(!flag){throw _b_.ValueError('element '+child+' is not inside '+self)}}
+return None}else{throw _b_.AttributeError(_b_.str(self)+" has no attribute 'remove'")}}
 DOMNodeDict.reset=function(self){
 return function(){self.elt.reset()}}
 DOMNodeDict.style=function(self){

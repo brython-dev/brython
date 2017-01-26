@@ -34,6 +34,33 @@ function ajax(){
     return res
 }
 
+function ajax1(){
+    if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
+        var xmlhttp=new XMLHttpRequest();
+    }else{// code for IE6, IE5
+        var xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    xmlhttp.onreadystatechange = function(){
+        // here, "this" refers to xmlhttp
+        var state = this.readyState
+        var timer = this.$requestTimer
+        if(state===0 && this.onuninitialized){this.onuninitialized()}
+        else if(state===1 && this.onloading){this.onloading()}
+        else if(state===2 && this.onloaded){this.onloaded()}
+        else if(state===3 && this.oninteractive){this.oninteractive()}
+        else if(state===4 && this.oncomplete){
+            if(timer !== null){window.clearTimeout(timer)}
+            this.oncomplete()
+        }
+    }
+    return {
+        __class__: ajax.$dict, 
+        js: xmlhttp,
+        headers: {}
+    }
+}
+ajax1.__class__ = $B.$factory
+
 ajax.__class__ = $B.$factory
 
 var add_to_res = function(res,key,val) {
@@ -143,6 +170,6 @@ ajax.$dict.__mro__ = [$B.JSObject.$dict, _b_.object.$dict]
 
 $B.set_func_names(ajax.$dict)
 
-return {ajax:ajax}
+return {ajax:ajax, ajax1:ajax1}
 
 })(__BRYTHON__)
