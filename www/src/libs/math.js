@@ -9,7 +9,7 @@ eval($s.join(';'))
 
 var float_check=function(x) {
     if (x.__class__===$B.LongInt.$dict){return parseInt(x.value)}
-    return x
+    return _b_.float(x)
 }
 
 var isWholeNumber=function(x){return (x*10) % 10 == 0}
@@ -388,7 +388,7 @@ var _mod = {
        return _b_.tuple([i, float(x2)])
     },
     nan: float('nan'),
-	pi : float(Math.PI),
+    pi : float(Math.PI),
     pow: function(x,y) {
         var x1=float_check(x)
         var y1=float_check(y)

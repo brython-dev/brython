@@ -1152,6 +1152,18 @@ data = [1, 2, 3]
 data = (item for item in data)
 assert list(data) == [1, 2, 3]
 
+# issue 557
+from math import sin, log
+
+class N:
+    def __float__(self):
+        return 42.0
+
+num = N()
+assert sin(num) == -0.9165215479156338
+assert log(num) == 3.7376696182833684
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
