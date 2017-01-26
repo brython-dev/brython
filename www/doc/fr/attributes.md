@@ -51,10 +51,6 @@ Comme le nom des attributs peut être différent d'un navigateur à l'autre, Bry
 </tr>
 
 <tr>
-<td>*remove*</td><td>fonction</td><td><code>`elt.remove(`_child_`)`</code> supprime *child* de la liste des descendants de l'élément</td><td>L</td>
-</tr>
-
-<tr>
 <td>*text*</td><td>chaine</td><td>le texte contenu dans l'élément</td><td>L/E</td>
 </tr>
 

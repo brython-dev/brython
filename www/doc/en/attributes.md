@@ -61,11 +61,6 @@ for `doc`)</td><td>R</td>
 </tr>
 
 <tr>
-<td>*remove*</td><td>function</td><td><code>remove(_child_)</code> removes 
-*child* from the list of the element's children</td><td>R</td>
-</tr>
-
-<tr>
 <td>*text*</td><td>string</td><td>the text inside the element</td><td>R/W</td>
 </tr>
 

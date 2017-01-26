@@ -52,10 +52,6 @@ Debido a que sus nombres pueden variar dependiendo del navegador, Brython define
 </tr>
 
 <tr>
-<td>*remove*</td><td>función</td><td><code>remove(_child_)</code> elimina *child* de la lista de elementos hijos</td><td>R</td>
-</tr>
-
-<tr>
 <td>*text*</td><td>string</td><td>el texto dentro de un elemento</td><td>R/W</td>
 </tr>
 
