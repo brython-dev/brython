@@ -35,29 +35,34 @@ def err_msg():
 
 timeout = 4
 
-def fake_qs():
-    return '?foo=%s' %time.time()
+def fake_qs(method):
+    if method == "GET":
+        return '?foo=%s' %time.time()
+    else:
+        return ''
 
-def go(url):
-    req = ajax.ajax()
-    req.bind('complete',on_complete)
-    req.set_timeout(timeout,err_msg)
-    req.open('GET',url+fake_qs(),True)
-    req.send()
+def go(url, method="GET"):
+    req = ajax.Ajax(url+fake_qs(method), method=method)
+    req.set_timeout(timeout, err_msg)
+    @req.complete
+    def success():
+        if req.status==200 or req.status==0:
+            doc["result"].html = req.text
+        else:
+            doc["result"].html = "error "+req.text    
 
-def post(url):
-    req = ajax.ajax()
-    req.bind('complete',on_complete)
-    req.set_timeout(timeout,err_msg)
-    req.open('POST',url,True)
-    req.set_header('content-type','application/x-www-form-urlencoded')
-    req.send({'foo':34})
+    if method == "GET":
+        req.send()
+    else:
+        req.set_header('content-type','application/x-www-form-urlencoded')
+        req.send({'foo':34})
 
 # bindings
 doc['get_text'].bind('click',lambda ev:go('ajax_data.txt'))
 doc['i_dont_exist'].bind('click',lambda ev:go('i_dont_exist.txt'))
 doc['get_test'].bind('click',lambda ev:go('/cgi-bin/get_test.py'))
 doc['post_test'].bind('click',lambda ev:post('/cgi-bin/post_test.py'))
+
 </script>
 
 </body>
