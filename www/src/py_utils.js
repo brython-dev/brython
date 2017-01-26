@@ -19,9 +19,6 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     
     // If the function call had keywords arguments, they are in the last
     // element of $args
-    if(nb_pos>0 && $args[nb_pos-1]===undefined){
-        console.log('naomalie', '['+$fname+']', nb_pos, $args)
-    }
     if(nb_pos>0 && $args[nb_pos-1].$nat){
         has_kw_args=true
         nb_pos--
@@ -1269,7 +1266,7 @@ $B.imports = function(){
     var w = window.open('', '', 'width="50%",height=400,resizeable,scrollbars');
     w.document.write("Currently imported modules. Copy and paste in file "+
         "<b>.bundle-include</b> in your application folder, then run "+
-        "<code>python -m brython --update</code> to generate a new version "+
+        "<code>python -m brython --modules</code> to generate a new version "+
         "of <b>brython_modules.js</b><p>")
     w.document.write("<TEXTAREA rows=20 cols=40>")
     for(var attr in $B.imported){
