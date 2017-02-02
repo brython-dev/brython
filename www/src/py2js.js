@@ -7518,25 +7518,24 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
         '"'+module.replace(/\./g,'_')+'", '+global_ns+', "a"]);\n'))
 
     // Wrap code in a try/finally to make sure we leave the frame
-    var try_node = new $Node(),
-        children = root.children.slice(enter_frame_pos+1, root.children.length),
-        ctx = new $NodeCtx(try_node)
+    var try_node = new $NodeJS('try'),
+        children = root.children.slice(enter_frame_pos+1, root.children.length)
     root.insert(enter_frame_pos+1, try_node)
-    new $TryCtx(ctx)
     
     // Add module body to the "try" clause
     if(children.length==0){children=[$NodeJS('')]} // in case the script is empty
     for(var i=0;i<children.length;i++){
         try_node.add(children[i])
     }
+    // add node to exit frame in case no exception was raised
+    try_node.add($NodeJS('$B.leave_frame("'+locals_id+'")'))
+    
     root.children.splice(enter_frame_pos+2, root.children.length)
     
-    var finally_node = new $Node(),
-        ctx = new $NodeCtx(finally_node)
-    new $SingleKwCtx(ctx, 'finally')
-    finally_node.add($NodeJS('$B.leave_frame("'+locals_id+'")'))
+    var catch_node = new $NodeJS('catch(err)')
+    catch_node.add($NodeJS('$B.leave_frame("'+locals_id+'")'))
     
-    root.add(finally_node)
+    root.add(catch_node)
     
     if($B.profile>0){$add_profile(root,null,module)}
     if($B.debug>0){$add_line_num(root,null,module)}
