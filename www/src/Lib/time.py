@@ -132,7 +132,7 @@ def _check_input(t):
     elif t and isinstance(t, struct_time) and len(t.args) != 9:
         raise TypeError("function takes exactly 9 arguments ({} given)".format(len(t.args)))
     elif t and isinstance(t, tuple) and len(t) != 9:
-        raise TypeError("function takes exactly 9 arguments ({} given)".format(len(t.args)))
+        raise TypeError("function takes exactly 9 arguments ({} given)".format(len(t)))
     elif t and not isinstance(t, (tuple, struct_time)):
         raise TypeError("Tuple or struct_time argument required")
     else:
