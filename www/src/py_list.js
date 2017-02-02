@@ -533,9 +533,9 @@ $B.$list = function(t){
 
 // constructor for built-in type 'list'
 function list(){
-    var $=$B.args('list',1,{obj:null},['obj'],arguments,{obj:null},null,null),
+    if(arguments.length==0){return []}
+    var $=$B.args('list',1,{obj:null},['obj'],arguments,{},null,null),
         obj = $.obj
-    if(obj===null) return []
 
     if(Array.isArray(obj)){ // most simple case
         obj = obj.slice() // list(t) is not t
