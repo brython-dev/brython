@@ -106,7 +106,6 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
         }
     
     }
-
     return slots
     
 }
@@ -998,26 +997,13 @@ $B.int_value = function(v){
 
 $B.enter_frame = function(frame){
     // Enter execution frame : save on top of frames stack
-    //console.log('enter frame', frame[0])
-    //if($B.frames_stack===undefined){alert('frames stack udef')}
     $B.frames_stack.push(frame)
 }
 
 $B.leave_frame = function(arg){
     // Leave execution frame
-    //console.log('leave frame', arg)
     if($B.frames_stack.length==0){console.log('empty stack');return}
-    /*
-    var last = $B.last($B.frames_stack)
-    if(last[0]!=arg){
-        // print a warning if arg is not on top of frames stack
-        console.log('leave error', 'leaving', arg, 'last on stack', last[0])
-    }
-    */
-    var frame = $B.frames_stack.pop()
-    //frame[0] = null
-    //frame[1] = null
-    //console.log($B.frames_stack.length, 'frames remain')
+    $B.frames_stack.pop()
 }
 
 $B.memory = function(){

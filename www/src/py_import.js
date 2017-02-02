@@ -293,9 +293,9 @@ function run_py(module_contents,path,module,compiled) {
         eval(js)
     }catch(err){
         console.log(err+' for module '+module.__name__)
+        /*
         console.log(err)
         console.log(js)
-        /*
         //console.log(module_contents
         for(var attr in err){
             console.log(attr, err[attr])

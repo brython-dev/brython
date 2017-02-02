@@ -2041,56 +2041,6 @@ function $DefCtx(context){
         
         // Add lines of code to node children
 
-        /*
-        nodes.push($NodeJS('var $len=arguments.length, $kwargs={}, $arg'))
-        nodes.push($NodeJS('if($len && arguments[$len-1].$nat){$kwargs=arguments[$len-1].kw;$len--}'))
-        if(this.args.length){
-            var js = this.positional_list.concat(this.default_list).join(', ')
-            if(this.star_arg){js += ', '+this.star_arg+'=[]'}
-            if(this.kw_arg){js+= ', '+this.kw_arg+'=$kwargs'}
-            if(js){ nodes.push($NodeJS('var '+js)) }
-        }
-        if(slot_list.length){
-            nodes.push($NodeJS('var $args = ['+slot_list.join(', ')+']'))
-        }
-        
-        nodes.push($NodeJS('var $locs = '+name+'.$defaults'))
-        nodes.push($NodeJS('for(var $attr in $kwargs){$locs[$attr]='+
-            '$kwargs[$attr]}'))
-        js = 'for(var $i=0;$i<$len;$i++){$arg = $args[$i]; $locs[$arg]='+
-            '$locs[$attr]===undefined ? arguments[$i] : $B.duplicate("'+
-            this.name+'", $arg)}'
-        nodes.push($NodeJS(js))
-
-        for(var i=0;i<this.positional_list.length;i++){
-            var pos_arg = this.positional_list[i]
-            js = pos_arg+' = arguments['+i+']!==undefined ? ($kwargs.'+
-                pos_arg+'!==undefined ? $B.duplicate("'+this.name+'", "'+
-                pos_arg+'") : '+
-                'arguments['+i+']) : $kwargs.'+pos_arg+' === undefined ? '+
-                'Error("missing") : $kwargs.'+pos_arg
-            if(this.kw_arg){js += '; delete '+this.kw_arg+'.'+pos_arg}
-            nodes.push($NodeJS(js))
-        }
-        for(var j=0;j<this.default_list.length;j++){
-            var pos_arg = this.default_list[j]
-            js = pos_arg+' = arguments['+(i+j)+']!==undefined ? ($kwargs.'+
-                pos_arg+'!==undefined ? Error("duplicate") : '+
-                'arguments['+i+']) : $kwargs.'+pos_arg+' === undefined ? '+
-                name+'.$defaults.'+pos_arg+' : $kwargs.'+pos_arg
-            if(this.kw_arg){js += '; delete '+this.kw_arg+'.'+pos_arg}
-            nodes.push($NodeJS(js))
-        }
-        if(this.star_arg){
-            js = 'for(var $i='+(i+j)+';$i<$len;$i++){'+this.star_arg+'.push('+
-                'arguments[$i])}'
-            nodes.push($NodeJS(js))
-        }
-
-
-        nodes.push($NodeJS('console.log($locs)'))
-        */
-
         // Declare object holding local variables
         var local_ns = '$locals_'+this.id
         js = 'var '+local_ns+'={}, '
@@ -2246,24 +2196,8 @@ function $DefCtx(context){
 
         var last_instr = node.children[node.children.length-1].context.tree[0]
         if(last_instr.type!=='return' && this.type!='generator'){
-            def_func_node.add($NodeJS('return None'))
+            node.add($NodeJS('$B.leave_frame($local_name);return None'))
         }
-
-        // Start with a line to define default values, if any
-        // This line must be outside of the function body because default
-        // values are set once, when the function is defined
-        // If function has no default value, insert a no-op "None" to have
-        // the same number of lines for subsequent transformations
-        var default_node = new $Node()
-        var js = ';_b_.None;'
-        if(false){ //defs1.length>0){
-            js = 'var $defaults = '+name+'.$defaults;'
-            if(this.type="generator"){
-                js = 'var $defaults = '+prefix+'.$defaults;'
-            }
-        }
-        new $NodeJSCtx(default_node,js)
-        node.insert(0,default_node)
 
         // Add the new function definition
         node.add(def_func_node)
@@ -2356,37 +2290,30 @@ function $DefCtx(context){
         new $NodeJSCtx(new_node,js)
         node.parent.insert(rank+offset, new_node)
 
-        // wrap everything in a try/finally to be sure to exit from frame
+        // wrap everything in a try/catch to be sure to exit from frame
         if(this.type=='def'){
-            var parent = node //enter_frame_node.parent
+            var parent = node
             for(var pos=0;pos<parent.children.length && 
                 parent.children[pos]!==enter_frame_node;pos++){}
-            var try_node = new $Node(),
-                children = parent.children.slice(pos+1),
-                ctx = new $NodeCtx(try_node)
+            var try_node = $NodeJS('try'),
+                children = parent.children.slice(pos+1)
             parent.insert(pos+1, try_node)
-            new $TryCtx(ctx)
             for(var i=0;i<children.length;i++){
                 if(children[i].is_def_func){
-                    //console.log('def func', children[i])
                     for(var j=0;j<children[i].children.length;j++){
                         try_node.add(children[i].children[j])
                     }                        
                 }else{
                     try_node.add(children[i])
                 }
-                //console.log(i, children[i].context)
             }
             parent.children.splice(pos+2,parent.children.length)
-            //try_node.add($NodeJS('return None'))
             
-            var finally_node = new $Node(),
-                ctx = new $NodeCtx(finally_node)
-            new $SingleKwCtx(ctx, 'finally')
-            if ( $B.profile > 0){finally_node.add($NodeJS('$B.$profile.return()'))}
-            finally_node.add($NodeJS('$B.frames_stack.pop()'))
+            var except_node = $NodeJS('catch(err)')
+            except_node.add($NodeJS('$B.leave_frame($local_name);throw err'))
+            //if ( $B.profile > 0){finally_node.add($NodeJS('$B.$profile.return()'))}
             
-            parent.add(finally_node)
+            parent.add(except_node)
         }        
 
         this.transformed = true
@@ -4402,12 +4329,19 @@ function $RaiseCtx(context){
         
         if(exc.type==='id' ||
             (exc.type==='expr' && exc.tree[0].type==='id')){
-            res = 'if(isinstance('+exc_js+',type)){throw '+exc_js+'()}'
-            return res + 'else{throw '+exc_js+'}'
+            res = 'var $res = '+exc_js+';'+
+                'if(isinstance($res, type)){try{$res = $res()}catch($err){'+
+                'throw $err}};'+
+                'throw $res'
+            return res
         }
         // if raise had a 'from' clause, ignore it
         while(this.tree.length>1) this.tree.pop()
-        return res+'throw '+$to_js(this.tree)
+        
+        res = 'try{var $res = '+$to_js(this.tree)+'}catch(err){'+
+            'throw err};'+
+            'throw $res'
+        return res
     }
 }
 
@@ -4452,7 +4386,9 @@ function $ReturnCtx(context){
         }
         var scope = $get_scope(this)
         if(scope.ntype=='generator'){
-            return 'return [$B.generator_return(' + $to_js(this.tree)+')]'
+            var js = 'return [$B.generator_return(' + $to_js(this.tree)+
+                ')]'
+            return js
         }
         // In most cases, returning from a function means leaving the 
         // execution frame ; but if the return is in a "try" with a "finally"
@@ -4482,6 +4418,8 @@ function $ReturnCtx(context){
         
         // Executing the target of "return" might raise an exception.
         
+        //leave_frame = true
+        
         if(leave_frame && !in_try){
             // Computing the target of "return" may raise an exception
             // If the return is in a try clause, this exception is handled
@@ -4495,7 +4433,7 @@ function $ReturnCtx(context){
         }else{
             var res = "return "+$to_js(this.tree)
         }
-        var res = "return "+$to_js(this.tree)
+        //var res = "return "+$to_js(this.tree)
         return res
     }
 }
@@ -8028,5 +7966,7 @@ $B.brython = brython
               
 })(__BRYTHON__)
 var brython = __BRYTHON__.brython
+
+
 
 

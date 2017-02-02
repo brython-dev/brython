@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-01-26 22:02:24.171284"
+__BRYTHON__.compiled_date="2017-02-02 15:03:14.106323"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1113,14 +1113,7 @@ new $NodeJSCtx(def_func_node,'')}else{new $NodeJSCtx(def_func_node,'')}
 def_func_node.is_def_func=true
 def_func_node.module=this.module
 var last_instr=node.children[node.children.length-1].C.tree[0]
-if(last_instr.type!=='return' && this.type!='generator'){def_func_node.add($NodeJS('return None'))}
-var default_node=new $Node()
-var js=';_b_.None;'
-if(false){
-js='var $defaults = '+name+'.$defaults;'
-if(this.type="generator"){js='var $defaults = '+prefix+'.$defaults;'}}
-new $NodeJSCtx(default_node,js)
-node.insert(0,default_node)
+if(last_instr.type!=='return' && this.type!='generator'){node.add($NodeJS('$B.leave_frame($local_name);return None'))}
 node.add(def_func_node)
 var offset=1
 var indent=node.indent
@@ -1182,20 +1175,16 @@ js +='None;'
 new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank+offset,new_node)
-if(this.type=='def'){var parent=node 
+if(this.type=='def'){var parent=node
 for(var pos=0;pos<parent.children.length && 
 parent.children[pos]!==enter_frame_node;pos++){}
-var try_node=new $Node(),children=parent.children.slice(pos+1),ctx=new $NodeCtx(try_node)
+var try_node=$NodeJS('try'),children=parent.children.slice(pos+1)
 parent.insert(pos+1,try_node)
-new $TryCtx(ctx)
-for(var i=0;i<children.length;i++){if(children[i].is_def_func){
-for(var j=0;j<children[i].children.length;j++){try_node.add(children[i].children[j])}}else{try_node.add(children[i])}}
+for(var i=0;i<children.length;i++){if(children[i].is_def_func){for(var j=0;j<children[i].children.length;j++){try_node.add(children[i].children[j])}}else{try_node.add(children[i])}}
 parent.children.splice(pos+2,parent.children.length)
-var finally_node=new $Node(),ctx=new $NodeCtx(finally_node)
-new $SingleKwCtx(ctx,'finally')
-if($B.profile > 0){finally_node.add($NodeJS('$B.$profile.return()'))}
-finally_node.add($NodeJS('$B.frames_stack.pop()'))
-parent.add(finally_node)}
+var except_node=$NodeJS('catch(err)')
+except_node.add($NodeJS('$B.leave_frame($local_name);throw err'))
+parent.add(except_node)}
 this.transformed=true
 return offset}
 this.to_js=function(func_name){this.js_processed=true
@@ -2161,10 +2150,16 @@ var res=''
 if(this.tree.length===0)return '$B.$raise()'
 var exc=this.tree[0],exc_js=exc.to_js()
 if(exc.type==='id' ||
-(exc.type==='expr' && exc.tree[0].type==='id')){res='if(isinstance('+exc_js+',type)){throw '+exc_js+'()}'
-return res + 'else{throw '+exc_js+'}'}
+(exc.type==='expr' && exc.tree[0].type==='id')){res='var $res = '+exc_js+';'+
+'if(isinstance($res, type)){try{$res = $res()}catch($err){'+
+'throw $err}};'+
+'throw $res'
+return res}
 while(this.tree.length>1)this.tree.pop()
-return res+'throw '+$to_js(this.tree)}}
+res='try{var $res = '+$to_js(this.tree)+'}catch(err){'+
+'throw err};'+
+'throw $res'
+return res}}
 function $RawJSCtx(C,js){this.type="raw_js"
 C.tree[C.tree.length]=this
 this.parent=C
@@ -2186,7 +2181,9 @@ if(this.tree.length==1 && this.tree[0].type=='abstract_expr'){
 this.tree.pop()
 new $IdCtx(new $ExprCtx(this,'rvalue',false),'None')}
 var scope=$get_scope(this)
-if(scope.ntype=='generator'){return 'return [$B.generator_return(' + $to_js(this.tree)+')]'}
+if(scope.ntype=='generator'){var js='return [$B.generator_return(' + $to_js(this.tree)+
+')]'
+return js}
 var node=$get_node(this),pnode,flag,leave_frame=true,in_try=false
 while(node && leave_frame){if(node.is_try){in_try=true
 pnode=node.parent,flag=false
@@ -2201,7 +2198,6 @@ var res='try{var $res = '+$to_js(this.tree)+';'+
 '$B.leave_frame($local_name);return $res}catch(err){'+
 '$B.leave_frame($local_name);throw err}'}else if(leave_frame){var res='var $res = '+$to_js(this.tree)+';'+
 '$B.leave_frame($local_name);return $res'}else{var res="return "+$to_js(this.tree)}
-var res="return "+$to_js(this.tree)
 return res}}
 function $SingleKwCtx(C,token){
 this.type='single_kw'
@@ -5081,7 +5077,7 @@ $B.enter_frame=function(frame){
 $B.frames_stack.push(frame)}
 $B.leave_frame=function(arg){
 if($B.frames_stack.length==0){console.log('empty stack');return}
-var frame=$B.frames_stack.pop()}
+$B.frames_stack.pop()}
 $B.memory=function(){var info=[]
 for(var attr in __BRYTHON__){var obj=__BRYTHON__[attr]
 if(obj===null){continue}
@@ -7016,8 +7012,6 @@ try{var js=(compiled)? module_contents : root.to_js()
 if($B.$options.debug==10){console.log('code for module '+module.__name__)
 console.log(js)}
 eval(js)}catch(err){console.log(err+' for module '+module.__name__)
-console.log(err)
-console.log(js)
 throw err}finally{$B.clear_ns(module.__name__)}
 try{
 var mod=eval('$module')
@@ -8618,8 +8612,8 @@ return(self.__brython__ ? $N : self)}
 $B.set_func_names($ListDict)
 $B.$list=function(t){t.__brython__=true;
 return t}
-function list(){var $=$B.args('list',1,{obj:null},['obj'],arguments,{obj:null},null,null),obj=$.obj
-if(obj===null)return[]
+function list(){if(arguments.length==0){return[]}
+var $=$B.args('list',1,{obj:null},['obj'],arguments,{},null,null),obj=$.obj
 if(Array.isArray(obj)){
 obj=obj.slice()
 obj.__brython__=true;
