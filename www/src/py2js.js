@@ -7534,6 +7534,7 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     
     var catch_node = new $NodeJS('catch(err)')
     catch_node.add($NodeJS('$B.leave_frame("'+locals_id+'")'))
+    catch_node.add($NodeJS('throw err'))
     
     root.add(catch_node)
     

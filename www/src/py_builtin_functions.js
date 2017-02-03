@@ -357,8 +357,17 @@ function $eval(src, _globals, _locals){
         // If the Python function is eval(), not exec(), check that the source
         // is an expression
         if(!is_exec){
+            // The result of py2js ends with
+            // try{
+            //     (block code)
+            //     $B.leave_frame($local_name)
+            // }catch(err){
+            //     $B.leave_frame($local_name)
+            //     throw err
+            // }
             var try_node = root.children[root.children.length-2],
-                instr = $B.last(try_node.children)
+                instr = try_node.children[try_node.children.length-2]
+            // type of the last instruction in (block code)
             var type = instr.context.tree[0].type
             switch(type){
             
@@ -372,7 +381,7 @@ function $eval(src, _globals, _locals){
                     // eval(root.to_js()) will be None
                     var children = try_node.children
                     root.children.splice(root.children.length-2, 2)
-                    for(var i=0;i<children.length;i++){
+                    for(var i=0;i<children.length-1;i++){
                         root.add(children[i])
                     }
                     break

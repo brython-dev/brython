@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-02-02 15:14:37.906323"
+__BRYTHON__.compiled_date="2017-02-03 21:56:41.135196"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4080,6 +4080,7 @@ try_node.add($NodeJS('$B.leave_frame("'+locals_id+'")'))
 root.children.splice(enter_frame_pos+2,root.children.length)
 var catch_node=new $NodeJS('catch(err)')
 catch_node.add($NodeJS('$B.leave_frame("'+locals_id+'")'))
+catch_node.add($NodeJS('throw err'))
 root.add(catch_node)
 if($B.profile>0){$add_profile(root,null,module)}
 if($B.debug>0){$add_line_num(root,null,module)}
@@ -5370,7 +5371,8 @@ while(1){try{var item=next(items)
 eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')}catch(err){break}}}
 var root=$B.py2js(src,globals_id,locals_id,parent_block_id),leave_frame=true
 try{
-if(!is_exec){var try_node=root.children[root.children.length-2],instr=$B.last(try_node.children)
+if(!is_exec){
+var try_node=root.children[root.children.length-2],instr=try_node.children[try_node.children.length-2]
 var type=instr.C.tree[0].type
 switch(type){case 'expr':
 case 'list_or_tuple':
@@ -5378,7 +5380,7 @@ case 'op':
 case 'ternary':
 var children=try_node.children
 root.children.splice(root.children.length-2,2)
-for(var i=0;i<children.length;i++){root.add(children[i])}
+for(var i=0;i<children.length-1;i++){root.add(children[i])}
 break
 default:
 leave_frame=false
