@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-02-05 18:37:22.864657"
+__BRYTHON__.compiled_date="2017-02-05 21:43:42.821780"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1069,9 +1069,8 @@ var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 make_args_nodes.push(new_node)
 if(this.type=='generator'){
-var new_node=new $Node()
-new $NodeJSCtx(new_node,'for(var $var in $ns){$locals[$var]=$ns[$var]};')
-make_args_nodes.push(new_node)}
+js='for(var $var in $ns){$locals[$var]=$ns[$var]};'
+make_args_nodes.push($NodeJS(js))}
 var only_positional=false
 if(this.other_args===null && this.other_kw===null &&
 this.after_star.length==0
@@ -1114,32 +1113,25 @@ new $NodeJSCtx(def_func_node,'')}else{new $NodeJSCtx(def_func_node,'')}
 def_func_node.is_def_func=true
 def_func_node.module=this.module
 var last_instr=node.children[node.children.length-1].C.tree[0]
-if(last_instr.type!=='return' && this.type!='generator'){node.add($NodeJS('$B.leave_frame($local_name);return None'))}
+if(last_instr.type!=='return' && this.type!='generator'){
+node.add($NodeJS('$B.leave_frame($local_name);return None'))}
 node.add(def_func_node)
 var offset=1
 var indent=node.indent
-js=name+'.$infos = {'
-var name_decl=new $Node()
-new $NodeJSCtx(name_decl,js)
-node.parent.insert(rank+offset++,name_decl)
+node.parent.insert(rank+offset++,$NodeJS(name+'.$infos = {'))
 js='    __name__:"'
 if(this.scope.ntype=='class'){js+=this.scope.C.tree[0].name+'.'}
 js +=this.name+'",'
-var name_decl=new $Node()
-new $NodeJSCtx(name_decl,js)
-node.parent.insert(rank+offset++,name_decl)
+node.parent.insert(rank+offset++,$NodeJS(js))
 var def_names=[]
 for(var i=0;i<this.default_list.length;i++){def_names.push('"'+this.default_list[i]+'"')}
 node.parent.insert(rank+offset++,$NodeJS('    __defaults__ : ['+
 def_names.join(', ')+'],'))
 var module=$get_module(this)
-new_node=new $Node()
-new $NodeJSCtx(new_node,'    __module__ : "'+module.module+'",')
-node.parent.insert(rank+offset++,new_node)
+js='    __module__ : "'+module.module+'",'
+node.parent.insert(rank+offset++,$NodeJS(js))
 js='    __doc__: '+(this.doc_string ||'None')+','
-new_node=new $Node()
-new $NodeJSCtx(new_node,js)
-node.parent.insert(rank+offset++,new_node)
+node.parent.insert(rank+offset++,$NodeJS(js))
 js='    __annotations__: {'+annotations.join(',')+'},'
 node.parent.insert(rank+offset++,$NodeJS(js))
 for(var attr in $B.bound[this.id]){this.varnames[attr]=true}
@@ -1172,6 +1164,7 @@ parent.insert(pos+1,try_node)
 for(var i=0;i<children.length;i++){if(children[i].is_def_func){for(var j=0;j<children[i].children.length;j++){try_node.add(children[i].children[j])}}else{try_node.add(children[i])}}
 parent.children.splice(pos+2,parent.children.length)
 var except_node=$NodeJS('catch(err)')
+if($B.profile > 0){except_node.add($NodeJS('$B.$profile.return()'))}
 except_node.add($NodeJS('$B.leave_frame($local_name);throw err'))
 parent.add(except_node)}
 this.transformed=true

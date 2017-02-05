@@ -392,7 +392,9 @@ function $AbstractExprCtx(context,with_commas){
     this.parent = context
     this.tree = []
     context.tree[context.tree.length]=this
+
     this.toString = function(){return '(abstract_expr '+with_commas+') '+this.tree}
+
     this.to_js = function(){
         this.js_processed=true
         if(this.type==='list') return '['+$to_js(this.tree)+']'
@@ -1969,7 +1971,11 @@ function $DefCtx(context){
             pnode = pnode.parent.parent
         }
         
-        var defaults = [], apos=0, dpos=0,defs1=[],dpos1=0
+        var defaults = [], 
+            apos=0, 
+            dpos=0,
+            defs1=[],
+            dpos1=0
         this.argcount = 0
         this.kwonlyargcount = 0 // number of args after a star arg
         this.varnames = {}
@@ -2082,6 +2088,29 @@ function $DefCtx(context){
             this.argcount+', {'+this.slots.join(', ')+'}, '+
             '['+slot_list.join(', ')+'], arguments, '
 
+        // Management of default values is complex... It uses a JS object
+        // called $default, evaluated only once, with the appropriate keys
+        // and values.
+        //
+        // A function like
+        // def f(x=1):
+        //     ...
+        //
+        // is implemented as
+        //
+        // $locals["f"] = (function($defaults){
+        //     function f1(){
+        //        ... function body, uses $default to parse arguments ...
+        //     }
+        //     f1.$infos = {
+        //         ... function attributes ...
+        //     }
+        //     return f1
+        // })({x: 1})  <-- default object is evaluated here
+        // 
+        // $defaults could be set as an attribute of f1, and be referenced
+        // inside the function body, but this slows down execution a lot
+        
         if(defs1.length){js += '$defaults, '}
         else{js += '{}, '}
         js += this.other_args+', '+this.other_kw+');'
@@ -2092,9 +2121,8 @@ function $DefCtx(context){
 
         if(this.type=='generator'){
             // For generators, update $locals with the result of $B.args
-            var new_node = new $Node()
-            new $NodeJSCtx(new_node,'for(var $var in $ns){$locals[$var]=$ns[$var]};')
-            make_args_nodes.push(new_node)
+            js ='for(var $var in $ns){$locals[$var]=$ns[$var]};'
+            make_args_nodes.push($NodeJS(js))
         }
         
         var only_positional = false
@@ -2176,6 +2204,7 @@ function $DefCtx(context){
         // __this__() in module javascript
         nodes.push($NodeJS('$B.js_this = this;'))
 
+        // remove children of original node
         for(var i=nodes.length-1;i>=0;i--){
             node.children.splice(0, 0, nodes[i])
         }
@@ -2192,8 +2221,11 @@ function $DefCtx(context){
         def_func_node.is_def_func = true
         def_func_node.module = this.module
 
+        // If the last instruction in the function is not a return,
+        // add an explicit line "return None".
         var last_instr = node.children[node.children.length-1].context.tree[0]
         if(last_instr.type!=='return' && this.type!='generator'){
+            // as always, leave frame before returning
             node.add($NodeJS('$B.leave_frame($local_name);return None'))
         }
 
@@ -2204,25 +2236,16 @@ function $DefCtx(context){
 
         var indent = node.indent
         
-        // Set to local
-        //js = prefix+'='+name
-        //node.parent.insert(rank+offset++, $NodeJS(js))
-        
         // Create attribute $infos for the function
         // Adding only one attribute is much faster than adding all the 
         // keys/values in $infos
-        js = name+'.$infos = {'
-        var name_decl = new $Node()
-        new $NodeJSCtx(name_decl,js)
-        node.parent.insert(rank+offset++,name_decl)
+        node.parent.insert(rank+offset++, $NodeJS(name+'.$infos = {'))
 
         // Add attribute __name__
         js = '    __name__:"'
         if(this.scope.ntype=='class'){js+=this.scope.context.tree[0].name+'.'}
         js += this.name+'",'
-        var name_decl = new $Node()
-        new $NodeJSCtx(name_decl,js)
-        node.parent.insert(rank+offset++,name_decl)
+        node.parent.insert(rank+offset++, $NodeJS(js))
 
         // Add attribute __defaults__
         var def_names = []
@@ -2234,19 +2257,16 @@ function $DefCtx(context){
 
         // Add attribute __module__
         var module = $get_module(this)
-        new_node = new $Node()
-        new $NodeJSCtx(new_node,'    __module__ : "'+module.module+'",')
-        node.parent.insert(rank+offset++,new_node)
+        js = '    __module__ : "'+module.module+'",'
+        node.parent.insert(rank+offset++, $NodeJS(js))
         
         // Add attribute __doc__
         js = '    __doc__: '+(this.doc_string || 'None')+','
-        new_node = new $Node()
-        new $NodeJSCtx(new_node,js)
-        node.parent.insert(rank+offset++,new_node)
+        node.parent.insert(rank+offset++, $NodeJS(js))
 
         // Add attribute __annotations__
         js = '    __annotations__: {'+annotations.join(',')+'},'
-        node.parent.insert(rank+offset++,$NodeJS(js))
+        node.parent.insert(rank+offset++, $NodeJS(js))
 
 
         for(var attr in $B.bound[this.id]){this.varnames[attr]=true}
@@ -2301,8 +2321,8 @@ function $DefCtx(context){
             parent.children.splice(pos+2,parent.children.length)
             
             var except_node = $NodeJS('catch(err)')
+            if($B.profile > 0){except_node.add($NodeJS('$B.$profile.return()'))}
             except_node.add($NodeJS('$B.leave_frame($local_name);throw err'))
-            //if ( $B.profile > 0){finally_node.add($NodeJS('$B.$profile.return()'))}
             
             parent.add(except_node)
         }        
