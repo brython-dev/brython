@@ -334,8 +334,11 @@ function $Node(type){
                         block_id = parent.id.replace(/\./g, '_'),
                         name = def_ctx.decorated ? def_ctx.alias : 
                             def_ctx.name+def_ctx.num,
-                        res = 'var '+name+' = $B.genfunc("'+
-                            def_ctx.name+'", '+blocks+',['+g+'])'
+                        res = 'var '+def_ctx.name+def_ctx.num + ' = '+
+                            '$locals_'+block_id+'["'+def_ctx.name+
+                            '"] = $B.genfunc("'+
+                            def_ctx.name+'", '+blocks+',['+g+'],'+
+                            def_ctx.default_str+')'
                     this.parent.children.splice(rank, 1)
                     this.parent.insert(rank+offset-1,
                         $NodeJS(res))
@@ -2036,7 +2039,7 @@ function $DefCtx(context){
         
         var prefix = this.tree[0].to_js()
         if(this.decorated){prefix=this.alias}
-        var name = (this.decorated ? this.alias : this.name+this.num)
+        var name = this.name+this.num
 
         
         // Add lines of code to node children
@@ -2072,10 +2075,6 @@ function $DefCtx(context){
 
         var make_args_nodes = []
 
-        var default_ref = name+'.$infos.$defaults'
-        if(this.type=="generator"){
-            default_ref = prefix+'.$infos.$defaults'
-        }
         // If function is not a generator, $locals is the result of $B.args
         var js = this.type=='def' ? local_ns+' = $locals' : 'var $ns'
         
@@ -2083,7 +2082,7 @@ function $DefCtx(context){
             this.argcount+', {'+this.slots.join(', ')+'}, '+
             '['+slot_list.join(', ')+'], arguments, '
 
-        if(defs1.length){js += default_ref+', '}
+        if(defs1.length){js += '$defaults, '}
         else{js += '{}, '}
         js += this.other_args+', '+this.other_kw+');'
 
@@ -2201,29 +2200,21 @@ function $DefCtx(context){
         // Add the new function definition
         node.add(def_func_node)
         
-        //node.parent.insert(rank, $NodeJS('// default'))
-
         var offset = 1
 
         var indent = node.indent
         
         // Set to local
-        js = prefix+'='+name
-        node.parent.insert(rank+offset++, $NodeJS(js))
+        //js = prefix+'='+name
+        //node.parent.insert(rank+offset++, $NodeJS(js))
         
         // Create attribute $infos for the function
         // Adding only one attribute is much faster than adding all the 
         // keys/values in $infos
-        js = prefix+'.$infos = {'
+        js = name+'.$infos = {'
         var name_decl = new $Node()
         new $NodeJSCtx(name_decl,js)
         node.parent.insert(rank+offset++,name_decl)
-
-        // Add $defaults
-        if(defs1.length){
-            js = '    $defaults: {'+defs1.join(',')+'},'
-            node.parent.insert(rank+offset++, $NodeJS(js))
-        }
 
         // Add attribute __name__
         js = '    __name__:"'
@@ -2281,7 +2272,14 @@ function $DefCtx(context){
 
         new_node = new $Node()
         new $NodeJSCtx(new_node,js)
-        node.parent.insert(rank+offset, new_node)
+        node.parent.insert(rank+offset++, new_node)
+
+        // Close anonymous function with defaults as argument
+        this.default_str = '{'+defs1.join(', ')+'}'
+        if(this.type=="def"){
+            node.parent.insert(rank+offset++, $NodeJS('return '+name+'})('+
+                this.default_str+')'))
+        }
 
         // wrap everything in a try/catch to be sure to exit from frame
         if(this.type=='def'){
@@ -2317,10 +2315,14 @@ function $DefCtx(context){
     this.to_js = function(func_name){
         this.js_processed=true
 
-        func_name = func_name || this.name+this.num
-        if(this.decorated){func_name=this.alias}
+        func_name = func_name || this.tree[0].to_js()
+        if(this.decorated){func_name='var '+this.alias}
+        
+        func_name = func_name || this.tree[0].to_js() //
+        if(this.decorated){func_name='var '+this.alias}
         //else{func_name = 'var '+this.name+' = '+func_name}
-        return 'function '+func_name+'('+this.params+')'
+        return func_name+' = (function ($defaults){function '+
+            this.name+this.num+'('+this.params+')'
     }
 }
 

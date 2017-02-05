@@ -43,7 +43,8 @@ function make_node(top_node, node){
         // object __BRYTHON__ until the iterator is exhausted, so that it
         // can be restored in the next iteration
         var iter_name = top_node.iter_id
-        ctx_js = 'for(var attr in this.blocks){eval("var "+attr+"=this.blocks[attr]");};'+
+        ctx_js = 'for(var attr in this.blocks){'+
+            'eval("var "+attr+"=this.blocks[attr]");};'+
             'var $locals_'+iter_name+' = this.env = {}'+
             ', $local_name = "'+iter_name+
             '", $locals = $locals_'+iter_name+';'
@@ -349,14 +350,9 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
     var src = func_root.src(), //children[1].src(),
         raw_src = src.substr(src.search('function'))
     
-    var first_line = func_root.children[0].src()
-    var def_pos = first_line.search(/\$defaults/)
-    if(def_pos>-1){
-        var $default = first_line.substr(def_pos)
-        // remove trailing ";"
-        $default = $default.substr(0, $default.length-2)
-    }
-    
+    // For the first call, add defaults object as arguement
+    raw_src += 'return '+def_ctx.name+def_ctx.num+'}'
+
     var funcs = [raw_src]
     
     //$B.modules[iter_id] = obj
@@ -504,6 +500,11 @@ function make_next(self, yield_node_id){
     var src = root.children[0].src(),
         next_src = src.substr(src.search('function'))
     
+    // function starts with "function($defaults){ function" : must remove
+    // the first part
+    next_src = next_src.substr(10)
+    next_src = next_src.substr(next_src.search('function'))
+    
     return next_src
 }
 
@@ -592,21 +593,23 @@ $gen_it.$$throw = function(self, value){
     return $gen_it.__next__(self)
 }
 
-$B.genfunc = function(name, blocks, funcs){
+$B.genfunc = function(name, blocks, funcs, $defaults){
     // Transform a list of functions into a generator object, ie a function
     // that returns an iterator
     return function(){
         var iter_id = '$gen'+$B.gen_counter++,
             gfuncs = []
-        for(var i=0; i<funcs.length;i++){
+
+        gfuncs.push(funcs[0]($defaults))
+        for(var i=1; i<funcs.length;i++){
             try{
-                eval('var f='+unescape(funcs[i]))
+                eval('var f='+funcs[i])
             }catch(err){
                 console.log(err)
                 console.log(funcs[i]+'')
                 throw err
             }
-            gfuncs.push(f)
+            gfuncs.push(funcs[i])
         }
         
         var res = {
@@ -619,7 +622,8 @@ $B.genfunc = function(name, blocks, funcs){
             next: gfuncs[0],
             iter_id: iter_id,
             gi_running: false,
-            $started: false
+            $started: false,
+            $defaults: $defaults
         }
         return res
     }

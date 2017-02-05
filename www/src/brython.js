@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-02-05 10:02:09.487176"
+__BRYTHON__.compiled_date="2017-02-05 18:37:22.864657"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -199,8 +199,11 @@ blocks='{'+blocks+'}'
 var parent=this.parent
 while(parent!==undefined && parent.id===undefined){parent=parent.parent}
 var g=$B.$BRgenerator(def_ctx.name,blocks,def_ctx.id,def_node),block_id=parent.id.replace(/\./g,'_'),name=def_ctx.decorated ? def_ctx.alias : 
-def_ctx.name+def_ctx.num,res='var '+name+' = $B.genfunc("'+
-def_ctx.name+'", '+blocks+',['+g+'])'
+def_ctx.name+def_ctx.num,res='var '+def_ctx.name+def_ctx.num + ' = '+
+'$locals_'+block_id+'["'+def_ctx.name+
+'"] = $B.genfunc("'+
+def_ctx.name+'", '+blocks+',['+g+'],'+
+def_ctx.default_str+')'
 this.parent.children.splice(rank,1)
 this.parent.insert(rank+offset-1,$NodeJS(res))}
 return ctx_offset}}
@@ -1035,7 +1038,7 @@ while(global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.
 var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
 var prefix=this.tree[0].to_js()
 if(this.decorated){prefix=this.alias}
-var name=(this.decorated ? this.alias : this.name+this.num)
+var name=this.name+this.num
 var local_ns='$locals_'+this.id
 js='var '+local_ns+'={}, '
 js +='$local_name="'+this.id+'",$locals='+local_ns+';'
@@ -1055,13 +1058,11 @@ new $NodeJSCtx(enter_frame_node,js)
 nodes.push(enter_frame_node)
 this.env=[]
 var make_args_nodes=[]
-var default_ref=name+'.$infos.$defaults'
-if(this.type=="generator"){default_ref=prefix+'.$infos.$defaults'}
 var js=this.type=='def' ? local_ns+' = $locals' : 'var $ns'
 js +=' = $B.args("'+this.name+'", '+
 this.argcount+', {'+this.slots.join(', ')+'}, '+
 '['+slot_list.join(', ')+'], arguments, '
-if(defs1.length){js +=default_ref+', '}
+if(defs1.length){js +='$defaults, '}
 else{js +='{}, '}
 js +=this.other_args+', '+this.other_kw+');'
 var new_node=new $Node()
@@ -1117,14 +1118,10 @@ if(last_instr.type!=='return' && this.type!='generator'){node.add($NodeJS('$B.le
 node.add(def_func_node)
 var offset=1
 var indent=node.indent
-js=prefix+'='+name
-node.parent.insert(rank+offset++,$NodeJS(js))
-js=prefix+'.$infos = {'
+js=name+'.$infos = {'
 var name_decl=new $Node()
 new $NodeJSCtx(name_decl,js)
 node.parent.insert(rank+offset++,name_decl)
-if(defs1.length){js='    $defaults: {'+defs1.join(',')+'},'
-node.parent.insert(rank+offset++,$NodeJS(js))}
 js='    __name__:"'
 if(this.scope.ntype=='class'){js+=this.scope.C.tree[0].name+'.'}
 js +=this.name+'",'
@@ -1163,7 +1160,10 @@ h+'}\n    };'
 js +='None;'
 new_node=new $Node()
 new $NodeJSCtx(new_node,js)
-node.parent.insert(rank+offset,new_node)
+node.parent.insert(rank+offset++,new_node)
+this.default_str='{'+defs1.join(', ')+'}'
+if(this.type=="def"){node.parent.insert(rank+offset++,$NodeJS('return '+name+'})('+
+this.default_str+')'))}
 if(this.type=='def'){var parent=node
 for(var pos=0;pos<parent.children.length && 
 parent.children[pos]!==enter_frame_node;pos++){}
@@ -1177,9 +1177,12 @@ parent.add(except_node)}
 this.transformed=true
 return offset}
 this.to_js=function(func_name){this.js_processed=true
-func_name=func_name ||this.name+this.num
-if(this.decorated){func_name=this.alias}
-return 'function '+func_name+'('+this.params+')'}}
+func_name=func_name ||this.tree[0].to_js()
+if(this.decorated){func_name='var '+this.alias}
+func_name=func_name ||this.tree[0].to_js()
+if(this.decorated){func_name='var '+this.alias}
+return func_name+' = (function ($defaults){function '+
+this.name+this.num+'('+this.params+')'}}
 function $DelCtx(C){
 this.type='del'
 this.parent=C
@@ -10598,7 +10601,8 @@ if(node.C.$genjs){var ctx_js=node.C.$genjs}else{var ctx_js=node.C.$genjs=node.C.
 var is_cond=false,is_except=false,is_else=false,is_continue
 if(node.locals_def){
 var iter_name=top_node.iter_id
-ctx_js='for(var attr in this.blocks){eval("var "+attr+"=this.blocks[attr]");};'+
+ctx_js='for(var attr in this.blocks){'+
+'eval("var "+attr+"=this.blocks[attr]");};'+
 'var $locals_'+iter_name+' = this.env = {}'+
 ', $local_name = "'+iter_name+
 '", $locals = $locals_'+iter_name+';'}
@@ -10742,10 +10746,7 @@ func_root.addChild(nd)}
 var obj={__class__ : $BRGeneratorDict,blocks: blocks,def_ctx:def_ctx,def_id:def_id,func_name:func_name,func_root:func_root,module:module,gi_running:false,iter_id:iter_id,id:iter_id,num:0}
 var src=func_root.src(),
 raw_src=src.substr(src.search('function'))
-var first_line=func_root.children[0].src()
-var def_pos=first_line.search(/\$defaults/)
-if(def_pos>-1){var $default=first_line.substr(def_pos)
-$default=$default.substr(0,$default.length-2)}
+raw_src +='return '+def_ctx.name+def_ctx.num+'}'
 var funcs=[raw_src]
 obj.parent_block=def_node.parent_block
 for(var i=0;i<func_root.yields.length;i++){funcs.push(make_next(obj,i))}
@@ -10804,6 +10805,8 @@ parent=children[0]}}
 exit_node=exit_parent
 if(exit_node===self.func_root){break}}
 var src=root.children[0].src(),next_src=src.substr(src.search('function'))
+next_src=next_src.substr(10)
+next_src=next_src.substr(next_src.search('function'))
 return next_src}
 var $gen_it={__class__: $B.$type,__name__: "generator"}
 $gen_it.__mro__=[_b_.object.$dict]
@@ -10836,13 +10839,14 @@ return $gen_it.__next__(self)}
 $gen_it.$$throw=function(self,value){if(_b_.isinstance(value,_b_.type))value=value()
 self.sent_value={__class__:$B.$GeneratorSendError,err:value}
 return $gen_it.__next__(self)}
-$B.genfunc=function(name,blocks,funcs){
+$B.genfunc=function(name,blocks,funcs,$defaults){
 return function(){var iter_id='$gen'+$B.gen_counter++,gfuncs=[]
-for(var i=0;i<funcs.length;i++){try{eval('var f='+unescape(funcs[i]))}catch(err){console.log(err)
+gfuncs.push(funcs[0]($defaults))
+for(var i=1;i<funcs.length;i++){try{eval('var f='+funcs[i])}catch(err){console.log(err)
 console.log(funcs[i]+'')
 throw err}
-gfuncs.push(f)}
-var res={__class__: $gen_it,args: Array.prototype.slice.call(arguments),blocks: blocks,env:{},name: name,nexts: gfuncs.slice(1),next: gfuncs[0],iter_id: iter_id,gi_running: false,$started: false}
+gfuncs.push(funcs[i])}
+var res={__class__: $gen_it,args: Array.prototype.slice.call(arguments),blocks: blocks,env:{},name: name,nexts: gfuncs.slice(1),next: gfuncs[0],iter_id: iter_id,gi_running: false,$started: false,$defaults: $defaults}
 return res}}
 $B.genfunc.__class__=$B.$factory
 $B.genfunc.$dict=$gen_it
