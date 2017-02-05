@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,1,'alpha',0]
 __BRYTHON__.__MAGIC__="3.3.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-02-03 21:56:41.135196"
+__BRYTHON__.compiled_date="2017-02-05 10:02:09.487176"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1055,8 +1055,8 @@ new $NodeJSCtx(enter_frame_node,js)
 nodes.push(enter_frame_node)
 this.env=[]
 var make_args_nodes=[]
-var default_ref=name+'.$defaults'
-if(this.type=="generator"){default_ref=prefix+'.$defaults'}
+var default_ref=name+'.$infos.$defaults'
+if(this.type=="generator"){default_ref=prefix+'.$infos.$defaults'}
 var js=this.type=='def' ? local_ns+' = $locals' : 'var $ns'
 js +=' = $B.args("'+this.name+'", '+
 this.argcount+', {'+this.slots.join(', ')+'}, '+
@@ -1118,44 +1118,33 @@ node.add(def_func_node)
 var offset=1
 var indent=node.indent
 js=prefix+'='+name
-node.parent.insert(rank+offset,$NodeJS(js))
-offset++
-js=name+'.$defaults = {'+defs1.join(',')+'};'
-node.parent.insert(rank+offset,$NodeJS(js))
-offset++
-js=name+'.$infos = {'
+node.parent.insert(rank+offset++,$NodeJS(js))
+js=prefix+'.$infos = {'
 var name_decl=new $Node()
 new $NodeJSCtx(name_decl,js)
-node.parent.insert(rank+offset,name_decl)
-offset++
+node.parent.insert(rank+offset++,name_decl)
+if(defs1.length){js='    $defaults: {'+defs1.join(',')+'},'
+node.parent.insert(rank+offset++,$NodeJS(js))}
 js='    __name__:"'
 if(this.scope.ntype=='class'){js+=this.scope.C.tree[0].name+'.'}
 js +=this.name+'",'
 var name_decl=new $Node()
 new $NodeJSCtx(name_decl,js)
-node.parent.insert(rank+offset,name_decl)
-offset++
-var module=$get_module(this)
-new_node=new $Node()
-new $NodeJSCtx(new_node,'    __defaults__ : $B.builtins.tuple(Object.values('+name+
-'.$defaults)),')
-node.parent.insert(rank+offset,new_node)
-offset++
+node.parent.insert(rank+offset++,name_decl)
+var def_names=[]
+for(var i=0;i<this.default_list.length;i++){def_names.push('"'+this.default_list[i]+'"')}
+node.parent.insert(rank+offset++,$NodeJS('    __defaults__ : ['+
+def_names.join(', ')+'],'))
 var module=$get_module(this)
 new_node=new $Node()
 new $NodeJSCtx(new_node,'    __module__ : "'+module.module+'",')
-node.parent.insert(rank+offset,new_node)
-offset++
+node.parent.insert(rank+offset++,new_node)
 js='    __doc__: '+(this.doc_string ||'None')+','
 new_node=new $Node()
 new $NodeJSCtx(new_node,js)
-node.parent.insert(rank+offset,new_node)
-offset++
+node.parent.insert(rank+offset++,new_node)
 js='    __annotations__: {'+annotations.join(',')+'},'
-new_node=new $Node()
-new $NodeJSCtx(new_node,js)
-node.parent.insert(rank+offset,new_node)
-offset++
+node.parent.insert(rank+offset++,$NodeJS(js))
 for(var attr in $B.bound[this.id]){this.varnames[attr]=true}
 var co_varnames=[]
 for(var attr in this.varnames){co_varnames.push('"'+attr+'"')}
@@ -1526,7 +1515,7 @@ function $FuncArgIdCtx(C,name){
 this.type='func_arg_id'
 this.name=name
 this.parent=C
-if(C.has_star_arg){C.parent.after_star.push('"'+name+'"')}else{C.parent.positional_list.push(name)}
+if(C.has_star_arg){C.parent.after_star.push(name)}else{C.parent.positional_list.push(name)}
 var node=$get_node(this)
 if($B.bound[node.id][name]){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}
 $B.bound[node.id][name]={level:1}
@@ -4608,7 +4597,6 @@ catch(err){}
 var init_func=null
 try{init_func=_b_.getattr(klass,'__init__')}
 catch(err){}
-if(klass.__mro__[0]===klass){console.log('578 first is class',klass)}
 var simple=false
 if(klass.__bases__.length==0){simple=true}
 else if(klass.__bases__.length==1){switch(klass.__bases__[0]){case _b_.object:

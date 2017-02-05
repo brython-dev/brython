@@ -594,10 +594,6 @@ function $instance_creator(klass){
     try{init_func = _b_.getattr(klass,'__init__')}
     catch(err){}
 
-    if(klass.__mro__[0]===klass){
-        console.log('578 first is class', klass)
-    }
-    
     // Variable "simple" is set if class only has one parent and this
     // parent is "object" or "type"
     var simple=false

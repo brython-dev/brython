@@ -2072,11 +2072,10 @@ function $DefCtx(context){
 
         var make_args_nodes = []
 
-        var default_ref = name+'.$defaults'
+        var default_ref = name+'.$infos.$defaults'
         if(this.type=="generator"){
-            default_ref = prefix+'.$defaults'
+            default_ref = prefix+'.$infos.$defaults'
         }
-
         // If function is not a generator, $locals is the result of $B.args
         var js = this.type=='def' ? local_ns+' = $locals' : 'var $ns'
         
@@ -2179,7 +2178,7 @@ function $DefCtx(context){
         nodes.push($NodeJS('$B.js_this = this;'))
 
         for(var i=nodes.length-1;i>=0;i--){
-            node.children.splice(0,0,nodes[i])
+            node.children.splice(0, 0, nodes[i])
         }
 
         // Node that replaces the original "def" line
@@ -2201,6 +2200,8 @@ function $DefCtx(context){
 
         // Add the new function definition
         node.add(def_func_node)
+        
+        //node.parent.insert(rank, $NodeJS('// default'))
 
         var offset = 1
 
@@ -2208,22 +2209,21 @@ function $DefCtx(context){
         
         // Set to local
         js = prefix+'='+name
-        node.parent.insert(rank+offset, $NodeJS(js))
-        offset++
+        node.parent.insert(rank+offset++, $NodeJS(js))
         
-        // Add $defaults
-        js = name+'.$defaults = {'+defs1.join(',')+'};'
-        node.parent.insert(rank+offset, $NodeJS(js))
-        offset++
-
         // Create attribute $infos for the function
         // Adding only one attribute is much faster than adding all the 
         // keys/values in $infos
-        js = name+'.$infos = {'
+        js = prefix+'.$infos = {'
         var name_decl = new $Node()
         new $NodeJSCtx(name_decl,js)
-        node.parent.insert(rank+offset,name_decl)
-        offset++
+        node.parent.insert(rank+offset++,name_decl)
+
+        // Add $defaults
+        if(defs1.length){
+            js = '    $defaults: {'+defs1.join(',')+'},'
+            node.parent.insert(rank+offset++, $NodeJS(js))
+        }
 
         // Add attribute __name__
         js = '    __name__:"'
@@ -2231,38 +2231,31 @@ function $DefCtx(context){
         js += this.name+'",'
         var name_decl = new $Node()
         new $NodeJSCtx(name_decl,js)
-        node.parent.insert(rank+offset,name_decl)
-        offset++
+        node.parent.insert(rank+offset++,name_decl)
 
         // Add attribute __defaults__
-        var module = $get_module(this)
-        new_node = new $Node()
-        new $NodeJSCtx(new_node,
-            '    __defaults__ : $B.builtins.tuple(Object.values('+name+
-            '.$defaults)),')
-        node.parent.insert(rank+offset,new_node)
-        offset++
+        var def_names = []
+        for(var i=0; i<this.default_list.length;i++){
+            def_names.push('"'+this.default_list[i]+'"')
+        }
+        node.parent.insert(rank+offset++, $NodeJS('    __defaults__ : ['+
+            def_names.join(', ')+'],'))
 
         // Add attribute __module__
         var module = $get_module(this)
         new_node = new $Node()
         new $NodeJSCtx(new_node,'    __module__ : "'+module.module+'",')
-        node.parent.insert(rank+offset,new_node)
-        offset++
+        node.parent.insert(rank+offset++,new_node)
         
         // Add attribute __doc__
         js = '    __doc__: '+(this.doc_string || 'None')+','
         new_node = new $Node()
         new $NodeJSCtx(new_node,js)
-        node.parent.insert(rank+offset,new_node)
-        offset++
+        node.parent.insert(rank+offset++,new_node)
 
         // Add attribute __annotations__
         js = '    __annotations__: {'+annotations.join(',')+'},'
-        new_node = new $Node()
-        new $NodeJSCtx(new_node,js)
-        node.parent.insert(rank+offset,new_node)
-        offset++
+        node.parent.insert(rank+offset++,$NodeJS(js))
 
 
         for(var attr in $B.bound[this.id]){this.varnames[attr]=true}
@@ -2989,7 +2982,7 @@ function $FuncArgIdCtx(context,name){
     this.parent = context
     
     if(context.has_star_arg){
-        context.parent.after_star.push('"'+name+'"')
+        context.parent.after_star.push(name)
     }else{
         context.parent.positional_list.push(name)
     }
