@@ -1163,6 +1163,12 @@ num = N()
 assert sin(num) == -0.9165215479156338
 assert log(num) == 3.7376696182833684
 
+# issue 558
+a = set([5, 10])
+b = set(a)
+a.difference_update([5])
+assert a == {10}
+assert b == {5, 10}
 
 # ==========================================
 # Finally, report that all tests have passed

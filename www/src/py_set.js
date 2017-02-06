@@ -135,16 +135,16 @@ $SetDict.__init__ = function(self){
         ['self', 'iterable'], arguments, {iterable:[]}, null,null),
         self = $.self, iterable= $.iterable
 
-    if(_b_.isinstance(iterable,[set,frozenset])){
-        self.$items = iterable.$items
+    if(_b_.isinstance(iterable,[set, frozenset])){
+        self.$items = iterable.$items.slice()
         return $N
     }
     var it = _b_.iter(iterable),
-        obj = {$items:[],$str:true,$num:true}
+        obj = {$items:[], $str:true, $num:true}
     while(1){
         try{
             var item = _b_.next(it)
-            $SetDict.add(obj,item)
+            $SetDict.add(obj, item)
         }catch(err){
             if(_b_.isinstance(err, _b_.StopIteration)){break}
             throw err
@@ -533,10 +533,10 @@ function set(){
     // $str is true if all the elements in the set are string, $num if
     // all the elements are integers
     // They are used to speed up operations on sets
-    var res = {__class__:$SetDict,$str:true,$num:true,$items:[]}
+    var res = {__class__:$SetDict,$str:true, $num:true, $items:[]}
     // apply __init__ with arguments of set()
     var args = [res].concat(Array.prototype.slice.call(arguments))
-    $SetDict.__init__.apply(null,args)
+    $SetDict.__init__.apply(null, args)
     return res
 }
 set.__class__ = $B.$factory
