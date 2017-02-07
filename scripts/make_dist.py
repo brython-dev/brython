@@ -23,7 +23,7 @@ if(sys.version_info[0]!=3):
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
-implementation = [3, 3, 1, 'alpha', 0]
+implementation = [3, 3, 2, 'dev', 0]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
@@ -153,6 +153,20 @@ def run():
     
         arc.close()
         
-    
+
+    # changelog file
+    try:
+        first = 'Changes in Brython version {}'.format(vname)
+        with open(os.path.join(pdir, 'setup', 'changelog.txt')) as file_to_read:
+            input_changelog_data_string = file_to_read.read()
+        with open(os.path.join(pdir, 'setup', 'data',
+            'changelog_{}.txt'.format(vname)), 'w') as out:
+            out.write('%s\n' % first)
+            out.write('%s\n\n' % ('=' * len(first)))
+            out.write(input_changelog_data_string)
+    except Exception as error:
+        print(error)
+        print("Warning - no changelog file")
+
 if __name__=="__main__":
     run()
