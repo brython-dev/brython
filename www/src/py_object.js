@@ -171,11 +171,18 @@ $ObjectDict.__getattribute__ = function(obj,attr){
             return res.__get__(res, obj, klass)
         }
 
-        var __get__ = _b_.getattr(res,'__get__',null)
-
+        var get = res.__get__
+        if(get===undefined && res.__class__){
+            var get = res.__class__.__get__
+            for(var i=0;i<res.__class__.__mro__.length && get===undefined; i++){
+                get = res.__class__.__mro__[i].__get__
+            }
+        }
+        var __get__ = get === undefined ? null : _b_.getattr(res,'__get__',null)
+        
         // For descriptors, attribute resolution is done by applying __get__
         if(__get__!==null){
-            try{return __get__.apply(null,[obj, klass])}
+            try{return __get__.apply(null, [obj, klass])}
             catch(err){
                 console.log('error in get.apply', err)
                 console.log(__get__+'')
@@ -195,9 +202,9 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         if(__get__!==null){ // descriptor
             res.__name__ = attr
             // __new__ is a static method
-            if(attr=='__new__'){res.$type='staticmethod'}
-            var res1 = __get__.apply(null,[res,obj,klass])
-            if(typeof res1=='function'){
+            if(attr == '__new__'){res.$type = 'staticmethod'}
+            var res1 = __get__.apply(null, [res, obj, klass])
+            if(typeof res1 == 'function'){
                 // If attribute is a class then return it unchanged
                 //
                 // Example :
@@ -217,7 +224,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                 // class A, its method __init__ must be called without B's
                 // self as first argument
     
-                if(res1.__class__===$B.$factory) return res
+                if(res1.__class__ === $B.$factory) return res
                 
                 // Same thing if the attribute is a method of an instance
                 // =================

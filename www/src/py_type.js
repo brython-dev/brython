@@ -143,19 +143,18 @@ $B.make_method = function(attr, klass, func){
       case 'function':
         // the attribute is a function : return an instance method,
         // called with the instance as first argument
-        var f = _b_.getattr(func, '__get__', func)
         method = function(instance){
             var instance_method = function(){
                 var local_args = [instance]
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     local_args.push(arguments[i])
                 }
-                return f.apply(instance, local_args)
+                return func.apply(instance, local_args)
             }
             instance_method.__class__ = $B.$MethodDict
             instance_method.$infos = {
                 __class__:klass.$factory,
-                __func__:f,
+                __func__:func,
                 __name__:attr,
                 __self__:instance
             }

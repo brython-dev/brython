@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-02-07 16:15:03.811338"
+__BRYTHON__.compiled_date="2017-02-07 22:51:22.709420"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4284,7 +4284,10 @@ for(var i=0,_len_i=mro.length;i < _len_i;i++){res=check(obj,mro[i],attr)
 if(res!==undefined){break}}}}else{if(res.__set__===undefined){
 return res}}
 if(res!==undefined){if(res.__class__===_b_.property.$dict){return res.__get__(res,obj,klass)}
-var __get__=_b_.getattr(res,'__get__',null)
+var get=res.__get__
+if(get===undefined && res.__class__){var get=res.__class__.__get__
+for(var i=0;i<res.__class__.__mro__.length && get===undefined;i++){get=res.__class__.__mro__[i].__get__}}
+var __get__=get===undefined ? null : _b_.getattr(res,'__get__',null)
 if(__get__!==null){try{return __get__.apply(null,[obj,klass])}
 catch(err){console.log('error in get.apply',err)
 console.log(__get__+'')
@@ -4400,12 +4403,11 @@ $B.make_method=function(attr,klass,func){
 var method
 switch(func.$type){case undefined:
 case 'function':
-var f=_b_.getattr(func,'__get__',func)
 method=function(instance){var instance_method=function(){var local_args=[instance]
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){local_args.push(arguments[i])}
-return f.apply(instance,local_args)}
+return func.apply(instance,local_args)}
 instance_method.__class__=$B.$MethodDict
-instance_method.$infos={__class__:klass.$factory,__func__:f,__name__:attr,__self__:instance}
+instance_method.$infos={__class__:klass.$factory,__func__:func,__name__:attr,__self__:instance}
 return instance_method}
 break
 case 'instancemethod':
