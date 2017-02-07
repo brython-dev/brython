@@ -83,10 +83,11 @@ def test_next():
         doc['console'].value = ''
         print('completed all tests in %.2f s' %(time.time()-t_start))
         print('failed : %s' %failed)
+
         w = window.open()
         
         head = w.document.get(selector="head")
-        head[0] <= LINK(rel="stylesheet", href=__BRYTHON__.brython_path+"/doc/doc_brython.css")
+        head[0] <= STYLE("*{font-family: Arial;}")
         
         body = w.document.body
         table = TABLE(border=1)
@@ -97,7 +98,8 @@ def test_next():
             row <= TD(int(100*float(result['Brython'])/float(result['CPython'])),
                 align="right")
             table <= row
-        body <= H1("Brython performance (base 100 = CPython)")
+        version = '.'.join(str(x) for x in __BRYTHON__.implementation[:3])
+        body <= H1("Brython {} performance (base 100 = CPython)".format(version))
         body <= table
     
 def test_all(ev):
@@ -192,6 +194,7 @@ Test suite:
     <option value="benchmarks/create_class_with_init.py">create class with init</option>
     <option value="benchmarks/create_instance_simple_class.py">create instance of simple class</option>
     <option value="benchmarks/create_instance_with_init.py">create instance of class with init</option>
+    <option value="benchmarks/call_instance_method.py">call instance method</option>
     <!--
     <option value="benchmarks/pystone.py">pystone</option>
     <option value="benchmarks/bm_ai.py">bm_ai (n-queens)</option>
