@@ -4,7 +4,7 @@ var _b_=$B.builtins
 
 // generic code for class constructor
 $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwargs){
-    var cl_dict=_b_.dict(),bases=null
+    var cl_dict=_b_.dict(), bases=null
     // transform class object into a dictionary
     for(var attr in class_obj){
         cl_dict.$string_dict[attr] = class_obj[attr]
@@ -41,7 +41,6 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         class_dict[items[i][0]] = items[i][1]
     }
 
-    //class_dict.__mro__ = [class_dict].concat(make_mro(bases, cl_dict))
     class_dict.__mro__ = make_mro(bases, cl_dict)
     
     // Check if at least one method is abstract (cf PEP 3119)
@@ -108,9 +107,6 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     }
 
     if(metaclass===_b_.type) {
-        if(class_name=='classXXX'){ // experimental
-            return class_dict
-        }
         return factory
     }
     for(var attr in class_dict){
@@ -136,31 +132,6 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         return nofactory
     }
 
-    return factory
-}
-
-$B.$class_constructor1 = function(class_name,class_obj){
-    if(class_obj.__init__===undefined){
-        var creator = function(){
-            this.__class__ = class_obj
-        }
-    }else{
-        var creator = function(args){
-            this.__class__ = class_obj
-            class_obj.__init__.apply(null,[this].concat(Array.prototype.slice.call(args)))
-        }
-    }
-    var factory = function(){return new creator(arguments)}
-    factory.__class__ = $B.$factory
-    factory.__name__ = class_name
-    factory.$dict = class_obj
-    class_obj.__class__ = $B.$type
-    class_obj.__name__ = class_name
-    class_obj.__mro__ = [_b_.object.$dict]
-    for(var attr in class_obj){
-        factory.prototype[attr] = class_obj[attr]
-    }
-    class_obj.$factory = factory
     return factory
 }
 
@@ -205,7 +176,7 @@ $B.make_method = function(attr, klass, func){
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     local_args[pos++]=arguments[i]
                 }
-                return func.apply(null,local_args)
+                return func.apply(null, local_args)
             }
             class_method.__class__ = $B.$MethodDict
             class_method.$infos = {
@@ -354,17 +325,10 @@ $B.$type.__new__ = function(cls, name, bases, cl_dict){
     
     //class_dict.__mro__ = [class_dict].concat(make_mro(bases, cl_dict))
     class_dict.__mro__ = make_mro(bases, cl_dict)
-    if(class_dict.__mro__[0]===class_dict){
-        console.log('first is class', class_dict)
-    }
     
     // Reset the attribute __class__
     class_dict.__class__ = class_dict.__mro__[0].__class__
 
-    if(class_dict.__mro__[0]===class_dict){
-        console.log('358 first is class', class_dict)
-    }
-    
     // create the factory function
     var factory = $instance_creator(class_dict)
 
@@ -574,72 +538,61 @@ $B.$type.__getattribute__=function(klass, attr){
 
 
 function $instance_creator(klass){
-
-    if(klass.__mro__[0]===klass){
-        console.log('559 first is class', klass)
-    }
+    // return the function to initalise a class instance
 
     // The class may not be instanciable if it has at least one abstract method
     if(klass.$instanciable!==undefined){
-        console.log('klass', klass.__name__,'not instanciable')
         return function(){throw _b_.TypeError("Can't instantiate abstract "+
             "class interface with abstract methods")}
     }
-    // return the function to initalise a class instance
-    var new_func = null
-    try{new_func = _b_.getattr(klass,'__new__')}
-    catch(err){}
-    
-    var init_func = null
-    try{init_func = _b_.getattr(klass,'__init__')}
-    catch(err){}
 
-    // Variable "simple" is set if class only has one parent and this
-    // parent is "object" or "type"
-    var simple=false
-    if(klass.__bases__.length==0){simple=true}
-    else if(klass.__bases__.length==1){
-        switch(klass.__bases__[0]){
-            case _b_.object:
-            case _b_.type:
-                simple=true
-                break
-            default:
-                simple=false
-                break
-        }
+    var new_func = klass.__new__
+    for(var i=0;i<klass.__mro__.length && new_func===undefined;i++){
+        new_func = klass.__mro__[i].__new__
     }
-        
-    if(simple && klass.__new__==undefined && init_func!==null){
-        // most usual case
-        
+
+    var init_func = klass.__init__
+    for(var i=0;i<klass.__mro__.length && init_func===undefined;i++){
+        init_func = klass.__mro__[i].__init__
+    }
+
+    if(init_func===_b_.object.$dict.__init__ && 
+        new_func===_b_.object.$dict.__new__){
+        // most simple case : no specific __init__ or __new__
+        return function(){
+            return {__class__: klass}
+        }
+    }else if(new_func===_b_.object.$dict.__new__ || 
+            new_func===$B.$type.__new__){
+        // default __new__ method, specific __init__
         return function(){
             var obj = {__class__:klass}
-            init_func.apply(null,[obj].concat(Array.prototype.slice.call(arguments)))
+            var args = [obj]
+            for(var i=0, len=arguments.length; i<len; i++){
+                args.push(arguments[i])
+            }
+            init_func.apply(null, args)
+            return obj
+        }        
+    }else{
+        // specific __new__ and __init__
+        return function(){
+            var args = [klass.$factory]
+            for(var i=0, len=arguments.length; i<len; i++){
+                args.push(arguments[i])
+            }
+            var obj = new_func.apply(null, args),
+                args = [obj]
+            for(var i=0, len=arguments.length; i<len; i++){
+                args.push(arguments[i])
+            }
+            // __initialized__ is set in object.__new__ if klass
+            // has a method __init__
+            if(!obj.__initialized__){
+                init_func.apply(null, args)
+             }
             return obj
         }
-
-    }
-
-    return function(){
-        var obj
-        var _args = Array.prototype.slice.call(arguments)
-        
-        // apply __new__ to initialize the instance
-        if(simple && klass.__new__==undefined){
-            obj = {__class__:klass}
-        }else{
-            if(new_func!==null){
-                obj = new_func.apply(null,[klass.$factory].concat(_args))
-            }
-        }
-        // __initialized__ is set in object.__new__ if klass has a method __init__
-        if(!obj.__initialized__){
-            if(init_func!==null){
-                init_func.apply(null,[obj].concat(_args))
-            }
-        }
-        return obj
     }
 }
 
