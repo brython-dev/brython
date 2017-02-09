@@ -168,9 +168,14 @@ $B.make_method = function(attr, klass, func){
         return func
       case 'classmethod':
         // class method : called with the class as first argument
-        method = function(){
-            var class_method = function(){                
-                var local_args = [klass.$factory]
+        method = function(obj){
+            var class_method = function(){
+                var local_args=0;
+                if (obj !== undefined) {
+                    local_args = [obj.__class__.$factory]
+                } else {
+                    local_args = [klass.$factory]
+                }
                 var pos=local_args.length
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     local_args[pos++]=arguments[i]
