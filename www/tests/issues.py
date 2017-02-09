@@ -1170,6 +1170,20 @@ a.difference_update([5])
 assert a == {10}
 assert b == {5, 10}
 
+# issue 560
+class Base:
+    @classmethod
+    def test(cls):
+        return cls
+
+class Derived(Base):
+    def __init__(self):
+        pass
+
+assert Derived.test() == Derived
+d = Derived()
+assert d.test() == Derived
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
