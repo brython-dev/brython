@@ -48,6 +48,9 @@ Thumbs.db
 *.egg-info
 .installed.cfg
 __pycache__/
+virtual_env/
+node_modules/
+travis-phantomjs/
 
 
 # Installer logs
