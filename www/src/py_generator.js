@@ -393,9 +393,11 @@ function make_next(self, yield_node_id){
         
     fnode.addChild(new $B.genNode(js))
     // add a node to enter the frame
-    fnode.addChild(new $B.genNode('$B.enter_frame(["'+self.iter_id+
-        '",$locals,"'+self.module+'",$locals_'+
-        self.module.replace(/\./g, '_')+']);'))
+    js = 'var $top_frame = ["'+self.iter_id+'",$locals,"'+self.module+
+        '",$locals_'+self.module.replace(/\./g, '_')+'];'+
+        '$B.frames_stack.push($top_frame); var $stack_length = '+
+        '$B.frames_stack.length;'
+    fnode.addChild(new $B.genNode(js))
 
     // To build the new function, we must identify the rest of the function to
     // run after the exit node

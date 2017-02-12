@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-02-07 22:51:22.709420"
+__BRYTHON__.compiled_date="2017-02-12 22:17:59.859324"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1033,7 +1033,6 @@ for(var i=0;i<this.default_list.length;i++){dobj[pos++]=this.default_list[i]+':n
 dobj='{'+dobj.join(',')+'}'
 var nodes=[],js
 var global_scope=scope
-if(global_scope.parent_block===undefined){alert('undef '+global_scope);console.log(global_scope)}
 while(global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.parent_block}
 var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
 var prefix=this.tree[0].to_js()
@@ -1046,13 +1045,16 @@ var new_node=new $Node()
 new_node.locals_def=true
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
-var enter_frame_node=new $Node(),js=';$B.frames_stack.push([$local_name, $locals,'+
-'"'+global_scope.id+'", '+global_ns+']);' 
+var enter_frame_node=new $Node(),js=';var $top_frame = [$local_name, $locals,'+
+'"'+global_scope.id+'", '+global_ns+
+']; $B.frames_stack.push($top_frame); var $stack_length = '+
+'$B.frames_stack.length;'
 if($B.profile > 1){if(this.scope.ntype=='class'){fname=this.scope.C.tree[0].name+'.'+this.name}
 else fname=this.name
 if(node.parent && node.parent.id){fmod=node.parent.id.slice(0,node.parent.id.indexOf('_'))}
 else fmod='';
-js=";$B.$profile.call('"+fmod+"','"+fname+"',"+node.line_num+",$locals.$line_info)"+js;}
+js=";$B.$profile.call('"+fmod+"','"+fname+"',"+
+node.line_num+",$locals.$line_info)"+js;}
 enter_frame_node.enter_frame=true
 new $NodeJSCtx(enter_frame_node,js)
 nodes.push(enter_frame_node)
@@ -1472,7 +1474,8 @@ this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),mod=$get_module(this).module,res=[],pos=0,indent=$get_node(this).indent,head=' '.repeat(indent);
 var _mod=this.module.replace(/\$/g,''),package,packages=[]
 while(_mod.length>0){if(_mod.charAt(0)=='.'){if(package===undefined){if($B.imported[mod]!==undefined){package=$B.imported[mod].__package__}}else{package=$B.imported[package]}
-if(package===undefined){return 'throw SystemError("Parent module \'\' not loaded,'+
+if(package===undefined){console.log('_mod',_mod)
+return 'throw SystemError("Parent module \'\' not loaded,'+
 ' cannot perform relative import")'}else if(package=='None'){console.log('package is None !')}else{packages.push(package)}
 _mod=_mod.substr(1)}else{break}}
 if(_mod){packages.push(_mod)}
@@ -2157,8 +2160,9 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 var node=$get_node(this)
-while(node.parent){if(node.parent.C && node.parent.C.tree[0].type=='for'){node.parent.C.tree[0].has_return=true
-break}
+while(node.parent){if(node.parent.C){var elt=node.parent.C.tree[0]
+if(elt.type=='for'){elt.has_return=true
+break}else if(elt.type=='try'){elt.has_return=true}else if(elt.type=='single_kw' && elt.token=='finally'){elt.has_return=true}}
 node=node.parent}
 this.toString=function(){return 'return '+this.tree}
 this.to_js=function(){this.js_processed=true
@@ -2166,24 +2170,9 @@ if(this.tree.length==1 && this.tree[0].type=='abstract_expr'){
 this.tree.pop()
 new $IdCtx(new $ExprCtx(this,'rvalue',false),'None')}
 var scope=$get_scope(this)
-if(scope.ntype=='generator'){var js='return [$B.generator_return(' + $to_js(this.tree)+
-')]'
-return js}
-var node=$get_node(this),pnode,flag,leave_frame=true,in_try=false
-while(node && leave_frame){if(node.is_try){in_try=true
-pnode=node.parent,flag=false
-for(var i=0;i<pnode.children.length;i++){var child=pnode.children[i]
-if(!flag && child===node){flag=true;continue}
-if(flag){if(child.C.tree[0].type=="single_kw" &&
-child.C.tree[0].token=="finally"){leave_frame=false
-break}}}}
-node=node.parent}
-if(leave_frame && !in_try){
-var res='try{var $res = '+$to_js(this.tree)+';'+
-'$B.leave_frame($local_name);return $res}catch(err){'+
-'$B.leave_frame($local_name);throw err}'}else if(leave_frame){var res='var $res = '+$to_js(this.tree)+';'+
-'$B.leave_frame($local_name);return $res'}else{var res="return "+$to_js(this.tree)}
-return res}}
+if(scope.ntype=='generator'){return 'return [$B.generator_return(' + $to_js(this.tree)+')]'}
+return 'var $res = '+$to_js(this.tree)+';'+
+'$B.leave_frame($local_name);return $res'}}
 function $SingleKwCtx(C,token){
 this.type='single_kw'
 this.token=token
@@ -2201,6 +2190,12 @@ elt.type=='asyncfor' ||
 elt.else_node=$get_node(this)
 this.loop_num=elt.loop_num}}}
 this.toString=function(){return this.token}
+this.transform=function(node,rank){
+if(this.token=='finally'){var scope=$get_scope(this)
+if(scope.ntype!='generator'){var scope_id=scope.id.replace(/\./g,'_'),js='var $exit;if($B.frames_stack.length<$stack_length)'+
+'{$exit=true;$B.frames_stack.push($top_frame)}'
+node.insert(0,$NodeJS(js))
+node.add($NodeJS('if($exit){$B.leave_frame("'+scope_id+'")}'))}}}
 this.to_js=function(){this.js_processed=true
 if(this.token=='finally')return this.token
 if(this.loop_num!==undefined){var scope=$get_scope(this)
@@ -2307,10 +2302,11 @@ default:
 $_SyntaxError(C,"missing clause after 'try' 2")}}
 var scope=$get_scope(this)
 var $var='var $failed'+$loop_num
-var js=$var+'=false;'+
+var js=$var+'=false;\n'+' '.repeat(node.indent+8)+
 'try'
 new $NodeJSCtx(node,js)
 node.is_try=true 
+node.has_return=this.has_return
 var catch_node=new $Node()
 new $NodeJSCtx(catch_node,'catch($err'+$loop_num+')')
 catch_node.is_catch=true
@@ -2441,7 +2437,9 @@ var finally_node=new $Node()
 new $NodeJSCtx(finally_node,'finally')
 finally_node.C.type='single_kw'
 finally_node.C.token='finally'
+finally_node.C.in_ctx_manager=true
 finally_node.is_except=true
+finally_node.in_ctx_manager=true
 var fbody=new $Node()
 new $NodeJSCtx(fbody,'if($exc'+num+'){$ctx_manager_exit'+num+
 '(None,None,None)}')
@@ -2450,7 +2448,7 @@ node.parent.insert(rank+1,finally_node)
 $loop_num++
 this.transformed=true}
 this.to_js=function(){this.js_processed=true
-var indent=$get_node(this).indent,h=' '.repeat(indent),num=this.num
+var indent=$get_node(this).indent,h=' '.repeat(indent+4),num=this.num
 var res='var $ctx_manager'+num+' = '+this.tree[0].to_js()+
 '\n'+h+'var $ctx_manager_exit'+num+
 '= getattr($ctx_manager'+num+',"__exit__")\n'+
@@ -4053,10 +4051,11 @@ root.insert(offset++,file_node)
 if(line_info !==undefined){var line_node=new $Node()
 new $NodeJSCtx(line_node,local_ns+'.$line="'+line_info+'";None;\n')
 root.insert(offset++,line_node)}
-var enter_frame_pos=offset
-root.insert(offset++,$NodeJS('$B.enter_frame(["'+
-locals_id.replace(/\./g,'_')+'", '+local_ns+','+
-'"'+module.replace(/\./g,'_')+'", '+global_ns+', "a"]);\n'))
+var enter_frame_pos=offset,js='var $top_frame = ["'+locals_id.replace(/\./g,'_')+'", '+
+local_ns+', "'+module.replace(/\./g,'_')+'", '+global_ns+
+', "a"]; $B.frames_stack.push($top_frame); var $stack_length = '+
+'$B.frames_stack.length;'
+root.insert(offset++,$NodeJS(js))
 var try_node=new $NodeJS('try'),children=root.children.slice(enter_frame_pos+1,root.children.length)
 root.insert(enter_frame_pos+1,try_node)
 if(children.length==0){children=[$NodeJS('')]}
@@ -4768,8 +4767,8 @@ var klass=$B.get_class(src)
 if(klass!==undefined){if(klass===_b_.list.$dict){for(var i=0,_len_i=src.length;i< _len_i;i++)src[i]=$B.$JS2Py(src[i])}else if(klass===$B.JSObject.$dict){src=src.js}else{return src}}
 if(typeof src=="object"){if($B.$isNode(src))return $B.DOMNode(src)
 if($B.$isEvent(src))return $B.$DOMEvent(src)
-if((Array.isArray(src)&&Object.getPrototypeOf(src)===Array.prototype)||
-$B.$isNodeList(src)){var res=[],pos=0
+if($B.$isNodeList(src))return $B.DOMNode(src)
+if(Array.isArray(src)&&Object.getPrototypeOf(src)===Array.prototype){var res=[],pos=0
 for(var i=0,_len_i=src.length;i<_len_i;i++)res[pos++]=$B.$JS2Py(src[i])
 return res}}
 return $B.JSObject(src)}
@@ -9996,8 +9995,9 @@ try{var result=Object.prototype.toString.call(nodes);
 var re=new RegExp("^\\[object (HTMLCollection|NodeList)\\]$")
 return(typeof nodes==='object'
 && re.exec(result)!==null
-&& nodes.hasOwnProperty('length')
-&&(nodes.length==0 ||(typeof nodes[0]==="object" && nodes[0].nodeType > 0))
+&& nodes.length!==undefined
+&&(nodes.length==0 ||
+(typeof nodes[0]==="object" && nodes[0].nodeType > 0))
 )}catch(err){return false}}
 var $DOMEventAttrs_W3C=['NONE','CAPTURING_PHASE','AT_TARGET','BUBBLING_PHASE','type','target','currentTarget','eventPhase','bubbles','cancelable','timeStamp','stopPropagation','preventDefault','initEvent']
 var $DOMEventAttrs_IE=['altKey','altLeft','button','cancelBubble','clientX','clientY','contentOverflow','ctrlKey','ctrlLeft','data','dataFld','dataTransfer','fromElement','keyCode','nextPage','offsetX','offsetY','origin','propertyName','reason','recordset','repeat','screenX','screenY','shiftKey','shiftLeft','source','srcElement','srcFilter','srcUrn','toElement','type','url','wheelDelta','x','y']
@@ -10150,7 +10150,8 @@ DOMNodeDict.__dir__=function(self){var res=[]
 for(var attr in self.elt){res.push(attr)}
 for(var attr in DOMNodeDict){if(res.indexOf(attr)==-1){res.push(attr)}}
 return res}
-DOMNodeDict.__eq__=function(self,other){return self.elt==other.elt}
+DOMNodeDict.__eq__=function(self,other){console.log(self,other,self.elt==other.elt)
+return self.elt==other.elt}
 DOMNodeDict.__getattribute__=function(self,attr){switch(attr){case 'class_name':
 case 'html':
 case 'id':
@@ -10214,7 +10215,7 @@ func.$is_func=true
 return func}
 if(attr=='options')return $Options(self.elt)
 if(attr=='style')return $Style(self.elt[attr])
-return DOMNode(res)}
+return $B.$JS2Py(res)}
 return $ObjectDict.__getattribute__(self,attr)}
 DOMNodeDict.__getitem__=function(self,key){if(self.elt.nodeType===9){
 if(typeof key==="string"){var res=self.elt.getElementById(key)
@@ -10736,9 +10737,11 @@ var js='for(var attr in this.blocks){eval("var "+attr+"='+
 'this.blocks[attr]");};var $locals_'+self.iter_id+' = this.env,'+
 ' $locals = $locals_'+self.iter_id+', $local_name="'+self.iter_id+'";'
 fnode.addChild(new $B.genNode(js))
-fnode.addChild(new $B.genNode('$B.enter_frame(["'+self.iter_id+
-'",$locals,"'+self.module+'",$locals_'+
-self.module.replace(/\./g,'_')+']);'))
+js='var $top_frame = ["'+self.iter_id+'",$locals,"'+self.module+
+'",$locals_'+self.module.replace(/\./g,'_')+'];'+
+'$B.frames_stack.push($top_frame); var $stack_length = '+
+'$B.frames_stack.length;'
+fnode.addChild(new $B.genNode(js))
 while(1){
 var exit_parent=exit_node.parent,rest=[],pos=0,has_break,has_continue
 var start=exit_node.rank+1
