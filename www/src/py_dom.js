@@ -77,8 +77,9 @@ $B.$isNodeList = function(nodes) {
         var re = new RegExp("^\\[object (HTMLCollection|NodeList)\\]$")     
         return (typeof nodes === 'object'
             && re.exec(result)!==null
-            && nodes.hasOwnProperty('length')
-            && (nodes.length == 0 || (typeof nodes[0] === "object" && nodes[0].nodeType > 0))
+            && nodes.length!==undefined
+            && (nodes.length == 0 || 
+                (typeof nodes[0] === "object" && nodes[0].nodeType > 0))
         )
     }catch(err){
         return false
@@ -437,7 +438,7 @@ DOMNodeDict.__dir__ = function(self){
     return res
 }
 
-DOMNodeDict.__eq__ = function(self,other){
+DOMNodeDict.__eq__ = function(self, other){
     return self.elt==other.elt
 }
 
@@ -559,7 +560,7 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         }
         if(attr=='options') return $Options(self.elt)
         if(attr=='style') return $Style(self.elt[attr])
-        return DOMNode(res)
+        return $B.$JS2Py(res)
     }
     return $ObjectDict.__getattribute__(self,attr)
 }
@@ -713,7 +714,7 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
         // (or getAttributeNS for SVG elements), and if this method applied to
         // the attribute returns a value.
         // Otherwise, the second option is used.
-
+        
         // Case-insensitive version of the attribute. Also replaces _ by -
         // to support setting attributes that have a -  
         var attr1 = attr.replace('_','-').toLowerCase()

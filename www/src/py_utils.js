@@ -354,8 +354,8 @@ $B.$JS2Py = function(src){
     if(typeof src=="object"){
         if($B.$isNode(src)) return $B.DOMNode(src)
         if($B.$isEvent(src)) return $B.$DOMEvent(src)
-        if((Array.isArray(src) &&Object.getPrototypeOf(src)===Array.prototype)||
-            $B.$isNodeList(src)){
+        if($B.$isNodeList(src)) return $B.DOMNode(src)
+        if(Array.isArray(src) &&Object.getPrototypeOf(src)===Array.prototype){
             var res = [], pos=0
             for(var i=0,_len_i=src.length;i<_len_i;i++) res[pos++]=$B.$JS2Py(src[i])
             return res
@@ -1003,6 +1003,11 @@ $B.enter_frame = function(frame){
 $B.leave_frame = function(arg){
     // Leave execution frame
     if($B.frames_stack.length==0){console.log('empty stack');return}
+    /*
+    if(arg.replace(/\./g, '_') != $B.last($B.frames_stack)[0] && arg.substr(0,4)!='$gen'){
+        console.log('leave', arg, 'top stack', $B.last($B.frames_stack)[0])
+    }
+    */
     $B.frames_stack.pop()
 }
 
