@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-02-12 22:20:39.629463"
+__BRYTHON__.compiled_date="2017-02-12 22:23:03.069667"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4412,7 +4412,9 @@ break
 case 'instancemethod':
 return func
 case 'classmethod':
-method=function(){var class_method=function(){var local_args=[klass.$factory]
+method=function(obj){var class_method=function(){var local_args=0;
+if(obj !==undefined){local_args=[obj.__class__.$factory]}else{
+local_args=[klass.$factory]}
 var pos=local_args.length
 for(var i=0,_len_i=arguments.length;i < _len_i;i++){local_args[pos++]=arguments[i]}
 return func.apply(null,local_args)}
