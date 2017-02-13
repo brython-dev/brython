@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-02-13 21:19:18.378532"
+__BRYTHON__.compiled_date="2017-02-13 21:40:15.182418"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -7900,11 +7900,10 @@ int.__class__=$B.$factory
 $IntDict.$factory=int
 _b_.int=int
 var $BoolDict=_b_.bool.$dict
-$BoolDict.__add__=function(self,other){if(self.valueOf())return other + 1;
-return other;}
+$BoolDict.__add__=function(self,other){return(other ? 1 : 0)+(self ? 1 : 0)}
 $BoolDict.__and__=function(self,other){return bool($IntDict.__and__(self,other))}
-$BoolDict.__eq__=function(self,other){return self.valueOf()? bool(other): !bool(other)}
-$BoolDict.__ne__=function(self,other){return self.valueOf()? !bool(other): bool(other)}
+$BoolDict.__eq__=function(self,other){return self ? bool(other): !bool(other)}
+$BoolDict.__ne__=function(self,other){return self ? !bool(other): bool(other)}
 $BoolDict.__ge__=function(self,other){return _b_.int.$dict.__ge__($BoolDict.__hash__(self),other)}
 $BoolDict.__gt__=function(self,other){return _b_.int.$dict.__gt__($BoolDict.__hash__(self),other)}
 $BoolDict.__hash__=$BoolDict.__index__=$BoolDict.__int__=function(self){if(self.valueOf())return 1
@@ -7912,16 +7911,13 @@ return 0}
 $BoolDict.__le__=function(self,other){return !$BoolDict.__gt__(self,other)}
 $BoolDict.__lshift__=function(self,other){return self.valueOf()<< other}
 $BoolDict.__lt__=function(self,other){return !$BoolDict.__ge__(self,other)}
-$BoolDict.__mul__=function(self,other){if(self.valueOf())return other
-return 0;}
+$BoolDict.__mul__=function(self,other){return self ? other : 0}
 $BoolDict.__neg__=function(self){return -$B.int_or_bool(self)}
 $BoolDict.__or__=function(self,other){return bool($IntDict.__or__(self,other))}
 $BoolDict.__pos__=$B.int_or_bool
-$BoolDict.__repr__=$BoolDict.__str__=function(self){if(self.valueOf())return "True"
-return "False"}
+$BoolDict.__repr__=$BoolDict.__str__=function(self){return self ? "True" : "False"}
 $BoolDict.__setattr__=function(self,attr){return no_set_attr($BoolDict,attr)}
-$BoolDict.__sub__=function(self,other){if(self.valueOf())return 1-other;
-return -other;}
+$BoolDict.__sub__=function(self,other){return(self ? 1 : 0)-(other ? 1 : 0)}
 $BoolDict.__xor__=function(self,other){return self.valueOf()!=other.valueOf()}
 $BoolDict.__mro__=[$IntDict,_b_.object.$dict]})(__BRYTHON__)
 ;(function($B){
