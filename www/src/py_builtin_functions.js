@@ -146,9 +146,6 @@ function compile(source, filename, mode) {
          arguments,{flags:0, dont_inherit:false, optimize:-1},null,null)
     
     var module_name = '$exec_' + $B.UUID()
-    //var local_name = module_name; //'' + $B.UUID()
-
-    //var root = $B.py2js(source,module_name,[module_name],local_name)
     $B.clear_ns(module_name)
     $.__class__ = $B.$CodeObjectDict
     $.co_flags = $.flags
@@ -347,11 +344,10 @@ function $eval(src, _globals, _locals){
             }
         }
     }
-    //var nb_modules = Object.keys(__BRYTHON__.modules).length
-    //console.log('before exec', nb_modules)
-
+    
     var root = $B.py2js(src, globals_id, locals_id, parent_block_id),
-        leave_frame = true
+        leave_frame = true,
+        js, gns, lns
 
     try{
         // If the Python function is eval(), not exec(), check that the source
@@ -392,14 +388,14 @@ function $eval(src, _globals, _locals){
             }
         }
 
-        var js = root.to_js()
+        js = root.to_js()
         
         var res = eval(js)
-        var gns = eval('$locals_'+globals_id)
+        gns = eval('$locals_'+globals_id)
 
         // Update _locals with the namespace after execution
         if(_locals!==undefined){
-            var lns = eval('$locals_'+locals_id)
+            lns = eval('$locals_'+locals_id)
             var setitem = getattr(_locals,'__setitem__')
             for(var attr in lns){
                 if(attr.charAt(0)=='$'){continue}
@@ -430,6 +426,10 @@ function $eval(src, _globals, _locals){
         if(err.$py_error===undefined){throw $B.exception(err)}
         throw err
     }finally{
+        root = null
+        js = null
+        gns = null
+        lns = null
         
         $B.clear_ns(globals_id)
         $B.clear_ns(locals_id)

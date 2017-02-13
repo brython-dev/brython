@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-02-12 22:23:03.069667"
+__BRYTHON__.compiled_date="2017-02-13 21:19:18.378532"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1879,6 +1879,7 @@ var save_pos=$pos
 var root=$B.py2js({src:py,is_comp:true},module_name,listcomp_name,local_name,line_num)
 $pos=save_pos
 var js=root.to_js()
+root=null
 $B.clear_ns(listcomp_name)
 delete $B.$py_src[listcomp_name]
 js +='return $locals_lc'+ix+'["x'+ix+'"]'
@@ -4107,11 +4108,12 @@ load_scripts(scripts)}}}
 $B._load_scripts=load_scripts;
 function run_script(script){
 $B.$py_module_path[script.name]=script.url
+var root,js
 try{
-var $root=$B.py2js(script.src,script.name,script.name,'__builtins__')
-var $js=$root.to_js()
-if($B.debug>1){console.log($js)}
-eval($js)}catch($err){if($B.debug>1){console.log($err)
+root=$B.py2js(script.src,script.name,script.name,'__builtins__')
+js=root.to_js()
+if($B.debug>1){console.log(js)}
+eval(js)}catch($err){if($B.debug>1){console.log($err)
 for(var attr in $err){console.log(attr+' : ',$err[attr])}}
 if($err.$py_error===undefined){console.log('Javascript error',$err)
 $err=_b_.RuntimeError($err+'')}
@@ -4119,7 +4121,9 @@ var name=$err.__name__
 var $trace=_b_.getattr($err,'info')+'\n'+name+': '
 if(name=='SyntaxError' ||name=='IndentationError'){$trace +=$err.args[0]}else{$trace +=$err.args}
 try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
-throw $err}finally{$B.clear_ns(script.name)}}
+throw $err}finally{root=null
+js=null
+$B.clear_ns(script.name)}}
 $B._run_script=run_script;
 function brython(options){
 if($B.meta_path===undefined){$B.meta_path=[]}
@@ -4178,16 +4182,20 @@ if(filetype){if(filetype.slice(0,2)=='x-')filetype=filetype.slice(2);
 _importlib.optimize_import_for_path(e.href,filetype);}}
 var first_script=true,module_name;
 if(options.ipy_id!==undefined){module_name='__main__';
-var $src="";
+var $src="",js,root
 $B.$py_module_path[module_name]=$href;
 for(var $i=0;$i<$elts.length;$i++){var $elt=$elts[$i];
 $src +=($elt.innerHTML ||$elt.textContent);}
 try{
-var $root=$B.py2js($src,module_name,module_name,'__builtins__')
-var $js=$root.to_js()
-if($B.debug>1)console.log($js)
-eval($js)
-$B.clear_ns(module_name)}catch($err){console.log($err)
+root=$B.py2js($src,module_name,module_name,'__builtins__')
+js=root.to_js()
+if($B.debug>1)console.log(js)
+eval(js)
+$B.clear_ns(module_name)
+root=null
+js=null}catch($err){root=null
+js=null
+console.log($err)
 if($B.debug>1){console.log($err)
 for(var attr in $err){console.log(attr+' : ',$err[attr])}}
 if($err.$py_error===undefined){console.log('Javascript error',$err)
@@ -5334,7 +5342,7 @@ for(var attr in current_frame[1]){ex +='$locals_'+locals_id+'["'+attr+
 eval(ex)}}else{var items=_b_.dict.$dict.items(_locals),item
 while(1){try{var item=next(items)
 eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')}catch(err){break}}}
-var root=$B.py2js(src,globals_id,locals_id,parent_block_id),leave_frame=true
+var root=$B.py2js(src,globals_id,locals_id,parent_block_id),leave_frame=true,js,gns,lns
 try{
 if(!is_exec){
 var try_node=root.children[root.children.length-2],instr=try_node.children[try_node.children.length-2]
@@ -5350,10 +5358,10 @@ break
 default:
 leave_frame=false
 throw _b_.SyntaxError("eval() argument must be an expression",'<string>',1,1,src)}}
-var js=root.to_js()
+js=root.to_js()
 var res=eval(js)
-var gns=eval('$locals_'+globals_id)
-if(_locals!==undefined){var lns=eval('$locals_'+locals_id)
+gns=eval('$locals_'+globals_id)
+if(_locals!==undefined){lns=eval('$locals_'+locals_id)
 var setitem=getattr(_locals,'__setitem__')
 for(var attr in lns){if(attr.charAt(0)=='$'){continue}
 setitem(attr,lns[attr])}}else{for(var attr in lns){current_frame[1][attr]=lns[attr]}}
@@ -5363,7 +5371,11 @@ for(var attr in gns){if(attr.charAt(0)=='$'){continue}
 setitem(attr,gns[attr])}}else{for(var attr in gns){current_frame[3][attr]=gns[attr]}}
 if(res===undefined)return _b_.None
 return res}catch(err){if(err.$py_error===undefined){throw $B.exception(err)}
-throw err}finally{$B.clear_ns(globals_id)
+throw err}finally{root=null
+js=null
+gns=null
+lns=null
+$B.clear_ns(globals_id)
 $B.clear_ns(locals_id)
 if(!is_exec && leave_frame){
 $B.frames_stack.pop()}}}
@@ -6959,9 +6971,10 @@ mod_elts.pop()
 $B.imported[mod_name].__package__=mod_elts.join('.')}
 $B.imported[mod_name].__file__=path
 return run_py(module_contents,path,module)}
-function run_py(module_contents,path,module,compiled){if(!compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
+function run_py(module_contents,path,module,compiled){var root,js
+if(!compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 $B.$py_module_path[module.__name__]=path
-var root=$B.py2js(module_contents,module.__name__,module.__name__,'__builtins__')
+root=$B.py2js(module_contents,module.__name__,module.__name__,'__builtins__')
 var body=root.children
 root.children=[]
 var mod_node=new $Node('expression')
@@ -6974,21 +6987,23 @@ mod_node.add(ret_node)
 var ex_node=new $Node('expression')
 new $NodeJSCtx(ex_node,')(__BRYTHON__)')
 root.add(ex_node)}
-try{var js=(compiled)? module_contents : root.to_js()
+try{js=(compiled)? module_contents : root.to_js()
 if($B.$options.debug==10){console.log('code for module '+module.__name__)
 console.log(js)}
 eval(js)}catch(err){console.log(err+' for module '+module.__name__)
+root=null
+js=null
 throw err}finally{$B.clear_ns(module.__name__)}
 try{
 var mod=eval('$module')
 for(var attr in mod){module[attr]=mod[attr];}
 module.__initializing__=false
-if($B.$options.store){module.$js=js}
 $B.imported[module.__name__]=module
 return true}catch(err){console.log(''+err+' '+' for module '+module.name)
 for(var attr in err)console.log(attr+' '+err[attr])
 if($B.debug>0){console.log('line info '+__BRYTHON__.line_info)}
-throw err}finally{}}
+throw err}finally{root=null
+js=null}}
 $B.run_py=run_py
 function new_spec(fields){
 fields.__class__=$B.$ModuleDict
@@ -10819,10 +10834,7 @@ return $gen_it.__next__(self)}
 $B.genfunc=function(name,blocks,funcs,$defaults){
 return function(){var iter_id='$gen'+$B.gen_counter++,gfuncs=[]
 gfuncs.push(funcs[0]($defaults))
-for(var i=1;i<funcs.length;i++){try{eval('var f='+funcs[i])}catch(err){console.log(err)
-console.log(funcs[i]+'')
-throw err}
-gfuncs.push(funcs[i])}
+for(var i=1;i<funcs.length;i++){gfuncs.push(funcs[i])}
 var res={__class__: $gen_it,args: Array.prototype.slice.call(arguments),blocks: blocks,env:{},name: name,nexts: gfuncs.slice(1),next: gfuncs[0],iter_id: iter_id,gi_running: false,$started: false,$defaults: $defaults}
 return res}}
 $B.genfunc.__class__=$B.$factory

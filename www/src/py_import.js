@@ -257,11 +257,12 @@ function import_py(module,path,package,blocking){
 
 //$B.run_py is needed for import hooks..
 function run_py(module_contents,path,module,compiled) {
+    var root, js
     if (!compiled) {
         var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
         $B.$py_module_path[module.__name__]=path
         
-        var root = $B.py2js(module_contents,module.__name__,
+        root = $B.py2js(module_contents,module.__name__,
             module.__name__,'__builtins__')
 
         var body = root.children
@@ -285,7 +286,7 @@ function run_py(module_contents,path,module,compiled) {
     }
 
     try{
-        var js = (compiled)? module_contents : root.to_js()
+        js = (compiled)? module_contents : root.to_js()
         if ($B.$options.debug == 10) {
            console.log('code for module '+module.__name__)
            console.log(js)
@@ -306,6 +307,8 @@ function run_py(module_contents,path,module,compiled) {
         console.log('linenum: '+err.lineNumber)
         if($B.debug>0){console.log('line info '+ $B.line_info)}
         */
+        root = null
+        js = null
         throw err
     }finally{
         $B.clear_ns(module.__name__)
@@ -319,9 +322,6 @@ function run_py(module_contents,path,module,compiled) {
             module[attr] = mod[attr];
         }
         module.__initializing__ = false
-        if($B.$options.store){
-            module.$js = js
-        }
         // $B.imported[mod.__name__] must be the module object, so that
         // setting attributes in a program affects the module namespace
         // See issue #7
@@ -334,8 +334,8 @@ function run_py(module_contents,path,module,compiled) {
         if($B.debug>0){console.log('line info '+__BRYTHON__.line_info)}
         throw err
     }finally{
-        //$B.clear_ns(module.__name__)
-        //console.log('clear', module.__name__)
+        root = null
+        js = null
     }
 }
 

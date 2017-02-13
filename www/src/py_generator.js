@@ -604,13 +604,6 @@ $B.genfunc = function(name, blocks, funcs, $defaults){
 
         gfuncs.push(funcs[0]($defaults))
         for(var i=1; i<funcs.length;i++){
-            try{
-                eval('var f='+funcs[i])
-            }catch(err){
-                console.log(err)
-                console.log(funcs[i]+'')
-                throw err
-            }
             gfuncs.push(funcs[i])
         }
         

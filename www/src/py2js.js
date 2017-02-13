@@ -3860,6 +3860,7 @@ function $ListOrTupleCtx(context,real){
                     
                 var js = root.to_js()
                 
+                root = null
                 $B.clear_ns(listcomp_name)
                 delete $B.$py_src[listcomp_name]
 
@@ -7641,15 +7642,16 @@ function run_script(script){
     // script has attributes url, src, name
 
     $B.$py_module_path[script.name]=script.url
+    var root, js
 
     try{
         // Conversion of Python source code to Javascript
 
-        var $root = $B.py2js(script.src,script.name,script.name,'__builtins__')
-        var $js = $root.to_js()
-        if($B.debug>1){console.log($js)}
+        root = $B.py2js(script.src,script.name,script.name,'__builtins__')
+        js = root.to_js()
+        if($B.debug>1){console.log(js)}
         // Run resulting Javascript
-        eval($js)
+        eval(js)
         //$B.imported[script.name] = $locals
     }catch($err){
         if($B.debug>1){
@@ -7682,6 +7684,8 @@ function run_script(script){
         // Throw the error to stop execution
         throw $err
     }finally{
+        root = null
+        js = null
         $B.clear_ns(script.name)
     }
 }
@@ -7848,7 +7852,7 @@ function brython(options){
     var first_script = true, module_name;
     if(options.ipy_id!==undefined){
         module_name='__main__';
-        var $src = "";
+        var $src = "", js, root
         $B.$py_module_path[module_name] = $href;
         for(var $i=0;$i<$elts.length;$i++){
             var $elt = $elts[$i];
@@ -7857,17 +7861,20 @@ function brython(options){
         try{
             // Conversion of Python source code to Javascript
 
-            var $root = $B.py2js($src,module_name,module_name,'__builtins__')
-            //earney
-            var $js = $root.to_js()
-            if($B.debug>1) console.log($js)
+            root = $B.py2js($src,module_name,module_name,'__builtins__')
+            js = root.to_js()
+            if($B.debug>1) console.log(js)
 
             // Run resulting Javascript
-            eval($js)
+            eval(js)
             
             $B.clear_ns(module_name)
+            root = null
+            js = null
             
         }catch($err){
+            root = null
+            js = null
             console.log($err)
             if($B.debug>1){
                 console.log($err)
