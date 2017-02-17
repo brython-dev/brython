@@ -261,6 +261,8 @@ $B.clear_ns = function(name){
     var len = name.length
     for(var key in __BRYTHON__.modules){
         if(key.substr(0, len)==name){
+            __BRYTHON__.modules[key] = null
+            __BRYTHON__.bound[key] = null
             delete __BRYTHON__.modules[key]
             delete __BRYTHON__.bound[key]
         }
