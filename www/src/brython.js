@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-02-17 16:28:09.304624"
+__BRYTHON__.compiled_date="2017-02-17 18:20:01.542121"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4731,7 +4731,9 @@ delete $B.$py_src[genexpr_name]
 return js}
 $B.clear_ns=function(name){
 var len=name.length
-for(var key in __BRYTHON__.modules){if(key.substr(0,len)==name){delete __BRYTHON__.modules[key]
+for(var key in __BRYTHON__.modules){if(key.substr(0,len)==name){__BRYTHON__.modules[key]=null
+__BRYTHON__.bound[key]=null
+delete __BRYTHON__.modules[key]
 delete __BRYTHON__.bound[key]}}
 var alt_name=name.replace(/\./g,'_')
 if(alt_name!=name){$B.clear_ns(alt_name)}}
@@ -5424,7 +5426,10 @@ return obj[attr].apply(obj,arguments)}}else{return $B.$JS2Py(obj[attr])}}
 if(_default!==undefined)return _default
 throw _b_.AttributeError('object has no attribute '+attr)}
 switch(attr){case '__call__':
-if(typeof obj=='function'){return obj}else if(klass===$B.JSObject.$dict && typeof obj.js=='function'){return function(){var res=obj.js.apply(null,arguments)
+if(typeof obj=='function'){return obj}else if(klass===$B.JSObject.$dict && typeof obj.js=='function'){return function(){
+var args=[]
+for(var i=0;i<arguments.length;i++){args.push($B.pyobj2jsobj(arguments[i]))}
+var res=obj.js.apply(null,args)
 if(res===undefined){return None}
 return $B.JSObject(res)}}
 break
@@ -6720,7 +6725,8 @@ if(klass===undefined){
 return pyobj;}
 if(klass===$JSObjectDict ||klass===$JSConstructorDict){
 if(pyobj.js_func!==undefined){return pyobj.js_func}
-return pyobj.js}else if(klass.__mro__.indexOf($B.DOMNodeDict)>-1){
+return pyobj.js}else if(klass===$B.DOMNodeDict ||
+klass.__mro__.indexOf($B.DOMNodeDict)>-1){
 return pyobj.elt}else if([_b_.list.$dict,_b_.tuple.$dict].indexOf(klass)>-1){
 var res=[]
 for(var i=0,_len_i=pyobj.length;i < _len_i;i++){res.push(pyobj2jsobj(pyobj[i]))}

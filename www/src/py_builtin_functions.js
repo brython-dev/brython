@@ -544,8 +544,15 @@ function getattr(obj,attr,_default){
            return obj
         } else if (klass===$B.JSObject.$dict && typeof obj.js=='function'){
           return function(){
-              var res = obj.js.apply(null, arguments)
+              // apply Javascript function to arguments converted from 
+              // Python objects to JS or DOM objects
+              var args = []
+              for(var i=0; i<arguments.length; i++){
+                  args.push($B.pyobj2jsobj(arguments[i]))
+              }
+              var res = obj.js.apply(null, args)
               if(res===undefined){return None} // JSObject would throw an exception
+              // transform JS / DOM result in Python object
               return $B.JSObject(res)
           }
         }
