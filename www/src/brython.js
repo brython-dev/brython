@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-02-13 21:40:15.182418"
+__BRYTHON__.compiled_date="2017-02-17 16:28:09.304624"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1474,8 +1474,7 @@ this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),mod=$get_module(this).module,res=[],pos=0,indent=$get_node(this).indent,head=' '.repeat(indent);
 var _mod=this.module.replace(/\$/g,''),package,packages=[]
 while(_mod.length>0){if(_mod.charAt(0)=='.'){if(package===undefined){if($B.imported[mod]!==undefined){package=$B.imported[mod].__package__}}else{package=$B.imported[package]}
-if(package===undefined){console.log('_mod',_mod)
-return 'throw SystemError("Parent module \'\' not loaded,'+
+if(package===undefined){return 'throw SystemError("Parent module \'\' not loaded,'+
 ' cannot perform relative import")'}else if(package=='None'){console.log('package is None !')}else{packages.push(package)}
 _mod=_mod.substr(1)}else{break}}
 if(_mod){packages.push(_mod)}
@@ -5131,7 +5130,8 @@ var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
 $B.is_safe_int=function(){for(var i=0;i<arguments.length;i++){var arg=arguments[i]
 if(arg<min_int ||arg>max_int){return false}}
 return true}
-$B.add=function(x,y){var z=x+y
+$B.add=function(x,y){var z=(typeof x!='number' ||typeof y!='number')?
+new Number(x+y): x+y
 if(x>min_int && x<max_int && y>min_int && y<max_int
 && z>min_int && z<max_int){return z}
 else if((typeof x=='number' ||x.__class__===$B.LongInt.$dict)
@@ -5149,14 +5149,16 @@ $B.floordiv=function(x,y){var z=x/y
 if(x>min_int && x<max_int && y>min_int && y<max_int
 && z>min_int && z<max_int){return Math.floor(z)}
 else{return $B.LongInt.$dict.__floordiv__($B.LongInt(x),$B.LongInt(y))}}
-$B.mul=function(x,y){var z=x*y
+$B.mul=function(x,y){var z=(typeof x!='number' ||typeof y!='number')?
+new Number(x*y): x*y
 if(x>min_int && x<max_int && y>min_int && y<max_int
 && z>min_int && z<max_int){return z}
 else if((typeof x=='number' ||x.__class__===$B.LongInt.$dict)
 &&(typeof y=='number' ||y.__class__===$B.LongInt.$dict)){if((typeof x=='number' && isNaN(x))||
 (typeof y=='number' && isNaN(y))){return _b_.float('nan')}
 return $B.LongInt.$dict.__mul__($B.LongInt(x),$B.LongInt(y))}else{return z}}
-$B.sub=function(x,y){var z=x-y
+$B.sub=function(x,y){var z=(typeof x!='number' ||typeof y!='number')?
+new Number(x-y): x-y
 if(x>min_int && x<max_int && y>min_int && y<max_int
 && z>min_int && z<max_int){return z}
 else if((typeof x=='number' ||x.__class__===$B.LongInt.$dict)
@@ -5680,7 +5682,7 @@ function pow(){var $ns=$B.args('pow',3,{x:null,y:null,z:null},['x','y','z'],argu
 var x=$ns['x'],y=$ns['y'],z=$ns['z']
 var res=getattr(x,'__pow__')(y)
 if(z===null){return res}
-else{if(!isinstance(x,_b_.int)||!isinstance(y,_b_.int)){throw _b_.TypeError("pow() 3rd argument not allowed unless "+
+else{if(x!=_b_.int(x)||y !=_b_.int(y)){throw _b_.TypeError("pow() 3rd argument not allowed unless "+
 "all arguments are integers")}
 return getattr(res,'__mod__')(z)}}
 function $print(){var $ns=$B.args('print',0,{},[],arguments,{},'args','kw')

@@ -1174,7 +1174,8 @@ $B.is_safe_int = function(){
 }
 
 $B.add = function(x,y){
-    var z = x+y
+    var z = (typeof x!='number' || typeof y!='number') ?
+                new Number(x+y) : x+y
     if(x>min_int && x<max_int && y>min_int && y<max_int
         && z>min_int && z<max_int){return z}
     else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
@@ -1210,7 +1211,8 @@ $B.floordiv = function(x,y){
 }
 
 $B.mul = function(x,y){
-    var z = x*y
+    var z = (typeof x!='number' || typeof y!='number') ?
+            new Number(x*y) : x*y
     if(x>min_int && x<max_int && y>min_int && y<max_int
         && z>min_int && z<max_int){return z}
     else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
@@ -1221,7 +1223,8 @@ $B.mul = function(x,y){
     }else{return z}
 }
 $B.sub = function(x,y){
-    var z = x-y
+    var z = (typeof x!='number' || typeof y!='number') ?
+                new Number(x-y) : x-y
     if(x>min_int && x<max_int && y>min_int && y<max_int
         && z>min_int && z<max_int){return z}
     else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)

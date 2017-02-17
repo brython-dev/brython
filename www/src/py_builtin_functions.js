@@ -1141,7 +1141,7 @@ function pow() {
     var res = getattr(x,'__pow__')(y)
     if(z === null){return res}
     else{
-        if(!isinstance(x, _b_.int) || !isinstance(y, _b_.int)){
+        if(x!=_b_.int(x) || y != _b_.int(y)){
             throw _b_.TypeError("pow() 3rd argument not allowed unless "+
                 "all arguments are integers")
         }

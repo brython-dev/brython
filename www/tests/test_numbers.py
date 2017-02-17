@@ -22,7 +22,7 @@ assert 7.0 / 2 == 3.5
 
 y=3.14
 assert y.__class__ == float
-assert isinstance(3.14,float)
+assert isinstance(3.14, float)
 assert str(y)=="3.14"
 
 x = -3
@@ -33,6 +33,12 @@ assert x.__ceil__() == x
 assert x.__ceil__() == -3
 
 assert x.__divmod__(2) == (-2, 1)
+
+# issue 564
+x = 2
+assert isinstance(.5 * x, float)
+assert isinstance(1.0 + x, float)
+assert isinstance(3.0 - x, float)
 
 # complex numbers
 x = 8j

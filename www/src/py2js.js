@@ -2928,7 +2928,6 @@ function $FromCtx(context){
                     package = $B.imported[package]
                 }
                 if(package===undefined){
-                    console.log('_mod', _mod)
                     return 'throw SystemError("Parent module \'\' not loaded,'+
                         ' cannot perform relative import")'
                 }else if(package=='None'){
