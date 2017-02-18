@@ -736,7 +736,6 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
                     }else{
                         self.elt.setAttribute(attr1,value)
                     }
-                    console.log(self.elt)
                     return
                 }
         }
