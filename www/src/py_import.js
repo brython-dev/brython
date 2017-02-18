@@ -79,7 +79,10 @@ function $download_module(module,url,package,blocking){
         $xmlhttp = imp[0],fake_qs=imp[1],timer=imp[2],res=null,
         mod_name = module.__name__,
         no_block = Array.isArray(blocking) || blocking===false,
-        res
+        res,
+        t0 = new Date()
+
+    $B.download_time = $B.download_time || 0
 
     if(no_block){
         console.log('download non blocking', mod_name)
@@ -138,6 +141,7 @@ function $download_module(module,url,package,blocking){
         if(res == null) throw _b_.FileNotFoundError("No module named '"+mod_name+"' (res is null)")
     
         if(res.constructor===Error){throw res} // module not found
+        $B.download_time += (new Date())-t0
         return res
     }
 }

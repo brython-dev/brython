@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-02-17 18:20:01.542121"
+__BRYTHON__.compiled_date="2017-02-18 19:26:26.386170"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4069,7 +4069,7 @@ root.add(catch_node)
 if($B.profile>0){$add_profile(root,null,module)}
 if($B.debug>0){$add_line_num(root,null,module)}
 var t1=new Date().getTime()
-if($B.debug>=2){console.log('module '+module+' translated in '+(t1 - t0)+' ms')}
+if($B.debug>=2){if(module==locals_id){console.log('module '+module+' translated in '+(t1 - t0)+' ms')}}
 $B.compile_time +=t1-t0
 return root}
 function load_scripts(scripts,run_script,onerror){
@@ -6901,7 +6901,8 @@ fake_qs="?v="+(new Date().getTime())}
 var timer=setTimeout(function(){$xmlhttp.abort()
 throw _b_.ImportError("No module named '"+module+"'")},5000)
 return[$xmlhttp,fake_qs,timer]}
-function $download_module(module,url,package,blocking){var imp=$importer(),$xmlhttp=imp[0],fake_qs=imp[1],timer=imp[2],res=null,mod_name=module.__name__,no_block=Array.isArray(blocking)||blocking===false,res
+function $download_module(module,url,package,blocking){var imp=$importer(),$xmlhttp=imp[0],fake_qs=imp[1],timer=imp[2],res=null,mod_name=module.__name__,no_block=Array.isArray(blocking)||blocking===false,res,t0=new Date()
+$B.download_time=$B.download_time ||0
 if(no_block){console.log('download non blocking',mod_name)
 $xmlhttp.open('GET',url+fake_qs,true)}else{$xmlhttp.open('GET',url+fake_qs,false)}
 if($B.$CORS){$xmlhttp.onload=function(){if($xmlhttp.status==200 ||$xmlhttp.status==0){res=$xmlhttp.responseText}else{
@@ -6926,6 +6927,7 @@ $xmlhttp.send()
 if(!no_block){
 if(res==null)throw _b_.FileNotFoundError("No module named '"+mod_name+"' (res is null)")
 if(res.constructor===Error){throw res}
+$B.download_time +=(new Date())-t0
 return res}}
 $B.$download_module=$download_module
 function import_js(module,path,blocking){try{var module_contents=$download_module(module,path,undefined,blocking)
@@ -10303,7 +10305,6 @@ if(self.elt[attr1]!==undefined){self.elt[attr1]=value;return}
 if(typeof self.elt.getAttribute=='function' && 
 typeof self.elt.setAttribute=='function'){var res=self.elt.getAttribute(attr1)
 if(res!==undefined&&res!==null&&res!=''){if(value===false){self.elt.removeAttribute(attr1)}else{self.elt.setAttribute(attr1,value)}
-console.log(self.elt)
 return}}
 self.elt[attr]=value}}
 DOMNodeDict.__setitem__=function(self,key,value){self.elt.childNodes[key]=value}
