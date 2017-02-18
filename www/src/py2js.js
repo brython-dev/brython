@@ -7550,7 +7550,9 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     
     var t1 = new Date().getTime()
     if($B.debug>=2){
-        console.log('module '+module+' translated in '+(t1 - t0)+' ms')
+        if(module == locals_id){
+            console.log('module '+module+' translated in '+(t1 - t0)+' ms')
+        }
     }
     
     $B.compile_time += t1-t0
