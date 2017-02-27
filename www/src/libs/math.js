@@ -282,17 +282,44 @@ var _mod = {
     fmod:function(x,y){return float(float_check(x)%float_check(y))},
     frexp: function(x){var _l=_b_.$frexp(x);return _b_.tuple([float(_l[0]), _l[1]])}, // located in py_float.js
     fsum:function(x){
-        var res = new Number(), _it = _b_.iter(x)
+        /* Full precision summation using multiple floats for intermediate values
+        # Rounded x+y stored in hi with the round-off stored in lo.  Together
+        # hi+lo are exactly equal to x+y.  The inner loop applies hi/lo summation
+        # to each partial so that the list of partial sums remains exact.
+        # Depends on IEEE-754 arithmetic guarantees.  See proof of correctness at:
+        # www-2.cs.cmu.edu/afs/cs/project/quake/public/papers/robust-arithmetic.ps
+        */
+        var partials = [], //sorted, non-overlapping partial sums
+            res = new Number(), 
+            _it = _b_.iter(x)
         while(true){
             try{
-                var item = _b_.next(_it)
-                res += new Number(item)
+                var x = _b_.next(_it),
+                    i = 0
+                for(var j=0, len=partials.length;j<len;j++){
+                    var y = partials[j]
+                    if(Math.abs(x) < Math.abs(y)){
+                        var z = x
+                        x = y
+                        y = z
+                    }
+                    var hi = x + y,
+                        lo = y - (hi - x)
+                    if(lo){
+                        partials[i] = lo
+                        i++
+                    }
+                    x = hi
+                }
+                partials = partials.slice(0, i).concat([x])
             }catch(err){
                 if(_b_.isinstance(err, _b_.StopIteration)){break}
                 throw err
             }
         }
-        return res
+        var res = new Number(0)
+        for(var i=0; i<partials.length;i++){res += new Number(partials[i])}
+        return new Number(res)
     },
     gamma: function(x){
          //using code from http://stackoverflow.com/questions/3959211/fast-factorial-function-in-javascript
