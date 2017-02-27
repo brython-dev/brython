@@ -282,14 +282,11 @@ var _mod = {
     fmod:function(x,y){return float(float_check(x)%float_check(y))},
     frexp: function(x){var _l=_b_.$frexp(x);return _b_.tuple([float(_l[0]), _l[1]])}, // located in py_float.js
     fsum:function(x){
-        /* Full precision summation using multiple floats for intermediate values
-        # Rounded x+y stored in hi with the round-off stored in lo.  Together
-        # hi+lo are exactly equal to x+y.  The inner loop applies hi/lo summation
-        # to each partial so that the list of partial sums remains exact.
-        # Depends on IEEE-754 arithmetic guarantees.  See proof of correctness at:
-        # www-2.cs.cmu.edu/afs/cs/project/quake/public/papers/robust-arithmetic.ps
+        /* Translation into Javascript of the function msum in an Active
+           State Cookbook recipe : https://code.activestate.com/recipes/393090/
+           by Raymond Hettinger
         */
-        var partials = [], //sorted, non-overlapping partial sums
+        var partials = [],
             res = new Number(), 
             _it = _b_.iter(x)
         while(true){
