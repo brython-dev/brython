@@ -73,7 +73,7 @@
     // look at other loader options to see if we can/should do something else.
 
     if (_loader.VFS && _loader.VFS == true) {
-       _files.push('py_VFS')
+       _files.push('brython_stdlib')
     }
 
     import_file(_path,0)

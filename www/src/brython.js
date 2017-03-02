@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-02-27 21:27:11.350403"
+__BRYTHON__.compiled_date="2017-03-02 15:29:01.380904"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4138,7 +4138,8 @@ $B.profile=options.profile
 if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
 $B.static_stdlib_import=options.static_stdlib_import
 if(options.open !==undefined){_b_.open=options.open;
-console.log("DeprecationWarning: \'open\' option of \'brython\' function will be deprecated in future versions of Brython.");}
+console.log("DeprecationWarning: \'open\' option of \'brython\' "+
+"function will be deprecated in future versions of Brython.");}
 $B.$options=options
 var meta_path=[]
 var path_hooks=[]
@@ -7039,7 +7040,7 @@ var stored=$B.VFS[fullname];
 if(stored===undefined){return _b_.None;}
 var is_package=stored[2],is_builtin=$B.builtin_module_names.indexOf(fullname)> -1;
 return new_spec({name : fullname,loader: cls,
-origin : is_builtin? 'built-in' : 'py_VFS',
+origin : is_builtin? 'built-in' : 'brython_stdlib',
 submodule_search_locations: is_package?[]: _b_.None,loader_state:{stored: stored},
 cached: _b_.None,parent: is_package? fullname : parent_package(fullname),has_location: _b_.False});}}
 finder_VFS.$dict.__mro__=[_b_.object.$dict]

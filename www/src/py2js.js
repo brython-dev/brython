@@ -7729,7 +7729,8 @@ function brython(options){
     // function open() - see py_builtin_functions.js
     if (options.open !== undefined) {
         _b_.open = options.open;
-        console.log("DeprecationWarning: \'open\' option of \'brython\' function will be deprecated in future versions of Brython.");
+        console.log("DeprecationWarning: \'open\' option of \'brython\' "+
+            "function will be deprecated in future versions of Brython.");
     }
 
     $B.$options=options
@@ -7747,8 +7748,9 @@ function brython(options){
     var meta_path = []
     var path_hooks = []
 
-    // $B.use_VFS is set to true if the script py_VFS.js or brython_dist.js
-    // has been loaded in the page. In this case we use the VFS
+    // $B.use_VFS is set to true if the script brython_stdlib.js or 
+    // brython_dist.js has been loaded in the page. In this case we use the 
+    // Virtual File System (VFS)
     if($B.use_VFS){
         meta_path.push($B.$meta_path[0])
         path_hooks.push($B.$path_hooks[0])

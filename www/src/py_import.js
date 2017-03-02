@@ -407,7 +407,7 @@ finder_VFS.$dict = {
         return new_spec({name : fullname,
                          loader: cls,
                          // FIXME : Better origin string.
-                         origin : is_builtin? 'built-in' : 'py_VFS',
+                         origin : is_builtin? 'built-in' : 'brython_stdlib',
                          // FIXME: Namespace packages ?
                          submodule_search_locations: is_package? [] : _b_.None,
                          loader_state: {stored: stored},
