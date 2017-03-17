@@ -7756,12 +7756,6 @@ function brython(options){
         path_hooks.push($B.$path_hooks[0])
     }
 
-    if(options.use_compiled){
-        // Add finder using precompiled JS scripts
-        meta_path.push($B.$meta_path[3])
-        path_hooks.push($B.$path_hooks[2])
-    }
-
     if(options.static_stdlib_import!==false){
         // Add finder using static paths
         meta_path.push($B.$meta_path[1])
