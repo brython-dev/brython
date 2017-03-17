@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-03-02 15:29:01.380904"
+__BRYTHON__.compiled_date="2017-03-17 16:52:41.357084"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4145,9 +4145,6 @@ var meta_path=[]
 var path_hooks=[]
 if($B.use_VFS){meta_path.push($B.$meta_path[0])
 path_hooks.push($B.$path_hooks[0])}
-if(options.use_compiled){
-meta_path.push($B.$meta_path[3])
-path_hooks.push($B.$path_hooks[2])}
 if(options.static_stdlib_import!==false){
 meta_path.push($B.$meta_path[1])
 if($B.path.length>3){$B.path.shift()
@@ -7030,7 +7027,8 @@ var path=$B.brython_path+'Lib/'+module.__name__
 if(module.$is_package){path +='/__init__.py'}
 module.__file__=path
 if(ext=='.js'){run_js(module_contents,module.__path__,module)}
-else{run_py(module_contents,module.__path__,module,ext=='.pyc.js')}
+else{
+run_py(module_contents,module.__path__,module,ext=='.pyc.js')}
 if($B.debug>1){console.log('import '+module.__name__+' from VFS')}},find_module: function(cls,name,path){return{__class__:Loader,load_module:function(name,path){var spec=cls.$dict.find_spec(cls,name,path)
 var mod=module(name)
 $B.imported[name]=mod
@@ -7048,33 +7046,6 @@ finder_VFS.$dict.create_module.$type='classmethod'
 finder_VFS.$dict.exec_module.$type='classmethod'
 finder_VFS.$dict.find_module.$type='classmethod'
 finder_VFS.$dict.find_spec.$type='classmethod'
-function finder_compiled(){return{__class__:finder_compiled.$dict}}
-finder_compiled.__class__=$B.$factory
-finder_compiled.$dict={$factory: finder_compiled,__class__: $B.$type,__name__: 'CompiledPath',create_module : function(cls,spec){
-return _b_.None;},exec_module : function(cls,module){var _spec=_b_.getattr(module,'__spec__'),code=_spec.loader_state.code;
-module.$is_package=_spec.loader_state.is_package,delete _spec.loader_state['code'];
-run_js(code,_spec.origin,module)},find_module: function(cls,name,path){return finder_compiled.$dict.find_spec(cls,name,path)},find_spec : function(cls,fullname,path,prev_module,blocking){if(!$B.$options.use_compiled){return _b_.None }
-if($B.is_none(path)){
-path=$B.path}
-var path_entry='/compiled/'+fullname+'.js'
-var finder=$B.path_importer_cache[path_entry];
-if(finder===undefined){var hook=precompiled_hook;
-try{
-finder=(typeof hook=='function' ? hook : _b_.getattr(hook,'__call__'))(path_entry)
-finder_notfound=false;}
-catch(e){if(e.__class__ !==_b_.ImportError.$dict){throw e;}}
-if(finder_notfound){$B.path_importer_cache[path_entry]=_b_.None;}}
-var find_spec=_b_.getattr(finder,'find_spec'),fs_func=typeof find_spec=='function' ? 
-find_spec : 
-_b_.getattr(find_spec,'__call__')
-var spec=fs_func(fullname,prev_module,blocking);
-if(!$B.is_none(spec)){return spec;}
-return _b_.None;}}
-finder_compiled.$dict.__mro__=[_b_.object.$dict]
-finder_compiled.$dict.create_module.$type='classmethod'
-finder_compiled.$dict.exec_module.$type='classmethod'
-finder_compiled.$dict.find_module.$type='classmethod'
-finder_compiled.$dict.find_spec.$type='classmethod'
 function finder_stdlib_static(){return{__class__:finder_stdlib_static.$dict}}
 finder_stdlib_static.__class__=$B.$factory
 finder_stdlib_static.$dict={$factory : finder_stdlib_static,__class__ : $B.$type,__name__ : 'StdlibStatic',create_module : function(cls,spec){
@@ -7198,29 +7169,6 @@ cached: _b_.None,parent: loader_data.is_package? fullname :
 parent_package(fullname),has_location: _b_.True});}
 return _b_.None;},invalidate_caches : function(self){}}
 url_hook.$dict.__mro__=[_b_.object.$dict]
-function precompiled_hook(path_entry,hint){return{__class__: precompiled_hook.$dict,path_entry:path_entry,hint:hint }}
-precompiled_hook.__class__=$B.$factory
-precompiled_hook.$dict={$factory: precompiled_hook,__class__: $B.$type,__name__ : 'PrecompiledPathFinder',__repr__: function(self){return '<PrecompiledPathFinder' +(self.hint? " for '" + self.hint + "'":
-"(unbound)")+ ' at ' + self.path_entry + '>'},find_spec : function(self,fullname,module,blocking){var loader_data={},notfound=true,hint=self.hint,base_path='/compiled/'+ fullname+'.js'
-try{var file_info=[self.path_entry,'py',false],module={__name__:fullname,$is_package: false}
-loader_data.code=$download_module(module,file_info[0],undefined,blocking);
-notfound=false;
-loader_data.type=file_info[1];
-loader_data.is_package=file_info[2];
-if(hint===undefined){self.hint=file_info[1];
-$B.path_importer_cache[self.path_entry]=self;}
-if(loader_data.is_package){
-$B.path_importer_cache[base_path + '/']=
-url_hook(base_path + '/',self.hint);}
-loader_data.path=file_info[0];}catch(err){}
-if(!notfound){return new_spec({name : fullname,loader: finder_compiled,origin : loader_data.path,
-submodule_search_locations: loader_data.is_package?[base_path]:
-_b_.None,loader_state: loader_data,
-cached: _b_.None,parent: loader_data.is_package? fullname :
-parent_package(fullname),has_location: _b_.True});}
-return _b_.None;},invalidate_caches : function(self){}}
-precompiled_hook.$dict.__mro__=[_b_.object.$dict]
-$B.$path_hooks=[vfs_hook,url_hook,precompiled_hook];
 $B.path_importer_cache={};
 var _sys_paths=[[$B.script_dir + '/','py'],[$B.brython_path + 'Lib/','py'],[$B.brython_path + 'Lib/site-packages/','py'],[$B.brython_path + 'libs/','js']];
 for(i=0;i < _sys_paths.length;++i){var _path=_sys_paths[i],_type=_path[1];
@@ -7267,7 +7215,8 @@ var norm_parts=[],prefix=true;
 for(var i=0,_len_i=parts.length;i < _len_i;i++){var p=parts[i];
 if(prefix && p==''){
 elt=norm_parts.pop();
-if(elt===undefined){throw _b_.ImportError("Parent module '' not loaded, cannot perform relative import");}}
+if(elt===undefined){throw _b_.ImportError("Parent module '' not loaded, "+
+"cannot perform relative import");}}
 else{
 prefix=false;
 norm_parts.push(p.substr(0,2)=='$$' ? p.substr(2): p)}}
@@ -7306,7 +7255,8 @@ throw _b_.ImportError("cannot import name '"+name+"'")}}}}}}
 $B.$import_non_blocking=function(mod_name,func){console.log('import non blocking',mod_name)
 $B.$import(mod_name,[],[],{},[false,func])
 console.log('after async import',$B.imported[mod_name])}
-$B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path,finder_compiled];
+$B.$path_hooks=[vfs_hook,url_hook];
+$B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path];
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!='/'){path=path + '/' }
 var value=(filetype=='none')? _b_.None : url_hook(path,filetype);
 $B.path_importer_cache[path]=value;}
@@ -10941,13 +10891,13 @@ if(options !==undefined){if(Array.isArray(options)){for(var i=0,len=options.leng
 typeof options[i]=='number'){res.push(options[i])}else{throw _b_.ValueError("can only pass strings or numbers in options.args")}}}}}
 return res},__set__: function(){throw _b_.TypeError("Read only property 'sys.argv'")}},modules:{
 __get__: function(){return _b_.dict($B.JSObject($B.imported))},__set__: function(self,obj,value){throw _b_.TypeError("Read only property 'sys.modules'")}},path:{
-__get__: function(){return $B.path},__set__: function(self,obj,value){$B.path=value;console.log('path set to',$B.path)}},meta_path:{
+__get__: function(){return $B.path},__set__: function(self,obj,value){$B.path=value;}},meta_path:{
 __get__: function(){return $B.meta_path},__set__: function(self,obj,value){$B.meta_path=value }},path_hooks:{
 __get__: function(){return $B.path_hooks},__set__: function(self,obj,value){$B.path_hooks=value }},path_importer_cache:{
 __get__: function(){return _b_.dict($B.JSObject($B.path_importer_cache))},__set__: function(self,obj,value){throw _b_.TypeError("Read only property"+
 " 'sys.path_importer_cache'")}},stderr:{
 __get__: function(){return $B.stderr},__set__: function(self,obj,value){$B.stderr=value},write: function(data){_b_.getattr($B.stderr,"write")(data)}},stdout:{
-__get__: function(){return $B.stdout},__set__: function(self,obj,value){$B.stdout=value},write: function(data){console.log('stdout write');_b_.getattr($B.stdout,"write")(data)}},stdin : $B.stdin}
+__get__: function(){return $B.stdout},__set__: function(self,obj,value){$B.stdout=value},write: function(data){_b_.getattr($B.stdout,"write")(data)}},stdin : $B.stdin}
 function load(name,module_obj){
 module_obj.__class__=$B.$ModuleDict
 module_obj.__name__=name

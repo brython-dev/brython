@@ -271,7 +271,8 @@
             if ($B.is_none(module_name)) {
                 module_name = '__main__'+$B.UUID()
             }
-            return $B.py2js(src,module_name,module_name,'__builtins__').to_js()
+            return $B.py2js(src, module_name, module_name, 
+                '__builtins__').to_js()
         },
         pyobj2jsobj:function(obj){ return $B.pyobj2jsobj(obj)},
         jsobj2pyobj:function(obj){ return $B.jsobj2pyobj(obj)}
@@ -323,7 +324,7 @@
         path: {
             __get__: function(){return $B.path},
             __set__: function(self, obj, value){ 
-                 $B.path = value; console.log('path set to', $B.path) 
+                 $B.path = value; 
             }
         },
         meta_path: {
@@ -351,7 +352,7 @@
         stdout: {
             __get__: function(){return $B.stdout},
             __set__: function(self, obj, value){$B.stdout = value},
-            write: function(data){console.log('stdout write');_b_.getattr($B.stdout,"write")(data)}
+            write: function(data){_b_.getattr($B.stdout,"write")(data)}
         },
         stdin : $B.stdin
     }
