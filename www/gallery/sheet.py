@@ -48,67 +48,6 @@ def update(cell):
         cell.text = eval(content[1:])
     else:
         cell.text = content
-    
-def doc_keydown(ev):
-    is_arrow = ev.keyCode in [9, #tab
-        37, # left
-        39, # right
-        38, #up
-        40, #down
-        13, # CR
-        27  # escape
-        ]
-    if is_arrow:
-        move_sel(ev)
-
-def move_sel(ev):
-    cell = selected
-    row = cell.closest("tr")
-    table = cell.closest("table")
-    
-    # jump to next cell
-    if ev.keyCode==39 or (ev.keyCode==9 and not ev.shiftKey):
-        # right
-        next_cell = cell.nextSibling or cell
-        mark_selected(next_cell)
-    elif ev.keyCode==37 or (ev.keyCode==9 and ev.shiftKey):
-        # left
-        if cell.previousSibling.previousSibling:
-            mark_selected(cell.previousSibling)
-    elif ev.keyCode in [40, 13, 38]:
-        # down or CR or up
-        # get column number
-        col = 0
-        while cell.previousSibling:
-            col += 1
-            cell = cell.previousSibling
-        if ev.keyCode == 38:
-            # up
-            if row.previousSibling.previousSibling:
-                next_row = row.previousSibling
-            else:
-                next_row = row
-        else:
-            # down or CR
-            next_row = row.nextSibling or row
-        next_cell = next_row.childNodes[col]
-        mark_selected(next_cell)
-    elif ev.keyCode == 27:
-        # escape
-        cell.text = cell.initial
-
-    ev.preventDefault()
-    ev.stopPropagation()
-
-def select(ev):
-    global selected
-    
-    clear_selections()
-    cell = ev.target
-    cell.classList.add("selected")
-    selected = cell
-    selected.focus()
-
         
 # Functions to open/save spredsheets
 prefix = 'brython_spreadsheet'
@@ -209,42 +148,17 @@ def stop_menu(*args):
         current_menu.close()
     current_menu = None
 
-document.bind('keydown', doc_keydown)
 document.bind('click', stop_menu)
 
 menu_file = None
 
-def focus(ev):
-    """Cell gets focus"""
-    # save initial value in case user hits the Escape key
-    selected.initial = ev.target.text
-    # set position cursor at text end
-    _range = document.createRange()
-    sel = window.getSelection()
-    if len(selected.childNodes):
-        _range.setStart(selected.firstChild, len(ev.target.text))
-        _range.collapse(True)
-        sel.removeAllRanges()
-        sel.addRange(_range)
-    document["current"].text = ev.target.text
-
-def keyup(ev):
-    document["current"].text = ev.target.text
-
 RegExp = window.RegExp.new
 String = window.String.new
 
-def blur(ev):
-    # check cells with formulas
-    for cell in document.get(selector="td"):
-        if cell.text.startswith("="):
-            formula = cell.text[1:]
-            pattern = RegExp("([A-Z]+)([0-9]+)", "g")
-            print(formula, String(formula).replace(pattern, 'cell("$1$2")'))
-
 def clear_selections():
 
-    for klass in "column-select", "selected", "row-select":
+    for klass in ("column-select", "selected", "row-select", "selection-top",
+            "selection-bottom", "selection-left", "selection-right"):
         for cell in document.get(selector="."+klass):
             cell.classList.remove(klass)
     
@@ -336,7 +250,7 @@ class RowHead(html.TH):
     def select_row(self, ev):
         """Select all cells in a row"""
         global mouseDown, selected_line
-
+        
         # remove caret from selected cell        
         document.getSelection().removeAllRanges()
 
@@ -344,7 +258,7 @@ class RowHead(html.TH):
         mouseDown += 1
     
         clear_selections()
-        Row(self).mark_cells()
+        Row(self.closest('tr')).mark_cells()
         ev.preventDefault()
         ev.stopPropagation()
 
@@ -387,21 +301,151 @@ class Row:
         # column number
         for cell in self.tr.get(selector="td"):
             cell.classList.add("row-select")
-    
+
+
+def coords(td):
+    row_num = Row(td.closest('tr')).row_num()
+    col_num = 0
+    cell = td
+    while cell.previousSibling:
+        col_num += 1
+        cell = cell.previousSibling
+    return col_num-1, row_num
         
-def select_row(ev):
-    """Select cells in a row"""
-    clear_selections()
-    # row number
-    cell = ev.target
-    tr = cell.closest('tr')
+class Cell(html.TD):
+    
+    def __init__(self):
+        html.TD.__init__(self, contentEditable="true",
+            style=dict(padding='2px'))
+        self.bind("mousedown", self.select)
+        self.bind("mouseenter", self.mousemove)
+        self.bind("mouseleave", self.mousemove)
+        self.bind("mouseup", self.mouseup)
+        self.bind("focus", self.focus)
+        self.bind("keydown", self.keydown)
+        self.bind("keyup", self.keyup)
+        self.bind("blur", self.blur)
 
-    cells = tr.get(selector="td")
-    for cell in cells:
-        cell.classList.add("column-select")
+    def blur(self, ev):
+        # check cells with formulas
+        for cell in document.get(selector="td"):
+            if cell.text.startswith("="):
+                formula = cell.text[1:]
+                pattern = RegExp("([A-Z]+)([0-9]+)", "g")
+                print(formula, String(formula).replace(pattern, 'cell("$1$2")'))
+            
+    def extend_selection(self, ev):
+        # mark all cells from selected to ev.target
+        #ev.target.classList.add('selected')
+        clear_selections()
+        c0, r0 = coords(selected)
+        c1, r1 = coords(ev.target)
+        if c0 > c1:
+            c0, c1 = c1, c0
+        if r0 > r1:
+            r0, r1 = r1, r0
+        rows = document.get(selector="tr")
+        for cell in rows[r0].get(selector="td")[c0:c1+1]:
+            cell.classList.add("selection-top")
+        for cell in rows[r1].get(selector="td")[c0:c1+1]:
+            cell.classList.add("selection-bottom")
+        for row in rows[r0:r1+1]:
+            row.childNodes[c0+1].classList.add("selection-left")
+            row.childNodes[c1+1].classList.add("selection-right")
 
-    ev.preventDefault()
-    ev.stopPropagation()
+    def select(self, ev):
+        global selected, mouseDown
+        
+        clear_selections()
+        self.classList.add("selected")
+        mouseDown += 1
+        selected = self
+        selected.focus()
+
+    def focus(self, ev):
+        """Cell gets focus"""
+        # save initial value in case user hits the Escape key
+        self.initial = self.text
+        # set position cursor at text end
+        _range = document.createRange()
+        sel = window.getSelection()
+        if len(self.childNodes):
+            _range.setStart(self.firstChild, len(self.text))
+            _range.collapse(True)
+            sel.removeAllRanges()
+            sel.addRange(_range)
+        document["current"].text = self.text
+    
+    def keyup(self, ev):
+        document["current"].text = self.text
+
+    def keydown(self, ev):
+        if ev.keyCode in [
+                9, #tab
+                37, # left
+                39, # right
+                38, # up
+                40, # down
+                13, # CR
+                27  # escape
+            ]:
+            self.move_sel(ev)
+    
+    def mousemove(self, ev):
+        print('mouse move')
+        if mouseDown:
+            self.extend_selection(ev)
+
+    def mouseup(self, ev):
+        global mouseDown
+        mouseDown = 0
+
+    def move_sel(self, ev):
+        cell = selected
+        row = cell.closest("tr")
+        table = cell.closest("table")
+        
+        # jump to next cell
+        if ev.keyCode==39 or (ev.keyCode==9 and not ev.shiftKey):
+            # right
+            next_cell = cell.nextSibling or cell
+            self.mark_selected(next_cell)
+        elif ev.keyCode==37 or (ev.keyCode==9 and ev.shiftKey):
+            # left
+            if cell.previousSibling.previousSibling:
+                self.mark_selected(cell.previousSibling)
+        elif ev.keyCode in [40, 13, 38]:
+            # down or CR or up
+            # get column number
+            col = 0
+            while cell.previousSibling:
+                col += 1
+                cell = cell.previousSibling
+            if ev.keyCode == 38:
+                # up
+                if row.previousSibling.previousSibling:
+                    next_row = row.previousSibling
+                else:
+                    next_row = row
+            else:
+                # down or CR
+                next_row = row.nextSibling or row
+            next_cell = next_row.childNodes[col]
+            self.mark_selected(next_cell)
+        elif ev.keyCode == 27:
+            # escape
+            cell.text = cell.initial
+    
+        ev.preventDefault()
+        ev.stopPropagation()
+
+    def mark_selected(self, td):
+        global selected
+        selected = td
+        if not mouseDown:
+            clear_selections()
+        td.classList.add('selected')
+        td.focus()
 
 def load(sheet_name=None):
     global current_cell_info,menu_file
@@ -439,21 +483,10 @@ def load(sheet_name=None):
             line <= RowHead(row+1, Class="row-head")
             t <= line
             srow = row
-        cell = html.TD(contentEditable="true",
-            style=dict(padding='2px'))
-        cell.bind("click", select)
-        cell.bind("focus", focus)
-        cell.bind("keyup", keyup)
-        cell.bind("blur", blur)
-        cell.info = {'entry':''}
-        line <= cell
 
+        line <= Cell()
 
     panel <= html.DIV(t, style=dict(float='left'))
-
-
-    for cell in document.get(selector="th.row-head"):
-        cell.bind("mousedown", select_row)
 
     t.get(selector='TD')[0].dispatchEvent(window.MouseEvent.new("click"))
 
