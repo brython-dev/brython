@@ -37,10 +37,10 @@ class ToDir:
 
 instanceToDir = ToDir()
 
-dictToDir=({k: getattr(instanceToDir,k) 
+dictToDir=({k: getattr(instanceToDir,k)
     for k in dir(instanceToDir) if '__' not in k})
 
-castdictToDir={str(k): getattr(instanceToDir,k) 
+castdictToDir={str(k): getattr(instanceToDir,k)
     for k in dir(instanceToDir) if '__' not in k}
 
 
@@ -280,7 +280,7 @@ assert repr(type(None)) == "<class 'NoneType'>"
 
 # nonlocal
 def f():
-    def g(): 
+    def g():
         nonlocal t
         return t
     t = 1
@@ -420,7 +420,7 @@ class Cmp:
 
     def __eq__(self, other):
         return self.arg == other
-        
+
 a=Cmp(1)
 b=Cmp(1)
 
@@ -519,7 +519,7 @@ n = 1
 for n in range(n): pass
 assert n == 0
 
-#issue 301 
+#issue 301
 t = 1,2
 assertRaises(TypeError, t.__setitem__, 0, 1)
 
@@ -646,10 +646,10 @@ except SystemError as ie:
     assert str(ie)=="Parent module '' not loaded, cannot perform relative import"
 
 # issue 343
-a76gf = 0   
+a76gf = 0
 
 def f():
-    a76gf = 1   
+    a76gf = 1
     def g():
         nonlocal a76gf
         a76gf=a76gf+1
@@ -659,7 +659,7 @@ f()
 
 # issue 344
 def f():
-    a2fx = 1   
+    a2fx = 1
     def g():
         nonlocal a2fx
         a2fx = 2
@@ -971,7 +971,7 @@ def extend_instance(obj, cls):
     base_cls = obj.__class__
     base_cls_name = obj.__class__.__name__
     obj.__class__ = type("Extended"+base_cls_name, (cls,base_cls),{})
-    
+
 class Mixin(object):
     def __setattr__(self, name, value):
         if not name.startswith('_'):
@@ -1144,7 +1144,7 @@ def f():
 
 def g(unused_arg=f()):
     pass
- 
+
 assert nbcalls == 1
 
 # issue 499
@@ -1183,6 +1183,14 @@ class Derived(Base):
 assert Derived.test() == Derived
 d = Derived()
 assert d.test() == Derived
+
+# Issue 572: Sort should be stable
+words = ["Bed", "Axe", "Cat", "Court", "Axle", "Beer"]
+words.sort()
+words.sort(key=len, reverse=True)
+
+assert words == ['Court', 'Axle', 'Beer', 'Axe', 'Bed', 'Cat']
+
 
 # ==========================================
 # Finally, report that all tests have passed
