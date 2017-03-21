@@ -75,7 +75,8 @@ if args.modules:
     if os.path.exists(include_path):
         with open(include_path, encoding="utf-8") as fobj:
             bundle_list = [m.strip() for m in fobj if m.strip()]
-        mods = {k:v for (k, v) in mods.items() if k in bundle_list}
+            print('bundled modules', bundle_list)
+            mods = {k:v for (k, v) in mods.items() if k in bundle_list}
     
     # save new version of brython_modules
     with open("brython_modules.js", "w", encoding="utf-8") as out:

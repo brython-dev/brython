@@ -103,6 +103,10 @@ def minify(src, preserve_lines=False):
                 last_type in [tokenize.NAME, tokenize.NUMBER]:
                 # for cases like "return b'x'"
                 out += ' '
+            elif item.type == tokenize.NAME \
+                and last_item.type == tokenize.OP and last_item.string == '.':
+                # special case : from . import X
+                out += ' '
             out += item.string
 
         line = item.end[0]

@@ -103,8 +103,8 @@ def run():
     
     res = res.replace('context', 'C')
     
-    with open(abs_path('brython.js'), 'w') as the_brythonjs_file_output:
-        the_brythonjs_file_output.write(res)
+    with open(abs_path('brython.js'), 'w') as out:
+        out.write(res)
     
     print(('size : originals %s compact %s gain %.2f' %
           (src_size, len(res), 100 * (src_size - len(res)) / src_size)))
@@ -114,28 +114,22 @@ def run():
     try:
         import make_VFS  # isort:skip
     except ImportError:
-        print("Cannot find make_VFS, so we won't make py_VFS.js")
+        print("Cannot find make_VFS, so we won't make brython_stdlib.js.js")
         make_VFS = None
         sys.exit()
     
-    make_VFS.process(os.path.join(pdir, 'www', 'src', 'py_VFS.js'))
+    make_VFS.process(os.path.join(pdir, 'www', 'src', 'brython_stdlib.js'))
     # make distribution with core + libraries
     src_dir = os.path.join(pdir, 'www', 'src')
     with open(os.path.join(src_dir, 'brython_dist.js'), 'w') as distrib_file:
         distrib_file.write(open(os.path.join(src_dir, 'brython.js')).read())
-        distrib_file.write(open(os.path.join(src_dir, 'py_VFS.js')).read())
-
-    # create brython_stdlib.js, new alias for py_VFS.js
-    shutil.copyfile(os.path.join(src_dir, 'py_VFS.js'),
-        os.path.join(src_dir, 'brython_stdlib.js'))
+        distrib_file.write(open(os.path.join(src_dir, 'brython_stdlib.js')).read())
 
     # copy files in folder /setup
     sdir = os.path.join(pdir, 'setup', 'data')
-    shutil.copyfile(os.path.join(src_dir, 'brython.js'),
-        os.path.join(sdir, 'brython.js'))
-    shutil.copyfile(os.path.join(src_dir, 'py_VFS.js'),
-        os.path.join(sdir, 'brython_stdlib.js'))
-
+    for f in ['brython.js', 'brython_stdlib.js']:
+        shutil.copyfile(os.path.join(src_dir, f), os.path.join(sdir, f))
+   
     # create zip files    
     name = 'Brython-{}'.format(vname)
     dest_path = os.path.join(sdir, name)

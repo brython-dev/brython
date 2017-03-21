@@ -2036,7 +2036,6 @@ function $DefCtx(context){
 
         // Get id of global scope
         var global_scope = scope
-        if(global_scope.parent_block===undefined){alert('undef '+global_scope);console.log(global_scope)}
         while(global_scope.parent_block.id !== '__builtins__'){
             global_scope=global_scope.parent_block
         }
@@ -2062,14 +2061,21 @@ function $DefCtx(context){
 
         // Push id in frames stack
         var enter_frame_node = new $Node(),
-            js = ';$B.frames_stack.push([$local_name, $locals,'+
-                '"'+global_scope.id+'", '+global_ns+']);' 
+            js = ';var $top_frame = [$local_name, $locals,'+
+                '"'+global_scope.id+'", '+global_ns+
+                ']; $B.frames_stack.push($top_frame); var $stack_length = '+
+                '$B.frames_stack.length;'
         if ($B.profile > 1) {
-            if(this.scope.ntype=='class'){fname=this.scope.context.tree[0].name+'.'+this.name}
+            if(this.scope.ntype=='class'){
+                fname=this.scope.context.tree[0].name+'.'+this.name
+            }
             else fname = this.name
-            if (node.parent && node.parent.id) {fmod = node.parent.id.slice(0,node.parent.id.indexOf('_'))}
+            if (node.parent && node.parent.id) {
+                fmod = node.parent.id.slice(0,node.parent.id.indexOf('_'))
+            }
             else fmod='';
-            js = ";$B.$profile.call('"+fmod+"','"+fname+"',"+node.line_num+",$locals.$line_info)"+js;
+            js = ";$B.$profile.call('"+fmod+"','"+fname+"',"+
+                node.line_num+",$locals.$line_info)"+js;
         }
         enter_frame_node.enter_frame = true
         new $NodeJSCtx(enter_frame_node,js)
@@ -3853,6 +3859,7 @@ function $ListOrTupleCtx(context,real){
                     
                 var js = root.to_js()
                 
+                root = null
                 $B.clear_ns(listcomp_name)
                 delete $B.$py_src[listcomp_name]
 
@@ -4383,9 +4390,16 @@ function $ReturnCtx(context){
     // for optimisation
     var node = $get_node(this)
     while(node.parent){
-        if(node.parent.context && node.parent.context.tree[0].type=='for'){
-            node.parent.context.tree[0].has_return = true
-            break
+        if(node.parent.context){
+            var elt = node.parent.context.tree[0]
+            if(elt.type=='for'){
+                elt.has_return = true
+                break
+            }else if(elt.type=='try'){
+                elt.has_return = true
+            }else if(elt.type=='single_kw' && elt.token=='finally'){
+                elt.has_return = true
+            }
         }
         node = node.parent
     }
@@ -4401,55 +4415,13 @@ function $ReturnCtx(context){
         }
         var scope = $get_scope(this)
         if(scope.ntype=='generator'){
-            var js = 'return [$B.generator_return(' + $to_js(this.tree)+
-                ')]'
-            return js
+            return 'return [$B.generator_return(' + $to_js(this.tree)+')]'
         }
-        // In most cases, returning from a function means leaving the 
-        // execution frame ; but if the return is in a "try" with a "finally"
-        // clause, we must remain in the same frame
-        var node = $get_node(this), pnode, flag,
-            leave_frame = true,
-            in_try = false
-        
-        while(node && leave_frame){
-            if(node.is_try){
-                in_try = true
-                pnode = node.parent, flag=false
-                for(var i=0;i<pnode.children.length;i++){
-                    var child = pnode.children[i]
-                    if(!flag && child===node){flag=true;continue}
-                    if(flag){
-                        if(child.context.tree[0].type=="single_kw" &&
-                            child.context.tree[0].token=="finally"){
-                                leave_frame = false
-                                break
-                        }
-                    }
-                }
-            }
-            node = node.parent
-        }
-        
-        // Executing the target of "return" might raise an exception.
-        
-        //leave_frame = true
-        
-        if(leave_frame && !in_try){
-            // Computing the target of "return" may raise an exception
-            // If the return is in a try clause, this exception is handled
-            // somewhere else
-            var res = 'try{var $res = '+$to_js(this.tree)+';'+
-                '$B.leave_frame($local_name);return $res}catch(err){'+
-                '$B.leave_frame($local_name);throw err}'
-        }else if(leave_frame){
-            var res = 'var $res = '+$to_js(this.tree)+';'+
-                '$B.leave_frame($local_name);return $res'
-        }else{
-            var res = "return "+$to_js(this.tree)
-        }
-        //var res = "return "+$to_js(this.tree)
-        return res
+        // Returning from a function means leaving the execution frame
+        // If the return is in a try block with a finally block, the frames
+        // will be restored when entering "finally"
+        return 'var $res = '+$to_js(this.tree)+';'+
+            '$B.leave_frame($local_name);return $res'
     }
 }
 
@@ -4473,7 +4445,7 @@ function $SingleKwCtx(context,token){
         if(pctx.tree.length>0){
             var elt = pctx.tree[0]
             if(elt.type=='for' || 
-elt.type=='asyncfor' ||
+                elt.type=='asyncfor' ||
                 (elt.type=='condition' && elt.token=='while')){
                 elt.has_break = true
                 elt.else_node = $get_node(this)
@@ -4483,6 +4455,23 @@ elt.type=='asyncfor' ||
     }
 
     this.toString = function(){return this.token}
+    
+    this.transform = function(node, rank){
+        // If node is "finally" there might have been a "return" or a
+        // "raise" in the matching "try". In this case the frames stack has
+        // been popped from. We must add code to restore it, and to re-pop
+        // when exiting the "finally" block
+        if(this.token=='finally'){
+            var scope = $get_scope(this)
+            if(scope.ntype!='generator'){
+                var scope_id = scope.id.replace(/\./g, '_'),
+                    js = 'var $exit;if($B.frames_stack.length<$stack_length)'+
+                    '{$exit=true;$B.frames_stack.push($top_frame)}'
+                node.insert(0, $NodeJS(js))
+                node.add($NodeJS('if($exit){$B.leave_frame("'+scope_id+'")}'))
+            }
+        }
+    }
     
     this.to_js = function(){
         this.js_processed=true
@@ -4689,12 +4678,11 @@ function $TryCtx(context){
         // Transform node into Javascript 'try' (necessary if
         // "try" inside a "for" loop)
         // add a boolean $failed, used to run the 'else' clause
-        var js = $var+'=false;'+
-            // '$locals["$frame'+$loop_num+'"]=$B.frames_stack.slice();'+
-            // 'console.log("save frames", $B.last($B.frames_stack)[0]);'+
+        var js = $var+'=false;\n'+' '.repeat(node.indent+8)+
             'try'
         new $NodeJSCtx(node, js)
         node.is_try = true // used in generators
+        node.has_return = this.has_return
         
         // Insert new 'catch' clause
         var catch_node = new $Node()
@@ -4976,7 +4964,9 @@ function $WithCtx(context){
         new $NodeJSCtx(finally_node,'finally')
         finally_node.context.type = 'single_kw'
         finally_node.context.token = 'finally'
+        finally_node.context.in_ctx_manager = true
         finally_node.is_except = true
+        finally_node.in_ctx_manager = true
         var fbody = new $Node()
         new $NodeJSCtx(fbody,'if($exc'+num+'){$ctx_manager_exit'+num+
             '(None,None,None)}')
@@ -4990,7 +4980,7 @@ function $WithCtx(context){
 
     this.to_js = function(){
         this.js_processed=true
-        var indent = $get_node(this).indent, h=' '.repeat(indent),
+        var indent = $get_node(this).indent, h=' '.repeat(indent+4),
             num = this.num
         var res = 'var $ctx_manager'+num+' = '+this.tree[0].to_js()+
             '\n'+h+'var $ctx_manager_exit'+num+
@@ -7527,10 +7517,12 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
         root.insert(offset++,line_node)
     }
 
-    var enter_frame_pos = offset
-    root.insert(offset++, $NodeJS('$B.enter_frame(["'+
-        locals_id.replace(/\./g,'_')+'", '+local_ns+','+
-        '"'+module.replace(/\./g,'_')+'", '+global_ns+', "a"]);\n'))
+    var enter_frame_pos = offset,
+        js = 'var $top_frame = ["'+locals_id.replace(/\./g,'_')+'", '+
+            local_ns+', "'+module.replace(/\./g,'_')+'", '+global_ns+
+            ', "a"]; $B.frames_stack.push($top_frame); var $stack_length = '+
+            '$B.frames_stack.length;'
+    root.insert(offset++, $NodeJS(js))
 
     // Wrap code in a try/finally to make sure we leave the frame
     var try_node = new $NodeJS('try'),
@@ -7558,7 +7550,9 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     
     var t1 = new Date().getTime()
     if($B.debug>=2){
-        console.log('module '+module+' translated in '+(t1 - t0)+' ms')
+        if(module == locals_id){
+            console.log('module '+module+' translated in '+(t1 - t0)+' ms')
+        }
     }
     
     $B.compile_time += t1-t0
@@ -7649,15 +7643,16 @@ function run_script(script){
     // script has attributes url, src, name
 
     $B.$py_module_path[script.name]=script.url
+    var root, js
 
     try{
         // Conversion of Python source code to Javascript
 
-        var $root = $B.py2js(script.src,script.name,script.name,'__builtins__')
-        var $js = $root.to_js()
-        if($B.debug>1){console.log($js)}
+        root = $B.py2js(script.src,script.name,script.name,'__builtins__')
+        js = root.to_js()
+        if($B.debug>1){console.log(js)}
         // Run resulting Javascript
-        eval($js)
+        eval(js)
         //$B.imported[script.name] = $locals
     }catch($err){
         if($B.debug>1){
@@ -7690,6 +7685,8 @@ function run_script(script){
         // Throw the error to stop execution
         throw $err
     }finally{
+        root = null
+        js = null
         $B.clear_ns(script.name)
     }
 }
@@ -7732,7 +7729,8 @@ function brython(options){
     // function open() - see py_builtin_functions.js
     if (options.open !== undefined) {
         _b_.open = options.open;
-        console.log("DeprecationWarning: \'open\' option of \'brython\' function will be deprecated in future versions of Brython.");
+        console.log("DeprecationWarning: \'open\' option of \'brython\' "+
+            "function will be deprecated in future versions of Brython.");
     }
 
     $B.$options=options
@@ -7750,17 +7748,12 @@ function brython(options){
     var meta_path = []
     var path_hooks = []
 
-    // $B.use_VFS is set to true if the script py_VFS.js or brython_dist.js
-    // has been loaded in the page. In this case we use the VFS
+    // $B.use_VFS is set to true if the script brython_stdlib.js or 
+    // brython_dist.js has been loaded in the page. In this case we use the 
+    // Virtual File System (VFS)
     if($B.use_VFS){
         meta_path.push($B.$meta_path[0])
         path_hooks.push($B.$path_hooks[0])
-    }
-
-    if(options.use_compiled){
-        // Add finder using precompiled JS scripts
-        meta_path.push($B.$meta_path[3])
-        path_hooks.push($B.$path_hooks[2])
     }
 
     if(options.static_stdlib_import!==false){
@@ -7856,7 +7849,7 @@ function brython(options){
     var first_script = true, module_name;
     if(options.ipy_id!==undefined){
         module_name='__main__';
-        var $src = "";
+        var $src = "", js, root
         $B.$py_module_path[module_name] = $href;
         for(var $i=0;$i<$elts.length;$i++){
             var $elt = $elts[$i];
@@ -7865,17 +7858,20 @@ function brython(options){
         try{
             // Conversion of Python source code to Javascript
 
-            var $root = $B.py2js($src,module_name,module_name,'__builtins__')
-            //earney
-            var $js = $root.to_js()
-            if($B.debug>1) console.log($js)
+            root = $B.py2js($src,module_name,module_name,'__builtins__')
+            js = root.to_js()
+            if($B.debug>1) console.log(js)
 
             // Run resulting Javascript
-            eval($js)
+            eval(js)
             
             $B.clear_ns(module_name)
+            root = null
+            js = null
             
         }catch($err){
+            root = null
+            js = null
             console.log($err)
             if($B.debug>1){
                 console.log($err)

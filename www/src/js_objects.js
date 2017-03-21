@@ -103,7 +103,8 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
         if(pyobj.js_func!==undefined){return pyobj.js_func}
         return pyobj.js
 
-    }else if(klass.__mro__.indexOf($B.DOMNodeDict)>-1){
+    }else if(klass===$B.DOMNodeDict || 
+        klass.__mro__.indexOf($B.DOMNodeDict)>-1){
 
         // instances of DOMNode or its subclasses are transformed into the 
         // underlying DOM element

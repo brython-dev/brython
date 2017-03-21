@@ -261,6 +261,8 @@ $B.clear_ns = function(name){
     var len = name.length
     for(var key in __BRYTHON__.modules){
         if(key.substr(0, len)==name){
+            __BRYTHON__.modules[key] = null
+            __BRYTHON__.bound[key] = null
             delete __BRYTHON__.modules[key]
             delete __BRYTHON__.bound[key]
         }
@@ -354,8 +356,8 @@ $B.$JS2Py = function(src){
     if(typeof src=="object"){
         if($B.$isNode(src)) return $B.DOMNode(src)
         if($B.$isEvent(src)) return $B.$DOMEvent(src)
-        if((Array.isArray(src) &&Object.getPrototypeOf(src)===Array.prototype)||
-            $B.$isNodeList(src)){
+        if($B.$isNodeList(src)) return $B.DOMNode(src)
+        if(Array.isArray(src) &&Object.getPrototypeOf(src)===Array.prototype){
             var res = [], pos=0
             for(var i=0,_len_i=src.length;i<_len_i;i++) res[pos++]=$B.$JS2Py(src[i])
             return res
@@ -1003,6 +1005,11 @@ $B.enter_frame = function(frame){
 $B.leave_frame = function(arg){
     // Leave execution frame
     if($B.frames_stack.length==0){console.log('empty stack');return}
+    /*
+    if(arg.replace(/\./g, '_') != $B.last($B.frames_stack)[0] && arg.substr(0,4)!='$gen'){
+        console.log('leave', arg, 'top stack', $B.last($B.frames_stack)[0])
+    }
+    */
     $B.frames_stack.pop()
 }
 
@@ -1169,7 +1176,8 @@ $B.is_safe_int = function(){
 }
 
 $B.add = function(x,y){
-    var z = x+y
+    var z = (typeof x!='number' || typeof y!='number') ?
+                new Number(x+y) : x+y
     if(x>min_int && x<max_int && y>min_int && y<max_int
         && z>min_int && z<max_int){return z}
     else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
@@ -1205,7 +1213,8 @@ $B.floordiv = function(x,y){
 }
 
 $B.mul = function(x,y){
-    var z = x*y
+    var z = (typeof x!='number' || typeof y!='number') ?
+            new Number(x*y) : x*y
     if(x>min_int && x<max_int && y>min_int && y<max_int
         && z>min_int && z<max_int){return z}
     else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
@@ -1216,7 +1225,8 @@ $B.mul = function(x,y){
     }else{return z}
 }
 $B.sub = function(x,y){
-    var z = x-y
+    var z = (typeof x!='number' || typeof y!='number') ?
+                new Number(x-y) : x-y
     if(x>min_int && x<max_int && y>min_int && y<max_int
         && z>min_int && z<max_int){return z}
     else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)

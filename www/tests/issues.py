@@ -1184,6 +1184,11 @@ assert Derived.test() == Derived
 d = Derived()
 assert d.test() == Derived
 
+# issue 563
+assert str(False + False) == '0'
+assert False + True == 1
+assert True + True == 2
+
 # Issue 572: Sort should be stable
 words = ["Bed", "Axe", "Cat", "Court", "Axle", "Beer"]
 words.sort()

@@ -608,8 +608,7 @@ _b_.int = int
 var $BoolDict = _b_.bool.$dict
 
 $BoolDict.__add__ = function(self,other){
-    if(self.valueOf()) return other + 1;
-    return other;
+    return (other ? 1 : 0)+(self ? 1 : 0)
 }
 
 $BoolDict.__and__ = function(self, other){
@@ -617,11 +616,11 @@ $BoolDict.__and__ = function(self, other){
 }
 
 $BoolDict.__eq__ = function(self,other){
-    return self.valueOf() ? bool(other) : !bool(other)
+    return self ? bool(other) : !bool(other)
 }
 
 $BoolDict.__ne__ = function(self,other){
-    return self.valueOf() ? !bool(other) : bool(other)
+    return self ? !bool(other) : bool(other)
 }
 
 $BoolDict.__ge__ = function(self,other){
@@ -644,8 +643,7 @@ $BoolDict.__lshift__ = function(self,other){return self.valueOf() << other}
 $BoolDict.__lt__ = function(self,other){return !$BoolDict.__ge__(self,other)}
 
 $BoolDict.__mul__ = function(self,other){
-    if(self.valueOf()) return other
-    return 0;
+    return self ? other : 0
 }
 
 $BoolDict.__neg__ = function(self){return -$B.int_or_bool(self)}
@@ -657,8 +655,7 @@ $BoolDict.__or__ = function(self, other){
 $BoolDict.__pos__ = $B.int_or_bool
 
 $BoolDict.__repr__ = $BoolDict.__str__ = function(self){
-    if(self.valueOf()) return "True"
-    return "False"
+    return self ? "True" : "False"
 }
 
 $BoolDict.__setattr__ = function(self, attr){
@@ -666,8 +663,7 @@ $BoolDict.__setattr__ = function(self, attr){
 }
 
 $BoolDict.__sub__ = function(self,other){
-    if(self.valueOf()) return 1-other;
-    return -other;
+    return (self ? 1 : 0) - (other ? 1 : 0)
 }
 
 $BoolDict.__xor__ = function(self, other) {

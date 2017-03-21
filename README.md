@@ -59,11 +59,11 @@ Zero install !
 --------------
 The most simple way to get started, without anything to install, is to use the 
 distribution available online through [rawgit](https://rawgit.com/). You can 
-either choose the latest stable release, for instance for release 3.2.9 :
+either choose the latest stable release :
 
 ```xml
 <script type="text/javascript"
-    src="https://cdn.rawgit.com/brython-dev/brython/3.2.9/www/src/brython.js">
+    src="https://cdn.rawgit.com/brython-dev/brython/3.3.1/www/src/brython.js">
 </script>
 ```
 
@@ -77,13 +77,12 @@ or the current development version :
 
 The previous code will allow you to use raw python code, but if you import
 modules from the standard library this will be slow as they are implemented 
-using ajax calls. If you want to test your projects using a standalone 
-javascript file with the [available stdlib](https://github.com/brython-dev/brython/tree/master/www/src/Lib) 
-included you should use:
+using ajax calls. Besides __brython.js__ you can load a single javascript file 
+with the [available stdlib](https://github.com/brython-dev/brython/tree/master/www/src/Lib):
 
 ```xml
 <script type="text/javascript"
-    src="https://cdn.rawgit.com/brython-dev/brython/3.2.9/www/src/brython_dist.js">
+    src="https://cdn.rawgit.com/brython-dev/brython/3.3.1/www/src/brython_stdlib.js">
 </script>
 ```
 
@@ -91,7 +90,7 @@ or the current development version :
 
 ```xml
 <script type="text/javascript" 
-    src="https://cdn.rawgit.com/brython-dev/brython/master/www/src/brython_dist.js">
+    src="https://cdn.rawgit.com/brython-dev/brython/master/www/src/brython_stdlib.js">
 </script>
 ```
 
@@ -149,9 +148,8 @@ Curious about [how Brython works](https://github.com/brython-dev/brython/wiki/Ho
 
 Community (questions, feedback, issues, new features, ...)
 ==========================================================
-There is a main [mailing list in English](https://groups.google.com/forum/?fromgroups=#!forum/brython "Brython Main Mailing List").
-Also, you can find [mail list in other languages](http://brython.info/groups.html "Brython Mailing Lists")
-but the activity is very low and it is recommended to use the main one in English.
+You can subscribe and post to the 
+[mailing list](https://groups.google.com/forum/?fromgroups=#!forum/brython "Brython Main Mailing List").
 
 If you find a bug/issue or do you want to see a new feature in Brython, please,
 [open a new issue](https://github.com/brython-dev/brython/issues "Brython GitHub Issues").

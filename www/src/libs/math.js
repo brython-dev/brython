@@ -282,17 +282,41 @@ var _mod = {
     fmod:function(x,y){return float(float_check(x)%float_check(y))},
     frexp: function(x){var _l=_b_.$frexp(x);return _b_.tuple([float(_l[0]), _l[1]])}, // located in py_float.js
     fsum:function(x){
-        var res = new Number(), _it = _b_.iter(x)
+        /* Translation into Javascript of the function msum in an Active
+           State Cookbook recipe : https://code.activestate.com/recipes/393090/
+           by Raymond Hettinger
+        */
+        var partials = [],
+            res = new Number(), 
+            _it = _b_.iter(x)
         while(true){
             try{
-                var item = _b_.next(_it)
-                res += new Number(item)
+                var x = _b_.next(_it),
+                    i = 0
+                for(var j=0, len=partials.length;j<len;j++){
+                    var y = partials[j]
+                    if(Math.abs(x) < Math.abs(y)){
+                        var z = x
+                        x = y
+                        y = z
+                    }
+                    var hi = x + y,
+                        lo = y - (hi - x)
+                    if(lo){
+                        partials[i] = lo
+                        i++
+                    }
+                    x = hi
+                }
+                partials = partials.slice(0, i).concat([x])
             }catch(err){
                 if(_b_.isinstance(err, _b_.StopIteration)){break}
                 throw err
             }
         }
-        return res
+        var res = new Number(0)
+        for(var i=0; i<partials.length;i++){res += new Number(partials[i])}
+        return new Number(res)
     },
     gamma: function(x){
          //using code from http://stackoverflow.com/questions/3959211/fast-factorial-function-in-javascript
