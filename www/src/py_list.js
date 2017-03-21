@@ -530,17 +530,17 @@ $ListDict.sort = function(self){
                 cmp = function(b,a) {
                     if(getattr(a,'__le__')(b)) {
                         if(a==b){return 0};
-                        return 1;
+                        return -1;
                     }
-                    return -1;
+                    return 1;
                 }
             } else {
                 cmp = function(a,b) {
                     if(getattr(a,'__le__')(b)) {
                         if(a==b){return 0};
-                        return 1;
+                        return -1;
                     }
-                    return -1;
+                    return 1;
                 }
             }
         } else {
@@ -549,18 +549,18 @@ $ListDict.sort = function(self){
                     var _a = func(a), _b=func(b);
                     if(getattr(_a,'__le__')(_b)) {
                         if(_a==_b){return 0};
-                        return 1;
+                        return -1;
                     }
-                    return -1;
+                    return 1;
                 }
             } else {
                 cmp = function(a,b) {
                     var _a = func(a), _b=func(b);
                     if(getattr(_a,'__le__')(_b)) {
                         if(_a==_b){return 0};
-                        return 1;
+                        return -1;
                     }
-                    return -1;
+                    return 1;
                 }
             }
 
