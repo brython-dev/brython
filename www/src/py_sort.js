@@ -1,5 +1,15 @@
 ;(function($B){
 
+// Code adapted from https://github.com/mziccard/node-timsort
+// Which is licensed under the MIT license
+//
+// Changes:
+//    -- do not use new style (ES6) Javascript classes since they are not yet
+//       supported by all javascript engines
+//    -- use var instead of let (same as above)
+//    -- wrap the whole thing into a function which injects the
+//       sort implementation into the __BRYTHON__ object
+
 eval($B.InjectBuiltins())
 
 /**
