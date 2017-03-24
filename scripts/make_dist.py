@@ -32,7 +32,7 @@ if implementation[3] == 'rc':
 
 def run():
     # update package.json
-    package_file = os.path.join(pdir, 'package.json')
+    package_file = os.path.join(pdir, 'npm', 'package.json')
     with open(package_file, encoding="utf-8") as fobj:
         package_info = fobj.read()
         package_info = re.sub('"version": "(.*)"', 
@@ -129,6 +129,11 @@ def run():
     sdir = os.path.join(pdir, 'setup', 'data')
     for f in ['brython.js', 'brython_stdlib.js']:
         shutil.copyfile(os.path.join(src_dir, f), os.path.join(sdir, f))
+    
+    # copy files in folder /npm
+    npmdir = os.path.join(pdir, 'npm')
+    for f in ['brython.js', 'brython_stdlib.js']:
+        shutil.copyfile(os.path.join(src_dir, f), os.path.join(npmdir, f))
    
     # create zip files    
     name = 'Brython-{}'.format(vname)
