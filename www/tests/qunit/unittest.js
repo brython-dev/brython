@@ -12,7 +12,7 @@
         if (result.details !== __BRYTHON__.builtins.None) {
             msg = '[' + result.lastOutcome + '] - ' + result.details;
         }
-        assert.ok(__BRYTHON__.builtins.getattr(result, 'wasSuccessful')(),
+        assert.js.ok(__BRYTHON__.builtins.getattr(result, 'wasSuccessful')(),
                   msg)
     }
   }
