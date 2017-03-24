@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-03-17 16:52:41.357084"
+__BRYTHON__.compiled_date="2017-03-24 22:14:57.808874"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -89,6 +89,7 @@ for(var $i=0;$i<$op_order.length;$i++){var _tmp=$op_order[$i]
 for(var $j=0;$j<_tmp.length;$j++){$op_weight[_tmp[$j]]=$weight}
 $weight++}
 var $loop_num=0
+var chained_comp_num=0
 function $_SyntaxError(C,msg,indent){
 var ctx_node=C
 while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
@@ -2012,8 +2013,12 @@ res +=',"__'+method+'__")('+this.tree[1].to_js()+')'
 return res}
 break;}}}
 switch(this.op){case 'and':
-var res='$B.$test_expr($B.$test_item('+this.tree[0].to_js()+')&&'
-return res + '$B.$test_item('+this.tree[1].to_js()+'))'
+var op0=this.tree[0].to_js(),op1=this.tree[1].to_js()
+if(this.wrap!==undefined){
+return '(function(){var '+this.wrap.name+'='+this.wrap.js+
+';return $B.$test_expr($B.$test_item('+
+op0+') && $B.$test_item('+op1+'))})()'}else{return '$B.$test_expr($B.$test_item('+op0+')&&'+
+'$B.$test_item('+op1+'))'}
 case 'or':
 var res='$B.$test_expr($B.$test_item('+this.tree[0].to_js()+')||'
 return res + '$B.$test_item('+this.tree[1].to_js()+'))'
@@ -3086,12 +3091,18 @@ case '!=':
 case 'is':
 case '>=':
 case '>':
-var c2=repl.tree[1]
+var c2=repl.tree[1],
+c2js=c2.to_js()
 var c2_clone=new Object()
 for(var attr in c2){c2_clone[attr]=c2[attr]}
+var vname="$c"+chained_comp_num
+c2.to_js=function(){return vname}
+c2_clone.to_js=function(){return vname}
+chained_comp_num++
 while(repl.parent && repl.parent.type=='op'){if($op_weight[repl.parent.op]<$op_weight[repl.op]){repl=repl.parent}else{break}}
 repl.parent.tree.pop()
 var and_expr=new $OpCtx(repl,'and')
+and_expr.wrap={'name': vname,'js': c2js}
 c2_clone.parent=and_expr
 and_expr.tree.push('xxx')
 var new_op=new $OpCtx(c2_clone,op)

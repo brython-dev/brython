@@ -1189,6 +1189,16 @@ assert str(False + False) == '0'
 assert False + True == 1
 assert True + True == 2
 
+# chained comparisons
+x = 0
+
+def impure():
+  global x
+  x += 1
+  return x
+
+assert 0 < impure() <= 1
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

@@ -95,6 +95,9 @@ for (var $i=0;$i<$op_order.length;$i++){
 // Variable used to generate random names used in loops
 var $loop_num = 0
 
+// Variable used for chained comparison
+var chained_comp_num = 0
+
 /*
 Function called in case of SyntaxError
 ======================================
@@ -4121,8 +4124,30 @@ function $OpCtx(context,op){
         }
         switch(this.op) {
           case 'and':
-            var res ='$B.$test_expr($B.$test_item('+this.tree[0].to_js()+')&&'
-            return res + '$B.$test_item('+this.tree[1].to_js()+'))'
+              var op0 = this.tree[0].to_js(),
+                  op1 = this.tree[1].to_js()
+              if(this.wrap!==undefined){
+                  // attribute "wrap" is set if this is a chained comparison,
+                  // like expr0 < expr1 < expr2
+                  // In this case, it is transformed into
+                  //     (expr0 < expr1) && (expr1 < expr2)
+                  // expr1 may be a function call, so it must be evaluated
+                  // only once. We wrap the result in an anonymous function
+                  // of the form
+                  //     function(){
+                  //         var temp = expr1; 
+                  //         return (expr0<temp && temp<expr2)
+                  //     }
+                  // The name of the temporary variable is stored in 
+                  // this.wrap.name ; expr1.to_js() is stored in this.wrap.js
+                  // They are initialized in 
+                  return '(function(){var '+this.wrap.name+'='+this.wrap.js+
+                          ';return $B.$test_expr($B.$test_item('+
+                          op0+') && $B.$test_item('+op1+'))})()'
+              }else{
+                return '$B.$test_expr($B.$test_item('+op0+')&&'+
+                        '$B.$test_item('+op1+'))'
+              }
           case 'or':
             var res ='$B.$test_expr($B.$test_item('+this.tree[0].to_js()+')||'
             return res + '$B.$test_item('+this.tree[1].to_js()+'))'
@@ -5303,6 +5328,7 @@ function $transition(context,token){
     
     switch(context.type) {
       case 'abstract_expr':
+      
 
         switch(token) {
           case 'id':
@@ -5966,10 +5992,20 @@ function $transition(context,token){
                        // replace by (c1 op1 c2) and (c2 op c3)
                        
                        // save c2
-                       var c2 = repl.tree[1] // right operand of op1
+                       var c2 = repl.tree[1], // right operand of op1
+                           c2js = c2.to_js()
+
                        // clone c2
                        var c2_clone = new Object()
                        for(var attr in c2){c2_clone[attr]=c2[attr]}
+                       
+                       // The variable c2 must be evaluated only once ; we
+                       // generate a temporary variable name to replace
+                       // c2.to_js() and c2_clone.to_js()
+                       var vname = "$c"+chained_comp_num
+                       c2.to_js = function(){return vname}
+                       c2_clone.to_js = function(){return vname}
+                       chained_comp_num++
 
                        // If there are consecutive chained comparisons
                        // we must go up to the uppermost 'and' operator
@@ -5983,6 +6019,11 @@ function $transition(context,token){
                        // Create a new 'and' operator, with the left operand
                        // equal to c1 <= c2
                        var and_expr = new $OpCtx(repl,'and')
+                       // Set an attribute "wrap" to the $OpCtx instance.
+                       // It will be used in an anomymous function where the
+                       // temporary variable called vname will be set to the
+                       // value of c2
+                       and_expr.wrap = {'name': vname, 'js': c2js}
                        
                        c2_clone.parent = and_expr
                        // For compatibility with the interface of $OpCtx,
