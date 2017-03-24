@@ -510,15 +510,64 @@ $ListDict.sort = function(self){
             "' is an invalid keyword argument for this function")}
     }
     if(self.length==0) return
+
     self.$cl = $elts_class(self)
-    if(func===null && self.$cl===_b_.str.$dict){self.sort()}
+    var cmp = null;
+    if(func===null && self.$cl===_b_.str.$dict){
+        if (reverse)
+            cmp = function(b,a) {return $B.$AlphabeticalCompare(a,b)};
+        else
+            cmp = function(a,b) {return $B.$AlphabeticalCompare(a,b)};
+    }
     else if(func===null && self.$cl===_b_.int.$dict){
-        self.sort(function(a,b){return a-b})
+        if (reverse)
+            cmp = function(b,a) {return a-b};
+        else
+            cmp = function(a,b) {return a-b};
+    } else {
+        if (func===null) {
+            if (reverse) {
+                cmp = function(b,a) {
+                    if(getattr(a,'__le__')(b)) {
+                        if(a==b){return 0};
+                        return -1;
+                    }
+                    return 1;
+                }
+            } else {
+                cmp = function(a,b) {
+                    if(getattr(a,'__le__')(b)) {
+                        if(a==b){return 0};
+                        return -1;
+                    }
+                    return 1;
+                }
+            }
+        } else {
+            if (reverse) {
+                cmp = function(b,a) {
+                    var _a = func(a), _b=func(b);
+                    if(getattr(_a,'__le__')(_b)) {
+                        if(_a==_b){return 0};
+                        return -1;
+                    }
+                    return 1;
+                }
+            } else {
+                cmp = function(a,b) {
+                    var _a = func(a), _b=func(b);
+                    if(getattr(_a,'__le__')(_b)) {
+                        if(_a==_b){return 0};
+                        return -1;
+                    }
+                    return 1;
+                }
+            }
+
+        }
     }
-    else{
-        $qsort(func,self,0,self.length)
-    }
-    if(reverse) $ListDict.reverse(self)
+    $B.$TimSort(self,cmp,0,self.length)
+
     // Javascript libraries might use the return value
     return (self.__brython__ ? $N : self)
 }

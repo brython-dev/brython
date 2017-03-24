@@ -6,7 +6,7 @@ self.addEventListener('message', function (e) {
     //importScripts('brython.js')
     importScripts('/src/brython_builtins.js', '/src/version_info.js',
         '/src/py2js.js',
-        '/src/py_object.js', '/src/py_type.js', '/src/py_utils.js',
+        '/src/py_object.js', '/src/py_type.js', '/src/py_utils.js','/src/py_sort.js',
         '/src/py_builtin_functions.js', '/src/py_set.js',
         '/src/js_objects.js',
         '/src/py_import.js', '/src/py_int.js', '/src/py_float.js',
