@@ -3,20 +3,13 @@ from setuptools import setup, find_packages
 
 import os
 
-if not os.path.exists(os.path.join(os.getcwd(), 'data', 
-    'brython_modules.js')):
-        print('/data/dist/brython_modules.js not present. Use'
-            ' /data/prepare_setup.py to generate it')
-        import sys
-        sys.exit()
-
 with open('README.rst', encoding='utf-8') as fobj:
     LONG_DESCRIPTION = fobj.read()
 
 setup(
     name='brython',
 
-    version='0.0.7',
+    version='3.3.1',
 
     description='Brython is an implementation of Python 3 running in the browser',
     

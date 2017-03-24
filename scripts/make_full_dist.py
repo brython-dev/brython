@@ -13,7 +13,7 @@ import zipfile
 
 import javascript_minifier
 
-from make_dist import *
+import make_dist
 make_dist.run()
 
 # Generate page comparing Brython dist and CPython stdlib
