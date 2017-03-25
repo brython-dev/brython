@@ -84,7 +84,7 @@ def run():
         'py_object', 'py_type', 'py_utils', 'py_builtin_functions', 
         'py_exceptions', 'py_range_slice', 'py_bytes', 'js_objects', 
         'stdlib_paths', 'py_import', 'py_float', 'py_int', 'py_long_int', 
-        'py_complex', 'py_list', 'py_sort' 'py_string', 'py_dict', 'py_set', 'py_dom',
+        'py_complex', 'py_list', 'py_sort', 'py_string', 'py_dict', 'py_set', 'py_dom',
         'py_generator', 'builtin_modules', 'py_import_hooks'
     ]
     
