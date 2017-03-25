@@ -228,6 +228,18 @@ function $Node(type){
         // we must jump to the next original node, skipping those that have
         // just been inserted
         
+        if(this.blocking){
+            console.log('blocking node')
+            this.blocking = undefined
+            var rest = this.parent.children.slice(rank)
+            var node = $NodeJS("setTimeout(function()")
+            this.parent.children.splice(rank, this.parent.children.length, node)
+            this.parent.add($NodeJS(", 0)"))
+            for(var i=0; i<rest.length; i++){
+                node.add(rest[i])
+            }
+        }
+        
         if(this.yield_atoms.length>0){
             // If the node contains 'yield' atoms, we must split the node into
             // several nodes
@@ -1202,7 +1214,11 @@ function $CallCtx(context){
     this.start = $pos
 
     this.toString = function(){return '(call) '+this.func+'('+this.tree+')'}
-
+    
+    if(this.func && this.func.value=='input'){
+        $get_node(this).blocking = this
+    }
+    
     this.to_js = function(){
         this.js_processed=true
 
@@ -1804,8 +1820,6 @@ function $DecoratorCtx(context){
         // and $append that javascript code to $B.execution_object.
         // if a delay is supplied (on brython_block only), use that value 
         // as the delay value in the execution_object's setTimeout.
-
-
 
         // fix me...
         if ($B.async_enabled && _block_async_flag) {
