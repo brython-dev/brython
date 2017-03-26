@@ -229,12 +229,23 @@ function $Node(type){
         // just been inserted
         
         if(this.blocking){
-            console.log('blocking node')
+            console.log('blocking node', this)
+            var type = this.blocking.type,
+                call = this.blocking.call
             this.blocking = undefined
             var rest = this.parent.children.slice(rank)
-            var node = $NodeJS("setTimeout(function()")
-            this.parent.children.splice(rank, this.parent.children.length, node)
-            this.parent.add($NodeJS(", 0)"))
+            var node = $NodeJS("var f = (function()")
+            node.module = this.module
+            this.parent.children.splice(rank, this.parent.children.length)
+            this.parent.add(node)
+            this.parent.add($NodeJS(")()"))
+            
+            if(type=="input"){
+                this.parent.add($NodeJS("setTimeout(f, 0)"))
+            }else if(type=='wait'){
+                var arg = call.tree[0].to_js()
+                this.parent.add($NodeJS("setTimeout(f, 1000*"+arg+")"))
+            }
             for(var i=0; i<rest.length; i++){
                 node.add(rest[i])
             }
@@ -1215,8 +1226,14 @@ function $CallCtx(context){
 
     this.toString = function(){return '(call) '+this.func+'('+this.tree+')'}
     
+    if(this.func && this.func.type=="attribute" && this.func.name=="wait"
+        && this.func.value.type=="id" && this.func.value.value=="time"){
+        console.log('call', this.func)
+        $get_node(this).blocking = {'type': 'wait', 'call': this}
+    }
+    
     if(this.func && this.func.value=='input'){
-        $get_node(this).blocking = this
+        $get_node(this).blocking = {'type': 'input'}
     }
     
     this.to_js = function(){

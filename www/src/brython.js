@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-03-25 10:28:48.507699"
+__BRYTHON__.compiled_date="2017-03-26 21:20:41.508717"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -152,12 +152,17 @@ this.res[pos++]='}\n'}}
 this.js=this.res.join('')
 return this.js}
 this.transform=function(rank){
-if(this.blocking){console.log('blocking node')
+if(this.blocking){console.log('blocking node',this)
+var type=this.blocking.type,call=this.blocking.call
 this.blocking=undefined
 var rest=this.parent.children.slice(rank)
-var node=$NodeJS("setTimeout(function()")
-this.parent.children.splice(rank,this.parent.children.length,node)
-this.parent.add($NodeJS(", 0)"))
+var node=$NodeJS("var f = (function()")
+node.module=this.module
+this.parent.children.splice(rank,this.parent.children.length)
+this.parent.add(node)
+this.parent.add($NodeJS(")()"))
+if(type=="input"){this.parent.add($NodeJS("setTimeout(f, 0)"))}else if(type=='wait'){var arg=call.tree[0].to_js()
+this.parent.add($NodeJS("setTimeout(f, 1000*"+arg+")"))}
 for(var i=0;i<rest.length;i++){node.add(rest[i])}}
 if(this.yield_atoms.length>0){
 this.parent.children.splice(rank,1)
@@ -649,7 +654,10 @@ this.expect='id'
 this.tree=[]
 this.start=$pos
 this.toString=function(){return '(call) '+this.func+'('+this.tree+')'}
-if(this.func && this.func.value=='input'){$get_node(this).blocking=this}
+if(this.func && this.func.type=="attribute" && this.func.name=="wait"
+&& this.func.value.type=="id" && this.func.value.value=="time"){console.log('call',this.func)
+$get_node(this).blocking={'type': 'wait','call': this}}
+if(this.func && this.func.value=='input'){$get_node(this).blocking={'type': 'input'}}
 this.to_js=function(){this.js_processed=true
 if(this.tree.length>0){if(this.tree[this.tree.length-1].tree.length==0){
 this.tree.pop()}}
