@@ -28,7 +28,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         if(key=='metaclass'){metaclass=val}
     }
 
-    // Create the class dictionary    
+    // Create the class dictionary
     var class_dict = {
         __name__ : class_name.replace('$$',''),
         __bases__ : bases,

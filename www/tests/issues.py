@@ -1207,6 +1207,24 @@ def impure():
 
 assert 0 < impure() <= 1
 
+# issue 576
+class Patched:
+    def method(self, first="patched1", second="patched2"):
+        return(first, second)
+
+
+class Patcher:
+    def __init__(self):
+        Patched.method = self.method  # monkey patches with instantiated method
+    def method(self, first="patcher1", second="patcher2"):
+        return(first, second)
+
+Patched.method = Patcher.method  # monkey patches with non instantiated method
+assert ("tester1", "patcher2") == Patched().method("tester1")
+Patcher()
+assert ("tester1", "patcher2") == Patched().method("tester1"), "instead returns %s %s" % Patched().method()
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

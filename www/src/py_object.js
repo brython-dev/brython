@@ -246,6 +246,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                     return res
                 }
 
+
                 // instance method object
                 return $B.make_method(attr, klass, res)(obj)
                 

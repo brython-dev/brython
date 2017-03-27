@@ -1335,9 +1335,12 @@ function setattr(obj,attr,value){
         // Setting attribute of a class means updating the class
         // dictionary, not the class factory function
         if(obj.$dict.$methods && typeof value=='function' 
-            && value.__class__!==$B.$factory){
+            && value.__class__!==$B.$factory
+            && value.__class__!==$B.$MethodDict // issue #576
+            ){
             // update attribute $methods
-            obj.$dict.$methods[attr] = $B.make_method(attr, obj.$dict, value, value)
+            obj.$dict.$methods[attr] = $B.make_method(attr, obj.$dict, value, 
+                value)
             return None
         }else{obj.$dict[attr]=value;return None}
     }
