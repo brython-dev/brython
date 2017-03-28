@@ -14,7 +14,7 @@
     "Python"
   ],
   "author": "Pierre Quentel",
-  "license": "BSD-2-Clause",
+  "license": "BSD-3-Clause",
   "bugs": {
     "url": "https://github.com/brython-dev/brython/issues"
   },

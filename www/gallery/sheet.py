@@ -194,7 +194,7 @@ class ColumnHead(html.TH):
         # mark all columns between initially selected and the one 
         # we are entering
         clear_selections()
-        col_start = selected_line.col_num()
+        col_start = Column(selected_line).col_num()
         this_col = Column(self).col_num()
         row = self.closest('tr')
         if this_col > col_start:
@@ -207,8 +207,9 @@ class ColumnHead(html.TH):
                 Column(row.childNodes[num]).mark_cells()
     
     def end_select_column(self, ev):
-        global mouseDown
+        global mouseDown, selected_line
         mouseDown -= 1
+        selected_line = None
 
 class Column:
     
@@ -314,9 +315,10 @@ def coords(td):
         
 class Cell(html.TD):
     
-    def __init__(self):
+    def __init__(self, col_head):
         html.TD.__init__(self, contentEditable="true",
             style=dict(padding='2px'))
+        self.col_head = col_head
         self.bind("mousedown", self.select)
         self.bind("mouseenter", self.mousemove)
         self.bind("mouseleave", self.mousemove)
@@ -336,7 +338,6 @@ class Cell(html.TD):
             
     def extend_selection(self, ev):
         # mark all cells from selected to ev.target
-        #ev.target.classList.add('selected')
         clear_selections()
         c0, r0 = coords(selected)
         c1, r1 = coords(ev.target)
@@ -392,8 +393,7 @@ class Cell(html.TD):
             self.move_sel(ev)
     
     def mousemove(self, ev):
-        print('mouse move')
-        if mouseDown:
+        if mouseDown and selected_line is None:
             self.extend_selection(ev)
 
     def mouseup(self, ev):
@@ -468,23 +468,23 @@ def load(sheet_name=None):
     rows, cols = 20, 20
     col_widths = [100 for i in range(rows)]
     
-    line = html.TR()
-    line <= html.TH()
+    col_heads = html.TR()
+    col_heads <= html.TH()
     for i in range(cols):
         col_name = chr(65+i)
-        line <= ColumnHead(col_name, Class="col-head",
+        col_heads <= ColumnHead(col_name, Class="col-head",
             style={'min-width':'%spx' %col_widths[i]})
-    t <= line
+    t <= col_heads
         
-    for i in range(rows*cols):
+    for i in range(rows * cols):
         row, column = divmod(i, cols)
-        if row>srow:
+        if row > srow:
             line = html.TR()
-            line <= RowHead(row+1, Class="row-head")
+            line <= RowHead(row + 1, Class="row-head")
             t <= line
             srow = row
 
-        line <= Cell()
+        line <= Cell(col_heads.children[column + 1])
 
     panel <= html.DIV(t, style=dict(float='left'))
 

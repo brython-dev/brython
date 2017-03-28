@@ -361,6 +361,10 @@ def to_struct_time(*arg):
     arg.append(-1)
     return struct_time(tuple(arg))
 
+def wait(secs):
+    # experimental - replacement for "sleep"
+    pass
+
 def strptime(string, _format):
     import _strptime
     return _strptime._strptime_datetime(to_struct_time, string, _format)
