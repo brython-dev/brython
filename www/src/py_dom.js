@@ -451,7 +451,6 @@ DOMNodeDict.__getattribute__ = function(self,attr){
       case 'parent':
       case 'query':
       case 'text':
-      case 'value':
         return DOMNodeDict[attr](self)
 
       case 'height':
@@ -1227,10 +1226,6 @@ DOMNodeDict.unbind = function(self,event){
         // The indicated func was not found, error is thrown
         if(!flag){throw KeyError('missing callback for event '+event)}
     }
-}
-
-DOMNodeDict.value = function(self){
-    return self.elt.value === undefined ? _b_.None : self.elt.value
 }
 
 DOMNodeDict.width = {
