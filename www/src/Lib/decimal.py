@@ -6468,20 +6468,4 @@ _PyHASH_NAN = sys.hash_info.nan
 _PyHASH_10INV = pow(10, _PyHASH_MODULUS - 2, _PyHASH_MODULUS)
 del sys
 
-try:
-    import _decimal
-except ImportError:
-    pass
-else:
-    s1 = set(dir())
-    s2 = set(dir(_decimal))
-    for name in s1 - s2:
-        del globals()[name]
-    del s1, s2, name
-    from _decimal import *
 
-# Brython fix me
-# This is not used at this moment
-#if __name__ == '__main__':
-    #import doctest, decimal
-    #doctest.testmod(decimal)
