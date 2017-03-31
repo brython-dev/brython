@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-03-27 22:18:43.398807"
+__BRYTHON__.compiled_date="2017-03-31 21:35:35.210394"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4184,9 +4184,9 @@ if(options.ipy_id!==undefined){var $elts=[];
 for(var $i=0;$i<options.ipy_id.length;$i++){$elts.push(document.getElementById(options.ipy_id[$i]));}}else{var scripts=document.getElementsByTagName('script'),$elts=[]
 for(var i=0;i<scripts.length;i++){var script=scripts[i]
 if(script.type=="text/python" ||script.type=="text/python3"){$elts.push(script)}}}
-var $href=$B.script_path=window.location.href
-var $href_elts=$href.split('/')
+var $href=$B.script_path=window.location.href,$href_elts=$href.split('/')
 $href_elts.pop()
+$B.curdir=$href_elts.join('/')
 if(options.pythonpath!==undefined){$B.path=options.pythonpath
 $B.$options.static_stdlib_import=false}
 if(options.re_module !==undefined){if(options.re_module=='pyre' ||options.re_module=='jsre'){$B.$options.re=options.re}
@@ -10494,7 +10494,6 @@ case 'id':
 case 'parent':
 case 'query':
 case 'text':
-case 'value':
 return DOMNodeDict[attr](self)
 case 'height':
 case 'left':
@@ -10831,7 +10830,6 @@ events.splice(j,1)
 flag=true
 break}}
 if(!flag){throw KeyError('missing callback for event '+event)}}}
-DOMNodeDict.value=function(self){return self.elt.value===undefined ? _b_.None : self.elt.value}
 DOMNodeDict.width={'__get__': function(self){
 if(self.elt.tagName=='CANVAS'){return self.elt.width}
 if(self.elt.style===undefined){return _b_.None}

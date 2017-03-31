@@ -7868,9 +7868,10 @@ function brython(options){
     }
 
     // URL of the script where function brython() is called
-    var $href = $B.script_path = window.location.href
-    var $href_elts = $href.split('/')
+    var $href = $B.script_path = window.location.href,
+        $href_elts = $href.split('/')
     $href_elts.pop()
+    $B.curdir = $href_elts.join('/')
     
     // List of URLs where imported modules should be searched
     // A list can be provided as attribute of options
