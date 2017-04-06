@@ -2361,7 +2361,6 @@ function $DefCtx(context){
             parent.children.splice(pos+2,parent.children.length)
             
             var except_node = $NodeJS('catch(err)')
-            if($B.profile > 0){except_node.add($NodeJS('$B.$profile.return()'))}
             except_node.add($NodeJS('$B.leave_frame($local_name);throw err'))
             
             parent.add(except_node)
