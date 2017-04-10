@@ -4401,24 +4401,9 @@ function $RaiseCtx(context){
     this.to_js = function(){
         this.js_processed=true
         var res = ''
-        if(this.tree.length===0) return '$B.$raise()'
+        if(this.tree.length===0){return '$B.$raise()'}
         var exc = this.tree[0], exc_js = exc.to_js()
-        
-        if(exc.type==='id' ||
-            (exc.type==='expr' && exc.tree[0].type==='id')){
-            res = 'var $res = '+exc_js+';'+
-                'if(isinstance($res, type)){try{$res = $res()}catch($err){'+
-                'throw $err}};'+
-                'throw $res'
-            return res
-        }
-        // if raise had a 'from' clause, ignore it
-        while(this.tree.length>1) this.tree.pop()
-        
-        res = 'try{var $res = '+$to_js(this.tree)+'}catch(err){'+
-            'throw err};'+
-            'throw $res'
-        return res
+        return '$B.$raise('+exc_js+')'
     }
 }
 
@@ -6614,7 +6599,7 @@ function $transition(context,token){
           case 'pass':
             return new $PassCtx(context)
           case 'raise':
-            return new $RaiseCtx(context)
+            return new $AbstractExprCtx(new $RaiseCtx(context), true)
           case 'return':
             return new $AbstractExprCtx(new $ReturnCtx(context),true)
           case 'with':

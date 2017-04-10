@@ -1224,6 +1224,28 @@ assert ("tester1", "patcher2") == Patched().method("tester1")
 Patcher()
 assert ("tester1", "patcher2") == Patched().method("tester1"), "instead returns %s %s" % Patched().method()
 
+# issue 578
+
+try:
+    raise 1
+except TypeError:
+    pass
+
+class A:
+    pass
+
+try:
+    raise A()
+except TypeError:
+    pass
+
+def test():
+    return IOError()
+
+try:
+    raise test()
+except IOError:
+    pass
 
 # ==========================================
 # Finally, report that all tests have passed

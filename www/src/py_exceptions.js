@@ -2,12 +2,21 @@
 
 eval($B.InjectBuiltins())
 
-$B.$raise= function(){
-    // Used for "raise" without specifying an exception
-    // If there is an exception in the stack, use it, else throw a simple Exception
-    var es = $B.current_exception
-    if(es!==undefined) throw es
-    throw _b_.RuntimeError('No active exception to reraise')
+$B.$raise= function(arg){
+    // Used for "raise" without specifying an exception.
+    // If there is an exception in the stack, use it, else throw a simple
+    // Exception
+    if(arg===undefined){
+        var es = $B.current_exception
+        if(es!==undefined) throw es
+        throw _b_.RuntimeError('No active exception to reraise')
+    }else if(isinstance(arg, BaseException)){
+        throw arg
+    }else if(arg.__class__===$B.$factory && issubclass(arg, BaseException)){
+        throw arg()
+    }else{
+        throw _b_.TypeError("exceptions must derive from BaseException")
+    }
 }
 
 $B.$syntax_err_line = function(exc,module,pos,line_num) {

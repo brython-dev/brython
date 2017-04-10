@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-03-31 21:35:35.210394"
+__BRYTHON__.compiled_date="2017-04-10 21:19:55.738639"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1183,7 +1183,6 @@ parent.insert(pos+1,try_node)
 for(var i=0;i<children.length;i++){if(children[i].is_def_func){for(var j=0;j<children[i].children.length;j++){try_node.add(children[i].children[j])}}else{try_node.add(children[i])}}
 parent.children.splice(pos+2,parent.children.length)
 var except_node=$NodeJS('catch(err)')
-if($B.profile > 0){except_node.add($NodeJS('$B.$profile.return()'))}
 except_node.add($NodeJS('$B.leave_frame($local_name);throw err'))
 parent.add(except_node)}
 this.transformed=true
@@ -2156,19 +2155,9 @@ C.tree[C.tree.length]=this
 this.toString=function(){return ' (raise) '+this.tree}
 this.to_js=function(){this.js_processed=true
 var res=''
-if(this.tree.length===0)return '$B.$raise()'
+if(this.tree.length===0){return '$B.$raise()'}
 var exc=this.tree[0],exc_js=exc.to_js()
-if(exc.type==='id' ||
-(exc.type==='expr' && exc.tree[0].type==='id')){res='var $res = '+exc_js+';'+
-'if(isinstance($res, type)){try{$res = $res()}catch($err){'+
-'throw $err}};'+
-'throw $res'
-return res}
-while(this.tree.length>1)this.tree.pop()
-res='try{var $res = '+$to_js(this.tree)+'}catch(err){'+
-'throw err};'+
-'throw $res'
-return res}}
+return '$B.$raise('+exc_js+')'}}
 function $RawJSCtx(C,js){this.type="raw_js"
 C.tree[C.tree.length]=this
 this.parent=C
@@ -3493,7 +3482,7 @@ return new $LambdaCtx(C)
 case 'pass':
 return new $PassCtx(C)
 case 'raise':
-return new $RaiseCtx(C)
+return new $AbstractExprCtx(new $RaiseCtx(C),true)
 case 'return':
 return new $AbstractExprCtx(new $ReturnCtx(C),true)
 case 'with':
@@ -5075,6 +5064,7 @@ catch(err){if(_b_.isinstance(v,_b_.complex)&& v.imag==0){return $B.int_or_bool(v
 $B.enter_frame=function(frame){
 $B.frames_stack.push(frame)}
 $B.leave_frame=function(arg){
+if($B.profile > 0)$B.$profile.return();
 if($B.frames_stack.length==0){console.log('empty stack');return}
 $B.frames_stack.pop()}
 $B.memory=function(){var info=[]
@@ -6066,10 +6056,10 @@ _b_['open']=$url_open
 _b_['print']=$print
 _b_['$$super']=$$super})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
-$B.$raise=function(){
-var es=$B.current_exception
+$B.$raise=function(arg){
+if(arg===undefined){var es=$B.current_exception
 if(es!==undefined)throw es
-throw _b_.RuntimeError('No active exception to reraise')}
+throw _b_.RuntimeError('No active exception to reraise')}else if(isinstance(arg,BaseException)){throw arg}else if(arg.__class__===$B.$factory && issubclass(arg,BaseException)){throw arg()}else{throw _b_.TypeError("exceptions must derive from BaseException")}}
 $B.$syntax_err_line=function(exc,module,pos,line_num){
 var pos2line={}
 var lnum=1
