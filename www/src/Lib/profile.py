@@ -280,7 +280,7 @@ class Profile:
         return self._profile
 
     def status(self):
-        return _profile.status
+        return _profile.status()
 
     def print_stats(self,sort='standard name'):
         """
