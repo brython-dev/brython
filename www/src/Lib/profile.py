@@ -273,6 +273,12 @@ class Profile:
         """
         _profile.pause()
 
+    def clear(self):
+        """
+            Reset all profile counters (clear collected data) & stop collecting.
+        """
+        _profile.clear()
+
     def create_stats(self):
         """
             Stop collecting profile data and load them into
