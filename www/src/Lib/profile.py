@@ -109,7 +109,10 @@ class Stats:
             self._data = data
             self.nruns = nruns
             self.line_counts = {k:data.line_counts[k] for k in dir(data.line_counts)}
-            self.duration = self._data.profile_duration
+            if hasattr(self._data,'profile_duration'):
+                self.duration = self._data.profile_duration
+            else:
+                self.duration = _profile.elapsed()
             self.function_totals = {k:data.call_times_proper[k] for k in dir(data.call_times_proper)}
             self.function_cumulated_totals = {k:data.call_times[k] for k in dir(data.call_times)}
             self.function_counts = {k:data.call_counts[k] for k in dir(data.call_counts)}

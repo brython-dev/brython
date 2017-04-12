@@ -1136,7 +1136,10 @@ $B.$profile = (function(profile) {
                active=true
                profile_start = new Date()
             }
-
+        },
+        'elapsed': function() {
+            if (active) return cumulated + (new Date())-profile_start
+            else return cumulated;
         },
         'stop':function() {
             if (active || paused) {

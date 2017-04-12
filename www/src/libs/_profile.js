@@ -11,6 +11,7 @@ var $module=(function($B) {
         pause:$B.$profile.pause,
         status:$B.$profile.status,
         clear:$B.$profile.clear,
+        elapsed:$B.$profile.elapsed,
         run:function(src,_globals,_locals,nruns) {
             var current_frame = $B.frames_stack[$B.frames_stack.length-1]
             if(current_frame!==undefined){
