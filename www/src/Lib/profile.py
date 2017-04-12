@@ -194,6 +194,63 @@ class Stats:
             self.sort()
 
 
+    def called_by_data(self, standard_calee_name):
+        """
+            Returns a dict indexed by standard function names
+            (or module names in case of top-level calls).
+            For each such function `f`, the dict contains
+            data about time spent in the function argument:`standard_calee_name`
+            when called from `f`.
+
+            The data available is 'cumulated', 'total', 'count', 'count_norec'
+            (see documentation of the method:`sort` for meaning of the keys)
+        """
+        call_data = self.callers[standard_calee_name]
+        ret = {}
+        for key, data in call_data.items():
+            if ':' in key:
+                location, func_name, func_def_line = key.split(':')
+                standard_caller_name = func_name+':'+func_def_line
+            else:
+                ln, mod = key.split(',')
+                standard_caller_name = mod
+
+            if not standard_caller_name in ret:
+                ret[standard_caller_name] = {'cumulated':0,'total':0,'count':0,'count_norec':0}
+            for k, v in data.items():
+                ret[standard_caller_name][k] += v
+        return ret
+
+    def relative_data(self, standard_name, relative_to):
+        """
+            Returns data how much time was spent in the funcition argument:`standard_name`
+            relative to the time spent in argument:`relative_to`.
+
+            The data available is 'cumulated', 'total', 'count', 'count_norec'
+            (see documentation of the method:`sort` for meaning of the keys)
+        """
+
+        baseline = {
+            'total':self.function_totals[relative_to],
+            'cumulated':self.function_cumulated_totals[relative_to],
+            'counts':self.function_counts[relative_to],
+            'counts_nonrec':self.function_counts_nonrec[relative_to]
+        }
+        callers = self.called_by_data(standard_name)
+        if relative_to in callers:
+            ret = {}
+            data = callers[relative_to]
+            for key, v in data.items():
+                if baseline[key] == 0:
+                    ret[key] = float('inf')
+                else:
+                    ret[key] = data[key]/float(baseline[key])
+        else:
+            ret = {'cumulated':0,'total':0,'count':0,'count_norec':0}
+        return ret
+
+
+
     def sort(self,key='standard name'):
         """
             Sort the stats according to key. Key can be any of the columns
