@@ -1068,6 +1068,7 @@ $B.$profile = (function(profile) {
                     func_stack = call_times[in_func]
                     inner_most_call = func_stack[func_stack.length-1];
                     inner_most_call[_CUMULATED] += (ctime-inner_most_call[_LAST_RESUMED])
+                    caller = caller+":"+in_func;
                 }
                 call_times[h].push([ctime,caller,0,ctime]) // start time, caller hash, duration without subcalls, start_of_last_subcall
                 call_stack.push(h)
@@ -1136,7 +1137,10 @@ $B.$profile = (function(profile) {
                active=true
                profile_start = new Date()
             }
-
+        },
+        'elapsed': function() {
+            if (active) return cumulated + (new Date())-profile_start
+            else return cumulated;
         },
         'stop':function() {
             if (active || paused) {

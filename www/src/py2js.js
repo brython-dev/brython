@@ -2104,12 +2104,15 @@ function $DefCtx(context){
                 fname=this.scope.context.tree[0].name+'.'+this.name
             }
             else fname = this.name
-            if (node.parent && node.parent.id) {
-                fmod = node.parent.id.slice(0,node.parent.id.indexOf('_'))
+            if (pnode && pnode.id) {
+                fmod = pnode.id.slice(0,pnode.id.indexOf('_'))
             }
             else fmod='';
-            js = ";$B.$profile.call('"+fmod+"','"+fname+"',"+
-                node.line_num+",$locals.$line_info)"+js;
+            js = ";var _parent_line_info={}; if($B.frames_stack[$B.frames_stack.length-1]){"+
+                 " _parent_line_info=$B.frames_stack[$B.frames_stack.length-1][1].$line_info;"+
+                 "} else _parent_line_info="+global_ns+".$line_info;"+
+                 ";$B.$profile.call('"+fmod+"','"+fname+"',"+
+                 node.line_num+",_parent_line_info)"+js;
         }
         enter_frame_node.enter_frame = true
         new $NodeJSCtx(enter_frame_node,js)
