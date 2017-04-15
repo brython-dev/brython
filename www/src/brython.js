@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-04-10 21:19:55.738639"
+__BRYTHON__.compiled_date="2017-04-15 09:25:25.946838"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1068,10 +1068,13 @@ var enter_frame_node=new $Node(),js=';var $top_frame = [$local_name, $locals,'+
 '$B.frames_stack.length;'
 if($B.profile > 1){if(this.scope.ntype=='class'){fname=this.scope.C.tree[0].name+'.'+this.name}
 else fname=this.name
-if(node.parent && node.parent.id){fmod=node.parent.id.slice(0,node.parent.id.indexOf('_'))}
+if(pnode && pnode.id){fmod=pnode.id.slice(0,pnode.id.indexOf('_'))}
 else fmod='';
-js=";$B.$profile.call('"+fmod+"','"+fname+"',"+
-node.line_num+",$locals.$line_info)"+js;}
+js=";var _parent_line_info={}; if($B.frames_stack[$B.frames_stack.length-1]){"+
+" _parent_line_info=$B.frames_stack[$B.frames_stack.length-1][1].$line_info;"+
+"} else _parent_line_info="+global_ns+".$line_info;"+
+";$B.$profile.call('"+fmod+"','"+fname+"',"+
+node.line_num+",_parent_line_info)"+js;}
 enter_frame_node.enter_frame=true
 new $NodeJSCtx(enter_frame_node,js)
 nodes.push(enter_frame_node)
@@ -5093,7 +5096,8 @@ if(!(h in call_times)){call_times[h]=[];}
 if(call_stack.length > 0){in_func=call_stack[call_stack.length-1];
 func_stack=call_times[in_func]
 inner_most_call=func_stack[func_stack.length-1];
-inner_most_call[_CUMULATED]+=(ctime-inner_most_call[_LAST_RESUMED])}
+inner_most_call[_CUMULATED]+=(ctime-inner_most_call[_LAST_RESUMED])
+caller=caller+":"+in_func;}
 call_times[h].push([ctime,caller,0,ctime])
 call_stack.push(h)}},'return':function(){if($B.profile > 1 && active){var h=call_stack.pop()
 if(h in call_times){var t_end=new Date();
@@ -5128,7 +5132,8 @@ active=false
 paused=true}},'start':function(){if($B.profile > 0){if(! paused )$B.$profile.clear();
 else{paused=false;}
 active=true
-profile_start=new Date()}},'stop':function(){if(active ||paused){profile.profile_duration=((new Date())-profile_start)+cumulated
+profile_start=new Date()}},'elapsed': function(){if(active)return cumulated +(new Date())-profile_start
+else return cumulated;},'stop':function(){if(active ||paused){profile.profile_duration=((new Date())-profile_start)+cumulated
 active=false
 paused=false}},'clear':function(){cumulated=0;
 profile.line_counts={};
@@ -11191,7 +11196,7 @@ var js='$B.DOMNodeDict.bind(self,"'
 js +=arg.toLowerCase().substr(2)
 eval(js+'",function(){'+value+'})')}else if(arg.toLowerCase()=="style"){$B.DOMNodeDict.set_style(self,value)}else{
 if(value!==false){
-try{arg=arg.toLowerCase().replace('_','-')
+try{arg=arg.replace('_','-')
 self.elt.setAttribute(arg,value)}catch(err){throw _b_.ValueError("can't set attribute "+arg)}}}}}
 dict.__mro__=[$B.DOMNodeDict,$B.builtins.object.$dict]
 dict.__new__=function(cls){

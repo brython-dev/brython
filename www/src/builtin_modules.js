@@ -147,7 +147,7 @@
                         if(value!==false){
                             // option.selected=false sets it to true :-)
                             try{
-                                arg = arg.toLowerCase().replace('_','-')
+                                arg = arg.replace('_','-')
                                 self.elt.setAttribute(arg,value)
                             }catch(err){
                                 throw _b_.ValueError("can't set attribute "+arg)
