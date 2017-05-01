@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-04-15 09:25:25.946838"
+__BRYTHON__.compiled_date="2017-05-01 09:21:11.536210"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1812,6 +1812,7 @@ this.locals=[]
 this.toString=function(){return '(lambda) '+this.args_start+' '+this.body_start}
 this.to_js=function(){this.js_processed=true
 var node=$get_node(this),module=$get_module(this),src=$B.$py_src[module.id],args=src.substring(this.args_start,this.body_start),body=src.substring(this.body_start+1,this.body_end)
+body=body.replace(/\\\n/g,' ')
 body=body.replace(/\n/g,' ')
 var scope=$get_scope(this)
 var rand=$B.UUID(),func_name='lambda_'+$B.lambda_magic+'_'+rand,py='def '+func_name+'('+args+'):\n'
@@ -2613,7 +2614,6 @@ function $to_js_map(tree_element){if(tree_element.to_js !==undefined)return tree
 throw Error('no to_js() for '+tree_element)}
 function $to_js(tree,sep){if(sep===undefined){sep=','}
 return tree.map($to_js_map).join(sep)}
-var $expr_starters=['id','imaginary','int','float','str','bytes','[','(','{','not','lambda']
 function $arbo(ctx){while(ctx.parent!=undefined){ctx=ctx.parent}
 return ctx}
 function $transition(C,token){

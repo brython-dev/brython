@@ -1247,6 +1247,14 @@ try:
 except IOError:
     pass
 
+# issue 582
+def nothing():
+    a = lambda: 1 \
+        or 2
+    return a()
+
+assert nothing() == 1
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

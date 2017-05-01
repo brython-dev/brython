@@ -3740,9 +3740,10 @@ function $LambdaCtx(context){
             src = $B.$py_src[module.id],
             args = src.substring(this.args_start,this.body_start),
             body = src.substring(this.body_start+1,this.body_end)
+            body = body.replace(/\\\n/g, ' ') // cf issue 582
         
         body = body.replace(/\n/g,' ')
-
+        
         var scope = $get_scope(this)
         
         var rand = $B.UUID(),
@@ -5328,9 +5329,6 @@ function $to_js(tree,sep){
 
     return tree.map($to_js_map).join(sep)
 }
-
-// expression starters 
-var $expr_starters = ['id','imaginary','int','float','str','bytes','[','(','{','not','lambda']
 
 function $arbo(ctx){
     while(ctx.parent!=undefined){ctx=ctx.parent}
