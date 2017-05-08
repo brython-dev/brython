@@ -1255,6 +1255,12 @@ def nothing():
 
 assert nothing() == 1
 
+# issue 584
+try:
+    from __future__ import non_existing_feature
+except SyntaxError:
+    pass
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-05-04 21:31:40.787641"
+__BRYTHON__.compiled_date="2017-05-08 10:45:16.779142"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -7275,6 +7275,9 @@ catch($err1){
 try{_b_.getattr(__import__,'__call__')(mod_name + '.' + name,globals,undefined,[],0);
 locals[alias]=_b_.getattr(modobj,name);}
 catch($err3){
+if(mod_name==="__future__"){
+var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
+$B.$SyntaxError(frame[2],"future feature "+name+" is not defined",undefined,line_num)}
 throw _b_.ImportError("cannot import name '"+name+"'")}}}}}}
 $B.$import_non_blocking=function(mod_name,func){console.log('import non blocking',mod_name)
 $B.$import(mod_name,[],[],{},[false,func])
