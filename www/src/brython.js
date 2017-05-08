@@ -61,7 +61,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-05-08 10:45:16.779142"
+__BRYTHON__.compiled_date="2017-05-08 14:24:39.832299"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -152,22 +152,13 @@ this.res[pos++]='}\n'}}
 this.js=this.res.join('')
 return this.js}
 this.transform=function(rank){
-if(this.blocking){console.log('blocking node',this)
-var type=this.blocking.type,call=this.blocking.call
-this.blocking=undefined
-var rest=this.parent.children.slice(rank)
-var node=$NodeJS("var f = (function()")
-node.module=this.module
-this.parent.children.splice(rank,this.parent.children.length)
-this.parent.add(node)
-this.parent.add($NodeJS(")()"))
-if(type=="input"){this.parent.add($NodeJS("setTimeout(f, 0)"))}else if(type=='wait'){var arg=call.tree[0].to_js()
-this.parent.add($NodeJS("setTimeout(f, 1000*"+arg+")"))}
-for(var i=0;i<rest.length;i++){node.add(rest[i])}}
 if(this.yield_atoms.length>0){
 this.parent.children.splice(rank,1)
 var offset=0
-for(var i=0;i<this.yield_atoms.length;i++){
+for(var i=0;i<this.yield_atoms.length;i++){var atom=this.yield_atoms[i]
+if(atom.from){
+atom.transform(this,rank)
+continue}else{
 var temp_node=new $Node()
 var js='var $yield_value'+$loop_num
 js +='='+(this.yield_atoms[i].to_js()||'None')
@@ -184,7 +175,7 @@ new $NodeJSCtx(set_yield,js)
 this.parent.insert(rank+offset+2,set_yield)
 this.yield_atoms[i].to_js=(function(x){return function(){return '$yield_value'+x}})($loop_num)
 $loop_num++
-offset +=3}
+offset +=3}}
 this.parent.insert(rank+offset,this)
 this.yield_atoms=[]
 return offset+1}

@@ -1261,6 +1261,21 @@ try:
 except SyntaxError:
     pass
 
+# issue 501
+class Test:
+    def __iter__(self):
+        self._blocking = True
+        yield self
+
+def test_yield():
+    b = yield from Test()
+    return b
+
+test = []
+for b in test_yield():
+    test.append(b)
+
+assert test[0]._blocking is True
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

@@ -228,29 +228,6 @@ function $Node(type){
         // we must jump to the next original node, skipping those that have
         // just been inserted
         
-        if(this.blocking){
-            console.log('blocking node', this)
-            var type = this.blocking.type,
-                call = this.blocking.call
-            this.blocking = undefined
-            var rest = this.parent.children.slice(rank)
-            var node = $NodeJS("var f = (function()")
-            node.module = this.module
-            this.parent.children.splice(rank, this.parent.children.length)
-            this.parent.add(node)
-            this.parent.add($NodeJS(")()"))
-            
-            if(type=="input"){
-                this.parent.add($NodeJS("setTimeout(f, 0)"))
-            }else if(type=='wait'){
-                var arg = call.tree[0].to_js()
-                this.parent.add($NodeJS("setTimeout(f, 1000*"+arg+")"))
-            }
-            for(var i=0; i<rest.length; i++){
-                node.add(rest[i])
-            }
-        }
-        
         if(this.yield_atoms.length>0){
             // If the node contains 'yield' atoms, we must split the node into
             // several nodes
@@ -264,38 +241,47 @@ function $Node(type){
             this.parent.children.splice(rank,1)
             var offset = 0
             for(var i=0;i<this.yield_atoms.length;i++){
-
-                // create a line to store the yield expression in a
-                // temporary variable
-                var temp_node = new $Node()
-                var js = 'var $yield_value'+$loop_num
-                js += '='+(this.yield_atoms[i].to_js() || 'None')
-                new $NodeJSCtx(temp_node,js)
-                this.parent.insert(rank+offset, temp_node)
+            
+                var atom = this.yield_atoms[i]
                 
-                // create a node to yield the yielded value
-                var yield_node = new $Node()
-                this.parent.insert(rank+offset+1, yield_node)
-                var yield_expr = new $YieldCtx(new $NodeCtx(yield_node))
-                new $StringCtx(yield_expr,'$yield_value'+$loop_num)
+                if(atom.from){
+                    // for "yield from" use the transform method of YieldCtx
+                    atom.transform(this, rank)
+                    continue
+                }else{
 
-                // create a node to set the yielded value to the last
-                // value sent to the generator, if any
-                var set_yield = new $Node()
-                set_yield.is_set_yield_value=true
-                
-                // the JS code will be set in py_utils.$B.make_node
-                js = $loop_num
-                new $NodeJSCtx(set_yield,js)
-                this.parent.insert(rank+offset+2, set_yield)
-                
-                // in the original node, replace yield atom by None   
-                this.yield_atoms[i].to_js = (function(x){
-                    return function(){return '$yield_value'+x}
-                    })($loop_num)
-
-                $loop_num++
-                offset += 3
+                    // create a line to store the yield expression in a
+                    // temporary variable
+                    var temp_node = new $Node()
+                    var js = 'var $yield_value'+$loop_num
+                    js += '='+(this.yield_atoms[i].to_js() || 'None')
+                    new $NodeJSCtx(temp_node,js)
+                    this.parent.insert(rank+offset, temp_node)
+                    
+                    // create a node to yield the yielded value
+                    var yield_node = new $Node()
+                    this.parent.insert(rank+offset+1, yield_node)
+                    var yield_expr = new $YieldCtx(new $NodeCtx(yield_node))
+                    new $StringCtx(yield_expr,'$yield_value'+$loop_num)
+    
+                    // create a node to set the yielded value to the last
+                    // value sent to the generator, if any
+                    var set_yield = new $Node()
+                    set_yield.is_set_yield_value=true
+                    
+                    // the JS code will be set in py_utils.$B.make_node
+                    js = $loop_num
+                    new $NodeJSCtx(set_yield,js)
+                    this.parent.insert(rank+offset+2, set_yield)
+                    
+                    // in the original node, replace yield atom by None   
+                    this.yield_atoms[i].to_js = (function(x){
+                        return function(){return '$yield_value'+x}
+                        })($loop_num)
+    
+                    $loop_num++
+                    offset += 3
+                }
           }
           // insert the original node after the yield nodes
           this.parent.insert(rank+offset, this)
@@ -4986,7 +4972,7 @@ function $WithCtx(context){
             try_node.add(value_node)
         }        
         
-        // place blcok inside a try clause
+        // place block inside a try clause
         for(var i=0;i<block.length;i++){try_node.add(block[i])}
         
         var catch_node = new $Node()
