@@ -1276,6 +1276,12 @@ for b in test_yield():
     test.append(b)
 
 assert test[0]._blocking is True
+
+# issue 588
+def yoba(a, b):
+    return a + b
+assertRaises(TypeError, yoba, 1, 2, 3)
+        
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

@@ -2187,12 +2187,13 @@ function $DefCtx(context){
                 nodes.push(else_node)
                 
             }
+
+            var pos_len = this.positional_list.length
             
             if($B.debug>0){
                 // If all arguments are "simple" all there is to check is that
                 // we got the right number of arguments
-                var pos_len = this.positional_list.length
-
+    
                 js = 'if($len!='+pos_len+'){$B.wrong_nb_args("'+this.name+
                     '", $len, '+pos_len
                 if(positional_str.length>0){ js += ', ['+positional_str+']'}
@@ -2216,6 +2217,11 @@ function $DefCtx(context){
                         var arg = this.positional_list[i]
                         pargs.push(arg+':'+arg)
                     }
+                    js = 'if($len!='+pos_len+'){$B.wrong_nb_args("'+this.name+
+                        '", $len, '+pos_len
+                    if(positional_str.length>0){ js += ', ['+positional_str+']'}
+                    js += ')}'
+                    else_node.add($NodeJS(js))
                     else_node.add($NodeJS(local_ns+'=$locals={'+pargs.join(', ')+'}'))
                 }
             }
