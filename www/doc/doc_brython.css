@@ -22,6 +22,12 @@ a.navig:link,a:link,a:hover,a.navig:visited {
   text-decoration:none
 }
 
+a.banner{
+  border-bottom-style: solid;
+  border-bottom-color: #1767B7;
+  border-bottom-width: 6px;
+}
+
 a.banner:link,a.banner:visited {
   background-color:#1767B7;
   color:#FFF;
@@ -30,7 +36,7 @@ a.banner:link,a.banner:visited {
   line-height:30px;
   padding:1.3em;
   text-align:center;
-  text-decoration:none
+  text-decoration:none;
 }
 
 a.banner:hover,a.banner:active {
@@ -140,7 +146,6 @@ strong {
   min-width:200px;
   padding:5px
 }
-
 
 
 
