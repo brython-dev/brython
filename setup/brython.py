@@ -70,13 +70,15 @@ if args.modules:
     
     # if there is a file .bundle-modules, use it to select only the requested
     # modules
-    include_path = ".bundle-include"
-
-    if os.path.exists(include_path):
-        with open(include_path, encoding="utf-8") as fobj:
-            bundle_list = [m.strip() for m in fobj if m.strip()]
-            print('bundled modules', bundle_list)
-            mods = {k:v for (k, v) in mods.items() if k in bundle_list}
+    include_paths = [".bundle-include", "bundle-include"]
+    
+    for include_path in include_paths:
+    
+        if os.path.exists(include_path):
+            with open(include_path, encoding="utf-8") as fobj:
+                bundle_list = [m.strip() for m in fobj if m.strip()]
+                print('bundled modules', bundle_list)
+                mods = {k:v for (k, v) in mods.items() if k in bundle_list}
     
     # save new version of brython_modules
     with open("brython_modules.js", "w", encoding="utf-8") as out:
