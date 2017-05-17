@@ -485,7 +485,7 @@ The function takes one argument, an object representing the event.
         input = document["input16"].value
         select = document["select16"]
         option = select.options[select.selectedIndex].value
-        text = document["textarea16"].text
+        text = document["textarea16"].value
         document["zone16"].clear()
         document["zone16"] <= ("Value in INPUT field: {}".format(input),
             html.BR(), "Selected option: {}".format(option),
