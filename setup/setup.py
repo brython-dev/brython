@@ -9,7 +9,7 @@ with open('README.rst', encoding='utf-8') as fobj:
 setup(
     name='brython',
 
-    version='3.3.1',
+    version='3.3.2',
 
     description='Brython is an implementation of Python 3 running in the browser',
     
@@ -61,6 +61,7 @@ setup(
     # have to be included in MANIFEST.in as well.
     package_data={
         'data': [
+            'README.txt',
             'demo.html', 
             'brython.js',
             'brython_stdlib.js'

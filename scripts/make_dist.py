@@ -22,7 +22,7 @@ if sys.version_info[0] != 3:
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
-implementation = [3, 3, 2, 'dev', 0]
+implementation = [3, 3, 2, 'final', 0]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
@@ -151,7 +151,7 @@ def run():
     dist3 = zipfile.ZipFile(dest_path + '.zip', mode='w',
                             compression=zipfile.ZIP_DEFLATED)
     
-    paths = ['demo.html', 'brython.js', 'brython_stdlib.js']
+    paths = ['README.txt', 'demo.html', 'brython.js', 'brython_stdlib.js']
     
     for arc, wfunc in ((dist1, dist1.add), (dist2, dist2.add), 
             (dist3, dist3.write)):

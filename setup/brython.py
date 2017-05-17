@@ -19,6 +19,8 @@ parser.add_argument('--update', help='Update Brython scripts',
     action="store_true")
 args = parser.parse_args()
 
+files = 'README.txt', 'demo.html', 'brython.js', 'brython_stdlib.js'
+
 if args.install:
     print('Installing Brython in an empty directory')
     
@@ -29,7 +31,7 @@ if args.install:
         import sys
         sys.exit()
     
-    for path in 'demo.html', 'brython.js', 'brython_stdlib.js':
+    for path in files:
         shutil.copyfile(os.path.join(src_path, path), path)
 
 if args.update:
@@ -37,7 +39,7 @@ if args.update:
 
     src_path = os.path.join(os.path.dirname(__file__), 'data')
 
-    for path in 'demo.html', 'brython.js', 'brython_stdlib.js':
+    for path in files:
         shutil.copyfile(os.path.join(src_path, path), path)
         
 if args.reset:
