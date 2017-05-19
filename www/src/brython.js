@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-05-18 15:08:32.741532"
+__BRYTHON__.compiled_date="2017-05-19 22:54:42.418416"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5702,7 +5702,7 @@ throw _b_.TypeError('ord() expected a character, but ' +
 $B.get_class(c).__name__ + ' was found')}}
 function pow(){var $ns=$B.args('pow',3,{x:null,y:null,z:null},['x','y','z'],arguments,{z:null},null,null)
 var x=$ns['x'],y=$ns['y'],z=$ns['z']
-var res=getattr(x,'__pow__')(y)
+var res=getattr(x,'__pow__')(y,z)
 if(z===null){return res}
 else{if(x!=_b_.int(x)||y !=_b_.int(y)){throw _b_.TypeError("pow() 3rd argument not allowed unless "+
 "all arguments are integers")}
@@ -6880,7 +6880,7 @@ $JSObjectDict.$factory=JSObject
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.header1','site-packages.highlight','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','module1','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.header1','site-packages.highlight','site-packages.test_sp','site-packages.turtle','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var js=['_ajax','_base64','_jsre','_multiprocessing','_posixsubprocess','_profile','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
@@ -7731,14 +7731,20 @@ $IntDict.__neg__=function(self){return -self}
 $IntDict.__new__=function(cls){if(cls===undefined){throw _b_.TypeError('int.__new__(): not enough arguments')}
 return{__class__:cls.$dict}}
 $IntDict.__pos__=function(self){return self}
-$IntDict.__pow__=function(self,other){if(isinstance(other,int)){switch(other.valueOf()){case 0:
+$IntDict.__pow__=function(self,other,z){if(isinstance(other,int)){switch(other.valueOf()){case 0:
 return int(1)
 case 1:
 return int(self.valueOf())}
+if(z !==undefined && z !==null){
+var res=(self % z + z)% z
+for(var i=1;i<other;i++){res *=self
+res=(res % z + z)% z}
+return res}
 var res=Math.pow(self.valueOf(),other.valueOf())
-if(!isFinite(res)){return res}
 if(res>$B.min_int && res<$B.max_int){return res}
-else{return int($B.LongInt.$dict.__pow__($B.LongInt(self),$B.LongInt(other)))}}
+else if(res !==Infinity && !isFinite(res)){return res}
+else{console.log(self,other)
+return int($B.LongInt.$dict.__pow__($B.LongInt(self),$B.LongInt(other)))}}
 if(isinstance(other,_b_.float)){if(self>=0){return new Number(Math.pow(self,other.valueOf()))}
 else{
 return _b_.complex.$dict.__pow__(_b_.complex(self,0),other)}}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.real),ln=Math.log(self)
@@ -8114,7 +8120,7 @@ for(var i=0;i<v2.length;i++){if(v1.charAt(start+i)=='1' ||v2.charAt(i)=='1'){res
 else{res +='0'}}
 return intOrLong(LongInt(res,2))}
 $LongIntDict.__pos__=function(self){return self}
-$LongIntDict.__pow__=function(self,power){if(typeof power=="number"){power=LongInt(_b_.str(power))}else if(!isinstance(power,LongInt)){var msg="power must be a LongDict, not '"
+$LongIntDict.__pow__=function(self,power,z){if(typeof power=="number"){power=LongInt(_b_.str(power))}else if(!isinstance(power,LongInt)){var msg="power must be a LongDict, not '"
 throw TypeError(msg+$B.get_class(power).__name__+"'")}
 if(!power.pos){if(self.value=='1'){return self}
 return LongInt('0')}else if(power.value=='0'){return LongInt('1')}
@@ -8122,7 +8128,8 @@ var res={__class__:$LongIntDict,value:self.value,pos:self.pos}
 var pow=power.value
 while(true){pow=sub_pos(pow,'1').value
 if(pow=='0'){break}
-res=LongInt($LongIntDict.__mul__(res,self))}
+res=LongInt($LongIntDict.__mul__(res,self))
+if(z !==undefined){res=$LongIntDict.__mod__(res,z)}}
 return intOrLong(res)}
 $LongIntDict.__rshift__=function(self,shift){shift=LongInt(shift)
 if(shift.value=='0'){return self}

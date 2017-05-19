@@ -457,7 +457,7 @@ $LongIntDict.__or__ = function(self, other){
 
 $LongIntDict.__pos__ = function(self){return self}
 
-$LongIntDict.__pow__ = function(self, power){
+$LongIntDict.__pow__ = function(self, power, z){
     if (typeof power == "number") {
         power=LongInt(_b_.str(power))
     }else if(!isinstance(power, LongInt)){
@@ -477,6 +477,9 @@ $LongIntDict.__pow__ = function(self, power){
         pow = sub_pos(pow, '1').value
         if(pow == '0'){break}
         res = LongInt($LongIntDict.__mul__(res, self))
+        if(z !== undefined){
+            res = $LongIntDict.__mod__(res, z)
+        }
     }
     return intOrLong(res)
 }

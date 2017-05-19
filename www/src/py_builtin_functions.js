@@ -1144,7 +1144,7 @@ function pow() {
     var $ns=$B.args('pow',3,{x:null,y:null,z:null},['x','y','z'],
         arguments,{z:null},null,null)
     var x=$ns['x'],y=$ns['y'],z=$ns['z']
-    var res = getattr(x,'__pow__')(y)
+    var res = getattr(x,'__pow__')(y, z)
     if(z === null){return res}
     else{
         if(x!=_b_.int(x) || y != _b_.int(y)){

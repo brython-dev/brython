@@ -6465,7 +6465,7 @@ _PyHASH_INF = sys.hash_info.inf
 _PyHASH_NAN = sys.hash_info.nan
 
 # _PyHASH_10INV is the inverse of 10 modulo the prime _PyHASH_MODULUS
-_PyHASH_10INV = pow(10, _PyHASH_MODULUS - 2, _PyHASH_MODULUS)
+_PyHASH_10INV = 1503238553 # pow(10, _PyHASH_MODULUS - 2, _PyHASH_MODULUS)
 del sys
 
 
