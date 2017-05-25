@@ -33,6 +33,7 @@ a.sort_link{
 </style>
 
 <script type="text/javascript" src="../src/brython.js"></script>
+<script type="text/javascript" src="../src/py_dom.js"></script>
 
 </head>
 <body onload="brython(1)">
@@ -106,7 +107,7 @@ def btn_click(ev):
         update_btn.bind('click', btn_click)
 
     elif action == "Update":
-        values = [entry.value for entry in row.get(selector="INPUT")]
+        values = [entry.value for entry in row.select("INPUT")]
         data = dict(zip(['title', 'author'], values))
         data['isbn'] = row.key # required for the "store.put" method below
 

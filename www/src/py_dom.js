@@ -1066,6 +1066,20 @@ DOMNodeDict.reset = function(self){ // for FORM
     return function(){self.elt.reset()}
 }
 
+DOMNodeDict.select = function(self, selector){
+    // alias for get(selector=...)
+    if(self.querySelectorAll===undefined){
+        throw _b_.TypeError("DOMNode object doesn't support selection by selector")
+    }
+    var node_list = self.querySelectorAll(selector),
+        res = []
+    if(node_list.length===0) return []
+    for(var i=0, len=node_list.length;i<len;i++){
+        res[i]=DOMNode(node_list[i])
+    }
+    return res
+}
+
 DOMNodeDict.style = function(self){
     // set attribute "float" for cross-browser compatibility
     self.elt.style.float = self.elt.style.cssFloat || self.style.styleFloat
