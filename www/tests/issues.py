@@ -1285,6 +1285,9 @@ assertRaises(TypeError, yoba, 1, 2, 3)
 # issue 592
 assert pow(97, 1351, 723) == 385
 
+# issue 595
+assert float(True) == 1.0
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-05-25 09:20:16.244561"
+__BRYTHON__.compiled_date="2017-05-25 09:28:46.500746"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -7573,7 +7573,11 @@ return $FloatClass(0.0)
 case Number.MAX_VALUE:
 return $FloatClass(Infinity)
 case -Number.MAX_VALUE:
-return $FloatClass(-Infinity)}
+return $FloatClass(-Infinity)
+case true:
+return new Number(1)
+case false:
+return new Number(0)}
 if(typeof value=="number")return new Number(value)
 if(isinstance(value,float)){return value}
 if(isinstance(value,_b_.bytes)){var s=getattr(value,'decode')('latin-1')

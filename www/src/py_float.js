@@ -601,6 +601,10 @@ var float = function (value){
         return $FloatClass(Infinity)
       case -Number.MAX_VALUE:
         return $FloatClass(-Infinity)
+      case true:
+        return new Number(1)
+      case false:
+        return new Number(0)
     }//switch
     
     if(typeof value=="number") return new Number(value)
