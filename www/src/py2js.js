@@ -1662,7 +1662,7 @@ function $ConditionCtx(context,token){
         // In a "while" loop, the flag "$no_break" is initially set to false.
         // If the loop exits with a "break" this flag will be set to "true",
         // so that an optional "else" clause will not be run.
-        var res = [tok+'(bool(']
+        var res = [tok+'($B.$bool(']
         if(tok=='while'){
             res.push('$locals["$no_break'+this.loop_num+'"] && ')
         }else if(tok=='else if'){
@@ -4062,7 +4062,7 @@ function $NotCtx(context){
     this.toString = function(){return 'not ('+this.tree+')'}
     this.to_js = function(){
         this.js_processed=true
-        return '!bool('+$to_js(this.tree)+')'
+        return '!$B.$bool('+$to_js(this.tree)+')'
     }
 }
 
@@ -4679,7 +4679,7 @@ function $TernaryCtx(context){
 
     this.to_js = function(){
         this.js_processed=true
-        var res = 'bool('+this.tree[1].to_js()+') ? ' // condition
+        var res = '$B.$bool('+this.tree[1].to_js()+') ? ' // condition
         res += this.tree[0].to_js()+' : '    // result if true
         return res + this.tree[2].to_js()          // result if false
     }
@@ -4988,7 +4988,7 @@ function $WithCtx(context){
         var fbody = new $Node(), indent=node.indent+4
         var js = '$exc'+num+' = false;$err'+$loop_num+'=$B.exception($err'+
             $loop_num+')\n'+' '.repeat(indent)+
-            'if(!bool($ctx_manager_exit'+num+'($err'+$loop_num+
+            'if(!$B.$bool($ctx_manager_exit'+num+'($err'+$loop_num+
             '.__class__.$factory,'+'$err'+$loop_num+
             ',getattr($err'+$loop_num+',"traceback"))))'
         js += '{throw $err'+$loop_num+'}'

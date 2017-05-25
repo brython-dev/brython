@@ -91,7 +91,7 @@ function bin(obj) {
     return getattr(obj, '__index__')()
 }
 
-function bool(obj){ // return true or false
+$B.$bool = function(obj){ // return true or false
     if(obj===null || obj === undefined ) return false
     switch(typeof obj) {
       case 'boolean':
@@ -107,6 +107,14 @@ function bool(obj){ // return true or false
             catch(err){return true}
         }
     }// switch
+}
+
+function bool(){
+    var $=$B.args('bool', 1,
+        {x:null},
+         ['x'],
+         arguments,{x:false},null,null)
+    return $B.$bool($.x)
 }
 
 function callable(obj) {return hasattr(obj,'__call__')}

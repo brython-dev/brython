@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-05-19 22:54:42.418416"
+__BRYTHON__.compiled_date="2017-05-25 09:20:16.244561"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -886,7 +886,7 @@ return 2}}
 this.to_js=function(){this.js_processed=true
 var tok=this.token
 if(tok==='elif'){tok='else if'}
-var res=[tok+'(bool(']
+var res=[tok+'($B.$bool(']
 if(tok=='while'){res.push('$locals["$no_break'+this.loop_num+'"] && ')}else if(tok=='else if'){var line_info=$get_node(this).line_num+','+$get_scope(this).id
 res.push('($locals.$line_info="'+line_info+'") && ')}
 if(this.tree.length==1){res.push($to_js(this.tree)+'))')}else{
@@ -1978,7 +1978,7 @@ this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return 'not ('+this.tree+')'}
 this.to_js=function(){this.js_processed=true
-return '!bool('+$to_js(this.tree)+')'}}
+return '!$B.$bool('+$to_js(this.tree)+')'}}
 function $OpCtx(C,op){
 this.type='op'
 this.op=op
@@ -2296,7 +2296,7 @@ C.parent=this
 this.tree=[C]
 this.toString=function(){return '(ternary) '+this.tree}
 this.to_js=function(){this.js_processed=true
-var res='bool('+this.tree[1].to_js()+') ? ' 
+var res='$B.$bool('+this.tree[1].to_js()+') ? ' 
 res +=this.tree[0].to_js()+' : ' 
 return res + this.tree[2].to_js()}}
 function $TryCtx(C){
@@ -2437,7 +2437,7 @@ new $NodeJSCtx(catch_node,'catch($err'+$loop_num+')')
 var fbody=new $Node(),indent=node.indent+4
 var js='$exc'+num+' = false;$err'+$loop_num+'=$B.exception($err'+
 $loop_num+')\n'+' '.repeat(indent)+
-'if(!bool($ctx_manager_exit'+num+'($err'+$loop_num+
+'if(!$B.$bool($ctx_manager_exit'+num+'($err'+$loop_num+
 '.__class__.$factory,'+'$err'+$loop_num+
 ',getattr($err'+$loop_num+',"traceback"))))'
 js +='{throw $err'+$loop_num+'}'
@@ -5266,7 +5266,7 @@ if(value >=0)return prefix + value.toString(base);
 return '-' + prefix +(-value).toString(base);}
 function bin(obj){if(isinstance(obj,_b_.int)){return $builtin_base_convert_helper(obj,2)}
 return getattr(obj,'__index__')()}
-function bool(obj){
+$B.$bool=function(obj){
 if(obj===null ||obj===undefined )return false
 switch(typeof obj){case 'boolean':
 return obj
@@ -5278,6 +5278,8 @@ default:
 try{return getattr(obj,'__bool__')()}
 catch(err){try{return getattr(obj,'__len__')()>0}
 catch(err){return true}}}}
+function bool(){var $=$B.args('bool',1,{x:null},['x'],arguments,{x:false},null,null)
+return $B.$bool($.x)}
 function callable(obj){return hasattr(obj,'__call__')}
 function chr(i){if(i < 0 ||i > 1114111)_b_.ValueError('Outside valid range')
 return String.fromCharCode(i)}
@@ -10763,6 +10765,12 @@ if(typeof self.elt.remove=="function"){self.elt.remove(child)
 return None}else{throw _b_.AttributeError(_b_.str(self)+" has no attribute 'remove'")}}
 DOMNodeDict.reset=function(self){
 return function(){self.elt.reset()}}
+DOMNodeDict.select=function(self,selector){
+if(self.querySelectorAll===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by selector")}
+var node_list=self.querySelectorAll(selector),res=[]
+if(node_list.length===0)return[]
+for(var i=0,len=node_list.length;i<len;i++){res[i]=DOMNode(node_list[i])}
+return res}
 DOMNodeDict.style=function(self){
 self.elt.style.float=self.elt.style.cssFloat ||self.style.styleFloat
 return $B.JSObject(self.elt.style)}
