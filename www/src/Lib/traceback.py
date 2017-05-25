@@ -19,7 +19,7 @@ def print_exc(file=sys.stderr):
     msg = exc.__name__
     if exc.args:
         msg += ': %s' %exc.args[0]
-    file.write(msg+'\n')
+    file.write('\n'+msg+'\n')
     _restore_current(exc)
 
 def format_exc(limit=None, chain=True):
