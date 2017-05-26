@@ -1394,9 +1394,9 @@ function setattr(obj,attr,value){
     }
 
     // Use __slots__ if defined
-    if(klass && klass.$slots && klass.$slots[attr]===undefined){
-        throw _b_.AttributeError("'"+klass.__name__+"' object has no attribute'"+
-            attr+"'")
+    if(klass && klass.$slots && klass.$slots[attr] === undefined){
+        throw _b_.AttributeError("'"+klass.__name__+
+            "' object has no attribute '"+attr+"'")
     }
     
     // Search the __setattr__ method

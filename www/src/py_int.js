@@ -292,7 +292,6 @@ $IntDict.__pow__ = function(self,other,z){
       if(res>$B.min_int && res<$B.max_int){return res}
       else if(res !== Infinity && !isFinite(res)){return res}
       else{
-          console.log(self, other)
           return int($B.LongInt.$dict.__pow__($B.LongInt(self),
              $B.LongInt(other)))
       }

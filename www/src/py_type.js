@@ -70,7 +70,8 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     for(var i=0;i<mro.length;i++){
         var _slots = mro[i].__slots__
         if(_slots!==undefined){
-            _slots = _b_.list(_slots)
+            if(typeof _slots == 'string'){_slots = [_slots]}
+            else{_slots = _b_.list(_slots)}
             for(var j=0;j<_slots.length;j++){
                 cl_dict.$slots = cl_dict.$slots || {}
                 cl_dict.$slots[_slots[j]]=class_dict.__mro__[i]

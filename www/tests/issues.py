@@ -1288,6 +1288,13 @@ assert pow(97, 1351, 723) == 385
 # issue 595
 assert float(True) == 1.0
 
+# issue 598
+class A(object):
+    __slots__ = "attr"
+    def __init__(self, attr=0):
+        self.attr  = attr 
+a = A() 
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

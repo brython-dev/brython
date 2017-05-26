@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-05-25 09:28:46.500746"
+__BRYTHON__.compiled_date="2017-05-26 21:03:05.428842"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4399,7 +4399,8 @@ var v=kdict[attr]
 if(typeof v=='function' && v.__class__!==$B.$factory){if(v.__isabstractmethod__===true){is_instanciable=false
 abstract_methods[attr]=true}else{non_abstract_methods[attr]=true}}}}
 for(var i=0;i<mro.length;i++){var _slots=mro[i].__slots__
-if(_slots!==undefined){_slots=_b_.list(_slots)
+if(_slots!==undefined){if(typeof _slots=='string'){_slots=[_slots]}
+else{_slots=_b_.list(_slots)}
 for(var j=0;j<_slots.length;j++){cl_dict.$slots=cl_dict.$slots ||{}
 cl_dict.$slots[_slots[j]]=class_dict.__mro__[i]}}}
 for(var i=1;i<mro.length;i++){if(mro[i].__class__ !==$B.$type){metaclass=mro[i].__class__.$factory}}
@@ -5814,8 +5815,8 @@ for(var i=0,_len=mro.length;i<_len;i++){__set1__=mro[i].__set__
 if(__set1__){break}}}}
 if(__set1__!==undefined){var __set__=getattr(res,'__set__',null)
 if(__set__ &&(typeof __set__=='function')){__set__.apply(res,[obj,value]);return None}}}
-if(klass && klass.$slots && klass.$slots[attr]===undefined){throw _b_.AttributeError("'"+klass.__name__+"' object has no attribute'"+
-attr+"'")}
+if(klass && klass.$slots && klass.$slots[attr]===undefined){throw _b_.AttributeError("'"+klass.__name__+
+"' object has no attribute '"+attr+"'")}
 var _setattr=false
 if(klass!==undefined){_setattr=klass.__setattr__
 if(_setattr===undefined){var mro=klass.__mro__
@@ -7749,8 +7750,7 @@ return res}
 var res=Math.pow(self.valueOf(),other.valueOf())
 if(res>$B.min_int && res<$B.max_int){return res}
 else if(res !==Infinity && !isFinite(res)){return res}
-else{console.log(self,other)
-return int($B.LongInt.$dict.__pow__($B.LongInt(self),$B.LongInt(other)))}}
+else{return int($B.LongInt.$dict.__pow__($B.LongInt(self),$B.LongInt(other)))}}
 if(isinstance(other,_b_.float)){if(self>=0){return new Number(Math.pow(self,other.valueOf()))}
 else{
 return _b_.complex.$dict.__pow__(_b_.complex(self,0),other)}}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.real),ln=Math.log(self)
