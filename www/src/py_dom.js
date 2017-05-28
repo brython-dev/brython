@@ -612,7 +612,7 @@ DOMNodeDict.__iter__ = function(self){
             items.push(DOMNode(self.elt.childNodes[i]))
         }
     }
-    return iter(items)
+    return $B.$iter(items)
 }
 
 DOMNodeDict.__le__ = function(self,other){

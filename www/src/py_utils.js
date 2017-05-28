@@ -122,6 +122,7 @@ $B.wrong_nb_args = function(name, received, expected, positional){
     }
 }
 
+
 $B.get_class = function(obj, from){
     // generally we get the attribute __class__ of an object by obj.__class__
     // but Javascript builtins used by Brython (functions, numbers, strings...)

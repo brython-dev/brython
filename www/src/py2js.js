@@ -659,7 +659,7 @@ function $AssignCtx(context){ //, check_unbound){
             var rname = '$right'+$loop_num
 
             var js = 'var '+rname+' = getattr'
-            js += '(iter('+right.to_js()+'),"__next__");'
+            js += '($B.$iter('+right.to_js()+'),"__next__");'
             new $NodeJSCtx(new_node,js)
 
             var new_nodes = [new_node], pos=1
@@ -2794,7 +2794,7 @@ function $ForExpr(context){
         var new_node = new $Node()
         new_node.line_num = $get_node(this).line_num
         var js = '$locals["$next'+num+'"]'
-        js += '=getattr(iter('+iterable.to_js()+'),"__next__");\n'
+        js += '=getattr($B.$iter('+iterable.to_js()+'),"__next__");\n'
         
         new $NodeJSCtx(new_node,js)
         new_nodes[pos++]=new_node

@@ -13,7 +13,77 @@ $B.$comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
 // maps comparison operator to name of inverse operator (eg < for >)
 $B.$inv_comps = {'>': 'lt', '>=': 'le', '<': 'gt', '<=': 'gt'}
 
+function check_nb_args(name, expected, got){
+    // Check the number of arguments
+    if(got != expected){
+        if(expected==0){
+            throw _b_.TypeError(name+"() takes no argument" +
+                " ("+got+" given)")
+        }else{
+            throw _b_.TypeError(name+"() takes exactly "+expected+" argument" +
+                (expected<2 ? '' : 's') +" ("+got+" given)")
+        }
+    }
+}
+
+function check_no_kw(name, x, y){
+    // Throw error if one of x, y is a keyword argument
+    if(x.$nat || (y!==undefined && y.$nat)){
+        throw _b_.TypeError(name+"() takes no keyword arguments")}
+}
+
+function check_not_kw(arg){
+    // Check that arg is not a keyword argument
+    if(arg.$nat){throw _b_.TypeError("'"+Object.keys(arg.kw)[0]+
+        "' is an invalid keyword argument for this function")}
+}
+
+var $NoneDict = {__class__:$B.$type,__name__:'NoneType'}
+
+$NoneDict.__mro__ = [$ObjectDict]
+
+$NoneDict.__setattr__ = function(self, attr){
+    return no_set_attr($NoneDict, attr)
+}
+
+var None = {
+    __bool__ : function(){return False},
+    __class__ : $NoneDict,
+    __hash__ : function(){return 0},
+    __repr__ : function(){return 'None'},
+    __str__ : function(){return 'None'},
+    toString : function(){return 'None'}
+}
+
+$NoneDict.$factory = function(){return None}
+$NoneDict.$factory.__class__=$B.$factory
+$NoneDict.$factory.$dict=$NoneDict
+
+for(var $op in $B.$comps){ // None is not orderable with any type
+    var key = $B.$comps[$op]
+    switch(key){
+      case 'ge':
+      case 'gt':
+      case 'le':
+      case 'lt':
+        $NoneDict['__'+key+'__']=(function(op){
+            return function(other){
+            throw _b_.TypeError("unorderable types: NoneType() "+op+" "+
+                $B.get_class(other).__name__+"()")}
+        })($op)
+    }
+}
+for(var $func in None){
+    if(typeof None[$func]==='function'){
+        None[$func].__str__ = (function(f){
+            return function(){return "<method-wrapper "+f+" of NoneType object>"}
+        })($func)
+    }
+}
+
 function abs(obj){
+    check_nb_args('abs', 1, arguments.length)
+    check_no_kw('abs', obj)
     if(isinstance(obj,_b_.int)) return _b_.int(Math.abs(obj));
     if(isinstance(obj,_b_.float)) return _b_.float(Math.abs(obj));
     if(hasattr(obj,'__abs__')){return getattr(obj,'__abs__')()};
@@ -22,6 +92,8 @@ function abs(obj){
 }
 
 function all(obj){
+    check_nb_args('all', 1, arguments.length)
+    check_no_kw('all', obj)
     var iterable = iter(obj)
     while(1){
         try{
@@ -32,6 +104,8 @@ function all(obj){
 }
 
 function any(obj){
+    check_nb_args('any', 1, arguments.length)
+    check_no_kw('any', obj)
     var iterable = iter(obj)
     while(1){
         try{
@@ -42,6 +116,8 @@ function any(obj){
 }
 
 function ascii(obj) {
+    check_nb_args('ascii', 1, arguments.length)
+    check_no_kw('ascii', obj)
     var res = repr(obj), res1='', cp
     for(var i=0;i<res.length;i++){
         cp = res.charCodeAt(i)
@@ -85,6 +161,8 @@ function $builtin_base_convert_helper(obj, base) {
 
 // bin() (built in function)
 function bin(obj) {
+    check_nb_args('bin', 1, arguments.length)
+    check_no_kw('bin', obj)
     if(isinstance(obj, _b_.int)){
         return $builtin_base_convert_helper(obj, 2)
     }
@@ -110,23 +188,35 @@ $B.$bool = function(obj){ // return true or false
 }
 
 function bool(){
-    var $=$B.args('bool', 1,
-        {x:null},
-         ['x'],
-         arguments,{x:false},null,null)
+    // This function is exposed as __builtins__.bool, to support the control
+    // on arguments provided by $B.$args.
+    // It calls $B.$bool, which is used inside the generated JS code and skips
+    // arguments control.
+    var $=$B.args('bool', 1, {x:null}, ['x'], arguments,{x:false},null,null)
     return $B.$bool($.x)
 }
 
-function callable(obj) {return hasattr(obj,'__call__')}
+function callable(obj) {
+    check_nb_args('callable', 1, arguments.length)
+    check_no_kw('callable', obj)
+
+    return hasattr(obj,'__call__')
+}
 
 function chr(i) {
-  if (i < 0 || i > 1114111) _b_.ValueError('Outside valid range')
+    check_nb_args('chr', 1, arguments.length)
+    check_no_kw('chr', i)
 
-  return String.fromCharCode(i)
+    if (i < 0 || i > 1114111) _b_.ValueError('Outside valid range')
+
+    return String.fromCharCode(i)
 }
 
 //classmethod() (built in function)
 function classmethod(func) {
+    check_nb_args('classmethod', 1, arguments.length)
+    check_no_kw('classmethod', func)
+
     func.$type = 'classmethod'
     return func
 }
@@ -172,6 +262,12 @@ var __debug__ = $B.debug>0
 function delattr(obj, attr) {
     // descriptor protocol : if obj has attribute attr and this attribute has 
     // a method __delete__(), use it
+    check_no_kw('delattr', obj, attr)
+    check_nb_args('delattr', 2, arguments.length)
+    if(typeof attr != 'string'){
+        throw _b_.TypeError("attribute name must be string, not '"+
+            $B.get_class(attr).__name__+"'")
+    }
     var klass = $B.get_class(obj)
     var res = obj[attr]
     if(res===undefined){
@@ -209,6 +305,9 @@ function dir(obj){
         _b_.list.$dict.sort(res)
         return res
     }
+
+    check_nb_args('dir', 1, arguments.length)
+    check_no_kw('dir', obj)
     
     var klass = obj.__class__ || $B.get_class(obj)
     
@@ -234,6 +333,9 @@ function dir(obj){
 
 //divmod() (built in function)
 function divmod(x,y) {
+   check_no_kw('divmod', x, y)
+   check_nb_args('divmod', 2, arguments.length)
+
    var klass = x.__class__ || $B.get_class(x)
    return _b_.tuple([getattr(klass, '__floordiv__')(x,y), 
        getattr(klass, '__mod__')(x,y)])
@@ -462,10 +564,11 @@ $FilterDict.__iter__ = function(self){return self}
 $FilterDict.__repr__ = $FilterDict.__str__ = function(){return "<filter object>"},
 $FilterDict.__mro__ = [$ObjectDict]
 
-function filter(){
-    if(arguments.length!=2){throw _b_.TypeError(
-            "filter expected 2 arguments, got "+arguments.length)}
-    var func=arguments[0],iterable=iter(arguments[1])
+function filter(func, iterable){
+    check_no_kw('filter', func, iterable)
+    check_nb_args('filter', 2, arguments.length)
+
+    iterable=iter(iterable)
     if(func === _b_.None) func = bool
 
     var __next__ = function() {
@@ -481,7 +584,10 @@ function filter(){
 }
 
 function format(value, format_spec) {
-  if(hasattr(value, '__format__')) return getattr(value,'__format__')(format_spec)
+  var $ = $B.args("format", {value: null, format_spec: null},
+      ['value', 'format_spec'], arguments, {format_spec: ''}, null, null)
+  var fmt = getattr($.value,'__format__', null)
+  if(fmt !== null){return fmt($.format_spec)}
   
   throw _b_.NotImplementedError("__format__ is not implemented for object '" + _b_.str(value) + "'")
 }
@@ -515,6 +621,13 @@ $B.show_getattr = function(){
 function getattr(obj,attr,_default){
 
     //if(obj===undefined){console.log('get attr', attr, 'of undefined')}
+    var len = arguments.length
+    if(len<2){throw _b_.TypeError("getattr expected at least 2 arguments, "
+        + "got "+len)}
+    else if(len>3){
+        throw _b_.TypeError("getattr expected at most 3 arguments, got "
+            +len)
+    }
     
     var klass = obj.__class__
     
@@ -728,20 +841,21 @@ function getattr(obj,attr,_default){
 function globals(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
+    check_nb_args('globals', 0, arguments.length)
     return $B.obj_dict($B.last($B.frames_stack)[3])
 }
 
 function hasattr(obj,attr){
+    check_no_kw('hasattr', obj, attr)
+    check_nb_args('hasattr', 2, arguments.length)
     try{getattr(obj,attr);return true}
     catch(err){return false}
 }
 
 function hash(obj){
-    if(arguments.length!=1){
-        throw _b_.TypeError("hash() takes exactly one argument ("+
-            arguments.length+" given)")
-    }
-    if (obj === undefined) console.log('hash:obj is undefined', obj)
+    check_no_kw('hash', obj)
+    check_nb_args('hash', 1, arguments.length)
+
     if (obj.__hashvalue__ !== undefined) return obj.__hashvalue__
     if (isinstance(obj, _b_.int)) return obj.valueOf()
     if (isinstance(obj, bool)) return _b_.int(obj)
@@ -827,9 +941,15 @@ function help(obj){
     catch(err){console.log('help err '+err);return ''}
 }
 
-function hex(x) { return $builtin_base_convert_helper(x, 16)}
+function hex(x) {
+    check_no_kw('hex', x)
+    check_nb_args('hex', 1, arguments.length)
+    return $builtin_base_convert_helper(x, 16)
+}
 
 function id(obj) {
+   check_no_kw('id', obj)
+   check_nb_args('id', 1, arguments.length)
    if (isinstance(obj, [_b_.str, _b_.int, _b_.float])){
        return getattr(_b_.str(obj), '__hash__')()
    }else if(obj.$id!==undefined){return obj.$id}
@@ -850,7 +970,7 @@ function __import__(mod_name, globals, locals, fromlist, level) {
 //not a direct alias of prompt: input has no default value
 function input(src) {
     var stdin = ($B.imported.sys && $B.imported.sys.stdin || $B.stdin);
-    if (stdin.__original__) { return prompt(src) || '' }
+    if (stdin.__original__) { return prompt(src || '') || '' }
     var val = _b_.getattr(stdin, 'readline')();
     val = val.split('\n')[0];
     if (stdin.len === stdin.pos){
@@ -861,6 +981,8 @@ function input(src) {
 }
 
 function isinstance(obj,arg){
+    check_no_kw('isinstance', obj, arg)
+    check_nb_args('isinstance', 2, arguments.length)
     if(obj===null) return arg===None
     if(obj===undefined) return false
     if(arg.constructor===Array){
@@ -914,9 +1036,9 @@ function isinstance(obj,arg){
 }
 
 function issubclass(klass,classinfo){
-    if(arguments.length!==2){
-      throw _b_.TypeError("issubclass expected 2 arguments, got "+arguments.length)
-    }
+    check_no_kw('issubclass', klass, classinfo)
+    check_nb_args('issubclass', 2, arguments.length)
+
     if(!klass.__class__ || klass.__class__!==$B.$factory){
       throw _b_.TypeError("issubclass() arg 1 must be a class")
     }
@@ -955,7 +1077,9 @@ iterator_class.$dict.__next__ = function(self){
     catch(err){throw _b_.StopIteration('')}
 }
 
-function iter(obj){
+$B.$iter = function(obj){
+    // Function used internally by core Brython modules, to avoid the cost
+    // of arguments control
     try{var _iter = getattr(obj,'__iter__')}
     catch(err){
         var gi = getattr(obj,'__getitem__',null),
@@ -980,7 +1104,17 @@ function iter(obj){
     return res
 }
 
+function iter(){
+    // Function exposed to Brython programs, with arguments control
+    var $ = $B.args('iter', 1, {obj: null}, ['obj'], arguments,
+        null, 'kw')
+    return $B.$iter($.obj)
+}
+
 function len(obj){
+    check_no_kw('len', obj)
+    check_nb_args('len', 1, arguments.length)
+
     try{return getattr(obj,'__len__')()}
     catch(err){
         throw _b_.TypeError("object of type '"+$B.get_class(obj).__name__+
@@ -991,6 +1125,7 @@ function len(obj){
 function locals(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
+    check_nb_args('locals', 0, arguments.length)
     var locals_obj = $B.last($B.frames_stack)[1]
     return $B.obj_dict(locals_obj)
 }
@@ -1001,9 +1136,11 @@ $MapDict.__mro__ = [$ObjectDict]
 $MapDict.__iter__ = function (self){return self}
 
 function map(){
-    var func = getattr(arguments[0],'__call__')
-    var iter_args = [], pos=0
-    for(var i=1;i<arguments.length;i++){iter_args[pos++]=iter(arguments[i])}
+    var $ = $B.args('map', 2, {func: null, it1:null}, ['func', 'it1'],
+        arguments, {}, 'args', null),
+        func = getattr($.func,'__call__')
+    var iter_args = [$B.$iter($.it1)], pos=0
+    for(var i=0;i<$.args.length;i++){iter_args[pos++]=$B.$iter($.args[i])}
     var __next__ = function(){
         var args = [], pos=0
         for(var i=0;i<iter_args.length;i++){
@@ -1049,7 +1186,7 @@ function $extreme(args,op){ // used by min() and max()
     }
     if(!func){func = function(x){return x}}
     if(nb_args==0){
-        throw _b_.TypeError($op_name+" expected 1 arguments, got 0")
+        throw _b_.TypeError($op_name+" expected 1 argument, got 0")
     }else if(nb_args==1){
         // Only one positional argument : it must be an iterable
         var $iter = iter(args[0]),
@@ -1099,6 +1236,8 @@ function min(){
 }
 
 function next(obj){
+    check_no_kw('next', obj)
+    check_nb_args('next', 1, arguments.length)
     var ga = getattr(obj,'__next__')
     if(ga!==undefined) return ga()
     throw _b_.TypeError("'"+$B.get_class(obj).__name__+
@@ -1125,6 +1264,8 @@ function $not(obj){return !bool(obj)}
 function oct(x) {return $builtin_base_convert_helper(x, 8)}
 
 function ord(c) {
+    check_no_kw('ord', c)
+    check_nb_args('ord', 1, arguments.length)
     //return String.charCodeAt(c)  <= this returns an undefined function error
     // see http://msdn.microsoft.com/en-us/library/ie/hza4d04f(v=vs.94).aspx
     if(typeof c=='string'){
@@ -1220,6 +1361,8 @@ property.$dict = $PropertyDict
 $PropertyDict.$factory = property
 
 function repr(obj){
+    check_no_kw('repr', obj)
+    check_nb_args('repr', 1, arguments.length)
     if(obj.__class__===$B.$factory){
         // obj is a class (the factory function)
         // In this case, repr() doesn't use the attribute __repr__ of the
@@ -1249,6 +1392,9 @@ function reversed(seq){
     // __reversed__() method or supports the sequence protocol (the __len__() 
     // method and the __getitem__() method with integer arguments starting at 
     // 0).
+    
+    check_no_kw('reversed', seq)
+    check_nb_args('reversed', 1, arguments.length)
 
     try{return getattr(seq,'__reversed__')()}
     catch(err){
@@ -1271,6 +1417,10 @@ reversed.$dict = $ReversedDict
 $ReversedDict.$factory = reversed
 
 function round(arg,n){
+    var $ = $B.args('round', 2, {number:null, ndigits:null},
+        ['number', 'ndigits'], arguments, {ndigits: None}, null, null),
+        arg = $.number, n = $.ndigits
+        
     if(!isinstance(arg,[_b_.int,_b_.float])){
         if (!hasattr(arg,'__round__'))
             throw _b_.TypeError("type "+arg.__class__+" doesn't define __round__ method")
@@ -1282,7 +1432,7 @@ function round(arg,n){
       throw _b_.OverflowError("cannot convert float infinity to integer")
     }
 
-    if(n===undefined){
+    if(n===None){
         var floor = Math.floor(arg)
         var diff = Math.abs(arg-floor)
         if (diff == 0.5){
@@ -1301,8 +1451,12 @@ function round(arg,n){
     }
 }
 
-function setattr(obj,attr,value){
+function setattr(){
 
+    var $ = $B.args('setattr', 3, {obj:null, attr:null, value:null},
+        ['obj', 'attr', 'value'], arguments, {}, null, null),
+        obj = $.obj, attr=$.attr, value=$.value
+        
     if(!(typeof attr=='string')){
         throw _b_.TypeError("setattr(): attribute name must be string")
     }
@@ -1441,6 +1595,9 @@ $StaticmethodDict.$factory = staticmethod
 // str() defined in py_string.js
 
 function sum(iterable,start){
+    var $ = $B.args('sum', 2, {iterable:null, start:null}, 
+        ['iterable', 'start'], arguments, {start: 0}, null, null),
+        iterable = $.iterable, start=$.start
     if(start===undefined) {
       start=0
     } else {
@@ -1793,48 +1950,6 @@ for(var $func in Ellipsis){
     }
 }
 
-var $NoneDict = {__class__:$B.$type,__name__:'NoneType'}
-
-$NoneDict.__mro__ = [$ObjectDict]
-
-$NoneDict.__setattr__ = function(self, attr){
-    return no_set_attr($NoneDict, attr)
-}
-
-var None = {
-    __bool__ : function(){return False},
-    __class__ : $NoneDict,
-    __hash__ : function(){return 0},
-    __repr__ : function(){return 'None'},
-    __str__ : function(){return 'None'},
-    toString : function(){return 'None'}
-}
-
-$NoneDict.$factory = function(){return None}
-$NoneDict.$factory.__class__=$B.$factory
-$NoneDict.$factory.$dict=$NoneDict
-
-for(var $op in $B.$comps){ // None is not orderable with any type
-    var key = $B.$comps[$op]
-    switch(key){
-      case 'ge':
-      case 'gt':
-      case 'le':
-      case 'lt':
-        $NoneDict['__'+key+'__']=(function(op){
-            return function(other){
-            throw _b_.TypeError("unorderable types: NoneType() "+op+" "+
-                $B.get_class(other).__name__+"()")}
-        })($op)
-    }
-}
-for(var $func in None){
-    if(typeof None[$func]==='function'){
-        None[$func].__str__ = (function(f){
-            return function(){return "<method-wrapper "+f+" of NoneType object>"}
-        })($func)
-    }
-}
 
 // add attributes to native Function
 var $FunctionCodeDict = {__class__:$B.$type,__name__:'function code'}

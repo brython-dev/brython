@@ -287,7 +287,7 @@ $DictDict.__init__ = function(self){
             var si = $DictDict.__setitem__
             while(i-->0) si(self, obj[i-1][0], obj[i-1][1])
             return $N
-        }else if(isinstance(obj,dict)){
+        }else if(obj.$nat===undefined && isinstance(obj,dict)){
             $copy_dict(self, obj)
             return $N
         }
@@ -322,7 +322,7 @@ $DictDict.__init__ = function(self){
             var si=$DictDict.__setitem__
             while(i-->0) si(self, src[i-1][0], src[i-1][1])
         }else{
-            var iterable = iter(args[0])
+            var iterable = $B.$iter(args[0])
             while(1){
                 try{
                    var elt = next(iterable)
@@ -482,7 +482,7 @@ $DictDict.fromkeys = function(){
     // class method
     var klass = $.cls,
         res = klass(),
-        keys_iter = _b_.iter(keys)
+        keys_iter = $B.$iter(keys)
 
     while(1){
         try{

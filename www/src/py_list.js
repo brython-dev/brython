@@ -187,7 +187,7 @@ $ListDict.__hash__ = None
 $ListDict.__iadd__ = function() {
     var $=$B.args('__iadd__',2,{self:null,x:null},['self','x'],
         arguments,{},null,null)
-    var x = list(iter($.x))
+    var x = list($B.$iter($.x))
     for (var i = 0; i < x.length; i++) {
         $.self.push(x[i])
     }
@@ -212,7 +212,7 @@ $ListDict.__init__ = function(self,arg){
     while(len_func()) pop_func()
 
     if(arg===undefined) return $N
-    var arg = iter(arg)
+    var arg = $B.$iter(arg)
     var next_func = getattr(arg,'__next__')
     var pos=len_func()
     while(1){
@@ -348,7 +348,7 @@ $ListDict.count = function(){
 $ListDict.extend = function(){
     var $=$B.args('extend',2,{self:null,t:null},['self','t'],
         arguments,{},null,null)
-    other = list(iter($.t))
+    other = list($B.$iter($.t))
     for(var i=0;i<other.length;i++){$.self.push(other[i])}
     return $N
 }
@@ -598,7 +598,7 @@ function list(){
     }
     var res = [], 
         pos=0, 
-        arg = iter(obj),
+        arg = $B.$iter(obj),
         next_func = getattr(arg,'__next__')
     while(1){
         try{res[pos++]=next_func()}
