@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-05-29 17:11:47.836518"
+__BRYTHON__.compiled_date="2017-05-29 18:34:13.036679"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1413,10 +1413,15 @@ this.test_range=true
 new_nodes=[],pos=0}
 var new_node=new $Node()
 new_node.line_num=$get_node(this).line_num
-var js='$locals["$next'+num+'"]'
-js +='=getattr($B.$iter('+iterable.to_js()+'),"__next__");\n'
+var it_js=iterable.to_js()
+var js='$locals["$next'+num+'"]'+'=getattr($B.$iter('+ it_js +
+'),"__next__")'
 new $NodeJSCtx(new_node,js)
 new_nodes[pos++]=new_node
+var js='if(isinstance('+it_js+', dict)){$locals.$len_func'+num+
+'=getattr('+it_js+',"__len__"); $locals.$len'+num+
+'=$locals.$len_func'+num+'()}else{$locals.$len'+num+'=null}'
+new_nodes[pos++]=$NodeJS(js)
 if(this.has_break){
 new_node=new $Node()
 new $NodeJSCtx(new_node,local_ns+'["$no_break'+num+'"]=true;')
@@ -1434,6 +1439,9 @@ new_nodes[pos++]=while_node
 node.parent.children.splice(rank,1)
 if(this.test_range){for(var i=new_nodes.length-1;i>=0;i--){else_node.insert(0,new_nodes[i])}}else{for(var i=new_nodes.length-1;i>=0;i--){node.parent.insert(rank,new_nodes[i])
 offset +=new_nodes.length}}
+while_node.add($NodeJS('if($locals.$len'+num+'!==null && $locals.$len'+
+num+'!=$locals.$len_func'+num+'()){throw RuntimeError("dictionary'+
+' changed size during iteration")}'))
 var try_node=new $Node()
 new $NodeJSCtx(try_node,'try')
 while_node.add(try_node)

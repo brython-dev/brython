@@ -2793,11 +2793,17 @@ function $ForExpr(context){
         // the iterable
         var new_node = new $Node()
         new_node.line_num = $get_node(this).line_num
-        var js = '$locals["$next'+num+'"]'
-        js += '=getattr($B.$iter('+iterable.to_js()+'),"__next__");\n'
-        
+        var it_js = iterable.to_js()
+        var js = '$locals["$next'+num+'"]'+'=getattr($B.$iter('+ it_js +
+            '),"__next__")'
         new $NodeJSCtx(new_node,js)
         new_nodes[pos++]=new_node
+        
+        // Line to store the length of the iterator
+        var js = 'if(isinstance('+it_js+', dict)){$locals.$len_func'+num+
+            '=getattr('+it_js+',"__len__"); $locals.$len'+num+
+            '=$locals.$len_func'+num+'()}else{$locals.$len'+num+'=null}'
+        new_nodes[pos++] = $NodeJS(js)
 
         if(this.has_break){
             // If there is a "break" in the loop, add a boolean
@@ -2834,6 +2840,12 @@ function $ForExpr(context){
                 offset += new_nodes.length
             }
         }
+        
+        // Add test of length change
+        while_node.add($NodeJS('if($locals.$len'+num+'!==null && $locals.$len'+
+            num+'!=$locals.$len_func'+num+'()){throw RuntimeError("dictionary'+
+            ' changed size during iteration")}'))
+
         var try_node = new $Node()
         new $NodeJSCtx(try_node,'try')
         while_node.add(try_node)
