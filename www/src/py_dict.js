@@ -91,9 +91,23 @@ var $copy_dict = function(left, right) {
     while(i--) si(left, _l[i][0], _l[i][1])
 }
 
+function toSet(items){
+    // Build a set from the iteration on items
+    var res = []
+    while(true){
+        try{res.push(items.next())}
+        catch(err){break}
+    }
+    return _b_.set(res)
+}
+
 var $iterator_wrapper = function(items,klass){
     var res = {
         __class__:klass,
+        __eq__:function(other){
+            // compare set of items to other
+            return getattr(toSet(items), "__eq__")(other)
+        },
         __iter__:function(){items.iter.i=0; return res},
         __len__:function(){return items.length()},
         __next__:function(){

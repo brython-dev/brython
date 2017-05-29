@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-05-29 16:19:02.739702"
+__BRYTHON__.compiled_date="2017-05-29 17:11:47.836518"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -9846,7 +9846,13 @@ var $copy_dict=function(left,right){var _l=new $item_generator(right).as_list()
 var si=$DictDict.__setitem__
 var i=_l.length
 while(i--)si(left,_l[i][0],_l[i][1])}
-var $iterator_wrapper=function(items,klass){var res={__class__:klass,__iter__:function(){items.iter.i=0;return res},__len__:function(){return items.length()},__next__:function(){return items.next()},__repr__:function(){var s=[]
+function toSet(items){
+var res=[]
+while(true){try{res.push(items.next())}
+catch(err){break}}
+return _b_.set(res)}
+var $iterator_wrapper=function(items,klass){var res={__class__:klass,__eq__:function(other){
+return getattr(toSet(items),"__eq__")(other)},__iter__:function(){items.iter.i=0;return res},__len__:function(){return items.length()},__next__:function(){return items.next()},__repr__:function(){var s=[]
 for(var i=0,len=items.length();i<len;i++){s.push(_b_.repr(items.next()))}
 return klass.__name__+'(['+ s.join(',')+ '])'},}
 res.__str__=res.toString=res.__repr__

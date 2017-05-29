@@ -1311,6 +1311,12 @@ b = B()
 assert a != b
 assert b != a
 
+# issue 601
+assert {1:1}.keys() == {1}
+assert {1} == {1:1}.keys()
+assert {1:1}.items() == {(1,1)}
+assert {1:2}.values() == {2}
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
