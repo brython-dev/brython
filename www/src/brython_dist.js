@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-05-29 20:28:12.536679"
+__BRYTHON__.compiled_date="2017-05-29 20:33:48.916679"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -6455,7 +6455,7 @@ $SliceDict.$conv=function(self,len){
 return{start: self.start===_b_.None ? 0 : self.start,stop: self.stop===_b_.None ? len : self.stop,step: self.step===_b_.None ? 1 : self.step}}
 $SliceDict.$conv_for_seq=function(self,len){
 var step=self.step===None ? 1 : $B.PyNumber_Index(self.step),step_is_neg=$B.gt(0,step),len_1=$B.sub(len,1)
-if(step==0){throw Error('ValueError : slice step cannot be zero');}
+if(step==0){throw _b_.ValueError('slice step cannot be zero');}
 var start
 if(self.start===None){start=step_is_neg ? len_1 : 0;}else{
 start=$B.PyNumber_Index(self.start);
