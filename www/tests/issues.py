@@ -1335,6 +1335,14 @@ b[0] += [10]
 assert a == [[1, 10], 2, 3]
 assert b == [[1, 10], 2, 3]
 
+# issue 604
+class StopCompares:
+    def __eq__(self, other):
+        return 1/0
+
+checkfirst = list([1, StopCompares()])
+assert(1 in checkfirst)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

@@ -34,9 +34,10 @@ $ListDict.__contains__ = function(self,item){
         self=$.self, 
         item=$.item
     var _eq = getattr(item, '__eq__')
-    var i=self.length
-    while(i--) {
+    var i=0
+    while(i<self.length) {
         if(_eq(self[i])) return true
+        i++
     }
     return false
 }
