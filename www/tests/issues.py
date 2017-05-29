@@ -1327,6 +1327,14 @@ try:
 except RuntimeError:
     pass
 
+# issue 603
+import copy
+a = [[1],2,3]
+b = copy.copy(a) 
+b[0] += [10]
+assert a == [[1, 10], 2, 3]
+assert b == [[1, 10], 2, 3]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

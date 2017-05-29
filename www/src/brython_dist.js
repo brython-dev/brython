@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-05-29 18:34:13.036679"
+__BRYTHON__.compiled_date="2017-05-29 20:06:21.391679"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4882,7 +4882,7 @@ return}else if(obj.__class__===_b_.dict.$dict){obj.__class__.__setitem__(obj,ite
 return}
 _b_.getattr(obj,'__setitem__')(item,value)}
 $B.augm_item_add=function(obj,item,incr){if(Array.isArray(obj)&& typeof item=="number" &&
-obj[item]!==undefined){if(Array.isArray(obj[item])&& Array.isArray(incr)){obj[item]=obj[item].concat(incr)
+obj[item]!==undefined){if(Array.isArray(obj[item])&& Array.isArray(incr)){for(var i=0,len=incr.length;i<len;i++){obj[item].push(incr[i])}
 return}else if(typeof obj[item]=='string' && typeof incr=='string'){obj[item]+=incr
 return}}
 var ga=_b_.getattr

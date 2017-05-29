@@ -524,7 +524,9 @@ $B.augm_item_add = function(obj,item,incr){
     if(Array.isArray(obj) && typeof item=="number" &&
         obj[item]!==undefined){
             if(Array.isArray(obj[item]) && Array.isArray(incr)){
-                obj[item] = obj[item].concat(incr)
+                for(var i=0, len=incr.length; i<len; i++){
+                    obj[item].push(incr[i])
+                }
                 return
             }else if(typeof obj[item]=='string' && typeof incr=='string'){
                 obj[item] += incr
