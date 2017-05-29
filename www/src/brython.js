@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-05-29 20:33:48.916679"
+__BRYTHON__.compiled_date="2017-05-29 21:15:56.763679"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -3739,7 +3739,7 @@ C.tree=[]
 return new $AbstractExprCtx(C,true)}
 return $transition(C.parent,token)}}
 $B.forbidden=['case','catch','constructor','Date','delete','default','enum','eval','extends','Error','history','function','location','Math','new','null','Number','RegExp','super','this','throw','var','toString']
-var s_escaped='abfnrtvxuU"'+"'"+'\\',is_escaped={}
+var s_escaped='abfnrtvxuU"0123456789'+"'"+'\\',is_escaped={}
 for(var i=0;i<s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
 function $tokenize(src,module,locals_id,parent_block_id,line_info){var br_close={")":"(","]":"[","}":"{"}
 var br_stack=""
@@ -5803,7 +5803,7 @@ else{if(x!=_b_.int(x)||y !=_b_.int(y)){throw _b_.TypeError("pow() 3rd argument n
 return getattr(res,'__mod__')(z)}}
 function $print(){var $ns=$B.args('print',0,{},[],arguments,{},'args','kw')
 var ks=$ns['kw'].$string_dict
-var end=ks['end']===undefined ? '\n' : ks['end'],sep=ks['sep']===undefined ? ' ' : ks['sep'],file=ks['file']===undefined ? $B.stdout : ks['file'],args=$ns['args']
+var end=(ks['end']===undefined ||ks['end']===None)? '\n' : ks['end'],sep=(ks['sep']===undefined ||ks['sep']===None)? ' ' : ks['sep'],file=ks['file']===undefined ? $B.stdout : ks['file'],args=$ns['args']
 getattr(file,'write')(args.map(_b_.str).join(sep)+end)
 return None}
 $print.__name__='print'

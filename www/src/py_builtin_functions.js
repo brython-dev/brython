@@ -1308,8 +1308,8 @@ function $print(){
     var $ns=$B.args('print',0,{},[],arguments,
         {},'args', 'kw')
     var ks = $ns['kw'].$string_dict
-    var end = ks['end'] === undefined ? '\n' : ks['end'],
-        sep = ks['sep'] === undefined ? ' ' : ks['sep'],
+    var end = (ks['end'] === undefined || ks['end'] === None) ? '\n' : ks['end'],
+        sep = (ks['sep'] === undefined || ks['sep'] === None) ? ' ' : ks['sep'],
         file = ks['file'] === undefined ? $B.stdout : ks['file'],
         args = $ns['args']
 

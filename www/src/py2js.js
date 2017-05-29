@@ -6966,7 +6966,7 @@ $B.forbidden = ['case','catch','constructor','Date','delete',
     'Math','new','null','Number','RegExp','super','this','throw','var',
     'toString']
 
-var s_escaped = 'abfnrtvxuU"'+"'"+'\\', is_escaped={}
+var s_escaped = 'abfnrtvxuU"0123456789'+"'"+'\\', is_escaped={}
 for(var i=0;i<s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
 
 function $tokenize(src,module,locals_id,parent_block_id,line_info){
