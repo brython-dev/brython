@@ -1258,6 +1258,25 @@ $B.gt = function(x,y){
     else{return $B.LongInt.$dict.__gt__(x, y)}
 }
 
+var reversed_op = {'__lt__': '__gt__', '__le__':'__ge__',
+    '__gt__': '__lt__', '__ge__': '__le__'}
+
+$B.rich_comp = function(op, x, y){
+    if(x.__class__ && y.__class__){
+        // cf issue #600 and 
+        // https://docs.python.org/3/reference/datamodel.html :
+        // "If the operands are of different types, and right operand’s type
+        // is a direct or indirect subclass of the left operand’s type, the
+        // reflected method of the right operand has priority, otherwise the
+        // left operand’s method has priority."
+        if(y.__class__.__mro__.indexOf(x.__class__)>-1){
+            var rev_op = reversed_op[op] || op
+            return _b_.getattr(y, rev_op)(x)
+        }
+    }
+    return _b_.getattr(x, op)(y)
+}
+
 $B.is_none = function (o) {
     return o === undefined || o == _b_.None;
 }

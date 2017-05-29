@@ -4137,11 +4137,11 @@ function $OpCtx(context,op){
                     break;
                   case 'id':
                     if(t0.type=='id'){
-                        var res = 'typeof '+t0.to_js()+'!="object" && '
-                        res += 'typeof '+t0.to_js()+'==typeof '+t1.to_js()
-                        res += ' ? '+t0.to_js()+this.op+t1.to_js()+' : '
-                        res += 'getattr('+this.tree[0].to_js()
-                        res += ',"__'+method+'__")('+this.tree[1].to_js()+')'
+                        var res = 'typeof '+t0.to_js()+'!="object" && '+
+                            'typeof '+t0.to_js()+'==typeof '+t1.to_js() +
+                            ' ? '+t0.to_js()+this.op+t1.to_js()+' : ' +
+                            '$B.rich_comp("__'+method+'__",' +
+                            this.tree[0].to_js()+','+this.tree[1].to_js()+')'
                         return res
                     }
                     break;
@@ -4316,11 +4316,21 @@ function $OpCtx(context,op){
                     return '('+res.join('')+')'
                 }
             }
-            var res = 'getattr('+e0.to_js()+',"__'
-            return res + $operators[this.op]+'__")'+'('+e1.to_js()+')'
+            if(comps[this.op]!==undefined){
+                return '$B.rich_comp("__'+$operators[this.op]+'__",'+e0.to_js()+
+                    ','+e1.to_js()+')'
+            }else{
+                return 'getattr('+e0.to_js()+', "__'+$operators[this.op]+
+                    '__")('+e1.to_js()+')'
+            }
           default:
-            var res = 'getattr('+this.tree[0].to_js()+',"__'
-            return res + $operators[this.op]+'__")'+'('+this.tree[1].to_js()+')'
+            if(comps[this.op]!==undefined){
+                return '$B.rich_comp("__'+$operators[this.op]+'__",'+
+                    this.tree[0].to_js()+','+this.tree[1].to_js()+')'
+            }else{
+                return 'getattr('+this.tree[0].to_js()+', "__'+
+                    $operators[this.op]+'__")('+this.tree[1].to_js()+')'
+            }
         }
     }
 

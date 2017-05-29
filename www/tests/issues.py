@@ -1295,6 +1295,22 @@ class A(object):
         self.attr  = attr 
 a = A() 
 
+# issue 600
+class A:
+    def __eq__(self, other):
+        return True
+
+class B(A):
+    def __eq__(self, other):
+        return False
+
+# check that B.__eq__ is used because B is a subclass of A
+assert A() != B()
+a = A()
+b = B()
+assert a != b
+assert b != a
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
