@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-05-29 21:15:56.763679"
+__BRYTHON__.compiled_date="2017-05-31 21:52:29.698590"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -6034,7 +6034,7 @@ req.onreadystatechange=function(){try{
 var status=this.status
 if(status===404){$res=_b_.IOError('File '+file+' not found')}else if(status!==200){$res=_b_.IOError('Could not open file '+file+' : status '+status)}else{$res=this.responseText
 if(is_binary){$res=_b_.str.$dict.encode($res,'utf-8')}}}catch(err){$res=_b_.IOError('Could not open file '+file+' : error '+err)}}
-var fake_qs='?foo='+$B.UUID()
+var fake_qs='?foo='+(new Date().getTime())
 req.open('GET',file+fake_qs,false)
 if(is_binary){req.overrideMimeType('text/plain; charset=utf-8');}
 req.send()
@@ -10749,7 +10749,7 @@ return res}
 DOMNodeDict.clear=function(self){
 var elt=self.elt
 if(elt.nodeType==9){elt=elt.body}
-for(var i=elt.childNodes.length-1;i>=0;i--){elt.removeChild(elt.childNodes[i])}}
+while(elt.firstChild){elt.removeChild(elt.firstChild)}}
 DOMNodeDict.Class=function(self){if(self.elt.className !==undefined)return self.elt.className
 return None}
 DOMNodeDict.class_name=function(self){return DOMNodeDict.Class(self)}

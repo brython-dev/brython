@@ -826,8 +826,8 @@ DOMNodeDict.clear = function(self){
     // remove all children elements
     var elt=self.elt
     if(elt.nodeType==9){elt=elt.body}
-    for(var i=elt.childNodes.length-1;i>=0;i--){
-       elt.removeChild(elt.childNodes[i])
+    while(elt.firstChild){
+       elt.removeChild(elt.firstChild)
     }    
 }
 
