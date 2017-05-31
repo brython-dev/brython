@@ -72,13 +72,13 @@ def change_grid(ev):
     puzzle.clear()
     puzzle <= make_grid(choice(grids))
 
-def entry_keydown(ev):
+def entry_keypress(ev):
     target = ev.target
-    is_tab = ev.keyCode==9
-    is_digit = ev.keyCode>=97 and ev.keyCode<=106
+    is_tab = ev.keyCode == 9
+    is_digit = ev.charCode >= 49 and ev.keyCode <= 58
     if is_tab or is_digit:
         if is_digit:
-            value = 1+ev.keyCode-97
+            value = chr(ev.charCode)
         else:
             value = ev.target.value
         cell = ev.target.parent
@@ -88,12 +88,12 @@ def entry_keydown(ev):
         # jump to next cell
         cell_rank = int(cell.id[1:])
         if is_digit or not ev.shiftKey:
-            if cell_rank<80:
-                next_cell = puzzle.get(selector='TD')[cell_rank+1]
+            if cell_rank < 80:
+                next_cell = puzzle.get(selector='TD')[cell_rank + 1]
                 make_input(next_cell)
         else: # shift tab
-            if cell_rank>0:
-                next_cell = puzzle.get(selector='TD')[cell_rank-1]
+            if cell_rank > 0:
+                next_cell = puzzle.get(selector='TD')[cell_rank - 1]
                 make_input(next_cell)
 
     ev.preventDefault()
@@ -122,7 +122,7 @@ def make_input(cell):
     input = html.INPUT(value=value,
         style={'width':'1.3em','padding':'0px'})
     cell <= input
-    input.bind('keydown', entry_keydown)
+    input.bind('keypress', entry_keypress)
     input.bind('blur', entry_blur)
     input.focus()
     input.select()
