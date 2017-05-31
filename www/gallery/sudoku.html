@@ -73,21 +73,35 @@ def change_grid(ev):
     puzzle <= make_grid(choice(grids))
 
 def entry_keypress(ev):
+    ev.preventDefault()
+    ev.stopPropagation()
     target = ev.target
-    is_tab = ev.keyCode == 9
     is_digit = ev.charCode >= 49 and ev.keyCode <= 58
-    if is_tab or is_digit:
-        if is_digit:
-            value = chr(ev.charCode)
-        else:
-            value = ev.target.value
+    if is_digit:
+        value = chr(ev.charCode)
         cell = ev.target.parent
         cell.clear()
         cell.text = value
 
         # jump to next cell
         cell_rank = int(cell.id[1:])
-        if is_digit or not ev.shiftKey:
+        if cell_rank < 80:
+            next_cell = puzzle.get(selector='TD')[cell_rank + 1]
+            make_input(next_cell)
+
+def entry_keydown(ev):
+    is_tab = ev.keyCode == 9
+    if is_tab:
+        ev.preventDefault()
+        ev.stopPropagation()
+        value = ev.target.value
+        cell = ev.target.parent
+        cell.clear()
+        cell.text = value
+
+        # jump to next cell
+        cell_rank = int(cell.id[1:])
+        if not ev.shiftKey:
             if cell_rank < 80:
                 next_cell = puzzle.get(selector='TD')[cell_rank + 1]
                 make_input(next_cell)
@@ -96,8 +110,6 @@ def entry_keypress(ev):
                 next_cell = puzzle.get(selector='TD')[cell_rank - 1]
                 make_input(next_cell)
 
-    ev.preventDefault()
-    ev.stopPropagation()
         
 def end_entry(ev):
     global current_cell
@@ -122,8 +134,9 @@ def make_input(cell):
     input = html.INPUT(value=value,
         style={'width':'1.3em','padding':'0px'})
     cell <= input
+    input.bind('keydown', entry_keydown)
     input.bind('keypress', entry_keypress)
-    input.bind('blur', entry_blur)
+    #input.bind('blur', entry_blur)
     input.focus()
     input.select()
     current_cell = cell
