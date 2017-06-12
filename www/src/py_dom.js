@@ -521,22 +521,25 @@ DOMNodeDict.__getattribute__ = function(self,attr){
                     for(var i=0;i<arguments.length;i++){
                         var arg=arguments[i]
                         if(typeof arg=="function"){
-                            var f1 = function(){
-                                try{return arg.apply(null, arguments)}
-                                catch(err){
-                                    if(err.__class__!==undefined){
-                                        var msg = _b_.getattr(err, 'info')+
-                                            '\n'+err.__class__.__name__
-                                        if(err.args){msg += ': '+err.args[0]}
-                                        try{getattr($B.stderr,"write")(msg)}
-                                        catch(err){console.log(msg)}
-                                    }else{
-                                        try{getattr($B.stderr,"write")(err)}
-                                        catch(err1){console.log(err)}
+                            var f1 = (function(x){
+                                return function(){
+                                    try{return x.apply(null, arguments)}
+                                    catch(err){
+                                        console.log(x, typeof x, err)
+                                        if(err.__class__!==undefined){
+                                            var msg = _b_.getattr(err, 'info')+
+                                                '\n'+err.__class__.__name__
+                                            if(err.args){msg += ': '+err.args[0]}
+                                            try{getattr($B.stderr,"write")(msg)}
+                                            catch(err){console.log(msg)}
+                                        }else{
+                                            try{getattr($B.stderr,"write")(err)}
+                                            catch(err1){console.log(err)}
+                                        }
+                                        throw err
                                     }
-                                    throw err
                                 }
-                            }
+                            })(arg)
                             args[pos++] = f1
                         }
                         else if(isinstance(arg,JSObject)){

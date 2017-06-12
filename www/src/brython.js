@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-05-31 21:52:29.698590"
+__BRYTHON__.compiled_date="2017-06-12 21:24:21.229677"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -10630,14 +10630,15 @@ var res=self.elt[attr]
 if(res!==undefined){if(res===null){return _b_.None}
 if(typeof res==="function"){var func=(function(f,elt){return function(){var args=[],pos=0
 for(var i=0;i<arguments.length;i++){var arg=arguments[i]
-if(typeof arg=="function"){var f1=function(){try{return arg.apply(null,arguments)}
-catch(err){if(err.__class__!==undefined){var msg=_b_.getattr(err,'info')+
+if(typeof arg=="function"){var f1=(function(x){return function(){try{return x.apply(null,arguments)}
+catch(err){console.log(x,typeof x,err)
+if(err.__class__!==undefined){var msg=_b_.getattr(err,'info')+
 '\n'+err.__class__.__name__
 if(err.args){msg +=': '+err.args[0]}
 try{getattr($B.stderr,"write")(msg)}
 catch(err){console.log(msg)}}else{try{getattr($B.stderr,"write")(err)}
 catch(err1){console.log(err)}}
-throw err}}
+throw err}}})(arg)
 args[pos++]=f1}
 else if(isinstance(arg,JSObject)){args[pos++]=arg.js}else if(isinstance(arg,DOMNode)){args[pos++]=arg.elt}else if(arg===_b_.None){args[pos++]=null}else{args[pos++]=arg}}
 var result=f.apply(elt,args)
