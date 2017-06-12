@@ -63,6 +63,9 @@ class RequestHandler(CGIHTTPRequestHandler):
         and must be closed by the caller under all circumstances), or
         None, in which case the caller has nothing further to do.
         """
+        if self.is_cgi():
+            return self.run_cgi()
+
         path = self.translate_path(self.path)
         f = None
         if os.path.isdir(path):
