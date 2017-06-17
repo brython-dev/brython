@@ -12,7 +12,6 @@ for manipulation of the pathname component of URLs.
 
 import os
 import sys
-import stat
 import genericpath
 from genericpath import *
 
@@ -160,11 +159,8 @@ def dirname(p):
 
 def islink(path):
     """Test whether a path is a symbolic link"""
-    try:
-        st = os.lstat(path)
-    except (os.error, AttributeError):
-        return False
-    return stat.S_ISLNK(st.st_mode)
+    # for Brython, always returns False
+    return False
 
 # Being true for dangling symbolic links is also useful.
 
