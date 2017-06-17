@@ -381,8 +381,8 @@ class deque_iterator(object):
             raise RuntimeError("deque mutated during iteration")
         self._gen = itergen(deq.state, giveup)
 
-    def next(self):
-        res =  self._gen.next()
+    def __next__(self):
+        res =  self._gen.__next__()
         self.counter -= 1
         return res
 
