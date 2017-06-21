@@ -9,7 +9,7 @@ with open('README.rst', encoding='utf-8') as fobj:
 setup(
     name='brython',
 
-    version='3.3.2',
+    version='3.3.3',
 
     description='Brython is an implementation of Python 3 running in the browser',
     
@@ -53,7 +53,7 @@ setup(
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
-    py_modules=["brython"],
+    py_modules=["brython", "list_modules"],
 
 
     # If there are data files included in your packages that need to be
