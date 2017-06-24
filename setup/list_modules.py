@@ -2,9 +2,62 @@
 """
 
 import os
+import shutil
 import html.parser
 import ast
 import json
+
+setup = """from setuptools import setup, find_packages
+
+import os
+
+if os.path.exists('README.rst'):
+    with open('README.rst', encoding='utf-8') as fobj:
+        LONG_DESCRIPTION = fobj.read()
+
+setup(
+    name='{app_name}',
+    version='{version}',
+
+    # The project's main homepage.
+    url='{url}',
+
+    # Author details
+    author='{author}',
+    author_email='{author_email}', 
+       
+    packages=['data'],
+    py_modules=["{app_name}"],
+    package_data={{'data':[{files}]}}
+)
+"""
+
+app = """import os
+import shutil
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--install',
+    help='Install {app_name} in an empty directory',
+    action="store_true")
+args = parser.parse_args()
+
+files = ({files})
+
+if args.install:
+    print('Installing {app_name} in an empty directory')
+    
+    src_path = os.path.join(os.path.dirname(__file__), 'data')
+
+    if os.listdir(os.getcwd()):
+        print('{app_name} can only be installed in an empty folder')
+        import sys
+        sys.exit()
+    
+    for path in files:
+        shutil.copyfile(os.path.join(src_path, path), path)
+
+"""
 
 # Get all modules in the Brython standard distribution.
 # They must be in brython_stdlib.js somewhere in the current directory
@@ -151,7 +204,6 @@ class VFSReplacementParser(html.parser.HTMLParser):
                 if key == "src":
                     elts = value.split("/")
                     if elts and elts[-1] == "brython_stdlib.js":
-                        print('start of vfs tag', self.getpos())
                         self.vfs = True
                         self.has_vfs = True
                         self.attrs = attrs
@@ -161,7 +213,6 @@ class VFSReplacementParser(html.parser.HTMLParser):
 
     def handle_endtag(self, tag):
         if tag.lower() == "script" and self.vfs:
-            print('end of vfs tag', self.getpos())
             self.end = self.getpos()
 
 class Visitor(ast.NodeVisitor):
@@ -291,27 +342,83 @@ class ModulesFinder:
             out.write("__BRYTHON__.use_VFS = true\n__BRYTHON__.VFS = ")
             json.dump(vfs, out)
 
+    def _dest(self, base_dir, dirname, filename):
+        elts = dirname[len(os.getcwd()) + 1:].split(os.sep)
+        dest_dir = base_dir
+        for elt in elts:
+            dest_dir = os.path.join(dest_dir, elt)
+            if not os.path.exists(dest_dir):
+                os.mkdir(dest_dir)
+        return os.path.join(dest_dir, filename)
+
     def make_setup(self):
         """Make the setup script for the application."""
-        # get all HTML files
-        html_files = []
+        # Create a temporary directory
+        temp_dir = '__dist__'
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir, ignore_errors=True)
+        os.mkdir(temp_dir)
+        # Create a package "data" in this directory
+        data_dir = os.path.join(temp_dir, 'data')
+        os.mkdir(data_dir)
+        with open(os.path.join(data_dir, "__init__.py"), "w") as out:
+            out.write('')
+        # If there is a brython_setup.json file, use it to get information
+        if os.path.exists("brython_setup.json"):
+            with open("brython_setup.json", encoding="utf-8") as fobj:
+                info = json.load(fobj)
+        else:
+            # Otherwise, ask setup information
+            while True:
+                app_name = input("Application name: ")
+                if app_name:
+                    break
+            while True:
+                version = input("Version: ")
+                if version:
+                    break
+            author = input("Author: ")
+            author_email = input("Author email: ")
+            url = input("Project url: ")
+            info = {
+                "app_name": app_name,
+                "version": version,
+                "author": author,
+                "author_email": author_email,
+                "url": url
+            }
+            # Store information in brython_setup.json
+            with open("brython_setup.json", "w", encoding="utf-8") as out:
+                json.dump(info, out, indent=4)
+
+        # Store all application files in the temporary directory. In HTML
+        # pages, replace "brython_stdlib.js" by "brython_modules.js"
+        files = []
         for dirname, dirnames, filenames in os.walk(self.directory):
+            if dirname == "__dist__":
+                continue
+            if "__dist__" in dirnames:
+                dirnames.remove("__dist__")
             for filename in filenames:
+                path = os.path.join(dirname, filename)
+                files.append(path[len(os.getcwd()) + 1:])
                 if os.path.splitext(filename)[1] == '.html':
-                    print(301, dirname, filename)
-                    path = os.path.join(dirname, filename)
                     # detect charset
                     charset_detector = CharsetDetector()
                     with open(path, encoding="iso-8859-1") as fobj:
                         charset_detector.feed(fobj.read())
+                    encoding = charset_detector.encoding
                     
                     # get text/python scripts
                     parser = VFSReplacementParser(dirname)
-                    with open(path, encoding=charset_detector.encoding) as fobj:
+                    with open(path, encoding=encoding) as fobj:
                         parser.feed(fobj.read())
                     if not parser.has_vfs:
+                        # save file
+                        dest = self._dest(data_dir, dirname, filename)
+                        shutil.copyfile(path, dest)
                         continue
-                    with open(path, encoding=charset_detector.encoding) as fobj:
+                    with open(path, encoding=encoding) as fobj:
                         lines = fobj.readlines()
                         start_line, start_pos = parser.start
                         end_line, end_pos = parser.end
@@ -320,8 +427,22 @@ class ModulesFinder:
                             res += lines[num].replace("brython_stdlib.js",
                                 "brython_modules.js")
                         res += ''.join(lines[end_line:])
-                        print(res[-500:])
-                            
+                    dest = self._dest(data_dir, dirname, filename)
+                    with open(dest, 'w', encoding=encoding) as out:
+                        out.write(res)
+                else:
+                    dest = self._dest(data_dir, dirname, filename)
+                    shutil.copyfile(path, dest)
+
+        info["files"] = ',\n'.join('"{}"'.format(file) for file in files)
+        # add setup.py
+        path = os.path.join(temp_dir, "setup.py")
+        with open(path, "w", encoding="utf-8") as out:
+            out.write(setup.format(**info))
+
+        path = os.path.join(temp_dir, "{}.py".format(name))
+        with open(path, "w", encoding="utf-8") as out:
+            out.write(app.format(**info))
 
 if __name__ == "__main__":
     ModulesFinder().make_setup()
