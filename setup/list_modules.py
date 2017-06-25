@@ -440,9 +440,9 @@ class ModulesFinder:
         with open(path, "w", encoding="utf-8") as out:
             out.write(setup.format(**info))
 
-        path = os.path.join(temp_dir, "{}.py".format(name))
+        path = os.path.join(temp_dir, "{}.py".format(info["app_name"]))
         with open(path, "w", encoding="utf-8") as out:
             out.write(app.format(**info))
-
+    
 if __name__ == "__main__":
     ModulesFinder().make_setup()
