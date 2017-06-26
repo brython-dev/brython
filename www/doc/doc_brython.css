@@ -118,8 +118,19 @@ pre.marked {
   font-size: 13px;
 }
 
-pre.python {
-  font-size: 13px;
+/* colors for highlighted Python code */
+
+span.python-string{
+    color: blue;
+}
+span.python-comment{
+    color: green;
+}
+span.python-keyword{
+    color: purple;
+}
+span.python-builtin{
+    color: #963;
 }
 
 code {
