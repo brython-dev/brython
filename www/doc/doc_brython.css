@@ -12,7 +12,6 @@ html {
 
 body {
   font-family:Roboto, Arial;
-  font-size:0.9em;
   margin: 0px;
   
 }
@@ -71,7 +70,7 @@ img.logo {
   border-width:0;
   height:auto;
   padding:0;
-  width:auto
+  width:auto;
 }
 
 td.logo {
@@ -125,7 +124,6 @@ pre.python {
 
 code {
   color:#339;
-  font-size: 13px;
 }
 
 em {
