@@ -1,4 +1,7 @@
 """Detect all Python scripts in HTML pages in current folder and subfolders.
+Generate brython_modules.js, a bundle with all the modules and packages used
+by an application.
+Generate a Python package ready for installation and upload on PyPI.
 """
 
 import os
@@ -7,6 +10,7 @@ import html.parser
 import ast
 import json
 
+# Template for application setup.py script
 setup = """from setuptools import setup, find_packages
 
 import os
@@ -25,6 +29,9 @@ setup(
     # Author details
     author='{author}',
     author_email='{author_email}', 
+    
+    # License
+    license='{license}',
        
     packages=['data'],
     py_modules=["{app_name}"],
@@ -32,6 +39,7 @@ setup(
 )
 """
 
+# Template for the application script
 app = """import os
 import shutil
 import argparse
@@ -117,6 +125,7 @@ for dirname, dirnames, filenames in os.walk(os.getcwd()):
                 if module_name == package:
                     user_modules[module_name].append(1)
 
+
 class CharsetDetector(html.parser.HTMLParser):
     """Used to detect <meta charset="..."> in HTML page."""
 
@@ -137,7 +146,7 @@ class CharsetDetector(html.parser.HTMLParser):
                 if key == "charset":
                     self.encoding = value
     
-class Parser(html.parser.HTMLParser):
+class BrythonScriptsExtractor(html.parser.HTMLParser):
     """Used to extract all Brython scripts in HTML pages."""
 
     def __init__(self, path, **kw):
@@ -215,7 +224,7 @@ class VFSReplacementParser(html.parser.HTMLParser):
         if tag.lower() == "script" and self.vfs:
             self.end = self.getpos()
 
-class Visitor(ast.NodeVisitor):
+class ImportsFinder(ast.NodeVisitor):
     """Used to detect all imports in an AST tree and store the results in
     attribute imports.
     """
@@ -265,9 +274,9 @@ class ModulesFinder:
     def get_imports(self, src, package=None):
         """Get all imports in source code src."""
         tree = ast.parse(src)
-        visitor = Visitor(package=package)
-        visitor.visit(tree)
-        for module in visitor.imports:
+        finder = ImportsFinder(package=package)
+        finder.visit(tree)
+        for module in finder.imports:
             if module in self.modules:
                 continue
             for module_dict in [stdlib, user_modules]:
@@ -276,7 +285,7 @@ class ModulesFinder:
                     if module_dict[module][0] == '.py':
                         imports = self.get_imports(module_dict[module][1])
     
-        return visitor.imports
+        return finder.imports
     
     def norm_indent(self, script):
         """Scripts in Brython page may start with an indent, remove it before
@@ -294,6 +303,9 @@ class ModulesFinder:
         return '\n'.join(lines)
     
     def inspect(self):
+        """Walk the directory to find all pages with Brython scripts, parse
+        them to get the list of modules needed to make them run.
+        """
         for dirname, dirnames, filenames in os.walk(self.directory):
             for filename in filenames:
                 path = os.path.join(dirname, filename)
@@ -307,7 +319,7 @@ class ModulesFinder:
                         charset_detector.feed(fobj.read())
                     
                     # get text/python scripts
-                    parser = Parser(dirname)
+                    parser = BrythonScriptsExtractor(dirname)
                     with open(path, encoding=charset_detector.encoding) as fobj:
                         parser.feed(fobj.read())
                     for script in parser.scripts:
@@ -315,8 +327,7 @@ class ModulesFinder:
                         try:
                             self.get_imports(script)
                         except SyntaxError:
-                            print('syntax error')
-                            print(script)
+                            print('syntax error', path)
                 elif ext.lower() == '.py':
                     if dirname != self.directory and not is_package(dirname):
                         continue
@@ -329,7 +340,9 @@ class ModulesFinder:
                             print('syntax error', path)
 
     def make_brython_modules(self):        
-        # build a Virtual File System (VFS)
+        """Build brython_modules.js from the list of modules needed by the
+        application.
+        """
         vfs = {}
         for module in self.modules:
             if module in stdlib:
@@ -343,6 +356,7 @@ class ModulesFinder:
             json.dump(vfs, out)
 
     def _dest(self, base_dir, dirname, filename):
+        """Build the destination path for a file."""
         elts = dirname[len(os.getcwd()) + 1:].split(os.sep)
         dest_dir = base_dir
         for elt in elts:
@@ -352,17 +366,20 @@ class ModulesFinder:
         return os.path.join(dest_dir, filename)
 
     def make_setup(self):
-        """Make the setup script for the application."""
+        """Make the setup script (setup.py) and the entry point script
+        for the application."""
         # Create a temporary directory
         temp_dir = '__dist__'
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir, ignore_errors=True)
         os.mkdir(temp_dir)
+
         # Create a package "data" in this directory
         data_dir = os.path.join(temp_dir, 'data')
         os.mkdir(data_dir)
         with open(os.path.join(data_dir, "__init__.py"), "w") as out:
             out.write('')
+
         # If there is a brython_setup.json file, use it to get information
         if os.path.exists("brython_setup.json"):
             with open("brython_setup.json", encoding="utf-8") as fobj:
@@ -379,12 +396,14 @@ class ModulesFinder:
                     break
             author = input("Author: ")
             author_email = input("Author email: ")
+            license = input("License: ")
             url = input("Project url: ")
             info = {
                 "app_name": app_name,
                 "version": version,
                 "author": author,
                 "author_email": author_email,
+                "license": license,
                 "url": url
             }
             # Store information in brython_setup.json
@@ -435,11 +454,13 @@ class ModulesFinder:
                     shutil.copyfile(path, dest)
 
         info["files"] = ',\n'.join('"{}"'.format(file) for file in files)
-        # add setup.py
+
+        # Generate setup.py from the template in string setup
         path = os.path.join(temp_dir, "setup.py")
         with open(path, "w", encoding="utf-8") as out:
             out.write(setup.format(**info))
 
+        # Generate the application script from the template in string app
         path = os.path.join(temp_dir, "{}.py".format(info["app_name"]))
         with open(path, "w", encoding="utf-8") as out:
             out.write(app.format(**info))
