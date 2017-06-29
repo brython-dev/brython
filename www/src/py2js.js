@@ -4567,7 +4567,7 @@ function $StringCtx(context,value){
     this.tree = [value] // may be extended if consecutive strings eg 'a' 'b'
     this.raw = false
     context.tree[context.tree.length]=this
-
+    
     this.toString = function(){return 'string '+(this.tree||'')}
 
     this.to_js = function(){
@@ -4581,7 +4581,12 @@ function $StringCtx(context,value){
                     ' object is not callable")}())'
                 return js
             }else{
-                var value=this.tree[i], is_bytes = value.charAt(0)=='b'
+                var value=this.tree[i], 
+                    is_fstring = Array.isArray(value)
+                if(!is_fstring){
+                    is_bytes = value.charAt(0)=='b'
+                }
+
                 if(type==null){
                     type=is_bytes
                     if(is_bytes){res+='bytes('}
@@ -4589,7 +4594,24 @@ function $StringCtx(context,value){
                     return '$B.$TypeError("can\'t concat bytes to str")'
                 }
                 if(!is_bytes){
-                    res += value.replace(/\n/g,'\\n\\\n')
+                    if(is_fstring){
+                        var elts = []
+                        //var fstring = value[0].replace(/\n/g,'\\n\\\n')
+                        for(var i=0; i<value.length;i++){
+                            if(Array.isArray(value[i])){
+                                var parts = value[i][0].split(':'),
+                                    expr = parts[0]
+                                parts[0] = "0"
+                                elts.push("$B.builtins.str.$dict.format('{" +
+                                    parts.join(':') + "}', $B.builtins.$$eval('"+
+                                    expr+"'))")
+                            }
+                            else{elts.push("'"+value[i]+"'")}
+                        }
+                        res += elts.join(" + ")
+                    }else{
+                        res += value.replace(/\n/g,'\\n\\\n')
+                    }
                 }else{
                     res += value.substr(1).replace(/\n/g,'\\n\\\n')
                 }
@@ -7084,7 +7106,8 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         // string
         if(car=='"' || car=="'"){
             var raw = context.type == 'str' && context.raw,
-                bytes = false ,
+                bytes = false,
+                fstring = false,
                 end = null;
             if(string_modifier){
                 switch(string_modifier) {
@@ -7101,6 +7124,13 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                   case 'rb':
                   case 'br':
                     bytes=true;raw=true
+                    break
+                  case 'f':
+                    fstring = true
+                    break
+                  case 'fr', 'rf':
+                    fstring = true
+                    raw = true
                     break
                 }
                 string_modifier = false
@@ -7163,8 +7193,18 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                             }
                             string += $car
                         }
+                        if(fstring){
+                            try{
+                                var elts = $B.parse_fstring(string) // in py_string.js
+                            }catch(err){
+                                $_SyntaxError(context, [err.toString()])
+                            }
+                        }
+
                         if(bytes){
                             context = $transition(context,'str','b'+car+string+car)
+                        }else if(fstring){
+                            context = $transition(context,'str', elts)
                         }else{
                             context = $transition(context,'str',car+string+car)
                         }
@@ -7243,7 +7283,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                         context = $transition(context,'op',name)
                     }
                 } else if((src.charAt(pos)=='"'||src.charAt(pos)=="'")
-                    && ['r','b','u','rb','br'].indexOf(name.toLowerCase())!==-1){
+                    && ['r','b','u','rb','br', 'f', 'fr', 'rf'].indexOf(name.toLowerCase())!==-1){
                     string_modifier = name.toLowerCase()
                     name = ""
                     continue

@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-06-17 16:25:02.386725"
+__BRYTHON__.compiled_date="2017-06-29 21:35:13.197999"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_markupbase_kozh","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -2243,10 +2243,18 @@ var res='',type=null
 for(var i=0;i<this.tree.length;i++){if(this.tree[i].type=="call"){
 var js='(function(){throw TypeError("'+"'str'"+
 ' object is not callable")}())'
-return js}else{var value=this.tree[i],is_bytes=value.charAt(0)=='b'
+return js}else{var value=this.tree[i],is_fstring=Array.isArray(value)
+if(!is_fstring){is_bytes=value.charAt(0)=='b'}
 if(type==null){type=is_bytes
 if(is_bytes){res+='bytes('}}else if(type!=is_bytes){return '$B.$TypeError("can\'t concat bytes to str")'}
-if(!is_bytes){res +=value.replace(/\n/g,'\\n\\\n')}else{res +=value.substr(1).replace(/\n/g,'\\n\\\n')}
+if(!is_bytes){if(is_fstring){var elts=[]
+for(var i=0;i<value.length;i++){if(Array.isArray(value[i])){var parts=value[i][0].split(':'),expr=parts[0]
+parts[0]="0"
+elts.push("$B.builtins.str.$dict.format('{" +
+parts.join(':')+ "}', $B.builtins.$$eval('"+
+expr+"'))")}
+else{elts.push("'"+value[i]+"'")}}
+res +=elts.join(" + ")}else{res +=value.replace(/\n/g,'\\n\\\n')}}else{res +=value.substr(1).replace(/\n/g,'\\n\\\n')}
 if(i<this.tree.length-1){res+='+'}}}
 if(is_bytes){res +=',"ISO-8859-1")'}
 return res}}
@@ -3796,7 +3804,7 @@ continue}
 if(car=="#"){var end=src.substr(pos+1).search('\n')
 if(end==-1){end=src.length-1}
 pos +=end+1;continue}
-if(car=='"' ||car=="'"){var raw=C.type=='str' && C.raw,bytes=false ,end=null;
+if(car=='"' ||car=="'"){var raw=C.type=='str' && C.raw,bytes=false,fstring=false,end=null;
 if(string_modifier){switch(string_modifier){case 'r': 
 raw=true
 break
@@ -3808,6 +3816,13 @@ break
 case 'rb':
 case 'br':
 bytes=true;raw=true
+break
+case 'f':
+fstring=true
+break
+case 'fr','rf':
+fstring=true
+raw=true
 break}
 string_modifier=false}
 if(src.substr(pos,3)==car+car+car){_type="triple_string";end=pos+3}
@@ -3838,7 +3853,8 @@ for(var i=0;i<$string.length;i++){var $car=$string.charAt(i)
 if($car==car &&
 (raw ||(i==0 ||$string.charAt(i-1)!=='\\'))){string +='\\'}
 string +=$car}
-if(bytes){C=$transition(C,'str','b'+car+string+car)}else{C=$transition(C,'str',car+string+car)}
+if(fstring){try{var elts=$B.parse_fstring(string)}catch(err){$_SyntaxError(C,[err.toString()])}}
+if(bytes){C=$transition(C,'str','b'+car+string+car)}else if(fstring){C=$transition(C,'str',elts)}else{C=$transition(C,'str',car+string+car)}
 C.raw=raw;
 pos=end+1
 if(_type=="triple_string"){pos=end+3}
@@ -3873,7 +3889,7 @@ $pos=pos-name.length
 C=$transition(C,'op','not_in')}else{$pos=pos-name.length
 C=$transition(C,name)}}else{$pos=pos-name.length
 C=$transition(C,'op',name)}}else if((src.charAt(pos)=='"'||src.charAt(pos)=="'")
-&&['r','b','u','rb','br'].indexOf(name.toLowerCase())!==-1){string_modifier=name.toLowerCase()
+&&['r','b','u','rb','br','f','fr','rf'].indexOf(name.toLowerCase())!==-1){string_modifier=name.toLowerCase()
 name=""
 continue}else{
 if($B.forbidden.indexOf(name)>-1){name='$$'+name}
@@ -9811,7 +9827,41 @@ if('+-'.indexOf(s.charAt(0))>-1){return s.charAt(0)+fill.repeat(missing)+s.subst
 case '^':
 var left=parseInt(missing/2)
 return fill.repeat(left)+s+fill.repeat(missing-left)}}
-return s}})(__BRYTHON__)
+return s}
+$B.parse_fstring=function(string){
+var elts=[],pos=0,current='',ctype=null,nb_braces=0,car
+while(pos<string.length){if(ctype===null){car=string.charAt(pos)
+if(car=='{'){if(string.charAt(pos+1)=='{'){ctype='string'
+current='{'
+pos +=2}else{ctype='expression'
+nb_braces=1
+pos++}}else if(car=='}'){if(string.charAt(pos+1)==car){ctype='string'
+current='}'
+pos +=1}else{throw Error(" f-string: single '}' is not allowed")}}else{ctype='string'
+current=car}}else if(ctype=='string'){
+var i=pos+1
+while(i<string.length){car=string.charAt(i)
+if(car=='{'){if(string.charAt(i+1)=='{'){current +='{'
+i+=2}else{elts.push(current)
+ctype='expression'
+pos=i+1
+break}}else if(car=='}'){if(string.charAt(i+1)==car){current +=car
+i +=2}else{throw Error(" f-string: single '}' is not allowed")}}else{current +=car
+i++}}
+pos=i+1}else{
+var i=pos,nb_braces=1,current=''
+while(i<string.length){car=string.charAt(i)
+if(car=='{'){nb_braces++
+i++}else if(car=='}'){nb_braces -=1
+if(nb_braces==0){
+elts.push([current])
+ctype=null}
+pos=i+1
+break}else{current +=car
+i++}}
+if(nb_braces>0){throw Error("f-string: expected '}'")}}}
+if(current.length>0){elts.push(current)}
+return elts}})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var $ObjectDict=_b_.object.$dict,str_hash=_b_.str.$dict.__hash__,$N=_b_.None
 function $DictClass($keys,$values){this.iter=null

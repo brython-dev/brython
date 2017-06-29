@@ -1776,4 +1776,100 @@ $B.format_width = function(s, fmt){
     return s
 }
 
+$B.parse_fstring = function(string){
+    // Parse a f-string
+    var elts = [],
+        pos = 0,
+        current = '',
+        ctype = null,
+        nb_braces = 0,
+        car
+
+    while(pos<string.length){
+        if(ctype===null){
+            car = string.charAt(pos)
+            if(car=='{'){
+                if(string.charAt(pos+1)=='{'){
+                    ctype = 'string'
+                    current = '{'
+                    pos += 2
+                }else{
+                    ctype = 'expression'
+                    nb_braces = 1
+                    pos++
+                }
+            }else if(car=='}'){
+                if(string.charAt(pos+1)==car){
+                    ctype = 'string'
+                    current = '}'
+                    pos += 1
+                }else{
+                    throw Error(" f-string: single '}' is not allowed")
+                }
+            }else{
+                ctype = 'string'
+                current = car
+            }
+        }else if(ctype=='string'){
+            // end of string is the first single { or end of string
+            var i=pos+1
+            while(i<string.length){
+                car = string.charAt(i)
+                if(car=='{'){
+                    if(string.charAt(i+1)=='{'){
+                        current += '{'
+                        i+=2
+                    }else{
+                        elts.push(current)
+                        ctype = 'expression'
+                        pos = i+1
+                        break
+                    }
+                }else if(car=='}'){
+                    if(string.charAt(i+1)==car){
+                        current += car
+                        i += 2
+                    }else{
+                        throw Error(" f-string: single '}' is not allowed")
+                    }
+                }else{
+                    current += car
+                    i++
+                }
+            }
+            pos = i+1
+        }else{
+            // End of expression is the } matching the opening {
+            // There may be nested braces
+            var i = pos,
+                nb_braces = 1,
+                current = ''
+            while(i<string.length){
+                car = string.charAt(i)
+                if(car=='{'){
+                    nb_braces++
+                    i++
+                }else if(car=='}'){
+                    nb_braces -= 1
+                    if(nb_braces==0){
+                        // end of expression
+                        elts.push([current])
+                        ctype = null
+                    }
+                    pos = i+1
+                    break
+                }else{
+                    current += car
+                    i++
+                }
+            }
+            if(nb_braces>0){
+                throw Error("f-string: expected '}'")
+            }
+        }
+    }
+    if(current.length>0){elts.push(current)}
+    return elts
+}
+
 })(__BRYTHON__)
