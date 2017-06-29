@@ -413,7 +413,6 @@ function make_next(self, yield_node_id){
     while(1){
 
         // Compute the rest of the block to run after exit_node
-        
         var exit_parent = exit_node.parent,
             rest = [], 
             pos=0,
@@ -448,7 +447,7 @@ function make_next(self, yield_node_id){
         }
 
         // add rest of block to new function
-        if(has_break){
+        if(has_break && rest.length>0){
             // If the rest had a "break", this "break" is converted into raising
             // an exception with __class__ set to GeneratorBreak
             var rest_try = new $B.genNode('try')
