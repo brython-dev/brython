@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-06-29 22:19:42.108652"
+__BRYTHON__.compiled_date="2017-07-01 17:19:53.859851"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_markupbase_kozh","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -3746,7 +3746,7 @@ C.from=true
 C.tree=[]
 return new $AbstractExprCtx(C,true)}
 return $transition(C.parent,token)}}
-$B.forbidden=['case','catch','constructor','Date','delete','default','enum','eval','extends','Error','history','function','location','Math','new','null','Number','RegExp','super','this','throw','var','toString']
+$B.forbidden=['alert','case','catch','constructor','Date','delete','default','document','enum','eval','extends','Error','history','function','location','Math','new','null','Number','RegExp','super','this','throw','var','window','toString']
 var s_escaped='abfnrtvxuU"0123456789'+"'"+'\\',is_escaped={}
 for(var i=0;i<s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
 function $tokenize(src,module,locals_id,parent_block_id,line_info){var br_close={")":"(","]":"[","}":"{"}
@@ -5888,7 +5888,6 @@ case 'constructor':
 case 'Date':
 case 'delete':
 case 'default':
-case 'document':
 case 'Error':
 case 'history':
 case 'function':
@@ -5928,8 +5927,13 @@ for(var i=0,_len=mro.length;i<_len;i++){__set1__=mro[i].__set__
 if(__set1__){break}}}}
 if(__set1__!==undefined){var __set__=getattr(res,'__set__',null)
 if(__set__ &&(typeof __set__=='function')){__set__.apply(res,[obj,value]);return None}}}
-if(klass && klass.$slots && klass.$slots[attr]===undefined){throw _b_.AttributeError("'"+klass.__name__+
-"' object has no attribute '"+attr+"'")}
+if(klass && klass.$slots){
+var has_slots=true,slots=klass.$slots,parent
+for(var i=0;i<klass.__mro__.length - 1;i++){parent=klass.__mro__[i]
+if(parent.$slots===undefined){has_slots=false;break}
+for(var k in parent.$slots){slots[k]=true}}
+if(has_slots && slots[attr]===undefined){throw _b_.AttributeError("'"+klass.__name__+
+"' object has no attribute '"+attr+"'")}}
 var _setattr=false
 if(klass!==undefined){_setattr=klass.__setattr__
 if(_setattr===undefined){var mro=klass.__mro__
