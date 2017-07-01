@@ -12,10 +12,17 @@ import inspect
 import types
 
 
-stdlib_name = '_csv'
+stdlib_name = 'pyexpat'
 ns = {}
 exec('import %s;print(dir(%s))' % (stdlib_name, stdlib_name), ns)
-infos = ns[stdlib_name]
+print(dir(ns["pyexpat"]))
+
+if('.') in stdlib_name:
+    package, name = stdlib_name.split('.')
+    infos = getattr(ns[package], name)
+    
+else:
+    infos = ns[stdlib_name]
 
 
 def skeleton(infos):
@@ -57,7 +64,7 @@ def skeleton(infos):
             res += '\n'.join('    %s' % line
                              for line in skeleton(val).splitlines())
         else:
-            res += '\n%s = "%s"\n' % (key, val)
+            res += '\n{} = "{}"\n'.format(key, str(val).replace('"', '\\"'))
     return res
 
 
