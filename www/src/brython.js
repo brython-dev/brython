@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-07-02 09:57:14.891780"
+__BRYTHON__.compiled_date="2017-07-02 21:14:19.533455"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_markupbase_kozh","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -3226,6 +3226,8 @@ C.parent.has_star_arg===undefined){console.log('parent '+C.parent,C.parent)
 $pos -=C.name.length
 $_SyntaxError(C,['non-default argument follows default argument'])}else{return $transition(C.parent,token)}
 case ':':
+if(C.parent.has_default){
+$_SyntaxError(C,'token '+token+' after '+C)}
 return new $AbstractExprCtx(new $AnnotationCtx(C),false)}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'func_args':
@@ -4161,8 +4163,10 @@ for(var attr in $err){console.log(attr+' : ',$err[attr])}}
 if($err.$py_error===undefined){console.log('Javascript error',$err)
 $err=_b_.RuntimeError($err+'')}
 var name=$err.__name__
-var $trace=_b_.getattr($err,'info')+'\n'+name+': '
-if(name=='SyntaxError' ||name=='IndentationError'){$trace +=$err.args[0]}else{$trace +=$err.args}
+var $trace=_b_.getattr($err,'info')
+if(name=='SyntaxError' ||name=='IndentationError'){var offset=$err.args[3]
+$trace +='\n' + ' '.repeat(offset)+ '^' +
+'\n' + name+': '+$err.args[0]}else{$trace +='\n'+name+': ' + $err.args}
 try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
 throw $err}finally{root=null
 js=null

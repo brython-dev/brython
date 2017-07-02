@@ -6248,6 +6248,9 @@ function $transition(context,token){
             }
           case ':':
             // annotation associated with a function parameter
+            if(context.parent.has_default){ // issue 610
+                $_SyntaxError(context,'token '+token+' after '+context)
+            }
             return new $AbstractExprCtx(new $AnnotationCtx(context), false)
         }
         $_SyntaxError(context,'token '+token+' after '+context)
@@ -7786,10 +7789,15 @@ function run_script(script){
 
         // Print the error traceback on the standard error stream
         var name = $err.__name__
-        var $trace = _b_.getattr($err,'info')+'\n'+name+': '
+        var $trace = _b_.getattr($err,'info')
         if(name=='SyntaxError' || name=='IndentationError'){
-            $trace += $err.args[0]
-        }else{$trace += $err.args}
+            var offset = $err.args[3]
+            $trace += '\n' + ' '.repeat(offset) + '^' +
+                '\n' + name+': '+$err.args[0]
+            
+        }else{
+            $trace += '\n'+name+': ' + $err.args
+        }
         try{
             _b_.getattr($B.stderr,'write')($trace)
         }catch(print_exc_err){
