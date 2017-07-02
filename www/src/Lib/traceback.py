@@ -24,7 +24,11 @@ def print_exc(file=sys.stderr):
 
 def format_exc(limit=None, chain=True):
     exc = __BRYTHON__.current_exception
-    res = exc.info+'\n'+exc.__name__
+    res = exc.info
+    if isinstance(exc, SyntaxError):
+        offset = exc.args[3]
+        res += '\n    '+offset*' '+'^'
+    res += '\n'+exc.__name__
     if exc.args:
         res += ': '+exc.args[0]
     _restore_current(exc)
