@@ -814,6 +814,44 @@ The function takes one argument, an object representing the event.
 </div>
 
 
+<div class="example" id="ex18">
+    <button id="button18">parse an XML document</button>
+
+    <p><div id="zone18" class="zone" style="padding-left:1em;width:auto;"></div>
+    
+    <script type="text/python" id="script18">
+    from browser import document, window, html
+    parser = window.DOMParser.new()
+
+    def show(node, container):
+        if hasattr(node, "tagName"):
+            container <= html.STRONG(node.tagName)
+            ul = html.UL()
+            container <= ul
+            for child in node.childNodes:
+                show(child, ul)
+        elif node.text.strip():
+            container <= html.LI(node.text)
+    
+    def show_xml():
+        src = open("cd-catalog.xml").read()
+        tree = parser.parseFromString(src, "application/xml")
+        
+        root = tree.firstChild
+        
+        show(root, document["zone18"])
+    
+    document["button18"].bind("click", lambda ev: show_xml())
+    </script>
+    
+    <pre class="python"></pre>
+
+    <span class="comment">
+    Instead of using the XML modules in Python standard library, it's more efficient
+    to use the Web API <a href="">DOMParser</a> to parse XML documents.
+    </span>
+</div>
+
 
 <div class="example" id="ex11">
     <button id="button11">use javascript objects : Date</button>
