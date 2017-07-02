@@ -629,6 +629,8 @@ function getattr(obj,attr,_default){
             +len)
     }
     
+    if($B.aliased_names[attr]){attr = '$$'+attr}
+    
     var klass = obj.__class__
     
     if(klass===undefined){
@@ -1460,31 +1462,9 @@ function setattr(){
     if(!(typeof attr=='string')){
         throw _b_.TypeError("setattr(): attribute name must be string")
     }
-
-    switch(attr) {
-      case 'alert':
-      case 'case':
-      case 'catch':
-      case 'constructor':
-      case 'Date':
-      case 'delete':
-      case 'default':
-      case 'Error':
-      case 'history':
-      case 'function':
-      case 'location':
-      case 'Math':
-      case 'new':
-      case 'Number':
-      case 'RegExp':
-      case 'this':
-      case 'throw':
-      case 'var':
-      case 'super':
-      case 'window':
-        attr='$$'+attr
-        break
-      case '__class__':
+    
+    if($B.aliased_names[attr]){attr = '$$'+attr}
+    else if(attr=='__class__'){
         // Setting the attribute __class__ : value is the factory function,
         // we must set __class__ to the class dictionary
         obj.__class__ = value.$dict;

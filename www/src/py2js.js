@@ -6987,6 +6987,8 @@ $B.forbidden = ['alert', 'case','catch','constructor','Date', 'delete',
     'default', 'document', 'enum', 'eval', 'extends','Error', 'history',
     'function','location', 'Math','new', 'null', 'Number', 'RegExp', 'super',
     'this','throw', 'var', 'window', 'toString']
+$B.aliased_names = {}
+for(var i=0;i<$B.forbidden.length;i++){$B.aliased_names[$B.forbidden[i]]=true}
 
 var s_escaped = 'abfnrtvxuU"0123456789'+"'"+'\\', is_escaped={}
 for(var i=0;i<s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}

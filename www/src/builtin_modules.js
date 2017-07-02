@@ -6,10 +6,10 @@
         __package__:'browser',
         __file__:$B.brython_path.replace(/\/*$/g,'')+
             '/Lib/browser/__init__.py',
-        alert:function(message){window.alert($B.builtins.str(message))},
+        $$alert:function(message){window.alert($B.builtins.str(message))},
         confirm: $B.JSObject(window.confirm),
         console:$B.JSObject(window.console),
-        document:$B.DOMNode(document),
+        $$document:$B.DOMNode(document),
         doc: $B.DOMNode(document),   //want to use document instead of doc
         DOMEvent:$B.DOMEvent,
         DOMNode:$B.DOMNode,
@@ -74,7 +74,7 @@
             return res
         },
         win: $B.win,
-        window: $B.win,
+        $$window: $B.win,
         URLParameter:function(name) {
            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
