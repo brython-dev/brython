@@ -131,8 +131,8 @@ class TurtleScreenBase:
         self._previous_turtle_attributes={}
         self._draw_pos=0
 
-        self.canvwidth = cv.width
-        self.canvheight = cv.height
+        self.canvwidth = cv.parentElement.width
+        self.canvheight = cv.parentElement.height
         self.xscale = self.yscale = 1.0
 
     def _createpoly(self):
@@ -522,7 +522,6 @@ class TurtleScreen(TurtleScreenBase):
                   }
 
         self._bgpics = {"nopic" : ""}
-
         TurtleScreenBase.__init__(self, cv)
         self._mode = mode
         self._delayvalue = delay
