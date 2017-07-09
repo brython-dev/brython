@@ -62,5 +62,6 @@ if args.make_dist:
     print('Make a Python distribution for the application')
     finder = list_modules.ModulesFinder()
     finder.inspect()
+    finder.make_brython_modules()
     finder.make_setup()
     print('done')
