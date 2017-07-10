@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-07-02 21:14:19.533455"
+__BRYTHON__.compiled_date="2017-07-10 22:11:35.807526"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_markupbase_kozh","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -2248,11 +2248,23 @@ if(!is_fstring){is_bytes=value.charAt(0)=='b'}
 if(type==null){type=is_bytes
 if(is_bytes){res+='bytes('}}else if(type!=is_bytes){return '$B.$TypeError("can\'t concat bytes to str")'}
 if(!is_bytes){if(is_fstring){var elts=[]
-for(var i=0;i<value.length;i++){if(Array.isArray(value[i])){var parts=value[i][0].split(':'),expr=parts[0]
+for(var i=0;i<value.length;i++){if(value[i].type=='expression'){var expr=value[i].expression,parts=expr.split(':')
+expr=parts[0]
 parts[0]="0"
-elts.push("$B.builtins.str.$dict.format('{" +
-parts.join(':')+ "}', $B.builtins.$$eval('"+
-expr+"'))")}
+var res1="$B.builtins.str.$dict.format('{" +
+parts.join(':')+ "}', "
+var expr1="$B.builtins.$$eval('"+expr+"')"
+switch(value[i].conversion){case "a":
+expr1='$B.builtins.ascii('+expr1+')'
+break
+case "r":
+expr1='$B.builtins.repr('+expr1+')'
+break
+case "s":
+expr1='$B.builtins.str('+expr1+')'
+break }
+res1 +=expr1 + ")"
+elts.push(res1)}
 else{elts.push("'"+value[i]+"'")}}
 res +=elts.join(" + ")}else{res +=value.replace(/\n/g,'\\n\\\n')}}else{res +=value.substr(1).replace(/\n/g,'\\n\\\n')}
 if(i<this.tree.length-1){res+='+'}}}
@@ -9818,6 +9830,10 @@ case '^':
 var left=parseInt(missing/2)
 return fill.repeat(left)+s+fill.repeat(missing-left)}}
 return s}
+function fstring_expression(){this.type='expression'
+this.expression=''
+this.conversion=null
+this.fmt=null}
 $B.parse_fstring=function(string){
 var elts=[],pos=0,current='',ctype=null,nb_braces=0,car
 while(pos<string.length){if(ctype===null){car=string.charAt(pos)
@@ -9839,15 +9855,23 @@ break}}else if(car=='}'){if(string.charAt(i+1)==car){current +=car
 i +=2}else{throw Error(" f-string: single '}' is not allowed")}}else{current +=car
 i++}}
 pos=i+1}else{
-var i=pos,nb_braces=1,current=''
+var i=pos,nb_braces=1,current=new fstring_expression()
 while(i<string.length){car=string.charAt(i)
 if(car=='{'){nb_braces++
 i++}else if(car=='}'){nb_braces -=1
 if(nb_braces==0){
-elts.push([current])
-ctype=null}
+elts.push(current)
+ctype=null
+current=''}
 pos=i+1
-break}else{current +=car
+break}else if(car=='\\'){
+throw Error("f-string expression part cannot include a" +
+" backslash")}else if(car=='!' && current.fmt===null){if(current.expression.length==0){throw Error("f-string: empty expression not allowed")}
+if('ars'.indexOf(string.charAt(i+1))==-1){throw Error("f-string: invalid conversion character:" +
+" expected 's', 'r', or 'a'")}else{current.conversion=string.charAt(i+1)
+i +=2}}else if(car==':'){current.fmt=true
+current.expression +=car
+i++}else{current.expression +=car
 i++}}
 if(nb_braces>0){throw Error("f-string: expected '}'")}}}
 if(current.length>0){elts.push(current)}

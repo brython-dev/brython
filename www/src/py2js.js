@@ -4598,15 +4598,32 @@ function $StringCtx(context,value){
                         var elts = []
                         //var fstring = value[0].replace(/\n/g,'\\n\\\n')
                         for(var i=0; i<value.length;i++){
-                            if(Array.isArray(value[i])){
-                                var parts = value[i][0].split(':'),
-                                    expr = parts[0]
+                            if(value[i].type=='expression'){
+                                var expr = value[i].expression,
+                                    parts = expr.split(':')
+                                expr = parts[0]
                                 parts[0] = "0"
-                                elts.push("$B.builtins.str.$dict.format('{" +
-                                    parts.join(':') + "}', $B.builtins.$$eval('"+
-                                    expr+"'))")
+                                var res1 = "$B.builtins.str.$dict.format('{" +
+                                    parts.join(':') + "}', "
+                                    
+                                var expr1 = "$B.builtins.$$eval('"+expr+"')"
+                                switch(value[i].conversion){
+                                    case "a":
+                                        expr1 = '$B.builtins.ascii('+expr1+')'
+                                        break
+                                    case "r":
+                                        expr1 = '$B.builtins.repr('+expr1+')'
+                                        break
+                                    case "s":
+                                        expr1 = '$B.builtins.str('+expr1+')'
+                                        break                                        
+                                }
+                                res1 += expr1 + ")"
+                                elts.push(res1)
                             }
-                            else{elts.push("'"+value[i]+"'")}
+                            else{
+                                elts.push("'"+value[i]+"'")
+                            }
                         }
                         res += elts.join(" + ")
                     }else{

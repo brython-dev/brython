@@ -1776,6 +1776,13 @@ $B.format_width = function(s, fmt){
     return s
 }
 
+function fstring_expression(){
+    this.type = 'expression'
+    this.expression = ''
+    this.conversion = null
+    this.fmt = null
+}
+
 $B.parse_fstring = function(string){
     // Parse a f-string
     var elts = [],
@@ -1843,7 +1850,7 @@ $B.parse_fstring = function(string){
             // There may be nested braces
             var i = pos,
                 nb_braces = 1,
-                current = ''
+                current = new fstring_expression()
             while(i<string.length){
                 car = string.charAt(i)
                 if(car=='{'){
@@ -1853,13 +1860,33 @@ $B.parse_fstring = function(string){
                     nb_braces -= 1
                     if(nb_braces==0){
                         // end of expression
-                        elts.push([current])
+                        elts.push(current)
                         ctype = null
+                        current = ''
                     }
                     pos = i+1
                     break
+                }else if(car=='\\'){
+                    // backslash is not allowed in expressions
+                    throw Error("f-string expression part cannot include a" +
+                        " backslash")
+                }else if(car=='!' && current.fmt===null){
+                    if(current.expression.length==0){
+                        throw Error("f-string: empty expression not allowed")
+                    }
+                    if('ars'.indexOf(string.charAt(i+1)) == -1){
+                        throw Error("f-string: invalid conversion character:" +
+                            " expected 's', 'r', or 'a'")
+                    }else{
+                        current.conversion = string.charAt(i+1)
+                        i += 2
+                    }
+                }else if(car==':'){
+                    current.fmt = true
+                    current.expression += car
+                    i++
                 }else{
-                    current += car
+                    current.expression += car
                     i++
                 }
             }
