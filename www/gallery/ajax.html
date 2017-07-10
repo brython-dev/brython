@@ -47,19 +47,19 @@ a.sort_link{margin-left:10px;text-decoration:none}
 <script id="ascript" type="text/python">
 import time
 
-from browser import document as doc, ajax
+from browser import document as doc
+from browser import ajax
 
-class Request(ajax.Ajax):
+def on_complete(req):
+    if req.status==200 or req.status==0:
+        doc["result"].html = req.text
+    else:
+        doc["result"].html = "error "+req.text
 
-    def success(self):
-        if self.status == 200 or self.status == 0:
-            doc["result"].html = self.text
-        else:
-            doc["result"].html = "error " + self.text
+def err_msg():
+    doc["result"].html = "server didn't reply after %s seconds" %timeout
 
-    def timeout(self):
-        doc["result"].html = "server didn't reply after %s seconds" %self.timeout_secs
-
+timeout = 4
 
 def fake_qs(method):
     if method == "GET":
@@ -68,21 +68,28 @@ def fake_qs(method):
         return ''
 
 def go(url, method="GET"):
+    req = ajax.Ajax(url+fake_qs(method), method=method, timemout=timeout)
+    req.set_timeout(timeout, err_msg)
+
+    @req.complete
+    def success():
+        if req.status==200 or req.status==0:
+            doc["result"].html = req.text
+        else:
+            doc["result"].html = "error "+req.text    
 
     if method == "GET":
-        req = Request(url+fake_qs(method), method=method, timeout=7)
         req.send()
     else:
-        req = Request(url+fake_qs(method), method=method, timeout=7,
-            headers={'Content-type':'application/x-www-form-urlencoded'}
-        )
-        req.send({'foo': 34})
+        req.set_header('content-type','application/x-www-form-urlencoded')
+        req.send({'foo':34})
 
 # bindings
 doc['get_text'].bind('click',lambda ev:go('ajax_data.txt'))
 doc['i_dont_exist'].bind('click',lambda ev:go('i_dont_exist.txt'))
 doc['get_test'].bind('click',lambda ev:go('/cgi-bin/get_test.py'))
 doc['post_test'].bind('click',lambda ev:go('/cgi-bin/post_test.py', 'post'))
+
 </script>
 
 </body>
