@@ -150,6 +150,7 @@ class BrythonScriptsExtractor(html.parser.HTMLParser):
     """Used to extract all Brython scripts in HTML pages."""
 
     def __init__(self, path, **kw):
+        print('brython script extractor', path, kw)
         kw.setdefault('convert_charrefs', True)
         try:
             html.parser.HTMLParser.__init__(self, **kw)
@@ -307,6 +308,11 @@ class ModulesFinder:
         them to get the list of modules needed to make them run.
         """
         for dirname, dirnames, filenames in os.walk(self.directory):
+            for name in dirnames:
+                if name.endswith('__dist__'):
+                    # don't inspect files in the subfolder __dist__
+                    dirnames.remove(name)
+                    break
             for filename in filenames:
                 path = os.path.join(dirname, filename)
                 if path == __file__:
