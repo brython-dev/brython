@@ -463,7 +463,6 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         return DOMNodeDict[attr].__get__(self)
       case 'clear':
       case 'closest':
-      case 'remove':
         return function(){return DOMNodeDict[attr](self,arguments[0])}
       case 'headers':
         if(self.elt.nodeType==9){
@@ -730,16 +729,16 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
         if(self.elt[attr1]!==undefined){self.elt[attr1]=value;return}
 
         if(typeof self.elt.getAttribute=='function' && 
-            typeof self.elt.setAttribute=='function'){
-                var res = self.elt.getAttribute(attr1)
-                if(res!==undefined&&res!==null&&res!=''){
-                    if(value===false){
-                        self.elt.removeAttribute(attr1)
-                    }else{
-                        self.elt.setAttribute(attr1,value)
-                    }
-                    return
+                typeof self.elt.setAttribute=='function'){
+            var res = self.elt.getAttribute(attr1)
+            if(res!==undefined&&res!==null&&res!=''){
+                if(value===false){
+                    self.elt.removeAttribute(attr1)
+                }else{
+                    self.elt.setAttribute(attr1,value)
                 }
+                return
+            }
         }
         
         // No attribute was found on the DOM element : set it to the DOMNode
@@ -1059,20 +1058,6 @@ DOMNodeDict.options = function(self){ // for SELECT tag
 DOMNodeDict.parent = function(self){
     if(self.elt.parentElement) return DOMNode(self.elt.parentElement)
     return None
-}
-
-DOMNodeDict.remove = function(self,child){
-    // In versions <= 3.1.1 elt.remove(child) would remove child from the
-    // element, where child could be a descendant of element at any level
-    // This was confusing with the new .remove() method of DOM elements
-    console.log('WARNING - since version 3.1.2, method remove() is the '+
-        'DOM Node method of the same name.')
-    if(typeof self.elt.remove=="function"){
-        self.elt.remove(child)
-        return None
-    }else{
-        throw _b_.AttributeError(_b_.str(self)+" has no attribute 'remove'")
-    }
 }
 
 DOMNodeDict.reset = function(self){ // for FORM

@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-07-12 17:59:58.151671"
+__BRYTHON__.compiled_date="2017-07-12 21:57:13.951769"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_markupbase_kozh","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -10664,7 +10664,6 @@ if(self.elt instanceof SVGElement){return self.elt.getAttributeNS(null,attr)}
 return DOMNodeDict[attr].__get__(self)
 case 'clear':
 case 'closest':
-case 'remove':
 return function(){return DOMNodeDict[attr](self,arguments[0])}
 case 'headers':
 if(self.elt.nodeType==9){
@@ -10920,11 +10919,6 @@ DOMNodeDict.options=function(self){
 return new $OptionsClass(self.elt)}
 DOMNodeDict.parent=function(self){if(self.elt.parentElement)return DOMNode(self.elt.parentElement)
 return None}
-DOMNodeDict.remove=function(self,child){
-console.log('WARNING - since version 3.1.2, method remove() is the '+
-'DOM Node method of the same name.')
-if(typeof self.elt.remove=="function"){self.elt.remove(child)
-return None}else{throw _b_.AttributeError(_b_.str(self)+" has no attribute 'remove'")}}
 DOMNodeDict.reset=function(self){
 return function(){self.elt.reset()}}
 DOMNodeDict.select=function(self,selector){
