@@ -1071,10 +1071,10 @@ DOMNodeDict.reset = function(self){ // for FORM
 
 DOMNodeDict.select = function(self, selector){
     // alias for get(selector=...)
-    if(self.querySelectorAll===undefined){
+    if(self.elt.querySelectorAll===undefined){
         throw _b_.TypeError("DOMNode object doesn't support selection by selector")
     }
-    var node_list = self.querySelectorAll(selector),
+    var node_list = self.elt.querySelectorAll(selector),
         res = []
     if(node_list.length===0) return []
     for(var i=0, len=node_list.length;i<len;i++){

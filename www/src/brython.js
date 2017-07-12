@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-07-10 22:11:35.807526"
+__BRYTHON__.compiled_date="2017-07-12 17:52:16.602272"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_markupbase_kozh","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -10924,8 +10924,8 @@ return None}else{throw _b_.AttributeError(_b_.str(self)+" has no attribute 'remo
 DOMNodeDict.reset=function(self){
 return function(){self.elt.reset()}}
 DOMNodeDict.select=function(self,selector){
-if(self.querySelectorAll===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by selector")}
-var node_list=self.querySelectorAll(selector),res=[]
+if(self.elt.querySelectorAll===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by selector")}
+var node_list=self.elt.querySelectorAll(selector),res=[]
 if(node_list.length===0)return[]
 for(var i=0,len=node_list.length;i<len;i++){res[i]=DOMNode(node_list[i])}
 return res}
