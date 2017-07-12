@@ -1017,6 +1017,16 @@ DOMNodeDict.id = function(self){
     return None
 }
 
+DOMNodeDict.index = function(self){
+    // Get index of element in its parent children
+    var rank = 0,
+        elt = self.elt
+    while((elt = elt.previousSibling) !== null){
+        rank++
+    }
+    return rank
+}
+
 DOMNodeDict.inside = function(self, other){
     // Test if a node is inside another node
     other = other.elt
