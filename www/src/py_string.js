@@ -1857,6 +1857,7 @@ $B.parse_fstring = function(string){
                 car = string.charAt(i)
                 if(car=='{' && nb_paren==0){
                     nb_braces++
+                    current.expression += car
                     i++
                 }else if(car=='}' && nb_paren==0){
                     nb_braces -= 1
@@ -1865,9 +1866,11 @@ $B.parse_fstring = function(string){
                         elts.push(current)
                         ctype = null
                         current = ''
+                        pos = i+1
+                        break
                     }
-                    pos = i+1
-                    break
+                    current.expression += car
+                    i++
                 }else if(car=='\\'){
                     // backslash is not allowed in expressions
                     throw Error("f-string expression part cannot include a" +
