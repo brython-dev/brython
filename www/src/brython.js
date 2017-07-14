@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-07-12 21:57:13.951769"
+__BRYTHON__.compiled_date="2017-07-14 13:57:49.428411"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_markupbase_kozh","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -2250,10 +2250,11 @@ if(is_bytes){res+='bytes('}}else if(type!=is_bytes){return '$B.$TypeError("can\'
 if(!is_bytes){if(is_fstring){var elts=[]
 for(var i=0;i<value.length;i++){if(value[i].type=='expression'){var expr=value[i].expression,parts=expr.split(':')
 expr=parts[0]
+expr=expr.replace('\n','\\n')
 parts[0]="0"
 var res1="$B.builtins.str.$dict.format('{" +
 parts.join(':')+ "}', "
-var expr1="$B.builtins.$$eval('"+expr+"')"
+var expr1="$B.builtins.$$eval('("+expr+")')"
 switch(value[i].conversion){case "a":
 expr1='$B.builtins.ascii('+expr1+')'
 break
@@ -9843,9 +9844,10 @@ pos +=2}else{ctype='expression'
 nb_braces=1
 pos++}}else if(car=='}'){if(string.charAt(pos+1)==car){ctype='string'
 current='}'
-pos +=1}else{throw Error(" f-string: single '}' is not allowed")}}else{ctype='string'
-current=car}}else if(ctype=='string'){
-var i=pos+1
+pos +=2}else{throw Error(" f-string: single '}' is not allowed")}}else{ctype='string'
+current=car
+pos++}}else if(ctype=='string'){
+var i=pos
 while(i<string.length){car=string.charAt(i)
 if(car=='{'){if(string.charAt(i+1)=='{'){current +='{'
 i+=2}else{elts.push(current)
@@ -9855,10 +9857,10 @@ break}}else if(car=='}'){if(string.charAt(i+1)==car){current +=car
 i +=2}else{throw Error(" f-string: single '}' is not allowed")}}else{current +=car
 i++}}
 pos=i+1}else{
-var i=pos,nb_braces=1,current=new fstring_expression()
+var i=pos,nb_braces=1,nb_paren=0,current=new fstring_expression()
 while(i<string.length){car=string.charAt(i)
-if(car=='{'){nb_braces++
-i++}else if(car=='}'){nb_braces -=1
+if(car=='{' && nb_paren==0){nb_braces++
+i++}else if(car=='}' && nb_paren==0){nb_braces -=1
 if(nb_braces==0){
 elts.push(current)
 ctype=null
@@ -9866,10 +9868,23 @@ current=''}
 pos=i+1
 break}else if(car=='\\'){
 throw Error("f-string expression part cannot include a" +
-" backslash")}else if(car=='!' && current.fmt===null){if(current.expression.length==0){throw Error("f-string: empty expression not allowed")}
+" backslash")}else if(nb_paren==0 && car=='!' && current.fmt===null){if(current.expression.length==0){throw Error("f-string: empty expression not allowed")}
 if('ars'.indexOf(string.charAt(i+1))==-1){throw Error("f-string: invalid conversion character:" +
 " expected 's', 'r', or 'a'")}else{current.conversion=string.charAt(i+1)
-i +=2}}else if(car==':'){current.fmt=true
+i +=2}}else if(car=='('){nb_paren++
+current.expression +=car
+i++}else if(car==')'){nb_paren--
+current.expression +=car
+i++}else if(car=='"'){
+if(string.substr(i,3)=='"""'){var end=string.indexOf('"""',i+3)
+if(end==-1){throw Error("f-string: unterminated string")}
+else{var trs=string.substring(i,end+3)
+trs=trs.replace('\n','\\n\\')
+current.expression +=trs
+i=end+3}}else{var end=string.indexOf('"',i+1)
+if(end==-1){throw Error("f-string: unterminated string")}
+else{current.expression +=string.substring(i,end+1)
+i=end+1}}}else if(nb_paren==0 && car==':'){current.fmt=true
 current.expression +=car
 i++}else{current.expression +=car
 i++}}

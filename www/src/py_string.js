@@ -1809,17 +1809,18 @@ $B.parse_fstring = function(string){
                 if(string.charAt(pos+1)==car){
                     ctype = 'string'
                     current = '}'
-                    pos += 1
+                    pos += 2
                 }else{
                     throw Error(" f-string: single '}' is not allowed")
                 }
             }else{
                 ctype = 'string'
                 current = car
+                pos++
             }
         }else if(ctype=='string'){
             // end of string is the first single { or end of string
-            var i=pos+1
+            var i=pos
             while(i<string.length){
                 car = string.charAt(i)
                 if(car=='{'){
@@ -1850,13 +1851,14 @@ $B.parse_fstring = function(string){
             // There may be nested braces
             var i = pos,
                 nb_braces = 1,
+                nb_paren = 0,
                 current = new fstring_expression()
             while(i<string.length){
                 car = string.charAt(i)
-                if(car=='{'){
+                if(car=='{' && nb_paren==0){
                     nb_braces++
                     i++
-                }else if(car=='}'){
+                }else if(car=='}' && nb_paren==0){
                     nb_braces -= 1
                     if(nb_braces==0){
                         // end of expression
@@ -1870,7 +1872,7 @@ $B.parse_fstring = function(string){
                     // backslash is not allowed in expressions
                     throw Error("f-string expression part cannot include a" +
                         " backslash")
-                }else if(car=='!' && current.fmt===null){
+                }else if(nb_paren == 0 && car=='!' && current.fmt===null){
                     if(current.expression.length==0){
                         throw Error("f-string: empty expression not allowed")
                     }
@@ -1881,7 +1883,34 @@ $B.parse_fstring = function(string){
                         current.conversion = string.charAt(i+1)
                         i += 2
                     }
-                }else if(car==':'){
+                }else if(car=='('){
+                    nb_paren++
+                    current.expression += car
+                    i++
+                }else if(car==')'){
+                    nb_paren--
+                    current.expression += car
+                    i++
+                }else if(car=='"'){
+                    // triple string ?
+                    if(string.substr(i, 3)=='"""'){
+                        var end = string.indexOf('"""', i+3)
+                        if(end==-1){throw Error("f-string: unterminated string")}
+                        else{
+                            var trs = string.substring(i, end+3)
+                            trs = trs.replace('\n', '\\n\\')
+                            current.expression += trs
+                            i = end+3
+                        }
+                    }else{
+                        var end = string.indexOf('"', i+1)
+                        if(end==-1){throw Error("f-string: unterminated string")}
+                        else{
+                            current.expression += string.substring(i, end+1)
+                            i = end+1
+                        }
+                    }
+                }else if(nb_paren == 0 && car==':'){
                     current.fmt = true
                     current.expression += car
                     i++

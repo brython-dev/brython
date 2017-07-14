@@ -4602,11 +4602,12 @@ function $StringCtx(context,value){
                                 var expr = value[i].expression,
                                     parts = expr.split(':')
                                 expr = parts[0]
+                                expr = expr.replace('\n', '\\n')
                                 parts[0] = "0"
                                 var res1 = "$B.builtins.str.$dict.format('{" +
                                     parts.join(':') + "}', "
                                     
-                                var expr1 = "$B.builtins.$$eval('"+expr+"')"
+                                var expr1 = "$B.builtins.$$eval('("+expr+")')"
                                 switch(value[i].conversion){
                                     case "a":
                                         expr1 = '$B.builtins.ascii('+expr1+')'
