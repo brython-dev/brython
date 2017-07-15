@@ -2,10 +2,17 @@
 from setuptools import setup, find_packages
 
 import os
+import shutil
 
 with open('README.rst', encoding='utf-8') as fobj:
     LONG_DESCRIPTION = fobj.read()
 
+# copy brython.js and brython_stdlib.js
+for fname in ['brython', 'brython_stdlib']:
+    shutil.copyfile(os.path.join(os.path.dirname(os.getcwd()),
+        "www", "src", "{}.js".format(fname)),
+        os.path.join("data", "{}.js".format(fname)))
+            
 setup(
     name='brython',
 
