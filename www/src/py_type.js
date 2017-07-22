@@ -36,10 +36,17 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     }
 
     // set class attributes for faster lookups
+    // unless commented out, it prevents user actions in __new__, because the
+    // attributes are set long before the user can do nothing to undo the actions
+    // the same code is present in type.__new__ and metaclasses should always
+    // invoke super to end up at type.__new__, which is actually in charge of
+    // setting the attribuute
+    /*
     var items = $B.$dict_items(cl_dict);
     for(var i=0;i<items.length;i++){
         class_dict[items[i][0]] = items[i][1]
     }
+    */
 
     class_dict.__mro__ = make_mro(bases, cl_dict)
     
