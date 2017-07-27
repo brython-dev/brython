@@ -4573,6 +4573,53 @@ function $StringCtx(context,value){
     this.to_js = function(){
         this.js_processed=true
         var res = '', type = null
+        
+        function fstring(parsed_fstring){
+            // generate code for a f-string
+            // parsed_fstring is an array, the result of $B.parse_fstring()
+            // in py_string.js
+            var elts = []
+            for(var i=0; i<parsed_fstring.length;i++){
+                if(parsed_fstring[i].type=='expression'){
+                    var expr = parsed_fstring[i].expression,
+                        parts = expr.split(':')
+                    expr = parts[0]
+                    expr = expr.replace('\n', '\\n')
+                    var expr1 = "$B.builtins.$$eval('("+expr+")')"
+                    switch(parsed_fstring[i].conversion){
+                        case "a":
+                            expr1 = '$B.builtins.ascii('+expr1+')'
+                            break
+                        case "r":
+                            expr1 = '$B.builtins.repr('+expr1+')'
+                            break
+                        case "s":
+                            expr1 = '$B.builtins.str('+expr1+')'
+                            break
+                    }
+
+                    var fmt = parts[1]
+                    if(fmt!==undefined){
+                        // Format specifier can also contain expressions
+                        var parsed_fmt = $B.parse_fstring(fmt)
+                        if(parsed_fmt.length > 1){
+                            fmt = fstring(parsed_fmt)
+                        }else{
+                            fmt = "'" + fmt + "'"
+                        }
+                        var res1 = "$B.builtins.str.$dict.format('{0:' + " +
+                            fmt + " + '}', " + expr1 + ")"
+                        elts.push(res1)
+                    }else{
+                        elts.push(expr1)
+                    }
+                }else{
+                    elts.push("'"+parsed_fstring[i]+"'")
+                }
+            }
+            return elts.join(' + ')
+        }
+
         for(var i=0;i<this.tree.length;i++){
             if(this.tree[i].type=="call"){
                 // syntax like "hello"(*args, **kw) raises TypeError
@@ -4595,58 +4642,7 @@ function $StringCtx(context,value){
                 }
                 if(!is_bytes){
                     if(is_fstring){
-                        var elts = []
-                        //var fstring = value[0].replace(/\n/g,'\\n\\\n')
-                        for(var i=0; i<value.length;i++){
-                            if(value[i].type=='expression'){
-                                var expr = value[i].expression,
-                                    parts = expr.split(':')
-                                expr = parts[0]
-                                expr = expr.replace('\n', '\\n')
-                                var expr1 = "$B.builtins.$$eval('("+expr+")')"
-                                switch(value[i].conversion){
-                                    case "a":
-                                        expr1 = '$B.builtins.ascii('+expr1+')'
-                                        break
-                                    case "r":
-                                        expr1 = '$B.builtins.repr('+expr1+')'
-                                        break
-                                    case "s":
-                                        expr1 = '$B.builtins.str('+expr1+')'
-                                        break                                        
-                                }
-
-                                var fmt = parts[1]
-                                if(fmt!==undefined){
-                                    // Format specifier can also contain expressions
-                                    var parsed_fmt = $B.parse_fstring(fmt)
-                                    var res1 = "$B.builtins.str.$dict.format('{0:' + "
-                                    if(parsed_fmt.length > 1){
-                                        var fmt_elts = []
-                                        for(var j=0;j<parsed_fmt.length;j++){
-                                            if(parsed_fmt[j].type=="expression"){
-                                                fmt_elts.push("$B.builtins.$$eval('("+
-                                                    parsed_fmt[j].expression +")')")
-                                            }else{
-                                                fmt_elts.push("'"+parsed_fmt[j]+"'")                                            
-                                            }
-                                        }
-                                        fmt = fmt_elts.join(" + ")
-                                    }else{
-                                        fmt = "'" + fmt + "'"
-                                    }
-                                    res1 += fmt + " + '}', "
-                                    res1 += expr1 + ")"
-                                    elts.push(res1)
-                                }else{
-                                    elts.push(expr1)
-                                }
-                            }
-                            else{
-                                elts.push("'"+value[i]+"'")
-                            }
-                        }
-                        res += elts.join(" + ")
+                        res += fstring(value)
                     }else{
                         res += value.replace(/\n/g,'\\n\\\n')
                     }
