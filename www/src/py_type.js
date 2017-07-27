@@ -35,18 +35,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         __dict__ : cl_dict
     }
 
-    // set class attributes for faster lookups
-    // unless commented out, it prevents user actions in __new__, because the
-    // attributes are set long before the user can do nothing to undo the actions
-    // the same code is present in type.__new__ and metaclasses should always
-    // invoke super to end up at type.__new__, which is actually in charge of
-    // setting the attribuute
-    /*
-    var items = $B.$dict_items(cl_dict);
-    for(var i=0;i<items.length;i++){
-        class_dict[items[i][0]] = items[i][1]
-    }
-    */
+    class_dict.__slots__ = class_obj.__slots__
 
     class_dict.__mro__ = make_mro(bases, cl_dict)
     
@@ -58,7 +47,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         mro = [class_dict].concat(class_dict.__mro__)
 
     for(var i=0;i<mro.length;i++){
-        var kdict = mro[i]
+        var kdict = i == 0 ? class_obj : mro[i]
         for(var attr in kdict){
             if(non_abstract_methods[attr]){continue}
             var v = kdict[attr]
@@ -451,7 +440,7 @@ $B.$type.__getattribute__=function(klass, attr){
             }
         }
     }
-        
+    
     if(res===undefined && klass.$slots && klass.$slots[attr]!==undefined){
         return member_descriptor(klass.$slots[attr], attr)
     }
