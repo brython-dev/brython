@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-07-27 22:22:29.181961"
+__BRYTHON__.compiled_date="2017-07-31 10:18:06.699623"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -2266,7 +2266,7 @@ return elts.join(' + ')}
 for(var i=0;i<this.tree.length;i++){if(this.tree[i].type=="call"){
 var js='(function(){throw TypeError("'+"'str'"+
 ' object is not callable")}())'
-return js}else{var value=this.tree[i],is_fstring=Array.isArray(value)
+return js}else{var value=this.tree[i],is_fstring=Array.isArray(value),is_bytes=false
 if(!is_fstring){is_bytes=value.charAt(0)=='b'}
 if(type==null){type=is_bytes
 if(is_bytes){res+='bytes('}}else if(type!=is_bytes){return '$B.$TypeError("can\'t concat bytes to str")'}
@@ -5455,8 +5455,11 @@ if(_locals===_globals ||_locals===undefined){locals_id=globals_id}else{locals_id
 eval('var $locals_'+globals_id+' = {}\nvar $locals_'+locals_id+' = {}')
 if(_globals===undefined){var gobj=current_frame[3],ex=''
 parent_block_id=current_globals_id
-ex +='var $locals_'+current_globals_id+'=gobj;'
-eval(ex)}else{$B.bound[globals_id]={}
+ex +='var $locals_'+current_globals_id+'=gobj;' 
+ex +='var $locals_'+globals_id+'=gobj;'
+eval(ex)
+$B.bound[globals_id]={}
+for(var attr in gobj){$B.bound[globals_id][attr]=true}}else{$B.bound[globals_id]={}
 var items=_b_.dict.$dict.items(_globals),item
 while(1){try{var item=next(items)
 eval('$locals_'+globals_id+'["'+item[0]+'"] = item[1]')

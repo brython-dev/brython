@@ -4629,7 +4629,9 @@ function $StringCtx(context,value){
                 return js
             }else{
                 var value=this.tree[i], 
-                    is_fstring = Array.isArray(value)
+                    is_fstring = Array.isArray(value),
+                    is_bytes = false
+                    
                 if(!is_fstring){
                     is_bytes = value.charAt(0)=='b'
                 }
