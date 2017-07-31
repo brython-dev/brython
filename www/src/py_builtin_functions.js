@@ -406,15 +406,14 @@ function $eval(src, _globals, _locals){
     if(_globals===undefined){
         var gobj = current_frame[3],
             ex = ''
-        /*
-        for(var attr in current_frame[3]){
-            ex == '$locals_'+globals_id+'["'+attr+
-                '"] = gobj["'+attr+'"]';
-        }
-        */
         parent_block_id = current_globals_id
-        ex += 'var $locals_'+current_globals_id+'=gobj;'
+        ex += 'var $locals_'+current_globals_id+'=gobj;' // needed for generators
+        ex += 'var $locals_'+globals_id+'=gobj;'
         eval(ex)
+        $B.bound[globals_id] = {}
+        for(var attr in gobj){
+            $B.bound[globals_id][attr] = true
+        }
     }else{
         $B.bound[globals_id] = {}
         var items = _b_.dict.$dict.items(_globals), item
@@ -499,7 +498,7 @@ function $eval(src, _globals, _locals){
         }
 
         js = root.to_js()
-        
+
         var res = eval(js)
         gns = eval('$locals_'+globals_id)
 
