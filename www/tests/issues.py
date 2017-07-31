@@ -1292,8 +1292,8 @@ assert float(True) == 1.0
 class A(object):
     __slots__ = "attr"
     def __init__(self, attr=0):
-        self.attr  = attr 
-a = A() 
+        self.attr  = attr
+a = A()
 
 # issue 600
 class A:
@@ -1330,7 +1330,7 @@ except RuntimeError:
 # issue 603
 import copy
 a = [[1],2,3]
-b = copy.copy(a) 
+b = copy.copy(a)
 b[0] += [10]
 assert a == [[1, 10], 2, 3]
 assert b == [[1, 10], 2, 3]
@@ -1342,6 +1342,20 @@ class StopCompares:
 
 checkfirst = list([1, StopCompares()])
 assert(1 in checkfirst)
+
+# issue 614
+from collections import namedtuple
+N = namedtuple('N', 'spam, length, eggs')
+n = N(5, 6, 7)
+assert n.length == 6
+
+M = namedtuple('M', 'a, b, c')
+m = M(5, 6, 7)
+try:
+    m.length
+    raise AssertionError("should have raised AttributeError")
+except AttributeError:
+    pass
 
 # ==========================================
 # Finally, report that all tests have passed
