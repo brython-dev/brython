@@ -328,6 +328,65 @@ The function takes one argument, an object representing the event.
 
 </div>
 
+<div class="example" id="ex61">
+    <button id="button61">insert before an element</button>
+    <div id="zone61" class="zone"><ul><li>element</ul></div>
+    
+    <script type="text/python" id="script61">
+    from browser import document, html
+    
+    ul = document["zone61"].get(selector="ul")[0]
+    element = ul.get(selector="li")[0]
+    nb = 0
+    
+    def change(event):
+        global nb
+        nb += 1
+        ul.insertBefore(html.LI(f"element before {nb}"), element)
+    
+    document["button61"].bind("click", change)
+    </script>
+
+    <pre class="python"></pre>
+
+    <span class="comment">
+    We use the standard DOM method <a href="https://developer.mozilla.org/en-US/docs/Web/API/Node/insertBefore">insertBefore()</a>
+    </code>
+    </span>
+
+</div>
+
+<div class="example" id="ex62">
+    <button id="button62">insert after an element</button>
+    <div id="zone62" class="zone"><ul><li>element</ul></div>
+    
+    <script type="text/python" id="script62">
+    from browser import document, html
+    
+    ul = document["zone62"].get(selector="ul")[0]
+    element = ul.get(selector="li")[0]
+    nb = 0
+    
+    def change(event):
+        global nb
+        nb += 1
+        ul.insertBefore(html.LI(f"element after {nb}"), element.nextSibling)
+    
+    document["button62"].bind("click", change)
+    </script>
+
+    <pre class="python"></pre>
+
+    <span class="comment">
+    We use the standard DOM method <a href="https://developer.mozilla.org/en-US/docs/Web/API/Node/insertBefore">insertBefore()</a>
+and insert the element after <a href="https://developer.mozilla.org/en-US/docs/Web/API/Node/nextSibling">element.nextSibling</a>.
+If the element is the last in its parent's children, <code>nextSibling</code> is <code>null</code> so the new element is inserted at
+the end.
+    </code>
+    </span>
+
+</div>
+
 
 <div class="example" id="ex_elt_attr">
     <button id="button_elt_attr">insert an element with attributes</button>
