@@ -1357,6 +1357,23 @@ try:
 except AttributeError:
     pass
 
+# issue 615
+class A:
+    spam = 5
+
+try:
+    a = A(5)
+    raise AssertionError("should have raised TypeError")
+except TypeError:
+    pass
+
+try:
+    class A(spam="foo"):
+        pass
+    raise AssertionError("should have raised TypeError")
+except TypeError:
+    pass
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

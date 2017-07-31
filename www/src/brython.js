@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-07-31 21:51:53.953248"
+__BRYTHON__.compiled_date="2017-07-31 22:09:47.167555"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4394,7 +4394,8 @@ $ObjectDict.__gt__=$ObjectNI('__gt__','>')
 $ObjectDict.__hash__=function(self){var hash=self.__hashvalue__
 if(hash!==undefined){return hash}
 return self.__hashvalue__=$B.$py_next_hash--;}
-$ObjectDict.__init__=function(){return _b_.None}
+$ObjectDict.__init__=function(){if(arguments.length>0){throw _b_.TypeError("object() takes no parameters")}
+return _b_.None}
 $ObjectDict.__le__=$ObjectNI('__le__','<=')
 $ObjectDict.__lt__=$ObjectNI('__lt__','<')
 $ObjectDict.__mro__=[]
@@ -4435,7 +4436,8 @@ throw _b_.NameError("name '"+parents_names[i]+"' is not defined")}}}
 bases=parents
 var metaclass=_b_.type
 for(var i=0;i<kwargs.length;i++){var key=kwargs[i][0],val=kwargs[i][1]
-if(key=='metaclass'){metaclass=val}}
+if(key=='metaclass'){metaclass=val}
+else{throw _b_.TypeError("type() takes 1 or 3 arguments")}}
 var class_dict={__name__ : class_name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict}
 class_dict.__slots__=class_obj.__slots__
 class_dict.__mro__=make_mro(bases,cl_dict)
@@ -4648,7 +4650,8 @@ var init_func=klass.__init__
 for(var i=0;i<klass.__mro__.length && init_func===undefined;i++){init_func=klass.__mro__[i].__init__}
 if(init_func===_b_.object.$dict.__init__ && 
 new_func===_b_.object.$dict.__new__){
-return function(){return{__class__: klass}}}else if(new_func===_b_.object.$dict.__new__ ||
+return function(){if(arguments.length>0){throw _b_.TypeError("object() takes no parameters")}
+return{__class__: klass}}}else if(new_func===_b_.object.$dict.__new__ ||
 new_func===$B.$type.__new__){
 return function(){var obj={__class__:klass}
 var args=[obj]

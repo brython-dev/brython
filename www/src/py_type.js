@@ -26,6 +26,9 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     for(var i=0;i<kwargs.length;i++){
         var key=kwargs[i][0],val=kwargs[i][1]
         if(key=='metaclass'){metaclass=val}
+        else{
+            throw _b_.TypeError("type() takes 1 or 3 arguments")
+        }
     }
 
     // Create the class dictionary
@@ -561,6 +564,9 @@ function $instance_creator(klass){
         new_func===_b_.object.$dict.__new__){
         // most simple case : no specific __init__ or __new__
         return function(){
+            if(arguments.length>0){
+               throw _b_.TypeError("object() takes no parameters")
+            }
             return {__class__: klass}
         }
     }else if(new_func===_b_.object.$dict.__new__ || 
