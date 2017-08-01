@@ -406,15 +406,14 @@ function $eval(src, _globals, _locals){
     if(_globals===undefined){
         var gobj = current_frame[3],
             ex = ''
-        /*
-        for(var attr in current_frame[3]){
-            ex == '$locals_'+globals_id+'["'+attr+
-                '"] = gobj["'+attr+'"]';
-        }
-        */
         parent_block_id = current_globals_id
-        ex += 'var $locals_'+current_globals_id+'=gobj;'
+        ex += 'var $locals_'+current_globals_id+'=gobj;' // needed for generators
+        ex += 'var $locals_'+globals_id+'=gobj;'
         eval(ex)
+        $B.bound[globals_id] = {}
+        for(var attr in gobj){
+            $B.bound[globals_id][attr] = true
+        }
     }else{
         if(_globals.__class__!=_b_.dict.$dict){
             throw _b_.TypeError("exec() globals must be a dict, not "+
@@ -461,6 +460,7 @@ function $eval(src, _globals, _locals){
     var root = $B.py2js(src, globals_id, locals_id, parent_block_id),
         leave_frame = true,
         js, gns, lns
+    
 
     try{
         // If the Python function is eval(), not exec(), check that the source
@@ -502,7 +502,8 @@ function $eval(src, _globals, _locals){
         }
 
         js = root.to_js()
-        
+    console.log('js', js)
+
         var res = eval(js)
         gns = eval('$locals_'+globals_id)
 
@@ -607,6 +608,7 @@ function attr_error(attr, cname){
         case '__call__':
             throw _b_.TypeError("'"+cname+"'"+' object is not callable')     
         default:
+            while(attr.charAt(0)=='$'){attr = attr.substr(1)}
             throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")
     }
 }
@@ -631,7 +633,7 @@ function getattr(obj,attr,_default){
         throw _b_.TypeError("getattr expected at most 3 arguments, got "
             +len)
     }
-    
+    var rawname = attr
     if($B.aliased_names[attr]){attr = '$$'+attr}
     
     var klass = obj.__class__
@@ -661,7 +663,7 @@ function getattr(obj,attr,_default){
             }
         }
         if(_default!==undefined) return _default
-        throw _b_.AttributeError('object has no attribute '+attr)
+        throw _b_.AttributeError('object has no attribute '+rawname)
     }
     
     switch(attr) {

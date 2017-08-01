@@ -4629,7 +4629,9 @@ function $StringCtx(context,value){
                 return js
             }else{
                 var value=this.tree[i], 
-                    is_fstring = Array.isArray(value)
+                    is_fstring = Array.isArray(value),
+                    is_bytes = false
+                    
                 if(!is_fstring){
                     is_bytes = value.charAt(0)=='b'
                 }
@@ -7022,8 +7024,8 @@ function $transition(context,token){
 
 $B.forbidden = ['alert', 'case','catch','constructor','Date', 'delete',
     'default', 'document', 'enum', 'eval', 'extends','Error', 'history',
-    'function','location', 'Math','new', 'null', 'Number', 'RegExp', 'super',
-    'this','throw', 'var', 'window', 'toString']
+    'function', 'length', 'location', 'Math','new', 'null', 'Number',
+    'RegExp', 'super', 'this','throw', 'var', 'window', 'toString']
 $B.aliased_names = {}
 for(var i=0;i<$B.forbidden.length;i++){$B.aliased_names[$B.forbidden[i]]=true}
 
