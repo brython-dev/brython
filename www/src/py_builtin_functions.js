@@ -416,13 +416,16 @@ function $eval(src, _globals, _locals){
         ex += 'var $locals_'+current_globals_id+'=gobj;'
         eval(ex)
     }else{
+        if(_globals.__class__!=_b_.dict.$dict){
+            throw _b_.TypeError("exec() globals must be a dict, not "+
+                _globals.__class__.__name__)
+        }
         $B.bound[globals_id] = {}
-        var items = _b_.dict.$dict.items(_globals), item
-        while(1){
+        var items = _globals.$string_dict
+        for(var item in items){
             try{
-                var item = next(items)
-                eval('$locals_'+globals_id+'["'+item[0]+'"] = item[1]')
-                $B.bound[globals_id][item[0]]=true
+                eval('$locals_'+globals_id+'["'+item+'"] = items[item]')
+                $B.bound[globals_id][item]=true
             }catch(err){
                 break
             }
