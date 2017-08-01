@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-07-15 22:31:29.327797"
+__BRYTHON__.compiled_date="2017-07-31 22:09:47.167555"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -2240,19 +2240,13 @@ C.tree[C.tree.length]=this
 this.toString=function(){return 'string '+(this.tree||'')}
 this.to_js=function(){this.js_processed=true
 var res='',type=null
-for(var i=0;i<this.tree.length;i++){if(this.tree[i].type=="call"){
-var js='(function(){throw TypeError("'+"'str'"+
-' object is not callable")}())'
-return js}else{var value=this.tree[i],is_fstring=Array.isArray(value)
-if(!is_fstring){is_bytes=value.charAt(0)=='b'}
-if(type==null){type=is_bytes
-if(is_bytes){res+='bytes('}}else if(type!=is_bytes){return '$B.$TypeError("can\'t concat bytes to str")'}
-if(!is_bytes){if(is_fstring){var elts=[]
-for(var i=0;i<value.length;i++){if(value[i].type=='expression'){var expr=value[i].expression,parts=expr.split(':')
+function fstring(parsed_fstring){
+var elts=[]
+for(var i=0;i<parsed_fstring.length;i++){if(parsed_fstring[i].type=='expression'){var expr=parsed_fstring[i].expression,parts=expr.split(':')
 expr=parts[0]
 expr=expr.replace('\n','\\n')
 var expr1="$B.builtins.$$eval('("+expr+")')"
-switch(value[i].conversion){case "a":
+switch(parsed_fstring[i].conversion){case "a":
 expr1='$B.builtins.ascii('+expr1+')'
 break
 case "r":
@@ -2260,20 +2254,23 @@ expr1='$B.builtins.repr('+expr1+')'
 break
 case "s":
 expr1='$B.builtins.str('+expr1+')'
-break }
+break}
 var fmt=parts[1]
 if(fmt!==undefined){
 var parsed_fmt=$B.parse_fstring(fmt)
-var res1="$B.builtins.str.$dict.format('{0:' + "
-if(parsed_fmt.length > 1){var fmt_elts=[]
-for(var j=0;j<parsed_fmt.length;j++){if(parsed_fmt[j].type=="expression"){fmt_elts.push("$B.builtins.$$eval('("+
-parsed_fmt[j].expression +")')")}else{fmt_elts.push("'"+parsed_fmt[j]+"'")}}
-fmt=fmt_elts.join(" + ")}else{fmt="'" + fmt + "'"}
-res1 +=fmt + " + '}', "
-res1 +=expr1 + ")"
-elts.push(res1)}else{elts.push(expr1)}}
-else{elts.push("'"+value[i]+"'")}}
-res +=elts.join(" + ")}else{res +=value.replace(/\n/g,'\\n\\\n')}}else{res +=value.substr(1).replace(/\n/g,'\\n\\\n')}
+if(parsed_fmt.length > 1){fmt=fstring(parsed_fmt)}else{fmt="'" + fmt + "'"}
+var res1="$B.builtins.str.$dict.format('{0:' + " +
+fmt + " + '}', " + expr1 + ")"
+elts.push(res1)}else{elts.push(expr1)}}else{elts.push("'"+parsed_fstring[i]+"'")}}
+return elts.join(' + ')}
+for(var i=0;i<this.tree.length;i++){if(this.tree[i].type=="call"){
+var js='(function(){throw TypeError("'+"'str'"+
+' object is not callable")}())'
+return js}else{var value=this.tree[i],is_fstring=Array.isArray(value),is_bytes=false
+if(!is_fstring){is_bytes=value.charAt(0)=='b'}
+if(type==null){type=is_bytes
+if(is_bytes){res+='bytes('}}else if(type!=is_bytes){return '$B.$TypeError("can\'t concat bytes to str")'}
+if(!is_bytes){if(is_fstring){res +=fstring(value)}else{res +=value.replace(/\n/g,'\\n\\\n')}}else{res +=value.substr(1).replace(/\n/g,'\\n\\\n')}
 if(i<this.tree.length-1){res+='+'}}}
 if(is_bytes){res +=',"ISO-8859-1")'}
 return res}}
@@ -3767,7 +3764,7 @@ C.from=true
 C.tree=[]
 return new $AbstractExprCtx(C,true)}
 return $transition(C.parent,token)}}
-$B.forbidden=['alert','case','catch','constructor','Date','delete','default','document','enum','eval','extends','Error','history','function','location','Math','new','null','Number','RegExp','super','this','throw','var','window','toString']
+$B.forbidden=['alert','case','catch','constructor','Date','delete','default','document','enum','eval','extends','Error','history','function','length','location','Math','new','null','Number','RegExp','super','this','throw','var','window','toString']
 $B.aliased_names={}
 for(var i=0;i<$B.forbidden.length;i++){$B.aliased_names[$B.forbidden[i]]=true}
 var s_escaped='abfnrtvxuU"0123456789'+"'"+'\\',is_escaped={}
@@ -4397,7 +4394,8 @@ $ObjectDict.__gt__=$ObjectNI('__gt__','>')
 $ObjectDict.__hash__=function(self){var hash=self.__hashvalue__
 if(hash!==undefined){return hash}
 return self.__hashvalue__=$B.$py_next_hash--;}
-$ObjectDict.__init__=function(){return _b_.None}
+$ObjectDict.__init__=function(){if(arguments.length>0){throw _b_.TypeError("object() takes no parameters")}
+return _b_.None}
 $ObjectDict.__le__=$ObjectNI('__le__','<=')
 $ObjectDict.__lt__=$ObjectNI('__lt__','<')
 $ObjectDict.__mro__=[]
@@ -4438,13 +4436,13 @@ throw _b_.NameError("name '"+parents_names[i]+"' is not defined")}}}
 bases=parents
 var metaclass=_b_.type
 for(var i=0;i<kwargs.length;i++){var key=kwargs[i][0],val=kwargs[i][1]
-if(key=='metaclass'){metaclass=val}}
+if(key=='metaclass'){metaclass=val}
+else{throw _b_.TypeError("type() takes 1 or 3 arguments")}}
 var class_dict={__name__ : class_name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict}
-var items=$B.$dict_items(cl_dict);
-for(var i=0;i<items.length;i++){class_dict[items[i][0]]=items[i][1]}
+class_dict.__slots__=class_obj.__slots__
 class_dict.__mro__=make_mro(bases,cl_dict)
 var is_instanciable=true,non_abstract_methods={},abstract_methods={},mro=[class_dict].concat(class_dict.__mro__)
-for(var i=0;i<mro.length;i++){var kdict=mro[i]
+for(var i=0;i<mro.length;i++){var kdict=i==0 ? class_obj : mro[i]
 for(var attr in kdict){if(non_abstract_methods[attr]){continue}
 var v=kdict[attr]
 if(typeof v=='function' && v.__class__!==$B.$factory){if(v.__isabstractmethod__===true){is_instanciable=false
@@ -4652,7 +4650,8 @@ var init_func=klass.__init__
 for(var i=0;i<klass.__mro__.length && init_func===undefined;i++){init_func=klass.__mro__[i].__init__}
 if(init_func===_b_.object.$dict.__init__ && 
 new_func===_b_.object.$dict.__new__){
-return function(){return{__class__: klass}}}else if(new_func===_b_.object.$dict.__new__ ||
+return function(){if(arguments.length>0){throw _b_.TypeError("object() takes no parameters")}
+return{__class__: klass}}}else if(new_func===_b_.object.$dict.__new__ ||
 new_func===$B.$type.__new__){
 return function(){var obj={__class__:klass}
 var args=[obj]
@@ -5459,8 +5458,11 @@ if(_locals===_globals ||_locals===undefined){locals_id=globals_id}else{locals_id
 eval('var $locals_'+globals_id+' = {}\nvar $locals_'+locals_id+' = {}')
 if(_globals===undefined){var gobj=current_frame[3],ex=''
 parent_block_id=current_globals_id
-ex +='var $locals_'+current_globals_id+'=gobj;'
-eval(ex)}else{$B.bound[globals_id]={}
+ex +='var $locals_'+current_globals_id+'=gobj;' 
+ex +='var $locals_'+globals_id+'=gobj;'
+eval(ex)
+$B.bound[globals_id]={}
+for(var attr in gobj){$B.bound[globals_id][attr]=true}}else{$B.bound[globals_id]={}
 var items=_b_.dict.$dict.items(_globals),item
 while(1){try{var item=next(items)
 eval('$locals_'+globals_id+'["'+item[0]+'"] = item[1]')
@@ -5489,6 +5491,7 @@ default:
 leave_frame=false
 throw _b_.SyntaxError("eval() argument must be an expression",'<string>',1,1,src)}}
 js=root.to_js()
+console.log('js',js)
 var res=eval(js)
 gns=eval('$locals_'+globals_id)
 if(_locals!==undefined){lns=eval('$locals_'+locals_id)
@@ -5537,6 +5540,7 @@ throw _b_.TypeError(msg.replace('#','~'))
 case '__call__':
 throw _b_.TypeError("'"+cname+"'"+' object is not callable')
 default:
+while(attr.charAt(0)=='$'){attr=attr.substr(1)}
 throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")}}
 $B.show_getattr=function(){var items=[]
 for(var attr in $B.counter){items.push([$B.counter[attr],attr])}
@@ -5549,6 +5553,7 @@ if(len<2){throw _b_.TypeError("getattr expected at least 2 arguments, "
 + "got "+len)}
 else if(len>3){throw _b_.TypeError("getattr expected at most 3 arguments, got "
 +len)}
+var rawname=attr
 if($B.aliased_names[attr]){attr='$$'+attr}
 var klass=obj.__class__
 if(klass===undefined){
@@ -5558,7 +5563,7 @@ if(klass===undefined){
 if(obj[attr]!==undefined){if(typeof obj[attr]=="function"){return function(){
 return obj[attr].apply(obj,arguments)}}else{return $B.$JS2Py(obj[attr])}}
 if(_default!==undefined)return _default
-throw _b_.AttributeError('object has no attribute '+attr)}
+throw _b_.AttributeError('object has no attribute '+rawname)}
 switch(attr){case '__call__':
 if(typeof obj=='function'){return obj}else if(klass===$B.JSObject.$dict && typeof obj.js=='function'){return function(){
 var args=[]
@@ -6994,7 +6999,7 @@ var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv',
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var js=['_ajax','_base64','_jsre','_multiprocessing','_posixsubprocess','_profile','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pkglist=['asyncio','browser','collections','concurrent','concurrent.futures','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.dom','xml.etree','xml.parsers','xml.sax']
+var pkglist=['asyncio','browser','collections','concurrent','concurrent.futures','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]})(__BRYTHON__)
 
 ;(function($B){var _b_=$B.builtins
