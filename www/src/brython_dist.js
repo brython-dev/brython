@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-08-03 14:54:20.076706"
+__BRYTHON__.compiled_date="2017-08-03 21:48:00.956708"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -729,8 +729,8 @@ args_str=p[0]
 for(var i=1;i<p.length;i++){args_str +='.concat('+p[i]+')'}}else{for(var i=0,len=positional.length;i<len;i++){positional[i]=positional[i][0]}
 args_str=positional.join(', ')}
 var kw_args_str='{'+kw_args.join(', ')+'}'
-if(dstar_args.length){kw_args_str='{$nat:"kw",kw:$B.extend("'+this.func.value+'",'+kw_args_str
-kw_args_str +=','+dstar_args.join(', ')+')}'}else if(kw_args_str!=='{}'){kw_args_str='{$nat:"kw",kw:'+kw_args_str+'}'}else{kw_args_str=''}
+if(dstar_args.length){kw_args_str='{$nat:"kw",kw:$B.extend("'+this.func.name+
+'",'+kw_args_str + ',' + dstar_args.join(', ')+')}'}else if(kw_args_str!=='{}'){kw_args_str='{$nat:"kw",kw:'+kw_args_str+'}'}else{kw_args_str=''}
 if(star_args && kw_args_str){args_str +='.concat(['+kw_args_str+'])' }else{if(args_str && kw_args_str){args_str +=','+kw_args_str}
 else if(!args_str){args_str=kw_args_str}}
 if(star_args){
@@ -1115,11 +1115,11 @@ new $NodeJSCtx(new_node,js)
 else_node.add(new_node)}}else{var pargs=[]
 for(var i=0;i<this.positional_list.length;i++){var arg=this.positional_list[i]
 pargs.push(arg+':'+arg)}
-js='if($len!='+pos_len+'){$B.wrong_nb_args("'+this.name+
+if($B.debug < 1){js='if($len!='+pos_len+'){$B.wrong_nb_args("'+this.name+
 '", $len, '+pos_len
 if(positional_str.length>0){js +=', ['+positional_str+']'}
 js +=')}'
-else_node.add($NodeJS(js))
+else_node.add($NodeJS(js))}
 else_node.add($NodeJS(local_ns+'=$locals={'+pargs.join(', ')+'}'))}}}else{nodes.push(make_args_nodes[0])
 if(make_args_nodes.length>1){nodes.push(make_args_nodes[1])}}
 nodes.push($NodeJS('$B.frames_stack[$B.frames_stack.length-1][1] = $locals;'))
@@ -4512,7 +4512,7 @@ var class_dict={__class__ : $B.$type,__name__ : name.replace('$$',''),__bases__ 
 var items=$B.$dict_items(cl_dict);
 for(var i=0;i<items.length;i++){var name=items[i][0],v=items[i][1]
 class_dict[name]=v
-if(typeof v=='function' 
+if(typeof v=='function'
 && v.__class__!==$B.$factory
 && v.__class__!==$B.$MethodDict){class_dict.$methods[name]=$B.make_method(name,class_dict,v,v)}}
 class_dict.__mro__=make_mro(bases,cl_dict)
@@ -4573,7 +4573,7 @@ if(get_func===undefined)return res
 if(attr=='__new__'){res.$type='staticmethod'}
 var res1=get_func.apply(null,[res,$B.builtins.None,klass])
 if(res1.__class__===$B.$factory){
-return res1 }
+return res1}
 if(typeof res1=='function'){res.__name__=attr
 var __self__,__func__=res1,__repr__,__str__,args
 switch(res.$type){case undefined:
@@ -4582,7 +4582,7 @@ case 'instancemethod':
 args=[]
 __repr__=__str__=function(attr){return function(){if(klass.$native){return "<method '"+attr+"' of '"+
 klass.__name__+"' objects>"}
-return '<function '+klass.__name__+'.'+attr+'>' }}(attr)
+return '<function '+klass.__name__+'.'+attr+'>'}}(attr)
 break;
 case 'classmethod':
 args=[klass.$factory]
@@ -4617,8 +4617,7 @@ var new_func=klass.__new__
 for(var i=0;i<klass.__mro__.length && new_func===undefined;i++){new_func=klass.__mro__[i].__new__}
 var init_func=klass.__init__
 for(var i=0;i<klass.__mro__.length - 1 && init_func===undefined;i++){init_func=klass.__mro__[i].__init__}
-if(init_func===undefined && 
-new_func===_b_.object.$dict.__new__){
+if(init_func===undefined && new_func===_b_.object.$dict.__new__){
 return function(){if(arguments.length>0){throw _b_.TypeError("object() takes no parameters")}
 return{__class__: klass}}}else if(new_func===_b_.object.$dict.__new__ ||
 new_func===$B.$type.__new__){
@@ -4643,7 +4642,7 @@ $MethodFactory.__class__=$B.$factory
 $B.$MethodDict={__class__:$B.$type,__name__:'method',$factory:$MethodFactory}
 $B.$MethodDict.__eq__=function(self,other){return self.$infos !==undefined &&
 other.$infos !==undefined &&
-self.$infos.__func__===other.$infos.__func__ && 
+self.$infos.__func__===other.$infos.__func__ &&
 self.$infos.__self__===other.$infos.__self__}
 $B.$MethodDict.__ne__=function(self,other){return !$B.$MethodDict.__eq__(self,other)}
 $B.$MethodDict.__getattribute__=function(self,attr){
@@ -4652,9 +4651,8 @@ if(infos && infos[attr]){if(attr=='__code__'){var res={__class__:$B.$CodeDict}
 for(var attr in infos.__code__){res[attr]=infos.__code__[attr]}
 return res}else{return infos[attr]}}else{return _b_.object.$dict.__getattribute__(self,attr)}}
 $B.$MethodDict.__mro__=[_b_.object.$dict]
-$B.$MethodDict.__repr__=$B.$MethodDict.__str__=function(self){var res='<bound method '+self.$infos.__class__.$dict.__name__+'.' 
-res +=self.$infos.__name__+' of '
-return res+_b_.str(self.$infos.__self__)+'>'}
+$B.$MethodDict.__repr__=$B.$MethodDict.__str__=function(self){return '<bound method '+self.$infos.__class__.$dict.__name__+'.'+
+self.$infos.__name__+' of '+_b_.str(self.$infos.__self__)+'>'}
 $MethodFactory.$dict=$B.$MethodDict
 $B.$InstanceMethodDict={__class__:$B.$type,__name__:'instancemethod',__mro__:[_b_.object.$dict],$factory:$MethodFactory}})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
@@ -10684,7 +10682,7 @@ case '$$location':
 attr='location'
 break}
 if(self.elt.getAttribute!==undefined){res=self.elt.getAttribute(attr)
-if(res!==undefined&&res!==null&&self.elt[attr]===undefined){
+if(res!==undefined && res!==null && self.elt[attr]===undefined){
 return res}}
 if(self.elt.getAttributeNS!==undefined){res=self.elt.getAttributeNS(null,attr)
 if(res!==undefined && res!==null && res!="" &&
@@ -10712,6 +10710,7 @@ func.$is_func=true
 return func}
 if(attr=='options')return $Options(self.elt)
 if(attr=='style')return $Style(self.elt[attr])
+if(Array.isArray(res)){return res}
 return $B.$JS2Py(res)}
 return $ObjectDict.__getattribute__(self,attr)}
 DOMNodeDict.__getitem__=function(self,key){if(self.elt.nodeType===9){

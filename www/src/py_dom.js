@@ -493,7 +493,7 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         // IE returns the properties of a DOMNode (eg parentElement)
         // as "attribute", so we must check that this[attr] is not
         // defined
-        if(res!==undefined&&res!==null&&self.elt[attr]===undefined){
+        if(res!==undefined && res!==null && self.elt[attr]===undefined){
             // now we're sure it's an attribute
             return res
         }
@@ -562,6 +562,8 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         }
         if(attr=='options') return $Options(self.elt)
         if(attr=='style') return $Style(self.elt[attr])
+        if(Array.isArray(res)){return res} // issue #619
+
         return $B.$JS2Py(res)
     }
     return $ObjectDict.__getattribute__(self,attr)
