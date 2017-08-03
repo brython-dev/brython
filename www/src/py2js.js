@@ -3605,67 +3605,6 @@ function $ImportedModuleCtx(context,name){
     }
 }
 
-function $IMPRTCtx(context){
-    // Class for keyword "import"
-    this.type = 'import'
-    this.parent = context
-    this.tree = []
-    context.tree[context.tree.length]=this
-    this.expect = 'id'
-
-    this.toString = function(){return 'import '+this.tree}
-    
-    this.bind_names = function(){
-        // For "import X", set X in the list of names bound in current scope
-        var scope = $get_scope(this)
-        for(var i=0;i<this.tree.length;i++){
-            if(this.tree[i].name==this.tree[i].alias){
-                var name = this.tree[i].name,
-                    parts = name.split('.'),
-                    bound = name
-                if(parts.length>1){
-                    bound = parts[0]
-                }
-            }else{
-                bound = this.tree[i].alias
-            }
-            $B.bound[scope.id][bound] = true
-        }
-    }
-    
-    this.transform = function(node, rank){
-        // If there are more than one module name, split line
-        for(var i=1;i<this.tree.length;i++){
-            var new_node = new $Node()
-            var ctx = new $IMPRTCtx(new $NodeCtx(new_node))
-            ctx.tree = [this.tree[i]]
-            node.parent.insert(rank+1, new_node)
-        }
-        this.tree.splice(1, this.tree.length)
-        // All the code that starts after IMPRT is put in a function
-        // called when the module has finished importing
-        var name = this.tree[0].name,
-            js = '$locals["'+this.tree[0].alias+'"]= $B.imported["'+name+'"]'
-        node.add($NodeJS(js))
-        for(var i=rank+1;i<node.parent.children.length;i++){
-            node.add(node.parent.children[i])
-        }
-        node.parent.children.splice(rank+1, node.parent.children.length)
-        node.parent.add($NodeJS(')'))
-    }
-    
-    this.to_js = function(){
-        this.js_processed=true
-        var res = [], 
-            pos=0
-        for(var i=0;i<this.tree.length;i++){
-            var mod_name = this.tree[i].name
-            res[pos++] = '$B.$import_non_blocking("'+mod_name+'", function()'
-        }
-        // add None for interactive console
-        return res.join('')
-    }
-}
 function $IntCtx(context,value){
     // Class for literal integers
     // value is a 2-elt tuple [base, value_as_string] where
@@ -5308,8 +5247,11 @@ function $get_docstring(node){
     if(node.children.length>0){
         var firstchild = node.children[0]
         if(firstchild.context.tree && firstchild.context.tree[0].type=='expr'){
-            if(firstchild.context.tree[0].tree[0].type=='str')
-            doc_string = firstchild.context.tree[0].tree[0].to_js()
+            var expr = firstchild.context.tree[0].tree[0]
+            // Set as docstring if first child is a string, but not a f-string
+            if(expr.type=='str' && !Array.isArray(expr.tree[0])){
+                doc_string = firstchild.context.tree[0].tree[0].to_js()
+            }
         }
     }
     return doc_string
@@ -6664,8 +6606,6 @@ function $transition(context,token){
             return new $FromCtx(context)
           case 'import':
             return new $ImportCtx(context)
-          case 'IMPRT': // experimental for non blocking imports
-            return new $IMPRTCtx(context)
           case 'global':
             return new $GlobalCtx(context)
           case 'nonlocal':
@@ -7036,14 +6976,10 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     var br_close = {")":"(","]":"[","}":"{"}
     var br_stack = ""
     var br_pos = []
-    var kwdict = ["class","return","break",
-        "for","lambda","try","finally","raise","def","from",
-        "nonlocal","while","del","global","with",
-        "as","elif","else","if","yield","assert","import",
-        "except","raise","in", //"not",
-        "pass","with","continue","__debugger__",
-        "IMPRT" // experimental for asynchronous imports
-        // "and',"or","is"
+    var kwdict = ["class", "return", "break", "for","lambda","try","finally",
+        "raise", "def", "from", "nonlocal", "while", "del", "global", "with",
+        "as", "elif", "else", "if", "yield", "assert", "import", "except",
+        "raise","in", "pass","with","continue","__debugger__"
         ]
     var unsupported = []
     var $indented = ['class','def','for','condition','single_kw','try','except','with']
