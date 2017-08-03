@@ -311,7 +311,7 @@ $ObjectDict.__hash__ = function (self) {
 }
 
 $ObjectDict.__init__ = function(){
-    if(arguments.length>0){
+    if(arguments.length>1){
         throw _b_.TypeError("object() takes no parameters")
     }
     return _b_.None

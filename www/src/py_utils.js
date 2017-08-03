@@ -266,6 +266,7 @@ $B.clear_ns = function(name){
             __BRYTHON__.bound[key] = null
             delete __BRYTHON__.modules[key]
             delete __BRYTHON__.bound[key]
+            $B.$py_module_path[key] = null
         }
     }
     

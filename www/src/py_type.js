@@ -109,6 +109,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     if(metaclass===_b_.type) {
         return factory
     }
+    
     for(var attr in class_dict){
         factory.$dict[attr] = class_dict[attr]
     }
@@ -121,7 +122,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
           metaclass.$dict[member].$type='classmethod'
        }
     }
-        
+
     factory.$is_func = true
     
     if(!is_instanciable){
@@ -555,12 +556,13 @@ function $instance_creator(klass){
         new_func = klass.__mro__[i].__new__
     }
 
+    // Get __init__ method. Ignore object.__init__().
     var init_func = klass.__init__
-    for(var i=0;i<klass.__mro__.length && init_func===undefined;i++){
+    for(var i=0;i<klass.__mro__.length - 1 && init_func===undefined;i++){
         init_func = klass.__mro__[i].__init__
     }
-
-    if(init_func===_b_.object.$dict.__init__ && 
+    
+    if(init_func===undefined && 
         new_func===_b_.object.$dict.__new__){
         // most simple case : no specific __init__ or __new__
         return function(){
@@ -578,7 +580,7 @@ function $instance_creator(klass){
             for(var i=0, len=arguments.length; i<len; i++){
                 args.push(arguments[i])
             }
-            init_func.apply(null, args)
+            if(init_func!==undefined){init_func.apply(null, args)}
             return obj
         }        
     }else{
@@ -595,9 +597,9 @@ function $instance_creator(klass){
             }
             // __initialized__ is set in object.__new__ if klass
             // has a method __init__
-            if(!obj.__initialized__){
+            if(!obj.__initialized__ && init_func!==undefined){
                 init_func.apply(null, args)
-             }
+            }
             return obj
         }
     }
