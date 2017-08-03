@@ -444,6 +444,7 @@ DOMNodeDict.__eq__ = function(self, other){
 
 DOMNodeDict.__getattribute__ = function(self,attr){
 
+    if(attr.substr(0,2)=='$$'){attr = attr.substr(2)}
     switch(attr) {
       case 'class_name':
       case 'html':
