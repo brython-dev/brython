@@ -394,6 +394,10 @@ function $eval(src, _globals, _locals){
     var globals_id = '$exec_'+$B.UUID(),
         locals_id,
         parent_block_id
+
+    // set module path
+    $B.$py_module_path[globals_id] = $B.$py_module_path[current_globals_id]
+    
     if(_locals===_globals || _locals===undefined){
         locals_id = globals_id
     }else{
@@ -460,7 +464,6 @@ function $eval(src, _globals, _locals){
     var root = $B.py2js(src, globals_id, locals_id, parent_block_id),
         leave_frame = true,
         js, gns, lns
-    
 
     try{
         // If the Python function is eval(), not exec(), check that the source
@@ -502,7 +505,6 @@ function $eval(src, _globals, _locals){
         }
 
         js = root.to_js()
-    console.log('js', js)
 
         var res = eval(js)
         gns = eval('$locals_'+globals_id)
