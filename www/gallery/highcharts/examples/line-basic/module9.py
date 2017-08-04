@@ -8,17 +8,17 @@ chart1 = b_highcharts(
         'renderTo' : 'container'
     },
     'title': {
-        'text': 'Fruit Consumption'
+        'text': 'Fruit Consumption',
         'renderTo' : 'container'
     },
     'xAxis': {
-        'categories': ['Apples', 'Bananas', 'Oranges']
+        'categories': ['Apples', 'Bananas', 'Oranges'],
         'renderTo' : 'container'
     },
     'yAxis': {
         'title': {
             'text': 'Fruit eaten'
-        }
+        },
         'renderTo' : 'container'
     },
     'series': [{
