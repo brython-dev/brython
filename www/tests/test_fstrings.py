@@ -36,7 +36,7 @@ for i in range(3):
     if i == 2:
         try:
             f'{i}:{d[i]}'
-            raise AssertionError, "should have raised KeyError"
+            raise AssertionError("should have raised KeyError")
         except KeyError:
             pass
     else:
