@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-08-03 21:48:00.956708"
+__BRYTHON__.compiled_date="2017-08-06 11:24:30.593389"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4407,6 +4407,12 @@ var metaclass=_b_.type
 for(var i=0;i<kwargs.length;i++){var key=kwargs[i][0],val=kwargs[i][1]
 if(key=='metaclass'){metaclass=val}
 else{throw _b_.TypeError("type() takes 1 or 3 arguments")}}
+function init_subclass(){};
+for(var i=0;i<bases.length;i++){if(bases[i].$dict.$methods){var __init_subclass__=bases[i].$dict.$methods.__init_subclass__;
+if(__init_subclass__){function init_subclass(cls){var kw={$nat:true,kw:{}}
+for(var kwidx=0;kwidx<kwargs.length;kwidx++){kw.kw[kwargs[kwidx][0]]=kwargs[kwidx][1];}
+__init_subclass__().$infos.__func__.apply(null,[cls,kw]);}
+break;}}}
 var class_dict={__name__ : class_name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict}
 class_dict.__slots__=class_obj.__slots__
 class_dict.__mro__=make_mro(bases,cl_dict)
@@ -4428,7 +4434,8 @@ if(meta_new.__func__===$B.$type.__new__){var factory=_b_.type.$dict.__new__(_b_.
 class_dict.$factory=factory
 for(var i=0;i<parents.length;i++){parents[i].$dict.$subclasses=parents[i].$dict.$subclasses ||[]
 parents[i].$dict.$subclasses.push(factory)}
-if(metaclass===_b_.type){return factory}
+if(metaclass===_b_.type){init_subclass(factory);
+return factory}
 for(var attr in class_dict){factory.$dict[attr]=class_dict[attr]}
 factory.$dict.$factory=factory
 for(var member in metaclass.$dict){if(typeof metaclass.$dict[member]=='function' && member !='__new__'){metaclass.$dict[member].$type='classmethod'}}
@@ -4436,7 +4443,9 @@ factory.$is_func=true
 if(!is_instanciable){function nofactory(){throw _b_.TypeError("Can't instantiate abstract class interface"+
 " with abstract methods "+Object.keys(abstract_methods).join(', '))}
 for(var attr in factory){nofactory[attr]=factory[attr]}
+init_subclass(nofactory);
 return nofactory}
+init_subclass(factory);
 return factory}
 $B.make_method=function(attr,klass,func){
 var method
@@ -5421,7 +5430,9 @@ function $eval(src,_globals,_locals){var current_frame=$B.frames_stack[$B.frames
 if(current_frame!==undefined){var current_locals_id=current_frame[0].replace(/\./,'_'),current_globals_id=current_frame[2].replace(/\./,'_')}
 var is_exec=arguments[3]=='exec',leave=false
 if(src.__class__===$B.$CodeObjectDict){src=src.source}
-var globals_id='$exec_'+$B.UUID(),locals_id,parent_block_id
+var globals_id='$exec_'+$B.UUID(),locals_id,parent_block_id,has_globals=false
+if(_globals !==undefined && _globals.__class__===_b_.dict.$dict){_globals.globals_id=_globals.globals_id ||globals_id
+globals_id=_globals.globals_id}
 $B.$py_module_path[globals_id]=$B.$py_module_path[current_globals_id]
 if(_locals===_globals ||_locals===undefined){locals_id=globals_id}else{locals_id='$exec_'+$B.UUID()}
 eval('var $locals_'+globals_id+' = {}\nvar $locals_'+locals_id+' = {}')
