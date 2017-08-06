@@ -395,6 +395,17 @@ function $eval(src, _globals, _locals){
         locals_id,
         parent_block_id
 
+    // If a _globals dictionary is provided, set or reuse its attribute
+    // globals_id
+    if(_globals !== undefined){
+        if(_globals.__class__!=_b_.dict.$dict){
+            throw _b_.TypeError("exec() globals must be a dict, not "+
+                _globals.__class__.__name__)
+        }
+        _globals.globals_id = _globals.globals_id || globals_id
+        globals_id = _globals.globals_id
+    } 
+    
     // set module path
     $B.$py_module_path[globals_id] = $B.$py_module_path[current_globals_id]
     
@@ -419,10 +430,6 @@ function $eval(src, _globals, _locals){
             $B.bound[globals_id][attr] = true
         }
     }else{
-        if(_globals.__class__!=_b_.dict.$dict){
-            throw _b_.TypeError("exec() globals must be a dict, not "+
-                _globals.__class__.__name__)
-        }
         $B.bound[globals_id] = {}
         var items = _globals.$string_dict
         for(var item in items){
