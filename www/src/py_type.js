@@ -30,6 +30,36 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
             throw _b_.TypeError("type() takes 1 or 3 arguments")
         }
     }
+    
+    /* see if __init_subclass__ is defined in any of the parents
+     * We can't use __getattribute__ since it must be defined directly on a parent,
+     * not further up the mro.
+     */
+    var init_subclass = function init_subclass(){};
+    for (var i=0;i<bases.length;i++) {
+        if (bases[i].$dict.$methods) {
+            var __init_subclass__ = bases[i].$dict.$methods.__init_subclass__;
+            if (__init_subclass__) {
+                init_subclass = function init_subclass(cls) {
+                    var kw = {
+                        $nat:true,
+                        kw:{}
+                    }
+                    for (var kwidx=0;kwidx<kwargs.length;kwidx++){
+                        kw.kw[kwargs[kwidx][0]] = kwargs[kwidx][1];
+                    }
+                    /* We can't simply __init_subclass__()(kw); 
+                     * because __init_subclass__ is bound to the parent.
+                     * We can't look up __init_subclass__ on factory directly,
+                     * since it might be overridden.  This also sidesteps
+                     * needing to mark __init_subclass__ as implicitly a @classmethod
+                     * */
+                    __init_subclass__().$infos.__func__.apply(null, [cls, kw]);
+                }
+                break;
+            }
+        }
+    }
 
     // Create the class dictionary
     var class_dict = {
@@ -107,6 +137,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     }
 
     if(metaclass===_b_.type) {
+        init_subclass(factory);
         return factory
     }
 
@@ -130,9 +161,11 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
             throw _b_.TypeError("Can't instantiate abstract class interface"+
                 " with abstract methods "+Object.keys(abstract_methods).join(', '))}
         for(var attr in factory){nofactory[attr] = factory[attr]}
+        init_subclass(nofactory);
         return nofactory
     }
 
+    init_subclass(factory);
     return factory
 }
 
