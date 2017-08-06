@@ -1114,9 +1114,9 @@ class BaseEventLoop(events.AbstractEventLoop):
             when = self._scheduled[0]._when
             timeout = max(0, when - self.time())
 
-        if self._debug and timeout != 0:
+        if self._debug and timeout != 0 and False:
             t0 = self.time()
-            event_list = self._selector.select(timeout)
+            #event_list = self._selector.select(timeout)
             dt = self.time() - t0
             if dt >= 1.0:
                 level = logging.INFO
@@ -1135,8 +1135,9 @@ class BaseEventLoop(events.AbstractEventLoop):
                            'poll %.3f ms took %.3f ms: timeout',
                            timeout * 1e3, dt * 1e3)
         else:
-            event_list = self._selector.select(timeout)
-        self._process_events(event_list)
+            pass
+            #event_list = self._selector.select(timeout)
+        #self._process_events(event_list)
 
         # Handle 'later' callbacks that are ready.
         end_time = self.time() + self._clock_resolution

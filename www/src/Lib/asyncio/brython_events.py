@@ -51,14 +51,17 @@ class BrythonEventLoop(base_events.BaseEventLoop):
     def is_running(self):
         return True
 
+    def _do_run_once(self):
+        try:
+            self._run_once()
+        except base_events._StopError:
+            timer.clear_interval(self._interval)
+
+
     def run_forever(self):
         """Run until stop() is called."""
         self._check_closed()
-        while True:
-            try:
-                self._run_once()
-            except base_events._StopError:
-                break
+        self._interval = timer.set_interval(self._do_run_once, 10)
 
     def run_in_executor(self, executor, callback, args):
         raise NotImplementedError()

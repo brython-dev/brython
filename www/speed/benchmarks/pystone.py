@@ -250,4 +250,5 @@ def Func3(EnumParIn):
     if EnumLoc == Ident3: return TRUE
     return FALSE
 
-main(LOOPS)
+if __name__ == "__main__":
+    main(LOOPS)

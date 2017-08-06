@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+
+<!-- OCTANE -->
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/base.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/richards.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/deltablue.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/crypto.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/raytrace.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/earley-boyer.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/regexp.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/splay.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/navier-stokes.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/pdfjs.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/mandreel.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/gbemu-part1.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/gbemu-part2.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/code-load.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/box2d.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/zlib.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/zlib-data.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/typescript.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/typescript-input.js"></script>
+<script type="text/javascript" src="/static/www/speed/cperf/html/Octane/typescript-compiler.js"></script>
+
+<script type="text/javascript">
+  var completed = 0;
+  var benchmarks = BenchmarkSuite.CountBenchmarks();
+  var success = true;
+  var latencyBenchmarks = ["Splay", "Mandreel"];
+  var skipBenchmarks = typeof skipBenchmarks === "undefined" ? [] : skipBenchmarks;
+  var results = [];
+  var octane_score = -1;
+  var brython_startup = -1;
+
+  function ShowBox(name) {
+    var box = document.getElementById("current_test");
+    box.innerHTML = name
+    var bar = document.getElementById("progress-bar");
+    bar.style.width = "" + ((++completed) / benchmarks) * 100 + "%";
+  }
+
+  function AddResult(name, result) {
+    console.log(name + ': ' + result);
+    // Add score to results
+    results.push({
+      benchmark: name,
+      result: result
+    });
+  }
+
+  function AddError(name, error) {
+    console.log(name + ": " + error.message);
+    if (error == "TypedArrayUnsupported") {
+      AddResult(name, '<b>Unsupported<\/b>');
+    } else if (error == "PerformanceNowUnsupported") {
+      AddResult(name, '<b>Timer error<\/b>');
+    } else {
+      AddResult(name, '<b>Error</b>');
+    }
+    success = false;
+  }
+
+  function AddScore(score) {
+    document.getElementById("running").style.display='none';
+    var score_elt = document.getElementById("octane-score");
+    if (success) {
+      score_elt.innerHTML = "<b>"+score+"</b>"
+    } else {
+      score_elt.innerHTML = "<b>"+score+"</b> (incomplete)";
+    }
+    document.getElementById("done").style.display='block';
+
+    // Add overall score to results
+    results.push({
+      benchmark: 'Octane score',
+      result: score
+    });
+    octane_score = score;
+    if ( on_octane_finished ) on_octane_finished()
+  }
+
+  function Run() {
+    document.getElementById("running").style.display='block'
+    BenchmarkSuite.RunSuites({
+      NotifyStart : ShowBox,
+      NotifyError : AddError,
+      NotifyResult : AddResult,
+      NotifyScore : AddScore
+    },
+    skipBenchmarks);
+  }
+
+  function Load() {
+    if (window.document.URL.indexOf('skip_zlib=1') >= 0) skipBenchmarks.push("zlib");
+    br_start = new Date()
+    brython({cache:'none', static_stdlib_import:true})
+    br_stop = new Date()
+    brython_startup = br_stop-br_start
+    Run();
+  }
+
+
+</script>
+
+<!-- BRYTHON -->
+<script type="text/javascript" src="/static/www/src/unicode.min.js"></script>
+
+<script type="text/javascript" src="/static/www/src/brython_builtins.js"></script>
+<script type="text/javascript" src="/static/www/src/version_info.js"></script>
+<script type="text/javascript" src="/static/www/src/py2js.js"></script>
+<script type="text/javascript" src="/static/www/src/py_object.js"></script>
+<script type="text/javascript" src="/static/www/src/py_type.js"></script>
+<script type="text/javascript" src="/static/www/src/py_utils.js"></script>
+<script type="text/javascript" src="/static/www/src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="/static/www/src/py_exceptions.js"></script>
+<script type="text/javascript" src="/static/www/src/py_range_slice.js"></script>
+<script type="text/javascript" src="/static/www/src/py_bytes.js"></script>
+<script type="text/javascript" src="/static/www/src/py_set.js"></script>
+<script type="text/javascript" src="/static/www/src/js_objects.js"></script>
+<script type="text/javascript" src="/static/www/src/stdlib_paths.js"></script>
+<script type="text/javascript" src="/static/www/src/py_import.js"></script>
+
+<script type="text/javascript" src="/static/www/src/py_string.js"></script>
+<script type="text/javascript" src="/static/www/src/py_int.js"></script>
+<script type="text/javascript" src="/static/www/src/py_long_int.js"></script>
+<script type="text/javascript" src="/static/www/src/py_float.js"></script>
+<script type="text/javascript" src="/static/www/src/py_complex.js"></script>
+<script type="text/javascript" src="/static/www/src/py_dict.js"></script>
+<script type="text/javascript" src="/static/www/src/py_list.js"></script>
+<script type="text/javascript" src="/static/www/src/py_generator.js"></script>
+<script type="text/javascript" src="/static/www/src/py_dom.js"></script>
+
+<script type="text/javascript" src="/static/www/src/builtin_modules.js"></script>
+<script type="text/javascript" src="/static/www/src/py_import_hooks.js"></script>
+<script type="text/javascript" src="/static/www/src/async.js"></script>
+
+<!-- BRYTHON BENCHMARKING CODE -->
+<link rel="pythonpath" href="/static/www/speed/cperf" hreflang="py" />
+<script type="text/python3" src="/static/www/speed/cperf/benchmark.py"/></script>
+
+<style>
+.br-progress {
+    background-color:blue;
+    width:0px;
+    height:1em;
+}
+.smaller {
+    font-size: 12pt;
+}
+body {
+    padding-left:10em;
+    padding-top:2em;
+    padding-right:5em;
+}
+
+
+#octane {
+    width: 50%;
+}
+</style>
+<link rel="stylesheet" href="/static/www/speed/cperf/html/bootstrap.min.css">
+
+
+</head>
+<body onload="Load()">
+
+<div id='octane'>
+    <div class="page-header">
+        <h1>Octane <small>(included from mozbench)</small></h1>
+    </div>
+  <div id='running' style='display:none;'>
+    <div class="progress right">
+        <div class="progress-bar" role='progressbar' style="width: 0%;" id="progress-bar"></div>
+    </div>
+    <div>
+        Current test: <span id='current_test'></span>
+    </div>
+  </div>
+  <div id='done' style='display:none;'>
+  <div>
+        Octane score: <span id='octane-score'></span>
+  </div>
+  </div>
+</div>
+
+<div id='brython'>
+    <div class="page-header">
+        <h1>Brython <small class='smaller' id='br-version'></small></h1>
+    </div>
+    <div id='loading_brython'>
+        <h3>Loading Brython benchmark, please wait...</h3>
+    </div>
+    <div id='running_brython' style='display:none'>
+        <table class='table' id='results_table'>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Progress</th>
+                <th>Avg</th>
+                <th>Dev</th>
+                <th>Corr Dev</th>
+                <th>Min</th>
+                <th>Max</th>
+                <th>Runs</th>
+                <th>Messages</th>
+            </tr>
+            </thead>
+            <tbody id='results'></tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
+
