@@ -86,8 +86,12 @@
     modules['browser'].__path__ = modules['browser'].__file__
 
     // creation of an HTML element
-    modules['browser.html'] = (function($B){
-    
+    modules['browser.html'] = {}
+    $B.tag_classes = {}  // init here before 1st call to maketag
+
+    function _maketag(tname){
+
+        var $B = __BRYTHON__
         var _b_ = $B.builtins
         var $TagSumDict = $B.$TagSum.$dict
         
@@ -175,9 +179,11 @@
         // are defined in py_dom.js
         
         function makeFactory(tagName){
-            var factory = function(){
+            var factory = function(textval=""){
                 if(tagName=='SVG'){
                     var res = $B.DOMNode(document.createElementNS("http://www.w3.org/2000/svg", "svg"))
+                }else if(tagName=='_TEXT'){
+                    var res = $B.DOMNode(document.createTextNode(textval))
                 }else{
                     var res = $B.DOMNode(document.createElement(tagName))
                 }
@@ -192,6 +198,15 @@
             return factory
         }
         
+	var obj = modules['browser.html']
+	var dicts = $B.tag_classes
+	dicts[tname] = makeTagDict(tname)
+	obj[tname] = makeFactory(tname)
+	dicts[tname].$factory = obj[tname]
+	return obj[tname]
+    }
+
+    (function($B) {
         // All HTML 4, 5.x extracted from
         // https://w3c.github.io/elements-of-html/
         // HTML4.01 tags
@@ -214,20 +229,15 @@
                     'PROGRESS','RB','RP','RT','RTC','RUBY','SECTION','SOURCE',
                     'TEMPLATE','TIME','TRACK','VIDEO','WBR',
                      // HTML5.1 tags
-                    'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY']
-        
-        // create classes
-        var obj = {},
-            dicts = {}
+                    'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY',
+		     '_TEXT']
+
         for(var i=0, len = $tags.length; i < len;i++){
-            var tag = $tags[i]
-            dicts[tag] = makeTagDict(tag)
-            obj[tag] = makeFactory(tag)
-            dicts[tag].$factory = obj[tag]
+	    _maketag($tags[i])
         }
-        $B.tag_classes = dicts
-        return obj
     })(__BRYTHON__)
+
+    modules['browser.html']['_maketag'] = _maketag  // add maketag in mod
 
     modules['javascript'] = {
         __file__:$B.brython_path+'/libs/javascript.js',
