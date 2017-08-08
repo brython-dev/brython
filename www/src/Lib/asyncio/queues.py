@@ -3,13 +3,20 @@
 __all__ = ['Queue', 'PriorityQueue', 'LifoQueue', 'JoinableQueue',
            'QueueFull', 'QueueEmpty']
 
-import collections
 import heapq
 
 from . import events
 from . import futures
 from . import locks
-from .tasks import coroutine
+
+from .coroutines import coroutine
+
+class _deque(list):
+
+    def popleft(self):
+        ret = self[0]
+        del self[0]
+        return ret
 
 
 class QueueEmpty(Exception):
@@ -38,21 +45,18 @@ class Queue:
     interrupted between calling qsize() and doing an operation on the Queue.
     """
 
-    def __init__(self, maxsize=0, *, loop=None):
-        if loop is None:
-            self._loop = events.get_event_loop()
-        else:
-            self._loop = loop
+    def __init__(self, maxsize=0):
+        self._loop = events.get_event_loop()
         self._maxsize = maxsize
 
         # Futures.
-        self._getters = collections.deque()
+        self._getters = _deque()
         # Pairs of (item, Future).
-        self._putters = collections.deque()
+        self._putters = _deque()
         self._init(maxsize)
 
     def _init(self, maxsize):
-        self._queue = collections.deque()
+        self._queue = _deque()
 
     def _get(self):
         return self._queue.popleft()
@@ -135,7 +139,7 @@ class Queue:
             getter.set_result(self._get())
 
         elif self._maxsize > 0 and self._maxsize <= self.qsize():
-            waiter = futures.Future(loop=self._loop)
+            waiter = futures.Future()
 
             self._putters.append((item, waiter))
             yield from waiter
@@ -192,7 +196,7 @@ class Queue:
         elif self.qsize():
             return self._get()
         else:
-            waiter = futures.Future(loop=self._loop)
+            waiter = futures.Future()
 
             self._getters.append(waiter)
             return (yield from waiter)
@@ -252,10 +256,10 @@ class LifoQueue(Queue):
 class JoinableQueue(Queue):
     """A subclass of Queue with task_done() and join() methods."""
 
-    def __init__(self, maxsize=0, *, loop=None):
-        super().__init__(maxsize=maxsize, loop=loop)
+    def __init__(self, maxsize=0):
+        super().__init__(maxsize=maxsize)
         self._unfinished_tasks = 0
-        self._finished = locks.Event(loop=self._loop)
+        self._finished = locks.Event()
         self._finished.set()
 
     def _format(self):
