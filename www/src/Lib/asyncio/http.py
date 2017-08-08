@@ -1,8 +1,7 @@
-import asyncio
-
 from browser import ajax
 
-__all__ = ['HTTPException', 'HTTPRequest']
+from .futures import Future
+
 
 class HTTPException(Exception):
     """
@@ -13,7 +12,7 @@ class HTTPException(Exception):
         self.req = request
 
 
-class HTTPRequest(asyncio.Future):
+class HTTPRequest(Future):
     """
         A class representing a Future HTTPRequest result.
     """
@@ -33,6 +32,10 @@ class HTTPRequest(asyncio.Future):
             self._req.send()
         else:
             self._req.send(self._data)
+
+    def cancel(self):
+        self._req.abort()
+        super().cancel()
 
     def _complete_handler(self, req):
         if req.status == 200 or req.status == 0:

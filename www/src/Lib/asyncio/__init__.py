@@ -1,56 +1,130 @@
-"""The asyncio package, tracking PEP 3156."""
+""" The asyncio package, tracking PEP 3156.
+    A module providing the :class:`Future` and :function:`coroutine` decorator
+    which can be make async operations look like sync. Typical usecase is
+    as follows. Assume we have a method ``query_server`` which asynchronously
+    queries a server. So, instead of returning the results, it returns an
+    instance of the :class:`Future` class. Normally one would call
+    the :method:`then` method of this instance providing it with a call back
+    to be called when the promise is "resolved", i.e. when the query has
+    finished and results are ready. This, however, typically leads to something
+    called the "callback" hell. The :function:`coroutine` decorator can get
+    around this by a clever use of the ``yield`` statement. So, instead of
+    writing:
 
-import sys
+    ```
+        def process_results(results):
+            do_some_stuff(results)
 
-# The selectors module is in the stdlib in Python 3.4 but not in 3.3.
-# Do this first, so the other submodules can use "from . import selectors".
-# Prefer asyncio/selectors.py over the stdlib one, as ours may be newer.
-try:
-    from . import selectors
-except ImportError:
-    import selectors  # Will also be exported.
+        def send_query():
+            promise = query_server()
+            promise.then(process_results)
+    ```
 
-if sys.platform == 'win32':
-    # Similar thing for _overlapped.
-    try:
-        from . import _overlapped
-    except ImportError:
-        import _overlapped  # Will also be exported.
+    one can write it in a more straightforward way:
 
-# This relies on each of the submodules having an __all__ variable.
-from .base_events import *
+    ```
+        @coroutine
+        def process_query():
+            results = yield query_server()
+            do_some_stuff(results)
+    ```
+
+    eliminating the need to introduce the ``process_results`` callback.
+"""
+
 from .coroutines import *
 from .events import *
 from .futures import *
 from .locks import *
-from .protocols import *
 from .queues import *
-from .streams import *
-from .subprocess import *
-from .tasks import *
-from .transports import *
+
 from .http import *
-
-__all__ = (base_events.__all__ +
-           coroutines.__all__ +
-           events.__all__ +
-           futures.__all__ +
-           locks.__all__ +
-           protocols.__all__ +
-           queues.__all__ +
-           streams.__all__ +
-           subprocess.__all__ +
-           tasks.__all__ +
-           transports.__all__+
-           http.__all__)
+from .objects import *
 
 
-if sys.platform == 'win32':  # pragma: no cover
-    from .windows_events import *
-    __all__ += windows_events.__all__
-elif sys.platform == 'brython':
-    from .brython_events import *
-    __all__ += brython_events.__all__
-else:
-    from .unix_events import *  # pragma: no cover
-    __all__ += unix_events.__all__
+default_event_loop = BrowserEventLoop()
+
+
+
+FIRST_COMPLETED = 0
+FIRST_EXCEPTION = 0
+ALL_COMPLETED = 0
+
+def wait_for(coro_or_future, timeout, *args, loop=None):
+    fut = ensure_future(fut, *args, loop=loop)
+    if timeout:
+        def timeout_handler():
+            if fut.done():
+                pass
+            else:
+                fut.set_exception(TimeoutError())
+        loop = loop or events.get_event_loop()
+        loop.call_later(timeout, timeout_handler)
+    return fut
+
+def ensure_future(coro_or_future, *args, loop=None):
+    if isinstance(coro_or_future, Future):
+        return coro_or_future
+    elif iscoroutine(coro_or_future):
+        return coro_or_future(*args)
+    else:
+        raise Exception('Expecting coroutine or Future got '+str(coro_or_future)+' instead.')
+
+def gather(*coros_or_futures, loop=None, return_exceptions=False):
+    fut_list = [ensure_future(c, loop=loop) for c in coros_or_futures]
+    return GatheredFuture(fut_list, return_exceptions=False)
+
+def shield(arg, *, loop=None):
+    """Wait for a future, shielding it from cancellation.
+
+    The statement
+
+        res = yield from shield(something())
+
+    is exactly equivalent to the statement
+
+        res = yield from something()
+
+    *except* that if the coroutine containing it is cancelled, the
+    task running in something() is not cancelled.  From the POV of
+    something(), the cancellation did not happen.  But its caller is
+    still cancelled, so the yield-from expression still raises
+    CancelledError.  Note: If something() is cancelled by other means
+    this will still cancel shield().
+
+    If you want to completely ignore cancellation (not recommended)
+    you can combine shield() with a try/except clause, as follows:
+
+        try:
+            res = yield from shield(something())
+        except CancelledError:
+            res = None
+    """
+    inner = ensure_future(arg, loop=loop)
+    if inner.done():
+        # Shortcut.
+        return inner
+    loop = inner._loop
+    outer = Future(loop=loop)
+
+    def _done_callback(inner):
+        if outer.cancelled():
+            if not inner.cancelled():
+                # Mark inner's result as retrieved.
+                inner.exception()
+            return
+
+        if inner.cancelled():
+            outer.cancel()
+        else:
+            exc = inner.exception()
+            if exc is not None:
+                outer.set_exception(exc)
+            else:
+                outer.set_result(inner.result())
+
+    inner.add_done_callback(_done_callback)
+    return outer
+
+def sleep(seconds, result=None, *, loop=None):
+    return futures.SleepFuture(seconds, result, loop=loop)
