@@ -1,10 +1,5 @@
-"""Synchronization primitives."""
-
 __all__ = ['Lock', 'Event', 'Condition', 'Semaphore', 'BoundedSemaphore']
 
-import collections
-
-from . import events
 from . import futures
 from .coroutines import coroutine
 
@@ -93,13 +88,9 @@ class Lock:
 
     """
 
-    def __init__(self, *, loop=None):
-        self._waiters = collections.deque()
+    def __init__(self):
+        self._waiters = []
         self._locked = False
-        if loop is not None:
-            self._loop = loop
-        else:
-            self._loop = events.get_event_loop()
 
     def __repr__(self):
         res = super().__repr__()
@@ -123,7 +114,7 @@ class Lock:
             self._locked = True
             return True
 
-        fut = futures.Future(loop=self._loop)
+        fut = futures.Future()
         self._waiters.append(fut)
         try:
             yield from fut
@@ -188,13 +179,9 @@ class Event:
     false.
     """
 
-    def __init__(self, *, loop=None):
-        self._waiters = collections.deque()
+    def __init__(self):
+        self._waiters = []
         self._value = False
-        if loop is not None:
-            self._loop = loop
-        else:
-            self._loop = events.get_event_loop()
 
     def __repr__(self):
         res = super().__repr__()
@@ -236,7 +223,7 @@ class Event:
         if self._value:
             return True
 
-        fut = futures.Future(loop=self._loop)
+        fut = futures.Future()
         self._waiters.append(fut)
         try:
             yield from fut
@@ -255,16 +242,10 @@ class Condition:
     A new Lock object is created and used as the underlying lock.
     """
 
-    def __init__(self, lock=None, *, loop=None):
-        if loop is not None:
-            self._loop = loop
-        else:
-            self._loop = events.get_event_loop()
+    def __init__(self, lock=None):
 
         if lock is None:
-            lock = Lock(loop=self._loop)
-        elif lock._loop is not self._loop:
-            raise ValueError("loop argument must agree with lock")
+            lock = Lock()
 
         self._lock = lock
         # Export the lock's locked(), acquire() and release() methods.
@@ -272,7 +253,7 @@ class Condition:
         self.acquire = lock.acquire
         self.release = lock.release
 
-        self._waiters = collections.deque()
+        self._waiters = []
 
     def __repr__(self):
         res = super().__repr__()
@@ -298,7 +279,7 @@ class Condition:
 
         self.release()
         try:
-            fut = futures.Future(loop=self._loop)
+            fut = futures.Future()
             self._waiters.append(fut)
             try:
                 yield from fut
@@ -383,15 +364,11 @@ class Semaphore:
     ValueError is raised.
     """
 
-    def __init__(self, value=1, *, loop=None):
+    def __init__(self, value=1):
         if value < 0:
             raise ValueError("Semaphore initial value must be >= 0")
         self._value = value
-        self._waiters = collections.deque()
-        if loop is not None:
-            self._loop = loop
-        else:
-            self._loop = events.get_event_loop()
+        self._waiters = []
 
     def __repr__(self):
         res = super().__repr__()
@@ -419,7 +396,7 @@ class Semaphore:
             self._value -= 1
             return True
 
-        fut = futures.Future(loop=self._loop)
+        fut = futures.Future()
         self._waiters.append(fut)
         try:
             yield from fut
@@ -459,9 +436,9 @@ class BoundedSemaphore(Semaphore):
     above the initial value.
     """
 
-    def __init__(self, value=1, *, loop=None):
+    def __init__(self, value=1):
         self._bound_value = value
-        super().__init__(value, loop=loop)
+        super().__init__(value)
 
     def release(self):
         if self._value >= self._bound_value:
