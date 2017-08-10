@@ -146,7 +146,28 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
 
     // DRo - BEGIN
     // create the factory function, extracted from type.__new__
-    var factory = $instance_creator(kls)
+    var meta_call = $B.$type.__getattribute__(metaclass.$dict,'__call__')
+
+    if(meta_call.__func__===$B.$type.__call__){
+        var factory = instance_creator(kls)  // same behavior as before
+    }else{
+        // Implement custom factory function
+        var factory = function() {
+        // The class may not be instanciable if it has at least one abstract method
+            if(kls.$instanciable!==undefined){
+                return function(){throw _b_.TypeError(
+                    "Can't instantiate abstract "+
+                    "class interface with abstract methods")}
+            }
+            var args = [kls.$factory]
+            for(var i=0, len=arguments.length; i<len; i++){
+                args.push(arguments[i])
+            }
+            return meta_call.apply(null, args)
+        }
+        // keep a reference to the default "type" factory for super calls
+        factory.$dfactory = instance_creator(kls)
+    }
 
     factory.__class__ = $B.$factory
     factory.$dict = kls
@@ -176,7 +197,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     }
 
     // DRo ... above extracted from __new__
-    // factory.$dict.$factory = factory
+    factory.$dict.$factory = factory
 
     // set functions defined in metaclass dictionary as class methods, except __new__
     for(var member in metaclass.$dict){
@@ -418,6 +439,16 @@ $B.$type.__init__ = function(cls, name, bases, cl_dict){
 }
 // DRo - END
 
+// DRo - BEGIN
+$B.$type.__call__ = function(){
+    kls = arguments[0]
+    var args = []
+    for(var i=1, len=arguments.length; i<len; i++){
+        args.push(arguments[i])
+    }
+    return kls.$dfactory.apply(null, args)  // use default factory
+}
+// DRo - END
 
 // class of constructors
 $B.$factory = {
@@ -436,8 +467,10 @@ _b_.object.__class__ = $B.$factory
 $B.$type.__getattribute__=function(klass, attr){
 
     switch(attr) {
-      case '__call__':
-        return $instance_creator(klass)
+      // DRo BEGIN -- there is now a specific type.__call__
+      // case '__call__':
+      //  return $instance_creator(klass)
+      // DRo END
       case '__eq__':
         return function(other){return klass.$factory===other}
       case '__ne__':
