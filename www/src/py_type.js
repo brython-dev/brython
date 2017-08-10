@@ -149,7 +149,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     var meta_call = $B.$type.__getattribute__(metaclass.$dict,'__call__')
 
     if(meta_call.__func__===$B.$type.__call__){
-        var factory = instance_creator(kls)  // same behavior as before
+        var factory = $instance_creator(kls)  // same behavior as before
     }else{
         // Implement custom factory function
         var factory = function() {
@@ -166,7 +166,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
             return meta_call.apply(null, args)
         }
         // keep a reference to the default "type" factory for super calls
-        factory.$dfactory = instance_creator(kls)
+        factory.$dfactory = $instance_creator(kls)
     }
 
     factory.__class__ = $B.$factory
