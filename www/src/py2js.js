@@ -6129,6 +6129,9 @@ function $transition(context,token){
           case 'in':
             return new $AbstractExprCtx(new $ExprCtx(context,'target list', true),false)
           case ':':
+            if(context.tree.length<2){ // issue 638
+                $_SyntaxError(context,'token '+token+' after '+context)
+            }
             return $BodyCtx(context)
         }
         $_SyntaxError(context,'token '+token+' after '+context)

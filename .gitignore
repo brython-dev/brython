@@ -19,7 +19,7 @@
 *.rar
 *.tar
 *.zip
-
+*.tar.bz2
 
 # Logs and databases
 *.log
@@ -78,3 +78,6 @@ nosetests.xml
 # Temporary QUnit folder
 #qunit/
 
+# Files created by make_dist
+npm/*.js
+setup/data/*.js
