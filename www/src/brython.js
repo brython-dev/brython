@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-08-06 11:24:30.593389"
+__BRYTHON__.compiled_date="2017-08-11 14:49:55.598241"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5430,8 +5430,10 @@ function $eval(src,_globals,_locals){var current_frame=$B.frames_stack[$B.frames
 if(current_frame!==undefined){var current_locals_id=current_frame[0].replace(/\./,'_'),current_globals_id=current_frame[2].replace(/\./,'_')}
 var is_exec=arguments[3]=='exec',leave=false
 if(src.__class__===$B.$CodeObjectDict){src=src.source}
-var globals_id='$exec_'+$B.UUID(),locals_id,parent_block_id,has_globals=false
-if(_globals !==undefined && _globals.__class__===_b_.dict.$dict){_globals.globals_id=_globals.globals_id ||globals_id
+var globals_id='$exec_'+$B.UUID(),locals_id,parent_block_id
+if(_globals !==undefined){if(_globals.__class__!=_b_.dict.$dict){throw _b_.TypeError("exec() globals must be a dict, not "+
+_globals.__class__.__name__)}
+_globals.globals_id=_globals.globals_id ||globals_id
 globals_id=_globals.globals_id}
 $B.$py_module_path[globals_id]=$B.$py_module_path[current_globals_id]
 if(_locals===_globals ||_locals===undefined){locals_id=globals_id}else{locals_id='$exec_'+$B.UUID()}
@@ -5442,9 +5444,7 @@ ex +='var $locals_'+current_globals_id+'=gobj;'
 ex +='var $locals_'+globals_id+'=gobj;'
 eval(ex)
 $B.bound[globals_id]={}
-for(var attr in gobj){$B.bound[globals_id][attr]=true}}else{if(_globals.__class__!=_b_.dict.$dict){throw _b_.TypeError("exec() globals must be a dict, not "+
-_globals.__class__.__name__)}
-$B.bound[globals_id]={}
+for(var attr in gobj){$B.bound[globals_id][attr]=true}}else{$B.bound[globals_id]={}
 var items=_globals.$string_dict
 for(var item in items){try{eval('$locals_'+globals_id+'["'+item+'"] = items[item]')
 $B.bound[globals_id][item]=true}catch(err){break}}
@@ -6979,7 +6979,7 @@ var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv',
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var js=['_ajax','_base64','_jsre','_multiprocessing','_posixsubprocess','_profile','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pkglist=['asyncio','browser','collections','concurrent','concurrent.futures','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.etree','xml.parsers','xml.sax']
+var pkglist=['asyncio','browser','collections','concurrent','concurrent.futures','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]})(__BRYTHON__)
 
 ;(function($B){var _b_=$B.builtins
