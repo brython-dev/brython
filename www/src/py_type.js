@@ -4,32 +4,47 @@ var _b_=$B.builtins
 
 // generic code for class constructor
 $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwargs){
-    var cl_dict=_b_.dict(), bases=null
-    // transform class object into a dictionary
-    for(var attr in class_obj){
-        cl_dict.$string_dict[attr] = class_obj[attr]
-    }
-    // check if parents are defined
-    if(parents!==undefined){
-        for(var i=0;i<parents.length;i++){
-            if(parents[i]===undefined){
-                // restore the line of class definition
-                $B.line_info = class_obj.$def_line
-                throw _b_.NameError("name '"+parents_names[i]+"' is not defined")
-            }
-        }
-    }
-    bases = parents
+    var metaclass = _b_.type  // DRo put here, because is used inside if and later
 
-    // see if there is 'metaclass' in kwargs
-    var metaclass = _b_.type
-    for(var i=0;i<kwargs.length;i++){
-        var key=kwargs[i][0],val=kwargs[i][1]
-        if(key=='metaclass'){metaclass=val}
-        else{
-            throw _b_.TypeError("type() takes 1 or 3 arguments")
-        }
+    // DRo - Begin
+    // if kwargs is not undefined, we have the standard behavior
+    // but if "undefined, then the call is from type and class_obj is already a dict
+    // and no need to check for parents is needed, because a runtime error will
+    // have been generated before getting here (or will be generated if it's not
+    // a valid parent
+    if(kwargs !== undefined) {
+        var cl_dict=_b_.dict(), bases=null
+	// transform class object into a dictionary
+	for(var attr in class_obj){
+            cl_dict.$string_dict[attr] = class_obj[attr]
+	}
+	// check if parents are defined
+	if(parents!==undefined){
+            for(var i=0;i<parents.length;i++){
+		if(parents[i]===undefined){
+                    // restore the line of class definition
+                    $B.line_info = class_obj.$def_line
+                    throw _b_.NameError("name '"+parents_names[i]+"' is not defined")
+		}
+            }
+	}
+	bases = parents
+
+	// see if there is 'metaclass' in kwargs
+	for(var i=0;i<kwargs.length;i++){
+            var key=kwargs[i][0],val=kwargs[i][1]
+            if(key=='metaclass'){metaclass=val}
+            else{
+		throw _b_.TypeError("type() takes 1 or 3 arguments")
+            }
+	}
+	var mro0 = class_obj
+    } else {
+	var cl_dict = class_obj  // already a dict
+	bases = parents
+	var mro0 = cl_dict.$string_dict  // to replace class_obj in method creation
     }
+    // DRo - Begin
 
     /* see if __init_subclass__ is defined in any of the parents
      * We can't use __getattribute__ since it must be defined directly on a parent,
@@ -68,7 +83,9 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         __dict__ : cl_dict
     }
 
-    class_dict.__slots__ = class_obj.__slots__
+    // DRo - slots will have been defined in class dict during type
+    // or in class definition in class_obj. mro0 simplifies the choosing
+    class_dict.__slots__ = mro0.__slots__
 
     class_dict.__mro__ = make_mro(bases, cl_dict)
 
@@ -79,8 +96,9 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         abstract_methods = {},
         mro = [class_dict].concat(class_dict.__mro__)
 
+
     for(var i=0;i<mro.length;i++){
-        var kdict = i == 0 ? class_obj : mro[i]
+        var kdict = i == 0 ? mro0 : mro[i]  // DRo mr0 set above to choose rightly
         for(var attr in kdict){
             if(non_abstract_methods[attr]){continue}
             var v = kdict[attr]
@@ -357,7 +375,6 @@ function make_mro(bases, cl_dict){
 
 }
 
-// class of classes
 _b_.type = function(obj, bases, cl_dict){
     if(arguments.length==1){
         if(obj.__class__===$B.$factory){
@@ -367,7 +384,19 @@ _b_.type = function(obj, bases, cl_dict){
         return $B.get_class(obj).$factory
     }
 
-    return $B.$type.__new__(_b_.type, obj, bases, cl_dict)
+    // DRo - Begin
+    // Instead of calling type.__new__ which now returns a class and not
+    // a factory, the existing $class_constructor is reused. The arguments
+    // are slightly different and in different order
+    // 1. name: in this case "obj"
+    // 2. class_obj which is an object containing the definitions in the class
+    // 3. parents: in this case the bases
+    // 4. parents_names: which is not needed, because invoking this function
+    //    should fail if something wrong is given dynamically to "type"
+    // 5. kwargs: no such thing in type ... pass as undefined as a flag for
+    //    $class_constructor to know it's coming from type
+    return $B.$class_constructor(obj, cl_dict, bases, undefined, undefined)
+    // DRo - End
 }
 
 _b_.type.__class__ = $B.$factory
