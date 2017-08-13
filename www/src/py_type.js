@@ -144,10 +144,8 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     // __init__ chance to perform further initialization
     // Create the factory function of the class
     if(meta_new.__func__===$B.$type.__new__){
-        // var factory = _b_.type.$dict.__new__(_b_.type, class_name, bases, cl_dict)
         var kls = _b_.type.$dict.__new__(_b_.type, class_name, bases, cl_dict)
     }else{
-        // var factory = meta_new(metaclass, class_name, bases, cl_dict)
         var kls = meta_new(metaclass, class_name, bases, cl_dict)
     }
     // DRo - END
@@ -161,6 +159,12 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     }else{
         // Implement custom factory function
         var factory = function() {
+            // The class may not be instanciable if it has at least one abstract method
+            if(kls.$instanciable!==undefined){
+                return function(){throw _b_.TypeError(
+                    "Can't instantiate abstract "+
+                    "class interface with abstract methods")}
+            }
             var args = [kls.$factory]
             for(var i=0; i < arguments.length; i++){
                 args.push(arguments[i])
