@@ -110,9 +110,14 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
 
     // If no metaclass is specified for the class, see if one of the parents
     // has a metaclass set
+    // DRo. The initial comparison for the current metaclass is against
+    // _b_.type which is the default value.
+    // The comparison inside the loop is kept against $B.$type, because
+    // as done below, the actual value in __class__ is metaclass.$dict
+    // and the actual value in _b_.type.__class__ = $B.type (further below)
     if(metaclass === _b_.type) {
         for(var i=1;i<mro.length;i++){
-            if(mro[i].__class__ !== _b_.type){
+            if(mro[i].__class__ !== $B.$type){
                 metaclass = mro[i].__class__.$factory
                 break
             }
