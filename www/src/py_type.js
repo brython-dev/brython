@@ -153,32 +153,16 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     // DRo - END
 
     // DRo - BEGIN
-    //
-    var meta_init = $B.$type.__getattribute__(metaclass.$dict,'__init__')
-    if(meta_init.__func__===$B.$type.__init__){
-        _b_.type.$dict.__init__(kls, class_name, bases, cl_dict)
-    }else{
-        meta_init(kls, class_name, bases, cl_dict)
-    }
-    // DRo - END
-
-    // DRo - BEGIN
     // create the factory function, extracted from type.__new__
-    var meta_call = $B.$type.__getattribute__(metaclass.$dict,'__call__')
+    var meta_call = $B.$type.__getattribute__(metaclass.$dict,'__call__', kls)
 
     if(meta_call.__func__===$B.$type.__call__){
         var factory = $instance_creator(kls)  // same behavior as before
     }else{
         // Implement custom factory function
         var factory = function() {
-        // The class may not be instanciable if it has at least one abstract method
-            if(kls.$instanciable!==undefined){
-                return function(){throw _b_.TypeError(
-                    "Can't instantiate abstract "+
-                    "class interface with abstract methods")}
-            }
             var args = [kls.$factory]
-            for(var i=0, len=arguments.length; i<len; i++){
+            for(var i=0; i < arguments.length; i++){
                 args.push(arguments[i])
             }
             return meta_call.apply(null, args)
@@ -195,6 +179,16 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     // so that instance.__class__ compares equal to factory
     factory.__eq__ = function(other){return other===factory.__class__}
     kls.$factory = factory
+    // DRo - END
+
+    // DRo - BEGIN
+    // With the factory created (class in brython), the call to __init__ can be done
+    var meta_init = $B.$type.__getattribute__(metaclass.$dict,'__init__', kls)
+    if(meta_init.__func__===$B.$type.__init__){
+        _b_.type.$dict.__init__(kls.$factory, class_name, bases, cl_dict)
+    }else{
+        meta_init(class_name, bases, cl_dict)  // classmethod already
+    }
     // DRo - END
 
     class_dict.$factory = factory
@@ -470,12 +464,16 @@ $B.$type.__init__ = function(cls, name, bases, cl_dict){
 
 // DRo - BEGIN
 $B.$type.__call__ = function(){
-    kls = arguments[0]
-    var args = []
-    for(var i=1, len=arguments.length; i<len; i++){
+    // invoked via super ... there is a specific metaclass.__call__
+    // during class construction the default factory was stored under
+    // $dfactory for the klass which is the 1st argument because
+    // this is a classmethod
+    $f = arguments[0].$dfactory
+    args = []
+    for(var i=1; i < arguments.length; i++){
         args.push(arguments[i])
     }
-    return kls.$dfactory.apply(null, args)  // use default factory
+    return $f.apply(null, args)
 }
 // DRo - END
 
@@ -493,7 +491,8 @@ _b_.type.__class__ = $B.$factory
 _b_.object.$dict.__class__ = $B.$type
 _b_.object.__class__ = $B.$factory
 
-$B.$type.__getattribute__=function(klass, attr){
+// DRo Begin/End - Added metaclassed as flag during class construction
+$B.$type.__getattribute__=function(klass, attr, metaclassed){
 
     switch(attr) {
       // DRo BEGIN -- there is now a specific type.__call__
@@ -593,6 +592,10 @@ $B.$type.__getattribute__=function(klass, attr){
 
         // __new__ is a static method
         if(attr=='__new__'){res.$type='staticmethod'}
+	// DRo Begin -- these 2 are classmethods
+        if(attr=='__init__'){res.$type='classmethod'}
+        if(attr=='__call__'){res.$type='classmethod'}
+	// DRo End
         var res1 = get_func.apply(null,[res,$B.builtins.None,klass])
 
         if(res1.__class__===$B.$factory){
@@ -622,7 +625,24 @@ $B.$type.__getattribute__=function(klass, attr){
                     break;
                 case 'classmethod':
                     // class method : called with the class as first argument
-                    args = [klass.$factory]
+                    // DRo Begin - metaclassed indicates the classmethod is
+                    // being requested during class construction
+                    if(metaclassed === undefined) {
+                        args = [klass.$factory]
+                    } else {
+                        // $factory is used as a flag for the __call__ conumdrum
+                        // __call__ is the factory but can only be so after
+                        // checking itself against the default. Hence the need
+                        // to manually control at first the class parameter
+                        // passing to __call__
+                        if(metaclassed.$factory === undefined) {
+                            // too early in class construction
+                            args = []
+                        } else {
+                            args = [metaclassed.$factory]
+                        }
+                    }
+                    // DRo End
                     __self__ = klass
                     __repr__ = __str__ = function(){
                         var x = '<built-in method '+klass.__name__+'.'+attr
