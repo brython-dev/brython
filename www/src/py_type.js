@@ -110,9 +110,9 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
 
     // If no metaclass is specified for the class, see if one of the parents
     // has a metaclass set
-    if(metaclass === $B.$type) {
+    if(metaclass === _b_.type) {
         for(var i=1;i<mro.length;i++){
-            if(mro[i].__class__ !== $B.$type){
+            if(mro[i].__class__ !== _b_.type){
                 metaclass = mro[i].__class__.$factory
                 break
             }
