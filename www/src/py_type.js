@@ -119,6 +119,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         for(var i=1;i<mro.length;i++){
             if(mro[i].__class__ !== $B.$type){
                 metaclass = mro[i].__class__.$factory
+		break
             }
         }
     }
