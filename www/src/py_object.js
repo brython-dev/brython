@@ -311,10 +311,17 @@ $ObjectDict.__hash__ = function (self) {
 }
 
 $ObjectDict.__init__ = function(){
-    if(arguments.length>1){
-        throw _b_.TypeError("object() takes no parameters")
+    if(arguments.length <= 2) {  // at most "self" and kwargs
+        kw = arguments[1]
+        // kwargs is well formed
+        if(kw.$nat !== undefined && kw.kw !== undefined) {
+            if(Object.keys(kw.kw).length == 0) {  // no items in kwargs
+                return _b_.None  // all is good ... return None
+            }
+        }
     }
-    return _b_.None
+    // *args expansion has elements or **kwargs is not empty
+    throw _b_.TypeError("object() takes no parameters")
 }
 
 $ObjectDict.__le__ = $ObjectNI('__le__','<=')
