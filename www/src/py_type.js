@@ -597,8 +597,13 @@ $B.$type.__getattribute__=function(klass, attr, metaclassed){
         // __new__ is a static method
         if(attr=='__new__'){res.$type='staticmethod'}
 	// DRo Begin -- these 2 are classmethods
-        if(attr=='__init__'){res.$type='classmethod'}
-        if(attr=='__call__'){res.$type='classmethod'}
+        if(metaclassed !== undefined) {
+            if(attr=='__init__'){
+                res.$type='classmethod'
+            } else if(attr=='__call__') {
+                res.$type='classmethod'
+            }
+        }
 	// DRo End
         var res1 = get_func.apply(null,[res,$B.builtins.None,klass])
 
