@@ -88,7 +88,7 @@
     // creation of an HTML element
     modules['browser.html'] = {}
 
-    function _maketag(tname) {
+    function _maketag(tname, add2mod=false) {
 
         var _b_ = $B.builtins
         var $TagSumDict = $B.$TagSum.$dict
@@ -194,12 +194,14 @@
             return factory
         }
 
-        var obj = modules['browser.html']
         var dicts = $B.tag_classes
         dicts[tname] = makeTagDict(tname)
-        obj[tname] = makeFactory(tname)
-        dicts[tname].$factory = obj[tname]
-        return obj[tname]
+        var newtag = makeFactory(tname)
+        dicts[tname].$factory = newtag
+        if(add2mod) {
+            modules['browser.html'][tname] = newtag
+        }
+        return newtag
     }
 
     (function($B) {
@@ -229,7 +231,7 @@
 
         $B.tag_classes = {}  // init here before 1st call to maketag
         for(var i=0, len = $tags.length; i < len; i++) {
-            _maketag($tags[i])
+            _maketag($tags[i], true)
         }
     })(__BRYTHON__)
 
