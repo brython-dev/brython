@@ -87,7 +87,6 @@
 
     // creation of an HTML element
     modules['browser.html'] = {}
-    $B.tag_classes = {}  // init here before 1st call to maketag
 
     function _maketag(tname) {
 
@@ -228,6 +227,7 @@
                      // HTML5.1 tags
                     'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY']
 
+        $B.tag_classes = {}  // init here before 1st call to maketag
         for(var i=0, len = $tags.length; i < len; i++) {
             _maketag($tags[i])
         }
