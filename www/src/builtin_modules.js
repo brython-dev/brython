@@ -227,7 +227,7 @@
                     'PROGRESS','RB','RP','RT','RTC','RUBY','SECTION','SOURCE',
                     'TEMPLATE','TIME','TRACK','VIDEO','WBR',
                      // HTML5.1 tags
-                    'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY',]
+                    'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY']
 
         for(var i=0, len = $tags.length; i < len; i++) {
             _maketag($tags[i])
