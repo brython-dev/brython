@@ -91,7 +91,6 @@
 
     function _maketag(tname) {
 
-        var $B = __BRYTHON__
         var _b_ = $B.builtins
         var $TagSumDict = $B.$TagSum.$dict
 
