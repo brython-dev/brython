@@ -311,10 +311,11 @@ $ObjectDict.__hash__ = function (self) {
 }
 
 $ObjectDict.__init__ = function(){
-    if(arguments.length <= 2) {  // at most "self" and kwargs
+    if(arguments.length == 1) {  // only self
+        return _b_.None  // all is good ... return None
+    } else if(arguments.length == 2) {  // at most "self" and kwargs
         kw = arguments[1]
-        // kwargs is well formed
-        if(kw.$nat !== undefined && kw.kw !== undefined) {
+        if(kw.$nat !== undefined && kw.kw !== undefined) { // kwargs is well formed
             if(Object.keys(kw.kw).length == 0) {  // no items in kwargs
                 return _b_.None  // all is good ... return None
             }
