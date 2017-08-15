@@ -179,7 +179,7 @@
         // are defined in py_dom.js
 
         function makeFactory(tagName){
-            var factory = function(textval=""){
+            var factory = function(){
                 if(tagName=='SVG'){
                     var res = $B.DOMNode(document.createElementNS("http://www.w3.org/2000/svg", "svg"))
                 }else{
