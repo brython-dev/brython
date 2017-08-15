@@ -89,18 +89,18 @@
     modules['browser.html'] = {}
     $B.tag_classes = {}  // init here before 1st call to maketag
 
-    function _maketag(tname){
+    function _maketag(tname) {
 
         var $B = __BRYTHON__
         var _b_ = $B.builtins
         var $TagSumDict = $B.$TagSum.$dict
-        
+
         function makeTagDict(tagName){
             // return the dictionary for the class associated with tagName
             var dict = {__class__:$B.$type,
                 __name__:tagName
                 }
-        
+
             dict.__init__ = function(){
                 var $ns=$B.args('pow',1,{self:null},['self'],arguments,
                     {},'args','kw'),
@@ -132,14 +132,14 @@
                         }
                     }
                 }
-        
+
                 // attributes
                 var items = _b_.list(_b_.dict.$dict.items($ns['kw']))
                 for(var i=0, len = items.length; i < len;i++){
                     // keyword arguments
                     var arg = items[i][0],
                         value = items[i][1]
-                    if(arg.toLowerCase().substr(0,2)==="on"){ 
+                    if(arg.toLowerCase().substr(0,2)==="on"){
                         // Event binding passed as argument "onclick", "onfocus"...
                         // Better use method bind of DOMNode objects
                         var js = '$B.DOMNodeDict.bind(self,"'
@@ -160,9 +160,9 @@
                     }
                 }
             }
-        
+
             dict.__mro__ = [$B.DOMNodeDict, $B.builtins.object.$dict]
-        
+
             dict.__new__ = function(cls){
                 // __new__ must be defined explicitely : it returns an instance of
                 // DOMNode for the specified tagName
@@ -170,20 +170,18 @@
                 res.__class__ = cls.$dict
                 return res
             }
-        
+
             return dict
         }
-        
-        
-        // the classes used for tag sums, $TagSum and $TagSumClass 
+
+
+        // the classes used for tag sums, $TagSum and $TagSumClass
         // are defined in py_dom.js
-        
+
         function makeFactory(tagName){
             var factory = function(textval=""){
                 if(tagName=='SVG'){
                     var res = $B.DOMNode(document.createElementNS("http://www.w3.org/2000/svg", "svg"))
-                }else if(tagName=='_TEXT'){
-                    var res = $B.DOMNode(document.createTextNode(textval))
                 }else{
                     var res = $B.DOMNode(document.createElement(tagName))
                 }
@@ -197,13 +195,13 @@
             factory.$dict = dicts[tagName]
             return factory
         }
-        
-	var obj = modules['browser.html']
-	var dicts = $B.tag_classes
-	dicts[tname] = makeTagDict(tname)
-	obj[tname] = makeFactory(tname)
-	dicts[tname].$factory = obj[tname]
-	return obj[tname]
+
+        var obj = modules['browser.html']
+        var dicts = $B.tag_classes
+        dicts[tname] = makeTagDict(tname)
+        obj[tname] = makeFactory(tname)
+        dicts[tname].$factory = obj[tname]
+        return obj[tname]
     }
 
     (function($B) {
@@ -229,11 +227,10 @@
                     'PROGRESS','RB','RP','RT','RTC','RUBY','SECTION','SOURCE',
                     'TEMPLATE','TIME','TRACK','VIDEO','WBR',
                      // HTML5.1 tags
-                    'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY',
-		     '_TEXT']
+                    'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY',]
 
-        for(var i=0, len = $tags.length; i < len;i++){
-	    _maketag($tags[i])
+        for(var i=0, len = $tags.length; i < len; i++) {
+            _maketag($tags[i])
         }
     })(__BRYTHON__)
 
