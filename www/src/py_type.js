@@ -119,7 +119,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         for(var i=1;i<mro.length;i++){
             if(mro[i].__class__ !== $B.$type){
                 metaclass = mro[i].__class__.$factory
-		break
+        break
             }
         }
     }
@@ -680,9 +680,9 @@ $B.$MethodDict.__ne__ = function(self, other){
 }
 
 $B.$MethodDict.__getattribute__ = function(self, attr){
-    // Internal attributes __name__, __module__, __doc__ etc.
-    // are stored in self.$infos.__func__.$infos
-    var infos = self.$infos.__func__.$infos
+    // Internal attributes __name__, __func__, __self__ etc.
+    // are stored in self.$infos
+    var infos = self.$infos
     if(infos && infos[attr]){
         if(attr=='__code__'){
             var res = {__class__:$B.$CodeDict}
@@ -697,6 +697,7 @@ $B.$MethodDict.__getattribute__ = function(self, attr){
         return _b_.object.$dict.__getattribute__(self, attr)
     }
 }
+
 $B.$MethodDict.__mro__=[_b_.object.$dict]
 $B.$MethodDict.__repr__ = $B.$MethodDict.__str__ = function(self){
     return '<bound method '+self.$infos.__class__.$dict.__name__+'.'+
