@@ -233,7 +233,7 @@
         }
     })(__BRYTHON__)
 
-    modules['browser.html']['_maketag'] = _maketag  // add maketag in mod
+    modules['browser']['maketag'] = _maketag  // add maketag in mod
 
     modules['javascript'] = {
         __file__:$B.brython_path+'/libs/javascript.js',
