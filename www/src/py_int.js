@@ -270,7 +270,7 @@ $IntDict.__new__ = function(cls){
 
 $IntDict.__pos__ = function(self){return self}
 
-$IntDict.__pow__ = function(self,other){
+$IntDict.__pow__ = function(self,other,z){
     if(isinstance(other, int)) {
       switch(other.valueOf()) {
         case 0:
@@ -278,12 +278,23 @@ $IntDict.__pow__ = function(self,other){
         case 1:
           return int(self.valueOf())
       }
+      if(z !== undefined && z !== null){
+          // If z is provided, the algorithm is faster than computing
+          // self ** other then applying the modulo z
+          var res = (self % z + z) % z
+          for(var i=1; i<other; i++){
+              res *= self
+              res = (res % z + z) % z
+          }
+          return res
+      }
       var res = Math.pow(self.valueOf(),other.valueOf()) 
-      if(!isFinite(res)){return res}
       if(res>$B.min_int && res<$B.max_int){return res}
+      else if(res !== Infinity && !isFinite(res)){return res}
       else{
           return int($B.LongInt.$dict.__pow__($B.LongInt(self),
-             $B.LongInt(other)))}
+             $B.LongInt(other)))
+      }
     }
     if(isinstance(other, _b_.float)) { 
         if(self>=0){return new Number(Math.pow(self, other.valueOf()))}

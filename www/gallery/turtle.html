@@ -1,15 +1,16 @@
 <!doctype html>
 <html>
 <head>
+<meta charset="utf-8">
 
-    <script type=text/javascript src="../src/brython.js"></script>
+<script type="text/javascript" src="../src/brython.js"></script>
 
 <script id="python_script" type="text/python">
-  from browser import document, console
-  _code=document["div_html"].text
+from browser import document, console
+_code=document["div_html"].text
 
-  exec(_code)
-  document["processing"].style.display="none"
+exec(_code)
+document["processing"].style.display="none"
 </script>
 
 <style type="text/css">

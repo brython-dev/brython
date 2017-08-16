@@ -4,7 +4,6 @@ Do not use directly.  The OS specific modules import the appropriate
 functions from this module themselves.
 """
 import os
-import stat
 
 __all__ = ['commonprefix', 'exists', 'getatime', 'getctime', 'getmtime',
            'getsize', 'isdir', 'isfile']
@@ -29,6 +28,7 @@ def isfile(path):
         st = os.stat(path)
     except os.error:
         return False
+    import stat
     return stat.S_ISREG(st.st_mode)
 
 
@@ -41,6 +41,7 @@ def isdir(s):
         st = os.stat(s)
     except os.error:
         return False
+    import stat
     return stat.S_ISDIR(st.st_mode)
 
 

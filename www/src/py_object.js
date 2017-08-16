@@ -310,7 +310,12 @@ $ObjectDict.__hash__ = function (self) {
     return self.__hashvalue__=$B.$py_next_hash--;
 }
 
-$ObjectDict.__init__ = function(){return _b_.None}
+$ObjectDict.__init__ = function(){
+    if(arguments.length>1){
+        throw _b_.TypeError("object() takes no parameters")
+    }
+    return _b_.None
+}
 
 $ObjectDict.__le__ = $ObjectNI('__le__','<=')
 

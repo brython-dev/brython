@@ -29,8 +29,8 @@ assert timedelta(seconds=0.001) == timedelta(milliseconds=1)
 assert timedelta(milliseconds=0.001) == timedelta(microseconds=1)
 
 _d=date(2013, 3, 8)
-assert _d + timedelta(days=1) == datetime(2013, 3, 9)
-assert _d + timedelta(days=-1) == datetime(2013, 3, 7)
+assert _d + timedelta(days=1) == date(2013, 3, 9)
+assert _d + timedelta(days=-1) == date(2013, 3, 7)
 
 
 a = timedelta(7) # One week

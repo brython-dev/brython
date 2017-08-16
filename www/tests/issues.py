@@ -1247,6 +1247,158 @@ try:
 except IOError:
     pass
 
+# issue 582
+def nothing():
+    a = lambda: 1 \
+        or 2
+    return a()
+
+assert nothing() == 1
+
+# issue 584
+try:
+    from __future__ import non_existing_feature
+except SyntaxError:
+    pass
+
+# issue 501
+class Test:
+    def __iter__(self):
+        self._blocking = True
+        yield self
+
+def test_yield():
+    b = yield from Test()
+    return b
+
+test = []
+for b in test_yield():
+    test.append(b)
+
+assert test[0]._blocking is True
+
+# issue 588
+def yoba(a, b):
+    return a + b
+assertRaises(TypeError, yoba, 1, 2, 3)
+
+# issue 592
+assert pow(97, 1351, 723) == 385
+
+# issue 595
+assert float(True) == 1.0
+
+# issue 598
+class A(object):
+    __slots__ = "attr"
+    def __init__(self, attr=0):
+        self.attr  = attr
+a = A()
+
+# issue 600
+class A:
+    def __eq__(self, other):
+        return True
+
+class B(A):
+    def __eq__(self, other):
+        return False
+
+# check that B.__eq__ is used because B is a subclass of A
+assert A() != B()
+a = A()
+b = B()
+assert a != b
+assert b != a
+
+# issue 601
+assert {1:1}.keys() == {1}
+assert {1} == {1:1}.keys()
+assert {1:1}.items() == {(1,1)}
+assert {1:2}.values() == {2}
+
+# issue 602
+d = {} #should crash with mutation in for loop dict error
+d[1] = 1
+try:
+    for i in d:
+        d[i+1] = 1
+    raise Exception('should fail')
+except RuntimeError:
+    pass
+
+# issue 603
+import copy
+a = [[1],2,3]
+b = copy.copy(a)
+b[0] += [10]
+assert a == [[1, 10], 2, 3]
+assert b == [[1, 10], 2, 3]
+
+# issue 604
+class StopCompares:
+    def __eq__(self, other):
+        return 1/0
+
+checkfirst = list([1, StopCompares()])
+assert(1 in checkfirst)
+
+# issue 614
+from collections import namedtuple
+N = namedtuple('N', 'spam, length, eggs')
+n = N(5, 6, 7)
+assert n.length == 6
+
+M = namedtuple('M', 'a, b, c')
+m = M(5, 6, 7)
+try:
+    m.length
+    raise AssertionError("should have raised AttributeError")
+except AttributeError:
+    pass
+
+# issue 615
+class A:
+    spam = 5
+
+try:
+    a = A(5)
+    raise AssertionError("should have raised TypeError")
+except TypeError:
+    pass
+
+try:
+    class A(spam="foo"):
+        pass
+    raise AssertionError("should have raised TypeError")
+except TypeError:
+    pass
+
+# issue 619
+import sys
+from browser.html import H2
+
+
+class _ElementMixIn:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._sargs = []
+        self._kargs = {}
+
+    def mytest(self):
+        self._sargs.append(5)
+
+    def mytest2(self):
+        self._kargs[5] = '5'
+
+kls = type('h2', (_ElementMixIn, H2,), {})
+
+x = kls()
+x.mytest()
+assert x._sargs == [5]
+x.mytest2()
+assert x._kargs[5] == '5'
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

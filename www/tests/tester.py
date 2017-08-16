@@ -8,6 +8,7 @@ If the test failed, print the exception, and the line in the script where the
 exception happened.
 """
 
+import re
 import sys
 import time
 

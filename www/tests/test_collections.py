@@ -35,3 +35,10 @@ a = collections.namedtuple("foo", "bar bash bing")(1, 2, 3)
 assert a.bar == 1
 assert a.bash == 2
 assert repr(a) == 'foo(bar=1, bash=2, bing=3)'
+
+# iteration on deque
+
+d = collections.deque([1, 6, 2, 4])
+assert list(d) == [1, 6, 2, 4]
+
+

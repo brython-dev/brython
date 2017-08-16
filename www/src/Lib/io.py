@@ -37,10 +37,8 @@ Notes:
   bytes that occupy space in the buffer.
 - There's a simple test set (see end of this file).
 """
-try:
-    from errno import EINVAL
-except ImportError:
-    EINVAL = 22
+
+EINVAL = 22
 
 __all__ = ["StringIO"]
 
@@ -295,4 +293,3 @@ BufferedIOBase = RawIOBase
 BufferedReader = RawIOBase
 BytesIO = StringIO
 
-#from _io import *

@@ -3,8 +3,6 @@ standardized by the C Standard and the POSIX standard (a thinly
 disguised Unix interface).  Refer to the library manual and
 corresponding Unix manual entries for more information on calls."""
 
-import datetime
-
 from browser import window
 
 def _randint(a, b):
@@ -511,7 +509,7 @@ class stat_result:
             on Unix, or the time of creation on Windows, expressed in 
             nanoseconds as an integer """
         # Brython : fake values
-        self.st_atime = datetime.datetime.now()
+        self.st_atime = window.Date.new()
         self.st_mtime = self.st_ctime = self.st_atime_ns = \
             self.st_mtime_ns = self.st_ctime_ns = self.st_atime
         self.st_uid = self.st_gid = self.st_ino = -1

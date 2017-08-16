@@ -444,6 +444,7 @@ DOMNodeDict.__eq__ = function(self, other){
 
 DOMNodeDict.__getattribute__ = function(self,attr){
 
+    if(attr.substr(0,2)=='$$'){attr = attr.substr(2)}
     switch(attr) {
       case 'class_name':
       case 'html':
@@ -463,7 +464,6 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         return DOMNodeDict[attr].__get__(self)
       case 'clear':
       case 'closest':
-      case 'remove':
         return function(){return DOMNodeDict[attr](self,arguments[0])}
       case 'headers':
         if(self.elt.nodeType==9){
@@ -493,7 +493,7 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         // IE returns the properties of a DOMNode (eg parentElement)
         // as "attribute", so we must check that this[attr] is not
         // defined
-        if(res!==undefined&&res!==null&&self.elt[attr]===undefined){
+        if(res!==undefined && res!==null && self.elt[attr]===undefined){
             // now we're sure it's an attribute
             return res
         }
@@ -521,22 +521,25 @@ DOMNodeDict.__getattribute__ = function(self,attr){
                     for(var i=0;i<arguments.length;i++){
                         var arg=arguments[i]
                         if(typeof arg=="function"){
-                            var f1 = function(){
-                                try{return arg.apply(null, arguments)}
-                                catch(err){
-                                    if(err.__class__!==undefined){
-                                        var msg = _b_.getattr(err, 'info')+
-                                            '\n'+err.__class__.__name__
-                                        if(err.args){msg += ': '+err.args[0]}
-                                        try{getattr($B.stderr,"write")(msg)}
-                                        catch(err){console.log(msg)}
-                                    }else{
-                                        try{getattr($B.stderr,"write")(err)}
-                                        catch(err1){console.log(err)}
+                            var f1 = (function(x){
+                                return function(){
+                                    try{return x.apply(null, arguments)}
+                                    catch(err){
+                                        console.log(x, typeof x, err)
+                                        if(err.__class__!==undefined){
+                                            var msg = _b_.getattr(err, 'info')+
+                                                '\n'+err.__class__.__name__
+                                            if(err.args){msg += ': '+err.args[0]}
+                                            try{getattr($B.stderr,"write")(msg)}
+                                            catch(err){console.log(msg)}
+                                        }else{
+                                            try{getattr($B.stderr,"write")(err)}
+                                            catch(err1){console.log(err)}
+                                        }
+                                        throw err
                                     }
-                                    throw err
                                 }
-                            }
+                            })(arg)
                             args[pos++] = f1
                         }
                         else if(isinstance(arg,JSObject)){
@@ -559,6 +562,8 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         }
         if(attr=='options') return $Options(self.elt)
         if(attr=='style') return $Style(self.elt[attr])
+        if(Array.isArray(res)){return res} // issue #619
+
         return $B.$JS2Py(res)
     }
     return $ObjectDict.__getattribute__(self,attr)
@@ -612,7 +617,7 @@ DOMNodeDict.__iter__ = function(self){
             items.push(DOMNode(self.elt.childNodes[i]))
         }
     }
-    return iter(items)
+    return $B.$iter(items)
 }
 
 DOMNodeDict.__le__ = function(self,other){
@@ -727,16 +732,16 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
         if(self.elt[attr1]!==undefined){self.elt[attr1]=value;return}
 
         if(typeof self.elt.getAttribute=='function' && 
-            typeof self.elt.setAttribute=='function'){
-                var res = self.elt.getAttribute(attr1)
-                if(res!==undefined&&res!==null&&res!=''){
-                    if(value===false){
-                        self.elt.removeAttribute(attr1)
-                    }else{
-                        self.elt.setAttribute(attr1,value)
-                    }
-                    return
+                typeof self.elt.setAttribute=='function'){
+            var res = self.elt.getAttribute(attr1)
+            if(res!==undefined&&res!==null&&res!=''){
+                if(value===false){
+                    self.elt.removeAttribute(attr1)
+                }else{
+                    self.elt.setAttribute(attr1,value)
                 }
+                return
+            }
         }
         
         // No attribute was found on the DOM element : set it to the DOMNode
@@ -826,8 +831,8 @@ DOMNodeDict.clear = function(self){
     // remove all children elements
     var elt=self.elt
     if(elt.nodeType==9){elt=elt.body}
-    for(var i=elt.childNodes.length-1;i>=0;i--){
-       elt.removeChild(elt.childNodes[i])
+    while(elt.firstChild){
+       elt.removeChild(elt.firstChild)
     }    
 }
 
@@ -1014,6 +1019,16 @@ DOMNodeDict.id = function(self){
     return None
 }
 
+DOMNodeDict.index = function(self){
+    // Get index of element in its parent children
+    var rank = 0,
+        elt = self.elt
+    while((elt = elt.previousSibling) !== null){
+        rank++
+    }
+    return rank
+}
+
 DOMNodeDict.inside = function(self, other){
     // Test if a node is inside another node
     other = other.elt
@@ -1048,22 +1063,22 @@ DOMNodeDict.parent = function(self){
     return None
 }
 
-DOMNodeDict.remove = function(self,child){
-    // In versions <= 3.1.1 elt.remove(child) would remove child from the
-    // element, where child could be a descendant of element at any level
-    // This was confusing with the new .remove() method of DOM elements
-    console.log('WARNING - since version 3.1.2, method remove() is the '+
-        'DOM Node method of the same name.')
-    if(typeof self.elt.remove=="function"){
-        self.elt.remove(child)
-        return None
-    }else{
-        throw _b_.AttributeError(_b_.str(self)+" has no attribute 'remove'")
-    }
-}
-
 DOMNodeDict.reset = function(self){ // for FORM
     return function(){self.elt.reset()}
+}
+
+DOMNodeDict.select = function(self, selector){
+    // alias for get(selector=...)
+    if(self.elt.querySelectorAll===undefined){
+        throw _b_.TypeError("DOMNode object doesn't support selection by selector")
+    }
+    var node_list = self.elt.querySelectorAll(selector),
+        res = []
+    if(node_list.length===0) return []
+    for(var i=0, len=node_list.length;i<len;i++){
+        res[i]=DOMNode(node_list[i])
+    }
+    return res
 }
 
 DOMNodeDict.style = function(self){

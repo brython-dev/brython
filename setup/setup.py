@@ -2,14 +2,21 @@
 from setuptools import setup, find_packages
 
 import os
+import shutil
 
 with open('README.rst', encoding='utf-8') as fobj:
     LONG_DESCRIPTION = fobj.read()
 
+# copy brython.js and brython_stdlib.js
+for fname in ['brython', 'brython_stdlib']:
+    shutil.copyfile(os.path.join(os.path.dirname(os.getcwd()),
+        "www", "src", "{}.js".format(fname)),
+        os.path.join("data", "{}.js".format(fname)))
+            
 setup(
     name='brython',
 
-    version='3.3.1',
+    version='3.3.3',
 
     description='Brython is an implementation of Python 3 running in the browser',
     
@@ -53,7 +60,7 @@ setup(
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
-    py_modules=["brython"],
+    py_modules=["brython", "list_modules"],
 
 
     # If there are data files included in your packages that need to be
@@ -61,6 +68,7 @@ setup(
     # have to be included in MANIFEST.in as well.
     package_data={
         'data': [
+            'README.txt',
             'demo.html', 
             'brython.js',
             'brython_stdlib.js'

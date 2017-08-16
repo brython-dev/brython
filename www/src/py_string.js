@@ -1776,4 +1776,159 @@ $B.format_width = function(s, fmt){
     return s
 }
 
+function fstring_expression(){
+    this.type = 'expression'
+    this.expression = ''
+    this.conversion = null
+    this.fmt = null
+}
+
+$B.parse_fstring = function(string){
+    // Parse a f-string
+    var elts = [],
+        pos = 0,
+        current = '',
+        ctype = null,
+        nb_braces = 0,
+        car
+
+    while(pos<string.length){
+        if(ctype===null){
+            car = string.charAt(pos)
+            if(car=='{'){
+                if(string.charAt(pos+1)=='{'){
+                    ctype = 'string'
+                    current = '{'
+                    pos += 2
+                }else{
+                    ctype = 'expression'
+                    nb_braces = 1
+                    pos++
+                }
+            }else if(car=='}'){
+                if(string.charAt(pos+1)==car){
+                    ctype = 'string'
+                    current = '}'
+                    pos += 2
+                }else{
+                    throw Error(" f-string: single '}' is not allowed")
+                }
+            }else{
+                ctype = 'string'
+                current = car
+                pos++
+            }
+        }else if(ctype=='string'){
+            // end of string is the first single { or end of string
+            var i=pos
+            while(i<string.length){
+                car = string.charAt(i)
+                if(car=='{'){
+                    if(string.charAt(i+1)=='{'){
+                        current += '{'
+                        i+=2
+                    }else{
+                        elts.push(current)
+                        ctype = 'expression'
+                        pos = i+1
+                        break
+                    }
+                }else if(car=='}'){
+                    if(string.charAt(i+1)==car){
+                        current += car
+                        i += 2
+                    }else{
+                        throw Error(" f-string: single '}' is not allowed")
+                    }
+                }else{
+                    current += car
+                    i++
+                }
+            }
+            pos = i+1
+        }else{
+            // End of expression is the } matching the opening {
+            // There may be nested braces
+            var i = pos,
+                nb_braces = 1,
+                nb_paren = 0,
+                current = new fstring_expression()
+            while(i<string.length){
+                car = string.charAt(i)
+                if(car=='{' && nb_paren==0){
+                    nb_braces++
+                    current.expression += car
+                    i++
+                }else if(car=='}' && nb_paren==0){
+                    nb_braces -= 1
+                    if(nb_braces==0){
+                        // end of expression
+                        elts.push(current)
+                        ctype = null
+                        current = ''
+                        pos = i+1
+                        break
+                    }
+                    current.expression += car
+                    i++
+                }else if(car=='\\'){
+                    // backslash is not allowed in expressions
+                    throw Error("f-string expression part cannot include a" +
+                        " backslash")
+                }else if(nb_paren == 0 && car=='!' && current.fmt===null){
+                    if(current.expression.length==0){
+                        throw Error("f-string: empty expression not allowed")
+                    }
+                    if('ars'.indexOf(string.charAt(i+1)) == -1){
+                        throw Error("f-string: invalid conversion character:" +
+                            " expected 's', 'r', or 'a'")
+                    }else{
+                        current.conversion = string.charAt(i+1)
+                        i += 2
+                    }
+                }else if(car=='('){
+                    nb_paren++
+                    current.expression += car
+                    i++
+                }else if(car==')'){
+                    nb_paren--
+                    current.expression += car
+                    i++
+                }else if(car=='"'){
+                    // triple string ?
+                    if(string.substr(i, 3)=='"""'){
+                        var end = string.indexOf('"""', i+3)
+                        if(end==-1){throw Error("f-string: unterminated string")}
+                        else{
+                            var trs = string.substring(i, end+3)
+                            trs = trs.replace('\n', '\\n\\')
+                            current.expression += trs
+                            i = end+3
+                        }
+                    }else{
+                        var end = string.indexOf('"', i+1)
+                        if(end==-1){throw Error("f-string: unterminated string")}
+                        else{
+                            current.expression += string.substring(i, end+1)
+                            i = end+1
+                        }
+                    }
+                }else if(nb_paren == 0 && car==':'){
+                    current.fmt = true
+                    current.expression += car
+                    i++
+                }else{
+                    current.expression += car
+                    i++
+                }
+            }
+            if(nb_braces>0){
+                throw Error("f-string: expected '}'")
+            }
+        }
+    }
+    if(current.length>0){elts.push(current)}
+    return elts
+}
+
 })(__BRYTHON__)

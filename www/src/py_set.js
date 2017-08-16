@@ -94,7 +94,7 @@ $SetDict.__eq__ = function(self,other){
     if(_b_.hasattr(other, '__iter__')) { // is an iterator
       if(_b_.len(other)!=self.$items.length) return false
       
-      var _it=_b_.iter(other)
+      var _it=$B.$iter(other)
       
       while(1) {
          try {
@@ -139,7 +139,7 @@ $SetDict.__init__ = function(self){
         self.$items = iterable.$items.slice()
         return $N
     }
-    var it = _b_.iter(iterable),
+    var it = $B.$iter(iterable),
         obj = {$items:[], $str:true, $num:true}
     while(1){
         try{
@@ -198,7 +198,7 @@ $SetDict.__ne__ = function(self,other){return !$SetDict.__eq__(self,other)}
 $SetDict.__or__ = function(self,other,accept_iter){
     //$test(accept_iter, other)   <===  is this needed?  causes some dict unittests to fail
     var res = clone(self)
-    var func = _b_.getattr(_b_.iter(other),'__next__')
+    var func = _b_.getattr($B.$iter(other),'__next__')
     while(1){
         try{$SetDict.add(res, func())}
         catch(err){
@@ -326,7 +326,7 @@ $SetDict.difference_update = function(self){
         arguments, {}, 'args', null)
     for(var i=0;i<$.args.length;i++){
         var s = set($.args[i]),
-            _next = _b_.getattr(_b_.iter(s), '__next__'), item
+            _next = _b_.getattr($B.$iter(s), '__next__'), item
         while (true){
             try{
                item = _next()
@@ -427,7 +427,7 @@ $SetDict.symmetric_difference_update = function(self, s){
         {self:null, s:null}, ['self', 's'], arguments,{},null,null),
         self = $.self, s = $.s
 
-    var _next = _b_.getattr(_b_.iter(s), '__next__'), item, remove=[], add=[]
+    var _next = _b_.getattr($B.$iter(s), '__next__'), item, remove=[], add=[]
     while (true){
         try{
            item = _next()
@@ -515,7 +515,7 @@ $SetDict.issuperset = function(){
     var $ = $B.args('issuperset', 2, {self:null, other:null}, 
         ['self', 'other'], arguments,{},'args',null)
     var func = _b_.getattr($.self, '__contains__'),
-        it = _b_.iter($.other)
+        it = $B.$iter($.other)
     while(true){
         try{
             var item = _b_.next(it)

@@ -1212,7 +1212,7 @@ class _CharsetDispatcher(_Dispatcher):
     
     #fixme brython.   array module doesn't exist
     def set_bigcharset(self, ctx):
-        raise NotImplementationError("_sre.py: set_bigcharset, array not implemented")
+        raise NotImplementedError("_sre.py: set_bigcharset, array not implemented")
         # <BIGCHARSET> <blockcount> <256 blockindices> <blocks>
         char_code = self.char
         count = ctx.peek_code(1)

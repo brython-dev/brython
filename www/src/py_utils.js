@@ -122,6 +122,7 @@ $B.wrong_nb_args = function(name, received, expected, positional){
     }
 }
 
+
 $B.get_class = function(obj, from){
     // generally we get the attribute __class__ of an object by obj.__class__
     // but Javascript builtins used by Brython (functions, numbers, strings...)
@@ -265,6 +266,7 @@ $B.clear_ns = function(name){
             __BRYTHON__.bound[key] = null
             delete __BRYTHON__.modules[key]
             delete __BRYTHON__.bound[key]
+            $B.$py_module_path[key] = null
         }
     }
     
@@ -523,7 +525,9 @@ $B.augm_item_add = function(obj,item,incr){
     if(Array.isArray(obj) && typeof item=="number" &&
         obj[item]!==undefined){
             if(Array.isArray(obj[item]) && Array.isArray(incr)){
-                obj[item] = obj[item].concat(incr)
+                for(var i=0, len=incr.length; i<len; i++){
+                    obj[item].push(incr[i])
+                }
                 return
             }else if(typeof obj[item]=='string' && typeof incr=='string'){
                 obj[item] += incr
@@ -1068,6 +1072,7 @@ $B.$profile = (function(profile) {
                     func_stack = call_times[in_func]
                     inner_most_call = func_stack[func_stack.length-1];
                     inner_most_call[_CUMULATED] += (ctime-inner_most_call[_LAST_RESUMED])
+                    caller = caller+":"+in_func;
                 }
                 call_times[h].push([ctime,caller,0,ctime]) // start time, caller hash, duration without subcalls, start_of_last_subcall
                 call_stack.push(h)
@@ -1136,7 +1141,10 @@ $B.$profile = (function(profile) {
                active=true
                profile_start = new Date()
             }
-
+        },
+        'elapsed': function() {
+            if (active) return cumulated + (new Date())-profile_start
+            else return cumulated;
         },
         'stop':function() {
             if (active || paused) {
@@ -1251,6 +1259,25 @@ $B.gt = function(x,y){
     else if(typeof x=='number' && typeof y!= 'number'){return !y.pos}
     else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
     else{return $B.LongInt.$dict.__gt__(x, y)}
+}
+
+var reversed_op = {'__lt__': '__gt__', '__le__':'__ge__',
+    '__gt__': '__lt__', '__ge__': '__le__'}
+
+$B.rich_comp = function(op, x, y){
+    if(x.__class__ && y.__class__){
+        // cf issue #600 and 
+        // https://docs.python.org/3/reference/datamodel.html :
+        // "If the operands are of different types, and right operand’s type
+        // is a direct or indirect subclass of the left operand’s type, the
+        // reflected method of the right operand has priority, otherwise the
+        // left operand’s method has priority."
+        if(y.__class__.__mro__.indexOf(x.__class__)>-1){
+            var rev_op = reversed_op[op] || op
+            return _b_.getattr(y, rev_op)(x)
+        }
+    }
+    return _b_.getattr(x, op)(y)
 }
 
 $B.is_none = function (o) {

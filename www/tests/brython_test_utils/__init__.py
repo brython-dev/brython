@@ -22,6 +22,7 @@ def discover_brython_test_modules():
           ("test_print.py", "print"),
           ("test_set.py", "sets"),
           ("test_strings.py", "strings"),
+          ("test_fstrings.py", "f-strings"),
           ("test_string_format.py", "string format"),
           ("test_string_methods.py", "string methods")
         ]),

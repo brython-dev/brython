@@ -91,9 +91,23 @@ var $copy_dict = function(left, right) {
     while(i--) si(left, _l[i][0], _l[i][1])
 }
 
+function toSet(items){
+    // Build a set from the iteration on items
+    var res = []
+    while(true){
+        try{res.push(items.next())}
+        catch(err){break}
+    }
+    return _b_.set(res)
+}
+
 var $iterator_wrapper = function(items,klass){
     var res = {
         __class__:klass,
+        __eq__:function(other){
+            // compare set of items to other
+            return getattr(toSet(items), "__eq__")(other)
+        },
         __iter__:function(){items.iter.i=0; return res},
         __len__:function(){return items.length()},
         __next__:function(){
@@ -287,7 +301,7 @@ $DictDict.__init__ = function(self){
             var si = $DictDict.__setitem__
             while(i-->0) si(self, obj[i-1][0], obj[i-1][1])
             return $N
-        }else if(isinstance(obj,dict)){
+        }else if(obj.$nat===undefined && isinstance(obj,dict)){
             $copy_dict(self, obj)
             return $N
         }
@@ -322,7 +336,7 @@ $DictDict.__init__ = function(self){
             var si=$DictDict.__setitem__
             while(i-->0) si(self, src[i-1][0], src[i-1][1])
         }else{
-            var iterable = iter(args[0])
+            var iterable = $B.$iter(args[0])
             while(1){
                 try{
                    var elt = next(iterable)
@@ -482,7 +496,7 @@ $DictDict.fromkeys = function(){
     // class method
     var klass = $.cls,
         res = klass(),
-        keys_iter = _b_.iter(keys)
+        keys_iter = $B.$iter(keys)
 
     while(1){
         try{

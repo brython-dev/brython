@@ -12,7 +12,6 @@ html {
 
 body {
   font-family:Roboto, Arial;
-  font-size:0.9em;
   margin: 0px;
   
 }
@@ -20,6 +19,12 @@ body {
 a.navig:link,a:link,a:hover,a.navig:visited {
   color:#1767B7;
   text-decoration:none
+}
+
+a.banner{
+  border-bottom-style: solid;
+  border-bottom-color: #1767B7;
+  border-bottom-width: 6px;
 }
 
 a.banner:link,a.banner:visited {
@@ -30,7 +35,7 @@ a.banner:link,a.banner:visited {
   line-height:30px;
   padding:1.3em;
   text-align:center;
-  text-decoration:none
+  text-decoration:none;
 }
 
 a.banner:hover,a.banner:active {
@@ -65,7 +70,7 @@ img.logo {
   border-width:0;
   height:auto;
   padding:0;
-  width:auto
+  width:auto;
 }
 
 td.logo {
@@ -113,13 +118,23 @@ pre.marked {
   font-size: 13px;
 }
 
-pre.python {
-  font-size: 13px;
+/* colors for highlighted Python code */
+
+span.python-string{
+    color: blue;
+}
+span.python-comment{
+    color: green;
+}
+span.python-keyword{
+    color: purple;
+}
+span.python-builtin{
+    color: #963;
 }
 
 code {
   color:#339;
-  font-size: 13px;
 }
 
 em {
@@ -140,7 +155,6 @@ strong {
   min-width:200px;
   padding:5px
 }
-
 
 
 
