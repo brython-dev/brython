@@ -216,8 +216,9 @@
                      // HTML5.1 tags
                     'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY']
 
-        // create classes
-        var obj = {},
+        // Module has an attribute "tags" : a dictionary that maps all tag
+        // names to the matching tag class factory function.
+        var obj = {tags:_b_.dict()},
             dicts = {}
 
         function maketag(tag){
@@ -225,16 +226,17 @@
                 throw _b_.TypeError("html.maketag expects a string as argument")
             }
             dicts[tag] = makeTagDict(tag)
-            factory = makeFactory(tag)
-            dicts[tag].$factory = obj[tag]
+            var factory = makeFactory(tag)
+            dicts[tag].$factory = factory
+            obj.tags.$string_dict[tag] = factory
             return factory
         }
 
         for(var i=0, len = tags.length; i < len;i++){
             obj[tags[i]] = maketag(tags[i])
         }
-        $B.tag_classes = dicts
-        // expose a function to generate arbitrary tags (issue #624)
+
+        // expose function maketag to generate arbitrary tags (issue #624)
         obj.maketag = maketag
 
         return obj
