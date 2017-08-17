@@ -195,7 +195,7 @@
         // All HTML 4, 5.x extracted from
         // https://w3c.github.io/elements-of-html/
         // HTML4.01 tags
-        var $tags = ['A','ABBR','ACRONYM','ADDRESS','APPLET','AREA','B','BASE',
+        var tags = ['A','ABBR','ACRONYM','ADDRESS','APPLET','AREA','B','BASE',
                     'BASEFONT','BDO','BIG','BLOCKQUOTE','BODY','BR','BUTTON',
                     'CAPTION','CENTER','CITE','CODE','COL','COLGROUP','DD',
                     'DEL','DFN','DIR','DIV','DL','DT','EM','FIELDSET','FONT',
@@ -219,13 +219,23 @@
         // create classes
         var obj = {},
             dicts = {}
-        for(var i=0, len = $tags.length; i < len;i++){
-            var tag = $tags[i]
+        
+        function maketag(tag){
+            if(!(typeof tag=='string')){
+                throw _b_.TypeError("html.maketag expects a string as argument")
+            }
             dicts[tag] = makeTagDict(tag)
-            obj[tag] = makeFactory(tag)
             dicts[tag].$factory = obj[tag]
+            return makeFactory(tag)
+        }
+        
+        for(var i=0, len = tags.length; i < len;i++){
+            obj[tags[i]] = maketag(tags[i])
         }
         $B.tag_classes = dicts
+        // expose a function to generate arbitrary tags (issue #624)
+        obj.maketag = maketag
+        
         return obj
     })(__BRYTHON__)
 
