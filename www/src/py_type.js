@@ -4,33 +4,48 @@ var _b_=$B.builtins
 
 // generic code for class constructor
 $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwargs){
-    var cl_dict=_b_.dict(), bases=null
-    // transform class object into a dictionary
-    for(var attr in class_obj){
-        cl_dict.$string_dict[attr] = class_obj[attr]
-    }
-    // check if parents are defined
-    if(parents!==undefined){
-        for(var i=0;i<parents.length;i++){
-            if(parents[i]===undefined){
-                // restore the line of class definition
-                $B.line_info = class_obj.$def_line
-                throw _b_.NameError("name '"+parents_names[i]+"' is not defined")
-            }
-        }
-    }
-    bases = parents
+    var metaclass = _b_.type  // DRo put here, because is used inside if and later
 
-    // see if there is 'metaclass' in kwargs
-    var metaclass = _b_.type
-    for(var i=0;i<kwargs.length;i++){
-        var key=kwargs[i][0],val=kwargs[i][1]
-        if(key=='metaclass'){metaclass=val}
-        else{
-            throw _b_.TypeError("type() takes 1 or 3 arguments")
-        }
+    // DRo - Begin
+    // if kwargs is not undefined, we have the standard behavior
+    // but if "undefined, then the call is from type and class_obj is already a dict
+    // and no need to check for parents is needed, because a runtime error will
+    // have been generated before getting here (or will be generated if it's not
+    // a valid parent
+    if(kwargs !== undefined) {
+        var cl_dict=_b_.dict(), bases=null
+	// transform class object into a dictionary
+	for(var attr in class_obj){
+            cl_dict.$string_dict[attr] = class_obj[attr]
+	}
+	// check if parents are defined
+	if(parents!==undefined){
+            for(var i=0;i<parents.length;i++){
+		if(parents[i]===undefined){
+                    // restore the line of class definition
+                    $B.line_info = class_obj.$def_line
+                    throw _b_.NameError("name '"+parents_names[i]+"' is not defined")
+		}
+            }
+	}
+	bases = parents
+
+	// see if there is 'metaclass' in kwargs
+	for(var i=0;i<kwargs.length;i++){
+            var key=kwargs[i][0],val=kwargs[i][1]
+            if(key=='metaclass'){metaclass=val}
+            else{
+		throw _b_.TypeError("type() takes 1 or 3 arguments")
+            }
+	}
+	var mro0 = class_obj
+    } else {
+	var cl_dict = class_obj  // already a dict
+	bases = parents
+	var mro0 = cl_dict.$string_dict  // to replace class_obj in method creation
     }
-    
+    // DRo - Begin
+
     /* see if __init_subclass__ is defined in any of the parents
      * We can't use __getattribute__ since it must be defined directly on a parent,
      * not further up the mro.
@@ -48,7 +63,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
                     for (var kwidx=0;kwidx<kwargs.length;kwidx++){
                         kw.kw[kwargs[kwidx][0]] = kwargs[kwidx][1];
                     }
-                    /* We can't simply __init_subclass__()(kw); 
+                    /* We can't simply __init_subclass__()(kw);
                      * because __init_subclass__ is bound to the parent.
                      * We can't look up __init_subclass__ on factory directly,
                      * since it might be overridden.  This also sidesteps
@@ -68,7 +83,9 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         __dict__ : cl_dict
     }
 
-    class_dict.__slots__ = class_obj.__slots__
+    // DRo - slots will have been defined in class dict during type
+    // or in class definition in class_obj. mro0 simplifies the choosing
+    class_dict.__slots__ = mro0.__slots__
 
     class_dict.__mro__ = make_mro(bases, cl_dict)
 
@@ -79,8 +96,9 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         abstract_methods = {},
         mro = [class_dict].concat(class_dict.__mro__)
 
+
     for(var i=0;i<mro.length;i++){
-        var kdict = i == 0 ? class_obj : mro[i]
+        var kdict = i == 0 ? mro0 : mro[i]  // DRo mr0 set above to choose rightly
         for(var attr in kdict){
             if(non_abstract_methods[attr]){continue}
             var v = kdict[attr]
@@ -129,12 +147,61 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     // Get method __new__ of metaclass
     var meta_new = $B.$type.__getattribute__(metaclass.$dict,'__new__')
 
+    // DRo - BEGIN
+    // __new__ doesn't return a factory but the created "class". This gives
+    // __init__ chance to perform further initialization
     // Create the factory function of the class
     if(meta_new.__func__===$B.$type.__new__){
-        var factory = _b_.type.$dict.__new__(_b_.type, class_name, bases, cl_dict)
+        var kls = _b_.type.$dict.__new__(_b_.type, class_name, bases, cl_dict)
     }else{
-        var factory = meta_new(metaclass, class_name, bases, cl_dict)
+        var kls = meta_new(metaclass, class_name, bases, cl_dict)
     }
+    // DRo - END
+
+    // DRo - BEGIN
+    // create the factory function, extracted from type.__new__
+    var meta_call = $B.$type.__getattribute__(metaclass.$dict,'__call__', kls)
+
+    if(meta_call.__func__===$B.$type.__call__){
+        var factory = $instance_creator(kls)  // same behavior as before
+    }else{
+        // Implement custom factory function
+        var factory = function() {
+            // The class may not be instanciable if it has at least one abstract method
+            if(kls.$instanciable!==undefined){
+                return function(){throw _b_.TypeError(
+                    "Can't instantiate abstract "+
+                    "class interface with abstract methods")}
+            }
+            var args = [kls.$factory]
+            for(var i=0; i < arguments.length; i++){
+                args.push(arguments[i])
+            }
+            return meta_call.apply(null, args)
+        }
+        // keep a reference to the default "type" factory for super calls
+        factory.$dfactory = $instance_creator(kls)
+    }
+
+    factory.__class__ = $B.$factory
+    factory.$dict = kls
+    factory.$is_func = true // to speed up calls
+
+    // factory compares equal to class_dict
+    // so that instance.__class__ compares equal to factory
+    factory.__eq__ = function(other){return other===factory.__class__}
+    kls.$factory = factory
+    // DRo - END
+
+    // DRo - BEGIN
+    // With the factory created (class in brython), the call to __init__ can be done
+    var meta_init = $B.$type.__getattribute__(metaclass.$dict,'__init__', kls)
+    if(meta_init.__func__===$B.$type.__init__){
+        _b_.type.$dict.__init__(kls.$factory, class_name, bases, cl_dict)
+    }else{
+        meta_init(class_name, bases, cl_dict)  // classmethod already
+    }
+    // DRo - END
 
     class_dict.$factory = factory
 
@@ -153,6 +220,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         factory.$dict[attr] = class_dict[attr]
     }
 
+    // DRo ... above extracted from __new__
     factory.$dict.$factory = factory
 
     // set functions defined in metaclass dictionary as class methods, except __new__
@@ -162,7 +230,8 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
        }
     }
 
-    factory.$is_func = true
+    // DRo ... above extracted from __new__
+    // factory.$is_func = true
 
     if(!is_instanciable){
         function nofactory(){
@@ -312,7 +381,6 @@ function make_mro(bases, cl_dict){
 
 }
 
-// class of classes
 _b_.type = function(obj, bases, cl_dict){
     if(arguments.length==1){
         if(obj.__class__===$B.$factory){
@@ -322,7 +390,19 @@ _b_.type = function(obj, bases, cl_dict){
         return $B.get_class(obj).$factory
     }
 
-    return $B.$type.__new__(_b_.type, obj, bases, cl_dict)
+    // DRo - Begin
+    // Instead of calling type.__new__ which now returns a class and not
+    // a factory, the existing $class_constructor is reused. The arguments
+    // are slightly different and in different order
+    // 1. name: in this case "obj"
+    // 2. class_obj which is an object containing the definitions in the class
+    // 3. parents: in this case the bases
+    // 4. parents_names: which is not needed, because invoking this function
+    //    should fail if something wrong is given dynamically to "type"
+    // 5. kwargs: no such thing in type ... pass as undefined as a flag for
+    //    $class_constructor to know it's coming from type
+    return $B.$class_constructor(obj, cl_dict, bases, undefined, undefined)
+    // DRo - End
 }
 
 _b_.type.__class__ = $B.$factory
@@ -332,7 +412,9 @@ $B.$type.__class__ = $B.$type
 $B.$type.__mro__ = [_b_.object.$dict]
 _b_.type.$dict = $B.$type
 
-$B.$type.__new__ = function(cls, name, bases, cl_dict){
+$B.$type.__new__ = function(meta, name, bases, cl_dict){
+    // DRo - cls changed to meta to reflect that the class (cls) hasn't
+    // yet been created. It's about to be created by "meta"
 
     // Return a new type object. This is essentially a dynamic form of the
     // class statement. The name string is the class name and becomes the
@@ -370,26 +452,42 @@ $B.$type.__new__ = function(cls, name, bases, cl_dict){
     }
 
     //class_dict.__mro__ = [class_dict].concat(make_mro(bases, cl_dict))
+    // DRo this is also done before entering __new__ in the generic
+    // class constructor
     class_dict.__mro__ = make_mro(bases, cl_dict)
 
     // Reset the attribute __class__
     class_dict.__class__ = class_dict.__mro__[0].__class__
 
-    // create the factory function
-    var factory = $instance_creator(class_dict)
-
-    factory.__class__ = $B.$factory
-    factory.$dict = class_dict
-    factory.$is_func = true // to speed up calls
-
-    // factory compares equal to class_dict
-    // so that instance.__class__ compares equal to factory
-    factory.__eq__ = function(other){return other===factory.__class__}
-    class_dict.$factory = factory
-
-    // type() returns the factory function
-    return factory
+    // DRo this no longer returns a factory but just the class_dict which is
+    // basically the class itself
+    // type() returns the class (it's dict)
+    return class_dict
 }
+
+
+// DRo - BEGIN
+$B.$type.__init__ = function(cls, name, bases, cl_dict){
+    // Returns nothing
+    // Performs initialization of cls which is the class created by the
+    // metaclass __new__ (either from type or custom
+}
+// DRo - END
+
+// DRo - BEGIN
+$B.$type.__call__ = function(){
+    // invoked via super ... there is a specific metaclass.__call__
+    // during class construction the default factory was stored under
+    // $dfactory for the klass which is the 1st argument because
+    // this is a classmethod
+    $f = arguments[0].$dfactory
+    args = []
+    for(var i=1; i < arguments.length; i++){
+        args.push(arguments[i])
+    }
+    return $f.apply(null, args)
+}
+// DRo - END
 
 // class of constructors
 $B.$factory = {
@@ -405,11 +503,14 @@ _b_.type.__class__ = $B.$factory
 _b_.object.$dict.__class__ = $B.$type
 _b_.object.__class__ = $B.$factory
 
-$B.$type.__getattribute__=function(klass, attr){
+// DRo Begin/End - Added metaclassed as flag during class construction
+$B.$type.__getattribute__=function(klass, attr, metaclassed){
 
     switch(attr) {
-      case '__call__':
-        return $instance_creator(klass)
+      // DRo BEGIN -- there is now a specific type.__call__
+      // case '__call__':
+      //  return $instance_creator(klass)
+      // DRo END
       case '__eq__':
         return function(other){return klass.$factory===other}
       case '__ne__':
@@ -503,6 +604,15 @@ $B.$type.__getattribute__=function(klass, attr){
 
         // __new__ is a static method
         if(attr=='__new__'){res.$type='staticmethod'}
+	// DRo Begin -- these 2 are classmethods
+        if(metaclassed !== undefined) {
+            if(attr=='__init__'){
+                res.$type='classmethod'
+            } else if(attr=='__call__') {
+                res.$type='classmethod'
+            }
+        }
+	// DRo End
         var res1 = get_func.apply(null,[res,$B.builtins.None,klass])
 
         if(res1.__class__===$B.$factory){
@@ -532,7 +642,24 @@ $B.$type.__getattribute__=function(klass, attr){
                     break;
                 case 'classmethod':
                     // class method : called with the class as first argument
-                    args = [klass.$factory]
+                    // DRo Begin - metaclassed indicates the classmethod is
+                    // being requested during class construction
+                    if(metaclassed === undefined) {
+                        args = [klass.$factory]
+                    } else {
+                        // $factory is used as a flag for the __call__ conumdrum
+                        // __call__ is the factory but can only be so after
+                        // checking itself against the default. Hence the need
+                        // to manually control at first the class parameter
+                        // passing to __call__
+                        if(metaclassed.$factory === undefined) {
+                            // too early in class construction
+                            args = []
+                        } else {
+                            args = [metaclassed.$factory]
+                        }
+                    }
+                    // DRo End
                     __self__ = klass
                     __repr__ = __str__ = function(){
                         var x = '<built-in method '+klass.__name__+'.'+attr
