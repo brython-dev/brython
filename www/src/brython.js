@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-08-17 21:44:18.074773"
+__BRYTHON__.compiled_date="2017-08-17 22:00:42.591696"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4390,9 +4390,7 @@ return _b_.None}
 $ObjectDict.__setattr__.__str__=function(){return 'method object.setattr'}
 $ObjectDict.__str__=$ObjectDict.__repr__
 $ObjectDict.__subclasshook__=function(){return _b_.NotImplemented}
-function object(){var res={__class__:$ObjectDict},args=[res].concat(Array.prototype.slice.call(arguments))
-$ObjectDict.__init__.apply(null,args)
-return res}
+function object(){return{__class__:$ObjectDict}}
 object.$dict=$ObjectDict
 $ObjectDict.$factory=object
 object.__repr__=object.__str__=function(){return "<class 'object'>"}
@@ -4416,9 +4414,9 @@ var metaclass=_b_.type
 for(var i=0;i<kwargs.length;i++){var key=kwargs[i][0],val=kwargs[i][1]
 if(key=='metaclass'){metaclass=val}
 else{throw _b_.TypeError("type() takes 1 or 3 arguments")}}
-var init_subclass=function init_subclass(){};
+function init_subclass(){};
 for(var i=0;i<bases.length;i++){if(bases[i].$dict.$methods){var __init_subclass__=bases[i].$dict.$methods.__init_subclass__;
-if(__init_subclass__){init_subclass=function init_subclass(cls){var kw={$nat:true,kw:{}}
+if(__init_subclass__){function init_subclass(cls){var kw={$nat:true,kw:{}}
 for(var kwidx=0;kwidx<kwargs.length;kwidx++){kw.kw[kwargs[kwidx][0]]=kwargs[kwidx][1];}
 __init_subclass__().$infos.__func__.apply(null,[cls,kw]);}
 break;}}}
