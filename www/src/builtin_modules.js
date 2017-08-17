@@ -225,8 +225,9 @@
                 throw _b_.TypeError("html.maketag expects a string as argument")
             }
             dicts[tag] = makeTagDict(tag)
-            dicts[tag].$factory = obj[tag]
-            return makeFactory(tag)
+            var factory = makeFactory(tag)
+            dicts[tag].$factory = factory
+            return factory
         }
         
         for(var i=0, len = tags.length; i < len;i++){

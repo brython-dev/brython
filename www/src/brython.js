@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-08-17 11:25:17.086685"
+__BRYTHON__.compiled_date="2017-08-17 18:55:02.332188"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -11410,8 +11410,9 @@ var tags=['A','ABBR','ACRONYM','ADDRESS','APPLET','AREA','B','BASE','BASEFONT','
 var obj={},dicts={}
 function maketag(tag){if(!(typeof tag=='string')){throw _b_.TypeError("html.maketag expects a string as argument")}
 dicts[tag]=makeTagDict(tag)
-dicts[tag].$factory=obj[tag]
-return makeFactory(tag)}
+var factory=makeFactory(tag)
+dicts[tag].$factory=factory
+return factory}
 for(var i=0,len=tags.length;i < len;i++){obj[tags[i]]=maketag(tags[i])}
 $B.tag_classes=dicts
 obj.maketag=maketag
