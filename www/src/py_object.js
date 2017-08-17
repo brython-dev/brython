@@ -372,7 +372,12 @@ $ObjectDict.__str__ = $ObjectDict.__repr__
 $ObjectDict.__subclasshook__ = function(){return _b_.NotImplemented}
 
 // constructor of the built-in class 'object'
-function object(){return {__class__:$ObjectDict}}
+function object(){
+    var res = {__class__:$ObjectDict},
+        args = [res].concat(Array.prototype.slice.call(arguments))
+    $ObjectDict.__init__.apply(null, args)
+    return res
+}
 
 object.$dict = $ObjectDict
 // object.__class__ = $factory : this is done in py_types
