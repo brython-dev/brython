@@ -41,7 +41,7 @@
             var scripts = document.getElementsByTagName('script'),
                 js_scripts = []
             for(var i=0;i<scripts.length;i++){
-                if(scripts[i].type===undefined || 
+                if(scripts[i].type===undefined ||
                     scripts[i].type=='text/javascript'){
                     js_scripts.push(scripts[i])
                     if(scripts[i].src){
@@ -87,16 +87,16 @@
 
     // creation of an HTML element
     modules['browser.html'] = (function($B){
-    
+
         var _b_ = $B.builtins
         var $TagSumDict = $B.$TagSum.$dict
-        
+
         function makeTagDict(tagName){
             // return the dictionary for the class associated with tagName
             var dict = {__class__:$B.$type,
                 __name__:tagName
                 }
-        
+
             dict.__init__ = function(){
                 var $ns=$B.args('pow',1,{self:null},['self'],arguments,
                     {},'args','kw'),
@@ -128,14 +128,14 @@
                         }
                     }
                 }
-        
+
                 // attributes
                 var items = _b_.list(_b_.dict.$dict.items($ns['kw']))
                 for(var i=0, len = items.length; i < len;i++){
                     // keyword arguments
                     var arg = items[i][0],
                         value = items[i][1]
-                    if(arg.toLowerCase().substr(0,2)==="on"){ 
+                    if(arg.toLowerCase().substr(0,2)==="on"){
                         // Event binding passed as argument "onclick", "onfocus"...
                         // Better use method bind of DOMNode objects
                         var js = '$B.DOMNodeDict.bind(self,"'
@@ -156,9 +156,9 @@
                     }
                 }
             }
-        
+
             dict.__mro__ = [$B.DOMNodeDict, $B.builtins.object.$dict]
-        
+
             dict.__new__ = function(cls){
                 // __new__ must be defined explicitely : it returns an instance of
                 // DOMNode for the specified tagName
@@ -166,14 +166,14 @@
                 res.__class__ = cls.$dict
                 return res
             }
-        
+
             return dict
         }
-        
-        
-        // the classes used for tag sums, $TagSum and $TagSumClass 
+
+
+        // the classes used for tag sums, $TagSum and $TagSumClass
         // are defined in py_dom.js
-        
+
         function makeFactory(tagName){
             var factory = function(){
                 if(tagName=='SVG'){
@@ -191,7 +191,7 @@
             factory.$dict = dicts[tagName]
             return factory
         }
-        
+
         // All HTML 4, 5.x extracted from
         // https://w3c.github.io/elements-of-html/
         // HTML4.01 tags
@@ -215,27 +215,28 @@
                     'TEMPLATE','TIME','TRACK','VIDEO','WBR',
                      // HTML5.1 tags
                     'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY']
-        
+
         // create classes
         var obj = {},
             dicts = {}
-        
+
         function maketag(tag){
             if(!(typeof tag=='string')){
                 throw _b_.TypeError("html.maketag expects a string as argument")
             }
             dicts[tag] = makeTagDict(tag)
+            factory = makeFactory(tag)
             dicts[tag].$factory = obj[tag]
-            return makeFactory(tag)
+            return factory
         }
-        
+
         for(var i=0, len = tags.length; i < len;i++){
             obj[tags[i]] = maketag(tags[i])
         }
         $B.tag_classes = dicts
         // expose a function to generate arbitrary tags (issue #624)
         obj.maketag = maketag
-        
+
         return obj
     })(__BRYTHON__)
 
@@ -281,7 +282,7 @@
             if ($B.is_none(module_name)) {
                 module_name = '__main__'+$B.UUID()
             }
-            return $B.py2js(src, module_name, module_name, 
+            return $B.py2js(src, module_name, module_name,
                 '__builtins__').to_js()
         },
         pyobj2jsobj:function(obj){ return $B.pyobj2jsobj(obj)},
@@ -295,7 +296,7 @@
     var _b_=$B.builtins
     modules['_sys'] = {
         __file__:$B.brython_path+'/libs/_sys.js',
-        // Called "Getframe" because "_getframe" wouldn't be imported in 
+        // Called "Getframe" because "_getframe" wouldn't be imported in
         // sys.py with "from _sys import *"
         Getframe : function(depth){
             return $B._frame($B.frames_stack, depth)
@@ -327,14 +328,14 @@
         },
         modules: {
             __get__: function(){return _b_.dict($B.JSObject($B.imported))},
-            __set__: function(self, obj, value){ 
-                 throw _b_.TypeError("Read only property 'sys.modules'") 
+            __set__: function(self, obj, value){
+                 throw _b_.TypeError("Read only property 'sys.modules'")
              }
         },
         path: {
             __get__: function(){return $B.path},
-            __set__: function(self, obj, value){ 
-                 $B.path = value; 
+            __set__: function(self, obj, value){
+                 $B.path = value;
             }
         },
         meta_path: {
@@ -351,7 +352,7 @@
             },
             __set__: function(self, obj, value){
                 throw _b_.TypeError("Read only property"+
-                    " 'sys.path_importer_cache'") 
+                    " 'sys.path_importer_cache'")
             }
         },
         stderr: {
@@ -380,7 +381,7 @@
 
     for(var attr in modules){load(attr, modules[attr])}
     modules['browser'].html = modules['browser.html']
-    
+
     var _b_ = $B.builtins
 
     // Set builtin name __builtins__
@@ -393,6 +394,5 @@
         _b_[attr] = value
     }
     $B.bound.__builtins__.__builtins__ = _b_.__builtins__
-          
-})(__BRYTHON__)
 
+})(__BRYTHON__)
