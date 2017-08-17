@@ -50,12 +50,12 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
      * We can't use __getattribute__ since it must be defined directly on a parent,
      * not further up the mro.
      */
-    function init_subclass(){};
+    var init_subclass = function init_subclass(){};
     for (var i=0;i<bases.length;i++) {
         if (bases[i].$dict.$methods) {
             var __init_subclass__ = bases[i].$dict.$methods.__init_subclass__;
             if (__init_subclass__) {
-                function init_subclass(cls) {
+                init_subclass = function init_subclass(cls) {
                     var kw = {
                         $nat:true,
                         kw:{}
@@ -128,9 +128,17 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
 
     // If no metaclass is specified for the class, see if one of the parents
     // has a metaclass set
-    for(var i=1;i<mro.length;i++){
-        if(mro[i].__class__ !== $B.$type){
-            metaclass = mro[i].__class__.$factory
+    // DRo. The initial comparison for the current metaclass is against
+    // _b_.type which is the default value.
+    // The comparison inside the loop is kept against $B.$type, because
+    // as done below, the actual value in __class__ is metaclass.$dict
+    // and the actual value in _b_.type.__class__ = $B.type (further below)
+    if(metaclass === _b_.type) {
+        for(var i=1;i<mro.length;i++){
+            if(mro[i].__class__ !== $B.$type){
+                metaclass = mro[i].__class__.$factory
+		break
+            }
         }
     }
 
