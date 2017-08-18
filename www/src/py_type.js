@@ -680,9 +680,9 @@ $B.$MethodDict.__ne__ = function(self, other){
 }
 
 $B.$MethodDict.__getattribute__ = function(self, attr){
-    // Internal attributes __name__, __func__, __self__ etc.
-    // are stored in self.$infos
-    var infos = self.$infos
+    // Internal attributes __name__, __module__, __doc__ etc.
+    // are stored in self.$infos.__func__.$infos
+    var infos = self.$infos.__func__.$infos
     if(infos && infos[attr]){
         if(attr=='__code__'){
             var res = {__class__:$B.$CodeDict}
