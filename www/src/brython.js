@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-08-17 19:25:30.540755"
+__BRYTHON__.compiled_date="2017-08-19 09:29:14.256724"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -3736,7 +3736,7 @@ C.from=true
 C.tree=[]
 return new $AbstractExprCtx(C,true)}
 return $transition(C.parent,token)}}
-$B.forbidden=['alert','case','catch','constructor','Date','delete','default','document','enum','eval','extends','Error','history','function','length','location','Math','new','null','Number','RegExp','super','this','throw','var','window','toString']
+$B.forbidden=['alert','arguments','case','catch','constructor','Date','delete','default','document','enum','eval','extends','Error','history','function','length','location','Math','new','null','Number','RegExp','super','this','throw','var','window','toString']
 $B.aliased_names={}
 for(var i=0;i<$B.forbidden.length;i++){$B.aliased_names[$B.forbidden[i]]=true}
 var s_escaped='abfnrtvxuU"0123456789'+"'"+'\\',is_escaped={}
@@ -4416,9 +4416,9 @@ var metaclass=_b_.type
 for(var i=0;i<kwargs.length;i++){var key=kwargs[i][0],val=kwargs[i][1]
 if(key=='metaclass'){metaclass=val}
 else{throw _b_.TypeError("type() takes 1 or 3 arguments")}}
-var init_subclass=function init_subclass(){};
+function init_subclass(){};
 for(var i=0;i<bases.length;i++){if(bases[i].$dict.$methods){var __init_subclass__=bases[i].$dict.$methods.__init_subclass__;
-if(__init_subclass__){init_subclass=function init_subclass(cls){var kw={$nat:true,kw:{}}
+if(__init_subclass__){function init_subclass(cls){var kw={$nat:true,kw:{}}
 for(var kwidx=0;kwidx<kwargs.length;kwidx++){kw.kw[kwargs[kwidx][0]]=kwargs[kwidx][1];}
 __init_subclass__().$infos.__func__.apply(null,[cls,kw]);}
 break;}}}
@@ -4666,6 +4666,10 @@ self.$infos.__self__===other.$infos.__self__}
 $B.$MethodDict.__ne__=function(self,other){return !$B.$MethodDict.__eq__(self,other)}
 $B.$MethodDict.__getattribute__=function(self,attr){
 var infos=self.$infos
+switch(attr){case "__func__":
+case "__self__":
+return infos[attr]}
+infos=infos.__func__.$infos
 if(infos && infos[attr]){if(attr=='__code__'){var res={__class__:$B.$CodeDict}
 for(var attr in infos.__code__){res[attr]=infos.__code__[attr]}
 return res}else{return infos[attr]}}else{return _b_.object.$dict.__getattribute__(self,attr)}}
