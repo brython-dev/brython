@@ -35,12 +35,12 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
      * We can't use __getattribute__ since it must be defined directly on a parent,
      * not further up the mro.
      */
-    var init_subclass = function init_subclass(){};
+    function init_subclass(){};
     for (var i=0;i<bases.length;i++) {
         if (bases[i].$dict.$methods) {
             var __init_subclass__ = bases[i].$dict.$methods.__init_subclass__;
             if (__init_subclass__) {
-                init_subclass = function init_subclass(cls) {
+                function init_subclass(cls) {
                     var kw = {
                         $nat:true,
                         kw:{}
@@ -683,6 +683,12 @@ $B.$MethodDict.__getattribute__ = function(self, attr){
     // Internal attributes __name__, __func__, __self__ etc.
     // are stored in self.$infos
     var infos = self.$infos
+    switch(attr){
+        case "__func__":
+        case "__self__":
+            return infos[attr]
+    }
+    infos = infos.__func__.$infos
     if(infos && infos[attr]){
         if(attr=='__code__'){
             var res = {__class__:$B.$CodeDict}
