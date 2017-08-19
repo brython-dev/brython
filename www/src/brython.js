@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-08-19 09:29:14.256724"
+__BRYTHON__.compiled_date="2017-08-19 12:01:41.855521"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -203,7 +203,7 @@ if(node===undefined ||node.id=='__builtins__'){break}}
 blocks='{'+blocks+'}'
 var parent=this.parent
 while(parent!==undefined && parent.id===undefined){parent=parent.parent}
-var g=$B.$BRgenerator(def_ctx.name,blocks,def_ctx.id,def_node),block_id=parent.id.replace(/\./g,'_'),name=def_ctx.decorated ? def_ctx.alias : 
+var g=$B.$BRgenerator(def_ctx.name,blocks,def_ctx.id,def_node),block_id=parent.id.replace(/\./g,'_'),name=def_ctx.decorated ? def_ctx.alias :
 def_ctx.name+def_ctx.num,res='var '+def_ctx.name+def_ctx.num + ' = '+
 '$locals_'+block_id+'["'+def_ctx.name+
 '"] = $B.genfunc("'+
@@ -304,7 +304,7 @@ var name=left.tree[0].value
 if($B._globals && $B._globals[scope.id]
 && $B._globals[scope.id][name]){}else{left.tree[0].bound=true}}
 break
-case 'target_list': 
+case 'target_list':
 case 'list_or_tuple':
 left_items=left.tree}
 if(left_items===null){return}
@@ -463,7 +463,7 @@ this.transform=function(node,rank){var func='__'+$operators[op]+'__'
 var offset=0,parent=node.parent
 var line_num=node.line_num,lnum_set=false
 parent.children.splice(rank,1)
-var left_is_id=(this.tree[0].type=='expr' && 
+var left_is_id=(this.tree[0].type=='expr' &&
 this.tree[0].tree[0].type=='id')
 if(left_is_id){
 this.tree[0].tree[0].augm_assign=true
@@ -473,7 +473,7 @@ if($B.debug>0){var check_node=$NodeJS('if('+this.tree[0].to_js()+
 node.parent.insert(rank,check_node)
 offset++}
 var left_id=this.tree[0].tree[0].value,was_bound=$B.bound[this.scope.id][left_id]!==undefined,left_id_unbound=this.tree[0].tree[0].unbound}
-var right_is_int=(this.tree[1].type=='expr' && 
+var right_is_int=(this.tree[1].type=='expr' &&
 this.tree[1].tree[0].type=='int')
 var right=right_is_int ? this.tree[1].tree[0].to_js(): '$temp'
 if(!right_is_int){
@@ -520,7 +520,7 @@ if(prefix){var left1=in_class ? '$left' : left
 var new_node=new $Node()
 if(!lnum_set){new_node.line_num=line_num;lnum_set=true}
 js=right_is_int ? 'if(' : 'if(typeof $temp.valueOf()=="number" && '
-js +=left1+'.constructor===Number' 
+js +=left1+'.constructor===Number'
 js +='&& '+left+op1+right+'>$B.min_int && '+left+op1+right+
 '< $B.max_int){'
 js +=right_is_int ? '(' : '(typeof $temp=="number" && '
@@ -537,7 +537,7 @@ parent.insert(rank+offset,new_node)
 offset++}
 var aaops={'+=':'add','-=':'sub','*=':'mul'}
 if(C.tree[0].type=='sub' &&
-('+='==op ||'-='==op ||'*='==op)&& 
+('+='==op ||'-='==op ||'*='==op)&&
 C.tree[0].tree.length==1){var js1='$B.augm_item_'+aaops[op]+'('
 js1 +=C.tree[0].value.to_js()
 js1 +=','+C.tree[0].tree[0].to_js()+','
@@ -731,7 +731,7 @@ args_str=positional.join(', ')}
 var kw_args_str='{'+kw_args.join(', ')+'}'
 if(dstar_args.length){kw_args_str='{$nat:"kw",kw:$B.extend("'+this.func.name+
 '",'+kw_args_str + ',' + dstar_args.join(', ')+')}'}else if(kw_args_str!=='{}'){kw_args_str='{$nat:"kw",kw:'+kw_args_str+'}'}else{kw_args_str=''}
-if(star_args && kw_args_str){args_str +='.concat(['+kw_args_str+'])' }else{if(args_str && kw_args_str){args_str +=','+kw_args_str}
+if(star_args && kw_args_str){args_str +='.concat(['+kw_args_str+'])'}else{if(args_str && kw_args_str){args_str +=','+kw_args_str}
 else if(!args_str){args_str=kw_args_str}}
 if(star_args){
 args_str='.apply(null,'+args_str+')'}else{args_str='('+args_str+')'}
@@ -761,7 +761,7 @@ $B.modules[this.id]=this.parent.node
 this.parent.node.id=this.id
 var parent_block=scope
 while(parent_block.C && parent_block.C.tree[0].type=='class'){parent_block=parent_block.parent}
-while(parent_block.C && 
+while(parent_block.C &&
 'def' !=parent_block.C.tree[0].type &&
 'generator' !=parent_block.C.tree[0].type){parent_block=parent_block.parent}
 this.parent.node.parent_block=parent_block
@@ -960,7 +960,7 @@ this.enclosing=[]
 var scope=this.scope=$get_scope(this)
 var parent_block=scope
 while(parent_block.C && parent_block.C.tree[0].type=='class'){parent_block=parent_block.parent}
-while(parent_block.C && 
+while(parent_block.C &&
 'def' !=parent_block.C.tree[0].type &&
 'generator' !=parent_block.C.tree[0].type){parent_block=parent_block.parent}
 this.parent.node.parent_block=parent_block
@@ -1176,7 +1176,7 @@ this.default_str='{'+defs1.join(', ')+'}'
 if(this.type=="def"){node.parent.insert(rank+offset++,$NodeJS('return '+name+'})('+
 this.default_str+')'))}
 if(this.type=='def'){var parent=node
-for(var pos=0;pos<parent.children.length && 
+for(var pos=0;pos<parent.children.length &&
 parent.children[pos]!==enter_frame_node;pos++){}
 var try_node=$NodeJS('try'),children=parent.children.slice(pos+1)
 parent.insert(pos+1,try_node)
@@ -1460,7 +1460,7 @@ try_node.add(iter_node)
 var catch_node=new $Node()
 var js='catch($err){if($B.is_exc($err,[StopIteration]))'+
 '{$B.clear_exc();break;}'
-js +='else{throw($err)}}' 
+js +='else{throw($err)}}'
 new $NodeJSCtx(catch_node,js)
 while_node.add(catch_node)
 for(var i=0;i<children.length;i++){while_node.add(children[i].clone())}
@@ -1628,7 +1628,7 @@ this.js_processed=true
 var val=this.value
 var is_local=$B.bound[this.scope.id][val]!==undefined,this_node=$get_node(this),bound_before=this_node.bound_before
 if(this.scope.nonlocals && this.scope.nonlocals[val]!==undefined){this.nonlocal=true}
-this.unbound=this.unbound ||(is_local && !this.bound && 
+this.unbound=this.unbound ||(is_local && !this.bound &&
 bound_before && bound_before.indexOf(val)==-1)
 if(this.unbound && !this.nonlocal){if(this.scope.ntype=='def' ||this.scope.ntype=='generator'){return '$B.$local_search("'+val+'")'}else{return '$B.$search("'+val+'")'}}
 if(val=='__BRYTHON__' ||val=='$B'){return val}
@@ -1649,7 +1649,7 @@ else if(scope.C &&
 scope.C.tree[0].type=='def' &&
 scope.C.tree[0].env.indexOf(val)>-1){found.push(scope)}}else{if($B.bound[scope.id][val]){
 if(!this.bound && this_node.locals[val]===undefined){
-if(!scope.is_comp && 
+if(!scope.is_comp &&
 (!scope.parent_block ||
 !scope.parent_block.is_comp)){
 found.push(scope)}}else{found.push(scope)}}}}else{
@@ -1662,7 +1662,7 @@ if(this.nonlocal && found[0]===innermost){found.shift()}
 if(found.length>0){
 if(!this.bound && found[0].C && found[0]===innermost
 && val.charAt(0)!='$'){var locs=$get_node(this).locals ||{},nonlocs=innermost.nonlocals
-if(locs[val]===undefined && 
+if(locs[val]===undefined &&
 ((innermost.type!='def' ||innermost.type!='generator')&&
 innermost.C.tree[0].args.indexOf(val)==-1)&&
 (nonlocs===undefined ||nonlocs[val]===undefined)){this.result='$B.$local_search("'+val+'")'
@@ -1814,7 +1814,7 @@ return '(list) ['+this.tree+']'
 case 'list_comp':
 case 'gen_expr':
 return '('+this.real+') ['+this.intervals+'-'+this.tree+']'
-default: 
+default:
 return '(tuple) ('+this.tree+')'}}
 this.is_comp=function(){switch(this.real){case 'list_comp':
 case 'gen_expr':
@@ -1838,7 +1838,7 @@ for(var attr in item.ids()){_ids[attr]=true}}}
 return _ids}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),sc=scope,scope_id=scope.id.replace(/\//g, '_'),
-            env = [], 
+            env = [],
             pos=0
         while(sc && sc.id!=='__builtins__'){
             if(sc===scope){
@@ -2102,9 +2102,9 @@ if(comps[this.op]!==undefined){return '$B.rich_comp("__'+$operators[this.op]+'__
 this.tree[0].to_js()+','+this.tree[1].to_js()+')'}else{return 'getattr('+this.tree[0].to_js()+', "__'+
 $operators[this.op]+'__")('+this.tree[1].to_js()+')'}}}
 this.simple_js=function(){function sjs(elt){if(elt.type=='op'){return elt.simple_js()}
-else if(elt.type=='expr' && elt.tree[0].type=='list_or_tuple' 
+else if(elt.type=='expr' && elt.tree[0].type=='list_or_tuple'
 && elt.tree[0].real=='tuple'
-&& elt.tree[0].tree.length==1 
+&& elt.tree[0].tree.length==1
 && elt.tree[0].tree[0].type=='expr'){return '('+elt.tree[0].tree[0].tree[0].simple_js()+')'}else{return elt.tree[0].to_js()}}
 if(op=='+'){return '$B.add('+sjs(this.tree[0])+','+sjs(this.tree[1])+')'}
 else if(op=='-'){return '$B.sub('+sjs(this.tree[0])+','+sjs(this.tree[1])+')'}
@@ -2114,7 +2114,7 @@ else{return sjs(this.tree[0])+op+sjs(this.tree[1])}}}
 function $PackedCtx(C){
 this.type='packed'
 if(C.parent.type=='list_or_tuple'){for(var i=0;i<C.parent.tree.length;i++){var child=C.parent.tree[i]
-if(child.type=='expr' && child.tree.length>0 
+if(child.type=='expr' && child.tree.length>0
 && child.tree[0].type=='packed'){$_SyntaxError(C,["two starred expressions in assignment"])}}}
 this.parent=C
 this.tree=[]
@@ -2266,7 +2266,7 @@ if(type=='list'||type=='tuple'){if(this.tree.length==1){return '$B.list_key('+va
 (this.tree[2].to_js()||"null")+')'}}}
 if(this.func=='getitem' && this.tree.length==1){return '$B.$getitem('+this.value.to_js()+',' + this.tree[0].to_js()+')'}
 var res='',shortcut=false
-if(this.func!=='delitem' && Array.isArray && 
+if(this.func!=='delitem' && Array.isArray &&
 this.tree.length==1 && !this.in_sub){var expr='',x=this
 shortcut=true
 while(x.value.type=='sub'){expr +='['+x.tree[0].to_js()+']'
@@ -2413,9 +2413,9 @@ for(var i=0;i<node.children.length;i++){nw.add(node.children[i])}
 node.children=[nw]
 this.transformed=true
 return}
-var num=this.num=$loop_num 
+var num=this.num=$loop_num
 if(this.tree[0].alias===null){this.tree[0].alias='$temp'}
-if(this.tree[0].type=='expr' && 
+if(this.tree[0].type=='expr' &&
 this.tree[0].tree[0].type=='list_or_tuple'){if(this.tree[1].type!='expr' ||
 this.tree[1].tree[0].type!='list_or_tuple'){$_SyntaxError(C)}
 if(this.tree[0].tree[0].tree.length!=this.tree[1].tree[0].tree.length){$_SyntaxError(C,['wrong number of alias'])}
@@ -2483,7 +2483,7 @@ switch(C.type){case 'node':
 break;
 case 'assign':
 case 'tuple':
-case 'list_or_tuple': 
+case 'list_or_tuple':
 var ctx=C
 while(ctx.parent)ctx=ctx.parent
 ctx.node.yield_atoms.push(this)
@@ -2637,7 +2637,7 @@ case 'yield':
 C.parent.tree.pop()
 var commas=C.with_commas
 C=C.parent}
-switch(token){case 'id': 
+switch(token){case 'id':
 return new $IdCtx(new $ExprCtx(C,'id',commas),arguments[2])
 case 'str':
 return new $StringCtx(new $ExprCtx(C,'str',commas),arguments[2])
@@ -2816,7 +2816,7 @@ case ':':
 if(C.expect===',' && C.parent.parent.type==='lambda'){return $transition(C.parent.parent,token)}
 break
 case ',':
-if(C.expect===','){if(C.parent.kwargs && 
+if(C.expect===','){if(C.parent.kwargs &&
 ['kwarg','star_arg','double_star_arg'].indexOf($B.last(C.parent.tree).tree[0].type)==-1){console.log('err2')
 $_SyntaxError(C,['non-keyword arg after keyword arg'])}
 return $transition(C.parent,token,arguments[2])}
@@ -3150,7 +3150,7 @@ if(token=='in'){
 C.parent.tree.pop()
 return new $AbstractExprCtx(new $OpCtx(C.parent,'not_in'),false)}
 $_SyntaxError(C,'token '+token+' after '+C)
-case 'for': 
+case 'for':
 switch(token){case 'in':
 return new $AbstractExprCtx(new $ExprCtx(C,'target list',true),false)
 case ':':
@@ -3175,7 +3175,7 @@ C.blocking=token=='import'
 if(C.expect=='module'){C.expect='id'
 return C}
 case 'op':
-if(arguments[2]=='*' && C.expect=='id' 
+if(arguments[2]=='*' && C.expect=='id'
 && C.names.length==0){if($get_scope(C).ntype!=='module'){$_SyntaxError(C,["import * only allowed at module level"])}
 C.add_name('*')
 C.expect='eol'
@@ -3263,7 +3263,7 @@ C.add(arguments[2])
 C.expect=','
 return C}
 break
-case ',': 
+case ',':
 if(C.expect===','){C.expect='id'
 return C}
 break
@@ -3574,7 +3574,7 @@ case 'raise':
 switch(token){case 'id':
 if(C.tree.length===0){return new $IdCtx(new $ExprCtx(C,'exc',false),arguments[2])}
 break
-case 'from': 
+case 'from':
 if(C.tree.length>0){return new $AbstractExprCtx(C,false)}
 break
 case 'eol':
@@ -3864,7 +3864,7 @@ pos++}}
 if(name){
 if(kwdict.indexOf(name)>-1){$pos=pos-name.length
 if(unsupported.indexOf(name)>-1){$_SyntaxError(C,"Unsupported Python keyword '"+name+"'")}
-C=$transition(C,name)}else if($operators[name]!==undefined 
+C=$transition(C,name)}else if($operators[name]!==undefined
 && $B.forbidden.indexOf(name)==-1){
 if(name=='is'){
 var re=/^\s+not\s+/
@@ -3978,7 +3978,7 @@ C=$transition(C,'op','==')
 pos+=2}
 break
 case ',':
-case ':': 
+case ':':
 $pos=pos
 C=$transition(C,car)
 pos++
@@ -4029,7 +4029,7 @@ if(op_match.length>0){if(op_match in $augmented_assigns){C=$transition(C,'augm_a
 pos +=op_match.length}else{$_SyntaxError(C,'invalid character: '+car)}
 break
 case '\\':
-if(src.charAt(pos+1)=='\n'){lnum++ 
+if(src.charAt(pos+1)=='\n'){lnum++
 pos+=2
 break}
 case '@':

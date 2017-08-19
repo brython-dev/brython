@@ -30,7 +30,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
             throw _b_.TypeError("type() takes 1 or 3 arguments")
         }
     }
-    
+
     /* see if __init_subclass__ is defined in any of the parents
      * We can't use __getattribute__ since it must be defined directly on a parent,
      * not further up the mro.
@@ -48,7 +48,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
                     for (var kwidx=0;kwidx<kwargs.length;kwidx++){
                         kw.kw[kwargs[kwidx][0]] = kwargs[kwidx][1];
                     }
-                    /* We can't simply __init_subclass__()(kw); 
+                    /* We can't simply __init_subclass__()(kw);
                      * because __init_subclass__ is bound to the parent.
                      * We can't look up __init_subclass__ on factory directly,
                      * since it might be overridden.  This also sidesteps
