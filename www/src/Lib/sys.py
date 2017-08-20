@@ -170,6 +170,73 @@ class _hash_info:
 
 hash_info=_hash_info()
 
+class _float_info:
+    """
+ |  A structseq holding information about the float type. It contains low level
+ |  information about the precision and internal representation. 
+ |  
+ |  Brython's float is based on Javascript's Number type which is a 
+ |  double-precision 64-bit binary format IEEE 754 value
+ |  (number between -(2**53 -1) and 2**53 -1). For more information see:
+ |
+ |     https://developer.mozilla.org/cs/docs/Web/JavaScript/Data_structures
+ |     http://en.wikipedia.org/wiki/Double_precision_floating-point_format
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors defined here:
+ |  
+ |  dig
+ |      DBL_DIG -- digits
+ |  
+ |  epsilon
+ |      DBL_EPSILON -- Difference between 1 and the next representable float
+ |  
+ |  mant_dig
+ |      DBL_MANT_DIG -- mantissa digits
+ |  
+ |  max
+ |      DBL_MAX -- maximum representable finite float
+ |  
+ |  max_10_exp
+ |      DBL_MAX_10_EXP -- maximum int e such that 10**e is representable
+ |  
+ |  max_exp
+ |      DBL_MAX_EXP -- maximum int e such that radix**(e-1) is representable
+ |  
+ |  min
+ |      DBL_MIN -- Minimum positive normalizer float
+ |  
+ |  min_10_exp
+ |      DBL_MIN_10_EXP -- minimum int e such that 10**e is a normalized
+ |  
+ |  min_exp
+ |      DBL_MIN_EXP -- minimum int e such that radix**(e-1) is a normalized float
+ |  
+ |  radix
+ |      FLT_RADIX -- radix of exponent
+ |  
+ |  rounds
+ |      FLT_ROUNDS -- integer constant representing the rounding mode used for arithmetic operations. This reflects the value of the system FLT_ROUNDS macro at 
+ |                    interpreter startup time. See section 5.2.4.2.2 of the C99 standard for an explanation of the possible values and their meanings.
+    """
+    def __init__(self):
+        self.dig = 15
+        self.epsilon = 2**(-52)
+        self.mant_dig = 53
+        self.max = float(2**53-1)
+        self.max_exp=2**10
+        self.max_10_exp = 308
+        self.min = 2**(−1022)
+        self.radix=2
+        self.rounds=1
+        self._tuple = (self.max, self.max_exp, self.max_10_exp, self.min, self.min_exp, self.min_10_exp, self.dig, self.mant_dig, self.epsilon, self.radix, self.rounds
+    
+    def __getitem__(self, k):
+        return self._tuple[k]
+    
+    def __iter__(self):
+        return iter(self._tuple)
+
 warnoptions=[]
 
 def getfilesystemencoding():
