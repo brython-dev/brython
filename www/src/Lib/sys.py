@@ -232,10 +232,10 @@ class _float_info:
         self.max = float(2**53-1)
         self.max_exp=2**10
         self.max_10_exp = 308
-        self.min = 2**(−1022)
+        self.min = 2**(-1022)
         self.radix=2
         self.rounds=1
-        self._tuple = (self.max, self.max_exp, self.max_10_exp, self.min, self.min_exp, self.min_10_exp, self.dig, self.mant_dig, self.epsilon, self.radix, self.rounds
+        self._tuple = (self.max, self.max_exp, self.max_10_exp, self.min, self.min_exp, self.min_10_exp, self.dig, self.mant_dig, self.epsilon, self.radix, self.rounds)
     
     def __getitem__(self, k):
         return self._tuple[k]
