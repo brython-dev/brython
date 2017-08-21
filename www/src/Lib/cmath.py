@@ -11,9 +11,6 @@
 import math
 import sys
 
-_MISSING_IMPLEMENTATION_MESSAGE="""Not yet implemented, please consider sending a pull request with implementation to https://github.com/brython-dev/brython"""
-
-
 def phase(x):
     """Return phase, also known as the argument, of a complex."""
     return math.atan2(x.imag, x.real)
@@ -29,13 +26,31 @@ def polar(x):
     r = math.sqrt(x.real**2+x.imag**2)
     return r, phi
 
-
 def rect(r, phi):
     """
         Convert from polar coordinates to rectangular coordinates and return a complex.
     """
     if math.isinf(r) or math.isinf(phi):
-        raise NotImplemented(_MISSING_IMPLEMENTATION_MESSAGE)
+        # if r is +/-infinity and phi is finite but nonzero then
+        # result is (+-INF +-INF i), but we need to compute cos(phi)
+        # and sin(phi) to figure out the signs.
+        ret = complex()
+        
+        if -_INF < phi < _INF and phi != .0:
+            if r > 0:
+                ret.real = math.copysign(_INF, math.cos(phi))
+                ret.imag = math.copysign(_INF, math.sin(phi))
+            else:
+                ret.real = -math.copysign(_INF, cos(phi));
+                ret.imag = -math.copysign(_INF, sin(phi));
+        else:
+            ret = _SPECIAL_VALUE(complex(r,phi), _rect_special_values)
+            
+        # need to set errno = EDOM if r is a nonzero number and phi
+        # is infinite
+        if math.isinf(phi) and r != .0 and not math.isnan(r):
+            raise ValueError("math domain error")
+        return ret
     else:
         if phi == .0:
             # TODO: Not sure this applies to Brython ??
@@ -45,7 +60,6 @@ def rect(r, phi):
         else:
             return complex(r*cos(phi), r*sin(phi))
             
-
 def sqrt(x):
     """
        Return the square root of x. 
@@ -76,7 +90,7 @@ def sqrt(x):
     #   are normal.
 
     ret = complex()
-    s, d, ax, ay = .0, .0, abs(x.real), abs(x.imag)
+    s, d, ax, ay = .0, .0, math.fabs(x.real), math.fabs(x.imag)
     
     ret = _SPECIAL_VALUE(x, _sqrt_special_values)
     if ret is not None:
@@ -115,10 +129,10 @@ def acos(x):
     """
     ret = complex()
     
-    if abs(x.real) > _CM_LARGE_DOUBLE or abs(x.imag) > _CM_LARGE_DOUBLE:
+    if math.fabs(x.real) > _CM_LARGE_DOUBLE or math.fabs(x.imag) > _CM_LARGE_DOUBLE:
         
         # avoid unnecessary overflow for large arguments
-        ret.real = math.atan2(abs(x.imag), x.real)
+        ret.real = math.atan2(math.fabs(x.imag), x.real)
         
         # split into cases to make sure that the branch cut has the
         # correct continuity on systems with unsigned zeros
@@ -142,7 +156,23 @@ def acosh(x):
         
         There is one branch cut, extending left from 1 along the real axis to -∞, continuous from above.
     """
-    raise NotImplemented(_MISSING_IMPLEMENTATION_MESSAGE)
+    ret = _SPECIAL_VALUE(x, _acosh_special_values)
+    if ret is not None:
+        return ret
+    
+    ret = complex()
+    
+    if math.fabs(x.real) > _CM_LARGE_DOUBLE or math.fabs(x.imag) > _CM_LARGE_DOUBLE:
+        # avoid unnecessary overflow for large arguments
+        ret.real = math.log(math.hypot(x.real/2.0, x.imag/2.0)) + _M_LN2*2.0
+        ret.imag = math.atan2(x.imag, x.real);
+    else:
+        s1 = sqrt(complex(x.real-1.0, x.imag))
+        s2 = sqrt(complex(x.real+1.0, x.imag))
+        ret.real = math.asinh(s1.real*s2.real + s1.imag*s2.imag)
+        ret.imag = 2.*math.atan2(s1.imag, s2.real)
+
+    return ret
 
 def asin(x):
     """
@@ -155,7 +185,6 @@ def asin(x):
     s = asinh(s)
     return complex(s.imag, -s.real)
 
-
 def asinh(x):
     """
         Return the hyperbolic arc sine of x. 
@@ -163,8 +192,24 @@ def asinh(x):
         There are two branch cuts: One extends from 1j along the imaginary axis to ∞j, continuous from the right. 
         The other extends from -1j along the imaginary axis to -∞j, continuous from the left.
     """
-    raise NotImplemented(_MISSING_IMPLEMENTATION_MESSAGE)
+    ret = _SPECIAL_VALUE(x, _asinh_special_values)
+    if ret is not None:
+        return ret
+        
+    ret = complex()
 
+    if math.fabs(x.real) > _CM_LARGE_DOUBLE or math.fabs(x.imag) > _CM_LARGE_DOUBLE:
+        if x.imag >= .0:
+            ret.real = math.copysign(math.log(math.hypot(x.real/2., x.imag/2.)) + _M_LN2*2., x.real)
+        else:
+            ret.real = -math.copysign(math.log(math.hypot(x.real/2., x.imag/2.)) + _M_LN2*2., -x.real)
+        ret.imag = math.atan2(x.imag,math.fabs(x.real))
+    else:
+        s1 = sqrt(complex(1.0+x.imag, -x.real))
+        s2 = sqrt(complex(1.0-x.imag, x.real))
+        ret.real = math.asinh(s1.real*s2.imag-s2.real*s1.imag)
+        ret.imag = math.atan2(x.imag, s1.real*s2.real-s1.imag*s2.imag)
+    return ret
 
 def atan(x):
     """
@@ -173,7 +218,8 @@ def atan(x):
         There are two branch cuts: One extends from 1j along the imaginary axis to ∞j, continuous from the right. 
         The other extends from -1j along the imaginary axis to -∞j, continuous from the left.
     """
-    raise NotImplemented(_MISSING_IMPLEMENTATION_MESSAGE)
+    s = atanh(complex(-x.imag, x.real))
+    return complex(s.imag, -s.real)
 
 def atanh(x):
     """
@@ -183,15 +229,92 @@ def atanh(x):
         The other extends from -1 along the real axis to -∞, continuous from above.
     """
 
+    ret = _SPECIAL_VALUE(x, _atanh_special_values)
+    if ret is not None:
+        return ret
+    
+    ret = complex()
+
+    # Reduce to case where x.real >= 0., using atanh(z) = -atanh(-z).
+    if x.real < .0:
+        return -(atanh(-x))
+
+    ay = math.fabs(x.imag)
+    
+    if x.real > _CM_SQRT_LARGE_DOUBLE or ay > _CM_SQRT_LARGE_DOUBLE:
+        
+        #   if math.fabs(z) is large then we use the approximation
+        #   atanh(z) ~ 1/z +/- i*pi/2 (+/- depending on the sign
+        #   of x.imag)
+        
+        h = math.hypot(x.real/2., x.imag/2.)  # safe from overflow
+        ret.real = x.real/4./h/h
+        
+        #   the two negations in the next line cancel each other out
+        #   except when working with unsigned zeros: they're there to
+        #   ensure that the branch cut has the correct continuity on
+        #   systems that don't support signed zeros
+        
+        ret.imag = -math.copysign(math.pi/2., -x.imag)
+    
+    elif x.real == 1.0 and ay < _CM_SQRT_DBL_MIN:
+    
+        # C99 standard says:  atanh(1+/-0.) should be inf +/- 0i
+        if (ay == .0):
+            raise ValueError("math domain error")
+        else:
+            ret.real = -math.log(math.sqrt(ay)/math.sqrt(math.hypot(ay, 2.)))
+            ret.imag = math.copysign(math.atan2(2.0, -ay)/2, x.imag)
+    
+    else:
+    
+        ret.real = math.log1p(4.*x.real/((1-x.real)*(1-x.real) + ay*ay))/4.
+        ret.imag = -math.atan2(-2.*x.imag, (1-x.real)*(1+x.real) - ay*ay)/2.
+        errno = 0
+    
+    return ret
+
 def cos(x):
     """Return the cosine of x."""
-    raise NotImplemented(_MISSING_IMPLEMENTATION_MESSAGE)
-
+    return cosh(complex(-x.imag, x.real))
 
 def cosh(x):
     """Return the hyperbolic cosine of x."""
-    raise NotImplemented(_MISSING_IMPLEMENTATION_MESSAGE)
-
+    
+    ret = complex()
+    
+    # special treatment for cosh(+/-inf + iy) if y is not a NaN
+    if isinf(x):
+        if -_INF < x.imag < _INF and x.imag != .0:
+            if x.real > 0:
+                ret.real = math.copysign(_INF, math.cos(x.imag))
+                ret.imag = math.copysign(_INF, math.sin(x.imag))
+            else:
+                ret.real = math.copysign(_INF, math.cos(x.imag))
+                ret.imag = -math.copysign(_INF, math.sin(x.imag))
+        else:
+            # need to raise math domain error if y is +/- infinity and x is not a NaN
+            if x.imag != .0 and not math.isnan(x.real):
+                raise ValueError("math domain error")
+            ret = _SPECIAL_VALUE(x,_cosh_special_values)
+        return ret
+    
+    ret = complex()
+    
+    if math.fabs(x.real) > _CM_LOG_LARGE_DOUBLE:
+        #  deal correctly with cases where cosh(x.real) overflows but
+        #  cosh(z) does not. 
+        x_minus_one = x.real - math.copysign(1.0, x.real)
+        ret.real = cos(x.imag) * math.cosh(x_minus_one) * math.e
+        ret.imag = sin(x.imag) * math.sinh(x_minus_one) * math.e
+    else:
+        ret.real = math.cos(x.imag) * math.cosh(x.real)
+        ret.imag = math.sin(x.imag) * math.sinh(x.real)
+    
+    #  detect overflow 
+    if isinf(ret):
+        raise OverflowError()
+    
 def exp(x):
     """ Return the exponential value e**x."""
     ret = complex()
@@ -204,8 +327,7 @@ def exp(x):
                 ret.real = math.copysign(.0, cos(x.imag))
                 ret.imag = math.copysign(.0, sin(x.imag))
         else:
-            raise NotImplemented(_MISSING_IMPLEMENTATION_MESSAGE)
-    
+            ret = _SPECIAL_VALUE(x, _exp_special_values)    
  
         # need to raise DomainError if y is +/- infinity and x is not -infinity or NaN
         if math.isinf(x.imag) and (-_INF < x.real < _INF or math.isinf(x.real) and x.real > 0):
@@ -241,7 +363,66 @@ def log(x, base=None):
         
         There is one branch cut, from 0 along the negative real axis to -∞, continuous from above.
     """
-    raise NotImplemented(_MISSING_IMPLEMENTATION_MESSAGE)
+    #    The usual formula for the real part is log(hypot(z.real, z.imag)).
+    #    There are four situations where this formula is potentially
+    #    problematic:
+    #
+    #    (1) the absolute value of z is subnormal.  Then hypot is subnormal,
+    #    so has fewer than the usual number of bits of accuracy, hence may
+    #    have large relative error.  This then gives a large absolute error
+    #    in the log.  This can be solved by rescaling z by a suitable power
+    #    of 2.
+    #
+    #    (2) the absolute value of z is greater than DBL_MAX (e.g. when both
+    #    z.real and z.imag are within a factor of 1/sqrt(2) of DBL_MAX)
+    #    Again, rescaling solves this.
+    #
+    #    (3) the absolute value of z is close to 1.  In this case it's
+    #    difficult to achieve good accuracy, at least in part because a
+    #    change of 1ulp in the real or imaginary part of z can result in a
+    #    change of billions of ulps in the correctly rounded answer.
+    #
+    #    (4) z = 0.  The simplest thing to do here is to call the
+    #    floating-point log with an argument of 0, and let its behaviour
+    #    (returning -infinity, signaling a floating-point exception, setting
+    #    errno, or whatever) determine that of c_log.  So the usual formula
+    #    is fine here.
+    
+    
+    if base is not None:
+         x = log(x)
+         base = log(base)
+         x = x/base
+
+    ret = _SPECIAL_VALUE(x, _log_special_values)
+    if ret is not None:
+        return ret
+    
+
+    ax = math.fabs(x.real)
+    ay = math.fabs(x.imag)
+    
+    if ax > _CM_LARGE_DOUBLE or ay > _CM_LARGE_DOUBLE:
+        ret.real = math.log(math.hypot(ax/2.0, ay/2.0)) + _M_LN2
+    elif ax < sys.float_info.min and ay < sys.float_info.min:
+        if ax > .0 or ay > .0:
+            # catch cases where math.hypot(ax, ay) is subnormal 
+            ret.real = math.log(math.hypot(math.ldexp(ax, sys.float_info.mant_dig), math.ldexp(ay, sys.float_info.mant_dig))) - sys.float_info.mant_dig*_M_LN2
+        else:
+            # math.log(+/-0. +/- 0i)
+            raise ValueError("math domain error")
+            ret.real = -_INF
+            ret.imag = math.atan2(x.imag, x.real)
+    else:
+        h = math.hypot(ax, ay)
+        if 0.71 <= h and h <= 1.73:
+            am = max(ax,ay)
+            an = min(ax,ay)
+            ret.real = math.log1p((am-1)*(am+1)+an*an)/2.
+        else:
+            ret.real = math.log(h)
+    ret.imag = math.atan2(x.imag, x.real)
+    return ret
 
 def log10(x):
     """
@@ -249,7 +430,10 @@ def log10(x):
         
         This has the same branch cut as log().
     """
-    raise NotImplemented(_MISSING_IMPLEMENTATION_MESSAGE)
+    ret = log(x);
+    ret.real = ret.real / _M_LN10
+    ret.imag = ret.imag / _M_LN10
+    return ret
 
 def sin(x):
     """ Return the sine of x. """
@@ -270,8 +454,7 @@ def sinh(x):
                 ret.real = -math.copysign(_INF, cos(x.imag))
                 ret.imag = math.copysign(_INF, sin(x.imag))
         else:
-            raise NotImplemented(_MISSING_IMPLEMENTATION_MESSAGE)
-    
+            ret = _SPECIAL_VALUE(x,_sinh_special_values)
  
         # need to raise DomainError if y is +/- infinity and x is not
         # a NaN and not -infinity
@@ -280,7 +463,7 @@ def sinh(x):
         return ret
     
 
-    if abs(x.real) > _CM_LOG_LARGE_DOUBLE:
+    if math.fabs(x.real) > _CM_LOG_LARGE_DOUBLE:
         x_minus_one = x.real - math.copysign(1.0, x.real)
         ret.real = math.cos(x.imag)*math.sinh(x.imag)*math.e
         ret.imag = math.sin(x.imag)*math.cosh(x.imag)*math.e
@@ -293,17 +476,63 @@ def sinh(x):
     
     return ret   
 
-
 def tan(x):
     """ Return the tangent of x. """
+    s = atanh(complex(-x.imag, x.real))
+    return complex(x.imag, -x.real)
     
 def tanh(x):
     """ Return the hyperbolic tangent of x. """
+    """
+
+
+    """
+
+    # Formula:
+    #       tanh(x+iy) = (tanh(x)(1+tan(y)^2) + i tan(y)(1-tanh(x))^2) /
+    #       (1+tan(y)^2 tanh(x)^2)
+    #       To avoid excessive roundoff error, 1-tanh(x)^2 is better computed
+    #       as 1/cosh(x)^2.  When math.fabs(x) is large, we approximate 1-tanh(x)^2
+    #       by 4 exp(-2*x) instead, to avoid possible overflow in the
+    #       computation of cosh(x).
+    #    
+
+    ret = complex()
+    
+    if isinf(x):
+        if math.isinf(x.imag) and -_INF < x.real < _INF:
+            raise ValueError("math domain error")
+        
+        # special treatment for tanh(+/-inf + iy) if y is finite and nonzero 
+        if math.isinf(x.real) and -_INF < x.imag < _INF and x.imag != .0:
+            if x.real > 0:
+                ret.real = 1.0
+                ret.imag = math.copysign(.0, 2.0*math.sin(x.imag)*math.cos(x.imag))
+            else:
+                ret.real = -1.0
+                ret.imag = math.copysign(.0, 2.*math.sin(x.imag)*math.cos(x.imag))
+        else:
+            ret = _SPECIAL_VALUE(x, _tanh_special_values)
+        
+        return ret
+
+    # danger of overflow in 2.*z.imag !
+    if math.fabs(x.real) > _CM_LOG_LARGE_DOUBLE:
+        ret.real = math.copysign(1., x.real)
+        ret.imag = 4.*math.sin(x.imag)*math.cos(x.imag)*math.exp(-2.*math.fabs(x.real))
+    else:
+        tx = math.tanh(x.real)
+        ty = math.tan(x.imag)
+        cx = 1.0/math.cosh(x.real)
+        txty = tx*ty
+        denom = 1. + txty*txty
+        ret.real = tx*(1.+ty*ty)/denom
+        ret.imag = ((ty/denom)*cx)*cx
+    return ret
+
 
 pi = math.pi
 e = math.e
-
-
 
 _CM_LARGE_DOUBLE = sys.float_info.max/4
 _CM_SQRT_LARGE_DOUBLE = math.sqrt(_CM_LARGE_DOUBLE)
@@ -317,7 +546,7 @@ if sys.float_info.radix == 2:
 elif sys.float_info.radix == 16:
     _CM_SCALE_UP = (4*sys.float_info.mant_dig+1)
 else:
-    raise NotImplemented("cmath implementation expects the float base to be either 2 or 16, got "+str(sys.float_info.radix)+" instead.")
+    raise ("cmath implementation expects the float base to be either 2 or 16, got "+str(sys.float_info.radix)+" instead.")
 _CM_SCALE_DOWN =(-(_CM_SCALE_UP+1)/2)    
 
 _INF = float('inf')
@@ -363,12 +592,112 @@ def _special_type(x):
     else:
         return _ST_NINF
 
+_acos_special_values = [
+    [complex(_P34,_INF), complex(_PI,_INF), complex(_PI,_INF), complex(_PI,-_INF), complex(_PI,-_INF), complex(_P34,-_INF), complex(_NAN,_INF)],
+    [complex(_P12,_INF), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_P12,-_INF), complex(_NAN,_NAN)],
+    [complex(_P12,_INF), complex(_U,_U), complex(_P12,0.), complex(_P12,-0.), complex(_U,_U), complex(_P12,-_INF), complex(_P12,_NAN)],
+    [complex(_P12,_INF), complex(_U,_U), complex(_P12,0.), complex(_P12,-0.), complex(_U,_U), complex(_P12,-_INF), complex(_P12,_NAN)],
+    [complex(_P12,_INF), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_P12,-_INF), complex(_NAN,_NAN)],
+    [complex(_P14,_INF), complex(0.,_INF), complex(0.,_INF), complex(0.,-_INF), complex(0.,-_INF), complex(_P14,-_INF), complex(_NAN,_INF)],
+    [complex(_NAN,_INF), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,-_INF), complex(_NAN,_NAN)],
+]
+
+_acosh_special_values = [
+    [complex(_INF,-_P34), complex(_INF,-_PI), complex(_INF,-_PI), complex(_INF,_PI), complex(_INF,_PI), complex(_INF,_P34), complex(_INF,_NAN)],
+    [complex(_INF,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
+    [complex(_INF,-_P12), complex(_U,_U), complex(0.,-_P12), complex(0.,_P12), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
+    [complex(_INF,-_P12), complex(_U,_U), complex(0.,-_P12), complex(0.,_P12), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
+    [complex(_INF,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
+    [complex(_INF,-_P14), complex(_INF,-0.), complex(_INF,-0.), complex(_INF,0.), complex(_INF,0.), complex(_INF,_P14), complex(_INF,_NAN)],
+    [complex(_INF,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_INF,_NAN), complex(_NAN,_NAN)],
+]
+
+_asinh_special_values = [
+    [complex(-_INF,-_P14), complex(-_INF,-0.), complex(-_INF,-0.), complex(-_INF,0.), complex(-_INF,0.), complex(-_INF,_P14), complex(-_INF,_NAN)],
+    [complex(-_INF,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(-_INF,_P12), complex(_NAN,_NAN)],
+    [complex(-_INF,-_P12), complex(_U,_U), complex(-0.,-0.), complex(-0.,0.), complex(_U,_U), complex(-_INF,_P12), complex(_NAN,_NAN)],
+    [complex(_INF,-_P12), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
+    [complex(_INF,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
+    [complex(_INF,-_P14), complex(_INF,-0.), complex(_INF,-0.), complex(_INF,0.), complex(_INF,0.), complex(_INF,_P14), complex(_INF,_NAN)],
+    [complex(_INF,_NAN), complex(_NAN,_NAN), complex(_NAN,-0.), complex(_NAN,0.), complex(_NAN,_NAN), complex(_INF,_NAN), complex(_NAN,_NAN)],
+]
+
+_atanh_special_values = [
+    [complex(-0.,-_P12), complex(-0.,-_P12), complex(-0.,-_P12), complex(-0.,_P12), complex(-0.,_P12), complex(-0.,_P12), complex(-0.,_NAN)],
+    [complex(-0.,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(-0.,_P12), complex(_NAN,_NAN)],
+    [complex(-0.,-_P12), complex(_U,_U), complex(-0.,-0.), complex(-0.,0.), complex(_U,_U), complex(-0.,_P12), complex(-0.,_NAN)],
+    [complex(0.,-_P12), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(0.,_P12), complex(0.,_NAN)],
+    [complex(0.,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(0.,_P12), complex(_NAN,_NAN)],
+    [complex(0.,-_P12), complex(0.,-_P12), complex(0.,-_P12), complex(0.,_P12), complex(0.,_P12), complex(0.,_P12), complex(0.,_NAN)],
+    [complex(0.,-_P12), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(0.,_P12), complex(_NAN,_NAN)],
+]
+
+_cosh_special_values = [
+    [complex(_INF,_NAN), complex(_U,_U), complex(_INF,0.), complex(_INF,-0.), complex(_U,_U), complex(_INF,_NAN), complex(_INF,_NAN)],
+    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(_NAN,0.), complex(_U,_U), complex(1.,0.), complex(1.,-0.), complex(_U,_U), complex(_NAN,0.), complex(_NAN,0.)],
+    [complex(_NAN,0.), complex(_U,_U), complex(1.,-0.), complex(1.,0.), complex(_U,_U), complex(_NAN,0.), complex(_NAN,0.)],
+    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(_INF,_NAN), complex(_U,_U), complex(_INF,-0.), complex(_INF,0.), complex(_U,_U), complex(_INF,_NAN), complex(_INF,_NAN)],
+    [complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,0.), complex(_NAN,0.), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+]
+
+_exp_special_values = [
+    [complex(0.,0.), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(0.,0.), complex(0.,0.)],
+    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(_NAN,_NAN), complex(_U,_U), complex(1.,-0.), complex(1.,0.), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(_NAN,_NAN), complex(_U,_U), complex(1.,-0.), complex(1.,0.), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(_INF,_NAN), complex(_U,_U), complex(_INF,-0.), complex(_INF,0.), complex(_U,_U), complex(_INF,_NAN), complex(_INF,_NAN)],
+    [complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,-0.), complex(_NAN,0.), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+]
+
+_log_special_values = [
+    [complex(_INF,-_P34), complex(_INF,-_PI), complex(_INF,-_PI), complex(_INF,_PI), complex(_INF,_PI), complex(_INF,_P34), complex(_INF,_NAN)],
+    [complex(_INF,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
+    [complex(_INF,-_P12), complex(_U,_U), complex(-_INF,-_PI), complex(-_INF,_PI), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
+    [complex(_INF,-_P12), complex(_U,_U), complex(-_INF,-0.), complex(-_INF,0.), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
+    [complex(_INF,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
+    [complex(_INF,-_P14), complex(_INF,-0.), complex(_INF,-0.), complex(_INF,0.), complex(_INF,0.), complex(_INF,_P14), complex(_INF,_NAN)],
+    [complex(_INF,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_INF,_NAN), complex(_NAN,_NAN)],
+]
+
+_sinh_special_values = [
+    [complex(_INF,_NAN), complex(_U,_U), complex(-_INF,-0.), complex(-_INF,0.), complex(_U,_U), complex(_INF,_NAN), complex(_INF,_NAN)],
+    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(0.,_NAN), complex(_U,_U), complex(-0.,-0.), complex(-0.,0.), complex(_U,_U), complex(0.,_NAN), complex(0.,_NAN)],
+    [complex(0.,_NAN), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(0.,_NAN), complex(0.,_NAN)],
+    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(_INF,_NAN), complex(_U,_U), complex(_INF,-0.), complex(_INF,0.), complex(_U,_U), complex(_INF,_NAN), complex(_INF,_NAN)],
+    [complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,-0.), complex(_NAN,0.), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+]
+
 _sqrt_special_values = [
-      [complex(_INF,-_INF), complex(.0,-_INF),  complex(.0,-_INF),  complex(.0,_INF),   complex(.0,_INF),   complex(_INF,_INF), complex(_NAN,_INF)],
-      [complex(_INF,-_INF), complex(_U,_U),     complex(_U,_U),     complex(_U,_U),     complex(_U,_U),     complex(_INF,_INF), complex(_NAN,_NAN)],
-      [complex(_INF,-_INF), complex(_U,_U),     complex(.0,-.0),    complex(.0,.0),     complex(_U,_U),     complex(_INF,_INF), complex(_NAN,_NAN)],
-      [complex(_INF,-_INF), complex(_U,_U),     complex(.0,-.0),    complex(.0,.0),     complex(_U,_U),     complex(_INF,_INF), complex(_NAN,_NAN)],
-      [complex(_INF,-_INF), complex(_U,_U),     complex(_U,_U),     complex(_U,_U),     complex(_U,_U),     complex(_INF,_INF), complex(_NAN,_NAN)],
-      [complex(_INF,-_INF), complex(_INF,-.0),  complex(_INF,-.0),  complex(_INF,.0),   complex(_INF,.0),   complex(_INF,_INF), complex(_INF,_NAN)],
-      [complex(_INF,-_INF), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_INF,_INF), complex(_NAN,_NAN)]
+    [complex(_INF,-_INF), complex(0.,-_INF), complex(0.,-_INF), complex(0.,_INF), complex(0.,_INF), complex(_INF,_INF), complex(_NAN,_INF)],
+    [complex(_INF,-_INF), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_INF,_INF), complex(_NAN,_NAN)],
+    [complex(_INF,-_INF), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(_INF,_INF), complex(_NAN,_NAN)],
+    [complex(_INF,-_INF), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(_INF,_INF), complex(_NAN,_NAN)],
+    [complex(_INF,-_INF), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_INF,_INF), complex(_NAN,_NAN)],
+    [complex(_INF,-_INF), complex(_INF,-0.), complex(_INF,-0.), complex(_INF,0.), complex(_INF,0.), complex(_INF,_INF), complex(_INF,_NAN)],
+    [complex(_INF,-_INF), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_INF,_INF), complex(_NAN,_NAN)],
+]
+
+_tanh_special_values = [
+    [complex(-1.,0.), complex(_U,_U), complex(-1.,-0.), complex(-1.,0.), complex(_U,_U), complex(-1.,0.), complex(-1.,0.)],
+    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(_NAN,_NAN), complex(_U,_U), complex(-0.,-0.), complex(-0.,0.), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(_NAN,_NAN), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(1.,0.), complex(_U,_U), complex(1.,-0.), complex(1.,0.), complex(_U,_U), complex(1.,0.), complex(1.,0.)],
+    [complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,-0.), complex(_NAN,0.), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+]
+
+_rect_special_values = [
+    [complex(_INF,_NAN), complex(_U,_U), complex(-_INF,0.), complex(-_INF,-0.), complex(_U,_U), complex(_INF,_NAN), complex(_INF,_NAN)],
+    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(0.,0.), complex(_U,_U), complex(-0.,0.), complex(-0.,-0.), complex(_U,_U), complex(0.,0.), complex(0.,0.)],
+    [complex(0.,0.), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(0.,0.), complex(0.,0.)],
+    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(_INF,_NAN), complex(_U,_U), complex(_INF,-0.), complex(_INF,0.), complex(_U,_U), complex(_INF,_NAN), complex(_INF,_NAN)],
+    [complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,0.), complex(_NAN,0.), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN)],
 ]
