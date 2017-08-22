@@ -3,6 +3,7 @@
 ;(function($B){
 
 var _b_ = $B.builtins
+var _window = self;
 
 $B.$ModuleDict = {
     __class__ : $B.$type,
@@ -105,7 +106,7 @@ function $download_module(module,url,package,blocking){
     } else {
       $xmlhttp.onreadystatechange = function(){
         if(this.readyState==4){
-            window.clearTimeout(timer)
+            _window.clearTimeout(timer)
             if(this.status==200 || $xmlhttp.status==0){
                 res=this.responseText
                 module.$last_modified = this.getResponseHeader('Last-Modified')
@@ -205,7 +206,7 @@ function run_js(module_contents,path,module){
 }
 
 function show_ns(){
-    var kk = Object.keys(window)
+    var kk = Object.keys(_window)
     for (var i=0, _len_i = kk.length; i < _len_i; i++){
         console.log(kk[i])
         if(kk[i].charAt(0)=='$'){console.log(eval(kk[i]))}

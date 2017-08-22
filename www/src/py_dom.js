@@ -4,13 +4,14 @@ eval($B.InjectBuiltins())
 
 var $ObjectDict = _b_.object.$dict
 var JSObject = $B.JSObject
+var _window = self;
 
 // Maps $brython_id of DOM elements to events
 $B.events = _b_.dict()
 
 // cross-browser utility functions
 function $getMouseOffset(target, ev){
-    ev = ev || window.event;
+    ev = ev || _window.event;
     var docPos    = $getPosition(target);
     var mousePos  = $mouseCoords(ev);
     return {x:mousePos.x - docPos.x, y:mousePos.y - docPos.y};
@@ -37,7 +38,7 @@ function $getPosition(e){
 function $mouseCoords(ev){
     var posx = 0;
     var posy = 0;
-    if (!ev) var ev = window.event;
+    if (!ev) var ev = _window.event;
     if (ev.pageX || ev.pageY){
         posx = ev.pageX;
         posy = ev.pageY;
@@ -1375,7 +1376,7 @@ $TagSum.__class__=$B.$factory
 $TagSum.$dict = $TagSumDict
 $B.$TagSum = $TagSum // used in _html.js and _svg.js
 
-var win =  JSObject(window) //{__class__:$WinDict}
+var win =  JSObject(_window) //{__class__:$WinDict}
 
 win.get_postMessage = function(msg,targetOrigin){
     if(isinstance(msg,dict)){
@@ -1384,7 +1385,7 @@ win.get_postMessage = function(msg,targetOrigin){
         for(var i=0;i<items.length;i++) temp[items[i][0]]=items[i][1]
         msg = temp
     }
-    return window.postMessage(msg,targetOrigin)
+    return _window.postMessage(msg,targetOrigin)
 }
 
 $B.DOMNodeDict = DOMNodeDict

@@ -2,6 +2,7 @@ var __BRYTHON__=__BRYTHON__ || {}  // global object with brython built-ins
 
 ;(function($B) {
 
+var _window = self;
 // Get url of this script brython_builtins.js
 var scripts = document.getElementsByTagName('script')
 var this_url = scripts[scripts.length-1].src
@@ -12,7 +13,7 @@ elts.pop()
 var $path = $B.brython_path = elts.join('/')+'/'
 
 // Get the URL of the directory where the script stands
-var $href = $B.script_path = window.location.href
+var $href = $B.script_path = _window.location.href
 var $href_elts = $href.split('/')
 $href_elts.pop()
 var $script_dir = $B.script_dir = $href_elts.join('/')
@@ -77,7 +78,7 @@ $B.__setattr__ = function(attr,value){
 
 // system language ( _not_ the one set in browser settings)
 // cf http://stackoverflow.com/questions/1043339/javascript-for-detecting-browser-language-preference
-$B.language = window.navigator.userLanguage || window.navigator.language
+$B.language = _window.navigator.userLanguage || _window.navigator.language
 
 // document charset ; defaults to "utf-8"
 $B.charset = document.characterSet || document.inputEncoding || "utf-8"

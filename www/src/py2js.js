@@ -4,6 +4,7 @@
 
 var js,$pos,res,$op
 var _b_ = $B.builtins
+var _window = self;
 
 
 /*
@@ -7893,7 +7894,7 @@ function brython(options){
     }
 
     // URL of the script where function brython() is called
-    var $href = $B.script_path = window.location.href,
+    var $href = $B.script_path = _window.location.href,
         $href_elts = $href.split('/')
     $href_elts.pop()
     $B.curdir = $href_elts.join('/')
@@ -7921,7 +7922,7 @@ function brython(options){
     $B.js = {} // maps script name to JS conversion
 
     // Save initial Javascript namespace
-    var kk = Object.keys(window)
+    var kk = Object.keys(_window)
 
     // Get all links with rel=pythonpath and add them to sys.path
     var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
@@ -8055,7 +8056,7 @@ function brython(options){
     if (options.ipy_id === undefined){$B._load_scripts(scripts)}
 
     /* Uncomment to check the names added in global Javascript namespace
-    var kk1 = Object.keys(window)
+    var kk1 = Object.keys(_window)
     for (var i=0; i < kk1.length; i++){
         if(kk[i]===undefined){
             console.log(kk1[i])

@@ -1,4 +1,5 @@
  ;(function($B) {
+    var _window = self;
     var modules = {}
     modules['browser'] = {
         $package: true,
@@ -273,7 +274,7 @@
                         " list, not '"+$B.get_class(names).__name__)
                 }else{
                     for(var i=0;i<names.length;i++){
-                        try{window[names[i]]=eval(names[i])}
+                        try{_window[names[i]]=eval(names[i])}
                         catch(err){throw $B.builtins.NameError("name '"+
                             names[i]+"' not found in script "+script_url)}
                     }

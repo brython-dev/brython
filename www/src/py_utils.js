@@ -1,6 +1,7 @@
 ;(function($B){
 
 var _b_=$B.builtins
+var _window = self;
 
 $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     extra_pos_args,extra_kw_args){
@@ -1287,7 +1288,7 @@ $B.is_none = function (o) {
 $B.imports = function(){
     // pops up the list of modules currently imported
     // can be used to generate a bundle
-    var w = window.open('', '', 'width="50%",height=400,resizeable,scrollbars');
+    var w = _window.open('', '', 'width="50%",height=400,resizeable,scrollbars');
     w.document.write("Currently imported modules. Copy and paste in file "+
         "<b>.bundle-include</b> in your application folder, then run "+
         "<code>python -m brython --modules</code> to generate a new version "+
@@ -1320,7 +1321,7 @@ $B.compiled_imports = function(){
             }
         }
     }
-    var w = window.open('', '', 
+    var w = _window.open('', '', 
             'width="80%",height=400,resizeable,scrollbars')
     w.document.write("Currently imported modules. Copy and paste in file "+
         "<b>brython_modules.js</b> in your application folder<p>"+
