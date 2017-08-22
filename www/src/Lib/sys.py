@@ -204,10 +204,10 @@ class _float_info:
  |      DBL_MAX_EXP -- maximum int e such that radix**(e-1) is representable
  |  
  |  min
- |      DBL_MIN -- Minimum positive normalizer float
+ |      DBL_MIN -- Minimum positive normalized float
  |  
  |  min_10_exp
- |      DBL_MIN_10_EXP -- minimum int e such that 10**e is a normalized
+ |      DBL_MIN_10_EXP -- minimum int e such that 10**e is a normalized float
  |  
  |  min_exp
  |      DBL_MIN_EXP -- minimum int e such that radix**(e-1) is a normalized float
@@ -220,13 +220,16 @@ class _float_info:
  |                    interpreter startup time. See section 5.2.4.2.2 of the C99 standard for an explanation of the possible values and their meanings.
     """
     def __init__(self):
+        _number = window.Number
         self.dig = 15
-        self.epsilon = 2**(-52)
+        self.epsilon = _number.EPSILON
         self.mant_dig = 53
-        self.max = float(2**53-1)
+        self.max = _number.MAX_VALUE
         self.max_exp=2**10
         self.max_10_exp = 308
         self.min = 2**(-1022)
+        self.min_exp = -1021
+        self.min_10_exp = -307
         self.radix=2
         self.rounds=1
         self._tuple = (self.max, self.max_exp, self.max_10_exp, self.min, self.min_exp, self.min_10_exp, self.dig, self.mant_dig, self.epsilon, self.radix, self.rounds)
@@ -236,6 +239,8 @@ class _float_info:
     
     def __iter__(self):
         return iter(self._tuple)
+
+float_info = _float_info()        
 
 warnoptions=[]
 
