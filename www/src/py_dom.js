@@ -230,14 +230,8 @@ function $OpenFile(file,mode,encoding){
     this.__setattr__ = (function(obj){
         return function(attr,value){
             if(attr.substr(0,2)=='on'){ // event
-                // value is a function taking an event as argument
-                if(window.addEventListener){
-                    var callback = function(ev){return value($DOMEvent(ev))}
-                    obj.addEventListener(attr.substr(2),callback)
-                }else if(window.attachEvent){
-                    var callback = function(ev){return value($DOMEvent(window.event))}
-                    obj.attachEvent(attr,callback)
-                }
+                var callback = function(ev){return value($DOMEvent(ev))}
+                obj.addEventListener(attr.substr(2),callback)
             }else if('set_'+attr in obj){return obj['set_'+attr](value)}
             else if(attr in obj){obj[attr]=value}
             else{setattr(obj,attr,value)}
@@ -807,11 +801,7 @@ DOMNodeDict.bind = function(self,event){
                 }
             }}
         )(func)
-        if(window.addEventListener){
-            self.elt.addEventListener(event,callback,false)
-        }else if(window.attachEvent){
-            self.elt.attachEvent("on"+event,callback)
-        }
+        self.elt.addEventListener(event,callback,false)
         evlist[pos++]=[func, callback]
     }
     return self
@@ -1214,11 +1204,7 @@ DOMNodeDict.unbind = function(self,event){
     if(arguments.length===2){
         for(var i=0;i<events.length;i++){
             var callback = events[i][1]
-            if(window.removeEventListener){
-                self.elt.removeEventListener(event,callback,false)
-            }else if(window.detachEvent){
-                self.elt.detachEvent(event,callback,false)
-            }
+            self.elt.removeEventListener(event,callback,false)
         }
         events = []
         return
@@ -1228,11 +1214,7 @@ DOMNodeDict.unbind = function(self,event){
         for(var j=0;j<events.length;j++){
             if(getattr(func,'__eq__')(events[j][0])){
                 var callback = events[j][1]
-                if(window.removeEventListener){
-                    self.elt.removeEventListener(event,callback,false)
-                }else if(window.detachEvent){
-                    self.elt.detachEvent(event,callback,false)
-                }
+                self.elt.removeEventListener(event,callback,false)
                 events.splice(j,1)
                 flag = true
                 break

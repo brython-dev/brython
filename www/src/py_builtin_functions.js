@@ -1805,11 +1805,7 @@ function $url_open(){
     if(isinstance(file,$B.JSObject)) return new $OpenFile(file.js,mode,encoding)
     if(isinstance(file,_b_.str)){
         // read the file content and return an object with file object methods
-        if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
-            var req=new XMLHttpRequest();
-        }else{// code for IE6, IE5
-            var req=new ActiveXObject("Microsoft.XMLHTTP");
-        }
+        var req=new XMLHttpRequest();
         req.onreadystatechange = function(){
             try {
                 var status = this.status
