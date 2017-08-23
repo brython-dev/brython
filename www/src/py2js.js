@@ -5,6 +5,7 @@
 var js,$pos,res,$op
 var _b_ = $B.builtins
 var _window = self;
+var isWebWorker = ('undefined' !== typeof WorkerGlobalScope) && ("function" === typeof importScripts) && (navigator instanceof WorkerNavigator);
 
 
 /*
@@ -7872,27 +7873,7 @@ function brython(options){
     path_hooks.push($B.$path_hooks[1])
     $B.path_hooks = path_hooks
 
-    // Option to run code on demand and not all the scripts defined in a page
-    // The following lines are included to allow to run brython scripts in
-    // the IPython/Jupyter notebook using a cell magic. Have a look at
-    // https://github.com/kikocorreoso/brythonmagic for more info.
-    if(options.ipy_id!==undefined){
-       var $elts = [];
-       for(var $i=0;$i<options.ipy_id.length;$i++){
-          $elts.push(document.getElementById(options.ipy_id[$i]));
-       }
-     }else{
-        var scripts=document.getElementsByTagName('script'),$elts=[]
-        // Freeze the list of scripts here ; other scripts can be inserted on
-        // the fly by viruses
-        for(var i=0;i<scripts.length;i++){
-            var script = scripts[i]
-            if(script.type=="text/python" || script.type=="text/python3"){
-                $elts.push(script)
-            }
-        }
-    }
-
+    
     // URL of the script where function brython() is called
     var $href = $B.script_path = _window.location.href,
         $href_elts = $href.split('/')
@@ -7918,38 +7899,68 @@ function brython(options){
        console.log("DeprecationWarning: \'re_module\' option of \'brython\' function will be deprecated in future versions of Brython.")
     }
 
+    if (! isWebWorker ) {
+    // Get all links with rel=pythonpath and add them to sys.path
+        var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
+            _importlib = $B.modules['_importlib'];
+        for (var i=0, e; e = path_links[i]; ++i) {
+            var href = e.href;
+            $B.path.push(href);
+            if (href.slice(-7).toLowerCase() == '.vfs.js' &&
+                    (' ' + e.rel + ' ').indexOf(' prefetch ') != -1) {
+                // Prefetch VFS file
+                $B.path_importer_cache[href + '/'] =
+                        $B.imported['_importlib'].VFSPathFinder(href)
+            }
+            var filetype = e.hreflang;
+            if (filetype) {
+                if (filetype.slice(0,2) == 'x-') filetype = filetype.slice(2);
+                _importlib.optimize_import_for_path(e.href, filetype);
+            }
+        }
+    }
+    
     $B.scripts = []
     $B.js = {} // maps script name to JS conversion
+    if (!isWebWorker) {
+        _run_scripts(options)
+    }
+}
 
+function _run_scripts(options) { 
     // Save initial Javascript namespace
     var kk = Object.keys(_window)
 
-    // Get all links with rel=pythonpath and add them to sys.path
-    var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
-        _importlib = $B.modules['_importlib'];
-    for (var i=0, e; e = path_links[i]; ++i) {
-        var href = e.href;
-        $B.path.push(href);
-        if (href.slice(-7).toLowerCase() == '.vfs.js' &&
-                (' ' + e.rel + ' ').indexOf(' prefetch ') != -1) {
-            // Prefetch VFS file
-            $B.path_importer_cache[href + '/'] =
-                    $B.imported['_importlib'].VFSPathFinder(href)
+    
+    // Option to run code on demand and not all the scripts defined in a page
+    // The following lines are included to allow to run brython scripts in
+    // the IPython/Jupyter notebook using a cell magic. Have a look at
+    // https://github.com/kikocorreoso/brythonmagic for more info.
+    if(options.ipy_id!==undefined){
+        var $elts = [];
+        for(var $i=0;$i<options.ipy_id.length;$i++){
+            $elts.push(document.getElementById(options.ipy_id[$i]));
         }
-        var filetype = e.hreflang;
-        if (filetype) {
-            if (filetype.slice(0,2) == 'x-') filetype = filetype.slice(2);
-            _importlib.optimize_import_for_path(e.href, filetype);
+        }else{
+        var scripts=document.getElementsByTagName('script'),$elts=[]
+        // Freeze the list of scripts here ; other scripts can be inserted on
+        // the fly by viruses
+        for(var i=0;i<scripts.length;i++){
+            var script = scripts[i]
+            if(script.type=="text/python" || script.type=="text/python3"){
+                $elts.push(script)
+            }
         }
     }
-
+    
     // Get all scripts with type = text/python or text/python3 and run them
 
+    
     var first_script = true, module_name;
     if(options.ipy_id!==undefined){
         module_name='__main__';
         var $src = "", js, root
-        $B.$py_module_path[module_name] = $href;
+        $B.$py_module_path[module_name] = $B.script_path;
         for(var $i=0;$i<$elts.length;$i++){
             var $elt = $elts[$i];
             $src += ($elt.innerHTML || $elt.textContent);
@@ -8039,8 +8050,8 @@ function brython(options){
                     var $src = ($elt.innerHTML || $elt.textContent)
                     // remove leading CR if any
                     $src = $src.replace(/^\n/, '')
-                    $B.$py_module_path[module_name] = $href
-                    scripts.push({name: module_name, src: $src, url: $href})
+                    $B.$py_module_path[module_name] = $B.script_path
+                    scripts.push({name: module_name, src: $src, url: $B.script_path})
                 }
             }
         }
@@ -8063,8 +8074,9 @@ function brython(options){
         }
     }
     */
-
+    
 }
+
 $B.$operators = $operators
 $B.$Node = $Node
 $B.$NodeJSCtx = $NodeJSCtx
