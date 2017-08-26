@@ -25,6 +25,8 @@ exec_prefix = __BRYTHON__.brython_path
 
 executable = __BRYTHON__.brython_path+'/brython.js'
 
+argv = __BRYTHON__.__ARGV    
+
 def exit(i=None):
     raise SystemExit('')
 

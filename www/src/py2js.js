@@ -7922,6 +7922,11 @@ function brython(options){
     
     $B.scripts = []
     $B.js = {} // maps script name to JS conversion
+    if ($B.$options.args) {
+        $B.__ARGV = $B.$options.args
+    } else {
+        $B.__ARGV = _b_.list([])
+    }
     if (!isWebWorker) {
         _run_scripts(options)
     }
