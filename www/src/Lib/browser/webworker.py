@@ -1,3 +1,9 @@
+"""
+    The webworker module provides a basic integration between Brython and 
+    [WebWorkers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API)).
+    It allows one to run a python script in a web worker with relative ease. Currently 
+    there are two classes which can be used. A basic Worker class and a RPCWorker class.
+"""
 from browser import window
 
 import asyncio
@@ -9,12 +15,18 @@ DEFAULT_BRYTHON_OPTIONS = {
 
 CHILD_WORKERS = []
 
-S_CREATED = 0
-S_LOADING = 1
-S_LOADED = 2
-S_RUNNING = 3
-S_FINISHED = 4
-S_TERMINATED = 5
+# The following are possible states
+# the worker can be in throughout
+# its life
+
+S_CREATED = 0       # The worker has been created (e.g. new Worker())
+S_LOADING = 1       # The webworker started loading brython
+S_LOADED = 2        # The webworker finished loading brython and
+                    # is now starting to run the python script
+S_RUNNING = 3       # The python script finished its initialization
+                    # and is ready to work
+S_FINISHED = 4      # The worker finished without error (exit(0))
+S_TERMINATED = 5    # The worker was terminated
 
 try:
     _Worker = window.Worker.new
@@ -26,7 +38,12 @@ class WorkerError(Exception):
     pass
 
 
-class Message:    
+class Message:
+    """
+        A class representing a message to be sent to/from the webworker.
+        It has a name (message type) and some data (message payload).
+        These are mandatory arguments to be passed to the constructor.
+    """
     def __init__(self, name, data, src=None, id=-1):
         self.name = name
         self.data = data
@@ -38,6 +55,11 @@ class Message:
         return "MSG("+str(self.name)+":"+str(self.id)+"):"+str(self.data)
     
 class Reply(asyncio.Future):
+    """
+        A future representing a reply to a message. Not to be used directly
+        by the user but is created, e.g., by the `post_message` method when
+        called with `want_reply=True`.
+    """
     _LAST_MESSAGE_ID = 0
     _WAITING_REPLIES = {}
     
@@ -78,9 +100,27 @@ class Reply(asyncio.Future):
         super().set_result(result)
 
 class WorkerCommon:
+    """
+        This class implements methods useful both in the main thread
+        and in the worker thread.
+    """
             
+    
     @property
     def status(self):
+        """
+            The status of the worker:
+            
+               S_CREATED        - The worker has been created (e.g. new Worker())
+               S_LOADING        - The webworker started loading brython
+               S_LOADED         - The webworker finished loading brython and
+                                  is now starting to run the python script
+               S_RUNNING        - The python script finished its initialization
+                                  and is ready to work
+               S_FINISHED       - The worker finished without error (exit(0))
+               S_TERMINATED     - The worker was terminated
+            
+        """
         return self._status
     
     def __init__(self, worker):
@@ -95,6 +135,13 @@ class WorkerCommon:
         self.bind_event('ready', self._post_queued_messages)
                
     def post_message(self, message, want_reply=False, timeout=None):
+        """
+            Sends the message `message` (an instance of the `Message` class)
+            to the other side. If `want_reply` is set to true, the method
+            returns a future representing the potential reply to this message.
+            The optional `timeout` parameter specifies how long in seconds the future
+            should wait for a reply before resolving itself with a timeout exception,
+        """
         if self.status > S_RUNNING:
             raise WorkerError("Invalid state")
         if want_reply:
@@ -107,6 +154,9 @@ class WorkerCommon:
         return ret
     
     def post_reply(self, message, reply):
+        """
+            Sends the message `reply` as a reply to the message `message`.
+        """
         payload = {'type':'message', 'name':reply.name, 'id':reply.id, 'data':reply.data}
         if message.id:
             payload['reply_to']=message.id
@@ -119,12 +169,26 @@ class WorkerCommon:
             self._worker.postMessage(payload)
             
     def bind_event(self, event, handler):
+        """
+            Registers `handler` to be called whenever the `event` is emitted
+            by the class. Events are emitted when different things happen.
+            For example when the state of the worker changes, the following
+            events re emitted:
+            
+               exited
+               loaded
+               ready
+        """                         
         self._bind(self._event_handlers, event, handler)
     
     def unbind_event(self, event=None, handler=None):
         self._unbind(self._event_handlers, event, handler)
         
     def bind_message(self, message, handler):
+        """
+            Registers the method `handler` to be called whenever a message of type `message`
+            arrives.
+        """
         self._bind(self._message_handlers, message, handler)
     
     def unbind_message(self, message=None, handler=None):
@@ -188,10 +252,25 @@ class WorkerCommon:
 
 
 class WorkerParent(WorkerCommon):
+    """
+        The class representing the worker in the main thread.
+    """
     WORKER_SCRIPT = sys.base_exec_prefix+'/web_workers/worker.js'
     CHILD_CLASS = 'browser.webworker.WorkerChild'
     
     def __init__(self, url, argv=[], environ={}, brython_options=DEFAULT_BRYTHON_OPTIONS):
+        """
+            Creates a new Web Worker and runs the python script downloaded from `url`
+            in it. The parameter `url` can be either relative to the directory where
+            Brython is installed or it must be an absolute url (i.e. start with '/' or 'http:').
+            
+            The parameter `argv` is a list of arguments which will be available as `sys.argv` in the worker.
+            The parameter `environ` is a dictionary which will be available as `os.environ` in the worker.
+            The parameter `brython_options` will be passed to the `brython` function when called from
+            the webworker. If it contains an `imports` key, this should be a list of javascript files
+            to be loaded instead of the standard brython files. If it contains the key `import_dist`,
+            it will load brython from the `brython_webworker_dist.js` script.
+        """
         if not _can_launch_workers:
             raise WorkerError("Cannot spawn workers (webkit based browsers don't support running webworkers inside webworkers)")
         super().__init__(_Worker(self.WORKER_SCRIPT,{"name":url}))
@@ -209,6 +288,11 @@ class WorkerParent(WorkerCommon):
         CHILD_WORKERS.append(self)
         
     def terminate(self):
+        """
+            Forcibly Terminates the worker.
+            
+            Raises an error if the worker is not running
+        """
         if self.status > S_RUNNING:
             raise WorkerError("Invalid state")
         self._worker.terminate()
@@ -217,6 +301,10 @@ class WorkerParent(WorkerCommon):
         self._emit_event('exited')
         
     def wait_for_status(self, status):
+        """
+            Returns a future which will be resolved when
+            the worker transitions to the given status (or any later status)
+        """
         fut = asyncio.Future()
         setattr(fut, 'waiting_for', status)
         if status <= self.status:
@@ -250,6 +338,12 @@ class WorkerParent(WorkerCommon):
         
     
 class WorkerChild(WorkerCommon):
+    """
+        The class representing the worker in the worker thread. Should not
+        be instantiated by the user directly. Instead an instance of this
+        class will be provided as `current_worker` to every worker started
+        by the `WorkerParent` class.
+    """
     def __init__(self):
         super().__init__(__BRYTHON__.__WORKER)
         self._argv = sys.argv
@@ -257,11 +351,18 @@ class WorkerChild(WorkerCommon):
         self._status = S_LOADED
         
     def exec(self):
+        """
+            This method should be called from the worker script when it is
+            ready to start receiving messages from the main thread.
+        """
         self._status = S_RUNNING
         self._worker.postMessage({'type':'status', 'status':S_RUNNING})
         self._emit_event('ready')
         
     def terminate(self):
+        """
+            The worker script can use this method to gracefully shutdown the worker.
+        """
         if self.status > S_RUNNING:
             raise WorkerError("Invalid state")
         self._status = S_FINISHED
