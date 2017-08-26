@@ -15,8 +15,11 @@ def get_continuation(generator, final_result):
                 next_result = generator.send(previous_result.result())
             cb = get_continuation(generator, final_result)
             next_result.add_done_callback(cb)
-        except StopIteration:
-            final_result.set_result(None)
+        except StopIteration as ex:
+            if hasattr(ex,'value'):
+                final_result.set_result(ex.value)
+            else:
+                final_result.set_result(None)
         except Exception as ex:
             final_result.set_exception(ex)
     return _cb

@@ -1,13 +1,11 @@
-Módulo **asyncio**
+module **asyncio**
 -----------------------
 
-El módulo `asyncio` proporciona un eventloop básico al estilo del 
-[asyncio en CPython](https://docs.python.org/3.4/library/asyncio-dev.html)
-eventloop que permite escribir código asíncrono sin ser forzado a permanecer 
-en el "infierno loopback".
+The module asyncio provides a basic [asyncio](https://docs.python.org/3.4/library/asyncio-dev.html)-style
+eventloop to support writing asynchronous code without being forced to "loopback hell".
 
-Permite programación básica al estilo `asyncio` usando `Future`'s y 
-`coroutine`. E.g. puedes escribir
+Basic `asyncio` style programming using `Future`'s and `coroutine` is
+supported. E.g. you can write
 
 ```python
 import asyncio
@@ -24,20 +22,17 @@ t = asyncio.ensure_future(test_wget(['http://google.com','http://wikipedia.org']
 
 ```
 
-y, eventualmente, `t.value()` devolverá una lista que contiene el código
-HTML de las páginas requeridas. El código usa el `HTTPRequest` future 
-que proporciona la implementación asyncio de Brython (usa de forma obligada un 
-argumento url y las palabras clave opcionales `method` ('GET' o 'POST') 
-y `data` para POST-requests).
+and, eventually, `t.result()` will return a list containing the html code
+for the requested pages. The code uses the `HTTPRequest` future provided
+by Brython's asyncio implementation (it takes a mandatory url argument and
+optional keyword arguments `method` ('GET' or 'POST') and `data` for POST-requests).
 
-Sin embargo, alguna funcionalidad `asyncio` más avanzada no se encuentra
-implementado. Tampoco tiene mucho sentido en el navegador (servidores TCP, ...), 
-o puede tener sensito pero actualmente no está soportado (e.g. Threading/Multiprocess 
-podría, en teoría, ser implementado usando
-[WebWorkers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API))
-o se encuentra completamente sin comprobar (WebSocketTransport).
+However, some more advanced `asyncio`'s functionality is not implemented. Either
+it does not make sense in the browser (TCP Servers, ...), or it might make sense
+but is currently unsupported (e.g. Threading/Multiprocess could, in theory, be implemented using
+[WebWorkers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API)).
 
-Para más información sobre `asyncio` y `Futures`, ver
-[PEP 3156](https://www.python.org/dev/peps/pep-3156/) y
-[PEP 3148](https://www.python.org/dev/peps/pep-3148/) o
-[Documentación AsyncIO](https://docs.python.org/3.4/library/asyncio-dev.html).
+For more information on `asyncio` and `Futures`, see
+[PEP 3156](https://www.python.org/dev/peps/pep-3156/) and
+[PEP 3148](https://www.python.org/dev/peps/pep-3148/) or
+[AsyncIO Documentation](https://docs.python.org/3.4/library/asyncio-dev.html).
