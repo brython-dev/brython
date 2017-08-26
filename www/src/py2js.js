@@ -5,7 +5,7 @@
 var js,$pos,res,$op
 var _b_ = $B.builtins
 var _window = self;
-var isWebWorker = ('undefined' !== typeof WorkerGlobalScope) && ("function" === typeof importScripts) && (navigator instanceof WorkerNavigator);
+var isWebWorker = $B.isa_web_worker = ('undefined' !== typeof WorkerGlobalScope) && ("function" === typeof importScripts) && (navigator instanceof WorkerNavigator);
 
 
 /*
@@ -7878,6 +7878,7 @@ function brython(options){
     var $href = $B.script_path = _window.location.href,
         $href_elts = $href.split('/')
     $href_elts.pop()
+    if ( isWebWorker ) $href_elts.pop() // WebWorker script is in the web_workers subdirectory
     $B.curdir = $href_elts.join('/')
 
     // List of URLs where imported modules should be searched
@@ -7886,19 +7887,31 @@ function brython(options){
         $B.path = options.pythonpath
         $B.$options.static_stdlib_import = false
     }
-
-    // Allow user to specify the re module they want to use as a default
-    // Valid values are 'pyre' for pythons re module and
-    // 'jsre' for brythons customized re module
-    // Default is for brython to guess which to use by looking at
-    // complexity of the re pattern
-    if (options.re_module !==undefined) {
-       if (options.re_module == 'pyre' || options.re_module=='jsre') {
-          $B.$options.re=options.re
-       }
-       console.log("DeprecationWarning: \'re_module\' option of \'brython\' function will be deprecated in future versions of Brython.")
+    
+    // Or it can be provided as a list of strings or path objects
+    // where a path object has at least a path attribute and, optionally,
+    // a prefetch attribute and/or a lang attribute
+    // This corresponds to a python path specified via the link element
+    //
+    //    <link rel="prefetch" href=path hreflang=lang />
+    //
+    // where the prefetch attribute should be present & true if prefetching is required
+    // otherwise it should be present and false
+    
+    if (options.python_paths) {
+        options.python_paths.forEach(function(path) {
+            var lang, prefetch;
+            if (typeof path !== "string") {
+                lang = path.lang
+                prefetch = path.prefetch
+                path = path.path
+            }
+            $B.path.push(path)
+            if (path.slice(-7).toLowerCase() == '.vfs.js' && (prefetch === undefined || prefetch === true)) $B.path_importer_cache[path+'/'] = $B.imported['_importlib'].VFSPathFinder(path)
+            if (lang) _importlib.optimize_import_for_path(path, lang)
+        })
     }
-
+    
     if (! isWebWorker ) {
     // Get all links with rel=pythonpath and add them to sys.path
         var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
@@ -7918,6 +7931,18 @@ function brython(options){
                 _importlib.optimize_import_for_path(e.href, filetype);
             }
         }
+    }
+
+    // Allow user to specify the re module they want to use as a default
+    // Valid values are 'pyre' for pythons re module and
+    // 'jsre' for brythons customized re module
+    // Default is for brython to guess which to use by looking at
+    // complexity of the re pattern
+    if (options.re_module !==undefined) {
+       if (options.re_module == 'pyre' || options.re_module=='jsre') {
+          $B.$options.re=options.re
+       }
+       console.log("DeprecationWarning: \'re_module\' option of \'brython\' function will be deprecated in future versions of Brython.")
     }
     
     $B.scripts = []
