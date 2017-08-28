@@ -7232,8 +7232,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                         $_SyntaxError(context,"Unsupported Python keyword '"+name+"'")
                     }
                     context = $transition(context,name)
-                } else if($operators[name]!==undefined
-                    && $B.forbidden.indexOf(name)==-1) {
+                } else if(typeof $operators[name]=='string') {
                     // Literal operators : "and", "or", "is", "not"
                     // The additional test is to exclude the name "constructor"
                     if(name=='is'){
