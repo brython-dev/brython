@@ -50,19 +50,19 @@ FIRST_COMPLETED = 0
 FIRST_EXCEPTION = 0
 ALL_COMPLETED = 0
 
-def wait_for(coro_or_future, timeout, *args, loop=None):
-    fut = ensure_future(fut, *args, loop=loop)
+def wait_for(coro_or_future, timeout, *args):
+    fut = ensure_future(fut, *args)
     if timeout:
         def timeout_handler():
             if fut.done():
                 pass
             else:
                 fut.set_exception(TimeoutError())
-        loop = loop or events.get_event_loop()
-        loop.call_later(timeout, timeout_handler)
+        
+        default_event_loop.call_later(timeout, timeout_handler)
     return fut
 
-def ensure_future(coro_or_future, *args, loop=None):
+def ensure_future(coro_or_future, *args):
     if isinstance(coro_or_future, Future):
         return coro_or_future
     elif iscoroutine(coro_or_future):
@@ -70,11 +70,11 @@ def ensure_future(coro_or_future, *args, loop=None):
     else:
         raise Exception('Expecting coroutine or Future got '+str(coro_or_future)+' instead.')
 
-def gather(*coros_or_futures, loop=None, return_exceptions=False):
+def gather(*coros_or_futures, return_exceptions=False):
     fut_list = [ensure_future(c, loop=loop) for c in coros_or_futures]
     return GatheredFuture(fut_list, return_exceptions=False)
 
-def shield(arg, *, loop=None):
+def shield(arg):
     """Wait for a future, shielding it from cancellation.
 
     The statement
@@ -100,12 +100,12 @@ def shield(arg, *, loop=None):
         except CancelledError:
             res = None
     """
-    inner = ensure_future(arg, loop=loop)
+    inner = ensure_future(arg)
     if inner.done():
         # Shortcut.
         return inner
-    loop = inner._loop
-    outer = Future(loop=loop)
+    loop = default_event_loop
+    outer = Future()
 
     def _done_callback(inner):
         if outer.cancelled():
@@ -126,5 +126,5 @@ def shield(arg, *, loop=None):
     inner.add_done_callback(_done_callback)
     return outer
 
-def sleep(seconds, result=None, *, loop=None):
-    return futures.SleepFuture(seconds, result, loop=loop)
+def sleep(seconds, result=None):
+    return futures.SleepFuture(seconds, result)
