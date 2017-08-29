@@ -54,7 +54,7 @@ import HTMLTestRunner
 
 del document["msgbox"]
 
-sys.path.append(os.path.join(os.getcwd(), "Lib", "test"))
+sys.path.append(os.path.join(os.environ['PYTHONPATH'], "Lib", "test"))
 
 def flush(*args):
     from javascript import console
@@ -173,7 +173,8 @@ Brython version: <span id="version"></span>
 </div>
 
 
-<script type="text/javascript" src="/src/brython_dist.js"></script>
+<script type="text/javascript" src="/src/brython.js"></script>
+<script type="text/javascript" src="/src/brython_stdlib.js"></script>
 
 </body>
 </html>
