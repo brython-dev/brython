@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-08-29 22:14:36.689268"
+__BRYTHON__.compiled_date="2017-08-29 22:41:12.109521"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4743,10 +4743,7 @@ return res}
 $B.$list_comp=function(items){
 var ix=$B.UUID()
 var py="x"+ix+"=[]\n",indent=0
-for(var i=1,len=items.length;i < len;i++){py +=' '.repeat(indent)
-var item=items[i]
-item=item.replace(/\s*$/,'').replace(/\s+/g,' ')
-py +=item+':\n'
+for(var i=1,len=items.length;i < len;i++){py +=' '.repeat(indent)+ items[i].replace(/\s*$/,'')+':\n'
 indent +=4}
 py +=' '.repeat(indent)
 py +='x'+ix+'.append('+items[0]+')\n'
@@ -4754,9 +4751,7 @@ return[py,ix]}
 $B.$dict_comp=function(module_name,parent_block_id,items,line_num){
 var ix=$B.UUID(),res='res'+ix,py=res+"={}\n",
 indent=0
-for(var i=1,len=items.length;i<len;i++){py +='    '.repeat(indent)
-var item=items[i].replace(/\s+$/,'').replace(/\n/g,' ')
-py +=item+':\n'
+for(var i=1,len=items.length;i<len;i++){py +='    '.repeat(indent)+ items[i].replace(/\s+$/,'')+':\n'
 indent++}
 py +='    '.repeat(indent)+ res + '.update({'+items[0]+'})'
 var dictcomp_name='dc'+ix,root=$B.py2js({src:py,is_comp:true},module_name,dictcomp_name,parent_block_id,line_num),js=root.to_js()
@@ -4769,9 +4764,7 @@ $B.$gen_expr=function(module_name,parent_block_id,items,line_num){
 var $ix=$B.UUID()
 var py='def ge'+$ix+'():\n'
 var indent=1
-for(var i=1,len=items.length;i < len;i++){py +=' '.repeat(indent)
-var item=items[i].replace(/\s+$/,'').replace(/\n/g,' ')
-py +=item+':\n'
+for(var i=1,len=items.length;i < len;i++){py +=' '.repeat(indent)+ items[i].replace(/\s+$/,'')+ ':\n'
 indent +=4}
 py+=' '.repeat(indent)
 py +='yield ('+items[0]+')'

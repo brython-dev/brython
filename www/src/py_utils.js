@@ -178,10 +178,7 @@ $B.$list_comp = function(items){
     var ix = $B.UUID()
     var py = "x"+ix+"=[]\n", indent = 0
     for(var i=1, len = items.length; i < len;i++){
-        py += ' '.repeat(indent)
-        var item = items[i]
-        item = item.replace(/\s*$/, '').replace(/\s+/g, ' ')
-        py += item+':\n'
+        py += ' '.repeat(indent) + items[i].replace(/\s*$/, '')+':\n'
         indent += 4
     }
     py += ' '.repeat(indent)
@@ -202,9 +199,7 @@ $B.$dict_comp = function(module_name, parent_block_id, items, line_num){
         py = res+"={}\n", // Python code
         indent=0
     for(var i=1, len=items.length;i<len;i++){
-        py += '    '.repeat(indent)
-        var item = items[i].replace(/\s+$/,'').replace(/\n/g, ' ')
-        py += item+':\n'
+        py += '    '.repeat(indent) + items[i].replace(/\s+$/,'')+':\n'
         indent++
     }
     py += '    '.repeat(indent) + res + '.update({'+items[0]+'})'
@@ -231,9 +226,7 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
     var py = 'def ge'+$ix+'():\n'
     var indent=1
     for(var i=1, len = items.length; i < len;i++){
-        py += ' '.repeat(indent)
-        var item = items[i].replace(/\s+$/,'').replace(/\n/g, ' ')
-        py += item+':\n'
+        py += ' '.repeat(indent) + items[i].replace(/\s+$/,'') + ':\n'
         indent += 4
     }
     py+=' '.repeat(indent)
