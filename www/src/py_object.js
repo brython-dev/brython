@@ -42,7 +42,7 @@ var reverse_func = {'__lt__':'__gt__',
 }
 var $ObjectNI = function(name,op){
     return function(self, other){
-        var klass = $B.get_class(other), 
+        var klass = $B.get_class(other),
             other_comp = _b_.getattr(klass, reverse_func[name])
         if(other_comp.__func__===$ObjectDict[reverse_func[name]]){
             throw _b_.TypeError('unorderable types: object() '+op+
@@ -65,12 +65,12 @@ var opsigns = ['+','-','*','/','//','%','**','<<','>>','&','^', '|']
 
 $ObjectDict.__delattr__ = function(self,attr){
     _b_.getattr(self, attr) // raises AttributeError if necessary
-    delete self[attr]; 
+    delete self[attr];
     return _b_.None
 }
 
 $ObjectDict.__dir__ = function(self) {
-    var objects = [self], 
+    var objects = [self],
         pos=1,
         klass = self.__class__ || $B.get_class(self)
     objects[pos++] = klass
@@ -82,8 +82,8 @@ $ObjectDict.__dir__ = function(self) {
     var res = [], pos=0
     for (var i=0, _len_i = objects.length; i < _len_i; i++) {
         for(var attr in objects[i]){
-            //if(attr.charAt(0)=='$' && attr.substr(0,2)!=='$$'){
-            if(attr.charAt(0)=='$' && attr.charAt(1) != '$') {
+            if(attr=='toString'){console.log(attr, objects[i][attr])}
+            if(attr.charAt(0)=='$') {
                 // exclude internal attributes set by Brython
                 continue
             }
@@ -124,13 +124,13 @@ $ObjectDict.__format__ = function(){
 $ObjectDict.__ge__ = $ObjectNI('__ge__','>=')
 
 $ObjectDict.__getattribute__ = function(obj,attr){
-    
+
     var klass = obj.__class__ || $B.get_class(obj)
     if(attr==='__class__'){
         return klass.$factory
     }
     var res = obj[attr]
-    
+
     if(res===undefined){
         // search in classes hierarchy, following method resolution order
         function check(obj, kl, attr){
@@ -159,12 +159,12 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         }
     }else{
         if(res.__set__===undefined){
-            // For non-data descriptors, the attribute found in object 
+            // For non-data descriptors, the attribute found in object
             // dictionary takes precedence
             return res
         }
     }
-    
+
     if(res!==undefined){
 
         if(res.__class__===_b_.property.$dict){
@@ -179,7 +179,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
             }
         }
         var __get__ = get === undefined ? null : _b_.getattr(res,'__get__',null)
-        
+
         // For descriptors, attribute resolution is done by applying __get__
         if(__get__!==null){
             try{return __get__.apply(null, [obj, klass])}
@@ -189,13 +189,13 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                 throw err
             }
         }
-        
+
         if(typeof res=='object'){
             if(__get__ && (typeof __get__=='function')){
                 get_func = function(x,y){return __get__.apply(x,[y,klass])}
             }
         }
-        
+
         if(__get__===null && (typeof res=='function')){
             __get__ = function(x){return x}
         }
@@ -223,15 +223,15 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                 // In class B, when we call self.foo(18), self.foo is the
                 // class A, its method __init__ must be called without B's
                 // self as first argument
-    
+
                 if(res1.__class__ === $B.$factory) return res
-                
+
                 // Same thing if the attribute is a method of an instance
                 // =================
                 // class myRepr:
                 //     def repr(self, a):
                 //         return a
-                //    
+                //
                 // class myclass:
                 //     _repr=myRepr()
                 //     repr= _repr.repr
@@ -249,7 +249,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
 
                 // instance method object
                 return $B.make_method(attr, klass, res)(obj)
-                
+
             }else{
                 // result of __get__ is not a function
                 return res1
@@ -304,7 +304,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
 
 $ObjectDict.__gt__ = $ObjectNI('__gt__','>')
 
-$ObjectDict.__hash__ = function (self) { 
+$ObjectDict.__hash__ = function (self) {
     var hash = self.__hashvalue__
     if(hash!==undefined){return hash}
     return self.__hashvalue__=$B.$py_next_hash--;
@@ -391,7 +391,7 @@ $B.make_class = function(class_obj){
     function A(){
         var res = {__class__:A.$dict}
         if(class_obj.init){
-            class_obj.init.apply(null, 
+            class_obj.init.apply(null,
                 [res].concat(Array.prototype.slice.call(arguments)))
         }
         return res
