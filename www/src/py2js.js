@@ -573,6 +573,7 @@ function $AssignCtx(context){ //, check_unbound){
                 var assign = new $AssignCtx(assigned[i])
                 new $RawJSCtx(assign, '$temp'+$loop_num)
             }
+            $loop_num++
             return assigned.length-1
         }
 
