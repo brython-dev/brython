@@ -1411,6 +1411,12 @@ kk = (i for i in [
         2
 ])
 assert list(kk) == [1, 2]
+
+# issue 663
+a = {}
+a[5] = b = 0
+assert a[5] == 0
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
