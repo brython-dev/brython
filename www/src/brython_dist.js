@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-08-29 22:41:12.109521"
+__BRYTHON__.compiled_date="2017-08-30 17:51:47.083937"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -296,6 +296,7 @@ node.parent.insert(rank+1,new_node)
 assigned[i].parent=node_ctx
 var assign=new $AssignCtx(assigned[i])
 new $RawJSCtx(assign,'$temp'+$loop_num)}
+$loop_num++
 return assigned.length-1}
 var left_items=null
 switch(left.type){case 'expr':
@@ -1825,9 +1826,12 @@ this.get_src=function(){
 var scope=$get_scope(this)
 var ident=scope.id
 while($B.$py_src[ident]===undefined && $B.modules[ident].parent_block){ident=$B.modules[ident].parent_block.id}
-if($B.$py_src[ident]===undefined){
-return $B.$py_src[scope.module]}
-return $B.$py_src[ident]}
+var src=$B.$py_src[ident]
+if(scope.comments===undefined){return src}
+for(var i=0;i<scope.comments.length;i++){var start=scope.comments[i][0],len=scope.comments[i][1]
+src=src.substr(0,start)+ ' '.repeat(len + 1)+
+src.substr(start + len + 1)}
+return src}
 this.ids=function(){
 var _ids={}
 for(var i=0;i<this.tree.length;i++){var item=this.tree[i]
@@ -1854,6 +1858,7 @@ case 'gen_expr':
 case 'dict_or_set_comp':
 var src=this.get_src()
 var res1=[],items=[]
+if(this.comments !==undefined){console.log('comments in comp',this.comments)}
 var qesc=new RegExp('"',"g")
 for(var i=1;i<this.intervals.length;i++){var txt=src.substring(this.intervals[i-1],this.intervals[i])
 items.push(txt)
@@ -3757,6 +3762,7 @@ $B.modules[root.id]=root
 if(locals_id==parent_block_id){root.parent_block=$B.modules[parent_block_id].parent_block ||$B.modules['__builtins__']}else{root.parent_block=$B.modules[parent_block_id]||$B.modules['__builtins__']}
 root.line_info=line_info
 root.indent=-1
+root.comments=[]
 if(locals_id!==module){$B.bound[locals_id]={}}
 var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
 if(typeof src=="object"){root.is_comp=src.is_comp
@@ -3794,6 +3800,7 @@ C=new $NodeCtx(new_node)
 continue}
 if(car=="#"){var end=src.substr(pos+1).search('\n')
 if(end==-1){end=src.length-1}
+root.comments.push([pos,end])
 pos +=end+1;continue}
 if(car=='"' ||car=="'"){var raw=C.type=='str' && C.raw,bytes=false,fstring=false,end=null;
 if(string_modifier){switch(string_modifier){case 'r': 
@@ -4743,7 +4750,8 @@ return res}
 $B.$list_comp=function(items){
 var ix=$B.UUID()
 var py="x"+ix+"=[]\n",indent=0
-for(var i=1,len=items.length;i < len;i++){py +=' '.repeat(indent)+ items[i].replace(/\s*$/,'')+':\n'
+for(var i=1,len=items.length;i < len;i++){var item=items[i].replace(/\s+$/,'').replace(/\n/g,'')
+py +=' '.repeat(indent)+ item + ':\n'
 indent +=4}
 py +=' '.repeat(indent)
 py +='x'+ix+'.append('+items[0]+')\n'
@@ -4751,7 +4759,8 @@ return[py,ix]}
 $B.$dict_comp=function(module_name,parent_block_id,items,line_num){
 var ix=$B.UUID(),res='res'+ix,py=res+"={}\n",
 indent=0
-for(var i=1,len=items.length;i<len;i++){py +='    '.repeat(indent)+ items[i].replace(/\s+$/,'')+':\n'
+for(var i=1,len=items.length;i<len;i++){var item=items[i].replace(/\s+$/,'').replace(/\n/g,'')
+py +='    '.repeat(indent)+ item +':\n'
 indent++}
 py +='    '.repeat(indent)+ res + '.update({'+items[0]+'})'
 var dictcomp_name='dc'+ix,root=$B.py2js({src:py,is_comp:true},module_name,dictcomp_name,parent_block_id,line_num),js=root.to_js()
@@ -4764,7 +4773,8 @@ $B.$gen_expr=function(module_name,parent_block_id,items,line_num){
 var $ix=$B.UUID()
 var py='def ge'+$ix+'():\n'
 var indent=1
-for(var i=1,len=items.length;i < len;i++){py +=' '.repeat(indent)+ items[i].replace(/\s+$/,'')+ ':\n'
+for(var i=1,len=items.length;i < len;i++){var item=items[i].replace(/\s+$/,'').replace(/\n/g,'')
+py +=' '.repeat(indent)+ item + ':\n'
 indent +=4}
 py+=' '.repeat(indent)
 py +='yield ('+items[0]+')'
@@ -5073,8 +5083,8 @@ return item
 case "object":
 if(item.__class__===$B.LongInt.$dict){return item}
 var method=_b_.getattr(item,'__index__',null)
-if(method!==null){method=typeof method=='function' ? 
-method : 
+if(method!==null){method=typeof method=='function' ?
+method :
 _b_.getattr(method,'__call__')
 return $B.int_or_bool(method)}
 default:
