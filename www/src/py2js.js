@@ -3754,10 +3754,16 @@ function $ListOrTupleCtx(context,real){
         while($B.$py_src[ident]===undefined && $B.modules[ident].parent_block){
             ident = $B.modules[ident].parent_block.id
         }
-        if($B.$py_src[ident]===undefined){ // this is ugly
-            return $B.$py_src[scope.module]
+        // replace comments by whitespace, cf. issue #658
+        var src = $B.$py_src[ident]
+        if(scope.comments === undefined){return src}
+        for(var i=0; i<scope.comments.length; i++){
+            var start = scope.comments[i][0],
+                len = scope.comments[i][1]
+            src = src.substr(0, start) + ' '.repeat(len + 1) +
+                src.substr(start + len + 1)
         }
-        return $B.$py_src[ident]
+        return src
     }
 
     this.ids = function(){
@@ -3803,6 +3809,10 @@ function $ListOrTupleCtx(context,real){
           case 'dict_or_set_comp':
             var src = this.get_src()
             var res1 = [], items = []
+
+            if(this.comments !== undefined){
+                console.log('comments in comp', this.comments)
+            }
 
             var qesc = new RegExp('"',"g") // to escape double quotes in arguments
             for(var i=1;i<this.intervals.length;i++){
@@ -7011,6 +7021,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     }
     root.line_info = line_info
     root.indent = -1
+    root.comments = []
     if(locals_id!==module){$B.bound[locals_id] = {}}
     var new_node = new $Node(),
         current = root,
@@ -7084,6 +7095,8 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         if(car=="#"){
             var end = src.substr(pos+1).search('\n')
             if(end==-1){end=src.length-1}
+            // Keep track of comment positions
+            root.comments.push([pos, end])
             pos += end+1;continue
         }
         // string
