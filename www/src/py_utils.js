@@ -253,8 +253,8 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
 }
 
 $B.clear_ns = function(name){
-    // Remove name from __BRYTHON__.mdoules, and all the keys that start with name
-    //delete __BRYTHON__.modules[name]
+    // Remove name from __BRYTHON__.modules, and all the keys that start with name
+
     var len = name.length
     for(var key in __BRYTHON__.modules){
         if(key.substr(0, len)==name){

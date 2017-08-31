@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-08-30 17:51:47.083937"
+__BRYTHON__.compiled_date="2017-08-31 19:17:23.578973"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -3741,7 +3741,7 @@ C.from=true
 C.tree=[]
 return new $AbstractExprCtx(C,true)}
 return $transition(C.parent,token)}}
-$B.forbidden=['alert','arguments','case','catch','constructor','Date','delete','default','document','enum','eval','extends','Error','history','function','length','location','Math','new','null','Number','RegExp','super','this','throw','var','window','toLocaleString','toString']
+$B.forbidden=['alert','arguments','case','catch','constructor','Date','delete','default','document','enum','eval','extends','Error','history','function','length','location','Math','new','null','Number','RegExp','super','this','throw','var','window','toLocaleString','toString','message']
 $B.aliased_names={}
 for(var i=0;i<$B.forbidden.length;i++){$B.aliased_names[$B.forbidden[i]]=true}
 var s_escaped='abfnrtvxuU"0123456789'+"'"+'\\',is_escaped={}
@@ -6288,6 +6288,7 @@ info +='\n    '+line}
 return info}else if(attr=='traceback'){
 return traceback(self.$stack)}else{throw AttributeError(self.__class__.__name__+
 "has no attribute '"+attr+"'")}}
+$BaseExceptionDict.__str__=function(self){return self.args[0]}
 $BaseExceptionDict.with_traceback=function(self,tb){self.traceback=tb
 return self}
 $B.set_func_names($BaseExceptionDict)
@@ -6991,7 +6992,7 @@ $JSObjectDict.$factory=JSObject
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','module1','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmath_jv','cmath_ouroboros','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','module1','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var js=['_ajax','_base64','_jsre','_multiprocessing','_posixsubprocess','_profile','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
@@ -7409,7 +7410,11 @@ var $ObjectDict=_b_.object.$dict
 function $err(op,other){var msg="unsupported operand type(s) for "+op
 msg +=": 'float' and '"+$B.get_class(other).__name__+"'"
 throw _b_.TypeError(msg)}
-var $FloatDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'float',$native:true}
+var $FloatDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'float',$native:true,descriptors:{'numerator':true,'denominator':true,'imag':true,'real':true}}
+$FloatDict.numerator=function(self){return self}
+$FloatDict.denominator=function(self){return int(1)}
+$FloatDict.imag=function(self){return int(0)}
+$FloatDict.real=function(self){return self}
 $FloatDict.as_integer_ratio=function(self){if(self.valueOf()==Number.POSITIVE_INFINITY ||
 self.valueOf()==Number.NEGATIVE_INFINITY){throw _b_.OverflowError("Cannot pass infinity to float.as_integer_ratio.")}
 if(!Number.isFinite(self.valueOf())){throw _b_.ValueError("Cannot pass NaN to float.as_integer_ratio.")}
@@ -7484,12 +7489,12 @@ if(fmt.type=='%'){self *=100}
 if(fmt.type=='e'){var res=self.toExponential(fmt.precision),exp=parseInt(res.substr(res.search('e')+1))
 if(Math.abs(exp)<10){res=res.substr(0,res.length-1)+'0'+
 res.charAt(res.length-1)}
-return res }
+return res}
 if(fmt.precision!==undefined){
 var prec=fmt.precision
 if(prec==0){return Math.round(self)+''}
 var res=self.toFixed(prec),pt_pos=res.indexOf('.')
-if(fmt.type!==undefined && 
+if(fmt.type!==undefined &&
 (fmt.type=='%' ||fmt.type.toLowerCase()=='f')){if(pt_pos==-1){res +='.'+'0'.repeat(fmt.precision)}
 else{var missing=fmt.precision-res.length+pt_pos+1
 if(missing>0)res +='0'.repeat(missing)}}else{var res1=self.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search('e')+1))
@@ -7610,7 +7615,7 @@ $FloatDict.__pos__=function(self){return self}
 $FloatDict.__pow__=function(self,other){var other_int=isinstance(other,_b_.int)
 if(other_int ||isinstance(other,float)){if(self==1){return self}
 if(other==0){return new Number(1)}
-if(self==-1 && 
+if(self==-1 &&
 (!isFinite(other)||other.__class__===$B.LongInt.$dict ||!$B.is_safe_int(other))
 && !isNaN(other)){return new Number(1)}
 else if(self==0 && isFinite(other)&& other<0){throw _b_.ZeroDivisionError("0.0 cannot be raised to a negative power")}else if(self==Number.NEGATIVE_INFINITY && !isNaN(other)){if(other<0 && other%2==1){return new Number(-0.0)}else if(other<0){return new Number(0)}
@@ -9163,7 +9168,7 @@ if(self.length==0)return nbcar==0
 for(var i=0,_len_i=self.length;i < _len_i;i++){if(self.substr(i,nbcar)==item)return true}
 return false}
 $StringDict.__delitem__=function(){throw _b_.TypeError("'str' object doesn't support item deletion")}
-$StringDict.__dir__=$ObjectDict.__dir__ 
+$StringDict.__dir__=$ObjectDict.__dir__
 $StringDict.__eq__=function(self,other){if(other===undefined){
 return self===str}
 if(_b_.isinstance(other,_b_.str)){return other.valueOf()==self.valueOf()}
@@ -9315,7 +9320,7 @@ if(upper){ret="0X" + ret}else{
 ret="0x" + ret}}}
 return format_padding(format_sign(val,flags)+ ret,flags)}
 var octal_format=function(val,flags){number_check(val)
-var ret 
+var ret
 if(val.__class__===$B.LongInt.$dict){ret=$B.LongInt.$dict.to_base(8)}else{
 ret=parseInt(val)
 ret=ret.toString(8)}
@@ -9375,7 +9380,7 @@ var ret=func(self,flags)
 if(ret !==undefined){return ret}
 ++newpos}}catch(err){if(err.name==="UnsupportedChar"){invalid_char=s[newpos]
 if(invalid_char===undefined){throw _b_.ValueError("incomplete format")}
-throw _b_.ValueError("unsupported format character '" + invalid_char + 
+throw _b_.ValueError("unsupported format character '" + invalid_char +
 "' (0x" + invalid_char.charCodeAt(0).toString(16)+ ") at index " + newpos)}else if(err.name==="NotANumber"){var try_char=s[newpos]
 var cls=self.__class__
 if(!cls){if(typeof(self)==='string'){cls='str'}else{
@@ -9412,7 +9417,7 @@ $StringDict.__repr__=function(self){var res=self.replace(/\n/g,'\\\\n')
 res=res.replace(/\\/g,'\\\\')
 if(res.search('"')==-1 && res.search("'")==-1){return "'"+res+"'"}else if(self.search('"')==-1){return '"'+res+'"'}
 var qesc=new RegExp("'","g")
-res="'"+res.replace(qesc,"\\'")+"'" 
+res="'"+res.replace(qesc,"\\'")+"'"
 return res}
 $StringDict.__setitem__=function(self,attr,value){throw _b_.TypeError("'str' object does not support item assignment")}
 $StringDict.__str__=function(self){if(self===undefined)return "<class 'str'>"
@@ -9633,7 +9638,7 @@ $StringDict.replace=function(self,old,_new,count){
 var $=$B.args('replace',4,{self:null,old:null,$$new:null,count:null},['self','old','$$new','count'],arguments,{count:-1},null,null),count=$.count,self=$.self,old=$.old,_new=$.$$new
 check_str(old)
 check_str(_new)
-if(!isinstance(count,[_b_.int,_b_.float])){throw _b_.TypeError("'" + $B.get_class(count).__name__ + 
+if(!isinstance(count,[_b_.int,_b_.float])){throw _b_.TypeError("'" + $B.get_class(count).__name__ +
 "' object cannot be interpreted as an integer");}else if(isinstance(count,_b_.float)){throw _b_.TypeError("integer argument expected, got float");}
 if(count==0){return self}
 if(count.__class__==$B.LongInt.$dict){count=parseInt(count.value)}
@@ -9758,7 +9763,7 @@ return '0'.repeat(width - self.length)+self}}
 function str(arg){if(arg===undefined)return ''
 switch(typeof arg){case 'string':
 return arg
-case 'number': 
+case 'number':
 if(isFinite(arg)){return arg.toString()}}
 try{if(arg.__class__===$B.$factory){
 var func=$B.$type.__getattribute__(arg.$dict.__class__,'__str__')
@@ -9767,14 +9772,13 @@ return func()}else if(arg.__class__===$B.$type){
 var func=$B.$type.__getattribute__(arg.__class__,'__str__')
 if(func.__func__===_b_.object.$dict.__str__){return func(arg)}
 return func()}
-var f=getattr(arg,'__str__')
-return f()}
+var f=getattr(arg,'__str__')}
 catch(err){
 try{
-var f=getattr(arg,'__repr__')
-return getattr(f,'__call__')()}catch(err){if($B.debug>1){console.log(err)}
+var f=getattr(arg,'__repr__')}catch(err){if($B.debug>1){console.log(err)}
 console.log('Warning - no method __str__ or __repr__, default to toString',arg)
-return arg.toString()}}}
+return arg.toString()}}
+return getattr(f,'__call__')()}
 str.__class__=$B.$factory
 str.$dict=$StringDict
 $StringDict.$factory=str
@@ -9839,7 +9843,7 @@ return s+fill.repeat(missing)
 case '>':
 return fill.repeat(missing)+s
 case '=':
-if('+-'.indexOf(s.charAt(0))>-1){return s.charAt(0)+fill.repeat(missing)+s.substr(1)}else{return fill.repeat(missing)+s }
+if('+-'.indexOf(s.charAt(0))>-1){return s.charAt(0)+fill.repeat(missing)+s.substr(1)}else{return fill.repeat(missing)+s}
 case '^':
 var left=parseInt(missing/2)
 return fill.repeat(left)+s+fill.repeat(missing-left)}}
