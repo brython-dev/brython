@@ -73,7 +73,7 @@ $TracebackDict.__getattribute__ = function(self, attr){
         console.log(self.stack, Object.keys(self.stack))
     }
     var line_info = last_frame[1].$line_info
-    
+
     switch(attr){
         case 'tb_frame':
             return frame(self.stack)
@@ -156,7 +156,7 @@ function frame(stack, pos){
             throw err
         }
         res.f_globals = $B.obj_dict(_frame[3])
-        
+
         if(_frame[1].$line_info === undefined){res.f_lineno=-1}
         else{res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])}
 
@@ -255,6 +255,10 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
     }
 }
 
+$BaseExceptionDict.__str__ = function(self){
+    return self.args[0]
+}
+
 $BaseExceptionDict.with_traceback = function(self, tb){
     self.traceback = tb
     return self
@@ -289,7 +293,7 @@ $B.exception = function(js_exc){
     if(!js_exc.$py_error){
         // Print complete Javascript traceback in console
         //console.log('js exc', js_exc)
-        
+
         if(js_exc.info===undefined){
             var _frame = $B.last($B.frames_stack)
             if(_frame===undefined){_frame=$B.pmframe} // use post-mortem frame
@@ -351,7 +355,7 @@ $B.is_exc=function(exc,exc_list){
     // used in try/except to check if an exception is an instance of
     // one of the classes in exc_list
     if(exc.__class__===undefined) exc = $B.exception(exc)
-    
+
     var exc_class = exc.__class__.$factory
     for(var i=0;i<exc_list.length;i++){
         if(issubclass(exc_class,exc_list[i])) return true
@@ -374,7 +378,7 @@ function $make_exc(names, parent){
             // If name is an array, its first item is the exception name
             // and the second is a piece of code to replace the placeholder
             // in BaseException source code
-            var code = name[1], 
+            var code = name[1],
                 name = name[0]
         }
         // create a class for exception called "name"
@@ -426,7 +430,7 @@ $make_exc(['EnvironmentError','IOError','VMSError','WindowsError'],_b_.OSError)
 
 $B.$NameError = function(name){
     // Used if a name is not found in the bound names
-    // It is converted into 
+    // It is converted into
     // $globals[name] !== undefined ? $globals[name] : __BRYTHON__.$NameError(name)
     throw _b_.NameError("name '"+name+"' is not defined")
 }

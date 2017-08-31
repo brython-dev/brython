@@ -6,7 +6,7 @@ def _restore_current(exc):
     by the code inside functions of this module.
     """
     __BRYTHON__.current_exception = exc
-    
+
 def print_exc(file=sys.stderr):
     exc = __BRYTHON__.current_exception
     if isinstance(exc, SyntaxError):
@@ -16,9 +16,11 @@ def print_exc(file=sys.stderr):
         file.write('\n  '+offset*' '+'^')
     else:
         file.write(exc.info)
-    msg = exc.__name__
-    if exc.args:
-        msg += ': %s' %exc.args[0]
+    msg = exc.__class__.__name__ + ':'
+    try:
+        msg += str(exc)
+    except:
+        msg += '<unprintable {} object>'.format(exc.__class__.__name__)
     file.write('\n'+msg+'\n')
     _restore_current(exc)
 
@@ -28,14 +30,16 @@ def format_exc(limit=None, chain=True):
     if isinstance(exc, SyntaxError):
         offset = exc.args[3]
         res += '\n    '+offset*' '+'^'
-    res += '\n'+exc.__name__
-    if exc.args:
-        res += ': '+exc.args[0]
+    res += '\n' + exc.__class__.__name__ + ': '
+    try:
+        res += str(exc)
+    except:
+        res += '<unprintable {} object>'.format(exc.__class__.__name__)
     _restore_current(exc)
     return res+'\n'
 
 def format_exception(_type, value, tb, limit=None, chain=True):
-    return ['%s\n' %_type,'%s\n' %value]    
+    return ['%s\n' %_type,'%s\n' %value]
 
 def extract_tb(tb, limit=None):
     return tb
