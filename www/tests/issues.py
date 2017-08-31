@@ -1399,6 +1399,24 @@ assert x._sargs == [5]
 x.mytest2()
 assert x._kargs[5] == '5'
 
+# issue 658
+kk = [i for i in [
+        1,  # 1st quadrant
+        2
+]]
+assert kk == [1, 2]
+
+kk = (i for i in [
+        1, # a comment
+        2
+])
+assert list(kk) == [1, 2]
+
+# issue 663
+a = {}
+a[5] = b = 0
+assert a[5] == 0
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

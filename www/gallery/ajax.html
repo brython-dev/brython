@@ -52,10 +52,10 @@ from browser import document as doc, ajax
 class Request(ajax.Request):
 
     def success(self):
-        if self.status == 200 or self.status == 0:
-            doc["result"].html = self.text
-        else:
-            doc["result"].html = "error " + self.text
+        doc["result"].html = self.text
+
+    def error(self):
+        doc["result"].html = "error " + self.text
 
     def timeout(self):
         doc["result"].html = "server didn't reply after %s seconds" %self.timeout_secs

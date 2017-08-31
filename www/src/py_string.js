@@ -48,7 +48,7 @@ if (!String.prototype.trimRight) {
     return this.substring(0, j + 1);
   };
 }
-    
+
 var $ObjectDict = object.$dict
 
 var $StringDict = {__class__:$B.$type,
@@ -106,7 +106,7 @@ $StringDict.__delitem__ = function(){
 
 // __dir__must be assigned explicitely because attribute resolution for builtin
 // classes doesn't use __mro__
-$StringDict.__dir__ = $ObjectDict.__dir__ 
+$StringDict.__dir__ = $ObjectDict.__dir__
 
 $StringDict.__eq__ = function(self,other){
     if(other===undefined){ // compare object "self" to class "str"
@@ -123,7 +123,7 @@ function preformat(self, fmt){
     if(fmt.type && fmt.type!='s'){
         throw _b_.ValueError("Unknown format code '"+fmt.type+
             "' for object of type 'str'")
-    }    
+    }
     return self
 }
 
@@ -151,7 +151,7 @@ $StringDict.__getitem__ = function(self,arg){
         } else {
             if(stop>=start) return ''
             for(var i=start;i>stop;i+=step) res += self.charAt(i)
-        } 
+        }
         return res
     }
     if(isinstance(arg,bool)) return self.__getitem__(_b_.int(arg))
@@ -261,7 +261,7 @@ var format_float_precision = function(val, upper, flags, modifier) {
         return val.toUpperCase()
     }
     return val
-    
+
 }
 
 var format_sign = function(val, flags) {
@@ -302,7 +302,7 @@ var num_format = function(val, flags) {
             return sign + format_padding(s, flags, true)
         }
     }
-    
+
     return format_padding(format_sign(val, flags) + s, flags)
 }
 
@@ -374,12 +374,12 @@ var floating_point_format = function(val, upper, flags) {
             return format_padding(val, flags)
         }
         flags.precision = (flags.precision || 0) + numzeros
-        return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags, 
+        return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags,
             function(val, precision) {
                 return val.toFixed(min(precision, v_len - dot_idx) + numzeros)
             }), flags)
     }
-    
+
     if (dot_idx > flags.precision) {
         val = format_sign(val, flags) + format_float_precision(val, upper, flags, _floating_g_exp_helper)
         if (!flags.alternate) {
@@ -394,7 +394,7 @@ var floating_point_format = function(val, upper, flags) {
         }
         return format_padding(val, flags)
     }
-    return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags, 
+    return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags,
         function(val, precision) {
             if (!flags.decimal_point) {
                 precision = min(v_len - 1, 6)
@@ -418,7 +418,7 @@ var _floating_g_exp_helper = function(val, precision, flags, upper) {
     // pad exponent to two digits
     var e_idx = val.lastIndexOf('e')
     if (e_idx > val.length - 4) {
-        val = val.substring(0, e_idx + 2) + '0' + val.substring(e_idx + 2) 
+        val = val.substring(0, e_idx + 2) + '0' + val.substring(e_idx + 2)
     }
     if (upper) {
         return val.toUpperCase()
@@ -429,7 +429,7 @@ var _floating_g_exp_helper = function(val, precision, flags, upper) {
 // fF
 var floating_point_decimal_format = function(val, upper, flags) {
     val = _float_helper(val, flags)
-    return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags, 
+    return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags,
         function(val, precision, flags) {
             val = val.toFixed(precision)
             if (precision === 0 && flags.alternate) {
@@ -444,7 +444,7 @@ var _floating_exp_helper = function(val, precision, flags, upper) {
     // pad exponent to two digits
     var e_idx = val.lastIndexOf('e')
     if (e_idx > val.length - 4) {
-        val = val.substring(0, e_idx + 2) + '0' + val.substring(e_idx + 2) 
+        val = val.substring(0, e_idx + 2) + '0' + val.substring(e_idx + 2)
     }
     if (upper) {
         return val.toUpperCase()
@@ -455,7 +455,7 @@ var _floating_exp_helper = function(val, precision, flags, upper) {
 // eE
 var floating_point_exponential_format = function(val, upper, flags) {
     val = _float_helper(val, flags)
-    
+
     return format_padding(format_sign(val, flags) + format_float_precision(val, upper, flags, _floating_exp_helper), flags)
 }
 
@@ -483,7 +483,7 @@ var signed_hex_format = function(val, upper, flags) {
             ret = sign + format_padding(ret, flags, true)
         }
     }
-    
+
     if (flags.alternate) {
         if (ret.charAt(0) === '-') {
             if (upper) {
@@ -504,7 +504,7 @@ var signed_hex_format = function(val, upper, flags) {
 
 var octal_format = function(val, flags) {
     number_check(val)
-    var ret 
+    var ret
 
     if (val.__class__ === $B.LongInt.$dict) {
       ret = $B.LongInt.$dict.to_base(8)
@@ -514,7 +514,7 @@ var octal_format = function(val, flags) {
     }
 
     ret = format_int_precision(ret, flags)
-    
+
     if (flags.pad_char === '0') {
         if (val < 0) {
             ret = ret.substring(1)
@@ -525,7 +525,7 @@ var octal_format = function(val, flags) {
             ret = sign + format_padding(ret, flags, true)
         }
     }
-    
+
     if (flags.alternate) {
         if (ret.charAt(0) === '-') {
             ret = "-0o" + ret.slice(1)
@@ -657,7 +657,7 @@ $StringDict.__mod__ = function(self, args) {
     var $get_arg_string = function(s) {
         // returns [self, newpos]
         var self
-        
+
         // non-tuple args
         if (argpos === null) {
             // args is the value
@@ -692,7 +692,7 @@ $StringDict.__mod__ = function(self, args) {
                     if (invalid_char === undefined) {
                         throw _b_.ValueError("incomplete format")
                     }
-                    throw _b_.ValueError("unsupported format character '" + invalid_char + 
+                    throw _b_.ValueError("unsupported format character '" + invalid_char +
                         "' (0x" + invalid_char.charCodeAt(0).toString(16) + ") at index " + newpos)
                 } else if (err.name === "NotANumber") {
                     var try_char = s[newpos]
@@ -740,7 +740,7 @@ $StringDict.__mod__ = function(self, args) {
         }
         pos = newpos + 1
     } while (pos < length)
-    
+
     if(argpos!==null){
         if(args.length>argpos){
             throw _b_.TypeError('not enough arguments for format string')
@@ -778,7 +778,7 @@ $StringDict.__repr__ = function(self){
         return '"'+res+'"'
     }
     var qesc = new RegExp("'","g") // to escape single quote
-    res = "'"+res.replace(qesc,"\\'")+"'"    
+    res = "'"+res.replace(qesc,"\\'")+"'"
     return res
 }
 
@@ -836,7 +836,7 @@ $StringDict.center = function(self,width,fillchar){
         arguments,{fillchar:' '},null,null)
 
     if($.width<=self.length) return self
-    
+
     var pad = parseInt(($.width-self.length)/2)
     var res = $.fillchar.repeat(pad)
     res += self + res
@@ -891,12 +891,12 @@ $StringDict.encode = function(self, encoding) {
 }
 
 $StringDict.endswith = function(){
-    // Return True if the string ends with the specified suffix, otherwise 
-    // return False. suffix can also be a tuple of suffixes to look for. 
-    // With optional start, test beginning at that position. With optional 
+    // Return True if the string ends with the specified suffix, otherwise
+    // return False. suffix can also be a tuple of suffixes to look for.
+    // With optional start, test beginning at that position. With optional
     // end, stop comparing at that position.
     var $=$B.args("endswith",4,
-        {self:null, suffix:null, start:null, end:null}, 
+        {self:null, suffix:null, start:null, end:null},
         ['self', 'suffix', 'start', 'end'],
         arguments,{start:0, end:null},null,null)
 
@@ -904,7 +904,7 @@ $StringDict.endswith = function(){
 
     var suffixes = $.suffix
     if(!isinstance(suffixes,_b_.tuple)){suffixes=[suffixes]}
-    
+
     var s = $.self.substring($.start,$.end)
     for(var i=0, _len_i = suffixes.length; i < _len_i;i++){
         var suffix = suffixes[i]
@@ -939,17 +939,17 @@ $StringDict.expandtabs = function(self, tabsize) {
         }
         pos++
     }
-    
+
     return res
 }
 
 $StringDict.find = function(){
-    // Return the lowest index in the string where substring sub is found, 
-    // such that sub is contained in the slice s[start:end]. Optional 
-    // arguments start and end are interpreted as in slice notation. 
+    // Return the lowest index in the string where substring sub is found,
+    // such that sub is contained in the slice s[start:end]. Optional
+    // arguments start and end are interpreted as in slice notation.
     // Return -1 if sub is not found.
     var $=$B.args("$StringDict.find",4,
-        {self:null, sub:null, start:null, end:null}, 
+        {self:null, sub:null, start:null, end:null},
         ['self', 'sub', 'start','end'],
         arguments,{start:0,end:null},null,null)
     check_str($.sub)
@@ -975,7 +975,7 @@ $StringDict.find = function(){
 function parse_format(fmt_string){
 
     // Parse a "format string", as described in the Python documentation
-    // Return a format object. For the format string 
+    // Return a format object. For the format string
     //     a.x[z]!r:...
     // the object has attributes :
     // - name : "a"
@@ -1014,7 +1014,7 @@ function parse_format(fmt_string){
         name = name.replace(name_ext_re, name_repl)
     }
 
-    return {name: name, name_ext: name_ext, 
+    return {name: name, name_ext: name_ext,
         conv: conv, spec: spec||''}
 }
 
@@ -1028,11 +1028,11 @@ $StringDict.format = function(self) {
     // - elements of even rank are literal text
     // - elements of odd rank are "format objects", built from the
     //   format strings in self (of the form {...})
-    var pos=0, 
-        _len=self.length, 
-        car, 
-        text='', 
-        parts=[], 
+    var pos=0,
+        _len=self.length,
+        car,
+        text='',
+        parts=[],
         rank=0
 
     while(pos<_len){
@@ -1047,7 +1047,7 @@ $StringDict.format = function(self) {
             pos+=2
         }else if(car=='{'){
             // Start of a format string
-            
+
             // Store current literal text
             parts.push(text)
 
@@ -1082,17 +1082,17 @@ $StringDict.format = function(self) {
                                 if(/\d+/.exec(key)){
                                     // If key is numeric, search in positional
                                     // arguments
-                                    return _b_.tuple.$dict.__getitem__($.args, 
+                                    return _b_.tuple.$dict.__getitem__($.args,
                                         parseInt(key))
                                 }else{
                                     // Else try in keyword arguments
                                     return _b_.dict.$dict.__getitem__($.kw, key)
                                 }
                             }
-                            fmt_obj.spec = fmt_obj.spec.replace(/\{(.+?)\}/g, 
+                            fmt_obj.spec = fmt_obj.spec.replace(/\{(.+?)\}/g,
                                 replace_nested)
                         }
-                        
+
                         // Store format object in list "parts"
                         parts.push(fmt_obj)
                         text = ''
@@ -1105,13 +1105,13 @@ $StringDict.format = function(self) {
         }else{text += car;pos++}
     }
     if(text){parts.push(text)}
-    
+
     // Apply formatting to the values passed to format()
     var res = '', fmt
     for(var i=0;i<parts.length;i++){
         // Literal text is added unchanged
         if(typeof parts[i]=='string'){res += parts[i];continue}
-        
+
         // Format objects
         fmt = parts[i]
         if(fmt.name.charAt(0).search(/\d/)>-1){
@@ -1141,7 +1141,7 @@ $StringDict.format = function(self) {
         if(fmt.conv=='a'){value = _b_.ascii(value)}
         else if(fmt.conv=='r'){value = _b_.repr(value)}
         else if(fmt.conv=='s'){value = _b_.str(value)}
-        
+
         // Call attribute __format__ to perform the actual formatting
         res += _b_.getattr(value, '__format__')(fmt.spec)
     }
@@ -1162,7 +1162,7 @@ $StringDict.index = function(self){
 $StringDict.join = function(){
     var $=$B.args('join',2,{self:null,iterable:null},
         ['self', 'iterable'], arguments, {}, null, null)
-    
+
     var iterable=_b_.iter($.iterable)
     var res = [],count=0
     while(1){
@@ -1203,15 +1203,15 @@ $StringDict.lstrip = function(self,x){
 $StringDict.maketrans = function() {
     var $ = $B.args('maketrans', 3, {x:null,y:null,z:null},['x','y','z'],
         arguments, {y:null, z:null}, null, null)
-        
+
     var _t=_b_.dict()
     // make 'default' translate table
     for(var i=0; i < 256; i++) _t.$numeric_dict[i]=i
 
     if($.y===null && $.z===null){
-        // If there is only one argument, it must be a dictionary mapping 
-        // Unicode ordinals (integers) or characters (strings of length 1) to 
-        // Unicode ordinals, strings (of arbitrary lengths) or None. Character 
+        // If there is only one argument, it must be a dictionary mapping
+        // Unicode ordinals (integers) or characters (strings of length 1) to
+        // Unicode ordinals, strings (of arbitrary lengths) or None. Character
         // keys will then be converted to ordinals.
         if(!_b_.isinstance($.x, _b_.dict)){
             throw _b_.TypeError('maketrans only argument must be a dict')
@@ -1232,7 +1232,7 @@ $StringDict.maketrans = function() {
         }
         return _t
     }else{
-        // If there are two arguments, they must be strings of equal length, 
+        // If there are two arguments, they must be strings of equal length,
         // and in the resulting dictionary, each character in x will be mapped
         // to the character at the same position in y
         if(!(_b_.isinstance($.x, _b_.str) && _b_.isinstance($.y, _b_.str))){
@@ -1242,7 +1242,7 @@ $StringDict.maketrans = function() {
         }else{
             var toNone = {}
             if($.z!==null){
-                // If there is a third argument, it must be a string, whose 
+                // If there is a third argument, it must be a string, whose
                 // characters will be mapped to None in the result
                 if(!_b_.isinstance($.z, _b_.str)){
                     throw _b_.TypeError('maketrans third argument must be a string')
@@ -1250,7 +1250,7 @@ $StringDict.maketrans = function() {
                 for(var i=0,len=$.z.length;i<len;i++){
                     toNone[_b_.ord($.z.charAt(i))] = true
                 }
-            }                
+            }
             for(var i=0,len=$.x.length;i<len;i++){
                 _t.$numeric_dict[_b_.ord($.x.charAt(i))] = _b_.ord($.y.charAt(i))
             }
@@ -1269,7 +1269,7 @@ $StringDict.partition = function() {
   check_str($.sep)
   var i=$.self.indexOf($.sep)
   if (i== -1) return _b_.tuple([$.self, '', ''])
-  return _b_.tuple([$.self.substring(0,i), $.sep, 
+  return _b_.tuple([$.self.substring(0,i), $.sep,
       $.self.substring(i+$.sep.length)])
 }
 
@@ -1285,7 +1285,7 @@ function $re_escape(str)
 
 $StringDict.replace = function(self, old, _new, count) {
     // Replaces occurrences of 'old' by '_new'. Count references
-    // the number of times to replace. In CPython, negative or undefined 
+    // the number of times to replace. In CPython, negative or undefined
     // values of count means replace all.
     var $ = $B.args('replace', 4, {self:null,old:null,$$new:null,count:null},
         ['self','old','$$new','count'], arguments, {count:-1},null,null),
@@ -1295,7 +1295,7 @@ $StringDict.replace = function(self, old, _new, count) {
     check_str(_new)
     // Validate instance type of 'count'
     if (!isinstance(count,[_b_.int,_b_.float])) {
-        throw _b_.TypeError("'" + $B.get_class(count).__name__ + 
+        throw _b_.TypeError("'" + $B.get_class(count).__name__ +
             "' object cannot be interpreted as an integer");
     } else if (isinstance(count, _b_.float)) {
         throw _b_.TypeError("integer argument expected, got float");
@@ -1322,7 +1322,7 @@ $StringDict.replace = function(self, old, _new, count) {
         }
         return res+rest
     }
-    
+
     if (count < 0) count = res.length;
     while (count > 0) {
         pos = res.indexOf(old, pos);
@@ -1336,8 +1336,8 @@ $StringDict.replace = function(self, old, _new, count) {
 }
 
 $StringDict.rfind = function(self){
-    // Return the highest index in the string where substring sub is found, 
-    // such that sub is contained within s[start:end]. Optional arguments 
+    // Return the highest index in the string where substring sub is found,
+    // such that sub is contained within s[start:end]. Optional arguments
     // start and end are interpreted as in slice notation. Return -1 on failure.
     var $=$B.args("rfind",4,
         {self:null, sub:null, start:null, end:null},
@@ -1347,13 +1347,13 @@ $StringDict.rfind = function(self){
     normalize_start_end($)
 
     check_str($.sub)
-    
+
     if($.sub.length==0){
         if($.start>$.self.length){return -1}
         else{return $.self.length}
     }
     var sublen = $.sub.length
-        
+
     for(var i=$.end-sublen;i>=$.start;i--){
         if($.self.substr(i, sublen)==$.sub){return i}
     }
@@ -1382,7 +1382,7 @@ $StringDict.rpartition = function(self,sep) {
     var $=$B.args('rpartition',2,{self:null,sep:null},['self','sep'],
         arguments,{},null,null)
     check_str($.sep)
-    var self = reverse($.self), 
+    var self = reverse($.self),
         sep = reverse($.sep)
     var items = $StringDict.partition(self,sep).reverse()
     for(var i=0;i<items.length;i++){
@@ -1401,7 +1401,7 @@ $StringDict.rsplit = function(self) {
     var rev_str = reverse($.self),
         rev_sep = sep === _b_.None ? sep : reverse($.sep),
         rev_res = $StringDict.split(rev_str, rev_sep, $.maxsplit)
-    
+
     // Reverse the list, then each string inside the list
     rev_res.reverse()
     for(var i=0;i<rev_res.length;i++){
@@ -1514,12 +1514,12 @@ $StringDict.splitlines = function(self){
 }
 
 $StringDict.startswith = function(){
-    // Return True if string starts with the prefix, otherwise return False. 
-    // prefix can also be a tuple of prefixes to look for. With optional 
-    // start, test string beginning at that position. With optional end, 
+    // Return True if string starts with the prefix, otherwise return False.
+    // prefix can also be a tuple of prefixes to look for. With optional
+    // start, test string beginning at that position. With optional end,
     // stop comparing string at that position.
     var $=$B.args("startswith",4,
-        {self:null, prefix:null, start:null, end:null}, 
+        {self:null, prefix:null, start:null, end:null},
         ['self', 'prefix', 'start', 'end'],
         arguments,{start:0, end:null},null,null)
 
@@ -1527,7 +1527,7 @@ $StringDict.startswith = function(){
 
     var prefixes = $.prefix
     if(!isinstance(prefixes,_b_.tuple)){prefixes=[prefixes]}
-    
+
     var s = $.self.substring($.start,$.end)
     for(var i=0, _len_i = prefixes.length; i < _len_i;i++){
         prefix = prefixes[i]
@@ -1586,10 +1586,10 @@ function str(arg){
     switch(typeof arg) {
       case 'string':
           return arg
-      case 'number': 
+      case 'number':
           if(isFinite(arg)){return arg.toString()}
     }
-    
+
     try{
         if(arg.__class__===$B.$factory){
             // arg is a class (the factory function)
@@ -1611,19 +1611,20 @@ function str(arg){
 
         var f = getattr(arg,'__str__')
         // XXX fix : if not better than object.__str__, try __repr__
-        return f()
+        //return f()
     }
     catch(err){
         //console.log('err '+err)
         try{ // try __repr__
              var f = getattr(arg,'__repr__')
-             return getattr(f,'__call__')()
+             //return getattr(f,'__call__')()
         }catch(err){
              if($B.debug>1){console.log(err)}
              console.log('Warning - no method __str__ or __repr__, default to toString', arg)
              return arg.toString()
         }
     }
+    return getattr(f, '__call__')()
 }
 str.__class__ = $B.$factory
 str.$dict = $StringDict
@@ -1739,7 +1740,7 @@ $B.parse_format_spec = function(spec){
             //console.log('error', spec, this, pos, spec.charAt(pos))
             throw _b_.ValueError("Invalid format specifier")
         }
-    }    
+    }
     this.toString = function(){
         return (this.fill===undefined ? '' : _b_.str(this.fill))+
             (this.align||'')+
@@ -1766,7 +1767,7 @@ $B.format_width = function(s, fmt){
                 if('+-'.indexOf(s.charAt(0))>-1){
                     return s.charAt(0)+fill.repeat(missing)+s.substr(1)
                 }else{
-                    return fill.repeat(missing)+s            
+                    return fill.repeat(missing)+s
                 }
             case '^':
                 var left = parseInt(missing/2)

@@ -20,7 +20,7 @@ def exc_info():
     if exc is None:
         return(None, None, None)
     return (exc.__class__,exc,exc.traceback)
-    
+
 exec_prefix = __BRYTHON__.brython_path
 
 executable = __BRYTHON__.brython_path+'/brython.js'
@@ -43,10 +43,16 @@ class flag_class:
       self.quiet=0
       self.hash_randomization=1
 
-flags=flag_class()
+flags = flag_class()
+
+class float_info:
+    mant_dig = 53
+    max = window.Number.MAX_VALUE
+    min = window.Number.MIN_VALUE
+    radix = 2
 
 def getfilesystemencoding(*args,**kw):
-    """getfilesystemencoding() -> string    
+    """getfilesystemencoding() -> string
     Return the encoding used to convert Unicode filenames in
     operating system filenames."""
     return 'utf-8'
@@ -93,7 +99,7 @@ class __version_info(object):
 
     def __str__(self):
         _s="sys.version(major=%d, minor=%d, micro=%d, releaselevel='%s', serial=%d)"
-        return _s % (self.major, self.minor, self.micro, 
+        return _s % (self.major, self.minor, self.micro,
                      self.releaselevel, self.serial)
         #return str(self.version_info)
 
@@ -154,14 +160,14 @@ implementation=_implementation()
 
 class _hash_info:
   def __init__(self):
-      self.width=32, 
+      self.width=32,
       self.modulus=2147483647
-      self.inf=314159 
+      self.inf=314159
       self.nan=0
       self.imag=1000003
-      self.algorithm='siphash24' 
-      self.hash_bits=64 
-      self.seed_bits=128 
+      self.algorithm='siphash24'
+      self.hash_bits=64
+      self.seed_bits=128
       cutoff=0
 
   def __repr(self):

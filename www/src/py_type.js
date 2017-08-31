@@ -44,6 +44,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
 	bases = parents
 	var mro0 = cl_dict.$string_dict  // to replace class_obj in method creation
     }
+
     // DRo - Begin
 
     /* see if __init_subclass__ is defined in any of the parents
@@ -128,9 +129,17 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
 
     // If no metaclass is specified for the class, see if one of the parents
     // has a metaclass set
-    for(var i=1;i<mro.length;i++){
-        if(mro[i].__class__ !== $B.$type){
-            metaclass = mro[i].__class__.$factory
+    // DRo. The initial comparison for the current metaclass is against
+    // _b_.type which is the default value.
+    // The comparison inside the loop is kept against $B.$type, because
+    // as done below, the actual value in __class__ is metaclass.$dict
+    // and the actual value in _b_.type.__class__ = $B.type (further below)
+    if(metaclass === _b_.type) {
+        for(var i=1;i<mro.length;i++){
+            if(mro[i].__class__ !== $B.$type){
+                metaclass = mro[i].__class__.$factory
+        break
+            }
         }
     }
 
@@ -799,9 +808,15 @@ $B.$MethodDict.__ne__ = function(self, other){
 }
 
 $B.$MethodDict.__getattribute__ = function(self, attr){
-    // Internal attributes __name__, __module__, __doc__ etc.
-    // are stored in self.$infos.__func__.$infos
-    var infos = self.$infos.__func__.$infos
+    // Internal attributes __name__, __func__, __self__ etc.
+    // are stored in self.$infos
+    var infos = self.$infos
+    switch(attr){
+        case "__func__":
+        case "__self__":
+            return infos[attr]
+    }
+    infos = infos.__func__.$infos
     if(infos && infos[attr]){
         if(attr=='__code__'){
             var res = {__class__:$B.$CodeDict}
@@ -816,6 +831,7 @@ $B.$MethodDict.__getattribute__ = function(self, attr){
         return _b_.object.$dict.__getattribute__(self, attr)
     }
 }
+
 $B.$MethodDict.__mro__=[_b_.object.$dict]
 $B.$MethodDict.__repr__ = $B.$MethodDict.__str__ = function(self){
     return '<bound method '+self.$infos.__class__.$dict.__name__+'.'+

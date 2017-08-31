@@ -60,8 +60,6 @@
             else {
                 mod_desc = '(' + mod_desc + ')';
             }
-            module.toString = module.__repr__ = module.__str__ =
-                    function(){return "<module '" + mod_name + "' " + mod_desc + ">"}
         }
     }
     module.__name__ = _spec_name;

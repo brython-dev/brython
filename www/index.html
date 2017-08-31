@@ -28,7 +28,7 @@ if qs_lang:
 def ch_lang(ev):
     sel = ev.target
     new_lang = sel.options[sel.selectedIndex].value
-    doc.location.href = f"index.html?lang={new_lang}"
+    document.location.href = f"index.html?lang={new_lang}"
 
 for elt in document[html.SELECT]:
     if elt.id.startswith('change_lang_'):

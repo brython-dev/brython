@@ -13,10 +13,10 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     // $dobj = {'z':1}
     // extra_pos_args = 'args'
     // extra_kw_args = 'kw'
-    
-    var has_kw_args = false, 
+
+    var has_kw_args = false,
         nb_pos = $args.length
-    
+
     // If the function call had keywords arguments, they are in the last
     // element of $args
     if(nb_pos>0 && $args[nb_pos-1].$nat){
@@ -26,7 +26,7 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     }
 
     if(extra_pos_args){
-        slots[extra_pos_args]=[]; 
+        slots[extra_pos_args]=[];
         slots[extra_pos_args].__class__=_b_.tuple.$dict
     }
     if(extra_kw_args){
@@ -78,14 +78,14 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
                 }
             }else if(slots[key]!==null){
                 // The slot is already filled
-                throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")            
-            }else{    
+                throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")
+            }else{
                 // Fill the slot with the key/value pair
                 slots[key] = value
             }
         }
     }
-    
+
     // If there are unfilled slots, see if there are default values
     var missing = []
     for(var attr in slots){
@@ -94,7 +94,7 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
             else{missing.push("'"+attr+"'")}
         }
     }
-    
+
     if(missing.length>0){
 
         if(missing.length==1){
@@ -104,10 +104,10 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
             msg += missing.join(' and ')
             throw _b_.TypeError(msg)
         }
-    
+
     }
     return slots
-    
+
 }
 
 $B.wrong_nb_args = function(name, received, expected, positional){
@@ -178,15 +178,13 @@ $B.$list_comp = function(items){
     var ix = $B.UUID()
     var py = "x"+ix+"=[]\n", indent = 0
     for(var i=1, len = items.length; i < len;i++){
-        py += ' '.repeat(indent)
-        var item = items[i]
-        item = item.replace(/\s*$/, '').replace(/\s+/g, ' ')
-        py += item+':\n'
+        var item = items[i].replace(/\s+$/,'').replace(/\n/g, '')
+        py += ' '.repeat(indent) + item + ':\n'
         indent += 4
     }
     py += ' '.repeat(indent)
     py += 'x'+ix+'.append('+items[0]+')\n'
-    
+
     return [py,ix]
 }
 
@@ -202,19 +200,18 @@ $B.$dict_comp = function(module_name, parent_block_id, items, line_num){
         py = res+"={}\n", // Python code
         indent=0
     for(var i=1, len=items.length;i<len;i++){
-        py += '    '.repeat(indent)
-        var item = items[i].replace(/\s+$/,'').replace(/\n/g, ' ')
-        py += item+':\n'
+        var item = items[i].replace(/\s+$/,'').replace(/\n/g, '')
+        py += '    '.repeat(indent) + item +':\n'
         indent++
     }
     py += '    '.repeat(indent) + res + '.update({'+items[0]+'})'
-    
+
     var dictcomp_name = 'dc'+ix,
-        root = $B.py2js({src:py, is_comp:true}, module_name, dictcomp_name, 
+        root = $B.py2js({src:py, is_comp:true}, module_name, dictcomp_name,
             parent_block_id, line_num),
         js = root.to_js()
     js += '\nreturn $locals["'+res+'"]\n'
-    
+
     js = '(function(){'+js+'})()'
     $B.clear_ns(dictcomp_name)
     delete $B.$py_src[dictcomp_name]
@@ -226,25 +223,24 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
     // Called for generator expressions
     // "env" is a list of [local_name, local_ns] lists for all the enclosing
     // namespaces
-    
+
     var $ix = $B.UUID()
     var py = 'def ge'+$ix+'():\n'
     var indent=1
     for(var i=1, len = items.length; i < len;i++){
-        py += ' '.repeat(indent)
-        var item = items[i].replace(/\s+$/,'').replace(/\n/g, ' ')
-        py += item+':\n'
+        var item = items[i].replace(/\s+$/,'').replace(/\n/g, '')
+        py += ' '.repeat(indent) + item + ':\n'
         indent += 4
     }
     py+=' '.repeat(indent)
     py += 'yield ('+items[0]+')'
-    
+
     var genexpr_name = 'ge'+$ix,
-        root = $B.py2js({src:py, is_comp:true}, module_name, genexpr_name, 
+        root = $B.py2js({src:py, is_comp:true}, module_name, genexpr_name,
             parent_block_id, line_num),
         js = root.to_js(),
         lines = js.split('\n')
-    
+
     js = lines.join('\n')
     js += '\nvar $res = $locals_'+genexpr_name+'["'+genexpr_name+'"]();\n'+
         '$res.is_gen_expr=true;\nreturn $res\n'
@@ -252,13 +248,13 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
 
     $B.clear_ns(genexpr_name)
     delete $B.$py_src[genexpr_name]
-    
+
     return js
 }
 
 $B.clear_ns = function(name){
-    // Remove name from __BRYTHON__.mdoules, and all the keys that start with name
-    //delete __BRYTHON__.modules[name]
+    // Remove name from __BRYTHON__.modules, and all the keys that start with name
+
     var len = name.length
     for(var key in __BRYTHON__.modules){
         if(key.substr(0, len)==name){
@@ -269,7 +265,7 @@ $B.clear_ns = function(name){
             $B.$py_module_path[key] = null
         }
     }
-    
+
     var alt_name = name.replace(/\./g, '_')
     if(alt_name!=name){$B.clear_ns(alt_name)}
 }
@@ -405,12 +401,12 @@ $B.list_slice_step = function(obj, start, stop, step){
         stop = $B.$GetInt(stop)
         if(stop<0){stop=Math.max(0, stop+obj.length)}
     }
-    
+
     var res=[]
     if(step>0){
         for(var i=start;i<stop;i+=step){res.push(obj[i])}
     }else{
-        for(var i=start;i>stop;i+=step){res.push(obj[i])}    
+        for(var i=start;i>stop;i+=step){res.push(obj[i])}
     }
     return res
 }
@@ -429,7 +425,7 @@ $B.$getitem = function(obj, item){
             else{index_error(obj)}
         }
     }
-    
+
     try{item=$B.$GetInt(item)}catch(err){}
     if((Array.isArray(obj) || typeof obj=='string')
         && typeof item=='number'){
@@ -482,13 +478,13 @@ $B.set_list_slice_step = function(obj,start,stop,step,value){
         start=$B.$GetInt(start)
         if(start<0){start=Math.min(0, start+obj.length)}
     }
-    
+
     if(stop===null){stop = step>0 ? obj.length : -1}
     else{
         stop = $B.$GetInt(stop)
         if(stop<0){stop=Math.max(0, stop+obj.length)}
     }
-    
+
     var repl = _b_.list(value),j=0,test,nb=0
     if(step>0){test = function(i){return i<stop}}
     else{test = function(i){return i>stop}}
@@ -920,7 +916,7 @@ $B.set_func_names = function(klass){
 }
 
 // UUID is a function to produce a unique id.
-// the variable $B.py_UUID is defined in py2js.js (in the brython function) 
+// the variable $B.py_UUID is defined in py2js.js (in the brython function)
 $B.UUID=function() {return $B.$py_UUID++}
 
 $B.InjectBuiltins=function() {
@@ -953,8 +949,8 @@ $B.PyNumber_Index = function(item){
             if(item.__class__===$B.LongInt.$dict){return item}
             var method = _b_.getattr(item, '__index__', null)
             if(method!==null){
-                method = typeof method=='function' ? 
-                            method : 
+                method = typeof method=='function' ?
+                            method :
                             _b_.getattr(method, '__call__')
                 return $B.int_or_bool(method)
             }
@@ -1266,7 +1262,7 @@ var reversed_op = {'__lt__': '__gt__', '__le__':'__ge__',
 
 $B.rich_comp = function(op, x, y){
     if(x.__class__ && y.__class__){
-        // cf issue #600 and 
+        // cf issue #600 and
         // https://docs.python.org/3/reference/datamodel.html :
         // "If the operands are of different types, and right operand’s type
         // is a direct or indirect subclass of the left operand’s type, the
@@ -1320,7 +1316,7 @@ $B.compiled_imports = function(){
             }
         }
     }
-    var w = window.open('', '', 
+    var w = window.open('', '',
             'width="80%",height=400,resizeable,scrollbars')
     w.document.write("Currently imported modules. Copy and paste in file "+
         "<b>brython_modules.js</b> in your application folder<p>"+
@@ -1334,8 +1330,8 @@ $B.compiled_imports = function(){
 })(__BRYTHON__)
 
 // IE doesn't implement indexOf on Arrays
-if(!Array.indexOf){  
-  Array.prototype.indexOf = function(obj){  
+if(!Array.indexOf){
+  Array.prototype.indexOf = function(obj){
     for(var i=0, _len_i = this.length; i < _len_i;i++) if(this[i]==obj) return i
     return -1
   }

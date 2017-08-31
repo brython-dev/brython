@@ -1,11 +1,11 @@
 Implementation of _import_
 --------------------------
 
-Like in standard Python, you can install modules or packages Python in your 
-application by putting them in the root directory, or in directories with a 
+Like in standard Python, you can install modules or packages Python in your
+application by putting them in the root directory, or in directories with a
 file __\_\_init.py\_\___.
 
-Note that modules must be encoded in utf-8 ; the encoding declaration at the 
+Note that modules must be encoded in utf-8 ; the encoding declaration at the
 top of the script is ignored.
 
 For instance, the application can be made of the following files and
@@ -42,15 +42,15 @@ import datetime
 import re
 ```
 
-To import modules or packages, Brython uses the same mechanism as CPython : to 
+To import modules or packages, Brython uses the same mechanism as CPython : to
 resolve "import X", the program looks for a file in several places :
 
 - a module __X__ in the standard distribution
 - a file __X.py__ in the root directory
 - a file __\_\_init\_\_.py__ in directory __X__
 
-Since the browser has no direct access to the file system, looking for a file 
-must be done by an Ajax call, which returns an error message if there is no 
+Since the browser has no direct access to the file system, looking for a file
+must be done by an Ajax call, which returns an error message if there is no
 file at the specified url.
 
 Optimisation
@@ -61,18 +61,20 @@ The process described above has two main drawbacks :
 - the time taken by Ajax calls
 
 To optimise imports, if Brython was installed by `pip`, you can generate
-a file __brython_modules.js__ which only holds the modules used by the 
+a file __brython_modules.js__ which only holds the modules used by the
 application.
 
-For that, the list of these modules must be put in the file __.bundle-include__ 
-in the root directory, then run
+For that, open a console window, navigate to the application directory and
+execute
 
-`python -m brython --update`
+`python -m brython --modules`
 
-To get the list of used modules, you can run the application in a browser, 
-open the browser console and run the command
+You can then replace all the occurrences of
 
-`__BRYTHON__.imports()`
+    <script type="text/javascript" src="brython_stdlib.js"></script>
 
-This opens a new window with the list of used modules, that you can copy and
-paste in __.bundle-include__.
+by
+
+    <script type="text/javascript" src="brython_modules.js"></script>
+
+
