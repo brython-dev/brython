@@ -1,6 +1,6 @@
 """Substitute for unittest
 
-If a class inherits Tester, calling its method run() on an instance runs alls 
+If a class inherits Tester, calling its method run() on an instance runs alls
 the methods starting with "test_". Before running the method, executes method
 setUp() if present.
 
@@ -80,17 +80,17 @@ class _AssertRaisesContext(_AssertRaisesBaseContext):
 
 
 class Tester:
-    
+
     def assertEqual(self, result, expected, msg=None):
         if result != expected:
             if msg is not None:
                 raise AssertionError(msg)
-            raise AssertionError('assertEqual, expected %s, got %s' 
+            raise AssertionError('assertEqual, expected %s, got %s'
                 %(expected, result))
 
     def assertNotEqual(self, result, expected):
         if result == expected:
-            raise AssertionError('assertNotEqual, expected %s, got %s' 
+            raise AssertionError('assertNotEqual, expected %s, got %s'
                 %(expected, result))
 
     def assertRaises(self, excClass, callableObj=None, *args, **kwargs):
@@ -108,7 +108,7 @@ class Tester:
     def assertIsNot(self, a, b):
         if a is b:
             raise AssertionError('%s is %s should be false' %(a,b))
-    
+
     def assertIn(self, item, container):
         if not item in container:
             raise AssertionError('%s should be in %s' %(item, container))
@@ -120,17 +120,18 @@ class Tester:
     def assertTrue(self, item, msg=None):
         if item is not True:
             raise AssertionError(msg or '%s is not True' %item)
-            
+
     def assertFalse(self, item, msg=None):
         if item is not False:
             raise AssertionError(msg or '%s is not False' %item)
-            
+
     def fail(self, *args):
         raise Exception(str(args))
 
     def run(self, *methods):
         if not methods:
-            methods = [m for m in dir(self) if m.startswith('test_')]
+            methods = [m for m in dir(self) if m.startswith('test_')
+                and callable(getattr(self, m))]
         report = TestReport(type(self).__name__)
         for method in methods:
             if method.startswith('test'):
@@ -163,32 +164,32 @@ class Tester:
                         if tb is None:
                             break
                         fname = tb.tb_frame.f_code.co_filename
-                    report.add(method[5:], lineno, 
-                        round((time.time()-t0)*1000), 'fail', 
+                    report.add(method[5:], lineno,
+                        round((time.time()-t0)*1000), 'fail',
                         'line {}\n{}'.format(errline, errmsg))
         return report
 
 class MethodReport:
     """Stores the results on a method : line number, execution time, status
     (one of "ok", "skipped", "error") and optional additional information"""
-    
+
     def __init__(self, lineno, time, status, args):
         self.lineno = lineno
         self.time = time
         self.status = status
         self.args = args
-    
-    
+
+
 class TestReport:
     """Used to store the results of tests on a class"""
-    
+
     def __init__(self, class_name):
         self.class_name = class_name
         self.records = {}
-    
+
     def add(self, method, lineno, time, status, *args):
         self.records[method] = MethodReport(lineno, time, status, args)
-    
+
     def format_html(self, name="test_report"):
         """Returns the report as an HTML table"""
         html = ('<table id="%s" class="report">\n' %name +
@@ -261,4 +262,4 @@ support = Support()
 if __name__=='__main__':
     t = 1, 2
     assertRaises(TypeError, t, '__setitem__', 0, 1)
-    
+
