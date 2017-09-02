@@ -14,35 +14,35 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     // a valid parent
     if(kwargs !== undefined) {
         var cl_dict=_b_.dict(), bases=null
-	// transform class object into a dictionary
-	for(var attr in class_obj){
+    // transform class object into a dictionary
+    for(var attr in class_obj){
             cl_dict.$string_dict[attr] = class_obj[attr]
-	}
-	// check if parents are defined
-	if(parents!==undefined){
+    }
+    // check if parents are defined
+    if(parents!==undefined){
             for(var i=0;i<parents.length;i++){
-		if(parents[i]===undefined){
+        if(parents[i]===undefined){
                     // restore the line of class definition
                     $B.line_info = class_obj.$def_line
                     throw _b_.NameError("name '"+parents_names[i]+"' is not defined")
-		}
+        }
             }
-	}
-	bases = parents
+    }
+    bases = parents
 
-	// see if there is 'metaclass' in kwargs
-	for(var i=0;i<kwargs.length;i++){
+    // see if there is 'metaclass' in kwargs
+    for(var i=0;i<kwargs.length;i++){
             var key=kwargs[i][0],val=kwargs[i][1]
             if(key=='metaclass'){metaclass=val}
             else{
-		throw _b_.TypeError("type() takes 1 or 3 arguments")
+        throw _b_.TypeError("type() takes 1 or 3 arguments")
             }
-	}
-	var mro0 = class_obj
+    }
+    var mro0 = class_obj
     } else {
-	var cl_dict = class_obj  // already a dict
-	bases = parents
-	var mro0 = cl_dict.$string_dict  // to replace class_obj in method creation
+    var cl_dict = class_obj  // already a dict
+    bases = parents
+    var mro0 = cl_dict.$string_dict  // to replace class_obj in method creation
     }
 
     // DRo - Begin
@@ -605,7 +605,7 @@ $B.$type.__getattribute__=function(klass, attr, metaclassed){
 
         // __new__ is a static method
         if(attr=='__new__'){res.$type='staticmethod'}
-	// DRo Begin -- these 2 are classmethods
+    // DRo Begin -- these 2 are classmethods
         if(metaclassed !== undefined) {
             if(attr=='__init__'){
                 res.$type='classmethod'
@@ -613,7 +613,7 @@ $B.$type.__getattribute__=function(klass, attr, metaclassed){
                 res.$type='classmethod'
             }
         }
-	// DRo End
+    // DRo End
         var res1 = get_func.apply(null,[res,$B.builtins.None,klass])
 
         if(res1.__class__===$B.$factory){

@@ -2279,9 +2279,9 @@ function $DefCtx(context){
         node.parent.insert(rank+offset++, $NodeJS(name+'.$infos = {'))
 
         // Add attribute __name__
-        js = '    __name__:"'
-        if(this.scope.ntype=='class'){js+=this.scope.context.tree[0].name+'.'}
-        js += this.name+'",'
+        js = '    __name__:"' + this.name + '",'
+        //if(this.scope.ntype=='class'){js+=this.scope.context.tree[0].name+'.'}
+        //js += this.name+'",'
         node.parent.insert(rank+offset++, $NodeJS(js))
 
         // Add attribute __defaults__

@@ -1417,6 +1417,14 @@ a = {}
 a[5] = b = 0
 assert a[5] == 0
 
+# issue 659
+class A:
+    def x(self):
+        pass
+
+assert A().x.__name__ == "x"
+assert A.x.__name__ == "x"
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
