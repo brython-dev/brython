@@ -7933,7 +7933,7 @@ function brython(options){
         for (var i=0, e; e = path_links[i]; ++i) {
             var href = e.href;
         if ((' ' + e.rel + ' ').indexOf(' prepend ') != -1) {
-            $B.path.unshift(href);  // support prepending to pytohnpath
+            $B.path.unshift(href);  // support prepending to pythonpath
         } else {
             $B.path.push(href);
         }
