@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-02 13:24:23.362851"
+__BRYTHON__.compiled_date="2017-09-02 18:17:36.148572"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5124,7 +5124,7 @@ throw _b_.TypeError("'"+$B.get_class(v).__name__+
 "' object cannot be interpreted as an integer")}}
 $B.int_value=function(v){
 try{return $B.int_or_bool(v)}
-catch(err){if(_b_.isinstance(v,_b_.complex)&& v.imag==0){return $B.int_or_bool(v.real)}else if(isinstance(v,_b_.float)&& v==Math.floor(v)){return Math.floor(v)}else{throw _b_.TypeError("'"+$B.get_class(v).__name__+
+catch(err){if(_b_.isinstance(v,_b_.complex)&& v.$imag==0){return $B.int_or_bool(v.$real)}else if(isinstance(v,_b_.float)&& v==Math.floor(v)){return Math.floor(v)}else{throw _b_.TypeError("'"+$B.get_class(v).__name__+
 "' object cannot be interpreted as an integer")}}}
 $B.enter_frame=function(frame){
 $B.frames_stack.push(frame)}
@@ -5953,7 +5953,11 @@ if(__set1__===undefined){var mro=rcls.__mro__
 for(var i=0,_len=mro.length;i<_len;i++){__set1__=mro[i].__set__
 if(__set1__){break}}}}
 if(__set1__!==undefined){var __set__=getattr(res,'__set__',null)
-if(__set__ &&(typeof __set__=='function')){__set__.apply(res,[obj,value]);return None}}}
+if(__set__ &&(typeof __set__=='function')){__set__.apply(res,[obj,value])
+return None}}else if(klass && klass.descriptors !==undefined &&
+klass[attr]!==undefined){var setter=klass[attr].setter
+if(typeof setter=='function'){setter(obj,value)
+return None}else{throw _b_.AttributeError('readonly attribute')}}}
 if(klass && klass.$slots){
 var has_slots=true,slots=klass.$slots,parent
 for(var i=0;i<klass.__mro__.length - 1;i++){parent=klass.__mro__[i]
@@ -7458,8 +7462,8 @@ $FloatDict.__eq__=function(self,other){if(isNaN(self)&& isNaN(other)){return fal
 if(isinstance(other,_b_.int))return self==other
 if(isinstance(other,float)){
 return self.valueOf()==other.valueOf()}
-if(isinstance(other,_b_.complex)){if(other.imag !=0)return false
-return self==other.real}
+if(isinstance(other,_b_.complex)){if(other.$imag !=0)return false
+return self==other.$real}
 if(_b_.hasattr(other,'__eq__')){return _b_.getattr(other,'__eq__')(self.value)}
 return self.value===other}
 $FloatDict.__floordiv__=function(self,other){if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0)throw ZeroDivisionError('division by zero')
@@ -7627,7 +7631,7 @@ if(isinstance(other,float))return new Number(self*other)
 if(isinstance(other,_b_.bool)){var bool_value=0;
 if(other.valueOf())bool_value=1;
 return new Number(self*bool_value)}
-if(isinstance(other,_b_.complex)){return _b_.complex(float(self*other.real),float(self*other.imag))}
+if(isinstance(other,_b_.complex)){return _b_.complex(float(self*other.$real),float(self*other.$imag))}
 if(hasattr(other,'__rmul__'))return getattr(other,'__rmul__')(self)
 $err('*',other)}
 $FloatDict.__ne__=function(self,other){return !$FloatDict.__eq__(self,other)}
@@ -7644,7 +7648,7 @@ else if(other>0 && other%2==1){return Number.NEGATIVE_INFINITY}else{return Numbe
 if(other==Number.NEGATIVE_INFINITY && !isNaN(self)){return Math.abs(self)<1 ? Number.POSITIVE_INFINITY : new Number(0)}else if(other==Number.POSITIVE_INFINITY && !isNaN(self)){return Math.abs(self)<1 ? new Number(0): Number.POSITIVE_INFINITY}
 if(self<0 && !_b_.getattr(other,'__eq__')(_b_.int(other))){
 return _b_.complex.$dict.__pow__(_b_.complex(self,0),other)}
-return float(Math.pow(self,other))}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.real),ln=Math.log(self)
+return float(Math.pow(self,other))}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.$real),ln=Math.log(self)
 return _b_.complex(preal*Math.cos(ln),preal*Math.sin(ln))}
 if(hasattr(other,'__rpow__'))return getattr(other,'__rpow__')(self)
 $err("** or pow()",other)}
@@ -7660,9 +7664,9 @@ self[attr]=value
 return $N}
 $FloatDict.__truediv__=function(self,other){if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0)throw ZeroDivisionError('division by zero')
 return float(self/other)}
-if(isinstance(other,_b_.complex)){var cmod=other.real*other.real+other.imag*other.imag
+if(isinstance(other,_b_.complex)){var cmod=other.$real*other.$real+other.$imag*other.$imag
 if(cmod==0)throw ZeroDivisionError('division by zero')
-return _b_.complex(float(self*other.real/cmod),float(-self*other.imag/cmod))}
+return _b_.complex(float(self*other.$real/cmod),float(-self*other.$imag/cmod))}
 if(hasattr(other,'__rtruediv__'))return getattr(other,'__rtruediv__')(self)
 $err('/',other)}
 var $op_func=function(self,other){if(isinstance(other,_b_.int)){if(typeof other=='boolean'){return other ? self-1 : self}else if(other.__class__===$B.LongInt.$dict){return float(self-parseInt(other.value))}else{return float(self-other)}}
@@ -7670,7 +7674,7 @@ if(isinstance(other,float))return float(self-other)
 if(isinstance(other,_b_.bool)){var bool_value=0;
 if(other.valueOf())bool_value=1;
 return float(self-bool_value)}
-if(isinstance(other,_b_.complex)){return _b_.complex(self - other.real,-other.imag)}
+if(isinstance(other,_b_.complex)){return _b_.complex(self - other.$real,-other.$imag)}
 if(hasattr(other,'__rsub__'))return getattr(other,'__rsub__')(self)
 $err('-',other)}
 $op_func +='' 
@@ -7797,8 +7801,8 @@ $IntDict.__eq__=function(self,other){
 if(other===undefined)return self===int
 if(isinstance(other,int))return self.valueOf()==other.valueOf()
 if(isinstance(other,_b_.float))return self.valueOf()==other.valueOf()
-if(isinstance(other,_b_.complex)){if(other.imag !=0)return False
-return self.valueOf()==other.real}
+if(isinstance(other,_b_.complex)){if(other.$imag !=0)return False
+return self.valueOf()==other.$real}
 if(hasattr(other,'__eq__'))return getattr(other,'__eq__')(self)
 return self.valueOf()===other}
 $IntDict.__float__=function(self){return new Number(self)}
@@ -7866,7 +7870,7 @@ else{return int($B.LongInt.$dict.__mul__($B.LongInt(self),$B.LongInt(other)))}}
 if(isinstance(other,_b_.float)){return new Number(self*other)}
 if(isinstance(other,_b_.bool)){if(other.valueOf())return self
 return int(0)}
-if(isinstance(other,_b_.complex)){return _b_.complex($IntDict.__mul__(self,other.real),$IntDict.__mul__(self,other.imag))}
+if(isinstance(other,_b_.complex)){return _b_.complex($IntDict.__mul__(self,other.$real),$IntDict.__mul__(self,other.$imag))}
 if(isinstance(other,[_b_.list,_b_.tuple])){var res=[]
 var $temp=other.slice(0,other.length)
 for(var i=0;i<val;i++)res=res.concat($temp)
@@ -7894,7 +7898,7 @@ else if(res !==Infinity && !isFinite(res)){return res}
 else{return int($B.LongInt.$dict.__pow__($B.LongInt(self),$B.LongInt(other)))}}
 if(isinstance(other,_b_.float)){if(self>=0){return new Number(Math.pow(self,other.valueOf()))}
 else{
-return _b_.complex.$dict.__pow__(_b_.complex(self,0),other)}}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.real),ln=Math.log(self)
+return _b_.complex.$dict.__pow__(_b_.complex(self,0),other)}}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.$real),ln=Math.log(self)
 return _b_.complex(preal*Math.cos(ln),preal*Math.sin(ln))}
 if(hasattr(other,'__rpow__'))return getattr(other,'__rpow__')(self)
 $err("**",other)}
@@ -7913,9 +7917,9 @@ if(other.__class__==$B.LongInt.$dict){return new Number(self/parseInt(other.valu
 return new Number(self/other)}
 if(isinstance(other,_b_.float)){if(!other.valueOf())throw ZeroDivisionError('division by zero')
 return new Number(self/other)}
-if(isinstance(other,_b_.complex)){var cmod=other.real*other.real+other.imag*other.imag
+if(isinstance(other,_b_.complex)){var cmod=other.$real*other.$real+other.$imag*other.$imag
 if(cmod==0)throw ZeroDivisionError('division by zero')
-return _b_.complex(self*other.real/cmod,-self*other.imag/cmod)}
+return _b_.complex(self*other.$real/cmod,-self*other.$imag/cmod)}
 if(hasattr(other,'__rtruediv__'))return getattr(other,'__rtruediv__')(self)
 $err("/",other)}
 $IntDict.bit_length=function(self){s=bin(self)
@@ -7943,11 +7947,11 @@ var $op_func=function(self,other){if(isinstance(other,int)){if(typeof other=='nu
 if(res>=$B.min_int && res<=$B.max_int){return res}
 else{return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))}}else if(typeof other=="boolean"){return other ? self-1 : self}else{return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))}}
 if(isinstance(other,_b_.float)){return new Number(self-other)}
-if(isinstance(other,_b_.complex)){return _b_.complex(self-other.real,-other.imag)}
+if(isinstance(other,_b_.complex)){return _b_.complex(self-other.$real,-other.$imag)}
 if(isinstance(other,_b_.bool)){var bool_value=0;
 if(other.valueOf())bool_value=1;
 return self-bool_value}
-if(isinstance(other,_b_.complex)){return _b_.complex(self.valueOf()- other.real,other.imag)}
+if(isinstance(other,_b_.complex)){return _b_.complex(self.valueOf()- other.$real,other.$imag)}
 if(hasattr(other,'__rsub__'))return getattr(other,'__rsub__')(self)
 throw $err('-',other)}
 $op_func +='' 
@@ -8396,39 +8400,39 @@ $B.LongInt=LongInt})(__BRYTHON__)
 var $ObjectDict=_b_.object.$dict
 function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError("unsupported operand type(s) for "+op+": '"+class1+"' and '"+class2+"'")}
 var $ComplexDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'complex',$native:true,descriptors:{real:true,imag:true}}
-$ComplexDict.__abs__=function(self){return Math.sqrt(Math.pow(self.real,2)+Math.pow(self.imag,2))}
-$ComplexDict.__bool__=function(self){return new Boolean(self.real ||self.imag)}
+$ComplexDict.__abs__=function(self){return Math.sqrt(Math.pow(self.$real,2)+Math.pow(self.$imag,2))}
+$ComplexDict.__bool__=function(self){return new Boolean(self.$real ||self.$imag)}
 $ComplexDict.__class__=$B.$type
-$ComplexDict.__eq__=function(self,other){if(isinstance(other,complex))return self.real==other.real && self.imag==other.imag
-if(isinstance(other,_b_.int)){if(self.imag !=0)return False
-return self.real==other.valueOf()}
-if(isinstance(other,_b_.float)){if(self.imag !=0)return False
-return self.real==other.value}
+$ComplexDict.__eq__=function(self,other){if(isinstance(other,complex))return self.$real==other.$real && self.$imag==other.$imag
+if(isinstance(other,_b_.int)){if(self.$imag !=0)return False
+return self.$real==other.valueOf()}
+if(isinstance(other,_b_.float)){if(self.$imag !=0)return False
+return self.$real==other.value}
 $UnsupportedOpType("==","complex",$B.get_class(other))}
 $ComplexDict.__floordiv__=function(self,other){$UnsupportedOpType("//","complex",$B.get_class(other))}
 $ComplexDict.__hash__=function(self){
 if(self===undefined){return $ComplexDict.__hashvalue__ ||$B.$py_next_hash--}
-return self.imag*1000003+self.real}
-$ComplexDict.__init__=function(self,real,imag){self.toString=function(){return '('+real+'+'+imag+'j)'}}
+return self.$imag*1000003+self.$real}
+$ComplexDict.__init__=function(self,$real,$imag){self.toString=function(){return '('+$real+'+'+$imag+'j)'}}
 $ComplexDict.__invert__=function(self){return ~self}
 $ComplexDict.__mod__=function(self,other){throw _b_.TypeError("TypeError: can't mod complex numbers.")}
 $ComplexDict.__mro__=[$ObjectDict]
 $ComplexDict.__mul__=function(self,other){if(isinstance(other,complex))
-return complex(self.real*other.real-self.imag*other.imag,self.imag*other.real + self.real*other.imag)
+return complex(self.$real*other.$real-self.$imag*other.$imag,self.$imag*other.$real + self.$real*other.$imag)
 if(isinstance(other,_b_.int))
-return complex(self.real*other.valueOf(),self.imag*other.valueOf())
+return complex(self.$real*other.valueOf(),self.$imag*other.valueOf())
 if(isinstance(other,_b_.float))
-return complex(self.real*other,self.imag*other)
+return complex(self.$real*other,self.$imag*other)
 if(isinstance(other,_b_.bool)){if(other.valueOf())return self
 return complex(0)}
 $UnsupportedOpType("*",complex,other)}
 $ComplexDict.__name__='complex'
 $ComplexDict.__ne__=function(self,other){return !$ComplexDict.__eq__(self,other)}
-$ComplexDict.__neg__=function(self){return complex(-self.real,-self.imag)}
+$ComplexDict.__neg__=function(self){return complex(-self.$real,-self.$imag)}
 $ComplexDict.__new__=function(cls){if(cls===undefined)throw _b_.TypeError('complex.__new__(): not enough arguments')
 return{__class__:cls.$dict}}
 $ComplexDict.__pos__=function(self){return self}
-function complex2expo(cx){var norm=Math.sqrt((cx.real*cx.real)+(cx.imag*cx.imag)),sin=cx.imag/norm,cos=cx.real/norm,angle
+function complex2expo(cx){var norm=Math.sqrt((cx.$real*cx.$real)+(cx.$imag*cx.$imag)),sin=cx.$imag/norm,cos=cx.$real/norm,angle
 if(cos==0){angle=sin==1 ? Math.PI/2 : 3*Math.PI/2}
 else if(sin==0){angle=cos==1 ? 0 : Math.PI}
 else{angle=Math.atan(sin/cos)}
@@ -8436,61 +8440,63 @@ return{norm: norm,angle: angle}}
 $ComplexDict.__pow__=function(self,other){
 var exp=complex2expo(self),angle=exp.angle,res=Math.pow(exp.norm,other)
 if(_b_.isinstance(other,[_b_.int,_b_.float])){return complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}else if(_b_.isinstance(other,complex)){
-var x=other.real,y=other.imag
+var x=other.$real,y=other.$imag
 var pw=Math.pow(exp.norm,x)*Math.pow(Math.E,-y*angle),theta=y*Math.log(exp.norm)-x*angle
 return complex(pw*Math.cos(theta),pw*Math.sin(theta))}else{throw _b_.TypeError("unsupported operand type(s) for ** or pow(): "+
 "'complex' and '"+$B.get_class(other).__name__+"'")}}
-$ComplexDict.__str__=$ComplexDict.__repr__=function(self){if(self.real==0)return self.imag+'j'
-if(self.imag>=0)return '('+self.real+'+'+self.imag+'j)'
-return '('+self.real+'-'+(-self.imag)+'j)'}
-$ComplexDict.__sqrt__=function(self){if(self.imag==0)return complex(Math.sqrt(self.real))
-var r=self.real,i=self.imag,_a=Math.sqrt((r + sqrt)/2),_b=Number.sign(i)* Math.sqrt((-r + sqrt)/2)
+$ComplexDict.__str__=$ComplexDict.__repr__=function(self){if(self.$real==0)return self.$imag+'j'
+if(self.$imag>=0)return '('+self.$real+'+'+self.$imag+'j)'
+return '('+self.$real+'-'+(-self.$imag)+'j)'}
+$ComplexDict.__sqrt__=function(self){if(self.$imag==0)return complex(Math.sqrt(self.$real))
+var r=self.$real,i=self.$imag,_a=Math.sqrt((r + sqrt)/2),_b=Number.sign(i)* Math.sqrt((-r + sqrt)/2)
 return complex(_a,_b)}
-$ComplexDict.__truediv__=function(self,other){if(isinstance(other,complex)){if(other.real==0 && other.imag==0){throw ZeroDivisionError('division by zero')}
-var _num=self.real*other.real + self.imag*other.imag
-var _div=other.real*other.real + other.imag*other.imag
-var _num2=self.imag*other.real - self.real*other.imag
+$ComplexDict.__truediv__=function(self,other){if(isinstance(other,complex)){if(other.$real==0 && other.$imag==0){throw ZeroDivisionError('division by zero')}
+var _num=self.$real*other.$real + self.$imag*other.$imag
+var _div=other.$real*other.$real + other.$imag*other.$imag
+var _num2=self.$imag*other.$real - self.$real*other.$imag
 return complex(_num/_div,_num2/_div)}
 if(isinstance(other,_b_.int)){if(!other.valueOf())throw ZeroDivisionError('division by zero')
 return $ComplexDict.__truediv__(self,complex(other.valueOf()))}
 if(isinstance(other,_b_.float)){if(!other.value)throw ZeroDivisionError('division by zero')
 return $ComplexDict.__truediv__(self,complex(other.value))}
 $UnsupportedOpType("//","complex",other.__class__)}
-var $op_func=function(self,other){throw _b_.TypeError("TypeError: unsupported operand type(s) for -: 'complex' and '" + 
+var $op_func=function(self,other){throw _b_.TypeError("TypeError: unsupported operand type(s) for -: 'complex' and '" +
 $B.get_class(other).__name__+"'")}
 $op_func +='' 
 var $ops={'&':'and','|':'ior','<<':'lshift','>>':'rshift','^':'xor'}
 for(var $op in $ops){eval('$ComplexDict.__'+$ops[$op]+'__ = '+$op_func.replace(/-/gm,$op))}
 $ComplexDict.__ior__=$ComplexDict.__or__
-var $op_func=function(self,other){if(isinstance(other,complex))return complex(self.real-other.real,self.imag-other.imag)
-if(isinstance(other,_b_.int))return complex($B.sub(self.real,other.valueOf()),self.imag)
-if(isinstance(other,_b_.float))return complex(self.real - other.value,self.imag)
+var $op_func=function(self,other){if(isinstance(other,complex))return complex(self.$real-other.$real,self.$imag-other.$imag)
+if(isinstance(other,_b_.int))return complex($B.sub(self.$real,other.valueOf()),self.$imag)
+if(isinstance(other,_b_.float))return complex(self.$real - other.value,self.$imag)
 if(isinstance(other,_b_.bool)){var bool_value=0;
 if(other.valueOf())bool_value=1;
-return complex(self.real - bool_value,self.imag)}
+return complex(self.$real - bool_value,self.$imag)}
 throw _b_.TypeError("unsupported operand type(s) for -: "+self.__repr__()+
 " and '"+$B.get_class(other).__name__+"'")}
 $ComplexDict.__sub__=$op_func
 $op_func +='' 
 $op_func=$op_func.replace(/-/gm,'+').replace(/sub/gm,'add')
 eval('$ComplexDict.__add__ = '+$op_func)
-var $comp_func=function(self,other){throw _b_.TypeError("TypeError: unorderable types: complex() > " + 
+var $comp_func=function(self,other){throw _b_.TypeError("TypeError: unorderable types: complex() > " +
 $B.get_class(other).__name__ + "()")}
 $comp_func +='' 
 for(var $op in $B.$comps){eval("$ComplexDict.__"+$B.$comps[$op]+'__ = '+$comp_func.replace(/>/gm,$op))}
 $B.make_rmethods($ComplexDict)
-$ComplexDict.real=function(self){return new Number(self.real)}
-$ComplexDict.imag=function(self){return new Number(self.imag)}
+$ComplexDict.real=function(self){return new Number(self.$real)}
+$ComplexDict.real.setter=function(){throw _b_.AttributeError("readonly attribute")}
+$ComplexDict.imag=function(self){return new Number(self.$imag)}
+$ComplexDict.imag.setter=function(){throw _b_.AttributeError("readonly attribute")}
 var complex_re=/^(\d*\.?\d*)([\+\-]?)(\d*\.?\d*)(j?)$/
-var complex=function(real,imag){if(typeof real=='string'){if(imag!==undefined){throw _b_.TypeError("complex() can't take second arg if first is a string")}
-var parts=complex_re.exec(real)
-if(parts===null){throw _b_.ValueError("complex() arg is a malformed string")}else if(parts[1]=='.' ||parts[3]=='.'){throw _b_.ValueError("complex() arg is a malformed string")}else if(parts[4]=='j'){if(parts[2]==''){real=0;imag=parseFloat(parts[1])}else{real=parseFloat(parts[1])
-imag=parts[3]=='' ? 1 : parseFloat(parts[3])
-imag=parts[2]=='-' ? -imag : imag}}else{real=parseFloat(parts[1])
-imag=0}}
-var res={__class__:$ComplexDict,real:real ||0,imag:imag ||0}
-res.__repr__=res.__str__=function(){if(real==0)return imag + 'j'
-return '('+real+'+'+imag+'j)'}
+var complex=function($real,$imag){if(typeof $real=='string'){if($imag!==undefined){throw _b_.TypeError("complex() can't take second arg if first is a string")}
+var parts=complex_re.exec($real)
+if(parts===null){throw _b_.ValueError("complex() arg is a malformed string")}else if(parts[1]=='.' ||parts[3]=='.'){throw _b_.ValueError("complex() arg is a malformed string")}else if(parts[4]=='j'){if(parts[2]==''){$real=0;$imag=parseFloat(parts[1])}else{$real=parseFloat(parts[1])
+$imag=parts[3]=='' ? 1 : parseFloat(parts[3])
+$imag=parts[2]=='-' ? -$imag : $imag}}else{$real=parseFloat(parts[1])
+$imag=0}}
+var res={__class__:$ComplexDict,$real:$real ||0,$imag:$imag ||0}
+res.__repr__=res.__str__=function(){if($real==0)return $imag + 'j'
+return '('+$real+'+'+$imag+'j)'}
 return res}
 complex.$dict=$ComplexDict
 complex.__class__=$B.$factory

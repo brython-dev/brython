@@ -95,8 +95,8 @@ $IntDict.__eq__ = function(self,other){
     if(isinstance(other,int)) return self.valueOf()==other.valueOf()
     if(isinstance(other,_b_.float)) return self.valueOf()==other.valueOf()
     if(isinstance(other,_b_.complex)){
-      if (other.imag != 0) return False
-      return self.valueOf() == other.real
+      if (other.$imag != 0) return False
+      return self.valueOf() == other.$real
     }
 
     if (hasattr(other, '__eq__')) return getattr(other, '__eq__')(self)
@@ -248,8 +248,8 @@ $IntDict.__mul__ = function(self,other){
          return int(0)
     }
     if(isinstance(other,_b_.complex)){
-        return _b_.complex($IntDict.__mul__(self, other.real),
-            $IntDict.__mul__(self, other.imag))
+        return _b_.complex($IntDict.__mul__(self, other.$real),
+            $IntDict.__mul__(self, other.$imag))
     }
     if(isinstance(other,[_b_.list,_b_.tuple])){
         var res = []
@@ -307,7 +307,7 @@ $IntDict.__pow__ = function(self,other,z){
             return _b_.complex.$dict.__pow__(_b_.complex(self, 0), other)
         }
     }else if(isinstance(other, _b_.complex)){
-        var preal = Math.pow(self,  other.real),
+        var preal = Math.pow(self,  other.$real),
             ln = Math.log(self)
         return _b_.complex(preal*Math.cos(ln), preal*Math.sin(ln))
     }
@@ -356,9 +356,9 @@ $IntDict.__truediv__ = function(self,other){
         return new Number(self/other)
     }
     if(isinstance(other,_b_.complex)){
-        var cmod = other.real*other.real+other.imag*other.imag
+        var cmod = other.$real*other.$real+other.$imag*other.$imag
         if(cmod==0) throw ZeroDivisionError('division by zero')
-        return _b_.complex(self*other.real/cmod,-self*other.imag/cmod)
+        return _b_.complex(self*other.$real/cmod,-self*other.$imag/cmod)
     }
     if(hasattr(other,'__rtruediv__')) return getattr(other,'__rtruediv__')(self)
     $err("/",other)
@@ -426,7 +426,7 @@ var $op_func = function(self,other){
         return new Number(self-other)
     }
     if(isinstance(other,_b_.complex)){
-        return _b_.complex(self-other.real,-other.imag)
+        return _b_.complex(self-other.$real,-other.$imag)
     }
     if(isinstance(other,_b_.bool)){
          var bool_value=0;
@@ -434,7 +434,7 @@ var $op_func = function(self,other){
          return self-bool_value
     }
     if(isinstance(other,_b_.complex)){
-        return _b_.complex(self.valueOf() - other.real, other.imag)
+        return _b_.complex(self.valueOf() - other.$real, other.$imag)
     }
     if(hasattr(other,'__rsub__')) return getattr(other,'__rsub__')(self)
     throw $err('-',other)

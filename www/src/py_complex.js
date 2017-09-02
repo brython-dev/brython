@@ -15,21 +15,21 @@ var $ComplexDict = {__class__:$B.$type,
     descriptors:{real:true, imag:true}
 }
 
-$ComplexDict.__abs__ = function(self){return Math.sqrt(Math.pow(self.real,2)+Math.pow(self.imag,2))}
+$ComplexDict.__abs__ = function(self){return Math.sqrt(Math.pow(self.$real,2)+Math.pow(self.$imag,2))}
 
-$ComplexDict.__bool__ = function(self){return new Boolean(self.real || self.imag)}
+$ComplexDict.__bool__ = function(self){return new Boolean(self.$real || self.$imag)}
 
 $ComplexDict.__class__ = $B.$type
 
 $ComplexDict.__eq__ = function(self,other){
-    if(isinstance(other,complex)) return self.real==other.real && self.imag==other.imag
+    if(isinstance(other,complex)) return self.$real==other.$real && self.$imag==other.$imag
     if(isinstance(other,_b_.int)){
-      if (self.imag != 0) return False
-      return self.real == other.valueOf()
+      if (self.$imag != 0) return False
+      return self.$real == other.valueOf()
     }
     if(isinstance(other,_b_.float)){
-      if (self.imag != 0) return False
-      return self.real == other.value
+      if (self.$imag != 0) return False
+      return self.$real == other.value
     }
     $UnsupportedOpType("==","complex",$B.get_class(other))
 }
@@ -45,11 +45,11 @@ $ComplexDict.__hash__ = function(self){
        return $ComplexDict.__hashvalue__ || $B.$py_next_hash--
     }
 
-    return self.imag*1000003+self.real
+    return self.$imag*1000003+self.$real
 }
 
-$ComplexDict.__init__ = function(self,real,imag){
-    self.toString = function(){return '('+real+'+'+imag+'j)'}
+$ComplexDict.__init__ = function(self,$real,$imag){
+    self.toString = function(){return '('+$real+'+'+$imag+'j)'}
 }
 
 $ComplexDict.__invert__ = function(self){return ~self}
@@ -62,14 +62,14 @@ $ComplexDict.__mro__ = [$ObjectDict]
 
 $ComplexDict.__mul__ = function(self,other){
     if(isinstance(other,complex))
-      return complex(self.real*other.real-self.imag*other.imag, 
-          self.imag*other.real + self.real*other.imag)
+      return complex(self.$real*other.$real-self.$imag*other.$imag,
+          self.$imag*other.$real + self.$real*other.$imag)
 
     if(isinstance(other,_b_.int))
-      return complex(self.real*other.valueOf(), self.imag*other.valueOf())
+      return complex(self.$real*other.valueOf(), self.$imag*other.valueOf())
 
     if(isinstance(other,_b_.float))
-      return complex(self.real*other, self.imag*other)
+      return complex(self.$real*other, self.$imag*other)
 
     if(isinstance(other,_b_.bool)){
       if (other.valueOf()) return self
@@ -82,7 +82,7 @@ $ComplexDict.__name__ = 'complex'
 
 $ComplexDict.__ne__ = function(self,other){return !$ComplexDict.__eq__(self,other)}
 
-$ComplexDict.__neg__ = function(self){return complex(-self.real,-self.imag)}
+$ComplexDict.__neg__ = function(self){return complex(-self.$real,-self.$imag)}
 
 $ComplexDict.__new__ = function(cls){
     if(cls===undefined) throw _b_.TypeError('complex.__new__(): not enough arguments')
@@ -92,11 +92,11 @@ $ComplexDict.__new__ = function(cls){
 $ComplexDict.__pos__ = function(self){return self}
 
 function complex2expo(cx){
-    var norm = Math.sqrt((cx.real*cx.real)+(cx.imag*cx.imag)),
-        sin = cx.imag/norm,
-        cos = cx.real/norm,
+    var norm = Math.sqrt((cx.$real*cx.$real)+(cx.$imag*cx.$imag)),
+        sin = cx.$imag/norm,
+        cos = cx.$real/norm,
         angle
-    
+
     if(cos==0){angle = sin==1 ? Math.PI/2 : 3*Math.PI/2}
     else if(sin==0){angle = cos==1 ? 0 : Math.PI}
     else{angle = Math.atan(sin/cos)}
@@ -108,16 +108,16 @@ $ComplexDict.__pow__ = function(self,other){
     var exp = complex2expo(self),
         angle = exp.angle,
         res = Math.pow(exp.norm, other)
-    
+
     if(_b_.isinstance(other, [_b_.int, _b_.float])){
         return complex(res*Math.cos(angle*other), res*Math.sin(angle*other))
     }else if(_b_.isinstance(other, complex)){
         // (r*e**Ai)**(x+iy) = (e**iAx)*(e**-Ay)
-        var x = other.real,
-            y = other.imag
+        var x = other.$real,
+            y = other.$imag
         var pw = Math.pow(exp.norm, x)*Math.pow(Math.E, -y*angle),
             theta = y*Math.log(exp.norm)-x*angle
-        return complex(pw*Math.cos(theta), pw*Math.sin(theta))      
+        return complex(pw*Math.cos(theta), pw*Math.sin(theta))
     }else{
         throw _b_.TypeError("unsupported operand type(s) for ** or pow(): "+
             "'complex' and '"+$B.get_class(other).__name__+"'")
@@ -125,16 +125,16 @@ $ComplexDict.__pow__ = function(self,other){
 }
 
 $ComplexDict.__str__ = $ComplexDict.__repr__ = function(self){
-    if (self.real == 0) return self.imag+'j'
-    if(self.imag>=0) return '('+self.real+'+'+self.imag+'j)'
-    return '('+self.real+'-'+(-self.imag)+'j)'
+    if (self.$real == 0) return self.$imag+'j'
+    if(self.$imag>=0) return '('+self.$real+'+'+self.$imag+'j)'
+    return '('+self.$real+'-'+(-self.$imag)+'j)'
 }
 
 $ComplexDict.__sqrt__= function(self) {
-  if (self.imag == 0) return complex(Math.sqrt(self.real))
+  if (self.$imag == 0) return complex(Math.sqrt(self.$real))
 
-  var r=self.real, 
-      i=self.imag,
+  var r=self.$real,
+      i=self.$imag,
       _a = Math.sqrt((r + sqrt)/2),
       _b = Number.sign(i) * Math.sqrt((-r + sqrt)/2)
 
@@ -143,13 +143,13 @@ $ComplexDict.__sqrt__= function(self) {
 
 $ComplexDict.__truediv__ = function(self,other){
     if(isinstance(other,complex)){
-      if (other.real == 0 && other.imag == 0) {
+      if (other.$real == 0 && other.$imag == 0) {
          throw ZeroDivisionError('division by zero')
       }
-      var _num=self.real*other.real + self.imag*other.imag
-      var _div=other.real*other.real + other.imag*other.imag
+      var _num=self.$real*other.$real + self.$imag*other.$imag
+      var _div=other.$real*other.$real + other.$imag*other.$imag
 
-      var _num2=self.imag*other.real - self.real*other.imag
+      var _num2=self.$imag*other.$real - self.$real*other.$imag
 
       return complex(_num/_div, _num2/_div)
     }
@@ -166,7 +166,7 @@ $ComplexDict.__truediv__ = function(self,other){
 
 // operators
 var $op_func = function(self,other){
-    throw _b_.TypeError("TypeError: unsupported operand type(s) for -: 'complex' and '" + 
+    throw _b_.TypeError("TypeError: unsupported operand type(s) for -: 'complex' and '" +
         $B.get_class(other).__name__+"'")
 }
 $op_func += '' // source code
@@ -179,13 +179,13 @@ $ComplexDict.__ior__=$ComplexDict.__or__
 
 // operations
 var $op_func = function(self,other){
-    if(isinstance(other,complex)) return complex(self.real-other.real,self.imag-other.imag)
-    if (isinstance(other,_b_.int)) return complex($B.sub(self.real,other.valueOf()),self.imag)
-    if(isinstance(other,_b_.float)) return complex(self.real - other.value, self.imag)
+    if(isinstance(other,complex)) return complex(self.$real-other.$real,self.$imag-other.$imag)
+    if (isinstance(other,_b_.int)) return complex($B.sub(self.$real,other.valueOf()),self.$imag)
+    if(isinstance(other,_b_.float)) return complex(self.$real - other.value, self.$imag)
     if(isinstance(other,_b_.bool)){
          var bool_value=0;
          if(other.valueOf()) bool_value=1;
-         return complex(self.real - bool_value, self.imag)
+         return complex(self.$real - bool_value, self.$imag)
     }
     throw _b_.TypeError("unsupported operand type(s) for -: "+self.__repr__()+
              " and '"+$B.get_class(other).__name__+"'")
@@ -198,7 +198,7 @@ eval('$ComplexDict.__add__ = '+$op_func)
 
 // comparison methods
 var $comp_func = function(self,other){
-    throw _b_.TypeError("TypeError: unorderable types: complex() > " + 
+    throw _b_.TypeError("TypeError: unorderable types: complex() > " +
         $B.get_class(other).__name__ + "()")
 }
 $comp_func += '' // source codevar $comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
@@ -210,47 +210,45 @@ for(var $op in $B.$comps){
 $B.make_rmethods($ComplexDict)
 
 // Descriptors to return real and imag
-//$ComplexDict.descriptors = {
-    //'real': function(self){return new Number(self.real)},
-    //'imag': function(self){return new Number(self.imag)}
-//}
-$ComplexDict.real = function(self){return new Number(self.real)}
-$ComplexDict.imag = function(self){return new Number(self.imag)}
+$ComplexDict.real = function(self){return new Number(self.$real)}
+$ComplexDict.real.setter = function(){throw _b_.AttributeError("readonly attribute")}
+$ComplexDict.imag = function(self){return new Number(self.$imag)}
+$ComplexDict.imag.setter = function(){throw _b_.AttributeError("readonly attribute")}
 
 var complex_re = /^(\d*\.?\d*)([\+\-]?)(\d*\.?\d*)(j?)$/
 
-var complex=function(real,imag){
-    if(typeof real=='string'){
-        if(imag!==undefined){
+var complex=function($real,$imag){
+    if(typeof $real=='string'){
+        if($imag!==undefined){
             throw _b_.TypeError("complex() can't take second arg if first is a string")
         }
-        var parts = complex_re.exec(real)
+        var parts = complex_re.exec($real)
         if(parts===null){
             throw _b_.ValueError("complex() arg is a malformed string")
         }else if(parts[1]=='.' || parts[3]=='.'){
             throw _b_.ValueError("complex() arg is a malformed string")
         }else if(parts[4]=='j'){
             if(parts[2]==''){
-                real = 0; imag = parseFloat(parts[1])
+                $real = 0; $imag = parseFloat(parts[1])
             }else{
-                real = parseFloat(parts[1])
-                imag = parts[3]=='' ? 1 : parseFloat(parts[3])
-                imag = parts[2]=='-' ? -imag : imag
+                $real = parseFloat(parts[1])
+                $imag = parts[3]=='' ? 1 : parseFloat(parts[3])
+                $imag = parts[2]=='-' ? -$imag : $imag
             }
         }else{
-            real = parseFloat(parts[1])
-            imag = 0
+            $real = parseFloat(parts[1])
+            $imag = 0
         }
     }
     var res = {
         __class__:$ComplexDict,
-        real:real || 0,
-        imag:imag || 0
+        $real:$real || 0,
+        $imag:$imag || 0
     }
 
     res.__repr__ = res.__str__ = function() {
-        if (real == 0) return imag + 'j'
-        return '('+real+'+'+imag+'j)'
+        if ($real == 0) return $imag + 'j'
+        return '('+$real+'+'+$imag+'j)'
     }
 
     return res

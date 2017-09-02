@@ -986,8 +986,8 @@ $B.int_value = function(v){
     // Else throw ValueError
     try{return $B.int_or_bool(v)}
     catch(err){
-        if(_b_.isinstance(v, _b_.complex) && v.imag==0){
-            return $B.int_or_bool(v.real)
+        if(_b_.isinstance(v, _b_.complex) && v.$imag==0){
+            return $B.int_or_bool(v.$real)
         }else if(isinstance(v, _b_.float) && v==Math.floor(v)){
             return Math.floor(v)
         }else{

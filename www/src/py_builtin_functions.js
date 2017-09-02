@@ -1535,7 +1535,17 @@ function setattr(){
         if(__set1__!==undefined){
             var __set__ = getattr(res,'__set__',null)
             if(__set__ && (typeof __set__=='function')) {
-                __set__.apply(res,[obj,value]);return None
+                __set__.apply(res,[obj,value])
+                return None
+            }
+        }else if(klass && klass.descriptors !== undefined &&
+            klass[attr] !== undefined){
+            var setter = klass[attr].setter
+            if(typeof setter == 'function'){
+                setter(obj, value)
+                return None
+            }else{
+                throw _b_.AttributeError('readonly attribute')
             }
         }
     }
