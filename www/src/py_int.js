@@ -23,7 +23,7 @@ var $IntDict = {__class__:$B.$type,
 }
 
 $IntDict.from_bytes = function() {
-  var $=$B.args("from_bytes", 3, 
+  var $=$B.args("from_bytes", 3,
       {bytes:null, byteorder:null, signed:null}, ['bytes', 'byteorder', 'signed'],
       arguments, {signed:False}, null, null)
 
@@ -104,13 +104,17 @@ $IntDict.__eq__ = function(self,other){
     return self.valueOf()===other
 }
 
+$IntDict.__float__ = function(self){
+    return new Number(self)
+}
+
 function preformat(self, fmt){
     if(fmt.empty){return _b_.str(self)}
     if(fmt.type && 'bcdoxXn'.indexOf(fmt.type)==-1){
         throw _b_.ValueError("Unknown format code '"+fmt.type+
             "' for object of type 'int'")
     }
-    
+
     switch(fmt.type){
         case undefined:
         case 'd':
@@ -128,7 +132,7 @@ function preformat(self, fmt){
         case 'n':
             return self // fix me
     }
-        
+
     return res
 }
 
@@ -137,15 +141,15 @@ $IntDict.__format__ = function(self,format_spec){
     var fmt = new $B.parse_format_spec(format_spec)
     if(fmt.type && 'eEfFgG%'.indexOf(fmt.type)!=-1){
         // Call __format__ on float(self)
-        return _b_.float.$dict.__format__(self, format_spec)        
+        return _b_.float.$dict.__format__(self, format_spec)
     }
     fmt.align = fmt.align || '>'
     var res = preformat(self, fmt)
     if(fmt.comma){
         var sign = res[0]=='-' ? '-' : '',
             rest = res.substr(sign.length),
-            len = rest.length, 
-            nb = Math.ceil(rest.length/3), 
+            len = rest.length,
+            nb = Math.ceil(rest.length/3),
             chunks = []
         for(var i=0;i<nb;i++){
             chunks.push(rest.substring(len-3*i-3, len-3*i))
@@ -244,7 +248,7 @@ $IntDict.__mul__ = function(self,other){
          return int(0)
     }
     if(isinstance(other,_b_.complex)){
-        return _b_.complex($IntDict.__mul__(self, other.real), 
+        return _b_.complex($IntDict.__mul__(self, other.real),
             $IntDict.__mul__(self, other.imag))
     }
     if(isinstance(other,[_b_.list,_b_.tuple])){
@@ -288,7 +292,7 @@ $IntDict.__pow__ = function(self,other,z){
           }
           return res
       }
-      var res = Math.pow(self.valueOf(),other.valueOf()) 
+      var res = Math.pow(self.valueOf(),other.valueOf())
       if(res>$B.min_int && res<$B.max_int){return res}
       else if(res !== Infinity && !isFinite(res)){return res}
       else{
@@ -296,7 +300,7 @@ $IntDict.__pow__ = function(self,other,z){
              $B.LongInt(other)))
       }
     }
-    if(isinstance(other, _b_.float)) { 
+    if(isinstance(other, _b_.float)) {
         if(self>=0){return new Number(Math.pow(self, other.valueOf()))}
         else{
             // use complex power
@@ -384,7 +388,7 @@ var $op_func = function(self,other){
         if(other.__class__===$B.LongInt.$dict){
             return $B.LongInt.$dict.__sub__($B.LongInt(self), $B.LongInt(other))
         }
-        if (self > $B.max_int32 || self < $B.min_int32 || 
+        if (self > $B.max_int32 || self < $B.min_int32 ||
             other > $B.max_int32 || other < $B.min_int32) {
             return $B.LongInt.$dict.__sub__($B.LongInt(self), $B.LongInt(other))
         }
@@ -409,13 +413,13 @@ var $op_func = function(self,other){
         if(typeof other=='number'){
             var res = self.valueOf()-other.valueOf()
             if(res>=$B.min_int && res<=$B.max_int){return res}
-            else{return $B.LongInt.$dict.__sub__($B.LongInt(self), 
+            else{return $B.LongInt.$dict.__sub__($B.LongInt(self),
                 $B.LongInt(other))}
         }else if(typeof other=="boolean"){
             return other ? self-1 : self
         }else{
-            return $B.LongInt.$dict.__sub__($B.LongInt(self), 
-                $B.LongInt(other))        
+            return $B.LongInt.$dict.__sub__($B.LongInt(self),
+                $B.LongInt(other))
         }
     }
     if(isinstance(other,_b_.float)){
@@ -491,11 +495,11 @@ var $valid_digits=function(base) {
 var int = function(value, base){
     // int() with no argument returns 0
     if(value===undefined){return 0}
-    
+
     // int() of an integer returns the integer if base is undefined
-    if(typeof value=='number' && 
+    if(typeof value=='number' &&
         (base===undefined || base==10)){return parseInt(value)}
-    
+
     if(base!==undefined){
         if(!isinstance(value,[_b_.str,_b_.bytes,_b_.bytearray])){
             throw TypeError("int() can't convert non-string with explicit base")
@@ -510,7 +514,7 @@ var int = function(value, base){
         {'base':10},'null','null')
     var value = $ns['x']
     var base = $ns['base']
-    
+
     if(isinstance(value, _b_.float) && base===10){
         if(value<$B.min_int || value>$B.max_int){
             return $B.LongInt.$dict.$from_float(value)
@@ -574,12 +578,12 @@ var int = function(value, base){
       if(base <= 10 && !isFinite(value)) {
          throw _b_.ValueError(
              "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
-      } 
+      }
       var res=parseInt(_value, base)
       if(res < $B.min_int || res > $B.max_int) return $B.LongInt(_value, base)
       return res
     }
-    
+
     if(isinstance(value,[_b_.bytes,_b_.bytearray])){
         var _digits = $valid_digits(base)
         for(var i=0;i<value.source.length;i++){

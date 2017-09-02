@@ -195,7 +195,7 @@ function run_js(module_contents,path,module){
           return "<module '"+module.name+"' from "+path+" >"
         }
 
-        $module.toString = function(){return "<module '"+module.name+"' from "+path+" >"}
+        //$module.toString = function(){return "<module '"+module.name+"' from "+path+" >"}
         if(module.name != 'builtins') { // builtins do not have a __file__ attribute
           $module.__file__ = path
         }
@@ -299,9 +299,8 @@ function run_py(module_contents,path,module,compiled) {
         eval(js)
     }catch(err){
         console.log(err+' for module '+module.__name__)
-        /*
         console.log(err)
-        console.log(js)
+        //console.log(js)
         //console.log(module_contents
         for(var attr in err){
             console.log(attr, err[attr])
@@ -311,7 +310,6 @@ function run_py(module_contents,path,module,compiled) {
         console.log('filename: '+err.fileName)
         console.log('linenum: '+err.lineNumber)
         if($B.debug>0){console.log('line info '+ $B.line_info)}
-        */
         root = null
         js = null
         throw err

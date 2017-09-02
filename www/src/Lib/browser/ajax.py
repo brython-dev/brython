@@ -1,7 +1,7 @@
 from _ajax import *
 
 class Request:
-    
+
     def __init__(self, url, method="GET", headers={},
             data=None, async=True, timeout=None):
         self.req = ajax1()
@@ -59,7 +59,7 @@ class Request:
         if success is not None:
             self.req.text = self.req.responseText
             success.__func__(self.req)
-    
+
     def _timeout(self):
         """If the subclass is called with an argument "timeout" and if it
         defines a method "timeout", call it with the request object as
@@ -70,4 +70,3 @@ class Request:
             def func(*args):
                 return timeout_method.__func__(self.req)
             self.req.set_timeout(self.req.timeout_secs, func)
-        

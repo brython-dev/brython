@@ -575,6 +575,7 @@ function $AssignCtx(context){ //, check_unbound){
                 var assign = new $AssignCtx(assigned[i])
                 new $RawJSCtx(assign, '$temp'+$loop_num)
             }
+            $loop_num++
             return assigned.length-1
         }
 
@@ -2280,9 +2281,9 @@ function $DefCtx(context){
         node.parent.insert(rank+offset++, $NodeJS(name+'.$infos = {'))
 
         // Add attribute __name__
-        js = '    __name__:"'
-        if(this.scope.ntype=='class'){js+=this.scope.context.tree[0].name+'.'}
-        js += this.name+'",'
+        js = '    __name__:"' + this.name + '",'
+        //if(this.scope.ntype=='class'){js+=this.scope.context.tree[0].name+'.'}
+        //js += this.name+'",'
         node.parent.insert(rank+offset++, $NodeJS(js))
 
         // Add attribute __defaults__
@@ -3755,10 +3756,16 @@ function $ListOrTupleCtx(context,real){
         while($B.$py_src[ident]===undefined && $B.modules[ident].parent_block){
             ident = $B.modules[ident].parent_block.id
         }
-        if($B.$py_src[ident]===undefined){ // this is ugly
-            return $B.$py_src[scope.module]
+        // replace comments by whitespace, cf. issue #658
+        var src = $B.$py_src[ident]
+        if(scope.comments === undefined){return src}
+        for(var i=0; i<scope.comments.length; i++){
+            var start = scope.comments[i][0],
+                len = scope.comments[i][1]
+            src = src.substr(0, start) + ' '.repeat(len + 1) +
+                src.substr(start + len + 1)
         }
-        return $B.$py_src[ident]
+        return src
     }
 
     this.ids = function(){
@@ -3804,6 +3811,10 @@ function $ListOrTupleCtx(context,real){
           case 'dict_or_set_comp':
             var src = this.get_src()
             var res1 = [], items = []
+
+            if(this.comments !== undefined){
+                console.log('comments in comp', this.comments)
+            }
 
             var qesc = new RegExp('"',"g") // to escape double quotes in arguments
             for(var i=1;i<this.intervals.length;i++){
@@ -6968,10 +6979,11 @@ function $transition(context,token){
     } // switch(context.type)
 }
 
-$B.forbidden = ['alert', 'arguments', 'case','catch','constructor','Date',
-    'delete', 'default', 'document', 'enum', 'eval', 'extends','Error',
-    'history','function', 'length', 'location', 'Math','new', 'null',
-    'Number', 'RegExp', 'super', 'this','throw', 'var', 'window', 'toString']
+$B.forbidden = ['alert', 'arguments', 'case', 'catch', 'constructor', 'Date',
+    'delete', 'default', 'document', 'enum', 'eval', 'extends', 'Error',
+    'history','function', 'length', 'location', 'Math', 'new', 'null',
+    'Number', 'RegExp', 'super', 'this','throw', 'var', 'window',
+    'toLocaleString', 'toString', 'message']
 $B.aliased_names = {}
 for(var i=0;i<$B.forbidden.length;i++){$B.aliased_names[$B.forbidden[i]]=true}
 
@@ -7011,6 +7023,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     }
     root.line_info = line_info
     root.indent = -1
+    root.comments = []
     if(locals_id!==module){$B.bound[locals_id] = {}}
     var new_node = new $Node(),
         current = root,
@@ -7084,6 +7097,8 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         if(car=="#"){
             var end = src.substr(pos+1).search('\n')
             if(end==-1){end=src.length-1}
+            // Keep track of comment positions
+            root.comments.push([pos, end])
             pos += end+1;continue
         }
         // string
@@ -7233,8 +7248,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                         $_SyntaxError(context,"Unsupported Python keyword '"+name+"'")
                     }
                     context = $transition(context,name)
-                } else if($operators[name]!==undefined
-                    && $B.forbidden.indexOf(name)==-1) {
+                } else if(typeof $operators[name]=='string') {
                     // Literal operators : "and", "or", "is", "not"
                     // The additional test is to exclude the name "constructor"
                     if(name=='is'){

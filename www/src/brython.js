@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-08-19 12:01:41.855521"
+__BRYTHON__.compiled_date="2017-09-02 13:24:23.362851"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -296,6 +296,7 @@ node.parent.insert(rank+1,new_node)
 assigned[i].parent=node_ctx
 var assign=new $AssignCtx(assigned[i])
 new $RawJSCtx(assign,'$temp'+$loop_num)}
+$loop_num++
 return assigned.length-1}
 var left_items=null
 switch(left.type){case 'expr':
@@ -1138,9 +1139,7 @@ node.add(def_func_node)
 var offset=1
 var indent=node.indent
 node.parent.insert(rank+offset++,$NodeJS(name+'.$infos = {'))
-js='    __name__:"'
-if(this.scope.ntype=='class'){js+=this.scope.C.tree[0].name+'.'}
-js +=this.name+'",'
+js='    __name__:"' + this.name + '",'
 node.parent.insert(rank+offset++,$NodeJS(js))
 var def_names=[]
 for(var i=0;i<this.default_list.length;i++){def_names.push('"'+this.default_list[i]+'"')}
@@ -1825,9 +1824,12 @@ this.get_src=function(){
 var scope=$get_scope(this)
 var ident=scope.id
 while($B.$py_src[ident]===undefined && $B.modules[ident].parent_block){ident=$B.modules[ident].parent_block.id}
-if($B.$py_src[ident]===undefined){
-return $B.$py_src[scope.module]}
-return $B.$py_src[ident]}
+var src=$B.$py_src[ident]
+if(scope.comments===undefined){return src}
+for(var i=0;i<scope.comments.length;i++){var start=scope.comments[i][0],len=scope.comments[i][1]
+src=src.substr(0,start)+ ' '.repeat(len + 1)+
+src.substr(start + len + 1)}
+return src}
 this.ids=function(){
 var _ids={}
 for(var i=0;i<this.tree.length;i++){var item=this.tree[i]
@@ -1854,6 +1856,7 @@ case 'gen_expr':
 case 'dict_or_set_comp':
 var src=this.get_src()
 var res1=[],items=[]
+if(this.comments !==undefined){console.log('comments in comp',this.comments)}
 var qesc=new RegExp('"',"g")
 for(var i=1;i<this.intervals.length;i++){var txt=src.substring(this.intervals[i-1],this.intervals[i])
 items.push(txt)
@@ -3736,7 +3739,7 @@ C.from=true
 C.tree=[]
 return new $AbstractExprCtx(C,true)}
 return $transition(C.parent,token)}}
-$B.forbidden=['alert','arguments','case','catch','constructor','Date','delete','default','document','enum','eval','extends','Error','history','function','length','location','Math','new','null','Number','RegExp','super','this','throw','var','window','toString']
+$B.forbidden=['alert','arguments','case','catch','constructor','Date','delete','default','document','enum','eval','extends','Error','history','function','length','location','Math','new','null','Number','RegExp','super','this','throw','var','window','toLocaleString','toString','message']
 $B.aliased_names={}
 for(var i=0;i<$B.forbidden.length;i++){$B.aliased_names[$B.forbidden[i]]=true}
 var s_escaped='abfnrtvxuU"0123456789'+"'"+'\\',is_escaped={}
@@ -3757,6 +3760,7 @@ $B.modules[root.id]=root
 if(locals_id==parent_block_id){root.parent_block=$B.modules[parent_block_id].parent_block ||$B.modules['__builtins__']}else{root.parent_block=$B.modules[parent_block_id]||$B.modules['__builtins__']}
 root.line_info=line_info
 root.indent=-1
+root.comments=[]
 if(locals_id!==module){$B.bound[locals_id]={}}
 var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
 if(typeof src=="object"){root.is_comp=src.is_comp
@@ -3794,6 +3798,7 @@ C=new $NodeCtx(new_node)
 continue}
 if(car=="#"){var end=src.substr(pos+1).search('\n')
 if(end==-1){end=src.length-1}
+root.comments.push([pos,end])
 pos +=end+1;continue}
 if(car=='"' ||car=="'"){var raw=C.type=='str' && C.raw,bytes=false,fstring=false,end=null;
 if(string_modifier){switch(string_modifier){case 'r': 
@@ -3864,8 +3869,7 @@ pos++}}
 if(name){
 if(kwdict.indexOf(name)>-1){$pos=pos-name.length
 if(unsupported.indexOf(name)>-1){$_SyntaxError(C,"Unsupported Python keyword '"+name+"'")}
-C=$transition(C,name)}else if($operators[name]!==undefined
-&& $B.forbidden.indexOf(name)==-1){
+C=$transition(C,name)}else if(typeof $operators[name]=='string'){
 if(name=='is'){
 var re=/^\s+not\s+/
 var res=re.exec(src.substr(pos))
@@ -4289,8 +4293,8 @@ objects[pos++]=klass
 var mro=klass.__mro__
 for(var i=0,_len_i=mro.length;i < _len_i;i++){objects[pos++]=mro[i]}
 var res=[],pos=0
-for(var i=0,_len_i=objects.length;i < _len_i;i++){for(var attr in objects[i]){
-if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
+for(var i=0,_len_i=objects.length;i < _len_i;i++){for(var attr in objects[i]){if(attr=='toString'){console.log(attr,objects[i][attr])}
+if(attr.charAt(0)=='$'){
 continue}
 if(!isNaN(parseInt(attr.charAt(0)))){
 continue}
@@ -4406,27 +4410,31 @@ A.$dict.__mro__=[object.$dict]
 return A}
 return object})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
-$B.$class_constructor=function(class_name,class_obj,parents,parents_names,kwargs){var cl_dict=_b_.dict(),bases=null
+$B.$class_constructor=function(class_name,class_obj,parents,parents_names,kwargs){var metaclass=_b_.type 
+if(kwargs !==undefined){var cl_dict=_b_.dict(),bases=null
 for(var attr in class_obj){cl_dict.$string_dict[attr]=class_obj[attr]}
 if(parents!==undefined){for(var i=0;i<parents.length;i++){if(parents[i]===undefined){
 $B.line_info=class_obj.$def_line
 throw _b_.NameError("name '"+parents_names[i]+"' is not defined")}}}
 bases=parents
-var metaclass=_b_.type
 for(var i=0;i<kwargs.length;i++){var key=kwargs[i][0],val=kwargs[i][1]
 if(key=='metaclass'){metaclass=val}
 else{throw _b_.TypeError("type() takes 1 or 3 arguments")}}
-function init_subclass(){};
+var mro0=class_obj}else{
+var cl_dict=class_obj 
+bases=parents
+var mro0=cl_dict.$string_dict }
+var init_subclass=function init_subclass(){};
 for(var i=0;i<bases.length;i++){if(bases[i].$dict.$methods){var __init_subclass__=bases[i].$dict.$methods.__init_subclass__;
-if(__init_subclass__){function init_subclass(cls){var kw={$nat:true,kw:{}}
+if(__init_subclass__){init_subclass=function init_subclass(cls){var kw={$nat:true,kw:{}}
 for(var kwidx=0;kwidx<kwargs.length;kwidx++){kw.kw[kwargs[kwidx][0]]=kwargs[kwidx][1];}
 __init_subclass__().$infos.__func__.apply(null,[cls,kw]);}
 break;}}}
 var class_dict={__name__ : class_name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict}
-class_dict.__slots__=class_obj.__slots__
+class_dict.__slots__=mro0.__slots__
 class_dict.__mro__=make_mro(bases,cl_dict)
 var is_instanciable=true,non_abstract_methods={},abstract_methods={},mro=[class_dict].concat(class_dict.__mro__)
-for(var i=0;i<mro.length;i++){var kdict=i==0 ? class_obj : mro[i]
+for(var i=0;i<mro.length;i++){var kdict=i==0 ? mro0 : mro[i]
 for(var attr in kdict){if(non_abstract_methods[attr]){continue}
 var v=kdict[attr]
 if(typeof v=='function' && v.__class__!==$B.$factory){if(v.__isabstractmethod__===true){is_instanciable=false
@@ -4440,7 +4448,24 @@ if(metaclass===_b_.type){for(var i=1;i<mro.length;i++){if(mro[i].__class__ !==$B
 break}}}
 class_dict.__class__=metaclass.$dict
 var meta_new=$B.$type.__getattribute__(metaclass.$dict,'__new__')
-if(meta_new.__func__===$B.$type.__new__){var factory=_b_.type.$dict.__new__(_b_.type,class_name,bases,cl_dict)}else{var factory=meta_new(metaclass,class_name,bases,cl_dict)}
+if(meta_new.__func__===$B.$type.__new__){var kls=_b_.type.$dict.__new__(_b_.type,class_name,bases,cl_dict)}else{var kls=meta_new(metaclass,class_name,bases,cl_dict)}
+var meta_call=$B.$type.__getattribute__(metaclass.$dict,'__call__',kls)
+if(meta_call.__func__===$B.$type.__call__){var factory=$instance_creator(kls)}else{
+var factory=function(){
+if(kls.$instanciable!==undefined){return function(){throw _b_.TypeError(
+"Can't instantiate abstract "+
+"class interface with abstract methods")}}
+var args=[kls.$factory]
+for(var i=0;i < arguments.length;i++){args.push(arguments[i])}
+return meta_call.apply(null,args)}
+factory.$dfactory=$instance_creator(kls)}
+factory.__class__=$B.$factory
+factory.$dict=kls
+factory.$is_func=true 
+factory.__eq__=function(other){return other===factory.__class__}
+kls.$factory=factory
+var meta_init=$B.$type.__getattribute__(metaclass.$dict,'__init__',kls)
+if(meta_init.__func__===$B.$type.__init__){_b_.type.$dict.__init__(kls.$factory,class_name,bases,cl_dict)}else{meta_init(class_name,bases,cl_dict)}
 class_dict.$factory=factory
 for(var i=0;i<parents.length;i++){parents[i].$dict.$subclasses=parents[i].$dict.$subclasses ||[]
 parents[i].$dict.$subclasses.push(factory)}
@@ -4449,7 +4474,6 @@ return factory}
 for(var attr in class_dict){factory.$dict[attr]=class_dict[attr]}
 factory.$dict.$factory=factory
 for(var member in metaclass.$dict){if(typeof metaclass.$dict[member]=='function' && member !='__new__'){metaclass.$dict[member].$type='classmethod'}}
-factory.$is_func=true
 if(!is_instanciable){function nofactory(){throw _b_.TypeError("Can't instantiate abstract class interface"+
 " with abstract methods "+Object.keys(abstract_methods).join(', '))}
 for(var attr in factory){nofactory[attr]=factory[attr]}
@@ -4520,13 +4544,13 @@ return mro}
 _b_.type=function(obj,bases,cl_dict){if(arguments.length==1){if(obj.__class__===$B.$factory){
 return obj.$dict.__class__.$factory}
 return $B.get_class(obj).$factory}
-return $B.$type.__new__(_b_.type,obj,bases,cl_dict)}
+return $B.$class_constructor(obj,cl_dict,bases,undefined,undefined)}
 _b_.type.__class__=$B.$factory
 $B.$type={$factory: _b_.type,__name__:'type'}
 $B.$type.__class__=$B.$type
 $B.$type.__mro__=[_b_.object.$dict]
 _b_.type.$dict=$B.$type
-$B.$type.__new__=function(cls,name,bases,cl_dict){
+$B.$type.__new__=function(meta,name,bases,cl_dict){
 var class_dict={__class__ : $B.$type,__name__ : name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict,$methods :{},$slots: cl_dict.$slots}
 var items=$B.$dict_items(cl_dict);
 for(var i=0;i<items.length;i++){var name=items[i][0],v=items[i][1]
@@ -4536,20 +4560,19 @@ if(typeof v=='function'
 && v.__class__!==$B.$MethodDict){class_dict.$methods[name]=$B.make_method(name,class_dict,v,v)}}
 class_dict.__mro__=make_mro(bases,cl_dict)
 class_dict.__class__=class_dict.__mro__[0].__class__
-var factory=$instance_creator(class_dict)
-factory.__class__=$B.$factory
-factory.$dict=class_dict
-factory.$is_func=true 
-factory.__eq__=function(other){return other===factory.__class__}
-class_dict.$factory=factory
-return factory}
+return class_dict}
+$B.$type.__init__=function(cls,name,bases,cl_dict){}
+$B.$type.__call__=function(){
+$f=arguments[0].$dfactory
+args=[]
+for(var i=1;i < arguments.length;i++){args.push(arguments[i])}
+return $f.apply(null,args)}
 $B.$factory={__class__:$B.$type,$factory:_b_.type,is_class:true}
 $B.$factory.__mro__=[$B.$type,_b_.object.$dict]
 _b_.type.__class__=$B.$factory
 _b_.object.$dict.__class__=$B.$type
 _b_.object.__class__=$B.$factory
-$B.$type.__getattribute__=function(klass,attr){switch(attr){case '__call__':
-return $instance_creator(klass)
+$B.$type.__getattribute__=function(klass,attr,metaclassed){switch(attr){
 case '__eq__':
 return function(other){return klass.$factory===other}
 case '__ne__':
@@ -4590,6 +4613,7 @@ var get_func=res.__get__
 if(get_func===undefined &&(typeof res=='function')){get_func=function(x){return x}}
 if(get_func===undefined)return res
 if(attr=='__new__'){res.$type='staticmethod'}
+if(metaclassed !==undefined){if(attr=='__init__'){res.$type='classmethod'}else if(attr=='__call__'){res.$type='classmethod'}}
 var res1=get_func.apply(null,[res,$B.builtins.None,klass])
 if(res1.__class__===$B.$factory){
 return res1}
@@ -4604,7 +4628,10 @@ klass.__name__+"' objects>"}
 return '<function '+klass.__name__+'.'+attr+'>'}}(attr)
 break;
 case 'classmethod':
-args=[klass.$factory]
+if(metaclassed===undefined){args=[klass.$factory]}else{
+if(metaclassed.$factory===undefined){
+args=[]}else{
+args=[metaclassed.$factory]}}
 __self__=klass
 __repr__=__str__=function(){var x='<built-in method '+klass.__name__+'.'+attr
 x +=' of '+klass.__name__+'>'
@@ -4744,10 +4771,8 @@ return res}
 $B.$list_comp=function(items){
 var ix=$B.UUID()
 var py="x"+ix+"=[]\n",indent=0
-for(var i=1,len=items.length;i < len;i++){py +=' '.repeat(indent)
-var item=items[i]
-item=item.replace(/\s*$/,'').replace(/\s+/g,' ')
-py +=item+':\n'
+for(var i=1,len=items.length;i < len;i++){var item=items[i].replace(/\s+$/,'').replace(/\n/g,'')
+py +=' '.repeat(indent)+ item + ':\n'
 indent +=4}
 py +=' '.repeat(indent)
 py +='x'+ix+'.append('+items[0]+')\n'
@@ -4755,9 +4780,8 @@ return[py,ix]}
 $B.$dict_comp=function(module_name,parent_block_id,items,line_num){
 var ix=$B.UUID(),res='res'+ix,py=res+"={}\n",
 indent=0
-for(var i=1,len=items.length;i<len;i++){py +='    '.repeat(indent)
-var item=items[i].replace(/\s+$/,'').replace(/\n/g,' ')
-py +=item+':\n'
+for(var i=1,len=items.length;i<len;i++){var item=items[i].replace(/\s+$/,'').replace(/\n/g,'')
+py +='    '.repeat(indent)+ item +':\n'
 indent++}
 py +='    '.repeat(indent)+ res + '.update({'+items[0]+'})'
 var dictcomp_name='dc'+ix,root=$B.py2js({src:py,is_comp:true},module_name,dictcomp_name,parent_block_id,line_num),js=root.to_js()
@@ -4770,9 +4794,8 @@ $B.$gen_expr=function(module_name,parent_block_id,items,line_num){
 var $ix=$B.UUID()
 var py='def ge'+$ix+'():\n'
 var indent=1
-for(var i=1,len=items.length;i < len;i++){py +=' '.repeat(indent)
-var item=items[i].replace(/\s+$/,'').replace(/\n/g,' ')
-py +=item+':\n'
+for(var i=1,len=items.length;i < len;i++){var item=items[i].replace(/\s+$/,'').replace(/\n/g,'')
+py +=' '.repeat(indent)+ item + ':\n'
 indent +=4}
 py+=' '.repeat(indent)
 py +='yield ('+items[0]+')'
@@ -5081,8 +5104,8 @@ return item
 case "object":
 if(item.__class__===$B.LongInt.$dict){return item}
 var method=_b_.getattr(item,'__index__',null)
-if(method!==null){method=typeof method=='function' ? 
-method : 
+if(method!==null){method=typeof method=='function' ?
+method :
 _b_.getattr(method,'__call__')
 return $B.int_or_bool(method)}
 default:
@@ -5709,9 +5732,9 @@ if(klass===undefined){return false }
 if(arg.$dict===undefined){return false}
 if(klass==$B.$factory){klass=obj.$dict.__class__}
 function check(kl,arg){if(kl===arg.$dict){return true}
-else if(arg===_b_.str && 
+else if(arg===_b_.str &&
 kl===$B.$StringSubclassFactory.$dict){return true}
-else if(arg===_b_.list && 
+else if(arg===_b_.list &&
 kl===$B.$ListSubclassFactory.$dict){return true}}
 if(check(klass,arg)){return true}
 var mro=klass.__mro__
@@ -5821,19 +5844,19 @@ function oct(x){return $builtin_base_convert_helper(x,8)}
 function ord(c){check_no_kw('ord',c)
 check_nb_args('ord',1,arguments.length)
 if(typeof c=='string'){if(c.length==1)return c.charCodeAt(0)
-throw _b_.TypeError('ord() expected a character, but string of length ' + 
+throw _b_.TypeError('ord() expected a character, but string of length ' +
 c.length + ' found')}
 switch($B.get_class(c)){case _b_.str.$dict:
 if(c.length==1)return c.charCodeAt(0)
-throw _b_.TypeError('ord() expected a character, but string of length ' + 
+throw _b_.TypeError('ord() expected a character, but string of length ' +
 c.length + ' found')
 case _b_.bytes.$dict:
 case _b_.bytearray.$dict:
 if(c.source.length==1)return c.source[0]
-throw _b_.TypeError('ord() expected a character, but string of length ' + 
+throw _b_.TypeError('ord() expected a character, but string of length ' +
 c.source.length + ' found')
 default:
-throw _b_.TypeError('ord() expected a character, but ' + 
+throw _b_.TypeError('ord() expected a character, but ' +
 $B.get_class(c).__name__ + ' was found')}}
 function pow(){var $ns=$B.args('pow',3,{x:null,y:null,z:null},['x','y','z'],arguments,{z:null},null,null)
 var x=$ns['x'],y=$ns['y'],z=$ns['z']
@@ -5911,7 +5934,7 @@ else if(attr=='__class__'){
 obj.__class__=value.$dict;
 return None}
 if(obj.__class__===$B.$factory){
-if(obj.$dict.$methods && typeof value=='function' 
+if(obj.$dict.$methods && typeof value=='function'
 && value.__class__!==$B.$factory
 && value.__class__!==$B.$MethodDict 
 ){
@@ -6286,6 +6309,7 @@ info +='\n    '+line}
 return info}else if(attr=='traceback'){
 return traceback(self.$stack)}else{throw AttributeError(self.__class__.__name__+
 "has no attribute '"+attr+"'")}}
+$BaseExceptionDict.__str__=function(self){return self.args[0]}
 $BaseExceptionDict.with_traceback=function(self,tb){self.traceback=tb
 return self}
 $B.set_func_names($BaseExceptionDict)
@@ -6989,7 +7013,7 @@ $JSObjectDict.$factory=JSObject
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','module1','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmath_jv','cmath_jv_fixed','cmath_ouroboros','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','module1','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var js=['_ajax','_base64','_jsre','_multiprocessing','_posixsubprocess','_profile','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
@@ -7077,7 +7101,6 @@ $module.__class__=$B.$ModuleDict
 $module.__name__=module.name
 $module.__repr__=$module.__str__=function(){if($B.builtin_module_names.indexOf(module.name)> -1){return "<module '"+module.name+"' (built-in)>"}
 return "<module '"+module.name+"' from "+path+" >"}
-$module.toString=function(){return "<module '"+module.name+"' from "+path+" >"}
 if(module.name !='builtins'){
 $module.__file__=path}}
 $B.imported[module.__name__]=$module
@@ -7129,6 +7152,13 @@ try{js=(compiled)? module_contents : root.to_js()
 if($B.$options.debug==10){console.log('code for module '+module.__name__)
 console.log(js)}
 eval(js)}catch(err){console.log(err+' for module '+module.__name__)
+console.log(err)
+for(var attr in err){console.log(attr,err[attr])}
+console.log(_b_.getattr(err,'info'))
+console.log('message: '+err.$message)
+console.log('filename: '+err.fileName)
+console.log('linenum: '+err.lineNumber)
+if($B.debug>0){console.log('line info '+ $B.line_info)}
 root=null
 js=null
 throw err}finally{$B.clear_ns(module.__name__)}
@@ -7401,7 +7431,11 @@ var $ObjectDict=_b_.object.$dict
 function $err(op,other){var msg="unsupported operand type(s) for "+op
 msg +=": 'float' and '"+$B.get_class(other).__name__+"'"
 throw _b_.TypeError(msg)}
-var $FloatDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'float',$native:true}
+var $FloatDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'float',$native:true,descriptors:{'numerator':true,'denominator':true,'imag':true,'real':true}}
+$FloatDict.numerator=function(self){return self}
+$FloatDict.denominator=function(self){return _b_.int(1)}
+$FloatDict.imag=function(self){return _b_.int(0)}
+$FloatDict.real=function(self){return self}
 $FloatDict.as_integer_ratio=function(self){if(self.valueOf()==Number.POSITIVE_INFINITY ||
 self.valueOf()==Number.NEGATIVE_INFINITY){throw _b_.OverflowError("Cannot pass infinity to float.as_integer_ratio.")}
 if(!Number.isFinite(self.valueOf())){throw _b_.ValueError("Cannot pass NaN to float.as_integer_ratio.")}
@@ -7476,12 +7510,12 @@ if(fmt.type=='%'){self *=100}
 if(fmt.type=='e'){var res=self.toExponential(fmt.precision),exp=parseInt(res.substr(res.search('e')+1))
 if(Math.abs(exp)<10){res=res.substr(0,res.length-1)+'0'+
 res.charAt(res.length-1)}
-return res }
+return res}
 if(fmt.precision!==undefined){
 var prec=fmt.precision
 if(prec==0){return Math.round(self)+''}
 var res=self.toFixed(prec),pt_pos=res.indexOf('.')
-if(fmt.type!==undefined && 
+if(fmt.type!==undefined &&
 (fmt.type=='%' ||fmt.type.toLowerCase()=='f')){if(pt_pos==-1){res +='.'+'0'.repeat(fmt.precision)}
 else{var missing=fmt.precision-res.length+pt_pos+1
 if(missing>0)res +='0'.repeat(missing)}}else{var res1=self.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search('e')+1))
@@ -7602,7 +7636,7 @@ $FloatDict.__pos__=function(self){return self}
 $FloatDict.__pow__=function(self,other){var other_int=isinstance(other,_b_.int)
 if(other_int ||isinstance(other,float)){if(self==1){return self}
 if(other==0){return new Number(1)}
-if(self==-1 && 
+if(self==-1 &&
 (!isFinite(other)||other.__class__===$B.LongInt.$dict ||!$B.is_safe_int(other))
 && !isNaN(other)){return new Number(1)}
 else if(self==0 && isFinite(other)&& other<0){throw _b_.ZeroDivisionError("0.0 cannot be raised to a negative power")}else if(self==Number.NEGATIVE_INFINITY && !isNaN(other)){if(other<0 && other%2==1){return new Number(-0.0)}else if(other<0){return new Number(0)}
@@ -7767,6 +7801,7 @@ if(isinstance(other,_b_.complex)){if(other.imag !=0)return False
 return self.valueOf()==other.real}
 if(hasattr(other,'__eq__'))return getattr(other,'__eq__')(self)
 return self.valueOf()===other}
+$IntDict.__float__=function(self){return new Number(self)}
 function preformat(self,fmt){if(fmt.empty){return _b_.str(self)}
 if(fmt.type && 'bcdoxXn'.indexOf(fmt.type)==-1){throw _b_.ValueError("Unknown format code '"+fmt.type+
 "' for object of type 'int'")}
@@ -7944,7 +7979,7 @@ for(var i=10;i < base;i++)digits+=String.fromCharCode(i+55)
 return digits}
 var int=function(value,base){
 if(value===undefined){return 0}
-if(typeof value=='number' && 
+if(typeof value=='number' &&
 (base===undefined ||base==10)){return parseInt(value)}
 if(base!==undefined){if(!isinstance(value,[_b_.str,_b_.bytes,_b_.bytearray])){throw TypeError("int() can't convert non-string with explicit base")}}
 if(isinstance(value,_b_.complex)){throw TypeError("can't convert complex to int")}
@@ -8462,6 +8497,320 @@ complex.__class__=$B.$factory
 $ComplexDict.$factory=complex
 $B.set_func_names($ComplexDict)
 _b_.complex=complex})(__BRYTHON__)
+;(function($B){
+eval($B.InjectBuiltins())
+DEFAULT_MIN_MERGE=32;
+DEFAULT_MIN_GALLOPING=7;
+DEFAULT_TMP_STORAGE_LENGTH=256;
+POWERS_OF_TEN=[1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9]
+function log10(x){if(x < 1e5){if(x < 1e2){return x < 1e1 ? 0 : 1;}
+if(x < 1e4){return x < 1e3 ? 2 : 3;}
+return 4;}
+if(x < 1e7){return x < 1e6 ? 5 : 6;}
+if(x < 1e9){return x < 1e8 ? 7 : 8;}
+return 9;}
+function alphabeticalCompare(a,b){if(a===b){return 0;}
+if(~~a===a && ~~b===b){if(a===0 ||b===0){return a < b ? -1 : 1;}
+if(a < 0 ||b < 0){if(b >=0){return -1;}
+if(a >=0){return 1;}
+a=-a;
+b=-b;}
+al=log10(a);
+bl=log10(b);
+var t=0;
+if(al < bl){a *=POWERS_OF_TEN[bl - al - 1];
+b /=10;
+t=-1;}else if(al > bl){b *=POWERS_OF_TEN[al - bl - 1];
+a /=10;
+t=1;}
+if(a===b){return t;}
+return a < b ? -1 : 1;}
+var aStr=String(a);
+var bStr=String(b);
+if(aStr===bStr){return 0;}
+return aStr < bStr ? -1 : 1;}
+function minRunLength(n){var r=0;
+while(n >=DEFAULT_MIN_MERGE){r |=(n & 1);
+n >>=1;}
+return n + r;}
+function makeAscendingRun(array,lo,hi,compare){var runHi=lo + 1;
+if(runHi===hi){return 1;}
+if(compare(array[runHi++],array[lo])< 0){while(runHi < hi && compare(array[runHi],array[runHi - 1])< 0){runHi++;}
+reverseRun(array,lo,runHi);}else{
+while(runHi < hi && compare(array[runHi],array[runHi - 1])>=0){runHi++;}}
+return runHi - lo;}
+function reverseRun(array,lo,hi){hi--;
+while(lo < hi){var t=array[lo];
+array[lo++]=array[hi];
+array[hi--]=t;}}
+function binaryInsertionSort(array,lo,hi,start,compare){if(start===lo){start++;}
+for(;start < hi;start++){var pivot=array[start];
+var left=lo;
+var right=start;
+while(left < right){var mid=(left + right)>>> 1;
+if(compare(pivot,array[mid])< 0){right=mid;}else{
+left=mid + 1;}}
+var n=start - left;
+switch(n){case 3:
+array[left + 3]=array[left + 2];
+case 2:
+array[left + 2]=array[left + 1];
+case 1:
+array[left + 1]=array[left];
+break;
+default:
+while(n > 0){array[left + n]=array[left + n - 1];
+n--;}}
+array[left]=pivot;}}
+function gallopLeft(value,array,start,length,hint,compare){var lastOffset=0;
+var maxOffset=0;
+var offset=1;
+if(compare(value,array[start + hint])> 0){maxOffset=length - hint;
+while(offset < maxOffset && compare(value,array[start + hint + offset])> 0){lastOffset=offset;
+offset=(offset << 1)+ 1;
+if(offset <=0){offset=maxOffset;}}
+if(offset > maxOffset){offset=maxOffset;}
+lastOffset +=hint;
+offset +=hint;}else{
+maxOffset=hint + 1;
+while(offset < maxOffset && compare(value,array[start + hint - offset])<=0){lastOffset=offset;
+offset=(offset << 1)+ 1;
+if(offset <=0){offset=maxOffset;}}
+if(offset > maxOffset){offset=maxOffset;}
+var tmp=lastOffset;
+lastOffset=hint - offset;
+offset=hint - tmp;}
+lastOffset++;
+while(lastOffset < offset){var m=lastOffset +((offset - lastOffset)>>> 1);
+if(compare(value,array[start + m])> 0){lastOffset=m + 1;}else{
+offset=m;}}
+return offset;}
+function gallopRight(value,array,start,length,hint,compare){var lastOffset=0;
+var maxOffset=0;
+var offset=1;
+if(compare(value,array[start + hint])< 0){maxOffset=hint + 1;
+while(offset < maxOffset && compare(value,array[start + hint - offset])< 0){lastOffset=offset;
+offset=(offset << 1)+ 1;
+if(offset <=0){offset=maxOffset;}}
+if(offset > maxOffset){offset=maxOffset;}
+var tmp=lastOffset;
+lastOffset=hint - offset;
+offset=hint - tmp;}else{
+maxOffset=length - hint;
+while(offset < maxOffset && compare(value,array[start + hint + offset])>=0){lastOffset=offset;
+offset=(offset << 1)+ 1;
+if(offset <=0){offset=maxOffset;}}
+if(offset > maxOffset){offset=maxOffset;}
+lastOffset +=hint;
+offset +=hint;}
+lastOffset++;
+while(lastOffset < offset){var m=lastOffset +((offset - lastOffset)>>> 1);
+if(compare(value,array[start + m])< 0){offset=m;}else{
+lastOffset=m + 1;}}
+return offset;}
+TimSort=function(array,compare){self={array:array,compare:compare,minGallop:DEFAULT_MIN_GALLOPING,length : array.length,tmpStorageLength:DEFAULT_TMP_STORAGE_LENGTH,stackLength:0,runStart:null,runLength:null,stackSize:0,
+pushRun: function(runStart,runLength){this.runStart[this.stackSize]=runStart;
+this.runLength[this.stackSize]=runLength;
+this.stackSize +=1;},
+mergeRuns: function(){while(this.stackSize > 1){var n=this.stackSize - 2;
+if((n >=1 &&
+this.runLength[n - 1]<=this.runLength[n]+ this.runLength[n + 1])||
+(n >=2 &&
+this.runLength[n - 2]<=this.runLength[n]+ this.runLength[n - 1])){if(this.runLength[n - 1]< this.runLength[n + 1]){n--;}}else if(this.runLength[n]> this.runLength[n + 1]){break;}
+this.mergeAt(n);}},
+forceMergeRuns: function(){while(this.stackSize > 1){var n=this.stackSize - 2;
+if(n > 0 && this.runLength[n - 1]< this.runLength[n + 1]){n--;}
+this.mergeAt(n);}},
+mergeAt: function(i){var compare=this.compare;
+var array=this.array;
+var start1=this.runStart[i];
+var length1=this.runLength[i];
+var start2=this.runStart[i + 1];
+var length2=this.runLength[i + 1];
+this.runLength[i]=length1 + length2;
+if(i===this.stackSize - 3){this.runStart[i + 1]=this.runStart[i + 2];
+this.runLength[i + 1]=this.runLength[i + 2];}
+this.stackSize--;
+var k=gallopRight(array[start2],array,start1,length1,0,compare);
+start1 +=k;
+length1 -=k;
+if(length1===0){return;}
+length2=gallopLeft(array[start1 + length1 - 1],array,start2,length2,length2 - 1,compare);
+if(length2===0){return;}
+if(length1 <=length2){this.mergeLow(start1,length1,start2,length2);}else{
+this.mergeHigh(start1,length1,start2,length2);}},
+mergeLow: function(start1,length1,start2,length2){var compare=this.compare;
+var array=this.array;
+var tmp=this.tmp;
+var i=0;
+for(i=0;i < length1;i++){tmp[i]=array[start1 + i];}
+var cursor1=0;
+var cursor2=start2;
+var dest=start1;
+array[dest++]=array[cursor2++];
+if(--length2===0){for(i=0;i < length1;i++){array[dest + i]=tmp[cursor1 + i];}
+return;}
+if(length1===1){for(i=0;i < length2;i++){array[dest + i]=array[cursor2 + i];}
+array[dest + length2]=tmp[cursor1];
+return;}
+var minGallop=this.minGallop;
+while(true){var count1=0;
+var count2=0;
+var exit=false;
+do{
+if(compare(array[cursor2],tmp[cursor1])< 0){array[dest++]=array[cursor2++];
+count2++;
+count1=0;
+if(--length2===0){exit=true;
+break;}}else{
+array[dest++]=tmp[cursor1++];
+count1++;
+count2=0;
+if(--length1===1){exit=true;
+break;}}}while((count1 |count2)< minGallop);
+if(exit){break;}
+do{
+count1=gallopRight(array[cursor2],tmp,cursor1,length1,0,compare);
+if(count1 !==0){for(i=0;i < count1;i++){array[dest + i]=tmp[cursor1 + i];}
+dest +=count1;
+cursor1 +=count1;
+length1 -=count1;
+if(length1 <=1){exit=true;
+break;}}
+array[dest++]=array[cursor2++];
+if(--length2===0){exit=true;
+break;}
+count2=gallopLeft(tmp[cursor1],array,cursor2,length2,0,compare);
+if(count2 !==0){for(i=0;i < count2;i++){array[dest + i]=array[cursor2 + i];}
+dest +=count2;
+cursor2 +=count2;
+length2 -=count2;
+if(length2===0){exit=true;
+break;}}
+array[dest++]=tmp[cursor1++];
+if(--length1===1){exit=true;
+break;}
+minGallop--;}while(count1 >=DEFAULT_MIN_GALLOPING ||count2 >=DEFAULT_MIN_GALLOPING);
+if(exit){break;}
+if(minGallop < 0){minGallop=0;}
+minGallop +=2;}
+this.minGallop=minGallop;
+if(minGallop < 1){this.minGallop=1;}
+if(length1===1){for(i=0;i < length2;i++){array[dest + i]=array[cursor2 + i];}
+array[dest + length2]=tmp[cursor1];}else if(length1===0){throw new Error('mergeLow preconditions were not respected');}else{
+for(i=0;i < length1;i++){array[dest + i]=tmp[cursor1 + i];}}},
+mergeHigh: function(start1,length1,start2,length2){var compare=this.compare;
+var array=this.array;
+var tmp=this.tmp;
+var i=0;
+for(i=0;i < length2;i++){tmp[i]=array[start2 + i];}
+var cursor1=start1 + length1 - 1;
+var cursor2=length2 - 1;
+var dest=start2 + length2 - 1;
+var customCursor=0;
+var customDest=0;
+array[dest--]=array[cursor1--];
+if(--length1===0){customCursor=dest -(length2 - 1);
+for(i=0;i < length2;i++){array[customCursor + i]=tmp[i];}
+return;}
+if(length2===1){dest -=length1;
+cursor1 -=length1;
+customDest=dest + 1;
+customCursor=cursor1 + 1;
+for(i=length1 - 1;i >=0;i--){array[customDest + i]=array[customCursor + i];}
+array[dest]=tmp[cursor2];
+return;}
+var minGallop=this.minGallop;
+while(true){var count1=0;
+var count2=0;
+var exit=false;
+do{
+if(compare(tmp[cursor2],array[cursor1])< 0){array[dest--]=array[cursor1--];
+count1++;
+count2=0;
+if(--length1===0){exit=true;
+break;}}else{
+array[dest--]=tmp[cursor2--];
+count2++;
+count1=0;
+if(--length2===1){exit=true;
+break;}}}while((count1 |count2)< minGallop);
+if(exit){break;}
+do{
+count1=length1 - gallopRight(tmp[cursor2],array,start1,length1,length1 - 1,compare);
+if(count1 !==0){dest -=count1;
+cursor1 -=count1;
+length1 -=count1;
+customDest=dest + 1;
+customCursor=cursor1 + 1;
+for(i=count1 - 1;i >=0;i--){array[customDest + i]=array[customCursor + i];}
+if(length1===0){exit=true;
+break;}}
+array[dest--]=tmp[cursor2--];
+if(--length2===1){exit=true;
+break;}
+count2=length2 - gallopLeft(array[cursor1],tmp,0,length2,length2 - 1,compare);
+if(count2 !==0){dest -=count2;
+cursor2 -=count2;
+length2 -=count2;
+customDest=dest + 1;
+customCursor=cursor2 + 1;
+for(i=0;i < count2;i++){array[customDest + i]=tmp[customCursor + i];}
+if(length2 <=1){exit=true;
+break;}}
+array[dest--]=array[cursor1--];
+if(--length1===0){exit=true;
+break;}
+minGallop--;}while(count1 >=DEFAULT_MIN_GALLOPING ||count2 >=DEFAULT_MIN_GALLOPING);
+if(exit){break;}
+if(minGallop < 0){minGallop=0;}
+minGallop +=2;}
+this.minGallop=minGallop;
+if(minGallop < 1){this.minGallop=1;}
+if(length2===1){dest -=length1;
+cursor1 -=length1;
+customDest=dest + 1;
+customCursor=cursor1 + 1;
+for(i=length1 - 1;i >=0;i--){array[customDest + i]=array[customCursor + i];}
+array[dest]=tmp[cursor2];}else if(length2===0){throw new Error('mergeHigh preconditions were not respected');}else{
+customCursor=dest -(length2 - 1);
+for(i=0;i < length2;i++){array[customCursor + i]=tmp[i];}}}}
+if(self.length < 2 * DEFAULT_TMP_STORAGE_LENGTH){self.tmpStorageLength=self.length >>> 1;}
+self.tmp=new Array(self.tmpStorageLength);
+self.stackLength=
+(self.length < 120 ? 5 :
+self.length < 1542 ? 10 :
+self.length < 119151 ? 19 : 40);
+self.runStart=new Array(self.stackLength);
+self.runLength=new Array(self.stackLength);
+return self;}
+function tim_sort(array,compare,lo,hi){if(!Array.isArray(array)){throw new TypeError('Can only sort arrays');}
+if(!compare){compare=alphabeticalCompare;}else if(typeof compare !=='function'){hi=lo;
+lo=compare;
+compare=alphabeticalCompare;}
+if(!lo){lo=0;}
+if(!hi){hi=array.length;}
+var remaining=hi - lo;
+if(remaining < 2){return;}
+var runLength=0;
+if(remaining < DEFAULT_MIN_MERGE){runLength=makeAscendingRun(array,lo,hi,compare);
+binaryInsertionSort(array,lo,hi,lo + runLength,compare);
+return;}
+var ts=new TimSort(array,compare);
+var minRun=minRunLength(remaining);
+do{
+runLength=makeAscendingRun(array,lo,hi,compare);
+if(runLength < minRun){var force=remaining;
+if(force > minRun){force=minRun;}
+binaryInsertionSort(array,lo,lo + force,lo + runLength,compare);
+runLength=force;}
+ts.pushRun(lo,runLength);
+ts.mergeRuns();
+remaining -=runLength;
+lo +=runLength;}while(remaining !==0);
+ts.forceMergeRuns();}
+$B.$TimSort=tim_sort;
+$B.$AlphabeticalCompare=alphabeticalCompare;})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var $ObjectDict=_b_.object.$dict,$N=_b_.None
 function $list(){
@@ -8795,320 +9144,6 @@ $B.set_func_names($TupleDict)
 _b_.list=list
 _b_.tuple=tuple
 _b_.object.$dict.__bases__=tuple()})(__BRYTHON__)
-;(function($B){
-eval($B.InjectBuiltins())
-DEFAULT_MIN_MERGE=32;
-DEFAULT_MIN_GALLOPING=7;
-DEFAULT_TMP_STORAGE_LENGTH=256;
-POWERS_OF_TEN=[1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9]
-function log10(x){if(x < 1e5){if(x < 1e2){return x < 1e1 ? 0 : 1;}
-if(x < 1e4){return x < 1e3 ? 2 : 3;}
-return 4;}
-if(x < 1e7){return x < 1e6 ? 5 : 6;}
-if(x < 1e9){return x < 1e8 ? 7 : 8;}
-return 9;}
-function alphabeticalCompare(a,b){if(a===b){return 0;}
-if(~~a===a && ~~b===b){if(a===0 ||b===0){return a < b ? -1 : 1;}
-if(a < 0 ||b < 0){if(b >=0){return -1;}
-if(a >=0){return 1;}
-a=-a;
-b=-b;}
-al=log10(a);
-bl=log10(b);
-var t=0;
-if(al < bl){a *=POWERS_OF_TEN[bl - al - 1];
-b /=10;
-t=-1;}else if(al > bl){b *=POWERS_OF_TEN[al - bl - 1];
-a /=10;
-t=1;}
-if(a===b){return t;}
-return a < b ? -1 : 1;}
-var aStr=String(a);
-var bStr=String(b);
-if(aStr===bStr){return 0;}
-return aStr < bStr ? -1 : 1;}
-function minRunLength(n){var r=0;
-while(n >=DEFAULT_MIN_MERGE){r |=(n & 1);
-n >>=1;}
-return n + r;}
-function makeAscendingRun(array,lo,hi,compare){var runHi=lo + 1;
-if(runHi===hi){return 1;}
-if(compare(array[runHi++],array[lo])< 0){while(runHi < hi && compare(array[runHi],array[runHi - 1])< 0){runHi++;}
-reverseRun(array,lo,runHi);}else{
-while(runHi < hi && compare(array[runHi],array[runHi - 1])>=0){runHi++;}}
-return runHi - lo;}
-function reverseRun(array,lo,hi){hi--;
-while(lo < hi){var t=array[lo];
-array[lo++]=array[hi];
-array[hi--]=t;}}
-function binaryInsertionSort(array,lo,hi,start,compare){if(start===lo){start++;}
-for(;start < hi;start++){var pivot=array[start];
-var left=lo;
-var right=start;
-while(left < right){var mid=(left + right)>>> 1;
-if(compare(pivot,array[mid])< 0){right=mid;}else{
-left=mid + 1;}}
-var n=start - left;
-switch(n){case 3:
-array[left + 3]=array[left + 2];
-case 2:
-array[left + 2]=array[left + 1];
-case 1:
-array[left + 1]=array[left];
-break;
-default:
-while(n > 0){array[left + n]=array[left + n - 1];
-n--;}}
-array[left]=pivot;}}
-function gallopLeft(value,array,start,length,hint,compare){var lastOffset=0;
-var maxOffset=0;
-var offset=1;
-if(compare(value,array[start + hint])> 0){maxOffset=length - hint;
-while(offset < maxOffset && compare(value,array[start + hint + offset])> 0){lastOffset=offset;
-offset=(offset << 1)+ 1;
-if(offset <=0){offset=maxOffset;}}
-if(offset > maxOffset){offset=maxOffset;}
-lastOffset +=hint;
-offset +=hint;}else{
-maxOffset=hint + 1;
-while(offset < maxOffset && compare(value,array[start + hint - offset])<=0){lastOffset=offset;
-offset=(offset << 1)+ 1;
-if(offset <=0){offset=maxOffset;}}
-if(offset > maxOffset){offset=maxOffset;}
-var tmp=lastOffset;
-lastOffset=hint - offset;
-offset=hint - tmp;}
-lastOffset++;
-while(lastOffset < offset){var m=lastOffset +((offset - lastOffset)>>> 1);
-if(compare(value,array[start + m])> 0){lastOffset=m + 1;}else{
-offset=m;}}
-return offset;}
-function gallopRight(value,array,start,length,hint,compare){var lastOffset=0;
-var maxOffset=0;
-var offset=1;
-if(compare(value,array[start + hint])< 0){maxOffset=hint + 1;
-while(offset < maxOffset && compare(value,array[start + hint - offset])< 0){lastOffset=offset;
-offset=(offset << 1)+ 1;
-if(offset <=0){offset=maxOffset;}}
-if(offset > maxOffset){offset=maxOffset;}
-var tmp=lastOffset;
-lastOffset=hint - offset;
-offset=hint - tmp;}else{
-maxOffset=length - hint;
-while(offset < maxOffset && compare(value,array[start + hint + offset])>=0){lastOffset=offset;
-offset=(offset << 1)+ 1;
-if(offset <=0){offset=maxOffset;}}
-if(offset > maxOffset){offset=maxOffset;}
-lastOffset +=hint;
-offset +=hint;}
-lastOffset++;
-while(lastOffset < offset){var m=lastOffset +((offset - lastOffset)>>> 1);
-if(compare(value,array[start + m])< 0){offset=m;}else{
-lastOffset=m + 1;}}
-return offset;}
-TimSort=function(array,compare){self={array:array,compare:compare,minGallop:DEFAULT_MIN_GALLOPING,length : array.length,tmpStorageLength:DEFAULT_TMP_STORAGE_LENGTH,stackLength:0,runStart:null,runLength:null,stackSize:0,
-pushRun: function(runStart,runLength){this.runStart[this.stackSize]=runStart;
-this.runLength[this.stackSize]=runLength;
-this.stackSize +=1;},
-mergeRuns: function(){while(this.stackSize > 1){var n=this.stackSize - 2;
-if((n >=1 &&
-this.runLength[n - 1]<=this.runLength[n]+ this.runLength[n + 1])||
-(n >=2 &&
-this.runLength[n - 2]<=this.runLength[n]+ this.runLength[n - 1])){if(this.runLength[n - 1]< this.runLength[n + 1]){n--;}}else if(this.runLength[n]> this.runLength[n + 1]){break;}
-this.mergeAt(n);}},
-forceMergeRuns: function(){while(this.stackSize > 1){var n=this.stackSize - 2;
-if(n > 0 && this.runLength[n - 1]< this.runLength[n + 1]){n--;}
-this.mergeAt(n);}},
-mergeAt: function(i){var compare=this.compare;
-var array=this.array;
-var start1=this.runStart[i];
-var length1=this.runLength[i];
-var start2=this.runStart[i + 1];
-var length2=this.runLength[i + 1];
-this.runLength[i]=length1 + length2;
-if(i===this.stackSize - 3){this.runStart[i + 1]=this.runStart[i + 2];
-this.runLength[i + 1]=this.runLength[i + 2];}
-this.stackSize--;
-var k=gallopRight(array[start2],array,start1,length1,0,compare);
-start1 +=k;
-length1 -=k;
-if(length1===0){return;}
-length2=gallopLeft(array[start1 + length1 - 1],array,start2,length2,length2 - 1,compare);
-if(length2===0){return;}
-if(length1 <=length2){this.mergeLow(start1,length1,start2,length2);}else{
-this.mergeHigh(start1,length1,start2,length2);}},
-mergeLow: function(start1,length1,start2,length2){var compare=this.compare;
-var array=this.array;
-var tmp=this.tmp;
-var i=0;
-for(i=0;i < length1;i++){tmp[i]=array[start1 + i];}
-var cursor1=0;
-var cursor2=start2;
-var dest=start1;
-array[dest++]=array[cursor2++];
-if(--length2===0){for(i=0;i < length1;i++){array[dest + i]=tmp[cursor1 + i];}
-return;}
-if(length1===1){for(i=0;i < length2;i++){array[dest + i]=array[cursor2 + i];}
-array[dest + length2]=tmp[cursor1];
-return;}
-var minGallop=this.minGallop;
-while(true){var count1=0;
-var count2=0;
-var exit=false;
-do{
-if(compare(array[cursor2],tmp[cursor1])< 0){array[dest++]=array[cursor2++];
-count2++;
-count1=0;
-if(--length2===0){exit=true;
-break;}}else{
-array[dest++]=tmp[cursor1++];
-count1++;
-count2=0;
-if(--length1===1){exit=true;
-break;}}}while((count1 |count2)< minGallop);
-if(exit){break;}
-do{
-count1=gallopRight(array[cursor2],tmp,cursor1,length1,0,compare);
-if(count1 !==0){for(i=0;i < count1;i++){array[dest + i]=tmp[cursor1 + i];}
-dest +=count1;
-cursor1 +=count1;
-length1 -=count1;
-if(length1 <=1){exit=true;
-break;}}
-array[dest++]=array[cursor2++];
-if(--length2===0){exit=true;
-break;}
-count2=gallopLeft(tmp[cursor1],array,cursor2,length2,0,compare);
-if(count2 !==0){for(i=0;i < count2;i++){array[dest + i]=array[cursor2 + i];}
-dest +=count2;
-cursor2 +=count2;
-length2 -=count2;
-if(length2===0){exit=true;
-break;}}
-array[dest++]=tmp[cursor1++];
-if(--length1===1){exit=true;
-break;}
-minGallop--;}while(count1 >=DEFAULT_MIN_GALLOPING ||count2 >=DEFAULT_MIN_GALLOPING);
-if(exit){break;}
-if(minGallop < 0){minGallop=0;}
-minGallop +=2;}
-this.minGallop=minGallop;
-if(minGallop < 1){this.minGallop=1;}
-if(length1===1){for(i=0;i < length2;i++){array[dest + i]=array[cursor2 + i];}
-array[dest + length2]=tmp[cursor1];}else if(length1===0){throw new Error('mergeLow preconditions were not respected');}else{
-for(i=0;i < length1;i++){array[dest + i]=tmp[cursor1 + i];}}},
-mergeHigh: function(start1,length1,start2,length2){var compare=this.compare;
-var array=this.array;
-var tmp=this.tmp;
-var i=0;
-for(i=0;i < length2;i++){tmp[i]=array[start2 + i];}
-var cursor1=start1 + length1 - 1;
-var cursor2=length2 - 1;
-var dest=start2 + length2 - 1;
-var customCursor=0;
-var customDest=0;
-array[dest--]=array[cursor1--];
-if(--length1===0){customCursor=dest -(length2 - 1);
-for(i=0;i < length2;i++){array[customCursor + i]=tmp[i];}
-return;}
-if(length2===1){dest -=length1;
-cursor1 -=length1;
-customDest=dest + 1;
-customCursor=cursor1 + 1;
-for(i=length1 - 1;i >=0;i--){array[customDest + i]=array[customCursor + i];}
-array[dest]=tmp[cursor2];
-return;}
-var minGallop=this.minGallop;
-while(true){var count1=0;
-var count2=0;
-var exit=false;
-do{
-if(compare(tmp[cursor2],array[cursor1])< 0){array[dest--]=array[cursor1--];
-count1++;
-count2=0;
-if(--length1===0){exit=true;
-break;}}else{
-array[dest--]=tmp[cursor2--];
-count2++;
-count1=0;
-if(--length2===1){exit=true;
-break;}}}while((count1 |count2)< minGallop);
-if(exit){break;}
-do{
-count1=length1 - gallopRight(tmp[cursor2],array,start1,length1,length1 - 1,compare);
-if(count1 !==0){dest -=count1;
-cursor1 -=count1;
-length1 -=count1;
-customDest=dest + 1;
-customCursor=cursor1 + 1;
-for(i=count1 - 1;i >=0;i--){array[customDest + i]=array[customCursor + i];}
-if(length1===0){exit=true;
-break;}}
-array[dest--]=tmp[cursor2--];
-if(--length2===1){exit=true;
-break;}
-count2=length2 - gallopLeft(array[cursor1],tmp,0,length2,length2 - 1,compare);
-if(count2 !==0){dest -=count2;
-cursor2 -=count2;
-length2 -=count2;
-customDest=dest + 1;
-customCursor=cursor2 + 1;
-for(i=0;i < count2;i++){array[customDest + i]=tmp[customCursor + i];}
-if(length2 <=1){exit=true;
-break;}}
-array[dest--]=array[cursor1--];
-if(--length1===0){exit=true;
-break;}
-minGallop--;}while(count1 >=DEFAULT_MIN_GALLOPING ||count2 >=DEFAULT_MIN_GALLOPING);
-if(exit){break;}
-if(minGallop < 0){minGallop=0;}
-minGallop +=2;}
-this.minGallop=minGallop;
-if(minGallop < 1){this.minGallop=1;}
-if(length2===1){dest -=length1;
-cursor1 -=length1;
-customDest=dest + 1;
-customCursor=cursor1 + 1;
-for(i=length1 - 1;i >=0;i--){array[customDest + i]=array[customCursor + i];}
-array[dest]=tmp[cursor2];}else if(length2===0){throw new Error('mergeHigh preconditions were not respected');}else{
-customCursor=dest -(length2 - 1);
-for(i=0;i < length2;i++){array[customCursor + i]=tmp[i];}}}}
-if(self.length < 2 * DEFAULT_TMP_STORAGE_LENGTH){self.tmpStorageLength=self.length >>> 1;}
-self.tmp=new Array(self.tmpStorageLength);
-self.stackLength=
-(self.length < 120 ? 5 :
-self.length < 1542 ? 10 :
-self.length < 119151 ? 19 : 40);
-self.runStart=new Array(self.stackLength);
-self.runLength=new Array(self.stackLength);
-return self;}
-function tim_sort(array,compare,lo,hi){if(!Array.isArray(array)){throw new TypeError('Can only sort arrays');}
-if(!compare){compare=alphabeticalCompare;}else if(typeof compare !=='function'){hi=lo;
-lo=compare;
-compare=alphabeticalCompare;}
-if(!lo){lo=0;}
-if(!hi){hi=array.length;}
-var remaining=hi - lo;
-if(remaining < 2){return;}
-var runLength=0;
-if(remaining < DEFAULT_MIN_MERGE){runLength=makeAscendingRun(array,lo,hi,compare);
-binaryInsertionSort(array,lo,hi,lo + runLength,compare);
-return;}
-var ts=new TimSort(array,compare);
-var minRun=minRunLength(remaining);
-do{
-runLength=makeAscendingRun(array,lo,hi,compare);
-if(runLength < minRun){var force=remaining;
-if(force > minRun){force=minRun;}
-binaryInsertionSort(array,lo,lo + force,lo + runLength,compare);
-runLength=force;}
-ts.pushRun(lo,runLength);
-ts.mergeRuns();
-remaining -=runLength;
-lo +=runLength;}while(remaining !==0);
-ts.forceMergeRuns();}
-$B.$TimSort=tim_sort;
-$B.$AlphabeticalCompare=alphabeticalCompare;})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 if(!String.prototype.trim){
 String.prototype.trim=function(){var c;
@@ -9155,7 +9190,7 @@ if(self.length==0)return nbcar==0
 for(var i=0,_len_i=self.length;i < _len_i;i++){if(self.substr(i,nbcar)==item)return true}
 return false}
 $StringDict.__delitem__=function(){throw _b_.TypeError("'str' object doesn't support item deletion")}
-$StringDict.__dir__=$ObjectDict.__dir__ 
+$StringDict.__dir__=$ObjectDict.__dir__
 $StringDict.__eq__=function(self,other){if(other===undefined){
 return self===str}
 if(_b_.isinstance(other,_b_.str)){return other.valueOf()==self.valueOf()}
@@ -9307,7 +9342,7 @@ if(upper){ret="0X" + ret}else{
 ret="0x" + ret}}}
 return format_padding(format_sign(val,flags)+ ret,flags)}
 var octal_format=function(val,flags){number_check(val)
-var ret 
+var ret
 if(val.__class__===$B.LongInt.$dict){ret=$B.LongInt.$dict.to_base(8)}else{
 ret=parseInt(val)
 ret=ret.toString(8)}
@@ -9367,7 +9402,7 @@ var ret=func(self,flags)
 if(ret !==undefined){return ret}
 ++newpos}}catch(err){if(err.name==="UnsupportedChar"){invalid_char=s[newpos]
 if(invalid_char===undefined){throw _b_.ValueError("incomplete format")}
-throw _b_.ValueError("unsupported format character '" + invalid_char + 
+throw _b_.ValueError("unsupported format character '" + invalid_char +
 "' (0x" + invalid_char.charCodeAt(0).toString(16)+ ") at index " + newpos)}else if(err.name==="NotANumber"){var try_char=s[newpos]
 var cls=self.__class__
 if(!cls){if(typeof(self)==='string'){cls='str'}else{
@@ -9404,7 +9439,7 @@ $StringDict.__repr__=function(self){var res=self.replace(/\n/g,'\\\\n')
 res=res.replace(/\\/g,'\\\\')
 if(res.search('"')==-1 && res.search("'")==-1){return "'"+res+"'"}else if(self.search('"')==-1){return '"'+res+'"'}
 var qesc=new RegExp("'","g")
-res="'"+res.replace(qesc,"\\'")+"'" 
+res="'"+res.replace(qesc,"\\'")+"'"
 return res}
 $StringDict.__setitem__=function(self,attr,value){throw _b_.TypeError("'str' object does not support item assignment")}
 $StringDict.__str__=function(self){if(self===undefined)return "<class 'str'>"
@@ -9625,7 +9660,7 @@ $StringDict.replace=function(self,old,_new,count){
 var $=$B.args('replace',4,{self:null,old:null,$$new:null,count:null},['self','old','$$new','count'],arguments,{count:-1},null,null),count=$.count,self=$.self,old=$.old,_new=$.$$new
 check_str(old)
 check_str(_new)
-if(!isinstance(count,[_b_.int,_b_.float])){throw _b_.TypeError("'" + $B.get_class(count).__name__ + 
+if(!isinstance(count,[_b_.int,_b_.float])){throw _b_.TypeError("'" + $B.get_class(count).__name__ +
 "' object cannot be interpreted as an integer");}else if(isinstance(count,_b_.float)){throw _b_.TypeError("integer argument expected, got float");}
 if(count==0){return self}
 if(count.__class__==$B.LongInt.$dict){count=parseInt(count.value)}
@@ -9750,7 +9785,7 @@ return '0'.repeat(width - self.length)+self}}
 function str(arg){if(arg===undefined)return ''
 switch(typeof arg){case 'string':
 return arg
-case 'number': 
+case 'number':
 if(isFinite(arg)){return arg.toString()}}
 try{if(arg.__class__===$B.$factory){
 var func=$B.$type.__getattribute__(arg.$dict.__class__,'__str__')
@@ -9759,14 +9794,13 @@ return func()}else if(arg.__class__===$B.$type){
 var func=$B.$type.__getattribute__(arg.__class__,'__str__')
 if(func.__func__===_b_.object.$dict.__str__){return func(arg)}
 return func()}
-var f=getattr(arg,'__str__')
-return f()}
+var f=getattr(arg,'__str__')}
 catch(err){
 try{
-var f=getattr(arg,'__repr__')
-return getattr(f,'__call__')()}catch(err){if($B.debug>1){console.log(err)}
+var f=getattr(arg,'__repr__')}catch(err){if($B.debug>1){console.log(err)}
 console.log('Warning - no method __str__ or __repr__, default to toString',arg)
-return arg.toString()}}}
+return arg.toString()}}
+return getattr(f,'__call__')()}
 str.__class__=$B.$factory
 str.$dict=$StringDict
 $StringDict.$factory=str
@@ -9831,7 +9865,7 @@ return s+fill.repeat(missing)
 case '>':
 return fill.repeat(missing)+s
 case '=':
-if('+-'.indexOf(s.charAt(0))>-1){return s.charAt(0)+fill.repeat(missing)+s.substr(1)}else{return fill.repeat(missing)+s }
+if('+-'.indexOf(s.charAt(0))>-1){return s.charAt(0)+fill.repeat(missing)+s.substr(1)}else{return fill.repeat(missing)+s}
 case '^':
 var left=parseInt(missing/2)
 return fill.repeat(left)+s+fill.repeat(missing-left)}}
@@ -11485,9 +11519,7 @@ module=$B.$ModuleDict.$factory(mod_name);
 var mod_desc=_b_.getattr(spec,'origin');
 if(_b_.getattr(spec,'has_location')){mod_desc="from '" + mod_desc + "'";}
 else{
-mod_desc='(' + mod_desc + ')';}
-module.toString=module.__repr__=module.__str__=
-function(){return "<module '" + mod_name + "' " + mod_desc + ">"}}}
+mod_desc='(' + mod_desc + ')';}}}
 module.__name__=_spec_name;
 module.__loader__=_loader;
 module.__package__=_b_.getattr(spec,'parent','');
