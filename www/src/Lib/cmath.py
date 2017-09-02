@@ -88,14 +88,13 @@ def sqrt(x):
     #   subnormal, so will lack full precision.  We solve this by rescaling
     #   x and y by a sufficiently large power of 2 to ensure that x and y
     #   are normal.
-
-    ret = complex()
     s, d, ax, ay = .0, .0, math.fabs(x.real), math.fabs(x.imag)
     
     ret = _SPECIAL_VALUE(x, _sqrt_special_values)
     if ret is not None:
         return ret
-
+    
+    ret = complex()
     if x.real == .0 and x.imag == .0:
         ret.real = .0
         ret.imag = x.imag
@@ -299,8 +298,6 @@ def cosh(x):
             ret = _SPECIAL_VALUE(x,_cosh_special_values)
         return ret
     
-    ret = complex()
-    
     if math.fabs(x.real) > _CM_LOG_LARGE_DOUBLE:
         #  deal correctly with cases where cosh(x.real) overflows but
         #  cosh(z) does not. 
@@ -398,6 +395,7 @@ def log(x, base=None):
     if ret is not None:
         return ret
     
+    ret = complex()
 
     ax = math.fabs(x.real)
     ay = math.fabs(x.imag)
