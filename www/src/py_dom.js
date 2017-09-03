@@ -4,13 +4,14 @@ eval($B.InjectBuiltins())
 
 var $ObjectDict = _b_.object.$dict
 var JSObject = $B.JSObject
+var _window = self;
 
 // Maps $brython_id of DOM elements to events
 $B.events = _b_.dict()
 
 // cross-browser utility functions
 function $getMouseOffset(target, ev){
-    ev = ev || window.event;
+    ev = ev || _window.event;
     var docPos    = $getPosition(target);
     var mousePos  = $mouseCoords(ev);
     return {x:mousePos.x - docPos.x, y:mousePos.y - docPos.y};
@@ -37,7 +38,7 @@ function $getPosition(e){
 function $mouseCoords(ev){
     var posx = 0;
     var posy = 0;
-    if (!ev) var ev = window.event;
+    if (!ev) var ev = _window.event;
     if (ev.pageX || ev.pageY){
         posx = ev.pageX;
         posy = ev.pageY;
@@ -230,14 +231,8 @@ function $OpenFile(file,mode,encoding){
     this.__setattr__ = (function(obj){
         return function(attr,value){
             if(attr.substr(0,2)=='on'){ // event
-                // value is a function taking an event as argument
-                if(window.addEventListener){
-                    var callback = function(ev){return value($DOMEvent(ev))}
-                    obj.addEventListener(attr.substr(2),callback)
-                }else if(window.attachEvent){
-                    var callback = function(ev){return value($DOMEvent(window.event))}
-                    obj.attachEvent(attr,callback)
-                }
+                var callback = function(ev){return value($DOMEvent(ev))}
+                obj.addEventListener(attr.substr(2),callback)
             }else if('set_'+attr in obj){return obj['set_'+attr](value)}
             else if(attr in obj){obj[attr]=value}
             else{setattr(obj,attr,value)}
@@ -807,11 +802,7 @@ DOMNodeDict.bind = function(self,event){
                 }
             }}
         )(func)
-        if(window.addEventListener){
-            self.elt.addEventListener(event,callback,false)
-        }else if(window.attachEvent){
-            self.elt.attachEvent("on"+event,callback)
-        }
+        self.elt.addEventListener(event,callback,false)
         evlist[pos++]=[func, callback]
     }
     return self
@@ -1214,11 +1205,7 @@ DOMNodeDict.unbind = function(self,event){
     if(arguments.length===2){
         for(var i=0;i<events.length;i++){
             var callback = events[i][1]
-            if(window.removeEventListener){
-                self.elt.removeEventListener(event,callback,false)
-            }else if(window.detachEvent){
-                self.elt.detachEvent(event,callback,false)
-            }
+            self.elt.removeEventListener(event,callback,false)
         }
         events = []
         return
@@ -1228,11 +1215,7 @@ DOMNodeDict.unbind = function(self,event){
         for(var j=0;j<events.length;j++){
             if(getattr(func,'__eq__')(events[j][0])){
                 var callback = events[j][1]
-                if(window.removeEventListener){
-                    self.elt.removeEventListener(event,callback,false)
-                }else if(window.detachEvent){
-                    self.elt.detachEvent(event,callback,false)
-                }
+                self.elt.removeEventListener(event,callback,false)
                 events.splice(j,1)
                 flag = true
                 break
@@ -1393,7 +1376,7 @@ $TagSum.__class__=$B.$factory
 $TagSum.$dict = $TagSumDict
 $B.$TagSum = $TagSum // used in _html.js and _svg.js
 
-var win =  JSObject(window) //{__class__:$WinDict}
+var win =  JSObject(_window) //{__class__:$WinDict}
 
 win.get_postMessage = function(msg,targetOrigin){
     if(isinstance(msg,dict)){
@@ -1402,7 +1385,7 @@ win.get_postMessage = function(msg,targetOrigin){
         for(var i=0;i<items.length;i++) temp[items[i][0]]=items[i][1]
         msg = temp
     }
-    return window.postMessage(msg,targetOrigin)
+    return _window.postMessage(msg,targetOrigin)
 }
 
 $B.DOMNodeDict = DOMNodeDict
