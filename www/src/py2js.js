@@ -7887,7 +7887,7 @@ function brython(options){
     path_hooks.push($B.$path_hooks[1])
     $B.path_hooks = path_hooks
 
-    
+
     // URL of the script where function brython() is called
     var $href = $B.script_path = _window.location.href,
         $href_elts = $href.split('/')
@@ -7901,7 +7901,7 @@ function brython(options){
         $B.path = options.pythonpath
         $B.$options.static_stdlib_import = false
     }
-    
+
     // Or it can be provided as a list of strings or path objects
     // where a path object has at least a path attribute and, optionally,
     // a prefetch attribute and/or a lang attribute
@@ -7911,7 +7911,7 @@ function brython(options){
     //
     // where the prefetch attribute should be present & true if prefetching is required
     // otherwise it should be present and false
-    
+
     if (options.python_paths) {
         options.python_paths.forEach(function(path) {
             var lang, prefetch;
@@ -7925,18 +7925,18 @@ function brython(options){
             if (lang) _importlib.optimize_import_for_path(path, lang)
         })
     }
-    
+
     if (! isWebWorker ) {
     // Get all links with rel=pythonpath and add them to sys.path
         var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
             _importlib = $B.modules['_importlib'];
         for (var i=0, e; e = path_links[i]; ++i) {
             var href = e.href;
-        if ((' ' + e.rel + ' ').indexOf(' prepend ') != -1) {
-            $B.path.unshift(href);  // support prepending to pythonpath
-        } else {
-            $B.path.push(href);
-        }
+            if ((' ' + e.rel + ' ').indexOf(' prepend ') != -1) {
+                $B.path.unshift(href);  // support prepending to pythonpath
+            } else {
+                $B.path.push(href);
+            }
             if (href.slice(-7).toLowerCase() == '.vfs.js' &&
                     (' ' + e.rel + ' ').indexOf(' prefetch ') != -1) {
                 // Prefetch VFS file
@@ -7962,7 +7962,7 @@ function brython(options){
        }
        console.log("DeprecationWarning: \'re_module\' option of \'brython\' function will be deprecated in future versions of Brython.")
     }
-    
+
     $B.scripts = []
     $B.js = {} // maps script name to JS conversion
     if ($B.$options.args) {
@@ -7975,11 +7975,11 @@ function brython(options){
     }
 }
 
-function _run_scripts(options) { 
+function _run_scripts(options) {
     // Save initial Javascript namespace
     var kk = Object.keys(_window)
 
-    
+
     // Option to run code on demand and not all the scripts defined in a page
     // The following lines are included to allow to run brython scripts in
     // the IPython/Jupyter notebook using a cell magic. Have a look at
@@ -8000,10 +8000,10 @@ function _run_scripts(options) {
             }
         }
     }
-    
+
     // Get all scripts with type = text/python or text/python3 and run them
 
-    
+
     var first_script = true, module_name;
     if(options.ipy_id!==undefined){
         module_name='__main__';
@@ -8122,7 +8122,7 @@ function _run_scripts(options) {
         }
     }
     */
-    
+
 }
 
 $B.$operators = $operators
@@ -8136,7 +8136,3 @@ $B.brython = brython
 
 })(__BRYTHON__)
 var brython = __BRYTHON__.brython
-
-
-
-
