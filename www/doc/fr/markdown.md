@@ -13,10 +13,10 @@ Le module `markdown` définit une fonction :
 L'exemple ci-dessous montre comment récupérer le contenu d'un fichier markdown à l'adresse _url_, remplir une zone du document avec le code HTML correspondant, et exécuter tous les scripts présents dans la page. Cette technique est utilisée notamment pour ces pages de documentation
 
 ```python
-from browser import document as doc
+from browser import document
 import markdown
-mk,scripts = markdown.mark(open(url).read())
-doc['zone'].html = mk
+mk, scripts = markdown.mark(open(url).read())
+document['zone'].html = mk
 for script in scripts:
-    exec(script,globals())
+    exec(script, globals())
 ```

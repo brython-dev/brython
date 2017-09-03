@@ -29,21 +29,15 @@ Cliquer sur le champ de saisie ci-dessous pour qu'il reçoive le focus, puis cli
 
 #### Code
 
-<div id="codeFocus">
-    from browser import document
-    
-    def getFocus(ev):
-        document["traceFocus"].text = '%s reçoit le focus' %ev.target.id
-        
-    def loseFocus(ev):
-        document["traceFocus"].text = '%s perd le focus' %ev.target.id
+```exec_on_load
+from browser import document
 
-    document['entry'].bind('blur', loseFocus)
-    document['entry'].bind('focus', getFocus)
-</div>
+def getFocus(ev):
+    document["traceFocus"].text = '%s reçoit le focus' %ev.target.id
 
-<script type="text/python">
-exec(doc["codeFocus"].text)
-</script>
+def loseFocus(ev):
+    document["traceFocus"].text = '%s perd le focus' %ev.target.id
 
-
+document['entry'].bind('blur', loseFocus)
+document['entry'].bind('focus', getFocus)
+```

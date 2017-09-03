@@ -1,7 +1,7 @@
 module **browser.webworker**
 ----------------------------
 
-The webworker module provides a basic integration between Brython and [WebWorkers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API)).
+The webworker module provides a basic integration between Brython and [WebWorkers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API).
 It allows one to run a python script in a web worker with relative ease. Currently there are two classes which can be used.
 A basic Worker class and a RPCWorker class.
 
@@ -130,7 +130,7 @@ it in our coroutine pauses its run until it is available. Then we call the `log`
 we terminate the worker using the `WorkerCommon.terminate` method.
 
 Implementing the worker part is very similar to the previous case. The main difference is that
-instead of using the method `WorkerCommon.bind_message` we use the method `RPCWorerChild.register_method`:
+instead of using the method `WorkerCommon.bind_message` we use the method `RPCWorkerChild.register_method`:
 
 ```python
 from browser.webworker import current_worker, Message

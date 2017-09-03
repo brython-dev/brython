@@ -46,7 +46,7 @@ chaque fonction du débogueur fonctionne au cas où vous voudriez le
 compléter.
 
 
-####Brython_Debugger pour les développeurs
+### Brython_Debugger pour les développeurs
 
 Le débogueur fournit 4 points d'entrée(_on\_debugging\_started_, _on\_step\_update_, 
 _on\_debugging\_end_, et _on\_debugging\_error_) qui prennent comme argument une
