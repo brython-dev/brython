@@ -1,15 +1,15 @@
 Elements attributes and methods
 -------------------------------
 
-The elements in a page have attributes and methods that depend on the element 
+The elements in a page have attributes and methods that depend on the element
 type ; they are defined by the W3C and can be found on many Internet sites.
 
-Since their name may vary depending on the browser, Brython defines additional 
+Since their name may vary depending on the browser, Brython defines additional
 attributes that work in all cases :
 
 <table border=1 cellpadding=3>
 <tr>
-<th>Name</th><th>Type</th><th>Description</th><th>R = read only<br>R/W = 
+<th>Name</th><th>Type</th><th>Description</th><th>R = read only<br>R/W =
 read + write</th>
 </tr>
 
@@ -22,18 +22,22 @@ read + write</th>
 </tr>
 
 <tr>
-<td>*children*</td><td>list</td><td>the element's children in the document 
+<td>*children*</td><td>list</td><td>the element's children in the document
 tree</td><td>R</td>
 </tr>
 
 <tr>
-<td>*class\_name*</td><td>string</td><td>the name of the element's class (tag 
+<td>*class\_name*</td><td>string</td><td>the name of the element's class (tag
 attribute *class*)</td><td>R/W</td>
 </tr>
 
 <tr>
-<td>*clear*</td><td>method</td><td><code>`elt.clear()</code>` removes all the 
+<td>*clear*</td><td>method</td><td><code>`elt.clear()</code>` removes all the
 descendants of the element</td><td>-</td>
+</tr>
+
+<tr>
+<td>*get*</td><td>method</td><td>selects elements (cf <a href="access.html">access to elements</a>)</td><td>-</td>
 </tr>
 
 <tr>
@@ -46,18 +50,26 @@ descendants of the element</td><td>-</td>
 </tr>
 
 <tr>
+<td>*index*</td><td>method</td><td>`elt.index()` returns the index (integer) of the element among its parent's children</td><td>-</td>
+</tr>
+
+<tr>
 <td>*inside*</td><td>method</td><td>`elt.inside(other)` tests if `elt` is
 contained inside element `other`</td><td>-</td>
 </tr>
 
 <tr>
-<td>*left*</td><td>integer</td><td>the position of the element relatively to 
+<td>*left*</td><td>integer</td><td>the position of the element relatively to
 the left border of the first positioned parent (1)</td><td>R/W</td>
 </tr>
 
 <tr>
-<td>*parent*</td><td>`DOMNode` instance</td><td>the element's parent (`None` 
+<td>*parent*</td><td>`DOMNode` instance</td><td>the element's parent (`None`
 for `doc`)</td><td>R</td>
+</tr>
+
+<tr>
+<td>*select*</td><td>method</td><td>`elt.select(css_selector)` returns the elements matching the specified CSS selector</td><td>-</td>
 </tr>
 
 <tr>
@@ -65,7 +77,7 @@ for `doc`)</td><td>R</td>
 </tr>
 
 <tr>
-<td>*top*</td><td>integer</td><td>the position of the element relatively to 
+<td>*top*</td><td>integer</td><td>the position of the element relatively to
 the upper border of the first positioned parent (1)</td><td>R/W</td>
 </tr>
 
@@ -75,20 +87,20 @@ the upper border of the first positioned parent (1)</td><td>R/W</td>
 
 </table>
 
-(1) When going up the DOM tree, we stop at the first parent whose attribute 
-`style.position` is set to a value different of "static". `left` and `top` are 
-computed like `style.left` and `style.top` but are integer, not strings ending 
+(1) When going up the DOM tree, we stop at the first parent whose attribute
+`style.position` is set to a value different of "static". `left` and `top` are
+computed like `style.left` and `style.top` but are integer, not strings ending
 with `px`.
 
 (2) Same as `style.height` and `style.width` but as integers.
 
-To add a child to an element, use the operator __<=__ (think of it as a left 
+To add a child to an element, use the operator __<=__ (think of it as a left
 arrow for assignment)
 
 >    from browser import document, html
 >    document['zone'] <= html.INPUT(Id="data")
 
-Iterating on an element's children can be done using the usual Python syntax : 
+Iterating on an element's children can be done using the usual Python syntax :
 
 >    for child in element:
 >        (...)
