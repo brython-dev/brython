@@ -16,7 +16,7 @@
         $$window: $B.win,
     }
     browser.__path__ = browser.__file__
-    
+
     if (! $B.isa_web_worker ) {
         update(browser, {
             $$alert:function(message){window.alert($B.builtins.str(message))},
@@ -250,7 +250,7 @@
             return obj
         })(__BRYTHON__)
     }
-    
+
     modules['browser'] = browser
 
     modules['javascript'] = {
@@ -258,6 +258,7 @@
         $$this: function(){
             // returns the content of Javascript "this"
             // $B.js_this is set to "this" at the beginning of each function
+            if($B.js_this===undefined){return $B.builtins.None}
             return $B.JSObject($B.js_this)
         },
         JSObject: function(){
@@ -365,6 +366,14 @@
             return "<module '"+name+"' (built-in)>"
         }
         $B.imported[name] = $B.modules[name] = module_obj
+        // set attribute "name" of functions
+        for(var attr in module_obj){
+            if(typeof module_obj[attr] == 'function'){
+                var name = attr
+                while(name.charAt(0)=='$'){name=name.substr(1)}
+                module_obj[attr].$infos = {__name__:name}
+            }
+        }
     }
 
     for(var attr in modules){load(attr, modules[attr])}

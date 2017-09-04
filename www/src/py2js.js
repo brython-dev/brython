@@ -1476,13 +1476,26 @@ function $ClassCtx(context){
 
         var instance_decl = new $Node()
         var local_ns = '$locals_'+this.id.replace(/\./g,'_')
-        var js = ';var '+local_ns+'={}'
-        //if($B.debug>0){js += '{$def_line:$B.line_info}'}
-        //else{js += '{}'}
-        js += ', $locals = '+local_ns+';'
+        var js = ';var '+local_ns+'={$type:"class"}, $locals = '+local_ns+
+            ', $local_name="'+local_ns+'";'
         new $NodeJSCtx(instance_decl,js)
-        node.insert(0,instance_decl)
+        node.insert(0, instance_decl)
 
+        // Get id of global scope
+        var global_scope = this.scope
+        while(global_scope.parent_block.id !== '__builtins__'){
+            global_scope=global_scope.parent_block
+        }
+        var global_ns = '$locals_'+global_scope.id.replace(/\./g,'_')
+
+        var js = ';var $top_frame = [$local_name, $locals,'+
+            '"'+global_scope.id+'", '+global_ns+
+            ']; $B.frames_stack.push($top_frame);'
+
+        node.insert(1, $NodeJS(js))
+
+        // exit frame
+        node.add($NodeJS('$B.leave_frame()'))
         // return local namespace at the end of class definition
         var ret_obj = new $Node()
         new $NodeJSCtx(ret_obj,'return '+local_ns+';')
@@ -3234,7 +3247,6 @@ function $IdCtx(context,value){
             return this.result
         }
 
-
         this.js_processed=true
         var val = this.value
 
@@ -3251,6 +3263,14 @@ function $IdCtx(context,value){
         // $search or $local_search
         this.unbound = this.unbound || (is_local && !this.bound &&
             bound_before && bound_before.indexOf(val)==-1)
+
+        if(this.scope.context && this.scope.ntype=='class' &&
+                this.scope.context.tree[0].name == val){
+            // Name of class referenced inside the class
+            // Cf. issue #649
+            return '$B.$search("'+val+'")'
+        }
+
         if(this.unbound && !this.nonlocal){
             if(this.scope.ntype=='def' || this.scope.ntype=='generator'){
                 return '$B.$local_search("'+val+'")'

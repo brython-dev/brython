@@ -215,9 +215,8 @@ $B.genNode = function(data, parent){
         res.is_yield = this.is_yield
         for(var i=0, _len_i = this.children.length; i < _len_i;i++){
             if(this.children[i].is_continue){
-                // If a child is "continue", replace it by "void(0)" and 
-                // don't add the following lines
-                res.addChild(new $B.genNode('void(0)'))
+                // If a child is "continue", don't add the following lines
+                res.addChild(new $B.genNode('continue'))
                 break
             }
             res.addChild(this.children[i].clone_tree(exit_node, head))
