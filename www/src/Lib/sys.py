@@ -230,7 +230,7 @@ class _float_info:
     def __init__(self):
         _number = window.Number
         self.dig = 15
-        self.epsilon = _number.EPSILON
+        self.epsilon = 2**-52
         self.mant_dig = 53
         self.max = _number.MAX_VALUE
         self.max_exp=2**10
