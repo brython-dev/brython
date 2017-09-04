@@ -202,8 +202,10 @@ eval('$ComplexDict.__add__ = '+$op_func)
 
 // comparison methods
 var $comp_func = function(self,other){
-    throw _b_.TypeError("TypeError: unorderable types: complex() > " +
-        $B.get_class(other).__name__ + "()")
+    if (other===undefined || other == _b_.None) {
+        throw _b_.NotImplemented("");
+    }
+    throw _b_.TypeError("TypeError: no ordering relation is defined for complex numbers")
 }
 $comp_func += '' // source codevar $comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
 for(var $op in $B.$comps){

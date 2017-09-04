@@ -417,6 +417,7 @@ $make_exc(['BlockingIOError','ChildProcessError','ConnectionError',
 $make_exc(['BrokenPipeError','ConnectionAbortedError','ConnectionRefusedError',
     'ConnectionResetError'],_b_.ConnectionError)
 $make_exc(['NotImplementedError'],_b_.RuntimeError)
+$make_exc(['NotImplemented'],_b_.RuntimeError)
 $make_exc(['IndentationError'],_b_.SyntaxError)
 $make_exc(['TabError'],_b_.IndentationError)
 $make_exc(['UnicodeError'],_b_.ValueError)
