@@ -164,6 +164,10 @@ $ComplexDict.__truediv__ = function(self,other){
     $UnsupportedOpType("//","complex",other.__class__)
 }
 
+$ComplexDict.conjugate = function(self) {
+    return complex(self.$real,-self.$imag);
+}
+
 // operators
 var $op_func = function(self,other){
     throw _b_.TypeError("TypeError: unsupported operand type(s) for -: 'complex' and '" +
