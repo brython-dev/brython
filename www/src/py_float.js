@@ -25,6 +25,7 @@ $FloatDict.numerator = function(self){return self}
 $FloatDict.denominator = function(self){return _b_.int(1)}
 $FloatDict.imag = function(self){return _b_.int(0)}
 $FloatDict.real = function(self){return self}
+$FloatDict.__float__ = function(self){return self}
 
 $FloatDict.as_integer_ratio=function(self) {
     if (self.valueOf() == Number.POSITIVE_INFINITY ||
