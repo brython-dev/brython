@@ -22,14 +22,14 @@ $ComplexDict.__bool__ = function(self){return new Boolean(self.real || self.imag
 $ComplexDict.__class__ = $B.$type
 
 $ComplexDict.__eq__ = function(self,other){
-    if(isinstance(other,complex)) return self.real==other.real && self.imag==other.imag
+    if(isinstance(other,complex)) return self.real.valueOf()==other.real.valueOf() && self.imag.valueOf()==other.imag.valueOf()
     if(isinstance(other,_b_.int)){
       if (self.imag != 0) return False
       return self.real == other.valueOf()
     }
     if(isinstance(other,_b_.float)){
       if (self.imag != 0) return False
-      return self.real == other.value
+      return self.real == other.valueOf()
     }
     $UnsupportedOpType("==","complex",$B.get_class(other))
 }
