@@ -1,4 +1,4 @@
-modules **browser.local\_storage** and **browser.session\_storage**
+modules **browser.local\_storage** et **browser.session\_storage**
 -------------------------------------------------------------------
 
 Ce module utilise le stockage local défini par HTML5

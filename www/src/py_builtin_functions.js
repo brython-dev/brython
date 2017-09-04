@@ -1535,7 +1535,17 @@ function setattr(){
         if(__set1__!==undefined){
             var __set__ = getattr(res,'__set__',null)
             if(__set__ && (typeof __set__=='function')) {
-                __set__.apply(res,[obj,value]);return None
+                __set__.apply(res,[obj,value])
+                return None
+            }
+        }else if(klass && klass.descriptors !== undefined &&
+            klass[attr] !== undefined){
+            var setter = klass[attr].setter
+            if(typeof setter == 'function'){
+                setter(obj, value)
+                return None
+            }else{
+                throw _b_.AttributeError('readonly attribute')
             }
         }
     }
@@ -1805,11 +1815,7 @@ function $url_open(){
     if(isinstance(file,$B.JSObject)) return new $OpenFile(file.js,mode,encoding)
     if(isinstance(file,_b_.str)){
         // read the file content and return an object with file object methods
-        if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
-            var req=new XMLHttpRequest();
-        }else{// code for IE6, IE5
-            var req=new ActiveXObject("Microsoft.XMLHTTP");
-        }
+        var req=new XMLHttpRequest();
         req.onreadystatechange = function(){
             try {
                 var status = this.status

@@ -75,8 +75,8 @@ $FloatDict.__eq__ = function(self,other){
       return self.valueOf()==other.valueOf()
     }
     if(isinstance(other,_b_.complex)){
-      if (other.imag != 0) return false
-      return self==other.real
+      if (other.$imag != 0) return false
+      return self==other.$real
     }
 
     if (_b_.hasattr(other, '__eq__')) {
@@ -408,8 +408,8 @@ $FloatDict.__mul__ = function(self,other){
       // return float(0)
     }
     if(isinstance(other,_b_.complex)){
-      return _b_.complex(float(self*other.real),
-          float(self*other.imag))
+      return _b_.complex(float(self*other.$real),
+          float(self*other.$imag))
     }
     if(hasattr(other,'__rmul__')) return getattr(other,'__rmul__')(self)
     $err('*',other)
@@ -453,7 +453,7 @@ $FloatDict.__pow__= function(self,other){
         }
         return float(Math.pow(self,other))
     }else if(isinstance(other, _b_.complex)){
-        var preal = Math.pow(self,  other.real),
+        var preal = Math.pow(self,  other.$real),
             ln = Math.log(self)
         return _b_.complex(preal*Math.cos(ln), preal*Math.sin(ln))
     }
@@ -491,11 +491,11 @@ $FloatDict.__truediv__ = function(self,other){
         return float(self/other)
     }
     if(isinstance(other,_b_.complex)){
-        var cmod = other.real*other.real+other.imag*other.imag
+        var cmod = other.$real*other.$real+other.$imag*other.$imag
         if(cmod==0) throw ZeroDivisionError('division by zero')
 
-        return _b_.complex(float(self*other.real/cmod),
-                           float(-self*other.imag/cmod))
+        return _b_.complex(float(self*other.$real/cmod),
+                           float(-self*other.$imag/cmod))
     }
     if(hasattr(other,'__rtruediv__')) return getattr(other,'__rtruediv__')(self)
     $err('/',other)
@@ -517,7 +517,7 @@ var $op_func = function(self,other){
       return float(self-bool_value)
     }
     if(isinstance(other,_b_.complex)){
-      return _b_.complex(self - other.real, -other.imag)
+      return _b_.complex(self - other.$real, -other.$imag)
     }
     if(hasattr(other,'__rsub__')) return getattr(other,'__rsub__')(self)
     $err('-',other)

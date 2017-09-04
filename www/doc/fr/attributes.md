@@ -31,11 +31,19 @@ Comme le nom des attributs peut être différent d'un navigateur à l'autre, Bry
 </tr>
 
 <tr>
+<td>*get*</td><td>méthode</td><td>sélectionne des éléments (cf <a href="access.html">accéder aux éléments</a>)</td><td>-</td>
+</tr>
+
+<tr>
 <td>*height*</td><td>entier</td><td>hauteur de l'élément en pixels (2)</td><td>L/E</td>
 </tr>
 
 <tr>
 <td>*html*</td><td>chaine</td><td>le code HTML  contenu dans l'élément</td><td>L/E</td>
+</tr>
+
+<tr>
+<td>*index*</td><td>méthode</td><td>`elt.index()` renvoie le rang (entier) de l'élément parmi les enfants de son parent</td><td>-</td>
 </tr>
 
 <tr>
@@ -48,6 +56,10 @@ Comme le nom des attributs peut être différent d'un navigateur à l'autre, Bry
 
 <tr>
 <td>*parent*</td><td>instance de `DOMNode`</td><td>l'élément parent de l'élément (`None` pour `document`)</td><td>L</td>
+</tr>
+
+<tr>
+<td>*select*</td><td>méthode</td><td>`elt.select(css_selector)` renvoie les éléments correspondant au sélecteur CSS spécifié</td><td>-</td>
 </tr>
 
 <tr>
@@ -76,7 +88,7 @@ from browser import document, html
 document['zone'] <= html.INPUT(Id="data")
 ```
 
-On peut itérer sur les enfants d'un élément par la syntaxe classique Python : 
+On peut itérer sur les enfants d'un élément par la syntaxe classique Python :
 
 ```python
 for child in element:

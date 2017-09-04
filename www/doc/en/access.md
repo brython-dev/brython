@@ -24,10 +24,10 @@ Finally, all the elements in the page have a method `get()` that can be used to 
 - `elt.get(name=N)` returns a list of all the elements descending from `elt` whose attribute `name` is equal to `N`
 - `elt.get(selector=S)` returns a list with all the elements descending from `elt` whose CSS selector matches `S`
 
-A few examples :
+`elt.select(S)` is an alias for `elt.get(selector=S)`. A few examples :
 
-    document.get(selector='.foo')       # elements with class "foo"
-    document.get(selector='form')       # list of tags "<form>"
-    document.get(selector='H1.bar')     # H1 tags with class "bar"
-    document.get(selector='#container') # the element with id "container", same as [document["container"]]
-    document.get(selector='a[title]')   # A tags with an attribute "title"
+    document.select('.foo')       # elements with class "foo"
+    document.select('form')       # list of tags "<form>"
+    document.select('H1.bar')     # H1 tags with class "bar"
+    document.select('#container') # the element with id "container", same as [document["container"]]
+    document.select('a[title]')   # A tags with an attribute "title"

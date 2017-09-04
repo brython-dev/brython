@@ -6,9 +6,6 @@ var $module=(function($B){
         Getframe : function(depth){
             return $B._frame($B.frames_stack, depth)
         },
-        argv:
-            {'__get__':function(){return 'essai'}
-            },
         modules :
             {'__get__':function(){return $B.obj_dict($B.imported)},
              '__set__':function(self, obj, value){ throw _b_.TypeError("Read only property 'sys.modules'") }

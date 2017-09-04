@@ -62,7 +62,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-02 13:24:23.362851"
+__BRYTHON__.compiled_date="2017-09-03 09:31:21.298593"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5124,7 +5124,7 @@ throw _b_.TypeError("'"+$B.get_class(v).__name__+
 "' object cannot be interpreted as an integer")}}
 $B.int_value=function(v){
 try{return $B.int_or_bool(v)}
-catch(err){if(_b_.isinstance(v,_b_.complex)&& v.imag==0){return $B.int_or_bool(v.real)}else if(isinstance(v,_b_.float)&& v==Math.floor(v)){return Math.floor(v)}else{throw _b_.TypeError("'"+$B.get_class(v).__name__+
+catch(err){if(_b_.isinstance(v,_b_.complex)&& v.$imag==0){return $B.int_or_bool(v.$real)}else if(isinstance(v,_b_.float)&& v==Math.floor(v)){return Math.floor(v)}else{throw _b_.TypeError("'"+$B.get_class(v).__name__+
 "' object cannot be interpreted as an integer")}}}
 $B.enter_frame=function(frame){
 $B.frames_stack.push(frame)}
@@ -5953,7 +5953,11 @@ if(__set1__===undefined){var mro=rcls.__mro__
 for(var i=0,_len=mro.length;i<_len;i++){__set1__=mro[i].__set__
 if(__set1__){break}}}}
 if(__set1__!==undefined){var __set__=getattr(res,'__set__',null)
-if(__set__ &&(typeof __set__=='function')){__set__.apply(res,[obj,value]);return None}}}
+if(__set__ &&(typeof __set__=='function')){__set__.apply(res,[obj,value])
+return None}}else if(klass && klass.descriptors !==undefined &&
+klass[attr]!==undefined){var setter=klass[attr].setter
+if(typeof setter=='function'){setter(obj,value)
+return None}else{throw _b_.AttributeError('readonly attribute')}}}
 if(klass && klass.$slots){
 var has_slots=true,slots=klass.$slots,parent
 for(var i=0;i<klass.__mro__.length - 1;i++){parent=klass.__mro__[i]
@@ -7053,37 +7057,27 @@ fake_qs="?v="+(new Date().getTime())}
 var timer=setTimeout(function(){$xmlhttp.abort()
 throw _b_.ImportError("No module named '"+module+"'")},5000)
 return[$xmlhttp,fake_qs,timer]}
-function $download_module(module,url,package,blocking){var imp=$importer(),$xmlhttp=imp[0],fake_qs=imp[1],timer=imp[2],res=null,mod_name=module.__name__,no_block=Array.isArray(blocking)||blocking===false,res,t0=new Date()
+function $download_module(module,url,package){var imp=$importer(),$xmlhttp=imp[0],fake_qs=imp[1],timer=imp[2],res=null,mod_name=module.__name__,res,t0=new Date()
 $B.download_time=$B.download_time ||0
-if(no_block){console.log('download non blocking',mod_name)
-$xmlhttp.open('GET',url+fake_qs,true)}else{$xmlhttp.open('GET',url+fake_qs,false)}
+$xmlhttp.open('GET',url+fake_qs,false)
 if($B.$CORS){$xmlhttp.onload=function(){if($xmlhttp.status==200 ||$xmlhttp.status==0){res=$xmlhttp.responseText}else{
 res=_b_.FileNotFoundError("No module named '"+mod_name+"'")}}
 $xmlhttp.onerror=function(){res=_b_.FileNotFoundError("No module named '"+mod_name+"'")}}else{
 $xmlhttp.onreadystatechange=function(){if(this.readyState==4){window.clearTimeout(timer)
 if(this.status==200 ||$xmlhttp.status==0){res=this.responseText
-module.$last_modified=this.getResponseHeader('Last-Modified')
-if(no_block){var ext=url.substr(url.length-2)
-if(ext=='py'){try{import_py1(module,mod_name,url,package,res)}
-catch(err){console.log(err);throw err}}else if(ext=='js'){try{run_js(res,url,module)}
-catch(err){console.log(err);throw err}}
-console.log('non blocking ok',mod_name)
-blocking[1]()
-return}}else{
+module.$last_modified=this.getResponseHeader('Last-Modified')}else{
 console.log('Error '+this.status+
 ' means that Python module '+mod_name+
 ' was not found at url '+url)
 res=_b_.FileNotFoundError("No module named '"+mod_name+"'")}}}}
 if('overrideMimeType' in $xmlhttp){$xmlhttp.overrideMimeType("text/plain")}
 $xmlhttp.send()
-if(!no_block){
 if(res==null)throw _b_.FileNotFoundError("No module named '"+mod_name+"' (res is null)")
 if(res.constructor===Error){throw res}
 $B.download_time +=(new Date())-t0
-return res}}
+return res}
 $B.$download_module=$download_module
-function import_js(module,path,blocking){try{var module_contents=$download_module(module,path,undefined,blocking)
-if(Array.isArray(blocking)){return}}catch(err){return null}
+function import_js(module,path){try{var module_contents=$download_module(module,path,undefined)}catch(err){return null}
 run_js(module_contents,path,module)
 return true}
 function run_js(module_contents,path,module){
@@ -7109,19 +7103,8 @@ function show_ns(){var kk=Object.keys(window)
 for(var i=0,_len_i=kk.length;i < _len_i;i++){console.log(kk[i])
 if(kk[i].charAt(0)=='$'){console.log(eval(kk[i]))}}
 console.log('---')}
-function import_py1(module,mod_name,path,package,module_contents){console.log('importpy1',mod_name)
-$B.imported[mod_name]={__class__: $B.$ModuleDict,$is_package: module.$is_package,$last_modified: module.$last_modified}
-if(path.substr(path.length-12)=='/__init__.py'){
-$B.imported[mod_name].__package__=mod_name
-$B.imported[mod_name].__path__=path
-$B.imported[mod_name].$is_package=module.$is_package=true}else if(package){$B.imported[mod_name].__package__=package}else{var mod_elts=mod_name.split('.')
-mod_elts.pop()
-$B.imported[mod_name].__package__=mod_elts.join('.')}
-$B.imported[mod_name].__file__=path
-return run_py(module_contents,path,module)}
-function import_py(module,path,package,blocking){
-var mod_name=module.__name__,module_contents=$download_module(module,path,package,blocking)
-if(Array.isArray(blocking)){return}
+function import_py(module,path,package){
+var mod_name=module.__name__,module_contents=$download_module(module,path,package)
 $B.imported[mod_name].$is_package=module.$is_package
 $B.imported[mod_name].$last_modified=module.$last_modified
 if(path.substr(path.length-12)=='/__init__.py'){
@@ -7209,18 +7192,18 @@ finder_VFS.$dict.find_spec.$type='classmethod'
 function finder_stdlib_static(){return{__class__:finder_stdlib_static.$dict}}
 finder_stdlib_static.__class__=$B.$factory
 finder_stdlib_static.$dict={$factory : finder_stdlib_static,__class__ : $B.$type,__name__ : 'StdlibStatic',create_module : function(cls,spec){
-return _b_.None;},exec_module : function(cls,module,blocking){var metadata=module.__spec__.loader_state;
+return _b_.None;},exec_module : function(cls,module){var metadata=module.__spec__.loader_state;
 module.$is_package=metadata.is_package;
-if(metadata.ext=='py'){import_py(module,metadata.path,module.__package__,blocking);}
+if(metadata.ext=='py'){import_py(module,metadata.path,module.__package__);}
 else{
-import_js(module,metadata.path,blocking);}
+import_js(module,metadata.path);}
 delete module.__spec__['loader_state'];},find_module: function(cls,name,path){var spec=cls.$dict.find_spec(cls,name,path)
 if(spec===_b_.None){return _b_.None}
 return{__class__:Loader,load_module:function(name,path){var mod=module(name)
 $B.imported[name]=mod
 mod.__spec__=spec
 mod.__package__=spec.parent
-cls.$dict.exec_module(cls,mod,spec.blocking)}}},find_spec: function(cls,fullname,path,prev_module){if($B.stdlib && $B.$options.static_stdlib_import){var address=$B.stdlib[fullname];
+cls.$dict.exec_module(cls,mod)}}},find_spec: function(cls,fullname,path,prev_module){if($B.stdlib && $B.$options.static_stdlib_import){var address=$B.stdlib[fullname];
 if(address===undefined){var elts=fullname.split('.')
 if(elts.length>1){elts.pop()
 var package=$B.stdlib[elts.join('.')]
@@ -7247,7 +7230,7 @@ return _b_.None;},exec_module : function(cls,module){var _spec=_b_.getattr(modul
 module.$is_package=_spec.loader_state.is_package,delete _spec.loader_state['code'];
 var src_type=_spec.loader_state.type
 if(src_type=='py' ||src_type=='pyc.js'){run_py(code,_spec.origin,module,src_type=='pyc.js');}
-else if(_spec.loader_state.type=='js'){run_js(code,_spec.origin,module)}},find_module: function(cls,name,path){return finder_path.$dict.find_spec(cls,name,path)},find_spec : function(cls,fullname,path,prev_module,blocking){if($B.is_none(path)){
+else if(_spec.loader_state.type=='js'){run_js(code,_spec.origin,module)}},find_module: function(cls,name,path){return finder_path.$dict.find_spec(cls,name,path)},find_spec : function(cls,fullname,path,prev_module){if($B.is_none(path)){
 path=$B.path}
 for(var i=0,li=path.length;i<li;++i){var path_entry=path[i];
 if(path_entry[path_entry.length - 1]!='/'){path_entry +='/'}
@@ -7266,7 +7249,7 @@ continue;
 var find_spec=_b_.getattr(finder,'find_spec'),fs_func=typeof find_spec=='function' ? 
 find_spec : 
 _b_.getattr(find_spec,'__call__')
-var spec=fs_func(fullname,prev_module,blocking);
+var spec=fs_func(fullname,prev_module);
 if(!$B.is_none(spec)){return spec;}}
 return _b_.None;}}
 finder_path.$dict.__mro__=[_b_.object.$dict]
@@ -7303,7 +7286,7 @@ vfs_hook.$dict.__mro__=[_b_.object.$dict]
 function url_hook(path_entry,hint){return{__class__: url_hook.$dict,path_entry:path_entry,hint:hint }}
 url_hook.__class__=$B.$factory
 url_hook.$dict={$factory: url_hook,__class__: $B.$type,__name__ : 'UrlPathFinder',__repr__: function(self){return '<UrlPathFinder' +(self.hint? " for '" + self.hint + "'":
-"(unbound)")+ ' at ' + self.path_entry + '>'},find_spec : function(self,fullname,module,blocking){var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry + fullname.match(/[^.]+$/g)[0],modpaths=[];
+"(unbound)")+ ' at ' + self.path_entry + '>'},find_spec : function(self,fullname,module){var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry + fullname.match(/[^.]+$/g)[0],modpaths=[];
 var tryall=hint===undefined;
 if(tryall ||hint=='js'){
 modpaths=[[base_path + '.js','js',false]];}
@@ -7312,7 +7295,7 @@ modpaths=modpaths.concat([[base_path + '.pyc.js','pyc.js',false],[base_path + '/
 if(tryall ||hint=='py'){
 modpaths=modpaths.concat([[base_path + '.py','py',false],[base_path + '/__init__.py','py',true]]);}
 for(var j=0;notfound && j < modpaths.length;++j){try{var file_info=modpaths[j],module={__name__:fullname,$is_package: false}
-loader_data.code=$download_module(module,file_info[0],undefined,blocking);
+loader_data.code=$download_module(module,file_info[0],undefined);
 notfound=false;
 loader_data.type=file_info[1];
 loader_data.is_package=file_info[2];
@@ -7337,7 +7320,7 @@ $B.path_importer_cache[_path]=url_hook(_path,_type);}
 delete _path;
 delete _type;
 delete _sys_paths;
-$B.$__import__=function(mod_name,globals,locals,fromlist,level,blocking){
+$B.$__import__=function(mod_name,globals,locals,fromlist,level){
 var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.');
 if(modobj==_b_.None){
 throw _b_.ImportError(mod_name)}
@@ -7349,7 +7332,7 @@ modsep='.';
 var modobj=$B.imported[_mod_name];
 if(modobj==_b_.None){
 throw _b_.ImportError(_mod_name)}
-else if(modobj===undefined){try{$B.import_hooks(_mod_name,__path__,undefined,blocking)}
+else if(modobj===undefined){try{$B.import_hooks(_mod_name,__path__,undefined)}
 catch(err){delete $B.imported[_mod_name]
 throw err}
 if($B.is_none($B.imported[_mod_name])){throw _b_.ImportError(_mod_name)}
@@ -7360,16 +7343,11 @@ __path__=_b_.getattr($B.imported[_mod_name],'__path__')}catch(e){
 if(i==len-1 && $B.imported[_mod_name][parsed_name[len]]&& 
 $B.imported[_mod_name][parsed_name[len]].__class__===$B.$ModuleDict){return $B.imported[_mod_name][parsed_name[len]]}
 throw _b_.ImportError(_mod_name)}}}}
-else if(Array.isArray(blocking)){var frames=$B.frames_stack
-for(var i=0;i<frames.length;i++){var locals_id='$locals_'+frames[i][0].replace(/\./g,'_')
-eval('var '+locals_id+'=frames[i][1]')}
-eval('var $locals='+locals_id)
-blocking[1]()}
 if(fromlist.length > 0){
 return $B.imported[mod_name]}
 else{
 return $B.imported[parsed_name[0]]}}
-$B.$import=function(mod_name,fromlist,aliases,locals,blocking){var parts=mod_name.split('.');
+$B.$import=function(mod_name,fromlist,aliases,locals){var parts=mod_name.split('.');
 if(mod_name[mod_name.length - 1]=='.'){parts.pop()}
 var norm_parts=[],prefix=true;
 for(var i=0,_len_i=parts.length;i < _len_i;i++){var p=parts[i];
@@ -7389,7 +7367,7 @@ if(__import__===undefined){
 __import__=$B.$__import__;}
 var importer=typeof __import__=='function' ? 
 __import__ : 
-_b_.getattr(__import__,'__call__'),modobj=importer(mod_name,globals,undefined,fromlist,0,blocking);
+_b_.getattr(__import__,'__call__'),modobj=importer(mod_name,globals,undefined,fromlist,0);
 if(!fromlist ||fromlist.length==0){
 var alias=aliases[mod_name];
 if(alias){locals[alias]=$B.imported[mod_name];}
@@ -7415,9 +7393,6 @@ if(mod_name==="__future__"){
 var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
 $B.$SyntaxError(frame[2],"future feature "+name+" is not defined",undefined,line_num)}
 throw _b_.ImportError("cannot import name '"+name+"'")}}}}}}
-$B.$import_non_blocking=function(mod_name,func){console.log('import non blocking',mod_name)
-$B.$import(mod_name,[],[],{},[false,func])
-console.log('after async import',$B.imported[mod_name])}
 $B.$path_hooks=[vfs_hook,url_hook];
 $B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path];
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!='/'){path=path + '/' }
@@ -7458,8 +7433,8 @@ $FloatDict.__eq__=function(self,other){if(isNaN(self)&& isNaN(other)){return fal
 if(isinstance(other,_b_.int))return self==other
 if(isinstance(other,float)){
 return self.valueOf()==other.valueOf()}
-if(isinstance(other,_b_.complex)){if(other.imag !=0)return false
-return self==other.real}
+if(isinstance(other,_b_.complex)){if(other.$imag !=0)return false
+return self==other.$real}
 if(_b_.hasattr(other,'__eq__')){return _b_.getattr(other,'__eq__')(self.value)}
 return self.value===other}
 $FloatDict.__floordiv__=function(self,other){if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0)throw ZeroDivisionError('division by zero')
@@ -7627,7 +7602,7 @@ if(isinstance(other,float))return new Number(self*other)
 if(isinstance(other,_b_.bool)){var bool_value=0;
 if(other.valueOf())bool_value=1;
 return new Number(self*bool_value)}
-if(isinstance(other,_b_.complex)){return _b_.complex(float(self*other.real),float(self*other.imag))}
+if(isinstance(other,_b_.complex)){return _b_.complex(float(self*other.$real),float(self*other.$imag))}
 if(hasattr(other,'__rmul__'))return getattr(other,'__rmul__')(self)
 $err('*',other)}
 $FloatDict.__ne__=function(self,other){return !$FloatDict.__eq__(self,other)}
@@ -7644,7 +7619,7 @@ else if(other>0 && other%2==1){return Number.NEGATIVE_INFINITY}else{return Numbe
 if(other==Number.NEGATIVE_INFINITY && !isNaN(self)){return Math.abs(self)<1 ? Number.POSITIVE_INFINITY : new Number(0)}else if(other==Number.POSITIVE_INFINITY && !isNaN(self)){return Math.abs(self)<1 ? new Number(0): Number.POSITIVE_INFINITY}
 if(self<0 && !_b_.getattr(other,'__eq__')(_b_.int(other))){
 return _b_.complex.$dict.__pow__(_b_.complex(self,0),other)}
-return float(Math.pow(self,other))}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.real),ln=Math.log(self)
+return float(Math.pow(self,other))}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.$real),ln=Math.log(self)
 return _b_.complex(preal*Math.cos(ln),preal*Math.sin(ln))}
 if(hasattr(other,'__rpow__'))return getattr(other,'__rpow__')(self)
 $err("** or pow()",other)}
@@ -7660,9 +7635,9 @@ self[attr]=value
 return $N}
 $FloatDict.__truediv__=function(self,other){if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0)throw ZeroDivisionError('division by zero')
 return float(self/other)}
-if(isinstance(other,_b_.complex)){var cmod=other.real*other.real+other.imag*other.imag
+if(isinstance(other,_b_.complex)){var cmod=other.$real*other.$real+other.$imag*other.$imag
 if(cmod==0)throw ZeroDivisionError('division by zero')
-return _b_.complex(float(self*other.real/cmod),float(-self*other.imag/cmod))}
+return _b_.complex(float(self*other.$real/cmod),float(-self*other.$imag/cmod))}
 if(hasattr(other,'__rtruediv__'))return getattr(other,'__rtruediv__')(self)
 $err('/',other)}
 var $op_func=function(self,other){if(isinstance(other,_b_.int)){if(typeof other=='boolean'){return other ? self-1 : self}else if(other.__class__===$B.LongInt.$dict){return float(self-parseInt(other.value))}else{return float(self-other)}}
@@ -7670,7 +7645,7 @@ if(isinstance(other,float))return float(self-other)
 if(isinstance(other,_b_.bool)){var bool_value=0;
 if(other.valueOf())bool_value=1;
 return float(self-bool_value)}
-if(isinstance(other,_b_.complex)){return _b_.complex(self - other.real,-other.imag)}
+if(isinstance(other,_b_.complex)){return _b_.complex(self - other.$real,-other.$imag)}
 if(hasattr(other,'__rsub__'))return getattr(other,'__rsub__')(self)
 $err('-',other)}
 $op_func +='' 
@@ -7797,8 +7772,8 @@ $IntDict.__eq__=function(self,other){
 if(other===undefined)return self===int
 if(isinstance(other,int))return self.valueOf()==other.valueOf()
 if(isinstance(other,_b_.float))return self.valueOf()==other.valueOf()
-if(isinstance(other,_b_.complex)){if(other.imag !=0)return False
-return self.valueOf()==other.real}
+if(isinstance(other,_b_.complex)){if(other.$imag !=0)return False
+return self.valueOf()==other.$real}
 if(hasattr(other,'__eq__'))return getattr(other,'__eq__')(self)
 return self.valueOf()===other}
 $IntDict.__float__=function(self){return new Number(self)}
@@ -7866,7 +7841,7 @@ else{return int($B.LongInt.$dict.__mul__($B.LongInt(self),$B.LongInt(other)))}}
 if(isinstance(other,_b_.float)){return new Number(self*other)}
 if(isinstance(other,_b_.bool)){if(other.valueOf())return self
 return int(0)}
-if(isinstance(other,_b_.complex)){return _b_.complex($IntDict.__mul__(self,other.real),$IntDict.__mul__(self,other.imag))}
+if(isinstance(other,_b_.complex)){return _b_.complex($IntDict.__mul__(self,other.$real),$IntDict.__mul__(self,other.$imag))}
 if(isinstance(other,[_b_.list,_b_.tuple])){var res=[]
 var $temp=other.slice(0,other.length)
 for(var i=0;i<val;i++)res=res.concat($temp)
@@ -7894,7 +7869,7 @@ else if(res !==Infinity && !isFinite(res)){return res}
 else{return int($B.LongInt.$dict.__pow__($B.LongInt(self),$B.LongInt(other)))}}
 if(isinstance(other,_b_.float)){if(self>=0){return new Number(Math.pow(self,other.valueOf()))}
 else{
-return _b_.complex.$dict.__pow__(_b_.complex(self,0),other)}}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.real),ln=Math.log(self)
+return _b_.complex.$dict.__pow__(_b_.complex(self,0),other)}}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.$real),ln=Math.log(self)
 return _b_.complex(preal*Math.cos(ln),preal*Math.sin(ln))}
 if(hasattr(other,'__rpow__'))return getattr(other,'__rpow__')(self)
 $err("**",other)}
@@ -7913,9 +7888,9 @@ if(other.__class__==$B.LongInt.$dict){return new Number(self/parseInt(other.valu
 return new Number(self/other)}
 if(isinstance(other,_b_.float)){if(!other.valueOf())throw ZeroDivisionError('division by zero')
 return new Number(self/other)}
-if(isinstance(other,_b_.complex)){var cmod=other.real*other.real+other.imag*other.imag
+if(isinstance(other,_b_.complex)){var cmod=other.$real*other.$real+other.$imag*other.$imag
 if(cmod==0)throw ZeroDivisionError('division by zero')
-return _b_.complex(self*other.real/cmod,-self*other.imag/cmod)}
+return _b_.complex(self*other.$real/cmod,-self*other.$imag/cmod)}
 if(hasattr(other,'__rtruediv__'))return getattr(other,'__rtruediv__')(self)
 $err("/",other)}
 $IntDict.bit_length=function(self){s=bin(self)
@@ -7943,11 +7918,11 @@ var $op_func=function(self,other){if(isinstance(other,int)){if(typeof other=='nu
 if(res>=$B.min_int && res<=$B.max_int){return res}
 else{return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))}}else if(typeof other=="boolean"){return other ? self-1 : self}else{return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))}}
 if(isinstance(other,_b_.float)){return new Number(self-other)}
-if(isinstance(other,_b_.complex)){return _b_.complex(self-other.real,-other.imag)}
+if(isinstance(other,_b_.complex)){return _b_.complex(self-other.$real,-other.$imag)}
 if(isinstance(other,_b_.bool)){var bool_value=0;
 if(other.valueOf())bool_value=1;
 return self-bool_value}
-if(isinstance(other,_b_.complex)){return _b_.complex(self.valueOf()- other.real,other.imag)}
+if(isinstance(other,_b_.complex)){return _b_.complex(self.valueOf()- other.$real,other.$imag)}
 if(hasattr(other,'__rsub__'))return getattr(other,'__rsub__')(self)
 throw $err('-',other)}
 $op_func +='' 
@@ -8396,39 +8371,39 @@ $B.LongInt=LongInt})(__BRYTHON__)
 var $ObjectDict=_b_.object.$dict
 function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError("unsupported operand type(s) for "+op+": '"+class1+"' and '"+class2+"'")}
 var $ComplexDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'complex',$native:true,descriptors:{real:true,imag:true}}
-$ComplexDict.__abs__=function(self){return Math.sqrt(Math.pow(self.real,2)+Math.pow(self.imag,2))}
-$ComplexDict.__bool__=function(self){return new Boolean(self.real ||self.imag)}
+$ComplexDict.__abs__=function(self){return Math.sqrt(Math.pow(self.$real,2)+Math.pow(self.$imag,2))}
+$ComplexDict.__bool__=function(self){return new Boolean(self.$real ||self.$imag)}
 $ComplexDict.__class__=$B.$type
-$ComplexDict.__eq__=function(self,other){if(isinstance(other,complex))return self.real==other.real && self.imag==other.imag
-if(isinstance(other,_b_.int)){if(self.imag !=0)return False
-return self.real==other.valueOf()}
-if(isinstance(other,_b_.float)){if(self.imag !=0)return False
-return self.real==other.value}
+$ComplexDict.__eq__=function(self,other){if(isinstance(other,complex))return self.$real==other.$real && self.$imag==other.$imag
+if(isinstance(other,_b_.int)){if(self.$imag !=0)return False
+return self.$real==other.valueOf()}
+if(isinstance(other,_b_.float)){if(self.$imag !=0)return False
+return self.$real==other.value}
 $UnsupportedOpType("==","complex",$B.get_class(other))}
 $ComplexDict.__floordiv__=function(self,other){$UnsupportedOpType("//","complex",$B.get_class(other))}
 $ComplexDict.__hash__=function(self){
 if(self===undefined){return $ComplexDict.__hashvalue__ ||$B.$py_next_hash--}
-return self.imag*1000003+self.real}
-$ComplexDict.__init__=function(self,real,imag){self.toString=function(){return '('+real+'+'+imag+'j)'}}
+return self.$imag*1000003+self.$real}
+$ComplexDict.__init__=function(self,$real,$imag){self.toString=function(){return '('+$real+'+'+$imag+'j)'}}
 $ComplexDict.__invert__=function(self){return ~self}
 $ComplexDict.__mod__=function(self,other){throw _b_.TypeError("TypeError: can't mod complex numbers.")}
 $ComplexDict.__mro__=[$ObjectDict]
 $ComplexDict.__mul__=function(self,other){if(isinstance(other,complex))
-return complex(self.real*other.real-self.imag*other.imag,self.imag*other.real + self.real*other.imag)
+return complex(self.$real*other.$real-self.$imag*other.$imag,self.$imag*other.$real + self.$real*other.$imag)
 if(isinstance(other,_b_.int))
-return complex(self.real*other.valueOf(),self.imag*other.valueOf())
+return complex(self.$real*other.valueOf(),self.$imag*other.valueOf())
 if(isinstance(other,_b_.float))
-return complex(self.real*other,self.imag*other)
+return complex(self.$real*other,self.$imag*other)
 if(isinstance(other,_b_.bool)){if(other.valueOf())return self
 return complex(0)}
 $UnsupportedOpType("*",complex,other)}
 $ComplexDict.__name__='complex'
 $ComplexDict.__ne__=function(self,other){return !$ComplexDict.__eq__(self,other)}
-$ComplexDict.__neg__=function(self){return complex(-self.real,-self.imag)}
+$ComplexDict.__neg__=function(self){return complex(-self.$real,-self.$imag)}
 $ComplexDict.__new__=function(cls){if(cls===undefined)throw _b_.TypeError('complex.__new__(): not enough arguments')
 return{__class__:cls.$dict}}
 $ComplexDict.__pos__=function(self){return self}
-function complex2expo(cx){var norm=Math.sqrt((cx.real*cx.real)+(cx.imag*cx.imag)),sin=cx.imag/norm,cos=cx.real/norm,angle
+function complex2expo(cx){var norm=Math.sqrt((cx.$real*cx.$real)+(cx.$imag*cx.$imag)),sin=cx.$imag/norm,cos=cx.$real/norm,angle
 if(cos==0){angle=sin==1 ? Math.PI/2 : 3*Math.PI/2}
 else if(sin==0){angle=cos==1 ? 0 : Math.PI}
 else{angle=Math.atan(sin/cos)}
@@ -8436,61 +8411,63 @@ return{norm: norm,angle: angle}}
 $ComplexDict.__pow__=function(self,other){
 var exp=complex2expo(self),angle=exp.angle,res=Math.pow(exp.norm,other)
 if(_b_.isinstance(other,[_b_.int,_b_.float])){return complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}else if(_b_.isinstance(other,complex)){
-var x=other.real,y=other.imag
+var x=other.$real,y=other.$imag
 var pw=Math.pow(exp.norm,x)*Math.pow(Math.E,-y*angle),theta=y*Math.log(exp.norm)-x*angle
 return complex(pw*Math.cos(theta),pw*Math.sin(theta))}else{throw _b_.TypeError("unsupported operand type(s) for ** or pow(): "+
 "'complex' and '"+$B.get_class(other).__name__+"'")}}
-$ComplexDict.__str__=$ComplexDict.__repr__=function(self){if(self.real==0)return self.imag+'j'
-if(self.imag>=0)return '('+self.real+'+'+self.imag+'j)'
-return '('+self.real+'-'+(-self.imag)+'j)'}
-$ComplexDict.__sqrt__=function(self){if(self.imag==0)return complex(Math.sqrt(self.real))
-var r=self.real,i=self.imag,_a=Math.sqrt((r + sqrt)/2),_b=Number.sign(i)* Math.sqrt((-r + sqrt)/2)
+$ComplexDict.__str__=$ComplexDict.__repr__=function(self){if(self.$real==0)return self.$imag+'j'
+if(self.$imag>=0)return '('+self.$real+'+'+self.$imag+'j)'
+return '('+self.$real+'-'+(-self.$imag)+'j)'}
+$ComplexDict.__sqrt__=function(self){if(self.$imag==0)return complex(Math.sqrt(self.$real))
+var r=self.$real,i=self.$imag,_a=Math.sqrt((r + sqrt)/2),_b=Number.sign(i)* Math.sqrt((-r + sqrt)/2)
 return complex(_a,_b)}
-$ComplexDict.__truediv__=function(self,other){if(isinstance(other,complex)){if(other.real==0 && other.imag==0){throw ZeroDivisionError('division by zero')}
-var _num=self.real*other.real + self.imag*other.imag
-var _div=other.real*other.real + other.imag*other.imag
-var _num2=self.imag*other.real - self.real*other.imag
+$ComplexDict.__truediv__=function(self,other){if(isinstance(other,complex)){if(other.$real==0 && other.$imag==0){throw ZeroDivisionError('division by zero')}
+var _num=self.$real*other.$real + self.$imag*other.$imag
+var _div=other.$real*other.$real + other.$imag*other.$imag
+var _num2=self.$imag*other.$real - self.$real*other.$imag
 return complex(_num/_div,_num2/_div)}
 if(isinstance(other,_b_.int)){if(!other.valueOf())throw ZeroDivisionError('division by zero')
 return $ComplexDict.__truediv__(self,complex(other.valueOf()))}
 if(isinstance(other,_b_.float)){if(!other.value)throw ZeroDivisionError('division by zero')
 return $ComplexDict.__truediv__(self,complex(other.value))}
 $UnsupportedOpType("//","complex",other.__class__)}
-var $op_func=function(self,other){throw _b_.TypeError("TypeError: unsupported operand type(s) for -: 'complex' and '" + 
+var $op_func=function(self,other){throw _b_.TypeError("TypeError: unsupported operand type(s) for -: 'complex' and '" +
 $B.get_class(other).__name__+"'")}
 $op_func +='' 
 var $ops={'&':'and','|':'ior','<<':'lshift','>>':'rshift','^':'xor'}
 for(var $op in $ops){eval('$ComplexDict.__'+$ops[$op]+'__ = '+$op_func.replace(/-/gm,$op))}
 $ComplexDict.__ior__=$ComplexDict.__or__
-var $op_func=function(self,other){if(isinstance(other,complex))return complex(self.real-other.real,self.imag-other.imag)
-if(isinstance(other,_b_.int))return complex($B.sub(self.real,other.valueOf()),self.imag)
-if(isinstance(other,_b_.float))return complex(self.real - other.value,self.imag)
+var $op_func=function(self,other){if(isinstance(other,complex))return complex(self.$real-other.$real,self.$imag-other.$imag)
+if(isinstance(other,_b_.int))return complex($B.sub(self.$real,other.valueOf()),self.$imag)
+if(isinstance(other,_b_.float))return complex(self.$real - other.value,self.$imag)
 if(isinstance(other,_b_.bool)){var bool_value=0;
 if(other.valueOf())bool_value=1;
-return complex(self.real - bool_value,self.imag)}
+return complex(self.$real - bool_value,self.$imag)}
 throw _b_.TypeError("unsupported operand type(s) for -: "+self.__repr__()+
 " and '"+$B.get_class(other).__name__+"'")}
 $ComplexDict.__sub__=$op_func
 $op_func +='' 
 $op_func=$op_func.replace(/-/gm,'+').replace(/sub/gm,'add')
 eval('$ComplexDict.__add__ = '+$op_func)
-var $comp_func=function(self,other){throw _b_.TypeError("TypeError: unorderable types: complex() > " + 
+var $comp_func=function(self,other){throw _b_.TypeError("TypeError: unorderable types: complex() > " +
 $B.get_class(other).__name__ + "()")}
 $comp_func +='' 
 for(var $op in $B.$comps){eval("$ComplexDict.__"+$B.$comps[$op]+'__ = '+$comp_func.replace(/>/gm,$op))}
 $B.make_rmethods($ComplexDict)
-$ComplexDict.real=function(self){return new Number(self.real)}
-$ComplexDict.imag=function(self){return new Number(self.imag)}
+$ComplexDict.real=function(self){return new Number(self.$real)}
+$ComplexDict.real.setter=function(){throw _b_.AttributeError("readonly attribute")}
+$ComplexDict.imag=function(self){return new Number(self.$imag)}
+$ComplexDict.imag.setter=function(){throw _b_.AttributeError("readonly attribute")}
 var complex_re=/^(\d*\.?\d*)([\+\-]?)(\d*\.?\d*)(j?)$/
-var complex=function(real,imag){if(typeof real=='string'){if(imag!==undefined){throw _b_.TypeError("complex() can't take second arg if first is a string")}
-var parts=complex_re.exec(real)
-if(parts===null){throw _b_.ValueError("complex() arg is a malformed string")}else if(parts[1]=='.' ||parts[3]=='.'){throw _b_.ValueError("complex() arg is a malformed string")}else if(parts[4]=='j'){if(parts[2]==''){real=0;imag=parseFloat(parts[1])}else{real=parseFloat(parts[1])
-imag=parts[3]=='' ? 1 : parseFloat(parts[3])
-imag=parts[2]=='-' ? -imag : imag}}else{real=parseFloat(parts[1])
-imag=0}}
-var res={__class__:$ComplexDict,real:real ||0,imag:imag ||0}
-res.__repr__=res.__str__=function(){if(real==0)return imag + 'j'
-return '('+real+'+'+imag+'j)'}
+var complex=function($real,$imag){if(typeof $real=='string'){if($imag!==undefined){throw _b_.TypeError("complex() can't take second arg if first is a string")}
+var parts=complex_re.exec($real)
+if(parts===null){throw _b_.ValueError("complex() arg is a malformed string")}else if(parts[1]=='.' ||parts[3]=='.'){throw _b_.ValueError("complex() arg is a malformed string")}else if(parts[4]=='j'){if(parts[2]==''){$real=0;$imag=parseFloat(parts[1])}else{$real=parseFloat(parts[1])
+$imag=parts[3]=='' ? 1 : parseFloat(parts[3])
+$imag=parts[2]=='-' ? -$imag : $imag}}else{$real=parseFloat(parts[1])
+$imag=0}}
+var res={__class__:$ComplexDict,$real:$real ||0,$imag:$imag ||0}
+res.__repr__=res.__str__=function(){if($real==0)return $imag + 'j'
+return '('+$real+'+'+$imag+'j)'}
 return res}
 complex.$dict=$ComplexDict
 complex.__class__=$B.$factory

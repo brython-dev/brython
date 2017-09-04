@@ -32,7 +32,9 @@ Exemples
 
 *mouseenter* et *mouseleave*
 
-> ces événements sont déclenchés quand la souris entre ou sort d'un élément. Si un élément en englobe d'autres, l'événement est déclenché à chaque fois que la souris entre ou sort d'un élément fils
+> ces événements sont déclenchés quand la souris entre ou sort d'un élément. Si
+> un élément en englobe d'autres, l'événement est déclenché à chaque fois que
+> la souris entre ou sort d'un élément fils.
 
 <table>
 <tr>
@@ -45,32 +47,30 @@ Exemples
 <tr>
 <td colspan=2>
 <blockquote>
-<div id="enter_leave">
-    from browser import document
-    
-    def _mouseenter(ev):
-        document["trace1"].text = 'entrée dans %s' %ev.currentTarget.id
-    
-    def _mouseleave(ev):
-        document["trace1"].text = 'sortie de %s' %ev.currentTarget.id
-    
-    document["jaune1"].bind('mouseenter',_mouseenter)
-    document["jaune1"].bind('mouseleave',_mouseleave)
-    document["bleu1"].bind('mouseenter',_mouseenter)
-    document["bleu1"].bind('mouseleave',_mouseleave)
-</div>
+```exec_on_load
+from browser import document
+
+def _mouseenter(ev):
+    document["trace1"].text = 'entrée dans %s' %ev.currentTarget.id
+
+def _mouseleave(ev):
+    document["trace1"].text = 'sortie de %s' %ev.currentTarget.id
+
+document["jaune1"].bind('mouseenter',_mouseenter)
+document["jaune1"].bind('mouseleave',_mouseleave)
+document["bleu1"].bind('mouseenter',_mouseenter)
+document["bleu1"].bind('mouseleave',_mouseleave)
+```
 </blockquote>
 </td>
 </tr>
 </table>
 
-<script type="text/python">
-exec(doc["enter_leave"].text)
-</script>
-
 *mouseover* et *mouseout*
 
-> la différence avec *mouseenter* et *mouseleave* est qu'une fois que la souris est entrée dans un élément, l'événement n'est pas déclenché sur les éléments fils
+> la différence avec *mouseenter* et *mouseleave* est qu'une fois que la
+> souris est entrée dans un élément, l'événement n'est pas déclenché sur
+> les éléments fils
 
 <table>
 <tr>
@@ -85,28 +85,27 @@ exec(doc["enter_leave"].text)
 <tr>
 <td colspan=2>
 <blockquote>
-<div id="over_out">
-    from browser import document
-    
-    def _mouseover(ev):
-        document["trace2"].text = 'entrée dans %s' %ev.currentTarget.id
-    
-    def _mouseout(ev):
-        document["trace2"].text = 'sortie de %s' %ev.currentTarget.id
-    
-    document["jaune2"].bind('mouseover',_mouseover)
-    document["jaune2"].bind('mouseout',_mouseout)
-    document["bleu2"].bind('mouseover',_mouseover)
-    document["bleu2"].bind('mouseout',_mouseout)
-</div>
+
+```exec_on_load
+from browser import document
+
+def _mouseover(ev):
+    document["trace2"].text = 'entrée dans %s' %ev.currentTarget.id
+
+def _mouseout(ev):
+    document["trace2"].text = 'sortie de %s' %ev.currentTarget.id
+
+document["jaune2"].bind('mouseover',_mouseover)
+document["jaune2"].bind('mouseout',_mouseout)
+document["bleu2"].bind('mouseover',_mouseover)
+document["bleu2"].bind('mouseout',_mouseout)
+```
+
 </blockquote>
 </td>
 </tr>
 </table>
 
-<script type="text/python">
-exec(document["over_out"].text)
-</script>
 
 *mousemove*
 
@@ -118,12 +117,14 @@ exec(document["over_out"].text)
 </tr>
 </table>
 
-<script type="text/python">
+```exec_on_load
+from browser import document
+
 def _mousemove(ev):
     document["trace3"].text = 'coordonnées : %s, %s' %(ev.x,ev.y)
 
 document["vert"].bind('mousemove',_mousemove)
-</script>
+```
 
 Attributs de l'objet `DOMEvent`
 -------------------------------
