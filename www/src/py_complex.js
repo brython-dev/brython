@@ -17,7 +17,7 @@ var $ComplexDict = {__class__:$B.$type,
 
 $ComplexDict.__abs__ = function(self){return Math.sqrt(Math.pow(self.$real,2)+Math.pow(self.$imag,2))}
 
-$ComplexDict.__bool__ = function(self){if (self.$real || self.$imag) return true; else return false;}
+$ComplexDict.__bool__ = function(self){if (self.$real == 0 && self.$imag == 0) return false; else return true;}
 
 $ComplexDict.__class__ = $B.$type
 
