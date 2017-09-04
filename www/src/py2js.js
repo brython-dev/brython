@@ -7952,7 +7952,11 @@ function brython(options){
             _importlib = $B.modules['_importlib'];
         for (var i=0, e; e = path_links[i]; ++i) {
             var href = e.href;
-            $B.path.push(href);
+            if ((' ' + e.rel + ' ').indexOf(' prepend ') != -1) {
+                $B.path.unshift(href);  // support prepending to pythonpath
+            } else {
+                $B.path.push(href);
+            }
             if (href.slice(-7).toLowerCase() == '.vfs.js' &&
                     (' ' + e.rel + ' ').indexOf(' prefetch ') != -1) {
                 // Prefetch VFS file
@@ -8152,7 +8156,3 @@ $B.brython = brython
 
 })(__BRYTHON__)
 var brython = __BRYTHON__.brython
-
-
-
-
