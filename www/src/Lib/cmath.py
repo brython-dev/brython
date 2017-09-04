@@ -112,6 +112,7 @@ def sqrt(x):
         return ret
     
     ret = complex()
+
     if x.real == .0 and x.imag == .0:
         ret.real = .0
         ret.imag = x.imag
@@ -336,7 +337,7 @@ def cosh(x):
     #  detect overflow 
     if isinf(ret):
         raise OverflowError()
-    
+
 @takes_complex
 def exp(x):
     """ Return the exponential value e**x."""
