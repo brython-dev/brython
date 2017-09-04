@@ -353,13 +353,13 @@ var DOMNode = $B.DOMNode = function(elt, fromtag){
     // attribute to the factory to let it know, that special behavior
     // is needed. i.e: don't create the element, use the one provided
     if(fromtag === undefined) {
-        if(DOMNode.$tags !== undefined) {  // tags is a python dictionary
-            tdict = DOMNode.$tags.$string_dict
+        if(DOMNodeDict.tags !== undefined) {  // tags is a python dictionary
+            tdict = DOMNodeDict.tags.$string_dict
             if(tdict !== undefined) {
                 factory = tdict[elt.tagName]
                 if(factory !== undefined) {
                     // all checks are good
-                    factory.elt_wrap = elt  // tell factory to wrap element
+                    factory.$dict.$elt_wrap = elt  // tell factory to wrap element
                     return factory()  // and return what the factory wants
                 }
             }
