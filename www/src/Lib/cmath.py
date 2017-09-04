@@ -72,9 +72,9 @@ def rect(r, phi):
             # TODO: Not sure this applies to Brython ??
             # Workaround for buggy results with phi=-0.0 on OS X 10.8.  
             # See bugs.python.org/issue18513.
-            return complex(r,phi*r)
+            return complex(r, phi*r)
         else:
-            return complex(r*cos(phi), r*sin(phi))
+            return complex(r*math.cos(phi), r*math.sin(phi))
             
 @takes_complex
 def sqrt(x):
