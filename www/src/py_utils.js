@@ -281,8 +281,8 @@ $B.$search = function(name, global_ns){
     else if(frame[3][name]!==undefined){return frame[3][name]}
     else if(_b_[name]!==undefined){return _b_[name]}
     else{
-        if(frame[0]==frame[2]){throw _b_.NameError("name '"+name+
-            "' is not defined")}
+        if(frame[0]==frame[2] || frame[1].$type=="class"){
+            throw _b_.NameError("name '"+name+"' is not defined")}
         else{
             throw _b_.UnboundLocalError("local variable '"+name+
                 "' referenced before assignment")}

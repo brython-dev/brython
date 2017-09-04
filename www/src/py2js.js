@@ -1476,13 +1476,26 @@ function $ClassCtx(context){
 
         var instance_decl = new $Node()
         var local_ns = '$locals_'+this.id.replace(/\./g,'_')
-        var js = ';var '+local_ns+'={}'
-        //if($B.debug>0){js += '{$def_line:$B.line_info}'}
-        //else{js += '{}'}
-        js += ', $locals = '+local_ns+';'
+        var js = ';var '+local_ns+'={$type:"class"}, $locals = '+local_ns+
+            ', $local_name="'+local_ns+'";'
         new $NodeJSCtx(instance_decl,js)
-        node.insert(0,instance_decl)
+        node.insert(0, instance_decl)
 
+        // Get id of global scope
+        var global_scope = this.scope
+        while(global_scope.parent_block.id !== '__builtins__'){
+            global_scope=global_scope.parent_block
+        }
+        var global_ns = '$locals_'+global_scope.id.replace(/\./g,'_')
+
+        var js = ';var $top_frame = [$local_name, $locals,'+
+            '"'+global_scope.id+'", '+global_ns+
+            ']; $B.frames_stack.push($top_frame);'
+
+        node.insert(1, $NodeJS(js))
+
+        // exit frame
+        node.add($NodeJS('$B.leave_frame()'))
         // return local namespace at the end of class definition
         var ret_obj = new $Node()
         new $NodeJSCtx(ret_obj,'return '+local_ns+';')
@@ -3234,7 +3247,6 @@ function $IdCtx(context,value){
             return this.result
         }
 
-
         this.js_processed=true
         var val = this.value
 
@@ -3251,6 +3263,14 @@ function $IdCtx(context,value){
         // $search or $local_search
         this.unbound = this.unbound || (is_local && !this.bound &&
             bound_before && bound_before.indexOf(val)==-1)
+
+        if(this.scope.context && this.scope.ntype=='class' &&
+                this.scope.context.tree[0].name == val){
+            // Name of class referenced inside the class
+            // Cf. issue #649
+            return '$B.$search("'+val+'")'
+        }
+
         if(this.unbound && !this.nonlocal){
             if(this.scope.ntype=='def' || this.scope.ntype=='generator'){
                 return '$B.$local_search("'+val+'")'
@@ -7887,7 +7907,7 @@ function brython(options){
     path_hooks.push($B.$path_hooks[1])
     $B.path_hooks = path_hooks
 
-    
+
     // URL of the script where function brython() is called
     var $href = $B.script_path = _window.location.href,
         $href_elts = $href.split('/')
@@ -7901,7 +7921,7 @@ function brython(options){
         $B.path = options.pythonpath
         $B.$options.static_stdlib_import = false
     }
-    
+
     // Or it can be provided as a list of strings or path objects
     // where a path object has at least a path attribute and, optionally,
     // a prefetch attribute and/or a lang attribute
@@ -7911,7 +7931,7 @@ function brython(options){
     //
     // where the prefetch attribute should be present & true if prefetching is required
     // otherwise it should be present and false
-    
+
     if (options.python_paths) {
         options.python_paths.forEach(function(path) {
             var lang, prefetch;
@@ -7925,7 +7945,7 @@ function brython(options){
             if (lang) _importlib.optimize_import_for_path(path, lang)
         })
     }
-    
+
     if (! isWebWorker ) {
     // Get all links with rel=pythonpath and add them to sys.path
         var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
@@ -7958,7 +7978,7 @@ function brython(options){
        }
        console.log("DeprecationWarning: \'re_module\' option of \'brython\' function will be deprecated in future versions of Brython.")
     }
-    
+
     $B.scripts = []
     $B.js = {} // maps script name to JS conversion
     if ($B.$options.args) {
@@ -7971,11 +7991,11 @@ function brython(options){
     }
 }
 
-function _run_scripts(options) { 
+function _run_scripts(options) {
     // Save initial Javascript namespace
     var kk = Object.keys(_window)
 
-    
+
     // Option to run code on demand and not all the scripts defined in a page
     // The following lines are included to allow to run brython scripts in
     // the IPython/Jupyter notebook using a cell magic. Have a look at
@@ -7996,10 +8016,10 @@ function _run_scripts(options) {
             }
         }
     }
-    
+
     // Get all scripts with type = text/python or text/python3 and run them
 
-    
+
     var first_script = true, module_name;
     if(options.ipy_id!==undefined){
         module_name='__main__';
@@ -8118,7 +8138,7 @@ function _run_scripts(options) {
         }
     }
     */
-    
+
 }
 
 $B.$operators = $operators
