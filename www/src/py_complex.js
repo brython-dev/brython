@@ -223,10 +223,12 @@ $ComplexDict.imag.setter = function(){throw _b_.AttributeError("readonly attribu
 
 var complex_re = /^(\d*\.?\d*)([\+\-]?)(\d*\.?\d*)(j?)$/
 
-var complex=function($real,$imag){
+var complex=function(){
     var res;
+    var args = $B.args("complex",2,{real:null,imag:null},["real","imag"],arguments,{real:0,imag:0},null,null)
+    var $real=args.real, $imag=args.imag;
     if(typeof $real=='string'){
-        if($imag!==undefined){
+        if (arguments.length > 1 || arguments[0].$nat !== undefined){
             throw _b_.TypeError("complex() can't take second arg if first is a string")
         }
         var parts = complex_re.exec($real)
@@ -257,7 +259,6 @@ var complex=function($real,$imag){
         }
         return res
     }
-    if ($imag===undefined) $imag=0;
     if ((isinstance($real, _b_.float) || isinstance($real, _b_.int)) && (isinstance($imag, _b_.float) || isinstance($imag, _b_.int))) {
         res = {
             __class__:$ComplexDict,
