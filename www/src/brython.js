@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-04 16:03:21.898690"
+__BRYTHON__.compiled_date="2017-09-04 16:09:38.041204"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4229,7 +4229,8 @@ if(lang)_importlib.optimize_import_for_path(path,lang)})}
 if(! isWebWorker ){
 var path_links=document.querySelectorAll('head link[rel~=pythonpath]'),_importlib=$B.modules['_importlib'];
 for(var i=0,e;e=path_links[i];++i){var href=e.href;
-$B.path.push(href);
+if((' ' + e.rel + ' ').indexOf(' prepend ')!=-1){$B.path.unshift(href);}else{
+$B.path.push(href);}
 if(href.slice(-7).toLowerCase()=='.vfs.js' &&
 (' ' + e.rel + ' ').indexOf(' prefetch ')!=-1){
 $B.path_importer_cache[href + '/']=
