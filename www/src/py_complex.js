@@ -226,8 +226,8 @@ $ComplexDict.real.setter = function(){throw _b_.AttributeError("readonly attribu
 $ComplexDict.imag = function(self){return new Number(self.$imag)}
 $ComplexDict.imag.setter = function(){throw _b_.AttributeError("readonly attribute")}
 
-var complex_re = /^(\d*\.?\d*)([\+\-]?)(\d*\.?\d*)(j?)$/
-
+var complex_re = /^\s*([\+\-]*\d*\.?\d*(e[\+\-]*\d*)?)([\+\-]?)(\d*\.?\d*(e[\+\-]*\d*)?)(j?)\s*$/i
+var _real=1,_real_mantissa=2,_sign=3,_imag=4,_imag_mantissa=5,_j=6;
 var complex=function(){
     var res;
     var args = $B.args("complex",2,{real:null,imag:null},["real","imag"],arguments,{real:0,imag:0},null,null)
@@ -236,21 +236,31 @@ var complex=function(){
         if (arguments.length > 1 || arguments[0].$nat !== undefined){
             throw _b_.TypeError("complex() can't take second arg if first is a string")
         }
+        $real = $real.trim()
+        if ($real.startsWith('(') && $real.endsWith(')')) {
+            $real = $real.substr(1)
+            $real = $real.substr(0,$real.length-1)
+        }
         var parts = complex_re.exec($real)
         if(parts===null){
             throw _b_.ValueError("complex() arg is a malformed string")
-        }else if(parts[1]=='.' || parts[3]=='.'){
+        }else if(parts[_real]=='.' || parts[_imag]=='.' || parts[_real]=='.e' || parts[_imag]=='.e' || parts[_real]=='e' || parts[_imag]=='e'){
             throw _b_.ValueError("complex() arg is a malformed string")
-        }else if(parts[4]=='j'){
-            if(parts[2]==''){
-                $real = 0; $imag = parseFloat(parts[1])
+        }else if(parts[_j] != ''){
+            if(parts[_sign]==''){
+                $real = 0; 
+                if (parts[_real] == '+' || parts[_real] == '') {
+                    $imag = 1
+                } else if (parts[_real] == '-') {
+                    $imag = -1
+                } else $imag = parseFloat(parts[_real])
             }else{
-                $real = parseFloat(parts[1])
-                $imag = parts[3]=='' ? 1 : parseFloat(parts[3])
-                $imag = parts[2]=='-' ? -$imag : $imag
+                $real = parseFloat(parts[_real])
+                $imag = parts[_imag]=='' ? 1 : parseFloat(parts[_imag])
+                $imag = parts[_sign]=='-' ? -$imag : $imag
             }
         }else{
-            $real = parseFloat(parts[1])
+            $real = parseFloat(parts[_real])
             $imag = 0
         }
         res = {
