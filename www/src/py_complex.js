@@ -48,8 +48,13 @@ $ComplexDict.__hash__ = function(self){
     return self.$imag*1000003+self.$real
 }
 
-$ComplexDict.__init__ = function(self, real, imag){
-    self.toString = function(){return '('+real+'+'+imag+'j)'}
+$ComplexDict.__init__ = function() {
+    var args = [].slice.call(arguments,1)
+    var c = complex.apply(null, args)
+    var self=arguments[0];
+    self.$real=c.$real
+    self.$imag=c.$imag
+    self.toString = function(){return '('+self.$real+'+'+self.$imag+'j)'}
 }
 
 $ComplexDict.__invert__ = function(self){return ~self}
