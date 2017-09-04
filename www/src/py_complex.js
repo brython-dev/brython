@@ -22,14 +22,14 @@ $ComplexDict.__bool__ = function(self){return new Boolean(self.$real || self.$im
 $ComplexDict.__class__ = $B.$type
 
 $ComplexDict.__eq__ = function(self,other){
-    if(isinstance(other,complex)) return self.real.valueOf()==other.real.valueOf() && self.imag.valueOf()==other.imag.valueOf()
+    if(isinstance(other,complex)) return self.$real.valueOf()==other.$real.valueOf() && self.$imag.valueOf()==other.$imag.valueOf()
     if(isinstance(other,_b_.int)){
       if (self.$imag != 0) return False
       return self.$real == other.valueOf()
     }
     if(isinstance(other,_b_.float)){
-      if (self.imag != 0) return False
-      return self.real == other.valueOf()
+      if (self.$imag != 0) return False
+      return self.$real == other.valueOf()
     }
     $UnsupportedOpType("==","complex",$B.get_class(other))
 }
@@ -48,8 +48,8 @@ $ComplexDict.__hash__ = function(self){
     return self.$imag*1000003+self.$real
 }
 
-$ComplexDict.__init__ = function(self,$real,$imag){
-    self.toString = function(){return '('+$real+'+'+$imag+'j)'}
+$ComplexDict.__init__ = function(self, real, imag){
+    self.toString = function(){return '('+real+'+'+imag+'j)'}
 }
 
 $ComplexDict.__invert__ = function(self){return ~self}
@@ -218,6 +218,7 @@ $ComplexDict.imag.setter = function(){throw _b_.AttributeError("readonly attribu
 var complex_re = /^(\d*\.?\d*)([\+\-]?)(\d*\.?\d*)(j?)$/
 
 var complex=function($real,$imag){
+    var res;
     if(typeof $real=='string'){
         if($imag!==undefined){
             throw _b_.TypeError("complex() can't take second arg if first is a string")
@@ -239,19 +240,47 @@ var complex=function($real,$imag){
             $real = parseFloat(parts[1])
             $imag = 0
         }
+        res = {
+            __class__:$ComplexDict,
+            $real:$real || 0,
+            $imag:$imag || 0
+        }
+        res.__repr__ = res.__str__ = function() {
+            if (res.$real == 0) return res.$imag + 'j'
+            return '('+res.$real+'+'+res.$imag+'j)'
+        }
+        return res
     }
-    var res = {
-        __class__:$ComplexDict,
-        $real:$real || 0,
-        $imag:$imag || 0
+    if ($imag===undefined) $imag=0;
+    if ((isinstance($real, _b_.float) || isinstance($real, _b_.int)) && (isinstance($imag, _b_.float) || isinstance($imag, _b_.int))) {
+        res = {
+            __class__:$ComplexDict,
+            $real:$real,
+            $imag:$imag
+        }
+        res.__repr__ = res.__str__ = function() {
+            if (res.$real == 0) return res.$imag + 'j'
+            return '('+res.$real+'+'+res.$imag+'j)'
+        }
+        return res;
     }
-
-    res.__repr__ = res.__str__ = function() {
-        if ($real == 0) return $imag + 'j'
-        return '('+$real+'+'+$imag+'j)'
+    if(hasattr($real, '__complex__')) {
+        $real = getattr($real, '__complex__')()
     }
-
-    return res
+    if(hasattr($imag, '__complex__')) {
+        $imag = getattr($imag, '__complex__')()
+    }
+    if(!isinstance($real, _b_.float) && !isinstance($real, _b_.int) && !isinstance($real, _b_.complex)) {
+        throw _b_.TypeError("complex() argument must be a string or a number")
+    }
+    if(typeof $imag=='string') {
+        throw _b_.TypeError("complex() second arg can't be a string")
+    }
+    if(!isinstance($imag, _b_.float) && !isinstance($imag, _b_.int) && !isinstance($imag, _b_.complex) && $imag!==undefined) {
+        throw _b_.TypeError("complex() argument must be a string or a number")
+    }
+    $imag = $ComplexDict.__mul__(complex("1j"), $imag)
+    return $ComplexDict.__add__($imag, $real);
 }
 
 complex.$dict = $ComplexDict
