@@ -4,6 +4,7 @@ from test import support
 from random import random
 from math import atan2, isnan, copysign
 import operator
+from sys import platform
 
 INF = float("inf")
 NAN = float("nan")
@@ -426,6 +427,7 @@ class ComplexTest(unittest.TestCase):
     def test_neg(self):
         self.assertEqual(-(1+6j), -1-6j)
 
+    @unittest.skipIf(platform=='brython','Brython does not support writing to files')
     def test_file(self):
         a = 3.33+4.43j
         b = 5.1+2.3j
