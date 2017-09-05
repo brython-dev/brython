@@ -597,12 +597,10 @@ function filter(func, iterable){
 }
 
 function format(value, format_spec) {
-  var $ = $B.args("format", {value: null, format_spec: null},
-      ['value', 'format_spec'], arguments, {format_spec: ''}, null, null)
-  var fmt = getattr($.value,'__format__', null)
-  if(fmt !== null){return fmt($.format_spec)}
-
-  throw _b_.NotImplementedError("__format__ is not implemented for object '" + _b_.str(value) + "'")
+  var args = $B.args("format",2,{value:null,format_spec:null},["value","format_spec"],arguments,{format_spec:''},null,null)
+  var fmt = getattr(args.value,'__format__', null)
+  if(fmt !== null){return fmt(args.format_spec)}
+  throw _b_.NotImplementedError("__format__ is not implemented for object '" + _b_.str(args.value) + "'")
 }
 
 function attr_error(attr, cname){
