@@ -170,7 +170,16 @@
                 dict.__new__ = function(cls){
                     // __new__ must be defined explicitely : it returns an instance of
                     // DOMNode for the specified tagName
-                    var res = $B.DOMNode(document.createElement(tagName))
+                    if(cls.$dict.$elt_wrap !== undefined) {
+                        // DOMNode is piggybacking on us to autogenerate a node
+                        elt = cls.$dict.$elt_wrap  // keep track of the to wrap element
+                        dict.$elt_wrap = undefined  // nullify for later calls
+                        var res = $B.DOMNode(elt, true)  // generate the wrapped DOMNode
+                        res._wrapped = true  // marked as wrapped
+                    } else {
+                        var res = $B.DOMNode(document.createElement(tagName), true)
+                        res._wrapped = false  // not wrapped
+                    }
                     res.__class__ = cls.$dict
                     return res
                 }
@@ -184,10 +193,19 @@
 
             function makeFactory(tagName){
                 var factory = function(){
-                    if(tagName=='SVG'){
-                        var res = $B.DOMNode(document.createElementNS("http://www.w3.org/2000/svg", "svg"))
-                    }else{
-                        var res = $B.DOMNode(document.createElement(tagName))
+                    if(factory.$dict.$elt_wrap !== undefined) {
+                        // DOMNode is piggybacking on us to autogenerate a node
+                        elt = factory.$dict.$elt_wrap  // keep track of the to wrap element
+                        factory.$dict.$elt_wrap = undefined  // nullify for later calls
+                        var res = $B.DOMNode(elt, true)  // generate the wrapped DOMNode
+                        res._wrapped = true  // marked as wrapped
+                    } else {
+                        if(tagName=='SVG'){
+                            var res = $B.DOMNode(document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
+                        }else{
+                            var res = $B.DOMNode(document.createElement(tagName), true)
+                        }
+                        res._wrapped = false  // not wrapped
                     }
                     res.__class__ = dicts[tagName]
                     // apply __init__
@@ -228,6 +246,9 @@
             // names to the matching tag class factory function.
             var obj = {tags:_b_.dict()},
                 dicts = {}
+
+            // register tags in DOMNode to autogenerate tags when DOMNode is invoked
+            $B.DOMNodeDict.tags = obj.tags
 
             function maketag(tag){
                 if(!(typeof tag=='string')){

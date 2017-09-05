@@ -3264,10 +3264,9 @@ function $IdCtx(context,value){
         this.unbound = this.unbound || (is_local && !this.bound &&
             bound_before && bound_before.indexOf(val)==-1)
 
-        if(this.scope.context && this.scope.ntype=='class' &&
+        if((!this.bound) && this.scope.context && this.scope.ntype=='class' &&
                 this.scope.context.tree[0].name == val){
-            // Name of class referenced inside the class
-            // Cf. issue #649
+            // Name of class referenced inside the class. Cf. issue #649
             return '$B.$search("'+val+'")'
         }
 
@@ -4192,7 +4191,8 @@ function $OpCtx(context,op){
             }
             return 'getattr('+this.tree[1].to_js()+',"'+method+'")()'
           case 'is':
-            return this.tree[0].to_js() + '===' + this.tree[1].to_js()
+            return '$B.$is('+this.tree[0].to_js() + ', ' +
+                this.tree[1].to_js() + ')'
           case 'is_not':
             return this.tree[0].to_js() + '!==' + this.tree[1].to_js()
           case '*':
