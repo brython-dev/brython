@@ -3264,10 +3264,9 @@ function $IdCtx(context,value){
         this.unbound = this.unbound || (is_local && !this.bound &&
             bound_before && bound_before.indexOf(val)==-1)
 
-        if(this.scope.context && this.scope.ntype=='class' &&
+        if((!this.bound) && this.scope.context && this.scope.ntype=='class' &&
                 this.scope.context.tree[0].name == val){
-            // Name of class referenced inside the class
-            // Cf. issue #649
+            // Name of class referenced inside the class. Cf. issue #649
             return '$B.$search("'+val+'")'
         }
 
