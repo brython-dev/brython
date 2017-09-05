@@ -195,7 +195,7 @@
                 var factory = function(){
                     if(factory.$dict.$elt_wrap !== undefined) {
                         // DOMNode is piggybacking on us to autogenerate a node
-                        elt = factory.$dict.elt_wrap  // keep track of the to wrap element
+                        elt = factory.$dict.$elt_wrap  // keep track of the to wrap element
                         factory.$dict.$elt_wrap = undefined  // nullify for later calls
                         var res = $B.DOMNode(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
