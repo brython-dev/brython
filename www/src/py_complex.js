@@ -16,7 +16,7 @@ var $ComplexDict = {__class__:$B.$type,
 }
 
 $ComplexDict.__abs__ = function(self){
-    var mag = Math.hypot(self.$real, self.$imag);
+    var mag = Math.sqrt(Math.pow(self.$real,2)+Math.pow(self.$imag,2));
     if (!isFinite(mag) && isFinite(self.$real) && isFinite(self.$imag)) {
         // In these circumstances Math.hypot quietly returns inf, but Python should raise.
         // See https://hg.python.org/jython/rev/69826acfb4a9
