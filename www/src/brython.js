@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-05 08:29:54.647717"
+__BRYTHON__.compiled_date="2017-09-05 08:56:44.208869"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -2064,7 +2064,8 @@ case 'imaginary':
 return 'complex(0,'+op+x.value+')'}}
 return 'getattr('+this.tree[1].to_js()+',"'+method+'")()'
 case 'is':
-return this.tree[0].to_js()+ '===' + this.tree[1].to_js()
+return '$B.$is('+this.tree[0].to_js()+ ', ' +
+this.tree[1].to_js()+ ')'
 case 'is_not':
 return this.tree[0].to_js()+ '!==' + this.tree[1].to_js()
 case '*':
@@ -5005,6 +5006,9 @@ $B.$test_result=expr
 return _b_.bool(expr)}
 $B.$test_expr=function(){
 return $B.$test_result}
+$B.$is=function(a,b){
+if(a instanceof Number && b instanceof Number){return a.valueOf()==b.valueOf()}
+return a===b}
 $B.$is_member=function(item,_set){
 var f,_iter
 try{f=_b_.getattr(_set,"__contains__")}

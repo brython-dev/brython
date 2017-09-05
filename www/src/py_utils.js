@@ -608,6 +608,17 @@ $B.$test_expr = function(){
     return $B.$test_result
 }
 
+$B.$is = function(a, b){
+    // Used for Python "is". In most cases it's the same as Javascript ===,
+    // but new Number(1) === new Number(1) is false, and so is
+    // new Number(1) == new Number(1) !!!
+    // Cf. issue 669
+    if(a instanceof Number && b instanceof Number){
+        return a.valueOf()==b.valueOf()
+    }
+    return a === b
+}
+
 $B.$is_member = function(item,_set){
     // used for "item in _set"
     var f,_iter

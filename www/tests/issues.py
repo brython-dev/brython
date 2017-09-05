@@ -1431,6 +1431,9 @@ class A:
 assert A().x.__name__ == "x"
 assert A.x.__name__ == "x"
 
+# issue 669
+assert 0.1 is 0.1
+assert not(1 is 1.0)
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

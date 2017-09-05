@@ -4191,7 +4191,8 @@ function $OpCtx(context,op){
             }
             return 'getattr('+this.tree[1].to_js()+',"'+method+'")()'
           case 'is':
-            return this.tree[0].to_js() + '===' + this.tree[1].to_js()
+            return '$B.$is('+this.tree[0].to_js() + ', ' +
+                this.tree[1].to_js() + ')'
           case 'is_not':
             return this.tree[0].to_js() + '!==' + this.tree[1].to_js()
           case '*':
