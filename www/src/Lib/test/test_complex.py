@@ -327,7 +327,9 @@ class ComplexTest(unittest.TestCase):
         # check that complex accepts long unicode strings
         self.assertEqual(type(complex("1"*500)), complex)
         # check whitespace processing
-        self.assertEqual(complex('\N{EM SPACE}(\N{EN SPACE}1+1j ) '), 1+1j)
+        # _test_str = '\N{EM SPACE}(\N{EN SPACE}1+1j ) '
+        _test_str = '\u2003(\u20021+1j ) '
+        self.assertEqual(complex(_test_str), 1+1j)
 
         class EvilExc(Exception):
             pass
