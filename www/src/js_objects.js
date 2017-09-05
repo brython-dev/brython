@@ -54,11 +54,17 @@ $JSConstructorDict.__call__ = function(self){
     return $B.$JS2Py(res)
 }
 
+$JSConstructorDict.__getattr__ = function(self, attr){
+    // Attributes of a constructor are taken from the original JS object
+    return $JSObjectDict.__getattribute__(self.obj, attr)
+}
+
 $JSConstructorDict.__mro__ = [$ObjectDict]
 
 function JSConstructor(obj){
     return {
         __class__:$JSConstructorDict,
+        obj: obj,
         func:obj.js_func
     }
 }

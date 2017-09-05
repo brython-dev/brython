@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-05 08:56:44.208869"
+__BRYTHON__.compiled_date="2017-09-05 11:23:15.664731"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -6898,9 +6898,11 @@ for(var i=1,_len_i=arguments.length;i < _len_i;i++){args.push(pyobj2jsobj(argume
 var factory=self.func.bind.apply(self.func,args)
 var res=new factory()
 return $B.$JS2Py(res)}
+$JSConstructorDict.__getattr__=function(self,attr){
+return $JSObjectDict.__getattribute__(self.obj,attr)}
 $JSConstructorDict.__mro__=[$ObjectDict]
 function JSConstructor(obj){return{
-__class__:$JSConstructorDict,func:obj.js_func}}
+__class__:$JSConstructorDict,obj: obj,func:obj.js_func}}
 JSConstructor.__class__=$B.$factory
 JSConstructor.$dict=$JSConstructorDict
 $JSConstructorDict.$factory=JSConstructor
