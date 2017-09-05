@@ -236,6 +236,15 @@ $ComplexDict.imag.setter = function(){throw _b_.AttributeError("readonly attribu
 
 var complex_re = /^\s*([\+\-]*\d*\.?\d*(e[\+\-]*\d*)?)([\+\-]?)(\d*\.?\d*(e[\+\-]*\d*)?)(j?)\s*$/i
 var _real=1,_real_mantissa=2,_sign=3,_imag=4,_imag_mantissa=5,_j=6;
+var type_conversions = ['__complex__','__float__','__int__'];
+var _convert = function(num) {
+    for(i=0;i<type_conversions.length;i++) {
+        if(hasattr(num, type_conversions[i])) {
+            return getattr(num, type_conversions[i])()
+        }
+    }
+    return num
+}
 var complex=function(){
     var res;
     var args = $B.args("complex",2,{real:null,imag:null},["real","imag"],arguments,{real:0,imag:0},null,null)
@@ -297,12 +306,13 @@ var complex=function(){
         }
         return res;
     }
-    if(hasattr($real, '__complex__')) {
-        $real = getattr($real, '__complex__')()
+    for(i=0;i<type_conversions.length;i++) {
+        if(hasattr($real, type_conversions[i])) {
+            
+        }
     }
-    if(hasattr($imag, '__complex__')) {
-        $imag = getattr($imag, '__complex__')()
-    }
+    $real = _convert($real)
+    $imag = _convert($imag)
     if(!isinstance($real, _b_.float) && !isinstance($real, _b_.int) && !isinstance($real, _b_.complex)) {
         throw _b_.TypeError("complex() argument must be a string or a number")
     }
