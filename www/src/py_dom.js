@@ -335,10 +335,38 @@ $Style.__class__ = $B.$factory
 $Style.$dict = $StyleDict
 $StyleDict.$factory = $Style
 
-var DOMNode = $B.DOMNode = function(elt){
+var DOMNode = $B.DOMNode = function(elt, fromtag){
     if(elt.__class__===DOMNodeDict){return elt}
     if(typeof elt=="number" || typeof elt=="boolean" ||
         typeof elt=="string"){return elt}
+
+    // if none of the above, fromtag determines if the call is made by
+    // the tag factory or by any other call to DOMNode
+    // if made by tag factory (fromtag will be defined, the value is not
+    // important), the regular plain old behavior is retained. Only the
+    // return value of a DOMNode is sought
+
+    // In other cases (fromtag is undefined), DOMNode tries to return a "tag"
+    // from the browser.html module by looking into "$tags" which is set
+    // by the  browser.html module itself (external sources could override
+    // it) and piggybacks on the tag factory by adding an "elt_wrap"
+    // attribute to the factory to let it know, that special behavior
+    // is needed. i.e: don't create the element, use the one provided
+    if(fromtag === undefined) {
+        if(DOMNodeDict.tags !== undefined) {  // tags is a python dictionary
+            tdict = DOMNodeDict.tags.$string_dict
+            if(tdict !== undefined) {
+                factory = tdict[elt.tagName]
+                if(factory !== undefined) {
+                    // all checks are good
+                    factory.$dict.$elt_wrap = elt  // tell factory to wrap element
+                    return factory()  // and return what the factory wants
+                }
+            }
+        }
+        // all "else" ... default to old behavior of plain DOMNode wrapping
+    }
+
     // returns the element, enriched with an attribute $brython_id for
     // equality testing and with all the attributes of Node
     var res = {}
