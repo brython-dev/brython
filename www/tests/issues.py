@@ -1399,6 +1399,12 @@ assert x._sargs == [5]
 x.mytest2()
 assert x._kargs[5] == '5'
 
+# issue 649
+class test:
+    def test(self):
+        return 1
+assert test().test() == 1
+
 # issue 658
 kk = [i for i in [
         1,  # 1st quadrant
@@ -1425,6 +1431,9 @@ class A:
 assert A().x.__name__ == "x"
 assert A.x.__name__ == "x"
 
+# issue 669
+assert 0.1 is 0.1
+assert not(1 is 1.0)
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

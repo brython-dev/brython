@@ -5,7 +5,7 @@ Pour accéder à un élément, on peut utiliser plusieurs méthodes. La plus cou
 
 >    <input id="data">
 
-on peut obtenir une référence à ce champ par 
+on peut obtenir une référence à ce champ par
 
 >    from browser import document
 >    data = document["data"]
@@ -22,12 +22,14 @@ Enfin, tous les éléments de la page possèdent une méthode `get()` qui permet
 - `elt.get(name=N)` retourne une liste avec tous les éléments descendant de `elt` dont l'attribut `name` est égal à `N`
 - `elt.get(selector=S)` retourne une liste avec tous les élements descendant de `elt` dont le sélecteur CSS correspond à `S`
 
+`elt.select(S)` est équivalent à `elt.get(selector=S)`.
+
 Quelques exemples :
 
-    document.get(selector='.foo')       # éléments avec la classe "foo"
-    document.get(selector='form')       # liste des balises "<form>"
-    document.get(selector='H1.bar')     # balises H1 avec la classe "bar"
-    document.get(selector='#container") # liste avec l'élément dont l'id vaut "container", similaire à [doc["container"]]
-    document.get(selector='a[title]')   # balises A avec un attribut "title"
-    
+    document.select('.foo')       # éléments avec la classe "foo"
+    document.select('form')       # liste des balises "<form>"
+    document.select('H1.bar')     # balises H1 avec la classe "bar"
+    document.select('#container") # liste avec l'élément dont l'id vaut "container", similaire à [doc["container"]]
+    document.select('a[title]')   # balises A avec un attribut "title"
+
 

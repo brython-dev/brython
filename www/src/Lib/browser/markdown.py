@@ -24,7 +24,7 @@ class URL:
                 self.alt=alt[1:-1]
             elif alt[0] == "(" and alt[-1] == ")":
                 self.alt=alt[1:-1]
-        
+
 
 class CodeBlock:
 
@@ -38,7 +38,7 @@ class CodeBlock:
             self.info = "python-console"
         else:
             self.info = None
-    
+
     def to_html(self):
         if self.lines[0].startswith("`"):
             self.lines.pop(0)
@@ -53,10 +53,10 @@ class HtmlBlock:
 
     def __init__(self, src):
         self.src = src
-    
+
     def to_html(self):
         return self.src
-        
+
 class Marked:
 
     def __init__(self, line=''):
@@ -65,7 +65,7 @@ class Marked:
 
     def to_html(self):
         return apply_markdown(self.line)
-        
+
 # get references
 refs = {}
 ref_pattern = r"^\[(.*)\]:\s+(.*)"
@@ -80,19 +80,19 @@ def mark(src):
     # - a script
     # - a span-level HTML tag (markdown syntax will be processed)
     # - a code block
-    
+
     # normalise line feeds
     src = src.replace('\r\n','\n')
-    
+
     # lines followed by dashes
     src = re.sub(r'(.*?)\n=+\n', '\n# \\1\n', src)
-    src = re.sub(r'(.*?)\n-+\n', '\n## \\1\n', src) 
+    src = re.sub(r'(.*?)\n-+\n', '\n## \\1\n', src)
 
     lines = src.split('\n') + ['']
-    
+
     i = bq = 0
     ul = ol = 0
-    
+
     while i<len(lines):
 
         # enclose lines starting by > in a blockquote
@@ -154,9 +154,9 @@ def mark(src):
             lines.insert(i, '</ol>')
             i += 1
             ol = 0
-        
+
         i += 1
-    
+
     if ul:
         lines.append('</ul>' * ul)
     if ol:
@@ -181,7 +181,7 @@ def mark(src):
                 j += 1
             sections.append(section)
             section = Marked()
-            i = j   
+            i = j
             continue
 
         elif line.strip() and line.startswith("```"):
@@ -243,9 +243,9 @@ def mark(src):
                 if section.line:
                     section.line += '\n'
                 section.line += line
-                    
+
             i += 1
-    
+
     if isinstance(section, Marked) and section.line:
         sections.append(section)
 
@@ -254,7 +254,7 @@ def mark(src):
         mk, _scripts = section.to_html()
         res += mk
         scripts += _scripts
-    
+
     return res, scripts
 
 def escape(czone):
@@ -312,7 +312,7 @@ def apply_markdown(src):
                         else:
                             break
                     if end_href > -1 and rest[:end_href].find('\n') == -1:
-                        tag = ('<a href="' + rest[1:end_href] + '">' + link 
+                        tag = ('<a href="' + rest[1:end_href] + '">' + link
                             + '</a>')
                         src = src[:start_a - 1] + tag + rest[end_href + 1:]
                         i = start_a + len(tag)
@@ -335,15 +335,19 @@ def apply_markdown(src):
                         tag = '<a href="' + url + '">' + link + '</a>'
                         src = src[:start_a - 1] + tag + rest[end_key + 1:]
                         i = start_a + len(tag)
-        
+
         i += 1
 
-    # before applying the markup with _ and *, isolate HTML tags because 
+    # before applying the markup with _ and *, isolate HTML tags because
     # they can contain these characters
 
-    # We replace them temporarily by a random string
-    rstr = ''.join(random.choice(letters) for i in range(16))
-    
+    # We replace them temporarily by a random string. The string starts
+    # and ends with a whitespace so that in the new source, the text before
+    # the random string has a word end. E.g. <h2>_italic_</h2> is replaced
+    # by something like " agFyf_italic_ agFyf" so that the markdown for
+    # _italic_ can be applied.
+    rstr = ' '+''.join(random.choice(letters) for i in range(16)) + ' '
+
     i = 0
     state = None
     start = -1
@@ -385,7 +389,7 @@ def apply_markdown(src):
                     break
                 j += 1
             i = j
-        i += 1                    
+        i += 1
 
     # escape "<", ">", "&" and "_" in inline code
     code_pattern = r'\`(.*?)\`'
@@ -401,14 +405,18 @@ def apply_markdown(src):
     for tag,strong_pattern in strong_patterns:
         src = re.sub(strong_pattern, r'<%s>\1</%s>' %(tag, tag), src)
 
-    em_patterns = [('EM', r'\*(.*?)\*'), ('I', r'\_(.*?)\_')]
-    for tag,em_pattern in em_patterns:
-        src = re.sub(em_pattern, r'<%s>\1</%s>' %(tag, tag), src)
+    # EM for *xxx*
+    src = re.sub(r'\*(.*?)\*', r'<%s>\1</%s>' %('EM', 'EM'), src)
+
+    # I for _xxx_ where the _ are at the beginning or end of a word
+    # An underscore inside a word is ignored.
+    src = re.sub(r'\b_(.*?)_\b', r'<I>\1</I>', src,
+        flags=re.M)
 
     # inline code
     code_pattern = r'\`(.*?)\`'
     src = re.sub(code_pattern, r'<code>\1</code>', src)
-    
+
     # restore tags
     while True:
         pos = src.rfind(rstr)

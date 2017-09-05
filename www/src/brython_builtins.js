@@ -2,17 +2,36 @@ var __BRYTHON__=__BRYTHON__ || {}  // global object with brython built-ins
 
 ;(function($B) {
 
-// Get url of this script brython_builtins.js
-var scripts = document.getElementsByTagName('script')
-var this_url = scripts[scripts.length-1].src
-var elts = this_url.split('/')
-elts.pop()
-// brython_path is the url of the directory holding brython core scripts
-// It is used to import modules of the standard library
-var $path = $B.brython_path = elts.join('/')+'/'
+// Detect whether we are in a Web Worker
+var isWebWorker = ('undefined' !== typeof WorkerGlobalScope) && ("function" === typeof importScripts) && (navigator instanceof WorkerNavigator)
+var _window = self;
+
+
+var $path
+
+if ($B.brython_path === undefined) {
+    // Get url of this script brython_builtins.js
+    var this_url;
+    if (isWebWorker) {
+        this_url = _window.location.href;
+    } else {
+        var scripts = document.getElementsByTagName('script')
+        this_url = scripts[scripts.length-1].src
+    }
+
+
+    var elts = this_url.split('/')
+    elts.pop()
+    // brython_path is the url of the directory holding brython core scripts
+    // It is used to import modules of the standard library
+    $path = $B.brython_path = elts.join('/')+'/'
+} else {
+    $path = $B.brython_path
+}
+
 
 // Get the URL of the directory where the script stands
-var $href = $B.script_path = window.location.href
+var $href = $B.script_path = _window.location.href
 var $href_elts = $href.split('/')
 $href_elts.pop()
 var $script_dir = $B.script_dir = $href_elts.join('/')
@@ -77,10 +96,14 @@ $B.__setattr__ = function(attr,value){
 
 // system language ( _not_ the one set in browser settings)
 // cf http://stackoverflow.com/questions/1043339/javascript-for-detecting-browser-language-preference
-$B.language = window.navigator.userLanguage || window.navigator.language
+$B.language = _window.navigator.userLanguage || _window.navigator.language
 
-// document charset ; defaults to "utf-8"
-$B.charset = document.characterSet || document.inputEncoding || "utf-8"
+if (isWebWorker) {
+    $B.charset = "utf-8"
+} else {
+    // document charset ; defaults to "utf-8"
+    $B.charset = document.characterSet || document.inputEncoding || "utf-8"
+}
 
 // minimum and maximum safe integers
 $B.max_int = Math.pow(2,53)-1

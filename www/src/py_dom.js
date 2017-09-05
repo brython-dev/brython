@@ -4,13 +4,14 @@ eval($B.InjectBuiltins())
 
 var $ObjectDict = _b_.object.$dict
 var JSObject = $B.JSObject
+var _window = self;
 
 // Maps $brython_id of DOM elements to events
 $B.events = _b_.dict()
 
 // cross-browser utility functions
 function $getMouseOffset(target, ev){
-    ev = ev || window.event;
+    ev = ev || _window.event;
     var docPos    = $getPosition(target);
     var mousePos  = $mouseCoords(ev);
     return {x:mousePos.x - docPos.x, y:mousePos.y - docPos.y};
@@ -37,7 +38,7 @@ function $getPosition(e){
 function $mouseCoords(ev){
     var posx = 0;
     var posy = 0;
-    if (!ev) var ev = window.event;
+    if (!ev) var ev = _window.event;
     if (ev.pageX || ev.pageY){
         posx = ev.pageX;
         posy = ev.pageY;
@@ -63,8 +64,8 @@ $B.$isNode = function(o){
     // copied from http://stackoverflow.com/questions/384286/
     // javascript-isdom-how-do-you-check-if-a-javascript-object-is-a-dom-object
   return (
-    typeof Node === "object" ? o instanceof Node : 
-    o && typeof o === "object" && typeof o.nodeType === "number" && 
+    typeof Node === "object" ? o instanceof Node :
+    o && typeof o === "object" && typeof o.nodeType === "number" &&
     typeof o.nodeName==="string"
   );
 }
@@ -74,11 +75,11 @@ $B.$isNodeList = function(nodes) {
     // detect-htmlcollection-nodelist-in-javascript
     try{
         var result = Object.prototype.toString.call(nodes);
-        var re = new RegExp("^\\[object (HTMLCollection|NodeList)\\]$")     
+        var re = new RegExp("^\\[object (HTMLCollection|NodeList)\\]$")
         return (typeof nodes === 'object'
             && re.exec(result)!==null
             && nodes.length!==undefined
-            && (nodes.length == 0 || 
+            && (nodes.length == 0 ||
                 (typeof nodes[0] === "object" && nodes[0].nodeType > 0))
         )
     }catch(err){
@@ -196,7 +197,7 @@ function $Clipboard(data){ // drag and drop dataTransfer
 
 function $EventsList(elt,evt,arg){
     // handles a list of callback fuctions for the event evt of element elt
-    // method .remove(callback) removes the callback from the list, and 
+    // method .remove(callback) removes the callback from the list, and
     // removes the event listener
     this.elt = elt
     this.evt = evt
@@ -220,7 +221,7 @@ function $OpenFile(file,mode,encoding){
     this.reader = new FileReader()
     if(mode==='r'){this.reader.readAsText(file,encoding)}
     else if(mode==='rb'){this.reader.readAsBinaryString(file)}
-    
+
     this.file = file
     this.__class__ = dom.FileReader
     this.__getattr__ = function(attr){
@@ -230,14 +231,8 @@ function $OpenFile(file,mode,encoding){
     this.__setattr__ = (function(obj){
         return function(attr,value){
             if(attr.substr(0,2)=='on'){ // event
-                // value is a function taking an event as argument
-                if(window.addEventListener){
-                    var callback = function(ev){return value($DOMEvent(ev))}
-                    obj.addEventListener(attr.substr(2),callback)
-                }else if(window.attachEvent){
-                    var callback = function(ev){return value($DOMEvent(window.event))}
-                    obj.attachEvent(attr,callback)
-                }
+                var callback = function(ev){return value($DOMEvent(ev))}
+                obj.addEventListener(attr.substr(2),callback)
             }else if('set_'+attr in obj){return obj['set_'+attr](value)}
             else if(attr in obj){obj[attr]=value}
             else{setattr(obj,attr,value)}
@@ -269,7 +264,7 @@ $OptionsDict.__delitem__ = function(self,arg){
 $OptionsDict.__getitem__ = function(self,key){
     return DOMNode(self.parent.options[key])
 }
-    
+
 $OptionsDict.__len__ = function(self) {return self.parent.options.length}
 
 $OptionsDict.__mro__ = [$ObjectDict]
@@ -298,15 +293,15 @@ $OptionsDict.insert = function(self,index,element){
 $OptionsDict.item = function(self,index){
     return self.parent.options.item(index)
 }
-    
+
 $OptionsDict.namedItem = function(self,name){
     return self.parent.options.namedItem(name)
 }
-    
+
 $OptionsDict.remove = function(self,arg){self.parent.options.remove(arg.elt)}
 
 //$OptionsDict.toString = $OptionsDict.__str__
-    
+
 var $StyleDict = {__class__:$B.$type,__name__:'CSSProperty'}
 
 $StyleDict.__mro__ = [$ObjectDict]
@@ -340,11 +335,39 @@ $Style.__class__ = $B.$factory
 $Style.$dict = $StyleDict
 $StyleDict.$factory = $Style
 
-var DOMNode = $B.DOMNode = function(elt){ 
+var DOMNode = $B.DOMNode = function(elt, fromtag){
     if(elt.__class__===DOMNodeDict){return elt}
     if(typeof elt=="number" || typeof elt=="boolean" ||
         typeof elt=="string"){return elt}
-    // returns the element, enriched with an attribute $brython_id for 
+
+    // if none of the above, fromtag determines if the call is made by
+    // the tag factory or by any other call to DOMNode
+    // if made by tag factory (fromtag will be defined, the value is not
+    // important), the regular plain old behavior is retained. Only the
+    // return value of a DOMNode is sought
+
+    // In other cases (fromtag is undefined), DOMNode tries to return a "tag"
+    // from the browser.html module by looking into "$tags" which is set
+    // by the  browser.html module itself (external sources could override
+    // it) and piggybacks on the tag factory by adding an "elt_wrap"
+    // attribute to the factory to let it know, that special behavior
+    // is needed. i.e: don't create the element, use the one provided
+    if(fromtag === undefined) {
+        if(DOMNodeDict.tags !== undefined) {  // tags is a python dictionary
+            tdict = DOMNodeDict.tags.$string_dict
+            if(tdict !== undefined) {
+                factory = tdict[elt.tagName]
+                if(factory !== undefined) {
+                    // all checks are good
+                    factory.$dict.$elt_wrap = elt  // tell factory to wrap element
+                    return factory()  // and return what the factory wants
+                }
+            }
+        }
+        // all "else" ... default to old behavior of plain DOMNode wrapping
+    }
+
+    // returns the element, enriched with an attribute $brython_id for
     // equality testing and with all the attributes of Node
     var res = {}
     res.$dict = {} // used in getattr
@@ -422,7 +445,6 @@ DOMNodeDict.__delitem__ = function(self,key){
         if(res){res.parentNode.removeChild(res)}
         else{throw KeyError(key)}
     }else{ // other node : remove by rank in child nodes
-        console.log('delitem')
         self.elt.parentNode.removeChild(self.elt)
     }
 }
@@ -430,10 +452,12 @@ DOMNodeDict.__delitem__ = function(self,key){
 DOMNodeDict.__dir__ = function(self){
     var res = []
     // generic DOM attributes
-    for(var attr in self.elt){res.push(attr)}
+    for(var attr in self.elt){
+        if(attr.charAt(0)!='$'){res.push(attr)}
+    }
     // Brython-specific attributes
     for(var attr in DOMNodeDict){
-        if(res.indexOf(attr)==-1){res.push(attr)}
+        if(attr.charAt(0)!='$' && res.indexOf(attr)==-1){res.push(attr)}
     }
     return res
 }
@@ -487,7 +511,7 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         attr='location'
         break
     }//switch
-    
+
     if(self.elt.getAttribute!==undefined){
         res = self.elt.getAttribute(attr)
         // IE returns the properties of a DOMNode (eg parentElement)
@@ -509,9 +533,9 @@ DOMNodeDict.__getattribute__ = function(self,attr){
             return res
         }
     }
-        
+
     var res = self.elt[attr]
-    
+
     if(res!==undefined){
         if(res===null){return _b_.None}
         if(typeof res==="function"){
@@ -593,7 +617,7 @@ DOMNodeDict.__getitem__ = function(self, key){
                     var res = DOMNode(self.elt.item(key_to_int))
                     if(res===undefined){throw _b_.KeyError(key)}
                     return res
-            }else if(typeof key=="string" && 
+            }else if(typeof key=="string" &&
                 typeof self.elt.getNamedItem=='function'){
                  var res = DOMNode(self.elt.getNamedItem(key))
                  if(res===undefined){throw _b_.keyError(key)}
@@ -604,7 +628,7 @@ DOMNodeDict.__getitem__ = function(self, key){
     }
 }
 
-DOMNodeDict.__iter__ = function(self){ 
+DOMNodeDict.__iter__ = function(self){
     // iteration on a Node
     if(self.elt.length!==undefined && typeof self.elt.item=="function"){
         var items = []
@@ -623,7 +647,7 @@ DOMNodeDict.__iter__ = function(self){
 DOMNodeDict.__le__ = function(self,other){
     // for document, append child to document.body
     var elt = self.elt
-    if(self.elt.nodeType===9){elt = self.elt.body} 
+    if(self.elt.nodeType===9){elt = self.elt.body}
     if(isinstance(other,$TagSum)){
         var $i=0
         for($i=0;$i<other.children.length;$i++){
@@ -635,7 +659,7 @@ DOMNodeDict.__le__ = function(self,other){
     }else if(isinstance(other, DOMNode)){
         // other is a DOMNode instance
         elt.appendChild(other.elt)
-    }else{ 
+    }else{
         try{
             // If other is an iterable, add the items
             var items = _b_.list(other)
@@ -690,7 +714,7 @@ DOMNodeDict.__str__ = DOMNodeDict.__repr__ = function(self){
             name = proto_str.substring(8, proto_str.length-1)
         }
         return "<"+name+" object>"
-    }    
+    }
     var res = "<DOMNode object type '"
     return res+$NodeTypes[self.elt.nodeType]+"' name '"+self.elt.nodeName+"'>"
 }
@@ -708,22 +732,22 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
         if(DOMNodeDict['set_'+attr]!==undefined) {
           return DOMNodeDict['set_'+attr](self,value)
         }
-        // Setting an attribute to an instance of DOMNode can mean 2 
+        // Setting an attribute to an instance of DOMNode can mean 2
         // different things:
         // - setting an attribute to the DOM element, eg elt.href = ...
         //   sets <A href="...">
         // - setting an arbitrary attribute to the Python object
         //
-        // The first option is used if the DOM element supports getAttribute 
+        // The first option is used if the DOM element supports getAttribute
         // (or getAttributeNS for SVG elements), and if this method applied to
         // the attribute returns a value.
         // Otherwise, the second option is used.
-        
+
         // Case-insensitive version of the attribute. Also replaces _ by -
-        // to support setting attributes that have a -  
+        // to support setting attributes that have a -
         var attr1 = attr.replace('_','-').toLowerCase()
-        
-        if(self.elt instanceof SVGElement && 
+
+        if(self.elt instanceof SVGElement &&
             self.elt.getAttributeNS(null, attr1)!==null){
             self.elt.setAttributeNS(null, attr1, value)
             return
@@ -731,7 +755,7 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
 
         if(self.elt[attr1]!==undefined){self.elt[attr1]=value;return}
 
-        if(typeof self.elt.getAttribute=='function' && 
+        if(typeof self.elt.getAttribute=='function' &&
                 typeof self.elt.setAttribute=='function'){
             var res = self.elt.getAttribute(attr1)
             if(res!==undefined&&res!==null&&res!=''){
@@ -743,7 +767,7 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
                 return
             }
         }
-        
+
         // No attribute was found on the DOM element : set it to the DOMNode
         // instance
         self.elt[attr]=value
@@ -807,11 +831,7 @@ DOMNodeDict.bind = function(self,event){
                 }
             }}
         )(func)
-        if(window.addEventListener){
-            self.elt.addEventListener(event,callback,false)
-        }else if(window.attachEvent){
-            self.elt.attachEvent("on"+event,callback)
-        }
+        self.elt.addEventListener(event,callback,false)
         evlist[pos++]=[func, callback]
     }
     return self
@@ -833,7 +853,7 @@ DOMNodeDict.clear = function(self){
     if(elt.nodeType==9){elt=elt.body}
     while(elt.firstChild){
        elt.removeChild(elt.firstChild)
-    }    
+    }
 }
 
 DOMNodeDict.Class = function(self){
@@ -956,7 +976,7 @@ DOMNodeDict.get = function(self){
         var sel_res = [], pos=0
         if(node_list.length===0) return []
         for(var i=0;i<node_list.length;i++) sel_res[pos++]=DOMNode(node_list[i])
-        
+
         if(res===undefined) return sel_res
         var to_delete = [], pos=0
         for(var i=0;i<res.length;i++){
@@ -1042,7 +1062,7 @@ DOMNodeDict.inside = function(self, other){
 
 DOMNodeDict.left = {
     '__get__': function(self){
-        if(self.elt.style===undefined){return _b_.None}    
+        if(self.elt.style===undefined){return _b_.None}
         var res = parseInt(self.elt.style.left)
         if(isNaN(res)){
             throw _b_.AttributeError("node has no attribute 'left'")
@@ -1120,7 +1140,7 @@ DOMNodeDict.setSelectionRange = function(self){ // for TEXTAREA
     })(this)
     }
 }
-    
+
 DOMNodeDict.set_class_name = function(self,arg){
     self.elt.setAttribute('class',arg)
 }
@@ -1176,7 +1196,7 @@ DOMNodeDict.text = function(self){
     }
     return res
 }
-    
+
 DOMNodeDict.toString = function(self){
     if(self===undefined) return 'DOMNode'
     return self.elt.nodeName
@@ -1201,24 +1221,20 @@ DOMNodeDict.unbind = function(self,event){
     if(self.elt.nodeType==9){_id=0}else{_id=self.elt.$brython_id}
     if(!_b_.dict.$dict.__contains__($B.events, _id)) return
     var item = _b_.dict.$dict.__getitem__($B.events, _id)
-    
+
     if(event===undefined){
         var events = _b_.list(_b_.dict.$dict.keys(item))
         for(var i=0;i<events.length;i++){DOMNodeDict.unbind(self, events[i])}
         return
     }
-    
+
     if(!_b_.dict.$dict.__contains__(item, event)) return
 
     var events = _b_.dict.$dict.__getitem__(item, event)
     if(arguments.length===2){
         for(var i=0;i<events.length;i++){
             var callback = events[i][1]
-            if(window.removeEventListener){
-                self.elt.removeEventListener(event,callback,false)
-            }else if(window.detachEvent){
-                self.elt.detachEvent(event,callback,false)
-            }
+            self.elt.removeEventListener(event,callback,false)
         }
         events = []
         return
@@ -1228,11 +1244,7 @@ DOMNodeDict.unbind = function(self,event){
         for(var j=0;j<events.length;j++){
             if(getattr(func,'__eq__')(events[j][0])){
                 var callback = events[j][1]
-                if(window.removeEventListener){
-                    self.elt.removeEventListener(event,callback,false)
-                }else if(window.detachEvent){
-                    self.elt.detachEvent(event,callback,false)
-                }
+                self.elt.removeEventListener(event,callback,false)
                 events.splice(j,1)
                 flag = true
                 break
@@ -1275,7 +1287,7 @@ $QueryDict.__contains__ = function(self,key){
 }
 
 $QueryDict.__getitem__ = function(self,key){
-    // returns a single value or a list of values 
+    // returns a single value or a list of values
     // associated with key, or raise KeyError
     var result = self._values[key]
     if(result===undefined) throw KeyError(key)
@@ -1342,7 +1354,7 @@ DOMNodeDict.query = function(self){
 // class used for tag sums
 var $TagSumDict = {__class__ : $B.$type,__name__:'TagSum'}
 
-$TagSumDict.appendChild = function(self,child){    
+$TagSumDict.appendChild = function(self,child){
     self.children.push(child)
 }
 
@@ -1393,7 +1405,7 @@ $TagSum.__class__=$B.$factory
 $TagSum.$dict = $TagSumDict
 $B.$TagSum = $TagSum // used in _html.js and _svg.js
 
-var win =  JSObject(window) //{__class__:$WinDict}
+var win =  JSObject(_window) //{__class__:$WinDict}
 
 win.get_postMessage = function(msg,targetOrigin){
     if(isinstance(msg,dict)){
@@ -1402,7 +1414,7 @@ win.get_postMessage = function(msg,targetOrigin){
         for(var i=0;i<items.length;i++) temp[items[i][0]]=items[i][1]
         msg = temp
     }
-    return window.postMessage(msg,targetOrigin)
+    return _window.postMessage(msg,targetOrigin)
 }
 
 $B.DOMNodeDict = DOMNodeDict

@@ -8,24 +8,26 @@ var $LocationDict = {__class__:$B.$type,__name__:'Location'}
 
 $LocationDict.__mro__ = [$ObjectDict]
 
+var _window = self;
+
 function $Location(){ // used because of Firefox bug #814622
     var obj = {}
-    for(var x in window.location){
-        if(typeof window.location[x]==='function'){
+    for(var x in _window.location){
+        if(typeof _window.location[x]==='function'){
             obj[x] = (function(f){
                 return function(){
-                    return f.apply(window.location,arguments)
+                    return f.apply(_window.location,arguments)
                 }
-              })(window.location[x])
+              })(_window.location[x])
         }else{
-            obj[x]=window.location[x]
+            obj[x]=_window.location[x]
         }
     }
     if(obj['replace']===undefined){ // IE
-        obj['replace'] = function(url){window.location = url}
+        obj['replace'] = function(url){_window.location = url}
     }
     obj.__class__ = $LocationDict
-    obj.toString = function(){return window.location.toString()}
+    obj.toString = function(){return _window.location.toString()}
     obj.__repr__ = obj.__str__ = obj.toString
     return obj
 }
@@ -52,11 +54,17 @@ $JSConstructorDict.__call__ = function(self){
     return $B.$JS2Py(res)
 }
 
+$JSConstructorDict.__getattr__ = function(self, attr){
+    // Attributes of a constructor are taken from the original JS object
+    return $JSObjectDict.__getattribute__(self.obj, attr)
+}
+
 $JSConstructorDict.__mro__ = [$ObjectDict]
 
 function JSConstructor(obj){
     return {
         __class__:$JSConstructorDict,
+        obj: obj,
         func:obj.js_func
     }
 }
@@ -97,16 +105,16 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
     if(klass===$JSObjectDict || klass===$JSConstructorDict){
         // Instances of JSObject and JSConstructor are transformed into the
         // underlying Javascript object
-        
+
         // If the object is a function, the JSObject has a js_func attribute,
         // which is the original Javascript function
         if(pyobj.js_func!==undefined){return pyobj.js_func}
         return pyobj.js
 
-    }else if(klass===$B.DOMNodeDict || 
+    }else if(klass===$B.DOMNodeDict ||
         klass.__mro__.indexOf($B.DOMNodeDict)>-1){
 
-        // instances of DOMNode or its subclasses are transformed into the 
+        // instances of DOMNode or its subclasses are transformed into the
         // underlying DOM element
         return pyobj.elt
 
@@ -187,7 +195,7 @@ $JSObjectDict.__getattribute__ = function(self,attr){
     if(attr.substr(0,2)=='$$') attr=attr.substr(2)
     if(self.js===null) return $ObjectDict.__getattribute__(None,attr)
     if(attr==='__class__') return $JSObjectDict
-    if(self.__class__===$JSObjectDict && attr=="$bind" && 
+    if(self.__class__===$JSObjectDict && attr=="$bind" &&
         self.js[attr]===undefined &&
         self.js['addEventListener']!==undefined){attr='addEventListener'}
     var js_attr = self.js[attr]
@@ -207,9 +215,9 @@ $JSObjectDict.__getattribute__ = function(self,attr){
                     if(arguments[i].$nat!=undefined){
                         //
                         // Passing keyword arguments to a Javascript function
-                        // raises a TypeError : since we don't know the 
-                        // signature of the function, the result of Brython 
-                        // code like foo(y=1, x=2) applied to a JS function 
+                        // raises a TypeError : since we don't know the
+                        // signature of the function, the result of Brython
+                        // code like foo(y=1, x=2) applied to a JS function
                         // defined by function foo(x, y) can't be determined.
                         //
                         throw TypeError("A Javascript function can't "+
@@ -230,16 +238,16 @@ $JSObjectDict.__getattribute__ = function(self,attr){
                     new_this = self.js_func;
                 }
                 // but if we get explicit `this` (e.g. through apply call) we should pass it on
-                if (this !== null && this !== undefined && this !== window) {
+                if (this !== null && this !== undefined && this !== _window) {
                     new_this = this
                 }
                 //if(attr=='setValue'){console.log('get result')}
-                
+
                 var result = js_attr.apply(new_this, args)
 
                 // NOTE: fix for situations when wrapped function is constructor (thus it does not return and value is lost)
                 // this has side effect that non-constructor functions returning nothing will return `this` instead, which can break something
-                // 
+                //
                 if (result === undefined) {
                     result = this
                 }
@@ -255,12 +263,12 @@ $JSObjectDict.__getattribute__ = function(self,attr){
             if(Array.isArray(js_attr)){return js_attr}
             return $B.$JS2Py(js_attr)
         }
-    }else if(self.js===window && attr==='$$location'){
-        // special lookup because of Firefox bug 
+    }else if(self.js===_window && attr==='$$location'){
+        // special lookup because of Firefox bug
         // https://bugzilla.mozilla.org/show_bug.cgi?id=814622
         return $Location()
     }
-    
+
     var res = self.__class__[attr]
     if(res===undefined){
         // search in classes hierarchy, following method resolution order
@@ -306,7 +314,7 @@ $JSObjectDict.__getitem__ = function(self, rank){
                 var res = JSObject(self.js.item(rank_to_int))
                 if(res===undefined){throw _b_.KeyError(rank)}
                 return res
-        }else if(typeof rank=="string" && 
+        }else if(typeof rank=="string" &&
             typeof self.js.getNamedItem=='function'){
              var res = JSObject(self.js.getNamedItem(rank))
              if(res===undefined){throw _b_.keyError(rank)}
@@ -323,19 +331,19 @@ $JSObjectDict.__getitem__ = function(self, rank){
 var $JSObject_iterator = $B.$iterator_class('JS object iterator')
 $JSObjectDict.__iter__ = function(self){
     var items = []
-    if(window.Symbol && self.js[Symbol.iterator]!==undefined){
+    if(_window.Symbol && self.js[Symbol.iterator]!==undefined){
         // Javascript objects that support the iterable protocol, such as Map
-        // For the moment don't use "for(var item of self.js)" for 
+        // For the moment don't use "for(var item of self.js)" for
         // compatibility with uglifyjs
-        // If object has length and item(), it's a collection : iterate on 
+        // If object has length and item(), it's a collection : iterate on
         // its items
         if(self.js.length!==undefined && self.js.item!==undefined){
             for(var i=0; i<self.js.length ; i++){items.push(JSObject(self.js[i]))}
         }else{
-            for(var item in self.js){ 
+            for(var item in self.js){
                 if( self.js.hasOwnProperty( item ) ) {
                     items.push(jsobj2pyobj(item))
-                } 
+                }
             }
         }
         return $B.$iterator(items, $JSObject_iterator)
@@ -374,6 +382,10 @@ $JSObjectDict.__repr__ = function(self){
 }
 
 $JSObjectDict.__setattr__ = function(self,attr,value){
+    if(attr.substr(0,2)=='$$'){
+        // aliased attribute names, eg "message"
+        attr = attr.substr(2)
+    }
     if(isinstance(value,JSObject)){self.js[attr]=value.js}
     else{
         self.js[attr]=value

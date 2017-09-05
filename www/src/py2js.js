@@ -4,6 +4,8 @@
 
 var js,$pos,res,$op
 var _b_ = $B.builtins
+var _window = self;
+var isWebWorker = $B.isa_web_worker = ('undefined' !== typeof WorkerGlobalScope) && ("function" === typeof importScripts) && (navigator instanceof WorkerNavigator);
 
 
 /*
@@ -1474,13 +1476,26 @@ function $ClassCtx(context){
 
         var instance_decl = new $Node()
         var local_ns = '$locals_'+this.id.replace(/\./g,'_')
-        var js = ';var '+local_ns+'={}'
-        //if($B.debug>0){js += '{$def_line:$B.line_info}'}
-        //else{js += '{}'}
-        js += ', $locals = '+local_ns+';'
+        var js = ';var '+local_ns+'={$type:"class"}, $locals = '+local_ns+
+            ', $local_name="'+local_ns+'";'
         new $NodeJSCtx(instance_decl,js)
-        node.insert(0,instance_decl)
+        node.insert(0, instance_decl)
 
+        // Get id of global scope
+        var global_scope = this.scope
+        while(global_scope.parent_block.id !== '__builtins__'){
+            global_scope=global_scope.parent_block
+        }
+        var global_ns = '$locals_'+global_scope.id.replace(/\./g,'_')
+
+        var js = ';var $top_frame = [$local_name, $locals,'+
+            '"'+global_scope.id+'", '+global_ns+
+            ']; $B.frames_stack.push($top_frame);'
+
+        node.insert(1, $NodeJS(js))
+
+        // exit frame
+        node.add($NodeJS('$B.leave_frame()'))
         // return local namespace at the end of class definition
         var ret_obj = new $Node()
         new $NodeJSCtx(ret_obj,'return '+local_ns+';')
@@ -3232,7 +3247,6 @@ function $IdCtx(context,value){
             return this.result
         }
 
-
         this.js_processed=true
         var val = this.value
 
@@ -3249,6 +3263,13 @@ function $IdCtx(context,value){
         // $search or $local_search
         this.unbound = this.unbound || (is_local && !this.bound &&
             bound_before && bound_before.indexOf(val)==-1)
+
+        if((!this.bound) && this.scope.context && this.scope.ntype=='class' &&
+                this.scope.context.tree[0].name == val){
+            // Name of class referenced inside the class. Cf. issue #649
+            return '$B.$search("'+val+'")'
+        }
+
         if(this.unbound && !this.nonlocal){
             if(this.scope.ntype=='def' || this.scope.ntype=='generator'){
                 return '$B.$local_search("'+val+'")'
@@ -4170,7 +4191,8 @@ function $OpCtx(context,op){
             }
             return 'getattr('+this.tree[1].to_js()+',"'+method+'")()'
           case 'is':
-            return this.tree[0].to_js() + '===' + this.tree[1].to_js()
+            return '$B.$is('+this.tree[0].to_js() + ', ' +
+                this.tree[1].to_js() + ')'
           case 'is_not':
             return this.tree[0].to_js() + '!==' + this.tree[1].to_js()
           case '*':
@@ -7885,31 +7907,12 @@ function brython(options){
     path_hooks.push($B.$path_hooks[1])
     $B.path_hooks = path_hooks
 
-    // Option to run code on demand and not all the scripts defined in a page
-    // The following lines are included to allow to run brython scripts in
-    // the IPython/Jupyter notebook using a cell magic. Have a look at
-    // https://github.com/kikocorreoso/brythonmagic for more info.
-    if(options.ipy_id!==undefined){
-       var $elts = [];
-       for(var $i=0;$i<options.ipy_id.length;$i++){
-          $elts.push(document.getElementById(options.ipy_id[$i]));
-       }
-     }else{
-        var scripts=document.getElementsByTagName('script'),$elts=[]
-        // Freeze the list of scripts here ; other scripts can be inserted on
-        // the fly by viruses
-        for(var i=0;i<scripts.length;i++){
-            var script = scripts[i]
-            if(script.type=="text/python" || script.type=="text/python3"){
-                $elts.push(script)
-            }
-        }
-    }
 
     // URL of the script where function brython() is called
-    var $href = $B.script_path = window.location.href,
+    var $href = $B.script_path = _window.location.href,
         $href_elts = $href.split('/')
     $href_elts.pop()
+    if ( isWebWorker ) $href_elts.pop() // WebWorker script is in the web_workers subdirectory
     $B.curdir = $href_elts.join('/')
 
     // List of URLs where imported modules should be searched
@@ -7917,6 +7920,55 @@ function brython(options){
     if (options.pythonpath!==undefined){
         $B.path = options.pythonpath
         $B.$options.static_stdlib_import = false
+    }
+
+    // Or it can be provided as a list of strings or path objects
+    // where a path object has at least a path attribute and, optionally,
+    // a prefetch attribute and/or a lang attribute
+    // This corresponds to a python path specified via the link element
+    //
+    //    <link rel="prefetch" href=path hreflang=lang />
+    //
+    // where the prefetch attribute should be present & true if prefetching is required
+    // otherwise it should be present and false
+
+    if (options.python_paths) {
+        options.python_paths.forEach(function(path) {
+            var lang, prefetch;
+            if (typeof path !== "string") {
+                lang = path.lang
+                prefetch = path.prefetch
+                path = path.path
+            }
+            $B.path.push(path)
+            if (path.slice(-7).toLowerCase() == '.vfs.js' && (prefetch === undefined || prefetch === true)) $B.path_importer_cache[path+'/'] = $B.imported['_importlib'].VFSPathFinder(path)
+            if (lang) _importlib.optimize_import_for_path(path, lang)
+        })
+    }
+
+    if (! isWebWorker ) {
+    // Get all links with rel=pythonpath and add them to sys.path
+        var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
+            _importlib = $B.modules['_importlib'];
+        for (var i=0, e; e = path_links[i]; ++i) {
+            var href = e.href;
+            if ((' ' + e.rel + ' ').indexOf(' prepend ') != -1) {
+                $B.path.unshift(href);  // support prepending to pythonpath
+            } else {
+                $B.path.push(href);
+            }
+            if (href.slice(-7).toLowerCase() == '.vfs.js' &&
+                    (' ' + e.rel + ' ').indexOf(' prefetch ') != -1) {
+                // Prefetch VFS file
+                $B.path_importer_cache[href + '/'] =
+                        $B.imported['_importlib'].VFSPathFinder(href)
+            }
+            var filetype = e.hreflang;
+            if (filetype) {
+                if (filetype.slice(0,2) == 'x-') filetype = filetype.slice(2);
+                _importlib.optimize_import_for_path(e.href, filetype);
+            }
+        }
     }
 
     // Allow user to specify the re module they want to use as a default
@@ -7933,36 +7985,50 @@ function brython(options){
 
     $B.scripts = []
     $B.js = {} // maps script name to JS conversion
+    if ($B.$options.args) {
+        $B.__ARGV = $B.$options.args
+    } else {
+        $B.__ARGV = _b_.list([])
+    }
+    if (!isWebWorker) {
+        _run_scripts(options)
+    }
+}
 
+function _run_scripts(options) {
     // Save initial Javascript namespace
-    var kk = Object.keys(window)
+    var kk = Object.keys(_window)
 
-    // Get all links with rel=pythonpath and add them to sys.path
-    var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
-        _importlib = $B.modules['_importlib'];
-    for (var i=0, e; e = path_links[i]; ++i) {
-        var href = e.href;
-        $B.path.push(href);
-        if (href.slice(-7).toLowerCase() == '.vfs.js' &&
-                (' ' + e.rel + ' ').indexOf(' prefetch ') != -1) {
-            // Prefetch VFS file
-            $B.path_importer_cache[href + '/'] =
-                    $B.imported['_importlib'].VFSPathFinder(href)
+
+    // Option to run code on demand and not all the scripts defined in a page
+    // The following lines are included to allow to run brython scripts in
+    // the IPython/Jupyter notebook using a cell magic. Have a look at
+    // https://github.com/kikocorreoso/brythonmagic for more info.
+    if(options.ipy_id!==undefined){
+        var $elts = [];
+        for(var $i=0;$i<options.ipy_id.length;$i++){
+            $elts.push(document.getElementById(options.ipy_id[$i]));
         }
-        var filetype = e.hreflang;
-        if (filetype) {
-            if (filetype.slice(0,2) == 'x-') filetype = filetype.slice(2);
-            _importlib.optimize_import_for_path(e.href, filetype);
+        }else{
+        var scripts=document.getElementsByTagName('script'),$elts=[]
+        // Freeze the list of scripts here ; other scripts can be inserted on
+        // the fly by viruses
+        for(var i=0;i<scripts.length;i++){
+            var script = scripts[i]
+            if(script.type=="text/python" || script.type=="text/python3"){
+                $elts.push(script)
+            }
         }
     }
 
     // Get all scripts with type = text/python or text/python3 and run them
 
+
     var first_script = true, module_name;
     if(options.ipy_id!==undefined){
         module_name='__main__';
         var $src = "", js, root
-        $B.$py_module_path[module_name] = $href;
+        $B.$py_module_path[module_name] = $B.script_path;
         for(var $i=0;$i<$elts.length;$i++){
             var $elt = $elts[$i];
             $src += ($elt.innerHTML || $elt.textContent);
@@ -8052,8 +8118,8 @@ function brython(options){
                     var $src = ($elt.innerHTML || $elt.textContent)
                     // remove leading CR if any
                     $src = $src.replace(/^\n/, '')
-                    $B.$py_module_path[module_name] = $href
-                    scripts.push({name: module_name, src: $src, url: $href})
+                    $B.$py_module_path[module_name] = $B.script_path
+                    scripts.push({name: module_name, src: $src, url: $B.script_path})
                 }
             }
         }
@@ -8069,7 +8135,7 @@ function brython(options){
     if (options.ipy_id === undefined){$B._load_scripts(scripts)}
 
     /* Uncomment to check the names added in global Javascript namespace
-    var kk1 = Object.keys(window)
+    var kk1 = Object.keys(_window)
     for (var i=0; i < kk1.length; i++){
         if(kk[i]===undefined){
             console.log(kk1[i])
@@ -8078,6 +8144,7 @@ function brython(options){
     */
 
 }
+
 $B.$operators = $operators
 $B.$Node = $Node
 $B.$NodeJSCtx = $NodeJSCtx
@@ -8089,7 +8156,3 @@ $B.brython = brython
 
 })(__BRYTHON__)
 var brython = __BRYTHON__.brython
-
-
-
-

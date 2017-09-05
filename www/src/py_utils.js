@@ -1,6 +1,8 @@
 ;(function($B){
 
 var _b_=$B.builtins
+var _window = self;
+var isWebWorker = ('undefined' !== typeof WorkerGlobalScope) && ("function" === typeof importScripts) && (navigator instanceof WorkerNavigator);
 
 $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     extra_pos_args,extra_kw_args){
@@ -279,8 +281,8 @@ $B.$search = function(name, global_ns){
     else if(frame[3][name]!==undefined){return frame[3][name]}
     else if(_b_[name]!==undefined){return _b_[name]}
     else{
-        if(frame[0]==frame[2]){throw _b_.NameError("name '"+name+
-            "' is not defined")}
+        if(frame[0]==frame[2] || frame[1].$type=="class"){
+            throw _b_.NameError("name '"+name+"' is not defined")}
         else{
             throw _b_.UnboundLocalError("local variable '"+name+
                 "' referenced before assignment")}
@@ -604,6 +606,17 @@ $B.$test_item = function(expr){
 $B.$test_expr = function(){
     // returns the last evaluated item
     return $B.$test_result
+}
+
+$B.$is = function(a, b){
+    // Used for Python "is". In most cases it's the same as Javascript ===,
+    // but new Number(1) === new Number(1) is false, and so is
+    // new Number(1) == new Number(1) !!!
+    // Cf. issue 669
+    if(a instanceof Number && b instanceof Number){
+        return a.valueOf()==b.valueOf()
+    }
+    return a === b
 }
 
 $B.$is_member = function(item,_set){
@@ -986,8 +999,8 @@ $B.int_value = function(v){
     // Else throw ValueError
     try{return $B.int_or_bool(v)}
     catch(err){
-        if(_b_.isinstance(v, _b_.complex) && v.imag==0){
-            return $B.int_or_bool(v.real)
+        if(_b_.isinstance(v, _b_.complex) && v.$imag==0){
+            return $B.int_or_bool(v.$real)
         }else if(isinstance(v, _b_.float) && v==Math.floor(v)){
             return Math.floor(v)
         }else{
@@ -1283,7 +1296,7 @@ $B.is_none = function (o) {
 $B.imports = function(){
     // pops up the list of modules currently imported
     // can be used to generate a bundle
-    var w = window.open('', '', 'width="50%",height=400,resizeable,scrollbars');
+    var w = _window.open('', '', 'width="50%",height=400,resizeable,scrollbars');
     w.document.write("Currently imported modules. Copy and paste in file "+
         "<b>.bundle-include</b> in your application folder, then run "+
         "<code>python -m brython --modules</code> to generate a new version "+
@@ -1316,15 +1329,17 @@ $B.compiled_imports = function(){
             }
         }
     }
-    var w = window.open('', '',
-            'width="80%",height=400,resizeable,scrollbars')
-    w.document.write("Currently imported modules. Copy and paste in file "+
-        "<b>brython_modules.js</b> in your application folder<p>"+
-        "<TEXTAREA rows=20 cols=40>"+
-        "__BRYTHON__.use_VFS = true;\n__BRYTHON__.VFS = ")
-    w.document.write(JSON.stringify(res))
-    w.document.write("</TEXTAREA>")
-    w.document.close(); // needed for chrome and safari
+    var _code = "__BRYTHON__.use_VFS = true;\n__BRYTHON__.VFS = "+JSON.stringify(res)
+    if (isWebWorker) {
+        console.log(_code);
+    } else {
+        var w = _window.open('', '',
+                'width="80%",height=400,resizeable,scrollbars')
+        w.document.write("Currently imported modules. Copy and paste in file "+
+            "<b>brython_modules.js</b> in your application folder<p>"+
+            "<TEXTAREA rows=20 cols=40>"+_code+"</TEXTAREA>");
+        w.document.close(); // needed for chrome and safari
+    }
 }
 
 })(__BRYTHON__)

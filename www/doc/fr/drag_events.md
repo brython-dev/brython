@@ -64,10 +64,10 @@ Les "magasins de données" possèdent les attributs et méthodes suivants :
 
 > Les valeurs possibles sont :
 
-> -    "copy" : une copie de l'élément source est effectuée dans le nouvel emplacement.
-> -    "move" : un élément est déplacé dans le nouvel emplacement.
-> -    "link" : un lien vers l'élément source est établie dans le nouvel emplacement.
-> -    "none" : l'élément ne peut pas être déposé.
+-    "copy" : une copie de l'élément source est effectuée dans le nouvel emplacement.
+-    "move" : un élément est déplacé dans le nouvel emplacement.
+-    "link" : un lien vers l'élément source est établie dans le nouvel emplacement.
+-    "none" : l'élément ne peut pas être déposé.
 
 > Affecter une autre valeur n'a aucun effet et ne modifie pas la valeur courante.
 
@@ -78,15 +78,15 @@ Les "magasins de données" possèdent les attributs et méthodes suivants :
 
 > Les valeurs possibles sont:
 
-> - "copy" : une copie de la source peut être effectuée au nouvel emplacement.
-> - "move" : un élément peut être déplacé au nouvel emplacement.
-> - "link" : un lien peut être établi vers la source dans le nouvel emplacement.
-> - "copyLink" : une opération de copie ou de lien est autorisée.
-> - "copyMove" : une opération de copie ou de déplacement est autorisée.
-> - "linkMove" : une opération de lien ou de déplacement est autorisée.
-> - "all" : toutes les opérations sont autorisées.
-> - "none" : l'élement ne peut pas être déposé.
-> - "uninitialized" : la valeur par défaut quand l'effet n'a pas été défini, équivalent à "all".
+- "copy" : une copie de la source peut être effectuée au nouvel emplacement.
+- "move" : un élément peut être déplacé au nouvel emplacement.
+- "link" : un lien peut être établi vers la source dans le nouvel emplacement.
+- "copyLink" : une opération de copie ou de lien est autorisée.
+- "copyMove" : une opération de copie ou de déplacement est autorisée.
+- "linkMove" : une opération de lien ou de déplacement est autorisée.
+- "all" : toutes les opérations sont autorisées.
+- "none" : l'élement ne peut pas être déposé.
+- "uninitialized" : la valeur par défaut quand l'effet n'a pas été défini, équivalent à "all".
 
 > Affecter une autre valeur n'a aucun effet et ne modifie pas la valeur courante.
 

@@ -5,27 +5,27 @@ Ce module définit des classes correspondant aux balises HTML, en majuscules.
 
 Les classes définies sont :
 
-- les balises HTML4 : <code>A, ABBR, ACRONYM, ADDRESS, APPLET, AREA, B, BASE, 
-BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON, 
-CAPTION, CENTER, CITE, CODE, COL, COLGROUP, DD, 
-DEL, DFN, DIR, DIV, DL, DT, EM, FIELDSET, FONT, 
-FORM, FRAME, FRAMESET, H1, H2, H3, H4, H5, H6, 
-HEAD, HR, HTML, I, IFRAME, IMG, INPUT, INS, 
-ISINDEX, KBD, LABEL, LEGEND, LI, LINK, MAP, MENU, 
-META, NOFRAMES, NOSCRIPT, OBJECT, OL, OPTGROUP, 
-OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT, SELECT, 
+- les balises HTML4 : <code>A, ABBR, ACRONYM, ADDRESS, APPLET, AREA, B, BASE,
+BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON,
+CAPTION, CENTER, CITE, CODE, COL, COLGROUP, DD,
+DEL, DFN, DIR, DIV, DL, DT, EM, FIELDSET, FONT,
+FORM, FRAME, FRAMESET, H1, H2, H3, H4, H5, H6,
+HEAD, HR, HTML, I, IFRAME, IMG, INPUT, INS,
+ISINDEX, KBD, LABEL, LEGEND, LI, LINK, MAP, MENU,
+META, NOFRAMES, NOSCRIPT, OBJECT, OL, OPTGROUP,
+OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT, SELECT,
 SMALL, SPAN, STRIKE, STRONG, STYLE, SUB, SUP, SVG,
-TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD, 
+TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD,
 TITLE, TR, TT, U, UL, VAR</code>
 
-- les balises HTML5 : <code>ARTICLE, ASIDE, AUDIO, BDI, CANVAS, 
-COMMAND, DATA, DATALIST, EMBED, FIGCAPTION, 
-FIGURE, FOOTER, HEADER, KEYGEN, MAIN, MARK, 
-MATH, METER, NAV, OUTPUT, PROGRESS, RB, 
-RP, RT, RTC, RUBY, SECTION, SOURCE, 
-SUMMARY, TEMPLATE, TIME, TRACK, VIDEO, 
+- les balises HTML5 : <code>ARTICLE, ASIDE, AUDIO, BDI, CANVAS,
+COMMAND, DATA, DATALIST, EMBED, FIGCAPTION,
+FIGURE, FOOTER, HEADER, KEYGEN, MAIN, MARK,
+MATH, METER, NAV, OUTPUT, PROGRESS, RB,
+RP, RT, RTC, RUBY, SECTION, SOURCE,
+SUMMARY, TEMPLATE, TIME, TRACK, VIDEO,
 WBR</code>
-                      
+
 - les balises HTML5.1 : `DETAILS, DIALOG, MENUITEM, PICTURE, SUMMARY`
 
 > En suivant [ce lien](https://w3c.github.io/elements-of-html/),
@@ -116,7 +116,7 @@ de sélection à partir d'une liste :
 from browser import document
 from browser.html import *
 
-document <= SELECT(OPTION(elt, value=i) 
+document <= SELECT(OPTION(elt, value=i)
     for i, elt in enumerate(['one', 'two', 'three']))
 ```
 
@@ -165,7 +165,7 @@ container = doc['container']
 # Création d’une nouvelle div,
 newdiv = html.DIV(id = "new-div")
 # à laquelle on ajoute du style.
-newdiv.style = {"padding": "5px", 
+newdiv.style = {"padding": "5px",
                "backgroundColor": "#ADD8E6"}
 
 # Créons un tableau à deux colonnes, une pour le numéro de ligne,
@@ -174,10 +174,10 @@ text = "Brython is really cool"
 textlist = text.split()
 table = html.TABLE()
 for i, word in enumerate(textlist):
-    table <= html.TR(html.TD(i + 1) + 
+    table <= html.TR(html.TD(i + 1) +
                      html.TD(word))
 # Un peu de style pour ce tableau:
-table.style = {"padding": "5px", 
+table.style = {"padding": "5px",
                "backgroundColor": "#aaaaaa",
                "width": "100%"}
 # Maintenant, on ajoute le tableau à la div précédemment créée
@@ -218,4 +218,25 @@ container <= newdiv
 </table>
 </div>
 
+### Création de nouvelles balises
+
+Le module expose la fonction
+
+`maketag(`_nom_`)`
+
+> Crée une nouvelle classe pour une balise avec le nom indiqué. On peut
+> cette classe comme celles associées aux noms des balises HTML :
+
+```python
+p2 = maketag('P2')
+document <= p2('test')
+```
+
+Le module possède un autre attribut :
+
+_tags_
+
+> Dictionnaire qui associe des noms de balises (chaines de caractères)
+> aux classes correspondantes. Si de nouvelles balises sont ajoutées
+> par la fonction `maketag()` elles sont ajoutées à ce dictionnaire.
 
