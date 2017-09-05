@@ -274,6 +274,9 @@ var complex=function(){
         }
         return res
     }
+    if (arguments.length == 1 && $real.__class__ === $ComplexDict && $imag == 0) {
+        return $real;
+    }
     if ((isinstance($real, _b_.float) || isinstance($real, _b_.int)) && (isinstance($imag, _b_.float) || isinstance($imag, _b_.int))) {
         res = {
             __class__:$ComplexDict,
