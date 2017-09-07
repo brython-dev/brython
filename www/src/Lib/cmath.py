@@ -15,6 +15,8 @@ def takes_complex(func):
     def decorated(x):
         if type(x) == complex:
             return func(x)
+        if type(x) == str:
+            raise TypeError("A complex number is required")
         else:
             return func(complex(x))
     if hasattr(func,'__doc__'):
@@ -413,6 +415,9 @@ def log(x, base=None):
     #    (returning -infinity, signaling a floating-point exception, setting
     #    errno, or whatever) determine that of c_log.  So the usual formula
     #    is fine here.
+    
+    if type(x) == str:
+        raise TypeError("A complex number is required")
     
     if type(x) != complex:
         x = complex(x)
