@@ -17,12 +17,8 @@ var $ComplexDict = {__class__:$B.$type,
 
 $ComplexDict.__abs__ = function(self){
     var _rf = isFinite(self.$real), _if=isFinite(self.$imag);
-    if (! isFinite(self.$real) || ! isFinite(self.$imag) ) {
-        if (self.$real != NaN || self.$imag != NaN)
-            return Infinity;
-        else
-            return NaN;
-    }
+    if ((_rf && isNaN(self.$imag)) || (_if && isNaN(self.$real)) || (isNaN(self.$imag) && isNaN(self.$real)) ) return NaN
+    if (! _rf || ! _if ) return Infinity;
     var mag = Math.sqrt(Math.pow(self.$real,2)+Math.pow(self.$imag,2));
     if (!isFinite(mag) && _rf && _if) {
         // In these circumstances Math.hypot quietly returns inf, but Python should raise.
