@@ -16,8 +16,15 @@ var $ComplexDict = {__class__:$B.$type,
 }
 
 $ComplexDict.__abs__ = function(self){
+    var _rf = isFinite(self.$real), _if=isFinite(self.$imag);
+    if (! isFinite(self.$real) || ! isFinite(self.$imag) ) {
+        if (self.$real != NaN || self.$imag != NaN)
+            return Infinity;
+        else
+            return NaN;
+    }
     var mag = Math.sqrt(Math.pow(self.$real,2)+Math.pow(self.$imag,2));
-    if (!isFinite(mag) && isFinite(self.$real) && isFinite(self.$imag)) {
+    if (!isFinite(mag) && _rf && _if) {
         // In these circumstances Math.hypot quietly returns inf, but Python should raise.
         // See https://hg.python.org/jython/rev/69826acfb4a9
         throw _b_.OverflowError("absolute value too large");
