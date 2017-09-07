@@ -49,26 +49,24 @@ def rect(r, phi):
         Convert from polar coordinates to rectangular coordinates and return a complex.
     """
     if math.isinf(r) or math.isinf(phi):
-        # if r is +/-infinity and phi is finite but nonzero then
-        # result is (+-INF +-INF i), but we need to compute cos(phi)
-        # and sin(phi) to figure out the signs.
-        ret = complex()
-        
-        if -_INF < phi < _INF and phi != .0:
-            if r > 0:
-                ret.real = math.copysign(_INF, math.cos(phi))
-                ret.imag = math.copysign(_INF, math.sin(phi))
-            else:
-                ret.real = -math.copysign(_INF, cos(phi));
-                ret.imag = -math.copysign(_INF, sin(phi));
-        else:
-            ret = _SPECIAL_VALUE(complex(r,phi), _rect_special_values)
-            
-        # need to set errno = EDOM if r is a nonzero number and phi
+        # need to raise Domain error if r is a nonzero number and phi
         # is infinite
         if math.isinf(phi) and r != .0 and not math.isnan(r):
             raise ValueError("math domain error")
-        return ret
+        
+        # if r is +/-infinity and phi is finite but nonzero then
+        # result is (+-INF +-INF i), but we need to compute cos(phi)
+        # and sin(phi) to figure out the signs.
+        if -_INF < phi < _INF and phi != .0:
+            if r > 0:
+                _real = math.copysign(_INF, math.cos(phi))
+                _imag = math.copysign(_INF, math.sin(phi))
+            else:
+                _real = -math.copysign(_INF, cos(phi));
+                _imag = -math.copysign(_INF, sin(phi));
+            return complex(_real, _imag)
+        return _SPECIAL_VALUE(complex(r,phi), _rect_special_values)
+
     else:
         if phi == .0:
             # TODO: Not sure this applies to Brython ??
@@ -112,13 +110,11 @@ def sqrt(x):
     ret = _SPECIAL_VALUE(x, _sqrt_special_values)
     if ret is not None:
         return ret
-    
-    ret = complex()
 
     if x.real == .0 and x.imag == .0:
-        ret.real = .0
-        ret.imag = x.imag
-        return ret
+        _real = .0
+        _imag = x.imag
+        return complex(_real,_imag)
 
     if ax < sys.float_info.min and ay < sys.float_info.min and (ax > 0. or ay > 0.):
         #here we catch cases where hypot(ax, ay) is subnormal
@@ -131,13 +127,13 @@ def sqrt(x):
     d = ay/(2.0*s)
 
     if x.real >= .0:
-        ret.real = s;
-        ret.imag = math.copysign(d, x.imag)
+        _real = s;
+        _imag = math.copysign(d, x.imag)
     else:
-        ret.real = d;
-        ret.imag = math.copysign(s, x.imag)
+        _real = d;
+        _imag = math.copysign(s, x.imag)
     
-    return ret
+    return complex(_real,_imag)
 
 @takes_complex
 def acos(x):
@@ -147,7 +143,6 @@ def acos(x):
         There are two branch cuts: One extends right from 1 along the real axis to ∞, continuous from below. 
         The other extends left from -1 along the real axis to -∞, continuous from above.
     """
-    ret = complex()
     
     ret = _SPECIAL_VALUE(x, _acos_special_values)
     if ret is not None:
@@ -156,23 +151,23 @@ def acos(x):
     if math.fabs(x.real) > _CM_LARGE_DOUBLE or math.fabs(x.imag) > _CM_LARGE_DOUBLE:
         
         # avoid unnecessary overflow for large arguments
-        ret.real = math.atan2(math.fabs(x.imag), x.real)
+        _real = math.atan2(math.fabs(x.imag), x.real)
         
         # split into cases to make sure that the branch cut has the
         # correct continuity on systems with unsigned zeros
         if x.real < 0:
-            ret.imag = -math.copysign(math.log(math.hypot(x.real/2., x.imag/2.)) + _M_LN2*2., x.imag);
+            _imag = -math.copysign(math.log(math.hypot(x.real/2., x.imag/2.)) + _M_LN2*2., x.imag);
         else:
-            ret.imag = math.copysign(math.log(math.hypot(x.real/2., x.imag/2.)) + _M_LN2*2., -x.imag);
+            _imag = math.copysign(math.log(math.hypot(x.real/2., x.imag/2.)) + _M_LN2*2., -x.imag);
     else:
         s1 = complex(float(1-x.real), -x.imag)
         s1 = sqrt(s1)
         s2 = complex(1.0+x.real, x.imag)
         s2 = sqrt(s2)
-        ret.real = 2.0*math.atan2(s1.real, s2.real);
-        ret.imag = math.asinh(s2.real*s1.imag - s2.imag*s1.real)
+        _real = 2.0*math.atan2(s1.real, s2.real);
+        _imag = math.asinh(s2.real*s1.imag - s2.imag*s1.real)
     
-    return ret
+    return complex(_real,_imag)
 
 @takes_complex
 def acosh(x):
@@ -185,19 +180,17 @@ def acosh(x):
     if ret is not None:
         return ret
     
-    ret = complex()
-    
     if math.fabs(x.real) > _CM_LARGE_DOUBLE or math.fabs(x.imag) > _CM_LARGE_DOUBLE:
         # avoid unnecessary overflow for large arguments
-        ret.real = math.log(math.hypot(x.real/2.0, x.imag/2.0)) + _M_LN2*2.0
-        ret.imag = math.atan2(x.imag, x.real);
+        _real = math.log(math.hypot(x.real/2.0, x.imag/2.0)) + _M_LN2*2.0
+        _imag = math.atan2(x.imag, x.real);
     else:
         s1 = sqrt(complex(x.real-1.0, x.imag))
         s2 = sqrt(complex(x.real+1.0, x.imag))
-        ret.real = math.asinh(s1.real*s2.real + s1.imag*s2.imag)
-        ret.imag = 2.*math.atan2(s1.imag, s2.real)
+        _real = math.asinh(s1.real*s2.real + s1.imag*s2.imag)
+        _imag = 2.*math.atan2(s1.imag, s2.real)
 
-    return ret
+    return complex(_real,_imag)
 
 @takes_complex
 def asin(x):
@@ -222,21 +215,19 @@ def asinh(x):
     ret = _SPECIAL_VALUE(x, _asinh_special_values)
     if ret is not None:
         return ret
-        
-    ret = complex()
 
     if math.fabs(x.real) > _CM_LARGE_DOUBLE or math.fabs(x.imag) > _CM_LARGE_DOUBLE:
         if x.imag >= .0:
-            ret.real = math.copysign(math.log(math.hypot(x.real/2., x.imag/2.)) + _M_LN2*2., x.real)
+            _real = math.copysign(math.log(math.hypot(x.real/2., x.imag/2.)) + _M_LN2*2., x.real)
         else:
-            ret.real = -math.copysign(math.log(math.hypot(x.real/2., x.imag/2.)) + _M_LN2*2., -x.real)
-        ret.imag = math.atan2(x.imag,math.fabs(x.real))
+            _real = -math.copysign(math.log(math.hypot(x.real/2., x.imag/2.)) + _M_LN2*2., -x.real)
+        _imag = math.atan2(x.imag,math.fabs(x.real))
     else:
         s1 = sqrt(complex(1.0+x.imag, -x.real))
         s2 = sqrt(complex(1.0-x.imag, x.real))
-        ret.real = math.asinh(s1.real*s2.imag-s2.real*s1.imag)
-        ret.imag = math.atan2(x.imag, s1.real*s2.real-s1.imag*s2.imag)
-    return ret
+        _real = math.asinh(s1.real*s2.imag-s2.real*s1.imag)
+        _imag = math.atan2(x.imag, s1.real*s2.real-s1.imag*s2.imag)
+    return complex(_real,_imag)
 
 @takes_complex
 def atan(x):
@@ -261,8 +252,6 @@ def atanh(x):
     ret = _SPECIAL_VALUE(x, _atanh_special_values)
     if ret is not None:
         return ret
-    
-    ret = complex()
 
     # Reduce to case where x.real >= 0., using atanh(z) = -atanh(-z).
     if x.real < .0:
@@ -277,14 +266,14 @@ def atanh(x):
         #   of x.imag)
         
         h = math.hypot(x.real/2., x.imag/2.)  # safe from overflow
-        ret.real = x.real/4./h/h
+        _real = x.real/4./h/h
         
         #   the two negations in the next line cancel each other out
         #   except when working with unsigned zeros: they're there to
         #   ensure that the branch cut has the correct continuity on
         #   systems that don't support signed zeros
         
-        ret.imag = -math.copysign(math.pi/2., -x.imag)
+        _imag = -math.copysign(math.pi/2., -x.imag)
     
     elif x.real == 1.0 and ay < _CM_SQRT_DBL_MIN:
     
@@ -292,16 +281,16 @@ def atanh(x):
         if (ay == .0):
             raise ValueError("math domain error")
         else:
-            ret.real = -math.log(math.sqrt(ay)/math.sqrt(math.hypot(ay, 2.)))
-            ret.imag = math.copysign(math.atan2(2.0, -ay)/2, x.imag)
+            _real = -math.log(math.sqrt(ay)/math.sqrt(math.hypot(ay, 2.)))
+            _imag = math.copysign(math.atan2(2.0, -ay)/2, x.imag)
     
     else:
     
-        ret.real = math.log1p(4.*x.real/((1-x.real)*(1-x.real) + ay*ay))/4.
-        ret.imag = -math.atan2(-2.*x.imag, (1-x.real)*(1+x.real) - ay*ay)/2.
+        _real = math.log1p(4.*x.real/((1-x.real)*(1-x.real) + ay*ay))/4.
+        _imag = -math.atan2(-2.*x.imag, (1-x.real)*(1+x.real) - ay*ay)/2.
         errno = 0
     
-    return ret
+    return complex(_real,_imag)
 
 @takes_complex
 def cos(x):
@@ -312,72 +301,71 @@ def cos(x):
 def cosh(x):
     """Return the hyperbolic cosine of x."""
     
-    ret = complex()
-    
     # special treatment for cosh(+/-inf + iy) if y is not a NaN
     if isinf(x):
         if -_INF < x.imag < _INF and x.imag != .0:
             if x.real > 0:
-                ret.real = math.copysign(_INF, math.cos(x.imag))
-                ret.imag = math.copysign(_INF, math.sin(x.imag))
+                _real = math.copysign(_INF, math.cos(x.imag))
+                _imag = math.copysign(_INF, math.sin(x.imag))
             else:
-                ret.real = math.copysign(_INF, math.cos(x.imag))
-                ret.imag = -math.copysign(_INF, math.sin(x.imag))
+                _real = math.copysign(_INF, math.cos(x.imag))
+                _imag = -math.copysign(_INF, math.sin(x.imag))
+            return complex(_real,_imag)
         else:
             # need to raise math domain error if y is +/- infinity and x is not a NaN
             if x.imag != .0 and not math.isnan(x.real):
                 raise ValueError("math domain error")
-            ret = _SPECIAL_VALUE(x,_cosh_special_values)
-        return ret
+            return _SPECIAL_VALUE(x,_cosh_special_values)
     
     if math.fabs(x.real) > _CM_LOG_LARGE_DOUBLE:
         #  deal correctly with cases where cosh(x.real) overflows but
         #  cosh(z) does not. 
         x_minus_one = x.real - math.copysign(1.0, x.real)
-        ret.real = cos(x.imag) * math.cosh(x_minus_one) * math.e
-        ret.imag = sin(x.imag) * math.sinh(x_minus_one) * math.e
+        _real = cos(x.imag) * math.cosh(x_minus_one) * math.e
+        _imag = sin(x.imag) * math.sinh(x_minus_one) * math.e
     else:
-        ret.real = math.cos(x.imag) * math.cosh(x.real)
-        ret.imag = math.sin(x.imag) * math.sinh(x.real)
+        _real = math.cos(x.imag) * math.cosh(x.real)
+        _imag = math.sin(x.imag) * math.sinh(x.real)
     
+    ret = complex(_real, _imag)
     #  detect overflow 
     if isinf(ret):
         raise OverflowError()
+    return ret
 
 @takes_complex
 def exp(x):
     """ Return the exponential value e**x."""
-    ret = complex()
     if math.isinf(x.real) or math.isinf(x.imag):
-        if math.isinf(x.real) and -_INF < x.imag < _INF and x.imag != .0:
-            if x.real > 0:
-                ret.real = math.copysign(_INF, cos(x.imag))
-                ret.imag = math.copysign(_INF, sin(x.imag))
-            else:
-                ret.real = math.copysign(.0, cos(x.imag))
-                ret.imag = math.copysign(.0, sin(x.imag))
-        else:
-            ret = _SPECIAL_VALUE(x, _exp_special_values)    
- 
         # need to raise DomainError if y is +/- infinity and x is not -infinity or NaN
         if math.isinf(x.imag) and (-_INF < x.real < _INF or math.isinf(x.real) and x.real > 0):
             raise ValueError("math domain error")
-        return ret
-    
+        
+        if math.isinf(x.real) and -_INF < x.imag < _INF and x.imag != .0:
+            if x.real > 0:
+                _real = math.copysign(_INF, cos(x.imag))
+                _imag = math.copysign(_INF, sin(x.imag))
+            else:
+                _real = math.copysign(.0, cos(x.imag))
+                _imag = math.copysign(.0, sin(x.imag))
+            return complex(_real, _imag)
+ 
+        return _SPECIAL_VALUE(x, _exp_special_values)    
+ 
 
     if x.real > _CM_LOG_LARGE_DOUBLE:
         l = math.exp(x.real-1.);
-        ret.real = l*math.cos(x.imag)*math.e
-        ret.imag = l*math.sin(x.imag)*math.e
+        _real = l*math.cos(x.imag)*math.e
+        _imag = l*math.sin(x.imag)*math.e
     else:
-        l = exp(x.real);
-        ret.real = l*math.cos(x.imag)
-        ret.imag = l*math.sin(x.imag)
+        l = math.exp(x.real);
+        _real = l*math.cos(x.imag)
+        _imag = l*math.sin(x.imag)
 
-    if math.isinf(ret.real) or math.isinf(ret.imag):
+    if math.isinf(_real) or math.isinf(_imag):
         raise OverflowError()
     
-    return ret
+    return complex(_real, _imag)
 
 @takes_complex
 def isinf(x):
@@ -434,33 +422,31 @@ def log(x, base=None):
     ret = _SPECIAL_VALUE(x, _log_special_values)
     if ret is not None:
         return ret
-    
-    ret = complex()
 
     ax = math.fabs(x.real)
     ay = math.fabs(x.imag)
     
     if ax > _CM_LARGE_DOUBLE or ay > _CM_LARGE_DOUBLE:
-        ret.real = math.log(math.hypot(ax/2.0, ay/2.0)) + _M_LN2
+        _real = math.log(math.hypot(ax/2.0, ay/2.0)) + _M_LN2
     elif ax < sys.float_info.min and ay < sys.float_info.min:
         if ax > .0 or ay > .0:
             # catch cases where math.hypot(ax, ay) is subnormal 
-            ret.real = math.log(math.hypot(math.ldexp(ax, sys.float_info.mant_dig), math.ldexp(ay, sys.float_info.mant_dig))) - sys.float_info.mant_dig*_M_LN2
+            _real = math.log(math.hypot(math.ldexp(ax, sys.float_info.mant_dig), math.ldexp(ay, sys.float_info.mant_dig))) - sys.float_info.mant_dig*_M_LN2
         else:
             # math.log(+/-0. +/- 0i)
             raise ValueError("math domain error")
-            ret.real = -_INF
-            ret.imag = math.atan2(x.imag, x.real)
+            _real = -_INF
+            _imag = math.atan2(x.imag, x.real)
     else:
         h = math.hypot(ax, ay)
         if 0.71 <= h and h <= 1.73:
             am = max(ax,ay)
             an = min(ax,ay)
-            ret.real = math.log1p((am-1)*(am+1)+an*an)/2.
+            _real = math.log1p((am-1)*(am+1)+an*an)/2.
         else:
-            ret.real = math.log(h)
-    ret.imag = math.atan2(x.imag, x.real)
-    return ret
+            _real = math.log(h)
+    _imag = math.atan2(x.imag, x.real)
+    return complex(_real, _imag)
 
 @takes_complex
 def log10(x):
@@ -470,9 +456,9 @@ def log10(x):
         This has the same branch cut as log().
     """
     ret = log(x);
-    ret.real = ret.real / _M_LN10
-    ret.imag = ret.imag / _M_LN10
-    return ret
+    _real = ret.real / _M_LN10
+    _imag = ret.imag / _M_LN10
+    return complex(_real, _imag)
 
 @takes_complex
 def sin(x):
@@ -485,37 +471,36 @@ def sin(x):
 @takes_complex
 def sinh(x):
     """ Return the hyperbolic sine of x. """
-    ret = complex()
+    
     if math.isinf(x.real) or math.isinf(x.imag):
-        if math.isinf(x.real) and -_INF < x.imag < _INF and x.imag != .0:
-            if x.real > 0:
-                ret.real = math.copysign(_INF, cos(x.imag))
-                ret.imag = math.copysign(_INF, sin(x.imag))
-            else:
-                ret.real = -math.copysign(_INF, cos(x.imag))
-                ret.imag = math.copysign(_INF, sin(x.imag))
-        else:
-            ret = _SPECIAL_VALUE(x,_sinh_special_values)
- 
         # need to raise DomainError if y is +/- infinity and x is not
         # a NaN and not -infinity
         if math.isinf(x.imag) and not math.isnan(x.real):
             raise ValueError("math domain error")
-        return ret
-    
+        
+        if math.isinf(x.real) and -_INF < x.imag < _INF and x.imag != .0:
+            if x.real > 0:
+                _real = math.copysign(_INF, cos(x.imag))
+                _imag = math.copysign(_INF, sin(x.imag))
+            else:
+                _real = -math.copysign(_INF, cos(x.imag))
+                _imag = math.copysign(_INF, sin(x.imag))
+            return complex(_real, _imag)
+        
+        return  _SPECIAL_VALUE(x,_sinh_special_values)
 
     if math.fabs(x.real) > _CM_LOG_LARGE_DOUBLE:
         x_minus_one = x.real - math.copysign(1.0, x.real)
-        ret.real = math.cos(x.imag)*math.sinh(x.imag)*math.e
-        ret.imag = math.sin(x.imag)*math.cosh(x.imag)*math.e
+        _real = math.cos(x.imag)*math.sinh(x.imag)*math.e
+        _imag = math.sin(x.imag)*math.cosh(x.imag)*math.e
     else:
-        ret.real = math.cos(x.imag)*math.sinh(x.real)
-        ret.imag = math.sin(x.imag)*math.cosh(x.real)
+        _real = math.cos(x.imag)*math.sinh(x.real)
+        _imag = math.sin(x.imag)*math.cosh(x.real)
 
-    if math.isinf(ret.real) or math.isinf(ret.imag):
+    if math.isinf(_real) or math.isinf(_imag):
         raise OverflowError()
     
-    return ret   
+    return complex(_real, _imag)  
 
 @takes_complex
 def tan(x):
@@ -539,8 +524,6 @@ def tanh(x):
     #       by 4 exp(-2*x) instead, to avoid possible overflow in the
     #       computation of cosh(x).
     #    
-
-    ret = complex()
     
     if isinf(x):
         if math.isinf(x.imag) and -_INF < x.real < _INF:
@@ -549,29 +532,27 @@ def tanh(x):
         # special treatment for tanh(+/-inf + iy) if y is finite and nonzero 
         if math.isinf(x.real) and -_INF < x.imag < _INF and x.imag != .0:
             if x.real > 0:
-                ret.real = 1.0
-                ret.imag = math.copysign(.0, 2.0*math.sin(x.imag)*math.cos(x.imag))
+                _real = 1.0
+                _imag = math.copysign(.0, 2.0*math.sin(x.imag)*math.cos(x.imag))
             else:
-                ret.real = -1.0
-                ret.imag = math.copysign(.0, 2.*math.sin(x.imag)*math.cos(x.imag))
-        else:
-            ret = _SPECIAL_VALUE(x, _tanh_special_values)
-        
-        return ret
+                _real = -1.0
+                _imag = math.copysign(.0, 2.*math.sin(x.imag)*math.cos(x.imag))
+            return complex(_real, _imag)
+        return  _SPECIAL_VALUE(x, _tanh_special_values)
 
     # danger of overflow in 2.*z.imag !
     if math.fabs(x.real) > _CM_LOG_LARGE_DOUBLE:
-        ret.real = math.copysign(1., x.real)
-        ret.imag = 4.*math.sin(x.imag)*math.cos(x.imag)*math.exp(-2.*math.fabs(x.real))
+        _real = math.copysign(1., x.real)
+        _imag = 4.*math.sin(x.imag)*math.cos(x.imag)*math.exp(-2.*math.fabs(x.real))
     else:
         tx = math.tanh(x.real)
         ty = math.tan(x.imag)
         cx = 1.0/math.cosh(x.real)
         txty = tx*ty
         denom = 1. + txty*txty
-        ret.real = tx*(1.+ty*ty)/denom
-        ret.imag = ((ty/denom)*cx)*cx
-    return ret
+        _real = tx*(1.+ty*ty)/denom
+        _imag = ((ty/denom)*cx)*cx
+    return complex(_real, _imag)
 
 
 pi = math.pi
