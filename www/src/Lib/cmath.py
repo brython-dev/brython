@@ -584,12 +584,12 @@ _M_LN2 = 0.6931471805599453094  #  natural log of 2
 _M_LN10 = 2.302585092994045684  #  natural log of 10
 
 if sys.float_info.radix == 2:
-    _CM_SCALE_UP = (2*(sys.float_info.mant_dig/2) + 1)
+    _CM_SCALE_UP = int((2*(sys.float_info.mant_dig/2) + 1))
 elif sys.float_info.radix == 16:
-    _CM_SCALE_UP = (4*sys.float_info.mant_dig+1)
+    _CM_SCALE_UP = int((4*sys.float_info.mant_dig+1))
 else:
     raise ("cmath implementation expects the float base to be either 2 or 16, got "+str(sys.float_info.radix)+" instead.")
-_CM_SCALE_DOWN =(-(_CM_SCALE_UP+1)/2)    
+_CM_SCALE_DOWN =int((-(_CM_SCALE_UP+1)/2))
 
 _INF = float('inf')
 _NAN = float('nan')
