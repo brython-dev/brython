@@ -149,6 +149,10 @@ def acos(x):
     """
     ret = complex()
     
+    ret = _SPECIAL_VALUE(x, _acos_special_values)
+    if ret is not None:
+        return ret
+    
     if math.fabs(x.real) > _CM_LARGE_DOUBLE or math.fabs(x.imag) > _CM_LARGE_DOUBLE:
         
         # avoid unnecessary overflow for large arguments
