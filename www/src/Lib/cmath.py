@@ -13,12 +13,24 @@ import sys
 
 def takes_complex(func):
     def decorated(x):
-        if type(x) == complex:
+        if isinstance(x, complex):
             return func(x)
-        if type(x) == str:
-            raise TypeError("A complex number is required")
-        else:
+        elif type(x) in [int, float]:
             return func(complex(x))
+        elif hasattr(x,'__complex__'):
+            c = x.__complex__()
+            if not isinstance(c, complex):
+                raise TypeError("A complex number is required")
+            else:
+                return func(c)
+        elif hasattr(x,'__float__'):
+            try:
+                c = complex(x.__float__(),0)
+            except:
+                raise TypeError("A complex number is required")
+            return func(c)
+        else:
+            raise TypeError("A complex number is required")
     if hasattr(func,'__doc__'):
         decorated.__doc__ = func.__doc__
     return decorated
@@ -377,6 +389,11 @@ def isnan(x):
     """Return True if the real or imaginary part of x is not a number (NaN)."""
     return math.isnan(x.real) or math.isnan(x.imag)
 
+
+@takes_complex
+def _to_complex(x):
+    return x
+
 def log(x, base=None):
     """
         Returns the logarithm of x to the given base. If the base is not specified, returns the natural logarithm of x. 
@@ -408,11 +425,12 @@ def log(x, base=None):
     #    errno, or whatever) determine that of c_log.  So the usual formula
     #    is fine here.
     
-    if type(x) == str:
-        raise TypeError("A complex number is required")
+    x = _to_complex(x)
+    #if type(x) == str:
+        #raise TypeError("A complex number is required")
     
-    if type(x) != complex:
-        x = complex(x)
+    #if type(x) != complex:
+        #x = complex(x)
 
     if base is not None:
          x = log(x)
