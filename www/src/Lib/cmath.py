@@ -200,7 +200,7 @@ def asin(x):
         This has the same branch cuts as acos().
     """
     # asin(z) == -i asinh(iz)
-    s = complex(-x.imag, -x.real)
+    s = complex(-x.imag, x.real)
     s = asinh(s)
     return complex(s.imag, -s.real)
 
@@ -506,7 +506,7 @@ def sinh(x):
 def tan(x):
     """ Return the tangent of x. """
     s = atanh(complex(-x.imag, x.real))
-    return complex(x.imag, -x.real)
+    return complex(s.imag, -s.real)
     
 @takes_complex
 def tanh(x):
