@@ -592,7 +592,7 @@ _ST_NAN   = 6  # Not a Number
 
 
 def _SPECIAL_VALUE(z, table):
-    if math.isinf(z.real) or math.isinf(z.imag):
+    if not math.isfinite(z.real) or not math.isfinite(z.imag):
         return table[_special_type(z.real)][_special_type(z.imag)]
     else:
         return None
