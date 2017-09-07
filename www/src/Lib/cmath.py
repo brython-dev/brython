@@ -33,6 +33,8 @@ def takes_complex(func):
             raise TypeError("A complex number is required")
     if hasattr(func,'__doc__'):
         decorated.__doc__ = func.__doc__
+    if hasattr(func,'__name__'):
+        decorated.__name__ = func.__name__
     return decorated
 
 @takes_complex
