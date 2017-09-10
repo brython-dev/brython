@@ -141,8 +141,23 @@ $ComplexDict.__pow__ = function(self,other){
 }
 
 $ComplexDict.__str__ = $ComplexDict.__repr__ = function(self){
-    if (self.$real == 0) return self.$imag+'j'
-    if(self.$imag>=0) return '('+self.$real+'+'+self.$imag+'j)'
+    if (self.$real == 0) {
+        if (1/self.$real < 0) {
+            if (self.$imag < 0) {
+                return "(-0"+self.$imag+"j)"
+            } else if  (self.$imag == 0 && 1/self.$imag < 0) {
+                return "(-0-"+self.$imag+"j)"
+            } else return "(-0+"+self.$imag+"j)"
+        } else {
+            if  (self.$imag == 0 && 1/self.$imag < 0) return "-"+self.$imag+'j'
+            else return self.$imag+'j'
+        }
+    }
+    if(self.$imag>0) return '('+self.$real+'+'+self.$imag+'j)';
+    if(self.$imag == 0) {
+        if (1/self.$imag < 0) return '('+self.$real+'-'+self.$imag+'j)';
+        return '('+self.$real+'+'+self.$imag+'j)';
+    }
     return '('+self.$real+'-'+(-self.$imag)+'j)'
 }
 
