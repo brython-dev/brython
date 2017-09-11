@@ -10,22 +10,22 @@ NAN = float('nan')
 
 complex_zeros = [complex(x, y) for x in [0.0, -0.0] for y in [0.0, -0.0]]
 complex_infinities = [complex(x, y) for x, y in [
-        (INF, 0.0),  # 1st quadrant
+        (INF, 0.0),  
         (INF, 2.3),
         (INF, INF),
         (2.3, INF),
         (0.0, INF),
-        (-0.0, INF), # 2nd quadrant
+        (-0.0, INF), 
         (-2.3, INF),
         (-INF, INF),
         (-INF, 2.3),
         (-INF, 0.0),
-        (-INF, -0.0), # 3rd quadrant
+        (-INF, -0.0),
         (-INF, -2.3),
         (-INF, -INF),
         (-2.3, -INF),
         (-0.0, -INF),
-        (0.0, -INF), # 4th quadrant
+        (0.0, -INF),
         (2.3, -INF),
         (INF, -INF),
         (INF, -2.3),

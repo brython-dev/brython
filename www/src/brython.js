@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-05 11:23:15.664731"
+__BRYTHON__.compiled_date="2017-09-11 08:47:05.416035"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4847,11 +4847,16 @@ delete $B.$py_src[genexpr_name]
 return js}
 $B.clear_ns=function(name){
 var len=name.length
-for(var key in __BRYTHON__.modules){if(key.substr(0,len)==name){__BRYTHON__.modules[key]=null
-__BRYTHON__.bound[key]=null
-delete __BRYTHON__.modules[key]
-delete __BRYTHON__.bound[key]
-$B.$py_module_path[key]=null}}
+for(var key in $B.modules){if(key.substr(0,len)==name){$B.modules[key]=null
+$B.bound[key]=null
+$B._globals[key]=null
+delete $B.modules[key]
+delete $B.bound[key]
+delete $B._globals[key]}}
+for(var key in $B.$py_module_path){if(key.substr(0,len)==name){$B.$py_module_path[key]=null
+delete $B.$py_module_path[key]}}
+$B.$py_src[name]=null
+delete $B.$py_src[name]
 var alt_name=name.replace(/\./g,'_')
 if(alt_name!=name){$B.clear_ns(alt_name)}}
 $B.$search=function(name,global_ns){
@@ -4863,9 +4868,9 @@ else{if(frame[0]==frame[2]||frame[1].$type=="class"){throw _b_.NameError("name '
 else{throw _b_.UnboundLocalError("local variable '"+name+
 "' referenced before assignment")}}}
 $B.$global_search=function(name){
-var frame=$B.last($B.frames_stack)
-if(frame[3][name]!==undefined){return frame[3][name]}
-else{throw _b_.NameError("name '"+name+"' is not defined")}}
+for(var i=$B.frames_stack.length-1;i>0;i--){var frame=$B.frames_stack[i]
+if(frame[3][name]!==undefined){return frame[3][name]}}
+throw _b_.NameError("name '"+name+"' is not defined")}
 $B.$local_search=function(name){
 var frame=$B.last($B.frames_stack)
 if(frame[1][name]!==undefined){return frame[1][name]}
@@ -5302,7 +5307,7 @@ $B.rich_comp=function(op,x,y){if(x.__class__ && y.__class__){
 if(y.__class__.__mro__.indexOf(x.__class__)>-1){var rev_op=reversed_op[op]||op
 return _b_.getattr(y,rev_op)(x)}}
 return _b_.getattr(x,op)(y)}
-$B.is_none=function(o){return o===undefined ||o==_b_.None;}
+$B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None;}
 $B.imports=function(){
 var w=_window.open('','','width="50%",height=400,resizeable,scrollbars');
 w.document.write("Currently imported modules. Copy and paste in file "+
@@ -5582,10 +5587,10 @@ var __next__=function(){while(true){var _item=next(iterable)
 if(func(_item)){return _item}}}
 return{
 __class__: $FilterDict,__next__: __next__}}
-function format(value,format_spec){var $=$B.args("format",{value: null,format_spec: null},['value','format_spec'],arguments,{format_spec: ''},null,null)
-var fmt=getattr($.value,'__format__',null)
-if(fmt !==null){return fmt($.format_spec)}
-throw _b_.NotImplementedError("__format__ is not implemented for object '" + _b_.str(value)+ "'")}
+function format(value,format_spec){var args=$B.args("format",2,{value:null,format_spec:null},["value","format_spec"],arguments,{format_spec:''},null,null)
+var fmt=getattr(args.value,'__format__',null)
+if(fmt !==null){return fmt(args.format_spec)}
+throw _b_.NotImplementedError("__format__ is not implemented for object '" + _b_.str(args.value)+ "'")}
 function attr_error(attr,cname){var msg="bad operand type for unary #: '"+cname+"'"
 switch(attr){case '__neg__':
 throw _b_.TypeError(msg.replace('#','-'))
@@ -6432,6 +6437,7 @@ $make_exc(['UnboundLocalError'],_b_.NameError)
 $make_exc(['BlockingIOError','ChildProcessError','ConnectionError','FileExistsError','FileNotFoundError','InterruptedError','IsADirectoryError','NotADirectoryError','PermissionError','ProcessLookupError','TimeoutError'],_b_.OSError)
 $make_exc(['BrokenPipeError','ConnectionAbortedError','ConnectionRefusedError','ConnectionResetError'],_b_.ConnectionError)
 $make_exc(['NotImplementedError'],_b_.RuntimeError)
+$make_exc(['NotImplemented'],_b_.RuntimeError)
 $make_exc(['IndentationError'],_b_.SyntaxError)
 $make_exc(['TabError'],_b_.IndentationError)
 $make_exc(['UnicodeError'],_b_.ValueError)
@@ -7185,9 +7191,9 @@ console.log('message: '+err.$message)
 console.log('filename: '+err.fileName)
 console.log('linenum: '+err.lineNumber)
 if($B.debug>0){console.log('line info '+ $B.line_info)}
-root=null
+throw err}finally{root=null
 js=null
-throw err}finally{$B.clear_ns(module.__name__)}
+$B.clear_ns(module.__name__)}
 try{
 var mod=eval('$module')
 for(var attr in mod){module[attr]=mod[attr];}
@@ -7196,8 +7202,7 @@ $B.imported[module.__name__]=module
 return true}catch(err){console.log(''+err+' '+' for module '+module.name)
 for(var attr in err)console.log(attr+' '+err[attr])
 if($B.debug>0){console.log('line info '+__BRYTHON__.line_info)}
-throw err}finally{root=null
-js=null}}
+throw err}}
 $B.run_py=run_py
 function new_spec(fields){
 fields.__class__=$B.$ModuleDict
@@ -7289,8 +7294,8 @@ catch(e){if(e.__class__ !==_b_.ImportError.$dict){throw e;}}}
 if(finder_notfound){$B.path_importer_cache[path_entry]=_b_.None;}}
 if($B.is_none(finder))
 continue;
-var find_spec=_b_.getattr(finder,'find_spec'),fs_func=typeof find_spec=='function' ? 
-find_spec : 
+var find_spec=_b_.getattr(finder,'find_spec'),fs_func=typeof find_spec=='function' ?
+find_spec :
 _b_.getattr(find_spec,'__call__')
 var spec=fs_func(fullname,prev_module);
 if(!$B.is_none(spec)){return spec;}}
@@ -7311,6 +7316,7 @@ vfs_hook.$dict={$factory: vfs_hook,__class__: $B.$type,__name__: 'VfsPathFinder'
 catch(e){self.vfs=undefined;
 throw new _b_.ImportError(e.$message ||e.message);}
 eval(code);
+code=null
 try{
 self.vfs=$vfs;}
 catch(e){throw new _b_.ImportError('Expecting $vfs var in VFS file');}
@@ -7377,13 +7383,14 @@ if(modobj==_b_.None){
 throw _b_.ImportError(_mod_name)}
 else if(modobj===undefined){try{$B.import_hooks(_mod_name,__path__,undefined)}
 catch(err){delete $B.imported[_mod_name]
+$B.imported[_mod_name]=null
 throw err}
 if($B.is_none($B.imported[_mod_name])){throw _b_.ImportError(_mod_name)}
 else{
 if(_parent_name){_b_.setattr($B.imported[_parent_name],parsed_name[i],$B.imported[_mod_name]);}}}
 if(i < len){try{
 __path__=_b_.getattr($B.imported[_mod_name],'__path__')}catch(e){
-if(i==len-1 && $B.imported[_mod_name][parsed_name[len]]&& 
+if(i==len-1 && $B.imported[_mod_name][parsed_name[len]]&&
 $B.imported[_mod_name][parsed_name[len]].__class__===$B.$ModuleDict){return $B.imported[_mod_name][parsed_name[len]]}
 throw _b_.ImportError(_mod_name)}}}}
 if(fromlist.length > 0){
@@ -7408,8 +7415,8 @@ console.log('use static stdlib paths ? '+$B.static_stdlib_import)}
 var current_frame=$B.frames_stack[$B.frames_stack.length-1],_globals=current_frame[3],__import__=_globals['__import__'],globals=$B.obj_dict(_globals);
 if(__import__===undefined){
 __import__=$B.$__import__;}
-var importer=typeof __import__=='function' ? 
-__import__ : 
+var importer=typeof __import__=='function' ?
+__import__ :
 _b_.getattr(__import__,'__call__'),modobj=importer(mod_name,globals,undefined,fromlist,0);
 if(!fromlist ||fromlist.length==0){
 var alias=aliases[mod_name];
@@ -7454,6 +7461,7 @@ $FloatDict.numerator=function(self){return self}
 $FloatDict.denominator=function(self){return _b_.int(1)}
 $FloatDict.imag=function(self){return _b_.int(0)}
 $FloatDict.real=function(self){return self}
+$FloatDict.__float__=function(self){return self}
 $FloatDict.as_integer_ratio=function(self){if(self.valueOf()==Number.POSITIVE_INFINITY ||
 self.valueOf()==Number.NEGATIVE_INFINITY){throw _b_.OverflowError("Cannot pass infinity to float.as_integer_ratio.")}
 if(!Number.isFinite(self.valueOf())){throw _b_.ValueError("Cannot pass NaN to float.as_integer_ratio.")}
@@ -8414,20 +8422,31 @@ $B.LongInt=LongInt})(__BRYTHON__)
 var $ObjectDict=_b_.object.$dict
 function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError("unsupported operand type(s) for "+op+": '"+class1+"' and '"+class2+"'")}
 var $ComplexDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'complex',$native:true,descriptors:{real:true,imag:true}}
-$ComplexDict.__abs__=function(self){return Math.sqrt(Math.pow(self.$real,2)+Math.pow(self.$imag,2))}
-$ComplexDict.__bool__=function(self){return new Boolean(self.$real ||self.$imag)}
+$ComplexDict.__abs__=function(self){var _rf=isFinite(self.$real),_if=isFinite(self.$imag);
+if((_rf && isNaN(self.$imag))||(_if && isNaN(self.$real))||(isNaN(self.$imag)&& isNaN(self.$real)))return NaN
+if(! _rf ||! _if )return Infinity;
+var mag=Math.sqrt(Math.pow(self.$real,2)+Math.pow(self.$imag,2));
+if(!isFinite(mag)&& _rf && _if){
+throw _b_.OverflowError("absolute value too large");}
+return mag;}
+$ComplexDict.__bool__=function(self){if(self.$real==0 && self.$imag==0)return false;else return true;}
 $ComplexDict.__class__=$B.$type
-$ComplexDict.__eq__=function(self,other){if(isinstance(other,complex))return self.$real==other.$real && self.$imag==other.$imag
+$ComplexDict.__eq__=function(self,other){if(isinstance(other,complex))return self.$real.valueOf()==other.$real.valueOf()&& self.$imag.valueOf()==other.$imag.valueOf()
 if(isinstance(other,_b_.int)){if(self.$imag !=0)return False
 return self.$real==other.valueOf()}
 if(isinstance(other,_b_.float)){if(self.$imag !=0)return False
-return self.$real==other.value}
+return self.$real==other.valueOf()}
 $UnsupportedOpType("==","complex",$B.get_class(other))}
 $ComplexDict.__floordiv__=function(self,other){$UnsupportedOpType("//","complex",$B.get_class(other))}
 $ComplexDict.__hash__=function(self){
 if(self===undefined){return $ComplexDict.__hashvalue__ ||$B.$py_next_hash--}
 return self.$imag*1000003+self.$real}
-$ComplexDict.__init__=function(self,$real,$imag){self.toString=function(){return '('+$real+'+'+$imag+'j)'}}
+$ComplexDict.__init__=function(){var args=[].slice.call(arguments,1)
+var c=complex.apply(null,args)
+var self=arguments[0];
+self.$real=c.$real
+self.$imag=c.$imag
+self.toString=function(){return '('+self.$real+'+'+self.$imag+'j)'}}
 $ComplexDict.__invert__=function(self){return ~self}
 $ComplexDict.__mod__=function(self,other){throw _b_.TypeError("TypeError: can't mod complex numbers.")}
 $ComplexDict.__mro__=[$ObjectDict]
@@ -8458,8 +8477,12 @@ var x=other.$real,y=other.$imag
 var pw=Math.pow(exp.norm,x)*Math.pow(Math.E,-y*angle),theta=y*Math.log(exp.norm)-x*angle
 return complex(pw*Math.cos(theta),pw*Math.sin(theta))}else{throw _b_.TypeError("unsupported operand type(s) for ** or pow(): "+
 "'complex' and '"+$B.get_class(other).__name__+"'")}}
-$ComplexDict.__str__=$ComplexDict.__repr__=function(self){if(self.$real==0)return self.$imag+'j'
-if(self.$imag>=0)return '('+self.$real+'+'+self.$imag+'j)'
+$ComplexDict.__str__=$ComplexDict.__repr__=function(self){if(self.$real==0){if(1/self.$real < 0){if(self.$imag < 0){return "(-0"+self.$imag+"j)"}else if(self.$imag==0 && 1/self.$imag < 0){return "(-0-"+self.$imag+"j)"}else return "(-0+"+self.$imag+"j)"}else{
+if(self.$imag==0 && 1/self.$imag < 0)return "-"+self.$imag+'j'
+else return self.$imag+'j'}}
+if(self.$imag>0)return '('+self.$real+'+'+self.$imag+'j)';
+if(self.$imag==0){if(1/self.$imag < 0)return '('+self.$real+'-'+self.$imag+'j)';
+return '('+self.$real+'+'+self.$imag+'j)';}
 return '('+self.$real+'-'+(-self.$imag)+'j)'}
 $ComplexDict.__sqrt__=function(self){if(self.$imag==0)return complex(Math.sqrt(self.$real))
 var r=self.$real,i=self.$imag,_a=Math.sqrt((r + sqrt)/2),_b=Number.sign(i)* Math.sqrt((-r + sqrt)/2)
@@ -8474,6 +8497,7 @@ return $ComplexDict.__truediv__(self,complex(other.valueOf()))}
 if(isinstance(other,_b_.float)){if(!other.value)throw ZeroDivisionError('division by zero')
 return $ComplexDict.__truediv__(self,complex(other.value))}
 $UnsupportedOpType("//","complex",other.__class__)}
+$ComplexDict.conjugate=function(self){return complex(self.$real,-self.$imag);}
 var $op_func=function(self,other){throw _b_.TypeError("TypeError: unsupported operand type(s) for -: 'complex' and '" +
 $B.get_class(other).__name__+"'")}
 $op_func +='' 
@@ -8482,7 +8506,7 @@ for(var $op in $ops){eval('$ComplexDict.__'+$ops[$op]+'__ = '+$op_func.replace(/
 $ComplexDict.__ior__=$ComplexDict.__or__
 var $op_func=function(self,other){if(isinstance(other,complex))return complex(self.$real-other.$real,self.$imag-other.$imag)
 if(isinstance(other,_b_.int))return complex($B.sub(self.$real,other.valueOf()),self.$imag)
-if(isinstance(other,_b_.float))return complex(self.$real - other.value,self.$imag)
+if(isinstance(other,_b_.float))return complex(self.$real - other.valueOf(),self.$imag)
 if(isinstance(other,_b_.bool)){var bool_value=0;
 if(other.valueOf())bool_value=1;
 return complex(self.$real - bool_value,self.$imag)}
@@ -8492,8 +8516,8 @@ $ComplexDict.__sub__=$op_func
 $op_func +='' 
 $op_func=$op_func.replace(/-/gm,'+').replace(/sub/gm,'add')
 eval('$ComplexDict.__add__ = '+$op_func)
-var $comp_func=function(self,other){throw _b_.TypeError("TypeError: unorderable types: complex() > " +
-$B.get_class(other).__name__ + "()")}
+var $comp_func=function(self,other){if(other===undefined ||other==_b_.None){throw _b_.NotImplemented("");}
+throw _b_.TypeError("TypeError: no ordering relation is defined for complex numbers")}
 $comp_func +='' 
 for(var $op in $B.$comps){eval("$ComplexDict.__"+$B.$comps[$op]+'__ = '+$comp_func.replace(/>/gm,$op))}
 $B.make_rmethods($ComplexDict)
@@ -8501,17 +8525,41 @@ $ComplexDict.real=function(self){return new Number(self.$real)}
 $ComplexDict.real.setter=function(){throw _b_.AttributeError("readonly attribute")}
 $ComplexDict.imag=function(self){return new Number(self.$imag)}
 $ComplexDict.imag.setter=function(){throw _b_.AttributeError("readonly attribute")}
-var complex_re=/^(\d*\.?\d*)([\+\-]?)(\d*\.?\d*)(j?)$/
-var complex=function($real,$imag){if(typeof $real=='string'){if($imag!==undefined){throw _b_.TypeError("complex() can't take second arg if first is a string")}
+var complex_re=/^\s*([\+\-]*\d*\.?\d*(e[\+\-]*\d*)?)([\+\-]?)(\d*\.?\d*(e[\+\-]*\d*)?)(j?)\s*$/i
+var _real=1,_real_mantissa=2,_sign=3,_imag=4,_imag_mantissa=5,_j=6;
+var type_conversions=['__complex__','__float__','__int__'];
+var _convert=function(num){for(i=0;i<type_conversions.length;i++){if(hasattr(num,type_conversions[i])){return getattr(num,type_conversions[i])()}}
+return num}
+var complex=function(){var res;
+var args=$B.args("complex",2,{real:null,imag:null},["real","imag"],arguments,{real:0,imag:0},null,null)
+var $real=args.real,$imag=args.imag;
+if(typeof $real=='string'){if(arguments.length > 1 ||arguments[0].$nat !==undefined){throw _b_.TypeError("complex() can't take second arg if first is a string")}
+$real=$real.trim()
+if($real.startsWith('(')&& $real.endsWith(')')){$real=$real.substr(1)
+$real=$real.substr(0,$real.length-1)}
 var parts=complex_re.exec($real)
-if(parts===null){throw _b_.ValueError("complex() arg is a malformed string")}else if(parts[1]=='.' ||parts[3]=='.'){throw _b_.ValueError("complex() arg is a malformed string")}else if(parts[4]=='j'){if(parts[2]==''){$real=0;$imag=parseFloat(parts[1])}else{$real=parseFloat(parts[1])
-$imag=parts[3]=='' ? 1 : parseFloat(parts[3])
-$imag=parts[2]=='-' ? -$imag : $imag}}else{$real=parseFloat(parts[1])
-$imag=0}}
-var res={__class__:$ComplexDict,$real:$real ||0,$imag:$imag ||0}
-res.__repr__=res.__str__=function(){if($real==0)return $imag + 'j'
-return '('+$real+'+'+$imag+'j)'}
+if(parts===null){throw _b_.ValueError("complex() arg is a malformed string")}else if(parts[_real]=='.' ||parts[_imag]=='.' ||parts[_real]=='.e' ||parts[_imag]=='.e' ||parts[_real]=='e' ||parts[_imag]=='e'){throw _b_.ValueError("complex() arg is a malformed string")}else if(parts[_j]!=''){if(parts[_sign]==''){$real=0;
+if(parts[_real]=='+' ||parts[_real]==''){$imag=1}else if(parts[_real]=='-'){$imag=-1}else $imag=parseFloat(parts[_real])}else{$real=parseFloat(parts[_real])
+$imag=parts[_imag]=='' ? 1 : parseFloat(parts[_imag])
+$imag=parts[_sign]=='-' ? -$imag : $imag}}else{$real=parseFloat(parts[_real])
+$imag=0}
+res={__class__:$ComplexDict,$real:$real ||0,$imag:$imag ||0}
+res.__repr__=res.__str__=function(){if(res.$real==0)return res.$imag + 'j'
+return '('+res.$real+'+'+res.$imag+'j)'}
 return res}
+if(arguments.length==1 && $real.__class__===$ComplexDict && $imag==0){return $real;}
+if((isinstance($real,_b_.float)||isinstance($real,_b_.int))&&(isinstance($imag,_b_.float)||isinstance($imag,_b_.int))){res={__class__:$ComplexDict,$real:$real,$imag:$imag}
+res.__repr__=res.__str__=function(){if(res.$real==0)return res.$imag + 'j'
+return '('+res.$real+'+'+res.$imag+'j)'}
+return res;}
+for(i=0;i<type_conversions.length;i++){if(hasattr($real,type_conversions[i])){}}
+$real=_convert($real)
+$imag=_convert($imag)
+if(!isinstance($real,_b_.float)&& !isinstance($real,_b_.int)&& !isinstance($real,_b_.complex)){throw _b_.TypeError("complex() argument must be a string or a number")}
+if(typeof $imag=='string'){throw _b_.TypeError("complex() second arg can't be a string")}
+if(!isinstance($imag,_b_.float)&& !isinstance($imag,_b_.int)&& !isinstance($imag,_b_.complex)&& $imag!==undefined){throw _b_.TypeError("complex() argument must be a string or a number")}
+$imag=$ComplexDict.__mul__(complex("1j"),$imag)
+return $ComplexDict.__add__($imag,$real);}
 complex.$dict=$ComplexDict
 complex.__class__=$B.$factory
 $ComplexDict.$factory=complex
@@ -10682,9 +10730,15 @@ return{__class__:$StyleDict,js:style}}
 $Style.__class__=$B.$factory
 $Style.$dict=$StyleDict
 $StyleDict.$factory=$Style
-var DOMNode=$B.DOMNode=function(elt){if(elt.__class__===DOMNodeDict){return elt}
+var DOMNode=$B.DOMNode=function(elt,fromtag){if(elt.__class__===DOMNodeDict){return elt}
 if(typeof elt=="number" ||typeof elt=="boolean" ||
 typeof elt=="string"){return elt}
+if(fromtag===undefined){if(DOMNodeDict.tags !==undefined){
+var tdict=DOMNodeDict.tags.$string_dict
+if(tdict !==undefined){var factory=tdict[elt.tagName]
+if(factory !==undefined){
+factory.$dict.$elt_wrap=elt 
+return factory()}}}}
 var res={}
 res.$dict={}
 res.elt=elt 
@@ -10713,7 +10767,7 @@ key=key.elt !==undefined ? key.elt : key
 if(self.elt.length!==undefined && typeof self.elt.item=="function"){for(var i=0,len=self.elt.length;i<len;i++){if(self.elt.item(i)===key){return true}}}
 return false}
 DOMNodeDict.__del__=function(self){
-if(!self.elt.parentNode){throw _b_.ValueError("can't delete "+str(elt))}
+if(!self.elt.parentNode){throw _b_.ValueError("can't delete "+str(self.elt))}
 self.elt.parentNode.removeChild(self.elt)}
 DOMNodeDict.__delitem__=function(self,key){if(self.elt.nodeType===9){
 var res=self.elt.getElementById(key)
@@ -11451,11 +11505,23 @@ try{arg=arg.replace('_','-')
 self.elt.setAttribute(arg,value)}catch(err){throw _b_.ValueError("can't set attribute "+arg)}}}}}
 dict.__mro__=[$B.DOMNodeDict,$B.builtins.object.$dict]
 dict.__new__=function(cls){
-var res=$B.DOMNode(document.createElement(tagName))
+if(cls.$dict.$elt_wrap !==undefined){
+var elt=cls.$dict.$elt_wrap 
+cls.$dict.$elt_wrap=undefined 
+var res=$B.DOMNode(elt,true)
+res._wrapped=true }else{
+var res=$B.DOMNode(document.createElement(tagName),true)
+res._wrapped=false }
 res.__class__=cls.$dict
 return res}
 return dict}
-function makeFactory(tagName){var factory=function(){if(tagName=='SVG'){var res=$B.DOMNode(document.createElementNS("http://www.w3.org/2000/svg","svg"))}else{var res=$B.DOMNode(document.createElement(tagName))}
+function makeFactory(tagName){var factory=function(){if(factory.$dict.$elt_wrap !==undefined){
+var elt=factory.$dict.$elt_wrap 
+factory.$dict.$elt_wrap=undefined 
+var res=$B.DOMNode(elt,true)
+res._wrapped=true }else{
+if(tagName=='SVG'){var res=$B.DOMNode(document.createElementNS("http://www.w3.org/2000/svg","svg"),true)}else{var res=$B.DOMNode(document.createElement(tagName),true)}
+res._wrapped=false }
 res.__class__=dicts[tagName]
 var args=[res].concat(Array.prototype.slice.call(arguments))
 dicts[tagName].__init__.apply(null,args)
@@ -11467,6 +11533,7 @@ var tags=['A','ABBR','ACRONYM','ADDRESS','APPLET','AREA','B','BASE','BASEFONT','
 'ARTICLE','ASIDE','AUDIO','BDI','CANVAS','COMMAND','DATA','DATALIST','EMBED','FIGCAPTION','FIGURE','FOOTER','HEADER','KEYGEN','MAIN','MARK','MATH','METER','NAV','OUTPUT','PROGRESS','RB','RP','RT','RTC','RUBY','SECTION','SOURCE','TEMPLATE','TIME','TRACK','VIDEO','WBR',
 'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY']
 var obj={tags:_b_.dict()},dicts={}
+$B.DOMNodeDict.tags=obj.tags
 function maketag(tag){if(!(typeof tag=='string')){throw _b_.TypeError("html.maketag expects a string as argument")}
 dicts[tag]=makeTagDict(tag)
 var factory=makeFactory(tag)
@@ -11491,7 +11558,7 @@ eval(content)
 if(names!==undefined){if(!Array.isArray(names)){throw $B.builtins.TypeError("argument 'names' should be a"+
 " list, not '"+$B.get_class(names).__name__)}else{for(var i=0;i<names.length;i++){try{_window[names[i]]=eval(names[i])}
 catch(err){throw $B.builtins.NameError("name '"+
-names[i]+"' not found in script "+script_url)}}}}},py2js: function(src,module_name){if($B.is_none(module_name)){module_name='__main__'+$B.UUID()}
+names[i]+"' not found in script "+script_url)}}}}},py2js: function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
 return $B.py2js(src,module_name,module_name,'__builtins__').to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)}}
 var _b_=$B.builtins
 modules['_sys']={__file__:$B.brython_path+'/libs/_sys.js',
