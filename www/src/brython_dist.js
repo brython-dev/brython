@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-11 08:47:05.416035"
+__BRYTHON__.compiled_date="2017-09-11 11:09:51.872595"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -11502,7 +11502,7 @@ js +=arg.toLowerCase().substr(2)
 eval(js+'",function(){'+value+'})')}else if(arg.toLowerCase()=="style"){$B.DOMNodeDict.set_style(self,value)}else{
 if(value!==false){
 try{arg=arg.replace('_','-')
-self.elt.setAttribute(arg,value)}catch(err){throw _b_.ValueError("can't set attribute "+arg)}}}}}
+$B.DOMNodeDict.__setattr__(self,arg,value)}catch(err){throw _b_.ValueError("can't set attribute "+arg)}}}}}
 dict.__mro__=[$B.DOMNodeDict,$B.builtins.object.$dict]
 dict.__new__=function(cls){
 if(cls.$dict.$elt_wrap !==undefined){
