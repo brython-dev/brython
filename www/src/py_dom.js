@@ -354,9 +354,9 @@ var DOMNode = $B.DOMNode = function(elt, fromtag){
     // is needed. i.e: don't create the element, use the one provided
     if(fromtag === undefined) {
         if(DOMNodeDict.tags !== undefined) {  // tags is a python dictionary
-            tdict = DOMNodeDict.tags.$string_dict
+            var tdict = DOMNodeDict.tags.$string_dict
             if(tdict !== undefined) {
-                factory = tdict[elt.tagName]
+                var factory = tdict[elt.tagName]
                 if(factory !== undefined) {
                     // all checks are good
                     factory.$dict.$elt_wrap = elt  // tell factory to wrap element
@@ -434,7 +434,7 @@ DOMNodeDict.__del__ = function(self){
     // if element has a parent, calling __del__ removes object
     // from the parent's children
     if(!self.elt.parentNode){
-        throw _b_.ValueError("can't delete "+str(elt))
+        throw _b_.ValueError("can't delete "+str(self.elt))
     }
     self.elt.parentNode.removeChild(self.elt)
 }

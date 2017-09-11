@@ -84,7 +84,7 @@ function $download_module(module,url,package){
 
     $B.download_time = $B.download_time || 0
 
-    $xmlhttp.open('GET',url+fake_qs,false)    
+    $xmlhttp.open('GET',url+fake_qs,false)
 
     if ($B.$CORS) {
       $xmlhttp.onload=function() {
@@ -178,7 +178,7 @@ function run_js(module_contents,path,module){
         }
     }
     $B.imported[module.__name__] = $module
-    
+
     return true
 }
 
@@ -219,7 +219,7 @@ function run_py(module_contents,path,module,compiled) {
     if (!compiled) {
         var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
         $B.$py_module_path[module.__name__]=path
-        
+
         root = $B.py2js(module_contents,module.__name__,
             module.__name__,'__builtins__')
 
@@ -240,7 +240,7 @@ function run_py(module_contents,path,module,compiled) {
         var ex_node = new $Node('expression')
         new $NodeJSCtx(ex_node,')(__BRYTHON__)')
         root.add(ex_node)
-        
+
     }
 
     try{
@@ -263,10 +263,10 @@ function run_py(module_contents,path,module,compiled) {
         console.log('filename: '+err.fileName)
         console.log('linenum: '+err.lineNumber)
         if($B.debug>0){console.log('line info '+ $B.line_info)}
-        root = null
-        js = null
         throw err
     }finally{
+        root = null
+        js = null
         $B.clear_ns(module.__name__)
     }
 
@@ -289,9 +289,6 @@ function run_py(module_contents,path,module,compiled) {
 
         if($B.debug>0){console.log('line info '+__BRYTHON__.line_info)}
         throw err
-    }finally{
-        root = null
-        js = null
     }
 }
 
@@ -398,7 +395,7 @@ finder_stdlib_static.$dict = {
     },
     exec_module : function(cls, module) {
         var metadata = module.__spec__.loader_state;
-        module.$is_package = metadata.is_package; 
+        module.$is_package = metadata.is_package;
         if (metadata.ext == 'py') {
             import_py(module, metadata.path, module.__package__);
         }
@@ -536,8 +533,8 @@ finder_path.$dict = {
             if ($B.is_none(finder))
                 continue;
             var find_spec = _b_.getattr(finder, 'find_spec'),
-                fs_func = typeof find_spec=='function' ? 
-                    find_spec : 
+                fs_func = typeof find_spec=='function' ?
+                    find_spec :
                     _b_.getattr(find_spec, '__call__')
 
             var spec = fs_func(fullname, prev_module);
@@ -589,6 +586,7 @@ vfs_hook.$dict = {
             throw new _b_.ImportError(e.$message || e.message);
         }
         eval(code);
+        code = null
         try {
             self.vfs = $vfs;
         }
@@ -634,7 +632,7 @@ vfs_hook.$dict.__mro__ = [_b_.object.$dict]
  * @param {string}      one of 'js', 'py' or undefined (i.e. yet unknown)
  */
 
-function url_hook(path_entry, hint) { 
+function url_hook(path_entry, hint) {
     return {__class__: url_hook.$dict, path_entry:path_entry, hint:hint }
 }
 url_hook.__class__ = $B.$factory
@@ -747,10 +745,10 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
     // in function brython(), based on the options passed to this function.
     // The available meta paths are :
     // - finder_VFS : search in the Virtual File System ; used if
-    //   brython_stdlib.js or brythoon_modules.js was loaded in the page
+    //   brython_stdlib.js or brython_modules.js was loaded in the page
     // - finder_stdlib_static : search modules of the stdlib by Ajax calls to
-    //   a url stored in a static JS object stored in stdlib_paths.js. This 
-    //   meta path is used by defaut and disabled if option 
+    //   a url stored in a static JS object stored in stdlib_paths.js. This
+    //   meta path is used by defaut and disabled if option
     //   static_stdlib_import is set to false
     // - finder_path : search modules by Ajax calls to a list of locations
     //   (current directory, site-packages). The search is made on the module
@@ -760,21 +758,21 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
     //
     // In import_hooks, each of the finders in the meta path has a method
     // find_spec(). This method is called with module name and path and
-    // a "spec" object, or None. If None, import_hooks uses the new meta
+    // a "spec" object, or None. If None, import_hooks uses the next meta
     // path, if any.
-    // The "spec" object has an attribute loader (usually the meta path 
+    // The "spec" object has an attribute loader (usually the meta path
     // itself). The attribute create_module of the loader is called, then
     // its attribute exec_module.
     // exec_module initializes $B.imported to a module object.
-    
-    
+
+
    // [Import spec] Halt import logic
-   
+
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.');
    if (modobj == _b_.None) {
        // [Import spec] Stop loading loop right away
-       throw _b_.ImportError(mod_name) 
+       throw _b_.ImportError(mod_name)
    }
 
    if (modobj === undefined) {
@@ -792,17 +790,18 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
             var modobj = $B.imported[_mod_name];
             if (modobj == _b_.None) {
                 // [Import spec] Stop loading loop right away
-                throw _b_.ImportError(_mod_name) 
+                throw _b_.ImportError(_mod_name)
             }
             else if (modobj === undefined) {
                 try {$B.import_hooks(_mod_name, __path__, undefined)}
                 catch(err) {
                     delete $B.imported[_mod_name]
+                    $B.imported[_mod_name] = null
                     throw err
                 }
 
                 if ($B.is_none($B.imported[_mod_name])) {
-                    throw _b_.ImportError(_mod_name) 
+                    throw _b_.ImportError(_mod_name)
                 }
                 else {
                     // [Import spec] Preserve module invariant
@@ -816,17 +815,17 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
             // else { } // [Import spec] Module cache hit . Nothing to do.
             // [Import spec] If __path__ can not be accessed an ImportError is raised
             if (i < len) {
-                try { 
-                    __path__ = _b_.getattr($B.imported[_mod_name], '__path__') 
-                } catch (e) { 
+                try {
+                    __path__ = _b_.getattr($B.imported[_mod_name], '__path__')
+                } catch (e) {
                     // If this is the last but one part, and the last part is
                     // an attribute of module, and this attribute is a module,
                     // return it. This is the case for os.path for instance
-                    if(i==len-1 && $B.imported[_mod_name][parsed_name[len]] && 
+                    if(i==len-1 && $B.imported[_mod_name][parsed_name[len]] &&
                         $B.imported[_mod_name][parsed_name[len]].__class__===$B.$ModuleDict){
                         return $B.imported[_mod_name][parsed_name[len]]
                     }
-                    throw _b_.ImportError(_mod_name) 
+                    throw _b_.ImportError(_mod_name)
                 }
             }
        }
@@ -845,8 +844,8 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
 
 /**
  * Import a module and create corresponding bindings in the local namespace
- * 
- * The function sets __BRYTHON__.modules[mod_name] and 
+ *
+ * The function sets __BRYTHON__.modules[mod_name] and
  * __BRYTHON__.imported[mod_name] to an object representing the
  * imported module, or raises ImportError if the module couldn't be
  * found or loaded
@@ -883,7 +882,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     if ($B.$options.debug == 10) {
        console.log('$import '+mod_name)
        console.log('use VFS ? '+$B.use_VFS)
-       console.log('use static stdlib paths ? '+$B.static_stdlib_import)  
+       console.log('use static stdlib paths ? '+$B.static_stdlib_import)
     }
     //if ($B.$options.debug == 10) {show_ns()}
 
@@ -897,8 +896,8 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         __import__ = $B.$__import__;
     }
     // FIXME: Should we need locals dict supply it in, now it is useless
-    var importer = typeof __import__=='function' ? 
-                        __import__ : 
+    var importer = typeof __import__=='function' ?
+                        __import__ :
                         _b_.getattr(__import__, '__call__'),
         modobj = importer(mod_name, globals, undefined, fromlist, 0);
 
@@ -912,7 +911,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         }
         else {
             locals[norm_parts[0]] = modobj;
-            // TODO: After binding 'a' should we also bind 'a.b' , 'a.b.c' , ... ? 
+            // TODO: After binding 'a' should we also bind 'a.b' , 'a.b.c' , ... ?
         }
     }
     else {
@@ -948,7 +947,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                     // [Import spec] attempt to import a submodule with that name ...
                     // FIXME : level = 0 ? level = 1 ?
                     try{
-                        _b_.getattr(__import__, '__call__')(mod_name + '.' + name, 
+                        _b_.getattr(__import__, '__call__')(mod_name + '.' + name,
                             globals, undefined, [], 0);
                         // [Import spec] ... then check imported module again for name
                         locals[alias] = _b_.getattr(modobj, name);
@@ -961,7 +960,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                                 line_info = frame[3].$line_info,
                                 line_elts = line_info.split(','),
                                 line_num = parseInt(line_elts[0])
-                            $B.$SyntaxError(frame[2], 
+                            $B.$SyntaxError(frame[2],
                                 "future feature "+name+" is not defined",
                                 undefined, line_num)
                         }

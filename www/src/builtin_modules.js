@@ -173,7 +173,7 @@
                     if(cls.$dict.$elt_wrap !== undefined) {
                         // DOMNode is piggybacking on us to autogenerate a node
                         var elt = cls.$dict.$elt_wrap  // keep track of the to wrap element
-                        dict.$elt_wrap = undefined  // nullify for later calls
+                        cls.$dict.$elt_wrap = undefined  // nullify for later calls
                         var res = $B.DOMNode(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
                     } else {
@@ -183,10 +183,8 @@
                     res.__class__ = cls.$dict
                     return res
                 }
-
                 return dict
             }
-
 
             // the classes used for tag sums, $TagSum and $TagSumClass
             // are defined in py_dom.js

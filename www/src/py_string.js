@@ -316,7 +316,7 @@ var ascii_format = function(val, flags) {
     return format_padding(ascii(val), flags)
 }
 
-// converts to val to float and sets precision if missing
+// converts val to float and sets precision if missing
 var _float_helper = function(val, flags) {
     number_check(val)
     if (!flags.precision) {

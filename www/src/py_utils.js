@@ -258,15 +258,26 @@ $B.clear_ns = function(name){
     // Remove name from __BRYTHON__.modules, and all the keys that start with name
 
     var len = name.length
-    for(var key in __BRYTHON__.modules){
+    for(var key in $B.modules){
         if(key.substr(0, len)==name){
-            __BRYTHON__.modules[key] = null
-            __BRYTHON__.bound[key] = null
-            delete __BRYTHON__.modules[key]
-            delete __BRYTHON__.bound[key]
-            $B.$py_module_path[key] = null
+            $B.modules[key] = null
+            $B.bound[key] = null
+            $B._globals[key] = null
+
+            delete $B.modules[key]
+            delete $B.bound[key]
+            delete $B._globals[key]
         }
     }
+    for(var key in $B.$py_module_path){
+        if(key.substr(0, len)==name){
+            $B.$py_module_path[key] = null
+            delete $B.$py_module_path[key]
+        }
+    }
+    $B.$py_src[name] = null
+    delete $B.$py_src[name]
+
 
     var alt_name = name.replace(/\./g, '_')
     if(alt_name!=name){$B.clear_ns(alt_name)}
@@ -291,11 +302,11 @@ $B.$search = function(name, global_ns){
 
 $B.$global_search = function(name){
     // search in global namespace
-    var frame = $B.last($B.frames_stack)
-    if(frame[3][name]!==undefined){return frame[3][name]}
-    else{
-        throw _b_.NameError("name '"+name+"' is not defined")
+    for(var i=$B.frames_stack.length-1; i>0; i--){
+        var frame = $B.frames_stack[i]
+        if(frame[3][name]!==undefined){return frame[3][name]}
     }
+    throw _b_.NameError("name '"+name+"' is not defined")
 }
 
 $B.$local_search = function(name){
@@ -334,7 +345,6 @@ $B.$check_def_free = function(name, value){
     throw _b_.NameError("free variable '"+name+
         "' referenced before assignment in enclosing scope")
 }
-
 
 // transform native JS types into Brython types
 $B.$JS2Py = function(src){
@@ -1290,7 +1300,7 @@ $B.rich_comp = function(op, x, y){
 }
 
 $B.is_none = function (o) {
-    return o === undefined || o == _b_.None;
+    return o === undefined || o === null || o == _b_.None;
 }
 
 $B.imports = function(){
