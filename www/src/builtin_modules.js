@@ -172,7 +172,7 @@
                     // DOMNode for the specified tagName
                     if(cls.$dict.$elt_wrap !== undefined) {
                         // DOMNode is piggybacking on us to autogenerate a node
-                        elt = cls.$dict.$elt_wrap  // keep track of the to wrap element
+                        var elt = cls.$dict.$elt_wrap  // keep track of the to wrap element
                         dict.$elt_wrap = undefined  // nullify for later calls
                         var res = $B.DOMNode(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
@@ -195,7 +195,7 @@
                 var factory = function(){
                     if(factory.$dict.$elt_wrap !== undefined) {
                         // DOMNode is piggybacking on us to autogenerate a node
-                        elt = factory.$dict.$elt_wrap  // keep track of the to wrap element
+                        var elt = factory.$dict.$elt_wrap  // keep track of the to wrap element
                         factory.$dict.$elt_wrap = undefined  // nullify for later calls
                         var res = $B.DOMNode(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
@@ -314,7 +314,7 @@
             }
         },
         py2js: function(src, module_name){
-            if ($B.is_none(module_name)) {
+            if (module_name===undefined) {
                 module_name = '__main__'+$B.UUID()
             }
             return $B.py2js(src, module_name, module_name,
