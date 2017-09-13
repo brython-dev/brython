@@ -156,7 +156,7 @@
                                 // option.selected=false sets it to true :-)
                                 try{
                                     arg = arg.replace('_','-')
-                                    $B.DOMNodeDict.__setattr__(self, arg,value)
+                                    $B.DOMNodeDict.__setattr__(self, arg, value)
                                 }catch(err){
                                     throw _b_.ValueError("can't set attribute "+arg)
                                 }

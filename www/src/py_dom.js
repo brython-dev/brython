@@ -740,7 +740,7 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
         //
         // The first option is used if the DOM element supports getAttribute
         // (or getAttributeNS for SVG elements), and if this method applied to
-        // the attribute returns a value.
+        // the attribute returns the same value.
         // Otherwise, the second option is used.
 
         // Case-insensitive version of the attribute. Also replaces _ by -
@@ -758,18 +758,23 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
         if(typeof self.elt.getAttribute=='function' &&
                 typeof self.elt.setAttribute=='function'){
             var res = self.elt.getAttribute(attr1)
-            if(res!==undefined&&res!==null&&res!=''){
+            if(res!==undefined&&res!=''){
                 if(value===false){
                     self.elt.removeAttribute(attr1)
                 }else{
                     self.elt.setAttribute(attr1,value)
+                    if(self.elt.getAttribute(attr1) !== value){
+                        // If value is a Brython object, eg a dictionary
+                        self.elt.removeAttribute(attr1)
+                        self.elt[attr]=value
+                    }
                 }
                 return
             }
         }
 
-        // No attribute was found on the DOM element : set it to the DOMNode
-        // instance
+        // If setAttribute doesn't work, ie subsequent getAttribute doesn't
+        // return the same value, set key/value on the DOMNode instance
         self.elt[attr]=value
     }
 }
