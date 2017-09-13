@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-11 11:09:51.872595"
+__BRYTHON__.compiled_date="2017-09-13 17:04:14.172195"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4933,7 +4933,8 @@ throw _b_.IndexError(type+" index out of range")}
 $B.$getitem=function(obj,item){if(typeof item=='number'){if(Array.isArray(obj)||typeof obj=='string'){item=item >=0 ? item : obj.length+item
 if(obj[item]!==undefined){return obj[item]}
 else{index_error(obj)}}}
-try{item=$B.$GetInt(item)}catch(err){}
+var ce=$B.current_exception
+try{item=$B.$GetInt(item)}catch(err){$B.current_exception=ce}
 if((Array.isArray(obj)||typeof obj=='string')
 && typeof item=='number'){item=item >=0 ? item : obj.length+item
 if(obj[item]!==undefined){return obj[item]}
@@ -5708,8 +5709,9 @@ check_nb_args('globals',0,arguments.length)
 return $B.obj_dict($B.last($B.frames_stack)[3])}
 function hasattr(obj,attr){check_no_kw('hasattr',obj,attr)
 check_nb_args('hasattr',2,arguments.length)
+var ce=$B.current_exception
 try{getattr(obj,attr);return true}
-catch(err){return false}}
+catch(err){$B.current_exception=ce;return false}}
 function hash(obj){check_no_kw('hash',obj)
 check_nb_args('hash',1,arguments.length)
 if(obj.__hashvalue__ !==undefined)return obj.__hashvalue__
@@ -9140,9 +9142,10 @@ if(obj.__class__==$TupleDict){var res=obj.slice()
 res.__class__=$ListDict
 return res}
 return obj}
-var res=[],pos=0,arg=$B.$iter(obj),next_func=getattr(arg,'__next__')
+var res=[],pos=0,arg=$B.$iter(obj),next_func=getattr(arg,'__next__'),ce=$B.current_exception
 while(1){try{res[pos++]=next_func()}
 catch(err){if(!isinstance(err,_b_.StopIteration)){throw err}
+$B.current_exception=ce
 break}}
 res.__brython__=true 
 return res}
@@ -9153,7 +9156,7 @@ list.$is_func=true
 list.__module__='builtins'
 list.__bases__=[]
 var $ListSubclassDict={__class__:$B.$type,__name__:'list',__new__: function(cls){return{__class__:cls.$dict,$t:[]}}}
-for(var $attr in $ListDict){if(typeof $ListDict[$attr]=='function' && 
+for(var $attr in $ListDict){if(typeof $ListDict[$attr]=='function' &&
 $ListDict[$attr].__class__!==$B.$factory){
 $ListDict[$attr]=(function(attr){var method=$ListDict[attr],func=function(){var self=arguments[0]
 if(self.$t!==undefined){var args=[self.$t]
@@ -9192,7 +9195,7 @@ case 'pop':
 case 'reverse':
 case 'sort':
 break
-default: 
+default:
 if($TupleDict[attr]===undefined){if(typeof $ListDict[attr]=='function'){$TupleDict[attr]=(function(x){return function(){return $ListDict[x].apply(null,arguments)}})(attr)}else{$TupleDict[attr]=$ListDict[attr]}}}}
 $TupleDict.__delitem__=function(){throw _b_.TypeError("'tuple' object doesn't support item deletion")}
 $TupleDict.__setitem__=function(){throw _b_.TypeError("'tuple' object does not support item assignment")}

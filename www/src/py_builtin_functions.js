@@ -862,8 +862,9 @@ function globals(){
 function hasattr(obj,attr){
     check_no_kw('hasattr', obj, attr)
     check_nb_args('hasattr', 2, arguments.length)
+    var ce = $B.current_exception
     try{getattr(obj,attr);return true}
-    catch(err){return false}
+    catch(err){$B.current_exception=ce;return false}
 }
 
 function hash(obj){

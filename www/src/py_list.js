@@ -30,8 +30,8 @@ $ListDict.__add__ = function(self,other){
 
 $ListDict.__contains__ = function(self,item){
     var $=$B.args('__contains__',2,{self:null,item:null},['self','item'],
-        arguments,{},null,null), 
-        self=$.self, 
+        arguments,{},null,null),
+        self=$.self,
         item=$.item
     var _eq = getattr(item, '__eq__')
     var i=0
@@ -83,7 +83,7 @@ $ListDict.__delitem__ = function(self,arg){
            self.splice(res[i],1)
         }
         return $N
-    } 
+    }
 
     if (hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
        $ListDict.__delitem__(self, _b_.int(arg))
@@ -118,7 +118,7 @@ $ListDict.__getitem__ = function(self,arg){
         var pos = key
         if(key<0) pos=items.length+pos
         if(pos>=0 && pos<items.length) return items[pos]
-        
+
         throw _b_.IndexError('list index out of range')
     }
     if (isinstance(key,_b_.slice)) {
@@ -158,7 +158,7 @@ $ListDict.__ge__ = function(self,other){
     var i=0
     while(i<self.length){
         if(i>=other.length) return true
-        if(getattr(self[i],'__eq__')(other[i])){i++} 
+        if(getattr(self[i],'__eq__')(other[i])){i++}
         else return(getattr(self[i],"__ge__")(other[i]))
     }
 
@@ -248,13 +248,13 @@ $ListDict.__mro__ = [$ObjectDict]
 $ListDict.__mul__ = function(self,other){
     if(isinstance(other,_b_.int)) {  //this should be faster..
        var res=[],
-           $temp = self.slice(), 
+           $temp = self.slice(),
            len=$temp.length
        for(var i=0;i<other;i++){for(var j=0;j<len;j++){res.push($temp[j])}}
        res.__class__ = self.__class__
        return res
     }
-    
+
     if (hasattr(other, '__int__') || hasattr(other, '__index__')) {
        return $ListDict.__mul__(self, _b_.int(other))
     }
@@ -274,7 +274,7 @@ $ListDict.__repr__ = function(self){
         if(self[i]===self){_r.push('[...]')}
         else{_r.push(_b_.repr(self[i]))}
     }
-    
+
 
     if (self.__class__===$TupleDict){
         if(self.length==1){return '('+_r[0]+',)'}
@@ -391,7 +391,7 @@ $ListDict.pop = function(){
     var $=$B.args('pop',2,{self:null,pos:null},['self','pos'],
         arguments,{pos:null},null,null),
         self=$.self, pos=$.pos
-        
+
     if(pos===null){pos=self.length-1}
     pos = $B.$GetInt(pos)
     if(pos<0){pos+=self.length}
@@ -424,7 +424,7 @@ $ListDict.reverse = function(self){
     }
     return $N
 }
-    
+
 // QuickSort implementation found at http://en.literateprograms.org/Quicksort_(JavaScript)
 function $partition(arg,array,begin,end,pivot)
 {
@@ -433,7 +433,7 @@ function $partition(arg,array,begin,end,pivot)
     var store=begin;
     if(arg===null){
         if(array.$cl!==false){
-            // Optimisation : if all elements have the same type, the 
+            // Optimisation : if all elements have the same type, the
             // comparison function __le__ can be computed once
             var le_func = _b_.getattr(array.$cl, '__le__')
             for(var ix=begin;ix<end-1;++ix) {
@@ -500,7 +500,7 @@ function $elts_class(self){
 $ListDict.sort = function(self){
     var $=$B.args('sort',1,{self:null},['self'],arguments,{},
         null,'kw')
-    
+
     var func=null
     var reverse = false
     var kw_args = $.kw, keys=_b_.list(_b_.dict.$dict.keys(kw_args))
@@ -597,14 +597,16 @@ function list(){
         }
         return obj
     }
-    var res = [], 
-        pos=0, 
+    var res = [],
+        pos=0,
         arg = $B.$iter(obj),
-        next_func = getattr(arg,'__next__')
+        next_func = getattr(arg,'__next__'),
+        ce = $B.current_exception
     while(1){
         try{res[pos++]=next_func()}
         catch(err){
             if(!isinstance(err, _b_.StopIteration)){throw err}
+            $B.current_exception = ce
             break
         }
     }
@@ -631,11 +633,11 @@ var $ListSubclassDict = {
 
 for(var $attr in $ListDict){
 
-    if(typeof $ListDict[$attr]=='function' && 
+    if(typeof $ListDict[$attr]=='function' &&
       $ListDict[$attr].__class__!==$B.$factory){
 
-        // For each method of built-in list instances, add a check on the 
-        // argument "self" ; if it has the attribute $t set, it is a subclass 
+        // For each method of built-in list instances, add a check on the
+        // argument "self" ; if it has the attribute $t set, it is a subclass
         // of list, so the method must operate on self.$t
         // Cf issue 364
         $ListDict[$attr] = (function(attr){
@@ -723,7 +725,7 @@ for(var attr in $ListDict){
       case 'reverse':
       case 'sort':
         break
-      default:   
+      default:
         if($TupleDict[attr]===undefined){
             if(typeof $ListDict[attr]=='function'){
                 $TupleDict[attr] = (function(x){

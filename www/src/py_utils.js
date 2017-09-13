@@ -438,7 +438,8 @@ $B.$getitem = function(obj, item){
         }
     }
 
-    try{item=$B.$GetInt(item)}catch(err){}
+    var ce = $B.current_exception
+    try{item=$B.$GetInt(item)}catch(err){$B.current_exception = ce}
     if((Array.isArray(obj) || typeof obj=='string')
         && typeof item=='number'){
         item = item >=0 ? item : obj.length+item
