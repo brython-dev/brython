@@ -22,7 +22,7 @@ if sys.version_info[0] != 3:
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
-implementation = [3, 3, 3, 'dev', 0]
+implementation = [3, 3, 3, 'final', 0]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
@@ -34,38 +34,38 @@ def run():
     package_file = os.path.join(pdir, 'npm', 'package.json')
     with open(package_file, encoding="utf-8") as fobj:
         package_info = fobj.read()
-        package_info = re.sub('"version": "(.*)"', 
+        package_info = re.sub('"version": "(.*)"',
             '"version": "{}"'.format(vname),
             package_info)
-    
+
     with open(package_file, "w", encoding="utf-8") as fobj:
         fobj.write(package_info)
-    
+
     abs_path = lambda _pth: os.path.join(os.path.dirname(os.getcwd()), 'www',
         'src', _pth)
     now = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
-    
+
     # update version number
     with open(abs_path('version_info.js'), 'w') as vinfo_file_out:
         # implementation[2] = now
-        vinfo_file_out.write('__BRYTHON__.implementation = %s\n' 
+        vinfo_file_out.write('__BRYTHON__.implementation = %s\n'
             %implementation)
         vinfo_file_out.write('__BRYTHON__.__MAGIC__ = "%s"\n' %
             '.'.join(['%s' % _i for _i in implementation[:3]]))
         vinfo_file_out.write('__BRYTHON__.version_info = %s\n' % str(version))
-        vinfo_file_out.write('__BRYTHON__.compiled_date = "%s"\n' 
+        vinfo_file_out.write('__BRYTHON__.compiled_date = "%s"\n'
             %str(datetime.datetime.now()))
         # builtin module names = list of scripts in src/libs
         vinfo_file_out.write('__BRYTHON__.builtin_module_names = ["posix",'
             '"sys", "errno", "time",')
-        _modules=['"%s"' % fname.split('.')[0] 
-                   for fname in os.listdir(abs_path('libs')) 
+        _modules=['"%s"' % fname.split('.')[0]
+                   for fname in os.listdir(abs_path('libs'))
                    if fname.endswith('.js')]
 
         # Sort modules so that git diff's don't change between runs
         _modules.sort()
         vinfo_file_out.write(',\n    '.join(_modules))
-        
+
         # Add Python scripts in Lib that start with _ and aren't found in
         # CPython Lib.
         # Using sys.executable to find stdlib dir doesn't work under linux.
@@ -80,51 +80,51 @@ def run():
         vinfo_file_out.write(',\n    ' + ',\n    '.join(
                          ['"%s"' % f for f in brython_py_builtins]))
         vinfo_file_out.write(']\n')
-    
+
         #log.info("Finished Writing file: " + abs_path('version_info.js'))
-    
+
     import make_stdlib_static
     # build brython.js from base Javascript files
     sources = [
         'unicode.min',
-        'brython_builtins', 'version_info', 'py2js', 
-        'py_object', 'py_type', 'py_utils', 'py_builtin_functions', 
-        'py_exceptions', 'py_range_slice', 'py_bytes', 'js_objects', 
-        'stdlib_paths', 'py_import', 'py_float', 'py_int', 'py_long_int', 
-        'py_complex', 'py_list', 'py_sort', 'py_string', 'py_dict', 'py_set',
+        'brython_builtins', 'version_info', 'py2js',
+        'py_object', 'py_type', 'py_utils', 'py_builtin_functions',
+        'py_exceptions', 'py_range_slice', 'py_bytes', 'js_objects',
+        'stdlib_paths', 'py_import', 'py_float', 'py_int', 'py_long_int',
+        'py_complex', 'py_sort', 'py_list', 'py_string', 'py_dict', 'py_set',
         'py_dom', 'py_generator', 'builtin_modules', 'py_import_hooks'
     ]
-    
+
     res = """// brython.js brython.info
 // version {}
 // implementation {}
-// version compiled from commented, indented source files at 
+// version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 """.format(version, implementation)
     src_size = 0
-    
+
     for fname in sources:
         src = open(abs_path(fname)+'.js').read() + '\n'
         src_size += len(src)
         res += javascript_minifier.minify(src)
-    
+
     res = res.replace('context', 'C')
-    
+
     with open(abs_path('brython.js'), 'w') as out:
         out.write(res)
-    
+
     print(('size : originals %s compact %s gain %.2f' %
           (src_size, len(res), 100 * (src_size - len(res)) / src_size)))
-    
+
     sys.path.append("scripts")
-    
+
     try:
         import make_VFS
     except ImportError:
         print("Cannot find make_VFS, so we won't make brython_stdlib.js.js")
         make_VFS = None
         sys.exit()
-    
+
     make_VFS.process(os.path.join(pdir, 'www', 'src', 'brython_stdlib.js'))
 
     # Create make brython_stdlib.js : core + libraries
@@ -137,32 +137,34 @@ def run():
     sdir = os.path.join(pdir, 'setup', 'data')
     for f in ['brython.js', 'brython_stdlib.js']:
         shutil.copyfile(os.path.join(src_dir, f), os.path.join(sdir, f))
-    
+
     # copy files in folder /npm
     npmdir = os.path.join(pdir, 'npm')
     for f in ['brython.js', 'brython_stdlib.js']:
         shutil.copyfile(os.path.join(src_dir, f), os.path.join(npmdir, f))
-   
-    # create zip files    
+
+    # create zip files
+    print('create zip files in /setup/data')
     name = 'Brython-{}'.format(vname)
     dest_path = os.path.join(sdir, name)
     dist1 = tarfile.open(dest_path + '.tar.gz', mode='w:gz')
     dist2 = tarfile.open(dest_path+'.tar.bz2', mode='w:bz2')
     dist3 = zipfile.ZipFile(dest_path + '.zip', mode='w',
                             compression=zipfile.ZIP_DEFLATED)
-    
+
     paths = ['README.txt', 'demo.html', 'brython.js', 'brython_stdlib.js']
-    
-    for arc, wfunc in ((dist1, dist1.add), (dist2, dist2.add), 
+
+    for arc, wfunc in ((dist1, dist1.add), (dist2, dist2.add),
             (dist3, dist3.write)):
         for path in paths:
-            wfunc(os.path.join(sdir, path), 
+            wfunc(os.path.join(sdir, path),
                 arcname=os.path.join(name, path))
-    
+
         arc.close()
-        
+
 
     # changelog file
+    print('write changelog file')
     try:
         first = 'Changes in Brython version {}'.format(vname)
         with open(os.path.join(pdir, 'setup', 'changelog.txt')) as file_to_read:
