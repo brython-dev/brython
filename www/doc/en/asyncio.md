@@ -14,7 +14,7 @@ import asyncio
 def test_wget(urls):
     results = []
     for u in urls:
-        req = yield from asyncio.HTTPRequest(u)
+        req = yield asyncio.HTTPRequest(u)
         results.append(req.response)
     return results
 

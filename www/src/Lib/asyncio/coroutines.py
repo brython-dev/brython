@@ -16,13 +16,14 @@ def get_continuation(generator, final_result):
             cb = get_continuation(generator, final_result)
             next_result.add_done_callback(cb)
         except StopIteration as ex:
-            if hasattr(ex,'value'):
+            if hasattr(ex, 'value'):
                 final_result.set_result(ex.value)
             else:
                 final_result.set_result(None)
         except Exception as ex:
             final_result.set_exception(ex)
     return _cb
+
 
 @decorator
 def coroutine(func):
@@ -49,13 +50,18 @@ def coroutine(func):
             first_result = next(generator)
             _cb = get_continuation(generator, final_result)
             first_result.add_done_callback(_cb)
-        except StopIteration:
-            final_result.set_result(None)
+        except StopIteration as ex:
+            if hasattr(ex, 'value'):
+                final_result.set_result(ex.value)
+            else:
+                final_result.set_result(None)
         except Exception as ex:
             final_result.set_exception(ex)
         return final_result
     run.__coroutine = True
+    run.__name__ = func.__name__
     return run
+
 
 def iscoroutine(obj):
     return hasattr(obj, '__coroutine')

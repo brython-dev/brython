@@ -1,14 +1,18 @@
 
 from .events import get_event_loop
 
+
 class InvalidStateError(Exception):
     pass
+
 
 class CancelledError(Exception):
     pass
 
+
 class TimeoutError(Exception):
     pass
+
 
 class Future:
     """
@@ -49,7 +53,6 @@ class Future:
         self._schedule_callbacks()
         return True
 
-
     def cancelled(self):
         """Return True if the future was cancelled."""
         return self._status == Future.STATUS_CANCELED
@@ -75,7 +78,6 @@ class Future:
         if self._status == Future.STATUS_ERROR:
             raise self._exception
         return self._result
-
 
     def exception(self):
         """
@@ -186,6 +188,7 @@ class GatheredFuture(Future):
             else:
                 results.append(fut.result())
         self.set_result(results)
+
 
 class SleepFuture(Future):
     def __init__(self, seconds, result=None):
