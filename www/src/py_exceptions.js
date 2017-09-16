@@ -30,8 +30,9 @@ $B.$syntax_err_line = function(exc,module,pos,line_num) {
         pos2line[i]=lnum
         if(src.charAt(i)=='\n'){line_pos[++lnum]=i}
     }
-    if(line_num===undefined){
+    while(line_num===undefined){
         line_num = pos2line[pos]
+        pos--
     }
     exc.$line_info = line_num+','+module
 

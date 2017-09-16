@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'final',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-16 16:36:46.414019"
+__BRYTHON__.compiled_date="2017-09-16 19:10:45.465727"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -6250,7 +6250,8 @@ if(src===undefined){console.log('no src for',module)}
 var line_pos={1:0}
 for(var i=0,_len_i=src.length;i < _len_i;i++){pos2line[i]=lnum
 if(src.charAt(i)=='\n'){line_pos[++lnum]=i}}
-if(line_num===undefined){line_num=pos2line[pos]}
+while(line_num===undefined){line_num=pos2line[pos]
+pos--}
 exc.$line_info=line_num+','+module
 var lines=src.split('\n')
 var line=lines[line_num-1]
