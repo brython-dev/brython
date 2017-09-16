@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'final',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-16 14:55:59.961294"
+__BRYTHON__.compiled_date="2017-09-16 15:38:15.934344"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -10913,12 +10913,15 @@ return}
 if(self.elt[attr1]!==undefined){self.elt[attr1]=value;return}
 if(typeof self.elt.getAttribute=='function' &&
 typeof self.elt.setAttribute=='function'){var res=self.elt.getAttribute(attr1)
-if(res!==undefined&&res!=''){if(value===false){self.elt.removeAttribute(attr1)}else{self.elt.setAttribute(attr1,value)
+if(res!==undefined&&res!=''){if(value===false){self.elt.removeAttribute(attr1)}else{try{self.elt.setAttribute(attr1,value)}catch(err){
+self.elt[attr]=value
+return _b_.None}
 if(self.elt.getAttribute(attr1)!==value){
 self.elt.removeAttribute(attr1)
 self.elt[attr]=value}}
-return}}
-self.elt[attr]=value}}
+return _b_.None}}
+self.elt[attr]=value
+return _b_.None}}
 DOMNodeDict.__setitem__=function(self,key,value){self.elt.childNodes[key]=value}
 DOMNodeDict.abs_left={__get__: function(self){return $getPosition(self.elt).left},__set__: function(){throw _b_.AttributeError("'DOMNode' objectattribute 'abs_left' is read-only")}}
 DOMNodeDict.abs_top={__get__: function(self){return $getPosition(self.elt).top},__set__: function(){throw _b_.AttributeError("'DOMNode' objectattribute 'abs_top' is read-only")}}

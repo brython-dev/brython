@@ -762,20 +762,29 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
                 if(value===false){
                     self.elt.removeAttribute(attr1)
                 }else{
-                    self.elt.setAttribute(attr1,value)
+                    try{
+                        self.elt.setAttribute(attr1,value)
+                    }catch(err){
+                        // happens for instance if attr starts with _ because
+                        // attr1 starts with "-" and it is an invalid 1st arg
+                        // for setAttribute
+                        self.elt[attr]=value
+                        return _b_.None
+                    }
                     if(self.elt.getAttribute(attr1) !== value){
                         // If value is a Brython object, eg a dictionary
                         self.elt.removeAttribute(attr1)
                         self.elt[attr]=value
                     }
                 }
-                return
+                return _b_.None
             }
         }
 
         // If setAttribute doesn't work, ie subsequent getAttribute doesn't
         // return the same value, set key/value on the DOMNode instance
         self.elt[attr]=value
+        return _b_.None
     }
 }
 
