@@ -743,6 +743,8 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
         // the attribute returns the same value.
         // Otherwise, the second option is used.
 
+        if(self.elt[attr]!==undefined){self.elt[attr]=value;return}
+
         // Case-insensitive version of the attribute. Also replaces _ by -
         // to support setting attributes that have a -
         var attr1 = attr.replace('_','-').toLowerCase()
@@ -753,12 +755,9 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
             return
         }
 
-        if(self.elt[attr1]!==undefined){self.elt[attr1]=value;return}
-
         if(typeof self.elt.getAttribute=='function' &&
                 typeof self.elt.setAttribute=='function'){
             var res = self.elt.getAttribute(attr1)
-            if(res!==undefined&&res!=''){
                 if(value===false){
                     self.elt.removeAttribute(attr1)
                 }else{
@@ -778,7 +777,6 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
                     }
                 }
                 return _b_.None
-            }
         }
 
         // If setAttribute doesn't work, ie subsequent getAttribute doesn't
