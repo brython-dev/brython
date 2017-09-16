@@ -89,7 +89,7 @@ packages = set()
 def is_package(folder):
     """Test if folder is a package, ie has __init__.py and all the folders
     above until os.getcwd() also have __init__.py.
-    Use set packages() to cache results.
+    Use set "packages" to cache results.
     """
     if folder in packages:
         return True
@@ -150,7 +150,6 @@ class BrythonScriptsExtractor(html.parser.HTMLParser):
     """Used to extract all Brython scripts in HTML pages."""
 
     def __init__(self, path, **kw):
-        print('brython script extractor', path, kw)
         kw.setdefault('convert_charrefs', True)
         try:
             html.parser.HTMLParser.__init__(self, **kw)
