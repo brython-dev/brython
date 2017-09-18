@@ -12,14 +12,14 @@ for fname in ['brython', 'brython_stdlib']:
     shutil.copyfile(os.path.join(os.path.dirname(os.getcwd()),
         "www", "src", "{}.js".format(fname)),
         os.path.join("data", "{}.js".format(fname)))
-            
+
 setup(
     name='brython',
 
     version='3.3.3',
 
     description='Brython is an implementation of Python 3 running in the browser',
-    
+
     long_description = LONG_DESCRIPTION,
 
     # The project's main homepage.
@@ -28,8 +28,14 @@ setup(
     # Author details
     author='Pierre Quentel',
     author_email='quentel.pierre@orange.fr',
-    
+
     packages = ['data', 'data.tools'],
+
+    entry_points={
+          'console_scripts': [
+              'brython = data.__main__:main'
+          ]
+      },
 
     # Choose your license
     license='BSD',
@@ -40,7 +46,7 @@ setup(
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Interpreters',
-        
+
         'Operating System :: OS Independent',
 
         # Pick your license as you wish (should match "license" above)
@@ -60,7 +66,7 @@ setup(
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
-    py_modules=["brython", "list_modules"],
+    py_modules=["brython", "list_modules", "server"],
 
 
     # If there are data files included in your packages that need to be
@@ -69,7 +75,7 @@ setup(
     package_data={
         'data': [
             'README.txt',
-            'demo.html', 
+            'demo.html',
             'brython.js',
             'brython_stdlib.js'
             ],
