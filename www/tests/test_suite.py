@@ -287,7 +287,7 @@ def f(method, arg):
 
 def g(*z):
     return z
-    
+
 a = f(g,5)
 b = f(g,11)
 
@@ -335,7 +335,7 @@ assert res == ['a', 'b', 'c']
 class A:
     def __init__(self, x):
         self.x = x
-    
+
     def __setattr__(self, k, v):
         object.__setattr__(self, k, 2*v)
 
@@ -363,5 +363,12 @@ try:
     'a'+2
 except TypeError as exc:
     assert exc.args[0] == "Can't convert int to str implicitely"
+
+# check that line is in exception info
+x = []
+try:
+    x[1]
+except IndexError as exc:
+    assert 'line' in exc.info
 
 print('passed all tests...')
