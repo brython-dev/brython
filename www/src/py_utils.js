@@ -275,8 +275,8 @@ $B.clear_ns = function(name){
             delete $B.$py_module_path[key]
         }
     }
-    $B.$py_src[name] = null
-    delete $B.$py_src[name]
+    //$B.$py_src[name] = null
+    //delete $B.$py_src[name]
 
 
     var alt_name = name.replace(/\./g, '_')

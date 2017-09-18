@@ -8023,7 +8023,6 @@ function _run_scripts(options) {
 
     // Get all scripts with type = text/python or text/python3 and run them
 
-
     var first_script = true, module_name;
     if(options.ipy_id!==undefined){
         module_name='__main__';
@@ -8142,7 +8141,6 @@ function _run_scripts(options) {
         }
     }
     */
-
 }
 
 $B.$operators = $operators

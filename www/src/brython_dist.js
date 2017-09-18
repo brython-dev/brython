@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,3,'final',0]
 __BRYTHON__.__MAGIC__="3.3.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-16 19:10:45.465727"
+__BRYTHON__.compiled_date="2017-09-18 20:30:08.642444"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4855,8 +4855,6 @@ delete $B.bound[key]
 delete $B._globals[key]}}
 for(var key in $B.$py_module_path){if(key.substr(0,len)==name){$B.$py_module_path[key]=null
 delete $B.$py_module_path[key]}}
-$B.$py_src[name]=null
-delete $B.$py_src[name]
 var alt_name=name.replace(/\./g,'_')
 if(alt_name!=name){$B.clear_ns(alt_name)}}
 $B.$search=function(name,global_ns){
