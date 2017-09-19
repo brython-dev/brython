@@ -1435,6 +1435,50 @@ assert A.x.__name__ == "x"
 assert 0.1 is 0.1
 assert not(1 is 1.0)
 
+# issue 673
+class A:
+    __z = 7
+    def __init__(self):
+        self.__x = 20
+
+a = A()
+assert a._A__x == 20
+assert a._A__z == 7
+
+
+class Mapping:
+    def __init__(self, iterable):
+        self.items_list = []
+        self.__update(iterable)
+
+    def update(self, iterable):
+        for item in iterable:
+            self.items_list.append(item)
+
+    __update = update   # private copy of original update() method
+
+class MappingSubclass(Mapping):
+
+    def update(self, keys, values):
+        # provides new signature for update()
+        # but does not break __init__()
+        for item in zip(keys, values):
+            self.items_list.append(item)
+
+mapping = Mapping(range(3))
+mapping.update(range(7, 10))
+assert mapping.items_list == [0, 1, 2, 7, 8, 9]
+
+map2 = MappingSubclass(range(3))
+map2.update(['a', 'b'], [8, 9])
+assert map2.items_list == [0, 1, 2, ('a', 8), ('b', 9)]
+
+class B:
+    def __print(self, name):
+        return name
+
+assert B()._B__print('ok') == 'ok'
+
 # issue 680
 class A:
     def __getattribute__(self, name):

@@ -4,7 +4,7 @@ from browser import window, console
 
 has_local_storage = hasattr(window, 'localStorage')
 
-class __UnProvided():
+class _UnProvided():
     pass
 
 class LocalStorage():
@@ -55,10 +55,10 @@ class LocalStorage():
             raise TypeError("key must be string")
         return self.store.getItem(key) or default
 
-    def pop(self, key, default=__UnProvided()):
+    def pop(self, key, default=_UnProvided()):
         if (not isinstance(key, str)):
             raise TypeError("key must be string")
-        if type(default) is __UnProvided:
+        if type(default) is _UnProvided:
             ret = self.get(key)
             del self[key]  # will throw key error if doesn't exist
             return ret

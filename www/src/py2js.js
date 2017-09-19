@@ -1941,6 +1941,13 @@ function $DefCtx(context){
     this.after_star = []
 
     this.set_name = function(name){
+        try{
+        name = $mangle(name, this.parent.tree[0])
+        }catch(err){
+    console.log(err)
+    console.log('parent', this.parent)
+    throw err
+        }
         var id_ctx = new $IdCtx(this,name)
         this.name = name
         this.id = this.scope.id+'_'+name
@@ -3163,7 +3170,7 @@ function $IdCtx(context,value){
 
     this.type = 'id'
     this.toString = function(){return '(id) '+this.value+':'+(this.tree||'')}
-    this.value = value
+    this.value = $mangle(value, context)
     this.parent = context
     this.tree = []
     context.tree[context.tree.length]=this
@@ -5383,6 +5390,27 @@ function $arbo(ctx){
     return ctx
 }
 
+function $mangle(name, context){
+    // If name starts with __ and doesn't end with __, and if it is defined
+    // in a class, "mangle" it, ie preprend _<classname>
+    if(name.substr(0, 2)=="__" && name.substr(name.length-2)!=="__"){
+        var klass = null,
+            scope = $get_scope(context)
+        while(true){
+            if(scope.ntype=="module"){return name}
+            else if(scope.ntype=="class"){
+                var class_name = scope.context.tree[0].name
+                while(class_name.charAt(0)=='_'){class_name=class_name.substr(1)}
+                return '_' + class_name + name
+            }else{
+                if(scope.parent && scope.parent.context){
+                    scope = $get_scope(scope.context.tree[0])
+                }else{return name}
+            }
+        }
+    }else{return name}
+}
+
 // Function called in function $tokenise for each token found in the
 // Python source code
 
@@ -5507,6 +5535,7 @@ function $transition(context,token){
             var name = arguments[2]
             if(noassign[name]===true){$_SyntaxError(context,
                 ["cannot assign to "+name])}
+            name = $mangle(name, context)
             context.name=name
             return context.parent
         }

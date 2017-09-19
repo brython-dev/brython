@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-19 15:43:35.611851"
+__BRYTHON__.compiled_date="2017-09-19 18:19:02.668328"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -995,7 +995,10 @@ this.default_list=[]
 this.other_args=null
 this.other_kw=null
 this.after_star=[]
-this.set_name=function(name){var id_ctx=new $IdCtx(this,name)
+this.set_name=function(name){try{name=$mangle(name,this.parent.tree[0])}catch(err){console.log(err)
+console.log('parent',this.parent)
+throw err}
+var id_ctx=new $IdCtx(this,name)
 this.name=name
 this.id=this.scope.id+'_'+name
 this.id=this.id.replace(/\./g,'_')
@@ -1602,7 +1605,7 @@ return ''}}
 function $IdCtx(C,value){
 this.type='id'
 this.toString=function(){return '(id) '+this.value+':'+(this.tree||'')}
-this.value=value
+this.value=$mangle(value,C)
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
@@ -2644,6 +2647,12 @@ function $to_js(tree,sep){if(sep===undefined){sep=','}
 return tree.map($to_js_map).join(sep)}
 function $arbo(ctx){while(ctx.parent!=undefined){ctx=ctx.parent}
 return ctx}
+function $mangle(name,C){
+if(name.substr(0,2)=="__" && name.substr(name.length-2)!=="__"){var klass=null,scope=$get_scope(C)
+while(true){if(scope.ntype=="module"){return name}
+else if(scope.ntype=="class"){var class_name=scope.C.tree[0].name
+while(class_name.charAt(0)=='_'){class_name=class_name.substr(1)}
+return '_' + class_name + name}else{if(scope.parent && scope.parent.C){scope=$get_scope(scope.C.tree[0])}else{return name}}}}else{return name}}
 function $transition(C,token){
 switch(C.type){case 'abstract_expr':
 switch(token){case 'id':
@@ -2740,6 +2749,7 @@ $_SyntaxError(C,'token '+token+' after '+C)
 case 'attribute':
 if(token==='id'){var name=arguments[2]
 if(noassign[name]===true){$_SyntaxError(C,["cannot assign to "+name])}
+name=$mangle(name,C)
 C.name=name
 return C.parent}
 $_SyntaxError(C,token)

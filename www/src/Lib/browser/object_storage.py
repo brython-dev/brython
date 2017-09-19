@@ -1,6 +1,6 @@
 import json
 
-class __UnProvided():
+class _UnProvided():
     pass
 
 
@@ -26,8 +26,8 @@ class ObjectStorage():
             return self.storage[json.dumps(key)]
         return default
 
-    def pop(self, key, default=__UnProvided()):
-        if type(default) is __UnProvided or json.dumps(key) in self.storage:
+    def pop(self, key, default=_UnProvided()):
+        if type(default) is _UnProvided or json.dumps(key) in self.storage:
             return json.loads(self.storage.pop(json.dumps(key)))
         return default
 

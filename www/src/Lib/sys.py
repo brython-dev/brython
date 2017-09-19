@@ -79,7 +79,7 @@ version = '.'.join(str(x) for x in __BRYTHON__.version_info[:3])
 version += " (default, %s) \n[Javascript 1.5] on Brython" % __BRYTHON__.compiled_date
 hexversion = 0x03000000   # python 3.0
 
-class __version_info(object):
+class _version_info(object):
     def __init__(self, version_info):
         self.version_info = version_info
         self.major = version_info[0]
@@ -143,12 +143,12 @@ class __version_info(object):
 
 
 #eventually this needs to be the real python version such as 3.0, 3.1, etc
-version_info=__version_info(__BRYTHON__.version_info)
+version_info = _version_info(__BRYTHON__.version_info)
 
 class _implementation:
   def __init__(self):
       self.name='brython'
-      self.version = __version_info(__BRYTHON__.implementation)
+      self.version = _version_info(__BRYTHON__.implementation) 
       self.hexversion = self.version.hexversion()
       self.cache_tag=None
 
