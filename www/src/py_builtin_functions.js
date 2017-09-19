@@ -1642,10 +1642,7 @@ function sum(iterable,start){
 var $SuperDict = {__class__:$B.$type,__name__:'super'}
 
 $SuperDict.__getattribute__ = function(self,attr){
-    if($SuperDict[attr]!==undefined){ // for __repr__ and __str__
-        return function(){return $SuperDict[attr](self)}
-    }
-
+    
     var mro = self.__thisclass__.$dict.__mro__,
         res
     for(var i=0;i<mro.length;i++){ // ignore the class where super() is defined
@@ -1702,6 +1699,10 @@ $SuperDict.__getattribute__ = function(self,attr){
             return res
         }
     }
+    if(attr=="__repr__" || attr=="__str__"){
+        return function(){return $SuperDict[attr](self)}
+    }
+
     throw _b_.AttributeError("object 'super' has no attribute '"+attr+"'")
 }
 

@@ -1434,6 +1434,17 @@ assert A.x.__name__ == "x"
 # issue 669
 assert 0.1 is 0.1
 assert not(1 is 1.0)
+
+# issue 680
+class A:
+    def __getattribute__(self, name):
+        return super().__getattribute__(name)
+
+    def test(self):
+        return 'test !'
+
+assert A().test() == "test !"
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
