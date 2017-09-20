@@ -26,7 +26,7 @@ function add_pos(v1, v2){
         if(x.length==2){res=x.charAt(1)+res;carry=parseInt(x.charAt(0))}
         else{res=x+res;carry=0}
     }
-    if(carry){res=carry+res}        
+    if(carry){res=carry+res}
     return {__class__:$LongIntDict, value:res, pos:true}
 }
 
@@ -87,7 +87,7 @@ function divmod_pos(v1, v2){
         while(true){
             // Uses JS division to test an approximate result
             var candidate = Math.floor(parseInt(left)/parseInt(v2))+''
-            
+
             // Check that candidate is the correct result
             // Start by computing candidate*v2 : for this, use the table
             // mv2, which stores the multiples of v2 already calculated
@@ -137,7 +137,7 @@ function mul_pos(x, y){
     // multiplied by Javascript
     var chunk_size = 6
     var cx = split_chunks(x, chunk_size), cy = split_chunks(y, chunk_size)
-    
+
     // Multiply chunk i of x by chunk j of y and store the result in an
     // object "products" at index i+j
     // The value of products[pos] is the sum of x[i]*y[j] for i+j = pos
@@ -178,7 +178,7 @@ function sub_pos(v1, v2){
     // Substraction of positive numbers with v1>=v2
 
     var res = '', carry = 0, i1=v1.length, sv=0, x
-    
+
     // For all digits in v2, starting by the rightmost, substract it from
     // the matching digit in v1
     // This is the equivalent of the manual operation :
@@ -195,7 +195,7 @@ function sub_pos(v1, v2){
         if(x<0){res=(10+x)+res;carry=1}
         else{res=x+res;carry=0}
     }
-    
+
     // If there are remaining digits in v1, substract the carry, if any
     while(i1>0){
         i1--
@@ -222,7 +222,7 @@ $LongIntDict.$from_float = function(value){
             }else{
                 v = n1+n2+'0'.repeat(exp-1-n2.length)
             }
-        }        
+        }
     }
     return {__class__:$LongIntDict, value: v,
         pos: value >= 0}
@@ -238,7 +238,7 @@ $LongIntDict.__add__ = function(self, other){
         return _b_.float(parseInt(self.value)+other.value)
     }
     if (typeof other == 'number') other=LongInt(_b_.str(other))
-    
+
     // Addition of "self" and "other"
     // If both have the same sign (+ or -) we add their absolute values
     // If they have different sign we use the substraction of their
@@ -289,7 +289,7 @@ $LongIntDict.__and__ = function(self, other){
     // apply "and" on zeros and ones
     if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
     var start = v1.length-v2.length
-    var res = ''
+    var res = v1.substr(0, start)
     for(var i=0;i<v2.length;i++){
         if(v1.charAt(start+i)=='1' && v2.charAt(i)=='1'){res += '1'}
         else{res += '0'}
@@ -347,11 +347,11 @@ $LongIntDict.__index__ = function(self){
     // Used by bin()
     // returns a string with the binary value of self
     // The algorithm computes the result of the floor division of self by 2
-    
+
     // XXX to do : negative integers
-    
+
     var res = '',
-        temp = self.value, 
+        temp = self.value,
         d
     while(true){
         d = divmod_pos(temp, '2')
@@ -426,7 +426,7 @@ $LongIntDict.__mul__ = function(self, other){
             if(eq(0)){return NaN} // infinity * 0 = NaN
             else if(_b_.getattr(other, '__gt__')(0)){return self}
             else{return -self}
-    } 
+    }
     if(isinstance(other, _b_.float)){
         return _b_.float(parseInt(self.value)*other)
     }
