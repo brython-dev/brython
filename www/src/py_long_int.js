@@ -288,8 +288,9 @@ $LongIntDict.__and__ = function(self, other){
     var v2 = $LongIntDict.__index__(other)
     // apply "and" on zeros and ones
     if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
+    if(v2.charAt(0)=='1'){v2 = '1'.repeat(v1.length-v2.length)+v2}
     var start = v1.length-v2.length
-    var res = v1.substr(0, start)
+    var res = ''
     for(var i=0;i<v2.length;i++){
         if(v1.charAt(start+i)=='1' && v2.charAt(i)=='1'){res += '1'}
         else{res += '0'}
@@ -348,8 +349,6 @@ $LongIntDict.__index__ = function(self){
     // returns a string with the binary value of self
     // The algorithm computes the result of the floor division of self by 2
 
-    // XXX to do : negative integers
-
     var res = '',
         temp = self.value,
         d
@@ -358,6 +357,19 @@ $LongIntDict.__index__ = function(self){
         res = d[1].value + res
         temp = d[0].value
         if(temp=='0'){break}
+    }
+    if(!self.pos){
+        // Negative number : take two's complement
+        var nres='', flag=false
+        for(var len=res.length-1, i=len; i>=0 ; i--){
+            var bit = res.charAt(i)
+            if(bit=='0'){if(flag){nres='1'+nres}else{nres='0'+nres}}
+            else{if(flag){nres='0'+nres}else{flag=true;nres='1'+nres}}
+        }
+        nres = '1'+nres
+        res = nres
+    }else{
+        res = '0' + res
     }
     return intOrLong(res)
 }

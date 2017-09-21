@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.4"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-19 18:19:02.668328"
+__BRYTHON__.compiled_date="2017-09-21 09:35:41.491856"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -8223,6 +8223,7 @@ $LongIntDict.__and__=function(self,other){if(typeof other=='number')other=LongIn
 var v1=$LongIntDict.__index__(self)
 var v2=$LongIntDict.__index__(other)
 if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
+if(v2.charAt(0)=='1'){v2='1'.repeat(v1.length-v2.length)+v2}
 var start=v1.length-v2.length
 var res=''
 for(var i=0;i<v2.length;i++){if(v1.charAt(start+i)=='1' && v2.charAt(i)=='1'){res +='1'}
@@ -8253,6 +8254,13 @@ while(true){d=divmod_pos(temp,'2')
 res=d[1].value + res
 temp=d[0].value
 if(temp=='0'){break}}
+if(!self.pos){
+var nres='',flag=false
+for(var len=res.length-1,i=len;i>=0 ;i--){var bit=res.charAt(i)
+if(bit=='0'){if(flag){nres='1'+nres}else{nres='0'+nres}}
+else{if(flag){nres='0'+nres}else{flag=true;nres='1'+nres}}}
+nres='1'+nres
+res=nres}else{res='0' + res}
 return intOrLong(res)}
 $LongIntDict.__invert__=function(self){return $LongIntDict.__sub__(LongInt('-1'),self)}
 $LongIntDict.__le__=function(self,other){if(typeof other=='number')other=LongInt(_b_.str(other))
