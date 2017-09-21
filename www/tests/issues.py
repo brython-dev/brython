@@ -1489,6 +1489,14 @@ class A:
 
 assert A().test() == "test !"
 
+# issue 681
+found = [x for x in ['a','b','c']
+                     if x and not x.startswith('-')][-1]
+assert found == 'c'
+
+assert [0, 1][-1] == 1
+assert {-1: 'a'}[-1] == 'a'
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

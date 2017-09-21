@@ -5762,7 +5762,7 @@ function $transition(context,token){
         if(context.closed){
             switch(token) {
               case '[':
-                return new $SubCtx(context.parent)
+                return new $AbstractExprCtx(new $SubCtx(context.parent),false)
               case '(':
                 return new $CallArgCtx(new $CallCtx(context))
             }
@@ -6483,7 +6483,7 @@ function $transition(context,token){
         $_SyntaxError(context,'token '+token+' after '+context)
       case 'list_or_tuple':
         if(context.closed){
-            if(token==='[') return new $SubCtx(context.parent)
+            if(token==='[') return new $AbstractExprCtx(new $SubCtx(context.parent),false)
             if(token==='(') return new $CallCtx(context)
             return $transition(context.parent,token,arguments[2])
         }else{
