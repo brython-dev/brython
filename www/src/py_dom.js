@@ -4,7 +4,7 @@ eval($B.InjectBuiltins())
 
 var $ObjectDict = _b_.object.$dict
 var JSObject = $B.JSObject
-var _window = self;
+var _window = window //self;
 
 // Maps $brython_id of DOM elements to events
 $B.events = _b_.dict()
