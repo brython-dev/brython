@@ -129,6 +129,9 @@ function preformat(self, fmt){
 
 $StringDict.__format__ = function(self, format_spec) {
     var fmt = new $B.parse_format_spec(format_spec)
+    if(fmt.sign!==undefined){
+        throw _b_.ValueError("Sign not allowed in string format specifier")
+    }
     // For strings, alignment default to left
     fmt.align = fmt.align || '<'
     return $B.format_width(preformat(self, fmt), fmt)
