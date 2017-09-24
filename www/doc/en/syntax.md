@@ -18,13 +18,12 @@ Brython supports all the keywords and most functions of Python 3 :
   `callable(), chr(), classmethod(), delattr(), dict(), dir(), divmod(), `
   `enumerate(), eval(), exec(), filter(), float(), frozenset(), getattr(), `
   `globals(), hasattr(), hash(), hex(), id(), input(), int(), isinstance(), `
-  `iter(), len(), list(), locals(), map(), max(), min(), next(), object(), `
-  `open(), ord(), pow(), print(), property(), range(), repr(), reversed(), `
-  `round(), set(), setattr(), slice(), sorted(), str(), sum(), super(), `
-  `tuple(), type(), zip(), __import__()`
+  `iter(), len(), list(), locals(), map(), max(), memoryview(), min(), `
+  `next(), object(), open(), ord(), pow(), print(), property(), range(), `
+  repr(), reversed(), round(), set(), setattr(), slice(), sorted(), str(), `
+  `sum(), super(), tuple(), type(), zip(), __import__`
 
-The built-in functions `memoryview(), vars()` are not implemented in the 
-current version.
+The built-in function `vars()` is not implemented in the current version.
 
 Here are a few features and limitations imposed by the browser and Javascript :
 

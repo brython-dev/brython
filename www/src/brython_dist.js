@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-24 14:45:59.542031"
+__BRYTHON__.compiled_date="2017-09-24 17:49:25.447575"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5878,7 +5878,30 @@ return res}}
 function max(){var args=[],pos=0
 for(var i=0;i<arguments.length;i++){args[pos++]=arguments[i]}
 return $extreme(args,'__gt__')}
-function memoryview(obj){throw NotImplementedError('memoryview is not implemented')}
+var memoryview=$B.make_class({name:'memoryview',init:function(self,obj){check_no_kw('memoryview',obj)
+check_nb_args('memoryview',2,arguments.length)
+if($B.get_class(obj).$buffer_protocol){self.obj=obj
+self.format='B'
+self.itemsize=1
+self.ndim=1
+self.shape=_b_.tuple([self.obj.source.length])
+self.strides=_b_.tuple([1])
+self.suboffsets=_b_.tuple([])
+self.c_contiguous=true
+self.f_contiguous=true
+self.contiguous=true}else{throw _b_.TypeError("memoryview: a bytes-like object "+
+"is required, not '"+$B.get_class(obj).__name__+"'")}}})
+memoryview.$dict.__eq__=function(self,other){if(other.__class__!==memoryview.$dict){return false}
+return getattr(self.obj,'__eq__')(other.obj)}
+memoryview.$dict.__name__="memory"
+memoryview.$dict.__getitem__=function(self,key){var res=self.obj.__class__.__getitem__(self.obj,key)
+if(key.__class__===_b_.slice.$dict){return memoryview(res)}
+return res}
+memoryview.$dict.hex=function(self){var res='',bytes=_b_.bytes(self)
+for(var i=0,len=bytes.source.length;i<len;i++){res +=bytes.source[i].toString(16)}
+return res}
+memoryview.$dict.tobytes=function(self){return _b_.bytes(self.obj)}
+memoryview.$dict.tolist=function(self){return _b_.list(_b_.bytes(self.obj))}
 function min(){var args=[],pos=0
 for(var i=0;i<arguments.length;i++){args[pos++]=arguments[i]}
 return $extreme(args,'__lt__')}
@@ -6602,7 +6625,7 @@ _b_.slice=slice})(__BRYTHON__)
 var $ObjectDict=_b_.object.$dict
 var isinstance=_b_.isinstance,getattr=_b_.getattr,None=_b_.None
 var from_unicode={},to_unicode={}
-var $BytearrayDict={__class__:$B.$type,__name__:'bytearray'}
+var $BytearrayDict={__class__:$B.$type,__name__:'bytearray',$buffer_protocol:true}
 var mutable_methods=['__delitem__','clear','copy','count','index','pop','remove','reverse','sort']
 for(var i=0,_len_i=mutable_methods.length;i < _len_i;i++){var method=mutable_methods[i]
 $BytearrayDict[method]=(function(m){return function(self){var args=[self.source],pos=1
@@ -6645,7 +6668,7 @@ bytearray.__code__={}
 bytearray.__code__.co_argcount=1
 bytearray.__code__.co_consts=[]
 bytearray.__code__.co_varnames=['i']
-var $BytesDict={__class__ : $B.$type,__name__ : 'bytes'}
+var $BytesDict={__class__ : $B.$type,__name__ : 'bytes',$buffer_protocol:true}
 $BytesDict.__add__=function(self,other){if(!isinstance(other,bytes)){throw _b_.TypeError("can't concat bytes to " + _b_.str(other))}
 self.source=self.source.concat(other.source)
 return self}
@@ -6659,7 +6682,7 @@ if(arg<0)pos=self.source.length+pos
 if(pos>=0 && pos<self.source.length)return self.source[pos]
 throw _b_.IndexError('index out of range')}else if(isinstance(arg,_b_.slice)){var step=arg.step===None ? 1 : arg.step
 if(step>0){var start=arg.start===None ? 0 : arg.start
-var stop=arg.stop===None ? getattr(self.source,'__len__')(): arg.stop}else{var start=arg.start===None ? 
+var stop=arg.stop===None ? getattr(self.source,'__len__')(): arg.stop}else{var start=arg.start===None ?
 getattr(self.source,'__len__')()-1 : arg.start
 var stop=arg.stop===None ? 0 : arg.stop}
 if(start<0)start=self.source.length+start
@@ -6855,9 +6878,9 @@ t[pos++]=_int_e1+Math.floor((cp-_int_1000)/_int_1000)
 t[pos++]=_int_80+zone-zone1*64
 t[pos++]=_int_80 + cp - _int_2000 - 64 * zone}}
 break;
-case 'latin1': 
-case 'iso8859_1': 
-case 'windows1252': 
+case 'latin1':
+case 'iso8859_1':
+case 'windows1252':
 for(var i=0,_len_i=s.length;i < _len_i;i++){var cp=s.charCodeAt(i)
 if(cp<=255){t[pos++]=cp}
 else{$UnicodeEncodeError(encoding,i)}}

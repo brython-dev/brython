@@ -1239,10 +1239,53 @@ function max(){
     return $extreme(args,'__gt__')
 }
 
-
-function memoryview(obj) {
-  throw NotImplementedError('memoryview is not implemented')
+var memoryview = $B.make_class({name:'memoryview',
+    init:function(self, obj){
+        check_no_kw('memoryview', obj)
+        check_nb_args('memoryview', 2, arguments.length)
+        if($B.get_class(obj).$buffer_protocol){
+            self.obj = obj
+            // XXX fix me : next values are only for bytes and bytearray
+            self.format = 'B'
+            self.itemsize = 1
+            self.ndim = 1
+            self.shape = _b_.tuple([self.obj.source.length])
+            self.strides = _b_.tuple([1])
+            self.suboffsets = _b_.tuple([])
+            self.c_contiguous = true
+            self.f_contiguous = true
+            self.contiguous = true
+        }else{
+            throw _b_.TypeError("memoryview: a bytes-like object "+
+                "is required, not '"+$B.get_class(obj).__name__+"'")
+        }
+    }
+})
+memoryview.$dict.__eq__ = function(self, other){
+    if(other.__class__!==memoryview.$dict){return false}
+    return getattr(self.obj, '__eq__')(other.obj)
 }
+memoryview.$dict.__name__ = "memory"
+memoryview.$dict.__getitem__ = function(self, key){
+    var res = self.obj.__class__.__getitem__(self.obj, key)
+    if(key.__class__===_b_.slice.$dict){return memoryview(res)}
+    return res
+}
+memoryview.$dict.hex = function(self){
+    var res = '',
+        bytes = _b_.bytes(self)
+    for(var i=0,len=bytes.source.length; i<len; i++){
+        res += bytes.source[i].toString(16)
+    }
+    return res
+}
+memoryview.$dict.tobytes = function(self){
+    return _b_.bytes(self.obj)
+}
+memoryview.$dict.tolist = function(self){
+    return _b_.list(_b_.bytes(self.obj))
+}
+
 
 function min(){
     var args = [], pos=0
@@ -1642,7 +1685,7 @@ function sum(iterable,start){
 var $SuperDict = {__class__:$B.$type,__name__:'super'}
 
 $SuperDict.__getattribute__ = function(self,attr){
-    
+
     var mro = self.__thisclass__.$dict.__mro__,
         res
     for(var i=0;i<mro.length;i++){ // ignore the class where super() is defined
