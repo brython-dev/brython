@@ -1,6 +1,9 @@
 from tester import assertRaises
 
-print("{:+3}".format('essai'))
+try:
+    "{:+3}".format('essai')
+except ValueError:
+    pass
 
 x = f'{"""a}c"""[1]}'
 """ab
@@ -43,4 +46,8 @@ for i in range(3):
         f'{i}:{d[i]}'
 
 for x in (32, 100, 'fifty'):
-   print(f'x = {x:+3}')
+   try:
+       f'x = {x:+3}'
+   except ValueError:
+       if x != 'fifty':
+           raise
