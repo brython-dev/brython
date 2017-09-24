@@ -950,7 +950,7 @@ DOMNodeDict.get = function(self){
             throw _b_.TypeError("DOMNode object doesn't support selection by name")
         }
         var res = [], pos=0
-        var node_list = document.getElementsByName($dict['name'])
+        var node_list = obj.getElementsByName($dict['name'])
         if(node_list.length===0) return []
         for(var i=0;i<node_list.length;i++) res[pos++]=DOMNode(node_list[i])
     }
@@ -959,7 +959,7 @@ DOMNodeDict.get = function(self){
             throw _b_.TypeError("DOMNode object doesn't support selection by tag name")
         }
         var res = [], pos=0
-        var node_list = document.getElementsByTagName($dict['tag'])
+        var node_list = obj.getElementsByTagName($dict['tag'])
         if(node_list.length===0) return []
         for(var i=0;i<node_list.length;i++) res[pos++]=DOMNode(node_list[i])
     }
@@ -968,7 +968,7 @@ DOMNodeDict.get = function(self){
             throw _b_.TypeError("DOMNode object doesn't support selection by class name")
         }
         var res = [], pos=0
-        var node_list = document.getElementsByClassName($dict['classname'])
+        var node_list = obj.getElementsByClassName($dict['classname'])
         if(node_list.length===0) return []
         for(var i=0;i<node_list.length;i++) res[pos++]=DOMNode(node_list[i])
     }
@@ -976,7 +976,7 @@ DOMNodeDict.get = function(self){
         if(obj.getElementById===undefined){
             throw _b_.TypeError("DOMNode object doesn't support selection by id")
         }
-        var id_res = obj.getElementById($dict['id'])
+        var id_res = document.getElementById($dict['id'])
         if(!id_res) return []
         return [DOMNode(id_res)]
     }
