@@ -1113,6 +1113,18 @@ DOMNodeDict.select = function(self, selector){
     return res
 }
 
+DOMNodeDict.select_one = function(self, selector){
+    // alias for get(selector=...)
+    if(self.elt.querySelector===undefined){
+        throw _b_.TypeError("DOMNode object doesn't support selection by selector")
+    }
+    var res = self.elt.querySelector(selector)
+    if(res !== null) {
+        return None
+    }
+    return DOMNode(res)
+}
+
 DOMNodeDict.style = function(self){
     // set attribute "float" for cross-browser compatibility
     self.elt.style.float = self.elt.style.cssFloat || self.style.styleFloat
