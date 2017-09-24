@@ -14,17 +14,14 @@ Brython supporte tous les mots-clés et la plupart des fonctions de Python 3 :
 - mots clés : `as, assert, break, class, continue, def, del, elif, else, `
   `except, False, finally, for, from, global, if, import, is, lambda, None, `
   `nonlocal, pass, return, True, try, while, with, yield`
-- fonctions intégrées : `abs(), all(), any(), ascii(), bin(), bool(), bytes(),`
-  `callable(), chr(), classmethod(), delattr(), dict(), dir(), divmod(), `
-  `enumerate(), eval(), exec(), filter(), float(), frozenset(), getattr(), `
-  `globals(), hasattr(), hash(), hex(), id(), input(), int(), isinstance(), `
-  `iter(), len(), list(), locals(), map(), max(), memoryview(), min(), `
-  `next(), object(), open(), ord(), pow(), print(), property(), range(), `
-  repr(), reversed(), round(), set(), setattr(), slice(), sorted(), str(), `
-  `sum(), super(), tuple(), type(), zip(), __import__`
-
-Dans la version actuelle la fonction intégrée `vars()` n'est pas prise en
-compte.
+- fonctions et classes intégrées : `abs, all, any, ascii, bin, bool, bytes,`
+  `callable, chr, classmethod, delattr, dict, dir, divmod, `
+  `enumerate, eval, exec, filter, float, frozenset, getattr, `
+  `globals, hasattr, hash, hex, id, input, int, isinstance, `
+  `iter, len, list, locals, map, max, memoryview, min, `
+  `next, object, open, ord, pow, print, property, range, `
+  repr, reversed, round, set, setattr, slice, sorted, str, `
+  `sum, super, tuple, type, vars, zip, __import__`
 
 
 Quelques particularités liées au contexte d'exécution dans un navigateur :

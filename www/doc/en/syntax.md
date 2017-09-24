@@ -14,16 +14,14 @@ Brython supports all the keywords and most functions of Python 3 :
 - keywords : `as, assert, break, class, continue, def, del, elif, else,`
   `except, False, finally, for, from, global, if, import, is, lambda, `
   `None, nonlocal, pass, return, True, try, while, with, yield`
-- built-in functions : `abs(), all(), any(), ascii(), bin(), bool(), bytes(),`
-  `callable(), chr(), classmethod(), delattr(), dict(), dir(), divmod(), `
-  `enumerate(), eval(), exec(), filter(), float(), frozenset(), getattr(), `
-  `globals(), hasattr(), hash(), hex(), id(), input(), int(), isinstance(), `
-  `iter(), len(), list(), locals(), map(), max(), memoryview(), min(), `
-  `next(), object(), open(), ord(), pow(), print(), property(), range(), `
-  repr(), reversed(), round(), set(), setattr(), slice(), sorted(), str(), `
-  `sum(), super(), tuple(), type(), zip(), __import__`
-
-The built-in function `vars()` is not implemented in the current version.
+- built-in functions and classes : `abs, all, any, ascii, bin, bool, bytes,`
+  `callable, chr, classmethod, delattr, dict, dir, divmod, `
+  `enumerate, eval, exec, filter, float, frozenset, getattr, `
+  `globals, hasattr, hash, hex, id, input, int, isinstance, `
+  `iter, len, list, locals, map, max, memoryview, min, `
+  `next, object, open, ord, pow, print, property, range, `
+  repr, reversed, round, set, setattr, slice, sorted, str, `
+  `sum, super, tuple, type, vars, zip, __import__`
 
 Here are a few features and limitations imposed by the browser and Javascript :
 

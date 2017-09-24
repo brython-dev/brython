@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-24 17:49:25.447575"
+__BRYTHON__.compiled_date="2017-09-24 21:21:42.367963"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -6109,6 +6109,10 @@ $$super.$dict=$SuperDict
 $$super.__class__=$B.$factory
 $SuperDict.$factory=$$super
 $$super.$is_func=true
+function vars(){var def={},$=$B.args('vars',1,{obj:null},['obj'],arguments,{obj: def},null,null)
+if($.obj===def){return _b_.locals()}else{try{return getattr($.obj,'__dict__')}
+catch(err){if(err.__class__===_b_.AttributeError.$dict){throw _b_.TypeError("vars() argument must have __dict__ attribute")}
+throw err}}}
 var $Reader={__class__:$B.$type,__name__:'reader'}
 $Reader.__enter__=function(self){return self}
 $Reader.__exit__=function(self){return false}
@@ -7445,7 +7449,7 @@ var mod_name=norm_parts.join('.')
 if($B.$options.debug==10){console.log('$import '+mod_name)
 console.log('use VFS ? '+$B.use_VFS)
 console.log('use static stdlib paths ? '+$B.static_stdlib_import)}
-var current_frame=$B.frames_stack[$B.frames_stack.length-1],_globals=current_frame[3],__import__=_globals['__import__'],globals=$B.obj_dict(_globals);
+var current_frame=$B.frames_stack[$B.frames_stack.length-1],_globals=current_frame[3],__import__=_globals['__import__'],globals=_b_.dict()
 if(__import__===undefined){
 __import__=$B.$__import__;}
 var importer=typeof __import__=='function' ?
@@ -10134,14 +10138,15 @@ if(self.$jsobj)delete self.$jsobj[arg]
 return $N}
 $DictDict.__eq__=function(){var $=$B.args('__eq__',2,{self:null,other:null},['self','other'],arguments,{},null,null),self=$.self,other=$.other
 if(!isinstance(other,dict))return false
+if(self.$jsobj){self=self.$to_dict()}
+if(other.$jsobj){other=other.$to_dict()}
 if($DictDict.__len__(self)!=$DictDict.__len__(other)){return false}
 if((self.$numeric_dict.length!=other.$numeric_dict.length)||
 (self.$string_dict.length!=other.$string_dict.length)||
 (self.$object_dict.length!=other.$object_dict.length)){return false}
 for(var k in self.$numeric_dict){if(!_b_.getattr(other.$numeric_dict[k],'__eq__')(self.$numeric_dict[k])){return false}}
 for(var k in self.$string_dict){if(!_b_.getattr(other.$string_dict[k],'__eq__')(self.$string_dict[k])){return false}}
-for(var k in self.$object_dict){console.log('key in object dict',k)
-if(!_b_.getattr(other.$object_dict[k][1],'__eq__')(self.$object_dict[k][1])){return false}}
+for(var k in self.$object_dict){if(!_b_.getattr(other.$object_dict[k][1],'__eq__')(self.$object_dict[k][1])){return false}}
 return true}
 $DictDict.__getitem__=function(){var $=$B.args('__getitem__',2,{self:null,arg:null},['self','arg'],arguments,{},null,null),self=$.self,arg=$.arg
 if(self.$jsobj){if(self.$jsobj[arg]===undefined){return None}
@@ -10211,10 +10216,7 @@ try{
 return self.$iter.next()}catch(err){if(err.__name__ !=="StopIteration"){throw err }}}
 $DictDict.__repr__=function(self){if(self===undefined)return "<class 'dict'>"
 if(self.$jsobj){
-var res=[]
-for(var attr in self.$jsobj){if(attr.charAt(0)=='$' ||attr=='__class__'){continue}
-else{try{res.push("'"+attr+"': "+_b_.repr(self.$jsobj[attr]))}catch(err){}}}
-return '{'+res.join(', ')+'}'}
+return $DictDict.__repr__(self.$to_dict())}
 var res=[],pos=0,items=new $item_generator(self).as_list()
 for(var i=0;i < items.length;i++){var itm=items[i]
 if(itm[1]===self){res[pos++]=repr(itm[0])+': {...}'}
@@ -10363,8 +10365,15 @@ mappingproxy.__class__=$B.$factory
 mappingproxy.$dict=mappingproxyDict
 mappingproxyDict.$factory=mappingproxy
 $B.mappingproxy=mappingproxy
-$B.obj_dict=function(obj){var res=dict()
+$B.obj_dict=function(obj){var klass=$B.get_class(obj)
+if(klass !==undefined && klass.$native){throw _b_.AttributeError(klass.__name__+
+" has no attribute '__dict__'")}
+var res=dict()
 res.$jsobj=obj
+res.$to_dict=(function(x){return function(){var d=dict()
+for(var attr in x){if(attr.charAt(0)!='$' && attr!=='__class__'){d.$string_dict[attr]=x[attr]
+d.length++}}
+return d}})(obj)
 return res}})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 var $N=_b_.None

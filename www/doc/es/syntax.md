@@ -10,16 +10,14 @@ limitada a aquellas carpetas accesibles mediante una petición Ajax.
 Brython soporta la mayor parte de keywords y funciones de Python 3 :
 
 - keywords : `as, assert, break, class, continue, def, del, elif, else, except, False, finally, for, from, global, if, import, is, lambda, None, nonlocal, pass, return, True, try, while, with, yield`
-- built-in functions : `abs(), all(), any(), ascii(), bin(), bool(), bytes(),`
-  `callable(), chr(), classmethod(), delattr(), dict(), dir(), divmod(), `
-  `enumerate(), eval(), exec(), filter(), float(), frozenset(), getattr(), `
-  `globals(), hasattr(), hash(), hex(), id(), input(), int(), isinstance(), `
-  `iter(), len(), list(), locals(), map(), max(), memoryview(), min(), `
-  `next(), object(), open(), ord(), pow(), print(), property(), range(), `
-  repr(), reversed(), round(), set(), setattr(), slice(), sorted(), str(), `
-  `sum(), super(), tuple(), type(), zip(), __import__`
-
-La funcion integrada (_built-in_) `vars()` no ha sido implementada en la versión actual.
+- funciones y clases integradas : `abs, all, any, ascii, bin, bool, bytes,`
+  `callable, chr, classmethod, delattr, dict, dir, divmod, `
+  `enumerate, eval, exec, filter, float, frozenset, getattr, `
+  `globals, hasattr, hash, hex, id, input, int, isinstance, `
+  `iter, len, list, locals, map, max, memoryview, min, `
+  `next, object, open, ord, pow, print, property, range, `
+  repr, reversed, round, set, setattr, slice, sorted, str, `
+  `sum, super, tuple, type, vars, zip, __import__`
 
 Algunas de las características y limitaciones impuestas por el navegador y Javascript :
 

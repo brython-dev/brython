@@ -1770,6 +1770,23 @@ $$super.__class__ = $B.$factory
 $SuperDict.$factory = $$super
 $$super.$is_func = true
 
+function vars(){
+    var def = {},
+        $ = $B.args('vars', 1, {obj:null}, ['obj'], arguments, {obj: def},
+        null, null)
+    if($.obj===def){
+        return _b_.locals()
+    }else{
+        try{return getattr($.obj, '__dict__')}
+        catch(err){
+            if(err.__class__===_b_.AttributeError.$dict){
+                throw _b_.TypeError("vars() argument must have __dict__ attribute")
+            }
+            throw err
+        }
+    }
+}
+
 var $Reader = {__class__:$B.$type,__name__:'reader'}
 
 $Reader.__enter__ = function(self){return self}

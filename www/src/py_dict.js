@@ -40,7 +40,7 @@ $value_iterator.prototype.length = function() { return this.iter.length }
 $value_iterator.prototype.next = function() { return this.iter.next()[1] }
 
 var $item_generator = function(d) {
-    
+
     this.i = 0
 
     if(d.$jsobj){
@@ -51,7 +51,7 @@ var $item_generator = function(d) {
         this.length=this.items.length;
         return
     }
-    
+
     var items=[]
     var pos=0
     for (var k in d.$numeric_dict) {
@@ -157,11 +157,11 @@ $DictDict.__contains__ = function(){
         //
         //     class X:
         //         def __hash__(self): return hash('u')
-        //     
+        //
         //     a = {'u': 'a', X(): 'b'}
         //     assert set(a.values())=={'a', 'b'}
         //     assert not X() in a
-            
+
        var _eq = getattr(item, '__eq__')
        if(_eq(self.$object_dict[_key][0])){return true}
     }
@@ -193,7 +193,7 @@ $DictDict.__delitem__ = function(){
     // go with defaults
 
     var _key=hash(arg)
-    
+
     if (self.$object_dict[_key] !== undefined) {
         delete self.$object_dict[_key]
     }
@@ -208,7 +208,10 @@ $DictDict.__eq__ = function(){
         self=$.self, other=$.other
 
     if(!isinstance(other,dict)) return false
-    
+
+    if(self.$jsobj){self=self.$to_dict()}
+    if(other.$jsobj){other=other.$to_dict()}
+
     if ($DictDict.__len__(self) != $DictDict.__len__(other)){return false}
 
     if((self.$numeric_dict.length!=other.$numeric_dict.length) ||
@@ -227,12 +230,11 @@ $DictDict.__eq__ = function(){
         }
     }
     for(var k in self.$object_dict){
-        console.log('key in object dict', k)
         if(!_b_.getattr(other.$object_dict[k][1],'__eq__')(self.$object_dict[k][1])){
             return false
         }
     }
-    
+
     return true
 
 }
@@ -246,8 +248,8 @@ $DictDict.__getitem__ = function(){
         if(self.$jsobj[arg]===undefined){return None}
         return self.$jsobj[arg]
     }
-    
-    
+
+
     switch(typeof arg) {
       case 'string':
         if (self.$string_dict[arg] !== undefined) return self.$string_dict[arg]
@@ -321,7 +323,7 @@ $DictDict.__init__ = function(self){
     var $ns=$B.args('dict',0,{},[],args,{},'args','kw')
     var args = $ns['args']
     var kw = $ns['kw']
-    
+
     if (args.length>0) {
         if(isinstance(args[0],dict)){
             $B.$copy_dict(self, args[0])
@@ -329,7 +331,7 @@ $DictDict.__init__ = function(self){
         }
 
         // format dict([(k1,v1),(k2,v2)...])
-        
+
         if(Array.isArray(args[0])){
             var src = args[0]
             var i = src.length -1
@@ -361,7 +363,7 @@ $DictDict.__iter__ = function(self) {
 
 $DictDict.__len__ = function(self) {
     var _count=0
-    
+
     if(self.$jsobj){
         for(var attr in self.$jsobj){if(attr.charAt(0)!='$'){_count++}}
         return _count
@@ -370,7 +372,7 @@ $DictDict.__len__ = function(self) {
     for (var k in self.$numeric_dict) _count++
     for (var k in self.$string_dict) _count++
     for (var k in self.$object_dict) _count+= self.$object_dict[k].length
- 
+
     return _count
 }
 
@@ -392,6 +394,8 @@ $DictDict.__next__ = function(self){
 $DictDict.__repr__ = function(self){
     if(self===undefined) return "<class 'dict'>"
     if(self.$jsobj){ // wrapper around Javascript object
+        return $DictDict.__repr__(self.$to_dict())
+        /*
         var res = []
         for(var attr in self.$jsobj){
             if(attr.charAt(0)=='$' || attr=='__class__'){continue}
@@ -404,8 +408,9 @@ $DictDict.__repr__ = function(self){
             }
         }
         return '{'+res.join(', ')+'}'
+        */
     }
-    var res=[], 
+    var res=[],
         pos=0,
         items = new $item_generator(self).as_list()
     for (var i=0; i < items.length; i++) {
@@ -433,12 +438,12 @@ $DictDict.__setitem__ = function(self,key,value){
         self.$numeric_dict[key]=value
         return $N
     }
-    
+
     // if we got here the key is more complex, use default method
 
     var _key=hash(key)
     var _eq=getattr(key, '__eq__')
-    
+
     if(self.$numeric_dict[_key]!==undefined && _eq(_key)){
         self.$numeric_dict[_key] = value
         return $N
@@ -516,7 +521,7 @@ $DictDict.fromkeys.$type = 'classmethod'
 $DictDict.get = function(){
     var $ = $B.args('get', 3, {self:null, key:null, _default:null},
         ['self', 'key', '_default'], arguments, {_default:$N}, null, null)
-    
+
     try{return $DictDict.__getitem__($.self, $.key)}
     catch(err){
         if(_b_.isinstance(err, _b_.KeyError)){return $._default}
@@ -635,9 +640,9 @@ function dict(args, second){
         $str_hash: {},
         length: 0
     }
-    
+
     if(args===undefined){return res}
-        
+
     if(second===undefined){
         if(Array.isArray(args)){
             // Form "dict([[key1, value1], [key2,value2], ...])"
@@ -731,8 +736,24 @@ mappingproxyDict.$factory = mappingproxy
 $B.mappingproxy = mappingproxy
 
 $B.obj_dict = function(obj){
+    var klass = $B.get_class(obj)
+    if(klass !==undefined && klass.$native){
+        throw _b_.AttributeError(klass.__name__+
+            " has no attribute '__dict__'")}
     var res = dict()
     res.$jsobj = obj
+    res.$to_dict = (function(x){
+        return function(){
+            var d = dict()
+            for(var attr in x){
+                if(attr.charAt(0)!='$' && attr!=='__class__'){
+                    d.$string_dict[attr] = x[attr]
+                    d.length++
+                }
+            }
+            return d
+        }
+    })(obj)
     return res
 }
 

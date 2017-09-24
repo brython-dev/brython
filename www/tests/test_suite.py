@@ -371,4 +371,12 @@ try:
 except IndexError as exc:
     assert 'line' in exc.info
 
+# vars()
+class A:
+    def __init__(self, x):
+        self.x = x
+
+assert A(5).__dict__ == {'x': 5}
+assert vars(A(5)) == {'x': 5}
+
 print('passed all tests...')
