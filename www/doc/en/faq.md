@@ -18,6 +18,10 @@ __Q__ : _I see a lot of 404 errors in the browser console when I run Brython scr
 
 __A__ : this is because of the way Brython implements the "import" mechanism. When a script has to import module X, Brython searches for a file or a package in different directories : the standard library (directory libs for Javascript modules, Lib for Python modules), the directory Lib/site-packages, the directory of current page. For that, Ajax calls are sent to the matching urls ; if the file is not found, the 404 error message is written in the browser console, but the error is caught by Brython which goes on searching until it finds the module, or raises `ImportError` if all paths have been tried with no result
 
+__Q__ : why does this message show in the browser console : "Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience. For more help http://xhr.spec.whatwg.org/" ?
+
+__R__ : this is also related to imports, or to file reading. To achieve these operations, Brython uses _blocking_ Ajax calls : an imported module must be loaded before it can be used. Browser vendors should normally not remove blocking calls any time soon.
+
 __Q__ : _why use the operator `<=` to build the tree of DOM elements ? This is not pythonic !_
 
 __A__ : Python has no built-in structure to manipulate trees, ie to add "child" or "sibling" nodes to a tree node. For these operations, functions can be used ; the syntax proposed by Brython is to use operators : this is easier to type (no parenthesis) and more readable
@@ -33,6 +37,10 @@ To add a child, the operator `<=` was chosen for these reasons :
 - in Python, `<=` is used as an operator for sets with a different meaning than "lesser or equal"
 - the sign `<` is often used in computer science to mean something else than "lesser than" : in Python and many other languages, `<<` means left shift ; in HTML tags are enclosed with `<` and `>`
 - Python uses the same operator `%` for very different operations : modulo and string formatting
+
+__Q__ : couldn't some scripts (modules to import for instance) be precompiled in Javascript to improve performance and avoid the overhead of Python to Javascript translation at each page reload ?
+
+__R__ : this is theoretically possible, and many attempts have been made, but the generated Javascript is in the order of 10 times bigger than the Python source, which must be stored anyway for exception reporting. The time spared in translation would be lost by the time lost with bigger files to load.
 
 __Q__ : What browsers are compatible with Brython?
 

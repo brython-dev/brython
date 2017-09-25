@@ -16,11 +16,15 @@ __Q__ : _il y a des erreurs 404 dans la console du navigateur quand j'exécute d
 
 __R__ : c'est lié à la façon dont Brython gère les imports. Quand un script veut importer le module X, Brython recherche un fichier ou un paquetage dans différents répertoires : la bibliothèque standard (répertoire libs pour les modules en javascript, Lib pour les modules en Python), le répertoire Lib/site-packages, le répertoire de la page courante. Pour cela, il effectue des appels Ajax vers les url correspondantes ; si le fichier n'est pas trouvé, l'erreur 404 apparait dans la console, mais elle est capturée par Brython qui poursuit la recherche jusqu'à trouver le module, ou déclencher une `ImportError` si tous les chemins ont été essayés.
 
+__Q__ : pourquoi voit-on ce message dans la console du navigateur : "L’utilisation d’XMLHttpRequest de façon synchrone sur le fil d’exécution principal est obsolète à cause de son impact négatif sur la navigation de l’utilisateur final. Consulter http://xhr.spec.whatwg.org/ pour plus d’informations." ?
+
+__R__ : c'est aussi lié aux imports, ou à la lecture de fichiers. Pour réaliser ces opérations, Brython utilise des appels Ajax _bloquants_ : il faut attendre qu'un module importé soit chargé pour pouvoir l'utiliser. Normalement les éditeurs de navigateurs ne devraient pas supprimer les appels bloquants avant longtemps.
+
 __Q__ : _pourquoi utiliser l'opérateur `<=` pour construire l'arbre des éléments DOM ? Ce n'est pas pythonique !_
 
 __R__ : Python ne possède pas de structure intégrée pour manipuler les arbres, c'est-à-dire pour ajouter des éléments "enfants" ou "frères" à un noeud de l'arbre. Pour ces opérations, on peut utiliser des fonctions ; la syntaxe favorisée par Brython est d'utiliser des opérateurs : c'est plus facile à saisir (pas de parenthèses) et plus lisible
 
-Pour ajouter un "frère" on utilise l'opérateur `+` 
+Pour ajouter un "frère" on utilise l'opérateur `+`
 
 Pour ajouter un descendant, l'opérateur `<=` a été choisi pour les raisons suivantes :
 
@@ -31,3 +35,7 @@ Pour ajouter un descendant, l'opérateur `<=` a été choisi pour les raisons su
 - en Python, `<=` est utilisé comme opérateur pour les ensembles (classe set) avec une signification différente de "inférieur ou égal"
 - le signe `<` est souvent utilisé en informatique pour signifier autre chose de "strictement inférieur" : en Python et beaucoup d'autres langages, `<<` signifie décalage à gauche ; en HTML les balises sont délimitées par `<` et `>`
 - Python utilise le même opérateur `%` pour des opérations très différentes : modulo et formattage de chaines
+
+__Q__ : pourrait-on précompiler certains scripts (par exemple les modules à importer) pour gagner en performance et ne pas avoir à traduire Python en Javascript à chaque chargement ?
+
+__R__ : ce serait théoriquement possible, mais le Javascript généré est de l'ordre de 10 fois plus volumineux que le code source Python, qu'il faut de toutes façons conserver aussi pour la gestion des erreurs. Le gain en traduction serait vraisemblablement compensé par le temps plus important de chargement des scripts.
