@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-24 21:21:42.367963"
+__BRYTHON__.compiled_date="2017-09-25 21:03:06.143638"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4876,7 +4876,7 @@ else{if(frame[0]==frame[2]||frame[1].$type=="class"){throw _b_.NameError("name '
 else{throw _b_.UnboundLocalError("local variable '"+name+
 "' referenced before assignment")}}}
 $B.$global_search=function(name){
-for(var i=$B.frames_stack.length-1;i>0;i--){var frame=$B.frames_stack[i]
+for(var i=$B.frames_stack.length-1;i>=0;i--){var frame=$B.frames_stack[i]
 if(frame[3][name]!==undefined){return frame[3][name]}}
 throw _b_.NameError("name '"+name+"' is not defined")}
 $B.$local_search=function(name){
@@ -7449,7 +7449,7 @@ var mod_name=norm_parts.join('.')
 if($B.$options.debug==10){console.log('$import '+mod_name)
 console.log('use VFS ? '+$B.use_VFS)
 console.log('use static stdlib paths ? '+$B.static_stdlib_import)}
-var current_frame=$B.frames_stack[$B.frames_stack.length-1],_globals=current_frame[3],__import__=_globals['__import__'],globals=_b_.dict()
+var current_frame=$B.frames_stack[$B.frames_stack.length-1],_globals=current_frame[3],__import__=_globals['__import__'],globals=$B.obj_dict(_globals);
 if(__import__===undefined){
 __import__=$B.$__import__;}
 var importer=typeof __import__=='function' ?

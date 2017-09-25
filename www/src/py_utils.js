@@ -302,7 +302,7 @@ $B.$search = function(name, global_ns){
 
 $B.$global_search = function(name){
     // search in global namespace
-    for(var i=$B.frames_stack.length-1; i>0; i--){
+    for(var i=$B.frames_stack.length-1; i>=0; i--){
         var frame = $B.frames_stack[i]
         if(frame[3][name]!==undefined){return frame[3][name]}
     }
