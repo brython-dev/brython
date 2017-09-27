@@ -378,6 +378,17 @@ $EnumerateDict.$factory = enumerate
 //eval() (built in function)
 function $eval(src, _globals, _locals){
 
+    function from_alias(attr){
+        if(attr.substr(0, 2)=='$$' && $B.aliased_names[attr.substr(2)]){
+            return attr.substr(2)
+        }
+        return attr
+    }
+    function to_alias(attr){
+        if($B.aliased_names[attr]){return '$$'+attr}
+        return attr
+    }
+
     var current_frame = $B.frames_stack[$B.frames_stack.length-1]
     if(current_frame!==undefined){
         var current_locals_id = current_frame[0].replace(/\./,'_'),
@@ -433,8 +444,9 @@ function $eval(src, _globals, _locals){
         $B.bound[globals_id] = {}
         var items = _globals.$string_dict
         for(var item in items){
+            item1 = to_alias(item)
             try{
-                eval('$locals_'+globals_id+'["'+item+'"] = items[item]')
+                eval('$locals_'+globals_id+'["'+item1+'"] = items[item]')
                 $B.bound[globals_id][item]=true
             }catch(err){
                 break
@@ -461,6 +473,7 @@ function $eval(src, _globals, _locals){
         while(1){
             try{
                 var item = next(items)
+                item1 = to_alias(item)
                 eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')
             }catch(err){
                 break
@@ -521,8 +534,8 @@ function $eval(src, _globals, _locals){
             lns = eval('$locals_'+locals_id)
             var setitem = getattr(_locals,'__setitem__')
             for(var attr in lns){
-                if(attr.charAt(0)=='$'){continue}
-                setitem(attr, lns[attr])
+                attr1 = from_alias(attr)
+                if(attr1.charAt(0)!='$'){setitem(attr1, lns[attr])}
             }
         }else{
             for(var attr in lns){current_frame[1][attr] = lns[attr]}
@@ -532,8 +545,8 @@ function $eval(src, _globals, _locals){
             // Update _globals with the namespace after execution
             var setitem = getattr(_globals,'__setitem__')
             for(var attr in gns){
-                if(attr.charAt(0)=='$'){continue}
-                setitem(attr, gns[attr])
+                attr1 = from_alias(attr)
+                if(attr1.charAt(0)!='$'){setitem(attr1, gns[attr])}
             }
         }else{
             for(var attr in gns){

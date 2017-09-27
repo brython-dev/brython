@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-25 21:03:06.143638"
+__BRYTHON__.compiled_date="2017-09-27 17:53:59.534382"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5516,7 +5516,11 @@ return res}
 enumerate.__class__=$B.$factory
 enumerate.$dict=$EnumerateDict
 $EnumerateDict.$factory=enumerate
-function $eval(src,_globals,_locals){var current_frame=$B.frames_stack[$B.frames_stack.length-1]
+function $eval(src,_globals,_locals){function from_alias(attr){if(attr.substr(0,2)=='$$' && $B.aliased_names[attr.substr(2)]){return attr.substr(2)}
+return attr}
+function to_alias(attr){if($B.aliased_names[attr]){return '$$'+attr}
+return attr}
+var current_frame=$B.frames_stack[$B.frames_stack.length-1]
 if(current_frame!==undefined){var current_locals_id=current_frame[0].replace(/\./,'_'),current_globals_id=current_frame[2].replace(/\./,'_')}
 var is_exec=arguments[3]=='exec',leave=false
 if(src.__class__===$B.$CodeObjectDict){src=src.source}
@@ -5536,7 +5540,8 @@ eval(ex)
 $B.bound[globals_id]={}
 for(var attr in gobj){$B.bound[globals_id][attr]=true}}else{$B.bound[globals_id]={}
 var items=_globals.$string_dict
-for(var item in items){try{eval('$locals_'+globals_id+'["'+item+'"] = items[item]')
+for(var item in items){item1=to_alias(item)
+try{eval('$locals_'+globals_id+'["'+item1+'"] = items[item]')
 $B.bound[globals_id][item]=true}catch(err){break}}
 parent_block_id='__builtins__'}
 if(_locals===undefined){if(_globals!==undefined){eval('var $locals_'+locals_id+' = $locals_'+globals_id)}else{var lobj=current_frame[1],ex=''
@@ -5544,6 +5549,7 @@ for(var attr in current_frame[1]){ex +='$locals_'+locals_id+'["'+attr+
 '"] = current_frame[1]["'+attr+'"];'}
 eval(ex)}}else{var items=_b_.dict.$dict.items(_locals),item
 while(1){try{var item=next(items)
+item1=to_alias(item)
 eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')}catch(err){break}}}
 var root=$B.py2js(src,globals_id,locals_id,parent_block_id),leave_frame=true,js,gns,lns
 try{
@@ -5566,12 +5572,12 @@ var res=eval(js)
 gns=eval('$locals_'+globals_id)
 if(_locals!==undefined){lns=eval('$locals_'+locals_id)
 var setitem=getattr(_locals,'__setitem__')
-for(var attr in lns){if(attr.charAt(0)=='$'){continue}
-setitem(attr,lns[attr])}}else{for(var attr in lns){current_frame[1][attr]=lns[attr]}}
+for(var attr in lns){attr1=from_alias(attr)
+if(attr1.charAt(0)!='$'){setitem(attr1,lns[attr])}}}else{for(var attr in lns){current_frame[1][attr]=lns[attr]}}
 if(_globals!==undefined){
 var setitem=getattr(_globals,'__setitem__')
-for(var attr in gns){if(attr.charAt(0)=='$'){continue}
-setitem(attr,gns[attr])}}else{for(var attr in gns){current_frame[3][attr]=gns[attr]}}
+for(var attr in gns){attr1=from_alias(attr)
+if(attr1.charAt(0)!='$'){setitem(attr1,gns[attr])}}}else{for(var attr in gns){current_frame[3][attr]=gns[attr]}}
 if(res===undefined)return _b_.None
 return res}catch(err){if(err.$py_error===undefined){throw $B.exception(err)}
 throw err}finally{root=null

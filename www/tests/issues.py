@@ -1497,6 +1497,15 @@ assert found == 'c'
 assert [0, 1][-1] == 1
 assert {-1: 'a'}[-1] == 'a'
 
+# issue 686
+s = "message = 5"
+t = {}
+exec(s, t)
+assert 'message' in t
+exec('x = message', t)
+assert 'x' in t
+assert t['x'] == 5
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
