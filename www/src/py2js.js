@@ -2981,23 +2981,23 @@ function $FromCtx(context){
             indent = $get_node(this).indent,
             head= ' '.repeat(indent);
 
-        var _mod = this.module.replace(/\$/g,''), package, packages=[]
+        var _mod = this.module.replace(/\$/g,''), $package, packages=[]
         while(_mod.length>0){
             if(_mod.charAt(0)=='.'){
-                if(package===undefined){
+                if($package===undefined){
                     if($B.imported[mod]!==undefined){
-                        package = $B.imported[mod].__package__
+                        $package = $B.imported[mod].__package__
                     }
                 }else{
-                    package = $B.imported[package]
+                    $package = $B.imported[$package]
                 }
-                if(package===undefined){
+                if($package===undefined){
                     return 'throw SystemError("Parent module \'\' not loaded,'+
                         ' cannot perform relative import")'
-                }else if(package=='None'){
+                }else if($package=='None'){
                     console.log('package is None !')
                 }else{
-                    packages.push(package)
+                    packages.push($package)
                 }
                 _mod = _mod.substr(1)
             }else{
