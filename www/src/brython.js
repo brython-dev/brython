@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-30 09:03:21.914915"
+__BRYTHON__.compiled_date="2017-10-01 10:13:27.731306"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -11057,21 +11057,21 @@ var items=_b_.list(_b_.dict.$dict.items($ns['kw']))
 for(var i=0;i<items.length;i++){$dict[items[i][0]]=items[i][1]}
 if($dict['name']!==undefined){if(obj.getElementsByName===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by name")}
 var res=[],pos=0
-var node_list=document.getElementsByName($dict['name'])
+var node_list=obj.getElementsByName($dict['name'])
 if(node_list.length===0)return[]
 for(var i=0;i<node_list.length;i++)res[pos++]=DOMNode(node_list[i])}
 if($dict['tag']!==undefined){if(obj.getElementsByTagName===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by tag name")}
 var res=[],pos=0
-var node_list=document.getElementsByTagName($dict['tag'])
+var node_list=obj.getElementsByTagName($dict['tag'])
 if(node_list.length===0)return[]
 for(var i=0;i<node_list.length;i++)res[pos++]=DOMNode(node_list[i])}
 if($dict['classname']!==undefined){if(obj.getElementsByClassName===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by class name")}
 var res=[],pos=0
-var node_list=document.getElementsByClassName($dict['classname'])
+var node_list=obj.getElementsByClassName($dict['classname'])
 if(node_list.length===0)return[]
 for(var i=0;i<node_list.length;i++)res[pos++]=DOMNode(node_list[i])}
 if($dict['id']!==undefined){if(obj.getElementById===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by id")}
-var id_res=obj.getElementById($dict['id'])
+var id_res=document.getElementById($dict['id'])
 if(!id_res)return[]
 return[DOMNode(id_res)]}
 if($dict['selector']!==undefined){if(obj.querySelectorAll===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by selector")}
@@ -11132,6 +11132,11 @@ var node_list=self.elt.querySelectorAll(selector),res=[]
 if(node_list.length===0)return[]
 for(var i=0,len=node_list.length;i<len;i++){res[i]=DOMNode(node_list[i])}
 return res}
+DOMNodeDict.select_one=function(self,selector){
+if(self.elt.querySelector===undefined){throw _b_.TypeError("DOMNode object doesn't support selection by selector")}
+var res=self.elt.querySelector(selector)
+if(res !==null){return None}
+return DOMNode(res)}
 DOMNodeDict.style=function(self){
 self.elt.style.float=self.elt.style.cssFloat ||self.style.styleFloat
 return $B.JSObject(self.elt.style)}
