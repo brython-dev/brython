@@ -1506,6 +1506,15 @@ exec('x = message', t)
 assert 'x' in t
 assert t['x'] == 5
 
+# issue 690
+t = {}
+exec("""def f():
+    global x
+    x = 3
+""", t)
+exec("f()", t)
+assert t['x'] == 3
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

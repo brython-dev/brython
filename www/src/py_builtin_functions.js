@@ -394,6 +394,7 @@ function $eval(src, _globals, _locals){
         var current_locals_id = current_frame[0].replace(/\./,'_'),
             current_globals_id = current_frame[2].replace(/\./,'_')
     }
+    var stack_len = $B.frames_stack.length
 
     var is_exec = arguments[3]=='exec',leave = false
 
@@ -449,6 +450,8 @@ function $eval(src, _globals, _locals){
                 eval('$locals_'+globals_id+'["'+item1+'"] = items[item]')
                 $B.bound[globals_id][item]=true
             }catch(err){
+                console.log(err)
+                console.log('error setting', item)
                 break
             }
         }
@@ -482,52 +485,55 @@ function $eval(src, _globals, _locals){
     }
 
     var root = $B.py2js(src, globals_id, locals_id, parent_block_id),
-        leave_frame = true,
         js, gns, lns
 
     try{
+        // The result of py2js ends with
+        // try{
+        //     (block code)
+        //     $B.leave_frame($local_name)
+        // }catch(err){
+        //     $B.leave_frame($local_name)
+        //     throw err
+        // }
+        var try_node = root.children[root.children.length-2],
+            instr = try_node.children[try_node.children.length-2]
+        // type of the last instruction in (block code)
+        var type = instr.context.tree[0].type
+
         // If the Python function is eval(), not exec(), check that the source
         // is an expression
-        if(!is_exec){
-            // The result of py2js ends with
-            // try{
-            //     (block code)
-            //     $B.leave_frame($local_name)
-            // }catch(err){
-            //     $B.leave_frame($local_name)
-            //     throw err
-            // }
-            var try_node = root.children[root.children.length-2],
-                instr = try_node.children[try_node.children.length-2]
-            // type of the last instruction in (block code)
-            var type = instr.context.tree[0].type
-            switch(type){
 
-                case 'expr':
-                case 'list_or_tuple':
-                case 'op':
-                case 'ternary':
-                    // If the source is an expression, what we must execute is the
-                    // block inside the "try" clause : if we run root, since it's
-                    // wrapped in try / finally, the value produced by
-                    // eval(root.to_js()) will be None
-                    var children = try_node.children
-                    root.children.splice(root.children.length-2, 2)
-                    for(var i=0;i<children.length-1;i++){
-                        root.add(children[i])
-                    }
-                    break
-                default:
-                    leave_frame = false
+        switch(type){
+
+            case 'expr':
+            case 'list_or_tuple':
+            case 'op':
+            case 'ternary':
+                // If the source is an expression, what we must execute is the
+                // block inside the "try" clause : if we run root, since it's
+                // wrapped in try / finally, the value produced by
+                // eval(root.to_js()) will be None
+                var children = try_node.children
+                root.children.splice(root.children.length-2, 2)
+                for(var i=0;i<children.length-1;i++){
+                    root.add(children[i])
+                }
+                break
+            default:
+                if(!is_exec){
                     throw _b_.SyntaxError("eval() argument must be an expression",
                         '<string>', 1, 1, src)
-            }
+                }
         }
 
         js = root.to_js()
 
         var res = eval(js)
         gns = eval('$locals_'+globals_id)
+        if($B.frames_stack[$B.frames_stack.length-1][2] == globals_id){
+            gns = $B.frames_stack[$B.frames_stack.length-1][3]
+        }
 
         // Update _locals with the namespace after execution
         if(_locals!==undefined){
@@ -562,6 +568,11 @@ function $eval(src, _globals, _locals){
         if(err.$py_error===undefined){throw $B.exception(err)}
         throw err
     }finally{
+        // "leave_frame" was removed so we must execute it here
+        if($B.frames_stack.length == stack_len+1){
+            $B.frames_stack.pop()
+        }
+
         root = null
         js = null
         gns = null
@@ -570,11 +581,6 @@ function $eval(src, _globals, _locals){
         $B.clear_ns(globals_id)
         $B.clear_ns(locals_id)
 
-        if(!is_exec && leave_frame){
-            // For eval(), the finally clause with "leave_frame" was removed
-            // so we must execute it here
-            $B.frames_stack.pop()
-        }
     }
 }
 $eval.$is_func = true

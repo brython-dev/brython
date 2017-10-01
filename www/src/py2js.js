@@ -2089,7 +2089,6 @@ function $DefCtx(context){
         if(this.decorated){prefix=this.alias}
         var name = this.name+this.num
 
-
         // Add lines of code to node children
 
         // Declare object holding local variables
@@ -2119,7 +2118,7 @@ function $DefCtx(context){
             else fmod='';
             js = ";var _parent_line_info={}; if($B.frames_stack[$B.frames_stack.length-1]){"+
                  " _parent_line_info=$B.frames_stack[$B.frames_stack.length-1][1].$line_info;"+
-                 "} else _parent_line_info="+global_ns+".$line_info;"+
+                 "} else {_parent_line_info="+global_ns+".$line_info};"+
                  ";$B.$profile.call('"+fmod+"','"+fname+"',"+
                  node.line_num+",_parent_line_info)"+js;
         }
@@ -2285,7 +2284,11 @@ function $DefCtx(context){
         var last_instr = node.children[node.children.length-1].context.tree[0]
         if(last_instr.type!=='return' && this.type!='generator'){
             // as always, leave frame before returning
-            node.add($NodeJS('$B.leave_frame($local_name);return None'))
+            var js = '$B.leave_frame'
+            if(this.id.substr(0,5)=='$exec'){
+                js += '_exec'
+            }
+            node.add($NodeJS(js+'($local_name);return None'))
         }
 
         // Add the new function definition

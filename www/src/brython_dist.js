@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-09-27 17:53:59.534382"
+__BRYTHON__.compiled_date="2017-09-30 09:03:21.914915"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1086,7 +1086,7 @@ if(pnode && pnode.id){fmod=pnode.id.slice(0,pnode.id.indexOf('_'))}
 else fmod='';
 js=";var _parent_line_info={}; if($B.frames_stack[$B.frames_stack.length-1]){"+
 " _parent_line_info=$B.frames_stack[$B.frames_stack.length-1][1].$line_info;"+
-"} else _parent_line_info="+global_ns+".$line_info;"+
+"} else {_parent_line_info="+global_ns+".$line_info};"+
 ";$B.$profile.call('"+fmod+"','"+fname+"',"+
 node.line_num+",_parent_line_info)"+js;}
 enter_frame_node.enter_frame=true
@@ -1155,7 +1155,9 @@ def_func_node.is_def_func=true
 def_func_node.module=this.module
 var last_instr=node.children[node.children.length-1].C.tree[0]
 if(last_instr.type!=='return' && this.type!='generator'){
-node.add($NodeJS('$B.leave_frame($local_name);return None'))}
+var js='$B.leave_frame'
+if(this.id.substr(0,5)=='$exec'){js +='_exec'}
+node.add($NodeJS(js+'($local_name);return None'))}
 node.add(def_func_node)
 var offset=1
 var indent=node.indent
@@ -5186,6 +5188,11 @@ $B.leave_frame=function(arg){
 if($B.profile > 0)$B.$profile.return();
 if($B.frames_stack.length==0){console.log('empty stack');return}
 $B.frames_stack.pop()}
+$B.leave_frame_exec=function(arg){
+if($B.profile > 0)$B.$profile.return();
+if($B.frames_stack.length==0){console.log('empty stack');return}
+var frame=$B.frames_stack.pop()
+for(var i=$B.frames_stack.length-1;i>=0;i--){if($B.frames_stack[i][2]==frame[2]){$B.frames_stack[i][3]=frame[3]}}}
 $B.memory=function(){var info=[]
 for(var attr in __BRYTHON__){var obj=__BRYTHON__[attr]
 if(obj===null){continue}
@@ -5522,6 +5529,7 @@ function to_alias(attr){if($B.aliased_names[attr]){return '$$'+attr}
 return attr}
 var current_frame=$B.frames_stack[$B.frames_stack.length-1]
 if(current_frame!==undefined){var current_locals_id=current_frame[0].replace(/\./,'_'),current_globals_id=current_frame[2].replace(/\./,'_')}
+var stack_len=$B.frames_stack.length
 var is_exec=arguments[3]=='exec',leave=false
 if(src.__class__===$B.$CodeObjectDict){src=src.source}
 var globals_id='$exec_'+$B.UUID(),locals_id,parent_block_id
@@ -5542,7 +5550,9 @@ for(var attr in gobj){$B.bound[globals_id][attr]=true}}else{$B.bound[globals_id]
 var items=_globals.$string_dict
 for(var item in items){item1=to_alias(item)
 try{eval('$locals_'+globals_id+'["'+item1+'"] = items[item]')
-$B.bound[globals_id][item]=true}catch(err){break}}
+$B.bound[globals_id][item]=true}catch(err){console.log(err)
+console.log('error setting',item)
+break}}
 parent_block_id='__builtins__'}
 if(_locals===undefined){if(_globals!==undefined){eval('var $locals_'+locals_id+' = $locals_'+globals_id)}else{var lobj=current_frame[1],ex=''
 for(var attr in current_frame[1]){ex +='$locals_'+locals_id+'["'+attr+
@@ -5551,9 +5561,8 @@ eval(ex)}}else{var items=_b_.dict.$dict.items(_locals),item
 while(1){try{var item=next(items)
 item1=to_alias(item)
 eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')}catch(err){break}}}
-var root=$B.py2js(src,globals_id,locals_id,parent_block_id),leave_frame=true,js,gns,lns
+var root=$B.py2js(src,globals_id,locals_id,parent_block_id),js,gns,lns
 try{
-if(!is_exec){
 var try_node=root.children[root.children.length-2],instr=try_node.children[try_node.children.length-2]
 var type=instr.C.tree[0].type
 switch(type){case 'expr':
@@ -5565,11 +5574,11 @@ root.children.splice(root.children.length-2,2)
 for(var i=0;i<children.length-1;i++){root.add(children[i])}
 break
 default:
-leave_frame=false
-throw _b_.SyntaxError("eval() argument must be an expression",'<string>',1,1,src)}}
+if(!is_exec){throw _b_.SyntaxError("eval() argument must be an expression",'<string>',1,1,src)}}
 js=root.to_js()
 var res=eval(js)
 gns=eval('$locals_'+globals_id)
+if($B.frames_stack[$B.frames_stack.length-1][2]==globals_id){gns=$B.frames_stack[$B.frames_stack.length-1][3]}
 if(_locals!==undefined){lns=eval('$locals_'+locals_id)
 var setitem=getattr(_locals,'__setitem__')
 for(var attr in lns){attr1=from_alias(attr)
@@ -5580,14 +5589,14 @@ for(var attr in gns){attr1=from_alias(attr)
 if(attr1.charAt(0)!='$'){setitem(attr1,gns[attr])}}}else{for(var attr in gns){current_frame[3][attr]=gns[attr]}}
 if(res===undefined)return _b_.None
 return res}catch(err){if(err.$py_error===undefined){throw $B.exception(err)}
-throw err}finally{root=null
+throw err}finally{
+if($B.frames_stack.length==stack_len+1){$B.frames_stack.pop()}
+root=null
 js=null
 gns=null
 lns=null
 $B.clear_ns(globals_id)
-$B.clear_ns(locals_id)
-if(!is_exec && leave_frame){
-$B.frames_stack.pop()}}}
+$B.clear_ns(locals_id)}}
 $eval.$is_func=true
 function exec(src,globals,locals){return $eval(src,globals,locals,'exec')||_b_.None}
 exec.$is_func=true

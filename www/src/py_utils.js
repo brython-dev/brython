@@ -1038,6 +1038,19 @@ $B.leave_frame = function(arg){
     $B.frames_stack.pop()
 }
 
+$B.leave_frame_exec = function(arg){
+    // Leave execution frame in an "exec" or "eval" : may have side effects
+    // on the englobing namespace
+    if ($B.profile > 0) $B.$profile.return();
+    if($B.frames_stack.length==0){console.log('empty stack');return}
+    var frame = $B.frames_stack.pop()
+    for(var i=$B.frames_stack.length-1; i>=0; i--){
+        if($B.frames_stack[i][2]==frame[2]){
+            $B.frames_stack[i][3] = frame[3]
+        }
+    }
+}
+
 $B.memory = function(){
     var info = []
     for(var attr in __BRYTHON__){
