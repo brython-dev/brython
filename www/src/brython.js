@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-10-01 10:13:27.731306"
+__BRYTHON__.compiled_date="2017-10-01 11:27:32.350523"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1813,7 +1813,7 @@ this.vars=[]
 this.locals=[]
 this.toString=function(){return '(lambda) '+this.args_start+' '+this.body_start}
 this.to_js=function(){this.js_processed=true
-var node=$get_node(this),module=$get_module(this),src=$B.$py_src[module.id],args=src.substring(this.args_start,this.body_start),body=src.substring(this.body_start+1,this.body_end)
+var node=$get_node(this),module=$get_module(this),src=$get_src(C),args=src.substring(this.args_start,this.body_start),body=src.substring(this.body_start+1,this.body_end)
 body=body.replace(/\\\n/g,' ')
 body=body.replace(/\n/g,' ')
 var scope=$get_scope(this)
@@ -1823,6 +1823,7 @@ var lambda_name='lambda'+rand,module_name=module.id.replace(/\./g,'_'),scope_id=
 var js=$B.py2js(py,module_name,lambda_name,scope_id,node.line_num).to_js()
 js='(function(){\n'+js+'\nreturn $locals.'+func_name+'\n})()'
 $B.clear_ns(lambda_name)
+$B.$py_src[lambda_name]=null
 delete $B.$py_src[lambda_name]
 return js}}
 function $ListOrTupleCtx(C,real){
@@ -2635,14 +2636,13 @@ while(tree_node.parent.type!=='module'){tree_node=tree_node.parent}
 var scope=tree_node.parent 
 scope.ntype="module"
 return scope}
+function $get_src(C){
+var node=$get_node(C)
+while(node.parent!==undefined){node=node.parent}
+return node.src}
 function $get_node(C){var ctx=C
 while(ctx.parent){ctx=ctx.parent}
 return ctx.node}
-function $get_blocks(name,scope){var res=[]
-while(true){if($B.bound[scope.id][name]!==undefined){res.push(scope.id)}
-if(scope.parent_block){if(scope.parent_block.id=='__builtins__'){if(scope.blurred){return false}}}else{break}
-scope=scope.parent_block}
-return res}
 function $to_js_map(tree_element){if(tree_element.to_js !==undefined)return tree_element.to_js()
 throw Error('no to_js() for '+tree_element)}
 function $to_js(tree,sep){if(sep===undefined){sep=','}
@@ -3799,6 +3799,7 @@ if(locals_id!==module){$B.bound[locals_id]={}}
 var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
 if(typeof src=="object"){root.is_comp=src.is_comp
 src=src.src}
+root.src=src
 var lnum=1
 while(pos<src.length){var car=src.charAt(pos)
 if(indent===null){var indent=0

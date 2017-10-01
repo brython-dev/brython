@@ -3713,9 +3713,9 @@ function $LambdaCtx(context){
 
         var node = $get_node(this),
             module = $get_module(this),
-            src = $B.$py_src[module.id],
+            src = $get_src(context),
             args = src.substring(this.args_start,this.body_start),
-            body = src.substring(this.body_start+1,this.body_end)
+            body = src.substring(this.body_start+1, this.body_end)
             body = body.replace(/\\\n/g, ' ') // cf issue 582
 
         body = body.replace(/\n/g,' ')
@@ -3736,6 +3736,7 @@ function $LambdaCtx(context){
         js = '(function(){\n'+js+'\nreturn $locals.'+func_name+'\n})()'
 
         $B.clear_ns(lambda_name)
+        $B.$py_src[lambda_name] = null
         delete $B.$py_src[lambda_name]
 
         return js
@@ -5357,24 +5358,17 @@ function $get_module(context){
     return scope
 }
 
+function $get_src(context){
+    // Get the source code of context module
+    var node = $get_node(context)
+    while(node.parent!==undefined){node=node.parent}
+    return node.src
+}
+
 function $get_node(context){
     var ctx = context
     while(ctx.parent){ctx=ctx.parent}
     return ctx.node
-}
-
-function $get_blocks(name, scope){
-    var res = []
-    while(true){
-        if($B.bound[scope.id][name]!==undefined){res.push(scope.id)}
-        if(scope.parent_block){
-            if(scope.parent_block.id=='__builtins__'){
-                if(scope.blurred){return false}
-            }
-        }else{break}
-        scope = scope.parent_block
-    }
-    return res
 }
 
 function $to_js_map(tree_element) {
@@ -7089,6 +7083,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         root.is_comp = src.is_comp
         src = src.src
     }
+    root.src = src
     var lnum = 1
     while(pos<src.length){
         var car = src.charAt(pos)
