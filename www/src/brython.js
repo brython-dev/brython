@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-10-01 11:27:32.350523"
+__BRYTHON__.compiled_date="2017-10-11 21:47:01.895096"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -285,7 +285,9 @@ if(!$B._globals[scope.id]||
 $B._globals[scope.id][assigned.value]===undefined){
 var node=$get_node(this)
 node.bound_before=$B.keys($B.bound[scope.id])
-$bind(assigned.value,scope.id,level)}}}
+$bind(assigned.value,scope.id,level)}else{
+var module=$get_module(C)
+$bind(assigned.value,module.id,level)}}}
 this.guess_type=function(){return}
 this.toString=function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
 this.transform=function(node,rank){
@@ -1008,7 +1010,9 @@ this.parent.node.module=this.module
 $B.modules[this.id]=this.parent.node
 $B.bound[this.id]={}
 this.level=this.scope.level
-$B.bound[this.scope.id][name]=this
+if($B._globals[this.scope.id]!==undefined &&
+$B._globals[this.scope.id][name]!==undefined){
+$B.bound[this.module][name]=this}else{$B.bound[this.scope.id][name]=this}
 id_ctx.bound=true
 if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)}}}
 this.toString=function(){return 'def '+this.name+'('+this.tree+')'}
@@ -1162,7 +1166,9 @@ node.add(def_func_node)
 var offset=1
 var indent=node.indent
 node.parent.insert(rank+offset++,$NodeJS(name+'.$infos = {'))
-js='    __name__:"' + this.name + '",'
+var __name__=this.name
+if(__name__.substr(0,15)=='lambda_'+$B.lambda_magic){__name__="<lambda>"}
+js='    __name__:"' + __name__ + '",'
 node.parent.insert(rank+offset++,$NodeJS(js))
 var def_names=[]
 for(var i=0;i<this.default_list.length;i++){def_names.push('"'+this.default_list[i]+'"')}
@@ -2195,8 +2201,9 @@ this.tree.pop()
 new $IdCtx(new $ExprCtx(this,'rvalue',false),'None')}
 var scope=$get_scope(this)
 if(scope.ntype=='generator'){return 'return [$B.generator_return(' + $to_js(this.tree)+')]'}
-return 'var $res = '+$to_js(this.tree)+';'+
-'$B.leave_frame($local_name);return $res'}}
+var js='var $res = '+$to_js(this.tree)+';'+'$B.leave_frame'
+if(scope.id.substr(0,6)=='$exec_'){js +='_exec'}
+return js + '($local_name);return $res'}}
 function $SingleKwCtx(C,token){
 this.type='single_kw'
 this.token=token
@@ -2631,6 +2638,7 @@ function $get_module(C){
 var ctx_node=C.parent
 while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node
+if(tree_node.ntype=="module"){return tree_node}
 var scope=null
 while(tree_node.parent.type!=='module'){tree_node=tree_node.parent}
 var scope=tree_node.parent 
@@ -5546,7 +5554,7 @@ parent_block_id=current_globals_id
 ex +='var $locals_'+current_globals_id+'=gobj;' 
 ex +='var $locals_'+globals_id+'=gobj;'
 eval(ex)
-$B.bound[globals_id]={}
+$B.bound[globals_id]=$B.bound[globals_id]||{}
 for(var attr in gobj){$B.bound[globals_id][attr]=true}}else{$B.bound[globals_id]={}
 var items=_globals.$string_dict
 for(var item in items){item1=to_alias(item)

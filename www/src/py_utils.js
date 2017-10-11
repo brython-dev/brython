@@ -1030,11 +1030,6 @@ $B.leave_frame = function(arg){
     // Leave execution frame
     if ($B.profile > 0) $B.$profile.return();
     if($B.frames_stack.length==0){console.log('empty stack');return}
-    /*
-    if(arg.replace(/\./g, '_') != $B.last($B.frames_stack)[0] && arg.substr(0,4)!='$gen'){
-        console.log('leave', arg, 'top stack', $B.last($B.frames_stack)[0])
-    }
-    */
     $B.frames_stack.pop()
 }
 

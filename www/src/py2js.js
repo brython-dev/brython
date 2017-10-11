@@ -532,6 +532,11 @@ function $AssignCtx(context){ //, check_unbound){
                 var node = $get_node(this)
                 node.bound_before = $B.keys($B.bound[scope.id])
                 $bind(assigned.value, scope.id, level)
+            }else{
+                // assignement to a variable defined as global : bind name at
+                // module level (issue #690)
+                var module = $get_module(context)
+                $bind(assigned.value, module.id, level)
             }
         }
     }//if
@@ -1942,11 +1947,11 @@ function $DefCtx(context){
 
     this.set_name = function(name){
         try{
-        name = $mangle(name, this.parent.tree[0])
+            name = $mangle(name, this.parent.tree[0])
         }catch(err){
-    console.log(err)
-    console.log('parent', this.parent)
-    throw err
+            console.log(err)
+            console.log('parent', this.parent)
+            throw err
         }
         var id_ctx = new $IdCtx(this,name)
         this.name = name
@@ -1960,7 +1965,13 @@ function $DefCtx(context){
         $B.bound[this.id] = {}
 
         this.level = this.scope.level
-        $B.bound[this.scope.id][name]=this
+        if($B._globals[this.scope.id] !== undefined &&
+                $B._globals[this.scope.id][name] !== undefined){
+            // function name was declared global
+            $B.bound[this.module][name] = this
+        }else{
+            $B.bound[this.scope.id][name]=this
+        }
 
         // If function is defined inside another function, add the name
         // to local names
@@ -2304,9 +2315,9 @@ function $DefCtx(context){
         node.parent.insert(rank+offset++, $NodeJS(name+'.$infos = {'))
 
         // Add attribute __name__
-        js = '    __name__:"' + this.name + '",'
-        //if(this.scope.ntype=='class'){js+=this.scope.context.tree[0].name+'.'}
-        //js += this.name+'",'
+        var __name__ = this.name
+        if(__name__.substr(0, 15)=='lambda_'+$B.lambda_magic){__name__="<lambda>"}
+        js = '    __name__:"' + __name__ + '",'
         node.parent.insert(rank+offset++, $NodeJS(js))
 
         // Add attribute __defaults__
@@ -4462,8 +4473,9 @@ function $ReturnCtx(context){
         // Returning from a function means leaving the execution frame
         // If the return is in a try block with a finally block, the frames
         // will be restored when entering "finally"
-        return 'var $res = '+$to_js(this.tree)+';'+
-            '$B.leave_frame($local_name);return $res'
+        var js = 'var $res = '+$to_js(this.tree)+';'+'$B.leave_frame'
+        if(scope.id.substr(0, 6) == '$exec_'){js += '_exec'}
+        return js + '($local_name);return $res'
     }
 }
 
@@ -5349,6 +5361,7 @@ function $get_module(context){
     var ctx_node = context.parent
     while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
     var tree_node = ctx_node.node
+    if(tree_node.ntype=="module"){return tree_node}
     var scope = null
     while(tree_node.parent.type!=='module'){
         tree_node = tree_node.parent

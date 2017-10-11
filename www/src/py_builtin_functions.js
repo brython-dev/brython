@@ -437,7 +437,7 @@ function $eval(src, _globals, _locals){
         ex += 'var $locals_'+current_globals_id+'=gobj;' // needed for generators
         ex += 'var $locals_'+globals_id+'=gobj;'
         eval(ex)
-        $B.bound[globals_id] = {}
+        $B.bound[globals_id] = $B.bound[globals_id] ||  {}
         for(var attr in gobj){
             $B.bound[globals_id][attr] = true
         }
@@ -486,7 +486,7 @@ function $eval(src, _globals, _locals){
 
     var root = $B.py2js(src, globals_id, locals_id, parent_block_id),
         js, gns, lns
-
+    
     try{
         // The result of py2js ends with
         // try{
@@ -528,7 +528,7 @@ function $eval(src, _globals, _locals){
         }
 
         js = root.to_js()
-
+        
         var res = eval(js)
         gns = eval('$locals_'+globals_id)
         if($B.frames_stack[$B.frames_stack.length-1][2] == globals_id){
