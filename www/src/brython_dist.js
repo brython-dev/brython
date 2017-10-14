@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-10-14 16:07:11.331593"
+__BRYTHON__.compiled_date="2017-10-14 16:11:11.678340"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -6180,7 +6180,7 @@ for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
 if(args.length>0)var mode=args[0]
 if(args.length>1)var encoding=args[1]
 var is_binary=mode.search('b')>-1
-if(isinstance(file,$B.JSObject))return new $OpenFile(file.js,mode,encoding)
+if(isinstance(file,$B.JSObject))return new $B.$OpenFile(file.js,mode,encoding)
 if(isinstance(file,_b_.str)){
 var req=new XMLHttpRequest();
 req.onreadystatechange=function(){try{
@@ -10757,18 +10757,23 @@ this.callback.splice(i,1)
 this.elt.removeEventListener(this.evt,callback,false)
 break}}
 if(!found){throw KeyError("not found")}}}
-function $OpenFile(file,mode,encoding){this.reader=new FileReader()
-if(mode==='r'){this.reader.readAsText(file,encoding)}
-else if(mode==='rb'){this.reader.readAsBinaryString(file)}
-this.file=file
-this.__class__=dom.FileReader
-this.__getattr__=function(attr){if(this['get_'+attr]!==undefined)return this['get_'+attr]
-return this.reader[attr]}
-this.__setattr__=(function(obj){return function(attr,value){if(attr.substr(0,2)=='on'){
+var $OpenFile=$B.$OpenFile=function(file,mode,encoding){var res={__class__: $OpenFileDict,file: file,reader: new FileReader(),}
+if(mode==='r'){res.reader.readAsText(file,encoding)}else if(mode==='rb'){res.reader.readAsBinaryString(file)}
+return res}
+var $OpenFileDict={__class__: $B.$type,
+__name__: '$OpenFile',}
+$OpenFile.$dict=$OpenFileDict 
+$OpenFileDict.$factory=$OpenFile 
+$OpenFile.__class__=$B.$factory 
+$OpenFileDict.__mro__=[$ObjectDict]
+$OpenFileDict.__getattr__=function(self,attr){if(self['get_' + attr]!==undefined)
+return self['get_' + attr]
+return self.reader[attr]}
+$OpenFileDict.__setattr__=function(self,attr,value){var obj=self.reader
+if(attr.substr(0,2)=='on'){
 var callback=function(ev){return value($DOMEvent(ev))}
-obj.addEventListener(attr.substr(2),callback)}else if('set_'+attr in obj){return obj['set_'+attr](value)}
-else if(attr in obj){obj[attr]=value}
-else{setattr(obj,attr,value)}}})(this.reader)}
+obj.addEventListener(attr.substr(2),callback)}else if('set_' + attr in obj){return obj['set_' + attr](value)}else if(attr in obj){obj[attr]=value}else{
+setattr(obj,attr,value)}}
 var dom={File : function(){},FileReader : function(){}}
 dom.File.__class__=$B.$type
 dom.File.__str__=function(){return "<class 'File'>"}
