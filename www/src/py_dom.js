@@ -217,27 +217,52 @@ function $EventsList(elt,evt,arg){
     }
 }
 
-function $OpenFile(file,mode,encoding){
-    this.reader = new FileReader()
-    if(mode==='r'){this.reader.readAsText(file,encoding)}
-    else if(mode==='rb'){this.reader.readAsBinaryString(file)}
 
-    this.file = file
-    this.__class__ = dom.FileReader
-    this.__getattr__ = function(attr){
-        if(this['get_'+attr]!==undefined) return this['get_'+attr]
-        return this.reader[attr]
+var $OpenFile = $B.$OpenFile = function(file, mode, encoding) {
+    var res = {
+        __class__: $OpenFileDict,
+        file: file,
+        reader: new FileReader(),
     }
-    this.__setattr__ = (function(obj){
-        return function(attr,value){
-            if(attr.substr(0,2)=='on'){ // event
-                var callback = function(ev){return value($DOMEvent(ev))}
-                obj.addEventListener(attr.substr(2),callback)
-            }else if('set_'+attr in obj){return obj['set_'+attr](value)}
-            else if(attr in obj){obj[attr]=value}
-            else{setattr(obj,attr,value)}
-        }
-    })(this.reader)
+    if(mode === 'r') {
+        res.reader.readAsText(file, encoding)
+    } else if(mode === 'rb') {
+        res.reader.readAsBinaryString(file)
+    }
+    return res
+}
+
+var $OpenFileDict = {
+    __class__: $B.$type,  // metaclass type
+    __name__: '$OpenFile',
+}
+
+$OpenFile.$dict = $OpenFileDict  // cross ref class dict in factory
+$OpenFileDict.$factory = $OpenFile  // cross ref factory in class dict
+
+$OpenFile.__class__ = $B.$factory  // metaclass factory
+$OpenFileDict.__mro__ = [$ObjectDict]  // base class mro search
+
+
+$OpenFileDict.__getattr__ = function(self, attr) {
+    if(self['get_' + attr] !== undefined)
+        return self['get_' + attr]
+
+    return self.reader[attr]
+}
+
+$OpenFileDict.__setattr__ = function(self, attr, value) {
+    var obj = self.reader
+    if(attr.substr(0,2) == 'on') { // event
+        var callback = function(ev) { return value($DOMEvent(ev)) }
+        obj.addEventListener(attr.substr(2), callback)
+    } else if('set_' + attr in obj) {
+        return obj['set_' + attr](value)
+    } else if(attr in obj) {
+        obj[attr] = value
+    } else {
+        setattr(obj, attr, value)
+    }
 }
 
 
