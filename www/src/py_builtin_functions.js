@@ -1891,7 +1891,7 @@ function $url_open(){
     if(args.length>0) var mode=args[0]
     if(args.length>1) var encoding=args[1]
     var is_binary = mode.search('b')>-1
-    if(isinstance(file,$B.JSObject)) return new $OpenFile(file.js,mode,encoding)
+    if(isinstance(file,$B.JSObject)) return new $B.$OpenFile(file.js,mode,encoding)
     if(isinstance(file,_b_.str)){
         // read the file content and return an object with file object methods
         var req=new XMLHttpRequest();
