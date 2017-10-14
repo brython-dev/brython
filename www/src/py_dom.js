@@ -1051,12 +1051,15 @@ DOMNodeDict.id = function(self){
     return None
 }
 
-DOMNodeDict.index = function(self){
-    // Get index of element in its parent children
-    var rank = 0,
-        elt = self.elt
-    while((elt = elt.previousSibling) !== null){
-        rank++
+DOMNodeDict.index = function(self, selector){
+    if(selector===undefined){
+        // Get index of element in its parent children
+        selector = self.elt.tagName
+    }
+    var items = self.elt.parentElement.querySelectorAll(selector),
+        rank = -1
+    for(var i=0;i<items.length;i++){
+        if(items[i] === self.elt){rank=i;break}
     }
     return rank
 }
@@ -1083,6 +1086,39 @@ DOMNodeDict.left = {
     },
     '__set__': function(obj, self, value){
         self.elt.style.left = value+'px'
+    }
+}
+
+var EventListener = $B.make_class({
+    name: "EventListener",
+    init: function(self, obj){
+        self.obj=obj
+    }
+})
+EventListener.$dict.__enter__ = function(self){
+    // local namespace of object
+    var ns = $B.frames_stack[$B.frames_stack.length-1][1]
+    self.funcs = []
+    for(var attr in ns){
+        if(ns[attr] !==null && ns[attr].$infos!==undefined){
+            self.funcs.push(ns[attr])
+        }
+    }
+}
+EventListener.$dict.__exit__ = function(self){
+    var ns = $B.frames_stack[$B.frames_stack.length-1][1]
+    for(var attr in ns){
+        if(ns[attr] !== null && ns[attr].$infos!==undefined){
+            if(self.funcs.indexOf(ns[attr])==-1){
+                DOMNodeDict.bind(self.obj, attr, ns[attr])
+            }
+        }
+    }
+}
+
+DOMNodeDict.listener = {
+    __get__:function(self){
+        return EventListener(self)
     }
 }
 

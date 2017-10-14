@@ -400,8 +400,9 @@ $B.make_class = function(class_obj){
     A.__class__ = $B.$factory
 
     A.$dict = {
-        __class__: $B.type,
-        __name__: class_obj.name
+        __class__: $B.$type,
+        __name__: class_obj.name,
+        $factory: A
     }
     A.$dict.__mro__ = [object.$dict]
 

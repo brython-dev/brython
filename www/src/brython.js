@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-10-11 21:47:01.895096"
+__BRYTHON__.compiled_date="2017-10-14 16:07:11.331593"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4462,7 +4462,7 @@ function A(){var res={__class__:A.$dict}
 if(class_obj.init){class_obj.init.apply(null,[res].concat(Array.prototype.slice.call(arguments)))}
 return res}
 A.__class__=$B.$factory
-A.$dict={__class__: $B.type,__name__: class_obj.name}
+A.$dict={__class__: $B.$type,__name__: class_obj.name,$factory: A}
 A.$dict.__mro__=[object.$dict]
 return A}
 return object})(__BRYTHON__)
@@ -11115,9 +11115,10 @@ else{res=_b_.None}}
 return res}
 DOMNodeDict.id=function(self){if(self.elt.id !==undefined)return self.elt.id
 return None}
-DOMNodeDict.index=function(self){
-var rank=0,elt=self.elt
-while((elt=elt.previousSibling)!==null){rank++}
+DOMNodeDict.index=function(self,selector){if(selector===undefined){
+selector=self.elt.tagName}
+var items=self.elt.parentElement.querySelectorAll(selector),rank=-1
+for(var i=0;i<items.length;i++){if(items[i]===self.elt){rank=i;break}}
 return rank}
 DOMNodeDict.inside=function(self,other){
 other=other.elt
@@ -11129,6 +11130,14 @@ DOMNodeDict.left={'__get__': function(self){if(self.elt.style===undefined){retur
 var res=parseInt(self.elt.style.left)
 if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'left'")}
 return res},'__set__': function(obj,self,value){self.elt.style.left=value+'px'}}
+var EventListener=$B.make_class({name: "EventListener",init: function(self,obj){self.obj=obj}})
+EventListener.$dict.__enter__=function(self){
+var ns=$B.frames_stack[$B.frames_stack.length-1][1]
+self.funcs=[]
+for(var attr in ns){if(ns[attr]!==null && ns[attr].$infos!==undefined){self.funcs.push(ns[attr])}}}
+EventListener.$dict.__exit__=function(self){var ns=$B.frames_stack[$B.frames_stack.length-1][1]
+for(var attr in ns){if(ns[attr]!==null && ns[attr].$infos!==undefined){if(self.funcs.indexOf(ns[attr])==-1){DOMNodeDict.bind(self.obj,attr,ns[attr])}}}}
+DOMNodeDict.listener={__get__:function(self){return EventListener(self)}}
 DOMNodeDict.options=function(self){
 return new $OptionsClass(self.elt)}
 DOMNodeDict.parent=function(self){if(self.elt.parentElement)return DOMNode(self.elt.parentElement)
@@ -11563,9 +11572,7 @@ if(scripts[i].src){console.log(scripts[i].src)}}}
 console.log(js_scripts)
 for(var i=0;i<$B.scripts.length;i++){var name=$B.scripts[i]
 console.log('script:',name)}
-for(var mod in $B.imported){if($B.imported[mod].$last_modified){console.log('check',mod,$B.imported[mod].__file__,$B.imported[mod].$last_modified)}else{console.log('no date for mod',mod)}}},select: function(css_selector){var elts=document.querySelectorAll(css_selector),DOMNode=$B.DOMNodeDict.$factory,res=[]
-for(var i=0;i<elts.length;i++){res.push(DOMNode(elts[i]))}
-return res},URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+for(var mod in $B.imported){if($B.imported[mod].$last_modified){console.log('check',mod,$B.imported[mod].__file__,$B.imported[mod].$last_modified)}else{console.log('no date for mod',mod)}}},URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
 var regex=new RegExp("[\\?&]" + name + "=([^&#]*)"),results=regex.exec(location.search);
 results=results===null ? "" : decodeURIComponent(results[1].replace(/\+/g," "));
 return $B.builtins.str(results);}})
