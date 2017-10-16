@@ -866,7 +866,7 @@ function getattr(obj,attr,_default){
     var cname = klass.__name__
     if(is_class){cname=obj.__name__}
 
-    attr_error(attr, cname)
+    attr_error(rawname, cname)
 }
 
 //globals() (built in function)
