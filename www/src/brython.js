@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-10-14 16:11:11.678340"
+__BRYTHON__.compiled_date="2017-10-17 16:07:51.945002"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5735,7 +5735,7 @@ if(res!==undefined){return res}
 if(_default !==undefined){return _default}
 var cname=klass.__name__
 if(is_class){cname=obj.__name__}
-attr_error(attr,cname)}
+attr_error(rawname,cname)}
 function globals(){
 check_nb_args('globals',0,arguments.length)
 return $B.obj_dict($B.last($B.frames_stack)[3])}
@@ -6249,15 +6249,17 @@ var $FunctionGlobalsDict={__class:$B.$type,__name__:'function globals'}
 $FunctionGlobalsDict.__mro__=[$ObjectDict]
 $FunctionGlobalsDict.$factory={__class__:$B.$factory,$dict:$FunctionGlobalsDict}
 var $FunctionDict=$B.$FunctionDict={__class__:$B.$type,__code__:{__class__:$FunctionCodeDict,__name__:'function code'},__globals__:{__class__:$FunctionGlobalsDict,__name__:'function globals'},__name__:'function'}
+$FunctionDict.__dir__=function(self){var infos=self.$infos ||{},attrs=self.$attrs ||{}
+return Object.keys(infos).concat(Object.keys(attrs))}
 $FunctionDict.__getattribute__=function(self,attr){
 if(self.$infos && self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__:$B.$CodeDict}
 for(var attr in self.$infos.__code__){res[attr]=self.$infos.__code__[attr]}
 return res}else if(attr=='__annotations__'){
-return $B.obj_dict(self.$infos[attr])}else{return self.$infos[attr]}}else{return _b_.object.$dict.__getattribute__(self,attr)}}
+return $B.obj_dict(self.$infos[attr])}else{return self.$infos[attr]}}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.$dict.__getattribute__(self,attr)}}
 $FunctionDict.__repr__=$FunctionDict.__str__=function(self){return '<function '+self.$infos.__name__+'>'}
 $FunctionDict.__mro__=[$ObjectDict]
 $FunctionDict.__setattr__=function(self,attr,value){if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
-else{self[attr]=value}}
+else{self.$attrs=self.$attrs ||{};self.$attrs[attr]=value}}
 var $Function=function(){}
 $Function.__class__=$B.$factory
 $FunctionDict.$factory=$Function
@@ -10654,7 +10656,6 @@ _b_.frozenset=frozenset})(__BRYTHON__)
 var $ObjectDict=_b_.object.$dict
 var JSObject=$B.JSObject
 var _window=window 
-$B.events=_b_.dict()
 function $getMouseOffset(target,ev){ev=ev ||_window.event;
 var docPos=$getPosition(target);
 var mousePos=$mouseCoords(ev);
@@ -11007,11 +11008,8 @@ DOMNodeDict.bind=function(self,event){
 var _id
 if(self.elt.nodeType===9){_id=0}
 else{_id=self.elt.$brython_id}
-var _d=_b_.dict.$dict
-if(!_d.__contains__($B.events,_id)){_d.__setitem__($B.events,_id,dict())}
-var item=_d.__getitem__($B.events,_id)
-if(!_d.__contains__(item,event)){_d.__setitem__(item,event,[])}
-var evlist=_d.__getitem__(item,event)
+self.$events=self.$events ||{}
+var evlist=self.$events[event]=self.$events[event]||[]
 var pos=evlist.length
 for(var i=2;i<arguments.length;i++){var func=arguments[i]
 var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))}catch(err){if(err.__class__!==undefined){var msg=_b_.getattr(err,'info')+
@@ -11021,6 +11019,9 @@ try{getattr($B.stderr,"write")(msg)}
 catch(err){console.log(msg)}}else{try{getattr($B.stderr,"write")(err)}
 catch(err1){console.log(err)}}}}}
 )(func)
+callback.$infos=func.$infos
+callback.$attrs=func.$attrs ||{}
+callback.$func=func
 self.elt.addEventListener(event,callback,false)
 evlist[pos++]=[func,callback]}
 return self}
@@ -11049,14 +11050,8 @@ var res=self.elt,tagName=tagName.toLowerCase()
 while(res.tagName.toLowerCase()!=tagName){res=res.parentNode
 if(res===undefined){throw _b_.KeyError('no parent of type '+tagName)}}
 return DOMNode(res)}
-DOMNodeDict.events=function(self,event){var _id
-if(self.elt.nodeType===9){_id=0}
-else{_id=self.elt.$brython_id}
-var _d=_b_.dict.$dict
-if(!_d.__contains__($B.events,_id)){return[]}
-var item=_d.__getitem__($B.events,_id)
-if(!_d.__contains__(item,event)){return[]}
-var evt_list=_d.__getitem__(item,event),callbacks=[]
+DOMNodeDict.events=function(self,event){self.$events=self.$events ||{}
+var evt_list=self.$events[event]=self.$events[event]||[],callbacks=[]
 for(var i=0;i<evt_list.length;i++){callbacks.push(evt_list[i][1])}
 return callbacks}
 DOMNodeDict.focus=function(self){return(function(obj){return function(){
@@ -11209,20 +11204,20 @@ var evObj=document.createEvent('Events');
 evObj.initEvent(etype,true,false);
 self.elt.dispatchEvent(evObj);}}
 DOMNodeDict.unbind=function(self,event){
-var _id
-if(self.elt.nodeType==9){_id=0}else{_id=self.elt.$brython_id}
-if(!_b_.dict.$dict.__contains__($B.events,_id))return
-var item=_b_.dict.$dict.__getitem__($B.events,_id)
-if(event===undefined){var events=_b_.list(_b_.dict.$dict.keys(item))
-for(var i=0;i<events.length;i++){DOMNodeDict.unbind(self,events[i])}
-return}
-if(!_b_.dict.$dict.__contains__(item,event))return
-var events=_b_.dict.$dict.__getitem__(item,event)
-if(arguments.length===2){for(var i=0;i<events.length;i++){var callback=events[i][1]
+self.$events=self.$events ||{}
+if(self.$events==={}){return _b_.None}
+if(event===undefined){for(var event in self.$events){DOMNodeDict.unbind(self,event)}
+return _b_.None}
+if(self.$events[event]===undefined ||self.$events[event].length==0){return _b_.None}
+var events=self.$events[event]
+if(arguments.length===2){
+for(var i=0;i<events.length;i++){var callback=events[i][1]
 self.elt.removeEventListener(event,callback,false)}
-events=[]
-return}
-for(var i=2;i<arguments.length;i++){var func=arguments[i],flag=false
+self.$events[event]=[]
+return _b_.None}
+for(var i=2;i<arguments.length;i++){var callback=arguments[i],flag=false
+if(callback.$func===undefined){throw _b_.TypeError('function is not an event callback')}
+var func=callback.$func
 for(var j=0;j<events.length;j++){if(getattr(func,'__eq__')(events[j][0])){var callback=events[j][1]
 self.elt.removeEventListener(event,callback,false)
 events.splice(j,1)

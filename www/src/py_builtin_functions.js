@@ -486,7 +486,7 @@ function $eval(src, _globals, _locals){
 
     var root = $B.py2js(src, globals_id, locals_id, parent_block_id),
         js, gns, lns
-    
+
     try{
         // The result of py2js ends with
         // try{
@@ -528,7 +528,7 @@ function $eval(src, _globals, _locals){
         }
 
         js = root.to_js()
-        
+
         var res = eval(js)
         gns = eval('$locals_'+globals_id)
         if($B.frames_stack[$B.frames_stack.length-1][2] == globals_id){
@@ -2057,6 +2057,13 @@ var $FunctionDict = $B.$FunctionDict = {
     __name__:'function'
 }
 
+$FunctionDict.__dir__ = function(self){
+    var infos = self.$infos || {},
+        attrs = self.$attrs || {}
+
+    return Object.keys(infos).concat(Object.keys(attrs))
+}
+
 $FunctionDict.__getattribute__ = function(self, attr){
     // Internal attributes __name__, __module__, __doc__ etc.
     // are stored in self.$infos
@@ -2073,6 +2080,8 @@ $FunctionDict.__getattribute__ = function(self, attr){
         }else{
             return self.$infos[attr]
         }
+    }else if(self.$attrs && self.$attrs[attr] !== undefined){
+        return self.$attrs[attr]
     }else{
         return _b_.object.$dict.__getattribute__(self, attr)
     }
@@ -2086,7 +2095,7 @@ $FunctionDict.__mro__ = [$ObjectDict]
 
 $FunctionDict.__setattr__ = function(self, attr, value){
     if(self.$infos[attr]!==undefined){self.$infos[attr] = value}
-    else{self[attr] = value}
+    else{self.$attrs = self.$attrs || {}; self.$attrs[attr] = value}
 }
 
 var $Function = function(){}

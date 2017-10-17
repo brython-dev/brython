@@ -6,9 +6,6 @@ var $ObjectDict = _b_.object.$dict
 var JSObject = $B.JSObject
 var _window = window //self;
 
-// Maps $brython_id of DOM elements to events
-$B.events = _b_.dict()
-
 // cross-browser utility functions
 function $getMouseOffset(target, ev){
     ev = ev || _window.event;
@@ -836,17 +833,8 @@ DOMNodeDict.bind = function(self,event){
     var _id
     if(self.elt.nodeType===9){_id=0}
     else{_id = self.elt.$brython_id}
-    // if element id is not referenced in $B.events, create a new entry
-    var _d=_b_.dict.$dict
-    if(!_d.__contains__($B.events, _id)){
-        _d.__setitem__($B.events, _id, dict())
-    }
-    var item = _d.__getitem__($B.events, _id)
-    // If event is not already registered for the element, create a new list
-    if(!_d.__contains__(item, event)){
-        _d.__setitem__(item, event, [])
-    }
-    var evlist = _d.__getitem__(item, event)
+    self.$events = self.$events || {}
+    var evlist = self.$events[event] = self.$events[event] || []
     var pos=evlist.length
     for(var i=2;i<arguments.length;i++){
         var func = arguments[i]
@@ -868,8 +856,11 @@ DOMNodeDict.bind = function(self,event){
                 }
             }}
         )(func)
+        callback.$infos = func.$infos
+        callback.$attrs = func.$attrs || {}
+        callback.$func = func
         self.elt.addEventListener(event,callback,false)
-        evlist[pos++]=[func, callback]
+        evlist[pos++] = [func, callback]
     }
     return self
 }
@@ -934,16 +925,9 @@ DOMNodeDict.closest = function(self, tagName){
 }
 
 DOMNodeDict.events = function(self, event){
-    var _id
-    if(self.elt.nodeType===9){_id=0}
-    else{_id = self.elt.$brython_id}
-    // if element id is not referenced in $B.events, create a new entry
-    var _d=_b_.dict.$dict
-    if(!_d.__contains__($B.events, _id)){return []}
-    var item = _d.__getitem__($B.events, _id)
-    // If event is not already registered for the element, create a new list
-    if(!_d.__contains__(item, event)){return []}
-    var evt_list = _d.__getitem__(item, event), callbacks = []
+    self.$events = self.$events || {}
+    var evt_list = self.$events[event] = self.$events[event] || [],
+        callbacks = []
     for(var i=0;i<evt_list.length;i++){callbacks.push(evt_list[i][1])}
     return callbacks
 }
@@ -1298,34 +1282,41 @@ DOMNodeDict.trigger = function (self, etype){
     }
 }
 
-DOMNodeDict.unbind = function(self,event){
+DOMNodeDict.unbind = function(self, event){
     // unbind functions from the event (event = "click", "mouseover" etc.)
     // if no function is specified, remove all callback functions
     // If no event is specified, remove all callbacks for all events
-    var _id
-    if(self.elt.nodeType==9){_id=0}else{_id=self.elt.$brython_id}
-    if(!_b_.dict.$dict.__contains__($B.events, _id)) return
-    var item = _b_.dict.$dict.__getitem__($B.events, _id)
+    self.$events = self.$events || {}
+    if(self.$events==={}){return _b_.None}
 
     if(event===undefined){
-        var events = _b_.list(_b_.dict.$dict.keys(item))
-        for(var i=0;i<events.length;i++){DOMNodeDict.unbind(self, events[i])}
-        return
+        for(var event in self.$events){
+            DOMNodeDict.unbind(self, event)
+        }
+        return _b_.None
     }
 
-    if(!_b_.dict.$dict.__contains__(item, event)) return
+    if(self.$events[event]===undefined || self.$events[event].length==0){
+        return _b_.None
+    }
 
-    var events = _b_.dict.$dict.__getitem__(item, event)
+    var events = self.$events[event]
     if(arguments.length===2){
+        // remove all callback functions
         for(var i=0;i<events.length;i++){
             var callback = events[i][1]
             self.elt.removeEventListener(event,callback,false)
         }
-        events = []
-        return
+        self.$events[event] = []
+        return _b_.None
     }
+
     for(var i=2;i<arguments.length;i++){
-        var func = arguments[i], flag = false
+        var callback = arguments[i], flag = false
+        if(callback.$func === undefined){
+            throw _b_.TypeError('function is not an event callback')
+        }
+        var func = callback.$func
         for(var j=0;j<events.length;j++){
             if(getattr(func,'__eq__')(events[j][0])){
                 var callback = events[j][1]
