@@ -892,19 +892,15 @@ DOMNodeDict.Class = function(self){
 DOMNodeDict.class_name = function(self){return DOMNodeDict.Class(self)}
 
 DOMNodeDict.clone = function(self){
-    res = DOMNode(self.elt.cloneNode(true))
-    res.elt.$brython_id='DOM-' + $B.UUID()
+    var res = DOMNode(self.elt.cloneNode(true))
 
     // bind events on clone to the same callbacks as self
-    var _d=_b_.dict.$dict
-    if(_d.__contains__($B.events, self.elt.$brython_id)){
-        var events = _d.__getitem__($B.events, self.elt.$brython_id)
-        var items = _b_.list(_d.items(events))
-        for(var i=0;i<items.length;i++){
-            var event = items[i][0]
-            for(var j=0;j<items[i][1].length;j++){
-                DOMNodeDict.bind(res,event,items[i][1][j][0])
-            }
+    var events = self.$events || {}
+    for(var event in events){
+        var evt_list = events[event]
+        for(var i=0;i<evt_list.length;i++){
+            var func = evt_list[i][0]
+            DOMNodeDict.bind(res,event,func)
         }
     }
     return res

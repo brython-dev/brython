@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-10-17 16:07:51.945002"
+__BRYTHON__.compiled_date="2017-10-17 16:23:13.979739"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -11038,12 +11038,10 @@ DOMNodeDict.Class=function(self){if(self.elt.className !==undefined)return self.
 return None}
 DOMNodeDict.class_name=function(self){return DOMNodeDict.Class(self)}
 DOMNodeDict.clone=function(self){res=DOMNode(self.elt.cloneNode(true))
-res.elt.$brython_id='DOM-' + $B.UUID()
-var _d=_b_.dict.$dict
-if(_d.__contains__($B.events,self.elt.$brython_id)){var events=_d.__getitem__($B.events,self.elt.$brython_id)
-var items=_b_.list(_d.items(events))
-for(var i=0;i<items.length;i++){var event=items[i][0]
-for(var j=0;j<items[i][1].length;j++){DOMNodeDict.bind(res,event,items[i][1][j][0])}}}
+var events=self.$events ||{}
+for(var event in events){var evt_list=events[event]
+for(var i=0;i<evt_list.length;i++){var func=evt_list[i][0]
+DOMNodeDict.bind(res,event,func)}}
 return res}
 DOMNodeDict.closest=function(self,tagName){
 var res=self.elt,tagName=tagName.toLowerCase()
