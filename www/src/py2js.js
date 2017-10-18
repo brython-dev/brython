@@ -1818,8 +1818,14 @@ function $DecoratorCtx(context){
         // add a line after decorated element
         var tail='',
             scope = $get_scope(this),
-            ref = '$locals["'+obj.name+'"]',
-            res = ref+'='
+            ref = '$locals["'
+        // reference of the original function, may have been declared global
+        if($B._globals[scope.id] && $B._globals[scope.id][obj.name]){
+            var module = $get_module(this)
+            ref = '$locals_'+module.id+'["'
+        }
+        ref += obj.name+'"]'
+        var res = ref+'='
 
         for(var i=0;i<decorators.length;i++){
           //var dec = this.dec_ids[i]
@@ -1837,36 +1843,6 @@ function $DecoratorCtx(context){
         new $NodeJSCtx(decor_node,res)
         node.parent.insert(func_rank+1,decor_node)
         this.decorators = decorators
-
-        // Pierre, I probably need some help here...
-        // we can use brython_block and brython_async as decorators so we know
-        // that we need to generate javascript up to this point in python code
-        // and $append that javascript code to $B.execution_object.
-        // if a delay is supplied (on brython_block only), use that value
-        // as the delay value in the execution_object's setTimeout.
-
-        // fix me...
-        if ($B.async_enabled && _block_async_flag) {
-           /*
-
-        // this would be a good test to see if async (and blocking) works
-
-        @brython_block
-        def mytest():
-            print("10")
-
-        for _i in range(10):
-            print(_i)
-
-        mytest()
-
-        for _i in range(11,20):
-            print(_i)
-           */
-
-           if ($B.block[scope.id] === undefined) $B.block[scope.id]={}
-           $B.block[scope.id][obj.name] = true
-        }
     }
 
     this.to_js = function(){

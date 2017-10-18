@@ -70,7 +70,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-10-17 16:23:13.979739"
+__BRYTHON__.compiled_date="2017-10-18 08:27:44.700160"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -952,7 +952,11 @@ if(name=="brython_block" ||name=="brython_async")_block_async_flag=true}catch(er
 var obj=children[func_rank].C.tree[0]
 if(obj.type=='def'){obj.decorated=true
 obj.alias='$dec'+$B.UUID()}
-var tail='',scope=$get_scope(this),ref='$locals["'+obj.name+'"]',res=ref+'='
+var tail='',scope=$get_scope(this),ref='$locals["'
+if($B._globals[scope.id]&& $B._globals[scope.id][obj.name]){var module=$get_module(this)
+ref='$locals_'+module.id+'["'}
+ref +=obj.name+'"]'
+var res=ref+'='
 for(var i=0;i<decorators.length;i++){
 res +='getattr('+this.dec_ids[i]+',"__call__")('
 tail +=')'}
@@ -961,10 +965,7 @@ $B.bound[scope.id][obj.name]=true
 var decor_node=new $Node()
 new $NodeJSCtx(decor_node,res)
 node.parent.insert(func_rank+1,decor_node)
-this.decorators=decorators
-if($B.async_enabled && _block_async_flag){
-if($B.block[scope.id]===undefined)$B.block[scope.id]={}
-$B.block[scope.id][obj.name]=true}}
+this.decorators=decorators}
 this.to_js=function(){if($B.async_enabled){if(this.processing !==undefined)return ""}
 this.js_processed=true
 var res=[],pos=0
@@ -11037,7 +11038,7 @@ while(elt.firstChild){elt.removeChild(elt.firstChild)}}
 DOMNodeDict.Class=function(self){if(self.elt.className !==undefined)return self.elt.className
 return None}
 DOMNodeDict.class_name=function(self){return DOMNodeDict.Class(self)}
-DOMNodeDict.clone=function(self){res=DOMNode(self.elt.cloneNode(true))
+DOMNodeDict.clone=function(self){var res=DOMNode(self.elt.cloneNode(true))
 var events=self.$events ||{}
 for(var event in events){var evt_list=events[event]
 for(var i=0;i<evt_list.length;i++){var func=evt_list[i][0]
@@ -11136,6 +11137,11 @@ for(var attr in ns){if(ns[attr]!==null && ns[attr].$infos!==undefined){self.func
 EventListener.$dict.__exit__=function(self){var ns=$B.frames_stack[$B.frames_stack.length-1][1]
 for(var attr in ns){if(ns[attr]!==null && ns[attr].$infos!==undefined){if(self.funcs.indexOf(ns[attr])==-1){DOMNodeDict.bind(self.obj,attr,ns[attr])}}}}
 DOMNodeDict.listener={__get__:function(self){return EventListener(self)}}
+DOMNodeDict.on=function(self,event){
+return(function(obj,evt){function f(callback){console.log('bind',callback)
+DOMNodeDict.bind(obj,evt,callback)
+return callback}
+return f})(self,event)}
 DOMNodeDict.options=function(self){
 return new $OptionsClass(self.elt)}
 DOMNodeDict.parent=function(self){if(self.elt.parentElement)return DOMNode(self.elt.parentElement)
@@ -11213,9 +11219,12 @@ for(var i=0;i<events.length;i++){var callback=events[i][1]
 self.elt.removeEventListener(event,callback,false)}
 self.$events[event]=[]
 return _b_.None}
-for(var i=2;i<arguments.length;i++){var callback=arguments[i],flag=false
-if(callback.$func===undefined){throw _b_.TypeError('function is not an event callback')}
-var func=callback.$func
+for(var i=2;i<arguments.length;i++){var callback=arguments[i],flag=false,func=callback.$func
+if(func===undefined){
+var found=false
+for(var j=0;j<events.length;j++){if(events[j][0]===callback){var func=callback,found=true
+break}}
+if(!found){throw _b_.TypeError('function is not an event callback')}}
 for(var j=0;j<events.length;j++){if(getattr(func,'__eq__')(events[j][0])){var callback=events[j][1]
 self.elt.removeEventListener(event,callback,false)
 events.splice(j,1)
