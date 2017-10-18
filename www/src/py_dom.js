@@ -1127,6 +1127,18 @@ DOMNodeDict.listener = {
     }
 }
 
+DOMNodeDict.on = function(self, event){
+    // decorator for callback functions
+    return (function(obj, evt){
+        function f(callback){
+            console.log('bind',callback)
+            DOMNodeDict.bind(obj, evt, callback)
+            return callback
+        }
+        return f
+    })(self, event)
+}
+
 DOMNodeDict.options = function(self){ // for SELECT tag
     return new $OptionsClass(self.elt)
 }
@@ -1308,11 +1320,22 @@ DOMNodeDict.unbind = function(self, event){
     }
 
     for(var i=2;i<arguments.length;i++){
-        var callback = arguments[i], flag = false
-        if(callback.$func === undefined){
-            throw _b_.TypeError('function is not an event callback')
+        var callback = arguments[i], flag = false,
+            func = callback.$func
+        if(func === undefined){
+            // If a callback is created by an assignment to an existing
+            // function
+            var found = false
+            for(var j=0;j<events.length;j++){
+                if(events[j][0] === callback){
+                    var func = callback, found=true
+                    break
+                }
+            }
+            if(!found){
+                throw _b_.TypeError('function is not an event callback')
+            }
         }
-        var func = callback.$func
         for(var j=0;j<events.length;j++){
             if(getattr(func,'__eq__')(events[j][0])){
                 var callback = events[j][1]
