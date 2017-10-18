@@ -7618,7 +7618,7 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     $B.bound[module]['__name__'] = true
     $B.bound[module]['__file__'] = true
 
-    $B.$py_src[locals_id] = $B.$py_src[locals_id] || src
+    $B.$py_src[locals_id] = src
     var root = $tokenize({src:src, is_comp:is_comp},
         module,locals_id,parent_block_id,line_info)
     root.is_comp = is_comp

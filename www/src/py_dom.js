@@ -1131,7 +1131,6 @@ DOMNodeDict.on = function(self, event){
     // decorator for callback functions
     return (function(obj, evt){
         function f(callback){
-            console.log('bind',callback)
             DOMNodeDict.bind(obj, evt, callback)
             return callback
         }
