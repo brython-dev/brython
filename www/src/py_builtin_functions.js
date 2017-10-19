@@ -731,27 +731,17 @@ function getattr(obj,attr,_default){
         }
         break
       case '__mro__':
-        if(klass.__name__=='classXXX'){ // experimental
-            console.log('newmro')
-            var res = [obj],
-                pos = 0,
-                mro = obj.__mro__
-            for(var i=0;i<mro.length;i++){
-                res[pos++]=mro[i]
-            }
-            return res
-        }
         if(klass===$B.$factory){
             // The attribute __mro__ of classes is a list of class
             // dictionaries ; it must be returned as a list of class
             // factory functions
-            var res = [obj.$dict],
+            var res = [obj],
                 pos = 0,
                 mro = obj.$dict.__mro__
             for(var i=0;i<mro.length;i++){
-                res[pos++]=mro[i].$factory
+                res.push(mro[i].$factory)
             }
-            return res
+            return _b_.tuple(res)
         }
         break
       case '__subclasses__':
