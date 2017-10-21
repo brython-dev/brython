@@ -311,7 +311,7 @@ $DictDict.__init__ = function(self){
         if(obj.__class__===$B.JSObject.$dict){
             // convert a JSObject into a Python dictionary
             var si = $DictDict.__setitem__
-            for(var attr in obj.js) si(self,attr,obj.js[attr])
+            for(var attr in obj.js) si(self,attr,$B.jsobj2pyobj(obj.js[attr]))
 
             // Attribute $jsobj is used to update the original JS object
             // when the dictionary is modified
