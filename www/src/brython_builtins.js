@@ -36,6 +36,9 @@ var $href_elts = $href.split('/')
 $href_elts.pop()
 var $script_dir = $B.script_dir = $href_elts.join('/')
 
+// Populated in py2js.brython(), used for sys.argv
+$B.__ARGV = []
+
 // Mapping between a module name and its path (url)
 $B.$py_module_path = {}
 
@@ -50,7 +53,7 @@ $B.path = [$path+'Lib', $path+'libs', $script_dir, $path+'Lib/site-packages']
 // __BRYTHON__.bound[scope.id]
 $B.bound = {}
 
-// for the time being, a flag will be used to know if we should 
+// for the time being, a flag will be used to know if we should
 // enable async functionality.
 $B.async_enabled=false
 if ($B.async_enabled) $B.block = {}
@@ -76,7 +79,7 @@ $B.frames_stack = []
 // Python __builtins__
 $B.builtins = {
     __repr__:function(){return "<module 'builtins>'"},
-    __str__:function(){return "<module 'builtins'>"},    
+    __str__:function(){return "<module 'builtins'>"},
 }
 
 $B.builtins_block = {id:'__builtins__',module:'__builtins__'}
@@ -109,11 +112,11 @@ if (isWebWorker) {
 $B.max_int = Math.pow(2,53)-1
 $B.min_int = -$B.max_int
 
-// Used to compute the hash value of some objects (see 
+// Used to compute the hash value of some objects (see
 // py_builtin_functions.js)
 $B.$py_next_hash = Math.pow(2,53)-1
 
-// $py_UUID guarantees a unique id.  Do not use this variable 
+// $py_UUID guarantees a unique id.  Do not use this variable
 // directly, use the $B.UUID function defined in py_utils.js
 $B.$py_UUID=0
 
