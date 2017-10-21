@@ -25,12 +25,6 @@ setup(
 
     packages = ['data', 'data.tools'],
 
-    entry_points={
-          'console_scripts': [
-              'brython = data.__main__:main'
-          ]
-      },
-
     # Choose your license
     license='BSD',
 

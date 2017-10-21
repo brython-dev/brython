@@ -28,11 +28,11 @@ setup(
 
     # Author details
     author='{author}',
-    author_email='{author_email}', 
-    
+    author_email='{author_email}',
+
     # License
     license='{license}',
-       
+
     packages=['data'],
     py_modules=["{app_name}"],
     package_data={{'data':[{files}]}}
@@ -54,14 +54,14 @@ files = ({files})
 
 if args.install:
     print('Installing {app_name} in an empty directory')
-    
+
     src_path = os.path.join(os.path.dirname(__file__), 'data')
 
     if os.listdir(os.getcwd()):
         print('{app_name} can only be installed in an empty folder')
         import sys
         sys.exit()
-    
+
     for path in files:
         shutil.copyfile(os.path.join(src_path, path), path)
 
@@ -70,10 +70,13 @@ if args.install:
 # Get all modules in the Brython standard distribution.
 # They must be in brython_stdlib.js somewhere in the current directory
 # or below.
+print('searching brython_stdlib.js...')
 stdlib = {}
+stdlib_dir = None
 for dirname, dirnames, filenames in os.walk(os.getcwd()):
     for filename in filenames:
         if filename == "brython_stdlib.js":
+            stdlib_dir = dirname
             path = os.path.join(dirname, filename)
             with open(path, encoding="utf-8") as fobj:
                 modules = fobj.read()
@@ -102,6 +105,7 @@ def is_package(folder):
             packages.add(folder)
             return True
 
+print('finding packages...')
 for dirname, dirnames, filenames in os.walk(os.getcwd()):
     for filename in filenames:
         name, ext = os.path.splitext(filename)
@@ -137,7 +141,7 @@ class CharsetDetector(html.parser.HTMLParser):
             # convert_charrefs is only supported by Python 3.4+
             del kw['convert_charrefs']
             html.parser.HTMLParser.__init__(self, *args, **kw)
-            
+
         self.encoding = "iso-8859-1"
 
     def handle_starttag(self, tag, attrs):
@@ -145,11 +149,11 @@ class CharsetDetector(html.parser.HTMLParser):
             for key, value in attrs:
                 if key == "charset":
                     self.encoding = value
-    
+
 class BrythonScriptsExtractor(html.parser.HTMLParser):
     """Used to extract all Brython scripts in HTML pages."""
 
-    def __init__(self, path, **kw):
+    def __init__(self, dirname, **kw):
         kw.setdefault('convert_charrefs', True)
         try:
             html.parser.HTMLParser.__init__(self, **kw)
@@ -157,7 +161,7 @@ class BrythonScriptsExtractor(html.parser.HTMLParser):
             # convert_charrefs is only supported by Python 3.4+
             del kw['convert_charrefs']
             html.parser.HTMLParser.__init__(self, **kw)
-        
+
         self.dirname = dirname
         self.scripts = []
         self.py_tags = [] # stack of Python blocks
@@ -228,7 +232,7 @@ class ImportsFinder(ast.NodeVisitor):
     """Used to detect all imports in an AST tree and store the results in
     attribute imports.
     """
-    
+
     def __init__(self, *args, **kw):
         self.package = kw.pop("package") or ""
         ast.NodeVisitor.__init__(self, *args, **kw)
@@ -270,7 +274,7 @@ class ModulesFinder:
     def __init__(self, directory=os.getcwd()):
         self.directory = directory
         self.modules = set()
-    
+
     def get_imports(self, src, package=None):
         """Get all imports in source code src."""
         tree = ast.parse(src)
@@ -284,9 +288,9 @@ class ModulesFinder:
                     self.modules.add(module)
                     if module_dict[module][0] == '.py':
                         imports = self.get_imports(module_dict[module][1])
-    
+
         return finder.imports
-    
+
     def norm_indent(self, script):
         """Scripts in Brython page may start with an indent, remove it before
         building the AST.
@@ -301,7 +305,7 @@ class ModulesFinder:
                 line = line[indent:]
             lines.append(line)
         return '\n'.join(lines)
-    
+
     def inspect(self):
         """Walk the directory to find all pages with Brython scripts, parse
         them to get the list of modules needed to make them run.
@@ -322,7 +326,7 @@ class ModulesFinder:
                     charset_detector = CharsetDetector()
                     with open(path, encoding="iso-8859-1") as fobj:
                         charset_detector.feed(fobj.read())
-                    
+
                     # get text/python scripts
                     parser = BrythonScriptsExtractor(dirname)
                     with open(path, encoding=charset_detector.encoding) as fobj:
@@ -344,7 +348,7 @@ class ModulesFinder:
                         except SyntaxError:
                             print('syntax error', path)
 
-    def make_brython_modules(self):        
+    def make_brython_modules(self):
         """Build brython_modules.js from the list of modules needed by the
         application.
         """
@@ -354,9 +358,15 @@ class ModulesFinder:
                 vfs[module] = stdlib[module]
             else:
                 vfs[module] = user_modules[module]
-        
+                elts = module.split('.')
+                for i in range(1, len(elts)):
+                    pkg = '.'.join(elts[:i])
+                    if not pkg in vfs:
+                        vfs[pkg] = user_modules[pkg]
+
         # save in brython_modules.js
-        with open("brython_modules.js", "w", encoding="utf-8") as out:
+        path = os.path.join(stdlib_dir, "brython_modules.js")
+        with open(path, "w", encoding="utf-8") as out:
             out.write("__BRYTHON__.use_VFS = true\n__BRYTHON__.VFS = ")
             json.dump(vfs, out)
 
@@ -376,7 +386,7 @@ class ModulesFinder:
         # Create a temporary directory
         temp_dir = '__dist__'
         if os.path.exists(temp_dir):
-            shutil.rmtree(temp_dir, ignore_errors=True)
+            shutil.rmtree(temp_dir)
         os.mkdir(temp_dir)
 
         # Create a package "data" in this directory
@@ -432,7 +442,7 @@ class ModulesFinder:
                     with open(path, encoding="iso-8859-1") as fobj:
                         charset_detector.feed(fobj.read())
                     encoding = charset_detector.encoding
-                    
+
                     # get text/python scripts
                     parser = VFSReplacementParser(dirname)
                     with open(path, encoding=encoding) as fobj:
@@ -469,6 +479,6 @@ class ModulesFinder:
         path = os.path.join(temp_dir, "{}.py".format(info["app_name"]))
         with open(path, "w", encoding="utf-8") as out:
             out.write(app.format(**info))
-    
+
 if __name__ == "__main__":
     ModulesFinder().make_setup()
