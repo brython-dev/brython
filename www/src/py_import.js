@@ -258,7 +258,7 @@ function run_py(module_contents,path,module,compiled) {
         for(var attr in err){
             console.log(attr, err[attr])
         }
-        console.log(_b_.getattr(err, 'info'))
+        console.log(_b_.getattr(err, 'info', '[no info]'))
         console.log('message: '+err.$message)
         console.log('filename: '+err.fileName)
         console.log('linenum: '+err.lineNumber)
