@@ -132,8 +132,7 @@ Finis.
 #
 # Import our required modules
 #
-import re
-import string
+import _jsre as re # BRYTHON : use Javascript module
 
 __all__ = ["CookieError", "BaseCookie", "SimpleCookie"]
 
@@ -159,7 +158,15 @@ class CookieError(Exception):
 #       _LegalChars       is the list of chars which don't require "'s
 #       _Translator       hash-table for fast quoting
 #
-_LegalChars       = string.ascii_letters + string.digits + "!#$%&'*+-.^_`|~:"
+
+# BRYTHON : don't import module "string" (too expensive)
+
+ascii_lowercase = 'abcdefghijklmnopqrstuvwxyz'
+ascii_uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+ascii_letters = ascii_lowercase + ascii_uppercase
+digits = '0123456789'
+
+_LegalChars       = ascii_letters + digits + "!#$%&'*+-.^_`|~:"
 _Translator       = {
     '\000' : '\\000',  '\001' : '\\001',  '\002' : '\\002',
     '\003' : '\\003',  '\004' : '\\004',  '\005' : '\\005',
