@@ -1527,6 +1527,12 @@ class Foo:
         pass
 
 members(Foo)
+
+# issue 701
+assert type( (1,2,3)[:0] ) == tuple
+assert type( (1,2,3)[1:2:-1] ) == tuple
+assert type( (1,2,3)[0:2] ) == tuple
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
