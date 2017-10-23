@@ -1515,6 +1515,18 @@ exec("""def f():
 exec("f()", t)
 assert t['x'] == 3
 
+# issue 699
+def members(obj):
+    for m in dir(obj):
+        getattr(obj, m)
+
+members(int)
+
+class Foo:
+    def foo(self):
+        pass
+
+members(Foo)
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

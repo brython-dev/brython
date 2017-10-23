@@ -14,35 +14,37 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     // a valid parent
     if(kwargs !== undefined) {
         var cl_dict=_b_.dict(), bases=null
-    // transform class object into a dictionary
-    for(var attr in class_obj){
-            cl_dict.$string_dict[attr] = class_obj[attr]
-    }
-    // check if parents are defined
-    if(parents!==undefined){
+        // transform class object into a dictionary
+        for(var attr in class_obj){
+            if(attr.charAt(0)!='$' || attr.substr(0,2)=='$$'){
+                cl_dict.$string_dict[attr] = class_obj[attr]
+            }
+        }
+        // check if parents are defined
+        if(parents!==undefined){
             for(var i=0;i<parents.length;i++){
-        if(parents[i]===undefined){
+                if(parents[i]===undefined){
                     // restore the line of class definition
                     $B.line_info = class_obj.$def_line
                     throw _b_.NameError("name '"+parents_names[i]+"' is not defined")
-        }
+                }
             }
-    }
-    bases = parents
-
-    // see if there is 'metaclass' in kwargs
-    for(var i=0;i<kwargs.length;i++){
+        }
+        bases = parents
+    
+        // see if there is 'metaclass' in kwargs
+        for(var i=0;i<kwargs.length;i++){
             var key=kwargs[i][0],val=kwargs[i][1]
             if(key=='metaclass'){metaclass=val}
             else{
-        throw _b_.TypeError("type() takes 1 or 3 arguments")
+                throw _b_.TypeError("type() takes 1 or 3 arguments")
             }
-    }
-    var mro0 = class_obj
+        }
+        var mro0 = class_obj
     } else {
-    var cl_dict = class_obj  // already a dict
-    bases = parents
-    var mro0 = cl_dict.$string_dict  // to replace class_obj in method creation
+        var cl_dict = class_obj  // already a dict
+        bases = parents
+        var mro0 = cl_dict.$string_dict  // to replace class_obj in method creation
     }
 
     // DRo - Begin
@@ -504,6 +506,13 @@ _b_.type.__class__ = $B.$factory
 _b_.object.$dict.__class__ = $B.$type
 _b_.object.__class__ = $B.$factory
 
+function method_wrapper(attr, klass, method){
+    // add __str__ and __repr__ to special methods
+    method.__str__ = method.__repr__ = function(self){
+        return "<method '"+attr+"' of '"+klass.__name__+"' objects>"
+    }
+    return method
+}
 // DRo Begin/End - Added metaclassed as flag during class construction
 $B.$type.__getattribute__=function(klass, attr, metaclassed){
 
@@ -513,19 +522,23 @@ $B.$type.__getattribute__=function(klass, attr, metaclassed){
       //  return $instance_creator(klass)
       // DRo END
       case '__eq__':
-        return function(other){return klass.$factory===other}
+        return method_wrapper(attr, klass,
+            function(other){return klass.$factory===other})
       case '__ne__':
-        return function(other){return klass.$factory!==other}
+        return method_wrapper(attr, klass,
+            function(other){return klass.$factory!==other})
       case '__class__':
         return klass.__class__.$factory
       case '__doc__':
         return klass.__doc__ || _b_.None
       case '__setattr__':
-        if(klass['__setattr__']!==undefined) return klass['__setattr__']
-        return function(key,value){klass[key]=value}
+        if(klass['__setattr__']!==undefined){var func = klass['__setattr__']}
+        else{var func = function(key,value){klass[key]=value}}
+        return method_wrapper(attr, klass, func)
       case '__delattr__':
         if(klass['__delattr__']!==undefined) return klass['__delattr__']
-        return function(key){delete klass[key]}
+        return method_wrapper(attr, klass,
+            function(key){delete klass[key]})
     }//switch
     //console.log('get attr '+attr+' of klass '+klass)
     var res = klass[attr]

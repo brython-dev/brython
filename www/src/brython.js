@@ -71,7 +71,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-10-22 09:55:07.854707"
+__BRYTHON__.compiled_date="2017-10-23 14:20:04.088121"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1317,8 +1317,9 @@ if(this.tree[0].name==='Exception')return 'else if(1)'}
 var res=[],pos=0
 for(var i=0;i<this.tree.length;i++){res[pos++]=this.tree[i].to_js()}
 var lnum=''
-if($B.debug>0){lnum='($locals.$line_info="'+$get_node(this).line_num+','+
-this.scope.id+'") && '}
+if($B.debug>0){var module=$get_module(this)
+lnum='($locals.$line_info="'+$get_node(this).line_num+','+
+module.id+'") && '}
 return 'else if('+lnum+'$B.is_exc('+this.error_name+',['+res.join(',')+']))'}}
 function $ExprCtx(C,name,with_commas){
 this.type='expr'
@@ -4471,7 +4472,7 @@ return object})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 $B.$class_constructor=function(class_name,class_obj,parents,parents_names,kwargs){var metaclass=_b_.type 
 if(kwargs !==undefined){var cl_dict=_b_.dict(),bases=null
-for(var attr in class_obj){cl_dict.$string_dict[attr]=class_obj[attr]}
+for(var attr in class_obj){if(attr.charAt(0)!='$' ||attr.substr(0,2)=='$$'){cl_dict.$string_dict[attr]=class_obj[attr]}}
 if(parents!==undefined){for(var i=0;i<parents.length;i++){if(parents[i]===undefined){
 $B.line_info=class_obj.$def_line
 throw _b_.NameError("name '"+parents_names[i]+"' is not defined")}}}
@@ -4631,21 +4632,25 @@ $B.$factory.__mro__=[$B.$type,_b_.object.$dict]
 _b_.type.__class__=$B.$factory
 _b_.object.$dict.__class__=$B.$type
 _b_.object.__class__=$B.$factory
+function method_wrapper(attr,klass,method){
+method.__str__=method.__repr__=function(self){return "<method '"+attr+"' of '"+klass.__name__+"' objects>"}
+return method}
 $B.$type.__getattribute__=function(klass,attr,metaclassed){switch(attr){
 case '__eq__':
-return function(other){return klass.$factory===other}
+return method_wrapper(attr,klass,function(other){return klass.$factory===other})
 case '__ne__':
-return function(other){return klass.$factory!==other}
+return method_wrapper(attr,klass,function(other){return klass.$factory!==other})
 case '__class__':
 return klass.__class__.$factory
 case '__doc__':
 return klass.__doc__ ||_b_.None
 case '__setattr__':
-if(klass['__setattr__']!==undefined)return klass['__setattr__']
-return function(key,value){klass[key]=value}
+if(klass['__setattr__']!==undefined){var func=klass['__setattr__']}
+else{var func=function(key,value){klass[key]=value}}
+return method_wrapper(attr,klass,func)
 case '__delattr__':
 if(klass['__delattr__']!==undefined)return klass['__delattr__']
-return function(key){delete klass[key]}}
+return method_wrapper(attr,klass,function(key){delete klass[key]})}
 var res=klass[attr]
 if(res===undefined){
 var v=klass[attr]
@@ -5673,6 +5678,7 @@ if(klass.__name__=='classXXX'){
 return klass}
 return klass.$factory
 case '__dict__':
+if(klass.is_class && klass.__dict__){return klass.__dict__}
 return $B.obj_dict(obj)
 case '__doc__':
 for(var i=0;i<builtin_names.length;i++){if(obj===_b_[builtin_names[i]]){_get_builtins_doc()
@@ -5692,13 +5698,13 @@ case '$$new':
 if(klass===$B.JSObject.$dict && obj.js_func !==undefined){return $B.JSConstructor(obj)}
 break}
 if(typeof obj=='function'){var value=obj.__class__===$B.$factory ? obj.$dict[attr]: obj[attr]
-if(value !==undefined){if(attr=='__module__' ||attr=='__hash__'){
+if(value !==undefined){if(attr=='__module__'){
 return value}}}
 if(klass.$native){if(klass[attr]===undefined){var object_attr=_b_.object.$dict[attr]
 if(object_attr!==undefined){klass[attr]=object_attr}
 else{if(_default===undefined){attr_error(attr,klass.__name__)}
 return _default}}
-if(klass.descriptors && klass.descriptors[attr]!==undefined){return klass[attr](obj)}
+if(klass.$descriptors && klass.$descriptors[attr]!==undefined){return klass[attr](obj)}
 if(typeof klass[attr]=='function'){
 if(attr=='__new__')return klass[attr].apply(null,arguments)
 if(klass[attr].$type=='classmethod'){var res=function(){var args=[klass.$factory]
@@ -6052,7 +6058,7 @@ for(var i=0,_len=mro.length;i<_len;i++){__set1__=mro[i].__set__
 if(__set1__){break}}}}
 if(__set1__!==undefined){var __set__=getattr(res,'__set__',null)
 if(__set__ &&(typeof __set__=='function')){__set__.apply(res,[obj,value])
-return None}}else if(klass && klass.descriptors !==undefined &&
+return None}}else if(klass && klass.$descriptors !==undefined &&
 klass[attr]!==undefined){var setter=klass[attr].setter
 if(typeof setter=='function'){setter(obj,value)
 return None}else{throw _b_.AttributeError('readonly attribute')}}}
@@ -6508,7 +6514,7 @@ $B.$NameError=function(name){
 throw _b_.NameError("name '"+name+"' is not defined")}
 $B.$TypeError=function(msg){throw _b_.TypeError(msg)}})(__BRYTHON__)
 
-;(function($B){var _b_=$B.builtins,None=_b_.None,$RangeDict={__class__:$B.$type,__dir__:_b_.object.$dict.__dir__,__name__:'range',$native:true,descriptors:{start:true,step:true,stop:true}}
+;(function($B){var _b_=$B.builtins,None=_b_.None,$RangeDict={__class__:$B.$type,__dir__:_b_.object.$dict.__dir__,__name__:'range',$native:true,$descriptors:{start:true,step:true,stop:true}}
 $RangeDict.__contains__=function(self,other){if($RangeDict.__len__(self)==0){return false}
 try{other=$B.int_or_bool(other)}
 catch(err){
@@ -6601,7 +6607,7 @@ range.__class__=$B.$factory
 range.$dict=$RangeDict
 $RangeDict.$factory=range
 range.$is_func=true
-var $SliceDict={__class__:$B.$type,__name__:'slice',$native:true,descriptors:{start:true,step:true,stop:true}}
+var $SliceDict={__class__:$B.$type,__name__:'slice',$native:true,$descriptors:{start:true,step:true,stop:true}}
 $SliceDict.__mro__=[_b_.object.$dict]
 $SliceDict.__repr__=$SliceDict.__str__=function(self){return 'slice('+_b_.str(self.start)+','+
 _b_.str(self.stop)+','+_b_.str(self.step)+')'}
@@ -7516,7 +7522,7 @@ var $ObjectDict=_b_.object.$dict
 function $err(op,other){var msg="unsupported operand type(s) for "+op
 msg +=": 'float' and '"+$B.get_class(other).__name__+"'"
 throw _b_.TypeError(msg)}
-var $FloatDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'float',$native:true,descriptors:{'numerator':true,'denominator':true,'imag':true,'real':true}}
+var $FloatDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'float',$native:true,$descriptors:{'numerator':true,'denominator':true,'imag':true,'real':true}}
 $FloatDict.numerator=function(self){return self}
 $FloatDict.denominator=function(self){return _b_.int(1)}
 $FloatDict.imag=function(self){return _b_.int(0)}
@@ -7845,7 +7851,7 @@ var $ObjectDict=_b_.object.$dict,$N=_b_.None
 function $err(op,other){var msg="unsupported operand type(s) for "+op
 msg +=": 'int' and '"+$B.get_class(other).__name__+"'"
 throw _b_.TypeError(msg)}
-var $IntDict={__class__:$B.$type,__name__:'int',__dir__:$ObjectDict.__dir__,toString:function(){return '$IntDict'},$native:true,descriptors:{'numerator':true,'denominator':true,'imag':true,'real':true}}
+var $IntDict={__class__:$B.$type,__name__:'int',__dir__:$ObjectDict.__dir__,$native:true,$descriptors:{'numerator':true,'denominator':true,'imag':true,'real':true}}
 $IntDict.from_bytes=function(){var $=$B.args("from_bytes",3,{bytes:null,byteorder:null,signed:null},['bytes','byteorder','signed'],arguments,{signed:False},null,null)
 var x=$.bytes,byteorder=$.byteorder,signed=$.signed
 var _bytes,_len
@@ -8489,7 +8495,7 @@ $B.LongInt=LongInt})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var $ObjectDict=_b_.object.$dict
 function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError("unsupported operand type(s) for "+op+": '"+class1+"' and '"+class2+"'")}
-var $ComplexDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'complex',$native:true,descriptors:{real:true,imag:true}}
+var $ComplexDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'complex',$native:true,$descriptors:{real:true,imag:true}}
 $ComplexDict.__abs__=function(self){var _rf=isFinite(self.$real),_if=isFinite(self.$imag);
 if((_rf && isNaN(self.$imag))||(_if && isNaN(self.$real))||(isNaN(self.$imag)&& isNaN(self.$real)))return NaN
 if(! _rf ||! _if )return Infinity;

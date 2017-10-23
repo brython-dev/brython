@@ -720,6 +720,7 @@ function getattr(obj,attr,_default){
         return klass.$factory
       case '__dict__':
         // attribute __dict__ returns a dictionary wrapping obj
+        if(klass.is_class && klass.__dict__){return klass.__dict__}
         return $B.obj_dict(obj) // defined in py_dict.js
       case '__doc__':
         // for builtins objects, use $B.builtins_doc
@@ -760,7 +761,7 @@ function getattr(obj,attr,_default){
     if(typeof obj == 'function') {
       var value = obj.__class__ === $B.$factory ? obj.$dict[attr] : obj[attr]
       if(value !== undefined) {
-        if (attr == '__module__' || attr =='__hash__') { // put other attrs here too..
+        if (attr == '__module__'){
           return value
         }
       }
@@ -775,7 +776,7 @@ function getattr(obj,attr,_default){
                 return _default
             }
         }
-        if(klass.descriptors && klass.descriptors[attr]!==undefined){
+        if(klass.$descriptors && klass.$descriptors[attr]!==undefined){
             return klass[attr](obj)
         }
         if(typeof klass[attr]=='function'){
@@ -1589,7 +1590,7 @@ function setattr(){
                 __set__.apply(res,[obj,value])
                 return None
             }
-        }else if(klass && klass.descriptors !== undefined &&
+        }else if(klass && klass.$descriptors !== undefined &&
             klass[attr] !== undefined){
             var setter = klass[attr].setter
             if(typeof setter == 'function'){
