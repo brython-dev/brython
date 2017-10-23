@@ -2552,8 +2552,9 @@ function $ExceptCtx(context){
         }
         var lnum = ''
         if($B.debug>0){
+            var module = $get_module(this)
             lnum = '($locals.$line_info="'+$get_node(this).line_num+','+
-                this.scope.id+'") && '
+                module.id+'") && '
         }
         return 'else if('+lnum+'$B.is_exc('+this.error_name+',['+res.join(',')+']))'
     }
