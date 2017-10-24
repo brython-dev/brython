@@ -71,7 +71,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-10-23 14:20:04.088121"
+__BRYTHON__.compiled_date="2017-10-24 08:36:50.155500"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1527,10 +1527,10 @@ $B.bound[scope.id][name]={level: scope.level}}}
 this.toString=function(){return '(from) '+this.module+' (import) '+this.names+'(as)'+this.aliases}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),mod=$get_module(this).module,res=[],pos=0,indent=$get_node(this).indent,head=' '.repeat(indent);
-var _mod=this.module.replace(/\$/g,''),package,packages=[]
-while(_mod.length>0){if(_mod.charAt(0)=='.'){if(package===undefined){if($B.imported[mod]!==undefined){package=$B.imported[mod].__package__}}else{package=$B.imported[package]}
-if(package===undefined){return 'throw SystemError("Parent module \'\' not loaded,'+
-' cannot perform relative import")'}else if(package=='None'){console.log('package is None !')}else{packages.push(package)}
+var _mod=this.module.replace(/\$/g,''),$package,packages=[]
+while(_mod.length>0){if(_mod.charAt(0)=='.'){if($package===undefined){if($B.imported[mod]!==undefined){$package=$B.imported[mod].__package__}}else{$package=$B.imported[$package]}
+if($package===undefined){return 'throw SystemError("Parent module \'\' not loaded,'+
+' cannot perform relative import")'}else if($package=='None'){console.log('package is None !')}else{packages.push($package)}
 _mod=_mod.substr(1)}else{break}}
 if(_mod){packages.push(_mod)}
 this.module=packages.join('.')
@@ -5698,8 +5698,7 @@ case '$$new':
 if(klass===$B.JSObject.$dict && obj.js_func !==undefined){return $B.JSConstructor(obj)}
 break}
 if(typeof obj=='function'){var value=obj.__class__===$B.$factory ? obj.$dict[attr]: obj[attr]
-if(value !==undefined){if(attr=='__module__'){
-return value}}}
+if(value !==undefined){if(attr=='__module__'){return value}}}
 if(klass.$native){if(klass[attr]===undefined){var object_attr=_b_.object.$dict[attr]
 if(object_attr!==undefined){klass[attr]=object_attr}
 else{if(_default===undefined){attr_error(attr,klass.__name__)}
@@ -7145,7 +7144,7 @@ $B.$ModuleDict.__repr__=$B.$ModuleDict.__str__=function(self){return '<module '+
 $B.$ModuleDict.__mro__=[_b_.object.$dict]
 $B.$ModuleDict.__setattr__=function(self,attr,value){if(self.__name__=='__builtins__'){
 $B.builtins[attr]=value}else{self[attr]=value}}
-function module(name,doc,package){return{__class__:$B.$ModuleDict,__name__:name,__doc__:doc||_b_.None,__package__:package||_b_.None}}
+function module(name,doc,$package){return{__class__:$B.$ModuleDict,__name__:name,__doc__:doc||_b_.None,__package__:$package||_b_.None}}
 module.__class__=$B.$factory
 module.$dict=$B.$ModuleDict
 $B.$ModuleDict.$factory=module
@@ -7172,7 +7171,7 @@ fake_qs="?v="+(new Date().getTime())}
 var timer=setTimeout(function(){$xmlhttp.abort()
 throw _b_.ImportError("No module named '"+module+"'")},5000)
 return[$xmlhttp,fake_qs,timer]}
-function $download_module(module,url,package){var imp=$importer(),$xmlhttp=imp[0],fake_qs=imp[1],timer=imp[2],res=null,mod_name=module.__name__,res,t0=new Date()
+function $download_module(module,url,$package){var imp=$importer(),$xmlhttp=imp[0],fake_qs=imp[1],timer=imp[2],res=null,mod_name=module.__name__,res,t0=new Date()
 $B.download_time=$B.download_time ||0
 $xmlhttp.open('GET',url+fake_qs,false)
 if($B.$CORS){$xmlhttp.onload=function(){if($xmlhttp.status==200 ||$xmlhttp.status==0){res=$xmlhttp.responseText}else{
@@ -7218,14 +7217,14 @@ function show_ns(){var kk=Object.keys(_window)
 for(var i=0,_len_i=kk.length;i < _len_i;i++){console.log(kk[i])
 if(kk[i].charAt(0)=='$'){console.log(eval(kk[i]))}}
 console.log('---')}
-function import_py(module,path,package){
-var mod_name=module.__name__,module_contents=$download_module(module,path,package)
+function import_py(module,path,$package){
+var mod_name=module.__name__,module_contents=$download_module(module,path,$package)
 $B.imported[mod_name].$is_package=module.$is_package
 $B.imported[mod_name].$last_modified=module.$last_modified
 if(path.substr(path.length-12)=='/__init__.py'){
 $B.imported[mod_name].__package__=mod_name
 $B.imported[mod_name].__path__=path
-$B.imported[mod_name].$is_package=module.$is_package=true}else if(package){$B.imported[mod_name].__package__=package}else{var mod_elts=mod_name.split('.')
+$B.imported[mod_name].$is_package=module.$is_package=true}else if($package){$B.imported[mod_name].__package__=$package}else{var mod_elts=mod_name.split('.')
 mod_elts.pop()
 $B.imported[mod_name].__package__=mod_elts.join('.')}
 $B.imported[mod_name].__file__=path
@@ -7320,8 +7319,8 @@ mod.__package__=spec.parent
 cls.$dict.exec_module(cls,mod)}}},find_spec: function(cls,fullname,path,prev_module){if($B.stdlib && $B.$options.static_stdlib_import){var address=$B.stdlib[fullname];
 if(address===undefined){var elts=fullname.split('.')
 if(elts.length>1){elts.pop()
-var package=$B.stdlib[elts.join('.')]
-if(package && package[1]){address=['py']}}}
+var $package=$B.stdlib[elts.join('.')]
+if($package && $package[1]){address=['py']}}}
 if(address !==undefined){var ext=address[0],is_pkg=address[1]!==undefined,path=$B.brython_path +((ext=='py')? 'Lib/' : 'libs/')+
 fullname.replace(/\./g,'/'),metadata={ext: ext,is_package: is_pkg,path: path +(is_pkg? '/__init__.py' :
 ((ext=='py')? '.py' : '.js')),address: address}
