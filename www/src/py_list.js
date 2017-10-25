@@ -128,13 +128,13 @@ $ListDict.__getitem__ = function(self,arg){
         var res=[], i=null, items=self.valueOf(), pos=0,
             start=s.start, stop=s.stop, step=s.step
         if (step > 0) {
-            if (stop <= start) return res;
+            if (stop <= start) return klass(res);
             for(var i=start; i<stop; i+=step) {
                res[pos++]=items[i]
             }
             return klass(res);
         } else {
-            if (stop > start) return res;
+            if (stop > start) return klass(res);
             for(var i=start; i>stop; i+=step) {
                res[pos++]=items[i]
             }
