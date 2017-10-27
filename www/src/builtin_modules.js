@@ -76,15 +76,6 @@
                     }
                 }
             },
-            select: function(css_selector){
-                var elts = document.querySelectorAll(css_selector),
-                    DOMNode = $B.DOMNodeDict.$factory,
-                    res = []
-                for(var i=0;i<elts.length;i++){
-                    res.push(DOMNode(elts[i]))
-                }
-                return res
-            },
             URLParameter:function(name) {
             name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
             var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
@@ -93,6 +84,7 @@
             return $B.builtins.str(results);
             }
         })
+
         // creation of an HTML element
         modules['browser.html'] = (function($B){
 

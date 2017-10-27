@@ -7,7 +7,10 @@ var isinstance = _b_.isinstance, getattr=_b_.getattr, None=_b_.None
 var from_unicode={}, to_unicode={}
 
 //bytearray() (built in function)
-var $BytearrayDict = {__class__:$B.$type,__name__:'bytearray'}
+var $BytearrayDict = {__class__:$B.$type,
+    __name__:'bytearray',
+    $buffer_protocol:true
+}
 
 var mutable_methods = ['__delitem__','clear','copy','count','index','pop',
     'remove','reverse','sort']
@@ -106,7 +109,10 @@ bytearray.__code__.co_consts=[]
 bytearray.__code__.co_varnames=['i']
 
 //bytes() (built in function)
-var $BytesDict = {__class__ : $B.$type,__name__ : 'bytes'}
+var $BytesDict = {__class__ : $B.$type,
+    __name__ : 'bytes',
+    $buffer_protocol:true
+}
 
 $BytesDict.__add__ = function(self,other){
     if(!isinstance(other,bytes)){
@@ -144,7 +150,7 @@ $BytesDict.__getitem__ = function(self,arg){
             var start = arg.start===None ? 0 : arg.start
             var stop = arg.stop===None ? getattr(self.source,'__len__')() : arg.stop
         }else{
-            var start = arg.start===None ? 
+            var start = arg.start===None ?
             getattr(self.source,'__len__')()-1 : arg.start
             var stop = arg.stop===None ? 0 : arg.stop
         }
@@ -192,7 +198,7 @@ $BytesDict.__init__ = function(self,source,encoding,errors){
         // empty list
     }else if(isinstance(source,_b_.int)){
         var i=source
-        //for(var i=0;i<source;i++) 
+        //for(var i=0;i<source;i++)
         while(i--) int_list[pos++]=0
     }else{
         if(isinstance(source,_b_.str)){
@@ -308,11 +314,11 @@ $BytesDict.split = function(){
     var $ = $B.args('split', 2, {self:null, sep:null}, ['self', 'sep'],
         arguments, {}, null, null),
         res=[], start=0, stop=0
-    var seps = $.sep.source, 
-        len = seps.length, 
+    var seps = $.sep.source,
+        len = seps.length,
         src = $.self.source,
         blen = src.length
-        
+
     while(stop<blen){
         var match=true
         for(var i=0;i<len && match;i++){
@@ -356,7 +362,7 @@ $BytesDict.lstrip = function(self,cars) {return _strip(self,cars,'l')}
 $BytesDict.rstrip = function(self,cars) {return _strip(self,cars,'r')}
 
 $BytesDict.startswith = function(){
-    var $ = $B.args('startswith', 2, {self: null, start: null}, 
+    var $ = $B.args('startswith', 2, {self: null, start: null},
         ['self', 'start'], arguments, {}, null, null)
     if(_b_.isinstance($.start, bytes)){
         var res = true
@@ -391,7 +397,7 @@ $BytesDict.translate = function(self,table,_delete) {
     if(_delete===undefined){_delete=[]}
     else if(isinstance(_delete, bytes)){_delete=_delete.source}
     else{
-        throw _b_.TypeError("Type "+$B.get_class(_delete).__name+" doesn't support the buffer API")    
+        throw _b_.TypeError("Type "+$B.get_class(_delete).__name+" doesn't support the buffer API")
     }
     var res = [], pos=0
     if (isinstance(table, bytes) && table.source.length==256) {
@@ -555,7 +561,7 @@ function encode(s,encoding){
         var _int_800=_int('800'), _int_c2=_int('c2'), _int_1000=_int('1000')
         var _int_e0=_int('e0'), _int_e1=_int('e1'),_int_a0=_int('a0'), _int_80=_int('80')
         var _int_2000=_int('2000'), _int_D000=_int('D000')
- 
+
         for(var i=0, _len_i = s.length; i < _len_i;i++){
             var cp = s.charCodeAt(i) // code point
             if(cp<=127){
@@ -583,9 +589,9 @@ function encode(s,encoding){
             }
         }
         break;
-      case 'latin1': 
-      case 'iso8859_1': 
-      case 'windows1252': 
+      case 'latin1':
+      case 'iso8859_1':
+      case 'windows1252':
         for(var i=0, _len_i = s.length; i < _len_i;i++){
             var cp = s.charCodeAt(i) // code point
             if(cp<=255){t[pos++]=cp}
@@ -602,7 +608,7 @@ function encode(s,encoding){
       default:
           try{load_encoder(enc)}
           catch(err){throw _b_.LookupError("unknown encoding: "+ enc)}
-              
+
           for(var i=0, _len_i = s.length; i < _len_i;i++){
               var cp = s.charCodeAt(i) // code point
               if(from_unicode[enc][cp]===undefined){

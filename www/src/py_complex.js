@@ -12,7 +12,7 @@ var $ComplexDict = {__class__:$B.$type,
     __dir__:$ObjectDict.__dir__,
     __name__:'complex',
     $native:true,
-    descriptors:{real:true, imag:true}
+    $descriptors:{real:true, imag:true}
 }
 
 $ComplexDict.__abs__ = function(self){

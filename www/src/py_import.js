@@ -23,11 +23,11 @@ $B.$ModuleDict.__setattr__ = function(self, attr, value){
     }
 }
 
-function module(name,doc,package){
+function module(name,doc,$package){
     return {__class__:$B.$ModuleDict,
         __name__:name,
         __doc__:doc||_b_.None,
-        __package__:package||_b_.None
+        __package__:$package||_b_.None
     }
 }
 
@@ -75,7 +75,7 @@ function $importer(){
     return [$xmlhttp,fake_qs,timer]
 }
 
-function $download_module(module,url,package){
+function $download_module(module,url,$package){
     var imp = $importer(),
         $xmlhttp = imp[0],fake_qs=imp[1],timer=imp[2],res=null,
         mod_name = module.__name__,
@@ -191,10 +191,10 @@ function show_ns(){
     console.log('---')
 }
 
-function import_py(module,path,package){
+function import_py(module,path,$package){
     // import Python module at specified path
     var mod_name = module.__name__,
-        module_contents = $download_module(module, path, package)
+        module_contents = $download_module(module, path, $package)
     $B.imported[mod_name].$is_package = module.$is_package
     $B.imported[mod_name].$last_modified = module.$last_modified
     if(path.substr(path.length-12)=='/__init__.py'){
@@ -202,8 +202,8 @@ function import_py(module,path,package){
         $B.imported[mod_name].__package__ = mod_name
         $B.imported[mod_name].__path__ = path
         $B.imported[mod_name].$is_package = module.$is_package = true
-    }else if(package){
-        $B.imported[mod_name].__package__ = package
+    }else if($package){
+        $B.imported[mod_name].__package__ = $package
     }else{
         var mod_elts = mod_name.split('.')
         mod_elts.pop()
@@ -258,7 +258,7 @@ function run_py(module_contents,path,module,compiled) {
         for(var attr in err){
             console.log(attr, err[attr])
         }
-        console.log(_b_.getattr(err, 'info'))
+        console.log(_b_.getattr(err, 'info', '[no info]'))
         console.log('message: '+err.$message)
         console.log('filename: '+err.fileName)
         console.log('linenum: '+err.lineNumber)
@@ -424,8 +424,8 @@ finder_stdlib_static.$dict = {
                 var elts = fullname.split('.')
                 if(elts.length>1){
                     elts.pop()
-                    var package = $B.stdlib[elts.join('.')]
-                    if(package && package[1]){address = ['py']}
+                    var $package = $B.stdlib[elts.join('.')]
+                    if($package && $package[1]){address = ['py']}
                 }
             }
             if (address !== undefined) {

@@ -7,9 +7,10 @@ import shutil
 import json
 import argparse
 
-import list_modules
-
 parser = argparse.ArgumentParser()
+
+parser.add_argument('--add_package',
+    help="Add a CPython package in Lib/site-packages")
 
 parser.add_argument('--install', help='Install Brython in an empty directory',
     action="store_true")
@@ -36,6 +37,34 @@ parser.add_argument('--update', help='Update Brython scripts',
 args = parser.parse_args()
 
 files = 'README.txt', 'demo.html', 'brython.js', 'brython_stdlib.js'
+
+if args.add_package:
+    print('add package {}...'.format(args.add_package))
+    package = __import__(args.add_package)
+    package_file = os.path.dirname(package.__file__)
+    lib_dir = os.path.join(os.getcwd(), 'Lib')
+    if not os.path.exists(lib_dir):
+        os.mkdir(lib_dir)
+    dest_dir = os.path.join(lib_dir, 'site-packages')
+    if not os.path.exists(dest_dir):
+        os.mkdir(dest_dir)
+
+    if os.path.splitext(package_file)[1] == '.egg':
+        import zipfile
+        zf = zipfile.ZipFile(package_file)
+        for info in zf.infolist():
+            if info.filename.startswith(('__pycache__', 'EGG-INFO')):
+                continue
+            zf.extract(info, dest_dir)
+            print('extract', info.filename)
+        zf.close()
+        print('done')
+    elif os.path.isdir(package_file):
+        print('copy folder', package_file)
+        dest_dir = os.path.join(dest_dir, args.add_package)
+        if os.path.exists(dest_dir):
+            shutil.rmtree(dest_dir)
+        shutil.copytree(package_file, dest_dir)
 
 if args.install:
     print('Installing Brython in an empty directory')
@@ -69,12 +98,15 @@ if args.server:
 
 if args.modules:
     print('Create brython_modules.js with all the modules used by the application')
+    import list_modules
+
     finder = list_modules.ModulesFinder()
     finder.inspect()
     finder.make_brython_modules()
 
 if args.make_dist:
     print('Make a Python distribution for the application')
+    import list_modules
     finder = list_modules.ModulesFinder()
     finder.inspect()
     finder.make_brython_modules()

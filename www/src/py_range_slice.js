@@ -7,7 +7,7 @@ var _b_ = $B.builtins,
         __dir__:_b_.object.$dict.__dir__,
         __name__:'range',
         $native:true,
-        descriptors:{start:true,step:true,stop:true}
+        $descriptors:{start:true,step:true,stop:true}
     }
 
 $RangeDict.__contains__ = function(self,other){
@@ -280,7 +280,7 @@ range.$is_func = true
 var $SliceDict = {__class__:$B.$type, 
     __name__:'slice', 
     $native:true,
-    descriptors:{start:true,step:true,stop:true}
+    $descriptors:{start:true,step:true,stop:true}
 }
 
 $SliceDict.__mro__ = [_b_.object.$dict]

@@ -212,7 +212,7 @@ $JSObjectDict.__getattribute__ = function(self,attr){
                 //if(attr=='setValue'){console.log('run function')}
                 var args = []
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
-                    if(arguments[i].$nat!=undefined){
+                    if(arguments[i] !== null && arguments[i].$nat!=undefined){
                         //
                         // Passing keyword arguments to a Javascript function
                         // raises a TypeError : since we don't know the
@@ -241,8 +241,7 @@ $JSObjectDict.__getattribute__ = function(self,attr){
                 if (this !== null && this !== undefined && this !== _window) {
                     new_this = this
                 }
-                //if(attr=='setValue'){console.log('get result')}
-
+                
                 var result = js_attr.apply(new_this, args)
 
                 // NOTE: fix for situations when wrapped function is constructor (thus it does not return and value is lost)

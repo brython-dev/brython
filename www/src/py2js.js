@@ -532,6 +532,11 @@ function $AssignCtx(context){ //, check_unbound){
                 var node = $get_node(this)
                 node.bound_before = $B.keys($B.bound[scope.id])
                 $bind(assigned.value, scope.id, level)
+            }else{
+                // assignement to a variable defined as global : bind name at
+                // module level (issue #690)
+                var module = $get_module(context)
+                $bind(assigned.value, module.id, level)
             }
         }
     }//if
@@ -1813,8 +1818,14 @@ function $DecoratorCtx(context){
         // add a line after decorated element
         var tail='',
             scope = $get_scope(this),
-            ref = '$locals["'+obj.name+'"]',
-            res = ref+'='
+            ref = '$locals["'
+        // reference of the original function, may have been declared global
+        if($B._globals[scope.id] && $B._globals[scope.id][obj.name]){
+            var module = $get_module(this)
+            ref = '$locals_'+module.id+'["'
+        }
+        ref += obj.name+'"]'
+        var res = ref+'='
 
         for(var i=0;i<decorators.length;i++){
           //var dec = this.dec_ids[i]
@@ -1832,36 +1843,6 @@ function $DecoratorCtx(context){
         new $NodeJSCtx(decor_node,res)
         node.parent.insert(func_rank+1,decor_node)
         this.decorators = decorators
-
-        // Pierre, I probably need some help here...
-        // we can use brython_block and brython_async as decorators so we know
-        // that we need to generate javascript up to this point in python code
-        // and $append that javascript code to $B.execution_object.
-        // if a delay is supplied (on brython_block only), use that value
-        // as the delay value in the execution_object's setTimeout.
-
-        // fix me...
-        if ($B.async_enabled && _block_async_flag) {
-           /*
-
-        // this would be a good test to see if async (and blocking) works
-
-        @brython_block
-        def mytest():
-            print("10")
-
-        for _i in range(10):
-            print(_i)
-
-        mytest()
-
-        for _i in range(11,20):
-            print(_i)
-           */
-
-           if ($B.block[scope.id] === undefined) $B.block[scope.id]={}
-           $B.block[scope.id][obj.name] = true
-        }
     }
 
     this.to_js = function(){
@@ -1942,11 +1923,11 @@ function $DefCtx(context){
 
     this.set_name = function(name){
         try{
-        name = $mangle(name, this.parent.tree[0])
+            name = $mangle(name, this.parent.tree[0])
         }catch(err){
-    console.log(err)
-    console.log('parent', this.parent)
-    throw err
+            console.log(err)
+            console.log('parent', this.parent)
+            throw err
         }
         var id_ctx = new $IdCtx(this,name)
         this.name = name
@@ -1960,7 +1941,13 @@ function $DefCtx(context){
         $B.bound[this.id] = {}
 
         this.level = this.scope.level
-        $B.bound[this.scope.id][name]=this
+        if($B._globals[this.scope.id] !== undefined &&
+                $B._globals[this.scope.id][name] !== undefined){
+            // function name was declared global
+            $B.bound[this.module][name] = this
+        }else{
+            $B.bound[this.scope.id][name]=this
+        }
 
         // If function is defined inside another function, add the name
         // to local names
@@ -2089,7 +2076,6 @@ function $DefCtx(context){
         if(this.decorated){prefix=this.alias}
         var name = this.name+this.num
 
-
         // Add lines of code to node children
 
         // Declare object holding local variables
@@ -2119,7 +2105,7 @@ function $DefCtx(context){
             else fmod='';
             js = ";var _parent_line_info={}; if($B.frames_stack[$B.frames_stack.length-1]){"+
                  " _parent_line_info=$B.frames_stack[$B.frames_stack.length-1][1].$line_info;"+
-                 "} else _parent_line_info="+global_ns+".$line_info;"+
+                 "} else {_parent_line_info="+global_ns+".$line_info};"+
                  ";$B.$profile.call('"+fmod+"','"+fname+"',"+
                  node.line_num+",_parent_line_info)"+js;
         }
@@ -2285,7 +2271,11 @@ function $DefCtx(context){
         var last_instr = node.children[node.children.length-1].context.tree[0]
         if(last_instr.type!=='return' && this.type!='generator'){
             // as always, leave frame before returning
-            node.add($NodeJS('$B.leave_frame($local_name);return None'))
+            var js = '$B.leave_frame'
+            if(this.id.substr(0,5)=='$exec'){
+                js += '_exec'
+            }
+            node.add($NodeJS(js+'($local_name);return None'))
         }
 
         // Add the new function definition
@@ -2301,9 +2291,9 @@ function $DefCtx(context){
         node.parent.insert(rank+offset++, $NodeJS(name+'.$infos = {'))
 
         // Add attribute __name__
-        js = '    __name__:"' + this.name + '",'
-        //if(this.scope.ntype=='class'){js+=this.scope.context.tree[0].name+'.'}
-        //js += this.name+'",'
+        var __name__ = this.name
+        if(__name__.substr(0, 15)=='lambda_'+$B.lambda_magic){__name__="<lambda>"}
+        js = '    __name__:"' + __name__ + '",'
         node.parent.insert(rank+offset++, $NodeJS(js))
 
         // Add attribute __defaults__
@@ -2562,8 +2552,9 @@ function $ExceptCtx(context){
         }
         var lnum = ''
         if($B.debug>0){
+            var module = $get_module(this)
             lnum = '($locals.$line_info="'+$get_node(this).line_num+','+
-                this.scope.id+'") && '
+                module.id+'") && '
         }
         return 'else if('+lnum+'$B.is_exc('+this.error_name+',['+res.join(',')+']))'
     }
@@ -2981,23 +2972,23 @@ function $FromCtx(context){
             indent = $get_node(this).indent,
             head= ' '.repeat(indent);
 
-        var _mod = this.module.replace(/\$/g,''), package, packages=[]
+        var _mod = this.module.replace(/\$/g,''), $package, packages=[]
         while(_mod.length>0){
             if(_mod.charAt(0)=='.'){
-                if(package===undefined){
+                if($package===undefined){
                     if($B.imported[mod]!==undefined){
-                        package = $B.imported[mod].__package__
+                        $package = $B.imported[mod].__package__
                     }
                 }else{
-                    package = $B.imported[package]
+                    $package = $B.imported[$package]
                 }
-                if(package===undefined){
+                if($package===undefined){
                     return 'throw SystemError("Parent module \'\' not loaded,'+
                         ' cannot perform relative import")'
-                }else if(package=='None'){
+                }else if($package=='None'){
                     console.log('package is None !')
                 }else{
-                    packages.push(package)
+                    packages.push($package)
                 }
                 _mod = _mod.substr(1)
             }else{
@@ -3710,9 +3701,9 @@ function $LambdaCtx(context){
 
         var node = $get_node(this),
             module = $get_module(this),
-            src = $B.$py_src[module.id],
+            src = $get_src(context),
             args = src.substring(this.args_start,this.body_start),
-            body = src.substring(this.body_start+1,this.body_end)
+            body = src.substring(this.body_start+1, this.body_end)
             body = body.replace(/\\\n/g, ' ') // cf issue 582
 
         body = body.replace(/\n/g,' ')
@@ -3733,6 +3724,7 @@ function $LambdaCtx(context){
         js = '(function(){\n'+js+'\nreturn $locals.'+func_name+'\n})()'
 
         $B.clear_ns(lambda_name)
+        $B.$py_src[lambda_name] = null
         delete $B.$py_src[lambda_name]
 
         return js
@@ -4458,8 +4450,9 @@ function $ReturnCtx(context){
         // Returning from a function means leaving the execution frame
         // If the return is in a try block with a finally block, the frames
         // will be restored when entering "finally"
-        return 'var $res = '+$to_js(this.tree)+';'+
-            '$B.leave_frame($local_name);return $res'
+        var js = 'var $res = '+$to_js(this.tree)+';'+'$B.leave_frame'
+        if(scope.id.substr(0, 6) == '$exec_'){js += '_exec'}
+        return js + '($local_name);return $res'
     }
 }
 
@@ -5345,6 +5338,7 @@ function $get_module(context){
     var ctx_node = context.parent
     while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
     var tree_node = ctx_node.node
+    if(tree_node.ntype=="module"){return tree_node}
     var scope = null
     while(tree_node.parent.type!=='module'){
         tree_node = tree_node.parent
@@ -5354,24 +5348,17 @@ function $get_module(context){
     return scope
 }
 
+function $get_src(context){
+    // Get the source code of context module
+    var node = $get_node(context)
+    while(node.parent!==undefined){node=node.parent}
+    return node.src
+}
+
 function $get_node(context){
     var ctx = context
     while(ctx.parent){ctx=ctx.parent}
     return ctx.node
-}
-
-function $get_blocks(name, scope){
-    var res = []
-    while(true){
-        if($B.bound[scope.id][name]!==undefined){res.push(scope.id)}
-        if(scope.parent_block){
-            if(scope.parent_block.id=='__builtins__'){
-                if(scope.blurred){return false}
-            }
-        }else{break}
-        scope = scope.parent_block
-    }
-    return res
 }
 
 function $to_js_map(tree_element) {
@@ -5762,7 +5749,7 @@ function $transition(context,token){
         if(context.closed){
             switch(token) {
               case '[':
-                return new $SubCtx(context.parent)
+                return new $AbstractExprCtx(new $SubCtx(context.parent),false)
               case '(':
                 return new $CallArgCtx(new $CallCtx(context))
             }
@@ -6483,7 +6470,7 @@ function $transition(context,token){
         $_SyntaxError(context,'token '+token+' after '+context)
       case 'list_or_tuple':
         if(context.closed){
-            if(token==='[') return new $SubCtx(context.parent)
+            if(token==='[') return new $AbstractExprCtx(new $SubCtx(context.parent),false)
             if(token==='(') return new $CallCtx(context)
             return $transition(context.parent,token,arguments[2])
         }else{
@@ -7086,6 +7073,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         root.is_comp = src.is_comp
         src = src.src
     }
+    root.src = src
     var lnum = 1
     while(pos<src.length){
         var car = src.charAt(pos)
@@ -7631,7 +7619,7 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     $B.bound[module]['__name__'] = true
     $B.bound[module]['__file__'] = true
 
-    $B.$py_src[locals_id] = $B.$py_src[locals_id] || src
+    $B.$py_src[locals_id] = src
     var root = $tokenize({src:src, is_comp:is_comp},
         module,locals_id,parent_block_id,line_info)
     root.is_comp = is_comp

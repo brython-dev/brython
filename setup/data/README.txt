@@ -1,7 +1,11 @@
 To run the demo, start the built-in Python HTTP server by
 
-    python -m http.server 8000
+    python -m brython --server
 
-and load http://localhost:8000/demo.html in the browser address bar.
+The default port is 8080. To specify another port:
+
+    python -m brython --server --port 8081
+
+Then load http://localhost:<port>/demo.html in the browser address bar.
 
 For more information please visit http://brython.info.

@@ -15,7 +15,7 @@ var $FloatDict = {__class__:$B.$type,
     __dir__:$ObjectDict.__dir__,
     __name__:'float',
     $native:true,
-    descriptors:{'numerator':true,
+    $descriptors:{'numerator':true,
              'denominator':true,
              'imag':true,
              'real':true}

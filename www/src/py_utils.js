@@ -302,7 +302,7 @@ $B.$search = function(name, global_ns){
 
 $B.$global_search = function(name){
     // search in global namespace
-    for(var i=$B.frames_stack.length-1; i>0; i--){
+    for(var i=$B.frames_stack.length-1; i>=0; i--){
         var frame = $B.frames_stack[i]
         if(frame[3][name]!==undefined){return frame[3][name]}
     }
@@ -1030,12 +1030,20 @@ $B.leave_frame = function(arg){
     // Leave execution frame
     if ($B.profile > 0) $B.$profile.return();
     if($B.frames_stack.length==0){console.log('empty stack');return}
-    /*
-    if(arg.replace(/\./g, '_') != $B.last($B.frames_stack)[0] && arg.substr(0,4)!='$gen'){
-        console.log('leave', arg, 'top stack', $B.last($B.frames_stack)[0])
-    }
-    */
     $B.frames_stack.pop()
+}
+
+$B.leave_frame_exec = function(arg){
+    // Leave execution frame in an "exec" or "eval" : may have side effects
+    // on the englobing namespace
+    if ($B.profile > 0) $B.$profile.return();
+    if($B.frames_stack.length==0){console.log('empty stack');return}
+    var frame = $B.frames_stack.pop()
+    for(var i=$B.frames_stack.length-1; i>=0; i--){
+        if($B.frames_stack[i][2]==frame[2]){
+            $B.frames_stack[i][3] = frame[3]
+        }
+    }
 }
 
 $B.memory = function(){

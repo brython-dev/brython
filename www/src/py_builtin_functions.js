@@ -378,11 +378,23 @@ $EnumerateDict.$factory = enumerate
 //eval() (built in function)
 function $eval(src, _globals, _locals){
 
+    function from_alias(attr){
+        if(attr.substr(0, 2)=='$$' && $B.aliased_names[attr.substr(2)]){
+            return attr.substr(2)
+        }
+        return attr
+    }
+    function to_alias(attr){
+        if($B.aliased_names[attr]){return '$$'+attr}
+        return attr
+    }
+
     var current_frame = $B.frames_stack[$B.frames_stack.length-1]
     if(current_frame!==undefined){
         var current_locals_id = current_frame[0].replace(/\./,'_'),
             current_globals_id = current_frame[2].replace(/\./,'_')
     }
+    var stack_len = $B.frames_stack.length
 
     var is_exec = arguments[3]=='exec',leave = false
 
@@ -425,7 +437,7 @@ function $eval(src, _globals, _locals){
         ex += 'var $locals_'+current_globals_id+'=gobj;' // needed for generators
         ex += 'var $locals_'+globals_id+'=gobj;'
         eval(ex)
-        $B.bound[globals_id] = {}
+        $B.bound[globals_id] = $B.bound[globals_id] ||  {}
         for(var attr in gobj){
             $B.bound[globals_id][attr] = true
         }
@@ -433,10 +445,13 @@ function $eval(src, _globals, _locals){
         $B.bound[globals_id] = {}
         var items = _globals.$string_dict
         for(var item in items){
+            item1 = to_alias(item)
             try{
-                eval('$locals_'+globals_id+'["'+item+'"] = items[item]')
+                eval('$locals_'+globals_id+'["'+item1+'"] = items[item]')
                 $B.bound[globals_id][item]=true
             }catch(err){
+                console.log(err)
+                console.log('error setting', item)
                 break
             }
         }
@@ -461,6 +476,7 @@ function $eval(src, _globals, _locals){
         while(1){
             try{
                 var item = next(items)
+                item1 = to_alias(item)
                 eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')
             }catch(err){
                 break
@@ -469,60 +485,63 @@ function $eval(src, _globals, _locals){
     }
 
     var root = $B.py2js(src, globals_id, locals_id, parent_block_id),
-        leave_frame = true,
         js, gns, lns
 
     try{
+        // The result of py2js ends with
+        // try{
+        //     (block code)
+        //     $B.leave_frame($local_name)
+        // }catch(err){
+        //     $B.leave_frame($local_name)
+        //     throw err
+        // }
+        var try_node = root.children[root.children.length-2],
+            instr = try_node.children[try_node.children.length-2]
+        // type of the last instruction in (block code)
+        var type = instr.context.tree[0].type
+
         // If the Python function is eval(), not exec(), check that the source
         // is an expression
-        if(!is_exec){
-            // The result of py2js ends with
-            // try{
-            //     (block code)
-            //     $B.leave_frame($local_name)
-            // }catch(err){
-            //     $B.leave_frame($local_name)
-            //     throw err
-            // }
-            var try_node = root.children[root.children.length-2],
-                instr = try_node.children[try_node.children.length-2]
-            // type of the last instruction in (block code)
-            var type = instr.context.tree[0].type
-            switch(type){
 
-                case 'expr':
-                case 'list_or_tuple':
-                case 'op':
-                case 'ternary':
-                    // If the source is an expression, what we must execute is the
-                    // block inside the "try" clause : if we run root, since it's
-                    // wrapped in try / finally, the value produced by
-                    // eval(root.to_js()) will be None
-                    var children = try_node.children
-                    root.children.splice(root.children.length-2, 2)
-                    for(var i=0;i<children.length-1;i++){
-                        root.add(children[i])
-                    }
-                    break
-                default:
-                    leave_frame = false
+        switch(type){
+
+            case 'expr':
+            case 'list_or_tuple':
+            case 'op':
+            case 'ternary':
+                // If the source is an expression, what we must execute is the
+                // block inside the "try" clause : if we run root, since it's
+                // wrapped in try / finally, the value produced by
+                // eval(root.to_js()) will be None
+                var children = try_node.children
+                root.children.splice(root.children.length-2, 2)
+                for(var i=0;i<children.length-1;i++){
+                    root.add(children[i])
+                }
+                break
+            default:
+                if(!is_exec){
                     throw _b_.SyntaxError("eval() argument must be an expression",
                         '<string>', 1, 1, src)
-            }
+                }
         }
 
         js = root.to_js()
 
         var res = eval(js)
         gns = eval('$locals_'+globals_id)
+        if($B.frames_stack[$B.frames_stack.length-1][2] == globals_id){
+            gns = $B.frames_stack[$B.frames_stack.length-1][3]
+        }
 
         // Update _locals with the namespace after execution
         if(_locals!==undefined){
             lns = eval('$locals_'+locals_id)
             var setitem = getattr(_locals,'__setitem__')
             for(var attr in lns){
-                if(attr.charAt(0)=='$'){continue}
-                setitem(attr, lns[attr])
+                attr1 = from_alias(attr)
+                if(attr1.charAt(0)!='$'){setitem(attr1, lns[attr])}
             }
         }else{
             for(var attr in lns){current_frame[1][attr] = lns[attr]}
@@ -532,8 +551,8 @@ function $eval(src, _globals, _locals){
             // Update _globals with the namespace after execution
             var setitem = getattr(_globals,'__setitem__')
             for(var attr in gns){
-                if(attr.charAt(0)=='$'){continue}
-                setitem(attr, gns[attr])
+                attr1 = from_alias(attr)
+                if(attr1.charAt(0)!='$'){setitem(attr1, gns[attr])}
             }
         }else{
             for(var attr in gns){
@@ -549,6 +568,11 @@ function $eval(src, _globals, _locals){
         if(err.$py_error===undefined){throw $B.exception(err)}
         throw err
     }finally{
+        // "leave_frame" was removed so we must execute it here
+        if($B.frames_stack.length == stack_len+1){
+            $B.frames_stack.pop()
+        }
+
         root = null
         js = null
         gns = null
@@ -557,11 +581,6 @@ function $eval(src, _globals, _locals){
         $B.clear_ns(globals_id)
         $B.clear_ns(locals_id)
 
-        if(!is_exec && leave_frame){
-            // For eval(), the finally clause with "leave_frame" was removed
-            // so we must execute it here
-            $B.frames_stack.pop()
-        }
     }
 }
 $eval.$is_func = true
@@ -701,6 +720,7 @@ function getattr(obj,attr,_default){
         return klass.$factory
       case '__dict__':
         // attribute __dict__ returns a dictionary wrapping obj
+        if(klass.is_class && klass.__dict__){return klass.__dict__}
         return $B.obj_dict(obj) // defined in py_dict.js
       case '__doc__':
         // for builtins objects, use $B.builtins_doc
@@ -712,27 +732,17 @@ function getattr(obj,attr,_default){
         }
         break
       case '__mro__':
-        if(klass.__name__=='classXXX'){ // experimental
-            console.log('newmro')
-            var res = [obj],
-                pos = 0,
-                mro = obj.__mro__
-            for(var i=0;i<mro.length;i++){
-                res[pos++]=mro[i]
-            }
-            return res
-        }
         if(klass===$B.$factory){
             // The attribute __mro__ of classes is a list of class
             // dictionaries ; it must be returned as a list of class
             // factory functions
-            var res = [obj.$dict],
+            var res = [obj],
                 pos = 0,
                 mro = obj.$dict.__mro__
             for(var i=0;i<mro.length;i++){
-                res[pos++]=mro[i].$factory
+                res.push(mro[i].$factory)
             }
-            return res
+            return _b_.tuple(res)
         }
         break
       case '__subclasses__':
@@ -751,7 +761,7 @@ function getattr(obj,attr,_default){
     if(typeof obj == 'function') {
       var value = obj.__class__ === $B.$factory ? obj.$dict[attr] : obj[attr]
       if(value !== undefined) {
-        if (attr == '__module__' || attr =='__hash__') { // put other attrs here too..
+        if (attr == '__module__'){
           return value
         }
       }
@@ -766,7 +776,7 @@ function getattr(obj,attr,_default){
                 return _default
             }
         }
-        if(klass.descriptors && klass.descriptors[attr]!==undefined){
+        if(klass.$descriptors && klass.$descriptors[attr]!==undefined){
             return klass[attr](obj)
         }
         if(typeof klass[attr]=='function'){
@@ -847,7 +857,7 @@ function getattr(obj,attr,_default){
     var cname = klass.__name__
     if(is_class){cname=obj.__name__}
 
-    attr_error(attr, cname)
+    attr_error(rawname, cname)
 }
 
 //globals() (built in function)
@@ -1239,10 +1249,53 @@ function max(){
     return $extreme(args,'__gt__')
 }
 
-
-function memoryview(obj) {
-  throw NotImplementedError('memoryview is not implemented')
+var memoryview = $B.make_class({name:'memoryview',
+    init:function(self, obj){
+        check_no_kw('memoryview', obj)
+        check_nb_args('memoryview', 2, arguments.length)
+        if($B.get_class(obj).$buffer_protocol){
+            self.obj = obj
+            // XXX fix me : next values are only for bytes and bytearray
+            self.format = 'B'
+            self.itemsize = 1
+            self.ndim = 1
+            self.shape = _b_.tuple([self.obj.source.length])
+            self.strides = _b_.tuple([1])
+            self.suboffsets = _b_.tuple([])
+            self.c_contiguous = true
+            self.f_contiguous = true
+            self.contiguous = true
+        }else{
+            throw _b_.TypeError("memoryview: a bytes-like object "+
+                "is required, not '"+$B.get_class(obj).__name__+"'")
+        }
+    }
+})
+memoryview.$dict.__eq__ = function(self, other){
+    if(other.__class__!==memoryview.$dict){return false}
+    return getattr(self.obj, '__eq__')(other.obj)
 }
+memoryview.$dict.__name__ = "memory"
+memoryview.$dict.__getitem__ = function(self, key){
+    var res = self.obj.__class__.__getitem__(self.obj, key)
+    if(key.__class__===_b_.slice.$dict){return memoryview(res)}
+    return res
+}
+memoryview.$dict.hex = function(self){
+    var res = '',
+        bytes = _b_.bytes(self)
+    for(var i=0,len=bytes.source.length; i<len; i++){
+        res += bytes.source[i].toString(16)
+    }
+    return res
+}
+memoryview.$dict.tobytes = function(self){
+    return _b_.bytes(self.obj)
+}
+memoryview.$dict.tolist = function(self){
+    return _b_.list(_b_.bytes(self.obj))
+}
+
 
 function min(){
     var args = [], pos=0
@@ -1537,7 +1590,7 @@ function setattr(){
                 __set__.apply(res,[obj,value])
                 return None
             }
-        }else if(klass && klass.descriptors !== undefined &&
+        }else if(klass && klass.$descriptors !== undefined &&
             klass[attr] !== undefined){
             var setter = klass[attr].setter
             if(typeof setter == 'function'){
@@ -1642,7 +1695,7 @@ function sum(iterable,start){
 var $SuperDict = {__class__:$B.$type,__name__:'super'}
 
 $SuperDict.__getattribute__ = function(self,attr){
-    
+
     var mro = self.__thisclass__.$dict.__mro__,
         res
     for(var i=0;i<mro.length;i++){ // ignore the class where super() is defined
@@ -1726,6 +1779,23 @@ $$super.$dict = $SuperDict
 $$super.__class__ = $B.$factory
 $SuperDict.$factory = $$super
 $$super.$is_func = true
+
+function vars(){
+    var def = {},
+        $ = $B.args('vars', 1, {obj:null}, ['obj'], arguments, {obj: def},
+        null, null)
+    if($.obj===def){
+        return _b_.locals()
+    }else{
+        try{return getattr($.obj, '__dict__')}
+        catch(err){
+            if(err.__class__===_b_.AttributeError.$dict){
+                throw _b_.TypeError("vars() argument must have __dict__ attribute")
+            }
+            throw err
+        }
+    }
+}
 
 var $Reader = {__class__:$B.$type,__name__:'reader'}
 
@@ -1812,7 +1882,7 @@ function $url_open(){
     if(args.length>0) var mode=args[0]
     if(args.length>1) var encoding=args[1]
     var is_binary = mode.search('b')>-1
-    if(isinstance(file,$B.JSObject)) return new $OpenFile(file.js,mode,encoding)
+    if(isinstance(file,$B.JSObject)) return new $B.$OpenFile(file.js,mode,encoding)
     if(isinstance(file,_b_.str)){
         // read the file content and return an object with file object methods
         var req=new XMLHttpRequest();
@@ -1978,6 +2048,13 @@ var $FunctionDict = $B.$FunctionDict = {
     __name__:'function'
 }
 
+$FunctionDict.__dir__ = function(self){
+    var infos = self.$infos || {},
+        attrs = self.$attrs || {}
+
+    return Object.keys(infos).concat(Object.keys(attrs))
+}
+
 $FunctionDict.__getattribute__ = function(self, attr){
     // Internal attributes __name__, __module__, __doc__ etc.
     // are stored in self.$infos
@@ -1994,6 +2071,8 @@ $FunctionDict.__getattribute__ = function(self, attr){
         }else{
             return self.$infos[attr]
         }
+    }else if(self.$attrs && self.$attrs[attr] !== undefined){
+        return self.$attrs[attr]
     }else{
         return _b_.object.$dict.__getattribute__(self, attr)
     }
@@ -2007,7 +2086,7 @@ $FunctionDict.__mro__ = [$ObjectDict]
 
 $FunctionDict.__setattr__ = function(self, attr, value){
     if(self.$infos[attr]!==undefined){self.$infos[attr] = value}
-    else{self[attr] = value}
+    else{self.$attrs = self.$attrs || {}; self.$attrs[attr] = value}
 }
 
 var $Function = function(){}

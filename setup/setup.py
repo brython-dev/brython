@@ -7,16 +7,10 @@ import shutil
 with open('README.rst', encoding='utf-8') as fobj:
     LONG_DESCRIPTION = fobj.read()
 
-# copy brython.js and brython_stdlib.js
-for fname in ['brython', 'brython_stdlib']:
-    shutil.copyfile(os.path.join(os.path.dirname(os.getcwd()),
-        "www", "src", "{}.js".format(fname)),
-        os.path.join("data", "{}.js".format(fname)))
-
 setup(
     name='brython',
 
-    version='3.3.3',
+    version='3.3.4',
 
     description='Brython is an implementation of Python 3 running in the browser',
 
@@ -30,12 +24,6 @@ setup(
     author_email='quentel.pierre@orange.fr',
 
     packages = ['data', 'data.tools'],
-
-    entry_points={
-          'console_scripts': [
-              'brython = data.__main__:main'
-          ]
-      },
 
     # Choose your license
     license='BSD',

@@ -4,10 +4,7 @@ eval($B.InjectBuiltins())
 
 var $ObjectDict = _b_.object.$dict
 var JSObject = $B.JSObject
-var _window = self;
-
-// Maps $brython_id of DOM elements to events
-$B.events = _b_.dict()
+var _window = window //self;
 
 // cross-browser utility functions
 function $getMouseOffset(target, ev){
@@ -217,27 +214,52 @@ function $EventsList(elt,evt,arg){
     }
 }
 
-function $OpenFile(file,mode,encoding){
-    this.reader = new FileReader()
-    if(mode==='r'){this.reader.readAsText(file,encoding)}
-    else if(mode==='rb'){this.reader.readAsBinaryString(file)}
 
-    this.file = file
-    this.__class__ = dom.FileReader
-    this.__getattr__ = function(attr){
-        if(this['get_'+attr]!==undefined) return this['get_'+attr]
-        return this.reader[attr]
+var $OpenFile = $B.$OpenFile = function(file, mode, encoding) {
+    var res = {
+        __class__: $OpenFileDict,
+        file: file,
+        reader: new FileReader(),
     }
-    this.__setattr__ = (function(obj){
-        return function(attr,value){
-            if(attr.substr(0,2)=='on'){ // event
-                var callback = function(ev){return value($DOMEvent(ev))}
-                obj.addEventListener(attr.substr(2),callback)
-            }else if('set_'+attr in obj){return obj['set_'+attr](value)}
-            else if(attr in obj){obj[attr]=value}
-            else{setattr(obj,attr,value)}
-        }
-    })(this.reader)
+    if(mode === 'r') {
+        res.reader.readAsText(file, encoding)
+    } else if(mode === 'rb') {
+        res.reader.readAsBinaryString(file)
+    }
+    return res
+}
+
+var $OpenFileDict = {
+    __class__: $B.$type,  // metaclass type
+    __name__: '$OpenFile',
+}
+
+$OpenFile.$dict = $OpenFileDict  // cross ref class dict in factory
+$OpenFileDict.$factory = $OpenFile  // cross ref factory in class dict
+
+$OpenFile.__class__ = $B.$factory  // metaclass factory
+$OpenFileDict.__mro__ = [$ObjectDict]  // base class mro search
+
+
+$OpenFileDict.__getattr__ = function(self, attr) {
+    if(self['get_' + attr] !== undefined)
+        return self['get_' + attr]
+
+    return self.reader[attr]
+}
+
+$OpenFileDict.__setattr__ = function(self, attr, value) {
+    var obj = self.reader
+    if(attr.substr(0,2) == 'on') { // event
+        var callback = function(ev) { return value($DOMEvent(ev)) }
+        obj.addEventListener(attr.substr(2), callback)
+    } else if('set_' + attr in obj) {
+        return obj['set_' + attr](value)
+    } else if(attr in obj) {
+        obj[attr] = value
+    } else {
+        setattr(obj, attr, value)
+    }
 }
 
 
@@ -811,17 +833,8 @@ DOMNodeDict.bind = function(self,event){
     var _id
     if(self.elt.nodeType===9){_id=0}
     else{_id = self.elt.$brython_id}
-    // if element id is not referenced in $B.events, create a new entry
-    var _d=_b_.dict.$dict
-    if(!_d.__contains__($B.events, _id)){
-        _d.__setitem__($B.events, _id, dict())
-    }
-    var item = _d.__getitem__($B.events, _id)
-    // If event is not already registered for the element, create a new list
-    if(!_d.__contains__(item, event)){
-        _d.__setitem__(item, event, [])
-    }
-    var evlist = _d.__getitem__(item, event)
+    self.$events = self.$events || {}
+    var evlist = self.$events[event] = self.$events[event] || []
     var pos=evlist.length
     for(var i=2;i<arguments.length;i++){
         var func = arguments[i]
@@ -843,8 +856,11 @@ DOMNodeDict.bind = function(self,event){
                 }
             }}
         )(func)
+        callback.$infos = func.$infos
+        callback.$attrs = func.$attrs || {}
+        callback.$func = func
         self.elt.addEventListener(event,callback,false)
-        evlist[pos++]=[func, callback]
+        evlist[pos++] = [func, callback]
     }
     return self
 }
@@ -876,19 +892,15 @@ DOMNodeDict.Class = function(self){
 DOMNodeDict.class_name = function(self){return DOMNodeDict.Class(self)}
 
 DOMNodeDict.clone = function(self){
-    res = DOMNode(self.elt.cloneNode(true))
-    res.elt.$brython_id='DOM-' + $B.UUID()
+    var res = DOMNode(self.elt.cloneNode(true))
 
     // bind events on clone to the same callbacks as self
-    var _d=_b_.dict.$dict
-    if(_d.__contains__($B.events, self.elt.$brython_id)){
-        var events = _d.__getitem__($B.events, self.elt.$brython_id)
-        var items = _b_.list(_d.items(events))
-        for(var i=0;i<items.length;i++){
-            var event = items[i][0]
-            for(var j=0;j<items[i][1].length;j++){
-                DOMNodeDict.bind(res,event,items[i][1][j][0])
-            }
+    var events = self.$events || {}
+    for(var event in events){
+        var evt_list = events[event]
+        for(var i=0;i<evt_list.length;i++){
+            var func = evt_list[i][0]
+            DOMNodeDict.bind(res,event,func)
         }
     }
     return res
@@ -909,16 +921,9 @@ DOMNodeDict.closest = function(self, tagName){
 }
 
 DOMNodeDict.events = function(self, event){
-    var _id
-    if(self.elt.nodeType===9){_id=0}
-    else{_id = self.elt.$brython_id}
-    // if element id is not referenced in $B.events, create a new entry
-    var _d=_b_.dict.$dict
-    if(!_d.__contains__($B.events, _id)){return []}
-    var item = _d.__getitem__($B.events, _id)
-    // If event is not already registered for the element, create a new list
-    if(!_d.__contains__(item, event)){return []}
-    var evt_list = _d.__getitem__(item, event), callbacks = []
+    self.$events = self.$events || {}
+    var evt_list = self.$events[event] = self.$events[event] || [],
+        callbacks = []
     for(var i=0;i<evt_list.length;i++){callbacks.push(evt_list[i][1])}
     return callbacks
 }
@@ -950,7 +955,7 @@ DOMNodeDict.get = function(self){
             throw _b_.TypeError("DOMNode object doesn't support selection by name")
         }
         var res = [], pos=0
-        var node_list = document.getElementsByName($dict['name'])
+        var node_list = obj.getElementsByName($dict['name'])
         if(node_list.length===0) return []
         for(var i=0;i<node_list.length;i++) res[pos++]=DOMNode(node_list[i])
     }
@@ -959,7 +964,7 @@ DOMNodeDict.get = function(self){
             throw _b_.TypeError("DOMNode object doesn't support selection by tag name")
         }
         var res = [], pos=0
-        var node_list = document.getElementsByTagName($dict['tag'])
+        var node_list = obj.getElementsByTagName($dict['tag'])
         if(node_list.length===0) return []
         for(var i=0;i<node_list.length;i++) res[pos++]=DOMNode(node_list[i])
     }
@@ -968,7 +973,7 @@ DOMNodeDict.get = function(self){
             throw _b_.TypeError("DOMNode object doesn't support selection by class name")
         }
         var res = [], pos=0
-        var node_list = document.getElementsByClassName($dict['classname'])
+        var node_list = obj.getElementsByClassName($dict['classname'])
         if(node_list.length===0) return []
         for(var i=0;i<node_list.length;i++) res[pos++]=DOMNode(node_list[i])
     }
@@ -976,7 +981,7 @@ DOMNodeDict.get = function(self){
         if(obj.getElementById===undefined){
             throw _b_.TypeError("DOMNode object doesn't support selection by id")
         }
-        var id_res = obj.getElementById($dict['id'])
+        var id_res = document.getElementById($dict['id'])
         if(!id_res) return []
         return [DOMNode(id_res)]
     }
@@ -1051,12 +1056,15 @@ DOMNodeDict.id = function(self){
     return None
 }
 
-DOMNodeDict.index = function(self){
-    // Get index of element in its parent children
-    var rank = 0,
-        elt = self.elt
-    while((elt = elt.previousSibling) !== null){
-        rank++
+DOMNodeDict.index = function(self, selector){
+    if(selector===undefined){
+        // Get index of element in its parent children
+        selector = self.elt.tagName
+    }
+    var items = self.elt.parentElement.querySelectorAll(selector),
+        rank = -1
+    for(var i=0;i<items.length;i++){
+        if(items[i] === self.elt){rank=i;break}
     }
     return rank
 }
@@ -1086,6 +1094,50 @@ DOMNodeDict.left = {
     }
 }
 
+var EventListener = $B.make_class({
+    name: "EventListener",
+    init: function(self, obj){
+        self.obj=obj
+    }
+})
+EventListener.$dict.__enter__ = function(self){
+    // local namespace of object
+    var ns = $B.frames_stack[$B.frames_stack.length-1][1]
+    self.funcs = []
+    for(var attr in ns){
+        if(ns[attr] !==null && ns[attr].$infos!==undefined){
+            self.funcs.push(ns[attr])
+        }
+    }
+}
+EventListener.$dict.__exit__ = function(self){
+    var ns = $B.frames_stack[$B.frames_stack.length-1][1]
+    for(var attr in ns){
+        if(ns[attr] !== null && ns[attr].$infos!==undefined){
+            if(self.funcs.indexOf(ns[attr])==-1){
+                DOMNodeDict.bind(self.obj, attr, ns[attr])
+            }
+        }
+    }
+}
+
+DOMNodeDict.listener = {
+    __get__:function(self){
+        return EventListener(self)
+    }
+}
+
+DOMNodeDict.on = function(self, event){
+    // decorator for callback functions
+    return (function(obj, evt){
+        function f(callback){
+            DOMNodeDict.bind(obj, evt, callback)
+            return callback
+        }
+        return f
+    })(self, event)
+}
+
 DOMNodeDict.options = function(self){ // for SELECT tag
     return new $OptionsClass(self.elt)
 }
@@ -1111,6 +1163,18 @@ DOMNodeDict.select = function(self, selector){
         res[i]=DOMNode(node_list[i])
     }
     return res
+}
+
+DOMNodeDict.select_one = function(self, selector){
+    // alias for get(selector=...)
+    if(self.elt.querySelector===undefined){
+        throw _b_.TypeError("DOMNode object doesn't support selection by selector")
+    }
+    var res = self.elt.querySelector(selector)
+    if(res !== null) {
+        return None
+    }
+    return DOMNode(res)
 }
 
 DOMNodeDict.style = function(self){
@@ -1225,34 +1289,52 @@ DOMNodeDict.trigger = function (self, etype){
     }
 }
 
-DOMNodeDict.unbind = function(self,event){
+DOMNodeDict.unbind = function(self, event){
     // unbind functions from the event (event = "click", "mouseover" etc.)
     // if no function is specified, remove all callback functions
     // If no event is specified, remove all callbacks for all events
-    var _id
-    if(self.elt.nodeType==9){_id=0}else{_id=self.elt.$brython_id}
-    if(!_b_.dict.$dict.__contains__($B.events, _id)) return
-    var item = _b_.dict.$dict.__getitem__($B.events, _id)
+    self.$events = self.$events || {}
+    if(self.$events==={}){return _b_.None}
 
     if(event===undefined){
-        var events = _b_.list(_b_.dict.$dict.keys(item))
-        for(var i=0;i<events.length;i++){DOMNodeDict.unbind(self, events[i])}
-        return
+        for(var event in self.$events){
+            DOMNodeDict.unbind(self, event)
+        }
+        return _b_.None
     }
 
-    if(!_b_.dict.$dict.__contains__(item, event)) return
+    if(self.$events[event]===undefined || self.$events[event].length==0){
+        return _b_.None
+    }
 
-    var events = _b_.dict.$dict.__getitem__(item, event)
+    var events = self.$events[event]
     if(arguments.length===2){
+        // remove all callback functions
         for(var i=0;i<events.length;i++){
             var callback = events[i][1]
             self.elt.removeEventListener(event,callback,false)
         }
-        events = []
-        return
+        self.$events[event] = []
+        return _b_.None
     }
+
     for(var i=2;i<arguments.length;i++){
-        var func = arguments[i], flag = false
+        var callback = arguments[i], flag = false,
+            func = callback.$func
+        if(func === undefined){
+            // If a callback is created by an assignment to an existing
+            // function
+            var found = false
+            for(var j=0;j<events.length;j++){
+                if(events[j][0] === callback){
+                    var func = callback, found=true
+                    break
+                }
+            }
+            if(!found){
+                throw _b_.TypeError('function is not an event callback')
+            }
+        }
         for(var j=0;j<events.length;j++){
             if(getattr(func,'__eq__')(events[j][0])){
                 var callback = events[j][1]

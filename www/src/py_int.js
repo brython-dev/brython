@@ -14,9 +14,8 @@ function $err(op,other){
 var $IntDict = {__class__:$B.$type,
     __name__:'int',
     __dir__:$ObjectDict.__dir__,
-    toString:function(){return '$IntDict'},
     $native:true,
-    descriptors:{'numerator':true,
+    $descriptors:{'numerator':true,
                  'denominator':true,
                  'imag':true,
                  'real':true}

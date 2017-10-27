@@ -67,4 +67,19 @@ assert class_decorated_function() == 3, 'Class fails decorating function'
 assert function_decorated_class().v == 9, 'Function fails decorating class'
 assert class_decorated_class().v == 7, 'Class fails decorating class'
 
+# decorate a function declared global inside another function
+def deco(func):
+    def wrapper(*args, **kw):
+        return func(*args, **kw)
+    return wrapper
+
+def f():
+    global g
+    @deco
+    def g():
+        return 1
+
+f()
+assert g() == 1
+
 print('passed all tests..')

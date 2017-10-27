@@ -1489,6 +1489,50 @@ class A:
 
 assert A().test() == "test !"
 
+# issue 681
+found = [x for x in ['a','b','c']
+                     if x and not x.startswith('-')][-1]
+assert found == 'c'
+
+assert [0, 1][-1] == 1
+assert {-1: 'a'}[-1] == 'a'
+
+# issue 686
+s = "message = 5"
+t = {}
+exec(s, t)
+assert 'message' in t
+exec('x = message', t)
+assert 'x' in t
+assert t['x'] == 5
+
+# issue 690
+t = {}
+exec("""def f():
+    global x
+    x = 3
+""", t)
+exec("f()", t)
+assert t['x'] == 3
+
+# issue 699
+def members(obj):
+    for m in dir(obj):
+        getattr(obj, m)
+
+members(int)
+
+class Foo:
+    def foo(self):
+        pass
+
+members(Foo)
+
+# issue 701
+assert type( (1,2,3)[:0] ) == tuple
+assert type( (1,2,3)[1:2:-1] ) == tuple
+assert type( (1,2,3)[0:2] ) == tuple
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
