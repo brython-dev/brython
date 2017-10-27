@@ -46,7 +46,11 @@ var $item_generator = function(d) {
     if(d.$jsobj){
         this.items = []
         for(var attr in d.$jsobj){
-            if(attr.charAt(0)!='$'){this.items.push([attr,d.$jsobj[attr]])}
+            if(attr.charAt(0)!='$'){
+                val = d.$jsobj[attr];
+                if (val === undefined || val === null) this.items.push([attr,$N])
+                else this.items.push([attr,val])
+            }
         }
         this.length=this.items.length;
         return
@@ -243,7 +247,7 @@ $DictDict.__getitem__ = function(){
         self=$.self, arg=$.arg
 
     if(self.$jsobj){
-        if(self.$jsobj[arg]===undefined){return None}
+        if(self.$jsobj[arg]===undefined || self.$jsobj[arg]===null){return $N}
         return self.$jsobj[arg]
     }
     
@@ -308,9 +312,6 @@ $DictDict.__init__ = function(self){
 
         if(obj.__class__===$B.JSObject.$dict){
             // convert a JSObject into a Python dictionary
-            var si = $DictDict.__setitem__
-            for(var attr in obj.js) si(self,attr,obj.js[attr])
-
             // Attribute $jsobj is used to update the original JS object
             // when the dictionary is modified
             self.$jsobj = obj.js
@@ -422,7 +423,11 @@ $DictDict.__setitem__ = function(self,key,value){
         ['self', 'key', 'value'], arguments, {}, null, null),
         self=$.self, key=$.key, value=$.value
 
-    if(self.$jsobj){self.$jsobj[key]=value;return}
+    if(self.$jsobj){
+        if (value === $N) self.$jsobj[key] = undefined;
+        else self.$jsobj[key]=value;
+        return
+    }
 
     switch(typeof key) {
       case 'string':
@@ -585,7 +590,7 @@ $DictDict.setdefault = function(){
 
     try{return $DictDict.__getitem__(self,key)}
     catch(err){
-        if(_default===undefined) _default=None
+        if(_default===undefined) _default=$N
         $DictDict.__setitem__(self,key,_default)
         return _default
     }

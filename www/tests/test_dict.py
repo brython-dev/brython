@@ -42,4 +42,23 @@ d = {}
 d[1] = d
 assert repr(d) == '{1: {...}}'
 
+# Test dict initialization from native js objects
+from browser import window
+pyobj = dict(window.test_jsobj)
+assert pyobj["null_value"] is None
+assert pyobj["undef_value"] is None
+assert pyobj["test_num"] == 10
+assert len(list(pyobj.items())) == 3
+assert len(list(pyobj.values())) == 3
+assert len(list(pyobj.keys())) == 3
+
+# Test that setting jsobject dict value to None
+# makes it a javascript undefined
+pyobj['python_none'] = None
+assert window.test_none('python_none')
+
+# Test setdefault
+assert pyobj.setdefault('default') is None
+
+
 print("passed all tests..")
