@@ -83,8 +83,6 @@ def b64decode(s, altchars=None, validate=False):
     """
     if altchars is not None:
         altchars = _bytes_from_decode_data(altchars)
-        assert len(altchars) == 2, repr(altchars)
-        s = s.translate(bytes.maketrans(altchars, b'+/'))
     return _base64.Base64.decode(s, altchars, validate)
 
 
