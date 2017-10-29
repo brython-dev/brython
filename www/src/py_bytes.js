@@ -468,9 +468,37 @@ $BytesDict.translate = function(self,table,_delete) {
     return bytes(res)
 }
 
+var _upper = function(char_code) {
+    if (char_code >= 97 && char_code <= 122) {
+        return char_code - 32
+    } else {
+        return char_code
+    }
+}
+
+var _lower = function(char_code) {
+    if (char_code >= 65 && char_code <= 90) {
+        return char_code + 32
+    } else {
+        return char_code
+    }
+}
+
 $BytesDict.upper = function(self) {
     var _res=[], pos=0
-    for(var i=0, _len_i = self.source.length; i < _len_i; i++) _res[pos++]=self.source[i].toUpperCase()
+    for(var i=0, _len_i = self.source.length; i < _len_i; i++) {
+        if (self.source[i])
+        _res[pos++]=_upper(self.source[i])
+    }
+    return bytes(_res)
+}
+
+$BytesDict.lower = function(self) {
+    var _res=[], pos=0
+    for(var i=0, _len_i = self.source.length; i < _len_i; i++) {
+        if (self.source[i])
+        _res[pos++]=_lower(self.source[i])
+    }
     return bytes(_res)
 }
 
