@@ -312,6 +312,57 @@ $BytesDict.maketrans=function(from, to) {
     return bytes(_t)
 }
 
+$BytesDict.find = function() {
+    var $ = $B.args('find', 4, {self:null, sub:null, start:null, end:null}, ['self', 'sub', 'start', 'end'],
+        arguments, {start:0,end:-1}, null, null),
+        sub = $.sub,
+        start = $.start;
+    if (! sub.__class__ ) {
+        throw _b_.TypeError("first argument must be a bytes-like object not '"+$B.get_class($.sub).__name__+"'")
+    } else if (! sub.__class__.$buffer_protocol ) {
+        throw _b_.TypeError("first argument must be a bytes-like object not '"+sub.__class__.__name__+"'")
+    }
+    var end = $.end == -1 ? $.self.source.length-sub.source.length : Math.min($.self.source.length-sub.source.length, $.end);
+
+    for(var i=start;i<=end;i++) {
+        if ($BytesDict.startswith($.self, sub, i)) return i;
+    }
+    return -1;
+}
+
+$BytesDict.replace = function(){
+    var $ = $B.args('replace', 4, {self:null, old:null, new:null, count:null}, ['self', 'old', 'new', 'count'],
+        arguments, {count:-1}, null, null),
+        res = [];
+    var self = $.self, src=self.source, len=src.length, old=$.old, $new=$.new;
+    var count = $.count >= 0 ? $.count : src.length;
+
+    if (! $.old.__class__ ) {
+        throw _b_.TypeError("first argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")
+    } else if (! $.old.__class__.$buffer_protocol ) {
+        throw _b_.TypeError("first argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")
+    }
+
+    if (! $.new.__class__ ) {
+        throw _b_.TypeError("second argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")
+    } else if (! $.new.__class__.$buffer_protocol ) {
+        throw _b_.TypeError("second argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")
+    }
+
+    for(var i=0;i<len;i++) {
+        if ($BytesDict.startswith(self, old, i) && count) {
+            for(var j=0;j<$new.source.length;j++) {
+                res.push($new.source[j]);
+            }
+            i+= (old.source.length-1);
+            count--;
+        } else {
+            res.push(src[i]);
+        }
+    }
+    return bytes(res);
+}
+
 $BytesDict.split = function(){
     var $ = $B.args('split', 2, {self:null, sep:null}, ['self', 'sep'],
         arguments, {}, null, null),
