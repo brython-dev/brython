@@ -11,6 +11,10 @@
 #import binascii
 
 import _base64 # Javascript module in libs
+import binascii
+import struct
+import io
+
 setattr(_base64.Base64, 'error', binascii.Error)
 
 __all__ = [
@@ -81,6 +85,8 @@ def b64decode(s, altchars=None, validate=False):
     discarded prior to the padding check.  If validate is True,
     non-base64-alphabet characters in the input result in a binascii.Error.
     """
+    if isinstance(s, str):
+        s = bytes(s, encoding='ascii')
     if altchars is not None:
         altchars = _bytes_from_decode_data(altchars)
     return _base64.Base64.decode(s, altchars, validate)
@@ -319,6 +325,9 @@ MAXBINSIZE = (MAXLINESIZE//4)*3
 
 def encode(input, output):
     """Encode a file; input and output are binary files."""
+    if isinstance(input, io.TextIOBase) or isinstance(output, io.TextIOBase):
+        raise TypeError("Both input and output must be binary streams.")
+
     while True:
         s = input.read(MAXBINSIZE)
         if not s:
