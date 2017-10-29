@@ -24,25 +24,30 @@ $B.$syntax_err_line = function(exc,module,pos,line_num) {
     var pos2line = {}
     var lnum=1
     var src = $B.$py_src[module]
-    if(src===undefined){console.log('no src for', module)}
-    var line_pos = {1:0}
-    for(var i=0, _len_i = src.length; i < _len_i;i++){
-        pos2line[i]=lnum
-        if(src.charAt(i)=='\n'){line_pos[++lnum]=i}
-    }
-    while(line_num===undefined){
-        line_num = pos2line[pos]
-        pos--
-    }
-    exc.$line_info = line_num+','+module
+    if(src===undefined){
+        console.log('no src for', module)
+        exc.$line_info = line_num+','+module
+        exc.args = _b_.tuple([$B.$getitem(exc.args,0), module, line_num, 0, 0])
+    } else {
+        var line_pos = {1:0}
+        for(var i=0, _len_i = src.length; i < _len_i;i++){
+            pos2line[i]=lnum
+            if(src.charAt(i)=='\n'){line_pos[++lnum]=i}
+        }
+        while(line_num===undefined){
+            line_num = pos2line[pos]
+            pos--
+        }
+        exc.$line_info = line_num+','+module
 
-    var lines = src.split('\n')
-    var line = lines[line_num-1]
-    var lpos = pos-line_pos[line_num]
-    var len=line.length
-    line=line.replace(/^\s*/,'')
-    lpos-=len-line.length
-    exc.args = _b_.tuple([$B.$getitem(exc.args,0), module, line_num, lpos, line])
+        var lines = src.split('\n')
+        var line = lines[line_num-1]
+        var lpos = pos-line_pos[line_num]
+        var len=line.length
+        line=line.replace(/^\s*/,'')
+        lpos-=len-line.length
+        exc.args = _b_.tuple([$B.$getitem(exc.args,0), module, line_num, lpos, line])
+    }
 }
 
 $B.$SyntaxError = function(module, msg, pos, line_num, root) {
