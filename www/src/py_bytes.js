@@ -639,6 +639,9 @@ function decode(b,encoding,errors){
 }
 
 function encode(s,encoding){
+    var $ = $B.args('encode', 2, {s:null, encoding:null}, ['s', 'encoding'],
+        arguments, {}, null, null),
+        s=$.s, encoding=$.encoding;
     var t=[], pos=0, enc=normalise(encoding)
 
     switch(enc) {
