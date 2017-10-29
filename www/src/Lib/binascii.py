@@ -148,8 +148,8 @@ table_a2b_base64 = {
 
 
 def a2b_base64(s):
-    if not isinstance(s, (str, bytes)):
-        raise TypeError("expected string, got %r" % (s,))
+    if not isinstance(s, (str, bytes, bytearray)):
+        raise TypeError("expected string, bytes or a bytearray, got %r" % (s,))
     s = s.rstrip()
     # clean out all invalid characters, this also strips the final '=' padding
     # check for correct padding
@@ -679,20 +679,30 @@ def crc32(s, crc=0):
     return result
 
 def b2a_hex(s):
+    if isinstance(s, bytes) or isinstance(s, bytearray):
+        conv = lambda x:x
+        unconv = lambda x:x
+    else:
+        conv = lambda x:ord(x)
+        unconv = lambda x:chr(x)
     result = []
     for char in s:
-        c = (ord(char) >> 4) & 0xf
+        c = (conv(char) >> 4) & 0xf
         if c > 9:
             c = c + ord('a') - 10
         else:
             c = c + ord('0')
-        result.append(chr(c))
-        c = ord(char) & 0xf
+        result.append(unconv(c))
+        c = conv(char) & 0xf
         if c > 9:
             c = c + ord('a') - 10
         else:
             c = c + ord('0')
-        result.append(chr(c))
+        result.append(unconv(c))
+    if isinstance(s, bytes):
+        return bytes(result,encoding='ascii')
+    if isinstance(s, bytearray):
+        return bytearray(result,encoding='ascii')
     return ''.join(result)
 
 hexlify = b2a_hex
@@ -713,9 +723,13 @@ def a2b_hex(t):
     result = []
 
     def pairs_gen(s):
+        if isinstance(s, bytes) or isinstance(s, bytearray):
+            conv = lambda x:x
+        else:
+            conv = lambda x:ord(x)
         while s:
             try:
-                yield table_hex[ord(s[0])], table_hex[ord(s[1])]
+                yield table_hex[conv(s[0])], table_hex[conv(s[1])]
             except IndexError:
                 if len(s):
                     raise TypeError('Odd-length string')
