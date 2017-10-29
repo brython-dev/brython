@@ -11,6 +11,7 @@
 #import binascii
 
 import _base64 # Javascript module in libs
+setattr(_base64.Base64, 'error', binascii.Error)
 
 __all__ = [
     # Legacy interface exports traditional RFC 1521 Base64 encodings

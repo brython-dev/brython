@@ -6,13 +6,18 @@ PyPy provides an RPython version too.
 
 # borrowed from https://bitbucket.org/pypy/pypy/src/f2bf94943a41/lib_pypy/binascii.py
 
-class Error(Exception):
-    pass
+class Error(ValueError):
+    def __init__(self, msg=''):
+        self._msg = msg
+
+    def __str__(self):
+        return " binascii.Error: "+self._msg
+
 
 class Done(Exception):
     pass
 
-class Incomplete(Exception):
+class Incomplete(Error):
     pass
 
 def a2b_uu(s):
