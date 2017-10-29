@@ -367,6 +367,11 @@ $BytesDict.split = function(){
     var $ = $B.args('split', 2, {self:null, sep:null}, ['self', 'sep'],
         arguments, {}, null, null),
         res=[], start=0, stop=0
+    if (! $.sep.__class__ ) {
+        throw _b_.TypeError("a bytes-like object is required not '"+$B.get_class($.start).__name__+"'")
+    } else if (! $.sep.__class__.$buffer_protocol ) {
+        throw _b_.TypeError("a bytes-like object is required not '"+$.sep.__class__.__name__+"'")
+    }
     var seps = $.sep.source,
         len = seps.length,
         src = $.self.source,
