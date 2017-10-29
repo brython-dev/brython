@@ -194,6 +194,20 @@ def b32encode(s):
     return bytes(encoded)
 
 
+def _strip_padchars(s):
+    if isinstance(s, bytes_types):
+        padchar = ord('=')
+    else:
+        padchar = '='
+    pos = -1
+    while s[pos] == padchar:
+        pos -= 1
+    pos = abs(pos+1)
+    if pos == 0:
+        return s, 0
+    else:
+        return s[:-pos], pos
+
 def b32decode(s, casefold=False, map01=None):
     """Decode a Base32 encoded byte string.
 
@@ -229,12 +243,8 @@ def b32decode(s, casefold=False, map01=None):
     # Strip off pad characters from the right.  We need to count the pad
     # characters because this will tell us how many null bytes to remove from
     # the end of the decoded string.
-    padchars = 0
-    mo = re.search(b'(?P<pad>[=]*)$', s)
-    if mo:
-        padchars = len(mo.group('pad'))
-        if padchars > 0:
-            s = s[:-padchars]
+    s, padchars = _strip_padchars(s)
+
     # Now decode the full quanta
     parts = []
     acc = 0
@@ -295,8 +305,9 @@ def b16decode(s, casefold=False):
     s = _bytes_from_decode_data(s)
     if casefold:
         s = s.upper()
-    if re.search(b'[^0-9A-F]', s):
-        raise binascii.Error('Non-base16 digit found')
+    for b in s:
+        if b not in b'[0123456789ABCDEF]':
+            raise binascii.Error('Non-base16 digit found')
     return binascii.unhexlify(s)
 
 
