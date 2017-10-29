@@ -420,29 +420,30 @@ $BytesDict.lstrip = function(self,cars) {return _strip(self,cars,'l')}
 $BytesDict.rstrip = function(self,cars) {return _strip(self,cars,'r')}
 
 $BytesDict.startswith = function(){
-    var $ = $B.args('startswith', 2, {self: null, start: null},
-        ['self', 'start'], arguments, {}, null, null)
-    if(_b_.isinstance($.start, bytes)){
+    var $ = $B.args('startswith', 3, {self: null, prefix: null, start:null},
+        ['self', 'prefix', 'start'], arguments, {start:0}, null, null),
+        start = $.start
+    if(_b_.isinstance($.prefix, bytes)){
         var res = true
-        for(var i=0;i<$.start.source.length && res;i++){
-            res = $.self.source[i]==$.start.source[i]
+        for(var i=0;i<$.prefix.source.length && res;i++){
+            res = $.self.source[start+i]==$.prefix.source[i]
         }
         return res
-    }else if(_b_.isinstance($.start, _b_.tuple)){
+    }else if(_b_.isinstance($.prefix, _b_.tuple)){
         var items = []
-        for(var i=0;i<$.start.length; i++){
-            if(_b_.isinstance($.start[i], bytes)){
-                items = items.concat($.start[i].source)
+        for(var i=0;i<$.prefix.length; i++){
+            if(_b_.isinstance($.prefix[i], bytes)){
+                items = items.concat($.prefix[i].source)
             }else{
                 throw _b_.TypeError("startswith first arg must be bytes or "+
-                    "a tuple of bytes, not "+$B.get_class($.start).__name__)
+                    "a tuple of bytes, not "+$B.get_class($.prefix).__name__)
             }
         }
-        var start = bytes(items)
-        return $BytesDict.startswith($.self, start)
+        var prefix = bytes(items)
+        return $BytesDict.startswith($.self, prefix, start)
     }else{
-        throw _b_.TypeError("startswith first arg must be bytes or a tuple of bytes, not "+
-            $B.get_class($.start).__name__)
+        throw _b_.TypeError("startsswith first arg must be bytes or a tuple of bytes, not "+
+            $B.get_class($.prefix).__name__)
     }
 }
 
