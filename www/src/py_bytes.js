@@ -158,10 +158,10 @@ $BytesDict.__getitem__ = function(self,arg){
         if(stop<0) stop=self.source.length+stop
         var res = [],i=null, pos=0
         if(step>0){
-          if(stop<=start) return ''
+          if(stop<=start) return bytes([])
           for(i=start;i<stop;i+=step) res[pos++]=self.source[i]
         } else {
-            if(stop>=start) return ''
+            if(stop>=start) return bytes([])
             for(i=start;i>=stop;i+=step) res[pos++]=self.source[i]
         }
         return bytes(res)
