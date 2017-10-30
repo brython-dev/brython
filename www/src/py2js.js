@@ -831,6 +831,14 @@ function $AssignCtx(context){ //, check_unbound){
     }
 }
 
+function $AsyncCtx(context){
+    // Class for async : def, while, for
+    this.type = 'async'
+    this.parent = context
+    context.async = true
+    this.toString = function(){return '(async)'}
+}
+
 function $AttrCtx(context){
     // Class for object attributes (eg x in obj.x)
     this.type = 'attribute'
@@ -1863,6 +1871,7 @@ function $DefCtx(context){
     this.name = null
     this.parent = context
     this.tree = []
+    this.async = context.async
 
     this.locals = []
     this.yields = [] // list of nodes with "yield"
@@ -5114,8 +5123,6 @@ function $YieldCtx(context){
     var scope = this.scope = $get_scope(this)
     if(!scope.is_function){
         $_SyntaxError(context,["'yield' outside function"])
-    }else if(scope.has_return_with_arguments){
-        $_SyntaxError(context,["'return' with argument inside generator"])
     }
 
     // Change type of function to generator
@@ -5515,6 +5522,11 @@ function $transition(context,token){
             // If left is an id, update binding to the type of right operand
             context.guess_type()
             return $transition(context.parent,'eol')
+        }
+        $_SyntaxError(context,'token '+token+' after '+context)
+      case 'async':
+        if(token=="def"){
+            return $transition(context.parent, token, arguments[2])
         }
         $_SyntaxError(context,'token '+token+' after '+context)
       case 'attribute':
@@ -6610,6 +6622,8 @@ function $transition(context,token){
                 return $transition(expr,token,arguments[2])
             }// switch
             break
+          case 'async':
+            return new $AsyncCtx(context)
           case 'class':
             return new $ClassCtx(context)
           case 'continue':
@@ -7033,7 +7047,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     var kwdict = ["class", "return", "break", "for","lambda","try","finally",
         "raise", "def", "from", "nonlocal", "while", "del", "global", "with",
         "as", "elif", "else", "if", "yield", "assert", "import", "except",
-        "raise","in", "pass","with","continue","__debugger__"
+        "raise","in", "pass","with","continue","__debugger__", "async"
         ]
     var unsupported = []
     var $indented = ['class','def','for','condition','single_kw','try','except','with']
