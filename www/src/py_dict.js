@@ -485,7 +485,13 @@ $DictDict.clear = function(){
     self.$str_hash={}
     self.$object_dict={}
 
-    if(self.$jsobj) self.$jsobj={}
+    if(self.$jsobj){
+        for(var attr in self.$jsobj){
+            if(attr.charAt(0) !== '$' && attr !== "__class__"){
+                delete self.$jsobj[attr]
+            }
+        }
+    }
     return $N
 }
 

@@ -71,7 +71,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-10-30 16:53:10.300483"
+__BRYTHON__.compiled_date="2017-10-30 22:18:50.915887"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -447,6 +447,11 @@ left.func='getitem'
 res +=','+right_js+')};None;'}
 return res}}
 return left.to_js()+'='+right.to_js()}}
+function $AsyncCtx(C){
+this.type='async'
+this.parent=C
+C.async=true
+this.toString=function(){return '(async)'}}
 function $AttrCtx(C){
 this.type='attribute'
 this.value=C.tree[0]
@@ -976,6 +981,7 @@ function $DefCtx(C){this.type='def'
 this.name=null
 this.parent=C
 this.tree=[]
+this.async=C.async
 this.locals=[]
 this.yields=[]
 C.tree[C.tree.length]=this
@@ -2532,7 +2538,7 @@ break;
 default:
 $_SyntaxError(C,'yield atom must be inside ()')}
 var scope=this.scope=$get_scope(this)
-if(!scope.is_function){$_SyntaxError(C,["'yield' outside function"])}else if(scope.has_return_with_arguments){$_SyntaxError(C,["'return' with argument inside generator"])}
+if(!scope.is_function){$_SyntaxError(C,["'yield' outside function"])}
 var def=scope.C.tree[0]
 def.type='generator'
 def.yields.push(this)
@@ -2758,6 +2764,9 @@ case 'assign':
 if(token==='eol'){if(C.tree[1].type=='abstract_expr'){$_SyntaxError(C,'token '+token+' after '+C)}
 C.guess_type()
 return $transition(C.parent,'eol')}
+$_SyntaxError(C,'token '+token+' after '+C)
+case 'async':
+if(token=="def"){return $transition(C.parent,token,arguments[2])}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'attribute':
 if(token==='id'){var name=arguments[2]
@@ -3488,6 +3497,8 @@ case '~':
 var expr=new $AbstractExprCtx(C,true)
 return $transition(expr,token,arguments[2])}
 break
+case 'async':
+return new $AsyncCtx(C)
 case 'class':
 return new $ClassCtx(C)
 case 'continue':
@@ -3792,7 +3803,7 @@ for(var i=0;i<s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
 function $tokenize(src,module,locals_id,parent_block_id,line_info){var br_close={")":"(","]":"[","}":"{"}
 var br_stack=""
 var br_pos=[]
-var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__"
+var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async"
 ]
 var unsupported=[]
 var $indented=['class','def','for','condition','single_kw','try','except','with']
@@ -6036,6 +6047,11 @@ if(!(typeof attr=='string')){throw _b_.TypeError("setattr(): attribute name must
 if($B.aliased_names[attr]){attr='$$'+attr}
 else if(attr=='__class__'){
 obj.__class__=value.$dict;
+return None}else if(attr=='__dict__'){
+if(!value.__class__===_b_.dict.$dict){throw _b_.TypeError("__dict__ must be set to a dictionary, " +
+"not a '"+value.__class__.$dict.__name+"'")}
+for(var attr in obj){if(attr !=="__class__"){delete obj[attr]}}
+for(var attr in value.$string_dict){obj[attr]=value.$string_dict[attr]}
 return None}
 if(obj.__class__===$B.$factory){
 if(obj.$dict.$methods && typeof value=='function'
@@ -10312,7 +10328,7 @@ self.$numeric_dict={}
 self.$string_dict={}
 self.$str_hash={}
 self.$object_dict={}
-if(self.$jsobj)self.$jsobj={}
+if(self.$jsobj){for(var attr in self.$jsobj){if(attr.charAt(0)!=='$' && attr !=="__class__"){delete self.$jsobj[attr]}}}
 return $N}
 $DictDict.copy=function(self){
 var $=$B.args('copy',1,{self:null},['self'],arguments,{},null,null),self=$.self,res=_b_.dict()

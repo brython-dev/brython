@@ -1535,6 +1535,21 @@ function setattr(){
         // we must set __class__ to the class dictionary
         obj.__class__ = value.$dict;
         return None
+    }else if(attr=='__dict__'){
+        // set attribute __dict__
+        // remove previous attributes
+        if(!value.__class__===_b_.dict.$dict){
+            throw _b_.TypeError("__dict__ must be set to a dictionary, " +
+                "not a '"+value.__class__.$dict.__name+"'")
+        }
+        for(var attr in obj){
+            if(attr !== "__class__"){delete obj[attr]}
+        }
+        // set them
+        for(var attr in value.$string_dict){
+            obj[attr] = value.$string_dict[attr]
+        }
+        return None
     }
 
     if(obj.__class__===$B.$factory){

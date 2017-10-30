@@ -1515,6 +1515,25 @@ exec("""def f():
 exec("f()", t)
 assert t['x'] == 3
 
+# issue 691
+class C(object): pass
+c1 = C()
+c1.x = 42
+assert c1.__dict__['x'] == 42
+c1.__dict__.clear()
+assert c1.__dict__ == {}
+
+class C(object): pass
+c2 = C()
+c2.x = 42
+c2.__dict__ = dict()
+assert c2.__dict__ == {}
+
+try:
+    c2.__dict__ = 6
+except TypeError:
+    pass
+
 # issue 699
 def members(obj):
     for m in dir(obj):
