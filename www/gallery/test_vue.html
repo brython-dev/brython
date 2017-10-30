@@ -1,0 +1,154 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="https://unpkg.com/vue"></script>
+
+<script type="text/javascript" src="../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../src/version_info.js"></script>
+<script type="text/javascript" src="../src/py2js.js"></script>
+<script type="text/javascript" src="../src/py_object.js"></script>
+<script type="text/javascript" src="../src/py_type.js"></script>
+<script type="text/javascript" src="../src/py_utils.js"></script>
+<script type="text/javascript" src="../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../src/py_exceptions.js"></script>
+<script type="text/javascript" src="../src/py_range_slice.js"></script>
+<script type="text/javascript" src="../src/py_bytes.js"></script>
+<script type="text/javascript" src="../src/py_set.js"></script>
+<script type="text/javascript" src="../src/js_objects.js"></script>
+<script type="text/javascript" src="../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../src/py_import.js"></script>
+<script type="text/javascript" src="../src/unicode.min.js"></script>
+<script type="text/javascript" src="../src/py_string.js"></script>
+<script type="text/javascript" src="../src/py_int.js"></script>
+<script type="text/javascript" src="../src/py_long_int.js"></script>
+<script type="text/javascript" src="../src/py_float.js"></script>
+<script type="text/javascript" src="../src/py_complex.js"></script>
+<script type="text/javascript" src="../src/py_dict.js"></script>
+<script type="text/javascript" src="../src/py_list.js"></script>
+<script type="text/javascript" src="../src/py_generator.js"></script>
+<script type="text/javascript" src="../src/py_dom.js"></script>
+
+<script type="text/javascript" src="../src/builtin_modules.js"></script>
+<script type="text/javascript" src="../src/py_import_hooks.js"></script>
+
+</head>
+<body onload="brython(1)">
+
+<div id="app">
+  {{ message }}
+</div>
+
+<div id="app-2">
+  <span v-bind:title="message">
+    Hover your mouse over me for a few seconds
+    to see my dynamically bound title!
+  </span>
+</div>
+
+<div id="app-4">
+  <ol>
+    <li v-for="todo in todos">
+      {{ todo.text }}
+    </li>
+  </ol>
+</div>
+
+<div id="app-5">
+  <p>{{ message }}</p>
+  <button v-on:click="reverseMessage">Reverse Message</button>
+</div>
+
+<div id="app-6">
+  <p>{{ message }}</p>
+  <input v-model="message">
+</div>
+
+<div id="app-7">
+  <ol>
+    <!--
+      Now we provide each todo-item with the todo object
+      it's representing, so that its content can be dynamic.
+      We also need to provide each component with a "key",
+      which will be explained later.
+    -->
+    <todo-item
+      v-for="item in groceryList"
+      v-bind:todo="item"
+      v-bind:key="item.id">
+    </todo-item>
+  </ol>
+</div>
+
+<script type="text/python">
+from browser import document, window
+from javascript import this
+
+Date = window.Date.new
+
+Vue = window.Vue.new
+
+app = Vue({
+  'el': '#app',
+  'data': {
+    'message': 'Hello Brython Vue!'
+  }
+})
+
+app2 = Vue({
+  'el': '#app-2',
+  'data': {
+    'message': 'You loaded this page on ' + Date().toLocaleString()
+  }
+})
+
+app4 = Vue({
+  'el': '#app-4',
+  'data': {
+    'todos': [
+      { 'text': 'Learn JavaScript' },
+      { 'text': 'Learn Vue' },
+      { 'text': 'Build something awesome' }
+    ]
+  }
+})
+
+def reverse_message(ev):
+    this().message = ''.join(reversed(this().message))
+
+app5 = Vue({
+  'el': '#app-5',
+  'data': {
+    'message': 'Hello Vue.js!'
+  },
+  'methods': {
+    'reverseMessage': reverse_message
+  }
+})
+
+app6 = Vue({
+  'el': '#app-6',
+  'data': {
+    'message': 'Hello Vue!'
+  }
+})
+
+Vue.component('todo-item', {
+  'props': ['todo'],
+  'template': '<li>{{ todo.text }}</li>'
+})
+
+app7 = Vue({
+  'el': '#app-7',
+  'data': {
+    'groceryList': [
+      { 'id': 0, 'text': 'Vegetables' },
+      { 'id': 1, 'text': 'Cheese' },
+      { 'id': 2, 'text': 'Whatever else humans are supposed to eat' }
+    ]
+  }
+})
+
+</script>
+</body>
+</html>
