@@ -46,7 +46,7 @@ def _complain_ifclosed(closed):
     if closed:
         raise ValueError("I/O operation on closed file")
 
-class StringIO:
+class IOBase:
     """class StringIO([buffer])
 
     When a StringIO object is created, it can be initialized to an existing
@@ -65,11 +65,14 @@ class StringIO:
         self.pos = 0
         self.closed = False
         self.softspace = 0
+        self.empty_char = ''
+        self.zero_char = '\0'
+        self.newline = '\n'
 
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         """A file object is its own iterator, for example iter(f) returns f
         (unless f is closed). When a file is used as an iterator, typically
         in a for loop (for example, for line in f: print line), the next()
@@ -107,7 +110,7 @@ class StringIO:
         """
         _complain_ifclosed(self.closed)
         if self.buflist:
-            self.buf += ''.join(self.buflist)
+            self.buf += self.empty_char.join(self.buflist)
             self.buflist = []
         if mode == 1:
             pos += self.pos
@@ -130,7 +133,7 @@ class StringIO:
         """
         _complain_ifclosed(self.closed)
         if self.buflist:
-            self.buf += ''.join(self.buflist)
+            self.buf += self.empty_char.join(self.buflist)
             self.buflist = []
         if n is None or n < 0:
             newpos = self.len
@@ -155,9 +158,9 @@ class StringIO:
         """
         _complain_ifclosed(self.closed)
         if self.buflist:
-            self.buf += ''.join(self.buflist)
+            self.buf += self.empty_char.join(self.buflist)
             self.buflist = []
-        i = self.buf.find('\n', self.pos)
+        i = self.buf.find(self.newline, self.pos)
         if i < 0:
             newpos = self.len
         else:
@@ -223,14 +226,14 @@ class StringIO:
             self.len = self.pos = spos + len(s)
             return
         if spos > slen:
-            self.buflist.append('\0'*(spos - slen))
+            self.buflist.append(self.zero_char*(spos - slen))
             slen = spos
         newpos = spos + len(s)
         if spos < slen:
             if self.buflist:
-                self.buf += ''.join(self.buflist)
+                self.buf += self.empty_char.join(self.buflist)
             self.buflist = [self.buf[:spos], s, self.buf[newpos:]]
-            self.buf = ''
+            self.buf = self.empty_char
             if newpos > slen:
                 slen = newpos
         else:
@@ -269,10 +272,15 @@ class StringIO:
         """
         _complain_ifclosed(self.closed)
         if self.buflist:
-            self.buf += ''.join(self.buflist)
+            self.buf += self.empty_char.join(self.buflist)
             self.buflist = []
         return self.buf
 
+class TextIOBase(IOBase):
+    pass
+
+class StringIO(TextIOBase):
+    pass
 
 TextIOWrapper = StringIO
 
@@ -292,4 +300,13 @@ class RawIOBase:
 BufferedIOBase = RawIOBase
 BufferedReader = RawIOBase
 BytesIO = StringIO
+
+class BytesIO(IOBase):
+    def __init__(self, buf=b''):
+        super().__init__(buf)
+        self.empty_char = b''
+        self.zero_char = b'\0'
+        self.newline = b'\n'
+
+
 

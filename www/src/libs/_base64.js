@@ -15,6 +15,7 @@ function make_alphabet(altchars){
 }
 
 var Base64 = {
+    error: function() { return 'binascii_error' },
 
     encode: function(bytes, altchars) {
 
@@ -64,13 +65,24 @@ var Base64 = {
         // If validate is set, check that all characters in input
         // are in the alphabet
         var _input = ''
+        var padding = 0;
         for(var i=0, len=input.length;i<len;i++){
             var car = String.fromCharCode(input[i])
-            if(alphabet.search(car)==-1){
-                if(validate){throw 'binascii_error'}
-            }else{_input+=car}
+            var char_num = alphabet.indexOf(car)
+            if(char_num==-1){
+                if(validate){throw Base64.error("Non-base64 digit found: "+car)}
+            } else if(char_num==64 && i < input.length-2) {
+                if(validate){throw Base64.error("Non-base64 digit found: "+car)}
+            } else if(char_num==64 && i >= input.length-2) {
+                padding++;
+                _input +=car;
+            } else {
+                _input +=car
+            }
         }
         input = _input;
+        if (_input.length == padding ) return _b_.bytes([]);
+        if ( _input.length % 4 > 0) throw Base64.error("Incorrect padding");
 
         var i = 0;
         while (i < input.length) {

@@ -158,10 +158,12 @@ $BytesDict.__getitem__ = function(self,arg){
         if(stop<0) stop=self.source.length+stop
         var res = [],i=null, pos=0
         if(step>0){
-          if(stop<=start) return ''
+          stop = Math.min(stop, self.source.length)
+          if(stop<=start) return bytes([])
           for(i=start;i<stop;i+=step) res[pos++]=self.source[i]
         } else {
-            if(stop>=start) return ''
+            if(stop>=start) return bytes([])
+            stop = Math.max(0, stop)
             for(i=start;i>=stop;i+=step) res[pos++]=self.source[i]
         }
         return bytes(res)
@@ -310,10 +312,66 @@ $BytesDict.maketrans=function(from, to) {
     return bytes(_t)
 }
 
+$BytesDict.find = function() {
+    var $ = $B.args('find', 4, {self:null, sub:null, start:null, end:null}, ['self', 'sub', 'start', 'end'],
+        arguments, {start:0,end:-1}, null, null),
+        sub = $.sub,
+        start = $.start;
+    if (! sub.__class__ ) {
+        throw _b_.TypeError("first argument must be a bytes-like object not '"+$B.get_class($.sub).__name__+"'")
+    } else if (! sub.__class__.$buffer_protocol ) {
+        throw _b_.TypeError("first argument must be a bytes-like object not '"+sub.__class__.__name__+"'")
+    }
+    var end = $.end == -1 ? $.self.source.length-sub.source.length : Math.min($.self.source.length-sub.source.length, $.end);
+
+    for(var i=start;i<=end;i++) {
+        if ($BytesDict.startswith($.self, sub, i)) return i;
+    }
+    return -1;
+}
+
+$BytesDict.replace = function(){
+    var $ = $B.args('replace', 4, {self:null, old:null, new:null, count:null}, ['self', 'old', 'new', 'count'],
+        arguments, {count:-1}, null, null),
+        res = [];
+    var self = $.self, src=self.source, len=src.length, old=$.old, $new=$.new;
+    var count = $.count >= 0 ? $.count : src.length;
+
+    if (! $.old.__class__ ) {
+        throw _b_.TypeError("first argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")
+    } else if (! $.old.__class__.$buffer_protocol ) {
+        throw _b_.TypeError("first argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")
+    }
+
+    if (! $.new.__class__ ) {
+        throw _b_.TypeError("second argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")
+    } else if (! $.new.__class__.$buffer_protocol ) {
+        throw _b_.TypeError("second argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")
+    }
+
+    for(var i=0;i<len;i++) {
+        if ($BytesDict.startswith(self, old, i) && count) {
+            for(var j=0;j<$new.source.length;j++) {
+                res.push($new.source[j]);
+            }
+            i+= (old.source.length-1);
+            count--;
+        } else {
+            res.push(src[i]);
+        }
+    }
+    return bytes(res);
+}
+
 $BytesDict.split = function(){
     var $ = $B.args('split', 2, {self:null, sep:null}, ['self', 'sep'],
         arguments, {}, null, null),
         res=[], start=0, stop=0
+    if (! $.sep.__class__ ) {
+        throw _b_.TypeError("a bytes-like object is required not '"+$B.get_class($.start).__name__+"'")
+    } else if (! $.sep.__class__.$buffer_protocol ) {
+        throw _b_.TypeError("a bytes-like object is required not '"+$.sep.__class__.__name__+"'")
+    }
     var seps = $.sep.source,
         len = seps.length,
         src = $.self.source,
@@ -362,29 +420,30 @@ $BytesDict.lstrip = function(self,cars) {return _strip(self,cars,'l')}
 $BytesDict.rstrip = function(self,cars) {return _strip(self,cars,'r')}
 
 $BytesDict.startswith = function(){
-    var $ = $B.args('startswith', 2, {self: null, start: null},
-        ['self', 'start'], arguments, {}, null, null)
-    if(_b_.isinstance($.start, bytes)){
+    var $ = $B.args('startswith', 3, {self: null, prefix: null, start:null},
+        ['self', 'prefix', 'start'], arguments, {start:0}, null, null),
+        start = $.start
+    if(_b_.isinstance($.prefix, bytes)){
         var res = true
-        for(var i=0;i<$.start.source.length && res;i++){
-            res = $.self.source[i]==$.start.source[i]
+        for(var i=0;i<$.prefix.source.length && res;i++){
+            res = $.self.source[start+i]==$.prefix.source[i]
         }
         return res
-    }else if(_b_.isinstance($.start, _b_.tuple)){
+    }else if(_b_.isinstance($.prefix, _b_.tuple)){
         var items = []
-        for(var i=0;i<$.start.length; i++){
-            if(_b_.isinstance($.start[i], bytes)){
-                items = items.concat($.start[i].source)
+        for(var i=0;i<$.prefix.length; i++){
+            if(_b_.isinstance($.prefix[i], bytes)){
+                items = items.concat($.prefix[i].source)
             }else{
                 throw _b_.TypeError("startswith first arg must be bytes or "+
-                    "a tuple of bytes, not "+$B.get_class($.start).__name__)
+                    "a tuple of bytes, not "+$B.get_class($.prefix).__name__)
             }
         }
-        var start = bytes(items)
-        return $BytesDict.startswith($.self, start)
+        var prefix = bytes(items)
+        return $BytesDict.startswith($.self, prefix, start)
     }else{
-        throw _b_.TypeError("startswith first arg must be bytes or a tuple of bytes, not "+
-            $B.get_class($.start).__name__)
+        throw _b_.TypeError("startsswith first arg must be bytes or a tuple of bytes, not "+
+            $B.get_class($.prefix).__name__)
     }
 }
 
@@ -409,9 +468,37 @@ $BytesDict.translate = function(self,table,_delete) {
     return bytes(res)
 }
 
+var _upper = function(char_code) {
+    if (char_code >= 97 && char_code <= 122) {
+        return char_code - 32
+    } else {
+        return char_code
+    }
+}
+
+var _lower = function(char_code) {
+    if (char_code >= 65 && char_code <= 90) {
+        return char_code + 32
+    } else {
+        return char_code
+    }
+}
+
 $BytesDict.upper = function(self) {
     var _res=[], pos=0
-    for(var i=0, _len_i = self.source.length; i < _len_i; i++) _res[pos++]=self.source[i].toUpperCase()
+    for(var i=0, _len_i = self.source.length; i < _len_i; i++) {
+        if (self.source[i])
+        _res[pos++]=_upper(self.source[i])
+    }
+    return bytes(_res)
+}
+
+$BytesDict.lower = function(self) {
+    var _res=[], pos=0
+    for(var i=0, _len_i = self.source.length; i < _len_i; i++) {
+        if (self.source[i])
+        _res[pos++]=_lower(self.source[i])
+    }
     return bytes(_res)
 }
 
@@ -552,6 +639,9 @@ function decode(b,encoding,errors){
 }
 
 function encode(s,encoding){
+    var $ = $B.args('encode', 2, {s:null, encoding:null}, ['s', 'encoding'],
+        arguments, {}, null, null),
+        s=$.s, encoding=$.encoding;
     var t=[], pos=0, enc=normalise(encoding)
 
     switch(enc) {

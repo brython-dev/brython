@@ -309,6 +309,7 @@ class BaseXYTestCase(unittest.TestCase):
 
 
 
+@unittest.skipIf(sys.platform=='brython','Brython does not support writing to files')
 class TestMain(unittest.TestCase):
     def tearDown(self):
         if os.path.exists(support.TESTFN):
