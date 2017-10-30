@@ -1585,7 +1585,7 @@ $StringDict.zfill = function(self, width) {
 }
 
 function str(arg){
-    if(arg===undefined) return ''
+    if(arg===undefined) return '<undefined>'
     switch(typeof arg) {
       case 'string':
           return arg

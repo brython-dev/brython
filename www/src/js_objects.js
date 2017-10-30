@@ -241,7 +241,7 @@ $JSObjectDict.__getattribute__ = function(self,attr){
                 if (this !== null && this !== undefined && this !== _window) {
                     new_this = this
                 }
-                
+
                 var result = js_attr.apply(new_this, args)
 
                 // NOTE: fix for situations when wrapped function is constructor (thus it does not return and value is lost)

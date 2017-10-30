@@ -678,7 +678,7 @@ function getattr(obj,attr,_default){
 
     if(klass===undefined){
         // for native JS objects used in Python code
-        if(obj[attr]!==undefined){
+        if(obj.hasOwnProperty(attr)){
             if(typeof obj[attr]=="function"){
                 return function(){
                     // In function, "this" is set to the object
@@ -714,9 +714,6 @@ function getattr(obj,attr,_default){
       case '__class__':
         // attribute __class__ is set for all Python objects
         // return the factory function
-        if(klass.__name__=='classXXX'){ // experimental
-            return klass
-        }
         return klass.$factory
       case '__dict__':
         // attribute __dict__ returns a dictionary wrapping obj
@@ -838,7 +835,10 @@ function getattr(obj,attr,_default){
 
     if(attr_func===odga){
         var res = obj[attr]
-        if(res!==undefined && res.__set__===undefined){
+        if(res===null){return null}
+        else if(res===undefined && obj.hasOwnProperty(attr)){
+            return res
+        }else if(res!==undefined && res.__set__===undefined){
             return obj[attr]
         }
     }

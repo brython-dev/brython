@@ -942,7 +942,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                 try {
                     // [Import spec] Check if module has an attribute by that name
                     locals[alias] = _b_.getattr(modobj, name);
-                }
+               }
                 catch ($err1) {
                     // [Import spec] attempt to import a submodule with that name ...
                     // FIXME : level = 0 ? level = 1 ?

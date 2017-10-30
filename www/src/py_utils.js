@@ -21,7 +21,7 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
 
     // If the function call had keywords arguments, they are in the last
     // element of $args
-    if(nb_pos>0 && $args[nb_pos-1].$nat){
+    if(nb_pos>0 && $args[nb_pos-1] && $args[nb_pos-1].$nat){
         has_kw_args=true
         nb_pos--
         var kw_args=$args[nb_pos].kw
@@ -282,6 +282,14 @@ $B.clear_ns = function(name){
     var alt_name = name.replace(/\./g, '_')
     if(alt_name!=name){$B.clear_ns(alt_name)}
 }
+
+$B.from_alias = function(attr){
+    if(attr.substr(0, 2)=='$$' && $B.aliased_names[attr.substr(2)]){
+        return attr.substr(2)
+    }
+    return attr
+}
+    
 // Function used to resolve names not defined in Python source
 // but introduced by "from A import *" or by exec
 
@@ -306,7 +314,7 @@ $B.$global_search = function(name){
         var frame = $B.frames_stack[i]
         if(frame[3][name]!==undefined){return frame[3][name]}
     }
-    throw _b_.NameError("name '"+name+"' is not defined")
+    throw _b_.NameError("name '"+$B.from_alias(name)+"' is not defined")
 }
 
 $B.$local_search = function(name){

@@ -303,6 +303,7 @@
                 }
             }
         },
+        NULL: null,
         py2js: function(src, module_name){
             if (module_name===undefined) {
                 module_name = '__main__'+$B.UUID()
@@ -311,7 +312,8 @@
                 '__builtins__').to_js()
         },
         pyobj2jsobj:function(obj){ return $B.pyobj2jsobj(obj)},
-        jsobj2pyobj:function(obj){ return $B.jsobj2pyobj(obj)}
+        jsobj2pyobj:function(obj){ return $B.jsobj2pyobj(obj)},
+        UNDEFINED: undefined
     }
 
     // _sys module is at the core of Brython since it is paramount for

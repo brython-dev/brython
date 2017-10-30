@@ -71,7 +71,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-10-24 08:36:50.155500"
+__BRYTHON__.compiled_date="2017-10-30 16:53:10.300483"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4774,7 +4774,7 @@ var _window=self;
 var isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&("function"===typeof importScripts)&&(navigator instanceof WorkerNavigator);
 $B.args=function($fname,argcount,slots,var_names,$args,$dobj,extra_pos_args,extra_kw_args){
 var has_kw_args=false,nb_pos=$args.length
-if(nb_pos>0 && $args[nb_pos-1].$nat){has_kw_args=true
+if(nb_pos>0 && $args[nb_pos-1]&& $args[nb_pos-1].$nat){has_kw_args=true
 nb_pos--
 var kw_args=$args[nb_pos].kw}
 if(extra_pos_args){slots[extra_pos_args]=[];
@@ -4885,6 +4885,8 @@ for(var key in $B.$py_module_path){if(key.substr(0,len)==name){$B.$py_module_pat
 delete $B.$py_module_path[key]}}
 var alt_name=name.replace(/\./g,'_')
 if(alt_name!=name){$B.clear_ns(alt_name)}}
+$B.from_alias=function(attr){if(attr.substr(0,2)=='$$' && $B.aliased_names[attr.substr(2)]){return attr.substr(2)}
+return attr}
 $B.$search=function(name,global_ns){
 var frame=$B.last($B.frames_stack)
 if(frame[1][name]!==undefined){return frame[1][name]}
@@ -4896,7 +4898,7 @@ else{throw _b_.UnboundLocalError("local variable '"+name+
 $B.$global_search=function(name){
 for(var i=$B.frames_stack.length-1;i>=0;i--){var frame=$B.frames_stack[i]
 if(frame[3][name]!==undefined){return frame[3][name]}}
-throw _b_.NameError("name '"+name+"' is not defined")}
+throw _b_.NameError("name '"+$B.from_alias(name)+"' is not defined")}
 $B.$local_search=function(name){
 var frame=$B.last($B.frames_stack)
 if(frame[1][name]!==undefined){return frame[1][name]}
@@ -5661,7 +5663,7 @@ if(klass===undefined){
 if(typeof obj=='string'){klass=_b_.str.$dict}
 else if(typeof obj=='number'){klass=obj % 1==0 ? _b_.int.$dict : _b_.float.$dict}else if(obj instanceof Number){klass=_b_.float.$dict}else{klass=$B.get_class(obj)}}
 if(klass===undefined){
-if(obj[attr]!==undefined){if(typeof obj[attr]=="function"){return function(){
+if(obj.hasOwnProperty(attr)){if(typeof obj[attr]=="function"){return function(){
 return obj[attr].apply(obj,arguments)}}else{return $B.$JS2Py(obj[attr])}}
 if(_default!==undefined)return _default
 throw _b_.AttributeError('object has no attribute '+rawname)}
@@ -5674,8 +5676,6 @@ if(res===undefined){return None}
 return $B.JSObject(res)}}
 break
 case '__class__':
-if(klass.__name__=='classXXX'){
-return klass}
 return klass.$factory
 case '__dict__':
 if(klass.is_class && klass.__dict__){return klass.__dict__}
@@ -5729,7 +5729,8 @@ for(var i=0,len=mro.length;i<len;i++){attr_func=mro[i]['__getattribute__']
 if(attr_func!==undefined){break}}}}
 if(typeof attr_func!=='function'){console.log(attr+' is not a function '+attr_func)}
 if(attr_func===odga){var res=obj[attr]
-if(res!==undefined && res.__set__===undefined){return obj[attr]}}
+if(res===null){return null}
+else if(res===undefined && obj.hasOwnProperty(attr)){return res}else if(res!==undefined && res.__set__===undefined){return obj[attr]}}
 try{var res=attr_func(obj,attr)}
 catch(err){if(_default!==undefined)return _default
 throw err}
@@ -6308,7 +6309,9 @@ $B.$syntax_err_line=function(exc,module,pos,line_num){
 var pos2line={}
 var lnum=1
 var src=$B.$py_src[module]
-if(src===undefined){console.log('no src for',module)}
+if(src===undefined){console.log('no src for',module)
+exc.$line_info=line_num+','+module
+exc.args=_b_.tuple([$B.$getitem(exc.args,0),module,line_num,0,0])}else{
 var line_pos={1:0}
 for(var i=0,_len_i=src.length;i < _len_i;i++){pos2line[i]=lnum
 if(src.charAt(i)=='\n'){line_pos[++lnum]=i}}
@@ -6321,7 +6324,7 @@ var lpos=pos-line_pos[line_num]
 var len=line.length
 line=line.replace(/^\s*/,'')
 lpos-=len-line.length
-exc.args=_b_.tuple([$B.$getitem(exc.args,0),module,line_num,lpos,line])}
+exc.args=_b_.tuple([$B.$getitem(exc.args,0),module,line_num,lpos,line])}}
 $B.$SyntaxError=function(module,msg,pos,line_num,root){if(root!==undefined && root.line_info!==undefined){
 line_num=root.line_info}
 var exc=_b_.SyntaxError(msg)
@@ -6720,9 +6723,11 @@ var stop=arg.stop===None ? 0 : arg.stop}
 if(start<0)start=self.source.length+start
 if(stop<0)stop=self.source.length+stop
 var res=[],i=null,pos=0
-if(step>0){if(stop<=start)return ''
+if(step>0){stop=Math.min(stop,self.source.length)
+if(stop<=start)return bytes([])
 for(i=start;i<stop;i+=step)res[pos++]=self.source[i]}else{
-if(stop>=start)return ''
+if(stop>=start)return bytes([])
+stop=Math.max(0,stop)
 for(i=start;i>=stop;i+=step)res[pos++]=self.source[i]}
 return bytes(res)}else if(isinstance(arg,bool)){return self.source.__getitem__(_b_.int(arg))}}
 $BytesDict.__gt__=function(self,other){return _b_.list.$dict.__gt__(self.source,other.source)}
@@ -6777,7 +6782,23 @@ for(var i=0;i < 256;i++)_t[i]=i
 for(var i=0,_len_i=from.source.length;i < _len_i;i++){var _ndx=from.source[i]
 _t[_ndx]=to.source[i]}
 return bytes(_t)}
+$BytesDict.find=function(){var $=$B.args('find',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null),sub=$.sub,start=$.start;
+if(! sub.__class__ ){throw _b_.TypeError("first argument must be a bytes-like object not '"+$B.get_class($.sub).__name__+"'")}else if(! sub.__class__.$buffer_protocol ){throw _b_.TypeError("first argument must be a bytes-like object not '"+sub.__class__.__name__+"'")}
+var end=$.end==-1 ? $.self.source.length-sub.source.length : Math.min($.self.source.length-sub.source.length,$.end);
+for(var i=start;i<=end;i++){if($BytesDict.startswith($.self,sub,i))return i;}
+return -1;}
+$BytesDict.replace=function(){var $=$B.args('replace',4,{self:null,old:null,new:null,count:null},['self','old','new','count'],arguments,{count:-1},null,null),res=[];
+var self=$.self,src=self.source,len=src.length,old=$.old,$new=$.new;
+var count=$.count >=0 ? $.count : src.length;
+if(! $.old.__class__ ){throw _b_.TypeError("first argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")}else if(! $.old.__class__.$buffer_protocol ){throw _b_.TypeError("first argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")}
+if(! $.new.__class__ ){throw _b_.TypeError("second argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")}else if(! $.new.__class__.$buffer_protocol ){throw _b_.TypeError("second argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")}
+for(var i=0;i<len;i++){if($BytesDict.startswith(self,old,i)&& count){for(var j=0;j<$new.source.length;j++){res.push($new.source[j]);}
+i+=(old.source.length-1);
+count--;}else{
+res.push(src[i]);}}
+return bytes(res);}
 $BytesDict.split=function(){var $=$B.args('split',2,{self:null,sep:null},['self','sep'],arguments,{},null,null),res=[],start=0,stop=0
+if(! $.sep.__class__ ){throw _b_.TypeError("a bytes-like object is required not '"+$B.get_class($.start).__name__+"'")}else if(! $.sep.__class__.$buffer_protocol ){throw _b_.TypeError("a bytes-like object is required not '"+$.sep.__class__.__name__+"'")}
 var seps=$.sep.source,len=seps.length,src=$.self.source,blen=src.length
 while(stop<blen){var match=true
 for(var i=0;i<len && match;i++){if(src[stop+i]!=seps[i]){match=false}}
@@ -6795,15 +6816,15 @@ for(var i=self.source.length-1;i>=0;i--){if(cars.indexOf(self.source[i])==-1)bre
 return bytes(self.source.slice(0,i+1))}
 $BytesDict.lstrip=function(self,cars){return _strip(self,cars,'l')}
 $BytesDict.rstrip=function(self,cars){return _strip(self,cars,'r')}
-$BytesDict.startswith=function(){var $=$B.args('startswith',2,{self: null,start: null},['self','start'],arguments,{},null,null)
-if(_b_.isinstance($.start,bytes)){var res=true
-for(var i=0;i<$.start.source.length && res;i++){res=$.self.source[i]==$.start.source[i]}
-return res}else if(_b_.isinstance($.start,_b_.tuple)){var items=[]
-for(var i=0;i<$.start.length;i++){if(_b_.isinstance($.start[i],bytes)){items=items.concat($.start[i].source)}else{throw _b_.TypeError("startswith first arg must be bytes or "+
-"a tuple of bytes, not "+$B.get_class($.start).__name__)}}
-var start=bytes(items)
-return $BytesDict.startswith($.self,start)}else{throw _b_.TypeError("startswith first arg must be bytes or a tuple of bytes, not "+
-$B.get_class($.start).__name__)}}
+$BytesDict.startswith=function(){var $=$B.args('startswith',3,{self: null,prefix: null,start:null},['self','prefix','start'],arguments,{start:0},null,null),start=$.start
+if(_b_.isinstance($.prefix,bytes)){var res=true
+for(var i=0;i<$.prefix.source.length && res;i++){res=$.self.source[start+i]==$.prefix.source[i]}
+return res}else if(_b_.isinstance($.prefix,_b_.tuple)){var items=[]
+for(var i=0;i<$.prefix.length;i++){if(_b_.isinstance($.prefix[i],bytes)){items=items.concat($.prefix[i].source)}else{throw _b_.TypeError("startswith first arg must be bytes or "+
+"a tuple of bytes, not "+$B.get_class($.prefix).__name__)}}
+var prefix=bytes(items)
+return $BytesDict.startswith($.self,prefix,start)}else{throw _b_.TypeError("startsswith first arg must be bytes or a tuple of bytes, not "+
+$B.get_class($.prefix).__name__)}}
 $BytesDict.strip=function(self,cars){var res=$BytesDict.lstrip(self,cars)
 return $BytesDict.rstrip(res,cars)}
 $BytesDict.translate=function(self,table,_delete){if(_delete===undefined){_delete=[]}
@@ -6813,8 +6834,17 @@ var res=[],pos=0
 if(isinstance(table,bytes)&& table.source.length==256){for(var i=0,_len_i=self.source.length;i < _len_i;i++){if(_delete.indexOf(self.source[i])>-1)continue
 res[pos++]=table.source[self.source[i]]}}
 return bytes(res)}
+var _upper=function(char_code){if(char_code >=97 && char_code <=122){return char_code - 32}else{
+return char_code}}
+var _lower=function(char_code){if(char_code >=65 && char_code <=90){return char_code + 32}else{
+return char_code}}
 $BytesDict.upper=function(self){var _res=[],pos=0
-for(var i=0,_len_i=self.source.length;i < _len_i;i++)_res[pos++]=self.source[i].toUpperCase()
+for(var i=0,_len_i=self.source.length;i < _len_i;i++){if(self.source[i])
+_res[pos++]=_upper(self.source[i])}
+return bytes(_res)}
+$BytesDict.lower=function(self){var _res=[],pos=0
+for(var i=0,_len_i=self.source.length;i < _len_i;i++){if(self.source[i])
+_res[pos++]=_lower(self.source[i])}
 return bytes(_res)}
 function $UnicodeEncodeError(encoding,code_point,position){throw _b_.UnicodeEncodeError("'"+encoding+
 "' codec can't encode character "+_b_.hex(code_point)+
@@ -6889,7 +6919,8 @@ if(u!==undefined){s+=String.fromCharCode(u)}
 else{s +=String.fromCharCode(b[i])}}
 break;}
 return s}
-function encode(s,encoding){var t=[],pos=0,enc=normalise(encoding)
+function encode(s,encoding){var $=$B.args('encode',2,{s:null,encoding:null},['s','encoding'],arguments,{},null,null),s=$.s,encoding=$.encoding;
+var t=[],pos=0,enc=normalise(encoding)
 switch(enc){case 'utf-8':
 case 'utf8':
 var _int_800=_int('800'),_int_c2=_int('c2'),_int_1000=_int('1000')
@@ -9007,10 +9038,10 @@ throw _b_.IndexError('list index out of range')}
 if(isinstance(key,_b_.slice)){
 var s=_b_.slice.$dict.$conv_for_seq(key,self.length)
 var res=[],i=null,items=self.valueOf(),pos=0,start=s.start,stop=s.stop,step=s.step
-if(step > 0){if(stop <=start)return res;
+if(step > 0){if(stop <=start)return klass(res);
 for(var i=start;i<stop;i+=step){res[pos++]=items[i]}
 return klass(res);}else{
-if(stop > start)return res;
+if(stop > start)return klass(res);
 for(var i=start;i>stop;i+=step){res[pos++]=items[i]}
 return klass(res);}}
 if(hasattr(key,'__int__')||hasattr(key,'__index__')){return $ListDict.__getitem__(self,_b_.int(key))}
@@ -9925,7 +9956,7 @@ case '-':
 return self.charAt(0)+'0'.repeat($.width-self.length)+self.substr(1)
 default:
 return '0'.repeat(width - self.length)+self}}
-function str(arg){if(arg===undefined)return ''
+function str(arg){if(arg===undefined)return '<undefined>'
 switch(typeof arg){case 'string':
 return arg
 case 'number':
@@ -10097,7 +10128,9 @@ $value_iterator.prototype.length=function(){return this.iter.length }
 $value_iterator.prototype.next=function(){return this.iter.next()[1]}
 var $item_generator=function(d){this.i=0
 if(d.$jsobj){this.items=[]
-for(var attr in d.$jsobj){if(attr.charAt(0)!='$'){this.items.push([attr,d.$jsobj[attr]])}}
+for(var attr in d.$jsobj){if(attr.charAt(0)!='$'){val=d.$jsobj[attr];
+if(val===undefined ||val===null)this.items.push([attr,$N])
+else this.items.push([attr,val])}}
 this.length=this.items.length;
 return}
 var items=[]
@@ -10177,7 +10210,7 @@ for(var k in self.$string_dict){if(!_b_.getattr(other.$string_dict[k],'__eq__')(
 for(var k in self.$object_dict){if(!_b_.getattr(other.$object_dict[k][1],'__eq__')(self.$object_dict[k][1])){return false}}
 return true}
 $DictDict.__getitem__=function(){var $=$B.args('__getitem__',2,{self:null,arg:null},['self','arg'],arguments,{},null,null),self=$.self,arg=$.arg
-if(self.$jsobj){if(self.$jsobj[arg]===undefined){return None}
+if(self.$jsobj){if(self.$jsobj[arg]===undefined ||self.$jsobj[arg]===null){return $N}
 return self.$jsobj[arg]}
 switch(typeof arg){case 'string':
 if(self.$string_dict[arg]!==undefined)return self.$string_dict[arg]
@@ -10208,8 +10241,6 @@ while(i-->0)si(self,obj[i-1][0],obj[i-1][1])
 return $N}else if(obj.$nat===undefined && isinstance(obj,dict)){$copy_dict(self,obj)
 return $N}
 if(obj.__class__===$B.JSObject.$dict){
-var si=$DictDict.__setitem__
-for(var attr in obj.js)si(self,attr,$B.jsobj2pyobj(obj.js[attr]))
 self.$jsobj=obj.js
 return $N}}
 var $ns=$B.args('dict',0,{},[],args,{},'args','kw')
@@ -10251,7 +10282,9 @@ if(itm[1]===self){res[pos++]=repr(itm[0])+': {...}'}
 else{res[pos++]=repr(itm[0])+': '+repr(itm[1])}}
 return '{'+ res.join(', ')+'}'}
 $DictDict.__setitem__=function(self,key,value){var $=$B.args('__setitem__',3,{self:null,key:null,value:null},['self','key','value'],arguments,{},null,null),self=$.self,key=$.key,value=$.value
-if(self.$jsobj){self.$jsobj[key]=value;return}
+if(self.$jsobj){if(value===$N)self.$jsobj[key]=undefined;
+else self.$jsobj[key]=value;
+return}
 switch(typeof key){case 'string':
 self.$string_dict[key]=value
 self.$str_hash[str_hash(key)]=key
@@ -10317,7 +10350,7 @@ $DictDict.__delitem__(self,itm[0])
 return _b_.tuple(itm)}catch(err){if(err.__name__=="StopIteration"){throw KeyError("'popitem(): dictionary is empty'")}}}
 $DictDict.setdefault=function(){var $=$B.args('setdefault',3,{self:null,key: null,_default:null},['self','key','_default'],arguments,{_default:$N},null,null),self=$.self,key=$.key,_default=$._default
 try{return $DictDict.__getitem__(self,key)}
-catch(err){if(_default===undefined)_default=None
+catch(err){if(_default===undefined)_default=$N
 $DictDict.__setitem__(self,key,_default)
 return _default}}
 $DictDict.update=function(self){var $=$B.args('update',1,{'self':null},['self'],arguments,{},'args','kw'),self=$.self,args=$.args,kw=$.kw
@@ -11659,8 +11692,8 @@ eval(content)
 if(names!==undefined){if(!Array.isArray(names)){throw $B.builtins.TypeError("argument 'names' should be a"+
 " list, not '"+$B.get_class(names).__name__)}else{for(var i=0;i<names.length;i++){try{_window[names[i]]=eval(names[i])}
 catch(err){throw $B.builtins.NameError("name '"+
-names[i]+"' not found in script "+script_url)}}}}},py2js: function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
-return $B.py2js(src,module_name,module_name,'__builtins__').to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)}}
+names[i]+"' not found in script "+script_url)}}}}},NULL: null,py2js: function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
+return $B.py2js(src,module_name,module_name,'__builtins__').to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},UNDEFINED: undefined}
 var _b_=$B.builtins
 modules['_sys']={__file__:$B.brython_path+'/libs/_sys.js',
 Getframe : function(depth){return $B._frame($B.frames_stack,depth)},modules:{
