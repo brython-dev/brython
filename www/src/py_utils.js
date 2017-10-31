@@ -1301,6 +1301,7 @@ var reversed_op = {'__lt__': '__gt__', '__le__':'__ge__',
     '__gt__': '__lt__', '__ge__': '__le__'}
 
 $B.rich_comp = function(op, x, y){
+    var res, rev_op, compared = false
     if(x.__class__ && y.__class__){
         // cf issue #600 and
         // https://docs.python.org/3/reference/datamodel.html :
@@ -1309,11 +1310,19 @@ $B.rich_comp = function(op, x, y){
         // reflected method of the right operand has priority, otherwise the
         // left operand’s method has priority."
         if(y.__class__.__mro__.indexOf(x.__class__)>-1){
-            var rev_op = reversed_op[op] || op
-            return _b_.getattr(y, rev_op)(x)
+            rev_op = reversed_op[op] || op
+            res =  _b_.getattr(y, rev_op)(x)
+            if ( res !== _b_.NotImplemented ) return res
+            compared = true
         }
     }
-    return _b_.getattr(x, op)(y)
+    res = _b_.getattr(x, op)(y)
+    if ( res !== _b_.NotImplemented ) return res;
+    if (compared) return false;
+    rev_op = reversed_op[op] || op
+    res =  _b_.getattr(y, rev_op)(x)
+    if ( res !== _b_.NotImplemented ) return res
+    return false;
 }
 
 $B.is_none = function (o) {
