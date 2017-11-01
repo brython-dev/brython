@@ -5415,7 +5415,6 @@ function $transition(context,token){
     switch(context.type) {
       case 'abstract_expr':
 
-
         switch(token) {
           case 'id':
           case 'imaginary':
@@ -6395,6 +6394,16 @@ function $transition(context,token){
           case 'imaginary':
             $_SyntaxError(context,'token '+token+' after '+context)
         }
+          if(context.value=="async"){
+              // Until Python 3.7 async is not a keyword
+              if(token=='def'){
+                  context.parent.parent.tree = []
+                  var ctx = $transition(context.parent.parent,
+                      token, arguments[2])
+                  ctx.async = true
+                  return ctx
+              }
+          }
 
         return $transition(context.parent,token,arguments[2])
       case 'import':
@@ -6622,8 +6631,6 @@ function $transition(context,token){
                 return $transition(expr,token,arguments[2])
             }// switch
             break
-          case 'async':
-            return new $AsyncCtx(context)
           case 'class':
             return new $ClassCtx(context)
           case 'continue':
@@ -7047,7 +7054,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     var kwdict = ["class", "return", "break", "for","lambda","try","finally",
         "raise", "def", "from", "nonlocal", "while", "del", "global", "with",
         "as", "elif", "else", "if", "yield", "assert", "import", "except",
-        "raise","in", "pass","with","continue","__debugger__", "async"
+        "raise","in", "pass","with","continue","__debugger__"
         ]
     var unsupported = []
     var $indented = ['class','def','for','condition','single_kw','try','except','with']

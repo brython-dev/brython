@@ -71,7 +71,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-10-30 22:18:50.915887"
+__BRYTHON__.compiled_date="2017-11-01 09:34:35.460199"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -3342,6 +3342,11 @@ case 'int':
 case 'float':
 case 'imaginary':
 $_SyntaxError(C,'token '+token+' after '+C)}
+if(C.value=="async"){
+if(token=='def'){C.parent.parent.tree=[]
+var ctx=$transition(C.parent.parent,token,arguments[2])
+ctx.async=true
+return ctx}}
 return $transition(C.parent,token,arguments[2])
 case 'import':
 switch(token){case 'id':
@@ -3497,8 +3502,6 @@ case '~':
 var expr=new $AbstractExprCtx(C,true)
 return $transition(expr,token,arguments[2])}
 break
-case 'async':
-return new $AsyncCtx(C)
 case 'class':
 return new $ClassCtx(C)
 case 'continue':
@@ -3803,7 +3806,7 @@ for(var i=0;i<s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
 function $tokenize(src,module,locals_id,parent_block_id,line_info){var br_close={")":"(","]":"[","}":"{"}
 var br_stack=""
 var br_pos=[]
-var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async"
+var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__"
 ]
 var unsupported=[]
 var $indented=['class','def','for','condition','single_kw','try','except','with']
@@ -7554,6 +7557,11 @@ catch($err3){
 if(mod_name==="__future__"){
 var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
 $B.$SyntaxError(frame[2],"future feature "+name+" is not defined",undefined,line_num)}
+if($err3.$py_error){var msg=$err3.__class__.__name__ + '\n' +
+_b_.getattr($err3,"info")
+throw _b_.ImportError("cannot import name '"+
+name+"'\n\n" + msg)}
+console.log($err3)
 throw _b_.ImportError("cannot import name '"+name+"'")}}}}}}
 $B.$path_hooks=[vfs_hook,url_hook];
 $B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path];
