@@ -3,9 +3,9 @@ from _ajax import *
 class Request:
 
     def __init__(self, url, method="GET", headers={},
-            data=None, async=True, timeout=None):
+            data=None, asynchr=True, timeout=None):
         self.req = ajax1()
-        self.req.open(method, url, async)
+        self.req.open(method, url, asynchr)
         self.method = method
         self.headers = headers
         self.req.timeout_secs = timeout
