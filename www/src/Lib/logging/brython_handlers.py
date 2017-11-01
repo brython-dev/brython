@@ -35,7 +35,7 @@ class XMLHTTPHandler(logging.Handler):
         Send the record to the Web server as a percent-encoded dictionary
         """
         try:
-            req = ajax.open(self.method, self.url, async=False)
+            req = ajax.open(self.method, self.url, sync=False)
             req.send(self.mapLogRecord(record))
         except:
             self.handleError(record)
