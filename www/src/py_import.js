@@ -965,6 +965,13 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                                 undefined, line_num)
                         }
                         // For other modules, raise ImportError
+                        if($err3.$py_error){
+                            var msg = $err3.__class__.__name__ + '\n' +
+                                _b_.getattr($err3, "info")
+                            throw _b_.ImportError("cannot import name '"+
+                                name+"'\n\n" + msg)
+                        }
+                        console.log($err3)
                         throw _b_.ImportError("cannot import name '"+name+"'")
                     }
                 }
