@@ -133,4 +133,17 @@ class A:
 
 assert A(5).foo(88).arg == 88
 
+# If a rich-comparison method returns NotImplemented
+# we should retry with the reflected operator of the other object.
+# If that returns NotImplemented too, we should return False.
+class EqualityTester:
+    count = 0
+    def __eq__(self, other):
+        EqualityTester.count += 1
+        return NotImplemented
+
+a, b = EqualityTester(), EqualityTester()
+assert not (a == b)
+assert EqualityTester.count == 2
+
 print('passed all tests..')
