@@ -38,7 +38,7 @@ def coroutine(func):
             print(html)
 
         would download the www.google.com website and then print its html. The magic
-        is that the ``wget`` function returns a Future, but the @async generator
+        is that the ``wget`` function returns a Future, but the yield
         converts this promise into an actual value which is sent back to the function
         so that when ``print`` is called it has the results ready.
     """
