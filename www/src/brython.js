@@ -71,7 +71,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-11-01 09:42:37.886792"
+__BRYTHON__.compiled_date="2017-11-04 17:41:46.735220"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5351,10 +5351,19 @@ else if(typeof x=='number' && typeof y!='number'){return !y.pos}
 else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
 else{return $B.LongInt.$dict.__gt__(x,y)}}
 var reversed_op={'__lt__': '__gt__','__le__':'__ge__','__gt__': '__lt__','__ge__': '__le__'}
-$B.rich_comp=function(op,x,y){if(x.__class__ && y.__class__){
-if(y.__class__.__mro__.indexOf(x.__class__)>-1){var rev_op=reversed_op[op]||op
-return _b_.getattr(y,rev_op)(x)}}
-return _b_.getattr(x,op)(y)}
+$B.rich_comp=function(op,x,y){var res,rev_op,compared=false
+if(x.__class__ && y.__class__){
+if(y.__class__.__mro__.indexOf(x.__class__)>-1){rev_op=reversed_op[op]||op
+res=_b_.getattr(y,rev_op)(x)
+if(res !==_b_.NotImplemented )return res
+compared=true}}
+res=_b_.getattr(x,op)(y)
+if(res !==_b_.NotImplemented )return res;
+if(compared)return false;
+rev_op=reversed_op[op]||op
+res=_b_.getattr(y,rev_op)(x)
+if(res !==_b_.NotImplemented )return res
+return false;}
 $B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None;}
 $B.imports=function(){
 var w=_window.open('','','width="50%",height=400,resizeable,scrollbars');
