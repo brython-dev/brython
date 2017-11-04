@@ -309,7 +309,7 @@ def calcsize(fmt):
         else:
             # if formatdef is native, alignment is native, so we count a
             # number of padding bytes until result is a multiple of size
-            if alignment:
+            if alignment and result:
                 result += format['size'] - result % format['size']
             result += format['size']
         num = 0
