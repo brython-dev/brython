@@ -1552,6 +1552,14 @@ assert type( (1,2,3)[:0] ) == tuple
 assert type( (1,2,3)[1:2:-1] ) == tuple
 assert type( (1,2,3)[0:2] ) == tuple
 
+# generalised unpacking for function calls
+def f(*args, **kw):
+    return args, kw
+
+res = f(3, *[1, 8], 5, y=2, **{'a': 0}, **{'z': 3})
+assert res[0] == (3, 1, 8, 5)
+assert res[1] == {'y': 2, 'a': 0, 'z': 3}
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
