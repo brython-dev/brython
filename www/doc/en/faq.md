@@ -1,6 +1,12 @@
 Frequently asked questions
 --------------------------
 
+__Q__ : _which browsers support Brython ?_
+
+__A__ : all modern browsers, including on smartphones. The generated Javascript purposely avoids using new syntax until it is supported by most browsers.
+
+Note that performance is usually better (sometimes _much_ better) with Firefox than with Chrome.
+
 __Q__ : _what is the performance of Brython compared to Javascript, or to other solutions that allow using Python in the browser ?_
 
 __A__ : compared to Javascript, the ratio is naturally very different from one program to another. A Javascript console is provided in the distribution or on [the Brython site](http://brython.info/tests/js_console.html), it can be used to measure the execution time of a Javascript program compared to its equivalent in Python in the editor (unchecking the "debug" box)
@@ -18,9 +24,15 @@ __Q__ : _I see a lot of 404 errors in the browser console when I run Brython scr
 
 __A__ : this is because of the way Brython implements the "import" mechanism. When a script has to import module X, Brython searches for a file or a package in different directories : the standard library (directory libs for Javascript modules, Lib for Python modules), the directory Lib/site-packages, the directory of current page. For that, Ajax calls are sent to the matching urls ; if the file is not found, the 404 error message is written in the browser console, but the error is caught by Brython which goes on searching until it finds the module, or raises `ImportError` if all paths have been tried with no result
 
-__Q__ : why does this message show in the browser console : "Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience. For more help http://xhr.spec.whatwg.org/" ?
+__Q__ : _why does this message show in the browser console : "Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience. For more help http://xhr.spec.whatwg.org/" ?_
 
-__R__ : this is also related to imports, or to file reading. To achieve these operations, Brython uses _blocking_ Ajax calls : an imported module must be loaded before it can be used. Browser vendors should normally not remove blocking calls any time soon.
+__A__ : this is also related to imports, or to file reading. To achieve these operations, Brython uses _blocking_ Ajax calls : an imported module must be loaded before it can be used. Browser vendors should normally not remove blocking calls any time soon.
+
+__Q__ : _is it possible to precompile Brython scripts, in order to reduce execution time ?_
+
+__A__ : Brython is designed to be as simple to run as Javascript : put Python code in a `<script>` section of an HTML page, load the page, edit the code, reload the page, etc. It is not like other projects where the Python code is translated to Javascript by a CPython script, so for each modification you have to run this script before reloading the page.
+
+Another reason why it is a not a good idea to precompile Brython is that the generated code is typically 10 times bigger than the original Python source - this is the price to pay for compliance with the language specification. The page would take longer to load, and we haven't found that this would be faster than compiling on the fly.
 
 __Q__ : _why use the operator `<=` to build the tree of DOM elements ? This is not pythonic !_
 
@@ -38,17 +50,3 @@ To add a child, the operator `<=` was chosen for these reasons :
 - the sign `<` is often used in computer science to mean something else than "lesser than" : in Python and many other languages, `<<` means left shift ; in HTML tags are enclosed with `<` and `>`
 - Python uses the same operator `%` for very different operations : modulo and string formatting
 
-__Q__ : couldn't some scripts (modules to import for instance) be precompiled in Javascript to improve performance and avoid the overhead of Python to Javascript translation at each page reload ?
-
-__R__ : this is theoretically possible, and many attempts have been made, but the generated Javascript is in the order of 10 times bigger than the Python source, which must be stored anyway for exception reporting. The time spared in translation would be lost by the time lost with bigger files to load.
-
-__Q__ : What browsers are compatible with Brython?
-
-__A__ : Below is a list of browsers we support:
-
-// todo: get images from http://www.paulirish.com/2010/high-res-browser-icons/
-
-<table border="1">
-  <tr><td>Chrome</td><td>FireFox</td><td>IE</td><td>Opera</td><td>Safari</td><td>Android Browser</td><td>Chrome for Android</td><td>iOS Safari</td><td>Opera Mini</td></tr>
-  <tr><td>36+</td><td>31+</td><td>9+</td><td>26+</td><td>5.1+</td><td>4.1+</td><td>39+</td><td>7.1+</td><td>8+</td></tr>
-</table>

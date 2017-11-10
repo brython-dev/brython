@@ -1,6 +1,12 @@
 Questions fréquemment posées
 ----------------------------
 
+__Q__ : _avec quels navigateurs peut-on utiliser Brython ?_
+
+__R__ : sur tous les navigateurs modernes, y compris les smartphones. Le code Javscript généré évite intentionnellement de nouvelles syntaxes tant qu'elles ne sont pas supportées par la plupart des navigateurs.
+
+Noter tout de même que la performance est généralement meilleure (et parfois _nettement_ meilleure) sur Firefox que sur Chrome.
+
 __Q__ : _quelle est la performance de Brython par rapport à Javascript, ou par rapport à d'autres solutions qui permettent d'utiliser Python dans le navigateur ?_
 
 __R__ : par rapport à Javascript, le rapport est naturellement très différent d'un programme à l'autre. Une console Javascript est fournie dans la distribution ou [sur le site Brython](http://brython.info/tests/js_console.html), vous pouvez l'utiliser pour mesurer le temps d'exécution d'un script Javascript par rapport à son équivalent en Python dans l'éditeur (en décochant la case "debug").
@@ -16,9 +22,15 @@ __Q__ : _il y a des erreurs 404 dans la console du navigateur quand j'exécute d
 
 __R__ : c'est lié à la façon dont Brython gère les imports. Quand un script veut importer le module X, Brython recherche un fichier ou un paquetage dans différents répertoires : la bibliothèque standard (répertoire libs pour les modules en javascript, Lib pour les modules en Python), le répertoire Lib/site-packages, le répertoire de la page courante. Pour cela, il effectue des appels Ajax vers les url correspondantes ; si le fichier n'est pas trouvé, l'erreur 404 apparait dans la console, mais elle est capturée par Brython qui poursuit la recherche jusqu'à trouver le module, ou déclencher une `ImportError` si tous les chemins ont été essayés.
 
-__Q__ : pourquoi voit-on ce message dans la console du navigateur : "L’utilisation d’XMLHttpRequest de façon synchrone sur le fil d’exécution principal est obsolète à cause de son impact négatif sur la navigation de l’utilisateur final. Consulter http://xhr.spec.whatwg.org/ pour plus d’informations." ?
+__Q__ : _pourquoi voit-on ce message dans la console du navigateur : "L’utilisation d’XMLHttpRequest de façon synchrone sur le fil d’exécution principal est obsolète à cause de son impact négatif sur la navigation de l’utilisateur final. Consulter http://xhr.spec.whatwg.org/ pour plus d’informations." ?_
 
 __R__ : c'est aussi lié aux imports, ou à la lecture de fichiers. Pour réaliser ces opérations, Brython utilise des appels Ajax _bloquants_ : il faut attendre qu'un module importé soit chargé pour pouvoir l'utiliser. Normalement les éditeurs de navigateurs ne devraient pas supprimer les appels bloquants avant longtemps.
+
+__Q__ : _peut-on précompiler les scripts Brython pour réduire le temps d'exécution ?_
+
+__R__ : Brython est conçu pour être aussi simple à utiliser que Javascript : on met du code Python dans une section `<script>` d'une page HTML, on charge la page, on édite le code, on recharge la page, etc. Ce n'est pas comme d'autres projets dans lesquels le code Python est transformé en Javascript par un programme en CPython, qu'il faut exécuter pour toute modification avant de recharger la page.
+
+Une autre raison pour laquelle ce n'est pas une bonne idée de précompiler est que le code généré est typiquement 10 fois plus gros que le source Python de départ - c'est le prix à payer pour une compatibilité avec la spécification du langage. La page prendrait donc plus longtemps à se charger, et nous n'avons pas trouvé que cela ferait gagner du temps par rapport à une compilation à la volée.
 
 __Q__ : _pourquoi utiliser l'opérateur `<=` pour construire l'arbre des éléments DOM ? Ce n'est pas pythonique !_
 
@@ -36,6 +48,3 @@ Pour ajouter un descendant, l'opérateur `<=` a été choisi pour les raisons su
 - le signe `<` est souvent utilisé en informatique pour signifier autre chose de "strictement inférieur" : en Python et beaucoup d'autres langages, `<<` signifie décalage à gauche ; en HTML les balises sont délimitées par `<` et `>`
 - Python utilise le même opérateur `%` pour des opérations très différentes : modulo et formattage de chaines
 
-__Q__ : pourrait-on précompiler certains scripts (par exemple les modules à importer) pour gagner en performance et ne pas avoir à traduire Python en Javascript à chaque chargement ?
-
-__R__ : ce serait théoriquement possible, mais le Javascript généré est de l'ordre de 10 fois plus volumineux que le code source Python, qu'il faut de toutes façons conserver aussi pour la gestion des erreurs. Le gain en traduction serait vraisemblablement compensé par le temps plus important de chargement des scripts.
