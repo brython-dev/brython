@@ -1386,7 +1386,7 @@ function $CallCtx(context){
 
             var kw_args_str = '{'+kw_args.join(', ')+'}'
             if(dstar_args.length){
-                kw_args_str = '{$nat:"kw",kw:$B.extend("'+this.func.name+
+                kw_args_str = '{$nat:"kw",kw:$B.extend("'+this.func.value+
                     '",'+kw_args_str + ',' + dstar_args.join(', ')+')}'
             }else if(kw_args_str!=='{}'){
                 kw_args_str = '{$nat:"kw",kw:'+kw_args_str+'}'
@@ -3672,6 +3672,9 @@ function $KwArgCtx(context){
     // operation replaces left operand
     context.parent.tree.pop()
     context.parent.tree.push(this)
+
+    // set attribute "has_kw" of $CallCtx instance to true
+    context.parent.parent.has_kw = true
 
     // put id in list of kwargs
     // used to avoid passing the id as argument of a list comprehension
