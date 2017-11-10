@@ -71,7 +71,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-11-04 17:41:46.735220"
+__BRYTHON__.compiled_date="2017-11-10 11:45:01.696772"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -748,7 +748,7 @@ args_str=p[0]
 for(var i=1;i<p.length;i++){args_str +='.concat('+p[i]+')'}}else{for(var i=0,len=positional.length;i<len;i++){positional[i]=positional[i][0]}
 args_str=positional.join(', ')}
 var kw_args_str='{'+kw_args.join(', ')+'}'
-if(dstar_args.length){kw_args_str='{$nat:"kw",kw:$B.extend("'+this.func.name+
+if(dstar_args.length){kw_args_str='{$nat:"kw",kw:$B.extend("'+this.func.value+
 '",'+kw_args_str + ',' + dstar_args.join(', ')+')}'}else if(kw_args_str!=='{}'){kw_args_str='{$nat:"kw",kw:'+kw_args_str+'}'}else{kw_args_str=''}
 if(star_args && kw_args_str){args_str +='.concat(['+kw_args_str+'])'}else{if(args_str && kw_args_str){args_str +=','+kw_args_str}
 else if(!args_str){args_str=kw_args_str}}
@@ -1807,6 +1807,7 @@ this.parent=C.parent
 this.tree=[C.tree[0]]
 C.parent.tree.pop()
 C.parent.tree.push(this)
+C.parent.parent.has_kw=true
 var value=this.tree[0].value
 var ctx=C.parent.parent 
 if(ctx.kwargs===undefined){ctx.kwargs=[value]}
@@ -4587,6 +4588,7 @@ function make_mro(bases,cl_dict){
 var seqs=[],pos1=0
 for(var i=0;i<bases.length;i++){
 if(bases[i]===_b_.str)bases[i]=$B.$StringSubclassFactory
+else if(bases[i]===_b_.float)bases[i]=$B.$FloatSubclassFactory
 else if(bases[i]===_b_.list)bases[i]=$B.$ListSubclassFactory
 var bmro=[],pos=0
 if(bases[i].$dict===undefined ||
@@ -5838,6 +5840,8 @@ if(klass==$B.$factory){klass=obj.$dict.__class__}
 function check(kl,arg){if(kl===arg.$dict){return true}
 else if(arg===_b_.str &&
 kl===$B.$StringSubclassFactory.$dict){return true}
+else if(arg===_b_.float &&
+kl===$B.$FloatSubclassFactory.$dict){return true}
 else if(arg===_b_.list &&
 kl===$B.$ListSubclassFactory.$dict){return true}}
 if(check(klass,arg)){return true}
@@ -7761,7 +7765,9 @@ if(_e < 0){_esign='-'
 _e=-_e}
 if(self.value < 0)return "-0x" + _s + 'p' + _esign + _e;
 return "0x" + _s + 'p' + _esign + _e;}
-$FloatDict.__init__=function(self,value){self=new Number(value)}
+$FloatDict.__init__=function(self,value){self.valueOf=function(){return value.valueOf()}
+self.toString=function(){return value+''}
+return _b_.None}
 $FloatDict.__int__=function(self){return parseInt(self)}
 $FloatDict.is_integer=function(self){return _b_.int(self)==self}
 $FloatDict.__mod__=function(self,other){
@@ -7906,8 +7912,16 @@ $B.get_class(value).__name__+"'")}
 float.__class__=$B.$factory
 float.$dict=$FloatDict
 $FloatDict.$factory=float
-$FloatDict.__new__=$B.$__new__(float)
+$FloatDict.__new__=function(cls){if(cls===undefined){throw _b_.TypeError('float.__new__(): not enough arguments')}
+return{__class__:cls.$dict}}
 $B.$FloatClass=$FloatClass
+var $FloatSubclassDict={__class__:$B.$type,__name__:'float'}
+for(var $attr in $FloatDict){if(typeof $FloatDict[$attr]=='function'){$FloatSubclassDict[$attr]=(function(attr){return function(){var args=[],pos=0
+if(arguments.length>0){var args=[arguments[0].valueOf()],pos=1
+for(var i=1,_len_i=arguments.length;i < _len_i;i++){args[pos++]=arguments[i]}}
+return $FloatDict[attr].apply(null,args)}})($attr)}}
+$FloatSubclassDict.__mro__=[$ObjectDict]
+$B.$FloatSubclassFactory={__class__:$B.$factory,$dict:$FloatSubclassDict}
 _b_.float=float})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var $ObjectDict=_b_.object.$dict,$N=_b_.None

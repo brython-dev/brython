@@ -1044,6 +1044,8 @@ function isinstance(obj,arg){
       if(kl === arg.$dict){return true}
       else if(arg===_b_.str &&
           kl===$B.$StringSubclassFactory.$dict){return true}
+      else if(arg===_b_.float &&
+          kl===$B.$FloatSubclassFactory.$dict){return true}
       else if(arg===_b_.list &&
           kl===$B.$ListSubclassFactory.$dict){return true}
    }

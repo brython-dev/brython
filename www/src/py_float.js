@@ -362,7 +362,11 @@ $FloatDict.hex = function(self) {
     return "0x" + _s + 'p' + _esign + _e;
 }
 
-$FloatDict.__init__ = function(self,value){self=new Number(value)}
+$FloatDict.__init__ = function(self,value){
+    self.valueOf = function(){return value.valueOf()}
+    self.toString = function(){return value+''}
+    return _b_.None
+}
 
 $FloatDict.__int__ = function(self){return parseInt(self)}
 
@@ -660,9 +664,46 @@ var float = function (value){
 float.__class__ = $B.$factory
 float.$dict = $FloatDict
 $FloatDict.$factory = float
-$FloatDict.__new__ = $B.$__new__(float)
+$FloatDict.__new__ = function(cls){
+    if(cls===undefined){
+        throw _b_.TypeError('float.__new__(): not enough arguments')
+    }
+    return {__class__:cls.$dict}
+}
 
 $B.$FloatClass = $FloatClass
+
+// dictionary and factory for subclasses of string
+var $FloatSubclassDict = {
+    __class__:$B.$type,
+    __name__:'float'
+}
+
+// the methods in subclass apply the methods in $StringDict to the
+// result of instance.valueOf(), which is a Javascript string
+for(var $attr in $FloatDict){
+    if(typeof $FloatDict[$attr]=='function'){
+        $FloatSubclassDict[$attr]=(function(attr){
+            return function(){
+                var args = [], pos=0
+                if(arguments.length>0){
+                    var args = [arguments[0].valueOf()], pos=1
+                    for(var i=1, _len_i = arguments.length; i < _len_i;i++){
+                        args[pos++]=arguments[i]
+                    }
+                }
+                return $FloatDict[attr].apply(null,args)
+            }
+        })($attr)
+    }
+}
+$FloatSubclassDict.__mro__ = [$ObjectDict]
+
+// factory for str subclasses
+$B.$FloatSubclassFactory = {
+    __class__:$B.$factory,
+    $dict:$FloatSubclassDict
+}
 
 _b_.float = float
 })(__BRYTHON__)
