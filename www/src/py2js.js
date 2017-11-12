@@ -498,9 +498,7 @@ function $AssignCtx(context){ //, check_unbound){
         (context.type=='expr' && context.tree[0].type=='list_or_tuple')){
         if(context.type=='expr'){context = context.tree[0]}
         // Bind all the ids in the list or tuple
-        for(var name in context.ids()){
-            $bind(name, scope.id, level)
-        }
+        context.bind_ids(scope.id, level)
     }else if(context.type=='assign'){
         for(var i=0;i<context.tree.length;i++){
             var assigned = context.tree[i].tree[0]
@@ -3206,20 +3204,13 @@ function $IdCtx(context,value){
         }
         ctx = ctx.parent
     }
-
-    if(context.type=='packed'){
-        // An id defined as "packed" (eg "a, *b = [1, 2, 3]") is bound
-        $B.bound[scope.id][value]={level: $get_level(this)}
-        this.bound = true
-    }
-
+    
     if(context.type=='target_list' ||
         (context.type=='expr' && context.parent.type=='target_list')){
         // An id defined as a target in a "for" loop is bound
         $B.bound[scope.id][value]={level: $get_level(this)}
         this.bound = true
     }
-
 
     if(scope.ntype=='def' || scope.ntype=='generator'){
         // if variable is declared inside a comprehension,
@@ -3798,22 +3789,28 @@ function $ListOrTupleCtx(context,real){
         return src
     }
 
-    this.ids = function(){
-        // Return an object indexed by all "simple" variable names in the list
-        // or tuple, ie not calls, subscriptions etc.
-        var _ids = {}
+    this.bind_ids = function(scope_id, level){
+        // Used by $AssignCtx for assignments to a list or tuple
+        // Binds all the "simple" ids (not the calls, subscriptions, etc.)
         for(var i=0;i<this.tree.length;i++){
             var item = this.tree[i]
-            if(item.type=='id'){_ids[item.value]=true}
-            else if(item.type=='expr' && item.tree[0].type=="id"){
-                _ids[item.tree[0].value]=true
+            if(item.type=='id'){
+                $bind(item.value, scope_id, level)
+                item.bound = true
+            }else if(item.type=='expr' && item.tree[0].type=="id"){
+                $bind(item.tree[0].value, scope_id, level)
+                item.tree[0].bound = true
+            }else if(item.type=='expr' && item.tree[0].type=="packed"){
+                if(item.tree[0].tree[0].type == 'id'){
+                    $bind(item.tree[0].tree[0], scope_id, level)
+                    item.tree[0].tree[0].bound=true
+                }
             }else if(item.type=='list_or_tuple' ||
                 (item.type=="expr" && item.tree[0].type=='list_or_tuple')){
                 if(item.type=="expr"){item=item.tree[0]}
-                for(var attr in item.ids()){_ids[attr]=true}
+                item.bind_ids(scope_id, level)
             }
         }
-        return _ids
     }
 
     this.to_js = function(){

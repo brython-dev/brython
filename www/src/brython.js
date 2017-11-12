@@ -71,7 +71,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-11-10 11:45:01.696772"
+__BRYTHON__.compiled_date="2017-11-12 22:21:30.224705"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -278,7 +278,7 @@ this.tree=[C]
 var scope=$get_scope(this),level=$get_level(this)
 if(C.type=='expr' && C.tree[0].type=='call'){$_SyntaxError(C,["can't assign to function call "])}else if(C.type=='list_or_tuple' ||
 (C.type=='expr' && C.tree[0].type=='list_or_tuple')){if(C.type=='expr'){C=C.tree[0]}
-for(var name in C.ids()){$bind(name,scope.id,level)}}else if(C.type=='assign'){for(var i=0;i<C.tree.length;i++){var assigned=C.tree[i].tree[0]
+C.bind_ids(scope.id,level)}else if(C.type=='assign'){for(var i=0;i<C.tree.length;i++){var assigned=C.tree[i].tree[0]
 if(assigned.type=='id'){$bind(assigned.value,scope.id,level)}}}else{var assigned=C.tree[0]
 if(assigned && assigned.type=='id'){if(noassign[assigned.value]===true){$_SyntaxError(C,["can't assign to keyword"])}
 assigned.bound=true
@@ -1645,9 +1645,6 @@ else if(ctx.vars.indexOf(value)===-1){ctx.vars.push(value)}
 if(this.call_arg&&ctx.type==='lambda'){if(ctx.locals===undefined){ctx.locals=[value]}
 else{ctx.locals.push(value)}}}
 ctx=ctx.parent}
-if(C.type=='packed'){
-$B.bound[scope.id][value]={level: $get_level(this)}
-this.bound=true}
 if(C.type=='target_list' ||
 (C.type=='expr' && C.parent.type=='target_list')){
 $B.bound[scope.id][value]={level: $get_level(this)}
@@ -1873,14 +1870,14 @@ for(var i=0;i<scope.comments.length;i++){var start=scope.comments[i][0],len=scop
 src=src.substr(0,start)+ ' '.repeat(len + 1)+
 src.substr(start + len + 1)}
 return src}
-this.ids=function(){
-var _ids={}
+this.bind_ids=function(scope_id,level){
 for(var i=0;i<this.tree.length;i++){var item=this.tree[i]
-if(item.type=='id'){_ids[item.value]=true}
-else if(item.type=='expr' && item.tree[0].type=="id"){_ids[item.tree[0].value]=true}else if(item.type=='list_or_tuple' ||
+if(item.type=='id'){$bind(item.value,scope_id,level)
+item.bound=true}else if(item.type=='expr' && item.tree[0].type=="id"){$bind(item.tree[0].value,scope_id,level)
+item.tree[0].bound=true}else if(item.type=='expr' && item.tree[0].type=="packed"){if(item.tree[0].tree[0].type=='id'){$bind(item.tree[0].tree[0],scope_id,level)
+item.tree[0].tree[0].bound=true}}else if(item.type=='list_or_tuple' ||
 (item.type=="expr" && item.tree[0].type=='list_or_tuple')){if(item.type=="expr"){item=item.tree[0]}
-for(var attr in item.ids()){_ids[attr]=true}}}
-return _ids}
+item.bind_ids(scope_id,level)}}}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),sc=scope,scope_id=scope.id.replace(/\//g, '_'),
             env = [],
