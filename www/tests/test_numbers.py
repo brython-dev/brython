@@ -121,4 +121,29 @@ assert int('2qhxjli', 34) == 4294967296
 assert int('2br45qb', 35) == 4294967296
 assert int('1z141z4', 36) == 4294967296
 
+# float subclass
+class Float(float):
+
+    def __eq__(self, other):
+        if not float.__eq__(self, other) and self.almost_equal(other):
+            raise FloatCompError('you probably meant almost equal')
+        return float.__eq__(self, other)
+
+    def almost_equal(self, other):
+        return abs(self - other) < 10**-8
+
+class FloatCompError(Exception):
+    pass
+
+assert str(Float(0.3)) == "0.3"
+assert Float(0.1) + Float(0.1) == Float(0.2)
+
+float_sum = Float(0.1) + Float(0.1) + Float(0.1)
+assert Float(0.3).almost_equal(float_sum)
+try:
+    Float(0.3) == float_sum
+    raise Exception("should have raised FloatCompError")
+except FloatCompError:
+    pass
+
 print('passed all tests...')
