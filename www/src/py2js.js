@@ -778,8 +778,12 @@ function $AssignCtx(context){ //, check_unbound){
           if(left.type==='attribute'){ // assign to attribute
               $loop_num++
               left.func = 'setattr'
-              res += left.to_js()
+              var left_to_js = left.to_js()
               left.func = 'getattr'
+              if(left.assign_self){
+                return res + left_to_js[0] + rvar + left_to_js[1] + rvar + ')'
+              }
+              res += left_to_js
               res = res.substr(0,res.length-1) // remove trailing )
               return res + ','+rvar+');None;'
           }
@@ -849,7 +853,34 @@ function $AttrCtx(context){
     this.toString = function(){return '(attr) '+this.value+'.'+this.name}
     this.to_js = function(){
         this.js_processed=true
-        return this.func+'('+this.value.to_js()+',"'+this.name+'")'
+        var js = this.value.to_js()
+        if(this.func == "setattr" && this.value.type=="id"){
+            var scope = $get_scope(this),
+                parent = scope.parent
+            if(scope.ntype=="def"){
+                if(parent.ntype=="class"){
+                    var params = scope.context.tree[0].positional_list
+                    if(this.value.value == params[0] && parent.context &&
+                            parent.context.tree[0].args===undefined){
+                        // set attr to instance of a class without a parent
+                        this.assign_self = true
+                        return [js+".__class__.__setattr__==="+
+                            "undefined && "+js+'.__class__ !== $B.$factory ? '+
+                            js+"."+this.name+" = ", " : $B.$setattr("+js+', "'+
+                            this.name+'", ']
+                    }
+                }
+            }
+
+        }
+        if(this.func=='setattr'){
+            // For setattr, use $B.$setattr which doesn't use $B.args to parse
+            // the arguments
+            return '$B.$setattr('+js+',"'+this.name+'")'
+        }else{
+            //return js + '.' + this.name
+            return 'getattr('+js+',"'+this.name+'")'
+        }
     }
 }
 
@@ -2676,6 +2707,7 @@ function $ForExpr(context){
                 new_nodes[pos++]=new_node
             }
 
+            // Check that range is the built-in function
             var range_is_builtin = false
             if(!scope.blurred){
                 var _scope = $get_scope(this), found=[], fpos=0
@@ -2705,6 +2737,7 @@ function $ForExpr(context){
             }else{
                 var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()
             }
+
             var js = 'var $stop_'+num +'=$B.int_or_bool('+
                 stop+');'+h+idt+'='+start+';'+h+
                 '    var $next'+num+'= '+idt+','+h+
@@ -3204,7 +3237,7 @@ function $IdCtx(context,value){
         }
         ctx = ctx.parent
     }
-    
+
     if(context.type=='target_list' ||
         (context.type=='expr' && context.parent.type=='target_list')){
         // An id defined as a target in a "for" loop is bound
@@ -3818,16 +3851,7 @@ function $ListOrTupleCtx(context,real){
         var scope = $get_scope(this),
             sc = scope,
             scope_id = scope.id.replace(/\//g, '_'),
-            env = [],
             pos=0
-        while(sc && sc.id!=='__builtins__'){
-            if(sc===scope){
-                env[pos++]='["'+sc.id+'",$locals]'
-            }else{
-                env[pos++]='["'+sc.id+'",$locals_'+sc.id.replace(/\./g,'_')+']'
-            }
-            sc = sc.parent_block
-        }
         var module_name = $get_module(this).module
 
         switch(this.real) {
@@ -4349,7 +4373,7 @@ function $OpCtx(context,op){
 
 function $PackedCtx(context){
     // used for packed tuples in expressions, eg
-    //     a, *b, c = [1, 2, 3, 4}
+    //     a, *b, c = [1, 2, 3, 4]
     this.type = 'packed'
     if(context.parent.type=='list_or_tuple'){
         for(var i=0;i<context.parent.tree.length;i++){

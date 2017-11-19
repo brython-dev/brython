@@ -1526,10 +1526,13 @@ function setattr(){
     var $ = $B.args('setattr', 3, {obj:null, attr:null, value:null},
         ['obj', 'attr', 'value'], arguments, {}, null, null),
         obj = $.obj, attr=$.attr, value=$.value
-
     if(!(typeof attr=='string')){
         throw _b_.TypeError("setattr(): attribute name must be string")
     }
+    return $B.$setattr(obj, attr, value)
+}
+
+$B.$setattr = function(obj, attr, value){
 
     if($B.aliased_names[attr]){attr = '$$'+attr}
     else if(attr=='__class__'){
