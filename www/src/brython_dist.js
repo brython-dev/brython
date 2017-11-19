@@ -71,7 +71,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-11-12 22:21:30.224705"
+__BRYTHON__.compiled_date="2017-11-19 18:16:11.177669"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -417,8 +417,10 @@ rvar=$var}else{rvar=right_js}
 if(left.type==='attribute'){
 $loop_num++
 left.func='setattr'
-res +=left.to_js()
+var left_to_js=left.to_js()
 left.func='getattr'
+if(left.assign_self){return res + left_to_js[0]+ rvar + left_to_js[1]+ rvar + ')'}
+res +=left_to_js
 res=res.substr(0,res.length-1)
 return res + ','+rvar+');None;'}
 if(left.type==='sub'){
@@ -462,7 +464,19 @@ this.tree=[]
 this.func='getattr' 
 this.toString=function(){return '(attr) '+this.value+'.'+this.name}
 this.to_js=function(){this.js_processed=true
-return this.func+'('+this.value.to_js()+',"'+this.name+'")'}}
+var js=this.value.to_js()
+if(this.func=="setattr" && this.value.type=="id"){var scope=$get_scope(this),parent=scope.parent
+if(scope.ntype=="def"){if(parent.ntype=="class"){var params=scope.C.tree[0].positional_list
+if(this.value.value==params[0]&& parent.C &&
+parent.C.tree[0].args===undefined){
+this.assign_self=true
+return[js+".__class__.__setattr__==="+
+"undefined && "+js+'.__class__ !== $B.$factory ? '+
+js+"."+this.name+" = "," : $B.$setattr("+js+', "'+
+this.name+'", ']}}}}
+if(this.func=='setattr'){
+return '$B.$setattr('+js+',"'+this.name+'")'}else{
+return 'getattr('+js+',"'+this.name+'")'}}}
 function $AugmentedAssignCtx(C,op){
 this.type='augm_assign'
 this.parent=C.parent
@@ -1880,24 +1894,20 @@ item.tree[0].tree[0].bound=true}}else if(item.type=='list_or_tuple' ||
 item.bind_ids(scope_id,level)}}}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),sc=scope,scope_id=scope.id.replace(/\//g, '_'),
-            env = [],
             pos=0
-        while(sc && sc.id!=='__builtins__'){
-            if(sc===scope){
-                env[pos++]='["'+sc.id+'",$locals]'
-            }else{
-                env[pos++]='["'+sc.id+'",$locals_'+sc.id.replace(/\./g,'_')+']'}
-sc=sc.parent_block}
-var module_name=$get_module(this).module
-switch(this.real){case 'list':
-return '$B.$list(['+$to_js(this.tree)+'])'
-case 'list_comp':
-case 'gen_expr':
-case 'dict_or_set_comp':
-var src=this.get_src()
-var res1=[],items=[]
-if(this.comments !==undefined){console.log('comments in comp',this.comments)}
-var qesc=new RegExp('"',"g")
+        var module_name = $get_module(this).module
+        switch(this.real) {
+          case 'list':
+            return '$B.$list(['+$to_js(this.tree)+'])'
+          case 'list_comp':
+          case 'gen_expr':
+          case 'dict_or_set_comp':
+            var src = this.get_src()
+            var res1 = [], items = []
+            if(this.comments !== undefined){
+                console.log('comments in comp', this.comments)
+            }
+            var qesc = new RegExp('"',"g") // to escape double quotes in arguments
 for(var i=1;i<this.intervals.length;i++){var txt=src.substring(this.intervals[i-1],this.intervals[i])
 items.push(txt)
 var lines=txt.split('\n')
@@ -5350,7 +5360,20 @@ else if(typeof x=='number' && typeof y!='number'){return !y.pos}
 else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
 else{return $B.LongInt.$dict.__gt__(x,y)}}
 var reversed_op={'__lt__': '__gt__','__le__':'__ge__','__gt__': '__lt__','__ge__': '__le__'}
-$B.rich_comp=function(op,x,y){var res,rev_op,compared=false
+$B.rich_comp=function(op,x,y){var x1=x.valueOf(),y1=y.valueOf()
+if(typeof x1=='number' && typeof y1=='number'){switch(op){case "__eq__":
+return x1==y1
+case "__ne__":
+return x1 !=y1
+case "__le__":
+return x1 <=y1
+case "__lt__":
+return x1 < y1
+case "__ge__":
+return x1 >=y1
+case "__gt__":
+return x1 > y1}}
+var res,rev_op,compared=false
 if(x.__class__ && y.__class__){
 if(y.__class__.__mro__.indexOf(x.__class__)>-1){rev_op=reversed_op[op]||op
 res=_b_.getattr(y,rev_op)(x)
@@ -6057,7 +6080,8 @@ if(isinstance(arg,_b_.float)){return _b_.float(_b_.int.$dict.__truediv__(Number(
 return _b_.int(_b_.int.$dict.__truediv__(Number(Math.round(arg.valueOf()*mult)),mult))}}
 function setattr(){var $=$B.args('setattr',3,{obj:null,attr:null,value:null},['obj','attr','value'],arguments,{},null,null),obj=$.obj,attr=$.attr,value=$.value
 if(!(typeof attr=='string')){throw _b_.TypeError("setattr(): attribute name must be string")}
-if($B.aliased_names[attr]){attr='$$'+attr}
+return $B.$setattr(obj,attr,value)}
+$B.$setattr=function(obj,attr,value){if($B.aliased_names[attr]){attr='$$'+attr}
 else if(attr=='__class__'){
 obj.__class__=value.$dict;
 return None}else if(attr=='__dict__'){
@@ -7068,7 +7092,7 @@ return pyobj.valueOf()}else if(klass===$B.$FunctionDict){
 return function(){try{var args=[]
 for(var i=0;i<arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}
 else{args.push(jsobj2pyobj(arguments[i]))}}
-return pyobj.apply(this,args)}catch(err){console.log(err)
+return pyobj2jsobj(pyobj.apply(this,args))}catch(err){console.log(err)
 console.log(_b_.getattr(err,'info'))
 console.log(err.__name__+':',err.args.length > 0 ? err.args[0]: '' )
 throw err}}}else{
