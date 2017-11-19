@@ -289,7 +289,7 @@ $B.from_alias = function(attr){
     }
     return attr
 }
-    
+
 // Function used to resolve names not defined in Python source
 // but introduced by "from A import *" or by exec
 
@@ -1301,6 +1301,24 @@ var reversed_op = {'__lt__': '__gt__', '__le__':'__ge__',
     '__gt__': '__lt__', '__ge__': '__le__'}
 
 $B.rich_comp = function(op, x, y){
+    var x1 = x.valueOf(),
+        y1 = y.valueOf()
+    if(typeof x1 == 'number' && typeof y1 == 'number'){
+        switch(op){
+            case "__eq__":
+                return x1 == y1
+            case "__ne__":
+                return x1 != y1
+            case "__le__":
+                return x1 <= y1
+            case "__lt__":
+                return x1 < y1
+            case "__ge__":
+                return x1 >= y1
+            case "__gt__":
+                return x1 > y1
+        }
+    }
     var res, rev_op, compared = false
     if(x.__class__ && y.__class__){
         // cf issue #600 and
