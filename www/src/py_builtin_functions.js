@@ -390,10 +390,12 @@ function $eval(src, _globals, _locals){
     }
 
     var current_frame = $B.frames_stack[$B.frames_stack.length-1]
+
     if(current_frame!==undefined){
         var current_locals_id = current_frame[0].replace(/\./,'_'),
             current_globals_id = current_frame[2].replace(/\./,'_')
     }
+    
     var stack_len = $B.frames_stack.length
 
     var is_exec = arguments[3]=='exec',leave = false
@@ -421,10 +423,18 @@ function $eval(src, _globals, _locals){
     // set module path
     $B.$py_module_path[globals_id] = $B.$py_module_path[current_globals_id]
 
-    if(_locals===_globals || _locals===undefined){
-        locals_id = globals_id
+    if(_globals===undefined){
+        if(current_locals_id == current_globals_id){
+            locals_id = globals_id
+        }else{
+            locals_id = '$exec_' + $B.UUID()
+        }
     }else{
-        locals_id = '$exec_'+$B.UUID()
+        if(_locals===_globals || _locals===undefined){
+            locals_id = globals_id
+        }else{
+            locals_id = '$exec_' + $B.UUID()
+        }
     }
     // Initialise the object for block namespaces
     eval('var $locals_'+globals_id+' = {}\nvar $locals_'+locals_id+' = {}')
@@ -459,6 +469,7 @@ function $eval(src, _globals, _locals){
     }
 
     // Initialise block locals
+    $B.bound[locals_id] = $B.bound[locals_id] || {}
     if(_locals===undefined){
         if(_globals!==undefined){
             eval('var $locals_'+locals_id+' = $locals_'+globals_id)
@@ -468,6 +479,7 @@ function $eval(src, _globals, _locals){
             for(var attr in current_frame[1]){
                 ex += '$locals_'+locals_id+'["'+attr+
                     '"] = current_frame[1]["'+attr+'"];'
+                $B.bound[locals_id][attr] = true
             }
             eval(ex)
         }
@@ -478,6 +490,7 @@ function $eval(src, _globals, _locals){
                 var item = next(items)
                 item1 = to_alias(item)
                 eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')
+                $B.bound[locals_id][item] = true
             }catch(err){
                 break
             }
@@ -530,6 +543,7 @@ function $eval(src, _globals, _locals){
         js = root.to_js()
 
         var res = eval(js)
+
         gns = eval('$locals_'+globals_id)
         if($B.frames_stack[$B.frames_stack.length-1][2] == globals_id){
             gns = $B.frames_stack[$B.frames_stack.length-1][3]
@@ -544,7 +558,9 @@ function $eval(src, _globals, _locals){
                 if(attr1.charAt(0)!='$'){setitem(attr1, lns[attr])}
             }
         }else{
-            for(var attr in lns){current_frame[1][attr] = lns[attr]}
+            for(var attr in lns){
+                current_frame[1][attr] = lns[attr]
+            }
         }
 
         if(_globals!==undefined){

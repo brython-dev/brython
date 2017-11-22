@@ -71,7 +71,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-11-19 18:16:11.177669"
+__BRYTHON__.compiled_date="2017-11-21 22:26:24.249541"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -2280,6 +2280,7 @@ case "r":
 expr1='$B.builtins.repr('+expr1+')'
 break
 case "s":
+default:
 expr1='$B.builtins.str('+expr1+')'
 break}
 var fmt=parts[1]
@@ -11113,7 +11114,10 @@ if(self.elt.nodeType===9){_id=0}
 else{_id=self.elt.$brython_id}
 self.$events=self.$events ||{}
 var evlist=self.$events[event]=self.$events[event]||[]
-var pos=evlist.length
+if(arguments.length==2){
+return(function(obj,evt){function f(callback){DOMNodeDict.bind(obj,evt,callback)
+return callback}
+return f})(self,event)}
 for(var i=2;i<arguments.length;i++){var func=arguments[i]
 var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))}catch(err){if(err.__class__!==undefined){var msg=_b_.getattr(err,'info')+
 '\n'+err.__class__.__name__
@@ -11126,7 +11130,7 @@ callback.$infos=func.$infos
 callback.$attrs=func.$attrs ||{}
 callback.$func=func
 self.elt.addEventListener(event,callback,false)
-evlist[pos++]=[func,callback]}
+evlist.push([func,callback])}
 return self}
 DOMNodeDict.children=function(self){var res=[],pos=0,elt=self.elt
 console.log(elt,elt.childNodes)

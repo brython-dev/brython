@@ -7105,7 +7105,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     root.line_info = line_info
     root.indent = -1
     root.comments = []
-    if(locals_id!==module){$B.bound[locals_id] = {}}
+    if(locals_id!==module){$B.bound[locals_id] = $B.bound[locals_id] || {}}
     var new_node = new $Node(),
         current = root,
         name = "",
