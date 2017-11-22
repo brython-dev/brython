@@ -828,14 +828,25 @@ DOMNodeDict.abs_top = {
     }
 }
 
-DOMNodeDict.bind = function(self,event){
+DOMNodeDict.bind = function(self, event){
     // bind functions to the event (event = "click", "mouseover" etc.)
     var _id
     if(self.elt.nodeType===9){_id=0}
     else{_id = self.elt.$brython_id}
     self.$events = self.$events || {}
     var evlist = self.$events[event] = self.$events[event] || []
-    var pos=evlist.length
+
+    if(arguments.length==2){
+        // elt.bind(event) is a decorator for callback functions
+        return (function(obj, evt){
+            function f(callback){
+                DOMNodeDict.bind(obj, evt, callback)
+                return callback
+            }
+            return f
+        })(self, event)
+    }
+
     for(var i=2;i<arguments.length;i++){
         var func = arguments[i]
         var callback = (function(f){
@@ -860,7 +871,7 @@ DOMNodeDict.bind = function(self,event){
         callback.$attrs = func.$attrs || {}
         callback.$func = func
         self.elt.addEventListener(event,callback,false)
-        evlist[pos++] = [func, callback]
+        evlist.push([func, callback])
     }
     return self
 }
