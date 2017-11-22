@@ -1303,7 +1303,8 @@ var reversed_op = {'__lt__': '__gt__', '__le__':'__ge__',
 $B.rich_comp = function(op, x, y){
     var x1 = x.valueOf(),
         y1 = y.valueOf()
-    if(typeof x1 == 'number' && typeof y1 == 'number'){
+    if(typeof x1 == 'number' && typeof y1 == 'number' &&
+            x.__class__ == undefined && y.__class__===undefined){
         switch(op){
             case "__eq__":
                 return x1 == y1
