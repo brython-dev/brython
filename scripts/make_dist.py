@@ -138,6 +138,27 @@ def run():
     for f in ['brython.js', 'brython_stdlib.js']:
         shutil.copyfile(os.path.join(src_dir, f), os.path.join(sdir, f))
 
+    # copy demo.html
+    with open(os.path.join(pdir, 'www', 'demo.html'), encoding="utf-8") as f:
+        demo = f.read()
+    start_tag = "<!-- start copy -->"
+    end_tag = "<!-- end copy -->"
+    start = demo.find(start_tag)
+    if start == -1:
+        raise Exception("No tag <!-- start copy --> in demo.html")
+    end = demo.find(end_tag)
+    if end == -1:
+        raise Exception("No tag <!-- end copy --> in demo.html")
+    body = demo[start + len(start_tag) : end].strip()
+
+    with open(os.path.join(sdir, "demo.tmpl"), encoding="utf-8") as f:
+        template = f.read()
+
+    demo = template.replace("{{body}}", body)
+
+    with open(os.path.join(sdir, "demo.html"), "w", encoding="utf-8") as out:
+        out.write(demo)
+
     # copy files in folder /npm
     npmdir = os.path.join(pdir, 'npm')
     for f in ['brython.js', 'brython_stdlib.js']:
