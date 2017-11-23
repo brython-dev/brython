@@ -10,11 +10,15 @@ Los eventos relacionados con el ratón (mover o pulsar un  botón) son
 <table cellpadding=3 border=1>
 <tr>
 <td>*mouseenter*</td>
-<td>cuando el puntero se mueve sobre un elemento que tiene la función anexada que espera a que suceda el evento</td>
+<td>cuando el puntero se mueve sobre un elemento que tiene la función anexada
+que espera a que suceda el evento</td>
 </tr>
-<tr><td>*mouseleave*</td><td>cuando el puntero se mueve fuera de un elemento que tiene la función anexada que espera a que suceda el evento</td></tr>
+<tr><td>*mouseleave*</td><td>cuando el puntero se mueve fuera de un elemento
+que tiene la función anexada que espera a que suceda el evento</td></tr>
 
-<tr><td>*mouseover*</td><td>cuando el puntero se mueve sobre un elemento que tiene la función anexada que espera a que suceda el evento o sobre uno de sus elementos hijos</td></tr>
+<tr><td>*mouseover*</td><td>cuando el puntero se mueve sobre un elemento que
+tiene la función anexada que espera a que suceda el evento o sobre uno de sus
+elementos hijos</td></tr>
 <tr><td>*mouseout*</td><td>cuando el puntero se mueve fuera de un elemento que tiene la función anexada que espera a que suceda el evento o cuando sale de alguno de sus elementos hijos</td></tr>
 
 <tr><td>*mousemove*</td><td>cuando el puntero se mueve en un elemento que tiene la función anexada que espera a que suceda el evento</td></tr>
@@ -45,30 +49,23 @@ Ejemplos
 <tr>
 <td colspan=2>
 <blockquote>
-<div id="enter_leave">
-    from browser import document
-    
-    def _mouseenter(ev):
-        document["trace1"].text = 'entering %s' %ev.currentTarget.id
-    
-    def _mouseleave(ev):
-        document["trace1"].text = 'leaving %s' %ev.currentTarget.id
-    
-    document["yellow1"].bind('mouseenter',_mouseenter)
-    document["yellow1"].bind('mouseleave',_mouseleave)
-    document["blue1"].bind('mouseenter',_mouseenter)
-    document["blue1"].bind('mouseleave',_mouseleave)
-</div>
+```exec_on_load
+from browser import document
+
+def mouseenter(ev):
+    document["trace1"].text = f'entering {ev.currentTarget.id}'
+
+def mouseleave(ev):
+    document["trace1"].text = f'leaving {ev.currentTarget.id}'
+
+for elt_id in ("yellow1", "blue1"):
+    document[elt_id].bind('mouseenter', mouseenter)
+    document[elt_id].bind('mouseleave', mouseleave)
+```
 </blockquote>
 </td>
 </tr>
 </table>
-
-<script type="text/python">
-from browser import document
-
-exec(document["enter_leave"].text)
-</script>
 
 *mouseover* y *mouseout*
 
@@ -87,31 +84,23 @@ exec(document["enter_leave"].text)
 <tr>
 <td colspan=2>
 <blockquote>
-<div id="over_out">
-    from browser import document
-    
-    def _mouseover(ev):
-        document["trace2"].text = 'entering %s' %ev.currentTarget.id
-    
-    def _mouseout(ev):
-        document["trace2"].text = 'leaving %s' %ev.currentTarget.id
-    
-    document["yellow2"].bind('mouseover',_mouseover)
-    document["yellow2"].bind('mouseout',_mouseout)
-    document["blue2"].bind('mouseover',_mouseover)
-    document["blue2"].bind('mouseout',_mouseout)
+```exec_on_load
+from browser import document
 
-</div>
+def mouseover(ev):
+    document["trace2"].text = f'entering {ev.currentTarget.id}'
+
+def mouseout(ev):
+    document["trace2"].text = f'leaving {ev.currentTarget.id}'
+
+for elt_id in ("yellow2", "blue2"):
+    document["yellow2"].bind('mouseover', mouseover)
+    document["yellow2"].bind('mouseout', mouseout)
+```
 </blockquote>
 </td>
 </tr>
 </table>
-
-<script type="text/python">
-from browser import document
-
-exec(doc["over_out"].text)
-</script>
 
 *mousemove*
 
@@ -124,24 +113,17 @@ exec(doc["over_out"].text)
 <tr>
 <td colspan=2>
 <blockquote>
-<div id="move">
-    from browser import document
-    
-    def _mousemove(ev):
-        document["trace3"].text = 'coordinates : %s, %s' %(ev.x,ev.y)
-    
-    document["green"].bind('mousemove',_mousemove)
-</div>
+```exec_on_load
+from browser import document
+
+@document["green"].bind('mousemove')
+def mousemove(ev):
+    document["trace3"].text = f'coordinates : {ev.x}, {ev.y}'
+```
 </blockquote>
 </td>
 </tr>
 </table>
-
-<script type="text/python">
-from browser import document
-
-exec(document["move"].text)
-</script>
 
 Atributos de la instancia `DOMEvent`
 ------------------------------------

@@ -9,41 +9,76 @@ from browser import alert
 Introduction
 ------------
 
-Suppose we have in a page a element of type button, like this one : <button>a button</button>
+Suppose we have in a page a element of type button, like this one :
+ <button>a button</button>
 
-If you click on it, nothing will happen, because no instruction was given on how to react to a click. For that, the action to take is defined by this syntax :
+If you click on it, nothing will happen, because no instruction was given on
+how to react to a click. For that, the action to take is defined by this
+syntax :
 
->    btn.bind('click', show)
+```python
+@btn.bind("click")
+def show(ev):
+    ...
+```
 
-The first argument of `bind` is the type of event the button must handle ; the second is a function that takes a single argument, an instance of the class `DOMEvent`. For instance :
+`btn` is a reference to the lement. The argument of `bind` is the type of
+event the button must handle ; the following pages give many examples of
+such events for mouse, keyboard, drag-and-drop, etc.
 
->    def show(ev):
->        print('ok !')
+The decorated function takes a single argument, an instance of the class
+`DOMEvent` defined in module **browser**. For instance :
+
+```python
+@btn.bind("click")
+def show(ev):
+    print('ok')
+```
 
 (remember that to see the results of `print` the browser console must be open)
 
-Instances of `DOMEvent` have a number of attributes that depend on the event type. In the case of a click, and more generally for events related to the mouse, the attributes include
+Instances of `DOMEvent` have a number of attributes that depend on the event
+type. In the case of a click, and more generally for events related to the
+mouse, the attributes include
 
 - `target` : the element the event was dispatched on
 - `x, y` : position of the mouse relatively to the upper left corner of the window
 
 For instance, to print the button text and the mouse position :
 
->    def show(ev):
->        print(ev.target.text, ev.x, ev.y)
+```python
+@btn.bind("click")
+def show(ev):
+    print(ev.target.text, ev.x, ev.y)
+```
+
+If the body of the function to call is not present in the script (for instance
+because it is imported), or if one wants to associate the same event handler
+to a list of elements, a variant of method `bind()` can be used:
+```python
+def callback(ev):
+    ...
+
+for element in elements:
+    element.bind("click", callback)
+```
 
 Interface
 ---------
 For events management, the elements of a page have the following methods :
 
-<code>elt.bind(_evt\_name, handler_)</code>
+<code>elt.bind(_evt_name[, handler]_)</code>
 
-> associates function _handler_ to the event named _evt\_name_
+> - if a _handler_ function is specified, this function is called when the
+> event _event_name_ happens on the element
+
+> - if it is not specified, returns a decorator which associates the
+> decorated function to an event _event_name_ on the element
 
 <code>elt.unbind(_evt\_name[, handler_])</code>
 
-> removes the association of function _handler_ to the event named 
-> _evt\_name_. If _handler_ is omitted, removes all the associations for the 
+> removes the association of function _handler_ to the event named
+> _evt\_name_. If _handler_ is omitted, removes all the associations for the
 > event
 
 <code>elt.events(_evt\_name_)</code>
@@ -183,11 +218,11 @@ and the following methods
 
 > **Example**
 
-> When a checkbox is clicked on, the default action is to show or hide a tick inside the checkbox : 
+> When a checkbox is clicked on, the default action is to show or hide a tick inside the checkbox :
 
 >> checkbox (default behaviour) <input type="checkbox">
 
-> To disable this behaviour on the checkbox : 
+> To disable this behaviour on the checkbox :
 
 <blockquote>
 <div id="disable_cbox">
@@ -195,7 +230,7 @@ and the following methods
 
     def _cancel(ev):
         ev.preventDefault()
-    
+
     document["disabled_cbox"].bind('click',_cancel)
 </div>
 </blockquote>
@@ -227,14 +262,14 @@ exec(document["disable_cbox"].text)
 <blockquote>
 <div id="zzz_source">
     from browser import document, alert
-    
+
     def show(ev):
         alert('click on %s' %ev.currentTarget.id)
-    
+
     def show_stop(ev):
         alert('clic on %s' %ev.currentTarget.id)
         ev.stopPropagation()
-    
+
     document["yellow"].bind('click',show)
     document["blue"].bind('click',show)
     document["green"].bind('click',show_stop)
@@ -261,7 +296,7 @@ eval(document["zzz_source"].text)
 Creating and firing an event
 ----------------------------
 
-If you want to fire an event on an element, first check the 
+If you want to fire an event on an element, first check the
 [Event reference](https://developer.mozilla.org/en-US/docs/Web/Events) ; for
 instance, the event "click" uses the DOM interface `MouseEvent`, available
 in Brython by `window.MouseEvent`.

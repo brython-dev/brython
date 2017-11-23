@@ -48,15 +48,14 @@ Introduce texto en el campo de más abajo pulsando y sin pulsar la tecla Alt
 
 #### Código
 
-<div id="codeAltKey">
-    from browser import document
-    
-    def altKey(ev):
-        document["traceAltKey"].text = 'altKey : %s ' %ev.altKey
-        
-    # the entry field has the id "altKey"
-    document['altKey'].bind('keypress', altKey)
-</div>
+```exec_on_load
+from browser import document
+
+# the entry field has the id "altKey"
+@document["altKey"].bind("keypress")
+def keypress(ev):
+    document["traceAltKey"].text = f'altKey: {ev.altKey}'
+```
 </td>
 </tr>
 
@@ -77,17 +76,15 @@ Introduce texto en el campo de más abajo. Date cuenta que el carácter se puede
 
 #### Código
 
-<div id="codeCharCode">
-    from browser import document
-    
-    def charCode(ev):
-        trace = document["traceCharCode"]
-        char = chr(ev.charCode)
-        trace.text = 'charCode : %s, ' %ev.charCode
-        trace.text += 'character : %s' %char
-    
-    document['charCode'].bind('keypress', charCode)
-</div>
+```exec_on_load
+from browser import document
+
+@document["charCode"].bind("keypress")
+def charCode(ev):
+    trace = document["traceCharCode"]
+    char = chr(ev.charCode)
+    trace.text = f'charCode: {ev.charCode}, character: {char}'
+```
 </td>
 
 <tr>
@@ -108,16 +105,15 @@ Introduce texto en el campo de más abajo, presionando y sin presionar la tecla 
 
 #### Código
 
-<div id="codeCtrlKey">
-    from browser import document
-        
-    def ctrlKey(ev):
-        trace = document["traceCtrlKey"]
-        trace.text = 'ctrlKey : %s ' %ev.ctrlKey
-        ev.preventDefault()
-    
-    document['ctrlKey'].bind('keypress', ctrlKey)
-</div>
+```exec_on_load
+from browser import document
+
+@document["ctrlKey"].bind("keypress")
+def keypress(ev):
+    trace = document["traceCtrlKey"]
+    trace.text = f'ctrlKey : {ev.ctrlKey}'
+    ev.preventDefault()
+```
 Fíjate que `ev.preventDefault()` para evitar el comportamiento por defecto de algunos atajos de teclado que usan la tecla Ctrl
 
 </td>
@@ -146,19 +142,18 @@ with *keydown* <input id="keyCodeKeydown" value=""></input>
 
 #### Código
 
-<div id="codeKeyCode">
-    from browser import document
-    
-    def keyCode(ev):
-        trace = document["traceKeyCode"]
-        trace.text = 'event %s '%ev.type
-        trace.text += ', keyCode : %s ' %ev.keyCode
-        ev.stopPropagation()
-    
-    document['keyCodeKeydown'].bind('keydown', keyCode)
-    document['keyCodeKeypress'].bind('keypress', keyCode)
-    document['keyCodeKeyup'].bind('keyup', keyCode)
-</div>
+```exec_on_load
+from browser import document
+
+def keyCode(ev):
+    trace = document["traceKeyCode"]
+    trace.text = f'event {ev.type}, keyCode : {ev.keyCode}'
+    ev.stopPropagation()
+
+document["keyCodeKeydown"].bind("keydown", keyCode)
+document["keyCodeKeypress"].bind("keypress", keyCode)
+document["keyCodeKeyup"].bind("keyup", keyCode)
+```
 
 </td>
 </tr>
@@ -182,15 +177,14 @@ Introduce texto en el campo de más abajo, pulsando y sin pulsar la tecla Shift
 
 #### Code
 
-<div id="codeShiftKey">
-    from browser import document
-    
-    def shiftKey(ev):
-        trace = document["traceShiftKey"]
-        trace.text = 'shiftKey : %s ' %ev.shiftKey
+```exec_on_load
+from browser import document
 
-    document['shiftKey'].bind('keypress', shiftKey)
-</div>
+@document['shiftKey'].bind('keypress')
+def keypress(ev):
+    trace = document["traceShiftKey"]
+    trace.text = f'shiftKey : {ev.shiftKey}'
+```
 </td>
 </tr>
 
@@ -226,34 +220,22 @@ con *keydown* <input id="whichKeydown"></input>
  
 #### Código
 
- <div id="codeWhich">
-    from browser import document
+```exec_on_load
+from browser import document
 
-    def which(ev):
-        trace = document["traceWhich"]
-        trace.html = 'event : %s<br>' %ev.type
-        trace.html += 'which : %s<br>' %ev.which
-        if ev.type == 'keypress':
-            trace.html += 'character : %s' %chr(ev.which)
+def which(ev):
+    trace = document["traceWhich"]
+    trace.html = f'event : {ev.type}<br>which: {ev.which}'
+    if ev.type == "keypress":
+        trace.html += f'<br>character : {chr(ev.which)}'
 
-    document['whichKeydown'].bind('keydown', which)
-    document['whichKeypress'].bind('keypress', which)
-    document['whichKeyup'].bind('keyup', which)
- </div>
+document["whichKeydown"].bind("keydown", which)
+document["whichKeypress"].bind("keypress", which)
+document["whichKeyup"].bind("keyup", which)
+```
  </td>
  </tr>
  </table>
 </td>
 </tr>
 </table>
-
-<script type="text/python">
-from browser import document
-
-exec(document["codeAltKey"].text)
-exec(document["codeCharCode"].text)
-exec(document["codeCtrlKey"].text)
-exec(document["codeKeyCode"].text)
-exec(document["codeShiftKey"].text)
-exec(document["codeWhich"].text)
-</script>

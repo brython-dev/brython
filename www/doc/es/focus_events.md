@@ -29,21 +29,14 @@ Pulsa en el campo de entrada de abajo para hacer que reciba el foco, posteriorme
 
 #### Código
 
-<div id="codeFocus">
-    from browser import document
-    
-    def getFocus(ev):
-        document["traceFocus"].text = '%s recibe el foco' %ev.target.id
-        
-    def loseFocus(ev):
-        document["traceFocus"].text = '%s pierde el foco' %ev.target.id
-
-    document['entry'].bind('blur', loseFocus)
-    document['entry'].bind('focus', getFocus)
-</div>
-
-<script type="text/python">
+```exec_on_load
 from browser import document
 
-exec(document["codeFocus"].text)
-</script>
+@document['entry'].bind('focus')
+def focus(ev):
+    document["traceFocus"].text = f'{ev.target.id} recibe el foco'
+
+@document['entry'].bind('blur')
+def blur(ev):
+    document["traceFocus"].text = f'{ev.target.id} pierde el foco'
+```

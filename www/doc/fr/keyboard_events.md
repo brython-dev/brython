@@ -1,16 +1,13 @@
 Evénements clavier
 ==================
 
-<script type="text/python">
-from browser import doc, alert
-</script>
-
 Les événements relatifs au clavier sont
 
 <table cellpadding=3 border=1>
 <tr>
 <td>*input*</td>
-<td>déclenché quand la valeur d'un élément &lt;input&gt; ou &lt;textarea&gt; est modifié, ou quand le contenu d'un élément `contenteditable` est modifié
+<td>déclenché quand la valeur d'un élément &lt;input&gt; ou &lt;textarea&gt;
+est modifié, ou quand le contenu d'un élément `contenteditable` est modifié
 </td>
 </tr>
 
@@ -18,7 +15,12 @@ Les événements relatifs au clavier sont
 <td>*keydown*</td><td>appui sur une touche quelconque du clavier</td>
 </tr>
 
-<tr><td>*keypress*</td><td>appui sur une touche du clavier qui produit un caractère. Par exemple, quand on entre Ctrl+C au clavier, l'événement *keypress* n'est déclenché qu'au moment où on appuie sur C, alors que *keydown* est déclenché dès l'appui sur Ctrl</td></tr>
+<tr><td>*keypress*</td><td>appui sur une touche du clavier qui produit un
+caractère. Par exemple, quand on entre Ctrl+C au clavier, l'événement
+*keypress* n'est déclenché qu'au moment où on appuie sur C, alors que
+*keydown* est déclenché dès l'appui sur Ctrl
+</td>
+</tr>
 
 <tr><td>*keyup*</td><td>relâchement d'une touche enfoncée</td></tr>
 
@@ -34,30 +36,31 @@ L'instance de `DOMEvent` possède les attributs suivants
 <tr>
 <td>
 `altKey`
-> booléen, indique si la touche Alt (ou Option sur Mac) était enfoncée quand l'événement clavier a été déclenché
+> booléen, indique si la touche Alt (ou Option sur Mac) était enfoncée quand
+> l'événement clavier a été déclenché
 
 > Cet attribut n'est pas disponible pour l'événement *input*
 
-> Il est normalement utilisé avec *keypress*, pour pouvoir tester si on a entré Alt+&lt;key&gt; ou seulement &lt;key&gt;
+> Il est normalement utilisé avec *keypress*, pour pouvoir tester si on a
+> entré Alt+&lt;key&gt; ou seulement &lt;key&gt;
 </td>
 <td>
 #### Exemple
 
 Saisir du texte dans le champ ci-dessous, en appuyant ou pas sur la touche Alt
 
-<p><input id="altKey"></input>&nbsp;<span id="traceAltKey">&nbsp;</span>
+<p><input id="altKey" autocomplete="off">&nbsp;<span id="traceAltKey">&nbsp;</span>
 
 #### Code
 
-<div id="codeAltKey">
-    from browser import document as doc
-    
-    def altKey(ev):
-        doc["traceAltKey"].text = 'altKey : %s ' %ev.altKey
-        
-    # le champ de saisie a comme id "altKey"
-    doc['altKey'].bind('keypress', altKey)
-</div>
+```exec_on_load
+from browser import document
+
+@document["altKey"].bind("keypress")
+def altKey(ev):
+    document["traceAltKey"].text = f'altKey : {ev.altKey}'
+
+```
 </td>
 </tr>
 
@@ -71,57 +74,56 @@ Saisir du texte dans le champ ci-dessous, en appuyant ou pas sur la touche Alt
 <td>
 #### Example
 
-Enter text in the entry below. Note that the character can be read by `ch(ev.charCode)`
+Entrer du texte dans le champ ci-dessous. Notez qu'on lit le caractère par
+`chr(ev.charCode)`
 
-<input id="charCode"></input>
+<input id="charCode" autocomplete="off"></input>
 &nbsp;<span id="traceCharCode">&nbsp;</span>
 
 #### Code
 
-<div id="codeCharCode">
-    from browser import document as doc
-    
-    def charCode(ev):
-        trace = doc["traceCharCode"]
-        char = chr(ev.charCode)
-        trace.text = 'charCode : %s, ' %ev.charCode
-        trace.text += 'character : %s' %char
-    
-    doc['charCode'].bind('keypress', charCode)
-</div>
+```exec_on_load
+from browser import document
+
+@document["charCode"].bind("keypress")
+def keypress(ev):
+    trace = document["traceCharCode"]
+    char = chr(ev.charCode)
+    trace.text = f'charCode : {ev.charCode}, character: {char}'
+```
 </td>
 
 <tr>
 <td>
 `ctrlKey`
-> booléen, indique si la touche Ctrl était enfoncée quand l'événement clavier a été déclenché
+> booléen, indique si la touche Ctrl était enfoncée quand l'événement
+> clavier a été déclenché
 
 > Cet attribut n'est pas disponible pour l'événement *input*
 
-> Il est normalement utilisé avec *keypress*, pour pouvoir tester si on a entré Ctrl+&lt;key&gt; ou seulement &lt;key&gt;
+> Il est normalement utilisé avec *keypress*, pour pouvoir tester si on a
+> entré Ctrl+&lt;key&gt; ou seulement &lt;key&gt;
 </td>
 <td>
 #### Example
 
 Saisir du texte dans le champ ci-dessous, en appuyant ou pas sur la touche Ctrl
 
-<input id="ctrlKey"></input>
+<input id="ctrlKey" autocomplete="off"></input>
 &nbsp;<span id="traceCtrlKey">&nbsp;</span>
 
 #### Code
 
-<div id="codeCtrlKey">
-    from browser import document as doc
-    
-    
-    def ctrlKey(ev):
-        doc["traceCtrlKey"].text = 'ctrlKey : %s ' %ev.ctrlKey
-        ev.preventDefault()
-    
-    doc['ctrlKey'].bind('keypress', ctrlKey)
-</div>
+```exec_on_load
+from browser import document
 
-Notez que `ev.preventDefault()` est appelé pour éviter le comportement par défaut associé à certains raccourcis clavier qui utilisent la touche Ctrl
+@document["ctrlKey"].bind("keypress")
+def keypress(ev):
+    document["traceCtrlKey"].text = f'ctrlKey : {ev.ctrlKey}'
+    ev.preventDefault()
+```
+Notez que `ev.preventDefault()` est appelé pour éviter le comportement par
+défaut associé à certains raccourcis clavier qui utilisent la touche Ctrl.
 
 </td>
 </tr>
@@ -129,96 +131,102 @@ Notez que `ev.preventDefault()` est appelé pour éviter le comportement par dé
 <tr>
 <td>
 `keyCode`
-> un code numérique dépendant du système et de l'implémentation, caractérise la clé enfoncée
+> un code numérique dépendant du système et de l'implémentation, caractérise
+> la clé enfoncée
 
-> cette valeur est la même que les touches Alt, Ctrl ou majuscules soient enfoncées ou non
+> cette valeur est la même que les touches Alt, Ctrl ou majuscules soient
+> enfoncées ou non
 
-> noter que le résultat n'est pas le même selon qu'on gère les événements *keydown*, *keyup* et *keypress*
+> noter que le résultat n'est pas le même selon qu'on gère les événements
+> *keydown*, *keyup* et *keypress*
 </td>
 <td>
 
 #### Example
 
-Saisissez du texte dans les champs de saisie ci-dessous. Notez que le caractère peut être lu par `ch(ev.charCode)` avec l'événement *keypress*
+Saisissez du texte dans les champs de saisie ci-dessous. Notez que le
+caractère peut être lu par `ch(ev.charCode)` avec l'événement *keypress*
 
-avec *keydown* <input id="keyCodeKeydown"></input>
+avec *keydown* <input id="keyCodeKeydown" autocomplete="off">
 
-<p>avec *keypress* <input id="keyCodeKeypress"></input>
+<p>avec *keypress* <input id="keyCodeKeypress" autocomplete="off">
 &nbsp<span id="traceKeyCode">&nbsp;</span>
 
-<p>avec *keyup* <input id="keyCodeKeyup"></input>
+<p>avec *keyup* <input id="keyCodeKeyup" autocomplete="off">
 
 #### Code
 
-<div id="codeKeyCode">
-    from browser import document as doc
-    
-    def keyCode(ev):
-        trace = doc["traceKeyCode"]
-        trace.text = 'event %s '%ev.type
-        trace.text += ', keyCode : %s ' %ev.keyCode
-        ev.stopPropagation()
-    
-    doc['keyCodeKeydown'].bind('keydown', keyCode)
-    doc['keyCodeKeypress'].bind('keypress', keyCode)
-    doc['keyCodeKeyup'].bind('keyup', keyCode)
-</div>
+```exec_on_load
+from browser import document
 
+def keyCode(ev):
+    trace = document["traceKeyCode"]
+    trace.text = f'event: {ev.type}, keyCode: {ev.keyCode}'
+    ev.stopPropagation()
+
+document["keyCodeKeydown"].bind("keydown", keyCode)
+document["keyCodeKeypress"].bind("keypress", keyCode)
+document["keyCodeKeyup"].bind("keyup", keyCode)
+```
 </td>
 </tr>
 
 <tr>
 <td>
 `shiftKey`
-> booléen, indique si la touche Majuscule était enfoncée quand l'événement clavier a été déclenché
+> booléen, indique si la touche Majuscule était enfoncée quand l'événement
+> clavier a été déclenché
 
 > Cet attribut n'est pas disponible pour l'événement *input*
 
-> Il est normalement utilisé avec *keypress*, pour pouvoir tester si on a entré Shift+&lt;key&gt; ou seulement &lt;key&gt;
+> Il est normalement utilisé avec *keypress*, pour pouvoir tester si on a
+> entré Shift+&lt;key&gt; ou seulement &lt;key&gt;
 </td>
 <td>
 #### Example
 
-Saisir du texte dans le champ ci-dessous, en appuyant ou pas sur la touche Majuscule
+Saisir du texte dans le champ ci-dessous, en appuyant ou pas sur la touche
+Majuscule
 
-<input id="shiftKey" value="saisie"></input>
+<input id="shiftKey" value="saisie" autocomplete="off">
 &nbsp;<span id="traceShiftKey">&nbsp;</span>
 
 #### Code
 
-<div id="codeShiftKey">
-    from browser import document as doc
-    
-    def shiftKey(ev):
-        doc["traceShiftKey"].text = 'shiftKey : %s ' %ev.shiftKey
+```exec_on_load
+from browser import document
 
-    doc['shiftKey'].bind('keypress', shiftKey)
-</div>
-
+@document["shiftKey"].bind("keypress")
+def keypress(ev):
+    document["traceShiftKey"].text = f'shiftKey : {ev.shiftKey}'
+```
 </td>
 </tr>
 
 <tr>
 <td>
 `which`
-> un code numérique dépendant du système et de l'implémentation, caractérise la clé enfoncée
+> un code numérique dépendant du système et de l'implémentation, caractérise
+> la clé enfoncée
 
-> noter que le résultat n'est pas le même selon qu'on gère les événements *keydown*, *keyup* et *keypress*
+> noter que le résultat n'est pas le même selon qu'on gère les événements
+> *keydown*, *keyup* et *keypress*
 </td>
 <td>
 #### Example
 
-Saisir du texte dans les champs ci-dessous. Notez qu'on peut lire le caractère par `chr(ev.which)` avec l'événement *keypress*
+Saisir du texte dans les champs ci-dessous. Notez qu'on peut lire le caractère
+par `chr(ev.which)` avec l'événement *keypress*.
 
 <table>
 <tr>
 <td>
 
-avec *keydown* <input id="whichKeydown"></input>
+avec *keydown* <input id="whichKeydown" autocomplete="off">
 
-<p>avec *keypress* <input id="whichKeypress"></input>
+<p>avec *keypress* <input id="whichKeypress" autocomplete="off">
 
-<p>avec *keyup* <input id="whichKeyup"></input>
+<p>avec *keyup* <input id="whichKeyup" autocomplete="off">
 
 </td>
 <td>
@@ -230,21 +238,20 @@ avec *keydown* <input id="whichKeydown"></input>
 
 #### Code
 
-<div id="codeWhich">
-    from browser import document as doc
-     
-    trace = doc["traceWhich"]
+```exec_on_load
+from browser import document
 
-    def which(ev):
-        trace.html = 'event : %s<br>' %ev.type
-        trace.html += 'which : %s<br>' %ev.which
-        if ev.type == 'keypress':
-            trace.html += 'character : %s' %chr(ev.which)
+trace = document["traceWhich"]
 
-    doc['whichKeydown'].bind('keydown', which)
-    doc['whichKeypress'].bind('keypress', which)
-    doc['whichKeyup'].bind('keyup', which)
- </div>
+def which(ev):
+    trace.html = f'event : {ev.type}<br> which : {ev.which}'
+    if ev.type == 'keypress':
+        trace.html += f'<br>character : {chr(ev.which)}'
+
+document['whichKeydown'].bind('keydown', which)
+document['whichKeypress'].bind('keypress', which)
+document['whichKeyup'].bind('keyup', which)
+```
  </td>
  </tr>
  </table>
@@ -255,10 +262,5 @@ avec *keydown* <input id="whichKeydown"></input>
 
 </table>
 
-<script type="text/python">
-from browser import document as doc
-for _id in ["AltKey", "CharCode", "CtrlKey", "KeyCode", "ShiftKey", "Which"]:
-    elt_id = "code%s" %_id
-    exec(doc[elt_id].text)
-</script>
+
 

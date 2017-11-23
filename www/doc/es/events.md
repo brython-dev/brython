@@ -9,41 +9,81 @@ from browser import alert
 Introducción
 ------------
 
-Supón que tenemos un elemento del tipo botón en una página, como el siguiente : <button>un botón</button>
+Supón que tenemos un elemento del tipo botón en una página, como el siguiente :
+ <button>un botón</button>
 
-Si pulsas sobre el mismo no sucederá nada, debido a que no existe ninguna instrucción sobre como reaccionar con un click (i.e., al pulsar el botón). Para ello, la acción para definir esto se realiza mediante la siguiente sintaxis :
+Si pulsas sobre el mismo no sucederá nada, debido a que no existe ninguna
+instrucción sobre como reaccionar con un click (i.e., al pulsar el botón).
+Para ello, la acción para definir esto se realiza mediante la siguiente
+sintaxis :
 
->    btn.bind('click', show)
+```python
+@btn.bind("click")
+def show(ev):
+    ...
+```
 
-El primer argumento de `bind` es el tipo de evento que el botón deberá manejar ; El segundo argumento es una función que toma un único argumento, una instancia de la clase `DOMEvent`. Por ejemplo :
+`btn` es una referencia al elemento.
+El argumento de `bind` es el tipo de evento que el botón deberá manejar.
+La función decorada toma un único argumento, una instancia
+de la clase `DOMEvent`. Por ejemplo :
 
->    def show(ev):
->        print('ok !')
+```python
+@btn.bind("click")
+def show(ev):
+    print('ok')
+```
 
-(recuerda que para ver los resultados del `print` deberás tener abierta la consola del navegador)
+(recuerda que para ver los resultados del `print` deberás tener abierta la
+consola del navegador)
 
-Las instancias de `DOMEvent` poseen un número de atributos que dependen del tipo de evente. En el caso de un click y, de forma más general para eventos relacionados con el ratón, los atributos incluyen
+Las instancias de `DOMEvent` poseen un número de atributos que dependen del
+tipo de evente. En el caso de un click y, de forma más general para eventos
+relacionados con el ratón, los atributos incluyen
 
 - `target` : el elemento que despachó el evento
-- `x, y` : posición del ratón en relación a la esquina superior izquierda de la ventana
+- `x, y` : posición del ratón en relación a la esquina superior izquierda de
+  la ventana
 
-Por ejemplo, para imprimir el texto del botón y la posiviónn del ratón :
+Por ejemplo, para imprimir el texto del botón y la posición del ratón :
 
->    def show(ev):
->        print(ev.target.text, ev.x, ev.y)
+```python
+@btn.bind("click")
+def show(ev):
+    print(ev.target.text, ev.x, ev.y)
+```
+
+Si el corpo de la función no esta en el script (por ejemplo porque es
+importada), o si queremos definir la misma acción para una lista de
+elementos, se puede usar otra forma del método `bind()` :
+
+```python
+def action(ev):
+    ...
+
+for element in elements:
+    element.bind("click", action)
+```
 
 Interfaz
 --------
 
-Para la gestión de eventos, los elementos de una página disponen de los siguientes métodos :
+Para la gestión de eventos, los elementos de una página disponen de los
+siguientes métodos :
 
-<code>elt.bind(_evt\_name, handler_)</code>
+<code>elt.bind(_evt\_name[, handler]_)</code>
 
-> asocia la función _handler_ al evento llamado _evt\_name_
+> - si la función _handler_ está presente, es llamada quando el evento
+> ocurre sobre el elemento
+
+> - si non está presente, retorne un decorador que asocia la función decorada
+> al evento llamado _nom_evt_
 
 <code>elt.unbind(_evt\_name[, handler_])</code>
 
-> elimina la asociación de la  función _handler_ al  evento llamado _evt\_name_. Si se omite _handler_, elimina todas las asociaciones para el evento
+> elimina la asociación de la  función _handler_ al  evento llamado
+> _evt\_name_. Si se omite _handler_, elimina todas las asociaciones para el
+> evento
 
 <code>elt.events(_evt\_name_)</code>
 
@@ -52,9 +92,11 @@ Para la gestión de eventos, los elementos de una página disponen de los siguie
 Objetos `DOMEvent`
 ------------------
 
-(información de Mozilla Contributors, encontrada en [https://developer.mozilla.org/en-US/docs/Web/API/event](https://developer.mozilla.org/en-US/docs/Web/API/event))
+(información de Mozilla Contributors, encontrada en
+[https://developer.mozilla.org/en-US/docs/Web/API/event](https://developer.mozilla.org/en-US/docs/Web/API/event))
 
-Cualquiera que sea el tipo de evento, las instancias de la clase `DOMEvent` poseen llos siguientes atributos
+Cualquiera que sea el tipo de evento, las instancias de la clase `DOMEvent`
+poseen los siguientes atributos
 
 <table border=1 cellpadding=5>
 
@@ -187,19 +229,19 @@ y los siguientes métodos
 
 > **Ejemplo**
 
-> Cuando una checkbox se pulsa, la acción por defecto será mostrar u ocultar una marca dentro del checkbox : 
+> Cuando una checkbox se pulsa, la acción por defecto será mostrar u ocultar una marca dentro del checkbox :
 
 >> checkbox (comportamiento por defecto) <input type="checkbox">
 
-> Para deshabilitar este comportamiento en el checkbox : 
+> Para deshabilitar este comportamiento en el checkbox :
 
 <blockquote>
 <div id="disable_cbox">
     from browser import document
-    
+
     def _cancel(ev):
         ev.preventDefault()
-    
+
     document["disabled_cbox"].bind('click',_cancel)
 </div>
 </blockquote>
@@ -230,14 +272,14 @@ exec(document["disable_cbox"].text)
 <blockquote>
 <div id="zzz_source">
     from browser import document, alert
-    
+
     def show(ev):
         alert('click on %s' %ev.currentTarget.id)
-    
+
     def show_stop(ev):
         alert('clic on %s' %ev.currentTarget.id)
         ev.stopPropagation()
-    
+
     document["yellow"].bind('click',show)
     document["blue"].bind('click',show)
     document["green"].bind('click',show_stop)

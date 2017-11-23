@@ -8,66 +8,91 @@ from browser import doc, alert
 Introduction
 ------------
 
-Supposons que nous ayons dans la page un élément de type bouton, comme 
+Supposons que nous ayons dans la page un élément de type bouton, comme
 celui-ci : <button>un bouton</button>
 
 Si vous cliquez dessus, il ne se passera rien, parce que nous ne lui avons pas
- dit comment réagir à un clic. Pour cela, il faut définir une fonction qui 
- sera appelée quand on clique, en utilisant la syntaxe :
+dit comment réagir à un clic. Pour cela, il faut définir une fonction qui
+sera appelée quand on clique, en utilisant la syntaxe :
 
 ```python
-btn.bind('click', montre)
+@btn.bind("click")
+def montre(ev):
+    ...
 ```
 
-Le premier argument de `bind` est le type d'événement auquel le bouton doit 
-réagir ; le deuxième est une fonction qui prend un seul argument, une instance 
-de la classe `DOMEvent` (définie dans le module **browser**). Par exemple :
+`btn` est une référence à l'élement. L'argument de `bind` est le type
+d'événement auquel le bouton doit réagir : les pages suivantes donnent de
+nombreux exemples d'événement relatifs à la souris, au clavier, au
+glisser-déposer, etc.
+
+La fonction décorée prend un seul argument, une instance de la classe
+`DOMEvent` (définie dans le module **browser**). Par exemple :
 
 ```python
+@btn.bind("click")
 def montre(ev):
     print('ouah !')
 ```
 
-(rappelez-vous que pour voir les résultats de `print` il faut ouvrir la 
+(rappelez-vous que pour voir les résultats de `print` il faut ouvrir la
 console du navigateur)
 
-Les instances de `DOMEvent` possèdent un certain nombre d'attributs qui varient 
-selon le type d'événement. Dans le cas d'un clic, et plus généralement des 
+Les instances de `DOMEvent` possèdent un certain nombre d'attributs qui varient
+selon le type d'événement. Dans le cas d'un clic, et plus généralement des
 événements relatifs à la souris, les attributs sont notamment :
 
 - `target` : l'élément sur lequel l'événement s'est produit
-- `x, y` : position de la souris par rapport au bord supérieur gauche de la 
+- `x, y` : position de la souris par rapport au bord supérieur gauche de la
 fenêtre
 
-Par exemple, si on veut afficher le texte affiché sur le bouton, et la 
+Par exemple, si on veut afficher le texte affiché sur le bouton, et la
 position de la souris :
 
 ```python
+@btn.bind("click")
 def montre(ev):
     print(ev.target.text, ev.x, ev.y)
 ```
 
+Si le corps de la fonction à déclencher n'est pas présent dans le script (par
+exemple parce qu'elle est importée), ou si on veut associer le même gestionnaire
+d'événements pour une liste d'éléments, on peut utiliser une variante de
+la méthode `bind()` :
+
+```python
+def action(ev):
+    ...
+
+for element in elements:
+    element.bind("click", action)
+```
+
 Interface
 ---------
-Pour la gestion des événements, les éléments d'une page possèdent les 
+Pour la gestion des événements, les éléments d'une page possèdent les
 méthodes suivantes :
 
-<code>elt.bind(_nom\_evt, gest_)</code>
+<code>elt.bind(_nom_evt[, gestionnaire]_)</code>
 
-> associe la fonction _gest_ à l'événement de nom _nom\_evt_
+> - si une fonction _gestionnaire_ est spécifiée, cette fonction est appelée
+> quand l'événement _nom_evt_ se produit sur l'élément
+
+> - si la fonction n'est pas précisée, retourne un décorateur qui associe la
+> fonction décorée à l'événement _nom_evt_
 
 <code>elt.unbind(_nom\_evt[, gest_])</code>
 
 > défait l'association de la fonction _gest_ à l'événement de nom _nom\_evt_.
 > Si _gest_ n'est pas fourni, défait toutes les associations de l'événement.
- 
+
 <code>elt.events(_nom\_evt_)</code>
 
 > renvoie la liste des fonctions qui gèrent l'événement de nom _nom\_evt_
 
 Objets `DOMEvent`
 -----------------
-Quel que soit le type d'événement géré, les instances de la classe `DOMEvent` 
+Quel que soit le type d'événement géré, les instances de la classe `DOMEvent`
 possèdent les propriétés suivantes
 
 <table border=1 cellpadding=5>
@@ -75,8 +100,8 @@ possèdent les propriétés suivantes
 <tr>
 <td>
 `bubbles`
-> un booléen qui indique si l'élément se propage aux parents de l'élément sur 
-lequel l'événement s'est produit
+> un booléen qui indique si l'élément se propage aux parents de l'élément sur
+> lequel l'événement s'est produit
 </td>
 <td>
 <button id="_bubbles">test</button>
@@ -163,7 +188,7 @@ doc['_timeStamp'].bind('click',lambda ev:alert('timeStamp : %s ' %ev.timeStamp))
 </tr>
 
 <tr><td>`type`
-> le type d'événement    
+> le type d'événement
 </td>
 <td>
 <button id="_type">test</button>
@@ -182,11 +207,11 @@ et les méthodes suivantes
 
 > **Exemple**
 
-> Quand on clique sur une case à cocher, l'action par défaut est de marquer ou d'effacer un trait à l'intérieur de la case : 
+> Quand on clique sur une case à cocher, l'action par défaut est de marquer ou d'effacer un trait à l'intérieur de la case :
 
 >> case à cocher (comportement par défaut) <input type="checkbox">
 
-> Pour désactiver ce comportement sur la case : 
+> Pour désactiver ce comportement sur la case :
 
 <blockquote><blockquote>
 ```exec_on_load

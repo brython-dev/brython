@@ -10,7 +10,9 @@ Keyboard events are
 <table cellpadding=3 border=1>
 <tr>
 <td>*input*</td>
-<td>triggered when the value of an &lt;input&gt; or &lt;textarea&gt; element is modified, or the content of a `contenteditable` element is modified
+<td>triggered when the value of an &lt;input&gt; or &lt;textarea&gt;
+element is modified, or the content of a `contenteditable` element is
+modified
 </td>
 </tr>
 
@@ -18,7 +20,10 @@ Keyboard events are
 <td>*keydown*</td><td>fired when any key on the keyboard is pressed down</td>
 </tr>
 
-<tr><td>*keypress*</td><td>a key is pressed down and that key normally produces a character value. For instance, when entering Ctrl+C, the event *keypress* is only fired when the key C is pressed down, whereas *keydown* is fired as soon as the Ctrl key is pressed</td></tr>
+<tr><td>*keypress*</td><td>a key is pressed down and that key normally
+produces a character value. For instance, when entering Ctrl+C, the event
+*keypress* is only fired when the key C is pressed down, whereas *keydown* is
+fired as soon as the Ctrl key is pressed</td></tr>
 
 <tr><td>*keyup*</td><td>a key is released</td></tr>
 
@@ -44,19 +49,18 @@ For keyboard events, the `DOMEvent` instance has the following attributes
 #### Example
 
 Enter text in the field below, with or without pressing the Alt key
-<p><input id="altKey" value=""></input>&nbsp;<span id="traceAltKey">&nbsp;</span>
+<p><input id="altKey" value="" autocomplete="off">&nbsp;<span id="traceAltKey">&nbsp;</span>
 
 #### Code
 
-<div id="codeAltKey">
-    from browser import document
-    
-    def altKey(ev):
-        document["traceAltKey"].text = 'altKey : %s ' %ev.altKey
-        
-    # the entry field has the id "altKey"
-    document['altKey'].bind('keypress', altKey)
-</div>
+```exec_on_load
+from browser import document
+
+# the entry field has the id "altKey"
+@document["altKey"].bind("keypress")
+def keypress(ev):
+    document["traceAltKey"].text = f'altKey: {ev.altKey}'
+```
 </td>
 </tr>
 
@@ -71,23 +75,23 @@ Enter text in the field below, with or without pressing the Alt key
 <td>
 #### Example
 
-Enter text in the entry below. Note that the character can be read by `ch(ev.charCode)`
+Enter text in the entry below. Note that the character can be read by
+`ch(ev.charCode)`
 
-<input id="charCode" value=""></input>&nbsp;<span id="traceCharCode">&nbsp;</span>
+<input id="charCode" value="" autocomplete="off">&nbsp;
+<span id="traceCharCode">&nbsp;</span>
 
 #### Code
 
-<div id="codeCharCode">
-    from browser import document
+```exec_on_load
+from browser import document
 
-    def charCode(ev):
-        trace = document["traceCharCode"]
-        char = chr(ev.charCode)
-        trace.text = 'charCode : %s, ' %ev.charCode
-        trace.text += 'character : %s' %char
-    
-    document['charCode'].bind('keypress', charCode)
-</div>
+@document["charCode"].bind("keypress")
+def charCode(ev):
+    trace = document["traceCharCode"]
+    char = chr(ev.charCode)
+    trace.text = f'charCode: {ev.charCode}, character: {char}'
+```
 </td>
 
 <tr>
@@ -97,28 +101,30 @@ Enter text in the entry below. Note that the character can be read by `ch(ev.cha
 
 > This attribute is not set for the *input* event
 
-> It is usually used with *keypress*, to be able to test if Ctrl+&lt;key&gt; was entered, or just &lt;key&gt;</td>
+> It is usually used with *keypress*, to be able to test if Ctrl+&lt;key&gt;
+> was entered, or just &lt;key&gt;</td>
 <td>
 #### Example
 
 Enter text in the field below, with or without pressing the Ctrl key
 
-<input id="ctrlKey" value=""></input>
+<input id="ctrlKey" value="" autocomplete="off">
 &nbsp;<span id="traceCtrlKey">&nbsp;</span>
 
 #### Code
 
-<div id="codeCtrlKey">
-    from browser import document
-    
-    def ctrlKey(ev):
-        trace = document["traceCtrlKey"]
-        trace.text = 'ctrlKey : %s ' %ev.ctrlKey
-        ev.preventDefault()
-    
-    document['ctrlKey'].bind('keypress', ctrlKey)
-</div>
-Note that `ev.preventDefault()` is used to avoid the default behaviour of some keyboard shortcuts using the Ctrl key
+```exec_on_load
+from browser import document
+
+@document["ctrlKey"].bind("keypress")
+def keypress(ev):
+    trace = document["traceCtrlKey"]
+    trace.text = f'ctrlKey : {ev.ctrlKey}'
+    ev.preventDefault()
+```
+
+Note that `ev.preventDefault()` is used to avoid the default behaviour of
+some keyboard shortcuts using the Ctrl key.
 
 </td>
 </tr>
@@ -126,40 +132,41 @@ Note that `ev.preventDefault()` is used to avoid the default behaviour of some k
 <tr>
 <td>
 `keyCode`
-> A system and implementation dependent numerical code identifying the unmodified value of the pressed key
+> A system and implementation dependent numerical code identifying the
+> unmodified value of the pressed key
 
 > The value doesn't change if the keys Alt, Ctrl or Shift are pressed
 
-> Note that the result is not the same depending on the handled events *keydown*, *keyup* or *keypress*
+> Note that the result is not the same depending on the handled events
+> *keydown*, *keyup* or *keypress*
 </td>
 <td>
 #### Example
 
-Enter text in the entry fields below. Note that the character can be read by `ch(ev.charCode)` with the *keypress* event
+Enter text in the entry fields below. Note that the character can be read by
+`ch(ev.charCode)` with the *keypress* event
 
-with *keydown* <input id="keyCodeKeydown" value=""></input>
+with *keydown* <input id="keyCodeKeydown" value="" autocomplete="off">
 
-<p>with *keypress* <input id="keyCodeKeypress" value=""></input>
+<p>with *keypress* <input id="keyCodeKeypress" value="" autocomplete="off">
 &nbsp;<span id="traceKeyCode">&nbsp;</span>
 
-<p>with *keyup* <input id="keyCodeKeyup" value=""></input>
+<p>with *keyup* <input id="keyCodeKeyup" value="" autocomplete="off">
 
 #### Code
 
-<div id="codeKeyCode">
-    from browser import document
-    
-    def keyCode(ev):
-        trace = document["traceKeyCode"]
-        trace.text = 'event %s '%ev.type
-        trace.text += ', keyCode : %s ' %ev.keyCode
-        ev.stopPropagation()
-    
-    document['keyCodeKeydown'].bind('keydown', keyCode)
-    document['keyCodeKeypress'].bind('keypress', keyCode)
-    document['keyCodeKeyup'].bind('keyup', keyCode)
-</div>
+```exec_on_load
+from browser import document
 
+def keyCode(ev):
+    trace = document["traceKeyCode"]
+    trace.text = f'event {ev.type}, keyCode : {ev.keyCode}'
+    ev.stopPropagation()
+
+document["keyCodeKeydown"].bind("keydown", keyCode)
+document["keyCodeKeypress"].bind("keypress", keyCode)
+document["keyCodeKeyup"].bind("keyup", keyCode)
+```
 </td>
 </tr>
 
@@ -170,51 +177,54 @@ with *keydown* <input id="keyCodeKeydown" value=""></input>
 
 > This attribute is not set for the *input* event
 
-> It is usually used with *keypress*, to be able to test if Shift+&lt;key&gt; was entered, or just &lt;key&gt;</td>
+> It is usually used with *keypress*, to be able to test if Shift+&lt;key&gt;
+> was entered, or just &lt;key&gt;</td>
 </td>
 <td>
 #### Example
 
 Enter text in the field below, with or without pressing the Shift key
 
-<input id="shiftKey" value=""></input>
+<input id="shiftKey" value="" autocomplete="off">
 &nbsp;<span id="traceShiftKey">&nbsp;</span>
 
 #### Code
 
-<div id="codeShiftKey">
-    from browser import document
-    
-    def shiftKey(ev):
-        trace = document["traceShiftKey"]
-        trace.text = 'shiftKey : %s ' %ev.shiftKey
+```exec_on_load
+from browser import document
 
-    document['shiftKey'].bind('keypress', shiftKey)
-</div>
+@document['shiftKey'].bind('keypress')
+def keypress(ev):
+    trace = document["traceShiftKey"]
+    trace.text = f'shiftKey : {ev.shiftKey}'
+```
 </td>
 </tr>
 
 <tr>
 <td>
 `which`
-> A system and implementation dependent numeric code identifying the unmodified value of the pressed key
+> A system and implementation dependent numeric code identifying the
+> unmodified value of the pressed key
 
-> Note that the result is not the same depending on the handled events *keydown*, *keyup* or *keypress*
+> Note that the result is not the same depending on the handled events
+> *keydown*, *keyup* or *keypress*
 </td>
 <td>
 #### Example
 
-Enter text in the entry below. Note that the character can be read by `chr(ev.which)` for the *keypress* event
+Enter text in the entry below. Note that the character can be read by
+`chr(ev.which)` for the *keypress* event
 
 
 <table>
 <tr>
 <td>
-with *keydown* <input id="whichKeydown"></input>
+with *keydown* <input id="whichKeydown" autocomplete="off">
 
-<p>with *keypress* <input id="whichKeypress"></input>
+<p>with *keypress* <input id="whichKeypress" autocomplete="off">
 
-<p>with *keyup* <input id="whichKeyup"></input>
+<p>with *keyup* <input id="whichKeyup" autocomplete="off">
 
  </td>
  <td>
@@ -223,38 +233,26 @@ with *keydown* <input id="whichKeydown"></input>
  </tr>
  <tr>
  <td colspan=2>
- 
+
 #### Code
 
- <div id="codeWhich">
-    from browser import document
-    
-    def which(ev):
-        trace = document["traceWhich"]
-        trace.html = 'event : %s<br>' %ev.type
-        trace.html += 'which : %s<br>' %ev.which
-        if ev.type == 'keypress':
-            trace.html += 'character : %s' %chr(ev.which)
+```exec_on_load
+from browser import document
 
-    document['whichKeydown'].bind('keydown', which)
-    document['whichKeypress'].bind('keypress', which)
-    document['whichKeyup'].bind('keyup', which)
- </div>
+def which(ev):
+    trace = document["traceWhich"]
+    trace.html = f'event : {ev.type}<br>which: {ev.which}'
+    if ev.type == "keypress":
+        trace.html += f'<br>character : {chr(ev.which)}'
+
+document["whichKeydown"].bind("keydown", which)
+document["whichKeypress"].bind("keypress", which)
+document["whichKeyup"].bind("keyup", which)
+```
  </td>
  </tr>
  </table>
 </td>
 </tr>
 </table>
-
-<script type="text/python">
-from browser import document
-
-exec(document["codeAltKey"].text)
-exec(document["codeCharCode"].text)
-exec(document["codeCtrlKey"].text)
-exec(document["codeKeyCode"].text)
-exec(document["codeShiftKey"].text)
-exec(document["codeWhich"].text)
-</script>
 

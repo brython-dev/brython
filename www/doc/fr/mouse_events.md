@@ -1,10 +1,6 @@
 Evénements souris
 =================
 
-<script type="text/python">
-from browser import doc, alert
-</script>
-
 Les événements relatifs à la souris (mouvement, appui sur un bouton) sont
 
 <table cellpadding=3 border=1>
@@ -50,16 +46,15 @@ Exemples
 ```exec_on_load
 from browser import document
 
-def _mouseenter(ev):
-    document["trace1"].text = 'entrée dans %s' %ev.currentTarget.id
+def mouseenter(ev):
+    document["trace1"].text = f'entrée dans {ev.currentTarget.id}'
 
-def _mouseleave(ev):
-    document["trace1"].text = 'sortie de %s' %ev.currentTarget.id
+def mouseleave(ev):
+    document["trace1"].text = f'sortie de {ev.currentTarget.id}'
 
-document["jaune1"].bind('mouseenter',_mouseenter)
-document["jaune1"].bind('mouseleave',_mouseleave)
-document["bleu1"].bind('mouseenter',_mouseenter)
-document["bleu1"].bind('mouseleave',_mouseleave)
+for elt_id in ("jaune1", "bleu1"):
+    document[elt_id].bind('mouseenter', mouseenter)
+    document[elt_id].bind('mouseleave', mouseleave)
 ```
 </blockquote>
 </td>
@@ -89,16 +84,15 @@ document["bleu1"].bind('mouseleave',_mouseleave)
 ```exec_on_load
 from browser import document
 
-def _mouseover(ev):
-    document["trace2"].text = 'entrée dans %s' %ev.currentTarget.id
+def mouseover(ev):
+    document["trace2"].text = f'entrée dans {ev.currentTarget.id}'
 
-def _mouseout(ev):
-    document["trace2"].text = 'sortie de %s' %ev.currentTarget.id
+def mouseout(ev):
+    document["trace2"].text = f'sortie de {ev.currentTarget.id}'
 
-document["jaune2"].bind('mouseover',_mouseover)
-document["jaune2"].bind('mouseout',_mouseout)
-document["bleu2"].bind('mouseover',_mouseover)
-document["bleu2"].bind('mouseout',_mouseout)
+for elt_id in ["jaune2", "bleu2"]:
+    document[elt_id].bind('mouseover', mouseover)
+    document[elt_id].bind('mouseout', mouseout)
 ```
 
 </blockquote>
@@ -120,10 +114,9 @@ document["bleu2"].bind('mouseout',_mouseout)
 ```exec_on_load
 from browser import document
 
-def _mousemove(ev):
-    document["trace3"].text = 'coordonnées : %s, %s' %(ev.x,ev.y)
-
-document["vert"].bind('mousemove',_mousemove)
+@document["vert"].bind("mousemove")
+def mousemove(ev):
+    document["trace3"].text = f'coordonnées : {ev.x}, {ev.y}'
 ```
 
 Attributs de l'objet `DOMEvent`

@@ -23,21 +23,21 @@ Les événement focus sont :
 
 #### Exemple
 
-Cliquer sur le champ de saisie ci-dessous pour qu'il reçoive le focus, puis cliquer ailleurs dans la page pour que le champ de saisie perde le focus
+Cliquer sur le champ de saisie ci-dessous pour qu'il reçoive le focus, puis
+cliquer ailleurs dans la page pour que le champ de saisie perde le focus.
 
-<p><input id="entry"></input>&nbsp;<span id="traceFocus">&nbsp;</span>
+<p><input id="entry" autocomplete="off">&nbsp;<span id="traceFocus">&nbsp;</span>
 
 #### Code
 
 ```exec_on_load
 from browser import document
 
-def getFocus(ev):
-    document["traceFocus"].text = '%s reçoit le focus' %ev.target.id
+@document["entry"].bind("focus")
+def focus(ev):
+    document["traceFocus"].text = f'{ev.target.id} reçoit le focus'
 
-def loseFocus(ev):
-    document["traceFocus"].text = '%s perd le focus' %ev.target.id
-
-document['entry'].bind('blur', loseFocus)
-document['entry'].bind('focus', getFocus)
+@document['entry'].bind("blur")
+def blur(ev):
+    document["traceFocus"].text = f'{ev.target.id} perd le focus'
 ```

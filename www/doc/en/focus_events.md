@@ -23,28 +23,22 @@ Focus events are
 
 #### Example
 
-Click in the entry field below to make it receive focus, then click somewhere outside the field to make it lose focus
+Click in the entry field below to make it receive focus, then click somewhere
+outside the field to make it lose focus.
 
-<p><input id="entry"></input>&nbsp;<span id="traceFocus">&nbsp;</span>
+<p><input id="entry" autocomplete="off">&nbsp;
+<span id="traceFocus">&nbsp;</span>
 
 #### Code
 
-<div id="codeFocus">
-    from browser import document
-    
-    def getFocus(ev):
-        document["traceFocus"].text = '%s receives focus' %ev.target.id
-        
-    def loseFocus(ev):
-        document["traceFocus"].text = '%s loses focus' %ev.target.id
-
-    document['entry'].bind('blur', loseFocus)
-    document['entry'].bind('focus', getFocus)
-</div>
-
-<script type="text/python">
+```exec_on_load
 from browser import document
 
-exec(document["codeFocus"].text)
-</script>
+@document['entry'].bind('focus')
+def focus(ev):
+    document["traceFocus"].text = f'{ev.target.id} receives focus'
 
+@document['entry'].bind('blur')
+def blur(ev):
+    document["traceFocus"].text = f'{ev.target.id} loses focus'
+```

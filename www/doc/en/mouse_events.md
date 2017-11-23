@@ -10,20 +10,29 @@ The mouse-related events (movement, pressing a button) are
 <table cellpadding=3 border=1>
 <tr>
 <td>*mouseenter*</td>
-<td>A pointing device is moved onto the element that has the listener attached</td>
+<td>A pointing device is moved onto the element that has the listener attached
+</td>
 </tr>
-<tr><td>*mouseleave*</td><td>a pointing device is moved off the element that has the listener attached</td></tr>
+<tr><td>*mouseleave*</td><td>a pointing device is moved off the element that
+has the listener attached</td></tr>
 
-<tr><td>*mouseover*</td><td>a pointing device is moved onto the element that has the listener attached or onto one of its children</td></tr>
-<tr><td>*mouseout*</td><td>a pointing device is moved off the element that has the listener attached or off one of its children</td></tr>
+<tr><td>*mouseover*</td><td>a pointing device is moved onto the element that
+has the listener attached or onto one of its children</td></tr>
+<tr><td>*mouseout*</td><td>a pointing device is moved off the element that has
+the listener attached or off one of its children</td></tr>
 
-<tr><td>*mousemove*</td><td>a pointing device is moved over an element</td></tr>
+<tr><td>*mousemove*</td><td>a pointing device is moved over an element</td>
+</tr>
 
-<tr><td>*mousedown*</td><td>a pointing device button (usually a mouse) is pressed on an element</td></tr>
-<tr><td>*mouseup*</td><td>a pointing device button is released over an element</td></tr>
+<tr><td>*mousedown*</td><td>a pointing device button (usually a mouse) is
+pressed on an element</td></tr>
+<tr><td>*mouseup*</td><td>a pointing device button is released over an
+element</td></tr>
 
-<tr><td>*click*</td><td>a pointing device button has been pressed and released on an element</td></tr>
-<tr><td>*dblclick*</td><td>a pointing device button is clicked twice on an element</td></tr>
+<tr><td>*click*</td><td>a pointing device button has been pressed and
+released on an element</td></tr>
+<tr><td>*dblclick*</td><td>a pointing device button is clicked twice on an
+element</td></tr>
 
 </table>
 
@@ -32,7 +41,9 @@ Examples
 
 *mouseenter* and *mouseleave*
 
-> these events are triggered when the mouse enters or leaves an element. If an element includes other ones, the event is triggered every time the mouse enters or leaves a child element
+> these events are triggered when the mouse enters or leaves an element. If an
+> element includes other ones, the event is triggered every time the mouse enters
+> or leaves a child element
 
 <table>
 <tr>
@@ -45,34 +56,29 @@ Examples
 <tr>
 <td colspan=2>
 <blockquote>
-<div id="enter_leave">
-    from browser import document
+```exec_on_load
+from browser import document
 
-    def _mouseenter(ev):
-        document["trace1"].text = 'entering %s' %ev.currentTarget.id
-    
-    def _mouseleave(ev):
-        document["trace1"].text = 'leaving %s' %ev.currentTarget.id
-    
-    document["yellow1"].bind('mouseenter',_mouseenter)
-    document["yellow1"].bind('mouseleave',_mouseleave)
-    document["blue1"].bind('mouseenter',_mouseenter)
-    document["blue1"].bind('mouseleave',_mouseleave)
-</div>
+def mouseenter(ev):
+    document["trace1"].text = f'entering {ev.currentTarget.id}'
+
+def mouseleave(ev):
+    document["trace1"].text = f'leaving {ev.currentTarget.id}'
+
+for elt_id in ("yellow1", "blue1"):
+    document[elt_id].bind('mouseenter', mouseenter)
+    document[elt_id].bind('mouseleave', mouseleave)
+```
 </blockquote>
 </td>
 </tr>
 </table>
 
-<script type="text/python">
-from browser import document
-
-exec(document["enter_leave"].text)
-</script>
 
 *mouseover* and *mouseout*
 
-> the difference with *mouseenter* and *mouseleave* is that once the mouse entered an element, the event is not triggered on its children elements
+> the difference with *mouseenter* and *mouseleave* is that once the mouse
+> entered an element, the event is not triggered on its children elements
 
 <table>
 <tr>
@@ -87,61 +93,47 @@ exec(document["enter_leave"].text)
 <tr>
 <td colspan=2>
 <blockquote>
-<div id="over_out">
-    from browser import document
+```exec_on_load
+from browser import document
 
-    def _mouseover(ev):
-        document["trace2"].text = 'entering %s' %ev.currentTarget.id
-    
-    def _mouseout(ev):
-        document["trace2"].text = 'leaving %s' %ev.currentTarget.id
-    
-    document["yellow2"].bind('mouseover',_mouseover)
-    document["yellow2"].bind('mouseout',_mouseout)
-    document["blue2"].bind('mouseover',_mouseover)
-    document["blue2"].bind('mouseout',_mouseout)
+def mouseover(ev):
+    document["trace2"].text = f'entering {ev.currentTarget.id}'
 
-</div>
+def mouseout(ev):
+    document["trace2"].text = f'leaving {ev.currentTarget.id}'
+
+for elt_id in ("yellow2", "blue2"):
+    document["yellow2"].bind('mouseover', mouseover)
+    document["yellow2"].bind('mouseout', mouseout)
+```
 </blockquote>
 </td>
 </tr>
 </table>
 
-<script type="text/python">
-from browser import document
-
-exec(document["over_out"].text)
-</script>
-
 *mousemove*
 
 <table>
 <tr><td>
-<div id="green" style="padding:5px;background-color:#8F8;width:150px;">move the mouse</div>
+<div id="green" style="padding:5px;background-color:#8F8;width:150px;">move
+the mouse</div>
 </td>
 <td><div id="trace3">&nbsp;</div></td>
 </tr>
 <tr>
 <td colspan=2>
 <blockquote>
-<div id="move">
-    from browser import document
-    
-    def _mousemove(ev):
-        document["trace3"].text = 'coordinates : %s, %s' %(ev.x,ev.y)
-    
-    document["green"].bind('mousemove',_mousemove)
-</div>
+```exec_on_load
+from browser import document
+
+@document["green"].bind('mousemove')
+def mousemove(ev):
+    document["trace3"].text = f'coordinates : {ev.x}, {ev.y}'
+```
 </blockquote>
 </td>
 </tr>
 </table>
-
-<script type="text/python">
-from browser import document
-
-exec(document["move"].text)
-</script>
 
 `DOMEvent` instance attributes
 ------------------------------
@@ -149,19 +141,54 @@ exec(document["move"].text)
 For mouse events, the instance of `DOMEvent` has the following attributes
 
 <table cellpadding=3 border=1>
-<tr><td>*button*</td><td>indicates which button was pressed on the mouse to trigger the event</td></tr>
-<tr><td>*buttons*</td><td>indicates which buttons were pressed on the mouse to trigger the event.
+<tr>
+  <td>*button*</td>
+  <td>indicates which button was pressed on the mouse to trigger the event</td>
+</tr>
+<tr>
+  <td>*buttons*</td>
+  <td>indicates which buttons were pressed on the mouse to trigger the event.
 
-Each button that can be pressed is representd by a given number (1  : Left button, 2  : Right button, 4  : Wheel button). If more than one button is pressed, the value of the buttons is combined to produce a new number. For example, if the right button (2) and the wheel button (4) are pressed, the value is equal to 2|4, which is 6</td></tr>
+  Each button that can be pressed is represented by a given number (1  : Left
+  button, 2  : Right button, 4  : Wheel button). If more than one button is
+  pressed, the value of the buttons is combined to produce a new number. For
+  example, if the right button (2) and the wheel button (4) are pressed, the
+  value is equal to 2|4, which is 6
+  </td>
+</tr>
 
-<tr><td>*x*</td><td>position of the mouse relatively to the left border of the window (in pixels)</td></tr>
-<tr><td>*y*</td><td>position of the mouse relatively to the upper border of the window (in pixels)</td></tr>
+<tr>
+  <td>*x*</td>
+  <td>position of the mouse relatively to the left border of the window (in
+  pixels)</td>
+</tr>
+<tr>
+  <td>*y*</td>
+  <td>position of the mouse relatively to the upper border of the window (in
+  pixels)</td>
+</tr>
 
-<tr><td>*clientX*</td><td>the X coordinate of the mouse pointer in local (DOM content) coordinates</td></tr>
-<tr><td>*clientY*</td><td>the Y coordinate of the mouse pointer in local (DOM content) coordinates</td></tr>
+<tr>
+  <td>*clientX*</td>
+  <td>the X coordinate of the mouse pointer in local (DOM content)
+  coordinates</td>
+</tr>
+<tr>
+  <td>*clientY*</td>
+  <td>the Y coordinate of the mouse pointer in local (DOM content)
+  coordinates</td>
+</tr>
 
-<tr><td>*screenX*</td><td>the X coordinate of the mouse pointer in global (screen) coordinates</td></tr>
-<tr><td>*screenY*</td><td>the Y coordinate of the mouse pointer in global (screen) coordinates</td></tr>
+<tr>
+  <td>*screenX*</td>
+  <td>the X coordinate of the mouse pointer in global (screen)
+  coordinates</td>
+</tr>
+<tr>
+  <td>*screenY*</td>
+  <td>the Y coordinate of the mouse pointer in global (screen)
+  coordinates</td>
+</tr>
 
 </table>
 
