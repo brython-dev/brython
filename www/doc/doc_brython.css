@@ -13,7 +13,6 @@ html {
 body {
   font-family:Roboto, Arial;
   margin: 0px;
-  
 }
 
 a.navig:link,a:link,a:hover,a.navig:visited {
@@ -106,6 +105,17 @@ select.language {
     width:auto;
 }
 
+.xml{
+    background-color:#F0F0F0;
+    padding:3px 8px 8px 8px;
+    border-style:solid;
+    border-width:1px;
+    border-color:#888;
+    border-radius: 10px;
+    color: green;
+    width:auto;
+}
+
 li {
   margin-bottom:3px
 }
@@ -115,7 +125,7 @@ pre{
 }
 pre.marked {
   color:#339;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 /* colors for highlighted Python code */
@@ -135,6 +145,7 @@ span.python-builtin{
 
 code {
   color:#339;
+  font-family: Consolas;
 }
 
 em {
