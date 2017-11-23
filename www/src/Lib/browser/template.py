@@ -1,20 +1,23 @@
 """Brython templating engine.
 Usage :
 
-from browser import template
-html = template.Template(url).render(**kw)
+from browser.template import render
+render(element, **kw)
 
-renders the template located at specified url with the key/values in kw.
+replaces an element with template code by its rendering using the
+key/values in kw.
 """
 import traceback
+import random
 from browser import document, html
 
 class Template:
 
-    def __init__(self, url):
-        self.url = url
+    def __init__(self, element):
+        self.element = element
         self.line_mapping = {}
         self.line_num = 1
+        self.bindings = {}
 
     def add(self, content, elt):
         self.python += content
@@ -34,7 +37,7 @@ class Template:
                 text = ' '.join(lines).replace('"', '&quot;')
                 self.add("    " * self.indent + '__write__("'
                     + text + '")\n', elt)
-                
+
         elif hasattr(elt, 'tagName'):
             if elt.tagName == "PY":
                 for item in elt.attributes:
@@ -49,6 +52,8 @@ class Template:
             elif elt != self.zone:
                 self.add("    " * self.indent + "__write__('<"
                     + elt.tagName, elt)
+                bindings = {}
+                elt_id = None
                 for item in elt.attributes:
                     if item.name == "attrs":
                         # special attribute "attrs" replaced by the key-values
@@ -56,14 +61,27 @@ class Template:
                         kw = eval("dict("+item.value+")", self.ns)
                         for k, v in kw.items():
                             self.add(' ' + k + '="' + v+ '"', elt)
+                    elif item.name == "events":
+                        bindings = eval("dict(" + item.value + ")", self.ns)
                     else:
+                        if item.name == "id":
+                            elt_id = item.value
                         self.add(' ' + item.name + '="' + item.value
                             + '"', elt)
+                if bindings:
+                    if elt_id is None:
+                        # add a random id
+                        elt_id = "id_" + "".join(random.choice("0123456789")
+                            for _ in range(10))
+                        self.add(' id="' + elt_id +'"', elt)
+
+                    self.bindings[elt_id] = bindings
+
                 self.add(">')\n", elt)
 
         for child in elt.childNodes:
             self.parse(child)
-    
+
         if is_block:
             self.indent -= 1
 
@@ -78,20 +96,20 @@ class Template:
         self.python = ''
         self.indent = 0
         self.html = ''
-        
+
         # create empty DIV to store the content of template file
         self.zone = html.DIV(style=dict(display="none"))
-        self.zone.html = open(self.url).read()
+        self.zone.html = self.element.html
         document <= self.zone
-        
+
         # Generate the Python code to execute
         self.ns = ns
         self.parse(self.zone)
-        
+
         # Add name "__write__" to namespace, alias for self.write, used in the
         # generated Python code
         self.ns.update({'__write__': self.write})
-        
+
         # Executing the Python code will store HTML code in self.html
         try:
             exec(self.python, self.ns)
@@ -106,9 +124,19 @@ class Template:
                 if item.name in ["code", "expr"]:
                     print(item.value)
                     print('{}:'.format(exc.__class__.__name__), exc)
-    
+
         # Remove temporary DIV
         self.zone.remove()
-        
-        return self.html
 
+        # replace element content by generated html
+        self.element.html = self.html
+
+        print('bindings', self.bindings)
+        for key, bindings in self.bindings.items():
+            print(document[key])
+            for event, callback in bindings.items():
+                document[key].bind(event, callback)
+
+
+def render(element, **kw):
+    Template(element).render(**kw)
