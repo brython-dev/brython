@@ -71,7 +71,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-11-21 22:26:24.249541"
+__BRYTHON__.compiled_date="2017-11-23 08:38:23.196737"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -2280,7 +2280,6 @@ case "r":
 expr1='$B.builtins.repr('+expr1+')'
 break
 case "s":
-default:
 expr1='$B.builtins.str('+expr1+')'
 break}
 var fmt=parts[1]
@@ -3829,7 +3828,7 @@ if(locals_id==parent_block_id){root.parent_block=$B.modules[parent_block_id].par
 root.line_info=line_info
 root.indent=-1
 root.comments=[]
-if(locals_id!==module){$B.bound[locals_id]={}}
+if(locals_id!==module){$B.bound[locals_id]=$B.bound[locals_id]||{}}
 var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
 if(typeof src=="object"){root.is_comp=src.is_comp
 src=src.src}
@@ -5362,7 +5361,8 @@ else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
 else{return $B.LongInt.$dict.__gt__(x,y)}}
 var reversed_op={'__lt__': '__gt__','__le__':'__ge__','__gt__': '__lt__','__ge__': '__le__'}
 $B.rich_comp=function(op,x,y){var x1=x.valueOf(),y1=y.valueOf()
-if(typeof x1=='number' && typeof y1=='number'){switch(op){case "__eq__":
+if(typeof x1=='number' && typeof y1=='number' &&
+x.__class__==undefined && y.__class__===undefined){switch(op){case "__eq__":
 return x1==y1
 case "__ne__":
 return x1 !=y1
@@ -5602,7 +5602,7 @@ _globals.__class__.__name__)}
 _globals.globals_id=_globals.globals_id ||globals_id
 globals_id=_globals.globals_id}
 $B.$py_module_path[globals_id]=$B.$py_module_path[current_globals_id]
-if(_locals===_globals ||_locals===undefined){locals_id=globals_id}else{locals_id='$exec_'+$B.UUID()}
+if(_globals===undefined){if(current_locals_id==current_globals_id){locals_id=globals_id}else{locals_id='$exec_' + $B.UUID()}}else{if(_locals===_globals ||_locals===undefined){locals_id=globals_id}else{locals_id='$exec_' + $B.UUID()}}
 eval('var $locals_'+globals_id+' = {}\nvar $locals_'+locals_id+' = {}')
 if(_globals===undefined){var gobj=current_frame[3],ex=''
 parent_block_id=current_globals_id
@@ -5618,13 +5618,16 @@ $B.bound[globals_id][item]=true}catch(err){console.log(err)
 console.log('error setting',item)
 break}}
 parent_block_id='__builtins__'}
+$B.bound[locals_id]=$B.bound[locals_id]||{}
 if(_locals===undefined){if(_globals!==undefined){eval('var $locals_'+locals_id+' = $locals_'+globals_id)}else{var lobj=current_frame[1],ex=''
 for(var attr in current_frame[1]){ex +='$locals_'+locals_id+'["'+attr+
-'"] = current_frame[1]["'+attr+'"];'}
+'"] = current_frame[1]["'+attr+'"];'
+$B.bound[locals_id][attr]=true}
 eval(ex)}}else{var items=_b_.dict.$dict.items(_locals),item
 while(1){try{var item=next(items)
 item1=to_alias(item)
-eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')}catch(err){break}}}
+eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')
+$B.bound[locals_id][item]=true}catch(err){break}}}
 var root=$B.py2js(src,globals_id,locals_id,parent_block_id),js,gns,lns
 try{
 var try_node=root.children[root.children.length-2],instr=try_node.children[try_node.children.length-2]
@@ -7215,7 +7218,7 @@ $JSObjectDict.$factory=JSObject
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.highlight','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var js=['_ajax','_base64','_jsre','_multiprocessing','_posixsubprocess','_profile','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']

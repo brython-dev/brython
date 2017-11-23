@@ -793,8 +793,9 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
                 throw _b_.ImportError(_mod_name)
             }
             else if (modobj === undefined) {
-                try {$B.import_hooks(_mod_name, __path__, undefined)}
-                catch(err) {
+                try {
+                    $B.import_hooks(_mod_name, __path__, undefined)
+                }catch(err) {
                     delete $B.imported[_mod_name]
                     $B.imported[_mod_name] = null
                     throw err
