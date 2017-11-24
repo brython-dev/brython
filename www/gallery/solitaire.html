@@ -8,124 +8,148 @@
 """Much of the drag and drop code is copied from a demo by Doug Schepers
 at http://svg-whiz.com/svg/DragAndDrop.svg"""
 
-from browser import document as doc
-import browser.svg as svg
+import math
 
+from browser import document, svg
+
+SVGRoot = document['svg_root']
+
+ball_color = "sienna"
+plate_color = "moccasin"
+
+@SVGRoot.bind('mousedown')
 def Grab(evt):
     global DragTarget,DragStart,dragged_pos
+
     # find out which element we moused down on
-    targetElement = evt.target
-    
+    target = evt.target
+
     # you cannot drag the background itself, so ignore any attempts to mouse down on it
-    if targetElement != BackDrop and (targetElement.style.fill == '#ffa500' or targetElement.style.fill == 'orange'):
-        #set the item moused down on as the element to be dragged
-        DragTarget = targetElement
-        
+    if target != BackDrop and target.style.fill == ball_color:
+        # set the item moused down on as the element to be dragged
+        DragTarget = target
+
         # turn off all pointer events to the dragged element, this does 2 things:
         #    1) allows us to drag text elements without selecting the text
         #    2) allows us to find out where the dragged element is dropped (see Drop)
         DragTarget.setAttributeNS(None, 'pointer-events', 'none')
-        print(DragTarget.id.split('_'))
-        
+
         # we need to find the current position and translation of the grabbed element,
-        #    so that we only apply the differential between the current location
-        #    and the new location
+        # so that we only apply the differential between the current location
+        # and the new location
         transMatrix = DragTarget.getCTM()
         GrabPoint.x = TrueCoords.x - transMatrix.e
         GrabPoint.y = TrueCoords.y - transMatrix.f
         DragStart = GrabPoint
-        
+
         dragged_pos = [int(i) for i in DragTarget.id.split('_')]
 
         # move this element to the "top" of the display, so it is (almost)
-        #    always over other elements (exception: in this case, elements that are
-        #    "in the folder" (children of the folder group) with only maintain
-        #    hierarchy within that group
-        DragTarget.parentNode.appendChild( DragTarget )
+        # always over other elements (exception: in this case, elements that are
+        # "in the folder" (children of the folder group) with only maintain
+        # hierarchy within that group
+        DragTarget.parentNode.appendChild(DragTarget)
 
+@SVGRoot.bind('mousemove')
 def Drag(evt):
     # account for zooming and panning
     GetTrueCoords(evt)
-    
+
     # if we don't currently have an element in tow, don't do anything
-    if DragTarget:
-        # account for the offset between the element's origin and the
-        #    exact place we grabbed it... this way, the drag will look more natural
-        newX = TrueCoords.x - GrabPoint.x
-        newY = TrueCoords.y - GrabPoint.y
-        
-        # apply a new tranform translation to the dragged element, to display
-        #    it in its new location
-        DragTarget.setAttributeNS(None, 'transform', 'translate(%s,%s)' %(newX,newY))
+    if not DragTarget:
+        return
 
+    # account for the offset between the element's origin and the
+    # exact place we grabbed it... this way, the drag will look more natural
+    newX = TrueCoords.x - GrabPoint.x
+    newY = TrueCoords.y - GrabPoint.y
+
+    # apply a new tranform translation to the dragged element, to display
+    # it in its new location
+    DragTarget.setAttributeNS(None, 'transform',
+        f'translate({newX},{newY})')
+
+@SVGRoot.bind('mouseup')
 def Drop(evt):
-    global DragTarget
+    global DragTarget, border_pos
+
     # if we aren't currently dragging an element, don't do anything
-    if DragTarget:
-        # since the element currently being dragged has its pointer-events turned off,
-        #    we are afforded the opportunity to find out the element it's being dropped on
-        targetElement = evt.target
-        
-        # turn the pointer-events back on, so we can grab this item later
-        DragTarget.setAttributeNS(None, 'pointer-events', 'all')
-        if targetElement.id == 'BackDrop':
-            # invalid move : not dropped on a ball
-            newX = DragStart.x - GrabPoint.x
-            newY = DragStart.y - GrabPoint.y
-            DragTarget.setAttributeNS(None, 'transform', 
-                'translate(%s,%s)' %(newX,newY))
+    if not DragTarget:
+        return
 
-        elif (targetElement.style.fill == "#ffa500" or targetElement.style.fill == "orange"):
-            # invalid move : dropped on a non empty cell
-            newX = DragStart.x - GrabPoint.x
-            newY = DragStart.y - GrabPoint.y
-            DragTarget.setAttributeNS(None, 'transform', 
-                'translate(%s,%s)' %(newX,newY))
+    # since the element currently being dragged has its pointer-events turned off,
+    # we are afforded the opportunity to find out the element it's being dropped on
+    targetElement = evt.target
+
+    # turn the pointer-events back on, so we can grab this item later
+    DragTarget.setAttributeNS(None, 'pointer-events', 'all')
+    if targetElement.id == 'BackDrop':
+        # invalid move : not dropped on a ball
+        newX = DragStart.x - GrabPoint.x
+        newY = DragStart.y - GrabPoint.y
+        DragTarget.setAttributeNS(None, 'transform',
+            f'translate({newX},{newY})')
+
+    elif targetElement.style.fill == ball_color:
+        # invalid move : dropped on a non empty cell
+        newX = DragStart.x - GrabPoint.x
+        newY = DragStart.y - GrabPoint.y
+        DragTarget.setAttributeNS(None, 'transform',
+            f'translate({newX},{newY})')
+
+    else:
+        # drop and replace
+        # compute column and row of target cell
+        target_pos = [int((targetElement.cx.baseVal.value - left) / dx),
+            int((targetElement.cy.baseVal.value - top - dy) / dy)]
+        newX = target_pos[0] - dragged_pos[0]
+        newY = target_pos[1] - dragged_pos[1]
+
+        # column and row of cell jumped over
+        col = int((target_pos[0] + dragged_pos[0]) / 2)
+        row = int((target_pos[1] + dragged_pos[1]) / 2)
+
+        if (newX == 0 and abs(newY) == 2 and filled[col][row]) \
+            or (newY == 0 and abs(newX)==2 and filled[col][row]):
+
+            # valid move : there was a ball in the cell jumped over
+
+            # move this ball to the plate border
+            removed = document[filled[col][row].id]
+            old_x = removed.cx.baseVal.value
+            old_y = removed.cy.baseVal.value
+            cx = center_x + store_ray * math.cos(border_pos)
+            cy = center_y + store_ray * math.sin(border_pos)
+            document[filled[col][row].id].setAttributeNS(None, 'transform',
+                f'translate({cx - old_x},{cy - old_y})')
+            border_pos += math.pi / 18
             
+            # remove dragged ball
+            del document[DragTarget.id]
+
+            # create new ball at target position
+            ball = svg.circle(id='{}_{}'.format(*target_pos),
+                cx=left + target_pos[0] * dx,
+                cy=top + dy + dy * target_pos[1],
+                r=ray,
+                style={'fill': ball_color})
+            SVGRoot <= ball
+
+            # reset dictionary
+            filled[dragged_pos[0]][dragged_pos[1]] = None
+            filled[col][row] = None
+            filled[target_pos[0]][target_pos[1]] = ball
+            check_finished()
         else:
-            # drop and replace
-            # compute column and row of target cell
-            target_pos = [int((targetElement.cx.baseVal.value-left)/dx),
-                int((targetElement.cy.baseVal.value-dy)/dy)]
-            newX = target_pos[0] - dragged_pos[0]
-            newY = target_pos[1] - dragged_pos[1]
+            # invalid move : jump over an empty cell
+            newX = DragStart.x - GrabPoint.x
+            newY = DragStart.y - GrabPoint.y
+            DragTarget.setAttributeNS(None, 'transform',
+                f'translate({newX},{newY})')
 
-            # column and row of cell jumped over
-            col = int((target_pos[0]+dragged_pos[0])/2)
-            row = int((target_pos[1]+dragged_pos[1])/2)
-
-            if (newX == 0 and abs(newY) == 2 and filled[col][row]) \
-                or (newY == 0 and abs(newX)==2 and filled[col][row]):
-
-                # valid move : there was a ball in the cell jumped over
-
-                # remove this ball
-                del doc[filled[col][row].id]
-
-                # remove dragged ball
-                del doc[DragTarget.id]
-                
-                # create new ball at target position
-                ball = svg.circle(id='%s_%s' %(target_pos[0],target_pos[1]),
-                    cx=left+target_pos[0]*dx,cy=dy+dy*target_pos[1],
-                    r=ray,style={'fill':'orange'})
-                SVGRoot <= ball
-
-                # reset dictionary
-                filled[dragged_pos[0]][dragged_pos[1]] = None
-                filled[col][row] = None
-                filled[target_pos[0]][target_pos[1]] = ball
-                check_finished()
-            else:
-                # invalid move : jump over an empty cell
-                newX = DragStart.x - GrabPoint.x
-                newY = DragStart.y - GrabPoint.y
-                DragTarget.setAttributeNS(None, 'transform', 
-                    'translate(%s,%s)' %(newX,newY))
-
-        # set the global variable to None, so nothing will be dragged until we
-        #    grab the next element
-        DragTarget = None
+    # set the global variable to None, so nothing will be dragged until we
+    # grab the next element
+    DragTarget = None
 
 def check_finished():
     # check if there are still possible moves
@@ -146,92 +170,125 @@ def check_finished():
     if remaining == 1:
         alert('Congratulations, you win !')
     else:
-        alert('Game over, %s balls remaining' %remaining)                
+        alert('Game over, %s balls remaining' %remaining)
 
 def GetTrueCoords(evt):
     # find the current zoom level and pan setting, and adjust the reported
-    #    mouse position accordingly
+    # mouse position accordingly
     newScale = SVGRoot.currentScale
     translation = SVGRoot.currentTranslate
-    TrueCoords.x = (evt.clientX - translation.x)/newScale
-    TrueCoords.y = (evt.clientY - translation.y)/newScale
+    TrueCoords.x = (evt.clientX - translation.x) / newScale
+    TrueCoords.y = (evt.clientY - translation.y) / newScale
 
 DragTarget = None
 dragged_pos = None
 DragStart = None
 shadow = None
 
-SVGRoot = doc['svg_root']
-SVGRoot.bind('mousedown',Grab)
-SVGRoot.bind('mousemove',Drag)
-SVGRoot.bind('mouseup',Drop)
-
 # these svg points hold x and y values...
-#    very handy, but they do not display on the screen (just so you know)
+# very handy, but they do not display on the screen (just so you know)
 TrueCoords = SVGRoot.createSVGPoint()
 GrabPoint = SVGRoot.createSVGPoint()
 
 # this will serve as the canvas over which items are dragged.
-#    having the drag events occur on the mousemove over a backdrop
-#    (instead of the dragged element) prevents the dragged element
-#    from being inadvertantly dropped when the mouse is moved rapidly
-BackDrop = doc['BackDrop']
+# having the drag events occur on the mousemove over a backdrop
+# (instead of the dragged element) prevents the dragged element
+# from being inadvertantly dropped when the mouse is moved rapidly
+BackDrop = document['BackDrop']
 
 ray = 20
 dx = dy = 60
-left = 30
-filled = dict((i,dict((j,False) for j in range(7))) for i in range(7))
+left = 150
+top = 100
+filled = dict((i, dict((j, False) for j in range(7))) for i in range(7))
+
+border_pos = - math.pi / 2 # angle for position of next place to put captured balls
+store_ray = int(13.5 * ray)
+
+# plate
+center_x = left + 3 * dx
+center_y = top + 4 * dy
+
+big_plate = svg.circle(
+        cx=center_x,
+        cy=center_y,
+        r=15 * ray,
+        style={'fill': plate_color, 'stroke': ball_color})
+SVGRoot <= big_plate
+
+plate = svg.circle(
+        cx=center_x,
+        cy=center_y,
+        r=12 * ray,
+        style={'fill': plate_color, 'stroke': ball_color})
+SVGRoot <= plate
+
 
 # create cells
 for i in range(3):
-    SVGRoot <= svg.circle(Id='hole0_%s' %(i+2),
-        cx=left+(2+i)*dx,cy=dy,r=ray,
-        style={'fill':'white','stroke':'orange'})
-    SVGRoot <= svg.circle(Id='hole6_%s' %(i+2),
-        cx=left+(2+i)*dx,cy=7*dy,r=ray,
-        style={'fill':'white','stroke':'orange'})
+    SVGRoot <= svg.circle(Id=f'hole0_{i + 2}',
+        cx=left + (2 + i) * dx,
+        cy=top + dy, r=ray,
+        style={'fill': 'white', 'stroke':ball_color})
+    SVGRoot <= svg.circle(Id=f'hole6_{i + 2}',
+        cx=left + (2 + i) * dx,
+        cy=top + 7 * dy, r=ray,
+        style={'fill': 'white', 'stroke': ball_color})
 for i in range(5):
-    SVGRoot <= svg.circle(Id='hole1_%s' %(i+1),
-        cx=left+(1+i)*dx,cy=2*dy,r=ray,
-        style={'fill':'white','stroke':'orange'})
-    SVGRoot <= svg.circle(Id='hole5_%s' %(i+1),
-        cx=left+(1+i)*dx,cy=6*dy,r=ray,
-        style={'fill':'white','stroke':'orange'})
+    SVGRoot <= svg.circle(Id=f'hole1_{i + 1}',
+        cx=left + (1 + i) * dx,
+        cy=top + 2 * dy, r=ray,
+        style={'fill': 'white', 'stroke': ball_color})
+    SVGRoot <= svg.circle(Id=f'hole5_{i + 1}',
+        cx=left  +(1 + i) * dx,
+        cy=top +6 * dy, r=ray,
+        style={'fill': 'white', 'stroke': ball_color})
 for i in range(7):
     for row in range(3):
-        SVGRoot <= svg.circle(Id='hole%s_%s' %(row+2,i),
-            cx=left+i*dx,cy=(3+row)*dy,r=ray,
-            style={'fill':'white','stroke':'orange'})
+        SVGRoot <= svg.circle(Id=f'hole{row + 2}_{i}',
+            cx=left + i * dx,
+            cy=top + (3 + row) * dy, r=ray,
+            style={'fill': 'white', 'stroke': ball_color})
 
 # put balls on all the cells except in the center
 for i in range(3):
 
-    ball = svg.circle(id='%s_0' %(i+2),
-        cx=left+(2+i)*dx,cy=dy,r=ray,style={'fill':'orange'})
+    ball = svg.circle(id=f'{i + 2}_0',
+        cx=left + (2 + i) * dx,
+        cy=top + dy, r=ray,
+        style={'fill': ball_color})
     SVGRoot <= ball
     filled[2+i][0] = ball
 
-    ball = svg.circle(id='%s_6' %(i+2),
-        cx=left+(2+i)*dx,cy=7*dy,r=ray,style={'fill':'orange'})
+    ball = svg.circle(id=f'{i + 2}_6',
+        cx=left + (2 + i) * dx,
+        cy=top + 7 * dy, r=ray,
+        style={'fill': ball_color})
     SVGRoot <= ball
     filled[2+i][6] = ball
-    
+
 for i in range(5):
-    ball = svg.circle(id='%s_1' %(i+1),
-        cx=left+(1+i)*dx,cy=2*dy,r=ray,style={'fill':'orange'})
+    ball = svg.circle(id=f'{i + 1}_1',
+        cx=left + (1 + i) * dx,
+        cy=top + 2 * dy, r=ray,
+        style={'fill': ball_color})
     SVGRoot <= ball
     filled[1+i][1] = ball
 
-    ball = svg.circle(id='%s_5' %(i+1),
-        cx=left+(1+i)*dx,cy=6*dy,r=ray,style={'fill':'orange'})
+    ball = svg.circle(id=f'{i + 1}_5',
+        cx=left + (1 + i) * dx,
+        cy=top + 6 * dy, r=ray,
+        style={'fill': ball_color})
     SVGRoot <= ball
     filled[1+i][5] = ball
 
 for i in range(7):
     for row in range(3):
         if row != 1 or i !=3:
-            ball = svg.circle(id='%s_%s' %(i,row+2),
-                cx=left+i*dx,cy=(3+row)*dy,r=ray,style={'fill':'orange'})
+            ball = svg.circle(id=f'{i}_{row + 2}',
+                cx=left + i * dx,
+                cy=top + (3 + row) * dy, r=ray,
+                style={'fill': ball_color})
             SVGRoot <= ball
             filled[i][2+row] = ball
 
@@ -239,7 +296,7 @@ filled[3][3] = None
 
 </script>
 </head>
-<body onload="brython(2)">
+<body onload="brython(1)">
 <svg width='100%' height='100%' xmlns='http://www.w3.org/2000/svg'
    id="svg_root">
 
@@ -251,10 +308,7 @@ filled[3][3] = None
       Use or misuse this code however you wish.
    </desc>
 
-
-
    <rect id='BackDrop' x='-10%' y='-10%' width='110%' height='110%' fill='none' pointer-events='all' />
-
 
 </svg>
 </body>
