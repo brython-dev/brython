@@ -6,17 +6,18 @@
 <meta name="author" content="Pierre Quentel">
 <meta charset="iso-8859-1">
 <script type="text/javascript" src="/src/brython.js"></script>
+<script type="text/javascript" src="/src/py_dom.js"></script>
 </head>
 
-<body onload="brython()">
+<body onload="brython(1)">
 
 <script type="text/python">
 from browser import document, alert
 
+@document["test"].bind("click")
 def echo(*args):
     alert("Hello {} !".format(document["zone"].value))
 
-document["test"].bind("click", echo)
 </script>
 <p>Your name is : <input id="zone" autocomplete="off">
 <button id="test">clic !</button>
