@@ -8,9 +8,7 @@
 <script type="text/python">
 import math
 
-from browser import document as doc
-import browser.html as html
-import browser.svg as svg
+from browser import document, html, svg
 
 ray = 100
 values = [20,10,30,15,25]
@@ -18,7 +16,7 @@ values = [20,10,30,15,25]
 colors = ["C8E0A2","A6BED1","E4CC85","D7D7D7","90AF97","698EA8",
         "BFA166","A8ADB0","FF6600"]
 
-panel = doc["panel"]
+panel = document["panel"]
 legend = None
 print(svg.text)
 title = svg.text('',x=150,y=25,
@@ -29,8 +27,8 @@ panel <= title
 paths = {}
 
 def pie_chart():
-    global paths,legend
-    # clear SVG doc
+    global paths, legend
+    # clear SVG document
     for child in panel: # iteration on child nodes
         if child != title:
             panel.removeChild(child)
@@ -42,7 +40,7 @@ def pie_chart():
     panel <= legend
 
     set_title()
-        
+
     paths = {}
     data = {}
     for i,cell in enumerate(cells):
@@ -75,17 +73,17 @@ def pie_chart():
         style["fill"]='#'+color
         path = svg.path(d=path,style=style)
         path.bind('mouseover',lambda ev,key=key:show_legend(key))
-        path.bind('mouseout',lambda ev:hide_legend)
+        path.bind('mouseout',lambda ev, legend=legend:hide_legend(legend))
         panel <= path
         paths[key]=path
 
 def set_title(*args):
     title.text = title_input.value
-    
+
 def show_legend(key):
     legend.text = key
 
-def hide_legend(ev):
+def hide_legend(legend):
     legend.text = ''
 
 def change(rank,offset):
@@ -99,11 +97,16 @@ nb_lines = 5
 
 t = html.TABLE()
 tb = html.TBODY()
-cells = []
 
 title_input = html.INPUT(value='Pie Chart')
 title_input.bind('change',set_title)
 tb <= html.TD('Title')+html.TD(title_input,colspan=3)
+t <= tb
+document['data'] <= t
+
+t = html.TABLE()
+tb = html.BODY()
+cells = []
 
 for i in range(nb_lines):
     row = html.TR()
@@ -114,12 +117,12 @@ for i in range(nb_lines):
     cell = html.SPAN(values[i])
     row <= html.TD(cell)
     b_up = html.BUTTON('>')
-    b_up.bind('click',lambda ev,x=i:change(x,1))
+    b_up.bind('click', lambda ev,x=i:change(x,1))
     row <= html.TD(b_up)
     cells.append(cell)
     tb <= row
 t <= tb
-doc['data'] <= t
+document['data'] <= t
 
 pie_chart()
 </script>
@@ -133,7 +136,7 @@ pie_chart()
 <tr>
 <td id="data"></td>
 <td>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
     width="400" height="300" style="border-style:solid;border-width:1;border-color:#000;">
   <g id="panel">
   </g>
