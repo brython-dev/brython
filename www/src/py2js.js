@@ -536,6 +536,8 @@ function $AssignCtx(context){ //, check_unbound){
                 var module = $get_module(context)
                 $bind(assigned.value, module.id, level)
             }
+        }else if(["str", "int", "float", "complex"].indexOf(assigned.type)>-1){
+            $_SyntaxError(context, ["can't assign to literal"])
         }
     }//if
 
@@ -896,18 +898,23 @@ function $AugmentedAssignCtx(context, op){
 
     var scope = this.scope = $get_scope(this)
 
-    if(context.type=='expr' && context.tree[0].type=='id'){
-        var name = context.tree[0].value
-        if(noassign[name]===true){
-            $_SyntaxError(context,["can't assign to keyword"])
-        }else if((scope.ntype=='def'||scope.ntype=='generator') &&
-            $B.bound[scope.id][name]===undefined){
-            if(scope.globals===undefined || scope.globals.indexOf(name)==-1){
-            // Augmented assign to a variable not yet defined in
-            // local scope : set attribute "unbound" to the id. If not defined
-            // in the rest of the block this will raise an UnboundLocalError
-                context.tree[0].unbound = true
+    if(context.type=='expr'){
+        var assigned = context.tree[0]
+        if(assigned.type=='id'){
+            var name = assigned.value
+            if(noassign[name]===true){
+                $_SyntaxError(context,["can't assign to keyword"])
+            }else if((scope.ntype=='def'||scope.ntype=='generator') &&
+                $B.bound[scope.id][name]===undefined){
+                if(scope.globals===undefined || scope.globals.indexOf(name)==-1){
+                // Augmented assign to a variable not yet defined in
+                // local scope : set attribute "unbound" to the id. If not defined
+                // in the rest of the block this will raise an UnboundLocalError
+                    assigned.unbound = true
+                }
             }
+        }else if(['str', 'int', 'float', 'complex'].indexOf(assigned.type)>-1){
+            $_SyntaxError(context, ["can't assign to literal"])
         }
     }
 
@@ -6164,6 +6171,10 @@ function $transition(context,token){
           case '=':
            if(context.expect===','){
                if(context.parent.type==="call_arg"){
+                   // issue 708
+                   if(context.tree[0].type != 'id'){
+                       $_SyntaxError(context, ["keyword can't be an expression"])
+                   }
                   return new $AbstractExprCtx(new $KwArgCtx(context),true)
                }else if(context.parent.type=="annotation"){
                    return $transition(context.parent.parent, token, arguments[2])

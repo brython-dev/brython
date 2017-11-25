@@ -71,7 +71,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-11-23 08:38:23.196737"
+__BRYTHON__.compiled_date="2017-11-24 11:10:40.280748"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -288,7 +288,7 @@ var node=$get_node(this)
 node.bound_before=$B.keys($B.bound[scope.id])
 $bind(assigned.value,scope.id,level)}else{
 var module=$get_module(C)
-$bind(assigned.value,module.id,level)}}}
+$bind(assigned.value,module.id,level)}}else if(["str","int","float","complex"].indexOf(assigned.type)>-1){$_SyntaxError(C,["can't assign to literal"])}}
 this.guess_type=function(){return}
 this.toString=function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
 this.transform=function(node,rank){
@@ -485,10 +485,11 @@ C.parent.tree[C.parent.tree.length]=this
 this.op=op
 this.tree=[C]
 var scope=this.scope=$get_scope(this)
-if(C.type=='expr' && C.tree[0].type=='id'){var name=C.tree[0].value
+if(C.type=='expr'){var assigned=C.tree[0]
+if(assigned.type=='id'){var name=assigned.value
 if(noassign[name]===true){$_SyntaxError(C,["can't assign to keyword"])}else if((scope.ntype=='def'||scope.ntype=='generator')&&
 $B.bound[scope.id][name]===undefined){if(scope.globals===undefined ||scope.globals.indexOf(name)==-1){
-C.tree[0].unbound=true}}}
+assigned.unbound=true}}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){$_SyntaxError(C,["can't assign to literal"])}}
 $get_node(this).bound_before=$B.keys($B.bound[scope.id])
 this.module=scope.module
 this.toString=function(){return '(augm assign) '+this.tree}
@@ -3193,7 +3194,9 @@ case 'augm_assign':
 if(C.expect===','){return new $AbstractExprCtx(new $AugmentedAssignCtx(C,arguments[2]),true)}
 break
 case '=':
-if(C.expect===','){if(C.parent.type==="call_arg"){return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(C.parent.type=="annotation"){return $transition(C.parent.parent,token,arguments[2])}
+if(C.expect===','){if(C.parent.type==="call_arg"){
+if(C.tree[0].type !='id'){$_SyntaxError(C,["keyword can't be an expression"])}
+return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(C.parent.type=="annotation"){return $transition(C.parent.parent,token,arguments[2])}
 while(C.parent!==undefined){C=C.parent
 if(C.type=='condition'){$_SyntaxError(C,'token '+token+' after '+C)}}
 C=C.tree[0]
@@ -7534,8 +7537,8 @@ modsep='.';
 var modobj=$B.imported[_mod_name];
 if(modobj==_b_.None){
 throw _b_.ImportError(_mod_name)}
-else if(modobj===undefined){try{$B.import_hooks(_mod_name,__path__,undefined)}
-catch(err){delete $B.imported[_mod_name]
+else if(modobj===undefined){try{
+$B.import_hooks(_mod_name,__path__,undefined)}catch(err){delete $B.imported[_mod_name]
 $B.imported[_mod_name]=null
 throw err}
 if($B.is_none($B.imported[_mod_name])){throw _b_.ImportError(_mod_name)}
