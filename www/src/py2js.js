@@ -8082,7 +8082,7 @@ function _run_scripts(options) {
         for(var $i=0;$i<options.ipy_id.length;$i++){
             $elts.push(document.getElementById(options.ipy_id[$i]));
         }
-        }else{
+    }else{
         var scripts=document.getElementsByTagName('script'),$elts=[]
         // Freeze the list of scripts here ; other scripts can be inserted on
         // the fly by viruses
