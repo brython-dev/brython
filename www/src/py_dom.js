@@ -1182,7 +1182,7 @@ DOMNodeDict.select_one = function(self, selector){
         throw _b_.TypeError("DOMNode object doesn't support selection by selector")
     }
     var res = self.elt.querySelector(selector)
-    if(res !== null) {
+    if(res === null) {
         return None
     }
     return DOMNode(res)
