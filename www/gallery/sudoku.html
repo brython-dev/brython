@@ -49,29 +49,6 @@ import sudoku
 
 current_cell = None
 
-def solve(ev):
-    line = ''.join(cell.text or ' ' for cell in puzzle.get(selector='TD'))
-    line = line.replace(' ','0')
-    try:
-        solution = sudoku.sudoku99(line)
-        result.clear()
-        result <= make_grid(solution)
-    except:
-        result.clear()
-        result <= "No solution !"
-
-def clear_grid(ev):
-    result.clear()
-    cells = puzzle.get(selector='TD')
-    for cell in cells:
-        cell.text = ' '
-    alert('Enter digits in the puzzle. Use TAB key to navigate')
-    make_input(cells[0])
-
-def change_grid(ev):
-    puzzle.clear()
-    puzzle <= make_grid(choice(grids))
-
 def entry_keypress(ev):
     ev.preventDefault()
     ev.stopPropagation()
@@ -110,7 +87,6 @@ def entry_keydown(ev):
                 next_cell = puzzle.get(selector='TD')[cell_rank - 1]
                 make_input(next_cell)
 
-        
 def end_entry(ev):
     global current_cell
     if current_cell is not None:
@@ -119,7 +95,7 @@ def end_entry(ev):
             value = inputs[0].value
             current_cell.clear()
             current_cell.text = value
-    
+
 def entry(ev):
     end_entry(ev)
     make_input(ev.target)
@@ -140,11 +116,11 @@ def make_input(cell):
     input.focus()
     input.select()
     current_cell = cell
-    
+
 def make_grid (grid):
     # returns an HTML table with 9 rows and 9 columns
     global current_cell
-    
+
     t = html.TABLE()
     for i in range(3):
         cg = html.COLGROUP()
@@ -185,17 +161,41 @@ document <= puzzle
 buttons = html.SPAN(style={"float":"left"})
 
 b_solve = html.BUTTON('Solve')
-b_solve.bind('click', solve)
 buttons <= html.DIV(b_solve)
+
+@b_solve.bind('click')
+def solve(ev):
+    line = ''.join(cell.text or ' ' for cell in puzzle.get(selector='TD'))
+    line = line.replace(' ','0')
+    try:
+        solution = sudoku.sudoku99(line)
+        result.clear()
+        result <= make_grid(solution)
+    except:
+        result.clear()
+        result <= "No solution !"
+
 buttons <= html.P()
 
 b_change = html.BUTTON('Load random grid')
-b_change.bind('click', change_grid)
 buttons <= html.DIV(b_change)
 
+@b_change.bind('click')
+def change_grid(ev):
+    puzzle.clear()
+    puzzle <= make_grid(choice(grids))
+
 b_clear = html.BUTTON('Enter new grid')
-b_clear.bind('click', clear_grid)
 buttons <= html.DIV(b_clear)
+
+@b_clear.bind('click')
+def clear_grid(ev):
+    result.clear()
+    cells = puzzle.get(selector='TD')
+    for cell in cells:
+        cell.text = ' '
+    alert('Enter digits in the puzzle. Use TAB key to navigate')
+    make_input(cells[0])
 
 document <= buttons
 
@@ -206,7 +206,7 @@ document <= result
 
 <h1>Sudoku solver</h1>
 <a href="https://github.com/attractivechaos/plb/blob/master/sudoku/incoming/sudoku-bb.py">Sudoku algorithm</a> by Boris Borcic,
-sample grids from <a href="http://magictour.free.fr/msk_009">http://magictour.free.fr/msk_009</a>, 
+sample grids from <a href="http://magictour.free.fr/msk_009">http://magictour.free.fr/msk_009</a>,
 
 <p>
 </body>

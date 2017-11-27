@@ -26,11 +26,12 @@ TIME_FMT = "%Y/%m/%d %H:%M:%S"
 # ----------------------------------------------------------
 class KanbanException(Exception):
     def __init__(self, msg):
-        Exception.__init__(self, "Kanban Error: %s" % msg)
+        Exception.__init__(self, f"Kanban Error: {msg}")
 
 # ----------------------------------------------------------
 class KanbanModel:
-    def __init__(self, counter=1, schema_revision=None, steps_colors=None, tasks_colors=None, tasks=None):
+    def __init__(self, counter=1, schema_revision=None, steps_colors=None,
+            tasks_colors=None, tasks=None):
         self.schema_revision = schema_revision
         self.counter = int(counter)
         self.steps_colors = list(steps_colors)
@@ -43,9 +44,9 @@ class KanbanModel:
             self.tasks = tasks
 
     def add_step(self, desc, color_id):
-        return self.add_task("root", desc, color_id, 0, prefix="step%d")
+        return self.add_task("root", desc, color_id, 0, prefix="step{}")
 
-    def add_task(self, parent_id, desc, color_id, progress, prefix="task%d"):
+    def add_task(self, parent_id, desc, color_id, progress, prefix="task{}"):
         task_id = self.get_next_id(prefix)
         task = Task(task_id, 0, desc, color_id, progress, [])
         self.tasks[task.id] = task
@@ -74,13 +75,14 @@ class KanbanModel:
         dst_task.add_task(task)
 
     def get_next_id(self, prefix):
-        next_id = prefix % self.counter
+        next_id = prefix.format(self.counter)
         self.counter += 1
         return next_id
 
 # ----------------------------------------------------------
 class Task:
-    def __init__(self, id=None, parent_id=None, desc=None, color_id=None, progress=None, task_ids=None):
+    def __init__(self, id=None, parent_id=None, desc=None, color_id=None,
+            progress=None, task_ids=None):
         self.id = id
         self.parent_id = parent_id
         self.desc = desc
@@ -126,7 +128,7 @@ class KanbanView:
         title = html.PRE(step.desc, Class="step_title")
         header <= title
 
-        count = html.PRE(0, id="%s count" % step.id, Class="step_count")
+        count = html.PRE(0, id=f"{step.id} count", Class="step_count")
         count.text = len(step.task_ids)
         header <= count
 
@@ -149,7 +151,8 @@ class KanbanView:
 
         progress = html.DIV(Class="task_progress")
 
-        progress_text = html.P("%d%%" % task.progress, Class="task_progress_text")
+        progress_text = html.P("%d%%" % task.progress,
+            Class="task_progress_text")
         progress <= progress_text
 
         progress_bar = html.DIV(Class="task_progress_bar")
@@ -157,11 +160,11 @@ class KanbanView:
         progress <= progress_bar
 
         command_delete = html.DIV("X", Class="task_command_delete")
-        command = html.TABLE( html.TR( html.TD(progress, Class="task_command") + html.TD(command_delete) )
-                                , Class="task_command" )
+        command = html.TABLE(html.TR(html.TD(progress, Class="task_command") +
+            html.TD(command_delete)), Class="task_command" )
         node <= command
 
-        desc = html.P(Id="desc %s" % task.id, Class="task_desc")
+        desc = html.P(Id=f"desc {task.id}", Class="task_desc")
         desc.html = task.desc
         node <= desc
 
@@ -172,7 +175,8 @@ class KanbanView:
 
         progress.progress_bar = progress_bar
         progress.progress_text = progress_text
-        progress.bind('click', ev_callback(self.make_task_progress, task, progress))
+        progress.bind('click',
+            ev_callback(self.make_task_progress, task, progress))
 
         command_delete.bind('click', ev_callback(self.remove_task, task))
 
@@ -181,7 +185,7 @@ class KanbanView:
         self.draw_tasks(task, node)
 
     def set_text(self, task):
-        desc = doc["desc %s" % task.id]
+        desc = doc[f"desc {task.id}"]
         clear_node(desc)
         desc.html = task.desc
 
@@ -213,7 +217,7 @@ class KanbanView:
         ev.stopPropagation()
 
         t = time.strftime(TIME_FMT)
-        desc = prompt("New task", "%s %s" % (step.desc, t))
+        desc = prompt("New task", f"{step.desc} {t}")
         if desc:
             task = self.kanban.add_task(step.id, desc, 0, 0)
             self.draw_task(task, node)
@@ -259,16 +263,18 @@ class KanbanView:
 
             try:
                 if kanban is None:
-                    raise KanbanException("could not load data from storage (use 'Save' to initialize it).")
+                    raise KanbanException("could not load data from storage "
+                        "(use 'Save' to initialize it).")
 
                 if kanban.schema_revision != self.kanban.schema_revision:
-                    raise KanbanException("storage schema does not match application schema (use 'Save' to re-initialize it)")
+                    raise KanbanException("storage schema does not match "
+                        "application schema (use 'Save' to re-initialize it)")
 
                 self.kanban = kanban
 
             except KanbanException as e:
                 alert(e.msg)
-            
+
             except:
                 del storage["kanban"]
 
@@ -293,26 +299,20 @@ def percent(p):
 # ----------------------------------------------------------
 def instance_repr(o):
     if isinstance(o, dict):
-        l = []
+        items = []
         for key, value in o.items():
             repr_key = instance_repr(key)
             repr_value = instance_repr(value)
-            l.append( "%s : %s" % (repr_key, repr_value) )
-        s = "{ %s }" % "\n, ".join(l)
+            items.append(f"{repr_key} : {repr_value}")
+        s = "{{ {} }}".format("\n, ".join(items))
 
     elif isinstance(o, list):
-        l = []
-        for i in o:
-            repr_i = instance_repr(i)
-            l.append(repr_i)
-        s = "[ %s ]" % "\n, ".join(l)
+        items = [instance_repr(i) for i in o]
+        s = "[ {} ]".format("\n, ".join(items))
 
     elif isinstance(o, set):
-        l = []
-        for i in o:
-            repr_i = instance_repr(i)
-            l.append(repr_i)
-        s = "{ %s }" % "\n, ".join(l)
+        items = [instance_repr(i) for i in o]
+        s = "{{ {} }}".format("\n, ".join(items))
 
     elif isinstance(o, float):
         s = str(o)
@@ -325,19 +325,19 @@ def instance_repr(o):
 
     else:
         attributes = dir(o)
-        l = []
+        items = []
         for n in attributes:
             if not n.startswith("__"):
                 repr_key = escape_string(n)
                 repr_value = instance_repr( getattr(o, n) )
-                l.append( "%s = %s" % (repr_key, repr_value) )
-        s = "%s( %s )" % (o.__class__.__name__, ", ".join(l))
+                items.append(f"{repr_key} = {repr_value}")
+        s = "{}( {} )".format(o.__class__.__name__, ", ".join(items))
 
     return s
 
 # ----------------------------------------------------------
 def quoted_escape_string(s):
-    s = "'%s'" % escape_string(s)
+    s = "'{}'".format(escape_string(s))
     return s
 
 # ----------------------------------------------------------
@@ -377,9 +377,28 @@ def init_demo(kanban):
     kanban.add_task("step6", 'Project D', 1, 100)
 
 # ----------------------------------------------------------
-kanban = KanbanModel(counter=1, schema_revision=SCHEMA_REVISION, steps_colors=STEPS_COLORS, tasks_colors=TASKS_COLORS)
-init_demo(kanban)
+kanban = KanbanModel(counter=1, schema_revision=SCHEMA_REVISION,
+    steps_colors=STEPS_COLORS, tasks_colors=TASKS_COLORS)
 
-kanban_view = KanbanView(kanban)
-kanban_view.load()
+copyright = """
+    Copyright (c) 2013-2014, Pedro Rodriguez pedro.rodriguez.web@gmail.com
+    All rights reserved.
+    Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+    Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+    Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+    Neither the name of the <ORGANIZATION> nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+ret = confirm( "Click OK to accept condition of use\n\n" + copyright )
+
+if ret:
+    init_demo(kanban)
+
+    kanban_view = KanbanView(kanban)
+    kanban_view.load()
+else:
+    doc.open("about:blank")
+
 

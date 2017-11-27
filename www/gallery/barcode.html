@@ -1,11 +1,11 @@
 <html>
 
 <head>
-
+<meta charset="utf-8">
 <script src="../src/brython.js"></script>
 
 <style>
-    
+
     body { background: indianred }
 
     input, div, h1 { width: 700px; margin: 25px; color: brown }
@@ -37,8 +37,9 @@
 
 <script type=text/python>
 
-from browser import document as doc
+from browser import document
 
+@document['user_in'].bind('keyup')
 def render(event):
 
     '''This function converts its input, a string of decimal digits, into a
@@ -47,9 +48,9 @@ def render(event):
 
     Wikipedia [ITF Format]: http://en.wikipedia.org/wiki/Interleaved_2_of_5
     '''
-    
+
     digits = event.target.value
-    
+
     if len(digits) % 2 != 0: return
     if [ digit for digit in digits if digit not in '0123456789' ]: return
 
@@ -75,7 +76,7 @@ def render(event):
         ones.'''
 
         if i == len(digits): return bits
- 
+
         for odd, even in zip(byte(i), byte(i+1)): bits.extend([odd, even])
 
         return encode(bits, i+2)
@@ -97,9 +98,7 @@ def render(event):
     # is passed to `svg`, which returns a list of SVG element strings
     # that're joined with newlines to create the actual SVG output.
 
-    doc['barcode'].html = '\n'.join(svg(encode([2, 2, 2, 2]) + [4, 2, 2, 0]))
-
-doc['user_in'].bind('keyup', render)
+    document['barcode'].html = '\n'.join(svg(encode([2, 2, 2, 2]) + [4, 2, 2, 0]))
 
 </script>
 
