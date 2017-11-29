@@ -1,0 +1,109 @@
+<html>
+<head>
+<meta charset="utf-8">
+
+<script src="/src/brython.js"></script>
+
+</head>
+<body onload="brython(1)">
+
+<h2 id="title"><py expr="title"/></h2>
+
+<div id="app">
+  <py expr="message"/>
+</div>
+
+<div id="app-2">
+  <span attrs="title=message">
+    Hover your mouse over me for a few seconds
+    to see my dynamically bound title!
+  </span>
+</div>
+
+<div id="app-4">
+  <ol>
+    <py code="for todo in todos:">
+    <li>
+      <py expr="todo"/>
+    </li>
+    </py>
+  </ol>
+</div>
+
+<div id="app-5">
+  <p><py expr="message"/></p>
+  <button b-click="reverse_message">Reverse Message</button>
+  <button b-click="show_message">Show Message</button>
+
+</div>
+
+<div id="app-6">
+  <p>
+  <button b-click="increment">
+      <py expr="counter">
+  </button>
+</div>
+
+<div id="app-7">
+<a attrs="href=hrefs[ix]"><py expr="hrefs[ix]"/></a>
+<button b-click="reset_link">change link</button>
+</div>
+
+<div id="app-8">
+  <ol>
+    <!--
+      Now we provide each todo-item with the todo object
+      it's representing, so that its content can be dynamic.
+      We also need to provide each component with a "key",
+      which will be explained later.
+    -->
+    <todo-item
+      v-for="item in groceryList"
+      v-bind:todo="item"
+      v-bind:key="item.id">
+    </todo-item>
+  </ol>
+</div>
+
+<script type="text/python">
+from browser import document, window
+from browser.template import render, Template
+
+Date = window.Date.new
+
+Template(document['title']).render(message="Brython Template demo")
+
+Template(document['app-2']).render(
+    message="You loaded this page on " + Date().toLocaleString()
+)
+
+Template(document['app-4']).render(
+    todos=['Learn JavaScript', 'Learn Vue', 'Build something awesome']
+)
+
+def reverse_message(elt):
+    elt.data["message"] = elt.data["message"][::-1]
+
+def show_message(elt):
+    print(elt.data["message"])
+
+app_5 = Template(document["app-5"])
+app_5.callbacks = [reverse_message, show_message]
+app_5.render(message="Hello Brython template !")
+
+def increment(element):
+    element.data["counter"] += 1
+
+app6 = Template(document["app-6"], [increment]).render(counter=0)
+
+def reset_link(elt):
+    elt.data["ix"] = 1 - elt.data["ix"]
+
+app7 = Template(document["app-7"], [reset_link])
+app7.render(hrefs=["http://vuejs.org", "http://brython.info"], ix=0)
+</script>
+
+
+<button id="btn2">show a</button>
+</body>
+</html>

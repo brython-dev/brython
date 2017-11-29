@@ -1,11 +1,54 @@
 """Brython templating engine.
-Usage :
 
-from browser.template import render
-render(element, **kw)
+Templates in HTML pages can include:
+
+- Python code blocks:
+
+    <py code="for item in items:">
+        ...
+    </py>
+
+    <py code="if some_value:">
+        ...
+    </py><py code="else:">
+        ...
+    </py>
+
+- Python expressions:
+
+    <py expr="message"/>
+
+- tag attributes:
+
+    <option attrs="value=name, selected=name===expected">
+
+Usage in Brython scripts:
+
+    from browser.template import Template
+
+    def show(element):
+        element.data += 1
+
+    Template(element, callbacks=[show]).render(message=1)
 
 replaces an element with template code by its rendering using the
 key/values in kw.
+
+Elements rendered by the template engine have an attribute "data" set to a
+dictionary with the key-values in the keyword arguments of render().
+
+Callback functions
+------------------
+
+    <button b-click="show">Show item</button>
+
+The tag attribute "b-click" is converted so that a click on the button is
+handled by the function "show". The function takes a single argument, the
+element object.
+
+After a handler function is run, the element is rendered again, with the
+current value of element.data.
+
 """
 import traceback
 import random
@@ -13,17 +56,25 @@ from browser import document, html
 
 class Template:
 
-    def __init__(self, element):
+    def __init__(self, element, callbacks=[]):
         self.element = element
         self.line_mapping = {}
         self.line_num = 1
+        self.indent = 0
+        self.python = ""
         self.bindings = {}
+        self.source = element.html
+        self.parse(element)
+        self.callbacks = callbacks
 
     def add(self, content, elt):
         self.python += content
         self.line_mapping[self.line_num] = elt
         if content.endswith('\n'):
             self.line_num += 1
+
+    def add_indent(self, content, elt):
+        self.add("    " * self.indent + content, elt)
 
     def write(self, content):
         self.html += str(content)+"\n"
@@ -35,8 +86,7 @@ class Template:
                 lines = [line for line in elt.text.split('\n')
                     if line.split()]
                 text = ' '.join(lines).replace('"', '&quot;')
-                self.add("    " * self.indent + '__write__("'
-                    + text + '")\n', elt)
+                self.add_indent ('__write__("' + text + '")\n', elt)
 
         elif hasattr(elt, 'tagName'):
             if elt.tagName == "PY":
@@ -47,37 +97,45 @@ class Template:
                             self.indent += 1
                             is_block = True
                     elif item.name == "expr":
-                        self.add("    " * self.indent +
-                            "__write__(" + item.value + ")\n", elt)
-            elif elt != self.zone:
-                self.add("    " * self.indent + "__write__('<"
-                    + elt.tagName, elt)
-                bindings = {}
+                        self.add_indent("__write__(" + item.value + ")\n",
+                            elt)
+            else:
+                self.add_indent("__write__('<" + elt.tagName, elt)
+                attrs = None
                 elt_id = None
+                bindings = {}
                 for item in elt.attributes:
                     if item.name == "attrs":
-                        # special attribute "attrs" replaced by the key-values
-                        # specified in the value
-                        kw = eval("dict("+item.value+")", self.ns)
-                        for k, v in kw.items():
-                            self.add(' ' + k + '="' + v+ '"', elt)
-                    elif item.name == "events":
-                        bindings = eval("dict(" + item.value + ")", self.ns)
+                        attrs = item.value
+                    elif item.name.startswith("b-"):
+                        elts = item.name.split('-')
+                        if elts[1]:
+                            bindings[elts[1]] = item.value
                     else:
-                        if item.name == "id":
+                        if item.name.lower() == "id":
                             elt_id = item.value
                         self.add(' ' + item.name + '="' + item.value
                             + '"', elt)
-                if bindings:
-                    if elt_id is None:
-                        # add a random id
-                        elt_id = "id_" + "".join(random.choice("0123456789")
-                            for _ in range(10))
-                        self.add(' id="' + elt_id +'"', elt)
+                if elt_id is None:
+                    elt_id = 'id_' + ''.join(random.choice('0123456789')
+                        for _ in range(8))
+                    self.add(' id = "' + elt_id +'"', elt)
 
+                if bindings:
                     self.bindings[elt_id] = bindings
 
-                self.add(">')\n", elt)
+                if attrs:
+                    # special attribute "attrs" replaced by the key-values
+                    # specified in the value
+                    self.add("')\n", elt)
+                    self.add_indent("for k, v in dict(" + item.value +
+                        ").items():\n", elt)
+                    self.add_indent(
+                        """ __write__(' ' + k + '="' + v + '"')\n""",
+                            elt)
+                    self.add_indent("__write__('>')\n", elt)
+                else:
+                    self.add_indent(">')\n", elt)
 
         for child in elt.childNodes:
             self.parse(child)
@@ -85,36 +143,29 @@ class Template:
         if is_block:
             self.indent -= 1
 
-        if hasattr(elt, 'tagName') and elt.tagName not in ['PY', 'BR'] \
-                and elt != self.zone:
-            self.add("    " * self.indent + "__write__('</"
-                + elt.tagName + ">')\n", elt)
+        if hasattr(elt, 'tagName') and elt.tagName not in ['PY', 'BR']:
+            self.add_indent("__write__('</" + elt.tagName + ">')\n", elt)
+
+    def on(self, element, event, callback):
+        def func(evt):
+            callback(self)
+            self.render(**self.data)
+        element.bind(event, func)
 
     def render(self, **ns):
         """Returns the HTML code for the template, with key / values in ns.
         """
-        self.python = ''
-        self.indent = 0
-        self.html = ''
-
-        # create empty DIV to store the content of template file
-        self.zone = html.DIV(style=dict(display="none"))
-        self.zone.html = self.element.html
-        document <= self.zone
-
-        # Generate the Python code to execute
-        self.ns = ns
-        self.parse(self.zone)
-
         # Add name "__write__" to namespace, alias for self.write, used in the
         # generated Python code
-        self.ns.update({'__write__': self.write})
+        self.data = ns
+        ns.update({'__write__': self.write})
+
+        self.html = ""
 
         # Executing the Python code will store HTML code in self.html
         try:
-            exec(self.python, self.ns)
+            exec(self.python, ns)
         except Exception as exc:
-            print(self.python)
             if isinstance(exc, SyntaxError):
                 line_no = exc.args[2]
             else:
@@ -122,20 +173,21 @@ class Template:
             elt = self.line_mapping[line_no]
             for item in elt.attributes:
                 if item.name in ["code", "expr"]:
-                    print(item.value)
+                    print(self.source)
                     print('{}:'.format(exc.__class__.__name__), exc)
-
-        # Remove temporary DIV
-        self.zone.remove()
 
         # replace element content by generated html
         self.element.html = self.html
 
-        print('bindings', self.bindings)
-        for key, bindings in self.bindings.items():
-            print(document[key])
-            for event, callback in bindings.items():
-                document[key].bind(event, callback)
+        # bindings
+        self.element.unbind()
+        callbacks = {}
+        for callback in self.callbacks:
+            callbacks[callback.__name__] = callback
+        for elt_id, bindings in self.bindings.items():
+            element = document[elt_id]
+            for event, func_name in bindings.items():
+                self.on(element, event, callbacks[func_name])
 
 
 def render(element, **kw):
