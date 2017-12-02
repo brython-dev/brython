@@ -924,7 +924,7 @@ DOMNodeDict.closest = function(self, tagName){
         tagName = tagName.toLowerCase()
     while(res.tagName.toLowerCase() != tagName){
         res = res.parentNode
-        if(res===undefined){
+        if(res===undefined || res.tagName===undefined){
             throw _b_.KeyError('no parent of type '+tagName)
         }
     }
