@@ -395,7 +395,7 @@ function $eval(src, _globals, _locals){
         var current_locals_id = current_frame[0].replace(/\./,'_'),
             current_globals_id = current_frame[2].replace(/\./,'_')
     }
-    
+
     var stack_len = $B.frames_stack.length
 
     var is_exec = arguments[3]=='exec',leave = false

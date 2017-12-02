@@ -397,20 +397,6 @@ $DictDict.__repr__ = function(self){
     if(self===undefined) return "<class 'dict'>"
     if(self.$jsobj){ // wrapper around Javascript object
         return $DictDict.__repr__(self.$to_dict())
-        /*
-        var res = []
-        for(var attr in self.$jsobj){
-            if(attr.charAt(0)=='$' || attr=='__class__'){continue}
-            else{
-                try{
-                    res.push("'"+attr+"': "+_b_.repr(self.$jsobj[attr]))
-                }catch(err){
-                    // FIX ME
-                }
-            }
-        }
-        return '{'+res.join(', ')+'}'
-        */
     }
     var res=[],
         pos=0,

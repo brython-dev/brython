@@ -54,6 +54,8 @@ $B.$py_next_hash=Math.pow(2,53)-1
 $B.$py_UUID=0
 $B.lambda_magic=Math.random().toString(36).substr(2,8)
 $B.callbacks={}
+$B.set_func_names=function(klass){var name=klass.__name__
+for(var attr in klass){if(typeof klass[attr]=='function'){klass[attr].$infos={__name__ : name+'.'+attr}}}}
 var has_storage=typeof(Storage)!=="undefined"
 if(has_storage){$B.has_local_storage=false
 try{
@@ -71,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.5"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-11-29 21:35:27.944052"
+__BRYTHON__.compiled_date="2017-12-02 15:08:09.574194"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -4385,6 +4387,8 @@ if(!isNaN(parseInt(attr.charAt(0)))){
 continue}
 if(attr=='__mro__'){continue}
 res[pos++]=attr}}
+for(var attr in self){if(attr.substr(0,2)=='$$'){res[pos++]=attr.substr(2)}
+else if(attr.charAt(0)!='$'){res[pos++]=attr}}
 res=_b_.list(_b_.set(res))
 _b_.list.$dict.sort(res)
 return res}
@@ -4474,11 +4478,13 @@ if(self.__class__.__module__!==undefined){return "<"+self.__class__.__module__+"
 $ObjectDict.__setattr__=function(self,attr,val){if(val===undefined){
 throw _b_.TypeError("can't set attributes of built-in/extension type 'object'")}else if(self.__class__===$ObjectDict){
 if($ObjectDict[attr]===undefined){throw _b_.AttributeError("'object' object has no attribute '"+attr+"'")}else{throw _b_.AttributeError("'object' object attribute '"+attr+"' is read-only")}}
+if($B.aliased_names[attr]){attr='$$'+attr}
 self[attr]=val
 return _b_.None}
 $ObjectDict.__setattr__.__str__=function(){return 'method object.setattr'}
 $ObjectDict.__str__=$ObjectDict.__repr__
 $ObjectDict.__subclasshook__=function(){return _b_.NotImplemented}
+$B.set_func_names($ObjectDict)
 function object(){var res={__class__:$ObjectDict},args=[res].concat(Array.prototype.slice.call(arguments))
 $ObjectDict.__init__.apply(null,args)
 return res}
@@ -4818,6 +4824,7 @@ for(var i=0;i<nb_pos;i++){slots[var_names[i]]=$args[i]}
 if(has_kw_args){for(var key in kw_args){var value=kw_args[key]
 if(slots[key]===undefined){
 if(extra_kw_args){
+if(key.substr(0,2)=='$$'){key=key.substr(2)}
 slots[extra_kw_args].$string_dict[key]=value}else{throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")}}else if(slots[key]!==null){
 throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")}else{
 slots[key]=value}}}
@@ -5182,8 +5189,6 @@ var ropsigns=['+','-','*','/','//','%','**','<<','>>','&','^','|']
 $B.make_rmethods=function(klass){for(var j=0,_len_j=ropnames.length;j < _len_j;j++){if(klass['__'+ropnames[j]+'__']===undefined){
 klass['__'+ropnames[j]+'__']=(function(name,sign){return function(self,other){try{return _b_.getattr(other,'__r'+name+'__')(self)}
 catch(err){$err(sign,klass,other)}}})(ropnames[j],ropsigns[j])}}}
-$B.set_func_names=function(klass){var name=klass.__name__
-for(var attr in klass){if(typeof klass[attr]=='function'){klass[attr].$infos={__name__ : name+'.'+attr}}}}
 $B.UUID=function(){return $B.$py_UUID++}
 $B.InjectBuiltins=function(){var _str=["var _b_=$B.builtins"],pos=1
 for(var $b in $B.builtins)_str[pos++]='var ' + $b +'=_b_["'+$b+'"]'
@@ -11159,7 +11164,7 @@ return res}
 DOMNodeDict.closest=function(self,tagName){
 var res=self.elt,tagName=tagName.toLowerCase()
 while(res.tagName.toLowerCase()!=tagName){res=res.parentNode
-if(res===undefined){throw _b_.KeyError('no parent of type '+tagName)}}
+if(res===undefined ||res.tagName===undefined){throw _b_.KeyError('no parent of type '+tagName)}}
 return DOMNode(res)}
 DOMNodeDict.events=function(self,event){self.$events=self.$events ||{}
 var evt_list=self.$events[event]=self.$events[event]||[],callbacks=[]
