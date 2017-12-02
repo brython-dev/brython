@@ -128,6 +128,16 @@ $B.lambda_magic = Math.random().toString(36).substr(2,8)
 // is triggered by a DOM event
 $B.callbacks = {}
 
+// Set __name__ attribute of klass methods
+$B.set_func_names = function(klass){
+    var name = klass.__name__
+    for(var attr in klass){
+        if(typeof klass[attr] == 'function'){
+            klass[attr].$infos = {__name__ : name+'.'+attr}
+        }
+    }
+}
+
 var has_storage = typeof(Storage)!=="undefined"
 if(has_storage){
     $B.has_local_storage = false
