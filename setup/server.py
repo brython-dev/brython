@@ -10,7 +10,7 @@ import datetime
 import io
 
 import email
-import urllib
+import urllib.parse
 from http import HTTPStatus
 import http.cookiejar
 import http.server as server
@@ -110,6 +110,31 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     def _make_chunk(self, data):
         return f"{len(data):X}".encode("ascii") + b"\r\n" + data + b"\r\n"
+
+    def do_GET(self):
+        """Serve a GET request.
+        Overrides SimpleHTTPRequestHandler method with support of compression
+        and chunked transfer encoding.
+        Cf. Pull Request #2078 on the Github CPython site.
+        """
+        f = self.send_head()
+        if f:
+            try:
+                if hasattr(f, "read"):
+                    self.copyfile(f, self.wfile)
+                else:
+                    # Generator for compressed data
+                    if self.protocol_version >= "HTTP/1.1":
+                        # Chunked Transfer
+                        for data in f:
+                            if data:
+                                self.wfile.write(self._make_chunk(data))
+                        self.wfile.write(self._make_chunk(b''))
+                    else:
+                        for data in f:
+                            self.wfile.write(data)
+            finally:
+                f.close()
 
     def send_head(self):
         """Common code for GET and HEAD commands.
