@@ -74,6 +74,7 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
                 // formal parameters
                 if(extra_kw_args){
                     // If there is a place to store extra keyword arguments
+                    if(key.substr(0, 2)=='$$'){key=key.substr(2)}
                     slots[extra_kw_args].$string_dict[key]=value
                 }else{
                     throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")
@@ -933,16 +934,6 @@ $B.make_rmethods = function(klass){
                     catch(err){$err(sign,klass,other)}
                 }
             })(ropnames[j],ropsigns[j])
-        }
-    }
-}
-
-// Set __name__ attribute of klass methods
-$B.set_func_names = function(klass){
-    var name = klass.__name__
-    for(var attr in klass){
-        if(typeof klass[attr] == 'function'){
-            klass[attr].$infos = {__name__ : name+'.'+attr}
         }
     }
 }
