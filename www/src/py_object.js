@@ -96,6 +96,12 @@ $ObjectDict.__dir__ = function(self) {
             res[pos++]=attr
         }
     }
+
+    // add object's own attributes
+    for(var attr in self){
+        if(attr.substr(0, 2) == '$$'){res[pos++] = attr.substr(2)}
+        else if (attr.charAt(0) != '$'){res[pos++] = attr}
+    }
     res = _b_.list(_b_.set(res))
     _b_.list.$dict.sort(res)
     return res
@@ -362,6 +368,7 @@ $ObjectDict.__setattr__ = function(self,attr,val){
             throw _b_.AttributeError("'object' object attribute '"+attr+"' is read-only")
         }
     }
+    if($B.aliased_names[attr]){attr='$$'+attr}
     self[attr] = val
     return _b_.None
 }
@@ -370,6 +377,9 @@ $ObjectDict.__setattr__.__str__ = function(){return 'method object.setattr'}
 $ObjectDict.__str__ = $ObjectDict.__repr__
 
 $ObjectDict.__subclasshook__ = function(){return _b_.NotImplemented}
+
+// add __str__ and __repr__
+$B.set_func_names($ObjectDict)
 
 // constructor of the built-in class 'object'
 function object(){
