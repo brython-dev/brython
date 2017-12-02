@@ -4,47 +4,48 @@ Templates in HTML pages can include:
 
 - Python code blocks:
 
-    <py code="for item in items:">
+    <tr b-code="for item in items">
         ...
-    </py>
+    </tr>
 
-    <py code="if some_value:">
-        ...
-    </py><py code="else:">
-        ...
-    </py>
 
 - Python expressions:
 
-    <py expr="message"/>
+    <span b-expr="message"/>
 
 - tag attributes:
 
-    <option attrs="value=name, selected=name===expected">
+    <option b-attrs="value=name, selected=name===expected">
 
 Usage in Brython scripts:
 
     from browser.template import Template
 
-    def show(element):
-        element.data += 1
-
-    Template(element, callbacks=[show]).render(message=1)
+    Template(element).render(message="ok")
 
 replaces an element with template code by its rendering using the
 key/values in kw.
 
 Elements rendered by the template engine have an attribute "data" set to a
-dictionary with the key-values in the keyword arguments of render().
+object with attributes set to the keyword arguments of render().
 
 Callback functions
 ------------------
 
-    <button b-click="show">Show item</button>
+    <button b-on="click=increment">Increment</button>
 
-The tag attribute "b-click" is converted so that a click on the button is
-handled by the function "show". The function takes a single argument, the
-element object.
+The tag attribute "b-on" is converted so that a click on the button is
+handled by the function "increment". This function takes two arguments:
+
+    def increment(event, element):
+       element.data.counter += 1
+
+where "event" is the event object.
+
+To make the function available in the element, pass the list of callback
+functions as the second argument of Template():
+
+    Template(element, [increment]).render(counter=0)
 
 After a handler function is run, the element is rendered again, with the
 current value of element.data.
@@ -53,6 +54,26 @@ current value of element.data.
 import traceback
 import random
 from browser import document, html
+
+
+class ElementData:
+
+    def __init__(self, **kw):
+        self.__keys__ = set()
+        for key, value in kw.items():
+            object.__setattr__(self, key, value)
+            self.__keys__.add(key)
+
+    def __setattr__(self, attr, value):
+        object.__setattr__(self, attr, value)
+        self.__keys__.add(attr)
+
+    def to_dict(self):
+        return {k:getattr(self, k) for k in self.__keys__}
+
+class TemplateError(Exception):
+    pass
+
 
 class Template:
 
@@ -63,7 +84,7 @@ class Template:
         self.indent = 0
         self.python = ""
         self.bindings = {}
-        self.source = element.html
+        self.source = element.outerHTML
         self.parse(element)
         self.callbacks = callbacks
 
@@ -89,53 +110,45 @@ class Template:
                 self.add_indent ('__write__("' + text + '")\n', elt)
 
         elif hasattr(elt, 'tagName'):
-            if elt.tagName == "PY":
-                for item in elt.attributes:
-                    if item.name == "code":
-                        self.add(item.value + "\n", elt)
-                        if item.value.rstrip().endswith(':'):
-                            self.indent += 1
-                            is_block = True
-                    elif item.name == "expr":
-                        self.add_indent("__write__(" + item.value + ")\n",
-                            elt)
-            else:
-                self.add_indent("__write__('<" + elt.tagName, elt)
-                attrs = None
-                elt_id = None
-                bindings = {}
-                for item in elt.attributes:
-                    if item.name == "attrs":
-                        attrs = item.value
-                    elif item.name.startswith("b-"):
-                        elts = item.name.split('-')
-                        if elts[1]:
-                            bindings[elts[1]] = item.value
-                    else:
-                        if item.name.lower() == "id":
-                            elt_id = item.value
-                        self.add(' ' + item.name + '="' + item.value
-                            + '"', elt)
-                if elt_id is None:
-                    elt_id = 'id_' + ''.join(random.choice('0123456789')
-                        for _ in range(8))
-                    self.add(' id = "' + elt_id +'"', elt)
-
-                if bindings:
-                    self.bindings[elt_id] = bindings
-
-                if attrs:
-                    # special attribute "attrs" replaced by the key-values
-                    # specified in the value
-                    self.add("')\n", elt)
-                    self.add_indent("for k, v in dict(" + item.value +
-                        ").items():\n", elt)
-                    self.add_indent(
-                        """ __write__(' ' + k + '="' + v + '"')\n""",
-                            elt)
-                    self.add_indent("__write__('>')\n", elt)
+            self.add_indent("__write__('<" + elt.tagName, elt)
+            attrs = None
+            expr = None
+            bindings = {}
+            block = None
+            for item in elt.attributes:
+                if item.name == "b-attrs":
+                    attrs = item.value
+                elif item.name == "b-expr":
+                    expr = item.value
+                elif item.name == "b-code":
+                    block = item.value.rstrip(':') + ':'
                 else:
-                    self.add_indent(">')\n", elt)
+                    self.add(' ' + item.name + '="' + item.value
+                        + '"', elt)
+
+            if bindings:
+                self.bindings[elt_id] = bindings
+
+            if attrs:
+                # special attribute "attrs" replaced by the key-values
+                # specified in the value
+                self.add("')\n", elt)
+                self.add_indent("for k, v in dict(" + item.value +
+                    ").items():\n", elt)
+                self.add_indent(
+                    """ __write__(' ' + k + '="' + v + '"')\n""",
+                        elt)
+                self.add_indent("__write__('>')\n", elt)
+            else:
+                self.add(">')\n", elt)
+
+            if expr:
+                self.add_indent("__write__(" + expr +")\n", elt)
+
+            if block:
+                self.add_indent(block + '\n', elt)
+                self.indent += 1
+                is_block = True
 
         for child in elt.childNodes:
             self.parse(child)
@@ -148,8 +161,8 @@ class Template:
 
     def on(self, element, event, callback):
         def func(evt):
-            callback(self)
-            self.render(**self.data)
+            callback(evt, self)
+            self.render(**self.data.to_dict())
         element.bind(event, func)
 
     def render(self, **ns):
@@ -157,8 +170,9 @@ class Template:
         """
         # Add name "__write__" to namespace, alias for self.write, used in the
         # generated Python code
-        self.data = ns
         ns.update({'__write__': self.write})
+
+        self.data = ElementData(**ns)
 
         self.html = ""
 
@@ -172,7 +186,7 @@ class Template:
                 line_no = exc.traceback.tb_lineno
             elt = self.line_mapping[line_no]
             for item in elt.attributes:
-                if item.name in ["code", "expr"]:
+                if item.name in ["b-code", "b-expr"]:
                     print(self.source)
                     print('{}:'.format(exc.__class__.__name__), exc)
 
@@ -184,11 +198,12 @@ class Template:
         callbacks = {}
         for callback in self.callbacks:
             callbacks[callback.__name__] = callback
-        for elt_id, bindings in self.bindings.items():
-            element = document[elt_id]
-            for event, func_name in bindings.items():
+        for element in self.element.select("*[b-on]"):
+            bindings = element.getAttribute("b-on")
+            bindings = bindings.split(',')
+            for binding in bindings:
+                parts = binding.split('=')
+                if not len(parts) == 2:
+                    raise TemplateError(f"wrong binding: {binding}")
+                event, func_name = [x.strip() for x in parts]
                 self.on(element, event, callbacks[func_name])
-
-
-def render(element, **kw):
-    Template(element).render(**kw)

@@ -2,15 +2,14 @@
 <head>
 <meta charset="utf-8">
 
-<script src="/src/brython.js"></script>
+<script type="text/javascript" src="/src/brython.js"></script>
 
 </head>
 <body onload="brython(1)">
 
-<h2 id="title"><py expr="title"/></h2>
+<h2 id="title" b-expr="title"></h2>
 
-<div id="app">
-  <py expr="message"/>
+<div id="app" b-expr="message">
 </div>
 
 <div id="app-2">
@@ -21,32 +20,28 @@
 </div>
 
 <div id="app-4">
-  <ol>
-    <py code="for todo in todos:">
-    <li>
-      <py expr="todo"/>
-    </li>
-    </py>
+  <ol b-code="for todo in todos:">
+    <li b-expr="todo">
   </ol>
 </div>
 
 <div id="app-5">
-  <p><py expr="message"/></p>
-  <button b-click="reverse_message">Reverse Message</button>
-  <button b-click="show_message">Show Message</button>
+  <p b-expr="message">
+  <button b-on="click=reverse_message">Reverse Message</button>
+  <button b-on="click=show_message">Show Message</button>
 
 </div>
 
 <div id="app-6">
   <p>
-  <button b-click="increment">
-      <py expr="counter">
+  <button b-on="click=increment">
+      <span b-expr="counter">
   </button>
 </div>
 
 <div id="app-7">
-<a attrs="href=hrefs[ix]"><py expr="hrefs[ix]"/></a>
-<button b-click="reset_link">change link</button>
+<a attrs="href=hrefs[ix]"><span b-expr="hrefs[ix]"></a>
+<button b-on="click=reset_link">change link</button>
 </div>
 
 <div id="app-8">
@@ -67,11 +62,11 @@
 
 <script type="text/python">
 from browser import document, window
-from browser.template import render, Template
+from browser.template import Template
 
 Date = window.Date.new
 
-Template(document['title']).render(message="Brython Template demo")
+Template(document['title']).render(title="Brython Template demo")
 
 Template(document['app-2']).render(
     message="You loaded this page on " + Date().toLocaleString()
@@ -81,23 +76,23 @@ Template(document['app-4']).render(
     todos=['Learn JavaScript', 'Learn Vue', 'Build something awesome']
 )
 
-def reverse_message(elt):
-    elt.data["message"] = elt.data["message"][::-1]
+def reverse_message(evt, elt):
+    elt.data.message = elt.data.message[::-1]
 
-def show_message(elt):
-    print(elt.data["message"])
+def show_message(evt, elt):
+    print(elt.data.message)
 
 app_5 = Template(document["app-5"])
 app_5.callbacks = [reverse_message, show_message]
 app_5.render(message="Hello Brython template !")
 
-def increment(element):
-    element.data["counter"] += 1
+def increment(evt, element):
+    element.data.counter += 1
 
 app6 = Template(document["app-6"], [increment]).render(counter=0)
 
-def reset_link(elt):
-    elt.data["ix"] = 1 - elt.data["ix"]
+def reset_link(evt, elt):
+    elt.data.ix = 1 - elt.data.ix
 
 app7 = Template(document["app-7"], [reset_link])
 app7.render(hrefs=["http://vuejs.org", "http://brython.info"], ix=0)
