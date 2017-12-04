@@ -2,46 +2,80 @@
 <head>
 <meta charset="utf-8">
 
-<script type="text/javascript" src="/src/brython.js"></script>
+<script type="text/javascript" src="../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../src/version_info.js"></script>
+<script type="text/javascript" src="../src/py2js.js"></script>
+<script type="text/javascript" src="../src/py_object.js"></script>
+<script type="text/javascript" src="../src/py_type.js"></script>
+<script type="text/javascript" src="../src/py_utils.js"></script>
+<script type="text/javascript" src="../src/py_sort.js"></script>
+<script type="text/javascript" src="../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../src/py_exceptions.js"></script>
+<script type="text/javascript" src="../src/py_range_slice.js"></script>
+<script type="text/javascript" src="../src/py_bytes.js"></script>
+<script type="text/javascript" src="../src/py_set.js"></script>
+<script type="text/javascript" src="../src/js_objects.js"></script>
+<script type="text/javascript" src="../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../src/py_import.js"></script>
+<script type="text/javascript" src="../src/unicode.min.js"></script>
+<script type="text/javascript" src="../src/py_string.js"></script>
+<script type="text/javascript" src="../src/py_int.js"></script>
+<script type="text/javascript" src="../src/py_long_int.js"></script>
+<script type="text/javascript" src="../src/py_float.js"></script>
+<script type="text/javascript" src="../src/py_complex.js"></script>
+<script type="text/javascript" src="../src/py_dict.js"></script>
+<script type="text/javascript" src="../src/py_list.js"></script>
+<script type="text/javascript" src="../src/py_generator.js"></script>
+<script type="text/javascript" src="../src/py_dom.js"></script>
+
+<script type="text/javascript" src="../src/builtin_modules.js"></script>
+<script type="text/javascript" src="../src/py_import_hooks.js"></script>
+
 
 </head>
 <body onload="brython(1)">
 
-<h2 id="title" b-expr="title"></h2>
+<h2 id="title">{title}</h2>
 
 <div id="app" b-expr="message">
 </div>
 
 <div id="app-2">
-  <span attrs="title=message">
+  <span title="{message}">
     Hover your mouse over me for a few seconds
     to see my dynamically bound title!
   </span>
 </div>
 
+<div id="app-3">
+    <select b-code="for name in names">
+        <option value="{name}" selected="{name==selected}">{name}
+    </select>
+</div>
+
 <div id="app-4">
   <ol b-code="for todo in todos:">
-    <li b-expr="todo">
+    <li>{todo}
   </ol>
 </div>
 
 <div id="app-5">
-  <p b-expr="message">
-  <button b-on="click=reverse_message">Reverse Message</button>
-  <button b-on="click=show_message">Show Message</button>
+  {message}
+  <button b-on="click:reverse_message">Reverse Message</button>
+  <button b-on="click:show_message">Show Message</button>
 
 </div>
 
 <div id="app-6">
   <p>
-  <button b-on="click=increment">
-      <span b-expr="counter">
+  <button b-on="click:increment">
+      {counter}
   </button>
 </div>
 
 <div id="app-7">
-<a attrs="href=hrefs[ix]"><span b-expr="hrefs[ix]"></a>
-<button b-on="click=reset_link">change link</button>
+<a href="{hrefs[ix]}">{hrefs[ix]}</a>
+<button b-on="click:reset_link">change link</button>
 </div>
 
 <div id="app-8">
@@ -72,11 +106,17 @@ Template(document['app-2']).render(
     message="You loaded this page on " + Date().toLocaleString()
 )
 
+Template(document["app-3"]).render(
+    names = ['jean', 'jacques', 'pierre', 'paul'],
+    selected="pierre"
+)
+
 Template(document['app-4']).render(
     todos=['Learn JavaScript', 'Learn Vue', 'Build something awesome']
 )
 
 def reverse_message(evt, elt):
+    print('reverse message', dir(elt.data))
     elt.data.message = elt.data.message[::-1]
 
 def show_message(evt, elt):

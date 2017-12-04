@@ -11,11 +11,11 @@ Templates in HTML pages can include:
 
 - Python expressions:
 
-    <span b-expr="message"/>
+    {message}
 
 - tag attributes:
 
-    <option b-attrs="value=name, selected=name===expected">
+    <option value="{name}", selected="{name===expected}">
 
 Usage in Brython scripts:
 
@@ -52,7 +52,7 @@ current value of element.data.
 
 """
 import traceback
-import random
+import json
 from browser import document, html
 
 
@@ -66,10 +66,23 @@ class ElementData:
 
     def __setattr__(self, attr, value):
         object.__setattr__(self, attr, value)
-        self.__keys__.add(attr)
+        if attr != '__keys__':
+            self.__keys__.add(attr)
 
     def to_dict(self):
         return {k:getattr(self, k) for k in self.__keys__}
+
+    def clone(self):
+        return ElementData(**self.to_dict())
+
+    def __eq__(self, other):
+        print(self.__keys__, other.__keys__)
+        if self.__keys__ != other.__keys__:
+            return False
+        for key in self.__keys__:
+            if getattr(self, key) != getattr(other, key):
+                return False
+        return True
 
 class TemplateError(Exception):
     pass
@@ -87,6 +100,7 @@ class Template:
         self.source = element.outerHTML
         self.parse(element)
         self.callbacks = callbacks
+        self.data_cache = None
 
     def add(self, content, elt):
         self.python += content
@@ -107,43 +121,31 @@ class Template:
                 lines = [line for line in elt.text.split('\n')
                     if line.split()]
                 text = ' '.join(lines).replace('"', '&quot;')
-                self.add_indent ('__write__("' + text + '")\n', elt)
+                text = '"""' + text + '"""'
+                if "{" in text:
+                    text = "f" + text
+                self.add_indent ('__write__(' + text + ')\n', elt)
 
         elif hasattr(elt, 'tagName'):
-            self.add_indent("__write__('<" + elt.tagName, elt)
-            attrs = None
-            expr = None
+            self.add_indent("__write__('<" + elt.tagName +"')\n", elt)
             bindings = {}
             block = None
             for item in elt.attributes:
-                if item.name == "b-attrs":
-                    attrs = item.value
-                elif item.name == "b-expr":
-                    expr = item.value
-                elif item.name == "b-code":
+                if item.name == "b-code":
                     block = item.value.rstrip(':') + ':'
                 else:
-                    self.add(' ' + item.name + '="' + item.value
-                        + '"', elt)
+                    value = item.value.replace('\n', '')
+                    if "{" in value:
+                        attr = ("__render_attr__('" + item.name + "', f'" +
+                            value + "')\n")
+                    else:
+                        attr = "__write__(' " + item.name + '= "' + value +'"\')\n'
+                    self.add_indent(attr, elt)
+
+            self.add_indent("__write__('>')\n", elt)
 
             if bindings:
                 self.bindings[elt_id] = bindings
-
-            if attrs:
-                # special attribute "attrs" replaced by the key-values
-                # specified in the value
-                self.add("')\n", elt)
-                self.add_indent("for k, v in dict(" + item.value +
-                    ").items():\n", elt)
-                self.add_indent(
-                    """ __write__(' ' + k + '="' + v + '"')\n""",
-                        elt)
-                self.add_indent("__write__('>')\n", elt)
-            else:
-                self.add(">')\n", elt)
-
-            if expr:
-                self.add_indent("__write__(" + expr +")\n", elt)
 
             if block:
                 self.add_indent(block + '\n', elt)
@@ -161,18 +163,29 @@ class Template:
 
     def on(self, element, event, callback):
         def func(evt):
+            cache = self.data.clone()
+            print('cache', cache.__keys__, dir(self.data))
             callback(evt, self)
-            self.render(**self.data.to_dict())
+            print('after callback', cache.__keys__)
+            if self.data != cache:
+                self.render(**self.data.to_dict())
         element.bind(event, func)
+
+    def render_attr(self, name, value):
+        if isinstance(value, bool):
+            self.html += '' if not value else ' ' + name
+        else:
+            self.html += ' ' + name + '="' + str(value) + '"'
 
     def render(self, **ns):
         """Returns the HTML code for the template, with key / values in ns.
         """
         # Add name "__write__" to namespace, alias for self.write, used in the
         # generated Python code
-        ns.update({'__write__': self.write})
-
         self.data = ElementData(**ns)
+
+        ns.update({'__write__': self.write,
+            '__render_attr__': self.render_attr})
 
         self.html = ""
 
@@ -186,9 +199,10 @@ class Template:
                 line_no = exc.traceback.tb_lineno
             elt = self.line_mapping[line_no]
             for item in elt.attributes:
-                if item.name in ["b-code", "b-expr"]:
+                if item.name in ["b-code", "b-expr", "b-attrs"]:
                     print(self.source)
-                    print('{}:'.format(exc.__class__.__name__), exc)
+            print(exc.__class__.__name__, exc)
+            return
 
         # replace element content by generated html
         self.element.html = self.html
@@ -198,11 +212,12 @@ class Template:
         callbacks = {}
         for callback in self.callbacks:
             callbacks[callback.__name__] = callback
+
         for element in self.element.select("*[b-on]"):
             bindings = element.getAttribute("b-on")
             bindings = bindings.split(',')
             for binding in bindings:
-                parts = binding.split('=')
+                parts = binding.split(':')
                 if not len(parts) == 2:
                     raise TemplateError(f"wrong binding: {binding}")
                 event, func_name = [x.strip() for x in parts]
