@@ -1549,8 +1549,11 @@ function setattr(){
 }
 
 $B.$setattr = function(obj, attr, value){
-
-    if($B.aliased_names[attr]){attr = '$$'+attr}
+    if($B.aliased_names[attr]){
+        attr = '$$' + attr
+    }else if(attr.substr(0,2) == '$$' && $B.aliased_names[attr.substr(2)]){
+        attr = attr.substr(2)
+    }
     else if(attr=='__class__'){
         // Setting the attribute __class__ : value is the factory function,
         // we must set __class__ to the class dictionary
