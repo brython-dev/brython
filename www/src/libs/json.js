@@ -1,13 +1,21 @@
 var $module = (function($B){
 
 return  {
-    loads : function(json_obj){
-        return $B.jsobject2pyobject(JSON.parse(json_obj))
+    loads : function(){
+        var $ = $B.args('loads', 1, {obj:null}, ['obj'], arguments, {},
+            null, null)
+        return $B.jsobject2pyobject(JSON.parse($.obj))
     },
-    load : function(file_obj){
-        return $module.loads(file_obj.$content);
+    load : function(){
+        var $ = $B.args('load', 1, {obj:null}, ['obj'], arguments, {},
+            null, null)
+        return $module.loads(obj.$content);
     },
-    dumps : function(obj){return JSON.stringify($B.pyobject2jsobject(obj))},
+    dumps : function(){
+        var $ = $B.args('dumps', 1, {obj:null}, ['obj'], arguments, {},
+            null, null)
+        return JSON.stringify($B.pyobject2jsobject($.obj))
+    },
 }
 
 })(__BRYTHON__)
