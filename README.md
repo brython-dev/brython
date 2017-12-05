@@ -5,7 +5,7 @@
 brython
 =======
 
-Brython (Browser Python) is an implementation of Python 3 running in the 
+Brython (Browser Python) is an implementation of Python 3 running in the
 browser, with an interface to the DOM elements and events.
 
 Here is a simple example of an HTML page running Python:
@@ -57,8 +57,8 @@ Getting started
 ===============
 Zero install !
 --------------
-The most simple way to get started, without anything to install, is to use the 
-distribution available online through [rawgit](https://rawgit.com/). You can 
+The most simple way to get started, without anything to install, is to use the
+distribution available online through [rawgit](https://rawgit.com/). You can
 either choose the latest stable release :
 
 ```xml
@@ -70,14 +70,14 @@ either choose the latest stable release :
 or the current development version :
 
 ```xml
-<script type="text/javascript" 
+<script type="text/javascript"
     src="https://cdn.rawgit.com/brython-dev/brython/master/www/src/brython.js">
 </script>
 ```
 
 The previous code will allow you to use raw python code, but if you import
-modules from the standard library this will be slow as they are implemented 
-using ajax calls. Besides __brython.js__ you can load a single javascript file 
+modules from the standard library this will be slow as they are implemented
+using ajax calls. Besides __brython.js__ you can load a single javascript file
 with the [available stdlib](https://github.com/brython-dev/brython/tree/master/www/src/Lib):
 
 ```xml
@@ -89,7 +89,7 @@ with the [available stdlib](https://github.com/brython-dev/brython/tree/master/w
 or the current development version :
 
 ```xml
-<script type="text/javascript" 
+<script type="text/javascript"
     src="https://cdn.rawgit.com/brython-dev/brython/master/www/src/brython_stdlib.js">
 </script>
 ```
@@ -108,15 +108,15 @@ then create a new directory and run
 python -m brython --install
 ```
 
-or by loading the latest version of the Brython zip file from the 
+or by loading the latest version of the Brython zip file from the
 [releases page](https://github.com/brython-dev/brython/releases).
 
 In both cases, the distribution includes __brython.js__ (the core Brython engine)
 and __brython_stdlib.js__ (a bundle of all the files in the standard distribution).
 
-It also includes the page __demo.html__ that shows a few examples of how you 
-can interact with a web page using Python as the scripting language : create 
-new elements, access and modify existing elements, create graphics, animations, 
+It also includes the page __demo.html__ that shows a few examples of how you
+can interact with a web page using Python as the scripting language : create
+new elements, access and modify existing elements, create graphics, animations,
 send Ajax requests, etc.
 
 Test Brython online
@@ -141,14 +141,17 @@ You can read the docs in [English](http://brython.info/doc/en/index.html),
 [French](http://brython.info/doc/fr/index.html) and
 [Spanish](http://brython.info/doc/es/index.html).
 
-The most updated docs usually are the English and French versions so if you 
+The most updated docs usually are the English and French versions so if you
 want to be up-to-date, please, use these versions.
 
 Curious about [how Brython works](https://github.com/brython-dev/brython/wiki/How%20Brython%20works) ?
 
+A [tutorial](https://github.com/brython-dev/brython/wiki/Writing-an-Android-application)
+explains how to build Android applications with Brython.
+
 Community (questions, feedback, issues, new features, ...)
 ==========================================================
-You can subscribe and post to the 
+You can subscribe and post to the
 [mailing list](https://groups.google.com/forum/?fromgroups=#!forum/brython "Brython Main Mailing List").
 
 If you find a bug/issue or do you want to see a new feature in Brython, please,
