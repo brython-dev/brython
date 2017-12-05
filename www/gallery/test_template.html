@@ -116,7 +116,6 @@ Template(document['app-4']).render(
 )
 
 def reverse_message(evt, elt):
-    print('reverse message', dir(elt.data))
     elt.data.message = elt.data.message[::-1]
 
 def show_message(evt, elt):

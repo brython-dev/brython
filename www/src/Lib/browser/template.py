@@ -32,7 +32,7 @@ object with attributes set to the keyword arguments of render().
 Callback functions
 ------------------
 
-    <button b-on="click=increment">Increment</button>
+    <button b-on="click:increment">Increment</button>
 
 The tag attribute "b-on" is converted so that a click on the button is
 handled by the function "increment". This function takes two arguments:
@@ -55,6 +55,18 @@ import traceback
 import json
 from browser import document, html
 
+def copy(obj):
+    if isinstance(obj, dict):
+        res = {}
+        for key, value in obj.items():
+            res[key] = copy(value)
+        return res
+    elif isinstance(obj, (list, tuple)):
+        return obj[:]
+    elif isinstance(obj, set):
+        return {x for x in obj}
+    else:
+        return obj
 
 class ElementData:
 
@@ -73,16 +85,8 @@ class ElementData:
         return {k:getattr(self, k) for k in self.__keys__}
 
     def clone(self):
-        return ElementData(**self.to_dict())
+        return copy(self.to_dict())
 
-    def __eq__(self, other):
-        print(self.__keys__, other.__keys__)
-        if self.__keys__ != other.__keys__:
-            return False
-        for key in self.__keys__:
-            if getattr(self, key) != getattr(other, key):
-                return False
-        return True
 
 class TemplateError(Exception):
     pass
@@ -164,11 +168,10 @@ class Template:
     def on(self, element, event, callback):
         def func(evt):
             cache = self.data.clone()
-            print('cache', cache.__keys__, dir(self.data))
             callback(evt, self)
-            print('after callback', cache.__keys__)
-            if self.data != cache:
-                self.render(**self.data.to_dict())
+            new_data = self.data.to_dict()
+            if new_data != cache:
+                self.render(**new_data)
         element.bind(event, func)
 
     def render_attr(self, name, value):
@@ -215,7 +218,7 @@ class Template:
 
         for element in self.element.select("*[b-on]"):
             bindings = element.getAttribute("b-on")
-            bindings = bindings.split(',')
+            bindings = bindings.split(';')
             for binding in bindings:
                 parts = binding.split(':')
                 if not len(parts) == 2:
