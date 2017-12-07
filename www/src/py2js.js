@@ -1916,6 +1916,9 @@ function $DefCtx(context){
     // store id of enclosing functions
     this.enclosing = []
     var scope = this.scope = $get_scope(this)
+    if(scope.context && scope.context.tree[0].type=="class"){
+        this.class_name=scope.context.tree[0].name
+    }
 
     // For functions inside classes, the parent scope is not the class body
     // but the block where the class is defined
@@ -2339,6 +2342,12 @@ function $DefCtx(context){
         var __name__ = this.name
         if(__name__.substr(0, 15)=='lambda_'+$B.lambda_magic){__name__="<lambda>"}
         js = '    __name__:"' + __name__ + '",'
+        node.parent.insert(rank+offset++, $NodeJS(js))
+
+        // Add attribute __qualname__
+        var __qualname__ = __name__
+        if(this.class_name){__qualname__ = this.class_name + '.' + __name__}
+        js = '    __qualname__:"' + __qualname__ + '",'
         node.parent.insert(rank+offset++, $NodeJS(js))
 
         // Add attribute __defaults__
@@ -4121,14 +4130,15 @@ function $OpCtx(context,op){
         if(comps[this.op]!==undefined){
             var method=comps[this.op]
             if(this.tree[0].type=='expr' && this.tree[1].type=='expr'){
-                var t0=this.tree[0].tree[0],t1=this.tree[1].tree[0]
+                var t0=this.tree[0].tree[0], t1=this.tree[1].tree[0],
+                    js0 = t0.to_js(), js1=t1.to_js()
                 switch(t1.type) {
                   case 'int':
                     switch (t0.type) {
                       case 'int':
                         if(t0.value>$B.min_int && t0.value<$B.max_int &&
                             t1.value>$B.min_int && t1.value<$B.max_int){
-                                return t0.to_js()+this.op+t1.to_js()
+                                return js0+this.op+js1
                         }else{
                             return 'getattr('+this.tree[0].to_js()+',"__'+
                                 method+'__")('+this.tree[1].to_js()+')'
@@ -4136,10 +4146,10 @@ function $OpCtx(context,op){
                       case 'str':
                         return '$B.$TypeError("unorderable types: int() < str()")'
                       case 'id':
-                        var res = 'typeof '+t0.to_js()+'=="number" ? '
-                        res += t0.to_js()+this.op+t1.to_js()+' : '
-                        res += 'getattr('+this.tree[0].to_js()
-                        res += ',"__'+method+'__")('+this.tree[1].to_js()+')'
+                        var res = 'typeof ' + js0 + '=="number" ? '+ js0 +
+                            this.op+js1+' : $B.rich_comp("__'+method+'__",'+
+                            this.tree[0].to_js()+','+
+                            this.tree[1].to_js()+')'
                         return res
                     }
 
@@ -4147,23 +4157,23 @@ function $OpCtx(context,op){
                   case 'str':
                     switch(t0.type) {
                       case 'str':
-                        return t0.to_js()+this.op+t1.to_js()
+                        return js0+this.op+js1
                       case 'int':
                         return '$B.$TypeError("unorderable types: str() < int()")'
                       case 'id':
-                        var res = 'typeof '+t0.to_js()+'=="string" ? '
-                        res += t0.to_js()+this.op+t1.to_js()+' : '
-                        res += 'getattr('+this.tree[0].to_js()
-                        res += ',"__'+method+'__")('+this.tree[1].to_js()+')'
+                        var res = 'typeof ' + js0 + '=="string" ? ' + js0 +
+                            this.op+js1+' : $B.rich_comp("__'+method+'__",'+
+                            this.tree[0].to_js()+','+
+                            this.tree[1].to_js()+')'
                         return res
                     }
                     break;
                   case 'id':
                     if(t0.type=='id'){
-                        var res = 'typeof '+t0.to_js()+'!="object" && '+
-                            'typeof '+t0.to_js()+'==typeof '+t1.to_js() +
-                            ' ? '+t0.to_js()+this.op+t1.to_js()+' : ' +
-                            '$B.rich_comp("__'+method+'__",' +
+                        var res = 'typeof '+js0+'!="object" && typeof '+js0+
+                            '!="function" && typeof '+js0+'==typeof '+js1 +
+                            ' ? '+js0+this.op+js1+' : $B.rich_comp("__'+
+                            method+'__",' +
                             this.tree[0].to_js()+','+this.tree[1].to_js()+')'
                         return res
                     }
