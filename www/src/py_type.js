@@ -228,7 +228,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
 
     // set functions defined in metaclass dictionary as class methods, except __new__
     for(var member in metaclass.$dict){
-       if(typeof metaclass.$dict[member]=='function' && member != '__new__'){
+       if(typeof metaclass.$dict[member]=='function' && member != '__new__' && member !="__str__"){
           metaclass.$dict[member].$type='classmethod'
        }
     }
@@ -270,6 +270,7 @@ $B.make_method = function(attr, klass, func){
                 __class__:klass.$factory,
                 __func__:func,
                 __name__:attr,
+                __qualname__:klass.__name__+'.'+attr,
                 __self__:instance
             }
 
@@ -300,7 +301,8 @@ $B.make_method = function(attr, klass, func){
             class_method.$infos = {
                 __class__:klass.$factory,
                 __func__:func,
-                __name__:attr
+                __name__:attr,
+                __qualname__:klass.__name__+'.'+attr
             }
 
             return class_method
@@ -514,14 +516,14 @@ function method_wrapper(attr, klass, method){
     }
     return method
 }
+
+$B.$type.__repr__ = $B.$type.__str__ = function(self){
+    return "<class '" + self.$dict.__name__ +"'>"
+}
 // DRo Begin/End - Added metaclassed as flag during class construction
 $B.$type.__getattribute__=function(klass, attr, metaclassed){
 
     switch(attr) {
-      // DRo BEGIN -- there is now a specific type.__call__
-      // case '__call__':
-      //  return $instance_creator(klass)
-      // DRo END
       case '__eq__':
         return method_wrapper(attr, klass,
             function(other){return klass.$factory===other})
@@ -577,6 +579,7 @@ $B.$type.__getattribute__=function(klass, attr, metaclassed){
                 res = v
             }
         }
+
 
         if(res===undefined){
             // search a method __getattr__
@@ -635,30 +638,20 @@ $B.$type.__getattribute__=function(klass, attr, metaclassed){
             return res1
         }
 
+
         if(typeof res1=='function'){
-            res.__name__ = attr
             // method
-            var __self__,__func__=res1,__repr__,__str__, args
             switch (res.$type) {
                 case undefined:
                 case 'function':
                 case 'instancemethod':
-                    // function called from a class
-                    args = []
-                    __repr__ = __str__ = function(attr){
-                        return function(){
-                            if(klass.$native){
-                                return "<method '"+attr+"' of '"+
-                                    klass.__name__+"' objects>"
-                            }
-                            return '<function '+klass.__name__+'.'+attr+'>'
-                        }
-                    }(attr)
-                    break;
+                case 'staticmethod':
+                    return res
                 case 'classmethod':
                     // class method : called with the class as first argument
                     // DRo Begin - metaclassed indicates the classmethod is
                     // being requested during class construction
+                    var args
                     if(metaclassed === undefined) {
                         args = [klass.$factory]
                     } else {
@@ -675,53 +668,34 @@ $B.$type.__getattribute__=function(klass, attr, metaclassed){
                         }
                     }
                     // DRo End
-                    __self__ = klass
-                    __repr__ = __str__ = function(){
-                        var x = '<built-in method '+klass.__name__+'.'+attr
-                        x += ' of '+klass.__name__+'>'
-                        return x
-                    }
-                    break;
-                case 'staticmethod':
-                    // static methods have no __self__ or __func__
-                    args = []
-                    __repr__ = __str__ = function(attr){
+                    var cl_method = (function(initial_args){
                         return function(){
-                            return '<function '+klass.__name__+'.'+attr+'>'
+                            // class method
+                            // make a local copy of initial args
+                            var local_args = initial_args.slice(),
+                                pos=local_args.length
+                            for(var i=0;i < arguments.length;i++){
+                                local_args[pos++]=arguments[i]
+                            }
+                            var result = res.apply(null, local_args)
+                            return result
                         }
-                    }(attr)
-                    break;
+                    })(args)
+                    cl_method.__class__ = $B.$MethodDict
+                    cl_method.$infos = {
+                        __self__: klass.$factory,
+                        __func__: res,
+                        __name__: attr,
+                        __qualname__: klass.__name__ + '.' + attr
+                    }
+                    return cl_method
             } // switch
-
-            // return a method that adds initial args to the function
-            // arguments
-            var method = (function(initial_args, attr){
-                    return function(){
-                        // class method
-                        // make a local copy of initial args
-                        var local_args = initial_args.slice(),
-                            pos=local_args.length
-                        for(var i=0;i < arguments.length;i++){
-                            local_args[pos++]=arguments[i]
-                        }
-                        return res.apply(null, local_args)
-                    }})(args, attr)
-            method.__class__ = $B.$FunctionDict
-            method.__eq__ = function(other){
-                return other.__func__ === __func__
-            }
-            for(var attr in res){method[attr]=res[attr]}
-            method.__func__ = __func__
-            method.__repr__ = __repr__
-            method.__self__ = __self__
-            method.__str__ = __str__
-            method.__code__ = {'__class__': $B.CodeDict}
-            method.__doc__ = res.__doc__ || ''
-            method.im_class = klass
-            return method
         }
+
     }
 }
+
+$B.set_func_names($B.$type)
 
 
 function $instance_creator(klass){
@@ -825,12 +799,6 @@ $B.$MethodDict.__getattribute__ = function(self, attr){
     // Internal attributes __name__, __func__, __self__ etc.
     // are stored in self.$infos
     var infos = self.$infos
-    switch(attr){
-        case "__func__":
-        case "__self__":
-            return infos[attr]
-    }
-    infos = infos.__func__.$infos
     if(infos && infos[attr]){
         if(attr=='__code__'){
             var res = {__class__:$B.$CodeDict}
@@ -841,6 +809,9 @@ $B.$MethodDict.__getattribute__ = function(self, attr){
         }else{
             return infos[attr]
         }
+    }else if(infos && infos.__func__ && infos.__func__.$infos &&
+            infos.__func__.$infos[attr]){ // eg __doc__
+        return infos.__func__.$infos[attr]
     }else{
         return _b_.object.$dict.__getattribute__(self, attr)
     }
@@ -848,10 +819,11 @@ $B.$MethodDict.__getattribute__ = function(self, attr){
 
 $B.$MethodDict.__mro__=[_b_.object.$dict]
 $B.$MethodDict.__repr__ = $B.$MethodDict.__str__ = function(self){
-    return '<bound method '+self.$infos.__class__.$dict.__name__+'.'+
-        self.$infos.__name__+' of '+_b_.str(self.$infos.__self__)+'>'
+    return '<bound method '+self.$infos.__qualname__+'.'+
+       ' of '+ _b_.str(self.$infos.__self__)+'>'
 }
 $MethodFactory.$dict = $B.$MethodDict
+$B.set_func_names($B.$MethodDict)
 
 $B.$InstanceMethodDict = {__class__:$B.$type,
     __name__:'instancemethod',
