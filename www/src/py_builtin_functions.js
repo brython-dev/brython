@@ -10,8 +10,7 @@ var $ObjectDict = _b_.object.$dict,
 
 // maps comparison operator to method names
 $B.$comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
-// maps comparison operator to name of inverse operator (eg < for >)
-$B.$inv_comps = {'>': 'lt', '>=': 'le', '<': 'gt', '<=': 'gt'}
+$B.$inv_comps = {'>': 'lt', '>=': 'le', '<': 'gt', '<=': 'ge'}
 
 function check_nb_args(name, expected, got){
     // Check the number of arguments
@@ -402,6 +401,9 @@ function $eval(src, _globals, _locals){
 
     if(src.__class__===$B.$CodeObjectDict){
         src = src.source
+    }else if(typeof src !== 'string'){
+        throw _b_.TypeError("eval() arg 1 must be a string, bytes "+
+            "or code object")
     }
 
     // code will be run in a specific block
@@ -541,7 +543,6 @@ function $eval(src, _globals, _locals){
         }
 
         js = root.to_js()
-
         var res = eval(js)
 
         gns = eval('$locals_'+globals_id)
@@ -667,7 +668,6 @@ $B.show_getattr = function(){
 
 function getattr(obj,attr,_default){
 
-    //if(obj===undefined){console.log('get attr', attr, 'of undefined')}
     var len = arguments.length
     if(len<2){throw _b_.TypeError("getattr expected at least 2 arguments, "
         + "got "+len)}
@@ -679,6 +679,7 @@ function getattr(obj,attr,_default){
     if($B.aliased_names[attr]){attr = '$$'+attr}
 
     var klass = obj.__class__
+    //if(attr=="__repr__"){console.log('get attr', attr, 'of', obj, 'klass', klass)}
 
     if(klass===undefined){
         // avoid calling $B.get_class in simple cases for performance
@@ -830,6 +831,7 @@ function getattr(obj,attr,_default){
     }
 
     var is_class = klass.is_class, mro, attr_func
+
 
     if(is_class){
         attr_func=$B.$type.__getattribute__
@@ -1330,20 +1332,8 @@ function next(obj){
         "' object is not an iterator")
 }
 
-
-function _NotImplemented(){return {__class__:_NotImplemented.$dict}}
-_NotImplemented.__class__ = $B.$factory
-
-_NotImplemented.$dict = {
-    $factory: _NotImplemented,
-    __class__: $B.$type,
-    __name__: 'NotImplementedType'
-}
-_NotImplemented.$dict.__mro__ = [$ObjectDict]
-
-var NotImplemented = {__class__ : _NotImplemented.$dict,
-    __str__: function(){return 'NotImplemented'}
-}
+var $NotImplemented = $B.make_class({__name__:"NotImplementedClass"}),
+    NotImplemented = $NotImplemented()
 
 function $not(obj){return !bool(obj)}
 
@@ -1579,15 +1569,7 @@ $B.$setattr = function(obj, attr, value){
     if(obj.__class__===$B.$factory){
         // Setting attribute of a class means updating the class
         // dictionary, not the class factory function
-        if(obj.$dict.$methods && typeof value=='function'
-            && value.__class__!==$B.$factory
-            && value.__class__!==$B.$MethodDict // issue #576
-            ){
-            // update attribute $methods
-            obj.$dict.$methods[attr] = $B.make_method(attr, obj.$dict, value,
-                value)
-            return None
-        }else{obj.$dict[attr]=value;return None}
+        obj.$dict[attr]=value;return None
     }
 
     var res = obj[attr],
@@ -2094,6 +2076,10 @@ $FunctionDict.__dir__ = function(self){
     return Object.keys(infos).concat(Object.keys(attrs))
 }
 
+$FunctionDict.__eq__ = function(self, other){
+    return self === other
+}
+
 $FunctionDict.__getattribute__ = function(self, attr){
     // Internal attributes __name__, __module__, __doc__ etc.
     // are stored in self.$infos
@@ -2118,7 +2104,7 @@ $FunctionDict.__getattribute__ = function(self, attr){
 }
 
 $FunctionDict.__repr__=$FunctionDict.__str__ = function(self){
-    return '<function '+self.$infos.__name__+'>'
+    return '<function '+self.$infos.__qualname__+'>'
 }
 
 $FunctionDict.__mro__ = [$ObjectDict]

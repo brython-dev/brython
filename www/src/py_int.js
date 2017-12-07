@@ -448,7 +448,9 @@ for(var $op in $ops){
 
 // comparison methods
 var $comp_func = function(self,other){
-    if (other.__class__ === $B.LongInt.$dict) {return $B.LongInt.$dict.__lt__(other, $B.LongInt(self))}
+    if (other.__class__ === $B.LongInt.$dict) {
+        return $B.LongInt.$dict.__lt__(other, $B.LongInt(self))
+    }
     if(isinstance(other,int)) return self.valueOf() > other.valueOf()
     if(isinstance(other,_b_.float)) return self.valueOf() > other.valueOf()
     if(isinstance(other,_b_.bool)) {
@@ -465,7 +467,7 @@ var $comp_func = function(self,other){
     throw _b_.TypeError(
         "unorderable types: int() > "+$B.get_class(other).__name__+"()")
 }
-$comp_func += '' // source codevar $comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
+$comp_func += '' // source code
 
 for(var $op in $B.$comps){
     eval("$IntDict.__"+$B.$comps[$op]+'__ = '+

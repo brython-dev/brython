@@ -310,10 +310,11 @@ $B.$search = function(name, global_ns){
 }
 
 $B.$global_search = function(name){
-    // search in global namespace
+    // search in all namespaces above current stack frame
     for(var i=$B.frames_stack.length-1; i>=0; i--){
         var frame = $B.frames_stack[i]
         if(frame[3][name]!==undefined){return frame[3][name]}
+        if(frame[1][name]!==undefined){return frame[1][name]}
     }
     throw _b_.NameError("name '"+$B.from_alias(name)+"' is not defined")
 }
@@ -1290,6 +1291,8 @@ $B.gt = function(x,y){
 
 var reversed_op = {'__lt__': '__gt__', '__le__':'__ge__',
     '__gt__': '__lt__', '__ge__': '__le__'}
+var method2comp = {'__lt__': '<', '__le__': '<=', '__gt__': '>',
+    '__ge__': '>='}
 
 $B.rich_comp = function(op, x, y){
     var x1 = x.valueOf(),
@@ -1321,7 +1324,7 @@ $B.rich_comp = function(op, x, y){
         // left operand’s method has priority."
         if(y.__class__.__mro__.indexOf(x.__class__)>-1){
             rev_op = reversed_op[op] || op
-            res =  _b_.getattr(y, rev_op)(x)
+            res = _b_.getattr(y, rev_op)(x)
             if ( res !== _b_.NotImplemented ) return res
             compared = true
         }
@@ -1332,7 +1335,16 @@ $B.rich_comp = function(op, x, y){
     rev_op = reversed_op[op] || op
     res =  _b_.getattr(y, rev_op)(x)
     if ( res !== _b_.NotImplemented ) return res
-    return false;
+    // If both operands return NotImplemented, return False if the operand is
+    // __eq__, True if it is __ne__, raise TypeError otherwise
+    if(op=='__eq__'){return _b_.False}
+    else if(op=='__ne__'){return _b_.True}
+    
+    if(x.__class__===$B.$factory){x=x.__class__}
+    if(y.__class__===$B.$factory){y=y.__class__}
+    throw _b_.TypeError("'"+method2comp[op]+"' not supported between " +
+        "instances of '" + $B.get_class(x).__name__+ "' and '" +
+        $B.get_class(y).__name__+"'")
 }
 
 $B.is_none = function (o) {

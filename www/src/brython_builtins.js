@@ -133,7 +133,7 @@ $B.set_func_names = function(klass){
     var name = klass.__name__
     for(var attr in klass){
         if(typeof klass[attr] == 'function'){
-            klass[attr].$infos = {__name__ : name+'.'+attr}
+            klass[attr].$infos = {__qualname__ : name+'.'+attr, __name__:attr}
         }
     }
 }

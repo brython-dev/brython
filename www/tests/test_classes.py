@@ -9,7 +9,7 @@ class bar(baz):
 
 class truc:
     machin = 99
-    
+
 class foo(bar,truc):
  def test(self):
   return 'test in foo'
@@ -55,7 +55,7 @@ try:
     raise ValueError('__add__ should raise NotImplementedError')
 except NotImplementedError:
     pass
-    
+
 # __call__
 
 class StaticCall():
@@ -162,6 +162,36 @@ assert (c == c)                     # The second call to __eq__ should succeed
 assert ReflectedSuccess.count == 2
 assert (a == c)
 assert (c == a)
+
+class Tester:
+
+    def __init__(self, name):
+        self.name = name
+
+    def __eq__(self, other):
+        print('use eq on', self.name)
+        return NotImplemented
+
+    def __ne__(self, other):
+        print('use ne')
+        return NotImplemented
+
+    def __le__(self, other):
+        print('use le on', self.name)
+        return NotImplemented
+
+    def __ge__(self, other):
+        print('use ge on', self.name)
+        return NotImplemented
+
+assert not (Tester('a') == Tester('b'))
+assert Tester('a') != Tester('b')
+
+try:
+    Tester('x') >= Tester('y')
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
 
 
 print('passed all tests..')

@@ -33,26 +33,6 @@ var $ObjectDict = {
     $native:true
 }
 
-// Function for comparison operators
-// In a<b, if b defines __gt__, use b.__gt__(a)
-var reverse_func = {'__lt__':'__gt__',
-    '__gt__':'__lt__',
-    '__le__': '__ge__',
-    '__ge__': '__le__'
-}
-var $ObjectNI = function(name,op){
-    return function(self, other){
-        var klass = $B.get_class(other),
-            other_comp = _b_.getattr(klass, reverse_func[name])
-        if(other_comp.__func__===$ObjectDict[reverse_func[name]]){
-            throw _b_.TypeError('unorderable types: object() '+op+
-                ' '+ _b_.str($B.get_class(other).__name__)+'()')
-        }else{
-            return other_comp(other, self)
-        }
-    }
-}
-
 // Name of special methods : if they are not found as attributes, try
 // the "reflected" attribute on the argument
 // For instance, for "getattr(x,'__mul__')", if object x has no attribute
@@ -127,7 +107,7 @@ $ObjectDict.__format__ = function(){
     return _b_.getattr($.self, '__repr__')()
 }
 
-$ObjectDict.__ge__ = $ObjectNI('__ge__','>=')
+$ObjectDict.__ge__ = function(){return _b_.NotImplemented}
 
 $ObjectDict.__getattribute__ = function(obj,attr){
 
@@ -140,12 +120,6 @@ $ObjectDict.__getattribute__ = function(obj,attr){
     if(res===undefined){
         // search in classes hierarchy, following method resolution order
         function check(obj, kl, attr){
-            if(kl.$methods){
-                var method = kl.$methods[attr]
-                if(method!==undefined){
-                    return method(obj)
-                }
-            }
             var v=kl[attr]
             if(v!==undefined){
                 return v
@@ -252,7 +226,6 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                     return res
                 }
 
-
                 // instance method object
                 return $B.make_method(attr, klass, res)(obj)
 
@@ -308,7 +281,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
     }
 }
 
-$ObjectDict.__gt__ = $ObjectNI('__gt__','>')
+$ObjectDict.__gt__ = function(){return _b_.NotImplemented}
 
 $ObjectDict.__hash__ = function (self) {
     var hash = self.__hashvalue__
@@ -331,9 +304,9 @@ $ObjectDict.__init__ = function(){
     throw _b_.TypeError("object() takes no parameters")
 }
 
-$ObjectDict.__le__ = $ObjectNI('__le__','<=')
+$ObjectDict.__le__ = function(){return _b_.NotImplemented}
 
-$ObjectDict.__lt__ = $ObjectNI('__lt__','<')
+$ObjectDict.__lt__ = function(){return _b_.NotImplemented}
 
 $ObjectDict.__mro__ = []
 
@@ -343,7 +316,8 @@ $ObjectDict.__new__ = function(cls){
 }
 
 $ObjectDict.__ne__ = function(self,other){
-    return !_b_.getattr(self, '__eq__')(other)
+    var eq = _b_.getattr(self, "__eq__")
+    return !eq(other)
 }
 
 $ObjectDict.__repr__ = function(self){

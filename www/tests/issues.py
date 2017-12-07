@@ -1560,6 +1560,39 @@ res = f(3, *[1, 8], 5, y=2, **{'a': 0}, **{'z': 3})
 assert res[0] == (3, 1, 8, 5)
 assert res[1] == {'y': 2, 'a': 0, 'z': 3}
 
+# issue 702
+def f():
+    return
+
+try:
+    f > 5
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+try:
+    min <= 'a'
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+import random
+try:
+    random.random < 1
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+class A:
+    pass
+
+try:
+    A < 'x'
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
