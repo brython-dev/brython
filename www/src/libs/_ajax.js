@@ -25,7 +25,7 @@ function ajax1(){
         }
     }
     return {
-        __class__: ajax.$dict, 
+        __class__: ajax.$dict,
         js: xmlhttp,
         headers: {}
     }
@@ -44,7 +44,9 @@ function ajax(){
     xmlhttp.onreadystatechange = function(){
         // here, "this" refers to xmlhttp
         var state = this.readyState
-        res.js.text = this.responseText
+        if(this.responseType == "" || this.responseType=="text"){
+            res.js.text = this.responseText
+        }
         var timer = this.$requestTimer
         if(state===0 && this.onuninitialized){this.onuninitialized(res)}
         else if(state===1 && this.onloading){this.onloading(res)}
@@ -56,7 +58,7 @@ function ajax(){
         }
     }
     var res = {
-        __class__: ajax.$dict, 
+        __class__: ajax.$dict,
         js: xmlhttp,
         headers: {}
     }
@@ -78,7 +80,7 @@ ajax.$dict = {
     __class__:$B.$type,
     __name__:'ajax',
     $factory: ajax,
-    
+
     __getattribute__ : function(self, attr){
         // Special case for send : accept dict as parameters
         if(attr=='send'){
@@ -89,10 +91,10 @@ ajax.$dict = {
         // Otherwise default to JSObject method
         return $B.JSObject.$dict.__getattribute__(self, attr)
     },
-    
+
     __repr__ : function(self){return '<object Ajax>'},
     __str__ : function(self){return '<object Ajax>'},
-    
+
     bind : function(self, evt, func){
         // req.bind(evt,func) is the same as req.onevt = func
         self.js['on'+evt] = function(){
@@ -113,7 +115,7 @@ ajax.$dict = {
         }
         return $N
     },
-    
+
     send : function(self,params){
         // params can be Python dictionary or string
         //self.js.onreadystatechange = function(ev){console.log(ev.target)}
@@ -153,12 +155,12 @@ ajax.$dict = {
         self.js.send(res)
         return $N
     },
-    
+
     set_header : function(self,key,value){
         self.js.setRequestHeader(key,value)
         self.headers[key.toLowerCase()] = value.toLowerCase()
     },
-    
+
     set_timeout : function(self,seconds,func){
         self.js.$requestTimer = setTimeout(
             function() {self.js.abort();func()},
