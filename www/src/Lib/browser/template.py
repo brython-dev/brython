@@ -102,7 +102,6 @@ class Template:
         self.python = ""
         self.source = element.outerHTML
         self.parse(element)
-        print(self.python)
         self.callbacks = callbacks
         self.data_cache = None
 
