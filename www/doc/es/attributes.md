@@ -1,7 +1,7 @@
 Atributos y métodos de los elementos
 ------------------------------------
 
-Los elementos contenidos en una página tienen atributos y métodos que dependen del tipo de elemento ; 
+Los elementos contenidos en una página tienen atributos y métodos que dependen del tipo de elemento ;
 los define el W3C y se pueden encontrar en muchos sitios de internet
 
 Debido a que sus nombres pueden variar dependiendo del navegador, Brython define atributos adicionales que funcionan en todos los casos :
@@ -52,6 +52,22 @@ Debido a que sus nombres pueden variar dependiendo del navegador, Brython define
 </tr>
 
 <tr>
+<td>*select*</td><td>método</td>
+<td>`elt.select(css_selector)` : una lista con todos los elementos que
+descienden de elt cuyo selector CSS coincide con `css_selector`
+</td>
+<td>-</td>
+</tr>
+
+<tr>
+<td>*select_one*</td>
+<td>método</td>
+<td>`elt.select_one(css_selector)`: el elemento que
+descienden de elt cuyo selector CSS coincide con `css_selector`, si no `None`</td>
+<td>-</td>
+</tr>
+
+<tr>
 <td>*text*</td><td>string</td><td>el texto dentro de un elemento</td><td>R/W</td>
 </tr>
 
@@ -67,7 +83,7 @@ Debido a que sus nombres pueden variar dependiendo del navegador, Brython define
 
 (1) Cuando se va hacia arriba en el árbol del DOM, paramos en el primero padre cuyo atributo
 `style.position` se encuentra asignado a un valor diferente a "static". `left` y `top` se
-computan como `style.left` y `style.top` pero son enteros en lugar de cadenas que acaban con 
+computan como `style.left` y `style.top` pero son enteros en lugar de cadenas que acaban con
 `px`.
 
 (2) Lo mismo que `style.height` y `style.width` pero como enteros.
@@ -77,7 +93,7 @@ Para añadir un hijo a un elemento se usa el operador `<=` (piensa en ello como 
 >    from browser import document, html
 >    document['zone'] <= html.INPUT(Id="data")
 
-La iteración sobre los hijos de un elemento se puede hacer usando la sintaxis Python habitual : 
+La iteración sobre los hijos de un elemento se puede hacer usando la sintaxis Python habitual :
 
 >    for child in element:
 >        (...)

@@ -73,6 +73,13 @@ for `doc`)</td><td>R</td>
 </tr>
 
 <tr>
+<td>*select_one*</td>
+<td>method</td>
+<td>`elt.select_one(css_selector)` returns the elements matching the specified CSS selector, otherwise `None`</td>
+<td>-</td>
+</tr>
+
+<tr>
 <td>*text*</td><td>string</td><td>the text inside the element</td><td>R/W</td>
 </tr>
 

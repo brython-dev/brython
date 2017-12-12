@@ -63,6 +63,13 @@ Comme le nom des attributs peut être différent d'un navigateur à l'autre, Bry
 </tr>
 
 <tr>
+<td>*select_one*</td>
+<td>méthode</td>
+<td>`elt.select_one(css_selector)` renvoie l'élément correspondant au sélecteur CSS spécifié, sinon `None`</td>
+<td>-</td>
+</tr>
+
+<tr>
 <td>*text*</td><td>chaine</td><td>le texte contenu dans l'élément</td><td>L/E</td>
 </tr>
 
