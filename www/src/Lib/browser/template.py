@@ -100,9 +100,9 @@ class Template:
         self.line_num = 1
         self.indent = 0
         self.python = ""
-        self.bindings = {}
         self.source = element.outerHTML
         self.parse(element)
+        print(self.python)
         self.callbacks = callbacks
         self.data_cache = None
 
@@ -131,9 +131,9 @@ class Template:
                 self.add_indent ('__write__(' + text + ')\n', elt)
 
         elif hasattr(elt, 'tagName'):
-            self.add_indent("__write__('<" + elt.tagName +"')\n", elt)
-            bindings = {}
+            start_tag = "__write__('<" + elt.tagName +"')\n"
             block = None
+            attrs = []
             for item in elt.attributes:
                 if item.name == "b-code":
                     block = item.value.rstrip(':') + ':'
@@ -144,26 +144,28 @@ class Template:
                             value + "')\n")
                     else:
                         attr = "__write__(' " + item.name + '= "' + value +'"\')\n'
-                    self.add_indent(attr, elt)
-
-            self.add_indent("__write__('>')\n", elt)
-
-            if bindings:
-                self.bindings[elt_id] = bindings
+                    attrs.append(attr)
+            end_tag = "__write__('>')\n"
 
             if block:
                 self.add_indent(block + '\n', elt)
                 self.indent += 1
                 is_block = True
 
+            self.add_indent(start_tag, elt)
+            for attr in attrs:
+                self.add_indent(attr, elt)
+
+            self.add_indent(end_tag, elt)
+
         for child in elt.childNodes:
             self.parse(child)
 
+        if hasattr(elt, 'tagName'):
+            self.add_indent("__write__('</" + elt.tagName + ">')\n", elt)
+
         if is_block:
             self.indent -= 1
-
-        if hasattr(elt, 'tagName') and elt.tagName not in ['PY', 'BR']:
-            self.add_indent("__write__('</" + elt.tagName + ">')\n", elt)
 
     def on(self, element, event, callback):
         def func(evt):
@@ -202,7 +204,7 @@ class Template:
                 line_no = exc.traceback.tb_lineno
             elt = self.line_mapping[line_no]
             for item in elt.attributes:
-                if item.name in ["b-code", "b-expr", "b-attrs"]:
+                if item.name == "b-code":
                     print(self.source)
             print(exc.__class__.__name__, exc)
             return

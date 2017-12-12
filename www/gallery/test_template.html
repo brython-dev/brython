@@ -48,14 +48,14 @@
 </div>
 
 <div id="app-3">
-    <select b-code="for name in names">
-        <option value="{name}" selected="{name==selected}">{name}
+    <select>
+        <option b-code="for name in names" value="{name}" selected="{name==selected}">{name}
     </select>
 </div>
 
 <div id="app-4">
-  <ol b-code="for todo in todos:">
-    <li>{todo}
+  <ol>
+    <li  b-code="for todo in todos:">{todo}
   </ol>
 </div>
 
@@ -78,21 +78,6 @@
 <button b-on="click:reset_link">change link</button>
 </div>
 
-<div id="app-8">
-  <ol>
-    <!--
-      Now we provide each todo-item with the todo object
-      it's representing, so that its content can be dynamic.
-      We also need to provide each component with a "key",
-      which will be explained later.
-    -->
-    <todo-item
-      v-for="item in groceryList"
-      v-bind:todo="item"
-      v-bind:key="item.id">
-    </todo-item>
-  </ol>
-</div>
 
 <script type="text/python">
 from browser import document, window
@@ -135,9 +120,8 @@ def reset_link(evt, elt):
 
 app7 = Template(document["app-7"], [reset_link])
 app7.render(hrefs=["http://vuejs.org", "http://brython.info"], ix=0)
+
 </script>
 
-
-<button id="btn2">show a</button>
 </body>
 </html>
