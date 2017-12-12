@@ -16,7 +16,7 @@ def print_exc(file=sys.stderr):
         file.write('\n  '+offset*' '+'^')
     else:
         file.write(exc.info)
-    msg = exc.__class__.__name__ + ':'
+    msg = exc.__class__.__name__ + ': '
     try:
         msg += str(exc)
     except:

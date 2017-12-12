@@ -21,9 +21,10 @@ $B.$raise= function(arg){
 
 $B.$syntax_err_line = function(exc,module,pos,line_num) {
     // map position to line number
-    var pos2line = {}
-    var lnum=1
-    var src = $B.$py_src[module]
+    var pos2line = {},
+        lnum=1,
+        src = $B.$py_src[module],
+        module = module.charAt(0) == '$' ? '<string>' : module
     if(src===undefined){
         console.log('no src for', module)
         exc.$line_info = line_num+','+module
@@ -40,10 +41,10 @@ $B.$syntax_err_line = function(exc,module,pos,line_num) {
         }
         exc.$line_info = line_num+','+module
 
-        var lines = src.split('\n')
-        var line = lines[line_num-1]
-        var lpos = pos-line_pos[line_num]
-        var len=line.length
+        var lines = src.split('\n'),
+            line = lines[line_num-1],
+            lpos = pos-line_pos[line_num],
+            len=line.length
         line=line.replace(/^\s*/,'')
         lpos-=len-line.length
         exc.args = _b_.tuple([$B.$getitem(exc.args,0), module, line_num, lpos, line])
@@ -216,7 +217,6 @@ $BaseExceptionDict.__new__ = function(cls){
 }
 
 $BaseExceptionDict.__getattr__ = function(self, attr){
-
     if(attr=='info'){
 
         var name = self.__class__.__name__

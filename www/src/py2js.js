@@ -6437,6 +6437,10 @@ function $transition(context,token){
           case 'int':
           case 'float':
           case 'imaginary':
+            if(context.value=="print"){
+                $_SyntaxError(context,
+                    ["missing parenthesis in call to 'print'"])
+            }
             $_SyntaxError(context,'token '+token+' after '+context)
         }
           if(context.value=="async"){
@@ -7887,7 +7891,7 @@ function run_script(script){
         var $trace = _b_.getattr($err,'info')
         if(name=='SyntaxError' || name=='IndentationError'){
             var offset = $err.args[3]
-            $trace += '\n' + ' '.repeat(offset) + '^' +
+            $trace += '\n    ' + ' '.repeat(offset) + '^' +
                 '\n' + name+': '+$err.args[0]
 
         }else{
