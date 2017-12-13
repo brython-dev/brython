@@ -209,9 +209,11 @@ $ListDict.__imul__ = function() {
 }
 
 $ListDict.__init__ = function(self,arg){
-    var len_func = getattr(self,'__len__'),pop_func=getattr(self,'pop')
-    while(len_func()) pop_func()
-
+    var len_func = getattr(self,'__len__'),
+        pop_func=getattr(self,'pop',_b_.None)
+    if(pop_func !== _b_.None){
+        while(len_func()) pop_func()
+    }
     if(arg===undefined) return $N
     var arg = $B.$iter(arg)
     var next_func = getattr(arg,'__next__')

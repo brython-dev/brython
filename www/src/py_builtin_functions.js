@@ -1184,8 +1184,10 @@ function map(){
     var $ = $B.args('map', 2, {func: null, it1:null}, ['func', 'it1'],
         arguments, {}, 'args', null),
         func = getattr($.func,'__call__')
-    var iter_args = [$B.$iter($.it1)], pos=0
-    for(var i=0;i<$.args.length;i++){iter_args[pos++]=$B.$iter($.args[i])}
+    var iter_args = [$B.$iter($.it1)]
+    for(var i=0;i<$.args.length;i++){
+        iter_args.push($B.$iter($.args[i]))
+    }
     var __next__ = function(){
         var args = [], pos=0
         for(var i=0;i<iter_args.length;i++){

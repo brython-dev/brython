@@ -36,9 +36,14 @@ assert a.bar == 1
 assert a.bash == 2
 assert repr(a) == 'foo(bar=1, bash=2, bing=3)'
 
+# issue 725
+A = collections.namedtuple('A', ('x', 'y'))
+a = A(0, 0)
+d = dict({'x': 1})
+b = a._replace(**d)
+assert b.x == 1
+
 # iteration on deque
 
 d = collections.deque([1, 6, 2, 4])
 assert list(d) == [1, 6, 2, 4]
-
-

@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-12-13 16:09:52.368577"
+__BRYTHON__.compiled_date="2017-12-13 22:45:17.447568"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -5917,8 +5917,8 @@ var $MapDict={__class__:$B.$type,__name__:'map'}
 $MapDict.__mro__=[$ObjectDict]
 $MapDict.__iter__=function(self){return self}
 function map(){var $=$B.args('map',2,{func: null,it1:null},['func','it1'],arguments,{},'args',null),func=getattr($.func,'__call__')
-var iter_args=[$B.$iter($.it1)],pos=0
-for(var i=0;i<$.args.length;i++){iter_args[pos++]=$B.$iter($.args[i])}
+var iter_args=[$B.$iter($.it1)]
+for(var i=0;i<$.args.length;i++){iter_args.push($B.$iter($.args[i]))}
 var __next__=function(){var args=[],pos=0
 for(var i=0;i<iter_args.length;i++){args[pos++]=next(iter_args[i])}
 return func.apply(null,args)}
@@ -9128,8 +9128,8 @@ var x=$B.$GetInt($.x),len=$.self.length,pos=len
 if(x==0){$ListDict.clear($.self);return $.self}
 for(var i=1;i < x;i++){for(j=0;j<len;j++){$.self[pos++]=$.self[j]}}
 return $.self}
-$ListDict.__init__=function(self,arg){var len_func=getattr(self,'__len__'),pop_func=getattr(self,'pop')
-while(len_func())pop_func()
+$ListDict.__init__=function(self,arg){var len_func=getattr(self,'__len__'),pop_func=getattr(self,'pop',_b_.None)
+if(pop_func !==_b_.None){while(len_func())pop_func()}
 if(arg===undefined)return $N
 var arg=$B.$iter(arg)
 var next_func=getattr(arg,'__next__')
