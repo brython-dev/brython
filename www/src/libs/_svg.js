@@ -69,7 +69,7 @@ function makeTagDict(tagName){
                 if(value!==false){
                     // option.selected=false sets it to true :-)
                     try{
-                        arg = arg.toLowerCase().replace('_','-')
+                        arg = arg.replace('_','-')
                         self.elt.setAttributeNS(null,arg,value)
                     }catch(err){
                         throw ValueError("can't set attribute "+arg)
