@@ -283,6 +283,16 @@ $ListDict.__repr__ = function(self){
     return '['+_r.join(', ')+']'
 }
 
+$ListDict.__setattr__ = function(self, attr, value){
+    if($ListDict.hasOwnProperty(attr)){
+        throw _b_.AttributeError("'list' object attribute '" + attr +
+            "' is read-only")
+    }else{
+        throw _b_.AttributeError("'list' object has no attribute '" +
+            attr + "'")
+    }
+}
+
 $ListDict.__setitem__ = function(){
     var $=$B.args('__setitem__',3,{self:null,key:null,value:null},
         ['self','key','value'],arguments,{},null,null),
@@ -671,6 +681,11 @@ for(var $attr in $ListDict){
             }
         })($attr)
     }
+}
+
+// Special case for __setattr__ : allowed for list subclasses
+$ListSubclassDict.__setattr__ = function(self, attr, value){
+    self[attr] = value
 }
 
 $ListSubclassDict.__mro__ = [$ObjectDict]

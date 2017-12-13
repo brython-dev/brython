@@ -47,4 +47,28 @@ assert x[1] == 'r'
 assert 'r' in x
 assert 'rty' not in x
 
+
+
+# issue 364
+class A(list):
+    def __init__(self, x):
+        list.__init__(self, x)
+
+z = A([1,2,3])
+assert isinstance(z, A)
+assert z == [1, 2, 3]
+assert len(z) == 3
+assert list.__len__(z) == 3
+
+# issue 724
+t = [2]
+try:
+    t.foo = 8
+    raise Exception("sould have raised AttributeError")
+except AttributeError:
+    pass
+
+z.foo = 5
+assert z.foo == 5
+
 print("passed all tests..")

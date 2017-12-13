@@ -1177,7 +1177,7 @@ DOMNodeDict.select = function(self, selector){
 }
 
 DOMNodeDict.select_one = function(self, selector){
-    // alias for get(selector=...)
+    // return the element matching selector, or None
     if(self.elt.querySelector===undefined){
         throw _b_.TypeError("DOMNode object doesn't support selection by selector")
     }

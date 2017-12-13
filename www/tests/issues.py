@@ -737,17 +737,6 @@ FULL_ENTEAN_ALPHABET =  "AZYXEWVTISRLPNOMQKJHUGFDCB"
 tran_tab = str.maketrans(FULL_ENGLISH_ALPHABET, FULL_ENTEAN_ALPHABET, 'sh')
 assert "PETEshelley".translate(tran_tab) == "MEHEelley"
 
-# issue 364
-class A(list):
-    def __init__(self, x):
-        list.__init__(self, x)
-
-z = A([1,2,3])
-assert isinstance(z, A)
-assert z == [1, 2, 3]
-assert len(z) == 3
-assert list.__len__(z) == 3
-
 # issue 363
 a = float('nan')
 b = 1
