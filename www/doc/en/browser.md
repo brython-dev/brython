@@ -18,22 +18,26 @@ The package **browser** groups the built-in Brython-specific names and modules
 **browser**.`DOMNode`
 > the class of DOM nodes
 
-**browser**.`load(`_script\_url[,names]_`)`
-> Load the Javascript script at address _script\_url_ and loads the list of
-> _names_ in the program namespace.
+**browser**.`load(`_script\_url_`)`
+> Load the Javascript library at address _script\_url_.
 
 > This function uses a blocking Ajax call. It must be used when one can't
-> load the Javascript library in the html page by 
-> `<script src="prog.js"></script>`. 
+> load the Javascript library in the html page by
+> `<script src="prog.js"></script>`.
+
+> The names inserted by the library inside the global Javascript namespace
+> are available in the Brython script as attributes of the `window` object.
 
 > For instance, the module **jqueryui** in Brython standard library
-> provides an interface with the Javascript library jQueryUI. To use it in a 
+> provides an interface with the Javascript library jQueryUI. To use it in a
 > Brython script, you simply write `import jqueryui` without inserting the
 > Javascript libraries in the page. It's the module **jqueryui** that
 > loads them, using this function `load()`
 
 **browser**.`prompt(`_message[,default]_`)`
-> a function that prints the _message_ in a window, and an entry field. Returns the entered value ; if no value was entered, return _default_ if defined, else the empty string
+> a function that prints the _message_ in a window, and an entry field.
+> Returns the entered value ; if no value was entered, return _default_ if 
+> defined, else the empty string
 
 **browser**.`window`
 > an object that represents the browser window

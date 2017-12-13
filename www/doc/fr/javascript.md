@@ -28,23 +28,6 @@ programme Brython.
 
 > _AVERTISSEMENT : cette fonction est dépréciée à partir de la version 3.1.1. Les attributs de l'objet `window` sont déjà des instances de la classe `JSObject`_
 
-**javascript**.`load(`_script\_url[,noms]_`)`
-
-> Fonction pour charger le script Javascript à l'adresse _script\_url_ et 
-> insérer la liste de _noms_ dans l'espace de noms du programme.
-
-> Cette fonction utilise un appel Ajax bloquant. Il faut l'utiliser quand on
-> ne peut pas insérer la librairie Javascript dans la page html par
-> `<script src="prog.js"></script>`. 
-
-> Par exemple, le module **jqueryui** de la bibliothèque standard Brython
-> fournit une interface avec la librairie Javascript jQueryUI. Si on écrit un
-> script Brython qui utilise ce module, on fait simplement `import jqueryui`
-> sans insérer les librairies Javascript dans la page. C'est le module 
-> **jqueryui** qui les charge, en utilisant cette fonction `load()`
-
-> _AVERTISSEMENT : cette fonction est dépréciée à partir de la version 3.1.1. Utilisez la fonction `load` du module **browser**_
-
 **javascript**.`py2js(`_src_`)`
 > Renvoie le code Javascript généré à partir du code source Python _src_.
 

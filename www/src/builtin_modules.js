@@ -25,24 +25,11 @@
             doc: $B.DOMNode(document),   //want to use document instead of doc
             DOMEvent:$B.DOMEvent,
             DOMNode:$B.DOMNode,
-            load:function(script_url, names){
+            load:function(script_url){
                 // Load and eval() the Javascript file at script_url
-                // Set the names in array "names" in the Javacript global namespace
                 var file_obj = $B.builtins.open(script_url)
                 var content = $B.builtins.getattr(file_obj, 'read')()
                 eval(content)
-                if(names!==undefined){
-                    if(!Array.isArray(names)){
-                        throw $B.builtins.TypeError("argument 'names' should be a"+
-                            " list, not '"+$B.get_class(names).__name__)
-                    }else{
-                        for(var i=0;i<names.length;i++){
-                            try{_window[names[i]]=eval(names[i])}
-                            catch(err){throw $B.builtins.NameError("name '"+
-                                names[i]+"' not found in script "+script_url)}
-                        }
-                    }
-                }
             },
             mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},
             prompt: function(message, default_value){
@@ -282,26 +269,14 @@
                 'Please refer to the documentation.')
             return $B.JSConstructor.apply(null, arguments)
         },
-        load:function(script_url, names){
+        load:function(script_url){
             console.log('"javascript.load" is deprecrated. '+
-                'Please refer to the documentation.')
+                'Use browser.load instead.')
             // Load and eval() the Javascript file at script_url
             // Set the names in array "names" in the Javacript global namespace
             var file_obj = $B.builtins.open(script_url)
             var content = $B.builtins.getattr(file_obj, 'read')()
             eval(content)
-            if(names!==undefined){
-                if(!Array.isArray(names)){
-                    throw $B.builtins.TypeError("argument 'names' should be a"+
-                        " list, not '"+$B.get_class(names).__name__)
-                }else{
-                    for(var i=0;i<names.length;i++){
-                        try{_window[names[i]]=eval(names[i])}
-                        catch(err){throw $B.builtins.NameError("name '"+
-                            names[i]+"' not found in script "+script_url)}
-                    }
-                }
-            }
         },
         NULL: null,
         py2js: function(src, module_name){

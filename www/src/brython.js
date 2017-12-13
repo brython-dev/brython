@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-12-13 09:33:09.223397"
+__BRYTHON__.compiled_date="2017-12-13 16:09:52.368577"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -11661,14 +11661,10 @@ var modules={}
 var browser={$package: true,$is_package: true,__package__:'browser',__file__:$B.brython_path.replace(/\/*$/g,'')+'/Lib/browser/__init__.py',console:$B.JSObject(self.console),win: $B.win,$$window: $B.win,}
 browser.__path__=browser.__file__
 if(! $B.isa_web_worker ){update(browser,{$$alert:function(message){window.alert($B.builtins.str(message))},confirm: $B.JSObject(window.confirm),$$document:$B.DOMNode(document),doc: $B.DOMNode(document),
-DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,load:function(script_url,names){
+DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,load:function(script_url){
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()
-eval(content)
-if(names!==undefined){if(!Array.isArray(names)){throw $B.builtins.TypeError("argument 'names' should be a"+
-" list, not '"+$B.get_class(names).__name__)}else{for(var i=0;i<names.length;i++){try{_window[names[i]]=eval(names[i])}
-catch(err){throw $B.builtins.NameError("name '"+
-names[i]+"' not found in script "+script_url)}}}}},mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},prompt: function(message,default_value){return $B.JSObject(window.prompt(message,default_value||''))},reload: function(){
+eval(content)},mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},prompt: function(message,default_value){return $B.JSObject(window.prompt(message,default_value||''))},reload: function(){
 var scripts=document.getElementsByTagName('script'),js_scripts=[]
 for(var i=0;i<scripts.length;i++){if(scripts[i].type===undefined ||
 scripts[i].type=='text/javascript'){js_scripts.push(scripts[i])
@@ -11748,15 +11744,11 @@ return $B.JSObject($B.js_this)},JSObject: function(){console.log('"javascript.JS
 'Please refer to the documentation.')
 return $B.JSObject.apply(null,arguments)},JSConstructor: function(){console.log('"javascript.JSConstructor" is deprecrated. '+
 'Please refer to the documentation.')
-return $B.JSConstructor.apply(null,arguments)},load:function(script_url,names){console.log('"javascript.load" is deprecrated. '+
-'Please refer to the documentation.')
+return $B.JSConstructor.apply(null,arguments)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
+'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()
-eval(content)
-if(names!==undefined){if(!Array.isArray(names)){throw $B.builtins.TypeError("argument 'names' should be a"+
-" list, not '"+$B.get_class(names).__name__)}else{for(var i=0;i<names.length;i++){try{_window[names[i]]=eval(names[i])}
-catch(err){throw $B.builtins.NameError("name '"+
-names[i]+"' not found in script "+script_url)}}}}},NULL: null,py2js: function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
+eval(content)},NULL: null,py2js: function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
 return $B.py2js(src,module_name,module_name,'__builtins__').to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},UNDEFINED: undefined}
 var _b_=$B.builtins
 modules['_sys']={__file__:$B.brython_path+'/libs/_sys.js',
