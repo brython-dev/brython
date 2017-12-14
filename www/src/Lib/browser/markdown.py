@@ -30,8 +30,11 @@ class CodeBlock:
 
     def __init__(self, line):
         self.lines = [line]
-        if line.startswith("```") and len(line) > 3:
-            self.info = line[3:]
+        if line.startswith("```"):
+            if len(line) > 3:
+                self.info = line[3:]
+            else:
+                self.info = "block"
         elif line.startswith("`") and len(line) > 1:
             self.info = line[1:]
         elif line.startswith(">>>"):
