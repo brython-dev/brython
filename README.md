@@ -22,10 +22,9 @@ Here is a simple example of an HTML page running Python:
             <script type="text/python">
             from browser import document, alert
 
+            @document["mybutton"].bind("click")
             def echo(event):
                 alert(document["zone"].value)
-
-            document['mybutton'].bind('click', echo)
             </script>
 
             <input id="zone"><button id="mybutton">click !</button>
