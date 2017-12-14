@@ -611,8 +611,8 @@ var int = function(value, base){
                 $B.get_class(res).__name__+')')
     }
 
-    throw _b_.ValueError(
-        "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
+    throw _b_.TypeError("int() argument must be a string, a bytes-like "+
+        "object or a number, not '"+$B.get_class(value).__name__+"'")
 }
 int.$dict = $IntDict
 int.__class__ = $B.$factory
