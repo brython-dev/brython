@@ -16,24 +16,26 @@ Un exemple simple :
 <tr>
 <td>
 
-    <html>
-    <head>
-    <script src="/brython.js"></script>
-    </head>
-    <body onload="brython()">
-    <script type="text/python">
-    from browser import document, alert
+```xml
+<html>
+<head>
+<script src="/brython.js"></script>
+</head>
+<body onload="brython()">
+<script type="text/python">
+from browser import document, alert
 
-    # associe l'événement "click" sur le bouton à la fonction echo
-    @document['echo'].bind("click")
-    def echo(ev):
-        alert(document["zone"].value)
+# associe l'événement "click" sur le bouton à la fonction echo
+@document["echo"].bind("click")
+def echo(ev):
+    alert(document["zone"].value)
 
-    </script>
-    <input id="zone">
-    <button id="echo">click !</button>
-    </body>
-    </html>
+</script>
+<input id="zone">
+<button id="echo">click !</button>
+</body>
+</html>
+```
 
 </td>
 <td style="padding-left:20px">
@@ -43,7 +45,7 @@ essayez :<p>
 from browser import document, alert
 
 # bind event 'click' on button to function echo
-@document['echo'].bind("click")
+@document["echo"].bind("click")
 def echo(ev):
     alert(document["zone"].value)
 
@@ -67,15 +69,17 @@ _src_ de la balise `<script>` :
 
 <table><tr><td>
 
-    <html>
-    <head>
-    <script src="/brython.js"></script>
-    </head>
-    <body onload="brython()">
-    <script type="text/python" src="test.py"></script>
-    <input id="zone"><button onclick="echo()">clic !</button>
-    </body>
-    </html>
+```xml
+<html>
+<head>
+<script src="/brython.js"></script>
+</head>
+<body onload="brython()">
+<script type="text/python" src="test.py"></script>
+<input id="zone"><button onclick="echo()">clic !</button>
+</body>
+</html>
+```
 
 </td></tr></table>
 

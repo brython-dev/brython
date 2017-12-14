@@ -13,25 +13,26 @@ A simple example :
 <table>
 <tr>
 <td>
+```xml
+<html>
+<head>
+<script src="/brython.js"></script>
+</head>
+<body onload="brython()">
+<script type="text/python">
+from browser import document, alert
 
-    <html>
-    <head>
-    <script src="/brython.js"></script>
-    </head>
-    <body onload="brython()">
-    <script type="text/python">
-    from browser import document, alert
+# bind event 'click' on button to function echo
+@document["mybutton"].bind("click")
+def echo(ev):
+    alert(document["zone"].value)
 
-    # bind event 'click' on button to function echo
-    @document['mybutton'].bind("click")
-    def echo(ev):
-        alert(document["zone"].value)
-
-    </script>
-    <input id="zone">
-    <button id="mybutton">click !</button>
-    </body>
-    </html>
+</script>
+<input id="zone">
+<button id="mybutton">click !</button>
+</body>
+</html>
+```
 
 </td>
 <td style="padding-left:20px">
@@ -41,7 +42,7 @@ Try it!
 <script type="text/python">
 from browser import document, alert
 
-@document['mybutton'].bind('click')
+@document["mybutton"].bind("click")
 def echo(ev):
     alert(document["zone"].value)
 
@@ -64,20 +65,21 @@ Javascript code displayed along with the error.
 If the Python program is large, another option is to write it in a separate
 file, and to load it using the _src_ attribute of the _script_ tag :
 
-    <html>
+```xml
+<html>
 
-    <head>
-    <script src="/brython.js"></script>
-    </head>
+<head>
+<script src="/brython.js"></script>
+</head>
 
-    <body onload="brython()">
-    <script type="text/python" src="test.py"></script>
-    <input id="zone" autocomplete="off">
-    <button id="mybutton">click!</button>
-    </body>
+<body onload="brython()">
+<script type="text/python" src="test.py"></script>
+<input id="zone" autocomplete="off">
+<button id="mybutton">click!</button>
+</body>
 
-    </html>
-
+</html>
+```
 
 Please note that in this case the Python script will be loaded through an
 Ajax call : it must be in the same domain as the HTML page.

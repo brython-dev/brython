@@ -14,34 +14,34 @@ Un ejemplo simple :
 <table>
 <tr>
 <td>
+```xml
+<html>
+<head>
+<script src="/brython.js"></script>
+</head>
+<body onload="brython()">
+<script type="text/python">
+from browser import document, alert
 
-    <html>
-    <head>
-    <script src="/brython.js"></script>
-    </head>
-    <body onload="brython()">
-    <script type="text/python">
-    from browser import document, alert
+@document["mybutton"].bind("click")
+def echo(ev):
+    alert(document["zone"].value)
 
-    @document['mybutton'].bind('click')
-    def echo(ev):
-        alert(document["zone"].value)
-
-    </script>
-    <input id="zone">
-    <button id="mybutton">click !</button>
-    </body>
-    </html>
-
+</script>
+<input id="zone">
+<button id="mybutton">click !</button>
+</body>
+</html>
+```
 </td>
 <td style="padding-left:20px">
 
-Try it!
+Intenta:
 
 <script type="text/python">
 from browser import document, alert
 
-@document['mybutton'].bind('click')
+@document["mybutton"].bind("click")
 def echo(ev):
     alert(document["zone"].value)
 
@@ -65,19 +65,21 @@ con el error.
 Si el programa Python es extenso, otra opción sería escribirlo en un fichero
 separado y cargarlo usando el atributo _src_ de la etiqueta _script_ :
 
-    <html>
+```xml
+<html>
 
-    <head>
-    <script src="/brython.js"></script>
-    </head>
+<head>
+<script src="/brython.js"></script>
+</head>
 
-    <body onload="brython()">
-    <script type="text/python" src="test.py"></script>
-    <input id="zone">
-    <button id="mybutton">click!</button>
-    </body>
+<body onload="brython()">
+<script type="text/python" src="test.py"></script>
+<input id="zone">
+<button id="mybutton">click!</button>
+</body>
 
-    </html>
+</html>
+```
 
 Hay que resaltar que, en este caso, el script Python será cargado mediante
 una llamada Ajax : deberá, por tanto, estar localizado en el mismo dominio
