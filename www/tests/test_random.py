@@ -22,7 +22,7 @@ s = random.sample(x, 5)
 assert len(s) == 5
 for item in s:
     assert item in x
-    
+
 random.getrandbits(20)
 
 state = random.getstate()
@@ -33,11 +33,11 @@ assert x1==x2
 
 tries = 8000
 stat = [0,0,0,0,0,0]
- 
+
 for i in range(tries):
     dice = random.randint(1,6)
     stat[dice-1] += 1
-    
+
 print("STATISTICS ON {0} DICE THROWS".format(tries))
 print("-----------------------------")
 for i in range(0, 6):
@@ -53,3 +53,10 @@ random.gauss(10,4)
 random.betavariate(10,4)
 random.paretovariate(5)
 random.weibullvariate(10,6)
+
+# issue 728
+try:
+    random.randint(2, 0)
+    raise Exception("should have raised ValueError")
+except ValueError:
+    pass
