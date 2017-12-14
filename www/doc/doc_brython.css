@@ -16,18 +16,18 @@ body {
 }
 
 a.navig:link,a:link,a:hover,a.navig:visited {
-  color:#1767B7;
+  color:#4466ac;
   text-decoration:none
 }
 
 a.banner{
   border-bottom-style: solid;
-  border-bottom-color: #1767B7;
+  border-bottom-color: #4466ac;
   border-bottom-width: 6px;
 }
 
 a.banner:link,a.banner:visited {
-  background-color:#1767B7;
+  background-color:#4466ac;
   color:#FFF;
   display:block;
   font-size:1.2em;
@@ -38,7 +38,7 @@ a.banner:link,a.banner:visited {
 }
 
 a.banner:hover,a.banner:active {
-  background-color:#2070C0;
+  background-color:#4466ac;
   color:#FFF
 }
 
@@ -73,7 +73,7 @@ img.logo {
 }
 
 td.logo {
-  background-color:#1767B7;
+  background-color:#4466ac;
   padding-left:20px;
   width:15%
 }
@@ -83,7 +83,7 @@ td.top_menu {
 }
 
 td.language {
-  background-color:#1767B7;
+  background-color:#4466ac;
   text-align:right
 }
 
