@@ -1581,6 +1581,9 @@ try:
 except TypeError:
     pass
 
+# issue 729
+head, *tail = 1, 2, 3
+assert tail == [2, 3]
 
 # ==========================================
 # Finally, report that all tests have passed

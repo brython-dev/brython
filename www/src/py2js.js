@@ -3851,7 +3851,7 @@ function $ListOrTupleCtx(context,real){
                 item.tree[0].bound = true
             }else if(item.type=='expr' && item.tree[0].type=="packed"){
                 if(item.tree[0].tree[0].type == 'id'){
-                    $bind(item.tree[0].tree[0], scope_id, level)
+                    $bind(item.tree[0].tree[0].value, scope_id, level)
                     item.tree[0].tree[0].bound=true
                 }
             }else if(item.type=='list_or_tuple' ||
