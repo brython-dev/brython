@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-12-15 12:05:45.652043"
+__BRYTHON__.compiled_date="2017-12-15 12:25:29.251287"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -2280,6 +2280,7 @@ var elts=[]
 for(var i=0;i<parsed_fstring.length;i++){if(parsed_fstring[i].type=='expression'){var expr=parsed_fstring[i].expression,parts=expr.split(':')
 expr=parts[0]
 expr=expr.replace('\n','\\n')
+expr=expr.replace(/'/g,"\\'")
 var expr1="$B.builtins.$$eval('("+expr+")')"
 switch(parsed_fstring[i].conversion){case "a":
 expr1='$B.builtins.ascii('+expr1+')'
@@ -2296,7 +2297,7 @@ var parsed_fmt=$B.parse_fstring(fmt)
 if(parsed_fmt.length > 1){fmt=fstring(parsed_fmt)}else{fmt="'" + fmt + "'"}
 var res1="$B.builtins.str.$dict.format('{0:' + " +
 fmt + " + '}', " + expr1 + ")"
-elts.push(res1)}else{elts.push(expr1)}}else{elts.push("'"+parsed_fstring[i]+"'")}}
+elts.push(res1)}else{elts.push(expr1)}}else{elts.push("'"+parsed_fstring[i].replace(/'/g,"\\'")+"'")}}
 return elts.join(' + ')}
 for(var i=0;i<this.tree.length;i++){if(this.tree[i].type=="call"){
 var js='(function(){throw TypeError("'+"'str'"+
@@ -3928,7 +3929,9 @@ for(var i=0;i<$string.length;i++){var $car=$string.charAt(i)
 if($car==car &&
 (raw ||(i==0 ||$string.charAt(i-1)!=='\\'))){string +='\\'}
 string +=$car}
-if(fstring){try{var elts=$B.parse_fstring(string)}catch(err){$_SyntaxError(C,[err.toString()])}}
+if(fstring){try{var re=new RegExp("\\\\"+car,"g"),string_no_bs=string.replace(re,car)
+console.log(string,string_no_bs)
+var elts=$B.parse_fstring(string_no_bs)}catch(err){$_SyntaxError(C,[err.toString()])}}
 if(bytes){C=$transition(C,'str','b'+car+string+car)}else if(fstring){C=$transition(C,'str',elts)}else{C=$transition(C,'str',car+string+car)}
 C.raw=raw;
 pos=end+1
@@ -4231,6 +4234,7 @@ if($B.debug>1){console.log(js)}
 eval(js)}catch($err){if($B.debug>1){console.log($err)
 for(var attr in $err){console.log(attr+' : ',$err[attr])}}
 if($err.$py_error===undefined){console.log('Javascript error',$err)
+console.log(js)
 $err=_b_.RuntimeError($err+'')}
 var name=$err.__name__
 var $trace=_b_.getattr($err,'info')

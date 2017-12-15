@@ -51,3 +51,7 @@ for x in (32, 100, 'fifty'):
    except ValueError:
        if x != 'fifty':
            raise
+
+# quote inside fstring
+t = 8
+assert f"'{t}px'" == "'8px'"

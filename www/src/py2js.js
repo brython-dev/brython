@@ -4608,6 +4608,7 @@ function $StringCtx(context,value){
                         parts = expr.split(':')
                     expr = parts[0]
                     expr = expr.replace('\n', '\\n')
+                    expr = expr.replace(/'/g, "\\'")
                     var expr1 = "$B.builtins.$$eval('("+expr+")')"
                     switch(parsed_fstring[i].conversion){
                         case "a":
@@ -4637,7 +4638,7 @@ function $StringCtx(context,value){
                         elts.push(expr1)
                     }
                 }else{
-                    elts.push("'"+parsed_fstring[i]+"'")
+                    elts.push("'"+parsed_fstring[i].replace(/'/g, "\\'")+"'")
                 }
             }
             return elts.join(' + ')
@@ -7300,7 +7301,10 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                         }
                         if(fstring){
                             try{
-                                var elts = $B.parse_fstring(string) // in py_string.js
+                                var re = new RegExp("\\\\"+car, "g"),
+                                    string_no_bs = string.replace(re, car)
+                                console.log(string, string_no_bs)
+                                var elts = $B.parse_fstring(string_no_bs) // in py_string.js
                             }catch(err){
                                 $_SyntaxError(context, [err.toString()])
                             }
@@ -7881,7 +7885,7 @@ function run_script(script){
         // instance of a Python exception
         if($err.$py_error===undefined){
             console.log('Javascript error', $err)
-            //console.log($js)
+            console.log(js)
             //for(var attr in $err){console.log(attr+': '+$err[attr])}
             $err=_b_.RuntimeError($err+'')
         }
