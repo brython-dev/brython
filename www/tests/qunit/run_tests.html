@@ -65,8 +65,6 @@
 <!-- Javascript code needed to run JSObject tests -->
     <script type="text/javascript" src="../jsobj_tests.js"></script>
 
-<!-- Test cases -->
-    <script type="text/javascript" src="unittest.js"></script>
 
 <script type="text/python3">
 from javascript import JSObject
@@ -75,7 +73,7 @@ import brython_test_utils as utils
 from   brython_test_utils import unittest as test_utils
 import unittest
 
-_QUnit = JSObject(window.QUnit)
+_QUnit = window.QUnit
 # TODO: Arg values e.g. verbosity level ?
 result = test_utils.OneTimeTestResult()
 
@@ -87,8 +85,7 @@ def qunit_add_tests(suite):
         if isinstance(test, unittest.BaseTestSuite):
             pend.append(test)
         else:
-            _QUnit.test(test.shortDescription(),
-                        window.qunit_unittest_wrapper(test, result))
+            _QUnit.test(test.shortDescription(), test_utils.qunit_test(test, result))
     for suite in pend:
         qunit_add_tests(suite)
 

@@ -20,7 +20,18 @@ class BrythonModuleTestCase(unittest.TestCase):
         # TODO: Record and output generated traceback
         self.assertEquals(1, status,
                           "Failure detected for module '%s'\n\n"
-                          "%s" % (self.modname, msg));
+                          "%s" % (self.modname, msg))
+
+
+def qunit_test(test, result):
+    def wrapped_test(qunit):
+        test(result)
+        if result.details:
+            msg = '[' + result.lastOutcome + '] - ' + result.details
+        else:
+            msg = ''
+        qunit.ok(result.wasSuccessful(), msg)
+    return wrapped_test
 
 
 class NamedTestSuite(unittest.BaseTestSuite):
