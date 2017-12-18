@@ -2981,30 +2981,6 @@ function $FromCtx(context){
         if(name=='*'){this.scope.blurred = true}
     }
 
-    this.transform = function(node, rank){
-        if(!this.blocking){
-            // Experimental : for non blocking import, wrap code after the
-            // "from" statement in a function
-            var mod_name = this.module.replace(/\$/g,'')
-            if(this.names[0]=='*'){
-                node.add($NodeJS('for(var $attr in $B.imported["'+mod_name+
-                    '"]){if($attr.charAt(0)!=="_"){$locals[$attr]=$B.imported["'+mod_name+'"][$attr]}};'))
-            }else{
-                for(var i=0;i<this.names.length;i++){
-                    var name = this.names[i]
-                    node.add($NodeJS('$locals["'+(this.aliases[name]||name)+
-                        '"]=$B.imported["'+mod_name+'"]["'+name+'"]'))
-                }
-            }
-
-            for(var i=rank+1;i<node.parent.children.length;i++){
-                node.add(node.parent.children[i])
-            }
-            node.parent.children.splice(rank+1, node.parent.children.length)
-            node.parent.add($NodeJS(')'))
-        }
-    }
-
     this.bind_names = function(){
         // Called at the end of the 'from' statement
         // Binds the names or aliases in current scope
@@ -3056,34 +3032,29 @@ function $FromCtx(context){
 
         // FIXME : Replacement still needed ?
         var mod_name = this.module.replace(/\$/g,'')
-        if(this.blocking){
-            res[pos++] = '$B.$import("';
-            res[pos++] = mod_name+'",["';
-            res[pos++] = this.names.join('","')+'"], {';
-            var sep = '';
-            for (var attr in this.aliases) {
-                res[pos++] = sep + '"'+attr+'": "'+this.aliases[attr]+'"';
-                sep = ',';
-            }
-            res[pos++] = '}, {}, true);';
-
-            // Add names to local namespace
-            if(this.names[0]=='*'){
-                res[pos++] = '\n'+head+'for(var $attr in $B.imported["'+mod_name+
-                    '"]){if($attr.charAt(0)!=="_"){'+
-                    '$locals[$attr]=$B.imported["'+mod_name+'"][$attr]}};'
-            }else{
-                for(var i=0;i<this.names.length;i++){
-                    var name = this.names[i]
-                    res[pos++] = '\n'+head+'$locals["'+(this.aliases[name]||name)+
-                        '"]=$B.imported["'+mod_name+'"]["'+name+'"];'
-                }
-            }
-            res[pos++] = '\n'+head+'None;';
-
-        }else{
-            res[pos++] = '$B.$import_non_blocking("'+mod_name+'", function()'
+        res[pos++] = '$B.$import("';
+        res[pos++] = mod_name+'",["';
+        res[pos++] = this.names.join('","')+'"], {';
+        var sep = '';
+        for (var attr in this.aliases) {
+            res[pos++] = sep + '"'+attr+'": "'+this.aliases[attr]+'"';
+            sep = ',';
         }
+        res[pos++] = '}, {}, true);';
+
+        // Add names to local namespace
+        if(this.names[0]=='*'){
+            res[pos++] = '\n'+head+'for(var $attr in $B.imported["'+mod_name+
+                '"]){if($attr.charAt(0)!=="_"){'+
+                '$locals[$attr]=$B.imported["'+mod_name+'"][$attr]}};'
+        }else{
+            for(var i=0;i<this.names.length;i++){
+                var name = this.names[i]
+                res[pos++] = '\n'+head+'$locals["'+(this.aliases[name]||name)+
+                    '"]=$B.imported["'+mod_name+'"]["'+name+'"];'
+            }
+        }
+        res[pos++] = '\n'+head+'None;';
 
         if(this.names[0]=='*'){
             // Set attribute to indicate that the scope has a
@@ -6261,13 +6232,11 @@ function $transition(context,token){
               return context
             }
           case 'import':
-            context.blocking = token=='import'
             if(context.expect=='module'){
               context.expect = 'id'
               return context
             }
           case 'op':
-
             if(arguments[2]=='*' && context.expect=='id'
               && context.names.length ==0){
                if($get_scope(context).ntype!=='module'){

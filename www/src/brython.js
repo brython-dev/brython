@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-12-15 12:25:29.251287"
+__BRYTHON__.compiled_date="2017-12-18 21:31:33.910729"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1539,15 +1539,6 @@ this.expect='module'
 this.scope=$get_scope(this)
 this.add_name=function(name){this.names[this.names.length]=name
 if(name=='*'){this.scope.blurred=true}}
-this.transform=function(node,rank){if(!this.blocking){
-var mod_name=this.module.replace(/\$/g,'')
-if(this.names[0]=='*'){node.add($NodeJS('for(var $attr in $B.imported["'+mod_name+
-'"]){if($attr.charAt(0)!=="_"){$locals[$attr]=$B.imported["'+mod_name+'"][$attr]}};'))}else{for(var i=0;i<this.names.length;i++){var name=this.names[i]
-node.add($NodeJS('$locals["'+(this.aliases[name]||name)+
-'"]=$B.imported["'+mod_name+'"]["'+name+'"]'))}}
-for(var i=rank+1;i<node.parent.children.length;i++){node.add(node.parent.children[i])}
-node.parent.children.splice(rank+1,node.parent.children.length)
-node.parent.add($NodeJS(')'))}}
 this.bind_names=function(){
 var scope=$get_scope(this)
 for(var i=0;i<this.names.length;i++){var name=this.aliases[this.names[i]]||this.names[i]
@@ -1563,7 +1554,7 @@ _mod=_mod.substr(1)}else{break}}
 if(_mod){packages.push(_mod)}
 this.module=packages.join('.')
 var mod_name=this.module.replace(/\$/g,'')
-if(this.blocking){res[pos++]='$B.$import("';
+res[pos++]='$B.$import("';
 res[pos++]=mod_name+'",["';
 res[pos++]=this.names.join('","')+'"], {';
 var sep='';
@@ -1575,7 +1566,7 @@ if(this.names[0]=='*'){res[pos++]='\n'+head+'for(var $attr in $B.imported["'+mod
 '$locals[$attr]=$B.imported["'+mod_name+'"][$attr]}};'}else{for(var i=0;i<this.names.length;i++){var name=this.names[i]
 res[pos++]='\n'+head+'$locals["'+(this.aliases[name]||name)+
 '"]=$B.imported["'+mod_name+'"]["'+name+'"];'}}
-res[pos++]='\n'+head+'None;';}else{res[pos++]='$B.$import_non_blocking("'+mod_name+'", function()'}
+res[pos++]='\n'+head+'None;';
 if(this.names[0]=='*'){
 scope.blurred=true}
 return res.join('');}}
@@ -3247,7 +3238,6 @@ if(C.expect=='module'){if(token=='id'){C.module +=arguments[2]}
 else{C.module +='.'}
 return C}
 case 'import':
-C.blocking=token=='import'
 if(C.expect=='module'){C.expect='id'
 return C}
 case 'op':
