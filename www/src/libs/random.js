@@ -568,7 +568,7 @@ function _Random(){
             }
             if(typeof start=='number' && typeof stop == 'number' &&
                 typeof step=='number'){
-                return start+step*Math.floor(_random()*Math.floor((stop-start)/step))
+                return start+step*Math.floor(_random()*Math.ceil((stop-start)/step))
             }else{
                 var d = _b_.getattr(stop,'__sub__')(start)
                 d = _b_.getattr(d, '__floordiv__')(step)
