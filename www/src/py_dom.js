@@ -543,6 +543,15 @@ DOMNodeDict.__getattribute__ = function(self,attr){
             // now we're sure it's an attribute
             return res
         }
+        // try replacing "_" by "-"
+        var attr1 = attr.replace(/_/g, '-')
+        if(attr1!=attr){
+            res = self.elt.getAttribute(attr1)
+            if(res!==undefined && res!==null && self.elt[attr]===undefined){
+                // now we're sure it's an attribute
+                return res
+            }
+        }
     }
 
     if(self.elt.getAttributeNS!==undefined){
@@ -780,25 +789,25 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
         if(typeof self.elt.getAttribute=='function' &&
                 typeof self.elt.setAttribute=='function'){
             var res = self.elt.getAttribute(attr1)
-                if(value===false){
-                    self.elt.removeAttribute(attr1)
-                }else{
-                    try{
-                        self.elt.setAttribute(attr1,value)
-                    }catch(err){
-                        // happens for instance if attr starts with _ because
-                        // attr1 starts with "-" and it is an invalid 1st arg
-                        // for setAttribute
-                        self.elt[attr]=value
-                        return _b_.None
-                    }
-                    if(self.elt.getAttribute(attr1) !== value){
-                        // If value is a Brython object, eg a dictionary
-                        self.elt.removeAttribute(attr1)
-                        self.elt[attr]=value
-                    }
+            if(value===false){
+                self.elt.removeAttribute(attr1)
+            }else{
+                try{
+                    self.elt.setAttribute(attr1,value)
+                }catch(err){
+                    // happens for instance if attr starts with _ because
+                    // attr1 starts with "-" and it is an invalid 1st arg
+                    // for setAttribute
+                    self.elt[attr]=value
+                    return _b_.None
                 }
-                return _b_.None
+                if(self.elt.getAttribute(attr1) !== value){
+                    // If value is a Brython object, eg a dictionary
+                    self.elt.removeAttribute(attr1)
+                    self.elt[attr]=value
+                }
+            }
+            return _b_.None
         }
 
         // If setAttribute doesn't work, ie subsequent getAttribute doesn't
