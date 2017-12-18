@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -86,13 +86,14 @@ def test_next():
         print('failed : %s' %failed)
 
         w = window.open()
-        
+
         head = w.document.get(selector="head")
         head[0] <= STYLE("*{font-family: Arial;}")
-        
+
         body = w.document.body
         table = TABLE(border=1)
         table <= TR(TH('test')+TH('Brython'))
+        print(results)
         for result in results:
             row = TR()
             row <= TD(result['test'])
@@ -102,7 +103,7 @@ def test_next():
         version = '.'.join(str(x) for x in __BRYTHON__.implementation[:3])
         body <= H1("Brython {} performance (base 100 = CPython)".format(version))
         body <= table
-    
+
 def test_all(ev):
     global script_num, failed, t_start, results
     script_num = -1
@@ -135,7 +136,7 @@ doc['files'].bind('change',editor.load_script)
 from browser import document
 import header
 
-qs_lang,language = header.show('../')
+qs_lang,language = header.show()
 
 # other translations
 
