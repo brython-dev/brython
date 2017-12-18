@@ -10,7 +10,7 @@
 
 <style type="text/css" media="screen">
   body {
-    font: 12px/15px Calibri, Verdana;
+    font-family: Calibri, Verdana;
     margin: 0px;
     background:#ddd;
     padding: 0px;
@@ -27,7 +27,6 @@
     position: absolute;
     background-color:#666;
     color: #fff;
-    font-size: 16px;
     line-height:20px;
     padding: 0px;
 }
@@ -78,6 +77,8 @@ container.style.padding = f'{padding}px'
 zwidth = dim - 2 * d - 2 * padding
 side = int(zwidth / 4)
 zone.style.width = zone.style.height = 4 * side
+
+zone.style.fontSize = f'{int(side / 2)}px'
 
 # Get position of zone upper left corner relative to window
 ztop, zleft = zone.offsetLeft, zone.offsetTop
