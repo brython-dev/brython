@@ -7272,7 +7272,6 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                             try{
                                 var re = new RegExp("\\\\"+car, "g"),
                                     string_no_bs = string.replace(re, car)
-                                console.log(string, string_no_bs)
                                 var elts = $B.parse_fstring(string_no_bs) // in py_string.js
                             }catch(err){
                                 $_SyntaxError(context, [err.toString()])
