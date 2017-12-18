@@ -106,6 +106,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
     }
 
     def _make_chunk(self, data):
+        """Produces a data chunk for Chunked Transfer Encoding."""
         return ("{:X}".format(len(data)).encode("ascii") + b"\r\n" + data
             + b"\r\n")
 
@@ -204,13 +205,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.send_header("Last-Modified",
                 self.date_time_string(fs.st_mtime))
 
+            # Use HTTP compression if possible
 
             if ctype not in self.compressed_types:
                 self.send_header("Content-Length", str(content_length))
                 self.end_headers()
                 return f
-
-            # Use HTTP compression if possible
 
             # Get accepted encodings ; "encodings" is a dictionary mapping
             # encodings to their quality ; eg for header "gzip; q=0.8",
