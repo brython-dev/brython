@@ -25,8 +25,9 @@ def escape(txt):
     return txt
 
 def highlight(txt, string_color="blue", comment_color="green",
-    keyword_color="purple", builtin_func_color="#963"):
+        keyword_color="purple", builtin_func_color="#963"):
     res = html.PRE()
+    txt = escape(txt)
     i = 0
     name = ''
     while i < len(txt):
