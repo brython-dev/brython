@@ -18,10 +18,9 @@ from http.server import SimpleHTTPRequestHandler
 
 # Python might be built without gzip / zlib
 try:
-    import gzip
     import zlib
 except ImportError:
-    gzip = None
+    zlib = None
 
 # List of commonly compressed content types, copied from
 # https://github.com/h5bp/server-configs-apache.
@@ -63,11 +62,11 @@ commonly_compressed_types = [ "application/atom+xml",
 
 # Generators for HTTP compression
 
+# Generators for HTTP compression
+
 def _zlib_producer(fileobj, wbits):
-    """Generator that yields pieces of compressed data read from the file
-    object fileobj, using the zlib library.
-    It yields non-empty bytes objects and ends by yielding b'', for compliance
-    with the Chunked Transfer Encoding protocol.
+    """Generator that yields data read from the file object fileobj,
+    compressed with the zlib library.
     wbits is the same argument as for zlib.compressobj.
     """
     bufsize = 2 << 17
@@ -76,14 +75,9 @@ def _zlib_producer(fileobj, wbits):
         while True:
             buf = fileobj.read(bufsize)
             if not buf: # end of file
-                data = producer.flush()
-                if data:
-                    yield data
-                yield b''
+                yield producer.flush()
                 return
-            data = producer.compress(buf)
-            if data:
-                yield data
+            yield producer.compress(buf)
 
 def _gzip_producer(fileobj):
     """Generator for gzip compression."""
@@ -95,28 +89,28 @@ def _deflate_producer(fileobj):
 
 class RequestHandler(SimpleHTTPRequestHandler):
 
-    # List of Content Types that are returned with HTTP compression (gzip).
+    # List of Content Types that are returned with HTTP compression.
     # Set to the empty list by default (no compression).
-    compressed_types = commonly_compressed_types
+    compressed_types = []
 
     # Dictionary mapping an encoding (in an Accept-Encoding header) to a
-    # generator of compressed data. By default, the only supported encoding is
-    # gzip. Override if a subclass wants to use another compression algorithm.
-    compressions = {
-        'deflate': _deflate_producer,
-        'gzip': _gzip_producer,
-        'x-gzip': _gzip_producer
+    # generator of compressed data. By default, provided zlib is available,
+    # the supported encodings are gzip and deflate.
+    # Override if a subclass wants to use other compression algorithms.
+    compressions = {}
+    if zlib:
+        compressions = {
+            'deflate': _deflate_producer,
+            'gzip': _gzip_producer,
+            'x-gzip': _gzip_producer # alias for gzip
     }
 
     def _make_chunk(self, data):
-        return f"{len(data):X}".encode("ascii") + b"\r\n" + data + b"\r\n"
+        return ("{:X}".format(len(data)).encode("ascii") + b"\r\n" + data
+            + b"\r\n")
 
     def do_GET(self):
-        """Serve a GET request.
-        Overrides SimpleHTTPRequestHandler method with support of compression
-        and chunked transfer encoding.
-        Cf. Pull Request #2078 on the Github CPython site.
-        """
+        """Serve a GET request."""
         f = self.send_head()
         if f:
             try:
@@ -210,12 +204,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.send_header("Last-Modified",
                 self.date_time_string(fs.st_mtime))
 
-            if not gzip or ctype not in self.compressed_types:
+
+            if ctype not in self.compressed_types:
                 self.send_header("Content-Length", str(content_length))
                 self.end_headers()
                 return f
 
-            # Use HTTP compression (gzip) if possible
+            # Use HTTP compression if possible
 
             # Get accepted encodings ; "encodings" is a dictionary mapping
             # encodings to their quality ; eg for header "gzip; q=0.8",
@@ -233,7 +228,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
                         # Invalid quality : ignore encoding
                         q = 0
                 else:
-                    q = 1 # quality default to 1
+                    q = 1 # quality defaults to 1
                 if q:
                     encodings[encoding] = max(encodings.get(encoding, 0), q)
 
@@ -241,12 +236,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
             compression = None
             if compressions:
                 # Take the encoding with highest quality
-                compression = sorted((encodings[enc], enc)
-                    for enc in compressions)[-1][1]
-            elif '*' in encodings:
+                compression = max((encodings[enc], enc)
+                    for enc in compressions)[1]
+            elif '*' in encodings and self.compressions:
                 # If no specified encoding is supported but "*" is accepted,
-                # use gzip.
-                compression = "gzip"
+                # take one of the available compressions.
+                compression = list(self.compressions)[0]
             if compression:
                 # If at least one encoding is accepted, send data compressed
                 # with the selected compression algorithm.
@@ -276,8 +271,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 def run(port=8080):
     server_address, handler = ('', port), RequestHandler
+    handler.compressed_types = commonly_compressed_types
     httpd = server.HTTPServer(server_address, handler)
 
-    print(("Server running on port http://localhost:{}.".format(server_address[1])))
+    print(("Server running on port http://localhost:{}.".format(port)))
     print("Press CTRL+C to Quit.")
     httpd.serve_forever()
+
+if __name__ == "__main__":
+    run()
