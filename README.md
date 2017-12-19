@@ -62,7 +62,7 @@ either choose the latest stable release :
 
 ```xml
 <script type="text/javascript"
-    src="https://cdn.rawgit.com/brython-dev/brython/stable/www/src/brython.js">
+    src="https://cdn.rawgit.com/brython-dev/brython/3.3.5/www/src/brython.js">
 </script>
 ```
 
@@ -70,7 +70,7 @@ or the current development version :
 
 ```xml
 <script type="text/javascript"
-    src="https://cdn.rawgit.com/brython-dev/brython/master/www/src/brython.js">
+    src="https://cdn.rawgit.com/brython-dev/brython/3.3.5/www/src/brython.js">
 </script>
 ```
 
