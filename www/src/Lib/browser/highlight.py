@@ -27,7 +27,7 @@ def escape(txt):
 def highlight(txt, string_color="blue", comment_color="green",
         keyword_color="purple", builtin_func_color="#963"):
     res = html.PRE()
-    txt = escape(txt)
+    #txt = escape(txt)
     i = 0
     name = ''
     while i < len(txt):
@@ -58,10 +58,10 @@ def highlight(txt, string_color="blue", comment_color="green",
         elif car == '#': # comment
             end = txt.find('\n', i)
             if end== -1:
-                res <= html.SPAN(txt[i:], Class="python-comment")
+                res <= html.SPAN(escape(txt[i:]), Class="python-comment")
                 break
             else:
-                res <= html.SPAN(txt[i:end], Class="python-comment")
+                res <= html.SPAN(escape(txt[i:end]), Class="python-comment")
                 i = end-1
         elif car in letters:
             name += car
