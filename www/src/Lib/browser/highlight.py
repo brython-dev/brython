@@ -7,17 +7,24 @@ letters = 'abcdefghijklmnopqrstuvwxyz'
 letters += letters.upper()+'_'
 digits = '0123456789'
 
-builtin_funcs = ("abs|divmod|input|open|staticmethod|all|enumerate|int|ord|str|any|" +
-        "eval|isinstance|pow|sum|basestring|execfile|issubclass|print|super|" +
-        "binfile|iter|property|tuple|bool|filter|len|range|type|bytearray|" +
-        "float|list|raw_input|unichr|callable|format|locals|reduce|unicode|" +
-        "chr|frozenset|long|reload|vars|classmethod|getattr|map|repr|xrange|" +
-        "cmp|globals|max|reversed|zip|compile|hasattr|memoryview|round|" +
-        "__import__|complex|hash|min|set|apply|delattr|help|next|setattr|" +
-        "buffer|dict|hex|object|slice|coerce|dir|id|oct|sorted|intern")
+builtin_funcs = """abs|dict|help|min|setattr|
+all|dir|hex|next|slice|
+any|divmod|id|object|sorted|
+ascii|enumerate|input|oct|staticmethod|
+bin|eval|int|open|str|
+bool|exec|isinstance|ord|sum|
+bytearray|filter|issubclass|pow|super|
+bytes|float|iter|print|tuple|
+callable|format|len|property|type|
+chr|frozenset|list|range|vars|
+classmethod|getattr|locals|repr|zip|
+compile|globals|map|reversed|__import__|
+complex|hasattr|max|round|
+delattr|hash|memoryview|set|
+"""
 
 kw_pattern = '^('+'|'.join(keyword.kwlist)+')$'
-bf_pattern = '^('+builtin_funcs+')$'
+bf_pattern = '^('+builtin_funcs.replace("\n", "")+')$'
 
 def escape(txt):
     txt = txt.replace('<', '&lt;')
@@ -27,7 +34,6 @@ def escape(txt):
 def highlight(txt, string_color="blue", comment_color="green",
         keyword_color="purple", builtin_func_color="#963"):
     res = html.PRE()
-    #txt = escape(txt)
     i = 0
     name = ''
     while i < len(txt):
