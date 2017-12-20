@@ -96,6 +96,7 @@ select.language {
 }
 
 .pycode{
+    font-size: 0.9em;
     display: inline-block;
     background-color:#F0F0F0;
     padding:3px 8px 8px 8px;
@@ -107,6 +108,7 @@ select.language {
 }
 
 .xml{
+    font-size: 0.9em;
     display: inline-block;
     background-color:#F0F0F0;
     padding:3px 8px 8px 8px;
