@@ -62,13 +62,14 @@ div.example{
 }
 
 pre{
+    display: inline-block;
     font-family: Consolas, Courier New;
     color: #113;
-    background: linear-gradient(to right, #ccc, #fff);
+    background: linear-gradient(to right, #ccc, #ddd);
     border-width: 0 0 0 2;
     border-color: #aac;
     border-style: solid;
-    margin-top: 2em;
+    padding: 1em;
 }
 
 pre.html{
@@ -129,11 +130,24 @@ header.show()
     </div>
     <div style="" id="panel">
       <div id="home">
-        <p>This page shows a few examples of how you can interact with a web page using Python as the scripting language : create new elements, access and modify existing elements, create graphics, animations, send Ajax requests, etc.
-        <p>The scripts use objects - elements shown in the page, styles applied to these elements, events, etc. - that are described in the Document Object Model (DOM), defined by the W3C. The reference used in this page is the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model" target="_blank" class="external">Mozilla Developer Network</a> (MDN) documentation.
-        <p>Although the DOM is by nature language-independant, most examples in the MDN documentation are written with Javascript, not (yet&nbsp;;-) in Python. The translation is usually straightforward, since Brython supports all the DOM types and their attributes and methods.
-        <p>In some cases, Brython adds a more Pythonic syntax : you will discover them by browsing the examples.
-        <p>More documentation and examples can be found on the <a href="http://brython.info" target="_blank" class="external">Brython site</a>.
+        <p>This page shows a few examples of how you can interact with a web
+        page using Python as the scripting language : create new elements,
+        access and modify existing elements, create graphics, animations, send
+        Ajax requests, etc.
+        <p>The scripts use objects - elements shown in the page, styles
+        applied to these elements, events, etc. - that are described in the
+        Document Object Model (DOM), defined by the W3C. The reference used in
+        this page is the
+        <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model" target="_blank" class="external">Mozilla Developer Network</a>
+        (MDN) documentation.
+        <p>Although the DOM is by nature language-independant, most examples
+        in the MDN documentation are written with Javascript, not
+        (yet&nbsp;;-) in Python. The translation is usually straightforward,
+        since Brython supports all the DOM types and their attributes and methods.
+        <p>In some cases, Brython adds a more Pythonic syntax : you will discover
+        them by browsing the examples.
+        <p>More documentation and examples can be found on the
+        <a href="http://brython.info" target="_blank" class="external">Brython site</a>.
       </div>
     </div>
   </div>
@@ -151,13 +165,22 @@ header.show()
         alert("Hello !")
     </script>
 
+    <p>
     <pre class="python"></pre>
 
-    <span class="comment">
-    <code>browser</code> is a Brython-specific module that defines the objects used to interact with the page.
-    <p><code>document</code> is an object representing the HTML document ; <code>document[element_id]</code> is the element with attribute id equal to element_id. In this example, <code>document["button0"]</code> is a reference to the button you click on.
-<p><code>bind(<i>event</i>)</code> is a method that returns a decorator, applied to the function to call when the <i>event</i> occurs on the element. When the user clicks on the element, this event is called "click". The code means : when the user clicks on the element (here, the button with the text "display an alert box"), call the function <code>hello()</code>.
-The function takes one argument, an object representing the event.
+    <p><span class="comment">
+    <code>browser</code> is a Brython-specific module that defines the objects
+    used to interact with the page.
+    <p><code>document</code> is an object representing the HTML document ;
+    <code>document[element_id]</code> is the element with attribute id equal
+    to element_id. In this example, <code>document["button0"]</code> is a
+    reference to the button you click on.
+    <p><code>bind(<i>event</i>)</code> is a method that returns a decorator,
+    applied to the function to call when the <i>event</i> occurs on the
+    element. When the user clicks on the element, this event is called
+    "click". The code means : when the user clicks on the element (here,
+    the button with the text "display an alert box"), call the function <code>hello()</code>.
+    The function takes one argument, an object representing the event.
     <p><code>alert</code> is used to display small popup windows.
     </span>
 </div>
@@ -174,14 +197,21 @@ The function takes one argument, an object representing the event.
         document["zone1"].textContent = "New content"
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
-    The attributes and methods of the elements are described in the Document Object Model (DOM), which is abundantly documented (by <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model" class="external">Mozilla</a> for instance).
-    <p><code>textContent</code> is an attribute of <a href="https://developer.mozilla.org/en-US/docs/Web/API/Node" target="_blank" class="external">Node</a> instances ; it is used to get or set an element's text content.
-    <p>Brython supports all the DOM methods and attributes ; for text content it provides a shortcut, <code>text</code>, so that the function body can also be written :
+    The attributes and methods of the elements are described in the Document
+    Object Model (DOM), which is abundantly documented (by
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model" class="external">Mozilla</a>
+    for instance).
+    <p><code>textContent</code> is an attribute of
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/Node" target="_blank" class="external">Node</a> instances ; it is used to get or set an element's text content.
+    <p>Brython supports all the DOM methods and attributes ; for text content
+    it provides a shortcut, <code>text</code>, so that the function body can
+    also be written :
     <pre class="python">
-
     def change(event):
         document["zone1"].text = "New Content"
     </pre>
@@ -209,7 +239,9 @@ The function takes one argument, an object representing the event.
 
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     Elements have an attribute <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/style" target="_blank"><code>style</code></a>, which itself has (among many others) the attributes <code>color</code> (text color), <code>backgroundColor</code> (background color), <code>fontWeigth</code> ("bold" or "normal"), <code>fontSize</code> (size of the letters, in pixels), etc.
@@ -239,7 +271,9 @@ The function takes one argument, an object representing the event.
             element.classList.add("up")
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     Elements have an attribute <a href="https://developer.mozilla.org/en-US/docs/Web/API/Element/classList" target="_blank" class="external"><code>classList</code></a> with the values set in the attribute <code>class</code> of the element.
@@ -262,7 +296,9 @@ The function takes one argument, an object representing the event.
         document["zone3"].style.display = "inline" if display == "none" else "none"
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     <code>display</code> is another attribute of <code>style</code>. Setting it to <code>"none"</code> hides the element.
@@ -290,7 +326,9 @@ The function takes one argument, an object representing the event.
     document["button6_std"].addEventListener("click", change)
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">This example uses the standard DOM methods to create elements (<a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/createElement" target="_blank" class="external"><code>document.createElement()</code></a>, <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/createTextNode" target="_blank" class="external"><code>createTextNode()</code></a>) and append them to other elements or to the document (<a href="https://developer.mozilla.org/en-US/docs/Web/API/Node/appendChild" target="_blank"><code>Node.appendChild()</code></a>).
     <p>Note that on the last line, we use the standard DOM method <a href="https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener" target="_blank" class="external"><code>EventTarget.addEventListener()</code></a> : the method <code>bind()</code> used in the other examples is Brython-specific.
@@ -320,7 +358,9 @@ The function takes one argument, an object representing the event.
         nb += 1
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     To create DOM elements, Brython provides the module <code class="module">browser.html</code>. It defines classes with the name of all the valid HTML tags in uppercase ; <code>html.B("message")</code> creates the element <code class="html">&lt;B&gt;message&lt;B&gt;</code>
@@ -348,7 +388,9 @@ The function takes one argument, an object representing the event.
         ul.insertBefore(html.LI(f"element before {nb}"), element)
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     We use the standard DOM method <a href="https://developer.mozilla.org/en-US/docs/Web/API/Node/insertBefore" class="external">insertBefore()</a>
@@ -375,7 +417,9 @@ The function takes one argument, an object representing the event.
         ul.insertBefore(html.LI(f"element after {nb}"), element.nextSibling)
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     We use the standard DOM method <a href="https://developer.mozilla.org/en-US/docs/Web/API/Node/insertBefore" class="external">insertBefore()</a>
@@ -405,7 +449,9 @@ the end.
 
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     The attributes of a tag are defined as keyword arguments of the html classes constructor.
@@ -440,7 +486,9 @@ the end.
         document["zone7"] <= table
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     To build a table, we use the HTML tags <code>TABLE, TR, TH</code> and <code>TD</code>.
@@ -473,16 +521,19 @@ the end.
         document["zone12"] <= dropdown
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     We build the dropdown menu by a SELECT element, using a generator expression with the OPTION elements displayed in the menu.
     <p>When the user changes the selected option in the menu, the event "change" is triggered on the SELECT box. This is done in the line
 
+    <p>
     <pre class="python">
-
-        dropdown.bind("change", show)
+    dropdown.bind("change", show)
     </pre>
+    <p>
 
     So far we have used the method <code>bind()</code> as a decorator for a callback function, with the event name as single argument. It can also be used with the function as
 the second argument.
@@ -516,7 +567,9 @@ the second argument.
 
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     We start by importing the module <code class="module">math</code>, the same as in the Python standard distribution.
@@ -571,7 +624,9 @@ the second argument.
             )
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
 </div>
 
@@ -596,7 +651,9 @@ the second argument.
         document["zone13"] <= "and {} elements with class 'zone'".format(len(zones))
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     We have seen how to get an element by its id : <code>document[element_id]</code>. Here, <code>document["zone13"]</code> is the bordered box at the right of the button.
@@ -623,7 +680,9 @@ the second argument.
         angle += 10
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     <code>transform</code> is another attribute of <code>style</code> that can make changes to the element, including a rotation by a specified angle.
@@ -673,7 +732,9 @@ the second argument.
         render()
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     The browser window provides 2 functions to start and stop an animation : <code>requestAnimationFrame</code> and <code>cancelAnimationFrame</code>.
@@ -730,7 +791,9 @@ the second argument.
     ElementMove(document["moving"])
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     This example uses other mouse events than "click" : "mousedown", "mousemove" and "mouseup".
@@ -806,7 +869,9 @@ the second argument.
 
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     The <a href="https://developer.mozilla.org/en-US/docs/Web/API/Storage" target="_blank">Storage</a> API allows local storage of key/value pairs.
@@ -844,7 +909,9 @@ the second argument.
         req.send()
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     The module <code class="module">browser.ajax</code> allows sending Ajax calls, ie sending HTTP requests to a URL and handle the reply without having to reload the page.
@@ -862,7 +929,9 @@ the second argument.
     document["button5"].bind("click", lambda ev: print("Hello !"))
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     By default, <code>print()</code> writes message in the browser console window (to open it, do Ctrl+Maj+K on Firefox, Ctrl+Maj+J on Chrome, F12 on IE, etc).
@@ -923,7 +992,9 @@ the second argument.
         show(root, document["zone18"])
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     Instead of using the XML modules in Python standard library, it's more efficient
@@ -947,7 +1018,9 @@ the second argument.
             date.getHours(), date.getMinutes(), date.getSeconds())
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     Brython provides the modules <code class="module">time</code> and <code class="module">datetime</code> of the standard distribution, but it can also interact with the objects defined by Javascript.
@@ -970,7 +1043,9 @@ the second argument.
         document['zone17'].text = s.replace(window.RegExp.new("a", "g"), "i")
     </script>
 
+    <p>
     <pre class="python"></pre>
+    <p>
 
     <span class="comment">
     Similarly, Brython provides the standard Python module <code class="module">re</code> for regular expressions, but it can also use the Javascript <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions" target="_blank">RegExp</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" target="_blank">String</a> classes.
@@ -1019,12 +1094,18 @@ for example in document.get(selector=".example"):
     # add the Python source inside the example
     script = example.get(selector="script")[0]
     src = script.text
+    while src.startswith("\n"):
+        src = src[1:]
+    indent = 0
+    while src[indent] == ' ':
+        indent += 1
+    src = "\n".join(line[indent:] for line in src.split("\n"))
     src = highlight.highlight(src)
     code_elt = example.get(selector="pre")
     if code_elt:
-        code_elt[0] <= src
+        code_elt[0].html = src.html
     else:
-        example <= html.PRE(src, Class="python")
+        example <= src
 
     # create a menu entry
     button = example.get(selector="button")[0]
