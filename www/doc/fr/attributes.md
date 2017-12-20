@@ -31,6 +31,15 @@ Comme le nom des attributs peut être différent d'un navigateur à l'autre, Bry
 </tr>
 
 <tr>
+<td>*closest*</td>
+<td>méthode</td>
+<td><code>`elt.closest(nom_balise)</code>` renvoie le premier élément parent
+de `elt` avec la balise spécifiée. Déclenche une `KeyError` si aucun élément
+n'est trouvé.</td>
+<td>-</td>
+</tr>
+
+<tr>
 <td>*get*</td><td>méthode</td><td>sélectionne des éléments (cf <a href="access.html">accéder aux éléments</a>)</td><td>-</td>
 </tr>
 
@@ -43,7 +52,9 @@ Comme le nom des attributs peut être différent d'un navigateur à l'autre, Bry
 </tr>
 
 <tr>
-<td>*index*</td><td>méthode</td><td>`elt.index()` renvoie le rang (entier) de l'élément parmi les enfants de son parent</td><td>-</td>
+<td>*index*</td><td>méthode</td><td>`elt.index([selector])` renvoie le rang (entier) de l'élément parmi les enfants de son parent.
+Si _selector_ est spécifié, seuls les enfants correspondant à ce sélecteur sont retenus ; dans ce cas, si l'élément
+ne correspond pas au sélecteur, la méthode renvoie -1</td><td>-</td>
 </tr>
 
 <tr>

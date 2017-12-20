@@ -37,6 +37,14 @@ descendants of the element</td><td>-</td>
 </tr>
 
 <tr>
+<td>*closest*</td>
+<td>method</td>
+<td><code>`elt.closest(tag_name)</code>` returns the first parent element of
+`elt` with the specified tag name. Raises `KeyError` if no element is found.</td>
+<td>-</td>
+</tr>
+
+<tr>
 <td>*get*</td><td>method</td><td>selects elements (cf <a href="access.html">access to elements</a>)</td><td>-</td>
 </tr>
 
@@ -50,7 +58,13 @@ descendants of the element</td><td>-</td>
 </tr>
 
 <tr>
-<td>*index*</td><td>method</td><td>`elt.index()` returns the index (integer) of the element among its parent's children</td><td>-</td>
+<td>*index*</td>
+<td>method</td>
+<td>`elt.index([selector])` returns the index (an integer) of the element
+among its parent's children. If _selector_ is specified, only the elements
+matching the CSS selector are taken into account ; in this case, if no
+element matches, the method returns -1.
+</td><td>-</td>
 </tr>
 
 <tr>

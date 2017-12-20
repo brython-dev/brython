@@ -54,7 +54,7 @@ Valor Built-in `__name__`
 La variable built-in `__name__` se fija al valor del atributo `id`
 del script. Por ejemplo:
 
-```python
+```xml
 <script type="text/python" id="myscript">
 assert __name__ == 'myscript'
 </script>
@@ -69,7 +69,7 @@ Para los scripts que no disponen de una `id` de forma explícita :
   será capaz de ejecutar los tests :
 
 <blockquote>
-```python
+```xml
 <script type="text/python">
 if __name__=='__main__':
     print('hello !')

@@ -1,4 +1,4 @@
-Brython implements Python version 3, based on the 
+Brython implements Python version 3, based on the
 [Python Language Reference](https://docs.python.org/3/reference/index.html)
 
 
@@ -30,27 +30,30 @@ Here are a few features and limitations imposed by the browser and Javascript :
   the script. The object returned by `open()` has the usual reading and access
   methods : `read, readlines, seek, tell, close`
 
-- by default, `print()` will output to the web browser console and so are the 
-  error messages. `sys.stderr` and `sys.stdout` can be assigned to an object 
-  with a `write()` method, and this allows for the redirection of output to go 
+- by default, `print()` will output to the web browser console and so are the
+  error messages. `sys.stderr` and `sys.stdout` can be assigned to an object
+  with a `write()` method, and this allows for the redirection of output to go
   to a window or text area, for example.
 
-- to open a print dialog (to a printer), call `window.print` (`window` is 
+- to open a print dialog (to a printer), call `window.print` (`window` is
   defined in module **browser**).
 
-- `sys.stdin` is not implemented at this time, however there is an `input()` 
+- `sys.stdin` is not implemented at this time, however there is an `input()`
   built-in function that will open a blocking input dialog (a prompt).
 
-- the objects lifecycle is managed by the Javascript garbage collector, 
+- the objects lifecycle is managed by the Javascript garbage collector,
   Brython doesn't manage reference counting like CPython. Therefore, method
   `__del__()` is not called when a class instance is no more referenced.
 
 - functions such as `time.sleep()` that block execution during a given time,
-  or until an event is triggered, are not managed because there is no 
+  or until an event is triggered, are not managed because there is no
   Javascript equivalent. In this case, the application must be written with
-  the functions of module **browser.timer** (eg `set_timeout()`, 
+  the functions of module **browser.timer** (eg `set_timeout()`,
   `set_interval()`), or by event handlers (method `bind()` of DOM elements).
 
+- the JSON parser uses that of Javascript ; because of that, the real
+  numbers that are equal to integers (eg 1.0) are converted into integers
+  by `json.dumps()`.
 
 Built-in value `__name__`
 -------------------------
@@ -58,7 +61,7 @@ Built-in value `__name__`
 The built-in variable `__name__` is set to the value of the attribute `id`
 of the script. For instance:
 
-```python
+```xml
 <script type="text/python" id="myscript">
 assert __name__ == 'myscript'
 </script>
@@ -73,7 +76,7 @@ For scripts that don't have an explicit `id` set :
   it will be able to run the usual test :
 
 <blockquote>
-```python
+```xml
 <script type="text/python">
 if __name__=='__main__':
     print('hello !')

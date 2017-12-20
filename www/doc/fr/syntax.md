@@ -58,6 +58,9 @@ Quelques particularités liées au contexte d'exécution dans un navigateur :
   `set_timeout()` ou `set_interval()`, ou des gestionnaires d'événements
   (méthode `bind()` des éléments DOM).
 
+- le parseur JSON réutilise celui de Javascript ; à cause de cela, les
+  nombres réels égaux à des entiers (par exemple 1.0) sont convertis en
+  entiers dans la sérialisation par `json.dumps()`.
 
 Valeur intégrée `__name__`
 --------------------------
@@ -65,7 +68,7 @@ Valeur intégrée `__name__`
 La valeur intégrée `__name__` est celle de l'attribut `id` du script. Par
 exemple:
 
-```python
+```xml
 <script type="text/python" id="monscript">
 assert __name__ == 'monscript'
 </script>
@@ -80,7 +83,7 @@ Pour les scripts dont l'attribut `id` n'est pas défini :
   qu'un script dans la page, il pourra exécuter le test habituel :
 
 <blockquote>
-```python
+```xml
 <script type="text/python">
 if __name__=='__main__':
     print('hello !')

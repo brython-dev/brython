@@ -1,6 +1,10 @@
 Questions fréquemment posées
 ----------------------------
 
+__Q__ : _que signifie "Brython" ?_
+
+__R__ : <u>Br</u>owser P<u>ython</u> (Python pour le navigateur). C'est aussi le mot gallois pour "breton".
+
 __Q__ : _avec quels navigateurs peut-on utiliser Brython ?_
 
 __R__ : sur tous les navigateurs modernes, y compris les smartphones. Le code Javscript généré évite intentionnellement de nouvelles syntaxes tant qu'elles ne sont pas supportées par la plupart des navigateurs.
@@ -17,6 +21,10 @@ La différence tient à deux facteurs :
 - le code Javascript généré par Brython doit être conforme aux spécifications de Python, notamment au caractère dynamique de la recherche d'attributs, ce qui dans certains cas conduit à du code Javascript non optimisé.
 
 Par rapport à d'autres solutions de traduction de Python en Javascript, un test est disponible sur [le blog de Pierre Quentel](https://brythonista.wordpress.com/2015/03/28/comparing-the-speed-of-cpython-brython-skulpt-and-pypy-js/) (le créateur et principal développeur de Brython). Il compare Brython, [Skulpt](http://skulpt.org) et [pypy.js](http://pypyjs.org/demo/). Il faut être prudent avec ce genre de comparaison, mais elle montre que pour le code testé, Brython est généralement plus rapide que pypy.js, lui-même plus rapide que Skulpt. Dans certains cas Brython est plus rapide que l'implémentation de référence de Python, CPython.
+
+Le repository Brython inclut un script, accessible à l'adresse _localhost:8000/speed_,
+qui compare la vitesse de Brython et de CPython sur la machine locale pour un certain
+nombre d'opérations élémentaires.
 
 __Q__ : _il y a des erreurs 404 dans la console du navigateur quand j'exécute des scripts Brython, pourquoi ?_
 

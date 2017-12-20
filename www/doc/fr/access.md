@@ -21,13 +21,6 @@ comporte comme un dictionnaire dont les clés sont les identifiants des
 éléments de la page. Si aucun élément ne possède l'identifiant spécifié, le
 programme déclenche une exception `KeyError`.
 
-On peut aussi récupérer tous les éléments d'un certain type, par exemple tous
-les liens hypertexte (balise HTML `A`), en  utilisant la syntaxe
-
-```python
-links = document.select("A")
-```
-
 Tous les éléments de la page possèdent une méthode `get()` qui permet
 de rechercher des éléments de plusieurs façons :
 
