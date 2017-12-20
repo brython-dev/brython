@@ -140,7 +140,7 @@ class Template:
                     value = item.value.replace('\n', '')
                     if "{" in value:
                         attr = ("__render_attr__('" + item.name + "', f'" +
-                            value + "')\n")
+                            value.replace("'", "\\'") + "')\n")
                     else:
                         attr = "__write__(' " + item.name + '= "' + value +'"\')\n'
                     attrs.append(attr)
@@ -198,6 +198,7 @@ class Template:
             exec(self.python, ns)
         except Exception as exc:
             if isinstance(exc, SyntaxError):
+                print(self.python)
                 line_no = exc.args[2]
             else:
                 line_no = exc.traceback.tb_lineno
