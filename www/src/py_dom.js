@@ -1077,12 +1077,16 @@ DOMNodeDict.id = function(self){
 }
 
 DOMNodeDict.index = function(self, selector){
+    var items
     if(selector===undefined){
-        // Get index of element in its parent children
-        selector = self.elt.tagName
+        if(self.elt.tagName !== undefined){
+            // Get index of element in its parent children
+            items = self.elt.parentElement.querySelectorAll(self.elt.tagName)
+        }else{
+            items = self.elt.parentElement.childNodes
+        }
     }
-    var items = self.elt.parentElement.querySelectorAll(selector),
-        rank = -1
+    var rank = -1
     for(var i=0;i<items.length;i++){
         if(items[i] === self.elt){rank=i;break}
     }

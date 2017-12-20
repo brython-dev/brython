@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-12-18 22:55:31.517751"
+__BRYTHON__.compiled_date="2017-12-20 09:26:50.629299"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -11209,9 +11209,10 @@ else{res=_b_.None}}
 return res}
 DOMNodeDict.id=function(self){if(self.elt.id !==undefined)return self.elt.id
 return None}
-DOMNodeDict.index=function(self,selector){if(selector===undefined){
-selector=self.elt.tagName}
-var items=self.elt.parentElement.querySelectorAll(selector),rank=-1
+DOMNodeDict.index=function(self,selector){var items
+if(selector===undefined){if(self.elt.tagName !==undefined){
+items=self.elt.parentElement.querySelectorAll(self.elt.tagName)}else{items=self.elt.parentElement.childNodes}}
+var rank=-1
 for(var i=0;i<items.length;i++){if(items[i]===self.elt){rank=i;break}}
 return rank}
 DOMNodeDict.inside=function(self,other){
