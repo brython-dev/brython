@@ -283,5 +283,6 @@ class Template:
                     raise TemplateError(f"wrong binding: {binding}")
                 event, func_name = [x.strip() for x in parts]
                 if not func_name in callbacks:
-                    raise TemplateError(f"Unknown callback: {func_name}")
+                    print(element.outerHTML)
+                    raise TemplateError(f"unknown callback: {func_name}")
                 self.on(element, event, callbacks[func_name])
