@@ -118,32 +118,43 @@ class Template:
         self.html += str(content)+"\n"
 
     def parse(self, elt):
+        """Parse the element recursively to generate the Python code that
+        will itself generate the HTML code to render the template.
+        """
+        # Flag to indicate if the element has an attribute b-code that
+        # starts a Python block (for loop, if / elif / else...).
         is_block = False
+
         if elt.nodeType == 3:
+            # text node
             if elt.text.strip():
                 lines = [line for line in elt.text.split('\n')
-                    if line.split()]
+                    if line.strip()]
                 text = ' '.join(lines).replace('"', '&quot;')
                 text = '"""' + text + '"""'
-                if "{" in text:
-                    text = "f" + text
+                # If the text has single braces, render it as an f-string
+                nb_braces = text.count("{")
+                if nb_braces:
+                    nb_double_braces = text.count("{{")
+                    if nb_double_braces != nb_braces:
+                        text = "f" + text
                 self.add_indent ('__write__(' + text + ')\n', elt)
 
         elif hasattr(elt, 'tagName'):
-            start_tag = "__write__('<" + elt.tagName +"')\n"
+            start_tag = "__write__('<" + elt.tagName
             block = None
-            attrs = []
+            static_attrs = []
+            dynamic_attrs = []
             for item in elt.attributes:
                 if item.name == "b-code":
                     block = item.value.rstrip(':') + ':'
                 else:
                     value = item.value.replace('\n', '')
                     if "{" in value:
-                        attr = ("__render_attr__('" + item.name + "', f'" +
-                            value.replace("'", "\\'") + "')\n")
+                        dynamic_attrs.append("'" + item.name + "', f'" +
+                            value.replace("'", "\\'") + "'")
                     else:
-                        attr = "__write__(' " + item.name + '= "' + value +'"\')\n'
-                    attrs.append(attr)
+                        static_attrs.append(item.name + '="' + value +'"')
             end_tag = "__write__('>')\n"
 
             if block:
@@ -152,10 +163,20 @@ class Template:
                 is_block = True
 
             self.add_indent(start_tag, elt)
-            for attr in attrs:
-                self.add_indent(attr, elt)
+            
+            if static_attrs or dynamic_attrs:
+                self.add(' ', elt)
+            for attr in static_attrs:
+                self.add_indent(attr + " ", elt)
+            if dynamic_attrs:
+                self.add("')\n", elt)
+                for attr in dynamic_attrs:
+                    self.add_indent("__render_attr__(" + attr + ")\n", elt)
+                self.add_indent("__write__('>')\n", elt)
+            else:
+                self.add_indent(">')\n", elt)
 
-            self.add_indent(end_tag, elt)
+            #self.add_indent(end_tag, elt)
 
         for child in elt.childNodes:
             self.parse(child)
@@ -198,19 +219,24 @@ class Template:
             exec(self.python, ns)
         except Exception as exc:
             if isinstance(exc, SyntaxError):
-                print(self.python)
                 line_no = exc.args[2]
             else:
                 line_no = exc.traceback.tb_lineno
             elt = self.line_mapping[line_no]
-            for item in elt.attributes:
-                if item.name == "b-code":
-                    print(self.source)
-            print(exc.__class__.__name__, exc)
+            print(elt.outerHTML)
+            print(f'{exc.__class__.__name__}: {exc!s}')
             return
 
-        # replace element content by generated html
-        self.element.html = self.html
+        # Replace element content by generated html.
+        # Since we reset outerHTML (this is necessary because the element may
+        # have dynamic attributes), we must reset the reference to the element
+        # because self.element would still point to the previous version
+        # (cf https://developer.mozilla.org/en-US/docs/Web/API/Element/outerHTML,
+        # section Notes).
+        rank = self.element.index()
+        parent = self.element.parent
+        self.element.outerHTML = self.html
+        self.element = parent.childNodes[rank]
 
         # bindings
         self.element.unbind()
