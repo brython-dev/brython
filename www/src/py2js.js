@@ -7236,6 +7236,54 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
                             // explicit line joining inside strings
                             end += 2
                             lnum++
+                        }else if(src.substr(end+1, 2)=='N{'){
+                            // Unicode literal ?
+                            var end_lit = end + 3,
+                                re = new RegExp("[-A-Z0-9 ]+"),
+                                search = re.exec(src.substr(end_lit))
+                            if(search===null){
+                                $_SyntaxError(context,"(unicode error) " +
+                                    "malformed \\N character escape",pos)
+                            }
+                            var end_lit = end_lit + search[0].length
+                            if(src.charAt(end_lit) != "}"){
+                                $_SyntaxError(context,"(unicode error) " +
+                                    "malformed \\N character escape",pos)
+                            }
+                            var description = search[0]
+                            // Load unicode table if not already loaded
+                            if($B.unicodedb===undefined){
+                                var xhr = new XMLHttpRequest
+                                xhr.open("GET", $B.brython_path+"unicode.txt",
+                                    false)
+                                xhr.onreadystatechange = function(){
+                                    if(this.readyState===4){
+                                        if(this.status===200){
+                                            $B.unicodedb=this.responseText
+                                        }else{
+                                            console.log("Warning - could not "+
+                                                "load unicode.txt")
+                                        }
+                                    }
+                                }
+                                xhr.send()
+                            }
+                            if($B.unicodedb!==undefined){
+                                var re = new RegExp("^([0-9A-F]+);"+description+"$", "m")
+                                search = re.exec($B.unicodedb)
+                                if(search===null){
+                                    $_SyntaxError(context,"(unicode error) " +
+                                        "unknown Unicode character name",pos)
+                                }
+                                if(search[1].length==4){
+                                    zone += "\\u" + search[1]
+                                    end = end_lit + 1
+                                }else{
+                                    end++
+                                }
+                            }else{
+                                end++
+                            }
                         } else {
                             if(end < src.length-1 &&
                                 is_escaped[src.charAt(end+1)]==undefined){

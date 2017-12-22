@@ -143,4 +143,8 @@ assert "André".isidentifier()
 assert "안녕하세요".isidentifier()
 assert not "1x".isidentifier()
 
+# issue 740
+s = "ess\N{LATIN CAPITAL LETTER A}i"
+assert s == "essAi"
+
 print("passed all tests...")
