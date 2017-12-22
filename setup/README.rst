@@ -1,4 +1,4 @@
-With Brython you can write browser programs in Python instead of Javascript, 
+With Brython you can write browser programs in Python instead of Javascript,
 by inserting Python code in an HTML page by::
 
     <script type="text/python">
@@ -8,10 +8,14 @@ by inserting Python code in an HTML page by::
 Usage::
 
     pip install brython
-    
+
 Then in an empty folder::
 
     python -m brython --install
 
-The package includes a page **demo.html** with examples of use. For more 
+or in a folder with older versions already present::
+
+    python -m brython --update
+    
+The package includes a page **demo.html** with examples of use. For more
 information see the `Brython site <http://brython.info>`_.
