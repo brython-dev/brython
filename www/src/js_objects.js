@@ -195,9 +195,12 @@ $JSObjectDict.__getattribute__ = function(self,attr){
     if(attr.substr(0,2)=='$$') attr=attr.substr(2)
     if(self.js===null) return $ObjectDict.__getattribute__(None,attr)
     if(attr==='__class__') return $JSObjectDict
-    if(self.__class__===$JSObjectDict && attr=="$bind" &&
+    if(self.__class__===$JSObjectDict && attr=="bind" &&
         self.js[attr]===undefined &&
-        self.js['addEventListener']!==undefined){attr='addEventListener'}
+        self.js['addEventListener']!==undefined){
+            // For JS objects, "bind" is aliased to addEventListener
+            attr='addEventListener'
+    }
     var js_attr = self.js[attr]
     if(self.js_func && self.js_func[attr]!==undefined){
         js_attr = self.js_func[attr]

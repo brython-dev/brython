@@ -2400,8 +2400,12 @@ function $DefCtx(context){
         // Close anonymous function with defaults as argument
         this.default_str = '{'+defs1.join(', ')+'}'
         if(this.type=="def"){
-            node.parent.insert(rank+offset++, $NodeJS('return '+name+'})('+
-                this.default_str+')'))
+            js = 'return '+name+'})('+ this.default_str+')'
+            node.parent.insert(rank+offset++, $NodeJS(js))
+            if(this.async){
+                js = prefix + ' = $B.make_async(' + prefix + ')'
+                node.parent.insert(rank+offset++, $NodeJS(js))
+            }
         }
 
         // wrap everything in a try/catch to be sure to exit from frame
@@ -2440,10 +2444,7 @@ function $DefCtx(context){
         func_name = func_name || this.tree[0].to_js()
         if(this.decorated){func_name='var '+this.alias}
 
-        func_name = func_name || this.tree[0].to_js() //
-        if(this.decorated){func_name='var '+this.alias}
-        //else{func_name = 'var '+this.name+' = '+func_name}
-        return func_name+' = (function ($defaults){function '+
+        return func_name +' = (function ($defaults){function '+
             this.name+this.num+'('+this.params+')'
     }
 }
@@ -7853,7 +7854,7 @@ function run_script(script){
         // instance of a Python exception
         if($err.$py_error===undefined){
             console.log('Javascript error', $err)
-            console.log(js)
+            //console.log(js)
             //for(var attr in $err){console.log(attr+': '+$err[attr])}
             $err=_b_.RuntimeError($err+'')
         }

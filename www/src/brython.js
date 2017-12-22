@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,3,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.3.6"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-12-20 09:26:50.629299"
+__BRYTHON__.compiled_date="2017-12-22 12:05:58.829262"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1231,8 +1231,10 @@ new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank+offset++,new_node)
 this.default_str='{'+defs1.join(', ')+'}'
-if(this.type=="def"){node.parent.insert(rank+offset++,$NodeJS('return '+name+'})('+
-this.default_str+')'))}
+if(this.type=="def"){js='return '+name+'})('+ this.default_str+')'
+node.parent.insert(rank+offset++,$NodeJS(js))
+if(this.async){js=prefix + ' = $B.make_async(' + prefix + ')'
+node.parent.insert(rank+offset++,$NodeJS(js))}}
 if(this.type=='def'){var parent=node
 for(var pos=0;pos<parent.children.length &&
 parent.children[pos]!==enter_frame_node;pos++){}
@@ -1248,9 +1250,7 @@ return offset}
 this.to_js=function(func_name){this.js_processed=true
 func_name=func_name ||this.tree[0].to_js()
 if(this.decorated){func_name='var '+this.alias}
-func_name=func_name ||this.tree[0].to_js()
-if(this.decorated){func_name='var '+this.alias}
-return func_name+' = (function ($defaults){function '+
+return func_name +' = (function ($defaults){function '+
 this.name+this.num+'('+this.params+')'}}
 function $DelCtx(C){
 this.type='del'
@@ -4223,7 +4223,6 @@ if($B.debug>1){console.log(js)}
 eval(js)}catch($err){if($B.debug>1){console.log($err)
 for(var attr in $err){console.log(attr+' : ',$err[attr])}}
 if($err.$py_error===undefined){console.log('Javascript error',$err)
-console.log(js)
 $err=_b_.RuntimeError($err+'')}
 var name=$err.__name__
 var $trace=_b_.getattr($err,'info')
@@ -7088,9 +7087,10 @@ $JSObjectDict.__dir__=function(self){return Object.keys(self.js)}
 $JSObjectDict.__getattribute__=function(self,attr){if(attr.substr(0,2)=='$$')attr=attr.substr(2)
 if(self.js===null)return $ObjectDict.__getattribute__(None,attr)
 if(attr==='__class__')return $JSObjectDict
-if(self.__class__===$JSObjectDict && attr=="$bind" &&
+if(self.__class__===$JSObjectDict && attr=="bind" &&
 self.js[attr]===undefined &&
-self.js['addEventListener']!==undefined){attr='addEventListener'}
+self.js['addEventListener']!==undefined){
+attr='addEventListener'}
 var js_attr=self.js[attr]
 if(self.js_func && self.js_func[attr]!==undefined){js_attr=self.js_func[attr]}
 if(js_attr !==undefined){if(typeof js_attr=='function'){
@@ -10996,6 +10996,10 @@ if(res!==undefined && res!==null && res!="" &&
 self.elt[attr]===undefined){
 return res}}
 var res=self.elt[attr]
+if(attr=="select" && self.elt.nodeType==1 &&
+["INPUT","TEXTAREA"].indexOf(self.elt.tagName.toUpperCase())>-1 ){
+return function(selector){if(selector===undefined){self.elet.select();return _b_.None}
+return DOMNodeDict.select(self,selector)}}
 if(res!==undefined){if(res===null){return _b_.None}
 if(typeof res==="function"){var func=(function(f,elt){return function(){var args=[],pos=0
 for(var i=0;i<arguments.length;i++){var arg=arguments[i]
@@ -11210,8 +11214,7 @@ return res}
 DOMNodeDict.id=function(self){if(self.elt.id !==undefined)return self.elt.id
 return None}
 DOMNodeDict.index=function(self,selector){var items
-if(selector===undefined){if(self.elt.tagName !==undefined){
-items=self.elt.parentElement.querySelectorAll(self.elt.tagName)}else{items=self.elt.parentElement.childNodes}}
+if(selector===undefined){items=self.elt.parentElement.childNodes}else{items=self.elt.parentElement.querySelectorAll(selector)}
 var rank=-1
 for(var i=0;i<items.length;i++){if(items[i]===self.elt){rank=i;break}}
 return rank}
