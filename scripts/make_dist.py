@@ -22,7 +22,7 @@ if sys.version_info[0] != 3:
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
-implementation = [3, 3, 6, 'dev', 0]
+implementation = [3, 4, 0, 'dev', 0]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
@@ -83,6 +83,9 @@ def run():
 
         #log.info("Finished Writing file: " + abs_path('version_info.js'))
 
+    # generate html files that compare Brython and CPython distributions
+    import make_stdlib_list
+
     import make_stdlib_static
     # build brython.js from base Javascript files
     sources = [
@@ -135,7 +138,7 @@ def run():
 
     # copy files in folder /setup
     sdir = os.path.join(pdir, 'setup', 'data')
-    for f in ['brython.js', 'brython_stdlib.js']:
+    for f in ['brython.js', 'brython_stdlib.js', 'unicode.txt']:
         shutil.copyfile(os.path.join(src_dir, f), os.path.join(sdir, f))
 
     # copy demo.html
@@ -161,7 +164,7 @@ def run():
 
     # copy files in folder /npm
     npmdir = os.path.join(pdir, 'npm')
-    for f in ['brython.js', 'brython_stdlib.js']:
+    for f in ['brython.js', 'brython_stdlib.js', 'unicode.txt']:
         shutil.copyfile(os.path.join(src_dir, f), os.path.join(npmdir, f))
 
     # create zip files
@@ -173,7 +176,8 @@ def run():
     dist3 = zipfile.ZipFile(dest_path + '.zip', mode='w',
                             compression=zipfile.ZIP_DEFLATED)
 
-    paths = ['README.txt', 'demo.html', 'brython.js', 'brython_stdlib.js']
+    paths = ['README.txt', 'demo.html', 'brython.js', 'brython_stdlib.js',
+        'unicode.txt']
 
     for arc, wfunc in ((dist1, dist1.add), (dist2, dist2.add),
             (dist3, dist3.write)):
