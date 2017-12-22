@@ -423,7 +423,10 @@ $JSObjectDict.__str__ = $JSObjectDict.__repr__
 var no_dict = {'string':true,'function':true,'number':true,'boolean':true}
 
 $JSObjectDict.bind = function(self, evt, func){
-    self.js.addEventListener(evt, func)
+    var js_func = function(ev) {
+        return func(jsobj2pyobj(ev))
+    }
+    self.js.addEventListener(evt, js_func)
     return _b_.None
 }
 
