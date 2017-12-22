@@ -567,6 +567,19 @@ DOMNodeDict.__getattribute__ = function(self,attr){
 
     var res = self.elt[attr]
 
+    if(attr=="select" && self.elt.nodeType == 1 &&
+            ["INPUT", "TEXTAREA"].indexOf(self.elt.tagName.toUpperCase())>-1 ){
+        // Special case for attribute "select" of INPUT or TEXTAREA tags :
+        // they have a "select" methods ; element.select() selects the
+        // element text content.
+        // Return a function that, if called without arguments, uses this
+        // method ; otherwise, uses DOMNodeDict.select
+        return function(selector){
+            if(selector===undefined){self.elet.select(); return _b_.None}
+            return DOMNodeDict.select(self, selector)
+        }
+    }
+
     if(res!==undefined){
         if(res===null){return _b_.None}
         if(typeof res==="function"){
@@ -1079,12 +1092,9 @@ DOMNodeDict.id = function(self){
 DOMNodeDict.index = function(self, selector){
     var items
     if(selector===undefined){
-        if(self.elt.tagName !== undefined){
-            // Get index of element in its parent children
-            items = self.elt.parentElement.querySelectorAll(self.elt.tagName)
-        }else{
-            items = self.elt.parentElement.childNodes
-        }
+        items = self.elt.parentElement.childNodes
+    }else{
+        items = self.elt.parentElement.querySelectorAll(selector)
     }
     var rank = -1
     for(var i=0;i<items.length;i++){
@@ -1231,13 +1241,13 @@ DOMNodeDict.setSelectionRange = function(self){ // for TEXTAREA
         return (function(obj){
             return function(start_pos,end_pos){
                 if(end_pos==undefined){end_pos=start_pos}
-        var range = obj.createTextRange();
-        range.collapse(true);
-        range.moveEnd('character', start_pos);
-        range.moveStart('character', end_pos);
-        range.select();
-            }
-    })(this)
+            var range = obj.createTextRange();
+            range.collapse(true);
+            range.moveEnd('character', start_pos);
+            range.moveStart('character', end_pos);
+            range.select();
+                }
+        })(this)
     }
 }
 
