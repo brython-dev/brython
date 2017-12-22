@@ -1,173 +1,382 @@
-"""
-This module makes available standard errno system symbols.
+"""This module makes available standard errno system symbols.
+
 The value of each symbol is the corresponding integer value,
 e.g., on most systems, errno.ENOENT equals the integer 2.
+
 The dictionary errno.errorcode maps numeric codes to symbol names,
 e.g., errno.errorcode[2] could be the string 'ENOENT'.
 
 Symbols that are not relevant to the underlying system are not defined.
 
 To map error codes to error messages, use the function os.strerror(),
-e.g. os.strerror(2) could return 'No such file or directory'.
-"""
+e.g. os.strerror(2) could return 'No such file or directory'."""
 
-errorcode= {1: 'EPERM', 2: 'ENOENT', 3: 'ESRCH', 4: 'EINTR', 5: 'EIO', 
-6: 'ENXIO', 7: 'E2BIG', 8: 'ENOEXEC', 9: 'EBADF', 10: 'ECHILD', 11: 'EAGAIN', 
-12: 'ENOMEM', 13: 'EACCES', 14: 'EFAULT', 15: 'ENOTBLK', 16: 'EBUSY', 
-17: 'EEXIST', 18: 'EXDEV', 19: 'ENODEV', 20: 'ENOTDIR', 21: 'EISDIR', 
-22: 'EINVAL', 23: 'ENFILE', 24: 'EMFILE', 25: 'ENOTTY', 26: 'ETXTBSY', 
-27: 'EFBIG', 28: 'ENOSPC', 29: 'ESPIPE', 30: 'EROFS', 31: 'EMLINK', 
-32: 'EPIPE', 33: 'EDOM', 34: 'ERANGE', 35: 'EDEADLOCK', 36: 'ENAMETOOLONG', 
-37: 'ENOLCK', 38: 'ENOSYS', 39: 'ENOTEMPTY', 40: 'ELOOP', 42: 'ENOMSG', 
-43: 'EIDRM', 44: 'ECHRNG', 45: 'EL2NSYNC', 46: 'EL3HLT', 47: 'EL3RST', 
-48: 'ELNRNG', 49: 'EUNATCH', 50: 'ENOCSI', 51: 'EL2HLT', 52: 'EBADE', 
-53: 'EBADR', 54: 'EXFULL', 55: 'ENOANO', 56: 'EBADRQC', 57: 'EBADSLT', 
-59: 'EBFONT', 60: 'ENOSTR', 61: 'ENODATA', 62: 'ETIME', 63: 'ENOSR', 
-64: 'ENONET', 65: 'ENOPKG', 66: 'EREMOTE', 67: 'ENOLINK', 68: 'EADV', 
-69: 'ESRMNT', 70: 'ECOMM', 71: 'EPROTO', 72: 'EMULTIHOP', 73: 'EDOTDOT', 
-74: 'EBADMSG', 75: 'EOVERFLOW', 76: 'ENOTUNIQ', 77: 'EBADFD', 78: 'EREMCHG', 
-79: 'ELIBACC', 80: 'ELIBBAD', 81: 'ELIBSCN', 82: 'ELIBMAX', 83: 'ELIBEXEC', 
-84: 'EILSEQ', 85: 'ERESTART', 86: 'ESTRPIPE', 87: 'EUSERS', 88: 'ENOTSOCK', 
-89: 'EDESTADDRREQ', 90: 'EMSGSIZE', 91: 'EPROTOTYPE', 92: 'ENOPROTOOPT', 
-93: 'EPROTONOSUPPORT', 94: 'ESOCKTNOSUPPORT', 95: 'ENOTSUP', 
-96: 'EPFNOSUPPORT', 97: 'EAFNOSUPPORT', 98: 'EADDRINUSE', 
-99: 'EADDRNOTAVAIL', 100: 'ENETDOWN', 101: 'ENETUNREACH', 102: 'ENETRESET', 
-103: 'ECONNABORTED', 104: 'ECONNRESET', 105: 'ENOBUFS', 106: 'EISCONN', 
-107: 'ENOTCONN', 108: 'ESHUTDOWN', 109: 'ETOOMANYREFS', 110: 'ETIMEDOUT', 
-111: 'ECONNREFUSED', 112: 'EHOSTDOWN', 113: 'EHOSTUNREACH', 114: 'EALREADY', 
-115: 'EINPROGRESS', 116: 'ESTALE', 117: 'EUCLEAN', 118: 'ENOTNAM', 
-119: 'ENAVAIL', 120: 'EISNAM', 121: 'EREMOTEIO', 122: 'EDQUOT', 
-123: 'ENOMEDIUM', 124: 'EMEDIUMTYPE', 125: 'ECANCELED', 126: 'ENOKEY', 
-127: 'EKEYEXPIRED', 128: 'EKEYREVOKED', 129: 'EKEYREJECTED', 
-130: 'EOWNERDEAD', 131: 'ENOTRECOVERABLE', 132: 'ERFKILL'}
 
-EPERM=1
-ENOENT=2
-ESRCH=3
-EINTR=4
-EIO=5
-ENXIO=6
-E2BIG=7
-ENOEXEC=8
-EBADF=9
-ECHILD=10
-EAGAIN=11
-ENOMEM=12
-EACCES=13
-EFAULT=14
-ENOTBLK=15
-EBUSY=16
-EEXIST=17
-EXDEV=18
-ENODEV=19
-ENOTDIR=20
-EISDIR=21
-EINVAL=22
-ENFILE=23
-EMFILE=24
-ENOTTY=25
-ETXTBSY=26
-EFBIG=27
-ENOSPC=28
-ESPIPE=29
-EROFS=30
-EMLINK=31
-EPIPE=32
-EDOM=33
-ERANGE=34
-EDEADLOCK=35
-ENAMETOOLONG=36
-ENOLCK=37
-ENOSYS=38
-ENOTEMPTY=39
-ELOOP=40
-ENOMSG=42
-EIDRM=43
-ECHRNG=44
-EL2NSYNC=45
-EL3HLT=46
-EL3RST=47
-ELNRNG=48
-EUNATCH=49
-ENOCSI=50
-EL2HLT=51
-EBADE=52
-EBADR=53
-EXFULL=54
-ENOANO=55
-EBADRQC=56
-EBADSLT=57
-EBFONT=59
-ENOSTR=60
-ENODATA=61
-ETIME=62
-ENOSR=63
-ENONET=64
-ENOPKG=65
-EREMOTE=66
-ENOLINK=67
-EADV=68
-ESRMNT=69
-ECOMM=70
-EPROTO=71
-EMULTIHOP=72
-EDOTDOT=73
-EBADMSG=74
-EOVERFLOW=75
-ENOTUNIQ=76
-EBADFD=77
-EREMCHG=78
-ELIBACC=79
-ELIBBAD=80
-ELIBSCN=81
-ELIBMAX=82
-ELIBEXEC=83
-EILSEQ=84
-ERESTART=85
-ESTRPIPE=86
-EUSERS=87
-ENOTSOCK=88
-EDESTADDRREQ=89
-EMSGSIZE=90
-EPROTOTYPE=91
-ENOPROTOOPT=92
-EPROTONOSUPPORT=93
-ESOCKTNOSUPPORT=94
-ENOTSUP=95
-EPFNOSUPPORT=96
-EAFNOSUPPORT=97
-EADDRINUSE=98
-EADDRNOTAVAIL=99
-ENETDOWN=100
-ENETUNREACH=101
-ENETRESET=102
-ECONNABORTED=103
-ECONNRESET=104
-ENOBUFS=105
-EISCONN=106
-ENOTCONN=107
-ESHUTDOWN=108
-ETOOMANYREFS=109
-ETIMEDOUT=110
-ECONNREFUSED=111
-EHOSTDOWN=112
-EHOSTUNREACH=113
-EALREADY=114
-EINPROGRESS=115
-ESTALE=116
-EUCLEAN=117
-ENOTNAM=118
-ENAVAIL=119
-EISNAM=120
-EREMOTEIO=121
-EDQUOT=122
-ENOMEDIUM=123
-EMEDIUMTYPE=124
-ECANCELED=125
-ENOKEY=126
-EKEYEXPIRED=127
-EKEYREVOKED=128
-EKEYREJECTED=129
-EOWNERDEAD=130
-ENOTRECOVERABLE=131
-ERFKILL=132
+E2BIG = 7
+
+EACCES = 13
+
+EADDRINUSE = 10048
+
+EADDRNOTAVAIL = 10049
+
+EAFNOSUPPORT = 10047
+
+EAGAIN = 11
+
+EALREADY = 10037
+
+EBADF = 9
+
+EBADMSG = 104
+
+EBUSY = 16
+
+ECANCELED = 105
+
+ECHILD = 10
+
+ECONNABORTED = 10053
+
+ECONNREFUSED = 10061
+
+ECONNRESET = 10054
+
+EDEADLK = 36
+
+EDEADLOCK = 36
+
+EDESTADDRREQ = 10039
+
+EDOM = 33
+
+EDQUOT = 10069
+
+EEXIST = 17
+
+EFAULT = 14
+
+EFBIG = 27
+
+EHOSTDOWN = 10064
+
+EHOSTUNREACH = 10065
+
+EIDRM = 111
+
+EILSEQ = 42
+
+EINPROGRESS = 10036
+
+EINTR = 4
+
+EINVAL = 22
+
+EIO = 5
+
+EISCONN = 10056
+
+EISDIR = 21
+
+ELOOP = 10062
+
+EMFILE = 24
+
+EMLINK = 31
+
+EMSGSIZE = 10040
+
+ENAMETOOLONG = 38
+
+ENETDOWN = 10050
+
+ENETRESET = 10052
+
+ENETUNREACH = 10051
+
+ENFILE = 23
+
+ENOBUFS = 10055
+
+ENODATA = 120
+
+ENODEV = 19
+
+ENOENT = 2
+
+ENOEXEC = 8
+
+ENOLCK = 39
+
+ENOLINK = 121
+
+ENOMEM = 12
+
+ENOMSG = 122
+
+ENOPROTOOPT = 10042
+
+ENOSPC = 28
+
+ENOSR = 124
+
+ENOSTR = 125
+
+ENOSYS = 40
+
+ENOTCONN = 10057
+
+ENOTDIR = 20
+
+ENOTEMPTY = 41
+
+ENOTRECOVERABLE = 127
+
+ENOTSOCK = 10038
+
+ENOTSUP = 129
+
+ENOTTY = 25
+
+ENXIO = 6
+
+EOPNOTSUPP = 10045
+
+EOVERFLOW = 132
+
+EOWNERDEAD = 133
+
+EPERM = 1
+
+EPFNOSUPPORT = 10046
+
+EPIPE = 32
+
+EPROTO = 134
+
+EPROTONOSUPPORT = 10043
+
+EPROTOTYPE = 10041
+
+ERANGE = 34
+
+EREMOTE = 10071
+
+EROFS = 30
+
+ESHUTDOWN = 10058
+
+ESOCKTNOSUPPORT = 10044
+
+ESPIPE = 29
+
+ESRCH = 3
+
+ESTALE = 10070
+
+ETIME = 137
+
+ETIMEDOUT = 10060
+
+ETOOMANYREFS = 10059
+
+ETXTBSY = 139
+
+EUSERS = 10068
+
+EWOULDBLOCK = 10035
+
+EXDEV = 18
+
+WSABASEERR = 10000
+
+WSAEACCES = 10013
+
+WSAEADDRINUSE = 10048
+
+WSAEADDRNOTAVAIL = 10049
+
+WSAEAFNOSUPPORT = 10047
+
+WSAEALREADY = 10037
+
+WSAEBADF = 10009
+
+WSAECONNABORTED = 10053
+
+WSAECONNREFUSED = 10061
+
+WSAECONNRESET = 10054
+
+WSAEDESTADDRREQ = 10039
+
+WSAEDISCON = 10101
+
+WSAEDQUOT = 10069
+
+WSAEFAULT = 10014
+
+WSAEHOSTDOWN = 10064
+
+WSAEHOSTUNREACH = 10065
+
+WSAEINPROGRESS = 10036
+
+WSAEINTR = 10004
+
+WSAEINVAL = 10022
+
+WSAEISCONN = 10056
+
+WSAELOOP = 10062
+
+WSAEMFILE = 10024
+
+WSAEMSGSIZE = 10040
+
+WSAENAMETOOLONG = 10063
+
+WSAENETDOWN = 10050
+
+WSAENETRESET = 10052
+
+WSAENETUNREACH = 10051
+
+WSAENOBUFS = 10055
+
+WSAENOPROTOOPT = 10042
+
+WSAENOTCONN = 10057
+
+WSAENOTEMPTY = 10066
+
+WSAENOTSOCK = 10038
+
+WSAEOPNOTSUPP = 10045
+
+WSAEPFNOSUPPORT = 10046
+
+WSAEPROCLIM = 10067
+
+WSAEPROTONOSUPPORT = 10043
+
+WSAEPROTOTYPE = 10041
+
+WSAEREMOTE = 10071
+
+WSAESHUTDOWN = 10058
+
+WSAESOCKTNOSUPPORT = 10044
+
+WSAESTALE = 10070
+
+WSAETIMEDOUT = 10060
+
+WSAETOOMANYREFS = 10059
+
+WSAEUSERS = 10068
+
+WSAEWOULDBLOCK = 10035
+
+WSANOTINITIALISED = 10093
+
+WSASYSNOTREADY = 10091
+
+WSAVERNOTSUPPORTED = 10092
+
+class __loader__(object):
+    """Meta path import for built-in modules.
+
+        All methods are either class or static methods to avoid the need to
+        instantiate the class.
+
+        """
+
+
+    __delattr__ = "<slot wrapper '__delattr__' of 'object' objects>"
+
+    __dict__ = "{'__module__': '_frozen_importlib', '__doc__': 'Meta path import for built-in modules.\n\n    All methods are either class or static methods to avoid the need to\n    instantiate the class.\n\n    ', 'module_repr': <staticmethod object at 0x00000153E1934208>, 'find_spec': <classmethod object at 0x00000153E1934240>, 'find_module': <classmethod object at 0x00000153E1934278>, 'create_module': <classmethod object at 0x00000153E19342B0>, 'exec_module': <classmethod object at 0x00000153E19342E8>, 'get_code': <classmethod object at 0x00000153E1934358>, 'get_source': <classmethod object at 0x00000153E19343C8>, 'is_package': <classmethod object at 0x00000153E1934438>, 'load_module': <classmethod object at 0x00000153E1934470>, '__dict__': <attribute '__dict__' of 'BuiltinImporter' objects>, '__weakref__': <attribute '__weakref__' of 'BuiltinImporter' objects>}"
+
+    __dir__ = "<method '__dir__' of 'object' objects>"
+
+    __eq__ = "<slot wrapper '__eq__' of 'object' objects>"
+
+    __format__ = "<method '__format__' of 'object' objects>"
+
+    __ge__ = "<slot wrapper '__ge__' of 'object' objects>"
+
+    __getattribute__ = "<slot wrapper '__getattribute__' of 'object' objects>"
+
+    __gt__ = "<slot wrapper '__gt__' of 'object' objects>"
+
+    __hash__ = "<slot wrapper '__hash__' of 'object' objects>"
+
+    __init__ = "<slot wrapper '__init__' of 'object' objects>"
+
+    def __init_subclass__(*args,**kw):
+        """This method is called when a class is subclassed.
+        The default implementation does nothing. It may be
+        overridden to extend subclasses.
+        """
+        pass
+
+    __le__ = "<slot wrapper '__le__' of 'object' objects>"
+
+    __lt__ = "<slot wrapper '__lt__' of 'object' objects>"
+
+    __module__ = """_frozen_importlib"""
+
+    __ne__ = "<slot wrapper '__ne__' of 'object' objects>"
+
+    def __new__(*args,**kw):
+        """Create and return a new object.  See help(type) for accurate signature."""
+        pass
+
+    __reduce__ = "<method '__reduce__' of 'object' objects>"
+
+    __reduce_ex__ = "<method '__reduce_ex__' of 'object' objects>"
+
+    __repr__ = "<slot wrapper '__repr__' of 'object' objects>"
+
+    __setattr__ = "<slot wrapper '__setattr__' of 'object' objects>"
+
+    __sizeof__ = "<method '__sizeof__' of 'object' objects>"
+
+    __str__ = "<slot wrapper '__str__' of 'object' objects>"
+
+    def __subclasshook__(*args,**kw):
+        """Abstract classes can override this to customize issubclass().
+        This is invoked early on by abc.ABCMeta.__subclasscheck__().
+        It should return True, False or NotImplemented.  If it returns
+        NotImplemented, the normal algorithm is used.  Otherwise, it
+        overrides the normal algorithm (and the outcome is cached).
+        """
+        pass
+
+    __weakref__ = "<attribute '__weakref__' of 'BuiltinImporter' objects>"
+
+    create_module = "<bound method BuiltinImporter.create_module of <class '_frozen_importlib.BuiltinImporter'>>"
+
+    exec_module = "<bound method BuiltinImporter.exec_module of <class '_frozen_importlib.BuiltinImporter'>>"
+
+    find_module = "<bound method BuiltinImporter.find_module of <class '_frozen_importlib.BuiltinImporter'>>"
+
+    find_spec = "<bound method BuiltinImporter.find_spec of <class '_frozen_importlib.BuiltinImporter'>>"
+
+    get_code = "<bound method BuiltinImporter.get_code of <class '_frozen_importlib.BuiltinImporter'>>"
+
+    get_source = "<bound method BuiltinImporter.get_source of <class '_frozen_importlib.BuiltinImporter'>>"
+
+    is_package = "<bound method BuiltinImporter.is_package of <class '_frozen_importlib.BuiltinImporter'>>"
+
+    load_module = "<bound method _load_module_shim of <class '_frozen_importlib.BuiltinImporter'>>"
+
+    def module_repr(*args,**kw):
+        """Return repr for the module.
+                The method is deprecated.  The import machinery does the job itself.
+
+                """
+        pass
+__spec__ = "ModuleSpec(name='errno', loader=<class '_frozen_importlib.BuiltinImporter'>, origin='built-in')"
+
+errorcode = {v:k for (k, v) in globals().items() if k == k.upper()}
