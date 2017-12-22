@@ -5,5 +5,7 @@ if hasattr(window, 'WebSocket'):
     WebSocket = window.WebSocket.new
 else:
     supported = False
-    def WebSocket(*args,**kw):
-        raise NotImplementedError
+
+    class WebSocket:
+        def __init__(self, *args):
+            raise NotImplementedError
