@@ -10,7 +10,7 @@ with open('README.rst', encoding='utf-8') as fobj:
 setup(
     name='brython',
 
-    version='3.3.4',
+    version='3.4.0',
 
     description='Brython is an implementation of Python 3 running in the browser',
 
@@ -48,25 +48,16 @@ setup(
     # What does your project relate to?
     keywords='Python browser',
 
-    # You can just specify the packages manually here if your project is
-    # simple. Or you can use find_packages().
-    # packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-
-    # Alternatively, if you want to distribute just a my_module.py, uncomment
-    # this:
     py_modules=["brython", "list_modules", "server"],
 
-
-    # If there are data files included in your packages that need to be
-    # installed, specify them here.  If using Python 2.6 or less, then these
-    # have to be included in MANIFEST.in as well.
     package_data={
         'data': [
             'README.txt',
             'demo.html',
             'brython.js',
-            'brython_stdlib.js'
-            ],
+            'brython_stdlib.js',
+            'unicode.txt'
+            ]
     }
 
 )

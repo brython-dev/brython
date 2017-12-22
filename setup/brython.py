@@ -36,7 +36,8 @@ parser.add_argument('--update', help='Update Brython scripts',
 
 args = parser.parse_args()
 
-files = 'README.txt', 'demo.html', 'brython.js', 'brython_stdlib.js'
+files = ['README.txt', 'demo.html', 'brython.js', 'brython_stdlib.js',
+    'unicode.txt']
 
 if args.add_package:
     print('add package {}...'.format(args.add_package))
