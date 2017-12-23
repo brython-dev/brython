@@ -48,7 +48,7 @@ Les attributs d'une balise HTML peuvent également être des variables:
 from browser import document
 from browser.template import Template
 
-Template(document["link"]).render(url="brython.info", name="Brython site")
+Template("link").render(url="brython.info", name="Brython site")
 ```
 
 Au lieu d'une variable simple, on peut mettre une expression:
@@ -76,7 +76,7 @@ L'attribut spécial `b-code` permet de définir un bloc de code : une boucle
 ```
 ```python
 teams = ["FC Barcelona", "Real Madrid CF", "Liverpool FC"]
-Template(document["team_list"]).render(teams)
+Template("team_list").render(teams)
 ```
 
 Les blocs de code peuvent être imbriqués. Par exemple le code suivant génère
@@ -116,7 +116,7 @@ Le template inclus dans la page sera rendu avec les arguments passés
 au template dans la page principale:
 
 ```python
-Template(document["menu"]).render(title="Page d'accueil")
+Template("menu").render(title="Page d'accueil")
 ```
 
 ## Gestion d'événements
@@ -134,11 +134,13 @@ Par exemple, pour gérer l'événement "click" sur un bouton:
 <button id="hello" b-on="click:say_hello">Hello !</button>
 ```
 
+Python code:
+
 ```python
 def say_hello(event, element):
     alert("Hello world")
 
-Template(document["hello"], [say_hello]).render()
+Template("hello", [say_hello]).render()
 ```
 
 S'il y a plusieurs gestionnaires d'événements, ils sont séparés par `;`:
@@ -163,7 +165,7 @@ comme argument de `render()`:
 def say_hello(event, element):
     alert(element.data.text)
 
-Template(document["hello"], [say_hello]).render(text="Hello, world !")
+Template("hello", [say_hello]).render(text="Hello, world !")
 ```
 
 Quand une fonction de gestion est exécutée, si les données associées à
@@ -182,5 +184,5 @@ Par exemple, pour incrémenter une valeur en appuyant sur un bouton:
 def incr(event, element):
     element.data.counter += 1
 
-Template(document["incrementer"], [incr]).render(counter=0)
+Template("incrementer", [incr]).render(counter=0)
 ```

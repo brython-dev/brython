@@ -85,7 +85,7 @@ The included template will be rendered with the arguments passed in the main
 page:
 
 ```python
-Template(document["menu"]).render(title="Home page")
+Template("menu").render(title="Home page")
 ```
 
 ## Code blocks
@@ -100,7 +100,7 @@ condition (`if`, `elif`, `else`).
 ```
 ```python
 teams = ["FC Barcelona", "Real Madrid CF", "Liverpool FC"]
-Template(document["team_list"]).render(teams)
+Template("team_list").render(teams)
 ```
 
 Code blocks can be nested. For instance, the following code generates a line
@@ -136,7 +136,7 @@ For instance, to manage the event "click" on a button:
 def say_hello(event, element):
     alert("Hello world")
 
-Template(document["hello"], [say_hello]).render()
+Template("hello", [say_hello]).render()
 ```
 
 To specify several handlers, separate them with `;`:
@@ -161,7 +161,7 @@ So, the example above can be modified by passing the text as an argument of
 def say_hello(event, element):
     alert(element.data.text)
 
-Template(document["hello"], [say_hello]).render(text="Hello, world !")
+Template("hello", [say_hello]).render(text="Hello, world !")
 ```
 
 When a handler function is executed, if the data associated with the element
@@ -176,9 +176,11 @@ For example, to increment a counter by hitting a button:
 </div>
 ```
 
+Code Python:
+
 ```python
 def incr(event, element):
     element.data.counter += 1
 
-Template(document["incrementer"], [incr]).render(counter=0)
+Template("incrementer", [incr]).render(counter=0)
 ```
