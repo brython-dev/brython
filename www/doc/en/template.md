@@ -1,7 +1,7 @@
 module **browser.template**
 ---------------------------
 
-The module **template** allows to dynamically generate some elements in a page
+The module **template** allows to dynamically generate some elements in a
 page, by including Python code blocks or expressions inside the HTML code.
 
 ## Variables
@@ -132,6 +132,8 @@ For instance, to manage the event "click" on a button:
 <button id="hello" b-on="click:say_hello">Hello !</button>
 ```
 
+Python code:
+
 ```python
 def say_hello(event, element):
     alert("Hello world")
@@ -176,7 +178,7 @@ For example, to increment a counter by hitting a button:
 </div>
 ```
 
-Code Python:
+Python code:
 
 ```python
 def incr(event, element):

@@ -134,7 +134,7 @@ Par exemple, pour gérer l'événement "click" sur un bouton:
 <button id="hello" b-on="click:say_hello">Hello !</button>
 ```
 
-Python code:
+Code Python:
 
 ```python
 def say_hello(event, element):
@@ -179,6 +179,8 @@ Par exemple, pour incrémenter une valeur en appuyant sur un bouton:
   <button b-on="click:incr">+1</button>{counter}
 </div>
 ```
+
+Code Python:
 
 ```python
 def incr(event, element):
