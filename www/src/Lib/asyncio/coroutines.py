@@ -43,21 +43,31 @@ def coroutine(func):
         so that when ``print`` is called it has the results ready.
     """
 
-    def run(*args, **kwargs):
-        generator = func(*args, **kwargs)
-        final_result = Future()
-        try:
-            first_result = next(generator)
-            _cb = get_continuation(generator, final_result)
-            first_result.add_done_callback(_cb)
-        except StopIteration as ex:
-            if hasattr(ex, 'value'):
-                final_result.set_result(ex.value)
-            else:
-                final_result.set_result(None)
-        except Exception as ex:
-            final_result.set_exception(ex)
-        return final_result
+    if not func.__code__.co_flags & 0x20:
+        # The function is not a generator
+        def run(*args, **kwargs):
+            final_result = Future()
+            try:
+                final_result.set_result(func(*args, **kwargs))
+            except Exception as ex:
+                final_result.set_exception(ex)
+            return final_result
+    else:
+        def run(*args, **kwargs):
+            generator = func(*args, **kwargs)
+            final_result = Future()
+            try:
+                first_result = next(generator)
+                _cb = get_continuation(generator, final_result)
+                first_result.add_done_callback(_cb)
+            except StopIteration as ex:
+                if hasattr(ex, 'value'):
+                    final_result.set_result(ex.value)
+                else:
+                    final_result.set_result(None)
+            except Exception as ex:
+                final_result.set_exception(ex)
+            return final_result
     run.__coroutine = True
     run.__name__ = func.__name__
     return run
