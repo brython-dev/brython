@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<meta charset="iso-8859-1">
+<head>
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+
+td {
+    border-style:solid;
+    border-width: 0px 0px 1px 0px;
+    border-color: #000;
+    padding:3px;
+}
+
+td.num{
+    text-align: right;
+}
+
+th {
+    border-style:solid;
+    border-width: 1px;
+    border-color: #000;
+    background-color: #61D7A4;
+    padding: 4px;
+}
+
+span{
+    font-size:15px;
+    margin-left:10px;
+    cursor:default;
+}
+</style>
+
+<script type="text/javascript" src="../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../src/version_info.js"></script>
+<script type="text/javascript" src="../src/py2js.js"></script>
+<script type="text/javascript" src="../src/py_object.js"></script>
+<script type="text/javascript" src="../src/py_type.js"></script>
+<script type="text/javascript" src="../src/py_utils.js"></script>
+<script type="text/javascript" src="../src/py_sort.js"></script>
+<script type="text/javascript" src="../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../src/py_exceptions.js"></script>
+<script type="text/javascript" src="../src/py_range_slice.js"></script>
+<script type="text/javascript" src="../src/py_bytes.js"></script>
+<script type="text/javascript" src="../src/py_set.js"></script>
+<script type="text/javascript" src="../src/js_objects.js"></script>
+<script type="text/javascript" src="../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../src/py_import.js"></script>
+<script type="text/javascript" src="../src/unicode.min.js"></script>
+<script type="text/javascript" src="../src/py_string.js"></script>
+<script type="text/javascript" src="../src/py_int.js"></script>
+<script type="text/javascript" src="../src/py_long_int.js"></script>
+<script type="text/javascript" src="../src/py_float.js"></script>
+<script type="text/javascript" src="../src/py_complex.js"></script>
+<script type="text/javascript" src="../src/py_dict.js"></script>
+<script type="text/javascript" src="../src/py_list.js"></script>
+<script type="text/javascript" src="../src/py_generator.js"></script>
+<script type="text/javascript" src="../src/py_dom.js"></script>
+
+<script type="text/javascript" src="../src/builtin_modules.js"></script>
+<script type="text/javascript" src="../src/py_import_hooks.js"></script>
+<script type="text/javascript" src="../src/async.js"></script>
+
+</head>
+<body onLoad="brython(1)">
+
+<h2>Pays d'Europe</h2>
+
+<table id="table">
+    <thead>
+        <tr>
+            <th b-code="for field in fields:">
+                {field} <span b-on="click:sort">&uparrow;&downarrow;</span>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr b-code="for country in countries">
+            <td b-code="for i, item in enumerate(country):"
+                class="{'num' if i >= 2 else False}">{item}</td>
+        </tr>
+    </tbody>
+</table>
+
+<script type="text/python">
+from browser import document
+from browser.template import Template
+
+def sort(evt, elt):
+    # get reference to the arrow
+    arrow = evt.target
+
+    # get title cell
+    th = arrow.closest('TH')
+
+    # get column of title cell
+    column = th.index("th")
+
+    # elt.data.order is a table with the sort order to apply to each column.
+    if not hasattr(elt.data, "order"):
+        elt.data.order = [0 for _ in elt.data.fields]
+
+    order = elt.data.order[column]
+
+    if True:
+        key = lambda x: x[column]
+    else:
+        key = lambda x: float(x[column])
+
+    # Changing the value of attribute "countries" will trigger re-rendering
+    # the template
+    elt.data.countries.sort(key=key, reverse=order)
+
+    # next time, sort this column the other way
+    elt.data.order[column] = 1 - order
+
+fields = ["Nom", "Population", "Superficie", "Population"]
+
+lines = [
+    'Allemagne','Berlin',357026,81.8,
+    'Autriche','Vienne',83871,8.40,
+    'Belgique','Bruxelles',30518,10.91,
+    'Bulgarie','Sofia',110944,7.50,
+    'Chypre','Nicosie',9251,0.80,
+    'Danemark','Copenhague',43098,5.56,
+    'Espagne','Madrid',505997,46.15,
+    'Estonie','Tallinn',43698,1.34,
+    'Finlande','Helsinki',338144,5.37,
+    'France','Paris',544000,65.07,
+    'Grèce','Athènes',131625,11.32,
+    'Hongrie','Budapest',93029,9.98,
+    'Irlande','Dublin',69797,4.48,
+    'Italie','Rome',301336,60.62,
+    'Lettonie','Riga',64589,2.22,
+    'Lituanie','Vilnius',62678,3.24,
+    'Luxembourg','Luxembourg',2586,0.51,
+    'Malte','La Valette',315,0.41,
+    'Pays-Bas','Amsterdam',41528,16.65,
+    'Pologne','Varsovie',312685,38.20,
+    'Portugal','Lisbonne',91946,10.63,
+    'République tchèque','Prague',78867,10.53,
+    'Roumanie','Bucarest',238391,21.41,
+    'Royaume-Uni','Londres',243820,62.43,
+    'Slovaquie','Bratislava',49034,5.43,
+    'Slovénie','Ljubljana',20273,2.05,
+    'Suède','Stockholm',441369,9.41
+]
+
+countries = [[lines[4 * i + j] for j in range(4)]
+    for i in range(len(lines) // 4)]
+
+Template(document["table"], [sort]).render(fields=fields, countries=countries)
+</script>
+
+</body>
+</html>
