@@ -85,6 +85,32 @@ prennent un contenu:
 </tr>
 ```
 
+## Inclusion d'autres templates
+
+Si un site contient plusieurs pages et qu'on veut mettre en commun certains
+éléments comme le menu, on peut mettre une partie de la page dans un
+template secondaire, et on l'inclut dans la page principale par l'attribut
+`b-include`.
+
+Par example on peut définir le template __menu.html__:
+
+```xml
+<img src="logo.png"><h2>{title}</h2>
+```
+
+et l'inclure dans la page principale:
+
+```xml
+<div id="menu" b-include="menu.html"></div>
+```
+
+Le template inclus dans la page sera rendu avec les arguments passés
+au template dans la page principale:
+
+```python
+Template(document["menu"]).render(title="Page d'accueil")
+```
+
 ## Gestion d'événements
 
 On peut définir des fonctions de gestion d'événements qui vont agir sur un

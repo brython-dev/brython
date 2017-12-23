@@ -55,6 +55,31 @@ result of the expression must be a boolean:
 <option selected="{name==expected}">
 ```
 
+## Including other templates
+
+If a site has several pages and we want to share some elements such as a
+menu, a part of the page can be put in a secondary template; it is included
+in the main page by the special attribute `b-include`.
+
+For instance we can define the template __menu.html__:
+
+```xml
+<img src="logo.png"><h2>{title}</h2>
+```
+
+and include it in the main page:
+
+```xml
+<div id="menu" b-include="menu.html"></div>
+```
+
+The included template will be rendered with the arguments passed in the main
+page:
+
+```python
+Template(document["menu"]).render(title="Home page")
+```
+
 ## Code blocks
 
 The special attribute `b-code` defines a code block : a `for` loop or a

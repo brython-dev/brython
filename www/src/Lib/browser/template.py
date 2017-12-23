@@ -8,7 +8,6 @@ Templates in HTML pages can include:
         ...
     </tr>
 
-
 - Python expressions:
 
     {message}
@@ -16,6 +15,10 @@ Templates in HTML pages can include:
 - tag attributes:
 
     <option value="{name}", selected="{name===expected}">
+
+- inclusion of subtemplates:
+
+    <div b-include="menu.html"></div>
 
 Usage in Brython scripts:
 
@@ -169,6 +172,9 @@ class Template:
                 if item.name == "b-code":
                     # Code block. The trailing ":" is optional.
                     block = item.value.rstrip(":") + ":"
+                elif item.name == "b-include":
+                    # Replace by content of the file at address item.value
+                    elt.html = open(item.value).read()
                 else:
                     value = item.value.replace("\n", "")
                     if "{" in value:

@@ -35,7 +35,7 @@
 </head>
 <body onload="brython(1)">
 
-<h2 id="title">{title}</h2>
+<div id="menu" b-include="template_home.html"></div>
 
 <div id="app" b-expr="message">
 </div>
@@ -55,19 +55,18 @@
 
 <div id="app-4">
   <ol>
-    <li  b-code="for todo in todos:">{todo}
+    <li b-code="for todo in todos:">{todo}
   </ol>
 </div>
 
 <div id="app-5">
-  {message}
+  {message} - {{text in braces}}
   <button b-on="click:reverse_message">Reverse Message</button>
-  <button b-on="click:show_message">Show Message</button>
 
 </div>
 
 <div id="app-6">
-  <p>
+  <p>Increment counter
   <button b-on="click:increment">
       {counter}
   </button>
@@ -78,14 +77,24 @@
 <button b-on="click:reset_link">change link</button>
 </div>
 
+<div id="app-8">
+  <button id="hello" b-on="click:say_hello">Hello !</button>
+</div>
 
+<div id="incrementer">
+  <button b-on="click:incr">+1</button>{counter}
+</div>
+
+<div id="with_include" b-include="included.html">
+
+</div>
 <script type="text/python">
-from browser import document, window
+from browser import document, window, alert
 from browser.template import Template
 
 Date = window.Date.new
 
-Template(document['title']).render(title="Brython Template demo")
+Template(document["menu"]).render(title="Brython Template demo")
 
 Template(document['app-2']).render(
     message="You loaded this page on " + Date().toLocaleString()
@@ -103,11 +112,7 @@ Template(document['app-4']).render(
 def reverse_message(evt, elt):
     elt.data.message = elt.data.message[::-1]
 
-def show_message(evt, elt):
-    print(elt.data.message)
-
-app_5 = Template(document["app-5"])
-app_5.callbacks = [reverse_message, show_message]
+app_5 = Template(document["app-5"], [reverse_message])
 app_5.render(message="Hello Brython template !")
 
 def increment(evt, element):
@@ -121,6 +126,17 @@ def reset_link(evt, elt):
 app7 = Template(document["app-7"], [reset_link])
 app7.render(hrefs=["http://vuejs.org", "http://brython.info"], ix=0)
 
+def say_hello(evt, elt):
+    alert(elt.data.message)
+
+Template(document["app-8"], [say_hello]).render(message="Hello, world !")
+
+def incr(event, element):
+    element.data.counter += 1
+
+Template(document["incrementer"], [incr]).render(counter=0)
+
+Template(document["with_include"]).render(info="included element")
 </script>
 
 </body>
