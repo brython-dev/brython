@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-12-23 09:01:28.933899"
+__BRYTHON__.compiled_date="2017-12-23 16:31:35.014185"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -10157,7 +10157,8 @@ break}
 current.expression +=car
 i++}else if(car=='\\'){
 throw Error("f-string expression part cannot include a" +
-" backslash")}else if(nb_paren==0 && car=='!' && current.fmt===null){if(current.expression.length==0){throw Error("f-string: empty expression not allowed")}
+" backslash")}else if(nb_paren==0 && car=='!' && current.fmt===null &&
+string.charAt(i + 2)==":"){if(current.expression.length==0){throw Error("f-string: empty expression not allowed")}
 if('ars'.indexOf(string.charAt(i+1))==-1){throw Error("f-string: invalid conversion character:" +
 " expected 's', 'r', or 'a'")}else{current.conversion=string.charAt(i+1)
 i +=2}}else if(car=='('){nb_paren++
