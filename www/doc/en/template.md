@@ -23,6 +23,14 @@ from browser.template import Template
 Template(document["team"]).render(name="Liverpool FC")
 ```
 
+The argument of `Template` can be either an element or a string; in the
+second case, it is the attribute `id` of the element. The above code can
+be written in a more concise way:
+
+```python
+Template("team").render(name="Liverpool FC")
+```
+
 The rendering engine uses Python f-strings ; if the text includes braces, they
 have to be written twice:
 

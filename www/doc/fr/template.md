@@ -24,6 +24,14 @@ from browser.template import Template
 Template(document["team"]).render(name="Liverpool FC")
 ```
 
+L'argument de `Template` peut être soit un élément, soit une chaine de
+caractères ; dans le deuxième cas, il s'agit de l'attribut `id` de
+l'élément, on peut donc écrire plus simplement
+
+```python
+Template("team").render(name="Liverpool FC")
+```
+
 Le moteur de rendu utilise les f-strings de Python ; si le texte contient des
 accolades, il faut les doubler:
 

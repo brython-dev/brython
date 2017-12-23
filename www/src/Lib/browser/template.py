@@ -118,6 +118,8 @@ class TemplateError(Exception):
 class Template:
 
     def __init__(self, element, callbacks=[]):
+        if isinstance(element, str):
+            element = document[element]
         self.element = element
         self.line_mapping = {}
         self.line_num = 1
@@ -267,10 +269,14 @@ class Template:
         # because self.element would still point to the previous version (cf.
         # https://developer.mozilla.org/en-US/docs/Web/API/Element/outerHTML,
         # section Notes).
-        rank = self.element.index()
-        parent = self.element.parent
-        self.element.outerHTML = self.html
-        self.element = parent.childNodes[rank]
+        if self.element.nodeType != 9:
+            rank = self.element.index()
+            parent = self.element.parent
+            self.element.outerHTML = self.html
+            self.element = parent.childNodes[rank]
+        else:
+            # If the template is the document, only reset (inner)html
+            self.element.html = self.html
 
         # Bindings.
         self.element.unbind()

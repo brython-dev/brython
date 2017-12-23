@@ -96,23 +96,23 @@ Date = window.Date.new
 
 Template(document["menu"]).render(title="Brython Template demo")
 
-Template(document['app-2']).render(
+Template("app-2").render(
     message="You loaded this page on " + Date().toLocaleString()
 )
 
-Template(document["app-3"]).render(
+Template("app-3").render(
     names = ['jean', 'jacques', 'pierre', 'paul'],
     selected="pierre"
 )
 
-Template(document['app-4']).render(
+Template("app-4").render(
     todos=['Learn JavaScript', 'Learn Vue', 'Build something awesome']
 )
 
 def reverse_message(evt, elt):
     elt.data.message = elt.data.message[::-1]
 
-app_5 = Template(document["app-5"], [reverse_message])
+app_5 = Template("app-5", [reverse_message])
 app_5.render(message="Hello Brython template !")
 
 def increment(evt, element):
