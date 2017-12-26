@@ -666,8 +666,8 @@ function $AssignCtx(context){ //, check_unbound){
 
             var rname = '$right'+$loop_num
 
-            var js = 'var '+rname+' = getattr'
-            js += '($B.$iter('+right.to_js()+'),"__next__");'
+            var js = 'var '+rname+' = $B.$getattr($B.$iter('+right.to_js()+
+                '),"__next__");'
             new $NodeJSCtx(new_node,js)
 
             var new_nodes = [new_node], pos=1
@@ -881,7 +881,11 @@ function $AttrCtx(context){
             return '$B.$setattr('+js+',"'+this.name+'")'
         }else{
             //return js + '.' + this.name
-            return 'getattr('+js+',"'+this.name+'")'
+
+            if(this.name=="__class__"){
+                return '('+js+'.__class__ || $B.get_class('+js+')).$factory'
+            }
+            return '$B.$getattr('+js+',"'+this.name+'")'
         }
     }
 }
@@ -1048,20 +1052,15 @@ function $AugmentedAssignCtx(context, op){
 
             // If both arguments are integers, we must check that the result
             // is a safe integer
-            js += '&& '+left+op1+right+'>$B.min_int && '+left+op1+right+
-                '< $B.max_int){'
+            js += ' && Number.isSafeInteger('+left+op1+right+')){'
             js += right_is_int ? '(' : '(typeof $temp=="number" && '
             js += 'typeof '+left1+'=="number") ? '
 
             js += left+op+right
 
-            js += ' : ('+left1+'.constructor===Number ? '
             // result is a float
-            js += left+'=float('+left+op1
+            js += ' : ' + left+'=new Number('+left+op1
             js += right_is_int ? right : right+'.valueOf()'
-            js += ') : '+left + op
-            js += right_is_int ? right : right+'.valueOf()'
-
             js += ')}'
 
             new $NodeJSCtx(new_node,js)
@@ -1072,7 +1071,6 @@ function $AugmentedAssignCtx(context, op){
         var aaops = {'+=':'add','-=':'sub','*=':'mul'}
         if(context.tree[0].type=='sub' &&
             ( '+=' == op || '-=' == op || '*=' == op) &&
-            //['+=','-=','*='].indexOf(op)>-1 &&
             context.tree[0].tree.length==1){
             var js1 = '$B.augm_item_'+aaops[op]+'('
             js1 += context.tree[0].value.to_js()
@@ -1126,7 +1124,7 @@ function $AugmentedAssignCtx(context, op){
 
         // create node for "foo.__iadd__(bar)"
         var aa3 = new $Node()
-        var js3 = 'getattr('+context.to_js()+',"'+func+'")('+right+')'
+        var js3 = '$B.$getattr('+context.to_js()+',"'+func+'")('+right+')'
         new $NodeJSCtx(aa3,js3)
         aa2.add(aa3)
 
@@ -1317,11 +1315,11 @@ function $CallCtx(context){
                    // form " -(x+2) "
                    switch(this.func.op) {
                       case '+':
-                        return 'getattr('+$to_js(this.tree)+',"__pos__")()'
+                        return '$B.$getattr('+$to_js(this.tree)+',"__pos__")()'
                       case '-':
-                        return 'getattr('+$to_js(this.tree)+',"__neg__")()'
+                        return '$B.$getattr('+$to_js(this.tree)+',"__neg__")()'
                       case '~':
-                        return 'getattr('+$to_js(this.tree)+',"__invert__")()'
+                        return '$B.$getattr('+$to_js(this.tree)+',"__invert__")()'
                    }//switch
                 }//if
             }//switch
@@ -1383,7 +1381,7 @@ function $CallCtx(context){
                 }
             }
 
-            var args_str //= pos_args.join(', ')
+            var args_str
 
             if(star_args){
                 // If there are "star arguments", eg in f(*t, 1, 2, *(8,))
@@ -1438,14 +1436,16 @@ function $CallCtx(context){
             }
 
             if(star_args){
-                    // If there are star args, we use an internal function
-                    // $B.extend_list to produce the list of positional
-                    // arguments. In this case the function must be called
-                    // with apply
-                    args_str = '.apply(null,'+args_str+')'
+                // If there are star args, we use an internal function
+                // $B.extend_list to produce the list of positional
+                // arguments. In this case the function must be called
+                // with apply
+                args_str = '.apply(null,'+args_str+')'
             }else{
                 args_str = '('+args_str+')'
             }
+
+            var default_res = '$B.$getattr('+func_js+',"__call__")'+args_str
 
             if(this.tree.length>-1){
               if(this.func.type=='id'){
@@ -1461,14 +1461,14 @@ function $CallCtx(context){
                           return func_js+args_str
                       }
                   }
-                  var res = 'getattr('+func_js+',"__call__")'+args_str
+                  var res = default_res
               }else{
-                  var res = 'getattr('+func_js+',"__call__")'+args_str
+                  var res = default_res
               }
               return res
             }
 
-            return 'getattr('+func_js+',"__call__")'+args_str
+            return default_res
         }
     }
 }
@@ -1842,17 +1842,6 @@ function $DecoratorCtx(context){
             this.dec_ids[pos++]='$id'+ $B.UUID()
         }
 
-        if ($B.async_enabled) {
-          var _block_async_flag=false;
-          for(var i=0;i<decorators.length;i++){
-           try {
-             // decorator name
-             var name=decorators[i][0].tree[0].value
-             if (name == "brython_block" || name == "brython_async") _block_async_flag=true
-           } catch (err) {console.log(i); console.log(decorators[i][0])}
-          }
-        }
-
         var obj = children[func_rank].context.tree[0]
         if(obj.type=='def'){
             obj.decorated = true
@@ -1872,8 +1861,7 @@ function $DecoratorCtx(context){
         var res = ref+'='
 
         for(var i=0;i<decorators.length;i++){
-          //var dec = this.dec_ids[i]
-          res += 'getattr('+this.dec_ids[i]+',"__call__")('
+          res += '$B.$getattr('+this.dec_ids[i]+',"__call__")('
           tail +=')'
         }
         res += (obj.decorated ? obj.alias : ref)+tail+';'
@@ -1890,9 +1878,6 @@ function $DecoratorCtx(context){
     }
 
     this.to_js = function(){
-        if ($B.async_enabled) {
-           if (this.processing !== undefined) return ""
-        }
         this.js_processed=true
         var res = [], pos=0
         for(var i=0;i<this.decorators.length;i++){
@@ -2866,14 +2851,14 @@ function $ForExpr(context){
         var new_node = new $Node()
         new_node.line_num = $get_node(this).line_num
         var it_js = iterable.to_js()
-        var js = '$locals["$next'+num+'"]'+'=getattr($B.$iter('+ it_js +
+        var js = '$locals["$next'+num+'"]'+'=$B.$getattr($B.$iter('+ it_js +
             '),"__next__")'
         new $NodeJSCtx(new_node,js)
         new_nodes[pos++]=new_node
 
         // Line to store the length of the iterator
         var js = 'if(isinstance('+it_js+', dict)){$locals.$len_func'+num+
-            '=getattr('+it_js+',"__len__"); $locals.$len'+num+
+            '=$B.$getattr('+it_js+',"__len__"); $locals.$len'+num+
             '=$locals.$len_func'+num+'()}else{$locals.$len'+num+'=null}'
         new_nodes[pos++] = $NodeJS(js)
 
@@ -3440,7 +3425,7 @@ function $IdCtx(context,value){
                         this.found = false
                         var res = ns0 + '["'+val+'"]!==undefined ? '
                         res += ns0 + '["'+val+'"] : '
-                        this.result = res + ns1 + '["'+val+'"]'
+                        this.result = "("+res + ns1 + '["'+val+'"])'
                         return this.result
                     }
                 }
@@ -4112,7 +4097,7 @@ function $OpCtx(context,op){
                             t1.value>$B.min_int && t1.value<$B.max_int){
                                 return js0+this.op+js1
                         }else{
-                            return 'getattr('+this.tree[0].to_js()+',"__'+
+                            return '$B.$getattr('+this.tree[0].to_js()+',"__'+
                                 method+'__")('+this.tree[1].to_js()+')'
                         }
                       case 'str':
@@ -4203,14 +4188,14 @@ function $OpCtx(context,op){
                     var v = parseInt(x.value[1], x.value[0])
                     if(v>$B.min_int && v<$B.max_int){return op+v}
                     // for long integers, use __neg__ or __invert__
-                    return 'getattr('+x.to_js()+', "'+method+'")()'
+                    return '$B.$getattr('+x.to_js()+', "'+method+'")()'
                   case 'float':
                     return 'float('+op+x.value+')'
                   case 'imaginary':
                     return 'complex(0,'+op+x.value+')'
                 }
             }
-            return 'getattr('+this.tree[1].to_js()+',"'+method+'")()'
+            return '$B.$getattr('+this.tree[1].to_js()+',"'+method+'")()'
           case 'is':
             return '$B.$is('+this.tree[0].to_js() + ', ' +
                 this.tree[1].to_js() + ')'
@@ -4316,7 +4301,7 @@ function $OpCtx(context,op){
                         res[pos++]='=="string") ? '+this.tree[0].to_js()
                         res[pos++]='+'+this.tree[1].to_js()
                     }
-                    res[pos++]= ': getattr('+this.tree[0].to_js()+',"__'
+                    res[pos++]= ': $B.$getattr('+this.tree[0].to_js()+',"__'
                     res[pos++]= $operators[this.op]+'__")'+'('+this.tree[1].to_js()+')'
                     //if(this.op=='+'){console.log(res)}
                     return '('+res.join('')+')'
@@ -4326,7 +4311,7 @@ function $OpCtx(context,op){
                 return '$B.rich_comp("__'+$operators[this.op]+'__",'+e0.to_js()+
                     ','+e1.to_js()+')'
             }else{
-                return 'getattr('+e0.to_js()+', "__'+$operators[this.op]+
+                return '$B.$getattr('+e0.to_js()+', "__'+$operators[this.op]+
                     '__")('+e1.to_js()+')'
             }
           default:
@@ -4334,7 +4319,7 @@ function $OpCtx(context,op){
                 return '$B.rich_comp("__'+$operators[this.op]+'__",'+
                     this.tree[0].to_js()+','+this.tree[1].to_js()+')'
             }else{
-                return 'getattr('+this.tree[0].to_js()+', "__'+
+                return '$B.$getattr('+this.tree[0].to_js()+', "__'+
                     $operators[this.op]+'__")('+this.tree[1].to_js()+')'
             }
         }
@@ -4521,7 +4506,12 @@ function $SingleKwCtx(context,token){
                     js = 'var $exit;if($B.frames_stack.length<$stack_length)'+
                     '{$exit=true;$B.frames_stack.push($top_frame)}'
                 node.insert(0, $NodeJS(js))
-                node.add($NodeJS('if($exit){$B.leave_frame("'+scope_id+'")}'))
+                // If the finally block ends with "return", don't add the
+                // final line
+                var last_child = node.children[node.children.length-1]
+                if(last_child.context.tree[0].type!="return"){
+                    node.add($NodeJS('if($exit){$B.leave_frame("'+scope_id+'")}'))
+                }
             }
         }
     }
@@ -4710,7 +4700,7 @@ function $SubCtx(context){
             res += subs+expr+ ' : '
         }
         var val = this.value.to_js()
-        res += 'getattr('+val+',"__'+this.func+'__")('
+        res += '$B.$getattr('+val+',"__'+this.func+'__")('
         if(this.tree.length===1){
             res += this.tree[0].to_js()+')'
         }else{
@@ -5066,7 +5056,7 @@ function $WithCtx(context){
             $loop_num+')\n'+' '.repeat(indent)+
             'if(!$B.$bool($ctx_manager_exit'+num+'($err'+$loop_num+
             '.__class__.$factory,'+'$err'+$loop_num+
-            ',getattr($err'+$loop_num+',"traceback"))))'
+            ',$B.$getattr($err'+$loop_num+',"traceback"))))'
         js += '{throw $err'+$loop_num+'}'
         new $NodeJSCtx(fbody,js)
         catch_node.add(fbody)
@@ -5096,8 +5086,8 @@ function $WithCtx(context){
             num = this.num
         var res = 'var $ctx_manager'+num+' = '+this.tree[0].to_js()+
             '\n'+h+'var $ctx_manager_exit'+num+
-            '= getattr($ctx_manager'+num+',"__exit__")\n'+
-            h+'var $value'+num+' = getattr($ctx_manager'+num+
+            '= $B.$getattr($ctx_manager'+num+',"__exit__")\n'+
+            h+'var $value'+num+' = $B.$getattr($ctx_manager'+num+
             ',"__enter__")()\n'
         res += h+'var $exc'+num+' = true\n'
         return res + h+'try'
@@ -5269,8 +5259,10 @@ function $add_line_num(node,rank){
         // line number to that of the "while" or "for" loop (cf issue #281)
         if((elt.type=='condition' && elt.token=="while")
             || node.context.type=='for'){
-            node.add($NodeJS('$locals.$line_info="'+node.line_num+','+
-                mod_id+'";'))
+            if($B.last(node.children).context.tree[0].type!="return"){
+                node.add($NodeJS('$locals.$line_info="'+node.line_num+','+
+                    mod_id+'";'))
+            }
         }
 
         return offset

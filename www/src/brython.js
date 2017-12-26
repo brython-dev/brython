@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-12-23 16:31:35.014185"
+__BRYTHON__.compiled_date="2017-12-26 21:35:55.695258"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -356,8 +356,8 @@ $loop_num++}else{
 var new_node=new $Node()
 new_node.line_num=node.line_num
 var rname='$right'+$loop_num
-var js='var '+rname+' = getattr'
-js +='($B.$iter('+right.to_js()+'),"__next__");'
+var js='var '+rname+' = $B.$getattr($B.$iter('+right.to_js()+
+'),"__next__");'
 new $NodeJSCtx(new_node,js)
 var new_nodes=[new_node],pos=1
 var rlist_node=new $Node()
@@ -478,7 +478,8 @@ js+"."+this.name+" = "," : $B.$setattr("+js+', "'+
 this.name+'", ']}}}}
 if(this.func=='setattr'){
 return '$B.$setattr('+js+',"'+this.name+'")'}else{
-return 'getattr('+js+',"'+this.name+'")'}}}
+if(this.name=="__class__"){return '('+js+'.__class__ || $B.get_class('+js+')).$factory'}
+return '$B.$getattr('+js+',"'+this.name+'")'}}}
 function $AugmentedAssignCtx(C,op){
 this.type='augm_assign'
 this.parent=C.parent
@@ -557,15 +558,11 @@ var new_node=new $Node()
 if(!lnum_set){new_node.line_num=line_num;lnum_set=true}
 js=right_is_int ? 'if(' : 'if(typeof $temp.valueOf()=="number" && '
 js +=left1+'.constructor===Number'
-js +='&& '+left+op1+right+'>$B.min_int && '+left+op1+right+
-'< $B.max_int){'
+js +=' && Number.isSafeInteger('+left+op1+right+')){'
 js +=right_is_int ? '(' : '(typeof $temp=="number" && '
 js +='typeof '+left1+'=="number") ? '
 js +=left+op+right
-js +=' : ('+left1+'.constructor===Number ? '
-js +=left+'=float('+left+op1
-js +=right_is_int ? right : right+'.valueOf()'
-js +=') : '+left + op
+js +=' : ' + left+'=new Number('+left+op1
 js +=right_is_int ? right : right+'.valueOf()'
 js +=')}'
 new $NodeJSCtx(new_node,js)
@@ -610,7 +607,7 @@ var aa2=new $Node()
 new $NodeJSCtx(aa2,'else')
 parent.insert(rank+offset,aa2)
 var aa3=new $Node()
-var js3='getattr('+C.to_js()+',"'+func+'")('+right+')'
+var js3='$B.$getattr('+C.to_js()+',"'+func+'")('+right+')'
 new $NodeJSCtx(aa3,js3)
 aa2.add(aa3)
 if(left_is_id && !was_bound && !this.scope.blurred){$B.bound[this.scope.id][left_id]=undefined}
@@ -705,11 +702,11 @@ break
 default:
 if(this.func.type=='unary'){
 switch(this.func.op){case '+':
-return 'getattr('+$to_js(this.tree)+',"__pos__")()'
+return '$B.$getattr('+$to_js(this.tree)+',"__pos__")()'
 case '-':
-return 'getattr('+$to_js(this.tree)+',"__neg__")()'
+return '$B.$getattr('+$to_js(this.tree)+',"__neg__")()'
 case '~':
-return 'getattr('+$to_js(this.tree)+',"__invert__")()'}}}
+return '$B.$getattr('+$to_js(this.tree)+',"__invert__")()'}}}
 var _block=false
 if($B.async_enabled){var scope=$get_scope(this.func)
 if($B.block[scope.id]===undefined){}
@@ -750,7 +747,7 @@ default:
 positional.push([arg.to_js(),'s'])
 break}
 break}}
-var args_str 
+var args_str
 if(star_args){
 var p=[]
 for(var i=0,len=positional.length;i<len;i++){arg=positional[i]
@@ -771,13 +768,14 @@ if(star_args && kw_args_str){args_str +='.concat(['+kw_args_str+'])'}else{if(arg
 else if(!args_str){args_str=kw_args_str}}
 if(star_args){
 args_str='.apply(null,'+args_str+')'}else{args_str='('+args_str+')'}
+var default_res='$B.$getattr('+func_js+',"__call__")'+args_str
 if(this.tree.length>-1){if(this.func.type=='id'){if(this.func.is_builtin){
 if($B.builtin_funcs[this.func.value]!==undefined){return func_js+args_str}}else{var bound_obj=this.func.found
 if(bound_obj &&(bound_obj.type=='class' ||
 bound_obj.type=='def')){return func_js+args_str}}
-var res='getattr('+func_js+',"__call__")'+args_str}else{var res='getattr('+func_js+',"__call__")'+args_str}
+var res=default_res}else{var res=default_res}
 return res}
-return 'getattr('+func_js+',"__call__")'+args_str}}}
+return default_res}}}
 function $ClassCtx(C){
 this.type='class'
 this.parent=C
@@ -968,10 +966,6 @@ children.splice(func_rank,1)}else{break}}
 this.dec_ids=[]
 var pos=0
 for(var i=0;i<decorators.length;i++){this.dec_ids[pos++]='$id'+ $B.UUID()}
-if($B.async_enabled){var _block_async_flag=false;
-for(var i=0;i<decorators.length;i++){try{
-var name=decorators[i][0].tree[0].value
-if(name=="brython_block" ||name=="brython_async")_block_async_flag=true}catch(err){console.log(i);console.log(decorators[i][0])}}}
 var obj=children[func_rank].C.tree[0]
 if(obj.type=='def'){obj.decorated=true
 obj.alias='$dec'+$B.UUID()}
@@ -980,8 +974,7 @@ if($B._globals[scope.id]&& $B._globals[scope.id][obj.name]){var module=$get_modu
 ref='$locals_'+module.id+'["'}
 ref +=obj.name+'"]'
 var res=ref+'='
-for(var i=0;i<decorators.length;i++){
-res +='getattr('+this.dec_ids[i]+',"__call__")('
+for(var i=0;i<decorators.length;i++){res +='$B.$getattr('+this.dec_ids[i]+',"__call__")('
 tail +=')'}
 res +=(obj.decorated ? obj.alias : ref)+tail+';'
 $B.bound[scope.id][obj.name]=true
@@ -989,8 +982,7 @@ var decor_node=new $Node()
 new $NodeJSCtx(decor_node,res)
 node.parent.insert(func_rank+1,decor_node)
 this.decorators=decorators}
-this.to_js=function(){if($B.async_enabled){if(this.processing !==undefined)return ""}
-this.js_processed=true
+this.to_js=function(){this.js_processed=true
 var res=[],pos=0
 for(var i=0;i<this.decorators.length;i++){res[pos++]='var '+this.dec_ids[i]+'='+$to_js(this.decorators[i])+';'}
 return res.join('')}}
@@ -1473,12 +1465,12 @@ new_nodes=[],pos=0}
 var new_node=new $Node()
 new_node.line_num=$get_node(this).line_num
 var it_js=iterable.to_js()
-var js='$locals["$next'+num+'"]'+'=getattr($B.$iter('+ it_js +
+var js='$locals["$next'+num+'"]'+'=$B.$getattr($B.$iter('+ it_js +
 '),"__next__")'
 new $NodeJSCtx(new_node,js)
 new_nodes[pos++]=new_node
 var js='if(isinstance('+it_js+', dict)){$locals.$len_func'+num+
-'=getattr('+it_js+',"__len__"); $locals.$len'+num+
+'=$B.$getattr('+it_js+',"__len__"); $locals.$len'+num+
 '=$locals.$len_func'+num+'()}else{$locals.$len'+num+'=null}'
 new_nodes[pos++]=$NodeJS(js)
 if(this.has_break){
@@ -1725,7 +1717,7 @@ this.result=res+'["'+val+'"]'
 return this.result}else{this.found=false
 var res=ns0 + '["'+val+'"]!==undefined ? '
 res +=ns0 + '["'+val+'"] : '
-this.result=res + ns1 + '["'+val+'"]'
+this.result="("+res + ns1 + '["'+val+'"])'
 return this.result}}}
 var scope=found[0]
 this.found=$B.bound[scope.id][val]
@@ -2029,7 +2021,7 @@ if(this.tree[0].type=='expr' && this.tree[1].type=='expr'){var t0=this.tree[0].t
 switch(t1.type){case 'int':
 switch(t0.type){case 'int':
 if(t0.value>$B.min_int && t0.value<$B.max_int &&
-t1.value>$B.min_int && t1.value<$B.max_int){return js0+this.op+js1}else{return 'getattr('+this.tree[0].to_js()+',"__'+
+t1.value>$B.min_int && t1.value<$B.max_int){return js0+this.op+js1}else{return '$B.$getattr('+this.tree[0].to_js()+',"__'+
 method+'__")('+this.tree[1].to_js()+')'}
 case 'str':
 return '$B.$TypeError("unorderable types: int() < str()")'
@@ -2085,12 +2077,12 @@ if(this.tree[1].type=="expr"){var x=this.tree[1].tree[0]
 switch(x.type){case 'int':
 var v=parseInt(x.value[1],x.value[0])
 if(v>$B.min_int && v<$B.max_int){return op+v}
-return 'getattr('+x.to_js()+', "'+method+'")()'
+return '$B.$getattr('+x.to_js()+', "'+method+'")()'
 case 'float':
 return 'float('+op+x.value+')'
 case 'imaginary':
 return 'complex(0,'+op+x.value+')'}}
-return 'getattr('+this.tree[1].to_js()+',"'+method+'")()'
+return '$B.$getattr('+this.tree[1].to_js()+',"'+method+'")()'
 case 'is':
 return '$B.$is('+this.tree[0].to_js()+ ', ' +
 this.tree[1].to_js()+ ')'
@@ -2144,15 +2136,15 @@ if(this.op=='+'){res[pos++]=' : (typeof '+this.tree[0].to_js()+'=="string"'
 res[pos++]=' && typeof '+this.tree[1].to_js()
 res[pos++]='=="string") ? '+this.tree[0].to_js()
 res[pos++]='+'+this.tree[1].to_js()}
-res[pos++]=': getattr('+this.tree[0].to_js()+',"__'
+res[pos++]=': $B.$getattr('+this.tree[0].to_js()+',"__'
 res[pos++]=$operators[this.op]+'__")'+'('+this.tree[1].to_js()+')'
 return '('+res.join('')+')'}}
 if(comps[this.op]!==undefined){return '$B.rich_comp("__'+$operators[this.op]+'__",'+e0.to_js()+
-','+e1.to_js()+')'}else{return 'getattr('+e0.to_js()+', "__'+$operators[this.op]+
+','+e1.to_js()+')'}else{return '$B.$getattr('+e0.to_js()+', "__'+$operators[this.op]+
 '__")('+e1.to_js()+')'}
 default:
 if(comps[this.op]!==undefined){return '$B.rich_comp("__'+$operators[this.op]+'__",'+
-this.tree[0].to_js()+','+this.tree[1].to_js()+')'}else{return 'getattr('+this.tree[0].to_js()+', "__'+
+this.tree[0].to_js()+','+this.tree[1].to_js()+')'}else{return '$B.$getattr('+this.tree[0].to_js()+', "__'+
 $operators[this.op]+'__")('+this.tree[1].to_js()+')'}}}
 this.simple_js=function(){function sjs(elt){if(elt.type=='op'){return elt.simple_js()}
 else if(elt.type=='expr' && elt.tree[0].type=='list_or_tuple'
@@ -2242,7 +2234,8 @@ if(this.token=='finally'){var scope=$get_scope(this)
 if(scope.ntype!='generator'){var scope_id=scope.id.replace(/\./g,'_'),js='var $exit;if($B.frames_stack.length<$stack_length)'+
 '{$exit=true;$B.frames_stack.push($top_frame)}'
 node.insert(0,$NodeJS(js))
-node.add($NodeJS('if($exit){$B.leave_frame("'+scope_id+'")}'))}}}
+var last_child=node.children[node.children.length-1]
+if(last_child.C.tree[0].type!="return"){node.add($NodeJS('if($exit){$B.leave_frame("'+scope_id+'")}'))}}}}
 this.to_js=function(){this.js_processed=true
 if(this.token=='finally')return this.token
 if(this.loop_num!==undefined){var scope=$get_scope(this)
@@ -2333,7 +2326,7 @@ res +='typeof '+x.value.to_js()+'=="string")'
 res +=' && '+subs+'!==undefined ?'
 res +=subs+expr+ ' : '}
 var val=this.value.to_js()
-res +='getattr('+val+',"__'+this.func+'__")('
+res +='$B.$getattr('+val+',"__'+this.func+'__")('
 if(this.tree.length===1){res +=this.tree[0].to_js()+')'}else{var res1=[],pos=0
 for(var i=0;i<this.tree.length;i++){if(this.tree[i].type==='abstract_expr'){res1[pos++]='None'}
 else{res1[pos++]=this.tree[i].to_js()}}
@@ -2500,7 +2493,7 @@ var js='$exc'+num+' = false;$err'+$loop_num+'=$B.exception($err'+
 $loop_num+')\n'+' '.repeat(indent)+
 'if(!$B.$bool($ctx_manager_exit'+num+'($err'+$loop_num+
 '.__class__.$factory,'+'$err'+$loop_num+
-',getattr($err'+$loop_num+',"traceback"))))'
+',$B.$getattr($err'+$loop_num+',"traceback"))))'
 js +='{throw $err'+$loop_num+'}'
 new $NodeJSCtx(fbody,js)
 catch_node.add(fbody)
@@ -2523,8 +2516,8 @@ this.to_js=function(){this.js_processed=true
 var indent=$get_node(this).indent,h=' '.repeat(indent+4),num=this.num
 var res='var $ctx_manager'+num+' = '+this.tree[0].to_js()+
 '\n'+h+'var $ctx_manager_exit'+num+
-'= getattr($ctx_manager'+num+',"__exit__")\n'+
-h+'var $value'+num+' = getattr($ctx_manager'+num+
+'= $B.$getattr($ctx_manager'+num+',"__exit__")\n'+
+h+'var $value'+num+' = $B.$getattr($ctx_manager'+num+
 ',"__enter__")()\n'
 res +=h+'var $exc'+num+' = true\n'
 return res + h+'try'}}
@@ -2614,8 +2607,8 @@ offset=2}
 var i=0
 while(i<node.children.length)i+=$add_line_num(node.children[i],i)
 if((elt.type=='condition' && elt.token=="while")
-||node.C.type=='for'){node.add($NodeJS('$locals.$line_info="'+node.line_num+','+
-mod_id+'";'))}
+||node.C.type=='for'){if($B.last(node.children).C.tree[0].type!="return"){node.add($NodeJS('$locals.$line_info="'+node.line_num+','+
+mod_id+'";'))}}
 return offset}}
 function $bind(name,scope_id,level){
 if($B.bound[scope_id][name]!==undefined){
@@ -5713,9 +5706,13 @@ if(len<2){throw _b_.TypeError("getattr expected at least 2 arguments, "
 + "got "+len)}
 else if(len>3){throw _b_.TypeError("getattr expected at most 3 arguments, got "
 +len)}
+return $B.$getattr(obj,attr,_default)}
+$B.$getattr=function(obj,attr,_default){
 var rawname=attr
 if($B.aliased_names[attr]){attr='$$'+attr}
 var klass=obj.__class__
+if(klass!==undefined && klass.__bases__ && klass.__bases__.length==0){if(obj.hasOwnProperty(attr)){return obj[attr]}else if(klass.hasOwnProperty(attr)){if(typeof klass[attr]!="function" && attr !="__dict__" &&
+klass[attr].__get__===undefined){return klass[attr]}}}
 if(klass===undefined){
 if(typeof obj=='string'){klass=_b_.str.$dict}
 else if(typeof obj=='number'){klass=obj % 1==0 ? _b_.int.$dict : _b_.float.$dict}else if(obj instanceof Number){klass=_b_.float.$dict}else{klass=$B.get_class(obj)}}
@@ -6089,7 +6086,8 @@ return _b_.int(_b_.int.$dict.__truediv__(Number(Math.round(arg.valueOf()*mult)),
 function setattr(){var $=$B.args('setattr',3,{obj:null,attr:null,value:null},['obj','attr','value'],arguments,{},null,null),obj=$.obj,attr=$.attr,value=$.value
 if(!(typeof attr=='string')){throw _b_.TypeError("setattr(): attribute name must be string")}
 return $B.$setattr(obj,attr,value)}
-$B.$setattr=function(obj,attr,value){if($B.aliased_names[attr]){attr='$$' + attr}else if(attr.substr(0,2)=='$$' && $B.aliased_names[attr.substr(2)]){attr=attr.substr(2)}
+$B.$setattr=function(obj,attr,value){
+if($B.aliased_names[attr]){attr='$$' + attr}else if(attr.substr(0,2)=='$$' && $B.aliased_names[attr.substr(2)]){attr=attr.substr(2)}
 else if(attr=='__class__'){
 obj.__class__=value.$dict;
 return None}else if(attr=='__dict__'){
