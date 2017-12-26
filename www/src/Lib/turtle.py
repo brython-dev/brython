@@ -22,8 +22,16 @@ _CFG = {"width" : 0.5,               # Screen
         "exampleturtle": "turtle",
         "examplescreen": "screen",
         "title": "Python Turtle Graphics",
-        "using_IDLE": False
+        "using_IDLE": False,
+        "turtle_canvas_wrapper": None,
+        "turtle_canvas_id": "turtle-canvas"
        }
+
+
+def set_defaults(**params):
+    """Allows to override defaults."""
+    _CFG.update(**params)
+
 
 
 class Vec2D(tuple):
@@ -79,21 +87,27 @@ class _Root:
     """Root class for Screen based on Tkinter."""
 
     def setupcanvas(self, width, height, cwidth, cheight):
-        self._svg=_svg.svg(Id="mycanvas", width=cwidth, height=cheight)
+        self._svg=_svg.svg(Id=_CFG["turtle_canvas_id"], width=cwidth, height=cheight)
         self._canvas=_svg.g(transform="translate(%d,%d)" % (cwidth//2, cheight//2))
         self._svg <= self._canvas
 
     def end(self):
         def set_svg():
+            if _CFG["turtle_canvas_wrapper"] is None:
+                _CFG["turtle_canvas_wrapper"] = html.DIV(Id="turtle-canvas-wrapper")
+                document <= _CFG["turtle_canvas_wrapper"]
+
             #have to do this to get animate to work...
-            document['container'].html=document['container'].html
+            _CFG["turtle_canvas_wrapper"].html = _CFG["turtle_canvas_wrapper"].html
+            # document[_CFG["turtle_div_id"]].html=document[_CFG["turtle_div_id"]].html
 
 
-        if "mycanvas" not in document:
-           document["container"] <= self._svg
+        if _CFG["turtle_canvas_id"] not in document:
+           _CFG["turtle_canvas_wrapper"] <= self._svg
+        #    document[_CFG["turtle_div_id"]] <= self._svg
            from browser import timer
            #need this for chrome so that first few draw commands are viewed properly.
-           timer.set_timeout(set_svg, 1)  
+           timer.set_timeout(set_svg, 1)
 
     def _getcanvas(self):
         return self._canvas
@@ -181,13 +195,13 @@ class TurtleScreenBase:
                if speed == 0:
                    speed = 10
                _dist /= (speed/2)
-           
+
            _dur="%4.2fs" % (0.01*_dist)
            if _dur == '0.00s':
               _dur='0.1s'
-           
-               
-    
+
+
+
            #_dur="%ss" % 1
            self._draw_pos+=1
 
@@ -203,7 +217,7 @@ class TurtleScreenBase:
                     _rotate=_previous.heading()
                     _turtle=_svg.polygon(points=" ".join(_shape),
                                    transform="rotate(%s)" % (_rotate-90),
-                                   style={'stroke': fill, 'fill': fill, 
+                                   style={'stroke': fill, 'fill': fill,
                                           'stroke-width': width, 'display': 'none'})
 
                     # we need to rotate our turtle..
@@ -217,7 +231,7 @@ class TurtleScreenBase:
                                                      dur=_dur,
                                                      begin="animateLine%s.end" % (self._draw_pos-1))
 
-                    _turtle <= _svg.set(attributeName="display", 
+                    _turtle <= _svg.set(attributeName="display",
                                         attributeType="CSS", to="block",
                                         begin="animateLine%s.begin" % self._draw_pos,
                                         end="animateLine%s.end" % self._draw_pos)
@@ -248,12 +262,12 @@ class TurtleScreenBase:
                              begin="animateLine%s.begin" % self._draw_pos,
                              From=_y0*self.xscale, to=_y1*self.xscale,
                              dur=_dur, fill='freeze')
-           
+
            # draw turtle
            if lineitem.isvisible():
               _turtle=_svg.polygon(points=" ".join(_shape),
                                    transform="rotate(%s)" % (lineitem.heading() - 90),
-                                   style={'stroke': fill, 'fill': fill, 
+                                   style={'stroke': fill, 'fill': fill,
                                           'stroke-width': width, 'display': 'none'})
 
               _turtle <= _svg.animateMotion(From="%s,%s" % (_x0*self.xscale, _y0*self.yscale),
@@ -261,7 +275,7 @@ class TurtleScreenBase:
                                         dur=_dur, begin="animateLine%s.begin" % self._draw_pos)
 
               _turtle <= _svg.set(attributeName="display", attributeType="CSS",
-                                to="block", 
+                                to="block",
                                 begin="animateLine%s.begin" % self._draw_pos,
                                 end="animateLine%s.end" % self._draw_pos)
 
@@ -319,7 +333,7 @@ class TurtleScreenBase:
         and color.
         Return text item and x-coord of right bottom corner
         of text's bounding box."""
-        
+
         self._draw_pos+=1
         _text= _svg.text(txt, x=pos[0], y=pos[1], fill=pencolor,
                          style={'display': 'none'})
@@ -2618,7 +2632,7 @@ class RawTurtle(TPen, TNavigator):
                #                                self._pensize))
                self.screen._drawline(self,     #please remove me eventually
                                 (self._position, end),
-                                self._pencolor, self._pensize, 
+                                self._pencolor, self._pensize,
                                 False,
                                 self._speed)
 
@@ -2992,6 +3006,20 @@ def _getscreen():
     if Turtle._screen is None:
         Turtle._screen = Screen()
     return Turtle._screen
+
+def show():
+    "For Brython turtle: show the current drawing"
+    _Screen().end()
+
+
+def restart():
+    "For Brython turtle: clears the existing drawing and canvas"
+    _Screen._root = None
+    _Screen._canvas = None
+    Turtle._screen = None
+    if document[_CFG["turtle_canvas_id"]] is not None:
+        element = document[_CFG["turtle_canvas_id"]]
+        element.parentNode.removeChild(element)
 
 
 if __name__ == "__main__":
