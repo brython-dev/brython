@@ -3,34 +3,53 @@
 <head>
 <meta charset="utf-8">
 
-<script type="text/javascript" src="../src/brython.js"></script>
+<script type="text/javascript" src="/src/brython.js"></script>
 
 <script id="python_script" type="text/python">
-from browser import document, console
-_code=document["div_html"].text
+from browser import document, alert
 
-exec(_code)
-document["processing"].style.display="none"
+@document["run"].bind("click")
+def show(ev):
+    _code=document["div_html"].text
+    exec(_code)
+
+@document["clear"].bind("click")
+def clear(ev):
+    from turtle import restart
+    restart()
 </script>
 
-<style type="text/css">
-.blink {
-  animation: blink 1s steps(5, start) infinite;
-  -webkit-animation: blink 1s steps(5, start) infinite;
-}
-@keyframes blink {
-  to { visibility: hidden; }
-}
-@-webkit-keyframes blink {
-  to { visibility: hidden; }
-}
+<style>
+  pre {
+    border: 1px solid blue;
+    background-color:antiquewhite;
+  }
+  button {
+    margin: 20px;
+    padding: 10px;
+  }
 </style>
 
 </head>
 
 <body onload="brython(1)">
-<pre id="div_html" style="float:left">
+<h1>Turtle demo</h1>
+<p><button id="run">Run</button> <button id="clear">Clear</button></p>
+
+<pre id="div_html" style="float:left" contenteditable="true">
+#
+# This content is editable
+#
+
 import turtle
+
+turtle.set_defaults(
+    canvwidth = 500,  # default is 400
+    canvheight = 500,  # default is 300
+    turtle_canvas_wrapper = document['turtle-div']
+   # , turtle_canvas_id = 'turtle-canvas' # default, could be overriden
+  )
+
 t=turtle.Turtle()
 
 t.penup()
@@ -62,15 +81,10 @@ t1.pendown()
 t1.color('red')
 t1.write("I love Brython!!")
 
-turtle._Screen().end()
+turtle.show()
 </pre>
 
-<div id="container" 
-     style="float:left;border-style:solid;border-color:black;margin-left:50px"></div>
+<span id="turtle-div" style="float:left;border:1px solid green; margin-left:50px;"> </span>
 </body>
-
-<div id="processing" class="blink" 
-     style="color:red;position:absolute;z-index:100;width:250px;height:100px;top:50%;left:50%;margin 0 auto;">Processing... Please wait..
-</div>
 
 </html>
