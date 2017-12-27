@@ -1881,7 +1881,7 @@ $B.parse_fstring = function(string){
                     throw Error("f-string expression part cannot include a" +
                         " backslash")
                 }else if(nb_paren == 0 && car=='!' && current.fmt===null &&
-                    string.charAt(i + 2)==":"){
+                    ':}'.indexOf(string.charAt(i + 2))>-1){
                     if(current.expression.length==0){
                         throw Error("f-string: empty expression not allowed")
                     }
