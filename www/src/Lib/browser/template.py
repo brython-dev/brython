@@ -54,7 +54,6 @@ After a handler function is run, if element.data has changed, the element is
 rendered again, with the new value of element.data.
 """
 import traceback
-import json
 from browser import document, html
 
 # HTML elements that don't need a closing tag
@@ -254,13 +253,18 @@ class Template:
         try:
             exec(self.python, ns)
         except Exception as exc:
+            msg = traceback.format_exc()
+            print("Error rendering template:\n" + self.element.outerHTML)
+            print("Namespace passed to render():\n", self.data.to_dict())
             if isinstance(exc, SyntaxError):
                 line_no = exc.args[2]
             else:
                 line_no = exc.traceback.tb_lineno
             elt = self.line_mapping[line_no]
+            print("The error is raised when rendering the element:")
             print(elt.outerHTML)
-            print(f"{exc.__class__.__name__}: {exc!s}")
+            print("Python traceback:")
+            print(msg)
             return
 
         # Replace element content by generated html.
