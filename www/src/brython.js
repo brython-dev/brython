@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-12-27 10:47:10.215187"
+__BRYTHON__.compiled_date="2017-12-28 10:18:52.154787"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){var js,$pos,res,$op
@@ -1496,6 +1496,7 @@ num+'!=$locals.$len_func'+num+'()){throw RuntimeError("dictionary'+
 var try_node=new $Node()
 new $NodeJSCtx(try_node,'try')
 while_node.add(try_node)
+try_node.add(new $NodeJS("var ce = $B.current_exception"))
 var iter_node=new $Node()
 iter_node.parent=$get_node(this).parent
 iter_node.id=this.module
@@ -1510,7 +1511,7 @@ assign.tree[1]=new $JSCode('$locals["$next'+num+'"]()')
 try_node.add(iter_node)
 var catch_node=new $Node()
 var js='catch($err){if($B.is_exc($err,[StopIteration]))'+
-'{$B.clear_exc();break;}'
+'{$B.current_exception=ce;break;}'
 js +='else{throw($err)}}'
 new $NodeJSCtx(catch_node,js)
 while_node.add(catch_node)
@@ -5040,18 +5041,20 @@ augm_code=augm_code.replace(/\+=/g,augm_ops[i][0])
 eval('$B.augm_item_'+augm_ops[i][1]+'='+augm_code)}
 $B.extend=function(fname,arg){
 for(var i=2;i<arguments.length;i++){var mapping=arguments[i]
-var it=_b_.iter(mapping),getter=_b_.getattr(mapping,'__getitem__')
+var it=_b_.iter(mapping),getter=_b_.getattr(mapping,'__getitem__'),ce=$B.current_exception
 while(true){try{var key=_b_.next(it)
 if(typeof key!=='string'){throw _b_.TypeError(fname+"() keywords must be strings")}
 if(arg[key]!==undefined){throw _b_.TypeError(
 fname+"() got multiple values for argument '"+key+"'")}
-arg[key]=getter(key)}catch(err){if(_b_.isinstance(err,[_b_.StopIteration])){break}
+arg[key]=getter(key)}catch(err){if(_b_.isinstance(err,[_b_.StopIteration])){$B.current_exception=ce
+break}
 throw err}}}
 return arg}
 $B.extend_list=function(){
 var res=Array.prototype.slice.call(arguments,0,arguments.length-1),last=$B.last(arguments)
-var it=_b_.iter(last)
-while(true){try{res.push(_b_.next(it))}catch(err){if(_b_.isinstance(err,[_b_.StopIteration])){break}
+var it=_b_.iter(last),ce=$B.current_exception
+while(true){try{res.push(_b_.next(it))}catch(err){if(_b_.isinstance(err,[_b_.StopIteration])){$B.current_exception=ce
+break}
 throw err}}
 return res}
 $B.$test_item=function(expr){
@@ -5064,13 +5067,15 @@ if(a instanceof Number && b instanceof Number){return a.valueOf()==b.valueOf()}
 return a===b}
 $B.$is_member=function(item,_set){
 var f,_iter
+var ce=$B.current_exception
 try{f=_b_.getattr(_set,"__contains__")}
-catch(err){}
+catch(err){$B.current_exception=ce}
 if(f)return f(item)
 try{_iter=_b_.iter(_set)}
-catch(err){}
+catch(err){$B.current_exception=ce}
 if(_iter){while(1){try{var elt=_b_.next(_iter)
-if(_b_.getattr(elt,"__eq__")(item))return true}catch(err){if(err.__name__=="StopIteration")return false
+if(_b_.getattr(elt,"__eq__")(item))return true}catch(err){if(err.__name__=="StopIteration"){$B.current_exception=ce
+return false}
 throw err}}}
 try{f=_b_.getattr(_set,"__getitem__")}
 catch(err){throw _b_.TypeError("'"+$B.get_class(_set).__name__+"' object is not iterable")}
@@ -5121,9 +5126,10 @@ var items=_b_.list(_b_.dict.$dict.items(obj))
 for(var i=0,_len_i=items.length;i < _len_i;i++){res[$B.pyobject2jsobject(items[i][0])]=$B.pyobject2jsobject(items[i][1])}
 return res}
 if(_b_.hasattr(obj,'__iter__')){
-var _a=[],pos=0
+var _a=[],pos=0,ce=$B.current_exception
 while(1){try{
 _a[pos++]=$B.pyobject2jsobject(_b_.next(obj))}catch(err){if(err.__name__ !=="StopIteration")throw err
+$B.current_exception=ce
 break}}
 return{'_type_': 'iter',data: _a}}
 if(_b_.hasattr(obj,'__getstate__')){return _b_.getattr(obj,'__getstate__')()}
@@ -5138,10 +5144,10 @@ res.__str__=res.toString=res.__repr__
 return res}
 $B.$iterator_class=function(name){var res={__class__:$B.$type,__name__:name,}
 res.__mro__=[_b_.object.$dict]
-function as_array(s){var _a=[],pos=0
-var _it=_b_.iter(s)
+function as_array(s){var _a=[],pos=0,_it=_b_.iter(s),ce=$B.current_exception
 while(1){try{
-_a[pos++]=_b_.next(_it)}catch(err){if(err.__name__=='StopIteration'){break}}}
+_a[pos++]=_b_.next(_it)}catch(err){if(err.__name__=='StopIteration'){$B.current_exception=ce
+break}}}
 return _a}
 function as_list(s){return _b_.list(as_array(s))}
 function as_set(s){return _b_.set(as_array(s))}
@@ -5433,9 +5439,6 @@ if(got !=expected){if(expected==0){throw _b_.TypeError(name+"() takes no argumen
 (expected<2 ? '' : 's')+" ("+got+" given)")}}}
 function check_no_kw(name,x,y){
 if(x.$nat ||(y!==undefined && y.$nat)){throw _b_.TypeError(name+"() takes no keyword arguments")}}
-function check_not_kw(arg){
-if(arg.$nat){throw _b_.TypeError("'"+Object.keys(arg.kw)[0]+
-"' is an invalid keyword argument for this function")}}
 var $NoneDict={__class__:$B.$type,__name__:'NoneType'}
 $NoneDict.__mro__=[$ObjectDict]
 $NoneDict.__setattr__=function(self,attr){return no_set_attr($NoneDict,attr)}
@@ -5460,14 +5463,14 @@ if(hasattr(obj,'__abs__')){return getattr(obj,'__abs__')()};
 throw _b_.TypeError("Bad operand type for abs(): '"+$B.get_class(obj)+"'")}
 function all(obj){check_nb_args('all',1,arguments.length)
 check_no_kw('all',obj)
-var iterable=iter(obj)
+var iterable=iter(obj),ce=$B.current_exception
 while(1){try{var elt=next(iterable)
-if(!bool(elt))return false}catch(err){return true}}}
+if(!bool(elt))return false}catch(err){$B.current_exception=ce;return true}}}
 function any(obj){check_nb_args('any',1,arguments.length)
 check_no_kw('any',obj)
-var iterable=iter(obj)
+var iterable=iter(obj),ce=$B.current_exception
 while(1){try{var elt=next(iterable)
-if(bool(elt))return true}catch(err){return false}}}
+if(bool(elt))return true}catch(err){$B.current_exception=ce;return false}}}
 function ascii(obj){check_nb_args('ascii',1,arguments.length)
 check_no_kw('ascii',obj)
 var res=repr(obj),res1='',cp
@@ -5505,8 +5508,10 @@ case 'string':
 if(obj)return true
 return false
 default:
+var ce=$B.current_exception
 try{return getattr(obj,'__bool__')()}
-catch(err){try{return getattr(obj,'__len__')()>0}
+catch(err){$B.current_exception=ce
+try{return getattr(obj,'__len__')()>0}
 catch(err){return true}}}}
 function bool(){
 var $=$B.args('bool',1,{x:null},['x'],arguments,{x:false},null,null)
@@ -5560,7 +5565,7 @@ _b_.list.$dict.sort(res)
 return res}
 check_nb_args('dir',1,arguments.length)
 check_no_kw('dir',obj)
-var klass=obj.__class__ ||$B.get_class(obj)
+var klass=obj.__class__ ||$B.get_class(obj),ce=$B.current_exception
 if(klass && klass.is_class){obj=obj.$dict}
 else{
 try{
@@ -5568,6 +5573,7 @@ var res=getattr(obj,'__dir__')()
 res=_b_.list(res)
 res.sort()
 return res}catch(err){}}
+$B.current_exception=ce
 var res=[],pos=0
 for(var attr in obj){if(attr.charAt(0)!=='$' && attr!=='__class__'){res[pos++]=attr}}
 res.sort()
@@ -5598,7 +5604,7 @@ var stack_len=$B.frames_stack.length
 var is_exec=arguments[3]=='exec',leave=false
 if(src.__class__===$B.$CodeObjectDict){src=src.source}else if(typeof src !=='string'){throw _b_.TypeError("eval() arg 1 must be a string, bytes "+
 "or code object")}
-var globals_id='$exec_'+$B.UUID(),locals_id,parent_block_id
+var globals_id='$exec_'+$B.UUID(),locals_id,parent_block_id,ce=$B.current_exception
 if(_globals !==undefined){if(_globals.__class__!=_b_.dict.$dict){throw _b_.TypeError("exec() globals must be a dict, not "+
 _globals.__class__.__name__)}
 _globals.globals_id=_globals.globals_id ||globals_id
@@ -5630,6 +5636,7 @@ while(1){try{var item=next(items)
 item1=to_alias(item)
 eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')
 $B.bound[locals_id][item]=true}catch(err){break}}}
+$B.current_exception=ce
 var root=$B.py2js(src,globals_id,locals_id,parent_block_id),js,gns,lns
 try{
 var try_node=root.children[root.children.length-2],instr=try_node.children[try_node.children.length-2]
@@ -5683,7 +5690,8 @@ __class__: $FilterDict,__next__: __next__}}
 function format(value,format_spec){var args=$B.args("format",2,{value:null,format_spec:null},["value","format_spec"],arguments,{format_spec:''},null,null)
 var fmt=getattr(args.value,'__format__',null)
 if(fmt !==null){return fmt(args.format_spec)}
-throw _b_.NotImplementedError("__format__ is not implemented for object '" + _b_.str(args.value)+ "'")}
+throw _b_.NotImplementedError("__format__ is not implemented for object '" +
+_b_.str(args.value)+ "'")}
 function attr_error(attr,cname){var msg="bad operand type for unary #: '"+cname+"'"
 switch(attr){case '__neg__':
 throw _b_.TypeError(msg.replace('#','-'))
@@ -5833,8 +5841,9 @@ if(typeof obj=='string'){$B.$import("pydoc");
 var pydoc=$B.imported["pydoc"]
 getattr(getattr(pydoc,"help"),"__call__")(obj)
 return}
+var ce=$B.current_exception
 try{return getattr(obj,'__doc__')}
-catch(err){console.log('help err '+err);return ''}}
+catch(err){$B.current_exception=ce;return ''}}
 function hex(x){check_no_kw('hex',x)
 check_nb_args('hex',1,arguments.length)
 return $builtin_base_convert_helper(x,16)}
@@ -5902,11 +5911,12 @@ catch(err){var gi=getattr(obj,'__getitem__',null),ln=getattr(obj,'__len__',null)
 if(gi!==null){if(ln!==null){var len=getattr(ln,'__call__')()
 return iterator_class(gi,len)}else{return iterator_class(gi,null)}}
 throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not iterable")}
-var res=_iter()
+var res=_iter(),ce=$B.current_exception
 try{getattr(res,'__next__')}
 catch(err){if(isinstance(err,_b_.AttributeError)){throw _b_.TypeError(
 "iter() returned non-iterator of type '"+
 $B.get_class(res).__name__+"'")}}
+$B.current_exception=ce
 return res}
 function iter(){
 var $=$B.args('iter',1,{obj: null},['obj'],arguments,null,'kw')
@@ -5949,9 +5959,10 @@ default:
 throw _b_.TypeError("'"+attr+"' is an invalid keyword argument for this function")}}}
 if(!func){func=function(x){return x}}
 if(nb_args==0){throw _b_.TypeError($op_name+" expected 1 argument, got 0")}else if(nb_args==1){
-var $iter=iter(args[0]),res=null
+var $iter=iter(args[0]),res=null,ce=$B.current_exception
 while(true){try{var x=next($iter)
-if(res===null ||bool(getattr(func(x),op)(func(res)))){res=x}}catch(err){if(err.__name__=="StopIteration"){if(res===null){if(has_default){return default_value}
+if(res===null ||bool(getattr(func(x),op)(func(res)))){res=x}}catch(err){if(err.__name__=="StopIteration"){$B.current_exception=ce
+if(res===null){if(has_default){return default_value}
 else{throw _b_.ValueError($op_name+"() arg is an empty sequence")}}else{return res}}
 throw err}}}else{if(has_default){throw _b_.TypeError("Cannot specify a default for "+$op_name+"() with multiple positional arguments")}
 var res=null
@@ -6062,8 +6073,10 @@ return self.getter(self.$counter)}
 function reversed(seq){
 check_no_kw('reversed',seq)
 check_nb_args('reversed',1,arguments.length)
+var ce=$B.current_exception
 try{return getattr(seq,'__reversed__')()}
 catch(err){if(err.__name__!='AttributeError'){throw err}}
+$B.current_exception=ce
 try{var res={__class__:$ReversedDict,$counter : getattr(seq,'__len__')(),getter:getattr(seq,'__getitem__')}
 return res}catch(err){throw _b_.TypeError("argument to reversed() must be a sequence")}}
 reversed.__class__=$B.$factory
@@ -6071,10 +6084,12 @@ reversed.$dict=$ReversedDict
 $ReversedDict.$factory=reversed
 function round(arg,n){var $=$B.args('round',2,{number:null,ndigits:null},['number','ndigits'],arguments,{ndigits: None},null,null),arg=$.number,n=$.ndigits
 if(!isinstance(arg,[_b_.int,_b_.float])){if(!hasattr(arg,'__round__'))
-throw _b_.TypeError("type "+arg.__class__+" doesn't define __round__ method")
+throw _b_.TypeError("type "+arg.__class__+
+" doesn't define __round__ method")
 if(n===undefined)return getattr(arg,'__round__')()
 else return getattr(arg,'__round__')(n)}
-if(isinstance(arg,_b_.float)&&(arg.value===Infinity ||arg.value===-Infinity)){throw _b_.OverflowError("cannot convert float infinity to integer")}
+if(isinstance(arg,_b_.float)&&
+(arg.value===Infinity ||arg.value===-Infinity)){throw _b_.OverflowError("cannot convert float infinity to integer")}
 if(n===None){var floor=Math.floor(arg)
 var diff=Math.abs(arg-floor)
 if(diff==0.5){if(floor % 2){return Math.round(arg)}else{return Math.floor(arg)}}else{return _b_.int(Math.round(arg))}}
@@ -6146,11 +6161,10 @@ function sum(iterable,start){var $=$B.args('sum',2,{iterable:null,start:null},['
 if(start===undefined){start=0}else{
 if(typeof start==='str'){throw _b_.TypeError("TypeError: sum() can't sum strings [use ''.join(seq) instead]")}
 if(_b_.isinstance(start,_b_.bytes)){throw _b_.TypeError("TypeError: sum() can't sum bytes [use b''.join(seq) instead]")}}
-var res=start
-var iterable=iter(iterable)
+var res=start,iterable=iter(iterable),ce=$B.current_exception
 while(1){try{var _item=next(iterable)
-res=getattr(res,'__add__')(_item)}catch(err){if(err.__name__==='StopIteration'){break}
-else{throw err}}}
+res=getattr(res,'__add__')(_item)}catch(err){if(err.__name__==='StopIteration'){$B.current_exception=ce
+break}else{throw err}}}
 return res}
 var $SuperDict={__class__:$B.$type,__name__:'super'}
 $SuperDict.__getattribute__=function(self,attr){var mro=self.__thisclass__.$dict.__mro__,res
@@ -6267,12 +6281,13 @@ var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
 var _args=$ns['args']
 var args=[],pos=0
 for(var i=0;i<_args.length;i++){args[pos++]=iter(_args[i])}
-var rank=0,items=[]
+var rank=0,items=[],ce=$B.current_exception
 while(1){var line=[],flag=true,pos=0
-for(var i=0;i<args.length;i++){try{line[pos++]=next(args[i])}catch(err){if(err.__name__==='StopIteration'){flag=false;break}
-else{throw err}}}
+for(var i=0;i<args.length;i++){try{line[pos++]=next(args[i])}catch(err){if(err.__name__==='StopIteration'){flag=false
+break}else{throw err}}}
 if(!flag)break
 items[rank++]=_b_.tuple(line)}
+$B.current_exception=ce
 res.items=items
 return res}
 zip.__class__=$B.$factory
@@ -6593,7 +6608,7 @@ if($B.gt(0,rank)){rank=$B.add(rank,$RangeDict.__len__(self))}
 var res=$B.add(self.start,$B.mul(rank,self.step))
 if(($B.gt(self.step,0)&&($B.ge(res,self.stop)||$B.gt(self.start,res)))||
 ($B.gt(0,self.step)&&($B.ge(self.stop,res)||$B.gt(res,self.start)))){throw _b_.IndexError('range object index out of range')}
-return res }
+return res}
 $RangeDict.__hash__=function(self){var len=$RangeDict.__len__(self)
 if(len==0){return _b_.hash(_b_.tuple([0,None,None]))}
 if(len==1){return _b_.hash(_b_.tuple([1,self.start,None]))}
@@ -6630,8 +6645,9 @@ $RangeDict.__setattr__=function(self,attr,value){throw _b_.AttributeError('reado
 $RangeDict.start=function(self){return self.start}
 $RangeDict.step=function(self){return self.step},$RangeDict.stop=function(self){return self.stop}
 $RangeDict.count=function(self,ob){if(_b_.isinstance(ob,[_b_.int,_b_.float,_b_.bool])){return _b_.int($RangeDict.__contains__(self,ob))}else{var comp=_b_.getattr(ob,'__eq__'),it=$RangeDict.__iter__(self)
-_next=$RangeIterator.$dict.__next__,nb=0
-while(true){try{if(comp(_next(it))){nb++}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){return nb}
+_next=$RangeIterator.$dict.__next__,nb=0,ce=$B.current_exception
+while(true){try{if(comp(_next(it))){nb++}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){$B.current_exception=ce
+return nb}
 throw err}}}}
 $RangeDict.index=function(self,other){var $=$B.args('index',2,{self:null,other:null},['self','other'],arguments,{},null,null),self=$.self,other=$.other
 try{other=$B.int_or_bool(other)}catch(err){var comp=_b_.getattr(other,'__eq__'),it=$RangeDict.__iter__(self),_next=$RangeIterator.$dict.__next__,nb=0
@@ -6820,11 +6836,12 @@ case 'backslashreplace':
 return decode(self.source,encoding,errors)
 default:}}
 $BytesDict.join=function(){var $ns=$B.args('join',2,{self:null,iterable:null},['self','iterable'],arguments,{}),self=$ns['self'],iterable=$ns['iterable']
-var next_func=_b_.getattr(_b_.iter(iterable),'__next__'),res=bytes(),empty=true
+var next_func=_b_.getattr(_b_.iter(iterable),'__next__'),res=bytes(),empty=true,ce=$B.current_exception
 while(true){try{var item=next_func()
 if(empty){empty=false}
 else{res=$BytesDict.__add__(res,self)}
-res=$BytesDict.__add__(res,item)}catch(err){if(isinstance(err,_b_.StopIteration)){break}
+res=$BytesDict.__add__(res,item)}catch(err){if(isinstance(err,_b_.StopIteration)){$B.current_exception=ce
+break}
 throw err}}
 return res}
 $BytesDict.maketrans=function(from,to){var _t=[]
@@ -9141,11 +9158,10 @@ return $.self}
 $ListDict.__init__=function(self,arg){var len_func=getattr(self,'__len__'),pop_func=getattr(self,'pop',_b_.None)
 if(pop_func !==_b_.None){while(len_func())pop_func()}
 if(arg===undefined)return $N
-var arg=$B.$iter(arg)
-var next_func=getattr(arg,'__next__')
-var pos=len_func()
+var arg=$B.$iter(arg),next_func=getattr(arg,'__next__'),pos=len_func(),ce=$B.current_exception
 while(1){try{self[pos++]=next_func()}
-catch(err){if(err.__name__=='StopIteration'){break}
+catch(err){if(err.__name__=='StopIteration'){$B.current_exception=ce
+break}
 else{throw err}}}
 return $N}
 var $list_iterator=$B.$iterator_class('list_iterator')
@@ -9855,11 +9871,12 @@ if(res===-1)throw _b_.ValueError("substring not found")
 return res}
 $StringDict.join=function(){var $=$B.args('join',2,{self:null,iterable:null},['self','iterable'],arguments,{},null,null)
 var iterable=_b_.iter($.iterable)
-var res=[],count=0
+var res=[],count=0,ce=$B.current_exception
 while(1){try{var obj2=_b_.next(iterable)
 if(!isinstance(obj2,str)){throw _b_.TypeError(
 "sequence item "+count+": expected str instance, "+$B.get_class(obj2).__name__+" found")}
-res.push(obj2)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
+res.push(obj2)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){$B.current_exception=ce
+break}
 else{throw err}}}
 return res.join($.self)}
 $StringDict.ljust=function(self){var $=$B.args('ljust',3,{self:null,width:null,fillchar:null},['self','width','fillchar'],arguments,{fillchar:' '},null,null)
@@ -10323,11 +10340,12 @@ return $N}
 if(Array.isArray(args[0])){var src=args[0]
 var i=src.length -1
 var si=$DictDict.__setitem__
-while(i-->0)si(self,src[i-1][0],src[i-1][1])}else{var iterable=$B.$iter(args[0])
+while(i-->0)si(self,src[i-1][0],src[i-1][1])}else{var iterable=$B.$iter(args[0]),ce=$B.current_exception
 while(1){try{var elt=next(iterable)
 var key=getattr(elt,'__getitem__')(0)
 var value=getattr(elt,'__getitem__')(1)
-$DictDict.__setitem__(self,key,value)}catch(err){if(err.__name__==='StopIteration'){break}
+$DictDict.__setitem__(self,key,value)}catch(err){if(err.__name__==='StopIteration'){$B.current_exception=ce
+break}
 throw err}}}}
 if($DictDict.__len__(kw)> 0)$copy_dict(self,kw)
 return $N}
@@ -10391,10 +10409,11 @@ var $=$B.args('copy',1,{self:null},['self'],arguments,{},null,null),self=$.self,
 $copy_dict(res,self)
 return res}
 $DictDict.fromkeys=function(){var $=$B.args('fromkeys',3,{cls:null,keys:null,value:null},['cls','keys','value'],arguments,{value:_b_.None},null,null),keys=$.keys,value=$.value
-var klass=$.cls,res=klass(),keys_iter=$B.$iter(keys)
+var klass=$.cls,res=klass(),keys_iter=$B.$iter(keys),ce=$B.current_exception
 while(1){try{var key=_b_.next(keys_iter)
 if(klass===dict){$DictDict.__setitem__(res,key,value)}
-else{_b_.getattr(res,"__setitem__")(key,value)}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return res}
+else{_b_.getattr(res,"__setitem__")(key,value)}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){$B.current_exception=ce
+return res}
 throw err}}}
 $DictDict.fromkeys.$type='classmethod'
 $DictDict.get=function(){var $=$B.args('get',3,{self:null,key:null,_default:null},['self','key','_default'],arguments,{_default:$N},null,null)
@@ -10417,9 +10436,11 @@ $DictDict.__delitem__(self,key)
 return res}catch(err){if(err.__name__==='KeyError'){if(_default!==undefined)return _default
 throw err}
 throw err}}
-$DictDict.popitem=function(self){try{var itm=new $item_iterator(self).next()
+$DictDict.popitem=function(self){var ce=$B.current_exception
+try{var itm=new $item_iterator(self).next()
 $DictDict.__delitem__(self,itm[0])
-return _b_.tuple(itm)}catch(err){if(err.__name__=="StopIteration"){throw KeyError("'popitem(): dictionary is empty'")}}}
+return _b_.tuple(itm)}catch(err){if(err.__name__=="StopIteration"){$B.current_exception=ce
+throw KeyError("'popitem(): dictionary is empty'")}}}
 $DictDict.setdefault=function(){var $=$B.args('setdefault',3,{self:null,key: null,_default:null},['self','key','_default'],arguments,{_default:$N},null,null),self=$.self,key=$.key,_default=$._default
 try{return $DictDict.__getitem__(self,key)}
 catch(err){if(_default===undefined)_default=$N
@@ -11120,11 +11141,6 @@ DOMNodeDict.__setitem__=function(self,key,value){self.elt.childNodes[key]=value}
 DOMNodeDict.abs_left={__get__: function(self){return $getPosition(self.elt).left},__set__: function(){throw _b_.AttributeError("'DOMNode' objectattribute 'abs_left' is read-only")}}
 DOMNodeDict.abs_top={__get__: function(self){return $getPosition(self.elt).top},__set__: function(){throw _b_.AttributeError("'DOMNode' objectattribute 'abs_top' is read-only")}}
 DOMNodeDict.bind=function(self,event){
-var _id
-if(self.elt.nodeType===9){_id=0}
-else{_id=self.elt.$brython_id}
-self.$events=self.$events ||{}
-var evlist=self.$events[event]=self.$events[event]||[]
 if(arguments.length==2){
 return(function(obj,evt){function f(callback){DOMNodeDict.bind(obj,evt,callback)
 return callback}
@@ -11141,7 +11157,9 @@ callback.$infos=func.$infos
 callback.$attrs=func.$attrs ||{}
 callback.$func=func
 self.elt.addEventListener(event,callback,false)
-evlist.push([func,callback])}
+self.elt.$events=self.elt.$events ||{}
+self.elt.$events[event]=self.elt.$events[event]||[]
+self.elt.$events[event].push([func,callback])}
 return self}
 DOMNodeDict.children=function(self){var res=[],pos=0,elt=self.elt
 console.log(elt,elt.childNodes)
@@ -11166,8 +11184,8 @@ var res=self.elt,tagName=tagName.toLowerCase()
 while(res.tagName.toLowerCase()!=tagName){res=res.parentNode
 if(res===undefined ||res.tagName===undefined){throw _b_.KeyError('no parent of type '+tagName)}}
 return DOMNode(res)}
-DOMNodeDict.events=function(self,event){self.$events=self.$events ||{}
-var evt_list=self.$events[event]=self.$events[event]||[],callbacks=[]
+DOMNodeDict.events=function(self,event){self.elt.$events=self.elt.$events ||{}
+var evt_list=self.elt.$events[event]=self.elt.$events[event]||[],callbacks=[]
 for(var i=0;i<evt_list.length;i++){callbacks.push(evt_list[i][1])}
 return callbacks}
 DOMNodeDict.focus=function(self){return(function(obj){return function(){
@@ -11246,18 +11264,6 @@ DOMNodeDict.left={'__get__': function(self){if(self.elt.style===undefined){retur
 var res=parseInt(self.elt.style.left)
 if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'left'")}
 return res},'__set__': function(obj,self,value){self.elt.style.left=value+'px'}}
-var EventListener=$B.make_class({name: "EventListener",init: function(self,obj){self.obj=obj}})
-EventListener.$dict.__enter__=function(self){
-var ns=$B.frames_stack[$B.frames_stack.length-1][1]
-self.funcs=[]
-for(var attr in ns){if(ns[attr]!==null && ns[attr].$infos!==undefined){self.funcs.push(ns[attr])}}}
-EventListener.$dict.__exit__=function(self){var ns=$B.frames_stack[$B.frames_stack.length-1][1]
-for(var attr in ns){if(ns[attr]!==null && ns[attr].$infos!==undefined){if(self.funcs.indexOf(ns[attr])==-1){DOMNodeDict.bind(self.obj,attr,ns[attr])}}}}
-DOMNodeDict.listener={__get__:function(self){return EventListener(self)}}
-DOMNodeDict.on=function(self,event){
-return(function(obj,evt){function f(callback){DOMNodeDict.bind(obj,evt,callback)
-return callback}
-return f})(self,event)}
 DOMNodeDict.options=function(self){
 return new $OptionsClass(self.elt)}
 DOMNodeDict.parent=function(self){if(self.elt.parentElement)return DOMNode(self.elt.parentElement)
@@ -11324,12 +11330,12 @@ var evObj=document.createEvent('Events');
 evObj.initEvent(etype,true,false);
 self.elt.dispatchEvent(evObj);}}
 DOMNodeDict.unbind=function(self,event){
-self.$events=self.$events ||{}
+self.elt.$events=self.elt.$events ||{}
 if(self.$events==={}){return _b_.None}
-if(event===undefined){for(var event in self.$events){DOMNodeDict.unbind(self,event)}
+if(event===undefined){for(var event in self.elt.$events){DOMNodeDict.unbind(self,event)}
 return _b_.None}
-if(self.$events[event]===undefined ||self.$events[event].length==0){return _b_.None}
-var events=self.$events[event]
+if(self.elt.$events[event]===undefined ||self.elt.$events[event].length==0){return _b_.None}
+var events=self.elt.$events[event]
 if(arguments.length===2){
 for(var i=0;i<events.length;i++){var callback=events[i][1]
 self.elt.removeEventListener(event,callback,false)}

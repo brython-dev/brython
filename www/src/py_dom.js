@@ -852,11 +852,6 @@ DOMNodeDict.abs_top = {
 
 DOMNodeDict.bind = function(self, event){
     // bind functions to the event (event = "click", "mouseover" etc.)
-    var _id
-    if(self.elt.nodeType===9){_id=0}
-    else{_id = self.elt.$brython_id}
-    self.$events = self.$events || {}
-    var evlist = self.$events[event] = self.$events[event] || []
 
     if(arguments.length==2){
         // elt.bind(event) is a decorator for callback functions
@@ -893,7 +888,9 @@ DOMNodeDict.bind = function(self, event){
         callback.$attrs = func.$attrs || {}
         callback.$func = func
         self.elt.addEventListener(event,callback,false)
-        evlist.push([func, callback])
+        self.elt.$events = self.elt.$events || {}
+        self.elt.$events[event] = self.elt.$events[event] || []
+        self.elt.$events[event].push([func, callback])
     }
     return self
 }
@@ -954,8 +951,8 @@ DOMNodeDict.closest = function(self, tagName){
 }
 
 DOMNodeDict.events = function(self, event){
-    self.$events = self.$events || {}
-    var evt_list = self.$events[event] = self.$events[event] || [],
+    self.elt.$events = self.elt.$events || {}
+    var evt_list = self.elt.$events[event] = self.elt.$events[event] || [],
         callbacks = []
     for(var i=0;i<evt_list.length;i++){callbacks.push(evt_list[i][1])}
     return callbacks
@@ -1128,50 +1125,6 @@ DOMNodeDict.left = {
     }
 }
 
-var EventListener = $B.make_class({
-    name: "EventListener",
-    init: function(self, obj){
-        self.obj=obj
-    }
-})
-EventListener.$dict.__enter__ = function(self){
-    // local namespace of object
-    var ns = $B.frames_stack[$B.frames_stack.length-1][1]
-    self.funcs = []
-    for(var attr in ns){
-        if(ns[attr] !==null && ns[attr].$infos!==undefined){
-            self.funcs.push(ns[attr])
-        }
-    }
-}
-EventListener.$dict.__exit__ = function(self){
-    var ns = $B.frames_stack[$B.frames_stack.length-1][1]
-    for(var attr in ns){
-        if(ns[attr] !== null && ns[attr].$infos!==undefined){
-            if(self.funcs.indexOf(ns[attr])==-1){
-                DOMNodeDict.bind(self.obj, attr, ns[attr])
-            }
-        }
-    }
-}
-
-DOMNodeDict.listener = {
-    __get__:function(self){
-        return EventListener(self)
-    }
-}
-
-DOMNodeDict.on = function(self, event){
-    // decorator for callback functions
-    return (function(obj, evt){
-        function f(callback){
-            DOMNodeDict.bind(obj, evt, callback)
-            return callback
-        }
-        return f
-    })(self, event)
-}
-
 DOMNodeDict.options = function(self){ // for SELECT tag
     return new $OptionsClass(self.elt)
 }
@@ -1327,21 +1280,21 @@ DOMNodeDict.unbind = function(self, event){
     // unbind functions from the event (event = "click", "mouseover" etc.)
     // if no function is specified, remove all callback functions
     // If no event is specified, remove all callbacks for all events
-    self.$events = self.$events || {}
+    self.elt.$events = self.elt.$events || {}
     if(self.$events==={}){return _b_.None}
 
     if(event===undefined){
-        for(var event in self.$events){
+        for(var event in self.elt.$events){
             DOMNodeDict.unbind(self, event)
         }
         return _b_.None
     }
 
-    if(self.$events[event]===undefined || self.$events[event].length==0){
+    if(self.elt.$events[event]===undefined || self.elt.$events[event].length==0){
         return _b_.None
     }
 
-    var events = self.$events[event]
+    var events = self.elt.$events[event]
     if(arguments.length===2){
         // remove all callback functions
         for(var i=0;i<events.length;i++){
