@@ -31,12 +31,6 @@ function check_no_kw(name, x, y){
         throw _b_.TypeError(name+"() takes no keyword arguments")}
 }
 
-function check_not_kw(arg){
-    // Check that arg is not a keyword argument
-    if(arg.$nat){throw _b_.TypeError("'"+Object.keys(arg.kw)[0]+
-        "' is an invalid keyword argument for this function")}
-}
-
 var $NoneDict = {__class__:$B.$type,__name__:'NoneType'}
 
 $NoneDict.__mro__ = [$ObjectDict]
@@ -93,24 +87,26 @@ function abs(obj){
 function all(obj){
     check_nb_args('all', 1, arguments.length)
     check_no_kw('all', obj)
-    var iterable = iter(obj)
+    var iterable = iter(obj),
+        ce = $B.current_exception
     while(1){
         try{
             var elt = next(iterable)
             if(!bool(elt)) return false
-        }catch(err){return true}
+        }catch(err){$B.current_exception=ce;return true}
     }
 }
 
 function any(obj){
     check_nb_args('any', 1, arguments.length)
     check_no_kw('any', obj)
-    var iterable = iter(obj)
+    var iterable = iter(obj),
+        ce = $B.current_exception
     while(1){
         try{
             var elt = next(iterable)
             if(bool(elt)) return true
-        }catch(err){return false}
+        }catch(err){$B.current_exception=ce;return false}
     }
 }
 
@@ -178,8 +174,10 @@ $B.$bool = function(obj){ // return true or false
         if(obj) return true
         return false
       default:
+        var ce = $B.current_exception
         try{return getattr(obj,'__bool__')()}
         catch(err){
+            $B.current_exception = ce
             try{return getattr(obj,'__len__')()>0}
             catch(err){return true}
         }
@@ -293,7 +291,8 @@ function dir(obj){
         // if dir is called without arguments, use globals
         var frame = $B.last($B.frames_stack),
             globals_obj = frame[3],
-            res = _b_.list(), pos=0
+            res = _b_.list(),
+            pos=0
         for(var attr in globals_obj){
             if(attr.charAt(0)=='$' && attr.charAt(1) != '$') {
                 // exclude internal attributes set by Brython
@@ -308,8 +307,8 @@ function dir(obj){
     check_nb_args('dir', 1, arguments.length)
     check_no_kw('dir', obj)
 
-    var klass = obj.__class__ || $B.get_class(obj)
-
+    var klass = obj.__class__ || $B.get_class(obj),
+        ce = $B.current_exception
     if(klass && klass.is_class){obj=obj.$dict}
     else {
         // We first look if the object has the __dir__ method
@@ -320,6 +319,7 @@ function dir(obj){
             return res
         } catch (err){}
     }
+    $B.current_exception = ce
     var res = [], pos=0
     for(var attr in obj){
         if(attr.charAt(0)!=='$' && attr!=='__class__'){
@@ -409,7 +409,8 @@ function $eval(src, _globals, _locals){
     // code will be run in a specific block
     var globals_id = '$exec_'+$B.UUID(),
         locals_id,
-        parent_block_id
+        parent_block_id,
+        ce = $B.current_exception
 
     // If a _globals dictionary is provided, set or reuse its attribute
     // globals_id
@@ -498,6 +499,8 @@ function $eval(src, _globals, _locals){
             }
         }
     }
+
+    $B.current_exception = ce
 
     var root = $B.py2js(src, globals_id, locals_id, parent_block_id),
         js, gns, lns
@@ -633,10 +636,12 @@ function filter(func, iterable){
 }
 
 function format(value, format_spec) {
-  var args = $B.args("format",2,{value:null,format_spec:null},["value","format_spec"],arguments,{format_spec:''},null,null)
+  var args = $B.args("format",2,{value:null,format_spec:null},
+      ["value","format_spec"],arguments,{format_spec:''},null,null)
   var fmt = getattr(args.value,'__format__', null)
   if(fmt !== null){return fmt(args.format_spec)}
-  throw _b_.NotImplementedError("__format__ is not implemented for object '" + _b_.str(args.value) + "'")
+  throw _b_.NotImplementedError("__format__ is not implemented for object '" +
+      _b_.str(args.value) + "'")
 }
 
 function attr_error(attr, cname){
@@ -996,8 +1001,9 @@ function help(obj){
         getattr(getattr(pydoc,"help"),"__call__")(obj)
         return
     }
+    var ce = $B.current_exception
     try{return getattr(obj,'__doc__')}
-    catch(err){console.log('help err '+err);return ''}
+    catch(err){$B.current_exception = ce;return ''}
 }
 
 function hex(x) {
@@ -1155,13 +1161,15 @@ $B.$iter = function(obj){
       }
       throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not iterable")
     }
-    var res = _iter()
+    var res = _iter(),
+        ce = $B.current_exception
     try{getattr(res,'__next__')}
     catch(err){
         if(isinstance(err,_b_.AttributeError)){throw _b_.TypeError(
             "iter() returned non-iterator of type '"+
              $B.get_class(res).__name__+"'")}
     }
+    $B.current_exception = ce
     return res
 }
 
@@ -1253,13 +1261,15 @@ function $extreme(args,op){ // used by min() and max()
     }else if(nb_args==1){
         // Only one positional argument : it must be an iterable
         var $iter = iter(args[0]),
-            res = null
+            res = null,
+            ce = $B.current_exception
         while(true){
             try{
                 var x = next($iter)
                 if(res===null || bool(getattr(func(x),op)(func(res)))){res = x}
             }catch(err){
                 if(err.__name__=="StopIteration"){
+                    $B.current_exception = ce
                     if(res===null){
                         if(has_default){return default_value}
                         else{throw _b_.ValueError($op_name+"() arg is an empty sequence")}
@@ -1490,10 +1500,13 @@ function reversed(seq){
     check_no_kw('reversed', seq)
     check_nb_args('reversed', 1, arguments.length)
 
+    var ce = $B.current_exception
+
     try{return getattr(seq,'__reversed__')()}
     catch(err){
         if(err.__name__!='AttributeError'){throw err}
     }
+    $B.current_exception = ce
 
     try{
         var res = {
@@ -1517,12 +1530,14 @@ function round(arg,n){
 
     if(!isinstance(arg,[_b_.int,_b_.float])){
         if (!hasattr(arg,'__round__'))
-            throw _b_.TypeError("type "+arg.__class__+" doesn't define __round__ method")
+            throw _b_.TypeError("type "+arg.__class__+
+                " doesn't define __round__ method")
         if(n===undefined) return getattr(arg,'__round__')()
         else return getattr(arg,'__round__')(n)
     }
 
-    if(isinstance(arg, _b_.float) && (arg.value === Infinity || arg.value === -Infinity)) {
+    if(isinstance(arg, _b_.float) &&
+        (arg.value === Infinity || arg.value === -Infinity)) {
       throw _b_.OverflowError("cannot convert float infinity to integer")
     }
 
@@ -1718,15 +1733,18 @@ function sum(iterable,start){
       }
     }
 
-    var res = start
-    var iterable = iter(iterable)
+    var res = start,
+        iterable = iter(iterable),
+        ce = $B.current_exception
     while(1){
         try{
             var _item = next(iterable)
             res = getattr(res,'__add__')(_item)
         }catch(err){
-           if(err.__name__==='StopIteration'){break}
-           else{throw err}
+           if(err.__name__==='StopIteration'){
+               $B.current_exception = ce
+               break
+           }else{throw err}
         }
     }
     return res
@@ -1990,20 +2008,25 @@ function zip(){
     var _args = $ns['args']
     var args = [], pos=0
     for(var i=0;i<_args.length;i++){args[pos++]=iter(_args[i])}
-    var rank=0,items=[]
+    var rank=0,
+        items=[],
+        ce = $B.current_exception
     while(1){
         var line=[],flag=true, pos=0
         for(var i=0;i<args.length;i++){
             try{
                 line[pos++]=next(args[i])
             }catch(err){
-                if(err.__name__==='StopIteration'){flag=false;break}
-                else{throw err}
+                if(err.__name__==='StopIteration'){
+                    flag=false
+                    break
+                }else{throw err}
             }
         }
         if(!flag) break
         items[rank++]=_b_.tuple(line)
     }
+    $B.current_exception = ce
     res.items = items
     return res
 }

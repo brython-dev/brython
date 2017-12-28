@@ -1167,7 +1167,9 @@ $StringDict.join = function(){
         ['self', 'iterable'], arguments, {}, null, null)
 
     var iterable=_b_.iter($.iterable)
-    var res = [],count=0
+    var res = [],
+        count=0,
+        ce = $B.current_exception
     while(1){
         try{
             var obj2 = _b_.next(iterable)
@@ -1175,7 +1177,10 @@ $StringDict.join = function(){
                 "sequence item "+count+": expected str instance, "+$B.get_class(obj2).__name__+" found")}
             res.push(obj2)
         }catch(err){
-            if(_b_.isinstance(err, _b_.StopIteration)){break}
+            if(_b_.isinstance(err, _b_.StopIteration)){
+                $B.current_exception = ce
+                break
+            }
             else{throw err}
         }
     }

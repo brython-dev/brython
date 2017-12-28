@@ -578,7 +578,9 @@ $B.extend = function(fname, arg){
     // The next arguments of $B.extend are the mappings to unpack
     for(var i=2; i<arguments.length; i++){
         var mapping = arguments[i]
-        var it = _b_.iter(mapping), getter = _b_.getattr(mapping,'__getitem__')
+        var it = _b_.iter(mapping),
+            getter = _b_.getattr(mapping,'__getitem__'),
+            ce = $B.current_exception
         while (true){
             try{
                 var key = _b_.next(it)
@@ -591,7 +593,10 @@ $B.extend = function(fname, arg){
                 }
                 arg[key] = getter(key)
             }catch(err){
-                if(_b_.isinstance(err,[_b_.StopIteration])){break}
+                if(_b_.isinstance(err,[_b_.StopIteration])){
+                    $B.current_exception = ce
+                    break
+                }
                 throw err
             }
         }
@@ -604,12 +609,16 @@ $B.extend_list = function(){
     // The last argument is the iterable to unpack
     var res = Array.prototype.slice.call(arguments,0,arguments.length-1),
         last = $B.last(arguments)
-    var it = _b_.iter(last)
+    var it = _b_.iter(last),
+        ce = $B.current_exception
     while (true){
         try{
             res.push(_b_.next(it))
         }catch(err){
-            if(_b_.isinstance(err,[_b_.StopIteration])){break}
+            if(_b_.isinstance(err,[_b_.StopIteration])){
+                $B.current_exception = ce
+                break
+            }
             throw err
         }
     }
@@ -642,24 +651,28 @@ $B.$is = function(a, b){
 
 $B.$is_member = function(item,_set){
     // used for "item in _set"
-    var f,_iter
+    var f, _iter
 
     // use __contains__ if defined
+    var ce = $B.current_exception
     try{f = _b_.getattr(_set,"__contains__")}
-    catch(err){}
+    catch(err){$B.current_exception = ce}
 
     if(f) return f(item)
 
     // use __iter__ if defined
     try{_iter = _b_.iter(_set)}
-    catch(err){}
+    catch(err){$B.current_exception = ce}
     if(_iter){
         while(1){
             try{
                 var elt = _b_.next(_iter)
                 if(_b_.getattr(elt,"__eq__")(item)) return true
             }catch(err){
-                if(err.__name__=="StopIteration") return false
+                if(err.__name__=="StopIteration"){
+                    $B.current_exception = ce
+                    return false
+                }
                 throw err
             }
         }
@@ -791,12 +804,15 @@ $B.pyobject2jsobject=function (obj){
 
     if (_b_.hasattr(obj, '__iter__')) {
        // this is an iterator..
-       var _a=[], pos=0
+       var _a=[],
+           pos=0,
+           ce = $B.current_exception
        while(1) {
           try {
            _a[pos++]=$B.pyobject2jsobject(_b_.next(obj))
           } catch(err) {
             if (err.__name__ !== "StopIteration") throw err
+            $B.current_exception = ce
             break
           }
        }
@@ -844,13 +860,18 @@ $B.$iterator_class = function(name){
     res.__mro__ = [_b_.object.$dict]
 
     function as_array(s) {
-       var _a=[], pos=0
-       var _it = _b_.iter(s)
+       var _a=[],
+           pos=0,
+           _it = _b_.iter(s),
+           ce = $B.current_exception
        while (1) {
          try {
               _a[pos++]=_b_.next(_it)
          } catch (err) {
-              if (err.__name__ == 'StopIteration'){break}
+              if (err.__name__ == 'StopIteration'){
+                  $B.current_exception = ce
+                  break
+              }
          }
        }
        return _a
@@ -1339,7 +1360,7 @@ $B.rich_comp = function(op, x, y){
     // __eq__, True if it is __ne__, raise TypeError otherwise
     if(op=='__eq__'){return _b_.False}
     else if(op=='__ne__'){return _b_.True}
-    
+
     if(x.__class__===$B.$factory){x=x.__class__}
     if(y.__class__===$B.$factory){y=y.__class__}
     throw _b_.TypeError("'"+method2comp[op]+"' not supported between " +

@@ -340,7 +340,8 @@ $DictDict.__init__ = function(self){
             var si=$DictDict.__setitem__
             while(i-->0) si(self, src[i-1][0], src[i-1][1])
         }else{
-            var iterable = $B.$iter(args[0])
+            var iterable = $B.$iter(args[0]),
+                ce = $B.current_exception
             while(1){
                 try{
                    var elt = next(iterable)
@@ -348,7 +349,10 @@ $DictDict.__init__ = function(self){
                    var value = getattr(elt,'__getitem__')(1)
                    $DictDict.__setitem__(self, key, value)
                 }catch(err){
-                   if(err.__name__==='StopIteration'){break}
+                   if(err.__name__==='StopIteration'){
+                       $B.current_exception = ce
+                       break
+                   }
                    throw err
                 }
             }
@@ -499,7 +503,8 @@ $DictDict.fromkeys = function(){
     // class method
     var klass = $.cls,
         res = klass(),
-        keys_iter = $B.$iter(keys)
+        keys_iter = $B.$iter(keys),
+        ce = $B.current_exception
 
     while(1){
         try{
@@ -508,6 +513,7 @@ $DictDict.fromkeys = function(){
             else{_b_.getattr(res, "__setitem__")(key,value)}
         }catch(err){
             if($B.is_exc(err,[_b_.StopIteration])){
+                $B.current_exception = ce
                 return res
             }
             throw err
@@ -569,12 +575,14 @@ $DictDict.pop = function(){
 }
 
 $DictDict.popitem = function(self){
+    var ce = $B.current_exception
     try{
         var itm = new $item_iterator(self).next()
         $DictDict.__delitem__(self,itm[0])
         return _b_.tuple(itm)
     }catch(err) {
         if (err.__name__ == "StopIteration") {
+            $B.current_exception = ce
             throw KeyError("'popitem(): dictionary is empty'")
         }
     }

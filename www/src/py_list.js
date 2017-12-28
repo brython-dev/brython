@@ -215,13 +215,17 @@ $ListDict.__init__ = function(self,arg){
         while(len_func()) pop_func()
     }
     if(arg===undefined) return $N
-    var arg = $B.$iter(arg)
-    var next_func = getattr(arg,'__next__')
-    var pos=len_func()
+    var arg = $B.$iter(arg),
+        next_func = getattr(arg,'__next__'),
+        pos = len_func(),
+        ce = $B.current_exception
     while(1){
         try{self[pos++]=next_func()}
         catch(err){
-            if(err.__name__=='StopIteration'){break}
+            if(err.__name__=='StopIteration'){
+                $B.current_exception = ce
+                break
+            }
             else{throw err}
         }
     }

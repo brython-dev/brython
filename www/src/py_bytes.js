@@ -282,7 +282,8 @@ $BytesDict.join = function(){
         self = $ns['self'], iterable = $ns['iterable']
     var next_func = _b_.getattr(_b_.iter(iterable), '__next__'),
         res = bytes(),
-        empty = true
+        empty = true,
+        ce = $B.current_exception
     while(true){
         try{
             var item = next_func()
@@ -290,7 +291,10 @@ $BytesDict.join = function(){
             else{res = $BytesDict.__add__(res, self)}
             res = $BytesDict.__add__(res, item)
         }catch(err){
-            if(isinstance(err, _b_.StopIteration)){break}
+            if(isinstance(err, _b_.StopIteration)){
+                $B.current_exception = ce
+                break
+            }
             throw err
         }
     }

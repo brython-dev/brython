@@ -19,7 +19,7 @@ $RangeDict.__contains__ = function(self,other){
         try{$RangeDict.index(self, other); return true}
         catch(err){return false}
     }
-    
+
     var sub = $B.sub(other, self.start),
         fl = $B.floordiv(sub, self.step),
         res = $B.mul(self.step, fl)
@@ -74,7 +74,7 @@ $RangeDict.__getitem__ = function(self,rank){
         ($B.gt(0, self.step) && ($B.ge(self.stop, res) || $B.gt(res, self.start)))){
             throw _b_.IndexError('range object index out of range')
     }
-    return res   
+    return res
 }
 
 $RangeDict.__hash__ = function(self){
@@ -92,9 +92,9 @@ $RangeIterator.$dict = {
     __class__: $B.$type,
     __name__: 'range_iterator',
     $factory: $RangeIterator,
-    
+
     __iter__: function(self){return self},
-    
+
     __next__: function(self){return _b_.next(self.obj)}
 }
 $RangeIterator.$dict.__mro__ = [_b_.object.$dict]
@@ -188,12 +188,14 @@ $RangeDict.count = function(self, ob){
         var comp = _b_.getattr(ob, '__eq__'),
             it = $RangeDict.__iter__(self)
             _next = $RangeIterator.$dict.__next__,
-            nb = 0
+            nb = 0,
+            ce = $B.current_exception
         while(true){
             try{
                 if(comp(_next(it))){nb++}
             }catch(err){
                 if(_b_.isinstance(err, _b_.StopIteration)){
+                    $B.current_exception = ce
                     return nb
                 }
                 throw err
@@ -229,14 +231,14 @@ $RangeDict.index = function(self, other){
         fl = $B.floordiv(sub, self.step),
         res = $B.mul(self.step, fl)
     if($B.eq(res, sub)){
-        if(($B.gt(self.stop, self.start) && $B.ge(other, self.start) 
+        if(($B.gt(self.stop, self.start) && $B.ge(other, self.start)
             && $B.gt(self.stop, other)) ||
-            ($B.ge(self.start, self.stop) && $B.ge(self.start, other) 
+            ($B.ge(self.start, self.stop) && $B.ge(self.start, other)
             && $B.gt(other, self.stop))){
                 return fl
         }else{throw _b_.ValueError(_b_.str(other)+' not in range')}
     }else{
-        throw _b_.ValueError(_b_.str(other)+' not in range')            
+        throw _b_.ValueError(_b_.str(other)+' not in range')
     }
 }
 
@@ -277,8 +279,8 @@ range.$is_func = true
 
 // slice
 // slice
-var $SliceDict = {__class__:$B.$type, 
-    __name__:'slice', 
+var $SliceDict = {__class__:$B.$type,
+    __name__:'slice',
     $native:true,
     $descriptors:{start:true,step:true,stop:true}
 }
