@@ -9,7 +9,7 @@ limited to the folders accessible with an Ajax request.
 Keywords and built-in functions
 -------------------------------
 
-Brython supports all the keywords and most functions of Python 3 :
+Brython supports most of the keywords and functions of Python 3 :
 
 - keywords : `as, assert, break, class, continue, def, del, elif, else,`
   `except, False, finally, for, from, global, if, import, is, lambda, `
@@ -72,7 +72,7 @@ If 2 scripts have the same `id`, an exception is raised.
 For scripts that don't have an explicit `id` set :
 
 - if no script has its `id` set to `__main__`, the first "unnamed" script has
-  its `__name__` set to `__main__`. So, if there only one script in the page,
+  its `__name__` set to `"__main__"`. So, if there only one script in the page,
   it will be able to run the usual test :
 
 <blockquote>

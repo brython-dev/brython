@@ -33,11 +33,14 @@ sur cet objet par la méthode _element_<code>.unbind(_evenement_)</code>
 
 <div style="width:400px;height:150px;background-color:yellow" id="panel">
 <div id="dest" style="position:absolute;width:180px;height:80px;background-color:green;color:white;">
-    zone de destination</div>
+zone de destination
+</div>
 <div id="source" style="position:absolute;width:80px;height:40px;background-color:red;">
-    objet déplaçable</div>
+objet déplaçable
+</div>
 </div>
 
+<p>
 ```exec_on_load
 from browser import document
 

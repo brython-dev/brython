@@ -7,24 +7,27 @@ A page is made of elements (texts, images, sounds...) that can be included in th
 
 - writing HTML code with tags, for instance
 
->    <html>
->    <body>
->    <b>Brython</b> is an implementation of <a href="http://www.python.org">Python</a> 
->    for web browsers
->    </body>
->    </html>
+```xml
+<html>
+<body>
+<b>Brython</b> is an implementation of <a href="http://www.python.org">Python</a>
+for web browsers
+</body>
+</html>
+```
 
 - or writing Python code, using the built-in module **browser.html**
 
->    <html>
->    <body>
->    <script type="text/python">
->    from browser import document
->    from browser.html import A,B
->
->    document <= B("Brython")+"is an implementation of "
->    document <= A("Python",href="http://www.python.org")+" for web browsers"
->    </script>
->    </body>
->    </html>
+```xml
+<html>
+<body>
+<script type="text/python">
+from browser import document
+from browser.html import A,B
 
+document <= B("Brython")+"is an implementation of "
+document <= A("Python",href="http://www.python.org")+" for web browsers"
+</script>
+</body>
+</html>
+```

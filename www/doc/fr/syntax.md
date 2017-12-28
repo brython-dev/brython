@@ -9,7 +9,7 @@ requête Ajax.
 Mots clés et fonctions intégrées
 --------------------------------
 
-Brython supporte tous les mots-clés et la plupart des fonctions de Python 3 :
+Brython supporte la plupart des mots-clés et des fonctions de Python 3 :
 
 - mots clés : `as, assert, break, class, continue, def, del, elif, else, `
   `except, False, finally, for, from, global, if, import, is, lambda, None, `
@@ -20,7 +20,7 @@ Brython supporte tous les mots-clés et la plupart des fonctions de Python 3 :
   `globals, hasattr, hash, hex, id, input, int, isinstance, `
   `iter, len, list, locals, map, max, memoryview, min, `
   `next, object, open, ord, pow, print, property, range, `
-  repr, reversed, round, set, setattr, slice, sorted, str, `
+  `repr, reversed, round, set, setattr, slice, sorted, str, `
   `sum, super, tuple, type, vars, zip, __import__`
 
 
@@ -43,8 +43,12 @@ Quelques particularités liées au contexte d'exécution dans un navigateur :
 - pour lancer une impression sur imprimante, utiliser la méthode `print()` de
   l'objet `window` défini dans le module **browser** :
 
->>    from browser import window
->>    window.print(text)
+<blockquote>
+```python
+from browser import window
+window.print(text)
+```
+</blockquote>
 
 - le cycle de vie des objets est géré par le ramasse-miettes de Javascript,
   Brython ne gère pas le comptage de référence comme CPython, donc la
@@ -79,7 +83,7 @@ Si 2 scripts ont le même `id`, une exception est déclenchée.
 Pour les scripts dont l'attribut `id` n'est pas défini :
 
 - si aucun autre script n'a un `id` qui vaut `__main__`, pour le premier
-  script sans `id`, '__name__' prend la valeur `__main__`. Ainsi, s'il n'y a
+  script sans `id`, `__name__` prend la valeur `"__main__"`. Ainsi, s'il n'y a
   qu'un script dans la page, il pourra exécuter le test habituel :
 
 <blockquote>
