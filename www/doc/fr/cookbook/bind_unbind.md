@@ -18,23 +18,21 @@ def myevent(ev):
     alert('ça marche !')
 
 def compteur():
-    alert('%s événement(s) attaché(s) à "click"' 
+    alert('%s événement(s) attaché(s) à "click"'
         %len(document['myblock'].events('click')))
 
+@document['attache'].bind('click')
 def attache(ev):
     document['myblock'].bind('click', myevent)
     compteur()
     document['mymessage'].text='événement attaché, cliquer pour voir...'
 
+@document['detache'].bind('click')
 def detache(ev):
     if document['myblock'].events('click'):
         document['myblock'].unbind('click', myevent)
         compteur()
         document['mymessage'].text='clic désactivé'
-
-document['attache'].bind('click', attache)
-document['detache'].bind('click', detache)
-
 ```
 
 </td>

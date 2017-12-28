@@ -20,22 +20,21 @@ def myevent(ev):
     alert('¡Funciona!')
 
 def counter():
-    alert('%s evento(s) vinculados con "click"' 
+    alert('%s evento(s) vinculados con "click"'
         %len(document['myblock'].events('click')))
 
+@document['bind_click'].bind('click')
 def bind_click(ev):
     document['myblock'].bind('click', myevent)
     counter()
     document['mymessage'].text='evento añadido, clicka para verlo...'
 
+@document['unbind_click'].bind('click')
 def unbind_click(ev):
     if document['myblock'].events('click'):
         document['myblock'].unbind('click', myevent)
         counter()
         document['mymessage'].text='click desactivado'
-
-document['bind_click'].bind('click', bind_click)
-document['unbind_click'].bind('click', unbind_click)
 ```
 </td>
 
