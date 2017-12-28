@@ -2907,6 +2907,8 @@ function $ForExpr(context){
         new $NodeJSCtx(try_node,'try')
         while_node.add(try_node)
 
+        try_node.add(new $NodeJS("var ce = $B.current_exception"))
+
         var iter_node = new $Node()
         // Parent of iter_node must be the same as current node, otherwise
         // targets are bound in global scope
@@ -2929,7 +2931,7 @@ function $ForExpr(context){
         var catch_node = new $Node()
 
         var js = 'catch($err){if($B.is_exc($err,[StopIteration]))'+
-                 '{$B.clear_exc();break;}'
+                 '{$B.current_exception=ce;break;}'
         js += 'else{throw($err)}}'
 
         new $NodeJSCtx(catch_node,js)
