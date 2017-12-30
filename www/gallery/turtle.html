@@ -9,33 +9,45 @@
 import sys
 from browser import document, timer
 
-def __write(*args):
-   document["print_output"].html = ''.join(args)
+def inform(*args):
+    document["status-info"].html = ''.join(args)
 
-sys.stdout.write = __write
+def _write(*args):
+    document["turtle-print-output"].html += ''.join(args)
+def __write(*args):
+    document["turtle-print-output"].html += '<span class="error">' + ''.join(args) + '</span>'
+
+sys.stdout.write = _write
+sys.stderr.write = __write
+
+def clear_print():
+    document["turtle-print-output"].html = ''
 
 @document["run"].bind("click")
 def show(ev):
-    print("Processing")
+    inform("Processing")
     # delay to allow updated DOM with above text to be shown.
     timer.set_timeout(exec_code, 1)
 
 def exec_code():
     _code= document["source"].text 
     exec(_code)
-    print("Done")
-
+    inform("")
 
 @document["clear"].bind("click")
 def clear(ev):
     from turtle import restart
     restart()
-    print("")
+    inform("")
+    clear_print()
 
 @document["demo_selector"].bind("change")
 def copy_content(ev):
     choice = document["demo_selector"].value
     document["source"].text = document[choice].text
+
+# Start with first demo
+document["source"].text = document["demo1"].text
 
 </script>
 
@@ -44,13 +56,31 @@ def copy_content(ev):
     border: 1px solid blue;
     background-color:antiquewhite;
   }
+
+  pre#turtle-print-output {
+    background-color: white;
+    color: darkgreen;
+    font-weight: bolder;
+    max-width: 800px;
+    min-height: 50px;
+    height: auto;
+    max-height: 200px;
+    overflow: auto;
+    word-break: normal !important;
+    word-wrap: normal !important;
+    white-space: pre !important;
+  }
+
   button {
     margin: 20px;
     padding: 10px;
   }
-  #print_output {
+  #status-info {
     color: darkred;
     font-weight: bolder;
+  }
+  .error {
+    color: red;
   }
 </style>
 
@@ -77,89 +107,55 @@ def copy_content(ev):
 Note that the content is editable.
 </p>
 
-<p><button id="run">Run</button> <button id="clear">Clear</button></p>
-<p id="print_output"></p>
+<p><button id="run">Run</button> <span id="status-info"></span> <button id="clear">Clear</button></p>
+<pre id="turtle-print-output"></pre>
 
 <pre id="source" style="float:left" contenteditable="true">
-import turtle
-
-turtle.set_defaults(
-    canvwidth = 500,  # default is 400
-    canvheight = 500,  # default is 300
-    turtle_canvas_wrapper = document['turtle-div']
-   # , turtle_canvas_id = 'turtle-canvas' # default, could be overriden
-  )
-
-t=turtle.Turtle()
-
-t.penup()
-t.left(45)
-t.backward(125)
-t.right(45)
-t.pendown()
-
-for c in ['red', 'green', 'orange', 'blue']:
-    t.color(c)
-    t.forward(75)
-    t.left(90)
-
-turtle.show()
 </pre>
 
 <div id="turtle-div" style="float:left;border:1px solid green; margin-left:50px;"> </div>
 
-<div id='demo1' style="display:none">
+<div id='demo1' style="display:none">'''
+Simple square drawing demo and 
+writing text with all default configuration values.
+'''
 import turtle
 
-turtle.set_defaults(
-    canvwidth = 500,  # default is 400
-    canvheight = 500,  # default is 300
-    turtle_canvas_wrapper = document['turtle-div']
-  )
-
-t=turtle.Turtle()
-
-t.penup()
-t.left(45)
-t.backward(125)
-t.right(45)
-t.pendown()
+t = turtle.Turtle()
 
 for c in ['red', 'green', 'yellow', 'blue']:
     t.color(c)
     t.forward(75)
     t.left(90)
 
+t.penup()
+t.left(60)
+t.backward(120)
+
+t.pendown()
+t.color('red')
+t.write("I love Brython!!")
+
 turtle.show()
 </div>
 
-<div id='demo2' style="display:none">
+<div id='demo2' style="display:none">'''
+Changing default size and specifying existing html element as 
+container for the turtle canvas'''
 import turtle
 
 turtle.set_defaults(
     canvwidth = 500,  # default is 400
     canvheight = 500,  # default is 300
     turtle_canvas_wrapper = document['turtle-div']
-   # , turtle_canvas_id = 'turtle-canvas' # default, could be overriden
   )
 
-t1=turtle.Turtle("turtle")
-t1.penup()
-
-t1.pendown()
-t1.width(3)
+t = turtle.Turtle("turtle")
+t.width(3)
 for c in ['red', 'blue', 'yellow', 'green', 'purple', 'brown']:
-    t1.color(c)
-    t1.forward(50)
-    t1.left(60)
-
-t1.penup()
-t1.left(60)
-t1.backward(120)
-
-t1.pendown()
-t1.color('red')
-t1.write("I love Brython!!")
+    t.color(c)
+    t.forward(50)
+    t.left(60)
 
 turtle.show()
 </div>
