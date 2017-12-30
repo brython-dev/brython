@@ -3017,7 +3017,8 @@ def restart():
     _Screen._root = None
     _Screen._canvas = None
     Turtle._screen = None
-    if document[_CFG["turtle_canvas_id"]] is not None:
+    if (_CFG["turtle_canvas_id"] in document and 
+        document[_CFG["turtle_canvas_id"]] is not None):
         element = document[_CFG["turtle_canvas_id"]]
         element.parentNode.removeChild(element)
 
