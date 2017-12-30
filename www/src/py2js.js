@@ -2,6 +2,10 @@
 
 ;(function($B){
 
+Number.isSafeInteger = Number.isSafeInteger || function (value) {
+   return Number.isInteger(value) && Math.abs(value) <= Number.MAX_SAFE_INTEGER;
+};
+
 var js,$pos,res,$op
 var _b_ = $B.builtins
 var _window = self;
