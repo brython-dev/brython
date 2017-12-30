@@ -13,9 +13,9 @@ before_install:
 before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
-  - chmod a+x scripts/ensure_phantomjs.sh
-  - scripts/ensure_phantomjs.sh
-  - export PATH=$PWD/travis_phantomjs/phantomjs-2.1.1-linux-x86_64/bin:$PATH
+  # - chmod a+x scripts/ensure_phantomjs.sh
+  # - scripts/ensure_phantomjs.sh
+  # - export PATH=$PWD/travis_phantomjs/phantomjs-2.1.1-linux-x86_64/bin:$PATH
 
 script:
   - ./node_modules/.bin/testem -t www/tests/qunit/run_tests.html ci
