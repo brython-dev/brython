@@ -6,17 +6,37 @@
 <script type="text/javascript" src="/src/brython.js"></script>
 
 <script id="python_script" type="text/python">
-from browser import document, alert
+import sys
+from browser import document, timer
+
+def __write(*args):
+   document["print_output"].html = ''.join(args)
+
+sys.stdout.write = __write
 
 @document["run"].bind("click")
 def show(ev):
-    _code=document["div_html"].text
+    print("Processing")
+    # delay to allow updated DOM with above text to be shown.
+    timer.set_timeout(exec_code, 1)
+
+def exec_code():
+    _code= document["source"].text 
     exec(_code)
+    print("Done")
+
 
 @document["clear"].bind("click")
 def clear(ev):
     from turtle import restart
     restart()
+    print("")
+
+@document["demo_selector"].bind("change")
+def copy_content(ev):
+    choice = document["demo_selector"].value
+    document["source"].text = document[choice].text
+
 </script>
 
 <style>
@@ -28,19 +48,39 @@ def clear(ev):
     margin: 20px;
     padding: 10px;
   }
+  #print_output {
+    color: darkred;
+    font-weight: bolder;
+  }
 </style>
 
 </head>
 
 <body onload="brython(1)">
 <h1>Turtle demo</h1>
+<p>Brython's turtle module uses Scalable Vector Graphics (SVG) for drawing
+  and animation. When a drawing is created and about to be displayed
+  via the <code>show()</code> method, an &lt;svg&gt; element with a 
+  specified and unique id is created and inserted into another DOM element.
+
+  Because html elements should have a unique id, if this &lt;svg&gt; element 
+  already exists, nothing new is created. Thus, old drawings must be cleared
+  before new ones can be created. 
+</p>
+
+
+<p>Select the desired demo.
+<select id="demo_selector">
+  <option value="demo1">Square with default turtle</option> 
+  <option value="demo2">Demo 2</option>
+</select>
+Note that the content is editable.
+</p>
+
 <p><button id="run">Run</button> <button id="clear">Clear</button></p>
+<p id="print_output"></p>
 
-<pre id="div_html" style="float:left" contenteditable="true">
-#
-# This content is editable
-#
-
+<pre id="source" style="float:left" contenteditable="true">
 import turtle
 
 turtle.set_defaults(
@@ -58,10 +98,50 @@ t.backward(125)
 t.right(45)
 t.pendown()
 
+for c in ['red', 'green', 'orange', 'blue']:
+    t.color(c)
+    t.forward(75)
+    t.left(90)
+
+turtle.show()
+</pre>
+
+<div id="turtle-div" style="float:left;border:1px solid green; margin-left:50px;"> </div>
+
+<div id='demo1' style="display:none">
+import turtle
+
+turtle.set_defaults(
+    canvwidth = 500,  # default is 400
+    canvheight = 500,  # default is 300
+    turtle_canvas_wrapper = document['turtle-div']
+  )
+
+t=turtle.Turtle()
+
+t.penup()
+t.left(45)
+t.backward(125)
+t.right(45)
+t.pendown()
+
 for c in ['red', 'green', 'yellow', 'blue']:
     t.color(c)
     t.forward(75)
     t.left(90)
+
+turtle.show()
+</div>
+
+<div id='demo2' style="display:none">
+import turtle
+
+turtle.set_defaults(
+    canvwidth = 500,  # default is 400
+    canvheight = 500,  # default is 300
+    turtle_canvas_wrapper = document['turtle-div']
+   # , turtle_canvas_id = 'turtle-canvas' # default, could be overriden
+  )
 
 t1=turtle.Turtle("turtle")
 t1.penup()
@@ -82,9 +162,8 @@ t1.color('red')
 t1.write("I love Brython!!")
 
 turtle.show()
-</pre>
+</div>
 
-<span id="turtle-div" style="float:left;border:1px solid green; margin-left:50px;"> </span>
 </body>
 
 </html>

@@ -1,6 +1,6 @@
 import math
 
-from browser import console, document, html
+from browser import console, document, html, timer
 import _svg
 
 _CFG = {"width" : 0.5,               # Screen
@@ -12,17 +12,15 @@ _CFG = {"width" : 0.5,               # Screen
         "mode": "standard",          # TurtleScreen
         "colormode": 1.0,
         "delay": 10,
-        "undobuffersize": 1000,      # RawTurtle
+        "undobuffersize": 1000,      # RawTurtle; not used
         "shape": "classic",
         "pencolor" : "black",
         "fillcolor" : "black",
         "resizemode" : "noresize",
         "visible" : True,
-        "language": "english",        # docstrings
         "exampleturtle": "turtle",
         "examplescreen": "screen",
         "title": "Python Turtle Graphics",
-        "using_IDLE": False,
         "turtle_canvas_wrapper": None,
         "turtle_canvas_id": "turtle-canvas"
        }
@@ -31,7 +29,6 @@ _CFG = {"width" : 0.5,               # Screen
 def set_defaults(**params):
     """Allows to override defaults."""
     _CFG.update(**params)
-
 
 
 class Vec2D(tuple):
@@ -84,7 +81,7 @@ class Vec2D(tuple):
 ##############################################################################
 
 class _Root:
-    """Root class for Screen based on Tkinter."""
+    """Root class for Screen based on using SVG."""
 
     def setupcanvas(self, width, height, cwidth, cheight):
         self._svg=_svg.svg(Id=_CFG["turtle_canvas_id"], width=cwidth, height=cheight)
@@ -92,22 +89,16 @@ class _Root:
         self._svg <= self._canvas
 
     def end(self):
-        def set_svg():
-            if _CFG["turtle_canvas_wrapper"] is None:
-                _CFG["turtle_canvas_wrapper"] = html.DIV(Id="turtle-canvas-wrapper")
-                document <= _CFG["turtle_canvas_wrapper"]
-
-            #have to do this to get animate to work...
-            _CFG["turtle_canvas_wrapper"].html = _CFG["turtle_canvas_wrapper"].html
-            # document[_CFG["turtle_div_id"]].html=document[_CFG["turtle_div_id"]].html
-
-
+        if _CFG["turtle_canvas_wrapper"] is None:
+            _CFG["turtle_canvas_wrapper"] = html.DIV(Id="turtle-canvas-wrapper")
+            document <= _CFG["turtle_canvas_wrapper"]
         if _CFG["turtle_canvas_id"] not in document:
            _CFG["turtle_canvas_wrapper"] <= self._svg
-        #    document[_CFG["turtle_div_id"]] <= self._svg
-           from browser import timer
-           #need this for chrome so that first few draw commands are viewed properly.
-           timer.set_timeout(set_svg, 1)
+
+        #need the following for chrome so that first few draw commands are viewed properly.
+        def set_svg():
+            _CFG["turtle_canvas_wrapper"].html = _CFG["turtle_canvas_wrapper"].html
+        timer.set_timeout(set_svg, 1)
 
     def _getcanvas(self):
         return self._canvas
