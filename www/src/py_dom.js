@@ -137,8 +137,7 @@ $DOMEventDict.__getattribute__ = function(self,attr){
         if(self.dataTransfer!==undefined) return $Clipboard(self.dataTransfer)
         return self['data']
       case 'target':
-        if(self.target===undefined) return DOMNode(self.target)
-        return DOMNode(self.target)
+        if(self.target!==undefined) return DOMNode(self.target)
       case 'char':
         return String.fromCharCode(self.which)
     }
@@ -507,7 +506,12 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         if(self.elt instanceof SVGElement){
             return self.elt.getAttributeNS(null, attr)
         }
-        return DOMNodeDict[attr].__get__(self)
+        if(self.elt.style[attr]){
+            return parseInt(self.elt.style[attr])
+        }else{
+            throw _b_.AttributeError("style." + attr + " is not set for " +
+                str(self))
+        }
       case 'clear':
       case 'closest':
         return function(){return DOMNodeDict[attr](self,arguments[0])}
@@ -773,6 +777,17 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
             DOMNodeDict.bind(self,attr.substr(2),value)
         }
     }else{
+        switch(attr){
+            case "left":
+            case "top":
+            case "width":
+            case "height":
+                var elt = self.elt
+                if(self.elt.nodeType==3){
+                    self.elt.style[attr] = value + "px"
+                }
+                break
+        }
         if(DOMNodeDict['set_'+attr]!==undefined) {
           return DOMNodeDict['set_'+attr](self,value)
         }
@@ -1113,7 +1128,8 @@ DOMNodeDict.inside = function(self, other){
 
 DOMNodeDict.left = {
     '__get__': function(self){
-        if(self.elt.style===undefined){return _b_.None}
+        console.log('get left', self.elt, self.elt.style)
+        //if(self.elt.style===undefined){return _b_.None}
         var res = parseInt(self.elt.style.left)
         if(isNaN(res)){
             throw _b_.AttributeError("node has no attribute 'left'")
