@@ -22,8 +22,8 @@ import _svg
 
 _CFG = {"width": 0.5,               # Screen
         "height": 0.75,
-        "canvwidth": 400,
-        "canvheight": 300,
+        "canvwidth": 500,
+        "canvheight": 500,
         "leftright": None,
         "topbottom": None,
         "mode": "standard",          # TurtleScreen

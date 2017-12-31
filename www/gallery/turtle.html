@@ -103,7 +103,9 @@ document["source"].text = document["demo1"].text
 <p>Select the desired demo.
 <select id="demo_selector">
   <option value="demo1">Square with default turtle</option> 
-  <option value="demo2">Demo 2</option>
+  <option value="demo2">Custom container</option>
+  <option value="demo3">Instant drawing</option>
+  <option value="demo4">All the turtles</option>
 </select>
 Note that the content is editable.
 </p>
@@ -117,24 +119,30 @@ Note that the content is editable.
 <div id="turtle-div" style="float:left;border:1px solid green; margin-left:50px;"> </div>
 
 <div id='demo1' style="display:none">'''
-Simple square drawing demo and 
-writing text with all default configuration values.
+Simple square drawing demo and writing text with all 
+default configuration values and also illustrating 
+various color modes.
 '''
 import turtle
 
 t = turtle.Turtle()
 
-for c in ['red', 'green', 'yellow', 'blue']:
+for c in ['red', '#00ff00', '#fa0', 'rgb(0,0,200)']:
     t.color(c)
-    t.forward(75)
+    t.forward(100)
     t.left(90)
 
+# dot() and write() do not require the pen to be down
 t.penup()
-t.left(60)
-t.backward(120)
+t.goto(-30, -100)
+t.dot(40, 'rgba(255, 0, 0, 0.5')
+t.goto(30, -100)
+t.dot(40, 'rgba(0, 255, 0, 0.5')
+t.goto(0, -70)
+t.dot(40, 'rgba(0, 0, 255, 0.5')
 
-t.pendown()
-t.color('red')
+t.goto(0, 125)
+t.color('purple')
 t.write("I love Brython!!")
 
 turtle.show()
@@ -142,21 +150,86 @@ turtle.show()
 
 <div id='demo2' style="display:none">'''
 Changing default size and specifying existing html element as 
-container for the turtle canvas'''
+container for the turtle canvas. This container is styled
+so as to have a green border.
+
+This is also meant as a test for the correct turtle orientation.
+'''
 import turtle
 
 turtle.set_defaults(
-    canvwidth = 500,  # default is 400
-    canvheight = 500,  # default is 300
+    canvwidth = 600,  # default is 500
+    canvheight = 400,  # default is 500
     turtle_canvas_wrapper = document['turtle-div']
   )
 
 t = turtle.Turtle("turtle")
 t.width(3)
-for c in ['red', 'blue', 'yellow', 'green', 'purple', 'brown']:
+t.speed(1)
+for c in ['red', 'blue', 'orange', 'green', 'purple', 'brown']:
     t.color(c)
-    t.forward(50)
+    t.forward(100)
     t.left(60)
+for c in ['red', 'blue', 'orange', 'green', 'purple', 'brown']:
+    t.color(c)
+    t.forward(100)
+    t.right(60)
+
+turtle.show()
+</div>
+<div id='demo3' style="display:none">'''
+"Instant" drawing through speed set up to zero.
+Uses the same demo as the previous one.
+'''
+import turtle
+
+turtle.set_defaults(
+    canvwidth = 600,  # default is 500
+    canvheight = 400,  # default is 500
+    turtle_canvas_wrapper = document['turtle-div']
+  )
+
+t = turtle.Turtle("turtle")
+t.width(3)
+t.speed(0)
+for c in ['red', 'blue', 'orange', 'green', 'purple', 'brown']:
+    t.color(c)
+    t.forward(100)
+    t.left(60)
+for c in ['red', 'blue', 'orange', 'green', 'purple', 'brown']:
+    t.color(c)
+    t.forward(100)
+    t.right(60)
+
+turtle.show()
+</div>
+
+
+<div id='demo4' style="display:none">'''
+Showing the available turtles.'''
+import turtle
+
+turtle.set_defaults(
+    turtle_canvas_wrapper = document['turtle-div']
+  )
+
+for name,c,y in [(None, 'black', -200),  # same as "classic"
+                 ("classic", 'blue', -150),
+                 ("arrow", 'orange', -100),
+                 ("circle", 'green', -50),
+                 ("square", 'purple', 0),
+                 ("triangle", 'brown', 50),
+                 ("turtle", 'red', 100)]:
+    if name is not None:
+        t = turtle.Turtle(name)
+    else: 
+        t = turtle.Turtle()
+    t.speed(2)
+    t.penup()
+    t.color(c)
+    t.goto(-100, y)
+    t.pendown()
+    t.forward(200)
 
 turtle.show()
 </div>
