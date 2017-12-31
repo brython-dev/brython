@@ -2335,6 +2335,7 @@ function $DefCtx(context){
 
         // Add attribute __name__
         var __name__ = this.name
+        if(this.name.substr(0,2)=="$$"){__name__=__name__.substr(2)}
         if(__name__.substr(0, 15)=='lambda_'+$B.lambda_magic){__name__="<lambda>"}
         js = '    __name__:"' + __name__ + '",'
         node.parent.insert(rank+offset++, $NodeJS(js))
