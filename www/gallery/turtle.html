@@ -214,13 +214,13 @@ turtle.set_defaults(
     turtle_canvas_wrapper = document['turtle-div']
   )
 
-for name,c,y in [(None, 'black', -200),  # same as "classic"
-                 ("classic", 'blue', -150),
-                 ("arrow", 'orange', -100),
-                 ("circle", 'green', -50),
+for name,c,y in [(None, 'black', 200),  # same as "classic"
+                 ("classic", 'blue', 150),
+                 ("arrow", 'orange', 100),
+                 ("circle", 'green', 50),
                  ("square", 'purple', 0),
-                 ("triangle", 'brown', 50),
-                 ("turtle", 'red', 100)]:
+                 ("triangle", 'brown', -50),
+                 ("turtle", 'red', -100)]:
     if name is not None:
         t = turtle.Turtle(name)
     else: 

@@ -252,8 +252,15 @@ class TurtleScreenBase:
 
             # draw turtle
             if lineitem.isvisible():
+                if self.mode() == 'standard':
+                    rotation = 90 - lineitem.heading()
+                elif self.mode() == 'logo':
+                    rotation = lineitem.heading()
+                else:  # should not happen
+                    print("Unknown mode when drawing turtle, mode=", self.mode())
+                    rotation = 90 - lineitem.heading()
                 _turtle = _svg.polygon(points=" ".join(_shape),
-                                       transform="rotate(%s)" % (90 - lineitem.heading()),
+                                       transform="rotate(%s)" % rotation,
                                        style={'stroke': fill, 'fill': fill,
                                               'stroke-width': 1, 'display': 'none'})
 
@@ -532,8 +539,10 @@ class TurtleScreen(TurtleScreenBase):
     """
     _RUNNING = True
 
-    def __init__(self, cv, mode=_CFG["mode"],
+    def __init__(self, cv, mode=None,
                  colormode=_CFG["colormode"], delay=_CFG["delay"]):
+        if mode is None:
+            mode = _CFG['mode']
         self._shapes = {
             "arrow": Shape("polygon", ((-10, 0), (10, 0), (0, 10))),
             "turtle": Shape("polygon", ((0, 16), (-2, 14), (-1, 10), (-4, 7),
@@ -1099,7 +1108,11 @@ class TNavigator:
         Will be overwritten by parent class
         """
         self._position = Vec2D(0.0, 0.0)
-        self._orient = TNavigator.START_ORIENTATION[self._mode]
+        try:
+            self._orient = TNavigator.START_ORIENTATION[self._mode]
+        except KeyError:
+            print("Unknown mode: ", self._mode)
+            raise
 
     def _setmode(self, mode=None):
         """Set turtle-mode to 'standard', 'world' or 'logo'.
@@ -2069,7 +2082,6 @@ class _TurtleImage:
                 screen._delete(item)
         self._type = screen._shapes[shapeIndex]._type
         return
-        # console.log(self._type)
         if self._type == "polygon":
             self._item = screen._createpoly()
         elif self._type == "image":
@@ -2760,7 +2772,6 @@ class RawTurtle(TPen, TNavigator):
             if self.undobuffer:
                 self.undobuffer.push(("dot", item))
         else:
-            print("does not have attr _dot")
             pen = self.pen()
             if self.undobuffer:
                 self.undobuffer.push(["seq"])
