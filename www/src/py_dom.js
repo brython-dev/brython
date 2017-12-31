@@ -1317,7 +1317,7 @@ DOMNodeDict.unbind = function(self, event){
             var callback = events[i][1]
             self.elt.removeEventListener(event,callback,false)
         }
-        self.$events[event] = []
+        self.elt.$events[event] = []
         return _b_.None
     }
 

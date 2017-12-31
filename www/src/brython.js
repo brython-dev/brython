@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-12-30 21:01:21.946228"
+__BRYTHON__.compiled_date="2017-12-31 14:23:01.370712"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1189,6 +1189,7 @@ var offset=1
 var indent=node.indent
 node.parent.insert(rank+offset++,$NodeJS(name+'.$infos = {'))
 var __name__=this.name
+if(this.name.substr(0,2)=="$$"){__name__=__name__.substr(2)}
 if(__name__.substr(0,15)=='lambda_'+$B.lambda_magic){__name__="<lambda>"}
 js='    __name__:"' + __name__ + '",'
 node.parent.insert(rank+offset++,$NodeJS(js))
@@ -11350,7 +11351,7 @@ var events=self.elt.$events[event]
 if(arguments.length===2){
 for(var i=0;i<events.length;i++){var callback=events[i][1]
 self.elt.removeEventListener(event,callback,false)}
-self.$events[event]=[]
+self.elt.$events[event]=[]
 return _b_.None}
 for(var i=2;i<arguments.length;i++){var callback=arguments[i],flag=false,func=callback.$func
 if(func===undefined){
