@@ -312,14 +312,33 @@ class TurtleScreenBase:
                           style={'display': 'none'})
         _text <= _svg.animate(Id="animateLine%s" % self._draw_pos,
                               attributeName="display", attributeType="CSS",
-                              From="block", to="block", dur="0.001s", fill='freeze',
-                              begin="animateLine%s.end" % (self._draw_pos-1))
+                              From="block", to="block", dur=_CFG["min_duration"],
+                              fill='freeze')
 
+        if self._draw_pos == 1:
+            _text.setAttribute('begin', "0s")
+        else:
+            _text.setAttribute('begin', "animateLine%s.end" % (self._draw_pos-1))
         self._canvas <= _text
         return Vec2D(pos[0]+50, pos[1]+50)  # fix me
 
-# def _dot(self, pos, size, color):
-##        """may be implemented for some other graphics toolkit"""
+    def _dot(self, pos, size, color):
+        """Draws a filled circle of specified size and color"""
+        print("_dot called")
+        print("pos = ", pos, "size = ", size, "color = ", color)
+        self._draw_pos += 1
+        _circle = _svg.circle(cx=pos[0], cy=pos[1], r=size, fill=color,
+                            style={'display': 'none'})
+        _circle <= _svg.animate(Id="animateLine%s" % self._draw_pos,
+                              attributeName="display", attributeType="CSS",
+                              From="block", to="block", dur=_CFG["min_duration"],
+                              fill='freeze')
+        if self._draw_pos == 1:
+            _circle.setAttribute('begin', "0s")
+        else:
+            _circle.setAttribute('begin', "animateLine%s.end" % (self._draw_pos-1))
+        self._canvas <= _circle
+
 
     def _createimage(self, image):
         """Create and return image item on canvas.
@@ -2697,7 +2716,9 @@ class RawTurtle(TPen, TNavigator):
         >>> turtle.dot()
         >>> turtle.fd(50); turtle.dot(20, "blue"); turtle.fd(50)
         """
+        print("dot called")
         if not color:
+            print("with no color")
             if isinstance(size, (str, tuple)):
                 color = self._colorstr(size)
                 size = self._pensize + max(self._pensize, 4)
@@ -2710,11 +2731,13 @@ class RawTurtle(TPen, TNavigator):
                 size = self._pensize + max(self._pensize, 4)
             color = self._colorstr(color)
         if hasattr(self.screen, "_dot"):
+            print("hasattr _dot")
             item = self.screen._dot(self._position, size, color)
             # self.items.append(item)
             if self.undobuffer:
                 self.undobuffer.push(("dot", item))
         else:
+            print("does not have attr _dot")
             pen = self.pen()
             if self.undobuffer:
                 self.undobuffer.push(["seq"])
