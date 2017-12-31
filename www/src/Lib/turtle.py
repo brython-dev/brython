@@ -110,7 +110,10 @@ class _Root:
 
     def setupcanvas(self, width, height, cwidth, cheight):
         self._svg = _svg.svg(Id=_CFG["turtle_canvas_id"], width=cwidth, height=cheight)
-        self._canvas = _svg.g(transform="translate(%d,%d)" % (cwidth//2, cheight//2))
+        if _CFG['mode'] in ['logo', 'standard']:
+            self._canvas = _svg.g(transform="translate(%d,%d)" % (cwidth//2, cheight//2))
+        else:
+            self._canvas = _svg.g(transform="translate(0,%d)" % cheight)
         self._svg <= self._canvas
 
     def end(self):
@@ -165,6 +168,8 @@ class TurtleScreenBase:
         self.canvwidth = cv.parentElement.width
         self.canvheight = cv.parentElement.height
         self.xscale = self.yscale = 1.0
+
+        self.background_color = "white"  # FIXME: added by hand; need to set it up properly
 
     def _createpoly(self):
         """Create an invisible polygon item on canvas self.cv)
@@ -252,12 +257,12 @@ class TurtleScreenBase:
 
             # draw turtle
             if lineitem.isvisible():
-                if self.mode() == 'standard':
+                if self.mode() == 'standard' or self.mode() == 'world':
                     rotation = 90 - lineitem.heading()
                 elif self.mode() == 'logo':
                     rotation = lineitem.heading()
                 else:  # should not happen
-                    print("Unknown mode when drawing turtle, mode=", self.mode())
+                    console.log("Unknown mode when drawing turtle, mode=", self.mode())
                     rotation = 90 - lineitem.heading()
                 _turtle = _svg.polygon(points=" ".join(_shape),
                                        transform="rotate(%s)" % rotation,
@@ -315,12 +320,34 @@ class TurtleScreenBase:
         # return ok
 
     def _bgcolor(self, color=None):
-        """Set canvas' backgroundcolor if color is not None,
-        else return backgroundcolor."""
-        if color is not None:
-            self.cv.style.backgroundColor = color
+        """Set canvas' background color if color is not None,
+        else return background color."""
+        if color is None:
+            return self.background_color
+        
+        width = _CFG['canvwidth']
+        height = _CFG['canvheight']
+        if self.mode() in ['logo', 'standard']:
+            x = -width//2 
+            y = -height//2 
         else:
-            return self.cv.style.backgroundColor
+            x = 0
+            y = -height
+
+        self._draw_pos += 1
+        _rect = _svg.rect(x=x, y=y, width=width, height=height, fill=color,
+                            style={'display': 'none'})
+        an = _svg.animate(Id="animateLine%s" % self._draw_pos,
+                              attributeName="display", attributeType="CSS",
+                              From="block", to="block", dur=_CFG["min_duration"],
+                              fill='freeze')
+        if self._draw_pos == 1:
+            an.setAttribute('begin', "0s")
+        else:
+            an.setAttribute('begin', "animateLine%s.end" % (self._draw_pos-1))
+        _rect <= an
+        self._canvas <= _rect
+
 
     def _write(self, pos, txt, align, font, pencolor):
         """Write txt at pos in canvas with specified font
