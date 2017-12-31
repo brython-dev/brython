@@ -241,7 +241,7 @@ class TurtleScreenBase:
                 _turtle = _svg.polygon(points=" ".join(_shape),
                                        transform="rotate(%s)" % (lineitem.heading() - 90),
                                        style={'stroke': fill, 'fill': fill,
-                                              'stroke-width': width, 'display': 'none'})
+                                              'stroke-width': 1, 'display': 'none'})
 
                 _turtle <= _svg.animateMotion(From="%s,%s" % (_x0*self.xscale, _y0*self.yscale),
                                               to="%s,%s" % (_x1*self.xscale, _y1*self.yscale),
