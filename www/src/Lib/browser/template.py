@@ -150,16 +150,18 @@ class Template:
         if elt.nodeType == 3:
             # Text node.
             if elt.text.strip():
-                lines = [line for line in elt.text.split("\n")
-                    if line.strip()]
-                text = " ".join(lines).replace('"', "&quot;")
-                text = '"""' + text + '"""'
+                text = elt.text.replace('"', "&quot;")
+                text = text.replace("\n", "\\n")
+                text = '"' + text + '"'
                 # If the text has single braces, render it as an f-string.
-                nb_braces = text.count("{")
+                nb_braces = elt.text.count("{")
                 if nb_braces:
-                    nb_double_braces = text.count("{{")
+                    nb_double_braces = elt.text.count("{{")
                     if nb_double_braces != nb_braces:
-                        text = "f" + text
+                        lines = [line for line in elt.text.split("\n")
+                            if line.strip()]
+                        text = " ".join(lines).replace('"', "&quot;")
+                        text = 'f"""' + text + '"""'
                 self.add_indent ("__write__(" + text + ")\n", elt)
 
         elif hasattr(elt, "tagName"):
@@ -254,7 +256,10 @@ class Template:
             exec(self.python, ns)
         except Exception as exc:
             msg = traceback.format_exc()
-            print("Error rendering template:\n" + self.element.outerHTML)
+            if self.element.nodeType != 9:
+                print("Error rendering template:\n" + self.element.outerHTML)
+            else:
+                print("Error rendering template:\n" + self.element.html)
             print("Namespace passed to render():\n", self.data.to_dict())
             if isinstance(exc, SyntaxError):
                 line_no = exc.args[2]
@@ -262,7 +267,11 @@ class Template:
                 line_no = exc.traceback.tb_lineno
             elt = self.line_mapping[line_no]
             print("The error is raised when rendering the element:")
-            print(elt.outerHTML)
+            try:
+                print(elt.outerHTML)
+            except AttributeError:
+                print('no outerHTML for', elt)
+                print(elt.html)
             print("Python traceback:")
             print(msg)
             return
