@@ -221,37 +221,6 @@ class TurtleScreenBase:
 
             _shape = ["%s,%s" % (_x, _y) for _x, _y in lineitem.get_shapepoly()]
 
-            # if 0:
-            #     # if lineitem.isvisible():
-            #     if lineitem in self._previous_turtle_attributes:
-            #         _previous = self._previous_turtle_attributes[lineitem]
-            #         if _previous.heading() != lineitem.heading():
-            #             # if self._turtle_heading[lineitem] != lineitem.heading():
-
-            #             _rotate = _previous.heading()
-            #             _turtle = _svg.polygon(points=" ".join(_shape),
-            #                                    transform="rotate(%s)" % (_rotate-90),
-            #                                    style={'stroke': fill, 'fill': fill,
-            #                                           'stroke-width': width, 'display': 'none'})
-
-            #             # we need to rotate our turtle..
-            #             _turtle <= _svg.animateTransform(
-            #                 Id="animateLine%s" % self._draw_pos,
-            #                 attributeName="transform",
-            #                 type="rotate",
-            #                 attributeType="XML",
-            #                 From=_rotate - 90,
-            #                 to=lineitem.heading() - 90,
-            #                 dur=_dur,
-            #                 begin="animateLine%s.end" % (self._draw_pos-1))
-
-            #             _turtle <= _svg.set(attributeName="display",
-            #                                 attributeType="CSS", to="block",
-            #                                 begin="animateLine%s.begin" % self._draw_pos,
-            #                                 end="animateLine%s.end" % self._draw_pos)
-
-            #             self._draw_pos += 1
-            #             self._canvas <= _turtle
 
             _line = _svg.line(x1=_x0*self.xscale, y1=_y0*self.yscale,
                               x2=_x0*self.xscale, y2=_y0*self.yscale,
