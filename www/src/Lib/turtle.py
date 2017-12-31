@@ -171,6 +171,17 @@ class TurtleScreenBase:
         """
         pass
 
+    def _convert_coordinates(self, pos):
+        """This method is specific to Brython's turtle.  In the browser,
+           the increasing y-coordinate is towards the bottom of the screen;
+           this is the opposite of what is assumed normally for the methods
+           in the CPython turtle module.
+
+           This method makes the necessary orientation. It should be called
+           just prior to creating any SVG element.
+        """
+        return (pos[0], -pos[1])
+
     def _drawpoly(self, polyitem, coordlist, fill=None,
                   outline=None, width=None, top=False):
         """Configure polygonitem polyitem according to provided
@@ -219,8 +230,11 @@ class TurtleScreenBase:
 
             self._draw_pos += 1
 
-            _shape = ["%s,%s" % (_x, _y) for _x, _y in lineitem.get_shapepoly()]
+            _shape = ["%s,%s" % self._convert_coordinates((_x, _y))
+                                for _x, _y in lineitem.get_shapepoly()]
 
+            _x0, _y0 = self._convert_coordinates((_x0, _y0))
+            _x1, _y1 = self._convert_coordinates((_x1, _y1))
 
             _line = _svg.line(x1=_x0*self.xscale, y1=_y0*self.yscale,
                               x2=_x0*self.xscale, y2=_y0*self.yscale,
@@ -233,13 +247,13 @@ class TurtleScreenBase:
 
             _an2 = _svg.animate(attributeName="y2", attributeType="XML",
                                 begin="animateLine%s.begin" % self._draw_pos,
-                                From=_y0*self.xscale, to=_y1*self.xscale,
+                                From=_y0*self.yscale, to=_y1*self.yscale,
                                 dur=_dur, fill='freeze')
 
             # draw turtle
             if lineitem.isvisible():
                 _turtle = _svg.polygon(points=" ".join(_shape),
-                                       transform="rotate(%s)" % (lineitem.heading() - 90),
+                                       transform="rotate(%s)" % (90 - lineitem.heading()),
                                        style={'stroke': fill, 'fill': fill,
                                               'stroke-width': 1, 'display': 'none'})
 
@@ -307,8 +321,9 @@ class TurtleScreenBase:
         Return text item and x-coord of right bottom corner
         of text's bounding box."""
 
+        x, y = self._convert_coordinates(pos)
         self._draw_pos += 1
-        _text = _svg.text(txt, x=pos[0], y=pos[1], fill=pencolor,
+        _text = _svg.text(txt, x=x, y=y, fill=pencolor,
                           style={'display': 'none'})
         _text <= _svg.animate(Id="animateLine%s" % self._draw_pos,
                               attributeName="display", attributeType="CSS",
@@ -324,10 +339,11 @@ class TurtleScreenBase:
 
     def _dot(self, pos, size, color):
         """Draws a filled circle of specified size and color"""
-        print("_dot called")
-        print("pos = ", pos, "size = ", size, "color = ", color)
         self._draw_pos += 1
-        _circle = _svg.circle(cx=pos[0], cy=pos[1], r=size, fill=color,
+
+        x, y = self._convert_coordinates(pos)
+
+        _circle = _svg.circle(cx=x, cy=y, r=size, fill=color,
                             style={'display': 'none'})
         _circle <= _svg.animate(Id="animateLine%s" % self._draw_pos,
                               attributeName="display", attributeType="CSS",
@@ -2716,9 +2732,7 @@ class RawTurtle(TPen, TNavigator):
         >>> turtle.dot()
         >>> turtle.fd(50); turtle.dot(20, "blue"); turtle.fd(50)
         """
-        print("dot called")
         if not color:
-            print("with no color")
             if isinstance(size, (str, tuple)):
                 color = self._colorstr(size)
                 size = self._pensize + max(self._pensize, 4)
@@ -2731,7 +2745,6 @@ class RawTurtle(TPen, TNavigator):
                 size = self._pensize + max(self._pensize, 4)
             color = self._colorstr(color)
         if hasattr(self.screen, "_dot"):
-            print("hasattr _dot")
             item = self.screen._dot(self._position, size, color)
             # self.items.append(item)
             if self.undobuffer:
