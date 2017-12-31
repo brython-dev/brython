@@ -45,6 +45,7 @@ def clear(ev):
 def copy_content(ev):
     choice = document["demo_selector"].value
     document["source"].text = document[choice].text
+    clear(ev)
 
 # Start with first demo
 document["source"].text = document["demo1"].text
