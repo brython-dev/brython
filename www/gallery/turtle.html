@@ -106,6 +106,7 @@ document["source"].text = document["demo1"].text
   <option value="demo2">Custom container</option>
   <option value="demo3">Instant drawing</option>
   <option value="demo4">All the turtles</option>
+  <option value="demo5">Writing samples</option>
 </select>
 Note that the content is editable.
 </p>
@@ -143,7 +144,7 @@ t.dot(40, 'rgba(0, 0, 255, 0.5')
 
 t.goto(0, 125)
 t.color('purple')
-t.write("I love Brython!!")
+t.write("I love Brython!!", font=("Arial", 20, "normal"))
 
 turtle.show()
 </div>
@@ -233,6 +234,38 @@ for name,c,y in [(None, 'black', -200),  # same as "classic"
 
 turtle.show()
 </div>
+
+<div id='demo5' style="display:none">'''
+Showing some writing parameters.'''
+import turtle
+
+turtle.set_defaults(
+    turtle_canvas_wrapper = document['turtle-div']
+  )
+t = turtle.Turtle()
+t.penup()
+
+
+t.color('rgba(255, 0, 0, 0.5)')
+t.dot(5)
+t.color('black')
+t.write("Default settings")
+
+t.goto(0, 50)
+t.color("red")
+t.write("Left-aligned", align='left', font=("Verdana", 20, "italic"))
+
+t.goto(0, 100)
+t.color("blue")
+t.write("center-aligned", align='center', font=("Times Roman", 20, "oblique"))
+
+t.goto(0, 150)
+t.color("green")
+t.write("right-aligned", align='right', font=("Courier", 20, "normal"))
+
+turtle.show()
+</div>
+
 
 </body>
 

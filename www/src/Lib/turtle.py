@@ -317,26 +317,34 @@ class TurtleScreenBase:
 
     def _write(self, pos, txt, align, font, pencolor):
         """Write txt at pos in canvas with specified font
-        and color.
-        Return text item and x-coord of right bottom corner
-        of text's bounding box."""
+        and color."""
 
         x, y = self._convert_coordinates(pos)
         self._draw_pos += 1
-        _text = _svg.text(txt, x=x, y=y, fill=pencolor,
-                          style={'display': 'none'})
+        _text = _svg.text(txt, x=x, y=y, fill=pencolor, 
+                          style={'display': 'none',
+                          'font-family': font[0],
+                          'font-size': font[1],
+                          'font-style': font[2]})
+
+        if align == 'left':
+            _text.setAttribute('text-anchor', 'start')
+        elif align == 'center' or align == 'centre':
+            _text.setAttribute('text-anchor', 'middle')
+        elif align == 'right':
+            _text.setAttribute('text-anchor', 'end')       
+
         an = _svg.animate(Id="animateLine%s" % self._draw_pos,
                               attributeName="display", attributeType="CSS",
                               From="block", to="block", dur=_CFG["min_duration"],
                               fill='freeze')
-
         if self._draw_pos == 1:
             an.setAttribute('begin', "0s")
         else:
             an.setAttribute('begin', "animateLine%s.end" % (self._draw_pos-1))
         _text <= an
         self._canvas <= _text
-        return Vec2D(pos[0]+50, pos[1]+50)  # fix me
+
 
     def _dot(self, pos, size, color):
         """Draws a filled circle of specified size and color"""
@@ -2772,41 +2780,27 @@ class RawTurtle(TPen, TNavigator):
     def _write(self, txt, align, font):
         """Performs the writing for write()
         """
-        item, end = self.screen._write(self._position, txt, align, font,
-                                       self._pencolor)
-        # self.items.append(item)
-        if self.undobuffer:
-            self.undobuffer.push(("wri", item))
-        return end
+        self.screen._write(self._position, txt, align, font, self._pencolor)
 
-    def write(self, arg, move=False, align="left", font=("Arial", 8, "normal")):
+
+    def write(self, arg, align="left", font=("Arial", 8, "normal")):
         """Write text at the current turtle position.
 
         Arguments:
-        arg -- info, which is to be written to the TurtleScreen
-        move (optional) -- True/False
+        arg -- info, which is to be written to the TurtleScreen; it will be
+           converted to a string.
         align (optional) -- one of the strings "left", "center" or right"
         font (optional) -- a triple (fontname, fontsize, fonttype)
 
         Write text - the string representation of arg - at the current
         turtle position according to align ("left", "center" or right")
-        and with the given font.
-        If move is True, the pen is moved to the bottom-right corner
-        of the text. By default, move is False.
 
         Example (for a Turtle instance named turtle):
-        >>> turtle.write('Home = ', True, align="center")
-        >>> turtle.write((0,0), True)
+        >>> turtle.write('Home = ', align="center")
+        >>> turtle.write((0,0))
         """
-        if self.undobuffer:
-            self.undobuffer.push(["seq"])
-            self.undobuffer.cumulate = True
-        end = self._write(str(arg), align.lower(), font)
-        if move:
-            x, y = self.pos()
-            self.setpos(end, y)
-        if self.undobuffer:
-            self.undobuffer.cumulate = False
+        self._write(str(arg), align.lower(), font)
+
 
     def begin_poly(self):
         """Start recording the vertices of a polygon.
