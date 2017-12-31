@@ -325,15 +325,16 @@ class TurtleScreenBase:
         self._draw_pos += 1
         _text = _svg.text(txt, x=x, y=y, fill=pencolor,
                           style={'display': 'none'})
-        _text <= _svg.animate(Id="animateLine%s" % self._draw_pos,
+        an = _svg.animate(Id="animateLine%s" % self._draw_pos,
                               attributeName="display", attributeType="CSS",
                               From="block", to="block", dur=_CFG["min_duration"],
                               fill='freeze')
 
         if self._draw_pos == 1:
-            _text.setAttribute('begin', "0s")
+            an.setAttribute('begin', "0s")
         else:
-            _text.setAttribute('begin', "animateLine%s.end" % (self._draw_pos-1))
+            an.setAttribute('begin', "animateLine%s.end" % (self._draw_pos-1))
+        _text <= an
         self._canvas <= _text
         return Vec2D(pos[0]+50, pos[1]+50)  # fix me
 
@@ -345,14 +346,15 @@ class TurtleScreenBase:
 
         _circle = _svg.circle(cx=x, cy=y, r=size, fill=color,
                             style={'display': 'none'})
-        _circle <= _svg.animate(Id="animateLine%s" % self._draw_pos,
+        an = _svg.animate(Id="animateLine%s" % self._draw_pos,
                               attributeName="display", attributeType="CSS",
                               From="block", to="block", dur=_CFG["min_duration"],
                               fill='freeze')
         if self._draw_pos == 1:
-            _circle.setAttribute('begin', "0s")
+            an.setAttribute('begin', "0s")
         else:
-            _circle.setAttribute('begin', "animateLine%s.end" % (self._draw_pos-1))
+            an.setAttribute('begin', "animateLine%s.end" % (self._draw_pos-1))
+        _circle <= an
         self._canvas <= _circle
 
 
