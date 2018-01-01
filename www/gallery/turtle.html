@@ -7,6 +7,7 @@
 
 <script id="python_script" type="text/python">
 import sys
+import turtle 
 from browser import document, timer
 
 def inform(*args):
@@ -36,8 +37,7 @@ def exec_code():
 
 @document["clear"].bind("click")
 def clear(ev):
-    from turtle import restart
-    restart()
+    turtle.restart()
     inform("")
     clear_print()
 
@@ -50,12 +50,19 @@ def copy_content(ev):
 # Start with first demo
 document["source"].text = document["demo1"].text
 
+# Add up to date info 
+document["turtle-docstring"].text = turtle.__doc__
 </script>
 
 <style>
   pre {
     border: 1px solid blue;
     background-color:antiquewhite;
+  }
+  pre#turtle-docstring {
+    background-color: white;
+    max-width: 800px;
+    font-style: italic;
   }
 
   pre#turtle-print-output {
@@ -89,16 +96,9 @@ document["source"].text = document["demo1"].text
 
 <body onload="brython(1)">
 <h1>Turtle demo</h1>
-<p>Brython's turtle module uses Scalable Vector Graphics (SVG) for drawing
-  and animation. When a drawing is created and about to be displayed
-  via the <code>show()</code> method, an &lt;svg&gt; element with a 
-  specified and unique id is created and inserted into another DOM element.
-
-  Because html elements should have a unique id, if this &lt;svg&gt; element 
-  already exists, nothing new is created. Thus, old drawings must be cleared
-  before new ones can be created. 
-</p>
-
+<p>The following is the docstring of the turtle module.</p>
+<pre id='turtle-docstring'></pre>
+<hr>
 
 <p>Select the desired demo.
 <select id="demo_selector">

@@ -1,17 +1,32 @@
 '''Turtle module adapted for Brython
 
-Uses Scalable Vector Graphics for display and animation.
+Uses Scalable Vector Graphics (SVG) for display and animation.
 
-For the CPython turtle module, drawings are done on a tkinter canvas,
-appearing in sequence as the code is interpreted.
+For the CPython turtle module, drawings are done on a Tkinter canvas,
+appearing in sequence as the code is interpreted, and updated when needed.
+Such Python program can suspend execution, resuming when needed, which makes
+it easy to implement in an interactive environmen (REPL)
 
-For this module, a drawing is created as an svg element (or many such
+The approach used by CPython based on Tkinter is not ideal for Brython.
+The way that any module is executed by Brython is essentially as follows:
+
+  1. Brython translates the entire Python code into Javascript
+  2. The Javascript code is then run by the browser using eval() in a single
+     thread.  Javascript does not support anything similar to a sleep()
+     function available in Python.
+
+Using Brython in the browser, there are two potential approaches to 
+implementing a turtle module: use the html canvas and setTimeout 
+(or the more modern requestAnimationFrame) to build an animation, or use 
+animated DOM elements - the natural choice being SVG.
+
+For this module, a turtle "scene" is created as an svg element (or many such
 elements) which are added all at once in the DOM. In order to have drawings
 that are displayed as a sequence of elements, each new svg addition is done
 with a css display set to none, and animated with a specified duration,
 most often calculated from a set value for the speed attribute.
 For objects that should appear all at once, we set the duration of
-the animation to a minimum value _CFG["min_duration"]
+the animation to a minimum value _CFG["min_duration"].
 '''
 
 import math
@@ -22,20 +37,18 @@ import _svg
 
 _CFG = {"width": 0.5,               # Screen
         "height": 0.75,
-        "canvwidth": 500,
-        "canvheight": 500,
+        "canvas_width": 500,
+        "canvas_height": 500,
         "leftright": None,
         "topbottom": None,
         "mode": "standard",          # TurtleScreen
         "colormode": 1.0,
         "delay": 10,
-        "undobuffersize": 1000,      # RawTurtle; not used
         "shape": "classic",
         "pencolor": "black",
         "fillcolor": "black",
         "resizemode": "noresize",
         "visible": True,
-        "title": "Python Turtle Graphics",
         "turtle_canvas_wrapper": None,
         "turtle_canvas_id": "turtle-canvas",
         "min_duration": "1ms"
@@ -165,8 +178,8 @@ class TurtleScreenBase:
         self._previous_turtle_attributes = {}
         self._draw_pos = 0
 
-        self.canvwidth = cv.parentElement.width
-        self.canvheight = cv.parentElement.height
+        self.canvas_width = cv.parentElement.width
+        self.canvas_height = cv.parentElement.height
         self.xscale = self.yscale = 1.0
 
         self.background_color = "white"  # FIXME: added by hand; need to set it up properly
@@ -307,26 +320,14 @@ class TurtleScreenBase:
         """Delay subsequent canvas actions for delay ms."""
         pass
 
-    def _iscolorstring(self, color):
-        """Check if the string color is a legal Tkinter color string.
-        """
-        return True  # fix me
-
-        # try:
-        #    rgb = self.cv.winfo_rgb(color)
-        #    ok = True
-        # except TK.TclError:
-        #    ok = False
-        # return ok
-
     def _bgcolor(self, color=None):
         """Set canvas' background color if color is not None,
         else return background color."""
         if color is None:
             return self.background_color
         
-        width = _CFG['canvwidth']
-        height = _CFG['canvheight']
+        width = _CFG['canvas_width']
+        height = _CFG['canvas_height']
         if self.mode() in ['logo', 'standard']:
             x = -width//2 
             y = -height//2 
@@ -424,12 +425,12 @@ class TurtleScreenBase:
         """
         pass
 
-    def _resize(self, canvwidth=None, canvheight=None, bg=None):
+    def _resize(self, canvas_width=None, canvas_height=None, bg=None):
         """Resize the canvas the turtles are drawing on. Does
         not alter the drawing window.
         """
-        self.cv.style.width = canvwidth
-        self.cv.style.height = canvheight
+        self.cv.style.width = canvas_width
+        self.cv.style.height = canvas_height
         if bg is not None:
             self.cv.style.backgroundColor = bg
 
@@ -439,60 +440,6 @@ class TurtleScreenBase:
         # for now just return canvas width/height
         return self.cv.width, self.cv.height
 
-    def mainloop(self):
-        """Starts event loop - calling Tkinter's mainloop function.
-
-        No argument.
-
-        Must be last statement in a turtle graphics program.
-        Must NOT be used if a script is run from within IDLE in -n mode
-        (No subprocess) - for interactive use of turtle graphics.
-
-        Example (for a TurtleScreen instance named screen):
-        >>> screen.mainloop()
-
-        """
-        pass
-
-    def textinput(self, title, prompt):
-        """Pop up a dialog window for input of a string.
-
-        Arguments: title is the title of the dialog window,
-        prompt is a text mostly describing what information to input.
-
-        Return the string input
-        If the dialog is canceled, return None.
-
-        Example (for a TurtleScreen instance named screen):
-        >>> screen.textinput("NIM", "Name of first player:")
-
-        """
-        pass
-
-    def numinput(self, title, prompt, default=None, minval=None, maxval=None):
-        """Pop up a dialog window for input of a number.
-
-        Arguments: title is the title of the dialog window,
-        prompt is a text mostly describing what numerical information to input.
-        default: default value
-        minval: minimum value for imput
-        maxval: maximum value for input
-
-        The number input must be in the range minval .. maxval if these are
-        given. If not, a hint is issued and the dialog remains open for
-        correction. Return the number input.
-        If the dialog is canceled,  return None.
-
-        Example (for a TurtleScreen instance named screen):
-        >>> screen.numinput("Poker", "Your stakes:", 1000, minval=10, maxval=10000)
-
-        """
-        pass
-
-
-##############################################################################
-###                  End of Tkinter - interface                            ###
-##############################################################################
 
 class Terminator (Exception):
     """Will be raised in TurtleScreen.update, if _RUNNING becomes False.
@@ -621,12 +568,6 @@ class TurtleScreen(TurtleScreenBase):
         self._updatecounter = 0
         self._turtles = []
         self.bgcolor("white")
-        # for btn in 1, 2, 3:
-        #    self.onclick(None, btn)
-        # self.onkeypress(None)
-        # for key in self._keys[:]:
-        #    self.onkey(None, key)
-        #    self.onkeypress(None, key)
         Turtle._pen = None
 
     def mode(self, mode=None):
@@ -658,8 +599,8 @@ class TurtleScreen(TurtleScreenBase):
             raise TurtleGraphicsError("No turtle-graphics-mode %s" % mode)
         self._mode = mode
         if mode in ["standard", "logo"]:
-            self._setscrollregion(-self.canvwidth//2, -self.canvheight//2,
-                                  self.canvwidth//2, self.canvheight//2)
+            self._setscrollregion(-self.canvas_width//2, -self.canvas_height//2,
+                                  self.canvas_width//2, self.canvas_height//2)
             self.xscale = self.yscale = 1.0
         self.reset()
 
@@ -692,12 +633,12 @@ class TurtleScreen(TurtleScreenBase):
         wx, wy = self._window_size()
         self.screensize(wx-20, wy-20)
         oldxscale, oldyscale = self.xscale, self.yscale
-        self.xscale = self.canvwidth / xspan
-        self.yscale = self.canvheight / yspan
+        self.xscale = self.canvas_width / xspan
+        self.yscale = self.canvas_height / yspan
         srx1 = llx * self.xscale
         sry1 = -ury * self.yscale
-        srx2 = self.canvwidth + srx1
-        sry2 = self.canvheight + sry1
+        srx2 = self.canvas_width + srx1
+        sry2 = self.canvas_height + sry1
         self._setscrollregion(srx1, sry1, srx2, sry2)
         self._rescale(self.xscale/oldxscale, self.yscale/oldyscale)
         # self.update()
@@ -750,10 +691,9 @@ class TurtleScreen(TurtleScreenBase):
         if len(color) == 1:
             color = color[0]
         if isinstance(color, str):
-            if self._iscolorstring(color) or color == "":
-                return color
-            else:
-                raise TurtleGraphicsError("bad color string: %s" % str(color))
+            # unlike the Tkinter-based version, we have no built-in way to
+            # check for valid colors, so we assume that it is correct.
+            return color
         try:
             r, g, b = color
         except:
@@ -1081,12 +1021,12 @@ class TurtleScreen(TurtleScreenBase):
         self._setbgpic(self._bgpic, self._bgpics[picname])
         self._bgpicname = picname
 
-    def screensize(self, canvwidth=None, canvheight=None, bg=None):
+    def screensize(self, canvas_width=None, canvas_height=None, bg=None):
         """Resize the canvas the turtles are drawing on.
 
         Optional arguments:
-        canvwidth -- positive integer, new width of canvas in pixels
-        canvheight --  positive integer, new height of canvas in pixels
+        canvas_width -- positive integer, new width of canvas in pixels
+        canvas_height --  positive integer, new height of canvas in pixels
         bg -- colorstring or color-tuple, new backgroundcolor
         If no arguments are given, return current (canvaswidth, canvasheight)
 
@@ -1098,7 +1038,7 @@ class TurtleScreen(TurtleScreenBase):
         >>> turtle.screensize(2000,1500)
         >>> # e.g. to search for an erroneously escaped turtle ;-)
         """
-        return self._resize(canvwidth, canvheight, bg)
+        return self._resize(canvas_width, canvas_height, bg)
 
     onscreenclick = onclick
     resetscreen = reset
@@ -1123,7 +1063,6 @@ class TNavigator:
         self._angleOffset = self.DEFAULT_ANGLEOFFSET
         self._angleOrient = self.DEFAULT_ANGLEORIENT
         self._mode = mode
-        self.undobuffer = None
         self.degrees()
         self._mode = None
         self._setmode(mode)
@@ -1568,9 +1507,6 @@ class TNavigator:
         >>> turtle.circle(50)
         >>> turtle.circle(120, 180)  # semicircle
         """
-        if self.undobuffer:
-            self.undobuffer.push(["seq"])
-            self.undobuffer.cumulate = True
         speed = self.speed()
         if extent is None:
             extent = self._fullcircle
@@ -1598,8 +1534,6 @@ class TNavigator:
         if speed == 0:
             self._tracer(tr, dl)
         self.speed(speed)
-        if self.undobuffer:
-            self.undobuffer.cumulate = False
 
 # three dummy methods to be implemented by child class:
 
@@ -1630,7 +1564,6 @@ class TPen:
 
     def __init__(self, resizemode=_CFG["resizemode"]):
         self._resizemode = resizemode  # or "user" or "noresize"
-        self.undobuffer = None
         TPen._reset(self)
 
     def _reset(self, pencolor=_CFG["pencolor"],
@@ -2011,9 +1944,6 @@ class TPen:
         for key in p:
             _p_buf[key] = _pd[key]
 
-        if self.undobuffer:
-            self.undobuffer.push(("pen", _p_buf))
-
         newLine = False
         if "pendown" in p:
             if self._drawing != p["pendown"]:
@@ -2127,7 +2057,6 @@ class RawTurtle(TPen, TNavigator):
 
     def __init__(self, canvas=None,
                  shape=_CFG["shape"],
-                 undobuffersize=_CFG["undobuffersize"],
                  visible=_CFG["visible"]):
         if isinstance(canvas, _Screen):
             self.screen = canvas
@@ -2153,9 +2082,6 @@ class RawTurtle(TPen, TNavigator):
         self.currentLine = [self._position]
         # self.items = []  #[self.currentLineItem]
         self.stampItems = []
-        self._undobuffersize = undobuffersize
-        self.undobuffer = None  # Tbuffer(undobuffersize)
-
         # self._update()
 
     def reset(self):
@@ -2183,37 +2109,6 @@ class RawTurtle(TPen, TNavigator):
         self._drawturtle()
         # self._update()
 
-    def setundobuffer(self, size):
-        """Set or disable undobuffer.
-
-        Argument:
-        size -- an integer or None
-
-        If size is an integer an empty undobuffer of given size is installed.
-        Size gives the maximum number of turtle-actions that can be undone
-        by the undo() function.
-        If size is None, no undobuffer is present.
-
-        Example (for a Turtle instance named turtle):
-        >>> turtle.setundobuffer(42)
-        """
-        if size is None:
-            self.undobuffer = None
-        else:
-            self.undobuffer = Tbuffer(size)
-
-    def undobufferentries(self):
-        """Return count of entries in the undobuffer.
-
-        No argument.
-
-        Example (for a Turtle instance named turtle):
-        >>> while undobufferentries():
-        ...     undo()
-        """
-        if self.undobuffer is None:
-            return 0
-        return self.undobuffer.nr_of_items()
 
     def _clear(self):
         """Delete all of pen's drawings"""
@@ -2226,7 +2121,6 @@ class RawTurtle(TPen, TNavigator):
             self.currentLine.append(self._position)
         #self.items = [self.currentLineItem]
         self.clearstamps()
-        # self.setundobuffer(self._undobuffersize)
 
     def clear(self):
         """Delete the turtle's drawings from the screen. Do not move turtle.
@@ -2608,7 +2502,6 @@ class RawTurtle(TPen, TNavigator):
                 screen._drawpoly(item, poly, fill=self._cc(fc),
                                  outline=self._cc(oc), width=self._outlinewidth, top=True)
         self.stampItems.append(stitem)
-        self.undobuffer.push(("stamp", stitem))
         return stitem
 
     def _clearstamp(self, stampid):
@@ -2621,17 +2514,7 @@ class RawTurtle(TPen, TNavigator):
             else:
                 self.screen._delete(stampid)
             self.stampItems.remove(stampid)
-        # Delete stampitem from undobuffer if necessary
-        # if clearstamp is called directly.
-        item = ("stamp", stampid)
-        buf = self.undobuffer
-        if item not in buf.buffer:
-            return
-        index = buf.buffer.index(item)
-        buf.buffer.remove(item)
-        if index <= buf.ptr:
-            buf.ptr = (buf.ptr - 1) % buf.bufsize
-        buf.buffer.insert((buf.ptr+1) % buf.bufsize, [None])
+
 
     def clearstamp(self, stampid):
         """Delete stamp with given stampid
@@ -2697,8 +2580,6 @@ class RawTurtle(TPen, TNavigator):
     def _rotate(self, angle):
         """Turns pen clockwise by angle.
         """
-        if self.undobuffer:
-            self.undobuffer.push(("rot", angle, self._degreesPerAU))
         angle *= self._degreesPerAU
         neworient = self._orient.rotate(angle)
         tracing = self.screen._tracing
@@ -2743,8 +2624,6 @@ class RawTurtle(TPen, TNavigator):
             # self.items.append(self._fillitem)
         self._fillpath = [self._position]
         # self._newLine()
-        if self.undobuffer:
-            self.undobuffer.push(("beginfill", self._fillitem))
         # self._update()
 
     def end_fill(self):
@@ -2762,8 +2641,6 @@ class RawTurtle(TPen, TNavigator):
             if len(self._fillpath) > 2:
                 self.screen._drawpoly(self._fillitem, self._fillpath,
                                       fill=self._fillcolor)
-                if self.undobuffer:
-                    self.undobuffer.push(("dofill", self._fillitem))
             self._fillitem = self._fillpath = None
             self._update()
 
@@ -2796,13 +2673,8 @@ class RawTurtle(TPen, TNavigator):
         if hasattr(self.screen, "_dot"):
             item = self.screen._dot(self._position, size, color)
             # self.items.append(item)
-            if self.undobuffer:
-                self.undobuffer.push(("dot", item))
         else:
             pen = self.pen()
-            if self.undobuffer:
-                self.undobuffer.push(["seq"])
-                self.undobuffer.cumulate = True
             try:
                 if self.resizemode() == 'auto':
                     self.ht()
@@ -2812,8 +2684,6 @@ class RawTurtle(TPen, TNavigator):
                 self.forward(0)
             finally:
                 self.pen(pen)
-            if self.undobuffer:
-                self.undobuffer.cumulate = False
 
     def _write(self, txt, align, font):
         """Performs the writing for write()
@@ -2944,7 +2814,6 @@ class _Screen(TurtleScreen):
 
     _root = None
     _canvas = None
-    _title = _CFG["title"]
 
     def __init__(self):
         # XXX there is no need for this code to be conditional,
@@ -2954,16 +2823,14 @@ class _Screen(TurtleScreen):
         # preserved (perhaps by passing it as an optional parameter)
         if _Screen._root is None:
             _Screen._root = self._root = _Root()
-            # self._root.title(_Screen._title)
-            # self._root.ondestroy(self._destroy)
         if _Screen._canvas is None:
             width = _CFG["width"]
             height = _CFG["height"]
-            canvwidth = _CFG["canvwidth"]
-            canvheight = _CFG["canvheight"]
+            canvas_width = _CFG["canvas_width"]
+            canvas_height = _CFG["canvas_height"]
             leftright = _CFG["leftright"]
             topbottom = _CFG["topbottom"]
-            self._root.setupcanvas(width, height, canvwidth, canvheight)
+            self._root.setupcanvas(width, height, canvas_width, canvas_height)
             _Screen._canvas = self._root._getcanvas()
             TurtleScreen.__init__(self, _Screen._canvas)
             self.setup(width, height, leftright, topbottom)
@@ -3023,13 +2890,11 @@ class Turtle(RawTurtle):
 
     def __init__(self,
                  shape=_CFG["shape"],
-                 undobuffersize=_CFG["undobuffersize"],
                  visible=_CFG["visible"]):
         if Turtle._screen is None:
             Turtle._screen = Screen()
         RawTurtle.__init__(self, Turtle._screen,
                            shape=shape,
-                           undobuffersize=undobuffersize,
                            visible=visible)
 
 Pen = Turtle
