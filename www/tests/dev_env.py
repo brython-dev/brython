@@ -189,7 +189,7 @@ def run(evt, elt):
     print(output.style.overflow)
     save_stdout = sys.stdout
     save_stderr = sys.stderr
-    sys.stdout = Output()
+    sys.stdout = sys.stderr = Output()
     output_window.style.display = "block"
     output.text = ""
     try:
@@ -204,9 +204,13 @@ height = window.innerHeight
 tmpl = Template("content",
     [run, load, save, save_as, delete, size_up, size_down])
 
-tmpl.render(height=int(0.6 * height), width=int(0.6 * width),
+tmpl.render(editor_height=int(0.9 * height),
+    height=int(0.6 * height), width=int(0.6 * width),
     top=int(0.2 * height), left=int(0.2 * width))
 
+Template("dialog_window").render(
+    height=int(0.6 * height), width=int(0.6 * width),
+    top=int(0.2 * height), left=int(0.2 * width))
 
 dialog = document["dialog"]
 
@@ -263,10 +267,6 @@ for bar in document.select(".dialog_bar"):
 output_window = document["output_window"]
 
 dialog_window = document["dialog_window"]
-dialog_window.style.top = f"{int(0.2 * height)}px"
-dialog_window.style.left = f"{int(0.2 * width)}px"
-dialog_window.style.width = f"{int(0.6 * width)}px"
-dialog_window.style.height = f"{int(0.6 * height)}px"
 
 output = document["output"]
 editor = document["editor"]
