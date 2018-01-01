@@ -47,7 +47,6 @@ _CFG = {"width": 0.5,               # Screen
         "shape": "classic",
         "pencolor": "black",
         "fillcolor": "black",
-        "resizemode": "noresize",
         "visible": True,
         "turtle_canvas_wrapper": None,
         "turtle_canvas_id": "turtle-canvas",
@@ -425,14 +424,6 @@ class TurtleScreenBase:
         """
         pass
 
-    def _resize(self, canvas_width=None, canvas_height=None, bg=None):
-        """Resize the canvas the turtles are drawing on. Does
-        not alter the drawing window.
-        """
-        self.cv.style.width = canvas_width
-        self.cv.style.height = canvas_height
-        if bg is not None:
-            self.cv.style.backgroundColor = bg
 
     def _window_size(self):
         """ Return the width and height of the turtle window.
@@ -631,7 +622,6 @@ class TurtleScreen(TurtleScreenBase):
         xspan = float(urx - llx)
         yspan = float(ury - lly)
         wx, wy = self._window_size()
-        self.screensize(wx-20, wy-20)
         oldxscale, oldyscale = self.xscale, self.yscale
         self.xscale = self.canvas_width / xspan
         self.yscale = self.canvas_height / yspan
@@ -1021,24 +1011,6 @@ class TurtleScreen(TurtleScreenBase):
         self._setbgpic(self._bgpic, self._bgpics[picname])
         self._bgpicname = picname
 
-    def screensize(self, canvas_width=None, canvas_height=None, bg=None):
-        """Resize the canvas the turtles are drawing on.
-
-        Optional arguments:
-        canvas_width -- positive integer, new width of canvas in pixels
-        canvas_height --  positive integer, new height of canvas in pixels
-        bg -- colorstring or color-tuple, new backgroundcolor
-        If no arguments are given, return current (canvaswidth, canvasheight)
-
-        Do not alter the drawing window. To observe hidden parts of
-        the canvas use the scrollbars. (Can make visible those parts
-        of a drawing, which were outside the canvas before!)
-
-        Example (for a Turtle instance named turtle):
-        >>> turtle.screensize(2000,1500)
-        >>> # e.g. to search for an erroneously escaped turtle ;-)
-        """
-        return self._resize(canvas_width, canvas_height, bg)
 
     onscreenclick = onclick
     resetscreen = reset
@@ -1562,8 +1534,7 @@ class TPen:
     Implements drawing properties.
     """
 
-    def __init__(self, resizemode=_CFG["resizemode"]):
-        self._resizemode = resizemode  # or "user" or "noresize"
+    def __init__(self):
         TPen._reset(self)
 
     def _reset(self, pencolor=_CFG["pencolor"],
@@ -1580,34 +1551,6 @@ class TPen:
         self._shapetrafo = (1., 0., 0., 1.)
         self._outlinewidth = 1
 
-    def resizemode(self, rmode=None):
-        """Set resizemode to one of the values: "auto", "user", "noresize".
-
-        (Optional) Argument:
-        rmode -- one of the strings "auto", "user", "noresize"
-
-        Different resizemodes have the following effects:
-          - "auto" adapts the appearance of the turtle
-                   corresponding to the value of pensize.
-          - "user" adapts the appearance of the turtle according to the
-                   values of stretchfactor and outlinewidth (outline),
-                   which are set by shapesize()
-          - "noresize" no adaption of the turtle's appearance takes place.
-        If no argument is given, return current resizemode.
-        resizemode("user") is called by a call of shapesize with arguments.
-
-
-        Examples (for a Turtle instance named turtle):
-        >>> turtle.resizemode("noresize")
-        >>> turtle.resizemode()
-        'noresize'
-        """
-        if rmode is None:
-            return self._resizemode
-        rmode = rmode.lower()
-        if rmode in ["auto", "user", "noresize"]:
-            self.pen(resizemode=rmode)
-
     def pensize(self, width=None):
         """Set or return the line thickness.
 
@@ -1616,9 +1559,8 @@ class TPen:
         Argument:
         width -- positive number
 
-        Set the line thickness to width or return it. If resizemode is set
-        to "auto" and turtleshape is a polygon, that polygon is drawn with
-        the same line thickness. If no argument is given, current pensize
+        Set the line thickness to width or return it. 
+        If no argument is given, current pensize
         is returned.
 
         Example (for a Turtle instance named turtle):
@@ -1887,7 +1829,6 @@ class TPen:
            "fillcolor"  :   color-string or color-tuple
            "pensize"    :   positive number
            "speed"      :   number in range 0..10
-           "resizemode" :   "auto" or "user" or "noresize"
            "stretchfactor": (positive number, positive number)
            "shearfactor":   number
            "outline"    :   positive number
@@ -1902,19 +1843,19 @@ class TPen:
         Examples (for a Turtle instance named turtle):
         >>> turtle.pen(fillcolor="black", pencolor="red", pensize=10)
         >>> turtle.pen()
-        {'pensize': 10, 'shown': True, 'resizemode': 'auto', 'outline': 1,
+        {'pensize': 10, 'shown': True, 'outline': 1,
         'pencolor': 'red', 'pendown': True, 'fillcolor': 'black',
         'stretchfactor': (1,1), 'speed': 3, 'shearfactor': 0.0}
         >>> penstate=turtle.pen()
         >>> turtle.color("yellow","")
         >>> turtle.penup()
         >>> turtle.pen()
-        {'pensize': 10, 'shown': True, 'resizemode': 'auto', 'outline': 1,
+        {'pensize': 10, 'shown': True, 'outline': 1,
         'pencolor': 'yellow', 'pendown': False, 'fillcolor': '',
         'stretchfactor': (1,1), 'speed': 3, 'shearfactor': 0.0}
         >>> p.pen(penstate, fillcolor="green")
         >>> p.pen()
-        {'pensize': 10, 'shown': True, 'resizemode': 'auto', 'outline': 1,
+        {'pensize': 10, 'shown': True, 'outline': 1,
         'pencolor': 'red', 'pendown': True, 'fillcolor': 'green',
         'stretchfactor': (1,1), 'speed': 3, 'shearfactor': 0.0}
         """
@@ -1924,7 +1865,6 @@ class TPen:
                "fillcolor": self._fillcolor,
                "pensize": self._pensize,
                "speed": self._speed,
-               "resizemode": self._resizemode,
                "stretchfactor": self._stretchfactor,
                "shearfactor": self._shearfactor,
                "outline": self._outlinewidth,
@@ -1970,8 +1910,6 @@ class TPen:
             self._fillcolor = p["fillcolor"]
         if "speed" in p:
             self._speed = p["speed"]
-        if "resizemode" in p:
-            self._resizemode = p["resizemode"]
         if "stretchfactor" in p:
             sf = p["stretchfactor"]
             if isinstance(sf, (int, float)):
@@ -2234,7 +2172,7 @@ class RawTurtle(TPen, TNavigator):
         # self._update()
 
     def shapesize(self, stretch_wid=None, stretch_len=None, outline=None):
-        """Set/return turtle's stretchfactors/outline. Set resizemode to "user".
+        """Set/return turtle's stretchfactors/outline. 
 
         Optional arguments:
            stretch_wid : positive number
@@ -2242,15 +2180,13 @@ class RawTurtle(TPen, TNavigator):
            outline  : positive number
 
         Return or set the pen's attributes x/y-stretchfactors and/or outline.
-        Set resizemode to "user".
-        If and only if resizemode is set to "user", the turtle will be displayed
+        The turtle will be displayed
         stretched according to its stretchfactors:
         stretch_wid is stretchfactor perpendicular to orientation
         stretch_len is stretchfactor in direction of turtles orientation.
         outline determines the width of the shapes's outline.
 
         Examples (for a Turtle instance named turtle):
-        >>> turtle.resizemode("user")
         >>> turtle.shapesize(5, 5, 12)
         >>> turtle.shapesize(outline=8)
         """
@@ -2270,8 +2206,7 @@ class RawTurtle(TPen, TNavigator):
             stretchfactor = self._stretchfactor
         if outline is None:
             outline = self._outlinewidth
-        self.pen(resizemode="user",
-                 stretchfactor=stretchfactor, outline=outline)
+        self.pen(stretchfactor=stretchfactor, outline=outline)
 
     def shearfactor(self, shear=None):
         """Set or return the current shearfactor.
@@ -2294,7 +2229,7 @@ class RawTurtle(TPen, TNavigator):
         """
         if shear is None:
             return self._shearfactor
-        self.pen(resizemode="user", shearfactor=shear)
+        self.pen(shearfactor=shear)
 
     def settiltangle(self, angle):
         """Rotate the turtleshape to point in the specified direction
@@ -2318,7 +2253,7 @@ class RawTurtle(TPen, TNavigator):
         """
         tilt = -angle * self._degreesPerAU * self._angleOrient
         tilt = (tilt * math.pi / 180.0) % (2*math.pi)
-        self.pen(resizemode="user", tilt=tilt)
+        self.pen(tilt=tilt)
 
     def tiltangle(self, angle=None):
         """Set or return the current tilt-angle.
@@ -2433,22 +2368,16 @@ class RawTurtle(TPen, TNavigator):
 
         """
         shape = self.screen._shapes[self.turtle.shapeIndex]
-        if shape._type == "polygon":
-            return self._getshapepoly(shape._data, shape._type == "compound")
+        return shape._data
+        # if shape._type == "polygon":
+        #     return self._getshapepoly(shape._data, shape._type == "compound")
         # else return None
 
     def _getshapepoly(self, polygon, compound=False):
-        """Calculate transformed shape polygon according to resizemode
-        and shapetransform.
+        """Calculate transformed shape polygon according to shapetransform.
         """
-        if self._resizemode == "user" or compound:
-            t11, t12, t21, t22 = self._shapetrafo
-        elif self._resizemode == "auto":
-            l = max(1, self._pensize/5.0)
-            t11, t12, t21, t22 = l, 0, 0, l
-        elif self._resizemode == "noresize":
-            return polygon
-        return tuple([(t11*x + t12*y, t21*x + t22*y) for (x, y) in polygon])
+        return polygon # much code removed
+
 
     def _drawturtle(self):
         """Manages the correct rendering of the turtle with respect to
@@ -2478,12 +2407,7 @@ class RawTurtle(TPen, TNavigator):
         tshape = shape._data
         if ttype == "polygon":
             stitem = screen._createpoly()
-            if self._resizemode == "noresize":
-                w = 1
-            elif self._resizemode == "auto":
-                w = self._pensize
-            else:
-                w = self._outlinewidth
+            w = 1
             shape = self._polytrafo(self._getshapepoly(tshape))
             fc, oc = self._fillcolor, self._pencolor
             screen._drawpoly(stitem, shape, fill=fc, outline=oc,
@@ -2676,8 +2600,6 @@ class RawTurtle(TPen, TNavigator):
         else:
             pen = self.pen()
             try:
-                if self.resizemode() == 'auto':
-                    self.ht()
                 self.pendown()
                 self.pensize(size)
                 self.pencolor(color)
