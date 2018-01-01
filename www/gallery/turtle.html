@@ -25,7 +25,7 @@ def clear_print():
     document["turtle-print-output"].html = ''
 
 @document["run"].bind("click")
-def show(ev):
+def done(ev):
     inform("Processing")
     # delay to allow updated DOM with above text to be shown.
     timer.set_timeout(exec_code, 1)
@@ -152,7 +152,7 @@ t.goto(0, 125)
 t.color('purple')
 t.write("I love Brython!!", font=("Arial", 20, "normal"))
 
-turtle.show()
+turtle.done()
 </div>
 
 <div id='demo2' style="display:none">'''
@@ -186,7 +186,7 @@ for c in ['red', 'blue', 'orange', 'green', 'purple', 'brown']:
     t.forward(100)
     t.right(60)
 
-turtle.show()
+turtle.done()
 </div>
 
 
@@ -231,7 +231,7 @@ for name,c,y in [(None, 'black', 200),  # same as "classic"
     t.stamp()
 screen.bgcolor('white')
 
-turtle.show()
+turtle.done()
 </div>
 
 <div id='demo5' style="display:none">'''
@@ -262,7 +262,7 @@ t.goto(0, 150)
 t.color("green")
 t.write("right-aligned", align='right', font=("Courier", 20, "normal"))
 
-turtle.show()
+turtle.done()
 </div>
 
 </body>

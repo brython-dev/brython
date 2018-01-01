@@ -2552,8 +2552,8 @@ def _getscreen():
     return Turtle._screen
 
 
-def show():
-    "For Brython turtle: show the current drawing"
+def done():
+    "ends the computation and shows the current drawing"
     _Screen().end()
 
 
