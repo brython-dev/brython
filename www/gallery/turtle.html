@@ -105,8 +105,7 @@ this page to view the turtle module docstring.</p>
 <p>Select the desired demo.
 <select id="demo_selector">
   <option value="demo1">Square with default turtle</option> 
-  <option value="demo2">Custom container</option>
-  <option value="demo3">Instant drawing</option>
+  <option value="demo2">Custom container and instant drawing</option>
   <option value="demo4">All the turtles</option>
   <option value="demo5">Writing samples</option>
 </select>
@@ -161,7 +160,8 @@ Changing default size and specifying existing html element as
 container for the turtle canvas. This container is styled
 so as to have a green border.
 
-This is also meant as a test for the correct turtle orientation.
+This is also meant as a test for the correct turtle orientation,
+and for demonstrating instant (fastest) drawing.
 '''
 import turtle
 
@@ -173,50 +173,37 @@ turtle.set_defaults(
 
 t = turtle.Turtle("turtle")
 t.width(3)
+
 for c in ['red', 'blue', 'orange', 'green', 'purple', 'brown']:
-    t.color(c)
+    t.color(c, "white")
     t.forward(100)
     t.left(60)
-for c in ['red', 'blue', 'orange', 'green', 'purple', 'brown']:
-    t.color(c)
-    t.forward(100)
-    t.right(60)
 
-turtle.show()
-</div>
-<div id='demo3' style="display:none">'''
-"Instant" drawing through speed set up to zero.
-Uses the same demo as the previous one.
-'''
-import turtle
-
-turtle.set_defaults(
-    canvwidth = 600,  # default is 500
-    canvheight = 400,  # default is 500
-    turtle_canvas_wrapper = document['turtle-div']
-)
-
-t = turtle.Turtle("turtle")
-t.width(3)
+###  bottom half drawn "instantly"
 t.speed(0)
 for c in ['red', 'blue', 'orange', 'green', 'purple', 'brown']:
     t.color(c)
     t.forward(100)
-    t.left(60)
-for c in ['red', 'blue', 'orange', 'green', 'purple', 'brown']:
-    t.color(c)
-    t.forward(100)
     t.right(60)
 
 turtle.show()
 </div>
 
 
+
 <div id='demo4' style="display:none">'''
-Showing the available turtles.'''
+Showing the available turtles, how to use stamp() and
+how to change the background color.'''
 import turtle
 
 turtle.set_defaults(turtle_canvas_wrapper=document['turtle-div'])
+
+def draw_square(t):
+    t.begin_fill()
+    for i in range(4):
+        t.forward(40)
+        t.left(90)
+    t.end_fill()
 
 for name,c,y in [(None, 'black', 200),  # same as "classic"
                  ("classic", 'blue', 150),
@@ -224,19 +211,25 @@ for name,c,y in [(None, 'black', 200),  # same as "classic"
                  ("circle", 'red', 50),
                  ("square", 'purple', 0),
                  ("triangle", 'brown', -50),
-                 ("turtle", 'green', -100)]:
+                 ("turtle", ('green', 'white'), -100)]:
     if name is not None:
         t = turtle.Turtle(name)
     else: 
         t = turtle.Turtle()
+        screen = t.getscreen()
+        screen.bgcolor('rgb(255, 255, 200)')
     t.penup()
-    t.color(c)
+    if len(c) == 2:
+        t.color(c[0], c[1])
+    else:
+        t.color(c)
     t.goto(-100, y)
     t.pendown()
-    t.forward(200)
+    draw_square(t)
     t.penup()
-    t.forward(50)
+    t.forward(100)
     t.stamp()
+screen.bgcolor('white')
 
 turtle.show()
 </div>
