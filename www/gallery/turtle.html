@@ -64,6 +64,9 @@ document["turtle-docstring"].text = turtle.__doc__
     max-width: 800px;
     font-style: italic;
   }
+  hr {
+    clear: both;
+  }
 
   pre#turtle-print-output {
     background-color: white;
@@ -96,9 +99,8 @@ document["turtle-docstring"].text = turtle.__doc__
 
 <body onload="brython(1)">
 <h1>Turtle demo</h1>
-<p>The following is the docstring of the turtle module.</p>
-<pre id='turtle-docstring'></pre>
-<hr>
+<p>A few demos. For some background information, scroll to the bottom over
+this page to view the turtle module docstring.</p>
 
 <p>Select the desired demo.
 <select id="demo_selector">
@@ -119,12 +121,17 @@ Note that the content is editable.
 
 <div id="turtle-div" style="float:left;border:1px solid green; margin-left:50px;"> </div>
 
+<hr>
+<p>The following is the docstring of the turtle module.</p>
+<pre id='turtle-docstring'></pre>
+
 <div id='demo1' style="display:none">'''
 Simple square drawing demo and writing text with all 
-default configuration values and also illustrating 
-various color modes.
+default configuration values except for the container 
+and also illustrating various color modes.
 '''
 import turtle
+turtle.set_defaults(turtle_canvas_wrapper=document['turtle-div'])
 
 t = turtle.Turtle()
 
@@ -162,11 +169,10 @@ turtle.set_defaults(
     canvwidth = 600,  # default is 500
     canvheight = 400,  # default is 500
     turtle_canvas_wrapper = document['turtle-div']
-  )
+)
 
 t = turtle.Turtle("turtle")
 t.width(3)
-t.speed(1)
 for c in ['red', 'blue', 'orange', 'green', 'purple', 'brown']:
     t.color(c)
     t.forward(100)
@@ -188,7 +194,7 @@ turtle.set_defaults(
     canvwidth = 600,  # default is 500
     canvheight = 400,  # default is 500
     turtle_canvas_wrapper = document['turtle-div']
-  )
+)
 
 t = turtle.Turtle("turtle")
 t.width(3)
@@ -210,27 +216,27 @@ turtle.show()
 Showing the available turtles.'''
 import turtle
 
-turtle.set_defaults(
-    turtle_canvas_wrapper = document['turtle-div']
-  )
+turtle.set_defaults(turtle_canvas_wrapper=document['turtle-div'])
 
 for name,c,y in [(None, 'black', 200),  # same as "classic"
                  ("classic", 'blue', 150),
                  ("arrow", 'orange', 100),
-                 ("circle", 'green', 50),
+                 ("circle", 'red', 50),
                  ("square", 'purple', 0),
                  ("triangle", 'brown', -50),
-                 ("turtle", 'red', -100)]:
+                 ("turtle", 'green', -100)]:
     if name is not None:
         t = turtle.Turtle(name)
     else: 
         t = turtle.Turtle()
-    t.speed(2)
     t.penup()
     t.color(c)
     t.goto(-100, y)
     t.pendown()
     t.forward(200)
+    t.penup()
+    t.forward(50)
+    t.stamp()
 
 turtle.show()
 </div>
@@ -265,7 +271,6 @@ t.write("right-aligned", align='right', font=("Courier", 20, "normal"))
 
 turtle.show()
 </div>
-
 
 </body>
 
