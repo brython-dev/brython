@@ -29,19 +29,46 @@ For objects that should appear all at once, we set the duration of
 the animation to a minimum value _CFG["min_duration"].
 '''
 
+
+# How is the canvas instantiated? ....
+# In class TurtleScreenBase, we use self._canvas which does not appear
+# to be instantiated anywhere within that class.  So, how does it appear?...
+# We create "._canvas" in _Root:
+#
+# class _Root:
+#     def setupcanvas(self, width, height):
+#         self._canvas = ...
+#
+# This is called in 
+#
+## class _Screen(TurtleScreen):
+#     _root = None
+#     _canvas = None
+#     def __init__(self):
+#         _Screen._root = self._root = _Root()
+#         _Screen._canvas = self._root._getcanvas()
+#         TurtleScreen.__init__(self, _Screen._canvas)
+#
+# and we have
+# class TurtleScreen(TurtleScreenBase):
+#
+#
+# So our _Screen instance, which has the ._canvas attribute,
+# inherits the methods from TurtleScreenBase which is why we can use that 
+# attribute there.
+
+
 import math
 import sys
 
 from browser import console, document, html, timer
 import _svg
 
-_CFG = {"width": 0.5,               # Screen
-        "height": 0.75,
-        "canvas_width": 500,
+_CFG = {"canvas_width": 500,
         "canvas_height": 500,
         "leftright": None,
         "topbottom": None,
-        "mode": "standard",          # TurtleScreen
+        "mode": "standard",
         "colormode": 1.0,
         "shape": "classic",
         "pencolor": "black",
@@ -114,18 +141,25 @@ class Vec2D(tuple):
 class _Root:
     """Root class for Screen based on using SVG."""
 
-    def setupcanvas(self, width, height, cwidth, cheight):
-        self._svg = _svg.svg(Id=_CFG["turtle_canvas_id"], width=cwidth, height=cheight)
+    def setupcanvas(self, width, height):
+        self._svg = _svg.svg(Id=_CFG["turtle_canvas_id"], width=width, height=height)
+
+        # Unlike html elements, svg elements have no concept of a z-index: each
+        # new element is drawn on top of each other.
+        # We thus need two canvases to be able to change the color of the
+        # background at any time in a given program.
+
         if _CFG['mode'] in ['logo', 'standard']:
-            self.background_canvas = _svg.g(transform="translate(%d,%d)" % (cwidth//2, cheight//2))
-            self._canvas = _svg.g(transform="translate(%d,%d)" % (cwidth//2, cheight//2))
+            self.background_canvas = _svg.g(transform="translate(%d,%d)" % (width//2, height//2))
+            self._canvas = _svg.g(transform="translate(%d,%d)" % (width//2, height//2))
         else:
-            self.background_canvas = _svg.g(transform="translate(0,%d)" % cheight)
-            self._canvas = _svg.g(transform="translate(0,%d)" % cheight)
+            self.background_canvas = _svg.g(transform="translate(0,%d)" % height)
+            self._canvas = _svg.g(transform="translate(0,%d)" % height)
         self._svg <= self.background_canvas
         self._svg <= self._canvas
 
     def end(self):
+        '''Ends the creation of a "scence" and has it displayed'''
         if _CFG["turtle_canvas_wrapper"] is None:
             _CFG["turtle_canvas_wrapper"] = html.DIV(Id="turtle-canvas-wrapper")
             document <= _CFG["turtle_canvas_wrapper"]
@@ -167,8 +201,7 @@ class TurtleScreenBase:
         self.canvas_width = cv.parentElement.width
         self.canvas_height = cv.parentElement.height
         self.xscale = self.yscale = 1.0
-
-        self.background_color = "white"  # FIXME: added by hand; need to set it up properly
+        self.background_color = "white"
 
     def _createpoly(self):
         """Create an invisible polygon item on canvas self.cv)
@@ -358,12 +391,15 @@ class TurtleScreenBase:
         """
         pass
 
-    def _bgcolor(self, color=None):
+    def _bgcolor(self, color=None, clear=False):
         """sets the background with the given color if color is not None,
-        else return current background color."""
+        else return current background color.
+  
+        If clear is set to True, draws on top of everything instead, 
+        to give the effect of clearing the canvas.
+        """
         if color is None:
             return self.background_color
-
         self.background_color = color
         width = _CFG['canvas_width']
         height = _CFG['canvas_height']
@@ -387,7 +423,10 @@ class TurtleScreenBase:
             an.setAttribute('begin', "animateLine%s.end" % (self.item_drawn_index-1))
         _rect <= an
 
-        self.background_canvas <=_rect
+        if clear:
+            self._canvas <= _rect 
+        else:
+            self.background_canvas <=_rect
 
 
     def _write(self, pos, txt, align, font, pencolor):
@@ -531,8 +570,7 @@ class TurtleScreen(TurtleScreenBase):
     """Provides screen oriented methods like setbg etc.
 
     Only relies upon the methods of TurtleScreenBase and NOT
-    upon components of the underlying graphics toolkit -
-    which is Tkinter in this case.
+    upon components of the underlying graphics toolkit.
     """
     _RUNNING = True
 
@@ -565,9 +603,15 @@ class TurtleScreen(TurtleScreenBase):
         self._mode = mode
         self._colormode = _CFG["colormode"]
         self._keys = []
-        self.clear()
+        # when initializing for the first time, we do not clear
+        # the foreground
+        self.clear(clear=False)
 
-    def clear(self):
+## Fixme: when clear is called to remove all items, 
+# it becomes impossible afterwards to change the background of the color.
+# A new way of clearing is needed.
+
+    def clear(self, clear=True):
         """Delete all drawings and all turtles from the TurtleScreen.
 
         No argument.
@@ -585,7 +629,7 @@ class TurtleScreen(TurtleScreenBase):
         self._bgpic = self._createimage("")
         self._bgpicname = "nopic"
         self._turtles = []
-        self.bgcolor("white")
+        self._bgcolor("white", clear=clear) # if clear==True, "white" covers everthing
         Turtle._pen = None
 
     def mode(self, mode=None):
@@ -2462,59 +2506,61 @@ class _Screen(TurtleScreen):
         if _Screen._root is None:
             _Screen._root = self._root = _Root()
         if _Screen._canvas is None:
-            width = _CFG["width"]
-            height = _CFG["height"]
             canvas_width = _CFG["canvas_width"]
             canvas_height = _CFG["canvas_height"]
             leftright = _CFG["leftright"]
             topbottom = _CFG["topbottom"]
-            self._root.setupcanvas(width, height, canvas_width, canvas_height)
+            self._root.setupcanvas(canvas_width, canvas_height)
             _Screen._canvas = self._root._getcanvas()
             _Screen.background_canvas = self._root._get_background_canvas()
             TurtleScreen.__init__(self, _Screen._canvas)
-            self.setup(width, height, leftright, topbottom)
+            # self.setup(width, height, leftright, topbottom)
 
     def end(self):
         self._root.end()
 
-    def setup(self, width=_CFG["width"], height=_CFG["height"],
-              startx=_CFG["leftright"], starty=_CFG["topbottom"]):
-        """ Set the size and position of the main window.
+#     def setup(self, width=_CFG["canvas_width"], height=_CFG["canvas_height"],
+#               startx=_CFG["leftright"], starty=_CFG["topbottom"]):
+#         """ Set the size and position of the main window.
 
-        Arguments:
-        width: as integer a size in pixels, as float a fraction of the screen.
-          Default is 50% of screen.
-        height: as integer the height in pixels, as float a fraction of the
-          screen. Default is 75% of screen.
-        startx: if positive, starting position in pixels from the left
-          edge of the screen, if negative from the right edge
-          Default, startx=None is to center window horizontally.
-        starty: if positive, starting position in pixels from the top
-          edge of the screen, if negative from the bottom edge
-          Default, starty=None is to center window vertically.
+# ### Needs to be re-implemented -currently ignored
 
-        Examples (for a Screen instance named screen):
-        >>> screen.setup (width=200, height=200, startx=0, starty=0)
+#         Arguments:
+#         width: as integer a size in pixels, as float a fraction of the screen.
+#           Default is 50% of screen.
+#         height: as integer the height in pixels, as float a fraction of the
+#           screen. Default is 75% of screen.
+#         startx: if positive, starting position in pixels from the left
+#           edge of the screen, if negative from the right edge
+#           Default, startx=None is to center window horizontally.
+#         starty: if positive, starting position in pixels from the top
+#           edge of the screen, if negative from the bottom edge
+#           Default, starty=None is to center window vertically.
 
-        sets window to 200x200 pixels, in upper left of screen
+#         Examples (for a Screen instance named screen):
+#         >>> screen.setup (width=200, height=200, startx=0, starty=0)
 
-        >>> screen.setup(width=.75, height=0.5, startx=None, starty=None)
+#         sets window to 200x200 pixels, in upper left of screen
 
-        sets window to 75% of screen by 50% of screen and centers
-        """
-        if not hasattr(self._root, "set_geometry"):
-            return
-        sw = self._root.canvas_width()
-        sh = self._root.canvas_height()
-        if isinstance(width, float) and 0 <= width <= 1:
-            width = sw*width
-        if startx is None:
-            startx = (sw - width) / 2
-        if isinstance(height, float) and 0 <= height <= 1:
-            height = sh*height
-        if starty is None:
-            starty = (sh - height) / 2
-        self._root.set_geometry(width, height, startx, starty)
+#         >>> screen.setup(width=.75, height=0.5, startx=None, starty=None)
+
+#         sets window to 75% of screen by 50% of screen and centers
+#         """
+#         if not hasattr(self._root, "set_geometry"):
+#             return
+
+
+#         sw = self._root.canvas_width()
+#         sh = self._root.canvas_height()
+#         if isinstance(width, float) and 0 <= width <= 1:
+#             width = sw*width
+#         if startx is None:
+#             startx = (sw - width) / 2
+#         if isinstance(height, float) and 0 <= height <= 1:
+#             height = sh*height
+#         if starty is None:
+#             starty = (sh - height) / 2
+#         self._root.set_geometry(width, height, startx, starty)
 
 
 class Turtle(RawTurtle):

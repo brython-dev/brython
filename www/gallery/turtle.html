@@ -44,42 +44,46 @@ def clear(ev):
 @document["demo_selector"].bind("change")
 def copy_content(ev):
     choice = document["demo_selector"].value
-    document["source"].text = document[choice].text
+    document["source"].text = document['demo'+ str(choice)].text
+    document["info"].html = document['info'+ str(choice)].html
     clear(ev)
 
 # Start with first demo
 document["source"].text = document["demo1"].text
-
-# Add up to date info 
-document["turtle-docstring"].text = turtle.__doc__
+document["info"].html = document["info1"].html
 </script>
 
 <style>
   pre {
+    max-width: 800px;    
+    overflow: auto;
+    word-break: normal !important;
+    word-wrap: normal !important;
+    white-space: pre !important;
+  }
+  pre#source {
     border: 1px solid blue;
     background-color:antiquewhite;
   }
   pre#turtle-docstring {
     background-color: white;
     max-width: 800px;
-    font-style: italic;
   }
   hr {
     clear: both;
   }
+  #info {
+    max-width: 800px;
+    border: 1px dotted black;
+  }
 
   pre#turtle-print-output {
-    background-color: white;
-    color: darkgreen;
+    background-color: black;
+    color: white;
     font-weight: bolder;
-    max-width: 800px;
     min-height: 50px;
     height: auto;
     max-height: 200px;
-    overflow: auto;
-    word-break: normal !important;
-    word-wrap: normal !important;
-    white-space: pre !important;
   }
 
   button {
@@ -99,18 +103,18 @@ document["turtle-docstring"].text = turtle.__doc__
 
 <body onload="brython(1)">
 <h1>Turtle demo</h1>
-<p>A few demos. For some background information, scroll to the bottom over
-this page to view the turtle module docstring.</p>
 
 <p>Select the desired demo.
 <select id="demo_selector">
-  <option value="demo1">Square with default turtle</option> 
-  <option value="demo2">Custom container and instant drawing</option>
-  <option value="demo4">All the turtles</option>
-  <option value="demo5">Writing samples</option>
+  <option value="1">Square with default turtle</option> 
+  <option value="2">Custom container and instant drawing</option>
+  <option value="3">All the turtles</option>
+  <option value="4">Writing samples</option>
+  <option value="5">OOP reference: Turtle move and draw</option>
 </select>
 Note that the content is editable.
 </p>
+<div id="info"></div>
 
 <p><button id="run">Run</button> <span id="status-info"></span> <button id="clear">Clear</button></p>
 <pre id="turtle-print-output"></pre>
@@ -120,16 +124,13 @@ Note that the content is editable.
 
 <div id="turtle-div" style="float:left;border:1px solid green; margin-left:50px;"> </div>
 
-<hr>
-<p>The following is the docstring of the turtle module.</p>
-<pre id='turtle-docstring'></pre>
-
-<div id='demo1' style="display:none">'''
+<div id='info1' style='display:none'>
 Simple square drawing demo and writing text with all 
 default configuration values except for the container 
 and also illustrating various color modes.
-'''
-import turtle
+</div>
+
+<div id='demo1' style="display:none">import turtle
 turtle.set_defaults(turtle_canvas_wrapper=document['turtle-div'])
 
 t = turtle.Turtle()
@@ -155,15 +156,16 @@ t.write("I love Brython!!", font=("Arial", 20, "normal"))
 turtle.done()
 </div>
 
-<div id='demo2' style="display:none">'''
+<div id='info2' style='display:none'>
 Changing default size and specifying existing html element as 
 container for the turtle canvas. This container is styled
 so as to have a green border.
 
 This is also meant as a test for the correct turtle orientation,
 and for demonstrating instant (fastest) drawing.
-'''
-import turtle
+</div>
+
+<div id='demo2' style="display:none">import turtle
 
 turtle.set_defaults(
     canvwidth = 600,  # default is 500
@@ -190,11 +192,13 @@ turtle.done()
 </div>
 
 
+<div id='info3' style='display:none'>
+Showing the available turtles, 
+how to use <code>stamp()</code> and
+how to change the background color.
+</div>
 
-<div id='demo4' style="display:none">'''
-Showing the available turtles, how to use stamp() and
-how to change the background color.'''
-import turtle
+<div id='demo3' style="display:none">import turtle
 
 turtle.set_defaults(turtle_canvas_wrapper=document['turtle-div'])
 
@@ -234,9 +238,11 @@ screen.bgcolor('white')
 turtle.done()
 </div>
 
-<div id='demo5' style="display:none">'''
-Showing some writing parameters.'''
-import turtle
+<div id='info4' style='display:none'>
+Demonstrating some writing parameters.
+</div>
+
+<div id='demo4' style="display:none">import turtle
 
 turtle.set_defaults(
     turtle_canvas_wrapper = document['turtle-div']
@@ -256,14 +262,133 @@ t.write("Left-aligned", align='left', font=("Verdana", 20, "italic"))
 
 t.goto(0, 100)
 t.color("blue")
-t.write("center-aligned", align='center', font=("Times Roman", 20, "oblique"))
+t.write("Center-aligned", align='center', font=("Times Roman", 20, "oblique"))
 
 t.goto(0, 150)
 t.color("green")
-t.write("right-aligned", align='right', font=("Courier", 20, "normal"))
+t.write("Right-aligned", align='right', font=("Courier", 20, "normal"))
 
 turtle.done()
 </div>
+
+<div id='info5' style='display:none'>
+  <h2>OOP version: comparison with CPython</h2>
+    <p><a href="https://docs.python.org/3/library/turtle.html#turtle-methods">Turtle motion: move and draw.</a></p>
+
+<h4>Move and draw</h4>
+<pre>
+forward() | fd()
+backward() | bk() | back()
+right() | rt()
+left() | lt()
+goto() | setpos() | setposition()
+setx()
+sety()
+setheading() | seth()
+home()
+circle()
+dot()
+stamp()
+speed()
+</pre>
+<pre class='error'>
+clearstamp() : not implemented
+clearstamps() : not implemented
+undo() : not implemented
+</pre>
+<h4>Tell Turtle’s state</h4>
+<pre>
+position() | pos()
+towards()
+xcor()
+ycor()
+heading()
+distance()</pre>
+<h4>Setting and measurement</h4>
+<pre>degrees()
+radians()
+</pre>
+</div>
+
+<div id='demo5' style="display:none">import turtle
+turtle.set_defaults(turtle_canvas_wrapper=document['turtle-div'])
+
+print("All expected values written rounded to nearest integer")
+
+t = turtle.Turtle("turtle")
+t.speed(1)
+t.forward(50)
+print("Should be (50, 0):", t.position())
+print("Should be 50: ", t.xcor())
+print("Should be 0: ", t.ycor())
+t.left(90)
+t.color("blue")
+t.speed(2)
+t.fd(50)
+
+
+print("Should be (50, 50):", t.pos())
+print("Should be 225: ", t.towards(0, 0))
+print("Should be 90: ", t.heading())
+print("Should be 71:", t.distance(0, 0))
+
+t.degrees(400)
+print("Should be 100: ", t.heading())
+t.radians()
+print("Should be Pi/2: ", t.heading())
+t.degrees()
+print("Should be 90: ", t.heading())
+
+t.lt(90)
+t.color("orange")
+t.backward(50)
+t.right(90)
+t.color("green")
+t.back(50)
+t.rt(90)
+t.color("red")
+t.bk(50)
+t.stamp()
+t.speed(4)
+
+t.color("black", "white")
+t.goto(-100, 100)
+t.stamp()
+t.color("blue", "yellow")
+t.setposition(0, 100)
+t.stamp()
+t.color("green", "white")
+t.setpos(100, 100)
+t.stamp()
+
+t.speed(10)
+t.color("orange")
+t.sety(-100)
+t.setx(-100)
+t.stamp()
+
+t.color("cyan")
+t.home()
+t.stamp()
+
+t.color("green")
+t.width(4)
+t.setheading(180)
+t.forward(150)
+t.seth(90)
+t.fd(20)
+
+t.dot(30, 'rgba(255, 0, 0, 0.2)')
+t.color('red')
+t.speed(0)
+t.forward(30)
+t.left(90)
+t.circle(30)
+
+turtle.done()
+</div>
+
+
 
 </body>
 
