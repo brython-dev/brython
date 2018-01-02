@@ -83,6 +83,7 @@ _CFG = {"canvas_width": 500,
 def set_defaults(**params):
     """Allows to override defaults."""
     _CFG.update(**params)
+    Screen(new_canvas=True)
 
 
 class Vec2D(tuple):
@@ -165,11 +166,12 @@ class _Root:
             document <= _CFG["turtle_canvas_wrapper"]
         if _CFG["turtle_canvas_id"] not in document:
             _CFG["turtle_canvas_wrapper"] <= self._svg
-
-        # need the following for chrome so that first few draw commands are viewed properly.
         def set_svg():
+        # need to have a delay for chrome so that first few draw commands are viewed properly.
             _CFG["turtle_canvas_wrapper"].html = _CFG["turtle_canvas_wrapper"].html
-        timer.set_timeout(set_svg, 1)
+        timer.set_timeout(set_svg, 1)  
+
+      
 
     def _getcanvas(self):
         return self._canvas
@@ -655,7 +657,11 @@ class TurtleScreen(TurtleScreenBase):
         'logo'
         """
         if mode is None:
-            return self._mode
+            try:
+                return self._mode
+            except:
+                self._mode = _CFG['mode']
+                return self._mode
         mode = mode.lower()
         if mode not in ["standard", "logo", "world"]:
             raise TurtleGraphicsError("No turtle-graphics-mode %s" % mode)
@@ -1504,6 +1510,11 @@ class TPen:
         self._shapetrafo = (1., 0., 0., 1.)
         self._outlinewidth = 1
 
+
+    def resizemode(self, rmode=None):
+        sys.stderr.write("Warning: TPen.resizemode() is not implemented.\n")
+
+
     def pensize(self, width=None):
         """Set or return the line thickness.
 
@@ -1982,10 +1993,8 @@ class RawTurtle(TPen, TNavigator):
 
     def _clear(self):
         """Delete all of pen's drawings"""
-        self._fillitem = self._fillpath = None
-        self.currentLine = []
-        if self._drawing:
-            self.currentLine.append(self._position)
+        sys.stderr.write("Warning: RawTurtle._clear() is not implemented.\n")
+
 
     def clear(self):
         """Delete the turtle's drawings from the screen. Do not move turtle.
@@ -1999,7 +2008,7 @@ class RawTurtle(TPen, TNavigator):
         Examples (for a Turtle instance named turtle):
         >>> turtle.clear()
         """
-        self._clear()
+        sys.stderr.write("Warning: RawTurtle.clear() is not implemented.\n")
 
 
     def _color(self, args):
@@ -2050,216 +2059,35 @@ class RawTurtle(TPen, TNavigator):
         self.turtle._setshape(name)
 
     def shapesize(self, stretch_wid=None, stretch_len=None, outline=None):
-        """Set/return turtle's stretchfactors/outline. 
-
-        Optional arguments:
-           stretch_wid : positive number
-           stretch_len : positive number
-           outline  : positive number
-
-        Return or set the pen's attributes x/y-stretchfactors and/or outline.
-        The turtle will be displayed
-        stretched according to its stretchfactors:
-        stretch_wid is stretchfactor perpendicular to orientation
-        stretch_len is stretchfactor in direction of turtles orientation.
-        outline determines the width of the shapes's outline.
-
-        Examples (for a Turtle instance named turtle):
-        >>> turtle.shapesize(5, 5, 12)
-        >>> turtle.shapesize(outline=8)
-        """
-        if stretch_wid is stretch_len is outline is None:
-            stretch_wid, stretch_len = self._stretchfactor
-            return stretch_wid, stretch_len, self._outlinewidth
-        if stretch_wid == 0 or stretch_len == 0:
-            raise TurtleGraphicsError("stretch_wid/stretch_len must not be zero")
-        if stretch_wid is not None:
-            if stretch_len is None:
-                stretchfactor = stretch_wid, stretch_wid
-            else:
-                stretchfactor = stretch_wid, stretch_len
-        elif stretch_len is not None:
-            stretchfactor = self._stretchfactor[0], stretch_len
-        else:
-            stretchfactor = self._stretchfactor
-        if outline is None:
-            outline = self._outlinewidth
-        self.pen(stretchfactor=stretchfactor, outline=outline)
+        sys.stderr.write("Warning: RawTurtle.shapesize() is not implemented.\n")
 
     def shearfactor(self, shear=None):
-        """Set or return the current shearfactor.
-
-        Optional argument: shear -- number, tangent of the shear angle
-
-        Shear the turtleshape according to the given shearfactor shear,
-        which is the tangent of the shear angle. DO NOT change the
-        turtle's heading (direction of movement).
-        If shear is not given: return the current shearfactor, i. e. the
-        tangent of the shear angle, by which lines parallel to the
-        heading of the turtle are sheared.
-
-        Examples (for a Turtle instance named turtle):
-        >>> turtle.shape("circle")
-        >>> turtle.shapesize(5,2)
-        >>> turtle.shearfactor(0.5)
-        >>> turtle.shearfactor()
-        >>> 0.5
-        """
-        if shear is None:
-            return self._shearfactor
-        self.pen(shearfactor=shear)
+        sys.stderr.write("Warning: RawTurtle.shearfactor() is not implemented.\n")
 
     def settiltangle(self, angle):
-        """Rotate the turtleshape to point in the specified direction
-
-        Argument: angle -- number
-
-        Rotate the turtleshape to point in the direction specified by angle,
-        regardless of its current tilt-angle. DO NOT change the turtle's
-        heading (direction of movement).
-
-
-        Examples (for a Turtle instance named turtle):
-        >>> turtle.shape("circle")
-        >>> turtle.shapesize(5,2)
-        >>> turtle.settiltangle(45)
-        >>> stamp()
-        >>> turtle.fd(50)
-        >>> turtle.settiltangle(-45)
-        >>> stamp()
-        >>> turtle.fd(50)
-        """
-        tilt = -angle * self._degreesPerAU * self._angleOrient
-        tilt = (tilt * math.pi / 180.0) % (2*math.pi)
-        self.pen(tilt=tilt)
+        sys.stderr.write("Warning: RawTurtle.settiltangle() is not implemented.\n")
 
     def tiltangle(self, angle=None):
-        """Set or return the current tilt-angle.
-
-        Optional argument: angle -- number
-
-        Rotate the turtleshape to point in the direction specified by angle,
-        regardless of its current tilt-angle. DO NOT change the turtle's
-        heading (direction of movement).
-        If angle is not given: return the current tilt-angle, i. e. the angle
-        between the orientation of the turtleshape and the heading of the
-        turtle (its direction of movement).
-
-        Deprecated since Python 3.1
-
-        Examples (for a Turtle instance named turtle):
-        >>> turtle.shape("circle")
-        >>> turtle.shapesize(5,2)
-        >>> turtle.tilt(45)
-        >>> turtle.tiltangle()
-        """
-        if angle is None:
-            tilt = -self._tilt * (180.0/math.pi) * self._angleOrient
-            return (tilt / self._degreesPerAU) % self._fullcircle
-        else:
-            self.settiltangle(angle)
+        sys.stderr.write("Warning: RawTurtle.tiltangle() is not implemented.\n")
 
     def tilt(self, angle):
-        """Rotate the turtleshape by angle.
-
-        Argument:
-        angle - a number
-
-        Rotate the turtleshape by angle from its current tilt-angle,
-        but do NOT change the turtle's heading (direction of movement).
-
-        Examples (for a Turtle instance named turtle):
-        >>> turtle.shape("circle")
-        >>> turtle.shapesize(5,2)
-        >>> turtle.tilt(30)
-        >>> turtle.fd(50)
-        >>> turtle.tilt(30)
-        >>> turtle.fd(50)
-        """
-        self.settiltangle(angle + self.tiltangle())
+        sys.stderr.write("Warning: RawTurtle.tilt() is not implemented.\n")
 
     def shapetransform(self, t11=None, t12=None, t21=None, t22=None):
-        """Set or return the current transformation matrix of the turtle shape.
-
-        Optional arguments: t11, t12, t21, t22 -- numbers.
-
-        If none of the matrix elements are given, return the transformation
-        matrix.
-        Otherwise set the given elements and transform the turtleshape
-        according to the matrix consisting of first row t11, t12 and
-        second row t21, 22.
-        Modify stretchfactor, shearfactor and tiltangle according to the
-        given matrix.
-
-        Examples (for a Turtle instance named turtle):
-        >>> turtle.shape("square")
-        >>> turtle.shapesize(4,2)
-        >>> turtle.shearfactor(-0.5)
-        >>> turtle.shapetransform()
-        (4.0, -1.0, -0.0, 2.0)
-        """
-        if t11 is t12 is t21 is t22 is None:
-            return self._shapetrafo
-        m11, m12, m21, m22 = self._shapetrafo
-        if t11 is not None:
-            m11 = t11
-        if t12 is not None:
-            m12 = t12
-        if t21 is not None:
-            m21 = t21
-        if t22 is not None:
-            m22 = t22
-        if t11 * t22 - t12 * t21 == 0:
-            raise TurtleGraphicsError("Bad shape transform matrix: must not be singular")
-        self._shapetrafo = (m11, m12, m21, m22)
-        alfa = math.atan2(-m21, m11) % (2 * math.pi)
-        sa, ca = math.sin(alfa), math.cos(alfa)
-        a11, a12, a21, a22 = (ca*m11 - sa*m21, ca*m12 - sa*m22,
-                              sa*m11 + ca*m21, sa*m12 + ca*m22)
-        self._stretchfactor = a11, a22
-        self._shearfactor = a12/a22
-        self._tilt = alfa
-
-    def _polytrafo(self, poly):
-        """Computes transformed polygon shapes from a shape
-        according to current position and heading.
-        """
-        screen = self.screen
-        p0, p1 = self._position
-        e0, e1 = self._orient
-        e = Vec2D(e0, e1 * screen.yscale / screen.xscale)
-        e0, e1 = (1.0 / abs(e)) * e
-        return [(p0+(e1*x+e0*y)/screen.xscale, p1+(-e0*x+e1*y)/screen.yscale)
-                for (x, y) in poly]
+        sys.stderr.write("Warning: RawTurtle.shapetransform() is not implemented.\n")
 
     def get_shapepoly(self):
         """Return the current shape polygon as tuple of coordinate pairs.
 
-        No argument.
-
-        Examples (for a Turtle instance named turtle):
-        >>> turtle.shape("square")
-        >>> turtle.shapetransform(4, -1, 0, 2)
-        >>> turtle.get_shapepoly()
-        ((50, -20), (30, 20), (-50, 20), (-30, -20))
-
+        No argument
         """
         shape = self.screen._shapes[self.turtle.shapeIndex]
         return shape._data
-        # if shape._type == "polygon":
-        #     return self._getshapepoly(shape._data, shape._type == "compound")
-        # else return None
-
-    def _getshapepoly(self, polygon, compound=False):
-        """Calculate transformed shape polygon according to shapetransform.
-        """
-        return polygon # much code removed
-
 
     def _drawturtle(self):
         """Manages the correct rendering of the turtle with respect to
         its shape, resizemode, stretch and tilt etc."""
-        return
+        sys.stderr.write("Warning: RawTurtle._drawturtle is not implemented.\n")
 
 
     def stamp(self):
@@ -2483,12 +2311,12 @@ RawPen = RawTurtle
 ###  Screen - Singleton  ########################
 
 
-def Screen():
+def Screen(new_canvas=False):
     """Return the singleton screen object.
-    If none exists at the moment, create a new one and return it,
-    else return the existing one."""
-    if Turtle._screen is None:
-        Turtle._screen = _Screen()
+    If none exists at the moment, or if a request has been made to add a
+    new canvas, create a new one and return it else return the existing one."""
+    if Turtle._screen is None or new_canvas:
+        Turtle._screen = _Screen(new_canvas=new_canvas)
     return Turtle._screen
 
 
@@ -2497,7 +2325,7 @@ class _Screen(TurtleScreen):
     _root = None
     _canvas = None
 
-    def __init__(self):
+    def __init__(self, new_canvas=False):
         # XXX there is no need for this code to be conditional,
         # as there will be only a single _Screen instance, anyway
         # XXX actually, the turtle demo is injecting root window,
@@ -2505,7 +2333,7 @@ class _Screen(TurtleScreen):
         # preserved (perhaps by passing it as an optional parameter)
         if _Screen._root is None:
             _Screen._root = self._root = _Root()
-        if _Screen._canvas is None:
+        if _Screen._canvas is None or new_canvas:
             canvas_width = _CFG["canvas_width"]
             canvas_height = _CFG["canvas_height"]
             leftright = _CFG["leftright"]
@@ -2564,7 +2392,7 @@ class _Screen(TurtleScreen):
 
 
 class Turtle(RawTurtle):
-    """RawTurtle auto-creating (scrolled) canvas.
+    """RawTurtle auto-creating canvas.
 
     When a Turtle object is created or a function derived from some
     Turtle method is called a TurtleScreen object is automatically created.
@@ -2602,6 +2430,13 @@ def done():
     "ends the computation and shows the current drawing"
     _Screen().end()
 
+def replay_scene():
+    "Start playing an animation by 'refreshing' the canvas."
+    if (_CFG["turtle_canvas_id"] in document and
+            document[_CFG["turtle_canvas_id"]] is not None):
+        element = document[_CFG["turtle_canvas_id"]]
+        element.parentNode.removeChild(element)  
+    _Screen().end()  
 
 def restart():
     "For Brython turtle: clears the existing drawing and canvas"
