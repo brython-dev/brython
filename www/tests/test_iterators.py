@@ -21,7 +21,7 @@ try:
     next(z)
 except StopIteration:
     pass
-    
+
 x = {'a':1,'b':2}
 z = iter(x)
 
@@ -73,5 +73,18 @@ assert str(x.__class__)=="<class 'generator'>"
 
 x = iter([1,2,3])
 assert str(x.__class__) == "<class 'list_iterator'>"
+
+# issue 742
+def test():
+    a = yield from X
+    if A:
+        pass
+    else:
+        pass
+
+X = range(5)
+A = True
+gen = test()
+assert list(gen) == list(range(5))
 
 print("passed all tests...")

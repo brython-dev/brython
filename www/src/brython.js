@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-12-31 14:23:01.370712"
+__BRYTHON__.compiled_date="2018-01-03 21:54:21.862863"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -2553,7 +2553,7 @@ this.toString=function(){return '(yield) '+(this.from ? '(from) ' : '')+this.tre
 this.transform=function(node,rank){if(this.from===true){
 var new_node=new $Node()
 new_node.locals=node.locals
-node.parent.children.splice(rank,1)
+if(this.parent.type!="assign"){node.parent.children.splice(rank,1)}
 node.parent.insert(rank,new_node)
 var for_ctx=new $ForExpr(new $NodeCtx(new_node))
 new $IdCtx(new $ExprCtx(for_ctx,'id',false),'$temp'+$loop_num)
@@ -3804,8 +3804,7 @@ if(token=='from'){
 if(C.tree[0].type!='abstract_expr'){
 $_SyntaxError(C,"'from' must follow 'yield'")}
 C.from=true
-C.tree=[]
-return new $AbstractExprCtx(C,true)}
+return C.tree[0]}
 return $transition(C.parent,token)}}
 $B.forbidden=['alert','arguments','case','catch','constructor','Date','delete','default','document','enum','eval','extends','Error','history','function','length','location','Math','new','null','Number','RegExp','super','this','throw','var','window','toLocaleString','toString','message']
 $B.aliased_names={}
@@ -7198,7 +7197,7 @@ var proto_str=proto.constructor.toString()
 name=proto_str.substring(8,proto_str.length-1)}
 return "<"+name+" object>"}
 return "<JSObject wraps "+self.js+">"}
-$JSObjectDict.__setattr__=function(self,attr,value){if(attr.substr(0,2)=='$$'){
+$JSObjectDict.__setattr__=function(self,attr,value){if(attr.substr && attr.substr(0,2)=='$$'){
 attr=attr.substr(2)}
 if(isinstance(value,JSObject)){self.js[attr]=value.js}
 else{self.js[attr]=value
