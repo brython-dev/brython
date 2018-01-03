@@ -384,7 +384,7 @@ $JSObjectDict.__repr__ = function(self){
 }
 
 $JSObjectDict.__setattr__ = function(self,attr,value){
-    if(attr.substr(0,2)=='$$'){
+    if(attr.substr && attr.substr(0,2)=='$$'){
         // aliased attribute names, eg "message"
         attr = attr.substr(2)
     }

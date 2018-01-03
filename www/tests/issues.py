@@ -1611,6 +1611,15 @@ def simple_coroutine():
 
 fut = simple_coroutine()
 assert fut.result() == 10
+
+# issue 744: Javascript objects should allow integer attribute names.
+from browser import window
+a = window.Uint8ClampedArray.new(10)
+
+for i in range(10):
+    a[i] = i
+    assert a[i] == i
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
