@@ -76,7 +76,8 @@ _CFG = {"canvas_width": 500,
         "visible": True,
         "turtle_canvas_wrapper": None,
         "turtle_canvas_id": "turtle-canvas",
-        "min_duration": "1ms"
+        "min_duration": "1ms",
+        "_debug": False
         }
 
 
@@ -1955,16 +1956,12 @@ class RawTurtle(TPen, TNavigator):
         TNavigator.__init__(self, screen.mode())
         TPen.__init__(self)
         screen._turtles.append(self)
-        #self.drawingLineItem = screen._createline()
         self.turtle = _TurtleImage(screen, shape)
         self._poly = None
         self._creatingPoly = False
         self._fillitem = self._fillpath = None
         self._shown = visible
         self._hidden_from_screen = False
-        #self.currentLineItem = screen._createline()
-        self.currentLine = [self._position]
-        # self.items = []  #[self.currentLineItem]
 
     def reset(self):
         """Delete the turtle's drawings and restore its default values.
@@ -1993,7 +1990,8 @@ class RawTurtle(TPen, TNavigator):
 
     def _clear(self):
         """Delete all of pen's drawings"""
-        sys.stderr.write("Warning: RawTurtle._clear() is not implemented.\n")
+        if _CFG["_debug"]:
+            sys.stderr.write("Warning: RawTurtle._clear() is not implemented.\n")
 
 
     def clear(self):
@@ -2087,7 +2085,8 @@ class RawTurtle(TPen, TNavigator):
     def _drawturtle(self):
         """Manages the correct rendering of the turtle with respect to
         its shape, resizemode, stretch and tilt etc."""
-        sys.stderr.write("Warning: RawTurtle._drawturtle is not implemented.\n")
+        if _CFG["_debug"]:
+            sys.stderr.write("Warning: RawTurtle._drawturtle is not implemented.\n")
 
 
     def stamp(self):

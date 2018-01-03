@@ -114,7 +114,7 @@ document["info"].html = document["info1"].html
     color: darkred;
     font-weight: bolder;
   }
-  .error {
+  .error, .not-implemented {
     color: red;
   }
   .hidden {
@@ -122,6 +122,9 @@ document["info"].html = document["info1"].html
   }
   .shown {
     display:inline;
+  }
+  .not-tested {
+    color: orange;
   }
 </style>
 
@@ -136,11 +139,14 @@ document["info"].html = document["info1"].html
   <option value="2">Custom container and instant drawing</option>
   <option value="3">All the turtles</option>
   <option value="4">Writing samples</option>
-  <option value="5">OOP reference: Turtle move and draw</option>
-  <option value="6">OOP reference: Pen control</option>
-  <option value="7">OOP reference: State, events and special methods</option>
-  <option value="8">Complex scene</option>
+  <option value="5">Complex scene</option>
+  <option value="6">OOP reference: Turtle move and draw</option>
+  <option value="7">OOP reference: Pen control</option>
+  <option value="8">OOP reference: State, events and special methods</option>
+  <option value="9">OOP reference: Methods of TurtleScreen/Screen</option>
+  <option value="10">Procedural version: comparison with CPython</option>
 </select>
+<br>
 Note that the content is editable.
 </p>
 <div id="info"></div>
@@ -156,14 +162,26 @@ Note that the content is editable.
 <div id="turtle-div" style="float:left;border:1px solid green; margin-left:50px;"> </div>
 
 <div id='info1' style='display:none'>
-Simple square drawing demo and writing text with all 
-default configuration values except for the container 
-and also illustrating various color modes.
+<h2>Simple demo</h2>
+<p>When you click on <b>Run</b>, Brython translates the Python code into 
+  Javascript, which is then being executed in a single thread. The end result of
+  turtle module computations is the creation of an aminated <em>scene</em> that
+  uses SVG. This scene is then added to the DOM so that it can be seen.</p>
+  <p>As soon as the scene has been created, the <b>Run</b> button will disappear
+  and two new buttons will appear: one to clear everything so that the program 
+  could be modified and executed again, and the second which can be used to show
+  the scene that was created as many times as desired, without requiring additional
+computation.</p>
+<p>When you select another demonstration, everything will be cleared automatically
+  without having to click on the <b>Clear</b> button.</p>
 </div>
 
 <div id='demo1' style="display:none">import turtle
-turtle.set_defaults(turtle_canvas_wrapper=document['turtle-div'])
-
+turtle.set_defaults(
+    canvas_width = 500,   # default
+    canvas_height = 500,  # default
+    turtle_canvas_wrapper = document['turtle-div']
+)
 t = turtle.Turtle()
 t.width(5)
 
@@ -189,12 +207,11 @@ turtle.done()
 </div>
 
 <div id='info2' style='display:none'>
-Changing default size and specifying existing html element as 
-container for the turtle canvas. This container is styled
-so as to have a green border.
+  <h2>Another simple demo</h2>
+  <p>In this demo, we change the default canvas size.
 
-This is also meant as a test for the correct turtle orientation,
-and for demonstrating instant (fastest) drawing.
+This demo was originally created as a test for the correct turtle orientation,
+and for demonstrating instant (fastest) drawing.</p>
 </div>
 
 <div id='demo2' style="display:none">import turtle
@@ -225,14 +242,18 @@ turtle.done()
 
 
 <div id='info3' style='display:none'>
-Showing the available turtles, 
-how to use <code>stamp()</code> and
-how to change the background color.
+  <h2>Yet another simple demo</h2>
+<p>This demo shows the available turtles, how to use <code>stamp()</code>, 
+and how to change the background color.</p>
 </div>
 
 <div id='demo3' style="display:none">import turtle
 
-turtle.set_defaults(turtle_canvas_wrapper=document['turtle-div'])
+turtle.set_defaults(
+    canvas_width = 500,   # default
+    canvas_height = 500,  # default
+    turtle_canvas_wrapper = document['turtle-div']
+)
 
 def draw_square(t):
     t.begin_fill()
@@ -271,14 +292,18 @@ turtle.done()
 </div>
 
 <div id='info4' style='display:none'>
-Demonstrating some writing parameters.
+  <h2>Writing demo</h2>
+<p>Demonstrating some writing parameters.</p>
 </div>
 
 <div id='demo4' style="display:none">import turtle
 
 turtle.set_defaults(
+    canvas_width = 500,   # default
+    canvas_height = 500,  # default
     turtle_canvas_wrapper = document['turtle-div']
-  )
+)
+
 t = turtle.Turtle()
 t.penup()
 
@@ -303,304 +328,18 @@ t.write("Right-aligned", align='right', font=("Courier", 20, "normal"))
 turtle.done()
 </div>
 
-<div id='info5' style='display:none'>
-  <h2>OOP version: comparison with CPython</h2>
-  <p>Note: anything dealing with removing items drawn on the screen does not 
-  make sense in this implementation of the turtle module.</p>
-  <p><a href="https://docs.python.org/3/library/turtle.html#turtle-methods" target="_blank">
-    Turtle motion: move and draw.</a> (link opens in new tab)</p>
-
-<h4>Move and draw</h4>
-<pre>
-forward() | fd()
-backward() | bk() | back()
-right() | rt()
-left() | lt()
-goto() | setpos() | setposition()
-setx()
-sety()
-setheading() | seth()
-home()
-circle()
-dot()
-stamp()
-speed()
-</pre>
-<pre class='error'>
-clearstamp() : not implemented
-clearstamps() : not implemented
-undo() : not implemented
-</pre>
-<h4>Tell Turtle’s state</h4>
-<pre>
-position() | pos()
-towards()
-xcor()
-ycor()
-heading()
-distance()</pre>
-<h4>Setting and measurement</h4>
-<pre>degrees()
-radians()
-</pre>
+<div id='info5' style="display:none">
+<h2>A complex scene</h2>
+<p>Other than setting some defaults, and calling <code>done()</code>
+  at the end, this demo has been copied code linked in  
+  <a href="https://www.reddit.com/r/Python/comments/7mo2l8/turtle_module_drawing_a_randomised_landscape/">
+  a post on reddit</a>, as a test to show that everything required had been 
+properly implemented in this version of the turtle module.</p>
+<p>Note that it takes of the order of 10 seconds to create the scene. If you
+  do miss seeing it being drawn at the end, simply click on <b>Replay scene</b>.</p>
 </div>
 
-<div id='demo5' style="display:none">import turtle
-turtle.set_defaults(turtle_canvas_wrapper=document['turtle-div'])
-
-print("All expected values written rounded to nearest integer")
-
-t = turtle.Turtle("turtle")
-t.speed(1)
-t.forward(50)
-print("Should be (50, 0):", t.position())
-print("Should be 50: ", t.xcor())
-print("Should be 0: ", t.ycor())
-t.left(90)
-t.color("blue")
-t.speed(2)
-t.fd(50)
-
-
-print("Should be (50, 50):", t.pos())
-print("Should be 225: ", t.towards(0, 0))
-print("Should be 90: ", t.heading())
-print("Should be 71:", t.distance(0, 0))
-
-t.degrees(400)
-print("Should be 100: ", t.heading())
-t.radians()
-print("Should be Pi/2: ", t.heading())
-t.degrees()
-print("Should be 90: ", t.heading())
-
-t.lt(90)
-t.color("orange")
-t.backward(50)
-t.right(90)
-t.color("green")
-t.back(50)
-t.rt(90)
-t.color("red")
-t.bk(50)
-t.stamp()
-t.speed(4)
-
-t.color("black", "white")
-t.goto(-100, 100)
-t.stamp()
-t.color("blue", "yellow")
-t.setposition(0, 100)
-t.stamp()
-t.color("green", "white")
-t.setpos(100, 100)
-t.stamp()
-
-t.speed(10)
-t.color("orange")
-t.sety(-100)
-t.setx(-100)
-t.stamp()
-
-t.color("cyan")
-t.home()
-t.stamp()
-
-t.color("green")
-t.width(4)
-t.setheading(180)
-t.forward(150)
-t.seth(90)
-t.fd(20)
-
-t.dot(30, 'rgba(255, 0, 0, 0.2)')
-t.color('red')
-t.speed(0)
-t.forward(30)
-t.left(90)
-t.circle(30)
-
-turtle.done()
-</div>
-
-<div id='info6' style='display:none'>
-  <h2>OOP version: comparison with CPython</h2>
-  <p>Note: anything dealing with removing items drawn on the screen does not 
-  make sense in this implementation of the turtle module.</p>
-    <p><a href="https://docs.python.org/3/library/turtle.html#turtle-methods" target="_blank">
-    Pen Control</a> (link opens in new tab)</p>
-
-<h4>Drawing state</h4>
-<pre>pendown() | pd() | down()
-penup() | pu() | up()
-pensize() | width()
-pen()
-isdown()
-</pre>
-
-<h4>Color control</h4>
-<pre>color()
-pencolor()
-fillcolor()
-</pre>
-<h4>More drawing control</h4>
-<pre>reset()
-write()
-</pre>
-<pre class='error'>clear() : not implemented
-</pre>
-</div>
-
-<div id='demo6' style="display:none">import turtle
-turtle.set_defaults(turtle_canvas_wrapper=document['turtle-div'])
-
-print("All expected values written rounded to nearest integer")
-
-t = turtle.Turtle("turtle")
-
-print("pendown() should be True: ", t.isdown())
-t.fd(50)
-t.penup()
-print("pendown() should be False: ", t.isdown())
-t.fd(50)
-
-t.left(90)
-
-t.color("blue", "yellow")
-t.pd()
-t.fd(50)
-t.pu()
-t.fd(50)
-t.stamp()
-
-t.left(90)
-
-t.pencolor("green")
-t.fillcolor("orange")  # see the turtle body
-t.down()
-t.fd(50)
-t.up()
-t.fd(50)
-t.stamp()
-
-t.goto(-50, -100)
-
-t.write("The turtle module is cool!", font=("Arial", 20, "normal"))
-
-print("About to call reset()")
-t.reset()  # black turtle, at origin
-t.left(90)
-t.fd(50)
-t.stamp()
-
-print("About to call clear()")
-t.clear()
-
-turtle.done()
-</div>
-
-
-
-<div id='info7' style='display:none'>
-  <h2>OOP version: comparison with CPython</h2>
-  <p>Note: anything dealing with removing items drawn on the screen does not 
-  make sense in this implementation of the turtle module.</p>
-    <p><a href="https://docs.python.org/3/library/turtle.html#turtle-methods" target="_blank">
-    Turtle state, using events, and special methods</a> (link opens in new tab)</p>
-
-<h3>Turtle state</h3>
-<h4>Visibility</h4>
-
-<pre>showturtle() | st()
-hideturtle() | ht()
-isvisible()
-</pre>
-
-<h4>Appearance</h4>
-<pre>shape()
-resizemode()
-shapesize() | turtlesize()
-shearfactor()
-settiltangle()
-tiltangle()
-tilt()
-shapetransform()
-get_shapepoly()
-</pre>
-
-
-<h3>Using events</h3>
-<p>Events are not implemented</p>
-<pre class="error">onclick(): not implemented
-onrelease(): not implemented
-ondrag(): not implemented
-</pre>
-
-<h3>Special Turtle methods</h3>
-
-<pre>begin_poly()
-end_poly()
-get_poly()
-clone()
-getturtle() | getpen()
-getscreen()</pre>
-
-<pre class="error">setundobuffer(): not implemented
-undobufferentries(): not implemented
-</pre>
-</div>
-
-<div id='demo7' style="display:none">import turtle
-turtle.set_defaults(turtle_canvas_wrapper=document['turtle-div'])
-
-t = turtle.Turtle("turtle")
-t.speed(1)
-
-t.hideturtle()
-t.forward(100)
-t.left(90)
-print("Turtle hidden; isvisible(): ", t.isvisible())
-
-t.showturtle()
-t.forward(100)
-t.left(90)
-print("Turtle not hidden; isvisible(): ", t.isvisible())
-
-t.ht()
-t.forward(100)
-t.left(90)
-
-t.st()
-t.forward(120)
-t.left(90)
-
-t.shape("triangle")
-t.fd(100)
-
-# not implemented methods
-t.resizemode()
-t.shapesize()
-t.turtlesize()
-t.shearfactor()
-t.settiltangle(0)
-t.tiltangle(0)
-t.tilt(0)
-t.shapetransform()
-
-print("Coordinates of triangle shape: ", t.get_shapepoly())
-
-turtle.done()
-</div>
-
-
-<div id='info8' style="display:none">
-
-Complex scene from a post on reddit.
-
-  https://www.reddit.com/r/Python/comments/7mo2l8/turtle_module_drawing_a_randomised_landscape/
-</div>
-
-<div id='demo8' style="display:none">
+<div id='demo5' style="display:none">
 # Example from reddit post
 from turtle import Turtle, done, set_defaults
 from random import randint
@@ -608,6 +347,7 @@ from random import randint
 set_defaults(
     canvas_width = 650,
     canvas_height = 650,
+    debug = False,
     turtle_canvas_wrapper = document['turtle-div']
 )
 
@@ -998,6 +738,415 @@ drawtrees()
 cutdraw() #cuts off the edges
 
 done()
+</div>
+
+<div id='info6' style='display:none'>
+  <h2>OOP version: comparison with CPython</h2>
+  <p>All of the implemented methods listed below are called at least once
+  in the demonstration program.</p>
+  <p>Due to the way that a scene is constructed, anything dealing with 
+    removing items drawn on the screen does not 
+  make sense in this implementation of the turtle module.</p>
+  <p>In general, when a "public" non-implemented method is called, a warning
+  is written on stderr. With debug mode turned on, such warnings are also
+  printed for private methods (whose name starts with an underscore)
+  <p>Reference: <a href="https://docs.python.org/3/library/turtle.html#turtle-methods" target="_blank">
+    Turtle motion: move and draw.</a> (link opens in new tab)</p>
+
+<h4>Move and draw</h4>
+<pre>
+forward() | fd()
+backward() | bk() | back()
+right() | rt()
+left() | lt()
+goto() | setpos() | setposition()
+setx()
+sety()
+setheading() | seth()
+home()
+circle()
+dot()
+stamp()
+<span class='not-implemented'>
+clearstamp() : not implemented
+clearstamps() : not implemented
+undo() : not implemented
+</span>
+speed()
+</pre>
+<h4>Tell Turtle’s state</h4>
+<pre>
+position() | pos()
+towards()
+xcor()
+ycor()
+heading()
+distance()</pre>
+<h4>Setting and measurement</h4>
+<pre>degrees()
+radians()
+</pre>
+</div>
+
+<div id='demo6' style="display:none">import turtle
+turtle.set_defaults(
+    canvas_width = 500,   # default
+    canvas_height = 500,  # default
+    _debug = True,
+    turtle_canvas_wrapper = document['turtle-div']
+)
+
+
+t = turtle.Turtle("turtle")
+t.speed(1)
+t.forward(50)
+print("Should be (50, 0):", t.position())
+print("Should be 50: ", t.xcor())
+print("Should be 0: ", t.ycor())
+t.left(90)
+t.color("blue")
+t.speed(2)
+t.fd(50)
+
+
+print("Should be (50, 50):", t.pos())
+print("Should be 225: ", t.towards(0, 0))
+print("Should be 90: ", t.heading())
+print("Should be 71:", t.distance(0, 0))
+
+t.degrees(400)
+print("Should be 100: ", t.heading())
+t.radians()
+print("Should be Pi/2: ", t.heading())
+t.degrees()
+print("Should be 90: ", t.heading())
+
+t.lt(90)
+t.color("orange")
+t.backward(50)
+t.right(90)
+t.color("green")
+t.back(50)
+t.rt(90)
+t.color("red")
+t.bk(50)
+t.stamp()
+t.speed(4)
+
+t.color("black", "white")
+t.goto(-100, 100)
+t.stamp()
+t.color("blue", "yellow")
+t.setposition(0, 100)
+t.stamp()
+t.color("green", "white")
+t.setpos(100, 100)
+t.stamp()
+
+t.speed(10)
+t.color("orange")
+t.sety(-100)
+t.setx(-100)
+t.stamp()
+
+t.color("cyan")
+t.home()
+t.stamp()
+
+t.color("green")
+t.width(4)
+t.setheading(180)
+t.forward(150)
+t.seth(90)
+t.fd(20)
+
+t.dot(30, 'rgba(255, 0, 0, 0.2)')
+t.color('red')
+t.speed(0)
+t.forward(30)
+t.left(90)
+t.circle(30)
+
+turtle.done()
+</div>
+
+<div id='info7' style='display:none'>
+  <h2>OOP version: comparison with CPython</h2>
+  <p>Note: anything dealing with removing items drawn on the screen does not 
+  make sense in this implementation of the turtle module.</p>
+    <p><a href="https://docs.python.org/3/library/turtle.html#turtle-methods" target="_blank">
+    Pen Control</a> (link opens in new tab)</p>
+
+<h4>Drawing state</h4>
+<pre>pendown() | pd() | down()
+penup() | pu() | up()
+pensize() | width()
+pen()
+isdown()
+</pre>
+
+<h4>Color control</h4>
+<pre>color()
+pencolor()
+fillcolor()
+</pre>
+<h4>More drawing control</h4>
+<pre>reset()
+<span class='not-implemented'>clear() : not implemented</span>
+write()
+</pre>
+</div>
+
+<div id='demo7' style="display:none">import turtle
+turtle.set_defaults(
+    canvas_width = 500,   # default
+    canvas_height = 500,  # default,
+    _debug = True,
+    turtle_canvas_wrapper = document['turtle-div']
+)
+
+
+t = turtle.Turtle("turtle")
+
+print("pendown() should be True: ", t.isdown())
+t.fd(50)
+t.penup()
+print("pendown() should be False: ", t.isdown())
+t.fd(50)
+
+t.left(90)
+
+t.color("blue", "yellow")
+t.pd()
+t.fd(50)
+t.pu()
+t.fd(50)
+t.stamp()
+
+t.left(90)
+
+t.pencolor("green")
+t.fillcolor("orange")  # see the turtle body
+t.down()
+t.fd(50)
+t.up()
+t.fd(50)
+t.stamp()
+
+t.goto(-50, -100)
+
+t.write("The turtle module is cool!", font=("Arial", 20, "normal"))
+
+print("About to call reset()")
+t.reset()  # black turtle, at origin
+t.left(90)
+t.fd(50)
+t.stamp()
+
+print("About to call clear()")
+t.clear()
+
+turtle.done()
+</div>
+
+
+<div id='info8' style='display:none'>
+  <h2>OOP version: comparison with CPython</h2>
+  <p>Note: anything dealing with removing items drawn on the screen does not 
+  make sense in this implementation of the turtle module.</p>
+    <p><a href="https://docs.python.org/3/library/turtle.html#turtle-methods" target="_blank">
+    Turtle state, using events, and special methods</a> (link opens in new tab)</p>
+
+<h3>Turtle state</h3>
+<h4>Visibility</h4>
+
+<pre>showturtle() | st()
+hideturtle() | ht()
+isvisible()
+</pre>
+
+<h4>Appearance</h4>
+<pre><span class='not-tested'>shape()
+resizemode()
+shapesize() | turtlesize()
+shearfactor()
+settiltangle()
+tiltangle()
+tilt()
+shapetransform()
+get_shapepoly()
+</span>
+</pre>
+
+
+<h3>Using events</h3>
+<p>Events are not implemented.</p>
+<pre class="not-implemented">onclick(): not implemented
+onrelease(): not implemented
+ondrag(): not implemented
+</pre>
+
+<h3>Special Turtle methods</h3>
+
+<pre><span class='not-tested'>begin_poly()
+end_poly()
+get_poly()
+clone()
+getturtle() | getpen()
+getscreen()
+</span>
+<span class='not-implemented'>setundobuffer(): not implemented
+undobufferentries(): not implemented
+</span>
+</pre>
+</div>
+
+<div id='demo8' style="display:none">import turtle
+turtle.set_defaults(
+    canvas_width = 500,   # default
+    canvas_height = 500,  # default
+    turtle_canvas_wrapper = document['turtle-div']
+)
+
+t = turtle.Turtle("turtle")
+t.speed(1)
+
+t.hideturtle()
+t.forward(100)
+t.left(90)
+print("Turtle hidden; isvisible(): ", t.isvisible())
+
+t.showturtle()
+t.forward(100)
+t.left(90)
+print("Turtle not hidden; isvisible(): ", t.isvisible())
+
+t.ht()
+t.forward(100)
+t.left(90)
+
+t.st()
+t.forward(120)
+t.left(90)
+
+t.shape("triangle")
+t.fd(100)
+
+# not implemented methods
+t.resizemode()
+t.shapesize()
+t.turtlesize()
+t.shearfactor()
+t.settiltangle(0)
+t.tiltangle(0)
+t.tilt(0)
+t.shapetransform()
+
+print("Coordinates of triangle shape: ", t.get_shapepoly())
+
+turtle.done()
+</div>
+
+
+<div id='info9' style='display:none'>
+  <h2>OOP version: comparison with CPython</h2>
+  <p>Note: anything dealing with removing items drawn on the screen does not 
+  make sense in this implementation of the turtle module.</p>
+    <p><a href="https://docs.python.org/3/library/turtle.html#turtle-methods" target="_blank">
+    Methods of TurtleScreen/Screen</a> (link opens in new tab)</p>
+
+<h3>Window control</h3>
+<pre>
+  <span class='not-tested'>
+bgcolor()
+bgpic()
+clear() | clearscreen()
+reset() | resetscreen()
+screensize()
+setworldcoordinates()
+</span>
+</pre>
+<h3>Animation control</h3>
+<pre>
+<span class='not-tested'>
+delay()
+tracer()
+update()
+</span>
+</pre>
+<h3>Using screen events</h3>
+<pre>
+  <span class='not-tested'>
+listen()
+onkey() | onkeyrelease()
+onkeypress()
+onclick() | onscreenclick()
+ontimer()
+mainloop() | done()
+</span>
+</pre>
+<h3>Settings and special methods</h3>
+<pre>
+  <span class='not-tested'>
+mode()
+colormode()
+getcanvas()
+getshapes()
+register_shape() | addshape()
+turtles()
+window_height()
+window_width()
+</span>
+</pre>
+<h3>Input methods</h3>
+<pre>
+<span class='not-implemented'>
+textinput(): not implemented
+numinput(): not implemented
+</span>
+</pre>
+<h3>Methods specific to Screen</h3>
+<pre>
+  <span class="not-tested">
+bye()
+exitonclick()
+setup()
+title()
+</span>
+</pre>
+</div>
+
+<div id='demo9' style="display:none">import turtle
+turtle.set_defaults(
+    canvas_width = 500,   # default
+    canvas_height = 500,  # default
+    turtle_canvas_wrapper = document['turtle-div']
+)
+
+t = turtle.Turtle("turtle")
+</div>
+
+<div id='info10' style='display:none'>
+  <h2>Procedural version: comparison with CPython</h2>
+  <p span='not-implemented'>The information below is currently wrong: none of the function has 
+  been implemented.</p>
+  <p> All implemented methods from the 
+      <a href="https://docs.python.org/3/library/turtle.html#turtle-methods" target="_blank">
+    CPython version</a> should also be available as functions.
+   We do not list them all nor test them all here, but chose a representative
+   sample for a demo.
+  </p>
+  <p>If you find a missing function, please file an issue.</p>
+</div>
+
+<div id='demo10' style="display:none">from turtle import *
+turtle.set_defaults(
+    canvas_width = 500,   # default
+    canvas_height = 500,  # default
+    turtle_canvas_wrapper = document['turtle-div']
+)
+
+# Code to be written once the functions have been implemented.
 </div>
 
 </body>
