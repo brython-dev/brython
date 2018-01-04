@@ -211,12 +211,12 @@ class TurtleScreenBase:
         self.background_color = "white"
 
     def _createpoly(self):
-        """Create an invisible polygon item on canvas self.cv)
+        """Create an invisible polygon item on canvas self.cv
         """
         pass
 
     def _convert_coordinates(self, x, y):
-        """TIn the browser,
+        """In the browser,
            the increasing y-coordinate is towards the bottom of the screen;
            this is the opposite of what is assumed normally for the methods
            in the CPython turtle module.
@@ -264,7 +264,7 @@ class TurtleScreenBase:
     def _drawline(self, _turtle, coordlist=None,
                   color=None, width=1, speed=None):
         """Draws an animated line with a turtle
-            - coordlist is the end coordinates of the line
+            - coordlist is the egin and end coordinates of the line
             - color should include the current outline and fill colors;
             - width is width of line to be drawn.
             - speed is the animation speed
@@ -285,8 +285,7 @@ class TurtleScreenBase:
         x0, y0 = self._convert_coordinates(x0, y0)
         x1, y1 = self._convert_coordinates(x1, y1)
 
-
-        # The speed scale does not correspond exactly to the Cpython one...
+        # The speed scale does not correspond exactly to the CPython one...
         if speed == 0:
             duration = _CFG["min_duration"]
         else:
@@ -336,27 +335,18 @@ class TurtleScreenBase:
         if _turtle.isvisible():
             _shape = ["%s,%s" % self._convert_coordinates(_x, _y)
                             for _x, _y in _turtle.get_shapepoly()]
-            self._draw_turtle(_turtle.heading(), fill, outline, 
-                              x0, y0, x1, y1, _shape, duration)
+            self._draw_moving_turtle(_turtle.heading(), outline, fill, 
+                                     x0, y0, x1, y1, _shape, duration)
 
         self._previous_turtle_attributes[_turtle] = _turtle
 
         self._canvas <= _line
 
 
-    def _draw_turtle(self, heading, fill, outline, x0, y0, x1, y1, 
+    def _draw_moving_turtle(self, heading, outline, fill, x0, y0, x1, y1, 
                      _shape, duration):
-        if self.mode() == 'standard' or self.mode() == 'world':
-            rotation = 90 - heading
-        elif self.mode() == 'logo':
-            rotation = heading
-        else:  # should not happen
-            console.log("Unknown mode when drawing turtle, mode=", self.mode())
-            rotation = 90 - heading
-        _turtle = _svg.polygon(points=" ".join(_shape),
-                               transform="rotate(%s)" % rotation,
-                               style={'stroke': outline, 'fill': fill,
-                                      'stroke-width': 1, 'display': 'none'})
+        '''draws a moving turtle'''
+        _turtle = self._create_turtle(heading, outline, fill, _shape)
 
         _turtle <= _svg.animateMotion(From="%s,%s" % (x0, y0),
                                       to="%s,%s" % (x1, y1),
@@ -370,13 +360,8 @@ class TurtleScreenBase:
         self._canvas <= _turtle
 
 
-    def _stamp(self, shape_data, x, y, heading, color):
-        '''draws a permanent copy of the turtle at its current location'''
-        self.item_drawn_index += 1
-        shape = ["%s,%s" % self._convert_coordinates(_x, _y)
-                                for _x, _y in shape_data]
-        x, y = self._convert_coordinates(x, y)
-
+    def _create_turtle(self, heading, outline, fill, _shape, translate=''):
+        '''create a turtle ready to be drawn'''
         if self.mode() == 'standard' or self.mode() == 'world':
             rotation = 90 - heading
         elif self.mode() == 'logo':
@@ -385,11 +370,21 @@ class TurtleScreenBase:
             console.log("Unknown mode when drawing turtle, mode=", self.mode())
             rotation = 90 - heading
 
-        _turtle = _svg.polygon(points=" ".join(shape),
-                               transform="translate(%s, %s) rotate(%s)" % (x, y, rotation),
-                               style={'stroke': color[0], 'fill': color[1],
-                                      'stroke-width': 1, 'display': 'none'})
+        transform = translate + "rotate(%s)" % rotation
+        return _svg.polygon(points=" ".join(_shape), transform=transform,
+                            style={'stroke': outline, 'fill': fill,
+                                   'stroke-width': 1, 'display': 'none'})
 
+
+    def _stamp(self, shape_data, x, y, heading, color):
+        '''draws a permanent copy of the turtle at its current location'''
+        shape = ["%s,%s" % self._convert_coordinates(_x, _y)
+                                for _x, _y in shape_data]
+        x, y = self._convert_coordinates(x, y)
+        _turtle = self._create_turtle(heading, color[0], color[1], shape, 
+                                      translate="translate(%s, %s) " % (x, y))
+
+        self.item_drawn_index += 1
         an = _svg.animate(Id="animateLine%s" % self.item_drawn_index,
                               attributeName="display", attributeType="CSS",
                               From="block", to="block", dur=_CFG["min_duration"],
