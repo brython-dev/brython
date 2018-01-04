@@ -262,80 +262,91 @@ class TurtleScreenBase:
 
 
     def _drawline(self, _turtle, coordlist=None,
-                  color=None, width=None, speed=None):
+                  color=None, width=1, speed=None):
         """Draws an animated line with a turtle
             - coordlist is the end coordinates of the line
             - color should include the current outline and fill colors;
             - width is width of line to be drawn.
             - speed is the animation speed
         """
+        if coordlist is None:
+            sys.stderr.write("Problem: coordlist is None in call to _drawline .\n")
+            return
+
         if color is not None:
             outline = color[0]
             fill = color[1]
         else:
             outline = fill = "black"
-        if width is None:
-            width = 1
 
-        if coordlist is not None:
-            _x0, _y0 = coordlist[0]
-            _x1, _y1 = coordlist[1]
+        x0, y0 = coordlist[0]
+        x1, y1 = coordlist[1]
 
-            _dist = math.sqrt((_x0-_x1)*(_x0-_x1) + (_y0-_y1)*(_y0-_y1))
+        x0, y0 = self._convert_coordinates((x0, y0))
+        x1, y1 = self._convert_coordinates((x1, y1))
 
-            if speed is not None:
-                if speed == 0:
-                    _dur = _CFG["min_duration"]
-                else:
-                    _dist /= (speed/2)
-                    _dur = "%6.3fs" % (0.01*_dist)
+
+        # The speed scale does not correspond exactly to the Cpython one...
+        if speed == 0:
+            duration = _CFG["min_duration"]
+        else:
+            dist= math.sqrt((x0-x1)*(x0-x1) + (y0-y1)*(y0-y1))
+            if speed is None or speed == 1:
+                duration = 0.02 * dist
             else:
-                _dur = "%6.3fs" % (0.01*_dist)
+                duration = 0.02 * dist / speed ** 1.2
+            if duration < 0.001:
+                duration = _CFG["min_duration"]
+            else:
+                duration = "%6.3fs" % duration
 
-            if _dur == '0.000s':
-                _dur = _CFG["min_duration"]
+        self.item_drawn_index += 1
 
-            self.item_drawn_index += 1
+        _line = _svg.line(x1=x0*self.xscale, y1=y0*self.yscale,
+                          x2=x0*self.xscale, y2=y0*self.yscale,
+                          style={'stroke': outline, 'stroke-width': width})
 
+        if not _turtle._drawing:
+            _line.setAttribute('opacity', 0)
+
+        _an1 = _svg.animate(Id="animateLine%s" % self.item_drawn_index,
+                            attributeName="x2", attributeType="XML",
+                            From=x0*self.xscale, to=x1*self.xscale,
+                            dur=duration, fill='freeze')
+
+        _an2 = _svg.animate(attributeName="y2", attributeType="XML",
+                            begin="animateLine%s.begin" % self.item_drawn_index,
+                            From=y0*self.yscale, to=y1*self.yscale,
+                            dur=duration, fill='freeze')
+
+
+        if _turtle.isvisible():
             _shape = ["%s,%s" % self._convert_coordinates((_x, _y))
-                                for _x, _y in _turtle.get_shapepoly()]
+                            for _x, _y in _turtle.get_shapepoly()]
+            self._draw_turtle(_turtle.heading(), fill, outline, 
+                              x0, y0, x1, y1, _shape, duration)
 
-            _x0, _y0 = self._convert_coordinates((_x0, _y0))
-            _x1, _y1 = self._convert_coordinates((_x1, _y1))
+        self._previous_turtle_attributes[_turtle] = _turtle
 
-            _line = _svg.line(x1=_x0*self.xscale, y1=_y0*self.yscale,
-                              x2=_x0*self.xscale, y2=_y0*self.yscale,
-                              style={'stroke': outline, 'stroke-width': width,
-                                     'stroke-linecap': 'round'})
+        if self.item_drawn_index == 1:
+            _an1.setAttribute('begin', "0s")
+        else:
+            _an1.setAttribute('begin', "animateLine%s.end" % (self.item_drawn_index-1))
 
-            _an1 = _svg.animate(Id="animateLine%s" % self.item_drawn_index,
-                                attributeName="x2", attributeType="XML",
-                                From=_x0*self.xscale, to=_x1*self.xscale,
-                                dur=_dur, fill='freeze')
+        _line <= _an1
+        _line <= _an2
 
-            _an2 = _svg.animate(attributeName="y2", attributeType="XML",
-                                begin="animateLine%s.begin" % self.item_drawn_index,
-                                From=_y0*self.yscale, to=_y1*self.yscale,
-                                dur=_dur, fill='freeze')
+        if width > 2 :
+            _line_cap = _svg.set(attributeName="stroke-linecap", 
+                begin="animateLine%s.begin" % self.item_drawn_index,
+                attributeType="xml", to="round", dur=duration, fill='freeze')
+            _line <= _line_cap
 
-            if _turtle.isvisible():
-                self._draw_turtle(_turtle.heading(), fill, outline, 
-                                  _x0, _y0, _x1, _y1, _shape, _dur)
-
-            self._previous_turtle_attributes[_turtle] = _turtle
-
-            if self.item_drawn_index == 1:
-                _an1.setAttribute('begin', "0s")
-            else:
-                _an1.setAttribute('begin', "animateLine%s.end" % (self.item_drawn_index-1))
-
-            _line <= _an1
-            _line <= _an2
-            self._canvas <= _line
+        self._canvas <= _line
 
 
-    def _draw_turtle(self, heading, fill, outline, _x0, _y0, _x1, _y1, 
-                     _shape, _dur):
+    def _draw_turtle(self, heading, fill, outline, x0, y0, x1, y1, 
+                     _shape, duration):
         if self.mode() == 'standard' or self.mode() == 'world':
             rotation = 90 - heading
         elif self.mode() == 'logo':
@@ -348,9 +359,9 @@ class TurtleScreenBase:
                                style={'stroke': outline, 'fill': fill,
                                       'stroke-width': 1, 'display': 'none'})
 
-        _turtle <= _svg.animateMotion(From="%s,%s" % (_x0*self.xscale, _y0*self.yscale),
-                                      to="%s,%s" % (_x1*self.xscale, _y1*self.yscale),
-                                      dur=_dur, begin="animateLine%s.begin" % self.item_drawn_index)
+        _turtle <= _svg.animateMotion(From="%s,%s" % (x0*self.xscale, y0*self.yscale),
+                                      to="%s,%s" % (x1*self.xscale, y1*self.yscale),
+                                      dur=duration, begin="animateLine%s.begin" % self.item_drawn_index)
 
         _turtle <= _svg.set(attributeName="display", attributeType="CSS",
                             to="block",
@@ -2122,11 +2133,10 @@ class RawTurtle(TPen, TNavigator):
         on this one.
         """
         if self._speed is not None:
-            if self._drawing:
-                self.screen._drawline(self,  # please remove me eventually
-                                      (self._position, end),
-                                      self.color(), self._pensize,
-                                      self._speed)
+            self.screen._drawline(self,  # please remove me eventually
+                                  (self._position, end),
+                                  self.color(), self._pensize,
+                                  self._speed)
 
         if hasattr(self._fillpath, 'append'):
             self._fillpath.append(end)

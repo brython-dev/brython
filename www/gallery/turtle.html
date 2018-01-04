@@ -7,6 +7,7 @@
 
 <script id="python_script" type="text/python">
 import sys
+import traceback
 from browser import document, timer
 
 def inform(*args):
@@ -26,15 +27,18 @@ def clear_print():
 @document["run"].bind("click")
 def run_code(ev):
     inform("Processing")
-    document["run"].class_name = 'hidden'
+    document["run"].class_name = 'btn-disabled'
     # delay to allow updated DOM with above text to be shown.
     timer.set_timeout(exec_code, 1)
 
 def exec_code():
     _code= document["source"].text 
-    exec(_code)
-    document["clear"].class_name = 'shown'
-    document["replay-scene"].class_name = 'shown'
+    try:
+        exec(_code)
+    except Exception as e:
+        traceback.print_exc()
+    document["clear"].class_name = 'btn-enabled'
+    document["replay-scene"].class_name = 'btn-enabled'
     inform("")
 
 @document["clear"].bind("click")
@@ -44,9 +48,9 @@ def clear(ev):
     from turtle import restart
     restart()
     inform("")
-    document["run"].class_name = 'shown'
-    document["replay-scene"].class_name = 'hidden'
-    document["clear"].class_name = 'hidden'
+    document["run"].class_name = 'btn-enabled'
+    document["replay-scene"].class_name = 'btn-disabled'
+    document["clear"].class_name = 'btn-disabled'
     clear_print()
 
 @document["replay-scene"].bind("click")
@@ -117,12 +121,18 @@ document["info"].html = document["info1"].html
   .error, .not-implemented {
     color: red;
   }
-  .hidden {
-    display:none;
+  .btn-enabled {
+    color: black;
+    background-color: #c0c0c0;
   }
-  .shown {
-    display:inline;
+
+  .btn-disabled {
+    cursor: not-allowed;
+    pointer-events: none;
+    color: #c0c0c0;
+    background-color: #ffffff;
   }
+
   .not-tested {
     color: orange;
   }
@@ -151,9 +161,9 @@ Note that the content is editable.
 </p>
 <div id="info"></div>
 
-<p><button id="run">Run</button> <span id="status-info"></span> 
-  <button id="clear" class="hidden">Clear</button>
-  <button id="replay-scene" class="hidden">Replay scene</button></p>
+<p><button id="run" class="btn-enabled">Run</button> <span id="status-info"></span> 
+  <button id="clear" class="btn-disabled">Clear</button>
+  <button id="replay-scene" class="btn-disabled">Replay scene</button></p>
 <pre id="turtle-print-output"></pre>
 
 <pre id="source" style="float:left" contenteditable="true">
@@ -343,6 +353,10 @@ properly implemented in this version of the turtle module.</p>
 # Example from reddit post
 from turtle import Turtle, done, set_defaults
 from random import randint
+
+# added for diagnostic
+import time
+start_time = time.time()
 
 set_defaults(
     canvas_width = 650,
@@ -738,6 +752,8 @@ drawtrees()
 cutdraw() #cuts off the edges
 
 done()
+
+print("Elapsed time: %s seconds" % (time.time() - start_time))
 </div>
 
 <div id='info6' style='display:none'>
@@ -766,13 +782,11 @@ setheading() | seth()
 home()
 circle()
 dot()
-stamp()
-<span class='not-implemented'>
+stamp()<span class='not-implemented'>
 clearstamp() : not implemented
 clearstamps() : not implemented
 undo() : not implemented
-</span>
-speed()
+</span>speed()
 </pre>
 <h4>Tell Turtle’s state</h4>
 <pre>
@@ -937,13 +951,13 @@ t.goto(-50, -100)
 
 t.write("The turtle module is cool!", font=("Arial", 20, "normal"))
 
-print("About to call reset()")
+print("\nAbout to call reset()")
 t.reset()  # black turtle, at origin
 t.left(90)
 t.fd(50)
 t.stamp()
 
-print("About to call clear()")
+print("\nAbout to call clear()")
 t.clear()
 
 turtle.done()
@@ -966,21 +980,22 @@ isvisible()
 </pre>
 
 <h4>Appearance</h4>
-<pre><span class='not-tested'>shape()
-resizemode()
-shapesize() | turtlesize()
-shearfactor()
-settiltangle()
-tiltangle()
-tilt()
-shapetransform()
-get_shapepoly()
-</span>
+<pre>shape()<span class='not-implemented'>
+resizemode(): not implemented
+shapesize() | turtlesize(): not implemented
+shearfactor(): not implemented
+settiltangle(): not implemented
+tiltangle(): not implemented
+tilt(): not implemented
+shapetransform(): not implemented
+</span>get_shapepoly()
 </pre>
 
 
 <h3>Using events</h3>
-<p>Events are not implemented.</p>
+<p>This version of the turtle module creates an animated <em>scene</em>
+which can be played back <em>as is</em> multiple times. 
+This scene cannot be interacted with.</p>
 <pre class="not-implemented">onclick(): not implemented
 onrelease(): not implemented
 ondrag(): not implemented
@@ -988,13 +1003,12 @@ ondrag(): not implemented
 
 <h3>Special Turtle methods</h3>
 
-<pre><span class='not-tested'>begin_poly()
-end_poly()
-get_poly()
-clone()
-getturtle() | getpen()
+<pre><span class='not-implemented'>begin_poly(): not implemented
+end_poly(): not implemented
+get_poly(): not implemented
+clone(): not implemented
+</span>getturtle() | getpen()
 getscreen()
-</span>
 <span class='not-implemented'>setundobuffer(): not implemented
 undobufferentries(): not implemented
 </span>
@@ -1005,11 +1019,12 @@ undobufferentries(): not implemented
 turtle.set_defaults(
     canvas_width = 500,   # default
     canvas_height = 500,  # default
+    _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
 
 t = turtle.Turtle("turtle")
-t.speed(1)
+t.speed(2)
 
 t.hideturtle()
 t.forward(100)
@@ -1030,6 +1045,7 @@ t.forward(120)
 t.left(90)
 
 t.shape("triangle")
+t.color("blue")
 t.fd(100)
 
 # not implemented methods
@@ -1041,6 +1057,19 @@ t.settiltangle(0)
 t.tiltangle(0)
 t.tilt(0)
 t.shapetransform()
+
+
+c = t.getturtle()
+c.color("black")
+c.right(90)
+c.fd(40)
+
+d = t.getpen()
+d.color('red')
+d.fd(40)
+
+screen = t.getscreen()
+screen.bgcolor("rgb(240, 255, 240)")
 
 print("Coordinates of triangle shape: ", t.get_shapepoly())
 
@@ -1057,8 +1086,8 @@ turtle.done()
 
 <h3>Window control</h3>
 <pre>
-  <span class='not-tested'>
 bgcolor()
+<span class='not-tested'>
 bgpic()
 clear() | clearscreen()
 reset() | resetscreen()
@@ -1120,10 +1149,13 @@ title()
 turtle.set_defaults(
     canvas_width = 500,   # default
     canvas_height = 500,  # default
+    _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
 
 t = turtle.Turtle("turtle")
+screen = t.getscreen()
+screen.bgcolor("rgb(240, 255, 240)")
 </div>
 
 <div id='info10' style='display:none'>
