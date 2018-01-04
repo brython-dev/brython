@@ -85,6 +85,10 @@ def set_defaults(**params):
     """Allows to override defaults."""
     _CFG.update(**params)
     Screen(new_canvas=True)
+    if _CFG["_debug"]:
+        sys.stderr.write("Warning: ")
+        print("Since _debug has been set to True, warning about")
+        print("missing private methods will be printed.\n")
 
 
 class Vec2D(tuple):
@@ -301,7 +305,8 @@ class TurtleScreenBase:
 
             _line = _svg.line(x1=_x0*self.xscale, y1=_y0*self.yscale,
                               x2=_x0*self.xscale, y2=_y0*self.yscale,
-                              style={'stroke': outline, 'stroke-width': width})
+                              style={'stroke': outline, 'stroke-width': width,
+                                     'stroke-linecap': 'round'})
 
             _an1 = _svg.animate(Id="animateLine%s" % self.item_drawn_index,
                                 attributeName="x2", attributeType="XML",
@@ -1991,7 +1996,9 @@ class RawTurtle(TPen, TNavigator):
     def _clear(self):
         """Delete all of pen's drawings"""
         if _CFG["_debug"]:
-            sys.stderr.write("Warning: RawTurtle._clear() is not implemented.\n")
+            # private methods warning are indented
+            sys.stderr.write(
+                "    Warning: RawTurtle._clear() is not implemented.\n")
 
 
     def clear(self):
@@ -2086,7 +2093,9 @@ class RawTurtle(TPen, TNavigator):
         """Manages the correct rendering of the turtle with respect to
         its shape, resizemode, stretch and tilt etc."""
         if _CFG["_debug"]:
-            sys.stderr.write("Warning: RawTurtle._drawturtle is not implemented.\n")
+            # private methods warning are indented
+            sys.stderr.write(
+                "    Warning: RawTurtle._drawturtle is not implemented.\n")
 
 
     def stamp(self):
