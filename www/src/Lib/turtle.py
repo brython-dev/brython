@@ -215,8 +215,8 @@ class TurtleScreenBase:
         """
         pass
 
-    def _convert_coordinates(self, pos):
-        """This method is specific to Brython's turtle.  In the browser,
+    def _convert_coordinates(self, x, y):
+        """TIn the browser,
            the increasing y-coordinate is towards the bottom of the screen;
            this is the opposite of what is assumed normally for the methods
            in the CPython turtle module.
@@ -224,7 +224,7 @@ class TurtleScreenBase:
            This method makes the necessary orientation. It should be called
            just prior to creating any SVG element.
         """
-        return (pos[0], -pos[1])
+        return x*self.yscale, -y*self.yscale
 
     def _drawpoly(self, coordlist, fill=None, outline=None, width=None):
         """Draws a path according to provided arguments:
@@ -234,7 +234,7 @@ class TurtleScreenBase:
             - width is the outline width
         """
         self.item_drawn_index += 1
-        shape = ["%s,%s" % self._convert_coordinates((_x, _y))
+        shape = ["%s,%s" % self._convert_coordinates(_x, _y)
                                 for _x, _y in coordlist]
 
         style = {'display': 'none'}
@@ -282,8 +282,8 @@ class TurtleScreenBase:
         x0, y0 = coordlist[0]
         x1, y1 = coordlist[1]
 
-        x0, y0 = self._convert_coordinates((x0, y0))
-        x1, y1 = self._convert_coordinates((x1, y1))
+        x0, y0 = self._convert_coordinates(x0, y0)
+        x1, y1 = self._convert_coordinates(x1, y1)
 
 
         # The speed scale does not correspond exactly to the Cpython one...
@@ -301,46 +301,45 @@ class TurtleScreenBase:
                 duration = "%6.3fs" % duration
 
         self.item_drawn_index += 1
+        drawing = _turtle._drawing 
 
-        _line = _svg.line(x1=x0*self.xscale, y1=y0*self.yscale,
-                          x2=x0*self.xscale, y2=y0*self.yscale,
+        _line = _svg.line(x1=x0, y1=y0, x2=x0, y2=y0,
                           style={'stroke': outline, 'stroke-width': width})
-
-        if not _turtle._drawing:
+        if not drawing:
             _line.setAttribute('opacity', 0)
 
+        # always create one animation for timing purpose
         _an1 = _svg.animate(Id="animateLine%s" % self.item_drawn_index,
                             attributeName="x2", attributeType="XML",
-                            From=x0*self.xscale, to=x1*self.xscale,
-                            dur=duration, fill='freeze')
-
-        _an2 = _svg.animate(attributeName="y2", attributeType="XML",
-                            begin="animateLine%s.begin" % self.item_drawn_index,
-                            From=y0*self.yscale, to=y1*self.yscale,
-                            dur=duration, fill='freeze')
-
-
-        if _turtle.isvisible():
-            _shape = ["%s,%s" % self._convert_coordinates((_x, _y))
-                            for _x, _y in _turtle.get_shapepoly()]
-            self._draw_turtle(_turtle.heading(), fill, outline, 
-                              x0, y0, x1, y1, _shape, duration)
-
-        self._previous_turtle_attributes[_turtle] = _turtle
+                            From=x0, to=x1, dur=duration, fill='freeze')
+        _line <= _an1
 
         if self.item_drawn_index == 1:
             _an1.setAttribute('begin', "0s")
         else:
             _an1.setAttribute('begin', "animateLine%s.end" % (self.item_drawn_index-1))
 
-        _line <= _an1
-        _line <= _an2
+        ## But, do not bother adding animations that will not be shown.
+        if drawing:
+            _an2 = _svg.animate(attributeName="y2", attributeType="XML",
+                            begin="animateLine%s.begin" % self.item_drawn_index,
+                            From=y0, to=y1, dur=duration, fill='freeze')
+            _line <= _an2
 
-        if width > 2 :
-            _line_cap = _svg.set(attributeName="stroke-linecap", 
-                begin="animateLine%s.begin" % self.item_drawn_index,
-                attributeType="xml", to="round", dur=duration, fill='freeze')
-            _line <= _line_cap
+            if width > 2:
+                _line_cap = _svg.set(attributeName="stroke-linecap", 
+                    begin="animateLine%s.begin" % self.item_drawn_index,
+                    attributeType="xml", to="round", dur=duration, fill='freeze')
+                _line <= _line_cap
+
+
+        if _turtle.isvisible():
+            _shape = ["%s,%s" % self._convert_coordinates(_x, _y)
+                            for _x, _y in _turtle.get_shapepoly()]
+            self._draw_turtle(_turtle.heading(), fill, outline, 
+                              x0, y0, x1, y1, _shape, duration)
+
+        self._previous_turtle_attributes[_turtle] = _turtle
 
         self._canvas <= _line
 
@@ -359,8 +358,8 @@ class TurtleScreenBase:
                                style={'stroke': outline, 'fill': fill,
                                       'stroke-width': 1, 'display': 'none'})
 
-        _turtle <= _svg.animateMotion(From="%s,%s" % (x0*self.xscale, y0*self.yscale),
-                                      to="%s,%s" % (x1*self.xscale, y1*self.yscale),
+        _turtle <= _svg.animateMotion(From="%s,%s" % (x0, y0),
+                                      to="%s,%s" % (x1, y1),
                                       dur=duration, begin="animateLine%s.begin" % self.item_drawn_index)
 
         _turtle <= _svg.set(attributeName="display", attributeType="CSS",
@@ -374,9 +373,9 @@ class TurtleScreenBase:
     def _stamp(self, shape_data, x, y, heading, color):
         '''draws a permanent copy of the turtle at its current location'''
         self.item_drawn_index += 1
-        shape = ["%s,%s" % self._convert_coordinates((_x, _y))
+        shape = ["%s,%s" % self._convert_coordinates(_x, _y)
                                 for _x, _y in shape_data]
-        x, y = self._convert_coordinates((x, y))
+        x, y = self._convert_coordinates(x, y)
 
         if self.mode() == 'standard' or self.mode() == 'world':
             rotation = 90 - heading
@@ -452,7 +451,7 @@ class TurtleScreenBase:
         """Write txt at pos in canvas with specified font
         and color."""
 
-        x, y = self._convert_coordinates(pos)
+        x, y = self._convert_coordinates(pos[0], pos[1])
         self.item_drawn_index += 1
         _text = _svg.text(txt, x=x, y=y, fill=pencolor, 
                           style={'display': 'none',
@@ -483,7 +482,7 @@ class TurtleScreenBase:
         """Draws a filled circle of specified size and color"""
         self.item_drawn_index += 1
 
-        x, y = self._convert_coordinates(pos)
+        x, y = self._convert_coordinates(pos[0], pos[1])
 
         _circle = _svg.circle(cx=x, cy=y, r=size, fill=color,
                             style={'display': 'none'})
