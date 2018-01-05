@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-01-03 21:54:21.862863"
+__BRYTHON__.compiled_date="2018-01-05 17:00:07.747279"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4919,7 +4919,11 @@ else{if(frame[0]==frame[2]||frame[1].$type=="class"){throw _b_.NameError("name '
 else{throw _b_.UnboundLocalError("local variable '"+name+
 "' referenced before assignment")}}}
 $B.$global_search=function(name){
-for(var i=$B.frames_stack.length-1;i>=0;i--){var frame=$B.frames_stack[i]
+var glob=$B.frames_stack[$B.frames_stack.length-1][2],in_exec=glob.substr(0,5)=="$exec",end=0
+if(in_exec){
+var end=$B.frames_stack.length - 1
+while(end>=1 && $B.frames_stack[end - 1][2]==glob){end--}}
+for(var i=$B.frames_stack.length-1;i>=end;i--){var frame=$B.frames_stack[i]
 if(frame[3][name]!==undefined){return frame[3][name]}
 if(frame[1][name]!==undefined){return frame[1][name]}}
 throw _b_.NameError("name '"+$B.from_alias(name)+"' is not defined")}

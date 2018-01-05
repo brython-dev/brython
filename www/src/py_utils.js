@@ -311,7 +311,18 @@ $B.$search = function(name, global_ns){
 
 $B.$global_search = function(name){
     // search in all namespaces above current stack frame
-    for(var i=$B.frames_stack.length-1; i>=0; i--){
+    var glob = $B.frames_stack[$B.frames_stack.length-1][2],
+        in_exec = glob.substr(0, 5)=="$exec",
+        end = 0
+    if(in_exec){
+        // If the code is running in an "exec", don't search further up than
+        // the global namespace defined for exec
+        var end = $B.frames_stack.length - 1
+        while(end>=1 && $B.frames_stack[end - 1][2]==glob){
+            end--
+        }
+    }
+    for(var i=$B.frames_stack.length-1; i>=end; i--){
         var frame = $B.frames_stack[i]
         if(frame[3][name]!==undefined){return frame[3][name]}
         if(frame[1][name]!==undefined){return frame[1][name]}

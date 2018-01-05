@@ -1620,6 +1620,15 @@ for i in range(10):
     a[i] = i
     assert a[i] == i
 
+# issue 748
+y = 42
+g = { 'x':0 }
+try:
+    exec('print(y)', g)
+    raise Exception("should have raised NameError")
+except NameError:
+    pass
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
