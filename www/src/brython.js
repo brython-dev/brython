@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-01-05 17:00:07.747279"
+__BRYTHON__.compiled_date="2018-01-05 18:04:53.830726"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -11008,6 +11008,7 @@ case 'height':
 case 'left':
 case 'top':
 case 'width':
+if(self.elt.tagName=='CANVAS' && self.elt[attr]){return self.elt[attr]}
 if(self.elt instanceof SVGElement){return self.elt.getAttributeNS(null,attr)}
 if(self.elt.style[attr]){return parseInt(self.elt.style[attr])}else{throw _b_.AttributeError("style." + attr + " is not set for " +
 str(self))}
@@ -11132,8 +11133,7 @@ DOMNodeDict.bind(self,attr.substr(2),value)}}else{switch(attr){case "left":
 case "top":
 case "width":
 case "height":
-var elt=self.elt
-if(self.elt.nodeType==3){self.elt.style[attr]=value + "px"}
+if(self.elt.tagName=="CANVAS"){self.elt.style[attr]=value}else if(self.elt.nodeType==1){self.elt.style[attr]=value + "px"}
 break}
 if(DOMNodeDict['set_'+attr]!==undefined){return DOMNodeDict['set_'+attr](self,value)}
 if(self.elt[attr]!==undefined){self.elt[attr]=value;return}
@@ -11251,13 +11251,6 @@ var obj=self.elt
 return function(ctx){return JSObject(obj.getContext(ctx))}}
 DOMNodeDict.getSelectionRange=function(self){
 if(self.elt['getSelectionRange']!==undefined){return self.elt.getSelectionRange.apply(null,arguments)}}
-DOMNodeDict.height={'__get__': function(self){
-if(self.elt.tagName=='CANVAS'){return self.elt.height}
-if(self.elt.style===undefined){return _b_.None}
-var res=parseInt(self.elt.style.height)
-if(isNaN(res)){return self.elt.offsetHeight}
-return res},'__set__': function(obj,self,value){if(self.elt.tagName=='CANVAS'){self.elt.height=value}
-self.elt.style.height=value+'px'}}
 DOMNodeDict.html=function(self){var res=self.elt.innerHTML
 if(res===undefined){if(self.elt.nodeType==9){res=self.elt.body.innerHTML}
 else{res=_b_.None}}
@@ -11275,10 +11268,6 @@ var elt=self.elt
 while(true){if(other===elt){return true}
 elt=elt.parentElement
 if(!elt){return false}}}
-DOMNodeDict.left={'__get__': function(self){console.log('get left',self.elt,self.elt.style)
-var res=parseInt(self.elt.style.left)
-if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'left'")}
-return res},'__set__': function(obj,self,value){self.elt.style.left=value+'px'}}
 DOMNodeDict.options=function(self){
 return new $OptionsClass(self.elt)}
 DOMNodeDict.parent=function(self){if(self.elt.parentElement)return DOMNode(self.elt.parentElement)
@@ -11299,10 +11288,6 @@ return DOMNode(res)}
 DOMNodeDict.style=function(self){
 self.elt.style.float=self.elt.style.cssFloat ||self.style.styleFloat
 return $B.JSObject(self.elt.style)}
-DOMNodeDict.top={'__get__': function(self){if(self.elt.style===undefined){return _b_.None}
-var res=parseInt(self.elt.style.top)
-if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'top'")}
-return res},'__set__': function(obj,self,value){self.elt.style.top=value+'px'}}
 DOMNodeDict.setSelectionRange=function(self){
 if(this['setSelectionRange']!==undefined){return(function(obj){return function(){return obj.setSelectionRange.apply(obj,arguments)}})(this)}else if(this['createTextRange']!==undefined){return(function(obj){return function(start_pos,end_pos){if(end_pos==undefined){end_pos=start_pos}
 var range=obj.createTextRange();
@@ -11368,15 +11353,6 @@ events.splice(j,1)
 flag=true
 break}}
 if(!flag){throw KeyError('missing callback for event '+event)}}}
-DOMNodeDict.width={'__get__': function(self){
-if(self.elt.tagName=='CANVAS'){return self.elt.width}
-if(self.elt.style===undefined){return _b_.None}
-var res=parseInt(self.elt.style.width)
-if(isNaN(res)){
-return self.elt.offsetWidth}
-return res},'__set__': function(obj,self,value){if(self.elt.tagName=='CANVAS'){
-self.elt.width=value}
-self.elt.style.width=value+'px'}}
 var $QueryDict={__class__:$B.$type,__name__:'query'}
 $QueryDict.__contains__=function(self,key){return self._keys.indexOf(key)>-1}
 $QueryDict.__getitem__=function(self,key){
