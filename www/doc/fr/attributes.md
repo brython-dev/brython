@@ -33,7 +33,7 @@ Comme le nom des attributs peut être différent d'un navigateur à l'autre, Bry
 <tr>
 <td>*closest*</td>
 <td>méthode</td>
-<td><code>`elt.closest(nom_balise)</code>` renvoie le premier élément parent
+<td><code>elt.closest(nom_balise)</code> renvoie le premier élément parent
 de `elt` avec la balise spécifiée. Déclenche une `KeyError` si aucun élément
 n'est trouvé.</td>
 <td>-</td>

@@ -39,7 +39,7 @@ descendants of the element</td><td>-</td>
 <tr>
 <td>*closest*</td>
 <td>method</td>
-<td><code>`elt.closest(tag_name)</code>` returns the first parent element of
+<td><code>elt.closest(tag_name)</code> returns the first parent element of
 `elt` with the specified tag name. Raises `KeyError` if no element is found.</td>
 <td>-</td>
 </tr>
