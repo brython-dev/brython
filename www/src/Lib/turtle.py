@@ -63,6 +63,7 @@ import sys
 
 from browser import console, document, html, timer
 import _svg
+import copy
 
 _CFG = {"canvas_width": 500,
         "canvas_height": 500,
@@ -77,8 +78,12 @@ _CFG = {"canvas_width": 500,
         "turtle_canvas_wrapper": None,
         "turtle_canvas_id": "turtle-canvas",
         "min_duration": "1ms",
-        "_debug": False
+        "_debug": False,
+        "x_offset": 0,  # automatically set
+        "y_offset": 0  # automatically set
         }
+
+_cfg_copy = copy.copy(_CFG)
 
 
 def set_defaults(**params):
@@ -159,8 +164,8 @@ class _Root:
             self.background_canvas = _svg.g(transform="translate(%d,%d)" % (width//2, height//2))
             self._canvas = _svg.g(transform="translate(%d,%d)" % (width//2, height//2))
         else:
-            self.background_canvas = _svg.g(transform="translate(0,%d)" % height)
-            self._canvas = _svg.g(transform="translate(0,%d)" % height)
+            self.background_canvas = _svg.g(transform="translate(%d,%d)" % (_CFG["x_offset"], height-_CFG["y_offset"]))
+            self._canvas = _svg.g(transform="translate(%d,%d)" % (_CFG["x_offset"], height-_CFG["y_offset"]))
         self._svg <= self.background_canvas
         self._svg <= self._canvas
 
@@ -175,8 +180,6 @@ class _Root:
         # need to have a delay for chrome so that first few draw commands are viewed properly.
             _CFG["turtle_canvas_wrapper"].html = _CFG["turtle_canvas_wrapper"].html
         timer.set_timeout(set_svg, 1)  
-
-      
 
     def _getcanvas(self):
         return self._canvas
@@ -208,6 +211,8 @@ class TurtleScreenBase:
         self.canvas_width = cv.parentElement.width
         self.canvas_height = cv.parentElement.height
         self.xscale = self.yscale = 1.0
+        self.x_offset = self.y_offset = 0
+        self._reverse_left_right = 1
         self.background_color = "white"
 
     def _createpoly(self):
@@ -224,9 +229,9 @@ class TurtleScreenBase:
            This method makes the necessary orientation. It should be called
            just prior to creating any SVG element.
         """
-        return x*self.yscale, -y*self.yscale
+        return x*self.yscale, -self._reverse_left_right * y*self.yscale
 
-    def _drawpoly(self, coordlist, fill=None, outline=None, width=None):
+    def _drawpoly(self, coordlist, outline=None, fill=None, width=None):
         """Draws a path according to provided arguments:
             - coordlist is sequence of coordinates
             - fill is filling color
@@ -234,8 +239,7 @@ class TurtleScreenBase:
             - width is the outline width
         """
         self.item_drawn_index += 1
-        shape = ["%s,%s" % self._convert_coordinates(_x, _y)
-                                for _x, _y in coordlist]
+        shape = ["%s,%s" % self._convert_coordinates(x, y) for x, y in coordlist]
 
         style = {'display': 'none'}
         if fill is not None:
@@ -333,8 +337,7 @@ class TurtleScreenBase:
 
 
         if _turtle.isvisible():
-            _shape = ["%s,%s" % self._convert_coordinates(_x, _y)
-                            for _x, _y in _turtle.get_shapepoly()]
+            _shape = ["%s,%s" % (_x, -_y) for _x, _y in _turtle.get_shapepoly()]
             self._draw_moving_turtle(_turtle.heading(), outline, fill, 
                                      x0, y0, x1, y1, _shape, duration)
 
@@ -363,7 +366,7 @@ class TurtleScreenBase:
     def _create_turtle(self, heading, outline, fill, _shape, translate=''):
         '''create a turtle ready to be drawn'''
         if self.mode() == 'standard' or self.mode() == 'world':
-            rotation = 90 - heading
+            rotation = 90 - self._reverse_left_right*heading
         elif self.mode() == 'logo':
             rotation = heading
         else:  # should not happen
@@ -378,8 +381,7 @@ class TurtleScreenBase:
 
     def _stamp(self, shape_data, x, y, heading, color):
         '''draws a permanent copy of the turtle at its current location'''
-        shape = ["%s,%s" % self._convert_coordinates(_x, _y)
-                                for _x, _y in shape_data]
+        shape = ["%s,%s" % (_x, -_y) for _x, _y in shape_data]
         x, y = self._convert_coordinates(x, y)
         _turtle = self._create_turtle(heading, color[0], color[1], shape, 
                                       translate="translate(%s, %s) " % (x, y))
@@ -676,11 +678,9 @@ class TurtleScreen(TurtleScreenBase):
         mode = mode.lower()
         if mode not in ["standard", "logo", "world"]:
             raise TurtleGraphicsError("No turtle-graphics-mode %s" % mode)
+        _CFG['mode'] = mode
         self._mode = mode
-        if mode in ["standard", "logo"]:
-            self._setscrollregion(-self.canvas_width//2, -self.canvas_height//2,
-                                  self.canvas_width//2, self.canvas_height//2)
-            self.xscale = self.yscale = 1.0
+        Screen(new_canvas=True)
         self.reset()
 
     def setworldcoordinates(self, llx, lly, urx, ury):
@@ -693,9 +693,7 @@ class TurtleScreen(TurtleScreenBase):
         ury -- a number, y-coordinate of upper right corner of canvas
 
         Set up user coodinat-system and switch to mode 'world' if necessary.
-        This performs a screen.reset. If mode 'world' is already active,
-        all drawings are redrawn according to the new coordinates.
-
+        This performs a screen.reset. 
         But ATTENTION: in user-defined coordinatesystems angles may appear
         distorted. (see Screen.mode())
 
@@ -707,18 +705,28 @@ class TurtleScreen(TurtleScreenBase):
         """
         if self.mode() != "world":
             self.mode("world")
-        xspan = float(urx - llx)
-        yspan = float(ury - lly)
-        wx, wy = self._window_size()
-        oldxscale, oldyscale = self.xscale, self.yscale
-        self.xscale = self.canvas_width / xspan
-        self.yscale = self.canvas_height / yspan
-        srx1 = llx * self.xscale
-        sry1 = -ury * self.yscale
-        srx2 = self.canvas_width + srx1
-        sry2 = self.canvas_height + sry1
-        self._setscrollregion(srx1, sry1, srx2, sry2)
-        self._rescale(self.xscale/oldxscale, self.yscale/oldyscale)
+
+        if urx < llx:
+            sys.stderr.write("Warning: ")
+            print("urx must be greater than llx; your choice will be reversed")
+            urx, llx = llx, urx 
+        xspan = urx - llx
+        yspan = abs(ury - lly)
+
+        self.xscale = int(self.canvas_width) / xspan
+        self.yscale = int(self.canvas_height) / yspan
+        self.x_offset = -llx * self.xscale
+        if ury < lly:
+            self._reverse_left_right = -1
+            self.y_offset = lly * self.yscale
+        else:
+            self._reverse_left_right = 1
+            self.y_offset = -lly * self.yscale
+        _CFG["x_offset"] = self.x_offset
+        _CFG["y_offset"] = self.y_offset
+        self.reset()
+        Screen(new_canvas=True)
+
 
     def register_shape(self, name, shape=None):
         """Adds a turtle shape to TurtleScreen's shapelist.
@@ -1179,7 +1187,7 @@ class TNavigator:
         >>> turtle.heading()
         337.0
         """
-        self._rotate(-angle)
+        self._rotate(-self.screen._reverse_left_right*angle)
 
     def left(self, angle):
         """Turn turtle left by angle units.
@@ -1200,7 +1208,7 @@ class TNavigator:
         >>> turtle.heading()
         67.0
         """
-        self._rotate(angle)
+        self._rotate(self.screen._reverse_left_right*angle)
 
     def pos(self):
         """Return the turtle's current location (x,y), as a Vec2D-vector.
@@ -2184,7 +2192,8 @@ class RawTurtle(TPen, TNavigator):
         >>> turtle.end_fill()
         """
         if self.filling() and len(self._fillpath) > 2:
-            self.screen._drawpoly(self._fillpath, fill=self._fillcolor, outline=self._pencolor)
+            self.screen._drawpoly(self._fillpath, outline=self._pencolor,
+                                  fill=self._fillcolor, )
         else:
             print("No path to fill.")
         self._fillpath = None
@@ -2348,8 +2357,8 @@ class _Screen(TurtleScreen):
         if _Screen._canvas is None or new_canvas:
             canvas_width = _CFG["canvas_width"]
             canvas_height = _CFG["canvas_height"]
-            leftright = _CFG["leftright"]
-            topbottom = _CFG["topbottom"]
+            # leftright = _CFG["leftright"]
+            # topbottom = _CFG["topbottom"]
             self._root.setupcanvas(canvas_width, canvas_height)
             _Screen._canvas = self._root._getcanvas()
             _Screen.background_canvas = self._root._get_background_canvas()
@@ -2452,6 +2461,7 @@ def replay_scene():
 
 def restart():
     "For Brython turtle: clears the existing drawing and canvas"
+    _CFG.update(_cfg_copy)
     _Screen._root = None
     _Screen._canvas = None
     Turtle._screen = None
