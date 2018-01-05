@@ -88,9 +88,6 @@
   <button b-on="click:incr">+1</button>{counter}
 </div>
 
-<div id="with_include" b-include="included.html">
-</div>
-
 <table id="score">
   <tr>
     <td b-code="for pattern in score['structure']">
@@ -99,6 +96,13 @@
   </tr>
 </table>
 
+<div id="measure">
+  <span b-code="for i in range(16):">
+    <span b-code="if i % 4 == 0:">{1 + i // 4}</span>
+    <span b-code="elif i % 4 == 2:">&</span>
+    <span b-code="else:">-</span>
+  </span>
+</div>
 <script type="text/python">
 from browser import document, window, alert
 from browser.template import Template
@@ -156,8 +160,6 @@ def incr(event, element):
 
 Template(document["incrementer"], [incr]).render(counter=0)
 
-Template(document["with_include"]).render(info="included element")
-
 score = {
     'patterns': {
         'A': {
@@ -178,6 +180,8 @@ score = {
     'title': 'song'
 }
 Template("score").render(score=score)
+
+Template("measure").render()
 </script>
 
 </body>
