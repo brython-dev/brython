@@ -33,7 +33,7 @@ $ListDict.__contains__ = function(self,item){
         arguments,{},null,null),
         self=$.self,
         item=$.item
-    var _eq = getattr(item, '__eq__')
+    var _eq = function(other){return $B.rich_comp("__eq__", item, other)}
     var i=0
     while(i<self.length) {
         if(_eq(self[i])) return true
@@ -98,7 +98,7 @@ $ListDict.__eq__ = function(self,other){
        if(other.length==self.length){
             var i=self.length
             while(i--) {
-               if(!getattr(self[i],'__eq__')(other[i])) return false
+                if(!$B.rich_comp("__eq__", self[i], other[i])) return false
             }
             return true
        }
@@ -158,7 +158,7 @@ $ListDict.__ge__ = function(self,other){
     var i=0
     while(i<self.length){
         if(i>=other.length) return true
-        if(getattr(self[i],'__eq__')(other[i])){i++}
+        if($B.rich_comp("__eq__", self[i], other[i])){i++}
         else return(getattr(self[i],"__ge__")(other[i]))
     }
 
@@ -176,7 +176,7 @@ $ListDict.__gt__ = function(self,other){
     var i=0
     while(i<self.length){
         if(i>=other.length) return true
-        if(getattr(self[i],'__eq__')(other[i])){i++}
+        if($B.rich_comp("__eq__", self[i], other[i])){i++}
         else return(getattr(self[i],'__gt__')(other[i]))
     }
     // other starts like self, but is as long or longer
@@ -356,7 +356,7 @@ $ListDict.count = function(){
     var $=$B.args('count',2,{self:null,x:null},['self','x'],
         arguments,{},null,null)
     var res = 0
-    _eq=getattr($.x, '__eq__')
+    _eq=function(other){return $B.rich_comp("__eq__", $.x, other)}
     var i=$.self.length
     while (i--) if (_eq($.self[i])) res++
     return res
@@ -375,7 +375,7 @@ $ListDict.index = function(){
         ['self','x','start','stop'],arguments,
         {start:null,stop:null},null,null),
         self=$.self, start=$.start, stop=$.stop
-    var _eq = getattr($.x, '__eq__')
+    var _eq = function(other){return $B.rich_comp("__eq__", $.x, other)}
     if(start===null){start=0}
     else{
         if(start.__class__===$B.LongInt.$dict){
@@ -421,7 +421,7 @@ $ListDict.remove = function(){
     var $=$B.args('remove',2,{self:null,x:null},['self','x'],arguments,{},
         null,null)
     for(var i=0, _len_i = $.self.length; i < _len_i;i++){
-        if(getattr($.self[i],'__eq__')($.x)){
+        if($B.rich_comp("__eq__", $.self[i], $.x)){
             $.self.splice(i,1)
             return $N
         }

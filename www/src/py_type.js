@@ -524,12 +524,6 @@ $B.$type.__repr__ = $B.$type.__str__ = function(self){
 $B.$type.__getattribute__=function(klass, attr, metaclassed){
 
     switch(attr) {
-      case '__eq__':
-        return method_wrapper(attr, klass,
-            function(other){return klass.$factory===other})
-      case '__ne__':
-        return method_wrapper(attr, klass,
-            function(other){return klass.$factory!==other})
       case '__class__':
         return klass.__class__.$factory
       case '__doc__':

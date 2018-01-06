@@ -110,7 +110,7 @@ var $iterator_wrapper = function(items,klass){
         __class__:klass,
         __eq__:function(other){
             // compare set of items to other
-            return getattr(toSet(items), "__eq__")(other)
+            return $B.rich_comp("__eq__", toSet(items), other)
         },
         __iter__:function(){items.iter.i=0; return res},
         __len__:function(){return items.length()},
@@ -151,9 +151,9 @@ $DictDict.__contains__ = function(){
 
     var _key=hash(item)
     if (self.$str_hash[_key]!==undefined &&
-        _b_.getattr(item,'__eq__')(self.$str_hash[_key])){return true}
+        $B.rich_comp("__eq__", item, self.$str_hash[_key])){return true}
     if (self.$numeric_dict[_key]!==undefined &&
-        _b_.getattr(item,'__eq__')(_key)){return true}
+        $B.rich_comp("__eq__", item, _key)){return true}
     if (self.$object_dict[_key] !== undefined) {
         // If the key is an object, its hash must be in the dict keys but the
         // key itself must compare equal to the key associated with the hash
@@ -165,9 +165,7 @@ $DictDict.__contains__ = function(){
         //     a = {'u': 'a', X(): 'b'}
         //     assert set(a.values())=={'a', 'b'}
         //     assert not X() in a
-
-       var _eq = getattr(item, '__eq__')
-       if(_eq(self.$object_dict[_key][0])){return true}
+       return $B.rich_comp("__eq__", item, self.$object_dict[_key][0])
     }
     return false
 }
@@ -224,17 +222,17 @@ $DictDict.__eq__ = function(){
             return false
     }
     for(var k in self.$numeric_dict){
-        if(!_b_.getattr(other.$numeric_dict[k],'__eq__')(self.$numeric_dict[k])){
+        if(!$B.rich_comp("__eq__", other.$numeric_dict[k], self.$numeric_dict[k])){
             return false
         }
     }
     for(var k in self.$string_dict){
-        if(!_b_.getattr(other.$string_dict[k],'__eq__')(self.$string_dict[k])){
+        if(!$B.rich_comp("__eq__", other.$string_dict[k], self.$string_dict[k])){
             return false
         }
     }
     for(var k in self.$object_dict){
-        if(!_b_.getattr(other.$object_dict[k][1],'__eq__')(self.$object_dict[k][1])){
+        if(!$B.rich_comp("__eq__", other.$object_dict[k][1], self.$object_dict[k][1])){
             return false
         }
     }
@@ -265,7 +263,7 @@ $DictDict.__getitem__ = function(){
     // since the key is more complex use 'default' method of getting item
 
     var _key = _b_.hash(arg),
-        _eq = _b_.getattr(arg, '__eq__')
+        _eq = function(other){return $B.rich_comp('__eq__', arg, other)}
 
     var sk = self.$str_hash[_key]
     if (sk!==undefined && _eq(sk)){
@@ -438,7 +436,7 @@ $DictDict.__setitem__ = function(self,key,value){
     // if we got here the key is more complex, use default method
 
     var _key=hash(key)
-    var _eq=getattr(key, '__eq__')
+    var _eq=function(other){return $B.rich_comp("__eq__", key, other)};
 
     if(self.$numeric_dict[_key]!==undefined && _eq(_key)){
         self.$numeric_dict[_key] = value
