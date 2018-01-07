@@ -1611,6 +1611,28 @@ def simple_coroutine():
 
 fut = simple_coroutine()
 assert fut.result() == 10
+
+# issue 751
+class Z: pass
+
+try:
+    (10, Z()) <= (10, Z())
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+try:
+    a = [100, 100, 100, 100, 100, 70, 100, 100, 70, 70, 100,
+     70, 70, 70, 100, 70, 70, 100, 70, 70, 70, 70, 100, 70,
+     70, 70, 70, 70, 100, 70, 70, 70, 100, 70, 70, 70, 70,
+     70, 70, 100]
+    b = [(v, Z()) for v in a]
+    sorted(b, reverse=True)
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
