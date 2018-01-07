@@ -139,7 +139,8 @@ body{
 
 <body onload="brython(1)">
 
-<div id="dialog_window">
+<div id="dialog_window"
+    style="height:{height}px; width:{width}px;top:{top}px;left:{left}px">
   <table class="dialog_table" width="100%" cellpadding="0" cellspacing="0">
     <tr class="dialog_bar">
       <td class="dialog_title"></td>
@@ -185,15 +186,15 @@ body{
     <tr>
 
       <td valign="top" style="width:15%;">
-        <div id="filebrowser" style="height:{height}px"></div>
+        <div id="filebrowser" style="height:{editor_height}px"></div>
       </td>
 
       <td valign="top" style="width:2%;">
-        <div id="linenum_wrapper" style="height:{height + 12}px"><div id="linenum"></div></div>
+        <div id="linenum_wrapper" style="height:{editor_height + 12}px"><div id="linenum"></div></div>
       </td>
 
       <td valign="top">
-        <div id="editor" style="height:{height}px" contenteditable="true"></div>
+        <div id="editor" style="height:{editor_height}px" contenteditable="true"></div>
       </td>
 
     </tr>

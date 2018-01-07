@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2017-12-31 14:23:01.370712"
+__BRYTHON__.compiled_date="2018-01-05 18:04:53.830726"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -2553,7 +2553,7 @@ this.toString=function(){return '(yield) '+(this.from ? '(from) ' : '')+this.tre
 this.transform=function(node,rank){if(this.from===true){
 var new_node=new $Node()
 new_node.locals=node.locals
-node.parent.children.splice(rank,1)
+if(this.parent.type!="assign"){node.parent.children.splice(rank,1)}
 node.parent.insert(rank,new_node)
 var for_ctx=new $ForExpr(new $NodeCtx(new_node))
 new $IdCtx(new $ExprCtx(for_ctx,'id',false),'$temp'+$loop_num)
@@ -3804,8 +3804,7 @@ if(token=='from'){
 if(C.tree[0].type!='abstract_expr'){
 $_SyntaxError(C,"'from' must follow 'yield'")}
 C.from=true
-C.tree=[]
-return new $AbstractExprCtx(C,true)}
+return C.tree[0]}
 return $transition(C.parent,token)}}
 $B.forbidden=['alert','arguments','case','catch','constructor','Date','delete','default','document','enum','eval','extends','Error','history','function','length','location','Math','new','null','Number','RegExp','super','this','throw','var','window','toLocaleString','toString','message']
 $B.aliased_names={}
@@ -4920,7 +4919,11 @@ else{if(frame[0]==frame[2]||frame[1].$type=="class"){throw _b_.NameError("name '
 else{throw _b_.UnboundLocalError("local variable '"+name+
 "' referenced before assignment")}}}
 $B.$global_search=function(name){
-for(var i=$B.frames_stack.length-1;i>=0;i--){var frame=$B.frames_stack[i]
+var glob=$B.frames_stack[$B.frames_stack.length-1][2],in_exec=glob.substr(0,5)=="$exec",end=0
+if(in_exec){
+var end=$B.frames_stack.length - 1
+while(end>=1 && $B.frames_stack[end - 1][2]==glob){end--}}
+for(var i=$B.frames_stack.length-1;i>=end;i--){var frame=$B.frames_stack[i]
 if(frame[3][name]!==undefined){return frame[3][name]}
 if(frame[1][name]!==undefined){return frame[1][name]}}
 throw _b_.NameError("name '"+$B.from_alias(name)+"' is not defined")}
@@ -7198,7 +7201,7 @@ var proto_str=proto.constructor.toString()
 name=proto_str.substring(8,proto_str.length-1)}
 return "<"+name+" object>"}
 return "<JSObject wraps "+self.js+">"}
-$JSObjectDict.__setattr__=function(self,attr,value){if(attr.substr(0,2)=='$$'){
+$JSObjectDict.__setattr__=function(self,attr,value){if(attr.substr && attr.substr(0,2)=='$$'){
 attr=attr.substr(2)}
 if(isinstance(value,JSObject)){self.js[attr]=value.js}
 else{self.js[attr]=value
@@ -11005,6 +11008,7 @@ case 'height':
 case 'left':
 case 'top':
 case 'width':
+if(self.elt.tagName=='CANVAS' && self.elt[attr]){return self.elt[attr]}
 if(self.elt instanceof SVGElement){return self.elt.getAttributeNS(null,attr)}
 if(self.elt.style[attr]){return parseInt(self.elt.style[attr])}else{throw _b_.AttributeError("style." + attr + " is not set for " +
 str(self))}
@@ -11129,8 +11133,7 @@ DOMNodeDict.bind(self,attr.substr(2),value)}}else{switch(attr){case "left":
 case "top":
 case "width":
 case "height":
-var elt=self.elt
-if(self.elt.nodeType==3){self.elt.style[attr]=value + "px"}
+if(self.elt.tagName=="CANVAS"){self.elt.style[attr]=value}else if(self.elt.nodeType==1){self.elt.style[attr]=value + "px"}
 break}
 if(DOMNodeDict['set_'+attr]!==undefined){return DOMNodeDict['set_'+attr](self,value)}
 if(self.elt[attr]!==undefined){self.elt[attr]=value;return}
@@ -11248,13 +11251,6 @@ var obj=self.elt
 return function(ctx){return JSObject(obj.getContext(ctx))}}
 DOMNodeDict.getSelectionRange=function(self){
 if(self.elt['getSelectionRange']!==undefined){return self.elt.getSelectionRange.apply(null,arguments)}}
-DOMNodeDict.height={'__get__': function(self){
-if(self.elt.tagName=='CANVAS'){return self.elt.height}
-if(self.elt.style===undefined){return _b_.None}
-var res=parseInt(self.elt.style.height)
-if(isNaN(res)){return self.elt.offsetHeight}
-return res},'__set__': function(obj,self,value){if(self.elt.tagName=='CANVAS'){self.elt.height=value}
-self.elt.style.height=value+'px'}}
 DOMNodeDict.html=function(self){var res=self.elt.innerHTML
 if(res===undefined){if(self.elt.nodeType==9){res=self.elt.body.innerHTML}
 else{res=_b_.None}}
@@ -11272,10 +11268,6 @@ var elt=self.elt
 while(true){if(other===elt){return true}
 elt=elt.parentElement
 if(!elt){return false}}}
-DOMNodeDict.left={'__get__': function(self){console.log('get left',self.elt,self.elt.style)
-var res=parseInt(self.elt.style.left)
-if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'left'")}
-return res},'__set__': function(obj,self,value){self.elt.style.left=value+'px'}}
 DOMNodeDict.options=function(self){
 return new $OptionsClass(self.elt)}
 DOMNodeDict.parent=function(self){if(self.elt.parentElement)return DOMNode(self.elt.parentElement)
@@ -11296,10 +11288,6 @@ return DOMNode(res)}
 DOMNodeDict.style=function(self){
 self.elt.style.float=self.elt.style.cssFloat ||self.style.styleFloat
 return $B.JSObject(self.elt.style)}
-DOMNodeDict.top={'__get__': function(self){if(self.elt.style===undefined){return _b_.None}
-var res=parseInt(self.elt.style.top)
-if(isNaN(res)){throw _b_.AttributeError("node has no attribute 'top'")}
-return res},'__set__': function(obj,self,value){self.elt.style.top=value+'px'}}
 DOMNodeDict.setSelectionRange=function(self){
 if(this['setSelectionRange']!==undefined){return(function(obj){return function(){return obj.setSelectionRange.apply(obj,arguments)}})(this)}else if(this['createTextRange']!==undefined){return(function(obj){return function(start_pos,end_pos){if(end_pos==undefined){end_pos=start_pos}
 var range=obj.createTextRange();
@@ -11365,15 +11353,6 @@ events.splice(j,1)
 flag=true
 break}}
 if(!flag){throw KeyError('missing callback for event '+event)}}}
-DOMNodeDict.width={'__get__': function(self){
-if(self.elt.tagName=='CANVAS'){return self.elt.width}
-if(self.elt.style===undefined){return _b_.None}
-var res=parseInt(self.elt.style.width)
-if(isNaN(res)){
-return self.elt.offsetWidth}
-return res},'__set__': function(obj,self,value){if(self.elt.tagName=='CANVAS'){
-self.elt.width=value}
-self.elt.style.width=value+'px'}}
 var $QueryDict={__class__:$B.$type,__name__:'query'}
 $QueryDict.__contains__=function(self,key){return self._keys.indexOf(key)>-1}
 $QueryDict.__getitem__=function(self,key){

@@ -37,7 +37,10 @@
 
 <div id="menu" b-include="template_home.html"></div>
 
-<div id="app" b-expr="message">
+<div id="app">{message}</div>
+
+<div id="change_message">
+    <input b-on="blur:change_msg">
 </div>
 
 <div id="app-2">
@@ -85,8 +88,20 @@
   <button b-on="click:incr">+1</button>{counter}
 </div>
 
-<div id="with_include" b-include="included.html">
+<table id="score">
+  <tr>
+    <td b-code="for pattern in score['structure']">
+      <button>{pattern}</button>
+    </td>
+  </tr>
+</table>
 
+<div id="measure">
+  <span b-code="for i in range(16):">
+    <span b-code="if i % 4 == 0:">{1 + i // 4}</span>
+    <span b-code="elif i % 4 == 2:">&</span>
+    <span b-code="else:">-</span>
+  </span>
 </div>
 <script type="text/python">
 from browser import document, window, alert
@@ -95,6 +110,15 @@ from browser.template import Template
 Date = window.Date.new
 
 Template(document["menu"]).render(title="Brython Template demo")
+
+app_tmpl = Template("app")
+app_tmpl.render(message="coucou")
+
+def change_msg(evt, elt):
+    print("change message")
+    app_tmpl.render(message=evt.target.value)
+
+Template("change_message", [change_msg]).render()
 
 Template("app-2").render(
     message="You loaded this page on " + Date().toLocaleString()
@@ -136,7 +160,28 @@ def incr(event, element):
 
 Template(document["incrementer"], [incr]).render(counter=0)
 
-Template(document["with_include"]).render(info="included element")
+score = {
+    'patterns': {
+        'A': {
+            'HiHat': [
+                0, 4, 8, 12
+            ],
+            'Kick': [
+                0, 3, 8, 10, 11, 14
+            ],
+            'Snare': [4, 7, 9, 12
+            ]
+        }
+    },
+    'structure': [
+        'A', 'A'
+    ],
+    'tempo': 100,
+    'title': 'song'
+}
+Template("score").render(score=score)
+
+Template("measure").render()
 </script>
 
 </body>

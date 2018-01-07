@@ -5159,7 +5159,9 @@ function $YieldCtx(context){
 
             var new_node = new $Node()
             new_node.locals = node.locals
-            node.parent.children.splice(rank,1)
+            if(this.parent.type!="assign"){
+                node.parent.children.splice(rank,1)
+            }
             node.parent.insert(rank, new_node)
 
             var for_ctx = new $ForExpr(new $NodeCtx(new_node))
@@ -7054,8 +7056,10 @@ function $transition(context,token){
                 $_SyntaxError(context,"'from' must follow 'yield'")
             }
             context.from = true
-            context.tree = []
-            return new $AbstractExprCtx(context, true)
+            return context.tree[0]
+            //context.from = true
+            //context.tree = []
+            //return new $AbstractExprCtx(context, true)
         }
         return $transition(context.parent,token)
     } // switch(context.type)

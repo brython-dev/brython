@@ -503,6 +503,12 @@ DOMNodeDict.__getattribute__ = function(self,attr){
       case 'left':
       case 'top':
       case 'width':
+        // Special case for Canvas
+        // http://stackoverflow.com/questions/4938346/canvas-width-and-height-in-html5
+        if(self.elt.tagName=='CANVAS' && self.elt[attr]){
+            return self.elt[attr]
+        }
+
         if(self.elt instanceof SVGElement){
             return self.elt.getAttributeNS(null, attr)
         }
@@ -782,8 +788,9 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
             case "top":
             case "width":
             case "height":
-                var elt = self.elt
-                if(self.elt.nodeType==3){
+                if(self.elt.tagName=="CANVAS"){
+                    self.elt.style[attr] = value
+                }else if(self.elt.nodeType==1){
                     self.elt.style[attr] = value + "px"
                 }
                 break
@@ -1068,25 +1075,6 @@ DOMNodeDict.getSelectionRange = function(self){ // for TEXTAREA
     }
 }
 
-DOMNodeDict.height = {
-    '__get__': function(self){
-        // Special case for Canvas
-        // http://stackoverflow.com/questions/4938346/canvas-width-and-height-in-html5
-        if(self.elt.tagName=='CANVAS'){return self.elt.height}
-        if(self.elt.style===undefined){return _b_.None}
-        var res = parseInt(self.elt.style.height)
-        if(isNaN(res)){
-            return self.elt.offsetHeight
-            //throw _b_.AttributeError("node has no attribute 'height'")
-        }
-        return res
-    },
-    '__set__': function(obj, self, value){
-        if(self.elt.tagName=='CANVAS'){self.elt.height=value}
-        self.elt.style.height = value+'px'
-    }
-}
-
 DOMNodeDict.html = function(self){
     var res = self.elt.innerHTML
     if(res===undefined){
@@ -1123,21 +1111,6 @@ DOMNodeDict.inside = function(self, other){
         if(other===elt){return true}
         elt = elt.parentElement
         if(!elt){return false}
-    }
-}
-
-DOMNodeDict.left = {
-    '__get__': function(self){
-        console.log('get left', self.elt, self.elt.style)
-        //if(self.elt.style===undefined){return _b_.None}
-        var res = parseInt(self.elt.style.left)
-        if(isNaN(res)){
-            throw _b_.AttributeError("node has no attribute 'left'")
-        }
-        return res
-    },
-    '__set__': function(obj, self, value){
-        self.elt.style.left = value+'px'
     }
 }
 
@@ -1184,20 +1157,6 @@ DOMNodeDict.style = function(self){
     // set attribute "float" for cross-browser compatibility
     self.elt.style.float = self.elt.style.cssFloat || self.style.styleFloat
     return $B.JSObject(self.elt.style)
-}
-
-DOMNodeDict.top = {
-    '__get__': function(self){
-        if(self.elt.style===undefined){return _b_.None}
-        var res = parseInt(self.elt.style.top)
-        if(isNaN(res)){
-            throw _b_.AttributeError("node has no attribute 'top'")
-        }
-        return res
-    },
-    '__set__': function(obj, self, value){
-        self.elt.style.top = value+'px'
-    }
 }
 
 DOMNodeDict.setSelectionRange = function(self){ // for TEXTAREA
@@ -1349,29 +1308,6 @@ DOMNodeDict.unbind = function(self, event){
         }
         // The indicated func was not found, error is thrown
         if(!flag){throw KeyError('missing callback for event '+event)}
-    }
-}
-
-DOMNodeDict.width = {
-    '__get__': function(self){
-        // Special case for Canvas
-        // http://stackoverflow.com/questions/4938346/canvas-width-and-height-in-html5
-        if(self.elt.tagName=='CANVAS'){return self.elt.width}
-        if(self.elt.style===undefined){return _b_.None}
-        var res = parseInt(self.elt.style.width)
-        if(isNaN(res)){
-            //throw _b_.AttributeError("node has no attribute 'width'")
-            return self.elt.offsetWidth
-        }
-        return res
-    },
-    '__set__': function(obj, self, value){
-        if(self.elt.tagName=='CANVAS'){
-            // for CANVAS, we must set both elt.widdth and elt.style.width
-            // to the same value, else content is scaled in the browser
-            self.elt.width=value
-        }
-        self.elt.style.width = value+'px'
     }
 }
 
