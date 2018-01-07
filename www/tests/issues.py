@@ -1629,7 +1629,6 @@ try:
 except NameError:
     pass
 
-
 # issue 749
 assert float.__eq__(1.5, 1.5)
 assert float.__eq__(1.0, 1)
@@ -1637,6 +1636,25 @@ assert not float.__eq__(1, 0)
 assert int.__eq__(1, 1)
 assert not int.__eq__(1, 0)
 
+# issue 751
+class Z: pass
+
+try:
+    (10, Z()) <= (10, Z())
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+try:
+    a = [100, 100, 100, 100, 100, 70, 100, 100, 70, 70, 100,
+     70, 70, 70, 100, 70, 70, 100, 70, 70, 70, 70, 100, 70,
+     70, 70, 70, 70, 100, 70, 70, 70, 100, 70, 70, 70, 70,
+     70, 70, 100]
+    b = [(v, Z()) for v in a]
+    sorted(b, reverse=True)
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
 
 
 # ==========================================

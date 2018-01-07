@@ -159,7 +159,13 @@ $ListDict.__ge__ = function(self,other){
     while(i<self.length){
         if(i>=other.length) return true
         if($B.rich_comp("__eq__", self[i], other[i])){i++}
-        else return(getattr(self[i],"__ge__")(other[i]))
+        else {
+            res = getattr(self[i],"__ge__")(other[i])
+             if (res === _b_.NotImplemented) {
+                throw _b_.TypeError("unorderable types: "+$B.get_class(self[i]).__name__+"() >= "+
+            $B.get_class(other[i]).__name__+'()')
+             } else return res
+        }
     }
 
     //if(other.length==self.length) return true
@@ -177,7 +183,13 @@ $ListDict.__gt__ = function(self,other){
     while(i<self.length){
         if(i>=other.length) return true
         if($B.rich_comp("__eq__", self[i], other[i])){i++}
-        else return(getattr(self[i],'__gt__')(other[i]))
+        else {
+            res = getattr(self[i],'__gt__')(other[i])
+            if (res === _b_.NotImplemented) {
+                throw _b_.TypeError("unorderable types: "+$B.get_class(self[i]).__name__+"() > "+
+            $B.get_class(other[i]).__name__+'()')
+            } else return res
+        }
     }
     // other starts like self, but is as long or longer
     return false
@@ -545,7 +557,9 @@ $ListDict.sort = function(self){
         if (func===null) {
             if (reverse) {
                 cmp = function(b,a) {
-                    if(getattr(a,'__le__')(b)) {
+                    res = getattr(a,'__le__')(b)
+                    if (res === _b_.NotImplemented) throw _b_.TypeError("unorderable types: "+$B.get_class(b).__name__+"() <="+$B.get_class(a).__name__+"()")
+                    if(res) {
                         if(a==b){return 0};
                         return -1;
                     }
@@ -553,7 +567,9 @@ $ListDict.sort = function(self){
                 }
             } else {
                 cmp = function(a,b) {
-                    if(getattr(a,'__le__')(b)) {
+                    res = getattr(a,'__le__')(b)
+                    if (res === _b_.NotImplemented) throw _b_.TypeError("unorderable types: "+$B.get_class(a).__name__+"() <="+$B.get_class(b).__name__+"()")
+                    if(res ) {
                         if(a==b){return 0};
                         return -1;
                     }
@@ -564,7 +580,9 @@ $ListDict.sort = function(self){
             if (reverse) {
                 cmp = function(b,a) {
                     var _a = func(a), _b=func(b);
-                    if(getattr(_a,'__le__')(_b)) {
+                    res = getattr(_a,'__le__')(_b)
+                    if (res === _b_.NotImplemented) throw _b_.TypeError("unorderable types: "+$B.get_class(b).__name__+"() <="+$B.get_class(a).__name__+"()")
+                    if(res) {
                         if(_a==_b){return 0};
                         return -1;
                     }
@@ -573,7 +591,9 @@ $ListDict.sort = function(self){
             } else {
                 cmp = function(a,b) {
                     var _a = func(a), _b=func(b);
-                    if(getattr(_a,'__le__')(_b)) {
+                    res = getattr(_a,'__le__')(_b)
+                    if (res === _b_.NotImplemented) throw _b_.TypeError("unorderable types: "+$B.get_class(a).__name__+"() <="+$B.get_class(b).__name__+"()")
+                    if(res) {
                         if(_a==_b){return 0};
                         return -1;
                     }
