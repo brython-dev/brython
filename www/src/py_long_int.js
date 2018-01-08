@@ -434,8 +434,7 @@ $LongIntDict.__mul__ = function(self, other){
     switch(self){
         case Number.NEGATIVE_INFINITY:
         case Number.POSITIVE_INFINITY:
-            var eq = _b_.getattr(other, '__eq__')
-            if(eq(0)){return NaN} // infinity * 0 = NaN
+            if ($B.rich_comp("__eq__",other,0)){return NaN} // infinity * 0 = NaN
             else if(_b_.getattr(other, '__gt__')(0)){return self}
             else{return -self}
     }

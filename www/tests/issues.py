@@ -1629,6 +1629,13 @@ try:
 except NameError:
     pass
 
+# issue 749
+assert float.__eq__(1.5, 1.5)
+assert float.__eq__(1.0, 1)
+assert not float.__eq__(1, 0)
+assert int.__eq__(1, 1)
+assert not int.__eq__(1, 0)
+
 # issue 751
 class Z: pass
 
@@ -1648,6 +1655,7 @@ try:
     raise Exception("should have raised TypeError")
 except TypeError:
     pass
+
 
 # ==========================================
 # Finally, report that all tests have passed

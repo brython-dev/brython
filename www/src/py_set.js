@@ -61,7 +61,7 @@ $SetDict.__contains__ = function(self,item){
     }
     
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
-        if(_b_.getattr(self.$items[i],'__eq__')(item)) return true
+        if($B.rich_comp("__eq__", self.$items[i], item)) return true
     }
     return false
 
@@ -295,7 +295,7 @@ $SetDict.add = function(){
         }
         return $N
     }
-    var cfunc = _b_.getattr(item,'__eq__')
+    var cfunc = function(other){return $B.rich_comp("__eq__", item, other)}
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
         if(cfunc(self.$items[i])) return
     }
@@ -339,7 +339,7 @@ $SetDict.difference_update = function(self){
                   } 
                } else {
                   for (var j=0; j < self.$items.length; j++) {
-                    if (_b_.getattr(self.$items[j], '__eq__')(item)) {
+                    if($B.rich_comp("__eq__", self.$items[j], item)){
                       self.$items.splice(j,1)
                     }
                   }
@@ -375,7 +375,7 @@ $SetDict.intersection_update = function(){
             }else{
               var found = false
               for(var k=0;!found && k < s.$items.length;k++){
-                if(_b_.getattr(s.$items[k], '__eq__')(_item)){found=true}
+                if($B.rich_comp("__eq__", s.$items[k], _item)){found=true}
               }
               if(!found){remove.push(j)}
            }
@@ -413,7 +413,7 @@ $SetDict.remove = function(self,item){
        return $N
     }
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
-        if(_b_.getattr(self.$items[i],'__eq__')(item)){
+        if($B.rich_comp("__eq__", self.$items[i], item)){
             self.$items.splice(i,1)
             return $N
         }
@@ -439,7 +439,7 @@ $SetDict.symmetric_difference_update = function(self, s){
            } else {
               var found = false
               for (var j=0; !found && j < self.$items.length; j++) {
-                if (_b_.getattr(self.$items[j], '__eq__')(item)) {
+                if($B.rich_comp("__eq__", self.$items[j], item)){
                   remove.push(j)
                   found = true
                 }

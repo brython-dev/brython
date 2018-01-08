@@ -678,7 +678,7 @@ $B.$is_member = function(item,_set){
         while(1){
             try{
                 var elt = _b_.next(_iter)
-                if(_b_.getattr(elt,"__eq__")(item)) return true
+                if($B.rich_comp("__eq__", elt, item)) return true
             }catch(err){
                 if(err.__name__=="StopIteration"){
                     $B.current_exception = ce
@@ -700,7 +700,7 @@ $B.$is_member = function(item,_set){
             i++
             try{
                 var elt = f(i)
-                if(_b_.getattr(elt,"__eq__")(item)) return true
+                if($B.rich_comp("__eq__", elt, item)) return true
             }catch(err){
                 if(err.__name__=='IndexError') return false
                 throw err
@@ -1347,6 +1347,27 @@ $B.rich_comp = function(op, x, y){
         }
     }
     var res, rev_op, compared = false
+
+    if(x.__class__ && x.__class__.$factory === $B.$type.$factory && y.__class__ && y.__class__.$factory === $B.$type.$factory) {
+        if ( op == '__eq__') {
+            return (x === y || x.$factory === y || y.$factory === x)
+        } else if ( op == '__ne__') {
+            return !(x === y || x.$factory === y || y.$factory === x)
+        } else {
+            throw _b_.TypeError("'"+op+"' not supported between types")
+        }
+
+    } else if (x.__class__ && x.__class__.$factory === $B.$type.$factory ) {
+        rev_op = reversed_op[op] || op
+        res = _b_.getattr(y, rev_op)(x)
+        if ( res !== _b_.NotImplemented ) return res
+        else return False
+    } else if (y.__class__ && y.__class__.$factory === $B.$type.$factory ) {
+        res = _b_.getattr(y, op)(x)
+        if ( res !== _b_.NotImplemented ) return res
+        else return False
+    }
+
     if(x.__class__ && y.__class__){
         // cf issue #600 and
         // https://docs.python.org/3/reference/datamodel.html :
