@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-01-05 18:04:53.830726"
+__BRYTHON__.compiled_date="2018-01-08 15:29:32.865959"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4405,7 +4405,7 @@ return res}
 $ObjectDict.__eq__=function(self,other){
 var _class=$B.get_class(self)
 if(_class.$native ||_class.__name__=='function'){var _class1=$B.get_class(other)
-if(!_class1.$native && _class1.__name__ !='function'){return _b_.getattr(other,'__eq__')(self)}}
+if(!_class1.$native && _class1.__name__ !='function'){return $B.rich_comp("__eq__",other,self)}}
 return self===other}
 $ObjectDict.__format__=function(){var $=$B.args('__format__',2,{self:null,spec:null},['self','spec'],arguments,{},null,null)
 if($.spec!==''){throw _b_.TypeError("non-empty format string passed to object.__format__")}
@@ -4428,11 +4428,11 @@ var get=res.__get__
 if(get===undefined && res.__class__){var get=res.__class__.__get__
 for(var i=0;i<res.__class__.__mro__.length && get===undefined;i++){get=res.__class__.__mro__[i].__get__}}
 var __get__=get===undefined ? null : _b_.getattr(res,'__get__',null)
-if(__get__!==null){try{return __get__.apply(null,[obj,klass])}
+if(__get__!==null){try{return __get__.apply(null,[obj,klass.$factory])}
 catch(err){console.log('error in get.apply',err)
 console.log(__get__+'')
 throw err}}
-if(typeof res=='object'){if(__get__ &&(typeof __get__=='function')){get_func=function(x,y){return __get__.apply(x,[y,klass])}}}
+if(typeof res=='object'){if(__get__ &&(typeof __get__=='function')){get_func=function(x,y){return __get__.apply(x,[y,klass.$factory])}}}
 if(__get__===null &&(typeof res=='function')){__get__=function(x){return x}}
 if(__get__!==null){
 res.__name__=attr
@@ -4478,8 +4478,7 @@ $ObjectDict.__lt__=function(){return _b_.NotImplemented}
 $ObjectDict.__mro__=[]
 $ObjectDict.__new__=function(cls){if(cls===undefined){throw _b_.TypeError('object.__new__(): not enough arguments')}
 return{__class__ : cls.$dict}}
-$ObjectDict.__ne__=function(self,other){var eq=_b_.getattr(self,"__eq__")
-return !eq(other)}
+$ObjectDict.__ne__=function(self,other){return !$B.rich_comp("__eq__",self,other)}
 $ObjectDict.__repr__=function(self){if(self===object)return "<class 'object'>"
 if(self.__class__===$B.$factory)return "<class '"+self.$dict.__name__+"'>"
 if(self.__class__===$B.$type && self.__name__=='classXXX')return "<class '"+self.__name__+"'>"
@@ -4677,11 +4676,7 @@ function method_wrapper(attr,klass,method){
 method.__str__=method.__repr__=function(self){return "<method '"+attr+"' of '"+klass.__name__+"' objects>"}
 return method}
 $B.$type.__repr__=$B.$type.__str__=function(self){return "<class '" + self.$dict.__name__ +"'>"}
-$B.$type.__getattribute__=function(klass,attr,metaclassed){switch(attr){case '__eq__':
-return method_wrapper(attr,klass,function(other){return klass.$factory===other})
-case '__ne__':
-return method_wrapper(attr,klass,function(other){return klass.$factory!==other})
-case '__class__':
+$B.$type.__getattribute__=function(klass,attr,metaclassed){switch(attr){case '__class__':
 return klass.__class__.$factory
 case '__doc__':
 return klass.__doc__ ||_b_.None
@@ -5082,7 +5077,7 @@ if(f)return f(item)
 try{_iter=_b_.iter(_set)}
 catch(err){$B.current_exception=ce}
 if(_iter){while(1){try{var elt=_b_.next(_iter)
-if(_b_.getattr(elt,"__eq__")(item))return true}catch(err){if(err.__name__=="StopIteration"){$B.current_exception=ce
+if($B.rich_comp("__eq__",elt,item))return true}catch(err){if(err.__name__=="StopIteration"){$B.current_exception=ce
 return false}
 throw err}}}
 try{f=_b_.getattr(_set,"__getitem__")}
@@ -5090,7 +5085,7 @@ catch(err){throw _b_.TypeError("'"+$B.get_class(_set).__name__+"' object is not 
 if(f){var i=-1
 while(1){i++
 try{var elt=f(i)
-if(_b_.getattr(elt,"__eq__")(item))return true}catch(err){if(err.__name__=='IndexError')return false
+if($B.rich_comp("__eq__",elt,item))return true}catch(err){if(err.__name__=='IndexError')return false
 throw err}}}}
 var $io={__class__:$B.$type,__name__:'io'}
 $io.__mro__=[_b_.object.$dict]
@@ -5384,6 +5379,8 @@ return x1 >=y1
 case "__gt__":
 return x1 > y1}}
 var res,rev_op,compared=false
+if(x.__class__===$B.$factory){if(op=='__eq__'){return(x===y)}else if(op=='__ne__'){return !(x===y)}else{
+throw _b_.TypeError("'"+op+"' not supported between types")}}
 if(x.__class__ && y.__class__){
 if(y.__class__.__mro__.indexOf(x.__class__)>-1){rev_op=reversed_op[op]||op
 res=_b_.getattr(y,rev_op)(x)
@@ -6047,7 +6044,7 @@ getattr(file,'write')(args.map(_b_.str).join(sep)+end)
 return None}
 $print.__name__='print'
 $print.is_func=true
-var $PropertyDict={__class__ : $B.$type,__name__ : 'property',}
+var $PropertyDict={__class__ : $B.$type,__name__ : 'property'}
 $PropertyDict.__mro__=[$ObjectDict]
 $B.$PropertyDict=$PropertyDict
 function property(fget,fset,fdel,doc){var p={__class__ : $PropertyDict,__doc__ : doc ||"",$type:fget.$type,fget:fget,fset:fset,fdel:fdel,toString:function(){return '<property>'}}
@@ -6652,13 +6649,13 @@ return res+')'}
 $RangeDict.__setattr__=function(self,attr,value){throw _b_.AttributeError('readonly attribute')}
 $RangeDict.start=function(self){return self.start}
 $RangeDict.step=function(self){return self.step},$RangeDict.stop=function(self){return self.stop}
-$RangeDict.count=function(self,ob){if(_b_.isinstance(ob,[_b_.int,_b_.float,_b_.bool])){return _b_.int($RangeDict.__contains__(self,ob))}else{var comp=_b_.getattr(ob,'__eq__'),it=$RangeDict.__iter__(self)
+$RangeDict.count=function(self,ob){if(_b_.isinstance(ob,[_b_.int,_b_.float,_b_.bool])){return _b_.int($RangeDict.__contains__(self,ob))}else{var comp=function(other){return $B.rich_comp("__eq__",ob,other)},it=$RangeDict.__iter__(self)
 _next=$RangeIterator.$dict.__next__,nb=0,ce=$B.current_exception
 while(true){try{if(comp(_next(it))){nb++}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){$B.current_exception=ce
 return nb}
 throw err}}}}
 $RangeDict.index=function(self,other){var $=$B.args('index',2,{self:null,other:null},['self','other'],arguments,{},null,null),self=$.self,other=$.other
-try{other=$B.int_or_bool(other)}catch(err){var comp=_b_.getattr(other,'__eq__'),it=$RangeDict.__iter__(self),_next=$RangeIterator.$dict.__next__,nb=0
+try{other=$B.int_or_bool(other)}catch(err){var comp=comp=function(x){return $B.rich_comp("__eq__",other,x)},it=$RangeDict.__iter__(self),_next=$RangeIterator.$dict.__next__,nb=0
 while(true){try{if(comp(_next(it))){return nb}
 nb++}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){throw _b_.ValueError(_b_.str(other)+' not in range')}
 throw err}}}
@@ -8468,8 +8465,7 @@ $LongIntDict.__mod__=function(self,other){return intOrLong($LongIntDict.__divmod
 $LongIntDict.__mro__=[_b_.int.$dict,_b_.object.$dict]
 $LongIntDict.__mul__=function(self,other){switch(self){case Number.NEGATIVE_INFINITY:
 case Number.POSITIVE_INFINITY:
-var eq=_b_.getattr(other,'__eq__')
-if(eq(0)){return NaN}
+if($B.rich_comp("__eq__",other,0)){return NaN}
 else if(_b_.getattr(other,'__gt__')(0)){return self}
 else{return -self}}
 if(isinstance(other,_b_.float)){return _b_.float(parseInt(self.value)*other)}
@@ -9088,7 +9084,7 @@ var res=self.valueOf().concat(other.valueOf())
 if(isinstance(self,tuple))res=tuple(res)
 return res}
 $ListDict.__contains__=function(self,item){var $=$B.args('__contains__',2,{self:null,item:null},['self','item'],arguments,{},null,null),self=$.self,item=$.item
-var _eq=getattr(item,'__eq__')
+var _eq=function(other){return $B.rich_comp("__eq__",item,other)}
 var i=0
 while(i<self.length){if(_eq(self[i]))return true
 i++}
@@ -9117,7 +9113,7 @@ if(hasattr(arg,'__int__')||hasattr(arg,'__index__')){$ListDict.__delitem__(self,
 return $N}
 throw _b_.TypeError('list indices must be integer, not '+_b_.str(arg.__class__))}
 $ListDict.__eq__=function(self,other){if(isinstance(other,$B.get_class(self).$factory)){if(other.length==self.length){var i=self.length
-while(i--){if(!getattr(self[i],'__eq__')(other[i]))return false}
+while(i--){if(!$B.rich_comp("__eq__",self[i],other[i]))return false}
 return true}}
 return false}
 $ListDict.__getitem__=function(self,arg){var $=$B.args('__getitem__',2,{self:null,key:null},['self','key'],arguments,{},null,null),self=$.self,key=$.key
@@ -9143,15 +9139,21 @@ $ListDict.__ge__=function(self,other){if(!isinstance(other,[list,_b_.tuple])){th
 $B.get_class(other).__name__+'()')}
 var i=0
 while(i<self.length){if(i>=other.length)return true
-if(getattr(self[i],'__eq__')(other[i])){i++}
-else return(getattr(self[i],"__ge__")(other[i]))}
+if($B.rich_comp("__eq__",self[i],other[i])){i++}
+else{
+res=getattr(self[i],"__ge__")(other[i])
+if(res===_b_.NotImplemented){throw _b_.TypeError("unorderable types: "+$B.get_class(self[i]).__name__+"() >= "+
+$B.get_class(other[i]).__name__+'()')}else return res}}
 return other.length==self.length}
 $ListDict.__gt__=function(self,other){if(!isinstance(other,[list,_b_.tuple])){throw _b_.TypeError("unorderable types: list() > "+
 $B.get_class(other).__name__+'()')}
 var i=0
 while(i<self.length){if(i>=other.length)return true
-if(getattr(self[i],'__eq__')(other[i])){i++}
-else return(getattr(self[i],'__gt__')(other[i]))}
+if($B.rich_comp("__eq__",self[i],other[i])){i++}
+else{
+res=getattr(self[i],'__gt__')(other[i])
+if(res===_b_.NotImplemented){throw _b_.TypeError("unorderable types: "+$B.get_class(self[i]).__name__+"() > "+
+$B.get_class(other[i]).__name__+'()')}else return res}}
 return false}
 $ListDict.__hash__=None
 $ListDict.__iadd__=function(){var $=$B.args('__iadd__',2,{self:null,x:null},['self','x'],arguments,{},null,null)
@@ -9223,7 +9225,7 @@ $ListDict.copy=function(){var $=$B.args('copy',1,{self:null},['self'],arguments,
 return $.self.slice()}
 $ListDict.count=function(){var $=$B.args('count',2,{self:null,x:null},['self','x'],arguments,{},null,null)
 var res=0
-_eq=getattr($.x,'__eq__')
+_eq=function(other){return $B.rich_comp("__eq__",$.x,other)}
 var i=$.self.length
 while(i--)if(_eq($.self[i]))res++
 return res}
@@ -9232,7 +9234,7 @@ other=list($B.$iter($.t))
 for(var i=0;i<other.length;i++){$.self.push(other[i])}
 return $N}
 $ListDict.index=function(){var $=$B.args('index',4,{self:null,x:null,start:null,stop:null},['self','x','start','stop'],arguments,{start:null,stop:null},null,null),self=$.self,start=$.start,stop=$.stop
-var _eq=getattr($.x,'__eq__')
+var _eq=function(other){return $B.rich_comp("__eq__",$.x,other)}
 if(start===null){start=0}
 else{if(start.__class__===$B.LongInt.$dict){start=parseInt(start.value)*(start.pos ? 1 : -1)}
 if(start<0){start=Math.max(0,start+self.length)}}
@@ -9253,7 +9255,7 @@ if(res===undefined){throw _b_.IndexError('pop index out of range')}
 self.splice(pos,1)
 return res}
 $ListDict.remove=function(){var $=$B.args('remove',2,{self:null,x:null},['self','x'],arguments,{},null,null)
-for(var i=0,_len_i=$.self.length;i < _len_i;i++){if(getattr($.self[i],'__eq__')($.x)){$.self.splice(i,1)
+for(var i=0,_len_i=$.self.length;i < _len_i;i++){if($B.rich_comp("__eq__",$.self[i],$.x)){$.self.splice(i,1)
 return $N}}
 throw _b_.ValueError(_b_.str($.x)+" is not in list")}
 $ListDict.reverse=function(self){var $=$B.args('reverse',1,{self:null},['self'],arguments,{},null,null),_len=$.self.length-1,i=parseInt($.self.length/2)
@@ -9310,18 +9312,26 @@ else if(func===null && self.$cl===_b_.int.$dict){if(reverse)
 cmp=function(b,a){return a-b};
 else
 cmp=function(a,b){return a-b};}else{
-if(func===null){if(reverse){cmp=function(b,a){if(getattr(a,'__le__')(b)){if(a==b){return 0};
+if(func===null){if(reverse){cmp=function(b,a){res=getattr(a,'__le__')(b)
+if(res===_b_.NotImplemented)throw _b_.TypeError("unorderable types: "+$B.get_class(b).__name__+"() <="+$B.get_class(a).__name__+"()")
+if(res){if(a==b){return 0};
 return -1;}
 return 1;}}else{
-cmp=function(a,b){if(getattr(a,'__le__')(b)){if(a==b){return 0};
+cmp=function(a,b){res=getattr(a,'__le__')(b)
+if(res===_b_.NotImplemented)throw _b_.TypeError("unorderable types: "+$B.get_class(a).__name__+"() <="+$B.get_class(b).__name__+"()")
+if(res ){if(a==b){return 0};
 return -1;}
 return 1;}}}else{
 if(reverse){cmp=function(b,a){var _a=func(a),_b=func(b);
-if(getattr(_a,'__le__')(_b)){if(_a==_b){return 0};
+res=getattr(_a,'__le__')(_b)
+if(res===_b_.NotImplemented)throw _b_.TypeError("unorderable types: "+$B.get_class(b).__name__+"() <="+$B.get_class(a).__name__+"()")
+if(res){if(_a==_b){return 0};
 return -1;}
 return 1;}}else{
 cmp=function(a,b){var _a=func(a),_b=func(b);
-if(getattr(_a,'__le__')(_b)){if(_a==_b){return 0};
+res=getattr(_a,'__le__')(_b)
+if(res===_b_.NotImplemented)throw _b_.TypeError("unorderable types: "+$B.get_class(a).__name__+"() <="+$B.get_class(b).__name__+"()")
+if(res){if(_a==_b){return 0};
 return -1;}
 return 1;}}}}
 $B.$TimSort(self,cmp,0,self.length)
@@ -10060,10 +10070,7 @@ if(isFinite(arg)){return arg.toString()}}
 try{if(arg.__class__===$B.$factory){
 var func=$B.$type.__getattribute__(arg.$dict.__class__,'__str__')
 if(func.__func__===_b_.object.$dict.__str__){return func(arg)}
-return func(arg)}else if(arg.__class__===$B.$type){
-var func=$B.$type.__getattribute__(arg.__class__,'__str__')
-if(func.__func__===_b_.object.$dict.__str__){return func(arg)}
-return func()}
+return func(arg)}
 var f=getattr(arg,'__str__')}
 catch(err){
 try{
@@ -10255,7 +10262,7 @@ while(true){try{res.push(items.next())}
 catch(err){break}}
 return _b_.set(res)}
 var $iterator_wrapper=function(items,klass){var res={__class__:klass,__eq__:function(other){
-return getattr(toSet(items),"__eq__")(other)},__iter__:function(){items.iter.i=0;return res},__len__:function(){return items.length()},__next__:function(){return items.next()},__repr__:function(){var s=[]
+return $B.rich_comp("__eq__",toSet(items),other)},__iter__:function(){items.iter.i=0;return res},__len__:function(){return items.length()},__next__:function(){return items.next()},__repr__:function(){var s=[]
 for(var i=0,len=items.length();i<len;i++){s.push(_b_.repr(items.next()))}
 return klass.__name__+'(['+ s.join(',')+ '])'},}
 res.__str__=res.toString=res.__repr__
@@ -10270,12 +10277,11 @@ case 'number':
 return self.$numeric_dict[item]!==undefined}
 var _key=hash(item)
 if(self.$str_hash[_key]!==undefined &&
-_b_.getattr(item,'__eq__')(self.$str_hash[_key])){return true}
+$B.rich_comp("__eq__",item,self.$str_hash[_key])){return true}
 if(self.$numeric_dict[_key]!==undefined &&
-_b_.getattr(item,'__eq__')(_key)){return true}
+$B.rich_comp("__eq__",item,_key)){return true}
 if(self.$object_dict[_key]!==undefined){
-var _eq=getattr(item,'__eq__')
-if(_eq(self.$object_dict[_key][0])){return true}}
+return $B.rich_comp("__eq__",item,self.$object_dict[_key][0])}
 return false}
 $DictDict.__delitem__=function(){var $=$B.args('__eq__',2,{self:null,arg:null},['self','arg'],arguments,{},null,null),self=$.self,arg=$.arg
 if(self.$jsobj){if(self.$jsobj[arg]===undefined){throw KeyError(arg)}
@@ -10302,9 +10308,9 @@ if($DictDict.__len__(self)!=$DictDict.__len__(other)){return false}
 if((self.$numeric_dict.length!=other.$numeric_dict.length)||
 (self.$string_dict.length!=other.$string_dict.length)||
 (self.$object_dict.length!=other.$object_dict.length)){return false}
-for(var k in self.$numeric_dict){if(!_b_.getattr(other.$numeric_dict[k],'__eq__')(self.$numeric_dict[k])){return false}}
-for(var k in self.$string_dict){if(!_b_.getattr(other.$string_dict[k],'__eq__')(self.$string_dict[k])){return false}}
-for(var k in self.$object_dict){if(!_b_.getattr(other.$object_dict[k][1],'__eq__')(self.$object_dict[k][1])){return false}}
+for(var k in self.$numeric_dict){if(!$B.rich_comp("__eq__",other.$numeric_dict[k],self.$numeric_dict[k])){return false}}
+for(var k in self.$string_dict){if(!$B.rich_comp("__eq__",other.$string_dict[k],self.$string_dict[k])){return false}}
+for(var k in self.$object_dict){if(!$B.rich_comp("__eq__",other.$object_dict[k][1],self.$object_dict[k][1])){return false}}
 return true}
 $DictDict.__getitem__=function(){var $=$B.args('__getitem__',2,{self:null,arg:null},['self','arg'],arguments,{},null,null),self=$.self,arg=$.arg
 if(self.$jsobj){if(self.$jsobj[arg]===undefined ||self.$jsobj[arg]===null){return $N}
@@ -10314,7 +10320,7 @@ if(self.$string_dict[arg]!==undefined)return self.$string_dict[arg]
 break
 case 'number':
 if(self.$numeric_dict[arg]!==undefined)return self.$numeric_dict[arg]}
-var _key=_b_.hash(arg),_eq=_b_.getattr(arg,'__eq__')
+var _key=_b_.hash(arg),_eq=function(other){return $B.rich_comp('__eq__',arg,other)}
 var sk=self.$str_hash[_key]
 if(sk!==undefined && _eq(sk)){return self.$string_dict[sk]}
 if(self.$numeric_dict[_key]!==undefined && _eq(_key)){return self.$numeric_dict[_key]}
@@ -10391,7 +10397,7 @@ case 'number':
 self.$numeric_dict[key]=value
 return $N}
 var _key=hash(key)
-var _eq=getattr(key,'__eq__')
+var _eq=function(other){return $B.rich_comp("__eq__",key,other)};
 if(self.$numeric_dict[_key]!==undefined && _eq(_key)){self.$numeric_dict[_key]=value
 return $N}
 var sk=self.$str_hash[_key]
@@ -10555,7 +10561,7 @@ for(var i=self.$items.length-1;i>=0;i--){if(isNaN(self.$items[i])){return true}}
 return false}else{return self.$items.indexOf(item)>-1}}
 if(self.$str &&(typeof item=='string')){return self.$items.indexOf(item)>-1}
 if(! _b_.isinstance(item,set)){_b_.hash(item)}
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_b_.getattr(self.$items[i],'__eq__')(item))return true}
+for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if($B.rich_comp("__eq__",self.$items[i],item))return true}
 return false}
 $SetDict.__eq__=function(self,other){
 if(other===undefined)return self===set
@@ -10648,7 +10654,7 @@ if(ix==-1){self.$items.push(item)}
 else{
 if(item!==self.$items[ix]){self.$items.push(item)}}
 return $N}
-var cfunc=_b_.getattr(item,'__eq__')
+var cfunc=function(other){return $B.rich_comp("__eq__",item,other)}
 for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(cfunc(self.$items[i]))return}
 self.$items.push(item)
 return $N}
@@ -10666,7 +10672,7 @@ while(true){try{item=_next()
 var _type=typeof item
 if(_type=='string' ||_type=="number"){var _index=self.$items.indexOf(item)
 if(_index > -1){self.$items.splice(_index,1)}}else{
-for(var j=0;j < self.$items.length;j++){if(_b_.getattr(self.$items[j],'__eq__')(item)){self.$items.splice(j,1)}}}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
+for(var j=0;j < self.$items.length;j++){if($B.rich_comp("__eq__",self.$items[j],item)){self.$items.splice(j,1)}}}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}}
 return $N}
 $SetDict.discard=function(){var $=$B.args('discard',2,{self:null,item:null},['self','item'],arguments,{},null,null)
@@ -10678,7 +10684,7 @@ var $=$B.args('intersection_update',1,{self:null},['self'],arguments,{},'args',n
 for(var i=0;i<$.args.length;i++){var remove=[],s=set($.args[i])
 for(var j=0;j<self.$items.length;j++){var _item=self.$items[j],_type=typeof _item
 if(_type=='string' ||_type=="number"){if(s.$items.indexOf(_item)==-1){remove.push(j)}}else{var found=false
-for(var k=0;!found && k < s.$items.length;k++){if(_b_.getattr(s.$items[k],'__eq__')(_item)){found=true}}
+for(var k=0;!found && k < s.$items.length;k++){if($B.rich_comp("__eq__",s.$items[k],_item)){found=true}}
 if(!found){remove.push(j)}}}
 remove.sort(function(x,y){return x-y}).reverse()
 for(var j=0;j<remove.length;j++){self.$items.splice(remove[j],1)}}
@@ -10695,7 +10701,7 @@ if(typeof item=='string' ||typeof item=='number'){var _i=self.$items.indexOf(ite
 if(_i==-1)throw _b_.KeyError(item)
 self.$items.splice(_i,1)
 return $N}
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_b_.getattr(self.$items[i],'__eq__')(item)){self.$items.splice(i,1)
+for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if($B.rich_comp("__eq__",self.$items[i],item)){self.$items.splice(i,1)
 return $N}}
 throw _b_.KeyError(item)}
 $SetDict.symmetric_difference_update=function(self,s){
@@ -10706,7 +10712,7 @@ var _type=typeof item
 if(_type=='string' ||_type=="number"){var _index=self.$items.indexOf(item)
 if(_index > -1){remove.push(_index)}else{add.push(item)}}else{
 var found=false
-for(var j=0;!found && j < self.$items.length;j++){if(_b_.getattr(self.$items[j],'__eq__')(item)){remove.push(j)
+for(var j=0;!found && j < self.$items.length;j++){if($B.rich_comp("__eq__",self.$items[j],item)){remove.push(j)
 found=true}}
 if(!found){add.push(item)}}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}

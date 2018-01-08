@@ -162,7 +162,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
 
         // For descriptors, attribute resolution is done by applying __get__
         if(__get__!==null){
-            try{return __get__.apply(null, [obj, klass])}
+            try{return __get__.apply(null, [obj, klass.$factory])}
             catch(err){
                 console.log('error in get.apply', err)
                 console.log(__get__+'')
@@ -172,7 +172,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
 
         if(typeof res=='object'){
             if(__get__ && (typeof __get__=='function')){
-                get_func = function(x,y){return __get__.apply(x,[y,klass])}
+                get_func = function(x,y){return __get__.apply(x,[y,klass.$factory])}
             }
         }
 

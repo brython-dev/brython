@@ -1426,7 +1426,7 @@ $print.is_func = true
 // property (built in function)
 var $PropertyDict = {
     __class__ : $B.$type,
-    __name__ : 'property',
+    __name__ : 'property'
 }
 $PropertyDict.__mro__ = [$ObjectDict]
 $B.$PropertyDict = $PropertyDict

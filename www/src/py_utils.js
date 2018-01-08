@@ -1348,24 +1348,14 @@ $B.rich_comp = function(op, x, y){
     }
     var res, rev_op, compared = false
 
-    if(x.__class__ && x.__class__.$factory === $B.$type.$factory && y.__class__ && y.__class__.$factory === $B.$type.$factory) {
+    if(x.__class__ === $B.$factory) {
         if ( op == '__eq__') {
-            return (x === y || x.$factory === y || y.$factory === x)
+            return (x === y)
         } else if ( op == '__ne__') {
-            return !(x === y || x.$factory === y || y.$factory === x)
+            return !(x === y)
         } else {
             throw _b_.TypeError("'"+op+"' not supported between types")
         }
-
-    } else if (x.__class__ && x.__class__.$factory === $B.$type.$factory ) {
-        rev_op = reversed_op[op] || op
-        res = _b_.getattr(y, rev_op)(x)
-        if ( res !== _b_.NotImplemented ) return res
-        else return False
-    } else if (y.__class__ && y.__class__.$factory === $B.$type.$factory ) {
-        res = _b_.getattr(y, op)(x)
-        if ( res !== _b_.NotImplemented ) return res
-        else return False
     }
 
     if(x.__class__ && y.__class__){
