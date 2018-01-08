@@ -31,7 +31,7 @@ function check_no_kw(name, x, y){
         throw _b_.TypeError(name+"() takes no keyword arguments")}
 }
 
-var $NoneDict = {__class__:$B.$type,__name__:'NoneType'}
+var $NoneDict = {__class__:$B.$type,__name__:'NoneType',__module__:"builtins"}
 
 $NoneDict.__mro__ = [$ObjectDict]
 
@@ -1137,6 +1137,8 @@ var iterator_class = $B.make_class({name:'iterator',
         self.counter = -1
     }
 })
+iterator_class.$dict.__module__ = "builtins"
+
 iterator_class.$dict.__next__ = function(self){
     self.counter++
     if(self.len!==null && self.counter==self.len){throw _b_.StopIteration('')}

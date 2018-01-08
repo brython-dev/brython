@@ -374,6 +374,9 @@
         'Python builtins')
     for(var attr in $B.builtins){
         _b_.__builtins__[attr] = _b_[attr]
+        if(_b_[attr].__class__===$B.$factory){
+            _b_[attr].$dict.__module__ = 'builtins'
+        }
     }
     _b_.__builtins__.__setattr__ = function(attr, value){
         _b_[attr] = value

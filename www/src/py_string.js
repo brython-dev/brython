@@ -1146,7 +1146,12 @@ $StringDict.format = function(self) {
         else if(fmt.conv=='s'){value = _b_.str(value)}
 
         // Call attribute __format__ to perform the actual formatting
-        res += _b_.getattr(value, '__format__')(fmt.spec)
+        if(value.__class__===$B.$factory){
+            // For classes, don't use the class __format__ method
+            res += value.$dict.__class__.__format__(value, fmt.spec)
+        }else{
+            res += _b_.getattr(value, '__format__')(fmt.spec)
+        }
     }
     return res
 }

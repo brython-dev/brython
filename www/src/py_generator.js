@@ -5,9 +5,9 @@
 // The original generator function is transformed into another function
 // that returns iterators
 //
-// For each iteration at rank r, a function F(r) is run and returns a 
-// 2-element list : [value, yield_node_id] where value is the yielded value 
-// and yield_node_id identifies the node in the function tree structure where 
+// For each iteration at rank r, a function F(r) is run and returns a
+// 2-element list : [value, yield_node_id] where value is the yielded value
+// and yield_node_id identifies the node in the function tree structure where
 // the value was yielded
 //
 // For the first iteration, the function F(0) is built from the original
@@ -16,7 +16,7 @@
 // For the iteration r+1 it is built from the function F(r), taking into
 // account yield_node_id :
 // - if it is the same as in the previous iteration, F(r+1) = F(r)
-// - else the new function is built to run the rest of the function after the 
+// - else the new function is built to run the rest of the function after the
 //   yielding node
 
 var _b_=$B.builtins
@@ -36,7 +36,7 @@ function make_node(top_node, node){
         var ctx_js = node.context.$genjs = node.context.to_js()
     }
     var is_cond = false, is_except = false,is_else=false,is_continue
-    
+
     if(node.locals_def){
         // Transforms the node where local namespace is reset
         // In generators, the namespace is stored in an attribute of the
@@ -51,7 +51,7 @@ function make_node(top_node, node){
     }
 
     // Mark some node types (try, except, finally, if, elif, else)
-    // The attributes set will be used to build the function for the next 
+    // The attributes set will be used to build the function for the next
     // iteration
 
     if(node.is_catch){is_except=true;is_cond=true}
@@ -59,7 +59,7 @@ function make_node(top_node, node){
     if(node.context.type=='node'){
         var ctx = node.context.tree[0]
         var ctype = ctx.type
-    
+
         switch(ctx.type) {
           case 'except':
             is_except=true
@@ -91,34 +91,34 @@ function make_node(top_node, node){
             var res =  'return ['+ctx_js+', '+yield_node_id+']'
             new_node.data = res
             top_node.yields.push(new_node)
-        
+
         }else if(node.is_set_yield_value){
 
             // After each yield, py2js inserts a no-op line as a placeholder
             // for values or exceptions sent to the iterator
             //
-            // Here, this line is replaced by a test on the attribute 
+            // Here, this line is replaced by a test on the attribute
             // sent_value of __BRYTHON__.modules[iter_id]. This attribute is
             // set when methods send() or throw() of the generators are
             // inovked
 
             var yield_node_id = top_node.yields.length
             var js = 'var sent_value = this.sent_value || None;'
-            
+
             // If method throw was called, raise the exception
             js += 'if(sent_value.__class__===$B.$GeneratorSendError)'+
                   '{throw sent_value.err}'
 
             // Else set the yielded value to sent_value
             js += 'var $yield_value'+ctx_js+'=sent_value;'
-            
+
             // Reset sent_value value to None for the next iteration
             js += 'this.sent_value=None'
             new_node.data = js
 
         }else if(ctype=='break' || ctype=="continue"){
 
-            // For a "break" or "continue", loop_num is a reference 
+            // For a "break" or "continue", loop_num is a reference
             // to the loop that is broken or continued
             new_node['is_'+ctype] = true
             new_node.loop_num = node.context.tree[0].loop_ctx.loop_num
@@ -236,7 +236,7 @@ $B.genNode = function(data, parent){
         }
         return false
     }
-    
+
     this.indent_src = function(indent){
         return ' '.repeat(indent*indent)
     }
@@ -259,9 +259,9 @@ $B.genNode = function(data, parent){
         if(this.has_child) res[pos++]='\n'+this.indent_src(indent)+'}\n'
         return res.join('')
     }
-    
+
     this.toString = function(){return '<Node '+this.data+'>'}
-    
+
 }
 
 
@@ -301,7 +301,7 @@ function in_try(node){
     return tries
 }
 
-var $BRGeneratorDict = {__class__:$B.$type,__name__:'generator'}
+var $BRGeneratorDict = {__class__:$B.$type,__name__:'generator',__module__:'builtins'}
 
 $B.gen_counter = 0 // used to identify the function run for each next()
 
@@ -311,9 +311,9 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
     // func_name : function name
     // def_id : generator function identifier
     // def_node : instance of Node for the function
-    
+
     var def_ctx = def_node.context.tree[0]
-    
+
     var module = def_node.module, // module name
         iter_id = def_id
 
@@ -331,7 +331,7 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
         if(nd===undefined){continue}
         func_root.addChild(nd)
     }
-    
+
     var obj = {
         __class__ : $BRGeneratorDict,
         blocks: blocks,
@@ -345,22 +345,22 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
         id:iter_id,
         num:0
     }
-    
+
     var src = func_root.src(), //children[1].src(),
         raw_src = src.substr(src.search('function'))
-    
+
     // For the first call, add defaults object as arguement
     raw_src += 'return '+def_ctx.name+def_ctx.num+'}'
 
     var funcs = [raw_src]
-    
+
     //$B.modules[iter_id] = obj
     obj.parent_block = def_node.parent_block
 
     for(var i=0; i<func_root.yields.length;i++){
         funcs.push(make_next(obj, i))
     }
-    
+
     delete $B.modules[iter_id]
     delete $B.bound[iter_id]
 
@@ -370,26 +370,26 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
 function make_next(self, yield_node_id){
     // Get node where yield was thrown
     var exit_node = self.func_root.yields[yield_node_id]
-    
+
     // Attribute "replaced" is used to replace a node only once if it was
     // inside a loop
     exit_node.replaced = false
 
-    // Before returning the yielded value, build the function for the next 
+    // Before returning the yielded value, build the function for the next
     // iteration
-    
-    // Create root node of new function and add the initialisation 
+
+    // Create root node of new function and add the initialisation
     // instructions
-    
+
     var root = new $B.genNode(self.def_ctx.to_js())
     var fnode = self.func_root.clone()
     root.addChild(fnode)
-    
+
     // restore namespaces
     var js =  'for(var attr in this.blocks){eval("var "+attr+"='+
         'this.blocks[attr]");};var $locals_'+self.iter_id+' = this.env,'+
         ' $locals = $locals_'+self.iter_id+', $local_name="'+self.iter_id+'";'
-        
+
     fnode.addChild(new $B.genNode(js))
     // add a node to enter the frame
     js = 'var $top_frame = ["'+self.iter_id+'",$locals,"'+self.module+
@@ -400,10 +400,10 @@ function make_next(self, yield_node_id){
 
     // To build the new function, we must identify the rest of the function to
     // run after the exit node
-    // 
-    // The exit node is in a block in the function tree structure. At each 
+    //
+    // The exit node is in a block in the function tree structure. At each
     // step, the algorithm :
-    // - builds the list "rest" of the children of exit_node parent after 
+    // - builds the list "rest" of the children of exit_node parent after
     //   exit_node
     // - wraps the code of "rest" in the same try/except clauses as exit_node,
     //   if any
@@ -413,11 +413,11 @@ function make_next(self, yield_node_id){
 
         // Compute the rest of the block to run after exit_node
         var exit_parent = exit_node.parent,
-            rest = [], 
+            rest = [],
             pos=0,
             has_break,
             has_continue
-        
+
         // "start" is the position where the rest of the block starts
         // By default it is the node of rank exit_node.rank+1
         var start = exit_node.rank+1
@@ -428,13 +428,13 @@ function make_next(self, yield_node_id){
         }else if(exit_node.is_cond){
             // If exit_node is a condition, start after the elif/else clauses
             while(start<exit_parent.children.length &&
-                (exit_parent.children[start].is_except || 
+                (exit_parent.children[start].is_except ||
                     exit_parent.children[start].is_else)){start++}
         }else if(exit_node.is_try || exit_node.is_except){
-            // If exit_node is a try or except, start after the 
+            // If exit_node is a try or except, start after the
             // except/else/finally clauses
             while(start<exit_parent.children.length &&
-                (exit_parent.children[start].is_except || 
+                (exit_parent.children[start].is_except ||
                     exit_parent.children[start].is_else)){start++}
         }
 
@@ -457,10 +457,10 @@ function make_next(self, yield_node_id){
             catch_test = new $B.genNode(catch_test)
             rest = [rest_try, catch_test]
         }
-        
+
         // Get list of "try" nodes above exit node
         var tries = in_try(exit_node)
-        
+
         if(tries.length==0){
             // Not in a "try" clause : run rest at function level
             for(var i=0;i<rest.length;i++){fnode.addChild(rest[i])}
@@ -495,22 +495,23 @@ function make_next(self, yield_node_id){
         exit_node = exit_parent
         if(exit_node===self.func_root){break}
     }
-     
+
     // return the code of the function for next iteration
     var src = root.children[0].src(),
         next_src = src.substr(src.search('function'))
-    
+
     // function starts with "function($defaults){ function" : must remove
     // the first part
     next_src = next_src.substr(10)
     next_src = next_src.substr(next_src.search('function'))
-    
+
     return next_src
 }
 
 var $gen_it = {
     __class__: $B.$type,
-    __name__: "generator"
+    __name__: "generator",
+    __module__: "builtins"
 }
 
 $gen_it.__mro__ = [_b_.object.$dict]
@@ -550,7 +551,7 @@ $gen_it.__next__ = function(self){
         self.gi_running = false
         $B.leave_frame(self.iter_id)
     }
-    
+
     // Brython replaces "yield x" by "return [x, next_rank]"
     // next_rank is the rank of the function to call after this yield
 
@@ -604,7 +605,7 @@ $B.genfunc = function(name, blocks, funcs, $defaults){
         for(var i=1; i<funcs.length;i++){
             gfuncs.push(funcs[i])
         }
-        
+
         var res = {
             __class__: $gen_it,
             args: Array.prototype.slice.call(arguments),

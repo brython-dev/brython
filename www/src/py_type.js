@@ -495,6 +495,10 @@ $B.$type.__call__ = function(){
 }
 // DRo - END
 
+$B.$type.__format__ = function(klass, fmt_spec){
+    // For classes, format spec is ignored, return str(klass)
+    return _b_.str(klass)
+}
 // class of constructors
 $B.$factory = {
     __class__:$B.$type,
@@ -518,7 +522,11 @@ function method_wrapper(attr, klass, method){
 }
 
 $B.$type.__repr__ = $B.$type.__str__ = function(self){
-    return "<class '" + self.$dict.__name__ +"'>"
+    var qualname = self.$dict.__name__
+    if(self.$dict.__module__ != 'builtins'){
+        qualname = self.$dict.__module__ + '.' + qualname
+    }
+    return "<class '" + qualname +"'>"
 }
 // DRo Begin/End - Added metaclassed as flag during class construction
 $B.$type.__getattribute__=function(klass, attr, metaclassed){

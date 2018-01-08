@@ -866,6 +866,7 @@ $B.$iterator_class = function(name){
     var res = {
         __class__:$B.$type,
         __name__:name,
+        __module__: "builtins"
     }
 
     res.__mro__ = [_b_.object.$dict]

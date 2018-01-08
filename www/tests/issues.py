@@ -1656,6 +1656,13 @@ try:
 except TypeError:
     pass
 
+# issue 755
+assert '{}'.format(int) == "<class 'int'>"
+
+class C:
+    pass
+
+assert '{}'.format(C) == "<class '__main__.C'>"
 
 # ==========================================
 # Finally, report that all tests have passed

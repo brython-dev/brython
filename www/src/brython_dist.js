@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-01-08 15:29:32.865959"
+__BRYTHON__.compiled_date="2018-01-08 22:37:03.716252"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1543,7 +1543,8 @@ for(var i=0;i<this.names.length;i++){var name=this.aliases[this.names[i]]||this.
 $B.bound[scope.id][name]={level: scope.level}}}
 this.toString=function(){return '(from) '+this.module+' (import) '+this.names+'(as)'+this.aliases}
 this.to_js=function(){this.js_processed=true
-var scope=$get_scope(this),mod=$get_module(this).module,res=[],pos=0,indent=$get_node(this).indent,head=' '.repeat(indent);
+var scope=$get_scope(this),module=$get_module(this),mod=module.module,res=[],pos=0,indent=$get_node(this).indent,head=' '.repeat(indent);
+module.imports[this.module]=true
 var _mod=this.module.replace(/\$/g,''),$package,packages=[]
 while(_mod.length>0){if(_mod.charAt(0)=='.'){if($package===undefined){if($B.imported[mod]!==undefined){$package=$B.imported[mod].__package__}}else{$package=$B.imported[$package]}
 if($package===undefined){return 'throw SystemError("Parent module \'\' not loaded,'+
@@ -1779,10 +1780,11 @@ for(var i=0;i<this.tree.length;i++){if(this.tree[i].name==this.tree[i].alias){va
 if(parts.length>1){bound=parts[0]}}else{bound=this.tree[i].alias}
 $B.bound[scope.id][bound]={level: scope.level}}}
 this.to_js=function(){this.js_processed=true
-var scope=$get_scope(this),res=[],pos=0
+var scope=$get_scope(this),res=[],pos=0,module=$get_module(this)
 for(var i=0;i<this.tree.length;i++){var mod_name=this.tree[i].name,aliases=(this.tree[i].name==this.tree[i].alias)?
 '{}' :('{"' + mod_name + '" : "' +
 this.tree[i].alias + '"}'),localns='$locals_'+scope.id.replace(/\./g,'_');
+module.imports[mod_name]=true
 res[pos++]='$B.$import("'+mod_name+'", [],'+aliases+',' +
 localns + ', true);'}
 return res.join('')+ 'None;'}}
@@ -3828,6 +3830,7 @@ if(locals_id==parent_block_id){root.parent_block=$B.modules[parent_block_id].par
 root.line_info=line_info
 root.indent=-1
 root.comments=[]
+root.imports={}
 if(locals_id!==module){$B.bound[locals_id]=$B.bound[locals_id]||{}}
 var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
 if(typeof src=="object"){root.is_comp=src.is_comp
@@ -4667,6 +4670,8 @@ $f=arguments[0].$dfactory
 args=[]
 for(var i=1;i < arguments.length;i++){args.push(arguments[i])}
 return $f.apply(null,args)}
+$B.$type.__format__=function(klass,fmt_spec){
+return _b_.str(klass)}
 $B.$factory={__class__:$B.$type,$factory:_b_.type,is_class:true}
 $B.$factory.__mro__=[$B.$type,_b_.object.$dict]
 _b_.type.__class__=$B.$factory
@@ -4675,7 +4680,9 @@ _b_.object.__class__=$B.$factory
 function method_wrapper(attr,klass,method){
 method.__str__=method.__repr__=function(self){return "<method '"+attr+"' of '"+klass.__name__+"' objects>"}
 return method}
-$B.$type.__repr__=$B.$type.__str__=function(self){return "<class '" + self.$dict.__name__ +"'>"}
+$B.$type.__repr__=$B.$type.__str__=function(self){var qualname=self.$dict.__name__
+if(self.$dict.__module__ !='builtins'){qualname=self.$dict.__module__ + '.' + qualname}
+return "<class '" + qualname +"'>"}
 $B.$type.__getattribute__=function(klass,attr,metaclassed){switch(attr){case '__class__':
 return klass.__class__.$factory
 case '__doc__':
@@ -5145,7 +5152,7 @@ if(res.counter<items.length)return items[res.counter]
 throw _b_.StopIteration("StopIteration")},__repr__:function(){return "<"+klass.__name__+" object>"},counter:-1}
 res.__str__=res.toString=res.__repr__
 return res}
-$B.$iterator_class=function(name){var res={__class__:$B.$type,__name__:name,}
+$B.$iterator_class=function(name){var res={__class__:$B.$type,__name__:name,__module__: "builtins"}
 res.__mro__=[_b_.object.$dict]
 function as_array(s){var _a=[],pos=0,_it=_b_.iter(s),ce=$B.current_exception
 while(1){try{
@@ -5444,7 +5451,7 @@ if(got !=expected){if(expected==0){throw _b_.TypeError(name+"() takes no argumen
 (expected<2 ? '' : 's')+" ("+got+" given)")}}}
 function check_no_kw(name,x,y){
 if(x.$nat ||(y!==undefined && y.$nat)){throw _b_.TypeError(name+"() takes no keyword arguments")}}
-var $NoneDict={__class__:$B.$type,__name__:'NoneType'}
+var $NoneDict={__class__:$B.$type,__name__:'NoneType',__module__:"builtins"}
 $NoneDict.__mro__=[$ObjectDict]
 $NoneDict.__setattr__=function(self,attr){return no_set_attr($NoneDict,attr)}
 var None={__bool__ : function(){return False},__class__ : $NoneDict,__hash__ : function(){return 0},__repr__ : function(){return 'None'},__str__ : function(){return 'None'},toString : function(){return 'None'}}
@@ -5906,6 +5913,7 @@ return false}
 var iterator_class=$B.make_class({name:'iterator',init:function(self,getitem,len){self.getitem=getitem
 self.len=len
 self.counter=-1}})
+iterator_class.$dict.__module__="builtins"
 iterator_class.$dict.__next__=function(self){self.counter++
 if(self.len!==null && self.counter==self.len){throw _b_.StopIteration('')}
 try{return self.getitem(self.counter)}
@@ -9880,7 +9888,8 @@ value=_b_.getattr(value,'__getitem__')(key)}}
 if(fmt.conv=='a'){value=_b_.ascii(value)}
 else if(fmt.conv=='r'){value=_b_.repr(value)}
 else if(fmt.conv=='s'){value=_b_.str(value)}
-res +=_b_.getattr(value,'__format__')(fmt.spec)}
+if(value.__class__===$B.$factory){
+res +=value.$dict.__class__.__format__(value,fmt.spec)}else{res +=_b_.getattr(value,'__format__')(fmt.spec)}}
 return res}
 $StringDict.format_map=function(self){throw NotImplementedError("function format_map not implemented yet");}
 $StringDict.index=function(self){
@@ -11555,7 +11564,7 @@ var tries=[],pnode=node.parent,pos=0
 while(pnode){if(pnode.is_try){tries[pos++]=pnode}
 pnode=pnode.parent}
 return tries}
-var $BRGeneratorDict={__class__:$B.$type,__name__:'generator'}
+var $BRGeneratorDict={__class__:$B.$type,__name__:'generator',__module__:'builtins'}
 $B.gen_counter=0 
 $B.$BRgenerator=function(func_name,blocks,def_id,def_node){
 var def_ctx=def_node.C.tree[0]
@@ -11637,7 +11646,7 @@ var src=root.children[0].src(),next_src=src.substr(src.search('function'))
 next_src=next_src.substr(10)
 next_src=next_src.substr(next_src.search('function'))
 return next_src}
-var $gen_it={__class__: $B.$type,__name__: "generator"}
+var $gen_it={__class__: $B.$type,__name__: "generator",__module__: "builtins"}
 $gen_it.__mro__=[_b_.object.$dict]
 $gen_it.__enter__=function(self){console.log("generator.__enter__ called")}
 $gen_it.__exit__=function(self){console.log("generator.__exit__ called")}
@@ -11795,7 +11804,8 @@ for(var attr in modules){load(attr,modules[attr])}
 if(! $B.isa_web_worker)modules['browser'].html=modules['browser.html'];
 var _b_=$B.builtins
 _b_.__builtins__=$B.$ModuleDict.$factory('__builtins__','Python builtins')
-for(var attr in $B.builtins){_b_.__builtins__[attr]=_b_[attr]}
+for(var attr in $B.builtins){_b_.__builtins__[attr]=_b_[attr]
+if(_b_[attr].__class__===$B.$factory){_b_[attr].$dict.__module__='builtins'}}
 _b_.__builtins__.__setattr__=function(attr,value){_b_[attr]=value}
 $B.bound.__builtins__.__builtins__=_b_.__builtins__})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
