@@ -2997,12 +2997,15 @@ function $FromCtx(context){
     this.to_js = function(){
         this.js_processed=true
         var scope = $get_scope(this),
-            mod = $get_module(this).module,
+            module = $get_module(this),
+            mod = module.module,
             res = [],
             pos = 0,
             indent = $get_node(this).indent,
             head= ' '.repeat(indent);
 
+        module.imports[this.module] = true
+        
         var _mod = this.module.replace(/\$/g,''), $package, packages=[]
         while(_mod.length>0){
             if(_mod.charAt(0)=='.'){
@@ -3617,13 +3620,15 @@ function $ImportCtx(context){
         this.js_processed=true
         var scope = $get_scope(this),
             res = [],
-            pos=0
+            pos=0,
+            module = $get_module(this)
         for(var i=0;i<this.tree.length;i++){
             var mod_name = this.tree[i].name,
                 aliases = (this.tree[i].name == this.tree[i].alias)?
                     '{}' : ('{"' + mod_name + '" : "' +
                     this.tree[i].alias + '"}'),
                 localns = '$locals_'+scope.id.replace(/\./g,'_');
+            module.imports[mod_name] = true
             res[pos++] = '$B.$import("'+mod_name+'", [],'+aliases+',' +
                                    localns + ', true);'
         }
@@ -7110,6 +7115,7 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     root.line_info = line_info
     root.indent = -1
     root.comments = []
+    root.imports = {}
     if(locals_id!==module){$B.bound[locals_id] = $B.bound[locals_id] || {}}
     var new_node = new $Node(),
         current = root,
@@ -7895,6 +7901,7 @@ function run_script(script){
 
         root = $B.py2js(script.src,script.name,script.name,'__builtins__')
         js = root.to_js()
+        //console.log('imports in', script.name, root.imports)
         if($B.debug>1){console.log(js)}
         // Run resulting Javascript
         eval(js)
