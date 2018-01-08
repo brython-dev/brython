@@ -48,7 +48,7 @@ def exec_code():
 def clear(ev):
     # importing turtle earlier slows down the loading
     # of this page
-    from turtle import restart
+    from turtle2 import restart
     restart()
     inform("")
     document["run"].class_name = 'btn-enabled'
@@ -60,7 +60,7 @@ def clear(ev):
 def replay(ev):
     # importing turtle earlier slows down the loading
     # of this page
-    from turtle import replay_scene
+    from turtle2 import replay_scene
     replay_scene()
 
 
@@ -193,20 +193,21 @@ computation.</p>
   without having to click on the <b>Clear</b> button.</p>
 </div>
 
-<div id='demo1' style="display:none">import turtle
+<div id='demo1' style="display:none">import turtle2 as turtle
 turtle.set_defaults(
     canvas_width = 500,   # default
     canvas_height = 500,  # default
     turtle_canvas_wrapper = document['turtle-div']
 )
 t = turtle.Turtle()
+
 t.width(5)
 
 for c in ['red', '#00ff00', '#fa0', 'rgb(0,0,200)']:
     t.color(c)
     t.forward(100)
     t.left(90)
-
+'''
 # dot() and write() do not require the pen to be down
 t.penup()
 t.goto(-30, -100)
@@ -219,6 +220,7 @@ t.dot(40, 'rgba(0, 0, 255, 0.5')
 t.goto(0, 125)
 t.color('purple')
 t.write("I love Brython!", font=("Arial", 20, "normal"))
+'''
 
 turtle.done()
 </div>
@@ -231,7 +233,7 @@ This demo was originally created as a test for the correct turtle orientation,
 and for demonstrating instant (fastest) drawing.</p>
 </div>
 
-<div id='demo2' style="display:none">import turtle
+<div id='demo2' style="display:none">import turtle2 as turtle
 
 turtle.set_defaults(
     canvas_width = 600,  # default is 500
@@ -264,7 +266,7 @@ turtle.done()
 and how to change the background color.</p>
 </div>
 
-<div id='demo3' style="display:none">import turtle
+<div id='demo3' style="display:none">import turtle2 as turtle
 
 turtle.set_defaults(
     canvas_width = 500,   # default
@@ -313,7 +315,7 @@ turtle.done()
 <p>Demonstrating some writing parameters.</p>
 </div>
 
-<div id='demo4' style="display:none">import turtle
+<div id='demo4' style="display:none">import turtle2 as turtle
 
 turtle.set_defaults(
     canvas_width = 500,   # default
@@ -361,7 +363,7 @@ properly implemented in this version of the turtle module.</p>
 
 <div id='demo5' style="display:none">
 # Example from reddit post
-from turtle import Turtle, done, set_defaults
+from turtle2 import Turtle, done, set_defaults
 from random import randint
 
 # added for diagnostic
@@ -812,7 +814,7 @@ radians()
 </pre>
 </div>
 
-<div id='demo6' style="display:none">import turtle
+<div id='demo6' style="display:none">import turtle2 as turtle
 turtle.set_defaults(
     canvas_width = 500,   # default
     canvas_height = 500,  # default
@@ -921,7 +923,7 @@ write()
 </pre>
 </div>
 
-<div id='demo7' style="display:none">import turtle
+<div id='demo7' style="display:none">import turtle2 as turtle
 turtle.set_defaults(
     canvas_width = 500,   # default
     canvas_height = 500,  # default,
@@ -1025,7 +1027,7 @@ undobufferentries(): not implemented
 </pre>
 </div>
 
-<div id='demo8' style="display:none">import turtle
+<div id='demo8' style="display:none">import turtle2 as turtle
 turtle.set_defaults(
     canvas_width = 500,   # default
     canvas_height = 500,  # default
@@ -1155,7 +1157,7 @@ title()
 </pre>
 </div>
 
-<div id='demo9' style="display:none">import turtle
+<div id='demo9' style="display:none">import turtle2 as turtle
 turtle.set_defaults(
     canvas_width = 500,   # default
     canvas_height = 500,  # default
@@ -1183,7 +1185,7 @@ turtle.done()
   <p>If you find a missing function, please file an issue.</p>
 </div>
 
-<div id='demo10' style="display:none">from turtle import *
+<div id='demo10' style="display:none">from turtle2 import *
 turtle.set_defaults(
     canvas_width = 500,   # default
     canvas_height = 500,  # default

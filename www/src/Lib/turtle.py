@@ -444,13 +444,17 @@ class TurtleScreenBase:
             self.background_canvas <=_rect
 
 
-    def _write(self, pos, txt, align, font, pencolor):
+    def _write(self, pos, txt, align, font, color):
         """Write txt at pos in canvas with specified font
         and color."""
-
+        if isinstance(color, tuple):
+            stroke = color[0]
+            fill = color[1]
+        else:
+            stroke = fill = color 
         x, y = self._convert_coordinates(pos[0], pos[1])
         self.item_drawn_index += 1
-        _text = _svg.text(txt, x=x, y=y, fill=pencolor, 
+        _text = _svg.text(txt, x=x, y=y, fill=fill, stroke=stroke, 
                           style={'display': 'none',
                           'font-family': font[0],
                           'font-size': font[1],
@@ -622,9 +626,9 @@ class TurtleScreen(TurtleScreenBase):
         # the foreground
         self.clear(clear=False)
 
-## Fixme: when clear is called to remove all items, 
-# it becomes impossible afterwards to change the background of the color.
-# A new way of clearing is needed.
+    ## Fixme: when clear is called to remove all items, 
+    # it becomes impossible afterwards to change the background of the color.
+    # A new way of clearing is needed.
 
     def clear(self, clear=True):
         """Delete all drawings and all turtles from the TurtleScreen.
@@ -2226,13 +2230,15 @@ class RawTurtle(TPen, TNavigator):
             color = self._colorstr(color)
         item = self.screen._dot(self._position, size, color)
 
-    def _write(self, txt, align, font):
+    def _write(self, txt, align, font, color=None):
         """Performs the writing for write()
         """
-        self.screen._write(self._position, txt, align, font, self._pencolor)
+        if color is None:
+            color = self._pencolor
+        self.screen._write(self._position, txt, align, font, color)
 
 
-    def write(self, arg, align="left", font=("Arial", 8, "normal")):
+    def write(self, arg, align="left", font=("Arial", 8, "normal"), color=None):
         """Write text at the current turtle position.
 
         Arguments:
@@ -2248,7 +2254,7 @@ class RawTurtle(TPen, TNavigator):
         >>> turtle.write('Home = ', align="center")
         >>> turtle.write((0,0))
         """
-        self._write(str(arg), align.lower(), font)
+        self._write(str(arg), align.lower(), font, color=color)
 
 
     def begin_poly(self):
