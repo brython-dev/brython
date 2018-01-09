@@ -3005,7 +3005,7 @@ function $FromCtx(context){
             head= ' '.repeat(indent);
 
         module.imports[this.module] = true
-        
+
         var _mod = this.module.replace(/\$/g,''), $package, packages=[]
         while(_mod.length>0){
             if(_mod.charAt(0)=='.'){
@@ -6296,7 +6296,7 @@ function $transition(context,token){
         switch(token) {
           case '=':
             if (context.expect==='='){
-               context.parent.has_default = true
+               context.has_default = true
                var def_ctx = context.parent.parent
                if(context.parent.has_star_arg){
                    def_ctx.default_list.push(def_ctx.after_star.pop())
@@ -6318,7 +6318,7 @@ function $transition(context,token){
             }
           case ':':
             // annotation associated with a function parameter
-            if(context.parent.has_default){ // issue 610
+            if(context.has_default){ // issue 610
                 $_SyntaxError(context,'token '+token+' after '+context)
             }
             return new $AbstractExprCtx(new $AnnotationCtx(context), false)

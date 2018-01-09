@@ -245,6 +245,7 @@ function run_py(module_contents,path,module,compiled) {
 
     try{
         js = (compiled)? module_contents : root.to_js()
+        //console.log('imports in', module.__name__, root.imports)
         if ($B.$options.debug == 10) {
            console.log('code for module '+module.__name__)
            console.log(js)

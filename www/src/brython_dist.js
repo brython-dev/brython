@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-01-08 22:37:03.716252"
+__BRYTHON__.compiled_date="2018-01-09 22:38:52.047393"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -3271,7 +3271,7 @@ return C}}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'func_arg_id':
 switch(token){case '=':
-if(C.expect==='='){C.parent.has_default=true
+if(C.expect==='='){C.has_default=true
 var def_ctx=C.parent.parent
 if(C.parent.has_star_arg){def_ctx.default_list.push(def_ctx.after_star.pop())}else{def_ctx.default_list.push(def_ctx.positional_list.pop())}
 return new $AbstractExprCtx(C,false)}
@@ -3283,7 +3283,7 @@ C.parent.has_star_arg===undefined){console.log('parent '+C.parent,C.parent)
 $pos -=C.name.length
 $_SyntaxError(C,['non-default argument follows default argument'])}else{return $transition(C.parent,token)}
 case ':':
-if(C.parent.has_default){
+if(C.has_default){
 $_SyntaxError(C,'token '+token+' after '+C)}
 return new $AbstractExprCtx(new $AnnotationCtx(C),false)}
 $_SyntaxError(C,'token '+token+' after '+C)
