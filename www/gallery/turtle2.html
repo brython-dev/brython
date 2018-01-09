@@ -10,6 +10,7 @@ import sys
 import traceback
 from browser import document, timer
 
+FIRST_TIME = True
 def inform(*args):
     document["status-info"].html = ''.join(args)
 
@@ -26,7 +27,12 @@ def clear_print():
 
 @document["run"].bind("click")
 def run_code(ev):
-    inform("Processing")
+    global FIRST_TIME
+    if FIRST_TIME:
+        FIRST_TIME = False 
+        inform("Importing turtle module for the first time and processing; please wait")
+    else:
+        inform("Processing")
     document["run"].class_name = 'btn-disabled'
     # delay to allow updated DOM with above text to be shown.
     timer.set_timeout(exec_code, 1)
@@ -350,13 +356,13 @@ turtle.done()
 <div id='info5' style="display:none">
 <h2>A complex scene</h2>
 <p>Other than setting some defaults, and calling <code>done()</code>
-  at the end, this demo has been copied verbatim from code linked in  
+  at the end, this demo has been copied from code linked in  
   <a href="https://www.reddit.com/r/Python/comments/7mo2l8/turtle_module_drawing_a_randomised_landscape/"
   target="_blank">
   a post on reddit</a>, as a test to show that everything required had been 
 properly implemented in this version of the turtle module.</p>
 <p>If the turtle module has already been imported at least once,
-  it should take approximately 25 seconds to create the scene. 
+  it should take approximately 20 seconds to create the scene. 
     Once it has been created, you can view it being drawn as often as you want 
     by clicking on <b>Replay scene</b>.</p>
 </div>
