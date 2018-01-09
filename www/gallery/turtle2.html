@@ -195,8 +195,8 @@ computation.</p>
 
 <div id='demo1' style="display:none">import turtle2 as turtle
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default
+    canvwidth = 500,   # default
+    canvheight = 500,  # default
     turtle_canvas_wrapper = document['turtle-div']
 )
 t = turtle.Turtle()
@@ -236,8 +236,8 @@ and for demonstrating instant (fastest) drawing.</p>
 <div id='demo2' style="display:none">import turtle2 as turtle
 
 turtle.set_defaults(
-    canvas_width = 600,  # default is 500
-    canvas_height = 400,  # default is 500
+    canvwidth = 600,  # default is 500
+    canvheight = 400,  # default is 500
     turtle_canvas_wrapper = document['turtle-div']
 )
 
@@ -269,8 +269,8 @@ and how to change the background color.</p>
 <div id='demo3' style="display:none">import turtle2 as turtle
 
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default
+    canvwidth = 500,   # default
+    canvheight = 500,  # default
     turtle_canvas_wrapper = document['turtle-div']
 )
 
@@ -318,8 +318,8 @@ turtle.done()
 <div id='demo4' style="display:none">import turtle2 as turtle
 
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default
+    canvwidth = 500,   # default
+    canvheight = 500,  # default
     turtle_canvas_wrapper = document['turtle-div']
 )
 
@@ -356,7 +356,7 @@ turtle.done()
   a post on reddit</a>, as a test to show that everything required had been 
 properly implemented in this version of the turtle module.</p>
 <p>If the turtle module has already been imported at least once,
-  it should take approximately 10 seconds to create the scene. 
+  it should take approximately 25 seconds to create the scene. 
     Once it has been created, you can view it being drawn as often as you want 
     by clicking on <b>Replay scene</b>.</p>
 </div>
@@ -371,8 +371,8 @@ import time
 start_time = time.time()
 
 set_defaults(
-    canvas_width = 650,
-    canvas_height = 650,
+    canvwidth = 650,
+    canvheight = 650,
     debug = False,
     turtle_canvas_wrapper = document['turtle-div']
 )
@@ -514,7 +514,6 @@ greens = ['#004000','#003300','#002600','#001900','#004c00']
 
 def drawgrass(amount,locx,locy):
     tuft.color('#004000')
-    tuft.hideturtle()
     def tuftdraw(size):
         if randint(0,1) == 1:
             size = -size
@@ -706,6 +705,7 @@ def lakedraw():
 
 def lilypads(amount):
     lily = Turtle()
+    lily.hideturtle()
     lily.speed(0)
     for i in range(amount):
         lily.color(greens[randint(0,4)])
@@ -816,8 +816,8 @@ radians()
 
 <div id='demo6' style="display:none">import turtle2 as turtle
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default
+    canvwidth = 500,   # default
+    canvheight = 500,  # default
     _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
@@ -925,8 +925,8 @@ write()
 
 <div id='demo7' style="display:none">import turtle2 as turtle
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default,
+    canvwidth = 500,   # default
+    canvheight = 500,  # default,
     _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
@@ -1029,8 +1029,8 @@ undobufferentries(): not implemented
 
 <div id='demo8' style="display:none">import turtle2 as turtle
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default
+    canvwidth = 500,   # default
+    canvheight = 500,  # default
     _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
@@ -1159,8 +1159,8 @@ title()
 
 <div id='demo9' style="display:none">import turtle2 as turtle
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default
+    canvwidth = 500,   # default
+    canvheight = 500,  # default
     _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
@@ -1187,8 +1187,8 @@ turtle.done()
 
 <div id='demo10' style="display:none">from turtle2 import *
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default
+    canvwidth = 500,   # default
+    canvheight = 500,  # default
     turtle_canvas_wrapper = document['turtle-div']
 )
 
