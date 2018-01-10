@@ -1170,7 +1170,7 @@ class Turtle(TPen, TNavigator):
     def _rotate(self, angle):
         """Turns pen clockwise by angle.
         """
-        self._angle += angle  ##FIXME - convert to degrees
+        self._angle += -self.screen.y_points_down*angle  ##FIXME - convert to degrees
         self._rotate_image(angle)
 
     def _rotate_image(self, angle):
