@@ -520,13 +520,6 @@ class TNavigator:
         """
         self._setDegreesPerAU(2*math.pi)
 
-    def _go(self, distance):
-        """move turtle forward by specified distance"""
-        x1 = distance * cos(self._angle * self._to_radians)
-        y1 = distance * sin(self._angle * self._to_radians)
-        self._distance = distance
-        self._goto(self._x + x1, self._y + y1)
-
     def _rotate(self, angle):
         """Turn turtle counterclockwise by specified angle if angle > 0."""
         pass
@@ -589,9 +582,13 @@ class TNavigator:
         if y is None:
             x, y = *x
         # distance only needed to calculate the duration of
-        # the animation based on "speed" as well. We use the Manhattan
-        # distance here as it is *much* faster on Chrome, than using
-        # the proper distance with calls to Math.sqrt
+        # the animation which is based on "distance" and "speed" as well. 
+        # We use the Manhattan distance here as it is *much* faster on Chrome, 
+        # than using the proper distance with calls to math.sqrt, while
+        # giving acceptable results
+        # 
+        # forward, backward, etc., call _goto directly with the distance
+        # given by the user
         self._distance = abs(self._x - x) + abs(self._y - y)
         self._goto(x, y)
     setpos = goto 
@@ -608,11 +605,13 @@ class TNavigator:
     def setx(self, x):
         """Set the turtle's first coordinate to x
         """
+        self._distance = abs(x - self._x)
         self._goto(x, self._y)
 
     def sety(self, y):
         """Set the turtle's second coordinate to y
         """
+        self._distance = abs(y - self._y)
         self._goto(self._x, y)
 
     def distance(self, x, y=None):
@@ -682,7 +681,7 @@ class TNavigator:
         self._rotate(w2)
         for i in range(steps):
             self.speed(speed)
-            self._go(l)
+            self.forward(l)
             self.speed(0)
             self._rotate(w)
         self._rotate(-w2)
@@ -1210,9 +1209,15 @@ class Turtle(TPen, TNavigator):
         attrs = vars(self)
         new_dict = {}
         for attr in attrs:
-            if isinstance(getattr(self, attr), (int, str)):
+            if isinstance(getattr(self, attr), (int, str, float)):
                 new_dict[attr] = getattr(self, attr)
         n.__dict__.update(**new_dict)
+        # ensure that visible characteristics are consistent with settings
+        if not n._shown:
+            n._shown = True  # otherwise, hideturtle() would have not effect
+            n.hideturtle()
+        n.left(0)
+        n.fd(0)
         n.color(n.color())
         return n
 
