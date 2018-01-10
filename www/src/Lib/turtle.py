@@ -192,9 +192,9 @@ class Screen(metaclass=Singleton):
             arg = self.shapes[_CVG["shape"]][1]
         shape = fn(arg)
         if self._mode == 'standard' or self._mode == 'world':
-            rotation = self.y_points_down * 90
+            rotation = -90
         else:
-            rotation = 0#self.y_points_down * 90
+            rotation = 0
         return shape, rotation
 
     def _dot(self, pos, size, color):
@@ -324,9 +324,12 @@ class Screen(metaclass=Singleton):
     def mode(self, _mode=None):
         if _mode is None:
             return self._mode
+        _CFG['mode'] = _mode 
+        self.reset()
+
 
     def reset(self):
-        self.turtles = []
+        self._turtles = []
         self.frame_index = 0        
         self.background_color = "white"
         self._set_geometry()
@@ -384,7 +387,7 @@ class Screen(metaclass=Singleton):
 
         Warning: in user-defined coordinate systems angles may appear distorted. 
         """
-        self.mode = "world"
+        self._mode = "world"
 
         if urx < llx:
             sys.stderr.write("Warning: urx must be greater than llx; your choice will be reversed")
@@ -392,8 +395,8 @@ class Screen(metaclass=Singleton):
         xspan = urx - llx
         yspan = abs(ury - lly)
 
-        self.xscale = int(self.canvas_width) / xspan
-        self.yscale = int(self.canvas_height) / yspan
+        self.xscale = int(self.width) / xspan
+        self.yscale = int(self.height) / yspan
         self.x_offset = -llx * self.xscale
         if ury < lly:
             self.y_points_down = 1 # standard orientation in the browser
@@ -406,7 +409,7 @@ class Screen(metaclass=Singleton):
     def show_scene(self):
         '''Ends the creation of a "scene" and has it displayed'''
 
-        for t in self.turtles:
+        for t in self._turtles:
             self.turtle_canvas <= t 
         if _CFG["turtle_canvas_wrapper"] is None:
             _CFG["turtle_canvas_wrapper"] = html.DIV(Id="turtle-canvas-wrapper")
@@ -418,6 +421,11 @@ class Screen(metaclass=Singleton):
             _CFG["turtle_canvas_wrapper"].html = _CFG["turtle_canvas_wrapper"].html
         timer.set_timeout(set_svg, 1)  
 
+
+    def turtles(self):
+        """Return the list of turtles on the screen.
+        """
+        return self._turtles
 
     def _write(self, pos, txt, align, font, color):
         """Write txt at pos in canvas with specified font
@@ -452,6 +460,90 @@ class Screen(metaclass=Singleton):
         an.setAttribute('begin', "animation_frame%s.end" % (self.frame_index-1))
         text <= an
         self.writing_canvas <= text        
+
+    def addshape(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.addshape() is not implemented.\n")
+
+    def bgpic(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.bgpic() is not implemented.\n")
+
+    def bye(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.bye() is not implemented.\n")
+
+    def clearscreen(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.clearscreen() is not implemented.\n")
+
+    def colormode(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.colormode() is not implemented.\n")
+
+    def delay(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.delay() is not implemented.\n")
+
+    def exitonclick(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.exitonclick() is not implemented.\n")
+
+    def getcanvas(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.getcanvas() is not implemented.\n")
+
+    def getshapes(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.getshapes() is not implemented.\n")
+
+    def addshape(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.addshape() is not implemented.\n")
+
+    def listen(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.listen() is not implemented.\n")
+
+    def mainloop(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.mainloop() is not implemented.\n")
+
+    def numinput(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.numinput() is not implemented.\n")
+
+    def onkey(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.onkey() is not implemented.\n")
+
+    def onkeypress(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.onkeypress() is not implemented.\n")
+
+    def onkeyrelease(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.onkeyrelease() is not implemented.\n")
+
+    def onscreenclick(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.onscreenclick() is not implemented.\n")
+
+    def ontimer(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.ontimer() is not implemented.\n")
+
+    def register_shape(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.register_shape() is not implemented.\n")
+
+    def resetscreen(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.resetscreen() is not implemented.\n")
+
+    def screensize(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.screensize() is not implemented.\n")
+
+    def setup(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.setup() is not implemented.\n")
+
+    def textinput(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.textinput() is not implemented.\n")
+
+    def title(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.title() is not implemented.\n")
+
+    def tracer(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.tracer() is not implemented.\n")
+
+    def update(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.update() is not implemented.\n")
+
+    def window_height(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.window_height() is not implemented.\n")
+
+    def window_width(self, *args, **kwargs):
+        sys.stderr.write("Warning: Screen.window_width() is not implemented.\n")        
 
 
 class TNavigator:
@@ -491,23 +583,24 @@ class TNavigator:
         if mode is None:
             return self._mode
         if mode not in ["standard", "logo", "world"]:
+            print(mode, "is an unknown mode; it will be ignored.")
             return
         self._mode = mode
         if mode in ["standard", "world"]:
             self._angleOffset = 0
             self._angleOrient = 1
         else:  # mode == "logo":
-            self._angleOffset = self._fullcircle/4.
-            self._angleOrient = +1
+            self._angleOffset = -self._fullcircle/4.
+            self._angleOrient = 1
 
     def _setDegreesPerAU(self, fullcircle):
         """Helper function for degrees() and radians()"""
         self._fullcircle = fullcircle
         self._degreesPerAU = 360/fullcircle
-        if self._mode == "standard":
+        if self._mode in ["standard", "world"]:
             self._angleOffset = 0
         else:
-            self._angleOffset = fullcircle/4.
+            self._angleOffset = -fullcircle/4.
         self._to_radians = math.pi * 2 / fullcircle
 
     def degrees(self, fullcircle=360.0):
@@ -549,14 +642,14 @@ class TNavigator:
     def right(self, angle):
         """Turn turtle right by angle units.
         """
-        self._angle -= angle  ##FIXME - convert to degrees
+        self._angle += self.screen.y_points_down*angle  ##FIXME - convert to degrees
         self._rotate_image(-angle)
     rt = right 
 
     def left(self, angle):
         """Turn turtle left by angle units.
         """
-        self._angle += angle  ##FIXME - convert to degreest
+        self._angle += -self.screen.y_points_down*angle  ##FIXME - convert to degreest
         self._rotate_image(angle)
     lt = left
 
@@ -946,6 +1039,8 @@ class Turtle(TPen, TNavigator):
     Puts Turtle upon a TurtleScreen and provides tools for
     its animation.
     """
+    _pen = None
+    screen = None
 
     def __init__(self, shape=_CFG["shape"], visible=_CFG["visible"]):
 
@@ -962,13 +1057,13 @@ class Turtle(TPen, TNavigator):
         self._shown = False
         if visible:
             self.showturtle() # will ensure that turtle become visible at appropriate time
-        self.screen.turtles.append(self.svg)
+        self.screen._turtles.append(self.svg)
         self.rotation_correction = rotation
         # apply correction to image orientation
         self._old_heading = self.heading() + self.rotation_correction
         speed = self.speed()
         self.speed(0)
-        self.left(0) # this will update the display to include the correction
+        self.left(-self._angleOffset) # this will update the display to include the correction
         self.speed(speed)
 
     def reset(self):
@@ -997,11 +1092,35 @@ class Turtle(TPen, TNavigator):
             self.hideturtle()
         self.screen.turtle_canvas <= self.svg
         self.svg = _turtle 
-        self.screen.turtles.append(self.svg)
+        self.screen._turtles.append(self.svg)
         if visible:
             self.showturtle()
 
-    def shapesize(self, stretch_wid=None, stretch_len=None, outline=None):
+    def clearstamp(self, *args, **kwargs):
+        sys.stderr.write("Warning: Turtle.clearstamp() is not implemented.\n")
+
+    def clearstamps(self, *args, **kwargs):
+        sys.stderr.write("Warning: Turtle.clearstamps() is not implemented.\n")
+
+    def onclick(self, *args, **kwargs):
+        sys.stderr.write("Warning: Turtle.onclick() is not implemented.\n")
+
+    def ondrag(self, *args, **kwargs):
+        sys.stderr.write("Warning: Turtle.ondrag() is not implemented.\n")
+
+    def onrelease(self, *args, **kwargs):
+        sys.stderr.write("Warning: Turtle.onrelease() is not implemented.\n")
+
+    def undo(self, *args, **kwargs):
+        sys.stderr.write("Warning: Turtle.undo() is not implemented.\n")
+
+    def setundobuffer(self, *args, **kwargs):
+        sys.stderr.write("Warning: Turtle.setundobuffer() is not implemented.\n")
+
+    def undobufferentries(self, *args, **kwargs):
+        sys.stderr.write("Warning: Turtle.undobufferentries() is not implemented.\n")
+
+    def shapesize(self, *args, **kwargs):
         sys.stderr.write("Warning: Turtle.shapesize() is not implemented.\n")
     turtlesize = shapesize
 
@@ -1243,7 +1362,98 @@ def restart():
     "For Brython turtle: clears the existing drawing and canvas"
     _CFG.update(_cfg_copy)
     Screen().reset()
+    Turtle._pen = None 
+
     if (_CFG["turtle_canvas_id"] in document and
             document[_CFG["turtle_canvas_id"]] is not None):
         element = document[_CFG["turtle_canvas_id"]]
         element.parentNode.removeChild(element)
+
+### Creating functions based
+
+import inspect
+def getmethparlist(ob):
+    """Get strings describing the arguments for the given object
+
+    Returns a pair of strings representing function parameter lists
+    including parenthesis.  The first string is suitable for use in
+    function definition and the second is suitable for use in function
+    call.  The "self" parameter is not included.
+    """
+    defText = callText = ""
+    # bit of a hack for methods - turn it into a function
+    # but we drop the "self" param.
+    # Try and build one for Python defined functions
+    args, varargs, varkw = inspect.getargs(ob.__code__)
+    items2 = args[1:]
+    realArgs = args[1:]
+    defaults = ob.__defaults__ or []
+    defaults = ["=%r" % (value,) for value in defaults]
+    defaults = [""] * (len(realArgs)-len(defaults)) + defaults
+    items1 = [arg + dflt for arg, dflt in zip(realArgs, defaults)]
+    if varargs is not None:
+        items1.append("*" + varargs)
+        items2.append("*" + varargs)
+    if varkw is not None:
+        items1.append("**" + varkw)
+        items2.append("**" + varkw)
+    defText = ", ".join(items1)
+    defText = "(%s)" % defText
+    callText = ", ".join(items2)
+    callText = "(%s)" % callText
+    return defText, callText
+
+_tg_screen_functions = ['addshape', 'bgcolor', 'bgpic', 'bye',
+        'clearscreen', 'colormode', 'delay', 'exitonclick', 'getcanvas',
+        'getshapes', 'listen', 'mainloop', 'mode', 'numinput',
+        'onkey', 'onkeypress', 'onkeyrelease', 'onscreenclick', 'ontimer',
+        'register_shape', 'resetscreen', 'screensize', 'setup',
+        'setworldcoordinates', 'textinput', 'title', 'tracer', 'turtles', 'update',
+        'window_height', 'window_width']
+
+_tg_turtle_functions = ['back', 'backward', 'begin_fill', 'begin_poly', 'bk',
+        'circle', 'clear', 'clearstamp', 'clearstamps', 'clone', 'color',
+        'degrees', 'distance', 'dot', 'down', 'end_fill', 'end_poly', 'fd',
+        'fillcolor', 'filling', 'forward', 'get_poly', 'getpen', 'getscreen', 'get_shapepoly',
+        'getturtle', 'goto', 'heading', 'hideturtle', 'home', 'ht', 'isdown',
+        'isvisible', 'left', 'lt', 'onclick', 'ondrag', 'onrelease', 'pd',
+        'pen', 'pencolor', 'pendown', 'pensize', 'penup', 'pos', 'position',
+        'pu', 'radians', 'right', 'reset', 'resizemode', 'rt',
+        'seth', 'setheading', 'setpos', 'setposition', 'settiltangle',
+        'setundobuffer', 'setx', 'sety', 'shape', 'shapesize', 'shapetransform', 'shearfactor', 'showturtle',
+        'speed', 'st', 'stamp', 'tilt', 'tiltangle', 'towards',
+        'turtlesize', 'undo', 'undobufferentries', 'up', 'width',
+        'write', 'xcor', 'ycor']
+
+
+__all__ = (_tg_screen_functions + _tg_turtle_functions +
+           ['done', 'restart', 'replay_scene', 'Turtle', 'Screen'])
+
+## The following mechanism makes all methods of RawTurtle and Turtle available
+## as functions. So we can enhance, change, add, delete methods to these
+## classes and do not need to change anything here.
+
+__func_body = """\
+def {name}{paramslist}:
+    if {obj} is None:
+        {obj} = {init}
+    return {obj}.{name}{argslist}
+"""
+def _make_global_funcs(functions, cls, obj, init):
+    for methodname in functions:
+        try:
+            method = getattr(cls, methodname)          
+        except AttributeError:
+            print("methodname missing:", methodname)
+            continue
+        pl1, pl2 = getmethparlist(method)
+        if pl1 == "":
+            print(">>>>>>", pl1, pl2)
+            continue  
+        defstr = __func_body.format(obj=obj, init=init, name=methodname,
+                                    paramslist=pl1, argslist=pl2)
+        exec(defstr, globals())
+
+_make_global_funcs(_tg_turtle_functions, Turtle, 'Turtle._pen', 'Turtle()')
+
+_make_global_funcs(_tg_screen_functions, Screen, 'Turtle.screen', 'Screen()')

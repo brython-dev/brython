@@ -50,10 +50,7 @@ def exec_code():
     document["replay-scene"].class_name = 'btn-enabled'
     inform("")
 
-@document["clear"].bind("click")
-def clear(ev):
-    # importing turtle earlier slows down the loading
-    # of this page
+def delayed_clear():
     from turtle import restart
     restart()
     inform("")
@@ -61,6 +58,17 @@ def clear(ev):
     document["replay-scene"].class_name = 'btn-disabled'
     document["clear"].class_name = 'btn-disabled'
     clear_print()
+
+@document["clear"].bind("click")
+def clear(ev):
+    global FIRST_TIME
+    if FIRST_TIME:
+        FIRST_TIME = False 
+        inform("Importing turtle module for the first time and processing; please wait")
+        document["run"].class_name = 'btn-disabled'
+    # delay to allow updated DOM with above text to be shown.
+    timer.set_timeout(delayed_clear, 1)
+
 
 @document["replay-scene"].bind("click")
 def replay(ev):
@@ -141,10 +149,6 @@ document["info"].html = document["info1"].html
     color: #c0c0c0;
     background-color: #ffffff;
   }
-
-  .not-tested {
-    color: orange;
-  }
 </style>
 
 </head>
@@ -201,8 +205,6 @@ computation.</p>
 
 <div id='demo1' style="display:none">import turtle
 turtle.set_defaults(
-    canvwidth = 500,   # default
-    canvheight = 500,  # default
     turtle_canvas_wrapper = document['turtle-div']
 )
 t = turtle.Turtle()
@@ -275,8 +277,7 @@ and how to change the background color.</p>
 <div id='demo3' style="display:none">import turtle
 
 turtle.set_defaults(
-    canvwidth = 500,   # default
-    canvheight = 500,  # default
+    canvheight = 400,
     turtle_canvas_wrapper = document['turtle-div']
 )
 
@@ -287,13 +288,13 @@ def draw_square(t):
         t.left(90)
     t.end_fill()
 
-for name,c,y in [(None, 'black', 200),  # same as "classic"
-                 ("classic", 'blue', 150),
-                 ("arrow", 'orange', 100),
-                 ("circle", 'red', 50),
-                 ("square", 'purple', 0),
-                 ("triangle", 'brown', -50),
-                 ("turtle", ('green', 'white'), -100)]:
+for name,c,y in [(None, 'black', 150),  # same as "classic"
+                 ("classic", 'blue', 100),
+                 ("arrow", 'orange', 50),
+                 ("circle", 'red', -50),
+                 ("square", 'purple',-100),
+                 ("triangle", 'brown', -150),
+                 ("turtle", ('green', 'white'), 0)]:
     if name is not None:
         t = turtle.Turtle(name)
     else: 
@@ -311,6 +312,7 @@ for name,c,y in [(None, 'black', 200),  # same as "classic"
     t.penup()
     t.forward(100)
     t.stamp()
+    t.forward(100)
 screen.bgcolor('white')
 
 turtle.done()
@@ -324,8 +326,6 @@ turtle.done()
 <div id='demo4' style="display:none">import turtle
 
 turtle.set_defaults(
-    canvwidth = 500,   # default
-    canvheight = 500,  # default
     turtle_canvas_wrapper = document['turtle-div']
 )
 
@@ -396,7 +396,6 @@ tuft = Turtle()
 cut = Turtle()
 cut.speed(0)
     
-
 lake = Turtle()
 
 mountain = Turtle()
@@ -422,7 +421,6 @@ def speed():
     for i in turtles:
         i.speed(0)
         i.hideturtle()
-
 
 hexnum = ["1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"]
 
@@ -492,7 +490,6 @@ def drawmountains():
     mountain.goto(-300,-400)
     mountain.end_fill()
 
-
     mountain.color('#6d8383')
     penup()
     mountain.goto(-300,-165)
@@ -517,7 +514,6 @@ def drawmountains():
 browns = ['#7a5230','#614126','#49311c','#302013','#181009']
 greens = ['#004000','#003300','#002600','#001900','#004c00']
 
-
 def drawgrass(amount,locx,locy):
     tuft.color('#004000')
     def tuftdraw(size):
@@ -537,8 +533,6 @@ def drawgrass(amount,locx,locy):
     for i in range(amount):
         for i in range(randint(1,4)):
             tuftdraw(i*3)
-
-    
 
 def drawtrees():
 
@@ -670,7 +664,6 @@ def clouddraw():
         singlecloud()
 
 
-
 def lakedraw():
     print("\nDrawing lake")
     blues = ['00004c','000066','000099','0000b2','0000cc','0000e5','0000ff']
@@ -726,7 +719,6 @@ def lilypads(amount):
             lily.pensize(7-i)
     
 
-
 def cutdraw():
     print("\nCutting out")
 
@@ -754,23 +746,15 @@ def cutdraw():
 
 
 speed() #sets all speeds to fastest
-
 drawsky()
-
 clouddraw()
-
 drawmountains()
-
 lakedraw()
-
 lilypads(25)
-
 drawtrees()
-
 cutdraw() #cuts off the edges
 
 done()
-
 print("Elapsed time: %s seconds" % (time.time() - start_time))
 </div>
 
@@ -822,8 +806,6 @@ radians()
 
 <div id='demo6' style="display:none">import turtle
 turtle.set_defaults(
-    canvwidth = 500,   # default
-    canvheight = 500,  # default
     _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
@@ -931,8 +913,6 @@ write()
 
 <div id='demo7' style="display:none">import turtle
 turtle.set_defaults(
-    canvwidth = 500,   # default
-    canvheight = 500,  # default,
     _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
@@ -967,15 +947,10 @@ t.stamp()
 
 t.goto(-50, -100)
 
-t.write("The turtle module is cool!", font=("Arial", 20, "normal"))
-
-print("\nAbout to call reset()")
 t.reset()  # black turtle, at origin
 t.left(90)
 t.fd(50)
-t.stamp()
 
-print("\nAbout to call clear()")
 t.clear()
 
 turtle.done()
@@ -1035,8 +1010,6 @@ undobufferentries(): not implemented
 
 <div id='demo8' style="display:none">import turtle
 turtle.set_defaults(
-    canvwidth = 500,   # default
-    canvheight = 500,  # default
     _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
@@ -1105,17 +1078,17 @@ turtle.done()
 <h3>Window control</h3>
 <pre>
 bgcolor()
-<span class='not-tested'>
+  <span class='not-implemented'>
 bgpic()
 clear() | clearscreen()
 reset() | resetscreen()
 screensize()
-setworldcoordinates()
 </span>
+setworldcoordinates()
 </pre>
 <h3>Animation control</h3>
 <pre>
-<span class='not-tested'>
+  <span class='not-implemented'>
 delay()
 tracer()
 update()
@@ -1123,24 +1096,28 @@ update()
 </pre>
 <h3>Using screen events</h3>
 <pre>
-  <span class='not-tested'>
+  <span class='not-implemented'>
 listen()
 onkey() | onkeyrelease()
 onkeypress()
 onclick() | onscreenclick()
 ontimer()
-mainloop() | done()
+mainloop()
 </span>
+done()  -- has a slightly different meaning
 </pre>
 <h3>Settings and special methods</h3>
 <pre>
-  <span class='not-tested'>
+
 mode()
+  <span class='not-implemented'>
 colormode()
 getcanvas()
 getshapes()
 register_shape() | addshape()
+</span>
 turtles()
+  <span class='not-implemented'>
 window_height()
 window_width()
 </span>
@@ -1154,7 +1131,7 @@ numinput(): not implemented
 </pre>
 <h3>Methods specific to Screen</h3>
 <pre>
-  <span class="not-tested">
+  <span class='not-implemented'>
 bye()
 exitonclick()
 setup()
@@ -1165,8 +1142,6 @@ title()
 
 <div id='demo9' style="display:none">import turtle
 turtle.set_defaults(
-    canvwidth = 500,   # default
-    canvheight = 500,  # default
     _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
@@ -1180,25 +1155,34 @@ turtle.done()
 
 <div id='info10' style='display:none'>
   <h2>Procedural version: comparison with CPython</h2>
-  <p span='not-implemented'>The information below is currently wrong: none of the function has 
-  been implemented.</p>
-  <p> All implemented methods from the 
+  <p>This demo shows the procedural version of the turtle module. 
+    We did not provide an html container, so a default one is created 
+    which is not styled; to show it, we changed the background color in 
+  the code.</p>
+  <p> All implemented <b><em>methods</em></b> from the 
       <a href="https://docs.python.org/3/library/turtle.html#turtle-methods" target="_blank">
-    CPython version</a> should also be available as functions.
-   We do not list them all nor test them all here, but chose a representative
-   sample for a demo.
+    CPython version</a> mentioned in the other demos should also be available as functions.
+   We do not list them all nor test them all here, but chose a few for a demo.
   </p>
   <p>If you find a missing function, please file an issue.</p>
 </div>
 
 <div id='demo10' style="display:none">from turtle import *
-turtle.set_defaults(
-    canvwidth = 500,   # default
-    canvheight = 500,  # default
-    turtle_canvas_wrapper = document['turtle-div']
-)
 
-# Code to be written once the functions have been implemented.
+# screen function 
+bgcolor('rgb(255, 245, 230)')
+
+# turtle functions
+fd(100)
+shape('turtle')
+color('green', 'white')
+left(90)
+up()
+fd(100)
+down()
+fd(100)
+
+done()
 </div>
 
 </body>
