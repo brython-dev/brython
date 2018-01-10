@@ -10,6 +10,7 @@ import sys
 import traceback
 from browser import document, timer
 
+FIRST_TIME = True
 def inform(*args):
     document["status-info"].html = ''.join(args)
 
@@ -26,7 +27,12 @@ def clear_print():
 
 @document["run"].bind("click")
 def run_code(ev):
-    inform("Processing")
+    global FIRST_TIME
+    if FIRST_TIME:
+        FIRST_TIME = False 
+        inform("Importing turtle module for the first time and processing; please wait")
+    else:
+        inform("Processing")
     document["run"].class_name = 'btn-disabled'
     # delay to allow updated DOM with above text to be shown.
     timer.set_timeout(exec_code, 1)
@@ -195,11 +201,12 @@ computation.</p>
 
 <div id='demo1' style="display:none">import turtle
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default
+    canvwidth = 500,   # default
+    canvheight = 500,  # default
     turtle_canvas_wrapper = document['turtle-div']
 )
 t = turtle.Turtle()
+
 t.width(5)
 
 for c in ['red', '#00ff00', '#fa0', 'rgb(0,0,200)']:
@@ -220,6 +227,7 @@ t.goto(0, 125)
 t.color('purple')
 t.write("I love Brython!", font=("Arial", 20, "normal"))
 
+
 turtle.done()
 </div>
 
@@ -234,8 +242,8 @@ and for demonstrating instant (fastest) drawing.</p>
 <div id='demo2' style="display:none">import turtle
 
 turtle.set_defaults(
-    canvas_width = 600,  # default is 500
-    canvas_height = 400,  # default is 500
+    canvwidth = 600,  # default is 500
+    canvheight = 400,  # default is 500
     turtle_canvas_wrapper = document['turtle-div']
 )
 
@@ -267,8 +275,8 @@ and how to change the background color.</p>
 <div id='demo3' style="display:none">import turtle
 
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default
+    canvwidth = 500,   # default
+    canvheight = 500,  # default
     turtle_canvas_wrapper = document['turtle-div']
 )
 
@@ -316,8 +324,8 @@ turtle.done()
 <div id='demo4' style="display:none">import turtle
 
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default
+    canvwidth = 500,   # default
+    canvheight = 500,  # default
     turtle_canvas_wrapper = document['turtle-div']
 )
 
@@ -348,13 +356,14 @@ turtle.done()
 <div id='info5' style="display:none">
 <h2>A complex scene</h2>
 <p>Other than setting some defaults, and calling <code>done()</code>
-  at the end, this demo has been copied verbatim from code linked in  
+  at the end, this demo has been copied from code linked in  
   <a href="https://www.reddit.com/r/Python/comments/7mo2l8/turtle_module_drawing_a_randomised_landscape/"
   target="_blank">
   a post on reddit</a>, as a test to show that everything required had been 
 properly implemented in this version of the turtle module.</p>
 <p>If the turtle module has already been imported at least once,
-  it should take approximately 10 seconds to create the scene. 
+  it currently takes approximately 10 seconds to <b><em>create</em></b>
+  this scene. 
     Once it has been created, you can view it being drawn as often as you want 
     by clicking on <b>Replay scene</b>.</p>
 </div>
@@ -369,8 +378,8 @@ import time
 start_time = time.time()
 
 set_defaults(
-    canvas_width = 650,
-    canvas_height = 650,
+    canvwidth = 650,
+    canvheight = 650,
     debug = False,
     turtle_canvas_wrapper = document['turtle-div']
 )
@@ -512,7 +521,6 @@ greens = ['#004000','#003300','#002600','#001900','#004c00']
 
 def drawgrass(amount,locx,locy):
     tuft.color('#004000')
-    tuft.hideturtle()
     def tuftdraw(size):
         if randint(0,1) == 1:
             size = -size
@@ -704,6 +712,7 @@ def lakedraw():
 
 def lilypads(amount):
     lily = Turtle()
+    lily.hideturtle()
     lily.speed(0)
     for i in range(amount):
         lily.color(greens[randint(0,4)])
@@ -814,8 +823,8 @@ radians()
 
 <div id='demo6' style="display:none">import turtle
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default
+    canvwidth = 500,   # default
+    canvheight = 500,  # default
     _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
@@ -923,8 +932,8 @@ write()
 
 <div id='demo7' style="display:none">import turtle
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default,
+    canvwidth = 500,   # default
+    canvheight = 500,  # default,
     _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
@@ -1027,8 +1036,8 @@ undobufferentries(): not implemented
 
 <div id='demo8' style="display:none">import turtle
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default
+    canvwidth = 500,   # default
+    canvheight = 500,  # default
     _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
@@ -1157,8 +1166,8 @@ title()
 
 <div id='demo9' style="display:none">import turtle
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default
+    canvwidth = 500,   # default
+    canvheight = 500,  # default
     _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
@@ -1185,8 +1194,8 @@ turtle.done()
 
 <div id='demo10' style="display:none">from turtle import *
 turtle.set_defaults(
-    canvas_width = 500,   # default
-    canvas_height = 500,  # default
+    canvwidth = 500,   # default
+    canvheight = 500,  # default
     turtle_canvas_wrapper = document['turtle-div']
 )
 
