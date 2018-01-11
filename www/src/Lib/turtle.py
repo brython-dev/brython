@@ -410,7 +410,7 @@ class Screen(metaclass=Singleton):
         '''Ends the creation of a "scene" and has it displayed'''
 
         for t in self._turtles:
-            self.turtle_canvas <= t 
+            self.turtle_canvas <= t.svg 
         if _CFG["turtle_canvas_wrapper"] is None:
             _CFG["turtle_canvas_wrapper"] = html.DIV(Id="turtle-canvas-wrapper")
             document <= _CFG["turtle_canvas_wrapper"]
@@ -562,8 +562,9 @@ class TNavigator:
         self._angleOffset = self.DEFAULT_ANGLEOFFSET
         self._angleOrient = self.DEFAULT_ANGLEORIENT
         self._mode = mode
+        self.degree_to_radians = math.pi / 180
         self.degrees()
-        self._mode = None
+        self._mode = _CFG['mode']
         self._setmode(mode)
         TNavigator.reset(self)
 
@@ -576,6 +577,7 @@ class TNavigator:
         self._x = 0 
         self._y = 0
         self._angle = 0
+        self._old_heading = 0
 
     def _setmode(self, mode=None):
         """Set turtle-mode to 'standard', 'world' or 'logo'.
@@ -597,11 +599,6 @@ class TNavigator:
         """Helper function for degrees() and radians()"""
         self._fullcircle = fullcircle
         self._degreesPerAU = 360/fullcircle
-        if self._mode in ["standard", "world"]:
-            self._angleOffset = 0
-        else:
-            self._angleOffset = -fullcircle/4.
-        self._to_radians = math.pi * 2 / fullcircle
 
     def degrees(self, fullcircle=360.0):
         """ Set angle measurement units to degrees, or possibly other system.
@@ -623,8 +620,8 @@ class TNavigator:
     def forward(self, distance):
         """Move the turtle forward by the specified distance.
         """
-        x1 = distance * cos(self._angle * self._to_radians)
-        y1 = distance * sin(self._angle * self._to_radians)
+        x1 = distance * cos(self._angle * self.degree_to_radians)
+        y1 = distance * sin(self._angle * self.degree_to_radians)
         self._distance = distance
         self._goto(self._x + x1, self._y + y1)        
     fd = forward
@@ -632,8 +629,8 @@ class TNavigator:
     def back(self, distance):
         """Move the turtle backward by distance.
         """
-        x1 = -distance * cos(self._angle * self._to_radians)
-        y1 = -distance * sin(self._angle * self._to_radians)
+        x1 = -distance * cos(self._angle * self.degree_to_radians)
+        y1 = -distance * sin(self._angle * self.degree_to_radians)
         self._distance = distance
         self._goto(self._x + x1, self._y + y1)   
     backward = back 
@@ -642,14 +639,16 @@ class TNavigator:
     def right(self, angle):
         """Turn turtle right by angle units.
         """
-        self._angle += self.screen.y_points_down*angle  ##FIXME - convert to degrees
+        angle*=self._degreesPerAU
+        self._angle += self.screen.y_points_down*angle
         self._rotate_image(-angle)
     rt = right 
 
     def left(self, angle):
         """Turn turtle left by angle units.
         """
-        self._angle += -self.screen.y_points_down*angle  ##FIXME - convert to degreest
+        angle*=self._degreesPerAU
+        self._angle += -self.screen.y_points_down*angle
         self._rotate_image(angle)
     lt = left
 
@@ -940,6 +939,7 @@ class TPen:
         if self._shown:
             return
         self.pen(shown=True)
+        self.left(0) # this will update the display to the correct rotation
     st = showturtle
 
     def hideturtle(self):
@@ -1057,7 +1057,7 @@ class Turtle(TPen, TNavigator):
         self._shown = False
         if visible:
             self.showturtle() # will ensure that turtle become visible at appropriate time
-        self.screen._turtles.append(self.svg)
+        self.screen._turtles.append(self)
         self.rotation_correction = rotation
         # apply correction to image orientation
         self._old_heading = self.heading() + self.rotation_correction
@@ -1092,7 +1092,7 @@ class Turtle(TPen, TNavigator):
             self.hideturtle()
         self.screen.turtle_canvas <= self.svg
         self.svg = _turtle 
-        self.screen._turtles.append(self.svg)
+        self.screen._turtles.append(self)
         if visible:
             self.showturtle()
 
@@ -1170,7 +1170,8 @@ class Turtle(TPen, TNavigator):
     def _rotate(self, angle):
         """Turns pen clockwise by angle.
         """
-        self._angle += -self.screen.y_points_down*angle  ##FIXME - convert to degrees
+        angle*=self._degreesPerAU
+        self._angle += -self.screen.y_points_down*angle
         self._rotate_image(angle)
 
     def _rotate_image(self, angle):
@@ -1447,9 +1448,6 @@ def _make_global_funcs(functions, cls, obj, init):
             print("methodname missing:", methodname)
             continue
         pl1, pl2 = getmethparlist(method)
-        if pl1 == "":
-            print(">>>>>>", pl1, pl2)
-            continue  
         defstr = __func_body.format(obj=obj, init=init, name=methodname,
                                     paramslist=pl1, argslist=pl2)
         exec(defstr, globals())

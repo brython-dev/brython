@@ -362,7 +362,8 @@ turtle.done()
   a post on reddit</a>, as a test to show that everything required had been 
 properly implemented in this version of the turtle module.</p>
 <p>If the turtle module has already been imported at least once,
-  it can take up to 20 seconds to <b><em>create</em></b> this scene. 
+  depending on your browser, it can take between 10 and 20 seconds to 
+  <b><em>create</em></b> this scene. 
     Once it has been created, you can view it being drawn as often as you want 
     by clicking on <b>Replay scene</b>.</p>
 </div>
@@ -379,7 +380,6 @@ start_time = time.time()
 set_defaults(
     canvwidth = 650,
     canvheight = 650,
-    debug = False,
     turtle_canvas_wrapper = document['turtle-div']
 )
 
@@ -766,8 +766,7 @@ print("Elapsed time: %s seconds" % (time.time() - start_time))
     removing items drawn on the screen does not 
   make sense in this implementation of the turtle module.</p>
   <p>In general, when a "public" non-implemented method is called, a warning
-  is written on stderr. With debug mode turned on, such warnings are also
-  printed for private methods (whose name starts with an underscore)
+  is written on stderr.
   <p>Reference: <a href="https://docs.python.org/3/library/turtle.html#turtle-methods" target="_blank">
     Turtle motion: move and draw.</a> (link opens in new tab)</p>
 
@@ -805,11 +804,10 @@ radians()
 </div>
 
 <div id='demo6' style="display:none">import turtle
+from math import pi
 turtle.set_defaults(
-    _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
-
 
 t = turtle.Turtle("turtle")
 t.speed(1)
@@ -826,14 +824,33 @@ t.fd(50)
 print("Should be (50, 50):", t.pos())
 print("Should be 225: ", t.towards(0, 0))
 print("Should be 90: ", t.heading())
-print("Should be 71:", t.distance(0, 0))
+print("Should be approximately 71:", t.distance(0, 0))
 
-t.degrees(400)
-print("Should be 100: ", t.heading())
+# Draw the same square in three different angle modes
+t.width(4)
+
+print("Drawing using degrees - the default")
+print("Heading should be 90: ", t.heading())
+for i in range(4):
+    t.forward(100)
+    t.left(90)
+
+print("Drawing using radians")
 t.radians()
-print("Should be Pi/2: ", t.heading())
+print("Heading should be pi/2: ", t.heading())
+for i in range(4):
+    t.forward(100)
+    t.left(pi/2)
+
+print("Drawing using gradients")
+t.degrees(400)
+print("Heading should be 100: ", t.heading())
+for i in range(4):
+    t.forward(100)
+    t.left(100)
+
 t.degrees()
-print("Should be 90: ", t.heading())
+t.width(1)
 
 t.lt(90)
 t.color("orange")
@@ -913,7 +930,6 @@ write()
 
 <div id='demo7' style="display:none">import turtle
 turtle.set_defaults(
-    _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
 
@@ -999,8 +1015,9 @@ ondrag(): not implemented
 <pre><span class='not-implemented'>begin_poly(): not implemented
 end_poly(): not implemented
 get_poly(): not implemented
-clone(): not implemented
-</span>getturtle() | getpen()
+</span>
+clone()
+getturtle() | getpen()
 getscreen()
 <span class='not-implemented'>setundobuffer(): not implemented
 undobufferentries(): not implemented
@@ -1010,7 +1027,6 @@ undobufferentries(): not implemented
 
 <div id='demo8' style="display:none">import turtle
 turtle.set_defaults(
-    _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
 
@@ -1048,7 +1064,7 @@ t.settiltangle(0)
 t.tiltangle(0)
 t.tilt(0)
 t.shapetransform()
-
+t.get_shapepoly()
 
 c = t.getturtle()
 c.color("black")
@@ -1059,10 +1075,12 @@ d = t.getpen()
 d.color('red')
 d.fd(40)
 
+r = t.clone()
+r.fd(40)
+
 screen = t.getscreen()
 screen.bgcolor("rgb(240, 255, 240)")
 
-print("Coordinates of triangle shape: ", t.get_shapepoly())
 
 turtle.done()
 </div>
@@ -1074,6 +1092,13 @@ turtle.done()
   make sense in this implementation of the turtle module.</p>
     <p><a href="https://docs.python.org/3/library/turtle.html#turtle-methods" target="_blank">
     Methods of TurtleScreen/Screen</a> (link opens in new tab)</p>
+    <p>This turtle implementation does not support <code>colormode</code>: 
+      all colours must be given as strings. However, <b><em>more</em></b>
+      color modes are supported since color may be given by name
+      ['red'], by hexadecimal notation ['#abcdef', or '#345'], in rgb notation
+      ['rgb(255, 255, 255)'], rgba notation ['rgba(255, 255, 255, 0.5)'],
+      hsl notation ['hsl(36, 73%, 37%)'], or any other notation supported by
+    a browser.</p>
 
 <h3>Window control</h3>
 <pre>
@@ -1111,8 +1136,8 @@ done()  -- has a slightly different meaning
 
 mode()
   <span class='not-implemented'>
-colormode()
-getcanvas()
+colormode()</span> Please, see comment above
+<span class='not-implemented'>getcanvas()
 getshapes()
 register_shape() | addshape()
 </span>
@@ -1138,17 +1163,65 @@ setup()
 title()
 </span>
 </pre>
+<h3>Classes available</h3>
+<p>Of all the classes listed in the CPython documentation,
+  only <code>Screen</code> and <code>Turtle</code>
+are guaranteed to be available.</p>
 </div>
 
 <div id='demo9' style="display:none">import turtle
 turtle.set_defaults(
-    _debug = True,
     turtle_canvas_wrapper = document['turtle-div']
 )
 
-t = turtle.Turtle("turtle")
-screen = t.getscreen()
-screen.bgcolor("rgb(240, 255, 240)")
+screen = turtle.Screen()
+print("Uncomment one of the demo choices at the bottom.")
+
+def test(x, y):
+    t = turtle.Turtle('turtle')
+    others = []
+    t.penup()
+    t.goto(x, y)
+    font = ("Arial", 12, "normal")
+    for _ in range(4):
+        t.dot(2, 'green')
+        t.pen('black')
+        t.write(t.position(), font=font, align='center',
+                color='black')
+        t.fd(200)
+        t.left(90)
+        others.append(t.clone())
+    t.goto(x+100, y+100)
+    t.color('green', 'white')
+    for o in others:
+        o.color('red')
+        o.speed(1)
+        o.left(320)
+    for tt in screen.turtles():
+        tt.ht()
+    screen.bgcolor("rgb(240, 255, 240)")
+
+def demo_default():
+    test(0, 0)
+
+def demo_logo():
+    screen.mode('logo')
+    test(0, 0)
+
+def demo_world():
+    screen.mode('world')
+    test(250, 250)
+
+def demo_custom():
+    screen.setworldcoordinates(0, 500, 500, 0)
+    # notice how the coordinates are inverted
+    test(250, 250)
+
+
+#demo_default()
+#demo_logo()
+#demo_world()
+#demo_custom()
 
 turtle.done()
 </div>
