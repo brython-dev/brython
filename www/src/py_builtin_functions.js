@@ -684,8 +684,8 @@ function getattr(obj,attr,_default){
 }
 
 $B.$getattr = function(obj, attr, _default){
-
     // Used internally to avoid having to parse the arguments
+
     var rawname = attr
     if($B.aliased_names[attr]){attr = '$$'+attr}
 
@@ -1967,9 +1967,7 @@ function $url_open(){
         // add fake query string to avoid caching
         var fake_qs = '?foo='+(new Date().getTime())
         req.open('GET',file+fake_qs,false)
-        if(is_binary){
-            req.overrideMimeType('text/plain; charset=utf-8');
-        }
+        req.overrideMimeType('text/plain; charset=utf-8');
         req.send()
         if($res.constructor===Error) throw $res
 
