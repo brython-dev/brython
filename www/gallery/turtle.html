@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 
 <script type="text/javascript" src="/src/brython.js"></script>
+<script type="text/javascript" src="/src/brython_stdlib.js"></script>
 
 <script id="python_script" type="text/python">
 import sys
@@ -157,7 +158,7 @@ document["info"].html = document["info1"].html
 <h1>Turtle demo</h1>
 
 <p>Select the desired demo.
-<select id="demo_selector">
+<select id="demo_selector" autocomplete="off">
   <option value="1">Square with default turtle</option> 
   <option value="2">Custom container and instant drawing</option>
   <option value="3">All the turtles</option>
