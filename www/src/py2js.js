@@ -876,9 +876,10 @@ function $AttrCtx(context){
                             parent.context.tree[0].args===undefined){
                         // set attr to instance of a class without a parent
                         this.assign_self = true
-                        return [js+".__class__.__setattr__==="+
-                            "undefined && "+js+'.__class__ !== $B.$factory ? '+
-                            js+"."+this.name+" = ", " : $B.$setattr("+js+', "'+
+                        return [js+".__class__ && !"+
+                            js+".__class__.$has_setattr && "+
+                            js+'.__class__ !== $B.$factory ? '+ js+"."+
+                            this.name+" = ", " : $B.$setattr("+js+', "'+
                             this.name+'", ']
                     }
                 }

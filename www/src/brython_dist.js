@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-01-09 22:38:52.047393"
+__BRYTHON__.compiled_date="2018-01-11 09:02:35.257809"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -476,9 +476,10 @@ if(scope.ntype=="def"){if(parent.ntype=="class"){var params=scope.C.tree[0].posi
 if(this.value.value==params[0]&& parent.C &&
 parent.C.tree[0].args===undefined){
 this.assign_self=true
-return[js+".__class__.__setattr__==="+
-"undefined && "+js+'.__class__ !== $B.$factory ? '+
-js+"."+this.name+" = "," : $B.$setattr("+js+', "'+
+return[js+".__class__ && !"+
+js+".__class__.$has_setattr && "+
+js+'.__class__ !== $B.$factory ? '+ js+"."+
+this.name+" = "," : $B.$setattr("+js+', "'+
 this.name+'", ']}}}}
 if(this.func=='setattr'){
 return '$B.$setattr('+js+',"'+this.name+'")'}else{
@@ -4533,6 +4534,7 @@ for(var kwidx=0;kwidx<kwargs.length;kwidx++){kw.kw[kwargs[kwidx][0]]=kwargs[kwid
 __init_subclass__().$infos.__func__.apply(null,[cls,kw]);}
 break;}}}
 var class_dict={__name__ : class_name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict}
+for(key in cl_dict.$string_dict){class_dict[key]=cl_dict.$string_dict[key]}
 class_dict.__slots__=mro0.__slots__
 class_dict.__mro__=make_mro(bases,cl_dict)
 var is_instanciable=true,non_abstract_methods={},abstract_methods={},mro=[class_dict].concat(class_dict.__mro__)
@@ -4546,6 +4548,8 @@ if(_slots!==undefined){if(typeof _slots=='string'){_slots=[_slots]}
 else{_slots=_b_.list(_slots)}
 for(var j=0;j<_slots.length;j++){cl_dict.$slots=cl_dict.$slots ||{}
 cl_dict.$slots[_slots[j]]=class_dict.__mro__[i]}}}
+for(var i=0;i<mro.length-1;i++){if(mro[i].hasOwnProperty("__setattr__")){cl_dict.$has_setattr=true
+break}}
 if(metaclass===_b_.type){for(var i=1;i<mro.length;i++){if(mro[i].__class__ !==$B.$type){metaclass=mro[i].__class__.$factory
 break}}}
 class_dict.__class__=metaclass.$dict
@@ -4654,7 +4658,7 @@ $B.$type.__class__=$B.$type
 $B.$type.__mro__=[_b_.object.$dict]
 _b_.type.$dict=$B.$type
 $B.$type.__new__=function(meta,name,bases,cl_dict){
-var class_dict={__class__ : $B.$type,__name__ : name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict,$methods :{},$slots: cl_dict.$slots}
+var class_dict={__class__ : $B.$type,__name__ : name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict,$methods :{},$slots: cl_dict.$slots,$has_setattr: cl_dict.$has_setattr}
 var items=$B.$dict_items(cl_dict);
 for(var i=0;i<items.length;i++){var name=items[i][0],v=items[i][1]
 class_dict[name]=v
@@ -6273,7 +6277,7 @@ if(status===404){$res=_b_.IOError('File '+file+' not found')}else if(status!==20
 if(is_binary){$res=_b_.str.$dict.encode($res,'utf-8')}}}catch(err){$res=_b_.IOError('Could not open file '+file+' : error '+err)}}
 var fake_qs='?foo='+(new Date().getTime())
 req.open('GET',file+fake_qs,false)
-if(is_binary){req.overrideMimeType('text/plain; charset=utf-8');}
+req.overrideMimeType('text/plain; charset=utf-8');
 req.send()
 if($res.constructor===Error)throw $res
 if(is_binary){var lf=_b_.bytes('\n','ascii'),lines=_b_.bytes.$dict.split($res,lf)

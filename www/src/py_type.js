@@ -4,6 +4,7 @@ var _b_=$B.builtins
 
 // generic code for class constructor
 $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwargs){
+
     var metaclass = _b_.type  // DRo put here, because is used inside if and later
 
     // DRo - Begin
@@ -86,6 +87,10 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         __dict__ : cl_dict
     }
 
+    for(key in cl_dict.$string_dict){
+        class_dict[key] = cl_dict.$string_dict[key]
+    }
+
     // DRo - slots will have been defined in class dict during type
     // or in class definition in class_obj. mro0 simplifies the choosing
     class_dict.__slots__ = mro0.__slots__
@@ -98,7 +103,6 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
         non_abstract_methods = {},
         abstract_methods = {},
         mro = [class_dict].concat(class_dict.__mro__)
-
 
     for(var i=0;i<mro.length;i++){
         var kdict = i == 0 ? mro0 : mro[i]  // DRo mr0 set above to choose rightly
@@ -126,6 +130,14 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
                 cl_dict.$slots = cl_dict.$slots || {}
                 cl_dict.$slots[_slots[j]]=class_dict.__mro__[i]
             }
+        }
+    }
+
+    // Check if class has __setattr__
+    for(var i=0;i<mro.length-1;i++){
+        if(mro[i].hasOwnProperty("__setattr__")){
+            cl_dict.$has_setattr = true
+            break
         }
     }
 
@@ -442,7 +454,8 @@ $B.$type.__new__ = function(meta, name, bases, cl_dict){
         __bases__ : bases,
         __dict__ : cl_dict,
         $methods : {},
-        $slots: cl_dict.$slots
+        $slots: cl_dict.$slots,
+        $has_setattr: cl_dict.$has_setattr
     }
 
     // set class attributes for faster lookups
