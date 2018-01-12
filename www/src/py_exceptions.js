@@ -217,6 +217,7 @@ $BaseExceptionDict.__new__ = function(cls){
 }
 
 $BaseExceptionDict.__getattr__ = function(self, attr){
+
     if(attr=='info'){
 
         var name = self.__class__.__name__
@@ -227,6 +228,8 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
 
         var info = 'Traceback (most recent call last):'
 
+        var line_info = self.$line_info
+        
         if(self.$js_exc!==undefined){
             for(var attr in self.$js_exc){
                 if(attr==='message') continue
@@ -239,7 +242,9 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
             var frame = self.$stack[i]
             //console.log('frame', i, frame, frame[3].$line_info)
             if(!frame[1] || !frame[1].$line_info){continue}
-            var line_info = frame[1].$line_info.split(',')
+            var $line_info = frame[1].$line_info
+            if(i==0 && self.$line_info){$line_info=self.$line_info}
+            var line_info = $line_info.split(',')
             if($B.$py_src[line_info[1]]===undefined){continue}
             var lines = $B.$py_src[line_info[1]].split('\n'),
                 module = line_info[1]
@@ -280,6 +285,7 @@ var BaseException = function (){
     err.__class__ = $BaseExceptionDict
     err.$py_error = true
     err.$stack = $B.frames_stack.slice()
+    err.$line_info = $B.last($B.frames_stack)[1].$line_info
     $B.current_exception = err
     eval('//placeholder//');
     return err

@@ -79,6 +79,7 @@ function make_node(top_node, node){
     if(ctx_js){ // empty for "global x"
 
         var new_node = new $B.genNode(ctx_js)
+        new_node.line_num = node.line_num
 
         if(ctype=='yield'){
 
@@ -172,6 +173,7 @@ $B.genNode = function(data, parent){
         res.loop_num = this.loop_num
         res.loop_start = this.loop_start
         res.is_yield = this.is_yield
+        res.line_num = this.line_num
         return res
     }
 
@@ -213,6 +215,7 @@ $B.genNode = function(data, parent){
         res.loop_start = this.loop_start
         res.no_break = true
         res.is_yield = this.is_yield
+        res.line_num = this.line_num
         for(var i=0, _len_i = this.children.length; i < _len_i;i++){
             if(this.children[i].is_continue){
                 // If a child is "continue", don't add the following lines
@@ -305,6 +308,16 @@ var $BRGeneratorDict = {__class__:$B.$type,__name__:'generator',__module__:'buil
 
 $B.gen_counter = 0 // used to identify the function run for each next()
 
+function remove_line_nums(node){
+    // Remove line numbers introduced by $add_line_nums in py2js
+    for(var i=0;i<node.children.length;i++){
+        if(node.children[i].is_line_num){
+            node.children.splice(i, 1)
+        }else{
+            remove_line_nums(node.children[i])
+        }
+    }
+}
 $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
 
     // Creates a function that will return an iterator
@@ -320,7 +333,15 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
     // Create a tree structure based on the generator tree
     // iter_id is used in the node where the iterator resets local
     // namespace
+    if($B.debug>0){
+        // add line nums for error reporting
+        $B.$add_line_num(def_node, def_ctx.rank)
+    }
     var func_root = new $B.genNode(def_ctx.to_js())
+    // Once the Javascript code is generated, remove the nodes for line
+    // numbers, they make the rest of the algorithm bug
+    remove_line_nums(def_node.parent)
+
     func_root.module = module
     func_root.yields = []
     func_root.loop_ends = {}

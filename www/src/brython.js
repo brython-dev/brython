@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-01-11 09:09:12.681609"
+__BRYTHON__.compiled_date="2018-01-12 07:51:35.178011"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -2610,6 +2610,7 @@ else if(elt.type==='single_kw'){flag=false}
 if(flag){
 var js=';$locals.$line_info="'+node.line_num+','+mod_id+'";'
 var new_node=new $Node()
+new_node.is_line_num=true 
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank,new_node)
 offset=2}
@@ -2619,6 +2620,7 @@ if((elt.type=='condition' && elt.token=="while")
 ||node.C.type=='for'){if($B.last(node.children).C.tree[0].type!="return"){node.add($NodeJS('$locals.$line_info="'+node.line_num+','+
 mod_id+'";'))}}
 return offset}}
+$B.$add_line_num=$add_line_num
 function $bind(name,scope_id,level){
 if($B.bound[scope_id][name]!==undefined){
 if(level<$B.bound[scope_id][name].level){$B.bound[scope_id][name].level=level}}else{$B.bound[scope_id][name]={level: level}}}
@@ -6487,13 +6489,16 @@ $BaseExceptionDict.__getattr__=function(self,attr){if(attr=='info'){var name=sel
 if(name=='SyntaxError' ||name=='IndentationError'){return 'File "'+self.args[1]+'", line '+self.args[2]+'\n    '+
 self.args[4]}
 var info='Traceback (most recent call last):'
+var line_info=self.$line_info
 if(self.$js_exc!==undefined){for(var attr in self.$js_exc){if(attr==='message')continue
 try{info +='\n    '+attr+' : '+self.$js_exc[attr]}
 catch(_err){}}
 info+='\n'}
 for(var i=0;i<self.$stack.length;i++){var frame=self.$stack[i]
 if(!frame[1]||!frame[1].$line_info){continue}
-var line_info=frame[1].$line_info.split(',')
+var $line_info=frame[1].$line_info
+if(i==0 && self.$line_info){$line_info=self.$line_info}
+var line_info=$line_info.split(',')
 if($B.$py_src[line_info[1]]===undefined){continue}
 var lines=$B.$py_src[line_info[1]].split('\n'),module=line_info[1]
 if(module.charAt(0)=='$'){module='<module>'}
@@ -6515,6 +6520,7 @@ err.args=_b_.tuple(Array.prototype.slice.call(arguments))
 err.__class__=$BaseExceptionDict
 err.$py_error=true
 err.$stack=$B.frames_stack.slice()
+err.$line_info=$B.last($B.frames_stack)[1].$line_info
 $B.current_exception=err
 eval('//placeholder//');
 return err}
@@ -11464,6 +11470,7 @@ if(ctx.token=='elif'){is_else=true;is_cond=true}
 if(ctx.token=='if')is_cond=true}}
 if(ctx_js){
 var new_node=new $B.genNode(ctx_js)
+new_node.line_num=node.line_num
 if(ctype=='yield'){
 var yield_node_id=top_node.yields.length
 while(ctx_js.charAt(ctx_js.length-1)==';'){ctx_js=ctx_js.substr(0,ctx_js.length-1)}
@@ -11511,6 +11518,7 @@ res.is_else=this.is_else
 res.loop_num=this.loop_num
 res.loop_start=this.loop_start
 res.is_yield=this.is_yield
+res.line_num=this.line_num
 return res}
 this.clone_tree=function(exit_node,head){
 var res=new $B.genNode(this.data)
@@ -11534,6 +11542,7 @@ res.loop_num=this.loop_num
 res.loop_start=this.loop_start
 res.no_break=true
 res.is_yield=this.is_yield
+res.line_num=this.line_num
 for(var i=0,_len_i=this.children.length;i < _len_i;i++){if(this.children[i].is_continue){
 res.addChild(new $B.genNode('continue'))
 break}
@@ -11570,11 +11579,16 @@ pnode=pnode.parent}
 return tries}
 var $BRGeneratorDict={__class__:$B.$type,__name__:'generator',__module__:'builtins'}
 $B.gen_counter=0 
+function remove_line_nums(node){
+for(var i=0;i<node.children.length;i++){if(node.children[i].is_line_num){node.children.splice(i,1)}else{remove_line_nums(node.children[i])}}}
 $B.$BRgenerator=function(func_name,blocks,def_id,def_node){
 var def_ctx=def_node.C.tree[0]
 var module=def_node.module,
 iter_id=def_id
+if($B.debug>0){
+$B.$add_line_num(def_node,def_ctx.rank)}
 var func_root=new $B.genNode(def_ctx.to_js())
+remove_line_nums(def_node.parent)
 func_root.module=module
 func_root.yields=[]
 func_root.loop_ends={}

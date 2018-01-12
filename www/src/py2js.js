@@ -5269,6 +5269,7 @@ function $add_line_num(node,rank){
             var js=';$locals.$line_info="'+node.line_num+','+mod_id+'";'
 
             var new_node = new $Node()
+            new_node.is_line_num = true // used in generators
             new $NodeJSCtx(new_node,js)
             node.parent.insert(rank,new_node)
             offset = 2
@@ -5289,6 +5290,8 @@ function $add_line_num(node,rank){
         return offset
     }
 }
+
+$B.$add_line_num = $add_line_num
 
 function $bind(name, scope_id, level){
     // Bind a name in scope_id
@@ -7798,7 +7801,9 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     root.add(catch_node)
 
     if($B.profile>0){$add_profile(root,null,module)}
-    if($B.debug>0){$add_line_num(root,null,module)}
+    if($B.debug>0){
+        $add_line_num(root,null,module)
+    }
 
     var t1 = new Date().getTime()
     if($B.debug>=2){
