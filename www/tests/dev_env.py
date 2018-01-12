@@ -189,11 +189,14 @@ def run(evt, elt):
     print(output.style.overflow)
     save_stdout = sys.stdout
     save_stderr = sys.stderr
-    sys.stdout = sys.stderr = Output()
+    stdout = Output()
+    sys.stdout = sys.stderr = stdout
     output_window.style.display = "block"
     output.text = ""
     try:
         exec(editor.text)
+    except:
+        traceback.print_exc(stdout)
     finally:
         sys.stdout = save_stdout
         sys.stderr = save_stderr
