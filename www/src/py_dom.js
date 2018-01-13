@@ -953,7 +953,7 @@ DOMNodeDict.clone = function(self){
     var res = DOMNode(self.elt.cloneNode(true))
 
     // bind events on clone to the same callbacks as self
-    var events = self.$events || {}
+    var events = self.elt.$events || {}
     for(var event in events){
         var evt_list = events[event]
         for(var i=0;i<evt_list.length;i++){
