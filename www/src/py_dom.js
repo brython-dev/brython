@@ -145,7 +145,13 @@ $DOMEventDict.__getattribute__ = function(self,attr){
     var res =  self[attr]
     if(res!==undefined){
         if(typeof res=='function'){
-            var func = function(){return res.apply(self,arguments)}
+            var func = function(){
+                var args = []
+                for(var i=0;i<arguments.length;i++){
+                    args.push($B.pyobj2jsobj(arguments[i]))
+                }
+                return res.apply(self,arguments)
+            }
             func.$infos = {__name__:res.toString().substr(9, res.toString().search('{'))}
             return func
         }
