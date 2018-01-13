@@ -7,6 +7,8 @@ from browser.template import Template
 # name of currently edited script
 current = None
 
+docs = {}
+
 # current number of lines
 current_nb_lines = 1
 
@@ -15,6 +17,7 @@ IDB = window.indexedDB
 def close(evt, elt):
     global current
     open_scripts.remove(current)
+    del docs[current]
     editor.text = ""
     print_line_nums()
     draw_file_browser()
@@ -28,6 +31,15 @@ request = IDB.open("brython_scripts")
 
 # If database doesn't exist, create it
 request.bind('upgradeneeded', create_db)
+
+def new(evt, elt):
+    global current
+    current = "script1.py"
+    docs["current"] = ""
+    open_scripts.append(current)
+    editor.text = ""
+    draw_file_browser()
+    print_line_nums()
 
 def load(evt, elt):
     """Get all the scripts in the database and open a dialog window to select
@@ -67,6 +79,8 @@ def open_script(evt):
     load().
     """
     global current, current_nb_lines
+    if current is not None:
+        docs[current] = editor.text
     current = evt.target.text
     db = request.result
     tx = db.transaction("scripts", "readonly")
@@ -78,6 +92,7 @@ def open_script(evt):
             print("not found")
         else:
             editor.text = req.result.content
+            docs[current] = req.result.content
             current_nb_lines = editor.text.count("\n")
             if not current in open_scripts:
                 open_scripts.append(current)
@@ -88,13 +103,22 @@ def open_script(evt):
 
     req.bind("success", success)
 
+def show_script(evt):
+    """Called when user clicks on a script name in the file browser."""
+    global current
+    if current is not None:
+        docs[current] = editor.text
+    current = evt.target.text
+    editor.text = docs[current]
+    draw_file_browser()
+    print_line_nums()
 
 def draw_file_browser():
     filebrowser.clear()
     open_scripts.sort()
     filebrowser <= (html.SPAN(s) + html.BR() for s in open_scripts)
     for span in filebrowser.select("span"):
-        span.bind("click", open_script)
+        span.bind("click", show_script)
         if span.text.strip() == current:
             span.style.backgroundColor = "#888"
 
@@ -183,6 +207,10 @@ def size_down(evt, elt):
     fsize = _fsize() - 1
     document.body.style.fontSize = f"{fsize}px"
 
+def syntax_highlight(evt, elt):
+    colored = highlight.highlight(editor.text)
+    editor.html = colored.html
+
 def run(evt, elt):
     """Execute current script."""
     save_stdout = sys.stdout
@@ -203,7 +231,8 @@ width = window.innerWidth
 height = window.innerHeight
 
 tmpl = Template("content",
-    [run, load, save, save_as, close, delete, size_up, size_down])
+    [new, run, load, save, save_as, close, delete, size_up, size_down,
+        syntax_highlight])
 
 tmpl.render(editor_height=int(0.9 * height),
     height=int(0.6 * height), width=int(0.6 * width),
@@ -279,12 +308,55 @@ linenum.style.width = f"{textareaWidth}px"
 
 editor.text = ""
 print_line_nums()
+editor.focus()
+
+indent = 0
+
+def get_indent():
+    """When user hits the Enter key, set global variables indent and
+    start_block."""
+    global indent
+    sel = document.getSelection()
+    _range = sel.getRangeAt(0)
+    line_start = _range.startOffset
+    text = sel.anchorNode.text
+    indent = len(text) - len(text.lstrip())
+    if text.rstrip().endswith(":"):
+        indent += 4
+
+def insert_spaces(nb):
+    # insert four non-breaking spaces for the tab key
+    sel = document.getSelection()
+    _range = sel.getRangeAt(0)
+
+    tabNode = document.createTextNode(" " * nb)
+    _range.insertNode(tabNode)
+
+    _range.setStartAfter(tabNode)
+    _range.setEndAfter(tabNode)
+    sel.removeAllRanges()
+    sel.addRange(_range)
 
 @editor.bind("keyup")
-def keypress(evt):
+def keyup(evt):
     if evt.keyCode in [8, 13, 17, 46]:
         # cr, delete, ctrl, backspace
         print_line_nums()
+    elif evt.keyCode == 9:
+        evt.preventDefault()
+
+    if evt.keyCode == 13:
+        insert_spaces(indent)
+
+@editor.bind('keypress')
+def keypress(evt):
+    if evt.keyCode == 9: # tab key
+        sel = document.getSelection()
+        evt.preventDefault()
+        insert_spaces(4)
+    if evt.keyCode == 13: # CR
+        # store indent
+        get_indent()
 
 @editor.bind("scroll")
 def scroll(evt):

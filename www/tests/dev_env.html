@@ -2,10 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<link rel="stylesheet" type="text/css"
-      href="https://fonts.googleapis.com/css?family=Roboto">
 
-<link rel="stylesheet" href="../doc/doc_brython.css">
 
 <script type="text/javascript" src="../src/unicode.min.js"></script>
 <script type="text/javascript" src="../src/brython_builtins.js"></script>
@@ -38,8 +35,10 @@
 <script type="text/javascript" src="../src/py_import_hooks.js"></script>
 
 <style>
-body{
-    font-size: 12px;
+body {
+  font-family:Roboto, Arial;
+  font-size: 12px;
+  margin: 20px;
 }
 
 #editor{
@@ -134,6 +133,22 @@ body{
 #dialog{
     padding: 0.5em;
 }
+
+/* For Python syntax highlighting */
+
+span.python-string{
+    color: #080;
+}
+span.python-comment{
+    color: green;
+}
+span.python-keyword{
+    color: #f00;
+}
+span.python-builtin{
+    color: #963;
+}
+
 </style>
 </head>
 
@@ -171,11 +186,13 @@ body{
   </table>
   </div>
 
+  <button b-on="click:new">New</button>
   <button b-on="click:load">Open</button>
   <button b-on="click:save_as">Save as...</button>
   <button b-on="click:save">Save</button>
   <button b-on="click:close">Close</button>
   <button b-on="click:delete">Delete</button>
+  <button b-on="click:syntax_highlight">Highlight</button>
   <button b-on="click:size_up">&uArr;</button>
   <button b-on="click:size_down">&dArr;</button>
 
