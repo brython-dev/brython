@@ -1262,7 +1262,7 @@ DOMNodeDict.unbind = function(self, event){
     // if no function is specified, remove all callback functions
     // If no event is specified, remove all callbacks for all events
     self.elt.$events = self.elt.$events || {}
-    if(self.$events==={}){return _b_.None}
+    if(self.elt.$events==={}){return _b_.None}
 
     if(event===undefined){
         for(var event in self.elt.$events){
