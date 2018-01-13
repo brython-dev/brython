@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-01-13 10:00:43.494206"
+__BRYTHON__.compiled_date="2018-01-13 21:13:45.914889"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4422,12 +4422,16 @@ if(attr==='__class__'){return klass.$factory}
 var res=obj[attr]
 if(res===undefined){
 function check(obj,kl,attr){var v=kl[attr]
-if(v!==undefined){return v}else if(attr=='__str__' && kl['__repr__']!==undefined){
-return kl['__repr__']}}
+if(v!==undefined){return v}}
 res=check(obj,klass,attr)
 if(res===undefined){var mro=klass.__mro__
 for(var i=0,_len_i=mro.length;i < _len_i;i++){res=check(obj,mro[i],attr)
-if(res!==undefined){break}}}}else{if(res.__set__===undefined){
+if(res!==undefined){break}}}
+if(res===undefined && attr=="__str__"){var attr1="__repr__",res1=check(obj,klass,attr1)
+if(res1===undefined){var mro=klass.__mro__
+for(var i=0,_len_i=mro.length;i < _len_i;i++){res1=check(obj,mro[i],attr)
+if(res1!==undefined){break}}}
+res=res1}}else{if(res.__set__===undefined){
 return res}}
 if(res!==undefined){if(res.__class__===_b_.property.$dict){return res.__get__(res,obj,klass)}
 var get=res.__get__

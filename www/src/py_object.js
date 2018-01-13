@@ -123,12 +123,9 @@ $ObjectDict.__getattribute__ = function(obj,attr){
             var v=kl[attr]
             if(v!==undefined){
                 return v
-            }else if(attr=='__str__' && kl['__repr__']!==undefined){
-                // If the class doesn't define __str__ but defines __repr__,
-                // use __repr__
-                return kl['__repr__']
             }
         }
+
         res = check(obj, klass, attr)
         if(res===undefined){
             var mro = klass.__mro__
@@ -137,6 +134,22 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                 if(res!==undefined){break}
             }
         }
+
+        // If the class doesn't define __str__ but defines __repr__,
+        // use __repr__
+        if(res===undefined && attr=="__str__"){
+            var attr1 = "__repr__",
+                res1 = check(obj, klass, attr1)
+            if(res1===undefined){
+                var mro = klass.__mro__
+                for(var i=0, _len_i = mro.length; i < _len_i;i++){
+                    res1 = check(obj, mro[i], attr)
+                    if(res1!==undefined){break}
+                }
+            }
+            res = res1
+        }
+
     }else{
         if(res.__set__===undefined){
             // For non-data descriptors, the attribute found in object
