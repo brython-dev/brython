@@ -1685,6 +1685,13 @@ class B(A):
 b = B()
 assert str(b) == "an A"
 
+# issue 761
+class A:
+    def __str__(self):
+        return 'an A'
+
+assert '{0}'.format(A()) == 'an A'
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
