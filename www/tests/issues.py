@@ -1671,6 +1671,20 @@ assert '{}'.format(C) == "<class '__main__.C'>"
 import javascript
 assert javascript.jsobj2pyobj(javascript.NULL) is None
 assert javascript.jsobj2pyobj(javascript.UNDEFINED) is None
+
+
+# issue 760
+class A(object):
+   def __str__(self):
+       return "an A"
+
+class B(A):
+    def __repr__(self):
+       return '<B>()'
+
+b = B()
+assert str(b) == "an A"
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

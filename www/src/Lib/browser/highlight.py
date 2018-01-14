@@ -31,8 +31,7 @@ def escape(txt):
     txt = txt.replace('>', '&gt;')
     return txt
 
-def highlight(txt, string_color="blue", comment_color="green",
-        keyword_color="purple", builtin_func_color="#963"):
+def highlight(txt):
     res = html.PRE()
     i = 0
     name = ''

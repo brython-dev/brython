@@ -145,7 +145,13 @@ $DOMEventDict.__getattribute__ = function(self,attr){
     var res =  self[attr]
     if(res!==undefined){
         if(typeof res=='function'){
-            var func = function(){return res.apply(self,arguments)}
+            var func = function(){
+                var args = []
+                for(var i=0;i<arguments.length;i++){
+                    args.push($B.pyobj2jsobj(arguments[i]))
+                }
+                return res.apply(self,arguments)
+            }
             func.$infos = {__name__:res.toString().substr(9, res.toString().search('{'))}
             return func
         }
@@ -947,7 +953,7 @@ DOMNodeDict.clone = function(self){
     var res = DOMNode(self.elt.cloneNode(true))
 
     // bind events on clone to the same callbacks as self
-    var events = self.$events || {}
+    var events = self.elt.$events || {}
     for(var event in events){
         var evt_list = events[event]
         for(var i=0;i<evt_list.length;i++){
@@ -1256,7 +1262,7 @@ DOMNodeDict.unbind = function(self, event){
     // if no function is specified, remove all callback functions
     // If no event is specified, remove all callbacks for all events
     self.elt.$events = self.elt.$events || {}
-    if(self.$events==={}){return _b_.None}
+    if(self.elt.$events==={}){return _b_.None}
 
     if(event===undefined){
         for(var event in self.elt.$events){

@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-01-12 07:51:35.178011"
+__BRYTHON__.compiled_date="2018-01-13 21:13:45.914889"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4422,12 +4422,16 @@ if(attr==='__class__'){return klass.$factory}
 var res=obj[attr]
 if(res===undefined){
 function check(obj,kl,attr){var v=kl[attr]
-if(v!==undefined){return v}else if(attr=='__str__' && kl['__repr__']!==undefined){
-return kl['__repr__']}}
+if(v!==undefined){return v}}
 res=check(obj,klass,attr)
 if(res===undefined){var mro=klass.__mro__
 for(var i=0,_len_i=mro.length;i < _len_i;i++){res=check(obj,mro[i],attr)
-if(res!==undefined){break}}}}else{if(res.__set__===undefined){
+if(res!==undefined){break}}}
+if(res===undefined && attr=="__str__"){var attr1="__repr__",res1=check(obj,klass,attr1)
+if(res1===undefined){var mro=klass.__mro__
+for(var i=0,_len_i=mro.length;i < _len_i;i++){res1=check(obj,mro[i],attr)
+if(res1!==undefined){break}}}
+res=res1}}else{if(res.__set__===undefined){
 return res}}
 if(res!==undefined){if(res.__class__===_b_.property.$dict){return res.__get__(res,obj,klass)}
 var get=res.__get__
@@ -10883,7 +10887,9 @@ if(self.target!==undefined)return DOMNode(self.target)
 case 'char':
 return String.fromCharCode(self.which)}
 var res=self[attr]
-if(res!==undefined){if(typeof res=='function'){var func=function(){return res.apply(self,arguments)}
+if(res!==undefined){if(typeof res=='function'){var func=function(){var args=[]
+for(var i=0;i<arguments.length;i++){args.push($B.pyobj2jsobj(arguments[i]))}
+return res.apply(self,arguments)}
 func.$infos={__name__:res.toString().substr(9,res.toString().search('{'))}
 return func}
 return $B.$JS2Py(res)}
@@ -11214,7 +11220,7 @@ DOMNodeDict.Class=function(self){if(self.elt.className !==undefined)return self.
 return None}
 DOMNodeDict.class_name=function(self){return DOMNodeDict.Class(self)}
 DOMNodeDict.clone=function(self){var res=DOMNode(self.elt.cloneNode(true))
-var events=self.$events ||{}
+var events=self.elt.$events ||{}
 for(var event in events){var evt_list=events[event]
 for(var i=0;i<evt_list.length;i++){var func=evt_list[i][0]
 DOMNodeDict.bind(res,event,func)}}
@@ -11356,7 +11362,7 @@ evObj.initEvent(etype,true,false);
 self.elt.dispatchEvent(evObj);}}
 DOMNodeDict.unbind=function(self,event){
 self.elt.$events=self.elt.$events ||{}
-if(self.$events==={}){return _b_.None}
+if(self.elt.$events==={}){return _b_.None}
 if(event===undefined){for(var event in self.elt.$events){DOMNodeDict.unbind(self,event)}
 return _b_.None}
 if(self.elt.$events[event]===undefined ||self.elt.$events[event].length==0){return _b_.None}
