@@ -104,7 +104,7 @@ $ObjectDict.__format__ = function(){
     var $ = $B.args('__format__', 2, {self:null, spec:null},
         ['self', 'spec'], arguments, {}, null, null)
     if($.spec!==''){throw _b_.TypeError("non-empty format string passed to object.__format__")}
-    return _b_.getattr($.self, '__repr__')()
+    return _b_.getattr($.self, '__str__')()
 }
 
 $ObjectDict.__ge__ = function(){return _b_.NotImplemented}
