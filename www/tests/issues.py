@@ -1615,7 +1615,7 @@ assert fut.result() == 10
 # issue 743
 def test(msg = 'a', e_type: int = 10):
     pass
-    
+
 # issue 744: Javascript objects should allow integer attribute names.
 from browser import window
 a = window.Uint8ClampedArray.new(10)
@@ -1668,6 +1668,9 @@ class C:
 
 assert '{}'.format(C) == "<class '__main__.C'>"
 
+import javascript
+assert javascript.jsobj2pyobj(javascript.NULL) is None
+assert javascript.jsobj2pyobj(javascript.UNDEFINED) is None
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
