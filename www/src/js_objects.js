@@ -96,6 +96,7 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
     // conversion of a Python object into a Javascript object
     if(pyobj===true || pyobj===false) return pyobj
     if(pyobj===_b_.None) return null
+    if(pyobj===_b_.NotImplemented) return undefined
 
     var klass = $B.get_class(pyobj)
     if (klass === undefined) {
@@ -435,16 +436,7 @@ $JSObjectDict.bind = function(self, evt, func){
 
 $JSObjectDict.to_dict = function(self){
     // Returns a Python dictionary based on the underlying Javascript object
-    var res = _b_.dict()
-    for(var key in self.js){
-        var value = self.js[key]
-        if(typeof value=='object' && !Array.isArray(value)){
-            _b_.dict.$dict.__setitem__(res, key, $JSObjectDict.to_dict(JSObject(value)))
-        }else{
-            _b_.dict.$dict.__setitem__(res, key, value)
-        }
-    }
-    return res
+    return $B.obj_dict(self.js)
 }
 
 function JSObject(obj){

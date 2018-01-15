@@ -48,8 +48,9 @@ var $item_generator = function(d) {
         for(var attr in d.$jsobj){
             if(attr.charAt(0)!='$'){
                 val = d.$jsobj[attr];
-                if (val === undefined || val === null) this.items.push([attr,$N])
-                else this.items.push([attr,val])
+                if(val === undefined){val = _b_.NotImplemented}
+                else if(val === null){val = $N}
+                this.items.push([attr, val])
             }
         }
         this.length=this.items.length;
@@ -211,8 +212,8 @@ $DictDict.__eq__ = function(){
 
     if(!isinstance(other,dict)) return false
 
-    if(self.$jsobj){self=self.$to_dict()}
-    if(other.$jsobj){other=other.$to_dict()}
+    if(self.$jsobj){self=jsobj2dict(self.$jsobj)}
+    if(other.$jsobj){other=jsobj2dict(other.$jsobj)}
 
     if ($DictDict.__len__(self) != $DictDict.__len__(other)){return false}
 
@@ -247,7 +248,9 @@ $DictDict.__getitem__ = function(){
         self=$.self, arg=$.arg
 
     if(self.$jsobj){
-        if(self.$jsobj[arg]===undefined || self.$jsobj[arg]===null){return $N}
+        if(!self.$jsobj.hasOwnProperty(arg)) throw _b_.KeyError(str(arg))
+        else if(self.$jsobj[arg]===undefined) return _b_.NotImplemented
+        else if(self.$jsobj[arg]===null){return $N}
         return self.$jsobj[arg]
     }
 
@@ -398,7 +401,7 @@ $DictDict.__next__ = function(self){
 $DictDict.__repr__ = function(self){
     if(self===undefined) return "<class 'dict'>"
     if(self.$jsobj){ // wrapper around Javascript object
-        return $DictDict.__repr__(self.$to_dict())
+        return $DictDict.__repr__(jsobj2dict(self.$jsobj))
     }
     var res=[],
         pos=0,
@@ -406,6 +409,7 @@ $DictDict.__repr__ = function(self){
     for (var i=0; i < items.length; i++) {
         var itm = items[i]
         if(itm[1]===self){res[pos++]=repr(itm[0])+': {...}'}
+        //else if(itm[1]===undefined){continue} // XXX this shouldn't happen
         else{res[pos++]=repr(itm[0])+': '+repr(itm[1])}
     }
     return '{'+ res.join(', ') +'}'
@@ -418,8 +422,7 @@ $DictDict.__setitem__ = function(self,key,value){
         self=$.self, key=$.key, value=$.value
 
     if(self.$jsobj){
-        if (value === $N) self.$jsobj[key] = undefined;
-        else self.$jsobj[key]=value;
+        self.$jsobj[key]=$B.pyobj2jsobj(value);
         return
     }
 
@@ -739,6 +742,16 @@ mappingproxy.$dict = mappingproxyDict
 mappingproxyDict.$factory = mappingproxy
 $B.mappingproxy = mappingproxy
 
+function jsobj2dict(x){
+    var d = dict()
+    for(var attr in x){
+        if(attr.charAt(0)!='$' && attr!=='__class__'){
+            d.$string_dict[attr] = x[attr]
+            d.length++
+        }
+    }
+    return d
+}
 $B.obj_dict = function(obj){
     var klass = $B.get_class(obj)
     if(klass !==undefined && klass.$native){
@@ -746,18 +759,6 @@ $B.obj_dict = function(obj){
             " has no attribute '__dict__'")}
     var res = dict()
     res.$jsobj = obj
-    res.$to_dict = (function(x){
-        return function(){
-            var d = dict()
-            for(var attr in x){
-                if(attr.charAt(0)!='$' && attr!=='__class__'){
-                    d.$string_dict[attr] = x[attr]
-                    d.length++
-                }
-            }
-            return d
-        }
-    })(obj)
     return res
 }
 

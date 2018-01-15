@@ -1680,6 +1680,15 @@ class B(A):
 b = B()
 assert str(b) == "an A"
 
+# pass globals() to exec
+x = 1
+
+def f():
+    exec("y = x", globals())
+    assert y == 1
+
+f()
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

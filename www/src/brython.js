@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-01-13 21:13:45.914889"
+__BRYTHON__.compiled_date="2018-01-15 17:38:02.370576"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5641,7 +5641,8 @@ ex +='var $locals_'+globals_id+'=gobj;'
 eval(ex)
 $B.bound[globals_id]=$B.bound[globals_id]||{}
 for(var attr in gobj){$B.bound[globals_id][attr]=true}}else{$B.bound[globals_id]={}
-var items=_globals.$string_dict
+if(_globals.$jsobj){var items=_globals.$jsobj}
+else{var items=_globals.$string_dict}
 for(var item in items){item1=to_alias(item)
 try{eval('$locals_'+globals_id+'["'+item1+'"] = items[item]')
 $B.bound[globals_id][item]=true}catch(err){console.log(err)
@@ -5678,13 +5679,13 @@ var res=eval(js)
 gns=eval('$locals_'+globals_id)
 if($B.frames_stack[$B.frames_stack.length-1][2]==globals_id){gns=$B.frames_stack[$B.frames_stack.length-1][3]}
 if(_locals!==undefined){lns=eval('$locals_'+locals_id)
-var setitem=getattr(_locals,'__setitem__')
 for(var attr in lns){attr1=from_alias(attr)
-if(attr1.charAt(0)!='$'){setitem(attr1,lns[attr])}}}else{for(var attr in lns){current_frame[1][attr]=lns[attr]}}
+if(attr1.charAt(0)!='$'){if(_locals.$jsobj){_locals.$jsobj[attr]=lns[attr]}
+else{_locals.$string_dict[attr1]=lns[attr]}}}}else{for(var attr in lns){current_frame[1][attr]=lns[attr]}}
 if(_globals!==undefined){
-var setitem=getattr(_globals,'__setitem__')
 for(var attr in gns){attr1=from_alias(attr)
-if(attr1.charAt(0)!='$'){setitem(attr1,gns[attr])}}}else{for(var attr in gns){current_frame[3][attr]=gns[attr]}}
+if(attr1.charAt(0)!='$'){if(_globals.$jsobj){_globals.$jsobj[attr]=gns[attr]}
+else{_globals.$string_dict[attr1]=gns[attr]}}}}else{for(var attr in gns){current_frame[3][attr]=gns[attr]}}
 if(res===undefined)return _b_.None
 return res}catch(err){if(err.$py_error===undefined){throw $B.exception(err)}
 throw err}finally{
@@ -5951,8 +5952,7 @@ catch(err){throw _b_.TypeError("object of type '"+$B.get_class(obj).__name__+
 "' has no len()")}}
 function locals(){
 check_nb_args('locals',0,arguments.length)
-var locals_obj=$B.last($B.frames_stack)[1]
-return $B.obj_dict(locals_obj)}
+return $B.obj_dict($B.last($B.frames_stack)[1])}
 var $MapDict={__class__:$B.$type,__name__:'map'}
 $MapDict.__mro__=[$ObjectDict]
 $MapDict.__iter__=function(self){return self}
@@ -7112,6 +7112,7 @@ return $B.JSObject(jsobj)}
 var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
 if(pyobj===true ||pyobj===false)return pyobj
 if(pyobj===_b_.None)return null
+if(pyobj===_b_.NotImplemented)return undefined
 var klass=$B.get_class(pyobj)
 if(klass===undefined){
 return pyobj;}
@@ -7241,10 +7242,7 @@ $JSObjectDict.bind=function(self,evt,func){var js_func=function(ev){return func(
 self.js.addEventListener(evt,js_func)
 return _b_.None}
 $JSObjectDict.to_dict=function(self){
-var res=_b_.dict()
-for(var key in self.js){var value=self.js[key]
-if(typeof value=='object' && !Array.isArray(value)){_b_.dict.$dict.__setitem__(res,key,$JSObjectDict.to_dict(JSObject(value)))}else{_b_.dict.$dict.__setitem__(res,key,value)}}
-return res}
+return $B.obj_dict(self.js)}
 function JSObject(obj){if(obj===null){return _b_.None}
 if(typeof obj=='function'){return{__class__:$JSObjectDict,js:obj,js_func:obj}}
 var klass=$B.get_class(obj)
@@ -10256,8 +10254,9 @@ $value_iterator.prototype.next=function(){return this.iter.next()[1]}
 var $item_generator=function(d){this.i=0
 if(d.$jsobj){this.items=[]
 for(var attr in d.$jsobj){if(attr.charAt(0)!='$'){val=d.$jsobj[attr];
-if(val===undefined ||val===null)this.items.push([attr,$N])
-else this.items.push([attr,val])}}
+if(val===undefined){val=_b_.NotImplemented}
+else if(val===null){val=$N}
+this.items.push([attr,val])}}
 this.length=this.items.length;
 return}
 var items=[]
@@ -10325,8 +10324,8 @@ if(self.$jsobj)delete self.$jsobj[arg]
 return $N}
 $DictDict.__eq__=function(){var $=$B.args('__eq__',2,{self:null,other:null},['self','other'],arguments,{},null,null),self=$.self,other=$.other
 if(!isinstance(other,dict))return false
-if(self.$jsobj){self=self.$to_dict()}
-if(other.$jsobj){other=other.$to_dict()}
+if(self.$jsobj){self=jsobj2dict(self.$jsobj)}
+if(other.$jsobj){other=jsobj2dict(other.$jsobj)}
 if($DictDict.__len__(self)!=$DictDict.__len__(other)){return false}
 if((self.$numeric_dict.length!=other.$numeric_dict.length)||
 (self.$string_dict.length!=other.$string_dict.length)||
@@ -10336,7 +10335,9 @@ for(var k in self.$string_dict){if(!$B.rich_comp("__eq__",other.$string_dict[k],
 for(var k in self.$object_dict){if(!$B.rich_comp("__eq__",other.$object_dict[k][1],self.$object_dict[k][1])){return false}}
 return true}
 $DictDict.__getitem__=function(){var $=$B.args('__getitem__',2,{self:null,arg:null},['self','arg'],arguments,{},null,null),self=$.self,arg=$.arg
-if(self.$jsobj){if(self.$jsobj[arg]===undefined ||self.$jsobj[arg]===null){return $N}
+if(self.$jsobj){if(!self.$jsobj.hasOwnProperty(arg))throw _b_.KeyError(str(arg))
+else if(self.$jsobj[arg]===undefined)return _b_.NotImplemented
+else if(self.$jsobj[arg]===null){return $N}
 return self.$jsobj[arg]}
 switch(typeof arg){case 'string':
 if(self.$string_dict[arg]!==undefined)return self.$string_dict[arg]
@@ -10402,15 +10403,14 @@ try{
 return self.$iter.next()}catch(err){if(err.__name__ !=="StopIteration"){throw err }}}
 $DictDict.__repr__=function(self){if(self===undefined)return "<class 'dict'>"
 if(self.$jsobj){
-return $DictDict.__repr__(self.$to_dict())}
+return $DictDict.__repr__(jsobj2dict(self.$jsobj))}
 var res=[],pos=0,items=new $item_generator(self).as_list()
 for(var i=0;i < items.length;i++){var itm=items[i]
 if(itm[1]===self){res[pos++]=repr(itm[0])+': {...}'}
 else{res[pos++]=repr(itm[0])+': '+repr(itm[1])}}
 return '{'+ res.join(', ')+'}'}
 $DictDict.__setitem__=function(self,key,value){var $=$B.args('__setitem__',3,{self:null,key:null,value:null},['self','key','value'],arguments,{},null,null),self=$.self,key=$.key,value=$.value
-if(self.$jsobj){if(value===$N)self.$jsobj[key]=undefined;
-else self.$jsobj[key]=value;
+if(self.$jsobj){self.$jsobj[key]=$B.pyobj2jsobj(value);
 return}
 switch(typeof key){case 'string':
 self.$string_dict[key]=value
@@ -10556,15 +10556,15 @@ mappingproxy.__class__=$B.$factory
 mappingproxy.$dict=mappingproxyDict
 mappingproxyDict.$factory=mappingproxy
 $B.mappingproxy=mappingproxy
+function jsobj2dict(x){var d=dict()
+for(var attr in x){if(attr.charAt(0)!='$' && attr!=='__class__'){d.$string_dict[attr]=x[attr]
+d.length++}}
+return d}
 $B.obj_dict=function(obj){var klass=$B.get_class(obj)
 if(klass !==undefined && klass.$native){throw _b_.AttributeError(klass.__name__+
 " has no attribute '__dict__'")}
 var res=dict()
 res.$jsobj=obj
-res.$to_dict=(function(x){return function(){var d=dict()
-for(var attr in x){if(attr.charAt(0)!='$' && attr!=='__class__'){d.$string_dict[attr]=x[attr]
-d.length++}}
-return d}})(obj)
 return res}})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 var $N=_b_.None

@@ -456,7 +456,8 @@ function $eval(src, _globals, _locals){
         }
     }else{
         $B.bound[globals_id] = {}
-        var items = _globals.$string_dict
+        if(_globals.$jsobj){var items = _globals.$jsobj}
+        else{var items = _globals.$string_dict}
         for(var item in items){
             item1 = to_alias(item)
             try{
@@ -556,10 +557,12 @@ function $eval(src, _globals, _locals){
         // Update _locals with the namespace after execution
         if(_locals!==undefined){
             lns = eval('$locals_'+locals_id)
-            var setitem = getattr(_locals,'__setitem__')
             for(var attr in lns){
                 attr1 = from_alias(attr)
-                if(attr1.charAt(0)!='$'){setitem(attr1, lns[attr])}
+                if(attr1.charAt(0)!='$'){
+                    if(_locals.$jsobj){_locals.$jsobj[attr] = lns[attr]}
+                    else{_locals.$string_dict[attr1] = lns[attr]}
+                }
             }
         }else{
             for(var attr in lns){
@@ -569,10 +572,12 @@ function $eval(src, _globals, _locals){
 
         if(_globals!==undefined){
             // Update _globals with the namespace after execution
-            var setitem = getattr(_globals,'__setitem__')
             for(var attr in gns){
                 attr1 = from_alias(attr)
-                if(attr1.charAt(0)!='$'){setitem(attr1, gns[attr])}
+                if(attr1.charAt(0)!='$'){
+                    if(_globals.$jsobj){_globals.$jsobj[attr] = gns[attr]}
+                    else{_globals.$string_dict[attr1] = gns[attr]}
+                }
             }
         }else{
             for(var attr in gns){
@@ -1197,8 +1202,7 @@ function locals(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
     check_nb_args('locals', 0, arguments.length)
-    var locals_obj = $B.last($B.frames_stack)[1]
-    return $B.obj_dict(locals_obj)
+    return $B.obj_dict($B.last($B.frames_stack)[1])
 }
 
 
