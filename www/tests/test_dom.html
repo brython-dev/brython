@@ -70,7 +70,7 @@ a.sort_link{
 <canvas id="test_canvas" width=400>
 </canvas>
 <script type="text/python">
-from browser import document
+from browser import document, html
 
 test = document["test"]
 
@@ -89,6 +89,21 @@ assert canvas.width == 400
 canvas.height = 276
 assert canvas.height == 276
 
+# issue 758
+class upgraded:
+
+  def sty(self, _style):
+    self.style=_style
+    return self
+
+
+class uSPAN(upgraded, html.SPAN):
+  pass
+
+span = uSPAN('hi').sty({'background':'red'})
+document <= span
+
+assert span.style.backgroundColor == "red", span.style.backgroundColor
 print("all tests ok")
 
 </script>
