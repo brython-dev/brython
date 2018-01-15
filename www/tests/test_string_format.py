@@ -64,6 +64,12 @@ import datetime
 d = datetime.datetime(2010, 7, 4, 12, 15, 58)
 assert '{:%Y-%m-%d %H:%M:%S}'.format(d) == '2010-07-04 12:15:58'
 
+# format objects
+class A:
+    def __str__(self):
+        return 'an A'
+assert '{}'.format(A()) == 'an A'
+
 ########################
 ## OLD STYLE FORMAT   ##
 ## ie, "%xxx" % value ##
@@ -216,7 +222,7 @@ assert int(x, 16) == 3232235521
 
 width = 5
 results = []
-for num in range(5,12): 
+for num in range(5,12):
     line = []
     for base in 'dXob':
         line.append('{0:{width}{base}}'.format(num, base=base, width=width))

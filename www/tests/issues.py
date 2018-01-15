@@ -1668,6 +1668,11 @@ class C:
 
 assert '{}'.format(C) == "<class '__main__.C'>"
 
+import javascript
+assert javascript.jsobj2pyobj(javascript.NULL) is None
+assert javascript.jsobj2pyobj(javascript.UNDEFINED) is None
+
+
 # issue 760
 class A(object):
    def __str__(self):
@@ -1680,14 +1685,12 @@ class B(A):
 b = B()
 assert str(b) == "an A"
 
-# pass globals() to exec
-x = 1
+# issue 761
+class A:
+    def __str__(self):
+        return 'an A'
 
-def f():
-    exec("y = x", globals())
-    assert y == 1
-
-f()
+assert '{0}'.format(A()) == 'an A'
 
 # ==========================================
 # Finally, report that all tests have passed
