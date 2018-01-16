@@ -73,7 +73,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-01-15 17:38:02.370576"
+__BRYTHON__.compiled_date="2018-01-16 08:45:26.604508"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -2797,6 +2797,7 @@ $_SyntaxError(C,token)
 case 'call':
 switch(token){case ',':
 if(C.expect=='id'){$_SyntaxError(C,token)}
+C.expect='id'
 return C
 case 'id':
 case 'imaginary':
@@ -4415,7 +4416,7 @@ if(!_class1.$native && _class1.__name__ !='function'){return $B.rich_comp("__eq_
 return self===other}
 $ObjectDict.__format__=function(){var $=$B.args('__format__',2,{self:null,spec:null},['self','spec'],arguments,{},null,null)
 if($.spec!==''){throw _b_.TypeError("non-empty format string passed to object.__format__")}
-return _b_.getattr($.self,'__repr__')()}
+return _b_.getattr($.self,'__str__')()}
 $ObjectDict.__ge__=function(){return _b_.NotImplemented}
 $ObjectDict.__getattribute__=function(obj,attr){var klass=obj.__class__ ||$B.get_class(obj)
 if(attr==='__class__'){return klass.$factory}
@@ -6524,7 +6525,7 @@ err.args=_b_.tuple(Array.prototype.slice.call(arguments))
 err.__class__=$BaseExceptionDict
 err.$py_error=true
 err.$stack=$B.frames_stack.slice()
-err.$line_info=$B.last($B.frames_stack)[1].$line_info
+if($B.frames_stack.length){err.$line_info=$B.last($B.frames_stack)[1].$line_info}
 $B.current_exception=err
 eval('//placeholder//');
 return err}
@@ -7105,6 +7106,8 @@ $JSConstructorDict.$factory=JSConstructor
 var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj){switch(jsobj){case true:
 case false:
 return jsobj}
+if(jsobj===undefined){return _b_.NotImplemented}
+else if(jsobj===null){return _b_.None}
 if(Array.isArray(jsobj))return _b_.list(jsobj)
 if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1)return _b_.int(jsobj)
 return _b_.float(jsobj)}

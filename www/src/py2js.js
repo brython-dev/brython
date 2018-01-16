@@ -5583,6 +5583,7 @@ function $transition(context,token){
         switch(token) {
           case ',':
             if(context.expect=='id'){$_SyntaxError(context, token)}
+            context.expect = 'id'
             return context
           case 'id':
           case 'imaginary':
