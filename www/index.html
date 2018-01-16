@@ -8,8 +8,8 @@
 
 <link rel="icon" type="image/png" href="favicon.png" />
 <link rel="stylesheet" type="text/css"
-      href="https://fonts.googleapis.com/css?family=Roboto">
-      
+      href="https://fonts.googleapis.com/css?family=Montserrat">
+
 <noscript>Please enable Javascript to view this page correctly.</noscript>
 <script type="text/javascript" src="src/brython.js"></script>
 
@@ -49,6 +49,10 @@ sin, cos = math.sin, math.cos
 width, height = 250, 250 # canvas dimensions
 ray = 100 # clock ray
 
+background = "#111"
+digits = "#fff"
+border = "#333"
+
 def needle(angle, r1, r2, color="#000000"):
     """Draw a needle at specified angle in specified color.
     r1 and r2 are percentages of clock ray.
@@ -58,7 +62,7 @@ def needle(angle, r1, r2, color="#000000"):
     x2 = width / 2 + ray * cos(angle) * r2
     y2 = height / 2 + ray * sin(angle) * r2
     ctx.beginPath()
-    ctx.strokeStyle = color
+    ctx.strokeStyle = "#fff"
     ctx.moveTo(x1, y1)
     ctx.lineTo(x2, y2)
     ctx.stroke()
@@ -66,10 +70,10 @@ def needle(angle, r1, r2, color="#000000"):
 def set_clock():
     # erase clock
     ctx.beginPath()
-    ctx.fillStyle = "#FFF"
+    ctx.fillStyle = background
     ctx.arc(width / 2, height / 2, ray * 0.89, 0, 2 * math.pi)
     ctx.fill()
-    
+
     # redraw hours
     show_hours()
 
@@ -79,11 +83,11 @@ def set_clock():
     ctx.font = "bold 14px Arial"
     ctx.textAlign = "center"
     ctx.textBaseline = "middle"
-    ctx.fillStyle="#FFF"
+    ctx.fillStyle="#000"
     ctx.fillText(day, width * 0.7, height * 0.5)
 
-    # draw needles for hour, minute, seconds    
-    ctx.lineWidth = 3
+    # draw needles for hour, minute, seconds
+    ctx.lineWidth = 2
     hour = now.hour % 12 + now.minute / 60
     angle = hour * 2 * math.pi / 12 - math.pi / 2
     needle(angle, 0.05, 0.5)
@@ -94,33 +98,40 @@ def set_clock():
     second = now.second + now.microsecond / 1000000
     angle = second * 2 * math.pi / 60 - math.pi / 2
     needle(angle, 0.05, 0.85, "#FF0000") # in red
-    
+
 def show_hours():
     ctx.beginPath()
     ctx.arc(width / 2, height / 2, ray * 0.05, 0, 2 * math.pi)
-    ctx.fillStyle = "#000"
+    ctx.fillStyle = digits
     ctx.fill()
     for i in range(1, 13):
         angle = i * math.pi / 6 - math.pi / 2
         x3 = width / 2 + ray * cos(angle) * 0.75
         y3 = height / 2 + ray * sin(angle) * 0.75
-        ctx.font = "20px Arial"
+        ctx.font = "18px Arial"
         ctx.textAlign = "center"
         ctx.textBaseline = "middle"
         ctx.fillText(i, x3, y3)
     # cell for day
-    ctx.fillStyle = "#000"
+    ctx.fillStyle = "#fff"
     ctx.fillRect(width * 0.65, height * 0.47, width * 0.1, height * 0.06)
 
 canvas = doc["clock"]
 # draw clock border
 if hasattr(canvas, 'getContext'):
     ctx = canvas.getContext("2d")
+
     ctx.beginPath()
-    ctx.lineWidth = 10
-    ctx.arc(width / 2,height / 2, ray, 0, 2 * math.pi)
+    ctx.arc(width / 2, height / 2, ray, 0, 2 * math.pi)
+    ctx.fillStyle = background
+    ctx.fill()
+
+    ctx.beginPath()
+    ctx.lineWidth = 6
+    ctx.arc(width / 2,height / 2, ray + 3, 0, 2 * math.pi)
+    ctx.strokeStyle = border
     ctx.stroke()
-    
+
     for i in range(60):
         ctx.lineWidth = 1
         if i%5 == 0:
@@ -131,6 +142,7 @@ if hasattr(canvas, 'getContext'):
         x2 = width / 2 + ray * cos(angle) * 0.9
         y2 = height / 2 + ray * sin(angle) * 0.9
         ctx.beginPath()
+        ctx.strokeStyle = digits
         ctx.moveTo(x1, y1)
         ctx.lineTo(x2, y2)
         ctx.stroke()
@@ -138,13 +150,14 @@ if hasattr(canvas, 'getContext'):
     show_hours()
 else:
     doc['navig_zone'].html = "On Internet Explorer 9 or more, use a Standard rendering engine"
+
 </script>
 
 
 <title>Brython</title>
 <link rel="stylesheet" href="doc/doc_brython.css">
 </head>
-<!--  
+<!--
 options:
   debug: can equal 0,1,2.  more verbose as number increases
   cache: 'none', 'version', 'browser'.
@@ -157,7 +170,7 @@ options:
 
 <table id="banner" cellpadding=0 cellspacing=0>
 <tr id="banner_row">
-<td class="logo"><a href="../index.html"><img src="brython.png" class="logo"></a></td>
+<td class="logo"><a href="../index.html"><img src="brython_tp.png" class="logo"></a></td>
 </tr>
 </table>
 
@@ -189,7 +202,7 @@ Without a doubt, you've seen a clock like this in demos of HTML5
 However, right click and view the source of this page...
 <p>It is not Javascript code! Instead, you will find Python code in a script of type "text/python".
 <p>Brython is designed to replace Javascript as the scripting language for the Web. As such, it is a Python 3 implementation (you can take it for a test drive through a web <a href="console.html" id="c_en">console</a>), adapted to the HTML5 environment, that is to say with an interface to the DOM objects and events.
-<p>The <a href="gallery/gallery_en.html">gallery</a> highlights a few of the possibilities, from creating simple document elements to drag and drop and 3D navigation. A <a href="https://github.com/brython-dev/brython/wiki/Brython%20in%20the%20wild">wiki</a> lists some applications using Brython. 
+<p>The <a href="gallery/gallery_en.html">gallery</a> highlights a few of the possibilities, from creating simple document elements to drag and drop and 3D navigation. A <a href="https://github.com/brython-dev/brython/wiki/Brython%20in%20the%20wild">wiki</a> lists some applications using Brython.
 <p><a href="http://pyschool.net">pyschool.net</a> provides a web-based environment for teachers in Python classes.
 <p>You can also take a look at <a href="https://github.com/brython-dev/brython/wiki/Brython-videos-and-talks">presentations</a> made in various conferences.</td>
 

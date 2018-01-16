@@ -5,32 +5,39 @@
 @-o-viewport{width:device-width}
 @viewport{width:device-width}
 
+:root {
+  --main-bg-color: #729f98;
+  --header-color: #283018;
+  --selected-header-color: #aa863a;
+}
 
 html {
 
 }
 
 body {
-  font-family:Roboto, Arial;
+  font-family:Montserrat, Arial;
+  font-size:0.9em;
   margin: 0px;
+  background-color: var(--main-bg-color);
 }
 
-a.navig:link,a:link,a:hover,a.navig:visited {
-  color:#4466ac;
-  text-decoration:none
+a.navig:link,a:link,a:hover,a:visited,a.navig:visited {
+  color:var(--header-color);
+  text-decoration:none;
 }
 
 a.banner{
   border-bottom-style: solid;
-  border-bottom-color: #4466ac;
+  border-bottom-color: var(--header-color);
   border-bottom-width: 6px;
 }
 
 a.banner:link,a.banner:visited {
-  background-color:#4466ac;
+  background-color:var(--header-color);
   color:#FFF;
   display:block;
-  font-size:1.2em;
+  font-size:0.9em;
   line-height:30px;
   padding:1.3em;
   text-align:center;
@@ -38,8 +45,13 @@ a.banner:link,a.banner:visited {
 }
 
 a.banner:hover,a.banner:active {
-  background-color:#4466ac;
+  background-color:var(--header-color);
+  border-bottom-color:var(--selected-header-color);
   color:#FFF
+}
+
+a.selected_header{
+  border-bottom-color:var(--selected-header-color);
 }
 
 #banner {
@@ -47,6 +59,16 @@ a.banner:hover,a.banner:active {
   width:100%
 }
 
+button{
+    background-color: var(--header-color);
+    border-color: var(--header-color);
+    color: #fff;
+    border: 1px solid;
+    padding: 0.2em;
+}
+button:hover{
+    border-color: var(--selected-header-color);
+}
 #console {
   background-color:#000;
   color:#FFF;
@@ -73,7 +95,7 @@ img.logo {
 }
 
 td.logo {
-  background-color:#4466ac;
+  background-color:var(--header-color);
   padding-left:20px;
   width:15%
 }
@@ -83,16 +105,16 @@ td.top_menu {
 }
 
 td.language {
-  background-color:#4466ac;
+  background-color:#9fa8a3;
   text-align:right
 }
 
 select.language {
   border-width:0;
   color:#000;
-  font-size:14px;
-  margin-left:10px;
-  padding:10px
+  font-size:0.8em;
+  margin-left:2em;
+  background-color: var(--main-bg-color);
 }
 
 .pycode{
