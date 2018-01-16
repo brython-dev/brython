@@ -81,9 +81,8 @@ var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj) {
         return jsobj
     }
 
-    if(jsobj === undefined || jsobj === null) {
-        return _b_.None
-    }
+    if(jsobj === undefined){return _b_.NotImplemented}
+    else if(jsobj === null) {return _b_.None}
 
     if (Array.isArray(jsobj)) return _b_.list(jsobj)
 
