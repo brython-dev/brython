@@ -32,6 +32,7 @@ $B.async_enabled=false
 if($B.async_enabled)$B.block={}
 $B.modules={}
 $B.imported={}
+$B.module_source={}
 $B.vars={}
 $B._globals={}
 $B.frames_stack=[]
@@ -73,7 +74,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-01-16 08:45:26.604508"
+__BRYTHON__.compiled_date="2018-01-17 22:45:16.759797"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -7133,7 +7134,7 @@ for(var j=0,_len_j=items.length;j < _len_j;j++){if(typeof items[j][1]=='function
 items[j][1].bind(jsobj)}
 jsobj[items[j][0]]=pyobj2jsobj(items[j][1])}
 return jsobj}else if(klass===$B.builtins.float.$dict){
-return pyobj.valueOf()}else if(klass===$B.$FunctionDict){
+return pyobj.valueOf()}else if(klass===$B.$FunctionDict ||klass===$B.$MethodDict){
 return function(){try{var args=[]
 for(var i=0;i<arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}
 else{args.push(jsobj2pyobj(arguments[i]))}}

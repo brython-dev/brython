@@ -149,7 +149,7 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
         // Python floats are converted to the underlying value
         return pyobj.valueOf()
 
-    }else if(klass===$B.$FunctionDict){
+    }else if(klass===$B.$FunctionDict || klass===$B.$MethodDict){
         // Transform arguments
         return function(){
             try{

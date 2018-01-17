@@ -66,6 +66,10 @@ $B.modules = {}
 // Maps the name of imported modules to the module object
 $B.imported = {}
 
+
+// Maps the name of modules to the matching Javascript code
+$B.module_source = {}
+
 // Distionary used to save the loval variables of a generator
 $B.vars = {}
 
