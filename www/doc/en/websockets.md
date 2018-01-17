@@ -11,7 +11,7 @@ The module defines a boolean:
 and a function:
 
 `WebSocket(`_host_`)`
-> _host_ is the location of a server that supports the WebSocket protocol. 
+> _host_ is the location of a server that supports the WebSocket protocol.
 > Returns a `WebSocket` object. If the browser doesn't support WebSocket, a
 > `NotImplementedError` will be raised
 
@@ -54,28 +54,29 @@ and a function:
 Example :
 <table>
 <tr>
-<td>
+<td valign="top">
 ```exec_on_load
-from browser import alert, document as doc
-from browser import websocket
+from browser import alert, document, websocket
 
 def on_open(evt):
-    doc['sendbtn'].disabled = False
-    doc['closebtn'].disabled = False
-    doc['openbtn'].disabled = True
+    document['sendbtn'].disabled = False
+    document['closebtn'].disabled = False
+    document['openbtn'].disabled = True
 
 def on_message(evt):
-    # message reeived from server
-    alert("Message received : %s" %evt.data)
+    # message received from server
+    alert(f"Message received : {evt.data}")
 
 def on_close(evt):
     # websocket is closed
     alert("Connection is closed")
-    doc['openbtn'].disabled = False
-    doc['closebtn'].disabled = True
-    doc['sendbtn'].disabled = True
+    document['openbtn'].disabled = False
+    document['closebtn'].disabled = True
+    document['sendbtn'].disabled = True
 
 ws = None
+
+@document['openbtn'].bind('click')
 def _open(ev):
     if not websocket.supported:
         alert("WebSocket is not supported by your browser")
@@ -88,19 +89,17 @@ def _open(ev):
     ws.bind('message',on_message)
     ws.bind('close',on_close)
 
+@document['sendbtn'].bind('click')
 def send(ev):
-    data = doc["data"].value
+    data = document["data"].value
     if data:
         ws.send(data)
 
+@document['closebtn'].bind('click')
 def close_connection(ev):
     ws.close()
-    doc['openbtn'].disabled = False
-
-doc['openbtn'].bind('click', _open)
-doc['sendbtn'].bind('click', send)
-doc['closebtn'].bind('click', close_connection)
-```        
+    document['openbtn'].disabled = False
+```
 </td>
 
 <td valign="top">
