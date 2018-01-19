@@ -251,8 +251,7 @@ function run_py(module_contents,path,module,compiled) {
         console.log('imports', imports)
         var idb_cx = indexedDB.open("brython_stdlib")
         idb_cx.onsuccess = function(){
-            $B.load_imports_idb(idb_cx, imports, js)
-            imported_idb = true
+            $B.load_imports_idb(module.__name__, idb_cx, imports, js)
         }
         idb_cx.onupgradeneeded = function(){
             console.log('upgradeneeded')
@@ -281,7 +280,7 @@ function run_py(module_contents,path,module,compiled) {
     }finally{
         root = null
         js = null
-        $B.clear_ns(module.__name__)
+        //$B.clear_ns(module.__name__)
     }
     /*
     try{
@@ -311,7 +310,7 @@ $B.run_py = run_py
 
 var nb = 0
 
-$B.load_imports_idb = function(idb_cx, imports, js){
+$B.load_imports_idb = function(mod_name, idb_cx, imports, js){
     nb++
     if(nb>150){
         console.log("je jette l'eponge")
@@ -319,19 +318,35 @@ $B.load_imports_idb = function(idb_cx, imports, js){
         return
     }
     for(var key in imports){
-        if($B.module_source[key]){delete imports[key]}
+        if($B.module_source.hasOwnProperty(key)){delete imports[key]}
+        else if($B.imported.hasOwnProperty(key)){delete imports[key]}
     }
+
     var imp_names = Object.keys(imports)
+    console.log(mod_name, imp_names)
     if(imp_names.length==0){
-        console.log('fini', Object.keys($B.imported))
-        eval(js)
+        console.log('fini pour', mod_name, Object.keys($B.imported))
+        try{
+            eval(js)
+            if($B.imported[mod_name]===false){
+                console.log('set imported', mod_name)
+                var $name = "$locals_" + mod_name.replace(/\./g, "_"),
+                    $module = eval($name)
+                $module.__class__ = $ModuleDict
+                $module.__name__ = mod_name
+                console.log('namespace', mod_name, Object.keys($module))
+            }
+        }catch(err){
+            console.log('error for', mod_name, err)
+            console.log(err.args)
+            throw err
+        }
         return
     }
     var module_name = imp_names.shift()
-    console.log('--load ', module_name)
     delete imports[module_name]
     if($B.module_source[module_name]){
-        $B.load_imports_idb(idb_cx, imports, js)
+        $B.load_imports_idb(mod_name, idb_cx, imports, js)
     }else{
         var db = idb_cx.result,
             tx = db.transaction("modules", "readonly")
@@ -357,6 +372,19 @@ $B.load_imports_idb = function(idb_cx, imports, js){
                                 imports[key] = true
                             }
                         }
+                    }else if(res.ext==".pyjs"){
+                        // precompiled
+                        $B.module_source[module_name] = module_contents
+                        var imports_str = res.imports,
+                            imp = imports_str.split(",")
+                        for(var i=0;i<imp.length;i++){
+                            if(!$B.imported.hasOwnProperty(imp[i]) &&
+                                !$B.module_source.hasOwnProperty(imp[i])){
+                                imports[imp[i]] = true
+                            }else{
+                                console.log(imp[i], 'déjà importé')
+                            }
+                        }
                     }else{
                         var src = res.content
                         src += "\nvar $locals_" +
@@ -369,11 +397,12 @@ $B.load_imports_idb = function(idb_cx, imports, js){
                     throw err
                 }
             }else{
-                console.log(module_name, "pas trouvé")
+                console.log(module_name, "pas trouvé dans load idb de", mod_name)
             }
-            $B.load_imports_idb(idb_cx, imports, js)
+            $B.load_imports_idb(mod_name, idb_cx, imports, js)
         }
         req.onsuccess = get_module
+        console.log('fin de load idb...')
     }
 }
 
@@ -862,8 +891,14 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
        if($B.module_source.hasOwnProperty(mod_name)){
            var mod_js = $B.module_source[mod_name]
            eval(mod_js)
-           var $module = eval("$locals_" +
-               mod_name.replace(/\./g, "_"))
+           try{
+               var $module = eval("$locals_" +
+                   mod_name.replace(/\./g, "_"))
+           }catch(err){
+               console.log(mod_js)
+               throw err
+           }
+           if($module===undefined){console.log('undef for', mod_name)}
            $module.__class__ = $B.$ModuleDict
            $module.__name__ = mod_name
            $B.imported[mod_name] = $module

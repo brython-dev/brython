@@ -3004,9 +3004,8 @@ function $FromCtx(context){
             indent = $get_node(this).indent,
             head= ' '.repeat(indent);
 
-        module.imports[this.module] = true
-
         var _mod = this.module.replace(/\$/g,''), $package, packages=[]
+        console.log('from', _mod)
         while(_mod.length>0){
             if(_mod.charAt(0)=='.'){
                 if($package===undefined){
@@ -3016,6 +3015,7 @@ function $FromCtx(context){
                 }else{
                     $package = $B.imported[$package]
                 }
+                console.log(_mod, 'starts with .', $package)
                 if($package===undefined){
                     return 'throw SystemError("Parent module \'\' not loaded,'+
                         ' cannot perform relative import")'
@@ -3031,6 +3031,7 @@ function $FromCtx(context){
         }
         if(_mod){packages.push(_mod)}
         this.module = packages.join('.')
+        module.imports[this.module] = true
 
         // FIXME : Replacement still needed ?
         var mod_name = this.module.replace(/\$/g,'')
@@ -7906,11 +7907,17 @@ function run_script(script){
         root = $B.py2js(script.src,script.name,script.name,'__builtins__')
         var js1 = root.to_js()
         if($B.debug>1){console.log(js1)}
-        console.log('imports', root.imports)
+        console.log('imports for', script.name, Object.keys(root.imports))
         var imports = root.imports
+        for(var key in imports){
+            if($B.imported.hasOwnProperty(key)){
+                delete imports[key]
+            }
+        }
         var idb_cx = indexedDB.open("brython_stdlib")
         idb_cx.onsuccess = function(){
-            $B.load_imports_idb(idb_cx, imports, js1)
+            $B.load_imports_idb(script.name, idb_cx, imports, js1)
+            console.log('terminé dans run script')
         }
         idb_cx.onupgradeneeded = function(){
             console.log('upgradeneeded')
@@ -7957,7 +7964,7 @@ function run_script(script){
     }finally{
         root = null
         js = null
-        $B.clear_ns(script.name)
+        //$B.clear_ns(script.name)
     }
 }
 
