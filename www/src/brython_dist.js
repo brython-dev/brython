@@ -74,7 +74,7 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-01-17 22:45:16.759797"
+__BRYTHON__.compiled_date="2018-01-19 07:47:35.069615"
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -7104,10 +7104,14 @@ __class__:$JSConstructorDict,obj: obj,func:obj.js_func}}
 JSConstructor.__class__=$B.$factory
 JSConstructor.$dict=$JSConstructorDict
 $JSConstructorDict.$factory=JSConstructor
+var $UndefinedClass=$B.make_class("undefined")
+$UndefinedClass.$dict.__bool__=function(){return false}
+$UndefinedClass.$dict.__repr__=function(){return "undefined"}
+$B.Undefined=$UndefinedClass()
 var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj){switch(jsobj){case true:
 case false:
 return jsobj}
-if(jsobj===undefined){return _b_.NotImplemented}
+if(jsobj===undefined){return $B.Undefined}
 else if(jsobj===null){return _b_.None}
 if(Array.isArray(jsobj))return _b_.list(jsobj)
 if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1)return _b_.int(jsobj)
@@ -7116,7 +7120,7 @@ return $B.JSObject(jsobj)}
 var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
 if(pyobj===true ||pyobj===false)return pyobj
 if(pyobj===_b_.None)return null
-if(pyobj===_b_.NotImplemented)return undefined
+if(pyobj===$B.Undefined)return undefined
 var klass=$B.get_class(pyobj)
 if(klass===undefined){
 return pyobj;}

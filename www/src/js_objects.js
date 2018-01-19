@@ -74,6 +74,13 @@ $JSConstructorDict.$factory = JSConstructor
 
 // JSObject : wrapper around a native Javascript object
 
+
+// Object used to convert Javascript undefined value
+var $UndefinedClass = $B.make_class("undefined")
+$UndefinedClass.$dict.__bool__ = function(){return false}
+$UndefinedClass.$dict.__repr__ = function(){return "undefined"}
+$B.Undefined = $UndefinedClass()
+
 var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj) {
     switch(jsobj) {
       case true:
@@ -81,7 +88,7 @@ var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj) {
         return jsobj
     }
 
-    if(jsobj === undefined){return _b_.NotImplemented}
+    if(jsobj === undefined){return $B.Undefined}
     else if(jsobj === null) {return _b_.None}
 
     if (Array.isArray(jsobj)) return _b_.list(jsobj)
@@ -99,7 +106,7 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
     // conversion of a Python object into a Javascript object
     if(pyobj===true || pyobj===false) return pyobj
     if(pyobj===_b_.None) return null
-    if(pyobj===_b_.NotImplemented) return undefined
+    if(pyobj===$B.Undefined) return undefined
 
     var klass = $B.get_class(pyobj)
     if (klass === undefined) {
