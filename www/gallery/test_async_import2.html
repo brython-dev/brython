@@ -1,0 +1,271 @@
+<!doctype html>
+<html>
+<meta charset="iso-8859-1">
+<head>
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+td {
+    border-style:solid;
+    border-width: 0px 0px 1px 0px;
+    border-color: #000;
+    padding:3px;
+}
+
+th {
+    border-style:solid;
+    border-width: 1px;
+    border-color: #000;
+    background-color: #61D7A4;
+    padding: 4px;
+}
+
+span{font-size:15px;
+    margin-left:10px;}
+a.sort_link{
+    margin-left:10px;
+    font-size: 15px;
+    text-decoration:none;
+}
+
+</style>
+
+<script type="text/javascript" src="../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../src/version_info.js"></script>
+<script type="text/javascript" src="../src/py2js_nevez.js"></script>
+<script type="text/javascript" src="../src/py_object.js"></script>
+<script type="text/javascript" src="../src/py_type.js"></script>
+<script type="text/javascript" src="../src/py_utils.js"></script>
+<script type="text/javascript" src="../src/py_sort.js"></script>
+<script type="text/javascript" src="../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../src/py_exceptions.js"></script>
+<script type="text/javascript" src="../src/py_range_slice.js"></script>
+<script type="text/javascript" src="../src/py_bytes.js"></script>
+<script type="text/javascript" src="../src/py_set.js"></script>
+<script type="text/javascript" src="../src/js_objects.js"></script>
+<script type="text/javascript" src="../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../src/py_import_nevez.js"></script>
+<script type="text/javascript" src="../src/unicode.min.js"></script>
+<script type="text/javascript" src="../src/py_string.js"></script>
+<script type="text/javascript" src="../src/py_int.js"></script>
+<script type="text/javascript" src="../src/py_long_int.js"></script>
+<script type="text/javascript" src="../src/py_float.js"></script>
+<script type="text/javascript" src="../src/py_complex.js"></script>
+<script type="text/javascript" src="../src/py_dict.js"></script>
+<script type="text/javascript" src="../src/py_list.js"></script>
+<script type="text/javascript" src="../src/py_generator.js"></script>
+<script type="text/javascript" src="../src/py_dom.js"></script>
+
+<script type="text/javascript" src="../src/builtin_modules.js"></script>
+<script type="text/javascript" src="../src/py_import_hooks.js"></script>
+<script type="text/javascript" src="../src/async.js"></script>
+
+<style>
+#output{
+    font-family: Consolas, "Courier New";
+    padding: 0.5em;
+    background-color: #000;
+    color: #fff;
+    width: 100%;
+    overflow: auto;
+    white-space: pre-wrap;
+}
+</style>
+</head>
+<body onLoad="brython(1)">
+<div id="banner_row"></div>
+
+<script id="python_script" type="text/pythonXXX">
+import datetime
+print(datetime)
+print(datetime.datetime.now())
+
+import header
+header.show()
+
+import import_test
+print(import_test.valude)
+</script>
+
+<script>
+var imports = ["browser", "math", "re", "header"],
+    sources = {}
+
+function show(xhr, f){
+    if(xhr.readyState==4){
+        if(xhr.status==200){
+            sources[xhr.url] = xhr.responseText.length
+            if(xhr.path != "libs"){
+                var root = __BRYTHON__.py2js(xhr.responseText, xhr.url, xhr.url, "__builtins__")
+                sources[xhr.url] = root.to_js()
+                for(var key in root.imports){
+                    if(!sources.hasOwnProperty(key)){
+                        tasks.splice(0, 0, [inImported, key])
+                    }
+                }
+            }
+        }else if(xhr.status==404){
+            console.log('404', xhr.url, xhr.path)
+            if(xhr.path == "Lib"){
+                tasks.splice(0, 0, [ajax_libs, xhr.url, show])
+            }else if(xhr.path == "libs"){
+                tasks.splice(0, 0, [ajax_current_dir, xhr.url, show])
+            }else if(xhr.path == "current-dir"){
+                tasks.splice(0, 0, [ajax_site_packages, xhr.url, show])
+            }
+        }
+        loop(f)
+    }
+}
+
+function inImported(f, url){
+    if(__BRYTHON__.imported.hasOwnProperty(url)){
+        sources[url] = "in imported"
+    }else if(__BRYTHON__.stdlib.hasOwnProperty(url)){
+        tasks.splice(0, 0, [idb_search, url])
+    }else{
+        tasks.splice(0, 0, [ajax_current_dir, url, show])
+    }
+    loop(f)
+}
+
+var idb_cx
+
+function idb_show(evt, f, url){
+    var res = evt.target.result
+    if(res!==undefined){
+        sources[url] = res.content
+        if(res.ext==".pyjs"){
+            if(res.imports.length>0){
+                var subimports = res.imports.split(",")
+                for(var i=0;i<subimports.length;i++){
+                    var subimport = subimports[i]
+                    if(subimport==""){
+                        console.log('bizarre', url)
+                    }
+                    if(subimport.startsWith(".")){
+                        var url_elts = url.split("."),
+                            nb_dots = 0
+                        while(subimport.startsWith(".")){
+                            nb_dots++
+                            subimport = subimport.substr(1)
+                        }
+                        var elts = url_elts.slice(0, nb_dots)
+                        if(subimport){
+                            elts = elts.concat([subimport])
+                        }
+                        subimport = elts.join(".")
+                    }
+                    if(!__BRYTHON__.imported.hasOwnProperty(subimport) &&
+                            !sources.hasOwnProperty(subimport)){
+                        // for modules imported by modules of the stdlib, only
+                        // search in indexedDB, don't try ajax calls
+                        tasks.splice(0, 0, [idb_search, subimport])
+                    }
+                }
+            }
+        }else if(res.ext==".js"){
+            var src = res.content
+            src += "\nvar $locals_" +
+                url.replace(/\./g, "_") + " = $module"
+            sources[url] = src
+        }
+    }
+    loop(f)
+}
+
+function idb_get(f, url, callback){
+    //console.log('idb get', url, f)
+    var db = idb_cx.result,
+        tx = db.transaction("modules", "readonly")
+        store = tx.objectStore("modules")
+        req = store.get(url)
+    req.onsuccess = callback
+}
+
+function idb_search(f, url, callback){
+    idb_cx = indexedDB.open("brython_stdlib")
+    idb_cx.onsuccess = function(){
+        tasks.splice(0, 0, [idb_get, url, function(evt){idb_show(evt, f, url)}])
+        loop(f)
+    }
+    idb_cx.onupgradeneeded = function(){
+        console.log('upgradeneeded')
+        loop(f)
+    }
+}
+
+function ajax_Lib(f, url, callback){
+    var req = new XMLHttpRequest()
+    req.open("GET", "/src/Lib/" + url + ".py", true)
+    req.onreadystatechange = function(){return callback(this, f)}
+    req.url = url
+    req.path = "Lib"
+    req.send()
+}
+
+function ajax_libs(f, url, callback){
+    var req = new XMLHttpRequest()
+    req.open("GET", "/src/libs/" + url + ".js", true)
+    req.onreadystatechange = function(){return callback(this, f)}
+    req.url = url
+    req.path = "libs"
+    req.send()
+}
+
+function ajax_current_dir(f, url, callback){
+    var req = new XMLHttpRequest()
+    req.open("GET", url + ".py", true)
+    req.onreadystatechange = function(){return callback(this, f)}
+    req.url = url
+    req.path = "current-dir"
+    req.send()
+}
+
+function ajax_site_packages(f, url, callback){
+    var req = new XMLHttpRequest()
+    req.open("GET", "/src/Lib/site-packages/" + url + ".py", true)
+    req.onreadystatechange = function(){return callback(this, f)}
+    req.url = url
+    req.path = "site-packages"
+    req.send()
+}
+
+var src = document.getElementById("python_script").textContent,
+    root = __BRYTHON__.py2js(src, "__main__", "__main__", "__builtins__"),
+    js = root.to_js(),
+    imports = Object.keys(root.imports)
+
+var tasks = []
+for(var i=0; i<imports.length;i++){
+   tasks.push([inImported, imports[i], function(){}])
+}
+
+function execute(){
+    for(var key in sources){
+        __BRYTHON__.module_source[key] = sources[key]
+    }
+    eval(js)
+}
+
+function loop(f){
+    if(tasks.length==0){
+        console.log('fini, exécute', f)
+        f()
+        return
+    }
+    var task = tasks.shift()
+    var func = task[0],
+        arg = task[1],
+        callback = task[2]
+    func(f, arg, callback)
+}
+
+loop(execute)
+</script>
+
+
+</body>
+</html>
