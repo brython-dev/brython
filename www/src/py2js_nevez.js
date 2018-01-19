@@ -3005,7 +3005,6 @@ function $FromCtx(context){
             head= ' '.repeat(indent);
 
         var _mod = this.module.replace(/\$/g,''), $package, packages=[]
-        console.log('from', _mod)
         while(_mod.length>0){
             if(_mod.charAt(0)=='.'){
                 if($package===undefined){
