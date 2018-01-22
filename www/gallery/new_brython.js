@@ -16,51 +16,23 @@ function ajax_load(){
                 }
             }
         }else if(this.status==404){
-            if(this.path == "Lib"){
-                tasks.splice(0, 0, [ajax_libs, this.module])
-            }else if(this.path == "libs"){
-                tasks.splice(0, 0, [ajax_current_dir, this.module])
-            }else if(this.path == "current-dir"){
-                tasks.splice(0, 0, [ajax_site_packages, this.module])
+            var path_num = this.path_num
+            if(this.path_num < $B.path.length-1){
+                tasks.splice(0, 0, [ajax_search, [this.module, this.path_num + 1]])
             }
         }
         loop()
     }
 }
 
-function ajax_Lib(module){
+function ajax_search(args){
+    var module = args[0],
+        path_num = args[1]
     var req = new XMLHttpRequest()
-    req.open("GET", "/src/Lib/" + module + ".py", true)
+    req.open("GET", __BRYTHON__.path[path_num] + "/" + module + ".py", true)
     req.onreadystatechange = ajax_load
     req.module = module
-    req.path = "Lib"
-    req.send()
-}
-
-function ajax_libs(module){
-    var req = new XMLHttpRequest()
-    req.open("GET", "/src/libs/" + module + ".js", true)
-    req.onreadystatechange = ajax_load
-    req.module = module
-    req.path = "libs"
-    req.send()
-}
-
-function ajax_current_dir(module){
-    var req = new XMLHttpRequest()
-    req.open("GET", module + ".py", true)
-    req.onreadystatechange = ajax_load
-    req.module = module
-    req.path = "current-dir"
-    req.send()
-}
-
-function ajax_site_packages(module){
-    var req = new XMLHttpRequest()
-    req.open("GET", "/src/Lib/site-packages/" + module + ".py", true)
-    req.onreadystatechange = ajax_load
-    req.module = module
-    req.path = "site-packages"
+    req.path_num = path_num
     req.send()
 }
 
@@ -70,7 +42,7 @@ function inImported(module){
     }else if(__BRYTHON__.stdlib.hasOwnProperty(module)){
         tasks.splice(0, 0, [idb_search, module])
     }else{
-        tasks.splice(0, 0, [ajax_current_dir, module])
+        tasks.splice(0, 0, [ajax_search, [module, 0]])
     }
     loop()
 }
@@ -79,81 +51,60 @@ var idb_cx
 
 function idb_load(evt, module){
     //document.write("idb load "+module+"<br>")
-    var results = evt.target.result,
-        res
-    if(results!==undefined){
-        for(var i=0;i<results.length;i++){
-            if(results[i].ext==".pyjs"){
-                res = results[i]
-            }
-        }
-        res = res || results[0]
-        if(res===undefined){
-            // not found : search in VFS
-            if(__BRYTHON__.VFS[module] !== undefined){
-                // precompile module
-                var elts = __BRYTHON__.VFS[module],
-                    ext = elts[0],
-                    source = elts[1],
-                    is_package = elts.length==3
-                if(ext==".py"){
-                    var root = __BRYTHON__.py2js(source, module, module, "__builtins__"),
-                        js = root.to_js(),
-                        imports = root.imports
-                    imports = Object.keys(imports).join(",")
-                    tasks.splice(0, 0, [store_precompiled, [module, js, imports, is_package],
-                        function(evt){return stored(evt, module)}])
-                }else{
-                    source += "\nvar $locals_" +
-                        module.replace(/\./g, "_") + " = $module"
-                    __BRYTHON__.module_source[module] = source
-                }
-            }else{
-                console.log('not found', module)
-            }
-        }else if(res.ext==".pyjs"){
-            // precompiled source
-            __BRYTHON__.module_source[module] = res.content
-            if(res.imports.length>0){
-                var subimports = res.imports.split(",")
-                for(var i=0;i<subimports.length;i++){
-                    var subimport = subimports[i]
-                    if(subimport==""){
-                        console.log('bizarre', module)
-                    }
-                    if(subimport.startsWith(".")){
-                        var url_elts = module.split("."),
-                            nb_dots = 0
-                        while(subimport.startsWith(".")){
-                            nb_dots++
-                            subimport = subimport.substr(1)
-                        }
-                        var elts = url_elts.slice(0, nb_dots)
-                        if(subimport){
-                            elts = elts.concat([subimport])
-                        }
-                        subimport = elts.join(".")
-                    }
-                    if(!__BRYTHON__.imported.hasOwnProperty(subimport) &&
-                            !__BRYTHON__.module_source.hasOwnProperty(subimport)){
-                        tasks.splice(0, 0, [idb_search, subimport])
-                    }
-                }
-            }
-        }else if(res.ext==".py"){
-            // precompile module
-            var root = __BRYTHON__.py2js(res.content, module, module, "__builtins__"),
-                js = root.to_js(),
-                imports = root.imports
-            imports = Object.keys(imports).join(",")
-            tasks.splice(0, 0, [store_precompiled, [module, js, imports, res.is_package],
-                function(evt){return stored(evt, module)}])
+    var res = evt.target.result
 
-        }else if(res.ext==".js"){
-            var src = res.content
-            src += "\nvar $locals_" +
-                module.replace(/\./g, "_") + " = $module"
-            __BRYTHON__.module_source[module] = src
+    if(res===undefined || res.timestamp != __BRYTHON__.timestamp){
+        // not found or not with the same date as in brython_stdlib.js:
+        // search in VFS
+        if(__BRYTHON__.VFS[module] !== undefined){
+            // precompile module
+            var elts = __BRYTHON__.VFS[module],
+                ext = elts[0],
+                source = elts[1],
+                is_package = elts.length==3
+            if(ext==".py"){
+                var root = __BRYTHON__.py2js(source, module, module, "__builtins__"),
+                    js = root.to_js(),
+                    imports = root.imports
+                imports = Object.keys(imports).join(",")
+                tasks.splice(0, 0, [store_precompiled,
+                    [module, js, imports, is_package]])
+            }else{
+                source += "\nvar $locals_" +
+                    module.replace(/\./g, "_") + " = $module"
+                __BRYTHON__.module_source[module] = source
+            }
+        }else{
+            console.log('not found', module)
+        }
+    }else{
+        // precompiled source
+        __BRYTHON__.module_source[module] = res.content
+        if(res.imports.length>0){
+            var subimports = res.imports.split(",")
+            for(var i=0;i<subimports.length;i++){
+                var subimport = subimports[i]
+                if(subimport==""){
+                    console.log('bizarre', module)
+                }
+                if(subimport.startsWith(".")){
+                    var url_elts = module.split("."),
+                        nb_dots = 0
+                    while(subimport.startsWith(".")){
+                        nb_dots++
+                        subimport = subimport.substr(1)
+                    }
+                    var elts = url_elts.slice(0, nb_dots)
+                    if(subimport){
+                        elts = elts.concat([subimport])
+                    }
+                    subimport = elts.join(".")
+                }
+                if(!__BRYTHON__.imported.hasOwnProperty(subimport) &&
+                        !__BRYTHON__.module_source.hasOwnProperty(subimport)){
+                    tasks.splice(0, 0, [idb_search, subimport])
+                }
+            }
         }
     }
     loop()
@@ -181,29 +132,23 @@ function store_precompiled(args, callback){
         cursor = store.openCursor(),
         data = {"name": module, "content": js,
             "imports": imports,
-            "ext": ".pyjs", "is_package": is_package},
+            "timestamp": __BRYTHON__.timestamp,
+            "is_package": is_package},
         request = store.put(data)
     request.onsuccess = function(evt){return stored(evt, module)}
 }
 
 function idb_get(module, callback){
     // Sends a request to the indexedDB database for the module name.
-    // If there is a Python module of this name, there may be 2 records,
-    // one with the Python source and one with the compiled Javascript,
-    // this is why the method is "getAll()".
-    //document.write("idb_get "+module+" "+idb_cx.result+"<br>")
     var db = idb_cx.result,
         tx = db.transaction("modules", "readonly")
-    //document.write("transaction "+tx+"<br>")
-    //console.log('transaction', tx)
+
     try{
         var store = tx.objectStore("modules")
-            req = store.getAll(module)
-        //document.write("ok"+"<br>")
+            req = store.get(module)
         req.onsuccess = function(evt){idb_load(evt, module)}
     }catch(err){
         console.log('error', err)
-        //document.write(err)
     }
 }
 
