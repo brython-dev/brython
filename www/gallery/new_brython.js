@@ -36,6 +36,34 @@ function ajax_search(args){
     req.send()
 }
 
+function ajax_load_script(args){
+    var url = args[0],
+        script_id = args[1]
+    var req = new XMLHttpRequest()
+    req.id = script_id
+    req.open("GET", url, true)
+    req.onreadystatechange = function(){
+        if(this.readyState==4){
+            if(this.status==200){
+                var src = this.responseText,
+                    root = $B.py2js(src, this.id, this.id, "__builtins__"),
+                    js = root.to_js()
+                for(var key in root.imports){
+                    if(!__BRYTHON__.module_source.hasOwnProperty(key)){
+                        tasks.splice(0, 0, [inImported, key])
+                    }
+                }
+                tasks.splice(0, 0, ["execute", js])
+            }else if(this.status==404){
+                throw Error(this.url+" not found")
+            }
+            loop()
+        }
+    }
+    req.url = url
+    req.send()
+}
+
 function inImported(module){
     if(__BRYTHON__.imported.hasOwnProperty(module)){
         __BRYTHON__.module_source[module] = "in imported"
@@ -50,7 +78,6 @@ function inImported(module){
 var idb_cx
 
 function idb_load(evt, module){
-    //document.write("idb load "+module+"<br>")
     var res = evt.target.result
 
     if(res===undefined || res.timestamp != __BRYTHON__.timestamp){
@@ -75,7 +102,7 @@ function idb_load(evt, module){
                 __BRYTHON__.module_source[module] = source
             }
         }else{
-            console.log('not found', module)
+            // Module not found : do nothing
         }
     }else{
         // precompiled source
@@ -153,7 +180,6 @@ function idb_get(module, callback){
 }
 
 function idb_search(module, callback){
-    //if(module=="datetime"){document.write("idb search "+module+"<br>")}
     tasks.splice(0, 0, [idb_get, module])
     loop()
 }
@@ -218,7 +244,8 @@ function idb_open(obj, callback){
 }
 
 var tasks = [],
-    scripts = document.querySelectorAll('[type="text/pythonXXX"]')
+    scripts = document.querySelectorAll('[type="text/pythonXXX"]'),
+    script_num
 
 // Build the list of tasks to run.
 // A task is a list of items:
@@ -233,15 +260,31 @@ var tasks = [],
 tasks.push([idb_open, null, function(){console.log("upgrade needed")}])
 
 for(var i=0; i<scripts.length; i++){
-    var src = scripts[i].textContent,
-        root = __BRYTHON__.py2js(src, "__main__" + i, "__main__" + i, "__builtins__"),
-        js = root.to_js(),
-        imports = Object.keys(root.imports)
-
-    for(var j=0; j<imports.length;j++){
-       tasks.push([inImported, imports[j]])
+    var script_id = scripts[i].getAttribute("id")
+    if(!script_id){
+        if(script_num===undefined){
+            script_id = "__main__"
+            script_num = 0
+        }else{
+            script_id = "__main__" + script_num
+            script_num++
+        }
     }
-    tasks.push(["execute", js])
+    if(scripts[i].getAttribute("src")){
+        console.log("src", scripts[i].getAttribute("src"))
+        tasks.push([ajax_load_script,
+            [scripts[i].getAttribute("src"), script_id]])
+    }else{
+        var src = scripts[i].textContent,
+            root = __BRYTHON__.py2js(src, "__main__" + i, "__main__" + i, "__builtins__"),
+            js = root.to_js(),
+            imports = Object.keys(root.imports)
+
+        for(var j=0; j<imports.length;j++){
+           tasks.push([inImported, imports[j]])
+        }
+        tasks.push(["execute", js])
+    }
 }
 
 // Function loop() takes the first task in the tasks list and processes it.
