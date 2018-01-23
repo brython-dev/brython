@@ -3013,17 +3013,17 @@ function $FromCtx(context){
                 if($package===undefined){
                     if($B.imported[mod]!==undefined){
                         $package = $B.imported[mod].__package__
+                        packages = $package.split('.')
                     }
                 }else{
                     $package = $B.imported[$package]
+                    packages.pop()
                 }
                 if($package===undefined){
                     return 'throw SystemError("Parent module \'\' not loaded,'+
                         ' cannot perform relative import")'
                 }else if($package=='None'){
                     console.log('package is None !')
-                }else{
-                    packages.push($package)
                 }
                 _mod = _mod.substr(1)
             }else{
