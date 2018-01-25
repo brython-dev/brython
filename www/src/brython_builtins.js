@@ -4,7 +4,7 @@ var __BRYTHON__=__BRYTHON__ || {}  // global object with brython built-ins
 
 // Detect whether we are in a Web Worker
 var isWebWorker = ('undefined' !== typeof WorkerGlobalScope) && ("function" === typeof importScripts) && (navigator instanceof WorkerNavigator)
-var _window = self;
+var _window = window;
 
 
 var $path
