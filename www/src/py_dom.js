@@ -342,6 +342,7 @@ $StyleDict.__setattr__ = function(self,attr,value){
         self.js.cssFloat = value
         self.js.styleFloat = value
     }else{
+        attr = attr.replace('_', '-')
         switch(attr) {
           case 'top':
           case 'left':
