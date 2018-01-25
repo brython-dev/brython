@@ -14,7 +14,7 @@ Number.isSafeInteger = Number.isSafeInteger || function (value) {
 
 var js,$pos,res,$op
 var _b_ = $B.builtins
-var _window = self;
+var _window = window;
 var isWebWorker = $B.isa_web_worker = ('undefined' !== typeof WorkerGlobalScope) && ("function" === typeof importScripts) && (navigator instanceof WorkerNavigator);
 
 

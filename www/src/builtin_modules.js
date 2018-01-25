@@ -4,14 +4,14 @@
             mod[attr] = data[attr]
         }
     }
-    var _window = self;
+    var _window = window;
     var modules = {}
     var browser = {
         $package: true,
         $is_package: true,
         __package__:'browser',
         __file__:$B.brython_path.replace(/\/*$/g,'')+'/Lib/browser/__init__.py',
-        console:$B.JSObject(self.console),
+        console:$B.JSObject(window.console),
         win: $B.win,
         $$window: $B.win,
     }
