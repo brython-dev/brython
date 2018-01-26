@@ -3014,7 +3014,6 @@ function $FromCtx(context){
                 }else{
                     $package = $B.imported[$package]
                 }
-                console.log(_mod, 'starts with .', $package)
                 if($package===undefined){
                     return 'throw SystemError("Parent module \'\' not loaded,'+
                         ' cannot perform relative import")'
@@ -7698,7 +7697,6 @@ $B.py2js = function(src, module, locals_id, parent_block_id, line_info){
     // create_ns = boolean to create a namespace for locals_id (used in exec)
     //
     // Returns a tree structure representing the Python source code
-
     var t0 = new Date().getTime(),
         is_comp = false
 
