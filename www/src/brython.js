@@ -74,7 +74,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-01-19 07:47:35.069615"
+__BRYTHON__.compiled_date="2018-01-23 09:50:37.162827"
+__BRYTHON__.timestamp=1516697437162
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1548,9 +1549,11 @@ this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),module=$get_module(this),mod=module.module,res=[],pos=0,indent=$get_node(this).indent,head=' '.repeat(indent);
 module.imports[this.module]=true
 var _mod=this.module.replace(/\$/g,''),$package,packages=[]
-while(_mod.length>0){if(_mod.charAt(0)=='.'){if($package===undefined){if($B.imported[mod]!==undefined){$package=$B.imported[mod].__package__}}else{$package=$B.imported[$package]}
+while(_mod.length>0){if(_mod.charAt(0)=='.'){if($package===undefined){if($B.imported[mod]!==undefined){$package=$B.imported[mod].__package__
+packages=$package.split('.')}}else{$package=$B.imported[$package]
+packages.pop()}
 if($package===undefined){return 'throw SystemError("Parent module \'\' not loaded,'+
-' cannot perform relative import")'}else if($package=='None'){console.log('package is None !')}else{packages.push($package)}
+' cannot perform relative import")'}else if($package=='None'){console.log('package is None !')}
 _mod=_mod.substr(1)}else{break}}
 if(_mod){packages.push(_mod)}
 this.module=packages.join('.')
@@ -11083,6 +11086,8 @@ if(res!==undefined && res!==null && res!="" &&
 self.elt[attr]===undefined){
 return res}}
 var res=self.elt[attr]
+if(res===undefined && $B.aliased_names[attr]){attr='$$' + attr
+res=self.elt[attr]}
 if(attr=="select" && self.elt.nodeType==1 &&
 ["INPUT","TEXTAREA"].indexOf(self.elt.tagName.toUpperCase())>-1 ){
 return function(selector){if(selector===undefined){self.elet.select();return _b_.None}

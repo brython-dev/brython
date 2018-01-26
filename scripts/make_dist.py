@@ -3,14 +3,13 @@
 
 """Script to compact all Brython scripts in a single one."""
 
-
+import time
 import datetime
 import os
 import re
 import sys
 import tarfile
 import zipfile
-import subprocess
 import shutil
 
 import javascript_minifier
@@ -55,6 +54,8 @@ def run():
         vinfo_file_out.write('__BRYTHON__.version_info = %s\n' % str(version))
         vinfo_file_out.write('__BRYTHON__.compiled_date = "%s"\n'
             %str(datetime.datetime.now()))
+        vinfo_file_out.write('__BRYTHON__.timestamp = {}\n'.format(
+            int(1000*time.time())))
         # builtin module names = list of scripts in src/libs
         vinfo_file_out.write('__BRYTHON__.builtin_module_names = ["posix",'
             '"sys", "errno", "time",')

@@ -583,6 +583,13 @@ DOMNodeDict.__getattribute__ = function(self,attr){
 
     var res = self.elt[attr]
 
+    // looking for attribute. If the attribute is in the forbidden
+    // arena ... look for the aliased version
+    if(res === undefined && $B.aliased_names[attr]) {
+        attr = '$$' + attr
+        res = self.elt[attr]
+    }
+
     if(attr=="select" && self.elt.nodeType == 1 &&
             ["INPUT", "TEXTAREA"].indexOf(self.elt.tagName.toUpperCase())>-1 ){
         // Special case for attribute "select" of INPUT or TEXTAREA tags :

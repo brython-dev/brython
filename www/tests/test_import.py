@@ -34,7 +34,7 @@ assert global_in_imported.X == 15
 from delegator import Delegator
 delegate = Delegator([])
 
-# test VFS path entry finder and from <module> import * 
+# test VFS path entry finder and from <module> import *
 import sys
 # Ensure that VFS path finder is installed
 from _importlib import VFSPathFinder
@@ -130,6 +130,9 @@ assert __BRYTHON__.path_importer_cache[none_path] is None
 
 empty_vfs_url = doc['link_empty_vfs'].href + '/'
 assert __BRYTHON__.path_importer_cache[empty_vfs_url].vfs is not None
+
+# issue 768
+import modtest
 
 print('passed all tests')
 
