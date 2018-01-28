@@ -74,8 +74,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-01-27 10:47:21.066103"
-__BRYTHON__.timestamp=1517046441066
+__BRYTHON__.compiled_date="2018-01-28 22:19:51.080565"
+__BRYTHON__.timestamp=1517174391080
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1899,7 +1899,8 @@ item.bind_ids(scope_id,level)}}}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),sc=scope,scope_id=scope.id.replace(/\//g, '_'),
             pos=0
-        var module_name = $get_module(this).module
+        var root = $get_module(this),
+            module_name = root.module
         switch(this.real) {
           case 'list':
             return '$B.$list(['+$to_js(this.tree)+'])'
@@ -1912,7 +1913,12 @@ var scope=$get_scope(this),sc=scope,scope_id=scope.id.replace(/\//g, '_'),
                 console.log('comments in comp', this.comments)
             }
             var qesc = new RegExp('"',"g") // to escape double quotes in arguments
-for(var i=1;i<this.intervals.length;i++){var txt=src.substring(this.intervals[i-1],this.intervals[i])
+var comments=root.comments
+for(var i=1;i<this.intervals.length;i++){var start=this.intervals[i-1],end=this.intervals[i],txt=src.substring(start,end)
+for(var j=0;j<comments.length;j++){if(comments[j][0]>start && comments[j][0]<end){
+var pos=comments[j][0]- start
+txt=txt.substr(0,pos)+
+txt.substr(pos + comments[j][1]+ 1)}}
 items.push(txt)
 var lines=txt.split('\n')
 var res2=[],pos=0
@@ -3878,7 +3884,8 @@ continue}
 if(car=="#"){var end=src.substr(pos+1).search('\n')
 if(end==-1){end=src.length-1}
 root.comments.push([pos,end])
-pos +=end+1;continue}
+pos +=end+1;
+continue}
 if(car=='"' ||car=="'"){var raw=C.type=='str' && C.raw,bytes=false,fstring=false,end=null;
 if(string_modifier){switch(string_modifier){case 'r': 
 raw=true

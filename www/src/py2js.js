@@ -3844,7 +3844,8 @@ function $ListOrTupleCtx(context,real){
             sc = scope,
             scope_id = scope.id.replace(/\//g, '_'),
             pos=0
-        var module_name = $get_module(this).module
+        var root = $get_module(this),
+            module_name = root.module
 
         switch(this.real) {
           case 'list':
@@ -3860,8 +3861,23 @@ function $ListOrTupleCtx(context,real){
             }
 
             var qesc = new RegExp('"',"g") // to escape double quotes in arguments
+
+            var comments = root.comments
             for(var i=1;i<this.intervals.length;i++){
-                var txt = src.substring(this.intervals[i-1],this.intervals[i])
+                var start = this.intervals[i-1],
+                    end = this.intervals[i],
+                    txt = src.substring(start, end)
+
+                for(var j=0;j<comments.length;j++){
+                    if(comments[j][0]>start && comments[j][0]<end){
+                        // If there is a comment inside the interval, remove it
+                        // Cf issue #776
+                        var pos = comments[j][0] - start
+                        txt = txt.substr(0, pos) +
+                            txt.substr(pos + comments[j][1] + 1)
+                    }
+                }
+
                 items.push(txt)
                 var lines = txt.split('\n')
                 var res2=[], pos=0
@@ -7197,7 +7213,8 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
             if(end==-1){end=src.length-1}
             // Keep track of comment positions
             root.comments.push([pos, end])
-            pos += end+1;continue
+            pos += end+1;
+            continue
         }
         // string
         if(car=='"' || car=="'"){

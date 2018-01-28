@@ -1693,6 +1693,16 @@ class A:
 
 assert '{0}'.format(A()) == 'an A'
 
+# issue 776
+def f():
+    d = {
+        a: b
+        for k in keys
+        if k not in (
+            "name",
+        )  # comment
+    }
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
