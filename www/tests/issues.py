@@ -1703,6 +1703,13 @@ def f():
         )  # comment
     }
 
+# issue 778
+import os
+try:
+    os.listdir()
+    raise Exception("should have raised NotImplementedError")
+except NotImplementedError:
+    pass
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

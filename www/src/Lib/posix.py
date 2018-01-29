@@ -282,7 +282,7 @@ def listdir(*args,**kw):
     On some platforms, path may also be specified as an open file descriptor;
       the file descriptor must refer to a directory.
       If this functionality is unavailable, using it raises NotImplementedError."""
-    pass
+    raise NotImplementedError("browser can't list files in a directory")
 
 def lseek(*args,**kw):
     """lseek(fd, pos, how) -> newpos    
