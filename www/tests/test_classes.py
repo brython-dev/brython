@@ -205,4 +205,15 @@ class A(metaclass=Singleton):
 A().t.append(1)
 assert A().t == [1]
 
+# reset __init__
+class A:
+    pass
+
+def init(self, x):
+    self.x = x
+
+A.__init__ = init
+a = A(5)
+assert a.x == 5
+
 print('passed all tests..')

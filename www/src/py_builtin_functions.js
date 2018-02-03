@@ -1627,12 +1627,16 @@ $B.$setattr = function(obj, attr, value){
         return None
     }
 
-    if(obj.__class__===$B.$factory){
+    if(obj.__class__===$B.$factory){ // XXX - old style
         // Setting attribute of a class means updating the class
         // dictionary, not the class factory function
         obj.$dict[attr]=value;return None
-    }else if(obj.__class__===$B.$type){
+    }else if(obj.$factory){
         obj[attr] = value
+        if(attr=="__init__" || attr=="__new__"){
+            // redefine the function that creates instances of the class
+            obj.$factory = $B.$instance_creator(obj)
+        }
         return None
     }
 
