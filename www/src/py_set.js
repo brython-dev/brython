@@ -27,7 +27,7 @@ var $SetDict = {
 }
 
 $SetDict.__add__ = function(self,other){
-    throw _b_.TypeError("unsupported operand type(s) for +: 'set' and " + 
+    throw _b_.TypeError("unsupported operand type(s) for +: 'set' and " +
         typeof other )
 }
 
@@ -56,10 +56,9 @@ $SetDict.__contains__ = function(self,item){
     if(self.$str && (typeof item=='string')){return self.$items.indexOf(item)>-1}
     if(! _b_.isinstance(item, set)){
         _b_.hash(item) // raises TypeError if item is not hashable
-        // If item is a set, "item in self" is True if item compares equal to 
+        // If item is a set, "item in self" is True if item compares equal to
         // one of the set items
     }
-    
     for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
         if($B.rich_comp("__eq__", self.$items[i], item)) return true
     }
@@ -70,7 +69,7 @@ $SetDict.__contains__ = function(self,item){
 $SetDict.__eq__ = function(self,other){
     // compare class set
     if(other===undefined) return self===set
-    
+
     if(_b_.isinstance(other,_b_.set)){
       if(other.$items.length==self.$items.length){
         for(var i=0, _len_i = self.$items.length; i < _len_i;i++){
@@ -93,9 +92,9 @@ $SetDict.__eq__ = function(self,other){
 
     if(_b_.hasattr(other, '__iter__')) { // is an iterator
       if(_b_.len(other)!=self.$items.length) return false
-      
+
       var _it=$B.$iter(other)
-      
+
       while(1) {
          try {
            var e=_b_.next(_it)
@@ -126,7 +125,7 @@ $SetDict.__gt__ = function(self, other){
     if(_b_.isinstance(other,[set, frozenset])){
         return !$SetDict.__le__(self, other)
     }else{
-        return _b_.object.$dict.__gt__(self, other)    
+        return _b_.object.$dict.__gt__(self, other)
     }
 }
 
@@ -156,7 +155,7 @@ $SetDict.__init__ = function(self){
 
 var $set_iterator = $B.$iterator_class('set iterator')
 $SetDict.__iter__ = function(self){
-    var it = $B.$iterator(self.$items,$set_iterator), 
+    var it = $B.$iterator(self.$items,$set_iterator),
         len = self.$items.length,
         nxt = it.__next__
     it.__next__ = function(){
@@ -289,7 +288,7 @@ $SetDict.add = function(){
         var ix = self.$items.indexOf(item)
         if(ix==-1){self.$items.push(item)}
         else{
-            // issue 543 : for some Javascript implementations, 
+            // issue 543 : for some Javascript implementations,
             // [''].indexOf(0) is 0, not -1, so {''}.add(0) is {''}
             if(item!==self.$items[ix]){self.$items.push(item)}
         }
@@ -306,7 +305,7 @@ $SetDict.add = function(){
 $SetDict.clear = function(){
     var $ = $B.args('clear', 1, {self:null},['self'],
         arguments, {}, null, null)
-    $.self.$items = []; 
+    $.self.$items = [];
     return $N
 }
 
@@ -331,12 +330,12 @@ $SetDict.difference_update = function(self){
             try{
                item = _next()
                var _type= typeof item
-    
+
                if(_type == 'string' || _type == "number") {
                   var _index=self.$items.indexOf(item)
                   if (_index > -1) {
                      self.$items.splice(_index, 1)
-                  } 
+                  }
                } else {
                   for (var j=0; j < self.$items.length; j++) {
                     if($B.rich_comp("__eq__", self.$items[j], item)){
@@ -387,7 +386,7 @@ $SetDict.intersection_update = function(){
 }
 
 $SetDict.isdisjoint = function(){
-    var $ = $B.args('is_disjoint', 2, 
+    var $ = $B.args('is_disjoint', 2,
         {self:null,other:null},['self','other'],
         arguments, {},null,null)
     for(var i=0, _len_i = $.self.$items.length; i < _len_i;i++){
@@ -407,7 +406,7 @@ $SetDict.remove = function(self,item){
         arguments, {},null,null), self=$.self, item=$.item
     if(!_b_.isinstance(item, set)){_b_.hash(item)}
     if (typeof item == 'string' || typeof item == 'number') {
-       var _i=self.$items.indexOf(item) 
+       var _i=self.$items.indexOf(item)
        if (_i == -1) throw _b_.KeyError(item)
        self.$items.splice(_i,1)
        return $N
@@ -473,19 +472,19 @@ $SetDict.update = function(self){
 }
 
 /*
-The non-operator versions of union(), intersection(), difference(), and 
-symmetric_difference(), issubset(), and issuperset() methods will accept any 
-iterable as an argument. In contrast, their operator based counterparts 
-require their arguments to be sets. This precludes error-prone constructions 
-like set('abc') & 'cbs' in favor of the more readable 
+The non-operator versions of union(), intersection(), difference(), and
+symmetric_difference(), issubset(), and issuperset() methods will accept any
+iterable as an argument. In contrast, their operator based counterparts
+require their arguments to be sets. This precludes error-prone constructions
+like set('abc') & 'cbs' in favor of the more readable
 set('abc').intersection('cbs').
 */
 
 $SetDict.difference = function(){
-    var $ = $B.args('difference', 1, {self:null}, 
+    var $ = $B.args('difference', 1, {self:null},
         ['self'], arguments,{},'args',null)
     if($.args.length==0){return $SetDict.copy($.self)}
-    
+
     var res = clone($.self)
     for(var i=0;i<$.args.length;i++){
         res = $SetDict.__sub__(res, set($.args[i]))
@@ -502,7 +501,7 @@ eval('$SetDict.union = '+
     fc.replace(/difference/g, 'union').replace('__sub__', '__or__'))
 
 $SetDict.issubset = function(){
-    var $ = $B.args('issubset', 2, {self:null, other:null}, 
+    var $ = $B.args('issubset', 2, {self:null, other:null},
         ['self', 'other'], arguments,{},'args',null),
         func = _b_.getattr($.other, '__contains__')
     for(var i=0, len=$.self.$items.length; i<len; i++){
@@ -512,7 +511,7 @@ $SetDict.issubset = function(){
 }
 
 $SetDict.issuperset = function(){
-    var $ = $B.args('issuperset', 2, {self:null, other:null}, 
+    var $ = $B.args('issuperset', 2, {self:null, other:null},
         ['self', 'other'], arguments,{},'args',null)
     var func = _b_.getattr($.self, '__contains__'),
         it = $B.$iter($.other)
@@ -585,7 +584,7 @@ $FrozensetDict.__hash__ = function(self) {
    if (self.__hashvalue__ !== undefined) return self.__hashvalue__
 
    var _hash=1927868237
-   _hash *=self.$items.length   
+   _hash *=self.$items.length
 
    for (var i=0, _len_i = self.$items.length; i < _len_i; i++) {
       var _h=_b_.hash(self.$items[i])
@@ -613,7 +612,7 @@ function frozenset(){
         arguments,{iterable:null},null,null)
     if($.iterable===null){return empty_frozenset()}
     else if($.iterable.__class__==$FrozensetDict){return $.iterable}
-    
+
     var res = set($.iterable)
     if(res.$items.length==0){return empty_frozenset()}
     res.__class__ = $FrozensetDict

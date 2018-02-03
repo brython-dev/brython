@@ -372,6 +372,7 @@ $B.is_exc=function(exc,exc_list){
 
     var exc_class = exc.__class__.$factory
     for(var i=0;i<exc_list.length;i++){
+        if(exc_list[i].__class__===$B.$type){exc_list[i]=exc_list[i].$factory} // XXX
         if(issubclass(exc_class,exc_list[i])) return true
     }
     return false

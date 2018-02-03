@@ -233,7 +233,7 @@ $B.$CodeObjectDict = {
 $B.$CodeObjectDict.__str__ = $B.$CodeObjectDict.__repr__
 $B.$CodeObjectDict.__mro__ = [$ObjectDict]
 
-function compile(source, filename, mode) {
+function compile() {
     var $=$B.args('compile', 6,
         {source:null, filename:null, mode:null, flags:null, dont_inherit:null,
          optimize:null},
@@ -286,7 +286,6 @@ function delattr(obj, attr) {
 }
 
 function dir(obj){
-
     if(obj===undefined){
         // if dir is called without arguments, use globals
         var frame = $B.last($B.frames_stack),
@@ -322,7 +321,8 @@ function dir(obj){
     $B.current_exception = ce
     var res = [], pos=0
     for(var attr in obj){
-        if(attr.charAt(0)!=='$' && attr!=='__class__'){
+        if(attr.charAt(0)!=='$' && attr!=='__class__' &&
+                obj[attr]!==undefined){
             res[pos++]=attr
         }
     }
@@ -400,6 +400,7 @@ function $eval(src, _globals, _locals){
     var is_exec = arguments[3]=='exec',leave = false
 
     if(src.__class__===$B.$CodeObjectDict){
+        is_exec = src.mode == "exec"
         src = src.source
     }else if(typeof src !== 'string'){
         throw _b_.TypeError("eval() arg 1 must be a string, bytes "+
@@ -489,13 +490,16 @@ function $eval(src, _globals, _locals){
         }
     }else{
         var items = _b_.dict.$dict.items(_locals), item
-        while(1){
+        if(_locals.$jsobj){var items = _locals.$jsobj}
+        else{var items = _locals.$string_dict}
+        for(var item in items){
+            item1 = to_alias(item)
             try{
-                var item = next(items)
-                item1 = to_alias(item)
                 eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')
                 $B.bound[locals_id][item] = true
             }catch(err){
+                console.log(err)
+                console.log('error setting', item)
                 break
             }
         }
@@ -738,8 +742,10 @@ $B.$getattr = function(obj, attr, _default){
 
     switch(attr) {
       case '__call__':
-        if (typeof obj=='function'){
-           return obj
+          if(obj.__class__===$B.$type || obj.$factory){
+              return obj.$factory
+          }else if (typeof obj=='function'){
+              return obj
         } else if (klass===$B.JSObject.$dict && typeof obj.js=='function'){
           return function(){
               // apply Javascript function to arguments converted from
@@ -758,10 +764,9 @@ $B.$getattr = function(obj, attr, _default){
       case '__class__':
         // attribute __class__ is set for all Python objects
         // return the factory function
-        return klass.$factory
+        return klass
       case '__dict__':
         // attribute __dict__ returns a dictionary wrapping obj
-        if(klass.is_class && klass.__dict__){return klass.__dict__}
         return $B.obj_dict(obj) // defined in py_dict.js
       case '__doc__':
         // for builtins objects, use $B.builtins_doc
@@ -928,11 +933,11 @@ function hash(obj){
     if (obj.__hashvalue__ !== undefined) return obj.__hashvalue__
     if (isinstance(obj, _b_.int)) return obj.valueOf()
     if (isinstance(obj, bool)) return _b_.int(obj)
+    if(obj.__class__===$B.$factory || obj.$is_class || obj.__class__===$B.$type){
+        return obj.__hashvalue__ = $B.$py_next_hash--
+    }
     if (obj.__hash__ !== undefined) {
        return obj.__hashvalue__=obj.__hash__()
-    }
-    if(obj.__class__===$B.$factory){
-        return obj.__hashvalue__ = $B.$py_next_hash--
     }
     var hashfunc = getattr(obj, '__hash__', _b_.None)
 
@@ -1053,6 +1058,9 @@ function input(src) {
 function isinstance(obj,arg){
     check_no_kw('isinstance', obj, arg)
     check_nb_args('isinstance', 2, arguments.length)
+
+    arg = arg.__class__===$B.$factory ? arg.$dict : arg
+
     if(obj===null) return arg===None
     if(obj===undefined) return false
     if(arg.constructor===Array){
@@ -1074,35 +1082,34 @@ function isinstance(obj,arg){
 
     if (klass === undefined) { return false }
 
-   // arg is the class constructor ; the attribute __class__ is the
-   // class dictionary, ie arg.$dict
+   //if(arg.$dict===undefined){return false}
 
-   if(arg.$dict===undefined){return false}
-
-   if(klass==$B.$factory){klass = obj.$dict.__class__}
+   var klass1 = klass===$B.$factory ? obj.$dict.__class__ : klass
 
    // Return true if one of the parents of obj class is arg
    // If one of the parents is the class used to inherit from str, obj is an
    // instance of str ; same for list
 
    function check(kl, arg){
-      if(kl === arg.$dict){return true}
-      else if(arg===_b_.str &&
+      if(kl === arg){return true}
+      else if(arg===_b_.str.$dict &&
           kl===$B.$StringSubclassFactory.$dict){return true}
-      else if(arg===_b_.float &&
+      else if(arg===_b_.float.$dict &&
           kl===$B.$FloatSubclassFactory.$dict){return true}
-      else if(arg===_b_.list &&
+      else if(arg===_b_.list.$dict &&
           kl===$B.$ListSubclassFactory.$dict){return true}
    }
-   if(check(klass, arg)){return true}
-   var mro = klass.__mro__
+   if(check(klass1, arg)){return true}
+   var mro = klass1.__mro__
    for(var i=0;i<mro.length;i++){
       if(check(mro[i], arg)){return true}
    }
 
     // Search __instancecheck__ on arg
     var hook = getattr(arg,'__instancecheck__',null)
-    if(hook!==null){return hook(obj)}
+    if(hook!==null){
+        return hook(obj)
+    }
 
    return false
 }
@@ -1111,7 +1118,10 @@ function issubclass(klass,classinfo){
     check_no_kw('issubclass', klass, classinfo)
     check_nb_args('issubclass', 2, arguments.length)
 
-    if(!klass.__class__ || klass.__class__!==$B.$factory){
+    klass = klass.__class__ === $B.$factory ? klass.$dict : klass
+
+    if(!klass.__class__ ||
+            !(klass.$factory!==undefined || klass.__class__.is_class)){
       throw _b_.TypeError("issubclass() arg 1 must be a class")
     }
     if(isinstance(classinfo,_b_.tuple)){
@@ -1120,13 +1130,14 @@ function issubclass(klass,classinfo){
       }
       return false
     }
-    if(classinfo.__class__.is_class){
-        if(klass.$dict===classinfo.$dict ||
-            klass.$dict.__mro__.indexOf(classinfo.$dict)>-1){return true}
+    var classinfo1 = classinfo.__class__ === $B.$factory ? classinfo.$dict : classinfo
+    if(classinfo1.$factory){
+        if(klass===classinfo1 ||
+            klass.__mro__.indexOf(classinfo1)>-1){return true}
     }
 
     // Search __subclasscheck__ on classinfo
-    var hook = getattr(classinfo,'__subclasscheck__',null)
+    var hook = getattr(classinfo1,'__subclasscheck__',null)
     if(hook!==null){return hook(klass)}
 
     return false
@@ -1480,7 +1491,16 @@ function repr(obj){
         // class metaclass (usually "type") or its subclasses (usually
         // "object")
         // The metaclass is the attribute __class__ of the class dictionary
-        var func = $B.$type.__getattribute__(obj.$dict.__class__,'__repr__')
+        return _b_.object.$dict.__repr__(obj)
+    }
+    if(obj.__class__===$B.$type){
+        // obj is a class (the factory function)
+        // In this case, repr() doesn't use the attribute __repr__ of the
+        // class or its subclasses, but the attribute __repr__ of the
+        // class metaclass (usually "type") or its subclasses (usually
+        // "object")
+        // The metaclass is the attribute __class__ of the class dictionary
+        var func = $B.$type.__getattribute__(obj,'__repr__')
         return func(obj)
     }
     var func = getattr(obj,'__repr__')
@@ -1588,7 +1608,7 @@ $B.$setattr = function(obj, attr, value){
     else if(attr=='__class__'){
         // Setting the attribute __class__ : value is the factory function,
         // we must set __class__ to the class dictionary
-        obj.__class__ = value.$dict;
+        obj.__class__ = value.__class__===$B.$factory ? value.$dict : value
         return None
     }else if(attr=='__dict__'){
         // set attribute __dict__
@@ -1611,6 +1631,9 @@ $B.$setattr = function(obj, attr, value){
         // Setting attribute of a class means updating the class
         // dictionary, not the class factory function
         obj.$dict[attr]=value;return None
+    }else if(obj.__class__===$B.$type){
+        obj[attr] = value
+        return None
     }
 
     var res = obj[attr],
@@ -1761,7 +1784,7 @@ var $SuperDict = {__class__:$B.$type,__name__:'super'}
 
 $SuperDict.__getattribute__ = function(self,attr){
 
-    var mro = self.__thisclass__.$dict.__mro__,
+    var mro = self.__thisclass__.__mro__,
         res
     for(var i=0;i<mro.length;i++){ // ignore the class where super() is defined
         res = mro[i][attr]
@@ -1778,7 +1801,7 @@ $SuperDict.__getattribute__ = function(self,attr){
                         var start = -1,
                             mro2 = [klass].concat(klass.__mro__)
                         for(var j=0;j<mro2.length;j++){
-                            if(mro2[j]===self.__thisclass__.$dict){
+                            if(mro2[j]===self.__thisclass__){
                                 start=j+1
                                 break
                             }
@@ -1827,7 +1850,7 @@ $SuperDict.__getattribute__ = function(self,attr){
 $SuperDict.__mro__ = [$ObjectDict]
 
 $SuperDict.__repr__=$SuperDict.__str__=function(self){
-    var res = "<super: <class '"+self.__thisclass__.$dict.__name__+"'"
+    var res = "<super: <class '"+self.__thisclass__.__name__+"'"
     if(self.__self_class__!==undefined){
         res += ', <'+self.__self_class__.__class__.__name__+' object>'
     }
@@ -1836,7 +1859,7 @@ $SuperDict.__repr__=$SuperDict.__str__=function(self){
 
 function $$super(_type1,_type2){
     return {__class__:$SuperDict,
-        __thisclass__:_type1,
+        __thisclass__:_type1.__class__===$B.$factory ? _type1.$dict : _type1,
         __self_class__:(_type2 || None)
     }
 }

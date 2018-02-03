@@ -893,9 +893,11 @@ function $AttrCtx(context){
         }else{
             //return js + '.' + this.name
 
+            /*
             if(this.name=="__class__"){
-                return '('+js+'.__class__ || $B.get_class('+js+')).$factory'
+                return '('+js+'.__class__ || $B.get_class('+js+'))'
             }
+            */
             return '$B.$getattr('+js+',"'+this.name+'")'
         }
     }
@@ -1467,9 +1469,8 @@ function $CallCtx(context){
                       }
                   }else{
                       var bound_obj = this.func.found
-                      if(bound_obj && (bound_obj.type=='class' ||
-                        bound_obj.type=='def')){
-                          return func_js+args_str
+                      if(bound_obj && bound_obj.type=='def'){
+                          //return func_js+args_str
                       }
                   }
                   var res = default_res
@@ -1609,7 +1610,7 @@ function $ClassCtx(context){
         // add doc string
         rank++
         var ds_node = new $Node()
-        js = name_ref+'.$dict.__doc__='
+        js = name_ref+'.__doc__='
         if(this.name=='classXXX'){ // experimental
             js = name_ref+'.__doc__='
         }
@@ -1619,7 +1620,7 @@ function $ClassCtx(context){
 
         // add attribute __module__
         rank++
-        js = name_ref+'.$dict.__module__=$locals_'
+        js = name_ref+'.__module__=$locals_'
         if(this.name=='classXXX'){ // experimental
             js = name_ref+'.__module__=$locals_'
         }

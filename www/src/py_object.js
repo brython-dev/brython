@@ -325,7 +325,7 @@ $ObjectDict.__mro__ = []
 
 $ObjectDict.__new__ = function(cls){
     if(cls===undefined){throw _b_.TypeError('object.__new__(): not enough arguments')}
-    return {__class__ : cls.$dict}
+    return {__class__ : cls.__class__ === $B.$factory ? cls.$dict : cls}
 }
 
 $ObjectDict.__ne__ = function(self,other){
@@ -334,8 +334,10 @@ $ObjectDict.__ne__ = function(self,other){
 
 $ObjectDict.__repr__ = function(self){
     if(self===object) return "<class 'object'>"
-    if(self.__class__===$B.$factory) return "<class '"+self.$dict.__name__+"'>"
-    if(self.__class__===$B.$type && self.__name__=='classXXX') return "<class '"+self.__name__+"'>"
+    if(self.__class__===$B.$factory){
+        return "<class '"+self.$dict.__name__+"'>"
+    }
+    if(self.__class__===$B.$type) return "<class '"+self.__name__+"'>"
     if(self.__class__.__module__!==undefined){
         return "<"+self.__class__.__module__+"."+self.__class__.__name__+" object>"
     }else{
@@ -358,6 +360,12 @@ $ObjectDict.__setattr__ = function(self,attr,val){
     self[attr] = val
     return _b_.None
 }
+$ObjectDict.__setattr__.__get__ = function(obj){
+    return function(attr, val){
+        $ObjectDict.__setattr__(obj, attr, val)
+    }
+}
+
 $ObjectDict.__setattr__.__str__ = function(){return 'method object.setattr'}
 
 $ObjectDict.__str__ = $ObjectDict.__repr__

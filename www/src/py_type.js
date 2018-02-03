@@ -5,7 +5,7 @@ var _b_=$B.builtins
 // generic code for class constructor
 $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwargs){
 
-    var metaclass = _b_.type  // DRo put here, because is used inside if and later
+    var metaclass = _b_.type.$dict  // DRo put here, because is used inside if and later
 
     // DRo - Begin
     // if kwargs is not undefined, we have the standard behavior
@@ -56,8 +56,8 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
      */
     var init_subclass = function init_subclass(){};
     for (var i=0;i<bases.length;i++) {
-        if (bases[i].$dict.$methods) {
-            var __init_subclass__ = bases[i].$dict.$methods.__init_subclass__;
+        if (bases[i].$methods) {
+            var __init_subclass__ = bases[i].$methods.__init_subclass__;
             if (__init_subclass__) {
                 init_subclass = function init_subclass(cls) {
                     var kw = {
@@ -151,16 +151,15 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     if(metaclass === _b_.type) {
         for(var i=1;i<mro.length;i++){
             if(mro[i].__class__ !== $B.$type){
-                metaclass = mro[i].__class__.$factory
+                metaclass = mro[i].__class__
         break
             }
         }
     }
-
-    class_dict.__class__ = metaclass.$dict
+    class_dict.__class__ = metaclass.__class__ == $B.$type ? metaclass : metaclass.$dict
 
     // Get method __new__ of metaclass
-    var meta_new = $B.$type.__getattribute__(metaclass.$dict,'__new__')
+    var meta_new = $B.$type.__getattribute__(metaclass,'__new__')
 
     // DRo - BEGIN
     // __new__ doesn't return a factory but the created "class". This gives
@@ -175,7 +174,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
 
     // DRo - BEGIN
     // create the factory function, extracted from type.__new__
-    var meta_call = $B.$type.__getattribute__(metaclass.$dict,'__call__', kls)
+    var meta_call = $B.$type.__getattribute__(metaclass,'__call__', kls)
 
     if(meta_call.__func__===$B.$type.__call__){
         var factory = $instance_creator(kls)  // same behavior as before
@@ -200,6 +199,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
 
     factory.__class__ = $B.$factory
     factory.$dict = kls
+    kls.$is_class = true
     factory.$is_func = true // to speed up calls
 
     // factory compares equal to class_dict
@@ -210,7 +210,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
 
     // DRo - BEGIN
     // With the factory created (class in brython), the call to __init__ can be done
-    var meta_init = $B.$type.__getattribute__(metaclass.$dict,'__init__', kls)
+    var meta_init = $B.$type.__getattribute__(metaclass,'__init__', kls)
     if(meta_init.__func__===$B.$type.__init__){
         _b_.type.$dict.__init__(kls.$factory, class_name, bases, cl_dict)
     }else{
@@ -222,13 +222,14 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
 
     // Set new class as subclass of its parents
     for(var i=0;i<parents.length;i++){
-        parents[i].$dict.$subclasses  = parents[i].$dict.$subclasses || []
-        parents[i].$dict.$subclasses.push(factory)
+        if(parents[i].__class__===$B.$factory){parents[i] = parents[i].$dict}
+        parents[i].$subclasses  = parents[i].$subclasses || []
+        parents[i].$subclasses.push(factory)
     }
 
     if(metaclass===_b_.type) {
         init_subclass(factory);
-        return factory
+        return factory.$dict
     }
 
     for(var attr in class_dict){
@@ -239,9 +240,9 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     factory.$dict.$factory = factory
 
     // set functions defined in metaclass dictionary as class methods, except __new__
-    for(var member in metaclass.$dict){
-       if(typeof metaclass.$dict[member]=='function' && member != '__new__' && member !="__str__"){
-          metaclass.$dict[member].$type='classmethod'
+    for(var member in metaclass){
+       if(typeof metaclass[member]=='function' && member != '__new__' && member !="__str__"){
+          metaclass[member].$type='classmethod'
        }
     }
 
@@ -258,7 +259,7 @@ $B.$class_constructor = function(class_name,class_obj,parents,parents_names,kwar
     }
 
     init_subclass(factory);
-    return factory
+    return factory.$dict
 }
 
 $B.make_method = function(attr, klass, func){
@@ -341,15 +342,18 @@ function make_mro(bases, cl_dict){
         if(bases[i]===_b_.str) bases[i] = $B.$StringSubclassFactory
         else if(bases[i]===_b_.float) bases[i] = $B.$FloatSubclassFactory
         else if(bases[i]===_b_.list) bases[i] = $B.$ListSubclassFactory
+        if(bases[i].__class__ == $B.$factory){
+            bases[i] = bases[i].$dict
+        }
         var bmro = [], pos=0
-        if(bases[i].$dict===undefined ||
-            bases[i].$dict.__mro__===undefined){
+        if(bases[i]===undefined ||
+            bases[i].__mro__===undefined){
             throw _b_.TypeError('Object passed as base class is not a class')
         }
-        bmro[pos++] = bases[i].$dict
-        var _tmp = bases[i].$dict.__mro__
-        if(_tmp[0]===bases[i].$dict){
-            console.log('bizarre', bases[i].$dict)
+        bmro[pos++] = bases[i]
+        var _tmp = bases[i].__mro__
+        if(_tmp[0]===bases[i]){
+            console.log('bizarre', bases[i])
             _tmp.splice(0, 1)
         }
         for(var k=0;k<_tmp.length;k++){
@@ -362,7 +366,7 @@ function make_mro(bases, cl_dict){
         bases=bases.concat(_b_.tuple([_b_.object]))
     }
 
-    for(var i=0;i<bases.length;i++) seqs[pos1++]=bases[i].$dict
+    for(var i=0;i<bases.length;i++) seqs[pos1++]=bases[i]
 
     var mro = [], mpos=0
     while(1){
@@ -400,12 +404,13 @@ function make_mro(bases, cl_dict){
 }
 
 _b_.type = function(obj, bases, cl_dict){
+    if(obj===null){console.log('type of', obj)}
     if(arguments.length==1){
         if(obj.__class__===$B.$factory){
             // Get type of a class
-            return obj.$dict.__class__.$factory
+            return obj.$dict.__class__ //.$factory
         }
-        return $B.get_class(obj).$factory
+        return $B.get_class(obj) //.$factory
     }
 
     // DRo - Begin
@@ -447,6 +452,7 @@ $B.$type.__new__ = function(meta, name, bases, cl_dict){
     // - a factory function that creates instances of the class
     // The dictionary is the attribute "$dict" of the factory function
     // type() returns the factory function
+    if(name=="SomeClass"){console.log("enter meta new")}
 
     // Create the class dictionary
     var class_dict = {__class__ : $B.$type,
@@ -461,13 +467,15 @@ $B.$type.__new__ = function(meta, name, bases, cl_dict){
     // set class attributes for faster lookups
     var items = $B.$dict_items(cl_dict);
     for(var i=0;i<items.length;i++){
-        var name=items[i][0], v=items[i][1]
-        class_dict[name] = v
+        var key=items[i][0], v=items[i][1]
+        class_dict[key] = v
+        /*
         if(typeof v=='function'
-          && v.__class__!==$B.$factory
-          && v.__class__!==$B.$MethodDict){
-            class_dict.$methods[name] = $B.make_method(name, class_dict, v, v)
+                && v.__class__!==$B.$factory
+                && v.__class__!==$B.$MethodDict){
+            class_dict.$methods[key] = $B.make_method(key, class_dict, v, v)
         }
+        */
     }
 
     //class_dict.__mro__ = [class_dict].concat(make_mro(bases, cl_dict))
@@ -481,6 +489,7 @@ $B.$type.__new__ = function(meta, name, bases, cl_dict){
     // DRo this no longer returns a factory but just the class_dict which is
     // basically the class itself
     // type() returns the class (it's dict)
+    if(name=="SomeClass"){console.log("in __new__", class_dict, "\nkeys", Object.keys(class_dict))}
     return class_dict
 }
 
@@ -534,10 +543,11 @@ function method_wrapper(attr, klass, method){
     return method
 }
 
-$B.$type.__repr__ = $B.$type.__str__ = function(self){
-    var qualname = self.$dict.__name__
-    if(self.$dict.__module__ != 'builtins'){
-        qualname = self.$dict.__module__ + '.' + qualname
+$B.$type.__repr__ = $B.$type.__str__ = function(kls){
+    if(kls.__class__===$B.$factory){kls = kls.$dict}
+    var qualname = kls.__name__
+    if(kls.__module__ != 'builtins'){
+        qualname = kls.__module__ + '.' + qualname
     }
     return "<class '" + qualname +"'>"
 }
@@ -566,12 +576,19 @@ $B.$type.__getattribute__=function(klass, attr, metaclassed){
 
         var v = klass[attr]
         if(v===undefined){
+            if(klass.__mro__===undefined){console.log('pas de mro', klass)}
             var mro = klass.__mro__
             for(var i=0;i<mro.length;i++){
                 var v=mro[i][attr]
                 if(v!==undefined){
                     res = v
                     break
+                }else{
+                    v = mro[i].__class__[attr]
+                    if(v !== undefined){
+                        res = v
+                        break
+                    }
                 }
             }
         }else{res=v}
@@ -599,12 +616,19 @@ $B.$type.__getattribute__=function(klass, attr, metaclassed){
         if(res===undefined){
             // search a method __getattr__
             var getattr=null,
-                v = klass.__class__.__getattr__
+                v = klass.__getattr__
             if(v===undefined){
-                for(var i=0;i<cl_mro.length;i++){
-                    if(cl_mro[i].__getattr__!==undefined){
-                        getattr = cl_mro[i].__getattr__
-                        break
+                if(klass.__class__.__getattr__ !== undefined){
+                    getattr = klass.__class__.__getattr__
+                }else{
+                    for(var i=0;i<mro.length;i++){
+                        if(mro[i].__getattr__!==undefined){
+                            getattr = mro[i].__getattr__
+                            break
+                        }else if(mro[i].__class__.__getattr__ !== undefined){
+                            getattr = mro[i].__class__.__getattr__
+                            break
+                        }
                     }
                 }
             }else{
@@ -692,6 +716,12 @@ $B.$type.__getattribute__=function(klass, attr, metaclassed){
                             for(var i=0;i < arguments.length;i++){
                                 local_args[pos++]=arguments[i]
                             }
+                            /*
+                            if(res.name.startsWith("__instancecheck")){
+                                console.log(res, res+"")
+                                console.log('local args', local_args)
+                            }
+                            */
                             var result = res.apply(null, local_args)
                             return result
                         }
@@ -713,7 +743,7 @@ $B.$type.__getattribute__=function(klass, attr, metaclassed){
 $B.set_func_names($B.$type)
 
 
-function $instance_creator(klass){
+var $instance_creator = $B.$instance_creator = function(klass){
     // return the function to initalise a class instance
 
     // The class may not be instanciable if it has at least one abstract method

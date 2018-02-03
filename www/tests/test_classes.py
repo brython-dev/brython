@@ -169,19 +169,15 @@ class Tester:
         self.name = name
 
     def __eq__(self, other):
-        print('use eq on', self.name)
         return NotImplemented
 
     def __ne__(self, other):
-        print('use ne')
         return NotImplemented
 
     def __le__(self, other):
-        print('use le on', self.name)
         return NotImplemented
 
     def __ge__(self, other):
-        print('use ge on', self.name)
         return NotImplemented
 
 assert not (Tester('a') == Tester('b'))
@@ -193,5 +189,20 @@ try:
 except TypeError:
     pass
 
+# singleton
+class Singleton(type):
+    _instances = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+class A(metaclass=Singleton):
+
+    def __init__(self):
+        self.t = []
+
+A().t.append(1)
+assert A().t == [1]
 
 print('passed all tests..')

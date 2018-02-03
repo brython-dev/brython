@@ -1022,9 +1022,8 @@ function parse_format(fmt_string){
 }
 
 $StringDict.format = function(self) {
-
     var $ = $B.args('format', 1, {self:null}, ['self'],
-        arguments, {}, 'args', 'kw')
+        arguments, {}, '$args', '$kw')
 
     // Parse self to detect formatting instructions
     // Create a list "parts" made of sections of the string :
@@ -1037,7 +1036,6 @@ $StringDict.format = function(self) {
         text='',
         parts=[],
         rank=0
-
     while(pos<_len){
         car = self.charAt(pos)
         if(car=='{' && self.charAt(pos+1)=='{'){
@@ -1085,11 +1083,11 @@ $StringDict.format = function(self) {
                                 if(/\d+/.exec(key)){
                                     // If key is numeric, search in positional
                                     // arguments
-                                    return _b_.tuple.$dict.__getitem__($.args,
+                                    return _b_.tuple.$dict.__getitem__($.$args,
                                         parseInt(key))
                                 }else{
                                     // Else try in keyword arguments
-                                    return _b_.dict.$dict.__getitem__($.kw, key)
+                                    return _b_.dict.$dict.__getitem__($.$kw, key)
                                 }
                             }
                             fmt_obj.spec = fmt_obj.spec.replace(/\{(.+?)\}/g,
@@ -1105,10 +1103,9 @@ $StringDict.format = function(self) {
             }
             if(nb>0){throw ValueError("wrong format "+self)}
             pos = end
-        }else{text += car;pos++}
+        }else{text += car;pos++;}
     }
     if(text){parts.push(text)}
-
     // Apply formatting to the values passed to format()
     var res = '', fmt
     for(var i=0;i<parts.length;i++){
@@ -1120,10 +1117,10 @@ $StringDict.format = function(self) {
         if(fmt.name.charAt(0).search(/\d/)>-1){
             // Numerical reference : use positional arguments
             var pos = parseInt(fmt.name),
-                value = _b_.tuple.$dict.__getitem__($.args, pos)
+                value = _b_.tuple.$dict.__getitem__($.$args, pos)
         }else{
             // Use keyword arguments
-            var value = _b_.dict.$dict.__getitem__($.kw, fmt.name)
+            var value = _b_.dict.$dict.__getitem__($.$kw, fmt.name)
         }
         // If name has extensions (attributes or subscriptions)
         for(var j=0;j<fmt.name_ext.length;j++){
@@ -1149,6 +1146,8 @@ $StringDict.format = function(self) {
         if(value.__class__===$B.$factory){
             // For classes, don't use the class __format__ method
             res += value.$dict.__class__.__format__(value, fmt.spec)
+        }else if(value.$factory){
+            res += value.__class__.__format__(value, fmt.spec)
         }else{
             res += _b_.getattr(value, '__format__')(fmt.spec)
         }
@@ -1595,7 +1594,7 @@ $StringDict.zfill = function(self, width) {
 }
 
 function str(arg){
-
+    arg = arg.__class__ === $B.$factory ? arg.$dict : arg
     if(arg===undefined) return '<undefined>'
     switch(typeof arg) {
       case 'string':
@@ -1603,17 +1602,18 @@ function str(arg){
       case 'number':
           if(isFinite(arg)){return arg.toString()}
     }
-
     try{
-        if(arg.__class__===$B.$factory){
+        if(arg.$factory){
             // arg is a class (the factory function)
             // In this case, str() doesn't use the attribute __str__ of the
             // class or its subclasses, but the attribute __str__ of the
             // class metaclass (usually "type") or its subclasses (usually
             // "object")
             // The metaclass is the attribute __class__ of the class dictionary
-            var func = $B.$type.__getattribute__(arg.$dict.__class__, '__str__')
-            if(func.__func__===_b_.object.$dict.__str__){return func(arg)}
+            if(arg.__class__===$B.$type){return $B.$type.__str__(arg)}
+            return $B.$getattr(arg.__class__, '__str__')(arg)
+        }else if(arg.$factory){
+            var func = $B.$getattr(arg.__class__, '__str__')
             return func(arg)
         }
         var f = getattr(arg,'__str__')
@@ -1621,7 +1621,7 @@ function str(arg){
         //return f()
     }
     catch(err){
-        //console.log('err '+err)
+        console.log('err ', err)
         try{ // try __repr__
              var f = getattr(arg,'__repr__')
              //return getattr(f,'__call__')()

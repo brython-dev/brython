@@ -224,12 +224,10 @@ $B.$dict_comp = function(module_name, parent_block_id, items, line_num){
 
 $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
     // Called for generator expressions
-    // "env" is a list of [local_name, local_ns] lists for all the enclosing
-    // namespaces
 
-    var $ix = $B.UUID()
-    var py = 'def ge'+$ix+'():\n'
-    var indent=1
+    var $ix = $B.UUID(),
+        py = 'def __ge'+$ix+'():\n', // use a special name (cf $global_search)
+        indent=1
     for(var i=1, len = items.length; i < len;i++){
         var item = items[i].replace(/\s+$/,'').replace(/\n/g, '')
         py += ' '.repeat(indent) + item + ':\n'
@@ -238,7 +236,7 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
     py+=' '.repeat(indent)
     py += 'yield ('+items[0]+')'
 
-    var genexpr_name = 'ge'+$ix,
+    var genexpr_name = '__ge'+$ix,
         root = $B.py2js({src:py, is_comp:true}, module_name, genexpr_name,
             parent_block_id, line_num),
         js = root.to_js(),
@@ -318,7 +316,14 @@ $B.$global_search = function(name){
         // If the code is running in an "exec", don't search further up than
         // the global namespace defined for exec
         var end = $B.frames_stack.length - 1
-        while(end>=1 && $B.frames_stack[end - 1][2]==glob){
+        while(end>=1){
+            if($B.frames_stack[end - 1][0].startsWith("__ge")){
+                // If the code is run in a generator expression, use its
+                // global namespace
+                glob = $B.frames_stack[end - 1][2]
+            }else if($B.frames_stack[end - 1][2]!=glob){
+                break
+            }
             end--
         }
     }
@@ -327,6 +332,7 @@ $B.$global_search = function(name){
         if(frame[3][name]!==undefined){return frame[3][name]}
         if(frame[1][name]!==undefined){return frame[1][name]}
     }
+
     throw _b_.NameError("name '"+$B.from_alias(name)+"' is not defined")
 }
 
@@ -657,7 +663,9 @@ $B.$is = function(a, b){
     if(a instanceof Number && b instanceof Number){
         return a.valueOf()==b.valueOf()
     }
-    return a === b
+    var a1 = a.__class__ === $B.$factory ? a.$dict : a,
+        b1 = b.__class__ === $B.$factory ? b.$dict : b
+    return a1 === b1
 }
 
 $B.$is_member = function(item,_set){
@@ -1347,45 +1355,50 @@ $B.rich_comp = function(op, x, y){
                 return x1 > y1
         }
     }
-    var res, rev_op, compared = false
+    var res, rev_op, compared = false, x1, y1
+    x1 = x.__class__===$B.$factory ? x.$dict : x
+    y1 = y.__class__===$B.$factory ? y.$dict : y
 
-    if(x.__class__ === $B.$factory) {
+    if(x1.$factory) {
         if ( op == '__eq__') {
-            return (x === y)
+            //console.log("compare classes", x, y, x===y)
+            return (x1 === y1)
         } else if ( op == '__ne__') {
-            return !(x === y)
+            return !(x1 === y1)
         } else {
             throw _b_.TypeError("'"+op+"' not supported between types")
         }
     }
 
-    if(x.__class__ && y.__class__){
+    if(x1.__class__ && y1.__class__){
         // cf issue #600 and
         // https://docs.python.org/3/reference/datamodel.html :
         // "If the operands are of different types, and right operand’s type
         // is a direct or indirect subclass of the left operand’s type, the
         // reflected method of the right operand has priority, otherwise the
         // left operand’s method has priority."
-        if(y.__class__.__mro__.indexOf(x.__class__)>-1){
+        if(y1.__class__.__mro__.indexOf(x1.__class__)>-1){
             rev_op = reversed_op[op] || op
-            res = _b_.getattr(y, rev_op)(x)
+            res = _b_.getattr(y1, rev_op)(x1)
             if ( res !== _b_.NotImplemented ) return res
             compared = true
         }
     }
-    res = _b_.getattr(x, op)(y)
+
+    res = _b_.getattr(x1, op)(y1)
+
     if ( res !== _b_.NotImplemented ) return res;
     if (compared) return false;
     rev_op = reversed_op[op] || op
-    res =  _b_.getattr(y, rev_op)(x)
+    res =  _b_.getattr(y1, rev_op)(x1)
     if ( res !== _b_.NotImplemented ) return res
     // If both operands return NotImplemented, return False if the operand is
     // __eq__, True if it is __ne__, raise TypeError otherwise
     if(op=='__eq__'){return _b_.False}
     else if(op=='__ne__'){return _b_.True}
 
-    if(x.__class__===$B.$factory){x=x.__class__}
-    if(y.__class__===$B.$factory){y=y.__class__}
+    //if(x.__class__===$B.$factory){x=x.__class__}
+    //if(y.__class__===$B.$factory){y=y.__class__}
     throw _b_.TypeError("'"+method2comp[op]+"' not supported between " +
         "instances of '" + $B.get_class(x).__name__+ "' and '" +
         $B.get_class(y).__name__+"'")

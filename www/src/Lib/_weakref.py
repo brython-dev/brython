@@ -21,6 +21,12 @@ class ref:
     def __call__(self):
         return self.obj.obj
 
+    def __hash__(self):
+        return hash(self.obj.obj)
+
+    def __eq__(self, other):
+        return self.obj.obj == other.obj.obj
+
 def getweakrefcount(obj):
     return 1
 

@@ -28,16 +28,16 @@ var $key_iterator = function(d) {
     this.current = 0
     this.iter = new $item_generator(d)
 }
-$key_iterator.prototype.length = function() { return this.iter.length }
-$key_iterator.prototype.next = function() { return this.iter.next()[0] }
+$key_iterator.prototype.length = function(){return this.iter.items.length}
+$key_iterator.prototype.next = function(){return this.iter.next()[0]}
 
 var $value_iterator = function(d) {
     this.d = d
     this.current = 0
     this.iter = new $item_generator(d)
 }
-$value_iterator.prototype.length = function() { return this.iter.length }
-$value_iterator.prototype.next = function() { return this.iter.next()[1] }
+$value_iterator.prototype.length = function(){return this.iter.items.length}
+$value_iterator.prototype.next = function(){return this.iter.next()[1]}
 
 var $item_generator = function(d) {
 
@@ -53,7 +53,6 @@ var $item_generator = function(d) {
                 this.items.push([attr, val])
             }
         }
-        this.length=this.items.length;
         return
     }
 
@@ -68,7 +67,6 @@ var $item_generator = function(d) {
     for (var k in d.$object_dict) {items[pos++] = d.$object_dict[k]}
 
     this.items=items
-    this.length=items.length
 }
 
 $item_generator.prototype.next = function() {
@@ -90,9 +88,9 @@ $item_iterator.prototype.length = function() {return this.iter.items.length }
 $item_iterator.prototype.next = function() { return _b_.tuple(this.iter.next()) }
 
 var $copy_dict = function(left, right) {
-    var _l=new $item_generator(right).as_list()
-    var si=$DictDict.__setitem__
-    var i=_l.length
+    var _l=new $item_generator(right).as_list(),
+        si=$DictDict.__setitem__,
+        i=_l.length
     while(i--) si(left, _l[i][0], _l[i][1])
 }
 
@@ -149,6 +147,8 @@ $DictDict.__contains__ = function(){
       case 'number':
         return self.$numeric_dict[item] !==undefined
     }
+
+    item = item.__class__ === $B.$factory ? item.$dict : item
 
     var _key=hash(item)
     if (self.$str_hash[_key]!==undefined &&
@@ -265,6 +265,7 @@ $DictDict.__getitem__ = function(){
 
     // since the key is more complex use 'default' method of getting item
 
+    arg = arg.__class__ === $B.$factory ? arg.$dict : arg
     var _key = _b_.hash(arg),
         _eq = function(other){return $B.rich_comp('__eq__', arg, other)}
 
@@ -275,6 +276,7 @@ $DictDict.__getitem__ = function(){
     if (self.$numeric_dict[_key]!==undefined && _eq(_key)){
          return self.$numeric_dict[_key]
     }
+
 
     var obj_ref = self.$object_dict[_key]
     if(obj_ref!==undefined){
@@ -408,9 +410,18 @@ $DictDict.__repr__ = function(self){
         items = new $item_generator(self).as_list()
     for (var i=0; i < items.length; i++) {
         var itm = items[i]
-        if(itm[1]===self){res[pos++]=repr(itm[0])+': {...}'}
+        if((!self.$jsobj && itm[1]===self) ||
+                (self.$jsobj && itm[1]===self.$jsobj)){
+            res[pos++]=repr(itm[0])+': {...}'
+        }
         //else if(itm[1]===undefined){continue} // XXX this shouldn't happen
-        else{res[pos++]=repr(itm[0])+': '+repr(itm[1])}
+        else{
+            try{
+                res[pos++]=repr(itm[0])+': '+repr(itm[1])
+            }catch(err){
+                res[pos++]=repr(itm[0])+': <unprintable object>'
+            }
+        }
     }
     return '{'+ res.join(', ') +'}'
 }
@@ -422,8 +433,17 @@ $DictDict.__setitem__ = function(self,key,value){
         self=$.self, key=$.key, value=$.value
 
     if(self.$jsobj){
-        self.$jsobj[key]=$B.pyobj2jsobj(value);
-        return
+        if(self.$jsobj.__class__===$B.$type){
+            self.$jsobj[key] = $B.pyobj2jsobj(value)
+            if(key=="__init__" || key=="__new__"){
+                // If class attribute __init__ or __new__ are reset,
+                // the factory function has to change
+                self.$jsobj.$factory = $B.$instance_creator(self.$jsobj)
+            }
+        }else{
+            self.$jsobj[key]=$B.pyobj2jsobj(value)
+        }
+        return $N
     }
 
     switch(typeof key) {
@@ -438,6 +458,7 @@ $DictDict.__setitem__ = function(self,key,value){
 
     // if we got here the key is more complex, use default method
 
+    key = key.__class__ === $B.$factory ? key.$dict : key
     var _key=hash(key)
     var _eq=function(other){return $B.rich_comp("__eq__", key, other)};
 
@@ -607,10 +628,10 @@ $DictDict.update = function(self){
 
     var $ = $B.args('update',1,{'self':null},['self'],arguments,{},'args','kw'),
         self=$.self, args=$.args, kw=$.kw
-
     if(args.length>0) {
       var o=args[0]
       if (isinstance(o,dict)){
+         if(o.$jsobj){o = jsobj2dict(o);}
          $copy_dict(self, o)
       } else if (hasattr(o, '__getitem__') && hasattr(o, 'keys')) {
          var _keys=_b_.list(getattr(o, 'keys')())
@@ -644,8 +665,7 @@ function dict(args, second){
         $numeric_dict : {},
         $object_dict : {},
         $string_dict : {},
-        $str_hash: {},
-        length: 0
+        $str_hash: {}
     }
 
     if(args===undefined){return res}
@@ -688,6 +708,10 @@ function dict(args, second){
                     break
                 }
             }
+            return res
+        }else if(args.$jsobj){
+            res.$jsobj = {}
+            for(var attr in args.$jsobj){res.$jsobj[attr] = args.$jsobj[attr]}
             return res
         }
     }
@@ -746,8 +770,11 @@ function jsobj2dict(x){
     var d = dict()
     for(var attr in x){
         if(attr.charAt(0)!='$' && attr!=='__class__'){
-            d.$string_dict[attr] = x[attr]
-            d.length++
+            if(x[attr].$jsobj===x){
+                d.$string_dict[attr] = d
+            }else{
+                d.$string_dict[attr] = x[attr]
+            }
         }
     }
     return d
