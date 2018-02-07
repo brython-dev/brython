@@ -25,7 +25,7 @@
     ```
         @coroutine
         def process_query():
-            results = yield query_server()
+            results = yield from query_server()
             do_some_stuff(results)
     ```
 
@@ -42,39 +42,26 @@ from .http import *
 from .objects import *
 
 
-default_event_loop = BrowserEventLoop()
-
-
-
 FIRST_COMPLETED = 0
 FIRST_EXCEPTION = 0
 ALL_COMPLETED = 0
 
-def wait_for(coro_or_future, timeout, *args):
-    fut = ensure_future(fut, *args)
+
+
+def wait_for(coro_or_future, timeout, *args, loop=None):
+    if loop is None:
+        loop = get_event_loop()
+    fut = ensure_future(coro_or_future(*args), loop=loop)
     if timeout:
         def timeout_handler():
             if fut.done():
                 pass
             else:
                 fut.set_exception(TimeoutError())
-        
-        default_event_loop.call_later(timeout, timeout_handler)
+        loop.call_later(timeout, timeout_handler)
     return fut
 
-def ensure_future(coro_or_future, *args):
-    if isinstance(coro_or_future, Future):
-        return coro_or_future
-    elif iscoroutine(coro_or_future):
-        return coro_or_future(*args)
-    else:
-        raise Exception('Expecting coroutine or Future got '+str(coro_or_future)+' instead.')
-
-def gather(*coros_or_futures, return_exceptions=False):
-    fut_list = [ensure_future(c, loop=loop) for c in coros_or_futures]
-    return GatheredFuture(fut_list, return_exceptions=False)
-
-def shield(arg):
+def shield(arg, loop=None):
     """Wait for a future, shielding it from cancellation.
 
     The statement
@@ -104,7 +91,8 @@ def shield(arg):
     if inner.done():
         # Shortcut.
         return inner
-    loop = default_event_loop
+    if loop is None:
+        loop = get_event_loop()
     outer = Future()
 
     def _done_callback(inner):
@@ -126,5 +114,5 @@ def shield(arg):
     inner.add_done_callback(_done_callback)
     return outer
 
-def sleep(seconds, result=None):
-    return futures.SleepFuture(seconds, result)
+def sleep(seconds, result=None, loop=None):
+    return futures.SleepFuture(seconds, result, loop=loop)

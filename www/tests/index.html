@@ -84,6 +84,7 @@ function attrs(){
 }
 </script>
 <script type="text/python3" id="tests">
+import asyncio
 import time
 import sys
 import traceback
@@ -102,6 +103,9 @@ script_num = -1
 failed = []
 t_start = None
 
+global_loop = asyncio.new_event_loop()
+
+@asyncio.run_async(loop=global_loop)
 def run():
     global output
     doc["console"].value = ''
@@ -109,13 +113,27 @@ def run():
     if storage is not None:
        storage["py_src"] = src
 
-    state, t0, t1, _ = utils.run(src)
+    state, t0, t1, _, async_manager = utils.run(src)
     output = doc["console"].value
+    print('<sync tests completed in %6.2f ms>' % ((t1 - t0) * 1000.0))
+    if async_manager.count_tests(pending_only=True) > 0:
+        print('<async tests pending {pending} (out of {total})>'.format(
+                pending=async_manager.count_tests(pending_only=True),
+                total=async_manager.count_tests()))
 
-    print('<completed in %6.2f ms>' % ((t1 - t0) * 1000.0))
+    console.log("Calling finish")
+    yield from async_manager.finish()
+    console.log("Done finish")
+
+    async_manager.print_results()
+    if async_manager.failed:
+        state = 0
+    print('<completed in %6.2f ms>' % ((time.perf_counter() - t0) * 1000.0))
     #window.attrs()
+
     return state
 
+@asyncio.run_async(loop=global_loop)
 def test_next():
     global script_num,failed
     script_num += 1
@@ -126,10 +144,10 @@ def test_next():
             src = open(option.value).read()
             doc['files'].selectedIndex = script_num
             editor.editor.setValue(src)
-            state = run()
+            state = yield from run()
             if state == 0:
                 failed.append(option.text)
-            timer.set_timeout(test_next,500)
+            global_loop.call_later(500, test_next)
         except Exception as exc:
             traceback.print_exc(file=sys.stderr)
     else:

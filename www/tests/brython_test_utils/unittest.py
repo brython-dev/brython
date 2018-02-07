@@ -15,7 +15,7 @@ class BrythonModuleTestCase(unittest.TestCase):
         return "Brython test module '%s'" % self.caption
 
     def runTest(self):
-        status, tstart, tend, msg = utils.run_test_module(self.modname,
+        status, tstart, tend, msg, aio_manager = utils.run_test_module(self.modname,
                                                      self.base_path)
         # TODO: Record and output generated traceback
         if not status == 1:
