@@ -194,7 +194,9 @@ BaseException.__repr__ = function(self){
 }
 
 BaseException.__str__ = function(self){
-    return _b_.str.$factory(self.args[0])
+    if (self.args.length > 0)
+        return _b_.str.$factory(self.args[0])
+    return self.__class__.__name__
 }
 
 BaseException.__new__ = function(cls){
@@ -262,10 +264,6 @@ BaseException.__getattr__ = function(self, attr){
         throw _b_.AttributeError.$factory(self.__class__.__name__ +
             " has no attribute '" + attr + "'")
     }
-}
-
-BaseException.__str__ = function(self){
-    return self.args[0]
 }
 
 BaseException.with_traceback = function(self, tb){
