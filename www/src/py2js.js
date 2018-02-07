@@ -442,7 +442,7 @@ var $Node = $B.parser.$Node = function(type){
             //     $yield_value0 = X
             //     yield $yield_value0
             //     $yield_value0 = <value sent to generator > or None
-            //     a = $yield_value
+            //     a = $yield_value0
 
             // remove original line
             this.parent.children.splice(rank, 1)
