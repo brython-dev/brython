@@ -679,78 +679,7 @@ list.$is_func = true
 list.__module__='builtins'
 list.__bases__=[]
 
-
-// Dictionary and factory for subclasses of list
-// Instances of list subclasses are not Javascript arrays, but
-// objects with an attribute $t which is a Javascript array
-var $ListSubclassDict = $B.$ListSubclassDict = {
-    __class__:$B.$type,
-    __name__:'list'
-}
-
-for(var $attr in $ListDict){
-
-    if($attr !== "__new__" && typeof $ListDict[$attr]=='function' &&
-      $ListDict[$attr].__class__!==$B.$factory){
-
-        // For each method of built-in list instances, add a check on the
-        // argument "self" ; if it has the attribute $t set, it is a subclass
-        // of list, so the method must operate on self.$t
-        // Cf issue 364
-
-        $ListDict[$attr] = (function(attr){
-            var method = $ListDict[attr],
-                func = function(){
-                    var self = arguments[0]
-                    if(self===undefined){console.log("no self for", attr)}
-                    if(self.$t!==undefined){
-                        var args = [self.$t]
-                        for(var i=1, len=arguments.length; i<len; i++){
-                            args.push(arguments[i])
-                        }
-                        return method.apply(null, args)
-                    }else{return method.apply(null, arguments)}
-                }
-            return func
-        })($attr)
-
-        // The methods in subclasses apply the methods in $ListDict to the
-        // attribute $t, which is a Javascript list
-        $ListSubclassDict[$attr]=(function(attr){
-            return function(){
-                var args = [arguments[0].$t]
-                var pos=1
-                for(var i=1, _len_i = arguments.length; i < _len_i;i++){
-                    args[pos++]=arguments[i]
-                }
-                console.log("list subclass", attr, arguments, args)
-                return $ListDict[attr].apply(null,args)
-            }
-        })($attr)
-    }
-}
-
-$ListSubclassDict.__new__ = function(cls){
-    return {
-        __class__:cls.$factory ? cls : cls.$dict,
-        $t: $ListDict.__new__.apply($ListDict, arguments)
-    }
-}
-// Special case for __setattr__ : allowed for list subclasses
-$ListSubclassDict.__setattr__ = function(self, attr, value){
-    self[attr] = value
-}
-
-$ListSubclassDict.__mro__ = [$ObjectDict]
-
-// factory for list subclasses
-$B.$ListSubclassFactory = {
-    __class__:$B.$factory,
-    $dict:$ListSubclassDict
-}
-
 $B.set_func_names($ListDict)
-$B.set_func_names($ListSubclassDict)
 
 // Tuples
 function $tuple(arg){return arg} // used for parenthesed expressions
