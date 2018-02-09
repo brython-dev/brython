@@ -210,9 +210,9 @@ $BaseExceptionDict.__str__ = function(self){
 $BaseExceptionDict.__mro__ = [_b_.object.$dict]
 
 $BaseExceptionDict.__new__ = function(cls){
+    cls = cls.$factory ? cls : cls.$dict
     var err = _b_.BaseException()
-    err.__name__ = cls.$dict.__name__
-    err.__class__ = cls.$dict
+    err.__class__ = cls
     return err
 }
 
@@ -365,15 +365,17 @@ $B.exception = function(js_exc){
     return exc
 }
 
-$B.is_exc=function(exc,exc_list){
+$B.is_exc=function(exc, exc_list){
     // used in try/except to check if an exception is an instance of
     // one of the classes in exc_list
     if(exc.__class__===undefined) exc = $B.exception(exc)
 
-    var exc_class = exc.__class__.$factory
+    var this_exc_class = exc.__class__
     for(var i=0;i<exc_list.length;i++){
-        if(exc_list[i].__class__===$B.$type){exc_list[i]=exc_list[i].$factory} // XXX
-        if(issubclass(exc_class,exc_list[i])) return true
+        var exc_class = exc_list[i]
+        exc_class == exc_class.__class__ === $B.$factory ? exc_class.$dict :
+            exc_class
+        if(issubclass(this_exc_class,exc_class)) return true
     }
     return false
 }
