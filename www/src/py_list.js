@@ -93,8 +93,9 @@ $ListDict.__delitem__ = function(self,arg){
     throw _b_.TypeError('list indices must be integer, not '+_b_.str(arg.__class__))
 }
 
-$ListDict.__eq__ = function(self,other){
-    if(isinstance(other, $B.get_class(self).$factory)){
+$ListDict.__eq__ = function(self, other){
+    if(isinstance(self, list)){var klass = list}else{var klass=tuple}
+    if(isinstance(other, klass)){
        if(other.length==self.length){
             var i=self.length
             while(i--) {
@@ -221,18 +222,22 @@ $ListDict.__imul__ = function() {
 }
 
 $ListDict.__init__ = function(self,arg){
-    var len_func = getattr(self,'__len__'),
+    var len_func = $B.$call(getattr(self,'__len__')),
         pop_func=getattr(self,'pop',_b_.None)
     if(pop_func !== _b_.None){
+        pop_func = $B.$call(pop_func)
         while(len_func()) pop_func()
     }
     if(arg===undefined) return $N
     var arg = $B.$iter(arg),
-        next_func = getattr(arg,'__next__'),
+        next_func = $B.$call(getattr(arg,'__next__')),
         pos = len_func(),
         ce = $B.current_exception
     while(1){
-        try{self[pos++]=next_func()}
+        try{
+            var res = next_func()
+            self[pos++]=res
+        }
         catch(err){
             if(err.__name__=='StopIteration'){
                 $B.current_exception = ce
@@ -284,6 +289,17 @@ $ListDict.__mul__ = function(self,other){
 
 $ListDict.__ne__ = function(self,other){return !$ListDict.__eq__(self,other)}
 
+$ListDict.__new__ = function(cls, ...args){
+    if(cls===undefined){
+        throw _b_.TypeError('list.__new__(): not enough arguments')
+    }
+    var res = []
+    res.__class__ = cls.$is_class ? cls : cls.$dict
+    res.__brython__ = true
+    return res
+}
+
+
 $ListDict.__repr__ = function(self){
     if(self===undefined) return "<class 'list'>"
 
@@ -293,7 +309,6 @@ $ListDict.__repr__ = function(self){
         else{_r.push(_b_.repr(self[i]))}
     }
 
-
     if (self.__class__===$TupleDict){
         if(self.length==1){return '('+_r[0]+',)'}
         return '('+_r.join(', ')+')'
@@ -302,13 +317,17 @@ $ListDict.__repr__ = function(self){
 }
 
 $ListDict.__setattr__ = function(self, attr, value){
-    if($ListDict.hasOwnProperty(attr)){
-        throw _b_.AttributeError("'list' object attribute '" + attr +
-            "' is read-only")
-    }else{
-        throw _b_.AttributeError("'list' object has no attribute '" +
-            attr + "'")
+    if(self.__class__ === $ListDict){
+        if($ListDict.hasOwnProperty(attr)){
+            throw _b_.AttributeError("'list' object attribute '" + attr +
+                "' is read-only")
+        }else{
+            throw _b_.AttributeError("'list' object has no attribute '" +
+                attr + "'")
+        }
     }
+    self[attr] = value
+    return $N
 }
 
 $ListDict.__setitem__ = function(){
@@ -337,7 +356,7 @@ $ListDict.__setitem__ = function(){
     throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
 }
 
-$ListDict.__str__ = $ListDict.__repr__
+// there is no list.__str__
 
 // add "reflected" methods
 $B.make_rmethods($ListDict)
@@ -533,12 +552,16 @@ $ListDict.sort = function(self){
     var reverse = false
     var kw_args = $.kw, keys=_b_.list(_b_.dict.$dict.keys(kw_args))
     for(var i=0;i<keys.length;i++){
-        if(keys[i]=="key"){func=getattr(kw_args.$string_dict[keys[i]],'__call__')}
+        if(keys[i]=="key"){func=kw_args.$string_dict[keys[i]]}
         else if(keys[i]=='reverse'){reverse=kw_args.$string_dict[keys[i]]}
         else{throw _b_.TypeError("'"+keys[i]+
             "' is an invalid keyword argument for this function")}
     }
     if(self.length==0) return
+
+    if(func!==null){
+        func = $B.$call(func) // func can be an object with method __call__
+    }
 
     self.$cl = $elts_class(self)
     var cmp = null;
@@ -609,8 +632,6 @@ $ListDict.sort = function(self){
     return (self.__brython__ ? $N : self)
 }
 
-$B.set_func_names($ListDict)
-
 // function used for list literals
 $B.$list = function(t){
     t.__brython__ = true;
@@ -636,10 +657,11 @@ function list(){
     var res = [],
         pos=0,
         arg = $B.$iter(obj),
-        next_func = getattr(arg,'__next__'),
+        next_func = $B.$call(getattr(arg, '__next__')),
         ce = $B.current_exception
+
     while(1){
-        try{res[pos++]=next_func()}
+        try{res[pos++] = next_func()}
         catch(err){
             if(!isinstance(err, _b_.StopIteration)){throw err}
             $B.current_exception = ce
@@ -661,25 +683,26 @@ list.__bases__=[]
 // Dictionary and factory for subclasses of list
 // Instances of list subclasses are not Javascript arrays, but
 // objects with an attribute $t which is a Javascript array
-var $ListSubclassDict = {
+var $ListSubclassDict = $B.$ListSubclassDict = {
     __class__:$B.$type,
-    __name__:'list',
-    __new__: function(cls){return {__class__:cls.$dict, $t: []}}
+    __name__:'list'
 }
 
 for(var $attr in $ListDict){
 
-    if(typeof $ListDict[$attr]=='function' &&
+    if($attr !== "__new__" && typeof $ListDict[$attr]=='function' &&
       $ListDict[$attr].__class__!==$B.$factory){
 
         // For each method of built-in list instances, add a check on the
         // argument "self" ; if it has the attribute $t set, it is a subclass
         // of list, so the method must operate on self.$t
         // Cf issue 364
+
         $ListDict[$attr] = (function(attr){
             var method = $ListDict[attr],
                 func = function(){
                     var self = arguments[0]
+                    if(self===undefined){console.log("no self for", attr)}
                     if(self.$t!==undefined){
                         var args = [self.$t]
                         for(var i=1, len=arguments.length; i<len; i++){
@@ -695,20 +718,24 @@ for(var $attr in $ListDict){
         // attribute $t, which is a Javascript list
         $ListSubclassDict[$attr]=(function(attr){
             return function(){
-                var args = []
-                if(arguments.length>0){
-                    var args = [arguments[0].$t]
-                    var pos=1
-                    for(var i=1, _len_i = arguments.length; i < _len_i;i++){
-                        args[pos++]=arguments[i]
-                    }
+                var args = [arguments[0].$t]
+                var pos=1
+                for(var i=1, _len_i = arguments.length; i < _len_i;i++){
+                    args[pos++]=arguments[i]
                 }
+                console.log("list subclass", attr, arguments, args)
                 return $ListDict[attr].apply(null,args)
             }
         })($attr)
     }
 }
 
+$ListSubclassDict.__new__ = function(cls){
+    return {
+        __class__:cls.$factory ? cls : cls.$dict,
+        $t: $ListDict.__new__.apply($ListDict, arguments)
+    }
+}
 // Special case for __setattr__ : allowed for list subclasses
 $ListSubclassDict.__setattr__ = function(self, attr, value){
     self[attr] = value
@@ -721,6 +748,9 @@ $B.$ListSubclassFactory = {
     __class__:$B.$factory,
     $dict:$ListSubclassDict
 }
+
+$B.set_func_names($ListDict)
+$B.set_func_names($ListSubclassDict)
 
 // Tuples
 function $tuple(arg){return arg} // used for parenthesed expressions
@@ -747,7 +777,6 @@ tuple.$dict = $TupleDict
 tuple.$is_func = true
 
 $TupleDict.$factory = tuple
-$TupleDict.__new__ = $B.$__new__(tuple)
 
 tuple.__module__='builtins'
 
@@ -770,7 +799,9 @@ for(var attr in $ListDict){
         if($TupleDict[attr]===undefined){
             if(typeof $ListDict[attr]=='function'){
                 $TupleDict[attr] = (function(x){
-                    return function(){return $ListDict[x].apply(null, arguments)}
+                    return function(){
+                        return $ListDict[x].apply(null, arguments)
+                    }
                 })(attr)
             }else{
                 $TupleDict[attr] = $ListDict[attr]
@@ -807,9 +838,41 @@ $TupleDict.__hash__ = function (self) {
   return x
 }
 
+$TupleDict.__init__ = function(){
+    // Tuple initialization is done in __new__
+    return $N
+}
+
 $TupleDict.__mro__ = [$ObjectDict]
+
 $TupleDict.__name__ = 'tuple'
 
+$TupleDict.__new__ = function(cls, ...args){
+    console.log("new tuple", args)
+    if(cls===undefined){
+        throw _b_.TypeError('list.__new__(): not enough arguments')
+    }
+    var self = []
+    self.__class__ = cls.$is_class ? cls : cls.$dict
+    self.__brython__ = true
+    var arg = $B.$iter(args[0]),
+        next_func = $B.$call(getattr(arg,'__next__')),
+        ce = $B.current_exception
+    while(1){
+        try{
+            var item = next_func()
+            self.push(item)
+        }
+        catch(err){
+            if(err.__name__=='StopIteration'){
+                $B.current_exception = ce
+                break
+            }
+            else{throw err}
+        }
+    }
+    return self
+}
 // set __repr__ and __str__
 $B.set_func_names($TupleDict)
 
