@@ -910,6 +910,7 @@ function hash(obj){
     check_no_kw('hash', obj)
     check_nb_args('hash', 1, arguments.length)
 
+    obj = obj.__class__ === $B.$factory ? obj.$dict : obj
     if (obj.__hashvalue__ !== undefined) return obj.__hashvalue__
     if (isinstance(obj, _b_.int)) return obj.valueOf()
     if (isinstance(obj, bool)) return _b_.int(obj)
@@ -923,6 +924,7 @@ function hash(obj){
 
     if (hashfunc == _b_.None){
         // return obj.__hashvalue__=$B.$py_next_hash--
+        console.log("pas de methode __hash__ pour", obj)
         throw _b_.TypeError("unhashable type: '"+
                 $B.get_class(obj).__name__+"'", 'hash')
     }
@@ -1329,17 +1331,17 @@ memoryview.$dict.__getitem__ = function(self, key){
 }
 memoryview.$dict.hex = function(self){
     var res = '',
-        bytes = _b_.bytes(self)
+        bytes = _b_.bytes.$factory(self)
     for(var i=0,len=bytes.source.length; i<len; i++){
         res += bytes.source[i].toString(16)
     }
     return res
 }
 memoryview.$dict.tobytes = function(self){
-    return _b_.bytes(self.obj)
+    return _b_.bytes.$factory(self.obj)
 }
 memoryview.$dict.tolist = function(self){
-    return _b_.list(_b_.bytes(self.obj))
+    return _b_.list(_b_.bytes.$factory(self.obj))
 }
 
 
@@ -1799,7 +1801,7 @@ $SuperDict.__getattribute__ = function(self, attr){
         return function(){return $SuperDict[attr](self)}
     }
     var f = _b_.type.$dict.__getattribute__(mro[0], attr)
-    
+
     if(f.$type=="staticmethod"){return f}
     else{
         var method = function(){
@@ -1877,7 +1879,7 @@ $Reader.read = function(self,nb){
     self.$counter+=nb
     if(self.$bin){
         var res = self.$content.source.slice(self.$counter-nb, self.$counter)
-        return _b_.bytes(res)
+        return _b_.bytes.$factory(res)
     }
     return self.$content.substr(self.$counter-nb,nb)
 }
@@ -1891,7 +1893,7 @@ $Reader.readline = function(self,limit){
     if(self.closed===true) throw _b_.ValueError('I/O operation on closed file')
 
     if(self.$lc==self.$lines.length-1){
-        return self.$bin ? _b_.bytes() : ''
+        return self.$bin ? _b_.bytes.$factory() : ''
     }
     self.$lc++
     var res = self.$lines[self.$lc]
@@ -1970,7 +1972,7 @@ function $url_open(){
         if($res.constructor===Error) throw $res
 
         if(is_binary){
-            var lf = _b_.bytes('\n', 'ascii'),
+            var lf = _b_.bytes.$factory('\n', 'ascii'),
                 lines = _b_.bytes.$dict.split($res, lf)
             for(var i=0;i<lines.length-1;i++){lines[i].source.push(10)}
         }else{

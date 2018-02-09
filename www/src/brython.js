@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-09 10:49:55.812785"
-__BRYTHON__.timestamp=1518169795812
+__BRYTHON__.compiled_date="2018-02-09 14:34:02.190909"
+__BRYTHON__.timestamp=1518183242190
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -778,7 +778,9 @@ if(star_args){
 args_str='.apply(null,'+args_str+')'}else{args_str='('+args_str+')'}
 var default_res="$B.$call("+func_js+")" + args_str
 if(this.tree.length>-1){if(this.func.type=='id'){if(this.func.is_builtin){
-if($B.builtin_funcs[this.func.value]!==undefined){return func_js+args_str}}else{var bound_obj=this.func.found
+if($B.builtin_funcs[this.func.value]!==undefined &&
+["complex","bytes","bytearray"].indexOf(this.func.value)==-1 
+){return func_js+args_str}}else{var bound_obj=this.func.found
 if(bound_obj && bound_obj.type=='def'){}}
 var res=default_res}else{var res=default_res}
 return res}
@@ -1768,7 +1770,7 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 this.to_js=function(){this.js_processed=true
-return 'complex(0,'+this.value+')'}}
+return '$B.make_complex(0,'+this.value+')'}}
 function $ImportCtx(C){
 this.type='import'
 this.parent=C
@@ -2097,7 +2099,7 @@ return '$B.$getattr('+x.to_js()+', "'+method+'")()'
 case 'float':
 return 'float('+op+x.value+')'
 case 'imaginary':
-return 'complex(0,'+op+x.value+')'}}
+return '$B.make_complex(0,'+op+x.value+')'}}
 return '$B.$getattr('+this.tree[1].to_js()+',"'+method+'")()'
 case 'is':
 return '$B.$is('+this.tree[0].to_js()+ ', ' +
@@ -2305,7 +2307,7 @@ var js='(function(){throw TypeError("'+"'str'"+
 return js}else{var value=this.tree[i],is_fstring=Array.isArray(value),is_bytes=false
 if(!is_fstring){is_bytes=value.charAt(0)=='b'}
 if(type==null){type=is_bytes
-if(is_bytes){res+='bytes('}}else if(type!=is_bytes){return '$B.$TypeError("can\'t concat bytes to str")'}
+if(is_bytes){res+='bytes.$factory('}}else if(type!=is_bytes){return '$B.$TypeError("can\'t concat bytes to str")'}
 if(!is_bytes){if(is_fstring){res +=fstring(value)}else{res +=value.replace(/\n/g,'\\n\\\n')}}else{res +=value.substr(1).replace(/\n/g,'\\n\\\n')}
 if(i<this.tree.length-1){res+='+'}}}
 if(is_bytes){res +=',"ISO-8859-1")'}
@@ -5813,6 +5815,7 @@ try{getattr(obj,attr);return true}
 catch(err){$B.current_exception=ce;return false}}
 function hash(obj){check_no_kw('hash',obj)
 check_nb_args('hash',1,arguments.length)
+obj=obj.__class__===$B.$factory ? obj.$dict : obj
 if(obj.__hashvalue__ !==undefined)return obj.__hashvalue__
 if(isinstance(obj,_b_.int))return obj.valueOf()
 if(isinstance(obj,bool))return _b_.int(obj)
@@ -5820,6 +5823,7 @@ if(obj.__class__===$B.$factory ||obj.$is_class ||obj.__class__===$B.$type){retur
 if(obj.__hash__ !==undefined){return obj.__hashvalue__=obj.__hash__()}
 var hashfunc=getattr(obj,'__hash__',_b_.None)
 if(hashfunc==_b_.None){
+console.log("pas de methode __hash__ pour",obj)
 throw _b_.TypeError("unhashable type: '"+
 $B.get_class(obj).__name__+"'",'hash')}
 if(hashfunc.$infos===undefined){return obj.__hashvalue__=hashfunc()}
@@ -5996,11 +6000,11 @@ memoryview.$dict.__name__="memory"
 memoryview.$dict.__getitem__=function(self,key){var res=self.obj.__class__.__getitem__(self.obj,key)
 if(key.__class__===_b_.slice.$dict){return memoryview(res)}
 return res}
-memoryview.$dict.hex=function(self){var res='',bytes=_b_.bytes(self)
+memoryview.$dict.hex=function(self){var res='',bytes=_b_.bytes.$factory(self)
 for(var i=0,len=bytes.source.length;i<len;i++){res +=bytes.source[i].toString(16)}
 return res}
-memoryview.$dict.tobytes=function(self){return _b_.bytes(self.obj)}
-memoryview.$dict.tolist=function(self){return _b_.list(_b_.bytes(self.obj))}
+memoryview.$dict.tobytes=function(self){return _b_.bytes.$factory(self.obj)}
+memoryview.$dict.tolist=function(self){return _b_.list(_b_.bytes.$factory(self.obj))}
 function min(){var args=[],pos=0
 for(var i=0;i<arguments.length;i++){args[pos++]=arguments[i]}
 return $extreme(args,'__lt__')}
@@ -6216,13 +6220,13 @@ $Reader.read=function(self,nb){if(self.closed===true)throw _b_.ValueError('I/O o
 if(nb===undefined)return self.$content
 self.$counter+=nb
 if(self.$bin){var res=self.$content.source.slice(self.$counter-nb,self.$counter)
-return _b_.bytes(res)}
+return _b_.bytes.$factory(res)}
 return self.$content.substr(self.$counter-nb,nb)}
 $Reader.readable=function(self){return true}
 $Reader.readline=function(self,limit){
 self.$lc=self.$lc===undefined ? -1 : self.$lc
 if(self.closed===true)throw _b_.ValueError('I/O operation on closed file')
-if(self.$lc==self.$lines.length-1){return self.$bin ? _b_.bytes(): ''}
+if(self.$lc==self.$lines.length-1){return self.$bin ? _b_.bytes.$factory(): ''}
 self.$lc++
 var res=self.$lines[self.$lc]
 self.$counter +=(self.$bin ? res.source.length : res.length)
@@ -6260,7 +6264,7 @@ req.open('GET',file+fake_qs,false)
 req.overrideMimeType('text/plain; charset=utf-8');
 req.send()
 if($res.constructor===Error)throw $res
-if(is_binary){var lf=_b_.bytes('\n','ascii'),lines=_b_.bytes.$dict.split($res,lf)
+if(is_binary){var lf=_b_.bytes.$factory('\n','ascii'),lines=_b_.bytes.$dict.split($res,lf)
 for(var i=0;i<lines.length-1;i++){lines[i].source.push(10)}}else{var lines=$res.split('\n')
 for(var i=0;i<lines.length-1;i++){lines[i]+='\n'}}
 var res={$content:$res,$counter:0,$lines:lines,$bin:is_binary,closed:False,encoding:encoding,mode:mode,name:file}
@@ -6731,17 +6735,17 @@ _b_.slice=slice})(__BRYTHON__)
 var $ObjectDict=_b_.object.$dict
 var isinstance=_b_.isinstance,getattr=_b_.getattr,None=_b_.None
 var from_unicode={},to_unicode={}
-var $BytearrayDict={__class__:$B.$type,__name__:'bytearray',$buffer_protocol:true}
+var bytearray={__class__:$B.$type,__name__:'bytearray',$buffer_protocol:true}
 var mutable_methods=['__delitem__','clear','copy','count','index','pop','remove','reverse','sort']
 for(var i=0,_len_i=mutable_methods.length;i < _len_i;i++){var method=mutable_methods[i]
-$BytearrayDict[method]=(function(m){return function(self){var args=[self.source],pos=1
+bytearray[method]=(function(m){return function(self){var args=[self.source],pos=1
 for(var i=1,_len_i=arguments.length;i < _len_i;i++)args[pos++]=arguments[i]
 return _b_.list.$dict[m].apply(null,args)}})(method)}
 var $bytearray_iterator=$B.$iterator_class('bytearray_iterator')
-$BytearrayDict.__iter__=function(self){return $B.$iterator(self.source,$bytearray_iterator)}
-$BytearrayDict.__mro__=[$ObjectDict]
-$BytearrayDict.__repr__=$BytearrayDict.__str__=function(self){return 'bytearray('+$BytesDict.__repr__(self)+")"}
-$BytearrayDict.__setitem__=function(self,arg,value){if(isinstance(arg,_b_.int)){if(!isinstance(value,_b_.int)){throw _b_.TypeError('an integer is required')}else if(value>255){throw _b_.ValueError("byte must be in range(0, 256)")}
+bytearray.__iter__=function(self){return $B.$iterator(self.source,$bytearray_iterator)}
+bytearray.__mro__=[$ObjectDict]
+bytearray.__repr__=bytearray.__str__=function(self){return 'bytearray('+bytes.__repr__(self)+")"}
+bytearray.__setitem__=function(self,arg,value){if(isinstance(arg,_b_.int)){if(!isinstance(value,_b_.int)){throw _b_.TypeError('an integer is required')}else if(value>255){throw _b_.ValueError("byte must be in range(0, 256)")}
 var pos=arg
 if(arg<0)pos=self.source.length+pos
 if(pos>=0 && pos<self.source.length){self.source[pos]=value}
@@ -6754,35 +6758,27 @@ if(_b_.hasattr(value,'__iter__')){var $temp=_b_.list(value)
 for(var i=$temp.length-1;i>=0;i--){if(!isinstance($temp[i],_b_.int)){throw _b_.TypeError('an integer is required')}else if($temp[i]>255){throw ValueError("byte must be in range(0, 256)")}
 self.source.splice(start,0,$temp[i])}}else{throw _b_.TypeError("can only assign an iterable")}}else{
 throw _b_.TypeError('list indices must be integer, not '+$B.get_class(arg).__name__)}}
-$BytearrayDict.append=function(self,b){if(arguments.length!=2){throw _b_.TypeError(
+bytearray.append=function(self,b){if(arguments.length!=2){throw _b_.TypeError(
 "append takes exactly one argument ("+(arguments.length-1)+" given)")}
 if(!isinstance(b,_b_.int))throw _b_.TypeError("an integer is required")
 if(b>255)throw ValueError("byte must be in range(0, 256)")
 self.source[self.source.length]=b}
-$BytearrayDict.insert=function(self,pos,b){if(arguments.length!=3){throw _b_.TypeError(
+bytearray.insert=function(self,pos,b){if(arguments.length!=3){throw _b_.TypeError(
 "insert takes exactly 2 arguments ("+(arguments.length-1)+" given)")}
 if(!isinstance(b,_b_.int))throw _b_.TypeError("an integer is required")
 if(b>255)throw ValueError("byte must be in range(0, 256)")
 _b_.list.$dict.insert(self.source,pos,b)}
-function bytearray(source,encoding,errors){var obj={__class__:$BytearrayDict}
-$BytearrayDict.__init__(obj,source,encoding,errors)
-return obj}
-bytearray.__class__=$B.$factory
-bytearray.$dict=$BytearrayDict
-$BytearrayDict.$factory=bytearray
-bytearray.__code__={}
-bytearray.__code__.co_argcount=1
-bytearray.__code__.co_consts=[]
-bytearray.__code__.co_varnames=['i']
-var $BytesDict={__class__ : $B.$type,__name__ : 'bytes',$buffer_protocol:true}
-$BytesDict.__add__=function(self,other){if(!isinstance(other,bytes)){throw _b_.TypeError("can't concat bytes to " + _b_.str(other))}
+bytearray.$factory=function(source,encoding,errors){return bytearray.__new__(bytearray,source,encoding,errors)}
+bytearray.__class__=$B.$type
+var bytes={__class__ : $B.$type,__name__ : 'bytes',$buffer_protocol:true}
+bytes.__add__=function(self,other){if(!isinstance(other,bytes)){throw _b_.TypeError("can't concat bytes to " + _b_.str(other))}
 self.source=self.source.concat(other.source)
 return self}
 var $bytes_iterator=$B.$iterator_class('bytes_iterator')
-$BytesDict.__iter__=function(self){return $B.$iterator(self.source,$bytes_iterator)}
-$BytesDict.__eq__=function(self,other){return getattr(self.source,'__eq__')(other.source)}
-$BytesDict.__ge__=function(self,other){return _b_.list.$dict.__ge__(self.source,other.source)}
-$BytesDict.__getitem__=function(self,arg){var i
+bytes.__iter__=function(self){return $B.$iterator(self.source,$bytes_iterator)}
+bytes.__eq__=function(self,other){return getattr(self.source,'__eq__')(other.source)}
+bytes.__ge__=function(self,other){return _b_.list.$dict.__ge__(self.source,other.source)}
+bytes.__getitem__=function(self,arg){var i
 if(isinstance(arg,_b_.int)){var pos=arg
 if(arg<0)pos=self.source.length+pos
 if(pos>=0 && pos<self.source.length)return self.source[pos]
@@ -6795,18 +6791,29 @@ if(start<0)start=self.source.length+start
 if(stop<0)stop=self.source.length+stop
 var res=[],i=null,pos=0
 if(step>0){stop=Math.min(stop,self.source.length)
-if(stop<=start)return bytes([])
+if(stop<=start)return bytes.$factory([])
 for(i=start;i<stop;i+=step)res[pos++]=self.source[i]}else{
-if(stop>=start)return bytes([])
+if(stop>=start)return bytes.$factory([])
 stop=Math.max(0,stop)
 for(i=start;i>=stop;i+=step)res[pos++]=self.source[i]}
-return bytes(res)}else if(isinstance(arg,bool)){return self.source.__getitem__(_b_.int(arg))}}
-$BytesDict.__gt__=function(self,other){return _b_.list.$dict.__gt__(self.source,other.source)}
-$BytesDict.__hash__=function(self){if(self===undefined){return $BytesDict.__hashvalue__ ||$B.$py_next_hash-- }
+return bytes.$factory(res)}else if(isinstance(arg,bool)){return self.source.__getitem__(_b_.int(arg))}}
+bytes.__gt__=function(self,other){return _b_.list.$dict.__gt__(self.source,other.source)}
+bytes.__hash__=function(self){if(self===undefined){return bytes.__hashvalue__ ||$B.$py_next_hash-- }
 var hash=1;
 for(var i=0,_len_i=self.length;i < _len_i;i++){hash=(101*hash + self.source[i])& 0xFFFFFFFF}
 return hash}
-$BytesDict.__init__=function(self,source,encoding,errors){var int_list=[],pos=0
+bytes.__init__=function(){return _b_.None}
+bytes.__le__=function(self,other){return _b_.list.$dict.__le__(self.source,other.source)}
+bytes.__len__=function(self){return self.source.length}
+bytes.__lt__=function(self,other){return _b_.list.$dict.__lt__(self.source,other.source)}
+bytes.__mro__=[$ObjectDict]
+bytes.__mul__=function(){var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],arguments,{},null,null),other=$B.PyNumber_Index($.other),res=bytes.$factory()
+for(var i=0;i<other;i++){res.source=res.source.concat($.self.source)}
+return res}
+bytes.__ne__=function(self,other){return !bytes.__eq__(self,other)}
+bytes.__new__=function(cls,source,encoding,errors){
+var self={__class__:cls}
+var int_list=[],pos=0
 if(source===undefined){}else if(isinstance(source,_b_.int)){var i=source
 while(i--)int_list[pos++]=0}else{if(isinstance(source,_b_.str)){if(encoding===undefined)
 throw _b_.TypeError("string argument without an encoding")
@@ -6814,23 +6821,16 @@ int_list=encode(source,encoding)}else{
 int_list=_b_.list(source)}}
 self.source=int_list
 self.encoding=encoding
-self.errors=errors}
-$BytesDict.__le__=function(self,other){return _b_.list.$dict.__le__(self.source,other.source)}
-$BytesDict.__len__=function(self){return self.source.length}
-$BytesDict.__lt__=function(self,other){return _b_.list.$dict.__lt__(self.source,other.source)}
-$BytesDict.__mro__=[$ObjectDict]
-$BytesDict.__mul__=function(){var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],arguments,{},null,null),other=$B.PyNumber_Index($.other),res=bytes()
-for(var i=0;i<other;i++){res.source=res.source.concat($.self.source)}
-return res}
-$BytesDict.__ne__=function(self,other){return !$BytesDict.__eq__(self,other)}
-$BytesDict.__repr__=$BytesDict.__str__=function(self){var res="b'"
+self.errors=errors
+return self}
+bytes.__repr__=bytes.__str__=function(self){var res="b'"
 for(var i=0,_len_i=self.source.length;i < _len_i;i++){var s=self.source[i]
 if(s<32 ||s>=128){var hx=s.toString(16)
 hx=(hx.length==1 ? '0' : '')+ hx
 res +='\\x'+hx}else{res +=String.fromCharCode(s)}}
 return res+"'"}
-$BytesDict.__reduce_ex__=function(self){return $BytesDict.__repr__(self)}
-$BytesDict.decode=function(self,encoding,errors){if(encoding===undefined)encoding='utf-8'
+bytes.__reduce_ex__=function(self){return bytes.__repr__(self)}
+bytes.decode=function(self,encoding,errors){if(encoding===undefined)encoding='utf-8'
 if(errors===undefined)errors='strict'
 switch(errors){case 'strict':
 case 'ignore':
@@ -6840,84 +6840,84 @@ case 'xmlcharrefreplace':
 case 'backslashreplace':
 return decode(self.source,encoding,errors)
 default:}}
-$BytesDict.join=function(){var $ns=$B.args('join',2,{self:null,iterable:null},['self','iterable'],arguments,{}),self=$ns['self'],iterable=$ns['iterable']
-var next_func=_b_.getattr(_b_.iter(iterable),'__next__'),res=bytes(),empty=true,ce=$B.current_exception
+bytes.join=function(){var $ns=$B.args('join',2,{self:null,iterable:null},['self','iterable'],arguments,{}),self=$ns['self'],iterable=$ns['iterable']
+var next_func=_b_.getattr(_b_.iter(iterable),'__next__'),res=bytes.$factory(),empty=true,ce=$B.current_exception
 while(true){try{var item=next_func()
 if(empty){empty=false}
-else{res=$BytesDict.__add__(res,self)}
-res=$BytesDict.__add__(res,item)}catch(err){if(isinstance(err,_b_.StopIteration)){$B.current_exception=ce
+else{res=bytes.__add__(res,self)}
+res=bytes.__add__(res,item)}catch(err){if(isinstance(err,_b_.StopIteration)){$B.current_exception=ce
 break}
 throw err}}
 return res}
-$BytesDict.maketrans=function(from,to){var _t=[]
+bytes.maketrans=function(from,to){var _t=[]
 for(var i=0;i < 256;i++)_t[i]=i
 for(var i=0,_len_i=from.source.length;i < _len_i;i++){var _ndx=from.source[i]
 _t[_ndx]=to.source[i]}
-return bytes(_t)}
-$BytesDict.find=function(){var $=$B.args('find',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null),sub=$.sub,start=$.start;
+return bytes.$factory(_t)}
+bytes.find=function(){var $=$B.args('find',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null),sub=$.sub,start=$.start;
 if(! sub.__class__ ){throw _b_.TypeError("first argument must be a bytes-like object not '"+$B.get_class($.sub).__name__+"'")}else if(! sub.__class__.$buffer_protocol ){throw _b_.TypeError("first argument must be a bytes-like object not '"+sub.__class__.__name__+"'")}
 var end=$.end==-1 ? $.self.source.length-sub.source.length : Math.min($.self.source.length-sub.source.length,$.end);
-for(var i=start;i<=end;i++){if($BytesDict.startswith($.self,sub,i))return i;}
+for(var i=start;i<=end;i++){if(bytes.startswith($.self,sub,i))return i;}
 return -1;}
-$BytesDict.replace=function(){var $=$B.args('replace',4,{self:null,old:null,new:null,count:null},['self','old','new','count'],arguments,{count:-1},null,null),res=[];
+bytes.replace=function(){var $=$B.args('replace',4,{self:null,old:null,new:null,count:null},['self','old','new','count'],arguments,{count:-1},null,null),res=[];
 var self=$.self,src=self.source,len=src.length,old=$.old,$new=$.new;
 var count=$.count >=0 ? $.count : src.length;
 if(! $.old.__class__ ){throw _b_.TypeError("first argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")}else if(! $.old.__class__.$buffer_protocol ){throw _b_.TypeError("first argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")}
 if(! $.new.__class__ ){throw _b_.TypeError("second argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")}else if(! $.new.__class__.$buffer_protocol ){throw _b_.TypeError("second argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")}
-for(var i=0;i<len;i++){if($BytesDict.startswith(self,old,i)&& count){for(var j=0;j<$new.source.length;j++){res.push($new.source[j]);}
+for(var i=0;i<len;i++){if(bytes.startswith(self,old,i)&& count){for(var j=0;j<$new.source.length;j++){res.push($new.source[j]);}
 i+=(old.source.length-1);
 count--;}else{
 res.push(src[i]);}}
-return bytes(res);}
-$BytesDict.split=function(){var $=$B.args('split',2,{self:null,sep:null},['self','sep'],arguments,{},null,null),res=[],start=0,stop=0
+return bytes.$factory(res);}
+bytes.split=function(){var $=$B.args('split',2,{self:null,sep:null},['self','sep'],arguments,{},null,null),res=[],start=0,stop=0
 if(! $.sep.__class__ ){throw _b_.TypeError("a bytes-like object is required not '"+$B.get_class($.start).__name__+"'")}else if(! $.sep.__class__.$buffer_protocol ){throw _b_.TypeError("a bytes-like object is required not '"+$.sep.__class__.__name__+"'")}
 var seps=$.sep.source,len=seps.length,src=$.self.source,blen=src.length
 while(stop<blen){var match=true
 for(var i=0;i<len && match;i++){if(src[stop+i]!=seps[i]){match=false}}
-if(match){res.push(bytes(src.slice(start,stop)))
+if(match){res.push(bytes.$factory(src.slice(start,stop)))
 start=stop+len
 stop=start}else{stop++}}
-if(match ||(stop>start)){res.push(bytes(src.slice(start,stop)))}
+if(match ||(stop>start)){res.push(bytes.$factory(src.slice(start,stop)))}
 return res}
 function _strip(self,cars,lr){if(cars===undefined){cars=[],pos=0
 var ws='\r\n \t'
 for(var i=0,_len_i=ws.length;i < _len_i;i++)cars[pos++]=ws.charCodeAt(i)}else if(isinstance(cars,bytes)){cars=cars.source}else{throw _b_.TypeError("Type str doesn't support the buffer API")}
 if(lr=='l'){for(var i=0,_len_i=self.source.length;i < _len_i;i++){if(cars.indexOf(self.source[i])==-1)break}
-return bytes(self.source.slice(i))}
+return bytes.$factory(self.source.slice(i))}
 for(var i=self.source.length-1;i>=0;i--){if(cars.indexOf(self.source[i])==-1)break}
-return bytes(self.source.slice(0,i+1))}
-$BytesDict.lstrip=function(self,cars){return _strip(self,cars,'l')}
-$BytesDict.rstrip=function(self,cars){return _strip(self,cars,'r')}
-$BytesDict.startswith=function(){var $=$B.args('startswith',3,{self: null,prefix: null,start:null},['self','prefix','start'],arguments,{start:0},null,null),start=$.start
+return bytes.$factory(self.source.slice(0,i+1))}
+bytes.lstrip=function(self,cars){return _strip(self,cars,'l')}
+bytes.rstrip=function(self,cars){return _strip(self,cars,'r')}
+bytes.startswith=function(){var $=$B.args('startswith',3,{self: null,prefix: null,start:null},['self','prefix','start'],arguments,{start:0},null,null),start=$.start
 if(_b_.isinstance($.prefix,bytes)){var res=true
 for(var i=0;i<$.prefix.source.length && res;i++){res=$.self.source[start+i]==$.prefix.source[i]}
 return res}else if(_b_.isinstance($.prefix,_b_.tuple)){var items=[]
 for(var i=0;i<$.prefix.length;i++){if(_b_.isinstance($.prefix[i],bytes)){items=items.concat($.prefix[i].source)}else{throw _b_.TypeError("startswith first arg must be bytes or "+
 "a tuple of bytes, not "+$B.get_class($.prefix).__name__)}}
-var prefix=bytes(items)
-return $BytesDict.startswith($.self,prefix,start)}else{throw _b_.TypeError("startsswith first arg must be bytes or a tuple of bytes, not "+
+var prefix=bytes.$factory(items)
+return bytes.startswith($.self,prefix,start)}else{throw _b_.TypeError("startsswith first arg must be bytes or a tuple of bytes, not "+
 $B.get_class($.prefix).__name__)}}
-$BytesDict.strip=function(self,cars){var res=$BytesDict.lstrip(self,cars)
-return $BytesDict.rstrip(res,cars)}
-$BytesDict.translate=function(self,table,_delete){if(_delete===undefined){_delete=[]}
+bytes.strip=function(self,cars){var res=bytes.lstrip(self,cars)
+return bytes.rstrip(res,cars)}
+bytes.translate=function(self,table,_delete){if(_delete===undefined){_delete=[]}
 else if(isinstance(_delete,bytes)){_delete=_delete.source}
 else{throw _b_.TypeError("Type "+$B.get_class(_delete).__name+" doesn't support the buffer API")}
 var res=[],pos=0
 if(isinstance(table,bytes)&& table.source.length==256){for(var i=0,_len_i=self.source.length;i < _len_i;i++){if(_delete.indexOf(self.source[i])>-1)continue
 res[pos++]=table.source[self.source[i]]}}
-return bytes(res)}
+return bytes.$factory(res)}
 var _upper=function(char_code){if(char_code >=97 && char_code <=122){return char_code - 32}else{
 return char_code}}
 var _lower=function(char_code){if(char_code >=65 && char_code <=90){return char_code + 32}else{
 return char_code}}
-$BytesDict.upper=function(self){var _res=[],pos=0
+bytes.upper=function(self){var _res=[],pos=0
 for(var i=0,_len_i=self.source.length;i < _len_i;i++){if(self.source[i])
 _res[pos++]=_upper(self.source[i])}
-return bytes(_res)}
-$BytesDict.lower=function(self){var _res=[],pos=0
+return bytes.$factory(_res)}
+bytes.lower=function(self){var _res=[],pos=0
 for(var i=0,_len_i=self.source.length;i < _len_i;i++){if(self.source[i])
 _res[pos++]=_lower(self.source[i])}
-return bytes(_res)}
+return bytes.$factory(_res)}
 function $UnicodeEncodeError(encoding,code_point,position){throw _b_.UnicodeEncodeError("'"+encoding+
 "' codec can't encode character "+_b_.hex(code_point)+
 " in position "+position)}
@@ -7033,20 +7033,12 @@ if(from_unicode[enc][cp]===undefined){$UnicodeEncodeError(encoding,cp,i)}
 t[pos++]=from_unicode[enc][cp]}
 break}
 return t}
-function bytes(source,encoding,errors){
-var obj={__class__:$BytesDict}
-$BytesDict.__init__(obj,source,encoding,errors)
-return obj}
-bytes.__class__=$B.$factory
-bytes.$dict=$BytesDict
-$BytesDict.$factory=bytes
-bytes.__code__={}
-bytes.__code__.co_argcount=1
-bytes.__code__.co_consts=[]
-bytes.__code__.co_varnames=['i']
-for(var $attr in $BytesDict){if($BytearrayDict[$attr]===undefined){$BytearrayDict[$attr]=(function(attr){return function(){return $BytesDict[attr].apply(null,arguments)}})($attr)}}
-$B.set_func_names($BytesDict)
-$B.set_func_names($BytearrayDict)
+bytes.$factory=function(source,encoding,errors){return bytes.__new__(bytes,source,encoding,errors)}
+bytes.__class__=$B.$type
+bytes.$is_class=true
+for(var attr in bytes){if(bytearray[attr]===undefined && typeof bytes[attr]=="function"){bytearray[attr]=(function(_attr){return function(){return bytes[_attr].apply(null,arguments)}})(attr)}}
+$B.set_func_names(bytes)
+$B.set_func_names(bytearray)
 _b_.bytes=bytes
 _b_.bytearray=bytearray})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
@@ -7318,6 +7310,7 @@ return true}
 function run_js(module_contents,path,module){
 try{eval(module_contents);
 if($B.$options.store){module.$js=module_contents}}catch(err){console.log(err)
+console.log(path,module)
 throw err}
 try{$module}
 catch(err){console.log('no $module')
@@ -7850,7 +7843,7 @@ if(isinstance(other,float))return new Number(self*other)
 if(isinstance(other,_b_.bool)){var bool_value=0;
 if(other.valueOf())bool_value=1;
 return new Number(self*bool_value)}
-if(isinstance(other,_b_.complex)){return _b_.complex(float(self*other.$real),float(self*other.$imag))}
+if(isinstance(other,_b_.complex)){return $B.make_complex(float(self*other.$real),float(self*other.$imag))}
 if(hasattr(other,'__rmul__'))return getattr(other,'__rmul__')(self)
 $err('*',other)}
 $FloatDict.__ne__=function(self,other){return !$FloatDict.__eq__(self,other)}
@@ -7866,9 +7859,9 @@ else if(self==0 && isFinite(other)&& other<0){throw _b_.ZeroDivisionError("0.0 c
 else if(other>0 && other%2==1){return Number.NEGATIVE_INFINITY}else{return Number.POSITIVE_INFINITY}}else if(self==Number.POSITIVE_INFINITY && !isNaN(other)){return other>0 ? self : new Number(0)}
 if(other==Number.NEGATIVE_INFINITY && !isNaN(self)){return Math.abs(self)<1 ? Number.POSITIVE_INFINITY : new Number(0)}else if(other==Number.POSITIVE_INFINITY && !isNaN(self)){return Math.abs(self)<1 ? new Number(0): Number.POSITIVE_INFINITY}
 if(self<0 && !_b_.getattr(other,'__eq__')(_b_.int(other))){
-return _b_.complex.$dict.__pow__(_b_.complex(self,0),other)}
+return _b_.complex.__pow__($B.make_complex(self,0),other)}
 return float(Math.pow(self,other))}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.$real),ln=Math.log(self)
-return _b_.complex(preal*Math.cos(ln),preal*Math.sin(ln))}
+return $B.make_complex(preal*Math.cos(ln),preal*Math.sin(ln))}
 if(hasattr(other,'__rpow__'))return getattr(other,'__rpow__')(self)
 $err("** or pow()",other)}
 $FloatDict.__repr__=$FloatDict.__str__=function(self){if(self===float)return "<class 'float'>"
@@ -7885,7 +7878,7 @@ $FloatDict.__truediv__=function(self,other){if(isinstance(other,[_b_.int,float])
 return float(self/other)}
 if(isinstance(other,_b_.complex)){var cmod=other.$real*other.$real+other.$imag*other.$imag
 if(cmod==0)throw ZeroDivisionError('division by zero')
-return _b_.complex(float(self*other.$real/cmod),float(-self*other.$imag/cmod))}
+return $B.make_complex(float(self*other.$real/cmod),float(-self*other.$imag/cmod))}
 if(hasattr(other,'__rtruediv__'))return getattr(other,'__rtruediv__')(self)
 $err('/',other)}
 var $op_func=function(self,other){if(isinstance(other,_b_.int)){if(typeof other=='boolean'){return other ? self-1 : self}else if(other.__class__===$B.LongInt.$dict){return float(self-parseInt(other.value))}else{return float(self-other)}}
@@ -7893,7 +7886,7 @@ if(isinstance(other,float))return float(self-other)
 if(isinstance(other,_b_.bool)){var bool_value=0;
 if(other.valueOf())bool_value=1;
 return float(self-bool_value)}
-if(isinstance(other,_b_.complex)){return _b_.complex(self - other.$real,-other.$imag)}
+if(isinstance(other,_b_.complex)){return $B.make_complex(self - other.$real,-other.$imag)}
 if(hasattr(other,'__rsub__'))return getattr(other,'__rsub__')(self)
 $err('-',other)}
 $op_func +='' 
@@ -8099,7 +8092,7 @@ else{return int($B.LongInt.$dict.__mul__($B.LongInt(self),$B.LongInt(other)))}}
 if(isinstance(other,_b_.float)){return new Number(self*other)}
 if(isinstance(other,_b_.bool)){if(other.valueOf())return self
 return int(0)}
-if(isinstance(other,_b_.complex)){return _b_.complex($IntDict.__mul__(self,other.$real),$IntDict.__mul__(self,other.$imag))}
+if(isinstance(other,_b_.complex)){return $B.make_complex($IntDict.__mul__(self,other.$real),$IntDict.__mul__(self,other.$imag))}
 if(isinstance(other,[_b_.list,_b_.tuple])){var res=[]
 var $temp=other.slice(0,other.length)
 for(var i=0;i<val;i++)res=res.concat($temp)
@@ -8127,8 +8120,8 @@ else if(res !==Infinity && !isFinite(res)){return res}
 else{return int($B.LongInt.$dict.__pow__($B.LongInt(self),$B.LongInt(other)))}}
 if(isinstance(other,_b_.float)){if(self>=0){return new Number(Math.pow(self,other.valueOf()))}
 else{
-return _b_.complex.$dict.__pow__(_b_.complex(self,0),other)}}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.$real),ln=Math.log(self)
-return _b_.complex(preal*Math.cos(ln),preal*Math.sin(ln))}
+return _b_.complex.__pow__($B.make_complex(self,0),other)}}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.$real),ln=Math.log(self)
+return $B.make_complex(preal*Math.cos(ln),preal*Math.sin(ln))}
 if(hasattr(other,'__rpow__'))return getattr(other,'__rpow__')(self)
 $err("**",other)}
 $IntDict.__repr__=function(self){if(self===int)return "<class 'int'>"
@@ -8148,7 +8141,7 @@ if(isinstance(other,_b_.float)){if(!other.valueOf())throw ZeroDivisionError('div
 return new Number(self/other)}
 if(isinstance(other,_b_.complex)){var cmod=other.$real*other.$real+other.$imag*other.$imag
 if(cmod==0)throw ZeroDivisionError('division by zero')
-return _b_.complex(self*other.$real/cmod,-self*other.$imag/cmod)}
+return $B.make_complex(self*other.$real/cmod,-self*other.$imag/cmod)}
 if(hasattr(other,'__rtruediv__'))return getattr(other,'__rtruediv__')(self)
 $err("/",other)}
 $IntDict.bit_length=function(self){s=bin(self)
@@ -8176,11 +8169,11 @@ var $op_func=function(self,other){if(isinstance(other,int)){if(typeof other=='nu
 if(res>=$B.min_int && res<=$B.max_int){return res}
 else{return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))}}else if(typeof other=="boolean"){return other ? self-1 : self}else{return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))}}
 if(isinstance(other,_b_.float)){return new Number(self-other)}
-if(isinstance(other,_b_.complex)){return _b_.complex(self-other.$real,-other.$imag)}
+if(isinstance(other,_b_.complex)){return $B.make_complex(self-other.$real,-other.$imag)}
 if(isinstance(other,_b_.bool)){var bool_value=0;
 if(other.valueOf())bool_value=1;
 return self-bool_value}
-if(isinstance(other,_b_.complex)){return _b_.complex(self.valueOf()- other.$real,other.$imag)}
+if(isinstance(other,_b_.complex)){return $B.make_complex(self.valueOf()- other.$real,other.$imag)}
 if(hasattr(other,'__rsub__'))return getattr(other,'__rsub__')(self)
 throw $err('-',other)}
 $op_func +='' 
@@ -8636,117 +8629,39 @@ $B.LongInt=LongInt})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var $ObjectDict=_b_.object.$dict
 function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError("unsupported operand type(s) for "+op+": '"+class1+"' and '"+class2+"'")}
-var $ComplexDict={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'complex',$native:true,$descriptors:{real:true,imag:true}}
-$ComplexDict.__abs__=function(self){var _rf=isFinite(self.$real),_if=isFinite(self.$imag);
+var complex={__class__:$B.$type,__dir__:$ObjectDict.__dir__,__name__:'complex',$native:true,$descriptors:{real:true,imag:true}}
+complex.__abs__=function(self){var _rf=isFinite(self.$real),_if=isFinite(self.$imag);
 if((_rf && isNaN(self.$imag))||(_if && isNaN(self.$real))||(isNaN(self.$imag)&& isNaN(self.$real)))return NaN
 if(! _rf ||! _if )return Infinity;
 var mag=Math.sqrt(Math.pow(self.$real,2)+Math.pow(self.$imag,2));
 if(!isFinite(mag)&& _rf && _if){
 throw _b_.OverflowError("absolute value too large");}
 return mag;}
-$ComplexDict.__bool__=function(self){if(self.$real==0 && self.$imag==0)return false;else return true;}
-$ComplexDict.__class__=$B.$type
-$ComplexDict.__eq__=function(self,other){if(isinstance(other,complex))return self.$real.valueOf()==other.$real.valueOf()&& self.$imag.valueOf()==other.$imag.valueOf()
+complex.__bool__=function(self){if(self.$real==0 && self.$imag==0)return false;else return true;}
+complex.__class__=$B.$type
+complex.__eq__=function(self,other){if(isinstance(other,complex))return self.$real.valueOf()==other.$real.valueOf()&& self.$imag.valueOf()==other.$imag.valueOf()
 if(isinstance(other,_b_.int)){if(self.$imag !=0)return False
 return self.$real==other.valueOf()}
 if(isinstance(other,_b_.float)){if(self.$imag !=0)return False
 return self.$real==other.valueOf()}
 $UnsupportedOpType("==","complex",$B.get_class(other))}
-$ComplexDict.__floordiv__=function(self,other){$UnsupportedOpType("//","complex",$B.get_class(other))}
-$ComplexDict.__hash__=function(self){
-if(self===undefined){return $ComplexDict.__hashvalue__ ||$B.$py_next_hash--}
+complex.__floordiv__=function(self,other){$UnsupportedOpType("//","complex",$B.get_class(other))}
+complex.__hash__=function(self){
+if(self===undefined){return complex.__hashvalue__ ||$B.$py_next_hash--}
 return self.$imag*1000003+self.$real}
-$ComplexDict.__init__=function(){var args=[].slice.call(arguments,1)
-var c=complex.apply(null,args)
-var self=arguments[0];
-self.$real=c.$real
-self.$imag=c.$imag
-self.toString=function(){return '('+self.$real+'+'+self.$imag+'j)'}}
-$ComplexDict.__invert__=function(self){return ~self}
-$ComplexDict.__mod__=function(self,other){throw _b_.TypeError("TypeError: can't mod complex numbers.")}
-$ComplexDict.__mro__=[$ObjectDict]
-$ComplexDict.__mul__=function(self,other){if(isinstance(other,complex))
-return complex(self.$real*other.$real-self.$imag*other.$imag,self.$imag*other.$real + self.$real*other.$imag)
-if(isinstance(other,_b_.int))
-return complex(self.$real*other.valueOf(),self.$imag*other.valueOf())
-if(isinstance(other,_b_.float))
-return complex(self.$real*other,self.$imag*other)
-if(isinstance(other,_b_.bool)){if(other.valueOf())return self
-return complex(0)}
+complex.__init__=function(){return _b_.None}
+complex.__invert__=function(self){return ~self}
+complex.__mod__=function(self,other){throw _b_.TypeError("TypeError: can't mod complex numbers.")}
+complex.__mro__=[$ObjectDict]
+complex.__mul__=function(self,other){if(isinstance(other,complex)){return make_complex(self.$real*other.$real-self.$imag*other.$imag,self.$imag*other.$real + self.$real*other.$imag)}else if(isinstance(other,_b_.int)){return make_complex(self.$real*other.valueOf(),self.$imag*other.valueOf())}else if(isinstance(other,_b_.float)){return make_complex(self.$real*other,self.$imag*other)}else if(isinstance(other,_b_.bool)){if(other.valueOf())return self
+return make_complex(0,0)}
 $UnsupportedOpType("*",complex,other)}
-$ComplexDict.__name__='complex'
-$ComplexDict.__ne__=function(self,other){return !$ComplexDict.__eq__(self,other)}
-$ComplexDict.__neg__=function(self){return complex(-self.$real,-self.$imag)}
-$ComplexDict.__new__=function(cls){if(cls===undefined)throw _b_.TypeError('complex.__new__(): not enough arguments')
-return{__class__:cls.$dict}}
-$ComplexDict.__pos__=function(self){return self}
-function complex2expo(cx){var norm=Math.sqrt((cx.$real*cx.$real)+(cx.$imag*cx.$imag)),sin=cx.$imag/norm,cos=cx.$real/norm,angle
-if(cos==0){angle=sin==1 ? Math.PI/2 : 3*Math.PI/2}
-else if(sin==0){angle=cos==1 ? 0 : Math.PI}
-else{angle=Math.atan(sin/cos)}
-return{norm: norm,angle: angle}}
-$ComplexDict.__pow__=function(self,other){
-var exp=complex2expo(self),angle=exp.angle,res=Math.pow(exp.norm,other)
-if(_b_.isinstance(other,[_b_.int,_b_.float])){return complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}else if(_b_.isinstance(other,complex)){
-var x=other.$real,y=other.$imag
-var pw=Math.pow(exp.norm,x)*Math.pow(Math.E,-y*angle),theta=y*Math.log(exp.norm)-x*angle
-return complex(pw*Math.cos(theta),pw*Math.sin(theta))}else{throw _b_.TypeError("unsupported operand type(s) for ** or pow(): "+
-"'complex' and '"+$B.get_class(other).__name__+"'")}}
-$ComplexDict.__str__=$ComplexDict.__repr__=function(self){if(self.$real==0){if(1/self.$real < 0){if(self.$imag < 0){return "(-0"+self.$imag+"j)"}else if(self.$imag==0 && 1/self.$imag < 0){return "(-0-"+self.$imag+"j)"}else return "(-0+"+self.$imag+"j)"}else{
-if(self.$imag==0 && 1/self.$imag < 0)return "-"+self.$imag+'j'
-else return self.$imag+'j'}}
-if(self.$imag>0)return '('+self.$real+'+'+self.$imag+'j)';
-if(self.$imag==0){if(1/self.$imag < 0)return '('+self.$real+'-'+self.$imag+'j)';
-return '('+self.$real+'+'+self.$imag+'j)';}
-return '('+self.$real+'-'+(-self.$imag)+'j)'}
-$ComplexDict.__sqrt__=function(self){if(self.$imag==0)return complex(Math.sqrt(self.$real))
-var r=self.$real,i=self.$imag,_a=Math.sqrt((r + sqrt)/2),_b=Number.sign(i)* Math.sqrt((-r + sqrt)/2)
-return complex(_a,_b)}
-$ComplexDict.__truediv__=function(self,other){if(isinstance(other,complex)){if(other.$real==0 && other.$imag==0){throw ZeroDivisionError('division by zero')}
-var _num=self.$real*other.$real + self.$imag*other.$imag
-var _div=other.$real*other.$real + other.$imag*other.$imag
-var _num2=self.$imag*other.$real - self.$real*other.$imag
-return complex(_num/_div,_num2/_div)}
-if(isinstance(other,_b_.int)){if(!other.valueOf())throw ZeroDivisionError('division by zero')
-return $ComplexDict.__truediv__(self,complex(other.valueOf()))}
-if(isinstance(other,_b_.float)){if(!other.value)throw ZeroDivisionError('division by zero')
-return $ComplexDict.__truediv__(self,complex(other.value))}
-$UnsupportedOpType("//","complex",other.__class__)}
-$ComplexDict.conjugate=function(self){return complex(self.$real,-self.$imag);}
-var $op_func=function(self,other){throw _b_.TypeError("TypeError: unsupported operand type(s) for -: 'complex' and '" +
-$B.get_class(other).__name__+"'")}
-$op_func +='' 
-var $ops={'&':'and','|':'ior','<<':'lshift','>>':'rshift','^':'xor'}
-for(var $op in $ops){eval('$ComplexDict.__'+$ops[$op]+'__ = '+$op_func.replace(/-/gm,$op))}
-$ComplexDict.__ior__=$ComplexDict.__or__
-var $op_func=function(self,other){if(isinstance(other,complex))return complex(self.$real-other.$real,self.$imag-other.$imag)
-if(isinstance(other,_b_.int))return complex($B.sub(self.$real,other.valueOf()),self.$imag)
-if(isinstance(other,_b_.float))return complex(self.$real - other.valueOf(),self.$imag)
-if(isinstance(other,_b_.bool)){var bool_value=0;
-if(other.valueOf())bool_value=1;
-return complex(self.$real - bool_value,self.$imag)}
-throw _b_.TypeError("unsupported operand type(s) for -: "+self.__repr__()+
-" and '"+$B.get_class(other).__name__+"'")}
-$ComplexDict.__sub__=$op_func
-$op_func +='' 
-$op_func=$op_func.replace(/-/gm,'+').replace(/sub/gm,'add')
-eval('$ComplexDict.__add__ = '+$op_func)
-var $comp_func=function(self,other){if(other===undefined ||other==_b_.None){throw _b_.NotImplemented("");}
-throw _b_.TypeError("TypeError: no ordering relation is defined for complex numbers")}
-$comp_func +='' 
-for(var $op in $B.$comps){eval("$ComplexDict.__"+$B.$comps[$op]+'__ = '+$comp_func.replace(/>/gm,$op))}
-$B.make_rmethods($ComplexDict)
-$ComplexDict.real=function(self){return new Number(self.$real)}
-$ComplexDict.real.setter=function(){throw _b_.AttributeError("readonly attribute")}
-$ComplexDict.imag=function(self){return new Number(self.$imag)}
-$ComplexDict.imag.setter=function(){throw _b_.AttributeError("readonly attribute")}
-var complex_re=/^\s*([\+\-]*\d*\.?\d*(e[\+\-]*\d*)?)([\+\-]?)(\d*\.?\d*(e[\+\-]*\d*)?)(j?)\s*$/i
-var _real=1,_real_mantissa=2,_sign=3,_imag=4,_imag_mantissa=5,_j=6;
-var type_conversions=['__complex__','__float__','__int__'];
-var _convert=function(num){for(i=0;i<type_conversions.length;i++){if(hasattr(num,type_conversions[i])){return getattr(num,type_conversions[i])()}}
-return num}
-var complex=function(){var res;
-var args=$B.args("complex",2,{real:null,imag:null},["real","imag"],arguments,{real:0,imag:0},null,null)
+complex.__name__='complex'
+complex.__ne__=function(self,other){return !complex.__eq__(self,other)}
+complex.__neg__=function(self){return make_complex(-self.$real,-self.$imag)}
+complex.__new__=function(cls){if(cls===undefined)throw _b_.TypeError('complex.__new__(): not enough arguments')
+var res;
+var args=$B.args("complex",3,{cls:null,real:null,imag:null},["cls","real","imag"],arguments,{real:0,imag:0},null,null)
 var $real=args.real,$imag=args.imag;
 if(typeof $real=='string'){if(arguments.length > 1 ||arguments[0].$nat !==undefined){throw _b_.TypeError("complex() can't take second arg if first is a string")}
 $real=$real.trim()
@@ -8758,14 +8673,10 @@ if(parts[_real]=='+' ||parts[_real]==''){$imag=1}else if(parts[_real]=='-'){$ima
 $imag=parts[_imag]=='' ? 1 : parseFloat(parts[_imag])
 $imag=parts[_sign]=='-' ? -$imag : $imag}}else{$real=parseFloat(parts[_real])
 $imag=0}
-res={__class__:$ComplexDict,$real:$real ||0,$imag:$imag ||0}
-res.__repr__=res.__str__=function(){if(res.$real==0)return res.$imag + 'j'
-return '('+res.$real+'+'+res.$imag+'j)'}
+res={__class__:complex,$real:$real ||0,$imag:$imag ||0}
 return res}
-if(arguments.length==1 && $real.__class__===$ComplexDict && $imag==0){return $real;}
-if((isinstance($real,_b_.float)||isinstance($real,_b_.int))&&(isinstance($imag,_b_.float)||isinstance($imag,_b_.int))){res={__class__:$ComplexDict,$real:$real,$imag:$imag}
-res.__repr__=res.__str__=function(){if(res.$real==0)return res.$imag + 'j'
-return '('+res.$real+'+'+res.$imag+'j)'}
+if(arguments.length==1 && $real.__class__===complex && $imag==0){return $real;}
+if((isinstance($real,_b_.float)||isinstance($real,_b_.int))&&(isinstance($imag,_b_.float)||isinstance($imag,_b_.int))){res={__class__:complex,$real:$real,$imag:$imag}
 return res;}
 for(i=0;i<type_conversions.length;i++){if(hasattr($real,type_conversions[i])){}}
 $real=_convert($real)
@@ -8773,12 +8684,80 @@ $imag=_convert($imag)
 if(!isinstance($real,_b_.float)&& !isinstance($real,_b_.int)&& !isinstance($real,_b_.complex)){throw _b_.TypeError("complex() argument must be a string or a number")}
 if(typeof $imag=='string'){throw _b_.TypeError("complex() second arg can't be a string")}
 if(!isinstance($imag,_b_.float)&& !isinstance($imag,_b_.int)&& !isinstance($imag,_b_.complex)&& $imag!==undefined){throw _b_.TypeError("complex() argument must be a string or a number")}
-$imag=$ComplexDict.__mul__(complex("1j"),$imag)
-return $ComplexDict.__add__($imag,$real);}
-complex.$dict=$ComplexDict
-complex.__class__=$B.$factory
-$ComplexDict.$factory=complex
-$B.set_func_names($ComplexDict)
+$imag=complex.__mul__(complex("1j"),$imag)
+return complex.__add__($imag,$real);}
+complex.__pos__=function(self){return self}
+function complex2expo(cx){var norm=Math.sqrt((cx.$real*cx.$real)+(cx.$imag*cx.$imag)),sin=cx.$imag/norm,cos=cx.$real/norm,angle
+if(cos==0){angle=sin==1 ? Math.PI/2 : 3*Math.PI/2}
+else if(sin==0){angle=cos==1 ? 0 : Math.PI}
+else{angle=Math.atan(sin/cos)}
+return{norm: norm,angle: angle}}
+complex.__pow__=function(self,other){
+var exp=complex2expo(self),angle=exp.angle,res=Math.pow(exp.norm,other)
+if(_b_.isinstance(other,[_b_.int,_b_.float])){return make_complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}else if(_b_.isinstance(other,complex)){
+var x=other.$real,y=other.$imag
+var pw=Math.pow(exp.norm,x)*Math.pow(Math.E,-y*angle),theta=y*Math.log(exp.norm)-x*angle
+return make_complex(pw*Math.cos(theta),pw*Math.sin(theta))}else{throw _b_.TypeError("unsupported operand type(s) for ** or pow(): "+
+"'complex' and '"+$B.get_class(other).__name__+"'")}}
+complex.__str__=complex.__repr__=function(self){if(self.$real==0){if(1/self.$real < 0){if(self.$imag < 0){return "(-0"+self.$imag+"j)"}else if(self.$imag==0 && 1/self.$imag < 0){return "(-0-"+self.$imag+"j)"}else return "(-0+"+self.$imag+"j)"}else{
+if(self.$imag==0 && 1/self.$imag < 0)return "-"+self.$imag+'j'
+else return self.$imag+'j'}}
+if(self.$imag>0)return '('+self.$real+'+'+self.$imag+'j)';
+if(self.$imag==0){if(1/self.$imag < 0)return '('+self.$real+'-'+self.$imag+'j)';
+return '('+self.$real+'+'+self.$imag+'j)';}
+return '('+self.$real+'-'+(-self.$imag)+'j)'}
+complex.__sqrt__=function(self){if(self.$imag==0)return complex(Math.sqrt(self.$real))
+var r=self.$real,i=self.$imag,_a=Math.sqrt((r + sqrt)/2),_b=Number.sign(i)* Math.sqrt((-r + sqrt)/2)
+return make_complex(_a,_b)}
+complex.__truediv__=function(self,other){if(isinstance(other,complex)){if(other.$real==0 && other.$imag==0){throw ZeroDivisionError('division by zero')}
+var _num=self.$real*other.$real + self.$imag*other.$imag
+var _div=other.$real*other.$real + other.$imag*other.$imag
+var _num2=self.$imag*other.$real - self.$real*other.$imag
+return make_complex(_num/_div,_num2/_div)}
+if(isinstance(other,_b_.int)){if(!other.valueOf())throw ZeroDivisionError('division by zero')
+return complex.__truediv__(self,complex(other.valueOf()))}
+if(isinstance(other,_b_.float)){if(!other.value)throw ZeroDivisionError('division by zero')
+return complex.__truediv__(self,complex(other.value))}
+$UnsupportedOpType("//","complex",other.__class__)}
+complex.conjugate=function(self){return make_complex(self.$real,-self.$imag);}
+var $op_func=function(self,other){throw _b_.TypeError("TypeError: unsupported operand type(s) for -: 'complex' and '" +
+$B.get_class(other).__name__+"'")}
+$op_func +='' 
+var $ops={'&':'and','|':'ior','<<':'lshift','>>':'rshift','^':'xor'}
+for(var $op in $ops){eval('complex.__'+$ops[$op]+'__ = '+$op_func.replace(/-/gm,$op))}
+complex.__ior__=complex.__or__
+var $op_func=function(self,other){if(isinstance(other,complex))return make_complex(self.$real-other.$real,self.$imag-other.$imag)
+if(isinstance(other,_b_.int))return make_complex($B.sub(self.$real,other.valueOf()),self.$imag)
+if(isinstance(other,_b_.float))return make_complex(self.$real - other.valueOf(),self.$imag)
+if(isinstance(other,_b_.bool)){var bool_value=0;
+if(other.valueOf())bool_value=1;
+return make_complex(self.$real - bool_value,self.$imag)}
+throw _b_.TypeError("unsupported operand type(s) for -: "+self.__repr__()+
+" and '"+$B.get_class(other).__name__+"'")}
+complex.__sub__=$op_func
+$op_func +='' 
+$op_func=$op_func.replace(/-/gm,'+').replace(/sub/gm,'add')
+eval('complex.__add__ = '+$op_func)
+var $comp_func=function(self,other){if(other===undefined ||other==_b_.None){throw _b_.NotImplemented("");}
+throw _b_.TypeError("TypeError: no ordering relation is defined for complex numbers")}
+$comp_func +='' 
+for(var $op in $B.$comps){eval("complex.__"+$B.$comps[$op]+'__ = '+$comp_func.replace(/>/gm,$op))}
+$B.make_rmethods(complex)
+complex.real=function(self){return new Number(self.$real)}
+complex.real.setter=function(){throw _b_.AttributeError("readonly attribute")}
+complex.imag=function(self){return new Number(self.$imag)}
+complex.imag.setter=function(){throw _b_.AttributeError("readonly attribute")}
+var complex_re=/^\s*([\+\-]*\d*\.?\d*(e[\+\-]*\d*)?)([\+\-]?)(\d*\.?\d*(e[\+\-]*\d*)?)(j?)\s*$/i
+var _real=1,_real_mantissa=2,_sign=3,_imag=4,_imag_mantissa=5,_j=6;
+var type_conversions=['__complex__','__float__','__int__'];
+var _convert=function(num){for(i=0;i<type_conversions.length;i++){if(hasattr(num,type_conversions[i])){return getattr(num,type_conversions[i])()}}
+return num}
+$B.make_complex=make_complex=function(real,imag){return{
+__class__: complex,$real: real,$imag: imag}}
+complex.$factory=function(){return complex.__new__(complex,...arguments)}
+complex.__class__=$B.$type
+complex.$is_class=true
+$B.set_func_names(complex)
 _b_.complex=complex})(__BRYTHON__)
 ;(function($B){
 eval($B.InjectBuiltins())
@@ -9793,7 +9772,7 @@ var res=''
 for(var i=0,_len=self.length;i<_len ;i++){var char=self.charAt(i)
 if(('a'<=char && char<='m')||('A'<=char && char<='M')){res +=String.fromCharCode(String.charCodeAt(char)+13)}else if(('m'<char && char<='z')||('M'<char && char<='Z')){res +=String.fromCharCode(String.charCodeAt(char)-13)}else{res +=char}}
 return res}
-return _b_.bytes(self,encoding)}
+return _b_.bytes.$factory(self,encoding)}
 $StringDict.endswith=function(){
 var $=$B.args("endswith",4,{self:null,suffix:null,start:null,end:null},['self','suffix','start','end'],arguments,{start:0,end:null},null,null)
 normalize_start_end($)

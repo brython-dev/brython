@@ -1465,7 +1465,7 @@ function $CallCtx(context){
                   if(this.func.is_builtin){
                       // simplify code for built-in functions
                       if($B.builtin_funcs[this.func.value]!==undefined &&
-                          this.func.value !== "complex" // XXX temporary
+                          ["complex", "bytes", "bytearray"].indexOf(this.func.value) == -1 // XXX temporary
                           ){
                           return func_js+args_str
                       }
@@ -4672,7 +4672,7 @@ function $StringCtx(context,value){
 
                 if(type==null){
                     type=is_bytes
-                    if(is_bytes){res+='bytes('}
+                    if(is_bytes){res+='bytes.$factory('}
                 }else if(type!=is_bytes){
                     return '$B.$TypeError("can\'t concat bytes to str")'
                 }
@@ -7942,7 +7942,7 @@ function run_script(script){
         if($B.debug>1){console.log(js)}
         // Run resulting Javascript
         eval(js)
-        //$B.imported[script.name] = $locals
+
     }catch($err){
         if($B.debug>1){
             console.log($err)

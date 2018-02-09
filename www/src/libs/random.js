@@ -305,7 +305,7 @@ function _Random(){
 
         var randbytes= []
         for(i=0;i<n;i++){randbytes.push(parseInt(_random()*256))}
-        return _b_.bytes(randbytes)
+        return _b_.bytes.$factory(randbytes)
     }
 
     var res = {
@@ -690,7 +690,7 @@ function _Random(){
             if(version==1){a = _b_.hash(a)}
             else if(version==2){
                 if(_b_.isinstance(a, _b_.str)){
-                    a = _b_.int.$dict.from_bytes(_b_.bytes(a, 'utf-8'), 'big')
+                    a = _b_.int.$dict.from_bytes(_b_.bytes.$factory(a, 'utf-8'), 'big')
                 }else if(_b_.isinstance(a, [_b_.bytes, _b_.bytearray])){
                     a = _b_.int.$dict.from_bytes(a, 'big')
                 }else if(!_b_.isinstance(a, _b_.int)){
