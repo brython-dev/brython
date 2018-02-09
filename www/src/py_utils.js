@@ -126,7 +126,7 @@ $B.wrong_nb_args = function(name, received, expected, positional){
 }
 
 
-$B.get_class = function(obj, from){
+$B.get_class = function(obj){
     // generally we get the attribute __class__ of an object by obj.__class__
     // but Javascript builtins used by Brython (functions, numbers, strings...)
     // don't have this attribute so we must return it
@@ -161,6 +161,8 @@ $B.get_class = function(obj, from){
             }else if(obj.constructor===Number) return _b_.float.$dict
             break
         }
+    }else if(klass.__class__===$B.$factory){
+        klass = klass.$dict
     }
     return klass
 }
@@ -714,6 +716,29 @@ $B.$is_member = function(item,_set){
                 throw err
             }
         }
+    }
+}
+
+$B.$call = function(callable){
+    if(callable.__class__ === $B.$MethodDict){
+        return callable
+    }
+    else if(callable.$is_func || typeof callable=="function"){return callable}
+    else if(callable.$factory){
+        return callable.$factory
+    }
+    else if(callable.$is_class){
+        // Use metaclass __call__, cache result in callable.$factory
+        return callable.$factory = $B.$instance_creator(callable)
+    }
+    else if(callable.__class__===$B.$factory){return callable} // XXX old style
+    try{
+        return $B.$getattr(callable, "__call__")
+    }catch(err){
+        console.log(err)
+        console.log(callable)
+        throw _b_.TypeError("'" + $B.get_class(callable).__name__ +
+            "' object is not callable")
     }
 }
 
@@ -1355,50 +1380,46 @@ $B.rich_comp = function(op, x, y){
                 return x1 > y1
         }
     }
-    var res, rev_op, compared = false, x1, y1
-    x1 = x.__class__===$B.$factory ? x.$dict : x
-    y1 = y.__class__===$B.$factory ? y.$dict : y
+    var res, rev_op, compared = false
+    x = x.__class__===$B.$factory ? x.$dict : x
+    y = y.__class__===$B.$factory ? y.$dict : y
 
-    if(x1.$factory) {
+    if(x.$is_class || x.$factory) {
         if ( op == '__eq__') {
-            //console.log("compare classes", x, y, x===y)
-            return (x1 === y1)
+            return (x === y)
         } else if ( op == '__ne__') {
-            return !(x1 === y1)
+            return !(x === y)
         } else {
             throw _b_.TypeError("'"+op+"' not supported between types")
         }
     }
 
-    if(x1.__class__ && y1.__class__){
+    if(x.__class__ && y.__class__){
         // cf issue #600 and
         // https://docs.python.org/3/reference/datamodel.html :
         // "If the operands are of different types, and right operand’s type
         // is a direct or indirect subclass of the left operand’s type, the
         // reflected method of the right operand has priority, otherwise the
         // left operand’s method has priority."
-        if(y1.__class__.__mro__.indexOf(x1.__class__)>-1){
+        if(y.__class__.__mro__.indexOf(x.__class__)>-1){
             rev_op = reversed_op[op] || op
-            res = _b_.getattr(y1, rev_op)(x1)
+            res = _b_.getattr(y, rev_op)(x)
             if ( res !== _b_.NotImplemented ) return res
             compared = true
         }
     }
-
-    res = _b_.getattr(x1, op)(y1)
-
+    res = $B.$call(_b_.getattr(x, op))(y)
+    
     if ( res !== _b_.NotImplemented ) return res;
     if (compared) return false;
     rev_op = reversed_op[op] || op
-    res =  _b_.getattr(y1, rev_op)(x1)
+    res =  _b_.getattr(y, rev_op)(x)
     if ( res !== _b_.NotImplemented ) return res
     // If both operands return NotImplemented, return False if the operand is
     // __eq__, True if it is __ne__, raise TypeError otherwise
     if(op=='__eq__'){return _b_.False}
     else if(op=='__ne__'){return _b_.True}
 
-    //if(x.__class__===$B.$factory){x=x.__class__}
-    //if(y.__class__===$B.$factory){y=y.__class__}
     throw _b_.TypeError("'"+method2comp[op]+"' not supported between " +
         "instances of '" + $B.get_class(x).__name__+ "' and '" +
         $B.get_class(y).__name__+"'")
