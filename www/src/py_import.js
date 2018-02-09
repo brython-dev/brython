@@ -376,6 +376,7 @@ finder_VFS.$dict.exec_module.$type = 'classmethod'
 finder_VFS.$dict.find_module.$type = 'classmethod'
 finder_VFS.$dict.find_spec.$type = 'classmethod'
 
+$B.set_func_names(finder_VFS.$dict, "<import>")
 
 /**
  * Module importer optimizing module lookups via stdlib_paths.js
@@ -464,6 +465,7 @@ finder_stdlib_static.$dict.exec_module.$type = 'classmethod'
 finder_stdlib_static.$dict.find_module.$type = 'classmethod'
 finder_stdlib_static.$dict.find_spec.$type = 'classmethod'
 
+$B.set_func_names(finder_stdlib_static.$dict, "<import>")
 /**
  * Search an import path for .py modules
  */
@@ -553,6 +555,7 @@ finder_path.$dict.exec_module.$type = 'classmethod'
 finder_path.$dict.find_module.$type = 'classmethod'
 finder_path.$dict.find_spec.$type = 'classmethod'
 
+$B.set_func_names(finder_path.$dict, "<import>")
 
 /**
  * Find modules packaged in a js script to be used as a virtual file system
@@ -625,6 +628,7 @@ vfs_hook.$dict = {
     }
 }
 vfs_hook.$dict.__mro__ = [_b_.object.$dict]
+$B.set_func_names(vfs_hook, "<import>")
 
 /**
  * Find modules deployed in a hierarchy under a given base URL
