@@ -1,11 +1,13 @@
 // A function that builds the __new__ method for the factory function
 __BRYTHON__.$__new__ = function(factory){
+    console.log('factory', factory)
     return function(cls){
         /*
         if(cls===undefined){
             throw __BRYTHON__.builtins.TypeError(factory.$dict.__name__+'.__new__(): not enough arguments')
         }
         */
+        console.log('create new object', cls, factory)
         var res = factory.apply(null,[])
         res.__class__ = cls.$dict
         var init_func = null
@@ -110,10 +112,9 @@ $ObjectDict.__format__ = function(){
 $ObjectDict.__ge__ = function(){return _b_.NotImplemented}
 
 $ObjectDict.__getattribute__ = function(obj,attr){
-
-    var klass = obj.__class__ || $B.get_class(obj)
+var klass = obj.__class__ || $B.get_class(obj)
     if(attr==='__class__'){
-        return klass.$factory
+        return klass
     }
     var res = obj[attr]
 
@@ -137,6 +138,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
 
         // If the class doesn't define __str__ but defines __repr__,
         // use __repr__
+        /*
         if(res===undefined && attr=="__str__"){
             var attr1 = "__repr__",
                 res1 = check(obj, klass, attr1)
@@ -149,6 +151,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
             }
             res = res1
         }
+        */
 
     }else{
         if(res.__set__===undefined){
@@ -175,7 +178,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
 
         // For descriptors, attribute resolution is done by applying __get__
         if(__get__!==null){
-            try{return __get__.apply(null, [obj, klass.$factory])}
+            try{return __get__.apply(null, [obj, klass])}
             catch(err){
                 console.log('error in get.apply', err)
                 console.log(__get__+'')
@@ -197,6 +200,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
             // __new__ is a static method
             if(attr == '__new__'){res.$type = 'staticmethod'}
             var res1 = __get__.apply(null, [res, obj, klass])
+
             if(typeof res1 == 'function'){
                 // If attribute is a class then return it unchanged
                 //
@@ -217,7 +221,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                 // class A, its method __init__ must be called without B's
                 // self as first argument
 
-                if(res1.__class__ === $B.$factory) return res
+                if(res1.__class__ === $B.$factory) return res /// XXX old style
 
                 // Same thing if the attribute is a method of an instance
                 // =================
@@ -240,8 +244,21 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                 }
 
                 // instance method object
-                return $B.make_method(attr, klass, res)(obj)
-
+                if(res.$type=="staticmethod"){return res}
+                else{
+                    var self = res.$type=="classmethod" ? klass : obj
+                    function method(){
+                        return res(self, ...arguments)
+                    }
+                    method.__class__ = $B.$MethodDict
+                    method.$infos = {
+                        __self__: self,
+                        __func__: res,
+                        __name__: attr,
+                        __qualname__: klass.__name__ + "." + attr
+                    }
+                    return method
+                }
             }else{
                 // result of __get__ is not a function
                 return res1
@@ -303,18 +320,12 @@ $ObjectDict.__hash__ = function (self) {
 }
 
 $ObjectDict.__init__ = function(){
-    if(arguments.length == 1) {  // only self
-        return _b_.None  // all is good ... return None
-    } else if(arguments.length == 2) {  // at most "self" and kwargs
-        kw = arguments[1]
-        if(kw.$nat !== undefined && kw.kw !== undefined) { // kwargs is well formed
-            if(Object.keys(kw.kw).length == 0) {  // no items in kwargs
-                return _b_.None  // all is good ... return None
-            }
-        }
+    if(arguments.length==0){
+        throw _b_.TypeError("descriptor '__init__' of 'object' object "+
+            "needs an argument")
     }
-    // *args expansion has elements or **kwargs is not empty
-    throw _b_.TypeError("object() takes no parameters")
+    // object.__init__ does nothing else
+    return _b_.None
 }
 
 $ObjectDict.__le__ = function(){return _b_.NotImplemented}
@@ -323,8 +334,14 @@ $ObjectDict.__lt__ = function(){return _b_.NotImplemented}
 
 $ObjectDict.__mro__ = []
 
-$ObjectDict.__new__ = function(cls){
+$ObjectDict.__new__ = function(cls, ...args){
     if(cls===undefined){throw _b_.TypeError('object.__new__(): not enough arguments')}
+    var init_func = $B.$getattr(cls, "__init__")
+    if(init_func===$ObjectDict.__init__){
+        if(args.length>0){
+            throw _b_.TypeError("object() takes no parameters")
+        }
+    }
     return {__class__ : cls.__class__ === $B.$factory ? cls.$dict : cls}
 }
 
@@ -368,12 +385,15 @@ $ObjectDict.__setattr__.__get__ = function(obj){
 
 $ObjectDict.__setattr__.__str__ = function(){return 'method object.setattr'}
 
-$ObjectDict.__str__ = $ObjectDict.__repr__
+$ObjectDict.__str__ = function(self){
+    var repr_func = $B.$getattr(self, "__repr__")
+    return $B.$call(repr_func)()
+}
 
 $ObjectDict.__subclasshook__ = function(){return _b_.NotImplemented}
 
 // add __str__ and __repr__
-$B.set_func_names($ObjectDict)
+$B.set_func_names($ObjectDict, "builtins")
 
 // constructor of the built-in class 'object'
 function object(){
