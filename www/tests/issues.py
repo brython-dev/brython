@@ -187,17 +187,13 @@ assert recur() == 1
 
 #issue 131
 import time
-import datetime
+
 target = time.struct_time([1970, 1, 1, 0, 0, 0, 3, 1, 0])
 assert time.gmtime(0).args == target.args
 target = time.struct_time([1970, 1, 1, 0, 1, 40, 3, 1, 0])
 assert time.gmtime(100).args == target.args
 target = time.struct_time([2001, 9, 9, 1, 46, 40, 6, 252, 0])
 assert time.gmtime(1000000000).args == target.args
-target1 = datetime.datetime(1969, 12, 31, 12, 0)
-target2 = datetime.datetime(1970, 1, 1, 12, 0)
-## depending on timezone this could be any hour near midnight Jan 1st, 1970
-assert target1 <= datetime.datetime.fromtimestamp(0) <= target2
 
 try:
     time.asctime(1)
