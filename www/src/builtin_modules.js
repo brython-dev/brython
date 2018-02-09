@@ -149,19 +149,21 @@
                 dict.__new__ = function(cls){
                     // __new__ must be defined explicitely : it returns an instance of
                     // DOMNode for the specified tagName
-                    if(cls.$dict.$elt_wrap !== undefined) {
+                    cls = cls.__class__ === $B.$factory ? cls.$dict : cls // XXX temporary
+                    if(cls.$elt_wrap !== undefined) {
                         // DOMNode is piggybacking on us to autogenerate a node
                         var elt = cls.$dict.$elt_wrap  // keep track of the to wrap element
-                        cls.$dict.$elt_wrap = undefined  // nullify for later calls
+                        cls.$elt_wrap = undefined  // nullify for later calls
                         var res = $B.DOMNode(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
                     } else {
                         var res = $B.DOMNode(document.createElement(tagName), true)
                         res._wrapped = false  // not wrapped
                     }
-                    res.__class__ = cls.$dict
+                    res.__class__ = cls
                     return res
                 }
+                $B.set_func_names(dict, "browser.html")
                 return dict
             }
 
