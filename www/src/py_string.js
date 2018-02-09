@@ -1143,6 +1143,8 @@ $StringDict.format = function(self) {
                 value = _b_.getattr(value, '__getitem__')(key)
             }
         }
+        // XXX temporary
+        value = value.__class__ === $B.$factory ? value.$dict : value
         // If the conversion flag is set, first call a function to convert
         // the value
         if(fmt.conv=='a'){value = _b_.ascii(value)}
@@ -1150,10 +1152,8 @@ $StringDict.format = function(self) {
         else if(fmt.conv=='s'){value = _b_.str(value)}
 
         // Call attribute __format__ to perform the actual formatting
-        if(value.__class__===$B.$factory){
+        if(value.$is_class || value.$factory){
             // For classes, don't use the class __format__ method
-            res += value.$dict.__class__.__format__(value, fmt.spec)
-        }else if(value.$factory){
             res += value.__class__.__format__(value, fmt.spec)
         }else{
             res += _b_.getattr(value, '__format__')(fmt.spec)
