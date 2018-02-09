@@ -194,6 +194,18 @@ $SetDict.__mro__ = [_b_.object.$dict]
 
 $SetDict.__ne__ = function(self,other){return !$SetDict.__eq__(self,other)}
 
+$SetDict.__new__ = function(cls){
+    if(cls===undefined){
+        throw _b_.TypeError('set.__new__(): not enough arguments')
+    }
+    return {
+        __class__:cls.$factory ? cls : cls.$dict,
+        $str:true,
+        $num:true,
+        $items:[]
+        }
+}
+
 $SetDict.__or__ = function(self,other,accept_iter){
     //$test(accept_iter, other)   <===  is this needed?  causes some dict unittests to fail
     var res = clone(self)
@@ -541,7 +553,6 @@ function set(){
 set.__class__ = $B.$factory
 set.$dict = $SetDict
 $SetDict.$factory = set
-$SetDict.__new__ = $B.$__new__(set)
 
 $B.set_func_names($SetDict)
 
@@ -603,6 +614,18 @@ $FrozensetDict.__init__ = function(){
     return $N
 }
 
+$FrozensetDict.__new__ = function(cls){
+    if(cls===undefined){
+        throw _b_.TypeError('frozenset.__new__(): not enough arguments')
+    }
+    return {
+        __class__:cls.$factory ? cls : cls.$dict,
+        $str:true,
+        $num:true,
+        $items:[]
+        }
+}
+
 // Singleton for empty frozensets
 var singleton_id = Math.floor(Math.random()*Math.pow(2,40))
 function empty_frozenset(){return {__class__:$FrozensetDict, $items:[], $id:singleton_id}}
@@ -620,7 +643,7 @@ function frozenset(){
 }
 frozenset.__class__ = $B.$factory
 frozenset.$dict = $FrozensetDict
-$FrozensetDict.__new__ = $B.$__new__(frozenset)
+
 $FrozensetDict.$factory = frozenset
 
 $B.set_func_names($FrozensetDict)

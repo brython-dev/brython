@@ -668,10 +668,12 @@ $FloatDict.__new__ = function(cls){
     if(cls===undefined){
         throw _b_.TypeError('float.__new__(): not enough arguments')
     }
-    return {__class__:cls.$dict}
+    return {__class__:cls.$factory ? cls : cls.$dict}
 }
 
 $B.$FloatClass = $FloatClass
+
+$B.set_func_names($FloatDict, "builtins")
 
 // dictionary and factory for subclasses of string
 var $FloatSubclassDict = {
@@ -704,6 +706,8 @@ $B.$FloatSubclassFactory = {
     __class__:$B.$factory,
     $dict:$FloatSubclassDict
 }
+
+$B.set_func_names($FloatSubclassDict, "builtins")
 
 _b_.float = float
 })(__BRYTHON__)

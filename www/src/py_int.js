@@ -268,7 +268,7 @@ $IntDict.__neg__ = function(self){return -self}
 
 $IntDict.__new__ = function(cls){
     if(cls===undefined){throw _b_.TypeError('int.__new__(): not enough arguments')}
-    return {__class__:cls.$dict}
+    return {__class__:cls.$factory ? cls : cls.$dict}
 }
 
 $IntDict.__pos__ = function(self){return self}
@@ -617,6 +617,8 @@ var int = function(value, base){
 int.$dict = $IntDict
 int.__class__ = $B.$factory
 $IntDict.$factory = int
+
+$B.set_func_names(int.$dict, "__builtins__")
 
 _b_.int = int
 

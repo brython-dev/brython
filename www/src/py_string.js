@@ -814,23 +814,30 @@ var $notimplemented = function(self,other){
     throw NotImplementedError("OPERATOR not implemented for class str")
 }
 
-$StringDict.title = unicode.title;
-$StringDict.capitalize = unicode.capitalize;
-$StringDict.casefold = unicode.casefold;
-$StringDict.islower = unicode.islower;
-$StringDict.isupper = unicode.isupper;
-$StringDict.istitle = unicode.istitle;
-$StringDict.isspace = unicode.isspace;
-$StringDict.isalpha = unicode.isalpha;
-$StringDict.isalnum = unicode.isalnum;
-$StringDict.isdecimal = unicode.isdecimal;
-$StringDict.isdigit = unicode.isdigit;
-$StringDict.isnumeric = unicode.isnumeric;
-$StringDict.isidentifier = unicode.isidentifier;
-$StringDict.isprintable = unicode.isprintable;
-$StringDict.lower = unicode.lower;
-$StringDict.swapcase = unicode.swapcase;
-$StringDict.upper = unicode.upper;
+// Copy static methods from unicode
+var from_unicode = [
+    "title",
+    "capitalize",
+    "casefold",
+    "islower",
+    "isupper",
+    "istitle",
+    "isspace",
+    "isalpha",
+    "isalnum",
+    "isdecimal",
+    "isdigit",
+    "isnumeric",
+    "isidentifier",
+    "isprintable",
+    "lower",
+    "swapcase",
+    "upper"
+]
+for(var i=0;i<from_unicode.length;i++){
+    var name = from_unicode[i]
+    $StringDict[name] = unicode[name]
+}
 
 $StringDict.center = function(self,width,fillchar){
     var $=$B.args("center",3,
@@ -1595,7 +1602,7 @@ $StringDict.zfill = function(self, width) {
 
 function str(arg){
     arg = arg.__class__ === $B.$factory ? arg.$dict : arg
-    if(arg===undefined) return '<undefined>'
+    if(arg===undefined){console.log("undef"); return '<undefined>'}
     switch(typeof arg) {
       case 'string':
           return arg
@@ -1603,16 +1610,13 @@ function str(arg){
           if(isFinite(arg)){return arg.toString()}
     }
     try{
-        if(arg.$factory){
-            // arg is a class (the factory function)
+        if(arg.$is_class || arg.$factory){
+            // arg is a class
             // In this case, str() doesn't use the attribute __str__ of the
             // class or its subclasses, but the attribute __str__ of the
             // class metaclass (usually "type") or its subclasses (usually
             // "object")
             // The metaclass is the attribute __class__ of the class dictionary
-            if(arg.__class__===$B.$type){return $B.$type.__str__(arg)}
-            return $B.$getattr(arg.__class__, '__str__')(arg)
-        }else if(arg.$factory){
             var func = $B.$getattr(arg.__class__, '__str__')
             return func(arg)
         }
@@ -1632,7 +1636,7 @@ function str(arg){
         }
     }
 
-    return getattr(f, '__call__')()
+    return $B.$call(f)()
 }
 str.__class__ = $B.$factory
 str.$dict = $StringDict
@@ -1644,7 +1648,7 @@ $StringDict.__new__ = function(cls){
     return {__class__:cls.$dict}
 }
 
-$B.set_func_names($StringDict)
+$B.set_func_names($StringDict, "builtins")
 
 // dictionary and factory for subclasses of string
 var $StringSubclassDict = {
@@ -1670,6 +1674,9 @@ for(var $attr in $StringDict){
         })($attr)
     }
 }
+$StringSubclassDict.__new__ = function(cls){
+    return {__class__:cls.$factory ? cls : cls.$dict}
+}
 $StringSubclassDict.__mro__ = [$ObjectDict]
 
 // factory for str subclasses
@@ -1677,6 +1684,8 @@ $B.$StringSubclassFactory = {
     __class__:$B.$factory,
     $dict:$StringSubclassDict
 }
+
+$B.set_func_names($StringSubclassDict, "builtins")
 
 _b_.str = str
 

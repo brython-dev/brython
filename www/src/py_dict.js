@@ -147,8 +147,7 @@ $DictDict.__contains__ = function(){
       case 'number':
         return self.$numeric_dict[item] !==undefined
     }
-
-    item = item.__class__ === $B.$factory ? item.$dict : item
+    item = item.__class__ === $B.$factory ? item.$dict : item // XXX old style
 
     var _key=hash(item)
     if (self.$str_hash[_key]!==undefined &&
@@ -166,7 +165,7 @@ $DictDict.__contains__ = function(){
         //     a = {'u': 'a', X(): 'b'}
         //     assert set(a.values())=={'a', 'b'}
         //     assert not X() in a
-       return $B.rich_comp("__eq__", item, self.$object_dict[_key][0])
+        return $B.rich_comp("__eq__", item, self.$object_dict[_key][0])
     }
     return false
 }
@@ -287,7 +286,7 @@ $DictDict.__getitem__ = function(){
     }
     if(self.__class__!==$DictDict){
         try{
-            var missing_method = getattr(self.__class__.$factory, '__missing__')
+            var missing_method = getattr(self.__class__, '__missing__')
             return missing_method(self, arg)
         }catch(err){}
     }
@@ -389,6 +388,17 @@ $DictDict.__mro__ = [$ObjectDict]
 
 $DictDict.__ne__ = function(self,other){return !$DictDict.__eq__(self,other)}
 
+$DictDict.__new__ = function(cls){
+    if(cls===undefined){throw _b_.TypeError('int.__new__(): not enough arguments')}
+    return {
+        __class__:cls.$factory ? cls : cls.$dict,
+        $numeric_dict : {},
+        $object_dict : {},
+        $string_dict : {},
+        $str_hash: {}
+    }
+}
+
 $DictDict.__next__ = function(self){
     if(self.$iter==null){
         self.$iter = new $item_generator(self)
@@ -413,9 +423,7 @@ $DictDict.__repr__ = function(self){
         if((!self.$jsobj && itm[1]===self) ||
                 (self.$jsobj && itm[1]===self.$jsobj)){
             res[pos++]=repr(itm[0])+': {...}'
-        }
-        //else if(itm[1]===undefined){continue} // XXX this shouldn't happen
-        else{
+        }else{
             try{
                 res[pos++]=repr(itm[0])+': '+repr(itm[1])
             }catch(err){
@@ -524,7 +532,7 @@ $DictDict.fromkeys = function(){
 
     // class method
     var klass = $.cls,
-        res = klass(),
+        res = $B.$call(klass)(),
         keys_iter = $B.$iter(keys),
         ce = $B.current_exception
 
@@ -726,7 +734,6 @@ function dict(args, second){
 dict.__class__ = $B.$factory
 dict.$dict = $DictDict
 $DictDict.$factory = dict
-$DictDict.__new__ = $B.$__new__(dict)
 
 _b_.dict = dict
 
