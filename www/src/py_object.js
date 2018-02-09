@@ -328,6 +328,17 @@ $ObjectDict.__init__ = function(){
     return _b_.None
 }
 
+$ObjectDict.__init_subclass__ = function(cls, kwargs){
+    // Default implementation only checks that no keyword arguments were passed
+    if(kwargs!==undefined){
+        if(kwargs.__class__!==_b_.dict.$dict ||
+                Object.keys(kwargs.$string_dict).length>0){
+            throw _b_.TypeError("__init_subclass__() takes no keyword arguments")
+        }
+    }
+    return _b_.None
+}
+
 $ObjectDict.__le__ = function(){return _b_.NotImplemented}
 
 $ObjectDict.__lt__ = function(){return _b_.NotImplemented}

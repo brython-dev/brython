@@ -22,7 +22,7 @@ $B.$class_constructor = function(class_name, class_obj, parents,
     // have been generated before getting here (or will be generated if it's not
     // a valid parent
     if(kwargs !== undefined) {
-        var cl_dict=_b_.dict(), bases=null, extra_kwargs = {}
+        var cl_dict=_b_.dict(), bases=null, extra_kwargs = _b_.dict()
         // transform class object into a dictionary
         for(var attr in class_obj){
             if(attr.charAt(0)!='$' || attr.substr(0,2)=='$$'){
@@ -41,11 +41,16 @@ $B.$class_constructor = function(class_name, class_obj, parents,
         }
         bases = parents
 
-        // see if there is 'metaclass' in kwargs
+        // see if there keyword arguments were passed to the class
         for(var i=0;i<kwargs.length;i++){
             var key=kwargs[i][0], val=kwargs[i][1]
-            if(key=='metaclass'){metaclass=val}
-            else{extra_kwargs[key] = val}
+            if(key=='metaclass'){
+                // special case for metaclass
+                metaclass=val
+            }else{
+                // other keyword arguments will be passed to __init_subclass__
+                extra_kwargs.$string_dict[key] = val
+            }
         }
         var mro0 = class_obj
     } else {
@@ -57,38 +62,6 @@ $B.$class_constructor = function(class_name, class_obj, parents,
     if(bases.length>0){
         metaclass = bases[0].__class__
         metaclass = bases[0].__class__ === $B.$factory ? $B.$type : metaclass
-    }
-
-    // DRo - Begin
-
-    /* see if __init_subclass__ is defined in any of the parents
-     * We can't use __getattribute__ since it must be defined directly on a parent,
-     * not further up the mro.
-     */
-    var init_subclass = function init_subclass(){};
-    for (var i=0;i<bases.length;i++) {
-        if (bases[i].$methods) {
-            var __init_subclass__ = bases[i].$methods.__init_subclass__;
-            if (__init_subclass__) {
-                init_subclass = function init_subclass(cls) {
-                    var kw = {
-                        $nat:true,
-                        kw:{}
-                    }
-                    for (var kwidx=0;kwidx<kwargs.length;kwidx++){
-                        kw.kw[kwargs[kwidx][0]] = kwargs[kwidx][1];
-                    }
-                    /* We can't simply __init_subclass__()(kw);
-                     * because __init_subclass__ is bound to the parent.
-                     * We can't look up __init_subclass__ on factory directly,
-                     * since it might be overridden.  This also sidesteps
-                     * needing to mark __init_subclass__ as implicitly a @classmethod
-                     * */
-                    __init_subclass__().$infos.__func__.apply(null, [cls, kw]);
-                }
-                break;
-            }
-        }
     }
 
     // Create the class dictionary
@@ -166,8 +139,8 @@ $B.$class_constructor = function(class_name, class_obj, parents,
 
     // Initialize the class object by a call to metaclass __init__
     var meta_init = $B.$type.__getattribute__(metaclass, '__init__')
-    meta_init(kls, class_name, bases, Object.keys(kls),
-        {$nat: "kw", kw: extra_kwargs})
+    
+    meta_init(kls, class_name, bases, Object.keys(kls))
 
 
     // Set new class as subclass of its parents
@@ -186,7 +159,12 @@ $B.$class_constructor = function(class_name, class_obj, parents,
         kls.$factory = nofactory
     }
 
-    // XXX todo : add init_subclass
+    // call __init_subclass__ with the extra keyword arguments
+    var first_parent = mro[0],
+        init_subclass = $B.$type.__getattribute__(first_parent, "__init_subclass__")
+
+    init_subclass(kls, extra_kwargs)
+
     return kls
 }
 
@@ -365,6 +343,7 @@ $B.$type = {
 }
 
 $B.$type.__class__ = $B.$type
+
 $B.$type.__mro__ = [_b_.object.$dict]
 
 $B.$type.__new__ = function(meta, name, bases, cl_dict){
