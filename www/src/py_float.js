@@ -412,7 +412,7 @@ $FloatDict.__mul__ = function(self,other){
       // return float(0)
     }
     if(isinstance(other,_b_.complex)){
-      return _b_.complex(float(self*other.$real),
+      return $B.make_complex(float(self*other.$real),
           float(self*other.$imag))
     }
     if(hasattr(other,'__rmul__')) return getattr(other,'__rmul__')(self)
@@ -453,13 +453,13 @@ $FloatDict.__pow__= function(self,other){
         }
         if(self<0 && !_b_.getattr(other,'__eq__')(_b_.int(other))){
             // use complex power
-            return _b_.complex.$dict.__pow__(_b_.complex(self, 0), other)
+            return _b_.complex.__pow__($B.make_complex(self, 0), other)
         }
         return float(Math.pow(self,other))
     }else if(isinstance(other, _b_.complex)){
         var preal = Math.pow(self,  other.$real),
             ln = Math.log(self)
-        return _b_.complex(preal*Math.cos(ln), preal*Math.sin(ln))
+        return $B.make_complex(preal*Math.cos(ln), preal*Math.sin(ln))
     }
     if(hasattr(other,'__rpow__')) return getattr(other,'__rpow__')(self)
     $err("** or pow()",other)
@@ -498,7 +498,7 @@ $FloatDict.__truediv__ = function(self,other){
         var cmod = other.$real*other.$real+other.$imag*other.$imag
         if(cmod==0) throw ZeroDivisionError('division by zero')
 
-        return _b_.complex(float(self*other.$real/cmod),
+        return $B.make_complex(float(self*other.$real/cmod),
                            float(-self*other.$imag/cmod))
     }
     if(hasattr(other,'__rtruediv__')) return getattr(other,'__rtruediv__')(self)
@@ -521,7 +521,7 @@ var $op_func = function(self,other){
       return float(self-bool_value)
     }
     if(isinstance(other,_b_.complex)){
-      return _b_.complex(self - other.$real, -other.$imag)
+      return $B.make_complex(self - other.$real, -other.$imag)
     }
     if(hasattr(other,'__rsub__')) return getattr(other,'__rsub__')(self)
     $err('-',other)

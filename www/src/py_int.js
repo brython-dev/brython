@@ -247,7 +247,7 @@ $IntDict.__mul__ = function(self,other){
          return int(0)
     }
     if(isinstance(other,_b_.complex)){
-        return _b_.complex($IntDict.__mul__(self, other.$real),
+        return $B.make_complex($IntDict.__mul__(self, other.$real),
             $IntDict.__mul__(self, other.$imag))
     }
     if(isinstance(other,[_b_.list,_b_.tuple])){
@@ -303,12 +303,12 @@ $IntDict.__pow__ = function(self,other,z){
         if(self>=0){return new Number(Math.pow(self, other.valueOf()))}
         else{
             // use complex power
-            return _b_.complex.$dict.__pow__(_b_.complex(self, 0), other)
+            return _b_.complex.__pow__($B.make_complex(self, 0), other)
         }
     }else if(isinstance(other, _b_.complex)){
         var preal = Math.pow(self,  other.$real),
             ln = Math.log(self)
-        return _b_.complex(preal*Math.cos(ln), preal*Math.sin(ln))
+        return $B.make_complex(preal*Math.cos(ln), preal*Math.sin(ln))
     }
     if(hasattr(other,'__rpow__')) return getattr(other,'__rpow__')(self)
     $err("**",other)
@@ -357,7 +357,7 @@ $IntDict.__truediv__ = function(self,other){
     if(isinstance(other,_b_.complex)){
         var cmod = other.$real*other.$real+other.$imag*other.$imag
         if(cmod==0) throw ZeroDivisionError('division by zero')
-        return _b_.complex(self*other.$real/cmod,-self*other.$imag/cmod)
+        return $B.make_complex(self*other.$real/cmod,-self*other.$imag/cmod)
     }
     if(hasattr(other,'__rtruediv__')) return getattr(other,'__rtruediv__')(self)
     $err("/",other)
@@ -425,7 +425,7 @@ var $op_func = function(self,other){
         return new Number(self-other)
     }
     if(isinstance(other,_b_.complex)){
-        return _b_.complex(self-other.$real,-other.$imag)
+        return $B.make_complex(self-other.$real,-other.$imag)
     }
     if(isinstance(other,_b_.bool)){
          var bool_value=0;
@@ -433,7 +433,7 @@ var $op_func = function(self,other){
          return self-bool_value
     }
     if(isinstance(other,_b_.complex)){
-        return _b_.complex(self.valueOf() - other.$real, other.$imag)
+        return $B.make_complex(self.valueOf() - other.$real, other.$imag)
     }
     if(hasattr(other,'__rsub__')) return getattr(other,'__rsub__')(self)
     throw $err('-',other)

@@ -1464,7 +1464,9 @@ function $CallCtx(context){
               if(this.func.type=='id'){
                   if(this.func.is_builtin){
                       // simplify code for built-in functions
-                      if($B.builtin_funcs[this.func.value]!==undefined){
+                      if($B.builtin_funcs[this.func.value]!==undefined &&
+                          this.func.value !== "complex" // XXX temporary
+                          ){
                           return func_js+args_str
                       }
                   }else{
@@ -3596,7 +3598,7 @@ function $ImaginaryCtx(context,value){
     context.tree[context.tree.length]=this
     this.to_js = function(){
         this.js_processed=true
-        return 'complex(0,'+this.value+')'
+        return '$B.make_complex(0,'+this.value+')'
     }
 }
 
@@ -4238,7 +4240,7 @@ function $OpCtx(context,op){
                   case 'float':
                     return 'float('+op+x.value+')'
                   case 'imaginary':
-                    return 'complex(0,'+op+x.value+')'
+                    return '$B.make_complex(0,'+op+x.value+')'
                 }
             }
             return '$B.$getattr('+this.tree[1].to_js()+',"'+method+'")()'
