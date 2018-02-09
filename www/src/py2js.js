@@ -1458,7 +1458,7 @@ function $CallCtx(context){
                 args_str = '('+args_str+')'
             }
 
-            var default_res = '$B.$getattr('+func_js+',"__call__")'+args_str
+            var default_res = "$B.$call("+func_js+")" + args_str
 
             if(this.tree.length>-1){
               if(this.func.type=='id'){
@@ -1567,13 +1567,21 @@ function $ClassCtx(context){
         new $NodeJSCtx(run_func,')();')
         node.parent.insert(rank+1,run_func)
 
+        var module_name = '$locals_' +
+            $get_module(this).module.replace(/\./g, '_')+'.__name__'
+
+        rank++
+        node.parent.insert(rank+1,
+            $NodeJS('$'+this.name+'_'+this.random+".__module__ = " + module_name))
+
         // class constructor
         var scope = $get_scope(this)
         var name_ref = ';$locals_'+scope.id.replace(/\./g,'_')
         name_ref += '["'+this.name+'"]'
 
-        var js = [name_ref +'=$B.$class_constructor("'+this.name], pos=1
-        js[pos++]= '",$'+this.name+'_'+this.random
+        var js = [name_ref +'=$B.$class_constructor("'+this.name],
+            pos=1
+        js[pos++]= '", $'+this.name+'_'+this.random
         if(this.args!==undefined){ // class def has arguments
             var arg_tree = this.args.tree,args=[],kw=[]
 
@@ -1618,17 +1626,16 @@ function $ClassCtx(context){
         new $NodeJSCtx(ds_node,js)
         node.parent.insert(rank+1,ds_node)
 
+        /*
         // add attribute __module__
         rank++
         js = name_ref+'.__module__=$locals_'
-        if(this.name=='classXXX'){ // experimental
-            js = name_ref+'.__module__=$locals_'
-        }
 
         js += $get_module(this).module.replace(/\./g, '_')+'.__name__'
         var mod_node = new $Node()
         new $NodeJSCtx(mod_node,js)
         node.parent.insert(rank+1,mod_node)
+        */
 
         // if class is defined at module level, add to module namespace
         if(scope.ntype==='module'){
@@ -1873,7 +1880,7 @@ function $DecoratorCtx(context){
         var res = ref+'='
 
         for(var i=0;i<decorators.length;i++){
-          res += '$B.$getattr('+this.dec_ids[i]+',"__call__")('
+          res += '$B.$call('+this.dec_ids[i]+')('
           tail +=')'
         }
         res += (obj.decorated ? obj.alias : ref)+tail+';'
@@ -2329,6 +2336,9 @@ function $DefCtx(context){
         var offset = 1
 
         var indent = node.indent
+
+        // Set attribute $is_func
+        node.parent.insert(rank+offset++, $NodeJS(name+'.$is_func = true'))
 
         // Create attribute $infos for the function
         // Adding only one attribute is much faster than adding all the
