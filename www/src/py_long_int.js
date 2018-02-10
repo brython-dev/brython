@@ -235,7 +235,7 @@ $LongIntDict.__abs__ = function(self){
 $LongIntDict.__add__ = function(self, other){
 
     if(isinstance(other, _b_.float)){
-        return _b_.float(parseInt(self.value)+other.value)
+        return _b_.float.$factory(parseInt(self.value)+other.value)
     }
     if (typeof other == 'number') other=LongInt(_b_.str(other))
 
@@ -326,7 +326,7 @@ $LongIntDict.__float__ = function(self){
 
 $LongIntDict.__floordiv__ = function(self, other){
     if(isinstance(other, _b_.float)){
-        return _b_.float(parseInt(self.value)/other)
+        return _b_.float.$factory(parseInt(self.value)/other)
     }
     if (typeof other == 'number') other=LongInt(_b_.str(other))
     return intOrLong($LongIntDict.__divmod__(self, other)[0])
@@ -439,7 +439,7 @@ $LongIntDict.__mul__ = function(self, other){
             else{return -self}
     }
     if(isinstance(other, _b_.float)){
-        return _b_.float(parseInt(self.value)*other)
+        return _b_.float.$factory(parseInt(self.value)*other)
     }
     if (typeof other == 'number') other=LongInt(_b_.str(other))
     var res = mul_pos(self.value, other.value)
@@ -516,7 +516,7 @@ $LongIntDict.__str__ = $LongIntDict.__repr__ = function(self){
 
 $LongIntDict.__sub__ = function(self, other){
     if(isinstance(other, _b_.float)){
-        return _b_.float(parseInt(self.value)-other.value)
+        return _b_.float.$factory(parseInt(self.value)-other.value)
     }
     if (typeof other == 'number') other=LongInt(_b_.str(other))
     var res
@@ -559,11 +559,11 @@ $LongIntDict.__sub__ = function(self, other){
 
 $LongIntDict.__truediv__ = function(self, other){
     if(isinstance(other, LongInt)){
-        return _b_.float(parseInt(self.value)/parseInt(other.value))
+        return _b_.float.$factory(parseInt(self.value)/parseInt(other.value))
     }else if(isinstance(other,_b_.int)){
-        return _b_.float(parseInt(self.value)/other)
+        return _b_.float.$factory(parseInt(self.value)/other)
     }else if(isinstance(other,_b_.float)){
-        return _b_.float(parseInt(self.value)/other)
+        return _b_.float.$factory(parseInt(self.value)/other)
     }else{throw TypeError.$factory("unsupported operand type(s) for /: 'int' and '"+
         $B.get_class(other).__name__+"'")}
 }

@@ -1465,7 +1465,7 @@ function $CallCtx(context){
                   if(this.func.is_builtin){
                       // simplify code for built-in functions
                       var new_style = ["complex", "bytes", "bytearray",
-                          "object", "memoryview", "int"]
+                          "object", "memoryview", "int", "float"]
                       if($B.builtin_funcs[this.func.value]!==undefined &&
                               new_style.indexOf(this.func.value) == -1 // XXX temporary
                           ){
@@ -2676,7 +2676,7 @@ function $FloatCtx(context,value){
                 return '(new Number('+this.value+'))'
         }
 
-        return 'float('+this.value+')'
+        return 'float.$factory('+this.value+')'
     }
 }
 
@@ -4243,7 +4243,7 @@ function $OpCtx(context,op){
                     // for long integers, use __neg__ or __invert__
                     return '$B.$getattr('+x.to_js()+', "'+method+'")()'
                   case 'float':
-                    return 'float('+op+x.value+')'
+                    return 'float.$factory('+op+x.value+')'
                   case 'imaginary':
                     return '$B.make_complex(0,'+op+x.value+')'
                 }

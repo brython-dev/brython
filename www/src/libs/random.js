@@ -924,7 +924,7 @@ function _Random(){
             beta = $.beta
 
         var y = res.gammavariate(alpha, 1)
-        if(y == 0){return _b_.float(0)}
+        if(y == 0){return _b_.float.$factory(0)}
         else{return y / (y + res.gammavariate(beta, 1))}
     }
 

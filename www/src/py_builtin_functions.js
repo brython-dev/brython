@@ -78,7 +78,7 @@ function abs(obj){
     check_nb_args('abs', 1, arguments.length)
     check_no_kw('abs', obj)
     if(isinstance(obj,_b_.int)) return _b_.int.$factory(Math.abs(obj));
-    if(isinstance(obj,_b_.float)) return _b_.float(Math.abs(obj));
+    if(isinstance(obj,_b_.float)) return _b_.float.$factory(Math.abs(obj));
     if(hasattr(obj,'__abs__')){return getattr(obj,'__abs__')()};
 
     throw _b_.TypeError.$factory("Bad operand type for abs(): '"+$B.get_class(obj)+"'")
@@ -719,9 +719,9 @@ $B.$getattr = function(obj, attr, _default){
         // avoid calling $B.get_class in simple cases for performance
         if(typeof obj=='string'){klass = _b_.str.$dict}
         else if(typeof obj=='number'){
-            klass = obj % 1 == 0 ? _b_.int : _b_.float.$dict
+            klass = obj % 1 == 0 ? _b_.int : _b_.float
         }else if(obj instanceof Number){
-            klass = _b_.float.$dict
+            klass = _b_.float
         }else{
             klass = $B.get_class(obj)
         }
@@ -1075,7 +1075,7 @@ function isinstance(obj,arg){
       if(kl === arg){return true}
       else if(arg===_b_.str.$dict &&
           kl===$B.$StringSubclassFactory.$dict){return true}
-      else if(arg===_b_.float.$dict &&
+      else if(arg===_b_.float &&
           kl===$B.$FloatSubclassFactory.$dict){return true}
    }
    if(check(klass1, arg)){return true}
@@ -1571,7 +1571,7 @@ function round(arg,n){
         "'"+n.__class__+"' object cannot be interpreted as an integer")}
     var mult = Math.pow(10,n)
     if(isinstance(arg, _b_.float)) {
-        return _b_.float(_b_.int.__truediv__(Number(Math.round(arg.valueOf()*mult)),mult))
+        return _b_.float.$factory(_b_.int.__truediv__(Number(Math.round(arg.valueOf()*mult)),mult))
     } else {
         return _b_.int.$factory(_b_.int.__truediv__(Number(Math.round(arg.valueOf()*mult)),mult))
     }

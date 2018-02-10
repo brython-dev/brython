@@ -143,8 +143,8 @@ $B.get_class = function(obj){
                return _b_.int
             }
             // this is a float
-            obj.__class__=_b_.float.$dict
-            return _b_.float.$dict
+            obj.__class__=_b_.float
+            return _b_.float
           case 'string':
             obj.__class__=_b_.str.$dict
             return _b_.str.$dict
@@ -160,7 +160,7 @@ $B.get_class = function(obj){
                   obj.__class__=_b_.list.$dict
                   return _b_.list.$dict
                 }
-            }else if(obj.constructor===Number) return _b_.float.$dict
+            }else if(obj.constructor===Number) return _b_.float
             break
         }
     }else if(klass.__class__===$B.$factory){
@@ -381,7 +381,7 @@ $B.$check_def_free = function(name, value){
 $B.$JS2Py = function(src){
     if(typeof src==='number'){
         if(src%1===0) return src
-        return _b_.float(src)
+        return _b_.float.$factory(src)
     }
     if(src===null||src===undefined) return _b_.None
     var klass = $B.get_class(src)
@@ -1288,7 +1288,7 @@ $B.add = function(x,y){
     else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
         && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
         if((typeof x=='number' && isNaN(x)) ||
-            (typeof y=='number' && isNaN(y))){return _b_.float('nan')}
+            (typeof y=='number' && isNaN(y))){return _b_.float.$factory('nan')}
         var res = $B.LongInt.$dict.__add__($B.LongInt(x), $B.LongInt(y))
         return res
     }else{return z}
@@ -1325,7 +1325,7 @@ $B.mul = function(x,y){
     else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
         && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
         if((typeof x=='number' && isNaN(x)) ||
-            (typeof y=='number' && isNaN(y))){return _b_.float('nan')}
+            (typeof y=='number' && isNaN(y))){return _b_.float.$factory('nan')}
         return $B.LongInt.$dict.__mul__($B.LongInt(x), $B.LongInt(y))
     }else{return z}
 }
@@ -1337,7 +1337,7 @@ $B.sub = function(x,y){
     else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
         && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
         if((typeof x=='number' && isNaN(x)) ||
-            (typeof y=='number' && isNaN(y))){return _b_.float('nan')}
+            (typeof y=='number' && isNaN(y))){return _b_.float.$factory('nan')}
         return $B.LongInt.$dict.__sub__($B.LongInt(x), $B.LongInt(y))
     }else{return z}
 }
