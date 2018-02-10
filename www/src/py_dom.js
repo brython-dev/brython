@@ -123,18 +123,28 @@ var $NodeTypes = {1:"ELEMENT",
     12:"NOTATION"
 }
 
-var $DOMEventDict = {__class__:$B.$type,__name__:'DOMEvent'}
+// Class for DOM events
 
-$DOMEventDict.__mro__ = [$ObjectDict]
+var DOMEvent = $B.DOMEvent = {__class__:$B.$type,__name__:'DOMEvent'}
 
-$DOMEventDict.__getattribute__ = function(self,attr){
+DOMEvent.__mro__ = [$ObjectDict]
+
+DOMEvent.__new__ = function(cls, evt_name){
+    var ev = new Event(evt_name)
+    ev.__class__ = DOMEvent
+    if(ev.preventDefault===undefined){ev.preventDefault = function(){ev.returnValue=false}}
+    if(ev.stopPropagation===undefined){ev.stopPropagation = function(){ev.cancelBubble=true}}
+    return ev
+}
+
+DOMEvent.__getattribute__ = function(self,attr){
     switch(attr) {
       case 'x':
         return $mouseCoords(self).x
       case 'y':
         return $mouseCoords(self).y
       case 'data':
-        if(self.dataTransfer!==undefined) return $Clipboard(self.dataTransfer)
+        if(self.dataTransfer!==undefined) return Clipboard.$factory(self.dataTransfer)
         return self['data']
       case 'target':
         if(self.target!==undefined) return DOMNode.$factory(self.target)
@@ -160,42 +170,45 @@ $DOMEventDict.__getattribute__ = function(self,attr){
     throw _b_.AttributeError.$factory("object DOMEvent has no attribute '"+attr+"'")
 }
 
+DOMEvent.$factory = function(evt_name){
+    // Factory to create instances of DOMEvent, based on an event name
+    return DOMEvent.__new__(DOMEvent, evt_name)
+}
+
+DOMEvent.__class__ = $B.$type
 
 // Function to transform a DOM event into an instance of DOMEvent
-function $DOMEvent(ev){
-    ev.__class__ = $DOMEventDict
+$B.$DOMEvent = $DOMEvent = function(ev){
+    ev.__class__ = DOMEvent
     if(ev.preventDefault===undefined){ev.preventDefault = function(){ev.returnValue=false}}
     if(ev.stopPropagation===undefined){ev.stopPropagation = function(){ev.cancelBubble=true}}
-    ev.__repr__ = function(){return '<DOMEvent object>'}
-    ev.toString = ev.__str__ = ev.__repr__
     return ev
 }
 
-$B.$DOMEvent = $DOMEvent
 
-$B.DOMEvent = function(evt_name){
-    // Factory to create instances of DOMEvent, based on an event name
-    return $DOMEvent(new Event(evt_name))
+var Clipboard = {
+    __class__:$B.$type,
+    __name__:'Clipboard'
 }
 
-$B.DOMEvent.__class__ = $B.$factory
-$B.DOMEvent.$dict = $DOMEventDict
-$DOMEventDict.$factory = $B.DOMEvent
+Clipboard.__getitem__ = function(self, name){
+    return self.data.getData(name)
+}
 
-var $ClipboardDict = {__class__:$B.$type,__name__:'Clipboard'}
+Clipboard.__mro__ = [$ObjectDict]
 
-$ClipboardDict.__getitem__=function(self,name){return self.data.getData(name)}
+Clipboard.__setitem__ = function(self, name, value){
+    self.data.setData(name,value)
+}
 
-$ClipboardDict.__mro__ = [$ObjectDict]
-
-$ClipboardDict.__setitem__=function(self,name,value){self.data.setData(name,value)}
-
-function $Clipboard(data){ // drag and drop dataTransfer
+Clipboard.$factory = function(data){ // drag and drop dataTransfer
     return {
         data : data,
-        __class__ : $ClipboardDict,
+        __class__ : Clipboard,
     }
 }
+
+$B.set_func_names(Clipboard, "<dom>")
 
 function $EventsList(elt,evt,arg){
     // handles a list of callback fuctions for the event evt of element elt
@@ -220,7 +233,15 @@ function $EventsList(elt,evt,arg){
 }
 
 
-var $OpenFile = $B.$OpenFile = function(file, mode, encoding) {
+
+var OpenFile = $B.OpenFile = {
+    __class__: $B.$type,  // metaclass type
+    __name__: 'OpenFile',
+    __mro__: [$ObjectDict]
+}
+
+
+OpenFile.$factory = function(file, mode, encoding) {
     var res = {
         __class__: $OpenFileDict,
         file: file,
@@ -234,26 +255,14 @@ var $OpenFile = $B.$OpenFile = function(file, mode, encoding) {
     return res
 }
 
-var $OpenFileDict = {
-    __class__: $B.$type,  // metaclass type
-    __name__: '$OpenFile',
-}
-
-$OpenFile.$dict = $OpenFileDict  // cross ref class dict in factory
-$OpenFileDict.$factory = $OpenFile  // cross ref factory in class dict
-
-$OpenFile.__class__ = $B.$factory  // metaclass factory
-$OpenFileDict.__mro__ = [$ObjectDict]  // base class mro search
-
-
-$OpenFileDict.__getattr__ = function(self, attr) {
+OpenFile.__getattr__ = function(self, attr) {
     if(self['get_' + attr] !== undefined)
         return self['get_' + attr]
 
     return self.reader[attr]
 }
 
-$OpenFileDict.__setattr__ = function(self, attr, value) {
+OpenFile.__setattr__ = function(self, attr, value) {
     var obj = self.reader
     if(attr.substr(0,2) == 'on') { // event
         var callback = function(ev) { return value($DOMEvent(ev)) }
@@ -267,6 +276,7 @@ $OpenFileDict.__setattr__ = function(self, attr, value) {
     }
 }
 
+$B.set_func_names(OpenFile)
 
 var dom = { File : function(){},
     FileReader : function(){}
@@ -276,68 +286,68 @@ dom.File.__str__ = function(){return "<class 'File'>"}
 dom.FileReader.__class__ = $B.$type
 dom.FileReader.__str__ = function(){return "<class 'FileReader'>"}
 
-function $Options(parent){
+// Class for options in a select box
+
+var Options = {
+    __class__:$B.$type,
+    __name__:'Options',
+    __delitem__: function(self, arg){
+        self.parent.options.remove(arg.elt)
+    },
+    __getitem__: function(self, key){
+        return DOMNode.$factory(self.parent.options[key])
+    },
+    __len__: function(self){
+        return self.parent.options.length
+    },
+    __mro__: [$ObjectDict],
+    __setattr__: function(self,attr,value){
+        self.parent.options[attr]=value
+    },
+    __setitem__: function(self,attr,value){
+        self.parent.options[attr]= $B.$JS2Py(value)
+    },
+    __str__: function(self){
+        return "<object Options wraps "+self.parent.options+">"
+    },
+    append: function(self,element){
+        self.parent.options.add(element.elt)
+    },
+    insert: function(self,index,element){
+        if(index===undefined){self.parent.options.add(element.elt)}
+        else{self.parent.options.add(element.elt,index)}
+    },
+    item: function(self,index){
+        return self.parent.options.item(index)
+    },
+    namedItem: function(self,name){
+        return self.parent.options.namedItem(name)
+    },
+    remove: function(self, arg){
+        self.parent.options.remove(arg.elt)
+    }
+}
+
+Options.$factory = function(parent){
     return {
-        __class__:$OptionsDict,
+        __class__:Options,
         parent:parent
     }
 }
-var $OptionsDict = {__class__:$B.$type,__name__:'Options'}
 
-$OptionsDict.__delitem__ = function(self,arg){
-    self.parent.options.remove(arg.elt)
-}
+$B.set_func_names(Options, "<dom>")
 
-$OptionsDict.__getitem__ = function(self,key){
-    return DOMNode.$factory(self.parent.options[key])
-}
+// Class for DOM element style
 
-$OptionsDict.__len__ = function(self) {return self.parent.options.length}
+var Style = {__class__:$B.$type,__name__:'CSSProperty'}
 
-$OptionsDict.__mro__ = [$ObjectDict]
+Style.__mro__ = [$ObjectDict]
 
-$OptionsDict.__setattr__ = function(self,attr,value){
-    self.parent.options[attr]=value
-}
-
-$OptionsDict.__setitem__ = function(self,attr,value){
-    self.parent.options[attr]= $B.$JS2Py(value)
-}
-
-$OptionsDict.__str__ = function(self){
-    return "<object Options wraps "+self.parent.options+">"
-}
-
-$OptionsDict.append = function(self,element){
-    self.parent.options.add(element.elt)
-}
-
-$OptionsDict.insert = function(self,index,element){
-    if(index===undefined){self.parent.options.add(element.elt)}
-    else{self.parent.options.add(element.elt,index)}
-}
-
-$OptionsDict.item = function(self,index){
-    return self.parent.options.item(index)
-}
-
-$OptionsDict.namedItem = function(self,name){
-    return self.parent.options.namedItem(name)
-}
-
-$OptionsDict.remove = function(self,arg){self.parent.options.remove(arg.elt)}
-
-//$OptionsDict.toString = $OptionsDict.__str__
-
-var $StyleDict = {__class__:$B.$type,__name__:'CSSProperty'}
-
-$StyleDict.__mro__ = [$ObjectDict]
-
-$StyleDict.__getattr__ = function(self,attr){
+Style.__getattr__ = function(self,attr){
     return $ObjectDict.__getattribute__(self.js,attr)
 }
 
-$StyleDict.__setattr__ = function(self,attr,value){
+Style.__setattr__ = function(self,attr,value){
     if(attr.toLowerCase()==='float'){
         self.js.cssFloat = value
         self.js.styleFloat = value
@@ -354,15 +364,16 @@ $StyleDict.__setattr__ = function(self,attr,value){
     }
 }
 
-function $Style(style){
+Style.$factory = function(style){
     // property "style"
-    return {__class__:$StyleDict,js:style}
+    return {__class__:Style,
+        js:style
+    }
 }
-$Style.__class__ = $B.$factory
-$Style.$dict = $StyleDict
-$StyleDict.$factory = $Style
 
-// DOMNode
+$B.set_func_names(Style, "<dom>")
+
+// Class for DOM nodes
 
 DOMNode = {
     __class__ : $B.$type,
@@ -653,8 +664,8 @@ DOMNode.__getattribute__ = function(self,attr){
             func.$is_func = true
             return func
         }
-        if(attr=='options') return $Options(self.elt)
-        if(attr=='style') return $Style(self.elt[attr])
+        if(attr=='options') return Options.$factory(self.elt)
+        if(attr=='style') return Style.$factory(self.elt[attr])
         if(Array.isArray(res)){return res} // issue #619
 
         return $B.$JS2Py(res)
@@ -670,7 +681,7 @@ DOMNode.__getitem__ = function(self, key){
             throw KeyError.$factory(key)
         }else{
             try{
-                var elts=self.elt.getElementsByTagName(key.$dict.__name__),res=[],pos=0
+                var elts=self.elt.getElementsByTagName(key.__name__),res=[],pos=0
                 for(var $i=0;$i<elts.length;$i++) res[pos++]=DOMNode.$factory(elts[$i])
                 return res
             }catch(err){
@@ -1327,13 +1338,16 @@ DOMNode.unbind = function(self, event){
 
 // return query string as an object with methods to access keys and values
 // same interface as cgi.FieldStorage, with getvalue / getlist / getfirst
-var $QueryDict = {__class__:$B.$type,__name__:'query'}
+var Query = {
+    __class__:$B.$type,
+    __name__:'query'
+}
 
-$QueryDict.__contains__ = function(self,key){
+Query.__contains__ = function(self,key){
     return self._keys.indexOf(key)>-1
 }
 
-$QueryDict.__getitem__ = function(self,key){
+Query.__getitem__ = function(self,key){
     // returns a single value or a list of values
     // associated with key, or raise KeyError
     var result = self._values[key]
@@ -1342,14 +1356,14 @@ $QueryDict.__getitem__ = function(self,key){
     return result
 }
 
-var $QueryDict_iterator = $B.$iterator_class('query string iterator')
-$QueryDict.__iter__ = function(self){
-    return $B.$iterator(self._keys,$QueryDict_iterator)
+var Query_iterator = $B.$iterator_class('query string iterator')
+Query.__iter__ = function(self){
+    return $B.$iterator(self._keys, Query_iterator)
 }
 
-$QueryDict.__mro__ = [$ObjectDict]
+Query.__mro__ = [$ObjectDict]
 
-$QueryDict.getfirst = function(self,key,_default){
+Query.getfirst = function(self, key, _default){
     // returns the first value associated with key
     var result = self._values[key]
     if(result===undefined){
@@ -1359,26 +1373,27 @@ $QueryDict.getfirst = function(self,key,_default){
     return result[0]
 }
 
-$QueryDict.getlist = function(self,key){
+Query.getlist = function(self, key){
     // always return a list
     var result = self._values[key]
     if(result===undefined) return []
     return result
 }
 
-$QueryDict.getvalue = function(self,key,_default){
-    try{return $QueryDict.__getitem__(self, key)}
+Query.getvalue = function(self, key, _default){
+    try{return Query.__getitem__(self, key)}
     catch(err){
         if(_default===undefined) return None
         return _default
     }
 }
 
-$QueryDict.keys = function(self){return self._keys}
+Query.keys = function(self){return self._keys}
 
 DOMNode.query = function(self){
 
-    var res = {__class__:$QueryDict,
+    var res = {
+        __class__: Query,
         _keys : [],
         _values : {}
     }

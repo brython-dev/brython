@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-10 14:13:17.639828"
-__BRYTHON__.timestamp=1518268397639
+__BRYTHON__.compiled_date="2018-02-10 17:16:02.338177"
+__BRYTHON__.timestamp=1518279362338
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6247,7 +6247,7 @@ for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
 if(args.length>0)var mode=args[0]
 if(args.length>1)var encoding=args[1]
 var is_binary=mode.search('b')>-1
-if(isinstance(file,$B.JSObject))return new $B.$OpenFile(file.js,mode,encoding)
+if(isinstance(file,$B.JSObject)){return $B.OpenFile.$factory(file.js,mode,encoding)}
 if(isinstance(file,_b_.str)){
 var req=new XMLHttpRequest();
 req.onreadystatechange=function(){try{
@@ -10858,14 +10858,19 @@ if(flag)return true
 for(var i=0;i<$DOMEventAttrs_IE.length;i++){if(obj[$DOMEventAttrs_IE[i]]===undefined)return false}
 return true}
 var $NodeTypes={1:"ELEMENT",2:"ATTRIBUTE",3:"TEXT",4:"CDATA_SECTION",5:"ENTITY_REFERENCE",6:"ENTITY",7:"PROCESSING_INSTRUCTION",8:"COMMENT",9:"DOCUMENT",10:"DOCUMENT_TYPE",11:"DOCUMENT_FRAGMENT",12:"NOTATION"}
-var $DOMEventDict={__class__:$B.$type,__name__:'DOMEvent'}
-$DOMEventDict.__mro__=[$ObjectDict]
-$DOMEventDict.__getattribute__=function(self,attr){switch(attr){case 'x':
+var DOMEvent=$B.DOMEvent={__class__:$B.$type,__name__:'DOMEvent'}
+DOMEvent.__mro__=[$ObjectDict]
+DOMEvent.__new__=function(cls,evt_name){var ev=new Event(evt_name)
+ev.__class__=DOMEvent
+if(ev.preventDefault===undefined){ev.preventDefault=function(){ev.returnValue=false}}
+if(ev.stopPropagation===undefined){ev.stopPropagation=function(){ev.cancelBubble=true}}
+return ev}
+DOMEvent.__getattribute__=function(self,attr){switch(attr){case 'x':
 return $mouseCoords(self).x
 case 'y':
 return $mouseCoords(self).y
 case 'data':
-if(self.dataTransfer!==undefined)return $Clipboard(self.dataTransfer)
+if(self.dataTransfer!==undefined)return Clipboard.$factory(self.dataTransfer)
 return self['data']
 case 'target':
 if(self.target!==undefined)return DOMNode.$factory(self.target)
@@ -10879,25 +10884,21 @@ func.$infos={__name__:res.toString().substr(9,res.toString().search('{'))}
 return func}
 return $B.$JS2Py(res)}
 throw _b_.AttributeError.$factory("object DOMEvent has no attribute '"+attr+"'")}
-function $DOMEvent(ev){ev.__class__=$DOMEventDict
+DOMEvent.$factory=function(evt_name){
+return DOMEvent.__new__(DOMEvent,evt_name)}
+DOMEvent.__class__=$B.$type
+$B.$DOMEvent=$DOMEvent=function(ev){ev.__class__=DOMEvent
 if(ev.preventDefault===undefined){ev.preventDefault=function(){ev.returnValue=false}}
 if(ev.stopPropagation===undefined){ev.stopPropagation=function(){ev.cancelBubble=true}}
-ev.__repr__=function(){return '<DOMEvent object>'}
-ev.toString=ev.__str__=ev.__repr__
 return ev}
-$B.$DOMEvent=$DOMEvent
-$B.DOMEvent=function(evt_name){
-return $DOMEvent(new Event(evt_name))}
-$B.DOMEvent.__class__=$B.$factory
-$B.DOMEvent.$dict=$DOMEventDict
-$DOMEventDict.$factory=$B.DOMEvent
-var $ClipboardDict={__class__:$B.$type,__name__:'Clipboard'}
-$ClipboardDict.__getitem__=function(self,name){return self.data.getData(name)}
-$ClipboardDict.__mro__=[$ObjectDict]
-$ClipboardDict.__setitem__=function(self,name,value){self.data.setData(name,value)}
-function $Clipboard(data){
+var Clipboard={__class__:$B.$type,__name__:'Clipboard'}
+Clipboard.__getitem__=function(self,name){return self.data.getData(name)}
+Clipboard.__mro__=[$ObjectDict]
+Clipboard.__setitem__=function(self,name,value){self.data.setData(name,value)}
+Clipboard.$factory=function(data){
 return{
-data : data,__class__ : $ClipboardDict,}}
+data : data,__class__ : Clipboard,}}
+$B.set_func_names(Clipboard,"<dom>")
 function $EventsList(elt,evt,arg){
 this.elt=elt
 this.evt=evt
@@ -10909,48 +10910,34 @@ this.callback.splice(i,1)
 this.elt.removeEventListener(this.evt,callback,false)
 break}}
 if(!found){throw KeyError.$factory("not found")}}}
-var $OpenFile=$B.$OpenFile=function(file,mode,encoding){var res={__class__: $OpenFileDict,file: file,reader: new FileReader(),}
+var OpenFile=$B.OpenFile={__class__: $B.$type,
+__name__: 'OpenFile',__mro__:[$ObjectDict]}
+OpenFile.$factory=function(file,mode,encoding){var res={__class__: $OpenFileDict,file: file,reader: new FileReader(),}
 if(mode==='r'){res.reader.readAsText(file,encoding)}else if(mode==='rb'){res.reader.readAsBinaryString(file)}
 return res}
-var $OpenFileDict={__class__: $B.$type,
-__name__: '$OpenFile',}
-$OpenFile.$dict=$OpenFileDict 
-$OpenFileDict.$factory=$OpenFile 
-$OpenFile.__class__=$B.$factory 
-$OpenFileDict.__mro__=[$ObjectDict]
-$OpenFileDict.__getattr__=function(self,attr){if(self['get_' + attr]!==undefined)
+OpenFile.__getattr__=function(self,attr){if(self['get_' + attr]!==undefined)
 return self['get_' + attr]
 return self.reader[attr]}
-$OpenFileDict.__setattr__=function(self,attr,value){var obj=self.reader
+OpenFile.__setattr__=function(self,attr,value){var obj=self.reader
 if(attr.substr(0,2)=='on'){
 var callback=function(ev){return value($DOMEvent(ev))}
 obj.addEventListener(attr.substr(2),callback)}else if('set_' + attr in obj){return obj['set_' + attr](value)}else if(attr in obj){obj[attr]=value}else{
 setattr(obj,attr,value)}}
+$B.set_func_names(OpenFile)
 var dom={File : function(){},FileReader : function(){}}
 dom.File.__class__=$B.$type
 dom.File.__str__=function(){return "<class 'File'>"}
 dom.FileReader.__class__=$B.$type
 dom.FileReader.__str__=function(){return "<class 'FileReader'>"}
-function $Options(parent){return{
-__class__:$OptionsDict,parent:parent}}
-var $OptionsDict={__class__:$B.$type,__name__:'Options'}
-$OptionsDict.__delitem__=function(self,arg){self.parent.options.remove(arg.elt)}
-$OptionsDict.__getitem__=function(self,key){return DOMNode.$factory(self.parent.options[key])}
-$OptionsDict.__len__=function(self){return self.parent.options.length}
-$OptionsDict.__mro__=[$ObjectDict]
-$OptionsDict.__setattr__=function(self,attr,value){self.parent.options[attr]=value}
-$OptionsDict.__setitem__=function(self,attr,value){self.parent.options[attr]=$B.$JS2Py(value)}
-$OptionsDict.__str__=function(self){return "<object Options wraps "+self.parent.options+">"}
-$OptionsDict.append=function(self,element){self.parent.options.add(element.elt)}
-$OptionsDict.insert=function(self,index,element){if(index===undefined){self.parent.options.add(element.elt)}
-else{self.parent.options.add(element.elt,index)}}
-$OptionsDict.item=function(self,index){return self.parent.options.item(index)}
-$OptionsDict.namedItem=function(self,name){return self.parent.options.namedItem(name)}
-$OptionsDict.remove=function(self,arg){self.parent.options.remove(arg.elt)}
-var $StyleDict={__class__:$B.$type,__name__:'CSSProperty'}
-$StyleDict.__mro__=[$ObjectDict]
-$StyleDict.__getattr__=function(self,attr){return $ObjectDict.__getattribute__(self.js,attr)}
-$StyleDict.__setattr__=function(self,attr,value){if(attr.toLowerCase()==='float'){self.js.cssFloat=value
+var Options={__class__:$B.$type,__name__:'Options',__delitem__: function(self,arg){self.parent.options.remove(arg.elt)},__getitem__: function(self,key){return DOMNode.$factory(self.parent.options[key])},__len__: function(self){return self.parent.options.length},__mro__:[$ObjectDict],__setattr__: function(self,attr,value){self.parent.options[attr]=value},__setitem__: function(self,attr,value){self.parent.options[attr]=$B.$JS2Py(value)},__str__: function(self){return "<object Options wraps "+self.parent.options+">"},append: function(self,element){self.parent.options.add(element.elt)},insert: function(self,index,element){if(index===undefined){self.parent.options.add(element.elt)}
+else{self.parent.options.add(element.elt,index)}},item: function(self,index){return self.parent.options.item(index)},namedItem: function(self,name){return self.parent.options.namedItem(name)},remove: function(self,arg){self.parent.options.remove(arg.elt)}}
+Options.$factory=function(parent){return{
+__class__:Options,parent:parent}}
+$B.set_func_names(Options,"<dom>")
+var Style={__class__:$B.$type,__name__:'CSSProperty'}
+Style.__mro__=[$ObjectDict]
+Style.__getattr__=function(self,attr){return $ObjectDict.__getattribute__(self.js,attr)}
+Style.__setattr__=function(self,attr,value){if(attr.toLowerCase()==='float'){self.js.cssFloat=value
 self.js.styleFloat=value}else{switch(attr){case 'top':
 case 'left':
 case 'height':
@@ -10958,11 +10945,9 @@ case 'width':
 case 'borderWidth':
 if(isinstance(value,_b_.int))value=value+'px'}
 self.js[attr]=value}}
-function $Style(style){
-return{__class__:$StyleDict,js:style}}
-$Style.__class__=$B.$factory
-$Style.$dict=$StyleDict
-$StyleDict.$factory=$Style
+Style.$factory=function(style){
+return{__class__:Style,js:style}}
+$B.set_func_names(Style,"<dom>")
 DOMNode={__class__ : $B.$type,__name__ : 'DOMNode'}
 DOMNode.$factory=function(elt,fromtag){if(elt.__class__===DOMNode){return elt}
 if(typeof elt=="number" ||typeof elt=="boolean" ||
@@ -11083,15 +11068,15 @@ return $B.$JS2Py(result)}})(res,self.elt)
 func.$infos={__name__ : attr}
 func.$is_func=true
 return func}
-if(attr=='options')return $Options(self.elt)
-if(attr=='style')return $Style(self.elt[attr])
+if(attr=='options')return Options.$factory(self.elt)
+if(attr=='style')return Style.$factory(self.elt[attr])
 if(Array.isArray(res)){return res}
 return $B.$JS2Py(res)}
 return $ObjectDict.__getattribute__(self,attr)}
 DOMNode.__getitem__=function(self,key){if(self.elt.nodeType===9){
 if(typeof key==="string"){var res=self.elt.getElementById(key)
 if(res)return DOMNode.$factory(res)
-throw KeyError.$factory(key)}else{try{var elts=self.elt.getElementsByTagName(key.$dict.__name__),res=[],pos=0
+throw KeyError.$factory(key)}else{try{var elts=self.elt.getElementsByTagName(key.__name__),res=[],pos=0
 for(var $i=0;$i<elts.length;$i++)res[pos++]=DOMNode.$factory(elts[$i])
 return res}catch(err){throw KeyError.$factory(str(key))}}}else{if(typeof self.elt.length=='number'){if((typeof key=="number" ||typeof key=="boolean")&&
 typeof self.elt.item=='function'){var key_to_int=_b_.int(key)
@@ -11369,30 +11354,30 @@ events.splice(j,1)
 flag=true
 break}}
 if(!flag){throw KeyError.$factory('missing callback for event '+event)}}}
-var $QueryDict={__class__:$B.$type,__name__:'query'}
-$QueryDict.__contains__=function(self,key){return self._keys.indexOf(key)>-1}
-$QueryDict.__getitem__=function(self,key){
+var Query={__class__:$B.$type,__name__:'query'}
+Query.__contains__=function(self,key){return self._keys.indexOf(key)>-1}
+Query.__getitem__=function(self,key){
 var result=self._values[key]
 if(result===undefined)throw KeyError.$factory(key)
 if(result.length==1)return result[0]
 return result}
-var $QueryDict_iterator=$B.$iterator_class('query string iterator')
-$QueryDict.__iter__=function(self){return $B.$iterator(self._keys,$QueryDict_iterator)}
-$QueryDict.__mro__=[$ObjectDict]
-$QueryDict.getfirst=function(self,key,_default){
+var Query_iterator=$B.$iterator_class('query string iterator')
+Query.__iter__=function(self){return $B.$iterator(self._keys,Query_iterator)}
+Query.__mro__=[$ObjectDict]
+Query.getfirst=function(self,key,_default){
 var result=self._values[key]
 if(result===undefined){if(_default===undefined)return None
 return _default}
 return result[0]}
-$QueryDict.getlist=function(self,key){
+Query.getlist=function(self,key){
 var result=self._values[key]
 if(result===undefined)return[]
 return result}
-$QueryDict.getvalue=function(self,key,_default){try{return $QueryDict.__getitem__(self,key)}
+Query.getvalue=function(self,key,_default){try{return Query.__getitem__(self,key)}
 catch(err){if(_default===undefined)return None
 return _default}}
-$QueryDict.keys=function(self){return self._keys}
-DOMNode.query=function(self){var res={__class__:$QueryDict,_keys :[],_values :{}}
+Query.keys=function(self){return self._keys}
+DOMNode.query=function(self){var res={__class__: Query,_keys :[],_values :{}}
 var qs=location.search.substr(1).split('&')
 for(var i=0;i<qs.length;i++){var pos=qs[i].search('=')
 var elts=[qs[i].substr(0,pos),qs[i].substr(pos+1)]
