@@ -137,7 +137,7 @@ $DOMEventDict.__getattribute__ = function(self,attr){
         if(self.dataTransfer!==undefined) return $Clipboard(self.dataTransfer)
         return self['data']
       case 'target':
-        if(self.target!==undefined) return DOMNode(self.target)
+        if(self.target!==undefined) return DOMNode.$factory(self.target)
       case 'char':
         return String.fromCharCode(self.which)
     }
@@ -289,7 +289,7 @@ $OptionsDict.__delitem__ = function(self,arg){
 }
 
 $OptionsDict.__getitem__ = function(self,key){
-    return DOMNode(self.parent.options[key])
+    return DOMNode.$factory(self.parent.options[key])
 }
 
 $OptionsDict.__len__ = function(self) {return self.parent.options.length}
@@ -362,8 +362,15 @@ $Style.__class__ = $B.$factory
 $Style.$dict = $StyleDict
 $StyleDict.$factory = $Style
 
-var DOMNode = $B.DOMNode = function(elt, fromtag){
-    if(elt.__class__===DOMNodeDict){return elt}
+// DOMNode
+
+DOMNode = {
+    __class__ : $B.$type,
+    __name__ : 'DOMNode'
+}
+
+DOMNode.$factory = function(elt, fromtag){
+    if(elt.__class__===DOMNode){return elt}
     if(typeof elt=="number" || typeof elt=="boolean" ||
         typeof elt=="string"){return elt}
 
@@ -377,17 +384,17 @@ var DOMNode = $B.DOMNode = function(elt, fromtag){
     // from the browser.html module by looking into "$tags" which is set
     // by the  browser.html module itself (external sources could override
     // it) and piggybacks on the tag factory by adding an "elt_wrap"
-    // attribute to the factory to let it know, that special behavior
+    // attribute to the class to let it know, that special behavior
     // is needed. i.e: don't create the element, use the one provided
     if(fromtag === undefined) {
-        if(DOMNodeDict.tags !== undefined) {  // tags is a python dictionary
-            var tdict = DOMNodeDict.tags.$string_dict
+        if(DOMNode.tags !== undefined) {  // tags is a python dictionary
+            var tdict = DOMNode.tags.$string_dict
             if(tdict !== undefined) {
-                var factory = tdict[elt.tagName]
-                if(factory !== undefined) {
+                var klass = tdict[elt.tagName]
+                if(klass !== undefined) {
                     // all checks are good
-                    factory.$dict.$elt_wrap = elt  // tell factory to wrap element
-                    return factory()  // and return what the factory wants
+                    klass.$elt_wrap = elt  // tell class to wrap element
+                    return klass.$factory()  // and return what the factory wants
                 }
             }
         }
@@ -403,21 +410,16 @@ var DOMNode = $B.DOMNode = function(elt, fromtag){
         // add a unique id for comparisons
         elt.$brython_id='DOM-'+$B.UUID()
     }
-    res.__class__ = DOMNodeDict
+    res.__class__ = DOMNode
     return res
 }
 
-DOMNodeDict = {__class__ : $B.$type,
-    __name__ : 'DOMNode'
-}
-DOMNode.__class__ = $B.$factory
-DOMNode.$dict = DOMNodeDict // for isinstance
-DOMNodeDict.$factory = DOMNode
 
-DOMNodeDict.__mro__ = [_b_.object.$dict]
+DOMNode.__class__ = $B.$type
 
+DOMNode.__mro__ = [_b_.object.$dict]
 
-DOMNodeDict.__add__ = function(self,other){
+DOMNode.__add__ = function(self,other){
     // adding another element to self returns an instance of $TagSum
     var res = $TagSum()
     res.children = [self], pos=1
@@ -425,7 +427,7 @@ DOMNodeDict.__add__ = function(self,other){
         res.children = res.children.concat(other.children)
     } else if(isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.list,
                                 _b_.dict,_b_.set,_b_.tuple])){
-        res.children[pos++]=DOMNode(document.createTextNode(_b_.str(other)))
+        res.children[pos++]=DOMNode.$factory(document.createTextNode(_b_.str(other)))
     }else if(isinstance(other, DOMNode)){
         res.children[pos++] = other
     }else{
@@ -438,11 +440,11 @@ DOMNodeDict.__add__ = function(self,other){
     return res
 }
 
-DOMNodeDict.__bool__ = function(self){return true}
+DOMNode.__bool__ = function(self){return true}
 
-DOMNodeDict.__class__ = $B.$type
+DOMNode.__class__ = $B.$type
 
-DOMNodeDict.__contains__ = function(self,key){
+DOMNode.__contains__ = function(self,key){
     // For document, if key is a string, "key in document" tells if an element
     // with id "key" is in the document
     if(self.elt.nodeType==9 && typeof key=="string"){
@@ -457,7 +459,7 @@ DOMNodeDict.__contains__ = function(self,key){
     return false
 }
 
-DOMNodeDict.__del__ = function(self){
+DOMNode.__del__ = function(self){
     // if element has a parent, calling __del__ removes object
     // from the parent's children
     if(!self.elt.parentNode){
@@ -466,7 +468,7 @@ DOMNodeDict.__del__ = function(self){
     self.elt.parentNode.removeChild(self.elt)
 }
 
-DOMNodeDict.__delitem__ = function(self,key){
+DOMNode.__delitem__ = function(self,key){
     if(self.elt.nodeType===9){ // document : remove by id
         var res = self.elt.getElementById(key)
         if(res){res.parentNode.removeChild(res)}
@@ -476,24 +478,24 @@ DOMNodeDict.__delitem__ = function(self,key){
     }
 }
 
-DOMNodeDict.__dir__ = function(self){
+DOMNode.__dir__ = function(self){
     var res = []
     // generic DOM attributes
     for(var attr in self.elt){
         if(attr.charAt(0)!='$'){res.push(attr)}
     }
     // Brython-specific attributes
-    for(var attr in DOMNodeDict){
+    for(var attr in DOMNode){
         if(attr.charAt(0)!='$' && res.indexOf(attr)==-1){res.push(attr)}
     }
     return res
 }
 
-DOMNodeDict.__eq__ = function(self, other){
+DOMNode.__eq__ = function(self, other){
     return self.elt==other.elt
 }
 
-DOMNodeDict.__getattribute__ = function(self,attr){
+DOMNode.__getattribute__ = function(self,attr){
 
     if(attr.substr(0,2)=='$$'){attr = attr.substr(2)}
     switch(attr) {
@@ -503,7 +505,7 @@ DOMNodeDict.__getattribute__ = function(self,attr){
       case 'parent':
       case 'query':
       case 'text':
-        return DOMNodeDict[attr](self)
+        return DOMNode[attr](self)
 
       case 'height':
       case 'left':
@@ -526,7 +528,7 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         }
       case 'clear':
       case 'closest':
-        return function(){return DOMNodeDict[attr](self,arguments[0])}
+        return function(){return DOMNode[attr](self,arguments[0])}
       case 'headers':
         if(self.elt.nodeType==9){
           // HTTP headers
@@ -596,10 +598,10 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         // they have a "select" methods ; element.select() selects the
         // element text content.
         // Return a function that, if called without arguments, uses this
-        // method ; otherwise, uses DOMNodeDict.select
+        // method ; otherwise, uses DOMNode.select
         return function(selector){
             if(selector===undefined){self.elet.select(); return _b_.None}
-            return DOMNodeDict.select(self, selector)
+            return DOMNode.select(self, selector)
         }
     }
 
@@ -660,16 +662,16 @@ DOMNodeDict.__getattribute__ = function(self,attr){
     return $ObjectDict.__getattribute__(self,attr)
 }
 
-DOMNodeDict.__getitem__ = function(self, key){
+DOMNode.__getitem__ = function(self, key){
     if(self.elt.nodeType===9){ // Document
         if(typeof key==="string"){
             var res = self.elt.getElementById(key)
-            if(res) return DOMNode(res)
+            if(res) return DOMNode.$factory(res)
             throw KeyError.$factory(key)
         }else{
             try{
                 var elts=self.elt.getElementsByTagName(key.$dict.__name__),res=[],pos=0
-                for(var $i=0;$i<elts.length;$i++) res[pos++]=DOMNode(elts[$i])
+                for(var $i=0;$i<elts.length;$i++) res[pos++]=DOMNode.$factory(elts[$i])
                 return res
             }catch(err){
                 throw KeyError.$factory(str(key))
@@ -681,12 +683,12 @@ DOMNodeDict.__getitem__ = function(self, key){
                 typeof self.elt.item=='function'){
                     var key_to_int = _b_.int(key)
                     if(key_to_int<0){key_to_int+=self.elt.length}
-                    var res = DOMNode(self.elt.item(key_to_int))
+                    var res = DOMNode.$factory(self.elt.item(key_to_int))
                     if(res===undefined){throw _b_.KeyError.$factory(key)}
                     return res
             }else if(typeof key=="string" &&
                 typeof self.elt.getNamedItem=='function'){
-                 var res = DOMNode(self.elt.getNamedItem(key))
+                 var res = DOMNode.$factory(self.elt.getNamedItem(key))
                  if(res===undefined){throw _b_.KeyError.$factory(key)}
                  return res
             }
@@ -695,23 +697,23 @@ DOMNodeDict.__getitem__ = function(self, key){
     }
 }
 
-DOMNodeDict.__iter__ = function(self){
+DOMNode.__iter__ = function(self){
     // iteration on a Node
     if(self.elt.length!==undefined && typeof self.elt.item=="function"){
         var items = []
         for(var i=0, len=self.elt.length; i<len; i++){
-            items.push(DOMNode(self.elt.item(i)))
+            items.push(DOMNode.$factory(self.elt.item(i)))
         }
     }else if(self.elt.childNodes!==undefined){
         var items = []
         for(var i=0, len=self.elt.childNodes.length; i<len; i++){
-            items.push(DOMNode(self.elt.childNodes[i]))
+            items.push(DOMNode.$factory(self.elt.childNodes[i]))
         }
     }
     return $B.$iter(items)
 }
 
-DOMNodeDict.__le__ = function(self,other){
+DOMNode.__le__ = function(self,other){
     // for document, append child to document.body
     var elt = self.elt
     if(self.elt.nodeType===9){elt = self.elt.body}
@@ -731,7 +733,7 @@ DOMNodeDict.__le__ = function(self,other){
             // If other is an iterable, add the items
             var items = _b_.list(other)
             for(var i=0; i<items.length; i++){
-                DOMNodeDict.__le__(self, items[i])
+                DOMNode.__le__(self, items[i])
             }
         }catch(err){
             throw _b_.TypeError.$factory("can't add '"+
@@ -741,38 +743,38 @@ DOMNodeDict.__le__ = function(self,other){
     }
 }
 
-DOMNodeDict.__len__ = function(self){return self.elt.length}
+DOMNode.__len__ = function(self){return self.elt.length}
 
-DOMNodeDict.__mul__ = function(self,other){
+DOMNode.__mul__ = function(self,other){
     if(isinstance(other,_b_.int) && other.valueOf()>0){
         var res = $TagSum()
         var pos=res.children.length
         for(var i=0;i<other.valueOf();i++){
-            res.children[pos++]= DOMNodeDict.clone(self)()
+            res.children[pos++]= DOMNode.clone(self)()
         }
         return res
     }
     throw _b_.ValueError.$factory("can't multiply "+self.__class__+"by "+other)
 }
 
-DOMNodeDict.__ne__ = function(self,other){return !DOMNodeDict.__eq__(self,other)}
+DOMNode.__ne__ = function(self,other){return !DOMNode.__eq__(self,other)}
 
-DOMNodeDict.__next__ = function(self){
+DOMNode.__next__ = function(self){
    self.$counter++
    if(self.$counter<self.elt.childNodes.length){
-       return DOMNode(self.elt.childNodes[self.$counter])
+       return DOMNode.$factory(self.elt.childNodes[self.$counter])
    }
    throw _b_.StopIteration.$factory('StopIteration')
 }
 
-DOMNodeDict.__radd__ = function(self,other){ // add to a string
+DOMNode.__radd__ = function(self,other){ // add to a string
     var res = $TagSum()
-    var txt = DOMNode(document.createTextNode(other))
+    var txt = DOMNode.$factory(document.createTextNode(other))
     res.children = [txt,self]
     return res
 }
 
-DOMNodeDict.__str__ = DOMNodeDict.__repr__ = function(self){
+DOMNode.__str__ = DOMNode.__repr__ = function(self){
     var proto = Object.getPrototypeOf(self.elt)
     if(proto){
         var name = proto.constructor.name
@@ -786,14 +788,14 @@ DOMNodeDict.__str__ = DOMNodeDict.__repr__ = function(self){
     return res+$NodeTypes[self.elt.nodeType]+"' name '"+self.elt.nodeName+"'>"
 }
 
-DOMNodeDict.__setattr__ = function(self,attr,value){
+DOMNode.__setattr__ = function(self,attr,value){
 
    if(attr.substr(0,2)=='on'){ // event
         if (!_b_.bool(value)) { // remove all callbacks attached to event
-            DOMNodeDict.unbind(self,attr.substr(2))
+            DOMNode.unbind(self,attr.substr(2))
         }else{
             // value is a function taking an event as argument
-            DOMNodeDict.bind(self,attr.substr(2),value)
+            DOMNode.bind(self,attr.substr(2),value)
         }
     }else{
         switch(attr){
@@ -808,8 +810,8 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
                 }
                 break
         }
-        if(DOMNodeDict['set_'+attr]!==undefined) {
-          return DOMNodeDict['set_'+attr](self,value)
+        if(DOMNode['set_'+attr]!==undefined) {
+          return DOMNode['set_'+attr](self,value)
         }
         // Setting an attribute to an instance of DOMNode can mean 2
         // different things:
@@ -865,9 +867,9 @@ DOMNodeDict.__setattr__ = function(self,attr,value){
     }
 }
 
-DOMNodeDict.__setitem__ = function(self,key,value){self.elt.childNodes[key]=value}
+DOMNode.__setitem__ = function(self,key,value){self.elt.childNodes[key]=value}
 
-DOMNodeDict.abs_left = {
+DOMNode.abs_left = {
     __get__: function(self){
         return $getPosition(self.elt).left
     },
@@ -876,7 +878,7 @@ DOMNodeDict.abs_left = {
     }
 }
 
-DOMNodeDict.abs_top = {
+DOMNode.abs_top = {
     __get__: function(self){
         return $getPosition(self.elt).top
     },
@@ -885,14 +887,13 @@ DOMNodeDict.abs_top = {
     }
 }
 
-DOMNodeDict.bind = function(self, event){
+DOMNode.bind = function(self, event){
     // bind functions to the event (event = "click", "mouseover" etc.)
-
     if(arguments.length==2){
         // elt.bind(event) is a decorator for callback functions
         return (function(obj, evt){
             function f(callback){
-                DOMNodeDict.bind(obj, evt, callback)
+                DOMNode.bind(obj, evt, callback)
                 return callback
             }
             return f
@@ -930,17 +931,17 @@ DOMNodeDict.bind = function(self, event){
     return self
 }
 
-DOMNodeDict.children = function(self){
+DOMNode.children = function(self){
     var res = [], pos=0, elt = self.elt
     console.log(elt, elt.childNodes)
     if(elt.nodeType==9){elt = elt.body}
     for(var i=0;i<elt.childNodes.length;i++){
-        res[pos++]=DOMNode(elt.childNodes[i])
+        res[pos++]=DOMNode.$factory(elt.childNodes[i])
     }
     return res
 }
 
-DOMNodeDict.clear = function(self){
+DOMNode.clear = function(self){
     // remove all children elements
     var elt=self.elt
     if(elt.nodeType==9){elt=elt.body}
@@ -949,15 +950,15 @@ DOMNodeDict.clear = function(self){
     }
 }
 
-DOMNodeDict.Class = function(self){
+DOMNode.Class = function(self){
     if(self.elt.className !== undefined) return self.elt.className
     return None
 }
 
-DOMNodeDict.class_name = function(self){return DOMNodeDict.Class(self)}
+DOMNode.class_name = function(self){return DOMNode.Class(self)}
 
-DOMNodeDict.clone = function(self){
-    var res = DOMNode(self.elt.cloneNode(true))
+DOMNode.clone = function(self){
+    var res = DOMNode.$factory(self.elt.cloneNode(true))
 
     // bind events on clone to the same callbacks as self
     var events = self.elt.$events || {}
@@ -965,13 +966,13 @@ DOMNodeDict.clone = function(self){
         var evt_list = events[event]
         for(var i=0;i<evt_list.length;i++){
             var func = evt_list[i][0]
-            DOMNodeDict.bind(res,event,func)
+            DOMNode.bind(res,event,func)
         }
     }
     return res
 }
 
-DOMNodeDict.closest = function(self, tagName){
+DOMNode.closest = function(self, tagName){
     // Returns the first parent of self with specified tagName
     // Raises KeyError if not found
     var res = self.elt,
@@ -982,10 +983,10 @@ DOMNodeDict.closest = function(self, tagName){
             throw _b_.KeyError.$factory('no parent of type '+tagName)
         }
     }
-    return DOMNode(res)
+    return DOMNode.$factory(res)
 }
 
-DOMNodeDict.events = function(self, event){
+DOMNode.events = function(self, event){
     self.elt.$events = self.elt.$events || {}
     var evt_list = self.elt.$events[event] = self.elt.$events[event] || [],
         callbacks = []
@@ -993,7 +994,7 @@ DOMNodeDict.events = function(self, event){
     return callbacks
 }
 
-DOMNodeDict.focus = function(self){
+DOMNode.focus = function(self){
     return (function(obj){
         return function(){
             // focus() is not supported in IE
@@ -1002,7 +1003,7 @@ DOMNodeDict.focus = function(self){
     })(self.elt)
 }
 
-DOMNodeDict.get = function(self){
+DOMNode.get = function(self){
     // for document : doc.get(key1=value1[,key2=value2...]) returns a list of the elements
     // with specified keys/values
     // key can be 'id','name' or 'selector'
@@ -1022,7 +1023,7 @@ DOMNodeDict.get = function(self){
         var res = [], pos=0
         var node_list = obj.getElementsByName($dict['name'])
         if(node_list.length===0) return []
-        for(var i=0;i<node_list.length;i++) res[pos++]=DOMNode(node_list[i])
+        for(var i=0;i<node_list.length;i++) res[pos++]=DOMNode.$factory(node_list[i])
     }
     if($dict['tag']!==undefined){
         if(obj.getElementsByTagName===undefined){
@@ -1031,7 +1032,7 @@ DOMNodeDict.get = function(self){
         var res = [], pos=0
         var node_list = obj.getElementsByTagName($dict['tag'])
         if(node_list.length===0) return []
-        for(var i=0;i<node_list.length;i++) res[pos++]=DOMNode(node_list[i])
+        for(var i=0;i<node_list.length;i++) res[pos++]=DOMNode.$factory(node_list[i])
     }
     if($dict['classname']!==undefined){
         if(obj.getElementsByClassName===undefined){
@@ -1040,7 +1041,7 @@ DOMNodeDict.get = function(self){
         var res = [], pos=0
         var node_list = obj.getElementsByClassName($dict['classname'])
         if(node_list.length===0) return []
-        for(var i=0;i<node_list.length;i++) res[pos++]=DOMNode(node_list[i])
+        for(var i=0;i<node_list.length;i++) res[pos++]=DOMNode.$factory(node_list[i])
     }
     if($dict['id']!==undefined){
         if(obj.getElementById===undefined){
@@ -1048,7 +1049,7 @@ DOMNodeDict.get = function(self){
         }
         var id_res = document.getElementById($dict['id'])
         if(!id_res) return []
-        return [DOMNode(id_res)]
+        return [DOMNode.$factory(id_res)]
     }
     if($dict['selector']!==undefined){
         if(obj.querySelectorAll===undefined){
@@ -1057,7 +1058,7 @@ DOMNodeDict.get = function(self){
         var node_list = obj.querySelectorAll($dict['selector'])
         var sel_res = [], pos=0
         if(node_list.length===0) return []
-        for(var i=0;i<node_list.length;i++) sel_res[pos++]=DOMNode(node_list[i])
+        for(var i=0;i<node_list.length;i++) sel_res[pos++]=DOMNode.$factory(node_list[i])
 
         if(res===undefined) return sel_res
         var to_delete = [], pos=0
@@ -1074,7 +1075,7 @@ DOMNodeDict.get = function(self){
     return res
 }
 
-DOMNodeDict.getContext = function(self){ // for CANVAS tag
+DOMNode.getContext = function(self){ // for CANVAS tag
     if(!('getContext' in self.elt)){
       throw _b_.AttributeError.$factory("object has no attribute 'getContext'")
     }
@@ -1082,13 +1083,13 @@ DOMNodeDict.getContext = function(self){ // for CANVAS tag
     return function(ctx){return JSObject(obj.getContext(ctx))}
 }
 
-DOMNodeDict.getSelectionRange = function(self){ // for TEXTAREA
+DOMNode.getSelectionRange = function(self){ // for TEXTAREA
     if(self.elt['getSelectionRange']!==undefined){
         return self.elt.getSelectionRange.apply(null,arguments)
     }
 }
 
-DOMNodeDict.html = function(self){
+DOMNode.html = function(self){
     var res = self.elt.innerHTML
     if(res===undefined){
         if(self.elt.nodeType==9){res = self.elt.body.innerHTML}
@@ -1097,12 +1098,12 @@ DOMNodeDict.html = function(self){
     return res
 }
 
-DOMNodeDict.id = function(self){
+DOMNode.id = function(self){
     if(self.elt.id !== undefined) return self.elt.id
     return None
 }
 
-DOMNodeDict.index = function(self, selector){
+DOMNode.index = function(self, selector){
     var items
     if(selector===undefined){
         items = self.elt.parentElement.childNodes
@@ -1116,7 +1117,7 @@ DOMNodeDict.index = function(self, selector){
     return rank
 }
 
-DOMNodeDict.inside = function(self, other){
+DOMNode.inside = function(self, other){
     // Test if a node is inside another node
     other = other.elt
     var elt = self.elt
@@ -1127,20 +1128,20 @@ DOMNodeDict.inside = function(self, other){
     }
 }
 
-DOMNodeDict.options = function(self){ // for SELECT tag
+DOMNode.options = function(self){ // for SELECT tag
     return new $OptionsClass(self.elt)
 }
 
-DOMNodeDict.parent = function(self){
-    if(self.elt.parentElement) return DOMNode(self.elt.parentElement)
+DOMNode.parent = function(self){
+    if(self.elt.parentElement) return DOMNode.$factory(self.elt.parentElement)
     return None
 }
 
-DOMNodeDict.reset = function(self){ // for FORM
+DOMNode.reset = function(self){ // for FORM
     return function(){self.elt.reset()}
 }
 
-DOMNodeDict.select = function(self, selector){
+DOMNode.select = function(self, selector){
     // alias for get(selector=...)
     if(self.elt.querySelectorAll===undefined){
         throw _b_.TypeError.$factory("DOMNode object doesn't support selection by selector")
@@ -1149,12 +1150,12 @@ DOMNodeDict.select = function(self, selector){
         res = []
     if(node_list.length===0) return []
     for(var i=0, len=node_list.length;i<len;i++){
-        res[i]=DOMNode(node_list[i])
+        res[i]=DOMNode.$factory(node_list[i])
     }
     return res
 }
 
-DOMNodeDict.select_one = function(self, selector){
+DOMNode.select_one = function(self, selector){
     // return the element matching selector, or None
     if(self.elt.querySelector===undefined){
         throw _b_.TypeError.$factory("DOMNode object doesn't support selection by selector")
@@ -1163,16 +1164,16 @@ DOMNodeDict.select_one = function(self, selector){
     if(res === null) {
         return None
     }
-    return DOMNode(res)
+    return DOMNode.$factory(res)
 }
 
-DOMNodeDict.style = function(self){
+DOMNode.style = function(self){
     // set attribute "float" for cross-browser compatibility
     self.elt.style.float = self.elt.style.cssFloat || self.style.styleFloat
     return $B.JSObject(self.elt.style)
 }
 
-DOMNodeDict.setSelectionRange = function(self){ // for TEXTAREA
+DOMNode.setSelectionRange = function(self){ // for TEXTAREA
     if(this['setSelectionRange']!==undefined){
         return (function(obj){
             return function(){
@@ -1192,17 +1193,17 @@ DOMNodeDict.setSelectionRange = function(self){ // for TEXTAREA
     }
 }
 
-DOMNodeDict.set_class_name = function(self,arg){
+DOMNode.set_class_name = function(self,arg){
     self.elt.setAttribute('class',arg)
 }
 
-DOMNodeDict.set_html = function(self,value){
+DOMNode.set_html = function(self,value){
     var elt = self.elt
     if(elt.nodeType==9){elt = elt.body}
     elt.innerHTML=str(value)
 }
 
-DOMNodeDict.set_style = function(self,style){ // style is a dict
+DOMNode.set_style = function(self,style){ // style is a dict
     if(!_b_.isinstance(style, _b_.dict)){
         throw TypeError.$factory('style must be dict, not '+$B.get_class(style).__name__)
     }
@@ -1225,20 +1226,20 @@ DOMNodeDict.set_style = function(self,style){ // style is a dict
     }
 }
 
-DOMNodeDict.set_text = function(self,value){
+DOMNode.set_text = function(self,value){
     var elt = self.elt
     if(elt.nodeType==9){elt = elt.body}
     elt.innerText=str(value)
     elt.textContent=str(value)
 }
 
-DOMNodeDict.set_value = function(self,value){self.elt.value = str(value)}
+DOMNode.set_value = function(self,value){self.elt.value = str(value)}
 
-DOMNodeDict.submit = function(self){ // for FORM
+DOMNode.submit = function(self){ // for FORM
     return function(){self.elt.submit()}
 }
 
-DOMNodeDict.text = function(self){
+DOMNode.text = function(self){
     var elt = self.elt
     if(elt.nodeType==9){elt = elt.body}
     var res = elt.innerText || elt.textContent
@@ -1248,12 +1249,12 @@ DOMNodeDict.text = function(self){
     return res
 }
 
-DOMNodeDict.toString = function(self){
+DOMNode.toString = function(self){
     if(self===undefined) return 'DOMNode'
     return self.elt.nodeName
 }
 
-DOMNodeDict.trigger = function (self, etype){
+DOMNode.trigger = function (self, etype){
     // Artificially triggers the event type provided for this DOMNode
     if (self.elt.fireEvent) {
       self.elt.fireEvent('on' + etype);
@@ -1264,7 +1265,7 @@ DOMNodeDict.trigger = function (self, etype){
     }
 }
 
-DOMNodeDict.unbind = function(self, event){
+DOMNode.unbind = function(self, event){
     // unbind functions from the event (event = "click", "mouseover" etc.)
     // if no function is specified, remove all callback functions
     // If no event is specified, remove all callbacks for all events
@@ -1273,7 +1274,7 @@ DOMNodeDict.unbind = function(self, event){
 
     if(event===undefined){
         for(var event in self.elt.$events){
-            DOMNodeDict.unbind(self, event)
+            DOMNode.unbind(self, event)
         }
         return _b_.None
     }
@@ -1375,7 +1376,7 @@ $QueryDict.getvalue = function(self,key,_default){
 
 $QueryDict.keys = function(self){return self._keys}
 
-DOMNodeDict.query = function(self){
+DOMNode.query = function(self){
 
     var res = {__class__:$QueryDict,
         _keys : [],
@@ -1409,7 +1410,7 @@ $TagSumDict.__add__ = function(self,other){
         self.children = self.children.concat(other.children)
     }else if(isinstance(other,[_b_.str,_b_.int,_b_.float,
                                _b_.dict,_b_.set,_b_.list])){
-        self.children = self.children.concat(DOMNode(document.createTextNode(other)))
+        self.children = self.children.concat(DOMNode.$factory(document.createTextNode(other)))
     }else{self.children.push(other)}
     return self
 }
@@ -1418,7 +1419,7 @@ $TagSumDict.__mro__ = [$ObjectDict]
 
 $TagSumDict.__radd__ = function(self,other){
     var res = $TagSum()
-    res.children = self.children.concat(DOMNode(document.createTextNode(other)))
+    res.children = self.children.concat(DOMNode.$factory(document.createTextNode(other)))
     return res
 }
 
@@ -1463,7 +1464,7 @@ win.get_postMessage = function(msg,targetOrigin){
     return _window.postMessage(msg,targetOrigin)
 }
 
-$B.DOMNodeDict = DOMNodeDict
+$B.DOMNode = DOMNode
 
 $B.win = win
 })(__BRYTHON__)

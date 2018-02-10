@@ -21,10 +21,10 @@
         update(browser, {
             $$alert:function(message){window.alert($B.builtins.str(message))},
             confirm: $B.JSObject(window.confirm),
-            $$document:$B.DOMNode(document),
-            doc: $B.DOMNode(document),   //want to use document instead of doc
+            $$document:$B.DOMNode.$factory(document),
+            doc: $B.DOMNode.$factory(document),   //want to use document instead of doc
             DOMEvent:$B.DOMEvent,
-            DOMNode:$B.DOMNode,
+            DOMNode:$B.DOMNode.$factory,
             load:function(script_url){
                 // Load and eval() the Javascript file at script_url
                 var file_obj = $B.builtins.open(script_url)
@@ -107,9 +107,11 @@
                                     // str, add the items
                                     var items = _b_.list(first)
                                     for(var i=0;i<items.length;i++){
-                                        $B.DOMNode.$dict.__le__(self, items[i])
+                                        $B.DOMNode.__le__(self, items[i])
                                     }
                                 }catch(err){
+                                    console.log(err)
+                                    console.log("first", first)
                                     throw _b_.ValueError.$factory('wrong element '+first)
                                 }
                             }
@@ -125,17 +127,17 @@
                         if(arg.toLowerCase().substr(0,2)==="on"){
                             // Event binding passed as argument "onclick", "onfocus"...
                             // Better use method bind of DOMNode objects
-                            var js = '$B.DOMNodeDict.bind(self,"'
+                            var js = '$B.DOMNode.bind(self,"'
                             js += arg.toLowerCase().substr(2)
                             eval(js+'",function(){'+value+'})')
                         }else if(arg.toLowerCase()=="style"){
-                            $B.DOMNodeDict.set_style(self,value)
+                            $B.DOMNode.set_style(self,value)
                         } else {
                             if(value!==false){
                                 // option.selected=false sets it to true :-)
                                 try{
                                     arg = arg.replace('_','-')
-                                    $B.DOMNodeDict.__setattr__(self, arg, value)
+                                    $B.DOMNode.__setattr__(self, arg, value)
                                 }catch(err){
                                     throw _b_.ValueError.$factory("can't set attribute "+arg)
                                 }
@@ -144,7 +146,7 @@
                     }
                 }
 
-                dict.__mro__ = [$B.DOMNodeDict, $B.builtins.object.$dict]
+                dict.__mro__ = [$B.DOMNode, $B.builtins.object.$dict]
 
                 dict.__new__ = function(cls){
                     // __new__ must be defined explicitely : it returns an instance of
@@ -154,10 +156,10 @@
                         // DOMNode is piggybacking on us to autogenerate a node
                         var elt = cls.$dict.$elt_wrap  // keep track of the to wrap element
                         cls.$elt_wrap = undefined  // nullify for later calls
-                        var res = $B.DOMNode(elt, true)  // generate the wrapped DOMNode
+                        var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
                     } else {
-                        var res = $B.DOMNode(document.createElement(tagName), true)
+                        var res = $B.DOMNode.$factory(document.createElement(tagName), true)
                         res._wrapped = false  // not wrapped
                     }
                     res.__class__ = cls
@@ -170,30 +172,28 @@
             // the classes used for tag sums, $TagSum and $TagSumClass
             // are defined in py_dom.js
 
-            function makeFactory(tagName){
+            function makeFactory(klass){
                 var factory = function(){
-                    if(factory.$dict.$elt_wrap !== undefined) {
+                    if(klass.$elt_wrap !== undefined) {
                         // DOMNode is piggybacking on us to autogenerate a node
-                        var elt = factory.$dict.$elt_wrap  // keep track of the to wrap element
-                        factory.$dict.$elt_wrap = undefined  // nullify for later calls
-                        var res = $B.DOMNode(elt, true)  // generate the wrapped DOMNode
+                        var elt = klass.$elt_wrap  // keep track of the to wrap element
+                        klass.$elt_wrap = undefined  // nullify for later calls
+                        var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
                     } else {
-                        if(tagName=='SVG'){
-                            var res = $B.DOMNode(document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
+                        if(klass.__name__=='SVG'){
+                            var res = $B.DOMNode.$factory(document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
                         }else{
-                            var res = $B.DOMNode(document.createElement(tagName), true)
+                            var res = $B.DOMNode.$factory(document.createElement(klass.__name__), true)
                         }
                         res._wrapped = false  // not wrapped
                     }
-                    res.__class__ = dicts[tagName]
+                    res.__class__ = klass
                     // apply __init__
-                    var args = [res].concat(Array.prototype.slice.call(arguments))
-                    dicts[tagName].__init__.apply(null, args)
+                    klass.__init__(res, ...arguments)
                     return res
                 }
                 factory.__class__=$B.$factory
-                factory.$dict = dicts[tagName]
                 return factory
             }
 
@@ -227,17 +227,16 @@
                 dicts = {}
 
             // register tags in DOMNode to autogenerate tags when DOMNode is invoked
-            $B.DOMNodeDict.tags = obj.tags
+            $B.DOMNode.tags = obj.tags
 
             function maketag(tag){
                 if(!(typeof tag=='string')){
                     throw _b_.TypeError.$factory("html.maketag expects a string as argument")
                 }
-                dicts[tag] = makeTagDict(tag)
-                var factory = makeFactory(tag)
-                dicts[tag].$factory = factory
-                obj.tags.$string_dict[tag] = factory
-                return factory
+                var klass = dicts[tag] = makeTagDict(tag)
+                klass.$factory = makeFactory(klass)
+                obj.tags.$string_dict[tag] = klass
+                return klass
             }
 
             for(var i=0, len = tags.length; i < len;i++){

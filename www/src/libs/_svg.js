@@ -27,7 +27,7 @@ function makeTagDict(tagName){
                 return dict[attr].apply(null, args)
             }
         }
-        return $B.DOMNodeDict.__getattribute__(self, attr)        
+        return $B.DOMNode.__getattribute__(self, attr)        
     }
 
     dict.__init__ = function(){
@@ -58,11 +58,11 @@ function makeTagDict(tagName){
             if(arg.toLowerCase().substr(0,2)==="on"){ 
                 // Event binding passed as argument "onclick", "onfocus"...
                 // Better use method bind of DOMNode objects
-                var js = '$B.DOMNodeDict.bind(self,"'
+                var js = '$B.DOMNode.bind(self,"'
                 js += arg.toLowerCase().substr(2)
                 eval(js+'",function(){'+value+'})')
             }else if(arg.toLowerCase()=="style"){
-                $B.DOMNodeDict.set_style(self,value)
+                $B.DOMNode.set_style(self,value)
             }else if(arg.toLowerCase().indexOf("href") !== -1){ // xlink:href
                 self.elt.setAttributeNS( "http://www.w3.org/1999/xlink","href",value)
             } else {
@@ -79,10 +79,10 @@ function makeTagDict(tagName){
         }
     }
 
-    dict.__mro__ = [$B.DOMNodeDict,$B.builtins.object.$dict]
+    dict.__mro__ = [$B.DOMNode,$B.builtins.object.$dict]
 
     dict.__new__ = function(cls){
-        var res = $B.DOMNode(document.createElementNS($svgNS,tagName))
+        var res = $B.DOMNode.$factory(document.createElementNS($svgNS,tagName))
         res.__class__ = cls.$dict
         return res
     }
@@ -91,7 +91,7 @@ function makeTagDict(tagName){
         if(self.elt.hasAttributeNS(null, key)){
             self.elt.setAttributeNS(null,key,value)
         }else{
-            $B.DOMNodeDict.__setattr__(self, key, value)
+            $B.DOMNode.__setattr__(self, key, value)
         }
     }
 
@@ -104,7 +104,7 @@ function makeTagDict(tagName){
 
 function makeFactory(tagName){
     var factory = function(){
-        var res = $B.DOMNode(document.createElementNS($svgNS,tagName))
+        var res = $B.DOMNode.$factory(document.createElementNS($svgNS,tagName))
         res.__class__ = dicts[tagName]
         // apply __init__
         var args = [res]

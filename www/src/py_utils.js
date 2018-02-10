@@ -395,9 +395,9 @@ $B.$JS2Py = function(src){
         }
     }
     if(typeof src=="object"){
-        if($B.$isNode(src)) return $B.DOMNode(src)
+        if($B.$isNode(src)) return $B.DOMNode.$factory(src)
         if($B.$isEvent(src)) return $B.$DOMEvent(src)
-        if($B.$isNodeList(src)) return $B.DOMNode(src)
+        if($B.$isNodeList(src)) return $B.DOMNode.$factory(src)
         if(Array.isArray(src) &&Object.getPrototypeOf(src)===Array.prototype){
             var res = [], pos=0
             for(var i=0,_len_i=src.length;i<_len_i;i++) res[pos++]=$B.$JS2Py(src[i])
