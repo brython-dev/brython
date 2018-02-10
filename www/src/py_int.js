@@ -111,7 +111,7 @@ int.__float__ = function(self){
 }
 
 function preformat(self, fmt){
-    if(fmt.empty){return _b_.str(self)}
+    if(fmt.empty){return _b_.str.$factory(self)}
     if(fmt.type && 'bcdoxXn'.indexOf(fmt.type)==-1){
         throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
             "' for object of type 'int'")
@@ -576,11 +576,13 @@ int.$factory = function(value, base){
       var _re=new RegExp('^[+-]?['+_digits+']+$', 'i')
       if(!_re.test(_value)) {
          throw _b_.ValueError.$factory(
-             "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
+             "invalid literal for int() with base "+base +": '"+
+             _b_.str.$factory(value)+"'")
       }
       if(base <= 10 && !isFinite(value)) {
          throw _b_.ValueError.$factory(
-             "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
+             "invalid literal for int() with base "+base +": '"+
+             _b_.str.$factory(value)+"'")
       }
       var res=parseInt(_value, base)
       if(res < $B.min_int || res > $B.max_int) return $B.LongInt(_value, base)

@@ -163,8 +163,8 @@ $RangeDict.__reversed__ = function(self){
 }
 
 $RangeDict.__repr__ = $RangeDict.__str__ = function(self){
-    var res = 'range('+_b_.str(self.start)+', '+_b_.str(self.stop)
-    if(self.step!=1) res += ', '+_b_.str(self.step)
+    var res = 'range('+_b_.str.$factory(self.start)+', '+_b_.str.$factory(self.stop)
+    if(self.step!=1) res += ', '+_b_.str.$factory(self.step)
     return res+')'
 }
 
@@ -221,7 +221,8 @@ $RangeDict.index = function(self, other){
                 nb++
             }catch(err){
                 if(_b_.isinstance(err, _b_.StopIteration)){
-                    throw _b_.ValueError.$factory(_b_.str(other)+' not in range')
+                    throw _b_.ValueError.$factory(_b_.str.$factory(other)+
+                        ' not in range')
                 }
                 throw err
             }
@@ -236,9 +237,10 @@ $RangeDict.index = function(self, other){
             ($B.ge(self.start, self.stop) && $B.ge(self.start, other)
             && $B.gt(other, self.stop))){
                 return fl
-        }else{throw _b_.ValueError.$factory(_b_.str(other)+' not in range')}
+        }else{throw _b_.ValueError.$factory(_b_.str.$factory(other)+
+            ' not in range')}
     }else{
-        throw _b_.ValueError.$factory(_b_.str(other)+' not in range')
+        throw _b_.ValueError.$factory(_b_.str.$factory(other)+' not in range')
     }
 }
 
@@ -288,8 +290,8 @@ var $SliceDict = {__class__:$B.$type,
 $SliceDict.__mro__ = [_b_.object]
 
 $SliceDict.__repr__ = $SliceDict.__str__ = function(self){
-        return 'slice('+_b_.str(self.start)+','+
-            _b_.str(self.stop)+','+_b_.str(self.step)+')'
+        return 'slice('+_b_.str.$factory(self.start)+','+
+            _b_.str.$factory(self.stop)+','+_b_.str.$factory(self.step)+')'
     }
 
 $SliceDict.__setattr__ = function(self, attr, value){

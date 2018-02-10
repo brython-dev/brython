@@ -139,7 +139,7 @@ $B.$class_constructor = function(class_name, class_obj, parents,
 
     // Initialize the class object by a call to metaclass __init__
     var meta_init = $B.$type.__getattribute__(metaclass, '__init__')
-    
+
     meta_init(kls, class_name, bases, Object.keys(kls))
 
 
@@ -154,14 +154,13 @@ $B.$class_constructor = function(class_name, class_obj, parents,
         function nofactory(){
             throw _b_.TypeError.$factory("Can't instantiate abstract class interface"+
                 " with abstract methods "+Object.keys(abstract_methods).join(', '))}
-        //for(var attr in factory){nofactory[attr] = factory[attr]}
-        //init_subclass(nofactory);
         kls.$factory = nofactory
     }
 
     // call __init_subclass__ with the extra keyword arguments
     var first_parent = mro[0],
-        init_subclass = $B.$type.__getattribute__(first_parent, "__init_subclass__")
+        init_subclass = $B.$type.__getattribute__(first_parent,
+            "__init_subclass__")
 
     init_subclass(kls, extra_kwargs)
 
@@ -246,7 +245,7 @@ function make_mro(bases, cl_dict){
     for(var i=0;i<bases.length;i++){
         // we can't simply push bases[i].__mro__
         // because it would be modified in the algorithm
-        if(bases[i]===_b_.str) bases[i] = $B.$StringSubclassFactory
+        if(bases[i]===_b_.str) bases[i] = $B.StringSubclass
         else if(bases[i]===_b_.float) bases[i] = $B.FloatSubclass
         if(bases[i].__class__ == $B.$factory){
             bases[i] = bases[i].$dict
@@ -411,7 +410,7 @@ $B.$type.__call__ = function(klass, ...extra_args){
 
 $B.$type.__format__ = function(klass, fmt_spec){
     // For classes, format spec is ignored, return str(klass)
-    return _b_.str(klass)
+    return _b_.str.$factory(klass)
 }
 // class of constructors
 $B.$factory = {
@@ -654,7 +653,7 @@ $B.$MethodDict.__getattribute__ = function(self, attr){
 $B.$MethodDict.__mro__=[_b_.object]
 $B.$MethodDict.__repr__ = $B.$MethodDict.__str__ = function(self){
     return '<bound method '+self.$infos.__qualname__+
-       ' of '+ _b_.str(self.$infos.__self__)+'>'
+       ' of '+ _b_.str.$factory(self.$infos.__self__)+'>'
 }
 $MethodFactory.$dict = $B.$MethodDict
 $B.set_func_names($B.$MethodDict, "builtins")

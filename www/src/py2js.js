@@ -469,7 +469,7 @@ function $AssertCtx(context){
         var new_node = new $Node()
         var js = 'throw AssertionError.$factory("AssertionError")'
         if(message !== null){
-            js = 'throw AssertionError.$factory(str('+message.to_js()+'))'
+            js = 'throw AssertionError.$factory(str.$factory('+message.to_js()+'))'
         }
         new $NodeJSCtx(new_node,js)
         node.add(new_node)
@@ -1465,7 +1465,7 @@ function $CallCtx(context){
                   if(this.func.is_builtin){
                       // simplify code for built-in functions
                       var new_style = ["complex", "bytes", "bytearray",
-                          "object", "memoryview", "int", "float"]
+                          "object", "memoryview", "int", "float", "str"]
                       if($B.builtin_funcs[this.func.value]!==undefined &&
                               new_style.indexOf(this.func.value) == -1 // XXX temporary
                           ){
@@ -3498,7 +3498,6 @@ function $IdCtx(context,value){
                                 // Cf issue #311
                                 if(found.length>1 && found[1].id == '__builtins__'){
                                     this.is_builtin = true
-                                    console.log("found in builtins", val)
                                     this.result = '$B.builtins.'+val+$to_js(this.tree,'')
                                     return this.result
                                 }
@@ -4633,7 +4632,7 @@ function $StringCtx(context,value){
                             expr1 = '$B.builtins.repr('+expr1+')'
                             break
                         case "s":
-                            expr1 = '$B.builtins.str('+expr1+')'
+                            expr1 = '$B.builtins.str.$factory('+expr1+')'
                             break
                     }
 
@@ -4646,7 +4645,7 @@ function $StringCtx(context,value){
                         }else{
                             fmt = "'" + fmt + "'"
                         }
-                        var res1 = "$B.builtins.str.$dict.format('{0:' + " +
+                        var res1 = "$B.builtins.str.format('{0:' + " +
                             fmt + " + '}', " + expr1 + ")"
                         elts.push(res1)
                     }else{

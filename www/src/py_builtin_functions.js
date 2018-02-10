@@ -650,7 +650,7 @@ function format(value, format_spec) {
   var fmt = getattr(args.value,'__format__', null)
   if(fmt !== null){return fmt(args.format_spec)}
   throw _b_.NotImplementedError("__format__ is not implemented for object '" +
-      _b_.str(args.value) + "'")
+      _b_.str.$factory(args.value) + "'")
 }
 
 function attr_error(attr, cname){
@@ -717,7 +717,7 @@ $B.$getattr = function(obj, attr, _default){
 
     if(klass===undefined){
         // avoid calling $B.get_class in simple cases for performance
-        if(typeof obj=='string'){klass = _b_.str.$dict}
+        if(typeof obj=='string'){klass = _b_.str}
         else if(typeof obj=='number'){
             klass = obj % 1 == 0 ? _b_.int : _b_.float
         }else if(obj instanceof Number){
@@ -1007,7 +1007,7 @@ function id(obj) {
    check_no_kw('id', obj)
    check_nb_args('id', 1, arguments.length)
    if (isinstance(obj, [_b_.str, _b_.int, _b_.float])){
-       return getattr(_b_.str(obj), '__hash__')()
+       return getattr(_b_.str.$factory(obj), '__hash__')()
    }else if(obj.$id!==undefined){return obj.$id}
    else{return obj.$id = $B.UUID()}
 }
@@ -1073,8 +1073,8 @@ function isinstance(obj,arg){
 
    function check(kl, arg){
       if(kl === arg){return true}
-      else if(arg===_b_.str.$dict &&
-          kl===$B.$StringSubclassFactory.$dict){return true}
+      else if(arg===_b_.str &&
+          kl===$B.StringSubclass){return true}
       else if(arg===_b_.float &&
           kl===$B.FloatSubclass){return true}
    }
@@ -1384,7 +1384,7 @@ function ord(c) {
             c.length + ' found')
     }
     switch($B.get_class(c)) {
-      case _b_.str.$dict:
+      case _b_.str:
         if (c.length == 1) return c.charCodeAt(0)     // <= strobj.charCodeAt(index)
         throw _b_.TypeError.$factory('ord() expected a character, but string of length ' +
             c.length + ' found')
@@ -1423,7 +1423,7 @@ function $print(){
         file = ks['file'] === undefined ? $B.stdout : ks['file'],
         args = $ns['args']
 
-    getattr(file,'write')(args.map(_b_.str).join(sep)+end)
+    getattr(file,'write')(args.map(_b_.str.$factory).join(sep)+end)
     return None
 }
 $print.__name__ = 'print'
@@ -1963,7 +1963,7 @@ function $url_open(){
                 }else{
                     $res = this.responseText
                     if(is_binary){
-                        $res=_b_.str.$dict.encode($res, 'utf-8')
+                        $res=_b_.str.encode($res, 'utf-8')
                     }
                 }
             } catch (err) {

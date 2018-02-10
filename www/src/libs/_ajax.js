@@ -72,7 +72,7 @@ var add_to_res = function(res,key,val) {
         }
     } else if (val instanceof File || val instanceof Blob) {
         res.append(key,val)
-    } else res.append(key,str(val))
+    } else res.append(key,str.$factory(val))
 }
 
 ajax.$dict = {
@@ -133,24 +133,27 @@ ajax.$dict = {
                 res = new FormData()
                 var items = _b_.list(_b_.dict.$dict.items(params))
                 for(var i=0, _len_i = items.length; i < _len_i;i++){
-                    add_to_res(res,str(items[i][0]),items[i][1])
+                    add_to_res(res, str.$factory(items[i][0]), items[i][1])
                 }
             }else{
                 var items = _b_.list(_b_.dict.$dict.items(params))
                 for(var i=0, _len_i = items.length; i < _len_i;i++){
-                    var key = encodeURIComponent(str(items[i][0]));
+                    var key = encodeURIComponent(str.$factory(items[i][0]));
                     if (isinstance(items[i][1],list)) {
                         for (j = 0; j < items[i][1].length; j++) {
-                            res += key +'=' + encodeURIComponent(str(items[i][1][j])) + '&'
+                            res += key +'=' +
+                                encodeURIComponent(str.$factory(items[i][1][j])) + '&'
                         }
                     } else {
-                        res += key + '=' + encodeURIComponent(str(items[i][1])) + '&'
+                        res += key + '=' +
+                            encodeURIComponent(str.$factory(items[i][1])) + '&'
                     }
                 }
                 res = res.substr(0,res.length-1)
             }
         }else{
-            throw _b_.TypeError("send() argument must be string or dictionary, not '"+str(params.__class__)+"'")
+            throw _b_.TypeError("send() argument must be string or dictionary, not '"+
+                str.$factory(params.__class__)+"'")
         }
         self.js.send(res)
         return $N

@@ -90,7 +90,8 @@ $ListDict.__delitem__ = function(self,arg){
        return $N
     }
 
-    throw _b_.TypeError.$factory('list indices must be integer, not '+_b_.str(arg.__class__))
+    throw _b_.TypeError.$factory('list indices must be integer, not '+
+        _b_.str.$factory(arg.__class__))
 }
 
 $ListDict.__eq__ = function(self, other){
@@ -424,7 +425,7 @@ $ListDict.index = function(){
     for(var i=start; i < stop;i++){
         if(_eq(self[i])) return i
     }
-    throw _b_.ValueError.$factory(_b_.str($.x)+" is not in list")
+    throw _b_.ValueError.$factory(_b_.str.$factory($.x)+" is not in list")
 }
 
 $ListDict.insert = function(){
@@ -457,7 +458,7 @@ $ListDict.remove = function(){
             return $N
         }
     }
-    throw _b_.ValueError.$factory(_b_.str($.x)+" is not in list")
+    throw _b_.ValueError.$factory(_b_.str.$factory($.x)+" is not in list")
 }
 
 $ListDict.reverse = function(self){
@@ -565,7 +566,7 @@ $ListDict.sort = function(self){
 
     self.$cl = $elts_class(self)
     var cmp = null;
-    if(func===null && self.$cl===_b_.str.$dict){
+    if(func===null && self.$cl===_b_.str){
         if (reverse)
             cmp = function(b,a) {return $B.$AlphabeticalCompare(a,b)};
         else

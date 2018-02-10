@@ -3,7 +3,7 @@
 eval($B.InjectBuiltins())
 
 var object = _b_.object,
-    str_hash = _b_.str.$dict.__hash__,
+    str_hash = _b_.str.__hash__,
     $N = _b_.None
 
 // dictionary
@@ -183,12 +183,12 @@ $DictDict.__delitem__ = function(){
     }
     switch(typeof arg) {
       case 'string':
-        if (self.$string_dict[arg] === undefined) throw KeyError.$factory(_b_.str(arg))
+        if (self.$string_dict[arg] === undefined) throw KeyError.$factory(_b_.str.$factory(arg))
         delete self.$string_dict[arg]
         delete self.$str_hash[str_hash(arg)]
         return $N
       case 'number':
-        if (self.$numeric_dict[arg] === undefined) throw KeyError.$factory(_b_.str(arg))
+        if (self.$numeric_dict[arg] === undefined) throw KeyError.$factory(_b_.str.$factory(arg))
         delete self.$numeric_dict[arg]
         return $N
     }
@@ -247,7 +247,7 @@ $DictDict.__getitem__ = function(){
         self=$.self, arg=$.arg
 
     if(self.$jsobj){
-        if(!self.$jsobj.hasOwnProperty(arg)) throw _b_.KeyError.$factory(str(arg))
+        if(!self.$jsobj.hasOwnProperty(arg)) throw _b_.KeyError.$factory(str.$factory(arg))
         else if(self.$jsobj[arg]===undefined) return _b_.NotImplemented
         else if(self.$jsobj[arg]===null){return $N}
         return self.$jsobj[arg]
@@ -290,7 +290,7 @@ $DictDict.__getitem__ = function(){
             return missing_method(self, arg)
         }catch(err){}
     }
-    throw KeyError.$factory(_b_.str(arg))
+    throw KeyError.$factory(_b_.str.$factory(arg))
 }
 
 $DictDict.__hash__ = None

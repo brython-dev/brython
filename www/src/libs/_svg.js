@@ -38,7 +38,7 @@ function makeTagDict(tagName){
         if(args.length==1){
             var first=args[0]
             if(isinstance(first,[str,int,float])){
-                self.elt.appendChild(document.createTextNode(str(first)))
+                self.elt.appendChild(document.createTextNode(str.$factory(first)))
             } else if(first.__class__===TagSum){
                 for(var i=0, _len_i = first.children.length; i < _len_i;i++){
                     self.elt.appendChild(first.children[i].elt)

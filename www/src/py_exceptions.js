@@ -208,7 +208,7 @@ BaseException.__repr__ = function(self){
 }
 
 BaseException.__str__ = function(self){
-    return _b_.str(self.args[0])
+    return _b_.str.$factory(self.args[0])
 }
 
 BaseException.__mro__ = [_b_.object]

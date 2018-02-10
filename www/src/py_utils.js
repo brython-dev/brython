@@ -146,8 +146,8 @@ $B.get_class = function(obj){
             obj.__class__=_b_.float
             return _b_.float
           case 'string':
-            obj.__class__=_b_.str.$dict
-            return _b_.str.$dict
+            obj.__class__=_b_.str
+            return _b_.str
           case 'boolean':
             obj.__class__=$B.$BoolDict
             return $B.$BoolDict
@@ -871,7 +871,8 @@ $B.pyobject2jsobject=function (obj){
     if (_b_.hasattr(obj, '__dict__')) {
        return $B.pyobject2jsobject(_b_.getattr(obj, '__dict__'))
     }
-    throw _b_.TypeError.$factory(_b_.str(obj)+' is not JSON serializable')
+    throw _b_.TypeError.$factory(_b_.str.$factory(obj)+
+        ' is not JSON serializable')
 }
 
 $B.set_line = function(line_num,module_name){

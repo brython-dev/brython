@@ -115,7 +115,8 @@ var bytes = {__class__ : $B.$type,
 
 bytes.__add__ = function(self,other){
     if(!isinstance(other,bytes)){
-        throw _b_.TypeError.$factory("can't concat bytes to " + _b_.str(other))
+        throw _b_.TypeError.$factory("can't concat bytes to " +
+            _b_.str.$factory(other))
     }
     self.source = self.source.concat(other.source)
     return self

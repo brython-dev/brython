@@ -438,7 +438,7 @@ DOMNode.__add__ = function(self,other){
         res.children = res.children.concat(other.children)
     } else if(isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.list,
                                 _b_.dict,_b_.set,_b_.tuple])){
-        res.children[pos++]=DOMNode.$factory(document.createTextNode(_b_.str(other)))
+        res.children[pos++]=DOMNode.$factory(document.createTextNode(_b_.str.$factory(other)))
     }else if(isinstance(other, DOMNode)){
         res.children[pos++] = other
     }else{
@@ -474,7 +474,7 @@ DOMNode.__del__ = function(self){
     // if element has a parent, calling __del__ removes object
     // from the parent's children
     if(!self.elt.parentNode){
-        throw _b_.ValueError.$factory("can't delete "+str(self.elt))
+        throw _b_.ValueError.$factory("can't delete "+str.$factory(self.elt))
     }
     self.elt.parentNode.removeChild(self.elt)
 }
@@ -535,7 +535,7 @@ DOMNode.__getattribute__ = function(self,attr){
             return parseInt(self.elt.style[attr])
         }else{
             throw _b_.AttributeError.$factory("style." + attr + " is not set for " +
-                str(self))
+                str.$factory(self))
         }
       case 'clear':
       case 'closest':
@@ -685,7 +685,7 @@ DOMNode.__getitem__ = function(self, key){
                 for(var $i=0;$i<elts.length;$i++) res[pos++]=DOMNode.$factory(elts[$i])
                 return res
             }catch(err){
-                throw KeyError.$factory(str(key))
+                throw KeyError.$factory(str.$factory(key))
             }
         }
     }else{
@@ -1211,7 +1211,7 @@ DOMNode.set_class_name = function(self,arg){
 DOMNode.set_html = function(self,value){
     var elt = self.elt
     if(elt.nodeType==9){elt = elt.body}
-    elt.innerHTML=str(value)
+    elt.innerHTML=str.$factory(value)
 }
 
 DOMNode.set_style = function(self,style){ // style is a dict
@@ -1240,11 +1240,11 @@ DOMNode.set_style = function(self,style){ // style is a dict
 DOMNode.set_text = function(self,value){
     var elt = self.elt
     if(elt.nodeType==9){elt = elt.body}
-    elt.innerText=str(value)
-    elt.textContent=str(value)
+    elt.innerText=str.$factory(value)
+    elt.textContent=str.$factory(value)
 }
 
-DOMNode.set_value = function(self,value){self.elt.value = str(value)}
+DOMNode.set_value = function(self,value){self.elt.value = str.$factory(value)}
 
 DOMNode.submit = function(self){ // for FORM
     return function(){self.elt.submit()}

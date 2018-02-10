@@ -19,7 +19,7 @@
 
     if (! $B.isa_web_worker ) {
         update(browser, {
-            $$alert:function(message){window.alert($B.builtins.str(message))},
+            $$alert:function(message){window.alert($B.builtins.str.$factory(message))},
             confirm: $B.JSObject(window.confirm),
             $$document:$B.DOMNode.$factory(document),
             doc: $B.DOMNode.$factory(document),   //want to use document instead of doc
@@ -68,7 +68,7 @@
             var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
                 results = regex.exec(location.search);
             results= results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-            return $B.builtins.str(results);
+            return $B.builtins.str.$factory(results);
             }
         })
 
@@ -93,7 +93,7 @@
                         var first=args[0]
                         if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
                             // set "first" as HTML content (not text)
-                            self.elt.innerHTML = _b_.str(first)
+                            self.elt.innerHTML = _b_.str.$factory(first)
                         } else if(first.__class__===TagSum){
                             for(var i=0, len = first.children.length; i < len;i++){
                                 self.elt.appendChild(first.children[i].elt)

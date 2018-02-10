@@ -160,7 +160,7 @@ float.__getformat__ = function(arg){
 }
 
 function preformat(self, fmt){
-    if(fmt.empty){return _b_.str(self)}
+    if(fmt.empty){return _b_.str.$factory(self)}
     if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type)==-1){
         throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
             "' for object of type 'float'")
@@ -209,7 +209,7 @@ function preformat(self, fmt){
                     res.charAt(res.length-1)}
             }
         }
-    }else{var res = _b_.str(self)}
+    }else{var res = _b_.str.$factory(self)}
 
     if(fmt.type===undefined|| 'gGn'.indexOf(fmt.type)!=-1){
         // remove trailing 0
@@ -473,7 +473,7 @@ float.__repr__ = float.__str__ = function(self){
 
     var res = self.valueOf()+'' // coerce to string
     if(res.indexOf('.')==-1) res+='.0'
-    return _b_.str(res)
+    return _b_.str.$factory(res)
 }
 
 float.__setattr__ = function(self,attr,value){
@@ -653,8 +653,9 @@ float.$factory = function (value){
            value = to_digits(value) // convert arabic-indic digits to latin
            if (isFinite(value)) return $FloatClass(eval(value))
            else {
-               _b_.str.$dict.encode(value, 'latin-1') // raises UnicodeEncodeError if not valid
-               throw _b_.ValueError.$factory("Could not convert to float(): '"+_b_.str(value)+"'")
+               _b_.str.encode(value, 'latin-1') // raises UnicodeEncodeError if not valid
+               throw _b_.ValueError.$factory("Could not convert to float(): '"+
+                   _b_.str.$factory(value)+"'")
            }
        }
     }
